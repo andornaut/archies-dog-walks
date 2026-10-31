@@ -705,11 +705,16 @@ def mr_b_phone(tap=0, bob=0):
     face_disc(g, 16, 16 + b, 7, 8, "dbrown", "plum")
     g.rect(11, 11 + b, 3, 1, "brown")
     g.p(11, 12 + b, "brown")
-    # White eyes and bottom-right pupils make his downward attention explicit.
+    # Low upper lids leave two native rows of white, with pupils resting on the bottom row.
+    px, s = raster(g), scale_of(g)
     for x in (12, 18):
+        left = math.floor(x * s + 0.5)
+        right = math.floor((x + 3) * s + 0.5)
+        bottom = math.floor((20 + b) * s + 0.5) - 1
         g.rect(x, 17 + b, 3, 1, "plum")
-        g.rect(x, 18 + b, 3, 2, "white")
-        g.p(x + 2, 19 + b, "ink")
+        px.rect(left, bottom - 2, right - left, 1, "plum")
+        px.rect(left, bottom - 1, right - left, 2, "white")
+        px.p(right - 2, bottom, "ink")
     g.rect(16, 21 + b, 2, 1, "plum")
     # Leave the upper lip bare; facial hair begins below the mouth, on the chin and lower jaw.
     g.rect(15, 22 + b, 3, 1, "ink")
