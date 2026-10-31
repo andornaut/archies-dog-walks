@@ -10,6 +10,7 @@ import { dotRects, HELP_LAYOUT, helpActionAt } from "../help/helpLayout";
 import { applyHelpAction, clampPage, type HelpAction, helpButtons } from "../help/helpPaging";
 import { closeHelp } from "../help/helpSeen";
 import { screenArea } from "../input/outsideTap";
+import { LABEL_HELP_GAP } from "../ui/labelHelpGap";
 import { PALETTE } from "../ui/palette";
 import { addFilledRect } from "../ui/phaser/draw";
 import { addPixelText, wrapPixelText } from "../ui/phaser/pixelText";
@@ -150,12 +151,19 @@ export class HelpScene extends Scene {
     }
     this.showPicture(page.art, frame);
 
-    addPixelText(this, layout.title.x, layout.title.y, page.title, {
+    const title = addPixelText(this, layout.title.x, layout.title.y, page.title, {
       colour: PALETTE.amber,
       font: "title",
       scale: layout.title.scale,
     });
-    this.drawBody(page.body);
+    const inkBottom = Math.max(
+      0,
+      ...title
+        .getTextBounds(true)
+        .characters.filter(({ h, w }) => w > 0 && h > 0)
+        .map(({ h, y }) => y + h),
+    );
+    this.drawBody(title.y + inkBottom * title.scaleY, page.body);
 
     dotRects(pages.length).forEach((dot, i) => {
       if (i === this.page) {
@@ -191,8 +199,9 @@ export class HelpScene extends Scene {
   // Wrapped at the body's width as the help pages' fit test wraps it, measured on the font, with
   // the line pitch set to the layout's, its names filled from the game data. Phaser's own wrap
   // counts a line's trailing space, so it would break a line that fits exactly.
-  private drawBody(body: string): void {
-    const { lineHeight, scale, width, x, y } = HELP_LAYOUT.body;
+  private drawBody(titleInkBottom: number, body: string): void {
+    const { lineHeight, scale, width, x } = HELP_LAYOUT.body;
+    const y = Math.ceil(titleInkBottom) + LABEL_HELP_GAP;
     const style = { colour: PALETTE.cream, scale };
     const lines = wrapPixelText(this, style, width, helpBody(gameData, { body }));
     const text = addPixelText(this, x, y, lines.join("\n"), style);

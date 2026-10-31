@@ -8,9 +8,10 @@ import { HOME_BAR_LAST_FACE, HOME_LAYOUT } from "../home/homeLayout";
 import { TITLE_CAP_ROWS } from "../hud/walkHud";
 import { MIN_TAP_SIZE } from "../layout/screenLayout";
 import { bodyTextWidth } from "../testing/bodyFont";
-import { fontFileMetrics, placedInk } from "../testing/fontInk";
+import { fontFileMetrics, gameFont, placedInk } from "../testing/fontInk";
 import { inside } from "../testing/rects";
 import { closeFace } from "../ui/closeControl";
+import { LABEL_HELP_GAP } from "../ui/labelHelpGap";
 import { TEXT_SCALE } from "../ui/textFit";
 import { topBarContentRows, topBarRects } from "../ui/topBarTrim";
 import { helpBody } from "./helpBody";
@@ -107,6 +108,20 @@ const BODY = fontFileMetrics("font-body");
 describe("help pages", () => {
   const { lineHeight, maxLines, scale, width, y } = HELP_LAYOUT.body;
   const dotsTop = Math.min(...dotRects(gameData.help.length).map((dot) => dot.y));
+  it("starts body capitals one label gap below the measured title ink", () => {
+    const title = fontFileMetrics("font-title");
+    const { glyphs } = gameFont("font-title");
+    for (const page of gameData.help) {
+      const bottom = Math.max(
+        ...[...page.title.toUpperCase()].map((char) => {
+          const glyph = glyphs.get(char);
+          return glyph === undefined || glyph.width === 0 ? 0 : glyph.yOffset + glyph.height;
+        }),
+      );
+      const inkBottom = HELP_LAYOUT.title.y + (bottom - title.capTop) * HELP_LAYOUT.title.scale;
+      expect(y - inkBottom, page.title).toBe(LABEL_HELP_GAP);
+    }
+  });
   it("fits every page's body in its lines above the page dots, and its title across the screen", () => {
     const { scale: titleScale, x } = HELP_LAYOUT.title;
     const inkBottom = y + (maxLines - 1) * lineHeight + inkRowsFromCapTop(BODY) * scale;

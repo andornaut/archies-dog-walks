@@ -7,6 +7,7 @@ import { MIN_TAP_SIZE } from "../layout/screenLayout";
 import { BUTTON_SIZE } from "../ui/buttonGeometry";
 import { pageCloseControl } from "../ui/closeControl";
 import { rectIndexAt } from "../ui/grid";
+import { LABEL_HELP_GAP } from "../ui/labelHelpGap";
 import { TEXT_SCALE } from "../ui/textFit";
 import type { HelpAction } from "./helpPaging";
 
@@ -28,10 +29,17 @@ const TITLE_Y = ILLUSTRATION.y + ILLUSTRATION.height + 26;
 // bar's last face is (Exit's, or Settings' where Exit is hidden), in its 44x44 target in the
 // screen's top-right corner.
 // The body's lines, at most maxLines of them, are lineHeight apart, its capitals the label gap
-// under the lowest row the title's font inks (helpCapDy). The picture is the walk screen's
+// under the title's actual ink. The picture is the walk screen's
 // width, ruled off a row above and below.
 export const HELP_LAYOUT = {
-  body: { lineHeight: 18, maxLines: 6, scale: 2, width: 336, x: 12, y: TITLE_Y + 22 },
+  body: {
+    lineHeight: 18,
+    maxLines: 6,
+    scale: 2,
+    width: 336,
+    x: 12,
+    y: TITLE_Y + TITLE_CAP_ROWS * TEXT_SCALE + LABEL_HELP_GAP,
+  },
   close: { ...pageCloseControl(SCREEN), ...HOME_BAR_LAST_FACE },
   // A tap target apart, so each dot's target is its own slot, ending above Previous's and
   // Next's.
