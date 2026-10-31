@@ -1471,6 +1471,10 @@
           "y": 0
         }
       },
+      "results": {
+        "buttonGap": 3,
+        "heroGap": 16
+      },
       "returnHome": {
         "dogs": [
           {

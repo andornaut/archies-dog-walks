@@ -28,6 +28,7 @@ import {
   endBadgeStrip,
   endPanelFits,
   endPanelLayout,
+  endResultsPlacement,
   grantedQuipLines,
   QUIP_LINES,
   QUIP_TEXT_ROOM,
@@ -185,6 +186,45 @@ describe("endPanelLayout", () => {
 
   it("keeps the tallest panel above the badges", () => {
     expect(most.y + most.height).toBeLessThanOrEqual(badges.y);
+  });
+});
+
+describe("results and badge placement", () => {
+  it.each([
+    ["short results", 3, 1, false, 1, 126],
+    ["tall normal results", 5, 3, true, 2, 122],
+    ["tall dev results", 6, 3, true, 1, 112],
+    ["results without badges", 5, 3, true, 0, 126],
+  ] as const)(
+    "fits %s and centres the allocated badge panel above the button",
+    (_, lines, owners, fired, badgeRows, top) => {
+      const original = endPanelLayout(FONTS, lines, quipRows(owners, fired, []));
+      const placed = endResultsPlacement(badgeRows, original.panel);
+      expect(placed.panel.y).toBe(top);
+      expect(placed.panel.height).toBe(original.panel.height);
+      expect(placed.offsetY).toBe(top - original.panel.y);
+      const bottom = END_LAYOUT.button.y - END_LAYOUT.results.buttonGap;
+      const before = placed.strip.y - placed.panel.y - placed.panel.height;
+      const after = bottom - placed.strip.y - placed.strip.height;
+      expect(before).toBeGreaterThanOrEqual(0);
+      expect(after - before).toBeGreaterThanOrEqual(0);
+      expect(after - before).toBeLessThanOrEqual(1);
+      expect(placed.strip.height).toBe(badgeRows === 0 ? 0 : endBadgeStrip(badgeRows).height);
+      if (badgeRows > 0) {
+        const count = badgeRows === 1 ? 3 : BADGE_STRIP.perRow + 1;
+        const originalHits = badgeStripHits(endBadgeStrip(badgeRows), badgeRows, count);
+        badgeStripHits(placed.strip, badgeRows, count).forEach((hit, i) => {
+          expect(hit.width).toBe(originalHits[i]?.width);
+          expect(hit.height).toBe(originalHits[i]?.height);
+          expect(rectsOverlap(hit, placed.panel)).toBe(false);
+          expect(rectsOverlap(hit, END_LAYOUT.button)).toBe(false);
+        });
+      }
+    },
+  );
+
+  it("rejects an allocation that cannot fit without moving into the returning group", () => {
+    expect(() => endResultsPlacement(2, { ...END_LAYOUT.panel, height: 400 })).toThrow(RangeError);
   });
 });
 

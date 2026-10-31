@@ -10,8 +10,8 @@ import { badgeStripHits, type BadgeView } from "../home/badgesView";
 import {
   END_LAYOUT,
   endBadgeRows,
-  endBadgeStrip,
   endPanelLayout,
+  endResultsPlacement,
   grantedQuipLines,
   QUIP_LINES,
   QUIP_TEXT_ROOM,
@@ -167,6 +167,7 @@ export class EndScene extends Scene {
     if (this.textures.exists(LOGO.key)) {
       this.add.image(LOGO.x, LOGO.y, LOGO.key).setOrigin(0);
     }
+    const resultsStart = this.children.getChildren().length;
     // A walk that earned nothing is no best, even the first.
     const newBest = ended?.newBestWalk === true && walk.earnedCents > 0;
     if (newBest && this.textures.exists(RIBBON.key)) {
@@ -194,7 +195,6 @@ export class EndScene extends Scene {
     // the panel has room for it, the panel growing into the badge strip's area when no badge
     // shows.
     const badgeRows = endBadgeRows(fonts, lines.length, closing, earned.length);
-    const strip = endBadgeStrip(badgeRows);
     const quipFit = (lines: number) => ({ room: QUIP_TEXT_ROOM, style: textOnLines(lines) });
     const wanted = closing.map((line) => {
       const { lines: shown } = withProbe(this, BODY_TEXT, (probe) => {
@@ -206,6 +206,8 @@ export class EndScene extends Scene {
     const quipLines = grantedQuipLines(fonts, badgeRows, lines.length, wanted);
     const quipRows = closing.map(({ fired }, i) => ({ fired, lines: itemAt(quipLines, i) }));
     const { panel, rows } = endPanelLayout(fonts, lines.length, quipRows);
+    const placement = endResultsPlacement(badgeRows, panel);
+    const { strip } = placement;
     addPanel(this, panel);
     const g = this.add.graphics();
 
@@ -291,6 +293,10 @@ export class EndScene extends Scene {
       const quip = text(textX, textY, line.text, PALETTE.plum);
       fitPixelText(quip, quipFit(quipRow.lines), textX, textY);
     });
+
+    // Move the complete results group together, including its ribbon, bursts and owner rows.
+    const resultObjects = this.children.getChildren().slice(resultsStart);
+    this.add.container(0, placement.offsetY).add(resultObjects);
 
     if (celebrating) {
       this.badges = addBadgeCelebration(this, reduced, strip, badgeRows, earned, false);

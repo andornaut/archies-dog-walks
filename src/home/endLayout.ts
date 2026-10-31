@@ -46,6 +46,7 @@ export const END_LAYOUT = {
     textX: 42,
     well: { size: 34, x: 290, y: 0 },
   },
+  results: { buttonGap: 3, heroGap: 16 },
   // The return home, under the logo and above the panel: the walker and pack walk up the
   // front path from behind the panel's top edge to the house's step while the owners wave
   // either side. The house, lawn, path and step are part of screen-end; without it a tan path
@@ -275,6 +276,35 @@ export function endBadgeStrip(rows: number): Rect {
   const { badges } = END_LAYOUT;
   const height = Math.max(badges.height, badgeStripMinHeight(rows));
   return { ...badges, height, y: badges.y + badges.height - height };
+}
+
+// Place the allocated results below the returning group where their unchanged content fits.
+// The badge panel centres in the remaining band, retaining the return button's 3px clearance.
+export function endResultsPlacement(badgeRows: number, panel: Rect) {
+  const strip = endBadgeStrip(badgeRows);
+  const bottom = END_LAYOUT.button.y - END_LAYOUT.results.buttonGap;
+  const badgeHeight = badgeRows > 0 ? strip.height : 0;
+  const latestTop = bottom - badgeHeight - panel.height;
+  if (latestTop < panel.y) {
+    throw new RangeError("Allocated end-screen content exceeds its placement band");
+  }
+  const home = END_LAYOUT.returnHome;
+  const feetBottom = Math.max(
+    home.walker.y,
+    ...home.dogs.map(({ y }) => y),
+    ...home.owners.map(({ y }) => y),
+  );
+  const y = Math.min(feetBottom + END_LAYOUT.results.heroGap, latestTop);
+  const placed = { ...panel, y };
+  return {
+    offsetY: y - panel.y,
+    panel: placed,
+    strip: {
+      ...strip,
+      height: badgeHeight,
+      y: Math.floor((placed.y + placed.height + bottom - badgeHeight) / 2),
+    },
+  };
 }
 
 // Whether a panel ends above the badge strip while badgeRows rows of badges show, or else
