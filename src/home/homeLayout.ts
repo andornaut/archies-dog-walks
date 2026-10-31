@@ -294,7 +294,7 @@ export const HOME_LAYOUT = {
   startLoading: { room: START_BUTTON.width - 24 },
   // The street name's centre and caps top on screen-home's street sign, clear of the walker's
   // speech bubble.
-  streetSign: { x: 327, y: 75 + HERO_OFFSET_Y },
+  streetSign: { x: 320, y: 75 + HERO_OFFSET_Y },
   // The backing begins this far below the section's top, after its header.
   tileOffset: TILE_OFFSET,
   // A selected tile's ui-select frame sits 1px outside it.

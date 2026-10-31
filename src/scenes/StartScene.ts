@@ -1232,6 +1232,7 @@ export class StartScene extends Scene {
     const sign = HOME_LAYOUT.streetSign;
     addPixelText(this, sign.x, sign.y, gameData.homeText.gateSign, {
       colour: PALETTE.white,
+      font: "title",
       originX: 0.5,
     });
   }
