@@ -43,7 +43,6 @@ import { MENU_TEXT_FIELDS } from "../home/menuText";
 import { confirmLines } from "../home/purchaseConfirm";
 import { PURCHASE_CONFIRM_ROOMS } from "../home/purchaseConfirmLayout";
 import {
-  INSTALL_STEPS,
   INSTALL_STEPS_FIT,
   installStepsLayout,
   noteRoom,
@@ -531,11 +530,18 @@ export function cardTitles(): CardTitles[] {
         Object.values(items).map(({ name }) => name),
       ),
     },
-    {
-      card: installStepsLayout(screen, INSTALL_STEPS.lines).card,
-      role: "install steps' title",
-      titles: Object.values(installSteps).map((steps) => steps.title),
-    },
+    ...Object.values(installSteps).map(({ steps, title }) => {
+      const { room, style } = INSTALL_STEPS_FIT;
+      const fitted = fitInFont("font-body", style, room, shownIn("font-body", steps));
+      return {
+        card: installStepsLayout(screen, fitted.lines.length, {
+          steps: Math.max(0, ...fitted.lines.map((line) => inkWidth("font-body", style, line))),
+          title: inkWidth("font-title", TEXT_STYLE, shownIn("font-title", title)),
+        }).card,
+        role: "install steps' title",
+        titles: [title],
+      };
+    }),
     {
       card: settingsLayout({ body: BODY, title: TITLE }, screen, []).panel,
       role: "settings title",

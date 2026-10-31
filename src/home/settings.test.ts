@@ -12,6 +12,7 @@ import { defined } from "../testing/defined";
 import { fitInFont, fontFileMetrics, gameGlyphs, inkWidth, placedInk } from "../testing/fontInk";
 import { inside } from "../testing/rects";
 import { SETTINGS_EXPORT_ROWS } from "../tools/layoutExport";
+import { barTitleRoom } from "../ui/barTitle";
 import { closeFace } from "../ui/closeControl";
 import { LABEL_HELP_GAP } from "../ui/labelHelpGap";
 import { cardTitleRow } from "./homeLayout";
@@ -349,6 +350,12 @@ describe.each(keysOf(gameData.menuText.settings.installSteps))(
       ["the button glyph", glyph, card],
     ])("keeps %s inside its frame", (_, inner, outer) => {
       expect(inside(inner, outer)).toBe(true);
+    });
+
+    it("fits its full-size title beside the complete close target", () => {
+      expect(inkWidth("font-title", TWO_X, title.toUpperCase())).toBeLessThanOrEqual(
+        barTitleRoom(cardTitleRow(card), close),
+      );
     });
 
     it("starts the steps under the title row", () => {
