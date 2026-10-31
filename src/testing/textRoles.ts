@@ -607,7 +607,10 @@ export function textRoleCases(): TextRoleCase[] {
     ...plainRole(
       "celebration title",
       "font-display",
-      { room: CELEBRATION_LAYOUT.titleRoom, style: { scale: CELEBRATION_LAYOUT.titleScale } },
+      {
+        room: CELEBRATION_LAYOUT.titleRoom,
+        style: { lines: CELEBRATION_LAYOUT.titleLines, scale: CELEBRATION_LAYOUT.titleScale },
+      },
       [newWalker.title, zoneDone.title],
     ),
     ...plainRole(

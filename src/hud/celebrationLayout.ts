@@ -19,15 +19,13 @@ const CENTRE_X = SCREEN_WIDTH / 2;
 const SIDE = MODAL.margin;
 // The width the greeting and each info line keep to inside the bubble's rim.
 const BUBBLE_ROOM = SCREEN_WIDTH - 2 * SIDE - 2 * MODAL.pad;
-const TITLE_SCALE = 2;
+const TITLE_SCALE = 3;
 const WALKER_SCALE = 2;
 // A walker's frame at 1x: ROAD_SPRITE_SIZE wide and half again as tall.
 const WALKER_FRAME = { height: ROAD_SPRITE_SIZE * 1.5, width: ROAD_SPRITE_SIZE };
 // ui-celebrate-burst's width; its top sits BURST_DROP rows below the walker's frame top.
 const BURST_WIDTH = 148;
 const BURST_DROP = 6;
-// The big line's top over the small line's, so the big line's outline clears the small one's.
-const TITLE_OVER_SUBTITLE = 38;
 
 // The dim covers the walk view, the backdrop and road between the walk bar and the dog cards. The
 // celebration moves with the road, its rows set from the road's top row: each version's walker's
@@ -38,7 +36,7 @@ const ROAD_TOP = SCREEN_LAYOUT.roadView.y;
 const DIM = SCREEN_LAYOUT.walkView;
 // Confetti stops this many rows above the dim's bottom.
 const CONFETTI_FLOOR = 8;
-const NEW_WALKER_FEET = ROAD_TOP + 104;
+const NEW_WALKER_FEET = ROAD_TOP + 112;
 const BUBBLE_TOP = NEW_WALKER_FEET + MODAL.gap;
 const ZONE_DONE_FEET = ROAD_TOP + 148;
 const PLATE_TOP = ZONE_DONE_FEET + 10;
@@ -49,20 +47,15 @@ const BUTTON = WIDE_BUTTON;
 const EARNINGS_PLATE = { height: 32, width: BUTTON.width, x: BUTTON.x, y: PLATE_TOP };
 const EARNINGS_INSET = 8;
 
-// A version's headline from its feet line: the walker's frame at WALKER_SCALE, centred on
-// CENTRE_X, standing on feetY; the burst behind it; and the small line's top subtitleGap rows
-// above the walker's frame top, so the head clears it, with the big line above that.
-function headline(feetY: number, subtitleGap: number) {
+// The walker's frame stands on feetY with its celebration burst behind it.
+function headline(feetY: number) {
   const walker = {
     x: CENTRE_X - (WALKER_FRAME.width * WALKER_SCALE) / 2,
     y: feetY - WALKER_FRAME.height * WALKER_SCALE,
   };
-  const subtitleY = walker.y - subtitleGap;
   return {
     burst: { x: CENTRE_X - BURST_WIDTH / 2, y: walker.y + BURST_DROP },
     feetY,
-    subtitleY,
-    titleY: subtitleY - TITLE_OVER_SUBTITLE,
     walker,
   };
 }
@@ -87,7 +80,7 @@ export const CELEBRATION_LAYOUT = {
   // The burst's top-left; the walker, drawn at walkerScale, stands with its frame's bottom
   // centre on the feet line, its frame's top-left at walker.
   newWalker: {
-    ...headline(NEW_WALKER_FEET, 10),
+    ...headline(NEW_WALKER_FEET),
     bubble: { height: 127, width: SCREEN_WIDTH - SIDE * 2, x: SIDE, y: BUBBLE_TOP },
     button: { ...BUTTON, y: BUBBLE_TOP + 105 },
     // The walker's line, its first line's top at top, wrapped within maxWidth onto up to lines
@@ -110,16 +103,19 @@ export const CELEBRATION_LAYOUT = {
     tail: { x: 176, y: BUBBLE_TOP - 5 },
   },
   // A new walker's centre hops in from fromX, and fx-confetti bursts at burstY as they land.
-  runIn: { burstY: ROAD_TOP + 44, durationMs: 600, fromX: 400 },
-  // The big line is font-display at titleScale on one line, no wider than titleRoom. The small
-  // line is font-display-cream at 1x.
+  runIn: { burstY: ROAD_TOP + 52, durationMs: 600, fromX: 400 },
+  // Visible display ink: two fixed-size title rows and a reserved cream subtitle row.
+  subtitleInkTop: 146,
+  titleInkTop: 44,
+  titleLines: 2,
+  titlePitch: 50,
   titleRoom: SCREEN_WIDTH - SIDE * 2,
   titleScale: TITLE_SCALE,
   walkerScale: WALKER_SCALE,
   // The zone's earnings on one line at 2x, centred on a plate exactly the button's x and width,
   // keeping earningsInset inside its sides (ZONE_EARNINGS_FIT).
   zoneDone: {
-    ...headline(ZONE_DONE_FEET, 14),
+    ...headline(ZONE_DONE_FEET),
     button: { ...BUTTON, y: PLATE_TOP + 40 },
     earningsInset: EARNINGS_INSET,
     earningsY: PLATE_TOP + 7,

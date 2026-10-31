@@ -24,18 +24,17 @@ import { cardNumberForKey, isConfirmKey, isPauseKey, menuKeyActs } from "../inpu
 import { keyNumbersShown } from "../input/keyNumbers";
 import { exitShown } from "../pwa";
 import { PALETTE } from "../ui/palette";
-import { addDisplayText } from "../ui/phaser/displayText";
 import { fillRect } from "../ui/phaser/draw";
 import {
   addPixelText,
   fitPixelText,
   pixelFontMetrics,
-  scalePixelText,
   setPixelText,
   withProbe,
 } from "../ui/phaser/pixelText";
 import { addRampDim } from "../ui/phaser/rampDim";
 import { addConfetti } from "./badges";
+import { addCelebrationHeadline } from "./celebrationHeadline";
 import { modalTextWidth } from "./modalMeasure";
 import { closeOverlay, listenOutsideTap, type OverlayData } from "./overlay";
 import { currentSettings, walkerSpriteKey } from "./profileStore";
@@ -56,7 +55,6 @@ export interface ZoneCelebrationSceneData extends OverlayData {
 
 type NewWalkerText = Extract<CelebrationText, { kind: "newWalker" }>;
 type ZoneDoneText = Extract<CelebrationText, { kind: "zoneDone" }>;
-type Version = typeof LAYOUT.newWalker | typeof LAYOUT.zoneDone;
 
 // Places a label made with origin y 0 by the top of its font line.
 function atLineTop<T extends GameObjects.BitmapText>(label: T, top: number): T {
@@ -84,8 +82,8 @@ export class ZoneCelebrationScene extends Scene {
       this.dropConfetti();
     }
     const text = celebrationText(gameData, data.celebration);
-    const version: Version = text.kind === "zoneDone" ? LAYOUT.zoneDone : LAYOUT.newWalker;
-    this.addHeadline(version, text);
+    const version = text.kind === "zoneDone" ? LAYOUT.zoneDone : LAYOUT.newWalker;
+    addCelebrationHeadline(this, text);
     if (this.textures.exists(ART.burst)) {
       this.add.image(version.burst.x, version.burst.y, ART.burst).setOrigin(0);
     }
@@ -121,18 +119,6 @@ export class ZoneCelebrationScene extends Scene {
       return;
     }
     this.addButton(this.addBubble(text), text.button, finish);
-  }
-
-  // The title in font-display at 2x, and the subtitle in font-display-cream under it.
-  private addHeadline(version: Version, text: CelebrationText): void {
-    const { centreX, titleScale } = LAYOUT;
-    const title = { colour: PALETTE.yellow, font: "title", originX: 0.5 } as const;
-    // addDisplayText draws the display font at 1x, so the title is scaled after.
-    const big = addDisplayText(this, centreX, 0, text.title, title);
-    scalePixelText(big, titleScale, centreX, 0);
-    atLineTop(big, version.titleY);
-    const subtitle = { ...title, colour: PALETTE.cream, variant: "cream" } as const;
-    atLineTop(addDisplayText(this, centreX, 0, text.subtitle, subtitle), version.subtitleY);
   }
 
   // The walker's celebration at 2x, its frame's bottom centre on the feet line. Mr. B's welcome

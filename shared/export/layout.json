@@ -1323,31 +1323,29 @@
       "newWalker": {
         "burst": {
           "x": 106,
-          "y": 164
+          "y": 172
         },
-        "feetY": 302,
-        "subtitleY": 148,
-        "titleY": 110,
+        "feetY": 310,
         "walker": {
           "x": 132,
-          "y": 158
+          "y": 166
         },
         "bubble": {
           "height": 111,
           "width": 328,
           "x": 16,
-          "y": 310
+          "y": 318
         },
         "button": {
           "height": 44,
           "width": 116,
           "x": 122,
-          "y": 429
+          "y": 437
         },
         "greeting": {
           "lines": 2,
           "maxWidth": 296,
-          "top": 326
+          "top": 334
         },
         "info": {
           "iconDrop": 1,
@@ -1355,28 +1353,32 @@
           "itemGap": 10,
           "maxWidth": 296,
           "y": [
-            373,
-            391
+            381,
+            399
           ]
         },
         "rule": {
           "fromX": 32,
           "step": 3,
           "toX": 327,
-          "y": 368
+          "y": 376
         },
         "tail": {
           "x": 176,
-          "y": 305
+          "y": 313
         }
       },
       "runIn": {
-        "burstY": 242,
+        "burstY": 250,
         "durationMs": 600,
         "fromX": 400
       },
+      "subtitleInkTop": 146,
+      "titleInkTop": 44,
+      "titleLines": 2,
+      "titlePitch": 50,
       "titleRoom": 328,
-      "titleScale": 2,
+      "titleScale": 3,
       "walkerScale": 2,
       "zoneDone": {
         "burst": {
@@ -1384,8 +1386,6 @@
           "y": 208
         },
         "feetY": 346,
-        "subtitleY": 188,
-        "titleY": 150,
         "walker": {
           "x": 132,
           "y": 202

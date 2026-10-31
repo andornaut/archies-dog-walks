@@ -23,21 +23,6 @@ import {
 } from "./celebrationLayout";
 import { celebrationText } from "./zoneCelebration";
 
-// Each version's big line, in font-display at its scale (every title fits the title room:
-// ui/textRoles.test.ts).
-describe("the celebration's title", () => {
-  // The display font's capitals carry their outline and shadow in their rows.
-  it.each(["newWalker", "zoneDone"] as const)(
-    "keeps the %s title's outline 6 rows clear of the subtitle's",
-    (version) => {
-      const { capHeight, capTop } = fontFileMetrics("font-display");
-      const { subtitleY, titleY } = LAYOUT[version];
-      const titleBottom = titleY + (capTop + capHeight) * LAYOUT.titleScale;
-      expect(subtitleY + capTop - titleBottom).toBeGreaterThanOrEqual(6);
-    },
-  );
-});
-
 // Each walker's bubble, laid out from their greeting and info lines as the scene lays it out.
 describe("a new walker's bubble", () => {
   const body = fontFileMetrics("font-body");
