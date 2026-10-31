@@ -283,7 +283,6 @@ const PAIRS: readonly Pair[] = [
   ...confirmPairs,
   ...detailCardPairs,
   ...endPairs,
-  ...helpPairs,
   ...settingsPairs,
   ...shopPairs,
   ...wallPairs,
@@ -306,6 +305,17 @@ describe("a label over its help text", () => {
         expect(fontClearRows(pair)).toBeGreaterThanOrEqual(10);
       }
       expect(clearRows(pair)).toBeGreaterThanOrEqual(10);
+    },
+  );
+});
+
+// Help positions its body under the visible heading glyphs rather than reserving the font's
+// deepest possible descender, while keeping the same exact clear-row gap.
+describe("Help headings over their body text", () => {
+  it.each(helpPairs.map((pair) => [pair.label, pair] as const))(
+    "leaves %s exactly 10 clear rows under its actual ink",
+    (_label, pair) => {
+      expect(clearRows(pair)).toBe(10);
     },
   );
 });
