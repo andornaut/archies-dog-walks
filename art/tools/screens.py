@@ -14,7 +14,7 @@ screen-<name>: 360x560 backgrounds in the house palette, one per screen. Where p
 and text sit, they are low-contrast dark wood, so the cream and tan UI text
 reads on them.
 - screen-home: a compact, skyless Cabbagetown courtyard, drawn at native screen
-  coordinates (0,0). Rows 40 to 163 hold a continuous stone-capped masonry
+  coordinates (0,0). Rows 40 to 163 hold a continuous masonry
   wall, a complete recessed window at the exposed left, a low autumn planter,
   an open iron gate and quiet broad flagstones. No roofs, skyline or sky are
   cropped beneath the top bar. The centre stays quiet behind dialogue and the
@@ -449,11 +449,8 @@ def urn(cv, x, foot):
 
 
 def courtyard_wall(cv):
-    """A complete stone-capped wall with quiet courses and one recessed sash window."""
+    """A complete masonry wall with quiet courses and one recessed sash window."""
     cv.fill(0, 40, W, 57, "stone")
-    cv.fill(0, 40, W, 1, "dstone")
-    cv.fill(0, 41, W, 2, "driftwood")
-    cv.fill(0, 43, W, 2, "dstone")
     for y, joints in ((61, (49, 124, 201)), (82, (78, 162, 226))):
         cv.fill(0, y, 234, 1, "dstone")
         for x in joints:
