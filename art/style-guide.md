@@ -145,7 +145,7 @@ Names are `PALETTE` names in `src/ui/palette.ts`, or `K` names for the neutral g
 - A count ("0/40 earned", "1 of 5 owned") is right-aligned at its list's right text edge, with or without a heading beside it.
 - Display lettering, the yard sign's letters (yellow fill, 1px ink outline, solid dred shadow), is for big words only, never body text: zone names on `ui-zone-banner`, "WHICH WAY?", "FIRED!", "NEW BEST!", the end screen title and hit labels, in `font-display` (yellow) or `font-display-cream`, colours baked in, drawn untinted. In-art signs use the same letters at 1× with a 1px shadow. `ui-pet-shop`'s PET SHOP board is a button, not a sign: the letter shapes at 2× filled ink with no outline or shadow.
 - `font-comic` holds the comic words' letters, colours baked in, drawn untinted; each glyph's advance is its width plus 1, so the next ring lands on the 1px gap and merges.
-- The gate scene's street sign (300,72 54×11) holds `homeText.gateSign` in `font-body` at 1×, white, centred at 327,75, inside the 52px face. `ui-pet-shop`'s glint bob stays at 2px or less so the board stays clear of it.
+- The gate scene's street sign is a 68×12 plate at (286,40), with a 66×10 navy face at (287,41) and a 2×44 pole at (319,50). Its right edge is x = 354 and its bottom y = 52, clear of the Pet shop's minimum top at y = 52. Render the existing `homeText.gateSign` in capitals using white `font-title` (Silkscreen) at 1×, centred at (320,43); the native letter ink is 39×5. `ui-pet-shop`'s glint bob stays at 2px or less so the board stays clear of it.
 
 ### Interaction states
 
