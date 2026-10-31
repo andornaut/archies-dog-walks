@@ -178,6 +178,7 @@ Source contracts: [`interaction.ts`](../src/ui/interaction.ts), [`home.ts`](../s
 - Retain the existing keyboard bindings and default choices. In confirmations, key 1 keeps the walk going or keeps playing, as the rulebook defines; it must not become the destructive alternative. This does not turn choice-card key 1 into an automatic or default choice.
 - Essential labels hold 4.5:1 contrast, or 3:1 at 2× and larger; essential icons hold 3:1. Inactive controls retain their existing exemption. State also uses text, glyphs, shape or position.
 - Reduced motion preserves visible selection and readable static feedback while skipping movement. Sound is supplementary; it cannot be the sole action/state cue.
+- Physical-impact jolts follow the [run-screen feedback contract](style-guide.md#run-screen). Move only the rendered road/backdrop; keep HUD, borders, viewport masks, input targets and logical coordinates fixed. Reduced motion uses one static border/tint cue without displacement or repeated flashing.
 
 The game shell supplies an accessible game label and control instructions. Individual canvas buttons, tiles and switches do not currently expose native DOM roles, checked state, indeterminate state or per-control ARIA semantics. Keyboard support does not imply those capabilities are implemented.
 
