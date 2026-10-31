@@ -2150,7 +2150,7 @@ export class StartScene extends Scene {
       drawProgressBar(
         bar,
         GAME_PROGRESS_STYLE,
-        SCREEN_LAYOUT.zoneProgress,
+        HOME_LAYOUT.loadingProgress,
         waitingForWalk ? this.waitProgress : undefined,
       );
     }
@@ -2200,10 +2200,14 @@ export class StartScene extends Scene {
 
   // The keyboard's focus ring, outside any selection frame.
   private drawFocus(root: GameObjects.Container): void {
-    const rect = this.focused()?.rect;
-    if (rect === undefined) {
+    const focused = this.focused();
+    if (focused === undefined) {
       return;
     }
-    drawFocusRing(addGraphicsIn(this, root), FOCUS_OUTSET, rect);
+    const outset =
+      focused.target.kind === "start"
+        ? Math.min(FOCUS_OUTSET, HOME_LAYOUT.startFocusOutset)
+        : FOCUS_OUTSET;
+    drawFocusRing(addGraphicsIn(this, root), outset, focused.rect);
   }
 }

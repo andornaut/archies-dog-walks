@@ -9,7 +9,7 @@ import { describe, expect, it } from "vitest";
 
 import { ownerFaceKey } from "../assets/spriteKeys";
 import { gameData } from "../data";
-import { SCREEN_CONFIG } from "../data/screen";
+import { SCREEN_CONFIG, SCREEN_LAYOUT } from "../data/screen";
 import type { WalkerId } from "../data/types";
 import { ownerPhotoRect, WALK_BAR } from "../hud/walkHud";
 import { MIN_TAP_SIZE } from "../layout/screenLayout";
@@ -73,9 +73,10 @@ const rows = [
 ] as const;
 
 describe("home layout", () => {
-  it("keeps equal four-pixel outer gaps around the contiguous picker and Start stack", () => {
+  it("keeps six pixels above the contiguous picker and Start stack and two below", () => {
     const { gateBar, heroSectionGap, sectionGap, startGap } = HOME_LAYOUT;
-    expect(sections.walker.y - gateBar.y - gateBar.height).toBe(4);
+    expect(sections.walker.y - gateBar.y - gateBar.height).toBe(heroSectionGap);
+    expect(heroSectionGap).toBe(6);
     const stack = [sections.walker, sections.dogs, sections.pocket];
     for (let i = 1; i < stack.length; i += 1) {
       const above = stack[i - 1];
@@ -83,7 +84,28 @@ describe("home layout", () => {
       expect((below?.y ?? 0) - ((above?.y ?? 0) + (above?.height ?? 0))).toBe(sectionGap);
     }
     expect(startButton.y - sections.pocket.y - sections.pocket.height).toBe(startGap);
-    expect(SCREEN_CONFIG.height - startButton.y - startButton.height).toBe(heroSectionGap);
+    expect(SCREEN_CONFIG.height - startButton.y - startButton.height).toBe(2);
+    expect(
+      inside(insetRect(-HOME_LAYOUT.startFocusOutset, startButton), SCREEN_LAYOUT.screen),
+    ).toBe(true);
+  });
+
+  it("keeps full-size home pending progress clear of the divider, picker and Start target", () => {
+    const { gateBar, loadingProgress } = HOME_LAYOUT;
+    expect(loadingProgress.width).toBe(SCREEN_LAYOUT.zoneProgress.width);
+    expect(loadingProgress.height).toBe(SCREEN_LAYOUT.zoneProgress.height);
+    expect(loadingProgress.x).toBe(SCREEN_LAYOUT.zoneProgress.x);
+    const above = loadingProgress.y - gateBar.y - gateBar.height;
+    const below = sections.walker.y - loadingProgress.y - loadingProgress.height;
+    expect(above).toBe(1);
+    expect(below).toBe(above);
+    for (const rect of [
+      { ...gateBar, width: SCREEN_CONFIG.width, x: 0 },
+      ...Object.values(sections),
+      startButton,
+    ]) {
+      expect(rectsOverlap(loadingProgress, rect)).toBe(false);
+    }
   });
 
   it("centres card edges with balanced padding and keeps badge overhang clear of the frame", () => {

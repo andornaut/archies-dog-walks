@@ -5,7 +5,7 @@ import {
   inkRowsOfLines,
 } from "@andornaut/game-kit/text/bitmapFont";
 
-import { SCREEN_CONFIG } from "../data/screen";
+import { SCREEN_CONFIG, SCREEN_LAYOUT } from "../data/screen";
 import type { DogId } from "../data/types";
 import { ownerPhotoRect, WALK_BAR, WALK_BAR_BUTTONS } from "../hud/walkHud";
 import type { PackPlacement } from "../layout/packFormation";
@@ -32,7 +32,7 @@ import type { SectionId } from "./sections";
 // each side, except the top bar's buttons, 34 wide in the walk bar's columns; tiles side by
 // side are 8 apart.
 const GAP = 8;
-const HERO_SECTION_GAP = 4;
+const HERO_SECTION_GAP = 6;
 // The dismissible update notice uses the same card and compact control as other home modals.
 const UPDATE_PANEL = modalRect({ ...SCREEN_CONFIG, x: 0, y: 0 }, undefined, {
   height: MODAL.header + BUTTON_SIZE.compact.height + MODAL.pad,
@@ -51,7 +51,7 @@ const SECTION_EDGE = 1;
 const SECTION_GAP = 0;
 const TILE_OFFSET = 24;
 const TILE_TOP_REACH = FEEDBACK.liftPx + FEEDBACK.badgePopPx - MARK_OFFSET.y;
-const START_BUTTON: Rect = { ...BUTTON_SIZE.wide, x: 32, y: 512 };
+const START_BUTTON: Rect = { ...BUTTON_SIZE.wide, x: 32, y: 514 };
 const START_GAP = 2;
 const WALKER_TILES = { cellHeight: 44, cellWidth: 77, columns: 4, gapX: GAP, gapY: 0 } as const;
 const DOG_TILES = { cellHeight: 44, cellWidth: 105, columns: 3, gapX: GAP, gapY: 0 } as const;
@@ -178,6 +178,14 @@ export const HOME_LAYOUT = {
   gearBadge: { height: 18, width: 18, x: 194, y: 166 + HERO_OFFSET_Y },
   heroOffsetY: HERO_OFFSET_Y,
   heroSectionGap: HERO_SECTION_GAP,
+  // Pending progress fits in the clear band between the divider and picker.
+  loadingProgress: {
+    ...SCREEN_LAYOUT.zoneProgress,
+    y:
+      GATE_BAR.y +
+      GATE_BAR.height +
+      Math.floor((HERO_SECTION_GAP - SCREEN_LAYOUT.zoneProgress.height) / 2),
+  },
   path: { width: 32, x: 164 },
   // The Pet shop building on the yard's right lot, which opens the shop; its hit area is its
   // frame. board is its PET SHOP board, which the walker's bubble keeps clear of.
@@ -286,6 +294,7 @@ export const HOME_LAYOUT = {
     top: 6,
   },
   startButton: START_BUTTON,
+  startFocusOutset: SCREEN_CONFIG.height - START_BUTTON.y - START_BUTTON.height,
   startGap: START_GAP,
   // Start walk's label caps on its raised face; the label sinks with the face.
   startLabel: { readyY: 12, scale: 3 },
