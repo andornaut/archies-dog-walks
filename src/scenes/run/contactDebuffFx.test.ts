@@ -79,6 +79,7 @@ function fixture(duration = 1200) {
     destroy: vi.fn(),
     fillRect: vi.fn(),
     fillStyle: vi.fn(),
+    setScrollFactor: vi.fn().mockReturnThis(),
   };
   graphics.fillStyle.mockReturnValue(graphics);
   const timers: { callback: () => void; ms: number }[] = [];
@@ -167,6 +168,12 @@ describe("contact debuff ground cues", () => {
       expect(scene.time.delayedCall).not.toHaveBeenCalled();
     },
   );
+
+  it("keeps the road viewport mask fixed while its camera moves", () => {
+    const { graphics, scene } = fixture();
+    playContactDebuff(scene as unknown as Scene, context(), cue);
+    expect(graphics.setScrollFactor).toHaveBeenCalledWith(0);
+  });
 
   it.each(["completion", "shutdown", "destroy"] as const)(
     "cleans all ground copies, mask and listeners on %s",

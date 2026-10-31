@@ -7,16 +7,15 @@ import type { EncounterId, MinorLookId } from "../data/types";
 // obstacle's hit, a puddle's splash included. A squirrel is not a bump: touching it does
 // nothing. The flash is a border BUMP_FLASH.width pixels of the colour at the screen's edge,
 // with an ink keyline BUMP_FLASH.keyline wide just inside it so it reads over a backdrop of its
-// own colour, and a tint of the colour over the road, under the HUD's panels, that starts at
-// BUMP_FLASH.tintAlpha and fades out. The flash lasts BUMP_FLASH.ms, as long as an encounter's
-// edge flash. The nudge shakes the road's camera, the HUD's excepted, BUMP_FLASH.nudgePx for
-// BUMP_FLASH.nudgeMs. Reduced motion keeps the flash and drops the nudge.
+// own colour. Two on/off flashes share their timing with opposite diagonal road-camera jolts;
+// the road tint shows only with the border. Reduced motion keeps one static cue and no jolt.
 export const BUMP_FLASH = {
+  firstOffMs: 80,
   keyline: 1,
   ms: 280,
-  nudgeMs: 150,
-  nudgePx: 5,
-  tintAlpha: 0.25,
+  secondOffMs: 200,
+  secondOnMs: 120,
+  tintAlpha: 0.12,
   width: 5,
 } as const;
 
@@ -169,7 +168,92 @@ export function bumpFlash(still: boolean, source: BumpSource): BumpFlash {
     source.kind === "minor"
       ? MINOR_FLASH_COLOURS[source.look]
       : STRIP_BORDERS[encounterFlashColour(source.encounter)];
-  return { colour: name, nudge: !still };
+  const colour: BorderColour =
+    name === "amber" || name === "tan"
+      ? "yellow"
+      : name === "cream" || name === "lightGrey"
+        ? "white"
+        : name === "mauve"
+          ? "pink"
+          : name;
+  return { colour, nudge: !still };
+}
+
+export function bumpFlashOn(still: boolean, elapsed: number): boolean {
+  return (
+    elapsed >= 0 &&
+    elapsed < BUMP_FLASH.ms &&
+    (still ||
+      elapsed < BUMP_FLASH.firstOffMs ||
+      (elapsed >= BUMP_FLASH.secondOnMs && elapsed < BUMP_FLASH.secondOffMs))
+  );
+}
+
+// World displacement, opposite to camera scroll, rounded to native pixels during settling.
+export function bumpWorldOffset(elapsed: number): { x: number; y: number } {
+  let offset = 0;
+  if (elapsed >= 0 && elapsed < BUMP_FLASH.firstOffMs) {
+    offset = BUMP_FLASH.width;
+  } else if (elapsed >= BUMP_FLASH.secondOnMs && elapsed < BUMP_FLASH.secondOffMs) {
+    offset = -BUMP_FLASH.width;
+  } else if (elapsed >= BUMP_FLASH.secondOffMs && elapsed < BUMP_FLASH.ms) {
+    offset = Math.round(
+      (-BUMP_FLASH.width * (BUMP_FLASH.ms - elapsed)) / (BUMP_FLASH.ms - BUMP_FLASH.secondOffMs),
+    );
+  }
+  return { x: offset, y: offset };
+}
+
+// Render-only edge copies fill the camera's maximum displacement without moving the projection.
+export function bumpOverscan(kind: "backdrop" | "road", view: Rect) {
+  const pad = BUMP_FLASH.width;
+  const { height, width, x, y } = view;
+  return [
+    {
+      name: "left",
+      source: { height, width: 1, x: 0, y: 0 },
+      target: { height, width: pad, x: x - pad, y },
+    },
+    {
+      name: "right",
+      source: { height, width: 1, x: width - 1, y: 0 },
+      target: { height, width: pad, x: x + width, y },
+    },
+    {
+      name: "bottom",
+      source: { height: 1, width, x: 0, y: height - 1 },
+      target: { height: pad, width, x, y: y + height },
+    },
+    {
+      name: "bottom-left",
+      source: { height: 1, width: 1, x: 0, y: height - 1 },
+      target: { height: pad, width: pad, x: x - pad, y: y + height },
+    },
+    {
+      name: "bottom-right",
+      source: { height: 1, width: 1, x: width - 1, y: height - 1 },
+      target: { height: pad, width: pad, x: x + width, y: y + height },
+    },
+    ...(kind === "road"
+      ? []
+      : [
+          {
+            name: "top",
+            source: { height: 1, width, x: 0, y: 0 },
+            target: { height: pad, width, x, y: y - pad },
+          },
+          {
+            name: "top-left",
+            source: { height: 1, width: 1, x: 0, y: 0 },
+            target: { height: pad, width: pad, x: x - pad, y: y - pad },
+          },
+          {
+            name: "top-right",
+            source: { height: 1, width: 1, x: width - 1, y: 0 },
+            target: { height: pad, width: pad, x: x + width, y: y - pad },
+          },
+        ]),
+  ];
 }
 
 // The border round screen: the bump's colour band at its edge and the ink keyline inside it,

@@ -170,8 +170,7 @@ export class RunScene extends Scene implements HudRun {
   create(data: RunSceneData): void {
     this.resetState();
     ensureRoadPlaceholders(this);
-    // Ink under the walk, where a bump's nudge moves the road off the canvas's edge rows and the
-    // canvas's plum clear colour would show.
+    // Ink backs unavailable world art; loaded road and backdrop textures pad camera movement.
     this.cameras.main.setBackgroundColor(PALETTE.ink);
 
     const { resume, setup } = data;

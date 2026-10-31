@@ -120,6 +120,7 @@ import { listenOnePress } from "./onePress";
 import { BAR_MUTED_EVENT, onSceneEvent } from "./overlay";
 import { OwnerTabs } from "./ownerTabs";
 import { isMuted, markHintShown, profileSave, shownHints, toggleMuted } from "./profileStore";
+import { cancelRoadShake } from "./run/hitFx";
 import {
   ACHIEVEMENTS_EVENT,
   BUFF_GLINT_EVENT,
@@ -358,7 +359,10 @@ export class HudScene extends Scene {
     );
     onSceneEvent(this, run.events, FORGIVEN_EVENT, (cue: ForgivenCue) => this.forgive(cue));
     onSceneEvent(this, run.events, BUFF_GLINT_EVENT, (item: EffectItem) => this.glint(item));
-    onSceneEvent(this, run.events, BUMP_FLASH_EVENT, (colour: number) => border.flash(colour));
+    onSceneEvent(this, run.events, BUMP_FLASH_EVENT, (colour: number) => {
+      cancelRoadShake(run.events);
+      border.flash(run.reducedMotion(), colour);
+    });
     onSceneEvent(this, run.events, HINT_EVENT, (hint: RaisedHint) => this.sayHint(hint));
     onSceneEvent(this, run.events, MESSAGE_EVENT, (line: MessageLine) => this.messages.say(line));
     onSceneEvent(this, run.events, QUIPS_EVENT, (quips: OwnerQuip[]) => this.sayQuips(quips));

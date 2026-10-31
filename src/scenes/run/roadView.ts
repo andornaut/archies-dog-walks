@@ -18,6 +18,7 @@ import {
 import { previousZone } from "../../rules/route";
 import type { Walk } from "../../runner/walk";
 import { colourFromHex } from "../../ui/palette";
+import { BumpOverscan } from "./bumpOverscan";
 import { DEPTH, LAYOUT, PROJECTION } from "./stage";
 
 const ROAD_TEXTURE = "road-projected";
@@ -120,6 +121,11 @@ export class RoadView {
     const image = () => scene.add.image(road.x, road.y, textureKey).setOrigin(0);
     image().setCrop(0, raster.approachRows, road.width, near).setDepth(DEPTH.road);
     image().setCrop(0, 0, road.width, raster.approachRows).setDepth(DEPTH.approach);
+    if (scene.textures.exists(textureKey)) {
+      new BumpOverscan(scene, { depth: DEPTH.approach, kind: "road", view: road }).setTexture(
+        textureKey,
+      );
+    }
   }
 
   // The zone's road strip and verge, projected row by row; at a zone's start, its start strip

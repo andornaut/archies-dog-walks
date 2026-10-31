@@ -37,7 +37,7 @@ export function playContactDebuff(
       .setScale(DEBUFF_GROUND.scale);
   });
   const group = scene.add.container(0, 0, bursts).setDepth(context.depth);
-  const graphics = scene.make.graphics({}, false);
+  const graphics = scene.make.graphics({}, false).setScrollFactor(0);
   const { view } = context;
   graphics.fillStyle(0xffffff).fillRect(view.x, view.y, view.width, view.height);
   const mask = graphics.createGeometryMask();

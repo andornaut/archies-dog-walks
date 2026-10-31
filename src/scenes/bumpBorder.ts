@@ -1,44 +1,61 @@
-import type { GameObjects, Scene, Time, Tweens } from "phaser";
+import type { GameObjects, Scene } from "phaser";
 
 import { SCREEN_CONFIG } from "../data/screen";
-import { BUMP_FLASH, bumpBorder } from "../layout/bumpFlash";
+import { BUMP_FLASH, bumpBorder, bumpFlashOn } from "../layout/bumpFlash";
 import { PALETTE } from "../ui/palette";
 import { fillRect } from "../ui/phaser/draw";
 import { HUD_DEPTH } from "./hudDepth";
 
 const SCREEN = { height: SCREEN_CONFIG.height, width: SCREEN_CONFIG.width, x: 0, y: 0 };
 
-// A bump's flash, drawn by the HUD so the road's nudge leaves it still: a border round the
-// whole screen over the HUD's parts, the bump's colour at the edge and the ink keyline inside
-// it, for BUMP_FLASH.ms, and a tint of the bump's colour over the whole screen under the HUD's
-// parts, from BUMP_FLASH.tintAlpha down to none over the same time. A newer bump redraws both
-// in its colour and restarts their time.
+// HUD coordinates keep the border and tint still while the road camera jolts.
 export class BumpBorder {
-  private fade: Tweens.Tween | undefined;
+  private colour = 0;
   private readonly graphics: GameObjects.Graphics;
   private readonly scene: Scene;
+  private started = 0;
+  private still = false;
   private readonly tint: GameObjects.Graphics;
-  private timer: Time.TimerEvent | undefined;
 
   constructor(scene: Scene) {
     this.scene = scene;
     this.graphics = scene.add.graphics().setDepth(HUD_DEPTH.bumpBorder);
-    this.tint = scene.add.graphics().setDepth(HUD_DEPTH.bumpTint);
+    this.tint = scene.add.graphics().setDepth(HUD_DEPTH.bumpTint).setAlpha(BUMP_FLASH.tintAlpha);
+    scene.events.once("shutdown", () => this.cancel());
   }
 
-  flash(colour: number): void {
-    const { band, keyline } = bumpBorder(SCREEN);
-    const g = this.graphics.clear();
-    band.forEach((rect) => fillRect(g, colour, rect));
-    keyline.forEach((rect) => fillRect(g, PALETTE.ink, rect));
-    this.timer?.remove();
-    this.timer = this.scene.time.delayedCall(BUMP_FLASH.ms, () => g.clear());
-    fillRect(this.tint.clear(), colour, SCREEN);
-    this.fade?.remove();
-    this.fade = this.scene.tweens.add({
-      alpha: { from: BUMP_FLASH.tintAlpha, to: 0 },
-      duration: BUMP_FLASH.ms,
-      targets: this.tint,
-    });
+  flash(still: boolean, colour: number): void {
+    this.cancel();
+    this.colour = colour;
+    this.started = this.scene.game.loop.time;
+    this.still = still;
+    this.scene.events.on("postupdate", this.draw);
+    this.draw();
   }
+
+  cancel(): void {
+    this.scene.events.off("postupdate", this.draw);
+    if (this.graphics.active) {
+      this.graphics.clear();
+    }
+    if (this.tint.active) {
+      this.tint.clear();
+    }
+  }
+
+  private readonly draw = () => {
+    const elapsed = this.scene.game.loop.time - this.started;
+    if (elapsed >= BUMP_FLASH.ms) {
+      this.cancel();
+      return;
+    }
+    const g = this.graphics.clear();
+    const tint = this.tint.clear();
+    if (bumpFlashOn(this.still, elapsed)) {
+      const { band, keyline } = bumpBorder(SCREEN);
+      band.forEach((rect) => fillRect(g, this.colour, rect));
+      keyline.forEach((rect) => fillRect(g, PALETTE.ink, rect));
+      fillRect(tint, this.colour, SCREEN);
+    }
+  };
 }

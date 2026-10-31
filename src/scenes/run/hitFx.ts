@@ -1,6 +1,6 @@
-import { type GameObjects, Math as PhaserMath, type Scene, TintModes } from "phaser";
+import { type GameObjects, type Scene, TintModes } from "phaser";
 
-import { BUMP_FLASH } from "../../layout/bumpFlash";
+import { BUMP_FLASH, bumpWorldOffset } from "../../layout/bumpFlash";
 import { type FlashCue, HIT_ART, type HitEffect, type MotionStep } from "../../layout/hitEffects";
 import { playEffect } from "../sprites";
 import { tagFrame } from "../uiKit";
@@ -65,12 +65,43 @@ export function moveObstacle(scene: Scene, body: StruckBody, steps: readonly Mot
   }
 }
 
-// Shakes the scene's camera by a bump's nudge; another scene's camera, the HUD's, keeps still.
+const roadJolts = new WeakMap<Scene["events"], () => void>();
+
+export function cancelRoadShake(events: Scene["events"]): void {
+  roadJolts.get(events)?.();
+}
+
+// Only this scene's camera moves. A new hit resets the previous offset before restarting.
 export function shakeRoad(scene: Scene): void {
+  cancelRoadShake(scene.events);
   const camera = scene.cameras.main;
-  const intensity = new PhaserMath.Vector2(
-    BUMP_FLASH.nudgePx / camera.width,
-    BUMP_FLASH.nudgePx / camera.height,
-  );
-  camera.shake(BUMP_FLASH.nudgeMs, intensity);
+  const base = { x: camera.scrollX, y: camera.scrollY };
+  const started = scene.game.loop.time;
+  let active = true;
+  const stop = () => {
+    if (!active) {
+      return;
+    }
+    active = false;
+    camera.setScroll(base.x, base.y);
+    scene.events.off("postupdate", place);
+    scene.events.off("shutdown", stop);
+    roadJolts.delete(scene.events);
+  };
+  const place = () => {
+    if (!active) {
+      return;
+    }
+    const elapsed = scene.game.loop.time - started;
+    if (elapsed >= BUMP_FLASH.ms) {
+      stop();
+      return;
+    }
+    const offset = bumpWorldOffset(elapsed);
+    camera.setScroll(base.x - offset.x, base.y - offset.y);
+  };
+  roadJolts.set(scene.events, stop);
+  scene.events.on("postupdate", place);
+  scene.events.once("shutdown", stop);
+  place();
 }

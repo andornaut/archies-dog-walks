@@ -1,11 +1,18 @@
 import { keysOf } from "@andornaut/game-kit/records";
-import type { Rect } from "@andornaut/game-kit/rect";
+import { containsPoint, type Rect, rectsOverlap } from "@andornaut/game-kit/rect";
 import { describe, expect, it } from "vitest";
 
 import { gameData } from "../data";
 import { SCREEN_CONFIG } from "../data/screen";
 import { minorLook } from "../runner/obstacleLooks";
-import { BUMP_FLASH, bumpBorder, bumpFlash, type BumpSource, FLASH_COLOURS } from "./bumpFlash";
+import {
+  BUMP_FLASH,
+  bumpBorder,
+  bumpFlash,
+  bumpOverscan,
+  type BumpSource,
+  FLASH_COLOURS,
+} from "./bumpFlash";
 
 const MINOR_OBSTACLES = keysOf(gameData.minorObstacles);
 // Every encounter a pack bumps into: an obstacle that opens a card or applies on contact, not a
@@ -30,11 +37,55 @@ const SCREEN: Rect = { height: SCREEN_CONFIG.height, width: SCREEN_CONFIG.width,
 
 // The minor obstacles' table is typed over every kind; the encounters' is partial.
 describe("bump flash colours", () => {
+  it("promotes muted border families while retaining vivid semantic colours", () => {
+    const looks = [
+      "barrelStack",
+      "tourist",
+      "ironFence2",
+      "clothingRack",
+      "taxi",
+      "car",
+      "ball",
+    ] as const;
+    expect(looks.map((look) => bumpFlash(false, { kind: "minor", look }).colour)).toEqual([
+      "yellow",
+      "white",
+      "white",
+      "pink",
+      "yellow",
+      "cyan",
+      "red",
+    ]);
+    expect(bumpFlash(false, { encounter: "cheeseCrates", kind: "encounter" }).colour).toBe(
+      "yellow",
+    );
+  });
   it("gives every bumped encounter a flash colour", () => {
     expect(BUMPED_ENCOUNTERS.filter((encounter) => FLASH_COLOURS[encounter] === undefined)).toEqual(
       [],
     );
   });
+});
+
+it("pads the backdrop and road edges by the jolt reach without covering native content or the road junction", () => {
+  const view = { height: 158, width: 360, x: 0, y: 40 };
+  const backdrop = bumpOverscan("backdrop", view);
+  for (const { source, target } of backdrop) {
+    expect(rectsOverlap(target, view)).toBe(false);
+    expect(source.x).toBeGreaterThanOrEqual(0);
+    expect(source.y).toBeGreaterThanOrEqual(0);
+    expect(source.x + source.width).toBeLessThanOrEqual(view.width);
+    expect(source.y + source.height).toBeLessThanOrEqual(view.height);
+  }
+  for (const point of [
+    { x: -5, y: 35 },
+    { x: 364, y: 35 },
+    { x: -5, y: 202 },
+    { x: 364, y: 202 },
+  ]) {
+    expect(backdrop.some(({ target }) => containsPoint(target, point.x, point.y))).toBe(true);
+  }
+  expect(bumpOverscan("road", view).every(({ target }) => target.y >= view.y)).toBe(true);
 });
 
 describe("bump flash with and without reduced motion", () => {
