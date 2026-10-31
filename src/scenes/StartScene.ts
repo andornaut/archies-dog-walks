@@ -123,6 +123,7 @@ import {
   stopWakeLock,
   updatePlateShown,
 } from "../pwa";
+import { offlineProgress } from "../pwa/offlineProgress";
 import { walkerOrder } from "../rules/walkers";
 import type { SaveDocument } from "../save/schema";
 import { walksFinished, walksPlayed } from "../save/stats";
@@ -432,6 +433,7 @@ export class StartScene extends Scene {
   private entry: object | undefined;
   private waitBar: GameObjects.Graphics | undefined;
   private waitProgress: ProgressValue;
+  private offlinePending = false;
   // Whether the top bar shows Exit (exitShown).
   private exit = true;
   private focus: Focus | null = null;
@@ -483,17 +485,14 @@ export class StartScene extends Scene {
     this.waitBar = undefined;
     const stopProgress = walkArtProgress.subscribe(({ active, value }) => {
       this.waitProgress = active ? value : undefined;
-      if (this.waitBar !== undefined) {
-        this.waitBar.clear();
-        drawProgressBar(
-          this.waitBar,
-          GAME_PROGRESS_STYLE,
-          SCREEN_LAYOUT.zoneProgress,
-          this.waitProgress,
-        );
-      }
+      this.drawLoadingProgress();
     });
     this.events.once("shutdown", stopProgress);
+    const stopOfflineProgress = offlineProgress.subscribe(({ active }) => {
+      this.offlinePending = active;
+      this.drawLoadingProgress();
+    });
+    this.events.once("shutdown", stopOfflineProgress);
     this.exit = exitShown();
     this.focus = null;
     this.hold = undefined;
@@ -2139,22 +2138,33 @@ export class StartScene extends Scene {
     });
   }
 
+  private drawLoadingProgress(): void {
+    const bar = this.waitBar;
+    if (bar === undefined) {
+      return;
+    }
+    const waitingForWalk = this.artWait?.kind === "start";
+    const shown = waitingForWalk || this.offlinePending;
+    bar.setVisible(shown).clear();
+    if (shown) {
+      drawProgressBar(
+        bar,
+        GAME_PROGRESS_STYLE,
+        SCREEN_LAYOUT.zoneProgress,
+        waitingForWalk ? this.waitProgress : undefined,
+      );
+    }
+  }
+
   // Start walk keeps its words and place in every state but one. Ready, it is primary: the
   // raised green go button, sinking into its lip when pressed, drawn twice, raised and pressed,
   // and the frame shows one. Not ready, it is disabled: a flat sunk face that never moves, under
   // both labels. The faces are the ui-button's, and the label sinks with the face.
   // Pressed while the walk's art loads, its pressed face says so, in words that keep still.
   private drawStartButton(root: GameObjects.Container, ready: boolean): void {
-    if (this.artWait?.kind === "start") {
-      this.waitBar = this.add.graphics();
-      root.add(this.waitBar);
-      drawProgressBar(
-        this.waitBar,
-        GAME_PROGRESS_STYLE,
-        SCREEN_LAYOUT.zoneProgress,
-        this.waitProgress,
-      );
-    }
+    this.waitBar = this.add.graphics();
+    root.add(this.waitBar);
+    this.drawLoadingProgress();
     const { width, x, y } = START_BUTTON;
     const container = this.add.container(0, 0);
     root.add(container);

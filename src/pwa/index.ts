@@ -34,6 +34,7 @@ import type { FrameTurn } from "@andornaut/game-kit/view/pagePoint";
 import { chooseSoundFormat, type SoundFormat } from "../audio/soundFormat";
 import { dispatchPhoneEvent, PHONE_EVENTS } from "./events";
 import { createInstallNudge, type InstallNudge } from "./installNudge";
+import { reportOfflineActivity } from "./offlineProgress";
 
 export { AUDIO_UNLOCK_EVENTS, unlockAudioOnFirstGesture } from "./audioUnlock";
 export { PHONE_EVENTS } from "./events";
@@ -88,6 +89,7 @@ function registerServiceWorker(): void {
   const play = startOfflinePlay(
     {
       bootWaitMs: BOOT_WAIT_MS,
+      onOfflineActivity: reportOfflineActivity,
       onUpdateShown: (shown) => {
         updateShown = shown;
         dispatchPhoneEvent(window, PHONE_EVENTS.updatePlate);
