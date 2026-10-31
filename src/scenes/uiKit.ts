@@ -43,7 +43,8 @@ import {
 } from "../ui/selection";
 import { TEXT_SCALE } from "../ui/textFit";
 import { TAP_BURST_SCENE_KEY } from "./sceneKeys";
-import { firstTag, playEffect, playTag } from "./sprites";
+import { addSelectionOrbit } from "./selectionOrbit";
+import { playEffect, playTag } from "./sprites";
 import { listenTargetPress } from "./targetPress";
 
 // Body text at 2x in plum, the screens' default text.
@@ -550,16 +551,29 @@ export function addSelectFrame(
   outset = SELECT_OUTSET,
 ): void {
   const outer = selectOuter(rect, outset);
-  addLoopingFrame(scene, parent, { key: "ui-select", outer, tag: "pulse" }, reducedMotion, (g) => {
-    drawRing(g, PALETTE.ink, outer, 1);
-    drawRing(g, PALETTE.amber, insetRect(1, outer), 2);
-    if (outset >= SELECT_OUTSET) {
-      drawRing(g, PALETTE.ink, rect, 1);
+  const g = scene.add.graphics();
+  drawStaticRing(g, outer);
+  drawRing(g, PALETTE.amber, insetRect(1, outer), 2);
+  drawRing(g, PALETTE.ink, insetRect(3, outer), 1);
+  for (const y of [outer.y + 1, outer.y + outer.height - 2]) {
+    for (const x of [outer.x + 1, outer.x + outer.width - 2]) {
+      fillRect(g, PALETTE.ink, { height: 1, width: 1, x, y });
     }
-  });
+  }
+  parent.add(g);
+  addSelectionOrbit(scene, parent, outer, "frame", reducedMotion);
 }
 
-// The shop's focus outline uses its own asset; selected tabs and cards keep ui-select.
+function drawStaticRing(g: GameObjects.Graphics, outer: Rect): void {
+  for (const y of [outer.y, outer.y + outer.height - 1]) {
+    fillRect(g, PALETTE.ink, { height: 1, width: outer.width - 2, x: outer.x + 1, y });
+  }
+  for (const x of [outer.x, outer.x + outer.width - 1]) {
+    fillRect(g, PALETTE.ink, { height: outer.height - 2, width: 1, x, y: outer.y + 1 });
+  }
+}
+
+// Shop focus retains its cyan band and ink keylines, separate from gold ownership selection.
 export function addShopFocusFrame(
   scene: Scene,
   parent: GameObjects.Container,
@@ -567,30 +581,12 @@ export function addShopFocusFrame(
   reducedMotion: boolean,
 ): void {
   const outer = selectOuter(rect);
-  addLoopingFrame(
-    scene,
-    parent,
-    { key: "ui-shop-focus", outer, tag: "pulse" },
-    reducedMotion,
-    (g) => {
-      const band = 3;
-      const corner = 12;
-      const pulse = insetRect(1, outer);
-      drawRing(g, PALETTE.ink, outer, 1);
-      drawRing(g, PALETTE.cyan, pulse, band);
-      drawRing(g, PALETTE.ink, insetRect(1 + band, outer), 1);
-      for (const y of [pulse.y, pulse.y + pulse.height - band]) {
-        for (const x of [pulse.x, pulse.x + pulse.width - corner]) {
-          fillRect(g, PALETTE.cream, { height: band, width: corner, x, y });
-        }
-      }
-      for (const y of [pulse.y, pulse.y + pulse.height - corner]) {
-        for (const x of [pulse.x, pulse.x + pulse.width - band]) {
-          fillRect(g, PALETTE.cream, { height: corner, width: band, x, y });
-        }
-      }
-    },
-  );
+  const g = scene.add.graphics();
+  drawStaticRing(g, outer);
+  drawRing(g, PALETTE.cyan, insetRect(1, outer), 3);
+  drawRing(g, PALETTE.ink, insetRect(4, outer), 1);
+  parent.add(g);
+  addSelectionOrbit(scene, parent, outer, "shop", reducedMotion);
 }
 
 // The ui-check mark at rect's top-left corner: tag is its art's tag, such as "tick". While the
@@ -622,7 +618,7 @@ function addSelectMark(
 export interface SelectTile {
   // Moves for the lift and any dip or shake; holds the face, content, frame and mark.
   container: GameObjects.Container;
-  // Where the caller adds the item's text and pictures: above the face, under the frame.
+  // The caller's text and pictures draw above the face and travelling border.
   content: GameObjects.Container;
   // The container's resting y: lifted when selected.
   lift: number;
@@ -641,7 +637,7 @@ export interface SelectTileOptions {
   reducedMotion: boolean;
   state: TileState;
   // A walker, dog or gear tile, drawn with ui-tile; other controls such as tabs draw their
-  // face in code, inside ui-select when selected.
+  // face in code, inside the static gold selection frame when selected.
   tile: boolean;
 }
 
@@ -654,35 +650,8 @@ function drawTileFace(scene: Scene, edge: boolean, look: SelectLook, rect: Rect)
   return g;
 }
 
-// Selected tile faces change UVs only, keeping their nine-slice size and origin intact.
-function animateTileFace(
-  scene: Scene,
-  tag: string,
-  reducedMotion: boolean,
-  face: GameObjects.NineSlice,
-): void {
-  const frames = scene.anims.get(animationKey("ui-tile", tag))?.frames ?? [];
-  if (reducedMotion || frames.length < 2) {
-    return;
-  }
-  const durations = frames.map(({ duration }) => duration);
-  let shown = 0;
-  const show = () => {
-    const index = loopFrame(false, durations, scene.time.now);
-    const frame = frames[index]?.textureFrame;
-    if (index !== shown && frame !== undefined) {
-      face.setFrame(frame, false, false);
-      face.updateUVs();
-      shown = index;
-    }
-  };
-  show();
-  scene.events.on("update", show);
-  face.once("destroy", () => scene.events.off("update", show));
-}
-
 // A tappable item in its interaction state. Selected, it has the gold face and any ui-check
-// mark and is lifted 2px onto a plum shadow; a face drawn in code adds the ui-select frame.
+// mark and is lifted 2px onto a plum shadow; a face drawn in code adds a gold selection frame.
 // Normal, its face is cream. Disabled, it is flat grey and never lifts. The caller draws its
 // pictures through tileTextureKey or addTileSprite in its look's art. The shadow goes in
 // parent so it stays put under the lift.
@@ -695,12 +664,8 @@ export function addSelectTile(
   const { edge, mark, outset, reducedMotion, state, tile: isTile } = options;
   const look = selectLook(state);
   const selected = state === "selected";
-  const tag =
-    isTile && selected ? firstTag(scene, "ui-tile", ["selected", "selected-static"]) : state;
+  const tag = selected ? "selected-static" : state;
   const art = isTile && tag !== undefined ? addNineSlice(scene, "ui-tile", rect, tag) : undefined;
-  if (selected && art !== undefined && tag !== undefined) {
-    animateTileFace(scene, tag, reducedMotion, art);
-  }
   const framed = selected && art === undefined;
   if (selected) {
     const outer = framed ? selectOuter(rect, outset) : rect;
@@ -718,11 +683,14 @@ export function addSelectTile(
   parent.add(container);
   const face = art ?? drawTileFace(scene, edge, look, rect);
   const content = scene.add.container(0, 0);
-  container.add([face, content]);
+  container.add(face);
   const tile: SelectTile = { container, content, lift, look };
   if (framed) {
     addSelectFrame(scene, container, rect, reducedMotion, outset);
+  } else if (selected) {
+    addSelectionOrbit(scene, container, rect, "tile", reducedMotion);
   }
+  container.add(content);
   if (selected) {
     const image = mark === undefined ? undefined : addSelectMark(scene, container, rect, mark);
     if (image !== undefined) {

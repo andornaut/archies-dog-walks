@@ -137,18 +137,29 @@ function tileScene(animated: boolean, reducedMotion: boolean) {
     ...(animated ? [["ui-tile:selected", { frames }] as const] : []),
   ]);
   let destroy: (() => void) | undefined;
+  const graphics: { destroy: () => void }[] = [];
   let face: { frame: { name: string }; height: number; width: number } | undefined;
   const time = { now: 0 };
   const container = () => ({ add: () => undefined });
   const scene = {
     add: {
       container,
-      graphics: () => ({
-        fillRect: () => undefined,
-        fillStyle() {
-          return this;
-        },
-      }),
+      graphics: () => {
+        let dispose: (() => void) | undefined;
+        const g = {
+          clear: () => undefined,
+          destroy: () => dispose?.(),
+          fillRect: () => undefined,
+          fillStyle() {
+            return this;
+          },
+          once(_event: string, callback: () => void) {
+            dispose = callback;
+          },
+        };
+        graphics.push(g);
+        return g;
+      },
       nineslice(
         _x: number,
         _y: number,
@@ -187,6 +198,7 @@ function tileScene(animated: boolean, reducedMotion: boolean) {
     events: {
       off: (_event: string, callback: () => void) => update.delete(callback),
       on: (_event: string, callback: () => void) => update.add(callback),
+      once: () => undefined,
     },
     textures: { exists: () => true },
     time,
@@ -198,37 +210,32 @@ function tileScene(animated: boolean, reducedMotion: boolean) {
     state: "selected",
     tile: true,
   });
-  return { destroy: () => destroy?.(), face: () => face, time, update };
+  return {
+    destroy: () => {
+      destroy?.();
+      graphics.forEach((g) => g.destroy());
+    },
+    face: () => face,
+    time,
+    update,
+  };
 }
 
 describe("selected tile faces", () => {
-  it("uses tag timing without resizing the tile and unregisters when destroyed", () => {
-    const shown = tileScene(true, false);
-    expect(shown.face()?.frame.name).toBe("selected-first");
-    shown.time.now = 130;
-    shown.update.forEach((callback) => callback());
-    expect(shown.face()).toMatchObject({
-      frame: { name: "selected-second" },
-      height: 44,
-      width: 77,
-    });
-    shown.time.now = 200;
-    shown.update.forEach((callback) => callback());
-    expect(shown.face()?.frame.name).toBe("selected-first");
-    shown.destroy();
-    expect(shown.update.size).toBe(0);
-  });
-
-  it.each([
-    [true, true, "selected-first"],
-    [false, false, "legacy-selected"],
-  ] as const)(
-    "holds a safe first frame with animation=%s and reducedMotion=%s",
-    (animated, reduced, frame) => {
-      const shown = tileScene(animated, reduced);
+  it.each([true, false])(
+    "keeps the static base and existing geometry with reducedMotion=%s",
+    (reduced) => {
+      const shown = tileScene(true, reduced);
+      expect(shown.face()?.frame.name).toBe("legacy-selected");
       shown.time.now = 130;
       shown.update.forEach((callback) => callback());
-      expect(shown.face()?.frame.name).toBe(frame);
+      expect(shown.face()).toMatchObject({
+        frame: { name: "legacy-selected" },
+        height: 44,
+        width: 77,
+      });
+      expect(shown.update.size).toBe(reduced ? 0 : 1);
+      shown.destroy();
       expect(shown.update.size).toBe(0);
     },
   );
