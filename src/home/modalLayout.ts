@@ -1,9 +1,12 @@
+import { wrapWords } from "@andornaut/game-kit/lines";
 import { modalWidth } from "@andornaut/game-kit/modalLayout";
 import { insetRect, type Rect, rectAboveIn, rectsOverlap } from "@andornaut/game-kit/rect";
+import type { FontMetrics } from "@andornaut/game-kit/text/bitmapFont";
 
 import { SCREEN_CONFIG } from "../data/screen";
 import { BUTTON_SIZE } from "../ui/buttonGeometry";
 import { MODAL } from "../ui/modalGeometry";
+import { TEXT_SCALE } from "../ui/textFit";
 
 export { MODAL };
 
@@ -57,6 +60,24 @@ export function modalActionWidth(ink: number): number {
   return Math.max(BUTTON_SIZE.icon.target, Math.ceil(ink + 2 * MODAL.pad));
 }
 
-export function modalTitleWidth(ink: number): number {
-  return Math.ceil(ink + BUTTON_SIZE.icon.target + MODAL.gap + MODAL.pad);
+export function modalTitleWidth(ink: number, closes = true): number {
+  if (ink <= 0) {
+    return 0;
+  }
+  const inset = closes ? BUTTON_SIZE.icon.target + MODAL.gap : MODAL.pad;
+  return Math.ceil(ink + 2 * inset);
+}
+
+// Wrap measured full-size title ink, retaining the single-line header's existing spacing.
+export function modalTitleLayout(
+  context: { font: FontMetrics; widthOf: (value: string) => number },
+  room: number,
+  title: string,
+) {
+  const lines = wrapWords(context.widthOf, room, title);
+  if (lines.some((line) => context.widthOf(line) > room)) {
+    throw new RangeError("Modal title word exceeds its full-size ink room");
+  }
+  const linePitch = context.font.lineHeight * TEXT_SCALE;
+  return { extraHeight: Math.max(0, lines.length - 1) * linePitch, linePitch, lines };
 }

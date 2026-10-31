@@ -14,7 +14,7 @@ import {
 } from "../home/homeLayout";
 import { MODAL, modalPanelWidth, modalRect, modalTitleWidth } from "../home/modalLayout";
 import { withNamePills } from "../hud/effectNames";
-import { barTitleLeft } from "../ui/barTitle";
+import { barTitleLeft, barTitleRoom } from "../ui/barTitle";
 import { type CloseControl, closeControl } from "../ui/closeControl";
 import { PALETTE } from "../ui/palette";
 import { addDim, drawFramedRect, drawRing } from "../ui/phaser/draw";
@@ -28,7 +28,7 @@ import {
 import { AFFORD_OUTSET } from "../ui/selection";
 import { TEXT_SCALE } from "../ui/textFit";
 import { addNamePills } from "./effectNameColours";
-import { modalTextWidth } from "./modalMeasure";
+import { measureModalTitle, modalTextWidth } from "./modalMeasure";
 import { playFirstTag } from "./sprites";
 import {
   addBodyText,
@@ -100,22 +100,22 @@ export function addModalCard(
 }
 
 // A modal card's title, on any card's background: plum 2x title text, its capitals at capTop,
-// the ink centred where barTitleLeft puts it on the card's title row: beside the close control
-// on a card that closes, else across the card.
+// each line's ink centred across the card with symmetric clearance for its close target.
 export function addCardTitle(
   scene: Scene,
   card: Rect,
   title: string,
   closes: boolean,
   capTop: number,
-): GameObjects.BitmapText {
-  return titleOnRow(
-    scene,
-    cardTitleRow(card),
-    closes ? closeControl(card) : undefined,
-    title,
-    capTop,
+): GameObjects.Container {
+  const row = cardTitleRow(card);
+  const close = closes ? closeControl(card) : undefined;
+  const { linePitch, lines } = measureModalTitle(scene, barTitleRoom(row, close), title);
+  const labels = scene.add.container(0, 0);
+  lines.forEach((line, i) =>
+    labels.add(titleOnRow(scene, row, close, line, capTop + i * linePitch)),
   );
+  return labels;
 }
 
 function titleOnRow(

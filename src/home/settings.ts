@@ -287,9 +287,10 @@ export interface InstallStepsLayout {
 export function installStepsLayout(
   screen: { height: number; width: number },
   lines: number,
-  ink?: { steps: number; title: number },
+  ink?: { steps: number; title: number; titleExtraHeight?: number },
 ): InstallStepsLayout {
-  const height = ROWS_TOP + lines * INSTALL_STEPS.linePitch + INSTALL_STEPS.foot;
+  const titleExtraHeight = ink?.titleExtraHeight ?? 0;
+  const height = ROWS_TOP + titleExtraHeight + lines * INSTALL_STEPS.linePitch + INSTALL_STEPS.foot;
   const width = modalPanelWidth(
     screen.width - 2 * MODAL.margin,
     ink === undefined
@@ -301,7 +302,7 @@ export function installStepsLayout(
   );
   const card = modalRect({ ...screen, x: 0, y: 0 }, undefined, { height, width });
   const { icon, pad, stepsDy } = INSTALL_STEPS;
-  const stepsY = card.y + ROWS_TOP + stepsDy;
+  const stepsY = card.y + ROWS_TOP + titleExtraHeight + stepsDy;
   return {
     card,
     close: closeControl(card),

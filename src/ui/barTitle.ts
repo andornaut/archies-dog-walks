@@ -3,22 +3,24 @@ import type { Rect } from "@andornaut/game-kit/rect";
 import type { CloseControl } from "./closeControl";
 import { MODAL } from "./modalGeometry";
 
-// Modal titles clear the full right-corner hit area. Pages retain their face-only clearance.
+// Modal titles reserve the full close hit plus its gap symmetrically on both sides.
+// Pages retain their face-only clearance.
 // A title is centred within its available row, or begins at the inset when too wide.
 export const BAR_TITLE = { closeGap: MODAL.gap, inset: 0 } as const;
 
 function titleRange(bar: Rect, close: CloseControl | undefined): { left: number; right: number } {
+  const right =
+    close === undefined
+      ? bar.x + bar.width
+      : (close.titleExclusion === "hit" ? close.hit.x : close.x) - BAR_TITLE.closeGap;
   return {
-    left: bar.x,
-    right:
-      close === undefined
-        ? bar.x + bar.width
-        : (close.titleExclusion === "hit" ? close.hit.x : close.x) - BAR_TITLE.closeGap,
+    left: close?.titleExclusion === "hit" ? 2 * bar.x + bar.width - right : bar.x,
+    right,
   };
 }
 
 // The title's actual ink room after the relevant corner clearance.
-export function barTitleRoom(bar: Rect, close: CloseControl): number {
+export function barTitleRoom(bar: Rect, close: CloseControl | undefined): number {
   const { left, right } = titleRange(bar, close);
   return right - left - BAR_TITLE.inset;
 }

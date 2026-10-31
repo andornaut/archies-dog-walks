@@ -11,6 +11,7 @@ import type { MenuText } from "../data/types";
 import { FEEDBACK } from "../home/feedback";
 import { type Focus, focusDirectionForKey, moveFocus } from "../home/focus";
 import { type OverlayRegion, overlayRegion, regionOutside } from "../home/homeBar";
+import { cardTitleRow } from "../home/homeLayout";
 import { MENU_TEXT_FIELDS } from "../home/menuText";
 import { modalActionWidth } from "../home/modalLayout";
 import {
@@ -45,6 +46,7 @@ import {
   onInstallStateChange,
 } from "../pwa";
 import type { Settings } from "../save/schema";
+import { barTitleRoom } from "../ui/barTitle";
 import { closeFace } from "../ui/closeControl";
 import { PLAIN_ITEM, tileState } from "../ui/interaction";
 import { PALETTE } from "../ui/palette";
@@ -64,7 +66,7 @@ import { GREYED } from "../ui/selection";
 import { TEXT_SCALE } from "../ui/textFit";
 import { listenHomeBar } from "./homeBarPress";
 import { addModalCard } from "./homePanels";
-import { modalTextWidth } from "./modalMeasure";
+import { measureModalTitle, modalTextWidth } from "./modalMeasure";
 import { listenOnePress } from "./onePress";
 import {
   BAR_MUTED_EVENT,
@@ -423,10 +425,20 @@ export class SettingsScene extends Scene {
   private openSteps(browser: MenuInstallBrowser): void {
     const words = gameData.menuText.settings.installSteps[browser];
     const lines = stepsLines(this, words.steps);
+    const ink = {
+      steps: modalTextWidth(this, "body", lines),
+      title: modalTextWidth(this, "title", [words.title]),
+    };
+    const preview = installStepsLayout(SCREEN_CONFIG, lines.length, ink);
+    const { extraHeight } = measureModalTitle(
+      this,
+      barTitleRoom(cardTitleRow(preview.card), preview.close),
+      words.title,
+    );
     this.steps = {
       ...installStepsLayout(SCREEN_CONFIG, lines.length, {
-        steps: modalTextWidth(this, "body", lines),
-        title: modalTextWidth(this, "title", [words.title]),
+        ...ink,
+        titleExtraHeight: extraHeight,
       }),
       browser,
     };

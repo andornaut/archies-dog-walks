@@ -1,19 +1,20 @@
 import type { Rect } from "@andornaut/game-kit/rect";
 import { describe, expect, it } from "vitest";
 
-import { inkWidth } from "../testing/fontInk";
+import { fontFileMetrics, inkWidth } from "../testing/fontInk";
 import { cardTitles } from "../testing/textRoles";
 import { BAR_TITLE, barTitleLeft, barTitleRoom } from "../ui/barTitle";
 import { type CloseControl, closeControl } from "../ui/closeControl";
 import { plainMarks } from "../ui/pixelFont";
 import { TEXT_STYLE } from "../ui/textFit";
 import { cardTitleRow } from "./homeLayout";
+import { modalTitleLayout } from "./modalLayout";
 
 // The clear space on either side of title ink, after the correct corner-control reservation.
 function clearSpace(bar: Rect, close: CloseControl, width: number) {
   const left = barTitleLeft(bar, close, width);
-  const start = bar.x;
   const end = (close.titleExclusion === "hit" ? close.hit.x : close.x) - BAR_TITLE.closeGap;
+  const start = close.titleExclusion === "hit" ? 2 * bar.x + bar.width - end : bar.x;
   return { left: left - start, right: end - (left + width) };
 }
 
@@ -55,11 +56,25 @@ describe("barTitleLeft", () => {
   });
 });
 
-describe.each(cardTitles())("the $role", ({ card, titles }) => {
+describe.each(cardTitles())("the $role", ({ card, close = closeControl(card), titles }) => {
   const bar = cardTitleRow(card);
-  const close = closeControl(card);
 
-  it.each(titles)("places %s centred beside the close control, or at the inset", (title) => {
-    expectPlaced(bar, close, inkWidth("font-title", TEXT_STYLE, plainMarks(title).toUpperCase()));
+  it.each(titles)("centres every line of %s with symmetric close clearance", (title) => {
+    const widthOf = (line: string) =>
+      inkWidth("font-title", TEXT_STYLE, plainMarks(line).toUpperCase());
+    const header = modalTitleLayout(
+      { font: fontFileMetrics("font-title"), widthOf },
+      barTitleRoom(bar, close),
+      title,
+    );
+    header.lines.forEach((line) => {
+      const width = widthOf(line);
+      expectPlaced(bar, close, width);
+      if (close.titleExclusion === "hit") {
+        expect(
+          Math.abs(2 * barTitleLeft(bar, close, width) + width - (2 * card.x + card.width)),
+        ).toBeLessThanOrEqual(1);
+      }
+    });
   });
 });

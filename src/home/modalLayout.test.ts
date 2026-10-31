@@ -11,11 +11,32 @@ import { closeControl } from "../ui/closeControl";
 import { TEXT_STYLE } from "../ui/textFit";
 import { overlayRegion } from "./homeBar";
 import { cardTitleRow, HOME_LAYOUT, updateModalLayout } from "./homeLayout";
-import { MODAL, modalPanelWidth, modalRect } from "./modalLayout";
+import {
+  MODAL,
+  modalPanelWidth,
+  modalRect,
+  modalTitleLayout,
+  modalTitleWidth,
+} from "./modalLayout";
 
 it("uses the full logical viewport for narrow content and still respects a smaller safe area", () => {
   expect(modalPanelWidth(328, 80)).toBe(180);
   expect(modalPanelWidth(160, 80)).toBe(160);
+});
+
+it("omits absent title reserves and rejects a word wider than the fixed-font title room", () => {
+  expect(modalTitleWidth(0)).toBe(0);
+  expect(modalTitleWidth(40, false)).toBe(40 + 2 * MODAL.pad);
+  expect(() =>
+    modalTitleLayout(
+      {
+        font: fontFileMetrics("font-title"),
+        widthOf: (text) => inkWidth("font-title", TEXT_STYLE, text.toUpperCase()),
+      },
+      20,
+      "Settings",
+    ),
+  ).toThrow(RangeError);
 });
 
 const area = overlayRegion("home");
@@ -52,6 +73,9 @@ describe.each(["newerSave", "update"] as const)("%s notice", (mode) => {
       y: row.y,
     };
     expect(rectsOverlap(titleInk, close.hit)).toBe(false);
+    expect(
+      Math.abs(2 * titleInk.x + titleInk.width - (2 * placed.panel.x + placed.panel.width)),
+    ).toBeLessThanOrEqual(1);
     expect(inside(titleInk, placed.panel)).toBe(true);
     expect(rectsOverlap(placed.panel, { ...HOME_LAYOUT.gate, width: area.width, x: area.x })).toBe(
       false,

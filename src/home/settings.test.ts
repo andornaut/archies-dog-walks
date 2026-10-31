@@ -17,7 +17,7 @@ import { closeFace } from "../ui/closeControl";
 import { LABEL_HELP_GAP } from "../ui/labelHelpGap";
 import { cardTitleRow } from "./homeLayout";
 import { MENU_TEXT_FIELDS } from "./menuText";
-import { MODAL, modalActionWidth } from "./modalLayout";
+import { MODAL, modalActionWidth, modalTitleLayout } from "./modalLayout";
 import {
   INSTALL_STEPS,
   INSTALL_STEPS_FIT,
@@ -330,9 +330,22 @@ describe.each(keysOf(gameData.menuText.settings.installSteps))(
     const { room, style } = INSTALL_STEPS_FIT;
     const fitted = fitInFont("font-body", style, room, installSteps);
     const stepsInk = Math.max(...fitted.lines.map((line) => inkWidth("font-body", style, line)));
-    const { card, close, icon, steps } = installStepsLayout(SCREEN_CONFIG, fitted.lines.length, {
+    const ink = {
       steps: stepsInk,
       title: inkWidth("font-title", TWO_X, title),
+    };
+    const preview = installStepsLayout(SCREEN_CONFIG, fitted.lines.length, ink);
+    const header = modalTitleLayout(
+      {
+        font: fontFileMetrics("font-title"),
+        widthOf: (line) => inkWidth("font-title", TWO_X, line.toUpperCase()),
+      },
+      barTitleRoom(cardTitleRow(preview.card), preview.close),
+      title,
+    );
+    const { card, close, icon, steps } = installStepsLayout(SCREEN_CONFIG, fitted.lines.length, {
+      ...ink,
+      titleExtraHeight: header.extraHeight,
     });
     const body = fontFileMetrics("font-body");
     // From the first line's capitals to the last line's lowest ink, at 2x.
@@ -352,9 +365,16 @@ describe.each(keysOf(gameData.menuText.settings.installSteps))(
       expect(inside(inner, outer)).toBe(true);
     });
 
-    it("fits its full-size title beside the complete close target", () => {
-      expect(inkWidth("font-title", TWO_X, title.toUpperCase())).toBeLessThanOrEqual(
-        barTitleRoom(cardTitleRow(card), close),
+    it("wraps its full-size title and grows the header before the steps", () => {
+      for (const line of header.lines) {
+        expect(inkWidth("font-title", TWO_X, line.toUpperCase())).toBeLessThanOrEqual(
+          barTitleRoom(cardTitleRow(card), close),
+        );
+      }
+      expect(card.height - preview.card.height).toBe(header.extraHeight);
+      expect(steps.y - card.y - (preview.steps.y - preview.card.y)).toBe(header.extraHeight);
+      expect(steps.y).toBeGreaterThan(
+        card.y + 16 + (header.lines.length - 1) * header.linePitch + 12,
       );
     });
 

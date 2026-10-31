@@ -40,6 +40,7 @@ import {
 } from "../home/homeLayout";
 import { messageLine, PLATE_MODES } from "../home/homeLines";
 import { MENU_TEXT_FIELDS } from "../home/menuText";
+import { modalTitleLayout } from "../home/modalLayout";
 import { confirmLines } from "../home/purchaseConfirm";
 import { PURCHASE_CONFIRM_ROOMS } from "../home/purchaseConfirmLayout";
 import {
@@ -89,7 +90,7 @@ import { read } from "../rules/units";
 import type { Owned } from "../save/schema";
 import { readBitmapFont } from "../tools/fontFile";
 import { barTitleRoom } from "../ui/barTitle";
-import { closeControl } from "../ui/closeControl";
+import { type CloseControl, closeControl } from "../ui/closeControl";
 import { plainMarks } from "../ui/pixelFont";
 import { TEXT_SCALE, TEXT_STYLE, textOnLines } from "../ui/textFit";
 import { cents } from "../units";
@@ -493,8 +494,10 @@ function questionPanelRoles(): TextRoleCase[] {
 // A card with a title row and a close control, and every title the data puts on it.
 export interface CardTitles {
   readonly card: Rect;
+  readonly close?: CloseControl;
   readonly role: string;
   readonly titles: readonly string[];
+  readonly titleLines?: number;
 }
 
 export function cardTitles(): CardTitles[] {
@@ -533,12 +536,26 @@ export function cardTitles(): CardTitles[] {
     ...Object.values(installSteps).map(({ steps, title }) => {
       const { room, style } = INSTALL_STEPS_FIT;
       const fitted = fitInFont("font-body", style, room, shownIn("font-body", steps));
+      const ink = {
+        steps: Math.max(0, ...fitted.lines.map((line) => inkWidth("font-body", style, line))),
+        title: inkWidth("font-title", TEXT_STYLE, shownIn("font-title", title)),
+      };
+      const preview = installStepsLayout(screen, fitted.lines.length, ink);
+      const header = modalTitleLayout(
+        {
+          font: TITLE,
+          widthOf: (line) => inkWidth("font-title", TEXT_STYLE, shownIn("font-title", line)),
+        },
+        barTitleRoom(cardTitleRow(preview.card), preview.close),
+        title,
+      );
       return {
         card: installStepsLayout(screen, fitted.lines.length, {
-          steps: Math.max(0, ...fitted.lines.map((line) => inkWidth("font-body", style, line))),
-          title: inkWidth("font-title", TEXT_STYLE, shownIn("font-title", title)),
+          ...ink,
+          titleExtraHeight: header.extraHeight,
         }).card,
         role: "install steps' title",
+        titleLines: header.lines.length,
         titles: [title],
       };
     }),
@@ -547,19 +564,25 @@ export function cardTitles(): CardTitles[] {
       role: "settings title",
       titles: [title],
     },
-    { card: SHOP_LAYOUT.panel, role: "shop title", titles: [gameData.homeText.shop.title] },
+    {
+      card: SHOP_LAYOUT.panel,
+      close: SHOP_LAYOUT.close,
+      role: "shop title",
+      titles: [gameData.homeText.shop.title],
+    },
   ];
 }
 
 // Each card's titles in the room its title row leaves them beside its close control.
 function cardTitleRoles(): TextRoleCase[] {
-  return cardTitles().flatMap(({ card, role, titles }) =>
-    plainRole(
-      role,
-      "font-title",
-      { room: barTitleRoom(cardTitleRow(card), closeControl(card)), style: TEXT_STYLE },
-      titles,
-    ),
+  return cardTitles().flatMap(
+    ({ card, close = closeControl(card), role, titleLines = 1, titles }) =>
+      plainRole(
+        role,
+        "font-title",
+        { room: barTitleRoom(cardTitleRow(card), close), style: textOnLines(titleLines) },
+        titles,
+      ),
   );
 }
 
