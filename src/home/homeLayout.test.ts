@@ -73,9 +73,10 @@ const rows = [
 ] as const;
 
 describe("home layout", () => {
-  it("spaces the sections evenly and leaves the inset start button clear of them and the screen edge", () => {
-    const { gateBar, sectionGap, startGap } = HOME_LAYOUT;
-    const stack = [gateBar, sections.walker, sections.dogs, sections.pocket];
+  it("separates the hero from the contiguous sections and keeps the start button clear", () => {
+    const { gateBar, heroSectionGap, sectionGap, startGap } = HOME_LAYOUT;
+    expect(sections.walker.y - gateBar.y - gateBar.height).toBe(heroSectionGap);
+    const stack = [sections.walker, sections.dogs, sections.pocket];
     for (let i = 1; i < stack.length; i += 1) {
       const above = stack[i - 1];
       const below = stack[i];

@@ -32,6 +32,7 @@ import type { SectionId } from "./sections";
 // each side, except the top bar's buttons, 34 wide in the walk bar's columns; tiles side by
 // side are 8 apart.
 const GAP = 8;
+const HERO_SECTION_GAP = 2;
 // The dismissible update notice uses the same card and compact control as other home modals.
 const UPDATE_PANEL = modalRect({ ...SCREEN_CONFIG, x: 0, y: 0 }, undefined, {
   height: MODAL.header + BUTTON_SIZE.compact.height + MODAL.pad,
@@ -51,7 +52,7 @@ const SECTION_GAP = 0;
 const TILE_OFFSET = 24;
 const TILE_TOP_REACH = FEEDBACK.liftPx + FEEDBACK.badgePopPx - MARK_OFFSET.y;
 const START_BUTTON: Rect = { ...BUTTON_SIZE.wide, x: 32, y: 510 };
-const START_GAP = 4;
+const START_GAP = 2;
 const WALKER_TILES = { cellHeight: 44, cellWidth: 77, columns: 4, gapX: GAP, gapY: 0 } as const;
 const DOG_TILES = { cellHeight: 44, cellWidth: 105, columns: 3, gapX: GAP, gapY: 0 } as const;
 const POCKET_TILES = { cellHeight: 44, cellWidth: 60, columns: 5, gapX: GAP, gapY: 0 } as const;
@@ -104,7 +105,7 @@ const POCKET_SECTION: Rect = {
   y: DOGS_SECTION.y + DOGS_SECTION.height + SECTION_GAP,
 };
 // The compact hero keeps its three-row divider strip; the native backdrop draws at (0, 0).
-const GATE_BAR = { height: 3, y: WALKER_SECTION.y - SECTION_GAP - 3 };
+const GATE_BAR = { height: 3, y: WALKER_SECTION.y - HERO_SECTION_GAP - 3 };
 const GATE = { height: GATE_BAR.y - 40, y: 40 };
 // Anchors retain their offset from the full-height yard, independently of the backdrop origin.
 const HERO_OFFSET_Y = GATE_BAR.y - 196;
@@ -176,6 +177,7 @@ export const HOME_LAYOUT = {
   ],
   gearBadge: { height: 18, width: 18, x: 194, y: 166 + HERO_OFFSET_Y },
   heroOffsetY: HERO_OFFSET_Y,
+  heroSectionGap: HERO_SECTION_GAP,
   path: { width: 32, x: 164 },
   // The Pet shop building on the yard's right lot, which opens the shop; its hit area is its
   // frame. board is its PET SHOP board, which the walker's bubble keeps clear of.

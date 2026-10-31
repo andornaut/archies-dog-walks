@@ -1696,7 +1696,7 @@
       },
       "dogOrigin": {
         "x": 15,
-        "y": 285
+        "y": 287
       },
       "dogTile": {
         "badge": {
@@ -1751,6 +1751,7 @@
         "y": 134
       },
       "heroOffsetY": -32,
+      "heroSectionGap": 2,
       "path": {
         "width": 32,
         "x": 164
@@ -1790,7 +1791,7 @@
         },
         "origin": {
           "x": 14,
-          "y": 456
+          "y": 458
         },
         "priceY": 28,
         "tileInset": 1
@@ -1845,19 +1846,19 @@
           "height": 171,
           "width": 348,
           "x": 6,
-          "y": 252
+          "y": 254
         },
         "pocket": {
           "height": 83,
           "width": 348,
           "x": 6,
-          "y": 423
+          "y": 425
         },
         "walker": {
           "height": 85,
           "width": 348,
           "x": 6,
-          "y": 167
+          "y": 169
         }
       },
       "slotSign": {
@@ -1916,7 +1917,7 @@
         "x": 32,
         "y": 510
       },
-      "startGap": 4,
+      "startGap": 2,
       "startLabel": {
         "readyY": 12,
         "scale": 3
@@ -1979,7 +1980,7 @@
       },
       "walkerOrigin": {
         "x": 14,
-        "y": 201
+        "y": 203
       },
       "walkerTile": {
         "badge": {
@@ -2135,55 +2136,55 @@
           "height": 44,
           "width": 105,
           "x": 15,
-          "y": 285
+          "y": 287
         },
         {
           "height": 44,
           "width": 105,
           "x": 128,
-          "y": 285
+          "y": 287
         },
         {
           "height": 44,
           "width": 105,
           "x": 241,
-          "y": 285
+          "y": 287
         },
         {
           "height": 44,
           "width": 105,
           "x": 15,
-          "y": 329
+          "y": 331
         },
         {
           "height": 44,
           "width": 105,
           "x": 128,
-          "y": 329
+          "y": 331
         },
         {
           "height": 44,
           "width": 105,
           "x": 241,
-          "y": 329
+          "y": 331
         },
         {
           "height": 44,
           "width": 105,
           "x": 15,
-          "y": 373
+          "y": 375
         },
         {
           "height": 44,
           "width": 105,
           "x": 128,
-          "y": 373
+          "y": 375
         },
         {
           "height": 44,
           "width": 105,
           "x": 241,
-          "y": 373
+          "y": 375
         }
       ],
       "pocketRects": [
@@ -2191,31 +2192,31 @@
           "height": 44,
           "width": 60,
           "x": 14,
-          "y": 456
+          "y": 458
         },
         {
           "height": 44,
           "width": 60,
           "x": 82,
-          "y": 456
+          "y": 458
         },
         {
           "height": 44,
           "width": 60,
           "x": 150,
-          "y": 456
+          "y": 458
         },
         {
           "height": 44,
           "width": 60,
           "x": 218,
-          "y": 456
+          "y": 458
         },
         {
           "height": 44,
           "width": 60,
           "x": 286,
-          "y": 456
+          "y": 458
         }
       ],
       "walkerRects": [
@@ -2223,25 +2224,25 @@
           "height": 44,
           "width": 77,
           "x": 14,
-          "y": 201
+          "y": 203
         },
         {
           "height": 44,
           "width": 77,
           "x": 99,
-          "y": 201
+          "y": 203
         },
         {
           "height": 44,
           "width": 77,
           "x": 184,
-          "y": 201
+          "y": 203
         },
         {
           "height": 44,
           "width": 77,
           "x": 269,
-          "y": 201
+          "y": 203
         }
       ]
     },
