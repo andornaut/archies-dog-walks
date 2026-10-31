@@ -3,6 +3,7 @@ import { insetRect, rectsOverlap } from "@andornaut/game-kit/rect";
 import { describe, expect, it } from "vitest";
 
 import { gameData } from "../data";
+import { SCREEN_CONFIG } from "../data/screen";
 import { fontFileMetrics, inkWidth } from "../testing/fontInk";
 import { inside } from "../testing/rects";
 import { barTitleLeft } from "../ui/barTitle";
@@ -10,7 +11,12 @@ import { closeControl } from "../ui/closeControl";
 import { TEXT_STYLE } from "../ui/textFit";
 import { overlayRegion } from "./homeBar";
 import { cardTitleRow, HOME_LAYOUT, updateModalLayout } from "./homeLayout";
-import { MODAL, modalRect } from "./modalLayout";
+import { MODAL, modalPanelWidth, modalRect } from "./modalLayout";
+
+it("uses the full logical viewport for narrow content and still respects a smaller safe area", () => {
+  expect(modalPanelWidth(328, 80)).toBe(180);
+  expect(modalPanelWidth(160, 80)).toBe(160);
+});
 
 const area = overlayRegion("home");
 const body = { height: 80, width: 180 };
@@ -34,7 +40,9 @@ describe.each(["newerSave", "update"] as const)("%s notice", (mode) => {
       title: ink,
     });
     expect(inside(placed.panel, insetRect(MODAL.margin, area))).toBe(true);
-    expect(placed.panel.width).toBeGreaterThanOrEqual(MODAL_CONTENT.minWidth);
+    expect(placed.panel.width).toBeGreaterThanOrEqual(
+      MODAL_CONTENT.minWidthFraction * SCREEN_CONFIG.width,
+    );
     const close = closeControl(placed.panel);
     const row = cardTitleRow(placed.panel);
     const titleInk = {
