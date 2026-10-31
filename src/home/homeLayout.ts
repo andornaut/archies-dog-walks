@@ -32,7 +32,7 @@ import type { SectionId } from "./sections";
 // each side, except the top bar's buttons, 34 wide in the walk bar's columns; tiles side by
 // side are 8 apart.
 const GAP = 8;
-const HERO_SECTION_GAP = 2;
+const HERO_SECTION_GAP = 4;
 // The dismissible update notice uses the same card and compact control as other home modals.
 const UPDATE_PANEL = modalRect({ ...SCREEN_CONFIG, x: 0, y: 0 }, undefined, {
   height: MODAL.header + BUTTON_SIZE.compact.height + MODAL.pad,
@@ -51,7 +51,7 @@ const SECTION_EDGE = 1;
 const SECTION_GAP = 0;
 const TILE_OFFSET = 24;
 const TILE_TOP_REACH = FEEDBACK.liftPx + FEEDBACK.badgePopPx - MARK_OFFSET.y;
-const START_BUTTON: Rect = { ...BUTTON_SIZE.wide, x: 32, y: 510 };
+const START_BUTTON: Rect = { ...BUTTON_SIZE.wide, x: 32, y: 512 };
 const START_GAP = 2;
 const WALKER_TILES = { cellHeight: 44, cellWidth: 77, columns: 4, gapX: GAP, gapY: 0 } as const;
 const DOG_TILES = { cellHeight: 44, cellWidth: 105, columns: 3, gapX: GAP, gapY: 0 } as const;

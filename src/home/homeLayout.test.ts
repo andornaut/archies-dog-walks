@@ -73,9 +73,9 @@ const rows = [
 ] as const;
 
 describe("home layout", () => {
-  it("separates the hero from the contiguous sections and keeps the start button clear", () => {
+  it("keeps equal four-pixel outer gaps around the contiguous picker and Start stack", () => {
     const { gateBar, heroSectionGap, sectionGap, startGap } = HOME_LAYOUT;
-    expect(sections.walker.y - gateBar.y - gateBar.height).toBe(heroSectionGap);
+    expect(sections.walker.y - gateBar.y - gateBar.height).toBe(4);
     const stack = [sections.walker, sections.dogs, sections.pocket];
     for (let i = 1; i < stack.length; i += 1) {
       const above = stack[i - 1];
@@ -83,7 +83,7 @@ describe("home layout", () => {
       expect((below?.y ?? 0) - ((above?.y ?? 0) + (above?.height ?? 0))).toBe(sectionGap);
     }
     expect(startButton.y - sections.pocket.y - sections.pocket.height).toBe(startGap);
-    expect(SCREEN_CONFIG.height - startButton.y - startButton.height).toBeGreaterThan(startGap);
+    expect(SCREEN_CONFIG.height - startButton.y - startButton.height).toBe(heroSectionGap);
   });
 
   it("centres card edges with balanced padding and keeps badge overhang clear of the frame", () => {
