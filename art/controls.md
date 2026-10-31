@@ -117,7 +117,20 @@ On the website homepage, Install is the secondary action on the left and Play is
 
 ## Labels and icons
 
-Use `font-title` for canvas buttons, headings and numbers, and `font-body` for body/help text. [`textFit.ts`](../src/ui/textFit.ts) fixes role scales: never shrink a label to fit. DOM controls retain their existing readable fonts and native labels. Keep the label/help ink gap, centre an action label on its face, and move the label with the pressed face.
+Use `font-title` for ordinary canvas buttons, modal/section headings and numbers, and `font-body` for body/help text. Display headings use the distinct roles below; the full-scene hero role is an approved paired target for source integration. Ink heights include outline and shadow where present; capital ink measures the letters themselves. [`textFit.ts`](../src/ui/textFit.ts) fixes role scales: never shrink a label to fit. DOM controls retain their existing readable fonts and native labels. Keep the label/help ink gap, centre an action label on its face, and move the label with the pressed face.
+
+| Title role                                 | Font and fixed scale                 | Rendered ink                     | Scope                                                                          |
+| ------------------------------------------ | ------------------------------------ | -------------------------------- | ------------------------------------------------------------------------------ |
+| Full-scene hero                            | `font-display` at 3×, untinted       | 42px total ink; 30px letter fill | New-walker welcome and neighbourhood completion in `ZoneCelebrationScene` only |
+| Hero subtitle                              | `font-display-cream` at 1×, untinted | 14px total ink                   | Walker or neighbourhood name under the hero title                              |
+| Ordinary modal, section and button heading | `font-title` at 2×                   | 10px capital ink                 | Existing control roles, including the closeable badge-celebration modal        |
+| End summary heading                        | `font-display` at 1×, untinted       | 14px total ink                   | Result heading inside the earnings/quip summary panel                          |
+| New-best ribbon                            | Baked white `font-title` at 1×       | 5px capital ink                  | Existing `ui-new-best` artwork                                                 |
+| New-best missing-ribbon fallback           | `font-display` at 1×, untinted       | 14px total ink                   | Fallback when the ribbon artwork is unavailable                                |
+| Firing plate                               | `font-display` at 1×, untinted       | 14px total ink                   | Transient FIRED notice over a dog slot                                         |
+| Neighbourhood-entry banner                 | `font-display` at 1×, untinted       | 14px total ink                   | Compact road banner, distinct from full-scene completion                       |
+
+The hero title stays centred at x = 180, within 328px of measured ink width, and wraps at word boundaries at its fixed 3× scale. Reserve the two-line block from ink y = 44 to 136, with line tops at 44 and 94 and 8px of clear ink gap. The 1× subtitle starts at ink y = 146, 10px below the title block. Centre measured ink rather than font advance padding. Other title roles keep their listed sizes and layouts; a three-line hero title requires more vertical room rather than smaller text.
 
 All player-facing strings, including names, labels, prices, goals, unavailable reasons and explanations, come from the text data in [`src/data/`](../src/data/). Follow the rulebook's [Voice](../gameplay/design.md#voice): Canadian spelling and one consistent name and label per thing. Reword the data consistently or grow the box; never shrink text or use a local shortened alias.
 
