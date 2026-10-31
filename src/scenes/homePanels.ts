@@ -17,7 +17,7 @@ import { withNamePills } from "../hud/effectNames";
 import { barTitleLeft, barTitleRoom } from "../ui/barTitle";
 import { type CloseControl, closeControl } from "../ui/closeControl";
 import { PALETTE } from "../ui/palette";
-import { addDim, drawFramedRect, drawRing } from "../ui/phaser/draw";
+import { addModalShade, drawFramedRect, drawRing } from "../ui/phaser/draw";
 import {
   addPixelText,
   inkSpan,
@@ -73,7 +73,7 @@ function drawCardFrame(
   title: string,
   content: GameObjects.Container,
 ): void {
-  parent.add(addDim(scene, dim));
+  parent.add(addModalShade(scene, dim));
   addModalCard(scene, parent, rect, title, { pressed: closePressed });
   content.setPosition(rect.x, rect.y);
   parent.add(content);

@@ -1,5 +1,6 @@
 import { getOrInsertComputed } from "@andornaut/game-kit/maps";
 import { insetRect, type Point, type Rect, ringRects } from "@andornaut/game-kit/rect";
+import { MODAL_DIM } from "@andornaut/game-kit/view/modalDim";
 import type { GameObjects, Scene, Textures } from "phaser";
 
 import { PALETTE } from "../palette";
@@ -16,6 +17,11 @@ export function addDim(scene: Scene, rect: Rect): GameObjects.Rectangle {
   return scene.add
     .rectangle(rect.x, rect.y, rect.width, rect.height, PALETTE.ink, DIM_ALPHA)
     .setOrigin(0);
+}
+
+// Modal ink scrims replace the fill opacity without multiplying another shade over it.
+export function addModalShade(scene: Scene, rect: Rect): GameObjects.Rectangle {
+  return addDim(scene, rect).setFillStyle(PALETTE.ink, MODAL_DIM.fallbackAlpha);
 }
 
 export function fillRect(graphics: GameObjects.Graphics, colour: number, rect: Rect): void {

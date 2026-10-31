@@ -6,7 +6,7 @@ import type { ConfirmChoice, ConfirmLines } from "../home/purchaseConfirm";
 import { purchaseConfirmLayout } from "../home/purchaseConfirmLayout";
 import { closeControl } from "../ui/closeControl";
 import { PALETTE } from "../ui/palette";
-import { addDim } from "../ui/phaser/draw";
+import { addModalShade } from "../ui/phaser/draw";
 import { addPixelText, pixelFontMetrics } from "../ui/phaser/pixelText";
 import { TEXT_SCALE } from "../ui/textFit";
 import { addDetailWell, addModalCard } from "./homePanels";
@@ -52,7 +52,7 @@ export function drawPurchaseConfirm(
       title: modalTextWidth(scene, "title", [lines.title]),
     },
   );
-  layer.add(addDim(scene, LAYOUT.dim));
+  layer.add(addModalShade(scene, LAYOUT.dim));
   addModalCard(scene, layer, LAYOUT.card, lines.title, { pressed: closePressed });
   const centred = (
     at: { capTop: number; centreX: number; font: "body" | "title" },

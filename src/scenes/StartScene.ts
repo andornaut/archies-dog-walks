@@ -139,7 +139,7 @@ import {
 } from "../ui/interaction";
 import { PALETTE } from "../ui/palette";
 import {
-  addDim,
+  addModalShade,
   drawFocusRing,
   drawFramedRect,
   drawRing,
@@ -1793,7 +1793,7 @@ export class StartScene extends Scene {
   private drawUpdateModal(root: GameObjects.Container, mode: PlateMode): void {
     const { button, panel } = this.updateLayout(mode);
     const text = gameData.homeText[mode];
-    root.add(addDim(this, HOME_REGION));
+    root.add(addModalShade(this, HOME_REGION));
     addModalCard(this, root, panel, text.title, { pressed: this.closePressed() });
     const control = addMenuButton(
       this,

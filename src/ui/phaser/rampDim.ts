@@ -1,12 +1,10 @@
 import type { Rect } from "@andornaut/game-kit/rect";
+import { modalDimmer } from "@andornaut/game-kit/view/modalDim";
 import { snapshotRemapped } from "@andornaut/game-kit/view/phaser/snapshotRemap";
 import { Core, type GameObjects, type Scene, Scenes } from "phaser";
 
-import { darkerRamp } from "../../assets/darkRamp";
-import { addDim } from "./draw";
-
-// What an overlay dims is redrawn this many steps down each colour's ramp.
-const DIM_STEPS = 2;
+import { ONE_STEP_DARKER } from "../../assets/housePalette";
+import { addModalShade } from "./draw";
 
 // The part of a scene rect its main camera shows, in the scene's coordinates and on the game's
 // canvas, or undefined when the camera shows none of it.
@@ -26,8 +24,8 @@ function shownPart(scene: Scene, rect: Rect): { canvas: Rect; world: Rect } | un
 }
 
 // Dims rect under an overlay the style guide's way: the frozen view read back from the next
-// frame and redrawn DIM_STEPS down each colour's ramp, never blended with black (the kit's
-// snapshotRemapped with darkerRamp). The overlay
+// frame and redrawn through the kit's shared modal palette-ramp policy, never blended with
+// black. The overlay
 // scene's cameras are hidden for that frame, so the read-back holds only the scenes beneath it,
 // never the overlay's own objects, which may later hide or move. Only the part the scene's
 // camera shows is read back. Where the renderer gives no snapshot to remap, the ink layer stands
@@ -50,7 +48,7 @@ export function addRampDim(
     return [];
   }
   const { canvas, world } = shown;
-  const shade = addDim(scene, world).setVisible(false);
+  const shade = addModalShade(scene, world).setVisible(false);
   const dim = scene.add.image(world.x, world.y, "__DEFAULT").setOrigin(0).setVisible(false);
   const key = `${scene.scene.key}-dim`;
   const fallback = () => shade.setVisible(true);
@@ -62,7 +60,7 @@ export function addRampDim(
     shownCameras.forEach((camera) => camera.setVisible(true));
     drawn();
   });
-  void snapshotRemapped(darkerRamp(DIM_STEPS), scene, canvas, key).then((remapped) => {
+  void snapshotRemapped(modalDimmer(ONE_STEP_DARKER), scene, canvas, key).then((remapped) => {
     if (!dim.active) {
       return;
     }

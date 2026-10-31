@@ -50,7 +50,7 @@ import { barTitleRoom } from "../ui/barTitle";
 import { closeFace } from "../ui/closeControl";
 import { PLAIN_ITEM, tileState } from "../ui/interaction";
 import { PALETTE } from "../ui/palette";
-import { addDim, drawFocusRing, fillRect } from "../ui/phaser/draw";
+import { addModalShade, drawFocusRing, fillRect } from "../ui/phaser/draw";
 import {
   addPixelText,
   fitPixelText,
@@ -565,7 +565,7 @@ export class SettingsScene extends Scene {
   private drawSteps(steps: OpenSteps): void {
     const words = gameData.menuText.settings.installSteps[steps.browser];
     const icon = STEPS_ICONS[steps.browser];
-    addDim(this, this.dim);
+    addModalShade(this, this.dim);
     addModalCard(this, this.add.container(0, 0), steps.card, words.title, {
       pressed: this.pressed?.kind === "stepsClose",
     });

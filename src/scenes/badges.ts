@@ -22,7 +22,7 @@ import { MODAL, modalPanelWidth, modalRect } from "../home/modalLayout";
 import { DETAIL_TEXT_WIDTH, detailPanel, detailTextTops, STATS_LAYOUT } from "../home/statsLayout";
 import { closeControl } from "../ui/closeControl";
 import { PALETTE } from "../ui/palette";
-import { addDim } from "../ui/phaser/draw";
+import { addModalShade } from "../ui/phaser/draw";
 import {
   addPixelText,
   labelInkWidth,
@@ -203,7 +203,7 @@ export function addBadgeDetail(
   );
   const panel = modalRect(dim, undefined, { height: measured.height, width });
   const tops = detailTextTops(fonts, goal.length);
-  parent.add([addDim(scene, dim), addPanel(scene, panel)]);
+  parent.add([addModalShade(scene, dim), addPanel(scene, panel)]);
   addCloseButton(scene, parent, closeControl(panel), false);
   const centre = panel.x + panel.width / 2;
   const badgeY = panel.y + DETAIL_TEXT.badgeY;
