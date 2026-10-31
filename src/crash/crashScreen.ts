@@ -5,22 +5,41 @@
 // keeps no resume point (stopResuming in src/main.ts), so that launch banks it.
 // src/crash/install.ts imports this module before any other game module.
 import "@andornaut/game-kit/crash/crash.css";
+import "./crash.css";
 
 import { BUILD_LABEL } from "@andornaut/game-kit/build/buildLabel";
 import { installCrashScreen } from "@andornaut/game-kit/crash/crashScreen";
+import artFiles from "virtual:art-files";
 
 import palette from "../../shared/palette.json";
+import { artFileUrl } from "../assets/artUrl";
 import { MENU_TEXT } from "../data/menuText";
 import { pageSearch } from "../dev/devTools";
 import { devInSearch } from "../dev/runSetup";
 
 const colour = (name: keyof typeof palette) => `#${palette[name].hex}`;
 
+// The local paper theme uses the same palette as canvas cards, without loading the renderer.
+for (const [name, value] of [
+  ["paper", colour("cream")],
+  ["paper-lip", colour("tan")],
+  ["paper-text", colour("plum")],
+] as const) {
+  document.documentElement.style.setProperty(`--crash-${name}`, value);
+}
+
+// Archie's upset portrait is a static decorative CSS crop, loaded without Phaser or the canvas.
+const sadDogUrl = artFileUrl(import.meta.env.BASE_URL, artFiles, "sprites/face-dog-archie.png");
+document.documentElement.style.setProperty(
+  "--crash-pose-image",
+  `url(${JSON.stringify(sadDogUrl)})`,
+);
+
 // Reload uses the same green primary face and forest lip as canvas actions.
 export const CRASH_SCREEN = installCrashScreen({
   buildLabel: BUILD_LABEL,
   colours: {
-    background: colour("plum"),
+    background: colour("ink"),
     buttonFace: colour("green"),
     buttonLip: colour("forest"),
     ink: colour("ink"),
