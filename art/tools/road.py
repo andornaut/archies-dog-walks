@@ -36,7 +36,8 @@ zone celebration: the front view with the hanging arm taken off and both arms ra
 shoulders in a V, the hands 1, 3, 4 and 3 design pixels out; a 2px crouch, a hop 2px and 3px up,
 then a 1px landing. Trista's tote stays on her shoulder.
 Mr. B also has phone (4 frames, 400ms, looping), appended after cheer: feet planted,
-head bowed toward a phone held at his chest, breathing and tapping with one thumb.
+head bowed toward a narrow handset held to his side, visible eyes looking down,
+beard below the mouth and a bare upper lip, breathing and tapping with one thumb.
 His new-walker welcome uses phone while the celebration plays around him.
 What stands on the road is a billboard seen from the walker's eye, as roadside objects in OutRun are: a
 front elevation (the ice cream truck a rear one, like obstacles.parked_car),
@@ -677,7 +678,7 @@ def mr_b_front(wave=0, bob=0):
 
 
 def mr_b_phone(tap=0, bob=0):
-    """Mr. B absorbed in his phone: bowed bald head, eyes down, both elbows bent, feet planted."""
+    """Mr. B absorbed in his phone: bald head bowed, pupils down toward a small side-held phone, bare upper lip, chin beard."""
     g = Grid(32, 48)
     b = bob
     for x in (11, 17):
@@ -693,8 +694,8 @@ def mr_b_phone(tap=0, bob=0):
     g.rect(20, 23 + b, 3, 11, "violet")
     g.rect(13, 22 + b, 6, 3, "plum")
     g.rect(7, 29 + b, 4, 4, "dbrown")
-    g.rect(8, 32 + b, 7, 3, "dbrown")
-    g.rect(9, 34 + b, 6, 1, "plum")
+    g.rect(8, 32 + b, 11, 3, "dbrown")
+    g.rect(9, 34 + b, 10, 1, "plum")
     g.rect(22, 29 + b, 4, 4, "dbrown")
     g.rect(21, 32 + b, 4, 3, "dbrown")
     g.rect(24, 29 + b, 2, 4, "plum")
@@ -704,23 +705,24 @@ def mr_b_phone(tap=0, bob=0):
     face_disc(g, 16, 16 + b, 7, 8, "dbrown", "plum")
     g.rect(11, 11 + b, 3, 1, "brown")
     g.p(11, 12 + b, "brown")
-    g.rect(10, 20 + b, 1, 3, "ink")
-    g.rect(21, 20 + b, 1, 3, "ink")
-    g.cel(16, 23 + b, 5.5, 2, "ink")
+    # White eyes and bottom-right pupils make his downward attention explicit.
     for x in (12, 18):
-        g.rect(x, 19 + b, 3, 1, "plum")
-        g.rect(x + 1, 20 + b, 2, 1, "ink")
+        g.rect(x, 17 + b, 3, 1, "plum")
+        g.rect(x, 18 + b, 3, 2, "white")
+        g.p(x + 2, 19 + b, "ink")
     g.rect(16, 21 + b, 2, 1, "plum")
-    g.rect(15, 23 + b, 3, 1, "dbrown")
-    # A dark case, pale blue screen and earpiece read as a phone without small screen text.
-    g.rect(14, 26 + b, 8, 11, "ink")
-    g.rect(15, 27 + b, 6, 8, "foam")
-    g.rect(15, 32 + b, 6, 3, "shallow")
-    g.rect(16, 27 + b, 3, 1, "dslate")
-    g.rect(17, 36 + b, 2, 1, "grey")
-    g.rect(12, 30 + b, 3, 4, "dbrown")
-    g.rect(21, 30 + b, 3, 4, "dbrown")
-    g.rect(19 - tap, 31 + b, 3, 2, "brown")
+    # Leave the upper lip bare; facial hair begins below the mouth, on the chin and lower jaw.
+    g.rect(15, 22 + b, 3, 1, "ink")
+    g.cel(16, 24.5 + b, 5.5, 1.5, "ink")
+    # A narrow portrait handset sits to screen right, below and clear of his face.
+    g.rect(19, 27 + b, 5, 9, "ink")
+    g.rect(20, 28 + b, 3, 6, "foam")
+    g.rect(20, 32 + b, 3, 2, "shallow")
+    g.p(21, 28 + b, "dslate")
+    g.p(21, 35 + b, "grey")
+    g.rect(17, 32 + b, 3, 3, "dbrown")
+    g.rect(23, 30 + b, 2, 4, "dbrown")
+    g.rect(19 + tap, 30 + b, 2, 1, "brown")
     return rim(g, dict(navy=("grey", "grey"), violet=("lilac", None), dbrown=("skin2", "brown"),
                        plum=("skin2", "brown"), ink=("grey", "slate")))
 
