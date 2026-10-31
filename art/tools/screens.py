@@ -19,8 +19,8 @@ reads on them.
   an open iron gate and quiet broad flagstones. No roofs, skyline or sky are
   cropped beneath the top bar. The centre stays quiet behind dialogue and the
   pack; the red-brick path at x 164 to 195 ends below the actor's last opaque
-  foot row 163 (anchor 164). The street-name board is at 300,40, 54x11; the
-  game prints its existing name in white at 327,43. The yard sign at 6,106,
+  foot row 163 (anchor 164). The street-name board is at 286,40, 68x12; the
+  game prints its existing name in white title lettering at 320,43. The yard sign at 6,106,
   128x38 carries ARCHIE'S over DOG WALKS in the existing sign letters, on two
   short posts. The right lot is reserved for ui-pet-shop at 234,54,120x108.
   Two quiet ground rows at 164 and 165 precede the plum divider on row 166;
@@ -520,10 +520,10 @@ def home():
         cv.fill(x - 1, 89, 8, 2, "dstone")
         cv.fill(x - 1, 89, 8, 1, "driftwood")
     # The street-name plate keeps its existing text anchor without adding lettering to art.
-    cv.fill(326, 49, 2, 45, "dstone")
-    cv.fill(326, 49, 1, 45, "stone")
-    cv.fill(300, 40, 54, 11, "dslate")
-    cv.fill(301, 41, 52, 9, "navy")
+    cv.fill(319, 50, 2, 44, "dstone")
+    cv.fill(319, 50, 1, 44, "stone")
+    cv.fill(286, 40, 68, 12, "dslate")
+    cv.fill(287, 41, 66, 10, "navy")
     # A shallow contact shadow seats the existing shop's step on the same paving.
     cv.fill(233, 160, 122, 3, "dstone")
     # The logo board is the foreground focal point on the exposed left.
