@@ -1,4 +1,7 @@
 import { itemAt } from "@andornaut/game-kit/arrays";
+import type { ProgressValue } from "@andornaut/game-kit/progress";
+import { drawProgressBar } from "@andornaut/game-kit/progress/phaser/drawProgressBar";
+import type { ProgressHandle } from "@andornaut/game-kit/progressState";
 import { keysOf } from "@andornaut/game-kit/records";
 import { GameObjects, type Loader, Scene, Sound } from "phaser";
 
@@ -29,6 +32,7 @@ import {
 } from "../assets/spriteKeys";
 import { HOME_CUES, soundKeysOf } from "../audio/sound";
 import { gameData } from "../data";
+import { SCREEN_LAYOUT } from "../data/screen";
 import type { EncounterId } from "../data/types";
 import { devRunLoadout, namesRunSetup } from "../dev/devStart";
 import { pageSearch } from "../dev/devTools";
@@ -36,7 +40,6 @@ import { pageRunSetup } from "../dev/pageRunSetup";
 import {
   bootProgress,
   LOADING_TRACK,
-  loadingBarWidth,
   loadingWalkerAt,
   stepFraction,
 } from "../layout/loadingScreen";
@@ -44,7 +47,8 @@ import { browserSoundFormat, launchReady, startWakeLock, unlockAudioOnFirstGestu
 import { PALETTE } from "../ui/palette";
 import { addFilledRect } from "../ui/phaser/draw";
 import { addPillGlyphs, registerFallbackPixelFont } from "../ui/phaser/pixelText";
-import { markArtReady } from "./artReady";
+import { GAME_PROGRESS_STYLE } from "../ui/progressBar";
+import { markArtReady, walkArtProgress } from "./artReady";
 import { onLoadProgress } from "./loadProgress";
 import {
   currentSettings,
@@ -116,7 +120,8 @@ function placeholderSizes(): Map<string, Size> {
 // dev link that names a run loads everything before it starts the walk, and a walk the save
 // resumes (ProfileSession.open) loads the rest behind the loading screen before it goes on.
 export class BootScene extends Scene {
-  private bar: GameObjects.Rectangle | undefined;
+  private bar: GameObjects.Graphics | undefined;
+  private artProgress: ProgressHandle | undefined;
   private manifest: AssetManifest = { fonts: [], images: [], sounds: [], sprites: [] };
   private walker: GameObjects.Sprite | undefined;
 
@@ -125,6 +130,10 @@ export class BootScene extends Scene {
   }
 
   preload(): void {
+    this.artProgress = undefined;
+    this.events.once("shutdown", () => this.artProgress?.finish());
+    this.bar = this.add.graphics().setDepth(1);
+    this.showProgress(undefined);
     this.load.on("loaderror", (file: Loader.File) => {
       console.warn(`Asset failed to load, using a placeholder: ${file.key} (${file.url})`);
     });
@@ -170,6 +179,7 @@ export class BootScene extends Scene {
       this.processAssets(first, FRAME_BUDGET_MS, () => {
         registerFallbackPixelFont(this);
         addPillGlyphs(this);
+        this.showProgress(undefined);
         void profileOpened.then(() => {
           if (walkNow) {
             this.startWalk();
@@ -201,12 +211,12 @@ export class BootScene extends Scene {
     queueManifestArt(this, manifest, (key) => loadingKeys.has(key));
   }
 
-  // Each missing piece of art is drawn plain: the track in plum and an amber bar along it.
+  // Missing loading art keeps its plain track; the shared thin progress line always remains.
   private showLoadingScreen(): void {
     if (this.textures.exists(LOADING_ART.screen)) {
       this.add.image(0, 0, LOADING_ART.screen).setOrigin(0);
     }
-    const { height, x, y } = LOADING_TRACK;
+    const { x, y } = LOADING_TRACK;
     if (this.textures.exists(LOADING_ART.track)) {
       this.add.image(x, y, LOADING_ART.track).setOrigin(0);
     } else {
@@ -218,8 +228,6 @@ export class BootScene extends Scene {
       const at = loadingWalkerAt(0);
       this.walker = this.add.sprite(at.x, at.y, walker.key).setOrigin(0);
       this.setWalkerMotion(currentSettings(this).reducedMotion);
-    } else {
-      this.bar = addFilledRect(this, PALETTE.amber, { height, width: 0, x, y });
     }
   }
 
@@ -229,10 +237,16 @@ export class BootScene extends Scene {
     }
   }
 
-  private showProgress(progress: number): void {
-    const at = loadingWalkerAt(progress);
-    this.walker?.setPosition(at.x, at.y);
-    this.bar?.setSize(loadingBarWidth(progress), LOADING_TRACK.height);
+  private showProgress(progress: ProgressValue): void {
+    if (progress !== undefined) {
+      const at = loadingWalkerAt(progress);
+      this.walker?.setPosition(at.x, at.y);
+    }
+    this.artProgress?.progress(progress);
+    if (this.bar !== undefined) {
+      this.bar.clear();
+      drawProgressBar(this.bar, GAME_PROGRESS_STYLE, SCREEN_LAYOUT.zoneProgress, progress);
+    }
   }
 
   // Registers the loaded sprites that include accepts and draws a placeholder for each such key
@@ -306,11 +320,17 @@ export class BootScene extends Scene {
   // Loads and registers what the home screen did not need, then marks the art ready and calls
   // done.
   private loadRest(budgetMs: number, done: () => void): void {
+    this.artProgress = walkArtProgress.begin();
+    this.showProgress(undefined);
     const rest = (key: string) => !loadsFirst(key);
     queueManifestArt(this, this.manifest, rest);
     this.queueSounds((key) => !loadsSoundFirst(key));
+    onLoadProgress(this, atlasPageBytes(this), (fraction) =>
+      this.showProgress(bootProgress("network", fraction)),
+    );
     this.load.once("complete", () =>
       this.processAssets(rest, budgetMs, () => {
+        this.artProgress?.finish();
         markArtReady(this);
         done();
       }),

@@ -1,6 +1,7 @@
 import { fillNames } from "@andornaut/game-kit/lines";
 import { clamp01 } from "@andornaut/game-kit/numbers";
-import { containsPoint, insetRect, type Point, type Rect } from "@andornaut/game-kit/rect";
+import { progressBarLayout } from "@andornaut/game-kit/progress";
+import { containsPoint, type Point, type Rect } from "@andornaut/game-kit/rect";
 
 import { gameData } from "../data";
 import { SCREEN_CONFIG } from "../data/screen";
@@ -9,6 +10,7 @@ import type { ScreenLayout } from "../layout/screenLayout";
 import { walkLength } from "../rules/route";
 import { zoneLength } from "../runner/walk";
 import type { RunState } from "../state/runState";
+import { GAME_PROGRESS, GAME_PROGRESS_STYLE } from "../ui/progressBar";
 import { TOP_BAR_FACE, TOP_BAR_WELL, wellCapsTop } from "../ui/topBarTrim";
 import { type EffectItem, maxEffects } from "./effectIcons";
 import { heartRows } from "./hudView";
@@ -198,14 +200,7 @@ export function debuffFillWidth(secondsLeft: number, seconds: number): number {
 // a fill that grows left to right in whole pixels with the share of the neighbourhood walked, a
 // row per fill colour, top to bottom. The strip is the borders and the fill's rows tall. Each
 // colour is a PALETTE name the scene draws it in.
-export const ZONE_PROGRESS = {
-  border: 1,
-  colours: {
-    border: "ink",
-    fill: ["yellow", "amber"],
-    track: "darkSlate",
-  },
-} as const;
+export const ZONE_PROGRESS = GAME_PROGRESS;
 
 type ZoneFillColour = (typeof ZONE_PROGRESS.colours.fill)[number];
 
@@ -229,19 +224,15 @@ interface ZoneProgressLayout {
 // The progress line in strip with share of the neighbourhood walked: the fill as wide as the
 // whole pixels of the track that share covers, so it is full only at the neighbourhood's end.
 export function zoneProgressLayout(strip: Rect, share: number): ZoneProgressLayout {
-  const { border, colours } = ZONE_PROGRESS;
-  const frame = strip;
-  const track = insetRect(border, frame);
-  const width = Math.floor(track.width * clamp01(share));
-  const rowHeight = track.height / colours.fill.length;
-  const fills = colours.fill.map((colour, i) => ({
-    colour,
-    height: rowHeight,
-    width,
-    x: track.x,
-    y: track.y + i * rowHeight,
-  }));
-  return { fills, frame, track };
+  const { fills, frame, track } = progressBarLayout(GAME_PROGRESS_STYLE, strip, share);
+  return {
+    fills: fills.map((fill, index) => ({
+      colour: ZONE_PROGRESS.colours.fill[index] ?? ZONE_PROGRESS.colours.fill[0],
+      ...fill,
+    })),
+    frame,
+    track,
+  };
 }
 
 // A dog card (ui-dog-card, the size of a slot in the card row). The name is centred on name.x

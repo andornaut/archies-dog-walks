@@ -10,7 +10,7 @@ export function onLoadProgress(
   scene: Scene,
   expectedBytes: ReadonlyMap<string, number>,
   report: (fraction: number) => void,
-): void {
+): () => void {
   const files = new Map<Loader.File, FileProgress>();
   const track = (file: Loader.File) => {
     files.set(file, { bytes: expectedBytes.get(file.key) ?? UNKNOWN_FILE_BYTES, fraction: 0 });
@@ -28,11 +28,23 @@ export function onLoadProgress(
     shown = Math.max(shown, byteFraction([...files.values()]));
     report(shown);
   };
+  const added = (_key: string, _type: string, _loader: unknown, file: Loader.File) => track(file);
+  const progressed = (file: Loader.File, fraction: number) => update(file, fraction);
+  const loaded = (file: Loader.File) => update(file, 1);
+  const stop = () => {
+    scene.load.off("addfile", added);
+    scene.load.off("fileprogress", progressed);
+    scene.load.off("load", loaded);
+    scene.load.off("loaderror", loaded);
+    scene.load.off("complete", stop);
+    scene.events.off("shutdown", stop);
+  };
   scene.load.list.forEach(track);
-  scene.load.on("addfile", (_key: string, _type: string, _loader: unknown, file: Loader.File) =>
-    track(file),
-  );
-  scene.load.on("fileprogress", (file: Loader.File, fraction: number) => update(file, fraction));
-  scene.load.on("load", (file: Loader.File) => update(file, 1));
-  scene.load.on("loaderror", (file: Loader.File) => update(file, 1));
+  scene.load.on("addfile", added);
+  scene.load.on("fileprogress", progressed);
+  scene.load.on("load", loaded);
+  scene.load.on("loaderror", loaded);
+  scene.load.once("complete", stop);
+  scene.events.once("shutdown", stop);
+  return stop;
 }

@@ -38,6 +38,7 @@ body {
    border box, padding included. Phaser re-measures the parent only every 500 ms of game
    time, so a canvas sized for a taller parent stays clipped to the game area. */
 #game {
+  position: relative;
   flex: 1;
   min-height: 0;
   overflow: hidden;

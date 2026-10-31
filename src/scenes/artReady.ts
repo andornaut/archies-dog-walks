@@ -1,8 +1,11 @@
+import { createProgressState } from "@andornaut/game-kit/progressState";
 import { type Scene, Scenes } from "phaser";
 
 // Set in the game registry, and emitted on the game, once boot has loaded and registered the
 // art and sounds it left until after the home screen showed.
 const ART_READY = "art-ready";
+
+export const walkArtProgress = createProgressState();
 
 export function markArtReady(scene: Scene): void {
   scene.registry.set(ART_READY, true);

@@ -62,8 +62,3 @@ export function loadingWalkerAt(progress: number): Point {
     y: LOADING_WALKER.y,
   };
 }
-
-// The fallback bar's width along the track, drawn while the walker's art is missing.
-export function loadingBarWidth(progress: number): number {
-  return Math.round(LOADING_TRACK.width * clamp01(progress));
-}

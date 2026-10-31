@@ -1,3 +1,4 @@
+import { drawProgressBar } from "@andornaut/game-kit/progress/phaser/drawProgressBar";
 import type { Point, Rect } from "@andornaut/game-kit/rect";
 import { type GameObjects, Scene } from "phaser";
 
@@ -68,7 +69,6 @@ import {
   WALK_BAR_BUTTONS,
   type WalkBarButtonId,
   walkBarLayout,
-  ZONE_PROGRESS,
   zoneProgressLayout,
   zoneProgressText,
   zoneShare,
@@ -101,6 +101,7 @@ import {
   scalePixelText,
   setPixelText,
 } from "../ui/phaser/pixelText";
+import { GAME_PROGRESS_STYLE } from "../ui/progressBar";
 import { topBarRects } from "../ui/topBarTrim";
 import { type Cents, cents } from "../units";
 import { arcFlight } from "./arcFlight";
@@ -290,11 +291,8 @@ export class HudScene extends Scene {
     } else {
       fillRect(g, PALETTE.darkBrown, dogRow);
     }
-    const { colours } = ZONE_PROGRESS;
-    const line = zoneProgressLayout(zoneProgress, 0);
-    fillRect(g, PALETTE[colours.border], line.frame);
-    fillRect(g, PALETTE[colours.track], line.track);
     this.zoneFill = this.add.graphics();
+    drawProgressBar(this.zoneFill, GAME_PROGRESS_STYLE, zoneProgress, 0);
     this.zoneFillWidth = undefined;
     if (this.textures.exists("ui-walk-bar")) {
       this.add.image(topBar.x, topBar.y, "ui-walk-bar").setOrigin(0);
@@ -719,9 +717,7 @@ export class HudScene extends Scene {
     }
     this.zoneFillWidth = width;
     g.clear();
-    if (width > 0) {
-      fills.forEach((fill) => fillRect(g, PALETTE[fill.colour], fill));
-    }
+    drawProgressBar(g, GAME_PROGRESS_STYLE, LAYOUT.zoneProgress, zoneShare(gameData, run));
   }
 
   private addDebuffBar(debuff: DebuffId, rect: Rect): DebuffBarView {

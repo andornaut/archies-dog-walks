@@ -45,6 +45,7 @@ import { StartScene } from "./scenes/StartScene";
 import { StatsScene } from "./scenes/StatsScene";
 import { TapBurstScene } from "./scenes/TapBurstScene";
 import { ZoneCelebrationScene } from "./scenes/ZoneCelebrationScene";
+import { startupLoad } from "./ui/startupProgress";
 
 // The dev panel's view of the game: the cheats are a registry entry RunScene reads each frame.
 function devPanelHost(game: Game): DevPanelHost {
@@ -163,6 +164,7 @@ function bootGame(): Game {
     Object.assign(globalThis, { dogWalkerGame: game });
   }
 
+  game.events.once(Core.Events.POST_RENDER, () => startupLoad.finish());
   // The update notice shows on the home screen only.
   watchHomeScreen(game, setOnHomeScreen);
   watchFirstWalk(game);

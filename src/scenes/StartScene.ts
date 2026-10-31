@@ -1,6 +1,8 @@
 import { clampIndex, itemAt } from "@andornaut/game-kit/arrays";
+import type { ProgressValue } from "@andornaut/game-kit/progress";
+import { drawProgressBar } from "@andornaut/game-kit/progress/phaser/drawProgressBar";
 import { containsPoint, insetRect, type Rect } from "@andornaut/game-kit/rect";
-import { type GameObjects, Scene, type Time } from "phaser";
+import { Core, type GameObjects, Scene, type Time } from "phaser";
 
 import {
   dogFaceKey,
@@ -152,11 +154,12 @@ import {
   setPixelText,
   withProbe,
 } from "../ui/phaser/pixelText";
+import { GAME_PROGRESS_STYLE } from "../ui/progressBar";
 import { BUTTON_COLOURS, GREYED, pictureBox, type SelectLook } from "../ui/selection";
 import { TEXT_SCALE } from "../ui/textFit";
 import { topBarRects } from "../ui/topBarTrim";
 import type { Cents } from "../units";
-import { artReady, whenArtReady } from "./artReady";
+import { artReady, walkArtProgress, whenArtReady } from "./artReady";
 import type { CelebrationSceneData } from "./CelebrationScene";
 import { addNamePills } from "./effectNameColours";
 import { HELP_CLOSED_EVENT } from "./HelpScene";
@@ -426,6 +429,9 @@ export class StartScene extends Scene {
   // A press of Start walk or help made before boot has loaded the rest of the art: the latest
   // runs once it has, and Start walk shows held down and dimmed while it waits.
   private artWait: { action: () => void; kind: "help" | "start" } | undefined;
+  private entry: object | undefined;
+  private waitBar: GameObjects.Graphics | undefined;
+  private waitProgress: ProgressValue;
   // Whether the top bar shows Exit (exitShown).
   private exit = true;
   private focus: Focus | null = null;
@@ -473,6 +479,21 @@ export class StartScene extends Scene {
   create(): void {
     this.action = { kind: "none" };
     this.artWait = undefined;
+    this.entry = undefined;
+    this.waitBar = undefined;
+    const stopProgress = walkArtProgress.subscribe(({ active, value }) => {
+      this.waitProgress = active ? value : undefined;
+      if (this.waitBar !== undefined) {
+        this.waitBar.clear();
+        drawProgressBar(
+          this.waitBar,
+          GAME_PROGRESS_STYLE,
+          SCREEN_LAYOUT.zoneProgress,
+          this.waitProgress,
+        );
+      }
+    });
+    this.events.once("shutdown", stopProgress);
     this.exit = exitShown();
     this.focus = null;
     this.hold = undefined;
@@ -639,6 +660,8 @@ export class StartScene extends Scene {
       this.pending.forEach((timer) => timer.remove());
       this.pending.clear();
       this.artWait = undefined;
+      this.entry = undefined;
+      this.waitBar?.setVisible(false);
       const lifted = this.closePressed();
       const dipping = this.press?.held === false ? this.press : undefined;
       this.hold = undefined;
@@ -1080,8 +1103,29 @@ export class StartScene extends Scene {
       loadout: { dogs, gear: this.loadout.gear, walker },
     };
     const go = () => {
+      if (this.entry !== undefined) {
+        return;
+      }
+      const entry = {};
+      this.entry = entry;
       startWakeLock();
-      this.scene.start(SCENE_KEYS.run, runSceneData(nextRunStart(), pick));
+      this.artWait = { action: () => undefined, kind: "start" };
+      this.waitProgress = undefined;
+      this.render();
+      // Paint the pending line before synchronous planning; it has no percentage denominator.
+      onceSceneEvent(this, this.game.events, Core.Events.POST_RENDER, () => {
+        if (this.entry !== entry) {
+          return;
+        }
+        const timer = this.time.delayedCall(0, () => {
+          this.pending.delete(timer);
+          if (this.entry !== entry) {
+            return;
+          }
+          this.scene.start(SCENE_KEYS.run, runSceneData(nextRunStart(), pick));
+        });
+        this.pending.add(timer);
+      });
     };
     if (!startWalkOpensHelp(save)) {
       go();
@@ -1242,6 +1286,7 @@ export class StartScene extends Scene {
     if (root === undefined) {
       return;
     }
+    this.waitBar = undefined;
     root.removeAll(true);
     this.views = new Map();
     this.gateDogs = [];
@@ -2100,6 +2145,16 @@ export class StartScene extends Scene {
   // both labels. The faces are the ui-button's, and the label sinks with the face.
   // Pressed while the walk's art loads, its pressed face says so, in words that keep still.
   private drawStartButton(root: GameObjects.Container, ready: boolean): void {
+    if (this.artWait?.kind === "start") {
+      this.waitBar = this.add.graphics();
+      root.add(this.waitBar);
+      drawProgressBar(
+        this.waitBar,
+        GAME_PROGRESS_STYLE,
+        SCREEN_LAYOUT.zoneProgress,
+        this.waitProgress,
+      );
+    }
     const { width, x, y } = START_BUTTON;
     const container = this.add.container(0, 0);
     root.add(container);
