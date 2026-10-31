@@ -27,9 +27,19 @@ const ROW_X = PANEL.x + 12;
 // Rows run to the tabs' right edge, or with a scrollbar stop 6px short of its track.
 const ROW_WIDTH = 328;
 const ROW_SCROLL_WIDTH = 314;
-const TAB = { drawHeight: 28, drawY: 85, gap: 8, height: 44, span: ROW_WIDTH, x: ROW_X, y: 77 };
-// A selected tab's ui-select frame and its shadow end SELECT_OUTSET under its face. TAB_GAP clear
-// rows lie between the selected tab and the title row over it, and between it and the list.
+// Both pages keep every tab target below the close target, with 4px clear between them.
+const TAB_Y = PAGE_CLOSE.hit.y + PAGE_CLOSE.hit.height + 4;
+const TAB = {
+  drawHeight: 28,
+  drawY: TAB_Y + 8,
+  gap: 8,
+  height: 44,
+  span: ROW_WIDTH,
+  x: ROW_X,
+  y: TAB_Y,
+};
+// A selected tab's frame and shadow end SELECT_OUTSET under its face. TAB_GAP clear rows
+// separate the selected tab from the list; the close target determines its header clearance.
 const TAB_BOTTOM = TAB.drawY + TAB.drawHeight + SELECT_OUTSET;
 const TAB_GAP = 6;
 // The list area: from TAB_GAP under the tabs to the card's inner edge, from the card's 8px frame

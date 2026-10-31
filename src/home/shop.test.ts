@@ -1,5 +1,6 @@
 import { fillNames } from "@andornaut/game-kit/lines";
 import { keysOf } from "@andornaut/game-kit/records";
+import { rectsOverlap } from "@andornaut/game-kit/rect";
 import { inkRowsFromCapTop } from "@andornaut/game-kit/text/bitmapFont";
 import { describe, expect, it } from "vitest";
 
@@ -350,10 +351,9 @@ describe("the shop's headings", () => {
   });
 });
 
-// A selected tab, lifted and framed, keeps 6px of card clear under the title row, and as much
-// over the list.
+// Selected tabs clear the title row and retain the gap over the list.
 describe("the shop's tabs", () => {
-  it("clear the title row and the list by 6px when selected", () => {
+  it("clear the title row and the list by at least 6px when selected", () => {
     const { list, tab } = SHOP_LAYOUT;
     const row = SHOP_LAYOUT.title.row;
     const above = tab.drawY - FEEDBACK.liftPx - SELECT_OUTSET - (row.y + row.height);
@@ -362,7 +362,7 @@ describe("the shop's tabs", () => {
       SHOP_LAYOUT.panel.x + SHOP_LAYOUT.panel.width,
     );
     expect(above).toBeGreaterThanOrEqual(6);
-    expect(below).toBe(above);
+    expect(below).toBe(6);
   });
 
   // The shop's tabs and the Logbook's split the same span, gap apart, each a full tap target.
@@ -383,6 +383,10 @@ describe("the shop's tabs", () => {
     });
     for (const tab of tabs) {
       expect(Math.min(tab.width, tab.height)).toBeGreaterThanOrEqual(MIN_TAP_SIZE);
+      expect(rectsOverlap(tab, SHOP_LAYOUT.close.hit)).toBe(false);
+      expect(
+        tab.y - (SHOP_LAYOUT.close.hit.y + SHOP_LAYOUT.close.hit.height),
+      ).toBeGreaterThanOrEqual(4);
     }
   });
 });

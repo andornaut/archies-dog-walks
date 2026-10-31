@@ -2470,43 +2470,43 @@
         "y": 52
       },
       "dogs": {
-        "dogHeadingY": 327,
+        "dogHeadingY": 342,
         "dogRows": {
           "height": 48,
           "pitch": 54,
-          "y": 352
+          "y": 367
         },
-        "slotHeadingY": 131,
+        "slotHeadingY": 146,
         "slotRows": {
           "height": 48,
           "pitch": 54,
-          "y": 156
+          "y": 171
         }
       },
       "gear": {
-        "headingY": 131,
+        "headingY": 146,
         "rows": {
           "height": 50,
           "pitch": 60,
-          "y": 156
+          "y": 171
         }
       },
       "headingX": 16,
       "list": {
-        "firstHeadingY": 131,
+        "firstHeadingY": 146,
         "padBottom": 8,
         "pageOverlap": 48,
         "rect": {
-          "height": 426,
+          "height": 411,
           "width": 322,
           "x": 12,
-          "y": 122
+          "y": 137
         },
         "unscrolledRect": {
-          "height": 426,
+          "height": 411,
           "width": 336,
           "x": 12,
-          "y": 122
+          "y": 137
         }
       },
       "message": {
@@ -2515,7 +2515,7 @@
           "height": 28,
           "width": 328,
           "x": 16,
-          "y": 122
+          "y": 137
         },
         "textDx": 10
       },
@@ -2552,12 +2552,12 @@
       },
       "tab": {
         "drawHeight": 28,
-        "drawY": 85,
+        "drawY": 100,
         "gap": 8,
         "height": 44,
         "span": 328,
         "x": 16,
-        "y": 77
+        "y": 92
       },
       "title": {
         "capTop": 57,
@@ -2573,13 +2573,13 @@
           "height": 44,
           "width": 160,
           "x": 16,
-          "y": 77
+          "y": 92
         },
         {
           "height": 44,
           "width": 160,
           "x": 184,
-          "y": 77
+          "y": 92
         }
       ]
     },
@@ -2619,7 +2619,7 @@
         "rowsY": 38,
         "ruleAbove": 6,
         "ruleDx": 2,
-        "top": 131
+        "top": 146
       },
       "panel": {
         "height": 512,
@@ -2645,15 +2645,15 @@
         "x": 336
       },
       "view": {
-        "height": 426,
+        "height": 411,
         "width": 322,
         "x": 12,
-        "y": 122
+        "y": 137
       },
       "walks": {
         "rowsY": 20,
         "sectionGap": 12,
-        "top": 131
+        "top": 146
       },
       "wall": {
         "badgeTop": 2,
@@ -2669,10 +2669,10 @@
         },
         "foot": 16,
         "gap": 8,
-        "headingY": 131,
+        "headingY": 146,
         "width": 314,
         "x": 16,
-        "y": 151
+        "y": 166
       },
       "wallText": {
         "lineHeight": 16,
@@ -2687,19 +2687,19 @@
           "height": 44,
           "width": 104,
           "x": 16,
-          "y": 77
+          "y": 92
         },
         {
           "height": 44,
           "width": 104,
           "x": 128,
-          "y": 77
+          "y": 92
         },
         {
           "height": 44,
           "width": 104,
           "x": 240,
-          "y": 77
+          "y": 92
         }
       ]
     }
