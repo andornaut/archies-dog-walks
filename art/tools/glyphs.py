@@ -54,8 +54,6 @@ import sys
 from PIL import Image
 
 sys.path.insert(0, os.path.dirname(__file__))
-import drops  # noqa: E402
-from minis import Mini  # noqa: E402
 from pixel import K, Grid, bitmap, build as build_sprites, icon_edge, to_image  # noqa: E402
 from fx import burst, star4  # noqa: E402
 from road import SQUIRREL_FUR  # noqa: E402
@@ -67,20 +65,20 @@ from road import SQUIRREL_FUR  # noqa: E402
 # that parts it from the back), b belly, s feet, w eye glint, n nose. The tail rises from the haunch as a
 # separate plume and curls over at the top, so the shape reads as a squirrel and not a dark blob.
 CHASER = [
-    "................",
-    ".........llll...",
-    "........lffffl..",
-    "....l...lff..ff.",
-    "..llfl..lff...f.",
-    ".lffff..lff.....",
-    ".fwffff.lff.....",
-    "nffffff..lff....",
-    ".fbffff..lff....",
-    "..bbffff.lff....",
-    "..bbffff.lfff...",
-    "..bbfffffffff...",
+    "..........lll...",
+    ".........lfffl..",
+    "........lff.ffl.",
+    "...l....lff..fl.",
+    "..lfl...lff..fl.",
+    ".lfff...lff.....",
+    "nfwfff..lff.....",
+    ".fbfff..lff.....",
+    "..bfff..lff.....",
+    "..bfff..lfff....",
+    "..ffff..lfff....",
+    "..fffffffffff...",
     "..ffffffffff....",
-    "..ss.ss.........",
+    ".ss..ss.........",
     "................",
     "................",
 ]
@@ -133,16 +131,20 @@ def second_chance():
 
 
 def long_reach():
-    """An open hand, palm out, over a green arrow pointing both ways: a reach a lane to each side."""
+    """A broad open palm and wrist above the green two-way reach arrow."""
     g = Grid(16, 16)
-    bitmap(g, 4, 0, [".s.s.s..", ".s.s.s.s", ".sssss.s", "ss.sssss", "sssssssd", ".ssssssd",
-                     "..sssssd", "..sssdd."], {"s": "skin1", "d": "skin2"})
+    g.rect(6, 3, 6, 5, "skin1")
+    for x, y in ((6, 1), (8, 0), (10, 1), (12, 2)):
+        g.rect(x, y, 1, 5 - y, "skin1")
+    g.rect(3, 5, 2, 2, "skin1")
+    g.rect(4, 6, 3, 2, "skin1")
+    g.rect(7, 8, 4, 2, "skin1")
+    g.rect(10, 7, 2, 2, "skin2")
     g.tri((1, 12.5), (4, 9.5), (4, 15.5), "green")
     g.tri((15, 12.5), (12, 9.5), (12, 15.5), "green")
     g.rect(4, 11, 8, 3, "green")
     g.rect(4, 13, 8, 1, "dgreen")
     return g
-
 
 def keen_eye():
     """A magnifying glass, its cyan lens over the treat (a white bone with a red heart on its shaft), its
@@ -361,42 +363,42 @@ def big_tipper():
 CALM_DOG_COLS = {"o": "brown", "h": "dbrown", "e": "dbrown", "m": "tan", "k": "ink", "c": "red"}
 CALM_DOG = [
     "................",
-    "................",
-    "..ooo...........",
-    ".ooooe..........",
-    ".okooe..........",
-    "kmoooe..........",
-    ".mmooe..........",
-    "...ooo..........",
+    "..oooo..........",
+    ".ooooee.........",
+    ".okooee.........",
+    "kmmoooe.........",
+    ".mmmooe.........",
     "...ccc..........",
-    "...mooo.........",
     "...moooo........",
     "...mooooo.......",
-    "...mo.oooo..hh..",
-    "...mo.ooooo.h...",
-    "..hhh.hhhhhhh...",
+    "...moooooo...h..",
+    "...mooooooo..h..",
+    "...moohhoooohh..",
+    "...moohhooooh...",
+    "..hhh.hhhhhh....",
+    "................",
     "................",
 ]
 CALM_DOG_20 = [
     "....................",
-    "....................",
-    "..oooo..............",
-    ".oooooee............",
-    ".ookoooe............",
-    ".oooooee............",
-    "kmmoooee............",
-    ".mmmooe.............",
-    "....ooo.............",
+    "...ooooo............",
+    "..oooooee...........",
+    "..ookooee...........",
+    "..oooooee...........",
+    ".kmmmoooe...........",
+    "..mmmmooe...........",
     "....cccc............",
-    "....mooo............",
-    "....moooo...........",
     "....mooooo..........",
     "....moooooo.........",
     "....mooooooo........",
-    "....mo.ooooo...hh...",
-    "....mo.oooooo..h....",
-    "....mo.ooooooohh....",
-    "...hhh.hhhhhhhh.....",
+    "....moooooooo....h..",
+    "....mooooooooo...h..",
+    "....mooooooooo..hh..",
+    "....mooohhoooohhhh..",
+    "....mooohhoooohh....",
+    "....mooohhoooo......",
+    "...hhhh.hhhhhhh.....",
+    "....................",
     "....................",
 ]
 
@@ -405,31 +407,25 @@ def good_leash():
     """A calm dog, sitting politely with its head up and a twinkle of good manners: no squirrel pulls it."""
     g = Grid(16, 16)
     bitmap(g, 0, 0, CALM_DOG, CALM_DOG_COLS)
-    star4(g, 11, 4, 1, "yellow")
+    star4(g, 12, 3, 1, "yellow")
     return g
 
 
 def raincoats():
-    """A yellow raincoat with its hood up, and a drop of rain."""
+    """A yellow hooded coat with one dark hood opening, two sleeves and a clear hem."""
     g = Grid(16, 16)
-    bitmap(g, 2, 2, [
-        "....yyyy....",
-        "...yyyyya...",
-        "..yy....ya..",
-        "..yy....ya..",
-        ".yyyy..yyaa.",
-        "yyyyyyyyyyaa",
-        "yyy.yyyy.yaa",
-        "yy..yykyy.aa",
-        "....yyyyya..",
-        "....yykyya..",
-        "...yyyyyyya.",
-        "...yyyyyyaa.",
-        "...yyyyyaaa.",
-    ], {"y": "yellow", "a": "amber", "k": "orange"})
+    bitmap(g, 5, 1, ["..yyy..", ".yyyyy.", "yyddday", "yyddday", ".yyyyy."],
+           {"y": "yellow", "a": "amber", "d": "dbrown"})
+    g.rect(5, 6, 8, 8, "yellow")
+    g.tri((5, 5), (2, 9), (5, 11), "yellow")
+    g.tri((12, 5), (15, 9), (13, 11), "amber")
+    g.rect(12, 7, 1, 7, "amber")
+    g.rect(8, 7, 1, 6, "orange")
+    for y in (8, 11):
+        g.p(9, y, "ochre")
+    g.rect(5, 14, 8, 1, "amber")
     drop(g, 2, 1, 1.3, "cyan", "sky")
     return g
-
 
 def sweet_talker():
     """A speech bubble saying money goes down."""
@@ -460,7 +456,7 @@ def rush_hour():
 # The gear, after its 32x32 item art in icons.py.
 
 def gear_whistle():
-    """The whistle without its sound lines, which blur together at 16x16."""
+    """A silver whistle with a dark mouthpiece and one separated cyan sound stroke."""
     g = Grid(16, 16)
     g.ell(6.5, 10, 5.5, 4.8, "lgrey", "grey", "white")
     g.rect(6, 6, 9, 4, "lgrey")
@@ -472,13 +468,13 @@ def gear_whistle():
     for x, y in ((4, 9), (6, 9), (3, 10), (7, 10)):
         g.p(x, y, "dred")
     g.rect(4, 11, 3, 2, "dred")
+    g.rect(9, 0, 1, 3, "cyan")
     return g
 
 
 def gear_fanny_pack():
-    """drops.py's forest-green waist pack at 16x16."""
-    return fanny_pack_at(1)
-
+    """A deep forest-green pouch with a visible belt, zipper and pale logo."""
+    return fanny_pack_icon(16)
 
 def gear_hall_pass():
     g = Grid(16, 16)
@@ -629,17 +625,20 @@ def quick_recovery20():
 
 
 def long_reach20():
-    """An open hand, palm out, over a green arrow pointing both ways: a reach a lane to each side."""
+    """A native twenty-pixel palm with separated fingers, a thumb and a green reach arrow."""
     g = Grid(20, 20)
-    bitmap(g, 4, 0, ["....ss.ss...", ".ss.ss.ss...", ".ss.ss.ss.ss", ".ss.ss.ss.ss", ".ss.ss.ss.ss",
-                     "s.ssssssssss", "ss.sssssssss", ".ssssssssssd", "..sssssssdd.", "...sssssdd.."],
-           {"s": "skin1", "d": "skin2"})
-    g.tri((1, 14.5), (5, 10.5), (5, 18.5), "green")
-    g.tri((19, 14.5), (15, 10.5), (15, 18.5), "green")
-    g.rect(5, 13, 10, 3, "green")
-    g.rect(5, 15, 10, 1, "dgreen")
+    g.rect(6, 4, 9, 6, "skin1")
+    for x, y in ((6, 2), (9, 0), (12, 1), (15, 3)):
+        g.rect(x, y, 2, 6 - y, "skin1")
+    g.rect(2, 6, 3, 3, "skin1")
+    g.rect(4, 8, 4, 3, "skin1")
+    g.rect(8, 10, 5, 2, "skin1")
+    g.rect(13, 7, 2, 3, "skin2")
+    g.tri((1, 15.5), (5, 12), (5, 19), "green")
+    g.tri((19, 15.5), (15, 12), (15, 19), "green")
+    g.rect(5, 14, 10, 3, "green")
+    g.rect(5, 16, 10, 1, "dgreen")
     return g
-
 
 def keen_eye20():
     """A magnifying glass, its cyan lens over the treat (a white bone with a red heart on its shaft), its
@@ -668,34 +667,25 @@ def good_leash20():
     """The calm dog of good_leash, sitting politely with its twinkle."""
     g = Grid(20, 20)
     bitmap(g, 0, 0, CALM_DOG_20, CALM_DOG_COLS)
-    star4(g, 14, 5, 2, "yellow")
+    star4(g, 15, 4, 2, "yellow")
     return g
 
 
 def raincoats20():
-    """A yellow raincoat with its hood up, buttoned down the front, and a drop of rain."""
+    """A native twenty-pixel raincoat with a single hood opening and broad yellow panels."""
     g = Grid(20, 20)
-    bitmap(g, 4, 3, [
-        ".....yyyy.....",
-        "....yyyyyy....",
-        "...yyyyyyya...",
-        "...yy....ya...",
-        "...yy....ya...",
-        "..yyy....yaa..",
-        ".yyyyy..yyyaa.",
-        "yyyyyyyyyyyyaa",
-        "yyyy.yyyyy.yaa",
-        "yyy..yykyy..aa",
-        "yyy..yyyyy..aa",
-        "yy...yykyy...a",
-        ".....yyyyya...",
-        "....yyyyyyya..",
-        "....yyyyyyaa..",
-        "....yyyyyaaa..",
-    ], {"y": "yellow", "a": "amber", "k": "orange"})
+    bitmap(g, 7, 1, ["..yyyy..", ".yyyyyy.", "yydddday", "yydddday", "yydddday", ".yyyyyy."],
+           {"y": "yellow", "a": "amber", "d": "dbrown"})
+    g.rect(6, 7, 10, 10, "yellow")
+    g.tri((6, 6), (2, 11), (5, 14), "yellow")
+    g.tri((15, 6), (19, 11), (16, 14), "amber")
+    g.rect(15, 8, 1, 9, "amber")
+    g.rect(10, 8, 1, 8, "orange")
+    for y in (10, 14):
+        g.rect(11, y, 1, 2, "ochre")
+    g.rect(6, 17, 10, 1, "amber")
     drop(g, 2.5, 1, 1.6, "cyan", "sky")
     return g
-
 
 def rush_hour20():
     """An alarm clock ringing: two amber bells, a red case on lgrey feet and a white face."""
@@ -743,18 +733,33 @@ def gear_whistle20():
 
 
 def gear_fanny_pack20():
-    """drops.py's forest-green waist pack at 20x20."""
-    return fanny_pack_at(1.25)
+    """A native twenty-pixel waist pack with a broad pouch and a separate buckle."""
+    return fanny_pack_icon(20)
 
-
-def fanny_pack_at(s):
-    """drops.fanny_pack's 16-unit design drawn at scale s on a Grid."""
-    m = Mini(s, 16, 16)
-    drops.fanny_pack(m)
-    g = Grid(len(m.px[0]), len(m.px))
-    g.px = m.px
+def fanny_pack_icon(size):
+    """Redraw each small glyph on its native grid without changing the shared pickup design."""
+    g = Grid(size, size)
+    if size == 16:
+        g.rect(0, 4, 16, 2, "dslate")
+        g.blob(8, 9, 6, 5, "dgreen", "forest", "green", power=3)
+        g.rect(3, 4, 10, 4, "dgreen")
+        g.rect(3, 4, 10, 1, "green")
+        g.rect(3, 6, 10, 1, "ink")
+        g.rect(12, 6, 1, 2, "lgrey")
+        g.rect(0, 4, 2, 4, "slate")
+        g.rect(0, 5, 1, 2, "lgrey")
+        g.rect(5, 10, 3, 1, "cream")
+    else:
+        g.rect(0, 5, 20, 2, "dslate")
+        g.blob(10, 11, 8, 6, "dgreen", "forest", "green", power=3)
+        g.rect(3, 5, 14, 4, "dgreen")
+        g.rect(3, 5, 14, 1, "green")
+        g.rect(3, 7, 14, 1, "ink")
+        g.rect(16, 7, 1, 3, "lgrey")
+        g.rect(0, 4, 3, 5, "slate")
+        g.rect(1, 5, 1, 3, "lgrey")
+        g.rect(6, 12, 4, 2, "cream")
     return g
-
 
 def gear_hall_pass20():
     """The Hall pass: a cream pass card on a sky lanyard, clipped through its red header band, a dred
