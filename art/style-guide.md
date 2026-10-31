@@ -247,6 +247,8 @@ Mr. B's new-walker welcome uses `walker-mr-b`'s `phone` tag at 2×: his feet sta
 
 ## Badges
 
+Result summaries and earned-badge strips follow the [control guide’s measured placement contract](controls.md#sizing-and-spacing): prefer summary top `y = 126`, clamped to fit the actual summary and unchanged badge-strip heights above `y = 511`. Move the summary and its attached ribbon as one group; centre the entire badge strip in the free space below the summary, retaining 3px before the Back to title target at `y = 514`. Preserve badge rows, quip allocation, fonts and targets. Ordinary modals and full-scene celebration headings retain their separate geometry.
+
 `badge-<achievement>` medals are 32×32: a ring in the tier colour around a cream face with the goal's emblem (`art/tools/badges.py`). No two badges share a motif, so all 40 read apart at 1× on the badge wall's cream panel. Each emblem is one object, with no scene or filler round it, and shows only what is in the game.
 
 - Tiers: firsts bronze, mastery silver, collection gold, legend purple with gold studs, silly pink. Legend is the one hardest badge, Legend of the Leash. Silly is the joke tier, earned by mishaps and running gags; pink marks a joke, never a rank.
