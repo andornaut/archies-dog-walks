@@ -66,8 +66,14 @@ export interface DebuffHitEffect {
   readonly key: string;
 }
 
-// Ground art uses its native frame size, anchored on the feet row.
-export const DEBUFF_GROUND = { groundRow: 30, height: 36, width: 60, yOffset: -1 } as const;
+// Ground art scales around its native feet row, retaining the actor's ground anchor.
+export const DEBUFF_GROUND = {
+  groundRow: 30,
+  height: 36,
+  scale: 1.5,
+  width: 60,
+  yOffset: -1,
+} as const;
 
 export interface StruckDog {
   readonly kind: HitKind;

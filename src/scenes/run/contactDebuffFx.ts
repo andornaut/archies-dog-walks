@@ -32,7 +32,9 @@ export function playContactDebuff(
   const bursts = feet.map(() => {
     const burst: GameObjects.Image | GameObjects.Sprite =
       cue.frame === null ? scene.add.sprite(0, 0, cue.key) : scene.add.image(0, 0, cue.key, frame);
-    return burst.setOrigin(0.5, DEBUFF_GROUND.groundRow / DEBUFF_GROUND.height);
+    return burst
+      .setOrigin(0.5, DEBUFF_GROUND.groundRow / DEBUFF_GROUND.height)
+      .setScale(DEBUFF_GROUND.scale);
   });
   const group = scene.add.container(0, 0, bursts).setDepth(context.depth);
   const graphics = scene.make.graphics({}, false);

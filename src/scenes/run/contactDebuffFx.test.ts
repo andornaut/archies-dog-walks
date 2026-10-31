@@ -20,7 +20,7 @@ class Display extends EventEmitter {
   displayHeight = 36;
   displayWidth = 60;
   mask: unknown;
-  origin = [0, 0];
+  origin: [number, number] = [0, 0];
   visible = true;
   x = 0;
   y = 0;
@@ -50,6 +50,11 @@ class Display extends EventEmitter {
   }
   setOrigin(x: number, y = x) {
     this.origin = [x, y];
+    return this;
+  }
+  setScale(scale: number) {
+    this.displayWidth = 60 * scale;
+    this.displayHeight = 36 * scale;
     return this;
   }
   setPosition(x: number, y: number) {
@@ -120,31 +125,48 @@ const context = (feet: () => readonly Point[] = () => [walker]) => ({
 beforeEach(() => vi.resetAllMocks());
 
 describe("contact debuff ground cues", () => {
-  it("follows every visible actor at native size, under actors, without frame clamping", () => {
-    const { bursts, events, graphics, groups, mask, scene } = fixture();
-    let feet = [walker, { x: 130, y: 420 }, { x: 230, y: 420 }];
-    playContactDebuff(
-      scene as unknown as Scene,
-      context(() => feet),
-      cue,
-    );
-    expect(bursts).toHaveLength(feet.length);
-    expect(bursts.map(({ x, y }) => ({ x, y }))).toEqual(feet.map(({ x, y }) => ({ x, y: y - 1 })));
-    expect(bursts.every(({ origin }) => origin[0] === 0.5 && origin[1] === 5 / 6)).toBe(true);
-    expect(groups.map(({ depth }) => depth)).toEqual([9.5]);
-    expect(groups.every((group) => group.mask === mask)).toBe(true);
-    expect(graphics.fillRect).toHaveBeenCalledWith(view.x, view.y, view.width, view.height);
-    feet = [
-      { x: view.x + view.width + 20, y: 440 },
-      { x: 160, y: 450 },
-    ];
-    events.emit("postupdate");
-    expect(bursts[0]?.x).toBe(feet[0]?.x);
-    expect(bursts[1]?.y).toBe(450 + DEBUFF_GROUND.yOffset);
-    expect(bursts[2]?.visible).toBe(false);
-    expect(playTagOnce).toHaveBeenCalledTimes(3);
-    expect(scene.time.delayedCall).not.toHaveBeenCalled();
-  });
+  it.each(["muddy", "spotlight", "stinky", "zoomies"] as const)(
+    "scales %s around every actor's feet, under actors, without frame clamping",
+    (debuff) => {
+      const { bursts, events, graphics, groups, mask, scene } = fixture();
+      let feet = [walker, { x: 130, y: 420 }, { x: 230, y: 420 }];
+      playContactDebuff(
+        scene as unknown as Scene,
+        context(() => feet),
+        { ...cue, debuff, key: HIT_ART.debuffs[debuff].key },
+      );
+      expect(bursts).toHaveLength(feet.length);
+      expect(bursts.map(({ x, y }) => ({ x, y }))).toEqual(
+        feet.map(({ x, y }) => ({ x, y: y - 1 })),
+      );
+      expect(bursts.every(({ origin }) => origin[0] === 0.5 && origin[1] === 5 / 6)).toBe(true);
+      expect(
+        bursts.every(
+          ({ displayHeight, displayWidth }) => displayWidth === 90 && displayHeight === 54,
+        ),
+      ).toBe(true);
+      const first = bursts[0];
+      expect(
+        first && {
+          x: first.x - first.displayWidth * first.origin[0],
+          y: first.y - first.displayHeight * first.origin[1],
+        },
+      ).toEqual({ x: 135, y: 394 });
+      expect(groups.map(({ depth }) => depth)).toEqual([9.5]);
+      expect(groups.every((group) => group.mask === mask)).toBe(true);
+      expect(graphics.fillRect).toHaveBeenCalledWith(view.x, view.y, view.width, view.height);
+      feet = [
+        { x: view.x + view.width + 20, y: 440 },
+        { x: 160, y: 450 },
+      ];
+      events.emit("postupdate");
+      expect(bursts[0]?.x).toBe(feet[0]?.x);
+      expect(bursts[1]?.y).toBe(450 + DEBUFF_GROUND.yOffset);
+      expect(bursts[2]?.visible).toBe(false);
+      expect(playTagOnce).toHaveBeenCalledTimes(3);
+      expect(scene.time.delayedCall).not.toHaveBeenCalled();
+    },
+  );
 
   it.each(["completion", "shutdown", "destroy"] as const)(
     "cleans all ground copies, mask and listeners on %s",
@@ -166,20 +188,32 @@ describe("contact debuff ground cues", () => {
     },
   );
 
-  it("holds the readable ground pose for the loaded duration", () => {
-    const { bursts, groups, scene, timers } = fixture(1200);
-    playContactDebuff(scene as unknown as Scene, context(), {
-      ...cue,
-      frame: HIT_ART.debuffs.stinky.peak,
-    });
-    expect(scene.add.sprite).not.toHaveBeenCalled();
-    expect(playTagOnce).not.toHaveBeenCalled();
-    expect(tagFrame).toHaveBeenCalledWith(scene, cue.key, HIT_ART.tag, 4);
-    expect(timers.map(({ ms }) => ms)).toEqual([1200]);
-    expect(bursts[0]?.active).toBe(true);
-    timers[0]?.callback();
-    expect(groups.every(({ active }) => !active)).toBe(true);
-  });
+  it.each(["muddy", "spotlight", "stinky", "zoomies"] as const)(
+    "holds the enlarged %s pose for the loaded duration",
+    (debuff) => {
+      const { bursts, groups, scene, timers } = fixture(1200);
+      playContactDebuff(scene as unknown as Scene, context(), {
+        ...cue,
+        debuff,
+        frame: HIT_ART.debuffs[debuff].peak,
+        key: HIT_ART.debuffs[debuff].key,
+      });
+      expect(scene.add.sprite).not.toHaveBeenCalled();
+      expect(playTagOnce).not.toHaveBeenCalled();
+      expect(tagFrame).toHaveBeenCalledWith(scene, HIT_ART.debuffs[debuff].key, HIT_ART.tag, 4);
+      expect(bursts[0]).toMatchObject({
+        displayHeight: 54,
+        displayWidth: 90,
+        origin: [0.5, 5 / 6],
+        x: 180,
+        y: 439,
+      });
+      expect(timers.map(({ ms }) => ms)).toEqual([1200]);
+      expect(bursts[0]?.active).toBe(true);
+      timers[0]?.callback();
+      expect(groups.every(({ active }) => !active)).toBe(true);
+    },
+  );
 
   it("skips unavailable art without graphics, listeners or timers", () => {
     const { events, scene } = fixture();
