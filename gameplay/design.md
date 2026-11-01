@@ -2,7 +2,7 @@
 
 The rulebook for the first complete game, set in one world, Toronto. What's left to build and tune is in [`README.md`](README.md), what comes later is in [`next.md`](next.md), and undecided ideas are in [`ideas.md`](ideas.md).
 
-[`src/data/`](../src/data/) holds every number and all content (names, text, prices, shapes, weights), and the [data page](https://dogwalker.tristamittermayer.com/data/) shows them with the generated card text. This doc states the rules, with numbers where they define one. `$` and `♥` give the direction and rough size of a change (`$$$` and `♥♥` are bigger).
+[`src/data/`](../src/data/) holds every number and all content (names, text, prices, shapes, weights), and the [data page](https://archie.tristamittermayer.com/data/) shows them with the generated card text. This doc states the rules, with numbers where they define one. `$` and `♥` give the direction and rough size of a change (`$$$` and `♥♥` are bigger).
 
 ## Pitch
 
