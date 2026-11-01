@@ -193,10 +193,10 @@ function repeatSlots(zone: RoadsideZone): number {
 
 describe("the roadside table", () => {
   it("is what art's tool prints", () => {
-    const tool = spawnSync("python3", ["-I", "art/tools/roadside.py", "table"], {
+    const tool = spawnSync(".venv-art/bin/python", ["-I", "art/tools/roadside.py", "table"], {
       encoding: "utf8",
     });
-    expect(tool.status).toBe(0);
+    expect(tool.status, tool.stderr).toBe(0);
     expect(JSON.parse(tool.stdout)).toEqual(ROADSIDE);
   });
 
