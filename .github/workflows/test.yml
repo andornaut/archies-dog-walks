@@ -2,15 +2,15 @@ name: Test
 
 # Every branch, not just main and pull requests: work lands on main directly as
 # often as it arrives through one, so a check that only runs on main is a check
-# that runs after the fact. Docs, art sources and gameplay notes carry no code,
-# so a push that touches only those skips the checks, as the deploy does.
+# that runs after the fact. Documentation and art assets skip the checks;
+# Python art generators run the same lint gate as the application.
 on:
   push:
     branches: ["**"]
-    paths-ignore: ["**/*.md", "art/**", "gameplay/**"]
+    paths: ["**", "!**/*.md", "!art/**", "!gameplay/**", "art/tools/**/*.py"]
   pull_request:
     branches: [main]
-    paths-ignore: ["**/*.md", "art/**", "gameplay/**"]
+    paths: ["**", "!**/*.md", "!art/**", "!gameplay/**", "art/tools/**/*.py"]
   workflow_dispatch:
 
 permissions:
@@ -85,7 +85,8 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      # Includes markdownlint, pinned in package.json, so this gate and a local
-      # `npm run lint` run one version from the lockfile.
+      - name: Install Python lint tool
+        run: npm run install:python
+
       - name: Lint
         run: npm run lint

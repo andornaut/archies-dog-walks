@@ -17,7 +17,7 @@ The folder READMEs describe the current design and implementation:
 
 ## Developing
 
-Use Node 24.21.0 (`.nvmrc`). Run `npm ci`, then:
+Use Node 24.21.0 (`.nvmrc`). Run `npm ci` and `npm run install:python`, then:
 
 | Command                                     | Does                                                                       |
 | ------------------------------------------- | -------------------------------------------------------------------------- |
@@ -31,7 +31,7 @@ Use Node 24.21.0 (`.nvmrc`). Run `npm ci`, then:
 | `npm run dev`                               | Dev server                                                                 |
 | `npm run export:data [-- --check]`          | Write `shared/export/` from the game's modules, or fail if it differs      |
 | `npm run format`                            | Rewrite files with Prettier and apply ESLint fixes                         |
-| `npm run lint`                              | Prettier check, ESLint and markdownlint                                    |
+| `npm run lint`                              | Prettier, ESLint, markdownlint and Ruff                                    |
 | `npm run preview`                           | Build, then serve it through `wrangler dev`                                |
 | `npm run simulate -- --help`                | Simulate runs ([src/README.md](src/README.md), Simulator)                  |
 | `npm test`                                  | Run the unit tests                                                         |
