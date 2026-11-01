@@ -1,0 +1,30 @@
+# Shared Python lint policy.
+line-length = 120
+
+target-version = "py312"
+
+[lint]
+select = ["ALL"]
+ignore = [
+    "ANN",
+    "D",
+    "CPY",
+    "COM",
+    "T20",
+    "FBT",
+    "EM",
+    "TRY003",
+    "PLR2004",
+    "C901",
+    "PLR0911",
+    "PLR0912",
+    "PLR0913",
+    "PLR0915",
+    "PLR0917",
+    "TRY300",
+    "TRY301",
+]
+
+[lint.per-file-ignores]
+"**/test_*.py" = ["ARG", "S101", "S108", "SLF001"]
+"**/*_test.py" = ["ARG", "S101", "S108", "SLF001"]
