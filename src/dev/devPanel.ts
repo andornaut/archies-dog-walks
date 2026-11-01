@@ -21,7 +21,6 @@ import {
   decodeCheats,
   decodeSaveEdits,
   DEV_CHEATS_KEY,
-  DEV_PANEL_OPEN_KEY,
   DEV_SAVE_EDITS_KEY,
   encodeCheats,
   encodeSaveEdits,
@@ -166,11 +165,7 @@ export function mountDevPanel(host: DevPanelHost, container: HTMLElement | null)
   sheet.setAttribute("role", "dialog");
   sheet.setAttribute("aria-label", "Cheats");
   const barLabel = el("span");
-  const bar = el(
-    "button",
-    { className: "dev-bar app-button app-button--wide", type: "button" },
-    barLabel,
-  );
+  const bar = el("button", { className: "dev-bar", type: "button" }, barLabel);
   bar.setAttribute("aria-controls", sheet.id);
 
   const render = () => {
@@ -192,12 +187,11 @@ export function mountDevPanel(host: DevPanelHost, container: HTMLElement | null)
     state = stagePanel(action, state);
     render();
   };
-  // Closing discards what is staged; Cancel discards it and leaves the panel open.
+  // Visibility does not change staged edits; only Cancel discards them.
   const setOpen = (open: boolean) => {
     sheet.hidden = !open;
     bar.setAttribute("aria-expanded", String(open));
-    sessionWrite(DEV_PANEL_OPEN_KEY, open ? "1" : "0");
-    stage({ kind: "cancel" });
+    render();
   };
 
   const select = startSelect();
@@ -252,17 +246,18 @@ export function mountDevPanel(host: DevPanelHost, container: HTMLElement | null)
     setOpen(sheet.hidden !== false);
     if (sheet.hidden === false) {
       sheet.scrollIntoView({ block: "nearest" });
-    } else {
-      // A focused bar would take the game's next Enter or Space as a click.
-      bar.blur();
     }
   });
-  // Phaser listens for keys on window, so keys typed here would move lanes or copy the run
-  // link without this.
+  // Native Enter and Space still activate the toggle, but never reach Phaser.
+  for (const event of ["keydown", "keyup"] as const) {
+    bar.addEventListener(event, (key) => key.stopPropagation());
+    sheet.addEventListener(event, (key) => key.stopPropagation());
+  }
+  // Escape hides the sheet and returns keyboard focus to its toggle.
   sheet.addEventListener("keydown", (event) => {
-    event.stopPropagation();
     if (event.key === "Escape") {
       setOpen(false);
+      bar.focus();
     }
   });
 
@@ -283,5 +278,5 @@ export function mountDevPanel(host: DevPanelHost, container: HTMLElement | null)
   container.append(bar, sheet);
   // The page starts it hidden, for the installed app, which mounts no panel.
   container.hidden = false;
-  setOpen(sessionRead(DEV_PANEL_OPEN_KEY) === "1");
+  setOpen(false);
 }

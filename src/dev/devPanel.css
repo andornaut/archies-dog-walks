@@ -17,10 +17,22 @@
 }
 
 .dev-bar {
-  display: flex;
-  justify-content: space-between;
+  display: block;
+  min-width: 44px;
+  min-height: 44px;
   margin-inline: auto;
+  padding: 0 8px;
+  border: 0;
+  background: transparent;
+  color: inherit;
   font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.dev-bar:focus-visible {
+  outline: 2px solid #2ce8f5;
+  outline-offset: -2px;
 }
 
 /* Below the bar, past the bottom of the screen; src/main.css scrolls the page to it. */

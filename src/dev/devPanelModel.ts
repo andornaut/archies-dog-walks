@@ -11,8 +11,6 @@ import { addCents, type Cents, cents } from "../units";
 import { stripDevParams } from "./devStart";
 import { type RunSetup, runSetupLink } from "./runSetup";
 
-// sessionStorage, "1" while the panel is open.
-export const DEV_PANEL_OPEN_KEY = "dog-walker-game:dev-panel-open";
 // sessionStorage: an input log, as encodeInputLog writes it, for the next run to play back.
 // The run that reads it should remove it, so a reload plays normally.
 export const DEV_REPLAY_KEY = "dog-walker-game:dev-replay";
