@@ -89,6 +89,8 @@ export interface SimPlayer {
 }
 
 export interface SimConfig {
+  // Optional diagnostic sink; ordinary runs retain no full plans or snapshots.
+  readonly observeSpawnPlan?: (observation: ZonePlanObservation, run: RunState) => void;
   readonly gear: GearId | null;
   readonly pack: PackDogs;
   readonly player: SimPlayer;
@@ -404,6 +406,7 @@ function noteZonePlan(
   seed: number,
   tally: Tally,
   observations: Map<number, ZonePlanObservation>,
+  observe: SimConfig["observeSpawnPlan"],
   walk: Walk,
 ): void {
   const { run } = walk;
@@ -427,6 +430,9 @@ function noteZonePlan(
     observations.delete(run.zoneIndex);
   }
   tally.spawnEvents.push(events);
+  if (observation !== undefined) {
+    observe?.(observation, run);
+  }
 }
 
 // A choice's record: an encounter card seen, and the firings it brought about.
@@ -472,7 +478,7 @@ function playBySkill(data: SimData, seed: number, config: SimConfig, tally: Tall
   const bot = newBot(randomStream(seed, "bot"), player.sight, player.skill);
   const start = { road: startRoad(LANE_COUNT), run: tally.run };
   let session = startSession(data, streams, screenRoadGeometry, start);
-  noteZonePlan(data, seed, tally, observations, session.walk);
+  noteZonePlan(data, seed, tally, observations, config.observeSpawnPlan, session.walk);
   let road = botRoadOf(data, session.walk);
   while (session.walk.run.phase.kind !== "ended") {
     const { card, walk } = session;
@@ -576,7 +582,7 @@ function playBySkill(data: SimData, seed: number, config: SimConfig, tally: Tall
           });
           break;
         case "zonePlanned":
-          noteZonePlan(data, seed, tally, observations, step.session.walk);
+          noteZonePlan(data, seed, tally, observations, config.observeSpawnPlan, step.session.walk);
           road = botRoadOf(data, step.session.walk);
           bot.replan = true;
           break;

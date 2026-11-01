@@ -10,6 +10,7 @@ import { NO_PULLS } from "../runner/pulls";
 import * as sessions from "../runner/session";
 import { SpawnPlanningError, type SpawnPlanSnapshot } from "../runner/spawnSearch";
 import { startRoad, type WalkStep } from "../runner/walk";
+import type { ZonePlanObservation } from "../runner/zonePlan";
 import { TALLY_IDS } from "../save/schema";
 import { packDogs, packOrder } from "../state/pack";
 import type { PackDogs, RunState } from "../state/runState";
@@ -385,17 +386,19 @@ describe("simulateRun planning diagnostics", () => {
         zoneLength: 1000,
       },
     };
+    const observed: { observation: ZonePlanObservation; run: RunState }[] = [];
+    const observationSnapshot = { ...snapshot, context: { seed: 7, zoneIndex: 1 } };
     const starting = vi.spyOn(sessions, "startSession").mockReturnValue(initial);
     const stepping = vi
       .spyOn(sessions, "stepSession")
       .mockImplementationOnce((_data, streams) => {
-        streams.observeSpawns?.({
+        const observation = {
           context: { seed: 7, zoneIndex: 1 },
           plan: {
             ...snapshot.plan,
             fixedKinds: [],
             maxEmptyRows: Infinity,
-            quotas: [{ blocksLane: false, count: 5, kind: "tip" }],
+            quotas: [{ blocksLane: false, count: 5, kind: "tip" as const }],
           },
           planned: {
             admission: {
@@ -409,7 +412,9 @@ describe("simulateRun planning diagnostics", () => {
             path: [],
             visibility: [],
           },
-        });
+          snapshot: observationSnapshot,
+        };
+        streams.observeSpawns?.(observation);
         return {
           events: [{ kind: "zonePlanned", unplanned: initial.walk }],
           session: { ...initial, walk: { road, run: second } },
@@ -419,7 +424,10 @@ describe("simulateRun planning diagnostics", () => {
         throw new SpawnPlanningError("unfilled later quota", snapshot);
       });
     try {
-      const result = simulateRun(gameData, 7, config());
+      const result = simulateRun(gameData, 7, {
+        ...config(),
+        observeSpawnPlan: (observation, run) => observed.push({ observation, run }),
+      });
       expect(result.planningFailure).toEqual({
         message: "unfilled later quota",
         seed: 7,
@@ -434,6 +442,9 @@ describe("simulateRun planning diagnostics", () => {
       expect(result.spawnEvents[1]?.audit?.requested).toBe(5);
       expect(result.spawnEvents[1]?.validation).toBe("invalid");
       expect(result.run).toBe(second);
+      expect(observed).toHaveLength(1);
+      expect(observed[0]?.run).toBe(second);
+      expect(observed[0]?.observation).toMatchObject({ snapshot: observationSnapshot });
       expect(result.spawnEvents[1]?.modifiers).toEqual([modifier]);
       expect(result.spawnEvents[1]?.route).toEqual(["highPark", "cabbagetown"]);
       expect(result.finished).toBe(false);
