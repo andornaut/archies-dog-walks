@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Draw the shop's gear icons.
 
 item-<id>: 32x32 images in Endesga 32 with coloured outlines (icon_edge, so they hold 3:1 on the tiles'
@@ -14,19 +13,19 @@ Run from the repository root. A build overwrites the .aseprite sources, so
 hand edits to them belong in this file instead. Shared tooling is in pixel.py.
 """
 
-import os
 import subprocess
 import sys
+from pathlib import Path
 
 from PIL import Image
 
-sys.path.insert(0, os.path.dirname(__file__))
-import drops  # noqa: E402
-from minis import Mini  # noqa: E402
-from pixel import Grid, bitmap, icon_edge, to_image  # noqa: E402
-
+sys.path.insert(0, str(Path(__file__).parent))
+import drops
+from minis import Mini
+from pixel import Grid, bitmap, icon_edge, to_image
 
 # ---------- gear ----------
+
 
 def fanny_pack(g):
     """drops.py's forest-green waist pack, drawn at 2x."""
@@ -64,22 +63,28 @@ def running_shoes(g):
     """A low running shoe side on, the toe to the left: a sky upper lit cyan along its top, three white
     laces, a navy collar, an orange stripe and heel tab, and a white sole with a toe spring on an lgrey
     outsole."""
-    bitmap(g, 2, 10, [
-        "......................oo...",
-        "...............ccccccccoo..",
-        "..............cwwnnnnnnsoo.",
-        ".............cssbnnnnnnsss.",
-        "...........ccwwssssssssssb.",
-        ".........ccsssbsssssoooossb",
-        ".......ccswwsssssoooosssssb",
-        ".....ccssssssooooossssssssb",
-        "...ccsssssooooosssssssssssb",
-        ".cccsssssssssssssssssssssbb",
-        ".sbbbbbbbbbbbbbbbbbbbbbbbbb",
-        ".wwwwwwwwwwwwwwwwwwwwwwwwww",
-        "..wwwwwwwwwwwwwwwwwwwwwwwww",
-        "...lllllllllllllllllllllll.",
-    ], {"b": "blue", "c": "cyan", "l": "lgrey", "n": "navy", "o": "orange", "s": "sky", "w": "white"})
+    bitmap(
+        g,
+        2,
+        10,
+        [
+            "......................oo...",
+            "...............ccccccccoo..",
+            "..............cwwnnnnnnsoo.",
+            ".............cssbnnnnnnsss.",
+            "...........ccwwssssssssssb.",
+            ".........ccsssbsssssoooossb",
+            ".......ccswwsssssoooosssssb",
+            ".....ccssssssooooossssssssb",
+            "...ccsssssooooosssssssssssb",
+            ".cccsssssssssssssssssssssbb",
+            ".sbbbbbbbbbbbbbbbbbbbbbbbbb",
+            ".wwwwwwwwwwwwwwwwwwwwwwwwww",
+            "..wwwwwwwwwwwwwwwwwwwwwwwww",
+            "...lllllllllllllllllllllll.",
+        ],
+        {"b": "blue", "c": "cyan", "l": "lgrey", "n": "navy", "o": "orange", "s": "sky", "w": "white"},
+    )
 
 
 def lucky_collar(g):
@@ -137,13 +142,13 @@ def preview(out, scale=4):
 
 
 def build():
-    os.makedirs("art/icons", exist_ok=True)
-    os.makedirs("public/art/images", exist_ok=True)
+    Path("art/icons").mkdir(parents=True, exist_ok=True)
+    Path("public/art/images").mkdir(parents=True, exist_ok=True)
     for name, draw in ICONS.items():
         key = f"item-{name}"
         png = f"public/art/images/{key}.png"
         image(draw).save(png)
-        subprocess.run(["aseprite", "-b", png, "--save-as", f"art/icons/{key}.aseprite"], check=True)
+        subprocess.run(["aseprite", "-b", png, "--save-as", f"art/icons/{key}.aseprite"], check=True)  # noqa: S603, S607 - Fixed art executable and generator-owned paths.
     print("built", ", ".join(f"item-{n}" for n in ICONS))
 
 

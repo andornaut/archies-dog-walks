@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Draw the UI kit: icons, nine-slice panels and buttons, the hint bubble and badges.
 
 Images (16x16 icons unless noted): icon-pause, icon-play, icon-home, icon-help, icon-close,
@@ -12,15 +11,18 @@ green plus badge, as the shop's item-<gear> art, outlined with icon_edge); ui-pa
 nine-slice, 4px corners), ui-hint (24x24 nine-slice, 8px corners), ui-hint-tail
 (8x6), ui-new-best (72x20 ribbon, text baked in with font-title); the start screen's ui-detail-card
 (24x24 nine-slice, 8px corners) and ui-detail-well (68x68); the shop list's ui-scroll-track (8x24) and
-ui-scroll-thumb (6x24, three-slices with 3px caps); the walker section's ui-cork (32x32 solid brown tile), the dogs section's ui-plaid
+ui-scroll-thumb (6x24, three-slices with 3px caps); the walker section's ui-cork (32x32 solid brown tile), the dogs
+section's ui-plaid
 (16x16 solid plum tile), the Pocket section's ui-denim (16x16 solid blue tile), ui-stitch-h
 (8x2) and ui-stitch-v (2x8, seamless stitch runs), all repeated with TileSprite; the card rows'
 ui-strip-well (24x24 nine-slice, the band behind a card row's subtitle), ui-quip (24x24 nine-slice,
 8px corners), ui-quip-tail (6x8), ui-quip-tail-down and ui-quip-tail-up (8x6), ui-celebrate-burst (148x132, the
 starburst behind the walker in the zone celebration), ui-zone-banner (248x48); the start screen top
 bar's bank well, drawn at (5, 5) in three pieces that stretch it to the bank's width,
-ui-home-cash-well-left, ui-home-cash-well-mid (repeated across) and ui-home-cash-well-right (1x29 each); the walk HUD's ui-walk-bar (360x40),
-ui-effect-well (22x22), ui-zone-pill (13x13 three-slice, 4px ends), ui-dog-card-band (360x76, drawn at (0, 480)), ui-lead-tag (27x11, LEAD baked
+ui-home-cash-well-left, ui-home-cash-well-mid (repeated across) and ui-home-cash-well-right (1x29 each); the walk
+HUD's ui-walk-bar (360x40),
+ui-effect-well (22x22), ui-zone-pill (13x13 three-slice, 4px ends), ui-dog-card-band (360x76, drawn at (0, 480)), ui-
+lead-tag (27x11, LEAD baked
 in with font-title) and ui-owner-tab (36x36).
 
 Sprites: ui-dog-card (120x70, one of three cards in the walk's card row; a tag per dog key and
@@ -30,7 +32,8 @@ ui-dog-card; tags pulse, static), ui-debuff-bar (360x16, one active debuff's bar
 tags muddy, stinky, zoomies, spotlight), ui-select (24x24 nine-slice, 8px corners; tag pulse),
 ui-shop-focus (32x32 nine-slice, 13px corners; tag pulse, two 180ms phases), ui-afford (24x24
 nine-slice, 8px corners; tag glint), ui-check (16x16; tags 1, 2, 3, tick), ui-section (24x32
-nine-slice, 3px sides and bottom, 24px top; tags complete, neutral, neutral-walker, neutral-dogs, neutral-pocket), fx-tap and fx-dust (16x16; tag
+nine-slice, 3px sides and bottom, 24px top; tags complete, neutral, neutral-walker, neutral-dogs, neutral-pocket), fx-
+tap and fx-dust (16x16; tag
 play), ui-heart (8x7; tags full, empty, and full-dark and empty-dark for the navy ui-dog-card),
 ui-button (24x24 nine-slice, 3px corners and a 5px bottom; tags normal, pressed, disabled,
 secondary, secondary-pressed, go, go-pressed, go-disabled), ui-icon-button (20x20, the face under a
@@ -57,19 +60,22 @@ Run from the repository root. A build overwrites the
 .aseprite sources, so hand edits to them belong in this file instead.
 """
 
-import os
+import math
 import subprocess
 import sys
+from pathlib import Path
 
 from PIL import Image
 
-sys.path.insert(0, os.path.dirname(__file__))
-import fonts  # noqa: E402
-import hits  # noqa: E402
-from pixel import DARKER, HEART, K, Grid, bitmap, contrast, edged, icon_edge, to_image, build as build_sprites  # noqa: E402
+sys.path.insert(0, str(Path(__file__).parent))
+import fonts
+from pixel import DARKER, HEART, Grid, K, bitmap, contrast, edged, icon_edge, to_image
+from pixel import build as build_sprites
 
+import road
 
 # ---------- the chrome: one frame for every panel, bubble, plate and card frame ----------
+
 
 def chrome_shape(g, inside, open_edge=None, face="cream", lip="tan", line="plum"):
     """Frame the shape inside(x, y) on g in the UI chrome: a 1px ink outer line, a 1px inner line
@@ -78,6 +84,7 @@ def chrome_shape(g, inside, open_edge=None, face="cream", lip="tan", line="plum"
     the grid that continue the shape, so a tail laid over a bubble's rim stays open on that side.
     Ink holds 3:1 on the light roads, the cream face on navy, ink and dark wood; text sits on
     the face."""
+
     def solid(x, y):
         if 0 <= x < g.w and 0 <= y < g.h:
             return inside(x, y)
@@ -105,11 +112,13 @@ def chrome_shape(g, inside, open_edge=None, face="cream", lip="tan", line="plum"
 
 def rounded_inside(x0, y0, w, h, r):
     """A box with each corner cut on a diagonal r pixels long, as an inside(x, y) test."""
+
     def inside(x, y):
         i, j = x - x0, y - y0
         if not (0 <= i < w and 0 <= j < h):
             return False
         return min(i, w - 1 - i) + min(j, h - 1 - j) >= r
+
     return inside
 
 
@@ -172,8 +181,20 @@ def home_icon():
     orange on its lower-right edges like them, a chimney on the right slope and a doorway the
     navy face shows through."""
     g = Grid(16, 16)
-    for y, row in enumerate([".....aa.ao..", "....aaaaao..", "...aaaaaao..", "..aaaaaaao..", ".aaaaaaaaao.",
-                             "aaaaaaaaaaao", "..aaaaaaao..", "..aaa..aao..", "..aaa..aao..", "..ooo..ooo.."]):
+    for y, row in enumerate(
+        [
+            ".....aa.ao..",
+            "....aaaaao..",
+            "...aaaaaao..",
+            "..aaaaaaao..",
+            ".aaaaaaaaao.",
+            "aaaaaaaaaaao",
+            "..aaaaaaao..",
+            "..aaa..aao..",
+            "..aaa..aao..",
+            "..ooo..ooo..",
+        ]
+    ):
         for x, ch in enumerate(row):
             if ch != ".":
                 g.p(2 + x, 3 + y, "amber" if ch == "a" else "orange")
@@ -183,8 +204,21 @@ def home_icon():
 def help_icon():
     """A bold question mark, 2px strokes with a tan right edge like the pause bars."""
     g = Grid(16, 16)
-    for y, row in enumerate(["..cccc..", ".cccccct", "cct..cct", "tt...cct", "....ccct", "...ccct.",
-                             "...cct..", "...cct..", "........", "...cct..", "...cct.."]):
+    for y, row in enumerate(
+        [
+            "..cccc..",
+            ".cccccct",
+            "cct..cct",
+            "tt...cct",
+            "....ccct",
+            "...ccct.",
+            "...cct..",
+            "...cct..",
+            "........",
+            "...cct..",
+            "...cct..",
+        ]
+    ):
         for x, ch in enumerate(row):
             if ch != ".":
                 g.p(4 + x, 2 + y, "cream" if ch == "c" else "tan")
@@ -232,7 +266,6 @@ def bill():
 def treat_icon():
     """The treat pickup's bone and heart as road.treat lays them out at 16x16 (idle frame 0), outlined with icon_edge
     as the content icons are."""
-    import road
 
     g = road.treat(lift=0)
     g.edge = icon_edge
@@ -242,7 +275,7 @@ def treat_icon():
 def stinky():
     """Three broad pink wisps above a mauve gas cloud, with a shared plum keyline."""
     g = Grid(16, 16)
-    g.edge = lambda c: K["plum"]
+    g.edge = lambda _c: K["plum"]
     for x, y in ((2, 10), (7, 9), (12, 10)):
         g.ell(x + 1, y + 2, 3, 2.5, "mauve", "purple", "pink")
     g.rect(3, 12, 10, 2, "mauve")
@@ -271,8 +304,21 @@ def speaker(ink, on, note=False):
         g.ell(4.5, 12, 3.5, 2.6, face, shade)
         g.rect(7, 2, 1, 10, face)
         g.rect(8, 2, 1, 9, shade)
-        for x, y in ((9, 2), (10, 2), (9, 3), (10, 3), (11, 3), (10, 4), (11, 4), (12, 4), (11, 5), (12, 5),
-                     (12, 6), (12, 7), (11, 7)):
+        for x, y in (
+            (9, 2),
+            (10, 2),
+            (9, 3),
+            (10, 3),
+            (11, 3),
+            (10, 4),
+            (11, 4),
+            (12, 4),
+            (11, 5),
+            (12, 5),
+            (12, 6),
+            (12, 7),
+            (11, 7),
+        ):
             g.p(x, y, face)
         if not on:
             mute_x(g, 10, 9, x_col)
@@ -297,8 +343,21 @@ def effects(ink, on):
     for on, and the speaker's X there instead for off."""
     face, shade, x_col = ink
     g = Grid(16, 16)
-    for y, row in enumerate(["....f....", "....f....", "...ffs...", "...ffs...", "..fffss..", "fffffffss",
-                             "..fffss..", "...fss...", "...fss...", "....s....", "....s...."]):
+    for y, row in enumerate(
+        [
+            "....f....",
+            "....f....",
+            "...ffs...",
+            "...ffs...",
+            "..fffss..",
+            "fffffffss",
+            "..fffss..",
+            "...fss...",
+            "...fss...",
+            "....s....",
+            "....s....",
+        ]
+    ):
         for x, ch in enumerate(row):
             if ch != ".":
                 g.p(x, 3 + y, face if ch == "f" else shade)
@@ -334,10 +393,26 @@ def install(ink, on):
     down arrow into the screen for on and the speaker's X in the arrow's place for off."""
     face, shade, x_col = ink
     g = Grid(16, 16)
-    for y, row in enumerate(["...ffffffffff...", "..fffffffffffs..", "..ff........fs..", "..ff........fs..",
-                             "..ff...fs...fs..", "..ff...fs...fs..", "..ff...fs...fs..", "..ff...fs...fs..",
-                             "..ff.ffffss.fs..", "..ff..ffss..fs..", "..ff...fs...fs..", "..ff........fs..",
-                             "..ff........fs..", "..fffffffffffs..", "..fffffffffffs..", "...ssssssssss..."]):
+    for y, row in enumerate(
+        [
+            "...ffffffffff...",
+            "..fffffffffffs..",
+            "..ff........fs..",
+            "..ff........fs..",
+            "..ff...fs...fs..",
+            "..ff...fs...fs..",
+            "..ff...fs...fs..",
+            "..ff...fs...fs..",
+            "..ff.ffffss.fs..",
+            "..ff..ffss..fs..",
+            "..ff...fs...fs..",
+            "..ff........fs..",
+            "..ff........fs..",
+            "..fffffffffffs..",
+            "..fffffffffffs..",
+            "...ssssssssss...",
+        ]
+    ):
         for x, ch in enumerate(row):
             if ch != ".":
                 g.p(x, y, face if ch == "f" else shade)
@@ -352,10 +427,26 @@ def share_icon():
     arrow rising out of it, its chevron head and box in 2px strokes, in the -panel icons' inks."""
     face, shade, _ = CREAM_PANEL
     g = Grid(16, 16)
-    for y, row in enumerate([".......fs.......", "......ffss......", ".....fffsss.....", "....ff.fs.ss....",
-                             ".......fs.......", ".......fs.......", "..fff..fs..ffs..", "..ff...fs...fs..",
-                             "..ff...fs...fs..", "..ff...fs...fs..", "..ff...fs...fs..", "..ff........fs..",
-                             "..ff........fs..", "..ff........fs..", "..fffffffffffs..", "...ssssssssss..."]):
+    for y, row in enumerate(
+        [
+            ".......fs.......",
+            "......ffss......",
+            ".....fffsss.....",
+            "....ff.fs.ss....",
+            ".......fs.......",
+            ".......fs.......",
+            "..fff..fs..ffs..",
+            "..ff...fs...fs..",
+            "..ff...fs...fs..",
+            "..ff...fs...fs..",
+            "..ff...fs...fs..",
+            "..ff........fs..",
+            "..ff........fs..",
+            "..ff........fs..",
+            "..fffffffffffs..",
+            "...ssssssssss...",
+        ]
+    ):
         for x, ch in enumerate(row):
             if ch != ".":
                 g.p(x, y, face if ch == "f" else shade)
@@ -376,10 +467,24 @@ def browser_menu_icon():
 
 
 # icon-update, 16x16 fills: lime lights the top-left edges, dgreen shades the lower-right.
-UPDATE_ROWS = ["................", "................", "......LLLL......", "......LGGD......",
-               "......LGGD......", "..LLLLLGGDLLLD..", "...LGGGGGGGGD...", "....LGGGGGGD....",
-               ".....LGGGGD.....", "......LGGD......", ".LL....GD....LL.", ".LG..........GD.",
-               ".LG..........GD.", ".LGGGGGGGGGGGGD.", ".DDDDDDDDDDDDDD.", "................"]
+UPDATE_ROWS = [
+    "................",
+    "................",
+    "......LLLL......",
+    "......LGGD......",
+    "......LGGD......",
+    "..LLLLLGGDLLLD..",
+    "...LGGGGGGGGD...",
+    "....LGGGGGGD....",
+    ".....LGGGGD.....",
+    "......LGGD......",
+    ".LL....GD....LL.",
+    ".LG..........GD.",
+    ".LG..........GD.",
+    ".LGGGGGGGGGGGGD.",
+    ".DDDDDDDDDDDDDD.",
+    "................",
+]
 
 
 def update_icon():
@@ -400,9 +505,22 @@ def logbook_icon():
     """An open ledger, its two pages bowed up from the spine with three ruled lines each; the
     spine is a navy gap, so the face shows through."""
     g = Grid(16, 16)
-    for y, row in enumerate(["cc..........cc..", "cccc......cccc..", "ccccccc.cccccct.", "c-----c.c-----t.",
-                             "ccccccc.cccccct.", "c----cc.c----ct.", "ccccccc.cccccct.", "c-----c.c-----t.",
-                             "ccccccc.cccccct.", "cccccct.ccccctt.", "tttccct.ccctttt.", "...ttt.t.ttt...."]):
+    for y, row in enumerate(
+        [
+            "cc..........cc..",
+            "cccc......cccc..",
+            "ccccccc.cccccct.",
+            "c-----c.c-----t.",
+            "ccccccc.cccccct.",
+            "c----cc.c----ct.",
+            "ccccccc.cccccct.",
+            "c-----c.c-----t.",
+            "ccccccc.cccccct.",
+            "cccccct.ccccctt.",
+            "tttccct.ccctttt.",
+            "...ttt.t.ttt....",
+        ]
+    ):
         for x, ch in enumerate(row):
             if ch != ".":
                 g.p(x, 2 + y, {"c": "cream", "t": "tan", "-": "tan"}[ch])
@@ -414,10 +532,26 @@ def settings_icon():
     duck-platformer game's Settings button shares, cream with tan on the lower-right edges like
     the other navy-face glyphs."""
     g = Grid(16, 16)
-    for y, row in enumerate(["......ccct......", "......ccct......", "..ct..ccct..ct..", "..tcccccccccct..",
-                             "...ccccttccct...", "...ccct..tcct...", "ccccct....tcccct", "cccct......cccct",
-                             "cccct......cccct", "tttcct....cccttt", "...ccct..ccct...", "...ccccccccct...",
-                             "..ccttccccttct..", "..tt..ccct..tt..", "......ccct......", "......tttt......"]):
+    for y, row in enumerate(
+        [
+            "......ccct......",
+            "......ccct......",
+            "..ct..ccct..ct..",
+            "..tcccccccccct..",
+            "...ccccttccct...",
+            "...ccct..tcct...",
+            "ccccct....tcccct",
+            "cccct......cccct",
+            "cccct......cccct",
+            "tttcct....cccttt",
+            "...ccct..ccct...",
+            "...ccccccccct...",
+            "..ccttccccttct..",
+            "..tt..ccct..tt..",
+            "......ccct......",
+            "......tttt......",
+        ]
+    ):
         for x, ch in enumerate(row):
             if ch != ".":
                 g.p(x, y, "cream" if ch == "c" else "tan")
@@ -429,9 +563,22 @@ def exit_icon():
     the sibling duck-platformer game's shares, cream with tan on the lower-right edges like the
     other navy-face glyphs."""
     g = Grid(16, 16)
-    for y, row in enumerate([".cccccccct......", ".cctttttct......", ".ct.....ct..t...", ".ct.....tt..ct..",
-                             ".ct.........cct.", ".ct...ccccccccct", ".ct...ttttttccct", ".ct.........cct.",
-                             ".ct.....ct..ct..", ".ct.....ct..t...", ".cccccccct......", ".ttttttttt......"]):
+    for y, row in enumerate(
+        [
+            ".cccccccct......",
+            ".cctttttct......",
+            ".ct.....ct..t...",
+            ".ct.....tt..ct..",
+            ".ct.........cct.",
+            ".ct...ccccccccct",
+            ".ct...ttttttccct",
+            ".ct.........cct.",
+            ".ct.....ct..ct..",
+            ".ct.....ct..t...",
+            ".cccccccct......",
+            ".ttttttttt......",
+        ]
+    ):
         for x, ch in enumerate(row):
             if ch != ".":
                 g.p(x, 2 + y, "cream" if ch == "c" else "tan")
@@ -447,8 +594,10 @@ def heart(full, dark=False):
         for x, c in enumerate(row):
             if c != "1":
                 continue
-            inside = all(0 <= y + dy < len(HEART) and 0 <= x + dx < len(row) and HEART[y + dy][x + dx] == "1"
-                         for dx, dy in ((0, -1), (0, 1), (-1, 0), (1, 0)))
+            inside = all(
+                0 <= y + dy < len(HEART) and 0 <= x + dx < len(row) and HEART[y + dy][x + dx] == "1"
+                for dx, dy in ((0, -1), (0, 1), (-1, 0), (1, 0))
+            )
             if full:
                 g.p(x, y, "red" if dark else "dred")
             elif not inside:
@@ -461,6 +610,7 @@ def heart(full, dark=False):
 
 # ---------- nine-slices and badges ----------
 
+
 def panel():
     """24x24 nine-slice (4px corners): the chrome box (chrome) with its corners cut 1px."""
     return chrome(Grid(24, 24), 0, 0, 24, 24)
@@ -469,8 +619,12 @@ def panel():
 # The interaction states shared by tiles and buttons: each state's face, its lip and a button
 # face's top highlight. normal is the chrome's cream, selected the gold of ui-section's complete
 # state, go the one primary action on a screen, disabled a flat grey with no lip.
-STATES = {"normal": ("cream", "tan", "white"), "selected": ("yellow", "amber", None),
-          "go": ("green", "forest", "yellow"), "disabled": ("ngrey", None, None)}
+STATES = {
+    "normal": ("cream", "tan", "white"),
+    "selected": ("yellow", "amber", None),
+    "go": ("green", "forest", "yellow"),
+    "disabled": ("ngrey", None, None),
+}
 
 
 def button(state):
@@ -483,8 +637,16 @@ def button(state):
     Raised, row 0 is ink, row 1 the highlight, the face runs to row 18, the lip fills rows 19 to
     22 and ink row 23. Sunk, rows 0 and 1 are clear, row 2 is ink and the face fills rows 3 to
     22, 2px lower, so every row from 3 to 18 is plain face and the plate stretches cleanly."""
-    kind = {"normal": "normal", "pressed": "normal", "secondary": "normal", "secondary-pressed": "normal",
-            "go": "go", "go-pressed": "go", "disabled": "disabled", "go-disabled": "disabled"}[state]
+    kind = {
+        "normal": "normal",
+        "pressed": "normal",
+        "secondary": "normal",
+        "secondary-pressed": "normal",
+        "go": "go",
+        "go-pressed": "go",
+        "disabled": "disabled",
+        "go-disabled": "disabled",
+    }[state]
     face, lip, hi = STATES[kind]
     sunk = state.endswith("pressed") or kind == "disabled"
     top = 2 if sunk else 0
@@ -581,8 +743,9 @@ def slider_track(filled, on=True):
     groove 6px tall in rows 2 to 7, so the level reads by height and fill as well as colour. The
     plum rim holds 9.42:1 on cream and forest 5.39:1. Muted (on false), both keep their shapes
     in the neutral greys."""
-    rim, face, hi, sh, inner = ("plum", "forest", "dgreen", "teal", "tan") if on else \
-        ("nslate", "ngrey", "nlgrey", "nslate", "nlgrey")
+    rim, face, hi, sh, inner = (
+        ("plum", "forest", "dgreen", "teal", "tan") if on else ("nslate", "ngrey", "nlgrey", "nslate", "nlgrey")
+    )
     g = Grid(24, 10)
     if filled:
         g.rect(1, 0, 22, 10, rim)
@@ -602,9 +765,11 @@ def slider_knob(state):
     """10x16, drawn 3px above the track so it overhangs it 3px each way. A cream face in a plum
     rim on a tan lip; dragged, the face sinks 2px into its lip and turns yellow, the active-state
     face. Disabled while sound is muted."""
-    rim, face, sh, grip = {"normal": ("plum", "cream", "tan", "brown"),
-                           "pressed": ("plum", "yellow", "amber", "orange"),
-                           "disabled": ("nslate", "nlgrey", "ngrey", "ngrey")}[state]
+    rim, face, sh, grip = {
+        "normal": ("plum", "cream", "tan", "brown"),
+        "pressed": ("plum", "yellow", "amber", "orange"),
+        "disabled": ("nslate", "nlgrey", "ngrey", "ngrey"),
+    }[state]
     top = 2 if state == "pressed" else 0
     g = Grid(10, 16)
     g.rect(1, top, 8, 16 - top, rim)
@@ -627,8 +792,10 @@ def down_tail(tip):
     """8x6, a tail pointing down from a bubble's bottom rim to its tip column: cream in an ink
     line, the lip down its right side. Its top row lies over the rim's ink row, open there, so
     the cream meets the bubble's plum line."""
-    rows = {4: ["########", ".######.", ".######.", "..####..", "..####..", "...##..."],
-            5: ["########", ".#######", "..######", "...#####", "....###.", ".....#.."]}[tip]
+    rows = {
+        4: ["########", ".######.", ".######.", "..####..", "..####..", "...##..."],
+        5: ["########", ".#######", "..######", "...#####", "....###.", ".....#.."],
+    }[tip]
     g = Grid(8, 6)
     return chrome_shape(g, lambda x, y: rows[y][x] == "#", lambda x, y: y < 0 and 1 <= x < 7, line=None)
 
@@ -646,7 +813,7 @@ def title_glyphs():
 
 def baked(im, text, x, y, col):
     """im with text baked in, in font-title and colour col, from column x, each glyph's yoffset below row y."""
-    rgba = tuple(int(K[col][i:i + 2], 16) for i in (0, 2, 4)) + (255,)
+    rgba = (*tuple(int(K[col][i : i + 2], 16) for i in (0, 2, 4)), 255)
     gl = title_glyphs()
     for ch in text:
         mask, ox, oy, adv = gl[ch]
@@ -706,6 +873,7 @@ def dog_slot():
 
 # ---------- plates: the fired plate and the payout tag (hits.py draws the hit label with plate) ----------
 
+
 def fired_plate(face, lit, shade):
     """ui-fired-plate's 24x24 nine-slice, 8px corners: a plate in face with a white stamp line 2px inside
     the face, its corners cut so it reads as a stamp's rounded border. The game stretches it to 116x28
@@ -722,6 +890,7 @@ def payout_label():
     """ui-payout-label's 24x16 three-slice, 8px caps; columns 8 to 15 are uniform. A cream price
     tag in the chrome, its left cap a point stepping in 1px every 2 rows with a punched hole in a
     plum ring. Forest text holds 5.39:1 on the cream, caps in rows 3 to 12."""
+
     def inside(x, y):
         left = (int(abs(y - 7.5)) + 1) // 2
         right = 21 if y in (0, 15) else 22 if y in (1, 14) else 23
@@ -742,8 +911,16 @@ def payout_label():
 # owner's photo; Archie's is rust, for his brown coat; Pepe's is his show bow's mauve, which holds his
 # black coat's ink line at 3.83:1.
 DOG_COLOURS = {
-    "ginger": "pink", "reggie": "red", "buddy": "dred", "pepe": "mauve", "lady": "green", "archie": "rust",
-    "sequoia": "blue", "penny": "amber", "kilo": "orange", "empty": "dslate",
+    "ginger": "pink",
+    "reggie": "red",
+    "buddy": "dred",
+    "pepe": "mauve",
+    "lady": "green",
+    "archie": "rust",
+    "sequoia": "blue",
+    "penny": "amber",
+    "kilo": "orange",
+    "empty": "dslate",
 }
 
 
@@ -757,8 +934,10 @@ def interior(solid, x, y, r):
 # ink on green 8.41:1, white on blue 8.48:1. Zoomies is green so its bar never sits blue on a blue sky;
 # the spotlight's is a dark stage blue under its yellow beam, darker than every sky band.
 DEBUFF_LOOKS = {
-    "muddy": ("brown", "dbrown", "tan", "ink"), "stinky": ("mauve", "purple", "pink", "white"),
-    "zoomies": ("green", "forest", "yellow", "ink"), "spotlight": ("blue", "navy", "yellow", "white"),
+    "muddy": ("brown", "dbrown", "tan", "ink"),
+    "stinky": ("mauve", "purple", "pink", "white"),
+    "zoomies": ("green", "forest", "yellow", "ink"),
+    "spotlight": ("blue", "navy", "yellow", "white"),
 }
 DEBUFF_BAR = (360, 16)
 # The bar's track, in bar pixels: its ink frame, and the run the game fills inside it.
@@ -788,6 +967,7 @@ def debuff_bar(debuff):
 
 # ---------- wood ----------
 
+
 def wood(g, top, h):
     """Plum wood across g from row top, h rows: h short dbrown grain lines at scattered rows and
     columns."""
@@ -797,6 +977,7 @@ def wood(g, top, h):
 
 
 # ---------- selection and feedback ----------
+
 
 def selection_glints(g, phase):
     """Move a two-pixel cream edge accent around a fixed gold frame, never across its face."""
@@ -853,7 +1034,7 @@ def check_badge(label):
     g = Grid(16, 16)
     g.ell(8, 8, 7, 7, "green", "dgreen")
     if label == "tick":
-        for i, (x, y) in enumerate(((4, 8), (5, 9), (6, 10), (7, 9), (8, 8), (9, 7), (10, 6), (11, 5))):
+        for _i, (x, y) in enumerate(((4, 8), (5, 9), (6, 10), (7, 9), (8, 8), (9, 7), (10, 6), (11, 5))):
             g.rect(x, y, 2, 2, "white")
     else:
         bits = {"1": "010110010010111", "2": "110001010100111", "3": "110001010001110"}[label]
@@ -872,8 +1053,9 @@ def tap_burst(step):
     r = (1, 3, 5, 7)[step]
     tail, head = (("yellow", "orange"), ("yellow", "orange"), ("amber", "rust"), (None, "rust"))[step]
     # the first frame is a plus on the tap's pixel: diagonals 1px out round unevenly
-    dirs = ((0, -1), (0, 1), (-1, 0), (1, 0)) + (() if step == 0 else ((-0.7, -0.7), (0.7, -0.7), (-0.7, 0.7),
-                                                                      (0.7, 0.7)))
+    dirs = ((0, -1), (0, 1), (-1, 0), (1, 0)) + (
+        () if step == 0 else ((-0.7, -0.7), (0.7, -0.7), (-0.7, 0.7), (0.7, 0.7))
+    )
     for dx, dy in dirs:
         if tail is not None:
             g.p(8 + dx * (r - 1), 8 + dy * (r - 1), tail)
@@ -975,7 +1157,13 @@ def detail_well():
 
 
 SECTION_W, SECTION_H = 24, 32
-SECTION_FACES = {"complete": "amber", "neutral": "violet", "neutral-walker": "lake", "neutral-dogs": "violet", "neutral-pocket": "mauve"}
+SECTION_FACES = {
+    "complete": "amber",
+    "neutral": "violet",
+    "neutral-walker": "lake",
+    "neutral-dogs": "violet",
+    "neutral-pocket": "mauve",
+}
 
 
 def section(state):
@@ -1040,6 +1228,7 @@ def stitch(horizontal):
 
 
 # ---------- walk screen and card rows: the strip well, zone progress, quips, zone banner ----------
+
 
 def well(g, x, y, w, h):
     """A recessed ink slot in the wood: clipped corners and a dark brown lip below and to the right."""
@@ -1141,7 +1330,8 @@ PILL = (13, 13)
 
 def zone_pill():
     """13x13 three-slice (4px ends), ui-zone-pill: the walk's neighbourhood label, centred just under
-    the walk bar, where the message strip may cover it. A navy face with a lighter top row in a 1px ink line, its corners
+    the walk bar, where the message strip may cover it. A navy face with a lighter top row in a 1px ink line,
+    its corners
     stepped two pixels, so it reads on every backdrop. The game sets the name in cream and "n of N"
     in lgrey, font-body at 1x, their capitals on row 4, 6 columns in from each end."""
     w, h = PILL
@@ -1224,6 +1414,7 @@ def dog_card_solid():
 
     def solid(x, y):
         return 0 <= x < w and 0 <= y < h and card[y][x] is not None
+
     return solid
 
 
@@ -1316,9 +1507,15 @@ def owner_tab():
 # Each zone's colour on its pip: its road colour, which the zone's road shadow (one ramp step
 # down) dims.
 ZONE_COLOURS = {
-    "cabbagetown": "grey", "high-park": "tan", "distillery-district": "dslate", "kensington-market": "stone",
-    "the-beaches": "cream", "yonge-street": "shale",
+    "cabbagetown": "grey",
+    "high-park": "tan",
+    "distillery-district": "dslate",
+    "kensington-market": "stone",
+    "the-beaches": "cream",
+    "yonge-street": "shale",
 }
+
+
 def pip_rim(well):
     """A zone pip's rim: its well's colour stepped down its ramp, at least one step, until it holds 3:1 on
     the end screen's cream panel, so every pip shows its edge there, the cream Beaches pip too."""
@@ -1376,7 +1573,6 @@ def celebrate_burst():
     """148x132: the starburst behind the cheering walker in the zone celebration, a round
     burst: a yellow body (an ellipse with 62x54 half axes) ringed by 18 amber spikes 10px long, in a
     1px ink outline, with a white glint along the body's upper left. No text goes on it."""
-    import math
 
     w, h = CELEBRATE_BURST
     points, spike = 18, 10
@@ -1395,8 +1591,10 @@ def celebrate_burst():
     shape = [row[:] for row in g.px]
     for y in range(h):
         for x in range(w):
-            if not shape[y][x] and any(0 <= x + dx < w and 0 <= y + dy < h and shape[y + dy][x + dx]
-                                       for dx, dy in ((0, -1), (0, 1), (-1, 0), (1, 0))):
+            if not shape[y][x] and any(
+                0 <= x + dx < w and 0 <= y + dy < h and shape[y + dy][x + dx]
+                for dx, dy in ((0, -1), (0, 1), (-1, 0), (1, 0))
+            ):
                 g.p(x, y, "ink")
     for y in range(h):
         for x in range(w):
@@ -1496,15 +1694,17 @@ def touch_layer(draw):
     layer's fill (the glove's line over the trail and the ring)."""
     g = Grid(*TOUCH_SIZE)
     draw(g)
-    g.edge = lambda c: K["ink"]
+    g.edge = lambda _c: K["ink"]
     return g.outlined()
 
 
 def touch_ring(x, r, col):
     """The press ring (yellow) or the lift ring (lgrey) round the contact at column x, under the glove."""
+
     def draw(g):
         g.ell(x + 0.5, TOUCH_Y + 0.5, r, r, col)
         g.ell(x + 0.5, TOUCH_Y + 0.5, r - 1.25, r - 1.25, None)
+
     return touch_layer(draw)
 
 
@@ -1525,9 +1725,15 @@ def touch_trail(head, start, fade=0, whole=False):
         while (head - x) * way > 5:
             back = (head - x) * way + 12 * fade
             if whole or back <= 48:
-                g.rect(x if way > 0 else x - 1, TOUCH_Y - 1, 2, 2,
-                       "white" if back < 20 else "lgrey" if whole or back < 36 else "grey")
+                g.rect(
+                    x if way > 0 else x - 1,
+                    TOUCH_Y - 1,
+                    2,
+                    2,
+                    "white" if back < 20 else "lgrey" if whole or back < 36 else "grey",
+                )
             x += 4 * way
+
     return touch_layer(draw)
 
 
@@ -1546,14 +1752,17 @@ def touch_swipe(start, way):
     the glass, presses (the yellow ring grows), drags with the ring round the fingertip and the dots behind,
     holds while the dots draw in, lifts (the lgrey ring grows as the glove leaves) and is gone."""
     end = start + 64 * way
-    frames = [touch_frame(touch_glove(start, *TOUCH_HOVER)),
-              touch_frame(touch_ring(start, 3.5, "yellow"), touch_glove(start)),
-              touch_frame(touch_ring(start, 5.5, "yellow"), touch_glove(start))]
+    frames = [
+        touch_frame(touch_glove(start, *TOUCH_HOVER)),
+        touch_frame(touch_ring(start, 3.5, "yellow"), touch_glove(start)),
+        touch_frame(touch_ring(start, 5.5, "yellow"), touch_glove(start)),
+    ]
     for o in TOUCH_OFFSETS:
         x = start + o * way
         frames.append(touch_frame(touch_trail(x, start), touch_ring(x, 3.5, "yellow"), touch_glove(x)))
-    for fade in (1, 2):
-        frames.append(touch_frame(touch_trail(end, start, fade), touch_ring(end, 3.5, "yellow"), touch_glove(end)))
+    frames.extend(
+        touch_frame(touch_trail(end, start, fade), touch_ring(end, 3.5, "yellow"), touch_glove(end)) for fade in (1, 2)
+    )
     frames.append(touch_frame(touch_ring(end, 4, "lgrey"), touch_glove(end, *TOUCH_HOVER)))
     frames.append(touch_frame(touch_ring(end, 5.5, "lgrey"), touch_glove(end, TOUCH_HOVER[0] + 1, TOUCH_HOVER[1] + 2)))
     frames.append(touch_frame())
@@ -1602,8 +1811,10 @@ IMAGES = {
     "ui-walk-bar": lambda: to_image(walk_bar().outlined(False)),
     "ui-effect-well": lambda: to_image(effect_well().outlined(False)),
     "ui-zone-pill": lambda: to_image(zone_pill().outlined(False)),
-    **{f"ui-home-cash-well-{p}": (lambda p=p: to_image(home_cash_well_piece(p).outlined(False)))
-       for p in HOME_CASH_WELL_PIECES},
+    **{
+        f"ui-home-cash-well-{p}": (lambda p=p: to_image(home_cash_well_piece(p).outlined(False)))
+        for p in HOME_CASH_WELL_PIECES
+    },
     "ui-dog-card-band": lambda: to_image(dog_card_band().outlined(False)),
     "ui-lead-tag": lead_tag,
     "ui-owner-tab": lambda: to_image(owner_tab().outlined(False)),
@@ -1620,45 +1831,87 @@ IMAGES = {
 
 
 def sprites():
-    yield "ui-dog-card", [(dog, [dog_card(dog).outlined(False)], 1000) for dog in DOG_COLOURS] + [
-        ("heart-loss", [dog_card_heart_loss(i).outlined(False) for i in range(4)], [60, 60, 80, 80])]
+    yield (
+        "ui-dog-card",
+        [(dog, [dog_card(dog).outlined(False)], 1000) for dog in DOG_COLOURS]
+        + [("heart-loss", [dog_card_heart_loss(i).outlined(False) for i in range(4)], [60, 60, 80, 80])],
+    )
     card_warn = [dog_card_warn(i).outlined(False) for i in (0, 1, 2, 1)]
     yield "ui-dog-card-warn", [("pulse", card_warn, 400), ("static", [card_warn[1]], 1000)]
     yield "ui-debuff-bar", [(d, [debuff_bar(d).outlined(False)], 1000) for d in DEBUFF_LOOKS]
     yield "ui-select", [("pulse", [select_frame(False).outlined(False), select_frame(True).outlined(False)], 180)]
-    yield "ui-shop-focus", [("pulse", [shop_focus_frame(False).outlined(False),
-                                      shop_focus_frame(True).outlined(False)], 180)]
+    yield (
+        "ui-shop-focus",
+        [("pulse", [shop_focus_frame(False).outlined(False), shop_focus_frame(True).outlined(False)], 180)],
+    )
     yield "ui-check", [(lb, [check_badge(lb).outlined()], 1000) for lb in ("1", "2", "3", "tick")]
     yield "ui-afford", [("glint", [afford_frame(i).outlined(False) for i in (0, 0, 1, 2)], 400)]
     yield "ui-section", [(s, [section(s).outlined(False)], 1000) for s in SECTION_FACES]
     yield "fx-tap", [("play", [tap_burst(i).outlined(False) for i in range(4)], 60)]
     yield "fx-dust", [("play", [dust(i).outlined(False) for i in range(4)], 80)]
-    yield "ui-heart", [("full", [heart(True).outlined(False)], 1000), ("empty", [heart(False).outlined(False)], 1000),
-                       ("full-dark", [heart(True, True).outlined(False)], 1000),
-                       ("empty-dark", [heart(False, True).outlined(False)], 1000)]
+    yield (
+        "ui-heart",
+        [
+            ("full", [heart(True).outlined(False)], 1000),
+            ("empty", [heart(False).outlined(False)], 1000),
+            ("full-dark", [heart(True, True).outlined(False)], 1000),
+            ("empty-dark", [heart(False, True).outlined(False)], 1000),
+        ],
+    )
     # Keep the existing normal, static selected and disabled frame indices; append the animated tag.
-    yield "ui-tile", [("normal", [tile("normal").outlined(False)], 1000),
-                      ("selected-static", [tile("selected").outlined(False)], 1000),
-                      ("disabled", [tile("disabled").outlined(False)], 1000),
-                      ("selected", [tile("selected", phase=p).outlined(False) for p in (0, 1)], 180)]
-    yield "ui-button", [(s, [button(s).outlined(False)], 1000)
-                        for s in ("normal", "pressed", "disabled", "secondary", "secondary-pressed", "go", "go-pressed",
-                                  "go-disabled")]
+    yield (
+        "ui-tile",
+        [
+            ("normal", [tile("normal").outlined(False)], 1000),
+            ("selected-static", [tile("selected").outlined(False)], 1000),
+            ("disabled", [tile("disabled").outlined(False)], 1000),
+            ("selected", [tile("selected", phase=p).outlined(False) for p in (0, 1)], 180),
+        ],
+    )
+    yield (
+        "ui-button",
+        [
+            (s, [button(s).outlined(False)], 1000)
+            for s in (
+                "normal",
+                "pressed",
+                "disabled",
+                "secondary",
+                "secondary-pressed",
+                "go",
+                "go-pressed",
+                "go-disabled",
+            )
+        ],
+    )
     yield "ui-icon-button", [(s, [icon_button(s).outlined(False)], 1000) for s in ("normal", "pressed")]
     yield "ui-switch", [("on", [switch(True).outlined(False)], 1000), ("off", [switch(False).outlined(False)], 1000)]
-    yield "ui-slider", [(t, [slider_track(t.startswith("filled"), not t.endswith("disabled")).outlined(False)], 1000)
-                        for t in ("filled", "empty", "filled-disabled", "empty-disabled")]
+    yield (
+        "ui-slider",
+        [
+            (t, [slider_track(t.startswith("filled"), not t.endswith("disabled")).outlined(False)], 1000)
+            for t in ("filled", "empty", "filled-disabled", "empty-disabled")
+        ],
+    )
     yield "ui-slider-knob", [(s, [slider_knob(s).outlined(False)], 1000) for s in ("normal", "pressed", "disabled")]
     for suffix, ink in (("", NAVY_FACE), ("-panel", CREAM_PANEL)):
         yield f"icon-sound{suffix}", [(t, [speaker(ink, t == "on").outlined(False)], 1000) for t in ("on", "off")]
-    yield "icon-music-panel", [(t, [speaker(CREAM_PANEL, t == "on", True).outlined(False)], 1000)
-                               for t in ("on", "off")]
+    yield (
+        "icon-music-panel",
+        [(t, [speaker(CREAM_PANEL, t == "on", True).outlined(False)], 1000) for t in ("on", "off")],
+    )
     yield "icon-effects-panel", [(t, [effects(CREAM_PANEL, t == "on").outlined(False)], 1000) for t in ("on", "off")]
     yield "icon-motion-panel", [(t, [motion(CREAM_PANEL, t == "on").outlined(False)], 1000) for t in ("on", "off")]
     yield "icon-install-panel", [(t, [install(CREAM_PANEL, t == "on").outlined(False)], 1000) for t in ("on", "off")]
-    yield "ui-zone-pips", [("todo", [zone_pip().outlined(False)], 1000)] + [
-        (zone + suffix, [zone_pip(zone, bool(suffix)).outlined(False)], 1000)
-        for zone in ZONE_COLOURS for suffix in ("", "-done")]
+    yield (
+        "ui-zone-pips",
+        [("todo", [zone_pip().outlined(False)], 1000)]
+        + [
+            (zone + suffix, [zone_pip(zone, bool(suffix)).outlined(False)], 1000)
+            for zone in ZONE_COLOURS
+            for suffix in ("", "-done")
+        ],
+    )
     yield "ui-touch-drag", touch_tags()
 
 
@@ -1687,12 +1940,12 @@ def preview(out, scale=3, width=380):
 
 
 def build():
-    os.makedirs("art/ui", exist_ok=True)
-    os.makedirs("public/art/images", exist_ok=True)
+    Path("art/ui").mkdir(parents=True, exist_ok=True)
+    Path("public/art/images").mkdir(parents=True, exist_ok=True)
     for key, draw in IMAGES.items():
         png = f"public/art/images/{key}.png"
         draw().save(png)
-        subprocess.run(["aseprite", "-b", png, "--save-as", f"art/ui/{key}.aseprite"], check=True)
+        subprocess.run(["aseprite", "-b", png, "--save-as", f"art/ui/{key}.aseprite"], check=True)  # noqa: S603, S607 - Fixed art executable and generator-owned paths.
     build_sprites(list(sprites()), "art/ui")
     print("built", ", ".join(IMAGES))
 

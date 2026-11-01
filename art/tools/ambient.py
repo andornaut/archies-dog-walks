@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Draw the ambient layer: people, traffic and lawn animals that pass by with no collisions and no card.
 Each is a road sprite with a variant at every depth step in minis.STEPS (@94 to @50), outlined with
 pixel.road_edge and lit with road.LIT's rim on its dark parts; the cross street draws from @50. Side
@@ -101,13 +100,14 @@ in this file instead. Shared tooling is in pixel.py; the legs, face and rim come
 """
 
 import math
-import os
 import sys
+from pathlib import Path
 
-sys.path.insert(0, os.path.dirname(__file__))
-import road  # noqa: E402
-from minis import STEPS, Mini, small, snap  # noqa: E402
-from pixel import DARKER, K, Grid, bitmap, edged, main  # noqa: E402
+sys.path.insert(0, str(Path(__file__).parent))
+from minis import STEPS, Mini, small, snap
+from pixel import DARKER, Grid, K, bitmap, edged, main
+
+import road
 
 DRIVE_MS = 100
 RIDE_MS = 120
@@ -134,6 +134,7 @@ KITE_MS = 200
 
 
 # ---------- the pedestrian, laid out on 32x48 as road.person's tops are ----------
+
 
 def student_front(g, b, arms=0):
     """The student facing the walker: a red jacket with its zip, the backpack's straps over the shoulders,
@@ -190,11 +191,11 @@ def student_back(g, b, arms=0):
     g.rect(23, 10 + b, 4, 6, "blue")
 
 
-LEGS = dict(legs="sky", shoes="white")
+LEGS = {"legs": "sky", "shoes": "white"}
 
 
 def walking(s, top, step):
-    """A walk frame at scale s (road.SCALE x the depth step), on road.person's planted legs in road.HUMAN_WALK's pose."""
+    """A walk frame at road.SCALE x depth step, with road.HUMAN_WALK's planted legs."""
     return small(road, s, road.dressed, top, grounded=True, **LEGS, **snap(road.HUMAN_WALK[step], s)).outlined()
 
 
@@ -202,17 +203,24 @@ def pedestrians(suffix, step):
     """Yield (key, tags) for the pedestrian's front and back views at a depth step."""
     s = road.SCALE * step
     for key, top in (("ambient-pedestrian", student_front), ("ambient-pedestrian-back", student_back)):
-        yield f"{key}{suffix}", [("walk", [walking(s, top, f) for f in range(len(road.HUMAN_WALK))], road.HUMAN_WALK_MS)]
+        yield (
+            f"{key}{suffix}",
+            [("walk", [walking(s, top, f) for f in range(len(road.HUMAN_WALK))], road.HUMAN_WALK_MS)],
+        )
 
 
 # ---------- cars: side elevations, laid out in design units and drawn at road.SCALE ----------
 
 # A hub's spoke a frame, an eighth of a turn clockwise each, as a wheel rolling right turns: |, /, - and \,
 # as offsets from the hub's centre.
-SPOKES = (((0, -2), (0, -1), (0, 1), (0, 2)), ((1, -1), (-1, 1)), ((-2, 0), (-1, 0), (1, 0), (2, 0)),
-          ((-1, -1), (1, 1)))
-ROOF = 3            # every car's roof row; the frame keeps 2 clear rows above it and 2 columns each side
-TIRE = 5            # a tire's radius; it rises 3 rows into the body
+SPOKES = (
+    ((0, -2), (0, -1), (0, 1), (0, 2)),
+    ((1, -1), (-1, 1)),
+    ((-2, 0), (-1, 0), (1, 0), (2, 0)),
+    ((-1, -1), (1, 1)),
+)
+ROOF = 3  # every car's roof row; the frame keeps 2 clear rows above it and 2 columns each side
+TIRE = 5  # a tire's radius; it rises 3 rows into the body
 
 
 class Car:
@@ -243,7 +251,7 @@ class Car:
         """Drive frame roll (0 to 3) at scale s: the body 1px lower on frames 1 and 2."""
         g = edged(Mini(s, self.w, self.h))
         dip = 1 / s if roll in (1, 2) else 0
-        q, L, belt, end = self.q, self.length, self.belt, self.end
+        q, length, belt, end = self.q, self.length, self.belt, self.end
         upper = q.get("upper", self.base)
 
         def rect(x, y, w, h, c):
@@ -280,10 +288,10 @@ class Car:
             for x in range(x0 + 1, x1, 2):
                 rect(x, ROOF + 1.5, 1, 1, "amber")
         # the body: lit along the belt, a step darker along the sill and down the nose
-        rect(1, belt, L - 2, self.body, self.base)
-        rect(1, belt, L - 2, 1, self.light)
-        rect(1, end - 1, L - 2, 2, self.shade)
-        rect(L - 3, belt + 1, 2, self.body - 2, self.shade)
+        rect(1, belt, length - 2, self.body, self.base)
+        rect(1, belt, length - 2, 1, self.light)
+        rect(1, end - 1, length - 2, 2, self.shade)
+        rect(length - 3, belt + 1, 2, self.body - 2, self.shade)
         for x0, x1, y0, y1, c in q.get("bands", ()):
             rect(x0, y0, x1 - x0 + 1, y1 - y0 + 1, c)
         for x in q.get("doors", ()):
@@ -293,46 +301,89 @@ class Car:
         rect(mx, belt - 2, 3, 2, self.shade)
         # lamps and bumpers
         lamp = q.get("lamp", belt + 1)
-        rect(L - 3, lamp, 2, 2, "yellow")
-        rect(L - 3, lamp, 1, 1, "white")
+        rect(length - 3, lamp, 2, 2, "yellow")
+        rect(length - 3, lamp, 1, 1, "white")
         rect(1, lamp, 2, 3, "red")
         rect(0, end - 3, 3, 3, "lgrey")
-        rect(L - 3, end - 3, 3, 3, "lgrey")
+        rect(length - 3, end - 3, 3, 3, "lgrey")
         rect(0, end - 1, 3, 1, "grey")
-        rect(L - 3, end - 1, 3, 1, "grey")
+        rect(length - 3, end - 1, 3, 1, "grey")
         # wheel arches, dark inside the body, cut off below it, then the tires in front of them
         for cx in self.wheels:
             rect(cx - TIRE - 1.5, self.cy - TIRE - 1.5 - dip, (TIRE + 1.5) * 2, 1, None)
             g.ell(cx + 2, self.cy + dip, TIRE + 1.5, TIRE + 1.5, "navy")
         g.rect(0, end + 1 + dip, self.w, self.h, None)
-        road.lit(g, dict(navy=("slate", None)))
-        for cx in self.wheels:
-            cx += 2
+        road.lit(g, {"navy": ("slate", None)})
+        for wheel_x in self.wheels:
+            cx = wheel_x + 2
             g.ell(cx, self.cy, TIRE, TIRE, "ink")
             g.ell(cx, self.cy, 2.6, 2.6, "grey")
             for dx, dy in SPOKES[roll]:
                 g.rect(cx - 0.5 + dx, self.cy - 0.5 + dy, 1, 1, "dslate")
             g.rect(cx - 0.5, self.cy - 0.5, 1, 1, "lgrey")
-        road.rim(g.g, dict(ink=("grey", None)))
+        road.rim(g.g, {"ink": ("grey", None)})
         return g.outlined()
 
 
 # ambient-car is the sedan; the other bodies are extra keys the game may take in turn.
 CARS = {
-    "ambient-car": Car(44, 11, (16, 26), 0.9, 1.5, (10, 34), ("orange", "rust", "amber"), pillars=(21,),
-                       doors=(12, 22)),
-    "ambient-car-hatchback": Car(38, 11, (8, 23), 0.6, 1.4, (9, 29), ("red", "dred", "pink"), pillars=(16,),
-                                 doors=(15,)),
-    "ambient-car-van": Car(42, 13, (3, 30), 0, 1, (9, 33), ("green", "dgreen", "yellow"), upper="white",
-                           pillars=(10, 20), doors=(20,), bands=((1, 40, 13, 13, "white"),)),
-    "ambient-car-wagon": Car(46, 11, (6, 32), 0, 1.4, (10, 36), ("cream", "tan", "white"), pillars=(13, 23),
-                             doors=(14, 24), rack=(8, 30),
-                             bands=((3, 41, 14, 17, "brown"), (3, 41, 14, 14, "ochre"), (3, 41, 17, 17, "dbrown"))),
-    "ambient-bus": Car(80, 15, (2, 76), 0, 0.2, (14, 58), ("ttc", "dred", "red"), body=13, upper="white",
-                       pillars=(12, 23, 34, 45, 54, 64), lamp=23, sign=(66, 78), pod=(8, 24),
-                       bands=((3, 63, 4, 5, "white"), (1, 77, 15, 15, "white"), (1, 77, 22, 22, "white"),
-                              (34, 41, 15, 24, "cyan"), (37, 38, 15, 24, "white"), (66, 73, 15, 24, "cyan"),
-                              (69, 70, 15, 24, "white"), (75, 77, 15, 20, "cyan"))),
+    "ambient-car": Car(
+        44, 11, (16, 26), 0.9, 1.5, (10, 34), ("orange", "rust", "amber"), pillars=(21,), doors=(12, 22)
+    ),
+    "ambient-car-hatchback": Car(
+        38, 11, (8, 23), 0.6, 1.4, (9, 29), ("red", "dred", "pink"), pillars=(16,), doors=(15,)
+    ),
+    "ambient-car-van": Car(
+        42,
+        13,
+        (3, 30),
+        0,
+        1,
+        (9, 33),
+        ("green", "dgreen", "yellow"),
+        upper="white",
+        pillars=(10, 20),
+        doors=(20,),
+        bands=((1, 40, 13, 13, "white"),),
+    ),
+    "ambient-car-wagon": Car(
+        46,
+        11,
+        (6, 32),
+        0,
+        1.4,
+        (10, 36),
+        ("cream", "tan", "white"),
+        pillars=(13, 23),
+        doors=(14, 24),
+        rack=(8, 30),
+        bands=((3, 41, 14, 17, "brown"), (3, 41, 14, 14, "ochre"), (3, 41, 17, 17, "dbrown")),
+    ),
+    "ambient-bus": Car(
+        80,
+        15,
+        (2, 76),
+        0,
+        0.2,
+        (14, 58),
+        ("ttc", "dred", "red"),
+        body=13,
+        upper="white",
+        pillars=(12, 23, 34, 45, 54, 64),
+        lamp=23,
+        sign=(66, 78),
+        pod=(8, 24),
+        bands=(
+            (3, 63, 4, 5, "white"),
+            (1, 77, 15, 15, "white"),
+            (1, 77, 22, 22, "white"),
+            (34, 41, 15, 24, "cyan"),
+            (37, 38, 15, 24, "white"),
+            (66, 73, 15, 24, "cyan"),
+            (69, 70, 15, 24, "white"),
+            (75, 77, 15, 20, "cyan"),
+        ),
+    ),
 }
 
 
@@ -347,7 +398,7 @@ def cars(suffix, step):
 
 # The bike in design units: hubs, the bottom bracket, the seat cluster, the head tube's top and bottom.
 REAR, FRONT, BB, SEAT, HEAD, FORK = (9, 38.5), (33, 38.5), (20, 39), (16, 26), (30, 25), (31, 29)
-WHEEL = 8           # a wheel's radius: an ink tire 1.2 thick round an lgrey rim 0.8 thick, clear inside
+WHEEL = 8  # a wheel's radius: an ink tire 1.2 thick round an lgrey rim 0.8 thick, clear inside
 CRANK = 4
 HIP = (16.5, 22)
 THIGH, SHIN = 10, 11
@@ -370,8 +421,8 @@ def knee(hip, foot):
     dx, dy = foot[0] - hip[0], foot[1] - hip[1]
     d = max(1e-6, math.hypot(dx, dy))
     r = min(d, THIGH + SHIN - 1e-6)
-    a = (THIGH ** 2 - SHIN ** 2 + r ** 2) / (2 * r)
-    h = math.sqrt(max(0.0, THIGH ** 2 - a ** 2))
+    a = (THIGH**2 - SHIN**2 + r**2) / (2 * r)
+    h = math.sqrt(max(0.0, THIGH**2 - a**2))
     nx, ny = dy / d, -dx / d
     if nx < 0:
         nx, ny = -nx, -ny
@@ -450,10 +501,10 @@ def cyclist(s, f):
     bar(g, BB, near, 1.5, "lgrey")
     g.ell(BB[0], BB[1], 1.5, 1.5, "grey")
     leg(near, "skin1", "white")
-    out = road.lit(g.g, dict(navy=("grey", "slate"), purple=("mauve", None))).outlined()
+    out = road.lit(g.g, {"navy": ("grey", "slate"), "purple": ("mauve", None)}).outlined()
     # the spokes: a cross through each hub, a sixteenth of a turn on per frame
-    for cx, cy in (REAR, FRONT):
-        cx, cy = (cx + 1) * s, cy * s
+    for hub_x, hub_y in (REAR, FRONT):
+        cx, cy = (hub_x + 1) * s, hub_y * s
         r = (WHEEL - 2) * s
         for k in range(2):
             a = math.radians(f * 22.5 + k * 90)
@@ -474,10 +525,12 @@ def bikes(suffix, step):
 # ---------- lawn animals: side on, facing right, laid out on 32x32 ----------
 # Each stands on row 30 (the sitting cat on 31); frame 0 of its idle is the rest pose the game measures its feet from.
 
+
 def ginger_cat(pose):
     """A ginger tabby side on. pose is (body dy, arch lift, near and far front feet, near and far back feet,
     tail tip) for a run frame, or "sit" and "sit-tail" for the idle: sat up, its tail curled round, the
     tail's tip flicking on the second frame."""
+
     def draw(g):
         if isinstance(pose, str):
             g.cel(17, 30, 4, 1.5, "rust")
@@ -523,15 +576,18 @@ def ginger_cat(pose):
         g.rect(26, 15 + dy, 2, 2, "green")
         g.rect(27, 15 + dy, 1, 2, "ink")
         g.rect(29.5, 17 + dy, 1, 1, "pink")
+
     return draw
 
 
 # The cat's gallop: stretched out, landing on its front feet, gathered with its body lifted over its feet,
 # pushing off. arch lifts the body by that many units.
-CAT_RUN = ((0, 0, (28, 28.5), (26.5, 29.5), (3.5, 27.5), (5, 28.5), (3.5, 9)),
-           (1, 0, (23, 29.5), (25, 29.5), (6, 28), (8, 29), (3.5, 12)),
-           (-1, 2, (17, 29.5), (19, 29), (14, 29.5), (12, 29), (4, 8)),
-           (0, 1, (27, 25), (25, 26), (6, 29.5), (8, 29.5), (3.5, 10)))
+CAT_RUN = (
+    (0, 0, (28, 28.5), (26.5, 29.5), (3.5, 27.5), (5, 28.5), (3.5, 9)),
+    (1, 0, (23, 29.5), (25, 29.5), (6, 28), (8, 29), (3.5, 12)),
+    (-1, 2, (17, 29.5), (19, 29), (14, 29.5), (12, 29), (4, 8)),
+    (0, 1, (27, 25), (25, 26), (6, 29.5), (8, 29.5), (3.5, 10)),
+)
 CAT_IDLE = ("sit", "sit-tail")
 
 
@@ -559,6 +615,7 @@ def cottontail(pose):
         g.rect(hx + 1, hy - 1, 1, 1, "white")
         g.rect(hx + 3.5, hy + 1 - (0.5 if stretch < 0 else 0), 1, 1, "pink")
         g.rect(hx - 1, hy + 2, 4, 1.5, "cream")
+
     return draw
 
 
@@ -571,6 +628,7 @@ RABBIT_HOP = ((0, -1, 2, 1, (0, 0)), (-3, 2, 3, -3, (3, -1)), (-5, 2, 4, -1, (3,
 def robin(peck=False, wing=None):
     """A robin side on, facing right. wing None stands it on the lawn (peck tips its head to the ground); in
     flight, wing is up, level or down, the legs tucked and the body a little higher."""
+
     def draw(g):
         lift = -2 if wing else 0
         if wing is None:
@@ -598,6 +656,7 @@ def robin(peck=False, wing=None):
         else:
             g.tri((10, cy), (18, cy), (8, cy + 10), "dbrown")
             g.tri((11, cy), (16, cy), (10, cy + 7), "brown")
+
     return draw
 
 
@@ -615,15 +674,28 @@ def animal(s, draw):
 def animals(suffix, step):
     """Yield (key, tags) for the lawn animals at a depth step; idle first, so frame 0 is the rest pose."""
     s = ANIMAL_SCALE * step
-    yield f"ambient-cat{suffix}", [("idle", [animal(s, ginger_cat(p)) for p in CAT_IDLE], IDLE_MS),
-                                   ("run", [animal(s, ginger_cat(p)) for p in CAT_RUN], RUN_MS)]
-    yield f"ambient-rabbit{suffix}", [("idle", [animal(s, cottontail(p)) for p in RABBIT_IDLE], IDLE_MS),
-                                      ("hop", [animal(s, cottontail(p)) for p in RABBIT_HOP], HOP_MS)]
-    yield f"ambient-bird{suffix}", [("idle", [animal(s, d) for d in BIRD_IDLE], IDLE_MS),
-                                    ("fly", [animal(s, d) for d in BIRD_FLY], FLY_MS)]
+    yield (
+        f"ambient-cat{suffix}",
+        [
+            ("idle", [animal(s, ginger_cat(p)) for p in CAT_IDLE], IDLE_MS),
+            ("run", [animal(s, ginger_cat(p)) for p in CAT_RUN], RUN_MS),
+        ],
+    )
+    yield (
+        f"ambient-rabbit{suffix}",
+        [
+            ("idle", [animal(s, cottontail(p)) for p in RABBIT_IDLE], IDLE_MS),
+            ("hop", [animal(s, cottontail(p)) for p in RABBIT_HOP], HOP_MS),
+        ],
+    )
+    yield (
+        f"ambient-bird{suffix}",
+        [("idle", [animal(s, d) for d in BIRD_IDLE], IDLE_MS), ("fly", [animal(s, d) for d in BIRD_FLY], FLY_MS)],
+    )
 
 
 # ---------- the sky movers: full size only, facing right ----------
+
 
 def sky_grid(w, h):
     """A sky mover's grid, with one ink line round every fill."""
@@ -696,7 +768,7 @@ def balloon(bob, flame):
 def pigeon(g, cx, cy, wing):
     """One pigeon seen as a chevron centred on (cx, cy): a slate body over a grey tail, its pale wings
     raised in a V (up), spread in a shallow one (level) or swept down."""
-    rows = dict(up=(-2, -1, 0), level=(-1, 0, 0), down=(1, 1, 0))[wing]
+    rows = {"up": (-2, -1, 0), "level": (-1, 0, 0), "down": (1, 1, 0)}[wing]
     for i, dy in enumerate(rows):
         g.p(cx - 3 + i, cy + dy, "lgrey")
         g.p(cx + 3 - i, cy + dy, "lgrey")
@@ -827,11 +899,11 @@ def banner_plane(f):
 
 
 # A gull seen head on, its wings bent at the wrist: raised in a V (up), in an M (level) or swept down.
-GULL = dict(
-    up=("w.........w", ".w.......w.", "..ww...ww..", "....www....", ".....w....."),
-    level=("", ".ww.....ww.", "w..ww.ww..w", "....www....", ".....w....."),
-    down=("", "", "..wwwwwww..", ".w..www..w.", "w....w....w"),
-)
+GULL = {
+    "up": ("w.........w", ".w.......w.", "..ww...ww..", "....www....", ".....w....."),
+    "level": ("", ".ww.....ww.", "w..ww.ww..w", "....www....", ".....w....."),
+    "down": ("", "", "..wwwwwww..", ".w..www..w.", "w....w....w"),
+}
 GULL_FLOCK = ((6, 8, 0), (18, 4, 2), (29, 9, 1))
 
 
@@ -840,7 +912,7 @@ def gulls(i):
     and an amber beak each, each a different step through its wingbeat."""
     g = sky_grid(36, 12)
     for cx, cy, phase in GULL_FLOCK:
-        bitmap(g, cx - 5, cy - 3, GULL[WINGBEAT[(i + phase) % 4]], dict(w="white"))
+        bitmap(g, cx - 5, cy - 3, GULL[WINGBEAT[(i + phase) % 4]], {"w": "white"})
         g.p(cx, cy + 1, "lgrey")
         g.p(cx + 1, cy, "amber")
     return g.outlined()
@@ -858,7 +930,7 @@ HAWK = (
     ".........rrrr.........",
     "........rrrrrr........",
 )
-HAWK_COLOURS = dict(b="brown", d="dbrown", c="cream", k="plum", r="rust")
+HAWK_COLOURS = {"b": "brown", "d": "dbrown", "c": "cream", "k": "plum", "r": "rust"}
 
 
 def hawk(tilt):
@@ -932,11 +1004,11 @@ def airliner(f):
 
 # A bat seen head on, an ink silhouette: ears and body between its wings, raised, spread with a scalloped
 # trailing edge, or down.
-BAT = dict(
-    up=("b.......b", "bb.b.b.bb", ".bbbbbbb.", "..bbbbb..", "....b...."),
-    level=("", "", "...b.b...", "bb.bbb.bb", ".bbbbbbb.", ".b..b..b."),
-    down=("", "", "...b.b...", "..bbbbb..", ".b.bbb.b.", "b...b...b"),
-)
+BAT = {
+    "up": ("b.......b", "bb.b.b.bb", ".bbbbbbb.", "..bbbbb..", "....b...."),
+    "level": ("", "", "...b.b...", "bb.bbb.bb", ".bbbbbbb.", ".b..b..b."),
+    "down": ("", "", "...b.b...", "..bbbbb..", ".b.bbb.b.", "b...b...b"),
+}
 BAT_FLOCK = ((4, 7, 0), (15, 4, 1), (24, 8, 3))
 
 
@@ -946,7 +1018,7 @@ def bats(i):
     g = Grid(29, 11)
     for cx, cy, phase in BAT_FLOCK:
         k = (i + phase) % 4
-        bitmap(g, cx - 4, cy - 4 + (0, -1, 0, 1)[k], BAT[WINGBEAT[k]], dict(b="ink"))
+        bitmap(g, cx - 4, cy - 4 + (0, -1, 0, 1)[k], BAT[WINGBEAT[k]], {"b": "ink"})
     return g.outlined(False)
 
 
@@ -971,11 +1043,15 @@ def sky_movers():
     yield "ambient-plane", [("fly", [plane("red"), plane("white")], PLANE_MS)]
     yield "ambient-balloon", [("fly", [balloon(b, f) for b, f in ((0, 1), (0, 0), (1, 1), (1, 0))], BALLOON_MS)]
     yield "ambient-pigeons", [("fly", [pigeons(i) for i in range(4)], PIGEON_MS)]
-    yield "ambient-helicopter", [("fly", [helicopter(r, l) for r, l in ((0, 1), (1, 1), (0, 0), (1, 0))],
-                                  HELICOPTER_MS)]
+    yield (
+        "ambient-helicopter",
+        [("fly", [helicopter(r, light) for r, light in ((0, 1), (1, 1), (0, 0), (1, 0))], HELICOPTER_MS)],
+    )
     yield "ambient-geese", [("fly", [geese(i) for i in range(4)], GEESE_MS)]
-    yield "ambient-turboprop", [("fly", [turboprop(b, l) for b, l in ((0, 1), (1, 1), (0, 0), (1, 0))],
-                                 TURBOPROP_MS)]
+    yield (
+        "ambient-turboprop",
+        [("fly", [turboprop(b, light) for b, light in ((0, 1), (1, 1), (0, 0), (1, 0))], TURBOPROP_MS)],
+    )
     yield "ambient-banner-plane", [("fly", [banner_plane(f) for f in range(4)], BANNER_PLANE_MS)]
     yield "ambient-gulls", [("fly", [gulls(i) for i in range(4)], GULLS_MS)]
     yield "ambient-hawk", [("fly", [hawk(t) for t in (0, 1, 0, -1)], HAWK_MS)]
@@ -989,7 +1065,7 @@ def sky_movers():
 def sprites():
     """Yield (key, [(tag, [frame pixels], duration_ms)]) for every ambient sprite at full size, then at every
     depth step."""
-    for suffix, step in (("", 1),) + tuple((f"@{x}", q) for x, q in STEPS):
+    for suffix, step in (("", 1), *tuple((f"@{x}", q) for x, q in STEPS)):
         yield from pedestrians(suffix, step)
         yield from cars(suffix, step)
         yield from bikes(suffix, step)

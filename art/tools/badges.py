@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Draw the 41 achievement badges and the celebration burst.
 
 badge-<achievement>: 32x32 medals, rimmed by category (firsts bronze, mastery
@@ -8,7 +7,8 @@ reads apart from the rest at 1x on the badge wall. The ring's outline takes icon
 3:1 on the wall's cream; the face is flat cream with a 1px tan crescent along its lower right.
 Tags: earned (in colour) and locked (in the neutral greys of locked UI: an
 ndslate ring, an ngrey face, the emblem as a two-tone ink and ndslate silhouette,
-a small padlock), dark enough that it never reads as silver. Where an emblem's edge holds under 3:1 against the cream and tan
+a small padlock), dark enough that it never reads as silver. Where an emblem's edge holds under 3:1 against the cream
+and tan
 face, the face beside it takes a 1px keyline: plum (9.42:1 on cream, 6.49:1 on
 tan), teal for green (eau-de-skunk).
 fx-confetti: 64x64, the burst behind a badge as it is earned (tag play, 10
@@ -29,19 +29,24 @@ hand edits to them belong in this file instead. Shared tooling is in pixel.py.
 """
 
 import math
-import os
 import random
 import sys
+from pathlib import Path
 
-sys.path.insert(0, os.path.dirname(__file__))
-import drops  # noqa: E402
-from minis import Mini  # noqa: E402
-from pixel import HEART, K, Grid, bitmap, contrast, icon_edge, main  # noqa: E402
-from road import SQUIRREL_FUR  # noqa: E402
+sys.path.insert(0, str(Path(__file__).parent))
+import drops
+from minis import Mini
+from pixel import HEART, Grid, K, bitmap, contrast, icon_edge, main
 
-RIMS = {"firsts": ("ochre", "rust", "tan"), "mastery": ("lgrey", "grey", "white"),
-        "collection": ("amber", "orange", "yellow"), "legend": ("purple", "plum", "mauve"),
-        "silly": ("pink", "mauve", "white")}
+from road import SQUIRREL_FUR
+
+RIMS = {
+    "firsts": ("ochre", "rust", "tan"),
+    "mastery": ("lgrey", "grey", "white"),
+    "collection": ("amber", "orange", "yellow"),
+    "legend": ("purple", "plum", "mauve"),
+    "silly": ("pink", "mauve", "white"),
+}
 # The rim's studs where they are not the rim's shade: gold on the legend's purple.
 STUDS = {"legend": "yellow"}
 # The icon keyline's colour where it is not plum, after the effects' rims.
@@ -55,8 +60,17 @@ def lum(c):
 
 # A muddy print: a pad under four toes, each toe apart from the others and the pad by a 1px gap, so the
 # print reads as a paw and not as arcs. 9x9.
-PAW_PRINT = ["..xx.xx..", "..xx.xx..", ".........", "xx.....xx", "xx.xxx.xx", "..xxxxx..", ".xxxxxxx.",
-             ".xxxxxxx.", "..xx.xx.."]
+PAW_PRINT = [
+    "..xx.xx..",
+    "..xx.xx..",
+    ".........",
+    "xx.....xx",
+    "xx.xxx.xx",
+    "..xxxxx..",
+    ".xxxxxxx.",
+    ".xxxxxxx.",
+    "..xx.xx..",
+]
 
 
 def line(g, a, b, col, w=1):
@@ -93,6 +107,7 @@ def icon(name):
     def deco(fn):
         ICONS[name] = fn
         return fn
+
     return deco
 
 
@@ -101,8 +116,12 @@ def _(g):
     """Toronto's skyline round the CN Tower: a grey needle with its pod and a red light, and either
     side blocks in the neighbourhoods' colours (Kensington's lilac, Cabbagetown's brick, the
     Distillery's ochre, the Beaches' sky), amber-lit, on a strip of High Park green."""
-    blocks = ((7, 17, 4, "lilac", "violet"), (11, 13, 4, "brick", "dbrick"), (19, 15, 4, "ochre", "rust"),
-              (23, 18, 3, "sky", "blue"))
+    blocks = (
+        (7, 17, 4, "lilac", "violet"),
+        (11, 13, 4, "brick", "dbrick"),
+        (19, 15, 4, "ochre", "rust"),
+        (23, 18, 3, "sky", "blue"),
+    )
     for x, top, w, fill, shade in blocks:
         g.rect(x, top, w, 24 - top, fill)
         g.rect(x + w - 1, top, 1, 24 - top, shade)
@@ -132,23 +151,38 @@ def _(g):
     a = math.radians(-80)
     px, py = 16 + 6.7 * math.cos(a), 16.5 + 6.7 * math.sin(a)
     t, n = (-math.sin(a), math.cos(a)), (math.cos(a), math.sin(a))
-    g.tri((px + 4.5 * t[0], py + 4.5 * t[1]), (px + 3.8 * n[0], py + 3.8 * n[1]),
-          (px - 3.8 * n[0], py - 3.8 * n[1]), "sky")
+    g.tri(
+        (px + 4.5 * t[0], py + 4.5 * t[1]),
+        (px + 3.8 * n[0], py + 3.8 * n[1]),
+        (px - 3.8 * n[0], py - 3.8 * n[1]),
+        "sky",
+    )
     g.tri((12, 16.5), (20, 16.5), (16, 12.5), "red")
     g.rect(13, 16, 6, 4, "brown")
     g.rect(15, 17, 2, 3, "plum")
 
 
 # A dog's head face on, floppy ears beside its muzzle: F fur, E ears, M muzzle, N nose, I eyes.
-DOG_FACE = ["..FFFFFF..", ".FFFFFFFF.", "EEFFFFFFEE", "EEFIFFIFEE", "EEFIFFIFEE", "EEFMMMMFEE", "EE.MNNM.EE",
-            "E..MMMM..E", "....MM...."]
+DOG_FACE = [
+    "..FFFFFF..",
+    ".FFFFFFFF.",
+    "EEFFFFFFEE",
+    "EEFIFFIFEE",
+    "EEFIFFIFEE",
+    "EEFMMMMFEE",
+    "EE.MNNM.EE",
+    "E..MMMM..E",
+    "....MM....",
+]
 
 
 @icon("double-leash")
 def _(g):
     """Two dogs' heads side by side, each in its collar."""
-    for x0, y0, fur, ears, muzzle, collar in ((5, 9, "ochre", "dbrown", "white", "red"),
-                                              (16, 12, "white", "ink", "lgrey", "sky")):
+    for x0, y0, fur, ears, muzzle, collar in (
+        (5, 9, "ochre", "dbrown", "white", "red"),
+        (16, 12, "white", "ink", "lgrey", "sky"),
+    ):
         bitmap(g, x0, y0, DOG_FACE, {"F": fur, "E": ears, "M": muzzle, "N": "ink", "I": "ink"})
         g.rect(x0 + 3, y0 + 9, 4, 1, collar)
 
@@ -260,8 +294,16 @@ def _(g):
 
 # A dog side on, stretched mid-leap, forelegs reaching and hind legs pushing off: B body, L legs, E ear,
 # N nose, I eye, T tail.
-LEAPER = ["............EE....", "T..........EBBBB..", "TT.........BIBBBN.", ".TBBBBBBBBBBBB....", "..BBBBBBBBBBB.....",
-          "..LBBBBBBBBLL.....", ".LL........LLL....", "LL...........LL..."]
+LEAPER = [
+    "............EE....",
+    "T..........EBBBB..",
+    "TT.........BIBBBN.",
+    ".TBBBBBBBBBBBB....",
+    "..BBBBBBBBBBB.....",
+    "..LBBBBBBBBLL.....",
+    ".LL........LLL....",
+    "LL...........LL...",
+]
 
 
 @icon("dodge-ball")
@@ -336,8 +378,16 @@ def _(g):
 
 
 # A dog side on at full stretch, ears streaming back: B body, S belly and legs, E ear, N nose, I eye, T tail.
-RUNNER = ["...........EEB...", "..........EBBIB..", "T.........BBBBBBN", "TBBBBBBBBBBBBBB..", ".BBBBBBBBBBBB....",
-          "..SSSSSSSSSS.....", ".SS........SS....", "SS..........SS..."]
+RUNNER = [
+    "...........EEB...",
+    "..........EBBIB..",
+    "T.........BBBBBBN",
+    "TBBBBBBBBBBBBBB..",
+    ".BBBBBBBBBBBB....",
+    "..SSSSSSSSSS.....",
+    ".SS........SS....",
+    "SS..........SS...",
+]
 
 
 @icon("zoomies")
@@ -365,8 +415,18 @@ def _(g):
 
 # An open hand reaching down out of a striped sleeve: N and W the sleeve's stripes, H skin, h the gaps
 # between the fingers.
-GRAB = ["..NWNWNW..", "..NWNWNW..", "..NWNWNW..", "..HHHHHH..", ".HHHHHHHH.", "HHHHHHHHHH", "HH.HhHhHhH",
-        "H..HhHhHhH", "...HhHhHhH", "...H.H.H.H"]
+GRAB = [
+    "..NWNWNW..",
+    "..NWNWNW..",
+    "..NWNWNW..",
+    "..HHHHHH..",
+    ".HHHHHHHH.",
+    "HHHHHHHHHH",
+    "HH.HhHhHhH",
+    "H..HhHhHhH",
+    "...HhHhHhH",
+    "...H.H.H.H",
+]
 
 
 @icon("yoink")
@@ -379,8 +439,17 @@ def _(g):
 
 
 # A dog's head side on, its nose to the right: F fur, E ear, M muzzle, N nose, I eye.
-SNIFFER = ["..FFFF.....", ".FFFFFF....", "EEFFFIFF...", "EEFFFFFFFNN", "EEEFFFFFFNN", "EEEFFFFFFF.",
-           ".EEFFFFMM..", "..FFFF.....", "..FFFF....."]
+SNIFFER = [
+    "..FFFF.....",
+    ".FFFFFF....",
+    "EEFFFIFF...",
+    "EEFFFFFFFNN",
+    "EEEFFFFFFNN",
+    "EEEFFFFFFF.",
+    ".EEFFFFMM..",
+    "..FFFF.....",
+    "..FFFF.....",
+]
 
 
 @icon("sniff-test")
@@ -600,12 +669,22 @@ def _(g):
         bitmap(g, x0, y0, rows, {"x": "red" if rows is not H5 else "pink"})
         g.p(x0 + 1, y0 + 1, "white")
 
+
 # ---------- the card choices and the Spotlight ----------
 
 # The stage lamp at the Spotlight's upper left, aimed down and right: d its dslate can, s slate light on it,
 # g its grey rim and yoke, w the white lens.
-LAMP = ["...g.......", "..gsdd.....", ".gssddd....", "gssdddddd..", ".sddddddd..", "..dddddgw..", "...ddddgww.",
-        "....dgwww..", ".....gww..."]
+LAMP = [
+    "...g.......",
+    "..gsdd.....",
+    ".gssddd....",
+    "gssdddddd..",
+    ".sddddddd..",
+    "..dddddgw..",
+    "...ddddgww.",
+    "....dgwww..",
+    ".....gww...",
+]
 # A $ for a price tag, 3x7.
 DOLLAR = [".1.", "111", "1..", "111", "..1", "111", ".1."]
 # A camera flash, 5x5.
@@ -744,19 +823,47 @@ def _(g):
 
 
 BADGES = {
-    "double-leash": "firsts", "pack-leader": "firsts", "round-trip": "firsts",
+    "double-leash": "firsts",
+    "pack-leader": "firsts",
+    "round-trip": "firsts",
     "legend-of-the-leash": "legend",
-    "big-payday": "mastery", "clean-paws": "mastery", "dodge-ball": "mastery", "everybody-home": "mastery",
-    "five-star-service": "mastery", "marathon": "mastery", "not-a-scratch": "mastery", "payday": "mastery",
-    "tip-jar": "mastery", "twenty-grand": "mastery",
-    "full-kennel": "collection", "kitted-out": "collection", "local-favourite": "collection",
-    "tag-team": "collection", "whole-city": "collection",
-    "big-screen": "silly", "bird-brain": "silly", "burned-bridges": "silly", "cat-whisperer": "silly",
-    "clean-streets": "silly", "close-shave": "silly", "eau-de-skunk": "silly", "fender-bender": "silly", "finders-keepers": "silly",
-    "mud-season": "silly", "paparazzi": "silly", "popular-pack": "silly",
-    "say-cheese": "silly", "snack-attack": "silly", "sniff-test": "silly", "squirrel": "silly",
-    "sugar-rush": "silly", "trash-panda": "silly", "yoink": "silly", "youre-fired": "silly",
-    "zookeeper": "silly", "zoomies": "silly",
+    "big-payday": "mastery",
+    "clean-paws": "mastery",
+    "dodge-ball": "mastery",
+    "everybody-home": "mastery",
+    "five-star-service": "mastery",
+    "marathon": "mastery",
+    "not-a-scratch": "mastery",
+    "payday": "mastery",
+    "tip-jar": "mastery",
+    "twenty-grand": "mastery",
+    "full-kennel": "collection",
+    "kitted-out": "collection",
+    "local-favourite": "collection",
+    "tag-team": "collection",
+    "whole-city": "collection",
+    "big-screen": "silly",
+    "bird-brain": "silly",
+    "burned-bridges": "silly",
+    "cat-whisperer": "silly",
+    "clean-streets": "silly",
+    "close-shave": "silly",
+    "eau-de-skunk": "silly",
+    "fender-bender": "silly",
+    "finders-keepers": "silly",
+    "mud-season": "silly",
+    "paparazzi": "silly",
+    "popular-pack": "silly",
+    "say-cheese": "silly",
+    "snack-attack": "silly",
+    "sniff-test": "silly",
+    "squirrel": "silly",
+    "sugar-rush": "silly",
+    "trash-panda": "silly",
+    "yoink": "silly",
+    "youre-fired": "silly",
+    "zookeeper": "silly",
+    "zoomies": "silly",
 }
 
 
@@ -787,9 +894,17 @@ def badge(name, locked=False):
     ICONS[name](art)
     icon_px = {(x, y) for y in range(32) for x in range(32) if art.px[y][x]}
     # the keyline: every face pixel beside an icon pixel that holds under 3:1 against it
-    keyline = {(x, y) for y in range(32) for x in range(32) if disc.px[y][x] and (x, y) not in icon_px and any(
-        (x + dx, y + dy) in icon_px and contrast(art.px[y + dy][x + dx], g.px[y][x]) < 3
-        for dx, dy in ((0, -1), (0, 1), (-1, 0), (1, 0)))}
+    keyline = {
+        (x, y)
+        for y in range(32)
+        for x in range(32)
+        if disc.px[y][x]
+        and (x, y) not in icon_px
+        and any(
+            (x + dx, y + dy) in icon_px and contrast(art.px[y + dy][x + dx], g.px[y][x]) < 3
+            for dx, dy in ((0, -1), (0, 1), (-1, 0), (1, 0))
+        )
+    }
     for x, y in icon_px:
         g.px[y][x] = art.px[y][x]
     for x, y in keyline:
@@ -798,8 +913,12 @@ def badge(name, locked=False):
         # In the neutral greys, as locked UI is: the ring darkens to ndslate and the face to ngrey, so a locked
         # badge never reads as silver; the icon becomes a two-tone silhouette (dark lines in ink, the rest
         # ndslate, 3.56:1 on ngrey) so its goal still reads on the grey face. The padlock keeps its colours.
-        ring_to = {K[rim]: K["ndslate"], K[rim_sh]: K["ink"], K[rim_li]: K["nslate"],
-                   K[STUDS.get(BADGES[name], rim_sh)]: K["ink"]}
+        ring_to = {
+            K[rim]: K["ndslate"],
+            K[rim_sh]: K["ink"],
+            K[rim_li]: K["nslate"],
+            K[STUDS.get(BADGES[name], rim_sh)]: K["ink"],
+        }
         for y in range(32):
             for x in range(32):
                 c = g.px[y][x]
@@ -820,11 +939,19 @@ def badge(name, locked=False):
 
 # Confetti pieces, fixed so every build draws the same burst: (angle, reach, fall, drift, phase, last frame, colour).
 # Angles are jittered off an even spread and reaches vary, so the burst fills the square unevenly.
-_rng = random.Random(7)
-PIECES = [(math.radians(i * 360 / 36 + _rng.uniform(-14, 14)), _rng.uniform(16, 38), _rng.uniform(0.35, 0.7),
-           _rng.uniform(-3, 3), _rng.randrange(3), _rng.randrange(6, 11),
-           ("red", "amber", "green", "sky", "pink", "yellow", "white", "cyan", "orange", "mauve")[i % 10])
-          for i in range(36)]
+_rng = random.Random(7)  # noqa: S311 - Seeded non-security art texture.
+PIECES = [
+    (
+        math.radians(i * 360 / 36 + _rng.uniform(-14, 14)),
+        _rng.uniform(16, 38),
+        _rng.uniform(0.35, 0.7),
+        _rng.uniform(-3, 3),
+        _rng.randrange(3),
+        _rng.randrange(6, 11),
+        ("red", "amber", "green", "sky", "pink", "yellow", "white", "cyan", "orange", "mauve")[i % 10],
+    )
+    for i in range(36)
+]
 # A piece tumbles through these shapes, one per frame.
 TUMBLE = ((1, 2), (2, 1), (2, 2))
 
@@ -840,7 +967,7 @@ def confetti(step):
         # thrown fast and slowing, with a kick upward, then gravity takes over
         r = reach * (1 - 0.55 ** (step + 1.2))
         x = 32 + math.cos(a) * r + drift * math.sin(step * 0.8 + phase) * min(step / 3, 1)
-        y = 32 + math.sin(a) * r - 7 * (1 - 0.5 ** step) + fall * max(step - 1, 0) ** 2
+        y = 32 + math.sin(a) * r - 7 * (1 - 0.5**step) + fall * max(step - 1, 0) ** 2
         w, h = TUMBLE[(step + phase) % 3]
         x, y = round(x - w / 2), round(y - h / 2)
         g.rect(x - 1, y, w + 2, h, "plum")
@@ -851,8 +978,12 @@ def confetti(step):
 
 # One falling confetti bit's tumble, one shape per frame as cells of its 6x6 frame: face on (3x2), edge on
 # (4x1), turning (a 3-step diagonal), edge on the other way (1x4).
-BIT_TUMBLE = (((1, 2), (2, 2), (3, 2), (1, 3), (2, 3), (3, 3)), ((1, 2), (2, 2), (3, 2), (4, 2)),
-              ((1, 1), (2, 1), (2, 2), (3, 2), (3, 3)), ((2, 1), (2, 2), (2, 3), (2, 4)))
+BIT_TUMBLE = (
+    ((1, 2), (2, 2), (3, 2), (1, 3), (2, 3), (3, 3)),
+    ((1, 2), (2, 2), (3, 2), (4, 2)),
+    ((1, 1), (2, 1), (2, 2), (3, 2), (3, 3)),
+    ((2, 1), (2, 2), (2, 3), (2, 4)),
+)
 BIT_COLOURS = ("amber", "cyan", "green", "pink", "white", "yellow")
 
 
@@ -871,11 +1002,15 @@ def confetti_bit(col, step):
 def sprites():
     """Yield (key, [(tag, [frame pixels], duration_ms)]) for every sprite."""
     for name in BADGES:
-        yield f"badge-{name}", [("earned", [badge(name).outlined()], 1000),
-                                ("locked", [badge(name, True).outlined()], 1000)]
+        yield (
+            f"badge-{name}",
+            [("earned", [badge(name).outlined()], 1000), ("locked", [badge(name, True).outlined()], 1000)],
+        )
     yield "fx-confetti", [("play", [confetti(i).outlined(False) for i in range(10)], 80)]
-    yield "fx-confetti-bit", [(col, [confetti_bit(col, i).outlined(False) for i in range(4)], 100)
-                              for col in BIT_COLOURS]
+    yield (
+        "fx-confetti-bit",
+        [(col, [confetti_bit(col, i).outlined(False) for i in range(4)], 100) for col in BIT_COLOURS],
+    )
 
 
 if __name__ == "__main__":

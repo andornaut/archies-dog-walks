@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Draw the site's link-preview image.
 
 share-card: a 300x157 picture in the house palette, fully opaque, scaled 4x with
@@ -23,18 +22,18 @@ Usage:
 Run from the repository root.
 """
 
-import os
 import re
 import subprocess
 import sys
+from pathlib import Path
 
 from PIL import Image
 
-sys.path.insert(0, os.path.dirname(__file__))
-import backdrops as bd  # noqa: E402
-import scene as sn  # noqa: E402
-from pixel import PALETTE64  # noqa: E402
-from screens import planks  # noqa: E402
+sys.path.insert(0, str(Path(__file__).parent))
+import backdrops as bd
+import scene as sn
+from pixel import PALETTE64
+from screens import planks
 
 W, H = 300, 157
 SCALE = 4
@@ -44,9 +43,9 @@ TAGLINE = ("A COZY", "PIXEL-ART", "DOG-WALKING", "LANE RUNNER")
 # The window onto Cabbagetown: its left edge, and the backdrop rows it shows above the road
 VIEW_X = 152
 VIEW_W = W - 1 - VIEW_X
-BAND_TOP = bd.BASE - 46    # the first backdrop row shown, 46 rows over the far side's ground row
+BAND_TOP = bd.BASE - 46  # the first backdrop row shown, 46 rows over the far side's ground row
 BAND_ROWS = bd.H - BAND_TOP
-STREET = next(z for z, v in sn.ZONES.items() if v["art"] == "cabbagetown")   # Cabbagetown's zone id
+STREET = next(z for z, v in sn.ZONES.items() if v["art"] == "cabbagetown")  # Cabbagetown's zone id
 # The pack's formation, as src/layout/packFormation.ts: each dog's (side, distance ahead of the
 # feet), the dogs in formation order. One dog leads; two walk side by side; three walk in a
 # triangle, the lead's row keyed by the three sizes and three large dogs' side dogs closer in.
@@ -57,18 +56,22 @@ SIZES = {d["id"]: d["size"] for d in sn.GAME["dogs"]}
 def formation(dogs):
     feet = sn.PACK["feet"]
     sizes = [SIZES[d] for d in dogs]
-    rows = [feet["lead"][sizes[0]]] if len(sizes) == 1 else [
-        feet["sideOfThreeLarge"] if sizes == ["large"] * 3 else feet["side"][s] for s in sizes[-2:]]
+    rows = (
+        [feet["lead"][sizes[0]]]
+        if len(sizes) == 1
+        else [feet["sideOfThreeLarge"] if sizes == ["large"] * 3 else feet["side"][s] for s in sizes[-2:]]
+    )
     if len(sizes) == 3:
-        rows = [feet["trioLead"][" ".join(sizes)]] + rows
-    return [(SIDES[slot], -row) for slot, row in zip(sn.PACK["slots"][len(dogs) - 1], rows)]
+        rows = [feet["trioLead"][" ".join(sizes)], *rows]
+    return [(SIDES[slot], -row) for slot, row in zip(sn.PACK["slots"][len(dogs) - 1], rows, strict=False)]
 
 
 # ---------- font-title, read from its BMFont export ----------
 
+
 def bmfont(key):
     """{char: (mask, xoffset, yoffset, xadvance)} from public/art/fonts/<key>.fnt and its atlas."""
-    with open(f"public/art/fonts/{key}.fnt") as f:
+    with Path(f"public/art/fonts/{key}.fnt").open() as f:
         src = f.read()
     atlas = Image.open(f"public/art/fonts/{key}.png").convert("RGBA").getchannel("A")
     out = {}
@@ -114,6 +117,7 @@ def label(cv, s, mid, y, col, rim, sc=2):
 
 # ---------- the window onto Cabbagetown ----------
 
+
 def street_view():
     """VIEW_W x (H - 2): the backdrop's street around its vanishing point, then the road strip
     sampled as the street keeps widening toward the viewer, with the pack walking up it."""
@@ -143,14 +147,18 @@ def pack(view, cx, base):
     """The pack at full size with the walker's feet on row base: the dogs in the game's
     formation, far ones first, then a leash from her hand to each collar, then Casey over them, so
     the leashes pass behind her and show only from her hands to the collars."""
+
     def stand(key, x, feet, shadow=True):
         f = sn.frame(key, "walk")
         if shadow:
             view.shadow(x, feet + 1, f.width)
         view.paste(f, x - f.width // 2, feet - f.getbbox()[3] + 1)
 
-    ids = ("kilo", "lady", "ginger")   # large, medium, small: formation order
-    dogs = [(f"dog-{d}", sn.side_dx(f"dog-{d}", side), base - row) for d, (side, row) in zip(ids, formation(ids))]
+    ids = ("kilo", "lady", "ginger")  # large, medium, small: formation order
+    dogs = [
+        (f"dog-{d}", sn.side_dx(f"dog-{d}", side), base - row)
+        for d, (side, row) in zip(ids, formation(ids), strict=False)
+    ]
     for k, dx, feet in sorted(dogs, key=lambda d: d[2]):
         stand(k, cx + dx, feet)
     walker = sn.frame("walker-casey", "walk")
@@ -162,6 +170,7 @@ def pack(view, cx, base):
 
 
 # ---------- the card ----------
+
 
 def card():
     cv = sn.Canvas(W, H)
@@ -208,11 +217,11 @@ def final(img):
 def build():
     img = card()
     check(img)
-    os.makedirs("art/share", exist_ok=True)
+    Path("art/share").mkdir(parents=True, exist_ok=True)
     master = "art/share/share-card.png"
     img.save(master)
-    subprocess.run(["aseprite", "-b", master, "--save-as", "art/share/share-card.aseprite"], check=True)
-    os.unlink(master)
+    subprocess.run(["aseprite", "-b", master, "--save-as", "art/share/share-card.aseprite"], check=True)  # noqa: S603, S607 - Fixed art executable and generator-owned paths.
+    Path(master).unlink()
     final(img).save("public/og-image.png")
     print("built share-card")
 

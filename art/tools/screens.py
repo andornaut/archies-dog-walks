@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Draw the logo and the full-screen backgrounds outside the run.
 
 logo: 145x41 on a transparent ground, "Archie's Dog Walks" stacked beside
@@ -114,21 +113,23 @@ file instead.
 """
 
 import math
-import os
 import subprocess
 import sys
+from pathlib import Path
 
 from PIL import Image
 
-sys.path.insert(0, os.path.dirname(__file__))
-import backdrops as bd  # noqa: E402
-import fonts  # noqa: E402
-import fx  # noqa: E402
-import scene as sn  # noqa: E402
-import minis  # noqa: E402
-import road  # noqa: E402
-from pixel import Grid, K, build as build_sprites, dk, edged, to_image  # noqa: E402
-from ui import STATES  # noqa: E402
+sys.path.insert(0, str(Path(__file__).parent))
+import backdrops as bd
+import fonts
+import fx
+import minis
+import scene as sn
+from pixel import Grid, K, dk, edged, to_image
+from pixel import build as build_sprites
+
+import road
+from ui import STATES
 
 W, H = 360, 560
 LOGO_W, LOGO_H = 145, 41
@@ -248,9 +249,9 @@ def comic(text, fill):
         x += len(rows[0]) + 1
     ring = {(a + dx, b + dy) for a, b in letters for dx in (-1, 0, 1) for dy in (-1, 0, 1)}
     shadow = {(a + d, b + d) for a, b in ring for d in (1, 2)} - ring
-    out = {p: "dred" for p in shadow}
-    out.update({p: "ink" for p in ring - letters})
-    out.update({p: fill for p in letters})
+    out = dict.fromkeys(shadow, "dred")
+    out.update(dict.fromkeys(ring - letters, "ink"))
+    out.update(dict.fromkeys(letters, fill))
     return out
 
 
@@ -263,8 +264,7 @@ def bust():
     his face, so the tip of his tail is left out) over a short bandana in a closed ink line: {(x, y): RGBA}
     from the portrait's top-left."""
     img = sn.image("portrait-dog-archie")
-    rows = {(x, y): img.getpixel((x, y)) for y in range(10, 42) for x in range(img.width)
-            if img.getpixel((x, y))[3]}
+    rows = {(x, y): img.getpixel((x, y)) for y in range(10, 42) for x in range(img.width) if img.getpixel((x, y))[3]}
     px, todo = {}, [HEAD_SEED]
     while todo:
         q = todo.pop()
@@ -275,11 +275,11 @@ def bust():
     for k in range(BANDANA_ROWS):
         half = 12.5 - 1.7 * k
         for x in range(round(BANDANA_MID - half), round(BANDANA_MID + half) + 1):
-            band[(x, 42 + k)] = sn.rgb("red" if x < 33 - k // 2 else "dred") + (255,)
+            band[(x, 42 + k)] = (*sn.rgb("red" if x < 33 - k // 2 else "dred"), 255)
     px.update(band)
     for x, y in list(band):
         for q in ((x + dx, y + dy) for dx in (-1, 0, 1) for dy in (-1, 0, 1)):
-            px.setdefault(q, sn.rgb("ink") + (255,))
+            px.setdefault(q, (*sn.rgb("ink"), 255))
     x0, y0 = min(p[0] for p in px), min(p[1] for p in px)
     return {(x - x0, y - y0): c for (x, y), c in px.items()}
 
@@ -291,8 +291,8 @@ def logo():
         cv.img.putpixel(p, c)
     hw, hh = extent(head)
     small, big = comic("ARCHIE'S", "cream"), fonts.sign("DOG WALKS", 2, "cream")[0]
-    sw, sh = extent(small)
-    bw, bh = extent(big)
+    _sw, sh = extent(small)
+    _bw, bh = extent(big)
     y = (hh - sh - bh) // 2 + 1
     lettering(small, cv, hw + 2, y)
     lettering(big, cv, hw + 1, y + sh)
@@ -303,11 +303,18 @@ def logo():
 
 FAR_BASE = 74  # the far side's ground row on screen-home: its houses stand on it, their front yards under it
 # The far side's bay-and-gables: (left, width, wall, trim, door, bay on the left).
-FAR_HOMES = ((-8, 30, "brick", "white", "dbrick", True), (24, 30, "cream", "stone", "ttc", False),
-             (56, 30, "dbrick", "driftwood", "navy", True), (88, 30, "brick", "white", "ttc", False),
-             (120, 30, "clay", "stone", "dbrick", True), (152, 30, "brick", "driftwood", "navy", False),
-             (184, 30, "dbrick", "white", "dbrick", True), (216, 30, "brick", "stone", "ttc", False),
-             (248, 30, "cream", "white", "navy", True), (280, 30, "brick", "stone", "dbrick", False))
+FAR_HOMES = (
+    (-8, 30, "brick", "white", "dbrick", True),
+    (24, 30, "cream", "stone", "ttc", False),
+    (56, 30, "dbrick", "driftwood", "navy", True),
+    (88, 30, "brick", "white", "ttc", False),
+    (120, 30, "clay", "stone", "dbrick", True),
+    (152, 30, "brick", "driftwood", "navy", False),
+    (184, 30, "dbrick", "white", "dbrick", True),
+    (216, 30, "brick", "stone", "ttc", False),
+    (248, 30, "cream", "white", "navy", True),
+    (280, 30, "brick", "stone", "dbrick", False),
+)
 FAR_CN = (340, 89, 36)  # the CN Tower's centre column, foot and mast tip on screen-home, over the laneway
 
 
@@ -475,8 +482,16 @@ def courtyard_paving(cv):
     for y in (113, 137, 163):
         cv.fill(0, y, 151, 1, "stone")
         cv.fill(208, y, W - 208, 1, "stone")
-    for x, y, h in ((28, 98, 15), (103, 98, 15), (62, 114, 23), (116, 138, 25),
-                    (25, 138, 25), (222, 114, 23), (288, 138, 25), (338, 114, 23)):
+    for x, y, h in (
+        (28, 98, 15),
+        (103, 98, 15),
+        (62, 114, 23),
+        (116, 138, 25),
+        (25, 138, 25),
+        (222, 114, 23),
+        (288, 138, 25),
+        (338, 114, 23),
+    ):
         cv.fill(x, y, 1, h, "stone")
     cv.fill(162, 97, 36, 67, "dstone")
     cv.fill(164, 97, 32, 67, "clay")
@@ -497,8 +512,7 @@ def home():
     cv.fill(2, 95, 46, 10, "bark")
     cv.fill(3, 96, 44, 8, "clay")
     cv.fill(2, 95, 46, 2, "driftwood")
-    crowns(cv, ((10, 92, 5), (19, 90, 6), (29, 91, 5), (39, 92, 5)),
-           "brown", "bark", "walnut")
+    crowns(cv, ((10, 92, 5), (19, 90, 6), (29, 91, 5), (39, 92, 5)), "brown", "bark", "walnut")
     for x, y in ((10, 90), (23, 87), (36, 91)):
         cv.fill(x, y, 3, 2, "ochre")
     # Open gate and short piers share the courtyard's ground plane.
@@ -548,8 +562,14 @@ def home():
 
 # ---------- ui-pet-shop ----------
 
-BONE = ["..cc.......cc..", ".cccc.....cccc.", "ccccccccccccccc", "ccccccccccccccc", ".cccc.....cccc.",
-        "..cc.......cc.."]
+BONE = [
+    "..cc.......cc..",
+    ".cccc.....cccc.",
+    "ccccccccccccccc",
+    "ccccccccccccccc",
+    ".cccc.....cccc.",
+    "..cc.......cc..",
+]
 
 
 def window_puppy():
@@ -623,7 +643,7 @@ def glint_board(cv, left):
             d = (x - bx) - left + (y - by) // 2
             if not 0 <= d < 6:
                 continue
-            c = lit.get("%02x%02x%02x" % px[x, y][:3])
+            c = lit.get("{:02x}{:02x}{:02x}".format(*px[x, y][:3]))
             if c == "green":
                 cv.fill(x, y, 1, 1, "white" if 0 < d < 5 else "yellow")
             elif c == "yellow":
@@ -715,8 +735,10 @@ def building(cv, w, h, pressed):
 def image_rows(img):
     """An RGBA image as sprite frame rows: hex colours, None where clear."""
     px = img.load()
-    return [["%02x%02x%02x" % px[x, y][:3] if px[x, y][3] else None for x in range(img.width)]
-            for y in range(img.height)]
+    return [
+        ["{:02x}{:02x}{:02x}".format(*px[x, y][:3]) if px[x, y][3] else None for x in range(img.width)]
+        for y in range(img.height)
+    ]
 
 
 # The sky after dark, top to horizon: night falling over a last mauve glow, on screen-loading.
@@ -814,7 +836,7 @@ def end():
     cv.fill(0, 0, W, 520, DUSK_SKY[-1])
     bd.bands(cv, 0, 96, DUSK_SKY)
     # Plain lower sky bands keep the open area behind the results calm.
-    for (top, bottom), colour in zip(bd.band_rows(112, END_STREET + 80, len(DUSK_SKY), 0.7), DUSK_SKY):
+    for (top, bottom), colour in zip(bd.band_rows(112, END_STREET + 80, len(DUSK_SKY), 0.7), DUSK_SKY, strict=False):
         cv.fill(0, top, W, bottom - top, colour)
     for x, y in ((40, 6), (92, 14), (262, 4), (348, 20), (20, 30)):
         cv.fill(x, y, 1, 1, "white")
@@ -825,8 +847,12 @@ def end():
         cv.fill(bx + 2, by + 1, 1, 1, "plum")
         cv.fill(bx + 3, by, 2, 1, "plum")
     # the neighbours either side: bay-and-gables with their lamps lit behind the curtains
-    for cx, wall, roof, door in ((6, "brick", "dslate", "navy"), (60, "dbrick", "shale", "forest"),
-                                 (300, "brick", "shale", "ttc"), (354, "dbrick", "dslate", "forest")):
+    for cx, wall, roof, door in (
+        (6, "brick", "dslate", "navy"),
+        (60, "dbrick", "shale", "forest"),
+        (300, "brick", "shale", "ttc"),
+        (354, "dbrick", "dslate", "forest"),
+    ):
         end_house(cv, cx, 46, wall, roof, door, 96)
     # the house the pack comes home to, between the logo and the panel: a brick Cabbagetown cottage whose
     # slate roof's ridge (END_RIDGE) the logo stands on, a low centre gable trimmed in white over the door
@@ -884,8 +910,12 @@ def end():
     cv.fill(192, 100, 1, 12, "dgreen")
     end_cottage_face(cv)
     # the rest of the city, far off: rooftops and towers in mauve against the glow
-    bd.roofline(cv, END_STREET + 110, ((8, 22, 30), (50, 40, 26), (118, 36, 28), (178, 44, 24), (250, 38, 30),
-                                       (314, 38, 26)), "mauve")
+    bd.roofline(
+        cv,
+        END_STREET + 110,
+        ((8, 22, 30), (50, 40, 26), (118, 36, 28), (178, 44, 24), (250, 38, 30), (314, 38, 26)),
+        "mauve",
+    )
     r = rand(17)
     for x, w, h in ((30, 14, 56), (96, 18, 70), (160, 12, 50), (226, 16, 64), (292, 14, 58)):
         top = END_STREET + 80 - h
@@ -901,8 +931,12 @@ def end():
     strip = clear(W, 150)
     for cx, top in ((28, 50), (180, 46), (330, 52)):
         bd.tree(strip, cx, top, "canopy", "pine", "bark", r=16)
-    for cx, wall, roof, door in ((60, "brick", "shale", "forest"), (114, "cream", "slate", "ttc"),
-                                 (246, "dbrick", "dslate", "navy"), (300, "brick", "shale", "ttc")):
+    for cx, wall, roof, door in (
+        (60, "brick", "shale", "forest"),
+        (114, "cream", "slate", "ttc"),
+        (246, "dbrick", "dslate", "navy"),
+        (300, "brick", "shale", "ttc"),
+    ):
         end_house(strip, cx, 46, wall, roof, door, 104)
     bd.ground(strip, yard=END_YARD)
     bd.flowers(strip, 40, 84, END_WALK - 13, ("orange", "yellow", "red"))
@@ -949,14 +983,24 @@ PAIR_AT = (TRACK_AT[0] - PAIR_HEEL, WALK_FOOT - PAIR_FEET)
 PAIR_TRAVEL = TRACK_AT[0] + TRACK_W - PAIR_NOSE - 1 - PAIR_AT[0]
 
 # The skyline, far back: (left, width, top, wall) for each downtown tower, its foot hidden behind the street.
-TOWERS = ((-6, 28, 286, "dslate"), (44, 18, 270, "navy"), (110, 24, 258, "dslate"), (172, 20, 276, "navy"),
-          (200, 26, 250, "dslate"), (290, 24, 262, "dslate"), (318, 16, 284, "navy"), (338, 26, 272, "dslate"))
+TOWERS = (
+    (-6, 28, 286, "dslate"),
+    (44, 18, 270, "navy"),
+    (110, 24, 258, "dslate"),
+    (172, 20, 276, "navy"),
+    (200, 26, 250, "dslate"),
+    (290, 24, 262, "dslate"),
+    (318, 16, 284, "navy"),
+    (338, 26, 272, "dslate"),
+)
 CN_X, CN_FOOT, CN_TIP = 258, 372, 150  # the CN Tower's centre column, its foot and its mast's tip
 # The near row, Cabbagetown's bay-and-gables: (left, width, wall, trim, door, bay on the left, lit windows),
 # the lit windows by their order in victorian.
-HOMES = ((-10, 76, "brick", "stone", "forest", False, (0, 2, 3, 5)),
-         (66, 76, "dbrick", "driftwood", "ttc", True, (0, 1, 2, 4, 6)),
-         (142, 76, "brick", "stone", "navy", True, (1, 3, 4, 5)))
+HOMES = (
+    (-10, 76, "brick", "stone", "forest", False, (0, 2, 3, 5)),
+    (66, 76, "dbrick", "driftwood", "ttc", True, (0, 1, 2, 4, 6)),
+    (142, 76, "brick", "stone", "navy", True, (1, 3, 4, 5)),
+)
 HOME_BASE = YARD_FOOT - 10  # the houses' ground row, over the front yards
 
 
@@ -974,15 +1018,17 @@ def after_dark(img, steps=2):
             if c[3] == 0:
                 continue
             if c[:3] == cyan:
-                po[x, y] = sn.rgb("yellow") + (255,)
-            elif c[:3] == white and any(0 <= x + dx < w and 0 <= y + dy < h and px[x + dx, y + dy][:3] == cyan
-                                        for dx, dy in ((-1, 0), (1, 0), (0, -1), (0, 1))):
-                po[x, y] = sn.rgb("amber") + (255,)
+                po[x, y] = (*sn.rgb("yellow"), 255)
+            elif c[:3] == white and any(
+                0 <= x + dx < w and 0 <= y + dy < h and px[x + dx, y + dy][:3] == cyan
+                for dx, dy in ((-1, 0), (1, 0), (0, -1), (0, 1))
+            ):
+                po[x, y] = (*sn.rgb("amber"), 255)
             else:
-                d = "%02x%02x%02x" % c[:3]
+                d = "{:02x}{:02x}{:02x}".format(*c[:3])
                 for _ in range(steps):
                     d = dk(d)
-                po[x, y] = sn.rgb(d) + (255,)
+                po[x, y] = (*sn.rgb(d), 255)
     return out
 
 
@@ -1127,7 +1173,7 @@ def iron_fence(cv, x0, x1, foot, gaps=()):
         if i % 2 == 0:
             cv.fill(x, foot - 10, 1, 1, "coal")
     edges = sorted({x0, x1, *[c for g in gaps for c in g]})
-    for a, b in zip(edges[::2], edges[1::2]):
+    for a, b in zip(edges[::2], edges[1::2], strict=False):
         cv.fill(a, foot - 8, b - a, 1, "coal")
         cv.fill(a, foot - 2, b - a, 1, "coal")
 
@@ -1205,9 +1251,9 @@ def loading():
         gp = glow.load()
         for y in range(glow.height):
             for x in range(glow.width):
-                c = {**SHOP_GLOW, **paw}.get("%02x%02x%02x" % gp[x, y][:3])
+                c = {**SHOP_GLOW, **paw}.get("{:02x}{:02x}{:02x}".format(*gp[x, y][:3]))
                 if c and gp[x, y][3]:
-                    gp[x, y] = sn.rgb(c) + (255,)
+                    gp[x, y] = (*sn.rgb(c), 255)
         lit.alpha_composite(glow, (SHOP_AT[0] + box[0], SHOP_AT[1] + box[1]))
     cv.img.paste(lit, (0, 0), lit)
     heritage_lamp(cv, LAMP_X, YARD_FOOT + 2, YARD_FOOT - 80)
@@ -1267,10 +1313,10 @@ PAIR_SCALE = 1.75
 # plant both feet apart; on the passing frames (1, 3) the swinging foot lifts 1px under the hip as the body
 # rises 1px, as the walkers' stride has it, and Lady's diagonal pairs swap with its ears lagging.
 PAIR_WALK = [
-    dict(near=4, far=-4, lift=None, bob=0, front=2, hind=-2, dbob=0, wag=-1, flop=0),
-    dict(near=0, far=0, lift="far", bob=-1, front=0, hind=0, dbob=-1, wag=0, flop=1),
-    dict(near=-4, far=4, lift=None, bob=0, front=-2, hind=2, dbob=0, wag=1, flop=0),
-    dict(near=0, far=0, lift="near", bob=-1, front=0, hind=0, dbob=-1, wag=0, flop=1),
+    {"near": 4, "far": -4, "lift": None, "bob": 0, "front": 2, "hind": -2, "dbob": 0, "wag": -1, "flop": 0},
+    {"near": 0, "far": 0, "lift": "far", "bob": -1, "front": 0, "hind": 0, "dbob": -1, "wag": 0, "flop": 1},
+    {"near": -4, "far": 4, "lift": None, "bob": 0, "front": -2, "hind": 2, "dbob": 0, "wag": 1, "flop": 0},
+    {"near": 0, "far": 0, "lift": "near", "bob": -1, "front": 0, "hind": 0, "dbob": -1, "wag": 0, "flop": 1},
 ]
 PAIR_WALK_MS = 160
 # Casey's hand and Lady's collar on the design grid, before the bob: the leash's two ends.
@@ -1418,14 +1464,17 @@ def slot_sign(pressed=False):
 def sprites():
     yield "ui-slot-sign", [(tag, [slot_sign(tag == "pressed")], 1000) for tag in ("normal", "pressed")]
     yield "ui-loading", [("walk", [pair(i) for i in range(len(PAIR_WALK))], PAIR_WALK_MS)]
-    yield "ui-pet-shop", [(tag, [image_rows(pet_shop(tag == "pressed").img)], 1000)
-                          for tag in ("normal", "pressed")] + [
-        ("glint", [image_rows(pet_shop(glint=g).img) for g in GLINT_STEPS] + [image_rows(pet_shop().img)], 60)]
+    yield (
+        "ui-pet-shop",
+        [(tag, [image_rows(pet_shop(tag == "pressed").img)], 1000) for tag in ("normal", "pressed")]
+        + [("glint", [image_rows(pet_shop(glint=g).img) for g in GLINT_STEPS] + [image_rows(pet_shop().img)], 60)],
+    )
 
 
 def ui(cv, key):
     """Block in the UI that sits on a screen, for the preview only (layout from StartScene, StatsScene on its
     badges tab, EndScene and loadingScreen.ts, which draws no text)."""
+
     def panel(x, y, w, h, face="cream"):
         cv.fill(x, y, w, h, "plum")
         cv.fill(x + 1, y + 1, w - 2, h - 2, face)
@@ -1487,13 +1536,13 @@ def preview(out, scale=2):
     sheet = Image.new("RGB", ((W + gap) * len(shots) * scale, (top + H) * scale), sn.rgb("ink"))
     x = 0
     for ground in ("green", "dbrown", "amber", "navy"):
-        bg = Image.new("RGBA", (LOGO_W, LOGO_H), sn.rgb(ground) + (255,))
+        bg = Image.new("RGBA", (LOGO_W, LOGO_H), (*sn.rgb(ground), 255))
         bg.alpha_composite(logo().img)
         sheet.paste(bg.resize((LOGO_W * 3 * scale, LOGO_H * 3 * scale), Image.NEAREST), (x * scale, 0))
         x += LOGO_W * 3 + gap
     # the ui-loading frames, on the night sidewalk
     for i in range(4):
-        bg = Image.new("RGBA", (PAIR_W, PAIR_H), sn.rgb("grey") + (255,))
+        bg = Image.new("RGBA", (PAIR_W, PAIR_H), (*sn.rgb("grey"), 255))
         bg.alpha_composite(to_image(pair(i)))
         sheet.paste(bg.resize((PAIR_W * scale, PAIR_H * scale), Image.NEAREST), (x * scale, 0))
         x += PAIR_W + gap
@@ -1501,8 +1550,9 @@ def preview(out, scale=2):
         cv = SCREENS[key]()
         if blocked:
             ui(cv, key)
-        sheet.paste(cv.img.convert("RGB").resize((W * scale, H * scale), Image.NEAREST),
-                    (i * (W + gap) * scale, top * scale))
+        sheet.paste(
+            cv.img.convert("RGB").resize((W * scale, H * scale), Image.NEAREST), (i * (W + gap) * scale, top * scale)
+        )
     sheet.save(out)
 
 
@@ -1512,8 +1562,9 @@ def shop_preview(out, scale=4):
     tags = [pet_shop(p).img for p in (False, True)]
     home_cv = home()
     home_cv.img.paste(tags[0], PET_SHOP_AT, tags[0])
-    lot = home_cv.img.crop((PET_SHOP_AT[0] - 4, PET_SHOP_AT[1] - 4, PET_SHOP_AT[0] + PET_SHOP_W + 4,
-                            PET_SHOP_AT[1] + PET_SHOP_H + 4))
+    lot = home_cv.img.crop(
+        (PET_SHOP_AT[0] - 4, PET_SHOP_AT[1] - 4, PET_SHOP_AT[0] + PET_SHOP_W + 4, PET_SHOP_AT[1] + PET_SHOP_H + 4)
+    )
     tiles = []
     for t in tags:
         bg = home().img.crop((PET_SHOP_AT[0], PET_SHOP_AT[1], PET_SHOP_AT[0] + PET_SHOP_W, PET_SHOP_AT[1] + PET_SHOP_H))
@@ -1521,8 +1572,9 @@ def shop_preview(out, scale=4):
         tiles.append(bg)
     gap = 8
     top = PET_SHOP_H * (scale + 1) + gap
-    sheet = Image.new("RGB", (max(W * (scale + 1) + gap, (PET_SHOP_W * (scale + 1) + gap) * 2), top + H * scale),
-                      sn.rgb("ink"))
+    sheet = Image.new(
+        "RGB", (max(W * (scale + 1) + gap, (PET_SHOP_W * (scale + 1) + gap) * 2), top + H * scale), sn.rgb("ink")
+    )
     x = 0
     for t in tiles:
         sheet.paste(t, (x, 0))
@@ -1536,12 +1588,12 @@ def shop_preview(out, scale=4):
 
 def build(only=None):
     screens = SCREENS if only is None else {only: SCREENS[only]}
-    os.makedirs("art/screens", exist_ok=True)
-    os.makedirs("public/art/images", exist_ok=True)
+    Path("art/screens").mkdir(parents=True, exist_ok=True)
+    Path("public/art/images").mkdir(parents=True, exist_ok=True)
     for key, draw in screens.items():
         png = f"public/art/images/{key}.png"
         draw().img.save(png)
-        subprocess.run(["aseprite", "-b", png, "--save-as", f"art/screens/{key}.aseprite"], check=True)
+        subprocess.run(["aseprite", "-b", png, "--save-as", f"art/screens/{key}.aseprite"], check=True)  # noqa: S603, S607 - Fixed art executable and generator-owned paths.
     if only is None:
         build_sprites(list(sprites()), "art/screens")
     print("built", ", ".join(screens))

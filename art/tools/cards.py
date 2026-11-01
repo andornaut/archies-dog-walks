@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Draw the choice card frame and compose the card illustrations.
 
 - card-frame: a 112x153 sprite, one frame per card type (tags encounter for an
@@ -35,22 +34,25 @@ hand edits to them belong in this file instead. Shared tooling is in pixel.py.
 """
 
 import math
-import os
 import subprocess
 import sys
 from collections import Counter
+from pathlib import Path
 
 from PIL import Image
 
-sys.path.insert(0, os.path.dirname(__file__))
-import backdrops as bd  # noqa: E402
-import dogs  # noqa: E402
-import glyphs  # noqa: E402
-import scene as sn  # noqa: E402
-import road  # noqa: E402
-import roads  # noqa: E402
-from pixel import Grid, K, bitmap, build as build_sprites, dk, edged, to_image  # noqa: E402
-from ui import chrome  # noqa: E402
+sys.path.insert(0, str(Path(__file__).parent))
+import itertools
+
+import backdrops as bd
+import glyphs
+import roads
+import scene as sn
+from pixel import Grid, K, bitmap, dk, edged, to_image
+from pixel import build as build_sprites
+
+import road
+from ui import chrome
 
 CW, CH = 112, 153
 AW, AH = 75, 56
@@ -69,11 +71,13 @@ GROUND_KEEP = 0.04
 
 # ---------- the frame ----------
 
+
 def card_frame(kind):
     """ui.py's chrome around the card: the ink and plum lines, the cream face with its tan lip, the
     title's rows plain face, and a recessed art window (an ink line over its top in shadow, plum on the
     other sides). The badge spot stays the cream face: the game lays card-cost there only on an option
     that costs cash. Every kind is alike."""
+    del kind
     g = chrome(Grid(CW, CH), 0, 0, CW, CH)
     # recessed art window
     g.rect(ART_X - 1, ART_Y - 1, AW + 2, AH + 2, "plum")
@@ -89,6 +93,7 @@ def card_frame_large(kind):
     """The tap-to-enlarge card: the 83x140 layout (LBW x LBH) at twice the size with 1px detail, so the
     illustration shows at 2x and the body has room for the modifiers behind the numbers. The
     chrome's lines and lip are 2px."""
+    del kind
     g = Grid(LW, LH)
     small = chrome(Grid(LBW, LBH), 0, 0, LBW, LBH).px
     for y in range(LH):
@@ -111,6 +116,7 @@ def card_cost():
 
 
 # ---------- illustration helpers ----------
+
 
 class Art(sn.Scene):
     def __init__(self, clear=False):
@@ -211,6 +217,7 @@ ARROW = ["...a...", "..aaa..", ".aaaaa.", "aaaaaaa", "..aaa..", "..aaa..", "..aa
 
 # ---------- encounters ----------
 
+
 def tub():
     """49x22: a clawfoot tub from the front, its lip wider than its body, shaded on the right and
     underneath, on two grey feet, outlined in dslate so it holds on the grey tiles."""
@@ -226,17 +233,16 @@ def tub():
         g.rect(x, 17, 5, 2, "grey")
         g.rect(x + 1, 19, 1, 1, "grey")
         g.rect(x + 3, 19, 1, 1, "grey")
-    g.edge = lambda c: K["dslate"]
+    g.edge = lambda _c: K["dslate"]
     return to_image(g.outlined())
 
 
 def foam():
     """51x9: white puffs shaded lgrey along the tub's lip, over the dog's legs."""
     g = Grid(51, 9)
-    for cx, cy, r in ((5, 5, 3.2), (11, 4, 4), (18, 5, 3.5), (33, 5, 3.5), (40, 4, 4), (46, 5, 3.2),
-                      (25, 6, 3)):
+    for cx, cy, r in ((5, 5, 3.2), (11, 4, 4), (18, 5, 3.5), (33, 5, 3.5), (40, 4, 4), (46, 5, 3.2), (25, 6, 3)):
         g.ell(cx, cy, r, r, "white", "lgrey")
-    g.edge = lambda c: K["grey"]
+    g.edge = lambda _c: K["grey"]
     return to_image(g.outlined())
 
 
@@ -246,7 +252,7 @@ def bath_bubble():
     g.ell(2.5, 2.5, 2.5, 2.5, "white")
     g.ell(2.5, 2.5, 1.5, 1.5, None)
     g.p(1, 1, "white")
-    g.edge = lambda c: K["slate"]
+    g.edge = lambda _c: K["slate"]
     return to_image(g.outlined())
 
 
@@ -266,7 +272,7 @@ def spray_drop():
     g = Grid(2, 2)
     g.rect(0, 0, 2, 2, "cyan")
     g.p(0, 0, "white")
-    g.edge = lambda c: K["sky"]
+    g.edge = lambda _c: K["sky"]
     return to_image(g.outlined())
 
 
@@ -274,7 +280,7 @@ def hose():
     """24x16: the hose lying on the lawn from the left edge, a grey spray nozzle at its end pointing up
     and right."""
     g = Grid(24, 16)
-    for x in range(0, 14):
+    for x in range(14):
         g.rect(x, 12 + (1 if 4 <= x < 10 else 0), 1, 2, "forest")
     g.rect(14, 11, 2, 3, "forest")
     g.rect(15, 9, 3, 3, "lgrey")
@@ -336,8 +342,16 @@ def other_dog_pull_away():
 
 
 def broken_heart(a, x, y):
-    rows = [".rrr....rrr.", "rrrrr..rrrrr", "rrrrr..rrrrr", "rrrr...rrrrr",
-            ".rrrr...rrr.", "..rrrr..rr..", "...rr..rr...", "....r..r...."]
+    rows = [
+        ".rrr....rrr.",
+        "rrrrr..rrrrr",
+        "rrrrr..rrrrr",
+        "rrrr...rrrrr",
+        ".rrrr...rrr.",
+        "..rrrr..rr..",
+        "...rr..rr...",
+        "....r..r....",
+    ]
     g = Grid(14, 10)
     for yy, row in enumerate(rows):
         for xx, c in enumerate(row):
@@ -374,6 +388,7 @@ def thief(s, draw, *args, k=0, **q):
 def thief_reaching(g, b, arms=0):
     """thief_top without the pouch, his free arm (screen left) out level from the shoulder to grab: a lgrey
     sleeve banded ink as his shirt is, the hand at its end."""
+    del arms
     road.thief_top(g, b, pouch=False)
     g.rect(5, 22 + b, 4, 12, None)
     g.rect(2, 22 + b, 8, 4, "lgrey")
@@ -534,7 +549,7 @@ def neighbour_take():
     # the sleeve: the upper arm out from her shoulder to the elbow, the forearm up to the dog's crown
     joints = [(31, 31), (37, 29), (44, 21)]
     arm = []
-    for (x0, y0), (x1, y1) in zip(joints, joints[1:]):
+    for (x0, y0), (x1, y1) in itertools.pairwise(joints):
         n = max(abs(x1 - x0), abs(y1 - y0))
         arm += [(round(x0 + (x1 - x0) * k / n), round(y0 + (y1 - y0) * k / n)) for k in range(n + 1)]
     for x, y in arm:
@@ -545,8 +560,15 @@ def neighbour_take():
         a.fill(x + 2, y + 2, 1, 1, "purple")
     # the hand, palm down on the crown between the ears: the back of it, a thumb out to the left and
     # three fingers curled over the dog's brow, in a plum outline
-    hand = {(x, y) for x in range(45, 51) for y in range(17, 20)} | {(44, 19), (45, 20), (47, 20), (49, 20),
-                                                                     (45, 21), (47, 21), (49, 21)}
+    hand = {(x, y) for x in range(45, 51) for y in range(17, 20)} | {
+        (44, 19),
+        (45, 20),
+        (47, 20),
+        (49, 20),
+        (45, 21),
+        (47, 21),
+        (49, 21),
+    }
     for x, y in hand:
         for dx, dy in ((0, -1), (0, 1), (-1, 0), (1, 0)):
             if (x + dx, y + dy) not in hand:
@@ -560,6 +582,7 @@ def neighbour_take():
 
 # ---------- upgrades and the Skip option ----------
 
+
 def disc(a, cx, cy, r, col, edge=None):
     for dy in range(-r, r + 1):
         for dx in range(-r, r + 1):
@@ -570,7 +593,7 @@ def disc(a, cx, cy, r, col, edge=None):
 
 def limb(g, pts, col, w=2):
     """A leg w pixels thick along the joints pts."""
-    for (x0, y0), (x1, y1) in zip(pts, pts[1:]):
+    for (x0, y0), (x1, y1) in itertools.pairwise(pts):
         n = max(abs(x1 - x0), abs(y1 - y0), 1)
         for k in range(n + 1):
             g.rect(round(x0 + (x1 - x0) * k / n), round(y0 + (y1 - y0) * k / n), w, w, col)
@@ -610,7 +633,8 @@ def rolled_over():
     below, each white paw showing its pink pads; the far leg of each pair is shaded. The bobtail
     (BOBTAIL), a tuft of three locks tipped white, wags on the grass at the left, the head at the
     right faces the viewer with the white blaze and muzzle and copper brows and cheeks, eyes shut
-    in happy arcs and mouth open in a grin with the tongue out, the rose ears flopped on the grass. The red bandana rings the neck,
+    in happy arcs and mouth open in a grin with the tongue out, the rose ears flopped on the grass.
+    The red bandana rings the neck,
     its point lying on the white chest. 50x36 with its outline; the collar's lower end is at
     32,28."""
     g = Grid(50, 36)
@@ -794,29 +818,35 @@ def skip():
 # and lawn beside it.
 FAR_Y, WALK_Y, CURB_Y, CROSS_Y, LINE_Y, STUB_Y = 21, 22, 25, 26, 29, 33
 HORIZON, SPREAD = 12.0, 0.75
-FOCAL = 16       # a stub row samples strip row FOCAL / scale: about 2 rows apart near, 7 far
-DASH = 5.0       # a stub divider's dashes repeat every 1 / DASH of log(row centre - HORIZON)
-MINI = (2, 6, 5, 7)   # a far house's windows and door, as backdrops.house parts
+FOCAL = 16  # a stub row samples strip row FOCAL / scale: about 2 rows apart near, 7 far
+DASH = 5.0  # a stub divider's dashes repeat every 1 / DASH of log(row centre - HORIZON)
+MINI = (2, 6, 5, 7)  # a far house's windows and door, as backdrops.house parts
 
 
 def tufted(lawn="green", rate=0.05):
     def paint(px, py):
         return dk(lawn) if bd.noise(px, py) < rate or bd.noise(px, py - 1) < rate else lawn
+
     return paint
 
 
 def flecked(base, fleck, n=23, second=None):
     """A ground of base with about one fleck in n, and a sparser second fleck."""
+
     def paint(px, py):
         if bd.hashed(px, py, n):
             return fleck
         return second if second and bd.hashed(px, py + 3, n + 8) else base
+
     return paint
 
 
 def boards(px, py):
     """The promenade's boards across the cross street, a seam every 5 columns."""
     return "tan" if px % 5 == 0 else flecked("cream", "tan", 27)(px, py)
+
+
+DEFAULT_LAWN = tufted()
 
 
 class ZoneView(Art):
@@ -827,8 +857,9 @@ class ZoneView(Art):
     walk and curb are the sidewalks' and curbs' colours, None where the zone has none, and
     walk_fleck the sidewalks' flecks."""
 
-    def __init__(self, zone, road, yard, mark, dash, curb="grey", walk="lgrey", lawn=tufted(), edge=None,
-                 walk_fleck="grey"):
+    def __init__(
+        self, zone, road, yard, mark, dash, curb="grey", walk="lgrey", lawn=DEFAULT_LAWN, edge=None, walk_fleck="grey"
+    ):
         super().__init__()
         self.road_px, self.yard, self.lawn = road, yard, lawn
         self.mark, self.dash, self.edge, self.curb, self.walk = mark, dash, edge, curb, walk
@@ -846,8 +877,11 @@ class ZoneView(Art):
         # lines along the road (board seams): columns off the base colour in 3 rows of 4
         base = Counter(c for row in self.strip for c in row).most_common(1)[0][0]
         lanes = {x + d for x in roads.DIVIDERS for d in (0, 1)}
-        self.seams = [x for x in range(8, roads.W - 8) if x not in lanes
-                      and sum(self.strip[y][x] != base for y in range(roads.H)) >= 0.75 * roads.H]
+        self.seams = [
+            x
+            for x in range(8, roads.W - 8)
+            if x not in lanes and sum(self.strip[y][x] != base for y in range(roads.H)) >= 0.75 * roads.H
+        ]
 
     def sky(self, top, low):
         self.fill(0, 0, AW, FAR_Y, low)
@@ -913,6 +947,7 @@ class ZoneView(Art):
     def stub_px(self, px, py, s):
         """The strip at scale s: the pixel under this one's centre, or a seam in its span, so
         the 1px seams along the road never drop out."""
+        del py
         row = self.strip[int(FOCAL / s) % roads.H]
         u0, u1 = roads.W / 2 + (px - AW / 2) / s, roads.W / 2 + (px + 1 - AW / 2) / s
         seam = next((x for x in self.seams if u0 <= x < u1), None)
@@ -925,16 +960,26 @@ class ZoneView(Art):
             if self.duty < 1 and (DASH * math.log(py + 0.5 - HORIZON)) % 1 >= self.duty:
                 continue
             s = SPREAD * (py + 0.5 - HORIZON) / bd.ROAD
-            for x, c in zip(roads.DIVIDERS, self.lane):
+            for x, c in zip(roads.DIVIDERS, self.lane, strict=False):
                 if c:
                     self.fill(math.floor(AW / 2 + (x + 1 - roads.W / 2) * s), py, 1, 1, c)
 
 
 # ---------- the Toronto neighbourhoods' path cards, after their backdrops ----------
 
+
 def cabbagetown_view():
-    a = ZoneView("cabbagetown", flecked("grey", "slate", 53), tufted("olive"), "white", (2, 6), curb="dstone",
-                 walk="stone", lawn=tufted("olive"), walk_fleck="dstone")
+    a = ZoneView(
+        "cabbagetown",
+        flecked("grey", "slate", 53),
+        tufted("olive"),
+        "white",
+        (2, 6),
+        curb="dstone",
+        walk="stone",
+        lawn=tufted("olive"),
+        walk_fleck="dstone",
+    )
     bd.bands(a, 0, FAR_Y, ("lilac", "pink", "peach", "gold"), w=AW)
     for dy in range(-4, 5):
         for dx in range(-4, 5):
@@ -944,9 +989,11 @@ def cabbagetown_view():
         a.fill(x, y, 1, 1, "white")
     for x in (14, 61):
         bd.tree(a, x, 10, "canopy", "pine", r=5, base=FAR_Y, girth=2)
-    for x, w, wall_c, roof, curtain, top in ((-21, 28, "brick", "shale", None, 3),
-                                             (23, 30, "cream", "slate", "gold", 2),
-                                             (69, 28, "brick", "dslate", "gold", 3)):
+    for x, w, wall_c, roof, curtain, top in (
+        (-21, 28, "brick", "shale", None, 3),
+        (23, 30, "cream", "slate", "gold", 2),
+        (69, 28, "brick", "dslate", "gold", 3),
+    ):
         bd.house(a, x, w, wall_c, roof, "forest", top=top, base=FAR_Y, roof_h=9, parts=MINI, curtains=curtain)
         half = w / 2 + 3
         for i in range(1, 9):
@@ -961,13 +1008,7 @@ def cabbagetown_view():
 
 
 # The zoo's llama at the card's scale, as backdrops.LLAMA: facing left, its far side driftwood.
-MINI_LLAMA = (".c....",
-              "cc....",
-              ".c....",
-              ".ccccc",
-              ".ccccs",
-              ".c..c.",
-              ".s..s.")
+MINI_LLAMA = (".c....", "cc....", ".c....", ".ccccc", ".ccccs", ".c..c.", ".s..s.")
 
 
 def high_park_view():
@@ -1027,8 +1068,17 @@ def high_park_view():
 
 def distillery_view():
     paving = flecked("brown", "brick", 19)
-    a = ZoneView("distillery-district", flecked("dslate", "navy", 61), paving, None, None, curb=None,
-                 walk="brown", lawn=paving, walk_fleck="brick")
+    a = ZoneView(
+        "distillery-district",
+        flecked("dslate", "navy", 61),
+        paving,
+        None,
+        None,
+        curb=None,
+        walk="brown",
+        lawn=paving,
+        walk_fleck="brick",
+    )
     bd.bands(a, 0, 13, bd.DISTILLERY_SKY, w=AW)
     bd.sun(a, 38, 9, 5, "yellow", 12)
     # the condo towers behind the old brick either side of the sun, dim in the haze
@@ -1065,13 +1115,26 @@ def distillery_view():
 def kensington_view():
     verge = bd.VERGES["kensington-market"]
     paving = bd.verge_paving("kensington-market")
-    a = ZoneView("kensington-market", lambda px, py: bd.KENSINGTON_ROAD, paving, "plum", (3, 6),
-                 curb=verge["curbColour"], walk=verge["walkColour"], lawn=paving, walk_fleck=verge["seamColour"],
-                 edge=bd.KENSINGTON_GUTTER)
+    a = ZoneView(
+        "kensington-market",
+        lambda _px, _py: bd.KENSINGTON_ROAD,
+        paving,
+        "plum",
+        (3, 6),
+        curb=verge["curbColour"],
+        walk=verge["walkColour"],
+        lawn=paving,
+        walk_fleck=verge["seamColour"],
+        edge=bd.KENSINGTON_GUTTER,
+    )
     bd.sunburst(a, AW / 2, FAR_Y + 2, 5, "purple", "violet", FAR_Y, w=AW)
     # the worn Victorian row in its backdrop's paint: a sash upstairs either side, a faded awning, the shop window
-    for x, w, wall, roof, awn in ((-14, 28, "dturq", "navy", "dred"), (14, 26, "violet", "plum", "ochre"),
-                                  (40, 26, "ochre", "dbrick", "dturq"), (66, 26, "olive", "dolive", "red")):
+    for x, w, wall, roof, awn in (
+        (-14, 28, "dturq", "navy", "dred"),
+        (14, 26, "violet", "plum", "ochre"),
+        (40, 26, "ochre", "dbrick", "dturq"),
+        (66, 26, "olive", "dolive", "red"),
+    ):
         wall_c, roof_c = bd.WORN_WALL[wall], bd.WORN_ROOF[roof]
         for k in range(w // 2 + 2):
             a.fill(x - 1 + k, 7 - k // 2, w + 2 - 2 * k, 1, roof_c)
@@ -1094,8 +1157,9 @@ def kensington_view():
 
 def beaches_view():
     sand = flecked("driftwood", "stone", 43)
-    a = ZoneView("the-beaches", boards, sand, "dbrown", (4, 9), curb=None, walk="driftwood", lawn=sand,
-                 walk_fleck="stone")
+    a = ZoneView(
+        "the-beaches", boards, sand, "dbrown", (4, 9), curb=None, walk="driftwood", lawn=sand, walk_fleck="stone"
+    )
     a.sky("gold", "yellow")
     bd.cloud(a, 26, 5, 16, 2, 4)
     for py in range(8, 17):
@@ -1127,8 +1191,18 @@ def beaches_view():
 
 def yonge_view():
     paving = flecked("dslate", "slate", 67)
-    a = ZoneView("yonge-street", flecked("shale", "ash", 41), paving, "amber", (4, 8), curb="grey", walk="dslate",
-                 lawn=paving, edge="coal", walk_fleck="slate")
+    a = ZoneView(
+        "yonge-street",
+        flecked("shale", "ash", 41),
+        paving,
+        "amber",
+        (4, 8),
+        curb="grey",
+        walk="dslate",
+        lawn=paving,
+        edge="coal",
+        walk_fleck="slate",
+    )
     bd.bands(a, 0, FAR_Y, bd.YONGE_SKY, w=AW)
     for x, y in ((30, 1), (50, 3), (70, 2)):
         a.fill(x, y, 1, 1, "white")
@@ -1161,10 +1235,15 @@ def yonge_view():
                 a.fill(px, py, 1, 1, "lgrey" if px in (31, 35) else "white" if lit else "haze")
             elif dome(px, py + 1) or dome(px - 1, py) or dome(px + 1, py):
                 a.fill(px, py, 1, 1, "ink")
-    for x, w, top, wall_c, lit_c in ((0, 10, 4, "dlake", "gold"), (11, 7, 17, "coal", "gold"),
-                                     (27, 9, 17, "dlake", "amber"), (36, 8, 6, "gold", "ochre"),
-                                     (44, 12, 7, "dlake", "gold"), (56, 7, 5, "lgrey", "grey"),
-                                     (63, 12, 8, "coal", "gold")):
+    for x, w, top, wall_c, lit_c in (
+        (0, 10, 4, "dlake", "gold"),
+        (11, 7, 17, "coal", "gold"),
+        (27, 9, 17, "dlake", "amber"),
+        (36, 8, 6, "gold", "ochre"),
+        (44, 12, 7, "dlake", "gold"),
+        (56, 7, 5, "lgrey", "grey"),
+        (63, 12, 8, "coal", "gold"),
+    ):
         a.fill(x, top, w, FAR_Y - top, wall_c)
         a.fill(x + w - 1, top, 1, FAR_Y - top, dk(wall_c))
         for y in range(top + 2, FAR_Y - 2, 2):
@@ -1253,8 +1332,9 @@ def mock_card(kind, key, large=False):
     im = to_image((card_frame_large if large else card_frame)(kind).px)
     cost = to_image(card_cost().px)
     badge, at = ((6, 121), (4, 16)) if large else ((BADGE_X, BADGE_Y), (ART_X, ART_Y))
-    im.paste(cost.resize((cost.width * scale, cost.height * scale), Image.NEAREST),
-             (badge[0] * scale, badge[1] * scale))
+    im.paste(
+        cost.resize((cost.width * scale, cost.height * scale), Image.NEAREST), (badge[0] * scale, badge[1] * scale)
+    )
     art = ILLUSTRATIONS[key]().img
     im.paste(art.resize((AW * scale, AH * scale), Image.NEAREST), (at[0] * scale, at[1] * scale))
     bg = Image.new("RGB", im.size, sn.rgb("dbrown"))
@@ -1281,14 +1361,16 @@ def preview(out, scale=3):
 
 def build():
     build_sprites(list(frame_sprite()), "art/cards")
-    os.makedirs("public/art/images", exist_ok=True)
+    Path("public/art/images").mkdir(parents=True, exist_ok=True)
     for key, draw in ILLUSTRATIONS.items():
         png = f"public/art/images/{key}.png"
         draw().img.save(png)
-        subprocess.run(["aseprite", "-b", png, "--save-as", f"art/cards/{key}.aseprite"], check=True)
+        subprocess.run(["aseprite", "-b", png, "--save-as", f"art/cards/{key}.aseprite"], check=True)  # noqa: S603, S607 - Fixed art executable and generator-owned paths.
     to_image(card_cost().outlined(False)).save("public/art/images/card-cost.png")
-    subprocess.run(["aseprite", "-b", "public/art/images/card-cost.png", "--save-as", "art/cards/card-cost.aseprite"],
-                   check=True)
+    subprocess.run(
+        ["aseprite", "-b", "public/art/images/card-cost.png", "--save-as", "art/cards/card-cost.aseprite"],  # noqa: S607 - Fixed art executable, no shell.
+        check=True,
+    )
     print("built", ", ".join([*ILLUSTRATIONS, "card-cost"]))
 
 

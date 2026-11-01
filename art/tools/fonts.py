@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Rasterize the game's pixel fonts into BMFonts (XML .fnt plus a PNG atlas).
 
 - font-body: Tiny5 at 8px made a row taller, for body text, quips and floating labels.
@@ -44,15 +43,15 @@ Usage:
 Run from the repository root.
 """
 
-import os
 import sys
+from pathlib import Path
 from xml.sax.saxutils import quoteattr
 
 from PIL import Image, ImageDraw, ImageFont
 
-sys.path.insert(0, os.path.dirname(__file__))
-from fx import LETTERS, word, word_size  # noqa: E402
-from pixel import HEART, Grid, K, to_image  # noqa: E402
+sys.path.insert(0, str(Path(__file__).parent))
+from fx import LETTERS, word, word_size
+from pixel import HEART, Grid, K, to_image
 
 FONTS = {
     "font-body": ("Tiny5", "art/fonts/tiny5/Tiny5.ttf", 8),
@@ -61,53 +60,57 @@ FONTS = {
 CHARS = [chr(c) for c in range(32, 127)] + ["·", "♥"]
 TINY5 = "art/fonts/tiny5/Tiny5.ttf"
 # Glyphs drawn in place of a font's own, by font file: rows, then the top row's offset and the advance.
-DRAWN = {TINY5: {
-    # Tiny5's $ is a 3px S that reads as a stray mark at 1x: a 4px S with 2px diagonals, its stem a
-    # row above and below it.
-    "$": (["..1.", ".111", "11..", "11..", "..11", "111.", ".1.."], 1, 5),
-    # Tiny5's 9 closes its bowl on row 3, so it differs from the 3 only in its top two rows: a 6 turned
-    # round, the bowl two rows deep.
-    "9": ([".1.", "1.1", "1.1", ".11", "..1", "11."], 2, 4),
-    # Tiny5's % is 4 rows of single pixels that read as an x: the capitals' height, 2px dots either side
-    # of an unbroken slash.
-    "%": (["11..1", "11.1.", "..1..", "..1..", ".1.11", "1..11"], 2, 6),
-    # The lower case: x-height rows 3 to 7, ascenders from row 1, descenders on row 8.
-    "a": ([".11.", "...1", ".111", "1..1", ".111"], 3, 5),
-    "b": (["1...", "1...", "111.", "1..1", "1..1", "1..1", "111."], 1, 5),
-    "c": ([".111", "1...", "1...", "1...", ".111"], 3, 5),
-    "d": (["...1", "...1", ".111", "1..1", "1..1", "1..1", ".111"], 1, 5),
-    "e": ([".11.", "1..1", "1111", "1...", ".111"], 3, 5),
-    "f": ([".11", "1..", "111", "1..", "1..", "1..", "1.."], 1, 4),
-    "g": ([".111", "1..1", "1..1", ".111", "...1", "111."], 3, 5),
-    "h": (["1...", "1...", "111.", "1..1", "1..1", "1..1", "1..1"], 1, 5),
-    "i": (["1", ".", "1", "1", "1", "1", "1"], 1, 2),
-    "j": ([".1", "..", ".1", ".1", ".1", ".1", ".1", "1."], 1, 3),
-    "k": (["1...", "1...", "1..1", "1.1.", "11..", "1.1.", "1..1"], 1, 5),
-    "l": (["1.", "1.", "1.", "1.", "1.", "1.", ".1"], 1, 3),
-    "m": (["1111.", "1.1.1", "1.1.1", "1.1.1", "1.1.1"], 3, 6),
-    "n": (["111.", "1..1", "1..1", "1..1", "1..1"], 3, 5),
-    "o": ([".11.", "1..1", "1..1", "1..1", ".11."], 3, 5),
-    "p": (["111.", "1..1", "1..1", "1..1", "111.", "1..."], 3, 5),
-    "q": ([".111", "1..1", "1..1", "1..1", ".111", "...1"], 3, 5),
-    "r": (["1.11", "11..", "1...", "1...", "1..."], 3, 5),
-    "s": ([".111", "1...", ".11.", "...1", "111."], 3, 5),
-    "t": (["1..", "111", "1..", "1..", "1..", ".11"], 2, 4),
-    "u": (["1..1", "1..1", "1..1", "1..1", ".111"], 3, 5),
-    "v": (["1...1", "1...1", ".1.1.", ".1.1.", "..1.."], 3, 6),
-    "w": (["1...1", "1...1", "1.1.1", "1.1.1", ".1.1."], 3, 6),
-    "x": (["1...1", ".1.1.", "..1..", ".1.1.", "1...1"], 3, 6),
-    "y": (["1..1", "1..1", "1..1", ".111", "...1", "111."], 3, 5),
-    "z": (["1111", "...1", "..1.", ".1..", "1111"], 3, 5),
-}}
+DRAWN = {
+    TINY5: {
+        # Tiny5's $ is a 3px S that reads as a stray mark at 1x: a 4px S with 2px diagonals, its stem a
+        # row above and below it.
+        "$": (["..1.", ".111", "11..", "11..", "..11", "111.", ".1.."], 1, 5),
+        # Tiny5's 9 closes its bowl on row 3, so it differs from the 3 only in its top two rows: a 6 turned
+        # round, the bowl two rows deep.
+        "9": ([".1.", "1.1", "1.1", ".11", "..1", "11."], 2, 4),
+        # Tiny5's % is 4 rows of single pixels that read as an x: the capitals' height, 2px dots either side
+        # of an unbroken slash.
+        "%": (["11..1", "11.1.", "..1..", "..1..", ".1.11", "1..11"], 2, 6),
+        # The lower case: x-height rows 3 to 7, ascenders from row 1, descenders on row 8.
+        "a": ([".11.", "...1", ".111", "1..1", ".111"], 3, 5),
+        "b": (["1...", "1...", "111.", "1..1", "1..1", "1..1", "111."], 1, 5),
+        "c": ([".111", "1...", "1...", "1...", ".111"], 3, 5),
+        "d": (["...1", "...1", ".111", "1..1", "1..1", "1..1", ".111"], 1, 5),
+        "e": ([".11.", "1..1", "1111", "1...", ".111"], 3, 5),
+        "f": ([".11", "1..", "111", "1..", "1..", "1..", "1.."], 1, 4),
+        "g": ([".111", "1..1", "1..1", ".111", "...1", "111."], 3, 5),
+        "h": (["1...", "1...", "111.", "1..1", "1..1", "1..1", "1..1"], 1, 5),
+        "i": (["1", ".", "1", "1", "1", "1", "1"], 1, 2),
+        "j": ([".1", "..", ".1", ".1", ".1", ".1", ".1", "1."], 1, 3),
+        "k": (["1...", "1...", "1..1", "1.1.", "11..", "1.1.", "1..1"], 1, 5),
+        "l": (["1.", "1.", "1.", "1.", "1.", "1.", ".1"], 1, 3),
+        "m": (["1111.", "1.1.1", "1.1.1", "1.1.1", "1.1.1"], 3, 6),
+        "n": (["111.", "1..1", "1..1", "1..1", "1..1"], 3, 5),
+        "o": ([".11.", "1..1", "1..1", "1..1", ".11."], 3, 5),
+        "p": (["111.", "1..1", "1..1", "1..1", "111.", "1..."], 3, 5),
+        "q": ([".111", "1..1", "1..1", "1..1", ".111", "...1"], 3, 5),
+        "r": (["1.11", "11..", "1...", "1...", "1..."], 3, 5),
+        "s": ([".111", "1...", ".11.", "...1", "111."], 3, 5),
+        "t": (["1..", "111", "1..", "1..", "1..", ".11"], 2, 4),
+        "u": (["1..1", "1..1", "1..1", "1..1", ".111"], 3, 5),
+        "v": (["1...1", "1...1", ".1.1.", ".1.1.", "..1.."], 3, 6),
+        "w": (["1...1", "1...1", "1.1.1", "1.1.1", ".1.1."], 3, 6),
+        "x": (["1...1", ".1.1.", "..1..", ".1.1.", "1...1"], 3, 6),
+        "y": (["1..1", "1..1", "1..1", ".111", "...1", "111."], 3, 5),
+        "z": (["1111", "...1", "..1.", ".1..", "1111"], 3, 5),
+    }
+}
 # Tiny5's capitals, digits and the marks that span them, a row taller: the row named here is drawn
 # twice (a crossbar's lower half, a bowl's side, a diagonal's top).
-REPEAT = {TINY5: {
-    **{c: 3 for c in "ABEFHIJKLMNPRSTUY1356789"},
-    **{c: 2 for c in "CDGOQ04"},
-    **{c: 0 for c in "VWX"},
-    **{c: 1 for c in "Z2"},
-    **{c: 2 for c in "!?()[]{}/\\|#&@<>"},
-}}
+REPEAT = {
+    TINY5: {
+        **dict.fromkeys("ABEFHIJKLMNPRSTUY1356789", 3),
+        **dict.fromkeys("CDGOQ04", 2),
+        **dict.fromkeys("VWX", 0),
+        **dict.fromkeys("Z2", 1),
+        **dict.fromkeys("!?()[]{}/\\|#&@<>", 2),
+    }
+}
 # Marks on the baseline or the x-height's middle, a row lower with them.
 LOWERED = {TINY5: set(".,;:-+=*~_·♥")}
 # How many rows lower than the face's ascent the baseline is.
@@ -219,10 +222,13 @@ def sign(text, scale=1, fill="yellow", kern=True):
     ring = {(px + dx, py + dy) for px, py in letters for dx in (-1, 0, 1) for dy in (-1, 0, 1)}
     shadow = {(px + d, py + d) for px, py in ring for d in range(1, scale + 1)} - ring
     # a counter too small to show the shadow (the middle of O at 1x) stays ink
-    ring |= {(px, py) for px, py in shadow
-             if all(q in ring for q in ((px - 1, py), (px + 1, py), (px, py - 1), (px, py + 1)))}
-    out = {p: "dred" for p in shadow - ring}
-    out.update({p: "ink" for p in ring})
+    ring |= {
+        (px, py)
+        for px, py in shadow
+        if all(q in ring for q in ((px - 1, py), (px + 1, py), (px, py - 1), (px, py + 1)))
+    }
+    out = dict.fromkeys(shadow - ring, "dred")
+    out.update(dict.fromkeys(ring, "ink"))
     out.update(letters)
     return out, x - 1
 
@@ -243,7 +249,7 @@ def display_glyphs(fill):
         w, h = max(x for x, _ in px) + 1 - x0, max(y for _, y in px) + 1 - y0
         im = Image.new("RGBA", (w, h), (0, 0, 0, 0))
         for (x, y), c in px.items():
-            im.putpixel((x - x0, y - y0), tuple(int(K[c][i:i + 2], 16) for i in (0, 2, 4)) + (255,))
+            im.putpixel((x - x0, y - y0), (*tuple(int(K[c][i : i + 2], 16) for i in (0, 2, 4)), 255))
         # the sign's y 0 is the capitals' outline, one row above their fill
         out[ch] = (im, x0, y0 + CAP_TOP - 1, adv)
     return out
@@ -278,6 +284,7 @@ def kernings():
 
 
 # ---------- the TrueType fonts ----------
+
 
 def repeat_row(im, row):
     """im one row taller, its row drawn twice."""
@@ -360,54 +367,65 @@ def pack(gl):
 
 def write_font(key, face, size, line_height, base, gl, kerns=()):
     atlas, places = pack(gl)
-    os.makedirs("public/art/fonts", exist_ok=True)
+    Path("public/art/fonts").mkdir(parents=True, exist_ok=True)
     atlas.save(f"public/art/fonts/{key}.png")
     lines = [
         '<?xml version="1.0"?>',
         "<font>",
-        f'  <info face={quoteattr(face)} size="{size}" bold="0" italic="0" charset="" unicode="1" stretchH="100" '
-        'smooth="0" aa="0" padding="0,0,0,0" spacing="1,1"/>',
-        f'  <common lineHeight="{line_height}" base="{base}" scaleW="{atlas.width}" '
-        f'scaleH="{atlas.height}" pages="1" packed="0"/>',
+        (
+            f'  <info face={quoteattr(face)} size="{size}" bold="0" italic="0" charset="" unicode="1" stretchH="100" '
+            'smooth="0" aa="0" padding="0,0,0,0" spacing="1,1"/>'
+        ),
+        (
+            f'  <common lineHeight="{line_height}" base="{base}" scaleW="{atlas.width}" '
+            f'scaleH="{atlas.height}" pages="1" packed="0"/>'
+        ),
         f'  <pages><page id="0" file="{key}.png"/></pages>',
         f'  <chars count="{len(gl)}">',
     ]
     for ch, (im, ox, oy, adv) in gl.items():
         x, y = places[ch]
         w, h = (im.width, im.height) if im is not None else (0, 0)
-        lines.append(f'    <char id="{ord(ch)}" x="{x}" y="{y}" width="{w}" height="{h}" xoffset="{ox}" '
-                     f'yoffset="{oy}" xadvance="{adv}" page="0" chnl="15"/>')
+        lines.append(
+            f'    <char id="{ord(ch)}" x="{x}" y="{y}" width="{w}" height="{h}" xoffset="{ox}" '
+            f'yoffset="{oy}" xadvance="{adv}" page="0" chnl="15"/>'
+        )
     lines.append("  </chars>")
     if kerns:
         lines.append(f'  <kernings count="{len(kerns)}">')
         lines += [f'    <kerning first="{ord(a)}" second="{ord(b)}" amount="{n}"/>' for a, b, n in kerns]
         lines.append("  </kernings>")
     lines += ["</font>", ""]
-    with open(f"public/art/fonts/{key}.fnt", "w") as f:
+    with Path(f"public/art/fonts/{key}.fnt").open("w") as f:
         f.write("\n".join(lines))
 
 
 def build():
     for key, (face, path, size) in FONTS.items():
         gl, ascent, descent = glyphs(path, size)
-        write_font(key, face, size, ascent + descent + 1, ascent + BASE_DROP.get(path, 0), gl,
-                   KERNS.get(path, ()))
+        write_font(key, face, size, ascent + descent + 1, ascent + BASE_DROP.get(path, 0), gl, KERNS.get(path, ()))
     for key, fill in DISPLAY.items():
-        write_font(key, "Sign", 5 * DISPLAY_SCALE, LINE_HEIGHT, CAP_TOP + 5 * DISPLAY_SCALE,
-                   display_glyphs(fill), kernings())
+        write_font(
+            key, "Sign", 5 * DISPLAY_SCALE, LINE_HEIGHT, CAP_TOP + 5 * DISPLAY_SCALE, display_glyphs(fill), kernings()
+        )
     write_font(COMIC, "Comic", 7, COMIC_LINE, COMIC_BASE, comic_glyphs())
     print("built", ", ".join([*FONTS, *DISPLAY, COMIC]))
 
 
 def preview(out, scale=3):
-    samples = ["ARCHIE'S DOG WALKS  $42  ZONE 1: HIGH PARK", "Eve: No rush, dear. ♥",
-               "-2 ♥, dramatic   +$1.50 tip, solo", "0123456789 !?.,:'+-/$%&()"]
+    samples = [
+        "ARCHIE'S DOG WALKS  $42  ZONE 1: HIGH PARK",
+        "Eve: No rush, dear. ♥",
+        "-2 ♥, dramatic   +$1.50 tip, solo",
+        "0123456789 !?.,:'+-/$%&()",
+    ]
     display = ["OOPS, PETUNIAS!", "WHICH WAY? $1.50 ♥"]
-    sheet = Image.new("RGB", (300, 26 + 14 * len(samples) * len(FONTS) + 20 * len(display) * len(DISPLAY)),
-                      (115, 62, 57))
+    sheet = Image.new(
+        "RGB", (300, 26 + 14 * len(samples) * len(FONTS) + 20 * len(display) * len(DISPLAY)), (115, 62, 57)
+    )
     y = 4
-    for key, (face, path, size) in FONTS.items():
-        gl, ascent, _ = glyphs(path, size)
+    for _, path, size in FONTS.values():
+        gl, _, _ = glyphs(path, size)
         for s in samples:
             x = 4
             for ch in s:
@@ -421,7 +439,7 @@ def preview(out, scale=3):
         for s in display:
             px, _ = sign(s, DISPLAY_SCALE, fill)
             for (x, yy), c in px.items():
-                sheet.putpixel((4 + x, y + CAP_TOP - 1 + yy), tuple(int(K[c][i:i + 2], 16) for i in (0, 2, 4)))
+                sheet.putpixel((4 + x, y + CAP_TOP - 1 + yy), tuple(int(K[c][i : i + 2], 16) for i in (0, 2, 4)))
             y += LINE_HEIGHT + 2
     sheet.resize((sheet.width * scale, sheet.height * scale), Image.NEAREST).save(out)
 

@@ -9,55 +9,169 @@ Usage:
 
 import json
 import math
-import os
 import subprocess
 import sys
 import tempfile
+from pathlib import Path
 
 # Endesga 32, by role.
-K = dict(
-    rust="be4a2f", ochre="d77643", cream="ead4aa", tan="e4a672", brown="b86f50", dbrown="733e39", plum="3e2731",
-    dred="a22633", red="e43b44", orange="f77622", amber="feae34", yellow="fee761", green="63c74d", dgreen="3e8948",
-    forest="265c42", teal="193c3e", blue="124e89", sky="0099db", cyan="2ce8f5", white="ffffff", lgrey="c0cbdc",
-    grey="8b9bb4", slate="5a6988", dslate="3a4466", navy="262b44", ink="181425", hot="ff0044", purple="68386c",
-    mauve="b55088", pink="f6757a", skin1="e8b796", skin2="c28569",
-)
+K = {
+    "rust": "be4a2f",
+    "ochre": "d77643",
+    "cream": "ead4aa",
+    "tan": "e4a672",
+    "brown": "b86f50",
+    "dbrown": "733e39",
+    "plum": "3e2731",
+    "dred": "a22633",
+    "red": "e43b44",
+    "orange": "f77622",
+    "amber": "feae34",
+    "yellow": "fee761",
+    "green": "63c74d",
+    "dgreen": "3e8948",
+    "forest": "265c42",
+    "teal": "193c3e",
+    "blue": "124e89",
+    "sky": "0099db",
+    "cyan": "2ce8f5",
+    "white": "ffffff",
+    "lgrey": "c0cbdc",
+    "grey": "8b9bb4",
+    "slate": "5a6988",
+    "dslate": "3a4466",
+    "navy": "262b44",
+    "ink": "181425",
+    "hot": "ff0044",
+    "purple": "68386c",
+    "mauve": "b55088",
+    "pink": "f6757a",
+    "skin1": "e8b796",
+    "skin2": "c28569",
+}
 PALETTE = list(K.values())
-DARKER = dict(p.split(":") for p in (
-    "be4a2f:733e39 d77643:be4a2f ead4aa:e4a672 e4a672:b86f50 b86f50:733e39 733e39:3e2731 3e2731:181425 "
-    "a22633:3e2731 e43b44:a22633 f77622:be4a2f feae34:f77622 fee761:feae34 63c74d:3e8948 3e8948:265c42 "
-    "265c42:193c3e 193c3e:181425 124e89:262b44 0099db:124e89 2ce8f5:0099db ffffff:c0cbdc c0cbdc:8b9bb4 "
-    "8b9bb4:5a6988 5a6988:3a4466 3a4466:262b44 262b44:181425 181425:181425 ff0044:a22633 68386c:3e2731 "
-    "b55088:68386c f6757a:b55088 e8b796:c28569 c28569:b86f50"
-).split())
+DARKER = dict(
+    p.split(":")
+    for p in [
+        "be4a2f:733e39",
+        "d77643:be4a2f",
+        "ead4aa:e4a672",
+        "e4a672:b86f50",
+        "b86f50:733e39",
+        "733e39:3e2731",
+        "3e2731:181425",
+        "a22633:3e2731",
+        "e43b44:a22633",
+        "f77622:be4a2f",
+        "feae34:f77622",
+        "fee761:feae34",
+        "63c74d:3e8948",
+        "3e8948:265c42",
+        "265c42:193c3e",
+        "193c3e:181425",
+        "124e89:262b44",
+        "0099db:124e89",
+        "2ce8f5:0099db",
+        "ffffff:c0cbdc",
+        "c0cbdc:8b9bb4",
+        "8b9bb4:5a6988",
+        "5a6988:3a4466",
+        "3a4466:262b44",
+        "262b44:181425",
+        "181425:181425",
+        "ff0044:a22633",
+        "68386c:3e2731",
+        "b55088:68386c",
+        "f6757a:b55088",
+        "e8b796:c28569",
+        "c28569:b86f50",
+    ]
+)
 # The neutral greys, outside Endesga 32 and allowed only for disabled and locked UI (a disabled tile,
 # button, slider or knob, a locked item's well): the neutral counterparts of lgrey, grey, slate and
 # dslate. Ink stays the darkest step.
-NEUTRAL = dict(nlgrey="d8d8d8", ngrey="a4a4a4", nslate="727272", ndslate="4a4a4a")
+NEUTRAL = {"nlgrey": "d8d8d8", "ngrey": "a4a4a4", "nslate": "727272", "ndslate": "4a4a4a"}
 K.update(NEUTRAL)
 DARKER.update({"d8d8d8": "a4a4a4", "a4a4a4": "727272", "727272": "4a4a4a", "4a4a4a": "181425"})
 # The Toronto colours, 32 past Endesga 32 for the Toronto neighbourhoods' scenery, roads, verges and
 # skies, in ramps that end on an Endesga colour: canopy and olive greens, brick and warm browns,
 # warm stones and dark slates for shaded laneways, TTC red, Kensington's painted-house brights, lake
 # blues and sky tones. Endesga 32 plus these is the 64-colour house palette.
-TORONTO = dict(
-    moss="9cb04a", olive="6b8a35", dolive="445a26", canopy="357a2f", pine="1e4d2b", fir="11301c",
-    brick="8e3b2b", dbrick="5e2620", clay="9a6a4a", bark="523a2c", walnut="2e2019", driftwood="a99c86",
-    stone="8a857c", dstone="625e58", ash="57606a", shale="353b45", coal="26292f", ttc="da291c",
-    turquoise="35c2a6", dturq="1f8a7a", lilac="a77bd9", violet="6d4bb0", lime="b2d94a", foam="a8e0e6",
-    shallow="58b8c9", lake="2f7fa6", dlake="1d5576", gold="f9c74f", peach="ff9e6b", haze="cfe3ea",
-    azure="3d86e0", cobalt="2654b0",
-)
+TORONTO = {
+    "moss": "9cb04a",
+    "olive": "6b8a35",
+    "dolive": "445a26",
+    "canopy": "357a2f",
+    "pine": "1e4d2b",
+    "fir": "11301c",
+    "brick": "8e3b2b",
+    "dbrick": "5e2620",
+    "clay": "9a6a4a",
+    "bark": "523a2c",
+    "walnut": "2e2019",
+    "driftwood": "a99c86",
+    "stone": "8a857c",
+    "dstone": "625e58",
+    "ash": "57606a",
+    "shale": "353b45",
+    "coal": "26292f",
+    "ttc": "da291c",
+    "turquoise": "35c2a6",
+    "dturq": "1f8a7a",
+    "lilac": "a77bd9",
+    "violet": "6d4bb0",
+    "lime": "b2d94a",
+    "foam": "a8e0e6",
+    "shallow": "58b8c9",
+    "lake": "2f7fa6",
+    "dlake": "1d5576",
+    "gold": "f9c74f",
+    "peach": "ff9e6b",
+    "haze": "cfe3ea",
+    "azure": "3d86e0",
+    "cobalt": "2654b0",
+}
 K.update(TORONTO)
 PALETTE64 = PALETTE + list(TORONTO.values())
-DARKER.update(dict(p.split(":") for p in (
-    "9cb04a:6b8a35 6b8a35:445a26 445a26:11301c 357a2f:1e4d2b 1e4d2b:11301c 11301c:181425 "
-    "8e3b2b:5e2620 5e2620:2e2019 9a6a4a:523a2c 523a2c:2e2019 2e2019:181425 a99c86:8a857c "
-    "8a857c:625e58 625e58:26292f 57606a:353b45 353b45:26292f 26292f:181425 da291c:a22633 "
-    "35c2a6:1f8a7a 1f8a7a:193c3e a77bd9:6d4bb0 6d4bb0:68386c b2d94a:63c74d a8e0e6:58b8c9 "
-    "58b8c9:2f7fa6 2f7fa6:1d5576 1d5576:262b44 f9c74f:feae34 ff9e6b:f77622 cfe3ea:c0cbdc "
-    "3d86e0:2654b0 2654b0:124e89"
-).split()))
+DARKER.update(
+    dict(
+        p.split(":")
+        for p in [
+            "9cb04a:6b8a35",
+            "6b8a35:445a26",
+            "445a26:11301c",
+            "357a2f:1e4d2b",
+            "1e4d2b:11301c",
+            "11301c:181425",
+            "8e3b2b:5e2620",
+            "5e2620:2e2019",
+            "9a6a4a:523a2c",
+            "523a2c:2e2019",
+            "2e2019:181425",
+            "a99c86:8a857c",
+            "8a857c:625e58",
+            "625e58:26292f",
+            "57606a:353b45",
+            "353b45:26292f",
+            "26292f:181425",
+            "da291c:a22633",
+            "35c2a6:1f8a7a",
+            "1f8a7a:193c3e",
+            "a77bd9:6d4bb0",
+            "6d4bb0:68386c",
+            "b2d94a:63c74d",
+            "a8e0e6:58b8c9",
+            "58b8c9:2f7fa6",
+            "2f7fa6:1d5576",
+            "1d5576:262b44",
+            "f9c74f:feae34",
+            "ff9e6b:f77622",
+            "cfe3ea:c0cbdc",
+            "3d86e0:2654b0",
+            "2654b0:124e89",
+        ]
+    )
+)
 # The contrast roads: dslate (dark, the Distillery District's), then the roads an outline must hold 3:1 on: tan,
 # pink and skin2 (light) and Kensington Market's stone (mid grey), which takes it nearly to ink.
 ROADS = ("3a4466", "e4a672", "f6757a", "c28569", "8a857c")
@@ -68,8 +182,9 @@ ZONE_ROADS = ("8b9bb4", "e4a672", "3a4466", "8a857c", "ead4aa", "353b45")
 
 def contrast(a, b):
     """WCAG contrast ratio of two hex colours."""
+
     def lum(c):
-        v = [int(c[i:i + 2], 16) / 255 for i in (0, 2, 4)]
+        v = [int(c[i : i + 2], 16) / 255 for i in (0, 2, 4)]
         v = [x / 12.92 if x <= 0.03928 else ((x + 0.055) / 1.055) ** 2.4 for x in v]
         return 0.2126 * v[0] + 0.7152 * v[1] + 0.0722 * v[2]
 
@@ -140,7 +255,7 @@ class Grid:
         for y in range(self.h):
             for x in range(self.w):
                 dx, dy = abs(x + 0.5 - cx) / rx, abs(y + 0.5 - cy) / ry
-                if dx ** power + dy ** power <= 1:
+                if dx**power + dy**power <= 1:
                     d = 0.7 * ((x + 0.5 - cx) / rx + (y + 0.5 - cy) / ry)
                     self.p(x, y, sh if sh and d > 0.5 else li if li and d < -0.72 else c)
 
@@ -148,9 +263,10 @@ class Grid:
         """Filled oval (squarer at power above 2), cel shaded from a top-left light: sh a crescent along the
         lower-right rim and li a thinner one along the upper-left, each following the outline, where ell
         cuts a straight diagonal plane."""
+
         def inside(x, y, o=0.0):
             dx, dy = abs(x + 0.5 - cx - o) / rx, abs(y + 0.5 - cy - o) / ry
-            return dx ** power + dy ** power <= 1
+            return dx**power + dy**power <= 1
 
         shade_w, light_w = max(1, 0.13 * (rx + ry)), max(1, 0.06 * (rx + ry))
         for y in range(self.h):
@@ -158,8 +274,11 @@ class Grid:
                 if not inside(x, y):
                     continue
                 lit = (x + 0.5 - cx) / rx + (y + 0.5 - cy) / ry < -0.7
-                self.p(x, y, sh if sh and not inside(x, y, -shade_w)
-                       else li if li and lit and not inside(x, y, light_w) else c)
+                self.p(
+                    x,
+                    y,
+                    sh if sh and not inside(x, y, -shade_w) else li if li and lit and not inside(x, y, light_w) else c,
+                )
 
     def tri(self, a, b, c, col):
         def side(px, py, x1, y1, x2, y2):
@@ -213,7 +332,11 @@ def edged(g, edge=road_edge, close=False):
     keep it."""
     if isinstance(edge, str):
         line = K.get(edge, edge)
-        edge = lambda c: line  # noqa: E731
+
+        def solid_edge(_c):
+            return line
+
+        edge = solid_edge
     inner = raster(g)
     inner.edge, inner.close = edge, close
     return g
@@ -244,38 +367,44 @@ def bitmap(g, x0, y0, rows, cols, mirror=False):
 
 def to_image(px):
     """Frame rows of hex colours (None where clear) as an RGBA image."""
-    from PIL import Image
+    from PIL import Image  # noqa: PLC0415 - Raster export alone requires Pillow.
 
     im = Image.new("RGBA", (len(px[0]), len(px)), (0, 0, 0, 0))
     for y, row in enumerate(px):
         for x, c in enumerate(row):
             if c:
-                im.putpixel((x, y), tuple(int(c[i:i + 2], 16) for i in (0, 2, 4)) + (255,))
+                im.putpixel((x, y), (*tuple(int(c[i : i + 2], 16) for i in (0, 2, 4)), 255))
     return im
 
 
 def preview(sprites, out, grounds=ZONE_ROADS, scale=6, gap=4):
     """Contact sheet: one row per sprite and ground colour, every frame in tag order."""
-    from PIL import Image
+    from PIL import Image  # noqa: PLC0415 - Raster export alone requires Pillow.
 
     rows = []
     for _, tags in sprites:
         frames = [f for _, fs, _ in tags for f in fs]
-        for ground in grounds:
-            rows.append((frames, ground))
+        rows.extend((frames, ground) for ground in grounds)
     cell_w = max(len(f[0][0]) for f, _ in rows) + gap
     cell_h = [len(f[0]) + gap for f, _ in rows]
     width = max(len(f) for f, _ in rows) * cell_w * scale
     img = Image.new("RGB", (width, sum(cell_h) * scale), (24, 20, 37))
     y0 = 0
-    for (frames, ground), ch in zip(rows, cell_h):
+    for (frames, ground), ch in zip(rows, cell_h, strict=False):
         for i, f in enumerate(frames):
             for y, row in enumerate(f):
-                for x, c in enumerate(row):
-                    c = c or ground
-                    rgb = tuple(int(c[k:k + 2], 16) for k in (0, 2, 4))
-                    img.paste(rgb, ((i * cell_w + x) * scale, (y0 + y) * scale,
-                                    (i * cell_w + x + 1) * scale, (y0 + y + 1) * scale))
+                for x, colour in enumerate(row):
+                    c = colour or ground
+                    rgb = tuple(int(c[k : k + 2], 16) for k in (0, 2, 4))
+                    img.paste(
+                        rgb,
+                        (
+                            (i * cell_w + x) * scale,
+                            (y0 + y) * scale,
+                            (i * cell_w + x + 1) * scale,
+                            (y0 + y + 1) * scale,
+                        ),
+                    )
         y0 += ch
     img.save(out)
 
@@ -306,32 +435,43 @@ def _lua(tags, out):
     for tag, fs, ms in tags:
         tag_lines.append(f'do local t = spr:newTag({n + 1}, {n + len(fs)}); t.name = "{tag}" end')
         # ms is the tag's frame duration, or a list with one duration per frame
-        for f, d in zip(fs, ms if isinstance(ms, (list, tuple)) else [ms] * len(fs)):
+        for f, d in zip(fs, ms if isinstance(ms, (list, tuple)) else [ms] * len(fs), strict=False):
             pts = []
             for y, row in enumerate(f):
                 for x, c in enumerate(row):
                     if c:
-                        pts.append("{%d,%d,%d,%d,%d}" % (x, y, int(c[0:2], 16), int(c[2:4], 16), int(c[4:6], 16)))
+                        pts.append(f"{{{x},{y},{int(c[0:2], 16)},{int(c[2:4], 16)},{int(c[4:6], 16)}}}")
             frames.append("{" + ",".join(pts) + "}")
             durations.append(str(d / 1000))
         n += len(fs)
     # A sprite drawn in the neutral greys or the Toronto colours carries them after Endesga 32 in its
     # palette.
     used = {c for _, fs, _ in tags for f in fs for row in f for c in row if c}
-    colours = (PALETTE + (list(NEUTRAL.values()) if used & set(NEUTRAL.values()) else [])
-               + (list(TORONTO.values()) if used & set(TORONTO.values()) else []))
+    colours = (
+        PALETTE
+        + (list(NEUTRAL.values()) if used & set(NEUTRAL.values()) else [])
+        + (list(TORONTO.values()) if used & set(TORONTO.values()) else [])
+    )
     palette = "\n".join(
         f"pal:setColor({i}, Color{{ r = {int(c[0:2], 16)}, g = {int(c[2:4], 16)}, b = {int(c[4:6], 16)} }})"
         for i, c in enumerate(colours)
     )
-    return LUA.format(w=w, h=h, ncolours=len(colours), palette=palette, frames="{" + ",\n".join(frames) + "}",
-                      durations="{" + ",".join(durations) + "}", tags="\n".join(tag_lines), out=out)
+    return LUA.format(
+        w=w,
+        h=h,
+        ncolours=len(colours),
+        palette=palette,
+        frames="{" + ",\n".join(frames) + "}",
+        durations="{" + ",".join(durations) + "}",
+        tags="\n".join(tag_lines),
+        out=out,
+    )
 
 
 def depth_scales():
     """{suffix: scale} for every depth step below full size in shared/depth-steps.json, the table the game
     reads: {"@94": 0.9375, "@88": 0.875, ...}."""
-    with open(os.path.join(os.path.dirname(__file__), "..", "..", "shared", "depth-steps.json")) as f:
+    with Path(str(Path(str(Path(__file__).parent)) / ".." / ".." / "shared" / "depth-steps.json")).open() as f:
         return {q["suffix"]: q["scale"] for q in json.load(f)["steps"] if q["scale"] < 1}
 
 
@@ -344,23 +484,29 @@ def opaque_rows(frames):
 def _exported(key):
     """public/art/sprites/<key>'s frame 0 as rows of colours (None where clear), or None if it is not
     exported."""
-    from PIL import Image
+    from PIL import Image  # noqa: PLC0415 - Raster export alone requires Pillow.
 
     path = f"public/art/sprites/{key}"
-    if not os.path.exists(path + ".json"):
+    if not Path(path + ".json").exists():
         return None
-    with open(path + ".json") as f:
+    with Path(path + ".json").open() as f:
         r = next(iter(json.load(f)["frames"].values()))["frame"]
     img = Image.open(path + ".png").convert("RGBA")
-    return [[("%02x%02x%02x" % px[:3]) if px[3] else None
-             for px in (img.getpixel((r["x"] + x, r["y"] + y)) for x in range(r["w"]))] for y in range(r["h"])]
+    return [
+        [
+            ("{:02x}{:02x}{:02x}".format(*px[:3])) if px[3] else None
+            for px in (img.getpixel((r["x"] + x, r["y"] + y)) for x in range(r["w"]))
+        ]
+        for y in range(r["h"])
+    ]
 
 
 def shifted(tags, dy):
     """tags with every frame moved dy rows down (up when negative) in its frame."""
+
     def move(f):
         blank = [[None] * len(f[0]) for _ in range(abs(dy))]
-        return blank + f[:len(f) - dy] if dy > 0 else f[-dy:] + blank if dy < 0 else f
+        return blank + f[: len(f) - dy] if dy > 0 else f[-dy:] + blank if dy < 0 else f
 
     return [(tag, [move(f) for f in fs], ms) for tag, fs, ms in tags]
 
@@ -412,6 +558,8 @@ class _Lined(str):
     """A fill pixel a cut left on the rim (see _without_rows): it compares as its fill, so the cuts after it
     are chosen as if it were not there, and it is drawn in line, the outline colour beside it."""
 
+    __slots__ = ("__dict__",)
+
     def __new__(cls, fill, line):
         out = super().__new__(cls, fill)
         out.line = line
@@ -445,8 +593,11 @@ def _opened(frames, r):
                 continue
             if not (0 <= away < h and f[away][x]):
                 continue
-            if _shown(f[away][x]) == line or _shown(c) not in {_shown(f[y][x - 1]), _shown(f[y][x + 1]),
-                                                                 _shown(f[away][x])}:
+            if _shown(f[away][x]) == line or _shown(c) not in {
+                _shown(f[y][x - 1]),
+                _shown(f[y][x + 1]),
+                _shown(f[away][x]),
+            }:
                 continue
             out.append((i, y, x, line))
     return out
@@ -469,10 +620,10 @@ def _without_rows(frames, n, first=False, below=None, picks=()):
             break
         h, mid = len(frames[0]), (top + bottom) / 2
 
-        def same(a, b):
+        def same(a, b, frames=frames):
             return all(f[a] == f[b] for f in frames)
 
-        def run(r):
+        def run(r, top=top, bottom=bottom, same=same):
             a, b = r, r
             while a > top and same(a - 1, r):
                 a -= 1
@@ -481,18 +632,18 @@ def _without_rows(frames, n, first=False, below=None, picks=()):
             return b - a + 1
 
         counts = [{} for _ in frames]
-        for f, cnt in zip(frames, counts):
+        for f, cnt in zip(frames, counts, strict=False):
             for row in f:
                 for c in row:
                     if c:
                         cnt[c] = cnt.get(c, 0) + 1
 
-        def thin(r):
+        def thin(r, frames=frames, counts=counts):
             """The weight of the small features row r crosses: each opaque pixel in a run of its colour at
             most 2 long across rows (a line, a knot, an eye) that taking the row out would thin away, ten
             times over when its colour is rare in the frame (a bow's knot, a collar's tag)."""
             n = 0
-            for f, cnt in zip(frames, counts):
+            for f, cnt in zip(frames, counts, strict=False):
                 for x, c in enumerate(f[r]):
                     if not c:
                         continue
@@ -505,24 +656,26 @@ def _without_rows(frames, n, first=False, below=None, picks=()):
                         n += 10 if cnt[c] <= 16 else 1
             return n
 
-        def score(r):
-            diff = sum(x != y for f in frames for x, y in zip(f[r], f[r - 1]))
+        def score(r, frames=frames, mid=mid, thin=thin, run=run):
+            diff = sum(x != y for f in frames for x, y in zip(f[r], f[r - 1], strict=False))
             return diff + thin(r), -run(r), abs(r - mid)
 
         r = picks[step] if step < len(picks) else min(rows, key=score)
-        assert r in rows, f"pinned cut {r} is outside rows {rows}"
+        if r not in rows:
+            raise AssertionError(f"pinned cut {r} is outside rows {rows}")
         opened = _opened(frames, r)
-        frames = [[[None] * len(f[0])] + f[:r] + f[r + 1:] for f in frames]
-        for i, y, x, line in opened:
-            y += y < r
+        frames = [[[None] * len(f[0]), *f[:r], *f[r + 1 :]] for f in frames]
+        for i, opened_y, x, line in opened:
+            y = opened_y + (opened_y < r)
             frames[i][y] = frames[i][y][:]
             frames[i][y][x] = _Lined(frames[i][y][x], line)
-        assert all(len(f) == h for f in frames)
+        if not (all(len(f) == h for f in frames)):
+            raise AssertionError
     return frames
 
 
 def _transposed(frames):
-    return [[list(col) for col in zip(*f)] for f in frames]
+    return [[list(col) for col in zip(*f, strict=False)] for f in frames]
 
 
 def squatted(tags, w, h):
@@ -537,7 +690,7 @@ def squatted(tags, w, h):
         cols = _without_rows(cols, fw - w)
         left, right = opaque_rows(cols)
         if left > 0 and left - 1 > fw - 1 - right:
-            cols = [c[1:] + [[None] * len(c[0])] for c in cols]
+            cols = [[*c[1:], [None] * len(c[0])] for c in cols]
         frames = _transposed(cols)
     return _regrouped(tags, frames)
 
@@ -546,7 +699,7 @@ def _unanchored():
     """The keys public/art/manifest.json lists without an anchor: the game does not stand them on the
     ground (overlays, icons and the like), so they keep their place in their frame."""
     try:
-        with open("public/art/manifest.json") as f:
+        with Path("public/art/manifest.json").open() as f:
             return {s["key"] for s in json.load(f)["sprites"] if "anchor" not in s}
     except FileNotFoundError:
         return set()
@@ -556,7 +709,7 @@ def _regrouped(tags, frames):
     """tags with their frames, in order, replaced by frames."""
     out, i = [], 0
     for tag, fs, ms in tags:
-        out.append((tag, frames[i:i + len(fs)], ms))
+        out.append((tag, frames[i : i + len(fs)], ms))
         i += len(fs)
     return out
 
@@ -574,7 +727,7 @@ def narrowed(tags, cols):
     fw = len(cut[0])
     lo, hi = opaque_rows(cut) or (0, fw - 1)
     while lo > 0 and lo - 1 > fw - 1 - hi:
-        cut = [c[1:] + [[None] * len(c[0])] for c in cut]
+        cut = [[*c[1:], [None] * len(c[0])] for c in cut]
         lo, hi = lo - 1, hi - 1
     return _regrouped(tags, _transposed(cut))
 
@@ -619,6 +772,7 @@ def depth_settled(sprites, originals=None, apart=()):
     each full-size sprite, in sprites or in originals."""
     sprites = list(sprites)
     if apart:
+
         def split(keep):
             part = [(k, ts) for k, tags in sprites if (ts := [t for t in tags if keep(t[0])])]
             full = {k: ts for k, tags in (originals or {}).items() if (ts := [t for t in tags if keep(t[0])])}
@@ -630,8 +784,9 @@ def depth_settled(sprites, originals=None, apart=()):
         for key, tags in sprites:
             base, at, suffix = key.partition("@")
             if at and key in rest and key in own and base in rest_full and base in own_full:
-                own[key] = _abreast(own[key], rest[key], scales.get(f"@{suffix}", 1),
-                                    _middle(own_full[base]) - _middle(rest_full[base]))
+                own[key] = _abreast(
+                    own[key], rest[key], scales.get(f"@{suffix}", 1), _middle(own_full[base]) - _middle(rest_full[base])
+                )
             settled_tags = {t[0]: t for t in rest.get(key, []) + own.get(key, [])}
             out.append((key, [settled_tags[t[0]] for t in tags]))
         return out
@@ -649,7 +804,8 @@ def depth_settled(sprites, originals=None, apart=()):
         _, at, suffix = key.partition("@")
         return scales.get(f"@{suffix}", 1) if at else 1
 
-    for key, tags in sorted(sprites, key=lambda kt: -scale_of(kt[0])):
+    for key, source_tags in sorted(sprites, key=lambda kt: -scale_of(kt[0])):
+        tags = source_tags
         base, at, suffix = key.partition("@")
         if not (at and f"@{suffix}" in scales):
             continue
@@ -657,8 +813,9 @@ def depth_settled(sprites, originals=None, apart=()):
         if frame0_full is None:
             print(f"{key}: no full-size {base} to settle it by")
             continue
-        steps = [s for x, s in scales.items()
-                 if f"{base}{x}" in full or os.path.exists(f"public/art/sprites/{base}{x}.json")]
+        steps = [
+            s for x, s in scales.items() if f"{base}{x}" in full or Path(f"public/art/sprites/{base}{x}.json").exists()
+        ]
         scale = scales[f"@{suffix}"]
         w, h = depth_envelope(len(frame0_full[0]), len(frame0_full), steps)[scale]
         tags = squatted(tags, w, h)
@@ -675,12 +832,14 @@ def depth_settled(sprites, originals=None, apart=()):
             left_l, right_l = opaque_cols([frame_l]) or (0, len(frame_l[0]) - 1)
             side_f = max(len(frame0_full[0]), len(frame0_full))
             side = max(len(tags[0][1][0][0]), len(tags[0][1][0]))
-            tags = shortened(tags, min(math.floor((feet_f - top_f + 1) * scale + 0.5), feet_l - top_l + 1),
-                             PINNED_CUTS.get(key, ()))
+            tags = shortened(
+                tags, min(math.floor((feet_f - top_f + 1) * scale + 0.5), feet_l - top_l + 1), PINNED_CUTS.get(key, ())
+            )
             tags = narrowed(tags, min(math.floor((right_f - left_f + 1) * scale + 0.5), right_l - left_l + 1))
             tags = seated(key, tags, math.ceil(feet_f * side / side_f - 1e-9))
         settled[key] = tags[0][1][0]
         full[key] = tags
+
     def drawn(tags):
         return [(tag, [[[_shown(c) for c in row] for row in f] for f in fs], ms) for tag, fs, ms in tags]
 
@@ -702,7 +861,7 @@ def _abreast(tags, rest, scale, gap):
     dx = max(-left, min(len(frames[0][0]) - 1 - right, dx))
 
     def move(f):
-        return [[None] * dx + row[:len(row) - dx] if dx >= 0 else row[-dx:] + [None] * -dx for row in f]
+        return [[None] * dx + row[: len(row) - dx] if dx >= 0 else row[-dx:] + [None] * -dx for row in f]
 
     return [(tag, [move(f) for f in fs], ms) for tag, fs, ms in tags]
 
@@ -711,18 +870,31 @@ def build(sprites, src_dir, originals=None, apart=()):
     """Write src_dir/<key>.aseprite for every sprite and export it to public/art/sprites/, each depth
     variant settled by depth_settled."""
     sprites = depth_settled(sprites, originals, apart)
-    os.makedirs(src_dir, exist_ok=True)
-    os.makedirs("public/art/sprites", exist_ok=True)
+    Path(src_dir).mkdir(parents=True, exist_ok=True)
+    Path("public/art/sprites").mkdir(parents=True, exist_ok=True)
     built = []
     for key, tags in sprites:
         src = f"{src_dir}/{key}.aseprite"
         with tempfile.NamedTemporaryFile("w", suffix=".lua", delete=False) as f:
             f.write(_lua(tags, src))
-        subprocess.run(["aseprite", "-b", "--script", f.name], check=True)
-        os.unlink(f.name)
-        subprocess.run(["aseprite", "-b", src, "--sheet", f"public/art/sprites/{key}.png",
-                        "--data", f"public/art/sprites/{key}.json", "--format", "json-hash", "--list-tags"],
-                       check=True, stdout=subprocess.DEVNULL)
+        subprocess.run(["aseprite", "-b", "--script", f.name], check=True)  # noqa: S603, S607 - Fixed art executable and generator-owned paths.
+        Path(f.name).unlink()
+        subprocess.run(  # noqa: S603 - Fixed art executable and generator-owned paths.
+            [  # noqa: S607 - Fixed art executable, no shell.
+                "aseprite",
+                "-b",
+                src,
+                "--sheet",
+                f"public/art/sprites/{key}.png",
+                "--data",
+                f"public/art/sprites/{key}.json",
+                "--format",
+                "json-hash",
+                "--list-tags",
+            ],
+            check=True,
+            stdout=subprocess.DEVNULL,
+        )
         built.append(key)
     print("built", ", ".join(built))
 
@@ -750,7 +922,7 @@ def palette_table():
 
 if __name__ == "__main__":
     if sys.argv[1:] == ["palette"]:
-        with open(PALETTE_JSON, "w") as f:
+        with Path(PALETTE_JSON).open("w") as f:
             f.write(json.dumps(palette_table(), indent=2) + "\n")
     else:
         sys.exit(__doc__)

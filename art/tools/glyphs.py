@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Draw the pull squirrel, the zone icons, a walker's perk icons, the debuff and effect icons, the
 walk bar's effect wells, the walk's message strip icons and a path card's difficulty paws.
 
@@ -47,17 +46,18 @@ Run from the repository root. A build overwrites the .aseprite sources, so
 hand edits to them belong in this file instead. Shared tooling is in pixel.py.
 """
 
-import os
 import subprocess
 import sys
+from pathlib import Path
 
 from PIL import Image
 
-sys.path.insert(0, os.path.dirname(__file__))
-from pixel import K, Grid, bitmap, build as build_sprites, icon_edge, to_image  # noqa: E402
-from fx import burst, star4  # noqa: E402
-from road import SQUIRREL_FUR  # noqa: E402
+sys.path.insert(0, str(Path(__file__).parent))
+from fx import burst, star4
+from pixel import Grid, K, bitmap, icon_edge, to_image
+from pixel import build as build_sprites
 
+from road import SQUIRREL_FUR
 
 # ---------- traits ----------
 
@@ -89,13 +89,15 @@ def chaser():
     standing up behind it and curling over at the top, a white glint for its eye."""
     f = SQUIRREL_FUR
     g = Grid(16, 16)
-    bitmap(g, 0, 0, CHASER, {"f": f["fur"], "l": f["lit"], "b": f["belly"], "s": f["shade"], "w": "white",
-                             "n": f["nose"]})
+    bitmap(
+        g, 0, 0, CHASER, {"f": f["fur"], "l": f["lit"], "b": f["belly"], "s": f["shade"], "w": "white", "n": f["nose"]}
+    )
     return g
 
 
 # ---------- walkers: perks, on walker tiles, the new walker celebration and the message strip ----------
 # Each holds its silhouette on cream and on the strip's ink.
+
 
 def quick_recovery():
     """An hourglass in a brown frame, its sand nearly all run through, a white speed tick at each side:
@@ -146,6 +148,7 @@ def long_reach():
     g.rect(4, 13, 8, 1, "dgreen")
     return g
 
+
 def keen_eye():
     """A magnifying glass, its cyan lens over the treat (a white bone with a red heart on its shaft), its
     brown handle down to the right."""
@@ -159,6 +162,7 @@ def keen_eye():
 
 
 # ---------- zones, after their backdrops ----------
+
 
 class Zone(Grid):
     """A 16x16 zone picture drawn only inside the 1px ring its outline takes, with icon_edge outlines, so a
@@ -268,6 +272,7 @@ def yonge_street():
 
 # ---------- debuffs: distinct material silhouettes with a shared plum keyline ----------
 
+
 def drop(g, cx, top, r, fill, sh=None, li=None):
     """A water drop: a point at (cx, top) over a round base of radius r."""
     base = top + 2.2 * r
@@ -278,7 +283,7 @@ def drop(g, cx, top, r, fill, sh=None, li=None):
 def muddy():
     """A sky-blue drop entering a broad brown mud splash, with a tan front lip."""
     g = Grid(16, 16)
-    g.edge = lambda c: K["plum"]
+    g.edge = lambda _c: K["plum"]
     g.tri((7, 1), (3, 7), (10, 7), "sky")
     g.ell(6.5, 6.5, 3.5, 3.5, "sky", "blue", "cyan")
     g.ell(8, 12, 6.5, 2.5, "brown", "dbrown", "tan")
@@ -294,13 +299,12 @@ def muddy():
 def zoomies():
     """A green paw rushing right with a broad yellow lightning tail."""
     g = Grid(16, 16)
-    g.edge = lambda c: K["plum"]
+    g.edge = lambda _c: K["plum"]
     g.rect(9, 3, 2, 3, "green")
     g.rect(12, 5, 2, 3, "green")
     g.ell(10, 10, 3.5, 3.5, "green", "forest", "yellow")
     g.rect(6, 5, 2, 2, "green")
-    bitmap(g, 1, 2, ["...yy", "..yyy", ".yyy.", "yyyy.", "..yy.", ".yy..", "yy..."],
-           {"y": "yellow"})
+    bitmap(g, 1, 2, ["...yy", "..yyy", ".yyy.", "yyyy.", "..yy.", ".yy..", "yy..."], {"y": "yellow"})
     g.p(10, 9, "yellow")
     g.p(11, 9, "yellow")
     return g
@@ -309,12 +313,11 @@ def zoomies():
 def spotlight():
     """A blue stage lamp throwing a broad yellow beam onto a white-lit pool."""
     g = Grid(16, 16)
-    g.edge = lambda c: K["plum"]
+    g.edge = lambda _c: K["plum"]
     g.tri((5, 5), (7, 5), (14, 13), "yellow")
     g.tri((5, 5), (14, 13), (5, 13), "yellow")
     g.ell(9.5, 13, 5, 1.5, "yellow")
-    bitmap(g, 1, 1, [".bbb...", "bbbbbb.", ".bbbbsw", "..bbsww", "...sww."],
-           {"b": "blue", "s": "sky", "w": "white"})
+    bitmap(g, 1, 1, [".bbb...", "bbbbbb.", ".bbbbsw", "..bbsww", "...sww."], {"b": "blue", "s": "sky", "w": "white"})
     g.rect(2, 6, 2, 3, "blue")
     g.rect(3, 8, 3, 1, "blue")
     g.rect(7, 11, 3, 1, "white")
@@ -338,8 +341,13 @@ def belly_rubs():
     """A hand rubbing below a heart."""
     g = Grid(16, 16)
     heart(g, 6, 1)
-    bitmap(g, 1, 9, ["....ssssss..", "ssssssssssss", "sssssddddd..", "sssssssssss.", "ssssdddd....",
-                     "ssssssssss.."], {"s": "skin1", "d": "skin2"})
+    bitmap(
+        g,
+        1,
+        9,
+        ["....ssssss..", "ssssssssssss", "sssssddddd..", "sssssssssss.", "ssssdddd....", "ssssssssss.."],
+        {"s": "skin1", "d": "skin2"},
+    )
     return g
 
 
@@ -414,8 +422,9 @@ def good_leash():
 def raincoats():
     """A yellow hooded coat with one dark hood opening, two sleeves and a clear hem."""
     g = Grid(16, 16)
-    bitmap(g, 5, 1, ["..yyy..", ".yyyyy.", "yyddday", "yyddday", ".yyyyy."],
-           {"y": "yellow", "a": "amber", "d": "dbrown"})
+    bitmap(
+        g, 5, 1, ["..yyy..", ".yyyyy.", "yyddday", "yyddday", ".yyyyy."], {"y": "yellow", "a": "amber", "d": "dbrown"}
+    )
     g.rect(5, 6, 8, 8, "yellow")
     g.tri((5, 5), (2, 9), (5, 11), "yellow")
     g.tri((12, 5), (15, 9), (13, 11), "amber")
@@ -426,6 +435,7 @@ def raincoats():
     g.rect(5, 14, 8, 1, "amber")
     drop(g, 2, 1, 1.3, "cyan", "sky")
     return g
+
 
 def sweet_talker():
     """A speech bubble saying money goes down."""
@@ -455,6 +465,7 @@ def rush_hour():
 
 # The gear, after its 32x32 item art in icons.py.
 
+
 def gear_whistle():
     """A silver whistle with a dark mouthpiece and one separated cyan sound stroke."""
     g = Grid(16, 16)
@@ -475,6 +486,7 @@ def gear_whistle():
 def gear_fanny_pack():
     """A deep forest-green pouch with a visible belt, zipper and pale logo."""
     return fanny_pack_icon(16)
+
 
 def gear_hall_pass():
     g = Grid(16, 16)
@@ -500,8 +512,17 @@ def gear_hall_pass():
 
 
 SHOE_COLS = {"b": "blue", "c": "cyan", "l": "lgrey", "g": "grey", "n": "navy", "o": "orange", "s": "sky", "w": "white"}
-SHOE_16 = ["..........oo..", "......cccnnno.", ".....cwwnnnss.", "...ccwwssssssb", "..csssssoooosb",
-           ".csooooossssbb", "sbbbbbbbbbbbbb", "wwwwwwwwwwwwww", ".llllllllllll."]
+SHOE_16 = [
+    "..........oo..",
+    "......cccnnno.",
+    ".....cwwnnnss.",
+    "...ccwwssssssb",
+    "..csssssoooosb",
+    ".csooooossssbb",
+    "sbbbbbbbbbbbbb",
+    "wwwwwwwwwwwwww",
+    ".llllllllllll.",
+]
 
 
 def gear_running_shoes():
@@ -526,8 +547,17 @@ def gear_lucky_collar():
 # The same subject, colours and silhouette as its 16x16 icon, redrawn with the room spent on detail.
 # Like the 16x16 icons', every fill that carries a shape holds 3:1 or more on the well's ink.
 
-BIG_HEART_20 = [".111...111.", "11111.11111", "11111111111", "1111111111p", ".11111111p.", "..111111p..",
-                "...1111p...", "....11p....", ".....p....."]
+BIG_HEART_20 = [
+    ".111...111.",
+    "11111.11111",
+    "11111111111",
+    "1111111111p",
+    ".11111111p.",
+    "..111111p..",
+    "...1111p...",
+    "....11p....",
+    ".....p.....",
+]
 
 
 def heart20(g, x, y):
@@ -570,21 +600,27 @@ def gear_running_shoes20():
     """The running shoe of gear_running_shoes with room for a second lace, a toe spring and a lugged
     outsole."""
     g = Grid(20, 20)
-    bitmap(g, 1, 4, [
-        "............oo....",
-        "........cccccoo...",
-        ".......cwwnnnnso..",
-        "......cssbnnnnsss.",
-        "....ccwwssssssssb.",
-        "...csssssssooossb.",
-        "..csssssoooosssssb",
-        ".csssooosssssssssb",
-        "cssssssssssssssbbb",
-        "sbbbbbbbbbbbbbbbbb",
-        "wwwwwwwwwwwwwwwwww",
-        ".wwwwwwwwwwwwwwwww",
-        "..lglglglglglglgl.",
-    ], SHOE_COLS)
+    bitmap(
+        g,
+        1,
+        4,
+        [
+            "............oo....",
+            "........cccccoo...",
+            ".......cwwnnnnso..",
+            "......cssbnnnnsss.",
+            "....ccwwssssssssb.",
+            "...csssssssooossb.",
+            "..csssssoooosssssb",
+            ".csssooosssssssssb",
+            "cssssssssssssssbbb",
+            "sbbbbbbbbbbbbbbbbb",
+            "wwwwwwwwwwwwwwwwww",
+            ".wwwwwwwwwwwwwwwww",
+            "..lglglglglglglgl.",
+        ],
+        SHOE_COLS,
+    )
     return g
 
 
@@ -640,6 +676,7 @@ def long_reach20():
     g.rect(5, 16, 10, 1, "dgreen")
     return g
 
+
 def keen_eye20():
     """A magnifying glass, its cyan lens over the treat (a white bone with a red heart on its shaft), its
     brown handle down to the right."""
@@ -648,8 +685,7 @@ def keen_eye20():
         g.rect(13 + i, 13 + i, 2, 2, "brown")
     g.ell(8, 8, 7, 7, "lgrey", "grey")
     g.ell(8, 8, 5.2, 5.2, "cyan", None, "white")
-    bitmap(g, 4, 6, ["..11.11..", "ww11111ww", ".ww111ww.", "ww..1..ww"],
-           {"w": "white", "1": "red"})
+    bitmap(g, 4, 6, ["..11.11..", "ww11111ww", ".ww111ww.", "ww..1..ww"], {"w": "white", "1": "red"})
     return g
 
 
@@ -657,9 +693,22 @@ def belly_rubs20():
     """A hand, palm up, rubbing below a heart."""
     g = Grid(20, 20)
     heart20(g, 6, 1)
-    bitmap(g, 1, 11, ["......sssss.....", "ssssssssssssss..", "sssssssdddddd...", "sssssssssssssss.",
-                      "ssssssdddddd....", "ssssssssssssss..", "sssssddddd......", "ssssssssssss...."],
-           {"s": "skin1", "d": "skin2"})
+    bitmap(
+        g,
+        1,
+        11,
+        [
+            "......sssss.....",
+            "ssssssssssssss..",
+            "sssssssdddddd...",
+            "sssssssssssssss.",
+            "ssssssdddddd....",
+            "ssssssssssssss..",
+            "sssssddddd......",
+            "ssssssssssss....",
+        ],
+        {"s": "skin1", "d": "skin2"},
+    )
     return g
 
 
@@ -674,8 +723,13 @@ def good_leash20():
 def raincoats20():
     """A native twenty-pixel raincoat with a single hood opening and broad yellow panels."""
     g = Grid(20, 20)
-    bitmap(g, 7, 1, ["..yyyy..", ".yyyyyy.", "yydddday", "yydddday", "yydddday", ".yyyyyy."],
-           {"y": "yellow", "a": "amber", "d": "dbrown"})
+    bitmap(
+        g,
+        7,
+        1,
+        ["..yyyy..", ".yyyyyy.", "yydddday", "yydddday", "yydddday", ".yyyyyy."],
+        {"y": "yellow", "a": "amber", "d": "dbrown"},
+    )
     g.rect(6, 7, 10, 10, "yellow")
     g.tri((6, 6), (2, 11), (5, 14), "yellow")
     g.tri((15, 6), (19, 11), (16, 14), "amber")
@@ -686,6 +740,7 @@ def raincoats20():
     g.rect(6, 17, 10, 1, "amber")
     drop(g, 2.5, 1, 1.6, "cyan", "sky")
     return g
+
 
 def rush_hour20():
     """An alarm clock ringing: two amber bells, a red case on lgrey feet and a white face."""
@@ -706,10 +761,14 @@ def sweet_talker20():
     """A speech bubble saying money goes down: a forest $ and a dred arrow down."""
     g = Grid(20, 20)
     bubble20(g, "white", "lgrey")
-    bitmap(g, 3, 2, ["..s..", ".ssss", "s.s..", "s.s..", ".sss.", "..s.s", "..s.s", "ssss.", "..s.."],
-           {"s": "forest"})
-    bitmap(g, 10, 3, ["..ddd..", "..ddd..", "..ddd..", "..ddd..", "ddddddd", ".ddddd.", "..ddd..", "...d..."],
-           {"d": "dred"})
+    bitmap(g, 3, 2, ["..s..", ".ssss", "s.s..", "s.s..", ".sss.", "..s.s", "..s.s", "ssss.", "..s.."], {"s": "forest"})
+    bitmap(
+        g,
+        10,
+        3,
+        ["..ddd..", "..ddd..", "..ddd..", "..ddd..", "ddddddd", ".ddddd.", "..ddd..", "...d..."],
+        {"d": "dred"},
+    )
     return g
 
 
@@ -736,6 +795,7 @@ def gear_fanny_pack20():
     """A native twenty-pixel waist pack with a broad pouch and a separate buckle."""
     return fanny_pack_icon(20)
 
+
 def fanny_pack_icon(size):
     """Redraw each small glyph on its native grid without changing the shared pickup design."""
     g = Grid(size, size)
@@ -760,6 +820,7 @@ def fanny_pack_icon(size):
         g.rect(1, 5, 1, 3, "lgrey")
         g.rect(6, 12, 4, 2, "cream")
     return g
+
 
 def gear_hall_pass20():
     """The Hall pass: a cream pass card on a sky lanyard, clipped through its red header band, a dred
@@ -828,8 +889,13 @@ def badge():
     """A red ribbon rosette with a cream badge face and a gold centre, on two navy tails, for a badge
     earned."""
     g = Grid(16, 16)
-    bitmap(g, 0, 0, BADGE, {"r": "red", "l": "pink", "d": "dred", "c": "cream", "t": "tan", "g": "amber",
-                            "b": "blue", "n": "navy"})
+    bitmap(
+        g,
+        0,
+        0,
+        BADGE,
+        {"r": "red", "l": "pink", "d": "dred", "c": "cream", "t": "tan", "g": "amber", "b": "blue", "n": "navy"},
+    )
     return g
 
 
@@ -869,8 +935,9 @@ def fired():
     """A pink slip: a page with lines of plum text and its top corner folded down, a dred stamp across it
     lettered in a white line, as the empty ui-dog-card's FIRED plate."""
     g = Grid(16, 16)
-    bitmap(g, 0, 0, FIRED, {"p": "pink", "m": "mauve", "w": "white", "f": "mauve", "t": "plum", "s": "dred",
-                            "l": "white"})
+    bitmap(
+        g, 0, 0, FIRED, {"p": "pink", "m": "mauve", "w": "white", "f": "mauve", "t": "plum", "s": "dred", "l": "white"}
+    )
     return g
 
 
@@ -907,8 +974,22 @@ def lucky():
         g.cel(cx, cy, 2.6, 2.6, "green", "dgreen")
     for x, y in ((7, 2), (7, 13), (1, 8), (12, 8)):
         g.p(x, y, None)
-    for x, y in ((7, 4), (7, 5), (7, 6), (7, 7), (7, 9), (7, 10), (7, 11), (3, 8), (4, 8), (5, 8), (6, 8),
-                 (8, 8), (9, 8), (10, 8)):
+    for x, y in (
+        (7, 4),
+        (7, 5),
+        (7, 6),
+        (7, 7),
+        (7, 9),
+        (7, 10),
+        (7, 11),
+        (3, 8),
+        (4, 8),
+        (5, 8),
+        (6, 8),
+        (8, 8),
+        (9, 8),
+        (10, 8),
+    ):
         g.p(x, y, "dgreen")
     g.p(7, 8, "yellow")
     star4(g, 13, 3, 1, "yellow")
@@ -967,8 +1048,7 @@ IMAGES = {
 
 # ---------- the difficulty marker on a fork's path card ----------
 
-PAW_PRINT = ("..ff.ff..", "..ff.ff..", "ff.....ff", "ff.....ff", "...fff...", "..fffff..", ".fffffff.",
-             "..fffff..")
+PAW_PRINT = ("..ff.ff..", "..ff.ff..", "ff.....ff", "ff.....ff", "...fff...", "..fffff..", ".fffffff.", "..fffff..")
 
 
 def paw(g, x0, filled):
@@ -1020,26 +1100,28 @@ def preview(out, scale=6):
         for j, ground in enumerate(grounds):
             tile = Image.new("RGB", im.size, ground)
             tile.paste(im, (0, 0), im)
-            sheet.paste(tile.resize((im.width * scale, im.height * scale), Image.NEAREST),
-                        (i * 20 * scale, j * 20 * scale))
+            sheet.paste(
+                tile.resize((im.width * scale, im.height * scale), Image.NEAREST), (i * 20 * scale, j * 20 * scale)
+            )
     # ui-difficulty, one row per ground
     for i, im in enumerate(marks):
         for j, ground in enumerate(grounds):
             tile = Image.new("RGB", (im.width + 2, im.height + 2), ground)
             tile.paste(im, (1, 1), im)
             y = 20 * len(grounds) + j * 14
-            sheet.paste(tile.resize((tile.width * scale, tile.height * scale), Image.NEAREST),
-                        (i * 60 * scale, y * scale))
+            sheet.paste(
+                tile.resize((tile.width * scale, tile.height * scale), Image.NEAREST), (i * 60 * scale, y * scale)
+            )
     sheet.save(out)
 
 
 def build():
-    os.makedirs("art/glyphs", exist_ok=True)
-    os.makedirs("public/art/images", exist_ok=True)
+    Path("art/glyphs").mkdir(parents=True, exist_ok=True)
+    Path("public/art/images").mkdir(parents=True, exist_ok=True)
     for key, draw in IMAGES.items():
         png = f"public/art/images/{key}.png"
         image(draw).save(png)
-        subprocess.run(["aseprite", "-b", png, "--save-as", f"art/glyphs/{key}.aseprite"], check=True)
+        subprocess.run(["aseprite", "-b", png, "--save-as", f"art/glyphs/{key}.aseprite"], check=True)  # noqa: S603, S607 - Fixed art executable and generator-owned paths.
     build_sprites(list(sprites()), "art/glyphs")
     print("built", ", ".join(IMAGES))
 

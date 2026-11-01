@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Draw the depth variants of road sprites that the other art scripts leave
 out: every depth step (minis.STEPS, from shared/depth-steps.json) for the road
 sprites that have no variants elsewhere, and the steps in BETWEEN (those
@@ -34,16 +33,19 @@ Run from the repository root. A build overwrites the .aseprite sources, so
 hand edits to them belong in this file instead. Shared tooling is in pixel.py.
 """
 
-import os
 import sys
+from pathlib import Path
 
-sys.path.insert(0, os.path.dirname(__file__))
-import hazards  # noqa: E402
-import minis  # noqa: E402
-import obstacles  # noqa: E402
-import road  # noqa: E402
-from minis import SCALES, STEPS, small, snap  # noqa: E402
-from pixel import ZONE_ROADS, build, depth_settled, preview  # noqa: E402
+from PIL import Image
+
+sys.path.insert(0, str(Path(__file__).parent))
+import hazards
+import minis
+import obstacles
+from minis import SCALES, STEPS, small, snap
+from pixel import ZONE_ROADS, build, depth_settled, preview
+
+import road
 
 # The steps hazards.py leaves to this file: it builds SCALES itself.
 BETWEEN = tuple(q for q in STEPS if q not in SCALES)
@@ -77,41 +79,108 @@ def own(s):
     p = road.SCALE * s
 
     def walk(top, **q):
-        return ("walk", [dressed(p, top, grounded=True, **w, **q).outlined() for w in road.HUMAN_WALK], road.HUMAN_WALK_MS)
+        return (
+            "walk",
+            [dressed(p, top, grounded=True, **w, **q).outlined() for w in road.HUMAN_WALK],
+            road.HUMAN_WALK_MS,
+        )
 
-    owner = dict(shoes="dbrown")
-    yield "other-dog-owner", [walk(road.dog_owner_top, **owner),
-                              ("idle", [dressed(p, road.dog_owner_top, grounded=True, bob=b, **owner).outlined() for b in breath], ms)]
-    yield "thief", [walk(road.thief_top),
-                    ("flee", [small(road, p, road.thief_fleeing, k).outlined() for k in (-1, 1)], 110),
-                    ("idle", [dressed(p, road.thief_top, grounded=True, bob=b).outlined() for b in breath], ms)]
-    neighbour = dict(legs="purple", shoes="dbrown")
-    yield "friendly-neighbour", [
-        ("walk", [dressed(p, road.neighbour_top(False, -w.get("bob", 0)), grounded=True, **w, **neighbour).outlined()
-                  for w in road.HUMAN_WALK], road.HUMAN_WALK_MS),
-        ("wave", [dressed(p, road.neighbour_top(True, k), grounded=True, bob=road.NEIGHBOUR_CROUCH, **neighbour).outlined()
-                  for k in (0, 1)], 350),
-        ("idle", [dressed(p, road.neighbour_top(False, k), grounded=True, bob=b, **neighbour).outlined()
-                  for k, b in enumerate(breath)], ms)]
-    yield "mail-carrier", [("walk", [small(road, p, road.mail_carrier, **snap(q, p)).outlined()
-                                     for q in road.HUMAN_WALK], road.HUMAN_WALK_MS),
-                           ("idle", [small(road, p, road.mail_carrier, **snap(dict(bob=b), p)).outlined()
-                                     for b in breath], ms)]
-    yield "stroller", [("walk", [small(road, p, road.stroller, **snap(q, p)).outlined() for q in road.STROLLER_WALK],
-                        road.STROLLER_WALK_MS)]
-    yield "jogger", [("run", [small(road, p, road.jogger, **posed(q, p)).outlined() for q in road.JOGGER_RUN],
-                      road.JOGGER_RUN_MS)]
-    yield "kid-on-a-bike", [("ride", [small(road, p, road.kid_on_a_bike, **posed(q, p)).outlined()
-                                      for q in road.KID_BIKE_RIDE], road.KID_BIKE_RIDE_MS)]
+    owner = {"shoes": "dbrown"}
+    yield (
+        "other-dog-owner",
+        [
+            walk(road.dog_owner_top, **owner),
+            ("idle", [dressed(p, road.dog_owner_top, grounded=True, bob=b, **owner).outlined() for b in breath], ms),
+        ],
+    )
+    yield (
+        "thief",
+        [
+            walk(road.thief_top),
+            ("flee", [small(road, p, road.thief_fleeing, k).outlined() for k in (-1, 1)], 110),
+            ("idle", [dressed(p, road.thief_top, grounded=True, bob=b).outlined() for b in breath], ms),
+        ],
+    )
+    neighbour = {"legs": "purple", "shoes": "dbrown"}
+    yield (
+        "friendly-neighbour",
+        [
+            (
+                "walk",
+                [
+                    dressed(p, road.neighbour_top(False, -w.get("bob", 0)), grounded=True, **w, **neighbour).outlined()
+                    for w in road.HUMAN_WALK
+                ],
+                road.HUMAN_WALK_MS,
+            ),
+            (
+                "wave",
+                [
+                    dressed(
+                        p, road.neighbour_top(True, k), grounded=True, bob=road.NEIGHBOUR_CROUCH, **neighbour
+                    ).outlined()
+                    for k in (0, 1)
+                ],
+                350,
+            ),
+            (
+                "idle",
+                [
+                    dressed(p, road.neighbour_top(False, k), grounded=True, bob=b, **neighbour).outlined()
+                    for k, b in enumerate(breath)
+                ],
+                ms,
+            ),
+        ],
+    )
+    yield (
+        "mail-carrier",
+        [
+            (
+                "walk",
+                [small(road, p, road.mail_carrier, **snap(q, p)).outlined() for q in road.HUMAN_WALK],
+                road.HUMAN_WALK_MS,
+            ),
+            ("idle", [small(road, p, road.mail_carrier, **snap({"bob": b}, p)).outlined() for b in breath], ms),
+        ],
+    )
+    yield (
+        "stroller",
+        [
+            (
+                "walk",
+                [small(road, p, road.stroller, **snap(q, p)).outlined() for q in road.STROLLER_WALK],
+                road.STROLLER_WALK_MS,
+            )
+        ],
+    )
+    yield (
+        "jogger",
+        [("run", [small(road, p, road.jogger, **posed(q, p)).outlined() for q in road.JOGGER_RUN], road.JOGGER_RUN_MS)],
+    )
+    yield (
+        "kid-on-a-bike",
+        [
+            (
+                "ride",
+                [small(road, p, road.kid_on_a_bike, **posed(q, p)).outlined() for q in road.KID_BIKE_RIDE],
+                road.KID_BIKE_RIDE_MS,
+            )
+        ],
+    )
 
     def times(q):
         return tuple(v * s for v in q)
 
     truck = times(road.TRUCK_SCALE)
     drive, drive_ms = road.TRUCK_DRIVE
-    yield "ice-cream-truck", [("idle", [small(road, truck, road.ice_cream_truck, f).outlined() for f in (0, 1)], 400),
-                              ("drive", [small(road, truck, road.ice_cream_truck, roll=r).outlined() for r in drive],
-                               drive_ms)]
+    yield (
+        "ice-cream-truck",
+        [
+            ("idle", [small(road, truck, road.ice_cream_truck, f).outlined() for f in (0, 1)], 400),
+            ("drive", [small(road, truck, road.ice_cream_truck, roll=r).outlined() for r in drive], drive_ms),
+        ],
+    )
     yield "puddle", [("idle", [small(road, s, road.puddle, f).outlined(False) for f in (0, 1)], 500)]
     yield "pothole", [("idle", [small(road, s, road.pothole, f).outlined(False) for f in (0, 1)], 500)]
     b = obstacles.SCALE * s
@@ -124,21 +193,46 @@ def own(s):
     args, ms = obstacles.PULL_OUT
     car = times(obstacles.CAR_SCALE)
     drive, drive_ms = obstacles.DRIVE
-    yield "parked-car", obstacle(car, obstacles.parked_car, obstacles.PARKED_CAR_IDLE) + [
-        ("pull-out", [small(obstacles, car, obstacles.parked_car, roll=f).outlined() for f in args], ms),
-        ("drive", [small(obstacles, car, obstacles.parked_car, roll=f, blink=False).outlined() for f in drive],
-         drive_ms)]
-    yield "delivery-truck", obstacle(car, obstacles.delivery_truck, obstacles.DELIVERY_IDLE) + [
-        ("drive", [small(obstacles, car, obstacles.delivery_truck, roll=f).outlined() for f in drive], drive_ms)]
-    yield "streetcar", obstacle(car, obstacles.streetcar, obstacles.STREETCAR_IDLE) + [
-        ("drive", [small(obstacles, car, obstacles.streetcar, roll=f).outlined() for f in drive], drive_ms)]
+    yield (
+        "parked-car",
+        [
+            *obstacle(car, obstacles.parked_car, obstacles.PARKED_CAR_IDLE),
+            ("pull-out", [small(obstacles, car, obstacles.parked_car, roll=f).outlined() for f in args], ms),
+            (
+                "drive",
+                [small(obstacles, car, obstacles.parked_car, roll=f, blink=False).outlined() for f in drive],
+                drive_ms,
+            ),
+        ],
+    )
+    yield (
+        "delivery-truck",
+        [
+            *obstacle(car, obstacles.delivery_truck, obstacles.DELIVERY_IDLE),
+            ("drive", [small(obstacles, car, obstacles.delivery_truck, roll=f).outlined() for f in drive], drive_ms),
+        ],
+    )
+    yield (
+        "streetcar",
+        [
+            *obstacle(car, obstacles.streetcar, obstacles.STREETCAR_IDLE),
+            ("drive", [small(obstacles, car, obstacles.streetcar, roll=f).outlined() for f in drive], drive_ms),
+        ],
+    )
     cue, cue_ms = obstacles.TAXI_CUE
     merge, merge_ms = obstacles.TAXI_MERGE
-    yield "taxi", [
-        ("drive", [small(obstacles, car, obstacles.taxi, roll=f).outlined() for f in drive], drive_ms),
-        ("cue", [small(obstacles, car, obstacles.taxi, roll=f, signal=b).outlined() for f, b in cue], cue_ms),
-        ("merge", [small(obstacles, car, obstacles.taxi, roll=f, signal=b, turn=True).outlined() for f, b in merge],
-         merge_ms)]
+    yield (
+        "taxi",
+        [
+            ("drive", [small(obstacles, car, obstacles.taxi, roll=f).outlined() for f in drive], drive_ms),
+            ("cue", [small(obstacles, car, obstacles.taxi, roll=f, signal=b).outlined() for f, b in cue], cue_ms),
+            (
+                "merge",
+                [small(obstacles, car, obstacles.taxi, roll=f, signal=b, turn=True).outlined() for f, b in merge],
+                merge_ms,
+            ),
+        ],
+    )
 
 
 def hazard(s):
@@ -183,15 +277,13 @@ def checked(variants):
 def compare(out_dir, scale=4, gap=4):
     """Per sprite with a variant here or in minis.py, a sheet with a band per zone road: each frame at 1x,
     then per step a line of nearest-neighbour beside the variant."""
-    from PIL import Image
 
-    os.makedirs(out_dir, exist_ok=True)
+    Path(out_dir).mkdir(parents=True, exist_ok=True)
     full = {**originals(), **minis.originals()}
     ours = {**dict(minis.sprites()), **dict(sprites())}
     for key in dict.fromkeys(k.split("@")[0] for k in ours):
         frames = [f for _, fs, _ in full[key] for f in fs]
-        found = [(s, [f for _, fs, _ in ours[f"{key}@{x}"] for f in fs])
-                 for x, s in STEPS if f"{key}@{x}" in ours]
+        found = [(s, [f for _, fs, _ in ours[f"{key}@{x}"] for f in fs]) for x, s in STEPS if f"{key}@{x}" in ours]
         lines = [[frames]] + [[[minis.nearest(f, s) for f in frames], small_frames] for s, small_frames in found]
         width = max(sum(sum(len(f[0]) + gap for f in block) + 2 * gap for block in line) for line in lines)
         band = sum(len(line[0][0]) + gap for line in lines)
@@ -204,13 +296,15 @@ def compare(out_dir, scale=4, gap=4):
                     for f in block:
                         for y, row in enumerate(f):
                             for x, c in enumerate(row):
-                                rgb = tuple(int((c or ground)[i:i + 2], 16) for i in (0, 2, 4))
-                                img.paste(rgb, ((x0 + x) * scale, (y0 + y) * scale,
-                                                (x0 + x + 1) * scale, (y0 + y + 1) * scale))
+                                rgb = tuple(int((c or ground)[i : i + 2], 16) for i in (0, 2, 4))
+                                img.paste(
+                                    rgb,
+                                    ((x0 + x) * scale, (y0 + y) * scale, (x0 + x + 1) * scale, (y0 + y + 1) * scale),
+                                )
                         x0 += len(f[0]) + gap
                     x0 += 2 * gap
                 y0 += len(line[0][0]) + gap
-        img.save(os.path.join(out_dir, f"{key}.png"))
+        img.save(str(Path(out_dir) / f"{key}.png"))
 
 
 if __name__ == "__main__":

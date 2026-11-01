@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Draw the site's icons: the home-screen app icons and the favicons.
 
 Archie's own art on flat sky, the blue behind his portrait on the detail card (ui-detail-well), in
@@ -43,16 +42,18 @@ build overwrites the .aseprite sources, so change this file or Archie's art, not
 """
 
 import math
-import os
 import subprocess
 import sys
 import tempfile
+from pathlib import Path
 
 from PIL import Image
 
-sys.path.insert(0, os.path.dirname(__file__))
-from minis import scaled  # noqa: E402
-from pixel import K, PALETTE64  # noqa: E402
+sys.path.insert(0, str(Path(__file__).parent))
+import dogs
+import minis
+from minis import scaled
+from pixel import PALETTE64, K
 
 PORTRAIT = "public/art/images/portrait-dog-archie.png"
 BACKGROUND = "sky"  # ui-detail-well's face, behind his portrait on the detail card
@@ -95,19 +96,34 @@ ARCHIE_16 = [
     ".kwrrrrrRRRRRlk.",
     ".kwlrrrrRRRRllk.",
 ]
-INK = dict(k="ink", D="dbrown", b="brown", s="skin2", w="white", l="lgrey", o="ochre", p="plum", S="sky",
-           a="amber", P="pink", m="mauve", r="red", R="dred")
+INK = {
+    "k": "ink",
+    "D": "dbrown",
+    "b": "brown",
+    "s": "skin2",
+    "w": "white",
+    "l": "lgrey",
+    "o": "ochre",
+    "p": "plum",
+    "S": "sky",
+    "a": "amber",
+    "P": "pink",
+    "m": "mauve",
+    "r": "red",
+    "R": "dred",
+}
 
 
 def rgb(c):
-    return tuple(int(c[i:i + 2], 16) for i in (0, 2, 4))
+    return tuple(int(c[i : i + 2], 16) for i in (0, 2, 4))
 
 
 def opaque(img):
     """img's opaque pixels as {(x, y): (r, g, b)}."""
     img = img.convert("RGBA")
-    return {(x, y): img.getpixel((x, y))[:3] for y in range(img.height) for x in range(img.width)
-            if img.getpixel((x, y))[3]}
+    return {
+        (x, y): img.getpixel((x, y))[:3] for y in range(img.height) for x in range(img.width) if img.getpixel((x, y))[3]
+    }
 
 
 def centre(px):
@@ -118,6 +134,7 @@ def centre(px):
 
 def ground(x, y):
     """The background colour at (x, y): flat sky, defined past any edge."""
+    del x, y
     return rgb(K[BACKGROUND])
 
 
@@ -129,7 +146,8 @@ def render(subject, size, scale):
     """subject on sky at a whole scale, centred on CENTRE, the sky carried to the edges."""
     cx, cy = CENTRE
     ox, oy = size / 2 - cx * scale, size / 2 - cy * scale
-    assert ox == int(ox) and oy == int(oy), f"{size} does not centre the portrait at x{scale}"
+    if not (ox == int(ox) and oy == int(oy)):
+        raise AssertionError(f"{size} does not centre the portrait at x{scale}")
     ox, oy = int(ox), int(oy)
     bg = ground
     img = Image.new("RGB", (size, size))
@@ -172,8 +190,6 @@ def tile(n, px, bg, cut):
 def favicon_32():
     """The happy face at FAVICON_SIDE over 32, its eyes drawn again alike, cropped to 32x32 from its top
     row and centred across."""
-    import dogs
-    import minis
 
     s = FAVICON_SIDE / 32
     px = minis.small(dogs, s, dogs.archie_face, "happy").outlined()
@@ -201,11 +217,14 @@ def favicon_16():
 
 def check(name, img, size):
     """Exact size, every opaque pixel a house palette colour; the app icons fully opaque."""
-    assert img.size == (size, size), f"{name}: {img.size}"
-    assert img.mode == ("RGBA" if name.startswith("favicon") else "RGB"), f"{name}: mode {img.mode}"
+    if not (img.size == (size, size)):
+        raise AssertionError(f"{name}: {img.size}")
+    if not (img.mode == ("RGBA" if name.startswith("favicon") else "RGB")):
+        raise AssertionError(f"{name}: mode {img.mode}")
     palette = {rgb(c) for c in PALETTE64}
     stray = {c[:3] for _, c in img.convert("RGBA").getcolors(size * size) if c[3]} - palette
-    assert not stray, f"{name}: off-palette {stray}"
+    if stray:
+        raise AssertionError(f"{name}: off-palette {stray}")
 
 
 def icons():
@@ -213,13 +232,13 @@ def icons():
     subject = portrait()
     out = {}
     for name, (size, scale) in ICONS.items():
-        if "maskable" in name:
-            assert in_safe_zone(subject, size, scale), f"{name}: Archie's face leaves the safe zone at x{scale}"
+        if "maskable" in name and not (in_safe_zone(subject, size, scale)):
+            raise AssertionError(f"{name}: Archie's face leaves the safe zone at x{scale}")
         out[f"public/icons/{name}.png"] = render(subject, size, scale)
     out["public/art/favicon.png"] = favicon_32()
     out["public/art/favicon-16.png"] = favicon_16()
     for path, img in out.items():
-        check(os.path.basename(path)[:-4], img, img.size[0])
+        check(Path(path).name[:-4], img, img.size[0])
     return out
 
 
@@ -267,17 +286,20 @@ def master():
 
 
 def build():
-    os.makedirs("public/icons", exist_ok=True)
+    Path("public/icons").mkdir(parents=True, exist_ok=True)
     imgs = icons()
     for path, img in imgs.items():
         img.save(path, optimize=True)
-    sources = {"art/appicon.aseprite": master(), "art/favicon-32.aseprite": imgs["public/art/favicon.png"],
-               "art/favicon-16.aseprite": imgs["public/art/favicon-16.png"]}
+    sources = {
+        "art/appicon.aseprite": master(),
+        "art/favicon-32.aseprite": imgs["public/art/favicon.png"],
+        "art/favicon-16.aseprite": imgs["public/art/favicon-16.png"],
+    }
     with tempfile.TemporaryDirectory() as tmp:
         for src, img in sources.items():
-            png = os.path.join(tmp, os.path.basename(src)[:-9] + ".png")
+            png = str(Path(tmp) / Path(src).name[:-9] + ".png")
             img.save(png)
-            subprocess.run(["aseprite", "-b", png, "--save-as", src], check=True)
+            subprocess.run(["aseprite", "-b", png, "--save-as", src], check=True)  # noqa: S603, S607 - Fixed art executable and generator-owned paths.
     print("built", ", ".join(imgs), "and", ", ".join(sources))
 
 
