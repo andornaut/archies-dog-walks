@@ -615,3 +615,41 @@ it("probes success and failure repeatedly without changing requests or checkpoin
   expect(tx.probeDetailed(entry)).toEqual({ accepted: true });
   expect(tx.tryInsert(entry)).toBe(true);
 });
+
+it("rebuilds swept masks when a standing wall moves and restores the complete saved union", () => {
+  const lanes = new LaneBlocks({ ...plan, minOpenLanes: 2 }, 100, new Int32Array(path.length));
+  for (const lane of [1, 3]) {
+    lanes.retainBlock({ lane, row: 2 }, { lanes: 1, rows: 1 });
+  }
+  lanes.retainBlock({ lane: 2, row: 2 }, { lanes: 1, rows: 1 }, true);
+  lanes.retainBlock({ lane: 2, row: 2 }, { lanes: 1, rows: 1 });
+  const wall = lanes.latest();
+  expect(lanes.keepsAllLanesOpen()).toBe(true);
+  const restore = lanes.save();
+  lanes.remove(wall);
+  expect(lanes.keepsAllLanesOpen()).toBe(false);
+  // A legal destination cannot repair the dart-only island left at the source.
+  expect(lanes.tryBlock({ lane: 1, row: 7 }, { lanes: 1, rows: 1 }, true)).toBe(true);
+  expect(lanes.keepsAllLanesOpen()).toBe(false);
+  restore();
+  expect(lanes.latest()).toBe(wall);
+  expect(lanes.keepsAllLanesOpen()).toBe(true);
+  lanes.remove(wall);
+  expect(lanes.keepsAllLanesOpen()).toBe(false);
+});
+
+it("restores wall and dart masks after speculative additions and dart removal", () => {
+  const lanes = new LaneBlocks(plan, 100, new Int32Array(path.length));
+  lanes.retainBlock({ lane: 2, row: 2 }, { lanes: 3, rows: 1 }, true);
+  const dart = lanes.latest();
+  const restore = lanes.save();
+  expect(lanes.keepsAllLanesOpen()).toBe(true);
+  lanes.retainBlock({ lane: 2, row: 2 }, { lanes: 1, rows: 1 });
+  expect(lanes.keepsAllLanesOpen()).toBe(false);
+  lanes.remove(dart);
+  expect(lanes.keepsAllLanesOpen()).toBe(true);
+  restore();
+  expect(lanes.keepsAllLanesOpen()).toBe(true);
+  lanes.retainBlock({ lane: 2, row: 2 }, { lanes: 1, rows: 1 });
+  expect(lanes.keepsAllLanesOpen()).toBe(false);
+});

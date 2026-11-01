@@ -1067,7 +1067,7 @@ class ZonePlanner<Kind extends string> {
       const cells = this.cellsIn(pick.from.quota, grown);
       if (cells.length > 0) {
         this.placeMoved(pick.from.member, pick.from.quota, randomPick(streams.spawns, cells));
-        if (quietRuns(plan, this.inView()).over < over) {
+        if (this.lanes.keepsAllLanesOpen() && quietRuns(plan, this.inView()).over < over) {
           return true;
         }
       }

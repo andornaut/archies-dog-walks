@@ -25,6 +25,7 @@ import {
 // overlaps, and its lanes.
 export interface Block {
   covered: number;
+  dart: boolean;
   lastGap: number;
   lastRow: number;
   row: number;
@@ -132,7 +133,7 @@ export class LaneBlocks {
       ok = this.keepsAllLanesOpen(onFailure, mode);
     }
     if (ok && keep) {
-      this.blocks.push({ covered, lastGap, lastRow, row: cell.row });
+      this.blocks.push({ covered, dart, lastGap, lastRow, row: cell.row });
     }
     if (!ok || !keep) {
       for (let row = cell.row; row <= lastRow; row++) {
@@ -162,7 +163,7 @@ export class LaneBlocks {
     for (let row = cell.row; row <= lastGap; row++) {
       addLanes(row, covered, this.gapBlocked);
     }
-    this.blocks.push({ covered, lastGap, lastRow, row: cell.row });
+    this.blocks.push({ covered, dart, lastGap, lastRow, row: cell.row });
   }
 
   // Removal can expose a stretch covered entirely by darts, including rows away
@@ -197,16 +198,19 @@ export class LaneBlocks {
   }
 
   // Drops a block kept, and recomputes the lanes blocked in the windows and gaps it overlapped
-  // from the blocks still kept. The lanes darts and walls sweep stay as they are.
+  // from the blocks still kept, including the separate wall and dart masks.
   remove(block: Block): void {
     removeItem(block, this.blocks);
     const first = block.row;
     const last = Math.max(block.lastRow, block.lastGap);
     this.blocked.fill(0, first, last + 1);
     this.gapBlocked.fill(0, first, last + 1);
+    this.dartBlocked.fill(0, first, last + 1);
+    this.wallBlocked.fill(0, first, last + 1);
     for (const kept of this.blocks) {
       for (let row = Math.max(first, kept.row); row <= Math.min(last, kept.lastRow); row++) {
         addLanes(row, kept.covered, this.blocked);
+        addLanes(row, kept.covered, kept.dart ? this.dartBlocked : this.wallBlocked);
       }
       for (let row = Math.max(first, kept.row); row <= Math.min(last, kept.lastGap); row++) {
         addLanes(row, kept.covered, this.gapBlocked);
@@ -243,10 +247,16 @@ export class LaneBlocks {
   }
 
   // Saves the blocks kept, the lanes they block and the wide rows, and returns what puts them
-  // back. The lanes darts and walls sweep are not saved.
+  // back, including each wall and dart sweep.
   save(): () => void {
     const blocks = [...this.blocks];
-    const arrays = [this.blocked, this.gapBlocked, this.wideRows];
+    const arrays = [
+      this.blocked,
+      this.gapBlocked,
+      this.dartBlocked,
+      this.wallBlocked,
+      this.wideRows,
+    ];
     const copies = arrays.map((array) => array.slice());
     return () => {
       arrays.forEach((array, i) => {
