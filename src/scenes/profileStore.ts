@@ -8,29 +8,18 @@ import { soundVolumes } from "../home/settings";
 import type { Change } from "../rules/causes";
 import type { RunResult } from "../save/checkpoint";
 import { saveContextFrom } from "../save/load";
-import {
-  deviceSettings,
-  newPlayerOnDevice,
-  ProfileSession,
-  type RunEnd,
-  type StorageState,
-} from "../save/profile";
+import { newPlayerOnDevice, ProfileSession, type RunEnd, type StorageState } from "../save/profile";
 import { encodeResume, launchWalk, type ResumeWalk } from "../save/resume";
-import {
-  type Checkpoint,
-  DEFAULT_SETTINGS,
-  type SaveDocument,
-  type Settings,
-} from "../save/schema";
+import { type Checkpoint, type SaveDocument, type Settings } from "../save/schema";
 import { pageSaveStore, RESUME_BACKUP_KEY } from "../save/storage";
+import { currentSettings, PROFILE_SESSION_KEY as SESSION_KEY } from "./sceneSettings";
 import { soundboardOf } from "./soundboard";
 
 export type { Settings } from "../save/schema";
+export { currentSettings } from "./sceneSettings";
 
 // The player's save, shared by every scene through the game's registry. BootScene opens it
 // before any other scene runs.
-const SESSION_KEY = "profileSession";
-
 // The opened profile, or undefined before BootScene opens it.
 function openedSession(scene: Scene): ProfileSession | undefined {
   return scene.registry.get(SESSION_KEY) as ProfileSession | undefined;
@@ -125,11 +114,6 @@ export function storageState(scene: Scene): StorageState {
 // The last run finished this session, for the end screen.
 export function lastRunEnd(scene: Scene): RunEnd | null {
   return session(scene).lastRunEnd;
-}
-
-// Before the save loads, the defaults, with reduced motion following the device's setting.
-export function currentSettings(scene: Scene): Settings {
-  return openedSession(scene)?.save.settings ?? deviceSettings(DEFAULT_SETTINGS);
 }
 
 // Calls listener with the new settings on every change, until the scene shuts down.

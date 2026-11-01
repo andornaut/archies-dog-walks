@@ -42,9 +42,9 @@ import {
   selectLook,
 } from "../ui/selection";
 import { TEXT_SCALE } from "../ui/textFit";
-import { currentSettings } from "./profileStore";
 import { refuseControl } from "./refuseControl";
 import { TAP_BURST_SCENE_KEY } from "./sceneKeys";
+import { currentSettings } from "./sceneSettings";
 import { addSelectionOrbit } from "./selectionOrbit";
 import { playEffect, playTag } from "./sprites";
 import { listenTargetPress } from "./targetPress";
