@@ -9,10 +9,13 @@ Usage:
 
 import json
 import math
-import subprocess
 import sys
-import tempfile
 from pathlib import Path
+
+from art_kit import aseprite
+from art_kit.colour import contrast as colour_contrast
+from art_kit.colour import rgb
+from art_kit.grid import Grid as DrawingGrid
 
 # Endesga 32, by role.
 K = {
@@ -181,15 +184,8 @@ ZONE_ROADS = ("8b9bb4", "e4a672", "3a4466", "8a857c", "ead4aa", "353b45")
 
 
 def contrast(a, b):
-    """WCAG contrast ratio of two hex colours."""
-
-    def lum(c):
-        v = [int(c[i : i + 2], 16) / 255 for i in (0, 2, 4)]
-        v = [x / 12.92 if x <= 0.03928 else ((x + 0.055) / 1.055) ** 2.4 for x in v]
-        return 0.2126 * v[0] + 0.7152 * v[1] + 0.0722 * v[2]
-
-    la, lb = lum(K.get(a, a)), lum(K.get(b, b))
-    return (max(la, lb) + 0.05) / (min(la, lb) + 0.05)
+    """WCAG contrast ratio of two house colour names or hexadecimal colours."""
+    return colour_contrast(K.get(a, a), K.get(b, b))
 
 
 # The Kensington Market murals' diagonal colour bands, shared by the backdrop, its zone card and the mural
@@ -221,99 +217,23 @@ def road_edge(c):
     return out
 
 
-class Grid:
-    # edge(fill) gives the outline colour beside fill; None keeps two ramp steps darker
+class Grid(DrawingGrid):
+    """House palette with mutable outline policy and the positional outline flag."""
+
     edge = None
-    # close draws the outline along the bottom row too, where the frame cuts a bust or a seated dog
     close = False
 
     def __init__(self, w=32, h=32):
-        self.w, self.h = w, h
-        self.px = [[None] * w for _ in range(h)]
-
-    def p(self, x, y, c):
-        x, y = int(x), int(y)
-        if 0 <= x < self.w and 0 <= y < self.h:
-            self.px[y][x] = K.get(c, c) if c else None
-
-    def rect(self, x, y, w, h, c):
-        for j in range(h):
-            for i in range(w):
-                self.p(x + i, y + j, c)
-
-    def ell(self, cx, cy, rx, ry, c, sh=None, li=None):
-        """Filled ellipse, shaded from a top-left light: sh on the lower-right rim, li on the upper-left."""
-        for y in range(self.h):
-            for x in range(self.w):
-                dx, dy = (x + 0.5 - cx) / rx, (y + 0.5 - cy) / ry
-                if dx * dx + dy * dy <= 1:
-                    d = 0.7 * (dx + dy)
-                    self.p(x, y, sh if sh and d > 0.5 else li if li and d < -0.72 else c)
-
-    def blob(self, cx, cy, rx, ry, c, sh=None, li=None, power=2.6):
-        """A squarer oval (superellipse): rounded, but fuller at the top and sides than ell."""
-        for y in range(self.h):
-            for x in range(self.w):
-                dx, dy = abs(x + 0.5 - cx) / rx, abs(y + 0.5 - cy) / ry
-                if dx**power + dy**power <= 1:
-                    d = 0.7 * ((x + 0.5 - cx) / rx + (y + 0.5 - cy) / ry)
-                    self.p(x, y, sh if sh and d > 0.5 else li if li and d < -0.72 else c)
-
-    def cel(self, cx, cy, rx, ry, c, sh=None, li=None, power=2):
-        """Filled oval (squarer at power above 2), cel shaded from a top-left light: sh a crescent along the
-        lower-right rim and li a thinner one along the upper-left, each following the outline, where ell
-        cuts a straight diagonal plane."""
-
-        def inside(x, y, o=0.0):
-            dx, dy = abs(x + 0.5 - cx - o) / rx, abs(y + 0.5 - cy - o) / ry
-            return dx**power + dy**power <= 1
-
-        shade_w, light_w = max(1, 0.13 * (rx + ry)), max(1, 0.06 * (rx + ry))
-        for y in range(self.h):
-            for x in range(self.w):
-                if not inside(x, y):
-                    continue
-                lit = (x + 0.5 - cx) / rx + (y + 0.5 - cy) / ry < -0.7
-                self.p(
-                    x,
-                    y,
-                    sh if sh and not inside(x, y, -shade_w) else li if li and lit and not inside(x, y, light_w) else c,
-                )
-
-    def tri(self, a, b, c, col):
-        def side(px, py, x1, y1, x2, y2):
-            return (px - x2) * (y1 - y2) - (x1 - x2) * (py - y2)
-
-        for y in range(self.h):
-            for x in range(self.w):
-                px, py = x + 0.5, y + 0.5
-                d1, d2, d3 = side(px, py, *a, *b), side(px, py, *b, *c), side(px, py, *c, *a)
-                if not ((d1 < 0 or d2 < 0 or d3 < 0) and (d1 > 0 or d2 > 0 or d3 > 0)):
-                    self.p(x, y, col)
+        edge, close = self.edge, self.close
+        super().__init__(K, w, h, edge=edge)
+        self.close = close
 
     def outlined(self, outline=True):
-        """Coloured outline: each empty pixel touching the sprite takes the colour two ramp steps darker,
-        or edge(fill) when the grid has an edge rule."""
-        out = [row[:] for row in self.px]
-        if not outline:
-            return out
-        for y in range(self.h):
-            for x in range(self.w):
-                if self.px[y][x]:
-                    continue
-                for dx, dy in ((0, -1), (0, 1), (-1, 0), (1, 0)):
-                    xx, yy = x + dx, y + dy
-                    if 0 <= xx < self.w and 0 <= yy < self.h and self.px[yy][xx]:
-                        c = self.px[yy][xx]
-                        out[y][x] = self.edge(c) if self.edge else DARKER[DARKER[c]]
-                        break
-        if self.close:
-            y = self.h - 1
-            for x in range(self.w):
-                if self.px[y][x]:
-                    c = self.px[y][x]
-                    out[y][x] = self.edge(c) if self.edge else DARKER[DARKER[c]]
-        return out
+        return super().outlined(edge=self.edge or _outline_edge, enabled=outline, close=self.close)
+
+
+def _outline_edge(c):
+    return DARKER[DARKER[c]]
 
 
 def icon_edge(c):
@@ -367,105 +287,30 @@ def bitmap(g, x0, y0, rows, cols, mirror=False):
 
 def to_image(px):
     """Frame rows of hex colours (None where clear) as an RGBA image."""
-    from PIL import Image  # noqa: PLC0415 - Raster export alone requires Pillow.
+    from art_kit.frames import to_image as frame_image  # noqa: PLC0415 - Raster conversion requires Pillow.
 
-    im = Image.new("RGBA", (len(px[0]), len(px)), (0, 0, 0, 0))
-    for y, row in enumerate(px):
-        for x, c in enumerate(row):
-            if c:
-                im.putpixel((x, y), (*tuple(int(c[i : i + 2], 16) for i in (0, 2, 4)), 255))
-    return im
+    return frame_image(px)
 
 
 def preview(sprites, out, grounds=ZONE_ROADS, scale=6, gap=4):
     """Contact sheet: one row per sprite and ground colour, every frame in tag order."""
-    from PIL import Image  # noqa: PLC0415 - Raster export alone requires Pillow.
+    from art_kit.frames import contact_sheet  # noqa: PLC0415 - Preview composition requires Pillow.
 
-    rows = []
-    for _, tags in sprites:
-        frames = [f for _, fs, _ in tags for f in fs]
-        rows.extend((frames, ground) for ground in grounds)
-    cell_w = max(len(f[0][0]) for f, _ in rows) + gap
-    cell_h = [len(f[0]) + gap for f, _ in rows]
-    width = max(len(f) for f, _ in rows) * cell_w * scale
-    img = Image.new("RGB", (width, sum(cell_h) * scale), (24, 20, 37))
-    y0 = 0
-    for (frames, ground), ch in zip(rows, cell_h, strict=False):
-        for i, f in enumerate(frames):
-            for y, row in enumerate(f):
-                for x, colour in enumerate(row):
-                    c = colour or ground
-                    rgb = tuple(int(c[k : k + 2], 16) for k in (0, 2, 4))
-                    img.paste(
-                        rgb,
-                        (
-                            (i * cell_w + x) * scale,
-                            (y0 + y) * scale,
-                            (i * cell_w + x + 1) * scale,
-                            (y0 + y + 1) * scale,
-                        ),
-                    )
-        y0 += ch
-    img.save(out)
+    contact_sheet(rgb, sprites, grounds, background=(24, 20, 37), scale=scale, gap=gap).save(out)
 
 
-LUA = """
-local spr = Sprite({w}, {h}, ColorMode.RGB)
-local pal = Palette({ncolours})
-{palette}
-spr:setPalette(pal)
-local rgba = app.pixelColor.rgba
-local frames = {frames}
-local durations = {durations}
-for i, px in ipairs(frames) do
-  if i > 1 then spr:newFrame() end
-  local img = spr.layers[1]:cel(i).image
-  img:clear()
-  for _, p in ipairs(px) do img:drawPixel(p[1], p[2], rgba(p[3], p[4], p[5], 255)) end
-  spr.frames[i].duration = durations[i]
-end
-{tags}
-spr:saveAs("{out}")
-"""
-
-
-def _lua(tags, out):
-    frames, durations, tag_lines, n = [], [], [], 0
-    h, w = len(tags[0][1][0]), len(tags[0][1][0][0])
-    for tag, fs, ms in tags:
-        tag_lines.append(f'do local t = spr:newTag({n + 1}, {n + len(fs)}); t.name = "{tag}" end')
-        # ms is the tag's frame duration, or a list with one duration per frame
-        for f, d in zip(fs, ms if isinstance(ms, (list, tuple)) else [ms] * len(fs), strict=False):
-            pts = []
-            for y, row in enumerate(f):
-                for x, c in enumerate(row):
-                    if c:
-                        pts.append(f"{{{x},{y},{int(c[0:2], 16)},{int(c[2:4], 16)},{int(c[4:6], 16)}}}")
-            frames.append("{" + ",".join(pts) + "}")
-            durations.append(str(d / 1000))
-        n += len(fs)
-    # A sprite drawn in the neutral greys or the Toronto colours carries them after Endesga 32 in its
-    # palette.
+def _palette(tags):
+    """House colours used by a sprite, in exported palette order."""
     used = {c for _, fs, _ in tags for f in fs for row in f for c in row if c}
-    colours = (
+    return (
         PALETTE
         + (list(NEUTRAL.values()) if used & set(NEUTRAL.values()) else [])
         + (list(TORONTO.values()) if used & set(TORONTO.values()) else [])
     )
-    palette = "\n".join(
-        f"pal:setColor({i}, Color{{ r = {int(c[0:2], 16)}, g = {int(c[2:4], 16)}, b = {int(c[4:6], 16)} }})"
-        for i, c in enumerate(colours)
-    )
-    return LUA.format(
-        w=w,
-        h=h,
-        ncolours=len(colours),
-        palette=palette,
-        frames="{" + ",\n".join(frames) + "}",
-        durations="{" + ",".join(durations) + "}",
-        tags="\n".join(tag_lines),
-        out=out,
-    )
+
+
+def _lua(tags, out):
+    return aseprite.lua(_palette(tags), tags, out)
 
 
 def depth_scales():
@@ -476,9 +321,10 @@ def depth_scales():
 
 
 def opaque_rows(frames):
-    """The first and last row with an opaque pixel in any of frames, or None when all are blank."""
-    rows = [y for f in frames for y, row in enumerate(f) if any(row)]
-    return (min(rows), max(rows)) if rows else None
+    """First and last opaque row in any frame, or None when all are blank."""
+    from art_kit.frames import opaque_rows as frame_rows  # noqa: PLC0415 - Frame helpers require Pillow.
+
+    return frame_rows(frames)
 
 
 def _exported(key):
@@ -733,8 +579,10 @@ def narrowed(tags, cols):
 
 
 def opaque_cols(frames):
-    """The first and last column with an opaque pixel in any of frames, or None when all are blank."""
-    return opaque_rows(_transposed(frames))
+    """First and last opaque column in any frame, or None when all are blank."""
+    from art_kit.frames import opaque_cols as frame_cols  # noqa: PLC0415 - Frame helpers require Pillow.
+
+    return frame_cols(frames)
 
 
 def shortened(tags, rows, picks=()):
@@ -867,33 +715,19 @@ def _abreast(tags, rest, scale, gap):
 
 
 def build(sprites, src_dir, originals=None, apart=()):
-    """Write src_dir/<key>.aseprite for every sprite and export it to public/art/sprites/, each depth
-    variant settled by depth_settled."""
+    """Settle road depth variants and export each sprite to its local source, sheet and JSON paths."""
     sprites = depth_settled(sprites, originals, apart)
     Path(src_dir).mkdir(parents=True, exist_ok=True)
     Path("public/art/sprites").mkdir(parents=True, exist_ok=True)
     built = []
     for key, tags in sprites:
-        src = f"{src_dir}/{key}.aseprite"
-        with tempfile.NamedTemporaryFile("w", suffix=".lua", delete=False) as f:
-            f.write(_lua(tags, src))
-        subprocess.run(["aseprite", "-b", "--script", f.name], check=True)  # noqa: S603, S607 - Fixed art executable and generator-owned paths.
-        Path(f.name).unlink()
-        subprocess.run(  # noqa: S603 - Fixed art executable and generator-owned paths.
-            [  # noqa: S607 - Fixed art executable, no shell.
-                "aseprite",
-                "-b",
-                src,
-                "--sheet",
-                f"public/art/sprites/{key}.png",
-                "--data",
-                f"public/art/sprites/{key}.json",
-                "--format",
-                "json-hash",
-                "--list-tags",
-            ],
-            check=True,
-            stdout=subprocess.DEVNULL,
+        aseprite.export(
+            "aseprite",
+            _palette(tags),
+            tags,
+            f"{src_dir}/{key}.aseprite",
+            f"public/art/sprites/{key}.png",
+            f"public/art/sprites/{key}.json",
         )
         built.append(key)
     print("built", ", ".join(built))

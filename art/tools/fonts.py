@@ -45,9 +45,9 @@ Run from the repository root.
 
 import sys
 from pathlib import Path
-from xml.sax.saxutils import quoteattr
 
-from PIL import Image, ImageDraw, ImageFont
+from art_kit import fonts as font_tools
+from PIL import Image, ImageFont
 
 sys.path.insert(0, str(Path(__file__).parent))
 from fx import LETTERS, word, word_size
@@ -319,85 +319,30 @@ def glyphs(path, size):
                         im.putpixel((x, y), 255)
             out[ch] = (im, 0, ascent - 6 + (ch in lowered), 8)
             continue
-        canvas = Image.new("L", (size * 3, ascent + descent + 2), 0)
-        d = ImageDraw.Draw(canvas)
-        d.fontmode = "1"
-        d.text((0, 0), ch, font=font, fill=255)
-        box = canvas.getbbox()
-        adv = round(font.getlength(ch))
-        if not box:
+        im, left, top, adv = font_tools.rasterize_glyph(font, ch)
+        if im is None:
             out[ch] = (None, 0, 0, adv)
             continue
-        im, top = canvas.crop(box), box[1]
         if ch in repeat:
             im = repeat_row(im, repeat[ch])
         if ch in lowered:
             top += 1
-        out[ch] = (im, box[0], top, adv)
+        out[ch] = (im, left, top, adv)
     return out, ascent, descent
 
 
 def pack(gl):
-    """Lay the glyphs out in rows on an atlas ATLAS_W wide: a mask (mode L) goes on in white, a
-    coloured glyph (RGBA) as it is."""
-    x = y = row_h = 0
-    places = {}
-    for ch, (im, *_rest) in gl.items():
-        if im is None:
-            places[ch] = (0, 0)
-            continue
-        if x + im.width + 1 > ATLAS_W:
-            x, y, row_h = 0, y + row_h + 1, 0
-        places[ch] = (x, y)
-        x += im.width + 1
-        row_h = max(row_h, im.height)
-    height = 1
-    while height < y + row_h + 1:
-        height *= 2
-    atlas = Image.new("RGBA", (ATLAS_W, height), (0, 0, 0, 0))
-    for ch, (im, *_rest) in gl.items():
-        if im is None:
-            continue
-        if im.mode == "L":
-            atlas.paste(Image.new("RGBA", im.size, (255, 255, 255, 255)), places[ch], im)
-        else:
-            atlas.paste(im, places[ch])
-    return atlas, places
+    """Pack monochrome and RGBA glyphs at the house atlas width."""
+    return font_tools.pack(ATLAS_W, gl)
 
 
 def write_font(key, face, size, line_height, base, gl, kerns=()):
     atlas, places = pack(gl)
     Path("public/art/fonts").mkdir(parents=True, exist_ok=True)
     atlas.save(f"public/art/fonts/{key}.png")
-    lines = [
-        '<?xml version="1.0"?>',
-        "<font>",
-        (
-            f'  <info face={quoteattr(face)} size="{size}" bold="0" italic="0" charset="" unicode="1" stretchH="100" '
-            'smooth="0" aa="0" padding="0,0,0,0" spacing="1,1"/>'
-        ),
-        (
-            f'  <common lineHeight="{line_height}" base="{base}" scaleW="{atlas.width}" '
-            f'scaleH="{atlas.height}" pages="1" packed="0"/>'
-        ),
-        f'  <pages><page id="0" file="{key}.png"/></pages>',
-        f'  <chars count="{len(gl)}">',
-    ]
-    for ch, (im, ox, oy, adv) in gl.items():
-        x, y = places[ch]
-        w, h = (im.width, im.height) if im is not None else (0, 0)
-        lines.append(
-            f'    <char id="{ord(ch)}" x="{x}" y="{y}" width="{w}" height="{h}" xoffset="{ox}" '
-            f'yoffset="{oy}" xadvance="{adv}" page="0" chnl="15"/>'
-        )
-    lines.append("  </chars>")
-    if kerns:
-        lines.append(f'  <kernings count="{len(kerns)}">')
-        lines += [f'    <kerning first="{ord(a)}" second="{ord(b)}" amount="{n}"/>' for a, b, n in kerns]
-        lines.append("  </kernings>")
-    lines += ["</font>", ""]
-    with Path(f"public/art/fonts/{key}.fnt").open("w") as f:
-        f.write("\n".join(lines))
+    info = font_tools.FontInfo(key, face, size, line_height, base)
+    xml = font_tools.bmfont_xml(info, atlas.size, places, gl, kernings=kerns)
+    Path(f"public/art/fonts/{key}.fnt").write_text(xml, encoding="utf-8")
 
 
 def build():

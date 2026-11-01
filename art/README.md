@@ -16,7 +16,9 @@ The game's pixel art, effects and sound, drawn by script, and what is left to dr
 
 ## Method
 
-- `art/tools/<set>.py` draws every asset except the home page's canvas grabs (`home-road`, `home-start`). Run `python3 art/tools/<set>.py build` (or `preview OUT.png`) from the repository root. Shared drawing tools are in `pixel.py` (whose only command is `palette`), and for pictures composed from exported art in `scene.py`.
+Use the art environment described in the [project setup](../README.md). It installs the pinned art-kit release and Pillow from `requirements-art.txt`; generators import art-kit from that environment's site-packages. Drawing, export, preview composition and font mechanisms delegate to art-kit. House palettes, glyph policy, depth geometry and output paths remain local.
+
+- `art/tools/<set>.py` draws every asset except the home page's canvas grabs (`home-road`, `home-start`). Run `.venv-art/bin/python -I art/tools/<set>.py build` (or `preview OUT.png`) from the repository root. Shared drawing tools are in `pixel.py` (whose only command is `palette`), and for pictures composed from exported art in `scene.py`.
 - A build writes the set's Aseprite sources under `art/` and exports them to `public/art/` (`sprites/<key>.png` and `.json`, `images/<key>.png`, `fonts/<key>.png` and `.fnt`, `sounds/<key>.ogg` and `.m4a`). Each script's docstring names its folders. Exceptions:
   - `appicons.py` writes `art/appicon.aseprite`, `art/favicon-32.aseprite` and `art/favicon-16.aseprite`, the app icons in `public/icons/` and the favicons `public/art/favicon.png` and `favicon-16.png`, drawn from Archie's exported portrait and his face in `dogs.py`, so it runs after `portraits.py`; `share.py` writes `art/share/share-card.aseprite` and `public/og-image.png`.
   - `fonts.py` and `sounds.py` write no sources. `hood_parks.py preview` and `sounds.py preview` take an output folder, not a PNG, and `sounds.py build` also writes the loop flags in `public/art/manifest.extra.json`.
