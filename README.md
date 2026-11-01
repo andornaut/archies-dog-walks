@@ -38,6 +38,17 @@ Use Node 24.21.0 (`.nvmrc`). Run `npm ci` and `npm run install:python`, then:
 
 The site's pages are in `pages/`, each at its URL's path (`pages/play/index.html` is `/play/`), and Vite bundles the TypeScript they load. `public/` is copied into the build unchanged: the art, the nav bar, the icons, and the art gallery, `public/art/index.html`. `shared/` holds the files art's tools and the game both read. [`vendor/game-kit/`](vendor/game-kit/README.md) holds the game-agnostic helpers, a copy of the game-kit repository's `kit/` that its `scripts/sync-into.sh` writes and nothing here edits, which the game imports as `@andornaut/game-kit/<path>`.
 
+Art generators require Python 3.12 or newer and a project-local environment:
+
+```bash
+python3.12 -m venv .venv-art
+.venv-art/bin/python -m pip install \
+  --requirement requirements-art.txt
+```
+
+Run existing art entrypoints with `.venv-art/bin/python -I`, for example
+`.venv-art/bin/python -I art/tools/glyphs.py build`. The pinned `art-kit` wheel and Pillow install into this environment.
+
 CI runs check, lint, test and build, and the AI attributions scan.
 
 ## Deploying
