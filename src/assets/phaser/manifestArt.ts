@@ -1,4 +1,5 @@
 import { itemAt } from "@andornaut/game-kit/arrays";
+import { getOrInsertComputed } from "@andornaut/game-kit/maps";
 import type { Loader, Scene, Textures } from "phaser";
 import artFiles from "virtual:art-files";
 
@@ -73,18 +74,17 @@ function atlasManifest(scene: Scene): AtlasManifest | undefined {
   if (!cache.exists(ATLAS_CACHE_KEY)) {
     return undefined;
   }
-  let parsed = parsedAtlases.get(cache);
-  if (parsed === undefined) {
-    try {
-      parsed = parseAtlasManifest(cache.get(ATLAS_CACHE_KEY));
-    } catch (error) {
-      console.error("The atlas manifest is invalid; loading each image on its own.", error);
-      cache.remove(ATLAS_CACHE_KEY);
-      return undefined;
-    }
-    parsedAtlases.set(cache, parsed);
+  try {
+    return getOrInsertComputed(
+      cache,
+      () => parseAtlasManifest(cache.get(ATLAS_CACHE_KEY)),
+      parsedAtlases,
+    );
+  } catch (error) {
+    console.error("The atlas manifest is invalid; loading each image on its own.", error);
+    cache.remove(ATLAS_CACHE_KEY);
+    return undefined;
   }
-  return parsed;
 }
 
 // Each atlas page's expected size in bytes, by its texture key, to weight it on the loading bar.
