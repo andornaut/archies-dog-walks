@@ -1,4 +1,5 @@
 import { itemAt } from "@andornaut/game-kit/arrays";
+import { guardSceneInput } from "@andornaut/game-kit/input/phaser/guardSceneInput";
 import { fillLine } from "@andornaut/game-kit/lines";
 import type { Rect } from "@andornaut/game-kit/rect";
 import { type GameObjects, Scene } from "phaser";
@@ -83,7 +84,6 @@ import {
   walkerSpriteKey,
 } from "./profileStore";
 import { SCENE_KEYS } from "./sceneKeys";
-import { guardScreenInput } from "./screenGuard";
 import { soundboardOf } from "./soundboard";
 import { firstTag, playTag } from "./sprites";
 import { listenTargetPress, sameByValue, type TargetPressListener } from "./targetPress";
@@ -123,7 +123,7 @@ function amountColour(amount: number): number {
 // for a new best walk, and a closing line from each owner. Badges the run earned burst in
 // under the panel while the owners still walking cheer, and a tap or a hold on one opens its
 // card, as on the Logbook. Back to title returns to the start screen. The screen takes no input
-// until seconds.screenTapGuard after its first frame, so a steering tap never answers it.
+// until its first drawn frame; only a fresh press on a control can act.
 export class EndScene extends Scene {
   // The badges just earned, in their slots' order.
   private badges: BadgeView[] = [];
@@ -156,7 +156,7 @@ export class EndScene extends Scene {
       goHome();
       return;
     }
-    onceBeforeRender(this, guardScreenInput(this).drawn);
+    onceBeforeRender(this, guardSceneInput(0, this).drawn);
     const ended = lastRunEnd(this);
     const earned = ended?.achievements ?? [];
     const reduced = currentSettings(this).reducedMotion;

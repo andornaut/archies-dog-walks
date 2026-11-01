@@ -1,10 +1,10 @@
 import { animationKey } from "@andornaut/game-kit/art/aseprite";
+import { guardSceneInput } from "@andornaut/game-kit/input/phaser/guardSceneInput";
 import type { Rect } from "@andornaut/game-kit/rect";
 import { type GameObjects, Math as PhaserMath, Scene } from "phaser";
 
 import { ZONE_CELEBRATION_ART as ART } from "../assets/spriteKeys";
 import { gameData } from "../data";
-import { regionOutside } from "../home/homeBar";
 import {
   CELEBRATION_LAYOUT as LAYOUT,
   GREETING_FIT,
@@ -22,7 +22,6 @@ import {
 } from "../hud/zoneCelebration";
 import { cardNumberForKey, isConfirmKey, isPauseKey, menuKeyActs } from "../input/keyBindings";
 import { keyNumbersShown } from "../input/keyNumbers";
-import { exitShown } from "../pwa";
 import { PALETTE } from "../ui/palette";
 import { fillRect } from "../ui/phaser/draw";
 import {
@@ -36,10 +35,9 @@ import { addRampDim } from "../ui/phaser/rampDim";
 import { addConfetti } from "./badges";
 import { addCelebrationHeadline } from "./celebrationHeadline";
 import { modalTextWidth } from "./modalMeasure";
-import { closeOverlay, listenOutsideTap, type OverlayData } from "./overlay";
+import { closeOverlay, type OverlayData } from "./overlay";
 import { currentSettings, walkerSpriteKey } from "./profileStore";
 import { SCENE_KEYS } from "./sceneKeys";
-import { guardScreenInput } from "./screenGuard";
 import { soundboardOf } from "./soundboard";
 import { playFirstTag } from "./sprites";
 import { addMenuButton, addPanel, BODY_TEXT, listenButtonTap, MENU_BUTTON_KEY_GAP } from "./uiKit";
@@ -62,11 +60,11 @@ function atLineTop<T extends GameObjects.BitmapText>(label: T, top: number): T {
 }
 
 // Over the paused walk: between zones, the walker cheers on a starburst under the zone's name
-// and earnings over a button, and waits for a tap or key 1; before the end screen, a walker the
+// and earnings over a button, and waits for its button or key 1; before the end screen, a walker the
 // walk unlocked hops in, greets the pack in a bubble with their agility and perk, and waits for
 // Welcome! (key 1).
-// Confetti falls in both, unless motion is reduced. Both take no input for
-// seconds.screenTapGuard from their first drawn frame.
+// Confetti falls in both, unless motion is reduced. Both require a fresh button press
+// after their first drawn frame, with no timed delay.
 export class ZoneCelebrationScene extends Scene {
   private done = false;
 
@@ -77,7 +75,7 @@ export class ZoneCelebrationScene extends Scene {
   create(data: ZoneCelebrationSceneData): void {
     this.done = false;
     const reduced = currentSettings(this).reducedMotion;
-    addRampDim(this, LAYOUT.dim, guardScreenInput(this).drawn);
+    addRampDim(this, LAYOUT.dim, guardSceneInput(0, this).drawn);
     if (!reduced) {
       this.dropConfetti();
     }
@@ -112,10 +110,6 @@ export class ZoneCelebrationScene extends Scene {
     if (text.kind === "zoneDone") {
       const action = this.addPlate(text);
       this.addButton(action, text.button, finish);
-      // A tap anywhere else but the walk bar's buttons, the dog cards included, or on the page
-      // beside the game, moves on too.
-      const area = regionOutside(exitShown(), "walk", [action]);
-      listenOutsideTap(this, () => area, finish);
       return;
     }
     this.addButton(this.addBubble(text), text.button, finish);
