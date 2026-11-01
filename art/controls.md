@@ -157,6 +157,8 @@ Disabled pictures use the existing neutral-grey copy and nslate art box. An affo
 
 Unavailable controls keep their readable price, goal or reason and the existing feedback. A full pack reports that it is full; a goal-locked walker shakes and explains its goal; an unowned item retains its shop action; an incomplete Start walk keeps its missing-choice feedback. A grey face does not erase these distinctions or make every unavailable tile inert.
 
+**Refused canvas controls.** An attempted disabled Help Previous, refused Start walk or home pick, unavailable card choice, or muted volume slider keeps its disabled chrome and existing price, goal or reason. Use the shared rejection cue in [`refuseControl.ts`](../src/scenes/refuseControl.ts): 320ms total, a 3px horizontal shake and label tint alternating red/restored at 80ms intervals. Reduced motion uses a steady red label for 320ms without shaking, then restores its prior tint. Refusal does not activate the unavailable action or change its value; retain existing explanations, keyboard/default choices and tap guards. Grey actionable shop rows keep their shop/detail actions. Native developer DOM controls retain their native disabled semantics and are outside this canvas cue.
+
 ## Selection controls
 
 The game controls below are canvas controls. Checkbox-like and radio-like describe their game semantics; they are not native HTML widgets. DOM surfaces retain native buttons, checkboxes, radios and sliders, including their keyboard behaviour and accessible state. A filter's selected state does not turn it into a primary action; palette swatches retain their actual colour samples.
