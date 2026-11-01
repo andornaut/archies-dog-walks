@@ -125,14 +125,15 @@ describe("gear drop planning", () => {
     }
   });
 
-  it("places a zone's two drops at least a third of the zone apart, each in its stretch", () => {
-    const tuning = {
-      ...REAL.tuning,
-      counts: { ...REAL.tuning.counts, gearDropsPerZone: { 1: 2, 2: 2, 3: 2, 4: 2 } },
-    };
-    const real = { ...REAL, tuning };
-    const length = zoneLength(real);
-    for (const position of POSITIONS) {
+  it.each(POSITIONS)(
+    "places two drops at least a third of the zone apart, each in its stretch at position %i",
+    (position) => {
+      const tuning = {
+        ...REAL.tuning,
+        counts: { ...REAL.tuning.counts, gearDropsPerZone: { 1: 2, 2: 2, 3: 2, 4: 2 } },
+      };
+      const real = { ...REAL, tuning };
+      const length = zoneLength(real);
       for (const seed of PLAN_SEEDS) {
         const { pending } = planZone(real, GAME_ROAD, plannerStreams(seed), {
           road: startRoad(LANE_COUNT),
@@ -145,6 +146,6 @@ describe("gear drop planning", () => {
           length / 3 - real.tuning.pixels.spawnRowSpacing,
         );
       }
-    }
-  });
+    },
+  );
 });

@@ -55,17 +55,22 @@ function runs(count: number, overrides: Overrides = {}): RunResult[] {
   );
 }
 
-// Every run plans each zone with the spawn planner, tens of milliseconds a zone, and the first
-// run in a worker also pays the warm-up: enough to pass 5 s on an oversubscribed machine.
+// Each whole-run comparison gets its own execution limit.
 describe("simulateRun", { timeout: 30_000 }, () => {
-  it("gives the same result for the same seed", () => {
+  describe("seed reproducibility", () => {
     const risky = config({ pack: RISKY, skill: SKILL_PRESETS.novice });
-    const first = simulateRun(gameData, 7, risky);
-    const second = simulateRun(gameData, 7, risky);
-    const other = simulateRun(gameData, 8, risky);
+    let first: RunResult;
+    beforeAll(() => {
+      first = simulateRun(gameData, 7, risky);
+    }, 30_000);
 
-    expect(second).toEqual(first);
-    expect(other).not.toEqual(first);
+    it("gives the same result for the same seed", () => {
+      expect(simulateRun(gameData, 7, risky)).toEqual(first);
+    });
+
+    it("gives a different result for a different seed", () => {
+      expect(simulateRun(gameData, 8, risky)).not.toEqual(first);
+    });
   });
 
   // A fork offers 3 of the zones left after the first zone, easiest first: the left path is one of
