@@ -6,6 +6,7 @@ import { DOGS } from "../data/dogs";
 import type { DogId, ZoneId } from "../data/types";
 import type { SpawnPlanSnapshot } from "../runner/spawnSearch";
 import type { SpawnAudit } from "../runner/spawnValidation";
+import type { WalkItemKind } from "../runner/walkItems";
 import type { PackDogs } from "../state/runState";
 import { cents } from "../units";
 import { POLICY_IDS } from "./policies";
@@ -27,11 +28,12 @@ import {
   simulateCell,
   simulateMatrix,
   spawnValidationFailures,
+  sumRoadObstacleEvents,
   sumSpawnEvents,
 } from "./report";
 import * as simulator from "./simulate";
 import { SKILL_PRESET_IDS, SKILL_PRESETS } from "./skills";
-import type { ZoneWalkEvents } from "./walkEvents";
+import type { SpawnFlow, ZoneWalkEvents } from "./walkEvents";
 
 // These tests cover how report.ts seeds, orders and summarizes runs, not the runs
 // themselves (simulate.test.ts does). A real run costs over a hundred milliseconds, so a stand-in
@@ -572,5 +574,85 @@ describe("spawn reporting", () => {
         },
       ]),
     ).toContain("unverified");
+  });
+  it("separates road obstacles including pulls from lucky finds and preserves unknown validity", () => {
+    const minor = Object.keys(gameData.minorObstacles)[0] as WalkItemKind;
+    const card = Object.entries(gameData.encounters).find(
+      ([, value]) => value.kind === "obstacle" && value.resolution.kind === "card",
+    )![0] as WalkItemKind;
+    const road = [minor, card, "squirrel"] as const;
+    const kinds = [
+      ...road,
+      "lostWallet",
+      "friendlyNeighbour",
+      "tip",
+      "treat",
+      Object.keys(gameData.shopGear)[0],
+    ] as WalkItemKind[];
+    const flows = Object.fromEntries(
+      kinds.map((kind) => [
+        kind,
+        {
+          admitted: 2,
+          departed: 0,
+          encountered: 0,
+          generated: 0,
+          herrings: 0,
+          passed: 0,
+          requested: 3,
+          touched: 0,
+          valid: 2,
+        } satisfies SpawnFlow,
+      ]),
+    );
+    const counts = kinds.map((kind) => ({
+      emitted: 2,
+      kind,
+      movement: null,
+      requested: 3,
+      validPlaced: 2,
+    }));
+    const zone: ZoneWalkEvents = {
+      audit: {
+        counts,
+        findings: [],
+        meetsPlacementFloor: false,
+        meetsValidPlacementFloor: false,
+        minimumPlaced: Math.ceil(kinds.length * 3 * 0.8),
+        missingCoverage: [],
+        placed: kinds.length * 2,
+        requested: kinds.length * 3,
+        status: "valid",
+        validPlaced: kinds.length * 2,
+        violations: [],
+      },
+      configured: kinds.length * 3,
+      herringRendering: "not-simulated",
+      kinds: flows,
+      modifiers: [],
+      position: 1,
+      route: ["highPark"],
+      seed: 7,
+      validation: "valid",
+      zone: "highPark",
+    };
+    expect(sumRoadObstacleEvents(gameData, [zone])).toEqual([
+      {
+        admitted: road.length * 2,
+        configured: road.length * 3,
+        position: 1,
+        requested: road.length * 3,
+        valid: road.length * 2,
+        validConfiguredRate: 2 / 3,
+        zone: "highPark",
+      },
+    ]);
+    const unknown = { ...zone, kinds: { ...flows, squirrel: { ...flows.squirrel!, valid: null } } };
+    expect(sumRoadObstacleEvents(gameData, [zone, unknown])[0]).toMatchObject({
+      configured: null,
+      requested: road.length * 6,
+      valid: null,
+      validConfiguredRate: null,
+    });
   });
 });

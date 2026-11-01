@@ -101,6 +101,7 @@ export interface MatrixRow extends BadgeCounters {
   readonly spawnRuns: readonly SpawnRunReport[];
   readonly spawnWeightVariation: "not measured";
   readonly spawnSummary: readonly SpawnEventSummary[];
+  readonly roadObstacleSummary: readonly RoadObstacleSummary[];
   // Of the obstacle hits, minor ones and movers included, those that came right after a pull.
   readonly afterPullShare: number | null;
   readonly bumpShare: number | null;
@@ -452,6 +453,10 @@ function summarizeCell(
     gameplayStatus: results.length === 0 ? "unavailable" : "measured",
     planningFailedRuns: attempted.length - results.length,
     requestedRuns: attempted.length,
+    roadObstacleSummary: sumRoadObstacleEvents(
+      data,
+      attempted.flatMap((result) => result.spawnEvents ?? []),
+    ),
     spawnRuns: attempted.map((result, index) => ({
       failure: result.planningFailure ?? null,
       modifiers: result.run.modifiers,
@@ -786,6 +791,85 @@ function inconsistentSpawnAudit(zone: ZoneWalkEvents): boolean {
   );
 }
 
+export interface RoadObstacleSummary {
+  readonly position: number;
+  readonly zone: string;
+  configured: number | null;
+  requested: number;
+  admitted: number;
+  valid: number | null;
+  validConfiguredRate: number | null;
+}
+
+function combineRoadObstacleSummaries(
+  records: readonly RoadObstacleSummary[],
+): RoadObstacleSummary[] {
+  const groups = new Map<string, RoadObstacleSummary>();
+  for (const record of records) {
+    const key = `${record.position}:${record.zone}`;
+    const sum = groups.get(key) ?? {
+      ...record,
+      admitted: 0,
+      configured: 0,
+      requested: 0,
+      valid: 0,
+    };
+    sum.requested += record.requested;
+    sum.admitted += record.admitted;
+    sum.configured =
+      sum.configured === null || record.configured === null
+        ? null
+        : sum.configured + record.configured;
+    sum.valid = sum.valid === null || record.valid === null ? null : sum.valid + record.valid;
+    sum.validConfiguredRate =
+      sum.valid === null || sum.configured === null || sum.configured === 0
+        ? null
+        : sum.valid / sum.configured;
+    groups.set(key, sum);
+  }
+  return [...groups.values()].sort(
+    (a, b) => a.position - b.position || a.zone.localeCompare(b.zone),
+  );
+}
+
+// Road quotas include pull-only obstacles; lucky finds, pickups and gear are separate.
+export function sumRoadObstacleEvents(
+  data: Pick<GameData, "encounters" | "minorObstacles">,
+  records: readonly ZoneWalkEvents[],
+): RoadObstacleSummary[] {
+  return combineRoadObstacleSummaries(
+    records.map((zone) => {
+      const isRoadObstacle = (kind: string) =>
+        kind in data.minorObstacles || data.encounters[kind as EncounterId]?.kind === "obstacle";
+      const flows = Object.entries(zone.kinds).flatMap(([kind, flow]) =>
+        flow !== undefined && isRoadObstacle(kind) ? [flow] : [],
+      );
+      const requested = flows.reduce((sum, flow) => sum + flow.requested, 0);
+      const unknown =
+        zone.audit === undefined ||
+        zone.audit.status === "unverified" ||
+        zone.audit.missingCoverage.length > 0 ||
+        flows.some((flow) => flow.valid === null);
+      const frozenRequested = zone.audit?.counts
+        .filter(({ kind }) => isRoadObstacle(kind))
+        .reduce((sum, count) => sum + count.requested, 0);
+      const configured =
+        unknown || zone.audit!.requested !== zone.configured || frozenRequested !== requested
+          ? null
+          : requested;
+      return {
+        admitted: flows.reduce((sum, flow) => sum + flow.admitted, 0),
+        configured,
+        position: zone.position,
+        requested,
+        valid: unknown ? null : flows.reduce((sum, flow) => sum + flow.valid!, 0),
+        validConfiguredRate: null,
+        zone: zone.zone,
+      };
+    }),
+  );
+}
+
 export interface SpawnEventSummary {
   readonly position: number;
   readonly zone: string;
@@ -1012,6 +1096,11 @@ export function formatSpawnEventTable(rows: readonly MatrixRow[], byKind = false
       row.spawnRuns.filter((run) => run.failure === null).flatMap((run) => run.zones),
     ),
   );
+  const obstacles = new Map(
+    combineRoadObstacleSummaries(rows.flatMap((row) => row.roadObstacleSummary ?? [])).map(
+      (sum) => [`${sum.position}:${sum.zone}`, sum],
+    ),
+  );
   return textTable(
     3,
     [
@@ -1035,34 +1124,45 @@ export function formatSpawnEventTable(rows: readonly MatrixRow[], byKind = false
       "Valid/configured",
       "80% safety floor",
       "100% configured target",
+      "Obstacle requested",
+      "Obstacle valid",
+      "Obstacle valid/configured",
     ],
-    sums.map((sum) => [
-      String(sum.position),
-      sum.zone,
-      sum.kind,
-      String(sum.exposures),
-      String(sum.variationExposures),
-      sum.configured === null ? "unavailable" : String(sum.configured),
-      String(sum.planned),
-      String(sum.requested),
-      String(sum.admitted),
-      sum.valid === null ? "unverified" : String(sum.valid),
-      String(sum.generated),
-      String(sum.herrings),
-      String(sum.encountered),
-      String(sum.touched),
-      String(sum.passed),
-      String(sum.departed),
-      sum.perExposure.requested === null
-        ? "unavailable"
-        : `${sum.perExposure.requested.mean.toFixed(2)}` +
-          `[${sum.perExposure.requested.min},${sum.perExposure.requested.max}]`,
-      sum.validConfiguredRate === null
-        ? "unverified"
-        : `${(sum.validConfiguredRate * 100).toFixed(1)}%`,
-      sum.goal,
-      sum.configuredTargetGoal,
-    ]),
+    sums.map((sum) => {
+      const road = obstacles.get(`${sum.position}:${sum.zone}`);
+      return [
+        String(sum.position),
+        sum.zone,
+        sum.kind,
+        String(sum.exposures),
+        String(sum.variationExposures),
+        sum.configured === null ? "unavailable" : String(sum.configured),
+        String(sum.planned),
+        String(sum.requested),
+        String(sum.admitted),
+        sum.valid === null ? "unverified" : String(sum.valid),
+        String(sum.generated),
+        String(sum.herrings),
+        String(sum.encountered),
+        String(sum.touched),
+        String(sum.passed),
+        String(sum.departed),
+        sum.perExposure.requested === null
+          ? "unavailable"
+          : `${sum.perExposure.requested.mean.toFixed(2)}` +
+            `[${sum.perExposure.requested.min},${sum.perExposure.requested.max}]`,
+        sum.validConfiguredRate === null
+          ? "unverified"
+          : `${(sum.validConfiguredRate * 100).toFixed(1)}%`,
+        sum.goal,
+        sum.configuredTargetGoal,
+        road === undefined ? "unavailable" : String(road.requested),
+        road?.valid == null ? "unverified" : String(road.valid),
+        road?.validConfiguredRate == null
+          ? "unverified"
+          : `${(road.validConfiguredRate * 100).toFixed(1)}%`,
+      ];
+    }),
   );
 }
 
