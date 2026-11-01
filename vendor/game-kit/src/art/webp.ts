@@ -1,7 +1,7 @@
 // Lossless WebP encoding and decoding for a game's build tools, in Node. libwebp built to
 // WebAssembly (@jsquash/webp, pinned at 1.5.0), so a build needs no native binary: the build
 // without SIMD, so every host writes the same bytes. A game that imports this module installs
-// @jsquash/webp 1.5.0 itself (its vendor/game-kit/ copy has no node_modules); kit/package.json
+// @jsquash/webp 1.5.0 itself (its vendor/game-kit/ copy has no node_modules); package.json
 // names it as a peer dependency. Each module loads once, on first use.
 import { readFile } from "node:fs/promises";
 import { createRequire } from "node:module";
@@ -21,8 +21,16 @@ export type { RgbaImage };
 
 const require = createRequire(import.meta.url);
 
-async function wasmModule(path: string): Promise<WebAssembly.Module> {
-  return WebAssembly.compile(await readFile(require.resolve(`@jsquash/webp/codec/${path}`)));
+// Node supplies WebAssembly; its types are independent of browser DOM declarations.
+type CompiledWasm = Parameters<typeof initEmscriptenModule>[1];
+const wasmHost = globalThis as unknown as {
+  readonly WebAssembly: { compile(bytes: Uint8Array): Promise<CompiledWasm> };
+};
+
+async function wasmModule(path: string): Promise<CompiledWasm> {
+  return wasmHost.WebAssembly.compile(
+    await readFile(require.resolve(`@jsquash/webp/codec/${path}`)),
+  );
 }
 
 let encoder: Promise<WebPEncoder> | undefined;
