@@ -1037,3 +1037,41 @@ export function formatSpawnFailures(rows: readonly MatrixRow[], byKind = false):
     }),
   );
 }
+
+// Validation is independent of gameplay completion and never pools one zone's surplus
+// against another zone's missing events.
+export function spawnValidationFailures(rows: readonly MatrixRow[]): string[] {
+  return rows.flatMap((row) =>
+    row.spawnRuns.flatMap((run) => {
+      if (run.zones.length === 0 && run.failure === null) {
+        return [`seed ${run.seed}: no zone audit recorded`];
+      }
+      return run.zones.flatMap((zone) => {
+        const audit = zone.audit;
+        const reasons: string[] = [];
+        if (audit === undefined) {
+          reasons.push("missing audit");
+        } else {
+          if (audit.status !== "valid") {
+            reasons.push(`audit ${audit.status}`);
+          }
+          if (audit.missingCoverage.length > 0) {
+            reasons.push(`missing coverage: ${audit.missingCoverage.join(", ")}`);
+          }
+          if (audit.requested !== zone.configured) {
+            reasons.push("frozen configured quota mismatch");
+          }
+          const floor = Math.ceil(zone.configured * 0.8);
+          if (audit.validPlaced < floor || !audit.meetsValidPlacementFloor) {
+            reasons.push(`valid ${audit.validPlaced}/${zone.configured}, requires ${floor}`);
+          }
+          if (audit.violations.length > 0) {
+            reasons.push(...audit.violations.slice(0, 3));
+          }
+        }
+        const context = `seed ${zone.seed}, zone ${zone.position} ${zone.zone}`;
+        return reasons.length === 0 ? [] : [`${context}: ${reasons.join("; ")}`];
+      });
+    }),
+  );
+}

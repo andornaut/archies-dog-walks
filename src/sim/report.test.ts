@@ -24,6 +24,7 @@ import {
   rowCells,
   simulateCell,
   simulateMatrix,
+  spawnValidationFailures,
   sumSpawnEvents,
 } from "./report";
 import * as simulator from "./simulate";
@@ -495,6 +496,29 @@ describe("spawn reporting", () => {
       }),
       0,
     );
+    const observedRow = (observed: readonly ZoneWalkEvents[]) => ({
+      ...row,
+      spawnRuns: [
+        {
+          failure: null,
+          modifiers: [],
+          partial: null,
+          route: ["highPark"] as const,
+          seed: 7,
+          zoneIndex: 0,
+          zones: observed,
+        },
+      ],
+    });
+    expect(spawnValidationFailures([observedRow(zones.slice(0, 1))])).toEqual([]);
+    for (const observed of [
+      zone,
+      zones[1]!,
+      { ...zone, audit: { ...audit(10), status: "invalid" as const } },
+      { ...zone, audit: { ...audit(10), missingCoverage: ["moving bodies"] } },
+    ]) {
+      expect(spawnValidationFailures([observedRow([observed])])).toHaveLength(1);
+    }
     expect(
       formatSpawnEventTable([
         {

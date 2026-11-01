@@ -25,6 +25,7 @@ import {
   type MatrixPlayer,
   type MatrixRow,
   simulateCell,
+  spawnValidationFailures,
 } from "./report";
 import { BOT_SIGHTS } from "./sight";
 import { SKILL_PRESET_IDS, SKILL_PRESETS } from "./skills";
@@ -325,7 +326,11 @@ async function main(): Promise<void> {
     writeFileSync(out, `${JSON.stringify(json, null, 2)}\n`);
     process.stdout.write(`Wrote ${out}\n`);
   }
-  if (failed) {
+  const validationFailures = spawnValidationFailures(rows);
+  if (validationFailures.length > 0) {
+    process.stderr.write(`Spawn validation failed:\n${validationFailures.join("\n")}\n`);
+  }
+  if (failed || validationFailures.length > 0) {
     process.exitCode = 1;
   }
 }
