@@ -471,7 +471,7 @@ def _lua(tags, out):
 def depth_scales():
     """{suffix: scale} for every depth step below full size in shared/depth-steps.json, the table the game
     reads: {"@94": 0.9375, "@88": 0.875, ...}."""
-    with Path(str(Path(str(Path(__file__).parent)) / ".." / ".." / "shared" / "depth-steps.json")).open() as f:
+    with (Path(__file__).parent.parent.parent / "shared" / "depth-steps.json").open() as f:
         return {q["suffix"]: q["scale"] for q in json.load(f)["steps"] if q["scale"] < 1}
 
 
