@@ -20,6 +20,15 @@ it("discovers only game source tests while preserving the configured plugins and
   const { default: config } = await import("../../vite.config");
   const resolved = await config;
   expect(factory).toHaveBeenCalledOnce();
+  expect(factory).toHaveBeenCalledWith(
+    expect.objectContaining({
+      pages: {
+        main: "pages/index.html",
+        play: "pages/play/index.html",
+        tuning: "pages/tuning/index.html",
+      },
+    }),
+  );
   expect(resolved.test).toEqual({
     ...base.test,
     include: ["src/**/*.test.ts"],

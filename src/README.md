@@ -91,7 +91,7 @@ Each context keeps its pure code at its root and the code that imports Phaser in
 - `src/audio/`: sound cues, the zones' music and its fades, the music and effects mix, and the sound format
 - `src/crash/`: the crash screen
 - `src/data/`: content and tuning
-- `src/dataPage/`: the `/data/` page, with filter pills kept in the query string
+- `src/dataPage/`: the Tuning page (`/tuning/`), with filter pills kept in the query string
 - `src/homePage/`: the home page's Install button
 - `src/headers/`: the build-time security headers
 - `src/home/`, `src/help/`, `src/hud/`: view models for the home, settings, stats and end screens, the help screen, and the walk bar and pause menu

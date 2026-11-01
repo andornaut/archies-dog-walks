@@ -8,11 +8,11 @@ export default gameViteConfig<typeof ConfigModules>({
   // Set just above it so that growth in Phaser or game code still warns.
   chunkSizeWarningLimit: 1100,
   configModules: "src/tools/viteConfigModules.ts",
-  // The home page at /, the game at /play/ and the game data tables at /data/.
+  // The home page at /, the game at /play/ and Tuning at /tuning/.
   pages: {
     main: "pages/index.html",
     play: "pages/play/index.html",
-    data: "pages/data/index.html",
+    tuning: "pages/tuning/index.html",
   },
   // atlasPlugin writes public/art/manifest.json from the art files, packs the art's images and
   // sprites into atlas pages, and writes every art file the game loads under /assets/art/ with a

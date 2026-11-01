@@ -77,7 +77,7 @@ const GOOGLE_FONTS: Directives = {
 export const PAGE_RULES: readonly PageRule[] = [
   { comment: "The home page.", directives: GOOGLE_FONTS, path: "/" },
   { comment: "The game.", directives: {}, path: "/play/*" },
-  { comment: "The game data tables.", directives: {}, path: "/data/*" },
+  { comment: "Tuning.", directives: {}, path: "/tuning/*" },
   {
     comment:
       "The art gallery. style-src-attr: the gallery's ground swatches and palette " +

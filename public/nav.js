@@ -37,7 +37,7 @@
   ul.append(
     item("Home", "/"),
     item("Play", "/play/"),
-    item("Tuning", "/data/"),
+    item("Tuning", "/tuning/"),
     item("Gallery", "/art/"),
     item("GitHub", REPO),
     item("Cloudflare", DASHBOARD),

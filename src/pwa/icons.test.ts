@@ -20,7 +20,7 @@ describe("HASHED_ICONS", () => {
     ["the web app manifest", webManifestIconUrls(JSON.parse(read("public/manifest.webmanifest")))],
     ["the home page", linkedIcons(read("pages/index.html"))],
     ["the game page", linkedIcons(read("pages/play/index.html"))],
-    ["the data page", linkedIcons(read("pages/data/index.html"))],
+    ["Tuning", linkedIcons(read("pages/tuning/index.html"))],
   ])("lists every icon %s names", (_name, icons) => {
     expect(icons.length).toBeGreaterThan(0);
     expect(icons.filter((icon) => !HASHED_ICONS.includes(icon))).toEqual([]);

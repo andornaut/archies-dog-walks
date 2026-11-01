@@ -70,7 +70,7 @@ describe("FILE_RULES", () => {
 
 describe("PAGE_RULES", () => {
   it("covers each of the site's pages with exactly one rule", () => {
-    const files = ["index.html", "play/index.html", "data/index.html", "art/index.html"];
+    const files = ["index.html", "play/index.html", "tuning/index.html", "art/index.html"];
     const pages = new Map(
       [...files, "art/notes/example.html"].map((file) => [
         servedPath(file),
