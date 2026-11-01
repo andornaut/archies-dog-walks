@@ -23,11 +23,6 @@
   font: inherit;
 }
 
-.dev-version {
-  font-size: 11px;
-  opacity: 0.6;
-}
-
 /* Below the bar, past the bottom of the screen; src/main.css scrolls the page to it. */
 .dev-sheet {
   box-sizing: border-box;
