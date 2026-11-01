@@ -31,6 +31,7 @@ export interface SpawnFlow {
   departed: number;
   encountered: number;
   generated: number;
+  herrings: number;
   passed: number;
   requested: number;
   touched: number;
@@ -44,6 +45,7 @@ export interface ZoneWalkEvents {
   // Configured is the frozen effective quota total after modifiers and weighted selection;
   // requested per kind partitions that same denominator, before any omission or herring.
   readonly configured: number;
+  readonly herringRendering: "not-simulated";
   readonly modifiers: RunState["modifiers"];
   readonly route: RunState["route"];
   readonly seed: number;
@@ -59,6 +61,7 @@ function flow(events: ZoneWalkEvents, kind: WalkItemKind): SpawnFlow {
     departed: 0,
     encountered: 0,
     generated: 0,
+    herrings: 0,
     passed: 0,
     requested: 0,
     touched: 0,
@@ -70,10 +73,15 @@ export function plannedWalkEvents(
   seed: number,
   run: Pick<RunState, "modifiers" | "route" | "zoneIndex">,
   zone: ZoneId,
-  road: Pick<Walk["road"], "pending" | "planned">,
+  road: {
+    readonly herrings: readonly { readonly kind: WalkItemKind }[];
+    readonly pending: readonly { readonly kind: WalkItemKind }[];
+    readonly planned: readonly { readonly count: number; readonly kind: WalkItemKind }[];
+  },
 ): ZoneWalkEvents {
   const events: ZoneWalkEvents = {
     configured: road.planned.reduce((sum, { count }) => sum + count, 0),
+    herringRendering: "not-simulated",
     kinds: {},
     modifiers: run.modifiers,
     position: run.zoneIndex + 1,
@@ -87,6 +95,10 @@ export function plannedWalkEvents(
   }
   for (const { kind } of road.pending) {
     flow(events, kind).admitted += 1;
+  }
+  for (const { kind } of road.herrings) {
+    flow(events, kind).admitted += 1;
+    flow(events, kind).herrings += 1;
   }
   return events;
 }
@@ -115,7 +127,7 @@ export function recordWalkEvents(events: ZoneWalkEvents, before: Walk, step: Wal
   }
   const touched = new Map(
     [
-      ...step.bumps,
+      ...step.bumps.filter(({ dodged }) => !dodged),
       ...step.contacts,
       ...step.instants,
       ...step.tips,
@@ -125,6 +137,9 @@ export function recordWalkEvents(events: ZoneWalkEvents, before: Walk, step: Wal
     ].map(({ item }) => [item.id, item]),
   );
   const encountered = new Map(touched);
+  for (const { item } of step.bumps) {
+    encountered.set(item.id, item);
+  }
   for (const { item, value } of step.modified) {
     if (value.subject.kind === "immune") {
       encountered.set(item.id, item);

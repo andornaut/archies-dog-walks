@@ -1,17 +1,20 @@
 import { itemAt } from "@andornaut/game-kit/arrays";
 import { keysOf } from "@andornaut/game-kit/records";
-import { beforeAll, describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it, vi } from "vitest";
 
 import { gameData } from "../data";
 import type { DebuffId } from "../data/types";
 import { currentZoneId } from "../rules/route";
 import { bumpCash, tipValue } from "../rules/run";
-import type { WalkStep } from "../runner/walk";
+import { NO_PULLS } from "../runner/pulls";
+import * as sessions from "../runner/session";
+import { SpawnPlanningError, type SpawnPlanSnapshot } from "../runner/spawnSearch";
+import { startRoad, type WalkStep } from "../runner/walk";
 import { TALLY_IDS } from "../save/schema";
 import { packDogs, packOrder } from "../state/pack";
 import type { PackDogs, RunState } from "../state/runState";
 import { defined } from "../testing/defined";
-import { testState } from "../testing/runState";
+import { activeModifier, testState } from "../testing/runState";
 import { IDEAL_SKILL, simConfig } from "../testing/sim";
 import { cents } from "../units";
 import { badgeCounters } from "./report";
@@ -327,4 +330,95 @@ describe("noteZoneDebuffs", () => {
       });
     },
   );
+});
+
+describe("simulateRun planning diagnostics", () => {
+  it("returns prior zone observations and the live run when later planning fails", () => {
+    const first = testState({ ginger: 4 });
+    const modifier = activeModifier(
+      { kind: "upgrade", upgrade: "rushHour" },
+      { by: "rushHourObstacles", operation: "multiply", stat: "obstacleSpawns" },
+    );
+    const second = {
+      ...first,
+      modifiers: [modifier],
+      route: ["highPark", "cabbagetown"],
+      zoneIndex: 1,
+    } as const;
+    const road = { ...startRoad(5), planned: [{ count: 3, kind: "tip", movement: null }] } as const;
+    const initial: sessions.Session = {
+      card: null,
+      debuffMovement: null,
+      distanceBeforeZone: 0,
+      needsZonePlan: false,
+      pulls: NO_PULLS,
+      queue: [],
+      timeMs: 0,
+      walk: { road, run: first },
+      zoneEndPending: false,
+    };
+    const snapshot: SpawnPlanSnapshot = {
+      context: { seed: 7, zoneIndex: 2 },
+      draws: { movers: [], spawns: [] },
+      plan: {
+        cellInset: 0,
+        cellLength: 10,
+        fixedKinds: [],
+        laneCount: 5,
+        laneInset: 0,
+        laneMoveSeconds: 0.1,
+        maxEmptyRows: null,
+        minOpenLanes: 2,
+        minSpacing: 20,
+        moverCaps: { darts: 6, slowVehicles: 4, total: 10 },
+        packHitLength: 10,
+        packLength: 10,
+        pathLaneMoveSeconds: 0.3,
+        pathStart: 2,
+        quotas: [],
+        reactionSeconds: 0.5,
+        riderFollowGap: 10,
+        roadLength: 100,
+        scrollSpeed: 100,
+        sightLength: 90,
+        stepSeconds: 1 / 60,
+        zoneLength: 1000,
+      },
+    };
+    const starting = vi.spyOn(sessions, "startSession").mockReturnValue(initial);
+    const stepping = vi
+      .spyOn(sessions, "stepSession")
+      .mockReturnValueOnce({
+        events: [{ kind: "zonePlanned", unplanned: initial.walk }],
+        session: { ...initial, walk: { road, run: second } },
+      })
+      .mockImplementationOnce(() => {
+        throw new SpawnPlanningError("unfilled later quota", snapshot);
+      });
+    try {
+      const result = simulateRun(gameData, 7, config());
+      expect(result.planningFailure).toEqual({
+        message: "unfilled later quota",
+        seed: 7,
+        snapshot,
+      });
+      expect(
+        result.spawnEvents.map(({ configured, position }) => ({ configured, position })),
+      ).toEqual([
+        { configured: 3, position: 1 },
+        { configured: 3, position: 2 },
+      ]);
+      expect(result.run).toBe(second);
+      expect(result.spawnEvents[1]?.modifiers).toEqual([modifier]);
+      expect(result.spawnEvents[1]?.route).toEqual(["highPark", "cabbagetown"]);
+      expect(result.finished).toBe(false);
+      stepping.mockImplementationOnce(() => {
+        throw new Error("broken session");
+      });
+      expect(() => simulateRun(gameData, 7, config())).toThrow("broken session");
+    } finally {
+      starting.mockRestore();
+      stepping.mockRestore();
+    }
+  });
 });

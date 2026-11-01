@@ -58,15 +58,17 @@ describe("simulator spawn observations", () => {
 
   it("keeps frozen requests, admitted events and actual runner dispatch distinct", () => {
     const before = walkWith(["ginger"]);
-    before.road.planned = [{ count: 2, kind: "bench", movement: null }];
-    before.road.pending = [{ distance: 0, kind: "bench", lane: 0 }];
+    before.road.planned = [{ count: 2, kind: "touristTrain", movement: null }];
+    before.road.pending = [{ distance: 0, kind: "touristTrain", lane: 0 }];
+    before.road.herrings = [{ distance: 20, kind: "touristTrain", lane: 0 }];
     const events = plannedWalkEvents(7, before.run, "highPark", before.road);
     recordWalkEvents(events, before, step(before, 0));
     expect(events.configured).toBe(2);
-    expect(events.kinds.bench).toMatchObject({
-      admitted: 1,
+    expect(events.kinds.touristTrain).toMatchObject({
+      admitted: 2,
       encountered: 0,
       generated: 1,
+      herrings: 1,
       requested: 2,
       valid: null,
     });
