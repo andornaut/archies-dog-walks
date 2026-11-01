@@ -1,3 +1,11 @@
+import {
+  glyphAdvance as fontGlyphAdvance,
+  type PixelFontAtlas,
+  pixelFontAtlas as buildPixelFontAtlas,
+  type PixelFontContext,
+  type PixelGlyph,
+} from "@andornaut/game-kit/text/pixelFont";
+
 // The 3x5 pixel font, plus a 5-wide heart. Each glyph is its rows top to bottom, "1" for a lit
 // pixel. Text is drawn in capitals.
 const GLYPHS: Readonly<Record<string, string>> = {
@@ -80,53 +88,24 @@ export function normalizePixelText(text: string): string {
   return plainMarks(text).toUpperCase();
 }
 
-interface Glyph {
-  bits: string;
-  char: string;
-  width: number;
-}
-
-export const PIXEL_GLYPHS: readonly Glyph[] = Object.entries(GLYPHS).map(([char, bits]) => ({
+export const PIXEL_GLYPHS: readonly PixelGlyph[] = Object.entries(GLYPHS).map(([char, bits]) => ({
   bits,
   char,
   width: bits.length / GLYPH_HEIGHT,
 }));
 
-const GLYPH_WIDTHS = new Map(PIXEL_GLYPHS.map(({ char, width }) => [char, width]));
+const FONT_CONTEXT: PixelFontContext = {
+  glyphs: PIXEL_GLYPHS,
+  height: GLYPH_HEIGHT,
+  spaceWidth: SPACE_WIDTH,
+  spacing: 1,
+};
 
-// One pixel of space follows every glyph; a character the font lacks draws as a space.
+// The house glyphs use one pixel of trailing spacing and a space for unknown characters.
 export function glyphAdvance(char: string): number {
-  return (GLYPH_WIDTHS.get(char) ?? SPACE_WIDTH) + 1;
+  return fontGlyphAdvance(FONT_CONTEXT, char);
 }
 
-interface AtlasGlyph {
-  advance: number;
-  char: string;
-  // Lit pixels, relative to the glyph's top-left corner in the atlas.
-  pixels: readonly (readonly [number, number])[];
-  width: number;
-  x: number;
-}
-
-interface PixelFontAtlas {
-  glyphs: readonly AtlasGlyph[];
-  height: number;
-  width: number;
-}
-
-// Every glyph side by side on one row, a pixel apart so no glyph bleeds into the next.
 export function pixelFontAtlas(): PixelFontAtlas {
-  let x = 0;
-  const glyphs = PIXEL_GLYPHS.map(({ bits, char, width }): AtlasGlyph => {
-    const pixels: [number, number][] = [];
-    [...bits].forEach((bit, index) => {
-      if (bit === "1") {
-        pixels.push([index % width, Math.floor(index / width)]);
-      }
-    });
-    const glyph = { advance: glyphAdvance(char), char, pixels, width, x };
-    x += width + 1;
-    return glyph;
-  });
-  return { glyphs, height: GLYPH_HEIGHT, width: x };
+  return buildPixelFontAtlas(FONT_CONTEXT);
 }

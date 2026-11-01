@@ -6,6 +6,7 @@ import {
   phaserBitmapFont,
   type PhaserFontData,
 } from "@andornaut/game-kit/text/phaser/phaserBitmapFont";
+import { registerPixelFont } from "@andornaut/game-kit/text/phaser/registerPixelFont";
 import { type FittedText, fittingText, type TextFitStyle } from "@andornaut/game-kit/text/textFit";
 import type { GameObjects, Scene, Types } from "phaser";
 
@@ -29,50 +30,17 @@ const FONT_KEYS: Readonly<Record<FontRole, string>> = { body: "font-body", title
 const FALLBACK_FONT_KEY = "font-pixel-fallback";
 
 export function registerFallbackPixelFont(scene: Scene): void {
-  if (scene.cache.bitmapFont.exists(FALLBACK_FONT_KEY)) {
-    return;
-  }
-  const atlas = pixelFontAtlas();
-  const texture = scene.textures.createCanvas(FALLBACK_FONT_KEY, atlas.width, atlas.height);
-  const context = texture?.getContext();
-  if (texture === null || context === undefined) {
-    return;
-  }
-  context.fillStyle = "#ffffff";
-  for (const glyph of atlas.glyphs) {
-    for (const [x, y] of glyph.pixels) {
-      context.fillRect(glyph.x + x, y, 1, 1);
-    }
-  }
-  texture.refresh();
-
-  const chars: Types.GameObjects.BitmapText.BitmapFontData["chars"] = {};
-  const glyphData = (x: number, width: number, advance: number) => ({
-    centerX: Math.floor(width / 2),
-    centerY: Math.floor(atlas.height / 2),
-    data: {},
-    height: atlas.height,
-    kerning: {},
-    u0: x / atlas.width,
-    u1: (x + width) / atlas.width,
-    v0: 1,
-    v1: 0,
-    width,
-    x,
-    xAdvance: advance,
-    xOffset: 0,
-    y: 0,
-    yOffset: 0,
-  });
-  for (const glyph of atlas.glyphs) {
-    chars[glyph.char.codePointAt(0) ?? 0] = glyphData(glyph.x, glyph.width, glyph.advance);
-  }
-  chars[" ".codePointAt(0) ?? 32] = glyphData(0, 0, glyphAdvance(" "));
-  scene.cache.bitmapFont.add(FALLBACK_FONT_KEY, {
-    data: { chars, font: FALLBACK_FONT_KEY, lineHeight: LINE_HEIGHT, retroFont: false, size: 5 },
-    frame: null,
-    texture: FALLBACK_FONT_KEY,
-  });
+  registerPixelFont(
+    scene,
+    {
+      colour: "#ffffff",
+      key: FALLBACK_FONT_KEY,
+      lineHeight: LINE_HEIGHT,
+      size: GLYPH_HEIGHT,
+      spaceAdvance: glyphAdvance(" "),
+    },
+    pixelFontAtlas(),
+  );
 }
 
 export interface PixelTextStyle {

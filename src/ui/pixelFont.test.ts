@@ -1,8 +1,26 @@
-import { itemAt } from "@andornaut/game-kit/arrays";
-import { describe, expect, it } from "vitest";
+import {
+  glyphAdvance as fontGlyphAdvance,
+  pixelFontAtlas as buildPixelFontAtlas,
+} from "@andornaut/game-kit/text/pixelFont";
+import { describe, expect, it, vi } from "vitest";
 
-import { defined } from "../testing/defined";
-import { normalizePixelText, PIXEL_GLYPHS, pixelFontAtlas, plainMarks } from "./pixelFont";
+import {
+  GLYPH_HEIGHT,
+  glyphAdvance,
+  normalizePixelText,
+  PIXEL_GLYPHS,
+  pixelFontAtlas,
+  plainMarks,
+} from "./pixelFont";
+
+vi.mock("@andornaut/game-kit/text/pixelFont", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@andornaut/game-kit/text/pixelFont")>();
+  return {
+    ...actual,
+    glyphAdvance: vi.fn(actual.glyphAdvance),
+    pixelFontAtlas: vi.fn(actual.pixelFontAtlas),
+  };
+});
 
 describe("PIXEL_GLYPHS", () => {
   it("gives every glyph whole columns of bits, and covers every character the cards and money need", () => {
@@ -18,6 +36,14 @@ describe("PIXEL_GLYPHS", () => {
   });
 });
 
+it("draws the house minus as three pixels across the middle glyph row", () => {
+  expect(pixelFontAtlas().glyphs.find(({ char }) => char === "-")?.pixels).toEqual([
+    [0, 2],
+    [1, 2],
+    [2, 2],
+  ]);
+});
+
 describe("plainMarks and normalizePixelText", () => {
   it("make typographic marks plain ASCII, the pixel text in capitals", () => {
     expect(plainMarks("−1 ♥ “each” × 2, don’t")).toBe('-1 ♥ "each" x 2, don\'t');
@@ -25,24 +51,24 @@ describe("plainMarks and normalizePixelText", () => {
   });
 });
 
-describe("pixelFontAtlas", () => {
-  it("places glyphs left to right a column apart, each lit pixel inside its box as the bits say", () => {
-    const atlas = pixelFontAtlas();
-    atlas.glyphs.slice(1).forEach((glyph, i) => {
-      const previous = itemAt(atlas.glyphs, i);
-      expect(glyph.x).toBe(previous.x + previous.width + 1);
-    });
-    const last = defined(atlas.glyphs.at(-1));
-    expect(atlas.width).toBe(last.x + last.width + 1);
-    const outside = atlas.glyphs.filter(({ pixels, width }) =>
-      pixels.some(([x, y]) => x >= width || y >= atlas.height),
-    );
-    expect(outside.map(({ char }) => char)).toEqual([]);
-    const minus = defined(atlas.glyphs.find(({ char }) => char === "-"));
-    expect(minus.pixels).toEqual([
-      [0, 2],
-      [1, 2],
-      [2, 2],
-    ]);
+describe("the game pixel font adapter", () => {
+  const context = {
+    glyphs: PIXEL_GLYPHS,
+    height: GLYPH_HEIGHT,
+    spaceWidth: 3,
+    spacing: 1,
+  };
+
+  it("passes its glyph content and spacing policy to atlas construction", () => {
+    const atlas = { glyphs: [], height: GLYPH_HEIGHT, width: 0 };
+    vi.mocked(buildPixelFontAtlas).mockReturnValueOnce(atlas);
+    expect(pixelFontAtlas()).toBe(atlas);
+    expect(buildPixelFontAtlas).toHaveBeenCalledWith(context);
+  });
+
+  it("passes the character and the same game font context to advance measurement", () => {
+    vi.mocked(fontGlyphAdvance).mockReturnValueOnce(4);
+    glyphAdvance("♥");
+    expect(fontGlyphAdvance).toHaveBeenCalledWith(context, "♥");
   });
 });

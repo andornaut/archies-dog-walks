@@ -1,9 +1,31 @@
+import { registerPixelFont } from "@andornaut/game-kit/text/phaser/registerPixelFont";
 import type { GameObjects, Scene } from "phaser";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { fontInk, laidChars, phaserFontData } from "../../testing/fontInk";
 import { inPill, laidPills } from "../namePills";
-import { addPixelText, type FontRole, labelPills } from "./pixelText";
+import { GLYPH_HEIGHT, glyphAdvance, LINE_HEIGHT, PIXEL_GLYPHS } from "../pixelFont";
+import { addPixelText, type FontRole, labelPills, registerFallbackPixelFont } from "./pixelText";
+
+vi.mock("@andornaut/game-kit/text/phaser/registerPixelFont", () => ({
+  registerPixelFont: vi.fn(),
+}));
+
+it("registers its fallback glyphs with the game key, white ink and line spacing", () => {
+  const scene = {} as Scene;
+  registerFallbackPixelFont(scene);
+  const [supplied, options, atlas] = vi.mocked(registerPixelFont).mock.calls[0] ?? [];
+  expect(supplied).toBe(scene);
+  expect(options).toEqual({
+    colour: "#ffffff",
+    key: "font-pixel-fallback",
+    lineHeight: LINE_HEIGHT,
+    size: GLYPH_HEIGHT,
+    spaceAdvance: glyphAdvance(" "),
+  });
+  expect(atlas?.height).toBe(GLYPH_HEIGHT);
+  expect(atlas?.glyphs.map(({ char }) => char)).toEqual(PIXEL_GLYPHS.map(({ char }) => char));
+});
 
 const FONTS: Readonly<Record<FontRole, string>> = { body: "font-body", title: "font-title" };
 
