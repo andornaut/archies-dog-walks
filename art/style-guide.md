@@ -122,7 +122,6 @@ Names are `PALETTE` names in `src/ui/palette.ts`, or `K` names for the neutral g
 | walnut on tan                  | 7.48  | Muddy's name on its pill                                                                                                    |
 | white on darkBrown             | 8.48  | Filled page dot                                                                                                             |
 | white on darkRed, blue, purple | 7.34+ | `ui-hit-label`, `ui-fired-plate`                                                                                            |
-| white on forest                | 7.80  | The purchase confirmation's title                                                                                           |
 | white on lake                  | 4.46  | Full-size 2× neutral Walker heading and prompt; 3:1 large-text threshold                                                    |
 | white on mauve                 | 4.70  | Neutral Pocket section heading and prompt                                                                                   |
 | white on violet                | 6.40  | Neutral Dogs section heading and count                                                                                      |
