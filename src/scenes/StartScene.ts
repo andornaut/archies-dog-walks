@@ -115,6 +115,8 @@ import type { PackPlacement } from "../layout/packFormation";
 import { addFigure, PackFigures } from "../pack/phaser/packFigures";
 import {
   acceptUpdate,
+  beginUpdateOfferVisit,
+  dismissUpdateOffer,
   exitShown,
   installNudgeDue,
   noteInstallNudged,
@@ -533,6 +535,7 @@ export class StartScene extends Scene {
     this.drawGate();
     this.root = this.add.container(0, 0);
     this.overlayLayer = this.add.container(0, 0);
+    beginUpdateOfferVisit();
     this.render();
 
     listenOnePress(this, {
@@ -751,7 +754,7 @@ export class StartScene extends Scene {
 
   // Which update notice is eligible, or the normal home screen.
   private gateTop(): ReturnType<typeof gateTop> {
-    return gateTop(updatePlateShown(), storageState(this));
+    return gateTop(updatePlateShown() || this.shownUpdate === "update", storageState(this));
   }
 
   // The dog slot sign comes and goes while a slot is for sale.
@@ -787,7 +790,12 @@ export class StartScene extends Scene {
   }
 
   private closeOverlay(): void {
+    const update =
+      this.overlay !== undefined && "mode" in this.overlay && this.overlay.mode === "update";
     this.overlay = undefined;
+    if (update) {
+      dismissUpdateOffer();
+    }
     this.render();
   }
 

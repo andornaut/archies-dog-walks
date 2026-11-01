@@ -63,15 +63,14 @@ let screenWakeLock: ScreenWakeLock | undefined;
 let updateFlow: UpdateFlow | undefined;
 // Resolves once the game may show its first screen and write its save (UpdateFlow.bootable).
 let ready: Promise<void> = Promise.resolve();
-// Called on each change of whether the home screen is in front (OfflinePlay.setOnHome).
-let homeHook: (onHome: boolean) => void = () => undefined;
+// Registration readiness and update-offer visibility follow the actual start screen.
+let registrationHook: (ready: boolean) => void = () => undefined;
+let offerHook: (visible: boolean) => void = () => undefined;
 // Whether the home screen shows the update plate.
 let updateShown = false;
 
-// How long a fresh load holds the home screen and the save for a newer version to be checked for
-// and installed, so it reloads into that version before the home screen draws; the game loads
-// meanwhile. A slower install switches once it lands, or, after the player has interacted, offers
-// the update plate on the home screen.
+// Bound the initial update check while the game loads. A waiting version is offered on the
+// start screen and activates only after the player chooses Update now.
 const BOOT_WAIT_MS = 4000;
 // The history state key of the entry that keeps back on the game (the kit's guardBackNavigation).
 const BACK_GUARD_STATE_KEY = "dogWalkerBackGuard";
@@ -88,6 +87,7 @@ function registerServiceWorker(): void {
   }
   const play = startOfflinePlay(
     {
+      activationPolicy: "manual",
       bootWaitMs: BOOT_WAIT_MS,
       onOfflineActivity: reportOfflineActivity,
       onUpdateShown: (shown) => {
@@ -99,7 +99,8 @@ function registerServiceWorker(): void {
     page,
   );
   updateFlow = play.flow;
-  homeHook = play.setOnHome;
+  registrationHook = (ready) => play.setRegistrationReady(ready);
+  offerHook = (visible) => play.setOfferVisible(visible);
   ready = play.bootable;
 }
 
@@ -196,7 +197,18 @@ export function stopWakeLock(): void {
 // Whether the home screen is in front, the only place the update plate shows. A first visit
 // registers the service worker on its first arrival home.
 export function setOnHomeScreen(onHome: boolean): void {
-  homeHook(onHome);
+  registrationHook(onHome);
+  offerHook(onHome);
+}
+
+// A new StartScene instance begins a new offer visit; resuming an overlay does not.
+export function beginUpdateOfferVisit(): void {
+  updateFlow?.beginOfferVisit();
+}
+
+// Dismiss the update offer while leaving the waiting version available for a later visit.
+export function dismissUpdateOffer(): void {
+  updateFlow?.dismissOffer();
 }
 
 // Whether the home screen shows the update plate: a newer version waits, after the player has

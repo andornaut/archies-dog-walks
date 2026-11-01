@@ -171,9 +171,9 @@ function bootGame(): Game {
   return game;
 }
 
-// The game boots at once, loading while the service worker checks for a newer version: BootScene
-// holds the save and the home screen until launchReady, so a fresh load switching to a newer
-// version never draws the old home screen first. It boots once the dev panel's queued save edits
-// are written, so the game loads the edited save. The installed app writes none.
+// The game boots at once, loading while the service worker checks for a newer version. BootScene
+// holds the first screen and save until launchReady; updates activate only after acceptance.
+// Queued dev-panel save edits finish before boot, so the game loads the edited save. The
+// installed app writes none.
 setupPhoneApp();
 void (devToolsOn() ? applyPendingSaveEdits() : Promise.resolve()).then(bootGame);

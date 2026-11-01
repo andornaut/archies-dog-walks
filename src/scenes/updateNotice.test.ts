@@ -6,6 +6,7 @@ import type { PlateMode } from "../home/homeLines";
 import { StartScene } from "./StartScene";
 
 const acceptUpdate = vi.fn();
+const dismissUpdateOffer = vi.fn();
 vi.mock("phaser", () => ({
   Core: { Events: {} },
   Scene: class {},
@@ -14,6 +15,7 @@ vi.mock("phaser", () => ({
 vi.mock("../pwa", async (original) => ({
   ...(await original<typeof import("../pwa")>()),
   acceptUpdate: () => acceptUpdate(),
+  dismissUpdateOffer: () => dismissUpdateOffer(),
 }));
 
 function notice() {
@@ -76,6 +78,7 @@ describe("home update notice", () => {
 
   it("dismisses Cancel without accepting the update or reopening on the next redraw", () => {
     acceptUpdate.mockClear();
+    dismissUpdateOffer.mockClear();
     const page = notice();
     page.activate();
     page.sync();
@@ -84,6 +87,7 @@ describe("home update notice", () => {
     expect(page.state.overlay).toBeUndefined();
     expect(page.state.render).toHaveBeenCalledOnce();
     expect(acceptUpdate).not.toHaveBeenCalled();
+    expect(dismissUpdateOffer).toHaveBeenCalledOnce();
     page.sync();
     expect(page.state.overlay).toBeUndefined();
     page.deactivate();
@@ -96,14 +100,25 @@ describe("home update notice", () => {
 
   it("keeps Update now as the accepting action and leaves newer-save eligibility unchanged", () => {
     acceptUpdate.mockClear();
+    dismissUpdateOffer.mockClear();
     const page = notice();
     page.activate();
     page.sync();
     page.release(page.layout.button);
     expect(acceptUpdate).toHaveBeenCalledOnce();
+    expect(dismissUpdateOffer).not.toHaveBeenCalled();
     const newer = notice();
     newer.newerSave();
     newer.sync();
     expect(newer.state.overlay?.mode).toBe("newerSave");
+    newer.state.closeOverlay();
+    expect(dismissUpdateOffer).not.toHaveBeenCalled();
+    const gate = (StartScene.prototype as unknown as { gateTop: () => "bubble" | PlateMode })
+      .gateTop;
+    const resumed = {
+      registry: { get: () => ({ storage: "newer" }) },
+      shownUpdate: "update",
+    };
+    expect(gate.call(resumed)).toBe("update");
   });
 });

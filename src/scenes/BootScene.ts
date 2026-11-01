@@ -152,9 +152,8 @@ export class BootScene extends Scene {
     // A dev link that names a run starts its walk, and banks a walk left unfinished rather than
     // resuming it.
     const walkNow = namesRunSetup(pageSearch());
-    // Opened once the save may be written (launchReady), so a version about to be replaced never
-    // banks or resumes a walk left unfinished; the loading walker then follows the saved reduced
-    // motion setting.
+    // Open the profile after the bounded initial update check. The loading walker then follows
+    // the saved reduced-motion setting; a waiting update still requires explicit acceptance.
     const profileOpened = launchReady().then(async () => {
       const load = await openProfile(this, !walkNow);
       if (load.status === "corrupt" || load.status === "newer" || load.status === "unavailable") {
