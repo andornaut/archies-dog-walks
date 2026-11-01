@@ -124,13 +124,14 @@ export function endReasonOf(run: Pick<RunState, "phase">): EndReason {
 // What a walk ending for reason banks, and the cash it carried and lost. A finished walk banks
 // all its money. One that ends early, heading home or with every owner having fired you, banks
 // its last zone's end money, or all its money when card costs have spent below it, and loses
-// what the current zone earned since.
+// what the current zone earned since. Settlement never debits the saved bank.
 export function walkEarnings(
   reason: EndReason,
   run: Pick<RunState, "money" | "zoneEndMoney">,
 ): { readonly banked: Cents; readonly lost: Cents } {
-  const banked = reason === "finished" ? run.money : cents(Math.min(run.money, run.zoneEndMoney));
-  return { banked, lost: cents(run.money - banked) };
+  const payout = reason === "finished" ? run.money : Math.min(run.money, run.zoneEndMoney);
+  const banked = cents(Math.max(0, payout));
+  return { banked, lost: cents(Math.max(0, run.money - banked)) };
 }
 
 // When every dog the walk set out with gets home after its last zone, the walk pays

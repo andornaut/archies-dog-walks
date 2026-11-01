@@ -112,7 +112,8 @@ function bankRun(context: AwardContext, run: BankedRun, save: SaveDocument): Sav
   const { stats } = save;
   const walked = walkedFromTheStart(run.counters);
   const walkedOf = (zones: number) => Math.max(0, zones - run.counters.firstZone);
-  const { earnedCents, outcome, zonesFinished } = run;
+  const { outcome, zonesFinished } = run;
+  const earnedCents = cents(Math.max(0, run.earnedCents));
   const dogs: Partial<Record<DogId, DogStats>> = { ...stats.dogs };
   for (const { firedInZone, id } of run.dogs) {
     const current = dogs[id] ?? ZERO_DOG_STATS;

@@ -392,3 +392,14 @@ describe("a save from a newer version", () => {
     expect(entries.get(SAVE_KEYS.save)).toBe(newerRaw);
   });
 });
+
+it("keeps the saved bank when a zero-payout interruption cannot resume", async () => {
+  const { entries, session } = await opened({ ...veteranSave(), bankCents: cents(20_000) });
+  session.stopResuming();
+  await session.checkpointRun({ ...leftAt, earnedCents: cents(0) });
+  expect(stored(entries).checkpoint?.resume).toBeUndefined();
+  const reopened = await opened(stored(entries));
+  expect(reopened.session.save.bankCents).toBe(session.save.bankCents);
+  expect(reopened.session.save.checkpoint).toBeNull();
+  expect(stored(reopened.entries).bankCents).toBe(20_000);
+});

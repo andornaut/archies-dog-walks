@@ -202,3 +202,13 @@ describe("walkEarnings", () => {
     expect(walkEarnings("finished", run)).toEqual({ banked: run.money, lost: 0 });
   });
 });
+
+it.each(["finished", "wentHome", "noDogs"] as const)(
+  "settles %s without charging negative carried cash to the bank",
+  (reason) => {
+    expect(walkEarnings(reason, { money: cents(-500), zoneEndMoney: cents(2_000) })).toEqual({
+      banked: 0,
+      lost: 0,
+    });
+  },
+);

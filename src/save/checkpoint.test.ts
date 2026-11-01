@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 
 import { gameData } from "../data";
 import type { DogId, WalkerId, ZoneId } from "../data/types";
+import { buy } from "../home/home";
 import { walkerGoal } from "../rules/walkers";
 import type { EndReason } from "../state/runState";
 import { packOf, runFactsFor } from "../testing/achievements";
@@ -475,5 +476,47 @@ describe("bests by pack size", () => {
       const { stats } = recordRunEnd(testAwards, veteranSave(), runResult(changes));
       expect(stats.bestCentsByPackSize, name).toEqual(kept);
     }
+  });
+});
+
+describe("nonnegative settlement", () => {
+  it.each(["finished", "wentHome", "noDogs"] as const)(
+    "never debits the current bank when a walk ends %s",
+    (outcome) => {
+      const credited = { ...veteranSave(), bankCents: cents(20_000) };
+      const banked = recordRunEnd(
+        testAwards,
+        credited,
+        runResult({ earnedCents: cents(-500), outcome }),
+      );
+      expect(banked.bankCents).toBe(credited.bankCents);
+      expect(banked.stats.lifetimeCents).toBe(credited.stats.lifetimeCents);
+      expect(banked.stats.lastWalk?.earnedCents).toBe(0);
+    },
+  );
+  it("banks a negative checkpoint without taking earlier credits", () => {
+    const credited = { ...veteranSave(), bankCents: cents(20_000) };
+    const saved = recordCheckpoint(credited, { ...checkpoint, earnedCents: cents(-500) });
+    const banked = bankCheckpoint(testAwards, saved);
+    expect(banked.bankCents).toBe(credited.bankCents);
+    expect(banked.checkpoint).toBeNull();
+    expect(banked.stats.lastWalk?.earnedCents).toBe(0);
+    expect(bankCheckpoint(testAwards, banked)).toBe(banked);
+  });
+  it("preserves a legitimate purchase instead of restoring the earlier bank", () => {
+    const before = { ...veteranSave(), bankCents: cents(1_000_000) };
+    const purchase = buy(gameData, { gear: "hallPass", kind: "gear" }, before);
+    expect(purchase.kind).toBe("bought");
+    if (purchase.kind !== "bought") {
+      throw new Error("Expected affordable unowned gear");
+    }
+    expect(purchase.save.bankCents).toBeLessThan(before.bankCents);
+    const banked = recordRunEnd(
+      testAwards,
+      purchase.save,
+      runResult({ earnedCents: cents(-500), outcome: "wentHome" }),
+    );
+    expect(banked.bankCents).toBe(purchase.save.bankCents);
+    expect(banked.owned.gear).toContain("hallPass");
   });
 });

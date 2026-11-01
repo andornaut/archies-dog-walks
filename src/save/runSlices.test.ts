@@ -136,3 +136,13 @@ describe("runResultOf", () => {
     });
   });
 });
+
+it("keeps negative walk cash out of persisted checkpoints and abort results", () => {
+  const spent = { ...midRun, money: cents(-500) };
+  expect(checkpointOf(data, spent).earnedCents).toBe(0);
+  expect(runResultOf(data, spent)).toMatchObject({
+    earnedCents: 0,
+    lostCents: 0,
+    outcome: "wentHome",
+  });
+});
