@@ -1,5 +1,6 @@
-import type * as ConfigModules from "./src/tools/viteConfigModules";
 import { gameViteConfig } from "@andornaut/game-kit/build/vite/gameConfig";
+
+import type * as ConfigModules from "./src/tools/viteConfigModules.ts";
 
 // The kit's Vite and Vitest config (gameViteConfig), which loads the plugins below from
 // src/tools/viteConfigModules.ts through native package resolution in its module runner.
