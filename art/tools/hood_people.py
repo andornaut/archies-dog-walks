@@ -71,7 +71,8 @@ segway-tour-rider   48x72   Distillery District, 1 lane; a Segway tour rider com
                             and the pennant's tip fluttering up, level, down, level
 gardener            48x72   Cabbagetown; a slow rider coming down a lane at the player, walking behind
                             a green wheelbarrow heaped with autumn leaves (a rust heap lit orange, big red
-                            and orange leaves on it, no gold or amber): an olive canvas sun hat with a wide brim, white hair, a
+                            and orange leaves on it, no gold or amber): an olive canvas sun hat with a wide brim,
+                                white hair, a
                             chambray shirt with rolled sleeves, a tan canvas apron, lime gardening gloves
                             on the grips, jeans and brown work boots; the barrow's black tire edge-on in
                             a grey fork in front, its stands under the tray's back corners; push (4
@@ -160,7 +161,8 @@ volleyball-player   48x72   The Beaches; a beach volleyball player darting acros
                             player: at rest, a breath, then a thumbs up over two frames
 granny-cart-shopper 48x72   Kensington Market; an older market shopper, a stepper facing the player as
                             the mail carrier is (the game mirrors it for a step left), pulling a
-                            two-wheeled shopping cart beside her (screen right): a mauve headscarf with white dots tied under the chin, a grey fringe,
+                            two-wheeled shopping cart beside her (screen right): a mauve headscarf with white dots
+                                tied under the chin, a grey fringe,
                             wire glasses, a long camel coat, dark tights and plum shoes, a cream cloth
                             tote with a green band in the other hand; the cart a red and green tartan
                             bag on a grey frame, its tires edge-on either side, a baguette, two leeks
@@ -191,19 +193,21 @@ hand edits to them belong in this file instead. Shared tooling is in pixel.py.
 """
 
 import math
-import os
 import sys
+from pathlib import Path
 
-sys.path.insert(0, os.path.dirname(__file__))
-from pixel import Grid, K, edged, main, raster, scale_of  # noqa: E402
-import minis  # noqa: E402
-import road  # noqa: E402
-from hazards import CYCLIST_RIDE, sway_rows  # noqa: E402
-from minis import STEPS, scaled, snap  # noqa: E402
-from obstacles import treads, unit  # noqa: E402
-from road import LIT, SCALE, face_disc, lean, rim, stair, swung  # noqa: E402
+sys.path.insert(0, str(Path(__file__).parent))
+import minis
+from hazards import CYCLIST_RIDE, sway_rows
+from minis import STEPS, scaled, snap
+from obstacles import treads, unit
+from pixel import Grid, K, edged, main, raster, scale_of
+
+import road
+from road import LIT, SCALE, face_disc, lean, rim, stair, swung
 
 # ---------- tourist: facing the player, a stepper like the mail carrier ----------
+
 
 def tourist_top(g, b, arms=0):
     """The tourist's top for road.person: shorts over the bare legs, the holiday shirt, the backpack, the
@@ -265,7 +269,7 @@ def tourist_top(g, b, arms=0):
     g.p(22, 17 + b, "pink")
 
 
-TOURIST = dict(legs="skin1", shoes="brown")
+TOURIST = {"legs": "skin1", "shoes": "brown"}
 TOURIST_RIM = {**LIT, "dturq": ("turquoise", None)}
 
 
@@ -365,9 +369,9 @@ def couple(lf=0, rf=0, bob=0, arms=0):
 
 # Strumming: the hand down over the sound hole, back up, down, up, the head nodding 1px on the second beat.
 # 4 frames at 150ms.
-BUSKER_IDLE = (dict(strum=0), dict(strum=1), dict(strum=0, nod=1), dict(strum=1, nod=1))
+BUSKER_IDLE = ({"strum": 0}, {"strum": 1}, {"strum": 0, "nod": 1}, {"strum": 1, "nod": 1})
 BUSKER_IDLE_MS = 150
-BUSKER = dict(legs="blue", shoes="dbrown")
+BUSKER = {"legs": "blue", "shoes": "dbrown"}
 BUSKER_RIM = {**LIT, "olive": ("moss", None), "dolive": ("olive", None), "blue": ("sky", None)}
 
 # A note, ♪, drawn in the grid's own pixels so it keeps its strokes at any scale.
@@ -397,6 +401,7 @@ def busker_top(strum=0, nod=0):
     """The busker's top for road.person: the plaid shirt, the guitar across him, the fretting hand on its
     neck (screen right), the strumming hand over the sound hole (strum 1 lower), the bearded head (nod lowers
     it a row) and the open case in front of his legs."""
+
     def top(g, b):
         h = b + nod
         # the plaid shirt, lit down its left side, checked in dolive
@@ -465,6 +470,7 @@ def busker_top(strum=0, nod=0):
         g.rect(28, 41, 2, 4, "dbrown")
         for x in (8, 23):
             g.rect(x, 42, 2, 1, "lgrey")
+
     return top
 
 
@@ -480,20 +486,26 @@ def busker(strum=0, nod=0, bob=0):
 # nodding 1px on the second beat, 4 frames at 150ms as the busker's. Cue: a strum flourish, the hand thrown
 # up, swept down past the sound hole and flung out low, a note rising beside his hat, 4 frames at 120ms.
 STROLLING_WALK = road.PERSON_WALK
-STROLLING_IDLE = (dict(strum=0), dict(strum=1), dict(strum=0, nod=1), dict(strum=1, nod=1))
+STROLLING_IDLE = ({"strum": 0}, {"strum": 1}, {"strum": 0, "nod": 1}, {"strum": 1, "nod": 1})
 STROLLING_IDLE_MS = 150
-STROLLING_CUE = (dict(flourish="up"), dict(flourish="down", strum=2), dict(flourish="out", note=(3, 13)),
-                 dict(flourish="out", note=(2, 9)))
+STROLLING_CUE = (
+    {"flourish": "up"},
+    {"flourish": "down", "strum": 2},
+    {"flourish": "out", "note": (3, 13)},
+    {"flourish": "out", "note": (2, 9)},
+)
 STROLLING_CUE_MS = 120
-STROLLING = dict(legs="brown", shoes="dbrown")
+STROLLING = {"legs": "brown", "shoes": "dbrown"}
 STROLLING_RIM = {**LIT, "violet": ("lilac", None), "green": ("lime", None)}
 
 
 def strolling_top(strum=0, nod=0, flourish=None, note_at=None):
-    """The strolling busker's top for road.person: shaggy dark brown hair to the jaw under a violet felt hat with a pink band and
+    """The strolling busker's top for road.person: shaggy dark brown hair to the jaw under a violet felt hat with a
+        pink band and
     a red feather, a plain lime shirt, a cherry-red guitar slung on a leather strap, the
     fretting hand on its neck (screen right) and the strumming hand over the sound hole (strum lowers it),
     or thrown up, down or out in the flourish. In a walk frame the swing of the free arms becomes the strum."""
+
     def top(g, b, arms=0):
         h = b + nod
         down = strum + abs(arms)
@@ -567,6 +579,7 @@ def strolling_top(strum=0, nod=0, flourish=None, note_at=None):
         g.rect(26, 8 + h, 2, 2, "purple")
         for k in range(4):
             g.p(21 + k * 0.75, 7 - k * 1.25 + h, "red")
+
     return top
 
 
@@ -600,12 +613,16 @@ STILT_ARMS = {
 # 1px over the planted leg and the arms swinging out against the legs. Idle: waving the screen-right glove
 # beside the hat, swaying. Cue: the wind-up before each step, the arms dropped to the sides as the body
 # sinks, then swung up into a V as the first knee lifts.
-STILT_WALK = (dict(lf=-8, sway=1, arms="left-low"), dict(lf=-2, bob=-1, arms="out"),
-              dict(rf=-8, sway=-1, arms="right-low"), dict(rf=-2, bob=-1, arms="out"))
+STILT_WALK = (
+    {"lf": -8, "sway": 1, "arms": "left-low"},
+    {"lf": -2, "bob": -1, "arms": "out"},
+    {"rf": -8, "sway": -1, "arms": "right-low"},
+    {"rf": -2, "bob": -1, "arms": "out"},
+)
 STILT_WALK_MS = 150
-STILT_IDLE = (dict(arms="wave"), dict(arms="wave-out", sway=1))
+STILT_IDLE = ({"arms": "wave"}, {"arms": "wave-out", "sway": 1})
 STILT_IDLE_MS = 300
-STILT_CUE = (dict(arms="in", bob=1), dict(arms="out"), dict(arms="v", lf=-3, bob=-1))
+STILT_CUE = ({"arms": "in", "bob": 1}, {"arms": "out"}, {"arms": "v", "lf": -3, "bob": -1})
 STILT_CUE_MS = 120
 STILT_RIM = {**LIT, "cobalt": ("azure", None), "violet": ("lilac", None)}
 
@@ -619,7 +636,7 @@ def stilt_walker(lf=0, rf=0, bob=0, sway=0, arms="out"):
     b, o = bob, sway
     # the legs: each a trouser leg of three bold stripes from under the jacket to a flared cuff, a lifted
     # one shorter with its knee bent up toward the player, then a big black shoe
-    for x, f in zip(STILT_LEGS, (lf, rf)):
+    for x, f in zip(STILT_LEGS, (lf, rf), strict=False):
         top, foot = 33 + b, STILT_SHOE + f
         for k, c in enumerate(STILT_STRIPES):
             g.rect(x + 2 * k, top, 2, foot - top, c)
@@ -652,7 +669,7 @@ def stilt_walker(lf=0, rf=0, bob=0, sway=0, arms="out"):
     g.tri((20.5 + o, 18.5 + b), (20.5 + o, 22.5 + b), (16 + o, 20.5 + b), "red")
     g.rect(15 + o, 19.5 + b, 2, 2, "dred")
     # the arms: denim sleeves from the shoulders, each to a white glove
-    for (sx, sy), (hx, hy) in zip(((8, 22), (24, 22)), STILT_ARMS[arms]):
+    for (sx, sy), (hx, hy) in zip(((8, 22), (24, 22)), STILT_ARMS[arms], strict=False):
         limb(g, sx + o, sy + b, hx + o, hy + b, 4, ((1, "cobalt"),))
         limb(g, sx - 0.5 + o, sy + b, hx - 0.5 + o, hy + b, 3, ((1, "azure"),))
         g.cel(hx + o, hy + b, 2.2, 2.2, "white", "lgrey")
@@ -683,7 +700,7 @@ DELIVERY_RIDE_MS = 90
 # stroke, the bike and box leaning DELIVERY_TILT layout pixels right at the top about the handlebar, the tire
 # swinging out left under it, the head upright over the neck. 4 frames at 100ms.
 DELIVERY_TILT = 4
-DELIVERY_MERGE = tuple(dict(lf=q["lf"], rf=q["rf"], tilt=DELIVERY_TILT) for q in CYCLIST_RIDE)
+DELIVERY_MERGE = tuple({"lf": q["lf"], "rf": q["rf"], "tilt": DELIVERY_TILT} for q in CYCLIST_RIDE)
 DELIVERY_MERGE_MS = 100
 # The layout rows the merge's tilt turns about (the handlebar) and carries the head by (the neck).
 DELIVERY_PIVOT = 24
@@ -808,7 +825,7 @@ def delivery_tilted(whole, body, head, tilt, p):
 # Riding: nothing to pedal, so the rider bobs 1px over the cobbles on frames 1 and 2, the knees taking it, the
 # tread falls down both tires 1px a frame and the pennant flutters, its tip up, level, down, level. 4 frames
 # at 90ms.
-SEGWAY_RIDE = tuple(dict(bob=b, roll=k, flag=f) for k, (b, f) in enumerate(((0, -1), (1, 0), (1, 1), (0, 0))))
+SEGWAY_RIDE = tuple({"bob": b, "roll": k, "flag": f} for k, (b, f) in enumerate(((0, -1), (1, 0), (1, 1), (0, 0))))
 SEGWAY_RIDE_MS = 90
 SEGWAY_RIM = {**LIT, "cobalt": ("azure", None), "dstone": ("stone", None)}
 
@@ -903,22 +920,36 @@ def segway_tour_rider(bob=0, roll=0, flag=0):
 
 # Pushing: road.PERSON_WALK's stride at the stroller's pace, the barrow rolling steadily in front, its tire's
 # tread marks rolling 1 drawn pixel down a frame. 4 frames at 160ms.
-GARDENER_PUSH = tuple(dict({k: v for k, v in q.items() if k != "arms"}, roll=str(n))
-                      for n, q in enumerate(road.PERSON_WALK))
+GARDENER_PUSH = tuple(
+    dict({k: v for k, v in q.items() if k != "arms"}, roll=str(n)) for n, q in enumerate(road.PERSON_WALK)
+)
 GARDENER_PUSH_MS = 160
 # Stopped: the barrow tipped forward onto its nose, the handles up at the chest, breathing.
-GARDENER_IDLE = tuple(dict(tilt="2", bob=b) for b in road.BREATH)
+GARDENER_IDLE = tuple({"tilt": "2", "bob": b} for b in road.BREATH)
 # Righting the barrow before a restart: tipped, halfway, level, then braced to push.
-GARDENER_CUE = (dict(tilt="2"), dict(tilt="1"), dict(tilt="0"), dict(tilt="0", bob=-1))
+GARDENER_CUE = ({"tilt": "2"}, {"tilt": "1"}, {"tilt": "0"}, {"tilt": "0", "bob": -1})
 GARDENER_CUE_MS = 200
 # The leaves on the heap in the tray, red and orange with no gold or amber, which read as coins: (column from
 # the heap's centre, depth down the heap as a fraction of its height, colour), each 3.5 by 2, so they hold 2px
 # at the smallest step. The lower ones show as the barrow tips forward.
-GARDENER_LEAVES = ((-8, 0.1, "orange"), (-2.5, 0, "red"), (3.5, 0.05, "orange"), (8, 0.15, "red"),
-                   (-5, 0.33, "red"), (1, 0.33, "orange"), (6.5, 0.45, "orange"), (-8.5, 0.55, "red"),
-                   (-1.5, 0.6, "red"))
-GARDENER_RIM = {**LIT, "olive": ("moss", None), "dolive": ("olive", None), "dgreen": ("green", None),
-                "lime": ("lime", None)}
+GARDENER_LEAVES = (
+    (-8, 0.1, "orange"),
+    (-2.5, 0, "red"),
+    (3.5, 0.05, "orange"),
+    (8, 0.15, "red"),
+    (-5, 0.33, "red"),
+    (1, 0.33, "orange"),
+    (6.5, 0.45, "orange"),
+    (-8.5, 0.55, "red"),
+    (-1.5, 0.6, "red"),
+)
+GARDENER_RIM = {
+    **LIT,
+    "olive": ("moss", None),
+    "dolive": ("olive", None),
+    "dgreen": ("green", None),
+    "lime": ("lime", None),
+}
 
 
 def limb(g, x0, y0, x1, y1, w, parts):
@@ -1009,11 +1040,11 @@ def gardener(lf=0, rf=0, bob=0, roll="0", tilt="0"):
 # Driving: the front tires' tread falls 1px a frame and the body dips 1px onto them on frames 1 and 2; 4 frames
 # at 100ms, as every drive. Stopped: the amber light blinks while the ranger looks left, then right; 4 frames at
 # 400ms. Restarting: the ranger jabs a finger ahead, the light flashing; 4 frames at 120ms.
-RANGER_PUSH = [dict(roll=r) for r in range(4)]
+RANGER_PUSH = [{"roll": r} for r in range(4)]
 RANGER_PUSH_MS = 100
-RANGER_IDLE = (dict(), dict(light=1, look=-1), dict(), dict(light=1, look=1))
+RANGER_IDLE = ({}, {"light": 1, "look": -1}, {}, {"light": 1, "look": 1})
 RANGER_IDLE_MS = 400
-RANGER_CUE = (dict(point=1, light=1), dict(point=2), dict(point=1, light=1), dict(point=2))
+RANGER_CUE = ({"point": 1, "light": 1}, {"point": 2}, {"point": 1, "light": 1}, {"point": 2})
 RANGER_CUE_MS = 120
 RANGER_RIM = {**LIT, "olive": ("moss", None), "dolive": ("olive", None)}
 
@@ -1022,7 +1053,8 @@ def park_rangers_cart(roll=None, light=0, look=0, point=0):
     """A park ranger's small utility cart coming down its lane at the pack, facing the player, laid out on
     32x48 and drawn at road.SCALE as the pedicab is: a white roof on two posts with an amber light on top, the
     ranger at the wheel on the cart's left (screen right) in an olive uniform and a tan flat-brimmed campaign
-    hat, a kraft paper bag of leaves standing in the bed behind the passenger seat, the green cowl with two headlights and a white plate with its number in blue, a black bumper
+    hat, a kraft paper bag of leaves standing in the bed behind the passenger seat, the green cowl with two headlights
+        and a white plate with its number in blue, a black bumper
     and the front tires under their fenders. roll (0 to 3) is a drive frame: the tread falls down the tires (still
     at rest) and the body dips 1px onto them on frames 1 and 2. light lights the amber beacon, look turns the
     ranger's eyes (-1 screen left, 1 right) and point raises his free hand pointing ahead (2 a pixel higher)."""
@@ -1060,8 +1092,13 @@ def park_rangers_cart(roll=None, light=0, look=0, point=0):
     g.rect(10, 14, 2, 6, "brown")
     g.rect(5, 14, 1, 6, "cream")
     g.rect(5, 14, 7, 1, "brown")
-    for x, y, c in ((5.5, 12.5, "orange"), (7.5, 12, "red"), (9.5, 12.5, "amber"), (6.5, 13, "rust"),
-                    (10, 13, "ochre")):
+    for x, y, c in (
+        (5.5, 12.5, "orange"),
+        (7.5, 12, "red"),
+        (9.5, 12.5, "amber"),
+        (6.5, 13, "rust"),
+        (10, 13, "ochre"),
+    ):
         g.rect(x, y, 2, 1.5, c)
     g.rect(4, 19, 24, 7, "dslate")
     g.rect(4, 19, 24, 1, "slate")
@@ -1132,23 +1169,28 @@ def park_rangers_cart(roll=None, light=0, look=0, point=0):
 
 # Pedalling: each foot's row under the box (the pedals go round), the wheels' tread roll and the rider's
 # 1px sway toward the foot pushing down; 4 frames at 120ms.
-ICE_PUSH = [dict(lf=41, rf=44, roll=0, sway=-2 / 3), dict(lf=42.5, rf=42.5, roll=1),
-            dict(lf=44, rf=41, roll=2, sway=2 / 3), dict(lf=42.5, rf=42.5, roll=3)]
+ICE_PUSH = [
+    {"lf": 41, "rf": 44, "roll": 0, "sway": -2 / 3},
+    {"lf": 42.5, "rf": 42.5, "roll": 1},
+    {"lf": 44, "rf": 41, "roll": 2, "sway": 2 / 3},
+    {"lf": 42.5, "rf": 42.5, "roll": 3},
+]
 ICE_PUSH_MS = 120
 # Stopped: the feet down, a cone held out in the screen-right hand, lifted 1px on frame 1 as the rider
 # breathes; 2 frames at 400ms.
-ICE_IDLE = [dict(offer=True), dict(offer=True, lift=2 / 3, bob=-2 / 3)]
+ICE_IDLE = [{"offer": True}, {"offer": True, "lift": 2 / 3, "bob": -2 / 3}]
 ICE_IDLE_MS = 400
 # Restarting: the thumb on the bell, the bell rocking and its ring marks flashing out; 2 frames at 150ms.
-ICE_CUE = [dict(ring=1), dict(ring=2)]
+ICE_CUE = [{"ring": 1}, {"ring": 2}]
 ICE_CUE_MS = 150
 ICE_RIM = {**LIT, "blue": ("sky", None)}
 # The ring marks over the bell, in drawn pixels so they keep their strokes at any scale: three strokes
 # fanning out: up and up-left on ring 1, all three further out on ring 2.
-RING = (("......#...", "......#...", "...#......", "....#.....", "..........", "..........",
-         ".........."),
-        ("......#...", "......#...", ".#........", "..#.......", "..........", "##........",
-         ".........."))
+RING = (
+    ("......#...", "......#...", "...#......", "....#.....", "..........", "..........", ".........."),
+    ("......#...", "......#...", ".#........", "..#.......", "..........", "##........", ".........."),
+)
+
 
 def recolour(g, x0, x1, y1, inside, swap):
     """In design columns x0 to x1 and rows above y1, where inside(x, y) holds, swap each drawn pixel's colour
@@ -1183,7 +1225,7 @@ def ice_cream_bike(lf=42.5, rf=42.5, roll=None, sway=0, offer=False, lift=0, bob
         hw = 15 * max(0.05, (1 - ((y - 7.5) / 7) ** 2)) ** 0.5
         return math.floor(((x - 16) / hw + 1) * 3) % 2 == 1
 
-    recolour(g, 0, 32, 7.5, panel, dict(red="white", pink="white", dred="lgrey"))
+    recolour(g, 0, 32, 7.5, panel, {"red": "white", "pink": "white", "dred": "lgrey"})
     g.rect(15.5, 0, 1, 1, "dred")
     # its valance, a scallop under each panel
     for k in range(6):
@@ -1261,14 +1303,14 @@ def ice_cream_bike(lf=42.5, rf=42.5, roll=None, sway=0, offer=False, lift=0, bob
 
 # Pushing the cart: road.PERSON_WALK's stride under the cart and the 1px bob, the stroller's pace, while the
 # tires' tread rolls down a row a frame (tread, in the drawn grid's own pixels). 4 frames at 160ms.
-CART_PUSH = tuple(dict(lf=q.get("lf", 0), rf=q.get("rf", 0), bob=q.get("bob", 0)) for q in road.PERSON_WALK)
+CART_PUSH = tuple({"lf": q.get("lf", 0), "rf": q.get("rf", 0), "bob": q.get("bob", 0)} for q in road.PERSON_WALK)
 CART_PUSH_MS = 160
 # Stopped: wiping the counter, the cloth out to the middle and back, breathing (frame 0 the rest pose); 4
 # frames at 250ms.
-CART_IDLE = (dict(wipe=0), dict(wipe=3), dict(wipe=6, bob=-1), dict(wipe=3, bob=-1))
+CART_IDLE = ({"wipe": 0}, {"wipe": 3}, {"wipe": 6, "bob": -1}, {"wipe": 3, "bob": -1})
 CART_IDLE_MS = 250
 # Setting off again: the hand up over the counter bell, then down on it as it rings, twice. 4 frames at 200ms.
-CART_CUE = (dict(bell="up"), dict(bell="ring"), dict(bell="up"), dict(bell="ring"))
+CART_CUE = ({"bell": "up"}, {"bell": "ring"}, {"bell": "up"}, {"bell": "ring"})
 CART_CUE_MS = 200
 CART_RIM = {**LIT, "violet": ("lilac", None), "dturq": ("turquoise", None), "moss": ("lime", None)}
 
@@ -1399,16 +1441,21 @@ SIGN_FACE = ((-8.3, -1.3), (3.6, -1.3), (3.6, -3.4), (8.2, 0), (3.6, 3.4), (3.6,
 SIGN_PIVOT = (16, 32)
 # The twirl: the sign turned 45 degrees a frame, anticlockwise on screen, a full turn in 8 frames at 120ms; the
 # fast spin before each hop turns it 90 degrees a frame, 4 frames at 60ms, the knees bent 1px for the hop.
-SPINNER_IDLE = tuple(dict(turn=45 * k) for k in range(8))
+SPINNER_IDLE = tuple({"turn": 45 * k} for k in range(8))
 SPINNER_IDLE_MS = 120
-SPINNER_CUE = tuple(dict(turn=90 * k, bob=1) for k in range(4))
+SPINNER_CUE = tuple({"turn": 90 * k, "bob": 1} for k in range(4))
 SPINNER_CUE_MS = 60
 # The hop sideways across a lane, the sign held level pointing the way (the game mirrors the sprite for a hop
 # to the left): crouched, pushing off stretched, tucked at the top with the feet drawn up under the body,
 # reaching down to land. The head clears the frame's top by a row at the top of the hop.
-SPINNER_HOP = (dict(bob=1), dict(bob=-2, lf=-2, rf=-2), dict(bob=-2, lf=-6, rf=-6), dict(bob=-1, lf=-3, rf=-3))
+SPINNER_HOP = (
+    {"bob": 1},
+    {"bob": -2, "lf": -2, "rf": -2},
+    {"bob": -2, "lf": -6, "rf": -6},
+    {"bob": -1, "lf": -3, "rf": -3},
+)
 SPINNER_HOP_MS = 75
-SPINNER = dict(legs="dslate", shoes="white")
+SPINNER = {"legs": "dslate", "shoes": "white"}
 SPINNER_RIM = {**LIT, "cobalt": ("azure", None)}
 
 
@@ -1443,9 +1490,15 @@ def arrow_sign(g, turn, b):
         g.tri(t0, s1, t1, "yellow")
     px = raster(g)
     yellow, red = K["yellow"], K["red"]
-    shade = [(x, y) for y in range(px.h) for x in range(px.w) if px.px[y][x] == yellow
-             and any(0 <= y + dy < px.h and 0 <= x + dx < px.w and px.px[y + dy][x + dx] == red
-                     for dx, dy in ((1, 0), (0, 1)))]
+    shade = [
+        (x, y)
+        for y in range(px.h)
+        for x in range(px.w)
+        if px.px[y][x] == yellow
+        and any(
+            0 <= y + dy < px.h and 0 <= x + dx < px.w and px.px[y + dy][x + dx] == red for dx, dy in ((1, 0), (0, 1))
+        )
+    ]
     for x, y in shade:
         px.px[y][x] = K["amber"]
 
@@ -1454,6 +1507,7 @@ def spinner_top(turn=0):
     """The sign spinner's top for road.person: the bright azure tee, both arms down and in to the sign's
     middle, the head in a red cap and black sunglasses, then the sign in front of the hips and the hands
     over it."""
+
     def top(g, b):
         # the tee, shaded down its right side, a white crew neck
         g.rect(9, 21 + b, 14, 13, "azure")
@@ -1484,6 +1538,7 @@ def spinner_top(turn=0):
         # the sign, then the hands, one over the other, gripping it by the middle
         arrow_sign(g, turn, b)
         g.cel(x0, y0 + b, 2.2, 1.7, "skin2", "brown")
+
     return top
 
 
@@ -1497,15 +1552,19 @@ def sign_spinner(turn=0, bob=0, lf=0, rf=0):
 # The hop sideways across a lane on the one foot: crouched on it, pushing off with the arms flung up, at the top
 # with the foot tucked up and the ponytail floating, landing crouched on the same foot. The game mirrors the
 # sprite for a hop to the left.
-KID_HOP = (dict(bob=2, arms=-1, kick=-1), dict(bob=-2, foot=-2, arms=2, kick=1, sway=1, tail=1),
-           dict(bob=-4, foot=-5, arms=3, kick=2, sway=1, tail=-1), dict(bob=1, arms=1, tail=1))
+KID_HOP = (
+    {"bob": 2, "arms": -1, "kick": -1},
+    {"bob": -2, "foot": -2, "arms": 2, "kick": 1, "sway": 1, "tail": 1},
+    {"bob": -4, "foot": -5, "arms": 3, "kick": 2, "sway": 1, "tail": -1},
+    {"bob": 1, "arms": 1, "tail": 1},
+)
 KID_HOP_MS = 75
 # Balancing on the one foot between hops: the arms see-saw and the body wobbles 1px each way.
-KID_IDLE = (dict(tilt=1, sway=-1), dict(tilt=-1, sway=1))
+KID_IDLE = ({"tilt": 1, "sway": -1}, {"tilt": -1, "sway": 1})
 KID_IDLE_MS = 300
 # The wind-up before each hop, played once over 600ms: the arms swing down as the knee dips, then up as it
 # straightens to go.
-KID_CUE = (dict(bob=1, arms=-2), dict(bob=2, arms=-4, kick=-1), dict(bob=1, arms=1))
+KID_CUE = ({"bob": 1, "arms": -2}, {"bob": 2, "arms": -4, "kick": -1}, {"bob": 1, "arms": 1})
 KID_CUE_MS = 200
 KID_RIM = {**LIT, "cobalt": ("azure", None)}
 # How many rows lower than road.person's adults the kid's hips, top and head sit, its legs that much shorter.
@@ -1617,7 +1676,7 @@ def tour_poses(frame, lag=4):
 TOUR_WALK = tuple(tour_poses(f) for f in range(len(COUPLE_WALK)))
 TOUR_WALK_MS = COUPLE_WALK_MS
 # The flag dipping before a step: half down, all the way, half down; 3 frames at 200ms, the mover's cue.
-TOUR_CUE = (dict(dip=2), dict(dip=5), dict(dip=2))
+TOUR_CUE = ({"dip": 2}, {"dip": 5}, {"dip": 2})
 TOUR_CUE_MS = 200
 TOUR_RIM = {**LIT, "dstone": ("stone", None), "cobalt": ("azure", None), "orange": ("peach", None)}
 
@@ -1697,8 +1756,9 @@ def tour_guide(g, x, b, lf, rf, arms, dip):
     g.rect(x + 19, 33 + b, 3, 4, "dstone")
     n = swung(arms, -1)
     road.back_arm(g, x + 5, 4, 22 + b, ((4, "green", "dgreen"), (7, "skin2", "brown")), lift=n)
-    road.raised_arm(g, x + 23, 4, 8 + b, 25 + b, 3, ((3, "skin2", "brown"), (7, "skin2", "brown"),
-                                                      (4, "green", "dgreen")))
+    road.raised_arm(
+        g, x + 23, 4, 8 + b, 25 + b, 3, ((3, "skin2", "brown"), (7, "skin2", "brown"), (4, "green", "dgreen"))
+    )
     # the tee, lit down its left side, the flag logo on the chest, the lanyard and its badge
     g.rect(x + 9, 21 + b, 14, 12, "green")
     g.rect(x + 20, 21 + b, 3, 12, "dgreen")
@@ -1743,8 +1803,7 @@ def tour_guide(g, x, b, lf, rf, arms, dip):
         g.rect(px + 2, t + 5, 3, 1, "amber")
 
 
-def tour_group(glf=0, grf=0, gbob=0, garms=0, llf=0, lrf=0, lbob=0, larms=0, rlf=0, rrf=0, rbob=0, rarms=0,
-               dip=0):
+def tour_group(glf=0, grf=0, gbob=0, garms=0, llf=0, lrf=0, lbob=0, larms=0, rlf=0, rrf=0, rbob=0, rarms=0, dip=0):
     """The tour group facing the player: the tourists behind, then the guide in front, with the road
     outline and the lit rim."""
     g = edged(Grid(TOUR_W, 48))
@@ -1760,21 +1819,21 @@ def tour_group(glf=0, grf=0, gbob=0, garms=0, llf=0, lrf=0, lbob=0, larms=0, rlf
 # through under the body (1px higher), the same on the other side; the arms pump against the legs. 4 frames at
 # 100ms, social-frisbee-dog's run.
 VOLLEY_RUN = (
-    dict(pose="run-reach", tail=0),
-    dict(pose="run-pass", bob=-1, tail=1),
-    dict(pose="run-kick", tail=0),
-    dict(pose="run-tuck", bob=-1, tail=1),
+    {"pose": "run-reach", "tail": 0},
+    {"pose": "run-pass", "bob": -1, "tail": 1},
+    {"pose": "run-kick", "tail": 0},
+    {"pose": "run-tuck", "bob": -1, "tail": 1},
 )
 VOLLEY_RUN_MS = 100
 # Diving one lane: the push off, arms out low after the ball; flat out in the air, the near forearm under it;
 # the belly landing, the ball popped up off the fist and the sand kicked up; the slide, the ball going up out of
 # the frame and the sand flying. 4 frames at 90ms, about the time the dart takes to cross a lane.
-VOLLEY_DIVE = tuple(dict(pose=p) for p in ("dive-launch", "dive-fly", "dive-land", "dive-slide"))
+VOLLEY_DIVE = tuple({"pose": p} for p in ("dive-launch", "dive-fly", "dive-land", "dive-slide"))
 VOLLEY_DIVE_MS = 90
 # Lying where they landed, on the belly, propped on the elbows with the feet up behind: at rest, a breath (the
 # head and shoulders 1px higher), then a thumbs up held over two frames, a breath on the second. 4 frames at
 # 400ms, frame 0 the rest pose.
-VOLLEY_IDLE = (dict(pose="lie"), dict(pose="lie", bob=-1), dict(pose="lie-thumb"), dict(pose="lie-thumb", bob=-1))
+VOLLEY_IDLE = ({"pose": "lie"}, {"pose": "lie", "bob": -1}, {"pose": "lie-thumb"}, {"pose": "lie-thumb", "bob": -1})
 VOLLEY_IDLE_MS = 400
 
 # Every pose's joints in design units, side on facing right: the hip, the shoulder and the head's centre, the
@@ -1782,33 +1841,93 @@ VOLLEY_IDLE_MS = 400
 # thrown up as (x, y, r) puffs. A foot on row 43.5 or lower is planted on the road and stays put under a bob.
 # Every limb, ball and puff keeps clear of the frame's sides, so the outline closes round it at every step.
 # front turns the face to the player, as the lying player does to give the thumbs up.
-VOLLEY_LAND = dict(hip=(8.5, 41), sh=(15.5, 40.5), head=(21.5, 35),
-                   near_arm=((21.5, 43.2), (28, 43.5)), far_arm=((21.5, 42.2), (27.5, 42.5)))
-VOLLEY_LIE = dict(hip=(8, 41.5), sh=(15, 40), head=(19.5, 33.5), front=True,
-                  far_arm=((17.5, 43), (24.5, 43)), near_leg=((3, 43.5), (3.5, 37)), far_leg=((3.5, 43), (6, 37)))
+VOLLEY_LAND = {
+    "hip": (8.5, 41),
+    "sh": (15.5, 40.5),
+    "head": (21.5, 35),
+    "near_arm": ((21.5, 43.2), (28, 43.5)),
+    "far_arm": ((21.5, 42.2), (27.5, 42.5)),
+}
+VOLLEY_LIE = {
+    "hip": (8, 41.5),
+    "sh": (15, 40),
+    "head": (19.5, 33.5),
+    "front": True,
+    "far_arm": ((17.5, 43), (24.5, 43)),
+    "near_leg": ((3, 43.5), (3.5, 37)),
+    "far_leg": ((3.5, 43), (6, 37)),
+}
 VOLLEY_POSES = {
-    "run-reach": dict(hip=(15, 31), sh=(17, 22), head=(19.5, 12.5),
-                      near_arm=((13, 26.5), (11, 30)), far_arm=((20.5, 26), (23.5, 23)),
-                      near_leg=((19.5, 36.5), (21, 43.5)), far_leg=((12.5, 37.5), (8, 39.5))),
-    "run-pass": dict(hip=(15, 31), sh=(17, 22), head=(19.5, 12.5),
-                     near_arm=((15, 27.5), (17.5, 30)), far_arm=((17.5, 27.5), (20, 30)),
-                     near_leg=((16.5, 37.5), (16, 44.5)), far_leg=((19.5, 35), (15, 39))),
-    "run-kick": dict(hip=(15, 31), sh=(17, 22), head=(19.5, 12.5),
-                     near_arm=((20.5, 26), (23.5, 23)), far_arm=((13, 26.5), (11, 30)),
-                     near_leg=((12.5, 37.5), (8, 39.5)), far_leg=((19.5, 36.5), (21, 43.5))),
-    "run-tuck": dict(hip=(15, 31), sh=(17, 22), head=(19.5, 12.5),
-                     near_arm=((17.5, 27.5), (20, 30)), far_arm=((15, 27.5), (17.5, 30)),
-                     near_leg=((19.5, 35), (15, 39)), far_leg=((16.5, 37.5), (16, 44.5))),
-    "dive-launch": dict(hip=(10, 33), sh=(16.5, 28.5), head=(21.5, 22),
-                        near_arm=((22, 33), (26.5, 37.5)), far_arm=((22.5, 32), (27, 36.5)),
-                        near_leg=((6, 38), (2.5, 43.5)), far_leg=((14, 38), (11, 43.5)), ball=(27, 40.5)),
-    "dive-fly": dict(hip=(8.5, 37), sh=(15, 36.5), head=(20.5, 31.5),
-                     near_arm=((21, 39.5), (26, 40)), far_arm=((21, 38.5), (25.5, 39)),
-                     near_leg=((3.5, 37.5), (2.5, 32.5)), far_leg=((4, 38.5), (4, 33.5)), ball=(27, 36)),
-    "dive-land": dict(VOLLEY_LAND, near_leg=((3, 43.5), (2.5, 38)), far_leg=((3.5, 43), (4, 39)), ball=(27, 26),
-                      sand=((30, 42.5, 1.3), (29.5, 39, 1))),
-    "dive-slide": dict(VOLLEY_LAND, near_leg=((3, 43.5), (3, 37)), far_leg=((3.5, 43), (4.5, 38)), ball=(25.5, 15),
-                       sand=((30, 40.5, 1.2), (29.5, 36.5, 1.1), (30.5, 33, 0.8), (27.5, 31.5, 0.7))),
+    "run-reach": {
+        "hip": (15, 31),
+        "sh": (17, 22),
+        "head": (19.5, 12.5),
+        "near_arm": ((13, 26.5), (11, 30)),
+        "far_arm": ((20.5, 26), (23.5, 23)),
+        "near_leg": ((19.5, 36.5), (21, 43.5)),
+        "far_leg": ((12.5, 37.5), (8, 39.5)),
+    },
+    "run-pass": {
+        "hip": (15, 31),
+        "sh": (17, 22),
+        "head": (19.5, 12.5),
+        "near_arm": ((15, 27.5), (17.5, 30)),
+        "far_arm": ((17.5, 27.5), (20, 30)),
+        "near_leg": ((16.5, 37.5), (16, 44.5)),
+        "far_leg": ((19.5, 35), (15, 39)),
+    },
+    "run-kick": {
+        "hip": (15, 31),
+        "sh": (17, 22),
+        "head": (19.5, 12.5),
+        "near_arm": ((20.5, 26), (23.5, 23)),
+        "far_arm": ((13, 26.5), (11, 30)),
+        "near_leg": ((12.5, 37.5), (8, 39.5)),
+        "far_leg": ((19.5, 36.5), (21, 43.5)),
+    },
+    "run-tuck": {
+        "hip": (15, 31),
+        "sh": (17, 22),
+        "head": (19.5, 12.5),
+        "near_arm": ((17.5, 27.5), (20, 30)),
+        "far_arm": ((15, 27.5), (17.5, 30)),
+        "near_leg": ((19.5, 35), (15, 39)),
+        "far_leg": ((16.5, 37.5), (16, 44.5)),
+    },
+    "dive-launch": {
+        "hip": (10, 33),
+        "sh": (16.5, 28.5),
+        "head": (21.5, 22),
+        "near_arm": ((22, 33), (26.5, 37.5)),
+        "far_arm": ((22.5, 32), (27, 36.5)),
+        "near_leg": ((6, 38), (2.5, 43.5)),
+        "far_leg": ((14, 38), (11, 43.5)),
+        "ball": (27, 40.5),
+    },
+    "dive-fly": {
+        "hip": (8.5, 37),
+        "sh": (15, 36.5),
+        "head": (20.5, 31.5),
+        "near_arm": ((21, 39.5), (26, 40)),
+        "far_arm": ((21, 38.5), (25.5, 39)),
+        "near_leg": ((3.5, 37.5), (2.5, 32.5)),
+        "far_leg": ((4, 38.5), (4, 33.5)),
+        "ball": (27, 36),
+    },
+    "dive-land": dict(
+        VOLLEY_LAND,
+        near_leg=((3, 43.5), (2.5, 38)),
+        far_leg=((3.5, 43), (4, 39)),
+        ball=(27, 26),
+        sand=((30, 42.5, 1.3), (29.5, 39, 1)),
+    ),
+    "dive-slide": dict(
+        VOLLEY_LAND,
+        near_leg=((3, 43.5), (3, 37)),
+        far_leg=((3.5, 43), (4.5, 38)),
+        ball=(25.5, 15),
+        sand=((30, 40.5, 1.2), (29.5, 36.5, 1.1), (30.5, 33, 0.8), (27.5, 31.5, 0.7)),
+    ),
     "lie": dict(VOLLEY_LIE, near_arm=((18, 43.5), (25, 43.5))),
     "lie-thumb": dict(VOLLEY_LIE, near_arm=((27, 43), (29, 37)), thumb=True),
 }
@@ -1926,10 +2045,12 @@ def volleyball_player(pose="run-reach", bob=0, tail=0):
 # beside her, the tread falling down its tires a drawn pixel a frame and the greens nodding on the passing
 # frames. Idle: road.BREATH with the cart stood upright. Cue, before each step: tipping the cart back, braced,
 # halfway and over, 3 frames at 150ms.
-GRANNY_WALK = tuple(dict({k: v for k, v in q.items() if k != "arms"}, tip=1, roll=str(n // 2), nod=-q.get("bob", 0))
-                    for n, q in enumerate(road.HUMAN_WALK))
-GRANNY_IDLE = tuple(dict(bob=b) for b in road.BREATH)
-GRANNY_CUE = (dict(bob=1), dict(tip=1, bob=1), dict(tip=2))
+GRANNY_WALK = tuple(
+    dict({k: v for k, v in q.items() if k != "arms"}, tip=1, roll=str(n // 2), nod=-q.get("bob", 0))
+    for n, q in enumerate(road.HUMAN_WALK)
+)
+GRANNY_IDLE = tuple({"bob": b} for b in road.BREATH)
+GRANNY_CUE = ({"bob": 1}, {"tip": 1, "bob": 1}, {"tip": 2})
 GRANNY_CUE_MS = 150
 GRANNY_RIM = {**LIT, "forest": ("green", None), "dgreen": ("green", None)}
 # The cart's tartan: red, crossed by dgreen bands (forest where they cross), as (start, width) in layout
@@ -1994,7 +2115,7 @@ def granny_cart_shopper(lf=0, rf=0, bob=0, tip=0, roll="0", nod=0):
     g.cel(kx, 29.5 + n, 2.6, 2.2, "green", "dgreen", "lime")
     # the tartan bag, its drawstring top cinched in dred
     quad(BAG_X, BAG_W, BAG_TOP, BAG_BOTTOM, "red")
-    for (c0, cw), (r0, rw) in zip(TARTAN_COLUMNS, TARTAN_ROWS):
+    for (c0, cw), (r0, rw) in zip(TARTAN_COLUMNS, TARTAN_ROWS, strict=False):
         quad(BAG_X + c0, cw, BAG_TOP, BAG_BOTTOM, "dgreen")
         quad(BAG_X, BAG_W, BAG_TOP + r0, BAG_TOP + r0 + rw, "dgreen")
     for c0, cw in TARTAN_COLUMNS:
@@ -2061,16 +2182,22 @@ def granny_cart_shopper(lf=0, rf=0, bob=0, tip=0, roll="0", nod=0):
 # and bob, the tires' tread rolling 1 drawn pixel down a frame (roll). 4 frames at 160ms, as the gardener's
 # push.
 KEG_TIP, KEG_TILT = 3.5, 1
-KEG_PUSH = tuple(dict(lf=q.get("lf", 0), rf=q.get("rf", 0), bob=q.get("bob", 0), tip=KEG_TIP, tilt=KEG_TILT,
-                      roll=n) for n, q in enumerate(road.PERSON_WALK))
+KEG_PUSH = tuple(
+    {"lf": q.get("lf", 0), "rf": q.get("rf", 0), "bob": q.get("bob", 0), "tip": KEG_TIP, "tilt": KEG_TILT, "roll": n}
+    for n, q in enumerate(road.PERSON_WALK)
+)
 KEG_PUSH_MS = 160
 # Stopped: the dolly stood upright on its nose plate, the screen-right hand flat on the keg's lid steadying
 # the load, breathing: road.BREATH, the hand staying on the lid. 2 frames at road.BREATH_MS.
-KEG_IDLE = tuple(dict(steady=0, bob=b) for b in road.BREATH)
+KEG_IDLE = tuple({"steady": 0, "bob": b} for b in road.BREATH)
 # Restarting: both hands on the handles, braced low, then rocking the dolly back onto its wheels, halfway and
 # over, then braced to push. 4 frames at 200ms, as the gardener's cue.
-KEG_CUE = (dict(bob=1), dict(bob=1, tip=KEG_TIP / 2), dict(tip=KEG_TIP, tilt=KEG_TILT),
-           dict(tip=KEG_TIP, tilt=KEG_TILT, bob=-1))
+KEG_CUE = (
+    {"bob": 1},
+    {"bob": 1, "tip": KEG_TIP / 2},
+    {"tip": KEG_TIP, "tilt": KEG_TILT},
+    {"tip": KEG_TIP, "tilt": KEG_TILT, "bob": -1},
+)
 KEG_CUE_MS = 200
 KEG_RIM = {**LIT, "green": ("green", None)}
 # The load's columns and vertical half-spans, the rails just outside them, and the wheels' centres and radii:
@@ -2131,7 +2258,7 @@ def keg_dolly_worker(lf=0, rf=0, bob=0, tip=0, tilt=0, roll=0, steady=None):
     for x in (11.5, 18.5):
         g.rect(x, 19.5 + b, 2, 2, "green")
     # the wheels, edge-on behind the rails' feet, their tread rolling down the outer half that shows
-    for cx, side in zip(DOLLY_WHEELS, (-1.5, 0.5)):
+    for cx, side in zip(DOLLY_WHEELS, (-1.5, 0.5), strict=False):
         g.ell(cx, 45 - WHEEL_RY, WHEEL_RX, WHEEL_RY, "ink")
         tread_rows(g, cx + side, 45 - 2 * WHEEL_RY + 1, 45, roll, K["slate"])
     # One clear steel cylinder fills the load envelope above the nose plate.
@@ -2168,6 +2295,7 @@ def keg_dolly_worker(lf=0, rf=0, bob=0, tip=0, tilt=0, roll=0, steady=None):
 
 # ---------- every sprite at a depth step ----------
 
+
 def posed(q, p):
     """A pose q with its numeric offsets snapped to whole pixels at p."""
     return {**q, **snap({k: v for k, v in q.items() if isinstance(v, (int, float))}, p)}
@@ -2184,36 +2312,69 @@ def steps(suffix, s):
     def own(draw, q):
         return minis.small(here, p, draw, **posed(q, p)).outlined()
 
-    breath = [dict(bob=b) for b in road.BREATH]
-    yield f"tourist{suffix}", [("walk", [person(tourist, q) for q in road.HUMAN_WALK], road.HUMAN_WALK_MS),
-                               ("idle", [person(tourist, q) for q in breath], road.BREATH_MS)]
-    yield f"couple{suffix}", [("walk", [own(couple, q) for q in COUPLE_WALK], COUPLE_WALK_MS),
-                              ("idle", [own(couple, q) for q in breath], road.BREATH_MS)]
+    breath = [{"bob": b} for b in road.BREATH]
+    yield (
+        f"tourist{suffix}",
+        [
+            ("walk", [person(tourist, q) for q in road.HUMAN_WALK], road.HUMAN_WALK_MS),
+            ("idle", [person(tourist, q) for q in breath], road.BREATH_MS),
+        ],
+    )
+    yield (
+        f"couple{suffix}",
+        [
+            ("walk", [own(couple, q) for q in COUPLE_WALK], COUPLE_WALK_MS),
+            ("idle", [own(couple, q) for q in breath], road.BREATH_MS),
+        ],
+    )
     yield f"busker{suffix}", [("idle", [person(busker, q) for q in BUSKER_IDLE], BUSKER_IDLE_MS)]
-    yield f"strolling-busker{suffix}", [
-        ("walk", [person(strolling_busker, q) for q in STROLLING_WALK], road.PERSON_WALK_MS),
-        ("idle", [person(strolling_busker, q) for q in STROLLING_IDLE], STROLLING_IDLE_MS),
-        ("cue", [person(strolling_busker, q) for q in STROLLING_CUE], STROLLING_CUE_MS)]
-    yield f"stilt-walker{suffix}", [("walk", [own(stilt_walker, q) for q in STILT_WALK], STILT_WALK_MS),
-                                    ("idle", [own(stilt_walker, q) for q in STILT_IDLE], STILT_IDLE_MS),
-                                    ("cue", [own(stilt_walker, q) for q in STILT_CUE], STILT_CUE_MS)]
-    yield f"delivery-cyclist{suffix}", [("ride", [delivery_at(s, **q).outlined() for q in DELIVERY_RIDE],
-                                         DELIVERY_RIDE_MS),
-                                        ("merge", [delivery_at(s, **q).outlined() for q in DELIVERY_MERGE],
-                                         DELIVERY_MERGE_MS)]
+    yield (
+        f"strolling-busker{suffix}",
+        [
+            ("walk", [person(strolling_busker, q) for q in STROLLING_WALK], road.PERSON_WALK_MS),
+            ("idle", [person(strolling_busker, q) for q in STROLLING_IDLE], STROLLING_IDLE_MS),
+            ("cue", [person(strolling_busker, q) for q in STROLLING_CUE], STROLLING_CUE_MS),
+        ],
+    )
+    yield (
+        f"stilt-walker{suffix}",
+        [
+            ("walk", [own(stilt_walker, q) for q in STILT_WALK], STILT_WALK_MS),
+            ("idle", [own(stilt_walker, q) for q in STILT_IDLE], STILT_IDLE_MS),
+            ("cue", [own(stilt_walker, q) for q in STILT_CUE], STILT_CUE_MS),
+        ],
+    )
+    yield (
+        f"delivery-cyclist{suffix}",
+        [
+            ("ride", [delivery_at(s, **q).outlined() for q in DELIVERY_RIDE], DELIVERY_RIDE_MS),
+            ("merge", [delivery_at(s, **q).outlined() for q in DELIVERY_MERGE], DELIVERY_MERGE_MS),
+        ],
+    )
 
     def segway(q):
         # the tread's phase and the pennant are choices, not offsets, so they skip the snap
-        return minis.small(here, p, segway_tour_rider, roll=q["roll"], flag=q["flag"],
-                           **posed(dict(bob=q["bob"]), p)).outlined()
+        return minis.small(
+            here, p, segway_tour_rider, roll=q["roll"], flag=q["flag"], **posed({"bob": q["bob"]}, p)
+        ).outlined()
 
     yield f"segway-tour-rider{suffix}", [("ride", [segway(q) for q in SEGWAY_RIDE], SEGWAY_RIDE_MS)]
-    yield f"gardener{suffix}", [("push", [own(gardener, q) for q in GARDENER_PUSH], GARDENER_PUSH_MS),
-                                ("idle", [own(gardener, q) for q in GARDENER_IDLE], road.BREATH_MS),
-                                ("cue", [own(gardener, q) for q in GARDENER_CUE], GARDENER_CUE_MS)]
-    yield f"park-rangers-cart{suffix}", [("push", [own(park_rangers_cart, q) for q in RANGER_PUSH], RANGER_PUSH_MS),
-                                         ("idle", [own(park_rangers_cart, q) for q in RANGER_IDLE], RANGER_IDLE_MS),
-                                         ("cue", [own(park_rangers_cart, q) for q in RANGER_CUE], RANGER_CUE_MS)]
+    yield (
+        f"gardener{suffix}",
+        [
+            ("push", [own(gardener, q) for q in GARDENER_PUSH], GARDENER_PUSH_MS),
+            ("idle", [own(gardener, q) for q in GARDENER_IDLE], road.BREATH_MS),
+            ("cue", [own(gardener, q) for q in GARDENER_CUE], GARDENER_CUE_MS),
+        ],
+    )
+    yield (
+        f"park-rangers-cart{suffix}",
+        [
+            ("push", [own(park_rangers_cart, q) for q in RANGER_PUSH], RANGER_PUSH_MS),
+            ("idle", [own(park_rangers_cart, q) for q in RANGER_IDLE], RANGER_IDLE_MS),
+            ("cue", [own(park_rangers_cart, q) for q in RANGER_CUE], RANGER_CUE_MS),
+        ],
+    )
 
     def bike(q):
         # the tread frame, the offered cone and the ring are choices, not offsets, so they skip the snap
@@ -2221,52 +2382,92 @@ def steps(suffix, s):
         rest = {k: v for k, v in q.items() if k not in keep}
         return minis.small(here, p, ice_cream_bike, **posed(rest, p), **keep).outlined()
 
-    yield f"ice-cream-bike{suffix}", [("push", [bike(q) for q in ICE_PUSH], ICE_PUSH_MS),
-                                      ("idle", [bike(q) for q in ICE_IDLE], ICE_IDLE_MS),
-                                      ("cue", [bike(q) for q in ICE_CUE], ICE_CUE_MS)]
-    cart = [minis.small(here, p, food_cart_vendor, tread=k, **posed(q, p)).outlined()
-            for k, q in enumerate(CART_PUSH)]
-    yield f"food-cart-vendor{suffix}", [("push", cart, CART_PUSH_MS),
-                                        ("idle", [own(food_cart_vendor, q) for q in CART_IDLE], CART_IDLE_MS),
-                                        ("cue", [own(food_cart_vendor, q) for q in CART_CUE], CART_CUE_MS)]
+    yield (
+        f"ice-cream-bike{suffix}",
+        [
+            ("push", [bike(q) for q in ICE_PUSH], ICE_PUSH_MS),
+            ("idle", [bike(q) for q in ICE_IDLE], ICE_IDLE_MS),
+            ("cue", [bike(q) for q in ICE_CUE], ICE_CUE_MS),
+        ],
+    )
+    cart = [minis.small(here, p, food_cart_vendor, tread=k, **posed(q, p)).outlined() for k, q in enumerate(CART_PUSH)]
+    yield (
+        f"food-cart-vendor{suffix}",
+        [
+            ("push", cart, CART_PUSH_MS),
+            ("idle", [own(food_cart_vendor, q) for q in CART_IDLE], CART_IDLE_MS),
+            ("cue", [own(food_cart_vendor, q) for q in CART_CUE], CART_CUE_MS),
+        ],
+    )
 
     def spinner(q):
         # the turn is an angle, not an offset, so it is not snapped
         pose = posed({k: v for k, v in q.items() if k != "turn"}, p)
         return minis.small(road, p, sign_spinner, turn=q.get("turn", 0), **pose).outlined()
 
-    yield f"sign-spinner{suffix}", [("hop", [spinner(q) for q in SPINNER_HOP], SPINNER_HOP_MS),
-                                    ("idle", [spinner(q) for q in SPINNER_IDLE], SPINNER_IDLE_MS),
-                                    ("cue", [spinner(q) for q in SPINNER_CUE], SPINNER_CUE_MS)]
-    yield f"hopscotch-kid{suffix}", [("hop", [own(hopscotch_kid, q) for q in KID_HOP], KID_HOP_MS),
-                                     ("idle", [own(hopscotch_kid, q) for q in KID_IDLE], KID_IDLE_MS),
-                                     ("cue", [own(hopscotch_kid, q) for q in KID_CUE], KID_CUE_MS)]
-    yield f"tour-group{suffix}", [("walk", [own(tour_group, q) for q in TOUR_WALK], TOUR_WALK_MS),
-                                  ("idle", [own(tour_group, dict(gbob=b, lbob=b, rbob=b)) for b in road.BREATH],
-                                   road.BREATH_MS),
-                                  ("cue", [own(tour_group, q) for q in TOUR_CUE], TOUR_CUE_MS)]
-    yield f"volleyball-player{suffix}", [("run", [own(volleyball_player, q) for q in VOLLEY_RUN], VOLLEY_RUN_MS),
-                                         ("dive", [own(volleyball_player, q) for q in VOLLEY_DIVE], VOLLEY_DIVE_MS),
-                                         ("idle", [own(volleyball_player, q) for q in VOLLEY_IDLE], VOLLEY_IDLE_MS)]
+    yield (
+        f"sign-spinner{suffix}",
+        [
+            ("hop", [spinner(q) for q in SPINNER_HOP], SPINNER_HOP_MS),
+            ("idle", [spinner(q) for q in SPINNER_IDLE], SPINNER_IDLE_MS),
+            ("cue", [spinner(q) for q in SPINNER_CUE], SPINNER_CUE_MS),
+        ],
+    )
+    yield (
+        f"hopscotch-kid{suffix}",
+        [
+            ("hop", [own(hopscotch_kid, q) for q in KID_HOP], KID_HOP_MS),
+            ("idle", [own(hopscotch_kid, q) for q in KID_IDLE], KID_IDLE_MS),
+            ("cue", [own(hopscotch_kid, q) for q in KID_CUE], KID_CUE_MS),
+        ],
+    )
+    yield (
+        f"tour-group{suffix}",
+        [
+            ("walk", [own(tour_group, q) for q in TOUR_WALK], TOUR_WALK_MS),
+            ("idle", [own(tour_group, {"gbob": b, "lbob": b, "rbob": b}) for b in road.BREATH], road.BREATH_MS),
+            ("cue", [own(tour_group, q) for q in TOUR_CUE], TOUR_CUE_MS),
+        ],
+    )
+    yield (
+        f"volleyball-player{suffix}",
+        [
+            ("run", [own(volleyball_player, q) for q in VOLLEY_RUN], VOLLEY_RUN_MS),
+            ("dive", [own(volleyball_player, q) for q in VOLLEY_DIVE], VOLLEY_DIVE_MS),
+            ("idle", [own(volleyball_player, q) for q in VOLLEY_IDLE], VOLLEY_IDLE_MS),
+        ],
+    )
 
     def shopper(q):
         """The shopper in pose q, the tread frame a choice, not an offset to snap."""
         pose = {k: v for k, v in q.items() if k != "roll"}
         return minis.small(here, p, granny_cart_shopper, roll=q.get("roll", "0"), **posed(pose, p)).outlined()
 
-    yield f"granny-cart-shopper{suffix}", [("walk", [shopper(q) for q in GRANNY_WALK], road.HUMAN_WALK_MS),
-                                           ("idle", [shopper(q) for q in GRANNY_IDLE], road.BREATH_MS),
-                                           ("cue", [shopper(q) for q in GRANNY_CUE], GRANNY_CUE_MS)]
+    yield (
+        f"granny-cart-shopper{suffix}",
+        [
+            ("walk", [shopper(q) for q in GRANNY_WALK], road.HUMAN_WALK_MS),
+            ("idle", [shopper(q) for q in GRANNY_IDLE], road.BREATH_MS),
+            ("cue", [shopper(q) for q in GRANNY_CUE], GRANNY_CUE_MS),
+        ],
+    )
 
     def dolly(q):
         """The keg dolly worker in pose q, its tread frame a choice, not an offset to snap."""
         pose = posed({k: v for k, v in q.items() if k != "roll"}, p)
         return minis.small(here, p, keg_dolly_worker, roll=q.get("roll", 0), **pose).outlined()
 
-    yield f"keg-dolly-worker{suffix}", [(tag, [dolly(q) for q in poses], ms)
-                                        for tag, poses, ms in (("push", KEG_PUSH, KEG_PUSH_MS),
-                                                               ("idle", KEG_IDLE, road.BREATH_MS),
-                                                               ("cue", KEG_CUE, KEG_CUE_MS))]
+    yield (
+        f"keg-dolly-worker{suffix}",
+        [
+            (tag, [dolly(q) for q in poses], ms)
+            for tag, poses, ms in (
+                ("push", KEG_PUSH, KEG_PUSH_MS),
+                ("idle", KEG_IDLE, road.BREATH_MS),
+                ("cue", KEG_CUE, KEG_CUE_MS),
+            )
+        ],
+    )
 
 
 def sprites():
@@ -2279,4 +2480,5 @@ def sprites():
 if __name__ == "__main__":
     # minis swaps the grid of the module named hood_people, so the build runs that module's functions
     import hood_people
+
     main(sys.argv, hood_people.sprites, "art/hood-people", __doc__)

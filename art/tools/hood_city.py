@@ -123,26 +123,30 @@ hand edits to them belong in this file instead. Shared tooling is in pixel.py.
 """
 
 import math
-import os
 import subprocess
 import sys
+from pathlib import Path
 
-sys.path.insert(0, os.path.dirname(__file__))
-import depths  # noqa: E402
-import hits  # noqa: E402
-import hood_people  # noqa: E402
-import obstacles  # noqa: E402
-import road  # noqa: E402
-import sounds  # noqa: E402
-from minis import STEPS, small, snap  # noqa: E402
-from obstacles import treads, unit  # noqa: E402
-from pixel import Grid, build as build_sprites, depth_settled, edged, preview, raster, scale_of, to_image  # noqa: E402
-from road import BREATH, BREATH_MS, HUMAN_WALK, HUMAN_WALK_MS, LIT, face_disc, lit, rim  # noqa: E402
+sys.path.insert(0, str(Path(__file__).parent))
+import itertools
+
+import depths
+import hits
+import hood_people
+import obstacles
+import sounds
+from minis import STEPS, small, snap
+from obstacles import treads, unit
+from pixel import Grid, depth_settled, edged, preview, raster, scale_of, to_image
+from pixel import build as build_sprites
+
+import road
+from road import BREATH, BREATH_MS, HUMAN_WALK, HUMAN_WALK_MS, LIT, face_disc, lit, rim
 
 SRC = "art/hood-city"
 # The people and riders are laid out on 32x48 and drawn at road.SCALE; the minor obstacles in layout pixels
 # at obstacles.SCALE; the bus at obstacles.CAR_SCALE.
-P, O, CAR = road.SCALE, obstacles.SCALE, obstacles.CAR_SCALE
+P, OBSTACLE_SCALE, CAR = road.SCALE, obstacles.SCALE, obstacles.CAR_SCALE
 
 
 def this():
@@ -169,6 +173,7 @@ def stamp(g, rows, cx, cy, cols):
 
 # ---------- dropped-ice-cream: the kid and her dropped cone ----------
 
+
 def waffle(g, x0, x1, y0, apex):
     """A waffle cone held point down: a triangle from its rim (x0 to x1 on row y0) to its point on row apex,
     tan lit on the left and ochre on the right, hatched in brown."""
@@ -187,6 +192,7 @@ def kid_top(tear=False):
     """The kid with the dropped cone, for kid(): a peach sundress, brown pigtails tied with red bobbles,
     looking down at the cone, her brows up and her mouth turned down; tear puts a cyan tear on her
     cheek."""
+
     def top(g, b, arms=0):
         # the arms hang by her sides, the hands open, the free one swinging with the walk
         for x, side in ((7, -1), (19, 1)):
@@ -226,6 +232,7 @@ def kid_top(tear=False):
         g.p(19.5, 19 + b, "pink")
         if tear:
             g.rect(10, 19.5 + b, 1, 2, "cyan")
+
     return top
 
 
@@ -269,8 +276,10 @@ def promo_top(tally=True):
     turquoise tee with a yellow star, an amber cap, a TV camera on her right shoulder (screen left) with its
     lens to the player and a red tally light (dred when tally is off), and a mic with a hot pink flag held
     out at shoulder height in her other hand."""
+
     def top(g, b, arms=0):
         # the mic arm (screen right): the sleeve and forearm up to the hand, the mic in it
+        del arms
         g.rect(23, 22 + b, 4, 3, "turquoise")
         g.rect(25, 22 + b, 3, 5, "skin2")
         g.rect(27, 22 + b, 1, 5, "brown")
@@ -306,6 +315,7 @@ def promo_top(tally=True):
         g.cel(5, 17.5 + b, 3, 3, "ink", None, "slate")
         g.rect(4, 16.5 + b, 1, 1, "white")
         g.rect(7.5, 14.5 + b, 1.5, 1.5, "red" if tally else "dred")
+
     return top
 
 
@@ -313,8 +323,12 @@ def promo_top(tally=True):
 
 # The skating stride: the foot pushing out to its side (None while both glide), the sway toward the gliding
 # foot and the tread's roll. 4 frames at 100ms.
-ROLLER_RIDE = [dict(push="left", sway=1, roll=0), dict(roll=1), dict(push="right", sway=-1, roll=2),
-               dict(roll=3)]
+ROLLER_RIDE = [
+    {"push": "left", "sway": 1, "roll": 0},
+    {"roll": 1},
+    {"push": "right", "sway": -1, "roll": 2},
+    {"roll": 3},
+]
 ROLLER_RIDE_MS = 100
 
 
@@ -394,8 +408,12 @@ def rollerblader(push=None, sway=0, roll=0):
 # ---------- pedicab ----------
 
 # Pedalling: each foot's row (the pedals go round) and the tread's roll; 4 frames at 120ms.
-PEDICAB_RIDE = [dict(lf=39, rf=44, roll=0), dict(lf=41, rf=42, roll=1), dict(lf=44, rf=39, roll=2),
-                dict(lf=42, rf=41, roll=3)]
+PEDICAB_RIDE = [
+    {"lf": 39, "rf": 44, "roll": 0},
+    {"lf": 41, "rf": 42, "roll": 1},
+    {"lf": 44, "rf": 39, "roll": 2},
+    {"lf": 42, "rf": 41, "roll": 3},
+]
 PEDICAB_RIDE_MS = 120
 
 
@@ -468,8 +486,9 @@ def pedicab(lf=39, rf=44, roll=0):
     road.face_front(g, 16, 18, lips="ink", spread=3, mouth=3)
     # the lit headlamp on the fork crown over the mudguard
     road.headlamp(g, 16, 36.5)
-    return rim(g, dict(LIT, dbrown=("skin2", "brown"), plum=("skin2", "brown"), coal=("ash", None),
-                       shale=("ash", None)))
+    return rim(
+        g, dict(LIT, dbrown=("skin2", "brown"), plum=("skin2", "brown"), coal=("ash", None), shale=("ash", None))
+    )
 
 
 # ---------- beach umbrella: someone's spot set up in the road ----------
@@ -650,7 +669,7 @@ def lifeguard_chair(lift=0):
     # the life ring hung on the left leg
     g.cel(9, 38, 4, 4, "orange", "rust", "amber")
     g.cel(9, 38, 1.6, 1.6, None)
-    for (x, y) in ((5, 38), (13, 38)):
+    for x, y in ((5, 38), (13, 38)):
         g.rect(x, y - 0.5, 1, 1, "white")
     return lit(g)
 
@@ -688,10 +707,10 @@ def volleyball_net(lanes, breeze=0):
     px, s = raster(g), scale_of(g)
     sy = getattr(g, "sy", s)
 
-    def X(v):
+    def to_x(v):
         return math.floor(v * s + 0.5)
 
-    def Y(v):
+    def to_y(v):
         return math.floor(v * sy + 0.5)
 
     posts = (2, w - 6)
@@ -702,8 +721,8 @@ def volleyball_net(lanes, breeze=0):
         g.rect(x + 3, 4, 1, crest + 1 - 4, "lgrey")
         g.rect(x - 0.5, 3, 5, 1.5, "lgrey")
     # the net between the posts, on the drawn grid so every line stays 1px
-    x0, x1 = X(posts[0] + 4), X(posts[1])
-    top, foot, bottom = Y(NET_TOP), Y(NET_TOP + 4), Y(NET_BOTTOM)
+    x0, x1 = to_x(posts[0] + 4), to_x(posts[1])
+    top, foot, bottom = to_y(NET_TOP), to_y(NET_TOP + 4), to_y(NET_BOTTOM)
     px.rect(x0, top, x1 - x0, foot - top, "white")
     px.rect(x0, foot - 1, x1 - x0, 1, "azure")
     lift = x0 + (x1 - x0) // 4, x1 - (x1 - x0) // 4
@@ -718,20 +737,21 @@ def volleyball_net(lanes, breeze=0):
     # the antennas, just inside each end band, striped red and white every 2 drawn pixels; breeze bends the
     # tip outward
     for x, out in ((x0 + 2, -1), (x1 - 3, 1)):
-        for y in range(Y(0), bottom):
-            c = "red" if (y - Y(0)) // 2 % 2 == 0 else "white"
-            px.p(x + (out if breeze and y == Y(0) else 0), y, c)
+        for y in range(to_y(0), bottom):
+            c = "red" if (y - to_y(0)) // 2 % 2 == 0 else "white"
+            px.p(x + (out if breeze and y == to_y(0) else 0), y, c)
     # the sand: a drift the width of the net, its top rippling a pixel, heaped into a mound round each post
-    for x in range(X(1.5), X(w - 1.5)):
-        top_y = Y(crest) - (1 if (x // max(2, X(5))) % 2 else 0)
-        px.rect(x, top_y, 1, Y(h) - top_y, "tan")
+    for x in range(to_x(1.5), to_x(w - 1.5)):
+        top_y = to_y(crest) - (1 if (x // max(2, to_x(5))) % 2 else 0)
+        px.rect(x, top_y, 1, to_y(h) - top_y, "tan")
         px.p(x, top_y, "cream")
-        px.p(x, Y(h) - 1, "brown")
+        px.p(x, to_y(h) - 1, "brown")
     for x in (posts[0] + 4.5, posts[1] - 0.5):
         g.cel(x, h - 3, 5, 3.5, "tan", "brown", "cream")
     if s >= BALL_MIN:
         hood_people.volley_ball(g, posts[1] - 11, h - 4)
     return lit(g)
+
 
 def net(s, lanes, breeze):
     """volleyball_net at s, outlined, its holes cleared."""
@@ -760,49 +780,48 @@ def streetcar_platform(dim=0):
     g = edged(Grid(w, PLATFORM_ROWS), net_edge)
     px, s = raster(g), scale_of(g)
     sy = getattr(g, "sy", s)
-    W, H = px.w, px.h
+    width, height = px.w, px.h
 
-    def X(v):
+    def to_x(v):
         return math.floor(v * s + 0.5)
 
-    def Y(v):
+    def to_y(v):
         return math.floor(v * sy + 0.5)
 
     big = s >= 0.85
     # the platform: an lgrey top under a white lit curb edge, a grey face, slate along its foot and right end
-    top, face = Y(PLATFORM_ROWS - 7), Y(PLATFORM_ROWS - 5)
-    px.rect(1, top, W - 2, H - top, "grey")
-    px.rect(1, top, W - 2, face - top, "lgrey")
-    px.rect(1, top, W - 2, 1, "white")
-    px.rect(1, H - 1, W - 2, 1, "slate")
-    px.rect(W - 2, face, 1, H - face, "slate")
+    top, face = to_y(PLATFORM_ROWS - 7), to_y(PLATFORM_ROWS - 5)
+    px.rect(1, top, width - 2, height - top, "grey")
+    px.rect(1, top, width - 2, face - top, "lgrey")
+    px.rect(1, top, width - 2, 1, "white")
+    px.rect(1, height - 1, width - 2, 1, "slate")
+    px.rect(width - 2, face, 1, height - face, "slate")
     if s >= obstacles.TEXTURE_MIN:
         for v in (w / 4, w / 2, 3 * w / 4):
-            px.rect(X(v), face, 1, H - face - 1, "slate")
+            px.rect(to_x(v), face, 1, height - face - 1, "slate")
     # the railing at the left end: two posts and a top and a middle rail, its gaps HOLE until platform()
-    rail_top, post = Y(PLATFORM_ROWS - 18), 2 if big else 1
-    r0, r1 = X(4), X(20) + post
+    rail_top, post = to_y(PLATFORM_ROWS - 18), 2 if big else 1
+    r0, r1 = to_x(4), to_x(20) + post
     px.rect(r0, rail_top, r1 - r0, top - rail_top, HOLE)
     for x in (r0, r1 - post):
         px.rect(x, rail_top, post, top - rail_top, "grey")
-    for y in (rail_top, Y(PLATFORM_ROWS - 12.5)):
+    for y in (rail_top, to_y(PLATFORM_ROWS - 12.5)):
         px.rect(r0, y, r1 - r0, 1, "lgrey")
     # the shelter: the roof band, the glass under it, the frame round the panes
-    x0, x1 = X(30), X(100)
-    over, roof0, roof1 = 2 * post, Y(6), Y(11)
+    x0, x1 = to_x(30), to_x(100)
+    over, roof0, roof1 = 2 * post, to_y(6), to_y(11)
     px.rect(x0 - over, roof0, x1 - x0 + 2 * over, roof1 - roof0, "ttc")
     px.rect(x0 - over, roof0, x1 - x0 + 2 * over, 1, "pink")
     foot = top - 1
     px.rect(x0, roof1, x1 - x0, foot - roof1, "navy")
-    posts = [x0, X(48), X(74), x1 - post]
+    posts = [x0, to_x(48), to_x(74), x1 - post]
     # the ad panel, between the first two posts: lit white round an azure poster, dipped to lgrey and cobalt
     a0, a1 = posts[0] + post, posts[1]
     px.rect(a0, roof1, a1 - a0, foot - roof1, "lgrey" if dim else "white")
     m = 2 if big else 1
-    px.rect(a0 + m, roof1 + m, a1 - a0 - 2 * m, foot - roof1 - 2 * m - (2 if big else 1),
-            "cobalt" if dim else "azure")
+    px.rect(a0 + m, roof1 + m, a1 - a0 - 2 * m, foot - roof1 - 2 * m - (2 if big else 1), "cobalt" if dim else "azure")
     # the glints, a cyan diagonal streak across each glass pane
-    for p0, p1 in zip(posts[1:], posts[2:]):
+    for p0, p1 in itertools.pairwise(posts[1:]):
         g0, g1 = p0 + post, p1
         n = foot - roof1
         for k in range(n):
@@ -814,9 +833,9 @@ def streetcar_platform(dim=0):
         px.rect(x, roof1, post, foot - roof1 + 1, "white")
     px.rect(x0, foot, x1 - x0, 1, "white")
     # the stop sign pole and its sign: red round a white band with a red bar through it
-    pole = X(122)
-    px.rect(pole, Y(8), post, top - Y(8), "slate")
-    s0, s1, t0, t1 = X(115), X(129) + post, Y(0), Y(9)
+    pole = to_x(122)
+    px.rect(pole, to_y(8), post, top - to_y(8), "slate")
+    s0, s1, t0, t1 = to_x(115), to_x(129) + post, to_y(0), to_y(9)
     px.rect(s0, t0, s1 - s0, t1 - t0, "ttc")
     px.rect(s0, t0, s1 - s0, 1, "pink")
     # the white band keeps 2 rows of red over and under it, so the sign stays red at the far steps
@@ -824,7 +843,7 @@ def streetcar_platform(dim=0):
     px.rect(s0 + b, t0 + 2, s1 - s0 - 2 * b, t1 - t0 - 4, "white")
     if big:
         px.rect(s0 + b + 1, (t0 + t1) // 2, s1 - s0 - 2 * b - 2, 1, "ttc")
-    return lit(g, dict(ttc=("pink", None)))
+    return lit(g, {"ttc": ("pink", None)})
 
 
 def platform(s, dim):
@@ -871,7 +890,7 @@ def sandwich_board(steam=0):
         g.rect(x + (ux if steam and k % 4 >= 2 else 0), y, 1, 1, "lgrey")
     g.rect(13, 23, 14, 1, "lgrey")
     g.rect(14, 26, 11, 1, "lgrey")
-    return lit(g, dict(forest=("green", None)))
+    return lit(g, {"forest": ("green", None)})
 
 
 # ---------- newspaper boxes ----------
@@ -879,8 +898,11 @@ def sandwich_board(steam=0):
 NEWS_IDLE = (0, 0, 1, 0), 400
 # Each box: its left edge, width, top row, body, shade and masthead bar colours. The red one is the
 # tallest and, drawn last, stands in front of its neighbours.
-NEWS_BOXES = ((3, 11, 11, "sky", "blue", "blue"), (26, 11, 12, "yellow", "amber", "red"),
-              (14, 12, 8, "red", "dred", "dred"))
+NEWS_BOXES = (
+    (3, 11, 11, "sky", "blue", "blue"),
+    (26, 11, 12, "yellow", "amber", "red"),
+    (14, 12, 8, "red", "dred", "dred"),
+)
 
 
 def news_box_front(g, x, w, top, body, shade, bar):
@@ -1018,7 +1040,7 @@ def ttc_bus(blink=0, roll=None):
     dip = 1 if roll in (1, 2) else 0
     body = px.px
     px.px = [[(body[y - dip][x] if y >= dip else None) or wheels[y][x] for x in range(px.w)] for y in range(px.h)]
-    return lit(g, dict(ttc=("red", None)))
+    return lit(g, {"ttc": ("red", None)})
 
 
 # ---------- hit bursts (hits.py's layout: 64x64, drawn hits.BURST_SCALE times bigger) ----------
@@ -1036,29 +1058,41 @@ def hit_dropped_ice_cream(step):
         return hits.rim(g)
     # the splat: a flat pink blot spreading, shaded mauve, that shrinks back to drips
     sr = (0, 10, 14, 16, 16, 14, 11, 8)[step]
-    hits.piece(g, lambda p: [p.ell(cx, cy + 6, sr, sr * 0.38, "pink", "mauve", "white"),
-                             p.ell(cx - sr * 0.6, cy + 7, sr * 0.3, sr * 0.22, "pink", "mauve")])
+    hits.piece(
+        g,
+        lambda p: [
+            p.ell(cx, cy + 6, sr, sr * 0.38, "pink", "mauve", "white"),
+            p.ell(cx - sr * 0.6, cy + 7, sr * 0.3, sr * 0.22, "pink", "mauve"),
+        ],
+    )
     # drops thrown out of it and falling
     t = step - 0.5
     for i, (vx, vy) in enumerate(((-8, -6), (8, -7), (-4, -9), (5, -10), (-11, -3), (11, -4))):
         x, y = cx + vx * t * 0.8, cy + 4 + vy * t * 0.8 + 1.1 * t * t
         if 3 <= x < 61 and 3 <= y < 60:
             col = SPRINKLES[i % 4] if i % 2 else "pink"
-            hits.piece(g, lambda p: p.ell(x, y, 1.5, 1.5, col))
+            hits.piece(g, lambda p, col=col, x=x, y=y: p.ell(x, y, 1.5, 1.5, col))
     # the empty cone tumbling off to the right, a quarter turn a frame, its rim lit and its point ochre
     ccx, ccy = cx + 5 + step * 3, cy - 4 - step * 3 + step * step * 0.6
     if ccx < 55 and ccy < 55:
         a = math.radians(step * 90 + 30)
         tip = (ccx + math.cos(a) * 7, ccy + math.sin(a) * 7)
-        rim_ = [(ccx - math.cos(a) * 3 + math.cos(a + d) * 4, ccy - math.sin(a) * 3 + math.sin(a + d) * 4)
-                for d in (math.pi / 2, -math.pi / 2)]
+        rim_ = [
+            (ccx - math.cos(a) * 3 + math.cos(a + d) * 4, ccy - math.sin(a) * 3 + math.sin(a + d) * 4)
+            for d in (math.pi / 2, -math.pi / 2)
+        ]
         mid = ((rim_[0][0] + tip[0]) / 2, (rim_[0][1] + tip[1]) / 2)
         hits.piece(g, lambda p: [p.tri(rim_[0], rim_[1], tip, "tan"), p.tri(rim_[1], tip, mid, "ochre")])
     # the scoop: up, peaking, dropping back
     sy = (0, 28, 18, 13, 12, 15, 21, 29)[step]
-    hits.piece(g, lambda p: [p.ell(cx - 2, sy, 5.5, 5, "pink", "mauve", "white"),
-                             p.rect(cx - 6, sy + 3, 9, 2, "pink"),
-                             p.p(cx - 3, sy - 4, "red")])
+    hits.piece(
+        g,
+        lambda p: [
+            p.ell(cx - 2, sy, 5.5, 5, "pink", "mauve", "white"),
+            p.rect(cx - 6, sy + 3, 9, 2, "pink"),
+            p.p(cx - 3, sy - 4, "red"),
+        ],
+    )
     return g
 
 
@@ -1072,20 +1106,25 @@ def hit_big_screen_promo(step):
         return hits.rim(g)
     fr = (0, 15, 12, 9, 6, 4, 0, 0)[step]
     if fr:
-        hits.piece(g, lambda p: [hits.burst(p, cx, cy, fr, fr * 0.45, 8, "yellow", 22.5),
-                                 p.ell(cx, cy, fr * 0.45, fr * 0.45, "white")])
+        hits.piece(
+            g,
+            lambda p: [
+                hits.burst(p, cx, cy, fr, fr * 0.45, 8, "yellow", 22.5),
+                p.ell(cx, cy, fr * 0.45, fr * 0.45, "white"),
+            ],
+        )
     for i, (x, y) in enumerate(((14, 18), (50, 22), (18, 50), (48, 48), (32, 12))):
         age = step - 1 - i
         if 0 <= age < 3:
             r = (3, 5, 2)[age]
-            hits.piece(g, lambda p: hits.star4(p, x, y, r, "yellow"))
+            hits.piece(g, lambda p, r=r, x=x, y=y: hits.star4(p, x, y, r, "yellow"))
     if step >= 2:
         t = step - 2
         for i, (x0, col) in enumerate(((12, "cyan"), (22, "pink"), (30, "yellow"), (41, "cyan"), (52, "pink"))):
             x = x0 + (1 if (t + i) % 2 else -1)
             y = 8 + i * 3 % 7 + t * 7
             if y < 58:
-                hits.piece(g, lambda p: p.rect(x, y, 2 + (t + i) % 2, 3 - (t + i) % 2, col))
+                hits.piece(g, lambda p, col=col, i=i, x=x, y=y: p.rect(x, y, 2 + (t + i) % 2, 3 - (t + i) % 2, col))
     return g
 
 
@@ -1093,6 +1132,7 @@ HITS = {"fx-hit-dropped-ice-cream": hit_dropped_ice_cream, "fx-hit-big-screen-pr
 
 
 # ---------- build: the road sprites at full size and every depth step ----------
+
 
 def posed(q, s):
     """A pose q with its numeric offsets snapped to whole pixels at s, its named choices as given."""
@@ -1110,32 +1150,68 @@ def sprites():
     me = this()
     drive = range(4)
     for suffix, step in (("", 1), *(("@" + k, v) for k, v in STEPS)):
-        p, o, car = P * step, O * step, tuple(v * step for v in CAR)
-        yield f"dropped-ice-cream{suffix}", [
-            ("idle", [person(p, dropped_ice_cream, bob=b, tear=k == 1).outlined() for k, b in enumerate(BREATH)],
-             BREATH_MS)]
-        yield f"big-screen-promo{suffix}", [
-            ("walk", [depths.dressed(p, promo_top(), legs="navy", shoes="white", grounded=True, **w).outlined()
-                      for w in HUMAN_WALK], HUMAN_WALK_MS),
-            ("idle", [depths.dressed(p, promo_top(k == 0), legs="navy", shoes="white", grounded=True, bob=b).outlined()
-                      for k, b in enumerate(BREATH)], BREATH_MS)]
-        yield f"rollerblader{suffix}", [("ride", [small(me, p, rollerblader, **posed(q, p)).outlined()
-                                                  for q in ROLLER_RIDE], ROLLER_RIDE_MS)]
-        yield f"pedicab{suffix}", [("ride", [small(me, p, pedicab, **posed(q, p)).outlined()
-                                             for q in PEDICAB_RIDE], PEDICAB_RIDE_MS)]
-        for key, draw, (args, ms) in (("beach-umbrella", beach_umbrella, UMBRELLA_IDLE),
-                                      ("sandcastle", sandcastle, SANDCASTLE_IDLE),
-                                      ("lifeguard-chair", lifeguard_chair, LIFEGUARD_IDLE),
-                                      ("sandwich-board", sandwich_board, BOARD_IDLE),
-                                      ("newspaper-box", newspaper_box, NEWS_IDLE)):
+        p, o, car = P * step, OBSTACLE_SCALE * step, tuple(v * step for v in CAR)
+        yield (
+            f"dropped-ice-cream{suffix}",
+            [
+                (
+                    "idle",
+                    [person(p, dropped_ice_cream, bob=b, tear=k == 1).outlined() for k, b in enumerate(BREATH)],
+                    BREATH_MS,
+                )
+            ],
+        )
+        yield (
+            f"big-screen-promo{suffix}",
+            [
+                (
+                    "walk",
+                    [
+                        depths.dressed(p, promo_top(), legs="navy", shoes="white", grounded=True, **w).outlined()
+                        for w in HUMAN_WALK
+                    ],
+                    HUMAN_WALK_MS,
+                ),
+                (
+                    "idle",
+                    [
+                        depths.dressed(
+                            p, promo_top(k == 0), legs="navy", shoes="white", grounded=True, bob=b
+                        ).outlined()
+                        for k, b in enumerate(BREATH)
+                    ],
+                    BREATH_MS,
+                ),
+            ],
+        )
+        yield (
+            f"rollerblader{suffix}",
+            [("ride", [small(me, p, rollerblader, **posed(q, p)).outlined() for q in ROLLER_RIDE], ROLLER_RIDE_MS)],
+        )
+        yield (
+            f"pedicab{suffix}",
+            [("ride", [small(me, p, pedicab, **posed(q, p)).outlined() for q in PEDICAB_RIDE], PEDICAB_RIDE_MS)],
+        )
+        for key, draw, (args, ms) in (
+            ("beach-umbrella", beach_umbrella, UMBRELLA_IDLE),
+            ("sandcastle", sandcastle, SANDCASTLE_IDLE),
+            ("lifeguard-chair", lifeguard_chair, LIFEGUARD_IDLE),
+            ("sandwich-board", sandwich_board, BOARD_IDLE),
+            ("newspaper-box", newspaper_box, NEWS_IDLE),
+        ):
             yield f"{key}{suffix}", [("idle", [small(me, o, draw, a).outlined() for a in args], ms)]
         args, ms = NET_IDLE
         yield f"volleyball-net-3{suffix}", [("idle", [net(o, 3, a) for a in args], ms)]
         args, ms = PLATFORM_IDLE
         yield f"streetcar-platform{suffix}", [("idle", [platform(o, a) for a in args], ms)]
         args, ms = BUS_IDLE
-        yield f"ttc-bus{suffix}", [("idle", [small(me, car, ttc_bus, a).outlined() for a in args], ms),
-                                   ("drive", [small(me, car, ttc_bus, roll=r).outlined() for r in drive], 100)]
+        yield (
+            f"ttc-bus{suffix}",
+            [
+                ("idle", [small(me, car, ttc_bus, a).outlined() for a in args], ms),
+                ("drive", [small(me, car, ttc_bus, roll=r).outlined() for r in drive], 100),
+            ],
+        )
 
 
 def bursts():
@@ -1145,10 +1221,13 @@ def bursts():
 
 # ---------- cards ----------
 
+
 def kid_with_cone(lift=0):
     """The kid holding a new cone up in her right hand (screen right), smiling, for the buy card: drawn at
     road.SCALE with no dropped cone."""
+
     def top(g, b, arms=0):
+        del arms
         kid_top()(g, b)
         # the happy face over the sad one: eyes, cheeks and a smile
         g.rect(10.5, 15 + b, 2, 1, "skin1")
@@ -1196,7 +1275,8 @@ def card_lick():
     """Let them lick it: Archie leaning in to lick the pink puddle round the dropped cone, the kid looking on,
     and the sugar rush hitting him: sky speed lines streaming off him and an amber paw print dashing, as
     icon-zoomies draws the zoomies."""
-    import cards
+    import cards  # noqa: PLC0415 - Retain lazy loading to avoid art-module import cycles and optional image dependencies.
+
     a = cards.Art()
     a.ground("theBeaches")
     a.put("dropped-ice-cream", "idle", 20, 60, 1)
@@ -1210,7 +1290,8 @@ def card_lick():
 
 def card_buy():
     """The kid holding up a new cone under hearts, a callout of -$."""
-    import cards
+    import cards  # noqa: PLC0415 - Retain lazy loading to avoid art-module import cycles and optional image dependencies.
+
     a = cards.Art()
     a.ground("theBeaches")
     img = to_image(small(this(), P, kid_with_cone).outlined())
@@ -1223,7 +1304,8 @@ def card_buy():
 
 def card_walk_on_by():
     """Walk on by: Archie pulled away from the dropped cone on its leash."""
-    import cards
+    import cards  # noqa: PLC0415 - Retain lazy loading to avoid art-module import cycles and optional image dependencies.
+
     a = cards.Art()
     a.ground("theBeaches")
     a.put("dropped-ice-cream", "idle", 52, 60)
@@ -1238,7 +1320,7 @@ def beam(a, x0, x1, cx, cy, rx):
     """A spotlight's beam from the art's top edge (x0 to x1) down to a pool round (cx, cy), rx wide: the beam
     flat ash, a step up the road's slate ramp, so it lights the road without texture, and the pool flat gold
     with a yellow centre."""
-    for y in range(0, cy + 4):
+    for y in range(cy + 4):
         t = min(1, y / cy)
         left, right = x0 + (cx - rx - x0) * t, x1 + (cx + rx - x1) * t
         a.fill(int(left), y, int(right) - int(left) + 1, 1, "ash")
@@ -1251,7 +1333,8 @@ def beam(a, x0, x1, cx, cy, rx):
 
 def card_wave():
     """Archie in a spotlight's pool, the promoter filming it, a flash popping."""
-    import cards
+    import cards  # noqa: PLC0415 - Retain lazy loading to avoid art-module import cycles and optional image dependencies.
+
     a = cards.Art()
     a.ground("yongeStreet")
     beam(a, 0, 26, 24, 52, 17)
@@ -1264,7 +1347,8 @@ def card_wave():
 
 def card_merch():
     """The promoter's star tee held up as merch, a callout of -$."""
-    import cards
+    import cards  # noqa: PLC0415 - Retain lazy loading to avoid art-module import cycles and optional image dependencies.
+
     a = cards.Art()
     a.ground("yongeStreet")
     a.put("big-screen-promo", "idle", 22, 68)
@@ -1276,7 +1360,8 @@ def card_merch():
 
 def card_push_through():
     """Archie pulling past the promoter, speed lines behind it."""
-    import cards
+    import cards  # noqa: PLC0415 - Retain lazy loading to avoid art-module import cycles and optional image dependencies.
+
     a = cards.Art()
     a.ground("yongeStreet")
     a.put("big-screen-promo", "walk", 56, 68, 1)
@@ -1298,11 +1383,10 @@ ILLUSTRATIONS = {
 
 
 def cards_preview(out, scale=4):
-    import cards
-    from PIL import Image
+    import cards  # noqa: PLC0415 - Retain lazy loading to avoid art-module import cycles and optional image dependencies.
+    from PIL import Image  # noqa: PLC0415 - Optional image dependency, loaded only for image rendering.
 
-    sheet = Image.new("RGB", ((cards.CW + 6) * len(ILLUSTRATIONS) * scale, (cards.CH + 6) * scale),
-                      (24, 20, 37))
+    sheet = Image.new("RGB", ((cards.CW + 6) * len(ILLUSTRATIONS) * scale, (cards.CH + 6) * scale), (24, 20, 37))
     saved = cards.ILLUSTRATIONS
     cards.ILLUSTRATIONS = {**saved, **ILLUSTRATIONS}
     try:
@@ -1319,22 +1403,38 @@ def cards_preview(out, scale=4):
 EFFECTS = {
     # a wet splat, then a sad "aww"
     "sfx-hit-dropped-ice-cream": [
-        ("pinknoise", 0.16, None, 0, dict(vol=0.7, low=1800, high=250, attack=0.003, release=0.85)),
-        ("triangle", 0.18, (300, 100), 0, dict(vol=0.4, attack=0.003, release=0.8)),
-        ("square", 0.14, (300, 130), 0, dict(vol=0.5, low=900, attack=0.003, release=0.8, shape="h")),
-        ("triangle", 0.34, ("E5", "A4"), 0.2, dict(vol=0.6, attack=0.04, release=0.6, shape="h")),
-        ("square", 0.34, ("E5", "A4"), 0.2, dict(vol=0.2, duty=25, low=1500, attack=0.04, release=0.6, shape="h")),
+        ("pinknoise", 0.16, None, 0, {"vol": 0.7, "low": 1800, "high": 250, "attack": 0.003, "release": 0.85}),
+        ("triangle", 0.18, (300, 100), 0, {"vol": 0.4, "attack": 0.003, "release": 0.8}),
+        ("square", 0.14, (300, 130), 0, {"vol": 0.5, "low": 900, "attack": 0.003, "release": 0.8, "shape": "h"}),
+        ("triangle", 0.34, ("E5", "A4"), 0.2, {"vol": 0.6, "attack": 0.04, "release": 0.6, "shape": "h"}),
+        (
+            "square",
+            0.34,
+            ("E5", "A4"),
+            0.2,
+            {"vol": 0.2, "duty": 25, "low": 1500, "attack": 0.04, "release": 0.6, "shape": "h"},
+        ),
     ],
     # two shutter clicks, a flash whine rising, a bright "ta-da"
     "sfx-hit-big-screen-promo": [
-        ("pinknoise", 0.025, None, 0.004, dict(vol=0.3, low=5000, high=2000, attack=0.001, release=0.9,
-                                               fx=("lowpass", "4500"))),
-        ("pinknoise", 0.025, None, 0.07, dict(vol=0.27, low=5000, high=2000, attack=0.001, release=0.9,
-                                              fx=("lowpass", "4500"))),
-        ("triangle", 0.18, (1500, 3200), 0.04, dict(vol=0.25, low=3500, attack=0.02, release=0.5)),
-        ("square", 0.08, "G5", 0.24, dict(vol=0.6, duty=35, low=3000, release=0.5)),
-        ("square", 0.22, "C6", 0.32, dict(vol=0.6, duty=35, low=3000, release=0.9, shape="h")),
-        ("triangle", 0.22, "C5", 0.32, dict(vol=0.6, release=0.9, shape="h")),
+        (
+            "pinknoise",
+            0.025,
+            None,
+            0.004,
+            {"vol": 0.3, "low": 5000, "high": 2000, "attack": 0.001, "release": 0.9, "fx": ("lowpass", "4500")},
+        ),
+        (
+            "pinknoise",
+            0.025,
+            None,
+            0.07,
+            {"vol": 0.27, "low": 5000, "high": 2000, "attack": 0.001, "release": 0.9, "fx": ("lowpass", "4500")},
+        ),
+        ("triangle", 0.18, (1500, 3200), 0.04, {"vol": 0.25, "low": 3500, "attack": 0.02, "release": 0.5}),
+        ("square", 0.08, "G5", 0.24, {"vol": 0.6, "duty": 35, "low": 3000, "release": 0.5}),
+        ("square", 0.22, "C6", 0.32, {"vol": 0.6, "duty": 35, "low": 3000, "release": 0.9, "shape": "h"}),
+        ("triangle", 0.22, "C5", 0.32, {"vol": 0.6, "release": 0.9, "shape": "h"}),
     ],
 }
 
@@ -1345,13 +1445,14 @@ def render_sounds(out_dir):
 
 # ---------- commands ----------
 
+
 def build():
     build_sprites([*sprites(), *bursts()], SRC)
-    os.makedirs("public/art/images", exist_ok=True)
+    Path("public/art/images").mkdir(parents=True, exist_ok=True)
     for key, draw in ILLUSTRATIONS.items():
         png = f"public/art/images/{key}.png"
         draw().img.save(png)
-        subprocess.run(["aseprite", "-b", png, "--save-as", f"{SRC}/{key}.aseprite"], check=True)
+        subprocess.run(["aseprite", "-b", png, "--save-as", f"{SRC}/{key}.aseprite"], check=True)  # noqa: S603, S607 - Trusted Aseprite CLI and generated local asset paths.
     print("built", ", ".join([*ILLUSTRATIONS, *render_sounds("public/art/sounds")]))
 
 

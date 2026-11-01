@@ -27,13 +27,13 @@ hand edits to them belong in this file instead. Shared tooling is in pixel.py.
 """
 
 import math
-import os
 import random
 import subprocess
 import sys
+from pathlib import Path
 
-sys.path.insert(0, os.path.dirname(__file__))
-from pixel import PALETTE64, Grid, dk  # noqa: E402
+sys.path.insert(0, str(Path(__file__).parent))
+from pixel import PALETTE64, Grid, dk
 
 W, H = 320, 64
 LANE = 64
@@ -63,7 +63,7 @@ def specks(g, rnd, n, col, x0=0, x1=W, wide=0.0):
             wp(g, x + 1, y, col)
 
 
-def scatter(rnd, n, x0, x1, gap, y0=0, y1=H, ok=lambda x, y: True):
+def scatter(rnd, n, x0, x1, gap, y0=0, y1=H, ok=lambda _x, _y: True):
     """Up to n points at least gap apart (wrapping top to bottom) where ok(x, y) holds, so
     texture never falls into a regular rhythm or a clump."""
     pts = []
@@ -94,6 +94,7 @@ def clip(g, y0, y1, draw):
 
 # ---------- lane lines ----------
 
+
 def meander(rnd, lo, hi, hold=(8, 14)):
     """A per-row offset for each of the 64 rows, wrapping: a walk between lo and hi that steps 1px at a
     time and holds each value hold rows or more, so a wobbling edge keeps runs long enough to read as a
@@ -122,7 +123,7 @@ def kensington_lines(g):
     """A 10-row painted dash every SEAM_PERIOD rows from row 24, wrapping, each divider its own colour, a
     ramp step darker down its right edge. Rows 35 to 55 stay bare: screen-end shows rows 36 to 39 below its
     button."""
-    for x, c in zip(DIVIDERS, LANE_PAINT):
+    for x, c in zip(DIVIDERS, LANE_PAINT, strict=False):
         for y in range(24, 24 + H, SEAM_PERIOD):
             wrect(g, x, y, 2, 10, c)
             wrect(g, x + 2, y + 1, 1, 10, dk(c))
@@ -133,14 +134,19 @@ def kensington_lines(g):
 # reads as a leaf and not a round fleck
 _TILTED = ("..fff", ".ffvf", "ffvss", "fvss.", "v....")
 _SMALL = ("..ff", ".fvf", "fvs.", "v...")
-LEAF_SHAPES = (_TILTED, tuple(r[::-1] for r in _TILTED), _SMALL, tuple(r[::-1] for r in _SMALL),
-               (".ff.", "fvfs", "fvss", ".vs.", ".v.."))
+LEAF_SHAPES = (
+    _TILTED,
+    tuple(r[::-1] for r in _TILTED),
+    _SMALL,
+    tuple(r[::-1] for r in _SMALL),
+    (".ff.", "fvfs", "fvss", ".vs.", ".v.."),
+)
 
 
 def leaves(g, rnd, n, x0, x1, tones, y0=0, y1=H):
     """n leaves spaced apart, clear of the lane dividers, each in one of tones (lit, shade, vein)."""
-    for x, y in scatter(rnd, n, x0, x1, 18, y0, y1, lambda x, y: (x + 7) % LANE >= 9):
-        tone = dict(zip("fsv", rnd.choice(tones)))
+    for x, y in scatter(rnd, n, x0, x1, 18, y0, y1, lambda x, _y: (x + 7) % LANE >= 9):
+        tone = dict(zip("fsv", rnd.choice(tones), strict=False))
         for j, row in enumerate(rnd.choice(LEAF_SHAPES)):
             for k, ch in enumerate(row):
                 if ch != ".":
@@ -148,7 +154,7 @@ def leaves(g, rnd, n, x0, x1, tones, y0=0, y1=H):
 
 
 def cabbagetown_lines(g):
-    rnd = random.Random("road-cabbagetown-lines")
+    rnd = random.Random("road-cabbagetown-lines")  # noqa: S311 - Fixed-seed art texture, not security randomness.
     for x in DIVIDERS:
         for y in (10,):
             # faded white (2.8:1 on the grey) with a slate edge, chipped where the paint wore
@@ -168,6 +174,7 @@ def beaches_lines(g):
 # ---------- the six neighbourhoods ----------
 # Each strip's base is its zone's road colour, which the game's road shadow steps down from.
 
+
 def grit(g, rnd, n, cols):
     """Sparse 2px grit spaced apart, 1x2 or 2x1."""
     for x, y in scatter(rnd, n, 6, W - 7, 7):
@@ -180,7 +187,8 @@ def grit(g, rnd, n, cols):
 
 def cracks(g, rnd, runs, col):
     """Cracks running along the road, 1 to 2px wide, kept inside lanes."""
-    for x, y, steps in runs:
+    for start_x, start_y, steps in runs:
+        x, y = start_x, start_y
         for _ in range(steps):
             wp(g, x, y, col)
             if rnd.random() < 0.25:
@@ -192,7 +200,7 @@ def cracks(g, rnd, runs, col):
 def cabbagetown_ground(g):
     """Pale asphalt with sparse 2px slate grit, a few cracks and green leaves, and granite gutters in stone, their
     joints every 32 rows. No grit lighter than the asphalt: light flecks shimmer like rain as the road scrolls."""
-    rnd = random.Random("road-cabbagetown")
+    rnd = random.Random("road-cabbagetown")  # noqa: S311 - Fixed-seed art texture, not security randomness.
     g.rect(0, 0, W, H, "grey")
     grit(g, rnd, 30, ("slate", "slate", "dslate"))
     cracks(g, rnd, ((43, 12, 10), (100, 40, 12), (160, 62, 9), (224, 50, 14), (286, 30, 8)), "dslate")
@@ -227,15 +235,16 @@ def root(g, rnd, x, y, dx, steps):
         y += 1
     for x, y, w in pts:
         wrect(g, x if dx > 0 or w == 1 else x - 1, y, w, 1, "bark")
-    for x, y, w in pts[:-3]:
+    for x, y, _w in pts[:-3]:
         wp(g, x + (1 if dx > 0 else -1), y - 1, "clay")
 
 
 def high_park_ground(g):
     """Packed earth on High Park's trail: skin1 worn patches down the middle of each lane where feet go,
     scuffed cream; skin2 damp patches and 2px grit; roots creeping in from the undergrowth; stones,
-    needles and fallen leaves, with no single-pixel specks; ragged pine undergrowth along both edges with grass spilling onto the dirt."""
-    rnd = random.Random("road-high-park")
+    needles and fallen leaves, with no single-pixel specks; ragged pine undergrowth along both edges with grass
+        spilling onto the dirt."""
+    rnd = random.Random("road-high-park")  # noqa: S311 - Fixed-seed art texture, not security randomness.
     g.rect(0, 0, W, H, "tan")
     # worn ground down each lane where feet go: skin1 patches chained along the lane's middle, drifting
     # side to side, overlapping or leaving a gap, so the lane wears unevenly rather than in a stripe;
@@ -267,22 +276,23 @@ def high_park_ground(g):
             x += run
     # damp patches, long along the road so each looks round in the view, under 8 columns wide so none
     # reads as a seam across the road, with a brown wet spot
-    for x, y in scatter(rnd, 9, 10, W - 16, 16, ok=lambda x, y: 4 < (x + 2) % LANE < 54):
+    for x, y in scatter(rnd, 9, 10, W - 16, 16, ok=lambda x, _y: 4 < (x + 2) % LANE < 54):
         w, h = rnd.randint(4, 7), rnd.randint(6, 12)
         oval(g, rnd, x, y, w, h, "skin2")
         wp(g, x + w // 2, y + h // 2, "brown")
     # stones half sunk in the dirt, lit on the top left, and loose pebbles
-    for x, y in scatter(rnd, 7, 12, W - 14, 16, ok=lambda x, y: 4 < (x + 2) % LANE < 58):
+    for x, y in scatter(rnd, 7, 12, W - 14, 16, ok=lambda x, _y: 4 < (x + 2) % LANE < 58):
         wrect(g, x, y, 3, 2, "driftwood")
         wp(g, x, y, "lgrey")
         wp(g, x + 2, y + 1, "stone")
         wrect(g, x, y + 2, 3, 1, "brown")
     # fallen needles in pairs, clear of the lane lines
-    for x, y in scatter(rnd, 14, 10, W - 12, 9, ok=lambda x, y: (x + 4) % LANE >= 8):
+    for x, y in scatter(rnd, 14, 10, W - 12, 9, ok=lambda x, _y: (x + 4) % LANE >= 8):
         wp(g, x, y, "bark")
         wp(g, x + 1, y + 1, "bark")
         wp(g, x + 2, y + 1, "bark")
     leaves(g, rnd, 5, 10, W - 10, (("moss", "olive", "dolive"), ("skin2", "brown", "dbrown")))
+
     # the undergrowth along each edge keeps to the outer 8 columns, clear of a sprite's margin: pine
     # with fir blades, a ragged brown margin of damp earth, and grass clumps spilling onto the dirt
     def col(side, x):
@@ -322,7 +332,7 @@ def distillery_ground(g):
     multiple of 4, never within 4 rows of its neighbour's, so no joint runs across the road. Each cobble's
     corners are rounded off in navy and its top left glints slate; 1px navy joints between the columns, a
     navy pit in some cobbles; brick gutters along both sides."""
-    rnd = random.Random("road-distillery-district")
+    rnd = random.Random("road-distillery-district")  # noqa: S311 - Fixed-seed art texture, not security randomness.
     g.rect(0, 0, W, H, "dslate")
     phase = 0
     for x in range(0, W, 16):
@@ -356,7 +366,7 @@ def kensington_ground(g):
     """Worn stone asphalt with no joints across it: long dstone patches, 2px or more even in the far rows, which
     sample the strip shrunk 4x; sparse 2px dstone grit and irregular dstone cracks along the road; dstone gutters
     on the outer 4 columns inside a coal seam, a coal joint every 32 rows."""
-    rnd = random.Random("road-kensington-market")
+    rnd = random.Random("road-kensington-market")  # noqa: S311 - Fixed-seed art texture, not security randomness.
     g.rect(0, 0, W, H, "stone")
     # patches 4 or 5 wide (7 at most where a ragged row spreads), so none reads as a seam across the road, and
     # 14 to 22 long, so the far rows still show them 2px or more; one to a lane and half of the strip
@@ -378,7 +388,7 @@ def kensington_ground(g):
 def beaches_ground(g):
     """A boardwalk, weathered: some boards skin1, sand drifted in skin1 along the edge beams, the
     beams driftwood."""
-    rnd = random.Random("road-the-beaches")
+    rnd = random.Random("road-the-beaches")  # noqa: S311 - Fixed-seed art texture, not security randomness.
     g.rect(0, 0, W, H, "cream")
     boards = range(0, W, 16)
     tinted = False
@@ -395,7 +405,7 @@ def beaches_ground(g):
         wrect(g, x0, y, 15, 2, "tan")
         wp(g, x0 + 3, y - 2, "driftwood")
         wp(g, x0 + 11, y + 3, "driftwood")
-    for x, y in scatter(rnd, 7, 8, W - 8, 20, ok=lambda x, y: x % 16 < 13):
+    for x, y in scatter(rnd, 7, 8, W - 8, 20, ok=lambda x, _y: x % 16 < 13):
         wrect(g, x, y, 2, 2, "tan")
         wp(g, x + 1, y + 1, "brown")
     # sand drifted onto the boards beside each beam, 1 to 3 columns, wobbling down the strip
@@ -413,7 +423,7 @@ def yonge_ground(g):
     """Dark concrete: shale slabs a lane wide and 32 rows long, their 2-row expansion joints in coal
     across the road and 1px along it under the lane lines, sparse ash and coal grit, a few coal cracks;
     dstone granite gutters, their joints in shale every 32 rows."""
-    rnd = random.Random("road-yonge-street")
+    rnd = random.Random("road-yonge-street")  # noqa: S311 - Fixed-seed art texture, not security randomness.
     g.rect(0, 0, W, H, "shale")
     grit(g, rnd, 30, ("ash", "coal", "coal", "dslate"))
     cracks(g, rnd, ((40, 20, 9), (150, 50, 11), (230, 12, 8)), "coal")
@@ -470,7 +480,7 @@ def crossing(g):
     zebra crossing (35 to 48), then the far curb's shadow (24, 25), face (22, 23) and lit top
     (20, 21). Every curb band is 2 rows but the near curb's 4-row top, each step 3.4:1 or less."""
     y0, y1 = CROSSING
-    rnd = random.Random("road-crossing")
+    rnd = random.Random("road-crossing")  # noqa: S311 - Fixed-seed art texture, not security randomness.
     g.rect(0, y0, W, y1 - y0, "dslate")
     for x, y in scatter(rnd, 30, 0, W, 7, 27, 56):
         g.rect(x, y, 1, 2, rnd.choice(("slate", "navy", "navy")))
@@ -506,22 +516,24 @@ def images():
 
 
 def strip_image(g):
-    from PIL import Image
+    from PIL import Image  # noqa: PLC0415 - Optional image dependency, loaded only for image rendering.
 
     img = Image.new("RGB", (g.w, g.h))
-    img.putdata([tuple(int(c[k:k + 2], 16) for k in (0, 2, 4)) for row in g.px for c in row])
+    img.putdata([tuple(int(c[k : k + 2], 16) for k in (0, 2, 4)) for row in g.px for c in row])
     return img
 
 
 def check(key, g):
     """Every pixel is opaque and on the palette, at the inventory size."""
-    assert (g.w, g.h) == (W, H), key
+    if (g.w, g.h) != (W, H):
+        raise AssertionError(key)
     bad = {c for row in g.px for c in row if c not in PALETTE64}
-    assert not bad, f"{key}: {bad}"
+    if bad:
+        raise AssertionError(f"{key}: {bad}")
 
 
 def preview(out, scale=2, gap=8):
-    from PIL import Image
+    from PIL import Image  # noqa: PLC0415 - Optional image dependency, loaded only for image rendering.
 
     tiles = dict(images())
     for key, g in tiles.items():
@@ -540,14 +552,14 @@ def preview(out, scale=2, gap=8):
 
 
 def build():
-    os.makedirs("art/roads", exist_ok=True)
-    os.makedirs("public/art/images", exist_ok=True)
+    Path("art/roads").mkdir(parents=True, exist_ok=True)
+    Path("public/art/images").mkdir(parents=True, exist_ok=True)
     built = []
     for key, g in images():
         check(key, g)
         png = f"public/art/images/{key}.png"
         strip_image(g).save(png)
-        subprocess.run(["aseprite", "-b", png, "--save-as", f"art/roads/{key}.aseprite"], check=True)
+        subprocess.run(["aseprite", "-b", png, "--save-as", f"art/roads/{key}.aseprite"], check=True)  # noqa: S603, S607 - Trusted Aseprite CLI and generated local asset paths.
         built.append(key)
     print("built", ", ".join(built))
 

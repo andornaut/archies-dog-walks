@@ -107,20 +107,23 @@ belong in this file instead. Shared tooling is in pixel.py.
 """
 
 import math
-import os
 import subprocess
 import sys
+from pathlib import Path
 
-sys.path.insert(0, os.path.dirname(__file__))
-import hits  # noqa: E402
-import minis  # noqa: E402
-import obstacles as ob  # noqa: E402
-import road  # noqa: E402
-import sounds  # noqa: E402
-from minis import STEPS  # noqa: E402
-from pixel import HEART, Grid, K, ZONE_ROADS, build as build_sprites, depth_settled, edged, preview  # noqa: E402
-from pixel import raster, scale_of, to_image  # noqa: E402
-from road import face_disc, face_front, lit  # noqa: E402
+sys.path.insert(0, str(Path(__file__).parent))
+import itertools
+
+import hits
+import minis
+import obstacles as ob
+import sounds
+from minis import STEPS
+from pixel import HEART, ZONE_ROADS, Grid, K, depth_settled, edged, preview, raster, scale_of, to_image
+from pixel import build as build_sprites
+
+import road
+from road import face_disc, face_front, lit
 
 SRC = "art/hood-markets"
 # People, movers and card obstacles are drawn PERSON times their design grid, minor obstacles OBSTACLE times
@@ -147,13 +150,14 @@ def unit(g):
 
 def line(g, pts, w, c):
     """A stroke w design units square through the joints pts."""
-    for (x0, y0), (x1, y1) in zip(pts, pts[1:]):
+    for (x0, y0), (x1, y1) in itertools.pairwise(pts):
         n = max(1, round(max(abs(x1 - x0), abs(y1 - y0)) * 2))
         for k in range(n + 1):
             g.rect(x0 + (x1 - x0) * k / n, y0 + (y1 - y0) * k / n, w, w, c)
 
 
 # ---------- the wedding photo shoot ----------
+
 
 def bride(g, b):
     """The bride, centred on design column 16 of the left lane, facing the pack: a haze veil falling behind
@@ -171,8 +175,13 @@ def bride(g, b):
     line(g, [(8, 21 + b), (8, 26 + b), (11, 29 + b)], 2.5, "skin1")
     line(g, [(21.5, 21 + b), (21.5, 26 + b), (18.5, 29 + b)], 2.5, "skin1")
     g.rect(22.5, 21 + b, 1, 5, "skin2")
-    for x, y, c, sh in ((13, 30, "pink", "mauve"), (16, 29, "red", "dred"), (19, 30, "pink", "mauve"),
-                        (14.5, 32.5, "cream", "tan"), (17.5, 32.5, "red", "dred")):
+    for x, y, c, sh in (
+        (13, 30, "pink", "mauve"),
+        (16, 29, "red", "dred"),
+        (19, 30, "pink", "mauve"),
+        (14.5, 32.5, "cream", "tan"),
+        (17.5, 32.5, "red", "dred"),
+    ):
         g.cel(x, y + b, 2, 2, c, sh)
     g.rect(15, 34 + b, 2, 3, "canopy")
     # the head: the neck, the face, hair over the crown, the bun and the tiara
@@ -268,7 +277,7 @@ def wedding_photo_shoot(bob=0, flash=False, parts=SHOOT_PARTS, pay=False):
         photographer(g, pay)
     if "bride" in parts:
         bride(g, bob * u)
-    lit(g, dict(slate=("lgrey", None)))
+    lit(g, {"slate": ("lgrey", None)})
     if flash and "photographer" in parts:
         px, s = raster(g), scale_of(g)
         cx, cy = math.floor(47.5 * s), math.floor(9.5 * s)
@@ -284,12 +293,15 @@ def wedding_photo_shoot(bob=0, flash=False, parts=SHOOT_PARTS, pay=False):
 
 
 # The breath and the flash: rest, the bride 1px up, the flash, the bride 1px up again.
-SHOOT_IDLE = (dict(), dict(bob=-1), dict(flash=True), dict(bob=-1)), 400
+SHOOT_IDLE = ({}, {"bob": -1}, {"flash": True}, {"bob": -1}), 400
 
 
 # ---------- the velvet rope ----------
 
-def velvet_rope(glint=None, w=ob.span(2)):
+VELVET_ROPE_WIDTH = ob.span(2)
+
+
+def velvet_rope(glint=None, w=VELVET_ROPE_WIDTH):
     """Front elevation, 2 lanes: three brass stanchions, gold lit yellow down their left and shaded ochre
     down their right, each on a round base under a ball knob, and a red velvet rope swagged between each pair,
     shaded dred along its lower edge and lit pink along its top, hooked on under the knobs. glint is the
@@ -299,7 +311,7 @@ def velvet_rope(glint=None, w=ob.span(2)):
     px, s = raster(g), scale_of(g)
     thick = max(2, round(3 * s))
     # the rope, drawn column by column on the drawn grid so it keeps an even thickness along its swag
-    for a, b in zip(posts, posts[1:]):
+    for a, b in itertools.pairwise(posts):
         x0, x1 = math.floor((a + 3) * s), math.ceil((b + 1) * s)
         for x in range(x0, x1):
             t = (x + 0.5 - x0) / (x1 - x0)
@@ -322,6 +334,7 @@ VELVET_IDLE = (None, None, 12, 19), 400
 
 
 # ---------- the rolling barrel ----------
+
 
 def rolling_barrel(turn=0.0, dust=None, rock=0.0):
     """A whisky barrel on its side, seen end-on: an ash iron hoop lit grey on its upper left and shaded
@@ -361,8 +374,9 @@ def rolling_barrel(turn=0.0, dust=None, rock=0.0):
                     c = "walnut"
             px.p(x, y, c)
     if dust is not None:
-        for x, y, rx, ry in (((6, 28, 2.6, 2), (4.5, 25, 1.4, 1.3)),
-                             ((5.5, 27.5, 2.2, 2.2), (7, 24.5, 1.3, 1.1)))[dust]:
+        for x, y, rx, ry in (((6, 28, 2.6, 2), (4.5, 25, 1.4, 1.3)), ((5.5, 27.5, 2.2, 2.2), (7, 24.5, 1.3, 1.1)))[
+            dust
+        ]:
             g.cel(x, y, rx, ry, "driftwood", "stone", "cream")
     return g
 
@@ -373,6 +387,7 @@ BARREL_RUN = tuple((k * 45, k % 2) for k in range(8)), 60
 
 
 # ---------- the barrel stack ----------
+
 
 def barrel_end(g, cx, cy, r, glint=None):
     """A barrel lying on its side with its head to the camera, centred on cx, cy with radius r in layout
@@ -410,8 +425,9 @@ def barrel_end(g, cx, cy, r, glint=None):
                     px.p(x, y, "tan" if k == lift and math.hypot(dx, dy + k - 1) > r else "brown")
                     break
     if glint is not None:
-        ring = [(x, y) for y in range(px.h) for x in range(px.w)
-                if r - hoop < math.hypot(x + 0.5 - cx, y + 0.5 - cy) <= r]
+        ring = [
+            (x, y) for y in range(px.h) for x in range(px.w) if r - hoop < math.hypot(x + 0.5 - cx, y + 0.5 - cy) <= r
+        ]
 
         def off(p):
             a = math.degrees(math.atan2(p[1] + 0.5 - cy, p[0] + 0.5 - cx)) - glint
@@ -444,7 +460,7 @@ def barrel_stack(glint=None):
     # the wedges chocking the bottom barrels
     g.tri((x0, base), (x0 + 4, base), (x0, base - 4), "bark")
     g.tri((x1, base), (x1 - 4, base), (x1, base - 4), "bark")
-    return lit(g, dict(bark=("clay", None)))
+    return lit(g, {"bark": ("clay", None)})
 
 
 # The glint runs down the top barrel's hoop on its upper left on frames 2 and 3.
@@ -452,6 +468,7 @@ STACK_IDLE = (None, None, 235, 200), 400
 
 
 # ---------- the shipping crates ----------
+
 
 def art_sculpture(glint=None):
     """Three closed shipping crates on the 40x40 obstacle grid, with their feet on row 35.
@@ -480,8 +497,7 @@ def art_sculpture(glint=None):
         g.rect(x + face - 3, y + d, 3, 2, "ash")
         g.rect(x + face - 1, y + d, 1, 3, "grey")
         # A single broad joint on the side reinforces the closed box's depth.
-        line(g, ((x + face + 1, y + d + (h - d) / 2),
-                 (x + w - 1, y + (h - d) / 2)), 1, "bark")
+        line(g, ((x + face + 1, y + d + (h - d) / 2), (x + w - 1, y + (h - d) / 2)), 1, "bark")
 
     crate(1, 18, 19, 18)
     crate(20, 18, 19, 18)
@@ -489,9 +505,10 @@ def art_sculpture(glint=None):
     if glint is not None:
         # The highlight remains a short joined mark at every native depth.
         px = raster(g)
-        px.rect(math.floor(25 * s), math.floor((4 + glint * 8) * s),
-                max(1, round(2 * s)), max(1, round(2 * s)), "white")
-    return lit(g, dict(bark=("clay", None)))
+        px.rect(
+            math.floor(25 * s), math.floor((4 + glint * 8) * s), max(1, round(2 * s)), max(1, round(2 * s)), "white"
+        )
+    return lit(g, {"bark": ("clay", None)})
 
 
 # The top crate's steel corner catches light on frames 2 and 3.
@@ -500,9 +517,10 @@ SCULPTURE_IDLE = (None, None, 0.1, 0.3), 400
 
 # ---------- the green bin spill ----------
 
+
 def poly(g, pts, c):
     """A convex polygon through the corners pts, as a fan of triangles."""
-    for a, b in zip(pts[1:], pts[2:]):
+    for a, b in itertools.pairwise(pts[1:]):
         g.tri(pts[0], a, b, c)
 
 
@@ -545,7 +563,7 @@ def green_bin_spill(rock=0):
     g.cel(2.5, 29.5, 3, 1.5, "clay", "bark")
     poly(g, [(13, 27), (16.5, 25), (19, 26.5), (16, 28.5)], "green")
     banana_peel(g, 5, 30)
-    return lit(g, dict(coal=("ash", None), bark=("clay", None)))
+    return lit(g, {"coal": ("ash", None), "bark": ("clay", None)})
 
 
 # The lid rocks up 1px on frame 2 and settles.
@@ -557,6 +575,7 @@ BIN_IDLE = (0, 0, 1, 0), 350
 # The cut wheel's missing wedge in degrees: narrow enough that the wheel reads as cheese, not a mouth.
 WHEEL_CUT = 30
 
+
 def cheese_wheel(g, cx, cy, r, turn=0.0, cut=True):
     """A cheese wheel stood on its edge, seen face on round design point cx, cy, r design units across the
     middle: an amber rind ring shaded orange on its lower right and lit gold on its upper left round yellow
@@ -567,8 +586,10 @@ def cheese_wheel(g, cx, cy, r, turn=0.0, cut=True):
     ox, oy, rr = cx * s, cy * s, r * s
     a0 = math.radians(turn - 90)
     rind = max(1, round(1.3 * s))
-    holes = [(ox + math.cos(a0 + math.radians(d)) * rr * k, oy + math.sin(a0 + math.radians(d)) * rr * k)
-             for d, k in ((130, 0.5), (215, 0.45), (290, 0.55))]
+    holes = [
+        (ox + math.cos(a0 + math.radians(d)) * rr * k, oy + math.sin(a0 + math.radians(d)) * rr * k)
+        for d, k in ((130, 0.5), (215, 0.45), (290, 0.55))
+    ]
     for y in range(px.h):
         for x in range(px.w):
             dx, dy = x + 0.5 - ox, y + 0.5 - oy
@@ -637,7 +658,7 @@ def cheese_crates(phase=0):
     g.rect(17, 21, 8, 5, "coal")
     g.rect(18.5, 22.3, 5, 0.7, "white")
     g.rect(18.5, 24, 3, 0.7, "lgrey")
-    return lit(g, dict(coal=("grey", None)))
+    return lit(g, {"coal": ("grey", None)})
 
 
 # The wisps rise a quarter wave a frame.
@@ -645,6 +666,7 @@ CHEESE_IDLE = (0, 1, 2, 3), 350
 
 
 # ---------- the produce crates ----------
+
 
 def crate(g, x, y, w, h):
     """A slatted wooden crate's front, x, y to x + w, y + h in layout pixels: tan lit cream on its top and
@@ -690,13 +712,14 @@ def produce_crates(leaf=0):
         g.rect(x - 0.8, y - 2.3, 1.7, 1, "green")
     plastic_crate(g, 3, 13, 17, 12)
     plastic_crate(g, 3, 25, 17, 12)
-    return lit(g, dict(lake=("shallow", None), dlake=("lake", None)))
+    return lit(g, {"lake": ("shallow", None), "dlake": ("lake", None)})
 
 
 PRODUCE_IDLE = (0, 0, 1, 0), 400
 
 
 # ---------- the clothing rack ----------
+
 
 def clothing_rack(sway=0):
     """A rolling rack of vintage clothes, laid out on 40x40: chrome uprights (lgrey lit white, grey on
@@ -745,7 +768,7 @@ def clothing_rack(sway=0):
     for y in range(6, 19, 3):
         g.rect(28, y, 7, 1, "dturq")
     g.rect(28, 5, 7, 1, "turquoise")
-    return lit(g, dict(lilac=("pink", None), violet=("lilac", None), dturq=("turquoise", None)))
+    return lit(g, {"lilac": ("pink", None), "violet": ("lilac", None), "dturq": ("turquoise", None)})
 
 
 RACK_IDLE = (0, 0, 1, 0), 450
@@ -822,10 +845,10 @@ def market_stall(lanes, flap=0):
     px, s = raster(g), scale_of(g)
     sy = getattr(g, "sy", s)
 
-    def X(v):
+    def to_x(v):
         return math.floor(v * s + 0.5)
 
-    def Y(v):
+    def to_y(v):
         return math.floor(v * sy + 0.5)
 
     poles = [2] + [w * k / lanes - 1 for k in range(1, lanes)] + [w - 4]
@@ -844,7 +867,7 @@ def market_stall(lanes, flap=0):
                 g.rect(lx + 5 * f, legs + (foot - legs) * f, 1.4, 1.4, "coal")
                 g.rect(lx + 5 - 5 * f, legs + (foot - legs) * f, 1.4, 1.4, "coal")
         x = a + 2
-        goods = GOODS[2 * k % len(GOODS):] + GOODS
+        goods = GOODS[2 * k % len(GOODS) :] + GOODS
         room = b - a - 3
         for draw, gw in goods:
             if gw > room:
@@ -859,25 +882,35 @@ def market_stall(lanes, flap=0):
     left, right = 0.5, w - 0.5
     g.tri((left + 4, 0.5), (right - 4, 0.5), (left, 5), "dturq")
     g.tri((right - 4, 0.5), (right, 5), (left, 5), "dturq")
-    x0, x1 = X(left), X(right)
-    top, hem = Y(5), Y(12)
-    stripe = max(4, X(6))
+    x0, x1 = to_x(left), to_x(right)
+    top, hem = to_y(5), to_y(12)
+    stripe = max(4, to_x(6))
     lift = x0 + (x1 - x0) // 4, x1 - (x1 - x0) // 4
     for x in range(x0, x1):
         n = (x - x0) // stripe
         c = "cream" if n % 2 else "dturq"
-        for y in range(Y(0.5), top):
+        for y in range(to_y(0.5), top):
             if px.px[y][x]:
                 px.p(x, y, "driftwood" if n % 2 else "dturq")
         # the scallop: each stripe's hem rounds down to a tab in its middle
         t = ((x - x0) % stripe + 0.5) / stripe
-        tab = round(Y(2) * (1 - (2 * t - 1) ** 2))
+        tab = round(to_y(2) * (1 - (2 * t - 1) ** 2))
         up = 1 if flap and lift[0] <= x < lift[1] else 0
         for y in range(top, hem + tab - up):
             px.p(x, y, c)
     px.rect(x0, top, x1 - x0, 1, "teal")
-    return lit(g, dict(coal=("ash", None), bark=("clay", None), clay=("driftwood", None), dturq=("turquoise", None),
-                       dlake=("lake", None), teal=("dturq", None), brick=("clay", None)))
+    return lit(
+        g,
+        {
+            "coal": ("ash", None),
+            "bark": ("clay", None),
+            "clay": ("driftwood", None),
+            "dturq": ("turquoise", None),
+            "dlake": ("lake", None),
+            "teal": ("dturq", None),
+            "brick": ("clay", None),
+        },
+    )
 
 
 STALL_IDLE = (0, 0, 1, 0), 500
@@ -887,9 +920,13 @@ STALL_IDLE = (0, 0, 1, 0), 500
 
 # The flowers in the box: (centre column, row, petals, their shade, centre or None). Sunflowers with a dbrown
 # centre and pink tulips, in turn.
-FLOWERS = ((7.5, 25, "yellow", "amber", "dbrown"), (12, 23.5, "pink", "mauve", None),
-           (16.5, 24, "yellow", "amber", "dbrown"), (21, 23.5, "pink", "mauve", None),
-           (25, 25, "yellow", "amber", "dbrown"))
+FLOWERS = (
+    (7.5, 25, "yellow", "amber", "dbrown"),
+    (12, 23.5, "pink", "mauve", None),
+    (16.5, 24, "yellow", "amber", "dbrown"),
+    (21, 23.5, "pink", "mauve", None),
+    (25, 25, "yellow", "amber", "dbrown"),
+)
 
 
 def cargo_bike(sway=0, jiggle=0, roll=0):
@@ -951,13 +988,14 @@ def cargo_bike(sway=0, jiggle=0, roll=0):
     g.rect(4, 37, 24, 1, "brown")
     # the lit headlamp on the fork crown under the box
     road.headlamp(g, 16, 39.5)
-    return lit(g, dict(dturq=("turquoise", None)))
+    return lit(g, {"dturq": ("turquoise", None)})
 
 
-CARGO_RIDE = (dict(sway=-1, jiggle=1, roll=0), dict(roll=1), dict(sway=1, jiggle=2, roll=2), dict(roll=3)), 100
+CARGO_RIDE = ({"sway": -1, "jiggle": 1, "roll": 0}, {"roll": 1}, {"sway": 1, "jiggle": 2, "roll": 2}, {"roll": 3}), 100
 
 
 # ---------- sprites ----------
+
 
 def frames(s, draw, poses):
     """draw(**pose) on a Mini at s for each pose, outlined."""
@@ -971,23 +1009,28 @@ def road_sprites(s=1):
     poses, ms = SHOOT_IDLE
     yield "wedding-photo-shoot", [("idle", frames(p, wedding_photo_shoot, poses), ms)]
     args, ms = VELVET_IDLE
-    yield "velvet-rope", [("idle", frames(o, velvet_rope, [dict(glint=a) for a in args]), ms)]
+    yield "velvet-rope", [("idle", frames(o, velvet_rope, [{"glint": a} for a in args]), ms)]
     idle, idle_ms = BARREL_IDLE
     run, run_ms = BARREL_RUN
-    yield "rolling-barrel", [("idle", frames(p, rolling_barrel, [dict(rock=a) for a, in idle]), idle_ms),
-                             ("run", frames(p, rolling_barrel, [dict(turn=a, dust=d) for a, d in run]), run_ms)]
+    yield (
+        "rolling-barrel",
+        [
+            ("idle", frames(p, rolling_barrel, [{"rock": a} for (a,) in idle]), idle_ms),
+            ("run", frames(p, rolling_barrel, [{"turn": a, "dust": d} for a, d in run]), run_ms),
+        ],
+    )
     args, ms = STACK_IDLE
-    yield "barrel-stack", [("idle", frames(o, barrel_stack, [dict(glint=a) for a in args]), ms)]
+    yield "barrel-stack", [("idle", frames(o, barrel_stack, [{"glint": a} for a in args]), ms)]
     args, ms = SCULPTURE_IDLE
-    yield "art-sculpture", [("idle", frames(o, art_sculpture, [dict(glint=a) for a in args]), ms)]
+    yield "art-sculpture", [("idle", frames(o, art_sculpture, [{"glint": a} for a in args]), ms)]
     args, ms = BIN_IDLE
-    yield GREEN_BIN_SPILL, [("idle", frames(p, green_bin_spill, [dict(rock=a) for a in args]), ms)]
+    yield GREEN_BIN_SPILL, [("idle", frames(p, green_bin_spill, [{"rock": a} for a in args]), ms)]
     args, ms = CHEESE_IDLE
-    yield CHEESE, [("idle", frames(p, cheese_crates, [dict(phase=a) for a in args]), ms)]
+    yield CHEESE, [("idle", frames(p, cheese_crates, [{"phase": a} for a in args]), ms)]
     args, ms = PRODUCE_IDLE
-    yield "produce-crates", [("idle", frames(o, produce_crates, [dict(leaf=a) for a in args]), ms)]
+    yield "produce-crates", [("idle", frames(o, produce_crates, [{"leaf": a} for a in args]), ms)]
     args, ms = RACK_IDLE
-    yield "clothing-rack", [("idle", frames(o, clothing_rack, [dict(sway=a) for a in args]), ms)]
+    yield "clothing-rack", [("idle", frames(o, clothing_rack, [{"sway": a} for a in args]), ms)]
     args, ms = STALL_IDLE
     for lanes in (2, 3):
         yield f"market-stall-{lanes}", [("idle", [drawn(o, market_stall, lanes, a).outlined() for a in args], ms)]
@@ -997,15 +1040,28 @@ def road_sprites(s=1):
 
 # ---------- hit bursts ----------
 
-PETALS = ((-1.0, -0.9, "pink"), (1.0, -1.0, "white"), (-1.3, -0.2, "red"), (1.3, -0.3, "pink"),
-          (-0.6, -1.3, "white"), (0.7, -1.4, "red"), (-1.2, 0.5, "pink"), (1.2, 0.4, "white"))
+PETALS = (
+    (-1.0, -0.9, "pink"),
+    (1.0, -1.0, "white"),
+    (-1.3, -0.2, "red"),
+    (1.3, -0.3, "pink"),
+    (-0.6, -1.3, "white"),
+    (0.7, -1.4, "red"),
+    (-1.2, 0.5, "pink"),
+    (1.2, 0.4, "white"),
+)
 
 
 def bouquet(g, cx, cy, tilt):
     """The bride's bouquet, 9x10 design units round cx, cy: five roses over green stems, tilted tilt (-1, 0,
     1) as it tumbles."""
-    for x, y, c, sh in ((-3, 0, "pink", "mauve"), (0, -1.5, "red", "dred"), (3, 0, "pink", "mauve"),
-                        (-1.5, 2, "cream", "tan"), (1.5, 2, "red", "dred")):
+    for x, y, c, sh in (
+        (-3, 0, "pink", "mauve"),
+        (0, -1.5, "red", "dred"),
+        (3, 0, "pink", "mauve"),
+        (-1.5, 2, "cream", "tan"),
+        (1.5, 2, "red", "dred"),
+    ):
         g.cel(cx + 1.3 * (x + tilt * y * 0.4), cy + 1.3 * (y - tilt * x * 0.3), 2.6, 2.6, c, sh)
     for k in range(5):
         g.rect(cx - 1 + tilt * (k + 3) * 0.6, cy + 5 + k, 2, 1, "canopy")
@@ -1022,22 +1078,30 @@ def hit_wedding_photo_shoot(step):
         return hits.rim(g)
     r = (0, 20, 15, 10, 6, 3, 0, 0)[step]
     if r:
+
         def flash(p):
             for k in range(4):
                 a = math.radians(k * 90 + 45)
-                p.tri((cx, cy), (cx + math.cos(a) * r * 0.45, cy + math.sin(a) * r * 0.45),
-                      (cx + math.cos(a + 0.8) * r * 0.25, cy + math.sin(a + 0.8) * r * 0.25), "yellow")
+                p.tri(
+                    (cx, cy),
+                    (cx + math.cos(a) * r * 0.45, cy + math.sin(a) * r * 0.45),
+                    (cx + math.cos(a + 0.8) * r * 0.25, cy + math.sin(a + 0.8) * r * 0.25),
+                    "yellow",
+                )
             p.tri((cx - r, cy), (cx, cy - r * 0.18), (cx, cy + r * 0.18), "white")
             p.tri((cx + r, cy), (cx, cy - r * 0.18), (cx, cy + r * 0.18), "white")
             p.tri((cx, cy - r), (cx - r * 0.18, cy), (cx + r * 0.18, cy), "white")
             p.tri((cx, cy + r), (cx - r * 0.18, cy), (cx + r * 0.18, cy), "white")
             p.ell(cx, cy, max(1.5, r * 0.3), max(1.5, r * 0.3), "white")
+
         hits.piece(g, flash)
     t = step - 0.5
     for i, (vx, vy, c) in enumerate(PETALS):
         x, y = cx + vx * 9 * t, cy + vy * 9 * t + 0.9 * t * t
         if 3 <= x < 60 and 3 <= y < 60 and step >= 2:
-            hits.piece(g, lambda p: p.rect(x, y, 2, 2, c) if (step + i) % 2 else p.rect(x, y, 2.5, 1.5, c))
+            hits.piece(
+                g, lambda p, c=c, i=i, x=x, y=y: p.rect(x, y, 2, 2, c) if (step + i) % 2 else p.rect(x, y, 2.5, 1.5, c)
+            )
     by = (0, 30, 20, 14, 12, 13, 16, 20)[step]
     tilt = (0, 0, 1, 0, -1, 0, 1, 0)[step]
     hits.piece(g, lambda p: bouquet(p, cx, by, tilt))
@@ -1062,13 +1126,14 @@ def hit_cheese_crates(step):
 
     hits.piece(g, puff)
     if step >= 3:
-        hits.piece(g, lambda p: stink_wisps(p, step % 4, xs=(cx - 9, cx, cx + 9), top=cy - 24 + step,
-                                            bottom=cy - 6 - r * 0.5))
+        hits.piece(
+            g, lambda p: stink_wisps(p, step % 4, xs=(cx - 9, cx, cx + 9), top=cy - 24 + step, bottom=cy - 6 - r * 0.5)
+        )
     t = step - 0.5
     for i, (vx, vy) in enumerate(((-9, -8), (9, -7), (-12, -3), (12, -4), (-5, -10), (6, -10))):
         x, y = cx + vx * t * 0.8, cy - 4 + vy * t * 0.8 + 1.3 * t * t
         if 3 <= x < 60 and 3 <= y < 60:
-            hits.piece(g, lambda p: p.rect(x, y, 2, 2, "yellow" if i % 2 else "amber"))
+            hits.piece(g, lambda p, i=i, x=x, y=y: p.rect(x, y, 2, 2, "yellow" if i % 2 else "amber"))
     wx = (0, 30, 33, 37, 41, 45, 48, 51)[step]
     wy = (0, 32, 22, 17, 18, 24, 32, 28)[step]
     hits.piece(g, lambda p: cheese_wheel(p, wx, wy, 8, turn=step * 90))
@@ -1076,11 +1141,24 @@ def hit_cheese_crates(step):
 
 
 # The splat's arms: (angle in degrees, 0 to the right and clockwise, reach and width as shares of its radius).
-SPLAT_ARMS = ((200, 1.0, 0.3), (250, 0.8, 0.26), (300, 1.05, 0.28), (345, 0.85, 0.3), (30, 0.95, 0.26),
-              (85, 0.7, 0.3), (135, 0.9, 0.28))
+SPLAT_ARMS = (
+    (200, 1.0, 0.3),
+    (250, 0.8, 0.26),
+    (300, 1.05, 0.28),
+    (345, 0.85, 0.3),
+    (30, 0.95, 0.26),
+    (85, 0.7, 0.3),
+    (135, 0.9, 0.28),
+)
 # The scraps thrown out of the splat: (x speed, y speed, colour) in design units a frame.
-SCRAPS = ((-10, -7, "clay"), (10, -8, "green"), (-13, -2, "cream"), (13, -3, "clay"), (-5, -11, "green"),
-          (6, -11, "clay"))
+SCRAPS = (
+    (-10, -7, "clay"),
+    (10, -8, "green"),
+    (-13, -2, "cream"),
+    (13, -3, "clay"),
+    (-5, -11, "green"),
+    (6, -11, "clay"),
+)
 
 
 def flying_peel(g, cx, cy, angle):
@@ -1116,39 +1194,51 @@ def hit_green_bin_spill(step):
             a = math.radians(deg)
             ex, ey = cx + math.cos(a) * r * reach, cy + math.sin(a) * r * reach
             nx, ny = -math.sin(a) * r * w, math.cos(a) * r * w
-            poly(p, [(cx + nx, cy + ny), (cx - nx, cy - ny), (ex - nx * 0.3, ey - ny * 0.3),
-                     (ex + nx * 0.3, ey + ny * 0.3)], "olive")
+            poly(
+                p,
+                [
+                    (cx + nx, cy + ny),
+                    (cx - nx, cy - ny),
+                    (ex - nx * 0.3, ey - ny * 0.3),
+                    (ex + nx * 0.3, ey + ny * 0.3),
+                ],
+                "olive",
+            )
             p.ell(ex, ey, r * w * 0.55 + 0.6, r * w * 0.55 + 0.6, "olive")
         p.ell(cx - r * 0.18, cy - r * 0.18, r * 0.3, r * 0.22, "moss")
 
     hits.piece(g, splat)
     if step >= 3:
-        for i, (deg, reach, w) in enumerate(SPLAT_ARMS[::2]):
+        for _i, (deg, reach, _w) in enumerate(SPLAT_ARMS[::2]):
             a = math.radians(deg)
             d = r * reach + 2.5 + (step - 2) * 3
             x, y = cx + math.cos(a) * d, cy + math.sin(a) * d + (step - 2) ** 2 * 0.6
             if 3 <= x < 60 and 3 <= y < 60:
-                hits.piece(g, lambda p: p.ell(x, y, 1.7, 1.7, "olive"))
+                hits.piece(g, lambda p, x=x, y=y: p.ell(x, y, 1.7, 1.7, "olive"))
     t = step - 0.5
     for i, (vx, vy, c) in enumerate(SCRAPS):
         x, y = cx + vx * t * 0.85, cy - 4 + vy * t * 0.85 + 1.3 * t * t
         if 3 <= x < 60 and 3 <= y < 60:
-            hits.piece(g, lambda p: p.rect(x, y, 3.5, 2.5, c) if i % 2 else p.rect(x, y, 2.5, 3.5, c))
+            hits.piece(
+                g, lambda p, c=c, i=i, x=x, y=y: p.rect(x, y, 3.5, 2.5, c) if i % 2 else p.rect(x, y, 2.5, 3.5, c)
+            )
     px_ = (0, 31, 30, 29, 28, 27, 26, 25)[step]
     py = (0, 32, 19, 12, 10, 12, 17, 24)[step]
     hits.piece(g, lambda p: flying_peel(p, px_, py, (0, -20, -60, -110, -160, -210, -250, -290)[step]))
     return g
 
 
-HIT_BURSTS = {"fx-hit-wedding-photo-shoot": (hit_wedding_photo_shoot, 8),
-              f"fx-hit-{CHEESE}": (hit_cheese_crates, 8), f"fx-hit-{GREEN_BIN_SPILL}": (hit_green_bin_spill, 8)}
+HIT_BURSTS = {
+    "fx-hit-wedding-photo-shoot": (hit_wedding_photo_shoot, 8),
+    f"fx-hit-{CHEESE}": (hit_cheese_crates, 8),
+    f"fx-hit-{GREEN_BIN_SPILL}": (hit_green_bin_spill, 8),
+}
 
 
 def burst_sprites():
     """Yield (key, tags) for the hit bursts, as hits.sprites draws its own."""
     for key, (draw, n) in HIT_BURSTS.items():
-        yield key, [("play", [minis.small(hits, hits.BURST_SCALE, draw, i).outlined(False)
-                              for i in range(n)], 70)]
+        yield key, [("play", [minis.small(hits, hits.BURST_SCALE, draw, i).outlined(False) for i in range(n)], 70)]
 
 
 def sprites():
@@ -1162,6 +1252,7 @@ def sprites():
 
 # ---------- cards ----------
 
+
 def figure(*parts, flash=False, pay=False):
     """Some of the wedding photo shoot's figures at 1x, as an image the size of its frame."""
     return to_image(drawn(PERSON, wedding_photo_shoot, flash=flash, parts=parts, pay=pay).outlined())
@@ -1170,7 +1261,8 @@ def figure(*parts, flash=False, pay=False):
 def card_wedding_pose():
     """Pose: the bride smiling at the left with Archie sitting at her side, the photographer's camera at
     the right edge firing its flash at them, hearts rising."""
-    import cards
+    import cards  # noqa: PLC0415 - Retain lazy loading to avoid art-module import cycles and optional image dependencies.
+
     a = cards.Art()
     a.ground("distilleryDistrict")
     a.shadow(18, 62, 30)
@@ -1185,7 +1277,7 @@ def card_wedding_pose():
 def arc(a, pts, col, dash=2, gap=2):
     """A dashed trail through the joints pts, dash pixels on and gap off along it."""
     run = []
-    for (x0, y0), (x1, y1) in zip(pts, pts[1:]):
+    for (x0, y0), (x1, y1) in itertools.pairwise(pts):
         n = max(1, round(math.hypot(x1 - x0, y1 - y0)))
         run += [(round(x0 + (x1 - x0) * k / n), round(y0 + (y1 - y0) * k / n)) for k in range(n)]
     for k, (x, y) in enumerate(dict.fromkeys(run)):
@@ -1195,15 +1287,22 @@ def arc(a, pts, col, dash=2, gap=2):
 
 def bezier(p0, p1, p2, n=24):
     """n + 1 points along the quadratic Bezier curve p0, p1, p2."""
-    return [((1 - t) ** 2 * p0[0] + 2 * (1 - t) * t * p1[0] + t * t * p2[0],
-             (1 - t) ** 2 * p0[1] + 2 * (1 - t) * t * p1[1] + t * t * p2[1]) for t in (k / n for k in range(n + 1))]
+    return [
+        (
+            (1 - t) ** 2 * p0[0] + 2 * (1 - t) * t * p1[0] + t * t * p2[0],
+            (1 - t) ** 2 * p0[1] + 2 * (1 - t) * t * p1[1] + t * t * p2[1],
+        )
+        for t in (k / n for k in range(n + 1))
+    ]
 
 
 def card_wedding_walk_around():
-    """Walk around: the shoot posing up the road at the left, drawn small, the flash firing, while Archie, up the road at
+    """Walk around: the shoot posing up the road at the left, drawn small, the flash firing, while Archie, up the road
+        at
     the right, pulls out wide round it, a dashed white trail curving from the bottom edge out past him and back in
     over the top of the shoot."""
-    import cards
+    import cards  # noqa: PLC0415 - Retain lazy loading to avoid art-module import cycles and optional image dependencies.
+
     a = cards.Art()
     a.ground("distilleryDistrict")
     shoot = to_image(drawn(PERSON * 0.45, wedding_photo_shoot, flash=True).outlined())
@@ -1220,7 +1319,8 @@ def card_wedding_reshoot():
     """Pay for a reshoot: the bride posing again at the left, the photographer's camera at the right edge lined
     up on her, its flash not yet fired, while his free hand reaches out to take a bill, Archie sitting aside at
     his feet, out of the shot."""
-    import cards
+    import cards  # noqa: PLC0415 - Retain lazy loading to avoid art-module import cycles and optional image dependencies.
+
     a = cards.Art()
     a.ground("distilleryDistrict")
     a.shadow(18, 62, 30)
@@ -1239,10 +1339,16 @@ def crate_image(draw):
 def slime(a, blobs):
     """The green bin's slop spilt across the cobbles: the union of the ellipses blobs (cx, cy, rx, ry),
     olive with a dolive rim and moss in its depths."""
+
     def inside(x, y, inset):
-        return any(((x + 0.5 - cx) / (rx - inset)) ** 2 + ((y + 0.5 - cy) / (ry - inset)) ** 2 <= 1
-                   for cx, cy, rx, ry in blobs if rx > inset and ry > inset)
-    from cards import AH, AW
+        return any(
+            ((x + 0.5 - cx) / (rx - inset)) ** 2 + ((y + 0.5 - cy) / (ry - inset)) ** 2 <= 1
+            for cx, cy, rx, ry in blobs
+            if rx > inset and ry > inset
+        )
+
+    from cards import AH, AW  # noqa: PLC0415 - Retain lazy loading to avoid art-module import cycles and optional image dependencies.
+
     for y in range(AH):
         for x in range(AW):
             if inside(x, y, 0):
@@ -1259,7 +1365,8 @@ def head_peel():
 
 def scrap(col):
     """One 3x2 scrap of compost lying on the road, outlined two ramp steps darker."""
-    import cards
+    import cards  # noqa: PLC0415 - Retain lazy loading to avoid art-module import cycles and optional image dependencies.
+
     return cards.pixmap(["xxx", "xx."], {"x": col})
 
 
@@ -1267,7 +1374,8 @@ def card_bin_wade_through():
     """Wade through: the toppled green bin drawn small up the road at the left, its olive slop running down
     across the cobbles with clay and green scraps lying in it, and Archie wading through it at the right, the
     banana peel draped over his head and brown splats on his coat."""
-    import cards
+    import cards  # noqa: PLC0415 - Retain lazy loading to avoid art-module import cycles and optional image dependencies.
+
     a = cards.Art()
     a.ground("kensingtonMarket")
     slime(a, [(18, 24, 11, 3), (28, 34, 20, 5), (40, 45, 30, 8), (42, 54, 34, 5)])
@@ -1315,7 +1423,8 @@ def sweeper_top(g, b):
 def card_bin_pay():
     """Pay for cleanup: the toppled green bin at the left with Archie sitting by it, and the shopkeeper at the
     right, broom in hand, holding up the bill he has been paid."""
-    import cards
+    import cards  # noqa: PLC0415 - Retain lazy loading to avoid art-module import cycles and optional image dependencies.
+
     a = cards.Art()
     a.ground("kensingtonMarket")
     bin_ = to_image(drawn(PERSON * 0.75, green_bin_spill).outlined())
@@ -1332,7 +1441,8 @@ def card_bin_pay():
 def card_bin_hurry_past():
     """Hurry past: the toppled green bin up the road at the right, Ginger pulling the pack away to the left
     and Archie behind her pulling back toward the bin, both leashes taut off the bottom."""
-    import cards
+    import cards  # noqa: PLC0415 - Retain lazy loading to avoid art-module import cycles and optional image dependencies.
+
     a = cards.Art()
     a.ground("kensingtonMarket")
     bin_ = to_image(drawn(PERSON * 0.75, green_bin_spill).outlined())
@@ -1349,7 +1459,8 @@ def shop_door(a):
     """The cheese crate's setting, the same in both neighbourhoods it stands in: a red brick shopfront in a
     running bond of dbrick mortar across the top, a bark wooden door in a dbrown frame with a gold knob over a
     stone step, and stone paving below in dstone courses; shadows dstone, the leash pink."""
-    from cards import AH, AW
+    from cards import AH, AW  # noqa: PLC0415 - Retain lazy loading to avoid art-module import cycles and optional image dependencies.
+
     a.fill(0, 0, AW, WALL, "brick")
     for y in range(3, WALL, 4):
         a.fill(0, y, AW, 1, "dbrick")
@@ -1390,7 +1501,8 @@ WALL, DOOR = 28, 26
 def card_cheese_sniff():
     """Have a sniff: the cheese crate at the shop door and Archie and Buddy nose in at it from either side,
     stink wisps rising round them all and a red heart in an ink line."""
-    import cards
+    import cards  # noqa: PLC0415 - Retain lazy loading to avoid art-module import cycles and optional image dependencies.
+
     a = cards.Art()
     shop_door(a)
     a.put(CHEESE, "idle", 38, 40)
@@ -1434,7 +1546,8 @@ def cheesemonger_top(g, b):
 def card_cheese_buy():
     """Buy the cheese: the cheese crate at the shop door with Archie sitting by it, and the cheesemonger in
     the doorway holding up the bill he has been paid and holding out a wedge of cheese."""
-    import cards
+    import cards  # noqa: PLC0415 - Retain lazy loading to avoid art-module import cycles and optional image dependencies.
+
     a = cards.Art()
     shop_door(a)
     # the crate set back and left and Archie low, so his head sits under the cut wheel and the wheel clears
@@ -1451,7 +1564,8 @@ def card_cheese_buy():
 def card_cheese_hurry_on():
     """Hurry on: the cheese crate at the shop door on the right and Archie pulled away to the left, the leash
     taut off the bottom, a red ! in an ink line by the cheese."""
-    import cards
+    import cards  # noqa: PLC0415 - Retain lazy loading to avoid art-module import cycles and optional image dependencies.
+
     a = cards.Art()
     shop_door(a)
     a.put(CHEESE, "idle", 54, 42)
@@ -1476,8 +1590,8 @@ CARDS = {
 
 def card_preview(out, scale=3):
     """Every card illustration inside an encounter card frame, cost plaque included."""
-    import cards
-    from PIL import Image
+    import cards  # noqa: PLC0415 - Retain lazy loading to avoid art-module import cycles and optional image dependencies.
+    from PIL import Image  # noqa: PLC0415 - Optional image dependency, loaded only for image rendering.
 
     cards.ILLUSTRATIONS.update(CARDS)
     sheet = Image.new("RGB", ((cards.CW + 6) * len(CARDS) * scale, (cards.CH + 6) * scale))
@@ -1488,11 +1602,11 @@ def card_preview(out, scale=3):
 
 
 def build_cards():
-    os.makedirs("public/art/images", exist_ok=True)
+    Path("public/art/images").mkdir(parents=True, exist_ok=True)
     for key, draw in CARDS.items():
         png = f"public/art/images/{key}.png"
         draw().img.save(png)
-        subprocess.run(["aseprite", "-b", png, "--save-as", f"art/cards/{key}.aseprite"], check=True)
+        subprocess.run(["aseprite", "-b", png, "--save-as", f"art/cards/{key}.aseprite"], check=True)  # noqa: S603, S607 - Trusted Aseprite CLI and generated local asset paths.
     print("built", ", ".join(CARDS))
 
 
@@ -1502,43 +1616,78 @@ def build_cards():
 EFFECTS = {
     # a soft wooden thunk, a squish, then the cheese's rising plop and a sag as it settles
     f"sfx-hit-{CHEESE}": [
-        ("triangle", 0.14, (320, 130), 0, dict(vol=0.3, attack=0.003, release=0.85)),
-        ("square", 0.12, (320, 150), 0, dict(vol=0.6, low=1000, attack=0.003, release=0.8, shape="h")),
-        ("pinknoise", 0.05, None, 0, dict(vol=0.2, low=1200, high=250, attack=0.002, release=0.9)),
-        ("pinknoise", 0.12, None, 0.14, dict(vol=0.4, low=1400, high=250, attack=0.02, release=0.7)),
-        ("triangle", 0.08, (260, 700), 0.16, dict(vol=0.9, attack=0.004, release=0.6, shape="h")),
-        ("triangle", 0.15, (420, 200), 0.25, dict(attack=0.01, release=0.8, shape="h")),
-        ("square", 0.15, (420, 200), 0.25, dict(vol=0.6, low=1000, attack=0.01, release=0.8, shape="h")),
+        ("triangle", 0.14, (320, 130), 0, {"vol": 0.3, "attack": 0.003, "release": 0.85}),
+        ("square", 0.12, (320, 150), 0, {"vol": 0.6, "low": 1000, "attack": 0.003, "release": 0.8, "shape": "h"}),
+        ("pinknoise", 0.05, None, 0, {"vol": 0.2, "low": 1200, "high": 250, "attack": 0.002, "release": 0.9}),
+        ("pinknoise", 0.12, None, 0.14, {"vol": 0.4, "low": 1400, "high": 250, "attack": 0.02, "release": 0.7}),
+        ("triangle", 0.08, (260, 700), 0.16, {"vol": 0.9, "attack": 0.004, "release": 0.6, "shape": "h"}),
+        ("triangle", 0.15, (420, 200), 0.25, {"attack": 0.01, "release": 0.8, "shape": "h"}),
+        ("square", 0.15, (420, 200), 0.25, {"vol": 0.6, "low": 1000, "attack": 0.01, "release": 0.8, "shape": "h"}),
     ],
     # the flash whining up, the shutter's two clicks, then two bells
     "sfx-hit-wedding-photo-shoot": [
-        ("square", 0.12, (1500, 3200), 0, dict(vol=0.15, duty=25, low=3500, attack=0.02, release=0.3,
-                                               fx=sounds.DARK)),
-        ("pinknoise", 0.02, None, 0.12, dict(vol=0.5, high=2000, low=5000, attack=0.001, release=0.6,
-                                             fx=("lowpass", "4500"))),
-        ("pinknoise", 0.025, None, 0.16, dict(vol=0.45, high=1800, low=4500, attack=0.001, release=0.6,
-                                              fx=("lowpass", "4500"))),
-        ("triangle", 0.2, "E6", 0.2, dict(vol=0.9, release=0.85)),
-        ("square", 0.2, "E5", 0.2, dict(vol=0.15, duty=25, low=2500, release=0.85)),
-        ("triangle", 0.28, "C6", 0.3, dict(vol=0.9, release=0.9)),
-        ("square", 0.28, "C5", 0.3, dict(vol=0.15, duty=25, low=2500, release=0.9)),
+        (
+            "square",
+            0.12,
+            (1500, 3200),
+            0,
+            {"vol": 0.15, "duty": 25, "low": 3500, "attack": 0.02, "release": 0.3, "fx": sounds.DARK},
+        ),
+        (
+            "pinknoise",
+            0.02,
+            None,
+            0.12,
+            {"vol": 0.5, "high": 2000, "low": 5000, "attack": 0.001, "release": 0.6, "fx": ("lowpass", "4500")},
+        ),
+        (
+            "pinknoise",
+            0.025,
+            None,
+            0.16,
+            {"vol": 0.45, "high": 1800, "low": 4500, "attack": 0.001, "release": 0.6, "fx": ("lowpass", "4500")},
+        ),
+        ("triangle", 0.2, "E6", 0.2, {"vol": 0.9, "release": 0.85}),
+        ("square", 0.2, "E5", 0.2, {"vol": 0.15, "duty": 25, "low": 2500, "release": 0.85}),
+        ("triangle", 0.28, "C6", 0.3, {"vol": 0.9, "release": 0.9}),
+        ("square", 0.28, "C5", 0.3, {"vol": 0.15, "duty": 25, "low": 2500, "release": 0.9}),
     ],
     # the bin's hollow plastic thunk, its lid clattering down in three shrinking knocks, then a soft squelch
     # and a gloop as the scraps settle
     f"sfx-hit-{GREEN_BIN_SPILL}": [
-        ("square", 0.12, (340, 160), 0, dict(vol=0.6, low=1000, attack=0.003, release=0.8, shape="h")),
-        ("triangle", 0.12, (340, 140), 0, dict(vol=0.35, attack=0.003, release=0.85)),
-        ("pinknoise", 0.04, None, 0, dict(vol=0.25, low=2500, high=600, attack=0.001, release=0.8,
-                                          fx=("lowpass", "3000"))),
-        ("square", 0.035, (720, 560), 0.07, dict(vol=0.5, duty=35, low=1600, attack=0.002, release=0.7,
-                                                 fx=("lowpass", "3000"))),
-        ("square", 0.03, (680, 540), 0.12, dict(vol=0.38, duty=35, low=1600, attack=0.002, release=0.7,
-                                                fx=("lowpass", "3000"))),
-        ("square", 0.025, (650, 520), 0.16, dict(vol=0.26, duty=35, low=1600, attack=0.002, release=0.7,
-                                                 fx=("lowpass", "3000"))),
-        ("pinknoise", 0.1, None, 0.23, dict(vol=0.5, low=1400, high=300, attack=0.012, release=0.75)),
-        ("triangle", 0.1, (520, 210), 0.23, dict(vol=0.8, attack=0.01, release=0.8, shape="h")),
-        ("triangle", 0.09, (260, 560), 0.35, dict(vol=0.6, attack=0.006, release=0.7, shape="h")),
+        ("square", 0.12, (340, 160), 0, {"vol": 0.6, "low": 1000, "attack": 0.003, "release": 0.8, "shape": "h"}),
+        ("triangle", 0.12, (340, 140), 0, {"vol": 0.35, "attack": 0.003, "release": 0.85}),
+        (
+            "pinknoise",
+            0.04,
+            None,
+            0,
+            {"vol": 0.25, "low": 2500, "high": 600, "attack": 0.001, "release": 0.8, "fx": ("lowpass", "3000")},
+        ),
+        (
+            "square",
+            0.035,
+            (720, 560),
+            0.07,
+            {"vol": 0.5, "duty": 35, "low": 1600, "attack": 0.002, "release": 0.7, "fx": ("lowpass", "3000")},
+        ),
+        (
+            "square",
+            0.03,
+            (680, 540),
+            0.12,
+            {"vol": 0.38, "duty": 35, "low": 1600, "attack": 0.002, "release": 0.7, "fx": ("lowpass", "3000")},
+        ),
+        (
+            "square",
+            0.025,
+            (650, 520),
+            0.16,
+            {"vol": 0.26, "duty": 35, "low": 1600, "attack": 0.002, "release": 0.7, "fx": ("lowpass", "3000")},
+        ),
+        ("pinknoise", 0.1, None, 0.23, {"vol": 0.5, "low": 1400, "high": 300, "attack": 0.012, "release": 0.75}),
+        ("triangle", 0.1, (520, 210), 0.23, {"vol": 0.8, "attack": 0.01, "release": 0.8, "shape": "h"}),
+        ("triangle", 0.09, (260, 560), 0.35, {"vol": 0.6, "attack": 0.006, "release": 0.7, "shape": "h"}),
     ],
 }
 

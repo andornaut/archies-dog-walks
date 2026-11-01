@@ -121,24 +121,27 @@ this file instead. Shared tooling is in pixel.py.
 """
 
 import math
-import os
 import subprocess
 import sys
+from pathlib import Path
 
-sys.path.insert(0, os.path.dirname(__file__))
-import cards  # noqa: E402
-import fx  # noqa: E402
-import hits  # noqa: E402
-import minis  # noqa: E402
-import obstacles  # noqa: E402
-import road  # noqa: E402
-import scene as sn  # noqa: E402
-import sounds  # noqa: E402
-from minis import STEPS  # noqa: E402
-from pixel import ZONE_ROADS, Grid, K, build as build_sprites, depth_settled, edged, road_edge, to_image  # noqa: E402
-from pixel import raster, scale_of  # noqa: E402
-from pixel import preview as sheet  # noqa: E402
-from road import lit  # noqa: E402
+sys.path.insert(0, str(Path(__file__).parent))
+import itertools
+
+import cards
+import fx
+import hits
+import minis
+import obstacles
+import scene as sn
+import sounds
+from minis import STEPS
+from pixel import ZONE_ROADS, Grid, K, depth_settled, edged, raster, road_edge, scale_of, to_image
+from pixel import build as build_sprites
+from pixel import preview as sheet
+
+import road
+from road import lit
 
 # Animals are laid out on 32 design units and drawn ANIMAL times bigger (48px); minor obstacles in their own
 # pixels, drawn OBSTACLE times bigger.
@@ -166,11 +169,18 @@ def bar(g, a, b, w, c):
 # ---------- porch-cat ----------
 
 # The calico's coat: white shaded lgrey, an ochre patch shaded rust, a dbrown patch shaded plum.
-CALICO = dict(coat="white", coat_sh="lgrey", orange="ochre", orange_sh="rust", dark="dbrown", dark_sh="plum")
+CALICO = {
+    "coat": "white",
+    "coat_sh": "lgrey",
+    "orange": "ochre",
+    "orange_sh": "rust",
+    "dark": "dbrown",
+    "dark_sh": "plum",
+}
 # The cat's idle: the tail tip flicks up, rests, the eyes blink slowly, the tip flicks down.
-PORCH_CAT_IDLE = (dict(), dict(tail=-1), dict(blink=True), dict(tail=1))
+PORCH_CAT_IDLE = ({}, {"tail": -1}, {"blink": True}, {"tail": 1})
 # Its crawl: a front paw reaches 1px ahead, the body lifts between steps, the other paw reaches.
-PORCH_CAT_WALK = (dict(near=1, sway=-1), dict(bob=-1), dict(far=1, sway=1), dict(bob=-1))
+PORCH_CAT_WALK = ({"near": 1, "sway": -1}, {"bob": -1}, {"far": 1, "sway": 1}, {"bob": -1})
 
 
 def porch_cat(tail=0, blink=False, near=0, far=0, bob=0, sway=0, swipe=False):
@@ -237,11 +247,11 @@ def porch_cat(tail=0, blink=False, near=0, far=0, bob=0, sway=0, swipe=False):
 # ---------- escaped-capybara ----------
 
 # The capybara's coat: brown, shaded dbrown, lit tan; the far legs and the nose dbrown.
-CAPY = dict(coat="brown", shade="dbrown", lit="tan", far="dbrown", nose="dbrown")
+CAPY = {"coat": "brown", "shade": "dbrown", "lit": "tan", "far": "dbrown", "nose": "dbrown"}
 # Its idle: a chew (the jaw drops 1px), rest, the ear flicks up, a blink.
-CAPYBARA_IDLE = (dict(chew=1), dict(), dict(ear=-1), dict(blink=True))
+CAPYBARA_IDLE = ({"chew": 1}, {}, {"ear": -1}, {"blink": True})
 # Its slow step: the near fore and far hind leg forward, passing 1px higher, the other pair forward, passing.
-CAPYBARA_WALK = (dict(a=1.5, b=-1.5), dict(bob=-1), dict(a=-1.5, b=1.5), dict(bob=-1))
+CAPYBARA_WALK = ({"a": 1.5, "b": -1.5}, {"bob": -1}, {"a": -1.5, "b": 1.5}, {"bob": -1})
 CAPYBARA_WALK_MS = 160
 
 
@@ -292,21 +302,36 @@ def escaped_capybara(a=0, b=0, bob=0, chew=0, ear=0, blink=False):
 # A Rhode Island Red: rust feathers shaded dbrown and lit ochre, a plum tail shaded walnut, dbrown wings with a
 # brick covert band, a red comb and wattle shaded dred, an amber beak and yellow legs shaded amber. The tail's
 # shade is walnut, not ink, so road.LIT gives it no cool rim and its tips stay solid at the small steps.
-HEN = dict(feather="rust", shade="dbrown", lit="ochre", tail="plum", tail_sh="walnut", wing="dbrown", wing_sh="plum",
-           band="brick", comb="red", comb_sh="dred", beak="amber", leg="yellow", leg_sh="amber")
+HEN = {
+    "feather": "rust",
+    "shade": "dbrown",
+    "lit": "ochre",
+    "tail": "plum",
+    "tail_sh": "walnut",
+    "wing": "dbrown",
+    "wing_sh": "plum",
+    "band": "brick",
+    "comb": "red",
+    "comb_sh": "dred",
+    "beak": "amber",
+    "leg": "yellow",
+    "leg_sh": "amber",
+}
 # Its scramble across the road, one dict per frame, read like hazards.SQUIRREL_RUN: body lift, the wing's
 # stroke, and the near and far feet (x, y of the foot's top-left). A design unit is 1.5px at full size, so
 # thirds land on whole pixels.
 HEN_RUN = (
-    dict(bob=0, wing="up", near=(16, 27 + 1 / 3), far=(13 + 1 / 3, 27 + 1 / 3)),                # gathered
-    dict(bob=-2 / 3, wing="mid", near=(11 + 1 / 3, 26 + 2 / 3), far=(18 + 2 / 3, 26)),           # push off
-    dict(bob=-4 / 3, wing="down", near=(18, 25 + 1 / 3), far=(12, 26)),                          # flight
-    dict(bob=-2 / 3, wing="mid", near=(18 + 2 / 3, 27 + 1 / 3), far=(12 + 2 / 3, 26 + 2 / 3)),   # lands
+    {"bob": 0, "wing": "up", "near": (16, 27 + 1 / 3), "far": (13 + 1 / 3, 27 + 1 / 3)},  # gathered
+    {"bob": -2 / 3, "wing": "mid", "near": (11 + 1 / 3, 26 + 2 / 3), "far": (18 + 2 / 3, 26)},  # push off
+    {"bob": -4 / 3, "wing": "down", "near": (18, 25 + 1 / 3), "far": (12, 26)},  # flight
+    {"bob": -2 / 3, "wing": "mid", "near": (18 + 2 / 3, 27 + 1 / 3), "far": (12 + 2 / 3, 26 + 2 / 3)},  # lands
 )
 # Waiting at the road's edge: standing on both feet, the neck up, then the head jerking forward into the run's
 # stretch, a whole design unit or more apart so the two frames differ at every depth step.
-HEN_IDLE = (dict(bob=0, wing="fold", near=(16, 27 + 1 / 3), far=(13 + 1 / 3, 27 + 1 / 3), reach=-2),
-            dict(bob=0, wing="fold", near=(16, 27 + 1 / 3), far=(13 + 1 / 3, 27 + 1 / 3), reach=0))
+HEN_IDLE = (
+    {"bob": 0, "wing": "fold", "near": (16, 27 + 1 / 3), "far": (13 + 1 / 3, 27 + 1 / 3), "reach": -2},
+    {"bob": 0, "wing": "fold", "near": (16, 27 + 1 / 3), "far": (13 + 1 / 3, 27 + 1 / 3), "reach": 0},
+)
 
 
 def hen(bob=0, wing="fold", near=(16, 27 + 1 / 3), far=(13 + 1 / 3, 27 + 1 / 3), reach=0):
@@ -346,8 +371,11 @@ def hen(bob=0, wing="fold", near=(16, 27 + 1 / 3), far=(13 + 1 / 3, 27 + 1 / 3),
         g.cel(14, 20.8 + b, 4.2, 2.6, c["wing"], c["wing_sh"])
         g.cel(15, 19.6 + b, 3.2, 1.2, c["band"])
     else:
-        tip, back = {"up": ((13.5, 8 + b), (9, 10.5 + b)), "mid": ((5, 18 + b), (7, 21.5 + b)),
-                     "down": ((12, 28 + b), (8, 25.5 + b))}[wing]
+        tip, back = {
+            "up": ((13.5, 8 + b), (9, 10.5 + b)),
+            "mid": ((5, 18 + b), (7, 21.5 + b)),
+            "down": ((12, 28 + b), (8, 25.5 + b)),
+        }[wing]
         g.tri((11.5, 20.5 + b), (17.5, 19 + b), tip, c["wing"])
         g.tri((11.5, 20.5 + b), tip, back, c["wing_sh"])
         # the leading edge lit brick from the shoulder to the tip
@@ -369,8 +397,8 @@ def hen(bob=0, wing="fold", near=(16, 27 + 1 / 3), far=(13 + 1 / 3, 27 + 1 / 3),
 
 # The pair's coats: a sable, dbrown shaded plum with plum legs and tail and a cream face, and a champagne, cream
 # shaded tan with clay legs and tail and a white face. Each mask band is its legs' colour.
-SABLE = dict(coat="dbrown", shade="plum", leg="plum", far="walnut", band="cream", patch="plum")
-CHAMPAGNE = dict(coat="cream", shade="tan", leg="clay", far="tan", band="white", patch="clay")
+SABLE = {"coat": "dbrown", "shade": "plum", "leg": "plum", "far": "walnut", "band": "cream", "patch": "plum"}
+CHAMPAGNE = {"coat": "cream", "shade": "tan", "leg": "clay", "far": "tan", "band": "white", "patch": "clay"}
 # The frame, in design units: two ferrets nose to tail across 2 lanes, 96x48 at full size.
 FERRETS_W = 64
 # Each ferret's bound, one tuple per frame, in design units from its rump column and its ground row: hip and
@@ -379,10 +407,10 @@ FERRETS_W = 64
 # crosses about 10 units a frame (3 lanes a second at 80ms), so a planted paw steps back 10 units a frame: the
 # front paws land at 23, the hind paws land at 12 where the front ones were, then push off from 2.
 FERRET_BOUND = (
-    ((5, -7 - 1 / 3), (19, -6 - 1 / 3), 2 + 2 / 3, (23, 0), (3, -2 - 2 / 3), 0),        # front paws land
-    ((8, -6), (16, -6), 5 + 1 / 3, (13, -2 / 3), (12, 0), -1),                         # hind land, arched
-    ((6, -6 - 2 / 3), (19, -7 - 1 / 3), 3 + 2 / 3, (24, -2), (2, 0), -2 / 3),           # hind push off
-    ((5, -8), (20, -8 - 1 / 3), 1 + 1 / 3, (26, -2 - 2 / 3), (0, -2 - 2 / 3), 1 / 3),   # flight, stretched
+    ((5, -7 - 1 / 3), (19, -6 - 1 / 3), 2 + 2 / 3, (23, 0), (3, -2 - 2 / 3), 0),  # front paws land
+    ((8, -6), (16, -6), 5 + 1 / 3, (13, -2 / 3), (12, 0), -1),  # hind land, arched
+    ((6, -6 - 2 / 3), (19, -7 - 1 / 3), 3 + 2 / 3, (24, -2), (2, 0), -2 / 3),  # hind push off
+    ((5, -8), (20, -8 - 1 / 3), 1 + 1 / 3, (26, -2 - 2 / 3), (0, -2 - 2 / 3), 1 / 3),  # flight, stretched
 )
 # Waiting at the road's edge: standing on all four paws under a gentle arch, the near ferret's head lifting to
 # sniff the air and the far one's tail flicking up.
@@ -404,8 +432,10 @@ def ferret(g, x0, gy, c, bound, sniff=0, flick=0):
     mx, my = (hx + sx) / 2, (hy + sy) / 2 - 2 * arch
 
     def spine(t):
-        return ((1 - t) ** 2 * hx + 2 * t * (1 - t) * mx + t * t * sx,
-                (1 - t) ** 2 * hy + 2 * t * (1 - t) * my + t * t * sy)
+        return (
+            (1 - t) ** 2 * hx + 2 * t * (1 - t) * mx + t * t * sx,
+            (1 - t) ** 2 * hy + 2 * t * (1 - t) * my + t * t * sy,
+        )
 
     def leg(top, paw, col):
         bar(g, top, (paw[0], paw[1] - 1), 2, col)
@@ -452,13 +482,13 @@ def ferrets(near=FERRET_STAND, far=FERRET_STAND, sniff=0):
     ferret(g, fx, fy, CHAMPAGNE, far, flick=-sniff)
     ferret(g, nx, ny, SABLE, near, sniff=sniff)
     # the eyes keep no rim, so a 1px eye at the small steps stays dark
-    return lit(g, dict(ink=(None, None)))
+    return lit(g, {"ink": (None, None)})
 
 
 # The run, 4 frames, the far ferret two frames behind the near one, so one arches while the other stretches;
 # and the stand at the road's edge, 2 frames.
-FERRETS_RUN = tuple(dict(near=FERRET_BOUND[k], far=FERRET_BOUND[k - 2]) for k in range(4))
-FERRETS_IDLE = (dict(), dict(sniff=1 + 1 / 3))
+FERRETS_RUN = tuple({"near": FERRET_BOUND[k], "far": FERRET_BOUND[k - 2]} for k in range(4))
+FERRETS_IDLE = ({}, {"sniff": 1 + 1 / 3})
 
 
 # ---------- minor obstacles ----------
@@ -467,8 +497,14 @@ SIZE, ROW = obstacles.SIZE, obstacles.ROW
 
 # Autumn leaves, each a fill and the shade of its lower half, from the lightest (the heap's top left, facing
 # the light) to the darkest (its lower right).
-LEAF_COLOURS = (("gold", "amber"), ("amber", "ochre"), ("orange", "rust"), ("ochre", "brown"), ("rust", "dbrick"),
-                ("brown", "dbrown"))
+LEAF_COLOURS = (
+    ("gold", "amber"),
+    ("amber", "ochre"),
+    ("orange", "rust"),
+    ("ochre", "brown"),
+    ("rust", "dbrick"),
+    ("brown", "dbrown"),
+)
 # The fallen log's leaves: (fill, shade), lit, middle and shaded.
 PILE_COLOURS = (("gold", "amber"), ("amber", "ochre"), ("rust", "dbrick"))
 # The heap's leaves: (fill, shade) on its lit upper left, its brown middle and its dark lower right.
@@ -537,7 +573,7 @@ def leaf_pile(lift=0):
     for x, y, k in pile_leaves():
         lens(g, x, y, *HEAP_COLOURS[k])
     maple(g, 20, 23.7, lift, lift)
-    return lit(g, dict(dred=("red", None)))
+    return lit(g, {"dred": ("red", None)})
 
 
 # The steps' idle: rest, rest, the candle guttering low, then flaring.
@@ -594,10 +630,28 @@ def porch_steps(flicker=0):
 LIBRARY_IDLE = (0, 0, 1, 2), 400
 # The book spines on each shelf, left to right: (colour, top row). Each is 2 layout pixels wide.
 # Four colours in turn; below obstacles.TEXTURE_MIN each pair of spines is drawn as one, so no spine is 1px.
-UPPER_BOOKS = (("ttc", 15), ("gold", 16), ("sky", 15), ("green", 16), ("ttc", 15), ("gold", 16),
-               ("sky", 15), ("green", 16), ("ttc", 15))
-LOWER_BOOKS = (("sky", 21), ("green", 20), ("ttc", 21), ("gold", 20), ("sky", 21), ("green", 20),
-               ("ttc", 21), ("gold", 20), ("sky", 21))
+UPPER_BOOKS = (
+    ("ttc", 15),
+    ("gold", 16),
+    ("sky", 15),
+    ("green", 16),
+    ("ttc", 15),
+    ("gold", 16),
+    ("sky", 15),
+    ("green", 16),
+    ("ttc", 15),
+)
+LOWER_BOOKS = (
+    ("sky", 21),
+    ("green", 20),
+    ("ttc", 21),
+    ("gold", 20),
+    ("sky", 21),
+    ("green", 20),
+    ("ttc", 21),
+    ("gold", 20),
+    ("sky", 21),
+)
 
 
 def little_free_library(glint=0):
@@ -631,7 +685,7 @@ def little_free_library(glint=0):
     g.rect(11, 14, 17, 9, "teal")
     fine = scale_of(g) >= obstacles.TEXTURE_MIN
     for books in (UPPER_BOOKS, LOWER_BOOKS):
-        for i, (c, top) in enumerate(books):
+        for i, _book in enumerate(books):
             x = 11 + i * 2
             bottom = 19 if books is UPPER_BOOKS else 23
             c, top = books[i if fine else i // 2 * 2]
@@ -642,7 +696,7 @@ def little_free_library(glint=0):
     u = obstacles.unit(g)[0]
     x0 = (12, 15, 21)[glint]
     for k in range(4 if glint else 2):
-        for w in ((0, u) if glint and scale_of(g) >= obstacles.TEXTURE_MIN else (0,)):
+        for w in (0, u) if glint and scale_of(g) >= obstacles.TEXTURE_MIN else (0,):
             g.rect(x0 + k * u + w, 18 - k * u - (1 if glint else 2), u, u, "white")
     # the roof: a gable edged in brick shingles over a cream bargeboard, lit along its left slope
     g.tri((4, 13), (20, 2), (36, 13), "brick")
@@ -660,7 +714,7 @@ def little_free_library(glint=0):
     g.tri((23.5, 9.5), (20, 10.5), (20, 12), "cream")
     g.rect(19.5, 10.5, 1, 1.5, "tan")
     g.rect(19, 1, 2, 2, "cream")
-    return lit(g, dict(brick=("clay", None), dbrick=("brick", None), dturq=("turquoise", None)))
+    return lit(g, {"brick": ("clay", None), "dbrick": ("brick", None), "dturq": ("turquoise", None)})
 
 
 # The log's idle: rest, rest, the leaf on its back stirred 1px right and up, rest.
@@ -675,7 +729,10 @@ RIDGES = ((14, 0.08, 0.45), (14, 0.6, 0.92), (18, 0.25, 0.7), (22, 0.05, 0.35), 
 LOG_LEAVES = ((0.05, 26, 0), (0.36, 26, 1), (0.66, 26, 0), (0.94, 26, 1))
 
 
-def fallen_log(leaf=(0, 0), w=obstacles.span(2)):
+FALLEN_LOG_WIDTH = obstacles.span(2)
+
+
+def fallen_log(leaf=(0, 0), w=FALLEN_LOG_WIDTH):
     """A fallen oak trunk lying across the road, side on: rough bark with ridges running along it, lit brown
     above and dbrown below, shaded walnut along its underside; a sawn end at the right showing cream wood in
     tan growth rings round a brown heart, and a broken end at the left, pale splinters jutting out of the
@@ -701,9 +758,11 @@ def fallen_log(leaf=(0, 0), w=obstacles.span(2)):
         g.rect(x0, y, x1 - x0, 1, "brown" if y < cy else "dbrown")
         g.rect(x0 + 1, y + 1, x1 - x0 - 1, 1, "walnut")
     # the broken end at the left: pale splinters jutting out of the bark, shaded tan below
-    for a, b, tip in (((LOG_LEFT + 1, LOG_TOP + 1), (LOG_LEFT + 1, LOG_TOP + 7), (2, LOG_TOP + 3)),
-                      ((LOG_LEFT + 1, LOG_TOP + 5), (LOG_LEFT + 1, LOG_TOP + 12), (4, LOG_TOP + 9)),
-                      ((LOG_LEFT + 1, LOG_TOP + 10), (LOG_LEFT + 1, LOG_BOTTOM - 1), (1, LOG_BOTTOM - 3))):
+    for a, b, tip in (
+        ((LOG_LEFT + 1, LOG_TOP + 1), (LOG_LEFT + 1, LOG_TOP + 7), (2, LOG_TOP + 3)),
+        ((LOG_LEFT + 1, LOG_TOP + 5), (LOG_LEFT + 1, LOG_TOP + 12), (4, LOG_TOP + 9)),
+        ((LOG_LEFT + 1, LOG_TOP + 10), (LOG_LEFT + 1, LOG_BOTTOM - 1), (1, LOG_BOTTOM - 3)),
+    ):
         g.tri(a, b, tip, "cream")
         g.tri((a[0], (a[1] + b[1]) / 2), b, tip, "tan")
     g.rect(LOG_LEFT, LOG_TOP, 1.5, LOG_BOTTOM - LOG_TOP, "dbrown")
@@ -729,7 +788,7 @@ def fallen_log(leaf=(0, 0), w=obstacles.span(2)):
     # the fallen leaves along its foot
     for f, y, k in LOG_LEAVES:
         lens(g, 1.5 + f * (w - LEAF - 3), y, *PILE_COLOURS[k])
-    return lit(g, dict(bark=("clay", None), walnut=("bark", None)))
+    return lit(g, {"bark": ("clay", None), "walnut": ("bark", None)})
 
 
 # The grove's idle: rest, rest, the crowns' tops swayed 1px right, then a petal drifting down.
@@ -744,10 +803,17 @@ PETAL = (46, 38)
 # Each crown's lobes, the lowest row first, as (dx, cy, rx, ry, sways) from its tree's centre column, in layout
 # pixels at full size: two low lobes either side of the trunk, leaving a notch under the crown where its limbs
 # show, two at the outer edges, two across the middle and three on top, the ones on top swaying in the idle.
-CROWN = ((-16, 27, 8.5, 5, False), (16, 27.5, 8.5, 4.5, False),
-         (-18, 19, 6.5, 6, False), (18, 19.5, 6.5, 6, False),
-         (-7, 16.5, 10, 7, False), (8, 17, 9.5, 6.5, False),
-         (-11, 10, 9, 6.5, True), (11, 10.5, 8.5, 6, True), (0, 6.5, 9.5, 6, True))
+CROWN = (
+    (-16, 27, 8.5, 5, False),
+    (16, 27.5, 8.5, 4.5, False),
+    (-18, 19, 6.5, 6, False),
+    (18, 19.5, 6.5, 6, False),
+    (-7, 16.5, 10, 7, False),
+    (8, 17, 9.5, 6.5, False),
+    (-11, 10, 9, 6.5, True),
+    (11, 10.5, 8.5, 6, True),
+    (0, 6.5, 9.5, 6, True),
+)
 # How far each lobe's pink sits up and left inside its mauve, leaving a crescent at least 2 drawn pixels deep
 # along its lower right.
 CLUSTER_SHADE = (0.8, 1.2)
@@ -760,7 +826,10 @@ TRUNK_TOP = 24
 LIMBS = (((0, 33), (-11, 20), 3.5), ((0, 31), (10, 21), 3))
 
 
-def cherry_trees(pose=0, w=obstacles.span(3)):
+CHERRY_TREES_WIDTH = obstacles.span(3)
+
+
+def cherry_trees(pose=0, w=CHERRY_TREES_WIDTH):
     """High Park's cherry grove in blossom, three cherry trees in a row across the road on a low stone curb, front
     elevation: each a lifted crown of pink lobes, every lobe shaded mauve along its lower right so the blossom
     clusters read, the middle tree mirrored, over a bare dark bark trunk flared at its foot and shaded walnut
@@ -782,7 +851,8 @@ def cherry_trees(pose=0, w=obstacles.span(3)):
             bar(g, (cx + m * x0, y0), (cx + m * x1, y1), t, "bark")
     # the crowns, lobe by lobe from the lowest row up, so each lobe's mauve underside lies on the pink below it
     for k, cx in enumerate(centres):
-        for dx, cy, rx, ry, sways in CROWN:
+        for dx, cy, crown_rx, ry, sways in CROWN:
+            rx = crown_rx
             x = cx + (-dx if k == 1 else dx) + (sway * ux if sways else 0)
             left, right = max(x - rx, CROWN_MARGIN), min(x + rx, w - CROWN_MARGIN)
             x, rx = (left + right) / 2, (right - left) / 2
@@ -794,7 +864,7 @@ def cherry_trees(pose=0, w=obstacles.span(3)):
     g.rect(1, GROVE_H - 1.5, w - 2, 1.5, "dstone")
     if pose == 2:
         g.rect(PETAL[0], PETAL[1], 2 * ux, 2 * uy, "pink")
-    return lit(g, dict(bark=("clay", None), walnut=("bark", None), stone=("driftwood", None)))
+    return lit(g, {"bark": ("clay", None), "walnut": ("bark", None), "stone": ("driftwood", None)})
 
 
 # The fence's idle: rest, rest, a glint along the top rail, rest.
@@ -825,11 +895,11 @@ def iron_fence(lanes, glint=0):
     px, s = raster(g), scale_of(g)
     sy = getattr(g, "sy", s)
 
-    def Y(v):
+    def to_y(v):
         return math.floor(v * sy + 0.5)
 
     big = s >= 0.85
-    curb, rail_top, rail_low, tip = Y(25), Y(7), Y(21), Y(3)
+    curb, rail_top, rail_low, tip = to_y(25), to_y(7), to_y(21), to_y(3)
     ball = 4 if big else 2
     plate = 2 if big else 1
     post_w = max(4, math.floor(5 * s + 0.5))
@@ -841,7 +911,7 @@ def iron_fence(lanes, glint=0):
     posts = [2] + [round(px.w * k / lanes - post_w / 2) for k in range(1, lanes)] + [px.w - 2 - post_w]
     # the pickets in each section, one even gap in every section (the narrowest's), the spare pixels split
     # between a section's ends
-    sections = [(a + post_w, b) for a, b in zip(posts, posts[1:])]
+    sections = [(a + post_w, b) for a, b in itertools.pairwise(posts)]
     gap = min((x1 - x0 - 2 * PICKETS) // (PICKETS + 1) for x0, x1 in sections)
     # the spear point: a 2px tip flaring 1px a row each side, as far as the gaps keep 2px between points
     head = (0, 1, 2) if gap >= 6 else (0, 1) if gap >= 4 else (0,)
@@ -907,21 +977,36 @@ def hit_porch_cat(step):
         return hits.rim(g)
     r = (0, 9, 12, 13, 12, 10, 0, 0)[step]
     if r:
+
         def puff(p):
             for k in range(7):
                 a = math.radians(k * 360 / 7 + step * 17)
                 p.ell(cx + math.cos(a) * r * 0.8, cy + math.sin(a) * r * 0.65, r * 0.5, r * 0.45, "white", "lgrey")
             p.ell(cx, cy, r * 0.8, r * 0.6, "white", "lgrey")
+
         hits.piece(g, puff)
     elif step == 6:
-        hits.piece(g, lambda p: [p.ell(cx + math.cos(math.radians(k * 72 + 30)) * 15,
-                                       cy + math.sin(math.radians(k * 72 + 30)) * 11, 3.5, 3, "white", "lgrey")
-                                 for k in range(5)])
+        hits.piece(
+            g,
+            lambda p: [
+                p.ell(
+                    cx + math.cos(math.radians(k * 72 + 30)) * 15,
+                    cy + math.sin(math.radians(k * 72 + 30)) * 11,
+                    3.5,
+                    3,
+                    "white",
+                    "lgrey",
+                )
+                for k in range(5)
+            ],
+        )
     length = (0, 10, 20, 22, 22, 18, 0, 0)[step]
     if length:
+
         def slashes(p):
             for x, y in SCRATCHES:
                 scratch(p, x, y + (22 - length) / 2, length)
+
         hits.piece(g, slashes)
     if step >= 3:
         t = step - 2
@@ -930,13 +1015,19 @@ def hit_porch_cat(step):
             x = cx + math.cos(a) * (10 + t * 4.5)
             y = cy + math.sin(a) * (8 + t * 3.5) + t * t * 0.5
             if 2 <= x < 59 and 2 <= y < 59:
-                hits.piece(g, lambda p: hits.tuft(p, x, y, col, (step + i) % 2))
+                hits.piece(g, lambda p, col=col, i=i, x=x, y=y: hits.tuft(p, x, y, col, (step + i) % 2))
     return g
 
 
 # Grass blades thrown up by the capybara: (vx, vy, colour) per blade.
-BLADES = ((-8, -9, "green"), (-3, -11, "dgreen"), (4, -10, "green"), (9, -8, "dgreen"), (-11, -4, "green"),
-          (12, -3, "green"))
+BLADES = (
+    (-8, -9, "green"),
+    (-3, -11, "dgreen"),
+    (4, -10, "green"),
+    (9, -8, "dgreen"),
+    (-11, -4, "green"),
+    (12, -3, "green"),
+)
 
 
 def blade(g, x, y, lean, col):
@@ -954,22 +1045,24 @@ def hit_escaped_capybara(step):
         return hits.rim(g)
     r = (0, 10, 13, 14, 12, 9, 6, 0)[step]
     if r:
+
         def poof(p):
             for k in range(6):
                 a = math.radians(k * 60 + 15 + step * 11)
                 p.ell(cx + math.cos(a) * r * 0.75, cy + math.sin(a) * r * 0.55, r * 0.55, r * 0.45, "cream", "tan")
             p.ell(cx, cy, r * 0.75, r * 0.55, "cream", "tan")
+
         hits.piece(g, poof)
     if step >= 2:
         t = step - 1
-        for i, (vx, vy, col) in enumerate(BLADES):
+        for _i, (vx, vy, col) in enumerate(BLADES):
             x, y = cx + vx * t * 0.7, cy - 2 + vy * t * 0.7 + 0.9 * t * t
             if 3 <= x < 60 and 5 <= y < 60:
-                hits.piece(g, lambda p: blade(p, x, y, (vx > 0) - (vx < 0), col))
+                hits.piece(g, lambda p, col=col, vx=vx, x=x, y=y: blade(p, x, y, (vx > 0) - (vx < 0), col))
         for i, (vx, col) in enumerate(((-6, "brown"), (7, "dbrown"), (1, "brown"))):
             x, y = cx + vx * t, cy - 6 - t * 4 + t * t * 0.8
             if 3 <= x < 60 and 3 <= y < 60:
-                hits.piece(g, lambda p: hits.tuft(p, x, y, col, (step + i) % 2))
+                hits.piece(g, lambda p, col=col, i=i, x=x, y=y: hits.tuft(p, x, y, col, (step + i) % 2))
     if step >= 4:
         y = cy - 14 - (step - 4) * 5
         hits.piece(g, lambda p: hits.stamp(p, fx.SMALL if step == 4 else fx.HEART, 30, y))
@@ -983,8 +1076,7 @@ HITS = {"fx-hit-porch-cat": (hit_porch_cat, 8), "fx-hit-escaped-capybara": (hit_
 def hit_sprites():
     """Yield (key, tags) for every burst: play, 8 frames at 70ms, as hits.py's."""
     for key, (draw, frames) in HITS.items():
-        yield key, [("play", [minis.small(hits, hits.BURST_SCALE, draw, i).outlined(False) for i in range(frames)],
-                     70)]
+        yield key, [("play", [minis.small(hits, hits.BURST_SCALE, draw, i).outlined(False) for i in range(frames)], 70)]
 
 
 # ---------- sounds ----------
@@ -993,24 +1085,54 @@ def hit_sprites():
 EFFECTS = {
     # A hiss falling from a high band to a lower one, then a "mrr" rising into a falling "ow".
     "sfx-hit-porch-cat": [
-        ("pinknoise", 0.12, None, 0, dict(vol=1.0, low=4500, high=2400, attack=0.006, release=0.5, shape="h",
-                                          fx=("lowpass", "4000"))),
-        ("pinknoise", 0.14, None, 0.08, dict(vol=0.9, low=3500, high=1500, attack=0.02, release=0.7, shape="h",
-                                             fx=sounds.DARK)),
-        ("square", 0.1, (430, 760), 0.24, dict(vol=0.3, duty=35, low=2200, attack=0.015, release=0.3)),
-        ("square", 0.16, (760, 520), 0.33, dict(vol=0.3, duty=35, low=2200, attack=0.005, release=0.8, shape="h")),
-        ("triangle", 0.1, (215, 380), 0.24, dict(vol=0.45, attack=0.015, release=0.3)),
-        ("triangle", 0.16, (380, 260), 0.33, dict(vol=0.45, attack=0.005, release=0.8, shape="h")),
+        (
+            "pinknoise",
+            0.12,
+            None,
+            0,
+            {
+                "vol": 1.0,
+                "low": 4500,
+                "high": 2400,
+                "attack": 0.006,
+                "release": 0.5,
+                "shape": "h",
+                "fx": ("lowpass", "4000"),
+            },
+        ),
+        (
+            "pinknoise",
+            0.14,
+            None,
+            0.08,
+            {"vol": 0.9, "low": 3500, "high": 1500, "attack": 0.02, "release": 0.7, "shape": "h", "fx": sounds.DARK},
+        ),
+        ("square", 0.1, (430, 760), 0.24, {"vol": 0.3, "duty": 35, "low": 2200, "attack": 0.015, "release": 0.3}),
+        (
+            "square",
+            0.16,
+            (760, 520),
+            0.33,
+            {"vol": 0.3, "duty": 35, "low": 2200, "attack": 0.005, "release": 0.8, "shape": "h"},
+        ),
+        ("triangle", 0.1, (215, 380), 0.24, {"vol": 0.45, "attack": 0.015, "release": 0.3}),
+        ("triangle", 0.16, (380, 260), 0.33, {"vol": 0.45, "attack": 0.005, "release": 0.8, "shape": "h"}),
     ],
     # A low "huff" through the nose, then three soft chirps rising, each quieter.
     "sfx-hit-escaped-capybara": [
-        ("pinknoise", 0.12, None, 0.01, dict(vol=0.3, low=1200, high=250, attack=0.025, release=0.7, shape="h")),
-        ("triangle", 0.14, (300, 170), 0.01, dict(vol=0.3, attack=0.025, release=0.7, shape="h")),
-        ("square", 0.14, (300, 170), 0.01, dict(vol=0.9, low=900, attack=0.025, release=0.7, shape="h")),
-        ("triangle", 0.08, (880, 1250), 0.18, dict(vol=0.9, attack=0.012, release=0.6)),
-        ("triangle", 0.08, (940, 1330), 0.26, dict(vol=0.77, attack=0.012, release=0.6)),
-        ("triangle", 0.1, (990, 1450), 0.34, dict(vol=0.65, attack=0.012, release=0.7)),
-        ("square", 0.08, (880, 1250), 0.18, dict(vol=0.12, duty=25, low=2500, attack=0.012, release=0.6)),
+        (
+            "pinknoise",
+            0.12,
+            None,
+            0.01,
+            {"vol": 0.3, "low": 1200, "high": 250, "attack": 0.025, "release": 0.7, "shape": "h"},
+        ),
+        ("triangle", 0.14, (300, 170), 0.01, {"vol": 0.3, "attack": 0.025, "release": 0.7, "shape": "h"}),
+        ("square", 0.14, (300, 170), 0.01, {"vol": 0.9, "low": 900, "attack": 0.025, "release": 0.7, "shape": "h"}),
+        ("triangle", 0.08, (880, 1250), 0.18, {"vol": 0.9, "attack": 0.012, "release": 0.6}),
+        ("triangle", 0.08, (940, 1330), 0.26, {"vol": 0.77, "attack": 0.012, "release": 0.6}),
+        ("triangle", 0.1, (990, 1450), 0.34, {"vol": 0.65, "attack": 0.012, "release": 0.7}),
+        ("square", 0.08, (880, 1250), 0.18, {"vol": 0.12, "duty": 25, "low": 2500, "attack": 0.012, "release": 0.6}),
     ],
 }
 
@@ -1094,7 +1216,7 @@ def porch_cat_treat():
 
 def porch_cat_bolt():
     """Splash past: Archie splashes through a muddy puddle beside the lounging calico."""
-    from PIL import ImageDraw
+    from PIL import ImageDraw  # noqa: PLC0415 - Optional image dependency, loaded only for image rendering.
 
     a = cards.Art()
     a.ground(CABBAGETOWN)
@@ -1106,13 +1228,13 @@ def porch_cat_bolt():
     c = a.dog("archie", "walk", 51, 57, 1)
     a.lead(51, c, 38)
     # Brown jets rising from the pawfall, with a lit edge for the grey paving.
-    for pts in [((34, 49), (28, 42), (29, 36), (33, 40), (36, 46)),
-                ((62, 48), (66, 40), (71, 36), (70, 43), (66, 49))]:
+    for pts in [((34, 49), (28, 42), (29, 36), (33, 40), (36, 46)), ((62, 48), (66, 40), (71, 36), (70, 43), (66, 49))]:
         d.polygon(pts, fill=sn.rgb("dbrown"))
         d.line(pts[:3], fill=sn.rgb("tan"), width=2)
     for box in ((23, 32, 26, 35), (68, 28, 71, 32)):
         d.ellipse(box, fill=sn.rgb("dbrown"))
     return a
+
 
 def escaped_capybara_help():
     """Help the keeper: the zookeeper in khaki and a bush hat leads the capybara off on a rope, a heart over
@@ -1185,7 +1307,7 @@ ILLUSTRATIONS = {
 
 def card(key, scale=1):
     """The illustration in an encounter card frame, cost plaque included, as cards.mock_card shows one."""
-    from PIL import Image
+    from PIL import Image  # noqa: PLC0415 - Optional image dependency, loaded only for image rendering.
 
     im = to_image(cards.card_frame("encounter").px)
     im.paste(to_image(cards.card_cost().px), (6, 121))
@@ -1197,6 +1319,7 @@ def card(key, scale=1):
 
 # ---------- sprites ----------
 
+
 def road_sprites(suffix, step):
     """Yield (key + suffix, tags) for every road sprite at depth step step."""
     a, o = ANIMAL * step, OBSTACLE * step
@@ -1204,32 +1327,59 @@ def road_sprites(suffix, step):
     def frames(s, draw, poses):
         return [drawn(s, draw, **q).outlined() for q in poses]
 
-    yield f"porch-cat{suffix}", [("idle", frames(a, porch_cat, PORCH_CAT_IDLE), 300),
-                                 ("walk", frames(a, porch_cat, PORCH_CAT_WALK), road.PERSON_WALK_MS)]
-    yield f"escaped-capybara{suffix}", [("idle", frames(a, escaped_capybara, CAPYBARA_IDLE), 300),
-                                        ("walk", frames(a, escaped_capybara, CAPYBARA_WALK), CAPYBARA_WALK_MS)]
+    yield (
+        f"porch-cat{suffix}",
+        [
+            ("idle", frames(a, porch_cat, PORCH_CAT_IDLE), 300),
+            ("walk", frames(a, porch_cat, PORCH_CAT_WALK), road.PERSON_WALK_MS),
+        ],
+    )
+    yield (
+        f"escaped-capybara{suffix}",
+        [
+            ("idle", frames(a, escaped_capybara, CAPYBARA_IDLE), 300),
+            ("walk", frames(a, escaped_capybara, CAPYBARA_WALK), CAPYBARA_WALK_MS),
+        ],
+    )
     yield f"hen{suffix}", [("idle", frames(a, hen, HEN_IDLE), 400), ("run", frames(a, hen, HEN_RUN), 80)]
-    yield f"ferrets{suffix}", [("idle", frames(a, ferrets, FERRETS_IDLE), 300),
-                               ("run", frames(a, ferrets, FERRETS_RUN), 80)]
-    for key, draw, (args, ms) in (("cherry-trees", cherry_trees, CHERRY_IDLE),
-                                  ("fallen-log", fallen_log, FALLEN_LOG_IDLE),
-                                  ("leaf-pile", leaf_pile, LEAF_PILE_IDLE),
-                                  ("little-free-library", little_free_library, LIBRARY_IDLE),
-                                  ("porch-steps", porch_steps, PORCH_STEPS_IDLE)):
-        yield f"{key}{suffix}", [("idle", [minis.small(sys.modules[__name__], o, draw, f).outlined() for f in args],
-                                  ms)]
+    yield (
+        f"ferrets{suffix}",
+        [("idle", frames(a, ferrets, FERRETS_IDLE), 300), ("run", frames(a, ferrets, FERRETS_RUN), 80)],
+    )
+    for key, draw, (args, ms) in (
+        ("cherry-trees", cherry_trees, CHERRY_IDLE),
+        ("fallen-log", fallen_log, FALLEN_LOG_IDLE),
+        ("leaf-pile", leaf_pile, LEAF_PILE_IDLE),
+        ("little-free-library", little_free_library, LIBRARY_IDLE),
+        ("porch-steps", porch_steps, PORCH_STEPS_IDLE),
+    ):
+        yield (
+            f"{key}{suffix}",
+            [("idle", [minis.small(sys.modules[__name__], o, draw, f).outlined() for f in args], ms)],
+        )
     args, ms = IRON_FENCE_IDLE
     for lanes in (2, 3):
-        yield f"iron-fence-{lanes}{suffix}", [
-            ("idle", [minis.small(sys.modules[__name__], o, iron_fence, lanes, f).outlined() for f in args], ms)]
+        yield (
+            f"iron-fence-{lanes}{suffix}",
+            [("idle", [minis.small(sys.modules[__name__], o, iron_fence, lanes, f).outlined() for f in args], ms)],
+        )
 
 
 # Where each road sprite's .aseprite source goes: the card obstacles with the encounters, the rest with the
 # obstacles.
-SOURCES = {"escaped-capybara": "art/encounters", "porch-cat": "art/encounters", "cherry-trees": "art/obstacles",
-           "fallen-log": "art/obstacles", "ferrets": "art/obstacles", "hen": "art/obstacles",
-           "iron-fence-2": "art/obstacles", "iron-fence-3": "art/obstacles", "leaf-pile": "art/obstacles",
-           "little-free-library": "art/obstacles", "porch-steps": "art/obstacles"}
+SOURCES = {
+    "escaped-capybara": "art/encounters",
+    "porch-cat": "art/encounters",
+    "cherry-trees": "art/obstacles",
+    "fallen-log": "art/obstacles",
+    "ferrets": "art/obstacles",
+    "hen": "art/obstacles",
+    "iron-fence-2": "art/obstacles",
+    "iron-fence-3": "art/obstacles",
+    "leaf-pile": "art/obstacles",
+    "little-free-library": "art/obstacles",
+    "porch-steps": "art/obstacles",
+}
 
 
 def sprites():
@@ -1241,9 +1391,9 @@ def sprites():
 
 def preview(out_dir):
     """Sheets of every road sprite and burst on the zone roads, every illustration in a card, and the sounds."""
-    from PIL import Image
+    from PIL import Image  # noqa: PLC0415 - Optional image dependency, loaded only for image rendering.
 
-    os.makedirs(out_dir, exist_ok=True)
+    Path(out_dir).mkdir(parents=True, exist_ok=True)
     sheet(depth_settled(list(sprites())), f"{out_dir}/road.png", ZONE_ROADS, scale=3)
     sheet(list(hit_sprites()), f"{out_dir}/hits.png", ZONE_ROADS[:3], scale=3)
     faces = [card(key, 3) for key in ILLUSTRATIONS]
@@ -1260,11 +1410,11 @@ def build():
     for src in dict.fromkeys(SOURCES.values()):
         build_sprites([(k, t) for k, t in road_keys if SOURCES[k.split("@")[0]] == src], src)
     build_sprites(list(hit_sprites()), "art/hits")
-    os.makedirs("art/cards", exist_ok=True)
+    Path("art/cards").mkdir(parents=True, exist_ok=True)
     for key, draw in ILLUSTRATIONS.items():
         png = f"public/art/images/{key}.png"
         draw().img.save(png)
-        subprocess.run(["aseprite", "-b", png, "--save-as", f"art/cards/{key}.aseprite"], check=True)
+        subprocess.run(["aseprite", "-b", png, "--save-as", f"art/cards/{key}.aseprite"], check=True)  # noqa: S603, S607 - Trusted Aseprite CLI and generated local asset paths.
     print("built", ", ".join(ILLUSTRATIONS))
     print("built", ", ".join(render_sounds("public/art/sounds")))
 

@@ -57,11 +57,13 @@ hand edits to them belong in this file instead. Shared tooling is in pixel.py.
 """
 
 import math
-import os
 import sys
+from pathlib import Path
 
-sys.path.insert(0, os.path.dirname(__file__))
-from pixel import DARKER, Grid, K, edged, main, raster, scale_of  # noqa: E402
+sys.path.insert(0, str(Path(__file__).parent))
+import itertools
+
+from pixel import DARKER, Grid, K, edged, main, raster, scale_of
 
 
 def face_front(g, cx, y, eyes="ink", lips="dbrown", spread=4, mouth=4):
@@ -85,8 +87,12 @@ def face_disc(g, cx, cy, rx, ry, skin, shade, to=0.35):
     sy = getattr(g, "sy", s)
     fill = K.get(skin, skin)
     for y in range(max(0, math.floor((cy - ry) * sy)), min(px.h, math.floor((cy + ry * to) * sy) + 1)):
-        xs = [x for x in range(px.w) if px.px[y][x] == fill
-              and ((x + 0.5 - cx * s) / (rx * s)) ** 2 + ((y + 0.5 - cy * sy) / (ry * sy)) ** 2 <= 1]
+        xs = [
+            x
+            for x in range(px.w)
+            if px.px[y][x] == fill
+            and ((x + 0.5 - cx * s) / (rx * s)) ** 2 + ((y + 0.5 - cy * sy) / (ry * sy)) ** 2 <= 1
+        ]
         if xs:
             px.p(max(xs), y, shade)
 
@@ -104,8 +110,10 @@ def rim(g, rims):
             c = g.px[y][x]
             if c not in rims:
                 continue
-            empty = [not (0 <= x + dx < g.w and 0 <= y + dy < g.h and g.px[y + dy][x + dx])
-                     for dx, dy in ((0, -1), (-1, 0), (1, 0), (0, 1))]
+            empty = [
+                not (0 <= x + dx < g.w and 0 <= y + dy < g.h and g.px[y + dy][x + dx])
+                for dx, dy in ((0, -1), (-1, 0), (1, 0), (0, 1))
+            ]
             if any(empty):
                 edge.append((x, y, rims[c][0] if empty[0] or empty[1] else rims[c][1]))
     for x, y, c in edge:
@@ -117,10 +125,25 @@ def rim(g, rims):
 # The lit rim for every road sprite that fails 3:1 on the dslate road, for rim(): navy, ink and dslate take grey
 # (slate opposite), slate lgrey, dark browns skin2, mid browns and ochre tan, greens green, blues cyan, and reds,
 # mauves and purples pink.
-LIT = dict(navy=("grey", "slate"), ink=("grey", "slate"), dslate=("grey", "slate"), slate=("lgrey", None),
-           dbrown=("skin2", None), plum=("skin2", None), brown=("tan", None), rust=("tan", None),
-           ochre=("tan", None), dgreen=("green", None), forest=("green", None), sky=("cyan", None),
-           blue=("cyan", None), red=("pink", None), dred=("pink", None), mauve=("pink", None), purple=("pink", None))
+LIT = {
+    "navy": ("grey", "slate"),
+    "ink": ("grey", "slate"),
+    "dslate": ("grey", "slate"),
+    "slate": ("lgrey", None),
+    "dbrown": ("skin2", None),
+    "plum": ("skin2", None),
+    "brown": ("tan", None),
+    "rust": ("tan", None),
+    "ochre": ("tan", None),
+    "dgreen": ("green", None),
+    "forest": ("green", None),
+    "sky": ("cyan", None),
+    "blue": ("cyan", None),
+    "red": ("pink", None),
+    "dred": ("pink", None),
+    "mauve": ("pink", None),
+    "purple": ("pink", None),
+}
 
 
 def lit(g, extra=None):
@@ -146,12 +169,17 @@ def stamp_lamp(px, x0, y0, n, edge="cream", spare=0):
     settling (pixel.depth_settled) can take out of the lamp instead of out of a feature such as the eyes."""
 
     def drawn(x, y, k, h):
-        return all(0 <= xx < px.w and 0 <= yy < px.h and px.px[yy][xx]
-                   for yy in range(y, y + h) for xx in range(x, x + k))
+        return all(
+            0 <= xx < px.w and 0 <= yy < px.h and px.px[yy][xx] for yy in range(y, y + h) for xx in range(x, x + k)
+        )
 
     moves = sorted(((dx, dy) for dx in (-1, 0, 1) for dy in (-1, 0, 1)), key=lambda d: abs(d[0]) + abs(d[1]))
-    found = [(k, x0 + dx + (n - k) // 2, y0 + dy + (n - k) // 2) for k in range(n, 1, -1) for dx, dy in moves
-             if drawn(x0 + dx + (n - k) // 2, y0 + dy + (n - k) // 2, k, k + (spare if k == 2 else 0))]
+    found = [
+        (k, x0 + dx + (n - k) // 2, y0 + dy + (n - k) // 2)
+        for k in range(n, 1, -1)
+        for dx, dy in moves
+        if drawn(x0 + dx + (n - k) // 2, y0 + dy + (n - k) // 2, k, k + (spare if k == 2 else 0))
+    ]
     if not found:
         raise ValueError(f"no drawing under a headlamp at ({x0}, {y0}) wide enough for a 2px core")
     k, x0, y0 = found[0]
@@ -188,7 +216,7 @@ TRUCK_SCALE = (1, ROW_SCALE)
 def drawn(s, draw, *args, **q):
     """draw(*args, **q) at scale s on a minis.Mini, or (sx, sy) for its columns and rows, its numeric keyword
     arguments (pose offsets) snapped to whole pixels as minis.snap has them at the row scale."""
-    import minis  # minis imports this module, so it is imported when first used
+    import minis  # noqa: PLC0415 - Retain lazy loading to avoid art-module import cycles and optional image dependencies.
 
     pose = {k: v for k, v in q.items() if isinstance(v, (int, float)) and not isinstance(v, bool)}
     sy = s[1] if isinstance(s, tuple) else s
@@ -202,6 +230,7 @@ def big(draw, *args, **q):
 
 # ---------- the walker (back view) ----------
 
+
 def back_arm(g, x, w, top, parts, out=0, lift=0):
     """A walker's arm seen from behind, hanging from its shoulder at row top: parts are (rows, fill, shade) from
     the shoulder down; shade (or None) takes the right column. The shoulder never moves. out swings the hand
@@ -213,12 +242,12 @@ def back_arm(g, x, w, top, parts, out=0, lift=0):
     longest = heights.index(max(heights))
     heights[longest] = max(1, heights[longest] - lift)
     span = max(1, sum(heights) - 1)
-    ends = [sum(heights[:i + 1]) for i in range(len(heights))]
+    ends = [sum(heights[: i + 1]) for i in range(len(heights))]
     first, last = round(top * s), round((top + ends[-1]) * s)
     # one rect per row of the grid's own pixels, so the arm has no gaps at any scale or bob
     for py in range(first, last):
         d = py / s - top
-        fill, shade = next((f, sh) for (_, f, sh), e in zip(parts, ends) if d < e - 1e-9)
+        fill, shade = next((f, sh) for (_, f, sh), e in zip(parts, ends, strict=False) if d < e - 1e-9)
         dx = math.copysign(math.floor(abs(out) * d / span * s), out) / s
         g.rect(x + dx, py / s, w, 1 / s, fill)
         if shade is not None:
@@ -239,8 +268,7 @@ def limb_bar(g, a, b, width, colour):
     dx, dy = b[0] - a[0], b[1] - a[1]
     length = max(0.001, math.hypot(dx, dy))
     px, py = -dy * width / (2 * length), dx * width / (2 * length)
-    corners = ((a[0] + px, a[1] + py), (b[0] + px, b[1] + py),
-               (b[0] - px, b[1] - py), (a[0] - px, a[1] - py))
+    corners = ((a[0] + px, a[1] + py), (b[0] + px, b[1] + py), (b[0] - px, b[1] - py), (a[0] - px, a[1] - py))
     g.tri(corners[0], corners[1], corners[2], colour)
     g.tri(corners[0], corners[2], corners[3], colour)
 
@@ -298,7 +326,9 @@ def casey_back(lf=0, rf=0, bob=0, arms=0, flare=0, reach=0):
     g.ell(16 - shift / 2, 17 + hb, 2.5, 4, "dbrown", "plum")
     return g
 
+
 # ---------- the other walkers (back view) ----------
+
 
 def ada_back(lf=0, rf=0, bob=0, arms=0, flare=0, reach=0):
     """Ada, 11, mixed race, caramel skin, long black curls falling straight down: yellow tee, blue shorts.
@@ -325,8 +355,13 @@ def ada_back(lf=0, rf=0, bob=0, arms=0, flare=0, reach=0):
         g.ell(x, y + b, rx, ry, "navy")
     for x, y, rx, ry in ((23.3, 22, 1.6, 1.9), (23.2, 26.6, 1.3, 1.4), (23.4, 29.3, 1.6, 1.5)):
         g.ell(x, y + b, rx, ry, "ink")
-    for x, y, rx, ry in ((10.2, 30.6, 1.6, 1.4), (13.4, 31, 2, 1.6), (16.6, 30.4, 1.3, 1.3), (19.4, 30.8, 1.9, 1.5),
-                         (21.9, 30.2, 1.2, 1.2)):
+    for x, y, rx, ry in (
+        (10.2, 30.6, 1.6, 1.4),
+        (13.4, 31, 2, 1.6),
+        (16.6, 30.4, 1.3, 1.3),
+        (19.4, 30.8, 1.9, 1.5),
+        (21.9, 30.2, 1.2, 1.2),
+    ):
         g.ell(x, y + b, rx, ry, "navy" if x < 20 else "ink")
     # the curls as a few unbroken wavy locks down the back, dslate on the lit side and navy in the shade, so
     # the hair holds one mass at road scale with no single-pixel texture
@@ -335,8 +370,16 @@ def ada_back(lf=0, rf=0, bob=0, arms=0, flare=0, reach=0):
             g.rect(x0 + CURL_WAVE[k % len(CURL_WAVE)], y0 + k + b, 1, n, c)
     g.ell(16, 12 + b, 2.5, 1.5, "pink", "mauve")
     # a light rim along the edges facing the light keeps her dark hair and skin off the dark road
-    return rim(g, dict(navy=("grey", "slate"), ink=("grey", "slate"), dslate=("grey", "slate"),
-                       brown=("skin2", None), blue=("sky", None)))
+    return rim(
+        g,
+        {
+            "navy": ("grey", "slate"),
+            "ink": ("grey", "slate"),
+            "dslate": ("grey", "slate"),
+            "brown": ("skin2", None),
+            "blue": ("sky", None),
+        },
+    )
 
 
 def mr_b_back(lf=0, rf=0, bob=0, arms=0, flare=0, reach=0):
@@ -347,8 +390,9 @@ def mr_b_back(lf=0, rf=0, bob=0, arms=0, flare=0, reach=0):
     human_legs(g, lf, rf, b, "navy", "grey", "white")
     for x, f in ((11, lf), (17, rf)):
         g.rect(x + 1, 43 + f, 2, 1, "red")
-    walker_arms(g, (5, 23), 4, 22 + b, ((4, "lilac", "violet"), (6, "dbrown", "plum"), (3, "dbrown", None)), arms,
-                flare, reach)
+    walker_arms(
+        g, (5, 23), 4, 22 + b, ((4, "lilac", "violet"), (6, "dbrown", "plum"), (3, "dbrown", None)), arms, flare, reach
+    )
     # the lilac tee, shaded dgreen down its right side
     g.rect(9, 21 + b, 14, 13, "lilac")
     g.rect(20, 21 + b, 3, 13, "violet")
@@ -362,8 +406,10 @@ def mr_b_back(lf=0, rf=0, bob=0, arms=0, flare=0, reach=0):
     g.rect(11, 7 + b, 3, 1, "brown")
     g.p(11, 8 + b, "brown")
     # a light rim along the edges facing the light, a dimmer one opposite, so he holds on the dark road
-    return rim(g, dict(navy=("grey", "grey"), violet=("lilac", None), dbrown=("skin2", "brown"),
-                       plum=("skin2", "brown")))
+    return rim(
+        g,
+        {"navy": ("grey", "grey"), "violet": ("lilac", None), "dbrown": ("skin2", "brown"), "plum": ("skin2", "brown")},
+    )
 
 
 def trista_back(lf=0, rf=0, bob=0, arms=0, flare=0, reach=0):
@@ -399,7 +445,7 @@ def trista_back(lf=0, rf=0, bob=0, arms=0, flare=0, reach=0):
     g.rect(14, 11 + b, 1, 4, "dbrown")
     g.rect(20, 11 + b, 1, 4, "dbrown")
     # a light rim along the edges facing the light keeps her hair, cardigan and skirt off the dark road
-    return rim(g, dict(brown=("tan", None), dgreen=("green", None), navy=("grey", None), dslate=("grey", None)))
+    return rim(g, {"brown": ("tan", None), "dgreen": ("green", None), "navy": ("grey", None), "dslate": ("grey", None)})
 
 
 # Ada's curly locks as (x, top row, rows, colour), each a 1px line swinging along CURL_WAVE as it falls, two
@@ -429,25 +475,42 @@ WALKERS = {
 
 
 # Human-only eight-beat gait. Each half stride has a planted support foot and a bent recovery knee.
-HUMAN_WALK = (dict(rf=-3, arms=1), dict(rf=-2, bob=-2 / 3, arms=1), dict(), dict(lf=-1, arms=-1),
-              dict(lf=-3, arms=-1), dict(lf=-2, bob=-2 / 3, arms=-1), dict(), dict(rf=-1, arms=1))
+HUMAN_WALK = (
+    {"rf": -3, "arms": 1},
+    {"rf": -2, "bob": -2 / 3, "arms": 1},
+    {},
+    {"lf": -1, "arms": -1},
+    {"lf": -3, "arms": -1},
+    {"lf": -2, "bob": -2 / 3, "arms": -1},
+    {},
+    {"rf": -1, "arms": 1},
+)
 HUMAN_WALK_MS = 50
 WALKER_WALK = HUMAN_WALK
 WALKER_WALK_MS = 80
-WALKER_REACT = [dict(lf=-4, rf=-4, bob=-4, flare=3, reach=1), dict(lf=-1, rf=-1, bob=-1, flare=1)]
+WALKER_REACT = [{"lf": -4, "rf": -4, "bob": -4, "flare": 3, "reach": 1}, {"lf": -1, "rf": -1, "bob": -1, "flare": 1}]
 # A bump: lurch left with the arms up, wobble back, steady (a right lean would push a tote out of the frame).
 # Each pose is (lean, walker args).
-WALKER_STUMBLE = [(-2, dict(rf=-3, arms=1, flare=2)), (1, dict(lf=-1, arms=-1, flare=3)),
-                  (-1, dict(lf=-2, bob=-2 / 3, arms=-1, flare=1)), (0, dict())]
+WALKER_STUMBLE = [
+    (-2, {"rf": -3, "arms": 1, "flare": 2}),
+    (1, {"lf": -1, "arms": -1, "flare": 3}),
+    (-1, {"lf": -2, "bob": -2 / 3, "arms": -1, "flare": 1}),
+    (0, {}),
+]
 # Waiting while the walk pauses: feet planted, arms at rest, a 1px breath.
-WALKER_IDLE = [dict(), dict(bob=-1)]
+WALKER_IDLE = [{}, {"bob": -1}]
 # The breathing bob every standing person shares, and its frame duration in ms.
 BREATH, BREATH_MS = (0, -1), 400
 # Four-beat gait for animals and bespoke performers: the left foot lifted, both feet 1px up
 # as the body passes over them 1px higher, the right foot lifted, passing again; 4 frames at 100ms, a 400ms
 # stride. arms swings the free arms against the legs: 1 takes the screen-left arm back (its hand 1 row up)
 # with the left foot lifted, -1 the screen-right arm with the right foot (see swung).
-PERSON_WALK = (dict(lf=-2, arms=1), dict(lf=-1, rf=-1, bob=-1), dict(rf=-2, arms=-1), dict(lf=-1, rf=-1, bob=-1))
+PERSON_WALK = (
+    {"lf": -2, "arms": 1},
+    {"lf": -1, "rf": -1, "bob": -1},
+    {"rf": -2, "arms": -1},
+    {"lf": -1, "rf": -1, "bob": -1},
+)
 PERSON_WALK_MS = 100
 
 
@@ -469,6 +532,7 @@ def lean(g, k):
 # ---------- the walkers waving (front view) ----------
 # A walker waving, facing the camera: the same clothes, colours and frame as
 # the back view, feet on the same rows, the left arm (screen right) raised and swinging from the shoulder.
+
 
 def raised_arm(g, x, w, top, bottom, dx, parts):
     """An arm raised from the shoulder (its bottom row) to the hand (its top row), tilted so the hand sits dx
@@ -542,8 +606,12 @@ def raise_mouth(g, cx, y, lips="dbrown", skin="skin1"):
     """Move the smile face_front draws at (cx, y) up a drawn pixel, the skin closing in under it."""
     px, s = raster(g), scale_of(g)
     col, fill = K[lips], K[skin]
-    spots = [(x, yy) for yy in range(math.floor((y + 3) * s), math.ceil((y + 7) * s))
-             for x in range(math.floor((cx - 3) * s), math.ceil((cx + 3) * s)) if px.px[yy][x] == col]
+    spots = [
+        (x, yy)
+        for yy in range(math.floor((y + 3) * s), math.ceil((y + 7) * s))
+        for x in range(math.floor((cx - 3) * s), math.ceil((cx + 3) * s))
+        if px.px[yy][x] == col
+    ]
     for x, yy in spots:
         px.px[yy][x] = fill
     for x, yy in spots:
@@ -607,8 +675,12 @@ def ada_front(wave=0, bob=0):
     g.cel(16, 18.5 + b, 8.5, 8, "navy", "ink", "dslate")
     g.rect(8, 19 + b, 16, 11, "navy")
     g.rect(21, 19 + b, 3, 11, "ink")
-    for x, y, rx, ry, c in ((8.4, 23, 1.6, 2, "navy"), (8.6, 28, 1.4, 1.6, "navy"), (23.6, 23.5, 1.4, 1.8, "ink"),
-                            (23.4, 28.4, 1.5, 1.5, "ink")):
+    for x, y, rx, ry, c in (
+        (8.4, 23, 1.6, 2, "navy"),
+        (8.6, 28, 1.4, 1.6, "navy"),
+        (23.6, 23.5, 1.4, 1.8, "ink"),
+        (23.4, 28.4, 1.5, 1.5, "ink"),
+    ):
         g.cel(x, y + b, rx, ry, c)
     g.rect(7, 30 + b, 3, 7, "brown")
     g.rect(7, 30 + b, 3, 3, "yellow")
@@ -631,8 +703,16 @@ def ada_front(wave=0, bob=0):
     g.cel(21, 13 + b, 2, 1.5, "pink", "mauve")
     face_front(g, 16, 20 + b)
     nose(g, 16, 20 + b, "dbrown")
-    return rim(g, dict(navy=("grey", "slate"), ink=("grey", "slate"), dslate=("grey", "slate"),
-                       brown=("skin2", None), blue=("sky", None)))
+    return rim(
+        g,
+        {
+            "navy": ("grey", "slate"),
+            "ink": ("grey", "slate"),
+            "dslate": ("grey", "slate"),
+            "brown": ("skin2", None),
+            "blue": ("sky", None),
+        },
+    )
 
 
 def mr_b_front(wave=0, bob=0):
@@ -673,12 +753,21 @@ def mr_b_front(wave=0, bob=0):
     g.rect(14, 17 + b, 4, 1, "cream")
     g.p(13, 16 + b, "cream")
     g.p(18, 16 + b, "cream")
-    return rim(g, dict(navy=("grey", "grey"), violet=("lilac", None), dbrown=("skin2", "brown"),
-                       plum=("skin2", "brown"), ink=("grey", "slate")))
+    return rim(
+        g,
+        {
+            "navy": ("grey", "grey"),
+            "violet": ("lilac", None),
+            "dbrown": ("skin2", "brown"),
+            "plum": ("skin2", "brown"),
+            "ink": ("grey", "slate"),
+        },
+    )
 
 
 def mr_b_phone(tap=0, bob=0):
-    """Mr. B absorbed in his phone: bald head bowed, pupils down toward a small side-held phone, bare upper lip, chin beard."""
+    """Mr. B absorbed in his phone: bald head bowed, pupils down toward a small side-held phone, bare upper lip, chin
+    beard."""
     g = Grid(32, 48)
     b = bob
     for x in (11, 17):
@@ -728,8 +817,16 @@ def mr_b_phone(tap=0, bob=0):
     g.rect(17, 32 + b, 3, 3, "dbrown")
     g.rect(23, 30 + b, 2, 4, "dbrown")
     g.rect(19 + tap, 30 + b, 2, 1, "brown")
-    return rim(g, dict(navy=("grey", "grey"), violet=("lilac", None), dbrown=("skin2", "brown"),
-                       plum=("skin2", "brown"), ink=("grey", "slate")))
+    return rim(
+        g,
+        {
+            "navy": ("grey", "grey"),
+            "violet": ("lilac", None),
+            "dbrown": ("skin2", "brown"),
+            "plum": ("skin2", "brown"),
+            "ink": ("grey", "slate"),
+        },
+    )
 
 
 def trista_front(wave=0, bob=0):
@@ -786,7 +883,7 @@ def trista_front(wave=0, bob=0):
     raise_mouth(g, 16, 14 + b)
     nose(g, 16, 14 + b, spread=3)
     glasses(g, 16, 14 + b, "dbrown", spread=3)
-    return rim(g, dict(brown=("tan", None), dgreen=("green", None), navy=("grey", None), dslate=("grey", None)))
+    return rim(g, {"brown": ("tan", None), "dgreen": ("green", None), "navy": ("grey", None), "dslate": ("grey", None)})
 
 
 WAVES = {
@@ -818,7 +915,7 @@ WALKER_CHEER_MS = 120
 
 def cheering(key, swing, bob=0):
     """key's front view (WAVES) with both arms raised swing design pixels out from the shoulders, crouched bob."""
-    global raised_arm
+    global raised_arm  # noqa: PLW0603 - Temporarily pair shared wave arms, restoring the painter in finally.
     rects, cols = CHEER_ARMS[key]
     hexes = {K[c] for c in cols}
     lift = raised_arm
@@ -853,7 +950,7 @@ def hopped(rows, hop):
 # ---------- pickups ----------
 
 # The treat's idle: it bobs a pixel up and back, its heart glinting at the top of the bob.
-TREAT_IDLE = (dict(lift=0), dict(lift=-1))
+TREAT_IDLE = ({"lift": 0}, {"lift": -1})
 # The heart on the treat's bone, by its width in drawn pixels: 1 red, d dred, l the lit pixel (pink, white
 # when it glints; the 3-wide heart is too small for one). treat_heart picks the widest that suits the scale
 # it is drawn at.
@@ -920,8 +1017,8 @@ def tip(rx):
 
 # The skunk's idle: the tail sways right, back, blinking, then left. Its walk, the step toward the pack: a
 # front paw lifts 1px, left then right, with the tail swaying against it.
-SKUNK_IDLE = (dict(sway=0), dict(sway=1), dict(sway=0, blink=True), dict(sway=-1))
-SKUNK_WALK = (dict(sway=1, paw_l=-1), dict(sway=0), dict(sway=-1, paw_r=-1), dict(sway=0))
+SKUNK_IDLE = ({"sway": 0}, {"sway": 1}, {"sway": 0, "blink": True}, {"sway": -1})
+SKUNK_WALK = ({"sway": 1, "paw_l": -1}, {"sway": 0}, {"sway": -1, "paw_r": -1}, {"sway": 0})
 
 
 def skunk(sway=0, blink=False, paw_l=0, paw_r=0):
@@ -968,8 +1065,16 @@ def skunk(sway=0, blink=False, paw_l=0, paw_r=0):
 # the icons): navy fur shaded ink and lit slate, a dslate streak down the tail, a dslate belly and paws held
 # at the chest, navy feet and a grey nose. LIT's rim puts grey on its top-left edges and slate on the rest,
 # so the dark fur and the tail's edge hold on the dslate road; the eyes keep their white glints.
-SQUIRREL_FUR = dict(fur="navy", shade="ink", lit="slate", streak="dslate", belly="dslate", paw="dslate",
-                    foot="navy", nose="grey")
+SQUIRREL_FUR = {
+    "fur": "navy",
+    "shade": "ink",
+    "lit": "slate",
+    "streak": "dslate",
+    "belly": "dslate",
+    "paw": "dslate",
+    "foot": "navy",
+    "nose": "grey",
+}
 
 
 # The squirrel is laid out small on the 32x32 animal grid, so at SCALE its body (head to feet, without the
@@ -1089,10 +1194,47 @@ def puddle(f, w=112, h=48):
 # The pothole's edge, star-shaped about POTHOLE_CENTRE, as (x, y) corners on its 112x48 frame, joined straight:
 # the far rim broken into teeth and steps, the near rim smoother with one chip out of it.
 POTHOLE_CENTRE = (54, 25)
-POTHOLE_EDGE = ((8, 28), (10, 21), (14, 19), (15, 15), (21, 14), (23, 10), (31, 10), (34, 6), (39, 8), (46, 7),
-                (49, 4), (55, 6), (60, 5), (63, 9), (70, 9), (72, 12), (79, 11), (82, 9), (87, 12), (93, 12),
-                (95, 16), (101, 17), (104, 22), (104, 27), (101, 31), (95, 35), (88, 35), (84, 37), (80, 37),
-                (73, 39), (71, 42), (63, 42), (61, 40), (52, 41), (40, 42), (30, 41), (20, 40), (13, 37), (9, 33))
+POTHOLE_EDGE = (
+    (8, 28),
+    (10, 21),
+    (14, 19),
+    (15, 15),
+    (21, 14),
+    (23, 10),
+    (31, 10),
+    (34, 6),
+    (39, 8),
+    (46, 7),
+    (49, 4),
+    (55, 6),
+    (60, 5),
+    (63, 9),
+    (70, 9),
+    (72, 12),
+    (79, 11),
+    (82, 9),
+    (87, 12),
+    (93, 12),
+    (95, 16),
+    (101, 17),
+    (104, 22),
+    (104, 27),
+    (101, 31),
+    (95, 35),
+    (88, 35),
+    (84, 37),
+    (80, 37),
+    (73, 39),
+    (71, 42),
+    (63, 42),
+    (61, 40),
+    (52, 41),
+    (40, 42),
+    (30, 41),
+    (20, 40),
+    (13, 37),
+    (9, 33),
+)
 # How many rows the far wall drops to the water.
 POTHOLE_DEPTH = 12
 # How many pixels each side the wall's foot smooths the far rim's top over, so its teeth stay on the rim.
@@ -1103,8 +1245,13 @@ POTHOLE_SLABS = (((19, 35), (31, 34), (35, 42), (14, 40)),)
 POTHOLE_SLAB_EDGE = 1
 # The cracks running out from the rim into the road, each a run of (x, y) corners: an ink line over a grey one,
 # lit along its lower edge.
-POTHOLE_CRACKS = (((23, 10), (19, 7), (11, 6)), ((49, 4), (51, 2)), ((8, 28), (4, 28), (2, 25)),
-                  ((104, 27), (109, 26)), ((71, 42), (73, 44)))
+POTHOLE_CRACKS = (
+    ((23, 10), (19, 7), (11, 6)),
+    ((49, 4), (51, 2)),
+    ((8, 28), (4, 28), (2, 25)),
+    ((104, 27), (109, 26)),
+    ((71, 42), (73, 44)),
+)
 # The water's white glint, (x, y, w, h); it moves a pixel right on frame 1.
 POTHOLE_GLINT = (54, 31, 7, 2)
 
@@ -1123,7 +1270,7 @@ def pothole(f, w=112, h=48):
     px = raster(g)
 
     def fan(pts, col, c=(cx, cy)):
-        for a, b in zip(pts, pts[1:] + pts[:1]):
+        for a, b in zip(pts, pts[1:] + pts[:1], strict=False):
             # a triangle with no area would fill the whole line through it
             if (a[0] - c[0]) * (b[1] - c[1]) != (a[1] - c[1]) * (b[0] - c[0]):
                 g.tri(c, a, b, col)
@@ -1136,7 +1283,7 @@ def pothole(f, w=112, h=48):
         lower, lit along its lower edge."""
         pts = [(round(x * s), round(y * s)) for x, y in run]
         ink = []
-        for (x0, y0), (x1, y1) in zip(pts, pts[1:]):
+        for (x0, y0), (x1, y1) in itertools.pairwise(pts):
             n = max(abs(x1 - x0), abs(y1 - y0), 1)
             ink += [(round(x0 + (x1 - x0) * k / n), round(y0 + (y1 - y0) * k / n)) for k in range(n + 1)]
         for x, y in ink:
@@ -1155,8 +1302,12 @@ def pothole(f, w=112, h=48):
     for x, y in hole:
         top[x] = min(top.get(x, y), y)
     r = max(1, round(POTHOLE_FOOT * s))
-    foot = {x: sum(top[k] for k in range(x - r, x + r + 1) if k in top)
-            / sum(1 for k in range(x - r, x + r + 1) if k in top) + d for x in top}
+    foot = {
+        x: sum(top[k] for k in range(x - r, x + r + 1) if k in top)
+        / sum(1 for k in range(x - r, x + r + 1) if k in top)
+        + d
+        for x in top
+    }
     water = {(x, y) for x, y in hole if y >= foot[x] and (x, y - d) in hole}
     for x, y in hole:
         if (x, y + 1) not in hole:
@@ -1166,7 +1317,8 @@ def pothole(f, w=112, h=48):
             k = next((k for k in range(1, d + 1) if (x, y - k) not in water), d + 1)
             c = "ink" if k == 1 else "navy" if k <= 1 + 2 * band else "dlake"
         elif any((x, y - k) not in hole for k in range(1, band + 1)) or any(
-                (x + k, y) not in hole for k in range(1, band + 1)):
+            (x + k, y) not in hole for k in range(1, band + 1)
+        ):
             # the far rim's broken asphalt, its cut face ash over the coal wall, and the right wall lit
             c = "ash"
         else:
@@ -1196,15 +1348,27 @@ def pothole(f, w=112, h=48):
 # CLOUD_SQUASH as tall as it is wide, so together they make a low, wide bank with a lumpy top, its base on the
 # frame's last row. A swollen puff still stops a pixel short of the frame's top and sides, so no lobe is clipped
 # flat; along the bottom the frame's last row cuts them level, where the haze meets the road.
-CLOUD_PUFFS = [(44, 28, 30), (22, 31, 15), (66, 31, 15), (31, 36, 15), (57, 36, 15), (32, 20, 11), (57, 19, 11),
-               (44, 14, 9), (11, 35, 9), (77, 35, 9), (19, 24, 7), (70, 24, 7)]
+CLOUD_PUFFS = [
+    (44, 28, 30),
+    (22, 31, 15),
+    (66, 31, 15),
+    (31, 36, 15),
+    (57, 36, 15),
+    (32, 20, 11),
+    (57, 19, 11),
+    (44, 14, 9),
+    (11, 35, 9),
+    (77, 35, 9),
+    (19, 24, 7),
+    (70, 24, 7),
+]
 CLOUD_SQUASH = 0.42
 CLOUD_W, CLOUD_H = 88, 40
 CLOUD_SIZE = (112, 60)
 # Where each stink wisp starts, trailing 6 design rows down.
 CLOUD_WISPS = ((22, 25), (62, 22), (72, 30), (14, 31), (42, 17))
 # The haze's colours: the outer and inner rim, the fill, the seams between lobes, and the wisps.
-CLOUD_INK = dict(outer="plum", inner="pink", fill="mauve", dark="purple", wisp="purple")
+CLOUD_INK = {"outer": "plum", "inner": "pink", "fill": "mauve", "dark": "purple", "wisp": "purple"}
 
 
 def skunk_cloud(step, s=1):
@@ -1220,7 +1384,8 @@ def skunk_cloud(step, s=1):
     g = Grid(w, h)
     k = CLOUD_SQUASH * sy / sx
     puffs = []
-    for i, (cx, cy, r) in enumerate(CLOUD_PUFFS):
+    for i, (puff_x, puff_y, puff_r) in enumerate(CLOUD_PUFFS):
+        cx, cy, r = puff_x, puff_y, puff_r
         cx, cy = cx * sx, cy * sy
         r = min(r * sx, cx - 1.6, w - cx - 1.6, (cy - 1.6) / k)
         puffs.append((cx, cy, r + (1 if (i + step) % 4 == 0 else 0)))
@@ -1238,8 +1403,7 @@ def skunk_cloud(step, s=1):
     def beside(x, y, test):
         return any(test(x + dx, y + dy) for dx, dy in ((0, -1), (0, 1), (-1, 0), (1, 0)))
 
-    outer = {(x, y) for y in range(h) for x in range(w)
-             if inside(x, y) and beside(x, y, lambda a, b: not inside(a, b))}
+    outer = {(x, y) for y in range(h) for x in range(w) if inside(x, y) and beside(x, y, lambda a, b: not inside(a, b))}
     # each pixel belongs to the puff it is deepest inside; where two lobes meet, the later one's edge is a
     # purple seam, so the haze reads as flat lobes
     owner = [[max(range(len(puffs)), key=lambda i: depth_of(puffs[i], x, y)) for x in range(w)] for y in range(h)]
@@ -1251,7 +1415,7 @@ def skunk_cloud(step, s=1):
                 g.p(x, y, CLOUD_INK["outer"])
             elif beside(x, y, lambda a, b: (a, b) in outer):
                 g.p(x, y, CLOUD_INK["inner"])
-            elif beside(x, y, lambda a, b: inside(a, b) and owner[b][a] < owner[y][x]):
+            elif beside(x, y, lambda a, b, x=x, y=y: inside(a, b) and owner[b][a] < owner[y][x]):
                 g.p(x, y, CLOUD_INK["dark"])
             else:
                 g.p(x, y, CLOUD_INK["fill"])
@@ -1316,10 +1480,10 @@ def corgi(fl=0, fr=0, bl=0, br=0, bob=0, tail=0, twitch=0):
 
 # The other dog's trot, as dogs.WALK has it: diagonal pairs swap on beats 0 and 2 and the body bobs up
 # on the passing beats; 4 frames at 100ms.
-CORGI_WALK = [dict(fl=1, fr=-1, bl=-1, br=1), dict(bob=-1), dict(fl=-1, fr=1, bl=1, br=-1), dict(bob=-1)]
+CORGI_WALK = [{"fl": 1, "fr": -1, "bl": -1, "br": 1}, {"bob": -1}, {"fl": -1, "fr": 1, "bl": 1, "br": -1}, {"bob": -1}]
 # Standing while its walker chats: the dogs' idle, the tail at -1, 0, +1, 0, the body 1px higher over the middle
 # two beats and the right ear 1px higher on the last frame.
-CORGI_IDLE = [dict(tail=-1), dict(bob=-1), dict(tail=1, bob=-1), dict(twitch=-1)]
+CORGI_IDLE = [{"tail": -1}, {"bob": -1}, {"tail": 1, "bob": -1}, {"twitch": -1}]
 
 
 def person(top, legs="navy", shoes="ink", lf=0, rf=0, bob=0, arms=0, grounded=False):
@@ -1373,8 +1537,20 @@ def stripes(g, x, y0, y1, w, b, light="white"):
 # with an amber centre on its face. The road thief carries BIG_POUCH or TIP_POUCH (POUCHES, widest first),
 # pouch_px picking by the grid's scale, so it stays a clean bitmap at every depth step and never shrinks
 # below TIP_POUCH, which still reads at @50. The cards hold TIP_POUCH close and FAR_POUCH in a distant hand.
-BIG_POUCH = ["...c.c...", "....c....", "..lgcgf..", "...lgf...", "..lgggf..", ".lggyggf.", "lggyayggf",
-             "lgggyggff", "lggggggff", "lggggggff", ".ggggfff.", "..fffff.."]
+BIG_POUCH = [
+    "...c.c...",
+    "....c....",
+    "..lgcgf..",
+    "...lgf...",
+    "..lgggf..",
+    ".lggyggf.",
+    "lggyayggf",
+    "lgggyggff",
+    "lggggggff",
+    "lggggggff",
+    ".ggggfff.",
+    "..fffff..",
+]
 TIP_POUCH = ["..c.c..", "...c...", "..lgf..", ".lgggf.", "lggyggf", "lgyaygf", "lggyggf", ".gggff.", "..fff.."]
 FAR_POUCH = [".c.c.", "..c..", ".lgf.", "lgygf", "lgggf", ".fff."]
 POUCHES = (BIG_POUCH, TIP_POUCH)
@@ -1475,8 +1651,17 @@ def thief_fleeing(stride, pouch=True):
 # left lobe. heart_px picks the widest that fits the grid's scale, so the heart stays a clean bitmap at every
 # depth step instead of a blur of scaled curves.
 HEARTS = (
-    (".111...111.", "1wh11.11111", "1h111111111", "11111111d1d", ".1111111dd.", "..11111dd..", "...111dd...",
-     "....1dd....", ".....d....."),
+    (
+        ".111...111.",
+        "1wh11.11111",
+        "1h111111111",
+        "11111111d1d",
+        ".1111111dd.",
+        "..11111dd..",
+        "...111dd...",
+        "....1dd....",
+        ".....d.....",
+    ),
     (".111.111.", "1wh111111", "1h111111d", "1111111dd", ".11111dd.", "..111dd..", "...1dd...", "....d...."),
     (".11.11.", "1wh1111", "1h1111d", ".1111d.", "..11d..", "...d..."),
     (".1.1.", "1h11d", ".11d.", "..d.."),
@@ -1510,6 +1695,7 @@ def neighbour_top(pet, beat):
     and reaches her left arm (screen right) out and down, the open hand patting: beat 1 lowers it a row and
     shrinks the floating heart a step, so it beats. Standing, beat 1 lifts the floating heart a row, so it
     bobs against her breath or her step."""
+
     def top(g, b, arms=0):
         # the cardigan, open down the front over the cream top, and the big heart on it
         g.rect(9, 21 + b, 14, 13, "mauve")
@@ -1552,6 +1738,7 @@ def neighbour_top(pet, beat):
         g.p(22, 15 + b, "pink")
         # the floating heart, clear of her hair at the top right, on the frame's rows whatever her pose
         heart_px(g, 27.5, 1 if pet else 2 - beat, 7.5, smaller=beat if pet else 0)
+
     return top
 
 
@@ -1647,7 +1834,7 @@ def ice_cream_truck(f=0, roll=None):
     lit blinker and the white music note. roll (0 to 3) is a drive frame: tread lines climb the tires, the
     body dips 1px onto them on frames 1 and 2, the cone sign rocks on its post the other way, and a note floats
     up beside it. The road outline and the lit rim."""
-    import obstacles  # obstacles imports this module
+    import obstacles  # noqa: PLC0415 - Retain lazy loading to avoid art-module import cycles and optional image dependencies.
 
     g = edged(Grid(56, 50))
     px = raster(g)
@@ -1760,8 +1947,17 @@ def mail_carrier(**q):
     """The mail carrier facing the player, with a light rim on the dark skin, brim and trousers so they hold
     on the dslate road, and the road outline for the light roads."""
     g = edged(person(mail_top, grounded=True, **q))
-    return rim(g, dict(dbrown=("skin2", "brown"), plum=("skin2", "brown"), navy=("grey", "slate"),
-                       ink=("grey", "slate"), sky=("cyan", None), blue=("sky", None)))
+    return rim(
+        g,
+        {
+            "dbrown": ("skin2", "brown"),
+            "plum": ("skin2", "brown"),
+            "navy": ("grey", "slate"),
+            "ink": ("grey", "slate"),
+            "sky": ("cyan", None),
+            "blue": ("sky", None),
+        },
+    )
 
 
 # ---------- road movers going the pack's way (back view) ----------
@@ -1780,6 +1976,7 @@ def stroller(lf=0, rf=0, bob=0, arms=0):
     running straight down to two round rear wheels and the two front wheels inside them, further up the road,
     every wheel a plain ink tire under the lit rim. It rolls
     steadily while he bobs. The road outline and the lit rim, the puffer's teal shade lit green."""
+    del arms
     g = edged(Grid(32, 48))
     b = bob
     # the front wheels, further up the road, inside the rear ones
@@ -1839,8 +2036,12 @@ def stroller(lf=0, rf=0, bob=0, arms=0):
 # Running at the player: the left knee driven up as the right foot plants and the body rises 1px, the left foot
 # passing down under the body, then the same on the right; the ponytail swings out from behind the head away
 # from the raised knee. 4 frames at 100ms.
-JOGGER_RUN = [dict(knee="left", bob=-1, tail="right"), dict(passing="left"), dict(knee="right", bob=-1, tail="left"),
-              dict(passing="right")]
+JOGGER_RUN = [
+    {"knee": "left", "bob": -1, "tail": "right"},
+    {"passing": "left"},
+    {"knee": "right", "bob": -1, "tail": "left"},
+    {"passing": "right"},
+]
 JOGGER_RUN_MS = 100
 
 
@@ -1925,8 +2126,12 @@ def bib(g, cx, cy):
 # Pedalling at the player: each foot's lift above the bottom of the pedal's turn (the pedals go round), the
 # kid's sway over the bars and the streamers' flutter, the column each 2-row piece of a streamer swings out by
 # from its grip. 4 frames at 100ms.
-KID_BIKE_RIDE = [dict(lf=-5, rf=0, sway=-1, flutter=(0, 1, 1)), dict(lf=-3, rf=-2, flutter=(0, 0, 1)),
-                 dict(lf=0, rf=-5, sway=1, flutter=(0, 1, 2)), dict(lf=-2, rf=-3, flutter=(0, 1, 0))]
+KID_BIKE_RIDE = [
+    {"lf": -5, "rf": 0, "sway": -1, "flutter": (0, 1, 1)},
+    {"lf": -3, "rf": -2, "flutter": (0, 0, 1)},
+    {"lf": 0, "rf": -5, "sway": 1, "flutter": (0, 1, 2)},
+    {"lf": -2, "rf": -3, "flutter": (0, 1, 0)},
+]
 KID_BIKE_RIDE_MS = 100
 
 
@@ -1990,58 +2195,133 @@ def kid_on_a_bike(lf=0, rf=0, sway=0, flutter=(0, 0, 0)):
 
 def sprites():
     """Yield (key, [(tag, [frame pixels], duration_ms)]) for every sprite."""
+
     def frames(gs, outline=True):
         return [g.outlined(outline) for g in gs]
 
     # the walkers carry the leash on every road, so their outlines hold 3:1 on the light roads
     for key, draw in WALKERS.items():
-        def pose(**q):
+
+        def pose(draw=draw, **q):
             return edged(big(draw, **q))
 
-        tags = [("walk", frames(pose(**q) for q in WALKER_WALK), WALKER_WALK_MS),
-                    ("react", frames(pose(**q) for q in WALKER_REACT), 120),
-                    ("stumble", frames(lean(pose(**q), k) for k, q in WALKER_STUMBLE), 90),
-                    ("idle", frames(pose(**q) for q in WALKER_IDLE), BREATH_MS),
-                    ("wave", frames(edged(big(WAVES[key], wave=w)) for w in WALKER_WAVE), WALKER_WAVE_MS),
-                    ("cheer", [hopped(edged(big(cheering, key, swing, bob=crouch)).outlined(), hop)
-                               for crouch, swing, hop in WALKER_CHEER], WALKER_CHEER_MS)]
+        tags = [
+            ("walk", frames(pose(**q) for q in WALKER_WALK), WALKER_WALK_MS),
+            ("react", frames(pose(**q) for q in WALKER_REACT), 120),
+            ("stumble", frames(lean(pose(**q), k) for k, q in WALKER_STUMBLE), 90),
+            ("idle", frames(pose(**q) for q in WALKER_IDLE), BREATH_MS),
+            ("wave", frames(edged(big(WAVES[key], wave=w)) for w in WALKER_WAVE), WALKER_WAVE_MS),
+            (
+                "cheer",
+                [
+                    hopped(edged(big(cheering, key, swing, bob=crouch)).outlined(), hop)
+                    for crouch, swing, hop in WALKER_CHEER
+                ],
+                WALKER_CHEER_MS,
+            ),
+        ]
         if key == "walker-mr-b":
-            tags.append(("phone", frames(edged(big(mr_b_phone, tap=tap, bob=bob))
-                                         for tap, bob in ((0, 0), (1, 0), (1, -1), (0, -1))), 400))
+            tags.append(
+                (
+                    "phone",
+                    frames(edged(big(mr_b_phone, tap=tap, bob=bob)) for tap, bob in ((0, 0), (1, 0), (1, -1), (0, -1))),
+                    400,
+                )
+            )
         yield key, tags
     yield "treat", [("idle", frames(big(treat, **q) for q in TREAT_IDLE), 400)]
     yield "tip", [("idle", frames(big(tip, rx) for rx in (5.5, 3.5, 1, 3.5)), 120)]
-    yield "skunk", [("idle", frames(big(skunk, **q) for q in SKUNK_IDLE), 300),
-                    ("walk", frames(big(skunk, **q) for q in SKUNK_WALK), PERSON_WALK_MS)]
-    yield "squirrel", [("idle", frames([big(squirrel, tail=0), big(squirrel, tail=1)]), 300),
-                       ("run", frames(big(squirrel_run, k) for k in range(4)), 60)]
+    yield (
+        "skunk",
+        [
+            ("idle", frames(big(skunk, **q) for q in SKUNK_IDLE), 300),
+            ("walk", frames(big(skunk, **q) for q in SKUNK_WALK), PERSON_WALK_MS),
+        ],
+    )
+    yield (
+        "squirrel",
+        [
+            ("idle", frames([big(squirrel, tail=0), big(squirrel, tail=1)]), 300),
+            ("run", frames(big(squirrel_run, k) for k in range(4)), 60),
+        ],
+    )
     yield "puddle", [("idle", frames([puddle(0), puddle(1)], outline=False), 500)]
     yield "pothole", [("idle", frames([pothole(0), pothole(1)], outline=False), 500)]
     yield "skunk-cloud", [("loop", frames((skunk_cloud(i) for i in range(4)), outline=False), 220)]
-    yield "other-dog", [("walk", frames(big(corgi, **q) for q in CORGI_WALK), 100),
-                        ("idle", frames(big(corgi, **q) for q in CORGI_IDLE), 300)]
-    owner = dict(shoes="dbrown")
-    yield "other-dog-owner", [("walk", frames(big(dressed, dog_owner_top, grounded=True, **q, **owner) for q in HUMAN_WALK),
-                               HUMAN_WALK_MS),
-                              ("idle", frames(big(dressed, dog_owner_top, grounded=True, bob=bb, **owner) for bb in BREATH),
-                               BREATH_MS)]
-    yield "thief", [("walk", frames(big(dressed, thief_top, grounded=True, **q) for q in HUMAN_WALK), HUMAN_WALK_MS),
-                    ("flee", frames(big(thief_fleeing, k) for k in (-1, 1)), 110),
-                    ("idle", frames(big(dressed, thief_top, grounded=True, bob=bb) for bb in BREATH), BREATH_MS)]
+    yield (
+        "other-dog",
+        [
+            ("walk", frames(big(corgi, **q) for q in CORGI_WALK), 100),
+            ("idle", frames(big(corgi, **q) for q in CORGI_IDLE), 300),
+        ],
+    )
+    owner = {"shoes": "dbrown"}
+    yield (
+        "other-dog-owner",
+        [
+            (
+                "walk",
+                frames(big(dressed, dog_owner_top, grounded=True, **q, **owner) for q in HUMAN_WALK),
+                HUMAN_WALK_MS,
+            ),
+            ("idle", frames(big(dressed, dog_owner_top, grounded=True, bob=bb, **owner) for bb in BREATH), BREATH_MS),
+        ],
+    )
+    yield (
+        "thief",
+        [
+            ("walk", frames(big(dressed, thief_top, grounded=True, **q) for q in HUMAN_WALK), HUMAN_WALK_MS),
+            ("flee", frames(big(thief_fleeing, k) for k in (-1, 1)), 110),
+            ("idle", frames(big(dressed, thief_top, grounded=True, bob=bb) for bb in BREATH), BREATH_MS),
+        ],
+    )
     yield "lost-wallet", [("idle", frames([big(wallet, False), big(wallet, True)]), 450)]
-    neighbour = dict(legs="purple", shoes="dbrown")
-    yield "friendly-neighbour", [("walk", frames(big(dressed, neighbour_top(False, -q.get("bob", 0)), grounded=True, **q, **neighbour)
-                                                 for q in HUMAN_WALK), HUMAN_WALK_MS),
-                                 ("wave", frames(big(dressed, neighbour_top(True, k), grounded=True, bob=NEIGHBOUR_CROUCH,
-                                                     **neighbour) for k in (0, 1)), 350),
-                                 ("idle", frames(big(dressed, neighbour_top(False, k), grounded=True, bob=bb, **neighbour)
-                                                 for k, bb in enumerate(BREATH)), BREATH_MS)]
+    neighbour = {"legs": "purple", "shoes": "dbrown"}
+    yield (
+        "friendly-neighbour",
+        [
+            (
+                "walk",
+                frames(
+                    big(dressed, neighbour_top(False, -q.get("bob", 0)), grounded=True, **q, **neighbour)
+                    for q in HUMAN_WALK
+                ),
+                HUMAN_WALK_MS,
+            ),
+            (
+                "wave",
+                frames(
+                    big(dressed, neighbour_top(True, k), grounded=True, bob=NEIGHBOUR_CROUCH, **neighbour)
+                    for k in (0, 1)
+                ),
+                350,
+            ),
+            (
+                "idle",
+                frames(
+                    big(dressed, neighbour_top(False, k), grounded=True, bob=bb, **neighbour)
+                    for k, bb in enumerate(BREATH)
+                ),
+                BREATH_MS,
+            ),
+        ],
+    )
     yield "fx-bark", [("pop", frames([bark(False), bark(True)]), 120)]
     drive, drive_ms = TRUCK_DRIVE
-    yield "ice-cream-truck", [("idle", frames([drawn(TRUCK_SCALE, ice_cream_truck, f) for f in (0, 1)]), 400),
-                              ("drive", frames(drawn(TRUCK_SCALE, ice_cream_truck, 0, r) for r in drive), drive_ms)]
-    yield "mail-carrier", [("walk", frames(big(mail_carrier, **q) for q in HUMAN_WALK), HUMAN_WALK_MS),
-                           ("idle", frames(big(mail_carrier, bob=bb) for bb in BREATH), BREATH_MS)]
+    yield (
+        "ice-cream-truck",
+        [
+            ("idle", frames([drawn(TRUCK_SCALE, ice_cream_truck, f) for f in (0, 1)]), 400),
+            ("drive", frames(drawn(TRUCK_SCALE, ice_cream_truck, 0, r) for r in drive), drive_ms),
+        ],
+    )
+    yield (
+        "mail-carrier",
+        [
+            ("walk", frames(big(mail_carrier, **q) for q in HUMAN_WALK), HUMAN_WALK_MS),
+            ("idle", frames(big(mail_carrier, bob=bb) for bb in BREATH), BREATH_MS),
+        ],
+    )
     yield "stroller", [("walk", frames(big(stroller, **q) for q in STROLLER_WALK), STROLLER_WALK_MS)]
     yield "jogger", [("run", frames(big(jogger, **q) for q in JOGGER_RUN), JOGGER_RUN_MS)]
     yield "kid-on-a-bike", [("ride", frames(big(kid_on_a_bike, **q) for q in KID_BIKE_RIDE), KID_BIKE_RIDE_MS)]
@@ -2050,4 +2330,5 @@ def sprites():
 if __name__ == "__main__":
     # minis swaps the grid of the module named road, so the build runs that module's functions, not __main__'s
     import road
+
     main(sys.argv, road.sprites, "art/road", __doc__)

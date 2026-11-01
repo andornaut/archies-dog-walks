@@ -77,12 +77,12 @@ belong in this file instead. Shared tooling is in pixel.py.
 
 import json
 import math
-import os
 import sys
+from pathlib import Path
 
-sys.path.insert(0, os.path.dirname(__file__))
-from minis import STEPS, Mini, scaled  # noqa: E402
-from pixel import MURAL, K, dk, edged, main, raster, scale_of  # noqa: E402
+sys.path.insert(0, str(Path(__file__).parent))
+from minis import STEPS, Mini, scaled
+from pixel import MURAL, K, dk, edged, main, raster, scale_of
 
 SCALE = 1.5
 GROUNDS = (K["green"], K["dgreen"], K["dslate"])
@@ -137,6 +137,7 @@ def gas_lamp():
         if eave and eave[0] >= lantern[0] and eave[-1] <= lantern[-1]:
             for x in range(lantern[0] - 1, lantern[-1] + 2):
                 px[top - 1][x] = K["coal"]
+
     return w, h, draw
 
 
@@ -162,6 +163,7 @@ def street_lamp():
             g.rect(x, 8, 10, 1, "white")
             g.rect(x + 1, 13, 8, 3, rim)
             g.rect(x + 2, 13, 6, 2, core)
+
     return w, h, draw
 
 
@@ -171,14 +173,23 @@ def lobed_tree(leaf, shade, light, trunk="dbrown", big=False):
     w, h = (96, 116) if big else (76, 104)
 
     def draw(g, f=0):
+        del f
         base = h - 2
         cx = w // 2
         g.rect(cx - 5, h - 44, 10, 43, trunk)
         g.rect(cx + 1, h - 44, 4, 43, dk(trunk))
         g.rect(cx - 9, base - 3, 18, 4, trunk)
-        lobes = (((cx, 34, 40, 30), (cx - 26, 52, 18, 15), (cx + 26, 52, 18, 15), (cx - 18, 26, 16, 14),
-                  (cx + 20, 28, 16, 14)) if big else
-                 ((cx, 33, 32, 30), (cx - 17, 53, 17, 14), (cx + 17, 53, 17, 14)))
+        lobes = (
+            (
+                (cx, 34, 40, 30),
+                (cx - 26, 52, 18, 15),
+                (cx + 26, 52, 18, 15),
+                (cx - 18, 26, 16, 14),
+                (cx + 20, 28, 16, 14),
+            )
+            if big
+            else ((cx, 33, 32, 30), (cx - 17, 53, 17, 14), (cx + 17, 53, 17, 14))
+        )
         for x, y, rx, ry in lobes:
             g.ell(x, y, rx, ry, shade)
         for x, y, rx, ry in lobes:
@@ -187,6 +198,7 @@ def lobed_tree(leaf, shade, light, trunk="dbrown", big=False):
             g.ell(x - 1, y - 2, rx - 4, ry - 4, leaf)
         for x, y, r in ((cx + 9, 25, 4), (cx - 11, 41, 3), (cx + 13, 49, 3), (cx - 7, 15, 3)):
             g.ell(x, y, r, r, shade)
+
     return w, h, draw
 
 
@@ -195,20 +207,23 @@ def fruit_stand():
     w, h = 72, 56
 
     def draw(g, f=0):
+        del f
         base = h - 2
         for x in (6, 62):
             g.rect(x, 8, 3, base - 7, "bark")
         for i in range(8):
             g.rect(4 + i * 8, 4, 8, 6, "ttc" if i % 2 == 0 else "white")
         g.rect(4, 10, 64, 1, "dred")
-        for row, (y, fruits) in enumerate(((base - 30, ("lime", "moss")), (base - 19, ("red", "ttc")),
-                                           (base - 8, ("orange", "amber")))):
+        for row, (y, fruits) in enumerate(
+            ((base - 30, ("lime", "moss")), (base - 19, ("red", "ttc")), (base - 8, ("orange", "amber")))
+        ):
             x0 = 10 - row * 2
             g.rect(x0, y, 52 + row * 4, 9, "clay")
             g.rect(x0, y + 4, 52 + row * 4, 1, "bark")
             g.rect(x0 + 50 + row * 4 - 3, y, 3, 9, "bark")
             for k in range((52 + row * 4) // 5):
                 g.ell(x0 + 3 + k * 5, y - 1, 2.4, 2.2, fruits[k % 2])
+
     return w, h, draw
 
 
@@ -234,7 +249,7 @@ def garden_car():
             g.ell(x, y, 1.6, 1.6, c)
 
     def draw(g, f=0):
-        base = h - 2
+        del f
         # the cabin: rust pillars round a windshield full of leaves, side mirrors at its foot
         g.tri((10, 32), (20, 15), (20, 32), "rust")
         g.tri((62, 32), (52, 15), (52, 32), "dbrown")
@@ -249,8 +264,14 @@ def garden_car():
         g.rect(61, 26, 6, 3, "dbrown")
         # the front: a body in mural patches, round headlights, the grille and a chrome bumper
         g.rect(4, 32, 64, 16, "rust")
-        for x, y, ww, hh, c in ((4, 32, 14, 9, "gold"), (54, 32, 14, 9, "turquoise"), (18, 41, 10, 7, "lilac"),
-                                (44, 41, 10, 7, "moss"), (28, 32, 8, 2, "pink"), (40, 32, 6, 2, "gold")):
+        for x, y, ww, hh, c in (
+            (4, 32, 14, 9, "gold"),
+            (54, 32, 14, 9, "turquoise"),
+            (18, 41, 10, 7, "lilac"),
+            (44, 41, 10, 7, "moss"),
+            (28, 32, 8, 2, "pink"),
+            (40, 32, 6, 2, "gold"),
+        ):
             g.rect(x, y, ww, hh, c)
         g.rect(65, 32, 3, 16, "dbrown")
         g.rect(4, 32, 64, 1, "ochre")
@@ -279,8 +300,22 @@ def garden_car():
         leaves(g, ((10, 31, 6, 3), (22, 31, 7, 3), (36, 30, 8, 3), (50, 31, 7, 3), (62, 31, 6, 3)))
         leaves(g, ((10, 56, 8, 6), (22, 57, 7, 5), (36, 56, 9, 6), (50, 57, 7, 5), (62, 56, 8, 6)))
         # flowers spaced out in red, yellow and pink, a few to each heap, so the greenery reads as one mass
-        flowers(g, ((22, 8, "red"), (35, 3, "yellow"), (48, 8, "pink"), (10, 30, "yellow"), (30, 29, "red"),
-                    (44, 29, "pink"), (62, 30, "red"), (12, 53, "red"), (36, 53, "yellow"), (60, 53, "pink")))
+        flowers(
+            g,
+            (
+                (22, 8, "red"),
+                (35, 3, "yellow"),
+                (48, 8, "pink"),
+                (10, 30, "yellow"),
+                (30, 29, "red"),
+                (44, 29, "pink"),
+                (62, 30, "red"),
+                (12, 53, "red"),
+                (36, 53, "yellow"),
+                (60, 53, "pink"),
+            ),
+        )
+
     return w, h, draw
 
 
@@ -289,11 +324,20 @@ def dune_grass():
     w, h = 40, 32
 
     def draw(g, f=0):
+        del f
         base = h - 2
-        for x, top, c in ((6, 14, "olive"), (11, 6, "moss"), (16, 10, "olive"), (21, 4, "moss"), (26, 9, "olive"),
-                          (31, 12, "moss"), (34, 18, "olive")):
+        for x, top, c in (
+            (6, 14, "olive"),
+            (11, 6, "moss"),
+            (16, 10, "olive"),
+            (21, 4, "moss"),
+            (26, 9, "olive"),
+            (31, 12, "moss"),
+            (34, 18, "olive"),
+        ):
             g.tri((x - 2, base + 1), (x + 2, base + 1), (x + (2 if x > 20 else -2), top), c)
             g.rect(x + (2 if x > 20 else -2), top, 1, 2, "gold")
+
     return w, h, draw
 
 
@@ -302,6 +346,7 @@ def transit_stop():
     w, h = 28, 100
 
     def draw(g, f=0):
+        del f
         base = h - 2
         g.rect(12, 6, 4, base - 5, "coal")
         g.rect(12, 6, 1, base - 5, "ash")
@@ -313,6 +358,7 @@ def transit_stop():
         g.rect(10, 41, 8, 14, "lgrey")
         for y in range(43, 54, 3):
             g.rect(11, y, 6, 1, "stone")
+
     return w, h, draw
 
 
@@ -322,6 +368,7 @@ def hot_dog_stand():
     w, h = 60, 84
 
     def draw(g, f=0):
+        del f
         base = h - 2
         for x in (18, 40):
             g.rect(x, 18, 2, 11, "coal")
@@ -351,6 +398,7 @@ def hot_dog_stand():
             g.rect(x + 1, 48, 1, 2, col)
         g.rect(42, 53, 6, 4, "white")
         g.rect(6, 68, 48, 3, "white")
+
     return w, h, draw
 
 
@@ -361,6 +409,7 @@ def ice_cream_stand():
     w, h = 60, 84
 
     def draw(g, f=0):
+        del f
         base = h - 2
         # the sign: a waffle cone standing on the roof, crosshatched, under three tiers of soft serve and a
         # curled tip, each tier shaded mauve below and right
@@ -401,6 +450,7 @@ def ice_cream_stand():
             g.ell(x, 52, 2.2, 2, col)
         g.rect(6, 68, 48, 3, "white")
         g.rect(6, 71, 48, 1, "pink")
+
     return w, h, draw
 
 
@@ -416,13 +466,17 @@ def love_lock():
 
     def span(y, r, tip):
         """The columns the inner heart covers on row y, as (x0, x1), or None."""
-        xs = [x for x in range(4, 48)
-              if (x + 0.5 - 17) ** 2 + (y + 0.5 - 18) ** 2 <= r * r
-              or (x + 0.5 - 35) ** 2 + (y + 0.5 - 18) ** 2 <= r * r
-              or (y + 0.5 >= 21 and abs(x + 0.5 - 26) <= (tip - y - 0.5) * (r + 9) / (tip - 21))]
+        xs = [
+            x
+            for x in range(4, 48)
+            if (x + 0.5 - 17) ** 2 + (y + 0.5 - 18) ** 2 <= r * r
+            or (x + 0.5 - 35) ** 2 + (y + 0.5 - 18) ** 2 <= r * r
+            or (y + 0.5 >= 21 and abs(x + 0.5 - 26) <= (tip - y - 0.5) * (r + 9) / (tip - 21))
+        ]
         return (xs[0], xs[-1] + 1) if xs else None
 
     def draw(g, f=0):
+        del f
         base = h - 2
         g.rect(12, base - 8, 28, 9, "stone")
         g.rect(36, base - 8, 4, 9, dk("stone"))
@@ -439,10 +493,19 @@ def love_lock():
             ys = [y for y in range(8, 40) if (sp := span(y, 6, 38)) and sp[0] <= x < sp[1]]
             if ys:
                 g.rect(x, ys[0], 1, ys[-1] + 1 - ys[0], "shale")
-        for x, y, col in ((14, 15, "gold"), (21, 20, "lgrey"), (32, 14, "turquoise"), (36, 21, "gold"),
-                          (25, 27, "pink"), (18, 26, "amber"), (30, 31, "lgrey"), (25, 15, "amber")):
+        for x, y, col in (
+            (14, 15, "gold"),
+            (21, 20, "lgrey"),
+            (32, 14, "turquoise"),
+            (36, 21, "gold"),
+            (25, 27, "pink"),
+            (18, 26, "amber"),
+            (30, 31, "lgrey"),
+            (25, 15, "amber"),
+        ):
             g.rect(x, y + 1, 3, 3, col)
             g.rect(x + 1, y, 1, 1, "grey")
+
     return w, h, draw
 
 
@@ -460,6 +523,7 @@ def mural_wall():
         return None
 
     def draw(g, f=0):
+        del f
         base = h - 2
         # the wall: brick courses between the piers, the footing under them
         g.rect(x0, top, x1 - x0, base - 3 - top, "brick")
@@ -508,6 +572,7 @@ def mural_wall():
         g.ell(57.5, 44, 2, 2, "pink")
         g.ell(61.5, 44, 2, 2, "pink")
         g.tri((55.5, 44.5), (63.5, 44.5), (59.5, 49), "pink")
+
     return w, h, draw
 
 
@@ -544,7 +609,7 @@ def shopfront(wall, awning, sign, rail):
         for k in range(6):
             g.rect(38 - k, 31 + 2 * k, 1, 2, "lake")
         g.rect(9, 33, 34, 1, "lgrey")
-        for i, (x, c) in enumerate(zip(range(10, 42, 5), rail)):
+        for i, (x, c) in enumerate(zip(range(10, 42, 5), rail, strict=False)):
             g.rect(x + 1, 34, 1, 2, "lgrey")
             if i % 2:
                 g.tri((x + 1, 36), (x - 0.5, 49 + i % 3), (x + 4.5, 49 + i % 3), c)
@@ -565,6 +630,7 @@ def shopfront(wall, awning, sign, rail):
         g.rect(2, base - 2, 68, 3, "stone")
         g.rect(2, base - 2, 68, 1, "lgrey")
         g.rect(66, base - 2, 4, 3, "dstone")
+
     return w, h, draw
 
 
@@ -609,6 +675,7 @@ def leuty():
         g.rect(33, 4, 9, 5, "ttc")
         if LEUTY_FOLD[f] is not None:
             g.rect(LEUTY_FOLD[f], 4, 3, 5, "dred")
+
     return w, h, draw
 
 
@@ -660,7 +727,9 @@ def beach_umbrella(stripes):
         return None
 
     def draw(g, f=0):
+        del f
         field(g, at)
+
     return w, h, draw
 
 
@@ -671,6 +740,7 @@ def beach_chair(stripes):
     first, second = BEACH_STRIPES[stripes]
 
     def draw(g, f=0):
+        del f
         base = h - 2
         for x in (9, 17):
             g.rect(x, 15, 2, base - 14, "ochre")
@@ -685,6 +755,7 @@ def beach_chair(stripes):
         g.rect(22, 11, 2, base - 10, "ochre")
         g.rect(3, 10, 6, 2, "tan")
         g.rect(19, 10, 6, 2, "ochre")
+
     return w, h, draw
 
 
@@ -730,6 +801,7 @@ def cafe_patio():
         g.rect(back + (2 if front > back else -2), 30, 2, 1, "ochre")
 
     def draw(g, f=0):
+        del f
         base = h - 2
         g.rect(cx - 1, eave + 3, 2, 12, "walnut")
         chair(g, 4, 13, "walnut", "bark")
@@ -751,6 +823,7 @@ def cafe_patio():
         g.p(cx + 4, 21, "yellow")
         field(g, canopy)
         g.rect(cx - 1, 1, 2, 3, "walnut")
+
     return w, h, draw
 
 
@@ -763,6 +836,7 @@ def hydrant():
     w, h = 18, 26
 
     def draw(g, f=0):
+        del f
         base = h - 2
         g.rect(3, base - 3, 12, 3, "dred")
         g.rect(3, base - 3, 12, 1, "red")
@@ -779,6 +853,7 @@ def hydrant():
         g.rect(11, 6, 2, 3, "stone")
         g.rect(5, 8, 8, 2, "stone")
         g.rect(8, 3, 2, 2, "stone")
+
     return w, h, draw
 
 
@@ -787,6 +862,7 @@ def urn():
     w, h = 22, 28
 
     def draw(g, f=0):
+        del f
         base = h - 2
         g.rect(7, base - 3, 8, 3, "coal")
         g.rect(9, base - 9, 4, 6, "coal")
@@ -800,6 +876,7 @@ def urn():
         # ivy trailing over the rim
         g.rect(4, 12, 1, 3, "canopy")
         g.rect(17, 12, 1, 4, "canopy")
+
     return w, h, draw
 
 
@@ -809,6 +886,7 @@ def barrel():
     w, h = 20, 26
 
     def draw(g, f=0):
+        del f
         base = h - 2
         g.rect(4, 4, 12, base - 5, "ochre")
         g.rect(3, 8, 14, base - 13, "ochre")
@@ -823,6 +901,7 @@ def barrel():
             g.rect(x0, y, x1 - x0, 1, "lgrey")
         g.ell(10, 4, 6, 2, "tan")
         g.ell(10, 4, 4, 1, "ochre")
+
     return w, h, draw
 
 
@@ -831,6 +910,7 @@ def bollard():
     w, h = 12, 26
 
     def draw(g, f=0):
+        del f
         base = h - 2
         g.rect(2, base - 3, 8, 3, "coal")
         g.rect(2, base - 3, 1, 3, "stone")
@@ -839,6 +919,7 @@ def bollard():
         g.rect(2, 9, 8, 2, "gold")
         g.ell(6, 6, 3, 3, "coal")
         g.rect(4, 4, 2, 2, "stone")
+
     return w, h, draw
 
 
@@ -847,14 +928,15 @@ def bike_ring():
     w, h = 16, 32
 
     def draw(g, f=0):
+        del f
         base = h - 2
         g.ell(8, 10, 6, 6, "lgrey")
         g.ell(8, 10, 4, 4, None)
         g.rect(7, 4, 2, base - 3, "lgrey")
         g.rect(8, 4, 1, base - 3, "stone")
         g.rect(6, base - 1, 4, 2, "stone")
-    return w, h, draw
 
+    return w, h, draw
 
 
 def rope_posts():
@@ -862,6 +944,7 @@ def rope_posts():
     w, h = 24, 20
 
     def draw(g, f=0):
+        del f
         base = h - 2
         for x in range(6, 17):
             g.rect(x, 7 + round(2 * (1 - ((x - 11.5) / 5) ** 2)), 2, 1, "tan")
@@ -869,6 +952,7 @@ def rope_posts():
             g.rect(x, 4, 4, base - 3, "driftwood")
             g.rect(x + 3, 4, 1, base - 3, dk("driftwood"))
             g.ell(x + 2, 4, 2, 1, "cream")
+
     return w, h, draw
 
 
@@ -878,6 +962,7 @@ def life_ring():
     w, h = 18, 34
 
     def draw(g, f=0):
+        del f
         base = h - 2
         g.rect(7, 3, 4, base - 2, "driftwood")
         g.rect(10, 3, 1, base - 2, dk("driftwood"))
@@ -885,6 +970,7 @@ def life_ring():
         g.ell(9, 12, 3, 3, "driftwood")
         for x, y in ((3, 11), (13, 11), (8, 6), (8, 16)):
             g.rect(x, y, 2, 2, "white")
+
     return w, h, draw
 
 
@@ -902,6 +988,7 @@ def utility_box():
         return None
 
     def draw(g, f=0):
+        del f
         base = h - 2
         g.rect(2, base - 2, 20, 3, "stone")
         g.rect(2, base - 2, 20, 1, "lgrey")
@@ -920,6 +1007,7 @@ def utility_box():
         g.rect(x0 - 1, top - 3, x1 - x0 + 2, 3, "ash")
         g.rect(x0 - 1, top - 3, x1 - x0 + 2, 1, "grey")
         g.rect(x1 - 1, top - 3, 2, 3, "shale")
+
     return w, h, draw
 
 
@@ -930,6 +1018,7 @@ def mailbox():
     w, h = 20, 36
 
     def draw(g, f=0):
+        del f
         base = h - 2
         g.rect(5, base - 2, 10, 3, "coal")
         g.rect(5, base - 2, 10, 1, "ash")
@@ -949,6 +1038,7 @@ def mailbox():
         g.rect(11, 28, 4, 1, "white")
         for x in (11, 13, 14):
             g.rect(x, 27, 1, 1, "white")
+
     return w, h, draw
 
 
@@ -981,6 +1071,7 @@ def pay_station():
         g.rect(6, 8 / 3, 2, 1, "white")
         g.rect(6, 4, 2, 1, "white")
         g.rect(22 / 3, 8 / 3, 1, 2, "white")
+
     return w, h, draw
 
 
@@ -1000,12 +1091,18 @@ PROPS = {
     "roadside-love-lock": (love_lock(), (0,), STILL_MS, True),
     "roadside-leuty": (leuty(), (0, 1, 2), (1800, 300, 300), True),
     "roadside-mural-wall": (mural_wall(), (0,), STILL_MS, True),
-    "roadside-shopfront-ochre": (shopfront("ochre", "red", "forest",
-                                           ("cyan", "lilac", "cream", "pink", "lime", "red", "violet")),
-                                 (0, 1, 2, 1), (2400, 300, 600, 300), True),
-    "roadside-shopfront-violet": (shopfront("violet", "dturq", "navy",
-                                            ("red", "lime", "pink", "cyan", "ochre", "lilac", "cream")),
-                                  (0, 1, 2, 1), (2400, 300, 600, 300), True),
+    "roadside-shopfront-ochre": (
+        shopfront("ochre", "red", "forest", ("cyan", "lilac", "cream", "pink", "lime", "red", "violet")),
+        (0, 1, 2, 1),
+        (2400, 300, 600, 300),
+        True,
+    ),
+    "roadside-shopfront-violet": (
+        shopfront("violet", "dturq", "navy", ("red", "lime", "pink", "cyan", "ochre", "lilac", "cream")),
+        (0, 1, 2, 1),
+        (2400, 300, 600, 300),
+        True,
+    ),
     **{f"roadside-beach-umbrella-{c}": (beach_umbrella(c), (0,), STILL_MS, True) for c in BEACH_STRIPES},
     **{f"roadside-beach-chair-{c}": (beach_chair(c), (0,), STILL_MS, True) for c in BEACH_STRIPES},
     "roadside-cafe-patio": (cafe_patio(), (0,), STILL_MS, True),
@@ -1038,7 +1135,7 @@ def draw_frame(key, step, f):
     # a base rounded onto the frame's bottom row moves up a row, into the clear rows above the top, so its
     # outline fits
     if any(fill[-1]) and not any(fill[0]) and not any(fill[1]):
-        fill[:] = fill[1:] + [[None] * len(fill[0])]
+        fill[:] = [*fill[1:], [None] * len(fill[0])]
     if any(fill[0]) or any(fill[-1]) or any(r[0] or r[-1] for r in fill):
         sys.exit(f"{key} at {step}: the fill touches the frame's edge")
     if rows != size(key, step)[1]:
@@ -1049,7 +1146,7 @@ def draw_frame(key, step, f):
 def sprites():
     """Yield (key, [(tag, [frame pixels], duration_ms)]) for every prop at full size, then at every depth
     step."""
-    for suffix, step in (("", 1),) + tuple((f"@{s}", q) for s, q in STEPS):
+    for suffix, step in (("", 1), *tuple((f"@{s}", q) for s, q in STEPS)):
         for key, (_, frames, ms, _) in PROPS.items():
             yield f"{key}{suffix}", [("idle", [draw_frame(key, step, f) for f in frames], ms)]
 
@@ -1057,6 +1154,7 @@ def sprites():
 # ---------- placement ----------
 # Road px: across from the road's centre line, z along the road. The sidewalk ends at across 208
 # (the street verge's walkTo, backdrops.WALK). Each prop's across is its frame's centre, set from its inner edge.
+
 
 def at_inner(key, inner):
     """The across of a prop's centre, in whole road px, whose frame's inner edge is at inner or beyond."""
@@ -1086,10 +1184,10 @@ def gap(*props):
 # side's 140 px after the left's, so over both sides they stand 140 and 420 px apart in turn. Street lamps
 # stand every lot: 280 px a side, one every 140 px, alternating sides. A zone with no lamps has one empty
 # lot.
-SIDES = dict(
-    left=dict(offset=0, lotStart=0, lotStride=1, gapStart=0, gapStride=1),
-    right=dict(offset=1, lotStart=0, lotStride=1, gapStart=2, gapStride=1),
-)
+SIDES = {
+    "left": {"offset": 0, "lotStart": 0, "lotStride": 1, "gapStart": 0, "gapStride": 1},
+    "right": {"offset": 1, "lotStart": 0, "lotStride": 1, "gapStart": 2, "gapStride": 1},
+}
 
 
 def lamp_lag(every):
@@ -1111,7 +1209,7 @@ def lamps(key, inner, every):
     right = first + lamp_lag(every)
     left = dict(SIDES["left"], lotStart=-(first // 2) % every)
     right = dict(SIDES["right"], lotStart=-((right - 1) // 2) % every)
-    return lots, dict(left=left, right=right)
+    return lots, {"left": left, "right": right}
 
 
 def sparse(first, own, between=None, lamp=None):
@@ -1119,15 +1217,17 @@ def sparse(first, own, between=None, lamp=None):
     an empty gap. between, if given, maps more gaps to their props, each a tuple of (key, inner edge, dz):
     the gaps then run to 12, first and own repeating in gaps 6 and 9 unless between gives those gaps props
     of their own. lamp, if given, is a (key, inner edge, every) the lots hold (see lamps)."""
+
     def one(prop):
         return () if prop is None else gap(prop)
+
     gaps = [one(first), (), (), one(own), (), ()] * (1 if between is None else 2)
     for i, props in (between or {}).items():
         gaps[i] = gap(*props)
     lots, sides = ((),), SIDES
     if lamp is not None:
         lots, sides = lamps(*lamp)
-    return dict(slot=140, lots=lots, gaps=tuple(gaps), sides=sides)
+    return {"slot": 140, "lots": lots, "gaps": tuple(gaps), "sides": sides}
 
 
 GAS_LAMP = ("gas-lamp", 213, 2)
@@ -1135,21 +1235,30 @@ PLACEMENT = {
     "cabbagetown": sparse(("tree-maple", 220, 0), ("tree-maple", 220, 0), lamp=GAS_LAMP),
     "high-park": sparse(("tree-oak", 220, 0), ("hot-dog-stand", 216, 0)),
     "distillery-district": sparse(None, ("love-lock", 216, 0), lamp=GAS_LAMP),
-    "kensington-market": sparse(("shopfront-violet", 216, 0), ("fruit-stand", 216, 0), {
-        1: (("cafe-patio", 213, 0),),
-        4: (("mural-wall", 216, 0),),
-        6: (("shopfront-ochre", 216, 0),),
-        7: (("cafe-patio", 213, 0),),
-        9: (("shopfront-violet", 216, 0),),
-        10: (("mural-wall", 216, 0),),
-    }, lamp=GAS_LAMP),
-    "the-beaches": sparse(("leuty", 220, 0), ("dune-grass", 213, 0), {
-        1: (("beach-umbrella-blue", 225, 0), ("beach-chair-blue", 220, -12)),
-        4: (("beach-umbrella-coral", 213, 0),),
-        7: (("beach-umbrella-green", 225, 0), ("beach-chair-green", 220, -12)),
-        9: (("ice-cream-stand", 216, 0),),
-        10: (("beach-chair-coral", 213, 0),),
-    }),
+    "kensington-market": sparse(
+        ("shopfront-violet", 216, 0),
+        ("fruit-stand", 216, 0),
+        {
+            1: (("cafe-patio", 213, 0),),
+            4: (("mural-wall", 216, 0),),
+            6: (("shopfront-ochre", 216, 0),),
+            7: (("cafe-patio", 213, 0),),
+            9: (("shopfront-violet", 216, 0),),
+            10: (("mural-wall", 216, 0),),
+        },
+        lamp=GAS_LAMP,
+    ),
+    "the-beaches": sparse(
+        ("leuty", 220, 0),
+        ("dune-grass", 213, 0),
+        {
+            1: (("beach-umbrella-blue", 225, 0), ("beach-chair-blue", 220, -12)),
+            4: (("beach-umbrella-coral", 213, 0),),
+            7: (("beach-umbrella-green", 225, 0), ("beach-chair-green", 220, -12)),
+            9: (("ice-cream-stand", 216, 0),),
+            10: (("beach-chair-coral", 213, 0),),
+        },
+    ),
     "yonge-street": sparse(None, ("transit-stop", 213, 0), {}, lamp=("street-lamp", 213, 1)),
 }
 
@@ -1163,7 +1272,7 @@ PAVED = 44
 CURB_CLEAR = 2
 # Half a slot further than the lawn props, so a curb prop never stands abreast of one.
 CURB_DZ = 70
-CURB_SIDES = dict(left=dict(start=0, stride=1), right=dict(start=1, stride=1))
+CURB_SIDES = {"left": {"start": 0, "stride": 1}, "right": {"start": 1, "stride": 1}}
 
 
 def curb_band(verge):
@@ -1177,12 +1286,12 @@ def curb_band(verge):
 def curb(zone, *names):
     """A curb table: each prop in turn on every other slot of a side, the sides alternating, so over both
     one stands every slot."""
-    with open(VERGES_JSON) as f:
+    with Path(VERGES_JSON).open() as f:
         lo, hi = curb_band(json.load(f)[zone])
     groups = []
     for name in names:
         groups += [((f"curb-{name}", (lo + hi) // 2, CURB_DZ),), ()]
-    return dict(groups=tuple(groups), sides=CURB_SIDES)
+    return {"groups": tuple(groups), "sides": CURB_SIDES}
 
 
 CURB = {
@@ -1193,8 +1302,14 @@ CURB = {
     "yonge-street": curb("yonge-street", "pay-station", "bike-ring"),
 }
 # Each zone's ground shadow under a free-standing prop: a darker tone of its lawn or paving.
-SHADOWS = {"cabbagetown": "dolive", "high-park": "fir", "distillery-district": "dbrown",
-           "kensington-market": "ink", "the-beaches": "stone", "yonge-street": "navy"}
+SHADOWS = {
+    "cabbagetown": "dolive",
+    "high-park": "fir",
+    "distillery-district": "dbrown",
+    "kensington-market": "ink",
+    "the-beaches": "stone",
+    "yonge-street": "navy",
+}
 # Props that stand free and take the game's ground shadow.
 SHADOWED = tuple(k for k, v in PROPS.items() if v[3])
 TABLE_JSON = "shared/roadside.json"
@@ -1219,7 +1334,9 @@ def check_lamps(zone, p):
     if not left and not right:
         return
     step = period // len(left) if left else 0
-    if len(left) != len(right) or any((b - a) % period != step for a, b in zip(left, left[1:] + left[:1])):
+    if len(left) != len(right) or any(
+        (b - a) % period != step for a, b in zip(left, left[1:] + left[:1], strict=False)
+    ):
         sys.exit(f"{zone}: the lots' props do not stand at a fixed step on each side")
     if step % 2 or sorted((n + lamp_lag(step // 2)) % period for n in left) != right:
         sys.exit(f"{zone}: the right side's lot props do not stand lamp_lag slots after the left's")
@@ -1243,7 +1360,7 @@ def check_placement():
             if a == b and p["gaps"][a]:
                 sys.exit(f"{zone}: the sides take the same gap in step")
         check_lamps(zone, p)
-    with open(VERGES_JSON) as f:
+    with Path(VERGES_JSON).open() as f:
         verges = json.load(f)
     for zone, c in CURB.items():
         band = curb_band(verges[zone])
@@ -1260,10 +1377,17 @@ def table():
     out = {}
     placed = set()
     for zone, p in PLACEMENT.items():
+
         def props(group):
             return [{"key": k, "across": a, "dz": dz} for k, a, dz in group]
-        out[zone] = {"slot": p["slot"], "lots": [props(g) for g in p["lots"]], "gaps": [props(g) for g in p["gaps"]],
-                     "sides": p["sides"], "shadowColour": K[SHADOWS[zone]]}
+
+        out[zone] = {
+            "slot": p["slot"],
+            "lots": [props(g) for g in p["lots"]],
+            "gaps": [props(g) for g in p["gaps"]],
+            "sides": p["sides"],
+            "shadowColour": K[SHADOWS[zone]],
+        }
         if zone in CURB:
             out[zone]["curb"] = {"groups": [props(g) for g in CURB[zone]["groups"]], "sides": CURB[zone]["sides"]}
         groups = p["lots"] + p["gaps"] + (CURB[zone]["groups"] if zone in CURB else ())
@@ -1273,7 +1397,7 @@ def table():
 
 def write_table():
     """Write the placement table to TABLE_JSON, as table prints it, for the game to read."""
-    with open(TABLE_JSON, "w") as f:
+    with Path(TABLE_JSON).open("w") as f:
         f.write(json.dumps(table(), indent=2) + "\n")
 
 
