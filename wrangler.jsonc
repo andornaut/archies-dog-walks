@@ -11,5 +11,8 @@
   },
   // Served at the custom domain; Cloudflare creates its DNS record and certificate.
   // workers.dev stays on as the fallback address.
-  "routes": [{ "pattern": "dogwalker.tristamittermayer.com", "custom_domain": true }],
+  "routes": [
+    { "pattern": "archie.tristamittermayer.com", "custom_domain": true },
+    { "pattern": "dogwalker.tristamittermayer.com", "custom_domain": true },
+  ],
 }
