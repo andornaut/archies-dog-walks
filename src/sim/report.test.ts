@@ -4,7 +4,10 @@ import { describe, expect, it, vi } from "vitest";
 import { gameData } from "../data";
 import { DOGS } from "../data/dogs";
 import type { DogId, ZoneId } from "../data/types";
+import type { SpawnPlanSnapshot } from "../runner/spawnSearch";
+import type { SpawnAudit } from "../runner/spawnValidation";
 import type { PackDogs } from "../state/runState";
+import { cents } from "../units";
 import { POLICY_IDS } from "./policies";
 import {
   DEFAULT_MATRIX,
@@ -12,15 +15,20 @@ import {
   formatDeliveryKindTable,
   formatDeliveryTable,
   formatKindTable,
+  formatSpawnEventTable,
   formatTable,
   type Matrix,
   MATRIX_HEADERS,
   matrixCells,
   type NamedPack,
   rowCells,
+  simulateCell,
   simulateMatrix,
+  sumSpawnEvents,
 } from "./report";
-import { SKILL_PRESET_IDS } from "./skills";
+import * as simulator from "./simulate";
+import { SKILL_PRESET_IDS, SKILL_PRESETS } from "./skills";
+import type { ZoneWalkEvents } from "./walkEvents";
 
 // These tests cover how report.ts seeds, orders and summarizes runs, not the runs
 // themselves (simulate.test.ts does). A real run costs over a hundred milliseconds, so a stand-in
@@ -102,6 +110,7 @@ vi.mock("./simulate", async (importOriginal) => {
       pullsMoved: 0,
       route: [],
       run,
+      spawnEvents: [],
       tips: cents(0),
       zones: [],
     };
@@ -329,5 +338,180 @@ describe("simulateMatrix", () => {
         new RegExp(`^1 +${String(sum?.zone)} +tip +${2 * rows.length} +1.00/2.00$`),
       ),
     ]);
+  });
+});
+
+const failedSnapshot: SpawnPlanSnapshot = {
+  context: { seed: 7, zoneIndex: 3 },
+  draws: { movers: [0.2], spawns: [0.4] },
+  plan: {
+    cellInset: 0,
+    cellLength: 10,
+    fixedKinds: [],
+    laneCount: 5,
+    laneInset: 0,
+    laneMoveSeconds: 0.1,
+    maxEmptyRows: null,
+    minOpenLanes: 2,
+    minSpacing: 20,
+    moverCaps: { darts: 6, slowVehicles: 4, total: 10 },
+    packHitLength: 10,
+    packLength: 10,
+    pathLaneMoveSeconds: 0.3,
+    pathStart: 2,
+    quotas: [
+      { blocksLane: false, count: 10, first: false, footprint: { lanes: 1, rows: 1 }, kind: "tip" },
+    ],
+    reactionSeconds: 0.5,
+    riderFollowGap: 10,
+    roadLength: 100,
+    scrollSpeed: 100,
+    sightLength: 90,
+    stepSeconds: 1 / 60,
+    zoneLength: 1000,
+  },
+};
+
+describe("spawn reporting", () => {
+  it("retains partial failures without adding them to gameplay means", () => {
+    const cell = itemAt(matrixCells(SMALL), 0);
+    const result = simulator.simulateRun(gameData, 7, {
+      gear: cell.gear,
+      pack: cell.pack.dogs,
+      player: { kind: "skill", sight: "sight", skill: SKILL_PRESETS.typical },
+      policy: cell.policy,
+      route: cell.route,
+      walker: cell.walker,
+    });
+    const failure = {
+      ...result,
+      earnings: cents(999999),
+      finished: false,
+      planningFailure: { message: "unfilled quota", seed: 7, snapshot: failedSnapshot },
+    };
+    const spy = vi
+      .spyOn(simulator, "simulateRun")
+      .mockReturnValueOnce(result)
+      .mockReturnValueOnce(failure);
+    try {
+      const row = simulateCell(gameData, 7, 2, cell);
+      expect(row).toMatchObject({
+        finishedShare: Number(result.finished),
+        meanEarnings: result.earnings,
+        planningFailedRuns: 1,
+        requestedRuns: 2,
+        runs: 1,
+      });
+      expect(row.spawnRuns[1]).toMatchObject({
+        failure: failure.planningFailure,
+        modifiers: result.run.modifiers,
+        partial: { earnings: failure.earnings },
+      });
+      spy.mockReturnValueOnce(failure);
+      const failed = simulateCell(gameData, 7, 1, cell);
+      expect(JSON.parse(JSON.stringify(failed))).toMatchObject({
+        finishedShare: null,
+        gameplayStatus: "unavailable",
+        meanEarnings: null,
+        runs: 0,
+      });
+      expect(formatTable([failed])).toContain("unavailable");
+      expect(formatTable([failed])).not.toContain("NaN");
+    } finally {
+      spy.mockRestore();
+    }
+  });
+
+  it("keeps unknown moving validity and evaluates each zone exposure before pooling", () => {
+    const flow = {
+      admitted: 10,
+      departed: 8,
+      encountered: 2,
+      generated: 9,
+      herrings: 1,
+      passed: 6,
+      requested: 10,
+      touched: 1,
+      valid: null,
+    };
+    const zone: ZoneWalkEvents = {
+      configured: 10,
+      herringRendering: "not-simulated",
+      kinds: { bench: flow },
+      modifiers: [],
+      position: 1,
+      route: ["highPark"],
+      seed: 7,
+      validation: "unverified",
+      zone: "highPark",
+    };
+    expect(sumSpawnEvents([zone])[0]).toMatchObject({
+      configured: null,
+      encountered: 2,
+      generated: 9,
+      goal: "unverified",
+      herrings: 1,
+      valid: null,
+    });
+    const audit = (valid: number): SpawnAudit => ({
+      counts: [{ emitted: 10, kind: "bench", movement: null, requested: 10, validPlaced: valid }],
+      findings: [],
+      meetsPlacementFloor: true,
+      meetsValidPlacementFloor: valid >= 8,
+      minimumPlaced: 8,
+      missingCoverage: [],
+      placed: 10,
+      requested: 10,
+      status: "valid",
+      validPlaced: valid,
+      violations: [],
+    });
+    const zones = [
+      { ...zone, audit: audit(10), validation: "valid" as const },
+      { ...zone, audit: audit(6), kinds: {}, validation: "valid" as const },
+    ];
+    expect(sumSpawnEvents(zones)[0]).toMatchObject({
+      configured: 20,
+      exposures: 2,
+      goal: "below floor",
+      valid: 16,
+    });
+    expect(sumSpawnEvents(zones, true)[0]).toMatchObject({
+      exposures: 2,
+      kind: "bench",
+      perExposure: {
+        admitted: { max: 10, mean: 5, min: 0 },
+        requested: { max: 10, mean: 10, min: 10 },
+      },
+      planned: 10,
+      requested: 20,
+    });
+    const row = itemAt(
+      simulateMatrix(gameData, 1, 1, {
+        ...SMALL,
+        packs: [itemAt(SMALL.packs, 0)],
+        players: [itemAt(SMALL.players, 0)],
+        policies: ["alwaysPay"],
+      }),
+      0,
+    );
+    expect(
+      formatSpawnEventTable([
+        {
+          ...row,
+          spawnRuns: [
+            {
+              failure: null,
+              modifiers: [],
+              partial: null,
+              route: ["highPark"],
+              seed: 7,
+              zoneIndex: 0,
+              zones: [zone],
+            },
+          ],
+        },
+      ]),
+    ).toContain("unverified");
   });
 });

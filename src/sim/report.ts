@@ -34,6 +34,7 @@ import {
   simulateRun,
 } from "./simulate";
 import { SKILL_PRESET_IDS, SKILL_PRESETS, type SkillPresetId } from "./skills";
+import type { ZoneWalkEvents } from "./walkEvents";
 
 export interface NamedPack {
   readonly dogs: PackDogs;
@@ -77,7 +78,29 @@ interface MatrixCell {
 // meanTips counts the tips collected per run, meanDrops the gear drops that reached the pack per
 // run and meanGrabs those grabbed. delivery sums every run's zone plans by walk
 // position and zone: what they asked for and what they placed, by group and by kind.
+export interface SpawnRunReport {
+  readonly seed: number;
+  readonly zoneIndex: number;
+  readonly route: RunResult["route"];
+  readonly modifiers: RunResult["run"]["modifiers"];
+  readonly zones: readonly ZoneWalkEvents[];
+  readonly failure: NonNullable<RunResult["planningFailure"]> | null;
+  readonly partial: Pick<
+    RunResult,
+    "cardsSeen" | "choices" | "earnings" | "facts" | "items" | "movers" | "zones"
+  > | null;
+  readonly snapshotPath?: string;
+}
+
 export interface MatrixRow extends BadgeCounters {
+  readonly requestedRuns: number;
+  readonly planningFailedRuns: number;
+  // Only completed simulator executions enter gameplay statistics. Empty statistics are
+  // non-finite in memory and serialize as null; the text tables render them unavailable.
+  readonly gameplayStatus: "measured" | "unavailable";
+  readonly spawnRuns: readonly SpawnRunReport[];
+  readonly spawnWeightVariation: "not measured";
+  readonly spawnSummary: readonly SpawnEventSummary[];
   // Of the obstacle hits, minor ones and movers included, those that came right after a pull.
   readonly afterPullShare: number | null;
   readonly bumpShare: number | null;
@@ -252,7 +275,9 @@ function hashSeed(text: string): number {
 
 // The nearest-rank percentile of sorted values.
 function percentile(sorted: readonly number[], fraction: number): number {
-  return itemAt(sorted, Math.max(0, Math.ceil(fraction * sorted.length) - 1));
+  return sorted.length === 0
+    ? Number.NaN
+    : itemAt(sorted, Math.max(0, Math.ceil(fraction * sorted.length) - 1));
 }
 
 const mean = (values: readonly number[]) =>
@@ -364,7 +389,12 @@ export function simulateCell(
   const results = Array.from({ length: runsPerCell }, (_, run) =>
     simulateCellRun(data, seed, cell, run),
   );
-  return summarizeCell(data, cell, results);
+  return summarizeCell(
+    data,
+    cell,
+    results,
+    results.map((_, run) => hashSeed(`${seed}:${cell.pack.dogs.join(",")}:${run}`)),
+  );
 }
 
 // Every obstacle kind, those that open a card first, then the minor ones, but pull obstacles
@@ -385,11 +415,13 @@ function touchedShare(counts: readonly ItemCount[]): number | null {
 function summarizeCell(
   data: AchievementData & Pick<GameData, "minorObstacles">,
   cell: MatrixCell,
-  results: readonly RunResult[],
+  attempted: readonly RunResult[],
+  seeds: readonly number[],
 ): MatrixRow {
-  if (results.length === 0) {
+  if (attempted.length === 0) {
     throw new RangeError("A cell needs at least 1 run");
   }
+  const results = attempted.filter((result) => result.planningFailure === undefined);
   const earnings = results.map((result) => result.earnings as number).sort((a, b) => a - b);
   const choices = results.flatMap((result) => result.choices);
   const judged = choices.filter(({ fellBack }) => fellBack !== null);
@@ -417,6 +449,35 @@ function summarizeCell(
   const hits = results.reduce((sum, result) => sum + result.hits.all, 0);
   const afterPull = results.reduce((sum, result) => sum + result.hits.afterPull, 0);
   return {
+    gameplayStatus: results.length === 0 ? "unavailable" : "measured",
+    planningFailedRuns: attempted.length - results.length,
+    requestedRuns: attempted.length,
+    spawnRuns: attempted.map((result, index) => ({
+      failure: result.planningFailure ?? null,
+      modifiers: result.run.modifiers,
+      partial:
+        result.planningFailure === undefined
+          ? null
+          : {
+              cardsSeen: result.cardsSeen,
+              choices: result.choices,
+              earnings: result.earnings,
+              facts: result.facts,
+              items: result.items,
+              movers: result.movers,
+              zones: result.zones,
+            },
+      route: result.route,
+      seed: result.planningFailure?.seed ?? itemAt(seeds, index),
+      zoneIndex: result.planningFailure?.snapshot.context.zoneIndex ?? result.run.zoneIndex,
+      zones: result.spawnEvents ?? [],
+    })),
+    spawnSummary: sumSpawnEvents(
+      attempted.flatMap((result) => result.spawnEvents ?? []),
+      true,
+      results.flatMap((result) => result.spawnEvents ?? []),
+    ),
+    spawnWeightVariation: "not measured",
     ...badgeCounters(
       data,
       cell.pack.dogs.length,
@@ -541,6 +602,12 @@ export const MATRIX_HEADERS = [
 ] as const;
 
 export function rowCells(row: MatrixRow): string[] {
+  if (row.gameplayStatus === "unavailable") {
+    return [
+      ...cellNames(row),
+      ...MATRIX_HEADERS.slice(CELL_HEADERS.length).map(() => "unavailable"),
+    ];
+  }
   return [
     ...cellNames(row),
     measured(row.hitShare),
@@ -631,7 +698,9 @@ export function formatDebuffCostTable(
       row.policyFallbackShare === null ? "-" : percent(row.policyFallbackShare),
       ...debuffs.flatMap((debuff) => {
         const cost = row.debuffCosts[debuff];
-        return [cost.meanBumpsWhile.toFixed(2), dollars(cost.meanCentsLost)];
+        return row.gameplayStatus === "unavailable"
+          ? ["unavailable", "unavailable"]
+          : [cost.meanBumpsWhile.toFixed(2), dollars(cost.meanCentsLost)];
       }),
     ]),
   );
@@ -689,5 +758,282 @@ export function formatDeliveryKindTable(rows: readonly MatrixRow[]): string {
           perPlan(sum.plans, count),
         ]),
     ),
+  );
+}
+
+export interface SpawnEventSummary {
+  readonly position: number;
+  readonly zone: string;
+  readonly kind: string;
+  exposures: number;
+  variationExposures: number;
+  configured: number | null;
+  planned: number;
+  requested: number;
+  admitted: number;
+  generated: number;
+  herrings: number;
+  encountered: number;
+  touched: number;
+  passed: number;
+  departed: number;
+  valid: number | null;
+  goal: "met" | "below floor" | "invalid" | "unverified";
+  perExposure: Readonly<Record<SpawnCountField, { mean: number; min: number; max: number } | null>>;
+  validConfiguredRate: number | null;
+}
+
+const SPAWN_COUNT_FIELDS = [
+  "admitted",
+  "configured",
+  "departed",
+  "encountered",
+  "generated",
+  "herrings",
+  "passed",
+  "planned",
+  "requested",
+  "touched",
+  "valid",
+] as const;
+type SpawnCountField = (typeof SPAWN_COUNT_FIELDS)[number];
+
+// Every kind uses the full zone-exposure denominator, including draws with zero of that kind.
+// The 80% decision is made independently for each zone plan, never on pooled admission totals.
+export function sumSpawnEvents(
+  records: readonly ZoneWalkEvents[],
+  byKind = false,
+  variationRecords: readonly ZoneWalkEvents[] = records,
+): SpawnEventSummary[] {
+  const variation = new Set(variationRecords);
+  const groups = new Map<string, SpawnEventSummary>();
+  const samples = new Map<string, Record<SpawnCountField, (number | null)[]>>();
+  const zoneKinds = new Map<string, Set<string>>();
+  for (const zone of records) {
+    const key = `${zone.position}:${zone.zone}`;
+    const kinds = zoneKinds.get(key) ?? new Set<string>();
+    for (const kind of Object.keys(zone.kinds)) {
+      kinds.add(kind);
+    }
+    for (const { kind } of zone.audit?.counts ?? []) {
+      kinds.add(kind);
+    }
+    zoneKinds.set(key, kinds);
+  }
+  for (const zone of records) {
+    const kinds = byKind ? [...zoneKinds.get(`${zone.position}:${zone.zone}`)!].sort() : ["all"];
+    for (const kind of kinds) {
+      const key = `${zone.position}:${zone.zone}:${kind}`;
+      const sum = groups.get(key) ?? {
+        admitted: 0,
+        configured: 0,
+        departed: 0,
+        encountered: 0,
+        exposures: 0,
+        generated: 0,
+        goal: "met",
+        herrings: 0,
+        kind,
+        passed: 0,
+        perExposure: Object.fromEntries(
+          SPAWN_COUNT_FIELDS.map((field) => [field, null]),
+        ) as SpawnEventSummary["perExposure"],
+        planned: 0,
+        position: zone.position,
+        requested: 0,
+        touched: 0,
+        valid: 0,
+        validConfiguredRate: null,
+        variationExposures: 0,
+        zone: zone.zone,
+      };
+      sum.exposures++;
+      const exposure = Object.fromEntries(SPAWN_COUNT_FIELDS.map((field) => [field, 0])) as Record<
+        SpawnCountField,
+        number | null
+      >;
+      const observed =
+        samples.get(key) ??
+        (Object.fromEntries(
+          SPAWN_COUNT_FIELDS.map((field) => [field, [] as (number | null)[]]),
+        ) as Record<SpawnCountField, (number | null)[]>);
+      const audited = zone.audit?.counts.filter((count) => kind === "all" || count.kind === kind);
+      const configured = audited?.reduce((n, count) => n + count.requested, 0) ?? null;
+      exposure.configured = configured;
+      sum.configured =
+        sum.configured === null || configured === null ? null : sum.configured + configured;
+      const flows = Object.entries(zone.kinds)
+        .filter(([id]) => kind === "all" || id === kind)
+        .map(([, flow]) => flow);
+      for (const flow of flows) {
+        if (flow === undefined) {
+          continue;
+        }
+        sum.planned += flow.requested;
+        exposure.planned! += flow.requested;
+        for (const field of [
+          "admitted",
+          "generated",
+          "herrings",
+          "encountered",
+          "touched",
+          "passed",
+          "departed",
+        ] as const) {
+          sum[field] += flow[field];
+          exposure[field]! += flow[field];
+        }
+      }
+      exposure.requested = configured ?? flows.reduce((n, flow) => n + (flow?.requested ?? 0), 0);
+      sum.requested += exposure.requested;
+      const valid =
+        zone.audit === undefined ||
+        zone.audit.status === "unverified" ||
+        zone.audit.missingCoverage.length > 0
+          ? null
+          : (audited?.reduce((n, count) => n + count.validPlaced, 0) ?? null);
+      exposure.valid = valid;
+      sum.valid = sum.valid === null || valid === null ? null : sum.valid + valid;
+      const goal =
+        zone.audit === undefined ||
+        zone.audit.status === "unverified" ||
+        zone.audit.missingCoverage.length > 0
+          ? "unverified"
+          : zone.audit.status === "invalid"
+            ? "invalid"
+            : zone.audit.meetsValidPlacementFloor
+              ? "met"
+              : "below floor";
+      if (
+        goal === "invalid" ||
+        (sum.goal !== "invalid" && goal === "unverified") ||
+        (sum.goal === "met" && goal === "below floor")
+      ) {
+        sum.goal = goal;
+      }
+      if (variation.has(zone)) {
+        sum.variationExposures++;
+        for (const field of SPAWN_COUNT_FIELDS) {
+          observed[field].push(exposure[field]);
+        }
+      }
+      samples.set(key, observed);
+      groups.set(key, sum);
+    }
+  }
+  return [...groups.values()]
+    .map((sum) => {
+      const observed = samples.get(`${sum.position}:${sum.zone}:${sum.kind}`)!;
+      return {
+        ...sum,
+        perExposure: Object.fromEntries(
+          SPAWN_COUNT_FIELDS.map((field) => {
+            const values = observed[field];
+            return [
+              field,
+              values.length === 0 || values.some((value) => value === null)
+                ? null
+                : {
+                    max: Math.max(...(values as number[])),
+                    mean: mean(values as number[]),
+                    min: Math.min(...(values as number[])),
+                  },
+            ];
+          }),
+        ) as SpawnEventSummary["perExposure"],
+        validConfiguredRate:
+          sum.valid === null || sum.configured === null || sum.configured === 0
+            ? null
+            : sum.valid / sum.configured,
+      };
+    })
+    .sort(
+      (a, b) =>
+        a.position - b.position || a.zone.localeCompare(b.zone) || a.kind.localeCompare(b.kind),
+    );
+}
+
+export function formatSpawnEventTable(rows: readonly MatrixRow[], byKind = false): string {
+  const sums = sumSpawnEvents(
+    rows.flatMap((row) => row.spawnRuns.flatMap((run) => run.zones)),
+    byKind,
+    rows.flatMap((row) =>
+      row.spawnRuns.filter((run) => run.failure === null).flatMap((run) => run.zones),
+    ),
+  );
+  return textTable(
+    3,
+    [
+      "Pos",
+      "Zone",
+      "Kind",
+      "Exposures",
+      "Variation exposures",
+      "Frozen configured",
+      "Planned",
+      "Requested",
+      "Admitted",
+      "Valid",
+      "Generated",
+      "Scene herrings",
+      "Encountered",
+      "Touched",
+      "Passed",
+      "Departed",
+      "Requested/exposure mean[min,max]",
+      "Valid/configured",
+      "80% zone goal",
+    ],
+    sums.map((sum) => [
+      String(sum.position),
+      sum.zone,
+      sum.kind,
+      String(sum.exposures),
+      String(sum.variationExposures),
+      sum.configured === null ? "unavailable" : String(sum.configured),
+      String(sum.planned),
+      String(sum.requested),
+      String(sum.admitted),
+      sum.valid === null ? "unverified" : String(sum.valid),
+      String(sum.generated),
+      String(sum.herrings),
+      String(sum.encountered),
+      String(sum.touched),
+      String(sum.passed),
+      String(sum.departed),
+      sum.perExposure.requested === null
+        ? "unavailable"
+        : `${sum.perExposure.requested.mean.toFixed(2)}` +
+          `[${sum.perExposure.requested.min},${sum.perExposure.requested.max}]`,
+      sum.validConfiguredRate === null
+        ? "unverified"
+        : `${(sum.validConfiguredRate * 100).toFixed(1)}%`,
+      sum.goal,
+    ]),
+  );
+}
+
+export function formatSpawnFailures(rows: readonly MatrixRow[], byKind = false): string {
+  const failures = rows.flatMap((row) => row.spawnRuns.filter((run) => run.failure !== null));
+  return textTable(
+    3,
+    ["Seed", "Zone index", "Kind", "Frozen configured", "Admitted", "Valid", "Snapshot"],
+    failures.flatMap((run) => {
+      const quotas = run.failure!.snapshot.plan.quotas;
+      const kinds = byKind ? [...new Set(quotas.map(({ kind }) => kind))].sort() : ["all"];
+      return kinds.map((kind) => [
+        String(run.seed),
+        String(run.zoneIndex),
+        kind,
+        String(
+          quotas
+            .filter((quota) => kind === "all" || quota.kind === kind)
+            .reduce((n, quota) => n + quota.count, 0),
+        ),
+        "unavailable",
+        "unverified",
+        run.snapshotPath ?? "embedded in spawnRuns",
+      ]);
+    }),
   );
 }

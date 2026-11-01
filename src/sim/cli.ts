@@ -1,7 +1,8 @@
 // npm run simulate -- --help
 // Runs a matrix, prints its tables and, with --out, writes the rows as JSON.
-import { writeFileSync } from "node:fs";
-import { availableParallelism } from "node:os";
+import { mkdirSync, mkdtempSync, writeFileSync } from "node:fs";
+import { availableParallelism, tmpdir } from "node:os";
+import { dirname, join, resolve } from "node:path";
 import { isMainThread, parentPort, Worker, workerData } from "node:worker_threads";
 
 import { itemAt } from "@andornaut/game-kit/arrays";
@@ -16,6 +17,8 @@ import {
   formatDeliveryKindTable,
   formatDeliveryTable,
   formatKindTable,
+  formatSpawnEventTable,
+  formatSpawnFailures,
   formatTable,
   type Matrix,
   matrixCells,
@@ -231,7 +234,7 @@ function runInWorker(job: Job): Promise<MatrixRow[]> {
 // cell alone, so the rows are the same however the cells are dealt.
 async function simulateInWorkers(options: Options): Promise<MatrixRow[]> {
   const count = matrixCells(options.matrix).length;
-  const workers = Math.min(count, availableParallelism());
+  const workers = Math.min(count, availableParallelism(), 4);
   const jobs = Array.from({ length: workers }, (_, worker) => ({
     cells: Array.from({ length: count }, (_, cell) => cell).filter(
       (cell) => cell % workers === worker,
@@ -253,23 +256,77 @@ async function main(): Promise<void> {
     return;
   }
   const started = performance.now();
-  const rows = await simulateInWorkers(options);
+  let rows = await simulateInWorkers(options);
+  const failed = rows.some((row) => row.planningFailedRuns > 0);
+  if (failed) {
+    const directory =
+      options.out === undefined
+        ? mkdtempSync(join(tmpdir(), "dog-sim-failures-"))
+        : `${resolve(options.out)}.failures`;
+    mkdirSync(directory, { recursive: true });
+    rows = rows.map((row, cell) => ({
+      ...row,
+      spawnRuns: row.spawnRuns.map((run, index) => {
+        if (run.failure === null) {
+          return run;
+        }
+        const snapshotPath = join(
+          directory,
+          `cell-${cell}-run-${index}-seed-${run.seed}-zone-${run.zoneIndex}.json`,
+        );
+        writeFileSync(snapshotPath, `${JSON.stringify(run.failure.snapshot, null, 2)}\n`);
+        writeFileSync(`${snapshotPath}.metadata.json`, `${JSON.stringify(run, null, 2)}\n`);
+        process.stderr.write(
+          `Planning failure: seed ${run.seed}, zone ${run.zoneIndex}, snapshot ${snapshotPath}: ` +
+            `${run.failure.message}\n`,
+        );
+        return { ...run, snapshotPath };
+      }),
+    }));
+    writeFileSync(
+      join(directory, "partial-report.json"),
+      `${JSON.stringify({ matrix: options.matrix, rows, seed: options.seed }, null, 2)}\n`,
+    );
+  }
   const seconds = (performance.now() - started) / 1000;
   const { matrix, out, runs, seed } = options;
   process.stdout.write(`${formatTable(rows)}\n\nHit rate by obstacle kind\n`);
   process.stdout.write(`${formatKindTable(gameData, rows)}\n\nDebuff costs per walk\n`);
   process.stdout.write(`${formatDebuffCostTable(gameData, rows)}\n\nDelivery by zone\n`);
   process.stdout.write(`${formatDeliveryTable(rows)}\n`);
+  process.stdout.write(`\nSpawn events by zone\n${formatSpawnEventTable(rows)}\n`);
+  process.stdout.write(
+    "Generated means runner dispatches; encountered means native gameplay outcomes. " +
+      "Frozen configured counts require the independent producer audit; " +
+      "incomplete movement coverage stays unverified. " +
+      "Theoretical per-kind weight variation: not measured. Scene-only herrings are not measured by runner dispatch.\n",
+  );
+  process.stdout.write(
+    `Requested executions: ${rows.reduce((n, row) => n + row.requestedRuns, 0)}; ` +
+      `completed executions: ${rows.reduce((n, row) => n + row.runs, 0)}; ` +
+      `planning failures: ${rows.reduce((n, row) => n + row.planningFailedRuns, 0)}. ` +
+      "Gameplay means exclude planning failures.\n",
+  );
+  if (failed) {
+    process.stdout.write(
+      `\nFailed plans (partial results retained)\n${formatSpawnFailures(rows, options.delivery === "kinds")}\n`,
+    );
+  }
   if (options.delivery === "kinds") {
     process.stdout.write(`\nDelivery by kind\n${formatDeliveryKindTable(rows)}\n`);
+    process.stdout.write(`\nSpawn events by kind\n${formatSpawnEventTable(rows, true)}\n`);
   }
   process.stdout.write(
     `${rows.length} cells x ${runs} runs, seed ${seed}, bot ${matrix.sight}, in ${seconds.toFixed(1)}s\n`,
   );
   if (out !== undefined) {
     const json = { matrix, rows, runsPerCell: runs, seed };
+    mkdirSync(dirname(resolve(out)), { recursive: true });
     writeFileSync(out, `${JSON.stringify(json, null, 2)}\n`);
     process.stdout.write(`Wrote ${out}\n`);
+  }
+  if (failed) {
+    process.exitCode = 1;
   }
 }
 
