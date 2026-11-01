@@ -86,17 +86,23 @@ export function stackOverPop(
   return { bottom: bottom + down, frame: { x: pop.frame.x, y: pop.frame.y + down } };
 }
 
-// The heart pop's number, by the top-left of its capitals (5 rows at 1x): from the frame's
-// x 31 with its capitals centred on row 16, or ending at the frame's x 1 when that would run
-// off the screen; raised to end above bounds.bottom when it would reach that far down.
-export function heartLabelAt(
+// Keep the signed number right of the whole pop's ink, translating both parts together
+// at the screen edge. The chip stays above the card label lane.
+export function heartNoticeLayout(
   bounds: { bottom: number; screenWidth: number },
-  frame: Point,
-  width: number,
-): Point {
-  const right = frame.x + 31;
-  const x = right + width <= bounds.screenWidth ? right : frame.x + 1 - width;
-  return { x, y: Math.min(frame.y + 14, bounds.bottom - 5) };
+  pop: { chip: { height: number; width: number }; frame: Point; inkRight: number },
+): { chip: Rect; frame: Point } {
+  const { chip, frame, inkRight } = pop;
+  const width = Math.max(32, inkRight + 4 + chip.width);
+  const x = Math.max(0, Math.min(bounds.screenWidth - width, frame.x));
+  return {
+    chip: {
+      ...chip,
+      x: x + inkRight + 4,
+      y: Math.min(frame.y + Math.round((32 - chip.height) / 2), bounds.bottom - chip.height),
+    },
+    frame: { ...frame, x },
+  };
 }
 
 // The money counter counting from one amount to another, from startMs.

@@ -15,7 +15,7 @@ import {
   chipLeft,
   FEEDBACK,
   FLY_HEART,
-  heartLabelAt,
+  heartNoticeLayout,
   heartPopBlocked,
   heartPopCovers,
   heartPopFrame,
@@ -28,13 +28,33 @@ import {
 } from "./feedback";
 import { changeChipAt, REACH_ICON } from "./hudLanes";
 
-describe("heartLabelAt", () => {
-  it("sets the number right of the heart, left of it at the screen's edge, and out of the lane below", () => {
+describe("heartNoticeLayout", () => {
+  it("keeps the number right of the whole heart and translates the pair at either edge", () => {
     const bounds = { bottom: 460, screenWidth: 360 };
-    const at = (x: number, top: number) => heartLabelAt(bounds, heartPopFrame({ x, y: top }), 20);
-    expect(at(100, 400)).toEqual({ x: 115, y: 387 });
-    expect(at(330, 400)).toEqual({ x: 295, y: 387 });
-    expect(at(100, 470)).toEqual({ x: 115, y: 455 });
+    const chip = { height: 18, width: 28 };
+    for (const x of [0, 100, 360]) {
+      const placed = heartNoticeLayout(bounds, {
+        chip,
+        frame: heartPopFrame({ x, y: 400 }),
+        inkRight: 31,
+      });
+      expect(placed.chip.x - (placed.frame.x + 31)).toBe(4);
+      expect(placed.frame.x).toBeGreaterThanOrEqual(0);
+      expect(placed.chip.x + placed.chip.width).toBeLessThanOrEqual(bounds.screenWidth);
+      expect(placed.frame.y).toBe(heartPopFrame({ x, y: 400 }).y);
+    }
+  });
+
+  it("keeps the complete chip above its card lane", () => {
+    const placed = heartNoticeLayout(
+      { bottom: 460, screenWidth: 360 },
+      {
+        chip: { height: 18, width: 30 },
+        frame: heartPopFrame({ x: 100, y: 490 }),
+        inkRight: 31,
+      },
+    );
+    expect(placed.chip.y + placed.chip.height).toBe(460);
   });
 });
 

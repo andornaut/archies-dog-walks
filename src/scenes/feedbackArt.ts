@@ -3,6 +3,16 @@ export const FEEDBACK_ART = {
   // The card's flash over its hearts as a lost heart lands, played on a second card over it.
   cardLoss: { key: "ui-dog-card", tag: "heart-loss" },
   // The pop over the dog, then the small heart flying into its card.
-  heartGain: { fly: "fly", key: "fx-heart-gain", pop: "pop" },
-  heartLoss: { fly: "fly", key: "fx-heart-loss", pop: "pop" },
+  heartGain: {
+    fly: "fly",
+    key: "fx-heart-gain",
+    pop: "pop",
+    popInk: { bottom: 30, left: 2, right: 31, top: 3 },
+  },
+  heartLoss: {
+    fly: "fly",
+    key: "fx-heart-loss",
+    pop: "pop",
+    popInk: { bottom: 29, left: 2, right: 30, top: 3 },
+  },
 } as const;

@@ -6,7 +6,7 @@ import { SCREEN_CONFIG } from "../data/screen";
 import type { DogId } from "../data/types";
 import {
   FEEDBACK,
-  heartLabelAt,
+  heartNoticeLayout,
   heartPopBlocked,
   heartPopCovers,
   heartPopFrame,
@@ -17,7 +17,7 @@ import { arcControl } from "../hud/moments";
 import { slotIndexOf } from "../state/pack";
 import { PALETTE } from "../ui/palette";
 import { CREAM_PANEL_COLOURS, drawFramedRect, drawRing } from "../ui/phaser/draw";
-import { addPixelText, pixelFontMetrics } from "../ui/phaser/pixelText";
+import { addPixelText, inkSpan } from "../ui/phaser/pixelText";
 import { arcFlight } from "./arcFlight";
 import { FEEDBACK_ART } from "./feedbackArt";
 import { HUD_DEPTH } from "./hudDepth";
@@ -25,8 +25,8 @@ import type { HudWalk } from "./hudWalk";
 import { playEffect, playTag, playTagOnce } from "./sprites";
 import { TimedGroup } from "./timedGroup";
 
-// The number's chip reaches this far past its 5-row capitals on every side.
-const CHIP_PAD = 2;
+// Padding around the actual ink of the 2x signed number.
+const CHIP_PAD = 4;
 // A dog not on the road pops this far over its card.
 const OVER_CARD = 8;
 // A forgiven heart blinks this empty heart over itself, under the pickup's 16x16 sparkle.
@@ -159,14 +159,15 @@ export class HeartFeedback {
   private show(pop: HeartPop): void {
     const loss = pop.label.amount < 0;
     const art = loss ? FEEDBACK_ART.heartLoss : FEEDBACK_ART.heartGain;
-    const frame = heartPopFrame(pop.dogTop);
-    const centre = { x: frame.x + 16, y: frame.y + 16 };
+    const preferredFrame = heartPopFrame(pop.dogTop);
     if (!this.scene.anims.exists(animationKey(art.key, art.pop))) {
       this.land(loss, pop);
       return;
     }
     const to = { x: pop.lane.x + Math.round(pop.lane.width / 2), y: pop.lane.y };
-    const number = this.addNumber(pop.label, frame);
+    const number = this.addNumber(pop.label, preferredFrame, art.popInk.right);
+    const frame = number.frame;
+    const centre = { x: frame.x + 16, y: frame.y + 16 };
     const covers = heartPopCovers({ chip: number.rect, frame, to }, FEEDBACK.heart.peak);
     if (heartPopBlocked(this.hooks.clearOf(), covers)) {
       number.chip.destroy();
@@ -203,33 +204,36 @@ export class HeartFeedback {
     active.land();
   }
 
-  // The pop's number, its card label's text ("+1♥"), in font-title at 1x on a cream chip,
-  // beside the heart, and the chip's rect on screen. The ♥, inked above the capitals, grows the
-  // chip up to hold it.
-  private addNumber(label: ChangeLabel, frame: Point): { chip: GameObjects.Container; rect: Rect } {
-    const text = addPixelText(this.scene, 0, 0, label.text, {
+  // Signed numeric ink on a cream chip beside the existing full-size heart art.
+  private addNumber(
+    label: ChangeLabel,
+    frame: Point,
+    inkRight: number,
+  ): { chip: GameObjects.Container; frame: Point; rect: Rect } {
+    const value = `${label.amount < 0 ? "−" : "+"}${Math.abs(label.amount)}`;
+    const text = addPixelText(this.scene, 0, 0, value, {
       colour: label.amount < 0 ? PALETTE.darkRed : PALETTE.forest,
       font: "title",
+      scale: 2,
     });
-    const width = Math.ceil(text.width);
-    const bottom = this.hooks.tabTop - CHIP_PAD - 1;
-    const at = heartLabelAt({ bottom, screenWidth: SCREEN_CONFIG.width }, frame, width);
-    const { capTop } = pixelFontMetrics(this.scene, "title");
-    const tops = text
-      .getTextBounds(true)
-      .characters.flatMap((char) => (char.h > 0 ? [char.y] : []));
-    const above = Math.max(0, capTop - Math.min(capTop, ...tops));
-    text.setPosition(CHIP_PAD, CHIP_PAD + above + text.y);
-    const box = this.scene.add.graphics();
-    const rect = {
-      height: 5 + above + 2 * CHIP_PAD,
-      width: width + 2 * CHIP_PAD,
-      x: at.x - CHIP_PAD,
-      y: at.y - CHIP_PAD - above,
+    const ink = inkSpan(text);
+    const chars = text.getTextBounds(true).characters.filter((char) => char.w > 0 && char.h > 0);
+    const top = chars.length === 0 ? 0 : Math.min(...chars.map((char) => char.y));
+    const bottom = Math.max(0, ...chars.map((char) => char.y + char.h));
+    const size = {
+      height: Math.ceil((bottom - top) * text.scaleY) + 2 * CHIP_PAD,
+      width: Math.ceil(ink.right - ink.left) + 2 * CHIP_PAD,
     };
+    const placed = heartNoticeLayout(
+      { bottom: this.hooks.tabTop - 1, screenWidth: SCREEN_CONFIG.width },
+      { chip: size, frame, inkRight },
+    );
+    text.setPosition(CHIP_PAD - ink.left, CHIP_PAD - top * text.scaleY);
+    const box = this.scene.add.graphics();
+    const rect = placed.chip;
     drawFramedRect(box, CREAM_PANEL_COLOURS, { ...rect, x: 0, y: 0 });
     const chip = this.scene.add.container(rect.x, rect.y, [box, text]).setDepth(HUD_DEPTH.heart);
-    return { chip, rect };
+    return { chip, frame: placed.frame, rect };
   }
 
   // A reached label's reach icon beside the small heart centred on centre, or undefined for a
