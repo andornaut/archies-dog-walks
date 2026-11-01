@@ -651,7 +651,12 @@ export class StartScene extends Scene {
       this.shopClosed(closed),
     );
     // A newer version can open the home update modal.
-    onWindowEvent(this, PHONE_EVENTS.updatePlate, () => this.render());
+    onWindowEvent(this, PHONE_EVENTS.updatePlate, () => {
+      if (this.sys.isActive()) {
+        this.render();
+      }
+    });
+    onSceneEvent(this, this.events, "resume", () => this.render());
     // A tap made while another tap's act opened help, settings or stats over this screen is
     // dropped, so it cannot act once the screen resumes, as is a press waiting for the art and
     // a press still down, whose release lands on the overlay. The dip of the tap that opened
@@ -801,17 +806,23 @@ export class StartScene extends Scene {
     const title = modalTextWidth(this, "title", [gameData.homeText[mode].title]);
     return updateModalLayout(HOME_REGION, {
       action: modalTextWidth(this, "title", [gameData.homeText[mode].button]),
+      ...(mode === "update"
+        ? { cancel: modalTextWidth(this, "title", [gameData.homeText.shop.confirmCancel]) }
+        : {}),
       title,
     });
   }
 
-  private updatePressed(): boolean {
+  private updatePressed(action?: "cancel" | "update"): boolean {
     const down = this.overlayPress;
+    const overlay = this.overlay;
+    if (overlay === undefined || !("mode" in overlay) || down === undefined) {
+      return false;
+    }
+    const { cancel, hit } = this.updateLayout(overlay.mode);
     return (
-      this.overlay !== undefined &&
-      "mode" in this.overlay &&
-      down !== undefined &&
-      containsPoint(this.updateLayout(this.overlay.mode).hit, down.x, down.y)
+      (action !== "cancel" && containsPoint(hit, down.x, down.y)) ||
+      (action !== "update" && cancel !== undefined && containsPoint(cancel, down.x, down.y))
     );
   }
 
@@ -823,9 +834,15 @@ export class StartScene extends Scene {
       return;
     }
     if ("mode" in overlay) {
-      const hit = this.updateLayout(overlay.mode).hit;
+      const { cancel, hit } = this.updateLayout(overlay.mode);
       const close = closeControl(rect).hit;
       if (containsPoint(close, down.x, down.y) && containsPoint(close, x, y)) {
+        this.closeOverlay();
+      } else if (
+        cancel !== undefined &&
+        containsPoint(cancel, down.x, down.y) &&
+        containsPoint(cancel, x, y)
+      ) {
         this.closeOverlay();
       } else if (containsPoint(hit, down.x, down.y) && containsPoint(hit, x, y)) {
         acceptUpdate();
@@ -1297,6 +1314,25 @@ export class StartScene extends Scene {
     });
   }
 
+  private syncUpdateNotice(): void {
+    const top = this.gateTop();
+    if (this.overlay !== undefined && "mode" in this.overlay && this.overlay.mode !== top) {
+      this.overlay = undefined;
+    }
+    if (top === "bubble") {
+      if (this.shownUpdate !== "update") {
+        this.shownUpdate = undefined;
+      }
+    } else if (
+      this.overlay === undefined &&
+      this.shownUpdate !== top &&
+      (top !== "update" || this.sys.isActive())
+    ) {
+      this.overlay = { mode: top, rect: this.updateLayout(top).panel };
+      this.shownUpdate = top;
+    }
+  }
+
   private render(): void {
     const root = this.root;
     if (root === undefined) {
@@ -1313,16 +1349,7 @@ export class StartScene extends Scene {
     this.drawTopBar(root, g, save);
     this.drawPetShop(root, save);
     this.drawSlotSign(root, save);
-    const top = this.gateTop();
-    if (this.overlay !== undefined && "mode" in this.overlay && this.overlay.mode !== top) {
-      this.overlay = undefined;
-    }
-    if (top === "bubble") {
-      this.shownUpdate = undefined;
-    } else if (this.overlay === undefined && this.shownUpdate !== top) {
-      this.overlay = { mode: top, rect: this.updateLayout(top).panel };
-      this.shownUpdate = top;
-    }
+    this.syncUpdateNotice();
     this.drawPackAtGate(root, g, save, true);
     fillRect(addGraphicsIn(this, root), PALETTE.plum, {
       height: 1,
@@ -1808,7 +1835,7 @@ export class StartScene extends Scene {
   // A waiting version or a newer save opens once per home visit or change of notice mode.
   // Closing leaves the home screen usable; Update now keeps the existing acceptUpdate action.
   private drawUpdateModal(root: GameObjects.Container, mode: PlateMode): void {
-    const { button, panel } = this.updateLayout(mode);
+    const { button, cancel, panel } = this.updateLayout(mode);
     const text = gameData.homeText[mode];
     root.add(addModalShade(this, HOME_REGION));
     addModalCard(this, root, panel, text.title, { pressed: this.closePressed() });
@@ -1819,7 +1846,17 @@ export class StartScene extends Scene {
       { available: true, primary: true },
       root,
     );
-    control.setPressed(this.updatePressed());
+    control.setPressed(this.updatePressed("update"));
+    if (cancel !== undefined) {
+      const cancelControl = addMenuButton(
+        this,
+        cancel,
+        gameData.homeText.shop.confirmCancel,
+        { available: true, primary: false },
+        root,
+      );
+      cancelControl.setPressed(this.updatePressed("cancel"));
+    }
   }
 
   // The Pet shop on the yard's right lot: ui-pet-shop, its front sinking while pressed, with

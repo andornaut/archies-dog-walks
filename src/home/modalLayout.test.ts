@@ -75,6 +75,9 @@ describe.each(["newerSave", "update"] as const)("%s notice", (mode) => {
     const ink = inkWidth("font-title", TEXT_STYLE, title.toUpperCase());
     const placed = updateModalLayout(area, {
       action: inkWidth("font-title", TEXT_STYLE, gameData.homeText[mode].button),
+      ...(mode === "update"
+        ? { cancel: inkWidth("font-title", TEXT_STYLE, gameData.homeText.shop.confirmCancel) }
+        : {}),
       title: ink,
     });
     expect(inside(placed.panel, insetRect(MODAL.margin, area))).toBe(true);
@@ -106,4 +109,17 @@ describe.each(["newerSave", "update"] as const)("%s notice", (mode) => {
       placed.panel.y + fontFileMetrics("font-title").capHeight * 2,
     );
   });
+});
+
+it("places update cancellation beside its primary action and stacks the whole group when necessary", () => {
+  const paired = updateModalLayout(area, { action: 100, cancel: 60, title: 160 });
+  expect(paired.cancel).toBeDefined();
+  expect(paired.cancel!.x + paired.cancel!.width + MODAL.gap).toBe(paired.button.x);
+  expect(paired.cancel!.y).toBe(paired.button.y);
+  const stacked = updateModalLayout(area, { action: 180, cancel: 120, title: 160 });
+  expect(stacked.cancel!.x).toBe(stacked.button.x);
+  expect(stacked.cancel!.width).toBe(stacked.button.width);
+  expect(stacked.cancel!.y + stacked.cancel!.height + MODAL.rowGap).toBe(stacked.button.y);
+  expect(inside(stacked.button, stacked.panel)).toBe(true);
+  expect(updateModalLayout(area, { action: 100, title: 160 }).cancel).toBeUndefined();
 });

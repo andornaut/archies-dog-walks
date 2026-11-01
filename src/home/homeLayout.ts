@@ -649,26 +649,44 @@ export function updateModalText(
   return { capY: button.y + Math.floor((button.height - BUTTON_LIP_PX - caps) / 2) };
 }
 
-// The notice has only its title, close control and compact action, with no empty body row.
-export function updateModalLayout(area: Rect, ink: { action: number; title: number }) {
+// The notice contains its title and actions, without an empty body row.
+export function updateModalLayout(
+  area: Rect,
+  ink: { action: number; cancel?: number; title: number },
+) {
   const actionWidth = modalActionWidth(ink.action);
+  const cancelWidth = ink.cancel === undefined ? undefined : modalActionWidth(ink.cancel);
+  const actionsWidth = actionWidth + (cancelWidth === undefined ? 0 : cancelWidth + MODAL.gap);
+  const stacked = actionsWidth > area.width - 2 * (MODAL.margin + MODAL.pad);
+  const groupWidth = stacked ? Math.max(actionWidth, cancelWidth ?? 0) : actionsWidth;
   const width = modalPanelWidth(
     area.width - 2 * MODAL.margin,
-    Math.max(actionWidth + 2 * MODAL.pad, modalTitleWidth(ink.title)),
+    Math.max(groupWidth + 2 * MODAL.pad, modalTitleWidth(ink.title)),
   );
+  const height = BUTTON_SIZE.compact.height;
   const panel = modalRect(
     area,
     { ...GATE, width: area.width, x: area.x },
     {
-      height: MODAL.header + BUTTON_SIZE.compact.height + MODAL.pad,
+      height: MODAL.header + height + (stacked ? height + MODAL.rowGap : 0) + MODAL.pad,
       width,
     },
   );
+  const left = panel.x + (panel.width - groupWidth) / 2;
+  const cancel =
+    cancelWidth === undefined
+      ? undefined
+      : {
+          height,
+          width: stacked ? groupWidth : cancelWidth,
+          x: left,
+          y: panel.y + MODAL.header,
+        };
   const button = {
-    height: BUTTON_SIZE.compact.height,
-    width: actionWidth,
-    x: panel.x + (panel.width - actionWidth) / 2,
-    y: panel.y + MODAL.header,
+    height,
+    width: stacked ? groupWidth : actionWidth,
+    x: left + (cancelWidth === undefined || stacked ? 0 : cancelWidth + MODAL.gap),
+    y: panel.y + MODAL.header + (stacked ? height + MODAL.rowGap : 0),
   };
-  return { button, hit: button, panel };
+  return { button, cancel, hit: button, panel };
 }
