@@ -1,7 +1,7 @@
 // The HUD's layers. Bottom to top: a bump's tint, the neighbourhood pill, the message strip, the parts with no depth
 // (the walk bar, the dog cards and their hearts, at 0), what draws over a part, the money chips
 // under the cash, the owners' tabs,
-// the moments, the fired lines, the heart pops, the message strip over a card or the pause menu,
+// the moments, the fired lines, the heart pops,
 // an explanation's detail card and a bump's border. A layer of several parts stacks them from its
 // depth up.
 export const HUD_DEPTH = {
@@ -22,8 +22,6 @@ export const HUD_DEPTH = {
   heart: 60,
   // The message strip, under the HUD's other parts.
   message: -1,
-  // The message strip when it draws over a card's or the pause menu's parts.
-  messageOverlay: 1000,
   // The firing, payout and other moments, over the cards, labels and owners' tabs.
   moment: 50,
   // The debuff bars' fills, and a change label's text over its chip.

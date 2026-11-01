@@ -67,9 +67,8 @@ interface StripLine extends FaceText {
   readonly names?: readonly NameMark[];
 }
 
-// The message strip (see hud/messageStrip.ts) as drawn. It draws in whichever scene it is
-// given each frame: the HUD while the walk shows, or the card or pause menu over its dim.
-// depth puts it under the HUD's other parts there, or over the overlay's.
+// The message strip (see hud/messageStrip.ts) as drawn in the HUD, below modal scenes
+// and their scrims. Its lines keep their paused lifetime while a modal is open.
 export class MessageStrip {
   private drawn: Drawn | undefined;
   private state: MessageStripState = EMPTY_MESSAGE_STRIP;

@@ -10,8 +10,8 @@ import { TEXT_SCALE } from "../ui/textFit";
 
 export { MODAL };
 
-// Content is measured and wrapped before placement. Keep its fixed-size controls intact,
-// and prefer a free side of a related character whenever the measured panel fits there.
+// Centre measured full-size content on the logical viewport, clamped to its protected area.
+// Character avoidance may shift it horizontally, without changing its vertical placement.
 export function modalRect(
   area: Rect,
   avoid: Rect | undefined,
@@ -21,7 +21,7 @@ export function modalRect(
   const centred = rectAboveIn(
     bounds,
     {
-      bottom: Math.round(bounds.y + (bounds.height + size.height) / 2),
+      bottom: Math.round((SCREEN_CONFIG.height + size.height) / 2),
       x: bounds.x + bounds.width / 2,
     },
     size,
@@ -30,8 +30,6 @@ export function modalRect(
     return centred;
   }
   const candidates = [
-    { ...centred, y: avoid.y - MODAL.gap - size.height },
-    { ...centred, y: avoid.y + avoid.height + MODAL.gap },
     { ...centred, x: avoid.x - MODAL.gap - size.width },
     { ...centred, x: avoid.x + avoid.width + MODAL.gap },
   ];

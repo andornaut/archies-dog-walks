@@ -64,7 +64,7 @@ interface PauseMenuLayout {
   titleY: number;
 }
 
-// The panel centred in area, the dimmed band and road, sized to its parts: the title, then the
+// The panel centred on the logical viewport and clamped to area, sized to its parts: the title, then the
 // buttons stacked down it with the note plate under them, or the note plate first when it is
 // the question. With no note lines there is no plate, and the buttons follow the title.
 function panelLayout(

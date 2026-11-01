@@ -564,12 +564,11 @@ export class HudScene extends Scene {
     this.showDebuffBars(view.run);
     this.showZonePill(view.run);
     this.showZoneProgress(view.run);
-    const depth = overlay === this ? HUD_DEPTH.message : HUD_DEPTH.messageOverlay;
     // The strip's lines wait under an explanation's detail card, and hide, waiting, while a card
     // is held enlarged.
     const aged = held || pause.hold ? 0 : delta;
     const hidden = overlay instanceof CardScene && overlay.holding();
-    this.messages.update(aged, overlay, depth, this.debuffBars.length, hidden);
+    this.messages.update(aged, this, HUD_DEPTH.message, this.debuffBars.length, hidden);
     const effects = effectItems(gameData, view.run);
     // The run state is immutable, so a changed pack or modifier list is a new array.
     const state: Record<string, unknown> = {

@@ -1969,21 +1969,21 @@
           "height": 44,
           "width": 144,
           "x": 108,
-          "y": 296
+          "y": 276
         },
         "hit": {
           "height": 44,
           "width": 144,
           "x": 108,
-          "y": 296
+          "y": 276
         },
         "panel": {
           "height": 112,
           "width": 274,
           "x": 43,
-          "y": 244
+          "y": 224
         },
-        "capY": 311
+        "capY": 291
       },
       "walkerAtGate": {
         "footY": 164,
@@ -2287,25 +2287,25 @@
           "height": 44,
           "width": 140,
           "x": 110,
-          "y": 160
+          "y": 179
         },
         {
           "height": 44,
           "width": 140,
           "x": 110,
-          "y": 208
+          "y": 227
         },
         {
           "height": 44,
           "width": 140,
           "x": 110,
-          "y": 256
+          "y": 275
         },
         {
           "height": 44,
           "width": 140,
           "x": 110,
-          "y": 304
+          "y": 323
         }
       ],
       "hits": [
@@ -2313,40 +2313,40 @@
           "height": 44,
           "width": 140,
           "x": 110,
-          "y": 160
+          "y": 179
         },
         {
           "height": 44,
           "width": 140,
           "x": 110,
-          "y": 208
+          "y": 227
         },
         {
           "height": 44,
           "width": 140,
           "x": 110,
-          "y": 256
+          "y": 275
         },
         {
           "height": 44,
           "width": 140,
           "x": 110,
-          "y": 304
+          "y": 323
         }
       ],
       "notePlate": {
         "height": 42,
         "width": 148,
         "x": 106,
-        "y": 356
+        "y": 375
       },
       "panel": {
         "height": 306,
         "width": 180,
         "x": 90,
-        "y": 108
+        "y": 127
       },
-      "titleY": 124
+      "titleY": 143
     },
     "settings": {
       "buildLabelY": 454,

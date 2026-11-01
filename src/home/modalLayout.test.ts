@@ -3,7 +3,7 @@ import { insetRect, rectsOverlap } from "@andornaut/game-kit/rect";
 import { describe, expect, it } from "vitest";
 
 import { gameData } from "../data";
-import { SCREEN_CONFIG } from "../data/screen";
+import { SCREEN_CONFIG, SCREEN_LAYOUT } from "../data/screen";
 import { fontFileMetrics, inkWidth } from "../testing/fontInk";
 import { inside } from "../testing/rects";
 import { barTitleLeft } from "../ui/barTitle";
@@ -46,10 +46,27 @@ it.each([
   { height: 100, width: 100, x: 130, y: 180 },
   { height: 100, width: 100, x: 130, y: 300 },
   { height: 150, width: 60, x: 120, y: 190 },
-])("places fitting content clear of the protected character $x,$y", (avoid) => {
+])("keeps vertical centring when a protected character overlaps at $x,$y", (avoid) => {
   const placed = modalRect(area, avoid, body);
   expect(inside(placed, insetRect(MODAL.margin, area))).toBe(true);
-  expect(rectsOverlap(placed, avoid)).toBe(false);
+  expect(placed.y + placed.height / 2).toBe(SCREEN_CONFIG.height / 2);
+});
+
+it.each([overlayRegion("home"), SCREEN_LAYOUT.walkView])(
+  "centres in the full viewport rather than its dim region",
+  (region) => {
+    const placed = modalRect(region, undefined, body);
+    expect(placed.y + placed.height / 2).toBe(SCREEN_CONFIG.height / 2);
+    expect(placed).toMatchObject(body);
+  },
+);
+
+it("clamps a tall full-size panel inside the protected walk region", () => {
+  const bounds = insetRect(MODAL.margin, SCREEN_LAYOUT.walkView);
+  const placed = modalRect(SCREEN_LAYOUT.walkView, undefined, { height: 400, width: 180 });
+  expect(placed.height).toBe(400);
+  expect(inside(placed, bounds)).toBe(true);
+  expect(placed.y + placed.height).toBe(bounds.y + bounds.height);
 });
 
 describe.each(["newerSave", "update"] as const)("%s notice", (mode) => {
