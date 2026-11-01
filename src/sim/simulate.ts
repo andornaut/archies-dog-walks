@@ -62,6 +62,13 @@ import { type ZoneDelivery, zoneDelivery } from "./delivery";
 import { choosePath, pickCardOption, type PolicyId, type RoutePolicyId } from "./policies";
 import type { BotSight } from "./sight";
 import type { Skill } from "./skills";
+import {
+  capturePlanningFailure,
+  plannedWalkEvents,
+  type PlanningFailure,
+  recordWalkEvents,
+  type ZoneWalkEvents,
+} from "./walkEvents";
 
 export type SimData = ChoiceData &
   WalkData &
@@ -153,6 +160,8 @@ export interface ZoneDebuffs {
 export type DebuffsByZone = Partial<Record<ZoneId, ZoneDebuffs>>;
 
 export interface RunResult {
+  readonly planningFailure?: PlanningFailure;
+  readonly spawnEvents: readonly ZoneWalkEvents[];
   // The achievements the run earns on its own facts, whatever the profile holds.
   readonly badges: readonly AchievementId[];
   // Encounter cards; forks are not counted.
@@ -197,6 +206,7 @@ interface Tally {
   readonly debuffCosts: DebuffCosts;
   readonly debuffsByZone: DebuffsByZone;
   readonly deliveries: ZoneDelivery[];
+  readonly spawnEvents: ZoneWalkEvents[];
   readonly firings: FiringRecord[];
   readonly hits: HitCounts;
   readonly inputs: InputEvent[];
@@ -385,9 +395,10 @@ function policyChoice(
 }
 
 // The counts of the zone just planned, read from the road the plan left.
-function noteZonePlan(data: SimData, tally: Tally, walk: Walk): void {
+function noteZonePlan(data: SimData, seed: number, tally: Tally, walk: Walk): void {
   const { run } = walk;
   tally.deliveries.push(zoneDelivery(data, run.zoneIndex + 1, currentZoneId(data, run), walk.road));
+  tally.spawnEvents.push(plannedWalkEvents(seed, run, currentZoneId(data, run), walk.road));
 }
 
 // A choice's record: an encounter card seen, and the firings it brought about.
@@ -428,10 +439,11 @@ function playBySkill(data: SimData, seed: number, config: SimConfig, tally: Tall
   const bot = newBot(randomStream(seed, "bot"), player.sight, player.skill);
   const start = { road: startRoad(LANE_COUNT), run: tally.run };
   let session = startSession(data, streams, screenRoadGeometry, start);
-  noteZonePlan(data, tally, session.walk);
+  noteZonePlan(data, seed, tally, session.walk);
   let road = botRoadOf(data, session.walk);
   while (session.walk.run.phase.kind !== "ended") {
     const { card, walk } = session;
+    tally.run = walk.run;
     const clock = bot.clock;
     let acted = walk;
     // Whether the card policy fell back on this step's card, for its choice's record.
@@ -504,6 +516,10 @@ function playBySkill(data: SimData, seed: number, config: SimConfig, tally: Tall
           const { afterPull } = tally;
           const pulledFrom =
             afterPull !== null && bot.clock <= afterPull.until ? afterPull.fromLane : null;
+          const zoneEvents = tally.spawnEvents.at(-1);
+          if (zoneEvents !== undefined) {
+            recordWalkEvents(zoneEvents, pulledWalk, event.step);
+          }
           countLeaving(data, tally, road.geometry, pulledFrom, pulledWalk, event.step);
           noteDebuffCosts(data, tally.debuffCosts, pulledWalk.run, event.step);
           landed = event.step.bumps.filter(({ dodged }) => !dodged).length;
@@ -527,7 +543,7 @@ function playBySkill(data: SimData, seed: number, config: SimConfig, tally: Tall
           });
           break;
         case "zonePlanned":
-          noteZonePlan(data, tally, step.session.walk);
+          noteZonePlan(data, seed, tally, step.session.walk);
           road = botRoadOf(data, step.session.walk);
           bot.replan = true;
           break;
@@ -542,6 +558,7 @@ function playBySkill(data: SimData, seed: number, config: SimConfig, tally: Tall
       step.session.walk.run,
     );
     session = step.session;
+    tally.run = session.walk.run;
   }
   tally.run = session.walk.run;
 }
@@ -573,10 +590,13 @@ export function simulateRun(data: SimData, seed: number, config: SimConfig): Run
       gear: config.gear,
       walker: config.walker,
     }),
+    spawnEvents: [],
     tips: cents(0),
     zones: [],
   };
-  playBySkill(data, seed, config, tally);
+  const planningFailure = capturePlanningFailure(seed, () =>
+    playBySkill(data, seed, config, tally),
+  );
   const { banked, lost } = walkEarnings(endReasonOf(tally.run), tally.run);
   const facts: RunFacts = {
     ...runCountersOf(tally.run),
@@ -587,6 +607,7 @@ export function simulateRun(data: SimData, seed: number, config: SimConfig): Run
     zonesFinished: tally.zones.length,
   };
   return {
+    ...(planningFailure === undefined ? {} : { planningFailure }),
     badges: earnedByRun(data, facts),
     cardsSeen: tally.cardsSeen,
     cashLost: lost,
@@ -605,6 +626,7 @@ export function simulateRun(data: SimData, seed: number, config: SimConfig): Run
     pullsMoved: tally.pullsMoved,
     route: tally.run.route,
     run: tally.run,
+    spawnEvents: tally.spawnEvents,
     tips: tally.tips,
     zones: tally.zones,
   };
