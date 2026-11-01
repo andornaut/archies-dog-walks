@@ -1,7 +1,7 @@
-import { pageRules, pathMatches, servedPath } from "@andornaut/game-kit/headers/securityHeaders";
-import { isHashedAssetUrl } from "@andornaut/game-kit/pwa/cachePolicy";
 import { describe, expect, it } from "vitest";
 
+import { pageRules, pathMatches, servedPath } from "../platform/headers/securityHeaders.ts";
+import { isHashedAssetUrl } from "../platform/pwa/cachePolicy.ts";
 import { CACHE_POLICY } from "../pwa/cachePolicy";
 import { hashedArtFileName } from "../tools/atlas/hashedArt";
 import { FILE_RULES, navWithoutStylesheet, PAGE_RULES } from "./securityPolicy";

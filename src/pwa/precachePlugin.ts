@@ -1,7 +1,7 @@
-import { precachePlugin as kitPrecachePlugin } from "@andornaut/game-kit/pwa/vite/precachePlugin";
 import type { Plugin } from "vite";
 
 import type { ArtFileMap } from "../assets/artUrl";
+import { precachePlugin as kitPrecachePlugin } from "../platform/pwa/vite/precachePlugin.ts";
 import { CACHE_POLICY } from "./cachePolicy";
 import { artHashedFiles } from "./precacheArt";
 

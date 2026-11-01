@@ -1,7 +1,6 @@
-import { contentHash } from "@andornaut/game-kit/build/contentHash";
-
 import { ATLAS_MANIFEST_PATH, type AtlasManifest } from "../../assets/atlasManifest";
 import type { AssetManifest } from "../../assets/manifest";
+import { contentHash } from "../../platform/build/contentHash.ts";
 import { ART_MANIFEST } from "../artManifest";
 import type { AtlasBuild } from "./atlasBuild";
 

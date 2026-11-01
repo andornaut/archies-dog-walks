@@ -1,7 +1,8 @@
 import { saveStore } from "@andornaut/game-kit/save/saveStore";
-import { localSaveStorage, memoryStorage } from "@andornaut/game-kit/save/storage";
+import { memoryStorage } from "@andornaut/game-kit/save/storage";
 import { describe, expect, it, vi } from "vitest";
 
+import { localSaveStorage } from "../platform/save/storage.ts";
 import { testContext } from "../testing/saves";
 import { saveFormat } from "./load";
 import { gameSaveStore, pageSaveStore, SAVE_KEYS } from "./storage";
@@ -11,8 +12,8 @@ vi.mock("./load", async (importOriginal) => {
   return { ...actual, saveFormat: vi.fn(actual.saveFormat) };
 });
 vi.mock("@andornaut/game-kit/save/saveStore", () => ({ saveStore: vi.fn() }));
-vi.mock("@andornaut/game-kit/save/storage", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("@andornaut/game-kit/save/storage")>();
+vi.mock("../platform/save/storage.ts", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("../platform/save/storage.ts")>();
   return { ...actual, localSaveStorage: vi.fn() };
 });
 

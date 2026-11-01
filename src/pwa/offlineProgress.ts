@@ -1,5 +1,6 @@
 import { createProgressState, type ProgressHandle } from "@andornaut/game-kit/progressState";
-import type { OfflineActivity } from "@andornaut/game-kit/pwa/offlinePlay";
+
+import type { OfflineActivity } from "../platform/pwa/offlinePlay.ts";
 
 export const offlineProgress = createProgressState();
 let pending: ProgressHandle | undefined;

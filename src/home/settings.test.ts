@@ -1,4 +1,3 @@
-import { buildLabel } from "@andornaut/game-kit/build/buildLabel";
 import { fillLine } from "@andornaut/game-kit/lines";
 import { keysOf } from "@andornaut/game-kit/records";
 import type { Rect } from "@andornaut/game-kit/rect";
@@ -7,6 +6,7 @@ import { describe, expect, it } from "vitest";
 
 import { gameData } from "../data";
 import { SCREEN_CONFIG } from "../data/screen";
+import { buildLabel } from "../platform/build/buildLabel.ts";
 import { DEFAULT_SETTINGS } from "../save/schema";
 import { defined } from "../testing/defined";
 import { fitInFont, fontFileMetrics, gameGlyphs, inkWidth, placedInk } from "../testing/fontInk";

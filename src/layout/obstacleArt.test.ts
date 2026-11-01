@@ -1,6 +1,5 @@
 import { readFileSync } from "node:fs";
 
-import { decodePng } from "@andornaut/game-kit/art/png";
 import { describe, expect, it } from "vitest";
 
 import { minorObstacleSpriteKey } from "../assets/spriteKeys";
@@ -8,6 +7,7 @@ import { gameData } from "../data";
 import type { EncounterId, MinorObstacleId, SkinId } from "../data/types";
 import { obstacleSkins } from "../runner/obstacleLooks";
 import { spriteSource } from "../tools/atlas/atlasLayout";
+import { decodePng } from "../tools/atlas/shared/png.ts";
 import { OBSTACLE_SILHOUETTES, obstacleParts, POSE_SILHOUETTES } from "./obstacleArt";
 
 const MANIFEST = JSON.parse(readFileSync("public/art/manifest.json", "utf8")) as {

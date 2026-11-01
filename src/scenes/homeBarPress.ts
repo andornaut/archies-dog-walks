@@ -1,9 +1,9 @@
-import { browserExitPage, exitApp } from "@andornaut/game-kit/pwa/exitApp";
 import type { Scene } from "phaser";
 
 import { homeBarAction, homeBarButtonAt } from "../home/homeBar";
 import type { HomeBarButton } from "../home/homeLayout";
 import { openGuard } from "../input/openGuard";
+import { browserExitPage, exitApp } from "../platform/pwa/exitApp.ts";
 import { whenArtReady } from "./artReady";
 import { openHelp } from "./helpScreen";
 import { BAR_MUTED_EVENT, onSceneEvent, openOverlay } from "./overlay";

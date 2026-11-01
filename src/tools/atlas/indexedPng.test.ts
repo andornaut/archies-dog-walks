@@ -1,9 +1,9 @@
-import { decodePng } from "@andornaut/game-kit/art/png";
 import { blankImage, type RgbaImage } from "@andornaut/game-kit/art/rgbaImage";
 import { describe, expect, it } from "vitest";
 
 import { encodePng } from "./atlasBuild";
 import { COLOUR_TYPE_INDEXED, MAX_PALETTE } from "./indexedPng";
+import { decodePng } from "./shared/png.ts";
 
 const COLOUR_TYPE_RGBA = 6;
 

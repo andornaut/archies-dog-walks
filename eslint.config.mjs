@@ -52,6 +52,7 @@ const CONTEXTS = {
     "rules/units",
     "runner",
     "state/runState",
+    "tools/atlas/shared/png.ts",
   ],
   ui: ["assets"],
 };

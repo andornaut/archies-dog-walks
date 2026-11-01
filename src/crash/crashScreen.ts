@@ -4,11 +4,9 @@
 // launch resumes or banks it. A checkpoint the walk writes after the crash, as the page hides,
 // keeps no resume point (stopResuming in src/main.ts), so that launch banks it.
 // src/crash/install.ts imports this module before any other game module.
-import "@andornaut/game-kit/crash/crash.css";
+import "../platform/crash/crash.css";
 import "./crash.css";
 
-import { BUILD_LABEL } from "@andornaut/game-kit/build/buildLabel";
-import { installCrashScreen } from "@andornaut/game-kit/crash/crashScreen";
 import artFiles from "virtual:art-files";
 
 import palette from "../../shared/palette.json";
@@ -16,6 +14,8 @@ import { artFileUrl } from "../assets/artUrl";
 import { MENU_TEXT } from "../data/menuText";
 import { pageSearch } from "../dev/devTools";
 import { devInSearch } from "../dev/runSetup";
+import { BUILD_LABEL } from "../platform/build/buildLabel.ts";
+import { installCrashScreen } from "../platform/crash/crashScreen.ts";
 
 const colour = (name: keyof typeof palette) => `#${palette[name].hex}`;
 

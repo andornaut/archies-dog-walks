@@ -1,5 +1,3 @@
-import { buildLabel } from "@andornaut/game-kit/build/buildLabel";
-import { UNKNOWN_COMMIT } from "@andornaut/game-kit/build/buildVersion";
 import { fillLine, fillNames } from "@andornaut/game-kit/lines";
 import { keysOf } from "@andornaut/game-kit/records";
 import type { Rect } from "@andornaut/game-kit/rect";
@@ -82,6 +80,8 @@ import {
   largeBodyBox,
   largeBodyStyle,
 } from "../layout/cardLayout";
+import { buildLabel } from "../platform/build/buildLabel.ts";
+import { UNKNOWN_COMMIT } from "../platform/build/buildVersion.ts";
 import { amountText } from "../rules/causes";
 import { firesText } from "../rules/choices";
 import { payFor } from "../rules/run";

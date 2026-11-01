@@ -1,7 +1,7 @@
 // Whether the page offers the dev tools: the dev panel, its cheats and save edits, a replay log
 // and a URL's run setup. Only a browser tab does; the installed app plays as shipped. Its
 // display mode does not change while it runs, so the page is tested once, on first use.
-import { pageRunsAsApp } from "@andornaut/game-kit/pwa/installFlow";
+import { pageRunsAsApp } from "../platform/pwa/installFlow.ts";
 
 let on: boolean | undefined;
 

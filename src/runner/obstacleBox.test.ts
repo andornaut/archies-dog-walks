@@ -1,7 +1,6 @@
 import { readFileSync } from "node:fs";
 
 import { itemAt } from "@andornaut/game-kit/arrays";
-import { decodePng } from "@andornaut/game-kit/art/png";
 import { getOrInsertComputed } from "@andornaut/game-kit/maps";
 import { keysOf } from "@andornaut/game-kit/records";
 import { describe, expect, it } from "vitest";
@@ -16,6 +15,7 @@ import { everyPack, PART_INSET } from "../layout/packFormation";
 import { project, SCALE_STEPS, screenYAt } from "../layout/projection";
 import { testState } from "../testing/runState";
 import { spriteSource } from "../tools/atlas/atlasLayout";
+import { decodePng } from "../tools/atlas/shared/png.ts";
 import { type DogBox, hitDog, type LanedBox, type ScaledBox } from "./collision";
 import { stillInLane } from "./laneMotion";
 import { drawnObstacleBox } from "./obstacleBox";

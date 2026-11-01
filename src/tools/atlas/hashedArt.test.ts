@@ -1,11 +1,11 @@
 import { readFile } from "node:fs/promises";
 
-import { contentHash } from "@andornaut/game-kit/build/contentHash";
 import { beforeAll, describe, expect, it } from "vitest";
 
 import shippedManifest from "../../../public/art/manifest.json";
 import { ATLAS_MANIFEST_PATH, type AtlasManifest } from "../../assets/atlasManifest";
 import { type AssetManifest, parseManifest } from "../../assets/manifest";
+import { contentHash } from "../../platform/build/contentHash.ts";
 import { ART_MANIFEST } from "../artManifest";
 import { buildAtlases } from "./atlasBuild";
 import { type HashedArtFile, hashedArtFileName, hashGameArt } from "./hashedArt";

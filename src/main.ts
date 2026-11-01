@@ -2,12 +2,11 @@
 import "./crash/install";
 // Turns the page frame on a touch screen in landscape before any script runs; main.css reads its
 // --inset-* safe-area insets.
-import "@andornaut/game-kit/view/frameTurnPortraitGame.css";
+import "./platform/view/frameTurnPortraitGame.css";
 import "./main.css";
 
 import { MENU_FPS } from "@andornaut/game-kit/clock/frameCap";
 import { capFrameRate } from "@andornaut/game-kit/clock/phaser/capFrameRate";
-import { followFrameTurn } from "@andornaut/game-kit/view/phaser/followFrameTurn";
 import { Core, Game, Scale, WEBGL } from "phaser";
 
 import { CRASH_SCREEN } from "./crash/crashScreen";
@@ -18,6 +17,7 @@ import { devToolsOn } from "./dev/devTools";
 import { pageRunSetup } from "./dev/pageRunSetup";
 import { noteKeyPress } from "./input/keyNumbers";
 import { lostTouches } from "./input/touches";
+import { followFrameTurn } from "./platform/view/phaser/followFrameTurn.ts";
 import {
   noteWalkStarted,
   pageFrameWatch,

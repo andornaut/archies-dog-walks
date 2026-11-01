@@ -65,3 +65,5 @@ Deployment scope is the complete batch diff. A batch changing only Markdown, `ar
 ## Licence
 
 Everything here (code, art, sound, music and writing) is licensed [CC BY-NC-SA 4.0](./LICENSE): share and remix it with credit to andornaut and a link to this project, for non-commercial use, under the same licence. The game's names and logos are not licensed, so a remix must use its own name. The separately installed GameKit helpers are licensed [MIT](https://github.com/andornaut/game-kit/blob/b32a50769801273a56d66a13c3ef8756f247b215/LICENSE).
+
+The parent browser/build helpers in `src/platform/` and atlas encoding/packing helpers in `src/tools/atlas/shared/` retain the [MIT licence](./LICENSE-MIT).

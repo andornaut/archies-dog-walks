@@ -1,7 +1,7 @@
 // The home page's Install button beside Play, on the game's install flow (the kit's
 // wireInstallButton). Its words are in pages/index.html.
-import { wireInstallButton } from "@andornaut/game-kit/pwa/installButton";
-import { watchInstall } from "@andornaut/game-kit/pwa/installFlow";
+import { wireInstallButton } from "../platform/pwa/installButton.ts";
+import { watchInstall } from "../platform/pwa/installFlow.ts";
 
 // Elements in pages/index.html. The steps dialog holds one section per browser, each marked
 // data-browser with its MenuInstallBrowser and titled by its h2.

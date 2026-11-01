@@ -1,5 +1,4 @@
-import type { MenuInstallBrowser } from "@andornaut/game-kit/pwa/installState";
-
+import type { MenuInstallBrowser } from "../platform/pwa/installState.ts";
 import type { ACHIEVEMENTS } from "./achievements";
 import type { DEBUFFS } from "./debuffs";
 import type { DOGS } from "./dogs";

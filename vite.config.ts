@@ -1,8 +1,7 @@
-import { gameViteConfig } from "@andornaut/game-kit/build/vite/gameConfig";
-
+import { gameViteConfig } from "./src/platform/build/vite/gameConfig.ts";
 import type * as ConfigModules from "./src/tools/viteConfigModules.ts";
 
-// The kit's Vite and Vitest config (gameViteConfig), which loads the plugins below from
+// The parent Vite and Vitest config loads the plugins below from
 // src/tools/viteConfigModules.ts through native package resolution in its module runner.
 export default gameViteConfig<typeof ConfigModules>({
   // The Phaser chunk alone is about 1.06 MB minified, so the 500 kB default always warns.

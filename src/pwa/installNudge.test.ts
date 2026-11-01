@@ -1,7 +1,7 @@
-import type { InstallState } from "@andornaut/game-kit/pwa/installState";
-import type { SaveStorage } from "@andornaut/game-kit/save/storage";
+import type { SaveStorage } from "@andornaut/game-kit/save/contracts";
 import { describe, expect, it } from "vitest";
 
+import type { InstallState } from "../platform/pwa/installState.ts";
 import { createInstallNudge, INSTALL_NUDGE_KEY } from "./installNudge";
 
 class FakeStorage implements SaveStorage {

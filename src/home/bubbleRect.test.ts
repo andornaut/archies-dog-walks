@@ -1,6 +1,5 @@
 import { readFileSync } from "node:fs";
 
-import { decodePng } from "@andornaut/game-kit/art/png";
 import { wrapWords } from "@andornaut/game-kit/lines";
 import { keysOf } from "@andornaut/game-kit/records";
 import { insetRect, rectsOverlap } from "@andornaut/game-kit/rect";
@@ -13,6 +12,7 @@ import { withNamePills } from "../hud/effectNames";
 import type { Owned } from "../save/schema";
 import { bodyTextWidth } from "../testing/bodyFont";
 import { fontFileMetrics, inkWidth } from "../testing/fontInk";
+import { decodePng } from "../tools/atlas/shared/png.ts";
 import { hasPill, PILL_SPACE, pillRows } from "../ui/namePills";
 import { plainMarks } from "../ui/pixelFont";
 import { cents } from "../units";

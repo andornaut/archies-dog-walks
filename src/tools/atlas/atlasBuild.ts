@@ -1,9 +1,6 @@
 import { createHash } from "node:crypto";
 
-import { type AtlasBlit, buildAtlasPages, drawAtlasPage } from "@andornaut/game-kit/art/atlasBuild";
-import { decodePng } from "@andornaut/game-kit/art/png";
 import { blankImage, blitExtruded, type RgbaImage } from "@andornaut/game-kit/art/rgbaImage";
-import { encodeLosslessWebp } from "@andornaut/game-kit/art/webp";
 import { getOrInsertComputed } from "@andornaut/game-kit/maps";
 import { PNG } from "pngjs";
 
@@ -22,6 +19,9 @@ import {
 } from "./atlasLayout";
 import { opaqueRect } from "./atlasPixels";
 import { encodeIndexedPng } from "./indexedPng";
+import { type AtlasBlit, buildAtlasPages, drawAtlasPage } from "./shared/atlasBuild.ts";
+import { decodePng } from "./shared/png.ts";
+import { encodeLosslessWebp } from "./shared/webp.ts";
 
 export interface AtlasBuild {
   // Each page's file, by its path relative to the art directory.

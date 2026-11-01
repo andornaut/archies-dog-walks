@@ -1,5 +1,4 @@
 import { itemAt } from "@andornaut/game-kit/arrays";
-import { BUILD_LABEL } from "@andornaut/game-kit/build/buildLabel";
 import { fillLine } from "@andornaut/game-kit/lines";
 import { containsPoint, insetRect, type Rect } from "@andornaut/game-kit/rect";
 import { fittingText } from "@andornaut/game-kit/text/textFit";
@@ -36,6 +35,7 @@ import {
   volumeSteps,
 } from "../home/settings";
 import { isConfirmKey, isMuteKey, isPauseKey, menuKeyActs } from "../input/keyBindings";
+import { BUILD_LABEL } from "../platform/build/buildLabel.ts";
 import {
   exitShown,
   installApp,

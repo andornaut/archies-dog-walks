@@ -1,4 +1,1 @@
-export {
-  AUDIO_UNLOCK_EVENTS,
-  unlockAudioOnFirstGesture,
-} from "@andornaut/game-kit/pwa/audioUnlock";
+export { AUDIO_UNLOCK_EVENTS, unlockAudioOnFirstGesture } from "../platform/pwa/audioUnlock.ts";

@@ -2,49 +2,49 @@
 // lock, the back gesture, visibility events, the page frame's turn and the orientation lock,
 // audio unlock, the install offer and persistent storage. setupPhoneApp runs once from main.ts; the
 // scenes listen for PHONE_EVENTS on window and call the functions below.
-import { appCannotClose } from "@andornaut/game-kit/pwa/appWindow";
+import type { FrameTurn } from "@andornaut/game-kit/view/pagePoint";
+
+import { chooseSoundFormat, type SoundFormat } from "../audio/soundFormat";
+import { appCannotClose } from "../platform/pwa/appWindow.ts";
 import {
   backCloseWatcher,
   browserCloseWatcher,
   guardBackNavigation,
-} from "@andornaut/game-kit/pwa/backNavigation";
+} from "../platform/pwa/backNavigation.ts";
 import {
   type InstallFlow,
   type InstallOutcome,
   watchInstall,
-} from "@andornaut/game-kit/pwa/installFlow";
-import type { InstallState, MenuInstallBrowser } from "@andornaut/game-kit/pwa/installState";
-import { browserOfflinePage, startOfflinePlay } from "@andornaut/game-kit/pwa/offlinePlay";
-import { serviceWorkerUrl } from "@andornaut/game-kit/pwa/serviceWorkerUrl";
+} from "../platform/pwa/installFlow.ts";
+import type { InstallState, MenuInstallBrowser } from "../platform/pwa/installState.ts";
+import { browserOfflinePage, startOfflinePlay } from "../platform/pwa/offlinePlay.ts";
+import { serviceWorkerUrl } from "../platform/pwa/serviceWorkerUrl.ts";
 import {
   requestPersistentStorage,
   type StoragePersistence,
-} from "@andornaut/game-kit/pwa/storagePersistence";
-import type { UpdateFlow } from "@andornaut/game-kit/pwa/updateReady";
-import { watchVisibility } from "@andornaut/game-kit/pwa/visibility";
-import { createScreenWakeLock, type ScreenWakeLock } from "@andornaut/game-kit/pwa/wakeLock";
-import { localSaveStorage } from "@andornaut/game-kit/save/storage";
+} from "../platform/pwa/storagePersistence.ts";
+import type { UpdateFlow } from "../platform/pwa/updateReady.ts";
+import { watchVisibility } from "../platform/pwa/visibility.ts";
+import { createScreenWakeLock, type ScreenWakeLock } from "../platform/pwa/wakeLock.ts";
+import { localSaveStorage } from "../platform/save/storage.ts";
 import {
   type FrameTurnWatch,
   lockGameOrientation,
   watchFrameTurn,
-} from "@andornaut/game-kit/view/frameTurn";
-import type { FrameTurn } from "@andornaut/game-kit/view/pagePoint";
-
-import { chooseSoundFormat, type SoundFormat } from "../audio/soundFormat";
+} from "../platform/view/frameTurn.ts";
 import { dispatchPhoneEvent, PHONE_EVENTS } from "./events";
 import { createInstallNudge, type InstallNudge } from "./installNudge";
 import { reportOfflineActivity } from "./offlineProgress";
 
-export { AUDIO_UNLOCK_EVENTS, unlockAudioOnFirstGesture } from "./audioUnlock";
-export { PHONE_EVENTS } from "./events";
-export type { InstallOutcome } from "@andornaut/game-kit/pwa/installFlow";
+export type { InstallOutcome } from "../platform/pwa/installFlow.ts";
 export {
   type InstallState,
   type MenuInstallBrowser,
   offersInstall,
-} from "@andornaut/game-kit/pwa/installState";
-export type { StoragePersistence } from "@andornaut/game-kit/pwa/storagePersistence";
+} from "../platform/pwa/installState.ts";
+export type { StoragePersistence } from "../platform/pwa/storagePersistence.ts";
+export { AUDIO_UNLOCK_EVENTS, unlockAudioOnFirstGesture } from "./audioUnlock";
+export { PHONE_EVENTS } from "./events";
 
 const SERVICE_WORKER_URL = "/sw.js";
 

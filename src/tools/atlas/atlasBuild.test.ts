@@ -1,4 +1,3 @@
-import { buildAtlasPages } from "@andornaut/game-kit/art/atlasBuild";
 import { blankImage } from "@andornaut/game-kit/art/rgbaImage";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -6,8 +5,9 @@ import type { AssetManifest } from "../../assets/manifest";
 import { sheetFromRows } from "../../testing/sheetImage";
 import { buildAtlases, compactFrames } from "./atlasBuild";
 import { layoutAtlases } from "./atlasLayout";
+import { buildAtlasPages } from "./shared/atlasBuild.ts";
 
-vi.mock("@andornaut/game-kit/art/atlasBuild", () => ({ buildAtlasPages: vi.fn() }));
+vi.mock("./shared/atlasBuild.ts", () => ({ buildAtlasPages: vi.fn() }));
 vi.mock("./atlasLayout", async (original) => ({
   ...(await original<typeof import("./atlasLayout")>()),
   layoutAtlases: vi.fn(),

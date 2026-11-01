@@ -1,10 +1,10 @@
-import { installCrashScreen } from "@andornaut/game-kit/crash/crashScreen";
 import { afterEach, expect, it, vi } from "vitest";
 
 import palette from "../../shared/palette.json";
 import { MENU_TEXT } from "../data/menuText";
+import { installCrashScreen } from "../platform/crash/crashScreen.ts";
 
-vi.mock("@andornaut/game-kit/crash/crashScreen", () => ({ installCrashScreen: vi.fn() }));
+vi.mock("../platform/crash/crashScreen.ts", () => ({ installCrashScreen: vi.fn() }));
 vi.mock("virtual:art-files", () => ({
   default: new Map([["sprites/face-dog-archie.png", "assets/art/face-dog-archie-test.png"]]),
 }));

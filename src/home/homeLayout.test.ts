@@ -1,6 +1,5 @@
 import { readFileSync } from "node:fs";
 
-import { decodePng } from "@andornaut/game-kit/art/png";
 import { wrapWords } from "@andornaut/game-kit/lines";
 import { keysOf } from "@andornaut/game-kit/records";
 import { insetRect, type Rect, rectsOverlap } from "@andornaut/game-kit/rect";
@@ -18,6 +17,7 @@ import type { Owned } from "../save/schema";
 import { bodyTextWidth } from "../testing/bodyFont";
 import { fontFileMetrics, fontInk, fontInkRows, inkWidth } from "../testing/fontInk";
 import { inside } from "../testing/rects";
+import { decodePng } from "../tools/atlas/shared/png.ts";
 import { closeControl } from "../ui/closeControl";
 import { gridRects } from "../ui/grid";
 import { MARK_OFFSET } from "../ui/mark";

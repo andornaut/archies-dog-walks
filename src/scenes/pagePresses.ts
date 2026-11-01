@@ -1,15 +1,15 @@
+import type { Point } from "@andornaut/game-kit/rect";
+import { pageToGame } from "@andornaut/game-kit/view/pagePoint";
+import type { Scene } from "phaser";
+
+import type { Press } from "../input/pointerTracking";
 import {
   clientPoint,
   listenPagePresses as listenKitPagePresses,
   onBarePage,
   type PagePointerEvent,
   type PagePress,
-} from "@andornaut/game-kit/input/pagePresses";
-import type { Point } from "@andornaut/game-kit/rect";
-import { pageToGame } from "@andornaut/game-kit/view/pagePoint";
-import type { Scene } from "phaser";
-
-import type { Press } from "../input/pointerTracking";
+} from "../platform/input/pagePresses.ts";
 import { pageFrameTurn } from "../pwa";
 
 // What a press on the bare page does, at points in game pixels, unclamped. onBare: whether the

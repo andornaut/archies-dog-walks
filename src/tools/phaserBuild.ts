@@ -1,4 +1,4 @@
-import type { PhaserBuild } from "@andornaut/game-kit/build/phaserBuild";
+import type { PhaserBuild } from "../platform/build/phaserBuild.ts";
 
 // The production build's Phaser (the kit's build/phaserBuild): without the namespaces the game
 // reads nothing from, and without the Canvas renderer, since the game runs on WebGL alone
