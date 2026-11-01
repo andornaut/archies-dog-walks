@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
 
+import { type AtlasBlit, buildAtlasPages, drawAtlasPage } from "@andornaut/game-kit/art/atlasBuild";
 import { decodePng } from "@andornaut/game-kit/art/png";
 import { blankImage, blitExtruded, type RgbaImage } from "@andornaut/game-kit/art/rgbaImage";
 import { encodeLosslessWebp } from "@andornaut/game-kit/art/webp";
@@ -120,6 +121,10 @@ interface AtlasInputs {
   pages?: PageFormat;
 }
 
+function atlasBlits(blits: PageLayout["blits"]): AtlasBlit[] {
+  return blits.map(({ png, ...blit }) => ({ ...blit, source: png }));
+}
+
 // Packs every image, font PNG and sprite frame of the art manifest into atlas pages, with a
 // disabled tile's grey copy of each picture one can grey, reading each file by its path
 // relative to the art directory. A key whose files cannot be read or parsed, or with a frame
@@ -179,16 +184,19 @@ export async function buildAtlases(
   const layout = layoutAtlases([...packed, ...disabled]);
   warnings.push(...layout.skipped.map((key) => `${key} has a frame too large for an atlas page`));
   const { encode, extension } = inputs.pages ?? PNG_PAGES;
-  const files = await Promise.all(
-    layout.pages.map(async (page) => {
-      const { group, height, name, width } = page;
-      const bytes = await encode(drawPage(images, page));
-      return {
-        bytes,
-        page: { bytes: bytes.length, file: `${name}.${extension}`, group, height, width },
-      };
-    }),
+  const pages = await buildAtlasPages(
+    { decode: decodePng, decoded: images, encode, extrude: EXTRUDE, read: readArt },
+    layout.pages.map(({ blits, group, height, name, width }) => ({
+      blits: atlasBlits(blits),
+      height,
+      metadata: { group, height, name, width },
+      width,
+    })),
   );
+  const files = pages.map(({ bytes, metadata: { group, height, name, width } }) => ({
+    bytes,
+    page: { bytes: bytes.length, file: `${name}.${extension}`, group, height, width },
+  }));
   return {
     files: new Map(files.map(({ bytes, page }) => [page.file, bytes])),
     manifest: { pages: files.map(({ page }) => page), textures: layout.textures },
@@ -196,17 +204,15 @@ export async function buildAtlases(
   };
 }
 
-// A page's pixels, each blit copied from its source PNG in images, by path.
+// Phaser's local frame adapter can draw a page without file encoding.
 export function drawPage(
   images: ReadonlyMap<string, RgbaImage>,
   { blits, height, width }: PageLayout,
 ): RgbaImage {
-  const page = blankImage(width, height);
-  for (const { at, bounds, from, png } of blits) {
-    const source = images.get(png);
-    if (source !== undefined) {
-      blitExtruded(source, from, EXTRUDE, page, at, bounds);
-    }
-  }
-  return page;
+  return drawAtlasPage(EXTRUDE, images, {
+    blits: atlasBlits(blits.filter(({ png }) => images.has(png))),
+    height,
+    metadata: undefined,
+    width,
+  });
 }

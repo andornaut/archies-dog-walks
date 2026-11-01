@@ -1,5 +1,7 @@
-import { describe, expect, it } from "vitest";
+import { type AtlasItem, type AtlasPolicy, packAtlas } from "@andornaut/game-kit/art/atlasLayout";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { LOADING_ART } from "../../assets/spriteKeys";
 import {
   ATLAS_MAX_SIZE,
   EXTRUDE,
@@ -8,6 +10,32 @@ import {
   type SourceTexture,
   spriteSource,
 } from "./atlasLayout";
+
+vi.mock("@andornaut/game-kit/art/atlasLayout", () => ({
+  packAtlas: vi.fn((policy: AtlasPolicy<unknown>, items: readonly AtlasItem<unknown>[]) => ({
+    pages:
+      items.length === 0
+        ? []
+        : [
+            {
+              height: 1024,
+              placed: items.map((item, index) => ({
+                at: item.rectangles.map((_, frame) => ({
+                  x: 1 + index * 10 + frame,
+                  y: 1 + frame,
+                })),
+                item,
+              })),
+              width: policy.maxSize,
+            },
+          ],
+    width: policy.maxSize,
+  })),
+}));
+
+beforeEach(() => {
+  vi.mocked(packAtlas).mockClear();
+});
 
 function sprite(key: string, count: number, width: number, height: number): SourceTexture {
   const frames = Array.from({ length: count }, (_, i) => ({
@@ -105,36 +133,6 @@ describe("layoutAtlases", () => {
     ]);
   });
 
-  it("keeps each frame and its extruded border inside its page and apart from the others", () => {
-    const { pages, textures: mapped } = layoutAtlases(textures);
-    const cells = mapped.flatMap(({ frames, page }) =>
-      frames.map(({ h, w, x, y }) => ({
-        bottom: y + h + EXTRUDE,
-        left: x - EXTRUDE,
-        page,
-        right: x + w + EXTRUDE,
-        top: y - EXTRUDE,
-      })),
-    );
-    for (const cell of cells) {
-      const page = pages[cell.page];
-      expect(cell.left).toBeGreaterThanOrEqual(0);
-      expect(cell.top).toBeGreaterThanOrEqual(0);
-      expect(cell.right).toBeLessThanOrEqual(page?.width ?? 0);
-      expect(cell.bottom).toBeLessThanOrEqual(page?.height ?? 0);
-      const overlapping = cells.filter(
-        (other) =>
-          other !== cell &&
-          other.page === cell.page &&
-          other.left < cell.right &&
-          cell.left < other.right &&
-          other.top < cell.bottom &&
-          cell.top < other.bottom,
-      );
-      expect(overlapping).toEqual([]);
-    }
-  });
-
   it("blits each frame from its source rect to its mapped rect", () => {
     const { pages, textures: mapped } = layoutAtlases(textures);
     for (const { frames, key, page } of mapped) {
@@ -168,18 +166,30 @@ describe("layoutAtlases", () => {
     ]);
   });
 
-  it("starts a new page when one is full, keeping each texture's frames on one page", () => {
-    const many = Array.from({ length: 12 }, (_, i) => sprite(`dog-${i}`, 4, 30, 30));
-    const { pages, textures: mapped } = layoutAtlases(many, 128);
-    expect(pages.length).toBeGreaterThan(1);
-    expect(pages.every(({ height, width }) => width <= 128 && height <= 128)).toBe(true);
-    expect(mapped).toHaveLength(12);
-  });
-
   it("leaves out a texture with a frame larger than a page", () => {
     const huge = imageSource("images/huge.png", ATLAS_MAX_SIZE, 10, "huge");
     const layout = layoutAtlases([huge, ...textures]);
     expect(layout.skipped).toEqual(["huge"]);
     expect(layout.textures.map(({ key }) => key)).not.toContain("huge");
+  });
+  it("passes one atomic item per texture and the game's page-width and sorting policy", () => {
+    const source = sprite("dog-test", 2, 20, 30);
+    layoutAtlases([source], 128);
+    const call = vi.mocked(packAtlas).mock.calls.find(([, items]) => items.length > 0)!;
+    const [policy, items] = call;
+    expect(policy).toMatchObject({ extrude: EXTRUDE, maxSize: 128, widths: [128] });
+    expect(items).toHaveLength(1);
+    expect(items[0]?.rectangles).toEqual(source.frames.map(({ from }) => from));
+    const taller = { rectangles: [], value: { texture: sprite("z", 1, 20, 40) } };
+    const shorter = { rectangles: [], value: { texture: source } };
+    expect(policy.compare(taller, shorter)).toBeLessThan(0);
+  });
+
+  it("preserves the whole-group skip policy when the shared packer reports no fit", () => {
+    vi.mocked(packAtlas).mockReturnValueOnce(undefined);
+    const source = imageSource("images/loading.png", 20, 20, Object.values(LOADING_ART)[0]!);
+    const layout = layoutAtlases([source]);
+    expect(layout.skipped).toEqual([source.key]);
+    expect(layout.pages).toEqual([]);
   });
 });

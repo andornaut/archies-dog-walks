@@ -1,4 +1,5 @@
 import { itemAt } from "@andornaut/game-kit/arrays";
+import { packAtlas } from "@andornaut/game-kit/art/atlasLayout";
 import { getOrInsertComputed } from "@andornaut/game-kit/maps";
 import type { Point, Rect } from "@andornaut/game-kit/rect";
 import * as v from "valibot";
@@ -109,12 +110,6 @@ export function spriteSource(key: string, png: string, json: unknown): SourceTex
   };
 }
 
-interface Shelf {
-  height: number;
-  x: number;
-  y: number;
-}
-
 // A texture as packed: the first of its frames with each distinct from rect, which get a rect
 // on the page each, and for every frame the index of its rect among them.
 interface Packable {
@@ -134,97 +129,28 @@ function packable(texture: SourceTexture): Packable {
   return { firsts, slots, texture };
 }
 
-interface PackedPage {
-  height: number;
-  placed: { at: Point[]; item: Packable }[];
-}
-
-// Each frame's top-left on a shelf of rows width wide, or undefined when they overflow
-// maxSize. Each frame's cell adds EXTRUDE on every side, so frames sit 2 * EXTRUDE apart and
-// EXTRUDE from the page's top and left edges.
-function placeOnShelf(
-  shelf: Shelf,
-  frames: readonly SourceFrame[],
-  width: number,
-  maxSize: number,
-): { at: Point[]; shelf: Shelf } | undefined {
-  let { height, x, y } = shelf;
-  const at: Point[] = [];
-  for (const { from } of frames) {
-    const cellWidth = from.width + 2 * EXTRUDE;
-    const cellHeight = from.height + 2 * EXTRUDE;
-    if (x + cellWidth > width) {
-      y += height;
-      x = 0;
-      height = 0;
-    }
-    if (x + cellWidth > width || y + cellHeight > maxSize) {
-      return undefined;
-    }
-    at.push({ x: x + EXTRUDE, y: y + EXTRUDE });
-    x += cellWidth;
-    height = Math.max(height, cellHeight);
-  }
-  return { at, shelf: { height, x, y } };
-}
-
-// Shelf packs the textures, tallest first, onto pages width wide, keeping each texture's
-// frames on one page. Undefined when a texture does not fit on an empty page.
-function packShelves(
-  items: readonly Packable[],
-  width: number,
-  maxSize: number,
-): PackedPage[] | undefined {
-  const pages: PackedPage[] = [];
-  let page: PackedPage = { height: 0, placed: [] };
-  let shelf: Shelf = { height: 0, x: 0, y: 0 };
-  for (const item of items) {
-    let placed = placeOnShelf(shelf, item.firsts, width, maxSize);
-    if (placed === undefined && page.placed.length > 0) {
-      pages.push(page);
-      page = { height: 0, placed: [] };
-      shelf = { height: 0, x: 0, y: 0 };
-      placed = placeOnShelf(shelf, item.firsts, width, maxSize);
-    }
-    if (placed === undefined) {
-      return undefined;
-    }
-    ({ shelf } = placed);
-    page.placed.push({ at: placed.at, item });
-    page.height = Math.max(page.height, shelf.y + shelf.height);
-  }
-  if (page.placed.length > 0) {
-    pages.push(page);
-  }
-  return pages;
-}
-
 const tallestFrame = (texture: SourceTexture) =>
   Math.max(...texture.frames.map(({ from }) => from.height));
 
 // The page width that packs the group onto the fewest pages, each one a request, then into the
 // least area, preferring the narrower on a tie.
-function packGroup(
-  textures: readonly SourceTexture[],
-  maxSize: number,
-): { pages: PackedPage[]; width: number } {
-  const sorted = [...textures]
-    .sort((a, b) => tallestFrame(b) - tallestFrame(a) || (a.key < b.key ? -1 : 1))
-    .map(packable);
-  let best: { area: number; pages: PackedPage[]; width: number } | undefined;
-  const widths = [...PAGE_WIDTHS.filter((candidate) => candidate < maxSize), maxSize];
-  for (const width of widths) {
-    const pages = packShelves(sorted, width, maxSize);
-    if (pages === undefined) {
-      continue;
-    }
-    const area = pages.reduce((sum, page) => sum + width * page.height, 0);
-    const fewer = best === undefined || pages.length < best.pages.length;
-    if (fewer || (pages.length === best?.pages.length && area < best.area)) {
-      best = { area, pages, width };
-    }
-  }
-  return best ?? { pages: [], width: 0 };
+function packGroup(textures: readonly SourceTexture[], maxSize: number) {
+  return (
+    packAtlas(
+      {
+        compare: (a, b) =>
+          tallestFrame(b.value.texture) - tallestFrame(a.value.texture) ||
+          (a.value.texture.key < b.value.texture.key ? -1 : 1),
+        extrude: EXTRUDE,
+        maxSize,
+        widths: [...PAGE_WIDTHS.filter((candidate) => candidate < maxSize), maxSize],
+      },
+      textures.map((texture) => {
+        const value = packable(texture);
+        return { rectangles: value.firsts.map(({ from }) => from), value };
+      }),
+    ) ?? { pages: [], width: 0 }
+  );
 }
 
 function fits(texture: SourceTexture, maxSize: number): boolean {
@@ -255,7 +181,7 @@ export function layoutAtlases(
       const page = layout.pages.length;
       const blits: Blit[] = [];
       for (const { at, item } of placed) {
-        const { firsts, slots, texture } = item;
+        const { firsts, slots, texture } = item.value;
         firsts.forEach(({ bounds, from }, i) => {
           blits.push({ at: itemAt(at, i), bounds: bounds ?? from, from, png: texture.png });
         });
