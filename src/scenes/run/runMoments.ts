@@ -379,7 +379,7 @@ export class RunMoments {
     // dog's feet, its edge flash and the bump's flash, with a plain obstacle's stop; the walker
     // stumbles and every dog reacts and shakes off. A minor obstacle with contact plays its bump's
     // cues instead (playBumpHit), as the splash, the shake-off and the edge flash strips are a
-    // contact obstacle's own. Applied or refreshed debuffs add one whole-pack ground cue and
+    // contact obstacle's own. Applied or refreshed debuffs add one lead-dog ground cue and
     // sound per kind in this contact batch; each contact still pops its own changes.
     const impacts = this.contactFrame.take(
       this.scene.game.loop.frame,
@@ -424,7 +424,8 @@ export class RunMoments {
         this.scene,
         {
           depth: DEPTH.sprite - 0.5,
-          feet: () => this.deps.pack.cueFeet(),
+          dogs: packDogs(step.walk.run),
+          feet: (dog) => this.deps.pack.dogFeet(dog),
           view: LAYOUT.roadView,
         },
         cue,

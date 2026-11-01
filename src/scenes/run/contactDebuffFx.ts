@@ -2,17 +2,20 @@ import { animationKey } from "@andornaut/game-kit/art/aseprite";
 import type { Point, Rect } from "@andornaut/game-kit/rect";
 import type { GameObjects, Scene, Time } from "phaser";
 
+import type { DogId } from "../../data/types";
 import { DEBUFF_GROUND, type DebuffHitEffect, HIT_ART } from "../../layout/hitEffects";
+import { formationOrder } from "../../layout/packFormation";
 import { playTagOnce } from "../sprites";
 import { tagFrame } from "../uiKit";
 
-// One ground animation per visible actor.
-// Every copy plays once. Reduced motion holds the readable pose for the same loaded duration.
+// One ground animation follows the dog selected as formation lead when the cue begins.
+// It plays once. Reduced motion holds the readable pose for the same loaded duration.
 export function playContactDebuff(
   scene: Scene,
   context: {
     readonly depth: number;
-    readonly feet: () => readonly Point[];
+    readonly dogs: readonly DogId[];
+    readonly feet: (dog: DogId) => Point | undefined;
     readonly view: Rect;
   },
   cue: DebuffHitEffect,
@@ -25,18 +28,16 @@ export function playContactDebuff(
   if (cue.frame !== null && frame === undefined) {
     return;
   }
-  const feet = context.feet();
-  if (feet.length === 0) {
+  const lead = formationOrder(context.dogs)[0];
+  if (lead === undefined || context.feet(lead) === undefined) {
     return;
   }
-  const bursts = feet.map(() => {
-    const burst: GameObjects.Image | GameObjects.Sprite =
-      cue.frame === null ? scene.add.sprite(0, 0, cue.key) : scene.add.image(0, 0, cue.key, frame);
-    return burst
-      .setOrigin(0.5, DEBUFF_GROUND.groundRow / DEBUFF_GROUND.height)
-      .setScale(DEBUFF_GROUND.scale);
-  });
-  const group = scene.add.container(0, 0, bursts).setDepth(context.depth);
+  const burst: GameObjects.Image | GameObjects.Sprite =
+    cue.frame === null ? scene.add.sprite(0, 0, cue.key) : scene.add.image(0, 0, cue.key, frame);
+  burst
+    .setOrigin(0.5, DEBUFF_GROUND.groundRow / DEBUFF_GROUND.height)
+    .setScale(DEBUFF_GROUND.scale);
+  const group = scene.add.container(0, 0, [burst]).setDepth(context.depth);
   const graphics = scene.make.graphics({}, false).setScrollFactor(0);
   const { view } = context;
   graphics.fillStyle(0xffffff).fillRect(view.x, view.y, view.width, view.height);
@@ -45,14 +46,11 @@ export function playContactDebuff(
   let ended = false;
   let timer: Time.TimerEvent | undefined;
   const place = () => {
-    const places = context.feet();
-    bursts.forEach((burst, index) => {
-      const at = places[index];
-      burst.setVisible(at !== undefined);
-      if (at !== undefined) {
-        burst.setPosition(at.x, at.y + DEBUFF_GROUND.yOffset);
-      }
-    });
+    const at = context.feet(lead);
+    burst.setVisible(at !== undefined);
+    if (at !== undefined) {
+      burst.setPosition(at.x, at.y + DEBUFF_GROUND.yOffset);
+    }
   };
   const stopTracking = () => {
     if (ended) {
@@ -76,14 +74,7 @@ export function playContactDebuff(
   scene.events.on("postupdate", place);
   scene.events.once("shutdown", finish);
   if (cue.frame === null) {
-    bursts.forEach((burst, index) => {
-      playTagOnce(
-        burst as GameObjects.Sprite,
-        cue.key,
-        HIT_ART.tag,
-        index === 0 ? finish : () => {},
-      );
-    });
+    playTagOnce(burst as GameObjects.Sprite, cue.key, HIT_ART.tag, finish);
   } else {
     timer = scene.time.delayedCall(animation.duration, finish);
   }

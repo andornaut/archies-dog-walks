@@ -5,7 +5,8 @@ import type { Scene } from "phaser";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { SCREEN_LAYOUT } from "../../data/screen";
-import { DEBUFF_GROUND, type DebuffHitEffect, HIT_ART } from "../../layout/hitEffects";
+import type { DogId } from "../../data/types";
+import { type DebuffHitEffect, HIT_ART } from "../../layout/hitEffects";
 import { playTagOnce } from "../sprites";
 import { tagFrame } from "../uiKit";
 import { playContactDebuff } from "./contactDebuffFx";
@@ -116,9 +117,13 @@ function fixture(duration = 1200) {
 
 const view = SCREEN_LAYOUT.roadView;
 const cue: DebuffHitEffect = { debuff: "stinky", frame: null, key: HIT_ART.debuffs.stinky.key };
-const walker = { x: 180, y: 440 };
-const context = (feet: () => readonly Point[] = () => [walker]) => ({
+const lead = { x: 180, y: 440 };
+const context = (
+  feet: (dog: DogId) => Point | undefined = () => lead,
+  dogs: readonly DogId[] = ["ginger", "lady", "kilo"],
+) => ({
   depth: 9.5,
+  dogs,
   feet,
   view,
 });
@@ -127,23 +132,28 @@ beforeEach(() => vi.resetAllMocks());
 
 describe("contact debuff ground cues", () => {
   it.each(["muddy", "spotlight", "stinky", "zoomies"] as const)(
-    "scales %s around every actor's feet, under actors, without frame clamping",
+    "tracks only the selected formation lead for %s, under actors and without frame clamping",
     (debuff) => {
       const { bursts, events, graphics, groups, mask, scene } = fixture();
-      let feet = [walker, { x: 130, y: 420 }, { x: 230, y: 420 }];
-      playContactDebuff(
-        scene as unknown as Scene,
-        context(() => feet),
-        { ...cue, debuff, key: HIT_ART.debuffs[debuff].key },
-      );
-      expect(bursts).toHaveLength(feet.length);
-      expect(bursts.map(({ x, y }) => ({ x, y }))).toEqual(
-        feet.map(({ x, y }) => ({ x, y: y - 1 })),
-      );
+      const dogs: DogId[] = ["ginger", "lady", "kilo"];
+      const places = new Map<DogId, Point>([
+        ["ginger", { x: 130, y: 420 }],
+        ["kilo", lead],
+        ["lady", { x: 230, y: 420 }],
+      ]);
+      const feet = vi.fn((dog: DogId) => places.get(dog));
+      playContactDebuff(scene as unknown as Scene, context(feet, dogs), {
+        ...cue,
+        debuff,
+        key: HIT_ART.debuffs[debuff].key,
+      });
+      expect(bursts).toHaveLength(1);
+      expect(bursts[0]).toMatchObject({ x: lead.x, y: lead.y - 1 });
+      expect(feet.mock.calls.every(([dog]) => dog === "kilo")).toBe(true);
       expect(bursts.every(({ origin }) => origin[0] === 0.5 && origin[1] === 5 / 6)).toBe(true);
       expect(
         bursts.every(
-          ({ displayHeight, displayWidth }) => displayWidth === 90 && displayHeight === 54,
+          ({ displayHeight, displayWidth }) => displayWidth === 120 && displayHeight === 72,
         ),
       ).toBe(true);
       const first = bursts[0];
@@ -152,19 +162,20 @@ describe("contact debuff ground cues", () => {
           x: first.x - first.displayWidth * first.origin[0],
           y: first.y - first.displayHeight * first.origin[1],
         },
-      ).toEqual({ x: 135, y: 394 });
+      ).toEqual({ x: 120, y: 379 });
       expect(groups.map(({ depth }) => depth)).toEqual([9.5]);
       expect(groups.every((group) => group.mask === mask)).toBe(true);
       expect(graphics.fillRect).toHaveBeenCalledWith(view.x, view.y, view.width, view.height);
-      feet = [
-        { x: view.x + view.width + 20, y: 440 },
-        { x: 160, y: 450 },
-      ];
+      dogs.splice(0, dogs.length, "ginger", "lady");
+      const moved = { x: view.x + view.width + 20, y: 450 };
+      places.set("kilo", moved);
       events.emit("postupdate");
-      expect(bursts[0]?.x).toBe(feet[0]?.x);
-      expect(bursts[1]?.y).toBe(450 + DEBUFF_GROUND.yOffset);
-      expect(bursts[2]?.visible).toBe(false);
-      expect(playTagOnce).toHaveBeenCalledTimes(3);
+      expect(bursts[0]).toMatchObject({ x: moved.x, y: moved.y - 1 });
+      places.delete("kilo");
+      events.emit("postupdate");
+      expect(bursts[0]?.visible).toBe(false);
+      expect(feet.mock.calls.every(([dog]) => dog === "kilo")).toBe(true);
+      expect(playTagOnce).toHaveBeenCalledTimes(1);
       expect(scene.time.delayedCall).not.toHaveBeenCalled();
     },
   );
@@ -176,7 +187,7 @@ describe("contact debuff ground cues", () => {
   });
 
   it.each(["completion", "shutdown", "destroy"] as const)(
-    "cleans all ground copies, mask and listeners on %s",
+    "cleans the lead ground cue, mask and listeners on %s",
     (endedBy) => {
       const { events, graphics, groups, mask, scene } = fixture();
       playContactDebuff(scene as unknown as Scene, context(), cue);
@@ -209,8 +220,8 @@ describe("contact debuff ground cues", () => {
       expect(playTagOnce).not.toHaveBeenCalled();
       expect(tagFrame).toHaveBeenCalledWith(scene, HIT_ART.debuffs[debuff].key, HIT_ART.tag, 4);
       expect(bursts[0]).toMatchObject({
-        displayHeight: 54,
-        displayWidth: 90,
+        displayHeight: 72,
+        displayWidth: 120,
         origin: [0.5, 5 / 6],
         x: 180,
         y: 439,
@@ -221,6 +232,24 @@ describe("contact debuff ground cues", () => {
       expect(groups.every(({ active }) => !active)).toBe(true);
     },
   );
+
+  it("creates no cue without a visible formation lead and never falls back to another actor", () => {
+    const { events, scene } = fixture();
+    playContactDebuff(
+      scene as unknown as Scene,
+      context(() => lead, []),
+      cue,
+    );
+    playContactDebuff(
+      scene as unknown as Scene,
+      context((dog) => (dog === "kilo" ? undefined : lead)),
+      cue,
+    );
+    expect(scene.add.container).not.toHaveBeenCalled();
+    expect(scene.add.sprite).not.toHaveBeenCalled();
+    expect(scene.make.graphics).not.toHaveBeenCalled();
+    expect(events.listenerCount("postupdate")).toBe(0);
+  });
 
   it("skips unavailable art without graphics, listeners or timers", () => {
     const { events, scene } = fixture();

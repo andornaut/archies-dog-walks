@@ -70,7 +70,7 @@ export interface DebuffHitEffect {
 export const DEBUFF_GROUND = {
   groundRow: 30,
   height: 36,
-  scale: 1.5,
+  scale: 2,
   width: 60,
   yOffset: -1,
 } as const;
