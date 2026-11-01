@@ -55,5 +55,6 @@ export default gameViteConfig<typeof ConfigModules>({
     ...config.test,
     // Library suites belong to their own repositories; this consumer owns its src tests.
     include: ["src/**/*.test.ts"],
+    server: { deps: { inline: ["@andornaut/game-kit"] } },
   },
 }));

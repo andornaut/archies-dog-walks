@@ -20,7 +20,11 @@ it("discovers only game source tests while preserving the configured plugins and
   const { default: config } = await import("../../vite.config");
   const resolved = await config;
   expect(factory).toHaveBeenCalledOnce();
-  expect(resolved.test).toEqual({ ...base.test, include: ["src/**/*.test.ts"] });
+  expect(resolved.test).toEqual({
+    ...base.test,
+    include: ["src/**/*.test.ts"],
+    server: { deps: { inline: ["@andornaut/game-kit"] } },
+  });
   expect(resolved.plugins).toBe(base.plugins);
   expect(resolved.root).toBe(base.root);
 });

@@ -31,7 +31,7 @@
     "lint:python": "node_modules/.bin/ruff check --no-cache art/tools"
   },
   "dependencies": {
-    "@andornaut/game-kit": "file:vendor/game-kit",
+    "@andornaut/game-kit": "https://github.com/andornaut/game-kit/releases/download/v0.3.1/game-kit-0.3.1.tgz",
     "phaser": "^4.2.1",
     "valibot": "1.5.0"
   },
