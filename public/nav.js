@@ -1,4 +1,4 @@
-// The site navigation bar: Home, Play, Data, the art gallery, the repository on GitHub and the
+// The site navigation bar: Home, Play, Tuning, the art gallery, the repository on GitHub and the
 // project's Cloudflare dashboard. Every link is a page on this site, the root of an external
 // site, or this project's dashboard. A page loads it with
 // <link rel="stylesheet" href="/nav.css"> and <script src="/nav.js" defer></script> in its head
@@ -37,7 +37,7 @@
   ul.append(
     item("Home", "/"),
     item("Play", "/play/"),
-    item("Data", "/data/"),
+    item("Tuning", "/data/"),
     item("Gallery", "/art/"),
     item("GitHub", REPO),
     item("Cloudflare", DASHBOARD),

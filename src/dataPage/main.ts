@@ -522,7 +522,7 @@ function render(): void {
   tablesRow = renderTablesRow();
   sectionNodes = sections.map((section) => renderSection(filters, sectionShown(section), section));
   root.replaceChildren(
-    element("h1", "Game data"),
+    element("h1", "Tuning"),
     element("p", "Every table the game reads, with card text generated from the live values."),
     tablesRow,
     ...sectionNodes,
