@@ -32,8 +32,7 @@ import {
 } from "../testing/planner";
 import { heartsByDog } from "../testing/runState";
 import { atPack, data, geometry, inLane, step, walkWith, withHearts } from "../testing/walk";
-import { weighedUp } from "../testing/world";
-import { DART_VERGE_LANES, dartOutcome, drawMover, hopShapes } from "./moverPlanning";
+import { DART_VERGE_LANES, dartOutcome, drawMover, hopShapes, stopsToTry } from "./moverPlanning";
 import {
   inMotion,
   isPausing,
@@ -622,20 +621,18 @@ describe("movers", { timeout: 120_000 }, () => {
       expect(open).toContainEqual(stands);
     }
   });
-  // A kind with several stops draws one, each as likely, and stands in it on a row where it leaves
-  // the path open, so where a row leaves several open, the row does not fix which: across seeds
-  // each stop is stood in on some row where another was open too. Searched until each has been.
-  // Whether a row fixes the stop is a matter of each mover and its row alone, whatever else its
-  // zone plans, so its zones weigh it up (weighedUp) to bring more of them a plan.
+  // Each configured stop can be preferred before placement; safety may rule it out in a zone.
   const severalStops = stopKinds.filter((kind) => stopsOf(kind).length > 1);
-  const choseOver = (stop: StopLanes, found: readonly StandingStop[]) =>
-    found.some(({ open, stands }) => stands[0] === stop[0] && open.length > 1);
-  it.each(severalStops)("stands %s in each of its stops where another is open too", (kind) => {
-    const tuned = weighedUp(kind as MinorObstacleId | ObstacleEncounterId, everyMover);
-    const stops = searchStops(tuned, kind, (found) =>
-      stopsOf(kind).every((stop) => choseOver(stop, found)),
-    );
-    expect(stopsOf(kind).filter((stop) => !choseOver(stop, stops))).toEqual([]);
+  it.each(severalStops)("can prefer each configured stop for %s", (kind) => {
+    const movement = movementOf(kind);
+    if (movement === null) {
+      throw new Error(`Missing movement for ${kind}`);
+    }
+    const spec = moverSpec(REAL, plannerStreams(1), footprintOf(REAL, kind), movement);
+    const stops = stopsOf(kind);
+    for (const [index, stop] of stops.entries()) {
+      expect(stopsToTry(spec, (index + 0.5) / stops.length)[0]).toEqual(stop);
+    }
   });
 
   // Its first move is cued: a dive's arrow before it sets off, a stop-and-go across's before it

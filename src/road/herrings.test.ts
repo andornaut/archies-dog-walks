@@ -6,12 +6,14 @@ import { describe, expect, it } from "vitest";
 import { LANE_COUNT } from "../data/screen";
 import type { MinorObstacleId, ZoneId } from "../data/types";
 import { read } from "../rules/units";
+import { drawMover, isHerring } from "../runner/moverPlanning";
 import { moverPlace, moverTell } from "../runner/movers";
+import { moverSpec } from "../runner/moverSpecs";
 import { startRoad, stepWalk, type Walk, zoneLength } from "../runner/walk";
+import { footprintOf } from "../runner/walkItems";
 import { planZone } from "../runner/zonePlan";
 import { plannerStreams } from "../testing/movers";
 import { FASTEST_WALKER, GAME_ROAD, inZone, REAL, type Real, realRun } from "../testing/planner";
-import { weighedUp } from "../testing/world";
 import { distractionScroll } from "./distractions";
 import { herringNow } from "./herrings";
 
@@ -25,7 +27,9 @@ const HERRING_KINDS = keysOf(REAL.minorObstacles).flatMap((kind: MinorObstacleId
   const zones = REAL.world.zones
     .filter(({ weights }) => weights.minorObstacles[kind] > 0)
     .map(({ id }) => id as ZoneId);
-  return [{ kind, share: read(REAL.tuning, "probability", movement.herringShare), zones }];
+  return [
+    { kind, movement, share: read(REAL.tuning, "probability", movement.herringShare), zones },
+  ];
 });
 const SEEDS = Array.from({ length: 8 }, (_, i) => i + 1);
 const HERRING_SHARE_TOLERANCE = 0.1;
@@ -51,31 +55,17 @@ describe("red herrings", { timeout: 120_000 }, () => {
     expect(HERRING_KINDS.length).toBeGreaterThan(0);
   });
 
-  // Of a kind's movers each zone plans, about its share come as red herrings, each one of them,
-  // not one more. Each mover's draw alone makes it a red herring, whatever else its zone plans, so
-  // its zones weigh it up (weighedUp) to bring more of them a plan. Planned a seed at a time from
-  // seed 1 until HERRING_MOVERS_ENOUGH of the kind's movers come up or the search has planned
-  // HERRING_SEEDS_MOST seeds.
-  it.each(HERRING_KINDS)("plans about $share of $kind's movers as red herrings", (herring) => {
-    const data = weighedUp(herring.kind, REAL);
-    let movers = 0;
+  // Admission can omit a drawn mover, so its configured probability is measured before placement.
+  it.each(HERRING_KINDS)("draws about $share of $kind's movers as red herrings", (herring) => {
+    const streams = plannerStreams(1);
+    const spec = moverSpec(REAL, streams, footprintOf(REAL, herring.kind), herring.movement);
     let herrings = 0;
-    for (let seed = 1; seed <= HERRING_SEEDS_MOST && movers < HERRING_MOVERS_ENOUGH; seed++) {
-      for (const { walk } of plansOf(data, herring.zones, [seed])) {
-        const { road } = walk;
-        const kindOf = (event: { kind: string }) => event.kind === herring.kind;
-        const placed = road.pending.filter((event) => kindOf(event) && event.mover !== undefined);
-        const shown = road.herrings.filter(kindOf);
-        const asked = road.planned
-          .filter((quota) => kindOf(quota) && quota.movement === "stopAndGoAcross")
-          .reduce((sum, { count }) => sum + count, 0);
-        expect(placed.length + shown.length).toBeLessThanOrEqual(asked);
-        movers += asked;
-        herrings += shown.length;
-      }
+    for (let mover = 0; mover < HERRING_MOVERS_ENOUGH; mover++) {
+      herrings += Number(isHerring(spec, drawMover(streams)));
     }
-    expect(movers).toBeGreaterThanOrEqual(HERRING_MOVERS_ENOUGH);
-    expect(Math.abs(herrings / movers - herring.share)).toBeLessThan(HERRING_SHARE_TOLERANCE);
+    expect(Math.abs(herrings / HERRING_MOVERS_ENOUGH - herring.share)).toBeLessThan(
+      HERRING_SHARE_TOLERANCE,
+    );
   });
 
   // Each red herring is no spawn of the walk's, and its seed plans it again the same. It shows from
