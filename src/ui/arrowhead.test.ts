@@ -26,15 +26,20 @@ describe("compassStep", () => {
 describe("arrowheadPixels", () => {
   // A line's direction, at angles on and between the compass steps.
   it.each([[0], [20], [45], [60], [90], [135], [200], [250], [315]])(
-    "is symmetric about its axis for a line at %d degrees",
+    "draws a symmetric head with visible depth and width at %d degrees",
     (degrees) => {
       const dx = Math.cos((degrees * Math.PI) / 180);
       const dy = Math.sin((degrees * Math.PI) / 180);
       const step = compassStep(dx, dy);
-      const pixels = arrowheadPixels(4, dx, dy);
+      const rows = 4;
+      const pixels = arrowheadPixels(rows, dx, dy);
       const shown = new Set(pixels.map(key));
       expect(pixels.filter((pixel) => !shown.has(key(reflect(step, pixel))))).toEqual([]);
       expect(shown.has("0,0")).toBe(true);
+      expect(
+        Math.max(...pixels.map(({ x, y }) => Math.max(Math.abs(x), Math.abs(y)))),
+      ).toBeGreaterThanOrEqual(rows - 1);
+      expect(pixels.some(({ x, y }) => x * step.y !== y * step.x)).toBe(true);
       // Every pixel lies behind the tip.
       expect(pixels.every(({ x, y }) => x * step.x + y * step.y <= 0)).toBe(true);
     },
