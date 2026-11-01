@@ -35,6 +35,7 @@ import {
   startSession,
   stepSession,
 } from "../runner/session";
+import { auditSpawnPlan } from "../runner/spawnValidation";
 import {
   laneMotionConfig,
   laneMoveSeconds,
@@ -46,6 +47,7 @@ import {
   type WalkStep,
 } from "../runner/walk";
 import { blocksLane, type WalkItemKind } from "../runner/walkItems";
+import type { ZonePlanObservation } from "../runner/zonePlan";
 import { packDogs } from "../state/pack";
 import { newRun, type PackDogs, type RunState } from "../state/runState";
 import { addCents, type Cents, cents } from "../units";
@@ -63,6 +65,7 @@ import { choosePath, pickCardOption, type PolicyId, type RoutePolicyId } from ".
 import type { BotSight } from "./sight";
 import type { Skill } from "./skills";
 import {
+  attachSpawnAudit,
   capturePlanningFailure,
   plannedWalkEvents,
   type PlanningFailure,
@@ -395,10 +398,34 @@ function policyChoice(
 }
 
 // The counts of the zone just planned, read from the road the plan left.
-function noteZonePlan(data: SimData, seed: number, tally: Tally, walk: Walk): void {
+function noteZonePlan(
+  data: SimData,
+  seed: number,
+  tally: Tally,
+  observations: Map<number, ZonePlanObservation>,
+  walk: Walk,
+): void {
   const { run } = walk;
   tally.deliveries.push(zoneDelivery(data, run.zoneIndex + 1, currentZoneId(data, run), walk.road));
-  tally.spawnEvents.push(plannedWalkEvents(seed, run, currentZoneId(data, run), walk.road));
+  const observation = observations.get(run.zoneIndex);
+  const selected =
+    observation === undefined
+      ? walk.road
+      : {
+          herrings: observation.planned.herrings,
+          pending: observation.planned.events,
+          planned: observation.plan.quotas,
+        };
+  const events = plannedWalkEvents(seed, run, currentZoneId(data, run), selected);
+  if (observation !== undefined) {
+    events.admission = observation.planned.admission;
+    attachSpawnAudit(
+      events,
+      auditSpawnPlan(observation.plan, observation.planned, observation.planned.visibility),
+    );
+    observations.delete(run.zoneIndex);
+  }
+  tally.spawnEvents.push(events);
 }
 
 // A choice's record: an encounter card seen, and the firings it brought about.
@@ -435,11 +462,16 @@ function botRoadOf(data: SimData, walk: Walk): BotRoad & { readonly pack: RunSta
 // walking that follow move the lane control it believes in until it reacts (observeDrift).
 function playBySkill(data: SimData, seed: number, config: SimConfig, tally: Tally): void {
   const { player } = config;
-  const streams = runStreams(seed);
+  const observations = new Map<number, ZonePlanObservation>();
+  const streams = {
+    ...runStreams(seed),
+    observeSpawns: (observation: ZonePlanObservation) =>
+      observations.set(observation.context.zoneIndex, observation),
+  };
   const bot = newBot(randomStream(seed, "bot"), player.sight, player.skill);
   const start = { road: startRoad(LANE_COUNT), run: tally.run };
   let session = startSession(data, streams, screenRoadGeometry, start);
-  noteZonePlan(data, seed, tally, session.walk);
+  noteZonePlan(data, seed, tally, observations, session.walk);
   let road = botRoadOf(data, session.walk);
   while (session.walk.run.phase.kind !== "ended") {
     const { card, walk } = session;
@@ -543,7 +575,7 @@ function playBySkill(data: SimData, seed: number, config: SimConfig, tally: Tall
           });
           break;
         case "zonePlanned":
-          noteZonePlan(data, seed, tally, step.session.walk);
+          noteZonePlan(data, seed, tally, observations, step.session.walk);
           road = botRoadOf(data, step.session.walk);
           bot.replan = true;
           break;

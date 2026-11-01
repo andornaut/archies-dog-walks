@@ -1,4 +1,5 @@
 import type { ZoneId } from "../data/types";
+import type { AdmissionReport } from "../runner/spawnAdmission";
 import { SpawnPlanningError, type SpawnPlanSnapshot } from "../runner/spawnSearch";
 import type { SpawnAudit } from "../runner/spawnValidation";
 import type { Walk, WalkStep } from "../runner/walk";
@@ -41,6 +42,7 @@ export interface SpawnFlow {
 // Generated means dispatched from pending by the runner. Encountered counts native bump,
 // contact, card-hit, immune-contact and collection outcomes, not side exits or placements.
 export interface ZoneWalkEvents {
+  admission?: AdmissionReport<WalkItemKind>;
   audit?: SpawnAudit;
   // Configured is the frozen effective quota total after modifiers and weighted selection;
   // requested per kind partitions that same denominator, before any omission or herring.

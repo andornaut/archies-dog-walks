@@ -388,9 +388,32 @@ describe("simulateRun planning diagnostics", () => {
     const starting = vi.spyOn(sessions, "startSession").mockReturnValue(initial);
     const stepping = vi
       .spyOn(sessions, "stepSession")
-      .mockReturnValueOnce({
-        events: [{ kind: "zonePlanned", unplanned: initial.walk }],
-        session: { ...initial, walk: { road, run: second } },
+      .mockImplementationOnce((_data, streams) => {
+        streams.observeSpawns?.({
+          context: { seed: 7, zoneIndex: 1 },
+          plan: {
+            ...snapshot.plan,
+            fixedKinds: [],
+            maxEmptyRows: Infinity,
+            quotas: [{ blocksLane: false, count: 5, kind: "tip" }],
+          },
+          planned: {
+            admission: {
+              capacity: { limits: [], rows: 0 },
+              counts: [],
+              rejections: [],
+              substitutions: [],
+            },
+            events: [],
+            herrings: [],
+            path: [],
+            visibility: [],
+          },
+        });
+        return {
+          events: [{ kind: "zonePlanned", unplanned: initial.walk }],
+          session: { ...initial, walk: { road, run: second } },
+        };
       })
       .mockImplementationOnce(() => {
         throw new SpawnPlanningError("unfilled later quota", snapshot);
@@ -406,8 +429,10 @@ describe("simulateRun planning diagnostics", () => {
         result.spawnEvents.map(({ configured, position }) => ({ configured, position })),
       ).toEqual([
         { configured: 3, position: 1 },
-        { configured: 3, position: 2 },
+        { configured: 5, position: 2 },
       ]);
+      expect(result.spawnEvents[1]?.audit?.requested).toBe(5);
+      expect(result.spawnEvents[1]?.validation).toBe("invalid");
       expect(result.run).toBe(second);
       expect(result.spawnEvents[1]?.modifiers).toEqual([modifier]);
       expect(result.spawnEvents[1]?.route).toEqual(["highPark", "cabbagetown"]);
