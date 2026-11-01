@@ -1,6 +1,6 @@
 # Gameplay
 
-The design of the game, how it's tuned and tested, and what's left for the first build. A pixel-art game (simple, retro, cute) about being a dog walker. Web first, then iOS and Android.
+The design of the game, its targets, and how it is tuned and tested. A pixel-art game (simple, retro, cute) about being a dog walker. Web first, then iOS and Android.
 
 ## Docs
 
@@ -20,7 +20,7 @@ Gameplay owns the rulebook and the values and content in the data value files (e
 ## Method
 
 - **Design sessions:** start with "design session" and a topic. Claude keeps floated ideas apart from agreed ones, asks the question that unblocks a decision, and on "wrap up" proposes doc changes, writing them once confirmed.
-- **Playtest what needs eyes:** play the deployed `/play/` headless on a phone viewport, with `?seed=N&pack=...&dev=1` for a reproducible run, and report what broke to tech or art.
+- **Playtesting:** the user playtests on devices. Run a bounded simulation batch only for a specific gameplay question that unit tests cannot answer.
 - **Card text:** generated from the effects, so a value-only edit changes it with no text edit. Check the result in `shared/export/game-data.json` or on the data page.
 
 ## Targets
@@ -41,8 +41,8 @@ Some walks should fail: the road stays calm, so losing comes from bumps and choi
 - **Trade-offs:** a strong downside always comes with a matching upside (Rush hour's extra tips come with more obstacles), and the net stays in the window
 - **Walker spread:** every walker lands within the play-style window, and each, in unlock order (Casey, Mr. B, Ada, Trista), is slightly stronger than the one before: agility and perk make a walker feel different, never a lot easier or harder. The skill targets are for the median walker
 
-## Remaining for the first build
+## Release and tuning
 
-**Done when:** a walk lasts about 8 minutes, we want to play "one more", and it works by touch on a phone browser.
+**Walk target:** a walk lasts about 8 minutes, we want to play "one more", and it works by touch on a phone browser.
 
-The tuning pass is done: a buyout of the Pet shop takes about 45 walks for a typical player and 36 for an expert, Big Payday sits within reach of a great walk, and the cozy curve stays. The phone playtest of the tuned build is done; version 1 waits on the user's call. The game is called Archie's Dog Walks.
+Version 1 is complete. Tuning continues against the targets above. The game is called Archie's Dog Walks.
