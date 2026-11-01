@@ -210,6 +210,7 @@ interface Tally {
   readonly debuffsByZone: DebuffsByZone;
   readonly deliveries: ZoneDelivery[];
   readonly spawnEvents: ZoneWalkEvents[];
+  readonly spawnOrigins: Map<number, ZoneWalkEvents>;
   readonly firings: FiringRecord[];
   readonly hits: HitCounts;
   readonly inputs: InputEvent[];
@@ -550,7 +551,7 @@ function playBySkill(data: SimData, seed: number, config: SimConfig, tally: Tall
             afterPull !== null && bot.clock <= afterPull.until ? afterPull.fromLane : null;
           const zoneEvents = tally.spawnEvents.at(-1);
           if (zoneEvents !== undefined) {
-            recordWalkEvents(zoneEvents, pulledWalk, event.step);
+            recordWalkEvents(tally.spawnOrigins, zoneEvents, pulledWalk, event.step);
           }
           countLeaving(data, tally, road.geometry, pulledFrom, pulledWalk, event.step);
           noteDebuffCosts(data, tally.debuffCosts, pulledWalk.run, event.step);
@@ -623,6 +624,7 @@ export function simulateRun(data: SimData, seed: number, config: SimConfig): Run
       walker: config.walker,
     }),
     spawnEvents: [],
+    spawnOrigins: new Map(),
     tips: cents(0),
     zones: [],
   };

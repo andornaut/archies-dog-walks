@@ -120,13 +120,41 @@ export function attachSpawnAudit(events: ZoneWalkEvents, audit: SpawnAudit): voi
   }
 }
 
-export function recordWalkEvents(events: ZoneWalkEvents, before: Walk, step: WalkStep): void {
+export function recordWalkEvents(
+  origins: Map<number, ZoneWalkEvents>,
+  events: ZoneWalkEvents,
+  before: Walk,
+  step: WalkStep,
+): void {
   const pending = new Set(step.walk.road.pending);
-  for (const event of before.road.pending) {
-    if (!pending.has(event)) {
-      flow(events, event.kind).generated += 1;
-    }
+  const dispatched = before.road.pending.filter((event) => !pending.has(event));
+  const allocated = step.walk.road.nextItemId - before.road.nextItemId;
+  if (allocated !== dispatched.length) {
+    throw new Error(
+      `Simulator dispatch identity mismatch: ${allocated} ids for ${dispatched.length} events`,
+    );
   }
+  for (let id = before.road.nextItemId; id < step.walk.road.nextItemId; id++) {
+    if (origins.has(id)) {
+      throw new Error(`Duplicate simulated item id ${id}`);
+    }
+    origins.set(id, events);
+  }
+  // stepWalk allocates ids in due-event order, once for every dispatched event.
+  const arrived = dispatched.map((event, index) => ({
+    id: before.road.nextItemId + index,
+    kind: event.kind,
+  }));
+  for (const item of arrived) {
+    flow(events, item.kind).generated += 1;
+  }
+  const owner = (item: { readonly id: number; readonly kind: WalkItemKind }) => {
+    const origin = origins.get(item.id);
+    if (origin === undefined) {
+      throw new Error(`Missing simulated origin for item ${item.id} (${item.kind})`);
+    }
+    return flow(origin, item.kind);
+  };
   const touched = new Map(
     [
       ...step.bumps.filter(({ dodged }) => !dodged),
@@ -148,22 +176,30 @@ export function recordWalkEvents(events: ZoneWalkEvents, before: Walk, step: Wal
     }
   }
   for (const item of touched.values()) {
-    flow(events, item.kind).touched += 1;
+    owner(item).touched += 1;
   }
   for (const item of encountered.values()) {
-    flow(events, item.kind).encountered += 1;
+    owner(item).encountered += 1;
   }
-  for (const card of step.encounterHits) {
-    flow(events, card.encounter).encountered += 1;
-    flow(events, card.encounter).touched += 1;
+  const encounterItems = step.encounterItems ?? [];
+  if (encounterItems.length !== step.encounterHits.length) {
+    throw new Error("Missing native card-hit item identities in simulator step");
+  }
+  for (const [index, item] of encounterItems.entries()) {
+    if (item.kind !== step.encounterHits[index]?.encounter) {
+      throw new Error(`Card-hit identity kind mismatch for item ${item.id}`);
+    }
+    owner(item).encountered += 1;
+    owner(item).touched += 1;
   }
   for (const item of step.passed) {
-    flow(events, item.kind).passed += 1;
+    owner(item).passed += 1;
   }
   const remaining = new Set(step.walk.road.items.map(({ id }) => id));
-  for (const item of before.road.items) {
+  for (const item of [...before.road.items, ...arrived]) {
     if (!remaining.has(item.id)) {
-      flow(events, item.kind).departed += 1;
+      owner(item).departed += 1;
+      origins.delete(item.id);
     }
   }
 }

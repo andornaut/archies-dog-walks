@@ -62,7 +62,7 @@ describe("simulator spawn observations", () => {
     before.road.pending = [{ distance: 0, kind: "touristTrain", lane: 0 }];
     before.road.herrings = [{ distance: 20, kind: "touristTrain", lane: 0 }];
     const events = plannedWalkEvents(7, before.run, "highPark", before.road);
-    recordWalkEvents(events, before, step(before, 0));
+    recordWalkEvents(new Map(), events, before, step(before, 0));
     expect(events.configured).toBe(2);
     expect(events.kinds.touristTrain).toMatchObject({
       admitted: 2,
@@ -82,7 +82,7 @@ describe("simulator spawn observations", () => {
     const events = plannedWalkEvents(7, before.run, "highPark", before.road);
     const moved = step(before, 0);
     moved.walk.road.items = [];
-    recordWalkEvents(events, before, moved);
+    recordWalkEvents(new Map([[8, events]]), events, before, moved);
     const audit: SpawnAudit = {
       counts: [{ emitted: 1, kind: "bench", movement: null, requested: 1, validPlaced: 0 }],
       findings: [],
@@ -100,5 +100,98 @@ describe("simulator spawn observations", () => {
     expect(events.kinds.bench).toMatchObject({ departed: 1, encountered: 0, valid: null });
     expect(events.audit).toBe(audit);
     expect(events.validation).toBe("unverified");
+  });
+
+  it("preserves same-kind origins across zones and retires a same-frame dispatch", () => {
+    const before = walkWith(["ginger"]);
+    before.road.nextItemId = 10;
+    before.road.planned = [
+      { count: 1, kind: "bench", movement: null },
+      { count: 1, kind: "thief", movement: null },
+      { count: 1, kind: "tip", movement: null },
+    ];
+    before.road.pending = [
+      { distance: 0, kind: "bench", lane: 0 },
+      { distance: 0, kind: "thief", lane: 1 },
+      { distance: 0, kind: "tip", lane: 2 },
+    ];
+    const carried = { height: 10, id: 9, kind: "bench", lane: 0, laneSpan: 1, y: 0 } as const;
+    const carriedCard = { height: 10, id: 8, kind: "thief", lane: 1, laneSpan: 1, y: 0 } as const;
+    before.road.items = [carried, carriedCard];
+    const original = plannedWalkEvents(7, before.run, "highPark", {
+      herrings: [],
+      pending: [{ kind: "bench" }, { kind: "thief" }],
+      planned: [
+        { count: 1, kind: "bench" },
+        { count: 1, kind: "thief" },
+      ],
+    });
+    const current = plannedWalkEvents(
+      7,
+      { ...before.run, zoneIndex: 1 },
+      "cabbagetown",
+      before.road,
+    );
+    const origins = new Map([
+      [9, original],
+      [8, original],
+    ]);
+    const moved = step(before, 0);
+    const justSpawned = moved.walk.road.items.find(({ id }) => id === 12)!;
+    expect(justSpawned.kind).toBe("tip");
+    moved.collected.push(justSpawned);
+    moved.walk.road.items = moved.walk.road.items.filter(
+      ({ id }) => id !== carried.id && id !== carriedCard.id && id !== justSpawned.id,
+    );
+    moved.bumps.push({ cash: null, change: null, dodged: true, dog: "ginger", item: carried });
+    moved.encounterHits.push({ affected: ["ginger"], encounter: "thief", kind: "encounter" });
+    moved.encounterItems = [carriedCard];
+    recordWalkEvents(origins, current, before, moved);
+    expect(original.kinds.bench).toMatchObject({
+      admitted: 1,
+      departed: 1,
+      encountered: 1,
+      generated: 0,
+      requested: 1,
+      touched: 0,
+    });
+    expect(original.kinds.thief).toMatchObject({
+      admitted: 1,
+      departed: 1,
+      encountered: 1,
+      generated: 0,
+      requested: 1,
+      touched: 1,
+    });
+    expect(current.kinds.bench).toMatchObject({
+      admitted: 1,
+      departed: 0,
+      encountered: 0,
+      generated: 1,
+      requested: 1,
+      touched: 0,
+    });
+    expect(current.kinds.thief).toMatchObject({
+      admitted: 1,
+      departed: 0,
+      encountered: 0,
+      generated: 1,
+      requested: 1,
+      touched: 0,
+    });
+    expect(current.kinds.tip).toMatchObject({
+      admitted: 1,
+      departed: 1,
+      encountered: 1,
+      generated: 1,
+      requested: 1,
+      touched: 1,
+    });
+    expect(current.configured).toBe(3);
+    expect(origins.has(12)).toBe(false);
+    expect(origins.get(10)).toBe(current);
+    expect(origins.get(11)).toBe(current);
+    expect(origins.has(9)).toBe(false);
+    expect(origins.has(8)).toBe(false);
   });
 });
