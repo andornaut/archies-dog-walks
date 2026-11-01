@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
-"""Draw the four pack-level contact-debuff effects around each member's feet.
+"""Draw the four contact-debuff effects around the lead dog's feet.
 
 fx-debuff-muddy, -spotlight, -stinky and -zoomies are 60x36, with play frames
 0 to 11 at 100ms each, played once (1200ms). Frame 4 is the reduced-motion
-pose. Each member has one copy: walker and visible dogs, anchored at (30,30)
-on (feetX, feetY-1), origin (0.5,5/6). Display at 1.5x (90x54), with the
-displayed anchor at (45,45). Follow their feet for the whole cue.
+pose. Draw one copy under the actual first dog in the ordered pack, including
+a side formation slot, with no other-dog or walker copies or fallback. If the
+lead dog is not drawn, show no ground cue. Anchor at (30,30) on the lead dog's
+(feetX, feetY-1), origin (0.5,5/6). Display at 2x (120x72), with the displayed
+anchor at (60,60). Follow the lead dog's feet for the whole cue.
 Draw above ground shadows and below all actors and leashes (road depth 9.5),
 clipped to the road viewport. These ground effects never float above a head;
 the separate acquisition icon appears above the lead dog.
