@@ -3,8 +3,14 @@ import type { Rect } from "@andornaut/game-kit/rect";
 import { type TextFitStyle } from "@andornaut/game-kit/text/textFit";
 
 import { badgeKey } from "../assets/spriteKeys";
-import type { AchievementCondition, AchievementId, GameData } from "../data/types";
+import type {
+  AchievementCondition,
+  AchievementDifficulty,
+  AchievementId,
+  GameData,
+} from "../data/types";
 import { MIN_TAP_SIZE } from "../layout/screenLayout";
+import { orderedAchievements } from "../rules/achievementOrder";
 import { achievementProgress } from "../rules/achievements";
 import type { SaveDocument } from "../save/schema";
 import { closeControl } from "../ui/closeControl";
@@ -18,6 +24,7 @@ import { MODAL } from "./modalLayout";
 export interface BadgeView {
   readonly art: string;
   readonly badgeLine: string;
+  readonly difficulty: AchievementDifficulty;
   readonly earned: boolean;
   readonly goal: string;
   readonly id: AchievementId;
@@ -36,14 +43,15 @@ export const BADGE_TEXT_COLOURS = {
   locked: { goal: "neutralSlate", name: "neutralDarkSlate", status: GREYED.shortPrice },
 } as const;
 
-// Every badge in wall order, earned or locked by the save.
+// Every badge in difficulty order, earned or locked by the save.
 export function badgeWall(
   data: Pick<GameData, "achievements">,
   save: Pick<SaveDocument, "achievements">,
 ): BadgeView[] {
-  return data.achievements.map((achievement) => ({
+  return orderedAchievements(data.achievements).map((achievement) => ({
     art: badgeKey(achievement.id),
     badgeLine: achievement.badgeLine,
+    difficulty: achievement.difficulty,
     earned: save.achievements.includes(achievement.id),
     goal: achievement.goal,
     id: achievement.id,
@@ -52,7 +60,7 @@ export function badgeWall(
   }));
 }
 
-// The badges ids name, earned, in wall order: a strip of badges just earned.
+// The badges ids name, earned, in difficulty order: a strip of badges just earned.
 export function earnedBadges(
   data: Pick<GameData, "achievements">,
   ids: readonly AchievementId[],

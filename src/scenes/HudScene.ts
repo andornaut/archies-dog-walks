@@ -74,6 +74,7 @@ import {
   zoneShare,
 } from "../hud/walkHud";
 import { zonePillLayout } from "../hud/zonePill";
+import { achievementLabel, orderedAchievements } from "../rules/achievementOrder";
 import { ownerMaxHearts } from "../rules/dogs";
 import { debuffLasting } from "../rules/durations";
 import { hintFor, hintJumpsQueue } from "../rules/hints";
@@ -1182,9 +1183,12 @@ export class HudScene extends Scene {
 
   // Each badge earned on the way, on the message strip.
   private sayAchievements(ids: readonly AchievementId[]): void {
-    for (const id of ids) {
-      const achievement = gameData.achievements.find((candidate) => candidate.id === id);
-      const text = stripLine(gameData, "achievement", { name: achievement?.name ?? id });
+    for (const achievement of orderedAchievements(gameData.achievements).filter(({ id }) =>
+      ids.includes(id),
+    )) {
+      const text = stripLine(gameData, "achievement", {
+        name: achievementLabel(gameData, achievement),
+      });
       soundboardOf(this).play("badge");
       this.messages.say({ icon: "achievement", text });
     }

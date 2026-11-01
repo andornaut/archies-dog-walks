@@ -10,6 +10,7 @@ import { defined } from "../testing/defined";
 import { testState } from "../testing/runState";
 import { newPlayerSave, veteranSave } from "../testing/saves";
 import { cents, dollarsToCents } from "../units";
+import { orderedAchievements } from "./achievementOrder";
 import {
   achievementConditionText,
   conditionHolds,
@@ -403,7 +404,7 @@ describe("profile conditions", () => {
   });
 });
 
-const ALL_IDS = gameData.achievements.map(({ id }) => id);
+const ALL_IDS = orderedAchievements(gameData.achievements).map(({ id }) => id);
 // The condition kinds judged on one run; every other kind is judged on the save.
 const RUN_KINDS: readonly AchievementCondition["kind"][] = [
   "cleanZones",
@@ -435,7 +436,7 @@ describe("newlyEarned", () => {
     expect(newlyEarned(gameData, earned, after, run)).not.toContain(id);
   });
 
-  it("lists every achievement met and not yet earned, in wall order", () => {
+  it("lists every achievement met and not yet earned, in difficulty order", () => {
     const after = saveFor(gameData, ALL_IDS, newPlayerSave);
     const run = runFactsFor(gameData, ALL_IDS);
     expect(newlyEarned(gameData, newPlayerSave, after, run)).toEqual(ALL_IDS);
@@ -458,7 +459,7 @@ describe("newlyEarned", () => {
 
 describe("earnedByRun", () => {
   it("counts only achievements whose conditions are all about the run", () => {
-    const aboutTheRun = gameData.achievements
+    const aboutTheRun = orderedAchievements(gameData.achievements)
       .filter(({ conditions }) => conditions.every(({ kind }) => RUN_KINDS.includes(kind)))
       .map(({ id }) => id);
     expect(aboutTheRun.length).toBeLessThan(ALL_IDS.length);

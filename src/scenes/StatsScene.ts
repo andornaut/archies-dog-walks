@@ -431,9 +431,13 @@ export class StatsScene extends Scene {
         const ink = inkSpan(probe);
         return ink.right - ink.left;
       };
-      return badges.map((badge) =>
-        wallCell(WALL_TEXT, inkWidth, badge, badgeProgress(gameData, save, badge)),
-      );
+      return badges.map((badge) => {
+        const cell = wallCell(WALL_TEXT, inkWidth, badge, badgeProgress(gameData, save, badge));
+        return {
+          ...cell,
+          name: [...cell.name, gameData.menuText.stats.badgeDifficulty[badge.difficulty]],
+        };
+      });
     });
     // Each line's capitals' top, the goal's clear of the name's line.
     const body = pixelFontMetrics(this, "body");

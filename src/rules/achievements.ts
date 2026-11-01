@@ -17,6 +17,7 @@ import type { SaveDocument, SaveStats } from "../save/schema";
 import { lifetimeEarnedNet, timesFired, walksFinished, walksPlayed } from "../save/stats";
 import type { RunState } from "../state/runState";
 import { type Cents, dollarsToCents } from "../units";
+import { orderedAchievements } from "./achievementOrder";
 import { walkLength } from "./route";
 
 export type AchievementData = Pick<
@@ -317,7 +318,7 @@ export function achievementProgress(
   return rest.length === 0 ? acrossWalksProgress(data, save, condition) : null;
 }
 
-// The achievements a run end or a purchase earned, in wall order: those not yet earned in
+// The achievements a run end or a purchase earned, in difficulty order: those not yet earned in
 // before whose every condition holds for after, with runFacts for a run (null otherwise).
 export function newlyEarned(
   data: AchievementData,
@@ -325,7 +326,7 @@ export function newlyEarned(
   after: Pick<SaveDocument, "owned" | "stats">,
   runFacts: RunFacts | null,
 ): AchievementId[] {
-  return data.achievements
+  return orderedAchievements(data.achievements)
     .filter(
       ({ conditions, id }) =>
         !before.achievements.includes(id) &&
@@ -337,7 +338,7 @@ export function newlyEarned(
 // The achievements one run earns on its own facts: those whose every condition is a run
 // condition that holds. The simulator counts them.
 export function earnedByRun(data: AchievementData, facts: RunFacts): AchievementId[] {
-  return data.achievements
+  return orderedAchievements(data.achievements)
     .filter(({ conditions }) =>
       conditions.every((condition) => conditionHolds(data, null, facts, condition)),
     )

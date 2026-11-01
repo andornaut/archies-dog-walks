@@ -23,6 +23,7 @@ import {
 } from "../home/modalLayout";
 import { isConfirmKey, isPauseKey, menuKeyActs } from "../input/keyBindings";
 import { exitShown } from "../pwa";
+import { achievementLabel } from "../rules/achievementOrder";
 import { BUTTON_SIZE } from "../ui/buttonGeometry";
 import { closeControl } from "../ui/closeControl";
 import { labelInkWidth, pixelFontMetrics, withProbe } from "../ui/phaser/pixelText";
@@ -65,7 +66,9 @@ export class CelebrationScene extends Scene {
     addRampDim(this, dim);
     const cheering = owners.slice(0, 3);
     const rows = badgeStripRows(achievements.length);
-    const names = earnedBadges(gameData, achievements).map(({ name }) => name);
+    const names = earnedBadges(gameData, achievements).map((badge) =>
+      achievementLabel(gameData, badge),
+    );
     const buttonWidth = modalActionWidth(
       modalTextWidth(this, "title", [gameData.menuText.celebration.button]),
     );

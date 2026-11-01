@@ -6,6 +6,7 @@ import { describe, expect, it } from "vitest";
 import { badgeKey } from "../assets/spriteKeys";
 import { gameData } from "../data";
 import type { AchievementCondition, ZoneId } from "../data/types";
+import { orderedAchievements } from "../rules/achievementOrder";
 import type { SaveDocument } from "../save/schema";
 import { defined } from "../testing/defined";
 import { inkWidth } from "../testing/fontInk";
@@ -138,7 +139,7 @@ function counted(condition: Counted, n: number): SaveDocument {
   }
 }
 
-const COUNTED_BADGES = gameData.achievements.flatMap((achievement) => {
+const COUNTED_BADGES = orderedAchievements(gameData.achievements).flatMap((achievement) => {
   const [condition, ...rest] = achievement.conditions;
   return rest.length === 0 && isCounted(condition) ? [{ condition, id: achievement.id }] : [];
 });
@@ -154,8 +155,29 @@ const progressText = (kind: Counted["kind"], have: number, need: number) =>
   });
 
 describe("badgeWall", () => {
-  it("lists every badge in wall order, earned by the save or locked", () => {
-    const [first] = gameData.achievements;
+  it("groups difficulties stably without changing earned state or authored order", () => {
+    const [a, b, c, d] = [
+      defined(gameData.achievements[0]),
+      defined(gameData.achievements[1]),
+      defined(gameData.achievements[2]),
+      defined(gameData.achievements[3]),
+    ] as const;
+    const achievements = [
+      { ...a, difficulty: "hard" },
+      { ...b, difficulty: "easy" },
+      { ...c, difficulty: "medium" },
+      { ...d, difficulty: "easy" },
+    ] as const;
+    const data = { ...gameData, achievements };
+    const wall = badgeWall(data, { achievements: [a.id, c.id] });
+    expect(wall.map(({ id }) => id)).toEqual([b.id, d.id, c.id, a.id]);
+    expect(wall.filter(({ earned }) => earned).map(({ id }) => id)).toEqual([c.id, a.id]);
+    expect(earnedBadges(data, [a.id, d.id, c.id]).map(({ id }) => id)).toEqual([d.id, c.id, a.id]);
+    expect(achievements.map(({ id }) => id)).toEqual([a.id, b.id, c.id, d.id]);
+  });
+
+  it("lists every badge in difficulty order, earned by the save or locked", () => {
+    const first = defined(orderedAchievements(gameData.achievements)[0]);
     const wall = badgeWall(gameData, { achievements: ["squirrel", first.id] });
     expect(wall).toHaveLength(gameData.achievements.length);
     expect(wall[0]).toMatchObject({ art: badgeKey(first.id), earned: true, name: first.name });
@@ -165,8 +187,8 @@ describe("badgeWall", () => {
 });
 
 describe("earnedBadges", () => {
-  it("lists the badges named, earned, in wall order whatever order they came in", () => {
-    const ids = gameData.achievements.map(({ id }) => id);
+  it("lists the badges named, earned, in difficulty order whatever order they came in", () => {
+    const ids = orderedAchievements(gameData.achievements).map(({ id }) => id);
     const [first, second, last] = [defined(ids[0]), defined(ids[2]), defined(ids.at(-1))];
     const shown = earnedBadges(gameData, [last, first, second]);
     expect(shown.map(({ id }) => id)).toEqual([first, second, last]);

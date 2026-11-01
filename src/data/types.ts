@@ -1360,7 +1360,7 @@ export interface AmbientMover {
 }
 
 export interface GameData {
-  // In badge wall order.
+  // Authored order is retained within each difficulty tier.
   readonly achievements: readonly [GameAchievement, ...GameAchievement[]];
   // Each zone's ambient movers.
   readonly ambient: Readonly<Record<ZoneId, readonly AmbientMover[]>>;

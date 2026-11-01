@@ -20,6 +20,7 @@ import {
 import { MENU_TEXT_FIELDS } from "../home/menuText";
 import { MODAL, modalPanelWidth, modalRect } from "../home/modalLayout";
 import { DETAIL_TEXT_WIDTH, detailPanel, detailTextTops, STATS_LAYOUT } from "../home/statsLayout";
+import { achievementLabel } from "../rules/achievementOrder";
 import { closeControl } from "../ui/closeControl";
 import { PALETTE } from "../ui/palette";
 import { addModalShade } from "../ui/phaser/draw";
@@ -131,7 +132,7 @@ export function addBadgeCelebration(
   const strip = panelBadgeStrip(rect, rows, badges.length);
   const style = { colour: PALETTE.plum, originX: 0.5, scale: TEXT_SCALE };
   const slotWidth = strip.slots[0]?.width ?? 0;
-  const named = badges.map(({ name }) => name);
+  const named = badges.map((badge) => (closes ? achievementLabel(gameData, badge) : badge.name));
   const names = strip.named ? rowNames(scene, style, slotWidth, named) : undefined;
   badges.forEach((badge, i) => {
     const slot = strip.slots[i];
@@ -187,6 +188,7 @@ export function addBadgeDetail(
   const words = gameData.menuText.stats;
   const wrap = (text: string) => wrapPixelText(scene, BODY_TEXT, DETAIL_TEXT_WIDTH, text);
   const goal = wrap(badge.goal);
+  const status = `${badge.earned ? words.badgeEarned : words.badgeLocked} (${words.badgeDifficulty[badge.difficulty]})`;
   const line = wrap(
     fillLine(MENU_TEXT_FIELDS.stats, words, "badgeLine", { line: badge.badgeLine }),
   );
@@ -197,8 +199,7 @@ export function addBadgeDetail(
     Math.max(
       BADGE_SIZE * DETAIL_BADGE_SCALE + 2 * MODAL.pad,
       modalTextWidth(scene, "title", [badge.name]) + 2 * MODAL.pad,
-      modalTextWidth(scene, "body", [words.badgeEarned, words.badgeLocked, ...goal, ...line]) +
-        2 * MODAL.pad,
+      modalTextWidth(scene, "body", [status, ...goal, ...line]) + 2 * MODAL.pad,
     ),
   );
   const panel = modalRect(dim, undefined, { height: measured.height, width });
@@ -227,7 +228,6 @@ export function addBadgeDetail(
   const text = (y: number, value: string, style: Partial<PixelTextStyle>) =>
     addBodyText(scene, parent, { x: centre, y: panel.y + y }, value, { originX: 0.5, ...style });
   text(DETAIL_TEXT.nameY, badge.name, { colour: colours.name, font: "title" });
-  const status = badge.earned ? words.badgeEarned : words.badgeLocked;
   text(tops.status, status, { colour: colours.status });
   // The goal and line centred under the name, each line of them centred on the card.
   text(tops.goal, goal.join("\n"), { align: "centre", colour: colours.goal });
