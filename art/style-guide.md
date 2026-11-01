@@ -25,8 +25,8 @@ Every piece is very readable, clean and not busy, judged at the size it's shown:
 
 | Band     | Screen rows | Contents                                                              |
 | -------- | ----------- | --------------------------------------------------------------------- |
-| Backdrop | 48 to 205   | `backdrop-<zone>`, 360×158                                            |
-| Road     | 206 to 481  | 5 lanes of 64px; at the pack the road spans x 20 to 340, centre x 180 |
+| Backdrop | 40 to 197   | `backdrop-<zone>`, 360×158                                            |
+| Road     | 198 to 481  | 5 lanes of 64px; at the pack the road spans x 20 to 340, centre x 180 |
 
 | Sprite                                                                                                              | Frame                                            |
 | ------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------ |
