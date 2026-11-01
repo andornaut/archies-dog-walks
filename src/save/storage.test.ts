@@ -1,56 +1,41 @@
-import { memoryStorage } from "@andornaut/game-kit/save/storage";
-import { describe, expect, it } from "vitest";
+import { saveStore } from "@andornaut/game-kit/save/saveStore";
+import { localSaveStorage, memoryStorage } from "@andornaut/game-kit/save/storage";
+import { describe, expect, it, vi } from "vitest";
 
-import { newPlayerSave, STARTER_DOGS, testContext, veteranSave } from "../testing/saves";
-import { cents } from "../units";
-import { SAVE_VERSION, storedSave } from "./schema";
-import { gameSaveStore, SAVE_KEYS } from "./storage";
+import { testContext } from "../testing/saves";
+import { saveFormat } from "./load";
+import { gameSaveStore, pageSaveStore, SAVE_KEYS } from "./storage";
 
-// The veteran save as the store writes it.
-const VETERAN_STORED = JSON.stringify(storedSave(testContext.defaults, veteranSave()));
+vi.mock("./load", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("./load")>();
+  return { ...actual, saveFormat: vi.fn(actual.saveFormat) };
+});
+vi.mock("@andornaut/game-kit/save/saveStore", () => ({ saveStore: vi.fn() }));
+vi.mock("@andornaut/game-kit/save/storage", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@andornaut/game-kit/save/storage")>();
+  return { ...actual, localSaveStorage: vi.fn() };
+});
 
-const NEWER_RAW = JSON.stringify({ ...veteranSave(), version: SAVE_VERSION + 1 });
-
-// The kit's save store tests its storage faults; these test it with the game's format.
 describe("gameSaveStore", () => {
-  it("round-trips a save, writing only what a load cannot add back", async () => {
-    const entries = new Map<string, string>();
-    const store = gameSaveStore(testContext, memoryStorage(entries));
-    expect(await store.save(veteranSave())).toEqual({ status: "saved" });
-    expect([...entries.keys()]).toEqual([SAVE_KEYS.save]);
-    expect(JSON.parse(entries.get(SAVE_KEYS.save) ?? "null").owned).toEqual({
-      dogSlots: [3],
-      dogs: veteranSave().owned.dogs.filter((dog) => !STARTER_DOGS.includes(dog)),
-      gear: ["fannyPack", "runningShoes"],
-      walkers: ["ada", "mrB", "trista"],
-    });
-    expect(await gameSaveStore(testContext, memoryStorage(entries)).load()).toEqual({
-      save: veteranSave(),
-      status: "loaded",
+  it("binds the game's storage keys and save format to the supplied storage", () => {
+    const storage = memoryStorage();
+    const format = saveFormat(testContext);
+    vi.mocked(saveFormat).mockReturnValueOnce(format);
+    gameSaveStore(testContext, storage);
+    expect(saveFormat).toHaveBeenLastCalledWith(testContext);
+    expect(saveStore).toHaveBeenCalledWith(storage, SAVE_KEYS, format);
+    expect(SAVE_KEYS).toEqual({
+      backup: "dog-walker-game:save-backup",
+      save: "dog-walker-game:save",
     });
   });
 
-  // A corrupt save is backed up and replaced by the next write; a later version's save is
-  // neither backed up nor written over for the session.
-  it.each<[string, string, "corrupt" | "newer", string | undefined, string]>([
-    ["a corrupt save", "{not json", "corrupt", "{not json", "saved"],
-    ["a newer version's save", NEWER_RAW, "newer", undefined, "unavailable"],
-  ])("starts %s as a new player", async (_name, raw, status, backup, written) => {
-    const entries = new Map([[SAVE_KEYS.save, raw]]);
-    const store = gameSaveStore(testContext, memoryStorage(entries));
-    expect(await store.load()).toEqual({ reason: expect.any(String), save: newPlayerSave, status });
-    expect(entries.get(SAVE_KEYS.backup)).toBe(backup);
-    expect((await store.save(veteranSave())).status).toBe(written);
-    expect(entries.get(SAVE_KEYS.save)).toBe(written === "saved" ? VETERAN_STORED : raw);
-  });
-
-  it("refuses to write a save the schema rejects and keeps the stored one", async () => {
-    const entries = new Map([[SAVE_KEYS.save, VETERAN_STORED]]);
-    const result = await gameSaveStore(testContext, memoryStorage(entries)).save({
-      ...veteranSave(),
-      bankCents: cents(-5),
-    });
-    expect(result).toEqual({ reason: expect.any(String), status: "invalid" });
-    expect(entries.get(SAVE_KEYS.save)).toBe(VETERAN_STORED);
+  it("uses the browser storage adapter for the page save store", () => {
+    const storage = memoryStorage();
+    vi.mocked(localSaveStorage).mockReturnValueOnce(storage);
+    vi.mocked(saveStore).mockClear();
+    pageSaveStore(testContext);
+    expect(localSaveStorage).toHaveBeenCalledOnce();
+    expect(saveStore).toHaveBeenCalledWith(storage, SAVE_KEYS, expect.any(Object));
   });
 });

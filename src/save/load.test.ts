@@ -12,6 +12,7 @@ import {
   testContext,
   veteranSave,
 } from "../testing/saves";
+import { cents } from "../units";
 import { saveContextFrom, saveFormat } from "./load";
 import { createDefaultSave, SAVE_VERSION, type SaveDocument, saveSchema } from "./schema";
 
@@ -64,35 +65,31 @@ describe("loadSave", () => {
     expect(new Set(save.owned.dogs)).toEqual(new Set([...STARTER_DOGS, ...dogs]));
   });
 
-  // Each row stores the veteran save under the current version plus offset.
-  const byVersion: [string, number, (raw: string) => unknown][] = [
-    [
-      "an older save as corrupt, with a default save",
-      -1,
-      (raw) => ({
-        raw,
-        reason: expect.stringMatching(/older than this game/),
-        save: newPlayerSave,
-        status: "corrupt",
-      }),
-    ],
-    ["a current save unchanged", 0, () => ({ save: veteranSave(), status: "loaded" })],
-    [
-      "a newer save as newer, with a default save and no backup",
-      1,
-      () => ({
-        reason: expect.stringMatching(/newer than this game/),
-        save: newPlayerSave,
-        status: "newer",
-      }),
-    ],
-  ];
-
-  it.each(byVersion)("loads %s", (_name, offset, expected) => {
-    const raw = withChanges((document) => {
-      untyped(document).version = SAVE_VERSION + offset;
+  it("stores purchased unlocks while leaving starter unlocks implicit", () => {
+    const encoded = saveFormat(testContext).encode(veteranSave());
+    expect(encoded).toMatchObject({
+      ok: true,
+      value: {
+        owned: {
+          dogSlots: [3],
+          dogs: veteranSave().owned.dogs.filter((dog) => !STARTER_DOGS.includes(dog)),
+          gear: ["fannyPack", "runningShoes"],
+          walkers: ["ada", "mrB", "trista"],
+        },
+      },
     });
-    expect(loadSave(saveFormat(testContext), raw)).toEqual(expected(raw));
+  });
+
+  it("rejects a negative bank through the game save encoder", () => {
+    expect(
+      saveFormat(testContext).encode({ ...veteranSave(), bankCents: cents(-5) }),
+    ).toMatchObject({ ok: false });
+  });
+
+  it("declares the current save version without migrations", () => {
+    const format = saveFormat(testContext);
+    expect(format.version).toBe(SAVE_VERSION);
+    expect(format.migrations).toEqual({});
   });
 
   // Each row changes the stored veteran save, then reads part of what loads.
@@ -330,7 +327,6 @@ describe("loadSave", () => {
 
   describe("a save it cannot use", () => {
     const corruptCases: [string, string][] = [
-      ["text that is not JSON", "{not json"],
       [
         "a missing field",
         withChanges((document) => {

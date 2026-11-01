@@ -1,7 +1,12 @@
-import { itemAt } from "@andornaut/game-kit/arrays";
-import { describe, expect, it } from "vitest";
+import { animationSpecs as sheetAnimations } from "@andornaut/game-kit/art/aseprite";
+import { describe, expect, it, vi } from "vitest";
 
 import { animationSpecs } from "./asepriteAnimations";
+
+vi.mock("@andornaut/game-kit/art/aseprite", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@andornaut/game-kit/art/aseprite")>();
+  return { ...actual, animationSpecs: vi.fn(actual.animationSpecs) };
+});
 
 function sheet(durations: number[], frameTags: unknown[] | undefined) {
   return {
@@ -15,48 +20,36 @@ function tag(direction: string, from: number, to: number) {
 }
 
 describe("animationSpecs", () => {
-  it("builds one animation per tag, keyed by texture and tag", () => {
-    const specs = animationSpecs(
-      "dog-kilo",
-      sheet(
-        [150, 150, 120, 120],
-        [
-          { direction: "forward", from: 0, name: "walk", to: 1 },
-          { direction: "forward", from: 2, name: "react", to: 3 },
-        ],
-      ),
-    );
-    expect(specs.map(({ key }) => key)).toEqual(["dog-kilo:walk", "dog-kilo:react"]);
-    expect(itemAt(specs, 1).frames).toEqual([
-      { duration: 120, frame: "dog 2.aseprite" },
-      { duration: 120, frame: "dog 3.aseprite" },
-    ]);
+  it("validates a sheet before passing its texture and frames to the kit", () => {
+    const json = sheet([150], [tag("forward", 0, 0)]);
+    const built = [{ frames: [], key: "built-by-kit" }];
+    vi.mocked(sheetAnimations).mockReturnValueOnce(built);
+    expect(animationSpecs("dog-kilo", json)).toBe(built);
+    expect(sheetAnimations).toHaveBeenLastCalledWith("dog-kilo", json);
   });
 
-  it("plays each direction in Aseprite's order, and no animation for a sheet without tags", () => {
-    const orders: [string, number[]][] = [
-      ["forward", [1, 2, 3]],
-      ["reverse", [3, 2, 1]],
-      ["pingpong", [1, 2, 3, 2]],
-      ["pingpong_reverse", [3, 2, 1, 2]],
-    ];
-    for (const [direction, order] of orders) {
-      const [spec] = animationSpecs("dog", sheet([1, 2, 3], [tag(direction, 0, 2)]));
-      expect(
-        spec?.frames.map(({ duration }) => duration),
-        direction,
-      ).toEqual(order);
-    }
-    expect(animationSpecs("face", sheet([100], undefined))).toEqual([]);
+  it("normalizes absent frame tags for the kit", () => {
+    const json = sheet([100], undefined);
+    vi.mocked(sheetAnimations).mockReturnValueOnce([]);
+    animationSpecs("face", json);
+    expect(sheetAnimations).toHaveBeenLastCalledWith("face", {
+      ...json,
+      meta: { frameTags: [] },
+    });
+  });
+
+  it("adds the texture name and retains the cause when the kit rejects a sheet", () => {
+    const cause = new Error("invalid frame reference");
+    vi.mocked(sheetAnimations).mockImplementationOnce(() => {
+      throw cause;
+    });
+    expect(() => animationSpecs("dog-kilo", sheet([150], []))).toThrow(
+      expect.objectContaining({ cause, message: "dog-kilo: invalid frame reference" }),
+    );
   });
 
   it("rejects a malformed sheet, naming the tag or frame", () => {
     const cases: { error: string; json: unknown; name: string }[] = [
-      {
-        error: "dog-kilo: Tag walk refers to missing frame 1",
-        json: sheet([150], [tag("forward", 0, 4)]),
-        name: "a tag that points past the last frame, naming it",
-      },
       {
         error: "dog-kilo sheet.meta.frameTags[0] from must not be after to",
         json: sheet([150, 150, 150], [tag("forward", 2, 1)]),

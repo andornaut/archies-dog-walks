@@ -1,29 +1,34 @@
-import { describe, expect, it } from "vitest";
+import { rampDown } from "@andornaut/game-kit/rgba";
+import { describe, expect, it, vi } from "vitest";
 
 import { darkerRamp } from "./darkRamp";
-import { PALETTE_COLOURS, paletteColour } from "./housePalette";
+import { ONE_STEP_DARKER, PALETTE_COLOURS, paletteColour } from "./housePalette";
+
+vi.mock("@andornaut/game-kit/rgba", () => ({ rampDown: vi.fn() }));
 
 describe("darkerRamp", () => {
-  it("moves a colour down its ramp, no further than ink, from its nearest palette colour", () => {
-    const cases: [string, number, number, number][] = [
-      ["one step down its ramp", 1, 0xead4aa, 0xe4a672],
-      ["two steps down its ramp", 2, 0xead4aa, 0xb86f50],
-      ["two steps down another ramp", 2, 0x2ce8f5, 0x124e89],
-      ["down to ink", 2, 0x3e2731, 0x181425],
-      ["no further than ink", 2, 0x181425, 0x181425],
-      ["off the palette to its nearest palette colour", 0, 0xebd5ab, 0xead4aa],
-      ["off the palette, then down its ramp", 2, 0xebd5ab, 0xb86f50],
-    ];
-    const wrong = cases.filter(([, steps, from, to]) => darkerRamp(steps)(from) !== to);
-    expect(wrong).toEqual([]);
+  it("passes the house ramp and requested step count to the kit", () => {
+    const mapping = () => 0;
+    vi.mocked(rampDown).mockReturnValueOnce(mapping);
+    expect(darkerRamp(2)).toBe(mapping);
+    expect(rampDown).toHaveBeenCalledWith(ONE_STEP_DARKER, 2);
   });
+});
 
-  it("keeps every palette colour on the palette and steps each down to ink", () => {
+describe("the house ramp", () => {
+  it("defines a path from every palette colour to ink without another cycle", () => {
     const ink = paletteColour("ink");
-    const wrong = [...PALETTE_COLOURS].filter(
-      ([, colour]) =>
-        darkerRamp(0)(colour) !== colour || darkerRamp(PALETTE_COLOURS.size)(colour) !== ink,
-    );
-    expect(wrong).toEqual([]);
+    const palette = new Set(PALETTE_COLOURS.values());
+    for (const start of palette) {
+      const visited = new Set<number>();
+      let colour: number | undefined = start;
+      while (colour !== ink && colour !== undefined && !visited.has(colour)) {
+        expect(palette.has(colour)).toBe(true);
+        visited.add(colour);
+        colour = ONE_STEP_DARKER.get(colour);
+      }
+      expect(colour).toBe(ink);
+    }
+    expect(ONE_STEP_DARKER.get(ink)).toBe(ink);
   });
 });

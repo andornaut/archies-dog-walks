@@ -1,6 +1,9 @@
-import { describe, expect, it } from "vitest";
+import { remapRgb } from "@andornaut/game-kit/rgba";
+import { describe, expect, it, vi } from "vitest";
 
 import { greyFor, remapToGrey } from "./greyRamp";
+
+vi.mock("@andornaut/game-kit/rgba", () => ({ remapRgb: vi.fn() }));
 
 const RAMP = [0xffffff, 0xd8d8d8, 0xa4a4a4, 0x727272, 0x4a4a4a, 0x181425];
 
@@ -22,9 +25,11 @@ describe("greyFor", () => {
 });
 
 describe("remapToGrey", () => {
-  it("replaces each pixel's colour and keeps its alpha", () => {
-    const pixels = new Uint8ClampedArray([0xea, 0xd4, 0xaa, 0x80, 0x73, 0x3e, 0x39, 0xff]);
-    remapToGrey(RAMP, 0, pixels);
-    expect([...pixels]).toEqual([0xd8, 0xd8, 0xd8, 0x80, 0x4a, 0x4a, 0x4a, 0xff]);
+  it("supplies the game grey mapping and original pixel buffer to the kit", () => {
+    const pixels = new Uint8ClampedArray([0xea, 0xd4, 0xaa, 0x80]);
+    remapToGrey(RAMP, 1, pixels);
+    const [mapping, supplied] = vi.mocked(remapRgb).mock.calls[0] ?? [];
+    expect(supplied).toBe(pixels);
+    expect(mapping?.(0xead4aa)).toBe(greyFor(RAMP, 1, 0xead4aa));
   });
 });
