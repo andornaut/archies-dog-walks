@@ -761,6 +761,31 @@ export function formatDeliveryKindTable(rows: readonly MatrixRow[]): string {
   );
 }
 
+export const DEFAULT_SPAWN_TARGET = 0.8;
+
+export function parseSpawnTarget(text: string): number {
+  const target = Number(text);
+  if (text.trim() === "" || !Number.isFinite(target) || target < 0.8 || target > 1) {
+    throw new RangeError(`--spawn-target takes a fraction from 0.8 to 1, not ${text}`);
+  }
+  return target;
+}
+
+function inconsistentSpawnAudit(zone: ZoneWalkEvents): boolean {
+  const audit = zone.audit;
+  return (
+    audit !== undefined &&
+    (audit.requested !== zone.configured ||
+      audit.validPlaced > audit.requested ||
+      ![audit.requested, audit.placed, audit.validPlaced].every(
+        (count) => Number.isSafeInteger(count) && count >= 0,
+      ) ||
+      audit.counts.reduce((n, count) => n + count.requested, 0) !== audit.requested ||
+      audit.counts.reduce((n, count) => n + count.validPlaced, 0) !== audit.validPlaced ||
+      audit.counts.reduce((n, count) => n + count.emitted, 0) !== audit.placed)
+  );
+}
+
 export interface SpawnEventSummary {
   readonly position: number;
   readonly zone: string;
@@ -779,6 +804,7 @@ export interface SpawnEventSummary {
   departed: number;
   valid: number | null;
   goal: "met" | "below floor" | "invalid" | "unverified";
+  configuredTargetGoal: "met" | "below target" | "invalid" | "unverified";
   perExposure: Readonly<Record<SpawnCountField, { mean: number; min: number; max: number } | null>>;
   validConfiguredRate: number | null;
 }
@@ -827,6 +853,7 @@ export function sumSpawnEvents(
       const sum = groups.get(key) ?? {
         admitted: 0,
         configured: 0,
+        configuredTargetGoal: "met",
         departed: 0,
         encountered: 0,
         exposures: 0,
@@ -894,22 +921,46 @@ export function sumSpawnEvents(
           : (audited?.reduce((n, count) => n + count.validPlaced, 0) ?? null);
       exposure.valid = valid;
       sum.valid = sum.valid === null || valid === null ? null : sum.valid + valid;
-      const goal =
+      const invalid =
+        zone.audit !== undefined &&
+        (zone.audit.status === "invalid" ||
+          zone.audit.violations.length > 0 ||
+          inconsistentSpawnAudit(zone) ||
+          zone.audit.findings.some((finding) => finding.reasons.length > 0));
+      const unverified =
         zone.audit === undefined ||
         zone.audit.status === "unverified" ||
-        zone.audit.missingCoverage.length > 0
+        zone.audit.missingCoverage.length > 0 ||
+        zone.audit.findings.some((finding) => finding.coverage.length > 0) ||
+        zone.audit.validPlaced !== zone.audit.placed;
+      const goal = invalid
+        ? "invalid"
+        : unverified
           ? "unverified"
-          : zone.audit.status === "invalid"
-            ? "invalid"
-            : zone.audit.meetsValidPlacementFloor
-              ? "met"
-              : "below floor";
+          : zone.audit!.validPlaced >= Math.ceil(zone.configured * 0.8) &&
+              zone.audit!.meetsValidPlacementFloor
+            ? "met"
+            : "below floor";
+      const configuredGoal = invalid
+        ? "invalid"
+        : unverified
+          ? "unverified"
+          : zone.audit!.validPlaced === zone.configured
+            ? "met"
+            : "below target";
       if (
         goal === "invalid" ||
         (sum.goal !== "invalid" && goal === "unverified") ||
         (sum.goal === "met" && goal === "below floor")
       ) {
         sum.goal = goal;
+      }
+      if (
+        configuredGoal === "invalid" ||
+        (sum.configuredTargetGoal !== "invalid" && configuredGoal === "unverified") ||
+        (sum.configuredTargetGoal === "met" && configuredGoal === "below target")
+      ) {
+        sum.configuredTargetGoal = configuredGoal;
       }
       if (variation.has(zone)) {
         sum.variationExposures++;
@@ -982,7 +1033,8 @@ export function formatSpawnEventTable(rows: readonly MatrixRow[], byKind = false
       "Departed",
       "Requested/exposure mean[min,max]",
       "Valid/configured",
-      "80% zone goal",
+      "80% safety floor",
+      "100% configured target",
     ],
     sums.map((sum) => [
       String(sum.position),
@@ -1009,6 +1061,7 @@ export function formatSpawnEventTable(rows: readonly MatrixRow[], byKind = false
         ? "unverified"
         : `${(sum.validConfiguredRate * 100).toFixed(1)}%`,
       sum.goal,
+      sum.configuredTargetGoal,
     ]),
   );
 }
@@ -1040,38 +1093,59 @@ export function formatSpawnFailures(rows: readonly MatrixRow[], byKind = false):
 
 // Validation is independent of gameplay completion and never pools one zone's surplus
 // against another zone's missing events.
-export function spawnValidationFailures(rows: readonly MatrixRow[]): string[] {
+export function spawnValidationFailures(target: number, rows: readonly MatrixRow[]): string[] {
+  parseSpawnTarget(String(target));
   return rows.flatMap((row) =>
     row.spawnRuns.flatMap((run) => {
+      const failed =
+        run.failure === null ? [] : [`seed ${run.seed}: planning failed: ${run.failure.message}`];
       if (run.zones.length === 0 && run.failure === null) {
         return [`seed ${run.seed}: no zone audit recorded`];
       }
-      return run.zones.flatMap((zone) => {
-        const audit = zone.audit;
-        const reasons: string[] = [];
-        if (audit === undefined) {
-          reasons.push("missing audit");
-        } else {
-          if (audit.status !== "valid") {
-            reasons.push(`audit ${audit.status}`);
+      return [
+        ...failed,
+        ...run.zones.flatMap((zone) => {
+          const audit = zone.audit;
+          const reasons: string[] = [];
+          if (audit === undefined) {
+            reasons.push("missing audit");
+          } else {
+            if (audit.status !== "valid") {
+              reasons.push(`audit ${audit.status}`);
+            }
+            if (audit.missingCoverage.length > 0) {
+              reasons.push(`missing coverage: ${audit.missingCoverage.join(", ")}`);
+            }
+            if (inconsistentSpawnAudit(zone)) {
+              reasons.push("frozen configured quota mismatch");
+            }
+            if (
+              audit.validPlaced !== audit.placed ||
+              audit.findings.some((finding) => finding.coverage.length > 0)
+            ) {
+              reasons.push("unverified emitted placements");
+            }
+            if (
+              audit.validPlaced > audit.requested ||
+              audit.findings.some((finding) => finding.reasons.length > 0)
+            ) {
+              reasons.push("invalid emitted placements");
+            }
+            const floor = Math.ceil(zone.configured * target);
+            if (
+              (target === 1 ? audit.validPlaced !== zone.configured : audit.validPlaced < floor) ||
+              !audit.meetsValidPlacementFloor
+            ) {
+              reasons.push(`valid ${audit.validPlaced}/${zone.configured}, requires ${floor}`);
+            }
+            if (audit.violations.length > 0) {
+              reasons.push(...audit.violations.slice(0, 3));
+            }
           }
-          if (audit.missingCoverage.length > 0) {
-            reasons.push(`missing coverage: ${audit.missingCoverage.join(", ")}`);
-          }
-          if (audit.requested !== zone.configured) {
-            reasons.push("frozen configured quota mismatch");
-          }
-          const floor = Math.ceil(zone.configured * 0.8);
-          if (audit.validPlaced < floor || !audit.meetsValidPlacementFloor) {
-            reasons.push(`valid ${audit.validPlaced}/${zone.configured}, requires ${floor}`);
-          }
-          if (audit.violations.length > 0) {
-            reasons.push(...audit.violations.slice(0, 3));
-          }
-        }
-        const context = `seed ${zone.seed}, zone ${zone.position} ${zone.zone}`;
-        return reasons.length === 0 ? [] : [`${context}: ${reasons.join("; ")}`];
-      });
+          const context = `seed ${zone.seed}, zone ${zone.position} ${zone.zone}`;
+          return reasons.length === 0 ? [] : [`${context}: ${reasons.join("; ")}`];
+        }),
+      ];
     }),
   );
 }

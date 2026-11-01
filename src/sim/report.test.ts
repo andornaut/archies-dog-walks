@@ -11,6 +11,7 @@ import { cents } from "../units";
 import { POLICY_IDS } from "./policies";
 import {
   DEFAULT_MATRIX,
+  DEFAULT_SPAWN_TARGET,
   formatDebuffCostTable,
   formatDeliveryKindTable,
   formatDeliveryTable,
@@ -21,6 +22,7 @@ import {
   MATRIX_HEADERS,
   matrixCells,
   type NamedPack,
+  parseSpawnTarget,
   rowCells,
   simulateCell,
   simulateMatrix,
@@ -423,7 +425,7 @@ describe("spawn reporting", () => {
     }
   });
 
-  it("keeps unknown moving validity and evaluates each zone exposure before pooling", () => {
+  it("keeps unknown validity and validates floor and configured target per zone", () => {
     const flow = {
       admitted: 10,
       departed: 8,
@@ -455,13 +457,15 @@ describe("spawn reporting", () => {
       valid: null,
     });
     const audit = (valid: number): SpawnAudit => ({
-      counts: [{ emitted: 10, kind: "bench", movement: null, requested: 10, validPlaced: valid }],
+      counts: [
+        { emitted: valid, kind: "bench", movement: null, requested: 10, validPlaced: valid },
+      ],
       findings: [],
       meetsPlacementFloor: true,
       meetsValidPlacementFloor: valid >= 8,
       minimumPlaced: 8,
       missingCoverage: [],
-      placed: 10,
+      placed: valid,
       requested: 10,
       status: "valid",
       validPlaced: valid,
@@ -510,14 +514,45 @@ describe("spawn reporting", () => {
         },
       ],
     });
-    expect(spawnValidationFailures([observedRow(zones.slice(0, 1))])).toEqual([]);
+    expect(spawnValidationFailures(DEFAULT_SPAWN_TARGET, [observedRow(zones.slice(0, 1))])).toEqual(
+      [],
+    );
+    const partial: ZoneWalkEvents = {
+      ...zone,
+      audit: {
+        ...audit(10),
+        counts: [{ emitted: 85, kind: "bench", movement: null, requested: 100, validPlaced: 85 }],
+        minimumPlaced: 80,
+        placed: 85,
+        requested: 100,
+        validPlaced: 85,
+      },
+      configured: 100,
+    };
+    const partialRow = observedRow([partial]);
+    expect(spawnValidationFailures(DEFAULT_SPAWN_TARGET, [partialRow])).toEqual([]);
+    expect(spawnValidationFailures(parseSpawnTarget("1"), [partialRow])).toEqual([
+      "seed 7, zone 1 highPark: valid 85/100, requires 100",
+    ]);
+    expect(spawnValidationFailures(1, [observedRow(zones.slice(0, 1))])).toEqual([]);
+    expect(sumSpawnEvents([partial])[0]).toMatchObject({
+      configuredTargetGoal: "below target",
+      goal: "met",
+    });
+    expect(formatSpawnEventTable([partialRow])).toContain("100% configured target");
+    for (const target of ["", "NaN", "0.79", "1.01"]) {
+      expect(() => parseSpawnTarget(target)).toThrow("--spawn-target takes a fraction");
+    }
     for (const observed of [
       zone,
       zones[1]!,
       { ...zone, audit: { ...audit(10), status: "invalid" as const } },
       { ...zone, audit: { ...audit(10), missingCoverage: ["moving bodies"] } },
+      { ...zone, audit: { ...audit(10), requested: 11 } },
     ]) {
-      expect(spawnValidationFailures([observedRow([observed])])).toHaveLength(1);
+      expect(spawnValidationFailures(DEFAULT_SPAWN_TARGET, [observedRow([observed])])).toHaveLength(
+        1,
+      );
     }
     expect(
       formatSpawnEventTable([

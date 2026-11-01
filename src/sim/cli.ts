@@ -13,6 +13,7 @@ import type { GearId } from "../data/types";
 import { DEFAULT_ROUTE_POLICY, MIXED_PAY_SHARE, POLICY_IDS, ROUTE_POLICY_IDS } from "./policies";
 import {
   DEFAULT_MATRIX,
+  DEFAULT_SPAWN_TARGET,
   formatDebuffCostTable,
   formatDeliveryKindTable,
   formatDeliveryTable,
@@ -24,6 +25,7 @@ import {
   matrixCells,
   type MatrixPlayer,
   type MatrixRow,
+  parseSpawnTarget,
   simulateCell,
   spawnValidationFailures,
 } from "./report";
@@ -46,7 +48,7 @@ const presetLines = SKILL_PRESET_IDS.map((id) => {
 const USAGE = [
   "npm run simulate -- [--skill preset,...] [--policy id,...]",
   "                    [--route id,...] [--gear id,...] [--walker id,...] [--runs N] [--seed N]",
-  "                    [--bot foresight|sight] [--delivery groups|kinds] [--out file]",
+  "                    [--bot foresight|sight] [--delivery groups|kinds] [--spawn-target fraction] [--out file]",
   "",
   "Plays whole runs on the real rules and data, one row per policy, route, player, gear, pack",
   "and walker.",
@@ -68,6 +70,8 @@ const USAGE = [
   "  --delivery",
   "            the delivery table: groups gives a column per group, kinds also a line per kind",
   "            (default: groups)",
+  "  --spawn-target fraction of frozen configured events independently valid in EVERY zone",
+  "                 (0.8 to 1, default: 0.8; use 1 for the 100% configured target)",
   "  --out     also write the matrix and rows as JSON to this file",
   "",
   "Card policies (a safe option leaves no owner whose meter falls at 1 heart or less):",
@@ -113,6 +117,7 @@ interface Options {
   readonly out: string | undefined;
   readonly runs: number;
   readonly seed: number;
+  readonly spawnTarget: number;
 }
 
 // The cells one worker simulates, by index into matrixCells(matrix).
@@ -160,9 +165,10 @@ function parseArgs(args: readonly string[]): Options {
   let out: string | undefined;
   let runs = DEFAULT_RUNS;
   let seed = DEFAULT_SEED;
+  let spawnTarget = DEFAULT_SPAWN_TARGET;
   let skills: MatrixPlayer[] = [];
   if (args.includes("--help") || args.includes("-h")) {
-    return { delivery, help: true, matrix, out, runs, seed };
+    return { delivery, help: true, matrix, out, runs, seed, spawnTarget };
   }
   for (let i = 0; i < args.length; i += 2) {
     const flag = args[i];
@@ -201,6 +207,9 @@ function parseArgs(args: readonly string[]): Options {
       case "--runs":
         runs = parseWhole(flag, 1, value);
         break;
+      case "--spawn-target":
+        spawnTarget = parseSpawnTarget(value);
+        break;
       case "--seed":
         seed = parseWhole(flag, 0, value);
         break;
@@ -211,7 +220,7 @@ function parseArgs(args: readonly string[]): Options {
   if (skills.length > 0) {
     matrix = { ...matrix, players: skills };
   }
-  return { delivery, help: false, matrix, out, runs, seed };
+  return { delivery, help: false, matrix, out, runs, seed, spawnTarget };
 }
 
 function runJob({ cells, matrix, runs, seed }: Job): MatrixRow[] {
@@ -284,9 +293,15 @@ async function main(): Promise<void> {
         return { ...run, snapshotPath };
       }),
     }));
+    const partialReport = {
+      matrix: options.matrix,
+      rows,
+      seed: options.seed,
+      spawnTarget: options.spawnTarget,
+    };
     writeFileSync(
       join(directory, "partial-report.json"),
-      `${JSON.stringify({ matrix: options.matrix, rows, seed: options.seed }, null, 2)}\n`,
+      `${JSON.stringify(partialReport, null, 2)}\n`,
     );
   }
   const seconds = (performance.now() - started) / 1000;
@@ -321,14 +336,16 @@ async function main(): Promise<void> {
     `${rows.length} cells x ${runs} runs, seed ${seed}, bot ${matrix.sight}, in ${seconds.toFixed(1)}s\n`,
   );
   if (out !== undefined) {
-    const json = { matrix, rows, runsPerCell: runs, seed };
+    const json = { matrix, rows, runsPerCell: runs, seed, spawnTarget: options.spawnTarget };
     mkdirSync(dirname(resolve(out)), { recursive: true });
     writeFileSync(out, `${JSON.stringify(json, null, 2)}\n`);
     process.stdout.write(`Wrote ${out}\n`);
   }
-  const validationFailures = spawnValidationFailures(rows);
+  const validationFailures = spawnValidationFailures(options.spawnTarget, rows);
   if (validationFailures.length > 0) {
-    process.stderr.write(`Spawn validation failed:\n${validationFailures.join("\n")}\n`);
+    process.stderr.write(
+      `Spawn validation failed (target ${options.spawnTarget * 100}% per zone):\n${validationFailures.join("\n")}\n`,
+    );
   }
   if (failed || validationFailures.length > 0) {
     process.exitCode = 1;
