@@ -437,7 +437,8 @@ export function inMotion(path: MoverPath, since: number): boolean {
   if (path.motion === "signature") {
     return (
       since >= path.route.entryEnd &&
-      (path.route.profile.kind !== "rectangle" || since < path.route.complete)
+      ((path.route.profile.kind !== "rectangle" && path.route.profile.kind !== "delayedTrail") ||
+        since < path.route.complete)
     );
   }
   if (path.motion === "cross") {

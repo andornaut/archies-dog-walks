@@ -769,13 +769,29 @@ describe("stepWalk", () => {
   });
 
   it("hits an obstacle, holding its card for the dogs it affects, and starts the grace window", () => {
-    const { cards, encounterHits, walk } = step(walkWith(["kilo", "ginger"], [atPack("otherDog")]));
+    const item = atPack("otherDog", 37);
+    const { cards, encounterHits, encounterItems, walk } = step(
+      walkWith(["kilo", "ginger"], [item]),
+    );
     const card = { affected: ["kilo", "ginger"], encounter: "otherDog", kind: "encounter" };
     expect(encounterHits).toEqual([card]);
+    expect(encounterItems?.map(({ id }) => id)).toEqual([item.id]);
+    expect(step(walk).encounterItems).toEqual([]);
     expect(cards).toEqual([]);
     expect(walk.road.hitStop?.cards).toEqual([card]);
     expect(walk.road.items).toEqual([]);
     expect(walk.road.invulnerableSeconds).toBe(1);
+  });
+
+  it("retains distinct item identities for same-kind encounter hits", () => {
+    const items = [atPack("otherDog", 19), atPack("otherDog", 83)];
+    const hits = items.map((item) => step(walkWith(["kilo"], [item])));
+    expect(hits.map(({ encounterItems }) => encounterItems?.map(({ id }) => id))).toEqual(
+      items.map(({ id }) => [id]),
+    );
+    expect(
+      hits.map(({ encounterHits }) => encounterHits.map(({ encounter }) => encounter)),
+    ).toEqual(items.map(({ kind }) => [kind]));
   });
 
   it("hits an obstacle across several lanes from any of them, and misses it from the others", () => {

@@ -275,6 +275,8 @@ export interface WalkStep {
   collected: WalkItem[];
   contacts: ContactHit[];
   encounterHits: EncounterCard[];
+  // Runtime steps provide the actual met items, parallel to encounterHits.
+  encounterItems?: readonly WalkItem[];
   fired: readonly DogId[];
   found: GearFind[];
   instants: InstantFind[];
@@ -1080,6 +1082,7 @@ export function stepWalk(
   const cards: EncounterCard[] = [];
   const collected: WalkItem[] = [];
   const contacts: ContactHit[] = [];
+  const encounterItems: WalkItem[] = [];
   const found: GearFind[] = [];
   const instants: InstantFind[] = [];
   const modified: RoadModified[] = [];
@@ -1159,6 +1162,9 @@ export function stepWalk(
       switch (resolution.kind) {
         case "card":
           cards.push({ affected, encounter: kind, kind: "encounter" });
+          if (hitLabel(data.encounters[kind]) !== null) {
+            encounterItems.push(item);
+          }
           return;
         case "contact":
         case "instant": {
@@ -1249,6 +1255,7 @@ export function stepWalk(
     collected,
     contacts,
     encounterHits,
+    encounterItems,
     fired: firing.fired,
     found,
     instants,
@@ -1374,6 +1381,7 @@ function stillStep(held: HeldStep, walk: Walk): WalkStep {
     collected: [],
     contacts: [],
     encounterHits: [],
+    encounterItems: [],
     fired: [],
     found: [],
     instants: [],

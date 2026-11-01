@@ -142,9 +142,11 @@ export function signatureHistoryPlace(path: SignaturePath, progress: number): Po
     }
   }
   const after = position - last.at - last.length;
+  // The recorded leader history keeps its running speed until the whole trail finishes.
+  const tailY = path.profile.kind === "delayedTrail" ? path.profile.downFactor : path.tail.y;
   return {
     x: path.tail.x === 0 ? last.to.x : last.to.x + path.tail.x * after,
-    y: path.tail.y === 0 ? last.to.y : last.to.y + path.tail.y * after,
+    y: tailY === 0 ? last.to.y : last.to.y + tailY * after,
   };
 }
 
@@ -161,6 +163,13 @@ export function signatureComponentProgress(
 }
 
 export function signaturePlace(path: SignaturePath, since: number, component = 0): Point {
+  if (path.profile.kind === "delayedTrail" && since > path.complete) {
+    const stopped = signatureHistoryPlace(
+      path,
+      signatureComponentProgress(path, path.complete, component),
+    );
+    return { x: stopped.x, y: stopped.y + (since - path.complete) };
+  }
   return signatureHistoryPlace(path, signatureComponentProgress(path, since, component));
 }
 
@@ -191,6 +200,7 @@ export function signatureSweeps(path: SignaturePath, from: number, to: number): 
       from,
       ...[
         path.entryEnd,
+        path.complete,
         ...path.legs.slice(1).flatMap((leg) => [leg.at + delay, leg.at + leg.length + delay]),
       ].filter((at) => at > from && at < to),
       to,
@@ -319,7 +329,7 @@ export function compileSignature(
           move(profile.straightSeconds, 0, profile.straightSeconds * scrollSpeed * down, false);
         }
       }
-      tail = { x: 0, y: down };
+      tail = { x: 0, y: trail ? 1 : down };
       break;
     }
     case "reflectingDiagonal": {

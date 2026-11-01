@@ -15,7 +15,8 @@ import type { ProfiledMovement } from "./movementAssignments";
 import type { PlannerStreams } from "./moverPlanning";
 import { moverMovement, moverSpec } from "./moverSpecs";
 import { pickSkin } from "./obstacleLooks";
-import type { SpawnQuota } from "./spawning";
+import type { PlannedSpawns, SpawnPlan, SpawnQuota } from "./spawning";
+import { SpawnPlanningError, type SpawnPlanSnapshot, type SpawnSearchContext } from "./spawnSearch";
 import { spacedStretch } from "./stretches";
 import {
   componentHitLength,
@@ -31,12 +32,13 @@ import {
   blocksLane,
   footprintOf,
   isMinorObstacle,
+  isObstacle,
   movementOf,
   opensACard,
   type WalkItemKind,
   type WalkSpawn,
 } from "./walkItems";
-import { planSpawns } from "./zonePlanner";
+import { planCompleteSpawns } from "./zonePlanner";
 
 // The entries of a zone's weights above 0, in the data's order.
 function positiveWeights<Id extends string>(weights: Readonly<Record<Id, number>>): [Id, number][] {
@@ -177,10 +179,21 @@ export function spawnQuotas(
   ];
 }
 
+export interface ZonePlanObservation {
+  readonly context: SpawnSearchContext;
+  readonly plan: SpawnPlan<WalkItemKind>;
+  readonly planned: PlannedSpawns<WalkItemKind>;
+  readonly snapshot?: SpawnPlanSnapshot<WalkItemKind>;
+}
+
+export interface ZonePlanningContext extends SpawnSearchContext {
+  readonly observePlan?: (observation: ZonePlanObservation) => void;
+}
+
 // Plans the run's current zone: its spawns, each obstacle and lucky encounter drawn by the
 // zone's weights. Last, each minor obstacle with skins picks its skin (pickSkin) from the spawns
 // stream, after every spawn is placed, so the picks move no spawn.
-export function planZone(
+export function planZoneWithContext(
   data: WalkData,
   geometry: Pick<
     RoadGeometry,
@@ -194,6 +207,7 @@ export function planZone(
     | "sightLength"
     | "tallestPackBand"
   >,
+  context: ZonePlanningContext,
   streams: PlannerStreams,
   walk: Walk,
 ): Walk {
@@ -256,7 +270,10 @@ export function planZone(
     pathLaneMoveSeconds: read(data.tuning, "seconds", "laneMove") / slowestDebuffedAgility(data),
     // The path goes on from where the last zone's ends, or starts in the pack's lane.
     pathStart: road.path[road.path.length - 1]?.lane ?? road.control.target,
-    quotas: withHitLengths(spawnQuotas(data, streams, run)),
+    quotas: withHitLengths(spawnQuotas(data, streams, run)).map((quota) => ({
+      ...quota,
+      hazard: isObstacle(data, quota.kind),
+    })),
     reactionSeconds: read(data.tuning, "seconds", "pathReactionMargin"),
     riderFollowGap: read(data.tuning, "pixels", "riderFollowGap"),
     roadLength: geometry.roadBottom - geometry.roadTop,
@@ -270,7 +287,17 @@ export function planZone(
     kind,
     movement: mover?.movement ?? null,
   }));
-  const { admission, events, herrings, path } = planSpawns(streams, plan);
+  const complete = planCompleteSpawns(context, streams, plan);
+  if (complete.status !== "complete" && complete.status !== "partial") {
+    throw new SpawnPlanningError(complete.reason, complete.snapshot);
+  }
+  context.observePlan?.({
+    context: { seed: context.seed, zoneIndex: context.zoneIndex },
+    plan,
+    planned: complete.planned,
+    snapshot: complete.snapshot,
+  });
+  const { admission, events, herrings, path } = complete.planned;
   const zone = currentZone(data, run).id;
   const pending = events.map((event): WalkSpawn => {
     const skin = isMinorObstacle(data, event.kind)
@@ -279,4 +306,20 @@ export function planZone(
     return skin === undefined ? event : { ...event, skin };
   });
   return { road: { ...road, admission, herrings, path, pending, planned }, run };
+}
+
+// Direct planner callers have no session seed. Their deterministic repair namespace is explicit.
+export function planZone(
+  data: WalkData,
+  geometry: Parameters<typeof planZoneWithContext>[1],
+  streams: PlannerStreams,
+  walk: Walk,
+): Walk {
+  return planZoneWithContext(
+    data,
+    geometry,
+    { seed: 0, zoneIndex: walk.run.zoneIndex },
+    streams,
+    walk,
+  );
 }

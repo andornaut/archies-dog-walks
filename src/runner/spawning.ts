@@ -7,6 +7,7 @@ import { crossingScroll, laneAt, type MoverPath, moverPlace, type MoverStep } fr
 import { shyOutcomes } from "./shy";
 import { signaturePlace } from "./signaturePaths";
 import type { AdmissionReport } from "./spawnAdmission";
+import type { SpawnVisibilityTrace } from "./spawnVisibility";
 
 // What a spawn covers: lanes across, and rows along the road of footprint.cellLength each.
 export interface Footprint {
@@ -36,6 +37,8 @@ export interface SpawnQuota<Kind extends string> {
   first?: boolean;
   footprint?: Footprint;
   hitLength?: number;
+  // Pull hazards do not block lanes but share the visible-kind limit.
+  hazard?: boolean;
   kind: Kind;
   mover?: MoverSpec;
   moversPassOver?: boolean;
@@ -122,6 +125,7 @@ export interface PlannedSpawns<Kind extends string> {
   events: SpawnEvent<Kind>[];
   herrings: SpawnEvent<Kind>[];
   path: PathRow[];
+  visibility: readonly SpawnVisibilityTrace[];
 }
 
 interface DueSpawns<Event> {
@@ -386,6 +390,50 @@ export function moverMayTake(
 interface MoverRest {
   distance: number;
   lane: number;
+}
+
+export interface StandingPickup {
+  readonly firstRow: number;
+  readonly from: number;
+  readonly lane: number;
+  readonly lanes: number;
+  readonly lastRow: number;
+  readonly moversPassOver?: boolean;
+  readonly moversRestOn?: boolean;
+  readonly to: number;
+}
+
+export function pickupAllowsMover(
+  pickup: StandingPickup,
+  mover: {
+    readonly blocksLane: boolean;
+    readonly cells: readonly Cell[];
+    readonly lanes: number;
+    readonly rests: readonly { readonly distance: number; readonly lane: number }[];
+  },
+): boolean {
+  if (
+    (!mover.blocksLane || pickup.moversPassOver !== true) &&
+    mover.cells.some(
+      ({ lane, row }) =>
+        row >= pickup.firstRow &&
+        row <= pickup.lastRow &&
+        lane >= pickup.lane &&
+        lane < pickup.lane + pickup.lanes,
+    )
+  ) {
+    return false;
+  }
+  return (
+    pickup.moversRestOn === true ||
+    !mover.rests.some(
+      (rest) =>
+        rest.distance >= pickup.from &&
+        rest.distance <= pickup.to &&
+        rest.lane < pickup.lane + pickup.lanes &&
+        pickup.lane < rest.lane + mover.lanes,
+    )
+  );
 }
 
 // Every spot a mover whose cue is at cue may end a move and stand: a dart that stops short at its

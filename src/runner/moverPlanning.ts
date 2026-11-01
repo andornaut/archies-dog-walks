@@ -28,6 +28,7 @@ import {
   signatureTravelSweeps,
 } from "./signaturePaths";
 import type { SpawnRejection } from "./spawnAdmission";
+import type { FeasibilityObserver } from "./spawnFeasibilityDiagnostics";
 import { nthStretch, rowsWithin, WHOLE_ZONE } from "./stretches";
 
 // Planning works in road distance. sightLength is how far a row travels down the road before
@@ -115,7 +116,7 @@ function blockCells(
 // across, a vehicle crossing side-on, has one. Of the placements that fit in a start lane and row,
 // the planner takes one of the highest rank, 0 when unset. stop is the lanes a stop-and-go across
 // covers while it stands in its pause (crossPlacements).
-interface MoverPlacement {
+export interface MoverPlacement {
   readonly appears: number;
   readonly body?: MoverBody;
   readonly cells: readonly BlockCell[];
@@ -125,6 +126,7 @@ interface MoverPlacement {
   readonly rank?: number;
   readonly rows: number;
   readonly screen: readonly [number, number];
+  readonly selection?: { readonly draws: MoverDraws; readonly lift: number };
   readonly stands: readonly MoverStand[];
   readonly stop?: LaneSpan;
 }
@@ -472,7 +474,7 @@ export function isHerring(spec: MoverSpec, draws: MoverDraws): boolean {
 }
 
 // A red herring crosser, one of its quota's in the rows from first to end: no mover on the road
-// but scenery the walk never reads, which takes no cell, blocks no lane and counts toward no cap.
+// but scenery the walk never reads, which takes no cell, blocks no lane and counts toward no movement-class cap.
 // It appears at its edge as its row comes on screen, its row the one its start draw picks among
 // those rows that let it be gone before the zone ends, each as likely, on the side its side draw
 // picks (below a half, the left), and sets off at once with no cue, crossing the whole road without
@@ -1429,6 +1431,20 @@ export function moverPlacements(
   }
 }
 
+// Reservation sharing is symmetric in a completed layout; construction insertion
+// order remains governed by its directional grid query.
+export function moverReservationsMayShare(
+  a: MoverPath["motion"],
+  b: MoverPath["motion"],
+  aBlocksLane: boolean,
+  bBlocksLane: boolean,
+): boolean {
+  return (
+    (a === "cross") !== (b === "cross") ||
+    (a === "ride" && b === "ride" && aBlocksLane && bBlocksLane)
+  );
+}
+
 // How many movers may be on screen at once: in all, darting, and in-lane slower than the road
 // (the slow vehicles).
 export interface MoverCaps {
@@ -1463,6 +1479,7 @@ export function screenHasRoom(
   caps: MoverCaps,
   planned: readonly OnScreen[],
   mover: OnScreen,
+  onFailure?: FeasibilityObserver,
 ): boolean {
   const [start, end] = mover.interval;
   const overlapping = planned.filter(({ interval: [from, to] }) => from < end && start < to);
@@ -1473,12 +1490,16 @@ export function screenHasRoom(
   ];
   const within = (cap: number, counted: (other: OnScreen) => boolean) =>
     !counted(mover) ||
-    moments.every(
-      (moment) =>
-        overlapping.filter(
-          (other) => counted(other) && other.interval[0] <= moment && moment < other.interval[1],
-        ).length < cap,
-    );
+    moments.every((moment) => {
+      const active = overlapping.filter(
+        (other) => counted(other) && other.interval[0] <= moment && moment < other.interval[1],
+      );
+      const fits = active.length < cap;
+      if (!fits) {
+        onFailure?.({ contributors: active, intrinsic: cap === 0, moment, rule: "screen-cap" });
+      }
+      return fits;
+    });
   return (
     within(caps.total, () => true) &&
     within(caps.darts, (other) => other.dart) &&
@@ -1500,7 +1521,22 @@ export function screenHasRoom(
 // when a lane-blocking rider's hit box keeps riderFollowGap from that of each recorded by rode, which a grid of
 // movers that block no lane leaves out. heldLanes is the lane mask the path holds on a row, none
 // without it.
-interface MoverGrid {
+export interface MoverVisibilityProof {
+  readonly block: {
+    readonly dart: boolean;
+    readonly lanes: LaneSpan;
+    readonly row: number;
+    readonly rows: number;
+  };
+  readonly body?: MoverBody;
+  readonly cells: readonly BlockCell[];
+  readonly screen: readonly [number, number];
+  readonly selection: { readonly draws: MoverDraws; readonly lift: number };
+  readonly stands: readonly MoverStand[];
+}
+
+export interface MoverGrid {
+  readonly onFailure?: FeasibilityObserver | undefined;
   block(row: number, lanes: LaneSpan, rows: number, keep: boolean, dart?: boolean): boolean;
   clearOf(body: MoverBody): boolean;
   clearRun(lanes: LaneSpan, row: number): number;
@@ -1510,6 +1546,21 @@ interface MoverGrid {
   packFits(stands: readonly MoverStand[]): boolean;
   stand(stands: readonly MoverStand[]): void;
   take(dart: boolean, lane: number, row: number, rider?: boolean): void;
+  canShow?(
+    spawn: MoverSpawn<string>,
+    interval: readonly [number, number],
+    cells?: readonly BlockCell[],
+  ): boolean;
+  showed?(
+    spawn: MoverSpawn<string>,
+    interval: readonly [number, number],
+    proof?: MoverVisibilityProof,
+    request?: {
+      readonly memberIndex: number;
+      readonly quotaIndex: number;
+      readonly requestedDraws?: MoverDraws;
+    },
+  ): void;
   clearOfRiders?(ride: RiderSpan): boolean;
   heldLanes?(row: number): number;
   rode?(ride: RiderSpan): void;
@@ -1527,7 +1578,7 @@ export interface RiderSpan {
 }
 
 // The rider span of a rider spawned at distance, at its planned hit length.
-function riderSpanOf(
+export function riderSpanOf(
   geometry: MoverGeometry,
   spec: MoverSpec,
   distance: number,
@@ -1583,7 +1634,12 @@ interface MoverQuota<Kind extends string> {
   readonly admitted?: boolean[];
   readonly drawn?: DrawnMover[];
   readonly kind: Kind;
+  // Original member indexes; count still defines each member's row span.
+  readonly members?: readonly number[];
+  readonly preferredRow?: number;
+  readonly motion?: readonly (MoverPath | undefined)[];
   readonly spec: MoverSpec;
+  readonly quotaIndex?: number;
   readonly within?: readonly [number, number];
 }
 
@@ -1602,7 +1658,35 @@ interface PlacedMovers<Kind extends string> {
   readonly spawns: readonly MoverSpawn<Kind>[];
 }
 
-interface Spot {
+// Absolute spawn lanes and cue distances may change while selected movement remains fixed.
+export function sameMoverMotion(reference: MoverPath, candidate: MoverPath): boolean {
+  const relative = (path: MoverPath) => {
+    if (!("lane" in path)) {
+      return path;
+    }
+    const normalized = { ...path, lane: 0 };
+    if (path.motion === "approach" || path.motion === "shy") {
+      return { ...normalized, reach: { ...path.reach, first: path.reach.first - path.lane } };
+    }
+    if (path.motion === "signature") {
+      return {
+        ...normalized,
+        route: {
+          ...path.route,
+          legs: path.route.legs.map((leg) => ({
+            ...leg,
+            from: { ...leg.from, x: leg.from.x - path.lane },
+            to: { ...leg.to, x: leg.to.x - path.lane },
+          })),
+        },
+      };
+    }
+    return normalized;
+  };
+  return JSON.stringify(relative(reference)) === JSON.stringify(relative(candidate));
+}
+
+export interface Spot {
   readonly distance: number;
   readonly placement: MoverPlacement;
   readonly row: number;
@@ -1715,6 +1799,95 @@ export function placeMovers<Kind extends string>(
   );
 }
 
+// Commits an already selected compiled candidate without changing its motion.
+export function keepMoverSpot(
+  geometry: MoverGeometry,
+  spec: MoverSpec,
+  grid: MoverGrid,
+  onScreen: OnScreen[],
+  spot: Spot,
+): void {
+  const { placement } = spot;
+  const dart = placement.path.motion === "cross";
+  const rider = placement.path.motion === "ride";
+  placement.cells.forEach(({ lane, row }) => grid.take(dart, lane, spot.row + row, rider));
+  const ride = riderSpanOf(geometry, spec, spot.distance + placement.appears, placement);
+  if (ride !== undefined) {
+    grid.rode?.(ride);
+  }
+  const body = bodyOf(spot);
+  if (body !== undefined) {
+    grid.occupy(body);
+  }
+  grid.block(spot.row, placement.lanes, placement.rows, true, dart);
+  grid.stand(standsOf(spot));
+  onScreen.push(onScreenOf(placement.path, screenOf(spot)));
+}
+
+export function fitsMoverSpot(
+  geometry: MoverGeometry & { readonly zoneLength: number },
+  caps: MoverCaps,
+  grid: MoverGrid,
+  onScreen: readonly OnScreen[],
+  spec: MoverSpec,
+  kind: string | undefined,
+  reject: (reason: SpawnRejection) => false,
+  spot: Spot,
+): boolean {
+  const [start, end] = screenOf(spot);
+  const { placement } = spot;
+  const { cells } = placement;
+  const body = bodyOf(spot);
+  const rider = riderSpanOf(geometry, spec, spot.distance + placement.appears, placement);
+  if (!(start >= 0 && end <= geometry.zoneLength)) {
+    return reject("outside-zone");
+  }
+  if (
+    kind !== undefined &&
+    !(
+      grid.canShow?.(
+        {
+          distance: spot.distance + placement.appears,
+          kind,
+          lane: placement.lane,
+          mover: placement.path,
+        },
+        [start, end],
+        cells.map(({ lane, row }) => ({ lane, row: spot.row + row })),
+      ) ?? true
+    )
+  ) {
+    return false;
+  }
+  if (!screenHasRoom(caps, onScreen, onScreenOf(placement.path, [start, end]), grid.onFailure)) {
+    return reject("screen-cap");
+  }
+  if (!cells.every(({ lane, row }) => grid.isFree(placement.path.motion, lane, spot.row + row))) {
+    return reject("cells");
+  }
+  if (!(rider === undefined || (grid.clearOfRiders?.(rider) ?? true))) {
+    return reject("rider-gap");
+  }
+  if (body !== undefined && !grid.clearOf(body)) {
+    return reject("body");
+  }
+  if (!grid.leavesRoom(cells.map(({ lane, row }) => ({ lane, row: spot.row + row })))) {
+    return reject("reservation");
+  }
+  if (!grid.packFits(standsOf(spot))) {
+    return reject("pack-gap");
+  }
+  return (
+    grid.block(
+      spot.row,
+      placement.lanes,
+      placement.rows,
+      false,
+      placement.path.motion === "cross",
+    ) || reject("open-lanes")
+  );
+}
+
 // The same planner, reporting each rejected candidate without consuming another random draw.
 export function placeMoversWithRejections<Kind extends string>(
   onRejected: ((kind: Kind, reason: SpawnRejection) => void) | undefined,
@@ -1735,50 +1908,8 @@ export function placeMoversWithRejections<Kind extends string>(
     }
     return false;
   };
-  const riderOf = (spot: Spot) =>
-    placing === undefined
-      ? undefined
-      : riderSpanOf(geometry, placing, spot.distance + spot.placement.appears, spot.placement);
-  const ridersClear = (spot: Spot) => {
-    const ride = riderOf(spot);
-    return ride === undefined || (grid.clearOfRiders?.(ride) ?? true);
-  };
-  const fits = (spot: Spot) => {
-    const [start, end] = screenOf(spot);
-    const { placement } = spot;
-    const { cells } = placement;
-    const body = bodyOf(spot);
-    if (!(start >= 0 && end <= geometry.zoneLength)) {
-      return reject("outside-zone");
-    }
-    if (!screenHasRoom(caps, onScreen, onScreenOf(placement.path, [start, end]))) {
-      return reject("screen-cap");
-    }
-    if (!cells.every(({ lane, row }) => grid.isFree(placement.path.motion, lane, spot.row + row))) {
-      return reject("cells");
-    }
-    if (!ridersClear(spot)) {
-      return reject("rider-gap");
-    }
-    if (body !== undefined && !grid.clearOf(body)) {
-      return reject("body");
-    }
-    if (!grid.leavesRoom(cells.map(({ lane, row }) => ({ lane, row: spot.row + row })))) {
-      return reject("reservation");
-    }
-    if (!grid.packFits(standsOf(spot))) {
-      return reject("pack-gap");
-    }
-    return (
-      grid.block(
-        spot.row,
-        placement.lanes,
-        placement.rows,
-        false,
-        placement.path.motion === "cross",
-      ) || reject("open-lanes")
-    );
-  };
+  const fits = (spot: Spot) =>
+    fitsMoverSpot(geometry, caps, grid, onScreen, placing!, placingKind, reject, spot);
   const spotsIn = (placements: readonly MoverPlacement[], first: number, end: number) =>
     placements.flatMap((placement) =>
       rows
@@ -1822,10 +1953,22 @@ export function placeMoversWithRejections<Kind extends string>(
   const spawns: MoverSpawn<Kind>[] = [];
   const dropped: Kind[] = [];
   const herrings: MoverSpawn<Kind>[] = [];
-  for (const { admitted, count, drawn, kind, spec, within } of quotas) {
+  for (const {
+    admitted,
+    count,
+    drawn,
+    kind,
+    members,
+    motion,
+    preferredRow,
+    quotaIndex,
+    spec,
+    within,
+  } of quotas) {
     const quotaRows = rowsWithin(rows.length, within ?? WHOLE_ZONE);
     const [, to] = quotaRows;
-    for (let i = 0; i < count; i++) {
+    const selected = members ?? Array.from({ length: count }, (_, index) => index);
+    for (const i of selected) {
       const draws = drawn?.[i]?.draws ?? drawMover(streams);
       const herring = drawn?.[i]?.herring ?? isHerring(spec, draws);
       if (drawn !== undefined && drawn[i] === undefined) {
@@ -1836,23 +1979,64 @@ export function placeMoversWithRejections<Kind extends string>(
       const lifts = spec.motion.kind === "cross" ? [0, ...DART_LIFTS] : [0];
       const [first, end] = nthStretch(count, i, quotaRows);
       if (herring) {
-        const herring = herringSpawn(geometry, spec, draws, kind, rows.slice(first, end));
-        if (herring !== null) {
-          herrings.push(herring);
+        const candidates = rows.slice(first, end).flatMap((row) => {
+          const event = herringSpawn(geometry, spec, draws, kind, [row]);
+          return event === null ? [] : [event];
+        });
+        const picked = Math.min(candidates.length - 1, Math.floor(draws.start * candidates.length));
+        const ordered = [...candidates.slice(picked), ...candidates.slice(0, picked)];
+        for (const event of ordered) {
+          if (
+            event.mover.motion !== "cross" ||
+            (motion?.[i] !== undefined && !sameMoverMotion(motion[i]!, event.mover))
+          ) {
+            continue;
+          }
+          const crossing =
+            crossLength(geometry.laneCount, spec.footprint.lanes) / event.mover.lanesPerPixel;
+          const interval = [event.distance, event.distance + crossing] as const;
+          if (!(grid.canShow?.(event, interval) ?? true)) {
+            continue;
+          }
+          grid.showed?.(
+            event,
+            interval,
+            undefined,
+            quotaIndex === undefined
+              ? undefined
+              : { memberIndex: i, quotaIndex, requestedDraws: draws },
+          );
+          herrings.push(event);
+          if (admitted !== undefined) {
+            admitted[i] = true;
+          }
+          break;
         }
         continue;
       }
       const fittingAt = (moverDraws: MoverDraws, stop: StopLanes | null, earlier: boolean) => {
         const starts = lifts.map((lift) =>
-          moverPlacements(geometry, spec, moverDraws, lift).filter((placement) =>
-            standsIn(stop, placement),
-          ),
+          moverPlacements(geometry, spec, moverDraws, lift)
+            .filter(
+              (placement) =>
+                standsIn(stop, placement) &&
+                (motion?.[i] === undefined || sameMoverMotion(motion[i]!, placement.path)),
+            )
+            .map((placement) => ({ ...placement, selection: { draws: moverDraws, lift } })),
         );
         if (starts.every((placements) => placements.length === 0)) {
           reject("geometry");
         }
         if (earlier) {
           return nearestLater(starts, quotaRows[0], first);
+        }
+        if (preferredRow !== undefined) {
+          const after = nearestLater(starts, Math.max(first, preferredRow), end);
+          if (after.length > 0) {
+            return after;
+          }
+          const before = nearestLater(starts, first, Math.min(end, preferredRow));
+          return before.length > 0 ? before : nearestLater(starts, end, to);
         }
         const stretch = firstFitting(starts, first, end);
         return stretch.length > 0 ? stretch : nearestLater(starts, end, to);
@@ -1905,29 +2089,38 @@ export function placeMoversWithRejections<Kind extends string>(
         inLane.filter((fit) => rankOf(fit) === best.get(fit.row)),
       );
       const { placement } = spot;
+      keepMoverSpot(geometry, placing!, grid, onScreen, spot);
       const dart = placement.path.motion === "cross";
-      const rider = placement.path.motion === "ride";
-      placement.cells.forEach(({ lane, row }) => grid.take(dart, lane, spot.row + row, rider));
-      const ride = riderOf(spot);
-      if (ride !== undefined) {
-        grid.rode?.(ride);
-      }
       const body = bodyOf(spot);
-      if (body !== undefined) {
-        grid.occupy(body);
-      }
-      grid.block(spot.row, placement.lanes, placement.rows, true, dart);
-      grid.stand(standsOf(spot));
-      onScreen.push(onScreenOf(placement.path, screenOf(spot)));
       if (admitted !== undefined) {
         admitted[i] = true;
       }
-      spawns.push({
+      const selection = placement.selection;
+      if (selection === undefined) {
+        throw new Error("Missing selected mover candidate");
+      }
+      const spawn = {
         distance: spot.distance + placement.appears,
         kind,
         lane: placement.lane,
         mover: placement.path,
-      });
+      };
+      grid.showed?.(
+        spawn,
+        screenOf(spot),
+        {
+          block: { dart, lanes: placement.lanes, row: spot.row, rows: placement.rows },
+          ...(body === undefined ? {} : { body }),
+          cells: placement.cells.map(({ lane, row }) => ({ lane, row: spot.row + row })),
+          screen: screenOf(spot),
+          selection,
+          stands: standsOf(spot),
+        },
+        quotaIndex === undefined
+          ? undefined
+          : { memberIndex: i, quotaIndex, requestedDraws: draws },
+      );
+      spawns.push(spawn);
     }
   }
   return { dropped, herrings, spawns };

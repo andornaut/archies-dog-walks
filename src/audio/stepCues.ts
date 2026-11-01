@@ -33,6 +33,8 @@ const STEP_CUES: Readonly<Record<keyof WalkStep, CuesOf>> = {
   // would play.
   contacts: contactCues,
   encounterHits: (data, { encounterHits }) => encounterCues(data, encounterHits),
+  // Encounter item identity shares its existing encounterHits cue.
+  encounterItems: NONE,
   // A firing plays as its owner leaves (RunMoments), whatever fired them.
   fired: NONE,
   // A gear drop grabbed, fresh or swapping the found item.

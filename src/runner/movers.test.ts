@@ -30,6 +30,7 @@ import {
   type OnScreen,
   onScreenOf,
   placeMovers,
+  sameMoverMotion,
   screenHasRoom,
   stepSpots,
   stopsOnVerge,
@@ -1465,6 +1466,30 @@ describe("screenHasRoom", () => {
   });
 });
 
+describe("selected mover motion", () => {
+  it("allows lane translation without narrowing reach or changing movement timing", () => {
+    const path: MoverPath = {
+      burst: 100,
+      lane: 1,
+      lengths: [20, 30],
+      motion: "approach",
+      movement: "approach",
+      pending: [],
+      reach: { count: 3, first: 0 },
+      rows: 2,
+      steps: [{ at: 10, lanes: 1, length: 20, travel: 15 }],
+      stopTravel: 400,
+      warning: 20,
+    };
+    expect(sameMoverMotion(path, { ...path, lane: 2, reach: { count: 3, first: 1 } })).toBe(true);
+    expect(sameMoverMotion(path, { ...path, reach: { count: 1, first: 1 } })).toBe(false);
+    expect(sameMoverMotion(path, { ...path, lengths: [20, 31] })).toBe(false);
+    expect(sameMoverMotion(path, { ...path, steps: [{ ...path.steps[0]!, lanes: -1 }] })).toBe(
+      false,
+    );
+  });
+});
+
 describe("placeMovers", () => {
   const rows = Array.from({ length: 40 }, (_, i) => (i + 1) * 150);
   const zoned = { ...geometry, zoneLength: 6150 };
@@ -1501,6 +1526,55 @@ describe("placeMovers", () => {
       taken,
     };
   };
+
+  it("tries the frozen requested row before shifting an otherwise fitting mover", () => {
+    const { grid } = freeGrid();
+    const chosen: number[] = [];
+    const placed = placeMovers(
+      plannerStreams(1),
+      zoned,
+      CAPS,
+      {
+        ...grid,
+        showed: (_event, _screen, proof) => {
+          chosen.push(defined(proof).block.row);
+        },
+      },
+      [],
+      rows,
+      [
+        {
+          count: 1,
+          kind: "rider",
+          preferredRow: 20,
+          spec: spec({ kind: "ride", speedMultiplier: 2 }),
+        },
+      ],
+    );
+    expect(placed.spawns).toHaveLength(1);
+    expect(chosen).toEqual([20]);
+  });
+
+  it("rejects placement variants that change an already selected request's speed", () => {
+    const { grid } = freeGrid();
+    const reference: MoverPath = {
+      lane: 1,
+      lanes: 1,
+      motion: "ride",
+      movement: "inLane",
+      speedMultiplier: 4,
+      warning: 100,
+    };
+    const placed = placeMovers(plannerStreams(1), zoned, CAPS, grid, [], rows, [
+      {
+        count: 1,
+        kind: "rider",
+        motion: [reference],
+        spec: spec({ kind: "ride", speedMultiplier: 2 }),
+      },
+    ]);
+    expect(placed.spawns).toHaveLength(0);
+  });
 
   it("places every mover wholly within the zone, within every cap on screen", () => {
     const { grid } = freeGrid();

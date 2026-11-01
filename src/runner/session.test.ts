@@ -37,6 +37,8 @@ import {
 } from "./session";
 import { itemHeight, startRoad, zoneLength } from "./walk";
 import { type WalkItem } from "./walkItems";
+import type { ZonePlanObservation } from "./zonePlan";
+import { replaySpawnPlan } from "./zonePlanner";
 
 const SKUNK: CardSource = { affected: ["kilo"], encounter: "skunk", kind: "encounter" };
 const STOP: CardSource = { affected: ["kilo"], encounter: "thief", kind: "encounter" };
@@ -85,7 +87,11 @@ describe("runStreams", () => {
   });
 
   it("keeps debuff movement draws independent of cards, forks and upgrades", () => {
-    const baseline = runStreams(3);
+    const observed: ZonePlanObservation[] = [];
+    const baseline = {
+      ...runStreams(3),
+      observeSpawns: (observation: ZonePlanObservation) => observed.push(observation),
+    };
     const drifted = runStreams(3);
     take(100, drifted.debuffMovement(0));
     expect([take(10, drifted.cards), take(10, drifted.forks), take(10, drifted.upgrades)]).toEqual([
@@ -99,6 +105,20 @@ describe("runStreams", () => {
     };
     expect(startSession(gameData, drifted, geometry, walk)).toEqual(
       startSession(gameData, baseline, geometry, walk),
+    );
+    expect(observed).toHaveLength(1);
+    const observation = itemAt(observed, 0);
+    if (observation.snapshot === undefined) {
+      throw new Error("Missing successful planning snapshot");
+    }
+    const replayed = replaySpawnPlan(
+      JSON.parse(JSON.stringify(observation.snapshot)) as typeof observation.snapshot,
+    );
+    if (!("planned" in replayed)) {
+      throw new Error(replayed.reason);
+    }
+    expect(JSON.parse(JSON.stringify(replayed.planned))).toEqual(
+      JSON.parse(JSON.stringify(observation.planned)),
     );
   });
 

@@ -28,7 +28,7 @@ import {
   type WalkStep,
   zoneLength,
 } from "./walk";
-import { planZone } from "./zonePlan";
+import { planZoneWithContext, type ZonePlanObservation } from "./zonePlan";
 import { type DebuffMovementClock, hasDebuffDrift, stepDebuffMovement } from "./zoomies";
 
 // One walk's step order, shared by the run scene and the simulator: the inputs, the pulls, the
@@ -48,6 +48,7 @@ export interface RunStreams {
   debuffMovement(zone: number): Random;
   draws(): StreamDraws;
   readonly forks: Random;
+  readonly observeSpawns?: (observation: ZonePlanObservation) => void;
   readonly seed: number;
   readonly upgrades: Random;
 }
@@ -352,7 +353,17 @@ function planCurrentZone(
     movers: randomStream(streams.seed, `movers-${zone}`),
     spawns: randomStream(streams.seed, `spawns-${zone}`),
   };
-  return planZone(data, geometry(walk.run), planner, walk);
+  return planZoneWithContext(
+    data,
+    geometry(walk.run),
+    {
+      ...(streams.observeSpawns === undefined ? {} : { observePlan: streams.observeSpawns }),
+      seed: streams.seed,
+      zoneIndex: zone,
+    },
+    planner,
+    walk,
+  );
 }
 
 // An owner who just fired you holds the walk while their moment plays, as a hit stop does:

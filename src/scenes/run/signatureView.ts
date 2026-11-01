@@ -3,7 +3,7 @@ import { animationKey } from "@andornaut/game-kit/art/aseprite";
 import { moverBodyTag } from "../../assets/spriteKeys";
 import { animationPhaseAt } from "../../layout/animationPhase";
 import { project } from "../../layout/projection";
-import { facesLeft, type MoverOnRoad } from "../../runner/movers";
+import { facesLeft, inMotion, type MoverOnRoad } from "../../runner/movers";
 import { signatureComponentProgress, signaturePlace } from "../../runner/signaturePaths";
 import type { WalkItem } from "../../runner/walkItems";
 import { playTag, showAtDepth, spriteMetrics } from "../sprites";
@@ -46,7 +46,7 @@ export function drawSignatureTrail(
       (metrics.feetY + baselineOffset) / metrics.frameHeight,
     );
     const has = (tag: string) => sprite.scene.anims.exists(animationKey(drawn.key, tag));
-    const moving = !halted && since >= route.entryEnd;
+    const moving = !halted && inMotion(path, since);
     const progress = signatureComponentProgress(route, since, component);
     const tag = moverBodyTag(has, path.movement, moving);
     if (tag !== undefined) {

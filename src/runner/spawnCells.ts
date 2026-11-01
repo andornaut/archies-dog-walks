@@ -1,7 +1,9 @@
 import { itemAt, partitionPoint, removeItem } from "@andornaut/game-kit/arrays";
 
 import { laneMask } from "../layout/lanes";
+import { moverReservationsMayShare } from "./moverPlanning";
 import type { LaneSpan, MoverPath } from "./movers";
+import type { FeasibilityObserver } from "./spawnFeasibilityDiagnostics";
 import {
   addLanes,
   type BlockingPlace,
@@ -74,17 +76,27 @@ export class LaneBlocks {
   // every window and gap they block and leave each stretch of road open in every window they
   // block (openStretches), counting them as a dart's sweep where dart is set and as a wall
   // otherwise, and undoes the block unless keep is set and they do.
-  tryBlock(cell: Cell, footprint: Footprint, keep: boolean, dart = false): boolean {
+  tryBlock(
+    cell: Cell,
+    footprint: Footprint,
+    keep: boolean,
+    dart = false,
+    wholeZone = false,
+    onFailure?: FeasibilityObserver,
+    mode: "complete" | "partial" = "complete",
+  ): boolean {
     const { blocked, gapBlocked, pathHeld, plan } = this;
     const { laneCount, minOpenLanes } = plan;
     const rowCount = pathHeld.length;
     const { lastGap, lastRow } = blockingSpan(plan, this.spacing, cell.row, footprint.rows);
     if (lastRow >= rowCount || lastGap >= rowCount - 1) {
+      onFailure?.({ intrinsic: true, rule: "outside-rows" });
       return false;
     }
     const covered = laneMask(cell.lane, footprint.lanes);
     for (let row = cell.row; row <= Math.max(lastRow, lastGap); row++) {
       if (((pathHeld[row] ?? 0) & covered) !== 0) {
+        onFailure?.({ intrinsic: true, row, rule: "path" });
         return false;
       }
     }
@@ -104,10 +116,20 @@ export class LaneBlocks {
     for (let row = cell.row; ok && row <= lastRow; row++) {
       ok =
         laneCount - laneTotal(blocked[row] ?? 0) >= minOpenLanes &&
-        openStretches(laneCount, this.wallBlocked[row] ?? 0, this.dartBlocked[row] ?? 0);
+        (mode === "partial" ||
+          openStretches(laneCount, this.wallBlocked[row] ?? 0, this.dartBlocked[row] ?? 0));
+      if (!ok) {
+        onFailure?.({ row, rule: "open-lanes" });
+      }
     }
     for (let row = cell.row; ok && row <= lastGap; row++) {
       ok = laneCount - laneTotal(gapBlocked[row] ?? 0) >= minOpenLanes;
+      if (!ok) {
+        onFailure?.({ gap: true, row, rule: "open-lanes" });
+      }
+    }
+    if (ok && wholeZone) {
+      ok = this.keepsAllLanesOpen(onFailure, mode);
     }
     if (ok && keep) {
       this.blocks.push({ covered, lastGap, lastRow, row: cell.row });
@@ -122,6 +144,51 @@ export class LaneBlocks {
       }
     }
     return ok;
+  }
+
+  // Retained individual reservations are already certified. Their partial union
+  // can fail openStretches until all retained blocks have been rehydrated.
+  retainBlock(cell: Cell, footprint: Footprint, dart = false): void {
+    const { lastGap, lastRow } = blockingSpan(this.plan, this.spacing, cell.row, footprint.rows);
+    if (cell.row < 0 || lastRow >= this.pathHeld.length || lastGap >= this.pathHeld.length - 1) {
+      throw new Error("Retained block exceeds zone rows");
+    }
+    const covered = laneMask(cell.lane, footprint.lanes);
+    const swept = dart ? this.dartBlocked : this.wallBlocked;
+    for (let row = cell.row; row <= lastRow; row++) {
+      addLanes(row, covered, this.blocked);
+      addLanes(row, covered, swept);
+    }
+    for (let row = cell.row; row <= lastGap; row++) {
+      addLanes(row, covered, this.gapBlocked);
+    }
+    this.blocks.push({ covered, lastGap, lastRow, row: cell.row });
+  }
+
+  // Removal can expose a stretch covered entirely by darts, including rows away
+  // from a newly inserted candidate. Check the complete trial union.
+  keepsAllLanesOpen(
+    onFailure?: FeasibilityObserver,
+    mode: "complete" | "partial" = "complete",
+  ): boolean {
+    const { laneCount, minOpenLanes } = this.plan;
+    for (let row = 0; row < this.pathHeld.length; row++) {
+      const walls = this.wallBlocked[row] ?? 0;
+      const darts = this.dartBlocked[row] ?? 0;
+      if (
+        laneCount - laneTotal(walls | darts) < minOpenLanes ||
+        laneCount - laneTotal(this.gapBlocked[row] ?? 0) < minOpenLanes ||
+        (mode === "complete" && !openStretches(laneCount, walls, darts))
+      ) {
+        onFailure?.({
+          gap: laneCount - laneTotal(this.gapBlocked[row] ?? 0) < minOpenLanes,
+          row,
+          rule: "open-lanes",
+        });
+        return false;
+      }
+    }
+    return true;
   }
 
   // The block kept last.
@@ -218,7 +285,7 @@ export class PlacedPlaces {
   }
 
   // True when the pack fits between a place and every place placed.
-  fits(place: BlockingPlace): boolean {
+  fits(place: BlockingPlace, onFailure?: FeasibilityObserver): boolean {
     const { places } = this;
     const from = place.distance - this.longest - this.widestGap;
     const to = place.distance + Math.max(0, place.length) + this.widestGap;
@@ -228,6 +295,7 @@ export class PlacedPlaces {
         return true;
       }
       if (!packFitsOnPath(this.plan, this.changes, place, other)) {
+        onFailure?.({ contributors: [other], rule: "pack-gap" });
         return false;
       }
     }
@@ -236,11 +304,17 @@ export class PlacedPlaces {
 
   // True when the pack fits between each of stands and every place placed, and between each two
   // of stands.
-  fitsAll(stands: readonly BlockingPlace[]): boolean {
+  fitsAll(stands: readonly BlockingPlace[], onFailure?: FeasibilityObserver): boolean {
     return stands.every(
       (stand, i) =>
-        this.fits(stand) &&
-        stands.slice(i + 1).every((other) => packFitsOnPath(this.plan, this.changes, stand, other)),
+        this.fits(stand, onFailure) &&
+        stands.slice(i + 1).every((other) => {
+          const fits = packFitsOnPath(this.plan, this.changes, stand, other);
+          if (!fits) {
+            onFailure?.({ intrinsic: true, rule: "pack-gap" });
+          }
+          return fits;
+        }),
     );
   }
 
@@ -269,6 +343,7 @@ export class SpawnCells {
   // holds where no mover's body comes (ZonePlanner's clearOfMovers), and a dart then sets off
   // over or past it.
   private readonly heldByStanding: Int32Array;
+  private readonly moverBlockingStanding: Int32Array;
   private left: number;
   // Lanes a mover holds, a dart or any other: lifting a standing spawn never frees them.
   private readonly moverHeld: Int32Array;
@@ -289,6 +364,7 @@ export class SpawnCells {
     this.reserved = reserved;
     this.dartHeld = new Int32Array(rowCount);
     this.heldByStanding = new Int32Array(rowCount);
+    this.moverBlockingStanding = new Int32Array(rowCount);
     this.left = rowCount * laneCount;
     this.moverHeld = new Int32Array(rowCount);
     this.otherMoverHeld = new Int32Array(rowCount);
@@ -334,8 +410,31 @@ export class SpawnCells {
     return moverMayTake(
       motion,
       ((this.dartHeld[row] ?? 0) & cell) !== 0,
-      (((this.heldByStanding[row] ?? 0) | (movers[row] ?? 0)) & cell) !== 0,
+      ((((passRiders ? this.moverBlockingStanding : this.heldByStanding)[row] ?? 0) |
+        (movers[row] ?? 0)) &
+        cell) !==
+        0,
     );
+  }
+
+  // Completed-ledger relocation checks standing bodies and pickup flags separately.
+  // Only swept mover reservations participate in this symmetric final-layout query.
+  isFreeForRepair(
+    motion: MoverPath["motion"],
+    lane: number,
+    row: number,
+    blocksLane: boolean,
+  ): boolean {
+    const bit = laneMask(lane, 1);
+    const darts = moverReservationsMayShare(motion, "cross", blocksLane, true)
+      ? 0
+      : (this.dartHeld[row] ?? 0);
+    const others = moverReservationsMayShare(motion, "steps", blocksLane, true)
+      ? 0
+      : moverReservationsMayShare(motion, "ride", blocksLane, true)
+        ? (this.stepperHeld[row] ?? 0)
+        : (this.otherMoverHeld[row] ?? 0);
+    return ((darts | others) & bit) === 0;
   }
 
   // A mover, a dart or any other, takes the cell, when it is on the zone's rows.
@@ -360,15 +459,19 @@ export class SpawnCells {
   }
 
   // A standing spawn takes the lanes of mask in row.
-  standOn(row: number, mask: number): void {
+  standOn(row: number, mask: number, passableByMovers = false): void {
     this.take(row, mask);
     addLanes(row, mask, this.heldByStanding);
+    if (!passableByMovers) {
+      addLanes(row, mask, this.moverBlockingStanding);
+    }
   }
 
   // A standing spawn leaves the lanes of mask in row, freeing those no mover holds.
   lift(row: number, mask: number): void {
     const { heldByStanding, moverHeld, taken } = this;
     heldByStanding[row] = (heldByStanding[row] ?? 0) & ~mask;
+    this.moverBlockingStanding[row] = (this.moverBlockingStanding[row] ?? 0) & ~mask;
     const freed = mask & (taken[row] ?? 0) & ~(moverHeld[row] ?? 0);
     taken[row] = (taken[row] ?? 0) & ~freed;
     this.left += laneTotal(freed);
@@ -382,7 +485,7 @@ export class SpawnCells {
   // Saves the lanes taken, those standing spawns hold and the count of free and reserved cells,
   // and returns what puts them back.
   save(): () => void {
-    const arrays = [this.taken, this.heldByStanding];
+    const arrays = [this.taken, this.heldByStanding, this.moverBlockingStanding];
     const copies = arrays.map((array) => array.slice());
     const { left, reserved } = this;
     return () => {

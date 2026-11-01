@@ -7,8 +7,10 @@ import {
   type DrawnMover,
   laneBalanceWeight,
   type MoverBody,
+  type MoverDraws,
   type MoverSpec,
   type MoverStand,
+  type MoverVisibilityProof,
   type OnScreen,
   placeMoversWithRejections,
   type PlannerStreams,
@@ -17,8 +19,21 @@ import {
 } from "./moverPlanning";
 import { hasLeftRoad, type LaneSpan, type MoverPath, moverPlace } from "./movers";
 import { signaturePlace } from "./signaturePaths";
-import { type AdmissionReport, type SpawnRejection, validateSpawnCapacity } from "./spawnAdmission";
+import {
+  type AdmissionReport,
+  type SpawnRejection,
+  validateSpawnCapacity,
+  validateSpawnFloorCapacity,
+} from "./spawnAdmission";
 import { type Block, LaneBlocks, PlacedPlaces, SpawnCells } from "./spawnCells";
+import {
+  fitsStanding,
+  holdMoverRests,
+  keepStanding,
+  type MaskedRoad,
+  sharesRoad,
+  type StandingFitContext,
+} from "./spawnFeasibilityRules";
 import {
   blockingLength,
   type BlockingPlace,
@@ -32,6 +47,7 @@ import {
   moverRests,
   pathChanges,
   pathHeldLanes,
+  pickupAllowsMover,
   type PlannedSpawns,
   quotaArea,
   quotaFootprint,
@@ -43,12 +59,19 @@ import {
   WIDE_LANES,
   zoneRows,
 } from "./spawning";
+import { repairIncumbentSpawns } from "./spawnRepair";
 import {
   type ConstructiveSpawnResult,
   searchSpawnAdmission,
   type SpawnConstruction,
+  type SpawnPlanSnapshot,
   type SpawnSearchContext,
 } from "./spawnSearch";
+import {
+  type SpawnVisibility,
+  type SpawnVisibilityTrace,
+  visibilityRejection,
+} from "./spawnVisibility";
 import { nthStretch, rowsWithin, WHOLE_ZONE } from "./stretches";
 
 // How many road lengths of scroll after its cue a mover's contact with the pack is looked for in:
@@ -63,8 +86,12 @@ interface PlacedMoverQuota<Kind extends string> {
   drawn: DrawnMover[];
   first: boolean;
   kind: Kind;
+  members?: readonly number[];
+  preferredRow?: number;
+  motion?: readonly (MoverPath | undefined)[];
   spec: MoverSpec;
   standingLength: number | undefined;
+  quotaIndex: number;
   within?: readonly [number, number];
 }
 
@@ -85,6 +112,10 @@ function moverQuotas<Kind extends string>(
               drawn: itemAt(construction.drawn, index),
               first: first ?? false,
               kind,
+              ...(construction.motion?.[index] === undefined
+                ? {}
+                : { motion: construction.motion[index] }),
+              quotaIndex: index,
               spec: mover,
               standingLength,
               ...(within === undefined ? {} : { within }),
@@ -107,15 +138,70 @@ function heldAcross(spec: MoverSpec): number {
   return spec.footprint.lanes + (motion.kind === "ride" && motion.merge !== undefined ? 1 : 0);
 }
 
-// The lane-blocking movers in the order they are placed: those that may share the fewest cells
-// first, and of those the widest first, so each placed later, freer to share, fits around those
-// placed before. Sorting copies leaves the quotas alone; sort is stable, so equal ones keep their
-// order.
+// Reactive paths can choose among several endings; reserve fixed trajectories before them
+// in the final repair, and place multi-lane manoeuvres before single-lane traffic.
+function constrainedOrder(a: MoverSpec, b: MoverSpec): number {
+  const reactive = (spec: MoverSpec) =>
+    Number(
+      spec.motion.kind === "approach" ||
+        (spec.motion.kind === "steps" && spec.motion.shy !== undefined),
+    );
+  const width = (spec: MoverSpec) => {
+    const { motion } = spec;
+    return (
+      heldAcross(spec) +
+      (motion.kind === "signature" && motion.profile.kind === "successiveMerges"
+        ? motion.profile.count * motion.profile.laneStep
+        : 0)
+    );
+  };
+  return reactive(a) - reactive(b) || width(b) - width(a);
+}
+
+// Original layouts order whole quotas by cell restrictions and width. Repairs
+// interleaves their original members by requested time, with constrained movers first on a tie.
+// Copies retain each member's frozen draws, original quota count and admission identity.
 function placingOrder<
-  Quota extends { readonly spec: MoverSpec; readonly within?: readonly [number, number] },
->(order: SpawnConstruction["order"], quotas: readonly Quota[]): Quota[] {
-  return [...quotas].sort(
+  Quota extends {
+    readonly count: number;
+    readonly drawn: readonly DrawnMover[];
+    readonly members?: readonly number[];
+    readonly preferredRow?: number;
+    readonly spec: MoverSpec;
+    readonly within?: readonly [number, number];
+  },
+>(rowCount: number, order: SpawnConstruction["order"], quotas: readonly Quota[]): Quota[] {
+  const requests =
+    order !== "original"
+      ? quotas.flatMap((quota) =>
+          Array.from({ length: quota.count }, (_, member) => ({
+            ...quota,
+            members: [member],
+          })),
+        )
+      : [...quotas];
+  const targetRow = (quota: Quota) => {
+    const member = quota.members?.[0];
+    if (member === undefined) {
+      throw new Error("Missing chronological request member");
+    }
+    const draws = itemAt(quota.drawn, member).draws;
+    const [first, end] = nthStretch(
+      quota.count,
+      member,
+      rowsWithin(rowCount, quota.within ?? WHOLE_ZONE),
+    );
+    return Math.floor(first + draws.start * (end - first));
+  };
+  const scheduled =
+    order === "requested-row"
+      ? requests.map((quota) => ({ ...quota, preferredRow: targetRow(quota) }))
+      : requests;
+  return scheduled.sort(
     (a, b) =>
+      (order !== "original"
+        ? targetRow(a) - targetRow(b) || constrainedOrder(a.spec, b.spec)
+        : 0) ||
       sharing(a.spec) - sharing(b.spec) ||
       heldAcross(b.spec) - heldAcross(a.spec) ||
       (order === "original"
@@ -291,21 +377,10 @@ interface Standing<Kind extends string> {
   quota: SpawnQuota<Kind>;
 }
 
-// Road along the zone, from and to as distances, in the lanes of a lane mask.
-interface MaskedRoad {
-  readonly from: number;
-  readonly lanes: number;
-  readonly to: number;
-}
-
-// Whether two stretches of road share any road in a lane both cover.
-function sharesRoad(a: MaskedRoad, b: MaskedRoad): boolean {
-  return (a.lanes & b.lanes) !== 0 && a.from < b.to && b.from < a.to;
-}
-
 // Places a zone's spawns by planSpawns' rules, on the zone's rows and around its drawn path.
 class ZonePlanner<Kind extends string> {
   private readonly cells: SpawnCells;
+  private readonly standingFit: StandingFitContext;
   private readonly events: SpawnEvent<Kind>[] = [];
   // The red herring crossers, scenery the walk never reads (herringSpawn).
   private readonly herrings: SpawnEvent<Kind>[] = [];
@@ -316,10 +391,15 @@ class ZonePlanner<Kind extends string> {
   private readonly moverInView: Uint8Array;
   // What is on screen as the lane-blocking movers are placed.
   private readonly onScreen: OnScreen[] = [];
+  private readonly visibility = new Map<
+    SpawnEvent<string>,
+    Omit<SpawnVisibilityTrace, "index" | "source">
+  >();
   private readonly places: PlacedPlaces;
   // The lane-blocking riders placed, in road and time.
   private readonly riders: RiderSpan[] = [];
   private readonly plan: SpawnPlan<Kind>;
+  private readonly restCache = new WeakMap<MoverPath, ReturnType<typeof moverRests>>();
   private readonly rows: readonly number[];
   private readonly spacing: number;
   private readonly standing: Standing<Kind>[] = [];
@@ -352,10 +432,27 @@ class ZonePlanner<Kind extends string> {
       0,
     );
     this.cells = new SpawnCells(rows.length, plan.laneCount, reserved);
+    this.standingFit = {
+      canShow: (quota, cell) =>
+        !this.isHazard(quota.kind) ||
+        this.canShow(this.standingVisibility(quota as SpawnQuota<Kind>, cell)),
+      cells: this.cells,
+      clearOfMovers: (cell, footprint) => this.clearOfMovers(cell, footprint),
+      lanes: this.lanes,
+      places: this.places,
+      plan,
+      reject: (kind, reason) => this.reject(kind as Kind, reason),
+      rows,
+      spacing,
+    };
   }
 
   // Places every spawn, in the order planSpawns gives, and returns them and the red herrings.
-  place(): { events: SpawnEvent<Kind>[]; herrings: SpawnEvent<Kind>[] } {
+  place(): {
+    events: SpawnEvent<Kind>[];
+    herrings: SpawnEvent<Kind>[];
+    visibility: ReadonlyMap<SpawnEvent<string>, Omit<SpawnVisibilityTrace, "index" | "source">>;
+  } {
     this.placeStanding((quota) => quota.first === true, this.placeMoving(true));
     this.placeMoving(false);
     this.placeStanding((quota) => quota.first !== true && quota.blocksLane, []);
@@ -363,7 +460,136 @@ class ZonePlanner<Kind extends string> {
     const stilledPrizes = this.placePrizes();
     this.holdRests();
     this.placeStanding((quota) => quota.first !== true && !quota.blocksLane, stilledPrizes);
-    return { events: this.events, herrings: this.herrings };
+    const validated: SpawnVisibility[] = [];
+    for (const shown of this.visibility.values()) {
+      if (!shown.hazard) {
+        continue;
+      }
+      const failure = visibilityRejection(this.entrySpacing(), validated, shown);
+      if (failure !== undefined) {
+        throw new Error(`Invalid spawn ${shown.kind}: ${failure}`);
+      }
+      validated.push(shown);
+    }
+    return { events: this.events, herrings: this.herrings, visibility: this.visibility };
+  }
+
+  private clearsExistingPickups(event: SpawnEvent<string>, cells: readonly Cell[]): boolean {
+    if (event.mover === undefined) {
+      return true;
+    }
+    const movingQuota = this.plan.quotas.find((quota) => quota.kind === event.kind);
+    let rests = this.restCache.get(event.mover);
+    for (const standing of this.events) {
+      if (standing.mover !== undefined) {
+        continue;
+      }
+      const index = this.visibility.get(standing)?.quotaIndex;
+      const quota = index === undefined ? undefined : this.plan.quotas[index];
+      if (quota === undefined || quota.blocksLane) {
+        continue;
+      }
+      if (rests === undefined) {
+        rests = moverRests(this.plan.laneCount, 0, event.mover);
+        this.restCache.set(event.mover, rests);
+      }
+      const row = this.rows.indexOf(standing.distance);
+      const footprint = quotaFootprint(quota);
+      const last = lastRowTaken(
+        this.plan,
+        this.spacing,
+        { lane: standing.lane, row },
+        footprint,
+        false,
+      );
+      if (
+        !pickupAllowsMover(
+          {
+            firstRow: row,
+            from: standing.distance,
+            lane: standing.lane,
+            lanes: footprint.lanes,
+            lastRow: last,
+            moversPassOver: quota.moversPassOver === true,
+            moversRestOn: quota.moversRestOn === true,
+            to: itemAt(this.rows, last),
+          },
+          {
+            blocksLane: movingQuota?.blocksLane ?? false,
+            cells,
+            lanes: movingQuota?.mover?.footprint.lanes ?? 1,
+            rests: rests.map((rest) => ({ ...rest, distance: event.distance + rest.distance })),
+          },
+        )
+      ) {
+        return this.reject(event.kind as Kind, "reservation");
+      }
+    }
+    return true;
+  }
+
+  private isHazard(kind: string): boolean {
+    return (
+      this.plan.quotas.some((quota) => quota.kind === kind && (quota.hazard ?? quota.blocksLane)) ||
+      this.plan.fixedKinds.some((fixed) => fixed.kind === kind)
+    );
+  }
+
+  private entrySpacing(): number {
+    return this.plan.scrollSpeed * this.plan.stepSeconds;
+  }
+
+  private visibleAt(
+    event: SpawnEvent<string>,
+    until: number,
+  ): Omit<SpawnVisibilityTrace, "index" | "source"> {
+    return {
+      entry: event.distance,
+      hazard: this.isHazard(event.kind),
+      kind: event.kind,
+      lane: event.lane,
+      nativeUntil: until,
+      row: Math.floor(event.distance / this.spacing),
+      until,
+    };
+  }
+
+  private canShow(shown: SpawnVisibility): boolean {
+    if (!this.isHazard(shown.kind)) {
+      return true;
+    }
+    const failure = visibilityRejection(
+      this.entrySpacing(),
+      [...this.visibility.values()].filter((other) => other.hazard),
+      shown,
+    );
+    return failure === undefined || this.reject(shown.kind as Kind, failure);
+  }
+
+  private standingVisibility(
+    quota: SpawnQuota<Kind>,
+    cell: Cell,
+  ): Omit<SpawnVisibilityTrace, "index" | "source"> {
+    const entry = itemAt(this.rows, cell.row);
+    return this.visibleAt(
+      { distance: entry, kind: quota.kind, lane: cell.lane },
+      entry +
+        this.plan.roadLength +
+        (quota.hitLength ?? quotaFootprint(quota).rows * this.plan.cellLength),
+    );
+  }
+
+  private movingVisibility(
+    event: SpawnEvent<string>,
+    interval: readonly [number, number],
+  ): Omit<SpawnVisibilityTrace, "index" | "source"> {
+    // A contacted mover may stop and remain as scenery below the pack after its
+    // unstruck route would have left the road.
+    const quota = this.plan.quotas.find((quota) => quota.kind === event.kind);
+    const height = quota?.mover?.hitLength ?? this.plan.cellLength;
+    const clearance =
+      Math.max(0, this.plan.roadLength - this.plan.sightLength) + this.plan.packLength + height;
+    return { ...this.visibleAt(event, interval[1] + clearance), nativeUntil: interval[1] };
   }
 
   // A lane-blocking standing spawn's hit box, from its row up the road for its hit length, in
@@ -392,41 +618,7 @@ class ZonePlanner<Kind extends string> {
   }
 
   private fits(cell: Cell, footprint: Footprint, quota: SpawnQuota<Kind>): boolean {
-    const { plan, rows, spacing } = this;
-    const { blocksLane, kind } = quota;
-    if (cell.lane + footprint.lanes > plan.laneCount) {
-      return this.reject(kind, "outside-road");
-    }
-    const last = lastRowTaken(plan, spacing, cell, footprint, blocksLane);
-    if (last >= rows.length) {
-      return this.reject(kind, "outside-rows");
-    }
-    const covered = laneMask(cell.lane, footprint.lanes);
-    for (let row = cell.row; row <= last; row++) {
-      if ((this.cells.heldFor(row, quota) & covered) !== 0) {
-        return this.reject(kind, "cells");
-      }
-    }
-    const cells = footprint.lanes * (last - cell.row + 1);
-    if (footprint.lanes * footprint.rows > 1 && !this.cells.leavesRoom(cells)) {
-      return this.reject(kind, "reservation");
-    }
-    if (!blocksLane) {
-      return true;
-    }
-    if (!this.clearOfMovers(cell, footprint)) {
-      return this.reject(kind, "body");
-    }
-    if (
-      footprint.lanes >= WIDE_LANES &&
-      !this.lanes.clearOfWide(cell.row, lastHitRow(plan, spacing, cell, footprint))
-    ) {
-      return this.reject(kind, "wide-gap");
-    }
-    if (!this.places.fits(blockingPlace(plan, rows, quota, cell, footprint))) {
-      return this.reject(kind, "pack-gap");
-    }
-    return this.lanes.tryBlock(cell, footprint, false) || this.reject(kind, "open-lanes");
+    return fitsStanding(this.standingFit, cell, footprint, quota);
   }
 
   private freeCells(
@@ -457,6 +649,13 @@ class ZonePlanner<Kind extends string> {
           keep,
           dart,
         ),
+      canShow: (
+        event: SpawnEvent<string>,
+        interval: readonly [number, number],
+        cells: readonly Cell[] = [],
+      ) =>
+        this.canShow(this.movingVisibility(event, interval)) &&
+        this.clearsExistingPickups(event, cells),
       clearOf: (body: MoverBody) => this.clearOfStanding(body),
       clearOfRiders: (ride: RiderSpan) =>
         this.riders.every((other) => !ridersMeet(this.plan.riderFollowGap, ride, other)),
@@ -472,6 +671,22 @@ class ZonePlanner<Kind extends string> {
       packFits: (stands: readonly MoverStand[]) => places.fitsAll(stands),
       rode: (ride: RiderSpan) => {
         this.riders.push(ride);
+      },
+      showed: (
+        event: SpawnEvent<string>,
+        interval: readonly [number, number],
+        placement?: MoverVisibilityProof,
+        request?: {
+          readonly memberIndex: number;
+          readonly quotaIndex: number;
+          readonly requestedDraws?: MoverDraws;
+        },
+      ) => {
+        this.visibility.set(event, {
+          ...this.movingVisibility(event, interval),
+          ...(placement === undefined ? {} : { placement }),
+          ...request,
+        });
       },
       stand: (stands: readonly MoverStand[]) => {
         for (const stand of stands) {
@@ -510,6 +725,7 @@ class ZonePlanner<Kind extends string> {
   private placeMoving(first: boolean): SpawnQuota<Kind>[] {
     const { plan, rows } = this;
     const quotas = placingOrder(
+      rows.length,
       this.construction.order,
       moverQuotas(this.construction, true, plan.quotas).filter((quota) => quota.first === first),
     );
@@ -562,24 +778,14 @@ class ZonePlanner<Kind extends string> {
   // Holds every cell a placed mover may end a move on and stand in: the rows a spawn on which
   // overlaps the mover there, each spawn's hit box planned as hitLength, in the lanes it covers.
   private holdRests(): void {
-    const { plan } = this;
-    const oneRowHit = hitLength(plan, 1);
-    const roadLanes = laneMask(0, plan.laneCount);
-    for (const { distance, kind, mover } of this.events) {
-      if (mover === undefined) {
+    for (const event of this.events) {
+      if (event.mover === undefined) {
         continue;
       }
       const footprint =
-        plan.quotas.find((quota) => quota.kind === kind)?.mover?.footprint ?? SINGLE_CELL;
-      const length = hitLength(plan, footprint.rows);
-      for (const rest of moverRests(plan.laneCount, distance, mover)) {
-        const covered = laneMask(rest.lane, footprint.lanes) & roadLanes;
-        this.rows.forEach((rowDistance, row) => {
-          if (rowDistance > rest.distance - oneRowHit && rowDistance < rest.distance + length) {
-            this.cells.holdRest(row, covered);
-          }
-        });
-      }
+        this.plan.quotas.find((quota) => quota.kind === event.kind)?.mover?.footprint ??
+        SINGLE_CELL;
+      holdMoverRests(this.plan, this.rows, this.cells, event, footprint);
     }
   }
 
@@ -695,21 +901,17 @@ class ZonePlanner<Kind extends string> {
   // Places a spawn on a cell that fits it. A one-cell spawn of the plan's own takes the cell kept
   // for it.
   private placeAt(member: number | undefined, quota: SpawnQuota<Kind>, cell: Cell): void {
-    const { plan, rows, spacing } = this;
+    const { plan, rows } = this;
     const footprint = quotaFootprint(quota);
-    const lastRow = lastRowTaken(plan, spacing, cell, footprint, quota.blocksLane);
-    const covered = laneMask(cell.lane, footprint.lanes);
-    for (let row = cell.row; row <= lastRow; row++) {
-      this.cells.standOn(row, covered);
-    }
+    keepStanding(this.standingFit, quota, cell);
     const event = { distance: itemAt(rows, cell.row), kind: quota.kind, lane: cell.lane };
+    const quotaIndex = this.plan.quotas.indexOf(quota);
+    this.visibility.set(event, {
+      ...this.standingVisibility(quota, cell),
+      ...(quotaIndex < 0 || member === undefined ? {} : { memberIndex: member, quotaIndex }),
+    });
     if (quota.blocksLane) {
-      if (footprint.lanes >= WIDE_LANES) {
-        this.lanes.markWide(1, cell.row, lastHitRow(plan, spacing, cell, footprint));
-      }
-      this.lanes.tryBlock(cell, footprint, true);
       const place = blockingPlace(plan, rows, quota, cell, footprint);
-      this.places.add(place);
       this.standing.push({ block: this.lanes.latest(), cell, event, member, place, quota });
     }
     this.events.push(event);
@@ -764,6 +966,7 @@ class ZonePlanner<Kind extends string> {
     }
     this.lanes.remove(block);
     this.places.remove(place);
+    this.visibility.delete(event);
     removeItem(event, this.events);
     removeItem(lifted, this.standing);
   }
@@ -773,6 +976,7 @@ class ZonePlanner<Kind extends string> {
     const undo = [this.cells.save(), this.lanes.save(), this.places.save()];
     const events = [...this.events];
     const standing = [...this.standing];
+    const visibility = [...this.visibility];
     const admitted = this.construction.admitted.map((members) => [...members]);
     return () => {
       for (const restore of undo) {
@@ -780,6 +984,10 @@ class ZonePlanner<Kind extends string> {
       }
       this.events.splice(0, this.events.length, ...events);
       this.standing.splice(0, this.standing.length, ...standing);
+      this.visibility.clear();
+      for (const [event, shown] of visibility) {
+        this.visibility.set(event, shown);
+      }
       this.construction.admitted.forEach((members, index) =>
         members.splice(0, members.length, ...itemAt(admitted, index)),
       );
@@ -955,7 +1163,7 @@ export function planSpawns<Kind extends string>(
   );
 }
 
-// Constructively verifies the whole requested mix without changing the raw phone planner.
+// Uses bounded constructions for the requested mix; the raw planner remains available separately.
 export function planCompleteSpawns<Kind extends string>(
   context: SpawnSearchContext,
   streams: PlannerStreams,
@@ -969,14 +1177,34 @@ export function planCompleteSpawns<Kind extends string>(
   );
 }
 
+// Replays a failed construction directly, without advancing a game session.
+export function replaySpawnPlan<Kind extends string>(
+  snapshot: SpawnPlanSnapshot<Kind>,
+): ConstructiveSpawnResult<Kind> {
+  const positions = { movers: 0, spawns: 0 };
+  const replay = (source: keyof PlannerStreams) => () =>
+    itemAt(snapshot.draws[source], positions[source]++);
+  return planCompleteSpawns(
+    snapshot.context,
+    { movers: replay("movers"), spawns: replay("spawns") },
+    { ...snapshot.plan, maxEmptyRows: snapshot.plan.maxEmptyRows ?? Infinity },
+  );
+}
+
 function attemptSpawns<Kind extends string>(
   construction: SpawnConstruction,
   streams: PlannerStreams,
   plan: SpawnPlan<Kind>,
 ): PlannedSpawns<Kind> {
+  if (construction.incumbent !== undefined) {
+    return repairIncumbentSpawns(construction, plan, construction.incumbent);
+  }
   const spacing = rowSpacing(plan);
   const rows = zoneRows(plan, spacing);
-  const capacity = validateSpawnCapacity(plan, rows.length);
+  const capacity =
+    construction.partial === true
+      ? validateSpawnFloorCapacity(plan, rows.length)
+      : validateSpawnCapacity(plan, rows.length);
   if (plan.pathStart < 0 || plan.pathStart >= plan.laneCount) {
     throw new Error("The path must start on the road");
   }
@@ -992,7 +1220,7 @@ function attemptSpawns<Kind extends string>(
     return false;
   };
   const substitutions: { from: Kind; to: Kind }[] = [];
-  const { events, herrings } = new ZonePlanner(
+  const { events, herrings, visibility } = new ZonePlanner(
     construction,
     reject,
     substitutions,
@@ -1023,11 +1251,9 @@ function attemptSpawns<Kind extends string>(
   for (const { kind, mover } of events) {
     countFor(kind, mover?.movement ?? null).admitted += 1;
   }
-  plan.quotas.forEach(({ kind, mover }, index) => {
-    countFor(kind, mover?.movement ?? null).herrings += itemAt(construction.drawn, index).filter(
-      (member) => member.herring,
-    ).length;
-  });
+  for (const { kind, mover } of herrings) {
+    countFor(kind, mover?.movement ?? null).herrings += 1;
+  }
   const admission: AdmissionReport<Kind> = {
     capacity,
     counts,
@@ -1038,11 +1264,22 @@ function attemptSpawns<Kind extends string>(
   };
   const byDistance = (a: SpawnEvent<Kind>, b: SpawnEvent<Kind>) =>
     a.distance - b.distance || a.lane - b.lane;
+  events.sort(byDistance);
+  herrings.sort(byDistance);
+  const traces: SpawnVisibilityTrace[] = [...visibility].map(([event, shown]) => {
+    const index = events.indexOf(event as SpawnEvent<Kind>);
+    return {
+      ...shown,
+      index: index < 0 ? herrings.indexOf(event as SpawnEvent<Kind>) : index,
+      source: index < 0 ? "herrings" : "events",
+    };
+  });
   return {
     admission,
-    events: events.sort(byDistance),
-    herrings: herrings.sort(byDistance),
+    events,
+    herrings,
     path: path.map((lane, row) => ({ distance: itemAt(rows, row), lane })),
+    visibility: traces,
   };
 }
 

@@ -10,6 +10,7 @@ import { NO_PULLS } from "../runner/pulls";
 import * as sessions from "../runner/session";
 import { SpawnPlanningError, type SpawnPlanSnapshot } from "../runner/spawnSearch";
 import { startRoad, type WalkStep } from "../runner/walk";
+import type { WalkItemKind } from "../runner/walkItems";
 import type { ZonePlanObservation } from "../runner/zonePlan";
 import { TALLY_IDS } from "../save/schema";
 import { packDogs, packOrder } from "../state/pack";
@@ -358,7 +359,7 @@ describe("simulateRun planning diagnostics", () => {
       walk: { road, run: first },
       zoneEndPending: false,
     };
-    const snapshot: SpawnPlanSnapshot = {
+    const snapshot: SpawnPlanSnapshot<WalkItemKind> = {
       context: { seed: 7, zoneIndex: 2 },
       draws: { movers: [], spawns: [] },
       plan: {

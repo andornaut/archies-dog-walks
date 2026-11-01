@@ -1,8 +1,10 @@
 import { describe, expect, it } from "vitest";
 
+import { moverBodyTag } from "../assets/spriteKeys";
 import { MOVEMENT_PROFILES } from "../data/movementProfiles";
 import type { SignatureProfile } from "../data/types";
 import { GAME_ROAD } from "../testing/planner";
+import { inMotion, type MoverPath } from "./movers";
 import {
   compileSignature,
   signatureAlive,
@@ -167,6 +169,50 @@ describe("signature paths", () => {
     expect(signatureSweeps(path, 0, path.complete).some(({ component }) => component === 2)).toBe(
       true,
     );
+  });
+
+  it("ends the whole trail run after the last follower, then scrolls all three idle birds continuously", () => {
+    const profile = MOVEMENT_PROFILES.ducklingTrail;
+    if (profile?.kind !== "delayedTrail") {
+      throw new Error("Missing delayed-trail profile");
+    }
+    const route = compiled(profile);
+    const path: MoverPath = {
+      lane: origin.lane,
+      motion: "signature",
+      movement: "follow",
+      route,
+      warning: 0,
+    };
+    const leaderEnd = route.legs.at(-1);
+    if (leaderEnd === undefined) {
+      throw new Error("Missing leader route");
+    }
+    const leaderDone = leaderEnd.at + leaderEnd.length;
+    expect(route.complete).toBe(leaderDone + Math.max(...route.componentDelays));
+    expect(inMotion(path, route.complete - 1)).toBe(true);
+    expect(inMotion(path, route.complete)).toBe(false);
+    const tags = (since: number) =>
+      moverBodyTag((tag) => tag === "run" || tag === "idle", "follow", inMotion(path, since));
+    expect(tags(route.complete - 1)).toBe("run");
+    expect(tags(route.complete)).toBe("idle");
+    for (const component of [0, 1, 2]) {
+      const before = signaturePlace(route, route.complete - 1, component);
+      const stopped = signaturePlace(route, route.complete, component);
+      const after = signaturePlace(route, route.complete + 10, component);
+      expect(stopped.y - before.y).toBeCloseTo(profile.downFactor);
+      expect(after).toEqual({ x: stopped.x, y: stopped.y + 10 });
+    }
+    const beforeFinal = signaturePlace(route, leaderDone + 1);
+    expect(signaturePlace(route, leaderDone + 2).y - beforeFinal.y).toBeCloseTo(profile.downFactor);
+    const sweeps = signatureSweeps(route, route.complete - 1, route.complete + 1);
+    for (const component of [0, 1, 2]) {
+      const pieces = sweeps.filter((sweep) => sweep.component === component);
+      expect(pieces).toHaveLength(2);
+      expect(pieces[0]?.end).toBe(route.complete);
+      expect(pieces[1]?.start).toBe(route.complete);
+    }
+    expect(route.tail.y).toBe(1);
   });
 
   it("includes turns and delayed turns in continuous component sweep partitions", () => {

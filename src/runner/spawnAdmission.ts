@@ -17,6 +17,10 @@ export type SpawnRejection =
   | "body"
   | "cells"
   | "geometry"
+  | "kind-cap"
+  | "kind-entry"
+  | "kind-lane"
+  | "kind-row"
   | "open-lanes"
   | "outside-road"
   | "outside-rows"
@@ -42,6 +46,28 @@ export interface SpawnCapacity {
 
 export interface AdmissionReport<Kind extends string> {
   readonly capacity: SpawnCapacity;
+  readonly repair?: {
+    readonly accepted: number;
+    readonly auditedNodes: number;
+    readonly candidates: number;
+    readonly evaluatedNodes: number;
+    readonly feasibilityNodes: number;
+    readonly generatedPlacements: number;
+    readonly transactions?: number;
+    readonly stopReason?: string;
+    readonly validationFailures: readonly string[];
+  };
+  readonly placement?: {
+    readonly missing: readonly {
+      readonly count: number;
+      readonly kind: Kind;
+      readonly movement: MovementKind | null;
+      readonly reasons: readonly SpawnRejection[];
+    }[];
+    readonly placed: number;
+    readonly ratio: number;
+    readonly requested: number;
+  };
   // Counts are logical groups: a delayed trail is one mover, regardless of its components.
   readonly counts: readonly {
     readonly admitted: number;
@@ -83,11 +109,29 @@ function minimumOnScreen(plan: SpawnPlan<string>, spec: MoverSpec): number {
 // Rejects only necessary-bound violations before the planner allocates per-spawn work. Movers
 // may share cells, so blocked-lane unions are never added up as though they were distinct cells.
 export function validateSpawnCapacity(plan: SpawnPlan<string>, rows: number): SpawnCapacity {
+  return checkSpawnCapacity(1, plan, rows);
+}
+
+export function validateSpawnFloorCapacity(plan: SpawnPlan<string>, rows: number): SpawnCapacity {
+  return checkSpawnCapacity(0.8, plan, rows);
+}
+
+function checkSpawnCapacity(
+  minimumRatio: number,
+  plan: SpawnPlan<string>,
+  rows: number,
+): SpawnCapacity {
   for (const { count, kind } of plan.quotas) {
     if (!Number.isSafeInteger(count) || count < 0) {
       throw new RangeError(`Spawn quota ${kind} count must be a nonnegative safe integer`);
     }
   }
+  const requested = plan.quotas.reduce((sum, quota) => sum + quota.count, 0);
+  if (!Number.isSafeInteger(requested)) {
+    throw new RangeError("Total spawn quota must be a safe integer");
+  }
+  const omissionBudget = requested - Math.ceil(requested * minimumRatio);
+  let unplaceable = 0;
   const minima = new Map<MoverSpec, number>();
   const screenMinimum = (spec: MoverSpec) => {
     let minimum = minima.get(spec);
@@ -102,9 +146,12 @@ export function validateSpawnCapacity(plan: SpawnPlan<string>, rows: number): Sp
     if (count > 0 && mover?.motion.kind === "signature") {
       const minimum = screenMinimum(mover);
       if (minimum === Infinity) {
-        throw new SpawnCapacityError(
-          `Impossible spawn quota: ${kind} has no legal complete signature variant`,
-        );
+        unplaceable += count;
+        if (unplaceable > omissionBudget) {
+          throw new SpawnCapacityError(
+            `Impossible spawn quota: ${kind} has no legal complete signature variant within the omission budget`,
+          );
+        }
       }
       signatureLimits.push({
         available: plan.zoneLength,
@@ -203,13 +250,32 @@ export function validateSpawnCapacity(plan: SpawnPlan<string>, rows: number): Sp
       resource,
     });
   }
-  const failed = limits.filter(({ available, required }) => required > available + 1e-9);
+  const requiredAtFloor = (limit: CapacityLimit): number => {
+    if (omissionBudget === 0) {
+      return limit.required;
+    }
+    const group = groups.find(({ resource }) => resource === limit.resource);
+    if (group !== undefined) {
+      const finite = group.items.filter(({ minimum }) => Number.isFinite(minimum));
+      const largest = Math.max(0, ...finite.map(({ minimum }) => minimum));
+      return Math.max(
+        0,
+        finite.reduce((sum, item) => sum + item.count * item.minimum, 0) - omissionBudget * largest,
+      );
+    }
+    if (limit.resource.endsWith("signature screen span")) {
+      return 0;
+    }
+    return Math.max(0, limit.required - omissionBudget);
+  };
+  const failed = limits.filter((limit) => requiredAtFloor(limit) > limit.available + 1e-9);
   if (failed.length > 0) {
     const reasons = failed.map(
       ({ available, required, resource }) =>
         `${resource} requires ${required}, maximum ${available}`,
     );
-    throw new SpawnCapacityError(`Impossible spawn quota: ${reasons.join("; ")}`);
+    const target = minimumRatio === 1 ? "Impossible spawn quota" : "Below 80% spawn floor";
+    throw new SpawnCapacityError(`${target}: ${reasons.join("; ")}`);
   }
   return { limits, rows };
 }
