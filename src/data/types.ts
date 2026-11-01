@@ -1187,6 +1187,7 @@ export interface MenuText {
     readonly volume: string;
   };
   readonly stats: {
+    readonly badgeDifficulty: Readonly<Record<AchievementDifficulty, string>>;
     readonly badgeEarned: string;
     readonly badgeLine: string;
     readonly badgeLocked: string;
@@ -1310,9 +1311,12 @@ export type AchievementCondition =
 
 // A badge on the Logbook's wall, earned once every condition holds. Celebration only: it
 // changes nothing in play. The badge art is badge-<id in kebab case>.
+export type AchievementDifficulty = "easy" | "medium" | "hard";
+
 export interface Achievement {
   readonly badgeLine: string;
   readonly conditions: readonly [AchievementCondition, ...AchievementCondition[]];
+  readonly difficulty: AchievementDifficulty;
   readonly goal: string;
   readonly id: string;
   readonly name: string;
