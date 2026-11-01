@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Draw the gear drops: a piece of the shop's gear lying on the road, which the
 pack grabs to wear for the rest of the walk.
 
@@ -35,13 +34,14 @@ hand edits to them belong in this file instead. Shared tooling is in pixel.py.
 """
 
 import math
-import os
 import sys
+from pathlib import Path
 
-sys.path.insert(0, os.path.dirname(__file__))
-import road  # noqa: E402
-from minis import STEPS, Mini  # noqa: E402
-from pixel import edged, main, raster  # noqa: E402
+sys.path.insert(0, str(Path(__file__).parent))
+from minis import STEPS, Mini
+from pixel import edged, main, raster
+
+import road
 
 # The sparkle's two frames by size, in drawn pixels: w white, y yellow. From 1.2x a plus twinkles to a
 # four-point star; below it a 3x3 yellow plus flashes white, so it never shrinks to a lone pixel.
@@ -83,6 +83,7 @@ def paw(g, cx, cy, c="dred"):
 
 
 # ---------- the gear ----------
+
 
 def fanny_pack(g):
     """A forest-green waist pack: a pouch flat along the top and round below, its dslate webbing belt out of
@@ -160,7 +161,8 @@ def running_shoes(g):
 
 def whistle(g):
     """A silver sports whistle side on, lit white along its top: a round barrel, its mouthpiece running
-    right with a dslate slot on top, never under 2px, and from 1.2x two cyan sound lines rising from the slot. The barrel's paw
+    right with a dslate slot on top, never under 2px, and from 1.2x two cyan sound lines rising from the
+    slot. The barrel's paw
     stamp is left off: at road size it reads as a face."""
     g.ell(6.5, 10.3, 5.2, 4.7, "lgrey", "grey", "white")
     g.rect(6.5, 6.5, 8.2, 4, "lgrey")
@@ -205,6 +207,7 @@ def drop(name, s, big):
 
 
 # ---------- build ----------
+
 
 def sprites():
     """Yield (key, [(tag, [frame pixels], duration_ms)]) for every drop at full size, then at each step."""

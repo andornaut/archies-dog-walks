@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Draw the encounter hit moments: a burst over the pack per encounter, the screen-edge
 flash in the encounter's colour and the plate behind the big label. Bursts carry a 1px
 plum rim so they hold 3:1 on the three light roads while their fills carry the dslate
@@ -35,13 +34,14 @@ the rim, burst, twinkle and heart helpers in fx.py.
 """
 
 import math
-import os
 import sys
+from importlib import import_module
+from pathlib import Path
 
-sys.path.insert(0, os.path.dirname(__file__))
-from fx import HEART, SMALL, burst  # noqa: E402
-import fx  # noqa: E402
-from pixel import Grid, main, raster, scale_of  # noqa: E402
+sys.path.insert(0, str(Path(__file__).parent))
+import fx
+from fx import HEART, SMALL, burst
+from pixel import Grid, main, raster, scale_of
 
 BAYER = ((0, 8, 2, 10), (12, 4, 14, 6), (3, 11, 1, 9), (15, 7, 13, 5))
 # A sideways wobble with an 8px period: a line rising 2px a frame loops seamlessly in 4 frames.
@@ -88,7 +88,7 @@ def dots(g, x0, y0, pts):
 
 def burst_frame(draw, step):
     """A burst's frame step: draw(step) laid out on BURST x BURST and drawn BURST_SCALE times bigger."""
-    import minis  # imported when first used, so feedback, moments and needs, which import hits, don't load it
+    minis = import_module("minis")
 
     return minis.small(sys.modules[__name__], BURST_SCALE, draw, step)
 
@@ -125,6 +125,7 @@ def impact(g, outer, cx=32, cy=32):
 
 
 # ---------- hit bursts ----------
+
 
 def hit_skunk(step):
     """The cloud swells in seven lobes, each with a scalloped rim of smaller puffs, then the lobes drift apart
@@ -163,8 +164,11 @@ def hit_skunk(step):
         for deg in range(0, 100, 2):
             a = math.radians(deg)
             x, y = drawn_at(g, cx + math.cos(a) * (pr - 0.5), cy + math.sin(a) * (pr - 0.5))
-            if 2 <= x < w - 2 and 2 <= y < h - 2 and all(mass[y + dy][x + dx]
-                                                         for dx in (-2, 0, 2) for dy in (-2, 0, 2)):
+            if (
+                2 <= x < w - 2
+                and 2 <= y < h - 2
+                and all(mass[y + dy][x + dx] for dx in (-2, 0, 2) for dy in (-2, 0, 2))
+            ):
                 px.p(x, y, "purple")
     # shade the lower-right edge of every puff, so the lumps read and overlapping lobes read as one mass, and
     # light the mass's upper-left edge pink
@@ -231,15 +235,20 @@ def hit_thief(step):
         return rim(g)
     pr = (0, 10, 13, 14, 11, 7, 0, 0)[step]
     if pr:
-        piece(g, lambda p: [p.ell(cx + dx * pr / 12, cy + dy * pr / 12, pr * 0.55, pr * 0.5, "white", "lgrey")
-                            for dx, dy in ((-7, 2), (7, 2), (0, -5), (0, 5), (-4, -3), (4, -3))])
+        piece(
+            g,
+            lambda p: [
+                p.ell(cx + dx * pr / 12, cy + dy * pr / 12, pr * 0.55, pr * 0.5, "white", "lgrey")
+                for dx, dy in ((-7, 2), (7, 2), (0, -5), (0, 5), (-4, -3), (4, -3))
+            ],
+        )
     wy = (0, 32, 23, 17, 14, 13, 13, 14)[step]
     tilt = (0, 0, 1, 0, -1, 0, 1, 0)[step]
     t = step - 0.5
     for i, (vx, vy) in enumerate(((-9, -6), (9, -6), (-5, -9.5))):
         x, y = cx + vx * t * 0.85, cy - 4 + vy * t * 0.85 + 1.2 * t * t
         if 3 <= y < 60 and 3 <= x < 61:
-            piece(g, lambda p: coin(p, x, y, step + i))
+            piece(g, lambda p, i=i, x=x, y=y: coin(p, x, y, step + i))
     piece(g, lambda p: pouch(p, cx, wy + 2, tilt))
     return g
 
@@ -267,6 +276,7 @@ def hit_other_dog(step):
         return rim(g)
     r = (0, 9, 12, 13, 13, 11, 0, 0)[step]
     if r:
+
         def cloud(p):
             for k in range(6):
                 a = math.radians(k * 60 + step * 23)
@@ -278,12 +288,15 @@ def hit_other_dog(step):
                 lx, ly = cx + math.cos(a) * r * 0.45, cy + math.sin(a) * r * 0.35
                 p.ell(lx, ly, 3, 3, "brown")
                 p.ell(lx, ly, 1.8, 1.8, "white")
+
         piece(g, cloud)
     elif step == 6:
+
         def puffs(p):
             for k in range(5):
                 a = math.radians(k * 72 + 10)
                 p.ell(cx + math.cos(a) * 15, cy + math.sin(a) * 11, 3.5, 3, "white", "lgrey")
+
         piece(g, puffs)
     if step >= 2:
         t = step - 1
@@ -292,7 +305,7 @@ def hit_other_dog(step):
             x = cx + math.cos(a) * (9 + t * 4.5)
             y = cy + math.sin(a) * (7 + t * 3.5) + t * t * 0.5
             if 2 <= x < 59 and 2 <= y < 59:
-                piece(g, lambda p: tuft(p, x, y, col, (step + i) % 2))
+                piece(g, lambda p, col=col, i=i, x=x, y=y: tuft(p, x, y, col, (step + i) % 2))
     if step >= 3:
         t = step - 3
         for x0, delay in ((24, 0), (36, 1), (30, 2)):
@@ -303,9 +316,9 @@ def hit_other_dog(step):
             if y < 2:
                 continue
             if tt == 0:
-                piece(g, lambda p: stamp(p, SMALL, x0, y))
+                piece(g, lambda p, x0=x0, y=y: stamp(p, SMALL, x0, y))
             else:
-                piece(g, lambda p: stamp(p, HEART, x0 - 1, y))
+                piece(g, lambda p, x0=x0, y=y: stamp(p, HEART, x0 - 1, y))
     return g
 
 
@@ -313,8 +326,13 @@ def hit_other_dog(step):
 
 # Each strip's ink, its dark fringe and, where the ink holds under 3:1 on the dark roads, a light rim one
 # step up its ramp (mauve's pink, 3.52:1 on dslate).
-FLASH = {"sky": ("cyan", "navy", None), "amber": ("amber", "plum", None),
-         "mauve": ("mauve", "plum", "pink"), "orange": ("orange", "plum", None), "pink": ("pink", "plum", None)}
+FLASH = {
+    "sky": ("cyan", "navy", None),
+    "amber": ("amber", "plum", None),
+    "mauve": ("mauve", "plum", "pink"),
+    "orange": ("orange", "plum", None),
+    "pink": ("pink", "plum", None),
+}
 
 
 def flash(colour, step):
@@ -351,7 +369,7 @@ def label_plate(face, lit, shade):
     """ui-hit-label's 24x24 nine-slice, 8px corners: ui.py's chrome plate (dred for normal, blue for lucky),
     stretched to 176x32. White text holds 7.34:1 on dred and 8.48:1 on blue; the cream band carries the
     dslate road and the ink line the light roads."""
-    import ui
+    ui = import_module("ui")
 
     return ui.plate(face, lit, shade)
 

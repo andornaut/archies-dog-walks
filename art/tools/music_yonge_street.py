@@ -16,7 +16,8 @@ LEAD = """
 D5:2 F5:2 A5:3 G5:3 F5:2 A5:4 | B5:3 A5:3 G5:2 D5:4 -:4 | E5:2 G5:2 C6:3 B5:3 G5:2 C6:4 | A5:3 G5:3 E5:2 A5:4 -:4
 D5:2 F5:2 A5:3 G5:3 F5:2 A5:4 | B5:3 A5:3 G5:2 B5:2 D6:6 | E6:3 D6:3 C6:2 G5:2 C6:2 E6:4 | D6:3 C6:3 A5:2 E5:2 G5:2 A5:4
 A5:4 C6:4 A5:2 G5:2 F5:4 | G5:4 E5:2 G5:2 C6:6 -:2 | B5:4 D6:4 B5:2 A5:2 G5:4 | A5:3 C#6:3 E6:2 C#6:2 A5:2 E5:4
-D5:2 F5:2 A5:3 G5:3 F5:2 A5:4 | B5:3 A5:3 G5:2 D5:4 -:4 | E5:2 G5:2 C6:3 D6:3 E6:2 C6:4 | E6:3 D6:3 C#6:2 A5:3 E5:3 C#5:2
+D5:2 F5:2 A5:3 G5:3 F5:2 A5:4 | B5:3 A5:3 G5:2 D5:4 -:4 | E5:2 G5:2 C6:3 D6:3 E6:2 C6:4 | E6:3 D6:3 C#6:2 A5:3
+E5:3 C#5:2
 """
 # Eighths: the root jumping octaves, then two notes that walk into the next bar's root.
 BASS = """
@@ -27,7 +28,12 @@ D2 D3 D2 D3 D2 D3 C3 A2 | G2 G3 G2 G3 G2 G3 D3 B1 | C2 C3 C2 C3 C2 C3 G2 B2 | A2
 """
 CHORDS = "Dm G C Am Dm G C Am F C G A Dm G C A"
 STABS = {
-    "Dm": "F4 A4 C5", "G": "D4 G4 B4", "C": "E4 G4 C5", "Am": "E4 A4 C5", "F": "F4 A4 C5", "A": "E4 A4 C#5",
+    "Dm": "F4 A4 C5",
+    "G": "D4 G4 B4",
+    "C": "E4 G4 C5",
+    "Am": "E4 A4 C5",
+    "F": "F4 A4 C5",
+    "A": "E4 A4 C#5",
 }
 ECHO = 3  # sixteenths: a dotted eighth
 STRUM = 0.006  # seconds between a stab's notes, low to high
@@ -47,10 +53,13 @@ def stab_score(index):
 
 def stab(index):
     """A short pulse stab, each higher note a little later so the chord strums."""
+
     def play(path, length, note):
         offset = n(STRUM * index)
-        tone(path, length - offset, "square", note, vol=0.5, duty=25, low=1800, attack=0.003, release=0.85,
-             start=offset)
+        tone(
+            path, length - offset, "square", note, vol=0.5, duty=25, low=1800, attack=0.003, release=0.85, start=offset
+        )
+
     return play
 
 
@@ -75,8 +84,23 @@ def snare(path, length, _):
     body, hiss = f"{path}-body.wav", f"{path}-hiss.wav"
     tone(body, size, "triangle", (230, 150), attack=0.002, release=0.9)
     tone(hiss, size, "pinknoise", None, low=3000, high=450, attack=0.002, release=0.85)
-    sox("-m", "-v", "0.45", body, "-v", "0.9", hiss, "-e", "floating-point", "-b", "32", path,
-        "pad", "0", f"{length - size}s")
+    sox(
+        "-m",
+        "-v",
+        "0.45",
+        body,
+        "-v",
+        "0.9",
+        hiss,
+        "-e",
+        "floating-point",
+        "-b",
+        "32",
+        path,
+        "pad",
+        "0",
+        f"{length - size}s",
+    )
 
 
 def rotate(tmp, name, path, samples):
@@ -91,16 +115,45 @@ def rotate(tmp, name, path, samples):
 
 
 def music(tmp, out):
-    lead = voice(tmp, "ys-lead", parse(LEAD), lambda p, length, note: tone(
-        p, length, "square", note, vol=0.5, duty=30, low=2500, attack=0.006, release=0.5), step=STEP)
-    body = voice(tmp, "ys-body", parse(LEAD), lambda p, length, note: tone(
-        p, length, "triangle", note, vol=0.5, attack=0.006, release=0.5), step=STEP)
-    echo = rotate(tmp, "ys-echo", voice(tmp, "ys-echo-dry", parse(LEAD), lambda p, length, note: tone(
-        p, length, "square", note, vol=0.5, duty=30, low=1600, attack=0.01, release=0.7), step=STEP), ECHO * STEP)
-    bass = voice(tmp, "ys-bass", bass_score(), lambda p, length, note: tone(
-        p, length, "square", note, vol=0.8, low=800, attack=0.004, release=0.4), step=STEP)
+    lead = voice(
+        tmp,
+        "ys-lead",
+        parse(LEAD),
+        lambda p, length, note: tone(p, length, "square", note, vol=0.5, duty=30, low=2500, attack=0.006, release=0.5),
+        step=STEP,
+    )
+    body = voice(
+        tmp,
+        "ys-body",
+        parse(LEAD),
+        lambda p, length, note: tone(p, length, "triangle", note, vol=0.5, attack=0.006, release=0.5),
+        step=STEP,
+    )
+    echo = rotate(
+        tmp,
+        "ys-echo",
+        voice(
+            tmp,
+            "ys-echo-dry",
+            parse(LEAD),
+            lambda p, length, note: tone(
+                p, length, "square", note, vol=0.5, duty=30, low=1600, attack=0.01, release=0.7
+            ),
+            step=STEP,
+        ),
+        ECHO * STEP,
+    )
+    bass = voice(
+        tmp,
+        "ys-bass",
+        bass_score(),
+        lambda p, length, note: tone(p, length, "square", note, vol=0.8, low=800, attack=0.004, release=0.4),
+        step=STEP,
+    )
     stabs = [voice(tmp, f"ys-stab{i}", stab_score(i), stab(i), step=STEP) for i in range(3)]
     kicks = voice(tmp, "ys-kick", kick_score(), kick, step=STEP)
     snares = voice(tmp, "ys-snare", snare_score(), snare, step=STEP)
-    mix([(lead, 1.1), (body, 0.45), (echo, 0.35), (bass, 0.5), *[(s, 0.4) for s in stabs], (kicks, 0.5),
-         (snares, 0.8)], out)
+    mix(
+        [(lead, 1.1), (body, 0.45), (echo, 0.35), (bass, 0.5), *[(s, 0.4) for s in stabs], (kicks, 0.5), (snares, 0.8)],
+        out,
+    )

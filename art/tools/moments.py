@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Draw the feedback moments over the dog cards: the firing moment's plate and
 pop, the fee payout's flying coin and amount plate, and the treat's landing pop.
 Effects carry the 1px plum rim, so they hold on the light roads while their fills
@@ -34,13 +33,14 @@ the rim, burst, twinkle and heart helpers in fx.py, piece in hits.py.
 """
 
 import math
-import os
 import sys
+from importlib import import_module
+from pathlib import Path
 
-sys.path.insert(0, os.path.dirname(__file__))
-from fx import burst, rim, stamp, star4  # noqa: E402
-from hits import piece  # noqa: E402
-from pixel import Grid, main  # noqa: E402
+sys.path.insert(0, str(Path(__file__).parent))
+from fx import burst, rim, stamp, star4
+from hits import piece
+from pixel import Grid, main
 
 # The wood card band, the plum top bar and the three light roads, for the preview.
 GROUNDS = ("733e39", "3e2731", "e4a672", "c0cbdc", "c28569")
@@ -55,7 +55,7 @@ FIRED_PLATE = ("blue", "sky", "navy")
 
 def fired_plate(face, lit, shade):
     """24x24 nine-slice, 8px corners: ui.py's chrome plate with a stamp line (fired_plate)."""
-    import ui
+    ui = import_module("ui")
 
     return ui.fired_plate(face, lit, shade)
 
@@ -88,8 +88,7 @@ def door(g, x, y, swing, jolt=0):
 
 
 # The puffs of the POOF cloud round the face: (angle in degrees, size against the frame's puff radius).
-PUFFS = ((-90, 1.05), (-50, 0.9), (-15, 1.1), (20, 0.95), (55, 1.05), (125, 1.0), (160, 0.9), (200, 1.1),
-         (235, 0.95))
+PUFFS = ((-90, 1.05), (-50, 0.9), (-15, 1.1), (20, 0.95), (55, 1.05), (125, 1.0), (160, 0.9), (200, 1.1), (235, 0.95))
 
 
 def poof_cloud(g, cx, cy, d, pr):
@@ -121,6 +120,7 @@ def fired_pop(step):
         # on frame 1 the cloud is still one mass round the small face; after that the face fills its middle
         if step == 1:
             p.ell(cx, cy, 11, 10, "cream", "tan", "white")
+
     piece(g, cloud)
     swing, jolt = (0, 2, 1, 0, 0, 0)[step], (0, 0, 0, 1, 0, 0)[step]
     piece(g, lambda p: door(p, 6, 30, swing, jolt))
@@ -129,12 +129,13 @@ def fired_pop(step):
         def lines(p):
             for x, y, n in ((1, 33, 3), (0, 40, 4), (1, 47, 3)):
                 p.rect(x, y, n, 1, "white")
+
         piece(g, lines)
         piece(g, lambda p: star4(p, 6, 27, 2, "yellow"))
     if step in (3, 4):
         t = step - 3
         for x, rr in ((6 - t, 2.5), (17 + t, 2.5 - t * 0.5), (12, 2)):
-            piece(g, lambda p: p.ell(x, 52 + t, rr + 0.5, rr, "cream", "tan"))
+            piece(g, lambda p, rr=rr, x=x: p.ell(x, 52 + t, rr + 0.5, rr, "cream", "tan"))
     # the face covers the middle from frame 2 on, so keep it clear for a clean silhouette
     if step >= 2:
         g.rect(19, 21, 26, 30, None)
@@ -142,6 +143,7 @@ def fired_pop(step):
 
 
 # ---------- fee payout ----------
+
 
 def coin_fly(step):
     """12x12: the coin turns edge-on and back. Amber holds 4.57:1 on the wood card band and
@@ -171,7 +173,7 @@ def coin_fly(step):
 
 def payout_label():
     """24x16 three-slice, 8px caps: ui.py's chrome price tag (payout_label)."""
-    import ui
+    ui = import_module("ui")
 
     return ui.payout_label()
 
@@ -199,13 +201,17 @@ def treat_pop(step):
         x = round(cx + dx * (0.5 + step * 0.35))
         y = round(cy + dy * (0.5 + step * 0.3) + step * step * 0.4)
         if 1 <= x < 22 and 1 <= y < 22:
-            piece(g, lambda p: p.rect(x, y, 2, 2, col), size=24)
+            piece(g, lambda p, col=col, x=x, y=y: p.rect(x, y, 2, 2, col), size=24)
     for x0, vx, delay in ((cx - 7, -1, 0), (cx + 3, 1, 0), (cx - 2, 0, 1)):
         t = step - 2 - delay
         if t < 0:
             continue
         cols = ("red", "pink", "dred") if step < 4 else ("pink", "white", "red")
-        piece(g, lambda p: stamp(p, MINI, x0 + vx * t, round(cy - 8 - t * 2.5), cols), size=24)
+        piece(
+            g,
+            lambda p, cols=cols, t=t, vx=vx, x0=x0: stamp(p, MINI, x0 + vx * t, round(cy - 8 - t * 2.5), cols),
+            size=24,
+        )
     return g
 
 

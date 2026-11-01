@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Draw the four contact-debuff effects around the lead dog's feet.
 
 fx-debuff-muddy, -spotlight, -stinky and -zoomies are 60x36, with play frames
@@ -31,13 +30,15 @@ Run from the repository root. Edit this script, not the generated sources.
 """
 
 import math
-import os
 import sys
+from itertools import pairwise
+from pathlib import Path
 
-sys.path.insert(0, os.path.dirname(__file__))
-from fx import rim  # noqa: E402
-from pixel import Grid, main  # noqa: E402
-from ui import DEBUFF_LOOKS  # noqa: E402
+sys.path.insert(0, str(Path(__file__).parent))
+from fx import rim
+from pixel import Grid, main
+
+from ui import DEBUFF_LOOKS
 
 WIDTH, HEIGHT = 60, 36
 FRAME_MS = 100
@@ -58,7 +59,7 @@ def oval(g, step, x, y, rx, ry, fill, shade=None, light=None):
 
 def path(g, step, points, colour, width=2):
     points = [point(step, x, y) for x, y in points]
-    for a, b in zip(points, points[1:]):
+    for a, b in pairwise(points):
         n = max(1, math.ceil(max(abs(b[0] - a[0]), abs(b[1] - a[1]))))
         for k in range(n + 1):
             x, y = (a[i] + (b[i] - a[i]) * k / n for i in (0, 1))
@@ -82,10 +83,9 @@ def polygon(g, step, points, colour):
     for y in range(HEIGHT):
         for x in range(WIDTH):
             inside = False
-            for (ax, ay), (bx, by) in zip(points, points[1:] + points[:1]):
-                if (ay > y + 0.5) != (by > y + 0.5):
-                    if x + 0.5 < (bx - ax) * (y + 0.5 - ay) / (by - ay) + ax:
-                        inside = not inside
+            for (ax, ay), (bx, by) in zip(points, points[1:] + points[:1], strict=True):
+                if (ay > y + 0.5) != (by > y + 0.5) and x + 0.5 < (bx - ax) * (y + 0.5 - ay) / (by - ay) + ax:
+                    inside = not inside
             if inside:
                 g.p(x, y, colour)
 
@@ -101,13 +101,17 @@ def muddy(step):
         for side in (-1, 1):
             x = 30 + side * 17
             oval(p, step, x, 28, 10, 5.5, face, shade)
-            fan = [(x - side * 8, 30), (x - side * 5, 23),
-                   (x - side * 3, 25), (x, 18 - lift),
-                   (x + side * 3, 25), (x + side * 8, 21 - lift / 2),
-                   (x + side * 6, 30)]
+            fan = [
+                (x - side * 8, 30),
+                (x - side * 5, 23),
+                (x - side * 3, 25),
+                (x, 18 - lift),
+                (x + side * 3, 25),
+                (x + side * 8, 21 - lift / 2),
+                (x + side * 6, 30),
+            ]
             polygon(p, step, fan, face)
-            path(p, step, [(x - side * 6, 28), (x, 25),
-                          (x + side * 5, 26)], light, 3)
+            path(p, step, [(x - side * 6, 28), (x, 25), (x + side * 5, 26)], light, 3)
             path(p, step, [(x, 23), (x, 20 - lift)], light, 2)
         path(p, step, [(14, 31), (22, 30), (38, 30), (46, 31)], light, 2)
 
@@ -127,14 +131,18 @@ def stinky(step):
         x = 30 + side * 17
         sway = (0, 0, 1, 1, 0, -1, -1, 0, 1, 1, 0, 0)[step] * side
 
-        def cloud(p):
+        def cloud(p, side=side, sway=sway, x=x):
             oval(p, step, x, 28, 10, 5, face, shade)
             oval(p, step, x + side * 5, 24 - rise / 2, 5, 5, face, shade, light)
             oval(p, step, x - side * 3, 23, 6, 5, face, shade, light)
-            pts = [(x - side * 5, 28), (x - side * 7, 25),
-                   (x - side * 4 + sway, 22), (x + side * 2 + sway, 22),
-                   (x + side * 4 + sway, 19 - rise),
-                   (x + side * 1 + sway, 16 - rise)]
+            pts = [
+                (x - side * 5, 28),
+                (x - side * 7, 25),
+                (x - side * 4 + sway, 22),
+                (x + side * 2 + sway, 22),
+                (x + side * 4 + sway, 19 - rise),
+                (x + side * 1 + sway, 16 - rise),
+            ]
             path(p, step, pts, light, 3)
             path(p, step, [(x - side * 1, 29), (x + side * 4, 28)], light, 2)
             if 2 <= step <= 7:
@@ -151,19 +159,25 @@ def zoomies(step):
     turn = -65 + step * 17
     for offset in (0, 180):
         angles = range(round(turn + offset), round(turn + offset + 112), 6)
-        pts = [(30 + math.cos(math.radians(a)) * 24, 24 + math.sin(math.radians(a)) * 6)
-               for a in angles]
+        pts = [(30 + math.cos(math.radians(a)) * 24, 24 + math.sin(math.radians(a)) * 6) for a in angles]
 
-        def rush(p):
+        def rush(p, offset=offset, pts=pts):
             path(p, step, pts, shade, 6)
             path(p, step, [(x, y - 1) for x, y in pts], face, 4)
             path(p, step, [(x, y - 2) for x, y in pts[3:]], light, 2)
             x, y = pts[-1]
             a = math.radians(turn + offset + 112)
             dx, dy = -math.sin(a), math.cos(a)
-            polygon(p, step, [(x + dx * 4, y + dy * 3),
-                              (x - dx * 4 - dy * 4, y - dy * 3 + dx * 4),
-                              (x - dx * 4 + dy * 4, y - dy * 3 - dx * 4)], light)
+            polygon(
+                p,
+                step,
+                [
+                    (x + dx * 4, y + dy * 3),
+                    (x - dx * 4 - dy * 4, y - dy * 3 + dx * 4),
+                    (x - dx * 4 + dy * 4, y - dy * 3 - dx * 4),
+                ],
+                light,
+            )
 
         part(g, rush)
     return g
@@ -178,6 +192,7 @@ def spotlight(step):
         oval(p, step, 30, 28, 27, 6.5, face, shade)
         oval(p, step, 30, 27, 22, 4.5, light)
         oval(p, step, 30, 26.5, 15, 2.5, face)
+
     part(g, pool)
     slide = (0, 2, 4, 6, 7, 7, 6, 4, 2, 0, -1, 0)[step]
     for side in (-1, 1):

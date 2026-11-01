@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Draw the moving hazards: things that cross the road or come down it, and the
 warning cue shown at the lane edge about a second before one enters.
 
@@ -53,15 +52,16 @@ hand edits to them belong in this file instead. Shared tooling is in pixel.py.
 """
 
 import math
-import os
 import sys
+from itertools import pairwise
+from pathlib import Path
 
-sys.path.insert(0, os.path.dirname(__file__))
-from pixel import Grid, K, edged, main, raster, scale_of  # noqa: E402
-import minis  # noqa: E402
-from minis import SCALES, Mini, scaled  # noqa: E402
-from road import SCALE, SQUIRREL_FUR, face_disc, face_front, headlamp, lean, lit  # noqa: E402
+sys.path.insert(0, str(Path(__file__).parent))
+import minis
+from minis import SCALES, Mini, scaled
+from pixel import Grid, K, edged, main, raster, scale_of
 
+from road import SCALE, SQUIRREL_FUR, face_disc, face_front, headlamp, lean, lit
 
 # ---------- squirrel-dash: side view, facing right ----------
 
@@ -69,12 +69,22 @@ from road import SCALE, SQUIRREL_FUR, face_disc, face_front, headlamp, lean, lit
 # (x, y of the paw's top-left pixel) and the tail tip's offset as it streams. Laid out small, as road.squirrel
 # is: a design unit is 1.5px at full size, so thirds land on whole pixels.
 SQUIRREL_RUN = [
-    dict(dy=0, st=-2 / 3, front=(17 + 1 / 3, 26 + 2 / 3), hind=(14, 26 + 2 / 3), tail=(0, 0)),  # gathered
-    dict(dy=-2 / 3, st=2 / 3, front=(21 + 1 / 3, 24 + 2 / 3), hind=(10 + 2 / 3, 26 + 2 / 3),
-         tail=(-2 / 3, 2 / 3)),                                                                # hind push off
-    dict(dy=-4 / 3, st=2 / 3, front=(22, 25 + 1 / 3), hind=(8, 24), tail=(-2 / 3, 4 / 3)),         # flight
-    dict(dy=-2 / 3, st=0, front=(20 + 2 / 3, 26 + 2 / 3), hind=(11 + 1 / 3, 24 + 2 / 3),
-         tail=(0, 2 / 3)),                                                                     # front lands
+    {"dy": 0, "st": -2 / 3, "front": (17 + 1 / 3, 26 + 2 / 3), "hind": (14, 26 + 2 / 3), "tail": (0, 0)},  # gathered
+    {
+        "dy": -2 / 3,
+        "st": 2 / 3,
+        "front": (21 + 1 / 3, 24 + 2 / 3),
+        "hind": (10 + 2 / 3, 26 + 2 / 3),
+        "tail": (-2 / 3, 2 / 3),
+    },  # hind push off
+    {"dy": -4 / 3, "st": 2 / 3, "front": (22, 25 + 1 / 3), "hind": (8, 24), "tail": (-2 / 3, 4 / 3)},  # flight
+    {
+        "dy": -2 / 3,
+        "st": 0,
+        "front": (20 + 2 / 3, 26 + 2 / 3),
+        "hind": (11 + 1 / 3, 24 + 2 / 3),
+        "tail": (0, 2 / 3),
+    },  # front lands
 ]
 # Waiting at the road's edge: crouched with all four paws under, the plume flicking forward and back.
 SQUIRREL_IDLE = [dict(SQUIRREL_RUN[0], st=0), dict(SQUIRREL_RUN[0], st=0, tail=(-2 / 3, 2 / 3))]
@@ -131,14 +141,16 @@ def squirrel_dash(dy=0, st=0, front=(17 + 1 / 3, 26 + 2 / 3), hind=(14, 26 + 2 /
 # top-left pixels, and the broken leash's wave, a 1px offset for each of its three trailing points. The
 # wave travels down the leash 1px a frame. The far legs follow the near ones 2px further forward.
 CORGI_RUN = [
-    dict(bob=0, front=(16, 27), hind=(9, 27), leash=(0, 1, 0)),      # gathered: all four paws under
-    dict(bob=-1, front=(23, 25), hind=(3, 27), leash=(1, 0, -1)),    # hind push off, front reaching
-    dict(bob=-2, front=(25, 23), hind=(1, 24), leash=(0, -1, 0)),    # airborne, stretched out
-    dict(bob=-1, front=(20, 27), hind=(6, 25), leash=(-1, 0, 1)),    # front paws land, hind swing in
+    {"bob": 0, "front": (16, 27), "hind": (9, 27), "leash": (0, 1, 0)},  # gathered: all four paws under
+    {"bob": -1, "front": (23, 25), "hind": (3, 27), "leash": (1, 0, -1)},  # hind push off, front reaching
+    {"bob": -2, "front": (25, 23), "hind": (1, 24), "leash": (0, -1, 0)},  # airborne, stretched out
+    {"bob": -1, "front": (20, 27), "hind": (6, 25), "leash": (-1, 0, 1)},  # front paws land, hind swing in
 ]
 # Waiting at the road's edge: standing square, a breath lifting the body, the leash drifting.
-CORGI_IDLE = [dict(bob=0, front=(18, 27), hind=(8, 27), leash=(0, 1, 0)),
-              dict(bob=-1, front=(18, 27), hind=(8, 27), leash=(1, 0, -1))]
+CORGI_IDLE = [
+    {"bob": 0, "front": (18, 27), "hind": (8, 27), "leash": (0, 1, 0)},
+    {"bob": -1, "front": (18, 27), "hind": (8, 27), "leash": (1, 0, -1)},
+]
 
 
 def limb(g, x0, y0, x1, y1, w, c):
@@ -161,9 +173,11 @@ def corgi_side(bob=0, front=(14, 27), hind=(11, 27), leash=(0, 0, 0), new=Grid):
     # the leash is 1px wide and unbroken at any scale: its points are placed on the drawn grid and joined there
     w1, w2, w3 = leash
     sc, px = scale_of(g), raster(g)
-    pts = [(math.floor((x + 0.5) * sc), math.floor((y + b + 0.5) * sc))
-           for x, y in ((19, 13), (15, 7), (10, 5 + w1), (6, 4 + w2), (3, 5 + w3))]
-    for (x0, y0), (x1, y1) in zip(pts, pts[1:]):
+    pts = [
+        (math.floor((x + 0.5) * sc), math.floor((y + b + 0.5) * sc))
+        for x, y in ((19, 13), (15, 7), (10, 5 + w1), (6, 4 + w2), (3, 5 + w3))
+    ]
+    for (x0, y0), (x1, y1) in pairwise(pts):
         n = max(abs(x1 - x0), abs(y1 - y0), 1)
         for k in range(n + 1):
             px.p(round(x0 + (x1 - x0) * k / n), round(y0 + (y1 - y0) * k / n), "red")
@@ -207,8 +221,14 @@ def corgi_side(bob=0, front=(14, 27), hind=(11, 27), leash=(0, 0, 0), new=Grid):
 # top of the arc; and the shadow's width per frame. ball_steps adds the ground row, 2 rows above the frame's
 # bottom (the ball's outline touches it on contact, and the shadow is centred on it), and the stripes' width,
 # spacing and step per frame (whole cycles over the 6 frames, so the loop has no jump).
-BALL_LAYOUT = dict(width=28, heights=(0, 11, 15, 17, 15, 11), squash=(10.4, 7), stretch=(7, 10.4),
-                   round=(9, 9), shadow=(21, 17, 14, 11, 14, 17))
+BALL_LAYOUT = {
+    "width": 28,
+    "heights": (0, 11, 15, 17, 15, 11),
+    "squash": (10.4, 7),
+    "stretch": (7, 10.4),
+    "round": (9, 9),
+    "shadow": (21, 17, 14, 11, 14, 17),
+}
 BALL_SIZE = (24, 36)
 
 
@@ -218,13 +238,16 @@ def ball_steps():
     for s in (1, *(v for _, v in minis.STEPS)):
         w, h = (math.floor(v * s + 0.5) for v in BALL_SIZE)
         k = w / BALL_LAYOUT["width"]
-        out[s] = dict(size=(w, h), ground=h - 2,
-                      heights=tuple(round(v * k) for v in BALL_LAYOUT["heights"]),
-                      squash=tuple(v * k for v in BALL_LAYOUT["squash"]),
-                      stretch=tuple(v * k for v in BALL_LAYOUT["stretch"]),
-                      round=tuple(v * k for v in BALL_LAYOUT["round"]),
-                      stripes=(3, 9, 3) if w >= 24 else (2, 6, 2),
-                      shadow=tuple(max(3, round(v * k)) for v in BALL_LAYOUT["shadow"]))
+        out[s] = {
+            "size": (w, h),
+            "ground": h - 2,
+            "heights": tuple(round(v * k) for v in BALL_LAYOUT["heights"]),
+            "squash": tuple(v * k for v in BALL_LAYOUT["squash"]),
+            "stretch": tuple(v * k for v in BALL_LAYOUT["stretch"]),
+            "round": tuple(v * k for v in BALL_LAYOUT["round"]),
+            "stripes": (3, 9, 3) if w >= 24 else (2, 6, 2),
+            "shadow": tuple(max(3, round(v * k)) for v in BALL_LAYOUT["shadow"]),
+        }
     return out
 
 
@@ -239,8 +262,9 @@ def ball_bounce(f, s=1, rest=False, rock=0):
     q = BALL[s]
     w, h = q["size"]
     up = q["heights"][f]
-    rx, ry = (q["round"] if rest else q["squash"] if f == 0
-              else q["stretch"] if up < max(q["heights"]) - 2 else q["round"])
+    rx, ry = (
+        q["round"] if rest else q["squash"] if f == 0 else q["stretch"] if up < max(q["heights"]) - 2 else q["round"]
+    )
     g = edged(Grid(w, h))
     cx, cy = w / 2, q["ground"] - up - ry
     g.ell(cx, cy, rx, ry, "white", "lgrey")
@@ -268,10 +292,10 @@ def ball_bounce(f, s=1, rest=False, rock=0):
 
 # Pedalling, one dict per frame: the left and right foot rows (the pedals go round) and the sway.
 CYCLIST_RIDE = [
-    dict(lf=36, rf=41, sway=-1),
-    dict(lf=38, rf=39, sway=0),
-    dict(lf=41, rf=36, sway=1),
-    dict(lf=39, rf=38, sway=0),
+    {"lf": 36, "rf": 41, "sway": -1},
+    {"lf": 38, "rf": 39, "sway": 0},
+    {"lf": 41, "rf": 36, "sway": 1},
+    {"lf": 39, "rf": 38, "sway": 0},
 ]
 
 
@@ -352,13 +376,17 @@ def cyclist_at(s, lf=36, rf=41, sway=0):
 # The stalk, one dict per frame: each paw's lift off the road (fl, fr the far and near front paws, bl, br the
 # far and near hind ones), the body's offset (negative is up) and the head's. A slow creep: one diagonal pair
 # lifts while the body sinks to slink under it, then the other, the head held level.
-COYOTE_WALK = [dict(fr=2, bl=1, bob=1, head=-1), dict(), dict(fl=2, br=1, bob=1, head=-1), dict()]
+COYOTE_WALK = [{"fr": 2, "bl": 1, "bob": 1, "head": -1}, {}, {"fl": 2, "br": 1, "bob": 1, "head": -1}, {}]
 # Crouched and watching: a breath (the body 1px up) and the near ear flicking back.
-COYOTE_IDLE = [dict(), dict(bob=-1, ear=1)]
+COYOTE_IDLE = [{}, {"bob": -1, "ear": 1}]
 # A quick low lunge for each step, never rising off its crouch: a sink onto the haunches, the push with the
 # front paws up and the ears pinned back, the reach with the head thrust lower still, and the landing.
-COYOTE_STEP = [dict(bob=1, head=1), dict(fl=2, fr=2, head=1, ear=1), dict(fl=1, fr=2, bob=1, head=2, ear=1),
-               dict(bl=1, br=1, bob=1)]
+COYOTE_STEP = [
+    {"bob": 1, "head": 1},
+    {"fl": 2, "fr": 2, "head": 1, "ear": 1},
+    {"fl": 1, "fr": 2, "bob": 1, "head": 2, "ear": 1},
+    {"bl": 1, "br": 1, "bob": 1},
+]
 COYOTE_OFFSETS = ("fl", "fr", "bl", "br", "bob", "head", "ear")
 
 
@@ -438,6 +466,7 @@ def coyote(fl=0, fr=0, bl=0, br=0, bob=0, head=0, ear=0, new=Grid):
 
 # ---------- the warning cue (UI, ink outlined) ----------
 
+
 def warning(big):
     """A yellow warning triangle with a bold "!", built row by row; big is the pulse frame, 1px larger
     all round."""
@@ -465,7 +494,7 @@ def warning_arrow(shift, down=False, up=False):
             if g.px[y][x] == K["yellow"] and not (y + 1 < 16 and g.px[y + 1][x]):
                 g.p(x, y, "amber")
     if down or up:
-        g.px = [list(col) for col in zip(*g.px)]
+        g.px = [list(col) for col in zip(*g.px, strict=True)]
     if up:
         g.px = g.px[::-1]
     return g
@@ -515,27 +544,49 @@ CORGI_OFFSETS = ("bob", "leash")
 def steps(suffix, s):
     """Yield (key + suffix, tags) for the road hazards at depth step s; depths.py draws the steps between
     SCALES with this too."""
-    yield f"squirrel-dash{suffix}", [(tag, [squirrel_dash(**small(s, q, SQUIRREL_OFFSETS)).outlined() for q in poses],
-                                       ms) for tag, poses, ms in (("idle", SQUIRREL_IDLE, 400), ("run", SQUIRREL_RUN, 80))]
-    yield f"loose-dog{suffix}", [(tag, [corgi_side(**small(s, q, CORGI_OFFSETS)).outlined() for q in poses], ms)
-                                 for tag, poses, ms in (("idle", CORGI_IDLE, 400), ("run", CORGI_RUN, 100))]
-    yield f"ball-bounce{suffix}", [("idle", [ball_bounce(0, s, True, r) for r in (0, 1)], 400),
-                                   ("bounce", [ball_bounce(f, s) for f in range(6)], 70)]
+    yield (
+        f"squirrel-dash{suffix}",
+        [
+            (tag, [squirrel_dash(**small(s, q, SQUIRREL_OFFSETS)).outlined() for q in poses], ms)
+            for tag, poses, ms in (("idle", SQUIRREL_IDLE, 400), ("run", SQUIRREL_RUN, 80))
+        ],
+    )
+    yield (
+        f"loose-dog{suffix}",
+        [
+            (tag, [corgi_side(**small(s, q, CORGI_OFFSETS)).outlined() for q in poses], ms)
+            for tag, poses, ms in (("idle", CORGI_IDLE, 400), ("run", CORGI_RUN, 100))
+        ],
+    )
+    yield (
+        f"ball-bounce{suffix}",
+        [
+            ("idle", [ball_bounce(0, s, True, r) for r in (0, 1)], 400),
+            ("bounce", [ball_bounce(f, s) for f in range(6)], 70),
+        ],
+    )
     yield f"cyclist{suffix}", [("ride", [cyclist_at(s, **q).outlined() for q in CYCLIST_RIDE], 90)]
-    yield f"coyote{suffix}", [(tag, [coyote(**small(s, q, COYOTE_OFFSETS)).outlined() for q in poses], ms)
-                              for tag, poses, ms in (("idle", COYOTE_IDLE, 400), ("walk", COYOTE_WALK, 120),
-                                                     ("step", COYOTE_STEP, 80))]
+    yield (
+        f"coyote{suffix}",
+        [
+            (tag, [coyote(**small(s, q, COYOTE_OFFSETS)).outlined() for q in poses], ms)
+            for tag, poses, ms in (("idle", COYOTE_IDLE, 400), ("walk", COYOTE_WALK, 120), ("step", COYOTE_STEP, 80))
+        ],
+    )
 
 
 def sprites():
     """Yield (key, [(tag, [frame pixels], duration_ms)]) for every sprite."""
     yield from steps("", 1)
     yield "ui-warning", [("pulse", [warning(False).outlined(), warning(True).outlined()], 250)]
-    yield "ui-warning-arrow", [("pulse", [warning_arrow(0).outlined(), warning_arrow(1).outlined()], 250),
-                               ("down-pulse", [warning_arrow(0, True).outlined(),
-                                               warning_arrow(1, True).outlined()], 250),
-                               ("up-pulse", [warning_arrow(0, up=True).outlined(),
-                                             warning_arrow(1, up=True).outlined()], 250)]
+    yield (
+        "ui-warning-arrow",
+        [
+            ("pulse", [warning_arrow(0).outlined(), warning_arrow(1).outlined()], 250),
+            ("down-pulse", [warning_arrow(0, True).outlined(), warning_arrow(1, True).outlined()], 250),
+            ("up-pulse", [warning_arrow(0, up=True).outlined(), warning_arrow(1, up=True).outlined()], 250),
+        ],
+    )
     yield "ui-warning-wander", [("pulse", [warning_wander(0).outlined(), warning_wander(1).outlined()], 250)]
     for suffix, s in SCALES:
         yield from steps(f"@{suffix}", s)

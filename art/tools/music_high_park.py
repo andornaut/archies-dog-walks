@@ -9,9 +9,7 @@ time. A few short birdsong trills and calls fill the held notes.
 Notes are "name:sixteenths"; "-" is a rest, "Bb" spells a flat, and "G5>A5" plays a quick G5 grace into A5.
 """
 
-import subprocess
-
-from sounds import concat, mix, n, parse, rest, tone, voice
+from sounds import concat, mix, n, parse, sox, tone, voice
 
 # One sixteenth in samples: 12 to the 6/8 bar, so a dotted quarter lasts 6 x 4704 samples, about 94 BPM.
 # 4704 is a multiple of 32, so the 288 sixteenths of the loop fill whole 1024-sample AAC frames.
@@ -87,7 +85,7 @@ def score(text):
 def sox_mix(layers, out):
     """Sum (path, volume) layers of equal length into out, without normalizing."""
     inputs = [a for path, vol in layers for a in ("-v", f"{vol:.4f}", path)]
-    subprocess.run(["sox", "-R", "-D", "-m", *inputs, "-e", "floating-point", "-b", "32", out], check=True)
+    sox("-m", *inputs, "-e", "floating-point", "-b", "32", out)
 
 
 def flute(path, length, note):
@@ -99,16 +97,36 @@ def flute(path, length, note):
         flute(f"{path}-m.wav", length - glen, note)
         concat([f"{path}-g.wav", f"{path}-m.wav"], path)
         return
-    tone(f"{path}-t.wav", length, "triangle", note, low=3500, attack=0.035, release=0.45, shape="h",
-         fx=("tremolo", "5.2", "14"))
+    tone(
+        f"{path}-t.wav",
+        length,
+        "triangle",
+        note,
+        low=3500,
+        attack=0.035,
+        release=0.45,
+        shape="h",
+        fx=("tremolo", "5.2", "14"),
+    )
     tone(f"{path}-n.wav", length, "pinknoise", None, low=3200, high=1400, attack=0.01, release=0.9, shape="h")
     sox_mix([(f"{path}-t.wav", 1), (f"{path}-n.wav", 0.18)], path)
 
 
 def oboe(path, length, note):
     """A reedy narrow pulse, filtered soft, with a slow swell and a light vibrato."""
-    tone(path, length, "square", note, duty=18, low=1900, high=200, attack=0.04, release=0.4, shape="h",
-         fx=("tremolo", "4.8", "12"))
+    tone(
+        path,
+        length,
+        "square",
+        note,
+        duty=18,
+        low=1900,
+        high=200,
+        attack=0.04,
+        release=0.4,
+        shape="h",
+        fx=("tremolo", "4.8", "12"),
+    )
 
 
 def bass(path, length, note):
@@ -149,8 +167,18 @@ def bird(path, length, call):
     layers = []
     for i, (start, seconds, freq, vol) in enumerate(parts):
         p = f"{path}-{i}.wav"
-        tone(p, n(seconds), "triangle", freq, vol=vol, low=4000, attack=0.006, release=0.6, start=n(start),
-             tail=length - n(start) - n(seconds))
+        tone(
+            p,
+            n(seconds),
+            "triangle",
+            freq,
+            vol=vol,
+            low=4000,
+            attack=0.006,
+            release=0.6,
+            start=n(start),
+            tail=length - n(start) - n(seconds),
+        )
         layers.append((p, 1))
     sox_mix(layers, path)
 
@@ -160,7 +188,7 @@ def bird_score():
     for start, call, steps in BIRDS:
         notes += [("-", start - at), (call, steps)]
         at = start + steps
-    return notes + [("-", BARS * 12 - at)]
+    return [*notes, ("-", BARS * 12 - at)]
 
 
 def drum(path, length, kind):
@@ -169,10 +197,30 @@ def drum(path, length, kind):
     else:
         # A hollow wooden knock: a falling mid triangle and a short band of noise.
         vol = 1 if kind == "tick" else 0.55
-        tone(f"{path}-k.wav", n(0.035), "triangle", (1150, 900), vol=vol, low=3000, attack=0.002, release=0.9,
-             shape="q", tail=length - n(0.035))
-        tone(f"{path}-n.wav", n(0.02), "pinknoise", None, vol=vol * 0.5, low=3000, high=1200, attack=0.002,
-             release=0.9, tail=length - n(0.02))
+        tone(
+            f"{path}-k.wav",
+            n(0.035),
+            "triangle",
+            (1150, 900),
+            vol=vol,
+            low=3000,
+            attack=0.002,
+            release=0.9,
+            shape="q",
+            tail=length - n(0.035),
+        )
+        tone(
+            f"{path}-n.wav",
+            n(0.02),
+            "pinknoise",
+            None,
+            vol=vol * 0.5,
+            low=3000,
+            high=1200,
+            attack=0.002,
+            release=0.9,
+            tail=length - n(0.02),
+        )
         sox_mix([(f"{path}-k.wav", 1), (f"{path}-n.wav", 1)], path)
 
 

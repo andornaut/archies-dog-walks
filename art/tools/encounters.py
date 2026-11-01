@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Draw the goose, a zone encounter on the road. It is a billboard like the minor
 obstacles (obstacles.py), but a side view, squat, its base on the last opaque row.
 
@@ -28,14 +27,15 @@ Run from the repository root. A build overwrites the .aseprite sources, so
 hand edits to them belong in this file instead. Shared tooling is in pixel.py.
 """
 
-import os
 import sys
+from pathlib import Path
 
-sys.path.insert(0, os.path.dirname(__file__))
-import road  # noqa: E402
-from minis import STEPS, Mini  # noqa: E402
-from pixel import Grid, edged, main  # noqa: E402
-from road import lit  # noqa: E402
+sys.path.insert(0, str(Path(__file__).parent))
+from minis import STEPS, Mini
+from pixel import Grid, edged, main
+
+import road
+from road import lit
 
 # The drawings are laid out on a 32-unit design grid; the sprites draw them road.SCALE times larger (32 units
 # are 48px).
@@ -48,6 +48,7 @@ def mini(s):
 
 
 # ---------- goose ----------
+
 
 def goose(fa=0, fb=0, bob=0, flap=0, beak=1, thrust=0, new=Grid):
     """Side view facing right. fa and fb move the near and far feet along the ground, bob lifts the body
@@ -97,13 +98,19 @@ def goose(fa=0, fb=0, bob=0, flap=0, beak=1, thrust=0, new=Grid):
 
 # The waddle: the near foot back, passing, forward, passing; the body bobs on the passing frames, and the
 # wings beat with the stride, raised on the steps and swept down as the body rises.
-GOOSE_RUN = [dict(fa=-2, fb=2, flap=-1), dict(bob=-1, flap=2), dict(fa=2, fb=-2, flap=-1), dict(bob=-1, flap=2)]
+GOOSE_RUN = [
+    {"fa": -2, "fb": 2, "flap": -1},
+    {"bob": -1, "flap": 2},
+    {"fa": 2, "fb": -2, "flap": -1},
+    {"bob": -1, "flap": 2},
+]
 # The honk: open, a thrust with the beak wide, open, shut.
-GOOSE_IDLE = [dict(), dict(beak=2, thrust=1), dict(), dict(beak=0)]
+GOOSE_IDLE = [{}, {"beak": 2, "thrust": 1}, {}, {"beak": 0}]
 GOOSE_OFFSETS = ("fa", "fb", "bob", "flap", "thrust")
 
 
 # ---------- build ----------
+
 
 def sprites():
     """Yield (key, [(tag, [frame pixels], duration_ms)]) for every sprite, then its depth variants. Each is
@@ -112,12 +119,16 @@ def sprites():
         s = BIG * step
         new = mini(s)
 
-        def snapped(q, keys):
+        def snapped(q, keys, s=s):
             return {k: (v / s if k in keys and v else v) for k, v in q.items()}
 
-        yield f"goose{suffix}", [
-            ("run", [goose(**snapped(q, GOOSE_OFFSETS), new=new).outlined() for q in GOOSE_RUN], 110),
-            ("idle", [goose(**snapped(q, GOOSE_OFFSETS), new=new).outlined() for q in GOOSE_IDLE], 300)]
+        yield (
+            f"goose{suffix}",
+            [
+                ("run", [goose(**snapped(q, GOOSE_OFFSETS), new=new).outlined() for q in GOOSE_RUN], 110),
+                ("idle", [goose(**snapped(q, GOOSE_OFFSETS), new=new).outlined() for q in GOOSE_IDLE], 300),
+            ],
+        )
 
 
 if __name__ == "__main__":

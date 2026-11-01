@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Draw the owners standing, full body, and build their Aseprite sources and exports.
 
 owner-<dog>: 32x48, chibi, front view, in the house palette with the road outline
@@ -20,12 +19,13 @@ hand edits to them belong in this file instead. Shared tooling is in pixel.py;
 the standing figure, face and rim come from road.py.
 """
 
-import os
 import sys
+from pathlib import Path
 
-sys.path.insert(0, os.path.dirname(__file__))
-from pixel import K, edged, hairline, main  # noqa: E402
-from road import BREATH, BREATH_MS, LIT, face_disc, face_front, person, rim  # noqa: E402
+sys.path.insert(0, str(Path(__file__).parent))
+from pixel import K, edged, hairline, main
+
+from road import BREATH, BREATH_MS, LIT, face_disc, face_front, person, rim
 
 OWNER_WAVE = ("up", "out")
 WAVE_MS = 300
@@ -89,6 +89,7 @@ def eve_top(wave):
     a denim-blue skirt and white sneakers, and a silver vlog camera on a short grip held up in her left hand
     beside her hair: a red recording light on its body, a top plate, and a round navy lens with a lit glass
     turned on her face."""
+
     def top(g, b):
         # the skirt, flared at the hem
         g.rect(11, 35 + b, 10, 3, "blue")
@@ -154,6 +155,7 @@ def eve_top(wave):
         # the ends falling over the shoulders, in front of the arms
         g.rect(9, 27 + b, 2, 5, "yellow")
         g.rect(22, 27 + b, 2, 5, "amber")
+
     return top
 
 
@@ -172,6 +174,7 @@ def ryan_top(wave):
     """Ryan, site engineer, dramatic: a blond forelock under a white hard hat, a yellow hi-vis vest with
     silver stripes over a blue work shirt with its sleeves rolled up, slate work trousers, brown boots, and
     rolled plans in his left hand."""
+
     def top(g, b):
         torso(g, b, "blue", "navy")
         # the vest: two yellow panels, open down the front, each crossed by a silver stripe
@@ -203,6 +206,7 @@ def ryan_top(wave):
         g.rect(10, 9 + b, 2, 1, "yellow")
         face_front(g, 16, 13 + b)
         cheeks(g, b, "mauve")
+
     return top
 
 
@@ -211,6 +215,7 @@ def ralph_top(wave):
     tight into a low ponytail behind the left shoulder, heavy brown brows, a dark leather flight jacket with a
     cream fleece collar and gold wings, open over a white shirt and a round belly, slate trousers, and a red
     model plane held nose up on his left fist."""
+
     def top(g, b):
         torso(g, b, "dbrown", "plum")
         # the belly, rounding the jacket out over the ribbed waistband
@@ -271,12 +276,14 @@ def ralph_top(wave):
         g.rect(10, 10 + b, 4, 2, "brown")
         g.rect(18, 10 + b, 4, 2, "brown")
         g.rect(15, 15 + b, 2, 1, "skin2")
+
     return top
 
 
 def tara_top(wave):
     """Ms. Tara, dog-show judge, fussy: tall blonde updo, amber earrings, red lips, a purple blazer over
     a white blouse and pearls, a pencil skirt, her hands empty."""
+
     def top(g, b):
         g.rect(10, 33 + b, 12, 6, "purple")
         g.rect(19, 33 + b, 3, 6, "plum")
@@ -303,6 +310,7 @@ def tara_top(wave):
         face_front(g, 16, 13 + b, lips="red")
         g.p(10, 12 + b, "ink")
         g.p(22, 12 + b, "ink")
+
     return top
 
 
@@ -310,6 +318,7 @@ def clare_top(wave):
     """Clare, psychology student, laid-back: fair skin, brown hair to the shoulders with a side-swept fringe and a
     pink clip, a cosy green knit sweater with a ribbed hem over a white collar, a navy skirt, and her psychology
     textbook in her left hand."""
+
     def top(g, b):
         g.rect(10, 33 + b, 12, 5, "navy")
         g.rect(19, 33 + b, 3, 5, "ink")
@@ -339,6 +348,7 @@ def clare_top(wave):
         g.p(10, 12 + b, "ink")
         g.p(22, 12 + b, "ink")
         cheeks(g, b)
+
     return top
 
 
@@ -346,6 +356,7 @@ def kiwi_top(wave):
     """Kiwi, grandmother, laid-back: a cloud of short white curls, a blue cardigan lit sky on its left, over a
     white blouse with a kiwi-slice brooch, a grey skirt, red shoes, and a ball of pink yarn on two knitting
     needles in her left hand."""
+
     def top(g, b):
         g.rect(10, 33 + b, 12, 5, "slate")
         g.rect(19, 33 + b, 3, 5, "dslate")
@@ -379,6 +390,7 @@ def kiwi_top(wave):
             g.cel(cx, 9 + b, 2, 1.6, "white", "lgrey")
         face_front(g, 16, 13 + b)
         cheeks(g, b, "rust")
+
     return top
 
 
@@ -386,6 +398,7 @@ def aunt_judy_top(wave):
     """Aunt Judy, tennis star, dramatic: older and fit, a silver high ponytail, a cyan visor, a sleeveless
     white tennis dress with a cyan V neck, armholes and hem, a cyan sweatband on the right wrist, white socks and
     shoes, and her racket held up in her left hand."""
+
     def top(g, b):
         # the high ponytail, from row 2, so the outline closes over it on the breath's raised frame
         g.cel(25, 7 + b, 3, 5, "lgrey", "grey", "white")
@@ -436,11 +449,13 @@ def aunt_judy_top(wave):
         g.p(10, 12 + b, "ink")
         g.p(22, 12 + b, "ink")
         cheeks(g, b)
+
     return top
 
 
 def aunt_judy_legs(g, b):
     """Aunt Judy's white tennis socks, a cyan stripe round each top."""
+    del b  # Socks remain planted while the torso bobs.
     for x in (11, 17):
         g.rect(x, 41, 4, 2, "white")
         g.rect(x, 41, 4, 1, "cyan")
@@ -449,6 +464,7 @@ def aunt_judy_legs(g, b):
 def gadget_top(wave):
     """Gadget, inspector, fussy: black hair under a brown brimmed hat, a tan trench coat belted at the waist
     with its collar turned up, over a white shirt and red tie, and a magnifying glass in his left hand."""
+
     def top(g, b):
         # the coat runs down over the knees
         g.rect(9, 33 + b, 14, 6, "tan")
@@ -482,6 +498,7 @@ def gadget_top(wave):
         g.rect(26, 7 + b, 2, 1, "dbrown")
         g.rect(6, 6 + b, 4, 1, "tan")
         face_front(g, 16, 13 + b)
+
     return top
 
 
@@ -489,6 +506,7 @@ def jason_top(wave):
     """Jason, lawn care pro, laid-back: short brown hair under an orange baseball cap with a moss leaf on its front, an
     olive work polo with a moss collar and an orange logo, amber work gloves, khaki work shorts, brown work
     boots, and a turquoise leaf blower in his left hand, its nozzle down to the grass and two leaves blowing off it."""
+
     def top(g, b):
         # the work shorts, a seam down the middle
         g.rect(10, 33 + b, 12, 4, "driftwood")
@@ -529,6 +547,7 @@ def jason_top(wave):
         g.rect(2, 9 + b, 22, 1, "rust")
         face_front(g, 16, 13 + b)
         cheeks(g, b, "brown")
+
     return top
 
 
@@ -558,8 +577,13 @@ def owner(dog, wave=None, bob=0):
 def sprites():
     """Yield (key, [(tag, [frame pixels], duration_ms)]) for every sprite."""
     for dog in OWNERS:
-        yield f"owner-{dog}", [("idle", [owner(dog, bob=bb).outlined() for bb in BREATH], BREATH_MS),
-                               ("wave", [owner(dog, w).outlined() for w in OWNER_WAVE], WAVE_MS)]
+        yield (
+            f"owner-{dog}",
+            [
+                ("idle", [owner(dog, bob=bb).outlined() for bb in BREATH], BREATH_MS),
+                ("wave", [owner(dog, w).outlined() for w in OWNER_WAVE], WAVE_MS),
+            ],
+        )
 
 
 if __name__ == "__main__":

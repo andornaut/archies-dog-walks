@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Draw the minor obstacles: things the pack bumps into with no card. Each
 spans whole lanes of the 64px road lanes: an n-lane obstacle is 64n-16 px wide,
 leaving an 8px margin in its outer lanes.
@@ -73,12 +72,14 @@ hand edits to them belong in this file instead. Shared tooling is in pixel.py.
 """
 
 import math
-import os
 import sys
+from importlib import import_module
+from pathlib import Path
 
-sys.path.insert(0, os.path.dirname(__file__))
-from pixel import Grid, K, edged, main, raster, road_edge, scale_of  # noqa: E402
-from road import lit  # noqa: E402
+sys.path.insert(0, str(Path(__file__).parent))
+from pixel import Grid, K, edged, main, raster, road_edge, scale_of
+
+from road import lit
 
 # The drawings are in layout pixels: a 1-lane sprite's frame is SIZE square and a lane-spanning obstacle ROW
 # tall. sprites() draws them SCALE times bigger on a minis.Mini, which keeps 1px lines 1px, so a 1-lane sprite
@@ -97,9 +98,13 @@ def span(lanes):
     return (64 * lanes - 16) / SCALE
 
 
+DOUBLE_LANE_SPAN = span(2)
+TRIPLE_LANE_SPAN = span(3)
+
+
 def drawn(s, draw, *args, **q):
     """draw(*args, **q) on a minis.Mini at scale s, or (sx, sy) for its columns and rows."""
-    import minis  # minis imports this module, so it is imported when first used
+    minis = import_module("minis")
 
     return minis.small(sys.modules[__name__], s, draw, *args, **q)
 
@@ -138,7 +143,7 @@ def trash_can(lift=0):
     return lit(g)
 
 
-def bench(leaf=(0, 0), w=span(2)):
+def bench(leaf=(0, 0), w=DOUBLE_LANE_SPAN):
     """From behind, low: the backrest (two slats) and the seat's front edge as bands on short legs. leaf
     offsets the fallen leaf on the seat edge; None leaves it off. Each slat is a 2-row tan top over a
     3-row brown face, with a 2-row plum gap between them."""
@@ -177,7 +182,7 @@ TEXTURE_MIN = 0.7
 HEDGE_ROWS = 35
 
 
-def hedge(w=span(3), rustle=()):
+def hedge(w=TRIPLE_LANE_SPAN, rustle=()):
     """Wide, seen side on: a rounded top edge of leaf clumps about 13px apart,
     alternately 2px higher, no top surface, lit green on their top-left edges; the rounded ends as tall as
     the body; a teal band at its foot. rustle lists the top clumps, by index, that lift 1px and shift 1px
@@ -298,7 +303,8 @@ def delivery_truck(puff=0, roll=None):
     its top and left edges with mirrors at its sides and amber marker lights on the roof, a tan roller door
     ribbed in brown with a white shipping label on it, red tail lights low at the outer corners, the bumper
     step and both rear wheels. puff 1 blows a grey exhaust puff out beside the right wheel and puff 2
-    lets it drift up and thin to two wisps. roll (0 to 3) is a drive frame: tread lines climb the tires 1px a frame (treads) and the
+    lets it drift up and thin to two wisps. roll (0 to 3) is a drive frame: tread lines climb the tires 1px
+    a frame (treads) and the
     body dips 1px onto them on frames 1 and 2. Laid out on 56x45 and drawn at CAR_SCALE, as the parked car."""
     g = edged(Grid(56, 45))
     px = raster(g)
@@ -362,12 +368,20 @@ def delivery_truck(puff=0, roll=None):
 
 # 5-row letters for the streetcar's route sign and wordmark and the taxi's roof light, one string per row, 1 for
 # a lit pixel: 3 columns wide, the I 1.
-LETTERS = {"0": ("111", "101", "101", "101", "111"), "4": ("101", "101", "111", "001", "001"),
-           "5": ("111", "100", "111", "001", "111"), "A": ("010", "101", "111", "101", "101"),
-           "C": ("111", "100", "100", "100", "111"), "I": ("1", "1", "1", "1", "1"),
-           "E": ("111", "100", "110", "100", "111"), "N": ("1001", "1101", "1011", "1001", "1001"),
-           "S": ("011", "100", "010", "001", "110"), "T": ("111", "010", "010", "010", "010"),
-           "W": ("10001", "10001", "10101", "10101", "01010"), "X": ("101", "101", "010", "101", "101")}
+LETTERS = {
+    "0": ("111", "101", "101", "101", "111"),
+    "4": ("101", "101", "111", "001", "001"),
+    "5": ("111", "100", "111", "001", "111"),
+    "A": ("010", "101", "111", "101", "101"),
+    "C": ("111", "100", "100", "100", "111"),
+    "I": ("1", "1", "1", "1", "1"),
+    "E": ("111", "100", "110", "100", "111"),
+    "N": ("1001", "1101", "1011", "1001", "1001"),
+    "S": ("011", "100", "010", "001", "110"),
+    "T": ("111", "010", "010", "010", "010"),
+    "W": ("10001", "10001", "10101", "10101", "01010"),
+    "X": ("101", "101", "010", "101", "101"),
+}
 # The streetcar's idle: a spark at the pantograph on frame 2.
 STREETCAR_IDLE = (False, False, True, False), 400
 # Its drive's sideways sway, in drawn pixels per frame, as the bogies roll under it.
@@ -460,8 +474,10 @@ def streetcar(spark=False, roll=None):
     g.rect(24, 44, 8, 1, "lgrey")
     sway = STREETCAR_SWAY[roll] if roll is not None else 0
     body = px.px
-    px.px = [[(body[y][x - sway] if 0 <= x - sway < px.w else None) or wheels[y][x] for x in range(px.w)]
-             for y in range(px.h)]
+    px.px = [
+        [(body[y][x - sway] if 0 <= x - sway < px.w else None) or wheels[y][x] for x in range(px.w)]
+        for y in range(px.h)
+    ]
     return lit(g)
 
 
@@ -488,11 +504,11 @@ def taxi(roll=None, signal=False, turn=False):
     # the rear face's columns, narrowed and slid left when turning; up leans the upper parts further right
     k, x0, lean = (0.875, 3, 2) if turn else (1, 4, 0)
 
-    def X(x, up=0):
+    def project_x(x, up=0):
         return x0 + (x - 4) * k + (lean if up else 0)
 
     def r(x, y, w, h, c, up=0):
-        g.rect(X(x, up), y, w * k, h, c)
+        g.rect(project_x(x, up), y, w * k, h, c)
 
     # rear tires, under the body at either side
     for x in (6, 42):
@@ -500,34 +516,34 @@ def taxi(roll=None, signal=False, turn=False):
         r(x, 26, 2, 7, "dslate")
     if turn:
         # the right flank: the beltline and rocker rising toward the front, the rear tire side on
-        g.tri((X(52), 17), (54, 16), (54, 26), "amber")
-        g.tri((X(52), 17), (X(52), 27), (54, 26), "amber")
-        g.rect(X(52), 25, 54 - X(52), 2, "ink")
+        g.tri((project_x(52), 17), (54, 16), (54, 26), "amber")
+        g.tri((project_x(52), 17), (project_x(52), 27), (54, 26), "amber")
+        g.rect(project_x(52), 25, 54 - project_x(52), 2, "ink")
         g.cel(50, 29.5, 3.2, 4, "ink", None, "dslate")
         if scale_of(g) >= TEXTURE_MIN:
             g.cel(50, 29.5, 1.3, 1.5, "grey", None, "lgrey")
         # the cabin's side: the side window under the roof's edge
-        g.rect(X(44, 1), 8, 52 - X(44, 1), 9, "amber")
-        g.rect(X(44, 1), 8, 52 - X(44, 1), 1, "yellow")
-        g.rect(X(45, 1), 10, 50 - X(45, 1), 6, "navy")
+        g.rect(project_x(44, 1), 8, 52 - project_x(44, 1), 9, "amber")
+        g.rect(project_x(44, 1), 8, 52 - project_x(44, 1), 1, "yellow")
+        g.rect(project_x(45, 1), 10, 50 - project_x(45, 1), 6, "navy")
     # roof and rear window, narrower than the body, between the pillars
     r(12, 8, 32, 2, "gold", 1)
     r(12, 8, 32, 1, "yellow", 1)
-    g.tri((X(9), 17), (X(12, 1), 9), (X(12, 1), 17), "gold")
-    g.tri((X(47), 17), (X(44, 1), 9), (X(44, 1), 17), "amber")
-    g.rect(X(12, 1), 10, X(44, 1) - X(12, 1), 7, "navy")
-    g.rect(X(12, 1), 10, X(44, 1) - X(12, 1), 1, "dslate")
-    g.tri((X(16, 1), 16), (X(21, 1), 11), (X(26, 1), 11), "slate")
-    g.p(X(9), 16, "yellow")
+    g.tri((project_x(9), 17), (project_x(12, 1), 9), (project_x(12, 1), 17), "gold")
+    g.tri((project_x(47), 17), (project_x(44, 1), 9), (project_x(44, 1), 17), "amber")
+    g.rect(project_x(12, 1), 10, project_x(44, 1) - project_x(12, 1), 7, "navy")
+    g.rect(project_x(12, 1), 10, project_x(44, 1) - project_x(12, 1), 1, "dslate")
+    g.tri((project_x(16, 1), 16), (project_x(21, 1), 11), (project_x(26, 1), 11), "slate")
+    g.p(project_x(9), 16, "yellow")
     # the roof light: a white box on a short base, lettered TAXI
     r(25, 7, 6, 1, "dslate", 1)
     r(19, 1, 18, 6, "white", 1)
     r(19, 6, 18, 1, "lgrey", 1)
     r(36, 2, 1, 4, "lgrey", 1)
-    lettering(g, X(27, 1), 1, "TAXI", "dred", "dred")
+    lettering(g, project_x(27, 1), 1, "TAXI", "dred", "dred")
     # black mirrors at the window's base; the right one carries the indicator's repeater
     r(3, 13, 5, 3, "ink")
-    mx, my = (50, 12) if turn else (X(48), 13)
+    mx, my = (50, 12) if turn else (project_x(48), 13)
     g.rect(mx, my, 5, 3, "ink")
     g.rect(mx + 1, my + 1, 3, 2, "amber" if signal else "dslate")
     if signal:
@@ -556,14 +572,14 @@ def taxi(roll=None, signal=False, turn=False):
     r(24, 22, 8, 1, "blue")
     if turn:
         # the tail light housing wraps round the corner onto the flank
-        g.rect(X(52), 20, 1, 6, "ink")
+        g.rect(project_x(52), 20, 1, 6, "ink")
     r(4, 26, 48, 1, "ink")
     r(3, 27, 50, 2, "ink")
     r(3, 27, 50, 1, "dslate")
     # tread lines on the tires' 5 rows under the bumper, as the parked car's
     if roll is not None:
         for x in (6, 42):
-            treads(g, X(x + 2), 29, 6 * k, 5, roll, uy)
+            treads(g, project_x(x + 2), 29, 6 * k, 5, roll, uy)
     return lit(g)
 
 
@@ -617,7 +633,7 @@ def cart_box(g, w, body, light, shade, lip=("white", "lgrey")):
     g.rect(w - 14, 30, 5, 15, shade)
 
 
-def hot_dog_cart(steam=0, w=span(2)):
+def hot_dog_cart(steam=0, w=DOUBLE_LANE_SPAN):
     """A Toronto street meat cart side on, two lanes wide, laid out on span(2) x 55 and drawn at SCALE to
     112x66: a stainless box on two wheels under a red and yellow striped umbrella with a scalloped valance,
     lit on its left and shaded on its right; ketchup, mustard and relish bottles and a stack of buns on the
@@ -684,7 +700,7 @@ def waffle(g, x0, x1, y0, tip):
                 px.p(x, y, "brown")
 
 
-def ice_cream_cart(drip=0, w=span(2)):
+def ice_cream_cart(drip=0, w=DOUBLE_LANE_SPAN):
     """A beach ice cream cart side on, the hot dog cart's frame: laid out on span(2) x 55 and drawn at SCALE
     to 112x66, a turquoise box on two wheels under a turquoise and white umbrella, a strawberry cone for its
     finial, lit on its left and shaded on its right; four tubs heaped with strawberry, vanilla, pistachio
@@ -701,8 +717,12 @@ def ice_cream_cart(drip=0, w=span(2)):
     g.rect(c - 2.6, 3.4, 5.2, 1, "mauve")
     cart_pole(g, w, 19)
     # on the counter: four white tubs, each heaped with its scoop
-    for x, col, sh, li in ((14, "pink", "mauve", "white"), (25, "cream", "tan", "white"),
-                           (w - 25, "lime", "green", "white"), (w - 14, "brown", "dbrown", "tan")):
+    for x, col, sh, li in (
+        (14, "pink", "mauve", "white"),
+        (25, "cream", "tan", "white"),
+        (w - 25, "lime", "green", "white"),
+        (w - 14, "brown", "dbrown", "tan"),
+    ):
         g.cel(x, 24, 4.2, 3, col, sh, li)
         g.rect(x - 4, 24.5, 8, 3.5, "white")
         g.rect(x + 3, 24.5, 1, 3.5, "lgrey")
@@ -742,7 +762,7 @@ def tulip(g, x, y, col, sh, nod=0):
     g.rect(x + 1.6, y + 1, 1.6, 4, sh)
 
 
-def flower_cart(nod=0, w=span(2)):
+def flower_cart(nod=0, w=DOUBLE_LANE_SPAN):
     """The street cart's Cabbagetown skin, laid out on span(2) x 55 and drawn at SCALE to 112x66: a violet box
     under a lilac and white umbrella, six galvanised buckets along the counter each holding a bunch of three
     blooms over its leaves, and a pink, a white and a red tulip on the box's side. nod (0 or 1) nods the
@@ -757,14 +777,18 @@ def flower_cart(nod=0, w=span(2)):
     # the buckets, each bunch's blooms the next three colours along
     for k, x in enumerate((13, 22, 31, w - 31, w - 22, w - 13)):
         g.cel(x, 22.5, 3.4, 2.2, "canopy", "pine", "moss")
-        for (dx, dy), (col, sh) in zip(((-1.8, 20.6), (1.8, 20.6), (0, 18.8)), FLOWERS[k % 4:] + FLOWERS[:k % 4]):
+        for (dx, dy), (col, sh) in zip(
+            ((-1.8, 20.6), (1.8, 20.6), (0, 18.8)), FLOWERS[k % 4 :] + FLOWERS[: k % 4], strict=False
+        ):
             g.cel(x + dx, dy, 1.8, 1.6, col, sh, None)
         g.rect(x - 3, 24, 6, 4, "grey")
         g.rect(x - 3, 24, 1, 4, "lgrey")
         g.rect(x + 2, 24, 1, 4, "slate")
     cart_box(g, w, "violet", "lilac", "purple")
     u = unit(g)[0]
-    for x, (col, sh), n in zip((c - 12, c, c + 12), (FLOWERS[0], FLOWERS[1], FLOWERS[3]), (0, nod * u, 0)):
+    for x, (col, sh), n in zip(
+        (c - 12, c, c + 12), (FLOWERS[0], FLOWERS[1], FLOWERS[3]), (0, nod * u, 0), strict=False
+    ):
         tulip(g, x, 32, col, sh, n)
     g.rect(9, 44, w - 18, 1, "slate")
     return lit(g)
@@ -780,7 +804,7 @@ GRAPES = ("lilac", "violet", None)
 EGGPLANTS = ("purple", "plum", "mauve")
 
 
-def fruit_cart(rock=0, w=span(2)):
+def fruit_cart(rock=0, w=DOUBLE_LANE_SPAN):
     """The street cart's Kensington Market skin, laid out on span(2) x 55 and drawn at SCALE to 112x66: a canopy
     green box under a moss and cream umbrella, two pale bins tilted on the counter, heaped in two courses with
     apples and limes on the left and cabbages, grapes and eggplants on the right, an apple perched on the left
@@ -818,10 +842,11 @@ NEWSPAPER_CART_IDLE = (0, 1), 500
 COVERS = (("pink", "mauve"), ("white", "lgrey"), ("lime", "green"), ("lilac", "violet"), ("red", "dred"))
 
 
-def newspaper_cart(lift=0, w=span(2)):
+def newspaper_cart(lift=0, w=DOUBLE_LANE_SPAN):
     """The street cart's Yonge Street skin, laid out on span(2) x 55 and drawn at SCALE to 112x66: an azure box
     under a flat cobalt roof slab on the pole, NEWS in white on its fascia (a white bar under lettering's
-    scale) and a front page standing on it; three stacks of folded papers and three magazines on the counter, and a row of six magazine
+    scale) and a front page standing on it; three stacks of folded papers and three magazines on the
+    counter, and a row of six magazine
     covers on a wire shelf along the box's side, each with a masthead band. lift (0 or 1) lifts the first
     stack's top paper's right corner a drawn pixel."""
     g = edged(Grid(w, 55), cart_edge)
@@ -871,6 +896,7 @@ def newspaper_cart(lift=0, w=span(2)):
 
 def sprites():
     """Yield (key, [(tag, [frame pixels], duration_ms)]) for every sprite."""
+
     def idle(draw, spec, s=SCALE):
         args, ms = spec
         return [("idle", [drawn(s, draw, a).outlined() for a in args], ms)]
@@ -880,24 +906,43 @@ def sprites():
     yield "hedge", idle(lambda r: hedge(rustle=r), HEDGE_IDLE)
     args, ms = PULL_OUT
     drive, drive_ms = DRIVE
-    yield "parked-car", idle(parked_car, PARKED_CAR_IDLE, CAR_SCALE) + [
-        ("pull-out", [drawn(CAR_SCALE, parked_car, roll=f).outlined() for f in args], ms),
-        ("drive", [drawn(CAR_SCALE, parked_car, roll=f, blink=False).outlined() for f in drive], drive_ms)]
-    yield "delivery-truck", idle(delivery_truck, DELIVERY_IDLE, CAR_SCALE) + [
-        ("drive", [drawn(CAR_SCALE, delivery_truck, roll=f).outlined() for f in drive], drive_ms)]
+    yield (
+        "parked-car",
+        [
+            *idle(parked_car, PARKED_CAR_IDLE, CAR_SCALE),
+            ("pull-out", [drawn(CAR_SCALE, parked_car, roll=f).outlined() for f in args], ms),
+            ("drive", [drawn(CAR_SCALE, parked_car, roll=f, blink=False).outlined() for f in drive], drive_ms),
+        ],
+    )
+    yield (
+        "delivery-truck",
+        [
+            *idle(delivery_truck, DELIVERY_IDLE, CAR_SCALE),
+            ("drive", [drawn(CAR_SCALE, delivery_truck, roll=f).outlined() for f in drive], drive_ms),
+        ],
+    )
     yield "hot-dog-cart", idle(lambda f: hot_dog_cart(steam=f), HOT_DOG_CART_IDLE)
     yield "flower-cart", idle(lambda f: flower_cart(nod=f), FLOWER_CART_IDLE)
     yield "fruit-cart", idle(lambda f: fruit_cart(rock=f), FRUIT_CART_IDLE)
     yield "ice-cream-cart", idle(lambda f: ice_cream_cart(drip=f), ICE_CREAM_CART_IDLE)
     yield "newspaper-cart", idle(lambda f: newspaper_cart(lift=f), NEWSPAPER_CART_IDLE)
-    yield "streetcar", idle(streetcar, STREETCAR_IDLE, CAR_SCALE) + [
-        ("drive", [drawn(CAR_SCALE, streetcar, roll=f).outlined() for f in drive], drive_ms)]
+    yield (
+        "streetcar",
+        [
+            *idle(streetcar, STREETCAR_IDLE, CAR_SCALE),
+            ("drive", [drawn(CAR_SCALE, streetcar, roll=f).outlined() for f in drive], drive_ms),
+        ],
+    )
     cue, cue_ms = TAXI_CUE
     merge, merge_ms = TAXI_MERGE
-    yield "taxi", [("drive", [drawn(CAR_SCALE, taxi, roll=f).outlined() for f in drive], drive_ms),
-                   ("cue", [drawn(CAR_SCALE, taxi, roll=f, signal=b).outlined() for f, b in cue], cue_ms),
-                   ("merge", [drawn(CAR_SCALE, taxi, roll=f, signal=b, turn=True).outlined() for f, b in merge],
-                    merge_ms)]
+    yield (
+        "taxi",
+        [
+            ("drive", [drawn(CAR_SCALE, taxi, roll=f).outlined() for f in drive], drive_ms),
+            ("cue", [drawn(CAR_SCALE, taxi, roll=f, signal=b).outlined() for f, b in cue], cue_ms),
+            ("merge", [drawn(CAR_SCALE, taxi, roll=f, signal=b, turn=True).outlined() for f, b in merge], merge_ms),
+        ],
+    )
 
 
 if __name__ == "__main__":

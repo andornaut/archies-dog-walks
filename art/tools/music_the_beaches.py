@@ -33,7 +33,12 @@ F2:6 C3:2 F3:4 C3:4 | D3:6 A2:2 D3:4 A2:4 | A#2:4 F2:4 C3:4 G2:4 | F2:4 A2:4 C3:
 # One chord per bar, or two joined by "+" for a half bar each.
 CHORDS = "F Dm Bb C F Dm Bb+C F Bb Am Gm C7 F Dm Bb+C F+C7"
 VOICINGS = {
-    "Am": "A3 C4 E4", "Bb": "A#3 D4 F4", "C": "G3 C4 E4", "C7": "A#3 C4 E4", "Dm": "A3 D4 F4", "F": "A3 C4 F4",
+    "Am": "A3 C4 E4",
+    "Bb": "A#3 D4 F4",
+    "C": "G3 C4 E4",
+    "C7": "A#3 C4 E4",
+    "Dm": "A3 D4 F4",
+    "F": "A3 C4 F4",
     "Gm": "G3 A#3 D4",
 }
 
@@ -70,8 +75,18 @@ def lead_octave(path, length, note):
     """The bright overtone: a triangle an octave up, low-passed near its fundamental, that fades before the body
     does."""
     ring = min(length, n(0.22))
-    tone(path, ring, "triangle", 2 * hz(note), vol=0.35, low=3000, attack=0.008, release=0.9, shape="t",
-         tail=length - ring)
+    tone(
+        path,
+        ring,
+        "triangle",
+        2 * hz(note),
+        vol=0.35,
+        low=3000,
+        attack=0.008,
+        release=0.9,
+        shape="t",
+        tail=length - ring,
+    )
 
 
 def lead_ping(path, length, note):
@@ -91,8 +106,19 @@ def stab(part):
 
     def play(path, length, note):
         ring = min(length - delay, n(0.16))
-        tone(path, ring, "square", note, vol=0.5, duty=30, low=1500, attack=0.008, release=0.8, start=delay,
-             tail=length - ring - delay)
+        tone(
+            path,
+            ring,
+            "square",
+            note,
+            vol=0.5,
+            duty=30,
+            low=1500,
+            attack=0.008,
+            release=0.8,
+            start=delay,
+            tail=length - ring - delay,
+        )
 
     return play
 
@@ -109,8 +135,19 @@ def drum(path, length, kind):
 
 def shake(path, length, accent):
     ring = n(0.06)
-    tone(path, ring, "pinknoise", None, vol=1 if accent == "loud" else 0.5, high=2200, low=4200, attack=0.015,
-         release=0.7, shape="h", tail=length - ring)
+    tone(
+        path,
+        ring,
+        "pinknoise",
+        None,
+        vol=1 if accent == "loud" else 0.5,
+        high=2200,
+        low=4200,
+        attack=0.015,
+        release=0.7,
+        shape="h",
+        tail=length - ring,
+    )
 
 
 def music(tmp, out):

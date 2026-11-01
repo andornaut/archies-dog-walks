@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Draw the dog and walker portraits for the start screen's detail card and the shop.
 
 portrait-dog-<name> and portrait-walker-<name>: 64x64 images in Endesga 32
@@ -21,17 +20,18 @@ hand edits to them belong in this file instead. Shared tooling is in pixel.py.
 """
 
 import math
-import os
+import shutil
 import subprocess
 import sys
+from pathlib import Path
 
 from PIL import Image
 
-sys.path.insert(0, os.path.dirname(__file__))
-import dogs  # noqa: E402
-import minis  # noqa: E402
-import owners  # noqa: E402
-from pixel import DARKER, K, Grid, edged, raster, scale_of, to_image  # noqa: E402
+sys.path.insert(0, str(Path(__file__).parent))
+import dogs
+import minis
+import owners
+from pixel import DARKER, Grid, K, edged, raster, scale_of, to_image
 
 S = 64
 
@@ -50,6 +50,7 @@ def lined(g, cx, cy, rx, ry, c, sh=None, li=None):
 # ---------- shared features ----------
 # The head turns toward the viewer's left: the muzzle sits left of the skull's
 # centre, the far (left) eye is narrower and the near (right) eye full width.
+
 
 def eye(g, x, y, w=5, iris=None):
     """A big round eye 6 tall, with a two-pixel shine top-left and a glint bottom-right."""
@@ -95,8 +96,10 @@ def pom(g, cx, cy, rx, ry, n=8, c="skin1", sh="brown", li="cream"):
     """A clipped pom-pom: an ellipse ringed by n lumps, so the silhouette scallops like curls.
     The pom takes the shadow; each lump only a highlight, which keeps the curls from turning blotchy."""
     r = min(rx, ry) * 0.45
-    lumps = [(cx + (rx - r * 0.5) * math.cos(a), cy + (ry - r * 0.5) * math.sin(a))
-             for a in (2 * math.pi * (k + 0.5) / n for k in range(n))]
+    lumps = [
+        (cx + (rx - r * 0.5) * math.cos(a), cy + (ry - r * 0.5) * math.sin(a))
+        for a in (2 * math.pi * (k + 0.5) / n for k in range(n))
+    ]
     g.ell(cx, cy, rx, ry, dk2(c))
     for x, y in lumps:
         g.ell(x, y, r + 1, r + 1, dk2(c))
@@ -107,6 +110,7 @@ def pom(g, cx, cy, rx, ry, n=8, c="skin1", sh="brown", li="cream"):
 
 
 # ---------- Ginger: Maltese, small, white, pink bow ----------
+
 
 def ginger(g):
     # long silky coat falling to the ground, the haunch behind on the right
@@ -143,6 +147,7 @@ def bow(g, cx, y, colours=("pink", "mauve")):
 
 # ---------- Reggie: pug, small, fawn, black mask, red bandana ----------
 
+
 def reggie(g):
     g.cel(45, 55, 11, 8, "skin1", "skin2", "cream")
     # curled tail over the hip
@@ -172,6 +177,7 @@ def reggie(g):
 
 
 # ---------- Buddy: Jack Russell, small, white with tan patches, red collar ----------
+
 
 def buddy(g):
     g.cel(44, 54, 11, 9, "white", "lgrey")
@@ -235,6 +241,7 @@ def pepe(g):
 
 
 # ---------- Lady: beagle, medium, tricolour, long ears, green collar ----------
+
 
 def lady(g):
     # black saddle and white-tipped tail behind, white chest in front
@@ -302,9 +309,19 @@ def archie(g):
     coat, (ear, tip) = dogs.COAT, dogs.EAR
     line = dk2(coat[0])
     # the bobtail: a tuft in three locks, white at the tip
-    inlay(g, line, lambda t: [t.cel(x, y, r, r, c, *sh) for x, y, r, c, sh in (
-        (55, 48, 3.2, coat[0], coat[1:]), (58, 45.8, 2.7, coat[0], coat[1:]), (55.5, 44.2, 2.4, coat[0], coat[1:]),
-        (58.6, 42.6, 2, "white", ("lgrey",)))])
+    inlay(
+        g,
+        line,
+        lambda t: [
+            t.cel(x, y, r, r, c, *sh)
+            for x, y, r, c, sh in (
+                (55, 48, 3.2, coat[0], coat[1:]),
+                (58, 45.8, 2.7, coat[0], coat[1:]),
+                (55.5, 44.2, 2.4, coat[0], coat[1:]),
+                (58.6, 42.6, 2, "white", ("lgrey",)),
+            )
+        ],
+    )
     # the rump and thigh, one round mass highest at the back, then the hind paw with two toe lines
     inlay(g, line, lambda t: t.cel(46.5, 54, 10.5, 10, *coat))
     inlay(g, dk2("white"), lambda t: t.cel(47.5, 60.5, 4.5, 2.6, "white", "lgrey"))
@@ -344,6 +361,7 @@ def archie(g):
 
 # ---------- Sequoia: Great Pyrenees, large, giant white fluff, collar with a bell ----------
 
+
 def sequoia(g):
     g.cel(47, 52, 14, 11, "white", "lgrey")
     g.cel(31, 50, 18, 14, "white", "lgrey")
@@ -357,10 +375,16 @@ def sequoia(g):
     # a Great Pyrenees' broad flat skull, small V drop ears set at its sides and marked badger tan, and a long
     # wedge muzzle set off by its line, so he reads as a grown giant rather than a pup
     g.cel(30, 24, 17, 14, "white", "lgrey")
-    dogs.inlay(g, "skin2", lambda t: (t.tri((13, 15), (22, 12), (16, 28), "tan"),
-                                      t.tri((15, 15), (21, 13.5), (16.5, 24), "cream")))
-    dogs.inlay(g, "skin2", lambda t: (t.tri((38, 12), (47, 15), (44, 28), "tan"),
-                                      t.tri((39.5, 13.5), (45, 15.5), (43.5, 24), "cream")))
+    dogs.inlay(
+        g,
+        "skin2",
+        lambda t: (t.tri((13, 15), (22, 12), (16, 28), "tan"), t.tri((15, 15), (21, 13.5), (16.5, 24), "cream")),
+    )
+    dogs.inlay(
+        g,
+        "skin2",
+        lambda t: (t.tri((38, 12), (47, 15), (44, 28), "tan"), t.tri((39.5, 13.5), (45, 15.5), (43.5, 24), "cream")),
+    )
     lined(g, 25, 32, 9, 6, "white", "lgrey")
     eyes(g, 18, 31, 20)
     nose(g, 20, 28)
@@ -368,12 +392,16 @@ def sequoia(g):
 
 # ---------- Penny: golden retriever with a Labrador build, large, golden coat, otter tail, blue collar ----------
 
+
 def penny(g):
     base, shade, light = dogs.GOLD
     # the haunch, and a thick otter tail curled forward round it along the ground, tapering to a blunt tip
     g.cel(46, 53, 13, 10, base, shade, light)
-    dogs.inlay(g, dk2(base), lambda t: (t.cel(52, 59.5, 10, 3.5, base, shade, light),
-                                        t.tri((42, 58), (42, 63), (34, 62), base)))
+    dogs.inlay(
+        g,
+        dk2(base),
+        lambda t: (t.cel(52, 59.5, 10, 3.5, base, shade, light), t.tri((42, 58), (42, 63), (34, 62), base)),
+    )
     # a deep chest on solid legs
     g.cel(31, 51, 15.5, 13, base, shade, light, power=2.4)
     legs(g, (21, 33), 53, base, shade, w=7)
@@ -384,10 +412,16 @@ def penny(g):
     # a broad, blocky head
     g.cel(30, 25, 17, 14, base, shade, light, power=2.6)
     # short flat drop ears set at the top of the skull's sides, hanging no lower than the jaw
-    dogs.inlay(g, dk2(shade), lambda t: (t.tri((11, 16), (21, 13), (15, 37), shade),
-                                         t.tri((11, 16), (10, 33), (15, 37), shade)))
-    dogs.inlay(g, dk2(shade), lambda t: (t.tri((39, 13), (49, 16), (47, 38), shade),
-                                         t.tri((49, 16), (51, 34), (47, 38), shade)))
+    dogs.inlay(
+        g,
+        dk2(shade),
+        lambda t: (t.tri((11, 16), (21, 13), (15, 37), shade), t.tri((11, 16), (10, 33), (15, 37), shade)),
+    )
+    dogs.inlay(
+        g,
+        dk2(shade),
+        lambda t: (t.tri((39, 13), (49, 16), (47, 38), shade), t.tri((49, 16), (51, 34), (47, 38), shade)),
+    )
     # a square muzzle, a shade lighter than the coat, set off from the brow by a clear stop
     dogs.inlay(g, dk2(light), lambda t: t.cel(25, 34, 9, 6.5, light, base, power=3.2))
     eyes(g, 18, 33, 21)
@@ -395,6 +429,7 @@ def penny(g):
 
 
 # ---------- Kilo: Alaskan Malamute, large, grey and white, blue eyes, orange harness ----------
+
 
 def kilo(g):
     g.cel(46, 52, 13, 11, "slate", "dslate", "grey")
@@ -428,6 +463,7 @@ def kilo(g):
 # The face turns toward the viewer's left like the dogs': the features sit left of the head's centre, the far
 # (left) eye is narrower, and only the near (right) ear shows. Faces stay clean: flat skin with a blush, a
 # shadow only under the hair or cap and down the near edge beside the eyes, never across the jaw or mouth.
+
 
 def human_eye(g, x, y, w, h=5, sclera=False):
     """An eye h tall and w wide, rounded at the corners, with a shine top-left and a glint bottom-right;
@@ -647,8 +683,17 @@ WALKERS = {
 # How big each walker's bust is drawn in the 64px well: the adults' heads about 37px from crown to chin, topping
 # out 2 or 3px under the well's top edge, and Ada smaller as the youngest.
 WALKER_SIDE = {"ada": 64, "casey": 66, "mr-b": 72, "trista": 69}
-PORTRAIT_SIDE = {"archie": 59, "buddy": 53, "ginger": 51, "kilo": 64, "lady": 57, "penny": 64, "pepe": 56,
-                 "reggie": 53, "sequoia": 63}
+PORTRAIT_SIDE = {
+    "archie": 59,
+    "buddy": 53,
+    "ginger": 51,
+    "kilo": 64,
+    "lady": 57,
+    "penny": 64,
+    "pepe": 56,
+    "reggie": 53,
+    "sequoia": 63,
+}
 
 
 def image(draw, side=S):
@@ -665,8 +710,10 @@ def image(draw, side=S):
 
 def portraits():
     """{key: (draw, side)} for every dog's portrait, then every walker's."""
-    return {**{f"portrait-dog-{n}": (d, PORTRAIT_SIDE[n]) for n, d in PORTRAITS.items()},
-            **{f"portrait-walker-{n}": (d, WALKER_SIDE[n]) for n, d in WALKERS.items()}}
+    return {
+        **{f"portrait-dog-{n}": (d, PORTRAIT_SIDE[n]) for n, d in PORTRAITS.items()},
+        **{f"portrait-walker-{n}": (d, WALKER_SIDE[n]) for n, d in WALKERS.items()},
+    }
 
 
 def faces():
@@ -684,7 +731,7 @@ def preview(out, scale=4):
     cell = S + 4
     rows = len(PORTRAITS) + len(WALKERS)
     sheet = Image.new("RGB", (cell * (1 + len(grounds)) * scale, cell * rows * scale), (24, 20, 37))
-    for i, (face_grid, (draw, side)) in enumerate(zip(faces(), portraits().values())):
+    for i, (face_grid, (draw, side)) in enumerate(zip(faces(), portraits().values(), strict=True)):
         face = to_image(face_grid.outlined()).resize((S, S), Image.NEAREST)
         im = image(draw, side)
         for j, tile_im in enumerate([face] + [im] * len(grounds)):
@@ -695,13 +742,17 @@ def preview(out, scale=4):
 
 
 def build():
-    os.makedirs("art/portraits", exist_ok=True)
-    os.makedirs("public/art/images", exist_ok=True)
+    Path("art/portraits").mkdir(parents=True, exist_ok=True)
+    Path("public/art/images").mkdir(parents=True, exist_ok=True)
     keys = portraits()
+    executable = shutil.which("aseprite")
+    if executable is None:
+        raise FileNotFoundError("aseprite")
     for key, (draw, side) in keys.items():
         png = f"public/art/images/{key}.png"
         image(draw, side).save(png)
-        subprocess.run(["aseprite", "-b", png, "--save-as", f"art/portraits/{key}.aseprite"], check=True)
+        # Fixed local exporter and asset paths generated from portrait keys.
+        subprocess.run([executable, "-b", png, "--save-as", f"art/portraits/{key}.aseprite"], check=True)  # noqa: S603
     print("built", ", ".join(keys))
 
 

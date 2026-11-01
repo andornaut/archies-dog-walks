@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Synthesize the sound effects and the walk's music loop with sox, and encode
 them with ffmpeg. Soft chiptune: square and triangle waves through gentle
 low-pass filters, short envelopes, and every note fading to silence in its slot.
@@ -61,11 +60,12 @@ bitexact mode, so a rebuild only changes files when this script changes.
 
 import importlib
 import json
-import os
 import re
+import shutil
 import subprocess
 import sys
 import tempfile
+from pathlib import Path
 
 RATE = 44100
 PEAK_DB = -4  # leaves room for the lossy encoders to overshoot and still peak below -1 dBFS
@@ -88,7 +88,8 @@ EFFECT_TAIL = 882
 # An effect whose peak reaches PEAK_DB first may sit up to this many LU under its level.
 EFFECT_BAND = 1
 CEILING_DB = -1  # the highest peak a decoded file may reach
-# Neighbourhood loops are levelled by their integrated loudness on a phone speaker, after the same 300 Hz high-pass as the
+# Neighbourhood loops are levelled by their integrated loudness on a phone speaker, after the same 300 Hz
+# high-pass as the
 # effects, so switching neighbourhoods doesn't jump on a phone.
 MUSIC_LUFS = -19
 NOTES = {"C": -9, "D": -7, "E": -5, "F": -4, "G": -2, "A": 0, "B": 2}
@@ -106,12 +107,34 @@ def n(seconds):
     return round(seconds * RATE)
 
 
+def _tool(name):
+    executable = shutil.which(name)
+    if executable is None:
+        raise FileNotFoundError(name)
+    return executable
+
+
 def sox(*args):
-    subprocess.run(["sox", "-R", "-D", *args], check=True)
+    # Fixed local audio tool and generated arguments; no shell expansion.
+    subprocess.run([_tool("sox"), "-R", "-D", *args], check=True)  # noqa: S603
 
 
-def tone(path, length, wave, freq, vol=1.0, duty=50, low=None, high=None, attack=0.005, release=0.6,
-         shape="l", start=0, tail=0, fx=()):
+def tone(
+    path,
+    length,
+    wave,
+    freq,
+    vol=1.0,
+    duty=50,
+    low=None,
+    high=None,
+    attack=0.005,
+    release=0.6,
+    shape="l",
+    start=0,
+    tail=0,
+    fx=(),
+):
     """One enveloped note, length samples long, with start samples of silence
     before it and tail after.
 
@@ -144,8 +167,18 @@ def rest(path, length):
 def mix(layers, out):
     """Sum (path, volume) layers and normalize the peak to PEAK_DB."""
     inputs = [a for path, vol in layers for a in ("-v", f"{vol:.4f}", path)]
-    sox(*(["-m"] if len(layers) > 1 else []), *inputs, "-e", "floating-point", "-b", "32", out,
-        "gain", "-n", str(PEAK_DB))
+    sox(
+        *(["-m"] if len(layers) > 1 else []),
+        *inputs,
+        "-e",
+        "floating-point",
+        "-b",
+        "32",
+        out,
+        "gain",
+        "-n",
+        str(PEAK_DB),
+    )
 
 
 def concat(paths, out):
@@ -160,222 +193,488 @@ DARK = ("lowpass", "3000")
 EFFECTS = {
     # Material onsets and short tonal signatures identify the four contact debuffs.
     "sfx-debuff-muddy": [
-        ("pinknoise", 0.17, None, 0,
-         dict(low=2300, attack=0.008, release=0.6, shape="h", vol=0.75, high=500)),
-        ("triangle", 0.17, (900, 420), 0,
-         dict(low=2400, attack=0.008, release=0.6, shape="h", vol=0.7)),
-        ("triangle", 0.08, (780, 1200), 0.12,
-         dict(low=2400, attack=0.008, release=0.6, shape="h", vol=0.6)),
-        ("triangle", 0.09, (650, 1000), 0.23,
-         dict(low=2400, attack=0.008, release=0.6, shape="h", vol=0.55)),
-        ("square", 0.16, (600, 360), 0.18,
-         dict(low=1400, attack=0.008, release=0.6, shape="h", vol=0.25, duty=25)),
+        (
+            "pinknoise",
+            0.17,
+            None,
+            0,
+            {"low": 2300, "attack": 0.008, "release": 0.6, "shape": "h", "vol": 0.75, "high": 500},
+        ),
+        ("triangle", 0.17, (900, 420), 0, {"low": 2400, "attack": 0.008, "release": 0.6, "shape": "h", "vol": 0.7}),
+        ("triangle", 0.08, (780, 1200), 0.12, {"low": 2400, "attack": 0.008, "release": 0.6, "shape": "h", "vol": 0.6}),
+        (
+            "triangle",
+            0.09,
+            (650, 1000),
+            0.23,
+            {"low": 2400, "attack": 0.008, "release": 0.6, "shape": "h", "vol": 0.55},
+        ),
+        (
+            "square",
+            0.16,
+            (600, 360),
+            0.18,
+            {"low": 1400, "attack": 0.008, "release": 0.6, "shape": "h", "vol": 0.25, "duty": 25},
+        ),
     ],
     "sfx-debuff-stinky": [
-        ("pinknoise", 0.38, None, 0,
-         dict(low=2400, attack=0.008, release=0.4, shape="h", high=700, fx=("lowpass", "3000", "tremolo", "12", "35"))),
-        ("square", 0.32, (780, 420), 0.04,
-         dict(low=1400, attack=0.008, release=0.6, shape="h", vol=0.25, duty=20)),
-        ("pinknoise", 0.24, None, 0.2,
-         dict(low=1600, attack=0.008, release=0.6, shape="h", vol=0.5, high=500)),
+        (
+            "pinknoise",
+            0.38,
+            None,
+            0,
+            {
+                "low": 2400,
+                "attack": 0.008,
+                "release": 0.4,
+                "shape": "h",
+                "high": 700,
+                "fx": ("lowpass", "3000", "tremolo", "12", "35"),
+            },
+        ),
+        (
+            "square",
+            0.32,
+            (780, 420),
+            0.04,
+            {"low": 1400, "attack": 0.008, "release": 0.6, "shape": "h", "vol": 0.25, "duty": 20},
+        ),
+        (
+            "pinknoise",
+            0.24,
+            None,
+            0.2,
+            {"low": 1600, "attack": 0.008, "release": 0.6, "shape": "h", "vol": 0.5, "high": 500},
+        ),
     ],
     "sfx-debuff-zoomies": [
-        ("pinknoise", 0.28, None, 0,
-         dict(low=2800, attack=0.035, release=0.6, shape="h", vol=0.5, high=900, fx=("lowpass", "3000"))),
-        ("square", 0.29, (600, 1600), 0.035,
-         dict(low=2200, attack=0.008, release=0.6, shape="h", vol=0.35, duty=20)),
-        ("triangle", 0.09, "A5", 0.07,
-         dict(low=2400, attack=0.008, release=0.6, shape="h", vol=0.65)),
-        ("triangle", 0.12, "D6", 0.18,
-         dict(low=2400, attack=0.008, release=0.6, shape="h", vol=0.7)),
-        ("triangle", 0.1, "A6", 0.28,
-         dict(low=2600, attack=0.008, release=0.6, shape="h", vol=0.35)),
+        (
+            "pinknoise",
+            0.28,
+            None,
+            0,
+            {
+                "low": 2800,
+                "attack": 0.035,
+                "release": 0.6,
+                "shape": "h",
+                "vol": 0.5,
+                "high": 900,
+                "fx": ("lowpass", "3000"),
+            },
+        ),
+        (
+            "square",
+            0.29,
+            (600, 1600),
+            0.035,
+            {"low": 2200, "attack": 0.008, "release": 0.6, "shape": "h", "vol": 0.35, "duty": 20},
+        ),
+        ("triangle", 0.09, "A5", 0.07, {"low": 2400, "attack": 0.008, "release": 0.6, "shape": "h", "vol": 0.65}),
+        ("triangle", 0.12, "D6", 0.18, {"low": 2400, "attack": 0.008, "release": 0.6, "shape": "h", "vol": 0.7}),
+        ("triangle", 0.1, "A6", 0.28, {"low": 2600, "attack": 0.008, "release": 0.6, "shape": "h", "vol": 0.35}),
     ],
     "sfx-debuff-spotlight": [
-        ("pinknoise", 0.045, None, 0,
-         dict(low=2600, attack=0.008, release=0.6, shape="h", high=800, vol=0.35)),
-        ("triangle", 0.24, "D6", 0.025,
-         dict(low=2400, attack=0.008, release=0.6, shape="h", vol=0.75)),
-        ("triangle", 0.25, "A6", 0.12,
-         dict(low=2700, attack=0.008, release=0.6, shape="h", vol=0.35)),
-        ("square", 0.25, "D5", 0.08,
-         dict(low=1600, attack=0.008, release=0.6, shape="h", vol=0.18, duty=25)),
+        (
+            "pinknoise",
+            0.045,
+            None,
+            0,
+            {"low": 2600, "attack": 0.008, "release": 0.6, "shape": "h", "high": 800, "vol": 0.35},
+        ),
+        ("triangle", 0.24, "D6", 0.025, {"low": 2400, "attack": 0.008, "release": 0.6, "shape": "h", "vol": 0.75}),
+        ("triangle", 0.25, "A6", 0.12, {"low": 2700, "attack": 0.008, "release": 0.6, "shape": "h", "vol": 0.35}),
+        (
+            "square",
+            0.25,
+            "D5",
+            0.08,
+            {"low": 1600, "attack": 0.008, "release": 0.6, "shape": "h", "vol": 0.18, "duty": 25},
+        ),
     ],
     "sfx-tip": [
-        ("square", 0.08, "B5", 0, dict(vol=0.6, low=3500, release=0.3)),
-        ("square", 0.27, "E6", 0.08, dict(vol=0.6, low=3500, release=0.9)),
-        ("triangle", 0.27, "E5", 0.08, dict(vol=0.5, release=0.9)),
+        ("square", 0.08, "B5", 0, {"vol": 0.6, "low": 3500, "release": 0.3}),
+        ("square", 0.27, "E6", 0.08, {"vol": 0.6, "low": 3500, "release": 0.9}),
+        ("triangle", 0.27, "E5", 0.08, {"vol": 0.5, "release": 0.9}),
     ],
     "sfx-treat": [
-        ("triangle", 0.07, "C6", 0, dict(release=0.4)),
-        ("triangle", 0.07, "E6", 0.06, dict(release=0.4)),
-        ("triangle", 0.07, "G6", 0.12, dict(release=0.4)),
-        ("triangle", 0.22, "C7", 0.18, dict(release=0.9)),
-        ("square", 0.22, "C6", 0.18, dict(vol=0.15, duty=25, low=2500, release=0.9)),
+        ("triangle", 0.07, "C6", 0, {"release": 0.4}),
+        ("triangle", 0.07, "E6", 0.06, {"release": 0.4}),
+        ("triangle", 0.07, "G6", 0.12, {"release": 0.4}),
+        ("triangle", 0.22, "C7", 0.18, {"release": 0.9}),
+        ("square", 0.22, "C6", 0.18, {"vol": 0.15, "duty": 25, "low": 2500, "release": 0.9}),
     ],
     # A minor bump: a soft thud with little low body, quieter than a card obstacle's hit.
     "sfx-bump": [
-        ("triangle", 0.26, (360, 150), 0, dict(vol=0.2, attack=0.006, release=0.85, shape="h")),
-        ("square", 0.22, (360, 170), 0, dict(low=1000, attack=0.008, release=0.75, shape="h")),
-        ("pinknoise", 0.08, None, 0, dict(vol=0.6, low=1400, high=250, attack=0.003, release=0.9, shape="h")),
+        ("triangle", 0.26, (360, 150), 0, {"vol": 0.2, "attack": 0.006, "release": 0.85, "shape": "h"}),
+        ("square", 0.22, (360, 170), 0, {"low": 1000, "attack": 0.008, "release": 0.75, "shape": "h"}),
+        (
+            "pinknoise",
+            0.08,
+            None,
+            0,
+            {"vol": 0.6, "low": 1400, "high": 250, "attack": 0.003, "release": 0.9, "shape": "h"},
+        ),
     ],
     "sfx-bark": [
-        ("square", 0.18, (680, 300), 0.02, dict(duty=35, low=1800, attack=0.012, release=0.55, shape="h")),
-        ("triangle", 0.18, (460, 220), 0.02, dict(vol=0.4, attack=0.012, release=0.55, shape="h")),
-        ("pinknoise", 0.05, None, 0.015, dict(vol=0.12, low=2500, high=600, attack=0.006, release=0.8)),
+        ("square", 0.18, (680, 300), 0.02, {"duty": 35, "low": 1800, "attack": 0.012, "release": 0.55, "shape": "h"}),
+        ("triangle", 0.18, (460, 220), 0.02, {"vol": 0.4, "attack": 0.012, "release": 0.55, "shape": "h"}),
+        ("pinknoise", 0.05, None, 0.015, {"vol": 0.12, "low": 2500, "high": 600, "attack": 0.006, "release": 0.8}),
     ],
     # A near miss: the air swells past and the dog skips up out of the way, with no thud.
     "sfx-dodge": [
-        ("pinknoise", 0.2, None, 0, dict(vol=0.4, low=3200, high=900, attack=0.05, release=0.6, shape="h", fx=DARK)),
-        ("triangle", 0.08, (520, 880), 0.07, dict(attack=0.003, release=0.6)),
-        ("triangle", 0.08, (700, 1180), 0.15, dict(vol=0.7, attack=0.003, release=0.6)),
+        (
+            "pinknoise",
+            0.2,
+            None,
+            0,
+            {"vol": 0.4, "low": 3200, "high": 900, "attack": 0.05, "release": 0.6, "shape": "h", "fx": DARK},
+        ),
+        ("triangle", 0.08, (520, 880), 0.07, {"attack": 0.003, "release": 0.6}),
+        ("triangle", 0.08, (700, 1180), 0.15, {"vol": 0.7, "attack": 0.003, "release": 0.6}),
     ],
     # Rarer than a tip: a glissando up an octave lands on a ringing chord, its top voice shimmering.
     "sfx-gear-found": [
-        ("square", 0.14, ("D5", "D6"), 0, dict(vol=0.6, duty=25, low=2600, attack=0.004, release=0.3, fx=DARK)),
-        ("square", 0.42, "D6", 0.13, dict(vol=0.5, duty=25, low=3000, attack=0.004, release=0.9,
-                                          fx=("tremolo", "11", "30", *DARK))),
-        ("triangle", 0.4, "A6", 0.15, dict(vol=0.3, attack=0.004, release=0.9)),
-        ("square", 0.42, "F#5", 0.13, dict(vol=0.3, duty=25, low=2200, attack=0.004, release=0.9, fx=DARK)),
+        (
+            "square",
+            0.14,
+            ("D5", "D6"),
+            0,
+            {"vol": 0.6, "duty": 25, "low": 2600, "attack": 0.004, "release": 0.3, "fx": DARK},
+        ),
+        (
+            "square",
+            0.42,
+            "D6",
+            0.13,
+            {
+                "vol": 0.5,
+                "duty": 25,
+                "low": 3000,
+                "attack": 0.004,
+                "release": 0.9,
+                "fx": ("tremolo", "11", "30", *DARK),
+            },
+        ),
+        ("triangle", 0.4, "A6", 0.15, {"vol": 0.3, "attack": 0.004, "release": 0.9}),
+        (
+            "square",
+            0.42,
+            "F#5",
+            0.13,
+            {"vol": 0.3, "duty": 25, "low": 2200, "attack": 0.004, "release": 0.9, "fx": DARK},
+        ),
     ],
     # A till's drawer clicks open on a bell, above the tip's coin in pitch, and two coins jingle after.
     "sfx-lost-wallet": [
-        ("pinknoise", 0.025, None, 0, dict(vol=0.6, low=3500, high=1500, attack=0.001, release=0.8, fx=DARK)),
-        ("square", 0.04, (640, 420), 0, dict(vol=0.5, low=1600, attack=0.002, release=0.8, shape="h")),
-        ("square", 0.34, "C#7", 0.05, dict(vol=0.5, duty=25, low=3000, attack=0.003, release=0.9,
-                                           fx=("tremolo", "14", "40", *DARK))),
-        ("triangle", 0.3, "E7", 0.05, dict(vol=0.3, low=3500, attack=0.003, release=0.9,
-                                           fx=("tremolo", "14", "40"))),
-        ("square", 0.3, "A6", 0.05, dict(vol=0.3, duty=25, low=3000, attack=0.003, release=0.9, fx=DARK)),
-        ("triangle", 0.06, "A6", 0.24, dict(vol=0.5, low=3500, attack=0.002, release=0.8)),
-        ("triangle", 0.06, "C#7", 0.3, dict(vol=0.4, low=3500, attack=0.002, release=0.8)),
+        (
+            "pinknoise",
+            0.025,
+            None,
+            0,
+            {"vol": 0.6, "low": 3500, "high": 1500, "attack": 0.001, "release": 0.8, "fx": DARK},
+        ),
+        ("square", 0.04, (640, 420), 0, {"vol": 0.5, "low": 1600, "attack": 0.002, "release": 0.8, "shape": "h"}),
+        (
+            "square",
+            0.34,
+            "C#7",
+            0.05,
+            {
+                "vol": 0.5,
+                "duty": 25,
+                "low": 3000,
+                "attack": 0.003,
+                "release": 0.9,
+                "fx": ("tremolo", "14", "40", *DARK),
+            },
+        ),
+        (
+            "triangle",
+            0.3,
+            "E7",
+            0.05,
+            {"vol": 0.3, "low": 3500, "attack": 0.003, "release": 0.9, "fx": ("tremolo", "14", "40")},
+        ),
+        ("square", 0.3, "A6", 0.05, {"vol": 0.3, "duty": 25, "low": 3000, "attack": 0.003, "release": 0.9, "fx": DARK}),
+        ("triangle", 0.06, "A6", 0.24, {"vol": 0.5, "low": 3500, "attack": 0.002, "release": 0.8}),
+        ("triangle", 0.06, "C#7", 0.3, {"vol": 0.4, "low": 3500, "attack": 0.002, "release": 0.8}),
     ],
     # Warm and low where the treat is bright and quick: one voice rising a third, then a soft chime.
     "sfx-friendly-neighbour": [
-        ("triangle", 0.4, ("C5", "E5"), 0, dict(vol=0.9, attack=0.03, release=0.6, shape="h",
-                                                fx=("tremolo", "6", "20"))),
-        ("square", 0.4, ("C5", "E5"), 0, dict(vol=0.25, duty=25, low=1800, attack=0.03, release=0.6, shape="h")),
-        ("triangle", 0.22, "G5", 0.24, dict(vol=0.6, release=0.9)),
-        ("triangle", 0.22, "C6", 0.3, dict(vol=0.35, release=0.9)),
+        (
+            "triangle",
+            0.4,
+            ("C5", "E5"),
+            0,
+            {"vol": 0.9, "attack": 0.03, "release": 0.6, "shape": "h", "fx": ("tremolo", "6", "20")},
+        ),
+        (
+            "square",
+            0.4,
+            ("C5", "E5"),
+            0,
+            {"vol": 0.25, "duty": 25, "low": 1800, "attack": 0.03, "release": 0.6, "shape": "h"},
+        ),
+        ("triangle", 0.22, "G5", 0.24, {"vol": 0.6, "release": 0.9}),
+        ("triangle", 0.22, "C6", 0.3, {"vol": 0.35, "release": 0.9}),
     ],
     # A card choice costs a heart: two notes falling a third, soft at both ends.
     "sfx-heart-lost": [
-        ("triangle", 0.13, "E5", 0, dict(attack=0.02, release=0.5, shape="h")),
-        ("triangle", 0.2, ("D5", "C5"), 0.12, dict(attack=0.02, release=0.8, shape="h")),
-        ("square", 0.13, "E5", 0, dict(vol=0.2, duty=25, low=1500, attack=0.02, release=0.5, shape="h")),
-        ("square", 0.2, ("D5", "C5"), 0.12, dict(vol=0.2, duty=25, low=1500, attack=0.02, release=0.8, shape="h")),
+        ("triangle", 0.13, "E5", 0, {"attack": 0.02, "release": 0.5, "shape": "h"}),
+        ("triangle", 0.2, ("D5", "C5"), 0.12, {"attack": 0.02, "release": 0.8, "shape": "h"}),
+        ("square", 0.13, "E5", 0, {"vol": 0.2, "duty": 25, "low": 1500, "attack": 0.02, "release": 0.5, "shape": "h"}),
+        (
+            "square",
+            0.2,
+            ("D5", "C5"),
+            0.12,
+            {"vol": 0.2, "duty": 25, "low": 1500, "attack": 0.02, "release": 0.8, "shape": "h"},
+        ),
     ],
     "sfx-card": [
-        ("pinknoise", 0.16, None, 0, dict(vol=0.3, low=3500, high=900, attack=0.07, release=0.55, shape="h")),
-        ("triangle", 0.1, "G5", 0.1, dict(release=0.5)),
-        ("triangle", 0.25, "D6", 0.19, dict(release=0.9)),
-        ("square", 0.25, "D5", 0.19, dict(vol=0.12, duty=25, low=2000, release=0.9)),
+        (
+            "pinknoise",
+            0.16,
+            None,
+            0,
+            {"vol": 0.3, "low": 3500, "high": 900, "attack": 0.07, "release": 0.55, "shape": "h"},
+        ),
+        ("triangle", 0.1, "G5", 0.1, {"release": 0.5}),
+        ("triangle", 0.25, "D6", 0.19, {"release": 0.9}),
+        ("square", 0.25, "D5", 0.19, {"vol": 0.12, "duty": 25, "low": 2000, "release": 0.9}),
     ],
     "sfx-fired": [
-        ("square", 0.32, "G4", 0, dict(vol=0.5, low=1100, attack=0.03, release=0.5, shape="h")),
-        ("square", 0.32, "F#4", 0.33, dict(vol=0.5, low=1100, attack=0.03, release=0.5, shape="h")),
-        ("square", 0.32, "F4", 0.66, dict(vol=0.5, low=1100, attack=0.03, release=0.5, shape="h")),
-        ("square", 0.81, ("E4", "D#4"), 0.99,
-         dict(vol=0.5, low=1100, attack=0.03, release=0.6, shape="h", fx=("tremolo", "5", "45"))),
-        ("triangle", 0.32, "G3", 0, dict(vol=0.6, attack=0.03, release=0.5, shape="h")),
-        ("triangle", 0.32, "F#3", 0.33, dict(vol=0.6, attack=0.03, release=0.5, shape="h")),
-        ("triangle", 0.32, "F3", 0.66, dict(vol=0.6, attack=0.03, release=0.5, shape="h")),
-        ("triangle", 0.81, ("E3", "D#3"), 0.99, dict(vol=0.6, attack=0.03, release=0.6, shape="h")),
+        ("square", 0.32, "G4", 0, {"vol": 0.5, "low": 1100, "attack": 0.03, "release": 0.5, "shape": "h"}),
+        ("square", 0.32, "F#4", 0.33, {"vol": 0.5, "low": 1100, "attack": 0.03, "release": 0.5, "shape": "h"}),
+        ("square", 0.32, "F4", 0.66, {"vol": 0.5, "low": 1100, "attack": 0.03, "release": 0.5, "shape": "h"}),
+        (
+            "square",
+            0.81,
+            ("E4", "D#4"),
+            0.99,
+            {"vol": 0.5, "low": 1100, "attack": 0.03, "release": 0.6, "shape": "h", "fx": ("tremolo", "5", "45")},
+        ),
+        ("triangle", 0.32, "G3", 0, {"vol": 0.6, "attack": 0.03, "release": 0.5, "shape": "h"}),
+        ("triangle", 0.32, "F#3", 0.33, {"vol": 0.6, "attack": 0.03, "release": 0.5, "shape": "h"}),
+        ("triangle", 0.32, "F3", 0.66, {"vol": 0.6, "attack": 0.03, "release": 0.5, "shape": "h"}),
+        ("triangle", 0.81, ("E3", "D#3"), 0.99, {"vol": 0.6, "attack": 0.03, "release": 0.6, "shape": "h"}),
     ],
     # Each band of hiss is lower than the last, so the spray falls without a swept filter.
     "sfx-hit-skunk": [
-        ("pinknoise", 0.22, None, 0, dict(vol=0.6, low=3800, high=1800, attack=0.02, release=0.5, shape="h", fx=DARK)),
-        ("pinknoise", 0.25, None, 0.12, dict(vol=0.8, low=2600, high=1000, attack=0.04, release=0.6, shape="h",
-                                             fx=DARK)),
-        ("pinknoise", 0.3, None, 0.2, dict(vol=0.8, low=1600, high=450, attack=0.05, release=0.7, shape="h",
-                                           fx=("tremolo", "18", "60"))),
-        ("square", 0.42, (900, 220), 0.06, dict(vol=0.12, duty=25, low=1400, attack=0.03, release=0.7)),
+        (
+            "pinknoise",
+            0.22,
+            None,
+            0,
+            {"vol": 0.6, "low": 3800, "high": 1800, "attack": 0.02, "release": 0.5, "shape": "h", "fx": DARK},
+        ),
+        (
+            "pinknoise",
+            0.25,
+            None,
+            0.12,
+            {"vol": 0.8, "low": 2600, "high": 1000, "attack": 0.04, "release": 0.6, "shape": "h", "fx": DARK},
+        ),
+        (
+            "pinknoise",
+            0.3,
+            None,
+            0.2,
+            {
+                "vol": 0.8,
+                "low": 1600,
+                "high": 450,
+                "attack": 0.05,
+                "release": 0.7,
+                "shape": "h",
+                "fx": ("tremolo", "18", "60"),
+            },
+        ),
+        ("square", 0.42, (900, 220), 0.06, {"vol": 0.12, "duty": 25, "low": 1400, "attack": 0.03, "release": 0.7}),
     ],
     "sfx-hit-puddle": [
-        ("pinknoise", 0.3, None, 0, dict(vol=0.6, low=3000, high=250, attack=0.004, release=0.85)),
-        ("triangle", 0.3, (300, 110), 0, dict(vol=0.3, attack=0.004, release=0.8)),
-        ("square", 0.2, (300, 140), 0, dict(vol=0.6, low=900, attack=0.004, release=0.8, shape="h")),
-        ("triangle", 0.05, (420, 900), 0.12, dict(vol=0.7, attack=0.003, release=0.6)),
-        ("triangle", 0.05, (560, 1200), 0.19, dict(vol=0.6, attack=0.003, release=0.6)),
-        ("triangle", 0.05, (360, 780), 0.26, dict(vol=0.6, attack=0.003, release=0.6)),
-        ("triangle", 0.05, (640, 1350), 0.34, dict(vol=0.5, attack=0.003, release=0.6)),
-        ("triangle", 0.06, (480, 1000), 0.44, dict(vol=0.4, attack=0.003, release=0.6)),
+        ("pinknoise", 0.3, None, 0, {"vol": 0.6, "low": 3000, "high": 250, "attack": 0.004, "release": 0.85}),
+        ("triangle", 0.3, (300, 110), 0, {"vol": 0.3, "attack": 0.004, "release": 0.8}),
+        ("square", 0.2, (300, 140), 0, {"vol": 0.6, "low": 900, "attack": 0.004, "release": 0.8, "shape": "h"}),
+        ("triangle", 0.05, (420, 900), 0.12, {"vol": 0.7, "attack": 0.003, "release": 0.6}),
+        ("triangle", 0.05, (560, 1200), 0.19, {"vol": 0.6, "attack": 0.003, "release": 0.6}),
+        ("triangle", 0.05, (360, 780), 0.26, {"vol": 0.6, "attack": 0.003, "release": 0.6}),
+        ("triangle", 0.05, (640, 1350), 0.34, {"vol": 0.5, "attack": 0.003, "release": 0.6}),
+        ("triangle", 0.06, (480, 1000), 0.44, {"vol": 0.4, "attack": 0.003, "release": 0.6}),
     ],
     # The wheel drops in with a dull thud kept above 300 Hz, then the water splashes up round it.
     "sfx-hit-pothole": [
-        ("square", 0.11, (600, 360), 0, dict(vol=0.7, low=1400, attack=0.004, release=0.7, shape="h")),
-        ("triangle", 0.12, (520, 340), 0, dict(vol=0.45, attack=0.004, release=0.7, shape="h")),
-        ("pinknoise", 0.04, None, 0, dict(vol=0.5, low=1600, high=350, attack=0.002, release=0.8, shape="h")),
-        ("pinknoise", 0.22, None, 0.08, dict(vol=0.8, low=3000, high=500, attack=0.01, release=0.8)),
-        ("triangle", 0.05, (480, 1000), 0.2, dict(vol=0.6, attack=0.003, release=0.6)),
-        ("triangle", 0.06, (400, 860), 0.3, dict(vol=0.45, attack=0.003, release=0.6)),
+        ("square", 0.11, (600, 360), 0, {"vol": 0.7, "low": 1400, "attack": 0.004, "release": 0.7, "shape": "h"}),
+        ("triangle", 0.12, (520, 340), 0, {"vol": 0.45, "attack": 0.004, "release": 0.7, "shape": "h"}),
+        (
+            "pinknoise",
+            0.04,
+            None,
+            0,
+            {"vol": 0.5, "low": 1600, "high": 350, "attack": 0.002, "release": 0.8, "shape": "h"},
+        ),
+        ("pinknoise", 0.22, None, 0.08, {"vol": 0.8, "low": 3000, "high": 500, "attack": 0.01, "release": 0.8}),
+        ("triangle", 0.05, (480, 1000), 0.2, {"vol": 0.6, "attack": 0.003, "release": 0.6}),
+        ("triangle", 0.06, (400, 860), 0.3, {"vol": 0.45, "attack": 0.003, "release": 0.6}),
     ],
     # Coins bounce apart: uneven gaps and pitches, each ping quieter than the last.
     "sfx-hit-thief": [
-        ("triangle", 0.12, "B6", 0, dict(low=3500, release=0.9)),
-        ("triangle", 0.12, "E7", 0.06, dict(vol=0.95, low=3500, release=0.9)),
-        ("triangle", 0.12, "G#6", 0.13, dict(vol=0.9, low=3500, release=0.9)),
-        ("triangle", 0.12, "D7", 0.19, dict(vol=0.85, low=3500, release=0.9)),
-        ("triangle", 0.12, "F#6", 0.28, dict(vol=0.75, low=3500, release=0.9)),
-        ("triangle", 0.12, "C#7", 0.36, dict(vol=0.65, low=3500, release=0.9)),
-        ("triangle", 0.12, "A6", 0.48, dict(vol=0.55, low=3500, release=0.9)),
-        ("square", 0.08, "B5", 0, dict(vol=0.3, duty=25, low=3000, release=0.9)),
-        ("square", 0.08, "E6", 0.06, dict(vol=0.25, duty=25, low=3000, release=0.9)),
+        ("triangle", 0.12, "B6", 0, {"low": 3500, "release": 0.9}),
+        ("triangle", 0.12, "E7", 0.06, {"vol": 0.95, "low": 3500, "release": 0.9}),
+        ("triangle", 0.12, "G#6", 0.13, {"vol": 0.9, "low": 3500, "release": 0.9}),
+        ("triangle", 0.12, "D7", 0.19, {"vol": 0.85, "low": 3500, "release": 0.9}),
+        ("triangle", 0.12, "F#6", 0.28, {"vol": 0.75, "low": 3500, "release": 0.9}),
+        ("triangle", 0.12, "C#7", 0.36, {"vol": 0.65, "low": 3500, "release": 0.9}),
+        ("triangle", 0.12, "A6", 0.48, {"vol": 0.55, "low": 3500, "release": 0.9}),
+        ("square", 0.08, "B5", 0, {"vol": 0.3, "duty": 25, "low": 3000, "release": 0.9}),
+        ("square", 0.08, "E6", 0.06, {"vol": 0.25, "duty": 25, "low": 3000, "release": 0.9}),
     ],
     "sfx-hit-squirrel": [
-        ("square", 0.03, (2200, 1450), 0.01, dict(vol=0.6, duty=35, low=2600, attack=0.002, release=0.6, fx=DARK)),
-        ("square", 0.03, (2350, 1500), 0.055, dict(vol=0.6, duty=35, low=2600, attack=0.002, release=0.6, fx=DARK)),
-        ("square", 0.03, (2100, 1400), 0.1, dict(vol=0.6, duty=35, low=2600, attack=0.002, release=0.6, fx=DARK)),
-        ("square", 0.03, (2300, 1500), 0.2, dict(vol=0.6, duty=35, low=2600, attack=0.002, release=0.6, fx=DARK)),
-        ("square", 0.03, (2450, 1600), 0.245, dict(vol=0.6, duty=35, low=2600, attack=0.002, release=0.6, fx=DARK)),
-        ("square", 0.03, (2200, 1450), 0.29, dict(vol=0.6, duty=35, low=2600, attack=0.002, release=0.6, fx=DARK)),
-        ("square", 0.065, (2500, 1400), 0.335, dict(vol=0.6, duty=35, low=2600, attack=0.002, release=0.7, fx=DARK)),
-        ("pinknoise", 0.38, None, 0.01, dict(vol=0.2, low=3000, high=1200, attack=0.002, release=0.3,
-                                             fx=("tremolo", "22", "100", *DARK))),
+        (
+            "square",
+            0.03,
+            (2200, 1450),
+            0.01,
+            {"vol": 0.6, "duty": 35, "low": 2600, "attack": 0.002, "release": 0.6, "fx": DARK},
+        ),
+        (
+            "square",
+            0.03,
+            (2350, 1500),
+            0.055,
+            {"vol": 0.6, "duty": 35, "low": 2600, "attack": 0.002, "release": 0.6, "fx": DARK},
+        ),
+        (
+            "square",
+            0.03,
+            (2100, 1400),
+            0.1,
+            {"vol": 0.6, "duty": 35, "low": 2600, "attack": 0.002, "release": 0.6, "fx": DARK},
+        ),
+        (
+            "square",
+            0.03,
+            (2300, 1500),
+            0.2,
+            {"vol": 0.6, "duty": 35, "low": 2600, "attack": 0.002, "release": 0.6, "fx": DARK},
+        ),
+        (
+            "square",
+            0.03,
+            (2450, 1600),
+            0.245,
+            {"vol": 0.6, "duty": 35, "low": 2600, "attack": 0.002, "release": 0.6, "fx": DARK},
+        ),
+        (
+            "square",
+            0.03,
+            (2200, 1450),
+            0.29,
+            {"vol": 0.6, "duty": 35, "low": 2600, "attack": 0.002, "release": 0.6, "fx": DARK},
+        ),
+        (
+            "square",
+            0.065,
+            (2500, 1400),
+            0.335,
+            {"vol": 0.6, "duty": 35, "low": 2600, "attack": 0.002, "release": 0.7, "fx": DARK},
+        ),
+        (
+            "pinknoise",
+            0.38,
+            None,
+            0.01,
+            {
+                "vol": 0.2,
+                "low": 3000,
+                "high": 1200,
+                "attack": 0.002,
+                "release": 0.3,
+                "fx": ("tremolo", "22", "100", *DARK),
+            },
+        ),
     ],
     "sfx-hit-other-dog": [
-        ("triangle", 0.18, (320, 160), 0.01, dict(vol=0.5, attack=0.02, release=0.7, shape="h")),
-        ("square", 0.18, (320, 160), 0.01, dict(low=1000, attack=0.02, release=0.7, shape="h")),
-        ("pinknoise", 0.08, None, 0.01, dict(vol=0.2, low=1400, high=250, attack=0.01, release=0.8)),
-        ("square", 0.18, (700, 1400), 0.22, dict(vol=0.6, duty=35, low=2500, attack=0.01, release=0.6)),
-        ("triangle", 0.18, (350, 700), 0.22, dict(vol=0.6, attack=0.01, release=0.6)),
+        ("triangle", 0.18, (320, 160), 0.01, {"vol": 0.5, "attack": 0.02, "release": 0.7, "shape": "h"}),
+        ("square", 0.18, (320, 160), 0.01, {"low": 1000, "attack": 0.02, "release": 0.7, "shape": "h"}),
+        ("pinknoise", 0.08, None, 0.01, {"vol": 0.2, "low": 1400, "high": 250, "attack": 0.01, "release": 0.8}),
+        ("square", 0.18, (700, 1400), 0.22, {"vol": 0.6, "duty": 35, "low": 2500, "attack": 0.01, "release": 0.6}),
+        ("triangle", 0.18, (350, 700), 0.22, {"vol": 0.6, "attack": 0.01, "release": 0.6}),
     ],
     "sfx-badge": [
-        ("square", 0.08, "D6", 0, dict(vol=0.5, duty=25, low=3000, release=0.4, fx=DARK)),
-        ("square", 0.08, "F#6", 0.08, dict(vol=0.5, duty=25, low=3000, release=0.4, fx=DARK)),
-        ("square", 0.08, "A6", 0.16, dict(vol=0.5, duty=25, low=3000, release=0.4, fx=DARK)),
-        ("square", 0.5, "D7", 0.24, dict(vol=0.6, duty=25, low=3000, release=0.9, fx=("tremolo", "9", "30", *DARK))),
-        ("triangle", 0.5, "D5", 0.24, dict(vol=0.6, release=0.9)),
-        ("triangle", 0.06, "A7", 0.5, dict(vol=0.35, low=4000, attack=0.002, release=0.8)),
-        ("triangle", 0.06, "F#7", 0.58, dict(vol=0.3, low=4000, attack=0.002, release=0.8)),
-        ("triangle", 0.06, "D7", 0.66, dict(vol=0.25, low=4000, attack=0.002, release=0.8)),
-        ("triangle", 0.26, "A7", 0.74, dict(vol=0.2, low=4000, attack=0.002, release=0.9)),
+        ("square", 0.08, "D6", 0, {"vol": 0.5, "duty": 25, "low": 3000, "release": 0.4, "fx": DARK}),
+        ("square", 0.08, "F#6", 0.08, {"vol": 0.5, "duty": 25, "low": 3000, "release": 0.4, "fx": DARK}),
+        ("square", 0.08, "A6", 0.16, {"vol": 0.5, "duty": 25, "low": 3000, "release": 0.4, "fx": DARK}),
+        (
+            "square",
+            0.5,
+            "D7",
+            0.24,
+            {"vol": 0.6, "duty": 25, "low": 3000, "release": 0.9, "fx": ("tremolo", "9", "30", *DARK)},
+        ),
+        ("triangle", 0.5, "D5", 0.24, {"vol": 0.6, "release": 0.9}),
+        ("triangle", 0.06, "A7", 0.5, {"vol": 0.35, "low": 4000, "attack": 0.002, "release": 0.8}),
+        ("triangle", 0.06, "F#7", 0.58, {"vol": 0.3, "low": 4000, "attack": 0.002, "release": 0.8}),
+        ("triangle", 0.06, "D7", 0.66, {"vol": 0.25, "low": 4000, "attack": 0.002, "release": 0.8}),
+        ("triangle", 0.26, "A7", 0.74, {"vol": 0.2, "low": 4000, "attack": 0.002, "release": 0.9}),
     ],
     # A zone is done: three quick repeated notes and a long one, short-short-short-long, unlike the new best's arpeggio.
     "sfx-zone-done": [
-        ("square", 0.09, "D6", 0, dict(vol=0.5, duty=25, low=3000, attack=0.004, release=0.4, fx=DARK)),
-        ("square", 0.09, "D6", 0.11, dict(vol=0.5, duty=25, low=3000, attack=0.004, release=0.4, fx=DARK)),
-        ("square", 0.09, "D6", 0.22, dict(vol=0.5, duty=25, low=3000, attack=0.004, release=0.4, fx=DARK)),
-        ("square", 0.9, "G6", 0.33, dict(vol=0.55, duty=25, low=3000, attack=0.004, release=0.6,
-                                         fx=("tremolo", "7", "25", *DARK))),
-        ("square", 0.9, "B5", 0.33, dict(vol=0.3, duty=25, low=2200, attack=0.004, release=0.6, fx=DARK)),
-        ("square", 0.3, "D5", 0, dict(vol=0.3, duty=25, low=1400, release=0.6)),
-        ("square", 0.9, "G4", 0.33, dict(vol=0.3, duty=25, low=1400, release=0.6)),
+        ("square", 0.09, "D6", 0, {"vol": 0.5, "duty": 25, "low": 3000, "attack": 0.004, "release": 0.4, "fx": DARK}),
+        (
+            "square",
+            0.09,
+            "D6",
+            0.11,
+            {"vol": 0.5, "duty": 25, "low": 3000, "attack": 0.004, "release": 0.4, "fx": DARK},
+        ),
+        (
+            "square",
+            0.09,
+            "D6",
+            0.22,
+            {"vol": 0.5, "duty": 25, "low": 3000, "attack": 0.004, "release": 0.4, "fx": DARK},
+        ),
+        (
+            "square",
+            0.9,
+            "G6",
+            0.33,
+            {
+                "vol": 0.55,
+                "duty": 25,
+                "low": 3000,
+                "attack": 0.004,
+                "release": 0.6,
+                "fx": ("tremolo", "7", "25", *DARK),
+            },
+        ),
+        ("square", 0.9, "B5", 0.33, {"vol": 0.3, "duty": 25, "low": 2200, "attack": 0.004, "release": 0.6, "fx": DARK}),
+        ("square", 0.3, "D5", 0, {"vol": 0.3, "duty": 25, "low": 1400, "release": 0.6}),
+        ("square", 0.9, "G4", 0.33, {"vol": 0.3, "duty": 25, "low": 1400, "release": 0.6}),
     ],
     "sfx-new-best": [
-        ("square", 0.1, "G4", 0, dict(vol=0.5, low=2200, attack=0.008, release=0.4)),
-        ("square", 0.1, "C5", 0.11, dict(vol=0.5, low=2200, attack=0.008, release=0.4)),
-        ("square", 0.1, "E5", 0.22, dict(vol=0.5, low=2200, attack=0.008, release=0.4)),
-        ("square", 0.35, "G5", 0.33, dict(vol=0.5, low=2200, attack=0.008, release=0.5)),
-        ("square", 0.12, "E5", 0.7, dict(vol=0.5, low=2200, attack=0.008, release=0.4)),
-        ("square", 0.66, "G5", 0.84, dict(vol=0.5, low=2200, attack=0.008, release=0.8, fx=("tremolo", "6", "25"))),
-        ("square", 0.66, "E5", 0.84, dict(vol=0.3, duty=25, low=1800, attack=0.008, release=0.8)),
-        ("triangle", 0.33, "C4", 0, dict(vol=0.8, release=0.6)),
-        ("triangle", 0.35, "E4", 0.33, dict(vol=0.8, release=0.6)),
-        ("triangle", 0.12, "G3", 0.7, dict(vol=0.8, release=0.5)),
-        ("triangle", 0.66, "C4", 0.84, dict(vol=0.8, release=0.8)),
+        ("square", 0.1, "G4", 0, {"vol": 0.5, "low": 2200, "attack": 0.008, "release": 0.4}),
+        ("square", 0.1, "C5", 0.11, {"vol": 0.5, "low": 2200, "attack": 0.008, "release": 0.4}),
+        ("square", 0.1, "E5", 0.22, {"vol": 0.5, "low": 2200, "attack": 0.008, "release": 0.4}),
+        ("square", 0.35, "G5", 0.33, {"vol": 0.5, "low": 2200, "attack": 0.008, "release": 0.5}),
+        ("square", 0.12, "E5", 0.7, {"vol": 0.5, "low": 2200, "attack": 0.008, "release": 0.4}),
+        (
+            "square",
+            0.66,
+            "G5",
+            0.84,
+            {"vol": 0.5, "low": 2200, "attack": 0.008, "release": 0.8, "fx": ("tremolo", "6", "25")},
+        ),
+        ("square", 0.66, "E5", 0.84, {"vol": 0.3, "duty": 25, "low": 1800, "attack": 0.008, "release": 0.8}),
+        ("triangle", 0.33, "C4", 0, {"vol": 0.8, "release": 0.6}),
+        ("triangle", 0.35, "E4", 0.33, {"vol": 0.8, "release": 0.6}),
+        ("triangle", 0.12, "G3", 0.7, {"vol": 0.8, "release": 0.5}),
+        ("triangle", 0.66, "C4", 0.84, {"vol": 0.8, "release": 0.8}),
     ],
 }
+
 
 def parse(score):
     return [(t.split(":")[0], int(t.split(":")[1])) for t in score.split() if t != "|"]
@@ -411,16 +710,35 @@ def track(key):
 def phone_loudness(path):
     """The loudest momentary loudness of a sound on a phone speaker, in LUFS (see EFFECT_LUFS). Silence pads both
     ends, so a sound shorter than the 400 ms window still fills one."""
-    log = subprocess.run(["ffmpeg", "-nostats", "-i", path, "-af",
-                          "adelay=400,apad=pad_dur=0.4,highpass=f=300,ebur128=framelog=info", "-f", "null", "-"],
-                         capture_output=True, text=True, check=True).stderr
+    # Fixed local audio tool and generated arguments; no shell expansion.
+    log = subprocess.run(  # noqa: S603
+        [
+            _tool("ffmpeg"),
+            "-nostats",
+            "-i",
+            path,
+            "-af",
+            "adelay=400,apad=pad_dur=0.4,highpass=f=300,ebur128=framelog=info",
+            "-f",
+            "null",
+            "-",
+        ],
+        capture_output=True,
+        text=True,
+        check=True,
+    ).stderr
     return max(float(m) for m in re.findall(r" M:\s*(-?[\d.]+)", log))
 
 
 def music_phone_loudness(path):
     """A loop's integrated loudness on a phone speaker, in LUFS (see MUSIC_LUFS)."""
-    log = subprocess.run(["ffmpeg", "-nostats", "-i", path, "-af", "highpass=f=300,ebur128", "-f", "null", "-"],
-                         capture_output=True, text=True, check=True).stderr
+    # Fixed local audio tool and generated arguments; no shell expansion.
+    log = subprocess.run(  # noqa: S603
+        [_tool("ffmpeg"), "-nostats", "-i", path, "-af", "highpass=f=300,ebur128", "-f", "null", "-"],
+        capture_output=True,
+        text=True,
+        check=True,
+    ).stderr
     return float(re.findall(r"I:\s+(-?[\d.]+) LUFS", log)[-1])
 
 
@@ -442,29 +760,69 @@ def effect(tmp, key, notes, out):
     mix([(path, 1 / len(layers)) for path in layers], mixed)
     gain = round(EFFECT_LUFS + LOUDER.get(key, 0) - QUIETER.get(key, 0) - phone_loudness(mixed), 1)
     if gain > EFFECT_BAND:
-        sys.exit(f"{key} is {gain} LU under its phone loudness at its {PEAK_DB} dBFS peak: move its energy above "
-                 "300 Hz or soften its loudest onset")
-    sox(mixed, "-e", "floating-point", "-b", "32", out, "gain", str(min(gain, 0)), "pad", f"{EFFECT_LEAD}s",
-        f"{EFFECT_TAIL}s")
+        sys.exit(
+            f"{key} is {gain} LU under its phone loudness at its {PEAK_DB} dBFS peak: move its energy above "
+            "300 Hz or soften its loudest onset"
+        )
+    sox(
+        mixed,
+        "-e",
+        "floating-point",
+        "-b",
+        "32",
+        out,
+        "gain",
+        str(min(gain, 0)),
+        "pad",
+        f"{EFFECT_LEAD}s",
+        f"{EFFECT_TAIL}s",
+    )
 
 
 def peak_db(path):
     """A decoded file's peak in dBFS."""
-    log = subprocess.run(["ffmpeg", "-nostats", "-i", path, "-af", "volumedetect", "-f", "null", "-"],
-                         capture_output=True, text=True, check=True).stderr
+    # Fixed local audio tool and generated arguments; no shell expansion.
+    log = subprocess.run(  # noqa: S603
+        [_tool("ffmpeg"), "-nostats", "-i", path, "-af", "volumedetect", "-f", "null", "-"],
+        capture_output=True,
+        text=True,
+        check=True,
+    ).stderr
     return float(re.search(r"max_volume: (-?[\d.]+) dB", log)[1])
 
 
 def encode(wav, out_dir, key):
     """Ogg Vorbis and AAC, mono 44.1kHz, with no timestamps or random stream serials. Stops the build if either
     decodes to a peak at or over CEILING_DB."""
-    common = ["ffmpeg", "-v", "error", "-y", "-i", wav, "-ac", "1", "-ar", str(RATE), "-map_metadata", "-1",
-              "-fflags", "+bitexact", "-flags:a", "+bitexact"]
+    common = [
+        _tool("ffmpeg"),
+        "-v",
+        "error",
+        "-y",
+        "-i",
+        wav,
+        "-ac",
+        "1",
+        "-ar",
+        str(RATE),
+        "-map_metadata",
+        "-1",
+        "-fflags",
+        "+bitexact",
+        "-flags:a",
+        "+bitexact",
+    ]
     loop = key.startswith("music-")
-    subprocess.run([*common, "-c:a", "libvorbis", "-q:a", "3" if loop else "2", f"{out_dir}/{key}.ogg"],
-                   check=True)
-    subprocess.run([*common, "-c:a", "aac", "-b:a", "64k" if loop else "96k", f"{out_dir}/{key}.m4a"],
-                   check=True)
+    # Fixed local audio tool and generated arguments; no shell expansion.
+    subprocess.run(  # noqa: S603
+        [*common, "-c:a", "libvorbis", "-q:a", "3" if loop else "2", f"{out_dir}/{key}.ogg"],
+        check=True,
+    )
+    # Fixed local audio tool and generated arguments; no shell expansion.
+    subprocess.run(  # noqa: S603
+        [*common, "-c:a", "aac", "-b:a", "64k" if loop else "96k", f"{out_dir}/{key}.m4a"],
+        check=True,
+    )
     for ext in ("ogg", "m4a"):
         peak = peak_db(f"{out_dir}/{key}.{ext}")
         if peak >= CEILING_DB:
@@ -473,7 +831,7 @@ def encode(wav, out_dir, key):
 
 def render_effects(out_dir, effects):
     """Write each effect in effects, {key: tone() calls}, into out_dir as .ogg and .m4a; return the keys."""
-    os.makedirs(out_dir, exist_ok=True)
+    Path(out_dir).mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory() as tmp:
         for key, notes in effects.items():
             wav = f"{tmp}/{key}.wav"
@@ -484,7 +842,7 @@ def render_effects(out_dir, effects):
 
 def render(out_dir, keys=(*EFFECTS, *MUSIC)):
     """Write each sound in keys into out_dir as .ogg and .m4a; return the keys."""
-    os.makedirs(out_dir, exist_ok=True)
+    Path(out_dir).mkdir(parents=True, exist_ok=True)
     render_effects(out_dir, {key: EFFECTS[key] for key in keys if key in EFFECTS})
     with tempfile.TemporaryDirectory() as tmp:
         for key in keys:
@@ -501,14 +859,15 @@ def mark_loops(keys, path="public/art/manifest.extra.json"):
     """Flag each music key as looping in the manifest sidecar, keeping every other entry: the game
     build reads the flags from there, since a sound file cannot say it loops."""
     extra = {}
-    if os.path.exists(path):
-        with open(path) as f:
+    path = Path(path)
+    if path.exists():
+        with path.open() as f:
             extra = json.load(f)
     sounds = extra.setdefault("sounds", {})
     for key in keys:
         if key.startswith("music-"):
             sounds.setdefault(key, {})["loop"] = True
-    with open(path, "w") as f:
+    with path.open("w") as f:
         json.dump(extra, f, indent=2)
         f.write("\n")
 

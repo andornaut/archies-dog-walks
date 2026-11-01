@@ -77,9 +77,11 @@ def hits(bars):
 
 def capped(seconds, play):
     """Sound play(path, samples) for at most seconds, then silence to fill the slot."""
+
     def render(path, length, note):
         sound = min(length, n(seconds))
         play(path, sound, note, length - sound)
+
     return render
 
 
@@ -95,11 +97,24 @@ def comp_score(i):
 def reed(cents):
     """One accordion reed, cents sharp. A sharp reed starts half a cycle late, so the pair begins out of
     phase instead of doubling the onset's peak."""
+
     def play(path, length, note):
         freq = hz(note) * 2 ** (cents / 1200)
         late = round(RATE / freq / 2) if cents else 0
-        tone(path, length - late, "square", freq, vol=0.5, duty=35, low=2200, attack=0.02, release=0.3,
-             shape="h", start=late)
+        tone(
+            path,
+            length - late,
+            "square",
+            freq,
+            vol=0.5,
+            duty=35,
+            low=2200,
+            attack=0.02,
+            release=0.3,
+            shape="h",
+            start=late,
+        )
+
     return play
 
 
@@ -111,32 +126,119 @@ def music(tmp, out):
     drums = hits(phrase * 4)
 
     reeds = [v(f"km-reed{i}", parse(ACCORDION), reed(cents)) for i, cents in enumerate((0, 6))]
-    marimba = v("km-marimba", parse(MARIMBA), capped(0.32, lambda p, s, note, tail: tone(
-        p, s, "triangle", note, attack=0.002, release=0.97, shape="q", tail=tail)))
-    mallet = v("km-mallet", parse(MARIMBA), capped(0.05, lambda p, s, note, tail: tone(
-        p, s, "triangle", hz(note) * 4, vol=0.25, low=3500, attack=0.001, release=0.95, tail=tail)))
-    bass = v("km-bass", parse(BASS), capped(0.36, lambda p, s, note, tail: tone(
-        p, s, "triangle", note, attack=0.004, release=0.5, tail=tail)))
+    marimba = v(
+        "km-marimba",
+        parse(MARIMBA),
+        capped(
+            0.32,
+            lambda p, s, note, tail: tone(p, s, "triangle", note, attack=0.002, release=0.97, shape="q", tail=tail),
+        ),
+    )
+    mallet = v(
+        "km-mallet",
+        parse(MARIMBA),
+        capped(
+            0.05,
+            lambda p, s, note, tail: tone(
+                p, s, "triangle", hz(note) * 4, vol=0.25, low=3500, attack=0.001, release=0.95, tail=tail
+            ),
+        ),
+    )
+    bass = v(
+        "km-bass",
+        parse(BASS),
+        capped(0.36, lambda p, s, note, tail: tone(p, s, "triangle", note, attack=0.004, release=0.5, tail=tail)),
+    )
     # A quiet filtered square on the bass line, so it still carries on a phone speaker.
-    growl = v("km-growl", parse(BASS), capped(0.2, lambda p, s, note, tail: tone(
-        p, s, "square", note, vol=0.5, duty=25, low=500, attack=0.004, release=0.7, tail=tail)))
-    comp = [v(f"km-comp{i}", comp_score(i), lambda p, length, note: tone(
-        p, length, "square", note, low=1200, attack=0.01, release=0.5, shape="h")) for i in range(3)]
-    congas = v("km-conga", drums, lambda p, length, kind: tone(
-        p, min(length, n(CONGA[kind][2])), "triangle", CONGA[kind][:2], vol=CONGA[kind][3], attack=0.002,
-        release=0.9, tail=length - min(length, n(CONGA[kind][2]))))
-    skin = v("km-skin", drums, lambda p, length, kind: tone(
-        p, n(SKIN[kind][0]), "pinknoise", None, vol=SKIN[kind][1], high=900, low=3500, attack=0.001,
-        release=0.8, tail=length - n(SKIN[kind][0])))
-    kick = v("km-kick", hits([KICK] * 16), lambda p, length, kind: tone(
-        p, n(0.12), "triangle", (150, 45), attack=0.002, release=0.9, tail=length - n(0.12)))
-    shaker = v("km-shaker", hits([SHAKER] * 16), lambda p, length, kind: tone(
-        p, n(0.05), "pinknoise", None, vol=SHAKE[kind], high=2000, low=4500, attack=0.015, release=0.6,
-        shape="h", tail=length - n(0.05)))
+    growl = v(
+        "km-growl",
+        parse(BASS),
+        capped(
+            0.2,
+            lambda p, s, note, tail: tone(
+                p, s, "square", note, vol=0.5, duty=25, low=500, attack=0.004, release=0.7, tail=tail
+            ),
+        ),
+    )
+    comp = [
+        v(
+            f"km-comp{i}",
+            comp_score(i),
+            lambda p, length, note: tone(p, length, "square", note, low=1200, attack=0.01, release=0.5, shape="h"),
+        )
+        for i in range(3)
+    ]
+    congas = v(
+        "km-conga",
+        drums,
+        lambda p, length, kind: tone(
+            p,
+            min(length, n(CONGA[kind][2])),
+            "triangle",
+            CONGA[kind][:2],
+            vol=CONGA[kind][3],
+            attack=0.002,
+            release=0.9,
+            tail=length - min(length, n(CONGA[kind][2])),
+        ),
+    )
+    skin = v(
+        "km-skin",
+        drums,
+        lambda p, length, kind: tone(
+            p,
+            n(SKIN[kind][0]),
+            "pinknoise",
+            None,
+            vol=SKIN[kind][1],
+            high=900,
+            low=3500,
+            attack=0.001,
+            release=0.8,
+            tail=length - n(SKIN[kind][0]),
+        ),
+    )
+    kick = v(
+        "km-kick",
+        hits([KICK] * 16),
+        lambda p, length, _kind: tone(
+            p, n(0.12), "triangle", (150, 45), attack=0.002, release=0.9, tail=length - n(0.12)
+        ),
+    )
+    shaker = v(
+        "km-shaker",
+        hits([SHAKER] * 16),
+        lambda p, length, kind: tone(
+            p,
+            n(0.05),
+            "pinknoise",
+            None,
+            vol=SHAKE[kind],
+            high=2000,
+            low=4500,
+            attack=0.015,
+            release=0.6,
+            shape="h",
+            tail=length - n(0.05),
+        ),
+    )
     summed = f"{tmp}/km-mix.wav"
-    mix([(reeds[0], 0.96), (reeds[1], 0.4), (marimba, 0.48), (mallet, 0.48), (bass, 0.36), (growl, 0.24),
-         *((c, 0.1) for c in comp), (congas, 0.24), (skin, 0.48), (kick, 0.2),
-         (shaker, 0.64)], summed)
+    mix(
+        [
+            (reeds[0], 0.96),
+            (reeds[1], 0.4),
+            (marimba, 0.48),
+            (mallet, 0.48),
+            (bass, 0.36),
+            (growl, 0.24),
+            *((c, 0.1) for c in comp),
+            (congas, 0.24),
+            (skin, 0.48),
+            (kick, 0.2),
+            (shaker, 0.64),
+        ],
+        summed,
+    )
     squeeze(summed, out)
 
 
@@ -145,6 +247,21 @@ def squeeze(path, out):
     then normalize the peak to PEAK_DB. It runs over three copies of the loop and keeps the middle one, so the
     compressor's state at the end flows into the start."""
     length = 16 * 16 * STEP
-    sox(path, path, path, out, "compand", "0.001,0.08", f"6:-70,-70,{SQUEEZE_DB},{SQUEEZE_DB},0,{SQUEEZE_DB * 3 / 4}",
-        "0", "0", f"{LOOKAHEAD / RATE:.6f}", "trim", f"{length}s", f"{length}s", "gain", "-n",
-        str(PEAK_DB))
+    sox(
+        path,
+        path,
+        path,
+        out,
+        "compand",
+        "0.001,0.08",
+        f"6:-70,-70,{SQUEEZE_DB},{SQUEEZE_DB},0,{SQUEEZE_DB * 3 / 4}",
+        "0",
+        "0",
+        f"{LOOKAHEAD / RATE:.6f}",
+        "trim",
+        f"{length}s",
+        f"{length}s",
+        "gain",
+        "-n",
+        str(PEAK_DB),
+    )

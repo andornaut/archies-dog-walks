@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Draw the dog needs: the pull bubble and its states, the blocked badge, the firing mark and the
 failed pull's puff.
 
@@ -39,13 +38,13 @@ hand edits to them belong in this file instead. Shared tooling is in pixel.py,
 the rim and stamp helpers in fx.py, piece in hits.py.
 """
 
-import os
 import sys
+from pathlib import Path
 
-sys.path.insert(0, os.path.dirname(__file__))
-from fx import rim, stamp  # noqa: E402
-from hits import piece  # noqa: E402
-from pixel import Grid, bitmap, main  # noqa: E402
+sys.path.insert(0, str(Path(__file__).parent))
+from fx import rim, stamp
+from hits import piece
+from pixel import Grid, bitmap, main
 
 
 def rounded(g, x, y, w, h, col, r=2):
@@ -96,7 +95,7 @@ def ticks(g, out):
     road; out is 0 on the frames where they pull in."""
     t = Grid(BW, BH)
     for ray in TICKS:
-        for x, y in ray[:1 + out]:
+        for x, y in ray[: 1 + out]:
             t.p(x, y, "yellow")
             t.p(BW - 1 - x, y, "yellow")
     rim(t)
@@ -121,8 +120,18 @@ def blocked():
 
 # The broken heart, 11x10, and the crack's column in each row: the left half keeps the columns before it,
 # the right half those after it.
-BROKEN = ["..11...11..", ".1211.1111.", "12211111113", "12111111113", "11111111113",
-          ".111111113.", "..1111113..", "...11113...", "....113....", ".....1....."]
+BROKEN = [
+    "..11...11..",
+    ".1211.1111.",
+    "12211111113",
+    "12111111113",
+    "11111111113",
+    ".111111113.",
+    "..1111113..",
+    "...11113...",
+    "....113....",
+    ".....1.....",
+]
 BROKEN_CRACK = [5, 5, 4, 5, 6, 5, 4, 5, 5, 5]
 
 
@@ -151,25 +160,46 @@ def pull_fail(step):
                 p.ell(8 + dx, y + (1 if dx else 0), r, r * 0.8, "white", "lgrey")
             # the sag: the middle droops below the side puffs
             p.rect(6, y + 2, 4, 1 + step // 2, "lgrey")
+
         piece(g, cloud, size=16)
         return g
     for x, yy in ((4, 12), (12, 13)):
-        piece(g, lambda p: p.ell(x, yy, 1.6, 1.3, "lgrey"), size=16)
+        piece(g, lambda p, x=x, yy=yy: p.ell(x, yy, 1.6, 1.3, "lgrey"), size=16)
     return g
 
 
 def sprites():
     """Yield (key, [(tag, [frame pixels], duration_ms)]) for every sprite."""
     # idle leads, so frame 0 (the anchor the game measures) is the rest pose
-    yield "ui-pull-bubble", [
-        ("idle", [bubble().outlined(False), bubble(grow=1).outlined(False)], 400),
-        ("show", [bubble(size=(10, 8)).outlined(False), bubble(grow=2).outlined(False), bubble().outlined(False)], 60),
-        ("urgent", [ticks(bubble(ring="red"), 1).outlined(False), ticks(bubble(1, "red"), 0).outlined(False),
-                    ticks(bubble(ring="amber"), 1).outlined(False), ticks(bubble(1, "amber"), 0).outlined(False)],
-         120)]
+    yield (
+        "ui-pull-bubble",
+        [
+            ("idle", [bubble().outlined(False), bubble(grow=1).outlined(False)], 400),
+            (
+                "show",
+                [bubble(size=(10, 8)).outlined(False), bubble(grow=2).outlined(False), bubble().outlined(False)],
+                60,
+            ),
+            (
+                "urgent",
+                [
+                    ticks(bubble(ring="red"), 1).outlined(False),
+                    ticks(bubble(1, "red"), 0).outlined(False),
+                    ticks(bubble(ring="amber"), 1).outlined(False),
+                    ticks(bubble(1, "amber"), 0).outlined(False),
+                ],
+                120,
+            ),
+        ],
+    )
     yield "ui-pull-blocked", [("normal", [blocked().outlined(False)], 1000)]
-    yield "ui-fires", [("static", [fires().outlined(False)], 1000),
-                       ("pulse", [fires().outlined(False), fires(1).outlined(False)], 400)]
+    yield (
+        "ui-fires",
+        [
+            ("static", [fires().outlined(False)], 1000),
+            ("pulse", [fires().outlined(False), fires(1).outlined(False)], 400),
+        ],
+    )
     yield "fx-pull-fail", [("play", [pull_fail(i).outlined(False) for i in range(4)], 90)]
 
 

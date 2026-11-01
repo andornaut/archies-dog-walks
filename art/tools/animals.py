@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Draw the animal minor obstacles, the Chase, Snatch and Social animals: moving
 minor obstacles (src/assets/spriteKeys.ts). Every sprite
 also has its depth variants at every step in minis.STEPS (@94 to @50),
@@ -66,16 +65,17 @@ hand edits to them belong in this file instead. Shared tooling is in pixel.py.
 """
 
 import math
-import os
 import sys
+from pathlib import Path
 
-sys.path.insert(0, os.path.dirname(__file__))
-import hazards  # noqa: E402
-import minis  # noqa: E402
-import road  # noqa: E402
-from minis import STEPS, snap  # noqa: E402
-from pixel import Grid, edged, main, raster, scale_of  # noqa: E402
-from road import BREATH, BREATH_MS, lit  # noqa: E402
+sys.path.insert(0, str(Path(__file__).parent))
+import hazards
+import minis
+from minis import STEPS, snap
+from pixel import Grid, edged, main, raster, scale_of
+
+import road
+from road import BREATH, BREATH_MS, lit
 
 
 def eyes(g, xs, y, c="ink"):
@@ -86,6 +86,7 @@ def eyes(g, xs, y, c="ink"):
 
 
 # ---------- Chase ----------
+
 
 def paw(g, x, y, h, c, sh, leg=None):
     """A 3-unit paw from row y, h rows tall, its lower-right pixel shaded; leg, if given, the 2 rows of leg
@@ -189,7 +190,7 @@ def pigeons(peck=False, wings=None, lift=(0, 0, 0)):
     the back right one's against the others', and lift raises each by its pixels."""
     g = edged(Grid())
     u = 1 / scale_of(g)
-    for (x, y), flip, up in zip(FLOCK, (1, -1, 1), lift):
+    for (x, y), flip, up in zip(FLOCK, (1, -1, 1), lift, strict=False):
         pigeon(g, x, y - up * u, peck=peck and x == 16, wings=None if wings is None else wings * flip)
     return lit(g)
 
@@ -226,7 +227,7 @@ def pigeons_fleeing(wings, rise):
     the others', and rise lifting each by its pixels."""
     g = edged(Grid())
     u = 1 / scale_of(g)
-    for (x, y), flip, up in zip(FLYERS, (1, -1, 1), rise):
+    for (x, y), flip, up in zip(FLYERS, (1, -1, 1), rise, strict=False):
         pigeon_back(g, x, y - up * u, wings * flip)
     return lit(g)
 
@@ -261,14 +262,14 @@ def ducklings(peep=False, wing=0, step=0, lift=(0, 0, 0)):
     the other foot) make the waddle, and lift raises each by its pixels."""
     g = edged(Grid())
     u = 1 / scale_of(g)
-    for (x, y), flip, up in zip(BROOD, (1, -1, 1), lift):
+    for (x, y), flip, up in zip(BROOD, (1, -1, 1), lift, strict=False):
         duckling(g, x, y - up * u, peep=peep and x == 16, wing=wing, step=step * flip)
     return lit(g)
 
 
 # The waddle-run down the road: a foot lifted with the wings out, both feet down as the brood bobs up a pixel,
 # the other foot lifted, down again.
-DUCKLINGS_RUN = (dict(step=-1, wing=1), dict(lift=(1, 1, 1)), dict(step=1, wing=1), dict(lift=(1, 1, 1)))
+DUCKLINGS_RUN = ({"step": -1, "wing": 1}, {"lift": (1, 1, 1)}, {"step": 1, "wing": 1}, {"lift": (1, 1, 1)})
 
 
 def duckling_side(g, cx, by, phase):
@@ -461,7 +462,7 @@ def bundle(g, x, y, k=1, fill="dstone", light="stone"):
 # light ones; dstone legs and coal paws; the black mask between white brows and a white muzzle; rounded ears
 # rimmed white; and the bushy tail's bold rings, lgrey and coal, ending in an ink tip. RACCOON_LIT is its rim
 # for road.lit: the coat lit driftwood, the legs stone, the paws and mask ash.
-RACCOON_LIT = dict(stone=("driftwood", None), dstone=("stone", None), coal=("ash", None), ink=("ash", None))
+RACCOON_LIT = {"stone": ("driftwood", None), "dstone": ("stone", None), "coal": ("ash", None), "ink": ("ash", None)}
 
 
 def raccoon_tail(g, rings, tip):
@@ -510,9 +511,11 @@ def raccoon(lf=0, rf=0, bob=0):
     g = edged(Grid(32, 48))
     b = bob
     # the ringed tail, from behind the right hip up its side, ending above the shoulder
-    raccoon_tail(g, [(x, y + b, 2.9, 2) for x, y in ((23, 40.5), (24.9, 37.6), (26.2, 34.4), (26.7, 31),
-                                                     (26.5, 27.7))],
-                 (25.8, 24.6 + b, 2.4, 2))
+    raccoon_tail(
+        g,
+        [(x, y + b, 2.9, 2) for x, y in ((23, 40.5), (24.9, 37.6), (26.2, 34.4), (26.7, 31), (26.5, 27.7))],
+        (25.8, 24.6 + b, 2.4, 2),
+    )
     for x, f in ((11, lf), (17, rf)):
         g.rect(x, 37 + b, 4, 6 + f - b, "dstone")
         g.rect(x - 1, 43 + f, 5, 2, "coal")
@@ -529,7 +532,7 @@ def raccoon(lf=0, rf=0, bob=0):
 
 # A run up the road, seen from behind, 4 frames: the stride (-1 the left knee up, 1 the right, 0 passing with
 # both feet down) and the body's lift, highest off the pushing foot.
-FLEE = [dict(stride=-1, bob=-2), dict(stride=0, bob=-1), dict(stride=1, bob=-2), dict(stride=0, bob=-1)]
+FLEE = [{"stride": -1, "bob": -2}, {"stride": 0, "bob": -1}, {"stride": 1, "bob": -2}, {"stride": 0, "bob": -1}]
 FLEE_MS = 90
 
 
@@ -553,8 +556,11 @@ def raccoon_fleeing(stride, bob=-1):
         g.rect(x - 1, y + 4 + b, 3, 2, "coal")
     g.cel(16, 31 + b, 8, 7.5, "stone", "dstone", "driftwood")
     # the tail down the back, swinging against the stride
-    raccoon_tail(g, [(16 - s * (1 + i), y + b, 3, 2.3) for i, y in enumerate((29.5, 33.5, 37.5))],
-                 (16 - s * 4, 41.5 + b, 2.2, 1.9))
+    raccoon_tail(
+        g,
+        [(16 - s * (1 + i), y + b, 3, 2.3) for i, y in enumerate((29.5, 33.5, 37.5))],
+        (16 - s * 4, 41.5 + b, 2.2, 1.9),
+    )
     raccoon_ears(g, ((10, 13 + b), (22, 13 + b)))
     g.cel(16, 18.5 + b, 8.5, 6.5, "stone", "dstone", "driftwood")
     for x in (7.5, 22.5):
@@ -568,13 +574,17 @@ def raccoon_fleeing(stride, bob=-1):
 
 # The raccoon's creep at the pack, as the coyote's (hazards.COYOTE_WALK): one diagonal pair lifts (lf, rf the
 # front paws, lh, rh the hind ones, negative up) while the body sinks 1px under the level head, then the other.
-RACCOON_STALK = [dict(lf=-2, rh=-1, sink=1), dict(), dict(rf=-2, lh=-1, sink=1), dict()]
+RACCOON_STALK = [{"lf": -2, "rh": -1, "sink": 1}, {}, {"rf": -2, "lh": -1, "sink": 1}, {}]
 RACCOON_STALK_MS = 120
 # A quick low lunge for each lane step, as the coyote's (hazards.COYOTE_STEP): a sink onto the haunches, the
 # push with both front paws up and the ears pinned back, the reach with the head thrust lower still, and the
 # landing on the hind paws.
-RACCOON_STEP = [dict(sink=1, head=1), dict(lf=-2, rf=-2, head=1, ear=1),
-                dict(lf=-1, rf=-2, sink=1, head=2, ear=1), dict(lh=-1, rh=-1, sink=1)]
+RACCOON_STEP = [
+    {"sink": 1, "head": 1},
+    {"lf": -2, "rf": -2, "head": 1, "ear": 1},
+    {"lf": -1, "rf": -2, "sink": 1, "head": 2, "ear": 1},
+    {"lh": -1, "rh": -1, "sink": 1},
+]
 RACCOON_STEP_MS = 80
 
 
@@ -592,8 +602,9 @@ def raccoon_stalking(lf=0, rf=0, lh=0, rh=0, sink=0, head=0, ear=0):
     # the bundle slung over the right shoulder
     bundle(g, 24, 29 + s, SLUNG)
     # the tail swept out low past the right hip
-    raccoon_tail(g, [(x, y + s, 2.6, 2.2) for x, y in ((22.6, 37.2), (24.6, 39), (26.4, 40.8))],
-                 (27.7, 42.4 + s, 1.7, 1.5))
+    raccoon_tail(
+        g, [(x, y + s, 2.6, 2.2) for x, y in ((22.6, 37.2), (24.6, 39), (26.4, 40.8))], (27.7, 42.4 + s, 1.7, 1.5)
+    )
     # the pale chest, the hind paws under it a shade darker
     g.cel(16, 39 + s, 4, 3.5, "driftwood", "stone")
     for x, lift in ((12.5, lh), (16.5, rh)):
@@ -649,7 +660,7 @@ def seagull(lf=0, rf=0, bob=0):
 
 # The seagull's wingbeat flying off: wings -1 raised, 0 level, 1 swept down; it climbs a pixel
 # on the downstroke.
-SEAGULL_FLEE = [dict(wings=-1), dict(wings=0), dict(wings=1, bob=-1), dict(wings=0, bob=-1)]
+SEAGULL_FLEE = [{"wings": -1}, {"wings": 0}, {"wings": 1, "bob": -1}, {"wings": 0, "bob": -1}]
 
 
 def seagull_fleeing(wings, bob=0):
@@ -720,6 +731,7 @@ def collie(fl=0, fr=0, bl=0, br=0, bob=0, tail=0, twitch=0):
 
 # ---------- Social run: the loose dog's crossing ----------
 
+
 def side_dog(spec, bob=0, front=(14, 27), hind=(11, 27)):
     """A Social dog galloping across the road in side view, facing right, on hazards.corgi_side's skeleton:
     the same body, hips, shoulders and paw positions per frame (hazards.CORGI_RUN), so it runs in the loose
@@ -760,8 +772,15 @@ def side_dog(spec, bob=0, front=(14, 27), hind=(11, 27)):
 
 # Each Social dog's side view, for side_dog.
 SIDE = {
-    "social-frisbee-dog": dict(coat=("navy", "ink", "dslate"), far="ink", under="white", leg="navy", sock="white",
-                               muzzle="white", eye="amber"),
+    "social-frisbee-dog": {
+        "coat": ("navy", "ink", "dslate"),
+        "far": "ink",
+        "under": "white",
+        "leg": "navy",
+        "sock": "white",
+        "muzzle": "white",
+        "eye": "amber",
+    },
 }
 
 
@@ -783,14 +802,25 @@ SOCIAL_ZOOM = 0.82
 # The Chase animals: (draw, idle poses, run (draw, poses), extra tags [(tag, draw, poses, ms)]), each pose a dict
 # of keyword arguments.
 CHASE = {
-    "chase-cat": (cat, [dict(), dict(tail=1)], (cat_run, [dict(phase=k) for k in range(4)]), []),
-    "chase-pigeons": (pigeons, [dict(), dict(peck=True)],
-                      (pigeons, [dict(wings=w, lift=up) for w, up in PIGEONS_RUN]),
-                      [("flee", pigeons_fleeing, [dict(wings=w, rise=up) for w, up in PIGEONS_FLEE], 80)]),
-    "chase-ducklings": (ducklings, [dict(), dict(peep=True)], (ducklings, list(DUCKLINGS_RUN)),
-                        [("hop", ducklings_hop, [dict(phase=k) for k in range(4)], 100)]),
-    "chase-rabbit": (rabbit, [dict(), dict(twitch=1)], (rabbit, [dict(bound=k) for k in range(4)]),
-                     [("hop", rabbit_hop, [dict(phase=k) for k in range(4)], 100)]),
+    "chase-cat": (cat, [{}, {"tail": 1}], (cat_run, [{"phase": k} for k in range(4)]), []),
+    "chase-pigeons": (
+        pigeons,
+        [{}, {"peck": True}],
+        (pigeons, [{"wings": w, "lift": up} for w, up in PIGEONS_RUN]),
+        [("flee", pigeons_fleeing, [{"wings": w, "rise": up} for w, up in PIGEONS_FLEE], 80)],
+    ),
+    "chase-ducklings": (
+        ducklings,
+        [{}, {"peep": True}],
+        (ducklings, list(DUCKLINGS_RUN)),
+        [("hop", ducklings_hop, [{"phase": k} for k in range(4)], 100)],
+    ),
+    "chase-rabbit": (
+        rabbit,
+        [{}, {"twitch": 1}],
+        (rabbit, [{"bound": k} for k in range(4)]),
+        [("hop", rabbit_hop, [{"phase": k} for k in range(4)], 100)],
+    ),
 }
 CHASE_IDLE_MS, CHASE_RUN_MS = 300, 80
 SNATCH = {
@@ -801,8 +831,10 @@ SNATCH = {
 # from the standing tags (pixel.depth_settled), so the crouch takes out its own rows and leaves the standing
 # frames as they were.
 SNATCH_EXTRA = {
-    "snatch-raccoon": [("stalk", raccoon_stalking, RACCOON_STALK, RACCOON_STALK_MS),
-                       ("step", raccoon_stalking, RACCOON_STEP, RACCOON_STEP_MS)],
+    "snatch-raccoon": [
+        ("stalk", raccoon_stalking, RACCOON_STALK, RACCOON_STALK_MS),
+        ("step", raccoon_stalking, RACCOON_STEP, RACCOON_STEP_MS),
+    ],
 }
 # road.PERSON_WALK's feet and bob: a snatcher holds its bundle, so it has no free arm to swing.
 SNATCH_WALK = [{k: v for k, v in q.items() if k in ("lf", "rf", "bob")} for q in road.PERSON_WALK]
@@ -828,32 +860,54 @@ def animals(step):
     """Yield (key, [(tag, [frame pixels], duration_ms)]) for every animal at depth step step (1 at full
     size), at its frame side / 32 x step."""
     c = CHASE_SIDE / 32 * step
+
     def component(**pose):
         rows = drawn(c, duckling_component, **pose)
         x, y, w, h = (minis.side(v, step) for v in DUCKLING_CROP)
-        return [row[x:x + w] for row in rows[y:y + h]]
+        return [row[x : x + w] for row in rows[y : y + h]]
 
-    runs = [dict(wing=q.get("wing", 0), step=q.get("step", 0), lift=q.get("lift", (0, 0, 0))[2])
-            for q in DUCKLINGS_RUN]
-    yield "chase-duckling", [("idle", [component(), component(peep=True)], CHASE_IDLE_MS),
-                             ("run", [component(**q) for q in runs], CHASE_RUN_MS),
-                             ("hop", [component(phase=k) for k in range(4)], 100)]
+    runs = [
+        {"wing": q.get("wing", 0), "step": q.get("step", 0), "lift": q.get("lift", (0, 0, 0))[2]} for q in DUCKLINGS_RUN
+    ]
+    yield (
+        "chase-duckling",
+        [
+            ("idle", [component(), component(peep=True)], CHASE_IDLE_MS),
+            ("run", [component(**q) for q in runs], CHASE_RUN_MS),
+            ("hop", [component(phase=k) for k in range(4)], 100),
+        ],
+    )
     for key, (draw, idle, (run, runs), extra) in CHASE.items():
-        yield key, [("idle", [drawn(c, draw, **q) for q in idle], CHASE_IDLE_MS),
-                    ("run", [drawn(c, run, **q) for q in runs], CHASE_RUN_MS),
-                    *((tag, [drawn(c, d, **q) for q in qs], ms) for tag, d, qs, ms in extra)]
+        yield (
+            key,
+            [
+                ("idle", [drawn(c, draw, **q) for q in idle], CHASE_IDLE_MS),
+                ("run", [drawn(c, run, **q) for q in runs], CHASE_RUN_MS),
+                *((tag, [drawn(c, d, **q) for q in qs], ms) for tag, d, qs, ms in extra),
+            ],
+        )
     for key, (draw, flee, flees) in SNATCH.items():
         t = SNATCH_SIDE[key] / 32 * step
-        yield key, [("walk", [drawn(t, draw, **q) for q in SNATCH_WALK], road.PERSON_WALK_MS),
-                    ("flee", [drawn(t, flee, **q) for q in flees], FLEE_MS),
-                    ("idle", [drawn(t, draw, bob=bb) for bb in BREATH], BREATH_MS),
-                    *((tag, [drawn(t, d, **q) for q in qs], ms) for tag, d, qs, ms in SNATCH_EXTRA.get(key, ()))]
+        yield (
+            key,
+            [
+                ("walk", [drawn(t, draw, **q) for q in SNATCH_WALK], road.PERSON_WALK_MS),
+                ("flee", [drawn(t, flee, **q) for q in flees], FLEE_MS),
+                ("idle", [drawn(t, draw, bob=bb) for bb in BREATH], BREATH_MS),
+                *((tag, [drawn(t, d, **q) for q in qs], ms) for tag, d, qs, ms in SNATCH_EXTRA.get(key, ())),
+            ],
+        )
     d = SOCIAL_SIDE / 32 * step
-    run = [dict(bob=q["bob"], front=q["front"], hind=q["hind"]) for q in hazards.CORGI_RUN]
+    run = [{"bob": q["bob"], "front": q["front"], "hind": q["hind"]} for q in hazards.CORGI_RUN]
     for key, draw in DOGS.items():
-        yield key, [("walk", [zoomed(d, draw, **q) for q in road.CORGI_WALK], 100),
-                    ("idle", [zoomed(d, draw, **q) for q in road.CORGI_IDLE], 300),
-                    ("run", [zoomed(d, side_dog, SIDE[key], **q) for q in run], 100)]
+        yield (
+            key,
+            [
+                ("walk", [zoomed(d, draw, **q) for q in road.CORGI_WALK], 100),
+                ("idle", [zoomed(d, draw, **q) for q in road.CORGI_IDLE], 300),
+                ("run", [zoomed(d, side_dog, SIDE[key], **q) for q in run], 100),
+            ],
+        )
 
 
 def sprites():

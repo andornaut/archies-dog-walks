@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Draw the road feedback for heart changes and dodges: the
 broken heart that pops over a dog and arcs into its card, the pink heart
 that pops and flies up, and a dog's dodge (small dogs always; medium and
@@ -48,14 +47,14 @@ layer in hits.py, the broken heart in needs.py.
 """
 
 import math
-import os
 import sys
+from pathlib import Path
 
-sys.path.insert(0, os.path.dirname(__file__))
-from fx import burst, rim, stamp, star4  # noqa: E402
-from hits import layer, piece  # noqa: E402
-from needs import BROKEN, BROKEN_CRACK  # noqa: E402
-from pixel import DARKER, ZONE_ROADS, Grid, main  # noqa: E402
+sys.path.insert(0, str(Path(__file__).parent))
+from fx import burst, rim, stamp, star4
+from hits import layer, piece
+from needs import BROKEN, BROKEN_CRACK
+from pixel import DARKER, ZONE_ROADS, Grid, main
 
 # The zone roads, then each one ramp step darker: the road dimmed under a card.
 GROUNDS = ZONE_ROADS + tuple(DARKER[c] for c in ZONE_ROADS)
@@ -63,10 +62,23 @@ GROUNDS = ZONE_ROADS + tuple(DARKER[c] for c in ZONE_ROADS)
 # ---------- heart changes ----------
 
 # The big heart, 17x15, drawn like ui-fires' BROKEN: 1 the fill, 2 the light, 3 the shade.
-BIG = ["..11111...11111..", ".1122211.1111111.", "11222111111111113", "12211111111111113",
-       "12111111111111113", "11111111111111113", "11111111111111113", ".111111111111113.",
-       "..1111111111113..", "...11111111113...", "....111111113....", ".....1111113.....",
-       "......11113......", ".......113.......", "........1........"]
+BIG = [
+    "..11111...11111..",
+    ".1122211.1111111.",
+    "11222111111111113",
+    "12211111111111113",
+    "12111111111111113",
+    "11111111111111113",
+    "11111111111111113",
+    ".111111111111113.",
+    "..1111111111113..",
+    "...11111111113...",
+    "....111111113....",
+    ".....1111113.....",
+    "......11113......",
+    ".......113.......",
+    "........1........",
+]
 # The crack's column in each row of BIG, a zigzag like BROKEN_CRACK's.
 BIG_CRACK = [8, 8, 8, 7, 8, 9, 8, 7, 8, 9, 8, 8, 8, 8, 8]
 LOSS = ("red", "pink", "dred")
@@ -135,8 +147,8 @@ def heart_gain(step):
         layer(g, ticks())
     layer(g, ringed(h))
     if step >= 2:
-        for (x, y), r in zip(((5, 6), (27, 9), (26, 26)), ((2, 1, 2), (1, 2, 1), (1, 1, 2))[step - 2]):
-            piece(g, lambda p: star4(p, x, y, r, "yellow"), "ink", 32)
+        for (x, y), r in zip(((5, 6), (27, 9), (26, 26)), ((2, 1, 2), (1, 2, 1), (1, 1, 2))[step - 2], strict=True):
+            piece(g, lambda p, r=r, x=x, y=y: star4(p, x, y, r, "yellow"), "ink", 32)
     return g
 
 
@@ -165,11 +177,13 @@ def fly_gain(glint):
 # speed lines trail it on the left (the game mirrors the frame for a sidestep left).
 DODGE = 48
 # Per frame: each puff's (x, y, radius), the speed lines' length.
-DODGE_PUFFS = (((19, 43, 2), (15, 44, 1.5)),
-               ((17, 42, 2.8), (12, 43, 2.3), (21, 44, 1.8)),
-               ((15, 40, 3.2), (9, 42, 2.8), (21, 43, 2.3)),
-               ((14, 39, 2.8), (8, 40, 2.3), (19, 41, 1.8)),
-               ((12, 37, 2), (6, 39, 1.5)))
+DODGE_PUFFS = (
+    ((19, 43, 2), (15, 44, 1.5)),
+    ((17, 42, 2.8), (12, 43, 2.3), (21, 44, 1.8)),
+    ((15, 40, 3.2), (9, 42, 2.8), (21, 43, 2.3)),
+    ((14, 39, 2.8), (8, 40, 2.3), (19, 41, 1.8)),
+    ((12, 37, 2), (6, 39, 1.5)),
+)
 DODGE_LINES = (10, 9, 6, 3, 0)
 DODGE_ROWS = (25, 30, 35)
 
@@ -193,10 +207,20 @@ def dodge(step):
 
 def sprites():
     """Yield (key, [(tag, [frame pixels], duration_ms)]) for every sprite."""
-    yield "fx-heart-loss", [("pop", [heart_loss(i).outlined(False) for i in range(6)], [50, 50, 90, 90, 90, 450]),
-                            ("fly", [fly_loss(b).outlined(False) for b in (0, 1)], 120)]
-    yield "fx-heart-gain", [("pop", [heart_gain(i).outlined(False) for i in range(5)], [50, 50, 90, 90, 450]),
-                            ("fly", [fly_gain(b).outlined(False) for b in (0, 1)], 120)]
+    yield (
+        "fx-heart-loss",
+        [
+            ("pop", [heart_loss(i).outlined(False) for i in range(6)], [50, 50, 90, 90, 90, 450]),
+            ("fly", [fly_loss(b).outlined(False) for b in (0, 1)], 120),
+        ],
+    )
+    yield (
+        "fx-heart-gain",
+        [
+            ("pop", [heart_gain(i).outlined(False) for i in range(5)], [50, 50, 90, 90, 450]),
+            ("fly", [fly_gain(b).outlined(False) for b in (0, 1)], 120),
+        ],
+    )
     yield "fx-dodge", [("play", [dodge(i).outlined(False) for i in range(5)], 70)]
 
 

@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Draw the vehicle minor obstacles: the garbage truck (garbageTruck) and the scooter (scooter), High Park's
 tourist train, Yonge Street's crossing TTC bus, the Distillery District's brewery dray and The Beaches'
 patrol buggy. Like obstacles.py's the truck and the scooter are billboards from a low camera, a front
@@ -96,15 +95,17 @@ hand edits to them belong in this file instead. Shared tooling is in pixel.py.
 """
 
 import math
-import os
 import sys
+from itertools import pairwise
+from pathlib import Path
 
-sys.path.insert(0, os.path.dirname(__file__))
-import obstacles  # noqa: E402
-from minis import STEPS, small  # noqa: E402
-from obstacles import PULL_OUT, treads, unit  # noqa: E402
-from pixel import K, Grid, edged, main, raster, scale_of  # noqa: E402
-from road import SCALE, face_disc, face_front, headlamp, lit, raise_mouth  # noqa: E402
+sys.path.insert(0, str(Path(__file__).parent))
+import obstacles
+from minis import STEPS, small
+from obstacles import PULL_OUT, treads, unit
+from pixel import Grid, K, edged, main, raster, scale_of
+
+from road import SCALE, face_disc, face_front, headlamp, lit, raise_mouth
 
 # The garbage truck is laid out on 56x50 and drawn as obstacles.delivery_truck is, its columns kept (a lane less
 # 4px each side) and its rows TRUCK_SCALE times taller: 56x60, taller than the delivery truck's 54 and as tall
@@ -352,13 +353,15 @@ TRAIN_AXLE, TRAIN_WHEEL = 37.2, 4.4
 # middle passenger waves, the hand swung out on frame 2; 4 frames at 400ms. Restarting: the whistle's puff grows out of
 # the stack and lifts away; 3 frames at 120ms.
 TRAIN_TAGS = (
-    ("push", tuple(dict(roll=r) for r in range(4)), 100),
-    ("idle", (dict(), dict(wave=1), dict(wave=2), dict(wave=1)), 400),
-    ("cue", (dict(toot=1), dict(toot=2), dict(toot=3)), 120),
+    ("push", tuple({"roll": r} for r in range(4)), 100),
+    ("idle", ({}, {"wave": 1}, {"wave": 2}, {"wave": 1}), 400),
+    ("cue", ({"toot": 1}, {"toot": 2}, {"toot": 3}), 120),
 )
 # Each car's left column and its passengers, back to front: (top, hair).
-TRAIN_CARS = ((2, (("teal", "ink"), ("amber", "dbrown"), ("lilac", "brown"))),
-              (40, (("orange", "gold"), ("sky", "rust"), ("green", "ink"))))
+TRAIN_CARS = (
+    (2, (("teal", "ink"), ("amber", "dbrown"), ("lilac", "brown"))),
+    (40, (("orange", "gold"), ("sky", "rust"), ("green", "ink"))),
+)
 
 
 def quad(g, a, b, c, d, col):
@@ -369,7 +372,7 @@ def quad(g, a, b, c, d, col):
 def strand(g, pts, c):
     """A 1px line in drawn pixels through the design points pts, so a spoke stays one pixel at any scale."""
     s, px = scale_of(g), raster(g)
-    for (x0, y0), (x1, y1) in zip(pts, pts[1:]):
+    for (x0, y0), (x1, y1) in pairwise(pts):
         a, b = (math.floor(x0 * s), math.floor(y0 * s)), (math.floor(x1 * s), math.floor(y1 * s))
         n = max(abs(b[0] - a[0]), abs(b[1] - a[1]), 1)
         for k in range(n + 1):
@@ -563,9 +566,9 @@ BUS_DOORS, BUS_DOOR = (52, 98), 7.5
 # body up off its kneel from frame 1 and the wheels a quarter turned on frame 2; 3 frames at 120ms, the
 # train's.
 BUS_TAGS = (
-    ("push", tuple(dict(roll=r) for r in range(4)), 100),
-    ("idle", (dict(doors=1), dict(doors=1, kneel=1), dict(doors=1, kneel=1), dict(doors=1)), 400),
-    ("cue", (dict(kneel=1, blink=1), dict(), dict(roll=1, blink=1)), 120),
+    ("push", tuple({"roll": r} for r in range(4)), 100),
+    ("idle", ({"doors": 1}, {"doors": 1, "kneel": 1}, {"doors": 1, "kneel": 1}, {"doors": 1}), 400),
+    ("cue", ({"kneel": 1, "blink": 1}, {}, {"roll": 1, "blink": 1}), 120),
 )
 
 
@@ -592,11 +595,11 @@ def glint(g, x, y0, y1, c="dslate"):
     """A glint across glass in drawn pixels: a stroke 2px wide from design (x, y1) leaning right up to row y0,
     a column right every two rows, as ttc_bus's glints lean."""
     s, px = scale_of(g), raster(g)
-    X, Y0, Y1 = math.floor(x * s), math.floor(y0 * s), math.floor(y1 * s)
-    for Y in range(Y0, Y1):
-        off = (Y1 - 1 - Y) // 2
-        px.p(X + off, Y, c)
-        px.p(X + off + 1, Y, c)
+    column, top, bottom = math.floor(x * s), math.floor(y0 * s), math.floor(y1 * s)
+    for row in range(top, bottom):
+        off = (bottom - 1 - row) // 2
+        px.p(column + off, row, c)
+        px.p(column + off + 1, row, c)
 
 
 def bus_door(g, x0, open_):
@@ -609,8 +612,13 @@ def bus_door(g, x0, open_):
         g.rect(x0 + 1.5, top + 0.75, w - 3, BUS_SILL - top - 2.25, "dslate")
         g.rect(x0 + 1.5, BUS_SILL - 1.5, w - 3, 1.5, "grey")
         s = scale_of(g)
-        raster(g).rect(math.floor((x0 + w / 2) * s), math.floor((top + 0.75) * s), 1,
-                       math.floor((BUS_SILL - 1.5) * s) - math.floor((top + 0.75) * s), "yellow")
+        raster(g).rect(
+            math.floor((x0 + w / 2) * s),
+            math.floor((top + 0.75) * s),
+            1,
+            math.floor((BUS_SILL - 1.5) * s) - math.floor((top + 0.75) * s),
+            "yellow",
+        )
         for x in (x0 + 0.75, x0 + w - 1.5):
             g.rect(x, top + 0.75, 0.75, BUS_SILL - top - 1.5, "navy")
     else:
@@ -695,7 +703,7 @@ def crosstown_bus(roll=None, doors=0, kneel=0, blink=0):
     layer(lambda: bus_body(g, doors, blink), dip)
     layer(lambda: [bus_wheel(g, x, roll or 0) for x in BUS_WHEELS], 0)
     px.px = out
-    return lit(g, dict(ttc=("red", None)))
+    return lit(g, {"ttc": ("red", None)})
 
 
 # ---------- brewery dray ----------
@@ -716,9 +724,9 @@ DRAY_WHEELS, DRAY_TUG_WHEELS = (13, 57), (82, 105)
 # the hand swung out on frame 2; 4 frames at 400ms. Pulling away: the roof beacon blinks, the wheels a quarter
 # turned on frame 2; 3 frames at 120ms, the train's.
 DRAY_TAGS = (
-    ("push", tuple(dict(roll=r) for r in range(4)), 100),
-    ("idle", (dict(), dict(wave=1), dict(wave=2), dict(wave=1)), 400),
-    ("cue", (dict(blink=1), dict(), dict(roll=1, blink=1)), 120),
+    ("push", tuple({"roll": r} for r in range(4)), 100),
+    ("idle", ({}, {"wave": 1}, {"wave": 2}, {"wave": 1}), 400),
+    ("cue", ({"blink": 1}, {}, {"roll": 1, "blink": 1}), 120),
 )
 
 
@@ -826,7 +834,7 @@ def brewery_dray(roll=None, wave=0, blink=0):
     layer(lambda: [bus_wheel(g, x, roll or 0) for x in DRAY_WHEELS + DRAY_TUG_WHEELS], 0)
     layer(lambda: tug(g, wave, blink), dip)
     px.px = out
-    return lit(g, dict(brick=("rust", None), dbrick=("brick", None)))
+    return lit(g, {"brick": ("rust", None), "dbrick": ("brick", None)})
 
 
 # ---------- lifeguard patrol buggy ----------
@@ -844,9 +852,9 @@ TRAILER_WHEEL_X, TRAILER_WHEEL = 13, 3.8
 # flutters, its fly end lifting on frames 1 to 3 and furthest on frame 2; 4 frames at 400ms. Pulling away: the
 # roll bar's light bar flashes, the wheels a quarter turned on frame 2; 3 frames at 120ms, the train's.
 BUGGY_TAGS = (
-    ("push", tuple(dict(roll=r) for r in range(4)), 100),
-    ("idle", (dict(), dict(flap=1), dict(flap=2), dict(flap=1)), 400),
-    ("cue", (dict(flash=1), dict(), dict(roll=1, flash=1)), 120),
+    ("push", tuple({"roll": r} for r in range(4)), 100),
+    ("idle", ({}, {"flap": 1}, {"flap": 2}, {"flap": 1}), 400),
+    ("cue", ({"flash": 1}, {}, {"roll": 1, "flash": 1}), 120),
 )
 
 
@@ -864,7 +872,8 @@ def buggy_wheel(g, cx, r, roll):
 
 def trailer(g):
     """The trailer behind the buggy: a dslate frame on one small wheel's fender, a red tail light at its back,
-    its tongue to the hitch, and the rescue board lying on it, yellow with a white lit top, grab handles along its amber rail, its nose
+    its tongue to the hitch, and the rescue board lying on it, yellow with a white lit top, grab handles
+    along its amber rail, its nose
     turned up at the front."""
     g.rect(2, 31, 21, 3, "dslate")
     row(g, 2, 23, 31, "slate")
@@ -971,6 +980,7 @@ def patrol_buggy(roll=None, flap=0, flash=0):
     px.px = out
     return lit(g)
 
+
 # ---------- build ----------
 
 
@@ -981,29 +991,49 @@ def sprites():
     this = sys.modules[__name__]
     drive, drive_ms = obstacles.DRIVE
     for suffix, step in (("", 1), *(("@" + k, v) for k, v in STEPS)):
-        yield f"stink-garbage-truck{suffix}", [("idle", [truck(garbage_truck, f, step) for f in (0, 1)], 400),
-                                               ("drive", [truck(truck_driving, f, step) for f in drive], drive_ms)]
+        yield (
+            f"stink-garbage-truck{suffix}",
+            [
+                ("idle", [truck(garbage_truck, f, step) for f in (0, 1)], 400),
+                ("drive", [truck(truck_driving, f, step) for f in drive], drive_ms),
+            ],
+        )
     for suffix, step in (("", 1), *(("@" + k, v) for k, v in STEPS)):
         s = SCALE * step
-        yield f"minor-scooter{suffix}", [(tag, [small(this, s, d, a, 1 / s).outlined() for a in fargs], fms)
-                                         for tag, d, fargs, fms in [("idle", scooter, (False, True), 500),
-                                                                    *SCOOTER_MOVES]]
+        yield (
+            f"minor-scooter{suffix}",
+            [
+                (tag, [small(this, s, d, a, 1 / s).outlined() for a in fargs], fms)
+                for tag, d, fargs, fms in [("idle", scooter, (False, True), 500), *SCOOTER_MOVES]
+            ],
+        )
     for suffix, step in (("", 1), *(("@" + k, v) for k, v in STEPS)):
         s = SCALE * step
-        yield f"{TRAIN_KEY}{suffix}", [(tag, [small(this, s, tourist_train, **q).outlined() for q in poses], ms)
-                                       for tag, poses, ms in TRAIN_TAGS]
+        yield (
+            f"{TRAIN_KEY}{suffix}",
+            [
+                (tag, [small(this, s, tourist_train, **q).outlined() for q in poses], ms)
+                for tag, poses, ms in TRAIN_TAGS
+            ],
+        )
     for suffix, step in (("", 1), *(("@" + k, v) for k, v in STEPS)):
         s = SCALE * step
-        yield f"{BUS_KEY}{suffix}", [(tag, [small(this, s, crosstown_bus, **q).outlined() for q in poses], ms)
-                                     for tag, poses, ms in BUS_TAGS]
+        yield (
+            f"{BUS_KEY}{suffix}",
+            [(tag, [small(this, s, crosstown_bus, **q).outlined() for q in poses], ms) for tag, poses, ms in BUS_TAGS],
+        )
     for suffix, step in (("", 1), *(("@" + k, v) for k, v in STEPS)):
         s = SCALE * step
-        yield f"{DRAY_KEY}{suffix}", [(tag, [small(this, s, brewery_dray, **q).outlined() for q in poses], ms)
-                                      for tag, poses, ms in DRAY_TAGS]
+        yield (
+            f"{DRAY_KEY}{suffix}",
+            [(tag, [small(this, s, brewery_dray, **q).outlined() for q in poses], ms) for tag, poses, ms in DRAY_TAGS],
+        )
     for suffix, step in (("", 1), *(("@" + k, v) for k, v in STEPS)):
         s = SCALE * step
-        yield f"{BUGGY_KEY}{suffix}", [(tag, [small(this, s, patrol_buggy, **q).outlined() for q in poses], ms)
-                                       for tag, poses, ms in BUGGY_TAGS]
+        yield (
+            f"{BUGGY_KEY}{suffix}",
+            [(tag, [small(this, s, patrol_buggy, **q).outlined() for q in poses], ms) for tag, poses, ms in BUGGY_TAGS],
+        )
 
 
 if __name__ == "__main__":

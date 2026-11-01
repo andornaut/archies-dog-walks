@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Draw the road effects for collisions and pickups, and the new-best burst on
 the end screen. The bumps, debris and fx-sparkle are light, warm or small, and
 would fade into the three light roads, so each carries a 1px plum rim (4.4:1 or
@@ -40,19 +39,26 @@ hand edits to them belong in this file instead. Shared tooling is in pixel.py.
 """
 
 import math
-import os
 import sys
+from pathlib import Path
 
-sys.path.insert(0, os.path.dirname(__file__))
-from pixel import Grid, main  # noqa: E402
+sys.path.insert(0, str(Path(__file__).parent))
+from pixel import Grid, main
 
 
 def rim(g, col="plum"):
     """Ring the shape with a 1px outline in one colour, in place: plum holds 6.5:1 on the tan road,
     5.0:1 on the pink and 4.4:1 on skin2, and the fill inside it carries the dslate road."""
-    edge = [(x, y) for y in range(g.h) for x in range(g.w) if not g.px[y][x] and any(
-        0 <= x + dx < g.w and 0 <= y + dy < g.h and g.px[y + dy][x + dx]
-        for dx, dy in ((0, -1), (0, 1), (-1, 0), (1, 0)))]
+    edge = [
+        (x, y)
+        for y in range(g.h)
+        for x in range(g.w)
+        if not g.px[y][x]
+        and any(
+            0 <= x + dx < g.w and 0 <= y + dy < g.h and g.px[y + dy][x + dx]
+            for dx, dy in ((0, -1), (0, 1), (-1, 0), (1, 0))
+        )
+    ]
     for x, y in edge:
         g.p(x, y, col)
     return g
@@ -138,7 +144,7 @@ def word(g, text, cx, top, fill="yellow"):
 def line(g, x0, y0, x1, y1, col):
     """A 1px line from (x0, y0) to (x1, y1)."""
     n = max(abs(x1 - x0), abs(y1 - y0), 1)
-    for i in range(int(round(n)) + 1):
+    for i in range(round(n) + 1):
         g.p(round(x0 + (x1 - x0) * i / n), round(y0 + (y1 - y0) * i / n), col)
 
 
@@ -235,7 +241,7 @@ def splash(step):
             jet(g, cx + bx, gy, cx + bx + (tx - bx) * h, gy + ty * h, 2.8, 1.2, "cyan")
     if 1 <= step <= 6:
         t = step - 1
-        for bx, tx, ty in SPLASH_JETS[1:4]:
+        for _bx, tx, ty in SPLASH_JETS[1:4]:
             x = cx + tx * (0.9 + 0.12 * t) + (tx / 22) * 2 * t
             y = gy + ty - 3 - 2.5 * t + 1.6 * t * t
             if y < gy - 2:
@@ -264,7 +270,7 @@ def debris_leaves(step):
     g = Grid(48, 48)
     t = step + 1
     for i, (vx, vy) in enumerate(LEAVES):
-        drag = (1 - 0.72 ** t) / 0.28
+        drag = (1 - 0.72**t) / 0.28
         x, y = 24 + vx * drag, 24 + vy * drag + 0.5 * t * t
         flip = (i + step) % 2 == 1
         leaf(g, x, y, flip, ("dgreen", "green", "forest")[i % 3], ("green", "yellow", "dgreen")[i % 3])
@@ -330,13 +336,26 @@ def stamp(g, rows, x0, y0, cols=("red", "pink", "dred"), keep=None):
 RIBBON = (12, 14)
 # Sparkles thrown out from behind the ribbon, slowing as they go: (x, y on the ribbon's edge, full
 # throw dx, dy, first frame, colour). They keep inside the frame's bands above, below and beside it.
-SPARKS = ((20, 14, -6, -9, 0, "white"), (40, 14, -3, -10, 1, "yellow"), (58, 14, 4, -11, 0, "white"),
-          (26, 34, -6, 9, 1, "yellow"), (50, 34, 1, 10, 0, "white"), (12, 21, -10, -5, 0, "yellow"),
-          (84, 20, 10, -6, 1, "white"), (12, 30, -9, 6, 2, "white"), (84, 30, 10, 5, 0, "yellow"))
+SPARKS = (
+    (20, 14, -6, -9, 0, "white"),
+    (40, 14, -3, -10, 1, "yellow"),
+    (58, 14, 4, -11, 0, "white"),
+    (26, 34, -6, 9, 1, "yellow"),
+    (50, 34, 1, 10, 0, "white"),
+    (12, 21, -10, -5, 0, "yellow"),
+    (84, 20, 10, -6, 1, "white"),
+    (12, 30, -9, 6, 2, "white"),
+    (84, 30, 10, 5, 0, "yellow"),
+)
 # Stars that pop out over the ribbon's edges and arc out under a little gravity: (x, y, dx, dy per frame,
 # first frame).
-STARS = ((30, 14, -2, -2.6, 0), (66, 14, 2.2, -2.8, 1), (48, 14, 0.3, -2.4, 3), (24, 34, -2.4, 1, 1),
-         (72, 34, 2.4, 0.8, 2))
+STARS = (
+    (30, 14, -2, -2.6, 0),
+    (66, 14, 2.2, -2.8, 1),
+    (48, 14, 0.3, -2.4, 3),
+    (24, 34, -2.4, 1, 1),
+    (72, 34, 2.4, 0.8, 2),
+)
 
 
 def over(dst, src):
@@ -371,10 +390,10 @@ def new_best(step):
             part = Grid(96, 48)
             star4(part, round(x + dx * k), round(y + dy * k), (2, 3, 3, 2, 2)[t], col)
             over(g, part)
-    for x, y, dx, dy, first in STARS:
+    for base_x, base_y, dx, dy, first in STARS:
         t = step - first
         if 0 <= t < 5:
-            x, y, r = x + dx * (t + 1), y + dy * (t + 1) + 0.3 * t * t, (4, 5, 5, 4, 3)[t]
+            x, y, r = base_x + dx * (t + 1), base_y + dy * (t + 1) + 0.3 * t * t, (4, 5, 5, 4, 3)[t]
             part = Grid(96, 48)
             burst(part, x, y, r, r * 0.45, 5, "amber")
             if r > 3:

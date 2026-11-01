@@ -83,8 +83,18 @@ def vibrato(length, delay=0.22, rate=5.5, cents=12):
 
 def lead(path, length, note):
     """A muted, clarinet-like square: odd harmonics only, darkened twice, with a breathy rise."""
-    tone(path, length, "square", note, vol=0.5, low=1700, attack=0.03, release=0.4 if length <= 2 * STEP else 0.3,
-         shape="q", fx=("lowpass", "2400", *vibrato(length)))
+    tone(
+        path,
+        length,
+        "square",
+        note,
+        vol=0.5,
+        low=1700,
+        attack=0.03,
+        release=0.4 if length <= 2 * STEP else 0.3,
+        shape="q",
+        fx=("lowpass", "2400", *vibrato(length)),
+    )
 
 
 def bass(path, length, note):
@@ -99,8 +109,9 @@ def bass_edge(path, length, note):
 def comp(k):
     """The kth voice of the comp: a soft mallet, a triangle that rings down, rolled upward 20 ms a voice."""
     roll = k * n(0.02)
-    return lambda path, length, note: tone(path, length - roll, "triangle", note, vol=0.5, attack=0.02,
-                                           release=0.85, start=roll)
+    return lambda path, length, note: tone(
+        path, length - roll, "triangle", note, vol=0.5, attack=0.02, release=0.85, start=roll
+    )
 
 
 # A second low-pass for the noise voices, so their hiss falls away steeply above 4 kHz.
@@ -111,12 +122,15 @@ def drum(path, length, kind):
     """One brush or cymbal hit, with silence to the end of its slot."""
     kinds = {
         # A swish across the snare head on 2 and 4.
-        "swish": (0.24, dict(vol=0.9, low=3000, high=500, attack=0.035, release=0.75, shape="h", fx=DARK)),
+        "swish": (
+            0.24,
+            {"vol": 0.9, "low": 3000, "high": 500, "attack": 0.035, "release": 0.75, "shape": "h", "fx": DARK},
+        ),
         # A soft circular sweep on 1 and 3.
-        "sweep": (0.5, dict(vol=0.45, low=1600, high=250, attack=0.22, release=0.55, shape="h")),
+        "sweep": (0.5, {"vol": 0.45, "low": 1600, "high": 250, "attack": 0.22, "release": 0.55, "shape": "h"}),
         # The ride's beat and its quieter swung skip note.
-        "ride": (0.18, dict(vol=0.5, low=3600, high=1800, attack=0.002, release=0.9, fx=DARK)),
-        "skip": (0.12, dict(vol=0.3, low=3600, high=1800, attack=0.002, release=0.9, fx=DARK)),
+        "ride": (0.18, {"vol": 0.5, "low": 3600, "high": 1800, "attack": 0.002, "release": 0.9, "fx": DARK}),
+        "skip": (0.12, {"vol": 0.3, "low": 3600, "high": 1800, "attack": 0.002, "release": 0.9, "fx": DARK}),
     }
     if kind == "kick":
         tone(path, n(0.14), "triangle", (110, 48), vol=0.8, attack=0.004, release=0.9, tail=length - n(0.14))
@@ -132,12 +146,33 @@ def music(tmp, out):
         (voice(tmp, "dd-bass", score(BASS), bass, step=STEP), 0.45),
         (voice(tmp, "dd-bass-edge", score(BASS), bass_edge, step=STEP), 0.6),
         *((voice(tmp, f"dd-comp{k}", comp_score(k), comp(k), step=STEP), 0.34) for k in range(4)),
-        (voice(tmp, "dd-brush", [(v, 3) for _ in range(bars) for v in ("sweep", "swish", "sweep", "swish")],
-               drum, step=STEP), 1.65),
-        (voice(tmp, "dd-ride", [(v, s) for _ in range(bars) for v, s in
-                                (("ride", 3), ("ride", 2), ("skip", 1), ("ride", 3), ("ride", 2), ("skip", 1))],
-               drum, step=STEP), 5),
-        (voice(tmp, "dd-kick", [(v, 3) for _ in range(bars) for v in ("kick", "-", "kick", "-")],
-               drum, step=STEP), 0.5),
+        (
+            voice(
+                tmp,
+                "dd-brush",
+                [(v, 3) for _ in range(bars) for v in ("sweep", "swish", "sweep", "swish")],
+                drum,
+                step=STEP,
+            ),
+            1.65,
+        ),
+        (
+            voice(
+                tmp,
+                "dd-ride",
+                [
+                    (v, s)
+                    for _ in range(bars)
+                    for v, s in (("ride", 3), ("ride", 2), ("skip", 1), ("ride", 3), ("ride", 2), ("skip", 1))
+                ],
+                drum,
+                step=STEP,
+            ),
+            5,
+        ),
+        (
+            voice(tmp, "dd-kick", [(v, 3) for _ in range(bars) for v in ("kick", "-", "kick", "-")], drum, step=STEP),
+            0.5,
+        ),
     ]
     mix(layers, out)

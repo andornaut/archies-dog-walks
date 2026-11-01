@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Draw the owners' and walkers' faces and build their Aseprite sources and exports.
 
 face-owner-<dog>: 32x32, chibi, front view, in the house palette with an ink outer line closed under the
@@ -23,20 +22,32 @@ Run from the repository root. A build overwrites the .aseprite sources, so
 hand edits to them belong in this file instead. Shared tooling is in pixel.py.
 """
 
-import os
 import sys
+from contextvars import ContextVar
+from pathlib import Path
 
-sys.path.insert(0, os.path.dirname(__file__))
-import minis  # noqa: E402
-from pixel import Grid, edged, hairline, main  # noqa: E402
-from road import face_disc  # noqa: E402
+sys.path.insert(0, str(Path(__file__).parent))
+import minis
+from pixel import Grid, edged, hairline, main
+
+from road import face_disc
+
+_SMALL_MODE = ContextVar("owner_small_face", default=False)
+
 
 MOODS = ["happy", "neutral", "upset", "fired", "worried"]
 
 
 def face():
     """A 32x32 face: one ink line round every fill, closed under the bust where the frame cuts it."""
+    if _SMALL_MODE.get():
+        return edged(minis.Mini(SMALL / 32), "ink", close=True)
     return edged(Grid(), "ink", close=True)
+
+
+def _draw_expression(*args, **kwargs):
+    renderer = small_expression if _SMALL_MODE.get() else expression
+    return renderer(*args, **kwargs)
 
 
 def base(g, skin, shade, shirt, shirt_sh):
@@ -50,8 +61,19 @@ def base(g, skin, shade, shirt, shirt_sh):
     face_disc(g, 16, 16, 8.5, 9, skin, shade, to=0.25)
 
 
-def expression(g, mood, feat="dbrown", blush="pink", lashes=False, wide=False, brow=None, whites=False, glasses=None,
-               lips=None, nose=None):
+def expression(
+    g,
+    mood,
+    feat="dbrown",
+    blush="pink",
+    lashes=False,
+    wide=False,
+    brow=None,
+    whites=False,
+    glasses=None,
+    lips=None,
+    nose=None,
+):
     """Eyes, brows and mouth. wide marks the dramatic owners, whose faces go further. brow is the brows'
     colour (feat unless given). whites sets a white beside each pupil, so the eyes read on dark skin.
     Happy closes the eyes into smiling arcs under raised flat brows; neutral is open eyes under flat brows;
@@ -173,7 +195,7 @@ def eve(mood):
     g.cel(11.5, 11, 3.5, 2, "yellow", "amber", "white")
     g.rect(7, 19, 1, 2, "orange")
     g.rect(24, 19, 1, 2, "orange")
-    expression(g, mood, wide=True)
+    _draw_expression(g, mood, wide=True)
     return g
 
 
@@ -202,7 +224,7 @@ def ryan(mood):
     # the forelock, swept out from under the brim above the left brow
     g.rect(9, 12, 6, 1, "amber")
     g.rect(10, 12, 2, 1, "yellow")
-    expression(g, mood, wide=True)
+    _draw_expression(g, mood, wide=True)
     return g
 
 
@@ -212,8 +234,12 @@ def ralph(mood):
     jacket with a cream fleece collar over a white shirt, and gold wings pinned on the chest."""
     g = face()
     # the ponytail behind the head, hanging from the nape down behind the left shoulder, with a dbrown tie
-    for x, y, r, c in ((8, 20.5, 1.8, "driftwood"), (6.8, 23, 1.7, "driftwood"), (5.6, 25.5, 1.4, "driftwood"),
-                       (4.8, 27.5, 1, "brown")):
+    for x, y, r, c in (
+        (8, 20.5, 1.8, "driftwood"),
+        (6.8, 23, 1.7, "driftwood"),
+        (5.6, 25.5, 1.4, "driftwood"),
+        (4.8, 27.5, 1, "brown"),
+    ):
         g.ell(x, y, r, r + 0.3, c)
     if not isinstance(g, minis.Mini):
         # grey strands through the tail, left out at 20px, where they break it into specks
@@ -254,7 +280,7 @@ def ralph(mood):
     # the hairline a shade darker, so the sandy hair stands apart from the fair forehead
     hairline(g, "driftwood", "skin1", "brown")
     # the brows a step darker at 20px, where they are one pixel deep
-    expression(g, mood, brow="dbrown" if isinstance(g, minis.Mini) else "brown")
+    _draw_expression(g, mood, brow="dbrown" if isinstance(g, minis.Mini) else "brown")
     if not isinstance(g, minis.Mini):
         # heavy brows: each brow pixel doubled upward
         brows = [(x, y) for y in range(12, 17) for x in range(9, 23) if g.px[y][x] == minis.K["brown"]]
@@ -286,7 +312,7 @@ def tara(mood):
     # amber drop earrings, two pixels long so they show, as on her figure
     g.rect(7, 19, 1, 2, "amber")
     g.rect(24, 19, 1, 2, "amber")
-    expression(g, mood, feat="dred", lashes=True, lips="red", brow="ink")
+    _draw_expression(g, mood, feat="dred", lashes=True, lips="red", brow="ink")
     return g
 
 
@@ -314,7 +340,7 @@ def clare(mood):
     # the pink clip above the right temple
     g.rect(20, 9, 3, 1, "pink")
     g.p(21, 10, "mauve")
-    expression(g, mood, feat="ink", lashes=True)
+    _draw_expression(g, mood, feat="ink", lashes=True)
     return g
 
 
@@ -323,8 +349,17 @@ def kiwi(mood):
     collar, a kiwi-slice brooch."""
     g = face()
     # the perm: round curls from ear to ear over the crown, each lit white and shaded lgrey
-    for cx, cy in ((7.5, 15.5), (24.5, 15.5), (7.5, 11), (24.5, 11), (9.5, 7), (22.5, 7), (13, 4.5), (19, 4.5),
-                   (16, 4)):
+    for cx, cy in (
+        (7.5, 15.5),
+        (24.5, 15.5),
+        (7.5, 11),
+        (24.5, 11),
+        (9.5, 7),
+        (22.5, 7),
+        (13, 4.5),
+        (19, 4.5),
+        (16, 4),
+    ):
         g.cel(cx, cy, 2.6, 2.6, "white", "lgrey")
     base(g, "brown", "dbrown", "blue", "navy")
     g.rect(6, 28, 2, 3, "sky")
@@ -338,7 +373,7 @@ def kiwi(mood):
     g.cel(16, 8.5, 7.5, 3, "white", "lgrey")
     for cx in (10, 13.5, 17, 20.5, 23):
         g.cel(cx, 10.5, 2, 1.8, "white", "lgrey")
-    expression(g, mood, feat="ink", blush="rust", whites=True)
+    _draw_expression(g, mood, feat="ink", blush="rust", whites=True)
     return g
 
 
@@ -367,7 +402,7 @@ def aunt_judy(mood):
     g.rect(6, 10, 20, 1, "cyan")
     g.rect(10, 10, 6, 1, "white")
     g.rect(8, 11, 16, 1, "sky")
-    expression(g, mood, lashes=True, wide=True)
+    _draw_expression(g, mood, lashes=True, wide=True)
     return g
 
 
@@ -395,7 +430,7 @@ def gadget(mood):
     g.rect(26, 10, 2, 1, "dbrown")
     g.rect(16, 10, 10, 1, "dbrown")
     g.rect(6, 9, 4, 1, "tan")
-    expression(g, mood)
+    _draw_expression(g, mood)
     return g
 
 
@@ -427,7 +462,7 @@ def jason(mood):
     g.p(16, 8, "olive")
     g.rect(4, 11, 20, 1, "ochre")
     g.rect(2, 12, 22, 1, "rust")
-    expression(g, mood)
+    _draw_expression(g, mood)
     return g
 
 
@@ -436,10 +471,12 @@ def jason(mood):
 SMALL = 20
 
 
-def small_expression(g, mood, feat="dbrown", blush="pink", lashes=False, wide=False, brow=None, whites=False,
-                     lips=None):
+def small_expression(
+    g, mood, feat="dbrown", blush="pink", lashes=False, wide=False, brow=None, whites=False, lips=None
+):
     """expression drawn at 20x20 on a Mini's own pixels, one feature per pixel: eyes at x 7 and 12 on rows 10
     and 11, brows on row 9 (raised to 8), the mouth on rows 13 and 14. Lashes are left out at this size."""
+    del lashes  # Shared expression keyword; lashes are omitted at this size.
     p = g.g.p
     brow = brow or feat
     for x, out in ((7, -1), (12, 1)):
@@ -543,8 +580,17 @@ def clare_small_fringe(g):
 def judy_small_ponytail(g):
     """Her high ponytail redrawn wider at 20px, where it scales to a 1px column: three pixels across from the
     crown down past the visor, lit white on the left and shaded grey on the right."""
-    for x, y, c in ((15, 1, "white"), (16, 1, "lgrey"), (14, 2, "white"), (15, 2, "white"), (16, 2, "lgrey"),
-                    (17, 2, "grey"), (15, 3, "white"), (16, 3, "lgrey"), (17, 3, "grey")):
+    for x, y, c in (
+        (15, 1, "white"),
+        (16, 1, "lgrey"),
+        (14, 2, "white"),
+        (15, 2, "white"),
+        (16, 2, "lgrey"),
+        (17, 2, "grey"),
+        (15, 3, "white"),
+        (16, 3, "lgrey"),
+        (17, 3, "grey"),
+    ):
         g.g.p(x, y, c)
     for y in range(4, 9):
         g.g.p(16, y, "lgrey")
@@ -563,28 +609,30 @@ def gadget_small(g):
 
 
 # Fixes drawn after the scaled owner, for shapes that do not survive the scale.
-SMALL_FIXES = {"lady": clare_small_fringe, "penny": gadget_small, "pepe": tara_small_bun,
-               "sequoia": judy_small_ponytail}
+SMALL_FIXES = {
+    "lady": clare_small_fringe,
+    "penny": gadget_small,
+    "pepe": tara_small_bun,
+    "sequoia": judy_small_ponytail,
+}
 
 
 def small(dog, mood):
     """The owner's face at SMALL x SMALL: their drawing's hair, clothes and props scaled by minis.Mini (each
     shape rasterized at the small size, then the small face's own ink line), the expression drawn natively by
     small_expression."""
-    global face, expression
-    big_face, big_expression = face, expression
-    face = lambda: edged(minis.Mini(SMALL / 32), "ink", close=True)  # noqa: E731
-    expression = small_expression
+    token = _SMALL_MODE.set(True)
     try:
         g = OWNERS[dog](mood)
     finally:
-        face, expression = big_face, big_expression
+        _SMALL_MODE.reset(token)
     if dog in SMALL_FIXES:
         SMALL_FIXES[dog](g)
     return g.g
 
 
 # ---------- the walkers' portraits, for the walker picker ----------
+
 
 def casey(mood):
     """Casey, the cap-and-hoodie walker."""
@@ -595,7 +643,7 @@ def casey(mood):
     g.cel(16, 7.5, 9, 4.5, "amber", "orange", "yellow")
     g.rect(7, 10, 18, 2, "orange")
     g.rect(15, 5, 2, 2, "orange")
-    expression(g, mood, nose="skin2")
+    _draw_expression(g, mood, nose="skin2")
     return g
 
 
@@ -618,7 +666,7 @@ def ada(mood):
     g.cel(16, 10, 8.5, 4, "navy", "ink", "dslate")
     g.cel(11.5, 8.5, 2.5, 1.5, "dslate")
     g.cel(22, 7, 2, 1.5, "pink", "mauve")
-    expression(g, mood, blush="pink", wide=True, nose="dbrown")
+    _draw_expression(g, mood, blush="pink", wide=True, nose="dbrown")
     # big, bright eyes with two highlights
     for x in (11, 18):
         g.rect(x, 15, 3, 4, "ink")
@@ -647,7 +695,7 @@ def mr_b(mood):
     g.rect(12, 26, 8, 1, "violet")
     g.rect(11, 27, 1, 1, "violet")
     g.rect(20, 27, 1, 1, "violet")
-    expression(g, mood, feat="cream", blush="rust", brow="ink", whites=True, nose="plum")
+    _draw_expression(g, mood, feat="cream", blush="rust", brow="ink", whites=True, nose="plum")
     return g
 
 
@@ -666,7 +714,7 @@ def trista(mood):
     g.cel(11, 11, 3, 2, "brown", "dbrown", "tan")
     for x, y, h in ((10, 8, 2), (14, 6, 3), (18, 7, 2)):
         g.rect(x, y, 1, h, "amber")
-    expression(g, mood, glasses="dbrown", nose="skin2")
+    _draw_expression(g, mood, glasses="dbrown", nose="skin2")
     return g
 
 

@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Draw the small versions of road sprites that the pseudo-3D road shows at
 each depth step below full size: STEPS, read from shared/depth-steps.json, the
 table the game reads (every 1/16 from 0.9375x down to 0.5x). A plain nearest-
@@ -32,15 +31,16 @@ hand edits to them belong in this file instead. Shared tooling is in pixel.py.
 """
 
 import math
-import os
 import sys
+from importlib import import_module
+from pathlib import Path
 
-sys.path.insert(0, os.path.dirname(__file__))
-import dogs  # noqa: E402
-import obstacles  # noqa: E402
-import road  # noqa: E402
-from pixel import K, Grid, depth_scales, main, raster  # noqa: E402
+sys.path.insert(0, str(Path(__file__).parent))
+import dogs
+import obstacles
+from pixel import Grid, K, depth_scales, main, raster
 
+import road
 
 # (suffix, scale) for every depth step below full size (pixel.depth_scales), the suffix without its @:
 # ("94", 0.9375), ("88", 0.875) and so on.
@@ -292,7 +292,7 @@ def dog_frames(module, draw, s, feet, zoom, poses):
     if dy:
         shifted = []
         for f in frames:
-            clipped = f[len(f) - dy:] if dy > 0 else f[:-dy]
+            clipped = f[len(f) - dy :] if dy > 0 else f[:-dy]
             if any(any(row) for row in clipped):
                 raise ValueError(f"{draw.__name__}: feet alignment would clip a pose at scale {s}")
             blank = [[None] * len(f[0]) for _ in range(abs(dy))]
@@ -375,12 +375,27 @@ def variants(s):
     yield "trash-can", [("idle", [small(obstacles, o, obstacles.trash_can, a).outlined() for a in frames], ms)]
     frames, ms = obstacles.BENCH_IDLE
     yield "bench", [("idle", [small(obstacles, o, obstacles.bench, a).outlined() for a in frames], ms)]
-    yield "skunk", [("idle", [shrunk(p, road.skunk, **q).outlined() for q in road.SKUNK_IDLE], 300),
-                    ("walk", [shrunk(p, road.skunk, **q).outlined() for q in road.SKUNK_WALK], road.PERSON_WALK_MS)]
-    yield "squirrel", [("idle", [squirrel(p, road.squirrel, tail=v).outlined() for v in (0, 1)], 300),
-                       ("run", [squirrel(p, road.squirrel_run, k).outlined() for k in range(4)], 60)]
-    yield "other-dog", [("walk", [shrunk(p, road.corgi, **q).outlined() for q in road.CORGI_WALK], 100),
-                        ("idle", [shrunk(p, road.corgi, **q).outlined() for q in road.CORGI_IDLE], 300)]
+    yield (
+        "skunk",
+        [
+            ("idle", [shrunk(p, road.skunk, **q).outlined() for q in road.SKUNK_IDLE], 300),
+            ("walk", [shrunk(p, road.skunk, **q).outlined() for q in road.SKUNK_WALK], road.PERSON_WALK_MS),
+        ],
+    )
+    yield (
+        "squirrel",
+        [
+            ("idle", [squirrel(p, road.squirrel, tail=v).outlined() for v in (0, 1)], 300),
+            ("run", [squirrel(p, road.squirrel_run, k).outlined() for k in range(4)], 60),
+        ],
+    )
+    yield (
+        "other-dog",
+        [
+            ("walk", [shrunk(p, road.corgi, **q).outlined() for q in road.CORGI_WALK], 100),
+            ("idle", [shrunk(p, road.corgi, **q).outlined() for q in road.CORGI_IDLE], 300),
+        ],
+    )
     yield "lost-wallet", [("idle", [wallet(p, gl).outlined() for gl in (False, True)], 450)]
     yield "skunk-cloud", [("loop", [road.skunk_cloud(i, s).outlined(False) for i in range(4)], 220)]
 
@@ -393,32 +408,44 @@ def sprites():
             yield f"{key}@{suffix}", tags
     for suffix, s in STEPS:
         for name, (draw, _) in dogs.DOGS.items():
-            yield f"dog-{name}@{suffix}", [(tag, dog_frames(dogs, draw, dogs.road_scale(name) * s,
-                                                            math.ceil(dogs.DOG_FEET[name] * side(32, dogs.road_scale(name) * s) / dogs.DOG_SIZE[name]),
-                                                            dogs.DOG_ZOOM.get(name, 1), poses), ms)
-                                           for tag, poses, ms in dogs.road_tags(name)]
+            yield (
+                f"dog-{name}@{suffix}",
+                [
+                    (
+                        tag,
+                        dog_frames(
+                            dogs,
+                            draw,
+                            dogs.road_scale(name) * s,
+                            math.ceil(dogs.DOG_FEET[name] * side(32, dogs.road_scale(name) * s) / dogs.DOG_SIZE[name]),
+                            dogs.DOG_ZOOM.get(name, 1),
+                            poses,
+                        ),
+                        ms,
+                    )
+                    for tag, poses, ms in dogs.road_tags(name)
+                ],
+            )
 
 
 def originals():
     """The full-size sprites this file makes small versions of, by key."""
-    out = {}
-    for module in (road, obstacles, dogs):
-        for key, tags in module.sprites():
-            out[key] = tags
-    return out
+    return {key: tags for module in (road, obstacles, dogs) for key, tags in module.sprites()}
 
 
 def nearest(f, s):
     """What the game's nearest-neighbour scaling shows: each screen pixel samples the source at its centre."""
     h, w = scaled(len(f), s), scaled(len(f[0]), s)
-    return [[f[min(int((y + 0.5) / s), len(f) - 1)][min(int((x + 0.5) / s), len(f[0]) - 1)] for x in range(w)]
-            for y in range(h)]
+    return [
+        [f[min(int((y + 0.5) / s), len(f) - 1)][min(int((x + 0.5) / s), len(f[0]) - 1)] for x in range(w)]
+        for y in range(h)
+    ]
 
 
 def compare(out, grounds=("3a4466", "c0cbdc"), scale=4, gap=4):
     """Per sprite and ground, a line of every frame at 1x, then for each scale the sprite has a
     line of nearest-neighbour beside this file's version."""
-    from PIL import Image
+    image_module = import_module("PIL.Image")
 
     full = originals()
     minis = dict(sprites())
@@ -429,11 +456,15 @@ def compare(out, grounds=("3a4466", "c0cbdc"), scale=4, gap=4):
             lines.append(([frames], ground))
             for suffix, s in STEPS:
                 if f"{key}@{suffix}" in minis:
-                    lines.append(([[nearest(f, s) for f in frames],
-                                   [f for _, fs, _ in minis[f"{key}@{suffix}"] for f in fs]], ground))
+                    lines.append(
+                        (
+                            [[nearest(f, s) for f in frames], [f for _, fs, _ in minis[f"{key}@{suffix}"] for f in fs]],
+                            ground,
+                        )
+                    )
     width = max(sum(sum(len(f[0]) + gap for f in b) + 2 * gap for b in blocks) for blocks, _ in lines)
     height = sum(len(blocks[0][0]) + gap for blocks, _ in lines)
-    img = Image.new("RGB", (width * scale, height * scale), (24, 20, 37))
+    img = image_module.new("RGB", (width * scale, height * scale), (24, 20, 37))
     y0 = 0
     for blocks, ground in lines:
         x0 = 0
@@ -441,7 +472,7 @@ def compare(out, grounds=("3a4466", "c0cbdc"), scale=4, gap=4):
             for f in block:
                 for y, row in enumerate(f):
                     for x, c in enumerate(row):
-                        rgb = tuple(int((c or ground)[k:k + 2], 16) for k in (0, 2, 4))
+                        rgb = tuple(int((c or ground)[k : k + 2], 16) for k in (0, 2, 4))
                         img.paste(rgb, ((x0 + x) * scale, (y0 + y) * scale, (x0 + x + 1) * scale, (y0 + y + 1) * scale))
                 x0 += len(f[0]) + gap
             x0 += 2 * gap

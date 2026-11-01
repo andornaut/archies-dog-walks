@@ -53,21 +53,38 @@ def pluck(wave, vol, low, shape="t", release=0.97, **opts):
     """A note that starts at once and decays through its whole length, as a plucked string or a music-box tine
     does. shape is the sox fade: "t" linear, "h" a half sine that keeps more of the body, "l" logarithmic for a
     ping that dies away fast."""
-    return lambda path, length, note: tone(path, length, wave, note, vol=vol, low=low, attack=0.003, release=release,
-                                           shape=shape, **opts)
+    return lambda path, length, note: tone(
+        path, length, wave, note, vol=vol, low=low, attack=0.003, release=release, shape=shape, **opts
+    )
 
 
 def brush(path, length, _):
-    tone(path, n(0.06), "pinknoise", None, vol=0.3, high=1800, low=4000, attack=0.012, release=0.8, shape="h",
-         tail=length - n(0.06))
+    tone(
+        path,
+        n(0.06),
+        "pinknoise",
+        None,
+        vol=0.3,
+        high=1800,
+        low=4000,
+        attack=0.012,
+        release=0.8,
+        shape="h",
+        tail=length - n(0.06),
+    )
 
 
 def music(tmp, out):
     tine = voice(tmp, "tine", parse(LEAD), pluck("triangle", 0.9, 3500, shape="h", release=0.9), step=STEP)
     shimmer = voice(tmp, "shimmer", octave_up(parse(LEAD)), pluck("triangle", 0.9, 3800, shape="l"), step=STEP)
     guitar = voice(tmp, "guitar", guitar_score(), pluck("square", 0.5, 1400, duty=25), step=STEP)
-    bass = voice(tmp, "bass", parse(BASS), lambda p, length, note: tone(
-        p, length, "triangle", note, vol=0.9, attack=0.01, release=0.6), step=STEP)
+    bass = voice(
+        tmp,
+        "bass",
+        parse(BASS),
+        lambda p, length, note: tone(p, length, "triangle", note, vol=0.9, attack=0.01, release=0.6),
+        step=STEP,
+    )
     brushes = voice(tmp, "brush", brush_score(), brush, step=STEP)
     # The bass and brushes mix with their polarity inverted, so their attacks partly cancel the tine's instead of
     # stacking on them: the lower peak leaves headroom when the loop is levelled to MUSIC_LUFS.
