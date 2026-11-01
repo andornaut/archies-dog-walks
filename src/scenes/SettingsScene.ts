@@ -77,6 +77,7 @@ import {
   type OverlayData,
 } from "./overlay";
 import { currentSettings, setSettings } from "./profileStore";
+import { refuseControl } from "./refuseControl";
 import { SCENE_KEYS, type SceneKey } from "./sceneKeys";
 import { soundboardOf } from "./soundboard";
 import { listenTargetPress, sameByValue } from "./targetPress";
@@ -234,6 +235,7 @@ export interface SettingsData extends OverlayData {
 // the close control; Enter or Space presses the focused row, and on a slider the left and right
 // keys, Home and End set the volume.
 export class SettingsScene extends Scene {
+  private sliderLabels = new Map<VolumeKey, GameObjects.BitmapText[]>();
   private dim: Rect = SCREEN_LAYOUT.screen;
   // The ramp dim's objects, kept as the card redraws over them.
   private dimmed: readonly GameObjects.GameObject[] = [];
@@ -291,6 +293,9 @@ export class SettingsScene extends Scene {
           this.slideTo(pointer.x);
           // The knob shows pressed while held.
           this.render();
+        }
+        if (this.steps === undefined && row?.kind === "slider" && currentSettings(this).muted) {
+          this.refuseSlider(row.key);
         }
         addTapBurst(this, pointer.x, pointer.y);
       },
@@ -352,6 +357,9 @@ export class SettingsScene extends Scene {
       const current = volumeSteps(settings[focusedRow.key]);
       const steps = volumeStepForKey(key, current);
       if (steps !== undefined) {
+        if (settings.muted) {
+          this.refuseSlider(focusedRow.key);
+        }
         if (!settings.muted && steps !== current) {
           this.change(setVolumeSteps(focusedRow.key, steps, settings));
           // A sample at the new level, as after a drag.
@@ -520,6 +528,7 @@ export class SettingsScene extends Scene {
   }
 
   private render(): void {
+    this.sliderLabels.clear();
     clearScene(this, this.dimmed);
     const settings = currentSettings(this);
     const { close, panel } = this.layout;
@@ -642,6 +651,19 @@ export class SettingsScene extends Scene {
     tile.content.add(g);
   }
 
+  private refuseSlider(key: VolumeKey): void {
+    const labels = this.sliderLabels.get(key);
+    if (labels === undefined) {
+      return;
+    }
+    this.sliderLabels.delete(key);
+    refuseControl(this, currentSettings(this).reducedMotion, labels, labels, () => {
+      if (labels.every((label) => label.active)) {
+        this.sliderLabels.set(key, labels);
+      }
+    });
+  }
+
   // A volume slider: drag along the row to set it. Muted, it is disabled and reads "Muted".
   private drawSlider(row: Extract<Row, { kind: "slider" }>, settings: Settings): void {
     const { key } = row;
@@ -653,8 +675,8 @@ export class SettingsScene extends Scene {
     addTagImage(this, row.icon, active && steps > 0 ? "on" : "off", x + ICON.dx, y + ICON.dy);
     const words = gameData.menuText.settings;
     const label = { colour: ink, font: "title", scale: TEXT_SCALE } as const;
-    addPixelText(this, x + LABEL.dx, y + LABEL.dy, words[row.label], label);
-    addPixelText(
+    const title = addPixelText(this, x + LABEL.dx, y + LABEL.dy, words[row.label], label);
+    const value = addPixelText(
       this,
       slider.x + slider.width,
       y + LABEL.dy,
@@ -665,6 +687,7 @@ export class SettingsScene extends Scene {
         : words.muted,
       { ...label, originX: 1 },
     );
+    this.sliderLabels.set(key, [title, value]);
     const track: Rect = {
       height: slider.height,
       width: slider.width,

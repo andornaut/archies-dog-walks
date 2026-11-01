@@ -21,7 +21,7 @@ import { listenOnePress } from "./onePress";
 import { closeOverlay, listenDismiss, type OverlayData } from "./overlay";
 import { updateProfile } from "./profileStore";
 import { SCENE_KEYS, type SceneKey } from "./sceneKeys";
-import { addCloseButton, addMenuButton, addTapBurst, clearScene } from "./uiKit";
+import { addCloseButton, addMenuButton, addTapBurst, clearScene, type MenuButton } from "./uiKit";
 
 // Emitted on game.events when the help closes, by any route.
 export const HELP_CLOSED_EVENT = "help-closed";
@@ -50,6 +50,7 @@ function pressedBy(action: HelpAction | undefined): Pressed | undefined {
 // menu over the walk, and before its picture's scenes, which draw over it. The caller pauses
 // itself and launches it (openHelp); on close, help resumes that scene.
 export class HelpScene extends Scene {
+  private previousButton: MenuButton | undefined;
   private page = 0;
   // The page whose picture shows.
   private picturePage: number | undefined;
@@ -108,6 +109,10 @@ export class HelpScene extends Scene {
   }
 
   private act(action: HelpAction): void {
+    if (action.kind === "previous" && this.page === 0) {
+      this.previousButton?.refuse();
+      return;
+    }
     const outcome = applyHelpAction(gameData.help.length, action, this.page);
     if (outcome.kind === "close") {
       this.close();
@@ -177,9 +182,8 @@ export class HelpScene extends Scene {
     // Next is the call to action; Previous is disabled on the first page.
     const { next, previousEnabled } = helpButtons(pages.length, this.page);
     const previous = { available: previousEnabled, primary: false };
-    addMenuButton(this, layout.previous, words.previous, previous).setPressed(
-      this.pressed === "previous",
-    );
+    this.previousButton = addMenuButton(this, layout.previous, words.previous, previous);
+    this.previousButton.setPressed(this.pressed === "previous");
     addMenuButton(this, layout.next, words[next], { available: true, primary: true }).setPressed(
       this.pressed === "next",
     );

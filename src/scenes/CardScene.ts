@@ -62,6 +62,7 @@ import { addCardCharm } from "./buffCharm";
 import { addNamePills } from "./effectNameColours";
 import { onSceneEvent } from "./overlay";
 import { currentSettings } from "./profileStore";
+import { refuseControl } from "./refuseControl";
 import { SCENE_KEYS } from "./sceneKeys";
 import { type ScenePicture, showAsPicture } from "./scenePicture";
 import { guardScreenInput } from "./screenGuard";
@@ -87,8 +88,6 @@ const EFFECT = CARD_LAYOUT.effect;
 const BADGE: Rect = CARD_LAYOUT.badge;
 const SELECTED_OUTLINE = 2;
 const COST_KEY = "card-cost";
-// A refused pick shakes its card and flashes its cost.
-const REFUSE = { flashMs: 80, flashes: 4, shake: 3, shakeMs: 40 };
 // Holding a card enlarges it, with the changes behind its numbers, however far the finger moves.
 const CARD_SLOP_PX = Number.POSITIVE_INFINITY;
 const LARGE = { ...CARD_LAYOUT.large, key: "card-frame-large" };
@@ -326,36 +325,23 @@ export class CardScene extends Scene {
   }
 
   // An option the player cannot afford shakes its card, unless motion is reduced, and
-  // flashes its cost red, ending in the grey plate's text it was drawn in, so the player knows
-  // to pick another.
+  // emphasises its cost red, restoring its original text colour. Reduced motion holds the
+  // emphasis steadily instead of shaking or flashing.
   private refuse(index: number): void {
     if (this.refusing) {
       return;
     }
     this.refusing = true;
-    const parts = this.parts[index] ?? [];
-    if (!currentSettings(this).reducedMotion) {
-      this.tweens.add({
-        duration: REFUSE.shakeMs,
-        repeat: 3,
-        targets: parts,
-        x: `+=${REFUSE.shake}`,
-        yoyo: true,
-      });
-    }
     const label = this.plaqueLabels[index];
-    let flashes = 0;
-    this.time.addEvent({
-      callback: () => {
-        flashes += 1;
-        label?.setTint(flashes % 2 === 1 ? PALETTE.red : PALETTE[GREYED.plateText]);
-        if (flashes >= REFUSE.flashes) {
-          this.refusing = false;
-        }
+    refuseControl(
+      this,
+      currentSettings(this).reducedMotion,
+      this.parts[index] ?? [],
+      label === undefined ? [] : [label],
+      () => {
+        this.refusing = false;
       },
-      delay: REFUSE.flashMs,
-      repeat: REFUSE.flashes - 1,
-    });
+    );
   }
 
   // The card at twice the size over the road, its illustration at 2x and, in its body, every

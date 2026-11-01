@@ -199,6 +199,7 @@ import {
   updateProfile,
   walkerSpriteKey,
 } from "./profileStore";
+import { emphasiseRefusedControl } from "./refuseControl";
 import { nextRunStart } from "./run/runRecorder";
 import { type RunPick, runSceneData } from "./run/runStart";
 import { SCENE_KEYS } from "./sceneKeys";
@@ -963,6 +964,13 @@ export class StartScene extends Scene {
     }
   }
 
+  private emphasiseRefusal(id: string): void {
+    const view = this.views.get(id);
+    if (view !== undefined) {
+      emphasiseRefusedControl(this, currentSettings(this).reducedMotion, view.container);
+    }
+  }
+
   private act(target: Target): void {
     const id = targetId(target);
     const now = this.time.now;
@@ -986,6 +994,7 @@ export class StartScene extends Scene {
             text: gameData.homeText.noticePackFull,
           };
           this.render();
+          this.emphasiseRefusal(id);
         } else {
           this.setLoadout(tap.loadout);
         }
@@ -1008,6 +1017,7 @@ export class StartScene extends Scene {
           this.shakes.set(id, now);
           this.action = { kind: "notice", text: tap.text };
           this.render();
+          this.emphasiseRefusal(id);
           return;
         }
         const walker = tap.kind === "pick" ? tap.walker : null;
@@ -1091,6 +1101,13 @@ export class StartScene extends Scene {
     const { walker } = save;
     if (dogs === undefined || walker === null || !startReady(this.sections(save))) {
       this.shakes.set("start", this.time.now);
+      if (this.startButton !== undefined) {
+        emphasiseRefusedControl(
+          this,
+          currentSettings(this).reducedMotion,
+          this.startButton.container,
+        );
+      }
       return;
     }
     if (!artReady(this)) {

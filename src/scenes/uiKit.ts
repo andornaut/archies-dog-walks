@@ -42,6 +42,8 @@ import {
   selectLook,
 } from "../ui/selection";
 import { TEXT_SCALE } from "../ui/textFit";
+import { currentSettings } from "./profileStore";
+import { refuseControl } from "./refuseControl";
 import { TAP_BURST_SCENE_KEY } from "./sceneKeys";
 import { addSelectionOrbit } from "./selectionOrbit";
 import { playEffect, playTag } from "./sprites";
@@ -229,7 +231,9 @@ function drawButtonChrome(
 }
 
 export interface MenuButton {
+  readonly available: boolean;
   readonly rect: Rect;
+  refuse(): void;
   setPressed(pressed: boolean): void;
 }
 
@@ -316,8 +320,25 @@ export function addMenuButton(
       : keyedLabels(scene, centreX, input.keyNumber, label, style);
   parent?.add([...faces, ...labels]);
   const centreY = rect.y + (rect.height - BUTTON_LIP_PX) / 2;
+  let refusing = false;
   const button: MenuButton = {
+    available: !disabled,
     rect,
+    refuse() {
+      if (!disabled || refusing) {
+        return;
+      }
+      refusing = true;
+      refuseControl(
+        scene,
+        currentSettings(scene).reducedMotion,
+        [...faces, ...labels],
+        labels,
+        () => {
+          refusing = false;
+        },
+      );
+    },
     setPressed(pressed) {
       const [up, down] = faces;
       if (down !== undefined) {
@@ -344,7 +365,13 @@ export function listenButtonTap(scene: Scene, button: MenuButton, onTap: () => v
   listenTargetPress<MenuButton>(scene, {
     onDown: (pointer) => addTapBurst(scene, pointer.x, pointer.y),
     onPressed: (target) => button.setPressed(target !== undefined),
-    onTap,
+    onTap: () => {
+      if (button.available) {
+        onTap();
+      } else {
+        button.refuse();
+      }
+    },
     targetAt: (x, y) => (containsPoint(button.rect, x, y) ? button : undefined),
   });
 }
