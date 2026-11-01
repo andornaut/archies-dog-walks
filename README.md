@@ -5,11 +5,11 @@
 
 Archie's Dog Walks is a cozy pixel-art lane runner where you walk a pack of dogs through the neighbourhood, and every bump in the road counts: a plain bump costs an owner's heart, and a card obstacle turns into a choice. Built with [Phaser](https://phaser.io/) and TypeScript, and served as static files from [Cloudflare Workers](https://developers.cloudflare.com/workers/static-assets/).
 
-Play it at <https://dogwalker.tristamittermayer.com/play/>. The site also has the game data tables at [`/data/`](https://dogwalker.tristamittermayer.com/data/) and the art gallery at [`/art/`](https://dogwalker.tristamittermayer.com/art/).
+The deployment target is <https://archie.tristamittermayer.com/play/>, with game data tables at [`/data/`](https://archie.tristamittermayer.com/data/) and the art gallery at [`/art/`](https://archie.tristamittermayer.com/art/). The custom domain is configured in [`wrangler.jsonc`](wrangler.jsonc).
 
 ## Docs
 
-Each folder's README is its plan, with what's left for the first build:
+The folder READMEs describe the current design and implementation:
 
 - [art/](art/README.md): art rules, assets and pipeline
 - [gameplay/](gameplay/README.md): the game design, tuning and playtesting
@@ -17,7 +17,7 @@ Each folder's README is its plan, with what's left for the first build:
 
 ## Developing
 
-Requires Node 24 (`.nvmrc`). Run `npm install`, then:
+Use Node 24.21.0 (`.nvmrc`). Run `npm ci`, then:
 
 | Command                                     | Does                                                                       |
 | ------------------------------------------- | -------------------------------------------------------------------------- |
@@ -44,7 +44,7 @@ CI runs check, lint, test and build, and the AI attributions scan.
 
 - [Cloudflare dashboard](https://dash.cloudflare.com/?to=/:account/workers/services/view/dog-walker-game)
 
-Deployments run through a scheduled local bus at :00, :20 and :40 each hour, in Toronto time. Each departure combines ready work into one batch, installs its locked dependencies and runs type checking, lint, tests and the build in isolated containers, capped at four CPUs and four test workers. A batch starts only while the 1-minute host load is below 24. Full validation runs at departure, not separately for each branch.
+Deployments run through a scheduled local bus hourly at :00, in Toronto time. Each departure combines ready work into one batch, installs its locked dependencies and runs type checking, lint, tests and the build in isolated containers, capped at four CPUs and four test workers. A batch starts only while the 1-minute host load is below 24. Full validation runs at departure, not separately for each branch.
 
 With `DEPLOY_MODE=wrangler`, the bus supplies the exact commit as `WORKERS_CI_COMMIT_SHA` for the build label, pushes the gated batch to `main` using the regular account's Git authentication, and deploys the same built `dist/` through the project's installed Wrangler and existing account login. It does not rebuild for deployment. GitHub CI starts from that push and the bus monitors its checks in the background. Automatic Cloudflare Workers Builds deployment is disconnected; deployments are not run manually. Delivery is complete when GitHub CI and any required deployment have succeeded for the pushed commit.
 
