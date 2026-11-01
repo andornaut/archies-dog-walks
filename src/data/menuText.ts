@@ -71,6 +71,7 @@ export const MENU_TEXT = {
     volume: "{percent}%",
   },
   stats: {
+    badgeDifficulty: { easy: "Easy", hard: "Hard", medium: "Medium" },
     badgeEarned: "Earned",
     badgeLine: '"{line}"',
     badgeLocked: "Locked",

@@ -1,11 +1,12 @@
 import type { Achievement } from "./types";
 
-// The badge wall, in the order the Logbook shows it: firsts, mastery, collection, silly.
+// Badges display by difficulty, retaining this order within each tier.
 // Each is earned once every condition holds; the wall shows the goal under a locked badge.
 export const ACHIEVEMENTS = [
   {
     badgeLine: "Home before the streetlights.",
     conditions: [{ count: "all", kind: "zonesFinished" }],
+    difficulty: "easy",
     goal: "Finish all 4 neighbourhoods of a walk",
     id: "roundTrip",
     name: "Round Trip",
@@ -17,6 +18,7 @@ export const ACHIEVEMENTS = [
       { count: 2, kind: "packSize" },
       { count: "all", kind: "zonesFinished" },
     ],
+    difficulty: "easy",
     goal: "Finish a walk with 2 dogs",
     id: "doubleLeash",
     name: "Double Trouble",
@@ -27,6 +29,7 @@ export const ACHIEVEMENTS = [
       { count: 3, kind: "packSize" },
       { count: "all", kind: "zonesFinished" },
     ],
+    difficulty: "medium",
     goal: "Finish a walk with 3 dogs",
     id: "packLeader",
     name: "Pack Leader",
@@ -34,6 +37,7 @@ export const ACHIEVEMENTS = [
   {
     badgeLine: "Not a speck on them.",
     conditions: [{ count: 1, kind: "cleanZones" }],
+    difficulty: "easy",
     goal: "Finish a neighbourhood without a bump",
     id: "cleanPaws",
     name: "Clean Paws",
@@ -42,6 +46,7 @@ export const ACHIEVEMENTS = [
   {
     badgeLine: "Spotless, start to finish.",
     conditions: [{ count: 4, kind: "cleanZones" }],
+    difficulty: "hard",
     goal: "Finish all 4 neighbourhoods of a walk without a bump",
     id: "notAScratch",
     name: "Not a Scratch",
@@ -50,6 +55,7 @@ export const ACHIEVEMENTS = [
   {
     badgeLine: "Nobody left behind.",
     conditions: [{ kind: "fullPackBonus", packSize: 3 }],
+    difficulty: "medium",
     goal: "Earn the Walk bonus with 3 dogs",
     id: "everybodyHome",
     name: "Everybody Home",
@@ -58,6 +64,7 @@ export const ACHIEVEMENTS = [
   {
     badgeLine: "Not today, bench.",
     conditions: [{ count: 50, kind: "tally", tally: "dodges" }],
+    difficulty: "medium",
     goal: "Dodge 50 bumps",
     id: "dodgeBall",
     name: "Dodge Ball",
@@ -66,6 +73,7 @@ export const ACHIEVEMENTS = [
   {
     badgeLine: "The reviews are in.",
     conditions: [{ count: 10, kind: "noFiringStreak" }],
+    difficulty: "hard",
     goal: "Finish 10 walks in a row with nobody fired",
     id: "fiveStarService",
     name: "Five-Star Service",
@@ -74,6 +82,7 @@ export const ACHIEVEMENTS = [
   {
     badgeLine: "Rent's covered this month.",
     conditions: [{ dollars: 400, kind: "earnings" }],
+    difficulty: "medium",
     goal: "Earn $400 in one walk",
     id: "payday",
     name: "Payday",
@@ -81,6 +90,7 @@ export const ACHIEVEMENTS = [
   {
     badgeLine: "Treats are on you.",
     conditions: [{ dollars: 500, kind: "earnings" }],
+    difficulty: "hard",
     goal: "Earn $500 in one walk",
     id: "bigPayday",
     name: "Big Payday",
@@ -88,6 +98,7 @@ export const ACHIEVEMENTS = [
   {
     badgeLine: "Retire the leash? Never.",
     conditions: [{ dollars: 20_000, kind: "lifetimeEarnings" }],
+    difficulty: "hard",
     goal: "Earn $20,000",
     id: "twentyGrand",
     name: "Twenty Grand",
@@ -96,6 +107,7 @@ export const ACHIEVEMENTS = [
   {
     badgeLine: "Every coin counts.",
     conditions: [{ count: 1000, kind: "tally", tally: "tips" }],
+    difficulty: "medium",
     goal: "Grab 1,000 tips",
     id: "tipJar",
     name: "Tip Jar",
@@ -104,6 +116,7 @@ export const ACHIEVEMENTS = [
   {
     badgeLine: "Your shoes have stories.",
     conditions: [{ count: 100, kind: "walksPlayed" }],
+    difficulty: "hard",
     goal: "Play 100 walks",
     id: "marathon",
     name: "Marathon",
@@ -111,6 +124,7 @@ export const ACHIEVEMENTS = [
   {
     badgeLine: "They named a street after you.",
     conditions: [{ count: 1000, kind: "walksFinished" }],
+    difficulty: "hard",
     goal: "Finish 1,000 walks",
     id: "legendOfTheLeash",
     name: "Legend of the Leash",
@@ -118,6 +132,7 @@ export const ACHIEVEMENTS = [
   {
     badgeLine: "Every leash is spoken for.",
     conditions: [{ count: "all", kind: "dogsOwned" }],
+    difficulty: "hard",
     goal: "Own all 9 dogs",
     id: "fullKennel",
     name: "Full Kennel",
@@ -125,6 +140,7 @@ export const ACHIEVEMENTS = [
   {
     badgeLine: "A pocket for everything. Well, one thing.",
     conditions: [{ count: "all", kind: "gearOwned" }],
+    difficulty: "hard",
     goal: "Own every gear item",
     id: "kittedOut",
     name: "Kitted Out",
@@ -132,6 +148,7 @@ export const ACHIEVEMENTS = [
   {
     badgeLine: "Everyone's met you now.",
     conditions: [{ count: "all", kind: "dogsFinishedWith" }],
+    difficulty: "hard",
     goal: "Finish a walk with each of the 9 dogs",
     id: "localFavourite",
     name: "Local Favourite",
@@ -140,6 +157,7 @@ export const ACHIEVEMENTS = [
   {
     badgeLine: "Every block, every bark.",
     conditions: [{ count: "all", kind: "zonesEverFinished" }],
+    difficulty: "easy",
     goal: "Finish every neighbourhood of Toronto",
     id: "wholeCity",
     name: "Whole City",
@@ -148,6 +166,7 @@ export const ACHIEVEMENTS = [
   {
     badgeLine: "Everyone gets a turn.",
     conditions: [{ count: "all", kind: "walkersFinishedWith" }],
+    difficulty: "medium",
     goal: "Finish a walk with each of the four walkers",
     id: "tagTeam",
     name: "Tag Team",
@@ -156,6 +175,7 @@ export const ACHIEVEMENTS = [
   {
     badgeLine: "They always come back.",
     conditions: [{ count: 10, kind: "timesFired" }],
+    difficulty: "easy",
     goal: "Get fired 10 times",
     id: "youreFired",
     name: "You're Fired!",
@@ -163,6 +183,7 @@ export const ACHIEVEMENTS = [
   {
     badgeLine: "Every owner has a story about you.",
     conditions: [{ count: "all", kind: "firedByOwners" }],
+    difficulty: "hard",
     goal: "Get fired by every owner",
     id: "burnedBridges",
     name: "Burned Bridges",
@@ -170,6 +191,7 @@ export const ACHIEVEMENTS = [
   {
     badgeLine: "Phew. Nobody saw that.",
     conditions: [{ kind: "finishOnLastHeart" }],
+    difficulty: "easy",
     goal: "Finish a walk with an owner on 1♥",
     id: "closeShave",
     name: "Close Shave",
@@ -178,6 +200,7 @@ export const ACHIEVEMENTS = [
   {
     badgeLine: "You can smell this badge.",
     conditions: [{ count: 5, debuff: "stinky", kind: "debuffsGot" }],
+    difficulty: "medium",
     goal: "Get Stinky 5 times in one walk",
     id: "eauDeSkunk",
     name: "Eau de Skunk",
@@ -185,6 +208,7 @@ export const ACHIEVEMENTS = [
   {
     badgeLine: "Wipe your paws, please.",
     conditions: [{ count: 5, debuff: "muddy", kind: "debuffsGot" }],
+    difficulty: "easy",
     goal: "Get Muddy 5 times in one walk",
     id: "mudSeason",
     name: "Mud Season",
@@ -192,6 +216,7 @@ export const ACHIEVEMENTS = [
   {
     badgeLine: "Zero to sixty, every time.",
     conditions: [{ count: 5, debuff: "zoomies", kind: "debuffsGot" }],
+    difficulty: "medium",
     goal: "Get Zoomies 5 times in one walk",
     id: "zoomies",
     name: "Zoomies!",
@@ -200,6 +225,7 @@ export const ACHIEVEMENTS = [
   {
     badgeLine: "No photos, please. Fine, one more.",
     conditions: [{ count: 3, debuff: "spotlight", kind: "debuffsGot" }],
+    difficulty: "medium",
     goal: "Get Spotlight 3 times in one walk",
     id: "paparazzi",
     name: "Paparazzi",
@@ -208,6 +234,7 @@ export const ACHIEVEMENTS = [
   {
     badgeLine: "So close. Every time.",
     conditions: [{ count: 50, kind: "tally", tally: "squirrelPulls" }],
+    difficulty: "medium",
     goal: "Get pulled toward 50 squirrels",
     id: "squirrel",
     name: "Squirrel!",
@@ -216,6 +243,7 @@ export const ACHIEVEMENTS = [
   {
     badgeLine: "They had a getaway scooter.",
     conditions: [{ count: 10, encounter: "thief", kind: "optionPicks", option: "letGo" }],
+    difficulty: "medium",
     goal: "Let 10 thieves get away",
     id: "yoink",
     name: "Yoink!",
@@ -224,6 +252,7 @@ export const ACHIEVEMENTS = [
   {
     badgeLine: "Hello. Hello. Hello.",
     conditions: [{ count: 5, encounter: "otherDog", kind: "optionPicks", option: "sniff" }],
+    difficulty: "easy",
     goal: "Let the pack sniff 5 dogs",
     id: "sniffTest",
     name: "Sniff Test",
@@ -234,6 +263,7 @@ export const ACHIEVEMENTS = [
     conditions: [
       { count: 10, encounter: "weddingPhotoShoot", kind: "optionPicks", option: "pose" },
     ],
+    difficulty: "hard",
     goal: "Pose for 10 wedding photos",
     id: "sayCheese",
     name: "Say Cheese",
@@ -242,6 +272,7 @@ export const ACHIEVEMENTS = [
   {
     badgeLine: "Sprinkles on every whisker.",
     conditions: [{ count: 10, encounter: "droppedIceCream", kind: "optionPicks", option: "lick" }],
+    difficulty: "medium",
     goal: "Let them lick 10 dropped cones",
     id: "sugarRush",
     name: "Sugar Rush",
@@ -250,6 +281,7 @@ export const ACHIEVEMENTS = [
   {
     badgeLine: "Kensington thanks you.",
     conditions: [{ count: 10, encounter: "greenBinSpill", kind: "optionPicks", option: "pay" }],
+    difficulty: "medium",
     goal: "Pay for cleanup 10 times",
     id: "cleanStreets",
     name: "Clean Streets",
@@ -258,6 +290,7 @@ export const ACHIEVEMENTS = [
   {
     badgeLine: "The porch cats have you on retainer.",
     conditions: [{ count: 10, encounter: "porchCat", kind: "optionPicks", option: "treat" }],
+    difficulty: "medium",
     goal: "Bribe 10 porch cats with treats",
     id: "catWhisperer",
     name: "Cat Whisperer",
@@ -266,6 +299,7 @@ export const ACHIEVEMENTS = [
   {
     badgeLine: "Ten feet tall on every screen.",
     conditions: [{ count: 10, encounter: "bigScreenPromo", kind: "optionPicks", option: "wave" }],
+    difficulty: "medium",
     goal: "Wave hello to the big screen 10 times",
     id: "bigScreen",
     name: "Big Screen",
@@ -274,6 +308,7 @@ export const ACHIEVEMENTS = [
   {
     badgeLine: "Crumbs everywhere.",
     conditions: [{ count: 100, kind: "tally", tally: "treats" }],
+    difficulty: "medium",
     goal: "Grab 100 treats",
     id: "snackAttack",
     name: "Snack Attack",
@@ -282,6 +317,7 @@ export const ACHIEVEMENTS = [
   {
     badgeLine: "The pigeons have a group chat about you.",
     conditions: [{ count: 20, kind: "bumps", kinds: ["ducklings", "goose", "hen", "pigeons"] }],
+    difficulty: "easy",
     goal: "Bump 20 birds",
     id: "birdBrain",
     name: "Bird Brain",
@@ -319,6 +355,7 @@ export const ACHIEVEMENTS = [
         ],
       },
     ],
+    difficulty: "easy",
     goal: "Bump 20 vehicles",
     id: "fenderBender",
     name: "Fender Bender",
@@ -327,6 +364,7 @@ export const ACHIEVEMENTS = [
   {
     badgeLine: "Masked bandits, all of them.",
     conditions: [{ count: 10, kind: "bumps", kinds: ["raccoon"] }],
+    difficulty: "medium",
     goal: "Bump 10 raccoons",
     id: "trashPanda",
     name: "Trash Panda",
@@ -335,6 +373,7 @@ export const ACHIEVEMENTS = [
   {
     badgeLine: "Finders keepers, mostly.",
     conditions: [{ count: 5, kind: "tally", tally: "walletsFound" }],
+    difficulty: "easy",
     goal: "Find 5 lost wallets",
     id: "findersKeepers",
     name: "Finders Keepers",
@@ -343,6 +382,7 @@ export const ACHIEVEMENTS = [
   {
     badgeLine: "The whole block knows their names.",
     conditions: [{ count: 5, kind: "tally", tally: "neighboursMet" }],
+    difficulty: "easy",
     goal: "Meet 5 friendly neighbours",
     id: "popularPack",
     name: "Popular Pack",
