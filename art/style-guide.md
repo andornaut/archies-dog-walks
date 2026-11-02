@@ -50,7 +50,9 @@ Every piece is very readable, clean and not busy, judged at the size it's shown:
 
 ## Palette and outlines
 
-- Picker UI adds six UI-only colours (`PICKER_UI` in `pixel.py`), leaving the house palette order and ramps fixed. The neutral Walker, Dogs and Pocket headers share OKLCH lightness 0.55 and chroma 0.105 at hues 230°, 290° and 350° before nearest-byte sRGB rounding. Each body is `encode_sRGB(0.5 × decode_sRGB(header))`, rounded to the nearest byte. Header tokens darken to their matching bodies; bodies darken to ink.
+- Neutral picker UI uses six UI-only colours (`PICKER_UI` in `pixel.py`), leaving the house palette order and ramps fixed. The neutral Walker, Dogs and Pocket headers share OKLCH lightness 0.55 and chroma 0.105 at hues 230°, 290° and 350° before nearest-byte sRGB rounding. Each body is `encode_sRGB(0.5 × decode_sRGB(header))`, rounded to the nearest byte. Header tokens darken to their matching bodies; bodies darken to ink.
+
+- **Approved paired target:** a picker section with an actual selection uses the amber header (`#feae34`) and `pickerSelectedBody` (`#bb7f23`), derived as `encode_sRGB(0.5 × decode_sRGB(amber))` with nearest-byte rounding. Unselected sections retain their matched blue, violet or pink header/body pair; an empty optional Pocket remains pink, while a selected Pocket uses amber. Preserve full-size text, card colours, gold selection states, check badges, asset keys, geometry and hit targets.
 
 - A 64-colour house palette, each pixel opaque or fully transparent: [Endesga 32](https://lospec.com/palette-list/endesga-32) and the 32 Toronto colours (`TORONTO` in `art/tools/pixel.py`; `PALETTE64` is both). Colour names are the `K` names in `pixel.py`. Each Toronto ramp ends on an Endesga colour (`DARKER`):
 
