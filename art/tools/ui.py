@@ -11,9 +11,10 @@ green plus badge, as the shop's item-<gear> art, outlined with icon_edge); ui-pa
 nine-slice, 4px corners), ui-hint (24x24 nine-slice, 8px corners), ui-hint-tail
 (8x6), ui-new-best (72x20 ribbon, text baked in with font-title); the start screen's ui-detail-card
 (24x24 nine-slice, 8px corners) and ui-detail-well (68x68); the shop list's ui-scroll-track (8x24) and
-ui-scroll-thumb (6x24, three-slices with 3px caps); the walker section's ui-cork (32x32 solid brown tile), the dogs
+ui-scroll-thumb (6x24, three-slices with 3px caps); the walker section's ui-cork
+(32x32 solid deep-lake tile), the dogs
 section's ui-plaid
-(16x16 solid plum tile), the Pocket section's ui-denim (16x16 solid blue tile), ui-stitch-h
+(16x16 solid navy tile), the Pocket section's ui-denim (16x16 solid purple tile), ui-stitch-h
 (8x2) and ui-stitch-v (2x8, seamless stitch runs), all repeated with TileSprite; the card rows'
 ui-strip-well (24x24 nine-slice, the band behind a card row's subtitle), ui-quip (24x24 nine-slice,
 8px corners), ui-quip-tail (6x8), ui-quip-tail-down and ui-quip-tail-up (8x6), ui-celebrate-burst (148x132, the
@@ -1187,9 +1188,9 @@ STITCH_DASH, STITCH_GAP = 5, 3
 
 
 def denim():
-    """16x16 solid blue tile under the Pocket's cards."""
+    """16x16 solid purple tile, a darker mauve, under the Pocket's cards."""
     g = Grid(FABRIC, FABRIC)
-    g.rect(0, 0, FABRIC, FABRIC, "blue")
+    g.rect(0, 0, FABRIC, FABRIC, "purple")
     return g
 
 
@@ -1198,16 +1199,16 @@ CORK = 32
 
 
 def cork():
-    """32x32 solid brown tile under the walker cards."""
+    """32x32 solid deep-lake tile under the lake walker header."""
     g = Grid(CORK, CORK)
-    g.rect(0, 0, CORK, CORK, "brown")
+    g.rect(0, 0, CORK, CORK, "dlake")
     return g
 
 
 def plaid():
-    """16x16 solid plum tile under the dog cards."""
+    """16x16 solid navy tile, a darker violet, under the dog cards."""
     g = Grid(FABRIC, FABRIC)
-    g.rect(0, 0, FABRIC, FABRIC, "plum")
+    g.rect(0, 0, FABRIC, FABRIC, "navy")
     return g
 
 
