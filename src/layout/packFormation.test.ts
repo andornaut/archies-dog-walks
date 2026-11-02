@@ -1,5 +1,6 @@
 import { readFileSync } from "node:fs";
 
+import { decodePng } from "@andornaut/art-kit/png";
 import { itemAt } from "@andornaut/game-kit/arrays";
 import { keysOf } from "@andornaut/game-kit/records";
 import { describe, expect, it } from "vitest";
@@ -10,7 +11,6 @@ import { LANE_COUNT, ROAD_CAMERA, SCREEN_LAYOUT } from "../data/screen";
 import type { DogId, Size, WalkerId } from "../data/types";
 import { walkProjection } from "../runner/walkGeometry";
 import { spriteSource } from "../tools/atlas/atlasLayout";
-import { decodePng } from "../tools/atlas/shared/png.ts";
 import { laneCentreXs } from "./lanes";
 import {
   COLLAR_HEIGHTS,

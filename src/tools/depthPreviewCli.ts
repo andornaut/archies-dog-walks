@@ -7,8 +7,9 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 
+import { decodePng } from "@andornaut/art-kit/png";
+import { blankImage, type RgbaImage } from "@andornaut/art-kit/rgbaImage";
 import { itemAt } from "@andornaut/game-kit/arrays";
-import { blankImage, type RgbaImage } from "@andornaut/game-kit/art/rgbaImage";
 
 import type { AssetManifest } from "../assets/manifest";
 import { backdropKey, depthVariantKey, roadTileKey } from "../assets/spriteKeys";
@@ -31,7 +32,6 @@ import { GLYPH_HEIGHT } from "../ui/pixelFont";
 import { ART_DIR, ART_MANIFEST, generateArtManifest, measureAnchor } from "./artManifest";
 import { encodePng } from "./atlas/atlasBuild";
 import { spriteSource } from "./atlas/atlasLayout";
-import { decodePng } from "./atlas/shared/png.ts";
 import {
   cloneImage,
   crop,

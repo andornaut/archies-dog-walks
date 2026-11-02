@@ -1,7 +1,7 @@
 import { createRequire } from "node:module";
 import { dirname, join } from "node:path";
 
-import type { RgbaImage } from "@andornaut/game-kit/art/rgbaImage";
+import type { RgbaImage } from "@andornaut/art-kit/rgbaImage";
 import { keysOf } from "@andornaut/game-kit/records";
 import type { Scene, Textures } from "phaser";
 import { describe, expect, it } from "vitest";

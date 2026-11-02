@@ -1,4 +1,4 @@
-import { blankImage, type RgbaImage } from "@andornaut/game-kit/art/rgbaImage";
+import { blankImage, type RgbaImage } from "@andornaut/art-kit/rgbaImage";
 import type { Rect } from "@andornaut/game-kit/rect";
 
 import { type DepthArt, type DepthDraw, depthDraw } from "../layout/depthScale";

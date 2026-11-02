@@ -1,5 +1,6 @@
 import { readFileSync } from "node:fs";
 
+import { decodePng } from "@andornaut/art-kit/png";
 import { itemAt } from "@andornaut/game-kit/arrays";
 import { keysOf } from "@andornaut/game-kit/records";
 import { describe, expect, it } from "vitest";
@@ -20,7 +21,6 @@ import {
   VERGES,
   walkFrom,
 } from "../road/roadside";
-import { decodePng } from "../tools/atlas/shared/png.ts";
 import { roadProjection, rowScale } from "./projection";
 import {
   drawRoad,

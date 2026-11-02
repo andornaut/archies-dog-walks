@@ -1,5 +1,7 @@
 import { readFileSync } from "node:fs";
 
+import { decodePng } from "@andornaut/art-kit/png";
+import { opaqueRect } from "@andornaut/art-kit/rgbaImage";
 import { keysOf } from "@andornaut/game-kit/records";
 import { type Point, type Rect, rectsOverlap } from "@andornaut/game-kit/rect";
 import { inkRowsFromCapTop } from "@andornaut/game-kit/text/bitmapFont";
@@ -18,8 +20,6 @@ import { zoneLength } from "../runner/walk";
 import { fontFileMetrics, fontInk } from "../testing/fontInk";
 import { LONE } from "../testing/packPlaces";
 import { inside } from "../testing/rects";
-import { opaqueRect } from "../tools/atlas/atlasPixels";
-import { decodePng } from "../tools/atlas/shared/png.ts";
 import { plainMarks } from "../ui/pixelFont";
 import { cents } from "../units";
 import { maxEffects } from "./effectIcons";
@@ -405,7 +405,7 @@ describe("the dog cards", () => {
     const image = decodePng(
       readFileSync(new URL("../../public/art/sprites/ui-dog-card.png", import.meta.url)),
     );
-    const area = opaqueRect(image, { height: frame.h, width: frame.w, x: frame.x, y: frame.y });
+    const area = opaqueRect({ height: frame.h, width: frame.w, x: frame.x, y: frame.y }, image);
     return area === undefined ? undefined : { ...area, x: area.x - frame.x, y: area.y - frame.y };
   })();
 

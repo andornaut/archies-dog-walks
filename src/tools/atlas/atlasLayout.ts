@@ -1,3 +1,4 @@
+import { packAtlas } from "@andornaut/art-kit/atlasLayout";
 import { itemAt } from "@andornaut/game-kit/arrays";
 import { getOrInsertComputed } from "@andornaut/game-kit/maps";
 import type { Point, Rect } from "@andornaut/game-kit/rect";
@@ -12,7 +13,6 @@ import {
   type FrameTrim,
 } from "../../assets/atlasManifest";
 import { isPlainObject, parseOrThrow, record } from "../../assets/jsonSchema";
-import { packAtlas } from "./shared/atlasLayout.ts";
 
 // Mobile GPUs guarantee textures up to 2048 pixels a side.
 export const ATLAS_MAX_SIZE = 2048;

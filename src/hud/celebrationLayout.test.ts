@@ -1,5 +1,6 @@
 import { readFileSync } from "node:fs";
 
+import { decodePng } from "@andornaut/art-kit/png";
 import { keysOf } from "@andornaut/game-kit/records";
 import { fitsRoom, fittingText, type TextFitStyle } from "@andornaut/game-kit/text/textFit";
 import { describe, expect, it } from "vitest";
@@ -10,7 +11,6 @@ import type { WalkerId } from "../data/types";
 import { bodyRunWidth } from "../testing/bodyFont";
 import { fontFileMetrics, inkWidth } from "../testing/fontInk";
 import { inside } from "../testing/rects";
-import { decodePng } from "../tools/atlas/shared/png.ts";
 import { plainMarks } from "../ui/pixelFont";
 import { TEXT_SCALE } from "../ui/textFit";
 import {

@@ -1,4 +1,4 @@
-import type { RgbaImage } from "@andornaut/game-kit/art/rgbaImage";
+import type { RgbaImage } from "@andornaut/art-kit/rgbaImage";
 import type { Plugin } from "vite";
 
 import type { ArtFileMap } from "../../assets/artUrl";

@@ -38,7 +38,7 @@ Use Node 24.21.0 (`.nvmrc`) and Python 3.12 or newer. Run `npm ci` and `npm run 
 
 The site's pages are in `pages/`, each at its URL's path (`pages/play/index.html` is `/play/`), and Vite bundles the TypeScript they load. `public/` is copied into the build unchanged: the art, the nav bar, the icons, and the art gallery, `public/art/index.html`. `shared/` holds the files art's tools and the game both read. The game imports shared helpers through `@andornaut/game-kit/<path>`, installed from the versioned [game-kit release](https://github.com/andornaut/game-kit/releases/tag/v0.4.0) pinned in `package-lock.json`. The installed package records its source revision in `SOURCE_COMMIT`.
 
-Art generators use the installed `art-kit` and Pillow dependencies from `requirements-art.txt` in `.venv-art`. Run entrypoints with `.venv-art/bin/python -I`, for example
+Art build tools install the versioned [art-kit release](https://github.com/andornaut/art-kit/releases/tag/v0.4.0) through npm; Python generators use the matching art-kit and Pillow dependencies from `requirements-art.txt` in `.venv-art`. Run entrypoints with `.venv-art/bin/python -I`, for example
 `.venv-art/bin/python -I art/tools/glyphs.py build`.
 
 The isolated check image supplies both runtimes without installing system packages:
@@ -66,4 +66,4 @@ Deployment scope is the complete batch diff. A batch changing only Markdown, `ar
 
 Everything here (code, art, sound, music and writing) is licensed [CC BY-NC-SA 4.0](./LICENSE): share and remix it with credit to andornaut and a link to this project, for non-commercial use, under the same licence. The game's names and logos are not licensed, so a remix must use its own name. The separately installed game-kit helpers are licensed [MIT](https://github.com/andornaut/game-kit/blob/057e6c1809cd6ea7485868bfe5fa4014e1ef3b78/LICENSE).
 
-The parent browser/build helpers in `src/platform/` and atlas encoding/packing helpers in `src/tools/atlas/shared/` retain the [MIT licence](./LICENSE-MIT).
+The separately installed art-kit helpers are licensed [MIT](https://github.com/andornaut/art-kit/blob/df5476c9d644d37801e515ce8541d73b80eff1ec/LICENSE). The parent browser/build helpers in `src/platform/` retain the [MIT licence](./LICENSE-MIT).

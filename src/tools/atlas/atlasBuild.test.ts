@@ -1,13 +1,13 @@
-import { blankImage } from "@andornaut/game-kit/art/rgbaImage";
+import { buildAtlasPages } from "@andornaut/art-kit/atlasBuild";
+import { blankImage } from "@andornaut/art-kit/rgbaImage";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { AssetManifest } from "../../assets/manifest";
 import { sheetFromRows } from "../../testing/sheetImage";
 import { buildAtlases, compactFrames } from "./atlasBuild";
 import { layoutAtlases } from "./atlasLayout";
-import { buildAtlasPages } from "./shared/atlasBuild.ts";
 
-vi.mock("./shared/atlasBuild.ts", () => ({ buildAtlasPages: vi.fn() }));
+vi.mock("@andornaut/art-kit/atlasBuild", () => ({ buildAtlasPages: vi.fn() }));
 vi.mock("./atlasLayout", async (original) => ({
   ...(await original<typeof import("./atlasLayout")>()),
   layoutAtlases: vi.fn(),
@@ -18,7 +18,7 @@ beforeEach(() => {
   vi.mocked(layoutAtlases).mockReset();
 });
 
-it("maps Dog source policy, blits, output names and metadata through the shared builder", async () => {
+it("maps Archie source policy, blits, output names and metadata through the shared builder", async () => {
   const image = blankImage(2, 2);
   image.data.set([255, 80, 20, 255]);
   const manifest: AssetManifest = {

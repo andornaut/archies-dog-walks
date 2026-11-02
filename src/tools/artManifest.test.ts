@@ -1,6 +1,6 @@
 import { readFile } from "node:fs/promises";
 
-import { blankImage } from "@andornaut/game-kit/art/rgbaImage";
+import { blankImage } from "@andornaut/art-kit/rgbaImage";
 import { describe, expect, it } from "vitest";
 
 import { type ArtFiles, artManifestText, generateArtManifest } from "./artManifest";

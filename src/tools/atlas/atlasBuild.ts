@@ -1,8 +1,11 @@
 import { createHash } from "node:crypto";
 
-import { blankImage, blitExtruded, type RgbaImage } from "@andornaut/game-kit/art/rgbaImage";
+import { type AtlasBlit, buildAtlasPages, drawAtlasPage } from "@andornaut/art-kit/atlasBuild";
+import { encodeIndexedPng } from "@andornaut/art-kit/indexedPng";
+import { decodePng, encodeRgbaPng } from "@andornaut/art-kit/png";
+import { blankImage, blitExtruded, opaqueRect, type RgbaImage } from "@andornaut/art-kit/rgbaImage";
+import { encodeLosslessWebp } from "@andornaut/art-kit/webp";
 import { getOrInsertComputed } from "@andornaut/game-kit/maps";
-import { PNG } from "pngjs";
 
 import { atlasGroupOf } from "../../assets/atlasGroups";
 import type { AtlasManifest } from "../../assets/atlasManifest";
@@ -17,11 +20,6 @@ import {
   type SourceTexture,
   spriteSource,
 } from "./atlasLayout";
-import { opaqueRect } from "./atlasPixels";
-import { encodeIndexedPng } from "./indexedPng";
-import { type AtlasBlit, buildAtlasPages, drawAtlasPage } from "./shared/atlasBuild.ts";
-import { decodePng } from "./shared/png.ts";
-import { encodeLosslessWebp } from "./shared/webp.ts";
 
 export interface AtlasBuild {
   // Each page's file, by its path relative to the art directory.
@@ -35,14 +33,11 @@ export interface AtlasBuild {
 // does, else RGBA. Pixel art's flat runs compress best unfiltered and with zlib's default
 // strategy: about half the size of pngjs's adaptive filters and run-length strategy.
 export function encodePng(image: RgbaImage): Uint8Array {
-  const indexed = encodeIndexedPng(image);
+  const indexed = encodeIndexedPng({ level: 9, memLevel: 9 }, image);
   if (indexed !== undefined) {
     return indexed;
   }
-  const { data, height, width } = image;
-  const png = new PNG({ height, width });
-  png.data = Buffer.from(data);
-  return PNG.sync.write(png, { colorType: 6, deflateLevel: 9, deflateStrategy: 0, filterType: 0 });
+  return encodeRgbaPng({ deflateLevel: 9, deflateStrategy: 0, filterType: 0 }, image);
 }
 
 // Whether a sprite's frames pack only their opaque pixels: the road's do, those the home
@@ -64,7 +59,7 @@ export function compactFrames(
   const firsts = new Map<string, Pick<SourceFrame, "bounds" | "from">>();
   const frames = texture.frames.map(({ from: whole, ...frame }): SourceFrame => {
     const from = trim
-      ? (opaqueRect(image, whole) ?? { height: 1, width: 1, x: whole.x, y: whole.y })
+      ? (opaqueRect(whole, image) ?? { height: 1, width: 1, x: whole.x, y: whole.y })
       : whole;
     const trimmed = from.width !== whole.width || from.height !== whole.height;
     const cell = blankImage(from.width + 2 * EXTRUDE, from.height + 2 * EXTRUDE);

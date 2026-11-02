@@ -1,5 +1,6 @@
 import { readFileSync } from "node:fs";
 
+import { decodePng } from "@andornaut/art-kit/png";
 import { itemAt } from "@andornaut/game-kit/arrays";
 import { describe, expect, it } from "vitest";
 
@@ -8,7 +9,6 @@ import depthSteps from "../../shared/depth-steps.json";
 import lightTable from "../../shared/lights.json";
 import { paletteColour } from "../assets/housePalette";
 import { WORLD } from "../data/world";
-import { decodePng } from "../tools/atlas/shared/png.ts";
 import { newAttachedLightPlaces, placeAttachedLights } from "./lightPlaces";
 import { bakeLight, LIGHT_ATTACHMENTS, type LightDef, LIGHTS, lightsFrom } from "./lights";
 

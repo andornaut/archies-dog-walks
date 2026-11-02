@@ -1,5 +1,6 @@
 import { readFileSync } from "node:fs";
 
+import { decodePng } from "@andornaut/art-kit/png";
 import { itemAt } from "@andornaut/game-kit/arrays";
 import { keysOf } from "@andornaut/game-kit/records";
 import { insetRect, type Rect, rectsOverlap } from "@andornaut/game-kit/rect";
@@ -19,7 +20,6 @@ import { MAX_CARD_OPTIONS } from "../rules/choices";
 import { everyCardOption } from "../testing/everyCardOption";
 import { fontFileMetrics, inkWidth } from "../testing/fontInk";
 import { inside } from "../testing/rects";
-import { decodePng } from "../tools/atlas/shared/png.ts";
 import { CARD_HEADER } from "../ui/cardRow";
 import { pillIndex, pillRows } from "../ui/namePills";
 import { plainMarks } from "../ui/pixelFont";
