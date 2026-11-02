@@ -36,7 +36,7 @@ Use Node 24.21.0 (`.nvmrc`) and Python 3.12 or newer. Run `npm ci` and `npm run 
 | `npm run simulate -- --help`                | Simulate runs ([src/README.md](src/README.md), Simulator)                  |
 | `npm test`                                  | Run the unit tests                                                         |
 
-The site's pages are in `pages/`, each at its URL's path (`pages/play/index.html` is `/play/`), and Vite bundles the TypeScript they load. `public/` is copied into the build unchanged: the art, the nav bar, the icons, and the art gallery, `public/art/index.html`. `shared/` holds the files art's tools and the game both read. The game imports shared helpers through `@andornaut/game-kit/<path>`, installed from the versioned [GameKit release](https://github.com/andornaut/game-kit/releases/tag/v0.3.1) pinned in `package-lock.json`. The installed package records its source revision in `SOURCE_COMMIT`.
+The site's pages are in `pages/`, each at its URL's path (`pages/play/index.html` is `/play/`), and Vite bundles the TypeScript they load. `public/` is copied into the build unchanged: the art, the nav bar, the icons, and the art gallery, `public/art/index.html`. `shared/` holds the files art's tools and the game both read. The game imports shared helpers through `@andornaut/game-kit/<path>`, installed from the versioned [game-kit release](https://github.com/andornaut/game-kit/releases/tag/v0.4.0) pinned in `package-lock.json`. The installed package records its source revision in `SOURCE_COMMIT`.
 
 Art generators use the installed `art-kit` and Pillow dependencies from `requirements-art.txt` in `.venv-art`. Run entrypoints with `.venv-art/bin/python -I`, for example
 `.venv-art/bin/python -I art/tools/glyphs.py build`.
@@ -64,6 +64,6 @@ Deployment scope is the complete batch diff. A batch changing only Markdown, `ar
 
 ## Licence
 
-Everything here (code, art, sound, music and writing) is licensed [CC BY-NC-SA 4.0](./LICENSE): share and remix it with credit to andornaut and a link to this project, for non-commercial use, under the same licence. The game's names and logos are not licensed, so a remix must use its own name. The separately installed GameKit helpers are licensed [MIT](https://github.com/andornaut/game-kit/blob/b32a50769801273a56d66a13c3ef8756f247b215/LICENSE).
+Everything here (code, art, sound, music and writing) is licensed [CC BY-NC-SA 4.0](./LICENSE): share and remix it with credit to andornaut and a link to this project, for non-commercial use, under the same licence. The game's names and logos are not licensed, so a remix must use its own name. The separately installed game-kit helpers are licensed [MIT](https://github.com/andornaut/game-kit/blob/057e6c1809cd6ea7485868bfe5fa4014e1ef3b78/LICENSE).
 
 The parent browser/build helpers in `src/platform/` and atlas encoding/packing helpers in `src/tools/atlas/shared/` retain the [MIT licence](./LICENSE-MIT).
