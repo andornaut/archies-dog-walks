@@ -224,21 +224,21 @@ export const HOME_LAYOUT = {
   sectionGap: SECTION_GAP,
   sectionLooks: {
     dogs: {
-      fill: "plum",
+      fill: "navy",
       heading: "white",
       neutral: "violet",
       neutralTag: "neutral-dogs",
       note: "white",
     },
     pocket: {
-      fill: "blue",
+      fill: "purple",
       heading: "white",
       neutral: "mauve",
       neutralTag: "neutral-pocket",
       note: "white",
     },
     walker: {
-      fill: "brown",
+      fill: "dlake",
       heading: "white",
       neutral: "lake",
       neutralTag: "neutral-walker",
