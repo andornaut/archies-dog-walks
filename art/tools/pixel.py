@@ -175,6 +175,56 @@ DARKER.update(
         ]
     )
 )
+
+
+def _picker_encode(channels):
+    """Encode in-gamut linear sRGB channels as nearest-byte picker colours."""
+    if any(channel < 0 or channel > 1 for channel in channels):
+        raise ValueError("Picker colour is outside the sRGB gamut")
+    encoded = [12.92 * c if c <= 0.0031308 else 1.055 * c ** (1 / 2.4) - 0.055 for c in channels]
+    return "".join(f"{math.floor(channel * 255 + 0.5):02x}" for channel in encoded)
+
+
+def picker_header(lightness, chroma, hue):
+    """Generate one picker hue at the shared perceptual lightness and chroma."""
+    # Oklab matrices: https://bottosson.github.io/posts/oklab/#converting-from-linear-srgb-to-oklab
+    angle = math.radians(hue)
+    a, b = chroma * math.cos(angle), chroma * math.sin(angle)
+    l_cone = (lightness + 0.3963377774 * a + 0.2158037573 * b) ** 3
+    m_cone = (lightness - 0.1055613458 * a - 0.0638541728 * b) ** 3
+    s_cone = (lightness - 0.0894841775 * a - 1.2914855480 * b) ** 3
+    return _picker_encode(
+        (
+            4.0767416621 * l_cone - 3.3077115913 * m_cone + 0.2309699292 * s_cone,
+            -1.2684380046 * l_cone + 2.6097574011 * m_cone - 0.3413193965 * s_cone,
+            -0.0041960863 * l_cone - 0.7034186147 * m_cone + 1.7076147010 * s_cone,
+        )
+    )
+
+
+def picker_body(factor, header):
+    """Scale a picker header's linear sRGB, then encode with nearest-byte rounding."""
+    encoded = [int(header[start : start + 2], 16) / 255 for start in (0, 2, 4)]
+    linear = [c / 12.92 if c <= 0.04045 else ((c + 0.055) / 1.055) ** 2.4 for c in encoded]
+    return _picker_encode([factor * channel for channel in linear])
+
+
+# Picker-only colours extend K without changing the house palette or its ramps.
+PICKER_LIGHTNESS = 0.55
+PICKER_CHROMA = 0.105
+PICKER_BODY_FACTOR = 0.5
+PICKER_HUES = {"Dogs": 290, "Pocket": 350, "Walker": 230}
+PICKER_UI = {}
+for section, hue in PICKER_HUES.items():
+    header = picker_header(PICKER_LIGHTNESS, PICKER_CHROMA, hue)
+    PICKER_UI[f"picker{section}Header"] = header
+    PICKER_UI[f"picker{section}Body"] = picker_body(PICKER_BODY_FACTOR, header)
+K.update(PICKER_UI)
+DARKER.update({colour: K["ink"] for name, colour in PICKER_UI.items() if name.endswith("Body")})
+for section in PICKER_HUES:
+    DARKER[PICKER_UI[f"picker{section}Header"]] = PICKER_UI[f"picker{section}Body"]
+
+
 # The contrast roads: dslate (dark, the Distillery District's), then the roads an outline must hold 3:1 on: tan,
 # pink and skin2 (light) and Kensington Market's stone (mid grey), which takes it nearly to ink.
 ROADS = ("3a4466", "e4a672", "f6757a", "c28569", "8a857c")
@@ -306,6 +356,7 @@ def _palette(tags):
         PALETTE
         + (list(NEUTRAL.values()) if used & set(NEUTRAL.values()) else [])
         + (list(TORONTO.values()) if used & set(TORONTO.values()) else [])
+        + [colour for colour in PICKER_UI.values() if colour in used]
     )
 
 
@@ -748,7 +799,7 @@ PALETTE_JSON = "shared/palette.json"
 
 
 def palette_table():
-    """Every colour by K name (Endesga 32, the neutral greys, the Toronto colours): its hex and the
+    """Every colour by K name, including picker-only UI tones: its hex and the
     name of the colour one ramp step darker."""
     names = {v: k for k, v in K.items()}
     return {name: {"hex": hexed, "darker": names[DARKER[hexed]]} for name, hexed in K.items()}

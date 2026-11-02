@@ -12,9 +12,9 @@ nine-slice, 4px corners), ui-hint (24x24 nine-slice, 8px corners), ui-hint-tail
 (8x6), ui-new-best (72x20 ribbon, text baked in with font-title); the start screen's ui-detail-card
 (24x24 nine-slice, 8px corners) and ui-detail-well (68x68); the shop list's ui-scroll-track (8x24) and
 ui-scroll-thumb (6x24, three-slices with 3px caps); the walker section's ui-cork
-(32x32 solid deep-lake tile), the dogs
+(32x32 solid pickerWalkerBody tile), the dogs
 section's ui-plaid
-(16x16 solid navy tile), the Pocket section's ui-denim (16x16 solid purple tile), ui-stitch-h
+(16x16 solid pickerDogsBody tile), the Pocket section's ui-denim (16x16 solid pickerPocketBody tile), ui-stitch-h
 (8x2) and ui-stitch-v (2x8, seamless stitch runs), all repeated with TileSprite; the card rows'
 ui-strip-well (24x24 nine-slice, the band behind a card row's subtitle), ui-quip (24x24 nine-slice,
 8px corners), ui-quip-tail (6x8), ui-quip-tail-down and ui-quip-tail-up (8x6), ui-celebrate-burst (148x132, the
@@ -1161,9 +1161,9 @@ SECTION_W, SECTION_H = 24, 32
 SECTION_FACES = {
     "complete": "amber",
     "neutral": "violet",
-    "neutral-walker": "lake",
-    "neutral-dogs": "violet",
-    "neutral-pocket": "mauve",
+    "neutral-walker": "pickerWalkerHeader",
+    "neutral-dogs": "pickerDogsHeader",
+    "neutral-pocket": "pickerPocketHeader",
 }
 
 
@@ -1171,9 +1171,10 @@ def section(state):
     """24x32 nine-slice (3px left, right and bottom, 24px top): one start screen section (walker,
     dogs, Pocket) with a single plum rim and heading rows 1 to 22. The solid section fill sits
     1px inside the rim below the 24px heading. Complete is amber; neutral is the dogs' violet,
-    neutral-walker lake, neutral-dogs violet and neutral-pocket mauve. The game writes its title
+    neutral-walker blue, neutral-dogs violet and neutral-pocket pink use picker header tokens. The game writes its title
     and note in rows 8 to 17: ink on complete amber, white on every neutral heading. Neutral hues
-    use mid saturation (40 to 56%). Existing tag indices and nine-slice caps stay fixed."""
+    share OKLCH lightness 0.55 and chroma 0.105 before byte rounding.
+    Existing tag indices and nine-slice caps stay fixed."""
     g = Grid(SECTION_W, SECTION_H)
     g.rect(0, 0, SECTION_W, SECTION_H, "plum")
     g.rect(1, 1, SECTION_W - 2, SECTION_H - 2, None)
@@ -1188,9 +1189,9 @@ STITCH_DASH, STITCH_GAP = 5, 3
 
 
 def denim():
-    """16x16 solid purple tile, a darker mauve, under the Pocket's cards."""
+    """16x16 solid pickerPocketBody tile, half the pink header's linear RGB."""
     g = Grid(FABRIC, FABRIC)
-    g.rect(0, 0, FABRIC, FABRIC, "purple")
+    g.rect(0, 0, FABRIC, FABRIC, "pickerPocketBody")
     return g
 
 
@@ -1199,16 +1200,16 @@ CORK = 32
 
 
 def cork():
-    """32x32 solid deep-lake tile under the lake walker header."""
+    """32x32 solid pickerWalkerBody tile, half the blue header's linear RGB."""
     g = Grid(CORK, CORK)
-    g.rect(0, 0, CORK, CORK, "dlake")
+    g.rect(0, 0, CORK, CORK, "pickerWalkerBody")
     return g
 
 
 def plaid():
-    """16x16 solid navy tile, a darker violet, under the dog cards."""
+    """16x16 solid pickerDogsBody tile, half the violet header's linear RGB."""
     g = Grid(FABRIC, FABRIC)
-    g.rect(0, 0, FABRIC, FABRIC, "navy")
+    g.rect(0, 0, FABRIC, FABRIC, "pickerDogsBody")
     return g
 
 

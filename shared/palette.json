@@ -270,5 +270,29 @@
   "cobalt": {
     "hex": "2654b0",
     "darker": "blue"
+  },
+  "pickerDogsHeader": {
+    "hex": "7166aa",
+    "darker": "pickerDogsBody"
+  },
+  "pickerDogsBody": {
+    "hex": "51497c",
+    "darker": "ink"
+  },
+  "pickerPocketHeader": {
+    "hex": "9f567a",
+    "darker": "pickerPocketBody"
+  },
+  "pickerPocketBody": {
+    "hex": "743d58",
+    "darker": "ink"
+  },
+  "pickerWalkerHeader": {
+    "hex": "127ca3",
+    "darker": "pickerWalkerBody"
+  },
+  "pickerWalkerBody": {
+    "hex": "0a5977",
+    "darker": "ink"
   }
 }
