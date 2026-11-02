@@ -1,7 +1,11 @@
+import { EventEmitter } from "node:events";
+
 import { animationKey } from "@andornaut/game-kit/art/aseprite";
 import type { GameObjects, Scene } from "phaser";
 import { describe, expect, it } from "vitest";
 
+import petShopSheet from "../../public/art/sprites/ui-pet-shop.json";
+import { animationSpecs } from "../assets/asepriteAnimations";
 import { addShopIdle } from "./shopIdle";
 import { playTag, playTagOnce, showAtDepth } from "./sprites";
 import { addSelectTile } from "./uiKit";
@@ -127,9 +131,10 @@ describe("playTagOnce", () => {
   );
 });
 
-function shopIdleScene(loaded = true) {
+function shopIdleScene(loaded = true, sheet?: unknown) {
   class Face extends EventEmitter {
     active = true;
+    frame = { name: "normal" };
     originX = 0;
     originY = 0;
     texture = { key: "ui-pet-shop" };
@@ -158,8 +163,19 @@ function shopIdleScene(loaded = true) {
   const events = new EventEmitter();
   const plays: { key: string; repeat: number; time: number }[] = [];
   const animation = animationKey(normal.texture.key, "door-wave");
+  const specs = new Map(
+    sheet === undefined
+      ? []
+      : animationSpecs(normal.texture.key, sheet).map((spec) => [spec.key, spec]),
+  );
+  normal.frame.name =
+    specs.get(animationKey(normal.texture.key, "normal"))?.frames[0]?.frame ?? "normal";
+  pressed.frame.name =
+    specs.get(animationKey(normal.texture.key, "pressed"))?.frames[0]?.frame ?? "pressed";
   const tag = {
-    frames: [
+    frames: specs
+      .get(animation)
+      ?.frames.map(({ duration, frame }) => ({ duration, textureFrame: frame })) ?? [
       { duration: 500, textureFrame: "open" },
       { duration: 1420, textureFrame: "closed" },
     ],
@@ -204,6 +220,7 @@ function shopIdleScene(loaded = true) {
     plays,
     pressed,
     sprite,
+    tag,
     tick: (now: number, eligible = true) => {
       time.now = now;
       idle?.update(eligible);
@@ -213,6 +230,28 @@ function shopIdleScene(loaded = true) {
 }
 
 describe("Pet shop idle invitation", () => {
+  it("uses the shipped door-wave metadata and retains pressed frame 1 when interrupted", () => {
+    const shown = shopIdleScene(true, petShopSheet);
+    expect(shown.tag.frames).toHaveLength(16);
+    expect(shown.tag.frames[0]?.textureFrame).toBe("ui-pet-shop 9.aseprite");
+    expect(shown.tag.frames[15]?.textureFrame).toBe("ui-pet-shop 24.aseprite");
+    expect(shown.tag.frames.every(({ duration }) => duration === 120)).toBe(true);
+    expect(shown.tag.frames.reduce((total, { duration }) => total + duration, 0)).toBe(1920);
+    shown.tick(0);
+    shown.tick(7000);
+    expect(shown.plays).toEqual([{ key: "ui-pet-shop:door-wave", repeat: 0, time: 7000 }]);
+    shown.idle?.setPressed(true);
+    shown.complete();
+    shown.tick(7200);
+    expect(shown.normal.visible).toBe(false);
+    expect(shown.sprite.visible).toBe(false);
+    expect(shown.pressed.visible).toBe(true);
+    expect(shown.pressed.frame.name).toBe("ui-pet-shop 1.aseprite");
+    shown.idle?.setPressed(false);
+    expect(shown.normal.visible).toBe(true);
+    expect(shown.normal.frame.name).toBe("ui-pet-shop 0.aseprite");
+  });
+
   it("plays once every seven seconds and retains the metadata-based closed pause after a late finish", () => {
     const shown = shopIdleScene();
     shown.tick(0);
@@ -416,4 +455,3 @@ describe("selected tile faces", () => {
     },
   );
 });
-import { EventEmitter } from "node:events";
