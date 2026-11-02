@@ -66,7 +66,7 @@ reads on them.
   500, where a status line could sit (the game draws none), then two
   streetcar tracks.
 
-ui-pet-shop: a 120x108 sprite, tags normal, pressed and glint: the pet shop on
+ui-pet-shop: a 120x108 sprite, tags normal, pressed, glint and door-wave: the pet shop on
 the yard's right lot, which opens the shop. The game draws it at PET_SHOP_AT
 (234,54), its base on the yard's bottom row (161), and its hit area is the
 frame. The PET SHOP board (BOARD, 3,0 114x22 in the frame, 237,54 on screen)
@@ -79,10 +79,11 @@ outline all round, on a grey step. pressed dips as ui-button does: the front
 sinks 2px onto the step, the step 1px shallower, and the board loses its lip
 and highlight to face, as go-pressed. glint is 7 frames at 60ms: a 6px light
 band sweeping up and across the raised board (GLINT_STEPS), then a clean
-frame; the game plays it every few seconds while idle, with a bob of at most
-2px, which keeps the board's top (54) clear of the street sign's plate (bottom
-row 50). An affordable item in the shop takes ui-afford 2px outside the frame
-(232,52 124x112).
+frame. This glint remains an export. door-wave appends frames 9 to 24 at
+120ms each (1920ms): the right-hinged door opens, a shopkeeper peeks out and
+waves inside its aperture, then withdraws as it closes. The building and
+board stay fixed. Normal frame 0 is the static closed pose. An affordable
+item in the shop takes ui-afford 2px outside the frame (232,52 124x112).
 
 ui-loading-track: a 316x8 image, the sidewalk being walked: Lady's paw
 prints in dslate, staggered on two rows from Casey's heel to the Pet shop's door.
@@ -143,6 +144,26 @@ BOARD = (3, 0, 114, 22)
 BOARD_RISE = 4
 # ui-pet-shop's glint: the light band's left edge on the board in each frame, then a clean frame.
 GLINT_STEPS = (-6, 16, 38, 60, 82, 104)
+# Projected door-leaf width, keeper reveal and hand pose. All coordinates stay inside the closed door.
+DOOR_WAVE = (
+    (26, None, None),
+    (22, None, None),
+    (14, 0, None),
+    (6, 0.35, None),
+    (6, 0.7, -1),
+    (6, 1, 0),
+    (6, 1, 1),
+    (6, 1, 2),
+    (6, 1, 1),
+    (6, 1, 0),
+    (6, 1, -1),
+    (6, 1, None),
+    (6, 0.35, None),
+    (14, 0, None),
+    (22, None, None),
+    (26, None, None),
+)
+DOOR_WAVE_MS = 120
 
 
 def rand(seed):
@@ -592,14 +613,14 @@ def window_puppy():
     return g
 
 
-def pet_shop(pressed=False, glint=None):
+def pet_shop(pressed=False, glint=None, door_frame=None):
     """The shop front, PET_SHOP_W x PET_SHOP_H: the building from BOARD_RISE down, under the board.
     Everything but the step is drawn t rows lower, so pressed sinks the front 2px onto a step 1px
     shallower, as ui-button's face sinks into its lip. glint, if given, is the left edge of the light
     band swept across the board (glint_board)."""
     w, h = PET_SHOP_W, PET_SHOP_H
     cv = clear(w, h)
-    building(cv, w, h - BOARD_RISE, pressed)
+    building(cv, w, h - BOARD_RISE, pressed, door_frame)
     shop_board(cv, pressed, glint)
     return cv
 
@@ -652,7 +673,7 @@ def glint_board(cv, left):
                 cv.fill(x, y, 1, 1, "green")
 
 
-def building(cv, w, h, pressed):
+def building(cv, w, h, pressed, door_frame=None):
     """The shop below the board, w x h from BOARD_RISE down: walls, parapet, awning, window, door and
     step."""
     full = cv
@@ -710,7 +731,62 @@ def building(cv, w, h, pressed):
         cv.fill(wx + 29 + x, wy + 31 + y, 1, 1, "blue")
     for x, y in bone:
         cv.fill(wx + 29 + x, wy + 31 + y, 1, 1, "white" if y < 2 else "lgrey" if y > 3 else "cream")
-    # the door: a cream frame, a navy door with a lit glass pane, a cream paw on it, an amber knob
+    shop_door(cv, h, pressed, door_frame)
+    # the step: 4 rows, 3 when pressed
+    sy = h - 3 if pressed else h - 4
+    cv.fill(2, sy, w - 4, h - sy, "ink")
+    cv.fill(3, sy + 1, w - 6, h - sy - 2, "lgrey")
+    if not pressed:
+        cv.fill(3, h - 2, w - 6, 1, "grey")
+    full.img.alpha_composite(cv.img, (0, BOARD_RISE))
+
+
+def shop_keeper(reveal, wave):
+    """A friendly native keeper on a 20x40 clip, behind the door leaf."""
+    g = edged(Grid(20, 40), "ink")
+    cx = 9 + round((1 - reveal) * 4)
+    # Shoes and apron remain planted while the keeper leans into the opening.
+    g.rect(cx - 4, 33, 3, 6, "navy")
+    g.rect(cx + 1, 33, 3, 6, "navy")
+    g.rect(cx - 5, 38, 4, 1, "brown")
+    g.rect(cx + 1, 38, 4, 1, "brown")
+    g.rect(cx - 6, 18, 12, 17, "cream")
+    g.rect(cx + 4, 19, 2, 15, "tan")
+    g.rect(cx - 2, 15, 4, 4, "skin2")
+    g.rect(cx - 4, 21, 8, 15, "blue")
+    g.rect(cx - 4, 19, 2, 7, "sky")
+    g.rect(cx + 2, 19, 2, 7, "sky")
+    g.rect(cx - 3, 29, 6, 1, "sky")
+    g.rect(cx - 1, 24, 2, 2, "yellow")
+    # A rounded short haircut, calm eyes and a small open smile.
+    g.cel(cx, 9, 5.5, 6, "skin1", "skin2")
+    g.cel(cx, 6, 5.5, 3, "dbrown", "plum", "brown")
+    g.rect(cx - 5, 8, 1, 4, "dbrown")
+    g.rect(cx + 4, 8, 1, 4, "plum")
+    g.p(cx - 2, 10, "ink")
+    g.p(cx + 2, 10, "ink")
+    g.p(cx - 1, 13, "dred")
+    g.p(cx, 14, "dred")
+    g.p(cx + 1, 13, "dred")
+    # The far arm rests; the near elbow and wrist make one small greeting.
+    g.rect(cx + 6, 20, 2, 10, "cream")
+    g.rect(cx + 6, 29, 2, 4, "skin1")
+    g.rect(cx - 8, 20, 3, 5, "cream")
+    if wave is None:
+        g.rect(cx - 8, 25, 2, 7, "skin1")
+    else:
+        dx, hand_y = (0, 16) if wave < 0 else ((0, 9), (-1, 8), (1, 8))[wave]
+        hand_x = cx - 7 + dx
+        for offset in (0, 1):
+            g.line(cx - 8 + offset, 24, hand_x + offset, hand_y, "skin1")
+        g.rect(hand_x - 1, hand_y - 2, 3, 3, "skin1")
+        g.p(hand_x, hand_y - 3, "skin1")
+    return to_image(g.outlined())
+
+
+def shop_door(cv, h, pressed, door_frame):
+    """The static closed door or a projected right-hinged leaf over the keeper."""
+    t = 2 if pressed else 0
     dx, dy, dw = 76, 44 + t, 30
     cv.fill(dx - 1, dy - 1, dw + 2, h - dy + 1, "ink")
     cv.fill(dx, dy, dw, h - dy, "cream")
@@ -722,14 +798,32 @@ def building(cv, w, h, pressed):
         for i, c in enumerate(row):
             if c == "#":
                 cv.fill(dx + 13 + i, dy + 11 + j, 1, 1, "cream")
-    cv.fill(dx + dw - 8, dy + 30, 3, 3, "amber")
-    # the step: 4 rows, 3 when pressed
-    sy = h - 3 if pressed else h - 4
-    cv.fill(2, sy, w - 4, h - sy, "ink")
-    cv.fill(3, sy + 1, w - 6, h - sy - 2, "lgrey")
-    if not pressed:
-        cv.fill(3, h - 2, w - 6, 1, "grey")
-    full.img.alpha_composite(cv.img, (0, BOARD_RISE))
+    cv.fill(dx + 5, dy + 30, 3, 3, "amber")
+    if door_frame is None:
+        return
+    width, reveal, wave = DOOR_WAVE[door_frame]
+    if width == 26:
+        return
+    # The aperture ends above the unchanged doorstep. The hinge column stays at x=103.
+    left, top, height = 104 - width, 46, 54
+    cv.fill(78, top, 26, height, "ink")
+    cv.fill(79, top + 1, 24, 2, "navy")
+    cv.fill(78, 95, 26, 5, "dbrown")
+    if reveal is not None:
+        cv.img.alpha_composite(shop_keeper(reveal, wave), (79, 60))
+    ratio = width / 26
+    cv.fill(left, top, width, height, "navy")
+    cv.fill(left, top, 1, height, "dslate")
+    pane_x = left + max(1, round(4 * ratio))
+    pane_w = max(1, round(18 * ratio))
+    cv.fill(pane_x, dy + 6, pane_w, 14, "sky")
+    cv.fill(pane_x, dy + 6, pane_w, 1, "cyan")
+    for j, row in enumerate(PAW):
+        for i, c in enumerate(row):
+            if c == "#":
+                cv.fill(left + round((11 + i) * ratio), dy + 11 + j, 1, 1, "cream")
+    knob_x = left + max(1, round(3 * ratio))
+    cv.fill(knob_x, dy + 30, max(1, round(3 * ratio)), 3, "amber")
 
 
 def image_rows(img):
@@ -1467,7 +1561,8 @@ def sprites():
     yield (
         "ui-pet-shop",
         [(tag, [image_rows(pet_shop(tag == "pressed").img)], 1000) for tag in ("normal", "pressed")]
-        + [("glint", [image_rows(pet_shop(glint=g).img) for g in GLINT_STEPS] + [image_rows(pet_shop().img)], 60)],
+        + [("glint", [image_rows(pet_shop(glint=g).img) for g in GLINT_STEPS] + [image_rows(pet_shop().img)], 60)]
+        + [("door-wave", [image_rows(pet_shop(door_frame=i).img) for i in range(len(DOOR_WAVE))], DOOR_WAVE_MS)],
     )
 
 

@@ -70,6 +70,134 @@
     "spriteSourceSize": { "x": 0, "y": 0, "w": 120, "h": 108 },
     "sourceSize": { "w": 120, "h": 108 },
     "duration": 60
+   },
+   "ui-pet-shop 9.aseprite": {
+    "frame": { "x": 1080, "y": 0, "w": 120, "h": 108 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 120, "h": 108 },
+    "sourceSize": { "w": 120, "h": 108 },
+    "duration": 120
+   },
+   "ui-pet-shop 10.aseprite": {
+    "frame": { "x": 1200, "y": 0, "w": 120, "h": 108 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 120, "h": 108 },
+    "sourceSize": { "w": 120, "h": 108 },
+    "duration": 120
+   },
+   "ui-pet-shop 11.aseprite": {
+    "frame": { "x": 1320, "y": 0, "w": 120, "h": 108 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 120, "h": 108 },
+    "sourceSize": { "w": 120, "h": 108 },
+    "duration": 120
+   },
+   "ui-pet-shop 12.aseprite": {
+    "frame": { "x": 1440, "y": 0, "w": 120, "h": 108 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 120, "h": 108 },
+    "sourceSize": { "w": 120, "h": 108 },
+    "duration": 120
+   },
+   "ui-pet-shop 13.aseprite": {
+    "frame": { "x": 1560, "y": 0, "w": 120, "h": 108 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 120, "h": 108 },
+    "sourceSize": { "w": 120, "h": 108 },
+    "duration": 120
+   },
+   "ui-pet-shop 14.aseprite": {
+    "frame": { "x": 1680, "y": 0, "w": 120, "h": 108 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 120, "h": 108 },
+    "sourceSize": { "w": 120, "h": 108 },
+    "duration": 120
+   },
+   "ui-pet-shop 15.aseprite": {
+    "frame": { "x": 1800, "y": 0, "w": 120, "h": 108 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 120, "h": 108 },
+    "sourceSize": { "w": 120, "h": 108 },
+    "duration": 120
+   },
+   "ui-pet-shop 16.aseprite": {
+    "frame": { "x": 1920, "y": 0, "w": 120, "h": 108 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 120, "h": 108 },
+    "sourceSize": { "w": 120, "h": 108 },
+    "duration": 120
+   },
+   "ui-pet-shop 17.aseprite": {
+    "frame": { "x": 2040, "y": 0, "w": 120, "h": 108 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 120, "h": 108 },
+    "sourceSize": { "w": 120, "h": 108 },
+    "duration": 120
+   },
+   "ui-pet-shop 18.aseprite": {
+    "frame": { "x": 2160, "y": 0, "w": 120, "h": 108 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 120, "h": 108 },
+    "sourceSize": { "w": 120, "h": 108 },
+    "duration": 120
+   },
+   "ui-pet-shop 19.aseprite": {
+    "frame": { "x": 2280, "y": 0, "w": 120, "h": 108 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 120, "h": 108 },
+    "sourceSize": { "w": 120, "h": 108 },
+    "duration": 120
+   },
+   "ui-pet-shop 20.aseprite": {
+    "frame": { "x": 2400, "y": 0, "w": 120, "h": 108 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 120, "h": 108 },
+    "sourceSize": { "w": 120, "h": 108 },
+    "duration": 120
+   },
+   "ui-pet-shop 21.aseprite": {
+    "frame": { "x": 2520, "y": 0, "w": 120, "h": 108 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 120, "h": 108 },
+    "sourceSize": { "w": 120, "h": 108 },
+    "duration": 120
+   },
+   "ui-pet-shop 22.aseprite": {
+    "frame": { "x": 2640, "y": 0, "w": 120, "h": 108 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 120, "h": 108 },
+    "sourceSize": { "w": 120, "h": 108 },
+    "duration": 120
+   },
+   "ui-pet-shop 23.aseprite": {
+    "frame": { "x": 2760, "y": 0, "w": 120, "h": 108 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 120, "h": 108 },
+    "sourceSize": { "w": 120, "h": 108 },
+    "duration": 120
+   },
+   "ui-pet-shop 24.aseprite": {
+    "frame": { "x": 2880, "y": 0, "w": 120, "h": 108 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 120, "h": 108 },
+    "sourceSize": { "w": 120, "h": 108 },
+    "duration": 120
    }
  },
  "meta": {
@@ -77,12 +205,13 @@
   "version": "1.2.30-x64",
   "image": "ui-pet-shop.png",
   "format": "RGBA8888",
-  "size": { "w": 1080, "h": 108 },
+  "size": { "w": 3000, "h": 108 },
   "scale": "1",
   "frameTags": [
    { "name": "normal", "from": 0, "to": 0, "direction": "forward" },
    { "name": "pressed", "from": 1, "to": 1, "direction": "forward" },
-   { "name": "glint", "from": 2, "to": 8, "direction": "forward" }
+   { "name": "glint", "from": 2, "to": 8, "direction": "forward" },
+   { "name": "door-wave", "from": 9, "to": 24, "direction": "forward" }
   ]
  }
 }
