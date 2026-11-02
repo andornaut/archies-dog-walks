@@ -38,7 +38,7 @@ Use Node 24.21.0 (`.nvmrc`) and Python 3.12 or newer. Run `npm ci` and `npm run 
 
 The site's pages are in `pages/`, each at its URL's path (`pages/play/index.html` is `/play/`), and Vite bundles the TypeScript they load. `public/` is copied into the build unchanged: the art, the nav bar, the icons, and the art gallery, `public/art/index.html`. `shared/` holds the files art's tools and the game both read. The game imports shared helpers through `@andornaut/game-kit/<path>`, installed from the versioned [game-kit release](https://github.com/andornaut/game-kit/releases/tag/v0.4.0) pinned in `package-lock.json`. The installed package records its source revision in `SOURCE_COMMIT`.
 
-Art build tools install the versioned [art-kit release](https://github.com/andornaut/art-kit/releases/tag/v0.4.0) through npm; Python generators use the matching art-kit and Pillow dependencies from `requirements-art.txt` in `.venv-art`. Run entrypoints with `.venv-art/bin/python -I`, for example
+Art build tools install the versioned [art-kit release](https://github.com/andornaut/art-kit/releases/tag/v0.5.0) through npm; Python generators use the matching art-kit and Pillow dependencies from `requirements-art.txt` in `.venv-art`. Run entrypoints with `.venv-art/bin/python -I`, for example
 `.venv-art/bin/python -I art/tools/glyphs.py build`.
 
 The isolated check image supplies both runtimes without installing system packages:
