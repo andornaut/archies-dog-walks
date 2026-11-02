@@ -294,5 +294,9 @@
   "pickerWalkerBody": {
     "hex": "0a5977",
     "darker": "ink"
+  },
+  "pickerSelectedBody": {
+    "hex": "bb7f23",
+    "darker": "ink"
   }
 }

@@ -219,6 +219,7 @@ for section, hue in PICKER_HUES.items():
     header = picker_header(PICKER_LIGHTNESS, PICKER_CHROMA, hue)
     PICKER_UI[f"picker{section}Header"] = header
     PICKER_UI[f"picker{section}Body"] = picker_body(PICKER_BODY_FACTOR, header)
+PICKER_UI["pickerSelectedBody"] = picker_body(PICKER_BODY_FACTOR, K["amber"])
 K.update(PICKER_UI)
 DARKER.update({colour: K["ink"] for name, colour in PICKER_UI.items() if name.endswith("Body")})
 for section in PICKER_HUES:
