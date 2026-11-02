@@ -1,3 +1,5 @@
+import sharedPalette from "../../shared/palette.json";
+
 // The Endesga 32 colours the scenes draw with.
 const ENDESGA = {
   amber: 0xfeae34,
@@ -52,8 +54,18 @@ const EXTRA = {
   walnut: 0x2e2019,
 } as const;
 
+// Picker colours are authored alongside the backing assets in the shared palette.
+const PICKER = {
+  pickerDogsBody: colourFromHex(sharedPalette.pickerDogsBody.hex),
+  pickerDogsHeader: colourFromHex(sharedPalette.pickerDogsHeader.hex),
+  pickerPocketBody: colourFromHex(sharedPalette.pickerPocketBody.hex),
+  pickerPocketHeader: colourFromHex(sharedPalette.pickerPocketHeader.hex),
+  pickerWalkerBody: colourFromHex(sharedPalette.pickerWalkerBody.hex),
+  pickerWalkerHeader: colourFromHex(sharedPalette.pickerWalkerHeader.hex),
+} as const;
+
 // Every colour the scenes draw with, by name.
-export const PALETTE = { ...ENDESGA, ...NEUTRAL, ...EXTRA } as const;
+export const PALETTE = { ...ENDESGA, ...NEUTRAL, ...EXTRA, ...PICKER } as const;
 
 // The ramp every disabled thing's grey copy is drawn in, lightest first: white, the neutral
 // greys, then ink.
