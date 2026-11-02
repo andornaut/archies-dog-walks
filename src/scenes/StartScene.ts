@@ -33,8 +33,6 @@ import {
   pressDip,
   settleDelay,
   shakeOffset,
-  shopBobOffset,
-  shopGlintFrame,
 } from "../home/feedback";
 import { type Focus, focusDirectionForKey, moveFocus } from "../home/focus";
 import {
@@ -206,6 +204,7 @@ import { nextRunStart } from "./run/runRecorder";
 import { type RunPick, runSceneData } from "./run/runStart";
 import { SCENE_KEYS } from "./sceneKeys";
 import { SETTINGS_CLOSED_EVENT } from "./SettingsScene";
+import { addShopIdle, type ShopIdle } from "./shopIdle";
 import {
   SHOP_CHANGED_EVENT,
   SHOP_CLOSED_EVENT,
@@ -236,7 +235,6 @@ import {
   setDollarAmount,
   settingsIcon,
   soundIcon,
-  tagFrame,
   tileTextureKey,
 } from "./uiKit";
 
@@ -391,20 +389,15 @@ type Overlay = { rect: Rect | undefined } & ({ mode: PlateMode } | { target: Det
 // A tile that reacts to taps: its container moves for the dip, lift and shake, its face hops,
 // and its mark pops.
 interface TileView {
-  // The dog slot sign hangs from the Pet shop, so it rises and falls with the shop's bob.
-  bobsWithShop?: boolean;
   container: GameObjects.Container;
   face?: { object: GameObjects.Image | GameObjects.Sprite; y: number };
-  // The Pet shop's glint frames, shown in place of its normal face while one plays.
-  glint?: { frames: readonly (string | number)[]; image: GameObjects.Image };
   // A button with a pressed face shows it rather than dipping.
   iconButton?: IconButton;
   lift: number;
   mark?: { image: GameObjects.Image; y: number };
   // The pop timer that raises the whole tile for a moment, for the gear badge at the gate.
   rise?: string;
-  // The Pet shop's normal face, which the glint covers.
-  shopNormal?: GameObjects.Image;
+  shopIdle?: ShopIdle;
 }
 
 // The heart after the Dogs band's pack-size bonus.
@@ -1216,32 +1209,17 @@ export class StartScene extends Scene {
     const pressed = this.press;
     const dip = (id: string) =>
       pressed?.id === id ? pressDip(pressed.held, now, pressed.startedMs) : 0;
-    // The Pet shop's art bobs while it is not pressed, and the slot sign with it.
-    const shopRise =
-      this.views.get("petShop")?.glint === undefined || dip("petShop") > 0
-        ? 0
-        : shopBobOffset(reduced, now);
     for (const [id, view] of this.views) {
       const rise =
         view.rise === undefined ? 0 : badgePopOffset(reduced, now, this.pops.get(view.rise));
       const down = dip(id) > 0;
       view.iconButton?.setPressed(down);
-      const glint = view.glint;
-      if (glint !== undefined) {
-        const frame = down ? undefined : shopGlintFrame(reduced, now);
-        const textureFrame = frame === undefined ? undefined : glint.frames[frame];
-        glint.image.setVisible(textureFrame !== undefined);
-        if (textureFrame !== undefined) {
-          glint.image.setFrame(textureFrame);
-          view.shopNormal?.setVisible(false);
-        }
-      }
+      view.shopIdle?.update(
+        !reduced && this.overlay === undefined && this.artWait === undefined && this.sys.isActive(),
+      );
       view.container.setPosition(
         shakeOffset(reduced, now, this.shakes.get(id)),
-        view.lift +
-          (view.iconButton === undefined ? dip(id) : 0) +
-          (glint !== undefined || view.bobsWithShop === true ? shopRise : 0) +
-          rise,
+        view.lift + (view.iconButton === undefined ? dip(id) : 0) + rise,
       );
       view.face?.object.setY(view.face.y + hopOffset(reduced, now, this.pops.get(id)));
       view.mark?.image.setY(view.mark.y + badgePopOffset(reduced, now, this.pops.get(id)));
@@ -1878,14 +1856,17 @@ export class StartScene extends Scene {
     if (faces !== undefined) {
       const [normal, pressed] = faces;
       view.container.add(faces);
-      view.iconButton = {
+      const idle = addShopIdle(this, view.container, faces);
+      if (idle !== undefined) {
+        view.shopIdle = idle;
+      }
+      view.iconButton = idle ?? {
         setPressed: (down) => {
           normal.setVisible(!down);
           pressed.setVisible(down);
         },
       };
       view.iconButton.setPressed(false);
-      this.addShopGlint(view, normal);
     } else {
       drawPetShopFallback(this, view.container, PET_SHOP, gameData.homeText.shop.title);
     }
@@ -1896,7 +1877,7 @@ export class StartScene extends Scene {
 
   // The dog slot sign hung across the Pet shop's front while a dog slot is for sale: ui-slot-sign,
   // its board and text dropping while pressed, with its call to buy over the cheapest slot's price,
-  // and the gold outline while the bank covers that slot. It bobs with the shop. A cream board in
+  // and the gold outline while the bank covers that slot. A cream board in
   // an ink frame stands in while the art is missing, when the whole sign dips instead.
   private drawSlotSign(root: GameObjects.Container, save: SaveDocument): void {
     const sign = slotSign(gameData, save.owned, save.bankCents);
@@ -1905,7 +1886,6 @@ export class StartScene extends Scene {
     }
     const { art, board, key, pressDrop, scale } = SLOT_SIGN;
     const view = this.tileView(root, "slotSign");
-    view.bobsWithShop = true;
     const faces = this.addPressFaces(key, art);
     if (faces === undefined) {
       const colours = { border: PALETTE.ink, fill: PALETTE.cream };
@@ -1958,23 +1938,6 @@ export class StartScene extends Scene {
       return undefined;
     }
     return [normal, pressed];
-  }
-
-  // The glint frames of the Pet shop's art, an image over the normal face, hidden between
-  // glints. update plays them from the clock, so there is no timer to stop.
-  private addShopGlint(view: TileView, normal: GameObjects.Image): void {
-    const frames = Array.from({ length: FEEDBACK.shopGlintFrames }, (_, i) =>
-      tagFrame(this, SHOP_ART.petShop, "glint", i),
-    ).filter((frame) => frame !== undefined);
-    const first = frames[0];
-    if (first === undefined) {
-      return;
-    }
-    const image = this.add.image(PET_SHOP.x, PET_SHOP.y, SHOP_ART.petShop, first).setOrigin(0);
-    image.setVisible(false);
-    view.container.add(image);
-    view.glint = { frames, image };
-    view.shopNormal = normal;
   }
 
   // A locked item's price (or goal) on the plate its look sets. originX places it by its left
