@@ -245,6 +245,7 @@ export const HOME_LAYOUT = {
       note: "white",
     },
   },
+  sectionSelectedFill: "pickerSelectedBody",
   // Under the gate, three framed sections top to bottom (walker, dogs, pocket), each a
   // heading band over its tiles; then Start walk.
   sections: {

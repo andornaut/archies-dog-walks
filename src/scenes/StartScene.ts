@@ -1372,7 +1372,7 @@ export class StartScene extends Scene {
         this.drawPackBonus(root, SECTION_RECTS[id], note);
       }
     }
-    this.drawSectionFills(root);
+    this.drawSectionFills(root, sections);
     this.drawWalkerPicker(root, save);
     this.drawDogTiles(root, save);
     this.drawPocket(root, save);
@@ -1387,12 +1387,14 @@ export class StartScene extends Scene {
     return homeSections(gameData, save.owned, { loadout: this.loadout, walker: save.walker });
   }
 
-  // Flat solid backings fill each section below its header, under the unchanged cards.
-  private drawSectionFills(root: GameObjects.Container): void {
+  // The section state sets its solid backing below the header and under the cards.
+  private drawSectionFills(root: GameObjects.Container, sections: Sections): void {
     for (const id of SECTION_IDS) {
       const key = SECTION_FILL_KEYS[id];
       const rect = sectionFill(SECTION_RECTS[id]);
-      if (this.textures.exists(key)) {
+      if (sections[id].state === "complete") {
+        fillRect(addGraphicsIn(this, root), PALETTE[HOME_LAYOUT.sectionSelectedFill], rect);
+      } else if (this.textures.exists(key)) {
         root.add(this.add.tileSprite(rect.x, rect.y, rect.width, rect.height, key).setOrigin(0));
       } else {
         fillRect(addGraphicsIn(this, root), PALETTE[HOME_LAYOUT.sectionLooks[id].fill], rect);

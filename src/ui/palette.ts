@@ -60,6 +60,7 @@ const PICKER = {
   pickerDogsHeader: colourFromHex(sharedPalette.pickerDogsHeader.hex),
   pickerPocketBody: colourFromHex(sharedPalette.pickerPocketBody.hex),
   pickerPocketHeader: colourFromHex(sharedPalette.pickerPocketHeader.hex),
+  pickerSelectedBody: colourFromHex(sharedPalette.pickerSelectedBody.hex),
   pickerWalkerBody: colourFromHex(sharedPalette.pickerWalkerBody.hex),
   pickerWalkerHeader: colourFromHex(sharedPalette.pickerWalkerHeader.hex),
 } as const;
