@@ -9,6 +9,7 @@ import { type Box, overlaps } from "../runner/collision";
 import { DART_VERGE_LANES, stopsOnVerge } from "../runner/moverPlanning";
 import { drawnLanes, hasLeftRoad, type MoverOnRoad, moverPlace, moverY } from "../runner/movers";
 import { minorLook } from "../runner/obstacleLooks";
+import { signaturePlace, signatureSweeps } from "../runner/signaturePaths";
 import { itemHeight, type RoadGeometry, zoneLength } from "../runner/walk";
 import { footprintOf, type WalkItem, type WalkSpawn } from "../runner/walkItems";
 import { eachRoadsideProp, type RoadsideTable, START_STRIP_LENGTH } from "./roadsideProps";
@@ -304,6 +305,7 @@ function isClear(
   const props = propsOnRow(stage, frame, data, distraction.row);
   const half = stage.width(distraction.key) / 2;
   let lastX: number | undefined;
+  let lastLane: number | undefined;
   const placed = { ...distraction, placed: side };
   const place = newDistractionPlace();
   const margin = ROW_MARGIN * geometry.cell.length;
@@ -322,26 +324,66 @@ function isClear(
     }
     const body: Box = {
       bottom: place.y + margin,
-      left: place.lanePosition - 0.5,
-      right: place.lanePosition + 0.5,
+      left: Math.min(place.lanePosition, lastLane ?? place.lanePosition) - 0.5,
+      right: Math.max(place.lanePosition, lastLane ?? place.lanePosition) + 0.5,
       top: place.y - geometry.cell.length - margin,
     };
+    lastLane = place.lanePosition;
     const ahead = at - since;
+    const from = Math.max(0, ahead - SAMPLE_SCROLL);
     for (const item of frame.items) {
-      const box = itemBoxAfter(geometry, ahead, item);
-      if (box !== null && overlaps(body, box)) {
+      if (itemBoxesDuring(geometry, from, ahead, item).some((box) => overlaps(body, box))) {
         return false;
       }
     }
     for (const { distance: arrives, item } of arrivals) {
       const after = zoneDistance + ahead - arrives;
-      const box = after < 0 ? null : itemBoxAfter(geometry, after, item);
-      if (box !== null && overlaps(body, box)) {
+      if (
+        after >= 0 &&
+        itemBoxesDuring(geometry, Math.max(0, after - SAMPLE_SCROLL), after, item).some((box) =>
+          overlaps(body, box),
+        )
+      ) {
         return false;
       }
     }
   }
   return true;
+}
+
+// Sweep between checks, including every defining turn and delayed signature component.
+function itemBoxesDuring(geometry: RoadGeometry, from: number, to: number, item: WalkItem): Box[] {
+  const path = item.mover?.path;
+  if (path?.motion === "signature" && item.mover !== undefined) {
+    const start = item.mover.since + from;
+    const finish = item.mover.since + to;
+    const sweeps =
+      from === to
+        ? path.route.componentDelays.map((_, component) => {
+            const point = signaturePlace(path.route, start, component);
+            return { from: point, to: point };
+          })
+        : signatureSweeps(path.route, start, finish);
+    return sweeps.map((sweep) => ({
+      bottom: geometry.roadTop + Math.max(sweep.from.y, sweep.to.y),
+      left: Math.min(sweep.from.x, sweep.to.x) - 0.5,
+      right: Math.max(sweep.from.x, sweep.to.x) + item.laneSpan - 0.5,
+      top: geometry.roadTop + Math.min(sweep.from.y, sweep.to.y) - item.height,
+    }));
+  }
+  const boxes = [itemBoxAfter(geometry, from, item), itemBoxAfter(geometry, to, item)].filter(
+    (box) => box !== null,
+  );
+  return boxes.length === 0
+    ? []
+    : [
+        {
+          bottom: Math.max(...boxes.map((box) => box.bottom)),
+          left: Math.min(...boxes.map((box) => box.left)),
+          right: Math.max(...boxes.map((box) => box.right)),
+          top: Math.min(...boxes.map((box) => box.top)),
+        },
+      ];
 }
 
 // A spawn still to come as the item it arrives as, at the zone distance it arrives at.
