@@ -742,32 +742,34 @@ def building(cv, w, h, pressed, door_frame=None):
 
 
 def shop_keeper(reveal, wave):
-    """A friendly native keeper on a 20x40 clip, behind the door leaf."""
-    g = edged(Grid(20, 40), "ink")
+    """A friendly native keeper on a 20x44 clip, behind the door leaf."""
+    g = edged(Grid(20, 44), "ink")
     cx = 9 + round((1 - reveal) * 4)
-    # Shoes and apron remain planted while the keeper leans into the opening.
-    g.rect(cx - 4, 33, 3, 6, "navy")
-    g.rect(cx + 1, 33, 3, 6, "navy")
-    g.rect(cx - 5, 38, 4, 1, "brown")
-    g.rect(cx + 1, 38, 4, 1, "brown")
-    g.rect(cx - 6, 18, 12, 17, "cream")
-    g.rect(cx + 4, 19, 2, 15, "tan")
-    g.rect(cx - 2, 15, 4, 4, "skin2")
-    g.rect(cx - 4, 21, 8, 15, "blue")
+    # A short apron exposes two trouser legs, a dark gap and grounded shoes.
+    g.rect(cx - 4, 30, 3, 12, "navy")
+    g.rect(cx - 4, 32, 1, 8, "dslate")
+    g.rect(cx + 1, 30, 3, 12, "navy")
+    g.rect(cx + 1, 32, 1, 8, "dslate")
+    g.rect(cx - 5, 42, 4, 1, "brown")
+    g.rect(cx + 1, 42, 4, 1, "brown")
+    g.rect(cx - 6, 18, 12, 12, "cream")
+    g.rect(cx + 4, 19, 2, 11, "tan")
+    g.rect(cx - 2, 16, 4, 3, "skin2")
+    g.rect(cx - 4, 21, 8, 11, "blue")
     g.rect(cx - 4, 19, 2, 7, "sky")
     g.rect(cx + 2, 19, 2, 7, "sky")
     g.rect(cx - 3, 29, 6, 1, "sky")
     g.rect(cx - 1, 24, 2, 2, "yellow")
     # A rounded short haircut, calm eyes and a small open smile.
-    g.cel(cx, 9, 5.5, 6, "skin1", "skin2")
-    g.cel(cx, 6, 5.5, 3, "dbrown", "plum", "brown")
-    g.rect(cx - 5, 8, 1, 4, "dbrown")
-    g.rect(cx + 4, 8, 1, 4, "plum")
-    g.p(cx - 2, 10, "ink")
-    g.p(cx + 2, 10, "ink")
-    g.p(cx - 1, 13, "dred")
-    g.p(cx, 14, "dred")
-    g.p(cx + 1, 13, "dred")
+    g.cel(cx, 11, 5.5, 6, "skin1", "skin2")
+    g.cel(cx, 7, 5.5, 3, "dbrown", "plum", "brown")
+    g.rect(cx - 5, 9, 1, 4, "dbrown")
+    g.rect(cx + 4, 9, 1, 4, "plum")
+    g.p(cx - 2, 12, "ink")
+    g.p(cx + 2, 12, "ink")
+    g.p(cx - 1, 15, "dred")
+    g.p(cx, 16, "dred")
+    g.p(cx + 1, 15, "dred")
     # The far arm rests; the near elbow and wrist make one small greeting.
     g.rect(cx + 6, 20, 2, 10, "cream")
     g.rect(cx + 6, 29, 2, 4, "skin1")
@@ -810,7 +812,7 @@ def shop_door(cv, h, pressed, door_frame):
     cv.fill(79, top + 1, 24, 2, "navy")
     cv.fill(78, 95, 26, 5, "dbrown")
     if reveal is not None:
-        cv.img.alpha_composite(shop_keeper(reveal, wave), (79, 60))
+        cv.img.alpha_composite(shop_keeper(reveal, wave), (79, 56))
     ratio = width / 26
     cv.fill(left, top, width, height, "navy")
     cv.fill(left, top, 1, height, "dslate")
