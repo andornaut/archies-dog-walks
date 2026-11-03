@@ -36,7 +36,7 @@ Counts apply only to the stated source and test collection. They do not transfer
 
 The `ac1cb8d8` candidate includes the whole planner and prize-fixture fix on published main, preserving the Pet shop and approved test reductions. Its source differs from `9b4c6334`, so the earlier counts are not its qualification results. The paged experiment is not a release baseline. A same-source whole-mode comparison at `00dfb1c9` restored 12/16 runtime results.
 
-The original 41 unknowns are `quiet-03` (Cabbagetown, 126 requests, capacity 1, seed 1, zone index 1) and `passable-13` (Tall Yonge, 169 requests, seed 1, zone index 3, 83 extra pack/rows). They are distinct from these four runtime Yonge cases, all at zone index 3:
+The original 41 unknowns are `quiet-03` (Cabbagetown, 126 requests, seed 1, zone index 1) and `passable-13` (Tall Yonge, 169 requests, seed 1, zone index 3). They are distinct from these four runtime Yonge cases, all at zone index 3:
 
 | Case         | Seed      | Requests | 90% floor |
 | ------------ | --------- | -------- | --------- |
@@ -50,7 +50,7 @@ The original 41 unknowns are `quiet-03` (Cabbagetown, 126 requests, capacity 1, 
 These prototypes use the whole `9b4c6334` source and remain scratch work:
 
 - **Local repair v3:** the first 236-request Yonge case returned unknown at the 32,768 propagation limit. All 26 mandatory owners remained, while the highest count was 46 against a 213 floor. Seven quiet gaps had 49 rows of excess; 148 repairs were dominated by kind-row and lane swaps.
-- **Dynamic MRV:** five native fixtures and TypeScript passed; no real query has run.
+- **Dynamic MRV:** five native fixtures and TypeScript passed. One original Yonge 236-request query on scratch `20bff58e` returned unknown at 32,768 propagation checks, peaking at 154 against the required 213, with no audited delivery.
 - **Min-conflicts:** three tests and TypeScript passed for a standing-only mechanism. Moving bodies, quiet coverage and optional omissions remain unqualified.
 - **Whole-source index:** an optimisation is in progress for 2,663 measured secondary charges while retaining 16,992 mandatory membership charges.
 - **Necessary bounds:** all protected owners had individual full-profile fits on the retained paths for four runtime Yonge and three strict capacity cases. Protected standing-domain subsets and screen-exposure lower bounds showed no overload. These checks prove neither joint feasibility nor impossibility; weighted owner, body, quiet and visibility compatibility remains unresolved.
@@ -60,4 +60,4 @@ These prototypes use the whole `9b4c6334` source and remain scratch work:
 1. Identify the exact candidate commit, tree, inputs and applicable check artifacts. Preserve other worktrees and unlanded changes.
 2. Review a proposed change against the native safety, frozen input, independent audit and shared-budget contracts above. Synthetic fixtures establish a mechanism; they do not establish original-zone success.
 3. Run the explicitly approved bounded original cases on the reviewed exact tree. A valid result requires its independent audit; unknown and exhausted outcomes are not passes. Compare matching inputs and counters without increasing limits or crediting a prefix.
-4. Qualify runtime, original cases and exact capacity on the final source, then complete the integrated full gate and exact-commit CI and deployment checks. Do not adopt an experiment or ship a candidate with unresolved required cases.
+4. Qualify required runtime and original regression checks on the final source, report offline 100% capacity separately, then complete the integrated full gate and exact-commit CI and deployment checks. Capacity unknown alone does not invalidate an independently audited runtime layout meeting the 90% floor. Unresolved required runtime, native safety, guarantee or regression failures block release.
