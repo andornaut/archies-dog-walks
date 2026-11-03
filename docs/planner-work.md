@@ -29,7 +29,7 @@ Counts apply only to the stated source and test collection. They do not transfer
 | ----------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
 | Whole `ffdb0f36`, original 41       | 41 valid: 33 complete, 8 partial. All 62 assertion uses and 10 quiet pairs passed.                                         |
 | Whole `ffdb0f36`, runtime 16        | 14 valid: 7 complete, 7 partial. Yonge `left-2` and `straight-2` are unknown at the unchanged budget.                      |
-| Whole `ffdb0f36`, strict capacity 6 | Cabbagetown 169, High Park 144 and Kensington 187 complete. Distillery 215, Beaches 198 and Yonge 230 unknown.             |
+| Whole `f88074c7`, strict capacity 6 | Cabbagetown 169, High Park 144 and Kensington 187 complete. Distillery 215, Beaches 198 and Yonge 230 unknown.             |
 | Whole `ffdb0f36`, full suite        | 6,910 passed, 2 failed, 11 skipped. Missing art environment caused one failure; a walk test and simulator setup timed out. |
 | Paged `00dfb1c9`                    | Held experiment: runtime 9/16, original 34/41 and capacity 1/6 valid. It is not a release baseline.                        |
 
