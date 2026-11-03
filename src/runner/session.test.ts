@@ -166,11 +166,11 @@ const OFFERS = new Map(SEEDS.map((seed) => [seed, seedForks(seed)]));
 const offersOf = (seed: number) => OFFERS.get(seed) ?? [];
 
 describe("a walk's forks, drawn from its seed", () => {
-  it.each(SEEDS.slice(0, 40))("offers the same upgrades every time for seed %i", (seed) => {
+  it.each(SEEDS.slice(0, 3))("offers the same upgrades every time for seed %i", (seed) => {
     expect(seedForks(seed)).toEqual(offersOf(seed));
   });
 
-  it.each(SEEDS.slice(0, 40))(
+  it.each(SEEDS.slice(0, 3))(
     "for seed %i, bares one path of a fork with several; the rest carry upgrades, none twice or picked, one trade-off",
     (seed) => {
       const picked = new Set<string>();

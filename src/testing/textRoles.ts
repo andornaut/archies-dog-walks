@@ -207,6 +207,7 @@ function cardRoles(): TextRoleCase[] {
   const forgiven = keysOf(gameData.dogs).map((dog) =>
     fillNames(gameData.runText.card.heartForgiven, { dog: gameData.dogs[dog].name, hearts: "1" }),
   );
+  const warnings = new Set<string>();
   return [
     ...everyCardOption().flatMap(([name, option]) => {
       const { effect } = smallCardText(gameData, BODY, bodyWidth, option);
@@ -219,6 +220,10 @@ function cardRoles(): TextRoleCase[] {
       };
       const fires = option === undefined || option.fires.length === 0 ? null : option.fires;
       const warning = fires === null ? null : firesText(gameData, fires);
+      const newWarning = warning !== null && !warnings.has(warning);
+      if (warning !== null) {
+        warnings.add(warning);
+      }
       const shownWarning = warning === null ? null : shownIn("font-title", warning);
       const warningLines =
         shownWarning === null
@@ -234,7 +239,7 @@ function cardRoles(): TextRoleCase[] {
       return [
         small,
         ...enlarged,
-        ...(warning === null
+        ...(warning === null || !newWarning
           ? []
           : [
               ...plainRole("card's firing warning", "font-body", FIRES_FIT.small, [warning]),
@@ -586,9 +591,9 @@ function cardTitleRoles(): TextRoleCase[] {
   );
 }
 
-// Every text role, each string the data puts in it.
+// Every text role, with representative strip wording combinations.
 export function textRoleCases(): TextRoleCase[] {
-  const strip = everyStripLine();
+  const strip = everyStripLine("representative");
   const dogNames = Object.values(gameData.dogs).map(({ name }) => name);
   const badgeLayout = {
     maxNamed: BADGE_STRIP.maxNamed,

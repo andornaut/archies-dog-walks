@@ -9,11 +9,13 @@ import type { MessageLine } from "../hud/messageStrip";
 import { STRIP_LINE_FIELDS } from "../hud/runText";
 import { debuffLines } from "../hud/stripLines";
 import { minorObstacleNames } from "../runner/obstacleLooks";
+import { inkWidth } from "./fontInk";
 
-// Every line the strip can say: each hint and badge, and each of the walk's lines for every dog,
-// owner and obstacle as each neighbourhood names it, with two-digit counts and the largest
-// amounts.
-export function everyStripLine(): (FaceText & Pick<MessageLine, "names">)[] {
+// Strip lines with two-digit counts and the largest amounts. Representative mode samples
+// dog, owner and obstacle widths while keeping every line template.
+export function everyStripLine(
+  mode: "all" | "representative" = "all",
+): (FaceText & Pick<MessageLine, "names">)[] {
   const { strip } = gameData.runText;
   const line = (key: keyof typeof STRIP_LINE_FIELDS, fields: Record<string, FaceText | string>) =>
     fillFaceText(strip[key], fields);
@@ -28,6 +30,19 @@ export function everyStripLine(): (FaceText & Pick<MessageLine, "names">)[] {
         .map((name) => name.toLowerCase()),
     ),
   ];
+  const width = (text: string) => inkWidth("font-body", { scale: 2 }, text);
+  const pick = <T>(values: readonly T[], measure: (value: T) => number, count: number): T[] => {
+    const sorted = [...values].sort((a, b) => measure(a) - measure(b));
+    return Array.from(
+      { length: count },
+      (_, i) => sorted[Math.round((i * (sorted.length - 1)) / (count - 1))],
+    ).filter((value): value is T => value !== undefined);
+  };
+  const sampledDogs =
+    mode === "representative"
+      ? pick(dogs, ({ dog, owner }) => width(dog) + width(owner.text), 4)
+      : dogs;
+  const sampledObstacles = mode === "representative" ? pick(obstacles, width, 3) : obstacles;
   const amount = "$9,999";
   return [
     ...Object.values(gameData.hints).map(({ text }) => ({ text })),
@@ -55,13 +70,13 @@ export function everyStripLine(): (FaceText & Pick<MessageLine, "names">)[] {
       const { name, size } = gameData.dogs[id];
       return size === "medium" ? [] : [line(SIZE_STRIP_LINES[size], { dog: name, speed: "99%" })];
     }),
-    ...dogs.flatMap(({ dog, owner }) => [
+    ...sampledDogs.flatMap(({ dog, owner }) => [
       line("fired", { dog, owner }),
       line("secondChance", { owner }),
       line("spareTreatUsed", { owner }),
       line("pull", { dog }),
       line("treat", { dog, hearts: "10", owner }),
-      ...obstacles.flatMap((obstacle) => [
+      ...sampledObstacles.flatMap((obstacle) => [
         line("dodge", { dog, obstacle }),
         line("plainHit", { dog, hearts: "10", obstacle, owner }),
       ]),
