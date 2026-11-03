@@ -17,6 +17,8 @@ The pages and `public/` are laid out in the [root README](../README.md#developin
 
 The player-facing rules (controls, layout, movers, pulls, feedback) are in `gameplay/design.md`; this section covers how the code carries them out.
 
+The [planner work record](../docs/planner-work.md) describes the unlanded planner and its qualification status.
+
 ### Data-driven entities
 
 - **Boundary:** code implements mechanisms; data selects which mechanisms an entity uses and supplies its profiles, traits and tuning values. Adding an entity that uses existing mechanisms should require data and assets, without a new runtime branch on its id. Dispatch on a validated mechanism kind belongs in code.
