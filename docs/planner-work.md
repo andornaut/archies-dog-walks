@@ -35,7 +35,7 @@ Counts apply only to the stated source and test collection. They do not transfer
 
 The candidate includes the whole planner, prize-fixture correction, Pet shop and approved test reductions. Published main has since added only this work record and its README pointer. The original 41 result is sealed for `ffdb0f36`; do not transfer it to another source without verifying the tree and relevant inputs.
 
-Both unresolved runtime cases use seed 550993563, zone index 3, 237 requests and a 214-request floor. The `left-2` diagnostic retained 115 requests and all 26 protected owners, with zero quiet excess; it has no delivery certificate. A reviewed, unlanded closure-gated fill leaf `d57885c7` has native unit coverage. Its original runtime qualification is authorised and in progress; no result transfers between source revisions.
+Both unresolved runtime cases use seed 550993563, zone index 3, 237 requests and a 214-request floor. The `left-2` diagnostic retained 115 requests and all 26 protected owners, with zero quiet excess; it has no delivery certificate. Resume from `ffdb0f36`. The unlanded fill leaf `d57885c7` regressed to 12/16 valid in its fresh runtime batch, with four Yonge cases unknown. Preserve it as a negative experiment and do not promote it or the paged experiment.
 
 ## Experiments
 
