@@ -309,7 +309,7 @@ export function planZoneWithContext(
     },
     context: {
       coverageFirst: true,
-      // CLEANUP (added 2026-11-02): restore exact delivery when required cases reach 100% within budget.
+      // The 90% floor is the runtime release rule; the search still prefers 100% delivery.
       delivery: "runtime-90",
       fairSources: true,
       limits: { ...SLOT_LIMITS, candidateChecks: 2 * SLOT_LIMITS.candidateChecks },

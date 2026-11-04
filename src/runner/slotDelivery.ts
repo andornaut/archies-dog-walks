@@ -37,7 +37,7 @@ export interface SlotPartialAudit<Kind extends string> {
   readonly violations: readonly string[];
 }
 
-// CLEANUP (added 2026-11-02): remove runtime-90 when all required contexts reach 100% within approved runtime limits.
+// The runtime release floor: a runtime-90 plan delivers at least nine tenths of its original requests.
 export const SLOT_RUNTIME_DELIVERY_FLOOR = Object.freeze({
   denominator: 10,
   numerator: 9,

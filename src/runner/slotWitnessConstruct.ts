@@ -45,7 +45,7 @@ export interface SlotWitnessConstructPorts<Kind extends string, Mark> {
   readonly omissionAttempts?: number;
   readonly ordinaryOrder?: "original" | "balanced";
   partial?(omissions: readonly WitnessOmission<Kind>[]): boolean | undefined;
-  // CLEANUP (added 2026-11-02): remove if fair-source exploration is declined.
+  // Opens each job's sources progressively in their weighted order (traverseSlotSources).
   readonly fairSources?: boolean;
   hint?(job: WitnessJob<Kind>): SlotCandidate<Kind> | undefined;
   laneClosure?(): { readonly accepted: true } | Rejection<Kind> | undefined;

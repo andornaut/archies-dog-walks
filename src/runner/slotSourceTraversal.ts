@@ -1,4 +1,3 @@
-// CLEANUP (added 2026-11-02): remove if the source-traversal experiment is declined.
 import type { SlotCandidate, SlotSequenceStep } from "./slotCandidateDomains";
 import type { PreparedSlotKind } from "./slotCandidates";
 

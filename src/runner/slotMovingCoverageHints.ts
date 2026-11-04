@@ -9,7 +9,6 @@ interface HintWork {
 }
 
 // A sampled native template supplies ordering hints, never admission or domain evidence.
-// CLEANUP (added 2026-11-03): remove if moving quiet-gap ordering is declined.
 export function createMovingCoverageHints<Kind extends string>(
   geometry: Omit<SpawnPlan<Kind>, "quotas">,
 ) {

@@ -57,13 +57,13 @@ export interface SlotPlanningContext {
   readonly zoneIndex: number;
   readonly limits: SlotLimits;
   readonly runtimeSearch?: "original-then-balanced";
-  // CLEANUP (added 2026-11-02): remove runtime-90 after all required contexts reach 100% within the allowance.
+  // Runtime plans use runtime-90, whose floor is the release rule; exact by default.
   readonly delivery?: SlotDeliveryPolicy;
-  // CLEANUP (added 2026-11-02): remove if fair-source exploration is declined.
+  // Opens each job's sources progressively in their weighted order; runtime plans set it.
   readonly fairSources?: boolean;
-  // CLEANUP (added 2026-11-02): remove if the initial coverage ordering experiment is declined.
+  // Places one initial coverage owner before wide guarantees; runtime plans set it.
   readonly coverageFirst?: boolean;
-  // CLEANUP (added 2026-11-03): remove this comparison switch after original-draw ordering qualification.
+  // Tries each draw tuple's native values before later retry tuples; on unless false.
   readonly originalDrawsFirst?: boolean;
 }
 export interface SlotAttemptDiagnostics {
