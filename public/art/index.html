@@ -114,7 +114,7 @@ canvas, .view img { display: block; image-rendering: pixelated; image-rendering:
 <main class="wrap">
   <header>
     <h1>Archie's Dog Walks Art</h1>
-    <p>Every asset listed in <code>/art/manifest.json</code>, as the game loads it, grouped by key prefix. Sprites play their Aseprite animations.</p>
+    <p>Every asset listed in <code>/art/manifest.json</code>, as the game loads it, grouped by key prefix. Sprites play their tagged animations.</p>
     <div class="counts" id="counts" role="group" aria-label="Show only"></div>
     <p class="error" id="status" hidden></p>
   </header>
@@ -131,7 +131,7 @@ canvas, .view img { display: block; image-rendering: pixelated; image-rendering:
       <label class="gr" title="Cabbagetown road"><input type="radio" name="ground" value="#8b9bb4"><i style="background:#8b9bb4"></i><span class="sr">Cabbagetown road</span></label>
       <label class="gr" title="High Park road"><input type="radio" name="ground" value="#e4a672"><i style="background:#e4a672"></i><span class="sr">High Park road</span></label>
       <label class="gr" title="Distillery District road"><input type="radio" name="ground" value="#3a4466"><i style="background:#3a4466"></i><span class="sr">Distillery District road</span></label>
-      <label class="gr" title="Kensington Market road"><input type="radio" name="ground" value="#5e2620"><i style="background:#5e2620"></i><span class="sr">Kensington Market road</span></label>
+      <label class="gr" title="Kensington Market road"><input type="radio" name="ground" value="#8a857c"><i style="background:#8a857c"></i><span class="sr">Kensington Market road</span></label>
       <label class="gr" title="The Beaches road and UI cream"><input type="radio" name="ground" value="#ead4aa"><i style="background:#ead4aa"></i><span class="sr">The Beaches road and UI cream</span></label>
       <label class="gr" title="Yonge Street road"><input type="radio" name="ground" value="#353b45"><i style="background:#353b45"></i><span class="sr">Yonge Street road</span></label>
       <label class="gr" title="High Park verge"><input type="radio" name="ground" value="#1e4d2b"><i style="background:#1e4d2b"></i><span class="sr">High Park verge</span></label>
@@ -139,15 +139,15 @@ canvas, .view img { display: block; image-rendering: pixelated; image-rendering:
     </div>
   </div>
 
-  <section id="s-palette" aria-labelledby="h-palette"><h2 id="h-palette">Palette <small>Endesga 32, the Toronto colours and the neutral greys</small></h2><div class="palette" id="palette"></div></section>
+  <section id="s-palette" aria-labelledby="h-palette"><h2 id="h-palette">Palette <small>Endesga 32, the neutral greys and the Toronto colours</small></h2><div class="palette" id="palette"></div></section>
 </main>
 
 <script>
 (() => {
 "use strict";
 const BASE = "/art/";
-// The house palette in pixel.ts order (Endesga 32, the Toronto colours, the neutral greys), as K name and hex.
-const PAL = "rust:be4a2f ochre:d77643 cream:ead4aa tan:e4a672 brown:b86f50 dbrown:733e39 plum:3e2731 dred:a22633 red:e43b44 orange:f77622 amber:feae34 yellow:fee761 green:63c74d dgreen:3e8948 forest:265c42 teal:193c3e blue:124e89 sky:0099db cyan:2ce8f5 white:ffffff lgrey:c0cbdc grey:8b9bb4 slate:5a6988 dslate:3a4466 navy:262b44 ink:181425 hot:ff0044 purple:68386c mauve:b55088 pink:f6757a skin1:e8b796 skin2:c28569 moss:9cb04a olive:6b8a35 dolive:445a26 canopy:357a2f pine:1e4d2b fir:11301c brick:8e3b2b dbrick:5e2620 clay:9a6a4a bark:523a2c walnut:2e2019 driftwood:a99c86 stone:8a857c dstone:625e58 ash:57606a shale:353b45 coal:26292f ttc:da291c turquoise:35c2a6 dturq:1f8a7a lilac:a77bd9 violet:6d4bb0 lime:b2d94a foam:a8e0e6 shallow:58b8c9 lake:2f7fa6 dlake:1d5576 gold:f9c74f peach:ff9e6b haze:cfe3ea azure:3d86e0 cobalt:2654b0 nlgrey:d8d8d8 ngrey:a4a4a4 nslate:727272 ndslate:4a4a4a".split(" ").map(p => p.split(":"));
+// The house palette in pixel.ts order (Endesga 32, the neutral greys, the Toronto colours), as K name and hex: shared/palette.json less the picker-only UI tones.
+const PAL = "rust:be4a2f ochre:d77643 cream:ead4aa tan:e4a672 brown:b86f50 dbrown:733e39 plum:3e2731 dred:a22633 red:e43b44 orange:f77622 amber:feae34 yellow:fee761 green:63c74d dgreen:3e8948 forest:265c42 teal:193c3e blue:124e89 sky:0099db cyan:2ce8f5 white:ffffff lgrey:c0cbdc grey:8b9bb4 slate:5a6988 dslate:3a4466 navy:262b44 ink:181425 hot:ff0044 purple:68386c mauve:b55088 pink:f6757a skin1:e8b796 skin2:c28569 nlgrey:d8d8d8 ngrey:a4a4a4 nslate:727272 ndslate:4a4a4a moss:9cb04a olive:6b8a35 dolive:445a26 canopy:357a2f pine:1e4d2b fir:11301c brick:8e3b2b dbrick:5e2620 clay:9a6a4a bark:523a2c walnut:2e2019 driftwood:a99c86 stone:8a857c dstone:625e58 ash:57606a shale:353b45 coal:26292f ttc:da291c turquoise:35c2a6 dturq:1f8a7a lilac:a77bd9 violet:6d4bb0 lime:b2d94a foam:a8e0e6 shallow:58b8c9 lake:2f7fa6 dlake:1d5576 gold:f9c74f peach:ff9e6b haze:cfe3ea azure:3d86e0 cobalt:2654b0".split(" ").map(p => p.split(":"));
 const $ = id => document.getElementById(id);
 const el = (tag, props = {}, kids = []) => {
   const { dataset, ...rest } = props;
@@ -211,7 +211,7 @@ function sizeCanvas(c, w, h) { c.width = w; c.height = h; c.style.width = w * pr
 function emptyCard(host, text) { host.replaceChildren(el("div", { className: "empty", innerHTML: text })); }
 function errorCard(host, kind, key, err) { host.append(el("div", { className: "empty error", textContent: `${key}: ${err.message}`, dataset: { key, kind } })); }
 
-// Aseprite "hash" JSON: frames keyed by name in export order, animations in meta.frameTags.
+// Sprite sheet JSON in json-hash form: frames keyed by name in export order, animations in meta.frameTags.
 function sequence(tag) {
   const fwd = []; for (let i = tag.from; i <= tag.to; i++) fwd.push(i);
   if (tag.direction === "reverse") return fwd.reverse();
