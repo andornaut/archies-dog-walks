@@ -479,7 +479,9 @@ function planSlotComposition<Kind extends string>(
     ]);
   }
   path = conditioned.path;
-  const domains = createSlotCandidateDomains(geometry, path);
+  const domains = createSlotCandidateDomains(geometry, path, {
+    negativeVisibility: !optionalDelivery,
+  });
   const layouts = new Map<string, number>();
   const sourceOrders = new Map<SlotJob<Kind>, readonly SlotSource<Kind>[]>();
   const orderSources = (job: SlotJob<Kind>) => {

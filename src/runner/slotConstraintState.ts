@@ -208,15 +208,18 @@ function immutableEntry(entry: SlotPlacement<string>): boolean {
   );
 }
 
+// An accepted result attests its visibility prerequisite for negative visibility lookups unless
+// attestVisibility is false, for a search that never looks them up.
 export function createSlotIntrinsicProbe<Kind extends string>(
   geometry: Omit<SpawnPlan<Kind>, "quotas">,
   path: PlannedSpawns<Kind>["path"],
+  attestVisibility = true,
 ) {
   const board = nativeSlotBoard("complete", geometry, path);
   const scope = fingerprint([geometry, path]);
   return (entry: SlotPlacement<Kind>) => {
     const result = board.checkIntrinsic(entry);
-    if (result.accepted && scope !== undefined && immutableEntry(entry)) {
+    if (attestVisibility && result.accepted && scope !== undefined && immutableEntry(entry)) {
       const visibility = board.visibilityPrerequisite(entry, entry.request);
       const snapshot = fingerprint(entry);
       if (visibility !== undefined && snapshot !== undefined) {

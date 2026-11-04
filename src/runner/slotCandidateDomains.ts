@@ -142,15 +142,22 @@ function immutableEntry<Kind extends string>(entry: SlotPlacement<Kind>): SlotPl
 
 // Only immutable native prerequisites belong here. Prefix occupancy, lane unions,
 // open stretches, reservations, visibility and caps remain transactional checks.
+// Runtime search, which records conflicts instead of looking up negative visibility, passes
+// negativeVisibility false so intrinsic checks skip their visibility attestations.
 export function createSlotCandidateDomains<Kind extends string>(
   geometry: Omit<SpawnPlan<Kind>, "quotas">,
   path: PlannedSpawns<Kind>["path"],
+  options: { readonly negativeVisibility?: boolean } = {},
 ) {
   const nativeGeometry = { ...geometry, moverCaps: { ...geometry.moverCaps } };
   const plan = { ...nativeGeometry, quotas: [] };
   const spacing = rowSpacing(plan);
   const rows = zoneRows(plan, spacing);
-  const probeIntrinsic = createSlotIntrinsicProbe(nativeGeometry, path);
+  const probeIntrinsic = createSlotIntrinsicProbe(
+    nativeGeometry,
+    path,
+    options.negativeVisibility !== false,
+  );
   const projection = createSlotPathProjection(nativeGeometry, path);
   const jobs = new Map<
     string,
