@@ -2528,15 +2528,6 @@
       "spriteKey": "sandcastle"
     },
     {
-      "id": "sandwichBoard",
-      "name": "Sandwich board",
-      "shape": {
-        "lanes": 1,
-        "rows": 1
-      },
-      "spriteKey": "sandwich-board"
-    },
-    {
       "id": "scooter",
       "movement": {
         "factor": 2,
@@ -3683,7 +3674,6 @@
           "rollerblader": 0,
           "rollingBarrel": 0,
           "sandcastle": 0,
-          "sandwichBoard": 0,
           "scooter": 0,
           "seagull": 0,
           "segwayTourRider": 0,
@@ -3962,7 +3952,6 @@
           "rollerblader": 0,
           "rollingBarrel": 0,
           "sandcastle": 0,
-          "sandwichBoard": 0,
           "scooter": 0,
           "seagull": 0,
           "segwayTourRider": 0,
@@ -4236,7 +4225,6 @@
           "rollerblader": 0,
           "rollingBarrel": 0,
           "sandcastle": 0,
-          "sandwichBoard": 0,
           "scooter": 3,
           "seagull": 0,
           "segwayTourRider": 0,
@@ -4515,7 +4503,6 @@
           "rollerblader": 1.5,
           "rollingBarrel": 0,
           "sandcastle": 4.25,
-          "sandwichBoard": 0,
           "scooter": 0,
           "seagull": 5,
           "segwayTourRider": 0,
@@ -4789,7 +4776,6 @@
           "rollerblader": 0,
           "rollingBarrel": 4,
           "sandcastle": 0,
-          "sandwichBoard": 0,
           "scooter": 3.5,
           "seagull": 0,
           "segwayTourRider": 6,
@@ -5073,7 +5059,6 @@
           "rollerblader": 0,
           "rollingBarrel": 0,
           "sandcastle": 0,
-          "sandwichBoard": 0,
           "scooter": 5,
           "seagull": 8,
           "segwayTourRider": 0,

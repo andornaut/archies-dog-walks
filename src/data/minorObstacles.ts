@@ -340,7 +340,6 @@ export const MINOR_OBSTACLES = {
     zones: ["distilleryDistrict"],
   },
   sandcastle: { name: "Sandcastle", shape: { lanes: 1, rows: 1 }, zones: ["theBeaches"] },
-  sandwichBoard: { name: "Sandwich board", shape: { lanes: 1, rows: 1 } },
   scooter: {
     movement: { factor: 2.0, kind: "inLane" },
     name: "Scooter",
