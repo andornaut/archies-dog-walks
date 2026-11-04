@@ -8,7 +8,7 @@ import type { ZoneId } from "../data/types";
 import { WORLD } from "../data/world";
 import { lightKeySchema, lightZonesSchema, zonesOf } from "./lights";
 
-// What lies beside the projected road, as art/tools/backdrops.py paints it below the
+// What lies beside the projected road, as art/tools/backdrops.ts paints it below the
 // backdrops' streets, so the verge under the band continues the band's bottom row. across is
 // how far from the road's centre line a pixel is, in road pixels (the road is across <
 // ROAD_HALF); x is the same measure signed, negative on the left. z is a road distance from
@@ -90,7 +90,7 @@ export interface Verge {
 // A tuft draws its own colour over the lawn's base or its marks, rather than darkening them.
 type LawnColours = readonly [base: number, marks: number, tufts: number];
 
-// A verge as art writes it in shared/verges.json (art/tools/backdrops.py verges --write): the
+// A verge as art writes it in shared/verges.json (art/tools/backdrops.ts verges --write): the
 // same fields with colours by palette name, a null walkTo for paving out to the screen's edges,
 // lawnColours null with no lawn, and pools left out with none.
 interface VergeDotsEntry {

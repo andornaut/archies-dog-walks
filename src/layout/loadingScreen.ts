@@ -1,7 +1,7 @@
 import { clamp01 } from "@andornaut/game-kit/numbers";
 import type { Point, Rect } from "@andornaut/game-kit/rect";
 
-// The loading screen's art (LOADING_ART) is placed as art/tools/screens.py draws it, in screen
+// The loading screen's art (LOADING_ART) is placed as art/tools/screens.ts draws it, in screen
 // pixels.
 export const LOADING_TRACK: Rect = { height: 8, width: 316, x: 16, y: 456 };
 

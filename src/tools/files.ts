@@ -4,7 +4,7 @@ import { dirname, join } from "node:path";
 import type { ArtFiles } from "./artManifest";
 
 // The generated files are committed, so they are written in one stable form: two-space
-// indents and a final newline, as art's Python tools write JSON.
+// indents and a final newline, as art's tools write JSON.
 export function jsonText(value: unknown): string {
   return `${JSON.stringify(value, null, 2)}\n`;
 }

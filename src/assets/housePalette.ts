@@ -1,6 +1,6 @@
 import palette from "../../shared/palette.json";
 
-// The house palette as art writes it (shared/palette.json, from art/tools/pixel.py): every
+// The house palette as art writes it (shared/palette.json, from art/tools/pixel.ts): every
 // colour by name, as RGB, and the colour one step down its ramp. Ink is the darkest step and
 // stays ink.
 

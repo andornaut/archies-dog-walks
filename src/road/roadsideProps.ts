@@ -8,7 +8,7 @@ import { STRIP } from "../layout/roadRaster";
 // The roadside props: houses, fences, trees and yard props standing on the lawns beyond the
 // sidewalks, and curb props (hydrants, bins, planters, bike racks, newspaper boxes) standing on
 // the sidewalk or paving inside its curb band (curbBand), placed from art's per-zone table
-// (shared/roadside.json, which art/tools/roadside.py writes). They are scenery only: nothing
+// (shared/roadside.json, which art/tools/roadside.ts writes). They are scenery only: nothing
 // in the walk reads them and they draw no random numbers, so a seed plays the same walk with
 // or without them.
 //
