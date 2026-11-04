@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 
+import { herringSpawn } from "./dartOutcomes.ts";
 import { type MoverDraws, type MoverSpec } from "./moverModel.ts";
-import { herringSpawn, moverPlacements } from "./moverPlanning.ts";
+import { moverPlacements } from "./moverPlanning.ts";
 import {
   blockingLength,
   rowSpacing,

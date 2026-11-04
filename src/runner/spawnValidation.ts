@@ -1,4 +1,5 @@
 import type { MovementKind } from "../data/types.ts";
+import { isHerring } from "./dartOutcomes.ts";
 import {
   alternativeLanesOpen,
   deterministicOccupancyMasks,
@@ -6,7 +7,6 @@ import {
 } from "./laneAlternatives.ts";
 import { DART_LIFTS, moverRetries } from "./moverDraws.ts";
 import { type MoverDraws } from "./moverModel.ts";
-import { isHerring } from "./moverPlanning.ts";
 import { onScreenOf } from "./moverScreen.ts";
 import { moverReservationsMayShare, type MoverVisibilityProof } from "./moverSpots.ts";
 import { ridersMeet } from "./riderSpans.ts";

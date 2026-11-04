@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { ROAD_SPRITE_SIZE } from "../assets/spriteKeys.ts";
 import { LANE_COUNT, SCREEN_CONFIG } from "../data/screen.ts";
 import { WORLD } from "../data/world.ts";
-import { DART_VERGE_LANES } from "../runner/moverPlanning.ts";
+import { DART_VERGE_LANES } from "../runner/dartOutcomes.ts";
 import { type MoverPath, moverPlace } from "../runner/movers.ts";
 import { curbBand, VERGES } from "./roadside.ts";
 import type { KeptScenery } from "./struckScenery.ts";

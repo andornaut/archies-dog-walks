@@ -12,7 +12,7 @@ import type { MinorObstacleId } from "../data/types.ts";
 import { laneCentreXs } from "../layout/lanes.ts";
 import { currentZone } from "../rules/route.ts";
 import { read } from "../rules/units.ts";
-import { DART_VERGE_LANES } from "../runner/moverPlanning.ts";
+import { DART_VERGE_LANES } from "../runner/dartOutcomes.ts";
 import { moverPlace } from "../runner/movers.ts";
 import { minorLook } from "../runner/obstacleLooks.ts";
 import { screenRoadGeometry } from "../runner/screenGeometry.ts";

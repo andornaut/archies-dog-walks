@@ -2,8 +2,8 @@ import { itemAt, partitionPoint } from "@andornaut/game-kit/arrays";
 
 import { laneMask } from "../layout/lanes.ts";
 import { approachOutcomes } from "./approach.ts";
+import { stopsOnVerge } from "./dartOutcomes.ts";
 import { type MoverSpec, type MoverStand, type PlannerStreams } from "./moverModel.ts";
-import { stopsOnVerge } from "./moverPlanning.ts";
 import { crossingScroll, laneAt, type MoverPath, moverPlace, type MoverStep } from "./movers.ts";
 import { type MoverCaps } from "./moverScreen.ts";
 import { shyOutcomes } from "./shy.ts";

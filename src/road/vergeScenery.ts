@@ -1,4 +1,4 @@
-import { stopsOnVerge } from "../runner/moverPlanning.ts";
+import { stopsOnVerge } from "../runner/dartOutcomes.ts";
 import { moverPlace, moverY } from "../runner/movers.ts";
 import type { RoadGeometry } from "../runner/walk.ts";
 import type { WalkItem } from "../runner/walkItems.ts";

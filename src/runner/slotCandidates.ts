@@ -1,3 +1,4 @@
+import { herringSpawn, isHerring } from "./dartOutcomes.ts";
 import { deepFreeze } from "./deepFreeze.ts";
 import { moverLeavesMinimumLanes } from "./laneAlternatives.ts";
 import { DART_LIFTS, drawMover, moverRetries } from "./moverDraws.ts";
@@ -7,7 +8,7 @@ import {
   type MoverPlacementWork,
   type PlannerStreams,
 } from "./moverModel.ts";
-import { herringSpawn, isHerring, moverPlacementsWithWork } from "./moverPlanning.ts";
+import { moverPlacementsWithWork } from "./moverPlanning.ts";
 import { crossLength } from "./movers.ts";
 import { isDartPlacement, leavesPathOpen } from "./moverSpots.ts";
 import { slotFootprint, type SlotSource } from "./slotConfig.ts";

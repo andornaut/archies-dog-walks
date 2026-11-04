@@ -4,7 +4,7 @@ import type { SpawnEvent } from "../runner/spawning.ts";
 import { itemHeight, type RoadGeometry } from "../runner/walk.ts";
 import { footprintOf, type WalkItem, type WalkItemKind } from "../runner/walkItems.ts";
 
-// The red herring crossers (herringSpawn in src/runner/moverPlanning.ts): a share of a kind's
+// The red herring crossers (herringSpawn in src/runner/dartOutcomes.ts): a share of a kind's
 // planned crossers, such as the tourist train, that the planner leaves off the road. Each crosses
 // the whole road far up it, with no cue, blocking nothing and colliding with nothing: the walk
 // never reads them. Each is drawn as the mover it looks like would be, at its depth and in its art,
