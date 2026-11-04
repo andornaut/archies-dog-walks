@@ -53,7 +53,7 @@
 //   the street, flat navy and plain from the curb to row 500, where a status line could sit (the
 //   game draws none), then two streetcar tracks.
 //
-// ui-pet-shop: a 120x108 sprite, tags normal, pressed, glint and door-wave: the pet shop on the
+// ui-pet-shop: a 120x108 sprite, tags normal, pressed and door-wave: the pet shop on the
 // yard's right lot, which opens the shop. The game draws it at PET_SHOP_AT (234,54), its base on
 // the yard's bottom row (161), and its hit area is the frame. The PET SHOP board (BOARD, 3,0 114x22
 // in the frame, 237,54 on screen) spans the parapet, its bottom 2 rows over it, built and coloured
@@ -62,12 +62,11 @@
 // window with a food bag and a puppy behind its bone, and a door with a paw on its glass; rust brick
 // with dbrown mortar, lit ochre on the left, dred on the right, ink outline all round, on a grey
 // step. pressed dips as ui-button does: the front sinks 2px onto the step, the step 1px shallower,
-// and the board loses its lip and highlight to face, as go-pressed. glint is 7 frames at 60ms: a
-// 6px light band sweeping up and across the raised board (GLINT_STEPS), then a clean frame. This
-// glint remains an export. door-wave appends frames 9 to 24 at 120ms each (1920ms): the
-// right-hinged door opens, a shopkeeper peeks out and waves inside its aperture, then withdraws as
-// it closes. The building and board stay fixed. Normal frame 0 is the static closed pose. An
-// affordable item in the shop takes ui-afford 2px outside the frame (232,52 124x112).
+// and the board loses its lip and highlight to face, as go-pressed. door-wave is frames 2 to 17 at
+// 120ms each (1920ms): the right-hinged door opens, a shopkeeper peeks out and waves inside its
+// aperture, then withdraws as it closes. The building and board stay fixed. Normal frame 0 is the
+// static closed pose. An affordable item in the shop takes ui-afford 2px outside the frame (232,52
+// 124x112).
 //
 // ui-loading-track: a 316x8 image, the sidewalk being walked: Lady's paw prints in dslate,
 // staggered on two rows from Casey's heel to the Pet shop's door. The game draws it at TRACK_AT
@@ -143,8 +142,6 @@ export const PET_SHOP_AT: readonly [number, number] = [234, 54];
 // parapet. The building below it starts BOARD_RISE rows down.
 export const BOARD: readonly [x: number, y: number, w: number, h: number] = [3, 0, 114, 22];
 export const BOARD_RISE = 4;
-// ui-pet-shop's glint: the light band's left edge on the board in each frame, then a clean frame.
-export const GLINT_STEPS: readonly number[] = [-6, 16, 38, 60, 82, 104];
 // Projected door-leaf width, keeper reveal and hand pose. All coordinates stay inside the closed
 // door.
 export type DoorStep = readonly [width: number, reveal: number | null, wave: number | null];
@@ -679,22 +676,16 @@ export function windowPuppy(): Drawable {
 export interface PetShopOptions {
   // A DOOR_WAVE frame index for door-wave, or null for the static closed door.
   doorFrame?: number | null;
-  // The left edge of the light band swept across the board (glintBoard), or null for none.
-  glint?: number | null;
   pressed?: boolean;
 }
 
 // The shop front, PET_SHOP_W x PET_SHOP_H: the building from BOARD_RISE down, under the board.
 // Everything but the step is drawn t rows lower, so pressed sinks the front 2px onto a step 1px
 // shallower, as ui-button's face sinks into its lip.
-export function petShop({
-  doorFrame = null,
-  glint = null,
-  pressed = false,
-}: PetShopOptions = {}): Clear {
+export function petShop({ doorFrame = null, pressed = false }: PetShopOptions = {}): Clear {
   const cv = clear(PET_SHOP_W, PET_SHOP_H);
   building(cv, PET_SHOP_W, PET_SHOP_H - BOARD_RISE, pressed, doorFrame);
-  shopBoard(cv, pressed, glint);
+  shopBoard(cv, pressed);
   return cv;
 }
 
@@ -704,7 +695,7 @@ export function petShop({
 // ink, row 1 the highlight, the face runs to row 16, the lip fills rows 17 to 20 and ink row 21; the
 // caps fill rows 4 to 13. Pressed, the lip and highlight give way to face, as go-pressed, and the
 // board rides down with the front: face and letters sink 2px.
-export function shopBoard(cv: Canvas, pressed: boolean, glint: number | null): void {
+export function shopBoard(cv: Canvas, pressed: boolean): void {
   const [bx, by, bw, bh] = BOARD;
   const t = pressed ? 2 : 0;
   const [face, lip, hi] = STATES.go!;
@@ -723,33 +714,6 @@ export function shopBoard(cv: Canvas, pressed: boolean, glint: number | null): v
   const lx = bx + Math.floor((bw - lw) / 2);
   for (const [x, y] of caps) {
     cv.fill(lx + x - x0, by + 4 + t + y - y0, 1, 1, "ink");
-  }
-  if (glint !== null) {
-    glintBoard(cv, glint);
-  }
-}
-
-// A light band slanting up to the right across the raised board, 6px wide: yellow edges and a white
-// middle on the face, white on the highlight row, green on the lip. The ink line and the letters
-// stay as they are.
-export function glintBoard(cv: Canvas, left: number): void {
-  const [bx, by, bw, bh] = BOARD;
-  const lit = new Map(["green", "forest", "yellow"].map((c) => [K[c]!, c]));
-  for (let y = by + 1; y < by + bh - 1; y++) {
-    for (let x = bx + 1; x < bx + bw - 1; x++) {
-      const d = x - bx - left + Math.floor((y - by) / 2);
-      if (!(d >= 0 && d < 6)) {
-        continue;
-      }
-      const c = lit.get(hexAt(cv.img, x, y));
-      if (c === "green") {
-        cv.fill(x, y, 1, 1, d > 0 && d < 5 ? "white" : "yellow");
-      } else if (c === "yellow") {
-        cv.fill(x, y, 1, 1, "white");
-      } else if (c === "forest") {
-        cv.fill(x, y, 1, 1, "green");
-      }
-    }
   }
 }
 
@@ -2036,14 +2000,6 @@ export function* sprites(): Generator<Sprite> {
     "ui-pet-shop",
     [
       ...pressedTags((pressed) => imageRows(petShop({ pressed }).img)),
-      [
-        "glint",
-        [
-          ...GLINT_STEPS.map((glint) => imageRows(petShop({ glint }).img)),
-          imageRows(petShop().img),
-        ],
-        60,
-      ],
       [
         "door-wave",
         DOOR_WAVE.map((_, i) => imageRows(petShop({ doorFrame: i }).img)),
