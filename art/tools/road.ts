@@ -398,7 +398,8 @@ export function backArm(
 // Both of a walker's arms from behind, the left at xs[0] and the right at xs[1]. arms swings them
 // against the legs: the arm swung forward (the left for arms above 0, the right below) shortens that
 // much. flare throws both hands that many pixels out from the sides and reach shortens both arms,
-// for a start or a stumble.
+// for a start or a stumble. sway carries both arms that many pixels sideways with the shoulders as
+// the upper body sways.
 export function walkerArms(
   g: Drawable,
   xs: readonly [number, number],
@@ -408,12 +409,13 @@ export function walkerArms(
   arms: number,
   flare: number,
   reach: number,
+  sway = 0,
 ): void {
   for (const [x, side, fwd] of [
     [xs[0], -1, arms],
     [xs[1], 1, -arms],
   ] as const) {
-    backArm(g, x, w, top, parts, { lift: Math.max(0, fwd) + reach, out: side * flare });
+    backArm(g, x + sway, w, top, parts, { lift: Math.max(0, fwd) + reach, out: side * flare });
   }
 }
 
@@ -481,73 +483,78 @@ export function humanLegs(
   }
 }
 
-// A walker's back-view pose: the lifted feet, bob, arm swing, flare and reach, and the head's lean.
+// A walker's back-view pose: the lifted feet, bob, arm swing, flare and reach, and the upper body's
+// sway.
 export interface WalkerPose {
   arms?: number;
   bob?: number;
   flare?: number;
-  head?: number;
   lf?: number;
   reach?: number;
   rf?: number;
+  sway?: number;
 }
 
-// Casey's cap and ponytail above a shaped hoodie, with bent elbows and recovery knees.
+// Casey's cap and ponytail above a shaped hoodie, with bent elbows and recovery knees. The head rides
+// the hoodie: it bobs and sways with the shoulders, so the neck keeps its length and stays centred on
+// the collar.
 export function caseyBack({
   arms = 0,
   bob = 0,
   flare = 0,
-  head = 0,
   lf = 0,
   reach = 0,
   rf = 0,
+  sway = 0,
 }: WalkerPose = {}): Drawable {
   const g = scope.Grid(32, 48);
   const b = bob;
-  const shift = supportShift(lf, rf);
+  const s = sway;
   humanLegs(g, lf, rf, b, "blue", "navy", "white");
   for (const side of [-1, 1]) {
-    const shoulder: Point = [16 + side * 7 + shift, 23 + b];
+    const shoulder: Point = [16 + side * 7 + s, 23 + b];
     const elbow: Point = [16 + side * (8 + flare / 2), 28 + b + (arms * side) / 2];
     const hand: Point = [16 + side * (9 + flare), 33.5 - Math.max(0, arms * side) - reach];
     limbBar(g, shoulder, elbow, 4, side < 0 ? "sky" : "blue");
     limbBar(g, elbow, [hand[0], hand[1] - 1.3], 3.5, "sky");
     g.rect(hand[0] - 1.5, hand[1] - 1, 3, 2.5, "skin1");
   }
-  g.tri([9 + shift, 22 + b], [23 + shift, 22 + b], [21 + shift, 34 + b], "sky");
-  g.tri([9 + shift, 22 + b], [21 + shift, 34 + b], [11 + shift, 34 + b], "sky");
-  g.rect(10 + shift, 25 + b, 12, 8, "sky");
-  g.rect(20 + shift, 24 + b, 2, 9, "blue");
-  g.rect(10 + shift, 25 + b, 1, 7, "cyan");
-  g.rect(11 + shift, 33 + b, 10, 1, "blue");
-  g.ell(16 + shift, 22.5 + b, 6, 2.5, "blue", "navy");
-  const hb = b / 2;
-  g.rect(14 + head, 19 + hb, 4, 3, "skin1");
-  g.cel(16 + head, 12.5 + hb, 8.5, 8.5, "dbrown", "plum", "brown");
-  g.rect(7 + head, 13 + hb, 2, 3, "skin1");
-  g.rect(23 + head, 13 + hb, 2, 3, "skin1");
-  g.cel(16 + head, 8 + hb, 8.5, 5, "amber", "orange", "yellow");
-  g.rect(8 + head, 10 + hb, 17, 2, "orange");
-  g.rect(15 + head, 10 + hb, 2, 2, "dbrown");
-  g.ell(16 + head - shift / 2, 17 + hb, 2.5, 4, "dbrown", "plum");
+  g.tri([9 + s, 22 + b], [23 + s, 22 + b], [21 + s, 34 + b], "sky");
+  g.tri([9 + s, 22 + b], [21 + s, 34 + b], [11 + s, 34 + b], "sky");
+  g.rect(10 + s, 25 + b, 12, 8, "sky");
+  g.rect(20 + s, 24 + b, 2, 9, "blue");
+  g.rect(10 + s, 25 + b, 1, 7, "cyan");
+  g.rect(11 + s, 33 + b, 10, 1, "blue");
+  g.ell(16 + s, 22.5 + b, 6, 2.5, "blue", "navy");
+  const hx = 16 + s;
+  g.rect(hx - 2, 19 + b, 4, 3, "skin1");
+  g.cel(hx, 12.5 + b, 8.5, 8.5, "dbrown", "plum", "brown");
+  g.rect(hx - 9, 13 + b, 2, 3, "skin1");
+  g.rect(hx + 7, 13 + b, 2, 3, "skin1");
+  g.cel(hx, 8 + b, 8.5, 5, "amber", "orange", "yellow");
+  g.rect(hx - 8, 10 + b, 17, 2, "orange");
+  g.rect(hx - 1, 10 + b, 2, 2, "dbrown");
+  g.ell(hx, 17 + b, 2.5, 4, "dbrown", "plum");
   return g;
 }
 
 // ---------- the other walkers (back view) ----------
 
 // Ada, 11, mixed race, caramel skin, long black curls falling straight down: yellow tee, blue shorts.
-// She stands 4px shorter than the adults: her head and body sit lower and her legs are shorter.
+// She stands 4px shorter than the adults: her head and body sit lower and her legs are shorter. Her
+// shorts, tee, arms and hair sway together, so the hidden neck stays joined to the shoulders.
 export function adaBack({
   arms = 0,
   bob = 0,
   flare = 0,
-  head = 0,
   lf = 0,
   reach = 0,
   rf = 0,
+  sway = 0,
 }: WalkerPose = {}): Drawable {
   const g = scope.Grid(32, 48);
   const b = bob;
+  const s = sway;
   humanLegs(g, lf, rf, b, "brown", "skin2", "white", { centres: [13.5, 18.5], top: 40, width: 3 });
   for (const [x, f] of [
     [12, lf],
@@ -567,33 +574,33 @@ export function adaBack({
     arms,
     flare,
     reach,
+    s,
   );
-  g.rect(10, 29 + b, 12, 8, "yellow");
-  g.rect(19, 29 + b, 3, 8, "amber");
-  g.rect(10, 36 + b, 12, 4, "sky");
-  g.rect(19, 36 + b, 3, 4, "blue");
-  g.rect(15, 36 + b, 2, 4, "blue");
-  g.rect(7, 20 + b, 2, 3, "brown");
-  g.rect(23, 20 + b, 2, 3, "brown");
-  // The crown tilts above the planted lower curls; the hidden neck stays joined to the shoulders.
+  g.rect(10 + s, 29 + b, 12, 8, "yellow");
+  g.rect(19 + s, 29 + b, 3, 8, "amber");
+  g.rect(10 + s, 36 + b, 12, 4, "sky");
+  g.rect(19 + s, 36 + b, 3, 4, "blue");
+  g.rect(15 + s, 36 + b, 2, 4, "blue");
+  g.rect(7 + s, 20 + b, 2, 3, "brown");
+  g.rect(23 + s, 20 + b, 2, 3, "brown");
   // black hair: a rounded crown, then long curls hanging straight down the back, bunched into bumps
   // of uneven size along the sides and the hem
-  g.ell(16 + head, 18.5 + b, 8, 7.5, "navy", "ink", "dslate");
-  g.rect(9, 20 + b, 14, 10, "navy");
-  g.rect(21, 20 + b, 2, 10, "ink");
+  g.ell(16 + s, 18.5 + b, 8, 7.5, "navy", "ink", "dslate");
+  g.rect(9 + s, 20 + b, 14, 10, "navy");
+  g.rect(21 + s, 20 + b, 2, 10, "ink");
   for (const [x, y, rx, ry] of [
     [8.7, 20.5, 1.4, 1.5],
     [8.4, 24.2, 1.8, 2.1],
     [8.8, 28.6, 1.4, 1.3],
   ] as const) {
-    g.ell(x, y + b, rx, ry, "navy");
+    g.ell(x + s, y + b, rx, ry, "navy");
   }
   for (const [x, y, rx, ry] of [
     [23.3, 22, 1.6, 1.9],
     [23.2, 26.6, 1.3, 1.4],
     [23.4, 29.3, 1.6, 1.5],
   ] as const) {
-    g.ell(x, y + b, rx, ry, "ink");
+    g.ell(x + s, y + b, rx, ry, "ink");
   }
   for (const [x, y, rx, ry] of [
     [10.2, 30.6, 1.6, 1.4],
@@ -602,17 +609,16 @@ export function adaBack({
     [19.4, 30.8, 1.9, 1.5],
     [21.9, 30.2, 1.2, 1.2],
   ] as const) {
-    g.ell(x, y + b, rx, ry, x < 20 ? "navy" : "ink");
+    g.ell(x + s, y + b, rx, ry, x < 20 ? "navy" : "ink");
   }
   // the curls as a few unbroken wavy locks down the back, dslate on the lit side and navy in the
   // shade, so the hair holds one mass at road scale with no single-pixel texture
   for (const [x0, y0, length, c] of CURL_LOCKS) {
     for (const [k, n] of curlRuns(length)) {
-      const sway = head * Math.max(0, Math.min(1, (30 - y0 - k) / 10));
-      g.rect(x0 + CURL_WAVE[k % CURL_WAVE.length]! + sway, y0 + k + b, 1, n, c);
+      g.rect(x0 + CURL_WAVE[k % CURL_WAVE.length]! + s, y0 + k + b, 1, n, c);
     }
   }
-  g.ell(16 + head, 12 + b, 2.5, 1.5, "pink", "mauve");
+  g.ell(16 + s, 12 + b, 2.5, 1.5, "pink", "mauve");
   // a light rim along the edges facing the light keeps her dark hair and skin off the dark road
   return rim(g, {
     blue: ["sky", null],
@@ -629,13 +635,14 @@ export function mrBBack({
   arms = 0,
   bob = 0,
   flare = 0,
-  head = 0,
   lf = 0,
   reach = 0,
   rf = 0,
+  sway = 0,
 }: WalkerPose = {}): Drawable {
   const g = scope.Grid(32, 48);
   const b = bob;
+  const s = sway;
   humanLegs(g, lf, rf, b, "navy", "grey", "white");
   for (const [x, f] of [
     [11, lf],
@@ -656,19 +663,20 @@ export function mrBBack({
     arms,
     flare,
     reach,
+    s,
   );
   // the lilac tee, shaded dgreen down its right side
-  g.rect(9, 21 + b, 14, 13, "lilac");
-  g.rect(20, 21 + b, 3, 13, "violet");
-  g.p(9, 21 + b, null);
-  g.p(22, 21 + b, null);
-  g.rect(13 + head, 19 + b, 6, 3, "dbrown");
+  g.rect(9 + s, 21 + b, 14, 13, "lilac");
+  g.rect(20 + s, 21 + b, 3, 13, "violet");
+  g.p(9 + s, 21 + b, null);
+  g.p(22 + s, 21 + b, null);
+  g.rect(13 + s, 19 + b, 6, 3, "dbrown");
   // bald head, the beard showing along the jaw, a shine on the crown
-  g.rect(8 + head, 12 + b, 2, 3, "dbrown");
-  g.rect(22 + head, 12 + b, 2, 3, "plum");
-  g.cel(16 + head, 12 + b, 7, 9, "dbrown", "plum", null, 2.15);
-  g.rect(11 + head, 7 + b, 3, 1, "brown");
-  g.p(11 + head, 8 + b, "brown");
+  g.rect(8 + s, 12 + b, 2, 3, "dbrown");
+  g.rect(22 + s, 12 + b, 2, 3, "plum");
+  g.cel(16 + s, 12 + b, 7, 9, "dbrown", "plum", null, 2.15);
+  g.rect(11 + s, 7 + b, 3, 1, "brown");
+  g.p(11 + s, 8 + b, "brown");
   // a light rim along the edges facing the light, a dimmer one opposite, so he holds on the dark road
   return rim(g, {
     dbrown: ["skin2", "brown"],
@@ -684,13 +692,14 @@ export function tristaBack({
   arms = 0,
   bob = 0,
   flare = 0,
-  head = 0,
   lf = 0,
   reach = 0,
   rf = 0,
+  sway = 0,
 }: WalkerPose = {}): Drawable {
   const g = scope.Grid(32, 48);
   const b = bob;
+  const s = sway;
   humanLegs(g, lf, rf, b, "dslate", "navy", "dbrown", { centres: [13.5, 19.5], top: 37, width: 3 });
   walkerArms(
     g,
@@ -704,39 +713,42 @@ export function tristaBack({
     arms,
     flare,
     reach,
+    s,
   );
-  g.rect(9, 21 + b, 14, 11, "dgreen");
-  g.rect(20, 21 + b, 3, 11, "forest");
-  g.rect(9, 21 + b, 1, 10, "green");
-  g.p(9, 21 + b, null);
-  g.p(22, 21 + b, null);
-  g.rect(9, 31 + b, 14, 7, "clay");
-  g.rect(20, 31 + b, 3, 7, "bark");
-  g.rect(9, 31 + b, 14, 1, "tan");
-  // a canvas tote with an apple on it
-  g.rect(25, 24 + b, 5, 1, "brown");
-  g.rect(24, 25 + b, 7, 8, "cream");
-  g.rect(29, 25 + b, 2, 8, "tan");
-  g.rect(26, 27 + b, 3, 3, "red");
-  g.p(27, 26 + b, "dgreen");
+  g.rect(9 + s, 21 + b, 14, 11, "dgreen");
+  g.rect(20 + s, 21 + b, 3, 11, "forest");
+  g.rect(9 + s, 21 + b, 1, 10, "green");
+  g.p(9 + s, 21 + b, null);
+  g.p(22 + s, 21 + b, null);
+  g.rect(9 + s, 31 + b, 14, 7, "clay");
+  g.rect(20 + s, 31 + b, 3, 7, "bark");
+  g.rect(9 + s, 31 + b, 14, 1, "tan");
+  // a canvas tote with an apple on it: it sways left with her, and against the frame's right edge it
+  // stays put as she sways right, resting on her hip
+  const t = Math.min(s, 0);
+  g.rect(25 + t, 24 + b, 5, 1, "brown");
+  g.rect(24 + t, 25 + b, 7, 8, "cream");
+  g.rect(29 + t, 25 + b, 2, 8, "tan");
+  g.rect(26 + t, 27 + b, 3, 3, "red");
+  g.p(27 + t, 26 + b, "dgreen");
   // a dirty blonde bob to the shoulders, flicking out at the ends: light brown, darker than her
   // skin, with golden amber streaks where the light catches it
-  g.cel(16 + head, 12.5 + b, 9, 9, "brown", "dbrown", "tan");
-  g.rect(8 + head, 14 + b, 17, 5, "brown");
-  g.rect(22 + head, 14 + b, 3, 5, "dbrown");
-  g.ell(16 + head, 19 + b, 9, 2.5, "brown", "dbrown");
-  g.p(7 + head, 20 + b, "brown");
-  g.p(25 + head, 20 + b, "dbrown");
+  g.cel(16 + s, 12.5 + b, 9, 9, "brown", "dbrown", "tan");
+  g.rect(8 + s, 14 + b, 17, 5, "brown");
+  g.rect(22 + s, 14 + b, 3, 5, "dbrown");
+  g.ell(16 + s, 19 + b, 9, 2.5, "brown", "dbrown");
+  g.p(7 + s, 20 + b, "brown");
+  g.p(25 + s, 20 + b, "dbrown");
   for (const [x, y, h] of [
     [10, 9, 5],
     [13, 6, 4],
     [16, 8, 6],
     [19, 6, 3],
   ] as const) {
-    g.rect(x + head, y + b, 1, h, "amber");
+    g.rect(x + s, y + b, 1, h, "amber");
   }
-  g.rect(14 + head, 11 + b, 1, 4, "dbrown");
-  g.rect(20 + head, 11 + b, 1, 4, "dbrown");
+  g.rect(14 + s, 11 + b, 1, 4, "dbrown");
+  g.rect(20 + s, 11 + b, 1, 4, "dbrown");
   // a light rim along the edges facing the light keeps her hair, cardigan and skirt off the dark road
   return rim(g, {
     brown: ["tan", null],
@@ -795,12 +807,13 @@ export const HUMAN_WALK: readonly WalkerPose[] = [
   { arms: 1, rf: -1 },
 ];
 export const HUMAN_WALK_MS = 50;
-// The head settles after each weight transfer; the neutral first pose keeps pack visibility stable.
-// A 2/3 design-pixel movement is one native export pixel.
-export const WALKER_HEAD: readonly number[] = [0, -2 / 3, -2 / 3, 0, 2 / 3, 2 / 3, 0, 0];
+// The walkers' upper body (head, neck, torso and arms) sways as one a beat after the hips settle over
+// the planted foot, so the head never slides on the shoulders. The neutral first pose keeps the
+// pack's visibility stable. A 2/3 design-pixel movement is one native export pixel.
+export const WALKER_SWAY: readonly number[] = [0, -2 / 3, -2 / 3, 0, 2 / 3, 2 / 3, 0, 0];
 export const WALKER_WALK: readonly WalkerPose[] = HUMAN_WALK.map((pose, i) => ({
   ...pose,
-  head: WALKER_HEAD[i]!,
+  sway: WALKER_SWAY[i]!,
 }));
 export const WALKER_WALK_MS = 80;
 export const WALKER_REACT: readonly WalkerPose[] = [

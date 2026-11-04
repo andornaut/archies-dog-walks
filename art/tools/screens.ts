@@ -864,59 +864,98 @@ export function building(
   composite({ x: 0, y: BOARD_RISE }, cv.img, full.img);
 }
 
-// A friendly native keeper on a 20x44 clip, behind the door leaf. The keeper draws lines, which
-// only a full-size Grid has, so it is never drawn small.
+// The keeper's raised near arm in each wave pose: [elbow, hand] offsets from the body's centre column
+// and rows on its clip. -1 lifts the forearm on the way up; 0, 1 and 2 hold the hand at head height,
+// then swing it out and in about the elbow. Upper arm and forearm keep the hanging arm's lengths, so
+// the arm reads as one limb.
+const KEEPER_WAVE: ReadonlyMap<
+  number,
+  readonly [readonly [number, number], readonly [number, number]]
+> = new Map([
+  [
+    -1,
+    [
+      [-9, 21],
+      [-9, 15],
+    ],
+  ],
+  [
+    0,
+    [
+      [-9, 12],
+      [-8, 6],
+    ],
+  ],
+  [
+    1,
+    [
+      [-9, 12],
+      [-10, 7],
+    ],
+  ],
+  [
+    2,
+    [
+      [-9, 12],
+      [-7, 6],
+    ],
+  ],
+]);
+
+// A friendly native keeper on a 20x48 clip, behind the door leaf, standing on the doorway's floor
+// with his head 5px under the lintel: a third of his height is head, the rest a short-sleeved shirt
+// and apron over trousers. Both arms hang from the shoulders' top row; the near one raises from there
+// to wave. The keeper draws lines, which only a full-size Grid has, so it is never drawn small.
 export function shopKeeper(reveal: number, wave: number | null): RgbaImage {
-  const g = edged(new Grid(20, 44), "ink");
-  const cx = 9 + Math.round((1 - reveal) * 4);
+  const g = edged(new Grid(20, 48), "ink");
+  const cx = 11 + Math.round((1 - reveal) * 4);
   // A short apron exposes two trouser legs, a dark gap and grounded shoes.
-  g.rect(cx - 4, 30, 3, 12, "navy");
-  g.rect(cx - 4, 32, 1, 8, "dslate");
-  g.rect(cx + 1, 30, 3, 12, "navy");
-  g.rect(cx + 1, 32, 1, 8, "dslate");
-  g.rect(cx - 5, 42, 4, 1, "brown");
-  g.rect(cx + 1, 42, 4, 1, "brown");
-  g.rect(cx - 6, 18, 12, 12, "cream");
-  g.rect(cx + 4, 19, 2, 11, "tan");
-  g.rect(cx - 2, 16, 4, 3, "skin2");
-  g.rect(cx - 4, 21, 8, 11, "blue");
-  g.rect(cx - 4, 19, 2, 7, "sky");
-  g.rect(cx + 2, 19, 2, 7, "sky");
-  g.rect(cx - 3, 29, 6, 1, "sky");
-  g.rect(cx - 1, 24, 2, 2, "yellow");
+  g.rect(cx - 4, 30, 3, 16, "navy");
+  g.rect(cx - 4, 32, 1, 12, "dslate");
+  g.rect(cx + 1, 30, 3, 16, "navy");
+  g.rect(cx + 1, 32, 1, 12, "dslate");
+  g.rect(cx - 5, 46, 4, 1, "brown");
+  g.rect(cx + 1, 46, 4, 1, "brown");
+  g.rect(cx - 6, 16, 12, 14, "cream");
+  g.rect(cx + 4, 17, 2, 13, "tan");
+  g.rect(cx - 2, 14, 4, 3, "skin2");
+  g.rect(cx - 4, 20, 8, 12, "blue");
+  g.rect(cx - 4, 17, 2, 7, "sky");
+  g.rect(cx + 2, 17, 2, 7, "sky");
+  g.rect(cx - 3, 31, 6, 1, "sky");
+  g.rect(cx - 1, 23, 2, 2, "yellow");
   // A rounded short haircut, calm eyes and a small open smile.
-  g.cel(cx, 11, 5.5, 6, "skin1", "skin2");
-  g.cel(cx, 7, 5.5, 3, "dbrown", "plum", "brown");
-  g.rect(cx - 5, 9, 1, 4, "dbrown");
-  g.rect(cx + 4, 9, 1, 4, "plum");
-  g.p(cx - 2, 12, "ink");
-  g.p(cx + 2, 12, "ink");
-  g.p(cx - 1, 15, "dred");
-  g.p(cx, 16, "dred");
-  g.p(cx + 1, 15, "dred");
-  // The far arm rests; the near elbow and wrist make one small greeting.
-  g.rect(cx + 6, 20, 2, 10, "cream");
-  g.rect(cx + 6, 29, 2, 4, "skin1");
-  g.rect(cx - 8, 20, 3, 5, "cream");
+  g.cel(cx, 9, 5.5, 6, "skin1", "skin2");
+  g.cel(cx, 5, 5.5, 3, "dbrown", "plum", "brown");
+  g.rect(cx - 5, 7, 1, 4, "dbrown");
+  g.rect(cx + 4, 7, 1, 4, "plum");
+  g.p(cx - 2, 10, "ink");
+  g.p(cx + 2, 10, "ink");
+  g.p(cx - 1, 12, "dred");
+  g.p(cx, 13, "dred");
+  g.p(cx + 1, 12, "dred");
+  // Short sleeves from the shoulder's top row, then bare forearms, the hands at the hips.
+  g.rect(cx + 6, 16, 2, 5, "cream");
+  g.rect(cx + 6, 21, 2, 11, "skin1");
   if (wave === null) {
-    g.rect(cx - 8, 25, 2, 7, "skin1");
+    g.rect(cx - 8, 16, 3, 5, "cream");
+    g.rect(cx - 8, 21, 2, 11, "skin1");
   } else {
-    const [dx, handY] =
-      wave < 0
-        ? [0, 16]
-        : (
-            [
-              [0, 9],
-              [-1, 8],
-              [1, 8],
-            ] as const
-          )[wave]!;
-    const handX = cx - 7 + dx;
+    const [[ex, ey], [hx, hy]] = KEEPER_WAVE.get(wave)!;
+    const elbow = [cx + ex, ey] as const;
+    const hand = [cx + hx, hy] as const;
+    const sleeve = [
+      cx - 8 + Math.floor((elbow[0] - cx + 8) / 2),
+      18 + Math.floor((elbow[1] - 18) / 2),
+    ] as const;
     for (const offset of [0, 1]) {
-      g.line(cx - 8 + offset, 24, handX + offset, handY, "skin1");
+      g.line(cx - 8 + offset, 18, elbow[0] + offset, elbow[1], "skin1");
+      g.line(cx - 8 + offset, 18, sleeve[0] + offset, sleeve[1], "cream");
+      g.line(elbow[0] + offset, elbow[1], hand[0] + offset, hand[1], "skin1");
     }
-    g.rect(handX - 1, handY - 2, 3, 3, "skin1");
-    g.p(handX, handY - 3, "skin1");
+    g.rect(cx - 8, 16, 3, 3, "cream");
+    g.rect(hand[0] - 1, hand[1] - 2, 3, 3, "skin1");
+    g.p(hand[0], hand[1] - 3, "skin1");
   }
   return toImage(g.outlined());
 }
@@ -952,7 +991,7 @@ export function shopDoor(cv: Canvas, h: number, pressed: boolean, doorFrame: num
   cv.fill(79, top + 1, 24, 2, "navy");
   cv.fill(78, 95, 26, 5, "dbrown");
   if (reveal !== null) {
-    composite({ x: 79, y: 56 }, shopKeeper(reveal, wave), cv.img);
+    composite({ x: 79, y: 52 }, shopKeeper(reveal, wave), cv.img);
   }
   const ratio = width / 26;
   cv.fill(left, top, width, height, "navy");
