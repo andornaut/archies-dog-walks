@@ -1853,7 +1853,7 @@ async function buildAll(): Promise<void> {
 if (import.meta.main) {
   const argv = process.argv.slice(2);
   if (argv.length === 2 && argv[0] === "preview") {
-    await preview({}, depthSettled({}, [...sprites(), ...bursts()]), argv[1]!);
+    preview({}, depthSettled({}, [...sprites(), ...bursts()]), argv[1]!);
   } else if (argv.length === 2 && argv[0] === "cards") {
     await cardsPreview(argv[1]!);
   } else if (argv.length === 2 && argv[0] === "sounds") {

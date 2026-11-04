@@ -10,13 +10,10 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 
 import { export as exportSprite } from "@andornaut/art-kit/aseprite";
 import { contrast as colourContrast, rgb } from "@andornaut/art-kit/colour";
-import {
-  opaque_cols as frameCols,
-  opaque_rows as frameRows,
-  renderContactSheet,
-} from "@andornaut/art-kit/frames";
+import { opaque_cols as frameCols, opaque_rows as frameRows } from "@andornaut/art-kit/frames";
 import { type Colour, type Edge, type Frame, Grid as DrawingGrid } from "@andornaut/art-kit/grid";
-import { decodePng } from "@andornaut/art-kit/png";
+import { decodePng, encodeRgbPng } from "@andornaut/art-kit/png";
+import { composeContactSheet } from "@andornaut/art-kit/raster";
 import type { RgbaImage } from "@andornaut/art-kit/rgbaImage";
 
 export type { Colour, Edge, Frame };
@@ -537,7 +534,7 @@ export function toImage(px: Frame): RgbaImage {
 export const PREVIEW_BACKGROUND: readonly [number, number, number] = [24, 20, 37];
 
 // Contact sheet: one row per sprite and ground colour, every frame in tag order.
-export async function preview(
+export function preview(
   {
     gap = 4,
     grounds = ZONE_ROADS,
@@ -545,13 +542,13 @@ export async function preview(
   }: { gap?: number; grounds?: readonly string[]; scale?: number },
   sprites: readonly Sprite[],
   out: string,
-): Promise<void> {
-  const sheet = renderContactSheet(
-    { background: PREVIEW_BACKGROUND, gap, resolveRgb: rgb, scale },
+): void {
+  const sheet = composeContactSheet(
+    { background: PREVIEW_BACKGROUND, cellSize: "row-first-frame", gap, resolveRgb: rgb, scale },
     sprites,
     grounds,
   );
-  await sheet.toFile(out);
+  writeFileSync(out, encodeRgbPng({ deflateLevel: 6, deflateStrategy: 0, filterType: -1 }, sheet));
 }
 
 // House colours used by a sprite, in exported palette order.
@@ -1237,11 +1234,7 @@ export async function main(
   argv: readonly string[] = process.argv.slice(2),
 ): Promise<void> {
   if (argv.length === 2 && argv[0] === "preview") {
-    await preview(
-      { grounds },
-      depthSettled({ apart, originals: originals?.() }, sprites()),
-      argv[1]!,
-    );
+    preview({ grounds }, depthSettled({ apart, originals: originals?.() }, sprites()), argv[1]!);
   } else if (argv.length === 1 && argv[0] === "build") {
     await build({ apart, originals: originals?.() }, srcDir, sprites());
   } else {

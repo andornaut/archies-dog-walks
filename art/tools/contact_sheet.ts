@@ -1,14 +1,15 @@
 // node art/tools/contact_sheet.ts OUT.png KEY...
-// Nonproduction preview: the Node counterpart of pixel.py's preview. Reads each key's exported
-// public/art/sprites/<key>.png and .json and writes one row per sprite and zone road colour, every
-// frame in tag order, with pixel.py's background, scale and gap. The grounds are the zones' road
-// colours from shared/export/game-data.json, so rows follow zone order, not pixel.py's ZONE_ROADS.
-import { readFile } from "node:fs/promises";
+// Nonproduction preview of exported sprites. Reads each key's public/art/sprites/<key>.png and .json
+// and writes one row per sprite and zone road colour, every frame in tag order and each cell sized
+// from the largest frame, with pixel.ts's preview background, scale and gap. The grounds are the
+// zones' road colours from shared/export/game-data.json, so rows follow zone order, not ZONE_ROADS.
+import { readFile, writeFile } from "node:fs/promises";
 
 import { rgb } from "@andornaut/art-kit/colour";
-import { renderContactSheet, type Rgb, type Sprite, type Tag } from "@andornaut/art-kit/frames";
+import type { Rgb, Sprite, Tag } from "@andornaut/art-kit/frames";
 import type { Frame } from "@andornaut/art-kit/grid";
-import { decodePng } from "@andornaut/art-kit/png";
+import { decodePng, encodeRgbPng } from "@andornaut/art-kit/png";
+import { composeContactSheet } from "@andornaut/art-kit/raster";
 
 interface SheetData {
   frames: Record<string, { frame: { h: number; w: number; x: number; y: number } }>;
@@ -57,10 +58,10 @@ if (!out || !keys.length) {
 }
 const grounds = await zoneRoads(GAME_DATA);
 const sprites = await Promise.all(keys.map((key) => exportedSprite(SPRITES_DIR, key)));
-const sheet = renderContactSheet(
-  { background: BACKGROUND, gap: GAP, resolveRgb: rgb, scale: SCALE },
+const sheet = composeContactSheet(
+  { background: BACKGROUND, cellSize: "largest-frame", gap: GAP, resolveRgb: rgb, scale: SCALE },
   sprites,
   grounds,
 );
-await sheet.toFile(out);
+await writeFile(out, encodeRgbPng({ deflateLevel: 6, deflateStrategy: 0, filterType: -1 }, sheet));
 console.log("wrote", out);

@@ -2406,7 +2406,7 @@ function renderSounds(outDir: string): void {
 if (import.meta.main) {
   const argv = process.argv.slice(2);
   if (argv.length === 2 && argv[0] === "preview") {
-    await preview({ grounds: ZONE_ROADS }, depthSettled({}, sprites()), argv[1]!);
+    preview({ grounds: ZONE_ROADS }, depthSettled({}, sprites()), argv[1]!);
   } else if (argv.length === 2 && argv[0] === "cards") {
     await cardPreview(argv[1]!);
   } else if (argv.length === 2 && argv[0] === "sounds") {

@@ -468,11 +468,7 @@ export function compare(
 if (import.meta.main) {
   const argv = process.argv.slice(2);
   if (argv.length === 2 && argv[0] === "preview") {
-    await preview(
-      { grounds: ZONE_ROADS },
-      depthSettled({ originals: originals() }, sprites()),
-      argv[1]!,
-    );
+    preview({ grounds: ZONE_ROADS }, depthSettled({ originals: originals() }, sprites()), argv[1]!);
   } else if (argv.length === 2 && argv[0] === "compare") {
     compare({}, argv[1]!);
   } else if (argv.length === 1 && argv[0] === "build") {
