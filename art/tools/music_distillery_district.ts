@@ -13,7 +13,6 @@
  */
 
 import {
-  fixed,
   mix,
   n,
   parse,
@@ -105,11 +104,11 @@ function vibrato(length: number, delay = 0.22, rate = 5.5, cents = 12): string[]
   if (end < delay + 2.5 * half) {
     return [];
   }
-  const bends = [`${fixed(3, delay)},${cents},${fixed(4, half / 2)}`];
+  const bends = [`${delay.toFixed(3)},${cents},${(half / 2).toFixed(4)}`];
   let at = delay + half / 2;
   let sign = -1;
   while (at + half <= end) {
-    bends.push(`0,${sign * 2 * cents},${fixed(4, half)}`);
+    bends.push(`0,${sign * 2 * cents},${half.toFixed(4)}`);
     at += half;
     sign = -sign;
   }

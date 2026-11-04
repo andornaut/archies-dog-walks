@@ -19,8 +19,6 @@ import { type Colour, type Edge, type Frame, Grid as DrawingGrid } from "@andorn
 import { decodePng } from "@andornaut/art-kit/png";
 import type { RgbaImage } from "@andornaut/art-kit/rgbaImage";
 
-import { radians, roundHalfEven } from "./py.ts";
-
 export type { Colour, Edge, Frame };
 // A tag's name, frames and duration in milliseconds (one for every frame, or one each).
 export type Tag = readonly [name: string, frames: Frame[], ms: number | readonly number[]];
@@ -225,7 +223,7 @@ function pickerEncode(channels: readonly number[]): string {
 // One picker hue at the shared perceptual lightness and chroma.
 export function pickerHeader(lightness: number, chroma: number, hue: number): string {
   // Oklab matrices: https://bottosson.github.io/posts/oklab/#converting-from-linear-srgb-to-oklab
-  const angle = radians(hue);
+  const angle = hue * (Math.PI / 180);
   const a = chroma * Math.cos(angle);
   const b = chroma * Math.sin(angle);
   const lCone = (lightness + 0.3963377774 * a + 0.2158037573 * b) ** 3;
@@ -1176,7 +1174,7 @@ function abreast(rest: readonly Tag[], scale: number, gap: number, tags: readonl
   const frames = tags.flatMap(([, fs]) => fs);
   const width = frames[0]![0]!.length;
   const [left, right] = frameCols(frames) ?? [0, width - 1];
-  const want = roundHalfEven(middle(rest)! + gap * scale - middle(tags)!);
+  const want = Math.round(middle(rest)! + gap * scale - middle(tags)!);
   const dx = Math.max(-left, Math.min(width - 1 - right, want));
   const move = (f: Frame): Frame =>
     f.map((row) =>

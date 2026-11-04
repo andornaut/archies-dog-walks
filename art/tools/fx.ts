@@ -31,12 +31,15 @@
 // Run from the repository root. A build overwrites the .aseprite sources, so hand edits to them
 // belong in this file instead. Shared tooling is in pixel.ts.
 import { type Drawable, Grid, main, type Sprite } from "./pixel.ts";
-import { radians, roundHalfEven } from "./py.ts";
 
 const USAGE = `Usage:
   node art/tools/fx.ts preview OUT.png   every frame of every effect on the zone roads
   node art/tools/fx.ts build             write art/fx/*.aseprite and export to
                                          public/art/sprites/`;
+
+function radians(degrees: number): number {
+  return degrees * (Math.PI / 180);
+}
 
 const SIDES: readonly (readonly [number, number])[] = [
   [0, -1],
@@ -160,7 +163,7 @@ export function word<G extends Drawable>(
   const [w] = wordSize(text);
   const key = (x: number, y: number): string => `${x},${y}`;
   const letters = new Map<string, [number, number]>();
-  let x = roundHalfEven(cx - w / 2) + 1;
+  let x = Math.round(cx - w / 2) + 1;
   for (const ch of text) {
     letter(ch).forEach((row, j) => {
       [...row].forEach((c, i) => {
@@ -211,8 +214,8 @@ export function line(
   col: string,
 ): void {
   const n = Math.max(Math.abs(x1 - x0), Math.abs(y1 - y0), 1);
-  for (let i = 0; i < roundHalfEven(n) + 1; i++) {
-    g.p(roundHalfEven(x0 + ((x1 - x0) * i) / n), roundHalfEven(y0 + ((y1 - y0) * i) / n), col);
+  for (let i = 0; i < Math.round(n) + 1; i++) {
+    g.p(Math.round(x0 + ((x1 - x0) * i) / n), Math.round(y0 + ((y1 - y0) * i) / n), col);
   }
 }
 
@@ -366,7 +369,7 @@ export function splash(step: number): Grid {
       const y = gy + ty - 3 - 2.5 * t + 1.6 * t * t;
       if (y < gy - 2) {
         g.ell(x, y, 2, 2, "cyan");
-        g.p(roundHalfEven(x - 0.5), roundHalfEven(y - 0.5), "white");
+        g.p(Math.round(x - 0.5), Math.round(y - 0.5), "white");
       }
     }
   }
@@ -383,8 +386,8 @@ export function leaf(
   lit = "green",
 ): void {
   const [w, h] = flip ? [3, 4] : [4, 3];
-  const lx = roundHalfEven(x);
-  const ly = roundHalfEven(y);
+  const lx = Math.round(x);
+  const ly = Math.round(y);
   g.rect(lx, ly, w, h, col);
   g.p(lx + w - 1, ly, null);
   g.p(lx, ly + h - 1, null);
@@ -444,8 +447,8 @@ export function debrisLitter(step: number): Grid {
   const g = new Grid(48, 48);
   const t = step + 1;
   LITTER.forEach(([vx, vy], i) => {
-    const x = roundHalfEven(22 + vx * t);
-    const y = roundHalfEven(20 + vy * t + 1.5 * t * t);
+    const x = Math.round(22 + vx * t);
+    const y = Math.round(20 + vy * t + 1.5 * t * t);
     const turn = (i + step) % 2;
     if (i === 0 || i === 3) {
       // paper ball
@@ -599,7 +602,7 @@ export function newBest(step: number): Grid {
     if (t >= 0 && t < 5) {
       const k = 1 - 0.5 ** (t + 1);
       const part = new Grid(96, 48);
-      star4(part, roundHalfEven(x + dx * k), roundHalfEven(y + dy * k), [2, 3, 3, 2, 2][t]!, col);
+      star4(part, Math.round(x + dx * k), Math.round(y + dy * k), [2, 3, 3, 2, 2][t]!, col);
       over(g, part);
     }
   }

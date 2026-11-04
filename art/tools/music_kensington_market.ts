@@ -11,8 +11,6 @@
  */
 
 import {
-  decimal,
-  fixed,
   hz,
   mix,
   n,
@@ -20,7 +18,6 @@ import {
   PEAK_DB,
   type Play,
   RATE,
-  roundTo,
   type Score,
   sox,
   tone,
@@ -134,7 +131,7 @@ function compScore(i: number): Score {
 function reed(cents: number): Play {
   return (path, length, note) => {
     const freq = hz(note) * 2 ** (cents / 1200);
-    const late = cents ? roundTo(0, RATE / freq / 2) : 0;
+    const late = cents ? Math.round(RATE / freq / 2) : 0;
     tone(path, length - late, "square", freq, {
       attack: 0.02,
       duty: 35,
@@ -161,10 +158,10 @@ function squeeze(path: string, out: string): void {
     out,
     "compand",
     "0.001,0.08",
-    `6:-70,-70,${SQUEEZE_DB},${SQUEEZE_DB},0,${decimal((SQUEEZE_DB * 3) / 4)}`,
+    `6:-70,-70,${SQUEEZE_DB},${SQUEEZE_DB},0,${(SQUEEZE_DB * 3) / 4}`,
     "0",
     "0",
-    fixed(6, LOOKAHEAD / RATE),
+    (LOOKAHEAD / RATE).toFixed(6),
     "trim",
     `${length}s`,
     `${length}s`,

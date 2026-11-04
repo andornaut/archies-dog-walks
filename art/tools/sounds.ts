@@ -158,49 +158,6 @@ function fail(message: string): never {
   process.exit(1);
 }
 
-/** A number's exact binary value as a sign and a fraction of non-negative integers. */
-function exact(x: number): { denominator: bigint; negative: boolean; numerator: bigint } {
-  const view = new DataView(new ArrayBuffer(8));
-  view.setFloat64(0, x);
-  const bits = view.getBigUint64(0);
-  const negative = bits >> 63n === 1n;
-  const exponent = Number((bits >> 52n) & 0x7ffn);
-  const mantissa = bits & 0xfffffffffffffn;
-  const significand = exponent === 0 ? mantissa : mantissa | (1n << 52n);
-  const shift = (exponent === 0 ? 1 : exponent) - 1075;
-  return shift >= 0
-    ? { denominator: 1n, negative, numerator: significand << BigInt(shift) }
-    : { denominator: 1n << BigInt(-shift), negative, numerator: significand };
-}
-
-/** x with digits decimals, rounding the exact binary value half to even, keeping a negative sign. */
-export function fixed(digits: number, x: number): string {
-  const { denominator, negative, numerator } = exact(x);
-  const scaled = numerator * 10n ** BigInt(digits);
-  let whole = scaled / denominator;
-  const twice = (scaled % denominator) * 2n;
-  if (twice > denominator || (twice === denominator && whole % 2n === 1n)) {
-    whole += 1n;
-  }
-  const text = whole.toString().padStart(digits + 1, "0");
-  const point = text.length - digits;
-  return `${negative ? "-" : ""}${text.slice(0, point)}${digits > 0 ? `.${text.slice(point)}` : ""}`;
-}
-
-/** x rounded to digits decimals, half to even on its exact binary value. */
-export function roundTo(digits: number, x: number): number {
-  return Number(fixed(digits, x));
-}
-
-/** A number written as a decimal with at least one fractional digit, as "1.0" or "-0.55". */
-export function decimal(x: number): string {
-  if (Object.is(x, -0)) {
-    return "-0.0";
-  }
-  const text = String(x);
-  return /[.e]/u.test(text) ? text : `${text}.0`;
-}
-
 /** Equal-tempered frequency of a note name such as "F#4"; a number passes through. */
 export function hz(note: Pitch): number {
   if (typeof note === "number") {
@@ -214,9 +171,9 @@ export function hz(note: Pitch): number {
   return 440 * 2 ** (semis / 12);
 }
 
-/** Seconds in samples, rounded half to even. */
+/** Seconds in samples, rounded. */
 export function n(seconds: number): number {
-  return roundTo(0, seconds * RATE);
+  return Math.round(seconds * RATE);
 }
 
 function run(tool: string, args: readonly string[]): void {
@@ -279,11 +236,11 @@ export function tone(
     // "-" sweeps exponentially; sox's smoother "/" sweep outputs a flat line when the pitch falls.
     const pitch =
       Array.isArray(freq) && freq.length === 2
-        ? `${fixed(3, hz(freq[0]))}-${fixed(3, hz(freq[1]))}`
-        : fixed(3, hz((freq ?? fail("a tone needs a pitch")) as Pitch));
+        ? `${hz(freq[0]).toFixed(3)}-${hz(freq[1]).toFixed(3)}`
+        : hz((freq ?? fail("a tone needs a pitch")) as Pitch).toFixed(3);
     // sox's bias both shifts and shrinks the wave; this much centres a pulse of the given duty on zero.
     const bias = wave === "square" ? (100 * (1 - duty / 50)) / (2 - duty / 50) : 0;
-    chain.push(pitch, fixed(4, bias), "0", String(duty));
+    chain.push(pitch, bias.toFixed(4), "0", String(duty));
   }
   // synth writes at full scale; filters overshoot it.
   chain.push("vol", "0.5");
@@ -296,7 +253,7 @@ export function tone(
   chain.push(...fx);
   chain.push("fade", shape, `${Math.max(1, n(attack))}s`, `${length}s`);
   chain.push(`${Math.trunc(length * release)}s`);
-  chain.push("fade", "t", "0", `${length}s`, "64s", "vol", decimal(vol));
+  chain.push("fade", "t", "0", `${length}s`, "64s", "vol", String(vol));
   chain.push("pad", `${start}s`, `${tail}s`);
   sox("-r", String(RATE), "-c", "1", "-n", "-e", "floating-point", "-b", "32", path, ...chain);
 }
@@ -321,7 +278,7 @@ export function rest(path: string, length: number): void {
 
 /** Sum [path, volume] layers and normalize the peak to PEAK_DB. */
 export function mix(layers: readonly (readonly [string, number])[], out: string): void {
-  const inputs = layers.flatMap(([path, vol]) => ["-v", fixed(4, vol), path]);
+  const inputs = layers.flatMap(([path, vol]) => ["-v", vol.toFixed(4), path]);
   sox(
     ...(layers.length > 1 ? ["-m"] : []),
     ...inputs,
@@ -1000,8 +957,8 @@ function musicPhoneLoudness(path: string): number {
 
 /** Gain a rendered loop to MUSIC_LUFS. One gain over the whole loop keeps it seamless. */
 function levelMusic(path: string, out: string): void {
-  const gain = roundTo(2, MUSIC_LUFS - musicPhoneLoudness(path));
-  sox(path, "-e", "floating-point", "-b", "32", out, "gain", decimal(gain));
+  const gain = Math.round((MUSIC_LUFS - musicPhoneLoudness(path)) * 100) / 100;
+  sox(path, "-e", "floating-point", "-b", "32", out, "gain", String(gain));
 }
 
 /**
@@ -1020,10 +977,10 @@ function effect(tmp: string, key: string, notes: readonly EffectNote[], out: str
     mixed,
   );
   const level = EFFECT_LUFS + (LOUDER[key] ?? 0) - (QUIETER[key] ?? 0);
-  const gain = roundTo(1, level - phoneLoudness(mixed));
+  const gain = Math.round((level - phoneLoudness(mixed)) * 10) / 10;
   if (gain > EFFECT_BAND) {
     fail(
-      `${key} is ${decimal(gain)} LU under its phone loudness at its ${PEAK_DB} dBFS peak: move ` +
+      `${key} is ${gain} LU under its phone loudness at its ${PEAK_DB} dBFS peak: move ` +
         "its energy above 300 Hz or soften its loudest onset",
     );
   }
@@ -1035,7 +992,7 @@ function effect(tmp: string, key: string, notes: readonly EffectNote[], out: str
     "32",
     out,
     "gain",
-    gain > 0 ? "0" : decimal(gain),
+    gain > 0 ? "0" : String(gain),
     "pad",
     `${EFFECT_LEAD}s`,
     `${EFFECT_TAIL}s`,
@@ -1076,7 +1033,7 @@ function encode(wav: string, outDir: string, key: string): void {
   for (const ext of ["ogg", "m4a"]) {
     const peak = peakDb(`${outDir}/${key}.${ext}`);
     if (peak >= CEILING_DB) {
-      fail(`${key}.${ext} peaks at ${decimal(peak)} dBFS, at or over ${CEILING_DB}`);
+      fail(`${key}.${ext} peaks at ${peak} dBFS, at or over ${CEILING_DB}`);
     }
   }
 }

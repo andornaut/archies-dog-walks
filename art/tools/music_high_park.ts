@@ -13,7 +13,6 @@
 
 import {
   concat,
-  fixed,
   type Freq,
   mix,
   n,
@@ -104,7 +103,7 @@ function score(text: string): Score {
 
 /** Sum [path, volume] layers of equal length into out, without normalizing. */
 function soxMix(layers: readonly (readonly [string, number])[], out: string): void {
-  const inputs = layers.flatMap(([path, vol]) => ["-v", fixed(4, vol), path]);
+  const inputs = layers.flatMap(([path, vol]) => ["-v", vol.toFixed(4), path]);
   sox("-m", ...inputs, "-e", "floating-point", "-b", "32", out);
 }
 

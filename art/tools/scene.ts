@@ -12,7 +12,6 @@ import { decodePng } from "@andornaut/art-kit/png";
 import { blankImage, type RgbaImage } from "@andornaut/art-kit/rgbaImage";
 
 import { Grid, HEART, K, toImage } from "./pixel.ts";
-import { floorMod, roundHalfEven } from "./py.ts";
 import { chrome } from "./ui.ts";
 
 export type Rgb = readonly [number, number, number];
@@ -123,15 +122,15 @@ export class Canvas {
   }
 
   paste(sprite: RgbaImage, x: number, y: number, flip = false): void {
-    pasteMasked(this.img, flip ? flipped(sprite) : sprite, roundHalfEven(x), roundHalfEven(y));
+    pasteMasked(this.img, flip ? flipped(sprite) : sprite, Math.round(x), Math.round(y));
   }
 
   line(x0: number, y0: number, x1: number, y1: number, c: string): void {
     const n = Math.max(Math.abs(x1 - x0), Math.abs(y1 - y0), 1);
     for (let i = 0; i < Math.trunc(n) + 1; i++) {
       this.fill(
-        roundHalfEven(x0 + ((x1 - x0) * i) / n),
-        roundHalfEven(y0 + ((y1 - y0) * i) / n),
+        Math.round(x0 + ((x1 - x0) * i) / n),
+        Math.round(y0 + ((y1 - y0) * i) / n),
         1,
         1,
         c,
@@ -235,7 +234,7 @@ export function textC(
   sc = 1,
   acc: Readonly<Record<string, string>> = {},
 ): void {
-  text(cv, s, roundHalfEven(mid - textW(s, sc) / 2), y, col, sc, acc);
+  text(cv, s, Math.round(mid - textW(s, sc) / 2), y, col, sc, acc);
 }
 
 // ---------- game data and layout, from the game's export in shared/export/ ----------
@@ -347,7 +346,8 @@ export function sheet(key: string): Sheet {
 export function frame(key: string, tag: string, i = 0): RgbaImage {
   const [img, frames, tags] = sheet(key);
   const t = tags.get(tag)!;
-  const f = frames[t.from + floorMod(i, t.to - t.from + 1)]!;
+  const n = t.to - t.from + 1;
+  const f = frames[t.from + (((i % n) + n) % n)]!;
   return crop(img, f.x, f.y, f.x + f.w, f.y + f.h);
 }
 
