@@ -870,10 +870,10 @@
         "lanes": 1,
         "rows": 1
       },
+      "spriteKey": "big-screen-promo",
       "zones": [
         "yongeStreet"
-      ],
-      "spriteKey": "big-screen-promo"
+      ]
     },
     {
       "id": "cheeseCrates",
@@ -927,11 +927,11 @@
         "lanes": 1,
         "rows": 1
       },
+      "spriteKey": "cheese-crates",
       "zones": [
         "kensingtonMarket",
         "distilleryDistrict"
-      ],
-      "spriteKey": "cheese-crates"
+      ]
     },
     {
       "id": "droppedIceCream",
@@ -985,10 +985,10 @@
         "lanes": 1,
         "rows": 1
       },
+      "spriteKey": "dropped-ice-cream",
       "zones": [
         "theBeaches"
-      ],
-      "spriteKey": "dropped-ice-cream"
+      ]
     },
     {
       "id": "friendlyNeighbour",
@@ -1066,11 +1066,11 @@
         "lanes": 1,
         "rows": 1
       },
+      "spriteKey": "green-bin-spill",
       "zones": [
         "kensingtonMarket",
         "yongeStreet"
-      ],
-      "spriteKey": "green-bin-spill"
+      ]
     },
     {
       "id": "lostWallet",
@@ -1151,7 +1151,11 @@
         "lanes": 1,
         "rows": 1
       },
-      "spriteKey": "other-dog"
+      "spriteKey": "other-dog",
+      "zones": [
+        "highPark",
+        "kensingtonMarket"
+      ]
     },
     {
       "id": "porchCat",
@@ -1205,10 +1209,10 @@
         "lanes": 1,
         "rows": 1
       },
+      "spriteKey": "porch-cat",
       "zones": [
         "cabbagetown"
-      ],
-      "spriteKey": "porch-cat"
+      ]
     },
     {
       "id": "pothole",
@@ -1228,12 +1232,12 @@
         "lanes": 2,
         "rows": 1
       },
+      "spriteKey": "pothole",
       "zones": [
         "kensingtonMarket",
         "distilleryDistrict",
         "yongeStreet"
-      ],
-      "spriteKey": "pothole"
+      ]
     },
     {
       "id": "puddle",
@@ -1253,12 +1257,12 @@
         "lanes": 2,
         "rows": 1
       },
+      "spriteKey": "puddle",
       "zones": [
-        "cabbagetown",
         "highPark",
+        "cabbagetown",
         "theBeaches"
-      ],
-      "spriteKey": "puddle"
+      ]
     },
     {
       "id": "skunk",
@@ -1319,7 +1323,11 @@
         "lanes": 2,
         "rows": 2
       },
-      "spriteKey": "skunk"
+      "spriteKey": "skunk",
+      "zones": [
+        "highPark",
+        "cabbagetown"
+      ]
     },
     {
       "id": "squirrel",
@@ -1341,7 +1349,15 @@
         "lanes": 1,
         "rows": 1
       },
-      "spriteKey": "squirrel"
+      "spriteKey": "squirrel",
+      "zones": [
+        "highPark",
+        "cabbagetown",
+        "kensingtonMarket",
+        "theBeaches",
+        "distilleryDistrict",
+        "yongeStreet"
+      ]
     },
     {
       "id": "thief",
@@ -1402,7 +1418,12 @@
         "lanes": 1,
         "rows": 1
       },
-      "spriteKey": "thief"
+      "spriteKey": "thief",
+      "zones": [
+        "theBeaches",
+        "distilleryDistrict",
+        "yongeStreet"
+      ]
     },
     {
       "id": "weddingPhotoShoot",
@@ -1456,11 +1477,11 @@
         "lanes": 2,
         "rows": 1
       },
+      "spriteKey": "wedding-photo-shoot",
       "zones": [
         "theBeaches",
         "distilleryDistrict"
-      ],
-      "spriteKey": "wedding-photo-shoot"
+      ]
     }
   ],
   "gear": [
@@ -1579,10 +1600,10 @@
         "lanes": 1,
         "rows": 1
       },
+      "spriteKey": "art-sculpture",
       "zones": [
         "distilleryDistrict"
-      ],
-      "spriteKey": "art-sculpture"
+      ]
     },
     {
       "id": "ball",
@@ -1600,7 +1621,11 @@
         "lanes": 1,
         "rows": 1
       },
-      "spriteKey": "ball-bounce"
+      "spriteKey": "ball-bounce",
+      "zones": [
+        "highPark",
+        "theBeaches"
+      ]
     },
     {
       "id": "barrelStack",
@@ -1617,10 +1642,10 @@
         "lanes": 1,
         "rows": 1
       },
+      "spriteKey": "barrel-stack",
       "zones": [
         "distilleryDistrict"
-      ],
-      "spriteKey": "barrel-stack"
+      ]
     },
     {
       "id": "beachUmbrella",
@@ -1629,10 +1654,10 @@
         "lanes": 1,
         "rows": 1
       },
+      "spriteKey": "beach-umbrella",
       "zones": [
         "theBeaches"
-      ],
-      "spriteKey": "beach-umbrella"
+      ]
     },
     {
       "id": "bench",
@@ -1641,7 +1666,10 @@
         "lanes": 2,
         "rows": 1
       },
-      "spriteKey": "bench"
+      "spriteKey": "bench",
+      "zones": [
+        "highPark"
+      ]
     },
     {
       "id": "breweryDray",
@@ -1669,10 +1697,10 @@
         "lanes": 3,
         "rows": 1
       },
+      "spriteKey": "brewery-dray",
       "zones": [
         "distilleryDistrict"
-      ],
-      "spriteKey": "brewery-dray"
+      ]
     },
     {
       "id": "bunny",
@@ -1691,7 +1719,12 @@
         "lanes": 1,
         "rows": 1
       },
-      "spriteKey": "chase-rabbit"
+      "spriteKey": "chase-rabbit",
+      "zones": [
+        "highPark",
+        "cabbagetown",
+        "theBeaches"
+      ]
     },
     {
       "id": "busker",
@@ -1701,10 +1734,10 @@
         "lanes": 1,
         "rows": 1
       },
+      "spriteKey": "busker",
       "zones": [
         "yongeStreet"
-      ],
-      "spriteKey": "busker"
+      ]
     },
     {
       "id": "car",
@@ -1717,7 +1750,11 @@
         "lanes": 1,
         "rows": 3
       },
-      "spriteKey": "parked-car"
+      "spriteKey": "parked-car",
+      "zones": [
+        "cabbagetown",
+        "yongeStreet"
+      ]
     },
     {
       "id": "cargoBike",
@@ -1730,10 +1767,10 @@
         "lanes": 1,
         "rows": 2
       },
+      "spriteKey": "cargo-bike",
       "zones": [
         "kensingtonMarket"
-      ],
-      "spriteKey": "cargo-bike"
+      ]
     },
     {
       "id": "cat",
@@ -1752,7 +1789,12 @@
         "lanes": 1,
         "rows": 1
       },
-      "spriteKey": "chase-cat"
+      "spriteKey": "chase-cat",
+      "zones": [
+        "cabbagetown",
+        "kensingtonMarket",
+        "theBeaches"
+      ]
     },
     {
       "id": "cherryTrees",
@@ -1761,10 +1803,10 @@
         "lanes": 3,
         "rows": 1
       },
+      "spriteKey": "cherry-trees",
       "zones": [
         "highPark"
-      ],
-      "spriteKey": "cherry-trees"
+      ]
     },
     {
       "id": "clothingRack",
@@ -1773,10 +1815,10 @@
         "lanes": 1,
         "rows": 1
       },
+      "spriteKey": "clothing-rack",
       "zones": [
         "kensingtonMarket"
-      ],
-      "spriteKey": "clothing-rack"
+      ]
     },
     {
       "id": "couple",
@@ -1794,12 +1836,12 @@
         "lanes": 2,
         "rows": 1
       },
+      "spriteKey": "couple",
       "zones": [
         "highPark",
-        "theBeaches",
-        "kensingtonMarket"
-      ],
-      "spriteKey": "couple"
+        "kensingtonMarket",
+        "theBeaches"
+      ]
     },
     {
       "id": "coyote",
@@ -1816,7 +1858,10 @@
         "lanes": 1,
         "rows": 1
       },
-      "spriteKey": "coyote"
+      "spriteKey": "coyote",
+      "zones": [
+        "cabbagetown"
+      ]
     },
     {
       "id": "crosstownBus",
@@ -1844,10 +1889,10 @@
         "lanes": 3,
         "rows": 1
       },
+      "spriteKey": "crosstown-bus",
       "zones": [
         "yongeStreet"
-      ],
-      "spriteKey": "crosstown-bus"
+      ]
     },
     {
       "id": "cyclist",
@@ -1860,7 +1905,12 @@
         "lanes": 1,
         "rows": 1
       },
-      "spriteKey": "cyclist"
+      "spriteKey": "cyclist",
+      "zones": [
+        "highPark",
+        "theBeaches",
+        "distilleryDistrict"
+      ]
     },
     {
       "id": "deliveryCyclist",
@@ -1875,12 +1925,12 @@
         "lanes": 1,
         "rows": 1
       },
+      "spriteKey": "delivery-cyclist",
       "zones": [
         "kensingtonMarket",
         "distilleryDistrict",
         "yongeStreet"
-      ],
-      "spriteKey": "delivery-cyclist"
+      ]
     },
     {
       "id": "deliveryTruck",
@@ -1893,7 +1943,11 @@
         "lanes": 1,
         "rows": 3
       },
-      "spriteKey": "delivery-truck"
+      "spriteKey": "delivery-truck",
+      "zones": [
+        "kensingtonMarket",
+        "yongeStreet"
+      ]
     },
     {
       "id": "ducklings",
@@ -1911,7 +1965,10 @@
         "lanes": 1,
         "rows": 1
       },
-      "spriteKey": "chase-ducklings"
+      "spriteKey": "chase-ducklings",
+      "zones": [
+        "highPark"
+      ]
     },
     {
       "id": "escapedCapybara",
@@ -1928,10 +1985,10 @@
         "lanes": 1,
         "rows": 1
       },
+      "spriteKey": "escaped-capybara",
       "zones": [
         "highPark"
-      ],
-      "spriteKey": "escaped-capybara"
+      ]
     },
     {
       "id": "fallenLog",
@@ -1940,10 +1997,10 @@
         "lanes": 2,
         "rows": 1
       },
+      "spriteKey": "fallen-log",
       "zones": [
         "highPark"
-      ],
-      "spriteKey": "fallen-log"
+      ]
     },
     {
       "id": "ferrets",
@@ -1962,10 +2019,10 @@
         "lanes": 2,
         "rows": 1
       },
+      "spriteKey": "ferrets",
       "zones": [
         "highPark"
-      ],
-      "spriteKey": "ferrets"
+      ]
     },
     {
       "id": "foodCartVendor",
@@ -1985,10 +2042,10 @@
         "lanes": 1,
         "rows": 1
       },
+      "spriteKey": "food-cart-vendor",
       "zones": [
         "kensingtonMarket"
-      ],
-      "spriteKey": "food-cart-vendor"
+      ]
     },
     {
       "id": "frisbeeDog",
@@ -2015,7 +2072,10 @@
         "lanes": 1,
         "rows": 1
       },
-      "spriteKey": "social-frisbee-dog"
+      "spriteKey": "social-frisbee-dog",
+      "zones": [
+        "cabbagetown"
+      ]
     },
     {
       "id": "garbageTruck",
@@ -2028,7 +2088,10 @@
         "lanes": 1,
         "rows": 3
       },
-      "spriteKey": "stink-garbage-truck"
+      "spriteKey": "stink-garbage-truck",
+      "zones": [
+        "yongeStreet"
+      ]
     },
     {
       "id": "gardener",
@@ -2047,10 +2110,10 @@
         "lanes": 1,
         "rows": 1
       },
+      "spriteKey": "gardener",
       "zones": [
         "cabbagetown"
-      ],
-      "spriteKey": "gardener"
+      ]
     },
     {
       "id": "goose",
@@ -2064,7 +2127,11 @@
         "lanes": 1,
         "rows": 1
       },
-      "spriteKey": "goose"
+      "spriteKey": "goose",
+      "zones": [
+        "highPark",
+        "theBeaches"
+      ]
     },
     {
       "id": "grannyCartShopper",
@@ -2081,10 +2148,10 @@
         "lanes": 1,
         "rows": 1
       },
+      "spriteKey": "granny-cart-shopper",
       "zones": [
         "kensingtonMarket"
-      ],
-      "spriteKey": "granny-cart-shopper"
+      ]
     },
     {
       "id": "hedge",
@@ -2093,11 +2160,11 @@
         "lanes": 3,
         "rows": 1
       },
+      "spriteKey": "hedge",
       "zones": [
         "highPark",
         "cabbagetown"
-      ],
-      "spriteKey": "hedge"
+      ]
     },
     {
       "id": "hen",
@@ -2116,10 +2183,10 @@
         "lanes": 1,
         "rows": 1
       },
+      "spriteKey": "hen",
       "zones": [
         "cabbagetown"
-      ],
-      "spriteKey": "hen"
+      ]
     },
     {
       "id": "hopscotchKid",
@@ -2137,12 +2204,12 @@
         "lanes": 1,
         "rows": 1
       },
+      "spriteKey": "hopscotch-kid",
       "zones": [
         "cabbagetown",
         "kensingtonMarket",
         "distilleryDistrict"
-      ],
-      "spriteKey": "hopscotch-kid"
+      ]
     },
     {
       "id": "iceCreamBike",
@@ -2161,10 +2228,10 @@
         "lanes": 1,
         "rows": 1
       },
+      "spriteKey": "ice-cream-bike",
       "zones": [
         "theBeaches"
-      ],
-      "spriteKey": "ice-cream-bike"
+      ]
     },
     {
       "id": "iceCreamTruck",
@@ -2177,7 +2244,10 @@
         "lanes": 1,
         "rows": 3
       },
-      "spriteKey": "ice-cream-truck"
+      "spriteKey": "ice-cream-truck",
+      "zones": [
+        "kensingtonMarket"
+      ]
     },
     {
       "id": "ironFence2",
@@ -2186,10 +2256,10 @@
         "lanes": 2,
         "rows": 1
       },
+      "spriteKey": "iron-fence-2",
       "zones": [
         "cabbagetown"
-      ],
-      "spriteKey": "iron-fence-2"
+      ]
     },
     {
       "id": "ironFence3",
@@ -2198,10 +2268,10 @@
         "lanes": 3,
         "rows": 1
       },
+      "spriteKey": "iron-fence-3",
       "zones": [
         "cabbagetown"
-      ],
-      "spriteKey": "iron-fence-3"
+      ]
     },
     {
       "id": "jogger",
@@ -2215,7 +2285,12 @@
         "lanes": 1,
         "rows": 1
       },
-      "spriteKey": "jogger"
+      "spriteKey": "jogger",
+      "zones": [
+        "highPark",
+        "cabbagetown",
+        "theBeaches"
+      ]
     },
     {
       "id": "kegDollyWorker",
@@ -2235,10 +2310,10 @@
         "lanes": 1,
         "rows": 1
       },
+      "spriteKey": "keg-dolly-worker",
       "zones": [
         "distilleryDistrict"
-      ],
-      "spriteKey": "keg-dolly-worker"
+      ]
     },
     {
       "id": "kidOnABike",
@@ -2251,7 +2326,12 @@
         "lanes": 1,
         "rows": 1
       },
-      "spriteKey": "kid-on-a-bike"
+      "spriteKey": "kid-on-a-bike",
+      "zones": [
+        "cabbagetown",
+        "theBeaches",
+        "distilleryDistrict"
+      ]
     },
     {
       "id": "leafPile",
@@ -2260,11 +2340,11 @@
         "lanes": 1,
         "rows": 1
       },
+      "spriteKey": "leaf-pile",
       "zones": [
         "highPark",
         "cabbagetown"
-      ],
-      "spriteKey": "leaf-pile"
+      ]
     },
     {
       "id": "lifeguardChair",
@@ -2273,10 +2353,10 @@
         "lanes": 1,
         "rows": 1
       },
+      "spriteKey": "lifeguard-chair",
       "zones": [
         "theBeaches"
-      ],
-      "spriteKey": "lifeguard-chair"
+      ]
     },
     {
       "id": "littleFreeLibrary",
@@ -2285,10 +2365,10 @@
         "lanes": 1,
         "rows": 1
       },
+      "spriteKey": "little-free-library",
       "zones": [
         "cabbagetown"
-      ],
-      "spriteKey": "little-free-library"
+      ]
     },
     {
       "id": "mailCarrier",
@@ -2305,7 +2385,12 @@
         "lanes": 1,
         "rows": 1
       },
-      "spriteKey": "mail-carrier"
+      "spriteKey": "mail-carrier",
+      "zones": [
+        "cabbagetown",
+        "distilleryDistrict",
+        "yongeStreet"
+      ]
     },
     {
       "id": "marketStall2",
@@ -2314,10 +2399,10 @@
         "lanes": 2,
         "rows": 1
       },
+      "spriteKey": "market-stall-2",
       "zones": [
         "kensingtonMarket"
-      ],
-      "spriteKey": "market-stall-2"
+      ]
     },
     {
       "id": "marketStall3",
@@ -2326,10 +2411,10 @@
         "lanes": 3,
         "rows": 1
       },
+      "spriteKey": "market-stall-3",
       "zones": [
         "kensingtonMarket"
-      ],
-      "spriteKey": "market-stall-3"
+      ]
     },
     {
       "id": "newspaperBox",
@@ -2338,10 +2423,10 @@
         "lanes": 1,
         "rows": 1
       },
+      "spriteKey": "newspaper-box",
       "zones": [
         "yongeStreet"
-      ],
-      "spriteKey": "newspaper-box"
+      ]
     },
     {
       "id": "parkRangersCart",
@@ -2360,10 +2445,10 @@
         "lanes": 1,
         "rows": 1
       },
+      "spriteKey": "park-rangers-cart",
       "zones": [
         "highPark"
-      ],
-      "spriteKey": "park-rangers-cart"
+      ]
     },
     {
       "id": "parkedCar",
@@ -2372,7 +2457,11 @@
         "lanes": 1,
         "rows": 3
       },
-      "spriteKey": "parked-car"
+      "spriteKey": "parked-car",
+      "zones": [
+        "cabbagetown",
+        "yongeStreet"
+      ]
     },
     {
       "id": "patrolBuggy",
@@ -2396,10 +2485,10 @@
         "lanes": 2,
         "rows": 1
       },
+      "spriteKey": "patrol-buggy",
       "zones": [
         "theBeaches"
-      ],
-      "spriteKey": "patrol-buggy"
+      ]
     },
     {
       "id": "pedicab",
@@ -2412,11 +2501,11 @@
         "lanes": 1,
         "rows": 2
       },
+      "spriteKey": "pedicab",
       "zones": [
-        "yongeStreet",
-        "distilleryDistrict"
-      ],
-      "spriteKey": "pedicab"
+        "distilleryDistrict",
+        "yongeStreet"
+      ]
     },
     {
       "id": "pigeons",
@@ -2435,7 +2524,12 @@
         "lanes": 1,
         "rows": 1
       },
-      "spriteKey": "chase-pigeons"
+      "spriteKey": "chase-pigeons",
+      "zones": [
+        "kensingtonMarket",
+        "distilleryDistrict",
+        "yongeStreet"
+      ]
     },
     {
       "id": "porchSteps",
@@ -2444,10 +2538,10 @@
         "lanes": 1,
         "rows": 1
       },
+      "spriteKey": "porch-steps",
       "zones": [
         "cabbagetown"
-      ],
-      "spriteKey": "porch-steps"
+      ]
     },
     {
       "id": "produceCrates",
@@ -2456,10 +2550,10 @@
         "lanes": 1,
         "rows": 1
       },
+      "spriteKey": "produce-crates",
       "zones": [
         "kensingtonMarket"
-      ],
-      "spriteKey": "produce-crates"
+      ]
     },
     {
       "id": "raccoon",
@@ -2476,7 +2570,12 @@
         "lanes": 1,
         "rows": 1
       },
-      "spriteKey": "snatch-raccoon"
+      "spriteKey": "snatch-raccoon",
+      "zones": [
+        "cabbagetown",
+        "kensingtonMarket",
+        "yongeStreet"
+      ]
     },
     {
       "id": "rollerblader",
@@ -2489,10 +2588,10 @@
         "lanes": 1,
         "rows": 1
       },
+      "spriteKey": "rollerblader",
       "zones": [
         "theBeaches"
-      ],
-      "spriteKey": "rollerblader"
+      ]
     },
     {
       "id": "rollingBarrel",
@@ -2510,10 +2609,10 @@
         "lanes": 1,
         "rows": 1
       },
+      "spriteKey": "rolling-barrel",
       "zones": [
         "distilleryDistrict"
-      ],
-      "spriteKey": "rolling-barrel"
+      ]
     },
     {
       "id": "sandcastle",
@@ -2522,10 +2621,10 @@
         "lanes": 1,
         "rows": 1
       },
+      "spriteKey": "sandcastle",
       "zones": [
         "theBeaches"
-      ],
-      "spriteKey": "sandcastle"
+      ]
     },
     {
       "id": "scooter",
@@ -2538,7 +2637,12 @@
         "lanes": 1,
         "rows": 1
       },
-      "spriteKey": "minor-scooter"
+      "spriteKey": "minor-scooter",
+      "zones": [
+        "kensingtonMarket",
+        "distilleryDistrict",
+        "yongeStreet"
+      ]
     },
     {
       "id": "seagull",
@@ -2565,7 +2669,11 @@
         "lanes": 1,
         "rows": 1
       },
-      "spriteKey": "snatch-seagull"
+      "spriteKey": "snatch-seagull",
+      "zones": [
+        "theBeaches",
+        "yongeStreet"
+      ]
     },
     {
       "id": "segwayTourRider",
@@ -2578,10 +2686,10 @@
         "lanes": 1,
         "rows": 1
       },
+      "spriteKey": "segway-tour-rider",
       "zones": [
         "distilleryDistrict"
-      ],
-      "spriteKey": "segway-tour-rider"
+      ]
     },
     {
       "id": "signSpinner",
@@ -2607,10 +2715,10 @@
         "lanes": 1,
         "rows": 1
       },
+      "spriteKey": "sign-spinner",
       "zones": [
         "yongeStreet"
-      ],
-      "spriteKey": "sign-spinner"
+      ]
     },
     {
       "id": "stiltWalker",
@@ -2636,11 +2744,11 @@
         "lanes": 1,
         "rows": 1
       },
+      "spriteKey": "stilt-walker",
       "zones": [
         "kensingtonMarket",
         "distilleryDistrict"
-      ],
-      "spriteKey": "stilt-walker"
+      ]
     },
     {
       "id": "streetCart",
@@ -2699,7 +2807,10 @@
         "lanes": 1,
         "rows": 3
       },
-      "spriteKey": "streetcar"
+      "spriteKey": "streetcar",
+      "zones": [
+        "yongeStreet"
+      ]
     },
     {
       "id": "streetcarPlatform",
@@ -2708,10 +2819,10 @@
         "lanes": 3,
         "rows": 1
       },
+      "spriteKey": "streetcar-platform",
       "zones": [
         "yongeStreet"
-      ],
-      "spriteKey": "streetcar-platform"
+      ]
     },
     {
       "id": "stroller",
@@ -2725,7 +2836,12 @@
         "lanes": 1,
         "rows": 1
       },
-      "spriteKey": "stroller"
+      "spriteKey": "stroller",
+      "zones": [
+        "highPark",
+        "cabbagetown",
+        "theBeaches"
+      ]
     },
     {
       "id": "strollingBusker",
@@ -2743,10 +2859,10 @@
         "lanes": 1,
         "rows": 1
       },
+      "spriteKey": "strolling-busker",
       "zones": [
         "kensingtonMarket"
-      ],
-      "spriteKey": "strolling-busker"
+      ]
     },
     {
       "id": "taxi",
@@ -2761,10 +2877,10 @@
         "lanes": 1,
         "rows": 2
       },
+      "spriteKey": "taxi",
       "zones": [
         "yongeStreet"
-      ],
-      "spriteKey": "taxi"
+      ]
     },
     {
       "id": "tourGroup",
@@ -2782,10 +2898,10 @@
         "lanes": 2,
         "rows": 1
       },
+      "spriteKey": "tour-group",
       "zones": [
         "distilleryDistrict"
-      ],
-      "spriteKey": "tour-group"
+      ]
     },
     {
       "id": "tourist",
@@ -2802,12 +2918,12 @@
         "lanes": 1,
         "rows": 1
       },
+      "spriteKey": "tourist",
       "zones": [
         "theBeaches",
         "distilleryDistrict",
         "yongeStreet"
-      ],
-      "spriteKey": "tourist"
+      ]
     },
     {
       "id": "touristTrain",
@@ -2836,10 +2952,10 @@
         "lanes": 3,
         "rows": 1
       },
+      "spriteKey": "tourist-train",
       "zones": [
         "highPark"
-      ],
-      "spriteKey": "tourist-train"
+      ]
     },
     {
       "id": "trashCan",
@@ -2856,7 +2972,10 @@
         "lanes": 1,
         "rows": 1
       },
-      "spriteKey": "trash-can"
+      "spriteKey": "trash-can",
+      "zones": [
+        "highPark"
+      ]
     },
     {
       "id": "ttcBus",
@@ -2869,10 +2988,10 @@
         "lanes": 1,
         "rows": 3
       },
+      "spriteKey": "ttc-bus",
       "zones": [
         "yongeStreet"
-      ],
-      "spriteKey": "ttc-bus"
+      ]
     },
     {
       "id": "velvetRope",
@@ -2881,10 +3000,10 @@
         "lanes": 2,
         "rows": 1
       },
+      "spriteKey": "velvet-rope",
       "zones": [
         "distilleryDistrict"
-      ],
-      "spriteKey": "velvet-rope"
+      ]
     },
     {
       "id": "volleyballNet3",
@@ -2893,10 +3012,10 @@
         "lanes": 3,
         "rows": 1
       },
+      "spriteKey": "volleyball-net-3",
       "zones": [
         "theBeaches"
-      ],
-      "spriteKey": "volleyball-net-3"
+      ]
     },
     {
       "id": "volleyballPlayer",
@@ -2915,10 +3034,10 @@
         "lanes": 1,
         "rows": 1
       },
+      "spriteKey": "volleyball-player",
       "zones": [
         "theBeaches"
-      ],
-      "spriteKey": "volleyball-player"
+      ]
     }
   ],
   "movementAssignments": {

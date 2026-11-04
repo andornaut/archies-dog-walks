@@ -15,6 +15,7 @@ import type {
 } from "../data/types.ts";
 import { WORLD } from "../data/world.ts";
 import { read } from "../rules/units.ts";
+import { weightedZones } from "../rules/zones.ts";
 import { newRun, type PackDogs } from "../state/runState.ts";
 import { moverFixture } from "../testing/moverFixtures.ts";
 import {
@@ -418,25 +419,14 @@ describe("movers", { timeout: 200_000 }, () => {
   };
   const enough = (spawns: readonly Planned[]) => spawns.length >= SEARCH_ENOUGH;
   // The zones that plan a kind: every zone for a lucky find, which each zone's quota places, and
-  // otherwise those that weigh it above 0, of its own zones if it has any.
+  // otherwise those that weigh it above 0.
   const zonesOf = (kind: WalkItem["kind"]): ZoneId[] => {
     if ((LUCKY_IDS as readonly string[]).includes(kind)) {
       return ZONE_IDS;
     }
-    const minor = Object.hasOwn(MINOR_OBSTACLES, kind);
-    const entry = minor
-      ? everyMover.minorObstacles[kind as MinorObstacleId]
-      : everyMover.encounters[kind as ObstacleEncounterId];
-    return everyMover.world.zones
-      .filter(({ id, weights }) => {
-        const weight = minor
-          ? weights.minorObstacles[kind as MinorObstacleId]
-          : weights.obstacles[kind as ObstacleEncounterId];
-        return (
-          weight > 0 && (!("zones" in entry) || (entry.zones as readonly string[]).includes(id))
-        );
-      })
-      .map(({ id }) => id as ZoneId);
+    return Object.hasOwn(MINOR_OBSTACLES, kind)
+      ? weightedZones(everyMover.world, "minorObstacles", kind as MinorObstacleId)
+      : weightedZones(everyMover.world, "obstacles", kind as ObstacleEncounterId);
   };
   // A kind's spawns planned in the zones that draw it, searched until found holds of them.
   const spawnsOfKind = (kind: WalkItem["kind"], found = enough) =>

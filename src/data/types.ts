@@ -556,17 +556,14 @@ export type MovementAssignment =
 // road from 0 at the left (Movement).
 export type StopLanes = readonly [first: number, last: number];
 
-// The zones a neighbourhood-only obstacle appears in, by id, at least one.
-type NeighbourhoodZones = readonly [string, ...string[]];
-
 // "obstacle": hit by accident. A card obstacle opens a card for the whole pack, with hitLabel
 // shown large as it hits; a contact obstacle applies its effects as it is touched; a pull
 // obstacle does nothing when touched. An obstacle the pack is immune to is harmless. "lucky": a
 // good thing to bump into, one cell big, applied on contact with no card. An obstacle or lucky
 // encounter with a movement comes as a mover at the zone's moverShare; a lucky one stays a prize
 // as it moves, never something the pack steers around. A card obstacle's hitWord is the comic
-// word drawn in font-comic over its hit burst: A to Z, ! ? - and space. An obstacle with zones
-// appears only in those zones: weighted in each and 0 in every other.
+// word drawn in font-comic over its hit burst: A to Z, ! ? - and space. An obstacle appears in
+// the zones that weigh it above 0.
 export type Encounter = {
   readonly name: string;
 } & (
@@ -579,8 +576,6 @@ export type Encounter = {
       readonly kind: "obstacle";
       readonly movement?: Movement;
       readonly shape: Shape;
-      // Zone ids, typed as strings since ZoneId comes from the world, which names this type.
-      readonly zones?: NeighbourhoodZones;
     } & (
       | {
           readonly hitLabel: string;
@@ -598,12 +593,11 @@ export type Encounter = {
 // One with contact is no bump: touching it applies its effects instead, as a contact obstacle
 // such as a puddle does (ContactResolution), with no dodge and no immunity. It counts as no bump,
 // in a zone or toward a bump badge, and stops the road as a bump does.
-// Each zone's weights set how often it appears there; one with zones appears only in those zones,
-// weighted in each and 0 in every other. One with a movement comes as a mover at the zone's
-// moverShare. One onFoot is a person or an animal, not a vehicle or a thing, which the
-// distraction movers are drawn from.
+// Each zone's weights set how often it appears there, and it appears only where weighed above 0.
+// One with a movement comes as a mover at the zone's moverShare. One onFoot is a person or an
+// animal, not a vehicle or a thing, which the distraction movers are drawn from.
 // One with skins never moves and has a look per neighbourhood instead of one name and look: each
-// skin names the zones it appears in, and the obstacle appears in every zone a skin names. Each
+// skin names the zones it appears in, which are the zones that weigh the obstacle above 0. Each
 // spawn picks one of its zone's skins, evenly, and is drawn, named and flashed as that skin.
 export type MinorObstacle =
   | {
@@ -612,8 +606,6 @@ export type MinorObstacle =
       readonly name: string;
       readonly onFoot?: true;
       readonly shape: Shape;
-      // Zone ids, as an obstacle encounter's zones are.
-      readonly zones?: NeighbourhoodZones;
     }
   | {
       readonly contact?: never;
@@ -631,8 +623,9 @@ interface MinorContact {
 // One look of a minor obstacle with skins: its name and the zones it appears in.
 interface ObstacleSkin {
   readonly name: string;
-  // Zone ids, as an obstacle encounter's zones are.
-  readonly zones: NeighbourhoodZones;
+  // Zone ids, at least one, typed as strings since ZoneId comes from the world, which names this
+  // type.
+  readonly zones: readonly [string, ...string[]];
 }
 
 // How long an upgrade card's effects last: applied at once, through the next zone, or for

@@ -1,7 +1,7 @@
 import type { MinorObstacle } from "./types.ts";
 
 // Obstacles that open no card. Shapes are lanes across by rows along the road; each zone
-// weighs how often they appear there, in world.ts, and one with zones appears only in those.
+// weighs how often they appear there, in world.ts, and one appears only where weighed above 0.
 // An obstacle has one look everywhere, or, with skins, a look per neighbourhood: each spawn picks
 // one of its zone's skins evenly. An obstacle with a movement comes as a mover at the zone's mover
 // share, and stands still otherwise. onFoot marks a person or an animal, not a vehicle or a thing.
@@ -10,7 +10,6 @@ export const MINOR_OBSTACLES = {
   artSculpture: {
     name: "Crate stack",
     shape: { lanes: 1, rows: 1 },
-    zones: ["distilleryDistrict"],
   },
   ball: {
     movement: { kind: "dart", stopShare: 0, tilt: { max: 0, min: 0 }, turnBackShare: 0 },
@@ -21,12 +20,10 @@ export const MINOR_OBSTACLES = {
     contact: { effects: [{ debuff: "stinky", kind: "debuff" }] },
     name: "Barrel stack",
     shape: { lanes: 1, rows: 1 },
-    zones: ["distilleryDistrict"],
   },
   beachUmbrella: {
     name: "Beach umbrella",
     shape: { lanes: 1, rows: 1 },
-    zones: ["theBeaches"],
   },
   bench: { name: "Bench", shape: { lanes: 2, rows: 1 } },
   breweryDray: {
@@ -42,7 +39,6 @@ export const MINOR_OBSTACLES = {
     },
     name: "Brewery dray",
     shape: { lanes: 3, rows: 1 },
-    zones: ["distilleryDistrict"],
   },
   bunny: {
     movement: { kind: "hop", most: 2, shy: true, times: { max: 5, min: 2 } },
@@ -54,7 +50,6 @@ export const MINOR_OBSTACLES = {
     name: "Busker",
     onFoot: true,
     shape: { lanes: 1, rows: 1 },
-    zones: ["yongeStreet"],
   },
   car: {
     movement: { factor: 2.3, kind: "inLane" },
@@ -65,7 +60,6 @@ export const MINOR_OBSTACLES = {
     movement: { factor: 1.3, kind: "inLane" },
     name: "Cargo bike",
     shape: { lanes: 1, rows: 2 },
-    zones: ["kensingtonMarket"],
   },
   cat: {
     movement: { kind: "dart", stopShare: 0.5, tilt: { max: 1.6, min: 0.1 }, turnBackShare: 0.33 },
@@ -73,18 +67,16 @@ export const MINOR_OBSTACLES = {
     onFoot: true,
     shape: { lanes: 1, rows: 1 },
   },
-  cherryTrees: { name: "Cherry trees", shape: { lanes: 3, rows: 1 }, zones: ["highPark"] },
+  cherryTrees: { name: "Cherry trees", shape: { lanes: 3, rows: 1 } },
   clothingRack: {
     name: "Clothing rack",
     shape: { lanes: 1, rows: 1 },
-    zones: ["kensingtonMarket"],
   },
   couple: {
     movement: { kind: "sway", pauseSeconds: 0.25, times: { max: 3, min: 2 } },
     name: "Couple",
     onFoot: true,
     shape: { lanes: 2, rows: 1 },
-    zones: ["highPark", "theBeaches", "kensingtonMarket"],
   },
   coyote: {
     movement: { kind: "approach", steps: { max: 4, min: 3 } },
@@ -105,7 +97,6 @@ export const MINOR_OBSTACLES = {
     },
     name: "Crosstown bus",
     shape: { lanes: 3, rows: 1 },
-    zones: ["yongeStreet"],
   },
   cyclist: {
     movement: { factor: 2.0, kind: "inLane" },
@@ -116,7 +107,6 @@ export const MINOR_OBSTACLES = {
     movement: { factor: 1.8, kind: "merge", mergeAt: 0.4, mergeSeconds: 0.4 },
     name: "Delivery cyclist",
     shape: { lanes: 1, rows: 1 },
-    zones: ["kensingtonMarket", "distilleryDistrict", "yongeStreet"],
   },
   deliveryTruck: {
     movement: { factor: 1.6, kind: "inLane" },
@@ -134,15 +124,13 @@ export const MINOR_OBSTACLES = {
     name: "Escaped capybara",
     onFoot: true,
     shape: { lanes: 1, rows: 1 },
-    zones: ["highPark"],
   },
-  fallenLog: { name: "Fallen log", shape: { lanes: 2, rows: 1 }, zones: ["highPark"] },
+  fallenLog: { name: "Fallen log", shape: { lanes: 2, rows: 1 } },
   ferrets: {
     movement: { kind: "dart", stopShare: 0, tilt: { max: 0, min: 0 }, turnBackShare: 0.3 },
     name: "Ferrets",
     onFoot: true,
     shape: { lanes: 2, rows: 1 },
-    zones: ["highPark"],
   },
   foodCartVendor: {
     movement: {
@@ -155,7 +143,6 @@ export const MINOR_OBSTACLES = {
     name: "Food cart vendor",
     onFoot: true,
     shape: { lanes: 1, rows: 1 },
-    zones: ["kensingtonMarket"],
   },
   frisbeeDog: {
     contact: { effects: [{ debuff: "zoomies", kind: "debuff" }] },
@@ -179,7 +166,6 @@ export const MINOR_OBSTACLES = {
     },
     name: "Gardener",
     shape: { lanes: 1, rows: 1 },
-    zones: ["cabbagetown"],
   },
   goose: {
     movement: { factor: 2.07, kind: "inLane" },
@@ -192,26 +178,22 @@ export const MINOR_OBSTACLES = {
     name: "Granny cart shopper",
     onFoot: true,
     shape: { lanes: 1, rows: 1 },
-    zones: ["kensingtonMarket"],
   },
   hedge: {
     name: "Hedge",
     shape: { lanes: 3, rows: 1 },
-    zones: ["highPark", "cabbagetown"],
   },
   hen: {
     movement: { kind: "dart", stopShare: 0, tilt: { max: 0, min: 0 }, turnBackShare: 0 },
     name: "Hen",
     onFoot: true,
     shape: { lanes: 1, rows: 1 },
-    zones: ["cabbagetown"],
   },
   hopscotchKid: {
     movement: { hops: { max: 4, min: 2 }, kind: "bounce", pauseSeconds: 0.6 },
     name: "Hopscotch kid",
     onFoot: true,
     shape: { lanes: 1, rows: 1 },
-    zones: ["cabbagetown", "kensingtonMarket", "distilleryDistrict"],
   },
   iceCreamBike: {
     movement: {
@@ -223,15 +205,14 @@ export const MINOR_OBSTACLES = {
     },
     name: "Ice cream bike",
     shape: { lanes: 1, rows: 1 },
-    zones: ["theBeaches"],
   },
   iceCreamTruck: {
     movement: { factor: 0.7, kind: "inLane" },
     name: "Ice cream truck",
     shape: { lanes: 1, rows: 3 },
   },
-  ironFence2: { name: "Iron fence", shape: { lanes: 2, rows: 1 }, zones: ["cabbagetown"] },
-  ironFence3: { name: "Iron fence", shape: { lanes: 3, rows: 1 }, zones: ["cabbagetown"] },
+  ironFence2: { name: "Iron fence", shape: { lanes: 2, rows: 1 } },
+  ironFence3: { name: "Iron fence", shape: { lanes: 3, rows: 1 } },
   jogger: {
     movement: { factor: 1.7, kind: "inLane" },
     name: "Jogger",
@@ -249,23 +230,20 @@ export const MINOR_OBSTACLES = {
     name: "Keg dolly worker",
     onFoot: true,
     shape: { lanes: 1, rows: 1 },
-    zones: ["distilleryDistrict"],
   },
   kidOnABike: {
     movement: { factor: 1.35, kind: "inLane" },
     name: "Kid on a bike",
     shape: { lanes: 1, rows: 1 },
   },
-  leafPile: { name: "Leaf pile", shape: { lanes: 1, rows: 1 }, zones: ["highPark", "cabbagetown"] },
+  leafPile: { name: "Leaf pile", shape: { lanes: 1, rows: 1 } },
   lifeguardChair: {
     name: "Lifeguard chair",
     shape: { lanes: 1, rows: 1 },
-    zones: ["theBeaches"],
   },
   littleFreeLibrary: {
     name: "Little Free Library",
     shape: { lanes: 1, rows: 1 },
-    zones: ["cabbagetown"],
   },
   mailCarrier: {
     movement: { kind: "step", steps: { max: 4, min: 3 } },
@@ -273,9 +251,9 @@ export const MINOR_OBSTACLES = {
     onFoot: true,
     shape: { lanes: 1, rows: 1 },
   },
-  marketStall2: { name: "Market stall", shape: { lanes: 2, rows: 1 }, zones: ["kensingtonMarket"] },
-  marketStall3: { name: "Market stall", shape: { lanes: 3, rows: 1 }, zones: ["kensingtonMarket"] },
-  newspaperBox: { name: "Newspaper box", shape: { lanes: 1, rows: 1 }, zones: ["yongeStreet"] },
+  marketStall2: { name: "Market stall", shape: { lanes: 2, rows: 1 } },
+  marketStall3: { name: "Market stall", shape: { lanes: 3, rows: 1 } },
+  newspaperBox: { name: "Newspaper box", shape: { lanes: 1, rows: 1 } },
   parkRangersCart: {
     movement: {
       factor: 0.7,
@@ -286,7 +264,6 @@ export const MINOR_OBSTACLES = {
     },
     name: "Park ranger's cart",
     shape: { lanes: 1, rows: 1 },
-    zones: ["highPark"],
   },
   parkedCar: { name: "Parked car", shape: { lanes: 1, rows: 3 } },
   patrolBuggy: {
@@ -301,13 +278,11 @@ export const MINOR_OBSTACLES = {
     },
     name: "Patrol buggy",
     shape: { lanes: 2, rows: 1 },
-    zones: ["theBeaches"],
   },
   pedicab: {
     movement: { factor: 1.2, kind: "inLane" },
     name: "Pedicab",
     shape: { lanes: 1, rows: 2 },
-    zones: ["yongeStreet", "distilleryDistrict"],
   },
   pigeons: {
     movement: { kind: "dart", stopShare: 0, tilt: { max: -0.3, min: -0.3 }, turnBackShare: 0 },
@@ -315,11 +290,10 @@ export const MINOR_OBSTACLES = {
     onFoot: true,
     shape: { lanes: 1, rows: 1 },
   },
-  porchSteps: { name: "Porch steps", shape: { lanes: 1, rows: 1 }, zones: ["cabbagetown"] },
+  porchSteps: { name: "Porch steps", shape: { lanes: 1, rows: 1 } },
   produceCrates: {
     name: "Produce crates",
     shape: { lanes: 1, rows: 1 },
-    zones: ["kensingtonMarket"],
   },
   raccoon: {
     movement: { kind: "approach", steps: { max: 3, min: 2 } },
@@ -331,15 +305,13 @@ export const MINOR_OBSTACLES = {
     movement: { factor: 2.0, kind: "inLane" },
     name: "Rollerblader",
     shape: { lanes: 1, rows: 1 },
-    zones: ["theBeaches"],
   },
   rollingBarrel: {
     movement: { kind: "dart", stopShare: 0, tilt: { max: 0.5, min: 0 }, turnBackShare: 0 },
     name: "Rolling barrel",
     shape: { lanes: 1, rows: 1 },
-    zones: ["distilleryDistrict"],
   },
-  sandcastle: { name: "Sandcastle", shape: { lanes: 1, rows: 1 }, zones: ["theBeaches"] },
+  sandcastle: { name: "Sandcastle", shape: { lanes: 1, rows: 1 } },
   scooter: {
     movement: { factor: 2.0, kind: "inLane" },
     name: "Scooter",
@@ -356,7 +328,6 @@ export const MINOR_OBSTACLES = {
     movement: { factor: 1.1, kind: "inLane" },
     name: "Segway tour rider",
     shape: { lanes: 1, rows: 1 },
-    zones: ["distilleryDistrict"],
   },
   signSpinner: {
     contact: { effects: [{ debuff: "zoomies", kind: "debuff" }] },
@@ -364,7 +335,6 @@ export const MINOR_OBSTACLES = {
     name: "Sign spinner",
     onFoot: true,
     shape: { lanes: 1, rows: 1 },
-    zones: ["yongeStreet"],
   },
   stiltWalker: {
     contact: { effects: [{ debuff: "spotlight", kind: "debuff" }] },
@@ -372,7 +342,6 @@ export const MINOR_OBSTACLES = {
     name: "Stilt walker",
     onFoot: true,
     shape: { lanes: 1, rows: 1 },
-    zones: ["kensingtonMarket", "distilleryDistrict"],
   },
   streetCart: {
     shape: { lanes: 2, rows: 1 },
@@ -392,7 +361,6 @@ export const MINOR_OBSTACLES = {
   streetcarPlatform: {
     name: "Streetcar platform",
     shape: { lanes: 3, rows: 1 },
-    zones: ["yongeStreet"],
   },
   stroller: {
     movement: { factor: 0.6, kind: "inLane" },
@@ -405,27 +373,23 @@ export const MINOR_OBSTACLES = {
     name: "Strolling busker",
     onFoot: true,
     shape: { lanes: 1, rows: 1 },
-    zones: ["kensingtonMarket"],
   },
   taxi: {
     movement: { factor: 1.6, kind: "merge", mergeAt: 0.4, mergeSeconds: 0.5 },
     name: "Taxi",
     shape: { lanes: 1, rows: 2 },
-    zones: ["yongeStreet"],
   },
   tourGroup: {
     movement: { kind: "follow", pauseSeconds: 0.6, steps: { max: 2, min: 1 } },
     name: "Tour group",
     onFoot: true,
     shape: { lanes: 2, rows: 1 },
-    zones: ["distilleryDistrict"],
   },
   tourist: {
     movement: { kind: "step", steps: { max: 4, min: 2 } },
     name: "Tourist",
     onFoot: true,
     shape: { lanes: 1, rows: 1 },
-    zones: ["theBeaches", "distilleryDistrict", "yongeStreet"],
   },
   touristTrain: {
     movement: {
@@ -441,7 +405,6 @@ export const MINOR_OBSTACLES = {
     },
     name: "Tourist train",
     shape: { lanes: 3, rows: 1 },
-    zones: ["highPark"],
   },
   trashCan: {
     contact: { effects: [{ debuff: "stinky", kind: "debuff" }] },
@@ -452,19 +415,16 @@ export const MINOR_OBSTACLES = {
     movement: { factor: 0.6, kind: "inLane" },
     name: "TTC bus",
     shape: { lanes: 1, rows: 3 },
-    zones: ["yongeStreet"],
   },
-  velvetRope: { name: "Velvet rope", shape: { lanes: 2, rows: 1 }, zones: ["distilleryDistrict"] },
+  velvetRope: { name: "Velvet rope", shape: { lanes: 2, rows: 1 } },
   volleyballNet3: {
     name: "Volleyball net",
     shape: { lanes: 3, rows: 1 },
-    zones: ["theBeaches"],
   },
   volleyballPlayer: {
     movement: { kind: "dive", slide: 0.4, speed: 1.5, tilt: { max: 0.3, min: 0 } },
     name: "Volleyball player",
     onFoot: true,
     shape: { lanes: 1, rows: 1 },
-    zones: ["theBeaches"],
   },
 } as const satisfies Record<string, MinorObstacle>;

@@ -8,12 +8,13 @@ import { forkPaths } from "../rules/route.ts";
 import { unlockPrice } from "../rules/shop.ts";
 import { read } from "../rules/units.ts";
 import { walkerGoal } from "../rules/walkers.ts";
+import { weightedZones } from "../rules/zones.ts";
 import { SLOT_ROLES } from "../runner/slotConfig.ts";
 import { zoneSlotGuarantees } from "../runner/zonePlan.ts";
 import { ACHIEVEMENTS } from "./achievements.ts";
 import { gameData } from "./index.ts";
 import { LANE_COUNT, SCREEN_CONFIG } from "./screen.ts";
-import type { CardOption, Effect, EncounterId, ZoneId } from "./types.ts";
+import type { CardOption, Effect, EncounterId, MinorObstacleId, ZoneId } from "./types.ts";
 
 // Invariants the rulebook states about the content and numbers, checked on the real data.
 const {
@@ -234,34 +235,17 @@ describe("run, world and walkers", () => {
     expect(Object.values(counts).every((count) => count >= 0)).toBe(true);
   });
 
-  // Every obstacle kind that names its zones, with the weights table that draws it in each zone. An
-  // obstacle with skins names each zone a skin names.
-  const zoneKinds = [
-    ...Object.entries(encounters).flatMap(([id, encounter]) =>
-      encounter.kind === "obstacle" && "zones" in encounter && encounter.zones !== undefined
-        ? [{ id, table: "obstacles" as const, zones: encounter.zones }]
-        : [],
-    ),
-    ...Object.entries(minorObstacles).flatMap(([id, minor]) => {
-      if ("skins" in minor) {
-        const named = new Set(Object.values(minor.skins).flatMap(({ zones }) => zones));
-        const zones: readonly string[] = [...named];
-        return [{ id, table: "minorObstacles" as const, zones }];
+  it("weighs each obstacle with skins above 0 in exactly the zones its skins name", () => {
+    const offenders = Object.entries(minorObstacles).flatMap(([id, minor]) => {
+      if (!("skins" in minor)) {
+        return [];
       }
-      return "zones" in minor ? [{ id, table: "minorObstacles" as const, zones: minor.zones }] : [];
-    }),
-  ];
-  const zoneIds = world.zones.map(({ id }) => id);
-
-  it("draws each of those obstacles only in the world's zones it names", () => {
-    const offenders = zoneKinds.flatMap(({ id, table, zones }) => {
-      const weighted = world.zones.flatMap((each) =>
-        ((each.weights[table] as Readonly<Record<string, number>>)[id] ?? 0) > 0 ? [each.id] : [],
-      );
-      const named = zoneIds.filter((zone) => zones.includes(zone));
-      return weighted.join() === named.join() && named.length === zones.length
+      const named = new Set<string>(Object.values(minor.skins).flatMap(({ zones }) => zones));
+      const weighted = weightedZones(world, "minorObstacles", id as MinorObstacleId);
+      const expected = world.zones.flatMap((zone) => (named.has(zone.id) ? [zone.id] : []));
+      return weighted.join() === expected.join() && named.size === expected.length
         ? []
-        : [`${id}: names ${zones.join(", ")}, weighed in ${weighted.join(", ")}`];
+        : [`${id}: skins name ${[...named].join(", ")}, weighed in ${weighted.join(", ")}`];
     });
     expect(offenders).toEqual([]);
   });
@@ -274,16 +258,7 @@ describe("run, world and walkers", () => {
       const looks =
         "skins" in minor
           ? Object.entries(minor.skins).map(([skin, { zones }]) => ({ id: skin, zones }))
-          : [
-              {
-                id,
-                zones: world.zones.flatMap((each) =>
-                  ((each.weights.minorObstacles as Readonly<Record<string, number>>)[id] ?? 0) > 0
-                    ? [each.id]
-                    : [],
-                ),
-              },
-            ];
+          : [{ id, zones: weightedZones(world, "minorObstacles", id as MinorObstacleId) }];
       return looks.flatMap((look) =>
         look.zones.length > 3 ? [`${look.id}: ${look.zones.join(", ")}`] : [],
       );

@@ -1,6 +1,13 @@
 import { type Pixels, pixels, type Seconds, seconds } from "@andornaut/game-kit/units";
 
-import type { LiveTuning, LuckyEncounterId, Zone } from "../data/types.ts";
+import type {
+  LiveTuning,
+  LuckyEncounterId,
+  World,
+  Zone,
+  ZoneId,
+  ZoneWeights,
+} from "../data/types.ts";
 import { read } from "./units.ts";
 
 interface ZoneStats {
@@ -48,6 +55,17 @@ export function zoneStats(
     ),
     treats: read(tuning, "counts", "treatsPerZone"),
   };
+}
+
+// The zones an obstacle appears in, in the world's order: those that weigh it above 0 in table.
+export function weightedZones<Table extends keyof ZoneWeights>(
+  world: Pick<World, "zones">,
+  table: Table,
+  obstacle: keyof ZoneWeights[Table],
+): ZoneId[] {
+  return world.zones.flatMap(({ id, weights }) =>
+    (weights[table][obstacle] as number) > 0 ? [id as ZoneId] : [],
+  );
 }
 
 // zoneStats' scrollSpeed alone.

@@ -38,7 +38,6 @@ export const ENCOUNTERS = {
       ],
     },
     shape: { lanes: 1, rows: 1 },
-    zones: ["yongeStreet"],
   },
   cheeseCrates: {
     hitLabel: "PEE-YEW!",
@@ -69,7 +68,6 @@ export const ENCOUNTERS = {
       ],
     },
     shape: { lanes: 1, rows: 1 },
-    zones: ["kensingtonMarket", "distilleryDistrict"],
   },
   droppedIceCream: {
     hitLabel: "MELTDOWN!",
@@ -100,7 +98,6 @@ export const ENCOUNTERS = {
       ],
     },
     shape: { lanes: 1, rows: 1 },
-    zones: ["theBeaches"],
   },
   friendlyNeighbour: {
     kind: "lucky",
@@ -142,7 +139,6 @@ export const ENCOUNTERS = {
       ],
     },
     shape: { lanes: 1, rows: 1 },
-    zones: ["kensingtonMarket", "yongeStreet"],
   },
   lostWallet: {
     kind: "lucky",
@@ -214,7 +210,6 @@ export const ENCOUNTERS = {
       ],
     },
     shape: { lanes: 1, rows: 1 },
-    zones: ["cabbagetown"],
   },
   pothole: {
     kind: "obstacle",
@@ -225,7 +220,6 @@ export const ENCOUNTERS = {
       kind: "contact",
     },
     shape: { lanes: 2, rows: 1 },
-    zones: ["kensingtonMarket", "distilleryDistrict", "yongeStreet"],
   },
   puddle: {
     kind: "obstacle",
@@ -236,7 +230,6 @@ export const ENCOUNTERS = {
       kind: "contact",
     },
     shape: { lanes: 2, rows: 1 },
-    zones: ["cabbagetown", "highPark", "theBeaches"],
   },
   skunk: {
     hitLabel: "SPRAYED!",
@@ -342,6 +335,5 @@ export const ENCOUNTERS = {
       ],
     },
     shape: { lanes: 2, rows: 1 },
-    zones: ["theBeaches", "distilleryDistrict"],
   },
 } as const satisfies Record<EncounterId, Encounter>;

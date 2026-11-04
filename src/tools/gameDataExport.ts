@@ -25,12 +25,14 @@ import type {
   GameData,
   GearId,
   MinorObstacleId,
+  ObstacleEncounterId,
   UpgradeId,
   WalkerId,
 } from "../data/types.ts";
 import { sizeHearts } from "../rules/dogs.ts";
 import { effectText } from "../rules/effectText.ts";
 import { faceMood } from "../rules/treats.ts";
+import { weightedZones } from "../rules/zones.ts";
 import { minorLook, obstacleSkins } from "../runner/obstacleLooks.ts";
 
 // The game data art's tools read, as shared/export/game-data.json. Every entry spreads its
@@ -159,7 +161,15 @@ export function gameDataExport(data: GameData) {
       };
     }),
     encounters: entries<EncounterId, GameData["encounters"][EncounterId]>(data.encounters).map(
-      ([id, encounter]) => ({ id, ...encounter, spriteKey: encounterSpriteKey(id) }),
+      ([id, encounter]) => ({
+        id,
+        ...encounter,
+        spriteKey: encounterSpriteKey(id),
+        // An obstacle's zones, from the weights.
+        ...(encounter.kind === "obstacle"
+          ? { zones: weightedZones(data.world, "obstacles", id as ObstacleEncounterId) }
+          : {}),
+      }),
     ),
     gear: entries<GearId, GameData["shopGear"][GearId]>(data.shopGear).map(([id, gear]) => ({
       id,
@@ -181,7 +191,12 @@ export function gameDataExport(data: GameData) {
               ]),
             ),
           }
-        : { id, ...obstacle, spriteKey: minorObstacleSpriteKey(minorLook(data, id)) },
+        : {
+            id,
+            ...obstacle,
+            spriteKey: minorObstacleSpriteKey(minorLook(data, id)),
+            zones: weightedZones(data.world, "minorObstacles", id),
+          },
     ),
     movementAssignments: data.movementAssignments,
     movementProfiles: data.movementProfiles,
