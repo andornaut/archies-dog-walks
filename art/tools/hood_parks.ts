@@ -145,11 +145,12 @@ const USAGE = `Usage:
                                                  the first three, OUT_DIR/cards.png (every
                                                  illustration in a card frame) and the sounds
   node art/tools/hood_parks.ts sounds OUT_DIR    write the two sounds into OUT_DIR only
-  node art/tools/hood_parks.ts build             write the .aseprite sources (art/encounters,
-                                                 art/obstacles, art/hits, art/cards), export the
+  node art/tools/hood_parks.ts build             write art/hood-parks/*.aseprite, export the
                                                  sprites to public/art/sprites/, the illustrations
                                                  to public/art/images/ and the sounds to
                                                  public/art/sounds/`;
+
+const SRC = "art/hood-parks";
 
 // Animals are laid out on 32 design units and drawn ANIMAL times bigger (48px); minor obstacles in
 // their own pixels, drawn OBSTACLE times bigger.
@@ -1617,22 +1618,6 @@ function* roadSprites(suffix: string, step: number): Generator<Sprite> {
   }
 }
 
-// Where each road sprite's .aseprite source goes: the card obstacles with the encounters, the rest
-// with the obstacles.
-const SOURCES: ReadonlyMap<string, string> = new Map([
-  ["cherry-trees", "art/obstacles"],
-  ["escaped-capybara", "art/encounters"],
-  ["fallen-log", "art/obstacles"],
-  ["ferrets", "art/obstacles"],
-  ["hen", "art/obstacles"],
-  ["iron-fence-2", "art/obstacles"],
-  ["iron-fence-3", "art/obstacles"],
-  ["leaf-pile", "art/obstacles"],
-  ["little-free-library", "art/obstacles"],
-  ["porch-cat", "art/encounters"],
-  ["porch-steps", "art/obstacles"],
-]);
-
 // Every road sprite at full size, then at each depth step.
 function* sprites(): Generator<Sprite> {
   yield* roadSprites("", 1);
@@ -1668,22 +1653,11 @@ async function preview(outDir: string): Promise<void> {
 
 // Export the road sprites and bursts, then the illustrations composed from them, then the sounds.
 async function build(): Promise<void> {
-  const roadKeys = [...sprites()];
-  for (const src of new Set(SOURCES.values())) {
-    // One source directory at a time keeps a build's Aseprite processes and output in order.
-    // eslint-disable-next-line no-await-in-loop
-    await buildSprites(
-      {},
-      src,
-      roadKeys.filter(([k]) => SOURCES.get(k.split("@")[0]!) === src),
-    );
-  }
-  await buildSprites({}, "art/hits", hitSprites());
-  mkdirSync("art/cards", { recursive: true });
+  await buildSprites({}, SRC, [...sprites(), ...hitSprites()]);
   for (const [key, draw] of ILLUSTRATIONS) {
     const png = `public/art/images/${key}.png`;
     writeFileSync(png, rgbPng(draw().img));
-    execFileSync("aseprite", ["-b", png, "--save-as", `art/cards/${key}.aseprite`], {
+    execFileSync("aseprite", ["-b", png, "--save-as", `${SRC}/${key}.aseprite`], {
       stdio: "inherit",
     });
   }
