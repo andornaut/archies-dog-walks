@@ -6,7 +6,9 @@ import { describe, expect, it } from "vitest";
 
 import petShopSheet from "../../public/art/sprites/ui-pet-shop.json";
 import { animationSpecs } from "../assets/asepriteAnimations";
-import { addShopIdle } from "./shopIdle";
+import { FEEDBACK } from "../home/feedback";
+import { HOME_LAYOUT } from "../home/homeLayout";
+import { addShopBoard, addShopIdle } from "./shopIdle";
 import { playTag, playTagOnce, showAtDepth } from "./sprites";
 import { addSelectTile } from "./uiKit";
 
@@ -228,6 +230,81 @@ function shopIdleScene(loaded = true, sheet?: unknown) {
     time,
   };
 }
+
+// The Pet shop's faces and its board's, each keeping its row and visibility, under one board.
+function shopBoardScene() {
+  const face = (y: number) => ({
+    setVisible(visible: boolean) {
+      this.visible = visible;
+      return this;
+    },
+    setY(next: number) {
+      this.y = next;
+      return this;
+    },
+    visible: true,
+    y,
+  });
+  const { board: rest, y: shopY } = HOME_LAYOUT.petShop;
+  const shopFaces = [face(shopY), face(shopY)] as const;
+  const boardFaces = [face(rest.y), face(rest.y)] as const;
+  const shop = {
+    setPressed(down: boolean) {
+      shopFaces[0].setVisible(!down);
+      shopFaces[1].setVisible(down);
+    },
+  };
+  const board = addShopBoard(shop, boardFaces as unknown as [GameObjects.Image, GameObjects.Image]);
+  // The board's and the shop's rows at now, while up or pressed, after the scene's place step.
+  const rows = (now: number, down: boolean, reduced = false) => {
+    board.setPressed(down);
+    board.place(reduced, now);
+    return {
+      board: boardFaces.map(({ y }) => y - rest.y),
+      shop: shopFaces.map(({ y }) => y - shopY),
+    };
+  };
+  return { boardFaces, rows, shopFaces };
+}
+
+describe("Pet shop board", () => {
+  const beat = FEEDBACK.bobBeatMs;
+
+  it("bobs 1px on alternate beats while up and leaves the shop still", () => {
+    const { rows } = shopBoardScene();
+    expect([rows(0, false), rows(beat, false), rows(2 * beat, false)]).toEqual([
+      { board: [0, 0], shop: [0, 0] },
+      { board: [-1, -1], shop: [0, 0] },
+      { board: [0, 0], shop: [0, 0] },
+    ]);
+  });
+
+  it.each([
+    ["while pressed", true, false],
+    ["with reduced motion", false, true],
+  ] as const)("holds at rest %s", (_, down, reduced) => {
+    const { rows } = shopBoardScene();
+    expect(rows(beat, down, reduced)).toEqual({ board: [0, 0], shop: [0, 0] });
+  });
+
+  it("shows the pressed faces of the board and the shop together", () => {
+    const { boardFaces, rows, shopFaces } = shopBoardScene();
+    rows(0, true);
+    expect([...boardFaces, ...shopFaces].map(({ visible }) => visible)).toEqual([
+      false,
+      true,
+      false,
+      true,
+    ]);
+    rows(0, false);
+    expect([...boardFaces, ...shopFaces].map(({ visible }) => visible)).toEqual([
+      true,
+      false,
+      true,
+      false,
+    ]);
+  });
+});
 
 describe("Pet shop idle invitation", () => {
   it("uses the shipped door-wave metadata and retains pressed frame 1 when interrupted", () => {

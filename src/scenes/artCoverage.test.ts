@@ -270,6 +270,10 @@ describe("screen and card art", () => {
       () => missingTags(SHOP_ART.petShop, ["door-wave", "normal", "pressed"]),
     ],
     [
+      "names the Pet shop board's faces",
+      () => missingTags(SHOP_ART.petShopBoard, ["normal", "pressed"]),
+    ],
+    [
       "names the dog slot sign's faces",
       () => missingTags(HOME_LAYOUT.slotSign.key, ["normal", "pressed"]),
     ],

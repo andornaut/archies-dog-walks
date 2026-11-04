@@ -1,6 +1,7 @@
 import { animationKey } from "@andornaut/game-kit/art/aseprite";
 import type { GameObjects, Scene } from "phaser";
 
+import { bobOffset } from "../home/feedback";
 import { playTagOnce } from "./sprites";
 import type { IconButton } from "./uiKit";
 
@@ -9,6 +10,35 @@ const INVITATION_TAG = "door-wave";
 
 export interface ShopIdle extends IconButton {
   update(eligible: boolean): void;
+}
+
+// The Pet shop's board over its building, which bobs while up.
+export interface ShopBoard extends IconButton {
+  place(reducedMotion: boolean, nowMs: number): void;
+}
+
+// The board's faces follow shop's press; while up the board bobs from its resting row as the
+// ready Start walk button does, and the building under it stays still.
+export function addShopBoard(
+  shop: IconButton,
+  faces: readonly [GameObjects.Image, GameObjects.Image],
+): ShopBoard {
+  const [normal, pressed] = faces;
+  const rest = normal.y;
+  let down = false;
+  return {
+    place(reducedMotion, nowMs) {
+      const y = rest + (down ? 0 : bobOffset(reducedMotion, nowMs, true));
+      normal.setY(y);
+      pressed.setY(y);
+    },
+    setPressed(next) {
+      down = next;
+      shop.setPressed(next);
+      normal.setVisible(!next);
+      pressed.setVisible(next);
+    },
+  };
 }
 
 // The shop's one-shot invitation uses the loaded tag's frames and durations, between closed pauses.

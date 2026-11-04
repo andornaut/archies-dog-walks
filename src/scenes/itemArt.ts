@@ -16,6 +16,7 @@ import { TEXT_SCALE } from "../ui/textFit";
 export const SHOP_ART = {
   dogSlot: "icon-dog-slot",
   petShop: "ui-pet-shop",
+  petShopBoard: "ui-pet-shop-board",
 } as const;
 
 // Each badge's art.

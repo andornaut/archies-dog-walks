@@ -204,7 +204,7 @@ import { nextRunStart } from "./run/runRecorder";
 import { type RunPick, runSceneData } from "./run/runStart";
 import { SCENE_KEYS } from "./sceneKeys";
 import { SETTINGS_CLOSED_EVENT } from "./SettingsScene";
-import { addShopIdle, type ShopIdle } from "./shopIdle";
+import { addShopBoard, addShopIdle, type ShopBoard, type ShopIdle } from "./shopIdle";
 import {
   SHOP_CHANGED_EVENT,
   SHOP_CLOSED_EVENT,
@@ -397,6 +397,7 @@ interface TileView {
   mark?: { image: GameObjects.Image; y: number };
   // The pop timer that raises the whole tile for a moment, for the gear badge at the gate.
   rise?: string;
+  shopBoard?: ShopBoard;
   shopIdle?: ShopIdle;
 }
 
@@ -1214,6 +1215,7 @@ export class StartScene extends Scene {
         view.rise === undefined ? 0 : badgePopOffset(reduced, now, this.pops.get(view.rise));
       const down = dip(id) > 0;
       view.iconButton?.setPressed(down);
+      view.shopBoard?.place(reduced, now);
       view.shopIdle?.update(
         !reduced && this.overlay === undefined && this.artWait === undefined && this.sys.isActive(),
       );
@@ -1847,9 +1849,9 @@ export class StartScene extends Scene {
     }
   }
 
-  // The Pet shop on the yard's right lot: ui-pet-shop, its front sinking while pressed, with
-  // the gold outline while anything inside is affordable. Drawn in code while the art is
-  // missing, when the whole building dips instead.
+  // The Pet shop on the yard's right lot: ui-pet-shop, its front sinking while pressed, under
+  // ui-pet-shop-board, which bobs while up, with the gold outline while anything inside is
+  // affordable. Drawn in code while the art is missing, when the whole building dips instead.
   private drawPetShop(root: GameObjects.Container, save: SaveDocument): void {
     const view = this.tileView(root, "petShop");
     const faces = this.addPressFaces(SHOP_ART.petShop, PET_SHOP);
@@ -1860,12 +1862,21 @@ export class StartScene extends Scene {
       if (idle !== undefined) {
         view.shopIdle = idle;
       }
-      view.iconButton = idle ?? {
+      const shop: IconButton = idle ?? {
         setPressed: (down) => {
           normal.setVisible(!down);
           pressed.setVisible(down);
         },
       };
+      // The board draws over the door-wave.
+      const board = this.addPressFaces(SHOP_ART.petShopBoard, PET_SHOP_BOARD);
+      if (board === undefined) {
+        view.iconButton = shop;
+      } else {
+        view.container.add(board);
+        view.shopBoard = addShopBoard(shop, board);
+        view.iconButton = view.shopBoard;
+      }
       view.iconButton.setPressed(false);
     } else {
       drawPetShopFallback(this, view.container, PET_SHOP, gameData.homeText.shop.title);
