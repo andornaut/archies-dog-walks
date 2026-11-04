@@ -14,6 +14,7 @@ import { createMovingCoverageHints } from "./slotMovingCoverageHints";
 import type { SlotPocketProof } from "./slotPocketSupport";
 import { drainSlotSolver } from "./slotSolverSession";
 import { traverseSlotSources } from "./slotSourceTraversal";
+import { balancedJobOrder, idealRowOrder, motionRank, rotatedColumns } from "./slotWitnessOrder";
 import type { WitnessJob, WitnessOmission } from "./slotWitnessSearch";
 import { blockingSpan, type PlannedSpawns, quotaFootprint, type SpawnPlan } from "./spawning";
 
@@ -316,17 +317,9 @@ function* construct<Kind extends string, Mark>(
       preparationLists.set(job, Object.freeze(read));
     }
   }
-  const rowOrder = (job: WitnessJob<Kind>) => {
-    const ideal = Math.floor(((job.ordinal + 0.5) * path.length) / Math.max(1, job.total));
-    return Array.from({ length: path.length }, (_, row) => row).sort(
-      (a, b) => Math.abs(a - ideal) - Math.abs(b - ideal) || a - b,
-    );
-  };
-  const columnOrder = (job: WitnessJob<Kind>, prepared: PreparedSlotKind<Kind>) => {
-    const count = geometry.laneCount;
-    const rank = (lane: number) => (((lane - job.ordinal) % count) + count) % count;
-    return [...prepared.columns].sort((a, b) => rank(a) - rank(b));
-  };
+  const rowOrder = (job: WitnessJob<Kind>) => idealRowOrder(path.length, job);
+  const columnOrder = (job: WitnessJob<Kind>, prepared: PreparedSlotKind<Kind>) =>
+    rotatedColumns(geometry.laneCount, job, prepared);
   const matches = (job: WitnessJob<Kind>, order: JobOrder<Kind>) =>
     order.preparationMethod === job.preparations &&
     order.fixed === job.fixed &&
@@ -387,24 +380,7 @@ function* construct<Kind extends string, Mark>(
       columns: new Map(prepared.map((source) => [source, Object.freeze(columnOrder(job, source))])),
       envelopeWidth: Number.isFinite(envelopeWidth) ? envelopeWidth : 0,
       prepared,
-      rank: Math.min(
-        ...prepared.map((source) => {
-          switch (source.request.mover?.motion.kind) {
-            case "signature":
-              return 0;
-            case "cross":
-              return 1;
-            case "approach":
-              return 2;
-            case "steps":
-              return 3;
-            case "ride":
-              return 4;
-            default:
-              return 5;
-          }
-        }),
-      ),
+      rank: Math.min(...prepared.map(motionRank)),
       rows: Object.freeze(rowOrder(job)),
       width: Math.max(0, ...prepared.map((source) => source.source.footprint.lanes)),
     });
@@ -968,49 +944,7 @@ function* construct<Kind extends string, Mark>(
     }
     // Static proportional order affect ordinary runtime choices, never native admission.
     let ordinaryOrder: readonly WitnessJob<Kind>[] | undefined;
-    const balancedJobs = () => {
-      if (ordinaryOrder === undefined) {
-        const streams = Array.from({ length: 3 }, () => ({
-          jobs: [] as { readonly index: number; readonly job: WitnessJob<Kind> }[],
-          used: 0,
-        }));
-        for (const [index, job] of jobs.entries()) {
-          if (!charge()) {
-            return undefined;
-          }
-          streams[job.laneEffect === "none" ? 2 : job.fixed ? 0 : 1]!.jobs.push({ index, job });
-        }
-        const ordered: WitnessJob<Kind>[] = [];
-        while (ordered.length < jobs.length) {
-          let chosen: (typeof streams)[number] | undefined;
-          for (const stream of streams) {
-            if (!charge()) {
-              return undefined;
-            }
-            if (stream.used === stream.jobs.length) {
-              continue;
-            }
-            const difference =
-              chosen === undefined
-                ? -1
-                : (stream.used + 1) * chosen.jobs.length - (chosen.used + 1) * stream.jobs.length;
-            if (
-              difference < 0 ||
-              (difference === 0 &&
-                stream.jobs[stream.used]!.index < chosen!.jobs[chosen!.used]!.index)
-            ) {
-              chosen = stream;
-            }
-          }
-          if (!charge()) {
-            return undefined;
-          }
-          ordered.push(chosen!.jobs[chosen!.used++]!.job);
-        }
-        ordinaryOrder = ordered;
-      }
-      return ordinaryOrder;
-    };
+    const balancedJobs = () => (ordinaryOrder ??= balancedJobOrder(charge, jobs));
     // Prefer one initial coverage owner before wide guarantees; all ordinary choices remain.
     let initialCoveragePending =
       ports.coverageFirst === true &&
