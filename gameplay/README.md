@@ -19,7 +19,7 @@ Gameplay owns the rulebook and the values and content in the data value files (e
 
 - **Design sessions:** start with "design session" and a topic. Claude keeps floated ideas apart from agreed ones, asks the question that unblocks a decision, and on "wrap up" proposes doc changes, writing them once confirmed.
 - **Playtesting:** the user playtests on devices. Run a bounded simulation batch only for a specific gameplay question that unit tests cannot answer.
-- **Card text:** generated from the effects, so a value-only edit changes it with no text edit. Check the result in `shared/export/game-data.json` or on the data page.
+- **Card text:** effect text is generated from the effects, so a numeric value edit updates it with no text edit. Authored strings that state an amount in words (for example "a spare treat" or "First card") assume their tuning value, so changing that value needs a text edit too. Check the result in `shared/export/game-data.json` or on the data page.
 
 ## Targets
 
