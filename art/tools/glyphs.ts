@@ -38,7 +38,6 @@
 //
 // Run from the repository root. A build overwrites the .aseprite sources, so hand edits to them
 // belong in this file instead. Shared tooling is in pixel.ts.
-import { execFileSync } from "node:child_process";
 import { mkdirSync, writeFileSync } from "node:fs";
 
 import { blankImage, type RgbaImage } from "@andornaut/art-kit/rgbaImage";
@@ -1358,14 +1357,10 @@ export function preview(out: string, scale = 6): void {
 // ---------- building ----------
 
 export async function build(): Promise<void> {
-  mkdirSync("art/glyphs", { recursive: true });
   mkdirSync("public/art/images", { recursive: true });
   for (const [key, draw] of IMAGES) {
     const png = `public/art/images/${key}.png`;
     writeFileSync(png, savePng(image(draw)));
-    execFileSync("aseprite", ["-b", png, "--save-as", `art/glyphs/${key}.aseprite`], {
-      stdio: "inherit",
-    });
   }
   await buildSprites({}, sprites());
   console.log("built", [...IMAGES.keys()].join(", "));

@@ -86,7 +86,6 @@
 //
 // Run from the repository root, after the fonts and the sprite builds. A build overwrites the
 // .aseprite sources, so hand edits to them belong in this file instead.
-import { execFileSync } from "node:child_process";
 import { mkdirSync, writeFileSync } from "node:fs";
 
 import {
@@ -2222,15 +2221,11 @@ export function shopPreview(out: string, scale = 4): void {
 
 export async function build(only?: string): Promise<void> {
   const screens = only === undefined ? SCREENS : new Map([[only, SCREENS.get(only)!]]);
-  mkdirSync("art/screens", { recursive: true });
   mkdirSync("public/art/images", { recursive: true });
   for (const [k, draw] of screens) {
     const png = `public/art/images/${k}.png`;
     const cv = draw();
     writeFileSync(png, cv instanceof Clear ? savePng(cv.img) : rgbPng(cv.img));
-    execFileSync("aseprite", ["-b", png, "--save-as", `art/screens/${k}.aseprite`], {
-      stdio: "inherit",
-    });
   }
   if (only === undefined) {
     await buildSprites({}, sprites());

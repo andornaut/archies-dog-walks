@@ -31,10 +31,8 @@
 // Run from the repository root after portraits: the app icons read Archie's exported portrait. The
 // icons are not in public/art/manifest.json: the pages and the web app manifest link them by path. A
 // build overwrites the .aseprite sources, so change this file or Archie's art, not the sources.
-import { execFileSync } from "node:child_process";
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
-import { tmpdir } from "node:os";
-import { basename, join } from "node:path";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { basename } from "node:path";
 
 import { rgb as hexRgb } from "@andornaut/art-kit/colour";
 import { decodePng, encodeRgbaPng, encodeRgbPng } from "@andornaut/art-kit/png";
@@ -56,14 +54,12 @@ const USAGE = `Usage:
                                                art/appicons/favicon-32.aseprite and
                                                art/appicons/favicon-16.aseprite`;
 
-const SRC = "art/appicons";
 const FAVICON_32 = "public/icons/favicon-32.png";
 const FAVICON_16 = "public/icons/favicon-16.png";
 
 const PORTRAIT = "public/art/images/portrait-dog-archie.png";
 const BACKGROUND = "sky"; // ui-detail-well's face, behind his portrait on the detail card
 const SAFE = 0.4; // the maskable safe zone: a circle of radius 40% of the icon size
-const MASTER = 64;
 const CENTRE: readonly [number, number] = [33, 37]; // the portrait point the icons centre on
 const KEEP_ROWS: readonly [number, number] = [23, 42]; // the head below the ear tips to the chin, end exclusive
 const BANDANA = ["red", "dred"];
@@ -378,44 +374,13 @@ export function preview(out: string, gap = 16, zoom = 8): void {
   writeFileSync(out, iconPng({ image: sheet, opaque: true }));
 }
 
-// The master at 1x: the portrait on sky, MASTER square, centred as the icons centre it.
-function master(): RgbaImage {
-  const subject = portrait();
-  const [cx, cy] = CENTRE;
-  const x0 = Math.trunc(cx - MASTER / 2);
-  const y0 = Math.trunc(cy - MASTER / 2);
-  const img = filledImage([0, 0, 0, 255], MASTER, MASTER);
-  for (let y = 0; y < MASTER; y++) {
-    for (let x = 0; x < MASTER; x++) {
-      setPixel(img, x, y, subject.get(key(x0 + x, y0 + y)) ?? ground());
-    }
-  }
-  return img;
-}
-
 export function build(): void {
   mkdirSync("public/icons", { recursive: true });
-  mkdirSync(SRC, { recursive: true });
   const imgs = icons();
   for (const [path, icon] of imgs) {
     writeFileSync(path, iconPng(icon, true));
   }
-  const sources = new Map<string, Icon>([
-    [`${SRC}/appicon.aseprite`, { image: master(), opaque: true }],
-    [`${SRC}/favicon-32.aseprite`, imgs.get(FAVICON_32)!],
-    [`${SRC}/favicon-16.aseprite`, imgs.get(FAVICON_16)!],
-  ]);
-  const tmp = mkdtempSync(join(tmpdir(), "appicons-"));
-  try {
-    for (const [src, icon] of sources) {
-      const png = join(tmp, `${basename(src, ".aseprite")}.png`);
-      writeFileSync(png, iconPng(icon));
-      execFileSync("aseprite", ["-b", png, "--save-as", src], { stdio: "inherit" });
-    }
-  } finally {
-    rmSync(tmp, { force: true, recursive: true });
-  }
-  console.log("built", [...imgs.keys()].join(", "), "and", [...sources.keys()].join(", "));
+  console.log("built", [...imgs.keys()].join(", "));
 }
 
 if (import.meta.main) {

@@ -9,7 +9,6 @@
 //
 // Run from the repository root. A build overwrites the .aseprite sources, so hand edits to them
 // belong in this file instead. Shared tooling is in pixel.ts.
-import { execFileSync } from "node:child_process";
 import { mkdirSync, writeFileSync } from "node:fs";
 
 import { filledImage, paste, resizeNearest, type Rgb } from "@andornaut/art-kit/raster";
@@ -932,15 +931,11 @@ export function preview(out: string, scale = 4): void {
 }
 
 export function build(): void {
-  mkdirSync("art/portraits", { recursive: true });
   mkdirSync("public/art/images", { recursive: true });
   const keys = portraits();
   for (const [key, draw, side] of keys) {
     const png = `public/art/images/${key}.png`;
     writeFileSync(png, savePng(image(draw, side)));
-    execFileSync("aseprite", ["-b", png, "--save-as", `art/portraits/${key}.aseprite`], {
-      stdio: "inherit",
-    });
   }
   console.log("built", keys.map(([key]) => key).join(", "));
 }

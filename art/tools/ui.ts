@@ -50,7 +50,6 @@
 //
 // Run from the repository root. A build overwrites the .aseprite sources, so hand edits to them
 // belong in this file instead.
-import { execFileSync } from "node:child_process";
 import { mkdirSync, writeFileSync } from "node:fs";
 
 import { rgb } from "@andornaut/art-kit/colour";
@@ -2299,14 +2298,10 @@ export function preview(out: string, scale = 3, width = 380): void {
 }
 
 export async function build(): Promise<void> {
-  mkdirSync("art/ui", { recursive: true });
   mkdirSync("public/art/images", { recursive: true });
   for (const [key, draw] of IMAGES) {
     const png = `public/art/images/${key}.png`;
     writeFileSync(png, savePng(draw()));
-    execFileSync("aseprite", ["-b", png, "--save-as", `art/ui/${key}.aseprite`], {
-      stdio: "inherit",
-    });
   }
   await buildSprites({}, sprites());
   console.log("built", [...IMAGES.keys()].join(", "));

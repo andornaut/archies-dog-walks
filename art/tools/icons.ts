@@ -6,7 +6,6 @@
 //
 // Run from the repository root. A build overwrites the .aseprite sources, so hand edits to them
 // belong in this file instead. Shared tooling is in pixel.ts.
-import { execFileSync } from "node:child_process";
 import { mkdirSync, writeFileSync } from "node:fs";
 
 import { filledImage, paste, resizeNearest, type Rgb } from "@andornaut/art-kit/raster";
@@ -191,16 +190,12 @@ export function preview(out: string, scale = 4): void {
 // ---------- building ----------
 
 export function build(): void {
-  mkdirSync("art/icons", { recursive: true });
   mkdirSync("public/art/images", { recursive: true });
   const built: string[] = [];
   for (const [name, draw] of ICONS) {
     const key = `item-${name}`;
     const png = `public/art/images/${key}.png`;
     writeFileSync(png, savePng(image(draw)));
-    execFileSync("aseprite", ["-b", png, "--save-as", `art/icons/${key}.aseprite`], {
-      stdio: "inherit",
-    });
     built.push(key);
   }
   console.log("built", built.join(", "));

@@ -28,7 +28,6 @@
 //
 // Run from the repository root. A build overwrites the .aseprite sources, so hand edits to them
 // belong in this file instead.
-import { execFileSync } from "node:child_process";
 import { mkdirSync, writeFileSync } from "node:fs";
 
 import { filledImage, paste, resizeNearest } from "@andornaut/art-kit/raster";
@@ -4013,14 +4012,10 @@ export function preview(out: string, scaleBy = 3): void {
 }
 
 export function build(): void {
-  mkdirSync("art/backdrops", { recursive: true });
   mkdirSync("public/art/images", { recursive: true });
   for (const [key, draw] of ZONES) {
     const png = `public/art/images/${key}.png`;
     writeFileSync(png, rgbPng(draw().img));
-    execFileSync("aseprite", ["-b", png, "--save-as", `art/backdrops/${key}.aseprite`], {
-      stdio: "inherit",
-    });
   }
   console.log("built", [...ZONES.keys()].join(", "));
 }

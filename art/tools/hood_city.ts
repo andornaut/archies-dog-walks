@@ -113,7 +113,6 @@
 //
 // Run from the repository root. A build overwrites the .aseprite sources, so hand edits to them
 // belong in this file instead. Shared tooling is in pixel.ts.
-import { execFileSync } from "node:child_process";
 import { mkdirSync, writeFileSync } from "node:fs";
 
 import { filledImage, paste, resizeNearest } from "@andornaut/art-kit/raster";
@@ -175,7 +174,6 @@ const USAGE = `Usage:
                                                 public/art/images/ and the sounds to
                                                 public/art/sounds/`;
 
-const SRC = "art/hood-city";
 // The people and riders are laid out on 32x48 and drawn at road.ts's SCALE; the minor obstacles in
 // layout pixels at obstacles.ts's SCALE; the bus at obstacles.ts's CAR_SCALE.
 const OBSTACLE_SCALE = obstacles.SCALE;
@@ -1709,9 +1707,6 @@ async function buildCards(): Promise<void> {
   for (const [key, draw] of ILLUSTRATIONS) {
     const png = `public/art/images/${key}.png`;
     writeFileSync(png, rgbPng(draw(cards).img));
-    execFileSync("aseprite", ["-b", png, "--save-as", `${SRC}/${key}.aseprite`], {
-      stdio: "inherit",
-    });
   }
 }
 

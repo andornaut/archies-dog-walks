@@ -99,7 +99,6 @@
 // Run from the repository root. The cards compose the exported sprites, so the build exports the
 // sprites first. A build overwrites the .aseprite sources, so hand edits to them belong in this file
 // instead. Shared tooling is in pixel.ts.
-import { execFileSync } from "node:child_process";
 import { mkdirSync, writeFileSync } from "node:fs";
 
 import { arc, ellipse, line, polygon } from "@andornaut/art-kit/draw";
@@ -149,8 +148,6 @@ const USAGE = `Usage:
                                                  sprites to public/art/sprites/, the illustrations
                                                  to public/art/images/ and the sounds to
                                                  public/art/sounds/`;
-
-const SRC = "art/hood-parks";
 
 // Animals are laid out on 32 design units and drawn ANIMAL times bigger (48px); minor obstacles in
 // their own pixels, drawn OBSTACLE times bigger.
@@ -1657,9 +1654,6 @@ async function build(): Promise<void> {
   for (const [key, draw] of ILLUSTRATIONS) {
     const png = `public/art/images/${key}.png`;
     writeFileSync(png, rgbPng(draw().img));
-    execFileSync("aseprite", ["-b", png, "--save-as", `${SRC}/${key}.aseprite`], {
-      stdio: "inherit",
-    });
   }
   console.log("built", [...ILLUSTRATIONS.keys()].join(", "));
   console.log("built", renderSounds("public/art/sounds").join(", "));

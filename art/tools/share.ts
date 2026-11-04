@@ -13,8 +13,7 @@
 // so it is written to public/, outside public/art/.
 //
 // Run from the repository root.
-import { execFileSync } from "node:child_process";
-import { mkdirSync, readFileSync, unlinkSync, writeFileSync } from "node:fs";
+import { readFileSync, writeFileSync } from "node:fs";
 
 import { decodePng } from "@andornaut/art-kit/png";
 import {
@@ -320,13 +319,6 @@ export function final(img: RgbaImage): RgbaImage {
 export function build(): void {
   const img = card();
   check(img);
-  mkdirSync("art/share", { recursive: true });
-  const master = "art/share/share-card.png";
-  writeFileSync(master, rgbPng(img));
-  execFileSync("aseprite", ["-b", master, "--save-as", "art/share/share-card.aseprite"], {
-    stdio: "inherit",
-  });
-  unlinkSync(master);
   writeFileSync("public/og-image.png", rgbPng(final(img)));
   console.log("built share-card");
 }

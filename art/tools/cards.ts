@@ -19,7 +19,6 @@
 //
 // Run from the repository root. A build overwrites the .aseprite sources, so hand edits to them
 // belong in this file instead. Shared tooling is in pixel.ts.
-import { execFileSync } from "node:child_process";
 import { mkdirSync, writeFileSync } from "node:fs";
 
 import type { Frame } from "@andornaut/art-kit/grid";
@@ -1936,10 +1935,6 @@ export function preview(out: string, scale = 3): void {
   writeFileSync(out, rgbPng(sheet));
 }
 
-function saveAs(png: string, source: string): void {
-  execFileSync("aseprite", ["-b", png, "--save-as", source], { stdio: "inherit" });
-}
-
 export async function build(): Promise<void> {
   await buildSprites({}, frameSprite());
   mkdirSync("public/art/images", { recursive: true });
@@ -1947,10 +1942,8 @@ export async function build(): Promise<void> {
     const png = `public/art/images/${key}.png`;
     const art = draw();
     writeFileSync(png, art.clear ? savePng(art.img) : rgbPng(art.img));
-    saveAs(png, `art/cards/${key}.aseprite`);
   }
   writeFileSync("public/art/images/card-cost.png", savePng(toImage(cardCost().outlined(false))));
-  saveAs("public/art/images/card-cost.png", "art/cards/card-cost.aseprite");
   console.log("built", [...ILLUSTRATIONS.keys(), "card-cost"].join(", "));
 }
 
