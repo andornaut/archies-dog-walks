@@ -17,7 +17,17 @@ The folder READMEs describe the current design and implementation:
 
 ## Developing
 
-Use Node 24.21.0 (`.nvmrc`). Run `npm ci`, then:
+Run commands in a Node 24.21.0 container (`.nvmrc`) with the checkout mounted read-only and copied inside:
+
+```sh
+docker run --rm -it --cpus 4 \
+  --user 19001:19001 --group-add "$(stat -c %g .)" -e HOME=/tmp \
+  --mount type=bind,src="$PWD",dst=/src,readonly \
+  node:24.21.0 \
+  sh -c 'cp -r /src /tmp/work && cd /tmp/work && npm ci && npm test'
+```
+
+Replace `npm test` with any command in the table; each runs inside that container. Mount host paths only with `--mount`, never `-v`, which creates a missing source as root, and copy outputs out with `docker cp`.
 
 | Command                                     | Does                                                                       |
 | ------------------------------------------- | -------------------------------------------------------------------------- |
@@ -40,8 +50,6 @@ The site's pages are in `pages/`, each at its URL's path (`pages/play/index.html
 
 Art build tools are TypeScript modules in `art/tools/`, which Node runs directly on the [art-kit release](https://github.com/andornaut/art-kit/releases) pinned in `package.json`, for example
 `node art/tools/glyphs.ts build`.
-
-Run local checks in a `node:24.21.0` container as `--user 19001:19001 --group-add "$(stat -c %g <checkout>)" -e HOME=/tmp`. Bind-mount host paths only with `--mount type=bind,src=<path>,dst=<path>,readonly`, never `-v`, which creates a missing source as root. Copy outputs out with `docker cp`.
 
 WORKAROUND: Parent-scoped development overrides pin [KaTeX](https://github.com/advisories/GHSA-238p-pmpm-9mq7) `0.18.2`, [minimatch](https://github.com/advisories/GHSA-g3hv-75wg-m249) `11.0.3` and [re2js](https://github.com/advisories/GHSA-gg6h-894w-4m9c) `2.8.7`. ESLint loads the cycle rule and resolver through exported plugin subpaths because the full plugin imports an unused rule requiring the removed minimatch `makeRe` API. Keep cycle detection enabled. Remove each override when its parent range supports the patched version; restore the full plugin import when it supports minimatch 11.
 
