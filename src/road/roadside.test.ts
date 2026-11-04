@@ -1,3 +1,6 @@
+import { spawnSync } from "node:child_process";
+import { readFileSync } from "node:fs";
+
 import { itemAt } from "@andornaut/game-kit/arrays";
 import { describe, expect, it } from "vitest";
 
@@ -118,5 +121,15 @@ describe("curbFits", () => {
 
   it.each(CASES)("fits a prop $what $art's band: $fits", ({ across, fits, verge, width }) => {
     expect(curbFits(verge, { across, width })).toBe(fits);
+  });
+});
+
+describe("shared/verges.json", () => {
+  it("is what art's tool prints", () => {
+    const tool = spawnSync(process.execPath, ["art/tools/backdrops.ts", "verges"], {
+      encoding: "utf8",
+    });
+    expect(tool.status, tool.stderr).toBe(0);
+    expect(tool.stdout).toBe(readFileSync("shared/verges.json", "utf8"));
   });
 });
