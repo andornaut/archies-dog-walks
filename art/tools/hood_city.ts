@@ -53,10 +53,6 @@
 //                             (2 frames, 400ms): the left blinker flashes, pulling out from a stop;
 //                             drive (4 frames, 100ms): tread lines climb the tires and the body dips
 //                             1px onto them on frames 1 and 2
-// sandwich-board      48x48   minor, 1 lane: a café's A-frame sign, a forest chalkboard in a brown
-//                             wooden frame with a chalk coffee cup and two lines of chalk writing, on
-//                             splayed legs. idle (4 frames, 450ms): the chalk steam over the cup
-//                             wavers on frame 2
 // newspaper-box       48x48   minor, 1 lane: a row of three street newspaper boxes chained together on
 //                             a concrete pad, a sky blue box, a taller red one in front and a yellow
 //                             one, each with a white masthead band and an unreadable bar, a window onto
@@ -1069,58 +1065,6 @@ export function platform(s: Scale, dim: number): Frame {
   return holesCleared(small(roadScope, scope, s, streetcarPlatform, dim).outlined());
 }
 
-// ---------- sandwich board ----------
-
-export const BOARD_IDLE: readonly [readonly number[], number] = [[0, 0, 1, 0], 450];
-
-// A café's A-frame sign, front on, laid out on obstacles.ts's SIZE: a forest chalkboard in a brown
-// wooden frame lit tan along its top and left, narrowing to a hinge at the top, on legs splayed to
-// the ground. On it in chalk: a coffee cup with steam over it and two lines of writing under it.
-// steam 1 waves the steam a pixel.
-export function sandwichBoard(steam = 0): Drawable {
-  const g = edged(scope.Grid(obstacles.SIZE, obstacles.SIZE));
-  const ux = unit(g)[0];
-  // the back legs behind, then the frame and the board
-  g.tri([7, 30], [12, 30], [5, 37], "dbrown");
-  g.tri([28, 30], [33, 30], [35, 37], "dbrown");
-  g.tri([12, 3], [28, 3], [6, 32], "brown");
-  g.tri([28, 3], [34, 32], [6, 32], "brown");
-  g.tri([12, 3], [14, 3], [6, 32], "tan");
-  g.rect(12, 3, 16, 1, "tan");
-  g.tri([26, 3], [28, 3], [34, 32], "dbrown");
-  g.tri([14, 6], [26, 6], [10, 29], "forest");
-  g.tri([26, 6], [30, 29], [10, 29], "forest");
-  g.rect(17, 2, 6, 1.5, "grey");
-  g.rect(17, 2, 6, 1, "lgrey");
-  // the legs' feet
-  g.rect(5, 32, 4, 5, "brown");
-  g.rect(31, 32, 4, 5, "dbrown");
-  // chalk: the cup, its handle and saucer, the steam, the writing
-  g.rect(16, 15, 7, 5, "white");
-  g.rect(16, 15, 7, 1, "lgrey");
-  g.rect(23, 16, 2, 1, "white");
-  g.rect(24, 16, 1, 3, "white");
-  g.rect(23, 18, 2, 1, "white");
-  g.rect(14, 20, 11, 1, "white");
-  (
-    [
-      [18, 13],
-      [18, 12],
-      [19, 11],
-      [19, 10],
-      [21, 13],
-      [21, 12],
-      [22, 11],
-      [22, 10],
-    ] as const
-  ).forEach(([x, y], k) => {
-    g.rect(x + (steam && k % 4 >= 2 ? ux : 0), y, 1, 1, "lgrey");
-  });
-  g.rect(13, 23, 14, 1, "lgrey");
-  g.rect(14, 26, 11, 1, "lgrey");
-  return lit(g, { forest: ["green", null] });
-}
-
 // ---------- newspaper boxes ----------
 
 export const NEWS_IDLE: readonly [readonly number[], number] = [[0, 0, 1, 0], 400];
@@ -1509,7 +1453,6 @@ function* steps(suffix: string, s: number): Generator<Sprite> {
     ["beach-umbrella", beachUmbrella, UMBRELLA_IDLE],
     ["sandcastle", sandcastle, SANDCASTLE_IDLE],
     ["lifeguard-chair", lifeguardChair, LIFEGUARD_IDLE],
-    ["sandwich-board", sandwichBoard, BOARD_IDLE],
     ["newspaper-box", newspaperBox, NEWS_IDLE],
   ] as const) {
     yield [
