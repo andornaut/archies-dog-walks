@@ -30,9 +30,10 @@ jobs:
   test:
     name: Test
     runs-on: ubuntu-latest
-    # Capped well under the six-hour default: nothing here runs longer than
-    # six minutes, so a job still going at fifteen has hung rather than failed.
-    timeout-minutes: 15
+    # Capped well under the six-hour default. The planner's whole-walk tests
+    # run the suite past fifteen minutes on a hosted runner, so a job still
+    # going at forty has hung rather than failed.
+    timeout-minutes: 40
 
     steps:
       - name: Checkout code
