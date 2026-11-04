@@ -467,12 +467,11 @@ export function compare(
 if (import.meta.main) {
   await main({
     commands: {
-      build: () => build({ originals: originals() }, "art/depths", checked(sprites())),
+      build: () => build({ originals: originals() }, checked(sprites())),
       "compare DIR": (dir) => compare({}, dir),
     },
     doc: USAGE,
     originals,
     sprites,
-    srcDir: "art/depths",
   });
 }

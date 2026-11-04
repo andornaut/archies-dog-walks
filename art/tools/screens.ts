@@ -2233,7 +2233,7 @@ export async function build(only?: string): Promise<void> {
     });
   }
   if (only === undefined) {
-    await buildSprites({}, "art/screens", sprites());
+    await buildSprites({}, sprites());
   }
   console.log("built", [...screens.keys()].join(", "));
 }

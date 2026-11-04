@@ -1,9 +1,8 @@
 // Shared pixel-art tooling: a drawing grid on the house palette with coloured outlines, the depth
-// settling of road sprites, and the step that turns frames into an Aseprite source and a PNG + JSON
-// export. Run the art scripts from the repository root.
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+// settling of road sprites, and the step that turns frames into a sprite sheet PNG and its JSON data.
+// Run the art scripts from the repository root.
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
 
-import { export as exportSprite } from "@andornaut/art-kit/aseprite";
 import { contrast as colourContrast, rgb } from "@andornaut/art-kit/colour";
 import { opaque_cols as frameCols, opaque_rows as frameRows } from "@andornaut/art-kit/frames";
 import { type Colour, type Edge, type Frame, Grid as DrawingGrid } from "@andornaut/art-kit/grid";
@@ -15,6 +14,7 @@ import {
 } from "@andornaut/art-kit/png";
 import { composeContactSheet } from "@andornaut/art-kit/raster";
 import type { RgbaImage } from "@andornaut/art-kit/rgbaImage";
+import { writeSpriteSheet } from "@andornaut/art-kit/spriteSheet";
 
 export type { Colour, Edge, Frame };
 // A tag's name, frames and duration in milliseconds (one for every frame, or one each).
@@ -555,7 +555,7 @@ export function savePng(image: RgbaImage): Uint8Array {
   return encodeRgbaPng(PNG_OPTIONS, image);
 }
 
-// An opaque image as an RGB PNG, which Aseprite opens as a Background layer.
+// An opaque image as an RGB PNG.
 export function rgbPng(image: RgbaImage): Uint8Array {
   return encodeRgbPng(PNG_OPTIONS, image);
 }
@@ -588,28 +588,6 @@ export function preview(
     );
     writeFileSync(groundSheetPath(ground, out), rgbPng(sheet));
   }
-}
-
-// House colours used by a sprite, in exported palette order.
-export function spritePalette(tags: readonly Tag[]): string[] {
-  const used = new Set<string>();
-  for (const [, fs] of tags) {
-    for (const f of fs) {
-      for (const row of f) {
-        for (const c of row) {
-          if (c) {
-            used.add(c);
-          }
-        }
-      }
-    }
-  }
-  return [
-    ...PALETTE,
-    ...(NEUTRAL_HEX.some((c) => used.has(c)) ? NEUTRAL_HEX : []),
-    ...(TORONTO_HEX.some((c) => used.has(c)) ? TORONTO_HEX : []),
-    ...Object.values(PICKER_UI).filter((c) => used.has(c)),
-  ];
 }
 
 const DEPTH_STEPS = new URL("../../shared/depth-steps.json", import.meta.url);
@@ -1213,29 +1191,23 @@ function abreast(rest: readonly Tag[], scale: number, gap: number, tags: readonl
 
 // ---------- building ----------
 
-// Settle road depth variants and export each sprite to its local source, sheet and JSON paths.
+// Settle road depth variants and export each sprite to its sheet and JSON paths.
 export async function build(
   {
     apart = [],
     originals,
   }: { apart?: readonly string[]; originals?: ReadonlyMap<string, readonly Tag[]> | undefined },
-  srcDir: string,
   source: Iterable<Sprite>,
 ): Promise<void> {
   const sprites = depthSettled({ apart, originals }, source);
-  mkdirSync(srcDir, { recursive: true });
-  mkdirSync("public/art/sprites", { recursive: true });
   const built: string[] = [];
   for (const [key, tags] of sprites) {
-    // Each export runs Aseprite twice; one at a time keeps a build's processes and output in order.
+    // One at a time keeps a build's output in order.
     // eslint-disable-next-line no-await-in-loop
-    await exportSprite(
-      "aseprite",
-      spritePalette(tags),
+    await writeSpriteSheet(
+      { data: `public/art/sprites/${key}.json`, sheet: `public/art/sprites/${key}.png` },
+      { key },
       tags,
-      `${srcDir}/${key}.aseprite`,
-      `public/art/sprites/${key}.png`,
-      `public/art/sprites/${key}.json`,
     );
     built.push(key);
   }
@@ -1318,8 +1290,6 @@ export interface MainOptions {
   grounds?: readonly string[];
   // The full-size sprites whose depth variants sprites draws but not their full size, by key.
   originals?: () => ReadonlyMap<string, readonly Tag[]>;
-  // The set's directory of Aseprite sources.
-  srcDir: string;
   // Every sprite the set draws.
   sprites: () => Iterable<Sprite>;
 }
@@ -1327,13 +1297,13 @@ export interface MainOptions {
 // A sprite set's command line (see run): preview OUT.png (one sheet per ground at groundSheetPath),
 // build and the set's other commands.
 export async function main(
-  { apart = [], commands = {}, doc, grounds = ZONE_ROADS, originals, sprites, srcDir }: MainOptions,
+  { apart = [], commands = {}, doc, grounds = ZONE_ROADS, originals, sprites }: MainOptions,
   argv: readonly string[] = process.argv.slice(2),
 ): Promise<void> {
   await run(
     {
       commands: {
-        build: () => build({ apart, originals: originals?.() }, srcDir, sprites()),
+        build: () => build({ apart, originals: originals?.() }, sprites()),
         "preview OUT.png": (out) =>
           preview({ grounds }, depthSettled({ apart, originals: originals?.() }, sprites()), out),
         ...commands,

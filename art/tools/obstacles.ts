@@ -1235,5 +1235,5 @@ export function* sprites(): Generator<Sprite> {
 }
 
 if (import.meta.main) {
-  await main({ doc: USAGE, sprites, srcDir: "art/obstacles" });
+  await main({ doc: USAGE, sprites });
 }

@@ -2400,7 +2400,7 @@ if (import.meta.main) {
   await main({
     commands: {
       build: async () => {
-        await buildSprites({}, SRC, sprites());
+        await buildSprites({}, sprites());
         await buildCards();
         renderSounds("public/art/sounds");
       },
@@ -2409,6 +2409,5 @@ if (import.meta.main) {
     },
     doc: USAGE,
     sprites,
-    srcDir: SRC,
   });
 }

@@ -1783,7 +1783,7 @@ export function renderSounds(outDir: string): string[] {
 // ---------- commands ----------
 
 async function buildAll(): Promise<void> {
-  await build({}, SRC, [...sprites(), ...bursts()]);
+  await build({}, [...sprites(), ...bursts()]);
   await buildCards();
   console.log("built", [...ILLUSTRATIONS.keys(), ...renderSounds("public/art/sounds")].join(", "));
 }

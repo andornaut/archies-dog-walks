@@ -1361,6 +1361,5 @@ if (import.meta.main) {
     doc: USAGE,
     grounds: ["733e39", "3a4466", "ead4aa"],
     sprites,
-    srcDir: "art/badges",
   });
 }

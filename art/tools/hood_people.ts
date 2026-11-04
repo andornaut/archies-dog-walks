@@ -3564,5 +3564,5 @@ export function* sprites(): Generator<Sprite> {
 }
 
 if (import.meta.main) {
-  await main({ doc: USAGE, sprites, srcDir: "art/hood-people" });
+  await main({ doc: USAGE, sprites });
 }

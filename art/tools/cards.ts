@@ -1941,7 +1941,7 @@ function saveAs(png: string, source: string): void {
 }
 
 export async function build(): Promise<void> {
-  await buildSprites({}, "art/cards", frameSprite());
+  await buildSprites({}, frameSprite());
   mkdirSync("public/art/images", { recursive: true });
   for (const [key, draw] of ILLUSTRATIONS) {
     const png = `public/art/images/${key}.png`;

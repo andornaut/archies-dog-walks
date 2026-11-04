@@ -1389,5 +1389,5 @@ export function sprites(): Sprite[] {
 }
 
 if (import.meta.main) {
-  await main({ apart: APART, doc: USAGE, sprites, srcDir: "art/animals" });
+  await main({ apart: APART, doc: USAGE, sprites });
 }

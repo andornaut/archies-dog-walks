@@ -1707,7 +1707,7 @@ if (import.meta.main) {
     commands: {
       build: async () => {
         checkPlacement();
-        await build({}, "art/roadside", sprites());
+        await build({}, sprites());
         writeTable();
       },
       "preview OUT.png": (out) => {

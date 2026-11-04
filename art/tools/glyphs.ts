@@ -1367,7 +1367,7 @@ export async function build(): Promise<void> {
       stdio: "inherit",
     });
   }
-  await buildSprites({}, "art/glyphs", sprites());
+  await buildSprites({}, sprites());
   console.log("built", [...IMAGES.keys()].join(", "));
 }
 

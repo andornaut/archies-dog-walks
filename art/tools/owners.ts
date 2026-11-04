@@ -953,5 +953,5 @@ export function* sprites(): Generator<Sprite> {
 }
 
 if (import.meta.main) {
-  await main({ doc: USAGE, grounds: ["e4a672"], sprites, srcDir: "art/owners" });
+  await main({ doc: USAGE, grounds: ["e4a672"], sprites });
 }

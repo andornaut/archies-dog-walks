@@ -1653,7 +1653,7 @@ async function preview(outDir: string): Promise<void> {
 
 // Export the road sprites and bursts, then the illustrations composed from them, then the sounds.
 async function build(): Promise<void> {
-  await buildSprites({}, SRC, [...sprites(), ...hitSprites()]);
+  await buildSprites({}, [...sprites(), ...hitSprites()]);
   for (const [key, draw] of ILLUSTRATIONS) {
     const png = `public/art/images/${key}.png`;
     writeFileSync(png, rgbPng(draw().img));

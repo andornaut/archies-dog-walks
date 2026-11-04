@@ -401,6 +401,5 @@ if (import.meta.main) {
     doc: USAGE,
     originals,
     sprites,
-    srcDir: "art/minis",
   });
 }
