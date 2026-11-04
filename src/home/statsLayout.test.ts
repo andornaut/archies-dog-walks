@@ -47,7 +47,7 @@ import { overallRows } from "./statsView.ts";
 
 const BODY = fontFileMetrics("font-body");
 const TITLE = fontFileMetrics("font-title");
-const BADGES = badgeWall(gameData, { achievements: [] });
+const BADGES = badgeWall(gameData, []);
 const words = gameData.menuText.stats;
 
 // The tabs span the panel's columns, side by side, over its top; each label fits its tab.
@@ -229,7 +229,10 @@ describe("the rows' right edge", () => {
   });
 
   it("fits the earned count between the rows' edges", () => {
-    const all = badgeWall(gameData, { achievements: BADGES.map(({ id }) => id) });
+    const all = badgeWall(
+      gameData,
+      BADGES.map(({ id }) => id),
+    );
     const text = earnedText(gameData, all);
     const left = statsListFrame(true).right - inkWidth("font-body", STYLE, text);
     expect(left).toBeGreaterThanOrEqual(rows.left);
@@ -294,8 +297,7 @@ describe("each tab's scroll", () => {
 // height and the last row cover the wall.
 describe("an earned row", () => {
   const ids = gameData.achievements.map(({ id }) => id);
-  const earnedSave = { achievements: ids };
-  const earned = badgeWall(gameData, earnedSave);
+  const earned = badgeWall(gameData, ids);
   const earnedRows = wallRects(
     wall,
     earned.map((badge) =>

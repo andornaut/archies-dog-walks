@@ -1,3 +1,4 @@
+import { newlyEarned } from "@andornaut/game-kit/achievements";
 import { itemAt } from "@andornaut/game-kit/arrays";
 import { STEP_SECONDS } from "@andornaut/game-kit/clock/fixedStep";
 import { seededRandom } from "@andornaut/game-kit/random";
@@ -38,7 +39,7 @@ import {
   takeDueInputs,
 } from "../dev/inputLog.ts";
 import type { LaneDirection } from "../layout/lanes.ts";
-import { earnedByRun, runCountersOf } from "../rules/achievements.ts";
+import { achievementJudge, runCountersOf } from "../rules/achievements.ts";
 import { cardFor, type CardView, chooseOption, openCard } from "../rules/choices.ts";
 import { modifiersOf, modifierValue } from "../rules/modifiers.ts";
 import { currentZone, defaultRoute, firstZoneId, walkLength } from "../rules/route.ts";
@@ -1224,7 +1225,9 @@ describe("stepWalk", () => {
       }
       const { bumpsByZone, firstZone } = runCountersOf(walk.run);
       const facts = { ...goal, bumpsByZone, firstZone, zonesFinished: data.world.walkLength };
-      expect(earnedByRun(awardData, facts)).toEqual(expect.arrayContaining([...badges]));
+      const judge = achievementJudge(awardData);
+      const earned = newlyEarned(judge, ACHIEVEMENTS, "run", { run: facts }, []);
+      expect(earned).toEqual(expect.arrayContaining([...badges]));
     });
   });
 

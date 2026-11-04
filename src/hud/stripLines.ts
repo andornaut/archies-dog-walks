@@ -1,7 +1,7 @@
 import { fillLine, fillNames } from "@andornaut/game-kit/lines";
 
 import type { Achievement, DebuffId, DogId, EncounterId, GameData, GearId } from "../data/types.ts";
-import { achievementLabel } from "../rules/achievementOrder.ts";
+import { achievementLabel } from "../rules/achievements.ts";
 import {
   type Change,
   type HeartChange,
@@ -192,7 +192,7 @@ export function firedLine(data: StripData, dog: DogId): MessageLine {
 // A badge earned, which waits its turn on the strip however long it takes.
 export function achievementLine(
   data: Pick<GameData, "menuText" | "runText">,
-  achievement: Pick<Achievement, "difficulty" | "name">,
+  achievement: Pick<Achievement, "name" | "tier">,
 ): MessageLine {
   const name = achievementLabel(data, achievement);
   return {

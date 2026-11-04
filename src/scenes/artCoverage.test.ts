@@ -296,7 +296,7 @@ describe("screen and card art", () => {
     [
       "names a badge with earned and locked for every achievement",
       () => {
-        const badges = badgeWall(gameData, { achievements: [] });
+        const badges = badgeWall(gameData, []);
         expect(badges).toHaveLength(Object.keys(gameData.achievements).length);
         return badges.flatMap(({ art }) => missingTags(art, ["earned", "locked"]));
       },

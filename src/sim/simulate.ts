@@ -1,3 +1,4 @@
+import { newlyEarned } from "@andornaut/game-kit/achievements";
 import { STEP_SECONDS } from "@andornaut/game-kit/clock/fixedStep";
 import { type Random, randomStream } from "@andornaut/game-kit/random";
 import { keysOf } from "@andornaut/game-kit/records";
@@ -14,7 +15,7 @@ import type {
 } from "../data/types.ts";
 import type { InputEvent } from "../dev/inputLog.ts";
 import {
-  earnedByRun,
+  achievementJudge,
   lastHeartOwnersOf,
   runCountersOf,
   type RunFacts,
@@ -653,7 +654,7 @@ export function simulateRun(data: SimData, seed: number, config: SimConfig): Run
   };
   return {
     ...(planningFailure === undefined ? {} : { planningFailure }),
-    badges: earnedByRun(data, facts),
+    badges: newlyEarned(achievementJudge(data), data.achievements, "run", { run: facts }, []),
     cardsSeen: tally.cardsSeen,
     cashLost: lost,
     choices: tally.choices,

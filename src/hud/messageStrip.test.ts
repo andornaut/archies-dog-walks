@@ -8,7 +8,6 @@ import { describe, expect, it } from "vitest";
 import { gameData } from "../data/index.ts";
 import { SCREEN_LAYOUT } from "../data/screen.ts";
 import type { QuipMoment } from "../data/types.ts";
-import { orderedAchievements } from "../rules/achievementOrder.ts";
 import { bodyRunWidth } from "../testing/bodyFont.ts";
 import { defined } from "../testing/defined.ts";
 import { everyStripLine } from "../testing/everyStripLine.ts";
@@ -172,7 +171,7 @@ describe("stepMessageStrip", () => {
     return { paced, said, shows, state, texts: shows.map(({ text }) => text) };
   };
   const badgeLines = (count: number) =>
-    orderedAchievements(gameData.achievements)
+    gameData.achievements
       .slice(0, count)
       .map((achievement) => achievementLine(gameData, achievement));
   const plainLines = (count: number) =>

@@ -1,3 +1,4 @@
+import { resolveThreshold } from "@andornaut/game-kit/achievements";
 import { assertNever } from "@andornaut/game-kit/assertNever";
 import { keysOf } from "@andornaut/game-kit/records";
 
@@ -9,7 +10,7 @@ import type {
   Threshold,
   ZoneId,
 } from "../data/types.ts";
-import { type AchievementData, needed, picksOf, type RunFacts } from "../rules/achievements.ts";
+import { type AchievementData, picksOf, type RunFacts } from "../rules/achievements.ts";
 import { walkLength } from "../rules/route.ts";
 import type { SaveDocument } from "../save/schema.ts";
 import { timesFired, walksFinished, walksPlayed, ZERO_DOG_STATS } from "../save/stats.ts";
@@ -66,7 +67,7 @@ function raiseRun(
     case "zonesFinished":
       return {
         ...facts,
-        zonesFinished: Math.max(facts.zonesFinished, needed(zones, condition.count)),
+        zonesFinished: Math.max(facts.zonesFinished, resolveThreshold(zones, condition.count)),
       };
     case "debuffsGot":
       return {
@@ -143,7 +144,7 @@ export function runFactsFor(data: AchievementData, ids: readonly AchievementId[]
 
 // have, or the first ids in data order when have holds fewer than threshold asks.
 function enough<T>(all: readonly T[], threshold: Threshold, have: readonly T[]): T[] {
-  const count = needed(all.length, threshold);
+  const count = resolveThreshold(all.length, threshold);
   return have.length >= count ? [...have] : all.slice(0, count);
 }
 
@@ -169,7 +170,10 @@ function raiseSave(
     }
     case "firedByOwners": {
       const dogs = { ...stats.dogs };
-      for (const id of dogIds(data).slice(0, needed(dogIds(data).length, condition.count))) {
+      for (const id of dogIds(data).slice(
+        0,
+        resolveThreshold(dogIds(data).length, condition.count),
+      )) {
         const current = dogs[id] ?? ZERO_DOG_STATS;
         dogs[id] = { ...current, timesFired: Math.max(current.timesFired, 1) };
       }

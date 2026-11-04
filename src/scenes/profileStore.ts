@@ -16,7 +16,7 @@ import {
 } from "../save/profile.ts";
 import { encodeResume, launchWalk, type ResumeWalk } from "../save/resume.ts";
 import { type Checkpoint, type SaveDocument, type Settings } from "../save/schema.ts";
-import { pageSaveStore, RESUME_BACKUP_KEY } from "../save/storage.ts";
+import { pageEarnedStore, pageSaveStore, RESUME_BACKUP_KEY } from "../save/storage.ts";
 import { currentSettings, PROFILE_SESSION_KEY as SESSION_KEY } from "./sceneSettings.ts";
 import { soundboardOf } from "./soundboard.ts";
 
@@ -45,7 +45,7 @@ export function applySound(scene: Scene, settings: Settings): void {
   soundboard.setMuted(settings.muted);
 }
 
-// Loads the save from localStorage and applies the saved volumes. A new player's reduced motion
+// Loads the save and the earned badges from localStorage and applies the saved volumes. A new player's reduced motion
 // follows the device's setting. A run left at a checkpoint resumes when resume allows it and its
 // resume point is good (launchWalk), and is banked as heading home otherwise; a resume point
 // that could not be read is kept under RESUME_BACKUP_KEY.
@@ -62,9 +62,13 @@ export async function openProfile(
     }
     return decided;
   };
+  const stores = {
+    earned: pageEarnedStore(gameData),
+    save: pageSaveStore(saveContextFrom(gameData)),
+  };
   const { load, session: opened } = await ProfileSession.open(
     { data: gameData },
-    pageSaveStore(saveContextFrom(gameData)),
+    stores,
     newPlayerOnDevice,
     launch,
   );
@@ -107,7 +111,13 @@ export function purchaseInProfile(
   return session(scene).purchase(change);
 }
 
-// Achievements earned on launch or by a purchase, for the home screen to celebrate once.
+// The achievements earned, in the order earned.
+export function earnedAchievements(scene: Scene): readonly AchievementId[] {
+  return session(scene).earned;
+}
+
+// Achievements earned on launch or by a purchase, or earlier and not yet celebrated, for the home
+// screen to celebrate once.
 export function takeCelebrations(scene: Scene): AchievementId[] {
   return session(scene).takeCelebrations();
 }

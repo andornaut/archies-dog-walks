@@ -1,3 +1,5 @@
+import { orderByTier } from "@andornaut/game-kit/achievements";
+
 import { ACHIEVEMENTS } from "./achievements.ts";
 import { AMBIENT } from "./ambient.ts";
 import { DEBUFFS } from "./debuffs.ts";
@@ -14,14 +16,26 @@ import { QUIPS } from "./quips.ts";
 import { RUN_TEXT } from "./runText.ts";
 import { SHOP_GEAR } from "./shop.ts";
 import { TUNING } from "./tuning.ts";
-import type { GameData } from "./types.ts";
+import type { AchievementTier, GameData } from "./types.ts";
 import { UPGRADES } from "./upgrades.ts";
 import { DEFAULT_WALKER, WALKER_PERKS, WALKERS } from "./walkers.ts";
 import { WORLD } from "./world.ts";
 
+// The badge wall's order, easiest first.
+const ACHIEVEMENT_TIERS: readonly AchievementTier[] = ["easy", "medium", "hard"];
+
+// The catalogue in the badge wall's order, set once for every reader.
+function wallOrder(achievements: GameData["achievements"]): GameData["achievements"] {
+  const [first, ...rest] = orderByTier(ACHIEVEMENT_TIERS, achievements);
+  if (first === undefined) {
+    throw new Error("The game data needs a badge");
+  }
+  return [first, ...rest];
+}
+
 function toGameData(values: ValueExports): GameData {
   return {
-    achievements: values.ACHIEVEMENTS,
+    achievements: wallOrder(values.ACHIEVEMENTS),
     ambient: values.AMBIENT,
     debuffs: values.DEBUFFS,
     defaultWalker: values.DEFAULT_WALKER,

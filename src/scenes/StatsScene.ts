@@ -61,7 +61,7 @@ import {
 import { addBadge, addBadgeDetail, BADGE_SIZE } from "./badges.ts";
 import { listenHomeBar } from "./homeBarPress.ts";
 import { closeOverlay, listenDismiss, type OverlayData } from "./overlay.ts";
-import { currentSettings, profileSave } from "./profileStore.ts";
+import { currentSettings, earnedAchievements, profileSave } from "./profileStore.ts";
 import { SCENE_KEYS, type SceneKey } from "./sceneKeys.ts";
 import {
   addScrollbar,
@@ -354,7 +354,7 @@ export class StatsScene extends Scene {
   }
 
   private badges(): BadgeView[] {
-    return badgeWall(gameData, profileSave(this));
+    return badgeWall(gameData, earnedAchievements(this));
   }
 
   private drawRuns(): number {
@@ -435,7 +435,7 @@ export class StatsScene extends Scene {
         const cell = wallCell(WALL_TEXT, inkWidth, badge, badgeProgress(gameData, save, badge));
         return {
           ...cell,
-          name: [...cell.name, gameData.menuText.stats.badgeDifficulty[badge.difficulty]],
+          name: [...cell.name, gameData.menuText.stats.badgeDifficulty[badge.tier]],
         };
       });
     });

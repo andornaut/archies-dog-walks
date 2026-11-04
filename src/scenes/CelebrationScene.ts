@@ -23,7 +23,7 @@ import {
 } from "../home/modalLayout.ts";
 import { isConfirmKey, isPauseKey, menuKeyActs } from "../input/keyBindings.ts";
 import { exitShown } from "../pwa/index.ts";
-import { achievementLabel } from "../rules/achievementOrder.ts";
+import { achievementLabel } from "../rules/achievements.ts";
 import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";
 import { closeControl } from "../ui/closeControl.ts";
 import { labelInkWidth, pixelFontMetrics, withProbe } from "../ui/phaser/pixelText.ts";

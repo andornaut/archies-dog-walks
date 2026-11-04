@@ -10,6 +10,7 @@ import { read } from "../rules/units.ts";
 import { walkerGoal } from "../rules/walkers.ts";
 import { SLOT_ROLES } from "../runner/slotConfig.ts";
 import { zoneSlotGuarantees } from "../runner/zonePlan.ts";
+import { ACHIEVEMENTS } from "./achievements.ts";
 import { gameData } from "./index.ts";
 import { LANE_COUNT, SCREEN_CONFIG } from "./screen.ts";
 import type { CardOption, Effect, EncounterId, ZoneId } from "./types.ts";
@@ -118,6 +119,15 @@ describe("cards", () => {
     }
     const badges = gameData.achievements.map(({ id }) => id);
     expect(new Set(badges).size).toBe(badges.length);
+  });
+
+  it("lists the badges by tier, easiest first, each tier in authored order", () => {
+    const tiers = ["easy", "medium", "hard"] as const;
+    const authored = tiers.flatMap((tier) =>
+      ACHIEVEMENTS.filter((badge) => badge.tier === tier).map(({ id }) => id),
+    );
+    expect(gameData.achievements.map(({ id }) => id)).toEqual(authored);
+    expect(authored).toHaveLength(ACHIEVEMENTS.length);
   });
 });
 

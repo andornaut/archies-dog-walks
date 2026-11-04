@@ -25,7 +25,7 @@ import {
   detailTextTops,
   STATS_LAYOUT,
 } from "../home/statsLayout.ts";
-import { achievementLabel } from "../rules/achievementOrder.ts";
+import { achievementLabel } from "../rules/achievements.ts";
 import { closeControl } from "../ui/closeControl.ts";
 import { PALETTE } from "../ui/palette.ts";
 import { addModalShade } from "../ui/phaser/draw.ts";
@@ -193,7 +193,7 @@ export function addBadgeDetail(
   const words = gameData.menuText.stats;
   const wrap = (text: string) => wrapPixelText(scene, BODY_TEXT, DETAIL_TEXT_WIDTH, text);
   const goal = wrap(badge.goal);
-  const status = `${badge.earned ? words.badgeEarned : words.badgeLocked} (${words.badgeDifficulty[badge.difficulty]})`;
+  const status = `${badge.earned ? words.badgeEarned : words.badgeLocked} (${words.badgeDifficulty[badge.tier]})`;
   const line = wrap(
     fillLine(MENU_TEXT_FIELDS.stats, words, "badgeLine", { line: badge.badgeLine }),
   );

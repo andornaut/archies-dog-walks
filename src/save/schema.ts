@@ -2,7 +2,6 @@ import { keysOf } from "@andornaut/game-kit/records";
 import * as v from "valibot";
 
 import type {
-  AchievementId,
   DogId,
   GearId,
   HintId,
@@ -16,7 +15,7 @@ import type { RunCounters } from "../rules/achievements.ts";
 import type { EndReason } from "../state/runState.ts";
 import { type Cents, cents as toCents } from "../units.ts";
 
-export const SAVE_VERSION = 23;
+export const SAVE_VERSION = 24;
 
 // Every tally the save keeps; a stored key outside it is dropped on load. A record, so a new
 // TallyId fails to compile until it is listed here.
@@ -156,8 +155,6 @@ const statsSchema = v.object({
 });
 
 export const saveSchema = v.object({
-  // The achievements earned, each once, in the order earned.
-  achievements: ids,
   bankCents: cents,
   checkpoint: v.nullable(checkpointSchema),
   // Whether the player has seen the help screen, so it opens by itself only once.
@@ -263,9 +260,8 @@ export interface SaveStats extends Omit<
 
 export interface SaveDocument extends Omit<
   StoredSave,
-  "achievements" | "checkpoint" | "lastLoadout" | "owned" | "shownHints" | "stats" | "walker"
+  "checkpoint" | "lastLoadout" | "owned" | "shownHints" | "stats" | "walker"
 > {
-  achievements: AchievementId[];
   checkpoint: Checkpoint | null;
   lastLoadout: Loadout;
   owned: Owned;
@@ -297,7 +293,6 @@ export const DEFAULT_SETTINGS: Settings = {
 export function createDefaultSave(defaults: SaveDefaults): SaveDocument {
   const zero = toCents(0);
   return {
-    achievements: [],
     bankCents: zero,
     checkpoint: null,
     helpSeen: false,

@@ -1,3 +1,4 @@
+import { newlyEarned } from "@andornaut/game-kit/achievements";
 import { keysOf } from "@andornaut/game-kit/records";
 import { describe, expect, it } from "vitest";
 
@@ -10,19 +11,18 @@ import { defined } from "../testing/defined.ts";
 import { testState } from "../testing/runState.ts";
 import { newPlayerSave, veteranSave } from "../testing/saves.ts";
 import { cents } from "../units.ts";
-import { orderedAchievements } from "./achievementOrder.ts";
 import {
   achievementConditionText,
-  conditionHolds,
+  achievementJudge,
   countBump,
   countLandedBump,
   countOptionPick,
   countTally,
-  earnedByRun,
-  newlyEarned,
   runCountersOf,
   type RunFacts,
 } from "./achievements.ts";
+
+const JUDGE = achievementJudge(gameData);
 
 const facts = (changes: Partial<RunFacts> = {}): RunFacts => ({
   bumpsByKind: {},
@@ -41,7 +41,7 @@ const facts = (changes: Partial<RunFacts> = {}): RunFacts => ({
 });
 
 const holdsForRun = (condition: AchievementCondition, run: Partial<RunFacts>) =>
-  conditionHolds(gameData, newPlayerSave, facts(run), condition);
+  JUDGE.holds("bank", { run: facts(run), save: newPlayerSave }, condition);
 
 const ALL_DOGS = keysOf(gameData.dogs);
 const ALL_GEAR = keysOf(gameData.shopGear);
@@ -337,16 +337,18 @@ describe("profile conditions", () => {
   ];
 
   it("holds each profile condition from its threshold, and none without a save", () => {
+    const holds = (condition: AchievementCondition, save: SaveDocument | null) =>
+      save === null
+        ? JUDGE.holds("run", { run: facts() }, condition)
+        : JUDGE.holds("profile", { save }, condition);
     const wrong = cases
-      .filter(
-        ([, condition, save, holds]) => conditionHolds(gameData, save, null, condition) !== holds,
-      )
+      .filter(([, condition, save, held]) => holds(condition, save) !== held)
       .map(([name]) => name);
     expect(wrong).toEqual([]);
   });
 });
 
-const ALL_IDS = orderedAchievements(gameData.achievements).map(({ id }) => id);
+const ALL_IDS = gameData.achievements.map(({ id }) => id);
 // The condition kinds judged on one run; every other kind is judged on the save.
 const RUN_KINDS: readonly AchievementCondition["kind"][] = [
   "cleanZones",
@@ -371,17 +373,17 @@ describe("newlyEarned", () => {
   );
 
   it.each(sampleIds)("earns %s from the least its goal asks for, and only once", (id) => {
-    const after = saveFor(gameData, [id], newPlayerSave);
+    const save = saveFor(gameData, [id], newPlayerSave);
     const run = runFactsFor(gameData, [id]);
-    expect(newlyEarned(gameData, newPlayerSave, after, run)).toContain(id);
-    const earned = { ...newPlayerSave, achievements: [id] };
-    expect(newlyEarned(gameData, earned, after, run)).not.toContain(id);
+    const { achievements } = gameData;
+    expect(newlyEarned(JUDGE, achievements, "bank", { run, save }, [])).toContain(id);
+    expect(newlyEarned(JUDGE, achievements, "bank", { run, save }, [id])).not.toContain(id);
   });
 
-  it("lists every achievement met and not yet earned, in difficulty order", () => {
-    const after = saveFor(gameData, ALL_IDS, newPlayerSave);
+  it("lists every achievement met and not yet earned, in wall order", () => {
+    const save = saveFor(gameData, ALL_IDS, newPlayerSave);
     const run = runFactsFor(gameData, ALL_IDS);
-    expect(newlyEarned(gameData, newPlayerSave, after, run)).toEqual(ALL_IDS);
+    expect(newlyEarned(JUDGE, gameData.achievements, "bank", { run, save }, [])).toEqual(ALL_IDS);
   });
 
   // A badge of two conditions: a pack of 2 that finishes the walk.
@@ -392,20 +394,19 @@ describe("newlyEarned", () => {
     ["the pack too small", { packSize: 1, ...walked }, false],
     ["a zone short", { packSize: 2, zonesFinished: 3 }, false],
   ])("needs every condition: %s", (_, run, earned) => {
-    const data = { ...gameData, achievements: [both] as const };
-    expect(newlyEarned(data, newPlayerSave, newPlayerSave, facts(run))).toEqual(
-      earned ? [first.id] : [],
-    );
+    const judged = { run: facts(run), save: newPlayerSave };
+    expect(newlyEarned(JUDGE, [both], "bank", judged, [])).toEqual(earned ? [first.id] : []);
   });
 });
 
-describe("earnedByRun", () => {
-  it("counts only achievements whose conditions are all about the run", () => {
-    const aboutTheRun = orderedAchievements(gameData.achievements)
+describe("the run scope", () => {
+  it("earns only achievements whose conditions are all about the run", () => {
+    const aboutTheRun = gameData.achievements
       .filter(({ conditions }) => conditions.every(({ kind }) => RUN_KINDS.includes(kind)))
       .map(({ id }) => id);
+    const run = runFactsFor(gameData, ALL_IDS);
     expect(aboutTheRun.length).toBeLessThan(ALL_IDS.length);
-    expect(earnedByRun(gameData, runFactsFor(gameData, ALL_IDS))).toEqual(aboutTheRun);
+    expect(newlyEarned(JUDGE, gameData.achievements, "run", { run }, [])).toEqual(aboutTheRun);
   });
 });
 

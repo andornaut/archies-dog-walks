@@ -16,7 +16,7 @@ import type {
 import { DEFAULT_WALKER } from "../data/walkers.ts";
 import {
   type AchievementData,
-  conditionHolds,
+  achievementJudge,
   picksOf,
   type RunFacts,
 } from "../rules/achievements.ts";
@@ -331,8 +331,9 @@ export function badgeCounters(
   packSize: number,
   facts: readonly RunFacts[],
 ): BadgeCounters {
+  const judge = achievementJudge(data);
   const share = (condition: AchievementCondition) =>
-    mean(facts.map((walk) => (conditionHolds(data, null, walk, condition) ? 1 : 0)));
+    mean(facts.map((walk) => (judge.holds("run", { run: walk }, condition) ? 1 : 0)));
   const meanOf = (count: (walk: RunFacts) => number) => mean(facts.map(count));
   const debuffs = keysOf(data.debuffs);
   const kinds = keysOf(data.minorObstacles);

@@ -1,36 +1,35 @@
+import { newlyEarned } from "@andornaut/game-kit/achievements";
+
 import type { AchievementId, GameData } from "../data/types.ts";
-import { isMoneyGoal } from "../rules/achievements.ts";
+import { achievementJudge, isMoneyGoal } from "../rules/achievements.ts";
 import type { RunState } from "../state/runState.ts";
-import { type AwardContext, earnedSince } from "./achievements.ts";
-import { recordRunEnd, type RunResult } from "./checkpoint.ts";
+import { type AwardContext, recordRunEnd, runEndFacts, type RunResult } from "./checkpoint.ts";
 import { runResultOf } from "./runSlices.ts";
 import type { SaveDocument } from "./schema.ts";
 
-// The achievements banking result into save would newly earn, without writing anything.
+// The achievements banking result into save would newly earn beside earned, without writing
+// anything.
 export function earnedIfBanked(
   context: AwardContext,
+  earned: readonly AchievementId[],
   save: SaveDocument,
   result: RunResult,
 ): AchievementId[] {
-  return earnedSince(context.data, save, recordRunEnd(context, save, result));
+  const facts = { run: runEndFacts(result), save: recordRunEnd(context, save, result) };
+  const { data } = context;
+  return newlyEarned(achievementJudge(data), data.achievements, "bank", facts, earned);
 }
 
-// A walk's mid-run badge lines preview what heading home at that moment would earn, each badge once
-// a walk, leaving out money goals, which are checked only on the total the walk banks. They award
-// nothing: the run's end (or its checkpoint, banked on the next launch) does, and the end screen
-// celebrates every badge the walk earned, announced or not. facts is what the last look was taken
-// at.
-export interface AchievementPreview {
-  readonly facts: string;
-  readonly shown: readonly AchievementId[];
-}
-
-export const NOTHING_PREVIEWED: AchievementPreview = { facts: "", shown: [] };
+// A walk's mid-run badge lines preview what heading home at that moment would earn, each badge
+// once a walk (the game kit's previewAchievements), leaving out money goals, which are checked
+// only on the total the walk banks. They award nothing: the run's end (or its checkpoint, banked
+// on the next launch) does, and the end screen celebrates every badge the walk earned, announced
+// or not.
 
 // Mid-run, only a finished zone, a debuff got, a tally, an option pick, a landed bump or a
 // firing can earn a previewed badge, so the bank is looked at again only when one of them has
 // changed. Finished walks count only at the end, and an ended run is left to the end screen.
-function previewFacts(run: RunState): string {
+export function previewKey(run: RunState): string {
   const fired = run.pack.filter((slot) => slot.status === "fired").length;
   return [
     run.zoneIndex,
@@ -42,19 +41,15 @@ function previewFacts(run: RunState): string {
   ].join(":");
 }
 
-export function previewAchievements(
+// What banking run now would newly earn (banked), money goals left out; nothing for an ended run.
+export function previewedEarned(
   data: Pick<GameData, "achievements" | "world">,
-  earned: (result: RunResult) => readonly AchievementId[],
-  preview: AchievementPreview,
+  banked: (result: RunResult) => readonly AchievementId[],
   run: RunState,
-): { readonly earned: readonly AchievementId[]; readonly preview: AchievementPreview } {
-  const facts = previewFacts(run);
-  if (run.phase.kind === "ended" || facts === preview.facts) {
-    return { earned: [], preview };
+): AchievementId[] {
+  if (run.phase.kind === "ended") {
+    return [];
   }
   const money = new Set(data.achievements.filter(isMoneyGoal).map(({ id }) => id));
-  const fresh = earned(runResultOf(data, run)).filter(
-    (id) => !money.has(id) && !preview.shown.includes(id),
-  );
-  return { earned: fresh, preview: { facts, shown: [...preview.shown, ...fresh] } };
+  return banked(runResultOf(data, run)).filter((id) => !money.has(id));
 }

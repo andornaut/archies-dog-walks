@@ -1,16 +1,26 @@
+import { newlyEarned } from "@andornaut/game-kit/achievements";
 import { keysOf } from "@andornaut/game-kit/records";
 import { describe, expect, it } from "vitest";
 
 import { gameData } from "../data/index.ts";
 import type { DogId, WalkerId, ZoneId } from "../data/types.ts";
 import { buy } from "../home/home.ts";
+import { achievementJudge } from "../rules/achievements.ts";
 import { walkerGoal } from "../rules/walkers.ts";
 import type { EndReason } from "../state/runState.ts";
 import { packOf, runFactsFor } from "../testing/achievements.ts";
-import { newPlayerSave, quietCounters, testAwards, veteranSave } from "../testing/saves.ts";
+import {
+  newPlayerSave,
+  quietCounters,
+  testAwards,
+  VETERAN_EARNED,
+  veteranSave,
+} from "../testing/saves.ts";
 import { cents } from "../units.ts";
+import { earnedIfBanked } from "./achievementPreview.ts";
 import {
   bankCheckpoint,
+  checkpointFacts,
   isNewBestWalk,
   recordCheckpoint,
   recordRunEnd,
@@ -242,13 +252,17 @@ describe("achievements at banking", () => {
   });
 
   // Clean Paws is earned for a walk with no bump, not for one with a bump in every zone.
-  it("awards a banked checkpoint's run from its counters, after those earned before", () => {
-    const before = veteranSave();
-    const bankedWith = (bumpsByZone: number[]) =>
-      bankCheckpoint(testAwards, recordCheckpoint(before, cleanPawsWalk(bumpsByZone)));
-    expect(bankedWith([]).achievements).toEqual([...before.achievements, "cleanPaws"]);
+  it("judges a banked checkpoint's run on its counters, beside those earned before", () => {
+    const judge = achievementJudge(gameData);
+    const earnedWith = (bumpsByZone: number[]) => {
+      const walk = cleanPawsWalk(bumpsByZone);
+      const save = bankCheckpoint(testAwards, recordCheckpoint(veteranSave(), walk));
+      const facts = { run: checkpointFacts(walk), save };
+      return newlyEarned(judge, gameData.achievements, "bank", facts, VETERAN_EARNED);
+    };
+    expect(earnedWith([])).toEqual(["cleanPaws"]);
     const bumped = Array.from({ length: cleanPaws.zonesFinished }, () => 1);
-    expect(bankedWith(bumped).achievements).toEqual(before.achievements);
+    expect(earnedWith(bumped)).toEqual([]);
   });
 
   // veteranSave is 2 finished walks into a streak with no firing, and lady finished one.
@@ -313,10 +327,10 @@ describe("achievements at banking", () => {
         stats: { ...newPlayerSave.stats, noFiringStreak: count - 1 },
       };
       const dogs = [{ firedInZone: null, id: "kilo" }] as const;
-      const finished = recordRunEnd(testAwards, before, runResult({ dogs: [...dogs] }));
-      expect(finished.achievements).toContain(id);
+      const finished = runResult({ dogs: [...dogs] });
+      expect(earnedIfBanked(testAwards, [], before, finished)).toContain(id);
       const home = runResult({ dogs: [...dogs], outcome: "wentHome", zone: 3 });
-      expect(recordRunEnd(testAwards, before, home).achievements).not.toContain(id);
+      expect(earnedIfBanked(testAwards, [], before, home)).not.toContain(id);
     },
   );
 
@@ -346,8 +360,9 @@ describe("achievements at banking", () => {
     expect(save.stats.noFiringStreak).toBe(0);
     expect(save.stats.dogsFinishedWith).toEqual([]);
     expect(save.stats.zonesEverFinished).toEqual([]);
-    expect(save.achievements).not.toContain("notAScratch");
-    expect(save.achievements).not.toContain("roundTrip");
+    const earned = earnedIfBanked(testAwards, [], newPlayerSave, clean);
+    expect(earned).not.toContain("notAScratch");
+    expect(earned).not.toContain("roundTrip");
   });
 
   // Each row starts from a save that has finished the first zone of ROUTE.

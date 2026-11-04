@@ -142,14 +142,13 @@ describe("loadSave", () => {
       veteranSave(),
     ],
     [
-      "without achievements, finished-with dogs and finished zones the game no longer has",
+      "without finished-with dogs and finished zones the game no longer has",
       (document) => {
-        document.achievements = ["retiredBadge", "wholeCity"];
         document.stats.dogsFinishedWith = ["kilo", "ghost"];
         document.stats.zonesEverFinished = ["highPark", "atlantis"];
       },
-      (save) => [save.achievements, save.stats.dogsFinishedWith, save.stats.zonesEverFinished],
-      [["wholeCity"], ["kilo"], ["highPark"]],
+      (save) => [save.stats.dogsFinishedWith, save.stats.zonesEverFinished],
+      [["kilo"], ["highPark"]],
     ],
     [
       "without unknown or duplicate owned ids",
@@ -436,8 +435,7 @@ describe("loadSave", () => {
 describe("saveContextFrom", () => {
   const context = saveContextFrom(gameData);
 
-  it("knows every achievement, debuff, dog, gear item, hint and walker in the game data", () => {
-    expect([...context.known.achievements]).toEqual(gameData.achievements.map(({ id }) => id));
+  it("knows every debuff, dog, gear item, hint and walker in the game data", () => {
     expect([...context.known.debuffs]).toEqual(Object.keys(gameData.debuffs));
     expect([...context.known.dogs]).toEqual(Object.keys(gameData.dogs));
     expect([...context.known.gear]).toEqual(Object.keys(gameData.shopGear));

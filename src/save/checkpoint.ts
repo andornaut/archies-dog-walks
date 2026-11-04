@@ -1,11 +1,21 @@
 import type { DogId, EncounterId, OptionPicks, WalkerId, ZoneId } from "../data/types.ts";
-import { type RunCounters, type RunFacts, walkedFromTheStart } from "../rules/achievements.ts";
+import {
+  type AchievementData,
+  type RunCounters,
+  type RunFacts,
+  walkedFromTheStart,
+} from "../rules/achievements.ts";
 import { newWalkers } from "../rules/walkers.ts";
 import type { EndReason } from "../state/runState.ts";
 import { addCents, type Cents, cents } from "../units.ts";
-import { awardAchievements, type AwardContext } from "./achievements.ts";
 import type { Checkpoint, DogRun, DogStats, LastWalk, SaveDocument, SaveStats } from "./schema.ts";
 import { bestWalkCents, ZERO_DOG_STATS } from "./stats.ts";
+
+// What banking a run and awarding its badges need: the achievements and the content their
+// "all" counts.
+export interface AwardContext {
+  readonly data: AchievementData;
+}
 
 // A finished run. earnedCents is what the run banks, and lostCents the cash it carried and lost
 // by ending early (walkEarnings). lastHeartOwners is how many walking owners ended it
@@ -106,8 +116,8 @@ type BankedRun = Pick<
 // Banks the earnings, counts the outcome and updates every stat and the logbook. A run a dev start
 // began past zone 1 banks no money, adds no starting cash and sets no best walk, and its zone
 // counts leave out the zones it skipped. Unlocks the walkers that a finished walk's dogs still
-// walking at its end reach (dogsFinishedWith). Clears the checkpoint, since the run it belonged to is now banked. Then
-// awards what the run earned.
+// walking at its end reach (dogsFinishedWith). Clears the checkpoint, since the run it belonged
+// to is now banked. The badges it earns are judged on its facts (runFacts).
 function bankRun(context: AwardContext, run: BankedRun, save: SaveDocument): SaveDocument {
   const { stats } = save;
   const walked = walkedFromTheStart(run.counters);
@@ -143,7 +153,7 @@ function bankRun(context: AwardContext, run: BankedRun, save: SaveDocument): Sav
   const stayed = run.dogs.flatMap(({ firedInZone, id }) => (firedInZone === null ? [id] : []));
   const banks = walked ? earnedCents : cents(0);
   const { owned } = save;
-  const banked: SaveDocument = {
+  return {
     ...save,
     bankCents: addCents(save.bankCents, banks),
     checkpoint: null,
@@ -188,15 +198,20 @@ function bankRun(context: AwardContext, run: BankedRun, save: SaveDocument): Sav
         : stats.zonesEverFinished,
     },
   };
-  const facts: RunFacts = {
+}
+
+// What the badges judge a banked run on: its counters, what it banked (never below 0), how many
+// dogs set out and got home unfired, its walking owners on their last heart and the zones it
+// finished.
+function runFacts(run: BankedRun): RunFacts {
+  return {
     ...run.counters,
-    dogsHome: stayed.length,
-    earnedCents,
+    dogsHome: run.dogs.filter(({ firedInZone }) => firedInZone === null).length,
+    earnedCents: cents(Math.max(0, run.earnedCents)),
     lastHeartOwners: run.lastHeartOwners,
     packSize: run.dogs.length,
-    zonesFinished,
+    zonesFinished: run.zonesFinished,
   };
-  return awardAchievements(context, facts, save, banked);
 }
 
 export function recordCheckpoint(save: SaveDocument, slice: Checkpoint): SaveDocument {
@@ -208,14 +223,16 @@ export function recordCheckpoint(save: SaveDocument, slice: Checkpoint): SaveDoc
 // last zone ends the run, which then saves no checkpoint.
 export function bankCheckpoint(context: AwardContext, save: SaveDocument): SaveDocument {
   const { checkpoint } = save;
-  if (checkpoint === null) {
-    return save;
-  }
-  return bankRun(
-    context,
-    { ...checkpoint, lastHeartOwners: 0, outcome: "wentHome", walker: null },
-    save,
-  );
+  return checkpoint === null ? save : bankRun(context, checkpointRun(checkpoint), save);
+}
+
+function checkpointRun(checkpoint: Checkpoint): BankedRun {
+  return { ...checkpoint, lastHeartOwners: 0, outcome: "wentHome", walker: null };
+}
+
+// What the badges judge a checkpoint's run on as bankCheckpoint banks it.
+export function checkpointFacts(checkpoint: Checkpoint): RunFacts {
+  return runFacts(checkpointRun(checkpoint));
 }
 
 // Banks a run that ended.
@@ -224,18 +241,23 @@ export function recordRunEnd(
   save: SaveDocument,
   result: RunResult,
 ): SaveDocument {
-  return bankRun(
-    context,
-    {
-      counters: result.counters,
-      dogs: result.dogs,
-      earnedCents: result.earnedCents,
-      lastHeartOwners: result.lastHeartOwners,
-      outcome: result.outcome,
-      route: result.route,
-      walker: result.walker,
-      zonesFinished: zonesFinishedBy(result),
-    },
-    save,
-  );
+  return bankRun(context, endedRun(result), save);
+}
+
+function endedRun(result: RunResult): BankedRun {
+  return {
+    counters: result.counters,
+    dogs: result.dogs,
+    earnedCents: result.earnedCents,
+    lastHeartOwners: result.lastHeartOwners,
+    outcome: result.outcome,
+    route: result.route,
+    walker: result.walker,
+    zonesFinished: zonesFinishedBy(result),
+  };
+}
+
+// What the badges judge a run that ended on as recordRunEnd banks it.
+export function runEndFacts(result: RunResult): RunFacts {
+  return runFacts(endedRun(result));
 }

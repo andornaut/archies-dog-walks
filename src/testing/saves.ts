@@ -2,9 +2,9 @@
 import { keysOf } from "@andornaut/game-kit/records";
 
 import { gameData } from "../data/index.ts";
-import type { DogId } from "../data/types.ts";
+import type { AchievementId, DogId } from "../data/types.ts";
 import type { RunCounters } from "../rules/achievements.ts";
-import type { AwardContext } from "../save/achievements.ts";
+import type { AwardContext } from "../save/checkpoint.ts";
 import type { SaveContext } from "../save/load.ts";
 import { createDefaultSave, SAVE_VERSION, type SaveDocument } from "../save/schema.ts";
 import { cents } from "../units.ts";
@@ -22,7 +22,6 @@ export const testContext: SaveContext = {
     walker: "casey",
   },
   known: {
-    achievements: new Set(gameData.achievements.map(({ id }) => id)),
     debuffs: new Set(["stinky"]),
     dogSlots: new Set([1, 2, 3]),
     dogs: new Set([
@@ -69,11 +68,13 @@ export const quietCounters = (): RunCounters => ({
 // A new player: the free dogs, one slot, and the starter dog picked.
 export const newPlayerSave: SaveDocument = createDefaultSave(testContext.defaults);
 
-// A player several runs in, with every field away from its default. It has finished every zone,
-// so it holds the badge for that.
+// The badges veteranSave's player has earned. It has finished every zone, so it holds the badge
+// for that.
+export const VETERAN_EARNED: readonly AchievementId[] = ["wholeCity", "squirrel"];
+
+// A player several runs in, with every field away from its default.
 export function veteranSave(): SaveDocument {
   return {
-    achievements: ["wholeCity", "squirrel"],
     bankCents: cents(12_345),
     checkpoint: null,
     helpSeen: true,

@@ -1,9 +1,15 @@
+import {
+  type ConditionKind,
+  type Judge,
+  judge,
+  type Progress,
+  resolveThreshold,
+} from "@andornaut/game-kit/achievements";
 import { assertNever } from "@andornaut/game-kit/assertNever";
 
 import type {
   Achievement,
   AchievementCondition,
-  AchievementId,
   DebuffId,
   EncounterId,
   GameData,
@@ -17,7 +23,6 @@ import type { SaveDocument, SaveStats } from "../save/schema.ts";
 import { lifetimeEarnedNet, timesFired, walksFinished, walksPlayed } from "../save/stats.ts";
 import type { RunState } from "../state/runState.ts";
 import { type Cents, dollarsToCents } from "../units.ts";
-import { orderedAchievements } from "./achievementOrder.ts";
 import { walkLength } from "./route.ts";
 
 export type AchievementData = Pick<
@@ -149,11 +154,6 @@ function finishedWalk(facts: RunFacts, zones: number): boolean {
   return walkedFromTheStart(facts) && facts.zonesFinished >= zones;
 }
 
-// The count a threshold asks for out of all.
-export function needed(all: number, threshold: Threshold): number {
-  return threshold === "all" ? all : threshold;
-}
-
 function cleanZones(facts: RunFacts): number {
   let clean = 0;
   for (let zone = facts.firstZone; zone < facts.zonesFinished; zone++) {
@@ -177,172 +177,148 @@ function firedByOwners(stats: Pick<SaveStats, "dogs">): number {
   return Object.values(stats.dogs).filter((dog) => dog.timesFired > 0).length;
 }
 
-// Run conditions need the run's facts, so they never hold for a purchase (facts null); profile
-// conditions need the save, so they never hold without one (save null). A condition that counts
-// across walks holds once its progress is complete (acrossWalksProgress).
-export function conditionHolds(
-  data: AchievementData,
-  save: Pick<SaveDocument, "owned" | "stats"> | null,
-  facts: RunFacts | null,
-  condition: AchievementCondition,
-): boolean {
-  const progress = save === null ? null : acrossWalksProgress(data, save, condition);
-  if (progress !== null) {
-    return progress.have >= progress.need;
+// Where badges are judged. bank: a run as it is banked, on the save after it and the run's
+// facts. profile: on launch and after a purchase, on the save alone. run: one run's facts alone,
+// which the simulator counts. Run conditions hold only with a run's facts, and the conditions on
+// the save (what it owns, and what it counts across walks) only with a save.
+export type AchievementScope = "bank" | "profile" | "run";
+
+// What a badge is judged on: the run's facts at bank and run, and the save at bank and profile.
+export interface AchievementFacts {
+  readonly run?: RunFacts;
+  readonly save?: Pick<SaveDocument, "owned" | "stats">;
+}
+
+export type AchievementJudge = Judge<AchievementCondition, AchievementScope, AchievementFacts>;
+
+type Kind<Cond> = ConditionKind<Cond, AchievementScope, AchievementFacts>;
+
+const RUN_SCOPES: readonly AchievementScope[] = ["bank", "run"];
+const SAVE_SCOPES: readonly AchievementScope[] = ["bank", "profile"];
+
+// Its scopes always pass the facts a kind reads, so a missing one is a programming error.
+function present<T>(what: string, value: T | undefined): T {
+  if (value === undefined) {
+    throw new Error(`A badge condition is judged without ${what}`);
   }
+  return value;
+}
+
+// A condition on one run's facts.
+function onRun<Cond>(holds: (facts: RunFacts, condition: Cond) => boolean): Kind<Cond> {
+  return {
+    holds: (facts, condition) => holds(present("a run", facts.run), condition),
+    scopes: RUN_SCOPES,
+  };
+}
+
+// A condition on what the save owns.
+function onOwned<Cond>(
+  holds: (owned: SaveDocument["owned"], condition: Cond) => boolean,
+): Kind<Cond> {
+  return {
+    holds: (facts, condition) => holds(present("a save", facts.save).owned, condition),
+    scopes: SAVE_SCOPES,
+  };
+}
+
+// A condition counted across walks, which holds once its progress is complete.
+function acrossWalks<Cond>(count: (stats: SaveStats, condition: Cond) => Progress): Kind<Cond> {
+  const progress = (facts: AchievementFacts, condition: Cond) =>
+    count(present("a save", facts.save).stats, condition);
+  return {
+    holds: (facts, condition) => {
+      const { have, need } = progress(facts, condition);
+      return have >= need;
+    },
+    progress,
+    scopes: SAVE_SCOPES,
+  };
+}
+
+// The judge of every condition kind. The counts across walks are a lifetime tally, option
+// picks, landed bumps, whole dollars earned net of starting cash, walks played or finished,
+// times fired, the current streak of finished walks with no firing, distinct owners who fired
+// you, distinct dogs and walkers that finished a walk, and distinct zones finished; only they
+// report progress.
+export function achievementJudge(data: AchievementData): AchievementJudge {
   const zones = walkLength(data);
   const dogs = Object.keys(data.dogs).length;
   const walkers = Object.keys(data.walkers).length;
-  switch (condition.kind) {
-    // Counted across walks: here only without a save.
-    case "bumps":
-    case "dogsFinishedWith":
-    case "firedByOwners":
-    case "lifetimeEarnings":
-    case "noFiringStreak":
-    case "optionPicks":
-    case "tally":
-    case "timesFired":
-    case "walkersFinishedWith":
-    case "walksFinished":
-    case "walksPlayed":
-    case "zonesEverFinished":
-      return false;
-    case "cleanZones":
-      return facts !== null && cleanZones(facts) >= needed(zones, condition.count);
-    case "debuffsGot":
-      return facts !== null && (facts.debuffsGot[condition.debuff] ?? 0) >= condition.count;
-    case "dogsOwned":
-      return save !== null && save.owned.dogs.length >= needed(dogs, condition.count);
-    case "earnings":
-      return facts !== null && earnedNet(facts) >= dollarsToCents(condition.dollars);
-    case "finishOnLastHeart":
-      return facts !== null && finishedWalk(facts, zones) && facts.lastHeartOwners > 0;
-    case "fullPackBonus":
-      return (
-        facts !== null &&
+  return judge<AchievementCondition, AchievementScope, AchievementFacts>({
+    bumps: acrossWalks((stats, { count, kinds }) => ({
+      have: landedBumps(stats, kinds),
+      need: count,
+    })),
+    cleanZones: onRun((facts, { count }) => cleanZones(facts) >= resolveThreshold(zones, count)),
+    debuffsGot: onRun((facts, { count, debuff }) => (facts.debuffsGot[debuff] ?? 0) >= count),
+    dogsFinishedWith: acrossWalks((stats, { count }) => ({
+      have: stats.dogsFinishedWith.length,
+      need: resolveThreshold(dogs, count),
+    })),
+    dogsOwned: onOwned((owned, { count }) => owned.dogs.length >= resolveThreshold(dogs, count)),
+    earnings: onRun((facts, { dollars }) => earnedNet(facts) >= dollarsToCents(dollars)),
+    finishOnLastHeart: onRun((facts) => finishedWalk(facts, zones) && facts.lastHeartOwners > 0),
+    firedByOwners: acrossWalks((stats, { count }) => ({
+      have: firedByOwners(stats),
+      need: resolveThreshold(dogs, count),
+    })),
+    fullPackBonus: onRun(
+      (facts, { packSize }) =>
         finishedWalk(facts, zones) &&
         facts.dogsHome === facts.packSize &&
-        facts.packSize >= condition.packSize
-      );
-    case "gearOwned":
-      return (
-        save !== null &&
-        save.owned.gear.length >= needed(Object.keys(data.shopGear).length, condition.count)
-      );
-    case "packSize":
-      return facts !== null && facts.packSize >= condition.count;
-    case "walkersUnlocked":
-      return save !== null && save.owned.walkers.length >= needed(walkers, condition.count);
-    case "zonesFinished":
-      return facts !== null && zonesWalked(facts) >= needed(zones, condition.count);
-    default:
-      return assertNever(condition);
-  }
+        facts.packSize >= packSize,
+    ),
+    gearOwned: onOwned(
+      (owned, { count }) =>
+        owned.gear.length >= resolveThreshold(Object.keys(data.shopGear).length, count),
+    ),
+    lifetimeEarnings: acrossWalks((stats, { dollars }) => ({
+      have: Math.max(0, Math.floor(lifetimeEarnedNet(stats) / dollarsToCents(1))),
+      need: dollars,
+    })),
+    noFiringStreak: acrossWalks((stats, { count }) => ({
+      have: stats.noFiringStreak,
+      need: count,
+    })),
+    optionPicks: acrossWalks((stats, { count, encounter, option }) => ({
+      have: picksOf(stats.optionPicks, encounter, option),
+      need: count,
+    })),
+    packSize: onRun((facts, { count }) => facts.packSize >= count),
+    tally: acrossWalks((stats, { count, tally }) => ({
+      have: stats.tallies[tally] ?? 0,
+      need: count,
+    })),
+    timesFired: acrossWalks((stats, { count }) => ({ have: timesFired(stats), need: count })),
+    walkersFinishedWith: acrossWalks((stats, { count }) => ({
+      have: stats.walkersFinishedWith.length,
+      need: resolveThreshold(walkers, count),
+    })),
+    walkersUnlocked: onOwned(
+      (owned, { count }) => owned.walkers.length >= resolveThreshold(walkers, count),
+    ),
+    walksFinished: acrossWalks((stats, { count }) => ({
+      have: walksFinished(stats),
+      need: count,
+    })),
+    walksPlayed: acrossWalks((stats, { count }) => ({ have: walksPlayed(stats), need: count })),
+    zonesEverFinished: acrossWalks((stats, { count }) => ({
+      have: stats.zonesEverFinished.length,
+      need: resolveThreshold(data.world.zones.length, count),
+    })),
+    zonesFinished: onRun(
+      (facts, { count }) => zonesWalked(facts) >= resolveThreshold(zones, count),
+    ),
+  });
 }
 
-// How far a save has come toward a condition that counts across walks (a lifetime tally,
-// option picks, landed bumps, whole dollars earned net of starting cash, walks played or
-// finished, times fired, the current streak of finished walks with no firing, distinct owners
-// who fired you, distinct dogs and walkers that finished a walk, distinct zones finished): have
-// is capped at need. null for a condition judged on one walk or on what the save owns.
-function acrossWalksProgress(
-  data: Pick<GameData, "dogs" | "walkers" | "world">,
-  save: Pick<SaveDocument, "stats">,
-  condition: AchievementCondition,
-): { readonly have: number; readonly need: number } | null {
-  const progress = (have: number, need: number) => ({ have: Math.min(have, need), need });
-  const dogs = Object.keys(data.dogs).length;
-  const { stats } = save;
-  switch (condition.kind) {
-    case "bumps":
-      return progress(landedBumps(stats, condition.kinds), condition.count);
-    case "dogsFinishedWith":
-      return progress(stats.dogsFinishedWith.length, needed(dogs, condition.count));
-    case "firedByOwners":
-      return progress(firedByOwners(stats), needed(dogs, condition.count));
-    case "lifetimeEarnings":
-      return progress(
-        Math.max(0, Math.floor(lifetimeEarnedNet(stats) / dollarsToCents(1))),
-        condition.dollars,
-      );
-    case "noFiringStreak":
-      return progress(stats.noFiringStreak, condition.count);
-    case "optionPicks":
-      return progress(
-        picksOf(stats.optionPicks, condition.encounter, condition.option),
-        condition.count,
-      );
-    case "tally":
-      return progress(stats.tallies[condition.tally] ?? 0, condition.count);
-    case "timesFired":
-      return progress(timesFired(stats), condition.count);
-    case "walkersFinishedWith":
-      return progress(
-        stats.walkersFinishedWith.length,
-        needed(Object.keys(data.walkers).length, condition.count),
-      );
-    case "walksFinished":
-      return progress(walksFinished(stats), condition.count);
-    case "walksPlayed":
-      return progress(walksPlayed(stats), condition.count);
-    case "zonesEverFinished":
-      return progress(
-        stats.zonesEverFinished.length,
-        needed(data.world.zones.length, condition.count),
-      );
-    case "cleanZones":
-    case "debuffsGot":
-    case "dogsOwned":
-    case "earnings":
-    case "finishOnLastHeart":
-    case "fullPackBonus":
-    case "gearOwned":
-    case "packSize":
-    case "walkersUnlocked":
-    case "zonesFinished":
-      return null;
-    default:
-      return assertNever(condition);
-  }
-}
-
-// A badge's progress toward its one condition when that condition counts across walks; null
-// for a badge with any other condition, or with more than one.
-export function achievementProgress(
-  data: Pick<GameData, "dogs" | "walkers" | "world">,
-  save: Pick<SaveDocument, "stats">,
-  achievement: Pick<Achievement, "conditions">,
-): { readonly have: number; readonly need: number } | null {
-  const [condition, ...rest] = achievement.conditions;
-  return rest.length === 0 ? acrossWalksProgress(data, save, condition) : null;
-}
-
-// The achievements a run end or a purchase earned, in difficulty order: those not yet earned in
-// before whose every condition holds for after, with runFacts for a run (null otherwise).
-export function newlyEarned(
-  data: AchievementData,
-  before: Pick<SaveDocument, "achievements">,
-  after: Pick<SaveDocument, "owned" | "stats">,
-  runFacts: RunFacts | null,
-): AchievementId[] {
-  return orderedAchievements(data.achievements)
-    .filter(
-      ({ conditions, id }) =>
-        !before.achievements.includes(id) &&
-        conditions.every((condition) => conditionHolds(data, after, runFacts, condition)),
-    )
-    .map(({ id }) => id);
-}
-
-// The achievements one run earns on its own facts: those whose every condition is a run
-// condition that holds. The simulator counts them.
-export function earnedByRun(data: AchievementData, facts: RunFacts): AchievementId[] {
-  return orderedAchievements(data.achievements)
-    .filter(({ conditions }) =>
-      conditions.every((condition) => conditionHolds(data, null, facts, condition)),
-    )
-    .map(({ id }) => id);
+// A badge's name with its tier, as a celebration and the message strip name it.
+export function achievementLabel(
+  data: Pick<GameData, "menuText">,
+  achievement: Pick<Achievement, "name" | "tier">,
+): string {
+  return `${achievement.name} (${data.menuText.stats.badgeDifficulty[achievement.tier]})`;
 }
 
 // Each tally in plain words, for the data page.

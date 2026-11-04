@@ -5,13 +5,12 @@ import { type TextFitStyle } from "@andornaut/game-kit/text/textFit";
 import { badgeKey } from "../assets/spriteKeys.ts";
 import type {
   AchievementCondition,
-  AchievementDifficulty,
   AchievementId,
+  AchievementTier,
   GameData,
 } from "../data/types.ts";
 import { MIN_TAP_SIZE } from "../layout/screenLayout.ts";
-import { orderedAchievements } from "../rules/achievementOrder.ts";
-import { achievementProgress } from "../rules/achievements.ts";
+import { type AchievementData, achievementJudge } from "../rules/achievements.ts";
 import type { SaveDocument } from "../save/schema.ts";
 import { closeControl } from "../ui/closeControl.ts";
 import { GREYED } from "../ui/selection.ts";
@@ -24,13 +23,13 @@ import { MODAL } from "./modalLayout.ts";
 export interface BadgeView {
   readonly art: string;
   readonly badgeLine: string;
-  readonly difficulty: AchievementDifficulty;
   readonly earned: boolean;
   readonly goal: string;
   readonly id: AchievementId;
   readonly name: string;
   // The goal to show when the full one does not fit its row on the badge wall.
   readonly shortGoal: string;
+  readonly tier: AchievementTier;
 }
 
 // The PALETTE names a badge's text draws in on the cream panel, by whether it is earned: its
@@ -43,29 +42,29 @@ export const BADGE_TEXT_COLOURS = {
   locked: { goal: "neutralSlate", name: "neutralDarkSlate", status: GREYED.shortPrice },
 } as const;
 
-// Every badge in difficulty order, earned or locked by the save.
+// Every badge in tier order, earned or locked by earned, the ids earned.
 export function badgeWall(
   data: Pick<GameData, "achievements">,
-  save: Pick<SaveDocument, "achievements">,
+  earned: readonly AchievementId[],
 ): BadgeView[] {
-  return orderedAchievements(data.achievements).map((achievement) => ({
+  return data.achievements.map((achievement) => ({
     art: badgeKey(achievement.id),
     badgeLine: achievement.badgeLine,
-    difficulty: achievement.difficulty,
-    earned: save.achievements.includes(achievement.id),
+    earned: earned.includes(achievement.id),
     goal: achievement.goal,
     id: achievement.id,
     name: achievement.name,
     shortGoal: achievement.shortGoal ?? achievement.goal,
+    tier: achievement.tier,
   }));
 }
 
-// The badges ids name, earned, in difficulty order: a strip of badges just earned.
+// The badges ids name, earned, in tier order: a strip of badges just earned.
 export function earnedBadges(
   data: Pick<GameData, "achievements">,
   ids: readonly AchievementId[],
 ): BadgeView[] {
-  return badgeWall(data, { achievements: [] })
+  return badgeWall(data, [])
     .filter(({ id }) => ids.includes(id))
     .map((badge) => ({ ...badge, earned: true }));
 }
@@ -92,15 +91,17 @@ function progressAmountText(kind: AchievementCondition["kind"], amount: number):
 // "$1,234/$20,000"); undefined for an earned badge and for one judged on a single walk or on
 // what the save owns.
 export function badgeProgress(
-  data: Pick<GameData, "achievements" | "dogs" | "menuText" | "walkers" | "world">,
-  save: Pick<SaveDocument, "stats">,
+  data: AchievementData & Pick<GameData, "menuText">,
+  save: Pick<SaveDocument, "owned" | "stats">,
   badge: Pick<BadgeView, "earned" | "id">,
 ): string | undefined {
   const achievement = data.achievements.find(({ id }) => id === badge.id);
   const progress =
-    badge.earned || achievement === undefined ? null : achievementProgress(data, save, achievement);
+    badge.earned || achievement === undefined
+      ? undefined
+      : achievementJudge(data).progress("profile", { save }, achievement.conditions);
   const kind = achievement?.conditions[0]?.kind;
-  return progress === null || kind === undefined
+  return progress === undefined || kind === undefined
     ? undefined
     : fillLine(MENU_TEXT_FIELDS.stats, data.menuText.stats, "badgeProgress", {
         have: progressAmountText(kind, progress.have),

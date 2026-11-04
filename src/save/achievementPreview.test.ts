@@ -1,3 +1,8 @@
+import {
+  type AchievementPreview,
+  NOTHING_PREVIEWED,
+  previewAchievements,
+} from "@andornaut/game-kit/achievements/preview";
 import { describe, expect, it } from "vitest";
 
 import { gameData } from "../data/index.ts";
@@ -8,13 +13,7 @@ import { finishZone, headHome } from "../runner/walk.ts";
 import { newRun, type RunState } from "../state/runState.ts";
 import { earningsGoal, packOf, runFactsFor } from "../testing/achievements.ts";
 import { newPlayerSave, testAwards } from "../testing/saves.ts";
-import {
-  type AchievementPreview,
-  earnedIfBanked,
-  NOTHING_PREVIEWED,
-  previewAchievements,
-} from "./achievementPreview.ts";
-import { earnedSince } from "./achievements.ts";
+import { earnedIfBanked, previewedEarned, previewKey } from "./achievementPreview.ts";
 import { recordCheckpoint, recordRunEnd } from "./checkpoint.ts";
 import { checkpointOf, runResultOf } from "./runSlices.ts";
 
@@ -24,14 +23,15 @@ const zoneDone = (run: RunState) => finishZone(gameData, run).run;
 // Previews the run against the save as it stands, counting how often the bank is looked at.
 function previewer(save = newPlayerSave) {
   let looks = 0;
-  const earned = (result: Parameters<typeof earnedIfBanked>[2]) => {
+  const banked = (result: Parameters<typeof earnedIfBanked>[3]) => {
     looks += 1;
-    return earnedIfBanked(testAwards, save, result);
+    return earnedIfBanked(testAwards, [], save, result);
   };
+  const earned = (run: RunState) => previewedEarned(gameData, banked, run);
   return {
     looks: () => looks,
-    preview: (preview: AchievementPreview, run: RunState) =>
-      previewAchievements(gameData, earned, preview, run),
+    preview: (preview: AchievementPreview<AchievementId>, run: RunState) =>
+      previewAchievements(previewKey, earned, preview, run),
   };
 }
 
@@ -81,7 +81,7 @@ function walkOf(packSize: number, bumped = false): RunState[] {
 // What each look over a walk toasts, and what the walk has shown by its end.
 function previewWalk(runs: readonly RunState[]) {
   const { preview } = previewer();
-  let previewed = NOTHING_PREVIEWED;
+  let previewed: AchievementPreview<AchievementId> = NOTHING_PREVIEWED;
   const toasts = runs.map((run) => {
     const looked = preview(previewed, run);
     previewed = looked.preview;
@@ -150,11 +150,11 @@ describe("previewAchievements", () => {
     const toasted = preview(preview(NOTHING_PREVIEWED, start).preview, zone1).preview.shown;
     // The save mid-walk holds only the checkpoint, as the run scene writes it.
     const midWalk = recordCheckpoint(newPlayerSave, checkpointOf(gameData, zone1));
-    expect(midWalk.achievements).toEqual([]);
-    const ended = recordRunEnd(testAwards, midWalk, runResultOf(gameData, headHome(zone1)));
-    const celebrated: AchievementId[] = earnedSince(gameData, midWalk, ended);
+    const result = runResultOf(gameData, headHome(zone1));
+    const ended = recordRunEnd(testAwards, midWalk, result);
+    const celebrated = earnedIfBanked(testAwards, [], midWalk, result);
     expect(celebrated).toEqual(expect.arrayContaining([...toasted]));
     expect(new Set(celebrated).size).toBe(celebrated.length);
-    expect(earnedIfBanked(testAwards, ended, runResultOf(gameData, headHome(zone1)))).toEqual([]);
+    expect(earnedIfBanked(testAwards, celebrated, ended, result)).toEqual([]);
   });
 });

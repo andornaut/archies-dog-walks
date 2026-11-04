@@ -1,3 +1,8 @@
+import {
+  type AchievementPreview,
+  NOTHING_PREVIEWED,
+  previewAchievements,
+} from "@andornaut/game-kit/achievements/preview";
 import type { Random } from "@andornaut/game-kit/random";
 import type { Point, Rect } from "@andornaut/game-kit/rect";
 import type { Scene } from "phaser";
@@ -5,7 +10,7 @@ import type { Scene } from "phaser";
 import { debuffSoundCue } from "../../audio/sound.ts";
 import { choiceCues, contactCues, pullCues, stepCues } from "../../audio/stepCues.ts";
 import { gameData } from "../../data/index.ts";
-import type { DogId, EncounterId, HintId, HintTrigger } from "../../data/types.ts";
+import type { AchievementId, DogId, EncounterId, HintId, HintTrigger } from "../../data/types.ts";
 import {
   type BuffPop,
   heartPopDogs,
@@ -83,11 +88,7 @@ import { minorLook, minorObstacleName } from "../../runner/obstacleLooks.ts";
 import type { PullStep } from "../../runner/pulls.ts";
 import type { EncounterCard, MinorBump, WalkStep } from "../../runner/walk.ts";
 import type { WalkItem } from "../../runner/walkItems.ts";
-import {
-  type AchievementPreview,
-  NOTHING_PREVIEWED,
-  previewAchievements,
-} from "../../save/achievementPreview.ts";
+import { previewedEarned, previewKey } from "../../save/achievementPreview.ts";
 import type { RunResult } from "../../save/checkpoint.ts";
 import { packDogs } from "../../state/pack.ts";
 import type { EffectSource, EndReason, RunState } from "../../state/runState.ts";
@@ -193,7 +194,7 @@ interface RunMomentsDeps {
 // hints and badge lines, and the HUD's feedback moments they cue. It keeps the money and
 // heart changes the run banks, and what the end screen waits for.
 export class RunMoments {
-  private achievements: AchievementPreview = NOTHING_PREVIEWED;
+  private achievements: AchievementPreview<AchievementId> = NOTHING_PREVIEWED;
   private readonly changes: Change[] = [];
   private readonly contactFrame = new ContactImpactFrame();
   private readonly deps: RunMomentsDeps;
@@ -583,8 +584,9 @@ export class RunMoments {
   // Badges the walk so far would earn on heading home show on the HUD's message strip; nothing
   // is awarded until the walk is banked.
   previewAchievements(run: RunState): void {
-    const earned = (result: RunResult) => earnedIfBanked(this.scene, result);
-    const preview = previewAchievements(gameData, earned, this.achievements, run);
+    const banked = (result: RunResult) => earnedIfBanked(this.scene, result);
+    const earned = (subject: RunState) => previewedEarned(gameData, banked, subject);
+    const preview = previewAchievements(previewKey, earned, this.achievements, run);
     this.achievements = preview.preview;
     if (preview.earned.length > 0) {
       this.scene.events.emit(ACHIEVEMENTS_EVENT, preview.earned);

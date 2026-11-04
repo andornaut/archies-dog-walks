@@ -4,7 +4,9 @@
 // module needs no Phaser.
 import "./devPanel.css";
 
+import { saveStore } from "@andornaut/game-kit/save/saveStore";
 import type { StoragePersistence } from "@andornaut/game-kit/web/pwa/storagePersistence";
+import { localSaveStorage } from "@andornaut/game-kit/web/save/dom/localSaveStorage";
 import {
   sessionRead,
   sessionRemove,
@@ -15,7 +17,7 @@ import { gameData } from "../data/index.ts";
 import { saveContextFrom } from "../save/load.ts";
 import { loadedSave, newPlayerOnDevice } from "../save/profile.ts";
 import { createDefaultSave } from "../save/schema.ts";
-import { pageSaveStore } from "../save/storage.ts";
+import { EARNED_KEYS, earnedRecordFormat, pageSaveStore } from "../save/storage.ts";
 import {
   applyPanel,
   applySaveEdit,
@@ -83,6 +85,22 @@ function button(text: string, onClick: () => void, className = "dev-button"): HT
   return element;
 }
 
+// A reset clears the earned badges too, kept apart from the save, unless a later version wrote
+// them or storage cannot be read.
+async function resetEarned(): Promise<void> {
+  const format = earnedRecordFormat(gameData);
+  const store = saveStore(localSaveStorage(), EARNED_KEYS, format);
+  const loaded = await store.load();
+  if (loaded.status === "newer" || loaded.status === "unavailable") {
+    console.warn(`Dev panel: earned badges not reset: ${loaded.reason}`);
+    return;
+  }
+  const saved = await store.save(format.fresh());
+  if (saved.status !== "saved") {
+    console.warn(`Dev panel: earned badges not reset: ${saved.reason}`);
+  }
+}
+
 // Called before the game boots: the save edits the panel queued are written to the save
 // before the game loads it. They are removed first, so an edit that fails is not retried.
 export async function applyPendingSaveEdits(): Promise<void> {
@@ -107,6 +125,9 @@ export async function applyPendingSaveEdits(): Promise<void> {
     const saved = await store.save(edited);
     if (saved.status !== "saved") {
       console.warn(`Dev panel: save edits not applied: ${saved.reason}`);
+    }
+    if (edits.some(({ kind }) => kind === "reset")) {
+      await resetEarned();
     }
   } catch (error) {
     console.warn("Dev panel: save edits not applied", error);

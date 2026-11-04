@@ -16,7 +16,7 @@ import {
 import { celebrationText } from "../hud/zoneCelebration.ts";
 import type { Owned } from "../save/schema.ts";
 import { fontFileMetrics, gameGlyphs, inkWidth } from "../testing/fontInk.ts";
-import { veteranSave } from "../testing/saves.ts";
+import { VETERAN_EARNED, veteranSave } from "../testing/saves.ts";
 import { plainMarks } from "../ui/pixelFont.ts";
 import { TEXT_SCALE } from "../ui/textFit.ts";
 import { cents } from "../units.ts";
@@ -194,7 +194,7 @@ const confirmPairs: Pair[] = SHOP_ROWS.flatMap(({ price }) => {
 
 // A badge's wall row's name over its goal, and its open card's name over its status.
 const SAVE = veteranSave();
-const BADGES = badgeWall(gameData, SAVE);
+const BADGES = badgeWall(gameData, VETERAN_EARNED);
 const wallPairs: Pair[] = BADGES.flatMap((badge) => {
   const width = (line: string) => inkWidth("font-body", { scale: TEXT_SCALE }, line);
   const cell = wallCell(STATS_LAYOUT.wallText, width, badge, badgeProgress(gameData, SAVE, badge));

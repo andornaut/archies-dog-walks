@@ -1,3 +1,4 @@
+import type { AchievementDef, Threshold } from "@andornaut/game-kit/achievements";
 import type { MenuInstallBrowser } from "@andornaut/game-kit/web/pwa/installState";
 
 import type { ACHIEVEMENTS } from "./achievements.ts";
@@ -1193,7 +1194,7 @@ export interface MenuText {
     readonly volume: string;
   };
   readonly stats: {
-    readonly badgeDifficulty: Readonly<Record<AchievementDifficulty, string>>;
+    readonly badgeDifficulty: Readonly<Record<AchievementTier, string>>;
     readonly badgeEarned: string;
     readonly badgeLine: string;
     readonly badgeLocked: string;
@@ -1273,7 +1274,7 @@ export interface Hint {
 }
 
 // How many a condition needs: a number, or "all" of what the game data has.
-export type Threshold = number | "all";
+export type { Threshold };
 
 // What earns an achievement. Run conditions are judged on one run as it is banked: zones it
 // finished (all: every zone of a walk), zones it finished without a bump, dogs it set out
@@ -1317,14 +1318,11 @@ export type AchievementCondition =
 
 // A badge on the Logbook's wall, earned once every condition holds. Celebration only: it
 // changes nothing in play. The badge art is badge-<id in kebab case>.
-export type AchievementDifficulty = "easy" | "medium" | "hard";
+export type AchievementTier = "easy" | "medium" | "hard";
 
-export interface Achievement {
+export interface Achievement extends AchievementDef<string, AchievementCondition, AchievementTier> {
   readonly badgeLine: string;
-  readonly conditions: readonly [AchievementCondition, ...AchievementCondition[]];
-  readonly difficulty: AchievementDifficulty;
   readonly goal: string;
-  readonly id: string;
   readonly name: string;
   // The goal on the badge wall when the full goal does not fit beside the name.
   readonly shortGoal?: string;
@@ -1366,7 +1364,7 @@ export interface AmbientMover {
 }
 
 export interface GameData {
-  // Authored order is retained within each difficulty tier.
+  // In tier order, easy first, keeping authored order within each tier.
   readonly achievements: readonly [GameAchievement, ...GameAchievement[]];
   // Each zone's ambient movers.
   readonly ambient: Readonly<Record<ZoneId, readonly AmbientMover[]>>;

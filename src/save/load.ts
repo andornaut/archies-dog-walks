@@ -4,7 +4,6 @@ import type { Checked, SaveFormat } from "@andornaut/game-kit/save/versionedSave
 import * as v from "valibot";
 
 import type {
-  AchievementId,
   DebuffId,
   DogId,
   EncounterId,
@@ -33,7 +32,6 @@ import {
 
 // The content ids the game currently has.
 interface KnownIds {
-  achievements: ReadonlySet<AchievementId>;
   debuffs: ReadonlySet<DebuffId>;
   // The dog slots by number, counting from 1.
   dogSlots: ReadonlySet<number>;
@@ -54,7 +52,6 @@ export interface SaveContext {
 
 type SaveData = Pick<
   GameData,
-  | "achievements"
   | "debuffs"
   | "defaultWalker"
   | "dogSlots"
@@ -87,7 +84,6 @@ export function saveContextFrom(data: SaveData): SaveContext {
       walker: data.defaultWalker,
     },
     known: {
-      achievements: new Set(data.achievements.map(({ id }) => id)),
       debuffs: new Set(keysOf(data.debuffs)),
       dogSlots: new Set(data.dogSlots.map((_, i) => i + 1)),
       dogs: new Set(dogs),
@@ -184,7 +180,6 @@ function dropUnknownIds(context: SaveContext, save: StoredSave): SaveDocument {
   const { checkpoint, settings, stats } = save;
   return {
     ...save,
-    achievements: keepKnown(known.achievements, save.achievements),
     checkpoint:
       checkpoint === null
         ? null
