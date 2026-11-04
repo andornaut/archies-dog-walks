@@ -75,12 +75,15 @@ function walkEvidence(observed: readonly Observed[], result: RunResult): WalkEvi
 
 const json = (value: unknown) => `${JSON.stringify(value, null, 2)}\n`;
 
+// A caller mistake the CLI reports as a message, not a stack trace.
+export class UsageError extends Error {}
+
 // Runs the fixed acceptance batch into out, route outer and seed inner, and stops at the first
 // walk with a failed criterion or evidence defect, keeping that walk's observations. Returns
-// whether the batch passed.
+// whether the batch passed. Throws a UsageError when out is not empty.
 export function runBatch(commit: string | null, out: string): boolean {
   if (existsSync(out) && readdirSync(out).length > 0) {
-    throw new Error(`${out} is not empty; give each batch a new output folder`);
+    throw new UsageError(`${out} is not empty; give each batch a new output folder`);
   }
   mkdirSync(out, { recursive: true });
   const allowance = SLOT_LIMITS.candidateChecks;

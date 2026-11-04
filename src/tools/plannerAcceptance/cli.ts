@@ -1,12 +1,12 @@
 // Planner acceptance batch: npm run planner:acceptance -- <out-dir> [--commit <sha>]
-import { runBatch } from "./run.ts";
+import { runBatch, UsageError } from "./run.ts";
 
 const USAGE = "Usage: planner:acceptance <out-dir> [--commit <sha>]";
 
 function parse(args: readonly string[]): { commit: string | null; out: string } {
   const [out, ...rest] = args;
   if (out === undefined || out.startsWith("-")) {
-    throw new Error(USAGE);
+    throw new UsageError(USAGE);
   }
   if (rest.length === 0) {
     return { commit: null, out };
@@ -14,8 +14,16 @@ function parse(args: readonly string[]): { commit: string | null; out: string } 
   if (rest.length === 2 && rest[0] === "--commit" && rest[1] !== undefined) {
     return { commit: rest[1], out };
   }
-  throw new Error(USAGE);
+  throw new UsageError(USAGE);
 }
 
-const { commit, out } = parse(process.argv.slice(2));
-process.exitCode = runBatch(commit, out) ? 0 : 1;
+try {
+  const { commit, out } = parse(process.argv.slice(2));
+  process.exitCode = runBatch(commit, out) ? 0 : 1;
+} catch (error) {
+  if (!(error instanceof UsageError)) {
+    throw error;
+  }
+  console.error(error.message);
+  process.exitCode = 2;
+}
