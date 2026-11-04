@@ -7,19 +7,18 @@ import { writeFileSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 
 import { rgb } from "@andornaut/art-kit/colour";
-import type { Rgb, Sprite, Tag } from "@andornaut/art-kit/frames";
+import type { Sprite, Tag } from "@andornaut/art-kit/frames";
 import type { Frame } from "@andornaut/art-kit/grid";
 import { decodePng } from "@andornaut/art-kit/png";
 import { composeContactSheet } from "@andornaut/art-kit/raster";
 
-import { groundSheetPath, rgbPng, run, ZONE_ROADS } from "./pixel.ts";
+import { groundSheetPath, PREVIEW_BACKGROUND, rgbPng, run, ZONE_ROADS } from "./pixel.ts";
 
 interface SheetData {
   frames: Record<string, { frame: { h: number; w: number; x: number; y: number } }>;
   meta: { frameTags?: { from: number; name: string; to: number }[] };
 }
 
-const BACKGROUND: Rgb = [24, 20, 37];
 const GAP = 4;
 const SCALE = 6;
 const SPRITES_DIR = "public/art/sprites";
@@ -54,7 +53,7 @@ async function contactSheets(keys: readonly string[], out: string): Promise<void
   for (const ground of new Set(ZONE_ROADS)) {
     const sheet = composeContactSheet(
       {
-        background: BACKGROUND,
+        background: PREVIEW_BACKGROUND,
         cellSize: "largest-frame",
         gap: GAP,
         resolveRgb: rgb,
