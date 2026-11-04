@@ -131,6 +131,7 @@ function optionModified(encounter: EncounterId, index: number, state: RunState):
 
 const sources = {
   bigTipper: { kind: "upgrade", upgrade: "bigTipper" },
+  charmer: { kind: "upgrade", upgrade: "charmer" },
   goodLeash: { kind: "upgrade", upgrade: "goodLeash" },
   hallPass: { gear: "hallPass", kind: "gear" },
   longReach: { kind: "walker", walker: walkerWith("longReach") },
@@ -138,7 +139,6 @@ const sources = {
   quickRecovery: { kind: "walker", walker: walkerWith("quickRecovery") },
   runningShoes: { gear: "runningShoes", kind: "gear" },
   secondChance: { kind: "walker", walker: walkerWith("secondChance") },
-  charmer: { kind: "upgrade", upgrade: "charmer" },
 } as const satisfies Record<string, EffectSource>;
 
 const by = (amount: number, source: ModifierSource) => [{ amount, kind: "modifier", source }];
