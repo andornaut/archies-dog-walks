@@ -19,6 +19,7 @@ import {
 } from "../../hud/buffMarks";
 import { type EffectItem, effectItems, gearWell } from "../../hud/effectIcons";
 import { heartPopFrame, stackOverPop } from "../../hud/feedback";
+import { stepHintTriggers } from "../../hud/hintTriggers";
 import { changeLabels, reachedLabels, totalLabel } from "../../hud/hudView";
 import type { MessageLine } from "../../hud/messageStrip";
 import {
@@ -396,6 +397,7 @@ export class RunMoments {
       this.addChanges(overPack(pack), outcomeChanges(outcome));
       this.afterOutcome(outcome);
     }
+    stepHintTriggers(step).forEach((trigger) => this.hint(trigger));
     const debuffCues = this.contactFrame.takeDebuffs(
       this.scene.game.loop.frame,
       contactDebuffBatch(

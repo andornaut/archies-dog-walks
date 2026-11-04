@@ -1,13 +1,16 @@
 import { describe, expect, it } from "vitest";
 
 import { gameData } from "../data";
+import type { EncounterId, HintId } from "../data/types";
 import { hintFor } from "../rules/hints";
 import { testState } from "../testing/runState";
+import { atPack, step, walkWith } from "../testing/walk";
 import {
   cardHintTriggers,
   moverHintTriggers,
   runHintTriggers,
   startHintTriggers,
+  stepHintTriggers,
 } from "./hintTriggers";
 
 describe("cardHintTriggers", () => {
@@ -41,6 +44,33 @@ describe("runHintTriggers", () => {
     expect(kinds(testState({ ginger: 5, kilo: 1 }))).toEqual(["firedOwner"]);
     expect(kinds(testState({ ginger: 5, kilo: "fired" }))).toEqual([]);
   });
+});
+
+describe("stepHintTriggers", () => {
+  // The hint text the data keys to an encounter.
+  const encounterHints = (encounter: EncounterId) =>
+    Object.values(gameData.hints).flatMap(({ text, trigger }) =>
+      trigger.kind === "encounter" && trigger.encounter === encounter ? [text] : [],
+    );
+
+  it.each(["pothole", "puddle"] as const)(
+    "says the %s hint once as the pack touches one, and not again at the next",
+    (encounter) => {
+      const shown: HintId[] = [];
+      const said: string[] = [];
+      for (let met = 0; met < 2; met += 1) {
+        for (const trigger of stepHintTriggers(step(walkWith(["kilo"], [atPack(encounter)])))) {
+          const hint = hintFor(gameData, shown, trigger);
+          if (hint !== null) {
+            shown.push(hint.id);
+            said.push(hint.text);
+          }
+        }
+      }
+      expect(encounterHints(encounter)).toHaveLength(1);
+      expect(said).toEqual(encounterHints(encounter));
+    },
+  );
 });
 
 describe("startHintTriggers", () => {

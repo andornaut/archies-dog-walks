@@ -1,6 +1,7 @@
 import type { CardSource, HintTrigger, LiveTuning } from "../data/types";
 import { packSizeBonus, placeInPack } from "../rules/dogs";
 import type { MoverTell } from "../runner/movers";
+import type { WalkStep } from "../runner/walk";
 import type { RunState } from "../state/runState";
 import { lowHeartDogs } from "./moments";
 
@@ -21,6 +22,14 @@ export function cardHintTriggers(source: CardSource): HintTrigger[] {
 // or along its lanes. The wander mark before a step is no arrow, so it raises none.
 export function moverHintTriggers(tell: MoverTell | null): HintTrigger[] {
   return tell === null || tell.kind === "wander" ? [] : [{ kind: "moverCue" }];
+}
+
+// The hint triggers a walk step raises as the pack touches a contact obstacle, such as a puddle:
+// its encounter's. A minor obstacle's contact raises none.
+export function stepHintTriggers(step: Pick<WalkStep, "contacts">): HintTrigger[] {
+  return step.contacts.flatMap(({ source }): HintTrigger[] =>
+    source.kind === "encounter" ? [{ encounter: source.encounter, kind: "encounter" }] : [],
+  );
 }
 
 // The hint triggers the run's state raises while it lasts: an owner down to their last heart.
