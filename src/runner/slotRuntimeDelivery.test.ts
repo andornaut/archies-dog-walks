@@ -64,7 +64,7 @@ function fixture(missing: number | undefined, guaranteed = 0) {
 }
 
 // Rejects wall-4's first native commits while its cursor still holds valid values.
-function rejectingFixture(failures = SLOT_OMISSION_ATTEMPTS.reserve) {
+function rejectingFixture(failures: number = SLOT_OMISSION_ATTEMPTS.reserve) {
   const value = fixture(undefined);
   let rejected = 0;
   const state: typeof value.state = {
