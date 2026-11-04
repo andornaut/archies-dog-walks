@@ -13,7 +13,7 @@
   const REPO = "https://github.com/andornaut/archies-dog-walks";
   // /:account picks the signed-in account, so the URL names no account id.
   const DASHBOARD =
-    "https://dash.cloudflare.com/?to=/:account/workers/services/view/dog-walker-game";
+    "https://dash.cloudflare.com/?to=/:account/workers/services/view/archies-dog-walks";
   // Cloudflare serves /x.html as /x and /dir/index.html as /dir/, so compare without either.
   const norm = (path) => path.replace(/(index)?\.html$/, "").replace(/\/$/, "");
   const here = norm(location.pathname);

@@ -58,7 +58,7 @@ CI runs check, lint, test and build, and the AI attributions scan.
 
 ## Deploying
 
-- [Cloudflare dashboard](https://dash.cloudflare.com/?to=/:account/workers/services/view/dog-walker-game)
+- [Cloudflare dashboard](https://dash.cloudflare.com/?to=/:account/workers/services/view/archies-dog-walks)
 
 Deployments run through a scheduled local bus hourly at :00, in Toronto time. Each departure combines ready work into one batch, installs its locked dependencies and runs type checking, lint, tests and the build in isolated containers, capped at four CPUs and four test workers. A batch starts only while the 1-minute host load is below 24. Full validation runs at departure, not separately for each branch.
 

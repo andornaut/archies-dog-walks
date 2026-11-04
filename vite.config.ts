@@ -44,7 +44,7 @@ export default gameViteConfig<typeof ConfigModules>({
   },
   // The container name the Playwright MCP reaches the dev or preview server by, over the
   // playwright-mcp Docker network. Vite rejects any other Host header.
-  previewHost: "dwg-preview",
+  previewHost: "adw-preview",
   repoRoot: import.meta.dirname,
   // Whole-walk tests run several seconds alone and several times that on a loaded host or a
   // CI runner, so the default 5 s is too tight; the slowest blocks set their own, longer limit.
