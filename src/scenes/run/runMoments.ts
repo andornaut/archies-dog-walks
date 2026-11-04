@@ -329,17 +329,17 @@ export class RunMoments {
     for (const { change, item } of step.tips) {
       this.addChanges(overPack(pack), [change], 0, reached.get(item.id));
     }
-    // A tip twinkles over the lead dog, its only sparkle; everything else grabbed sparkles over
-    // the pack.
+    // A tip, or a treat that pays cash, twinkles over the lead dog, its only sparkle; everything
+    // else grabbed sparkles over the pack.
     const sparkles = stepSparkles(step);
     if (sparkles.tip) {
       this.deps.pack.tipGrabbed(this.deps.still());
     }
-    for (const item of sparkles.overPack) {
+    sparkles.overPack.forEach(() => {
       playEffect(this.scene, "fx-sparkle", "play", overPack(pack), DEPTH.fx);
-      if (item.kind === "treat") {
-        this.hint({ kind: "treat" });
-      }
+    });
+    if (step.treats.length > 0) {
+      this.hint({ kind: "treat" });
     }
     // A treat cheers the owner of the dog that grabbed it, or with every owner at their max goes
     // into the gear that holds spare treats, such as the Fanny pack, whose well glints, or pays

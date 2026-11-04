@@ -8,23 +8,90 @@ import { type SparkleTops, stepSparkles, TIP_SPARKLE, TipSparkle } from "./tipSp
 
 const TIP = { id: 1, kind: "tip" } as WalkItem;
 const TREAT = { id: 2, kind: "treat" } as WalkItem;
+const WALLET = { id: 3, kind: "lostWallet" } as WalkItem;
 
-// A step that collected items, of which tips are the tips grabbed.
-function step(collected: WalkItem[], tips: WalkItem[]): Pick<WalkStep, "collected" | "tips"> {
-  const tip = { change: { amount: 1 } };
-  return { collected, tips: tips.map((item) => ({ ...tip, item })) } as Pick<
-    WalkStep,
-    "collected" | "tips"
-  >;
+type SparkleStep = Pick<WalkStep, "bumps" | "collected" | "instants" | "tips" | "treats">;
+
+const money = (amount: number) => ({ amount, causes: [], dog: null, kind: "money" });
+
+// A step that collected items, of which tips are the tips grabbed, each paying tipCash; treats
+// grabbed, each healing a heart or, with cash, paying it; instants lucky finds paying cash; and
+// bumps costing cash.
+function step(
+  collected: WalkItem[],
+  tips: WalkItem[],
+  parts: {
+    bumps?: number[];
+    instants?: number[];
+    tipCash?: number;
+    treats?: (number | null)[];
+  } = {},
+): SparkleStep {
+  const { bumps = [], instants = [], tipCash = 1, treats = [] } = parts;
+  return {
+    bumps: bumps.map((amount) => ({
+      cash: money(amount),
+      change: null,
+      dodged: false,
+      dog: "archie",
+      item: { id: 4, kind: "litter" },
+    })),
+    collected,
+    instants: instants.map((amount) => ({
+      encounter: "lostWallet",
+      item: WALLET,
+      outcome: { moneyChanges: [money(amount)], moneyDelta: amount },
+    })),
+    tips: tips.map((item) => ({ change: money(tipCash), item })),
+    treats: treats.map((cash) => ({
+      cash: cash === null ? null : money(cash),
+      change: cash === null ? { amount: 1, causes: [], dog: "archie", kind: "hearts" } : null,
+      dog: "archie",
+      item: TREAT,
+      stored: false,
+    })),
+  } as unknown as SparkleStep;
 }
 
 describe("stepSparkles", () => {
   it.each([
-    ["a tip plays the tip sparkle and does not sparkle over the pack", [TIP], [TIP], [], true],
-    ["a treat sparkles over the pack and plays no tip sparkle", [TREAT], [], [TREAT], false],
-    ["a tip and a treat sparkle once each, where each belongs", [TIP, TREAT], [TIP], [TREAT], true],
-  ])("%s", (_, collected, tips, overPack, tip) => {
-    expect(stepSparkles(step(collected, tips))).toEqual({ overPack, tip });
+    ["a tip plays the tip sparkle and does not sparkle over the pack", [TIP], [TIP], {}, [], true],
+    ["a Stinky tip paying $0 still plays the tip sparkle", [TIP], [TIP], { tipCash: 0 }, [], true],
+    [
+      "a treat healing a heart sparkles over the pack and plays no tip sparkle",
+      [TREAT],
+      [],
+      { treats: [null] },
+      [TREAT],
+      false,
+    ],
+    [
+      "a treat paying cash plays the tip sparkle and does not sparkle over the pack",
+      [TREAT],
+      [],
+      { treats: [5] },
+      [],
+      true,
+    ],
+    [
+      "a tip and a healing treat sparkle once each, where each belongs",
+      [TIP, TREAT],
+      [TIP],
+      { treats: [null] },
+      [TREAT],
+      true,
+    ],
+    [
+      "a Lost wallet's jackpot plays no tip sparkle, as its art pops over the pickup",
+      [],
+      [],
+      { instants: [20] },
+      [],
+      false,
+    ],
+    ["a bump costing cash plays no tip sparkle", [], [], { bumps: [-2] }, [], false],
+  ])("%s", (_, collected, tips, parts, overPack, tip) => {
+    expect(stepSparkles(step(collected, tips, parts))).toEqual({ overPack, tip });
   });
 });
 

@@ -6,9 +6,9 @@ import type { WalkStep } from "../../runner/walk.ts";
 import type { WalkItem } from "../../runner/walkItems.ts";
 import { playTagOnce } from "../sprites.ts";
 
-// The sprite a collected tip twinkles once over the lead dog: centred on the dog's centre
-// column, gap px plus half its frame height above the dog's top opaque row, so its bottom edge
-// is gap px above the dog. Its frame size is read from the loaded texture.
+// The sprite a collected tip, or a treat that pays cash, twinkles once over the lead dog: centred
+// on the dog's centre column, gap px plus half its frame height above the dog's top opaque row,
+// so its bottom edge is gap px above the dog. Its frame size is read from the loaded texture.
 export const TIP_SPARKLE = {
   gap: 4,
   key: "fx-tip-sparkle",
@@ -22,23 +22,29 @@ export interface SparkleTops {
   walker: Point;
 }
 
-// What a step's grabs sparkle: fx-sparkle over the pack for each collected item but a tip,
-// and the tip sparkle when it grabbed a tip.
-export function stepSparkles(step: Pick<WalkStep, "collected" | "tips">): {
+// What a step's grabs sparkle: the tip sparkle when it grabbed a tip, a Stinky tip's $0
+// included, or a treat that paid cash, each of which plays no other sparkle, and fx-sparkle over
+// the pack for each other collected item. A lucky find's cash pops its own art over its pickup,
+// and the step's other money changes are a bump's or a contact's, which play their own hit, so
+// none of them plays the tip sparkle.
+export function stepSparkles(step: Pick<WalkStep, "collected" | "tips" | "treats">): {
   overPack: WalkItem[];
   tip: boolean;
 } {
-  const tips = new Set(step.tips.map(({ item }) => item.id));
+  const paid = new Set([
+    ...step.tips.map(({ item }) => item.id),
+    ...step.treats.flatMap(({ cash, item }) => (cash !== null && cash.amount > 0 ? [item.id] : [])),
+  ]);
   return {
-    overPack: step.collected.filter((item) => !tips.has(item.id)),
-    tip: step.tips.length > 0,
+    overPack: step.collected.filter((item) => !paid.has(item.id)),
+    tip: paid.size > 0,
   };
 }
 
-// The pack's one tip sparkle: a tip plays it once, and a tip grabbed while it plays restarts
-// it, so sparkles never stack. While it plays it follows the lead dog's top, read by tops each
-// frame, so it moves to a new lead, and the walker's when no lead dog is shown; it is hidden
-// when it ends. Reduced motion skips it; nothing is drawn when the art is missing.
+// The pack's one tip sparkle: a tip or a treat's cash plays it once, and another grabbed while
+// it plays restarts it, so sparkles never stack. While it plays it follows the lead dog's top,
+// read by tops each frame, so it moves to a new lead, and the walker's when no lead dog is shown;
+// it is hidden when it ends. Reduced motion skips it; nothing is drawn when the art is missing.
 export class TipSparkle {
   private readonly depth: number;
   private readonly scene: Scene;

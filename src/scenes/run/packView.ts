@@ -72,8 +72,8 @@ export class PackView {
     }));
   }
 
-  // A grabbed tip twinkles over the lead dog, or the walker with no dog shown, restarting a
-  // twinkle still playing; reduced motion skips it.
+  // A grabbed tip, or a treat that pays cash, twinkles over the lead dog, or the walker with no
+  // dog shown, restarting a twinkle still playing; reduced motion skips it.
   tipGrabbed(still: boolean): void {
     this.tipSparkle.play(still);
   }
