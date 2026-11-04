@@ -1,7 +1,8 @@
 // node art/tools/home_grabs.ts OUT_DIR [BASE_URL]
 // Retake the home page's canvas grabs, home-road.png and home-start.png (360x560, the game canvas
-// at 1x), from a built game served at BASE_URL (default http://dwg-preview:4173), and write them
-// to OUT_DIR. Copy them to public/art/site/ to update the home page.
+// at 1x), from a built game served at BASE_URL (default http://<previewHost>:4173, the preview
+// container vite.config.ts names, adw-preview), and write them to OUT_DIR. Copy them to
+// public/art/site/ to update the home page. Run from the repository root.
 //
 // - home-road: High Park on ROAD_QUERY's seed, Trista walking Archie, Lady and Ginger with Running
 //   shoes and $50, ROAD_HOLD_MS after the message strip first reads PULL_TEXT (on seed 1, Ginger
@@ -20,7 +21,7 @@
 // Playwright is not a dependency of this repository: the module is imported from
 // PLAYWRIGHT_MODULE, which defaults to the copy in the Playwright MCP image
 // (mcr.microsoft.com/playwright/mcp), the image this runs in. art/README.md has the steps.
-import { mkdirSync, writeFileSync } from "node:fs";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { setTimeout } from "node:timers/promises";
 
 import { decodePng, encodeRgbPng } from "@andornaut/art-kit/png";
@@ -80,7 +81,12 @@ interface PageGame {
 }
 type PageGlobal = typeof globalThis & { dogWalkerGame?: PageGame; homeGrab?: string };
 
-const BASE_URL = "http://dwg-preview:4173";
+// The preview server, by the container name vite.config.ts gives it (previewHost).
+const PREVIEW_HOST = /previewHost:\s*"([^"]+)"/.exec(readFileSync("vite.config.ts", "utf8"))?.[1];
+if (PREVIEW_HOST === undefined) {
+  throw new Error("vite.config.ts names no previewHost");
+}
+const BASE_URL = `http://${PREVIEW_HOST}:4173`;
 // How long a card that opens on the walk shows before its first option is picked (key 1).
 const CARD_READ_MS = 640;
 const CHEATS_KEY = "dog-walker-game:dev-cheats";
