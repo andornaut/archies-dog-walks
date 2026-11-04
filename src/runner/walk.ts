@@ -144,7 +144,7 @@ export type WalkData = Pick<
 // tuning counts and weights, which the simulator compares with what it placed. herrings are this
 // zone's red herring crossers, at zone distances, scenery the walk never reads. speedFactor scales
 // the scroll speed, for testing. hitStop is set while a hit or a firing holds the walk still.
-export interface Road {
+interface Road {
   admission?: AdmissionReport<WalkItemKind>;
   control: LaneControl;
   herrings: readonly SpawnEvent<WalkItemKind>[];
@@ -233,7 +233,7 @@ export type EncounterCard = Extract<CardSource, { kind: "encounter" }>;
 
 // What a contact came from: a contact obstacle, such as a puddle, or a minor obstacle with
 // contact.
-export type ContactSource =
+type ContactSource =
   | { readonly encounter: EncounterId; readonly kind: "encounter" }
   | { readonly kind: "minor"; readonly obstacle: MinorObstacleId };
 

@@ -178,7 +178,7 @@ export interface QuipRow {
 }
 
 // The fonts an owner's row is set in: the header in title, the closing line in body.
-export interface QuipFonts {
+interface QuipFonts {
   readonly body: FontMetrics;
   readonly title: FontMetrics;
 }

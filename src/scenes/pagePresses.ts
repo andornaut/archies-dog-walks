@@ -14,7 +14,7 @@ import { pageFrameTurn } from "../pwa";
 
 // What a press on the bare page does, at points in game pixels, unclamped. onBare: whether the
 // release came on the bare page.
-export interface PagePressHandlers {
+interface PagePressHandlers {
   cancel?: (press: Press, point: Point) => void;
   down: (press: Press, point: Point) => void;
   move?: (press: Press, point: Point) => void;

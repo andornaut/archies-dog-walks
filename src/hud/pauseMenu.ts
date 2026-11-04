@@ -47,7 +47,7 @@ const BOTTOM = MODAL.pad;
 // Each button's hit area reaches this far above and below its face.
 const HIT_REACH = 0;
 
-export interface QuestionParts {
+interface QuestionParts {
   avoid?: Rect | undefined;
   buttonCount: number;
   buttonWidths?: readonly number[];

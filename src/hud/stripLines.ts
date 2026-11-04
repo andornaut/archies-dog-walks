@@ -141,7 +141,7 @@ function spareTreatIcon(source: EffectSource | undefined): MessageIcon {
 }
 
 // A treat grabbed at every owner's max, held as a spare treat by run's gear.
-export function spareTreatSavedLine(
+function spareTreatSavedLine(
   data: Pick<GameData, "runText">,
   run: Pick<RunState, "modifiers">,
 ): MessageLine {

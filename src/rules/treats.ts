@@ -51,7 +51,7 @@ export function treatRecipient(
 }
 
 // Whether every walking owner is at their max, so a treat raises no one's hearts.
-export function everyOwnerAtMax(
+function everyOwnerAtMax(
   data: Pick<GameData, "dogs" | "tuning">,
   run: Pick<RunState, "modifiers" | "pack">,
 ): boolean {

@@ -45,7 +45,7 @@ export function encodePng(image: RgbaImage): Uint8Array {
 // a nine-slice draw a frame's packed rect as the whole frame, and the road reads a backdrop's
 // pixels from its packed rect.
 const TRIMMED_GROUPS: ReadonlySet<string> = new Set(["home", "run"]);
-export const trimsFrames = (key: string): boolean => TRIMMED_GROUPS.has(atlasGroupOf(key));
+const trimsFrames = (key: string): boolean => TRIMMED_GROUPS.has(atlasGroupOf(key));
 
 // A sprite's frames as the atlas packs them. With trim, each frame keeps only the rect that
 // holds its opaque pixels (a clear frame, its top-left pixel) and records where that sits in
@@ -98,12 +98,12 @@ function disabledCopy(images: Map<string, RgbaImage>, texture: SourceTexture): S
 }
 
 // How each page's pixels become its file, and the file's extension.
-export interface PageFormat {
+interface PageFormat {
   encode: (page: RgbaImage) => Uint8Array | Promise<Uint8Array>;
   extension: string;
 }
 
-export const PNG_PAGES: PageFormat = { encode: encodePng, extension: "png" };
+const PNG_PAGES: PageFormat = { encode: encodePng, extension: "png" };
 
 // Pages as lossless WebPs (the kit's art/webp), as a build ships them.
 export const WEBP_PAGES: PageFormat = { encode: encodeLosslessWebp, extension: "webp" };

@@ -126,7 +126,7 @@ export const DETAIL_TEXT_WIDTH =
   STATS_LAYOUT.detail.width - STATS_LAYOUT.detailText.x - STATS_LAYOUT.detailText.textRight;
 
 // The fonts the open badge's text is set in: its name in title, the rest in body.
-export interface BadgeDetailFonts {
+interface BadgeDetailFonts {
   readonly body: FontMetrics;
   readonly title: FontMetrics;
 }

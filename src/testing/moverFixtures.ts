@@ -22,13 +22,13 @@ type FixtureData = Pick<
   GameData,
   "encounters" | "minorObstacles" | "movementAssignments" | "movementProfiles" | "tuning" | "world"
 >;
-export interface MoverFixture {
+interface MoverFixture {
   readonly kind: WalkItemKind;
   readonly lane: number;
   readonly mover: MoverPath;
   readonly speed: number;
 }
-export interface MoverFixtureDraws {
+interface MoverFixtureDraws {
   readonly placement: "native-default" | "seeded";
   readonly seed: number;
 }

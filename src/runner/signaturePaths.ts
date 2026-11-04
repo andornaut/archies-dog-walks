@@ -2,7 +2,7 @@ import { easeProgress, type Easing, type Point, progressAt } from "@andornaut/ga
 
 import type { MoveCount, SignatureProfile } from "../data/types";
 
-export interface SignatureGeometry {
+interface SignatureGeometry {
   readonly cellLength: number;
   readonly laneCount: number;
   readonly scrollSpeed: number;
@@ -10,7 +10,7 @@ export interface SignatureGeometry {
 }
 
 // X is the leftmost lane centre; Y is road travel. Progress is cumulative road scroll.
-export interface SignatureLeg {
+interface SignatureLeg {
   readonly at: number;
   readonly easing: Easing;
   readonly from: Point;
@@ -18,7 +18,7 @@ export interface SignatureLeg {
   readonly to: Point;
 }
 
-export interface SignatureCue {
+interface SignatureCue {
   readonly end: number;
   readonly start: number;
 }
@@ -121,7 +121,7 @@ export function signatureMotionProgress(path: SignaturePath, since: number): num
 
 // Walking-time history excludes the shared entry hold. Its straight pre-entry prefix stages
 // followers at distinct positions and joins the first bend continuously when walking resumes.
-export function signatureHistoryPlace(path: SignaturePath, progress: number): Point {
+function signatureHistoryPlace(path: SignaturePath, progress: number): Point {
   const first = path.legs[1] ?? path.legs[0];
   const last = path.legs.at(-1);
   if (first === undefined || last === undefined) {

@@ -1,10 +1,10 @@
 // What an open guard reads from the game: its step events, as Phaser's game.events emits them
 // (Core.Events.PRE_STEP and POST_STEP).
-export interface StepEvents {
+interface StepEvents {
   once(event: "poststep" | "prestep", listener: () => void): unknown;
 }
 
-export type OpenGuard = (events: StepEvents, owner: object, open: () => void) => boolean;
+type OpenGuard = (events: StepEvents, owner: object, open: () => void) => boolean;
 
 // One opener's guard against a second tap opening a second copy of what the first opened.
 // Phaser queues a scene's pause, launch, resume and stop to the next game step, so until that

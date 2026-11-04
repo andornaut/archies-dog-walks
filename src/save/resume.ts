@@ -379,7 +379,7 @@ function storedWalk(walk: ResumeWalk) {
 
 // The resume point format for the game's content. It has no migrations: one from another
 // version banks as heading home.
-export function resumeFormat(data: ResumeData): SaveFormat<ResumeWalk | null> {
+function resumeFormat(data: ResumeData): SaveFormat<ResumeWalk | null> {
   const schema = resumeSchema(data);
   const checked = (stored: unknown) => {
     const result = v.safeParse(schema, stored);

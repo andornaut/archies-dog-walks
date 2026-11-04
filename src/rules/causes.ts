@@ -148,7 +148,7 @@ function effectSourceName(data: CauseData, source: ModifierSource): string {
 
 // A cause a card's breakdown names: any but the Walk bonus, a zone's pay or a tip, which only
 // ever start a money change outside a card.
-export type NamedCause = Exclude<Cause, { readonly kind: "bonus" | "pay" | "tip" }>;
+type NamedCause = Exclude<Cause, { readonly kind: "bonus" | "pay" | "tip" }>;
 
 export function isNamedCause(cause: Cause): cause is NamedCause {
   return cause.kind !== "bonus" && cause.kind !== "pay" && cause.kind !== "tip";

@@ -278,7 +278,7 @@ interface MessageTiming {
   readonly maxWaiting: number;
 }
 
-export const MESSAGE_TIMING: Omit<MessageTiming, "maxWaitMs"> = {
+const MESSAGE_TIMING: Omit<MessageTiming, "maxWaitMs"> = {
   dwellMs: 1500,
   fadeMs: 400,
   lifeMs: 6000,

@@ -13,7 +13,7 @@ import { addBodyText, addGraphicsIn, addTab } from "./uiKit";
 const PANEL = SHOP_LAYOUT.panel;
 
 // A tab on the page: its label, and whether it is the open one or pressed.
-export interface ShopPageTab {
+interface ShopPageTab {
   readonly label: string;
   readonly open: boolean;
   readonly pressed: boolean;

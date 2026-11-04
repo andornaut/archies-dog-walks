@@ -24,12 +24,12 @@ export interface PanelEntry {
 }
 
 // A part of the panel's note, in its own colour, starting a line of its own.
-export interface PanelNotePart {
+interface PanelNotePart {
   readonly colour: number;
   readonly text: string;
 }
 
-export interface QuestionPanel {
+interface QuestionPanel {
   readonly avoid?: Rect;
   // What the close control in the panel's top-right corner does, as a tap outside the panel does.
   readonly close: () => void;

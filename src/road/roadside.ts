@@ -48,7 +48,7 @@ interface VergeStrip {
 }
 
 // The sides of the road, as a pool's offset names them.
-export type VergeSide = "left" | "right";
+type VergeSide = "left" | "right";
 
 // Lights repeating along the verge, each the light def keyed light, centred across from the
 // road's centre line. Each side's lights stand every road px along its zone's road, counted

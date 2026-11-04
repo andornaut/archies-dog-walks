@@ -129,19 +129,19 @@ function placeLight(
 
 // A light's drawn rect about its anchor at full size, its texture's turned to its rotation, as
 // the px from the anchor to each edge of the rect's bounds (left and top negative).
-export interface LightBounds {
+interface LightBounds {
   bottom: number;
   left: number;
   right: number;
   top: number;
 }
 
-export function newLightBounds(): LightBounds {
+function newLightBounds(): LightBounds {
   return { bottom: 0, left: 0, right: 0, top: 0 };
 }
 
 // Writes into out the bounds of def's rect turned by rotation radians about its anchor.
-export function lightBounds(
+function lightBounds(
   def: Pick<LightDef, "height" | "shape" | "width">,
   rotation: number,
   out: LightBounds,
@@ -169,7 +169,7 @@ export function lightBounds(
 const scratchBounds = newLightBounds();
 
 // Whether any of def's rect, drawn at place turned by rotation radians, lies inside view.
-export function lightOnScreen(
+function lightOnScreen(
   view: Rect,
   def: Pick<LightDef, "height" | "shape" | "width">,
   rotation: number,
@@ -225,7 +225,7 @@ export interface LightAnchor {
 // An attached light as drawn: its place, its rotation in radians, its strength this frame, the
 // screen row of its sprite's feet, which it fades in and is cut off by, and the index of the
 // anchor it follows.
-export interface AttachedLightPlace extends LightPlace {
+interface AttachedLightPlace extends LightPlace {
   anchor: number;
   groundY: number;
   rotation: number;
@@ -233,7 +233,7 @@ export interface AttachedLightPlace extends LightPlace {
 }
 
 // At most this many attached lights are drawn at once.
-export const ATTACHED_LIGHT_LIMIT = 48;
+const ATTACHED_LIGHT_LIMIT = 48;
 
 export function newAttachedLightPlaces(): AttachedLightPlace[] {
   return Array.from({ length: ATTACHED_LIGHT_LIMIT }, () => ({
@@ -367,7 +367,7 @@ function mod(value: number, by: number): number {
 }
 
 // A sprite as a view has drawn it: its position, origin, scale and flip.
-export interface DrawnSprite {
+interface DrawnSprite {
   readonly flipX: boolean;
   readonly originX: number;
   readonly originY: number;
@@ -379,7 +379,7 @@ export interface DrawnSprite {
 
 // The art a sprite is drawn from (one of its key's depth steps): its frame's size and its feet's
 // row in it; fullHeight is the frame height of the key's full-size art.
-export interface DrawnFrame {
+interface DrawnFrame {
   readonly feetY: number;
   readonly fullHeight: number;
   readonly height: number;

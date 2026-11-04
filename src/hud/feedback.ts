@@ -74,7 +74,7 @@ export function heartPopFrame(dogTop: Point): Point {
 // row, inkTop rows into its frame, both centred on the dog. A pop the walk draws (clampTop
 // given) moves down when the stack would rise past clampTop, the walk view's top, keeping the
 // gap; the HUD's pops keep their place.
-export const POP_STACK = { gap: 2 } as const;
+const POP_STACK = { gap: 2 } as const;
 
 export function stackOverPop(
   pop: { frame: Point; inkTop: number },

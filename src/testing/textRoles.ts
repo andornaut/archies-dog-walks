@@ -105,7 +105,7 @@ import { TEST_TUNING } from "./tuning";
 // Every string the data puts in each text role, set at the role's one size as the game sets it,
 // filled with the widest names and the largest amounts its template takes. overflow says how it
 // misses its room, or is "" where it fits.
-export interface TextRoleCase {
+interface TextRoleCase {
   readonly overflow: string;
   readonly role: string;
   readonly text: string;
@@ -497,7 +497,7 @@ function questionPanelRoles(): TextRoleCase[] {
 }
 
 // A card with a title row and a close control, and every title the data puts on it.
-export interface CardTitles {
+interface CardTitles {
   readonly card: Rect;
   readonly close?: CloseControl;
   readonly role: string;

@@ -570,7 +570,7 @@ export function addLoopingFrame(
 // The ui-select frame around rect at outset, playing its pulse tag. While the art is missing
 // it is drawn as the art draws it, without the pulse: an ink line, a 2px amber band, and at
 // the default outset an ink line on the edge.
-export function addSelectFrame(
+function addSelectFrame(
   scene: Scene,
   parent: GameObjects.Container,
   rect: Rect,

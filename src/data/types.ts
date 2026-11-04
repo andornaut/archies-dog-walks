@@ -46,7 +46,7 @@ export type GearId = keyof typeof SHOP_GEAR;
 export type HintId = keyof typeof HINTS;
 export type MinorObstacleId = keyof typeof MINOR_OBSTACLES;
 // A minor obstacle that comes in skins (MinorObstacle), and each skin's id.
-export type SkinnedObstacleId = {
+type SkinnedObstacleId = {
   [Id in MinorObstacleId]: (typeof MINOR_OBSTACLES)[Id] extends { readonly skins: object }
     ? Id
     : never;
@@ -189,7 +189,7 @@ export interface Tuning {
 export type Unlock =
   { readonly price: PriceKey; readonly unlock: "shop" } | { readonly unlock: "start" };
 
-export interface Owner {
+interface Owner {
   readonly name: string;
   readonly role: string;
 }
@@ -623,12 +623,12 @@ export type MinorObstacle =
     };
 
 // What touching a minor obstacle with contact does: its effects, as a contact obstacle's.
-export interface MinorContact {
+interface MinorContact {
   readonly effects: NonEmptyEffects;
 }
 
 // One look of a minor obstacle with skins: its name and the zones it appears in.
-export interface ObstacleSkin {
+interface ObstacleSkin {
   readonly name: string;
   // Zone ids, as an obstacle encounter's zones are.
   readonly zones: NeighbourhoodZones;
@@ -731,13 +731,13 @@ export type SpawnSlotRole = "encounterFixed" | "encounterMoving" | "minorFixed" 
 
 export type SpawnSlotCounts = Readonly<Record<SpawnSlotRole, number>>;
 
-export interface SpawnSlotGuarantee {
+interface SpawnSlotGuarantee {
   readonly count: number;
   readonly kind: MinorObstacleId | ObstacleEncounterId;
   readonly role: SpawnSlotRole;
 }
 
-export interface ZoneSpawnSlots {
+interface ZoneSpawnSlots {
   // Delivered ordinary counts at each position in the walk, before upgrade modifiers.
   readonly counts: readonly [SpawnSlotCounts, ...SpawnSlotCounts[]];
   // Maximum validated counts, including supported modifiers and unused tuning headroom.

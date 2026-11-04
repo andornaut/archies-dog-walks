@@ -17,7 +17,7 @@ import { listenTargetPress } from "./targetPress";
 // detail card or purchase confirm, so the page opens alone over the page beneath, dimmed once.
 export const HOME_PAGE_OPENING_EVENT = "home-page-opening";
 
-export type HomePage = "help" | "logbook" | "settings";
+type HomePage = "help" | "logbook" | "settings";
 
 const homePageGuard = openGuard();
 

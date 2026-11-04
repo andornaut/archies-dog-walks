@@ -26,7 +26,7 @@ interface ZoneDone {
 export type ZoneCelebration = { readonly kind: "newWalker"; readonly walker: WalkerId } | ZoneDone;
 
 // The zone's earnings in the order the plate says them.
-export const ZONE_EARNINGS = ["fees", "tips"] as const;
+const ZONE_EARNINGS = ["fees", "tips"] as const;
 
 interface ZoneFinish {
   // The changes made since the zone began, its fees included.

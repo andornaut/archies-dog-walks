@@ -25,7 +25,7 @@ export const DEV_CHEATS_KEY = "dog-walker-game:dev-cheats";
 export const DEV_SAVE_EDITS_KEY = "dog-walker-game:dev-save-edits";
 
 // The walk's movement speed under the speed cheat.
-export type Speed = "fast" | "normal" | "slow";
+type Speed = "fast" | "normal" | "slow";
 
 // Each cheat applies on its own: a toggle when true, the speed when not normal.
 export interface Cheats {

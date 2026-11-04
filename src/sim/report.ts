@@ -80,7 +80,7 @@ interface MatrixCell {
 // meanTips counts the tips collected per run, meanDrops the gear drops that reached the pack per
 // run and meanGrabs those grabbed. delivery sums every run's zone plans by walk
 // position and zone: what they asked for and what they placed, by group and by kind.
-export interface SpawnRunReport {
+interface SpawnRunReport {
   readonly seed: number;
   readonly zoneIndex: number;
   readonly route: RunResult["route"];
@@ -822,7 +822,7 @@ function inconsistentSpawnAudit(zone: ZoneWalkEvents): boolean {
   );
 }
 
-export interface RoadObstacleSummary {
+interface RoadObstacleSummary {
   readonly position: number;
   readonly zone: string;
   configured: number | null;
@@ -905,7 +905,7 @@ export function sumRoadObstacleEvents(
   );
 }
 
-export interface SpawnEventSummary {
+interface SpawnEventSummary {
   readonly position: number;
   readonly zone: string;
   readonly kind: string;

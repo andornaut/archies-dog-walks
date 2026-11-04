@@ -63,7 +63,7 @@ export const TOUCH_DRAG = {
   tags: { left: "left", right: "right", still: "still" },
 } as const;
 
-export type TouchTag = keyof typeof TOUCH_DRAG.tags;
+type TouchTag = keyof typeof TOUCH_DRAG.tags;
 
 // The lanes page's drag: a swipe right from touchStart moves the pack from fromLane to toLane,
 // then a swipe left brings it back, in a loop.

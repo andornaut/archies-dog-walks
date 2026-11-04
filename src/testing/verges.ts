@@ -3,7 +3,7 @@ import { itemAt } from "@andornaut/game-kit/arrays";
 import { LIGHTS } from "../road/lights";
 
 // A light art sets out, whichever it is, so the fixture follows renames.
-export const SOME_LIGHT = itemAt([...LIGHTS.keys()], 0);
+const SOME_LIGHT = itemAt([...LIGHTS.keys()], 0);
 
 // A paved verge as art writes it in shared/verges.json, with colours by palette name and a light
 // every 128 along its paving, staggered between the sides.

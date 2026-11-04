@@ -61,7 +61,7 @@ export function refuseControl(
   });
 }
 
-export function controlLabels(container: GameObjects.Container): GameObjects.BitmapText[] {
+function controlLabels(container: GameObjects.Container): GameObjects.BitmapText[] {
   return container.list.flatMap((part) =>
     part.type === "BitmapText"
       ? [part as GameObjects.BitmapText]

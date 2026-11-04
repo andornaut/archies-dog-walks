@@ -74,7 +74,7 @@ export type SettingsRowKind = "button" | "slider" | "switch";
 export type SettingsRowShape =
   { controlWidth?: number; kind: "button" | "switch"; noteLines: number } | { kind: "slider" };
 
-export interface SettingsRowLayout {
+interface SettingsRowLayout {
   // The switch's or the button's face, or null on a slider row.
   control: Rect | null;
   // The note's first line's capitals' top, or null on a slider row.
@@ -138,7 +138,7 @@ export function noteRoomForControl(controlWidth: number): number {
 export const SETTINGS_NOTE_STYLE = textOnLines(SETTINGS_ROW.note.lines);
 
 // The note's first line's capitals' top, from the row's top, under its title-font label.
-export function noteDy(title: FontMetrics): number {
+function noteDy(title: FontMetrics): number {
   return SETTINGS_ROW.label.dy + helpCapDy(title, TEXT_SCALE);
 }
 

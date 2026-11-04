@@ -25,9 +25,9 @@ import { WORLD } from "../data/world";
 // with none it shows at full strength. zones lists the zone ids it shows in, or null for every
 // zone. Drawing only: nothing in the walk reads them.
 
-export type LightShape = "band" | "cone" | "ellipse";
+type LightShape = "band" | "cone" | "ellipse";
 
-export interface LightRing {
+interface LightRing {
   readonly scale: number;
   readonly strength: number;
 }
@@ -40,7 +40,7 @@ export interface LightDef {
   readonly width: number;
 }
 
-export const MAX_RINGS = 3;
+const MAX_RINGS = 3;
 
 const unit = v.pipe(v.number(), v.gtValue(0), v.maxValue(1));
 const size = v.pipe(v.number(), v.integer(), v.minValue(1));
@@ -79,7 +79,7 @@ export function zonesOf(ids: readonly string[] | undefined): readonly ZoneId[] |
 }
 
 // Where a light sits from its sprite's feet, in px at full size.
-export interface LightOffset {
+interface LightOffset {
   readonly dx: number;
   readonly dy: number;
 }
@@ -124,7 +124,7 @@ const tableSchema = v.strictObject({
 // A cone points down as drawn.
 const CONE_ANGLE = 90;
 
-export interface LightTable {
+interface LightTable {
   // The lights each sprite carries, by sprite key.
   readonly attach: ReadonlyMap<string, readonly LightAttachment[]>;
   readonly defs: ReadonlyMap<string, LightDef>;

@@ -78,13 +78,13 @@ type ActiveImmunity = Lasting & {
   readonly source: EffectSource;
 };
 
-export interface SpareTreats {
+interface SpareTreats {
   readonly held: number;
   readonly spent: number;
   readonly stored: number;
 }
 
-export const NO_SPARE_TREATS: SpareTreats = { held: 0, spent: 0, stored: 0 };
+const NO_SPARE_TREATS: SpareTreats = { held: 0, spent: 0, stored: 0 };
 
 export type EndReason = "finished" | "noDogs" | "wentHome";
 

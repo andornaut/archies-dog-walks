@@ -380,7 +380,7 @@ export const HOME_BAR_BUTTONS = ["logbook", "help", "mute", "settings", "exit"] 
 export type HomeBarButton = (typeof HOME_BAR_BUTTONS)[number];
 
 // A top bar button: its ui-icon-button face and its hit area from the bar's top.
-export interface HomeBarButtonPlace {
+interface HomeBarButtonPlace {
   face: Point;
   hit: Rect;
 }
@@ -465,7 +465,7 @@ export function speechBubbleHeight(body: FontMetrics, lines: readonly string[]):
 }
 
 // The owner's row on a dog's card, with its role on roleLines lines.
-export interface OwnerRow {
+interface OwnerRow {
   readonly roleLines: number;
 }
 

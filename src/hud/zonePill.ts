@@ -19,7 +19,7 @@ export const ZONE_PILL = {
 
 // Where the pill and its texts go: the pill, the left edge of the name's ink, the column past
 // the count's ink, and the row their capitals start on.
-export interface ZonePillLayout {
+interface ZonePillLayout {
   readonly capsY: number;
   readonly countRight: number;
   readonly nameLeft: number;

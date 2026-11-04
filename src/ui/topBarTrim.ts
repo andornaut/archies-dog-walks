@@ -14,7 +14,7 @@ type TrimColour =
   (typeof TOP_BAR_TRIM.edge)[number] | typeof TOP_BAR_TRIM.fill | typeof TOP_BAR_TRIM.line.colour;
 
 // A palette colour name and the rect it fills.
-export interface TrimRect {
+interface TrimRect {
   colour: TrimColour;
   rect: Rect;
 }
@@ -39,7 +39,7 @@ export function topBarContentRows(height: number): { bottom: number; top: number
 
 // A well's top row and height on a bar height tall: clearance rows clear of the trim above and
 // below.
-export function topBarWellRows(height: number): { height: number; y: number } {
+function topBarWellRows(height: number): { height: number; y: number } {
   const { bottom, top } = topBarContentRows(height);
   const { clearance } = TOP_BAR_TRIM;
   return { height: bottom - top - 2 * clearance, y: top + clearance };

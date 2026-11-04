@@ -43,7 +43,7 @@ export const BUFF_POP = {
 } as const;
 
 // A lit charm's side at scale: the well and its ring each side.
-export function charmRingSize(scale: number): number {
+function charmRingSize(scale: number): number {
   return (CHARM.size + 2 * CHARM.ring) * scale;
 }
 

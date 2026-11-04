@@ -208,7 +208,7 @@ export interface Checkpoint extends Omit<
   route: ZoneId[];
 }
 
-export interface Loadout {
+interface Loadout {
   dogs: DogId[];
   gear: GearId | null;
 }
@@ -220,7 +220,7 @@ export interface Owned {
   walkers: WalkerId[];
 }
 
-export interface BestWalk extends Omit<v.InferOutput<typeof bestWalkSchema>, "dogs"> {
+interface BestWalk extends Omit<v.InferOutput<typeof bestWalkSchema>, "dogs"> {
   dogs: DogId[];
 }
 

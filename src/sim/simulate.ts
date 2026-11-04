@@ -143,7 +143,7 @@ const AFTER_PULL_REACTION_SECONDS = 0.6;
 // centsLost, the cash it took, as the walk's own changes name it: its share of each tip's pay,
 // such as Stinky's, and the cash bumps cost while it made them cost cash, such as Spotlight's.
 // A bump in the step a debuff starts in is not counted toward it.
-export interface DebuffCost {
+interface DebuffCost {
   bumpsWhile: number;
   centsLost: number;
 }
@@ -155,7 +155,7 @@ export type DebuffCosts = Record<DebuffId, DebuffCost>;
 // lasted, the times the pack got it in the zone and the walking seconds it lasted, so a debuff's
 // bumps per period compare against the zone's bump rate without one. A step counts toward a
 // debuff when the run held it before and after the step, and toward clear when it held none.
-export interface ZoneDebuffs {
+interface ZoneDebuffs {
   readonly clear: { bumps: number; seconds: number };
   readonly debuffs: Partial<
     Record<DebuffId, { bumpsWhile: number; periods: number; seconds: number }>

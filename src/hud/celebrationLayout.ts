@@ -206,7 +206,7 @@ export function zoneDoneRows(body: FontMetrics, ink: { action: number; earnings:
 }
 
 // An info line's items, left to right: each icon, and each run of text around them, trimmed.
-export type InfoItem =
+type InfoItem =
   | { readonly icon: string; readonly kind: "icon" }
   | { readonly kind: "text"; readonly text: string };
 
