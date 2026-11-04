@@ -92,9 +92,12 @@ function earnedNet(facts: RunFacts): number {
 // Whether achievement is a money goal, one walk's or every walk's, which is checked only when
 // the walk is banked.
 export function isMoneyGoal(achievement: Pick<Achievement, "conditions">): boolean {
-  return achievement.conditions.some(
-    (condition) => condition.kind === "earnings" || condition.kind === "lifetimeEarnings",
-  );
+  return achievement.conditions.some(isMoneyCondition);
+}
+
+// Whether condition counts dollars earned, in one walk or every walk.
+export function isMoneyCondition(condition: AchievementCondition): boolean {
+  return condition.kind === "earnings" || condition.kind === "lifetimeEarnings";
 }
 
 // Whether a run walked every zone up to the ones it finished: a dev start did not skip any.
@@ -236,6 +239,58 @@ function acrossWalks<Cond>(count: (stats: SaveStats, condition: Cond) => Progres
   };
 }
 
+// The condition kinds whose count may be "all", each of which counts toward a whole.
+type ThresholdCondition = AllCount<AchievementCondition>;
+type AllCount<C> = C extends { readonly count: infer N } ? ("all" extends N ? C : never) : never;
+
+// The whole an "all" threshold of each kind counts: the zones of a walk, every dog (or its
+// owner), gear item, walker or zone of the city.
+function thresholdWholes(data: AchievementData): Record<ThresholdCondition["kind"], number> {
+  const zones = walkLength(data);
+  const dogs = Object.keys(data.dogs).length;
+  const walkers = Object.keys(data.walkers).length;
+  return {
+    cleanZones: zones,
+    dogsFinishedWith: dogs,
+    dogsOwned: dogs,
+    firedByOwners: dogs,
+    gearOwned: Object.keys(data.shopGear).length,
+    walkersFinishedWith: walkers,
+    walkersUnlocked: walkers,
+    zonesEverFinished: data.world.zones.length,
+    zonesFinished: zones,
+  };
+}
+
+// What condition needs: its dollars, pack size or count, "all" resolved to its whole; null for
+// a condition with no number.
+export function conditionTarget(
+  data: AchievementData,
+  condition: AchievementCondition,
+): number | null {
+  switch (condition.kind) {
+    case "earnings":
+    case "lifetimeEarnings":
+      return condition.dollars;
+    case "finishOnLastHeart":
+      return null;
+    case "fullPackBonus":
+      return condition.packSize;
+    case "cleanZones":
+    case "dogsFinishedWith":
+    case "dogsOwned":
+    case "firedByOwners":
+    case "gearOwned":
+    case "walkersFinishedWith":
+    case "walkersUnlocked":
+    case "zonesEverFinished":
+    case "zonesFinished":
+      return resolveThreshold(thresholdWholes(data)[condition.kind], condition.count);
+    default:
+      return condition.count;
+  }
+}
+
 // The judge of every condition kind. The counts across walks are a lifetime tally, option
 // picks, landed bumps, whole dollars earned net of starting cash, walks played or finished,
 // times fired, the current streak of finished walks with no firing, distinct owners who fired
@@ -243,25 +298,28 @@ function acrossWalks<Cond>(count: (stats: SaveStats, condition: Cond) => Progres
 // report progress.
 export function achievementJudge(data: AchievementData): AchievementJudge {
   const zones = walkLength(data);
-  const dogs = Object.keys(data.dogs).length;
-  const walkers = Object.keys(data.walkers).length;
+  const wholes = thresholdWholes(data);
   return judge<AchievementCondition, AchievementScope, AchievementFacts>({
     bumps: acrossWalks((stats, { count, kinds }) => ({
       have: landedBumps(stats, kinds),
       need: count,
     })),
-    cleanZones: onRun((facts, { count }) => cleanZones(facts) >= resolveThreshold(zones, count)),
+    cleanZones: onRun(
+      (facts, { count }) => cleanZones(facts) >= resolveThreshold(wholes.cleanZones, count),
+    ),
     debuffsGot: onRun((facts, { count, debuff }) => (facts.debuffsGot[debuff] ?? 0) >= count),
     dogsFinishedWith: acrossWalks((stats, { count }) => ({
       have: stats.dogsFinishedWith.length,
-      need: resolveThreshold(dogs, count),
+      need: resolveThreshold(wholes.dogsFinishedWith, count),
     })),
-    dogsOwned: onOwned((owned, { count }) => owned.dogs.length >= resolveThreshold(dogs, count)),
+    dogsOwned: onOwned(
+      (owned, { count }) => owned.dogs.length >= resolveThreshold(wholes.dogsOwned, count),
+    ),
     earnings: onRun((facts, { dollars }) => earnedNet(facts) >= dollarsToCents(dollars)),
     finishOnLastHeart: onRun((facts) => finishedWalk(facts, zones) && facts.lastHeartOwners > 0),
     firedByOwners: acrossWalks((stats, { count }) => ({
       have: firedByOwners(stats),
-      need: resolveThreshold(dogs, count),
+      need: resolveThreshold(wholes.firedByOwners, count),
     })),
     fullPackBonus: onRun(
       (facts, { packSize }) =>
@@ -270,8 +328,7 @@ export function achievementJudge(data: AchievementData): AchievementJudge {
         facts.packSize >= packSize,
     ),
     gearOwned: onOwned(
-      (owned, { count }) =>
-        owned.gear.length >= resolveThreshold(Object.keys(data.shopGear).length, count),
+      (owned, { count }) => owned.gear.length >= resolveThreshold(wholes.gearOwned, count),
     ),
     lifetimeEarnings: acrossWalks((stats, { dollars }) => ({
       have: Math.max(0, Math.floor(lifetimeEarnedNet(stats) / dollarsToCents(1))),
@@ -293,10 +350,10 @@ export function achievementJudge(data: AchievementData): AchievementJudge {
     timesFired: acrossWalks((stats, { count }) => ({ have: timesFired(stats), need: count })),
     walkersFinishedWith: acrossWalks((stats, { count }) => ({
       have: stats.walkersFinishedWith.length,
-      need: resolveThreshold(walkers, count),
+      need: resolveThreshold(wholes.walkersFinishedWith, count),
     })),
     walkersUnlocked: onOwned(
-      (owned, { count }) => owned.walkers.length >= resolveThreshold(walkers, count),
+      (owned, { count }) => owned.walkers.length >= resolveThreshold(wholes.walkersUnlocked, count),
     ),
     walksFinished: acrossWalks((stats, { count }) => ({
       have: walksFinished(stats),
@@ -305,10 +362,10 @@ export function achievementJudge(data: AchievementData): AchievementJudge {
     walksPlayed: acrossWalks((stats, { count }) => ({ have: walksPlayed(stats), need: count })),
     zonesEverFinished: acrossWalks((stats, { count }) => ({
       have: stats.zonesEverFinished.length,
-      need: resolveThreshold(data.world.zones.length, count),
+      need: resolveThreshold(wholes.zonesEverFinished, count),
     })),
     zonesFinished: onRun(
-      (facts, { count }) => zonesWalked(facts) >= resolveThreshold(zones, count),
+      (facts, { count }) => zonesWalked(facts) >= resolveThreshold(wholes.zonesFinished, count),
     ),
   });
 }

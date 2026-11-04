@@ -6,6 +6,7 @@ import { describe, expect, it } from "vitest";
 import { badgeKey } from "../assets/spriteKeys.ts";
 import { gameData } from "../data/index.ts";
 import type { AchievementCondition, ZoneId } from "../data/types.ts";
+import { walkLength } from "../rules/route.ts";
 import type { SaveDocument } from "../save/schema.ts";
 import { defined } from "../testing/defined.ts";
 import { inkWidth } from "../testing/fontInk.ts";
@@ -76,6 +77,33 @@ function needOf(condition: Counted): number {
       return of(ALL_ZONES, condition.count);
     default:
       return assertNever(condition);
+  }
+}
+// What any condition needs: its dollars, pack size or count, where "all" is also every gear
+// item or zone of a walk; null for one with no number.
+function targetOf(condition: AchievementCondition): number | null {
+  const of = (all: number, count: number | "all") => (count === "all" ? all : count);
+  switch (condition.kind) {
+    case "cleanZones":
+    case "zonesFinished":
+      return of(walkLength(gameData), condition.count);
+    case "dogsOwned":
+      return of(ALL_DOGS.length, condition.count);
+    case "earnings":
+      return condition.dollars;
+    case "finishOnLastHeart":
+      return null;
+    case "fullPackBonus":
+      return condition.packSize;
+    case "gearOwned":
+      return of(keysOf(gameData.shopGear).length, condition.count);
+    case "debuffsGot":
+    case "packSize":
+      return condition.count;
+    case "walkersUnlocked":
+      return of(ALL_WALKERS.length, condition.count);
+    default:
+      return needOf(condition);
   }
 }
 // Starting cash across walks, which lifetime earnings leave out.
@@ -172,6 +200,31 @@ describe("badgeWall", () => {
     expect(wall[0]).toMatchObject({ art: badgeKey(first.id), earned: true, name: first.name });
     expect(wall.filter(({ earned }) => earned).map(({ id }) => id)).toEqual([first.id, "squirrel"]);
     expect(earnedText(gameData, wall)).toBe(`2/${gameData.achievements.length} earned`);
+  });
+
+  it("names each goal's number from its first condition, typing none of its own", () => {
+    const wall = badgeWall(gameData, []);
+    for (const achievement of gameData.achievements) {
+      const [condition] = achievement.conditions;
+      const target = targetOf(condition);
+      const fill = (text: string) =>
+        target === null
+          ? text
+          : text
+              .replaceAll("{amount}", dollarText(dollarsToCents(target)))
+              .replaceAll("{count}", target.toLocaleString("en-US"));
+      const badge = wall.find(({ id }) => id === achievement.id);
+      const shortGoal = achievement.shortGoal ?? achievement.goal;
+      expect(badge, achievement.id).toMatchObject({
+        goal: fill(achievement.goal),
+        shortGoal: fill(shortGoal),
+      });
+      // Every number comes from data; 1♥ is an owner's last heart.
+      for (const text of [achievement.goal, shortGoal]) {
+        expect(text.replaceAll("1♥", ""), achievement.id).not.toMatch(/\d/);
+      }
+      expect([badge?.goal, badge?.shortGoal].join(" "), achievement.id).not.toMatch(/[{}]/);
+    }
   });
 });
 

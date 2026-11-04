@@ -13,6 +13,7 @@ import type {
   Unlock,
   Zone,
 } from "../data/types.ts";
+import { badgeGoalText } from "../home/badgesView.ts";
 import { achievementConditionText } from "../rules/achievements.ts";
 import { maxHearts, sizeHearts } from "../rules/dogs.ts";
 import {
@@ -386,7 +387,7 @@ function achievementsSection(data: GameData): Section {
     note: "In badge wall order. Every condition must hold; celebration only, no reward.",
     rows: data.achievements.map((achievement) => [
       achievement.name,
-      achievement.goal,
+      badgeGoalText(data, achievement, achievement.goal),
       achievement.badgeLine,
       achievement.conditions
         .map((condition) => achievementConditionText(data, condition))

@@ -1,16 +1,22 @@
-import { fillLine, wrapWords } from "@andornaut/game-kit/lines";
+import { fillLine, fillNames, wrapWords } from "@andornaut/game-kit/lines";
 import type { Rect } from "@andornaut/game-kit/rect";
 import { type TextFitStyle } from "@andornaut/game-kit/text/textFit";
 
 import { badgeKey } from "../assets/spriteKeys.ts";
 import type {
+  Achievement,
   AchievementCondition,
   AchievementId,
   AchievementTier,
   GameData,
 } from "../data/types.ts";
 import { MIN_TAP_SIZE } from "../layout/screenLayout.ts";
-import { type AchievementData, achievementJudge } from "../rules/achievements.ts";
+import {
+  type AchievementData,
+  achievementJudge,
+  conditionTarget,
+  isMoneyCondition,
+} from "../rules/achievements.ts";
 import type { SaveDocument } from "../save/schema.ts";
 import { closeControl } from "../ui/closeControl.ts";
 import { GREYED } from "../ui/selection.ts";
@@ -43,27 +49,43 @@ export const BADGE_TEXT_COLOURS = {
 } as const;
 
 // Every badge in tier order, earned or locked by earned, the ids earned.
-export function badgeWall(
-  data: Pick<GameData, "achievements">,
-  earned: readonly AchievementId[],
-): BadgeView[] {
-  return data.achievements.map((achievement) => ({
-    art: badgeKey(achievement.id),
-    badgeLine: achievement.badgeLine,
-    earned: earned.includes(achievement.id),
-    goal: achievement.goal,
-    id: achievement.id,
-    name: achievement.name,
-    shortGoal: achievement.shortGoal ?? achievement.goal,
-    tier: achievement.tier,
-  }));
+export function badgeWall(data: AchievementData, earned: readonly AchievementId[]): BadgeView[] {
+  return data.achievements.map((achievement) => {
+    const goal = badgeGoalText(data, achievement, achievement.goal);
+    return {
+      art: badgeKey(achievement.id),
+      badgeLine: achievement.badgeLine,
+      earned: earned.includes(achievement.id),
+      goal,
+      id: achievement.id,
+      name: achievement.name,
+      shortGoal:
+        achievement.shortGoal === undefined
+          ? goal
+          : badgeGoalText(data, achievement, achievement.shortGoal),
+      tier: achievement.tier,
+    };
+  });
+}
+
+// A badge's goal or short goal with the {count} or, for a money goal, the {amount} its first
+// condition needs filled in.
+export function badgeGoalText(
+  data: AchievementData,
+  achievement: Pick<Achievement, "conditions">,
+  text: string,
+): string {
+  const [condition] = achievement.conditions;
+  const target = conditionTarget(data, condition);
+  if (target === null) {
+    return text;
+  }
+  const amount = badgeAmountText(condition, target);
+  return fillNames(text, isMoneyCondition(condition) ? { amount } : { count: amount });
 }
 
 // The badges ids name, earned, in tier order: a strip of badges just earned.
-export function earnedBadges(
-  data: Pick<GameData, "achievements">,
-  ids: readonly AchievementId[],
-): BadgeView[] {
+export function earnedBadges(data: AchievementData, ids: readonly AchievementId[]): BadgeView[] {
   return badgeWall(data, [])
     .filter(({ id }) => ids.includes(id))
     .map((badge) => ({ ...badge, earned: true }));
@@ -79,10 +101,10 @@ export function earnedText(
   });
 }
 
-// A count of a badge's progress as the game shows it: whole dollars for lifetime earnings,
-// else the number, each with thousands separated.
-function progressAmountText(kind: AchievementCondition["kind"], amount: number): string {
-  return kind === "lifetimeEarnings"
+// A count in a badge's goal or progress as the game shows it: whole dollars for a money
+// condition, else the number, each with thousands separated.
+function badgeAmountText(condition: AchievementCondition, amount: number): string {
+  return isMoneyCondition(condition)
     ? dollarText(dollarsToCents(amount))
     : amount.toLocaleString("en-US");
 }
@@ -100,12 +122,12 @@ export function badgeProgress(
     badge.earned || achievement === undefined
       ? undefined
       : achievementJudge(data).progress("profile", { save }, achievement.conditions);
-  const kind = achievement?.conditions[0]?.kind;
-  return progress === undefined || kind === undefined
+  const condition = achievement?.conditions[0];
+  return progress === undefined || condition === undefined
     ? undefined
     : fillLine(MENU_TEXT_FIELDS.stats, data.menuText.stats, "badgeProgress", {
-        have: progressAmountText(kind, progress.have),
-        need: progressAmountText(kind, progress.need),
+        have: badgeAmountText(condition, progress.have),
+        need: badgeAmountText(condition, progress.need),
       });
 }
 

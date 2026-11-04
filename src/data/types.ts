@@ -1315,6 +1315,8 @@ export type AchievementTier = "easy" | "medium" | "hard";
 
 export interface Achievement extends AchievementDef<string, AchievementCondition, AchievementTier> {
   readonly badgeLine: string;
+  // The goal and short goal name what the first condition needs as {count}, or for a money
+  // condition as {amount}, "all" resolved to its whole.
   readonly goal: string;
   readonly name: string;
   // The goal on the badge wall when the full goal does not fit beside the name.
