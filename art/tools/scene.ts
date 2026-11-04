@@ -246,12 +246,19 @@ export function readJson<T = unknown>(path: string): T {
 interface GameData {
   zones: { art: string; id: string; leashColour: string; name: string; roadShadowColour: string }[];
 }
+interface Rect {
+  height: number;
+  width: number;
+  x: number;
+  y: number;
+}
 interface Layout {
   pack: {
     collarHeights: Record<string, number>;
     laneHalfWidth: number;
     walkerHands: { heightAboveFeet: number; leftDx: number; rightDx: number };
   };
+  scenes: { home: { petShop: Rect & { board: Rect } } };
 }
 export interface Zone {
   art: string;

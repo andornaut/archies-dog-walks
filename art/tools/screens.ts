@@ -122,7 +122,7 @@ import {
   UsageError,
 } from "./pixel.ts";
 import { LIT, rim, scope as roadScope } from "./road.ts";
-import { Canvas, image, rgb, text, textC, TILES, ZONES } from "./scene.ts";
+import { Canvas, image, LAYOUT, rgb, text, textC, TILES, ZONES } from "./scene.ts";
 import { STATES } from "./ui.ts";
 
 const USAGE = `Usage:
@@ -147,11 +147,24 @@ export const SIGN_H = 38;
 export const SIGN_AT: readonly [number, number] = [6, 106];
 export const PET_SHOP_W = 120;
 export const PET_SHOP_H = 108;
-export const PET_SHOP_AT: readonly [number, number] = [234, 54];
+// Where the game draws ui-pet-shop on the start screen, from the layout export's home Pet shop.
+const PET_SHOP = LAYOUT.scenes.home.petShop;
+export const PET_SHOP_AT: readonly [number, number] = [PET_SHOP.x, PET_SHOP.y];
 // The PET SHOP board's place in ui-pet-shop: ui-button's go state 114x22, its bottom 2 rows over
 // the parapet. The building below it starts BOARD_RISE rows down. ui-pet-shop-board's frame adds
 // BOARD_DROP rows under it, where pressed sinks.
 export const BOARD: readonly [x: number, y: number, w: number, h: number] = [3, 0, 114, 22];
+// The frame and board the game places must be the ones drawn here.
+if (
+  PET_SHOP.width !== PET_SHOP_W ||
+  PET_SHOP.height !== PET_SHOP_H ||
+  PET_SHOP.board.x !== PET_SHOP.x + BOARD[0] ||
+  PET_SHOP.board.y !== PET_SHOP.y + BOARD[1] ||
+  PET_SHOP.board.width !== BOARD[2] ||
+  PET_SHOP.board.height !== BOARD[3]
+) {
+  throw new Error(`Pet shop layout ${JSON.stringify(PET_SHOP)} differs from ui-pet-shop`);
+}
 export const BOARD_RISE = 4;
 export const BOARD_DROP = 2;
 // Projected door-leaf width, keeper reveal and hand pose. All coordinates stay inside the closed
