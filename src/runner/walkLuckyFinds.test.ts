@@ -11,10 +11,11 @@ import { captureZoneInput, planZoneForSeed } from "../testing/zonePlan";
 import { startRoad, zoneLength } from "./walk";
 import { itemCategory } from "./walkItems";
 
-// The seeds the quota draws sample, and the fewer the planner's placements do, each zone's plan
-// taking a few hundred milliseconds.
+// The seeds the quota draws sample, and the one the planner's spaced placements do, each zone's
+// plan taking a second or more. planZone's pickup test checks the planner places every lucky find
+// these quotas draw, on the game's data in every zone at every walk position.
 const SEEDS = Array.from({ length: 12 }, (_, i) => i + 1);
-const PLAN_SEEDS = SEEDS.slice(0, 2);
+const PLAN_SEED = 1;
 // Every zone at every walk position it can be walked at.
 const PLACES = WORLD.zones.flatMap(({ id }): { position: number; zone: ZoneId }[] =>
   id === WORLD.firstZone
@@ -65,7 +66,7 @@ const FIRST_PLACES = PLACES.filter(
 
 describe("lucky finds", () => {
   it.each(PLACES)(
-    "places each kind's count, its expected count rounded either way, in $zone at position $position",
+    "draws each kind's count, its expected count rounded either way, in $zone at position $position",
     (place) => {
       const run = zonedRun(REAL, place);
       const expected = zoneStats(REAL.tuning, currentZone(REAL, run), place.position).luckyFinds;
@@ -80,12 +81,6 @@ describe("lucky finds", () => {
           );
         }
         expect(quotas.every(({ blocksLane, count }) => !blocksLane && count === 1)).toBe(true);
-      }
-      for (const seed of PLAN_SEEDS) {
-        const [quotas, finds] = [quotasOf(REAL, place, seed), findsOf(REAL, place, seed)];
-        for (const kind of LUCKY_IDS) {
-          expect(countOf(finds, kind), `seed ${seed}: ${kind}`).toBe(countOf(quotas, kind));
-        }
       }
     },
   );
@@ -110,15 +105,13 @@ describe("lucky finds", () => {
     ({ counts, finds, position, zone }) => {
       const tuned = tunedWith(counts);
       const stretch = zoneLength(tuned) / (2 * finds - 1);
-      for (const seed of PLAN_SEEDS) {
-        const placed = findsOf(tuned, { position, zone }, seed).map(({ distance }) => distance);
-        expect(placed, `seed ${seed}`).toHaveLength(finds);
-        const sorted = [...placed].sort((a, b) => a - b);
-        for (const [i, distance] of sorted.slice(1).entries()) {
-          expect(distance - (sorted[i] ?? 0), `seed ${seed}`).toBeGreaterThanOrEqual(
-            stretch - tuned.tuning.pixels.spawnRowSpacing,
-          );
-        }
+      const placed = findsOf(tuned, { position, zone }, PLAN_SEED).map(({ distance }) => distance);
+      expect(placed).toHaveLength(finds);
+      const sorted = [...placed].sort((a, b) => a - b);
+      for (const [i, distance] of sorted.slice(1).entries()) {
+        expect(distance - (sorted[i] ?? 0)).toBeGreaterThanOrEqual(
+          stretch - tuned.tuning.pixels.spawnRowSpacing,
+        );
       }
     },
   );

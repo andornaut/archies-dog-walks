@@ -43,14 +43,25 @@ const planned = (data: Real, zone: ZoneId, zoneIndex: number, seed: number): Wal
     road: startRoad(LANE_COUNT),
     run: inZone(realRun(data, FASTEST_WALKER), zone, zoneIndex),
   });
-const plansOf = (data: Real, zones: readonly ZoneId[], seeds: readonly number[]) =>
+// The game's data planned in a zone at a walk position on a seed, planned once for every test.
+const realPlans = new Map<string, Walk>();
+const realPlanned = (zone: ZoneId, zoneIndex: number, seed: number): Walk => {
+  const key = `${zone} ${zoneIndex} ${seed}`;
+  let walk = realPlans.get(key);
+  if (walk === undefined) {
+    walk = planned(REAL, zone, zoneIndex, seed);
+    realPlans.set(key, walk);
+  }
+  return walk;
+};
+const plansOf = (zones: readonly ZoneId[], seeds: readonly number[]) =>
   zones.flatMap((zone) =>
-    [0, data.world.walkLength - 1].flatMap((zoneIndex) =>
-      seeds.map((seed) => ({ seed, walk: planned(data, zone, zoneIndex, seed), zone, zoneIndex })),
+    [0, REAL.world.walkLength - 1].flatMap((zoneIndex) =>
+      seeds.map((seed) => ({ seed, walk: realPlanned(zone, zoneIndex, seed), zone, zoneIndex })),
     ),
   );
 
-describe("red herrings", { timeout: 120_000 }, () => {
+describe("red herrings", { timeout: 60_000 }, () => {
   it("has a kind with red herrings", () => {
     expect(HERRING_KINDS.length).toBeGreaterThan(0);
   });
@@ -68,16 +79,19 @@ describe("red herrings", { timeout: 120_000 }, () => {
     );
   });
 
-  // Each red herring is no spawn of the walk's, and its seed plans it again the same. It shows from
-  // as its row comes on screen with no cue, never coming nearer the pack than the road ahead a
-  // distraction is gone by, and crosses the whole road, gone before its zone ends.
+  // Each red herring is no spawn of the walk's, and its seed plans it again the same (checked on
+  // the first plan with one, as the planner draws every zone's herrings from the same streams). It
+  // shows from as its row comes on screen with no cue, never coming nearer the pack than the road
+  // ahead a distraction is gone by, and crosses the whole road, gone before its zone ends.
   it.each(HERRING_KINDS)("plans $kind's red herrings outside the walk, with no cue", (herring) => {
     const end = distractionScroll(REAL, GAME_ROAD);
     const length = zoneLength(REAL);
     let shown = 0;
-    for (const { seed, walk, zone, zoneIndex } of plansOf(REAL, herring.zones, SEEDS)) {
+    for (const { seed, walk, zone, zoneIndex } of plansOf(herring.zones, SEEDS)) {
       const { road } = walk;
-      expect(planned(REAL, zone, zoneIndex, seed).road.herrings).toEqual(road.herrings);
+      if (shown === 0 && road.herrings.length > 0) {
+        expect(planned(REAL, zone, zoneIndex, seed).road.herrings).toEqual(road.herrings);
+      }
       for (const event of road.herrings) {
         shown += 1;
         expect(road.pending).not.toContainEqual(event);
@@ -114,7 +128,7 @@ describe("red herrings", { timeout: 120_000 }, () => {
       // The first seed's plan with one of them.
       let plan: { walk: Walk } | undefined;
       for (let seed = 1; seed <= HERRING_SEEDS_MOST && plan === undefined; seed++) {
-        plan = plansOf(REAL, herring.zones, [seed]).find(({ walk }) =>
+        plan = plansOf(herring.zones, [seed]).find(({ walk }) =>
           walk.road.herrings.some(({ kind }) => kind === herring.kind),
         );
       }

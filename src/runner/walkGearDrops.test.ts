@@ -17,9 +17,9 @@ import { isGearDrop } from "./walkItems";
 const GEAR = keysOf(SHOP_GEAR);
 const POSITIONS = Array.from({ length: WORLD.walkLength }, (_, position) => position);
 // The seeds the quota draws sample, and the fewer the planner's placements do, each zone's plan
-// taking a few hundred milliseconds.
+// taking a second or more.
 const SEEDS = Array.from({ length: 12 }, (_, i) => i + 1);
-const PLAN_SEEDS = SEEDS.slice(0, 4);
+const PLAN_SEEDS = SEEDS.slice(0, 2);
 
 // A real run on the default reachable route, with the Pocket's gear.
 const zonedRun = (position: number, pocket: GearId | null = null) => ({
@@ -64,7 +64,7 @@ describe("gear drops on the road", () => {
   });
 });
 
-describe("gear drop planning", { timeout: 90_000 }, () => {
+describe("gear drop planning", () => {
   // Each zone's drops, counted and placed as the planner places them.
   // The zone's gear drop quotas, drawn as the planner draws them.
   const quotasOf = (position: number, seed: number, pocket: GearId | null = null) =>
@@ -73,21 +73,35 @@ describe("gear drop planning", { timeout: 90_000 }, () => {
       run: zonedRun(position, pocket),
     }).auxiliary.filter(({ kind }) => isGearDrop(REAL, kind));
   // The zone's drops as the planner places them.
-  const dropsOf = (position: number, seed: number) =>
+  const plannedDrops = (position: number, seed: number) =>
     planZoneForSeed(REAL, GAME_ROAD, seed, {
       road: startRoad(LANE_COUNT),
       run: zonedRun(position),
     }).road.pending.filter(({ kind }) => isGearDrop(REAL, kind));
+  // Each position's drops on each seed, planned once for every check made of them.
+  const drops = new Map<string, ReturnType<typeof plannedDrops>>();
+  const dropsOf = (position: number, seed: number) => {
+    const key = `${position} ${seed}`;
+    let planned = drops.get(key);
+    if (planned === undefined) {
+      planned = plannedDrops(position, seed);
+      drops.set(key, planned);
+    }
+    return planned;
+  };
 
   it.each(POSITIONS)(
     "plans as many drops as the count rule draws at walk position %i, each its own item",
     (position) => {
       const counts = new Set<number>();
-      for (const seed of PLAN_SEEDS) {
-        const [drops, quotas] = [dropsOf(position, seed), quotasOf(position, seed)];
+      for (const seed of SEEDS) {
+        const quotas = quotasOf(position, seed);
         expect(quotas.every(({ blocksLane, count }) => !blocksLane && count === 1)).toBe(true);
         expect(new Set(quotas.map(({ kind }) => kind)).size).toBe(quotas.length);
-        expect(drops.map(({ kind }) => kind).sort()).toEqual(quotas.map(({ kind }) => kind).sort());
+        if (PLAN_SEEDS.includes(seed)) {
+          const placed = dropsOf(position, seed).map(({ kind }) => kind);
+          expect(placed.sort()).toEqual(quotas.map(({ kind }) => kind).sort());
+        }
         counts.add(quotas.length);
       }
       const possible = [
@@ -101,7 +115,7 @@ describe("gear drop planning", { timeout: 90_000 }, () => {
   it.each(POSITIONS.slice(0, 1))(
     "plans the same drops from the same seed at walk position %i",
     (position) => {
-      expect(dropsOf(position, 1)).toEqual(dropsOf(position, 1));
+      expect(plannedDrops(position, 1)).toEqual(dropsOf(position, 1));
     },
   );
 

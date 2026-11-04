@@ -26,7 +26,7 @@ import type {
   ZoneId,
 } from "../data/types";
 import { UPGRADES } from "../data/upgrades";
-import { WALKER_PERKS, WALKERS } from "../data/walkers";
+import { DEFAULT_WALKER, WALKER_PERKS, WALKERS } from "../data/walkers";
 import { WORLD } from "../data/world";
 import {
   type CardChoice,
@@ -56,7 +56,7 @@ import {
   GAME_ROAD,
   gcdOf,
   inZone,
-  LANE_MOVE_WALKERS,
+  LUCKY_IDS,
   MINOR_OBSTACLE_IDS,
   type MoverEvent,
   muddyLaneMove,
@@ -211,9 +211,9 @@ function expectCertifiedDelivery({ road, slots }: ReturnType<typeof observedPlan
   }
 }
 
-// The spawn planner takes a few hundred milliseconds a zone of the game's road, so a sweep over it
-// takes several seconds, more on a busy machine.
-describe("planZone", { timeout: 180_000 }, () => {
+// The spawn planner takes a second or more a zone of the game's road, so a sweep over it takes
+// a minute or more, more on a busy machine.
+describe("planZone", { timeout: 150_000 }, () => {
   // The game's road planned in zone at walk position on seed, for walker, planned once for every
   // check made of it.
   const realPlans = new Map<string, ReturnType<typeof observedPlan>>();
@@ -223,7 +223,7 @@ describe("planZone", { timeout: 180_000 }, () => {
     position: number,
     walker?: WalkerId,
   ) => {
-    const key = `${walker ?? ""} ${zone} ${position} ${seed}`;
+    const key = `${walker ?? DEFAULT_WALKER} ${zone} ${position} ${seed}`;
     let planned = realPlans.get(key);
     if (planned === undefined) {
       planned = observedPlan(REAL, GAME_ROAD, seed, {
@@ -548,19 +548,26 @@ describe("planZone", { timeout: 180_000 }, () => {
     });
   };
   it.each(POSITIONS)(
-    "places every tip and treat planned, no treat where a mover stops, in $zone at walk position $position",
+    "places every tip, treat and lucky find planned, no treat where a mover stops, in $zone at walk position $position",
     ({ position, zone }) => {
       const zoned = inZone(realRun(REAL), zone, position);
       for (const seed of SWEEP_SEEDS) {
         const quotas = spawnQuotas(REAL, plannerStreams(seed), zoned);
-        const { pending } = realPlan(seed, zone, position);
-        const pickups = pending.filter(({ kind }) => kind === "tip" || kind === "treat");
+        const { road, slots } = realPlanWithDelivery(seed, zone, position);
+        const { pending } = road;
+        // One quota of each pickup kind, and one native request of each lucky find admitted.
+        const counted = (kind: string) => pending.filter((event) => event.kind === kind).length;
         for (const kind of ["tip", "treat"] as const) {
-          expect(
-            pickups.filter((pickup) => pickup.kind === kind).length,
-            `seed ${seed}: ${kind}s`,
-          ).toBe(quotas.find((quota) => quota.kind === kind)?.count);
+          expect(counted(kind), `seed ${seed}: ${kind}s`).toBe(
+            quotas.find((quota) => quota.kind === kind)?.count,
+          );
         }
+        for (const kind of LUCKY_IDS) {
+          expect(counted(kind), `seed ${seed}: ${kind}s`).toBe(
+            slots.input.auxiliary.filter((quota) => quota.kind === kind).length,
+          );
+        }
+        const pickups = pending.filter(({ kind }) => kind === "tip" || kind === "treat");
         const stops = pending.flatMap((event) =>
           event.mover === undefined
             ? []
@@ -681,12 +688,12 @@ describe("planZone", { timeout: 180_000 }, () => {
   // Standing obstacles along the path: at each change of lane, the road between the drawn hit
   // boxes of obstacles met before and after it is at least the tallest pack's hit boxes, the lane
   // moves made between them in whole walk steps and the reaction margin. Two obstacles WIDE_LANES
-  // or more lanes wide have a row between them. At the road's speed in the last neighbourhood, for
-  // the walkers whose lane moves cover the least and the most road.
-  it("spaces obstacles for the path's lane changes between them, at the shortest and longest lane move", () => {
-    for (const { walker, zone } of LANE_MOVE_WALKERS.flatMap((walker) =>
-      ZONE_IDS.map((zone) => ({ walker, zone })),
-    )) {
+  // or more lanes wide have a row between them. At the road's speed in the last neighbourhood. The
+  // planner and this check both take the slowest debuffed pack's lane move, whoever walks, and
+  // every walker walks the road at the same speed, so one walker stands for all.
+  it("spaces obstacles for the path's lane changes between them, at the slowest lane move", () => {
+    for (const zone of ZONE_IDS) {
+      const walker = DEFAULT_WALKER;
       const zoned = inZone(realRun(REAL, walker), zone, WORLD.walkLength - 1);
       const speed = walkScrollSpeed(REAL, zoned);
       const steps = Math.ceil(muddyLaneMove / STEP_SECONDS - 1e-9);

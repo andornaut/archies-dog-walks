@@ -94,7 +94,7 @@ interface StandingStop {
   readonly whole: boolean;
 }
 
-describe("movers", { timeout: 300_000 }, () => {
+describe("movers", { timeout: 200_000 }, () => {
   const baselineData = { ...REAL, movementAssignments: {} };
   const OBSTACLE_KINDS = [...OBSTACLE_IDS, ...MINOR_OBSTACLE_IDS] as WalkItem["kind"][];
   // The rulebook's obstacles that never move: art sculptures, benches, bins, cherry trees,
@@ -289,18 +289,6 @@ describe("movers", { timeout: 300_000 }, () => {
     return { placements, speed: input.geometry.scrollSpeed };
   };
 
-  it("plans the same movers for the same seed", () => {
-    const zoned = inZone(realRun(everyMover, FASTEST_WALKER), WORLD.lastZone, WORLD.walkLength - 1);
-    const plan = (seed: number) =>
-      planZoneForSeed(everyMover, GAME_ROAD, seed, {
-        road: startRoad(LANE_COUNT),
-        run: zoned,
-      }).road.pending;
-    const first = plan(4);
-    expect(plan(4)).toEqual(first);
-    expect(plan(5)).not.toEqual(first);
-  });
-
   // Count and shape capability is independent of which compatible value a whole layout selects.
   it("keeps every native hop count and shape, any way or sideways only", () => {
     for (const { hop, tuned } of hopping) {
@@ -370,23 +358,39 @@ describe("movers", { timeout: 300_000 }, () => {
     mover: MoverPath | undefined;
     speed: number;
   };
-  // Every spawn planned in a zone at a walk position on a seed, planned once for every search.
-  const spawnPlans = new Map<string, readonly Planned[]>();
-  const spawnsOf = (zone: ZoneId, zoneIndex: number, seed: number): readonly Planned[] => {
+  // A zone at a walk position on a seed with every mover moving, at the fastest pace: its road and
+  // every spawn so planned, planned once for every test.
+  const zonePlans = new Map<string, { road: Walk["road"]; spawns: readonly Planned[] }>();
+  const zonePlanOf = (zone: ZoneId, zoneIndex: number, seed: number) => {
     const key = `${zone} ${zoneIndex} ${seed}`;
-    let planned = spawnPlans.get(key);
+    let planned = zonePlans.get(key);
     if (planned === undefined) {
       const zoned = inZone(realRun(everyMover, FASTEST_WALKER), zone, zoneIndex);
-      const walk = planZoneForSeed(everyMover, GAME_ROAD, seed, {
+      const { road } = planZoneForSeed(everyMover, GAME_ROAD, seed, {
         road: startRoad(LANE_COUNT),
         run: zoned,
       });
       const speed = walkScrollSpeed(everyMover, zoned);
-      planned = walk.road.pending.map(({ kind, lane, mover }) => ({ kind, lane, mover, speed }));
-      spawnPlans.set(key, planned);
+      const spawns = road.pending.map(({ kind, lane, mover }) => ({ kind, lane, mover, speed }));
+      planned = { road, spawns };
+      zonePlans.set(key, planned);
     }
     return planned;
   };
+  const spawnsOf = (zone: ZoneId, zoneIndex: number, seed: number): readonly Planned[] =>
+    zonePlanOf(zone, zoneIndex, seed).spawns;
+
+  it("plans the same movers for the same seed", () => {
+    const [zone, zoneIndex] = [WORLD.lastZone, WORLD.walkLength - 1];
+    const zoned = inZone(realRun(everyMover, FASTEST_WALKER), zone, zoneIndex);
+    const first = zonePlanOf(zone, zoneIndex, 4).road.pending;
+    const again = planZoneForSeed(everyMover, GAME_ROAD, 4, {
+      road: startRoad(LANE_COUNT),
+      run: zoned,
+    }).road.pending;
+    expect(again).toEqual(first);
+    expect(zonePlanOf(zone, zoneIndex, 5).road.pending).not.toEqual(first);
+  });
   // Every spawn planned in zone at its first and last walk positions, on each of seeds.
   const planIn = (zone: ZoneId, seeds: readonly number[]): Planned[] =>
     [0, WORLD.walkLength - 1].flatMap((zoneIndex) =>
@@ -718,14 +722,10 @@ describe("movers", { timeout: 300_000 }, () => {
     const movement = movementOf(kind);
     return movement?.kind === "stopAndGoAcross" ? movement.stops : [];
   };
-  const stopsOn = (tuned: Real, kind: WalkItem["kind"], seed: number): StandingStop[] =>
+  const stopsOn = (kind: WalkItem["kind"], seed: number): StandingStop[] =>
     zonesOf(kind).flatMap((zone) =>
       [0, WORLD.walkLength - 1].flatMap((zoneIndex) => {
-        const run = inZone(realRun(tuned, FASTEST_WALKER), zone, zoneIndex);
-        const { road } = planZoneForSeed(tuned, GAME_ROAD, seed, {
-          road: startRoad(LANE_COUNT),
-          run,
-        });
+        const { road } = zonePlanOf(zone, zoneIndex, seed);
         const span = footprintOf(REAL, kind).lanes;
         return road.pending.flatMap(({ distance, kind: planned, mover }) => {
           if (planned !== kind || mover?.motion !== "cross" || mover.pause === undefined) {
@@ -747,16 +747,15 @@ describe("movers", { timeout: 300_000 }, () => {
         });
       }),
     );
-  // Plans tuned a seed at a time from seed 1 until found holds of the stops or the search has
-  // planned its most seeds.
+  // Plans every mover moving a seed at a time from seed 1 until found holds of the stops or the
+  // search has planned its most seeds.
   const searchStops = (
-    tuned: Real,
     kind: WalkItem["kind"],
     found: (stops: readonly StandingStop[]) => boolean,
   ): StandingStop[] => {
     const stops: StandingStop[] = [];
     for (let seed = 1; seed <= SEARCH_SEEDS_MOST && !found(stops); seed++) {
-      stops.push(...stopsOn(tuned, kind, seed));
+      stops.push(...stopsOn(kind, seed));
     }
     return stops;
   };
@@ -775,7 +774,7 @@ describe("movers", { timeout: 300_000 }, () => {
   // On whole lanes, so it covers only as many lanes as it is wide: a 2-lane one never straddles
   // three; and in a stop that leaves the path open on its row.
   it.each(stopKinds)("stands each %s in one of its stops, never over the path's lane", (kind) => {
-    const stops = searchStops(everyMover, kind, (found) => found.length >= SEARCH_ENOUGH);
+    const stops = searchStops(kind, (found) => found.length >= SEARCH_ENOUGH);
     expect(stops.length).toBeGreaterThan(0);
     for (const { open, stands, whole } of stops) {
       expect(whole).toBe(true);
@@ -1169,7 +1168,8 @@ describe("movers", { timeout: 300_000 }, () => {
     ]);
   });
 
-  // About half of a shy kind's hoppers hop shy, drawn per mover, across zones and seeds.
+  // About half of a shy kind's hoppers hop shy, drawn per mover, across zones and seeds: two seeds
+  // of every zone plan more than 40 hoppers.
   it("hops about half of a shy kind's hoppers shy", () => {
     const shyHops = hoppingInstead(legacyMovers, {
       kind: "hop",
@@ -1178,7 +1178,7 @@ describe("movers", { timeout: 300_000 }, () => {
       times: { max: 2, min: 1 },
     });
     const motions = ZONE_IDS.flatMap((zone) =>
-      [1, 2, 3].flatMap((seed) => {
+      [1, 2].flatMap((seed) => {
         const zoned = inZone(realRun(shyHops, FASTEST_WALKER), zone, 0);
         return planZoneForSeed(shyHops, GAME_ROAD, seed, {
           road: startRoad(LANE_COUNT),

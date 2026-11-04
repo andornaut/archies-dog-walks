@@ -46,7 +46,7 @@ import {
   type Walk,
   walkScrollSpeed,
 } from "./walk";
-import { blocksLane, footprintOf, movementOf } from "./walkItems";
+import { blocksLane, footprintOf, movementOf, type WalkItemKind } from "./walkItems";
 
 // While set, the lane-balance bias is off: the planner's only weighted draws are its lane balance
 // (laneBalanceWeight), so even weights draw every place that fits alike.
@@ -301,7 +301,7 @@ it("distinguishes a changing swept union from concurrent multi-actor contact", (
 // Every zone at the fastest pace, with every obstacle that can move moving: a way past every
 // lane-blocking spawn from every lane, at most the caps of movers on screen, the pack-fit gap
 // wherever the path changes lanes between two obstacles, and each mover moving as its kind does.
-describe("the planned road", { timeout: 240_000 }, () => {
+describe("the planned road", { timeout: 200_000 }, () => {
   const everyMover: Real = { ...REAL, world: sharedWorld(WORLD, 1) };
   // Every stepper and hopper hopping 1 or 2 times, each hop up to 2 spots any way.
   const HOP: HopMovement = { kind: "hop", most: 2, times: { max: 2, min: 1 } };
@@ -365,8 +365,10 @@ describe("the planned road", { timeout: 240_000 }, () => {
     ...ZONE_IDS.map((zone) => ({ zone, zoneIndex: WORLD.walkLength - 1 })),
     { zone: WORLD.firstZone as ZoneId, zoneIndex: 0 },
   ];
-  // How many seeds the overlap check plans each zone place on.
+  // The most seeds the overlap check plans each zone place on, and how many stop-and-go crossers
+  // it plans before it stops.
   const OVERLAP_SEEDS = 8;
+  const OVERLAP_CROSSERS = 8;
   type PassableCase = {
     road: RoadGeometry;
     seed?: number;
@@ -379,23 +381,34 @@ describe("the planned road", { timeout: 240_000 }, () => {
     sized.flatMap(({ road, taller }) =>
       zonePlaces.map(({ zone, zoneIndex }) => ({
         road,
-        tuned: widerRows(tuned, taller),
+        tuned: taller === 0 ? tuned : widerRows(tuned, taller),
         zone,
         zoneIndex,
       })),
     ),
   );
-  // Each case's plan on its seed, 1 unless given, planned once for every check made of it.
-  const plans = new Map<PassableCase, Walk>();
+  // Each case's plan on its seed, 1 unless given, planned once for every check made of it, by its
+  // data and road objects, zone, walk position and seed.
+  const ids = new Map<object, number>();
+  const idOf = (value: object): number => {
+    let id = ids.get(value);
+    if (id === undefined) {
+      id = ids.size;
+      ids.set(value, id);
+    }
+    return id;
+  };
+  const plans = new Map<string, Walk>();
   const planOf = (passable: PassableCase): Walk => {
-    let walk = plans.get(passable);
+    const { road, seed = 1, tuned, zone, zoneIndex } = passable;
+    const key = `${idOf(tuned)} ${idOf(road)} ${zone} ${zoneIndex} ${seed}`;
+    let walk = plans.get(key);
     if (walk === undefined) {
-      const { road, seed = 1, tuned, zone, zoneIndex } = passable;
       walk = planZoneForSeed(tuned, road, seed, {
         road: startRoad(LANE_COUNT),
         run: inZone(realRun(tuned, FASTEST_WALKER), zone, zoneIndex),
       });
-      plans.set(passable, walk);
+      plans.set(key, walk);
     }
     return walk;
   };
@@ -622,15 +635,32 @@ describe("the planned road", { timeout: 240_000 }, () => {
   it("keeps every standing obstacle's hit box off every mover's but a dart's", () => {
     expect(PASSABLE.flatMap(standingOverlaps)).toEqual([]);
   });
-  // Over many seeds of every zone where a walk has it, as no one seed plans every stop-and-go
-  // crosser next to a standing obstacle.
-  it.each(zonePlaces)(
+  // Over many seeds of every zone place whose zone weighs a stop-and-go crosser, as no one seed
+  // plans every stop-and-go crosser next to a standing obstacle: a seed at a time from seed 1 until
+  // it has planned enough of them. The check above covers every zone place on seed 1.
+  const isCrosser = ({ mover }: Walk["road"]["pending"][number]) =>
+    mover?.motion === "cross" && mover.pause !== undefined;
+  const weighsCrosser = (zone: ZoneId) =>
+    WORLD.zones.some(
+      ({ id, weights }) =>
+        id === zone &&
+        [...Object.entries(weights.minorObstacles), ...Object.entries(weights.obstacles)].some(
+          ([kind, weight]) =>
+            weight > 0 && movementOf(REAL, kind as WalkItemKind)?.kind === "stopAndGoAcross",
+        ),
+    );
+  it.each(zonePlaces.filter(({ zone }) => weighsCrosser(zone)))(
     "keeps every standing obstacle's hit box off every mover's but a dart's in $zone at $zoneIndex",
     (place) => {
-      const seeds = Array.from({ length: OVERLAP_SEEDS }, (_, i) => i + 1);
-      expect(
-        seeds.flatMap((seed) => standingOverlaps({ ...place, road: GAME_ROAD, seed, tuned: REAL })),
-      ).toEqual([]);
+      const overlaps: string[] = [];
+      let crossers = 0;
+      for (let seed = 1; seed <= OVERLAP_SEEDS && crossers < OVERLAP_CROSSERS; seed++) {
+        const passable = { ...place, road: GAME_ROAD, seed, tuned: REAL };
+        overlaps.push(...standingOverlaps(passable));
+        crossers += planOf(passable).road.pending.filter(isCrosser).length;
+      }
+      expect(crossers).toBeGreaterThan(0);
+      expect(overlaps).toEqual([]);
     },
   );
 });

@@ -1,6 +1,5 @@
 // The walk tests' view of the spawn planner on the game's road: the real data, the game's
 // road and pack, and each lane-blocking spawn's spans and contact with the pack.
-import { itemAt } from "@andornaut/game-kit/arrays";
 import { keysOf } from "@andornaut/game-kit/records";
 
 import { MINOR_OBSTACLES } from "../data/minorObstacles";
@@ -18,7 +17,6 @@ import { signaturePlace } from "../runner/signaturePaths";
 import {
   componentHitLength,
   itemHeight,
-  laneMoveSeconds,
   plannedCellInset,
   type RoadGeometry,
   type Walk,
@@ -105,16 +103,6 @@ export const FASTEST_WALKER = keysOf(WALKERS).reduce((fastest, walker) => {
   const speed = (id: WalkerId) => walkScrollSpeed(REAL, realRun(REAL, id));
   return speed(walker) > speed(fastest) ? walker : fastest;
 });
-// The walkers whose lane move covers the least and the most road: a lane move takes the same
-// time whoever walks, over road that a walker's pace scrolls faster or slower.
-export const LANE_MOVE_WALKERS = (() => {
-  const road = (walker: WalkerId) => {
-    const run = realRun(REAL, walker);
-    return laneMoveSeconds(REAL, run) * walkScrollSpeed(REAL, run);
-  };
-  const walkers = keysOf(WALKERS).sort((a, b) => road(a) - road(b));
-  return [itemAt(walkers, 0), itemAt(walkers, walkers.length - 1)];
-})();
 // The greatest common divisor: the row spacing, of distances on rows, some of them negative.
 export const gcdOf = (values: readonly number[]): number =>
   values.reduce((a, b) => {

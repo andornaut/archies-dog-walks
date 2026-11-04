@@ -1,5 +1,5 @@
 import { STEP_SECONDS } from "@andornaut/game-kit/clock/fixedStep";
-import { describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
 
 import { gameData } from "../data";
 import { LANE_COUNT } from "../data/screen";
@@ -38,17 +38,28 @@ interface Saved {
   readonly walk: ResumeWalk;
 }
 
+// Where a walk is saved: at point before zone index zone, or as that zone starts.
+interface SaveAt {
+  readonly point: Point;
+  readonly zone: number;
+}
+
+// The save made at a save point, and the session as it was there when saved as a zone starts.
+interface SavedAt {
+  saved: Saved | undefined;
+  sessionAt: Session | undefined;
+}
+
 // Plays session on from the logged inputs at next, as the game's replay does, and saves where it
-// would resume from at point before zone index zone, or as that zone starts.
+// would resume from at each of saveAt.
 function playOn(
   streams: RunStreams,
   inputs: readonly InputEvent[],
   start: { next: number; session: Session },
-  saveAt?: { point: Point; zone: number },
-): { run: RunState; saved: Saved | undefined; sessionAt: Session | undefined } {
+  saveAt: readonly SaveAt[] = [],
+): { run: RunState; saves: SavedAt[] } {
   let { next, session } = start;
-  let saved: Saved | undefined;
-  let sessionAt: Session | undefined;
+  const saves: SavedAt[] = saveAt.map(() => ({ saved: undefined, sessionAt: undefined }));
   const save = (point: Session) => ({
     next,
     walk: { draws: streams.draws(), seed: streams.seed, session: point },
@@ -69,19 +80,22 @@ function playOn(
     }
     const { run } = step.session.walk;
     for (const event of step.events) {
-      if (saved !== undefined || saveAt === undefined || run.zoneIndex !== saveAt.zone) {
-        continue;
-      }
-      if (saveAt.point === "fork" && event.kind === "zoneEnded" && run.phase.kind !== "ended") {
-        saved = save(forkPoint(step.session));
-      } else if (saveAt.point === "zoneStart" && event.kind === "zonePlanned") {
-        saved = save(zoneStartPoint(step.session, event.unplanned));
-        sessionAt = step.session;
+      for (const [index, { point, zone }] of saveAt.entries()) {
+        const at = saves[index]!;
+        if (at.saved !== undefined || run.zoneIndex !== zone) {
+          continue;
+        }
+        if (point === "fork" && event.kind === "zoneEnded" && run.phase.kind !== "ended") {
+          at.saved = save(forkPoint(step.session));
+        } else if (point === "zoneStart" && event.kind === "zonePlanned") {
+          at.saved = save(zoneStartPoint(step.session, event.unplanned));
+          at.sessionAt = step.session;
+        }
       }
     }
     session = step.session;
   }
-  return { run: session.walk.run, saved, sessionAt };
+  return { run: session.walk.run, saves };
 }
 
 // The first simulated walk that reaches zone 4, so every row can save it as zone 3 starts.
@@ -102,15 +116,16 @@ function walkReaching(): { inputs: readonly InputEvent[]; run: RunState; seed: n
 // A walk saved between zones and resumed from its checkpoint, as the next launch does, plays the
 // rest of the walk as the walk itself did: the run's streams take up where they were, each zone
 // is planned from the seed as before, and transient movement timing starts fresh at the boundary.
-describe("a walk resumed from its checkpoint", { timeout: 200_000 }, () => {
-  it.each<{ point: Point; zone: number }>([
+describe("a walk resumed from its checkpoint", () => {
+  const CASES: readonly { point: Point; zone: number }[] = [
     { point: "zoneStart", zone: 2 },
     { point: "fork", zone: 2 },
     { point: "zoneStart", zone: 3 },
-  ])("plays on as the walk did, saved at the $point of zone $zone", ({ point, zone }) => {
-    const zoneIndex = zone - 1;
-    const found = walkReaching();
-    const { inputs, seed } = found;
+  ];
+  // The walk played once from its start in the game, saved at every case's point.
+  let played: ReturnType<typeof playOn>;
+  beforeAll(() => {
+    const { inputs, seed } = walkReaching();
     const streams = runStreams(seed);
     const run = newRun(gameData, PACK.length, {
       dogs: PACK,
@@ -121,30 +136,43 @@ describe("a walk resumed from its checkpoint", { timeout: 200_000 }, () => {
       road: startRoad(LANE_COUNT),
       run,
     });
-    const played = playOn(streams, inputs, { next: 0, session }, { point, zone: zoneIndex });
-    expect(played.run).toEqual(found.run);
-    const { saved } = played;
-    if (saved === undefined) {
-      throw new Error(`the walk was not saved at the ${point} of zone ${zone}`);
-    }
-    expect(saved.walk.session.debuffMovement).toBeNull();
-    expect(saved.walk.session.walk.run.debuffs).toEqual([]);
+    played = playOn(
+      streams,
+      inputs,
+      { next: 0, session },
+      CASES.map(({ point, zone }) => ({ point, zone: zone - 1 })),
+    );
+  }, 90_000);
 
-    const checkpoint = {
-      ...checkpointOf(gameData, saved.walk.session.walk.run),
-      resume: encodeResume(gameData, saved.walk) ?? "",
-    };
-    const launched = launchWalk(gameData, true, checkpoint);
-    if (launched.kind !== "resume") {
-      throw new Error(`the walk did not resume: ${JSON.stringify(launched)}`);
-    }
-    const { walk } = launched;
-    const resumedStreams = runStreams(walk.seed, walk.draws);
-    const resumed = resumeSession(gameData, resumedStreams, screenRoadGeometry, walk.session);
-    if (played.sessionAt !== undefined) {
-      expect(resumed.session).toEqual(played.sessionAt);
-    }
-    const rest = playOn(resumedStreams, inputs, { next: saved.next, session: resumed.session });
-    expect(rest.run).toEqual(found.run);
-  });
+  it.each(CASES.map((saveAt, index) => ({ ...saveAt, index })))(
+    "plays on as the walk did, saved at the $point of zone $zone",
+    ({ index, point, zone }) => {
+      const found = walkReaching();
+      const { inputs } = found;
+      expect(played.run).toEqual(found.run);
+      const { saved, sessionAt } = played.saves[index]!;
+      if (saved === undefined) {
+        throw new Error(`the walk was not saved at the ${point} of zone ${zone}`);
+      }
+      expect(saved.walk.session.debuffMovement).toBeNull();
+      expect(saved.walk.session.walk.run.debuffs).toEqual([]);
+
+      const checkpoint = {
+        ...checkpointOf(gameData, saved.walk.session.walk.run),
+        resume: encodeResume(gameData, saved.walk) ?? "",
+      };
+      const launched = launchWalk(gameData, true, checkpoint);
+      if (launched.kind !== "resume") {
+        throw new Error(`the walk did not resume: ${JSON.stringify(launched)}`);
+      }
+      const { walk } = launched;
+      const resumedStreams = runStreams(walk.seed, walk.draws);
+      const resumed = resumeSession(gameData, resumedStreams, screenRoadGeometry, walk.session);
+      if (sessionAt !== undefined) {
+        expect(resumed.session).toEqual(sessionAt);
+      }
+      const rest = playOn(resumedStreams, inputs, { next: saved.next, session: resumed.session });
+      expect(rest.run).toEqual(found.run);
+    },
+  );
 });
