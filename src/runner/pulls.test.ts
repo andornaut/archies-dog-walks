@@ -204,10 +204,11 @@ describe("what a dog pulls toward", () => {
     }
   });
 
-  it("does not strain toward encounters without a pull resolution", () => {
+  it("does not strain toward encounters without a pull resolution, nor at random", () => {
     for (const kind of ["treat", "otherDog", "tip"] as const) {
       expect(after(walkWith(["lady"], [item(kind, 0, 4)]), 2).tells).toEqual([]);
     }
+    expect(after(walkWith(["kilo", "lady", "buddy"]), 30).tells).toEqual([]);
   });
 
   it("selects pull targets from encounter data rather than their identity", () => {
@@ -227,27 +228,39 @@ describe("what a dog pulls toward", () => {
     expect(pulled.walk.road.control.target).toBe(3);
   });
 
-  it("never pulls without a target: no random pulls", () => {
-    expect(after(walkWith(["kilo", "lady", "buddy"]), 30).tells).toEqual([]);
-  });
-
-  it("does not chase with Good leash, or toward a squirrel in the pack's lane", () => {
-    const leashed = walkWith(["kilo"], [item("squirrel", 0, 0)]);
-    const withLeash = { ...leashed, run: { ...leashed.run, modifiers: [GOOD_LEASH] } };
-    const held = after(withLeash, 2);
-    expect(held.tells).toEqual([]);
-    expect(held.leashed).toEqual(["kilo"]);
-    expect(after(walkWith(["kilo"], [item("squirrel", 0, 2)]), 2).tells).toEqual([]);
-  });
-
+  const leashed = walkWith(["kilo"], [item("squirrel", 0, 0)]);
   it.each([
-    { squirrel: item("squirrel", 0, 0, 600), standing: "standing" },
     {
-      squirrel: { ...item("squirrel", 0, 0, 600), mover: { path: DARTING, since: 600 } },
-      standing: "darting",
+      leashed: ["kilo"],
+      name: "a squirrel with Good leash",
+      seconds: 2,
+      walk: { ...leashed, run: { ...leashed.run, modifiers: [GOOD_LEASH] } },
     },
-  ])("ignores a $standing squirrel the pack has passed", ({ squirrel }) => {
-    expect(after(walkWith(["kilo"], [squirrel]), 1.5).tells).toEqual([]);
+    {
+      leashed: [],
+      name: "a squirrel in the pack's lane",
+      seconds: 2,
+      walk: walkWith(["kilo"], [item("squirrel", 0, 2)]),
+    },
+    {
+      leashed: [],
+      name: "a standing squirrel the pack has passed",
+      seconds: 1.5,
+      walk: walkWith(["kilo"], [item("squirrel", 0, 0, 600)]),
+    },
+    {
+      leashed: [],
+      name: "a darting squirrel the pack has passed",
+      seconds: 1.5,
+      walk: walkWith(
+        ["kilo"],
+        [{ ...item("squirrel", 0, 0, 600), mover: { path: DARTING, since: 600 } }],
+      ),
+    },
+  ])("does not chase $name", ({ leashed: held, seconds, walk }) => {
+    const chased = after(walk, seconds);
+    expect(chased.tells).toEqual([]);
+    expect(chased.leashed).toEqual(held);
   });
 
   // Of three dogs, the biggest leads, the next walks front-left and the smallest front-right.

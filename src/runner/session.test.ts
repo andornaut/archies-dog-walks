@@ -62,18 +62,16 @@ const take = (count: number, random: () => number) => Array.from({ length: count
 const kinds = (events: readonly SessionEvent[]) => events.map(({ kind }) => kind);
 
 describe("runStreams", () => {
-  it("names each stream from the seed, so a seed repeats them and another seed does not", () => {
+  // Each stream is named from the seed, so a seed repeats them and another seed does not. A
+  // card's draws never shift the fork offers, so a card tuning change or another way of walking
+  // keeps same-seed routes and upgrades.
+  it("names each stream from the seed, keeping forks and upgrades apart from cards and each other", () => {
     const draws = (seed: number) => {
       const { cards, debuffMovement, forks, upgrades } = runStreams(seed);
       return [take(5, cards), take(5, debuffMovement(0)), take(5, forks), take(5, upgrades)];
     };
     expect(draws(3)).toEqual(draws(3));
     expect(draws(4)).not.toEqual(draws(3));
-  });
-
-  // A card's draws never shift the fork offers, so a card tuning change or another way of
-  // walking keeps same-seed routes and upgrades.
-  it("keeps the fork and upgrade streams apart from the card stream and each other", () => {
     const fresh = runStreams(3);
     const [cards, forks, upgrades] = [
       take(5, fresh.cards),
@@ -175,10 +173,6 @@ const OFFERS = new Map(SEEDS.map((seed) => [seed, seedForks(seed)]));
 const offersOf = (seed: number) => OFFERS.get(seed) ?? [];
 
 describe("a walk's forks, drawn from its seed", () => {
-  it.each(SEEDS.slice(0, 3))("offers the same upgrades every time for seed %i", (seed) => {
-    expect(seedForks(seed)).toEqual(offersOf(seed));
-  });
-
   it.each(SEEDS.slice(0, 3))(
     "for seed %i, bares one path of a fork with several; the rest carry upgrades, none twice or picked, one trade-off",
     (seed) => {
@@ -201,12 +195,18 @@ describe("a walk's forks, drawn from its seed", () => {
     },
   );
 
-  it("varies with the seed", () => {
+  it("repeats a seed's offers, and varies them with the seed", () => {
+    for (const seed of SEEDS.slice(0, 3)) {
+      expect(seedForks(seed)).toEqual(offersOf(seed));
+    }
     const distinct = new Set(SEEDS.map((seed) => JSON.stringify(offersOf(seed)[0])));
     expect(distinct.size).toBeGreaterThan(SEEDS.length / 4);
   });
 
-  it("offers every upgrade, and leaves every zone a fork offers without one, on some seed", () => {
+  // On some seed every upgrade is offered and every zone a fork offers is left bare. A fork with
+  // more than one path leaves exactly one bare, any of them; the last fork's one path always
+  // carries an upgrade.
+  it("offers every upgrade and bares every zone on some seed, one path a fork, never the last's", () => {
     const forks = SEEDS.flatMap(offersOf);
     const offered = new Set(forks.flatMap(({ upgrades }) => upgrades));
     expect([...offered].sort()).toEqual([...keysOf(gameData.upgrades), null].sort());
@@ -216,12 +216,6 @@ describe("a walk's forks, drawn from its seed", () => {
     const offeredZones = new Set(forks.flatMap(({ paths }) => paths));
     offeredZones.delete(gameData.world.lastZone as ZoneId);
     expect([...bare].sort()).toEqual([...offeredZones].sort());
-  });
-
-  // A fork with more than one path leaves exactly one bare, any of them; the last fork's one
-  // path always carries an upgrade.
-  it("leaves one path of each fork with several bare, at every position, and never the last fork's", () => {
-    const forks = SEEDS.flatMap(offersOf);
     const bareAt = (upgrades: readonly unknown[]) => upgrades.indexOf(null);
     const multi = forks.filter(({ paths }) => paths.length > 1);
     expect(
@@ -702,7 +696,7 @@ describe("chooseShownCard", () => {
     throw new Error("The skunk card did not open");
   }
 
-  it("picks nothing when no card, or the next card, is open", () => {
+  it("chooses on the card it shows, and picks nothing when no card, or the next card, is open", () => {
     for (const [, session] of [
       ["no card is open", { ...skunk, card: null }],
       ["the next card is open", shown(STOP)],
@@ -710,9 +704,6 @@ describe("chooseShownCard", () => {
       const step = chooseShownCard(gameData, runStreams(1), geometry, view, 0, session);
       expect(step).toEqual({ events: [], session });
     }
-  });
-
-  it("chooses on the card it shows", () => {
     const choice = view.options.find((option) => option.availability.enabled)?.index ?? "skip";
     const step = chooseShownCard(gameData, runStreams(1), geometry, view, choice, skunk);
     expect(kinds(step.events)[0]).toBe("chosen");

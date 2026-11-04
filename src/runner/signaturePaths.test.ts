@@ -29,7 +29,7 @@ function compiled(profile: SignatureProfile) {
 }
 
 describe("signature paths", () => {
-  it("closes a one-lane by one-row rectangle before returning to road scroll", () => {
+  it("closes a one-lane by one-row rectangle, sweeping its turns, before returning to road scroll", () => {
     const path = compiled({ ...common, kind: "rectangle", lanes: 1, legSeconds: 0.5, rows: 1 });
     expect(path.legs.slice(1).map(({ to }) => to)).toEqual([
       { x: 2, y: 30 },
@@ -43,6 +43,17 @@ describe("signature paths", () => {
     expect(
       signatureTravelSweeps(path, 300, 330).every(({ from, to }) => from.x === 1 && to.x === 1),
     ).toBe(true);
+    // Its component sweeps take in its turns, each holding its part of the path.
+    const sweeps = signatureSweeps(path, 0, path.complete + 10);
+    expect(sweeps.flatMap(({ from, to }) => [from.x, to.x])).toContain(2);
+    expect(sweeps.flatMap(({ from, to }) => [from.y, to.y])).toContain(60);
+    for (const sweep of sweeps) {
+      const middle = signaturePlace(path, (sweep.start + sweep.end) / 2, sweep.component);
+      expect(middle.x).toBeGreaterThanOrEqual(Math.min(sweep.from.x, sweep.to.x));
+      expect(middle.x).toBeLessThanOrEqual(Math.max(sweep.from.x, sweep.to.x));
+      expect(middle.y).toBeGreaterThanOrEqual(Math.min(sweep.from.y, sweep.to.y));
+      expect(middle.y).toBeLessThanOrEqual(Math.max(sweep.from.y, sweep.to.y));
+    }
   });
 
   it("turns once after a row and continues sideways without resuming road scroll", () => {
@@ -215,22 +226,10 @@ describe("signature paths", () => {
     expect(route.tail.y).toBe(1);
   });
 
-  it("includes turns and delayed turns in continuous component sweep partitions", () => {
-    const path = compiled({ ...common, kind: "rectangle", lanes: 1, legSeconds: 0.5, rows: 1 });
-    const sweeps = signatureSweeps(path, 0, path.complete + 10);
-    expect(sweeps.flatMap(({ from, to }) => [from.x, to.x])).toContain(2);
-    expect(sweeps.flatMap(({ from, to }) => [from.y, to.y])).toContain(60);
-    for (const sweep of sweeps) {
-      const middle = signaturePlace(path, (sweep.start + sweep.end) / 2, sweep.component);
-      expect(middle.x).toBeGreaterThanOrEqual(Math.min(sweep.from.x, sweep.to.x));
-      expect(middle.x).toBeLessThanOrEqual(Math.max(sweep.from.x, sweep.to.x));
-      expect(middle.y).toBeGreaterThanOrEqual(Math.min(sweep.from.y, sweep.to.y));
-      expect(middle.y).toBeLessThanOrEqual(Math.max(sweep.from.y, sweep.to.y));
-    }
-  });
-
+  // A route out of the road is rejected, and so is one that cannot finish safely ahead of the
+  // pack, its clearance timed at its actual tail speed.
   it("rejects an out-of-road route or one that cannot finish safely ahead of the pack", () => {
-    const profile: SignatureProfile = {
+    const merges: SignatureProfile = {
       ...common,
       count: 2,
       downFactor: 1.5,
@@ -239,24 +238,12 @@ describe("signature paths", () => {
       mergeSeconds: 0.4,
       straightSeconds: 0.6,
     };
-    expect(compileSignature(geometry, profile, draws, { ...origin, lane: 4 })).toBeNull();
-    expect(compileSignature({ ...geometry, sightLength: 50 }, profile, draws, origin)).toBeNull();
+    expect(compileSignature(geometry, merges, draws, { ...origin, lane: 4 })).toBeNull();
+    expect(compileSignature({ ...geometry, sightLength: 50 }, merges, draws, origin)).toBeNull();
     expect(() =>
-      compileSignature(geometry, { ...profile, straightSeconds: 0 }, draws, origin),
+      compileSignature(geometry, { ...merges, straightSeconds: 0 }, draws, origin),
     ).toThrow("Invalid signature");
-  });
-
-  it("uses actual configured tail speed for minimum time clearance", () => {
-    const profile: SignatureProfile = {
-      ...common,
-      count: 2,
-      downFactor: 3,
-      finishAheadSeconds: 2,
-      kind: "successiveMerges",
-      laneStep: 1,
-      mergeSeconds: 0.4,
-      straightSeconds: 0.6,
-    };
+    const profile = { ...merges, downFactor: 3, finishAheadSeconds: 2 };
     expect(compileSignature({ ...geometry, sightLength: 250 }, profile, draws, origin)).toBeNull();
     const room = { ...geometry, sightLength: 400 };
     const path = compileSignature(room, profile, draws, origin);

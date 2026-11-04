@@ -145,20 +145,11 @@ describe("hitDog", () => {
     ] satisfies readonly [string, Box, DogId | null][]) {
       expect(hitDog(chevron, solid(box))).toBe(dog);
     }
-  });
-
-  // Buddy's rectangle runs 12 to 30 across; the box reaches 20 to 40, its lanes 25 on.
-  it("lands an obstacle only on a dog its lanes reach, not past them", () => {
-    for (const [, laneLeft, dog] of [
-      ["on a dog its lanes reach", 15, "buddy"],
-      ["on no dog only the box's spill past its lanes reaches", 30, null],
-    ] satisfies readonly [string, number, DogId | null][]) {
-      const box = {
-        ...solid({ bottom: 30, left: 20, right: 40, top: 10 }),
-        lanes: { left: laneLeft, right: 60 },
-      };
-      expect(hitDog(chevron, box)).toBe(dog);
-    }
+    // Buddy's rectangle runs 12 to 30 across and the box 20 to 40: its lanes from 15 reach Buddy,
+    // and from 30 only its spill past them does.
+    const box = solid({ bottom: 30, left: 20, right: 40, top: 10 });
+    expect(hitDog(chevron, { ...box, lanes: { left: 15, right: 60 } })).toBe("buddy");
+    expect(hitDog(chevron, { ...box, lanes: { left: 30, right: 60 } })).toBeNull();
   });
 });
 
@@ -218,21 +209,17 @@ describe("a settled pack", () => {
     ];
   };
 
-  it("never touches anything in the lane beside, for any pack size", () => {
-    for (const count of [1, 2, 3]) {
+  it.each([1, 2, 3])(
+    "touches only its own lane still, and both lanes halfway through a change, with %i dogs",
+    (count) => {
       expect(contact(count, stillInLane(2), 1)).toEqual([null, null]);
       expect(contact(count, stillInLane(2), 3)).toEqual([null, null]);
       expect(contact(count, stillInLane(2), 2)).not.toContain(null);
-    }
-  });
-
-  it("touches both lanes halfway through a lane change, for any pack size", () => {
-    for (const count of [1, 2, 3]) {
       const motion = { duration: 1, elapsed: 0.5, from: 2, kind: "moving", to: 3 } as const;
       expect(contact(count, motion, 2)).not.toContain(null);
       expect(contact(count, motion, 3)).not.toContain(null);
-    }
-  });
+    },
+  );
 
   // Every stalker kind, standing on the road at lane 1 with no step taken, its feet level with
   // the lead's rectangle.
@@ -284,18 +271,20 @@ describe("collideWithPack", () => {
     return { ...result, hits: result.hits.map(({ item }) => item) };
   };
 
-  it("retires every representation of a hit id and leaves distinct items", () => {
+  it("hits every touching obstacle with no window, retiring every copy of a hit id", () => {
     const hit = item(1, "obstacle", 2, 570);
+    const beside = item(3, "obstacle", 3, 570);
     const ahead = item(2, "obstacle", 2, 100);
     expect(
-      collided({ ...rules, invulnerabilitySeconds: 0 }, still, 0, [
+      collided({ ...rules, invulnerabilitySeconds: 0 }, midMove, 0, [
         hit,
         { ...hit },
         { ...hit, y: 90 },
+        beside,
         ahead,
       ]),
     ).toEqual({
-      hits: [hit],
+      hits: [hit, beside],
       invulnerableSeconds: 0,
       remaining: [ahead],
     });
@@ -346,6 +335,9 @@ describe("collideWithPack", () => {
     expect(collided(rules, still, during, [obstacle]).hits).toEqual([]);
     const after = tickInvulnerability(0.1, during);
     expect(collided(rules, still, after, [obstacle]).hits).toEqual([obstacle]);
+    // The window counts down to zero and no further.
+    expect(tickInvulnerability(0.25, 1)).toBeCloseTo(0.75);
+    expect(tickInvulnerability(2, 1)).toBe(0);
   });
 
   it("opens no window for a scenery hit, so the next obstacle is hit too", () => {
@@ -366,18 +358,5 @@ describe("collideWithPack", () => {
     });
     expect(asked).toEqual([1, 2]);
     expect(collided(sceneryRules, still, 0, [scenery]).invulnerableSeconds).toBe(0);
-  });
-
-  it("hits every touching obstacle when the window is zero", () => {
-    const noWindow = { ...rules, invulnerabilitySeconds: 0 };
-    const obstacles = [item(1, "obstacle", 2, 570), item(2, "obstacle", 3, 570)];
-    expect(collided(noWindow, midMove, 0, obstacles).hits).toHaveLength(2);
-  });
-});
-
-describe("tickInvulnerability", () => {
-  it("counts the window down to zero and no further", () => {
-    expect(tickInvulnerability(0.25, 1)).toBeCloseTo(0.75);
-    expect(tickInvulnerability(2, 1)).toBe(0);
   });
 });

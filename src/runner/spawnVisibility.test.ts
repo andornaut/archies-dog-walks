@@ -11,26 +11,39 @@ const shown = (entry: number, lane: number, kind = "dog"): SpawnVisibility => ({
 });
 
 describe("visible logical obstacle limits", () => {
-  it("counts a kind across skins and movement paths, but permits a new entry after departure", () => {
+  it.each([
+    { entry: 40, lane: 2, name: "a kind past its cap, across skins and paths", want: "kind-cap" },
+    { entry: 100, lane: 2, name: "a kind's new entry after a departure", want: undefined },
+  ])("judges $name: $want", ({ entry, lane, want }) => {
     const planned = [shown(0, 0), shown(20, 1), shown(25, 3, "cat")];
-    expect(visibilityRejection(1, planned, shown(40, 2))).toBe("kind-cap");
-    expect(visibilityRejection(1, planned, shown(100, 2))).toBeUndefined();
+    expect(visibilityRejection(1, planned, shown(entry, lane))).toBe(want);
   });
 
   it.each([
-    [0.5, 1, "kind-row"],
-    [20, 0, "kind-lane"],
-    [10.1, 1, "kind-entry"],
-  ] as const)("rejects a duplicate spawn at %s in lane %s: %s", (entry, lane, reason) => {
-    const existing = reason === "kind-entry" ? shown(9.9, 0) : shown(0, 0);
-    expect(visibilityRejection(1, [existing], shown(entry, lane))).toBe(reason);
-  });
-
-  it("treats prepopulated negative rows as entering together at the start of the walk", () => {
-    expect(visibilityRejection(1, [shown(-30, 0)], shown(-10, 1))).toBe("kind-entry");
-  });
-
-  it("checks overlap at later starts when an incoming interval begins first", () => {
-    expect(visibilityRejection(1, [shown(20, 1), shown(40, 2)], shown(0, 0))).toBe("kind-cap");
+    { entry: 0.5, existing: [shown(0, 0)], lane: 1, name: "in the same row", want: "kind-row" },
+    { entry: 20, existing: [shown(0, 0)], lane: 0, name: "in the same lane", want: "kind-lane" },
+    {
+      entry: 10.1,
+      existing: [shown(9.9, 0)],
+      lane: 1,
+      name: "entering together",
+      want: "kind-entry",
+    },
+    {
+      entry: -10,
+      existing: [shown(-30, 0)],
+      lane: 1,
+      name: "prepopulated in negative rows, as entering together at the walk's start",
+      want: "kind-entry",
+    },
+    {
+      entry: 0,
+      existing: [shown(20, 1), shown(40, 2)],
+      lane: 0,
+      name: "overlapping later starts when it begins first",
+      want: "kind-cap",
+    },
+  ])("rejects a spawn $name: $want", ({ entry, existing, lane, want }) => {
+    expect(visibilityRejection(1, existing, shown(entry, lane))).toBe(want);
   });
 });

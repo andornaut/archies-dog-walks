@@ -93,12 +93,6 @@ const boardIn = (lane: number, id: number): WalkItem => ({
   y: ROAD.packBand.top - 60,
 });
 
-function afterDrift(walk: Walk): number {
-  return destinationLane(
-    stepDebuffMovement(fixed, ROAD, () => 0, EVERY, null, walk).walk.road.control.motion,
-  );
-}
-
 describe("debuff movement profiles", () => {
   it("moves eligibility and timing with the data assignment", () => {
     const calm = { ...fixed.debuffs.zoomies };
@@ -131,56 +125,48 @@ describe("debuff movement profiles", () => {
     );
   });
 
-  it("rejects multiple movement owners", () => {
-    const data: GameData = {
-      ...fixed,
-      debuffs: { ...fixed.debuffs, stinky: { ...fixed.debuffs.stinky, movement: FIXED } },
-    };
-    expect(() => debuffDriftProfile(data)).toThrow("Only one debuff may define movement");
+  const timed = (data: GameData, seconds: Partial<GameData["tuning"]["seconds"]>): GameData => ({
+    ...data,
+    tuning: { ...data.tuning, seconds: { ...data.tuning.seconds, ...seconds } },
   });
-
+  const unordered = "positive, finite and ordered";
   it.each([
-    { ...FIXED, kind: "teleport" },
-    { ...FIXED, direction: "left" },
-    { ...FIXED, interval: { kind: "exponential" } },
-  ])("rejects unsupported strategies %o", (movement) => {
-    expect(() =>
-      debuffDriftProfile(configured(movement as unknown as DebuffDriftMovement)),
-    ).toThrow("Unsupported debuff");
-  });
-
-  it.each([0, -1, Number.NaN, Number.POSITIVE_INFINITY])(
-    "rejects invalid fixed interval %s",
-    (seconds) => {
-      const data: GameData = {
+    {
+      data: {
         ...fixed,
-        tuning: {
-          ...fixed.tuning,
-          seconds: { ...fixed.tuning.seconds, zoomiesDriftSeconds: seconds },
-        },
-      };
-      expect(() => debuffDriftProfile(data)).toThrow("positive, finite and ordered");
-    },
-  );
-
-  it.each([
-    [0, 1],
-    [1, 0.5],
-    [Number.NaN, 1],
-    [1, Number.POSITIVE_INFINITY],
-  ])("rejects invalid uniform interval %s..%s", (min, max) => {
-    const data: GameData = {
-      ...uniform,
-      tuning: {
-        ...uniform.tuning,
-        seconds: {
-          ...uniform.tuning.seconds,
-          zoomiesDriftMaxSeconds: max,
-          zoomiesDriftMinSeconds: min,
-        },
+        debuffs: { ...fixed.debuffs, stinky: { ...fixed.debuffs.stinky, movement: FIXED } },
       },
-    };
-    expect(() => debuffDriftProfile(data)).toThrow("positive, finite and ordered");
+      error: "Only one debuff may define movement",
+      name: "multiple movement owners",
+    },
+    ...[
+      { ...FIXED, kind: "teleport" },
+      { ...FIXED, direction: "left" },
+      { ...FIXED, interval: { kind: "exponential" } },
+    ].map((movement) => ({
+      data: configured(movement as unknown as DebuffDriftMovement),
+      error: "Unsupported debuff",
+      name: `the unsupported strategy ${JSON.stringify(movement)}`,
+    })),
+    ...[0, -1, Number.NaN, Number.POSITIVE_INFINITY].map((seconds) => ({
+      data: timed(fixed, { zoomiesDriftSeconds: seconds }),
+      error: unordered,
+      name: `the fixed interval ${seconds}`,
+    })),
+    ...(
+      [
+        [0, 1],
+        [1, 0.5],
+        [Number.NaN, 1],
+        [1, Number.POSITIVE_INFINITY],
+      ] as const
+    ).map(([min, max]) => ({
+      data: timed(uniform, { zoomiesDriftMaxSeconds: max, zoomiesDriftMinSeconds: min }),
+      error: unordered,
+      name: `the uniform interval ${min}..${max}`,
+    })),
+  ])("rejects $name", ({ data, error }) => {
+    expect(() => debuffDriftProfile(data)).toThrow(error);
   });
 });
 
@@ -238,16 +224,22 @@ describe("debuff movement schedule", () => {
     }
   });
 
+  // With a fixed heading it drifts that way, or to the safe opposite, or stays put when neither
+  // lane is safe, all on fixed timing and without drawing from random.
   it("retains explicit heading and fixed timing without consuming randomness", () => {
     const random = vi.fn(() => 0);
-    for (const [lane, heading, expected] of [
-      [2, 1, 3],
-      [2, -1, 1],
-      [2, undefined, 3],
-      [4, 1, 3],
-      [0, -1, 1],
-    ] satisfies readonly [number, LaneDirection | undefined, number][]) {
-      const result = stepDebuffMovement(fixed, ROAD, random, EVERY, null, walkIn(lane, heading));
+    for (const [lane, heading, items, expected] of [
+      [2, 1, [], 3],
+      [2, -1, [], 1],
+      [2, undefined, [], 3],
+      [4, 1, [], 3],
+      [0, -1, [], 1],
+      [2, 1, [boardIn(3, 0)], 1],
+      [2, 1, [boardIn(3, 0), boardIn(1, 1)], 2],
+      [4, 1, [boardIn(3, 0)], 4],
+    ] satisfies readonly [number, LaneDirection | undefined, WalkItem[], number][]) {
+      const walk = walkIn(lane, heading, items);
+      const result = stepDebuffMovement(fixed, ROAD, random, EVERY, null, walk);
       expect(destinationLane(result.walk.road.control.motion)).toBe(expected);
     }
     expect(random).not.toHaveBeenCalled();
@@ -339,16 +331,6 @@ describe("debuff movement schedule", () => {
     expect(safe.bumps).toEqual([]);
   });
 
-  it("uses the safe opposite or cancels without moving when neither lane is safe", () => {
-    for (const [lane, items, expected] of [
-      [2, [boardIn(3, 0)], 1],
-      [2, [boardIn(3, 0), boardIn(1, 1)], 2],
-      [4, [boardIn(3, 0)], 4],
-    ] satisfies readonly [number, WalkItem[], number][]) {
-      expect(afterDrift(walkIn(lane, 1, items))).toBe(expected);
-    }
-  });
-
   it.each([0, 0.25, 0.5, 1])("samples uniform interval once at activation with draw %s", (draw) => {
     const random = vi.fn(() => draw);
     const first = stepDebuffMovement(uniform, ROAD, random, 0, null, walkIn(2));
@@ -429,7 +411,7 @@ describe("debuff movement schedule", () => {
     expect(current.clock?.elapsed).toBeGreaterThanOrEqual(0);
   });
 
-  it("freezes clock and random draws during hit stops and cards", () => {
+  it("freezes clock and random draws during hit stops and cards, and resets on expiry", () => {
     const walk = walkIn(2);
     const clock: DebuffMovementClock = { debuff: "zoomies", elapsed: 0.2, interval: 1 };
     const random = vi.fn(() => 0.5);
@@ -457,22 +439,13 @@ describe("debuff movement schedule", () => {
       });
       expect(stepDebuffMovement(uniform, ROAD, random, 1, null, state).clock).toBeNull();
     }
-    expect(random).not.toHaveBeenCalled();
-  });
-
-  it("does not schedule prevented or inactive movement and resets on expiry", () => {
-    const walk = walkIn(2);
+    // With the debuff expired, its clock resets and nothing is scheduled.
     const calm = { ...walk, run: { ...walk.run, debuffs: [] } };
-    const random = vi.fn(() => 0.5);
-    const result = stepDebuffMovement(
-      uniform,
-      ROAD,
-      random,
-      1,
-      { debuff: "zoomies", elapsed: 0.2, interval: 1 },
-      calm,
-    );
-    expect(result).toEqual({ clock: null, drifted: null, walk: calm });
+    expect(stepDebuffMovement(uniform, ROAD, random, 1, clock, calm)).toEqual({
+      clock: null,
+      drifted: null,
+      walk: calm,
+    });
     expect(random).not.toHaveBeenCalled();
   });
 

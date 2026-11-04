@@ -35,42 +35,44 @@ const choose = (path: ApproachPath, pack: { x: number; y: number }) =>
 
 describe("a stalker's step", () => {
   // Wherever the pack is, the step nearest it, never up the road: beside or behind it, the
-  // stalker steps across, the left on a tie.
+  // stalker steps across, the left on a tie. A step outside the lanes and rows the planner left
+  // it falls back to the nearest one left.
+  const all = stalker();
   it.each([
-    { lanes: 0, name: "below", rows: 3, want: { lanes: 0, travel: 1 } },
-    { lanes: -2, name: "below and left", rows: 3, want: { lanes: -1, travel: 1 } },
-    { lanes: 2, name: "below and right", rows: 3, want: { lanes: 1, travel: 1 } },
-    { lanes: -2, name: "to the left", rows: 0, want: { lanes: -1, travel: 0 } },
-    { lanes: 2, name: "to the right", rows: 0, want: { lanes: 1, travel: 0 } },
-    { lanes: -2, name: "above and left", rows: -3, want: { lanes: -1, travel: 0 } },
-    { lanes: 0, name: "above", rows: -3, want: { lanes: -1, travel: 0 } },
-    { lanes: 2, name: "above and right", rows: -3, want: { lanes: 1, travel: 0 } },
-  ])("steps toward a pack $name in reach", ({ lanes, rows, want }) => {
-    expect(choose(stalker(), packAt(lanes, rows))).toEqual(want);
-  });
-
-  // A step outside the lanes and rows the planner left it falls back to the nearest one left.
-  it.each([
+    { lanes: 0, name: "below", path: all, rows: 3, want: { lanes: 0, travel: 1 } },
+    { lanes: -2, name: "below and left", path: all, rows: 3, want: { lanes: -1, travel: 1 } },
+    { lanes: 2, name: "below and right", path: all, rows: 3, want: { lanes: 1, travel: 1 } },
+    { lanes: -2, name: "to the left", path: all, rows: 0, want: { lanes: -1, travel: 0 } },
+    { lanes: 2, name: "to the right", path: all, rows: 0, want: { lanes: 1, travel: 0 } },
+    { lanes: -2, name: "above and left", path: all, rows: -3, want: { lanes: -1, travel: 0 } },
+    { lanes: 0, name: "above", path: all, rows: -3, want: { lanes: -1, travel: 0 } },
+    { lanes: 2, name: "above and right", path: all, rows: -3, want: { lanes: 1, travel: 0 } },
     {
-      name: "with only its own lane",
+      lanes: -2,
+      name: "below and left, falling back with only its own lane",
       path: stalker({ reach: { count: 1, first: 2 } }),
+      rows: 3,
       want: { lanes: 0, travel: 1 },
     },
     {
-      name: "with no lane to the left",
+      lanes: -2,
+      name: "below and left, falling back with no lane to the left",
       path: stalker({ reach: { count: 2, first: 2 } }),
+      rows: 3,
       want: { lanes: 0, travel: 1 },
     },
     {
-      name: "with its row down taken",
+      lanes: -2,
+      name: "below and left, falling back with its row down taken",
       path: stalker({
         pending: [{ kind: "near", travel: 400 }],
         steps: [{ at: 100, lanes: 0, length: 100, travel: CELL }],
       }),
+      rows: 3,
       want: { lanes: -1, travel: 0 },
     },
-  ])("falls back $name when it cannot step toward the pack", ({ path, want }) => {
-    expect(choose(path, packAt(-2, 3))).toEqual(want);
+  ])("steps toward a pack $name", ({ lanes, path, rows, want }) => {
+    expect(choose(path, packAt(lanes, rows))).toEqual(want);
   });
 
   // Once its step would start at or past the pack's rows, it takes no step, nor any later one.

@@ -403,11 +403,8 @@ describe("facesLeft", () => {
 });
 
 describe("laneAt and hasLeftRoad", () => {
-  it("puts a lane position in the lane whose half-lane span holds it", () => {
+  it("puts a position in the lane whose half-lane span holds it, dropping a crosser half a lane out", () => {
     expect([-0.6, -0.5, 0.49, 0.5, 4.49, 4.5].map(laneAt)).toEqual([-1, 0, 0, 1, 4, 5]);
-  });
-
-  it("drops a crosser half a lane past either edge", () => {
     const at = (lanePosition: number) => ({ lanePosition, solid: true, travel: 0 });
     expect([-1.01, -1, 5, 5.01].map((p) => hasLeftRoad(5, at(p)))).toEqual([
       true,
@@ -429,14 +426,12 @@ describe("moveMovers", () => {
     y: 0,
   });
 
-  it("moves a mover on by the scroll and places it in the lane it has reached", () => {
+  it("moves a mover on by the scroll into the lane it has reached, dropping one out of sight", () => {
     const [moved] = moveMovers({ laneCount: 5, roadTop: 40 }, 50, [
       item({ path: crosser(1), since: 100 }),
     ]);
     expect(moved).toEqual({ ...item({ path: crosser(1), since: 150 }), lane: 1, y: 40 - 30 + 350 });
-  });
-
-  it("drops a crosser once it is out of sight past the far edge, and leaves other items alone", () => {
+    // It drops a crosser out of sight past the far edge, and leaves other items alone.
     const still = item();
     const gone = item({ path: crosser(1), since: 100 + 5.5 / 0.02 });
     expect(moveMovers({ laneCount: 5, roadTop: 40 }, 1, [still, gone])).toEqual([still]);
@@ -526,39 +521,23 @@ describe("sweptLanes", () => {
 // a dart's start, tilt and turn at the low end of their ranges (the fewest and shortest moves,
 // the left side first, the lowest start and tilt, turning halfway), there and shy, or at the high
 // end (turning at the far edge). A dart of a kind that turns back turns at each end.
+// The low end of every draw but the move lengths, at the middle, and never shy.
+const LOW: MoverDraws = {
+  count: 0,
+  delays: [0, 0, 0],
+  lengths: [0.5, 0.5, 0.5, 0.5],
+  share: 0,
+  shy: 0.999999,
+  side: 0,
+  speed: 0.5,
+  start: 0,
+  tilt: 0,
+  turn: 0,
+  turnAt: 0,
+};
 const DRAW_ENDS: readonly { draws: MoverDraws; end: string }[] = [
-  {
-    draws: {
-      count: 0,
-      delays: [0, 0, 0],
-      lengths: [0, 0, 0, 0],
-      share: 0,
-      shy: 0.999999,
-      side: 0,
-      speed: 0.5,
-      start: 0,
-      tilt: 0,
-      turn: 0,
-      turnAt: 0,
-    },
-    end: "the low end",
-  },
-  {
-    draws: {
-      count: 0,
-      delays: [0, 0, 0],
-      lengths: [0, 0, 0, 0],
-      share: 0,
-      shy: 0,
-      side: 0,
-      speed: 0.5,
-      start: 0,
-      tilt: 0,
-      turn: 0,
-      turnAt: 0,
-    },
-    end: "the low end, shy",
-  },
+  { draws: { ...LOW, lengths: [0, 0, 0, 0] }, end: "the low end" },
+  { draws: { ...LOW, lengths: [0, 0, 0, 0], shy: 0 }, end: "the low end, shy" },
   {
     draws: {
       count: 0.999999,
@@ -905,19 +884,7 @@ describe("moverPlacements", () => {
     SPECS.flatMap(({ name, spec: moving }) =>
       moving.motion.kind === "steps"
         ? [0, 0.999999].map((shy) => ({
-            draws: {
-              count: 0.999999,
-              delays: [0, 0, 0] as const,
-              lengths: [0.5, 0.5, 0.5, 0.5],
-              share: 0,
-              shy,
-              side: 0,
-              speed: 0.5,
-              start: 0,
-              tilt: 0,
-              turn: 0,
-              turnAt: 0,
-            },
+            draws: { ...LOW, count: 0.999999, shy },
             moving,
             name,
             way: shy === 0 ? "shy if its kind can be" : "never shy",
@@ -1035,19 +1002,7 @@ describe("moverPlacements", () => {
   ])(
     "meets the pack with a dart set off $end only if it is still crossing",
     ({ lanes, meets, start }) => {
-      const draws = {
-        count: 0,
-        delays: [0, 0, 0] as const,
-        lengths: [0.5, 0.5, 0.5, 0.5],
-        share: 0,
-        shy: 0.999999,
-        side: 0,
-        speed: 0.5,
-        start,
-        tilt: 0,
-        turn: 0.999999,
-        turnAt: 0,
-      };
+      const draws = { ...LOW, start, turn: 0.999999 };
       const [rightward] = moverPlacements(geometry, spec(cross(3, 0)), draws);
       expect(rightward?.lanes.count).toBe(lanes);
       expect(rightward?.stands.length).toBe(meets ? 1 : 0);
@@ -1100,17 +1055,10 @@ describe("moverPlacements", () => {
     ({ draw, highTravel, motion, tilt }) => {
       const ends = [0, 0.999999].map((start) => {
         const [placement] = moverPlacements(geometry, spec(motion), {
-          count: 0,
-          delays: [0, 0, 0],
-          lengths: [0.5, 0.5, 0.5, 0.5],
-          share: 0,
-          shy: 0.999999,
-          side: 0,
-          speed: 0.5,
+          ...LOW,
           start,
           tilt: draw,
           turn: 0.999999,
-          turnAt: 0,
         });
         return placement?.path.motion === "cross" ? placement.path.enterTravel : NaN;
       });
@@ -1148,19 +1096,7 @@ describe("moverPlacements", () => {
     { name: "turns back halfway across", turn: 0.49, turnAfter: 2.5, turnAt: 0 },
     { name: "turns back at the far edge", turn: 0, turnAfter: 5, turnAt: 0.999999 },
   ])("draws whether a dart that turns back at half its kind's darts $name", (row) => {
-    const draws = {
-      count: 0,
-      delays: [0, 0, 0] as const,
-      lengths: [0.5, 0.5, 0.5, 0.5],
-      share: 0,
-      shy: 0.999999,
-      side: 0,
-      speed: 0.5,
-      start: 0.999999,
-      tilt: 0,
-      turn: row.turn,
-      turnAt: row.turnAt,
-    };
+    const draws = { ...LOW, start: 0.999999, turn: row.turn, turnAt: row.turnAt };
     const placements = moverPlacements(geometry, spec(cross(3, 0, 0, 0.5)), draws);
     expect(placements).toHaveLength(2);
     for (const { path, screen } of placements) {
@@ -1202,19 +1138,7 @@ describe("moverPlacements", () => {
       turnAt: stopDraw(lanes),
     })),
   ])("draws a dart that $name", (row) => {
-    const draws = {
-      count: 0,
-      delays: [0, 0, 0] as const,
-      lengths: [0.5, 0.5, 0.5, 0.5],
-      share: 0,
-      shy: 0.999999,
-      side: 0,
-      speed: 0.5,
-      start: 0,
-      tilt: 0,
-      turn: row.turn,
-      turnAt: row.turnAt,
-    };
+    const draws = { ...LOW, turn: row.turn, turnAt: row.turnAt };
     const motion = cross(3, 0, 0, CAT.turnBackShare, CAT.stopShare);
     const placements = moverPlacements(geometry, spec(motion), draws);
     expect(placements).toHaveLength(2);
@@ -1324,19 +1248,7 @@ describe("moverPlacements", () => {
     "starts a dart tilted away that $name no lower than leaves the pack its reaction time",
     (row) => {
       const motion = { ...cross(3, -0.5, -0.5, 0, row.stopShare), reactionSeconds: 2 };
-      const [placement] = moverPlacements(geometry, spec(motion), {
-        count: 0,
-        delays: [0, 0, 0],
-        lengths: [0.5, 0.5, 0.5, 0.5],
-        share: 0,
-        shy: 0.999999,
-        side: 0,
-        speed: 0.5,
-        start: 0,
-        tilt: 0,
-        turn: 0,
-        turnAt: 0,
-      });
+      const [placement] = moverPlacements(geometry, spec(motion), LOW);
       const path = placement?.path;
       if (path?.motion !== "cross") {
         throw new Error("A dart crosses");

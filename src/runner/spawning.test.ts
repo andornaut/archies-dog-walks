@@ -70,14 +70,11 @@ const tight: SpawnPlan<Kind> = {
 };
 
 describe("spawnRowDistances", () => {
-  it("spaces rows minSpacing apart, clear of both ends of the zone by at least minSpacing", () => {
+  it("spaces rows minSpacing apart, clear of both ends of the zone, and needs a positive spacing", () => {
     expect(spawnRowDistances(100, 1000)).toEqual([100, 200, 300, 400, 500, 600, 700, 800, 900]);
     expect(spawnRowDistances(100, 1050).at(-1)).toBe(900);
     expect(spawnRowDistances(100, 150)).toEqual([]);
     expect(spawnRowDistances(100, 50)).toEqual([]);
-  });
-
-  it("rejects a spacing that is not positive", () => {
     expect(() => spawnRowDistances(0, 1000)).toThrow("minSpacing must be positive");
   });
 });

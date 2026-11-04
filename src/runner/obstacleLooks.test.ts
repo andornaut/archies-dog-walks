@@ -13,37 +13,29 @@ const ZONES = gameData.world.zones.map(({ id, name }) => ({
 const PICKS = 6000;
 
 describe("street cart skins", () => {
-  it.each(ZONES)("gives $name at least one", ({ skins }) => {
+  // A zone with one skin picks it without drawing from random; with several, each skin's share
+  // of the picks is within a tenth of an even share.
+  it.each(ZONES)("gives $name at least one, picked evenly", ({ id, skins }) => {
     expect(skins.length).toBeGreaterThan(0);
-  });
-
-  // Each skin's share of the picks is within a tenth of an even share.
-  it.each(ZONES.filter(({ skins }) => skins.length > 1))(
-    "picks $name's skins evenly",
-    ({ id, skins }) => {
-      const random = seededRandom(7);
-      const counts = new Map(skins.map((skin) => [skin, 0]));
-      for (let i = 0; i < PICKS; i++) {
-        const skin = defined(pickSkin(gameData, random, id, "streetCart"));
-        counts.set(skin, (counts.get(skin) ?? 0) + 1);
-      }
-      const even = PICKS / skins.length;
-      expect([...counts.keys()]).toEqual(skins);
-      for (const count of counts.values()) {
-        expect(Math.abs(count - even)).toBeLessThan(even / 10);
-      }
-    },
-  );
-
-  it.each(ZONES.filter(({ skins }) => skins.length === 1))(
-    "picks $name's one skin without drawing from random",
-    ({ id, skins }) => {
+    if (skins.length === 1) {
       const random = () => {
         throw new Error("drew from random");
       };
       expect(pickSkin(gameData, random, id, "streetCart")).toBe(skins[0]);
-    },
-  );
+      return;
+    }
+    const random = seededRandom(7);
+    const counts = new Map(skins.map((skin) => [skin, 0]));
+    for (let i = 0; i < PICKS; i++) {
+      const skin = defined(pickSkin(gameData, random, id, "streetCart"));
+      counts.set(skin, (counts.get(skin) ?? 0) + 1);
+    }
+    const even = PICKS / skins.length;
+    expect([...counts.keys()]).toEqual(skins);
+    for (const count of counts.values()) {
+      expect(Math.abs(count - even)).toBeLessThan(even / 10);
+    }
+  });
 
   it("picks no skin for an obstacle with one look, which looks and is named as itself", () => {
     expect(pickSkin(gameData, seededRandom(1), "highPark", "bench")).toBeUndefined();
