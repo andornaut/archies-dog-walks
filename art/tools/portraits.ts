@@ -24,6 +24,7 @@ import {
   dk,
   type Drawable,
   edged,
+  type Frame,
   Grid,
   hexOf,
   K,
@@ -878,11 +879,16 @@ function portraits(): (readonly [key: string, draw: Draw, side: number])[] {
   ];
 }
 
-// The happy face of every dog, then every walker, in portraits() order.
-function faces(): Drawable[] {
+// The outlined happy face of every dog, as its face-dog sprite shows it, then every walker, in
+// portraits() order.
+function faces(): Frame[] {
   return [
-    ...[...PORTRAITS.keys()].map((name) => dogs.DOGS[name]![1]("happy")),
-    ...[...WALKERS.keys()].map((name) => WALKER_FACES.get(`walker-${name}`)!(FULL, "happy")),
+    ...[...PORTRAITS.keys()].map((name) =>
+      dogs.faceFrame(dogs.DOGS[name]![1], "happy", dogs.FACE_SIDE[name]!),
+    ),
+    ...[...WALKERS.keys()].map((name) =>
+      WALKER_FACES.get(`walker-${name}`)!(FULL, "happy").outlined(),
+    ),
   ];
 }
 
@@ -907,12 +913,12 @@ export function preview(out: string, scale = 4): void {
     cell * (1 + grounds.length) * scale,
     cell * keys.length * scale,
   );
-  const faceGrids = faces();
-  if (faceGrids.length !== keys.length) {
+  const faceFrames = faces();
+  if (faceFrames.length !== keys.length) {
     throw new Error("faces and portraits differ in length");
   }
   keys.forEach(([, draw, side], i) => {
-    const face = resizeNearest(S, S, toImage(faceGrids[i]!.outlined()));
+    const face = resizeNearest(S, S, toImage(faceFrames[i]!));
     const im = image(draw, side);
     [face, ...Array<RgbaImage>(grounds.length).fill(im)].forEach((tileIm, j) => {
       const tile = filledImage([...grounds[Math.max(0, j - 1)]!, 255], S, S);
