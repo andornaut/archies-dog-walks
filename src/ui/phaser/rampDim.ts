@@ -60,6 +60,8 @@ export function addRampDim(
     shownCameras.forEach((camera) => camera.setVisible(true));
     drawn();
   });
+  // The game canvas is opaque (src/main.ts sets no transparent background), so the kit's WebGL
+  // readback gives the same pixels its PNG snapshot did.
   void snapshotRemapped(modalDimmer(ONE_STEP_DARKER), scene, canvas, key).then((remapped) => {
     if (!dim.active) {
       return;

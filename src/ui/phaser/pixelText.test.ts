@@ -2,6 +2,8 @@ import { registerPixelFont } from "@andornaut/game-kit/text/phaser/registerPixel
 import type { GameObjects, Scene } from "phaser";
 import { describe, expect, it, vi } from "vitest";
 
+import shippedManifest from "../../../public/art/manifest.json";
+import { parseManifest } from "../../assets/manifest";
 import { fontInk, laidChars, phaserFontData } from "../../testing/fontInk";
 import { inPill, laidPills } from "../namePills";
 import { GLYPH_HEIGHT, glyphAdvance, LINE_HEIGHT, PIXEL_GLYPHS } from "../pixelFont";
@@ -25,6 +27,18 @@ it("registers its fallback glyphs with the game key, white ink and line spacing"
   });
   expect(atlas?.height).toBe(GLYPH_HEIGHT);
   expect(atlas?.glyphs.map(({ char }) => char)).toEqual(PIXEL_GLYPHS.map(({ char }) => char));
+});
+
+// The kit throws when the fallback's texture key is already in use, so no texture Boot loads
+// before registering it may take that key.
+it("registers its fallback under a key no shipped texture or atlas page uses", () => {
+  registerFallbackPixelFont({} as Scene);
+  const key = vi.mocked(registerPixelFont).mock.calls.at(-1)?.[1].key;
+  const { fonts, images, sprites } = parseManifest(shippedManifest);
+  const loaded = [...fonts, ...images, ...sprites].map((entry) => entry.key);
+  expect(key).toBeDefined();
+  expect(loaded).not.toContain(key);
+  expect(key).not.toMatch(/^atlas:/);
 });
 
 const FONTS: Readonly<Record<FontRole, string>> = { body: "font-body", title: "font-title" };
