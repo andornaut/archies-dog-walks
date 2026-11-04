@@ -1,5 +1,6 @@
 import { deepFreeze } from "./deepFreeze.ts";
 import { moverLeavesMinimumLanes } from "./laneAlternatives.ts";
+import { DART_LIFTS, drawMover, moverRetries } from "./moverDraws.ts";
 import {
   type MoverDraws,
   type MoverPlacement,
@@ -7,14 +8,11 @@ import {
   type PlannerStreams,
 } from "./moverModel.ts";
 import {
-  DART_LIFTS,
-  drawMover,
   herringSpawn,
   isDartPlacement,
   isHerring,
   leavesPathOpen,
   moverPlacementsWithWork,
-  moverRetries,
 } from "./moverPlanning.ts";
 import { crossLength } from "./movers.ts";
 import { slotFootprint, type SlotSource } from "./slotConfig.ts";

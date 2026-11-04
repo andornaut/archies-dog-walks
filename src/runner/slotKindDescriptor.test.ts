@@ -1,7 +1,8 @@
 import { describe, expect, it, vi } from "vitest";
 
+import { DART_LIFTS, drawMover, moverRetries } from "./moverDraws.ts";
 import { type MoverSpec } from "./moverModel.ts";
-import { DART_LIFTS, drawMover, moverPlacements, moverRetries } from "./moverPlanning.ts";
+import { moverPlacements } from "./moverPlanning.ts";
 import {
   compileSlotKindDomain,
   describeSlotKind,

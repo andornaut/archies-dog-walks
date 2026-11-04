@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 
 import * as laneAlternatives from "./laneAlternatives.ts";
+import * as moverDraws from "./moverDraws.ts";
 import type { MoverDraws } from "./moverModel.ts";
 import * as moverPlanning from "./moverPlanning.ts";
 import { createSlotCandidateDomains } from "./slotCandidateDomains.ts";
@@ -243,8 +244,8 @@ describe("native producer motion indexing", () => {
   });
 
   it("builds the checked alias index lazily for noncontiguous native draw groups", () => {
-    const native = moverPlanning.moverRetries;
-    const repeated = vi.spyOn(moverPlanning, "moverRetries").mockImplementation((spec, draws) => {
+    const native = moverDraws.moverRetries;
+    const repeated = vi.spyOn(moverDraws, "moverRetries").mockImplementation((spec, draws) => {
       const retries = native(spec, draws);
       return retries.length === 0 ? retries : [retries[0]!, draws, ...retries.slice(1)];
     });

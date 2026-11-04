@@ -1,8 +1,9 @@
 import { describe, expect, it, vi } from "vitest";
 
 import { moverLeavesMinimumLanes } from "./laneAlternatives.ts";
+import { DART_LIFTS, drawMover, moverRetries } from "./moverDraws.ts";
 import * as motion from "./moverPlanning.ts";
-import { DART_LIFTS, drawMover, moverPlacements, moverRetries } from "./moverPlanning.ts";
+import { moverPlacements } from "./moverPlanning.ts";
 import { auditSlotPartialPlan, auditSlotPlan } from "./slotAudit.ts";
 import { createSlotCandidateDomains } from "./slotCandidateDomains.ts";
 import {

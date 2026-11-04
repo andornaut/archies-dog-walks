@@ -4,12 +4,11 @@ import {
   deterministicOccupancyMasks,
   reactiveLaneMasks,
 } from "./laneAlternatives.ts";
+import { DART_LIFTS, moverRetries } from "./moverDraws.ts";
 import { type MoverDraws } from "./moverModel.ts";
 import {
-  DART_LIFTS,
   isHerring,
   moverReservationsMayShare,
-  moverRetries,
   type MoverVisibilityProof,
   onScreenOf,
   ridersMeet,

@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 
+import * as moverDraws from "./moverDraws.ts";
 import type { MoverDraws, MoverPlacement } from "./moverModel.ts";
 import * as moverPlanning from "./moverPlanning.ts";
 import { createSlotPathProjection, prepareSlotKind, slotPlacementsAt } from "./slotCandidates.ts";
@@ -125,8 +126,8 @@ describe("native whole-profile motion ranges", () => {
     expect(projection.view({ propagate }, { ...prepared }, selected)).toEqual({
       status: "unknown",
     });
-    const native = moverPlanning.moverRetries;
-    const repeated = vi.spyOn(moverPlanning, "moverRetries").mockImplementation((spec, draws) => {
+    const native = moverDraws.moverRetries;
+    const repeated = vi.spyOn(moverDraws, "moverRetries").mockImplementation((spec, draws) => {
       const retries = native(spec, draws);
       return retries.length === 0 ? retries : [retries[0]!, draws, ...retries.slice(1)];
     });
