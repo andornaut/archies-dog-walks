@@ -2004,11 +2004,10 @@ export function pair(step: number): Frame {
 
 // ---------- ui-slot-sign ----------
 
-// The dog-slot sign hung from the Pet shop's awning across its front: the frame's size and where the
-// game draws it, and the cream board in the frame, where the game writes its two lines.
+// The dog-slot sign hung from the Pet shop's awning across its front, which the game draws at 255,88:
+// the frame's size, and the cream board in the frame, where the game writes its two lines.
 export const SLOT_SIGN_W = 81;
 export const SLOT_SIGN_H = 30;
-export const SLOT_SIGN_AT: readonly [number, number] = [255, 88];
 export const SLOT_BOARD: readonly [x: number, y: number, w: number, h: number] = [1, 5, 79, 24];
 
 // ui-slot-sign: a cream board in a 1px dbrown frame, lit white along its top and tan along its

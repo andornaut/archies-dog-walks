@@ -161,7 +161,6 @@ const TORONTO_ENTRIES: readonly (readonly [string, string])[] = [
   ["azure", "3d86e0"],
   ["cobalt", "2654b0"],
 ];
-export const TORONTO: Readonly<Record<string, string>> = Object.fromEntries(TORONTO_ENTRIES);
 export const TORONTO_HEX: readonly string[] = TORONTO_ENTRIES.map(([, hex]) => hex);
 Object.assign(K, Object.fromEntries(TORONTO_ENTRIES));
 export const PALETTE64: readonly string[] = [...PALETTE, ...TORONTO_HEX];
@@ -594,16 +593,6 @@ export function depthScales(): Map<string, number> {
     steps: { scale: number; suffix: string }[];
   };
   return new Map(steps.filter((q) => q.scale < 1).map((q) => [q.suffix, q.scale]));
-}
-
-// First and last opaque row in any frame, or null when all are blank.
-export function opaqueRows(frames: readonly Frame[]): [number, number] | null {
-  return frameRows(frames);
-}
-
-// First and last opaque column in any frame, or null when all are blank.
-export function opaqueCols(frames: readonly Frame[]): [number, number] | null {
-  return frameCols(frames);
 }
 
 // public/art/sprites/<key>'s frame 0 as rows of colours (null where clear), or null if it is not
