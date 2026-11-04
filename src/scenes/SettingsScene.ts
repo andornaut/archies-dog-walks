@@ -4,6 +4,7 @@ import { containsPoint, insetRect, type Rect } from "@andornaut/game-kit/rect";
 import { fittingText } from "@andornaut/game-kit/text/textFit";
 import { type GameObjects, Scene, Scenes } from "phaser";
 
+import { BUILD_LABEL } from "../buildLabel";
 import { gameData } from "../data";
 import { SCREEN_CONFIG, SCREEN_LAYOUT } from "../data/screen";
 import type { MenuText } from "../data/types";
@@ -35,7 +36,6 @@ import {
   volumeSteps,
 } from "../home/settings";
 import { isConfirmKey, isMuteKey, isPauseKey, menuKeyActs } from "../input/keyBindings";
-import { BUILD_LABEL } from "../platform/build/buildLabel.ts";
 import {
   exitShown,
   installApp,

@@ -2,8 +2,7 @@
 // once. Installing is per device, so the flag sits beside the save under its own key rather
 // than in it.
 import type { SaveStorage } from "@andornaut/game-kit/save/contracts";
-
-import { type InstallState, offersInstall } from "../platform/pwa/installState.ts";
+import { type InstallState, offersInstall } from "@andornaut/game-kit/web/pwa/installState";
 
 export const INSTALL_NUDGE_KEY = "dog-walker-game:install-nudged";
 const SHOWN = "1";

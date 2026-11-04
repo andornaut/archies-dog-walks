@@ -1,3 +1,8 @@
+import {
+  sessionRead,
+  sessionRemove,
+  sessionWrite,
+} from "@andornaut/game-kit/web/save/dom/pageSessionStore";
 import type { Game } from "phaser";
 
 import { gameData } from "../../data";
@@ -19,7 +24,6 @@ import {
 import { pageRunSetup, runSetupLimitsFor } from "../../dev/pageRunSetup";
 import type { RunSetup } from "../../dev/runSetup";
 import { expectedRoadMs, type ZoneClocks } from "../../dev/zoneClock";
-import { sessionRead, sessionRemove, sessionWrite } from "../../platform/sessionStore.ts";
 import type { SessionInput } from "../../runner/session";
 import { roadScrollSpeed, type Walk, zoneLength } from "../../runner/walk";
 

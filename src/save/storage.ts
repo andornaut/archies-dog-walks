@@ -1,6 +1,7 @@
 import { type SaveKeys, type SaveStore, saveStore } from "@andornaut/game-kit/save/saveStore";
+import type { SaveStorage } from "@andornaut/game-kit/save/storage";
+import { localSaveStorage } from "@andornaut/game-kit/web/save/dom/localSaveStorage";
 
-import { localSaveStorage, type SaveStorage } from "../platform/save/storage.ts";
 import { type SaveContext, saveFormat } from "./load";
 import type { SaveDocument } from "./schema";
 

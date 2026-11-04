@@ -1,4 +1,4 @@
-import type { CachePolicy } from "../platform/pwa/cachePolicy.ts";
+import type { CachePolicy } from "@andornaut/game-kit/web/pwa/cachePolicy";
 
 // The game's caching rules (the kit's pwa/cachePolicy), which the service worker and the precache
 // build share. Content-hashed build output, the hashed art included, is under /assets/. The art

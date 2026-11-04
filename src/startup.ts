@@ -1,10 +1,11 @@
 // Install error handling before importing the game's renderer and other modules.
 import "./crash/install";
-import "./platform/view/frameTurnPortraitGame.css";
+import "@andornaut/game-kit/web/view/frameTurnPortraitGame.css";
 import "./main.css";
 
+import { createDomProgressBar } from "@andornaut/game-kit/web/progress/dom/progressBar";
+
 import { SCREEN_CONFIG, SCREEN_LAYOUT } from "./data/screen";
-import { createDomProgressBar } from "./platform/progress/dom/progressBar.ts";
 import { GAME_PROGRESS_STYLE } from "./ui/progressBar";
 import { startupLoad, startupProgress } from "./ui/startupProgress";
 

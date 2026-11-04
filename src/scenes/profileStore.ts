@@ -1,10 +1,10 @@
 import type { StoreLoadResult } from "@andornaut/game-kit/save/saveStore";
+import { localSaveStorage } from "@andornaut/game-kit/web/save/dom/localSaveStorage";
 import { type Game, type Scene, Scenes } from "phaser";
 
 import { gameData } from "../data";
 import type { AchievementId, HintId, WalkerId } from "../data/types";
 import { soundVolumes } from "../home/settings";
-import { localSaveStorage } from "../platform/save/storage.ts";
 import type { Change } from "../rules/causes";
 import type { RunResult } from "../save/checkpoint";
 import { saveContextFrom } from "../save/load";

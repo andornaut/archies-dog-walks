@@ -1,4 +1,5 @@
-import { gameViteConfig } from "./src/platform/build/vite/gameConfig.ts";
+import { gameViteConfig } from "@andornaut/game-kit/web/build/vite/gameConfig";
+
 import type * as ConfigModules from "./src/tools/viteConfigModules.ts";
 
 // The parent Vite and Vitest config loads the plugins below from

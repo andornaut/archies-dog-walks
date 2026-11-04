@@ -3,48 +3,51 @@
 // audio unlock, the install offer and persistent storage. setupPhoneApp runs once from main.ts; the
 // scenes listen for PHONE_EVENTS on window and call the functions below.
 import type { FrameTurn } from "@andornaut/game-kit/view/pagePoint";
-
-import { chooseSoundFormat, type SoundFormat } from "../audio/soundFormat";
-import { appCannotClose } from "../platform/pwa/appWindow.ts";
+import { appCannotClose } from "@andornaut/game-kit/web/pwa/appWindow";
+import { backCloseWatcher } from "@andornaut/game-kit/web/pwa/backNavigation";
 import {
-  backCloseWatcher,
   browserCloseWatcher,
   guardBackNavigation,
-} from "../platform/pwa/backNavigation.ts";
+} from "@andornaut/game-kit/web/pwa/dom/backNavigation";
 import {
   type InstallFlow,
   type InstallOutcome,
   watchInstall,
-} from "../platform/pwa/installFlow.ts";
-import type { InstallState, MenuInstallBrowser } from "../platform/pwa/installState.ts";
-import { browserOfflinePage, startOfflinePlay } from "../platform/pwa/offlinePlay.ts";
-import { serviceWorkerUrl } from "../platform/pwa/serviceWorkerUrl.ts";
+} from "@andornaut/game-kit/web/pwa/dom/installFlow";
+import { browserOfflinePage, startOfflinePlay } from "@andornaut/game-kit/web/pwa/dom/offlinePlay";
+import type { UpdateFlow } from "@andornaut/game-kit/web/pwa/dom/updateReady";
+import { watchVisibility } from "@andornaut/game-kit/web/pwa/dom/visibility";
+import {
+  createScreenWakeLock,
+  type ScreenWakeLock,
+} from "@andornaut/game-kit/web/pwa/dom/wakeLock";
+import type { InstallState, MenuInstallBrowser } from "@andornaut/game-kit/web/pwa/installState";
+import { serviceWorkerUrl } from "@andornaut/game-kit/web/pwa/serviceWorkerUrl";
 import {
   requestPersistentStorage,
   type StoragePersistence,
-} from "../platform/pwa/storagePersistence.ts";
-import type { UpdateFlow } from "../platform/pwa/updateReady.ts";
-import { watchVisibility } from "../platform/pwa/visibility.ts";
-import { createScreenWakeLock, type ScreenWakeLock } from "../platform/pwa/wakeLock.ts";
-import { localSaveStorage } from "../platform/save/storage.ts";
+} from "@andornaut/game-kit/web/pwa/storagePersistence";
+import { localSaveStorage } from "@andornaut/game-kit/web/save/dom/localSaveStorage";
 import {
   type FrameTurnWatch,
   lockGameOrientation,
   watchFrameTurn,
-} from "../platform/view/frameTurn.ts";
+} from "@andornaut/game-kit/web/view/dom/watchFrameTurn";
+
+import { chooseSoundFormat, type SoundFormat } from "../audio/soundFormat";
 import { dispatchPhoneEvent, PHONE_EVENTS } from "./events";
 import { createInstallNudge, type InstallNudge } from "./installNudge";
 import { reportOfflineActivity } from "./offlineProgress";
 
-export type { InstallOutcome } from "../platform/pwa/installFlow.ts";
+export { AUDIO_UNLOCK_EVENTS, unlockAudioOnFirstGesture } from "./audioUnlock";
+export { PHONE_EVENTS } from "./events";
+export type { InstallOutcome } from "@andornaut/game-kit/web/pwa/dom/installFlow";
 export {
   type InstallState,
   type MenuInstallBrowser,
   offersInstall,
-} from "../platform/pwa/installState.ts";
-export type { StoragePersistence } from "../platform/pwa/storagePersistence.ts";
-export { AUDIO_UNLOCK_EVENTS, unlockAudioOnFirstGesture } from "./audioUnlock";
-export { PHONE_EVENTS } from "./events";
+} from "@andornaut/game-kit/web/pwa/installState";
+export type { StoragePersistence } from "@andornaut/game-kit/web/pwa/storagePersistence";
 
 const SERVICE_WORKER_URL = "/sw.js";
 
@@ -116,17 +119,14 @@ export function setupPhoneApp(): void {
     "storage" in navigator ? navigator.storage : undefined,
   );
   installNudge = createInstallNudge(localSaveStorage());
-  watchVisibility(
-    (visible) =>
-      dispatchPhoneEvent(window, visible ? PHONE_EVENTS.appVisible : PHONE_EVENTS.appHidden),
-    window,
-    document,
+  watchVisibility(window, document, (visible) =>
+    dispatchPhoneEvent(window, visible ? PHONE_EVENTS.appVisible : PHONE_EVENTS.appHidden),
   );
   // On a touch screen in landscape the page frame turns onto its side, so the portrait game
   // stays upright for the device (the kit's frameTurnPortraitGame.css, imported by main.ts).
   // Where the browser allows it, the installed app holds the screen in portrait instead.
   pageFrameWatch();
-  lockGameOrientation(screen, "portrait");
+  lockGameOrientation("portrait", screen);
   // Read before the guard pushes any entry. An installed app that cannot close its window keeps
   // its own back, so the game never asks Quit? there.
   const closeWatcher = backCloseWatcher(navigator.userAgent, browserCloseWatcher());
@@ -145,7 +145,7 @@ export function setupPhoneApp(): void {
     );
   }
   const wakeLock = "wakeLock" in navigator ? navigator.wakeLock : undefined;
-  screenWakeLock = createScreenWakeLock(wakeLock, document);
+  screenWakeLock = createScreenWakeLock(window, document, wakeLock);
   // Held whenever the game is visible until the scenes take over with stopWakeLock and
   // startWakeLock (for example, letting the screen sleep on a menu).
   screenWakeLock.start();
@@ -170,7 +170,7 @@ let frameWatch: FrameTurnWatch | undefined;
 
 // The page frame's turn, watched from its first use (setupPhoneApp) for the page's life.
 export function pageFrameWatch(): FrameTurnWatch {
-  frameWatch ??= watchFrameTurn(window, "portrait");
+  frameWatch ??= watchFrameTurn("portrait", window);
   return frameWatch;
 }
 

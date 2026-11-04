@@ -1,8 +1,8 @@
 import { readFileSync } from "node:fs";
 
+import { webManifestIconUrls } from "@andornaut/game-kit/web/pwa/precacheList";
 import { describe, expect, it } from "vitest";
 
-import { webManifestIconUrls } from "../platform/pwa/precacheList.ts";
 import { HASHED_ICONS } from "./icons";
 
 const read = (path: string) => readFileSync(new URL(`../../${path}`, import.meta.url), "utf8");

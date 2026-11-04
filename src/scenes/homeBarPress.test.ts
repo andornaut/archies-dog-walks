@@ -12,7 +12,7 @@ const exitApp = vi.fn();
 
 // The scenes it reaches read only Phaser's event names, so none of Phaser loads.
 vi.mock("phaser", () => ({ Scenes: { Events: {} } }));
-vi.mock("../platform/pwa/exitApp.ts", () => ({
+vi.mock("@andornaut/game-kit/web/pwa/dom/exitApp", () => ({
   browserExitPage: () => PAGE,
   exitApp: (page: unknown) => exitApp(page),
 }));

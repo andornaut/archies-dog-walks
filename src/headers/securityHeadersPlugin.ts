@@ -1,6 +1,6 @@
+import * as kit from "@andornaut/game-kit/web/headers/vite/securityHeadersPlugin";
 import type { Plugin } from "vite";
 
-import * as kit from "../platform/headers/vite/securityHeadersPlugin.ts";
 import {
   BASE_DIRECTIVES,
   COMMON_RULE,

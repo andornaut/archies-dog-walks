@@ -1,10 +1,10 @@
+import { installCrashScreen } from "@andornaut/game-kit/web/crash/dom/crashScreen";
 import { afterEach, expect, it, vi } from "vitest";
 
 import palette from "../../shared/palette.json";
 import { MENU_TEXT } from "../data/menuText";
-import { installCrashScreen } from "../platform/crash/crashScreen.ts";
 
-vi.mock("../platform/crash/crashScreen.ts", () => ({ installCrashScreen: vi.fn() }));
+vi.mock("@andornaut/game-kit/web/crash/dom/crashScreen", () => ({ installCrashScreen: vi.fn() }));
 vi.mock("virtual:art-files", () => ({
   default: new Map([["sprites/face-dog-archie.png", "assets/art/face-dog-archie-test.png"]]),
 }));
@@ -23,7 +23,7 @@ it("installs the kit crash screen with the game words, palette and portrait", as
   vi.mocked(installCrashScreen).mockReturnValueOnce(screen);
   const { CRASH_SCREEN } = await import("./crashScreen");
   expect(CRASH_SCREEN).toBe(screen);
-  expect(installCrashScreen).toHaveBeenCalledWith({
+  expect(installCrashScreen).toHaveBeenCalledWith(window, {
     buildLabel: expect.any(String),
     colours: {
       background: `#${palette.ink.hex}`,

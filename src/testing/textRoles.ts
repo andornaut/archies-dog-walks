@@ -3,6 +3,8 @@ import { keysOf } from "@andornaut/game-kit/records";
 import type { Rect } from "@andornaut/game-kit/rect";
 import { overflowOf } from "@andornaut/game-kit/text/overflow";
 import { type TextFitStyle } from "@andornaut/game-kit/text/textFit";
+import { buildLabel } from "@andornaut/game-kit/web/build/buildLabel";
+import { UNKNOWN_COMMIT } from "@andornaut/game-kit/web/build/buildVersion";
 
 import { gameData } from "../data";
 import { SCREEN_LAYOUT } from "../data/screen";
@@ -80,8 +82,6 @@ import {
   largeBodyBox,
   largeBodyStyle,
 } from "../layout/cardLayout";
-import { buildLabel } from "../platform/build/buildLabel.ts";
-import { UNKNOWN_COMMIT } from "../platform/build/buildVersion.ts";
 import { amountText } from "../rules/causes";
 import { firesText } from "../rules/choices";
 import { payFor } from "../rules/run";

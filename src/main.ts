@@ -2,11 +2,12 @@
 import "./crash/install";
 // Turns the page frame on a touch screen in landscape before any script runs; main.css reads its
 // --inset-* safe-area insets.
-import "./platform/view/frameTurnPortraitGame.css";
+import "@andornaut/game-kit/web/view/frameTurnPortraitGame.css";
 import "./main.css";
 
 import { MENU_FPS } from "@andornaut/game-kit/clock/frameCap";
 import { capFrameRate } from "@andornaut/game-kit/clock/phaser/capFrameRate";
+import { followFrameTurn } from "@andornaut/game-kit/web/view/phaser/followFrameTurn";
 import { Core, Game, Scale, WEBGL } from "phaser";
 
 import { CRASH_SCREEN } from "./crash/crashScreen";
@@ -17,7 +18,6 @@ import { devToolsOn } from "./dev/devTools";
 import { pageRunSetup } from "./dev/pageRunSetup";
 import { noteKeyPress } from "./input/keyNumbers";
 import { lostTouches } from "./input/touches";
-import { followFrameTurn } from "./platform/view/phaser/followFrameTurn.ts";
 import {
   noteWalkStarted,
   pageFrameWatch,
@@ -128,7 +128,7 @@ function bootGame(): Game {
   // the visible area or the turn changes, the dev bar showing under #game after boot included.
   const parent = document.getElementById(GAME_PARENT_ID);
   if (parent !== null) {
-    followFrameTurn(game, parent, pageFrameWatch(), SCREEN_CONFIG);
+    followFrameTurn(pageFrameWatch(), SCREEN_CONFIG, parent, game);
   }
   // Menus draw at most about 60 frames a second; a walk (RunScene) draws every frame.
   capFrameRate(MENU_FPS, () => game.scene.isActive(SCENE_KEYS.run), game);
