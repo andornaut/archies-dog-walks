@@ -138,7 +138,7 @@ const USAGE = `Usage:
                                                    only
   node art/tools/hood_markets.ts build             write art/hood-markets/*.aseprite and export the
                                                    sprites to public/art/sprites/, then the cards to
-                                                   public/art/images/ (sources in art/cards/), then
+                                                   public/art/images/, then
                                                    the sounds to public/art/sounds/`;
 
 const SRC = "art/hood-markets";
@@ -2278,7 +2278,7 @@ async function buildCards(): Promise<void> {
   for (const [key, draw] of CARDS) {
     const png = `public/art/images/${key}.png`;
     writeFileSync(png, rgbPng(draw(cards).img));
-    execFileSync("aseprite", ["-b", png, "--save-as", `art/cards/${key}.aseprite`], {
+    execFileSync("aseprite", ["-b", png, "--save-as", `${SRC}/${key}.aseprite`], {
       stdio: "inherit",
     });
   }
