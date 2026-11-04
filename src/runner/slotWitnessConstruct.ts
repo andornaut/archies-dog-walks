@@ -85,6 +85,23 @@ interface RowPressure<Kind extends string> {
   readonly rejections: Map<number, number>;
   readonly rows: Map<SlotCandidate<Kind>, number>;
 }
+// A quiet-coverage scan over the leading quiet rows. Anchored scans try only blocking sources at
+// rows whose footprint covers a leading row; blocking scans yield only values that cover one and
+// defer the rest; open scans yield every value, leading rows first.
+interface CoverageScan {
+  readonly filter: "anchored" | "blocking" | "open";
+  readonly leading: readonly number[];
+}
+// How one frame enumerates a job's sources: the rows and columns to try, a repair row to try
+// first, an optional coverage scan, where blocking scans defer values and the frame's row pressure.
+interface SourceScan<Kind extends string> {
+  readonly columns?: ReadonlyMap<PreparedSlotKind<Kind>, readonly number[]>;
+  readonly coverage?: CoverageScan;
+  readonly deferred?: Option<Kind>[];
+  readonly pressure?: RowPressure<Kind>;
+  readonly repairRow?: number;
+  readonly rows: readonly number[];
+}
 interface JobOrder<Kind extends string> {
   readonly fixed: boolean;
   readonly guaranteed: boolean;
@@ -409,21 +426,19 @@ function* construct<Kind extends string, Mark>(
     return order;
   };
   function* options(
-    repairRow: number | undefined,
+    scan: SourceScan<Kind>,
+    traversal:
+      { readonly hint: SlotCandidate<Kind> | undefined; readonly seen: Set<string> } | undefined,
     job: WitnessJob<Kind>,
     prepared: Iterable<PreparedSlotKind<Kind>>,
-    rows: readonly number[],
-    columns?: ReadonlyMap<PreparedSlotKind<Kind>, readonly number[]>,
-    covering = false,
-    quietRows?: readonly number[],
-    coverageOnly = false,
-    deferred?: Option<Kind>[],
-    pressure?: RowPressure<Kind>,
-    traversal?: { readonly hint: SlotCandidate<Kind> | undefined; readonly seen: Set<string> },
   ): Generator<Choice<Kind>> {
     if (stopped()) {
       return;
     }
+    const { columns, deferred, pressure, repairRow, rows } = scan;
+    const quietRows = scan.coverage?.leading;
+    const covering = scan.coverage?.filter === "anchored";
+    const filtered = scan.coverage !== undefined && scan.coverage.filter !== "open";
     const seen = traversal?.seen ?? new Set<string>();
     const hint = traversal === undefined ? ports.hint?.(job) : traversal.hint;
     if (stopped()) {
@@ -432,16 +447,12 @@ function* construct<Kind extends string, Mark>(
     const hintRow =
       hint?.entry.trace.placement?.block.row ??
       path.findIndex((row) => row.distance === hint?.entry.event.distance);
-    const eligible = (candidate: SlotCandidate<Kind>) => {
-      if (!(covering || coverageOnly)) {
-        return true;
-      }
-      return quietRows !== undefined && coversLeading(candidate, quietRows);
-    };
+    const eligible = (candidate: SlotCandidate<Kind>) =>
+      !filtered || coversLeading(candidate, quietRows!);
     const deferredIds = new Set<string>();
     // The caller supplies the frozen weighted kind order. Hints only reorder its native values.
     for (const source of prepared) {
-      if ((covering || coverageOnly) && (source.herring || !source.request.blocksLane)) {
+      if (filtered && (source.herring || !source.request.blocksLane)) {
         continue;
       }
       const sourceColumns = covering
@@ -616,16 +627,9 @@ function* construct<Kind extends string, Mark>(
     }
   }
   function* fairOptions(
-    repairRow: number | undefined,
+    scan: SourceScan<Kind>,
     job: WitnessJob<Kind>,
     prepared: Iterable<PreparedSlotKind<Kind>>,
-    rows: readonly number[],
-    columns?: ReadonlyMap<PreparedSlotKind<Kind>, readonly number[]>,
-    covering = false,
-    quietRows?: readonly number[],
-    coverageOnly = false,
-    deferredOptions?: Option<Kind>[],
-    pressure?: RowPressure<Kind>,
   ): Generator<Choice<Kind>> {
     if (stopped()) {
       return;
@@ -639,19 +643,7 @@ function* construct<Kind extends string, Mark>(
       {
         *candidates(source): Generator<SlotSequenceStep<Kind>> {
           const deferred: Option<Kind>[] = [];
-          for (const choice of options(
-            repairRow,
-            job,
-            [source],
-            rows,
-            columns,
-            covering,
-            quietRows,
-            coverageOnly,
-            deferredOptions,
-            pressure,
-            traversal,
-          )) {
+          for (const choice of options(scan, traversal, job, [source])) {
             if (choice.status === "source-end" || choice.status === "tier-end") {
               for (const option of deferred) {
                 pending.set(source, {
@@ -700,7 +692,14 @@ function* construct<Kind extends string, Mark>(
       cursor.return({ status: "stopped" });
     }
   }
-  const sourceOptions = ports.fairSources === true ? fairOptions : options;
+  const sourceOptions = (
+    scan: SourceScan<Kind>,
+    job: WitnessJob<Kind>,
+    prepared: Iterable<PreparedSlotKind<Kind>>,
+  ) =>
+    ports.fairSources === true
+      ? fairOptions(scan, job, prepared)
+      : options(scan, undefined, job, prepared);
   const complete = () => {
     if (stopped()) {
       return false;
@@ -872,7 +871,6 @@ function* construct<Kind extends string, Mark>(
     const delayedForOrdering = (job: WitnessJob<Kind>) =>
       job.laneEffect === "none" || nonblockingGuarantees.has(job);
     function* choices(
-      quietRows: readonly number[] | undefined,
       pressure: RowPressure<Kind> | undefined,
       job: WitnessJob<Kind>,
     ): Generator<Choice<Kind>> {
@@ -888,33 +886,19 @@ function* construct<Kind extends string, Mark>(
         }
         repairRow = advice.status === "row" ? advice.row : undefined;
       }
+      const scan = {
+        ...(pressure === undefined ? {} : { pressure }),
+        ...(repairRow === undefined ? {} : { repairRow }),
+      };
       if (job.guaranteed) {
         const order = orderFor(job);
         yield* sourceOptions(
-          repairRow,
+          { ...scan, columns: order.columns, rows: order.rows },
           job,
           order.prepared,
-          order.rows,
-          order.columns,
-          false,
-          quietRows,
-          false,
-          undefined,
-          pressure,
         );
       } else {
-        yield* sourceOptions(
-          repairRow,
-          job,
-          readPreparations(job),
-          rowOrder(job),
-          undefined,
-          false,
-          quietRows,
-          false,
-          undefined,
-          pressure,
-        );
+        yield* sourceOptions({ ...scan, rows: rowOrder(job) }, job, readPreparations(job));
       }
     }
     function* fixedCoverageChoices(filled: ReadonlySet<string>, leading: readonly number[]) {
@@ -925,13 +909,9 @@ function* construct<Kind extends string, Mark>(
         }
         if (job.fixed && !filled.has(job.key)) {
           yield* sourceOptions(
-            undefined,
+            { coverage: { filter: "anchored", leading }, rows: leading },
             job,
             readPreparations(job),
-            leading,
-            undefined,
-            true,
-            leading,
           );
         }
       }
@@ -962,15 +942,9 @@ function* construct<Kind extends string, Mark>(
               }
             }
             yield* sourceOptions(
-              undefined,
+              { coverage: { filter: "blocking", leading }, deferred, rows: rowOrder(job) },
               job,
               blockers(),
-              rowOrder(job),
-              undefined,
-              false,
-              leading,
-              true,
-              deferred,
             );
           }
         }
@@ -984,7 +958,11 @@ function* construct<Kind extends string, Mark>(
           if (!charge()) {
             return;
           }
-          yield* sourceOptions(undefined, job, sources, rowOrder(job), undefined, false, leading);
+          yield* sourceOptions(
+            { coverage: { filter: "open", leading }, rows: rowOrder(job) },
+            job,
+            sources,
+          );
         }
       }
     }
@@ -1046,7 +1024,7 @@ function* construct<Kind extends string, Mark>(
           : { rejections: new Map<number, number>(), rows: new Map<SlotCandidate<Kind>, number>() };
       return {
         covering: false,
-        cursor: choices(undefined, pressure, job),
+        cursor: choices(pressure, job),
         job,
         ...(pressure === undefined ? {} : { pressure }),
       };
