@@ -77,22 +77,22 @@ const stinky = { debuffs: [{ debuff: "stinky", secondsLeft: 20, untilZone: 0 }] 
 // Every kind of bump and pickup the pack meets on the road. A pull obstacle passes through the
 // pack, so the pack never meets one; its tell barks.
 const CASES: readonly Case[] = [
-  { cue: "bump", item: atPack("sandwichBoard"), meeting: {}, name: "a minor obstacle's bump" },
+  { cue: "bump", item: atPack("newspaperBox"), meeting: {}, name: "a minor obstacle's bump" },
   {
     cue: "bump",
-    item: atPack("sandwichBoard"),
+    item: atPack("newspaperBox"),
     meeting: { walker: SECOND_CHANCE },
     name: "a bump Second chance forgives",
   },
   {
     cue: "bump",
-    item: atPack("sandwichBoard"),
+    item: atPack("newspaperBox"),
     meeting: { run: spotlight },
     name: "a Spotlight bump",
   },
   {
     cue: "dodge",
-    item: atPack("sandwichBoard"),
+    item: atPack("newspaperBox"),
     meeting: { dogs: [SMALL_DOG], draw: 0 },
     name: "a dodged bump",
   },

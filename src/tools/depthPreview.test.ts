@@ -14,11 +14,7 @@ function art(key: string, size: number): PreviewArt {
   return { feetY: size, height: size, image: blankImage(size, size), key, width: size };
 }
 
-const ARTS = [
-  art("sandwich-board", 32),
-  art("sandwich-board@75", 24),
-  art("sandwich-board@50", 16),
-];
+const ARTS = [art("newspaper-box", 32), art("newspaper-box@75", 24), art("newspaper-box@50", 16)];
 
 describe("sweepDistances", () => {
   it("runs from the feet to the far edge and stops where the art step changes", () => {
@@ -28,14 +24,14 @@ describe("sweepDistances", () => {
     const keyAt = (distance: number) =>
       depthDraw(ARTS, project(lens, { distance, x: lens.centreX }).scale).key;
     const changes = distances.filter((d) => d > 0 && keyAt(d) !== keyAt(d - 1));
-    expect(changes.map(keyAt)).toEqual(["sandwich-board@75", "sandwich-board@50"]);
+    expect(changes.map(keyAt)).toEqual(["newspaper-box@75", "newspaper-box@50"]);
   });
 });
 
 describe("sweepRow", () => {
   it("draws the art depthDraw picks, standing on the projected feet", () => {
     const row = sweepRow(ARTS, lens, lens.centreX, 0);
-    expect(row.drawn.key).toBe("sandwich-board");
+    expect(row.drawn.key).toBe("newspaper-box");
     expect(row.rect).toEqual({ height: 32, width: 32, x: lens.centreX - 16, y: lens.footY - 32 });
   });
 });

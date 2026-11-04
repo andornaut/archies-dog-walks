@@ -277,18 +277,18 @@ describe("stepDistractions", () => {
     ["the left edge lane", 1, [0]],
     ["the right edge lane", -1, [RIGHT]],
   ] as const)(
-    "with a sandwich board on its row in %s, takes side %s (null: moves up the road)",
+    "with a newspaper box on its row in %s, takes side %s (null: moves up the road)",
     (_, side, lanes) => {
-      // A sandwich board whose hit box reaches the road's top with the distraction's row.
-      const boards = lanes.map((lane, id): WalkItem => ({
+      // A newspaper box whose hit box reaches the road's top with the distraction's row.
+      const boxes = lanes.map((lane, id): WalkItem => ({
         height: 40,
         id,
-        kind: "sandwichBoard",
+        kind: "newspaperBox",
         lane,
         laneSpan: 1,
         y: GEOMETRY.roadTop - 40,
       }));
-      const first = firstSettled(boards);
+      const first = firstSettled(boxes);
       expect(first.placed).toBe(side);
       if (side === null) {
         expect(first.row).toBeGreaterThan(plain.row);

@@ -244,9 +244,9 @@ describe("smoothDepthArt", () => {
     images: [{ key: "screen-home", png: "images/screen-home.png" }],
     sounds: [],
     sprites: [
-      "sandwich-board",
-      "sandwich-board@94",
-      "sandwich-board@50",
+      "newspaper-box",
+      "newspaper-box@94",
+      "newspaper-box@50",
       "dog-kilo",
       "dog-kilo@50",
       "fx-tap",
@@ -254,7 +254,7 @@ describe("smoothDepthArt", () => {
     ].map(sprite),
   };
 
-  // A build's pages: road holds sandwich board, its steps and dog-kilo@50, and other the rest, except
+  // A build's pages: road holds newspaper box, its steps and dog-kilo@50, and other the rest, except
   // ui-heart, loaded from its own files.
   function loadedScene() {
     const road = { scaleMode: NEAREST };
@@ -263,9 +263,9 @@ describe("smoothDepthArt", () => {
       "dog-kilo": other,
       "dog-kilo@50": road,
       "fx-tap": other,
-      "sandwich-board": road,
-      "sandwich-board@50": road,
-      "sandwich-board@94": road,
+      "newspaper-box": road,
+      "newspaper-box@50": road,
+      "newspaper-box@94": road,
       "screen-home": other,
       "ui-heart": { scaleMode: NEAREST },
     };
@@ -292,7 +292,7 @@ describe("smoothDepthArt", () => {
   }
 
   it.each([
-    ["sandwich-board", LINEAR],
+    ["newspaper-box", LINEAR],
     ["dog-kilo@50", LINEAR],
     ["dog-kilo", NEAREST],
     ["ui-heart", NEAREST],

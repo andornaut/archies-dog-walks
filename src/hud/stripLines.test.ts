@@ -59,13 +59,13 @@ describe("bumpLines", () => {
   const softened = hearts(4, 3, [{ amount: -2, kind: "bump" }, secondChance]);
   const dodge = fillNames(strip.dodge, {
     dog: kilo.name,
-    obstacle: MINOR_OBSTACLES.sandwichBoard.name.toLowerCase(),
+    obstacle: MINOR_OBSTACLES.newspaperBox.name.toLowerCase(),
   });
   const hit = (lost: string) =>
     fillNames(strip.plainHit, {
       dog: kilo.name,
       hearts: lost,
-      obstacle: MINOR_OBSTACLES.sandwichBoard.name.toLowerCase(),
+      obstacle: MINOR_OBSTACLES.newspaperBox.name.toLowerCase(),
       owner,
     });
   const paid = strip.cashHit;
@@ -99,7 +99,7 @@ describe("bumpLines", () => {
     const said = bumpLines(
       gameData,
       { cash: taken, change, dodged, dog: "kilo" },
-      MINOR_OBSTACLES.sandwichBoard.name,
+      MINOR_OBSTACLES.newspaperBox.name,
     );
     expect(said.map(({ text }) => text)).toEqual(lines);
   });

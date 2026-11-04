@@ -87,7 +87,7 @@ function walkIn(lane: number, heading?: LaneDirection, items: readonly WalkItem[
 const boardIn = (lane: number, id: number): WalkItem => ({
   height: 30,
   id,
-  kind: "sandwichBoard",
+  kind: "newspaperBox",
   lane,
   laneSpan: 1,
   y: ROAD.packBand.top - 60,

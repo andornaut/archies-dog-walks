@@ -927,7 +927,7 @@ describe("stepWalk", () => {
   });
 
   it("costs a plain hit's dog's owner a heart, with no money, and starts the grace window", () => {
-    const walk = walkWith(["kilo", "ginger"], [atPack("sandwichBoard"), atPack("otherDog", 1)]);
+    const walk = walkWith(["kilo", "ginger"], [atPack("newspaperBox"), atPack("otherDog", 1)]);
     const { bumps, cards, walk: after } = step(walk);
     const bump = read(tuning, "hearts", "bump");
     expect(bumps.map(({ change, dodged, dog }) => [dog, dodged, change?.causes])).toEqual([
@@ -942,7 +942,7 @@ describe("stepWalk", () => {
 
   // Muddy only slows lane changes: a bump costs what it always does.
   it("costs a plain bump's hearts while Muddy", () => {
-    const walk = walkWith(["kilo"], [atPack("sandwichBoard")]);
+    const walk = walkWith(["kilo"], [atPack("newspaperBox")]);
     const muddy = {
       ...walk,
       run: { ...walk.run, debuffs: [{ debuff: "muddy", secondsLeft: 20, untilZone: 0 }] },
@@ -969,14 +969,14 @@ describe("stepWalk", () => {
     expect(laneMoveSeconds(data, muddy)).toBeCloseTo(laneMoveSeconds(data, run) / slow, 9);
   });
 
-  // With no grace window, a sandwich board, a card obstacle and a treat all meet the pack on one step.
+  // With no grace window, a newspaper box, a card obstacle and a treat all meet the pack on one step.
   it("fires an owner a hit empties before the step's treat, and leaves their dog off its card", () => {
     const ungraced = {
       ...data,
       tuning: { ...tuning, seconds: { ...tuning.seconds, collisionGrace: 0 } },
     };
     const items = [
-      atPack("sandwichBoard"),
+      atPack("newspaperBox"),
       { ...atPack("otherDog", 1), y: 556 },
       atPack("treat", 2),
     ];
@@ -997,17 +997,17 @@ describe("stepWalk", () => {
       ["on the bigger dog, picked second", ["lady", "kilo"], "kilo"],
       ["on the first in roster order of two of a size", ["pepe", "archie"], "archie"],
     ] satisfies readonly [string, PackDogs, string][]) {
-      const { bumps } = step(walkWith(dogs, [atPack("sandwichBoard")]));
+      const { bumps } = step(walkWith(dogs, [atPack("newspaperBox")]));
       expect(bumps.map((bump) => bump.dog)).toEqual([dog]);
     }
   });
 
   // Two quick taps carry the pack from lane 2 to lane 0 within one long step: it ends the step
   // clear of lane 1, and starts it clear too, so only its sweep across lane 1 meets what is there.
-  it("meets a tip or a sandwich board in a lane it crosses within one step", () => {
+  it("meets a tip or a newspaper box in a lane it crosses within one step", () => {
     for (const [, kind, met] of [
       ["collects a tip", "tip", (step) => step.tips.length],
-      ["bumps into a sandwich board", "sandwichBoard", (step) => step.bumps.length],
+      ["bumps into a newspaper box", "newspaperBox", (step) => step.bumps.length],
     ] satisfies readonly [
       string,
       WalkItem["kind"],
@@ -1049,7 +1049,7 @@ describe("stepWalk", () => {
       const dodging = { ...data, tuning: { ...tuning, probability } };
       const dog = keysOf(DOGS).find((id) => DOGS[id].size === size) ?? "kilo";
       const walk: Walk = {
-        road: { ...startRoad(5), items: [atPack("sandwichBoard")], nextItemId: 1 },
+        road: { ...startRoad(5), items: [atPack("newspaperBox")], nextItemId: 1 },
         run: newRun(dodging, 3, { dogs: [dog], gear, walker: "casey" }),
       };
       // Each draw just under the chance, and at it; a dog with no chance draws nothing.
@@ -1070,7 +1070,7 @@ describe("stepWalk", () => {
         [dodged, dodged],
       ]);
       expect(under.stepped.walk.run.bumpsByZone).toEqual(dodged ? [] : [1]);
-      expect(under.stepped.walk.run.bumpsByKind).toEqual(dodged ? {} : { sandwichBoard: 1 });
+      expect(under.stepped.walk.run.bumpsByKind).toEqual(dodged ? {} : { newspaperBox: 1 });
       expect(under.stepped.walk.road.hitStop === null).toBe(dodged);
       // Every dog's dodge counts toward the dodges tally, the Whistle's included.
       expect(under.stepped.walk.run.tallies.dodges ?? 0).toBe(dodged ? 1 : 0);
@@ -1079,7 +1079,7 @@ describe("stepWalk", () => {
   );
 
   it("counts only a plain hit as a bump in the zone, not a card obstacle or a lucky find", () => {
-    const walk = walkWith(["kilo"], [atPack("sandwichBoard")]);
+    const walk = walkWith(["kilo"], [atPack("newspaperBox")]);
     const zoned = { ...walk, run: { ...walk.run, zoneIndex: 1 } };
     expect(step(zoned).walk.run.bumpsByZone).toEqual([0, 1]);
     expect(step(walkWith(["kilo"], [atPack("otherDog")])).walk.run.bumpsByZone).toEqual([]);
@@ -1091,7 +1091,7 @@ describe("stepWalk", () => {
     (obstacle) => {
       const dogs: PackDogs = ["kilo", "ginger"];
       const after = step(walkWith(dogs, [atPack(obstacle)]));
-      const ordinary = step(walkWith(dogs, [atPack("sandwichBoard")]));
+      const ordinary = step(walkWith(dogs, [atPack("newspaperBox")]));
       expect(after.cards).toEqual([]);
       expect(after.encounterHits).toEqual([]);
       expect(after.contacts).toEqual([]);
@@ -1138,9 +1138,9 @@ describe("stepWalk", () => {
         { encounter, kind: "encounter" },
       ]);
       // The touching dog, as a plain obstacle in its place would land on.
-      const sandwichBoard = step(walkWith(dogs, [atPack("sandwichBoard")]));
+      const newspaperBox = step(walkWith(dogs, [atPack("newspaperBox")]));
       expect(after.contacts.map(({ dog }) => dog)).toEqual(
-        sandwichBoard.bumps.map(({ dog }) => dog),
+        newspaperBox.bumps.map(({ dog }) => dog),
       );
       expect(after.walk.run.debuffs.map(({ debuff }) => debuff)).toEqual(debuffs);
       expect(heartsByDog(after.walk.run)).toEqual(heartsByDog(walk.run));
@@ -1163,10 +1163,10 @@ describe("stepWalk", () => {
     it(`starts ${debuff} on the touching dog's pack, with no heart and a plain obstacle's stop`, () => {
       const walk = walkWith(dogs, [atPack(obstacle)]);
       const after = step(walk);
-      const sandwichBoard = step(walkWith(dogs, [atPack("sandwichBoard")]));
+      const newspaperBox = step(walkWith(dogs, [atPack("newspaperBox")]));
       expect(after.bumps).toEqual([]);
       expect(after.contacts.map(({ dog, source }) => ({ dog, source }))).toEqual(
-        sandwichBoard.bumps.map(({ dog }) => ({ dog, source: { kind: "minor", obstacle } })),
+        newspaperBox.bumps.map(({ dog }) => ({ dog, source: { kind: "minor", obstacle } })),
       );
       expect(after.walk.run.debuffs.map((active) => active.debuff)).toEqual([debuff]);
       expect(heartsByDog(after.walk.run)).toEqual(heartsByDog(walk.run));
@@ -1240,7 +1240,7 @@ describe("stepWalk", () => {
   it("in the grace window ignores obstacles and counts no bump, but collects pickups and opens lucky finds", () => {
     const items = [
       atPack("otherDog", 0),
-      atPack("sandwichBoard", 1),
+      atPack("newspaperBox", 1),
       atPack("tip", 2),
       atPack("lostWallet", 3),
     ];
@@ -1253,7 +1253,7 @@ describe("stepWalk", () => {
     expect(walk.run.bumpsByZone).toEqual([]);
     expect(collected.map(({ kind }) => kind)).toEqual(["tip"]);
     expect(cards).toEqual([]);
-    expect(walk.road.items.map(({ kind }) => kind)).toEqual(["otherDog", "sandwichBoard"]);
+    expect(walk.road.items.map(({ kind }) => kind)).toEqual(["otherDog", "newspaperBox"]);
   });
 
   it("applies an instant lucky find at once, with no card", () => {
@@ -1379,7 +1379,7 @@ describe("stepWalk's modified values", () => {
     [
       "Second chance forgives a bump",
       forgiving,
-      meeting(walkerWith("secondChance"), atPack("sandwichBoard")),
+      meeting(walkerWith("secondChance"), atPack("newspaperBox")),
       [
         {
           after: 0,
@@ -1463,7 +1463,7 @@ describe("stepWalk's modified values", () => {
         },
       ],
     ],
-    ["nothing changes a plain bump", data, meeting("casey", atPack("sandwichBoard")), []],
+    ["nothing changes a plain bump", data, meeting("casey", atPack("newspaperBox")), []],
   ] as const)("%s", (_, walkData, walk, expected) => {
     const { modified } = stepWalk(walkData, geometry, seededRandom(1), 0.01, walk);
     // Each at the step's one item, by its id: the step scrolls it.
@@ -1510,14 +1510,14 @@ describe("stepWalk's modified values", () => {
       walker: secondChance,
     },
   ])("costs a Spotlight bump $name", ({ cash, forgiven, hearts, money, walker }) => {
-    const walk = meeting(walker ?? "casey", atPack("sandwichBoard"), lit(money));
+    const walk = meeting(walker ?? "casey", atPack("newspaperBox"), lit(money));
     const walkData = walker === undefined ? data : forgiving;
     const after = stepWalk(walkData, geometry, seededRandom(1), 0.01, walk);
     const { run: next } = after.walk;
     expect(next.money).toBe(walk.run.money - cash);
     expect(heartsByDog(next).kilo).toBe((heartsByDog(walk.run).kilo ?? 0) - hearts);
     expect(next.heartsForgiven).toBe(forgiven);
-    expect(next.bumpsByKind).toEqual({ sandwichBoard: 1 });
+    expect(next.bumpsByKind).toEqual({ newspaperBox: 1 });
     expect(after.bumps.map((landed) => (landed.cash === null ? 0 : -landed.cash.amount))).toEqual([
       cash,
     ]);
@@ -1545,7 +1545,7 @@ describe("hit stop", () => {
         bumpsByZone: [1],
         dogs: ["kilo"],
         frames: 36,
-        item: "sandwichBoard",
+        item: "newspaperBox",
         name: "a minor bump",
         opens: false,
       },
@@ -1581,7 +1581,7 @@ describe("hit stop", () => {
       ...data,
       tuning: { ...tuning, seconds: { ...tuning.seconds, collisionGrace: 0 } },
     };
-    const both = walkWith(["kilo"], [atPack("sandwichBoard"), atPack("otherDog", 1)]);
+    const both = walkWith(["kilo"], [atPack("newspaperBox"), atPack("otherDog", 1)]);
     const hit = stepWalk(graceless, geometry, seededRandom(1), FRAME, both);
     expect(hit.encounterHits).toHaveLength(1);
     expect(hit.bumps).toHaveLength(1);
@@ -1595,7 +1595,7 @@ describe("hit stop", () => {
 
   it("advances neither distance, the spawn plan, the road nor the pack during the stop", () => {
     const hit = step(
-      withSpawnAhead(walkWith(["kilo"], [atPack("sandwichBoard"), atPack("tip", 1, 0)])),
+      withSpawnAhead(walkWith(["kilo"], [atPack("newspaperBox"), atPack("tip", 1, 0)])),
     );
     let walk = hit.walk;
     while (walk.road.hitStop !== null) {
@@ -1610,7 +1610,7 @@ describe("hit stop", () => {
   });
 
   it("keeps the grace window and the steering for after the stop", () => {
-    const hit = step(walkWith(["kilo"], [atPack("sandwichBoard")]), FRAME);
+    const hit = step(walkWith(["kilo"], [atPack("newspaperBox")]), FRAME);
     const { control, invulnerableSeconds } = hit.walk.road;
     const after = step(hit.walk, FRAME).walk.road;
     expect(after.invulnerableSeconds).toBe(invulnerableSeconds);
@@ -1618,7 +1618,7 @@ describe("hit stop", () => {
   });
 
   it("drops steering during the stop rather than queuing it", () => {
-    const hit = step(walkWith(["kilo"], [atPack("sandwichBoard")]), FRAME).walk;
+    const hit = step(walkWith(["kilo"], [atPack("newspaperBox")]), FRAME).walk;
     const steered = steerWalk(data, 5, 1, hit);
     expect(steered).toBe(hit);
     let walk = steered;
