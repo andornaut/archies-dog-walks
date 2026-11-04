@@ -194,7 +194,7 @@ function highParkLines(): void {}
 
 // Pedestrian Sunday's painted lane lines, one colour per divider, left to right: dark paint, each holding 3:1
 // or more on Kensington Market's stone asphalt, and none gold, amber or orange, which read as coins.
-const LANE_PAINT = ["dbrick", "navy", "fir", "plum"] as const;
+export const LANE_PAINT = ["dbrick", "navy", "fir", "plum"] as const;
 
 // A 10-row painted dash every SEAM_PERIOD rows from row 24, wrapping, each divider its own colour, a
 // ramp step darker down its right edge. Rows 35 to 55 stay bare: screen-end shows rows 36 to 39 below its
