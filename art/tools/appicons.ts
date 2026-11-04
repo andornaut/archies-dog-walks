@@ -18,7 +18,7 @@
 //
 // The favicons are drawn at their own size, a tile with its corners cut:
 //
-//   favicon.png             32x32    Archie's happy face (archieFace in dogs.ts) drawn at
+//   favicon-32.png          32x32    Archie's happy face (archieFace in dogs.ts) drawn at
 //                                    FAVICON_SIDE over 32 of its design and cropped to 32x32
 //                                    from the ear tips down, centred across, so his head fills
 //                                    the tile to the top of the bandana; its eyes, which that
@@ -50,11 +50,15 @@ const USAGE = `Usage:
   node art/tools/appicons.ts preview OUT.png   every icon at its native size on ink, the maskable
                                                icon cropped to a circle with the safe zone marked,
                                                and the favicons at 1x and 8x
-  node art/tools/appicons.ts build             write public/icons/<icon>.png, public/art/favicon.png
-                                               and favicon-16.png, and the sources
-                                               art/appicon.aseprite (the master, 64x64: what the 192
-                                               and 512 show), art/favicon-32.aseprite and
-                                               art/favicon-16.aseprite`;
+  node art/tools/appicons.ts build             write public/icons/<icon>.png, the favicons included,
+                                               and the sources art/appicons/appicon.aseprite (the
+                                               master, 64x64: what the 192 and 512 show),
+                                               art/appicons/favicon-32.aseprite and
+                                               art/appicons/favicon-16.aseprite`;
+
+const SRC = "art/appicons";
+const FAVICON_32 = "public/icons/favicon-32.png";
+const FAVICON_16 = "public/icons/favicon-16.png";
 
 const PORTRAIT = "public/art/images/portrait-dog-archie.png";
 const BACKGROUND = "sky"; // ui-detail-well's face, behind his portrait on the detail card
@@ -317,8 +321,8 @@ export function icons(): Map<string, Icon> {
     }
     out.set(`public/icons/${name}.png`, { image: render(subject, size, scale), opaque: true });
   }
-  out.set("public/art/favicon.png", { image: favicon32(), opaque: false });
-  out.set("public/art/favicon-16.png", { image: favicon16(), opaque: false });
+  out.set(FAVICON_32, { image: favicon32(), opaque: false });
+  out.set(FAVICON_16, { image: favicon16(), opaque: false });
   for (const [path, icon] of out) {
     check(basename(path, ".png"), icon, icon.image.width);
   }
@@ -351,13 +355,12 @@ export function preview(out: string, gap = 16, zoom = 8): void {
     }
   }
   const row = [
-    ...[...imgs].filter(([path]) => path.startsWith("public/icons/")).map(([, icon]) => icon.image),
+    ...[...imgs]
+      .filter(([path]) => path !== FAVICON_32 && path !== FAVICON_16)
+      .map(([, icon]) => icon.image),
     masked,
   ];
-  const ones = [
-    imgs.get("public/art/favicon.png")!.image,
-    imgs.get("public/art/favicon-16.png")!.image,
-  ];
+  const ones = [imgs.get(FAVICON_32)!.image, imgs.get(FAVICON_16)!.image];
   const favs = [...ones, ...ones.map((im) => resizeNearest(im.width * zoom, im.height * zoom, im))];
   const sum = (ims: readonly RgbaImage[]): number => ims.reduce((n, im) => n + im.width, 0);
   const width = Math.max(sum(row), sum(favs)) + gap * (row.length + 1);
@@ -392,14 +395,15 @@ function master(): RgbaImage {
 
 export function build(): void {
   mkdirSync("public/icons", { recursive: true });
+  mkdirSync(SRC, { recursive: true });
   const imgs = icons();
   for (const [path, icon] of imgs) {
     writeFileSync(path, iconPng(icon, true));
   }
   const sources = new Map<string, Icon>([
-    ["art/appicon.aseprite", { image: master(), opaque: true }],
-    ["art/favicon-32.aseprite", imgs.get("public/art/favicon.png")!],
-    ["art/favicon-16.aseprite", imgs.get("public/art/favicon-16.png")!],
+    [`${SRC}/appicon.aseprite`, { image: master(), opaque: true }],
+    [`${SRC}/favicon-32.aseprite`, imgs.get(FAVICON_32)!],
+    [`${SRC}/favicon-16.aseprite`, imgs.get(FAVICON_16)!],
   ]);
   const tmp = mkdtempSync(join(tmpdir(), "appicons-"));
   try {
