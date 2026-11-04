@@ -266,8 +266,8 @@ describe("image art", () => {
 describe("screen and card art", () => {
   it.each<Check>([
     [
-      "names the Pet shop's faces and the glint the Start screen plays",
-      () => missingTags(SHOP_ART.petShop, ["glint", "normal", "pressed"]),
+      "names the Pet shop's faces and the door invitation the Start screen plays",
+      () => missingTags(SHOP_ART.petShop, ["door-wave", "normal", "pressed"]),
     ],
     [
       "names the dog slot sign's faces",

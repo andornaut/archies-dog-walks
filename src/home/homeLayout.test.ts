@@ -243,13 +243,11 @@ describe("the Pocket's tiles", () => {
 describe("Pet shop", () => {
   const { board, ...shop } = HOME_LAYOUT.petShop;
 
-  it("holds its board at the top of its frame, under the street sign with room for the bob", () => {
+  it("holds its board at the top of its frame, under the street sign", () => {
     expect(board.y).toBe(shop.y);
     expect(board.x).toBeGreaterThanOrEqual(shop.x);
     expect(board.x + board.width).toBeLessThanOrEqual(shop.x + shop.width);
     const { streetSign } = HOME_LAYOUT;
-    expect(shop.y - FEEDBACK.shopBobSteps.length).toBeGreaterThan(0);
-    expect(Math.min(...FEEDBACK.shopBobSteps)).toBeGreaterThanOrEqual(-2);
     expect(streetSign.y).toBeLessThan(shop.y);
   });
 });
