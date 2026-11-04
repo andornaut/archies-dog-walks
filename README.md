@@ -42,6 +42,7 @@ Replace `npm test` with any command in the table; each runs inside that containe
 | `npm run export:data [-- --check]`          | Write `shared/export/` from the game's modules, or fail if it differs      |
 | `npm run format`                            | Rewrite files with Prettier and apply ESLint fixes                         |
 | `npm run lint`                              | Prettier, ESLint and markdownlint                                          |
+| `npm run planner:acceptance -- <out-dir>`   | Run the planner acceptance batch ([src/README.md](src/README.md))          |
 | `npm run preview`                           | Build, then serve it through `wrangler dev`                                |
 | `npm run simulate -- --help`                | Simulate runs ([src/README.md](src/README.md), Simulator)                  |
 | `npm test`                                  | Run the unit tests                                                         |

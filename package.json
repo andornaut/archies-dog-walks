@@ -21,6 +21,7 @@
     "check:art": "vitest run src/assets/ src/scenes/artCoverage.test.ts src/tools/artManifest.test.ts src/tools/atlas/",
     "art:unused": "tsx src/assets/unusedArtCli.ts",
     "simulate": "tsx src/sim/cli.ts",
+    "planner:acceptance": "node src/tools/plannerAcceptance/cli.ts",
     "export:data": "tsx src/tools/dataExportCli.ts",
     "art:manifest": "tsx src/tools/artManifestCli.ts",
     "art:depth-preview": "tsx src/tools/depthPreviewCli.ts",
