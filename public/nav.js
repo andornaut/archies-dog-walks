@@ -10,7 +10,7 @@
 // the full height.
 (() => {
   "use strict";
-  const REPO = "https://github.com/andornaut/dog-walker-game";
+  const REPO = "https://github.com/andornaut/archies-dog-walks";
   // /:account picks the signed-in account, so the URL names no account id.
   const DASHBOARD =
     "https://dash.cloudflare.com/?to=/:account/workers/services/view/dog-walker-game";
