@@ -419,6 +419,21 @@ export const ZONE_ROAD_COLOURS: ReadonlyMap<string, string> = zoneRoadColours();
 // The zone roads, the preview grounds when a set names none.
 export const ZONE_ROADS: readonly string[] = [...ZONE_ROAD_COLOURS.values()];
 
+// Each zone's verge ground as hex, in ZONE_ORDER: the walkColour (a K name) of its verge in
+// shared/verges.json, which backdrops.ts writes. The preview grounds of what stands on the verges.
+export function vergeGrounds(): string[] {
+  const verges = JSON.parse(
+    readFileSync(new URL("../../shared/verges.json", import.meta.url), "utf8"),
+  ) as Readonly<Record<string, { walkColour?: string }>>;
+  return ZONE_ORDER.map((art) => {
+    const colour = verges[art]?.walkColour;
+    if (colour === undefined || !Object.hasOwn(K, colour)) {
+      throw new Error(`shared/verges.json has no walkColour K name for ${art}`);
+    }
+    return K[colour]!;
+  });
+}
+
 // The contrast roads: the Distillery District's (dark), then the roads an outline must hold 3:1 on: tan,
 // pink and skin2 (light) and Kensington Market's (mid grey), which takes it nearly to ink.
 export const ROADS: readonly string[] = [

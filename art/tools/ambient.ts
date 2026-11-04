@@ -125,6 +125,7 @@ import {
   type Point,
   type Sprite,
   type Tag,
+  vergeGrounds,
 } from "./pixel.ts";
 import {
   dressed,
@@ -140,7 +141,7 @@ import {
 } from "./road.ts";
 
 const USAGE = `Usage:
-  node art/tools/ambient.ts preview OUT.png   every frame on the zone roads
+  node art/tools/ambient.ts preview OUT.png   every frame on each verge's ground (walkColour)
   node art/tools/ambient.ts build             export to public/art/sprites/`;
 
 export const DRIVE_MS = 100;
@@ -1482,5 +1483,5 @@ export function* sprites(): Generator<Sprite> {
 }
 
 if (import.meta.main) {
-  await main({ doc: USAGE, sprites });
+  await main({ doc: USAGE, grounds: vergeGrounds(), sprites });
 }

@@ -94,17 +94,17 @@ import {
   run,
   scaleOf,
   type Sprite,
+  vergeGrounds,
 } from "./pixel.ts";
 
 const USAGE = `Usage:
-  node art/tools/roadside.ts preview OUT.png   every frame on green, dgreen and dslate
+  node art/tools/roadside.ts preview OUT.png   every frame on each verge's ground (walkColour)
   node art/tools/roadside.ts build             export to public/art/sprites/
   node art/tools/roadside.ts table             print the placement table as JSON
   node art/tools/roadside.ts table --write     write it to shared/roadside.json, which the game
                                                reads; build writes it too`;
 
 export const SCALE = 1.5;
-export const GROUNDS: readonly string[] = [K.green!, K.dgreen!, K.dslate!];
 export const STILL_MS = 1000;
 
 // ---------- the props: front elevations, in design units ----------
@@ -1711,7 +1711,7 @@ if (import.meta.main) {
       },
       "preview OUT.png": (out) => {
         checkPlacement();
-        preview({ grounds: GROUNDS }, depthSettled({}, sprites()), out);
+        preview({ grounds: vergeGrounds() }, depthSettled({}, sprites()), out);
       },
       table: () => process.stdout.write(tableJson()),
       "table --write": () => writeTable(),
