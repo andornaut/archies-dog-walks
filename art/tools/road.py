@@ -254,13 +254,13 @@ def back_arm(g, x, w, top, parts, out=0, lift=0):
             g.rect(x + dx + w - 1, py / s, 1, 1 / s, shade)
 
 
-def walker_arms(g, xs, w, top, parts, arms, flare, reach):
+def walker_arms(g, xs, w, top, parts, arms, flare, reach, sway=0):
     """Both of a walker's arms from behind, the left at xs[0] and the right at xs[1]. arms swings them against
     the legs: the arm swung forward (the left for arms above 0, the right below) shortens that much. flare
     throws both hands that many pixels out from the sides and reach shortens both arms, for a start or a
-    stumble."""
+    stumble. sway carries both arms that many pixels sideways with the shoulders as the upper body sways."""
     for x, side, fwd in ((xs[0], -1, arms), (xs[1], 1, -arms)):
-        back_arm(g, x, w, top, parts, side * flare, max(0, fwd) + reach)
+        back_arm(g, x + sway, w, top, parts, side * flare, max(0, fwd) + reach)
 
 
 def limb_bar(g, a, b, width, colour):
@@ -296,66 +296,67 @@ def human_legs(g, lf, rf, bob, legs, shade, shoes, x0=0, top=33, width=4, centre
             g.rect(cx - width / 2, 44 + lift, width, 1, "lgrey")
 
 
-def casey_back(lf=0, rf=0, bob=0, arms=0, flare=0, reach=0, head=0):
-    """Casey's cap and ponytail above a shaped hoodie, with bent elbows and recovery knees."""
+def casey_back(lf=0, rf=0, bob=0, arms=0, flare=0, reach=0, sway=0):
+    """Casey's cap and ponytail above a shaped hoodie, with bent elbows and recovery knees. The head rides the
+    hoodie: it bobs and sways with the shoulders, so the neck keeps its length and stays centred on the collar."""
     g = Grid(32, 48)
-    b, shift = bob, support_shift(lf, rf)
+    b, s = bob, sway
     human_legs(g, lf, rf, b, "blue", "navy", "white")
     for side in (-1, 1):
-        shoulder = (16 + side * 7 + shift, 23 + b)
+        shoulder = (16 + side * 7 + s, 23 + b)
         elbow = (16 + side * (8 + flare / 2), 28 + b + arms * side / 2)
         hand = (16 + side * (9 + flare), 33.5 - max(0, arms * side) - reach)
         limb_bar(g, shoulder, elbow, 4, "sky" if side < 0 else "blue")
         limb_bar(g, elbow, (hand[0], hand[1] - 1.3), 3.5, "sky")
         g.rect(hand[0] - 1.5, hand[1] - 1, 3, 2.5, "skin1")
-    g.tri((9 + shift, 22 + b), (23 + shift, 22 + b), (21 + shift, 34 + b), "sky")
-    g.tri((9 + shift, 22 + b), (21 + shift, 34 + b), (11 + shift, 34 + b), "sky")
-    g.rect(10 + shift, 25 + b, 12, 8, "sky")
-    g.rect(20 + shift, 24 + b, 2, 9, "blue")
-    g.rect(10 + shift, 25 + b, 1, 7, "cyan")
-    g.rect(11 + shift, 33 + b, 10, 1, "blue")
-    g.ell(16 + shift, 22.5 + b, 6, 2.5, "blue", "navy")
-    hb = b / 2
-    g.rect(14 + head, 19 + hb, 4, 3, "skin1")
-    g.cel(16 + head, 12.5 + hb, 8.5, 8.5, "dbrown", "plum", "brown")
-    g.rect(7 + head, 13 + hb, 2, 3, "skin1")
-    g.rect(23 + head, 13 + hb, 2, 3, "skin1")
-    g.cel(16 + head, 8 + hb, 8.5, 5, "amber", "orange", "yellow")
-    g.rect(8 + head, 10 + hb, 17, 2, "orange")
-    g.rect(15 + head, 10 + hb, 2, 2, "dbrown")
-    g.ell(16 + head - shift / 2, 17 + hb, 2.5, 4, "dbrown", "plum")
+    g.tri((9 + s, 22 + b), (23 + s, 22 + b), (21 + s, 34 + b), "sky")
+    g.tri((9 + s, 22 + b), (21 + s, 34 + b), (11 + s, 34 + b), "sky")
+    g.rect(10 + s, 25 + b, 12, 8, "sky")
+    g.rect(20 + s, 24 + b, 2, 9, "blue")
+    g.rect(10 + s, 25 + b, 1, 7, "cyan")
+    g.rect(11 + s, 33 + b, 10, 1, "blue")
+    g.ell(16 + s, 22.5 + b, 6, 2.5, "blue", "navy")
+    hx = 16 + s
+    g.rect(hx - 2, 19 + b, 4, 3, "skin1")
+    g.cel(hx, 12.5 + b, 8.5, 8.5, "dbrown", "plum", "brown")
+    g.rect(hx - 9, 13 + b, 2, 3, "skin1")
+    g.rect(hx + 7, 13 + b, 2, 3, "skin1")
+    g.cel(hx, 8 + b, 8.5, 5, "amber", "orange", "yellow")
+    g.rect(hx - 8, 10 + b, 17, 2, "orange")
+    g.rect(hx - 1, 10 + b, 2, 2, "dbrown")
+    g.ell(hx, 17 + b, 2.5, 4, "dbrown", "plum")
     return g
 
 
 # ---------- the other walkers (back view) ----------
 
 
-def ada_back(lf=0, rf=0, bob=0, arms=0, flare=0, reach=0, head=0):
+def ada_back(lf=0, rf=0, bob=0, arms=0, flare=0, reach=0, sway=0):
     """Ada, 11, mixed race, caramel skin, long black curls falling straight down: yellow tee, blue shorts.
-    She stands 4px shorter than the adults: her head and body sit lower and her legs are shorter."""
+    She stands 4px shorter than the adults: her head and body sit lower and her legs are shorter. Her shorts,
+    tee, arms and hair sway together, so the hidden neck stays joined to the shoulders."""
     g = Grid(32, 48)
-    b = bob
+    b, s = bob, sway
     human_legs(g, lf, rf, b, "brown", "skin2", "white", top=40, width=3, centres=(13.5, 18.5))
     for x, f in ((12, lf), (17, rf)):
         g.rect(x, 45 + f, 3, 1, "pink")
-    walker_arms(g, (7, 22), 3, 30 + b, ((3, "yellow", None), (4, "brown", None)), arms, flare, reach)
-    g.rect(10, 29 + b, 12, 8, "yellow")
-    g.rect(19, 29 + b, 3, 8, "amber")
-    g.rect(10, 36 + b, 12, 4, "sky")
-    g.rect(19, 36 + b, 3, 4, "blue")
-    g.rect(15, 36 + b, 2, 4, "blue")
-    g.rect(7, 20 + b, 2, 3, "brown")
-    g.rect(23, 20 + b, 2, 3, "brown")
-    # The crown tilts above the planted lower curls; the hidden neck stays joined to the shoulders.
+    walker_arms(g, (7, 22), 3, 30 + b, ((3, "yellow", None), (4, "brown", None)), arms, flare, reach, s)
+    g.rect(10 + s, 29 + b, 12, 8, "yellow")
+    g.rect(19 + s, 29 + b, 3, 8, "amber")
+    g.rect(10 + s, 36 + b, 12, 4, "sky")
+    g.rect(19 + s, 36 + b, 3, 4, "blue")
+    g.rect(15 + s, 36 + b, 2, 4, "blue")
+    g.rect(7 + s, 20 + b, 2, 3, "brown")
+    g.rect(23 + s, 20 + b, 2, 3, "brown")
     # black hair: a rounded crown, then long curls hanging straight down the back, bunched into bumps of
     # uneven size along the sides and the hem
-    g.ell(16 + head, 18.5 + b, 8, 7.5, "navy", "ink", "dslate")
-    g.rect(9, 20 + b, 14, 10, "navy")
-    g.rect(21, 20 + b, 2, 10, "ink")
+    g.ell(16 + s, 18.5 + b, 8, 7.5, "navy", "ink", "dslate")
+    g.rect(9 + s, 20 + b, 14, 10, "navy")
+    g.rect(21 + s, 20 + b, 2, 10, "ink")
     for x, y, rx, ry in ((8.7, 20.5, 1.4, 1.5), (8.4, 24.2, 1.8, 2.1), (8.8, 28.6, 1.4, 1.3)):
-        g.ell(x, y + b, rx, ry, "navy")
+        g.ell(x + s, y + b, rx, ry, "navy")
     for x, y, rx, ry in ((23.3, 22, 1.6, 1.9), (23.2, 26.6, 1.3, 1.4), (23.4, 29.3, 1.6, 1.5)):
-        g.ell(x, y + b, rx, ry, "ink")
+        g.ell(x + s, y + b, rx, ry, "ink")
     for x, y, rx, ry in (
         (10.2, 30.6, 1.6, 1.4),
         (13.4, 31, 2, 1.6),
@@ -363,14 +364,13 @@ def ada_back(lf=0, rf=0, bob=0, arms=0, flare=0, reach=0, head=0):
         (19.4, 30.8, 1.9, 1.5),
         (21.9, 30.2, 1.2, 1.2),
     ):
-        g.ell(x, y + b, rx, ry, "navy" if x < 20 else "ink")
+        g.ell(x + s, y + b, rx, ry, "navy" if x < 20 else "ink")
     # the curls as a few unbroken wavy locks down the back, dslate on the lit side and navy in the shade, so
     # the hair holds one mass at road scale with no single-pixel texture
     for x0, y0, length, c in CURL_LOCKS:
         for k, n in curl_runs(length):
-            sway = head * max(0, min(1, (30 - y0 - k) / 10))
-            g.rect(x0 + CURL_WAVE[k % len(CURL_WAVE)] + sway, y0 + k + b, 1, n, c)
-    g.ell(16 + head, 12 + b, 2.5, 1.5, "pink", "mauve")
+            g.rect(x0 + CURL_WAVE[k % len(CURL_WAVE)] + s, y0 + k + b, 1, n, c)
+    g.ell(16 + s, 12 + b, 2.5, 1.5, "pink", "mauve")
     # a light rim along the edges facing the light keeps her dark hair and skin off the dark road
     return rim(
         g,
@@ -384,29 +384,37 @@ def ada_back(lf=0, rf=0, bob=0, arms=0, flare=0, reach=0, head=0):
     )
 
 
-def mr_b_back(lf=0, rf=0, bob=0, arms=0, flare=0, reach=0, head=0):
+def mr_b_back(lf=0, rf=0, bob=0, arms=0, flare=0, reach=0, sway=0):
     """Mr. B, 45, Black, bald (his beard is under his chin, out of sight from behind): lilac tee, navy track pants,
     sneakers. The tee's lilac is a hue no road has, so he reads on all six."""
     g = Grid(32, 48)
-    b = bob
+    b, s = bob, sway
     human_legs(g, lf, rf, b, "navy", "grey", "white")
     for x, f in ((11, lf), (17, rf)):
         g.rect(x + 1, 43 + f, 2, 1, "red")
     walker_arms(
-        g, (5, 23), 4, 22 + b, ((4, "lilac", "violet"), (6, "dbrown", "plum"), (3, "dbrown", None)), arms, flare, reach
+        g,
+        (5, 23),
+        4,
+        22 + b,
+        ((4, "lilac", "violet"), (6, "dbrown", "plum"), (3, "dbrown", None)),
+        arms,
+        flare,
+        reach,
+        s,
     )
     # the lilac tee, shaded dgreen down its right side
-    g.rect(9, 21 + b, 14, 13, "lilac")
-    g.rect(20, 21 + b, 3, 13, "violet")
-    g.p(9, 21 + b, None)
-    g.p(22, 21 + b, None)
-    g.rect(13 + head, 19 + b, 6, 3, "dbrown")
+    g.rect(9 + s, 21 + b, 14, 13, "lilac")
+    g.rect(20 + s, 21 + b, 3, 13, "violet")
+    g.p(9 + s, 21 + b, None)
+    g.p(22 + s, 21 + b, None)
+    g.rect(13 + s, 19 + b, 6, 3, "dbrown")
     # bald head, the beard showing along the jaw, a shine on the crown
-    g.rect(8 + head, 12 + b, 2, 3, "dbrown")
-    g.rect(22 + head, 12 + b, 2, 3, "plum")
-    g.cel(16 + head, 12 + b, 7, 9, "dbrown", "plum", power=2.15)
-    g.rect(11 + head, 7 + b, 3, 1, "brown")
-    g.p(11 + head, 8 + b, "brown")
+    g.rect(8 + s, 12 + b, 2, 3, "dbrown")
+    g.rect(22 + s, 12 + b, 2, 3, "plum")
+    g.cel(16 + s, 12 + b, 7, 9, "dbrown", "plum", power=2.15)
+    g.rect(11 + s, 7 + b, 3, 1, "brown")
+    g.p(11 + s, 8 + b, "brown")
     # a light rim along the edges facing the light, a dimmer one opposite, so he holds on the dark road
     return rim(
         g,
@@ -414,38 +422,40 @@ def mr_b_back(lf=0, rf=0, bob=0, arms=0, flare=0, reach=0, head=0):
     )
 
 
-def trista_back(lf=0, rf=0, bob=0, arms=0, flare=0, reach=0, head=0):
+def trista_back(lf=0, rf=0, bob=0, arms=0, flare=0, reach=0, sway=0):
     """Trista, 50, dirty blonde bob to the shoulders, cute: green cardigan, brown skirt, tights, brown flats."""
     g = Grid(32, 48)
-    b = bob
+    b, s = bob, sway
     human_legs(g, lf, rf, b, "dslate", "navy", "dbrown", top=37, width=3, centres=(13.5, 19.5))
-    walker_arms(g, (5, 23), 4, 22 + b, ((10, "dgreen", "forest"), (3, "skin1", None)), arms, flare, reach)
-    g.rect(9, 21 + b, 14, 11, "dgreen")
-    g.rect(20, 21 + b, 3, 11, "forest")
-    g.rect(9, 21 + b, 1, 10, "green")
-    g.p(9, 21 + b, None)
-    g.p(22, 21 + b, None)
-    g.rect(9, 31 + b, 14, 7, "clay")
-    g.rect(20, 31 + b, 3, 7, "bark")
-    g.rect(9, 31 + b, 14, 1, "tan")
-    # a canvas tote with an apple on it
-    g.rect(25, 24 + b, 5, 1, "brown")
-    g.rect(24, 25 + b, 7, 8, "cream")
-    g.rect(29, 25 + b, 2, 8, "tan")
-    g.rect(26, 27 + b, 3, 3, "red")
-    g.p(27, 26 + b, "dgreen")
+    walker_arms(g, (5, 23), 4, 22 + b, ((10, "dgreen", "forest"), (3, "skin1", None)), arms, flare, reach, s)
+    g.rect(9 + s, 21 + b, 14, 11, "dgreen")
+    g.rect(20 + s, 21 + b, 3, 11, "forest")
+    g.rect(9 + s, 21 + b, 1, 10, "green")
+    g.p(9 + s, 21 + b, None)
+    g.p(22 + s, 21 + b, None)
+    g.rect(9 + s, 31 + b, 14, 7, "clay")
+    g.rect(20 + s, 31 + b, 3, 7, "bark")
+    g.rect(9 + s, 31 + b, 14, 1, "tan")
+    # a canvas tote with an apple on it: it sways left with her, and against the frame's right edge it stays
+    # put as she sways right, resting on her hip
+    t = min(s, 0)
+    g.rect(25 + t, 24 + b, 5, 1, "brown")
+    g.rect(24 + t, 25 + b, 7, 8, "cream")
+    g.rect(29 + t, 25 + b, 2, 8, "tan")
+    g.rect(26 + t, 27 + b, 3, 3, "red")
+    g.p(27 + t, 26 + b, "dgreen")
     # a dirty blonde bob to the shoulders, flicking out at the ends: light brown, darker than her skin,
     # with golden amber streaks where the light catches it
-    g.cel(16 + head, 12.5 + b, 9, 9, "brown", "dbrown", "tan")
-    g.rect(8 + head, 14 + b, 17, 5, "brown")
-    g.rect(22 + head, 14 + b, 3, 5, "dbrown")
-    g.ell(16 + head, 19 + b, 9, 2.5, "brown", "dbrown")
-    g.p(7 + head, 20 + b, "brown")
-    g.p(25 + head, 20 + b, "dbrown")
+    g.cel(16 + s, 12.5 + b, 9, 9, "brown", "dbrown", "tan")
+    g.rect(8 + s, 14 + b, 17, 5, "brown")
+    g.rect(22 + s, 14 + b, 3, 5, "dbrown")
+    g.ell(16 + s, 19 + b, 9, 2.5, "brown", "dbrown")
+    g.p(7 + s, 20 + b, "brown")
+    g.p(25 + s, 20 + b, "dbrown")
     for x, y, h in ((10, 9, 5), (13, 6, 4), (16, 8, 6), (19, 6, 3)):
-        g.rect(x + head, y + b, 1, h, "amber")
-    g.rect(14 + head, 11 + b, 1, 4, "dbrown")
-    g.rect(20 + head, 11 + b, 1, 4, "dbrown")
+        g.rect(x + s, y + b, 1, h, "amber")
+    g.rect(14 + s, 11 + b, 1, 4, "dbrown")
+    g.rect(20 + s, 11 + b, 1, 4, "dbrown")
     # a light rim along the edges facing the light keeps her hair, cardigan and skirt off the dark road
     return rim(g, {"brown": ("tan", None), "dgreen": ("green", None), "navy": ("grey", None), "dslate": ("grey", None)})
 
@@ -488,10 +498,11 @@ HUMAN_WALK = (
     {"rf": -1, "arms": 1},
 )
 HUMAN_WALK_MS = 50
-# The head settles after each weight transfer; the neutral first pose keeps pack visibility stable.
+# The walkers' upper body (head, neck, torso and arms) sways as one a beat after the hips settle over the planted
+# foot, so the head never slides on the shoulders. The neutral first pose keeps the pack's visibility stable.
 # A 2/3 design-pixel movement is one native export pixel.
-WALKER_HEAD = (0, -2 / 3, -2 / 3, 0, 2 / 3, 2 / 3, 0, 0)
-WALKER_WALK = tuple({**pose, "head": head} for pose, head in zip(HUMAN_WALK, WALKER_HEAD, strict=True))
+WALKER_SWAY = (0, -2 / 3, -2 / 3, 0, 2 / 3, 2 / 3, 0, 0)
+WALKER_WALK = tuple({**pose, "sway": sway} for pose, sway in zip(HUMAN_WALK, WALKER_SWAY, strict=True))
 WALKER_WALK_MS = 80
 WALKER_REACT = [{"lf": -4, "rf": -4, "bob": -4, "flare": 3, "reach": 1}, {"lf": -1, "rf": -1, "bob": -1, "flare": 1}]
 # A bump: lurch left with the arms up, wobble back, steady (a right lean would push a tote out of the frame).
