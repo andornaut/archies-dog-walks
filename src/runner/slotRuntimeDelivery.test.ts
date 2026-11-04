@@ -64,7 +64,7 @@ function fixture(missing: number | undefined, guaranteed = 0) {
 }
 
 // Rejects wall-4's first native commits while its cursor still holds valid values.
-function rejectingFixture(failures = SLOT_OMISSION_ATTEMPTS) {
+function rejectingFixture(failures = SLOT_OMISSION_ATTEMPTS.reserve) {
   const value = fixture(undefined);
   let rejected = 0;
   const state: typeof value.state = {
@@ -83,7 +83,9 @@ function rejectingFixture(failures = SLOT_OMISSION_ATTEMPTS) {
   return { ...value, rejected: () => rejected, state };
 }
 // Each rejected commit also spends its intrinsic and commit checks.
-const REJECTION_CHECKS = 2 * SLOT_OMISSION_ATTEMPTS + 200;
+const REJECTION_CHECKS = 2 * SLOT_OMISSION_ATTEMPTS.reserve + 200;
+// A spent exploring share starts the attempt in its reserve pass.
+const RESERVE_DUE = { progress: () => 1 };
 
 describe("optional native slot delivery", () => {
   it("retains a qualifying native incumbent through budget rollback without full-universe proofs", () => {
@@ -188,35 +190,41 @@ describe("optional native slot delivery", () => {
   });
 
   it.each([
-    [1, "wall-4"],
-    [SLOT_OMISSION_ATTEMPTS, "wall-5"],
-  ])("after %s failed attempts of optional wall-4, next places %s", (failures, next) => {
-    const { domains, jobs, path, rejected, state } = rejectingFixture(failures);
-    const placed: string[] = [];
-    const result = createSlotWitnessSearch(geometry, path, domains, jobs, {
-      anchor: () => true,
-      certifyPartial: () => true,
-      check: () => true,
-      minimumDelivery: 9,
-      propagate: () => true,
-    }).solve({
-      ...state,
-      commit(owner, entry) {
-        const trial = state.commit(owner, entry);
-        if (trial.accepted && rejected() === failures) {
-          placed.push(owner.key);
-        }
-        return trial;
-      },
-    });
-    expect(rejected()).toBe(failures);
-    expect(placed[0]).toBe(next);
-    expect(result.status).toBe("compatible");
-    if (result.status === "compatible") {
-      expect(result.selections.map(({ owner }) => owner)).toEqual(jobs);
-    }
-    expect(state.entries()).toEqual([]);
-  });
+    { failures: 1, next: "wall-4", pass: "exploring", progress: 0 },
+    { failures: SLOT_OMISSION_ATTEMPTS.reserve, next: "wall-4", pass: "exploring", progress: 0 },
+    { failures: 1, next: "wall-4", pass: "reserve", progress: 1 },
+    { failures: SLOT_OMISSION_ATTEMPTS.reserve, next: "wall-5", pass: "reserve", progress: 1 },
+  ])(
+    "in the $pass pass, after $failures failed attempts of optional wall-4, next places $next",
+    ({ failures, next, progress }) => {
+      const { domains, jobs, path, rejected, state } = rejectingFixture(failures);
+      const placed: string[] = [];
+      const result = createSlotWitnessSearch(geometry, path, domains, jobs, {
+        anchor: () => true,
+        certifyPartial: () => true,
+        check: () => true,
+        minimumDelivery: 9,
+        progress: () => progress,
+        propagate: () => true,
+      }).solve({
+        ...state,
+        commit(owner, entry) {
+          const trial = state.commit(owner, entry);
+          if (trial.accepted && rejected() === failures) {
+            placed.push(owner.key);
+          }
+          return trial;
+        },
+      });
+      expect(rejected()).toBe(failures);
+      expect(placed[0]).toBe(next);
+      expect(result.status).toBe("compatible");
+      if (result.status === "compatible") {
+        expect(result.selections.map(({ owner }) => owner)).toEqual(jobs);
+      }
+      expect(state.entries()).toEqual([]);
+    },
+  );
 
   it("resumes a better original placement after its certified omission subtree is dominated", () => {
     const { domains, jobs, path, state } = rejectingFixture();
@@ -232,6 +240,7 @@ describe("optional native slot delivery", () => {
       },
       check: () => ++checks <= REJECTION_CHECKS,
       minimumDelivery: 9,
+      ...RESERVE_DUE,
       propagate: () => true,
     }).solve({
       ...state,
@@ -273,6 +282,7 @@ describe("optional native slot delivery", () => {
       certifyPartial,
       check: () => ++checks <= REJECTION_CHECKS,
       minimumDelivery: 9,
+      ...RESERVE_DUE,
       propagate: () => true,
     }).solve({
       ...state,

@@ -40,6 +40,8 @@ export interface SlotWitnessConstructPorts<Kind extends string, Mark> {
   readonly originalDrawsFirst?: boolean;
   motionTiers?(prepared: PreparedSlotKind<Kind>): SlotMotionTiers;
   readonly minimumDelivery?: number;
+  // Failed placement attempts before a frame may omit its optional request; reserve by default.
+  readonly omissionAttempts?: number;
   readonly ordinaryOrder?: "original" | "balanced";
   partial?(omissions: readonly WitnessOmission<Kind>[]): boolean | undefined;
   // CLEANUP (added 2026-11-02): remove if fair-source exploration is declined.
@@ -127,6 +129,7 @@ function* construct<Kind extends string, Mark>(
     return { status: "budget" };
   }
   const root = ports.checkpoint();
+  const omissionAttempts = ports.omissionAttempts ?? SLOT_OMISSION_ATTEMPTS.reserve;
   const byKey = new Map(jobs.map((job) => [job.key, job]));
   const {
     coverage,
@@ -1149,7 +1152,7 @@ function* construct<Kind extends string, Mark>(
       // Offer the omission once the request's own failed attempts reach the threshold, so its
       // domain is explored before the allowance is spent. The original cursor stays suspended
       // and retains every subsequent native value.
-      if (frame.attempts >= SLOT_OMISSION_ATTEMPTS && omit("not-selected-within-allowance")) {
+      if (frame.attempts >= omissionAttempts && omit("not-selected-within-allowance")) {
         continue;
       }
       let option: Option<Kind>;

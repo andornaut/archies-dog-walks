@@ -628,6 +628,18 @@ function planSlotComposition<Kind extends string>(
   const meter = {
     anchor: () => pathBudget("anchors"),
     check: () => pathBudget("candidateChecks"),
+    progress: () => {
+      const allowance = portfolio ? SLOT_LIMITS.candidateChecks : limits.candidateChecks;
+      const share = (type: "candidateChecks" | "propagationChecks") => {
+        const used = stats[type] - attemptStart[type];
+        const remaining = Math.max(
+          0,
+          Math.min(allowance - used, limits.candidateChecks - stats[type]),
+        );
+        return used + remaining === 0 ? 1 : used / (used + remaining);
+      };
+      return Math.max(share("candidateChecks"), share("propagationChecks"));
+    },
     propagate: () => {
       if (workFailure !== undefined || attemptStopped) {
         return false;

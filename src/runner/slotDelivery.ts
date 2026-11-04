@@ -42,8 +42,12 @@ export const SLOT_RUNTIME_DELIVERY_FLOOR = Object.freeze({
   denominator: 10,
   numerator: 9,
 } as const);
-// Failed placement attempts a search frame makes before it may omit its optional request.
-export const SLOT_OMISSION_ATTEMPTS = 3;
+// Failed placement attempts a search frame makes before it may omit its optional request. A runtime
+// attempt explores with the large threshold. If it holds no floor-meeting layout once it has used
+// SLOT_OMISSION_RESERVE of its work allowance, it restarts from the empty layout with the reserve
+// threshold for the rest of that allowance.
+export const SLOT_OMISSION_ATTEMPTS = Object.freeze({ explore: 128, reserve: 3 } as const);
+export const SLOT_OMISSION_RESERVE = Object.freeze({ denominator: 4, numerator: 3 } as const);
 const EXACT_FLOOR = Object.freeze({ denominator: 1, numerator: 1 } as const);
 
 export function slotDeliveryFloor(policy: SlotDeliveryPolicy): SlotDeliveryFloor {

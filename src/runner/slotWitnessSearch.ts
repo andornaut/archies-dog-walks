@@ -7,11 +7,12 @@ import type {
   ConstraintResult,
   createSlotConstraintState,
 } from "./slotConstraintState";
-import type { SlotOmission } from "./slotDelivery";
+import { SLOT_OMISSION_ATTEMPTS, SLOT_OMISSION_RESERVE, type SlotOmission } from "./slotDelivery";
 import type { SlotPocketProof, SlotPocketSupportResult } from "./slotPocketSupport";
 import { createSlotSolverSession, drainSlotSolver } from "./slotSolverSession";
 import {
   createSlotWitnessConstruct,
+  type SlotWitnessConstructPorts,
   type SlotWitnessRefutationAttestation,
 } from "./slotWitnessConstruct";
 import type { PlannedSpawns, SpawnPlan } from "./spawning";
@@ -28,6 +29,7 @@ export interface WitnessJob<Kind extends string> extends ConstraintOwner {
   preparations(): Iterable<PreparedSlotKind<Kind>>;
 }
 type ConstraintState<Kind extends string> = ReturnType<typeof createSlotConstraintState<Kind>>;
+type Mark<Kind extends string> = ReturnType<ConstraintState<Kind>["checkpoint"]>;
 type CandidateDomains<Kind extends string> = ReturnType<typeof createSlotCandidateDomains<Kind>>;
 type Failure<Kind extends string> = Extract<ConstraintResult<Kind>, { accepted: false }>["failure"];
 export interface WitnessSelection<Kind extends string> extends ConstraintEntry<Kind> {
@@ -69,6 +71,8 @@ export interface WitnessWork<Kind extends string> {
   readonly coverageFirst?: boolean;
   readonly fairSources?: boolean;
   readonly originalDrawsFirst?: boolean;
+  // Share of the current attempt's work allowance already used, from 0 to 1.
+  readonly progress?: () => number;
   readonly propagate?: () => boolean;
   readonly rejected?: (candidate: SlotCandidate<Kind>, failure: Failure<Kind>) => void;
   readonly stopped?: () => boolean;
@@ -87,8 +91,18 @@ export function createSlotWitnessSearch<Kind extends string>(
   const construct = createSlotWitnessConstruct(geometry, path, jobs);
   function* steps(state: ConstraintState<Kind>): Generator<void, WitnessResult<Kind>, void> {
     let partialFailure: Failure<Kind> | undefined;
-    const stopped = () => partialFailure !== undefined || work.stopped?.() === true;
-    if (stopped()) {
+    let incumbent: Extract<WitnessResult<Kind>, { status: "partial" }> | undefined;
+    let reserving = false;
+    // The exploring pass yields to the reserve pass while no floor-meeting layout exists.
+    const reserveDue = () =>
+      !reserving &&
+      incumbent === undefined &&
+      work.minimumDelivery !== undefined &&
+      work.progress !== undefined &&
+      work.progress() * SLOT_OMISSION_RESERVE.denominator >= SLOT_OMISSION_RESERVE.numerator;
+    const halted = () => partialFailure !== undefined || work.stopped?.() === true;
+    const stopped = () => halted() || reserveDue();
+    if (halted()) {
       return { status: "budget" };
     }
     if (
@@ -110,7 +124,6 @@ export function createSlotWitnessSearch<Kind extends string>(
     }
     const root = state.checkpoint();
     const provenance = new WeakMap<object, SlotCandidate<Kind>>();
-    let incumbent: Extract<WitnessResult<Kind>, { status: "partial" }> | undefined;
     const charge = () => !stopped() && work.check() && !stopped();
     const propagate = () => !stopped() && (work.propagate?.() ?? true) && !stopped();
     const selections = (
@@ -128,7 +141,7 @@ export function createSlotWitnessSearch<Kind extends string>(
       return Object.freeze(selected);
     };
     try {
-      const result = yield* construct.begin({
+      const ports: SlotWitnessConstructPorts<Kind, Mark<Kind>> = {
         ...(work.minimumDelivery !== undefined || work.attestRefutation === undefined
           ? {}
           : {
@@ -326,7 +339,18 @@ export function createSlotWitnessSearch<Kind extends string>(
           }
           return trial;
         },
+      };
+      let result = yield* construct.begin({
+        ...ports,
+        omissionAttempts: SLOT_OMISSION_ATTEMPTS.explore,
       });
+      if (!halted() && reserveDue()) {
+        reserving = true;
+        result = yield* construct.begin({
+          ...ports,
+          omissionAttempts: SLOT_OMISSION_ATTEMPTS.reserve,
+        });
+      }
       if (partialFailure !== undefined) {
         return { failure: partialFailure, status: "blocked" };
       }
