@@ -575,6 +575,8 @@ export function rgbPng(image: RgbaImage): Uint8Array {
 
 // The contact sheet's background, scale and gap.
 export const PREVIEW_BACKGROUND: readonly [number, number, number] = [24, 20, 37];
+export const PREVIEW_SCALE = 6;
+export const PREVIEW_GAP = 4;
 
 // A ground's preview sheet path: out without a trailing .png, a hyphen, the ground's hex and .png, so
 // OUT.png on ground 8b9bb4 is OUT-8b9bb4.png.
@@ -586,9 +588,9 @@ export function groundSheetPath(ground: string, out: string): string {
 // in tag order. One sheet per ground keeps the largest sets' sheets within memory.
 export function preview(
   {
-    gap = 4,
+    gap = PREVIEW_GAP,
     grounds = ZONE_ROADS,
-    scale = 6,
+    scale = PREVIEW_SCALE,
   }: { gap?: number; grounds?: readonly string[]; scale?: number },
   sprites: readonly Sprite[],
   out: string,
@@ -614,26 +616,68 @@ export function depthScales(): Map<string, number> {
   return new Map(steps.filter((q) => q.scale < 1).map((q) => [q.suffix, q.scale]));
 }
 
+// ---------- exported sprite sheets ----------
+
+// A frame's rectangle in its sheet PNG.
+export interface SheetRect {
+  h: number;
+  w: number;
+  x: number;
+  y: number;
+}
+// A tag's name and its first and last frame indices.
+export interface SheetTag {
+  from: number;
+  name: string;
+  to: number;
+}
+// An exported sprite: its sheet PNG, each frame's rectangle in order and its tags (none when the JSON
+// lists no frameTags).
+export interface SpriteSheet {
+  frames: SheetRect[];
+  image: RgbaImage;
+  tags: SheetTag[];
+}
+
+export const SPRITES_DIR = "public/art/sprites";
+
+// public/art/sprites/<key>.png and .json, decoded.
+export function readSheet(key: string): SpriteSheet {
+  const path = `${SPRITES_DIR}/${key}`;
+  const data = JSON.parse(readFileSync(`${path}.json`, "utf8")) as {
+    frames: Record<string, { frame: SheetRect }>;
+    meta: { frameTags?: SheetTag[] };
+  };
+  return {
+    frames: Object.values(data.frames).map((f) => f.frame),
+    image: decodePng(readFileSync(`${path}.png`)),
+    tags: data.meta.frameTags ?? [],
+  };
+}
+
+// The pixels of image inside r as rows of hex colours, null where clear.
+export function sheetFrame(image: RgbaImage, r: SheetRect): Frame {
+  return Array.from({ length: r.h }, (_, y) =>
+    Array.from({ length: r.w }, (__, x) => {
+      const i = ((r.y + y) * image.width + r.x + x) * 4;
+      return image.data[i + 3] ? hexAt(image, i) : null;
+    }),
+  );
+}
+
+// The hex colour of the pixel at byte offset i of image.
+function hexAt(image: RgbaImage, i: number): string {
+  return Array.from(image.data.subarray(i, i + 3), (c) => c.toString(16).padStart(2, "0")).join("");
+}
+
 // public/art/sprites/<key>'s frame 0 as rows of colours (null where clear), or null if it is not
 // exported.
 function exported(key: string): Frame | null {
-  const path = `public/art/sprites/${key}`;
-  if (!existsSync(`${path}.json`)) {
+  if (!existsSync(`${SPRITES_DIR}/${key}.json`)) {
     return null;
   }
-  const data = JSON.parse(readFileSync(`${path}.json`, "utf8")) as {
-    frames: Record<string, { frame: { h: number; w: number; x: number; y: number } }>;
-  };
-  const r = Object.values(data.frames)[0]!.frame;
-  const img = decodePng(readFileSync(`${path}.png`));
-  return Array.from({ length: r.h }, (_, y) =>
-    Array.from({ length: r.w }, (__, x) => {
-      const i = ((r.y + y) * img.width + r.x + x) * 4;
-      return img.data[i + 3]
-        ? Array.from(img.data.subarray(i, i + 3), (c) => c.toString(16).padStart(2, "0")).join("")
-        : null;
-    }),
-  );
+  const { frames, image } = readSheet(key);
+  return sheetFrame(image, frames[0]!);
 }
 
 // tags with every frame moved dy rows down (up when negative) in its frame.

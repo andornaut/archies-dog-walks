@@ -11,7 +11,7 @@ import { readFileSync } from "node:fs";
 import { decodePng } from "@andornaut/art-kit/png";
 import { blankImage, type RgbaImage } from "@andornaut/art-kit/rgbaImage";
 
-import { Grid, HEART, K, toImage } from "./pixel.ts";
+import { Grid, HEART, K, readSheet, type SheetRect, type SheetTag, toImage } from "./pixel.ts";
 import { chrome } from "./ui.ts";
 
 export type Rgb = readonly [number, number, number];
@@ -316,18 +316,7 @@ export function sideDx(key: string, side: number): number {
 
 // ---------- exported sprites ----------
 
-interface Rect {
-  h: number;
-  w: number;
-  x: number;
-  y: number;
-}
-interface FrameTag {
-  from: number;
-  name: string;
-  to: number;
-}
-export type Sheet = readonly [image: RgbaImage, frames: Rect[], tags: Map<string, FrameTag>];
+export type Sheet = readonly [image: RgbaImage, frames: SheetRect[], tags: Map<string, SheetTag>];
 
 const SHEETS = new Map<string, Sheet>();
 
@@ -335,15 +324,8 @@ const SHEETS = new Map<string, Sheet>();
 export function sheet(key: string): Sheet {
   let out = SHEETS.get(key);
   if (!out) {
-    const meta = readJson<{
-      frames: Record<string, { frame: Rect }>;
-      meta: { frameTags: FrameTag[] };
-    }>(`public/art/sprites/${key}.json`);
-    out = [
-      readPng(`public/art/sprites/${key}.png`),
-      Object.values(meta.frames).map((fr) => fr.frame),
-      new Map(meta.meta.frameTags.map((t) => [t.name, t])),
-    ];
+    const { frames, image, tags } = readSheet(key);
+    out = [image, frames, new Map(tags.map((t) => [t.name, t]))];
     SHEETS.set(key, out);
   }
   return out;

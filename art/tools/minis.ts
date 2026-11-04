@@ -35,6 +35,7 @@ import {
   K,
   main,
   type Point,
+  PREVIEW_GAP,
   raster,
   type Sprite,
   swapped,
@@ -331,7 +332,7 @@ export function nearest(f: Frame, s: number): Frame {
 // nearest-neighbour beside this file's version, as an opaque PNG at out.
 export function compare(
   {
-    gap = 4,
+    gap = PREVIEW_GAP,
     grounds = ["3a4466", "c0cbdc"],
     scale = 4,
   }: { gap?: number; grounds?: readonly string[]; scale?: number },

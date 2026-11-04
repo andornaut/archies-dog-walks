@@ -51,6 +51,7 @@ import {
   Grid,
   iconEdge,
   K,
+  PREVIEW_SCALE,
   run,
   savePng,
   type Sprite,
@@ -1322,7 +1323,7 @@ function stamp(target: RgbaImage, x: number, y: number, scale: number, source: R
 }
 
 // Every icon on the UI's paper, panel, wood and ink colours, then ui-difficulty's tags, scaled up.
-export function preview(out: string, scale = 6): void {
+export function preview(out: string, scale = PREVIEW_SCALE): void {
   const grounds: readonly Rgb[] = [
     [234, 212, 170],
     [228, 166, 114],

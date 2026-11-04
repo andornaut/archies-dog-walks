@@ -35,6 +35,7 @@ import {
   type Frame,
   main,
   PREVIEW_BACKGROUND,
+  PREVIEW_GAP,
   type Sprite,
   type Tag,
   ZONE_ROADS,
@@ -398,7 +399,7 @@ export function checked(variants: Iterable<Sprite>): Sprite[] {
 // Per sprite with a variant here or in minis.ts, a sheet DIR/<key>.png with a band per zone road:
 // each frame at 1x, then per step a line of nearest-neighbour beside the variant.
 export function compare(
-  { gap = 4, scale = 4 }: { gap?: number; scale?: number },
+  { gap = PREVIEW_GAP, scale = 4 }: { gap?: number; scale?: number },
   outDir: string,
 ): void {
   mkdirSync(outDir, { recursive: true });
