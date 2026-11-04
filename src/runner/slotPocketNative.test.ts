@@ -451,11 +451,6 @@ describe("native pocket proof boundaries", () => {
       false,
     );
     Object.assign(b.entry.request.footprint!, { rows: 1 });
-    state.reserveCells(1);
-    expect(state.additionStable(() => true, scope, context, second, b.entry, failed.failure)).toBe(
-      false,
-    );
-    state.reserveCells(0);
     expect(
       state.additionStable(() => true, scope, context, second, b.entry, { ...failed.failure }),
     ).toBe(false);
@@ -464,7 +459,7 @@ describe("native pocket proof boundaries", () => {
     ).toBeUndefined();
   });
 
-  it("binds native failure support and rejects future-reservation or foreign attestations", () => {
+  it("binds native failure support and rejects foreign attestations", () => {
     const domains = createSlotCandidateDomains(geometry, path);
     const one = standing("one"),
       two = standing("two");
@@ -506,15 +501,6 @@ describe("native pocket proof boundaries", () => {
     ).toBe(false);
     expect(state.attestsPocketOwners(() => true, scope, [second])).toBe(true);
     expect(state.attestsPocketOwners(() => true, scope, [])).toBe(false);
-    const mark = state.checkpoint();
-    state.reserveCells(1);
-    expect(state.additionStable(() => true, scope, context, second, b.entry, failure.failure)).toBe(
-      false,
-    );
-    state.restore(mark);
-    expect(state.additionStable(() => true, scope, context, second, b.entry, failure.failure)).toBe(
-      true,
-    );
     let ran = 0;
     const trial = () => {
       ran++;

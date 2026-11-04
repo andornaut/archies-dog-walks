@@ -72,9 +72,9 @@ export function quotaFootprint(quota: Pick<SpawnQuota<string>, "footprint">): Fo
 // firstContactSeconds, the rows reach back up the road, on the same grid, to the last that meets
 // the pack no sooner than that long after the zone starts: rows at negative distances are on the
 // road in view as the zone starts. pathStart is the lane the zone's guaranteed path starts in
-// (planSpawns). fixedKinds are the zone's fixed obstacles, which a lane-blocking standing spawn of
-// one of them with no room is swapped among (planSpawns). riderFollowGap is the least road between
-// two lane-blocking riders' hit boxes in one lane while both are on the road (ridersMeet).
+// (drawPath). fixedKinds lists the zone's fixed obstacles; runtime plans leave it empty.
+// riderFollowGap is the least road between two lane-blocking riders' hit boxes in one lane while
+// both are on the road (ridersMeet).
 export interface SpawnPlan<Kind extends string> {
   cellInset: number;
   cellLength: number;
@@ -547,12 +547,6 @@ export function pathChanges(rows: readonly number[], path: readonly number[]): P
     const to = path[row + 1] ?? from;
     return to === from ? [] : [{ at: (itemAt(rows, row) + itemAt(rows, row + 1)) / 2, from, to }];
   });
-}
-
-// The cells a quota's spawns cover.
-export function quotaArea(quota: Pick<SpawnQuota<string>, "footprint">): number {
-  const { lanes: across, rows: length } = quotaFootprint(quota);
-  return across * length;
 }
 
 // The last row a spawn's hit box is on: its rows' hit length reaches a row's distance.

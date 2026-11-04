@@ -563,7 +563,7 @@ describe("native slot constraint transactions", () => {
     }
   });
 
-  it("restores nested native ledgers, reservations and exact conflict owners", () => {
+  it("restores nested native ledgers and exact conflict owners", () => {
     const actual = { key: "actual" };
     const hypothetical = { key: "hypothetical" };
     const replacement = { key: "replacement" };
@@ -596,11 +596,6 @@ describe("native slot constraint transactions", () => {
     }
     expect(conflict.failure.owners[0]).toBe(hypothetical);
     const nested = state.checkpoint();
-    state.reserveCells(path.length * geometry.laneCount);
-    expect(state.probe({ key: "wide" }, fixed("wide", 10, 0, 2))).toMatchObject({
-      accepted: false,
-      failure: { rule: "reservation" },
-    });
     state.restore(root);
     expect(state.entries()).toHaveLength(1);
     expect(state.commit(replacement, fixed("replacement", 12, 4)).accepted).toBe(true);
@@ -675,7 +670,6 @@ describe("native slot constraint transactions", () => {
     )[0]!;
     const intrinsic = createSlotIntrinsicProbe(geometry, path);
     const state = createSlotConstraintState(geometry, path, [{ entry: pickup, owner }]);
-    state.reserveCells(path.length * geometry.laneCount);
     expect(intrinsic(wall)).toEqual({ accepted: false, rule: "path" });
     expect(state.probe({ key: "wall" }, wall)).toEqual({
       accepted: false,
@@ -687,10 +681,7 @@ describe("native slot constraint transactions", () => {
     });
     const other = fixed("other", 10, 0, 2);
     expect(intrinsic(other)).toEqual({ accepted: true });
-    expect(state.probe({ key: "other" }, other)).toMatchObject({
-      accepted: false,
-      failure: { rule: "reservation" },
-    });
+    expect(state.probe({ key: "other" }, other).accepted).toBe(true);
     expect(state.entries()[0]!.owner).toBe(owner);
   });
   it("keeps unknown native owner references unattributed", () => {

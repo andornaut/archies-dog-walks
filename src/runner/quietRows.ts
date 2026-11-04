@@ -1,6 +1,6 @@
 import type { SpawnPlan } from "./spawning";
 
-export interface QuietRun {
+interface QuietRun {
   first: number;
   last: number;
 }
@@ -9,7 +9,7 @@ export interface QuietRun {
 // rounded down, for a run from the zone's first row or to its last, so a run across the road where
 // two zones meet keeps near the cap; and none from the first row of a zone whose rows start on the
 // road in view, so something meets the pack soon after it starts.
-export function quietAllowed(
+function quietAllowed(
   plan: Pick<SpawnPlan<string>, "firstContactSeconds" | "maxEmptyRows">,
   rowCount: number,
   first: number,

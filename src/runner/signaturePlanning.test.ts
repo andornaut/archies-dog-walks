@@ -1,19 +1,15 @@
 import { describe, expect, it } from "vitest";
 
 import type { SignatureProfile } from "../data/types";
-import { plannerStreams } from "../testing/movers";
 import {
   type MoverGeometry,
   moverPlacements,
   moverRetries,
   type MoverSpec,
   onScreenOf,
-  placeMovers,
   screenHasRoom,
 } from "./moverPlanning";
 import { signaturePlace } from "./signaturePaths";
-import type { SpawnPlan } from "./spawning";
-import { planSpawns } from "./zonePlanner";
 
 const common = { finishAheadSeconds: 1, warningSeconds: 0.3 };
 const profiles: readonly SignatureProfile[] = [
@@ -77,19 +73,6 @@ const specOf = (profile: SignatureProfile): MoverSpec => ({
   variation: { delaySeconds: 0.3, lengthShare: 0.35, speedShare: 0 },
   warningSeconds: profile.warningSeconds,
 });
-const caps = { darts: 1, slowVehicles: 1, total: 3 };
-const grid = {
-  block: (_row: number, lanes: { count: number }) => lanes.count <= geometry.laneCount - 2,
-  clearOf: () => true,
-  clearRun: () => 3,
-  heldLanes: () => 0,
-  isFree: () => true,
-  leavesRoom: () => true,
-  occupy: () => {},
-  packFits: () => true,
-  stand: () => {},
-  take: () => {},
-};
 
 describe("signature admission", () => {
   it("counts a signature with dart classification against the shared dart cap", () => {
@@ -143,12 +126,6 @@ describe("signature admission", () => {
         }
         expect(placement.lanes.count).toBeLessThanOrEqual(geometry.laneCount - 2);
       }
-      const rows = Array.from({ length: 20 }, (_, index) => 1000 + index * 240);
-      const quota = { count: 1, kind: "example", spec };
-      const one = placeMovers(plannerStreams(1), geometry, caps, grid, [], rows, [quota]);
-      const replay = placeMovers(plannerStreams(1), geometry, caps, grid, [], rows, [quota]);
-      expect(one.spawns).toHaveLength(1);
-      expect(one).toEqual(replay);
     },
   );
 
@@ -163,57 +140,10 @@ describe("signature admission", () => {
     }
   });
 
-  it("drops an unsafe complete route without replacing it with a shorter or stationary one", () => {
+  it("offers no shorter route in place of an unsafe complete one", () => {
     for (const profile of profiles) {
       const spec = specOf(profile);
       expect(moverPlacements({ ...geometry, sightLength: 50 }, spec)).toEqual([]);
-      const placed = placeMovers(
-        plannerStreams(1),
-        geometry,
-        caps,
-        { ...grid, clearOf: () => false },
-        [],
-        [1000],
-        [{ count: 1, kind: "example", spec }],
-      );
-      expect(placed.spawns).toEqual([]);
-      expect(placed.dropped).toEqual(["example"]);
-    }
-  });
-
-  it("never converts an unplaceable first obstacle or moving prize into a stationary spawn", () => {
-    const profile = profiles[0];
-    if (profile === undefined) {
-      throw new Error("Missing profile fixture");
-    }
-    for (const blocksLane of [true, false]) {
-      const plan: SpawnPlan<"example"> = {
-        ...geometry,
-        cellInset: 5,
-        fixedKinds: [],
-        laneMoveSeconds: 0.2,
-        maxEmptyRows: Infinity,
-        minOpenLanes: 2,
-        minSpacing: 160,
-        moverCaps: caps,
-        pathLaneMoveSeconds: 0.8,
-        pathStart: 2,
-        quotas: [
-          {
-            blocksLane,
-            count: 1,
-            first: blocksLane,
-            kind: "example",
-            mover: specOf({ ...profile, finishAheadSeconds: 1000 }),
-          },
-        ],
-        reactionSeconds: 0.8,
-        riderFollowGap: 50,
-        stepSeconds: 1 / 60,
-      };
-      expect(() => planSpawns(plannerStreams(1), plan)).toThrow(
-        /no legal complete signature variant/,
-      );
     }
   });
 });

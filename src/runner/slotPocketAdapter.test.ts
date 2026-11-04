@@ -92,11 +92,6 @@ function fixture(width: number, adviceLimit?: number) {
     failure: { rule: "open-stretches" },
   });
   const before = state.entries();
-  const probeOwner = { key: "reservation-probe" };
-  const probe = domains.at(probeOwner.key, standing(2, "reservation-probe"), 10, 1)[0]!;
-  state.reserveCells(path.length * geometry.laneCount);
-  const reservation = () => state.probe(probeOwner, probe.entry);
-  expect(reservation()).toMatchObject({ accepted: false, failure: { rule: "reservation" } });
   const work = {
     ...(adviceLimit === undefined ? {} : { adviceLimit }),
     anchor: vi.fn(() => true),
@@ -111,7 +106,6 @@ function fixture(width: number, adviceLimit?: number) {
       expect(entry).toBe(before[index]!.entry);
       expect(owner).toBe(before[index]!.owner);
     });
-    expect(reservation()).toMatchObject({ accepted: false, failure: { rule: "reservation" } });
   };
   return {
     adapter,
@@ -158,7 +152,6 @@ describe("native pocket adapter", () => {
       ).toBe(true);
     }
     const root = test.state.checkpoint();
-    test.state.reserveCells(0);
     const other = test.domains.at(
       test.owners[2]!.key,
       [...test.owners[2]!.preparations()][0]!,
@@ -183,7 +176,6 @@ describe("native pocket adapter", () => {
     expect(test.adapter.check(test.state, "capacity")).toEqual({ status: "unknown" });
     test.restored();
     const before = test.state.checkpoint();
-    test.state.reserveCells(0);
     expect(test.state.commit(test.owners[2]!, test.repair.entry).accepted).toBe(true);
     expect(test.state.checkComplete()).toEqual({ accepted: true });
     const frontier = vi.spyOn(test.domains, "completeOwnerWalls");

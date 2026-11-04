@@ -11,18 +11,18 @@ This record summarises the runtime spawn planner's contract and the qualificatio
 
 ## Architecture
 
-The data flow at `38ef5717`:
+The data flow:
 
-| Responsibility                                                             | Source                                                                          |
-| -------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
-| Capture zone inputs and replay context                                     | `src/runner/zoneSlotInput.ts`, `zonePlan.ts`                                    |
-| Validate configuration, draw kinds and movement, prepare candidate domains | `slotConfig.ts`, `slotJobs.ts`, `slotCandidates.ts`, `slotCandidateDomains.ts`  |
-| Construct a path and search compatible assignments                         | `slotPath.ts`, `slotWitnessSearch.ts`, `slotWitnessConstruct.ts`                |
-| Check native constraints and conditional proof support                     | `slotConstraintState.ts`, `slotPocketSupport.ts`, `slotConflictCertificates.ts` |
-| Independently audit original requests and materialise delivery             | `slotAudit.ts`, `slotDelivery.ts`, `slotPlan.ts`                                |
-| Coordinate runtime and independent capacity planning                       | `slotPlanner.ts`                                                                |
+| Responsibility                                                             | Source                                                                         |
+| -------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| Capture zone inputs and replay context                                     | `src/runner/zoneSlotInput.ts`, `zonePlan.ts`                                   |
+| Validate configuration, draw kinds and movement, prepare candidate domains | `slotConfig.ts`, `slotJobs.ts`, `slotCandidates.ts`, `slotCandidateDomains.ts` |
+| Construct a path and search compatible assignments                         | `slotPath.ts`, `slotWitnessSearch.ts`, `slotWitnessConstruct.ts`               |
+| Check native constraints and conditional proof support                     | `slotConstraintState.ts`, `slotPocketAdapter.ts`, `slotPocketSupport.ts`       |
+| Independently audit original requests and materialise delivery             | `slotAudit.ts`, `slotDelivery.ts`, `slotPlan.ts`                               |
+| Coordinate runtime and independent capacity planning                       | `slotPlanner.ts`                                                               |
 
-Weights, random draws, movement profiles and original request counts remain frozen through the native safety boundary. A conditional refutation needs native attestation before it can prune search. Budget exhaustion or an unfinished prefix is unknown, not a certificate of impossibility or valid partial delivery.
+Weights, random draws, movement profiles and original request counts remain frozen through the native safety boundary. A conditional refutation needs native attestation before it can prune search; pocket support and refutation attestation run only in exact construction, which the offline capacity audit uses, not in runtime 90% construction. Budget exhaustion or an unfinished prefix is unknown, not a certificate of impossibility or valid partial delivery.
 
 ## Qualification
 

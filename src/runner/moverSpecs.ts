@@ -261,7 +261,7 @@ function moverMotion(
 // always stops in a lane, never on the verge, sliding its last lane. A merge is a rider that
 // changes lane once. A stop-and-go across is a dart as wide as its footprint that never stops for
 // good or turns back, pausing once in one of its stops, and of which a share may be red
-// herrings, which the planner leaves off the road (placeMovers). A hopper may make
+// herrings, which the planner leaves off the road (herringSpawn). A hopper may make
 // any hops it can, as many as its drawn count, of up to HOP_SEQUENCES_MOST ways for each count,
 // drawn here from the movers stream where there are more. The planner takes whichever way keeps
 // the road passable, drawing among those from the zone's seed.

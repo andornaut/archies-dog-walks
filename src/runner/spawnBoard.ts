@@ -182,16 +182,6 @@ export class SpawnBoard<Kind extends string> {
       restore.forEach((reset) => reset());
     };
   }
-  reserveCells(count: number): void {
-    if (
-      !Number.isSafeInteger(count) ||
-      count < 0 ||
-      count > this.rows.length * this.plan.laneCount
-    ) {
-      throw new RangeError("Invalid future slot cell reservation");
-    }
-    this.cells.reserved = count;
-  }
   private quota(entry: SpawnPlacement<Kind>): SpawnQuota<Kind> | undefined {
     const { memberIndex, quotaIndex } = entry.trace;
     if (

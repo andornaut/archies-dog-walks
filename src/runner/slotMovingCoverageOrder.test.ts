@@ -68,7 +68,6 @@ function fixture(pools: readonly (readonly SlotSource<string>[])[], fairSources:
     guaranteed: false,
     key: String(ordinal),
     laneEffect: "possible",
-    minimumCells: 0,
     ordinal,
     phase: "active",
     *preparations() {

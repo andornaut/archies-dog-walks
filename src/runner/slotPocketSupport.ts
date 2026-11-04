@@ -1,7 +1,10 @@
-import type { ConflictAssignment } from "./slotConflictCertificates";
 import type { ConstraintOwner, ConstraintResult } from "./slotConstraintState";
 
 type Failure = Extract<ConstraintResult<string>, { accepted: false }>["failure"];
+interface ConflictAssignment {
+  readonly owner: ConstraintOwner;
+  readonly value: object;
+}
 type Stop = { readonly status: "budget" } | { readonly failure: Failure; readonly status: "fatal" };
 export interface SlotPocketObligation {
   readonly context: object;

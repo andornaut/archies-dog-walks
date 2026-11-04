@@ -52,8 +52,5 @@ export function createSlotFeasibility<Kind extends string>(
       return result;
     },
     probe,
-    reserveCells(count: number): void {
-      board.reserveCells(count);
-    },
   };
 }

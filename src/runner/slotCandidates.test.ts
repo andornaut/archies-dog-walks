@@ -248,7 +248,6 @@ describe("native slot motion retry capabilities", () => {
       guaranteed: true,
       key,
       laneEffect: "possible",
-      minimumCells: 0,
       ordinal: 0,
       phase: "active",
       preparations: () => [prepared],

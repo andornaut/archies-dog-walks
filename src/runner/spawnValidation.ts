@@ -77,25 +77,6 @@ export interface SpawnAudit {
 
 type LocalAudit = { readonly reasons: readonly string[]; readonly coverage: readonly string[] };
 
-class AuditCache {
-  private readonly values = new Map<object, AuditCache>();
-  private result: unknown;
-
-  get<T>(keys: readonly object[], calculate: () => T): T {
-    if (keys.length === 0) {
-      this.result ??= calculate();
-      return this.result as T;
-    }
-    const [key, ...rest] = keys;
-    let child = this.values.get(key!);
-    if (child === undefined) {
-      child = new AuditCache();
-      this.values.set(key!, child);
-    }
-    return child.get(rest, calculate);
-  }
-}
-
 function preparePath<Kind extends string>(
   plan: SpawnPlan<Kind>,
   path: PlannedSpawns<Kind>["path"],
@@ -125,34 +106,6 @@ function preparePath<Kind extends string>(
   };
 }
 
-// The plan, path and all reused event/proof/draw objects must remain immutable for
-// this auditor's lifetime. Trace bindings and all global interactions stay fresh.
-export function createSpawnAuditor<Kind extends string>(
-  plan: SpawnPlan<Kind>,
-  path: PlannedSpawns<Kind>["path"],
-): { audit(planned: PlannedSpawns<Kind>): SpawnAudit } {
-  const prepared = preparePath(plan, path);
-  const cache = new AuditCache();
-  return {
-    audit(planned) {
-      const samePath =
-        planned.path === path ||
-        (planned.path.length === path.length &&
-          planned.path.every(
-            (row, index) =>
-              row.distance === path[index]!.distance && row.lane === path[index]!.lane,
-          ));
-      return auditPlan(
-        plan,
-        planned,
-        planned.visibility,
-        samePath ? prepared : preparePath(plan, planned.path),
-        cache,
-      );
-    },
-  };
-}
-
 // Audits emitted groups, never admission claims. An interval trace is evidence for
 // overlap checks, not proof that a moving body's actual route stays inside it.
 export function auditSpawnPlan<Kind extends string>(
@@ -168,10 +121,7 @@ function auditPlan<Kind extends string>(
   planned: PlannedSpawns<Kind>,
   visibility: readonly SpawnVisibilityTrace[],
   prepared: ReturnType<typeof preparePath<Kind>>,
-  cache?: AuditCache,
 ): SpawnAudit {
-  const local = (keys: readonly object[], calculate: () => LocalAudit): LocalAudit =>
-    cache === undefined ? calculate() : cache.get(keys, calculate);
   const counts: SpawnAuditCount[] = [];
   for (const quota of plan.quotas) {
     const movement = quota.mover?.movement ?? null;
@@ -397,9 +347,7 @@ function auditPlan<Kind extends string>(
       if (proof.selection === undefined) {
         finding.coverage.push("missing selected mover draws/lift");
       } else if (requestedDraws !== undefined && quota.mover !== undefined) {
-        const variants = () => [requestedDraws, ...moverRetries(quota.mover!, requestedDraws)];
-        const permitted =
-          cache === undefined ? variants() : cache.get([quota, requestedDraws], variants);
+        const permitted = [requestedDraws, ...moverRetries(quota.mover, requestedDraws)];
         if (!permitted.some((draws) => sameDraws(draws, proof.selection!.draws))) {
           finding.reasons.push("selected mover draws are not an allowed frozen-request retry");
         }
@@ -411,19 +359,10 @@ function auditPlan<Kind extends string>(
           finding.reasons.push("selected mover lift is not an allowed retry");
         }
       }
-      const audit = local(
-        [
-          event,
-          quota,
-          proof,
-          ...(requestedDraws === undefined ? [] : [requestedDraws]),
-          ...(proof.selection === undefined ? [] : [proof.selection, proof.selection.draws]),
-        ],
-        () =>
-          event.mover!.motion === "signature"
-            ? { coverage: [], reasons: signatureProof(plan, quota, event, proof) }
-            : auditMoverGeometry(plan, quota, event, proof),
-      );
+      const audit: LocalAudit =
+        event.mover!.motion === "signature"
+          ? { coverage: [], reasons: signatureProof(plan, quota, event, proof) }
+          : auditMoverGeometry(plan, quota, event, proof);
       finding.reasons.push(...audit.reasons);
       finding.coverage.push(...audit.coverage);
       if (

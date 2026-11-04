@@ -28,7 +28,7 @@ import {
 
 // Every block kept: its first row, the last row whose window and the last whose gap it
 // overlaps, and its lanes.
-export interface Block extends LaneAlternativeBlock {
+interface Block extends LaneAlternativeBlock {
   covered: number;
   dart: boolean;
   lastGap: number;
@@ -450,7 +450,7 @@ export class SpawnCells {
   // Lanes a dart holds.
   private readonly dartHeld: Int32Array;
   // Lanes taken by a standing spawn: a lane-blocking standing spawn may take a cell a mover
-  // holds where no mover's body comes (ZonePlanner's clearOfMovers), and a dart then sets off
+  // holds where no mover's body comes (clearOfMovers), and a dart then sets off
   // over or past it.
   private readonly heldByStanding: Int32Array;
   private readonly moverBlockingStanding: Int32Array;

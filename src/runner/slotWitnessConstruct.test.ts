@@ -140,7 +140,6 @@ function fixture(road: typeof geometry, specs: readonly Spec[], limit = Infinity
       guaranteed: spec.guaranteed === true,
       key: spec.key,
       laneEffect: spec.auxiliary ? "none" : "possible",
-      minimumCells: spec.moving || spec.auxiliary ? 0 : footprint.lanes,
       ordinal,
       phase: "active",
       preparations: () => [prepared],
@@ -170,13 +169,6 @@ function fixture(road: typeof geometry, specs: readonly Spec[], limit = Infinity
       if (!check()) {
         return undefined;
       }
-      const present = new Set(state.entries().map(({ owner }) => owner.key));
-      state.reserveCells(
-        jobs.reduce(
-          (total, next) => total + (present.has(next.key) || next === job ? 0 : next.minimumCells),
-          0,
-        ),
-      );
       const result = state.commit(job, candidate.entry);
       if (result.accepted) {
         accepted++;

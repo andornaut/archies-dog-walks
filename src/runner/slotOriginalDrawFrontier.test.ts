@@ -80,7 +80,6 @@ function fixture() {
     guaranteed: true,
     key: "dart",
     laneEffect: "possible",
-    minimumCells: 0,
     ordinal: 0,
     phase: "active",
     preparations: () => [prepared],

@@ -54,7 +54,6 @@ function fixture(overrides: Partial<WitnessWork<string>> = {}, auxiliary = false
       guaranteed: false,
       key,
       laneEffect: inert ? "none" : "possible",
-      minimumCells: inert ? 0 : 1,
       ordinal,
       phase: "active",
       preparations: () => [prepared],

@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 import { prepareSlotKind, slotPlacementsAt } from "./slotCandidates";
 import { type SlotSource } from "./slotConfig";
 import { createSlotConstructionState } from "./slotConstraintState";
-import { minimumUnsharedCells, type SlotJob } from "./slotJobs";
+import type { SlotJob } from "./slotJobs";
 import { materialiseSlotPlan } from "./slotPlan";
 import { blockingSpan, rowSpacing, type SpawnPlan, zoneRows } from "./spawning";
 import { auditSpawnPlan } from "./spawnValidation";
@@ -156,7 +156,7 @@ describe("future native cell reservations", () => {
     },
   );
 
-  it("keeps a complete native sharing layout when footprint products overreserve a wide choice", () => {
+  it("keeps a complete native sharing layout with a wide choice", () => {
     const state = sharingPrefix();
     const moverCells = state.entries()[1]!.entry.trace.placement!.cells;
     expect(moverCells).toEqual(
@@ -169,21 +169,7 @@ describe("future native cell reservations", () => {
     const future = ["north-left", "north-right", "south-left", "south-right"].map((kind) =>
       fixed(kind, 1, 10),
     );
-    const remaining = future.map(({ source }) => jobOf(source));
-    const previous = state.checkpoint();
-    state.reserveCells(
-      remaining.reduce(
-        (count, job) => count + job.sources[0]!.footprint.lanes * job.sources[0]!.footprint.rows,
-        0,
-      ),
-    );
-    expect(state.probe(jobOf(wide.source), at(wide, 0, 3))).toMatchObject({
-      accepted: false,
-      failure: { rule: "reservation" },
-    });
-    state.restore(previous);
     expect(state.probe(jobOf(wide.source), at(wide, 0, 3)).accepted).toBe(true);
-    state.reserveCells(remaining.reduce((count, job) => count + minimumUnsharedCells(job), 0));
     expect(state.commit(jobOf(wide.source), at(wide, 4, 3)).accepted).toBe(true);
     for (const [index, prepared] of future.entries()) {
       expect(
@@ -222,7 +208,6 @@ describe("future native cell reservations", () => {
     const parkedJob = jobOf(parked.source);
     expect(parked.source.footprint.rows).toBe(3);
     expect(blockingSpan({ ...geometry, quotas: [] }, spacing, 0, 3).lastRow + 1).toBe(2);
-    expect(minimumUnsharedCells(parkedJob)).toBe(0);
     const state = createSlotConstructionState(geometry, path);
     const last = path.length - 1;
     expect(state.probe(parkedJob, at(parked, last, 1))).toMatchObject({
@@ -230,7 +215,6 @@ describe("future native cell reservations", () => {
       failure: { rule: "outside-rows" },
     });
     const passable = fixed("passable", 1, 3, false);
-    expect(minimumUnsharedCells(jobOf(passable.source))).toBe(0);
     expect(state.commit(jobOf(passable.source), at(passable, last, 1)).accepted).toBe(true);
   });
 
@@ -246,7 +230,6 @@ describe("future native cell reservations", () => {
       weight: 1,
     });
     const job = { ...jobOf(source("wide", 3)), sources: [source("wide", 3), source("narrow", 1)] };
-    expect(minimumUnsharedCells(job)).toBe(0);
     expect(job.sources.map(({ kind }) => kind)).toEqual(["wide", "narrow"]);
     expect(compile).not.toHaveBeenCalled();
   });

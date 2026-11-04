@@ -299,8 +299,6 @@ export function createSlotPocketAdapter<Kind extends string>(
         },
       };
       try {
-        // Refutation under zero future reservation also refutes the more constrained caller state.
-        state.reserveCells(0);
         if (!nativeWork.propagate()) {
           return { status: "budget" };
         }

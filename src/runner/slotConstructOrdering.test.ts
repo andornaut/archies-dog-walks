@@ -127,7 +127,6 @@ function run(pools: readonly (readonly PreparedSlotKind<string>[])[], allowance 
     guaranteed: true,
     key: `job:${ordinal}`,
     laneEffect: "possible",
-    minimumCells: 0,
     ordinal,
     phase: "active",
     preparations: () => pool,

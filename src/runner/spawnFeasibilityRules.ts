@@ -131,7 +131,7 @@ export function keepStanding(
     places.add(blockingPlace(plan, rows, quota, cell, footprint));
   }
 }
-export interface MaskedRoad {
+interface MaskedRoad {
   readonly from: number;
   readonly lanes: number;
   readonly to: number;

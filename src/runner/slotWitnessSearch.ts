@@ -20,7 +20,6 @@ export interface WitnessJob<Kind extends string> extends ConstraintOwner {
   readonly fixed: boolean;
   readonly guaranteed: boolean;
   readonly laneEffect: SlotLaneEffect;
-  readonly minimumCells: number;
   readonly optional?: true;
   readonly ordinal: number;
   readonly phase: "active";
@@ -282,27 +281,6 @@ export function createSlotWitnessSearch<Kind extends string>(
             : row === undefined
               ? { status: "none" }
               : { row, status: "row" };
-        },
-        reserve(omissions, job) {
-          const present = new Set(state.entries().map(({ owner }) => owner.key));
-          const omitted = new Set(omissions.map(({ job }) => job));
-          const remaining = jobs.filter(
-            (next) => next !== job && !present.has(next.key) && !omitted.has(next),
-          );
-          const protectedJobs = remaining.filter((next) => !next.optional || next.guaranteed);
-          const optionalJobs = remaining.filter((next) => next.optional && !next.guaranteed);
-          const needed =
-            work.minimumDelivery === undefined
-              ? optionalJobs.length
-              : Math.max(0, work.minimumDelivery - present.size - 1 - protectedJobs.length);
-          state.reserveCells(
-            protectedJobs.reduce((total, next) => total + next.minimumCells, 0) +
-              optionalJobs
-                .map((next) => next.minimumCells)
-                .sort((a, b) => a - b)
-                .slice(0, needed)
-                .reduce((total, cells) => total + cells, 0),
-          );
         },
         restore(mark) {
           state.restore(mark);

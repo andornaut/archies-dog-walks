@@ -50,7 +50,6 @@ function fixture(missing: number | undefined, guaranteed = 0) {
       guaranteed: ordinal === guaranteed,
       key: `wall-${ordinal}`,
       laneEffect: "possible",
-      minimumCells: 1,
       ...(ordinal === guaranteed ? {} : { optional: true as const }),
       ordinal,
       phase: "active",
@@ -102,7 +101,6 @@ describe("optional native slot delivery", () => {
       expect(state.checkComplete().accepted).toBe(true);
       return true;
     });
-    const reservations: number[] = [];
     const result = createSlotWitnessSearch(geometry, path, domains, jobs, {
       anchor: () => true,
       attestRefutation,
@@ -113,15 +111,7 @@ describe("optional native slot delivery", () => {
       propagate: () => true,
       stopped: () => stopped,
       support,
-    }).solve({
-      ...state,
-      reserveCells(cells) {
-        reservations.push(cells);
-        state.reserveCells(cells);
-      },
-    });
-    expect(reservations[0]).toBe(8);
-    expect(reservations).toContain(0);
+    }).solve(state);
     expect(result.status).toBe("partial");
     if (result.status !== "partial") {
       throw new Error("Expected a retained native incumbent");

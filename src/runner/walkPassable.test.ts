@@ -48,8 +48,7 @@ import {
 } from "./walk";
 import { blocksLane, footprintOf, movementOf, type WalkItemKind } from "./walkItems";
 
-// While set, the lane-balance bias is off: the planner's only weighted draws are its lane balance
-// (laneBalanceWeight), so even weights draw every place that fits alike.
+// While set, weightedPick ignores its weights, so every weighted planner draw is even.
 const unbiased = vi.hoisted(() => ({ on: false }));
 vi.mock("@andornaut/game-kit/random", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@andornaut/game-kit/random")>();
@@ -434,14 +433,14 @@ describe("the planned road", { timeout: 200_000 }, () => {
       expectPassable(zonePlaces.map((place) => ({ ...place, road: GAME_ROAD, tuned })));
     },
   );
-  // Minor obstacle counts at which seed 1, with the lane-balance bias off and every hopper
-  // hopping, plans the last zone with a mover just after a card mover stilled for want of room,
-  // or with a dart just before a stepper in the lane beside those it meets the pack in: the
-  // pack-fit gap holds whatever the bias draws.
+  // Minor obstacle counts at which seed 1, with even weighted draws and every hopper hopping,
+  // plans the last zone with a mover just after a card mover stilled for want of room, or with a
+  // dart just before a stepper in the lane beside those it meets the pack in: the pack-fit gap
+  // holds whatever the draws.
   it.each([
     { first: 70, gain: 0 },
     { first: 90, gain: 1 },
-  ])("keeps every move passable with the lane-balance bias off: %o", (counts) => {
+  ])("keeps every move passable with even weighted draws: %o", (counts) => {
     unbiased.on = true;
     try {
       expectPassable([

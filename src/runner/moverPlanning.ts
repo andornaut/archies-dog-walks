@@ -1,11 +1,5 @@
 import { itemAt } from "@andornaut/game-kit/arrays";
-import {
-  type Random,
-  randomInt,
-  randomPick,
-  seededRandom,
-  weightedPick,
-} from "@andornaut/game-kit/random";
+import { type Random, randomInt, seededRandom } from "@andornaut/game-kit/random";
 
 import type { MoveCount, MovementKind, SignatureProfile, StopLanes } from "../data/types";
 import { type LaneDirection, laneMask } from "../layout/lanes";
@@ -29,7 +23,6 @@ import {
 } from "./signaturePaths";
 import type { SpawnRejection } from "./spawnAdmission";
 import type { FeasibilityObserver } from "./spawnFeasibilityDiagnostics";
-import { nthStretch, rowsWithin, WHOLE_ZONE } from "./stretches";
 
 export interface MoverPlacementWork {
   // Admission happens before a unique placement is built; shared prefixes reuse existing values.
@@ -52,12 +45,6 @@ export interface MoverGeometry {
   readonly scrollSpeed: number;
   readonly sightLength: number;
   readonly window: number;
-}
-
-// How strongly a placement is drawn toward the lanes left unblocked longest, from the longest run
-// of rows its lanes are clear through: the square of it.
-export function laneBalanceWeight(clearRows: number): number {
-  return clearRows * clearRows;
 }
 
 // The planned hit length of a mover rows long: the window less the pack's length, which is a
@@ -1670,68 +1657,11 @@ export function ridersMeet(gap: number, a: RiderSpan, b: RiderSpan): boolean {
   return low < a.length + gap && high > -(b.length + gap);
 }
 
-// within is the share of the zone's rows the quota's movers are spread over, from and to; the
-// whole zone without it.
-export interface DrawnMover {
-  readonly draws: MoverDraws;
-  readonly herring: boolean;
-}
-
-interface MoverQuota<Kind extends string> {
-  readonly count: number;
-  readonly admitted?: boolean[];
-  readonly drawn?: DrawnMover[];
-  readonly kind: Kind;
-  // Original member indexes; count still defines each member's row span.
-  readonly members?: readonly number[];
-  readonly preferredRow?: number;
-  readonly motion?: readonly (MoverPath | undefined)[];
-  readonly spec: MoverSpec;
-  readonly quotaIndex?: number;
-  readonly within?: readonly [number, number];
-}
-
 interface MoverSpawn<Kind extends string> {
   readonly distance: number;
   readonly kind: Kind;
   readonly lane: number;
   readonly mover: MoverPath;
-}
-
-// The movers placed, the kinds of those dropped, one entry each, and the red herrings
-// (herringSpawn).
-interface PlacedMovers<Kind extends string> {
-  readonly dropped: readonly Kind[];
-  readonly herrings: readonly MoverSpawn<Kind>[];
-  readonly spawns: readonly MoverSpawn<Kind>[];
-}
-
-// Absolute spawn lanes and cue distances may change while selected movement remains fixed.
-export function sameMoverMotion(reference: MoverPath, candidate: MoverPath): boolean {
-  const relative = (path: MoverPath) => {
-    if (!("lane" in path)) {
-      return path;
-    }
-    const normalized = { ...path, lane: 0 };
-    if (path.motion === "approach" || path.motion === "shy") {
-      return { ...normalized, reach: { ...path.reach, first: path.reach.first - path.lane } };
-    }
-    if (path.motion === "signature") {
-      return {
-        ...normalized,
-        route: {
-          ...path.route,
-          legs: path.route.legs.map((leg) => ({
-            ...leg,
-            from: { ...leg.from, x: leg.from.x - path.lane },
-            to: { ...leg.to, x: leg.to.x - path.lane },
-          })),
-        },
-      };
-    }
-    return normalized;
-  };
-  return JSON.stringify(relative(reference)) === JSON.stringify(relative(candidate));
 }
 
 export interface Spot {
@@ -1753,35 +1683,6 @@ function bodyOf(spot: Spot): MoverBody | undefined {
     : { from: spot.distance + body.from, lanes: body.lanes, to: spot.distance + body.to };
 }
 
-// The stops a stop-and-go across tries in turn, in an order its stop draw picks, each order as
-// likely and with no draw of its own: the draw, scaled to the stops left, picks the next among
-// them, and what it leaves past that one's share, scaled again, picks the one after. So the first
-// is the one the draw picks among all its stops, each as likely, and the rest come in a random
-// order. A mover with no stops tries once, with none (null).
-export function stopsToTry(spec: MoverSpec, stopDraw: number): (StopLanes | null)[] {
-  const { motion } = spec;
-  if (motion.kind !== "cross" || motion.pause === undefined) {
-    return [null];
-  }
-  const left = [...motion.pause.stops];
-  const order: StopLanes[] = [];
-  let draw = stopDraw;
-  while (left.length > 0) {
-    const scaled = draw * left.length;
-    const index = Math.min(left.length - 1, Math.floor(scaled));
-    order.push(...left.splice(index, 1));
-    draw = scaled - index;
-  }
-  return order;
-}
-
-// Whether a placement stands in stop, or has no stop where stop is null.
-function standsIn(stop: StopLanes | null, placement: MoverPlacement): boolean {
-  return stop === null
-    ? placement.stop === undefined
-    : placement.stop?.first === stop[0] && placement.stop.count === stop[1] - stop[0] + 1;
-}
-
 // Whether a placement's stop, if it has one, leaves open the lanes the path holds on its row, held
 // as a lane mask.
 export function leavesPathOpen(held: number, placement: Pick<MoverPlacement, "stop">): boolean {
@@ -1794,57 +1695,6 @@ function standsOf(spot: Spot): MoverStand[] {
     ...stand,
     distance: spot.distance + stand.distance,
   }));
-}
-
-// Places every mover on rows at the distances given, each quota spread one per equal stretch of the
-// zone, or of the share of it the quota's within holds it to, as the planner spreads other spawns,
-// each mover wholly on screen within the zone, within the caps on screen, its body, where it has
-// one, clear of the lane-blocking standing spawns placed before it. A mover with no room in its
-// stretch, such as one over a cap there, waits: it comes on at the next row with room, within its
-// share of the zone. A dart with no room at its drawn start retries the same rows from higher up
-// the road, its start lifted by each of DART_LIFTS in turn, lowest first, before it waits; on each
-// later row it tries its drawn start and then each lift. A mover with no room on any later row
-// tries again the same way at each of its retries (moverRetries): a dart at another tilt of its
-// kind's range and then another speed, a rider at another speed, and a stepper, hopper or stalker
-// at another count of moves, until one has room, so a dart whose drawn path sweeps too many lanes
-// in the pack's window still comes on, crossing at another tilt or speed, a merging rider too fast
-// to merge before it reaches the pack comes on slower, and a stepper with no room for its drawn
-// steps takes fewer or more. If none fits, the same variants check unused earlier rows in the
-// quota's share of the zone. A mover with no room at any is dropped, which uses no random draw past
-// its own draws, as the planner drops an obstacle it has no room for. A dart may take cells other
-// spawns hold, and a rider cells only darts hold (MoverGrid.isFree), or another lane-blocking rider
-// holds where their hit boxes keep riderFollowGap apart (ridersMeet, MoverGrid.clearOfRiders); no other mover
-// takes a cell a dart holds. A mover never stands still in place of moving. Each mover makes its
-// own draws (drawMover) before it is placed, and is placed as they have it move, so the path rule
-// holds for the speed and moments it was drawn. Of the places that fit, it takes a start lane from
-// the movers stream, drawn toward the lanes left unblocked longest (laneBalanceWeight), so an edge
-// lane that fits fewer of its ways comes up as often as a middle one; then, from the spawns stream,
-// a place in that lane of the highest rank in its row, so each row gives the lane the widest reach
-// that fits there. A stop-and-go across tries the stop its stop draw picks first, each as likely,
-// on the rows where it leaves the path's lanes open (leavesPathOpen), with every retry, and only
-// then its other stops in turn, in a random order its stop draw picks (stopsToTry); it is dropped
-// only where no stop fits. A red herring crosser (isHerring) is not placed: it comes as scenery in
-// its stretch (herringSpawn), one of its quota's count, taking no room.
-// onScreen holds the movers already on screen, from an earlier call, and gains each mover placed.
-export function placeMovers<Kind extends string>(
-  streams: PlannerStreams,
-  geometry: MoverGeometry & { readonly zoneLength: number },
-  caps: MoverCaps,
-  grid: MoverGrid,
-  onScreen: OnScreen[],
-  rows: readonly number[],
-  quotas: readonly MoverQuota<Kind>[],
-): PlacedMovers<Kind> {
-  return placeMoversWithRejections(
-    undefined,
-    streams,
-    geometry,
-    caps,
-    grid,
-    onScreen,
-    rows,
-    quotas,
-  );
 }
 
 // Commits an already selected compiled candidate without changing its motion.
@@ -1934,242 +1784,4 @@ export function fitsMoverSpot(
     grid.block(spot.row, placement.lanes, placement.rows, false, isDartPlacement(placement)) ||
     reject("open-lanes")
   );
-}
-
-// The same planner, reporting each rejected candidate without consuming another random draw.
-export function placeMoversWithRejections<Kind extends string>(
-  onRejected: ((kind: Kind, reason: SpawnRejection) => void) | undefined,
-  streams: PlannerStreams,
-  geometry: MoverGeometry & { readonly zoneLength: number },
-  caps: MoverCaps,
-  grid: MoverGrid,
-  onScreen: OnScreen[],
-  rows: readonly number[],
-  quotas: readonly MoverQuota<Kind>[],
-): PlacedMovers<Kind> {
-  // The spec of the mover being placed, for its rider span.
-  let placing: MoverSpec | undefined;
-  let placingKind: Kind | undefined;
-  const reject = (reason: SpawnRejection): false => {
-    if (placingKind !== undefined) {
-      onRejected?.(placingKind, reason);
-    }
-    return false;
-  };
-  const fits = (spot: Spot) =>
-    fitsMoverSpot(geometry, caps, grid, onScreen, placing!, placingKind, reject, spot);
-  const spotsIn = (placements: readonly MoverPlacement[], first: number, end: number) =>
-    placements.flatMap((placement) =>
-      rows
-        .slice(first, end)
-        .map((distance, i) => ({ distance, placement, row: first + i }))
-        .filter(
-          (spot) =>
-            (leavesPathOpen(grid.heldLanes?.(spot.row) ?? 0, placement) || reject("path-stop")) &&
-            fits(spot),
-        ),
-    );
-  // The spots that fit in the first of the starts that has any between first and end.
-  const firstFitting = (
-    starts: readonly (readonly MoverPlacement[])[],
-    first: number,
-    end: number,
-  ) => {
-    for (const placements of starts) {
-      const fitting = spotsIn(placements, first, end);
-      if (fitting.length > 0) {
-        return fitting;
-      }
-    }
-    return [];
-  };
-  // The spots that fit in the next row, from first on, that has any at one of the starts.
-  const nearestLater = (
-    starts: readonly (readonly MoverPlacement[])[],
-    first: number,
-    end: number,
-  ) => {
-    for (let row = first; row < end; row++) {
-      const inRow = firstFitting(starts, row, row + 1);
-      if (inRow.length > 0) {
-        return inRow;
-      }
-    }
-    return [];
-  };
-
-  const spawns: MoverSpawn<Kind>[] = [];
-  const dropped: Kind[] = [];
-  const herrings: MoverSpawn<Kind>[] = [];
-  for (const {
-    admitted,
-    count,
-    drawn,
-    kind,
-    members,
-    motion,
-    preferredRow,
-    quotaIndex,
-    spec,
-    within,
-  } of quotas) {
-    const quotaRows = rowsWithin(rows.length, within ?? WHOLE_ZONE);
-    const [, to] = quotaRows;
-    const selected = members ?? Array.from({ length: count }, (_, index) => index);
-    for (const i of selected) {
-      const draws = drawn?.[i]?.draws ?? drawMover(streams);
-      const herring = drawn?.[i]?.herring ?? isHerring(spec, draws);
-      if (drawn !== undefined && drawn[i] === undefined) {
-        drawn[i] = { draws, herring };
-      }
-      placing = spec;
-      placingKind = kind;
-      const lifts = spec.motion.kind === "cross" ? [0, ...DART_LIFTS] : [0];
-      const [first, end] = nthStretch(count, i, quotaRows);
-      if (herring) {
-        const candidates = rows.slice(first, end).flatMap((row) => {
-          const event = herringSpawn(geometry, spec, draws, kind, [row]);
-          return event === null ? [] : [event];
-        });
-        const picked = Math.min(candidates.length - 1, Math.floor(draws.start * candidates.length));
-        const ordered = [...candidates.slice(picked), ...candidates.slice(0, picked)];
-        for (const event of ordered) {
-          if (
-            event.mover.motion !== "cross" ||
-            (motion?.[i] !== undefined && !sameMoverMotion(motion[i]!, event.mover))
-          ) {
-            continue;
-          }
-          const crossing =
-            crossLength(geometry.laneCount, spec.footprint.lanes) / event.mover.lanesPerPixel;
-          const interval = [event.distance, event.distance + crossing] as const;
-          if (!(grid.canShow?.(event, interval) ?? true)) {
-            continue;
-          }
-          grid.showed?.(
-            event,
-            interval,
-            undefined,
-            quotaIndex === undefined
-              ? undefined
-              : { memberIndex: i, quotaIndex, requestedDraws: draws },
-          );
-          herrings.push(event);
-          if (admitted !== undefined) {
-            admitted[i] = true;
-          }
-          break;
-        }
-        continue;
-      }
-      const fittingAt = (moverDraws: MoverDraws, stop: StopLanes | null, earlier: boolean) => {
-        const starts = lifts.map((lift) =>
-          moverPlacements(geometry, spec, moverDraws, lift)
-            .filter(
-              (placement) =>
-                standsIn(stop, placement) &&
-                (motion?.[i] === undefined || sameMoverMotion(motion[i]!, placement.path)),
-            )
-            .map((placement) => ({ ...placement, selection: { draws: moverDraws, lift } })),
-        );
-        if (starts.every((placements) => placements.length === 0)) {
-          reject("geometry");
-        }
-        if (earlier) {
-          return nearestLater(starts, quotaRows[0], first);
-        }
-        if (preferredRow !== undefined) {
-          const after = nearestLater(starts, Math.max(first, preferredRow), end);
-          if (after.length > 0) {
-            return after;
-          }
-          const before = nearestLater(starts, first, Math.min(end, preferredRow));
-          return before.length > 0 ? before : nearestLater(starts, end, to);
-        }
-        const stretch = firstFitting(starts, first, end);
-        return stretch.length > 0 ? stretch : nearestLater(starts, end, to);
-      };
-      const firstFit = (): Spot[] => {
-        // Existing choices keep precedence. Only an otherwise dropped mover checks earlier
-        // holes, with the same drawn identity, variants and safety checks.
-        for (const earlier of [false, true]) {
-          for (const stop of stopsToTry(spec, draws.turnAt)) {
-            for (const tried of [draws, ...moverRetries(spec, draws)]) {
-              const found = fittingAt(tried, stop, earlier);
-              if (found.length > 0) {
-                return found;
-              }
-            }
-          }
-        }
-        return [];
-      };
-      const fitting = firstFit();
-      if (fitting.length === 0) {
-        dropped.push(kind);
-        continue;
-      }
-      const startLanes = [...new Set(fitting.map(({ placement }) => placement.lane))].sort(
-        (a, b) => a - b,
-      );
-      // Each start lane is weighted by the clearest run of rows its places' lanes have; one that
-      // blocks no lane by a run of one.
-      const weights = startLanes.map((start) =>
-        laneBalanceWeight(
-          Math.max(
-            ...fitting
-              .filter(({ placement }) => placement.lane === start)
-              .map(({ placement, row }) =>
-                placement.lanes.count === 0 ? 1 : grid.clearRun(placement.lanes, row),
-              ),
-          ),
-        ),
-      );
-      const lane = weightedPick(streams.movers, startLanes, weights);
-      const inLane = fitting.filter(({ placement }) => placement.lane === lane);
-      const rankOf = ({ placement }: Spot) => placement.rank ?? 0;
-      const best = new Map<number, number>();
-      for (const fit of inLane) {
-        best.set(fit.row, Math.max(rankOf(fit), best.get(fit.row) ?? rankOf(fit)));
-      }
-      const spot = randomPick(
-        streams.spawns,
-        inLane.filter((fit) => rankOf(fit) === best.get(fit.row)),
-      );
-      const { placement } = spot;
-      keepMoverSpot(geometry, placing!, grid, onScreen, spot);
-      const dart = isDartPlacement(placement);
-      const body = bodyOf(spot);
-      if (admitted !== undefined) {
-        admitted[i] = true;
-      }
-      const selection = placement.selection;
-      if (selection === undefined) {
-        throw new Error("Missing selected mover candidate");
-      }
-      const spawn = {
-        distance: spot.distance + placement.appears,
-        kind,
-        lane: placement.lane,
-        mover: placement.path,
-      };
-      grid.showed?.(
-        spawn,
-        screenOf(spot),
-        {
-          block: { dart, lanes: placement.lanes, row: spot.row, rows: placement.rows },
-          ...(body === undefined ? {} : { body }),
-          cells: placement.cells.map(({ lane, row }) => ({ lane, row: spot.row + row })),
-          screen: screenOf(spot),
-          selection,
-          stands: standsOf(spot),
-        },
-        quotaIndex === undefined
-          ? undefined
-          : { memberIndex: i, quotaIndex, requestedDraws: draws },
-      );
-      spawns.push(spawn);
-    }
-  }
-  return { dropped, herrings, spawns };
 }

@@ -62,7 +62,7 @@ function prepareJob(
   context: SlotSeedContext,
   geometry: Geometry,
   sources: readonly SlotKind<string>[],
-  options: Pick<WitnessJob<string>, "key" | "minimumCells" | "ordinal" | "phase" | "total">,
+  options: Pick<WitnessJob<string>, "key" | "ordinal" | "phase" | "total">,
 ) {
   const prepared = sources.map((source) =>
     prepareSlotKind(slotMotionStreams(context, options.key, source.kind), geometry, source),
@@ -157,7 +157,6 @@ describe("complete witness native contracts", () => {
       ...catalogue.map((source, ordinal) =>
         prepareJob(context, geometry, [source], {
           key: `active:minorMoving:${ordinal}`,
-          minimumCells: 0,
           ordinal,
           phase: "active",
           total: 4,
@@ -165,7 +164,6 @@ describe("complete witness native contracts", () => {
       ),
       prepareJob(context, geometry, catalogue, {
         key: "capacity:minorMoving:0",
-        minimumCells: 0,
         ordinal: 3,
         phase: "active",
         total: 4,
@@ -234,7 +232,7 @@ describe("complete witness native contracts", () => {
     expect(JSON.stringify(preparations.map(({ prepared }) => prepared))).toBe(frozen);
   });
 
-  it("accounts for multi-cell minima once and preserves native unattributed reservation failure", () => {
+  it("fits multi-cell fixed jobs on the native board", () => {
     const path = route(smallRoad);
     expect(path).toHaveLength(3);
     const solveWidths = (widths: readonly number[]) => {
@@ -242,7 +240,6 @@ describe("complete witness native contracts", () => {
         (width, ordinal) =>
           prepareJob(context, smallRoad, [fixedSource(`fixed-${ordinal}`, width)], {
             key: `active:minorFixed:${ordinal}`,
-            minimumCells: width,
             ordinal,
             phase: "active",
             total: widths.length,
@@ -268,10 +265,6 @@ describe("complete witness native contracts", () => {
     const audit = auditSpawnPlan(materialised.plan, materialised.planned);
     expect(audit.status).toBe("valid");
     expect(audit.validPlaced).toBe(3);
-    expect(solveWidths([2, 2, 2, 2])).toEqual({
-      failure: { classification: "unattributed", owners: [], rule: "reservation" },
-      status: "blocked",
-    });
   });
 
   it("rejects capacity that exhausts same-kind visibility despite spare native cells", () => {
@@ -283,7 +276,6 @@ describe("complete witness native contracts", () => {
       (ordinal) =>
         prepareJob(context, geometry, [source], {
           key: `${ordinal < 2 ? "active" : "capacity"}:minorFixed:${ordinal}`,
-          minimumCells: 1,
           ordinal,
           phase: "active",
           total: 3,

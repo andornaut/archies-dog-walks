@@ -1,5 +1,4 @@
 import type { PreparedSlotKind } from "./slotCandidates";
-import { isMonotoneConflict } from "./slotConflictCertificates";
 import type { SlotPlacement } from "./slotFeasibility";
 import { type PlacementRejection, SpawnBoard } from "./spawnBoard";
 import type { PlannedSpawns, SpawnPlan } from "./spawning";
@@ -23,6 +22,26 @@ export type ConstraintResult<Kind extends string> =
         readonly rule: string;
       };
     };
+// These native failures cannot be repaired by adding unrelated prefix entries.
+const MONOTONE_RULES = new Set([
+  "body",
+  "cells",
+  "open-lanes",
+  "pack-gap",
+  "rider-gap",
+  "screen-cap",
+  "wide-gap",
+]);
+
+function isMonotoneConflict(
+  failure: Extract<ConstraintResult<string>, { accepted: false }>["failure"],
+): boolean {
+  return (
+    failure.classification === "conflict" &&
+    failure.owners.length > 0 &&
+    MONOTONE_RULES.has(failure.rule)
+  );
+}
 export type NegativeVisibilityLookup<Kind extends string> =
   | { readonly status: "miss" }
   | { readonly status: "budget" }
@@ -218,7 +237,6 @@ function createNativeSlotState<Kind extends string>(
     misses: 0,
   };
   let ledger: ConstraintEntry<Kind>[] = [];
-  let reservation = 0;
   type Failure = Extract<ConstraintResult<Kind>, { accepted: false }>["failure"];
   type NativePrefix = readonly (ConstraintEntry<Kind> & { readonly shape: string | undefined })[];
   const snapshotPrefix = (): NativePrefix =>
@@ -232,7 +250,6 @@ function createNativeSlotState<Kind extends string>(
       failureShape: string | undefined;
       failureOwners: readonly ConstraintOwner[];
       prefix: NativePrefix;
-      reservation: number;
       rejection: PlacementRejection | undefined;
       scope: SlotPocketScope;
       context: object;
@@ -259,7 +276,6 @@ function createNativeSlotState<Kind extends string>(
     {
       readonly entries: readonly ConstraintEntry<Kind>[];
       readonly immutablePrefix: boolean;
-      readonly reservation: number;
       readonly restore: () => void;
     }
   >();
@@ -313,7 +329,6 @@ function createNativeSlotState<Kind extends string>(
     if (!result.accepted && pocketCapture !== undefined) {
       const capture = pocketCapture;
       if (
-        reservation === 0 &&
         immutablePrefix &&
         immutableEntry(entry) &&
         slotPocketScopeMatches(capture.scope, geometry, path) &&
@@ -329,7 +344,6 @@ function createNativeSlotState<Kind extends string>(
           owner,
           prefix: capture.prefix,
           rejection,
-          reservation,
           scope: capture.scope,
         });
       }
@@ -381,8 +395,6 @@ function createNativeSlotState<Kind extends string>(
         saved === undefined ||
         saved.owner !== owner ||
         saved.entry !== entry ||
-        saved.reservation !== 0 ||
-        reservation !== 0 ||
         !samePrefix(saved.prefix) ||
         !immutablePrefix ||
         !immutableEntry(entry) ||
@@ -479,7 +491,6 @@ function createNativeSlotState<Kind extends string>(
       if (
         !slotPocketScopeMatches(scope, geometry, path) ||
         !immutablePrefix ||
-        reservation !== 0 ||
         ledger.some((saved) => slotPocketScopeOwner(scope, saved.owner) === undefined)
       ) {
         return { status: "unknown" };
@@ -498,7 +509,6 @@ function createNativeSlotState<Kind extends string>(
       checkpoints.set(mark, {
         entries: ledger.slice(),
         immutablePrefix,
-        reservation,
         restore: board.save(),
       });
       return mark;
@@ -594,10 +604,6 @@ function createNativeSlotState<Kind extends string>(
       return board.openStretchRow();
     },
     probe,
-    reserveCells(count: number): void {
-      board.reserveCells(count);
-      reservation = count;
-    },
     restore(mark: ConstraintCheckpoint): void {
       const saved = checkpoints.get(mark);
       if (saved === undefined) {
@@ -606,7 +612,6 @@ function createNativeSlotState<Kind extends string>(
       saved.restore();
       ledger = [...saved.entries];
       immutablePrefix = saved.immutablePrefix;
-      reservation = saved.reservation;
       owners.clear();
       ledger.forEach(({ owner }, index) => {
         owners.set(`${index}:0`, owner);

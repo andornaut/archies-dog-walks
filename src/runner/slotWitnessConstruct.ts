@@ -49,7 +49,6 @@ export interface SlotWitnessConstructPorts<Kind extends string, Mark> {
   propagate(): boolean;
   repairRow?():
     { readonly row: number; readonly status: "row" } | { readonly status: "none" | "budget" };
-  reserve?(omissions: readonly WitnessOmission<Kind>[], job: WitnessJob<Kind>): void;
   restore(mark: Mark): void;
   stopped?(): boolean;
   support?(): SlotWitnessBranchSupport<Kind>;
@@ -712,11 +711,6 @@ function* construct<Kind extends string, Mark>(
     backjump = undefined;
     const before = ports.checkpoint();
     if (stopped()) {
-      return "rejected";
-    }
-    ports.reserve?.(omitted(), job);
-    if (stopped()) {
-      ports.restore(before);
       return "rejected";
     }
     const result = ports.test(job, candidate);

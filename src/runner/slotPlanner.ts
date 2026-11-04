@@ -26,7 +26,7 @@ import {
   type SlotPartialAudit,
 } from "./slotDelivery";
 import { slotMotionStreams, slotRandom } from "./slotEntropy";
-import { makeSlotJobs, minimumUnsharedCells, type SlotJob } from "./slotJobs";
+import { makeSlotJobs, type SlotJob } from "./slotJobs";
 import { guaranteeCompatiblePath } from "./slotPath";
 import { materialisePartialSlotPlan, materialiseSlotPlan, type SlotAssignment } from "./slotPlan";
 import { createSlotPocketAdapter } from "./slotPocketAdapter";
@@ -509,7 +509,6 @@ function planSlotComposition<Kind extends string>(
     guaranteed: job.guaranteed === true,
     key: job.key,
     laneEffect: job.laneEffect,
-    minimumCells: minimumUnsharedCells(job),
     ...(optionalDelivery && !job.guaranteed ? { optional: true as const } : {}),
     ordinal: job.ordinal,
     phase: job.phase,

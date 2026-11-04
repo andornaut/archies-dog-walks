@@ -9,7 +9,7 @@ import {
   type SpawnPlan,
   zoneRows,
 } from "./spawning";
-import { auditSpawnPlan, createSpawnAuditor, type SpawnAuditTrace } from "./spawnValidation";
+import { auditSpawnPlan, type SpawnAuditTrace } from "./spawnValidation";
 
 const plan: SpawnPlan<string> = {
   cellInset: 5,
@@ -305,43 +305,4 @@ it("measures standing footprint length in cell pixels rather than spacing rows",
     emitted([{ distance: 800, kind: "bench", lane: 0 }]),
   );
   expect(result).toMatchObject({ status: "valid", validPlaced: 1 });
-});
-
-describe("prepared spawn audit", () => {
-  it("matches fresh audits across reindexed records, changed proofs and reverted invalid nodes", () => {
-    const fixture = taxiFixture();
-    const valid = { ...fixture.planned, visibility: [fixture.trace] };
-    const prepared = createSpawnAuditor(fixture.plan, valid.path);
-    const check = (proposal: PlannedSpawns<string>) => {
-      const result = prepared.audit(proposal);
-      expect(result).toEqual(auditSpawnPlan(fixture.plan, proposal));
-      return result;
-    };
-    expect(check(valid).status).toBe("valid");
-    // Returned findings are owned by this result, including their mutable arrays.
-    const exposed = prepared.audit(valid);
-    exposed.findings[0]!.reasons.push("caller mutation");
-    exposed.findings[0]!.coverage.push("caller mutation");
-    expect(check(valid).status).toBe("valid");
-    const reindexed = {
-      ...valid,
-      events: [{ distance: 100, kind: "unknown", lane: 0 }, ...valid.events],
-      visibility: [{ ...fixture.trace, index: 1 }],
-    };
-    expect(check(reindexed).status).toBe("invalid");
-    expect(check(reindexed).findings[1]!.reasons).toEqual([]);
-    const proof = fixture.trace.placement!;
-    const changed = {
-      ...valid,
-      visibility: [{ ...fixture.trace, placement: { ...proof, stands: [] } }],
-    };
-    expect(check(changed).status).toBe("invalid");
-    const blockedPath = {
-      ...valid,
-      path: valid.path.map((row) => ({ ...row, lane: 0 })),
-    };
-    expect(check(blockedPath).status).toBe("invalid");
-    expect(check(valid).status).toBe("valid");
-    expect(check({ ...valid, path: valid.path.map((row) => ({ ...row })) }).status).toBe("valid");
-  });
 });

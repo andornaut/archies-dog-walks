@@ -41,7 +41,6 @@ import {
   drawMover,
   hopShapes,
   moverPlacements,
-  stopsToTry,
 } from "./moverPlanning";
 import {
   inMotion,
@@ -781,20 +780,6 @@ describe("movers", { timeout: 200_000 }, () => {
       expect(open).toContainEqual(stands);
     }
   });
-  // Each configured stop can be preferred before placement; safety may rule it out in a zone.
-  const severalStops = stopKinds.filter((kind) => stopsOf(kind).length > 1);
-  it.each(severalStops)("can prefer each configured stop for %s", (kind) => {
-    const movement = movementOf(kind);
-    if (movement === null) {
-      throw new Error(`Missing movement for ${kind}`);
-    }
-    const spec = moverSpec(REAL, plannerStreams(1), footprintOf(REAL, kind), movement);
-    const stops = stopsOf(kind);
-    for (const [index, stop] of stops.entries()) {
-      expect(stopsToTry(spec, (index + 0.5) / stops.length)[0]).toEqual(stop);
-    }
-  });
-
   // Its first move is cued: a dive's arrow before it sets off, a stop-and-go across's before it
   // sets off and again before it sets off from its stop, a merge's arrow down its lane
   // before it enters and its wander mark before it merges, and a stepping pattern's wander mark

@@ -89,19 +89,3 @@ export function makeSlotJobs<Kind extends string>(
   });
   return jobs;
 }
-export function minimumUnsharedCells<Kind extends string>(job: SlotJob<Kind>): number {
-  if (
-    job.role === "encounterMoving" ||
-    job.role === "minorMoving" ||
-    job.role === "auxiliaryMoving"
-  ) {
-    return 0;
-  }
-  // Moving-passable rewards can use cells already swept by movers.
-  if (job.role === "auxiliaryFixed") {
-    return 0;
-  }
-  // Standing footprints may overlap mover-held cells. Source metadata alone proves no
-  // positive marginal demand on the native ledger's untaken-cell count.
-  return 0;
-}

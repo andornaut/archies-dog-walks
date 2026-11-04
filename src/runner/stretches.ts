@@ -19,16 +19,3 @@ export function rowsWithin(
 ): readonly [number, number] {
   return [Math.floor(share[0] * rowCount), Math.floor(share[1] * rowCount)];
 }
-
-// The ith of count equal stretches of rows, from the first to the end, exclusive.
-export function nthStretch(
-  count: number,
-  i: number,
-  rows: readonly [number, number],
-): readonly [number, number] {
-  const [first, end] = rows;
-  return [
-    first + Math.floor((i * (end - first)) / count),
-    first + Math.floor(((i + 1) * (end - first)) / count),
-  ];
-}
