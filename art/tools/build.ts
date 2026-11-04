@@ -22,7 +22,9 @@ const USAGE = `Usage:
                                                its exports, in dependency order; --check then fails
                                                on any changed or untracked file under art/ or
                                                the paths the builds write (public/art/,
-                                               public/icons/, public/og-image.png, shared/)`;
+                                               public/icons/, public/og-image.png and
+                                               shared/palette.json, roadside.json and
+                                               verges.json)`;
 
 // Every set with a build command, in build order: the sets that read no other set's exports
 // (alphabetical), then the sets that do (alphabetical, which meets every entry in NEEDS).
@@ -48,6 +50,7 @@ const SETS = [
   "obstacles",
   "owners",
   "people",
+  "pixel",
   "portraits",
   "road",
   "roads",
@@ -103,12 +106,21 @@ const NOT_SETS = new Set([
   "music_kensington_market",
   "music_the_beaches",
   "music_yonge_street",
-  "pixel",
   "scene",
 ]);
 
-// art/, which no build writes, and every path a build writes.
-const TREES = ["art", "public/art", "public/icons", "public/og-image.png", "shared"];
+// art/, which no build writes, and every path a build writes: shared/palette.json (pixel),
+// shared/roadside.json (roadside) and shared/verges.json (backdrops). The rest of shared/ is the
+// game's.
+const TREES = [
+  "art",
+  "public/art",
+  "public/icons",
+  "public/og-image.png",
+  "shared/palette.json",
+  "shared/roadside.json",
+  "shared/verges.json",
+];
 
 function fail(message: string): never {
   console.error(message);

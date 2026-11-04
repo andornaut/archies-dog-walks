@@ -1516,6 +1516,7 @@ export function writePalette(): void {
 }
 
 const USAGE = `Usage:
+  node art/tools/pixel.ts build             write shared/palette.json, as palette --write
   node art/tools/pixel.ts palette           print the palette as JSON: every colour by K name, its
                                             hex and the name of the colour one ramp step darker
                                             (DARKER)
@@ -1525,6 +1526,7 @@ const USAGE = `Usage:
 if (import.meta.main) {
   await run({
     commands: {
+      build: () => writePalette(),
       palette: () => process.stdout.write(paletteJson()),
       "palette --write": () => writePalette(),
     },
