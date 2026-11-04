@@ -190,15 +190,12 @@ describe("a card's charms", () => {
           expect(rectsOverlap(ring, other)).toBe(false);
         }
       }
+      // The most an option has fill the reserved rows.
+      if (count === CHARM.card.most) {
+        expect(bottom(itemAt(rings, count - 1))).toBe(reserved);
+      }
     },
   );
-
-  it("fill their reserved rows when an option has the most", () => {
-    const card = itemAt(itemAt(ROWS, 0), 0);
-    const widths = Array.from({ length: CHARM.card.most }, () => WIDEST);
-    const last = itemAt(cardCharmPlates(card, widths), CHARM.card.most - 1);
-    expect(bottom(insetRect(-CHARM.ring, last))).toBe(bottom(card) + CARD_CHARMS_HEIGHT);
-  });
 });
 
 // Every pill on a card keeps 2 rows clear of the image over it, read from the art: the frame's
@@ -326,7 +323,9 @@ describe("a card's effect pills", () => {
     },
   );
 
-  it.each(largeKinds)("keeps a %s pill 2 rows under the enlarged card's art", () => {
+  // Every kind's pill sits at the same top on the enlarged card's first line.
+  it("keeps the enlarged card's first-line pills 2 rows under its art", () => {
+    expect(largeKinds.length).toBeGreaterThan(0);
     const top = pillTop(large.body.y + largeBodyBox({ body, title }, 0).top);
     const ink = Math.max(
       large.art.y + 2 * illustration + 1,

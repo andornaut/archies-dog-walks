@@ -71,23 +71,24 @@ const draw = (frame: RoadFrame, view = raster) => {
 const pixelAt = (out: Uint32Array, x: number, y: number) =>
   out[(y - view.y) * view.width + (x - view.x)];
 
+const ZONES = keysOf(VERGES);
+const zoneWhere = (test: (verge: Verge) => boolean): ZoneId => {
+  const zone = ZONES.find((id) => test(VERGES[id]));
+  if (zone === undefined) {
+    throw new Error("No zone's verge fits");
+  }
+  return zone;
+};
+const MOWN = zoneWhere((verge) => verge.lawn === "mown");
+const ROUGH = zoneWhere((verge) => verge.lawn === "rough");
+const DOTTED = zoneWhere((verge) => dottedBands(verge).length > 0);
+
 describe("the verge beside the road", () => {
   // The backdrop's bottom row, which the verge continues.
   const bandRow = itemAt(
     roadRaster(projection, approach.y, { ...view, height: 1, y: BAND_BOTTOM_Y }).rows,
     0,
   );
-  const ZONES = keysOf(VERGES);
-  const zoneWhere = (test: (verge: Verge) => boolean): ZoneId => {
-    const zone = ZONES.find((id) => test(VERGES[id]));
-    if (zone === undefined) {
-      throw new Error("No zone's verge fits");
-    }
-    return zone;
-  };
-  const MOWN = zoneWhere((verge) => verge.lawn === "mown");
-  const ROUGH = zoneWhere((verge) => verge.lawn === "rough");
-  const DOTTED = zoneWhere((verge) => dottedBands(verge).length > 0);
   const lawnOf = (zone: ZoneId) => {
     const colours = VERGES[zone].lawnColours;
     if (colours === null) {
@@ -530,36 +531,27 @@ describe("drawRoad", () => {
     },
   );
 
-  it("leaves the backdrop's own pixels on the approach where it does not show the verge", () => {
-    const band = backdropOf("distilleryDistrict", () => 0x010203);
-    const out = draw(
-      frameOf({ approach: band, current: look("distilleryDistrict", 0x3a4466), scroll: 7 }),
-    );
-    expect(approachVerge(out, band).every((word) => word === 0)).toBe(true);
-  });
-
-  it("leaves the near corners beside the junction to the backdrop, verge or not", () => {
-    const band = backdropOf("kensingtonMarket", undefined, 0, raster.junctionRows);
-    const out = draw(
-      frameOf({ approach: band, current: look("kensingtonMarket", 0x3a4466), scroll: 7 }),
-    );
+  it.each<[string, ZoneId, () => Uint32Array]>([
+    [
+      "the approach where it does not show the verge",
+      "distilleryDistrict",
+      () => backdropOf("distilleryDistrict", () => 0x010203),
+    ],
+    [
+      "the near corners beside the junction, verge or not",
+      "kensingtonMarket",
+      () => backdropOf("kensingtonMarket", undefined, 0, raster.junctionRows),
+    ],
+  ])("leaves the backdrop's own pixels on %s", (_, zone, backdrop) => {
+    const band = backdrop();
+    const out = draw(frameOf({ approach: band, current: look(zone, 0x3a4466), scroll: 7 }));
     expect(approachVerge(out, band).every((word) => word === 0)).toBe(true);
   });
 
   // The backdrops paint seams, dots and marks on their approach verges, standing still. The
   // raster draws its own there, moving with the road, so the backdrop's never show beside them.
-  const zoneWith = (test: (verge: Verge) => boolean): ZoneId => {
-    const zone = keysOf(VERGES).find((id) => test(VERGES[id]));
-    if (zone === undefined) {
-      throw new Error("No zone's verge fits");
-    }
-    return zone;
-  };
-  const SEAMED = zoneWith((verge) => verge.walkTo - walkFrom(verge) >= 8);
-  const DOTTED_ZONE = zoneWith((verge) => dottedBands(verge).length > 0);
-  const DOT_BAND = itemAt(dottedBands(VERGES[DOTTED_ZONE]), 0);
-  const MOWN_ZONE = zoneWith((verge) => verge.lawn === "mown");
-  const ROUGH_ZONE = zoneWith((verge) => verge.lawn === "rough");
+  const SEAMED = zoneWhere((verge) => verge.walkTo - walkFrom(verge) >= 8);
+  const DOT_BAND = itemAt(dottedBands(VERGES[DOTTED]), 0);
   const lawnColour = (zone: ZoneId, i: number) => itemAt(VERGES[zone].lawnColours ?? [], i);
   it.each([
     {
@@ -572,19 +564,14 @@ describe("drawRoad", () => {
       colour: itemAt(itemAt(DOT_BAND.dots, 0).colours, 0),
       from: DOT_BAND.from,
       name: "a dot",
-      zone: DOTTED_ZONE,
+      zone: DOTTED,
     },
+    { colour: lawnColour(MOWN, 2), from: VERGES[MOWN].walkTo, name: "a tuft", zone: MOWN },
     {
-      colour: lawnColour(MOWN_ZONE, 2),
-      from: VERGES[MOWN_ZONE].walkTo,
-      name: "a tuft",
-      zone: MOWN_ZONE,
-    },
-    {
-      colour: lawnColour(ROUGH_ZONE, 1),
-      from: VERGES[ROUGH_ZONE].walkTo,
+      colour: lawnColour(ROUGH, 1),
+      from: VERGES[ROUGH].walkTo,
       name: "a rough lawn's patch",
-      zone: ROUGH_ZONE,
+      zone: ROUGH,
     },
   ])(
     "covers $name the backdrop paints on the approach with the verge",
@@ -618,30 +605,33 @@ describe("shrinkRows", () => {
     width: rows[0]?.length ?? 0,
   });
 
-  it("keeps the colour most of the merged rows have", () => {
-    const shrunk = shrinkRows(4, image([[1], [2], [2], [3]]));
-    expect([...shrunk.pixels]).toEqual([2]);
-  });
-
-  it("breaks a tie toward the image's commonest colour, so a far speckle does not blink", () => {
-    const shrunk = shrinkRows(
+  const eight = [[4], [9], [9], [9], [2], [2], [2], [2]];
+  it.each<[string, number, number[][], number[] | undefined, number[]]>([
+    ["keeps the colour most of the merged rows have", 4, [[1], [2], [2], [3]], undefined, [2]],
+    [
+      "breaks a tie toward the image's commonest colour, so a far speckle does not blink",
       2,
-      image([
+      [
         [9, 1],
         [1, 1],
         [1, 1],
         [1, 1],
-      ]),
-    );
-    expect(shrunk.height).toBe(2);
-    expect([...shrunk.pixels]).toEqual([1, 1, 1, 1]);
-  });
-
-  it("leaves skipped pixels out of the vote, and takes the base where all are skipped", () => {
-    const source = image([[4], [9], [9], [9], [2], [2], [2], [2]]);
-    const skip = Uint8Array.from([0, 1, 1, 1, 1, 1, 1, 1]);
-    expect([...shrinkRows(4, source).pixels]).toEqual([9, 2]);
-    expect([...shrinkRows(4, source, skip).pixels]).toEqual([4, 2]);
+      ],
+      undefined,
+      [1, 1, 1, 1],
+    ],
+    ["votes in every pixel without a skip mask", 4, eight, undefined, [9, 2]],
+    [
+      "leaves skipped pixels out of the vote, and takes the base where all are skipped",
+      4,
+      eight,
+      [0, 1, 1, 1, 1, 1, 1, 1],
+      [4, 2],
+    ],
+  ])("%s", (_, rows, source, skip, pixels) => {
+    const shrunk = shrinkRows(rows, image(source), skip && Uint8Array.from(skip));
+    expect(shrunk.height).toBe(source.length / rows);
+    expect([...shrunk.pixels]).toEqual(pixels);
   });
 });
 

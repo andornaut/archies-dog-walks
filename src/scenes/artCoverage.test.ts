@@ -146,79 +146,80 @@ const loadedScene = {
   textures: { exists: (key: string) => images.has(key) || sprites.has(key) },
 } as unknown as Scene;
 
-describe("dog art", () => {
-  it("names a road sprite with every pose, pull and hit tag for every dog", () => {
-    const reactions = Object.values(DOG_REACTIONS).flat();
-    const tags = [...new Set(["idle", "walk", ...reactions, ...PULL_TAGS])];
-    expect(DOGS.flatMap((dog) => missingTags(dogSpriteKey(gameData, dog), tags))).toEqual([]);
-  });
+// A named check and the art it finds missing, which must be none. A check may also assert that
+// what it walks is not empty.
+type Check = readonly [string, () => readonly string[]];
+const expectNone = (_: string, missing: () => readonly string[]) => {
+  expect(missing()).toEqual([]);
+};
 
-  it("names a hand-drawn depth variant for every dog at every depth step", () => {
-    const keys = DOGS.map((dog) => dogSpriteKey(gameData, dog));
-    const missing = keys.flatMap((key) =>
-      SMALLER_STEPS.map((step) => depthVariantKey(key, step) ?? "").filter(
-        (variant) => !sprites.has(variant),
-      ),
-    );
-    expect(missing).toEqual([]);
-  });
-
-  it("names a face with every mood for every dog, and its owner's with fired too", () => {
-    const missing = DOGS.flatMap((dog) => [
-      ...missingTags(dogFaceKey(gameData, dog), MOODS),
-      ...missingTags(ownerFaceKey(gameData, dog), [...MOODS, "fired"]),
-    ]);
-    expect(MOODS).toEqual(expect.arrayContaining(["happy", "neutral", "upset"]));
-    expect(missing).toEqual([]);
-  });
-
-  it("names an owner's card face with every mood the card shows for every dog", () => {
-    const missing = DOGS.flatMap((dog) =>
-      missingTags(ownerCardFaceKey(gameData, dog), CARD_OWNER_MOODS),
-    );
-    expect(CARD_OWNER_MOODS).toEqual(expect.arrayContaining([...MOODS, "fired", "worried"]));
-    expect(missing).toEqual([]);
-  });
-
-  it("names a dog card for every dog, the empty card and the heart-loss flash", () => {
-    const tags = [...DOGS.map((dog) => dogCardTag(gameData, dog)), dogCardTag(gameData, null)];
-    expect(missingTags("ui-dog-card", [...tags, "heart-loss"])).toEqual([]);
-  });
-});
-
-describe("walker art", () => {
-  it("names a road sprite and a picker face with their tags for every walker", () => {
-    const missing = Object.values(gameData.walkers).flatMap(({ portraitKey, spriteKey }) => [
-      ...missingTags(spriteKey, ["idle", "walk", "stumble"]),
-      ...missingTags(portraitKey, ["happy", "neutral"]),
-    ]);
-    expect(missing).toEqual([]);
-  });
-
-  it("has the zone celebration's cheer for every walker, its burst, tail and confetti colours", () => {
-    const { burst, confettiBit, confettiBitTags, tailUp, walkerTags } = ZONE_CELEBRATION_ART;
-    const missing = [
-      ...Object.values(gameData.walkers).flatMap(({ spriteKey }) =>
-        missingTags(spriteKey, walkerTags),
-      ),
-      ...missingImages([burst, tailUp]),
-      ...missingTags(confettiBit, confettiBitTags),
-    ];
-    expect(missing).toEqual([]);
-  });
-});
-
-describe("Pet shop art", () => {
-  it.each([
+describe("dog and walker art", () => {
+  it.each<Check>([
     [
-      "the faces and the glint the Start screen plays",
-      SHOP_ART.petShop,
-      ["glint", "normal", "pressed"],
+      "names a road sprite with every pose, pull and hit tag for every dog",
+      () => {
+        const reactions = Object.values(DOG_REACTIONS).flat();
+        const tags = [...new Set(["idle", "walk", ...reactions, ...PULL_TAGS])];
+        return DOGS.flatMap((dog) => missingTags(dogSpriteKey(gameData, dog), tags));
+      },
     ],
-    ["the dog slot sign's faces", HOME_LAYOUT.slotSign.key, ["normal", "pressed"]],
-  ])("names %s", (_, key, tags) => {
-    expect(missingTags(key, tags)).toEqual([]);
-  });
+    [
+      "names a hand-drawn depth variant for every dog at every depth step",
+      () =>
+        DOGS.flatMap((dog) =>
+          SMALLER_STEPS.map((step) => depthVariantKey(dogSpriteKey(gameData, dog), step) ?? ""),
+        ).filter((variant) => !sprites.has(variant)),
+    ],
+    [
+      "names a face with every mood for every dog, and its owner's with fired too",
+      () => {
+        expect(MOODS).toEqual(expect.arrayContaining(["happy", "neutral", "upset"]));
+        return DOGS.flatMap((dog) => [
+          ...missingTags(dogFaceKey(gameData, dog), MOODS),
+          ...missingTags(ownerFaceKey(gameData, dog), [...MOODS, "fired"]),
+        ]);
+      },
+    ],
+    [
+      "names an owner's card face with every mood the card shows for every dog",
+      () => {
+        expect(CARD_OWNER_MOODS).toEqual(expect.arrayContaining([...MOODS, "fired", "worried"]));
+        return DOGS.flatMap((dog) =>
+          missingTags(ownerCardFaceKey(gameData, dog), CARD_OWNER_MOODS),
+        );
+      },
+    ],
+    [
+      "names a dog card for every dog, the empty card and the heart-loss flash",
+      () =>
+        missingTags("ui-dog-card", [
+          ...DOGS.map((dog) => dogCardTag(gameData, dog)),
+          dogCardTag(gameData, null),
+          "heart-loss",
+        ]),
+    ],
+    [
+      "names a road sprite and a picker face with their tags for every walker",
+      () =>
+        Object.values(gameData.walkers).flatMap(({ portraitKey, spriteKey }) => [
+          ...missingTags(spriteKey, ["idle", "walk", "stumble"]),
+          ...missingTags(portraitKey, ["happy", "neutral"]),
+        ]),
+    ],
+    [
+      "has the zone celebration's cheer for every walker, its burst, tail and confetti colours",
+      () => {
+        const { burst, confettiBit, confettiBitTags, tailUp, walkerTags } = ZONE_CELEBRATION_ART;
+        return [
+          ...Object.values(gameData.walkers).flatMap(({ spriteKey }) =>
+            missingTags(spriteKey, walkerTags),
+          ),
+          ...missingImages([burst, tailUp]),
+          ...missingTags(confettiBit, confettiBitTags),
+        ];
+      },
+    ],
+  ])("%s", expectNone);
 });
 
 describe("image art", () => {
@@ -262,129 +263,119 @@ describe("image art", () => {
   });
 });
 
-describe("help art", () => {
-  it("tags ui-touch-drag with swipes as long as each other, past every drag frame, and a still", () => {
-    const { dragPx, key, tags } = TOUCH_DRAG;
-    const specs = animationSpecs(key, sheetOf(key));
-    const durations = (tag: string) =>
-      specs
-        .find((spec) => spec.key === animationKey(key, tag))
-        ?.frames.map(({ duration }) => duration) ?? [];
-    expect(missingTags(key, Object.values(tags))).toEqual([]);
-    expect(durations(tags.left)).toEqual(durations(tags.right));
-    expect(durations(tags.right).length).toBeGreaterThan(dragPx.from + dragPx.px.length);
-  });
+describe("screen and card art", () => {
+  it.each<Check>([
+    [
+      "names the Pet shop's faces and the glint the Start screen plays",
+      () => missingTags(SHOP_ART.petShop, ["glint", "normal", "pressed"]),
+    ],
+    [
+      "names the dog slot sign's faces",
+      () => missingTags(HOME_LAYOUT.slotSign.key, ["normal", "pressed"]),
+    ],
+    [
+      "tags ui-touch-drag with swipes as long as each other, past every drag frame, and a still",
+      () => {
+        const { dragPx, key, tags } = TOUCH_DRAG;
+        const specs = animationSpecs(key, sheetOf(key));
+        const durations = (tag: string) =>
+          specs
+            .find((spec) => spec.key === animationKey(key, tag))
+            ?.frames.map(({ duration }) => duration) ?? [];
+        expect(durations(tags.left)).toEqual(durations(tags.right));
+        expect(durations(tags.right).length).toBeGreaterThan(dragPx.from + dragPx.px.length);
+        return missingTags(key, Object.values(tags));
+      },
+    ],
+    ["names a debuff bar icon for every debuff", () => missingImages(DEBUFFS.map(debuffIconKey))],
+    [
+      "names a badge with earned and locked for every achievement",
+      () => {
+        const badges = badgeWall(gameData, { achievements: [] });
+        expect(badges).toHaveLength(Object.keys(gameData.achievements).length);
+        return badges.flatMap(({ art }) => missingTags(art, ["earned", "locked"]));
+      },
+    ],
+    [
+      "tags ui-zone-pips with every route pip, for every zone",
+      () => {
+        const states: readonly PipState[] = ["current", "done", "todo"];
+        const tags = gameData.world.zones.flatMap((zone) =>
+          states.map((state) => pipTag(gameData, { state, zone: zone.id as ZoneId })),
+        );
+        const drawn = gameData.world.zones.flatMap(({ art }) => [art, `${art}-done`]);
+        expect(tags).toEqual(expect.arrayContaining(["todo", ...drawn]));
+        return missingTags(ZONE_PIPS_KEY, [...new Set(tags)]);
+      },
+    ],
+    [
+      "tags ui-difficulty with every zone's paws, and ui-fires, an option's firing marker",
+      () => {
+        const tags = gameData.world.zones.map(({ difficulty }) => String(difficulty));
+        return [
+          ...missingTags(DIFFICULTY_KEY, ["1", "2", "3", "4", "5", ...tags]),
+          ...missingTags("ui-fires", ["static", "pulse"]),
+        ];
+      },
+    ],
+    [
+      "tags both card frames with the frame of every card source",
+      () => {
+        const sources: CardSource[] = [
+          ...ENCOUNTERS.map((encounter): CardSource => ({
+            affected: [],
+            encounter,
+            kind: "encounter",
+          })),
+          { kind: "fork", paths: ["highPark"], upgrades: ["bellyRubs"] },
+        ];
+        const tags = [...new Set(sources.map((source) => cardFrameTag(source)))];
+        expect(tags).toHaveLength(2);
+        return [CARD_FRAME_KEY, "card-frame-large"].flatMap((key) => missingTags(key, tags));
+      },
+    ],
+    [
+      "names a card preview for every zone, as a fork's path card shows it",
+      () => {
+        const zones = gameData.world.zones.map(({ id }) => id as ZoneId);
+        const arts = [zones.slice(0, 3), zones.slice(3)].flatMap((paths) =>
+          cardFor(gameData, testState({ kilo: 4 }), {
+            kind: "fork",
+            paths,
+            upgrades: paths.map(() => "bellyRubs"),
+          }).options.map(({ art }) => art),
+        );
+        expect(arts).toHaveLength(zones.length);
+        return missingImages(arts);
+      },
+    ],
+    [
+      "tags the pull bubble and fail effect, and names the blocked mark and squirrel icon",
+      () => [
+        ...missingTags(PULL_ART.bubble, ["idle", "show"]),
+        ...[PULL_ART.pullBlocked].filter((key) => !sprites.has(key)),
+        ...missingImages([SQUIRREL_ICON_KEY]),
+        ...missingTags(PULL_ART.pullFail, ["play"]),
+      ],
+    ],
+    [
+      "names the heart pops and the card's heart loss with their tags",
+      () => {
+        const { cardLoss, heartGain, heartLoss } = FEEDBACK_ART;
+        return [
+          ...missingTags(cardLoss.key, [cardLoss.tag]),
+          ...[heartGain, heartLoss].flatMap((heart) =>
+            missingTags(heart.key, [heart.pop, heart.fly]),
+          ),
+        ];
+      },
+    ],
+  ])("%s", expectNone);
 });
 
-describe("icon art", () => {
-  it("names a debuff bar icon for every debuff", () => {
-    expect(missingImages(DEBUFFS.map(debuffIconKey))).toEqual([]);
-  });
-
-  it("names a badge with earned and locked for every achievement", () => {
-    const badges = badgeWall(gameData, { achievements: [] });
-    expect(badges).toHaveLength(Object.keys(gameData.achievements).length);
-    expect(badges.flatMap(({ art }) => missingTags(art, ["earned", "locked"]))).toEqual([]);
-  });
-
-  it("tags ui-zone-pips with every route pip, for every zone", () => {
-    const states: readonly PipState[] = ["current", "done", "todo"];
-    const tags = gameData.world.zones.flatMap((zone) =>
-      states.map((state) => pipTag(gameData, { state, zone: zone.id as ZoneId })),
-    );
-    const drawn = gameData.world.zones.flatMap(({ art }) => [art, `${art}-done`]);
-    expect(tags).toEqual(expect.arrayContaining(["todo", ...drawn]));
-    expect(missingTags(ZONE_PIPS_KEY, [...new Set(tags)])).toEqual([]);
-  });
-
-  it("tags ui-difficulty with every zone's paws, and ui-fires, an option's firing marker", () => {
-    const tags = gameData.world.zones.map(({ difficulty }) => String(difficulty));
-    expect([
-      ...missingTags(DIFFICULTY_KEY, ["1", "2", "3", "4", "5", ...tags]),
-      ...missingTags("ui-fires", ["static", "pulse"]),
-    ]).toEqual([]);
-  });
-});
-
-describe("card art", () => {
-  it("tags both card frames with the frame of every card source", () => {
-    const sources: CardSource[] = [
-      ...ENCOUNTERS.map((encounter): CardSource => ({
-        affected: [],
-        encounter,
-        kind: "encounter",
-      })),
-      { kind: "fork", paths: ["highPark"], upgrades: ["bellyRubs"] },
-    ];
-    const tags = [...new Set(sources.map((source) => cardFrameTag(source)))];
-    expect(tags).toHaveLength(2);
-    const missing = [CARD_FRAME_KEY, "card-frame-large"].flatMap((key) => missingTags(key, tags));
-    expect(missing).toEqual([]);
-  });
-
-  it("names a card preview for every zone, as a fork's path card shows it", () => {
-    const zones = gameData.world.zones.map(({ id }) => id as ZoneId);
-    const arts = [zones.slice(0, 3), zones.slice(3)].flatMap((paths) =>
-      cardFor(gameData, testState({ kilo: 4 }), {
-        kind: "fork",
-        paths,
-        upgrades: paths.map(() => "bellyRubs"),
-      }).options.map(({ art }) => art),
-    );
-    expect(arts).toHaveLength(zones.length);
-    expect(missingImages(arts)).toEqual([]);
-  });
-});
-
-describe("pull art", () => {
-  it("tags the pull bubble and fail effect, and names the blocked mark and squirrel icon", () => {
-    expect(missingTags(PULL_ART.bubble, ["idle", "show"])).toEqual([]);
-    expect(sprites.has(PULL_ART.pullBlocked)).toBe(true);
-    expect([
-      ...missingImages([SQUIRREL_ICON_KEY]),
-      ...missingTags(PULL_ART.pullFail, ["play"]),
-    ]).toEqual([]);
-  });
-});
-
-describe("feedback art", () => {
-  it("names the heart pops and the card's heart loss with their tags", () => {
-    const { cardLoss, heartGain, heartLoss } = FEEDBACK_ART;
-    const missing = [
-      ...missingTags(cardLoss.key, [cardLoss.tag]),
-      ...[heartGain, heartLoss].flatMap((heart) => missingTags(heart.key, [heart.pop, heart.fly])),
-    ];
-    expect(missing).toEqual([]);
-  });
-});
-
-describe("hit moment art", () => {
+describe("hit art", () => {
   const hits = ENCOUNTERS.filter((id) => hitLabel(gameData.encounters[id]) !== null);
   const lookOf = (id: EncounterId) => hitLook(gameData.encounters[id].kind, id);
-
-  it("names a burst with play, its plate's tag and any edge flash or its fallback for every hit moment", () => {
-    const missing = hits.flatMap((id) => {
-      const look = lookOf(id);
-      return [
-        ...missingTags(look.burst, ["play"]),
-        ...missingTags("ui-hit-label", [look.plate]),
-        ...(look.flash === null ? [] : missingTags(look.flash, ["play"])),
-      ];
-    });
-    expect(hits).toEqual(expect.arrayContaining(["otherDog", "skunk"]));
-    expect(missing).toEqual([]);
-    // fx-bump stands in for a hit moment without its own burst; none goes without.
-    expect(missingTags("fx-bump", ["play"])).toEqual([]);
-    expect(hits.filter((id) => hitBurstKey(loadedScene, lookOf(id)) === "fx-bump")).toEqual([]);
-  });
-
-  it("flashes the edges for every obstacle, and for no lucky find", () => {
-    const flashed = hits.filter((id) => lookOf(id).flash !== null);
-    expect(flashed).toEqual(hits.filter((id) => gameData.encounters[id].kind === "obstacle"));
-  });
-});
-
-describe("plain and moving hit art", () => {
   const effects = [
     HIT_ART.bump,
     HIT_ART.bumpBig,
@@ -396,21 +387,45 @@ describe("plain and moving hit art", () => {
     animationSpecs(key, sheetOf(key)).find((spec) => spec.key === animationKey(key, HIT_ART.tag))
       ?.frames.length ?? 0;
 
-  it("plays every hit effect's tag", () => {
-    expect(effects.flatMap(({ key }) => missingTags(key, [HIT_ART.tag]))).toEqual([]);
-  });
-
-  it("holds a peak frame inside its effect's tag for reduced motion", () => {
-    const peaks = [
-      HIT_ART.bump,
-      HIT_ART.bumpBig,
-      HIT_ART.splash,
-      ...Object.values(HIT_ART.debuffs),
-    ];
-    expect(peaks.filter(({ key, peak }) => peak >= framesOf(key)).map(({ key }) => key)).toEqual(
-      [],
-    );
-  });
+  it.each<Check>([
+    [
+      "names a burst with play, its plate's tag and any edge flash or its fallback for every hit moment",
+      () => {
+        expect(hits).toEqual(expect.arrayContaining(["otherDog", "skunk"]));
+        return [
+          ...hits.flatMap((id) => {
+            const look = lookOf(id);
+            return [
+              ...missingTags(look.burst, ["play"]),
+              ...missingTags("ui-hit-label", [look.plate]),
+              ...(look.flash === null ? [] : missingTags(look.flash, ["play"])),
+            ];
+          }),
+          // fx-bump stands in for a hit moment without its own burst; none goes without.
+          ...missingTags("fx-bump", ["play"]),
+          ...hits.filter((id) => hitBurstKey(loadedScene, lookOf(id)) === "fx-bump"),
+        ];
+      },
+    ],
+    [
+      "flashes the edges for every obstacle, and for no lucky find",
+      () =>
+        hits.filter(
+          (id) => (lookOf(id).flash !== null) !== (gameData.encounters[id].kind === "obstacle"),
+        ),
+    ],
+    [
+      "plays every hit effect's tag",
+      () => effects.flatMap(({ key }) => missingTags(key, [HIT_ART.tag])),
+    ],
+    [
+      "holds a peak frame inside its effect's tag for reduced motion",
+      () =>
+        [HIT_ART.bump, HIT_ART.bumpBig, HIT_ART.splash, ...Object.values(HIT_ART.debuffs)]
+          .filter(({ key, peak }) => peak >= framesOf(key))
+          .map(({ key }) => key),
+    ],
+  ])("%s", expectNone);
 
   it("sets the splash's ground row inside its frame, as tall as the art", () => {
     const { groundRow, height, key } = HIT_ART.splash;
@@ -422,28 +437,7 @@ describe("plain and moving hit art", () => {
 });
 
 describe("road object art", () => {
-  it("names a road sprite for every encounter, at every depth step", () => {
-    const keys = ENCOUNTERS.map(encounterSpriteKey);
-    const missing = keys.flatMap((key) =>
-      SCALE_STEPS.map((step) => depthVariantKey(key, step) ?? key).filter(
-        (key) => !sprites.has(key),
-      ),
-    );
-    expect(missing).toEqual([]);
-  });
-
-  it("names a gear drop sprite with an idle tag for every gear item, at every depth step", () => {
-    const keys = keysOf(gameData.shopGear).map(gearDropSpriteKey);
-    const missing = keys.flatMap((key) =>
-      SCALE_STEPS.map((step) => depthVariantKey(key, step) ?? key).filter(
-        (variant) => !sprites.has(variant) || !tagsOf(variant).includes("idle"),
-      ),
-    );
-    expect(missing).toEqual([]);
-  });
-
-  // Every obstacle or lucky find kind that moves and some zone draws, or a lucky find any zone
-  // counts, plays one of its movement's tags at each step it has.
+  // Every obstacle or lucky find kind that some zone draws, or a lucky find any zone counts.
   const drawn = (kind: string) =>
     ((gameData.tuning.counts.luckyFindsPerZone as Readonly<Record<string, number>>)[kind] ?? 0) >
       0 ||
@@ -469,29 +463,18 @@ describe("road object art", () => {
   const isLucky = (kind: string) =>
     Object.hasOwn(gameData.encounters, kind) &&
     gameData.encounters[kind as EncounterId].kind === "lucky";
-  it("tags every moving road item's sprite with a tag of its movement, at every step", () => {
-    const moving = roadKinds.flatMap(({ art, entry, kind }) => {
-      if (!drawn(kind)) {
-        return [];
-      }
-      const movement = "movement" in entry ? entry.movement : undefined;
-      return movement === undefined
-        ? []
-        : [{ key: MOVER_SPRITE_KEYS[art] ?? art, tags: MOVING_TAGS[movement.kind] }];
-    });
-    const missing = moving.flatMap(({ key, tags }) =>
-      [1, ...variantSteps([key])].flatMap((step) => {
-        const variant = depthVariantKey(key, step) ?? key;
-        return tags.some((tag) => tagsOf(variant).includes(tag)) ? [] : [variant];
-      }),
+  // Each key's art at every depth step that fails ok.
+  const everyStep = (keys: readonly string[], ok: (variant: string) => boolean) =>
+    keys.flatMap((key) =>
+      SCALE_STEPS.map((step) => depthVariantKey(key, step) ?? key).filter(
+        (variant) => !ok(variant),
+      ),
     );
-    expect(missing).toEqual([]);
-  });
 
   // Every road item's sprite, standing and as a mover, with any owner and spray cloud beside it,
   // plays a tag it has, of more than one frame where it has one: standing halted and walking,
   // and a mover moving and stopped, at every step it has.
-  it("animates every road item's sprite, standing and moving, at every step", () => {
+  const unanimated = () => {
     const items = roadKinds.flatMap(({ art, entry, kind }) => {
       const arts = [art].filter(hasSprite);
       const clouds = kind === "skunk" ? [SKUNK_CLOUD_KEY] : [];
@@ -510,7 +493,7 @@ describe("road object art", () => {
       });
       return movement === undefined ? standing : [...standing, ...movers];
     });
-    const unanimated = items.flatMap((item) =>
+    return items.flatMap((item) =>
       [1, ...variantSteps([item.key])].flatMap((step) => {
         const variant = depthVariantKey(item.key, step) ?? item.key;
         const frames = new Map(
@@ -541,21 +524,55 @@ describe("road object art", () => {
         );
       }),
     );
-    expect(unanimated).toEqual([]);
-  });
+  };
 
-  it("draws every zone's ambient movers and their variants, with its tag at every step", () => {
-    const movers = Object.values(gameData.ambient).flat();
-    const missing = movers.flatMap(({ key, tag }) => {
-      const variants = (AMBIENT_VARIANTS[key] ?? []).filter((variant) => sprites.has(variant));
-      return [key, ...variants].flatMap((art) =>
-        [1, ...variantSteps([art])].flatMap((step) =>
-          missingTags(depthVariantKey(art, step) ?? art, [tag]),
+  it.each<Check>([
+    [
+      "names a road sprite for every encounter, at every depth step",
+      () => everyStep(ENCOUNTERS.map(encounterSpriteKey), hasSprite),
+    ],
+    [
+      "names a gear drop sprite with an idle tag for every gear item, at every depth step",
+      () =>
+        everyStep(
+          keysOf(gameData.shopGear).map(gearDropSpriteKey),
+          (variant) => hasSprite(variant) && tagsOf(variant).includes("idle"),
         ),
-      );
-    });
-    expect(missing).toEqual([]);
-  });
+    ],
+    // A moving kind some zone draws plays one of its movement's tags at each step it has.
+    [
+      "tags every moving road item's sprite with a tag of its movement, at every step",
+      () =>
+        roadKinds
+          .flatMap(({ art, entry, kind }) => {
+            const movement = "movement" in entry ? entry.movement : undefined;
+            return !drawn(kind) || movement === undefined
+              ? []
+              : [{ key: MOVER_SPRITE_KEYS[art] ?? art, tags: MOVING_TAGS[movement.kind] }];
+          })
+          .flatMap(({ key, tags }) =>
+            [1, ...variantSteps([key])].flatMap((step) => {
+              const variant = depthVariantKey(key, step) ?? key;
+              return tags.some((tag) => tagsOf(variant).includes(tag)) ? [] : [variant];
+            }),
+          ),
+    ],
+    ["animates every road item's sprite, standing and moving, at every step", unanimated],
+    [
+      "draws every zone's ambient movers and their variants, with its tag at every step",
+      () =>
+        Object.values(gameData.ambient)
+          .flat()
+          .flatMap(({ key, tag }) => {
+            const variants = (AMBIENT_VARIANTS[key] ?? []).filter(hasSprite);
+            return [key, ...variants].flatMap((art) =>
+              [1, ...variantSteps([art])].flatMap((step) =>
+                missingTags(depthVariantKey(art, step) ?? art, [tag]),
+              ),
+            );
+          }),
+    ],
+  ])("%s", expectNone);
 });
 
 describe("depth variants", () => {
@@ -599,19 +616,26 @@ describe("depth variants", () => {
 describe("sound art", () => {
   const sounds = new Map(manifest.sounds.map((sound) => [sound.key, sound]));
 
-  it("plays a manifest sound for every cue", () => {
-    const loaded = (key: string) => sounds.has(key);
-    expect(keysOf(SOUND_KEYS).filter((cue) => soundKeyFor(loaded, cue) === undefined)).toEqual([]);
-  });
+  const loaded = (key: string) => sounds.has(key);
 
-  it("plays a looping music of its own in every zone", () => {
-    const silent = gameData.world.zones.filter((zone) => sounds.get(musicKey(zone))?.loop !== true);
-    expect(silent.map(({ art }) => art)).toEqual([]);
-  });
-
-  it("has its own hit sound for every encounter with a hit moment", () => {
-    const hits = ENCOUNTERS.filter((id) => hitLabel(gameData.encounters[id]) !== null);
-    const keys = hits.map((id) => soundKeysOf(hitCue(gameData.encounters[id].kind, id))[0] ?? "");
-    expect(keys.filter((key) => !sounds.has(key))).toEqual([]);
-  });
+  it.each<Check>([
+    [
+      "plays a manifest sound for every cue",
+      () => keysOf(SOUND_KEYS).filter((cue) => soundKeyFor(loaded, cue) === undefined),
+    ],
+    [
+      "plays a looping music of its own in every zone",
+      () =>
+        gameData.world.zones
+          .filter((zone) => sounds.get(musicKey(zone))?.loop !== true)
+          .map(({ art }) => art),
+    ],
+    [
+      "has its own hit sound for every encounter with a hit moment",
+      () =>
+        ENCOUNTERS.filter((id) => hitLabel(gameData.encounters[id]) !== null)
+          .map((id) => soundKeysOf(hitCue(gameData.encounters[id].kind, id))[0] ?? "")
+          .filter((key) => !loaded(key)),
+    ],
+  ])("%s", expectNone);
 });

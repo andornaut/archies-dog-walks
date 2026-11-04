@@ -250,11 +250,14 @@ describe("the pack's outline", () => {
         ...Object.values(PACK_FEET.trioLead),
       ].map(rowScale),
     );
-  // And so a pack settled in a lane never touches anything in the lane beside it.
+  // And so a pack settled in a lane never touches anything in the lane beside it. The longest
+  // pack's length is the tallest any pack runs.
   it("is the projected union of logical masks, inside the lane, for every walker and pack", () => {
+    let longest = 0;
     for (const walker of WALKERS) {
       for (const dogs of PACKS) {
         const box = packOutline(packOnRoad(PROJECTION, 0, { dogs, walker }));
+        longest = Math.max(longest, box.bottom - box.top);
         const drawn = logicalUnion(2, walker, dogs);
         const name = `${walker} with ${dogs.join(",")}`;
         expect(box.top, name).toBeCloseTo(drawn.top, 9);
@@ -265,16 +268,7 @@ describe("the pack's outline", () => {
         expect(box.right, name).toBeLessThanOrEqual(LANE_HALF_WIDTH);
       }
     }
-  });
-
-  it("is no longer than the longest any pack's runs", () => {
-    const lengths = WALKERS.flatMap((walker) =>
-      PACKS.map((dogs) => {
-        const box = packOutline(packOnRoad(PROJECTION, 0, { dogs, walker }));
-        return box.bottom - box.top;
-      }),
-    );
-    expect(tallestPackLength(PROJECTION)).toBeCloseTo(Math.max(...lengths), 9);
+    expect(tallestPackLength(PROJECTION)).toBeCloseTo(longest, 9);
   });
 });
 

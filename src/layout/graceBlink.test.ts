@@ -10,20 +10,15 @@ const { blinkSeconds, dimAlpha } = GRACE_BLINK;
 describe("graceAlpha", () => {
   // remaining is the grace left; elapsed blinks count from the window's start.
   it.each([
-    { alpha: 1, name: "past the window's end", remaining: -blinkSeconds },
-    { alpha: 1, name: "as the window opens, through the hit stop", remaining: WINDOW },
-    { alpha: 1, name: "in the first blink", remaining: WINDOW - 0.5 * blinkSeconds },
-    { alpha: 0, name: "in the second blink", remaining: WINDOW - 1.5 * blinkSeconds },
-  ])("shows the pack at $alpha $name", ({ alpha, remaining }) => {
-    expect(graceAlpha(false, WINDOW, remaining)).toBe(alpha);
-  });
-
-  it.each([
-    { alpha: dimAlpha, remaining: WINDOW },
-    { alpha: dimAlpha, remaining: blinkSeconds / 2 },
-    { alpha: 1, remaining: 0 },
-  ])("holds the pack at $alpha with reduced motion, $remaining s of grace left", (row) => {
-    expect(graceAlpha(true, WINDOW, row.remaining)).toBe(row.alpha);
+    { alpha: 1, name: "past the window's end", remaining: -blinkSeconds, still: false },
+    { alpha: 1, name: "as the window opens, in the hit stop", remaining: WINDOW, still: false },
+    { alpha: 1, name: "in the first blink", remaining: WINDOW - 0.5 * blinkSeconds, still: false },
+    { alpha: 0, name: "in the second blink", remaining: WINDOW - 1.5 * blinkSeconds, still: false },
+    { alpha: dimAlpha, name: "dimmed as the window opens", remaining: WINDOW, still: true },
+    { alpha: dimAlpha, name: "dimmed late on", remaining: blinkSeconds / 2, still: true },
+    { alpha: 1, name: "once the window ends", remaining: 0, still: true },
+  ])("shows the pack at $alpha $name, reduced motion $still", ({ alpha, remaining, still }) => {
+    expect(graceAlpha(still, WINDOW, remaining)).toBe(alpha);
   });
 
   // Stepped through the window at the walk's 60 Hz, the pack is hidden for about half of it,

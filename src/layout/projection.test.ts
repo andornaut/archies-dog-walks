@@ -81,13 +81,10 @@ describe("roadProjection", () => {
 });
 
 describe("inverses", () => {
-  it("distanceAtY undoes screenYAt", () => {
+  it("distanceAtY undoes screenYAt, and roadXAt undoes project's x", () => {
     for (const distance of [-6, 0, 100, 400, 700]) {
       expect(distanceAtY(projection, screenYAt(projection, distance))).toBeCloseTo(distance);
     }
-  });
-
-  it("roadXAt undoes project's x", () => {
     const placed = project(projection, { distance: 300, x: 108 });
     expect(roadXAt(projection, placed.scale, placed.x)).toBeCloseTo(108);
   });

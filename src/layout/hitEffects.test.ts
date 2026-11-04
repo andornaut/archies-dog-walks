@@ -74,7 +74,7 @@ function motionOf(steps: readonly MotionStep[]): { ends: number; moves: string[]
 }
 
 describe("hit effects", () => {
-  it("bursts over every hit with its effects", () => {
+  it("bursts over every hit with its effects, on the struck dog's column just over its top", () => {
     for (const [, kind, obstacle, keys] of [
       ["an iron fence", "plain", "ironFence3", [HIT_ART.bump.key]],
       ["a bench", "plain", "bench", [HIT_ART.bump.key]],
@@ -92,13 +92,10 @@ describe("hit effects", () => {
       expect(effects.map(({ key }) => key)).toEqual(keys);
       expect(effects.map(({ above }) => above)).toEqual(keys.map((__, index) => index));
       expect(effects.every(({ frame }) => frame === null)).toBe(true);
-    }
-  });
-
-  it("centres a hit's effects on the struck dog's column, just over its top row", () => {
-    for (const effect of hitEffects(false, struck("plain", "hedge"))) {
-      expect(effect.at.x).toBe(TOP.x);
-      expect(effect.at.y).toBeLessThan(TOP.y);
+      for (const { at } of effects) {
+        expect(at.x).toBe(TOP.x);
+        expect(at.y).toBeLessThan(TOP.y);
+      }
     }
   });
 
@@ -124,11 +121,10 @@ describe("hit effects", () => {
     expect(motion.ends).toBe(0);
     expect(steps.at(-1)?.dx ?? 0).toBe(0);
     expect(steps.at(-1)?.dy ?? 0).toBe(0);
-  });
-
-  it("jolts a mover back up the road, up the screen", () => {
-    const [jolt] = obstacleMotion(false, struck("moving", "car"));
-    expect(jolt?.dy).toBeLessThan(0);
+    // A mover's jolt goes back up the road, up the screen.
+    if (moves.includes("dy")) {
+      expect(steps[0]?.dy).toBeLessThan(0);
+    }
   });
 
   it("has the struck dog react, and every dog react and shake off on a splash", () => {
@@ -189,39 +185,32 @@ describe("physical contact render frames", () => {
 });
 
 describe("contact debuff bursts", () => {
-  it.each(CONTACTS)("shows the applied debuffs for $name", ({ apply, effects }) => {
-    const before = testState({ archie: 3 });
-    const { state: after } = apply(before);
-    const bursts = contactDebuffEffects(false, before, { after, effects });
-    expect(bursts.map(({ key }) => key)).toEqual(
-      debuffsIn(effects).map((debuff) => HIT_ART.debuffs[debuff].key),
-    );
-    expect(bursts.every(({ frame }) => frame === null)).toBe(true);
-  });
-
-  it.each(CONTACTS)("shows an unchanged-duration refresh for $name", ({ apply, effects }) => {
-    const { state: before } = apply(testState({ archie: 3 }));
-    const { state: after } = apply(before);
-    expect(after.debuffs).toEqual(before.debuffs);
-    expect(contactDebuffEffects(false, before, { after, effects }).map(({ key }) => key)).toEqual(
-      debuffsIn(effects).map((debuff) => HIT_ART.debuffs[debuff].key),
-    );
-  });
-
-  it.each(CONTACTS)("shows no debuff burst when $name applies nothing", ({ apply, effects }) => {
-    const { state: before } = apply(testState({ archie: 3 }));
-    expect(contactDebuffEffects(false, before, { after: before, effects })).toEqual([]);
-  });
-
   it.each(CONTACTS)(
-    "holds the applied debuff peaks with reduced motion for $name",
+    "shows the applied debuffs for $name, holding their peaks with reduced motion",
     ({ apply, effects }) => {
       const before = testState({ archie: 3 });
       const { state: after } = apply(before);
-      const bursts = contactDebuffEffects(true, before, { after, effects });
-      expect(bursts.map(({ frame }) => frame)).toEqual(
-        debuffsIn(effects).map((debuff) => HIT_ART.debuffs[debuff].peak),
+      const bursts = contactDebuffEffects(false, before, { after, effects });
+      expect(bursts.map(({ key }) => key)).toEqual(
+        debuffsIn(effects).map((debuff) => HIT_ART.debuffs[debuff].key),
       );
+      expect(bursts.every(({ frame }) => frame === null)).toBe(true);
+      expect(
+        contactDebuffEffects(true, before, { after, effects }).map(({ frame }) => frame),
+      ).toEqual(debuffsIn(effects).map((debuff) => HIT_ART.debuffs[debuff].peak));
+    },
+  );
+
+  it.each(CONTACTS)(
+    "shows an unchanged-duration refresh for $name, and nothing when it applies nothing",
+    ({ apply, effects }) => {
+      const { state: before } = apply(testState({ archie: 3 }));
+      const { state: after } = apply(before);
+      expect(after.debuffs).toEqual(before.debuffs);
+      expect(contactDebuffEffects(false, before, { after, effects }).map(({ key }) => key)).toEqual(
+        debuffsIn(effects).map((debuff) => HIT_ART.debuffs[debuff].key),
+      );
+      expect(contactDebuffEffects(false, before, { after: before, effects })).toEqual([]);
     },
   );
 
@@ -265,7 +254,7 @@ describe("white flash", () => {
       cue.on ? [(cues[index + 1]?.ms ?? Number.POSITIVE_INFINITY) - cue.ms] : [],
     );
 
-  it("blinks from the hit, alternating and ending off", () => {
+  it("blinks from the hit, alternating and ending off, longer once with reduced motion", () => {
     for (const [, still, flashes] of [
       ["flashes twice in motion", false, 2],
       ["blinks once with reduced motion", true, 1],
@@ -277,9 +266,7 @@ describe("white flash", () => {
       expect(cues.map(({ ms }) => ms)).toEqual(cues.map(({ ms }) => ms).sort((a, b) => a - b));
       expect(onSpans(cues)).toHaveLength(flashes);
     }
-  });
-
-  it("holds the reduced-motion blink longer than either flash in motion", () => {
+    // The reduced-motion blink holds longer than either flash in motion.
     const [blink = 0] = onSpans(whiteFlash(true));
     expect(blink).toBeGreaterThan(Math.max(...onSpans(whiteFlash(false))));
   });

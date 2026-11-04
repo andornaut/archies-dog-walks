@@ -50,16 +50,10 @@ describe("the burst words", () => {
     expect(Object.keys(COMIC_WORDS.burst.starRows).sort()).toEqual([...bursts].sort());
   });
 
-  it("give every burst a word font-comic draws as wide as art's", () => {
+  it("give every burst a word font-comic draws as wide as art's, placed where art does", () => {
     for (const id of bursts) {
       const word = hitWord(gameData.encounters[id]) ?? "";
       expect(widthOf(word)).toBe(ART_PLACES[id]?.[2]);
-    }
-  });
-
-  it("place every burst's word where art does", () => {
-    for (const id of bursts) {
-      const word = hitWord(gameData.encounters[id]) ?? "";
       const place = burstWordPlace(widthOf(word) ?? 0, COMIC_WORDS.burst.starRows[id] ?? 0);
       expect([place.x, place.y]).toEqual(ART_PLACES[id]?.slice(0, 2));
     }
@@ -80,9 +74,7 @@ describe("the pack's words", () => {
       expect(x + (drawn ?? Infinity)).toBeLessThanOrEqual(width);
       expect(y + LINE_HEIGHT).toBeLessThanOrEqual(height);
     }
-  });
-
-  it("hold the bark word for each of its tops", () => {
+    // The bark word holds for each of its tops.
     expect(bark.ms).toHaveLength(bark.tops.length);
   });
 });

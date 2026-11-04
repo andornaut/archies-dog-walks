@@ -108,18 +108,6 @@ describe("scaleAt", () => {
 });
 
 describe("depthDraw", () => {
-  it("draws the full-size art at 1, and never upscales it past the walker's feet", () => {
-    const arts = artsOf("tip");
-    const full = itemAt(arts, 0);
-    expect(depthDraw(arts, 1)).toEqual({
-      depth: 1,
-      key: "tip",
-      originY: full.feetY / full.height,
-      scale: 1,
-    });
-    expect(depthDraw(arts, 1.07)).toEqual(depthDraw(arts, 1));
-  });
-
   it("draws every pack dog's full-size art unscaled, at every step", () => {
     const dogs = keysOf(gameData.dogs).map((dog) => dogSpriteKey(gameData, dog));
     expect(dogs.length).toBeGreaterThan(0);
@@ -174,10 +162,13 @@ describe("depthDraw", () => {
   });
 
   // A 32-wide sandwich board with only @75 and @50, whatever steps the shipped sandwich board has.
+  // The full-size art draws at 1, and is never upscaled past the walker's feet.
   it("draws a projected scale from its own step, else the next larger step or art, scaled down", () => {
     const everyBoard = withEveryStep(artsOf("sandwich-board"));
     const board32 = syntheticArts("sandwich-board", 32, [0.75, 0.5]);
     const picks = [
+      { arts: artsOf("tip"), key: "tip", projected: 1, scale: 1 },
+      { arts: artsOf("tip"), key: "tip", projected: 1.07, scale: 1 },
       { arts: artsOf("sandwich-board"), key: "sandwich-board@75", projected: 0.75, scale: 1 },
       { arts: everyBoard, key: "sandwich-board@62", projected: 0.6 },
       { arts: board32, key: "sandwich-board@75", projected: 0.6 },
@@ -190,6 +181,7 @@ describe("depthDraw", () => {
       } else {
         expect(drawn.scale).toBe(scale);
       }
+      expect(drawn.depth).toBe(Math.min(1, projected));
     }
   });
 

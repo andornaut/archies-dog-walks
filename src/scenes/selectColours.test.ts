@@ -45,10 +45,11 @@ const EXEMPT = 3;
 const disabled = selectLook("disabled");
 const normal = selectLook("normal");
 const selected = selectLook("selected");
+const PILL_KINDS = [...Object.keys(gameData.debuffs), "buff"].sort() as EffectNameKind[];
 
 describe("interaction-state colours", () => {
   // [what, foreground, background, minimum].
-  it("hold every label, plate, picture and button at its minimum contrast", () => {
+  it("hold every label, plate, picture, button, debuff bar and pill at its minimum contrast", () => {
     const pairs: [string, number, number, number][] = [
       ["a normal tile's label", PALETTE[normal.text], PALETTE[normal.face], TEXT],
       ["a selected tile's label", PALETTE[selected.text], PALETTE[selected.face], TEXT],
@@ -122,6 +123,18 @@ describe("interaction-state colours", () => {
         greyFor(NEUTRAL_RAMP, 0, PALETTE.cream),
         TEXT,
       ],
+      ...Object.entries(DEBUFF_COLOURS).map(
+        ([debuff, { face, name }]): [string, number, number, number] => [
+          `the ${debuff} debuff bar's name on its face`,
+          name,
+          face,
+          TEXT,
+        ],
+      ),
+      ...PILL_KINDS.map((kind): [string, number, number, number] => {
+        const { name, pill } = pillColours(kind);
+        return [`the ${kind} effect pill's name`, name, pill, TEXT];
+      }),
     ];
     const faint = pairs.filter(
       ([, foreground, background, minimum]) => contrast(foreground, background) < minimum,
@@ -157,24 +170,8 @@ describe("change label colours", () => {
   );
 });
 
-describe("debuff bar colours", () => {
-  it("set each bar's name at 4.5:1 on its face", () => {
-    const faint = Object.entries(DEBUFF_COLOURS).filter(
-      ([, { face, name }]) => contrast(name, face) < TEXT,
-    );
-    expect(faint.map(([debuff]) => debuff)).toEqual([]);
-  });
-});
-
 describe("effect name pills", () => {
-  const kinds = [...Object.keys(gameData.debuffs), "buff"].sort() as EffectNameKind[];
-
   it("give every debuff and the buffs a pill", () => {
-    expect(Object.keys(EFFECT_PILLS).sort()).toEqual(kinds);
-  });
-
-  it.each(kinds)("set %s's name at 4.5:1 on its pill", (kind) => {
-    const { name, pill } = pillColours(kind);
-    expect(contrast(name, pill)).toBeGreaterThanOrEqual(TEXT);
+    expect(Object.keys(EFFECT_PILLS).sort()).toEqual(PILL_KINDS);
   });
 });

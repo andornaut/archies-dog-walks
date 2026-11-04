@@ -166,6 +166,8 @@ describe("contact debuff ground cues", () => {
       expect(groups.map(({ depth }) => depth)).toEqual([9.5]);
       expect(groups.every((group) => group.mask === mask)).toBe(true);
       expect(graphics.fillRect).toHaveBeenCalledWith(view.x, view.y, view.width, view.height);
+      // The road viewport mask stays fixed while its camera moves.
+      expect(graphics.setScrollFactor).toHaveBeenCalledWith(0);
       dogs.splice(0, dogs.length, "ginger", "lady");
       const moved = { x: view.x + view.width + 20, y: 450 };
       places.set("kilo", moved);
@@ -179,12 +181,6 @@ describe("contact debuff ground cues", () => {
       expect(scene.time.delayedCall).not.toHaveBeenCalled();
     },
   );
-
-  it("keeps the road viewport mask fixed while its camera moves", () => {
-    const { graphics, scene } = fixture();
-    playContactDebuff(scene as unknown as Scene, context(), cue);
-    expect(graphics.setScrollFactor).toHaveBeenCalledWith(0);
-  });
 
   it.each(["completion", "shutdown", "destroy"] as const)(
     "cleans the lead ground cue, mask and listeners on %s",
@@ -233,29 +229,34 @@ describe("contact debuff ground cues", () => {
     },
   );
 
-  it("creates no cue without a visible formation lead and never falls back to another actor", () => {
+  it.each<[string, (scene: ReturnType<typeof fixture>["scene"]) => void]>([
+    [
+      "without a visible formation lead, never falling back to another actor",
+      (scene) => {
+        playContactDebuff(
+          scene as unknown as Scene,
+          context(() => lead, []),
+          cue,
+        );
+        playContactDebuff(
+          scene as unknown as Scene,
+          context((dog) => (dog === "kilo" ? undefined : lead)),
+          cue,
+        );
+      },
+    ],
+    [
+      "for unavailable art",
+      (scene) => {
+        scene.textures.exists.mockReturnValue(false);
+        playContactDebuff(scene as unknown as Scene, context(), cue);
+      },
+    ],
+  ])("creates no cue, graphics, listeners or timers %s", (_, play) => {
     const { events, scene } = fixture();
-    playContactDebuff(
-      scene as unknown as Scene,
-      context(() => lead, []),
-      cue,
-    );
-    playContactDebuff(
-      scene as unknown as Scene,
-      context((dog) => (dog === "kilo" ? undefined : lead)),
-      cue,
-    );
+    play(scene);
     expect(scene.add.container).not.toHaveBeenCalled();
     expect(scene.add.sprite).not.toHaveBeenCalled();
-    expect(scene.make.graphics).not.toHaveBeenCalled();
-    expect(events.listenerCount("postupdate")).toBe(0);
-  });
-
-  it("skips unavailable art without graphics, listeners or timers", () => {
-    const { events, scene } = fixture();
-    scene.textures.exists.mockReturnValue(false);
-    playContactDebuff(scene as unknown as Scene, context(), cue);
-    expect(scene.add.container).not.toHaveBeenCalled();
     expect(scene.make.graphics).not.toHaveBeenCalled();
     expect(scene.time.delayedCall).not.toHaveBeenCalled();
     expect(events.listenerCount("postupdate")).toBe(0);
