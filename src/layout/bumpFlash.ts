@@ -127,7 +127,6 @@ const MINOR_FLASH_COLOURS: Readonly<Record<MinorLookId, BorderColour>> = {
   rollerblader: "green",
   rollingBarrel: "tan",
   sandcastle: "tan",
-  sandwichBoard: "green",
   scooter: "cyan",
   seagull: "white",
   segwayTourRider: "yellow",

@@ -88,7 +88,6 @@ export const OBSTACLE_SILHOUETTES: Readonly<Record<string, Silhouette>> = {
   rollerblader: { above: 64, left: -21, right: 21 },
   "rolling-barrel": { above: 37, left: -20, right: 19 },
   sandcastle: { above: 47, left: -23, right: 23 },
-  "sandwich-board": { above: 43, left: -19, right: 19 },
   "segway-tour-rider": { above: 70, left: -21, right: 24 },
   "sign-spinner": { above: 68, left: -17, right: 18 },
   skunk: { above: 42, left: -15, right: 20 },
