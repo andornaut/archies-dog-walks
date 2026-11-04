@@ -9,7 +9,7 @@ import type {
 import { nativeSlotPreparationOrderingHint, type PreparedSlotKind } from "./slotCandidates";
 import type { ConstraintEntry, ConstraintOwner, ConstraintResult } from "./slotConstraintState";
 import { coverageLeadingRows, createQuietCoverageState } from "./slotCoverage";
-import { SLOT_OMISSION_ATTEMPTS } from "./slotDelivery";
+import { SLOT_OMISSION_ATTEMPTS, SLOT_ROW_PRESSURE } from "./slotDelivery";
 import { createMovingCoverageHints } from "./slotMovingCoverageHints";
 import type { SlotPocketProof } from "./slotPocketSupport";
 import { drainSlotSolver } from "./slotSolverSession";
@@ -80,6 +80,11 @@ type Choice<Kind extends string> =
     }
   | { readonly status: "source-end" }
   | { readonly status: "tier-end" };
+// Occupancy rejections per row within one frame, and the row each yielded value was drawn from.
+interface RowPressure<Kind extends string> {
+  readonly rejections: Map<number, number>;
+  readonly rows: Map<SlotCandidate<Kind>, number>;
+}
 interface JobOrder<Kind extends string> {
   readonly fixed: boolean;
   readonly guaranteed: boolean;
@@ -413,6 +418,7 @@ function* construct<Kind extends string, Mark>(
     quietRows?: readonly number[],
     coverageOnly = false,
     deferred?: Option<Kind>[],
+    pressure?: RowPressure<Kind>,
     traversal?: { readonly hint: SlotCandidate<Kind> | undefined; readonly seen: Set<string> },
   ): Generator<Choice<Kind>> {
     if (stopped()) {
@@ -524,7 +530,16 @@ function* construct<Kind extends string, Mark>(
           yield { option: { candidate: hint, job }, status: "candidate" };
         }
         let emptyTier = false;
-        for (const row of sourceRows) {
+        // Each source keeps its own row order; a pressured row waits behind the untried rows.
+        const queue = [...sourceRows];
+        const ordered = pressure !== undefined && !covering && quietRows === undefined;
+        while (queue.length > 0) {
+          const open = ordered
+            ? queue.findIndex(
+                (row) => (pressure.rejections.get(row) ?? 0) < SLOT_ROW_PRESSURE.rejections,
+              )
+            : 0;
+          const row = queue.splice(Math.max(0, open), 1)[0]!;
           if (stopped()) {
             return;
           }
@@ -567,6 +582,7 @@ function* construct<Kind extends string, Mark>(
               }
               if (useful) {
                 seen.add(step.candidate.id);
+                pressure?.rows.set(step.candidate, row);
                 yield { option: { candidate: step.candidate, job }, status: "candidate" };
               } else if (deferred !== undefined && !deferredIds.has(step.candidate.id)) {
                 if (!charge()) {
@@ -609,6 +625,7 @@ function* construct<Kind extends string, Mark>(
     quietRows?: readonly number[],
     coverageOnly = false,
     deferredOptions?: Option<Kind>[],
+    pressure?: RowPressure<Kind>,
   ): Generator<Choice<Kind>> {
     if (stopped()) {
       return;
@@ -632,6 +649,7 @@ function* construct<Kind extends string, Mark>(
             quietRows,
             coverageOnly,
             deferredOptions,
+            pressure,
             traversal,
           )) {
             if (choice.status === "source-end" || choice.status === "tier-end") {
@@ -697,6 +715,8 @@ function* construct<Kind extends string, Mark>(
   };
   const learned = new Set<SlotPocketProof<SlotCandidate<Kind>>>();
   let backjump: number | undefined;
+  // The native rule that rejected the latest tested value, if any.
+  let rejectedRule: string | undefined;
   let fullCompletion = false;
   const attest = (proof: SlotPocketProof<SlotCandidate<Kind>>, current: WitnessJob<Kind>) => {
     const result = ports.attestRefutation?.(proof);
@@ -742,6 +762,7 @@ function* construct<Kind extends string, Mark>(
       return "rejected";
     }
     const result = ports.test(job, candidate);
+    rejectedRule = result?.accepted === false ? result.failure.rule : undefined;
     budget ||= result === undefined;
     if (result?.accepted === false && result.failure.classification === "unattributed") {
       fatal = result.failure;
@@ -814,6 +835,7 @@ function* construct<Kind extends string, Mark>(
     readonly deferred: Option<Kind>[];
     readonly job?: WitnessJob<Kind>;
     readonly omissions: readonly WitnessOmission<Kind>[];
+    readonly pressure?: RowPressure<Kind>;
     omissionOffered: boolean;
     attempts: number;
     deferredIndex: number;
@@ -851,6 +873,7 @@ function* construct<Kind extends string, Mark>(
       job.laneEffect === "none" || nonblockingGuarantees.has(job);
     function* choices(
       quietRows: readonly number[] | undefined,
+      pressure: RowPressure<Kind> | undefined,
       job: WitnessJob<Kind>,
     ): Generator<Choice<Kind>> {
       if (stopped()) {
@@ -875,6 +898,9 @@ function* construct<Kind extends string, Mark>(
           order.columns,
           false,
           quietRows,
+          false,
+          undefined,
+          pressure,
         );
       } else {
         yield* sourceOptions(
@@ -885,6 +911,9 @@ function* construct<Kind extends string, Mark>(
           undefined,
           false,
           quietRows,
+          false,
+          undefined,
+          pressure,
         );
       }
     }
@@ -1008,7 +1037,22 @@ function* construct<Kind extends string, Mark>(
     let initialCoveragePending =
       ports.coverageFirst === true &&
       mandatory.some(({ job, order }) => !job.fixed && order.width > 1);
-    const next = (): Pick<Frame, "covering" | "cursor" | "initialCoverage" | "job"> | undefined => {
+    // Runtime search orders each job's rows by occupancy pressure; exact construction keeps the
+    // fixed row order its pocket proofs replay.
+    const ordinaryFrame = (job: WitnessJob<Kind>) => {
+      const pressure =
+        ports.minimumDelivery === undefined
+          ? undefined
+          : { rejections: new Map<number, number>(), rows: new Map<SlotCandidate<Kind>, number>() };
+      return {
+        covering: false,
+        cursor: choices(undefined, pressure, job),
+        job,
+        ...(pressure === undefined ? {} : { pressure }),
+      };
+    };
+    const next = ():
+      Pick<Frame, "covering" | "cursor" | "initialCoverage" | "job" | "pressure"> | undefined => {
       const filled = resolved();
       if (initialCoveragePending && frames.length === 0) {
         initialCoveragePending = false;
@@ -1026,7 +1070,7 @@ function* construct<Kind extends string, Mark>(
           !filled.has(job.key) && (ports.minimumDelivery !== undefined || !delayedForOrdering(job)),
       );
       if (guaranteed !== undefined) {
-        return { covering: false, cursor: choices(undefined, guaranteed.job), job: guaranteed.job };
+        return ordinaryFrame(guaranteed.job);
       }
       const leading = leadingRows();
       if (leading !== undefined) {
@@ -1068,7 +1112,7 @@ function* construct<Kind extends string, Mark>(
           }
           closureChecked = true;
         }
-        return { covering: false, cursor: choices(undefined, selected), job: selected };
+        return ordinaryFrame(selected);
       }
       return undefined;
     };
@@ -1217,7 +1261,20 @@ function* construct<Kind extends string, Mark>(
         }
       }
       frame.attempts++;
+      rejectedRule = undefined;
       const admitted = attempt(preferClear, option);
+      const pressuredRow = frame.pressure?.rows.get(option.candidate);
+      if (
+        admitted === "rejected" &&
+        pressuredRow !== undefined &&
+        rejectedRule !== undefined &&
+        SLOT_ROW_PRESSURE.rules.has(rejectedRule)
+      ) {
+        frame.pressure!.rejections.set(
+          pressuredRow,
+          (frame.pressure!.rejections.get(pressuredRow) ?? 0) + 1,
+        );
+      }
       if (backjump !== undefined && !stopped()) {
         while (frames.length - 1 > backjump) {
           const abandoned = frames.pop()!;

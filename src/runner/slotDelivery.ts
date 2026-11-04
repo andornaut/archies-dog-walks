@@ -48,6 +48,12 @@ export const SLOT_RUNTIME_DELIVERY_FLOOR = Object.freeze({
 // threshold for the rest of that allowance.
 export const SLOT_OMISSION_ATTEMPTS = Object.freeze({ explore: 128, reserve: 3 } as const);
 export const SLOT_OMISSION_RESERVE = Object.freeze({ denominator: 4, numerator: 3 } as const);
+// Runtime search moves a row behind a job's untried rows once this many of its values have been
+// rejected there for occupied space within one search frame, whose earlier placements stay fixed.
+export const SLOT_ROW_PRESSURE = Object.freeze({
+  rejections: 2,
+  rules: Object.freeze(new Set(["body", "cells"])),
+} as const);
 const EXACT_FLOOR = Object.freeze({ denominator: 1, numerator: 1 } as const);
 
 export function slotDeliveryFloor(policy: SlotDeliveryPolicy): SlotDeliveryFloor {

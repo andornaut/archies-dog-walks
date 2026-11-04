@@ -2011,3 +2011,60 @@ describe("balanced runtime ordinary selection", () => {
     },
   );
 });
+
+describe("runtime row pressure", () => {
+  function pressured(minimumDelivery: number | undefined) {
+    const road = { ...geometry, maxEmptyRows: Infinity };
+    const { jobs, path, ports, state } = fixture(road, [{ key: "cover" }, { key: "subject" }]);
+    const kind = (key: string) =>
+      prepareSlotKind({ movers: () => 0.5, spawns: () => 0.5 }, road, {
+        compile: () => ({ blocksLane: true, first: true, footprint: { lanes: 1, rows: 1 } }),
+        footprint: { lanes: 1, rows: 1 },
+        kind: key,
+        role: "minorFixed",
+        weight: 1,
+      });
+    const sources = [kind("first"), kind("second")];
+    const subject = { ...jobs[1]!, preparations: () => sources };
+    const ideal = Math.floor(((subject.ordinal + 0.5) * path.length) / subject.total);
+    const far = (row: number) => Math.abs(row - ideal) > 1;
+    const tested: { readonly kind: string; readonly row: number }[] = [];
+    const result = constructSlotWitness(
+      {
+        ...ports,
+        ...(minimumDelivery === undefined ? {} : { minimumDelivery }),
+        test(owner, candidate) {
+          if (owner !== subject) {
+            return ports.test(owner, candidate);
+          }
+          const { distance, kind } = candidate.entry.event;
+          const row = path.findIndex((step) => step.distance === distance);
+          tested.push({ kind, row });
+          if (kind === "second" && far(row)) {
+            return ports.test(owner, candidate);
+          }
+          // Both kinds meet occupied space beside the ideal row; the first kind's far rows fail on
+          // a rule that is not occupancy.
+          const rule = far(row) ? "kind-lane" : "cells";
+          return { accepted: false, failure: { classification: "conflict", owners: [], rule } };
+        },
+      },
+      road,
+      path,
+      [jobs[0]!, subject],
+    );
+    expect(state.entries()).toEqual([]);
+    return { ideal, result, second: tested.filter(({ kind }) => kind === "second") };
+  }
+
+  it("moves a row with repeated occupancy rejections behind untried rows", () => {
+    const runtime = pressured(2);
+    const exact = pressured(undefined);
+    expect(runtime.result.status).toBe("compatible");
+    expect(exact.result.status).toBe("compatible");
+    expect(exact.second[0]!.row).toBe(exact.ideal);
+    // Rejections other than occupancy leave far rows unpressured, so they come first.
+    expect(Math.abs(runtime.second[0]!.row - runtime.ideal)).toBeGreaterThan(1);
+    expect(runtime.second.length).toBeLessThan(exact.second.length);
+  });
+});

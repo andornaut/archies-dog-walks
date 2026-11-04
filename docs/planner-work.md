@@ -9,6 +9,7 @@ This record summarises the runtime spawn planner's contract and the qualificatio
 - **Search:** the planner tries the original order first, then makes at most one balanced fallback attempt, only after a construction failure.
 - **Budgets:** candidate checks and propagation checks have separate caps, each 65,536 cumulative across both attempts and 32,768 per attempt.
 - **Reuse:** runtime search records each native rejection whose rule depends only on the candidate and its attributed owners (cells, bodies, lanes, gaps, screen caps and same-kind visibility). While every such owner keeps its placement, a repeated test of that candidate is rejected again with no check and its traversal step with no propagation; the decision is the one the native test would make. This replaces the negative visibility lookup in runtime search; exact construction keeps it. Path and stop proofs are shared across motion tiers, and a projected tier anchor revalidates its view without rebuilding its entries.
+- **Row order:** runtime search tries a job's rows nearest its ideal row first. Within one search frame, whose earlier placements stay fixed, a row where two of the job's values have been rejected for occupied cells or bodies moves behind the job's untried rows (`SLOT_ROW_PRESSURE`). Each kind keeps its own row sequence; job order, the seeded kind order and the domain are unchanged, so a value that would have waited behind a saturated row is reached before the omission threshold. Exact construction keeps the fixed order.
 - **Capacity:** an offline check constructs and independently audits the exact 100% composition. It is a separate, non-gating audit.
 
 ## Architecture
@@ -32,6 +33,7 @@ Counts apply only to the stated source and test collection; they do not transfer
 
 | Source                     | Result                                                                 |
 | -------------------------- | ---------------------------------------------------------------------- |
+| `49d51685` + row order     | 72-plan acceptance: 72/72 complete; peak 23,323 of 32,768 per attempt  |
 | `5a2c4cd3` runtime-16      | 16/16 valid: 12 complete, 4 partial; 3,005 of 3,033 requests delivered |
 | `5a2c4cd3` original-41     | 41/41 valid: 40 complete, 1 partial; 62 assertion uses, 10 quiet pairs |
 | `38ef5717` runtime-16      | 16/16 valid: 7 complete, 9 partial                                     |
