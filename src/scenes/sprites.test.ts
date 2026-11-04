@@ -232,9 +232,10 @@ function shopIdleScene(loaded = true, sheet?: unknown) {
 describe("Pet shop idle invitation", () => {
   it("uses the shipped door-wave metadata and retains pressed frame 1 when interrupted", () => {
     const shown = shopIdleScene(true, petShopSheet);
+    const doorWave = petShopSheet.meta.frameTags.find(({ name }) => name === "door-wave");
     expect(shown.tag.frames).toHaveLength(16);
-    expect(shown.tag.frames[0]?.textureFrame).toBe("ui-pet-shop 9.aseprite");
-    expect(shown.tag.frames[15]?.textureFrame).toBe("ui-pet-shop 24.aseprite");
+    expect(shown.tag.frames[0]?.textureFrame).toBe(`ui-pet-shop ${doorWave?.from}.aseprite`);
+    expect(shown.tag.frames[15]?.textureFrame).toBe(`ui-pet-shop ${doorWave?.to}.aseprite`);
     expect(shown.tag.frames.every(({ duration }) => duration === 120)).toBe(true);
     expect(shown.tag.frames.reduce((total, { duration }) => total + duration, 0)).toBe(1920);
     shown.tick(0);
