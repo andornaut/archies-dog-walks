@@ -1,4 +1,4 @@
-// Draw The Beaches' and Yonge Street's own road objects, their card obstacles' hits and sounds.
+// Draw The Beaches' and Yonge Street's own road objects, their card obstacles' cards, hits and sounds.
 //
 // The Beaches:
 // dropped-ice-cream   48x72   card obstacle (Dropped ice cream): a kid in a peach sundress with brown
@@ -97,6 +97,18 @@
 // fx-hit-big-screen-promo   the impact star in amber, then camera flashes popping round a white flash
 //                           that shrinks away, confetti in cyan, pink and yellow falling
 //
+// Cards (75x56 images, composed from the sprites above as cards.ts composes its own):
+// card-dropped-ice-cream-lick         Archie licking the pink puddle round the dropped cone, the kid
+//                                     by it, sky speed lines and icon-zoomies' amber paw print for
+//                                     the sugar rush
+// card-dropped-ice-cream-buy          the kid holding a new cone up under hearts, a callout of -$
+// card-dropped-ice-cream-walk-on-by   Archie pulled away from the dropped cone on its leash
+// card-big-screen-promo-wave          Archie under a spotlight beam, the promoter filming, flashes
+//                                     round it
+// card-big-screen-promo-merch         the promoter's turquoise star tee held up as merch, a callout
+//                                     of -$
+// card-big-screen-promo-push-through  Archie pulling past the promoter, speed lines behind it
+//
 // Sounds (sounds.ts's format, under 0.6s):
 // sfx-hit-dropped-ice-cream  0.54s  splat: a pink noise plop over a low falling triangle, then a sad
 //                                   triangle "aww" sliding down a fifth
@@ -105,6 +117,13 @@
 //
 // Run from the repository root. A build overwrites the .aseprite sources, so hand edits to them
 // belong in this file instead. Shared tooling is in pixel.ts.
+import { execFileSync } from "node:child_process";
+import { mkdirSync, writeFileSync } from "node:fs";
+
+import { encodeRgbPng } from "@andornaut/art-kit/png";
+import { filledImage, paste, resizeNearest } from "@andornaut/art-kit/raster";
+import type { RgbaImage } from "@andornaut/art-kit/rgbaImage";
+
 import { dressed } from "./depths.ts";
 import { burst } from "./fx.ts";
 import * as hits from "./hits.ts";
@@ -129,6 +148,7 @@ import {
   type Sprite,
   swapped,
   type Tag,
+  toImage,
 } from "./pixel.ts";
 import {
   BREATH,
@@ -147,13 +167,16 @@ import {
   treads,
   unit,
 } from "./road.ts";
+import { image } from "./scene.ts";
 import { type Effects, renderEffects } from "./sounds.ts";
 
 const USAGE = `Usage:
   node art/tools/hood_city.ts preview OUT.png   every frame of every sprite on the zone roads
+  node art/tools/hood_city.ts cards OUT.png     every card illustration in its card frame, scaled up
   node art/tools/hood_city.ts sounds OUT_DIR    write the two sounds into OUT_DIR only
   node art/tools/hood_city.ts build             write art/hood-city/*.aseprite, export the sprites
-                                                to public/art/sprites/ and the sounds to
+                                                to public/art/sprites/, the cards to
+                                                public/art/images/ and the sounds to
                                                 public/art/sounds/`;
 
 const SRC = "art/hood-city";
@@ -1585,6 +1608,175 @@ export function merchTee(): Drawable {
   return lit(g);
 }
 
+// cards.ts, loaded on first use: only the card commands need it and its image dependencies.
+type Cards = typeof import("./cards.ts");
+type Art = InstanceType<Cards["Art"]>;
+
+async function loadCards(): Promise<Cards> {
+  return import("./cards.ts");
+}
+
+// Let them lick it: Archie leaning in to lick the pink puddle round the dropped cone, the kid looking
+// on, and the sugar rush hitting him: sky speed lines streaming off him and an amber paw print
+// dashing, as icon-zoomies draws the zoomies.
+function cardLick(cards: Cards): Art {
+  const a = new cards.Art();
+  a.ground("theBeaches");
+  a.put("dropped-ice-cream", "idle", 20, 60, { i: 1 });
+  const c = a.dog("archie", "pull", 50, 57, { flip: true });
+  a.lead(50, c, 62);
+  for (const [x, y, n] of [
+    [63, 22, 6],
+    [65, 27, 8],
+    [63, 32, 5],
+  ] as const) {
+    a.fill(x, y, n, 1, "sky");
+  }
+  a.paste(image("icon-zoomies"), 52, 2);
+  return a;
+}
+
+// The kid holding up a new cone under hearts, a callout of -$.
+function cardBuy(cards: Cards): Art {
+  const a = new cards.Art();
+  a.ground("theBeaches");
+  const img = toImage(small(roadScope, scope, P, kidWithCone).outlined());
+  a.shadow(40, 56, 30);
+  a.paste(img, 40 - Math.floor(img.width / 2), 60 - img.height);
+  a.hearts([
+    [56, 10],
+    [62, 22],
+  ]);
+  a.bubble(3, 6, 24, ["-$"], "dred");
+  return a;
+}
+
+// Walk on by: Archie pulled away from the dropped cone on its leash.
+function cardWalkOnBy(cards: Cards): Art {
+  const a = new cards.Art();
+  a.ground("theBeaches");
+  a.put("dropped-ice-cream", "idle", 52, 60);
+  const c = a.dog("archie", "pull", 18, 56, { flip: true });
+  a.lead(18, c, 6);
+  a.fill(31, 6, 2, 5, "red");
+  a.fill(31, 12, 2, 2, "red");
+  return a;
+}
+
+// A spotlight's beam from the art's top edge (x0 to x1) down to a pool round (cx, cy), rx wide: the
+// beam flat ash, a step up the road's slate ramp, so it lights the road without texture, and the pool
+// flat gold with a yellow centre.
+function beam(a: Art, x0: number, x1: number, cx: number, cy: number, rx: number): void {
+  for (let y = 0; y < cy + 4; y++) {
+    const t = Math.min(1, y / cy);
+    const left = Math.trunc(x0 + (cx - rx - x0) * t);
+    const right = Math.trunc(x1 + (cx + rx - x1) * t);
+    a.fill(left, y, right - left + 1, 1, "ash");
+  }
+  for (let y = cy - 4; y < cy + 5; y++) {
+    for (let x = cx - rx; x < cx + rx + 1; x++) {
+      const d = ((x - cx) / rx) ** 2 + ((y - cy) / 4) ** 2;
+      if (d <= 1) {
+        a.fill(x, y, 1, 1, d <= 0.4 ? "yellow" : "gold");
+      }
+    }
+  }
+}
+
+// Archie in a spotlight's pool, the promoter filming it, a flash popping.
+function cardWave(cards: Cards): Art {
+  const a = new cards.Art();
+  a.ground("yongeStreet");
+  beam(a, 0, 26, 24, 52, 17);
+  a.put("big-screen-promo", "idle", 60, 68);
+  const c = a.dog("archie", "idle", 24, 56, { shadow: false });
+  a.lead(24, c, 18);
+  a.sparkle(42, 10, "white");
+  return a;
+}
+
+// The promoter's star tee held up as merch, a callout of -$.
+function cardMerch(cards: Cards): Art {
+  const a = new cards.Art();
+  a.ground("yongeStreet");
+  a.put("big-screen-promo", "idle", 22, 68);
+  a.paste(toImage(merchTee().outlined()), 42, 26);
+  a.bubble(46, 5, 24, ["-$"], "dred");
+  return a;
+}
+
+// Archie pulling past the promoter, speed lines behind it.
+function cardPushThrough(cards: Cards): Art {
+  const a = new cards.Art();
+  a.ground("yongeStreet");
+  a.put("big-screen-promo", "walk", 56, 68, { i: 1 });
+  const c = a.dog("archie", "pull", 24, 58);
+  a.lead(24, c, 12);
+  for (const [y, x, w] of [
+    [32, 3, 8],
+    [39, 1, 10],
+    [46, 4, 7],
+  ] as const) {
+    a.fill(x, y, w, 1, "white");
+  }
+  return a;
+}
+
+const ILLUSTRATIONS: ReadonlyMap<string, (cards: Cards) => Art> = new Map([
+  ["card-dropped-ice-cream-lick", cardLick],
+  ["card-dropped-ice-cream-buy", cardBuy],
+  ["card-dropped-ice-cream-walk-on-by", cardWalkOnBy],
+  ["card-big-screen-promo-wave", cardWave],
+  ["card-big-screen-promo-merch", cardMerch],
+  ["card-big-screen-promo-push-through", cardPushThrough],
+]);
+
+// An RGB PNG as Pillow saves one by default.
+function rgbPng(image: RgbaImage): Uint8Array {
+  return encodeRgbPng({ deflateLevel: 6, deflateStrategy: 0, filterType: -1 }, image);
+}
+
+// Every card illustration inside an encounter card frame, scaled up, with the illustrations added to
+// cards.ts's for the run.
+async function cardsPreview(out: string, scale = 4): Promise<void> {
+  const cards = await loadCards();
+  const sheet = filledImage(
+    [24, 20, 37, 255],
+    (cards.CW + 6) * ILLUSTRATIONS.size * scale,
+    (cards.CH + 6) * scale,
+  );
+  for (const [key, draw] of ILLUSTRATIONS) {
+    cards.ILLUSTRATIONS.set(key, () => draw(cards));
+  }
+  try {
+    [...ILLUSTRATIONS.keys()].forEach((key, i) => {
+      const card = resizeNearest(
+        cards.CW * scale,
+        cards.CH * scale,
+        cards.mockCard("encounter", key),
+      );
+      paste({ at: { x: i * (cards.CW + 6) * scale, y: 0 } }, card, sheet);
+    });
+  } finally {
+    for (const key of ILLUSTRATIONS.keys()) {
+      cards.ILLUSTRATIONS.delete(key);
+    }
+  }
+  writeFileSync(out, rgbPng(sheet));
+}
+
+async function buildCards(): Promise<void> {
+  const cards = await loadCards();
+  mkdirSync("public/art/images", { recursive: true });
+  for (const [key, draw] of ILLUSTRATIONS) {
+    const png = `public/art/images/${key}.png`;
+    writeFileSync(png, rgbPng(draw(cards).img));
+    execFileSync("aseprite", ["-b", png, "--save-as", `${SRC}/${key}.aseprite`], {
+      stdio: "inherit",
+    });
+  }
+}
+
 // ---------- sounds ----------
 
 export const EFFECTS: Effects = {
@@ -1654,13 +1846,16 @@ export function renderSounds(outDir: string): string[] {
 
 async function buildAll(): Promise<void> {
   await build({}, SRC, [...sprites(), ...bursts()]);
-  console.log("built", renderSounds("public/art/sounds").join(", "));
+  await buildCards();
+  console.log("built", [...ILLUSTRATIONS.keys(), ...renderSounds("public/art/sounds")].join(", "));
 }
 
 if (import.meta.main) {
   const argv = process.argv.slice(2);
   if (argv.length === 2 && argv[0] === "preview") {
     await preview({}, depthSettled({}, [...sprites(), ...bursts()]), argv[1]!);
+  } else if (argv.length === 2 && argv[0] === "cards") {
+    await cardsPreview(argv[1]!);
   } else if (argv.length === 2 && argv[0] === "sounds") {
     console.log("wrote", renderSounds(argv[1]!).join(", "));
   } else if (argv.length === 1 && argv[0] === "build") {
