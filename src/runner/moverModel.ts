@@ -224,3 +224,12 @@ export interface MoverSpawn<Kind extends string> {
   readonly lane: number;
   readonly mover: MoverPath;
 }
+
+// What a mover's placement builders read: the road's geometry, the mover's spec and draws, and
+// the planner's admission hook before each unique placement, if it has one.
+export interface PlacementContext {
+  readonly draws: MoverDraws;
+  readonly geometry: MoverGeometry;
+  readonly spec: MoverSpec;
+  readonly work: MoverPlacementWork | undefined;
+}

@@ -26,6 +26,7 @@ import type {
   MoverPlacement,
   MoverPlacementWork,
   MoverSpec,
+  PlacementContext,
   ShyHops,
 } from "./moverModel.ts";
 import {
@@ -92,13 +93,11 @@ function crossTilts(
 // spawn stands where it crosses. It has placements for each of its stops, from either side, each
 // with the lanes it covers there.
 function crossPlacements(
-  work: MoverPlacementWork | undefined,
-  geometry: MoverGeometry,
-  spec: MoverSpec,
+  context: PlacementContext,
   motion: Extract<MoverMotion, { kind: "cross" }>,
-  draws: MoverDraws,
   lift: number,
 ): MoverPlacement[] {
+  const { draws, geometry, spec } = context;
   const { cellLength, laneCount, scrollSpeed, sightLength } = geometry;
   const warning = spec.warningSeconds * scrollSpeed;
   const cueOnRoad = 1 - (warning + cellLength) / sightLength;
@@ -128,7 +127,7 @@ function crossPlacements(
   }
   const shared = { crosses, lanesPerPixel, span, stopAfter, tilt, turnAfter, warning };
   if (motion.pause === undefined) {
-    return crossPlacementsAt(work, geometry, spec, motion, draws, lift, {
+    return crossPlacementsAt(context, motion, lift, {
       ...shared,
       after: null,
       directions: [1, -1],
@@ -136,7 +135,7 @@ function crossPlacements(
   }
   return motion.pause.stops.flatMap((stop) =>
     ([1, -1] as const).flatMap((direction) =>
-      crossPlacementsAt(work, geometry, spec, motion, draws, lift, {
+      crossPlacementsAt(context, motion, lift, {
         ...shared,
         after: stopCrossed(laneCount, span, direction, stop),
         directions: [direction],
@@ -177,14 +176,12 @@ interface CrossShape {
 // A crosser's placements from each of its sides, with its pause, if it has one, at one stop
 // (crossPlacements).
 function crossPlacementsAt(
-  work: MoverPlacementWork | undefined,
-  geometry: MoverGeometry,
-  spec: MoverSpec,
+  context: PlacementContext,
   motion: Extract<MoverMotion, { kind: "cross" }>,
-  draws: MoverDraws,
   lift: number,
   shape: CrossShape,
 ): MoverPlacement[] {
+  const { draws, geometry, spec, work } = context;
   const { cellLength, laneCount, roadLength, rowSpacing, scrollSpeed, sightLength, window } =
     geometry;
   const { after, crosses, lanesPerPixel, span, stopAfter, tilt, turnAfter, warning } = shape;
@@ -332,12 +329,10 @@ function crossPlacementsAt(
 // before pack contact. With no room for the complete merge itself, it
 // has no placement. It is placed as a rider over both its lanes, blocking and standing in each.
 function ridePlacements(
-  work: MoverPlacementWork | undefined,
-  geometry: MoverGeometry,
-  spec: MoverSpec,
+  context: PlacementContext,
   motion: Extract<MoverMotion, { kind: "ride" }>,
-  draws: MoverDraws,
 ): MoverPlacement[] {
+  const { draws, geometry, spec, work } = context;
   const { cellLength, laneCount, roadLength, rowSpacing, scrollSpeed, sightLength } = geometry;
   const speedMultiplier = motion.speedMultiplier * speedFactor(spec.variation, draws);
   if (speedMultiplier <= 0 || speedMultiplier === 1) {
@@ -441,12 +436,11 @@ interface StandOffset {
 // spot. It spawns late enough that its furthest spot toward the pack meets the pack no sooner
 // than its row would.
 function standingPlacements(
-  work: MoverPlacementWork | undefined,
-  geometry: MoverGeometry,
-  spec: MoverSpec,
+  context: PlacementContext,
   spots: readonly StandOffset[],
   pathAt: (start: number) => MoverPath,
 ): MoverPlacement[] {
+  const { geometry, spec, work } = context;
   const { cellLength, laneCount, roadLength, rowSpacing, window } = geometry;
   const { lanes: across, rows } = spec.footprint;
   const height = rows * cellLength;
@@ -499,12 +493,10 @@ function standingPlacements(
 // in the lane it leaves while it comes level with the row it reaches, and in the lane it reaches
 // while still level with the row it leaves.
 function stepsPlacements(
-  work: MoverPlacementWork | undefined,
-  geometry: MoverGeometry,
-  spec: MoverSpec,
+  context: PlacementContext,
   motion: Extract<MoverMotion, { kind: "steps" }>,
-  draws: MoverDraws,
 ): MoverPlacement[] {
+  const { draws, geometry, spec } = context;
   const { cellLength, scrollSpeed, sightLength } = geometry;
   const warning = spec.warningSeconds * scrollSpeed;
   const length = motion.stepSeconds * scrollSpeed;
@@ -514,7 +506,7 @@ function stepsPlacements(
   const gap = motion.cueEach === true ? Math.max(pause, warning) : pause;
   const drift = motion.drift ?? 0;
   if (motion.shy !== undefined && draws.shy < motion.shy.share) {
-    return shyPlacements(work, geometry, spec, motion.shy, motion.stepSeconds, count, draws);
+    return shyPlacements(context, motion.shy, motion.stepSeconds, count);
   }
   const ways = motion.sequences.filter((sequence) => sequence.length === count);
   const prefixes = new Map<string, MoverPlacement[]>();
@@ -565,7 +557,7 @@ function stepsPlacements(
     if (existing !== undefined) {
       return existing;
     }
-    const placements = standingPlacements(work, geometry, spec, [...spots, ...corners], (lane) => ({
+    const placements = standingPlacements(context, [...spots, ...corners], (lane) => ({
       lane,
       motion: "steps",
       movement: spec.movement,
@@ -592,12 +584,10 @@ function reachesOf(side: number): readonly (readonly [number, number])[] {
 // Choreography ends before pack contact. Reserve its whole continuous body sweep against
 // other spawns, but block the guaranteed path only during actual contact with the pack.
 function signaturePlacements(
-  work: MoverPlacementWork | undefined,
-  geometry: MoverGeometry,
-  spec: MoverSpec,
+  context: PlacementContext,
   profile: SignatureProfile,
-  draws: MoverDraws,
 ): MoverPlacement[] {
+  const { draws, geometry, spec, work } = context;
   const { cellLength, laneCount, roadLength, rowSpacing, scrollSpeed, sightLength, window } =
     geometry;
   const span = spec.footprint.lanes;
@@ -721,19 +711,16 @@ function signaturePlacements(
 // draw ranked highest: it may stand at every travel given in every lane of its reach. pathAt makes
 // its path from its start lane and its reach.
 function reachPlacements(
-  work: MoverPlacementWork | undefined,
-  geometry: MoverGeometry,
-  spec: MoverSpec,
-  side: number,
+  context: PlacementContext,
   travels: readonly number[],
   pathAt: (lane: number, reach: LaneSpan) => MoverPath,
 ): MoverPlacement[] {
-  const reaches = reachesOf(side);
+  const reaches = reachesOf(context.draws.side);
   return reaches.flatMap(([left, right], rank) => {
     const spots = Array.from({ length: right - left + 1 }, (_, i) =>
       travels.map((travel) => ({ lane: left + i, travel })),
     ).flat();
-    return standingPlacements(work, geometry, spec, spots, (lane) =>
+    return standingPlacements(context, spots, (lane) =>
       pathAt(lane, { count: right - left + 1, first: lane + left }),
     ).map((placement) => ({ ...placement, rank: reaches.length - rank }));
   });
@@ -748,12 +735,10 @@ function reachPlacements(
 // the tallest pack's rows at sightLength, is down to its drawn share of the road's length. Each
 // step is its drawn length.
 function approachPlacements(
-  work: MoverPlacementWork | undefined,
-  geometry: MoverGeometry,
-  spec: MoverSpec,
+  context: PlacementContext,
   motion: Extract<MoverMotion, { kind: "approach" }>,
-  draws: MoverDraws,
 ): MoverPlacement[] {
+  const { draws, geometry, spec } = context;
   const { cellLength, roadLength, scrollSpeed, sightLength } = geometry;
   const warning = spec.warningSeconds * scrollSpeed;
   const height = spec.footprint.rows * cellLength;
@@ -773,7 +758,7 @@ function approachPlacements(
   const lengths = Array.from({ length: steps }, (_, i) =>
     moveLength(spec.variation, draws, i, motion.stepSeconds * scrollSpeed),
   );
-  return reachPlacements(work, geometry, spec, draws.side, travels, (lane, reach) => ({
+  return reachPlacements(context, travels, (lane, reach) => ({
     burst: cellLength,
     lane,
     lengths,
@@ -796,14 +781,12 @@ function approachPlacements(
 // road, and each later hop, with no cue, starts as the hop before ends, up to its drawn delay
 // later; it makes as many hops as its drawn count, each its drawn length.
 function shyPlacements(
-  work: MoverPlacementWork | undefined,
-  geometry: MoverGeometry,
-  spec: MoverSpec,
+  context: PlacementContext,
   shy: ShyHops,
   hopSeconds: number,
   count: number,
-  draws: MoverDraws,
 ): MoverPlacement[] {
+  const { draws, geometry, spec } = context;
   const { cellLength, scrollSpeed, sightLength } = geometry;
   const warning = spec.warningSeconds * scrollSpeed;
   const height = spec.footprint.rows * cellLength;
@@ -821,7 +804,7 @@ function shyPlacements(
     );
   }
   const travels = Array.from({ length: shy.rise + 1 }, (_, row) => -row * cellLength);
-  return reachPlacements(work, geometry, spec, draws.side, travels, (lane, reach) => ({
+  return reachPlacements(context, travels, (lane, reach) => ({
     burst: cellLength,
     lane,
     lengths,
@@ -855,17 +838,18 @@ export function moverPlacementsWithWork(
   draws: MoverDraws = EVEN_DRAWS,
   lift = 0,
 ): MoverPlacement[] {
+  const context: PlacementContext = { draws, geometry, spec, work };
   const { motion } = spec;
   switch (motion.kind) {
     case "signature":
-      return signaturePlacements(work, geometry, spec, motion.profile, draws);
+      return signaturePlacements(context, motion.profile);
     case "approach":
-      return approachPlacements(work, geometry, spec, motion, draws);
+      return approachPlacements(context, motion);
     case "cross":
-      return crossPlacements(work, geometry, spec, motion, draws, lift);
+      return crossPlacements(context, motion, lift);
     case "ride":
-      return ridePlacements(work, geometry, spec, motion, draws);
+      return ridePlacements(context, motion);
     default:
-      return stepsPlacements(work, geometry, spec, motion, draws);
+      return stepsPlacements(context, motion);
   }
 }
