@@ -122,8 +122,8 @@ function atlasBlits(blits: PageLayout["blits"]): AtlasBlit[] {
 
 // Packs every image, font PNG and sprite frame of the art manifest into atlas pages, with a
 // disabled tile's grey copy of each picture one can grey, reading each file by its path
-// relative to the art directory. A key whose files cannot be read or parsed, or with a frame
-// too large for a page, is left out with a warning.
+// relative to the art directory. A key whose files cannot be read or parsed rejects the build;
+// a key with a frame too large for a page is left out with a warning.
 export async function buildAtlases(
   readArt: (path: string) => Promise<Uint8Array>,
   inputs: AtlasInputs = {},
@@ -141,15 +141,14 @@ export async function buildAtlases(
   const sourceOf = async (
     key: string,
     read: () => Promise<SourceTexture>,
-  ): Promise<SourceTexture[]> => {
+  ): Promise<SourceTexture> => {
     try {
-      return [await read()];
+      return await read();
     } catch (error) {
-      warnings.push(`${key} is left out of the atlas: ${String(error)}`);
-      return [];
+      throw new Error(`${key} cannot be packed into the atlas: ${String(error)}`, { cause: error });
     }
   };
-  const sources = await Promise.all([
+  const packed = await Promise.all([
     ...[...manifest.images, ...manifest.fonts].map(({ key, png }) =>
       sourceOf(key, async () => {
         const { height, width } = await readPng(png);
@@ -172,7 +171,6 @@ export async function buildAtlases(
     ),
   ]);
 
-  const packed = sources.flat();
   const disabled = packed
     .filter(({ key }) => greysOnTile(key))
     .map((texture) => disabledCopy(images, texture));

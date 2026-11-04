@@ -81,25 +81,28 @@ it("maps Archie source policy, blits, output names and metadata through the shar
   });
 });
 
-it("keeps source-read and oversized-asset warnings as game policy", async () => {
+it("keeps the oversized-asset warning as game policy", async () => {
   vi.mocked(layoutAtlases).mockReturnValue({ pages: [], skipped: ["too-big"], textures: [] });
   vi.mocked(buildAtlasPages).mockResolvedValue([]);
+  const manifest: AssetManifest = { fonts: [], images: [], sounds: [], sprites: [] };
+  const build = await buildAtlases(async () => new Uint8Array(), { manifest });
+  expect(build.warnings).toEqual(["too-big has a frame too large for an atlas page"]);
+});
+
+it("rejects a source file it cannot read", async () => {
   const manifest: AssetManifest = {
     fonts: [],
     images: [{ key: "missing", png: "missing.png" }],
     sounds: [],
     sprites: [],
   };
-  const build = await buildAtlases(
-    async () => {
-      throw new Error("unreadable");
-    },
-    { manifest },
+  const read = async () => {
+    throw new Error("unreadable");
+  };
+  await expect(buildAtlases(read, { manifest })).rejects.toThrow(
+    "missing cannot be packed into the atlas: Error: unreadable",
   );
-  expect(build.warnings).toEqual([
-    "missing is left out of the atlas: Error: unreadable",
-    "too-big has a frame too large for an atlas page",
-  ]);
+  expect(layoutAtlases).not.toHaveBeenCalled();
 });
 
 describe("compactFrames", () => {
