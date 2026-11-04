@@ -274,9 +274,6 @@ for (const [section] of PICKER_HUES) {
   DARKER.set(PICKER_UI[`picker${section}Header`]!, PICKER_UI[`picker${section}Body`]!);
 }
 
-// The contrast roads: dslate (dark, the Distillery District's), then the roads an outline must hold 3:1
-// on: tan, pink and skin2 (light) and Kensington Market's stone (mid grey), which takes it nearly to ink.
-export const ROADS: readonly string[] = ["3a4466", "e4a672", "f6757a", "c28569", "8a857c"];
 // The zones' art ids in the tools' order, which the preview grounds and ui-zone-pips' tags keep.
 const ZONE_ORDER: readonly string[] = [
   "cabbagetown",
@@ -305,6 +302,16 @@ function zoneRoadColours(): Map<string, string> {
 export const ZONE_ROAD_COLOURS: ReadonlyMap<string, string> = zoneRoadColours();
 // The zone roads, the preview grounds when a set names none.
 export const ZONE_ROADS: readonly string[] = [...ZONE_ROAD_COLOURS.values()];
+
+// The contrast roads: the Distillery District's (dark), then the roads an outline must hold 3:1 on: tan,
+// pink and skin2 (light) and Kensington Market's (mid grey), which takes it nearly to ink.
+export const ROADS: readonly string[] = [
+  ZONE_ROAD_COLOURS.get("distillery-district")!,
+  K.tan!,
+  K.pink!,
+  K.skin2!,
+  ZONE_ROAD_COLOURS.get("kensington-market")!,
+];
 
 // A colour's hex: a K name's, or the colour itself.
 export function hexOf(c: string): string {
