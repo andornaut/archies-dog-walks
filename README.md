@@ -36,9 +36,9 @@ Use Node 24.21.0 (`.nvmrc`). Run `npm ci`, then:
 | `npm run simulate -- --help`                | Simulate runs ([src/README.md](src/README.md), Simulator)                  |
 | `npm test`                                  | Run the unit tests                                                         |
 
-The site's pages are in `pages/`, each at its URL's path (`pages/play/index.html` is `/play/`), and Vite bundles the TypeScript they load. `public/` is copied into the build unchanged: the art, the nav bar, the icons, and the art gallery, `public/art/index.html`. `shared/` holds the files art's tools and the game both read. The game imports shared helpers through `@andornaut/game-kit/<path>`, installed from the versioned [game-kit release](https://github.com/andornaut/game-kit/releases/tag/v0.9.0) pinned in `package-lock.json`. The installed package records its source revision in `SOURCE_COMMIT`.
+The site's pages are in `pages/`, each at its URL's path (`pages/play/index.html` is `/play/`), and Vite bundles the TypeScript they load. `public/` is copied into the build unchanged: the art, the nav bar, the icons, and the art gallery, `public/art/index.html`. `shared/` holds the files art's tools and the game both read. The game imports shared helpers through `@andornaut/game-kit/<path>`, installed from the [game-kit release](https://github.com/andornaut/game-kit/releases) pinned in `package.json`. The installed package records its source revision in `SOURCE_COMMIT`.
 
-Art build tools are TypeScript modules in `art/tools/`, which Node runs directly on the versioned [art-kit release](https://github.com/andornaut/art-kit/releases/tag/v0.12.0) pinned in `package-lock.json`, for example
+Art build tools are TypeScript modules in `art/tools/`, which Node runs directly on the [art-kit release](https://github.com/andornaut/art-kit/releases) pinned in `package.json`, for example
 `node art/tools/glyphs.ts build`.
 
 Run local checks in a `node:24.21.0` container as `--user 19001:19001 --group-add "$(stat -c %g <checkout>)" -e HOME=/tmp`. Bind-mount host paths only with `--mount type=bind,src=<path>,dst=<path>,readonly`, never `-v`, which creates a missing source as root. Copy outputs out with `docker cp`.
@@ -59,6 +59,6 @@ Deployment scope is the complete batch diff. A batch changing only Markdown, `ar
 
 ## Licence
 
-Everything here (code, art, sound, music and writing) is licensed [CC BY-NC-SA 4.0](./LICENSE): share and remix it with credit to andornaut and a link to this project, for non-commercial use, under the same licence. The game's names and logos are not licensed, so a remix must use its own name. The separately installed game-kit helpers are licensed [MIT](https://github.com/andornaut/game-kit/blob/057e6c1809cd6ea7485868bfe5fa4014e1ef3b78/LICENSE).
+Everything here (code, art, sound, music and writing) is licensed [CC BY-NC-SA 4.0](./LICENSE): share and remix it with credit to andornaut and a link to this project, for non-commercial use, under the same licence. The game's names and logos are not licensed, so a remix must use its own name. The separately installed game-kit helpers are licensed [MIT](https://github.com/andornaut/game-kit/blob/main/LICENSE).
 
-The separately installed art-kit helpers are licensed [MIT](https://github.com/andornaut/art-kit/blob/df5476c9d644d37801e515ce8541d73b80eff1ec/LICENSE).
+The separately installed art-kit helpers are licensed [MIT](https://github.com/andornaut/art-kit/blob/main/LICENSE).
