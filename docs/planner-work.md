@@ -31,6 +31,8 @@ Counts apply only to the stated source and test collection; they do not transfer
 
 | Source                     | Result                                                                 |
 | -------------------------- | ---------------------------------------------------------------------- |
+| `5a2c4cd3` runtime-16      | 16/16 valid: 12 complete, 4 partial; 3,005 of 3,033 requests delivered |
+| `5a2c4cd3` original-41     | 41/41 valid: 40 complete, 1 partial; 62 assertion uses, 10 quiet pairs |
 | `38ef5717` runtime-16      | 16/16 valid: 7 complete, 9 partial                                     |
 | `38ef5717` original-41     | 41/41 valid: 33 complete, 8 partial; 62 assertion uses, 10 quiet pairs |
 | `38ef5717` unit suite      | 6,950 passed                                                           |
