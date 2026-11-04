@@ -12,7 +12,7 @@ The game's pixel art, effects and sound, drawn by script.
 ## Scope
 
 - `art/`: the generators in `art/tools/`, the source fonts in `art/fonts/` and these docs.
-- `public/art/`: the exported sprites, images, fonts and sounds, `manifest.extra.json` and the `/art/` gallery. Mocks for decisions are shown in the chat, not committed. The game build generates `manifest.json` beside them.
+- `public/art/`: the exported sprites, images, fonts and sounds, `manifest.extra.json` and the `/art/` gallery. Mocks for decisions are shown in the chat, not committed. `manifest.json` beside them is derived from the files and committed (`npm run art:manifest`); the game build rewrites it before packing the atlases.
 - Also drawn here: the site's icons, `public/og-image.png` and the art on the home page.
 
 ## Method
