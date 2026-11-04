@@ -3,7 +3,8 @@ import type { Plugin } from "vite";
 
 import type { ArtFileMap } from "../../assets/artUrl.ts";
 import { ART_DIR, ART_MANIFEST, artManifestText, generateArtManifest } from "../artManifest.ts";
-import { nodeArtFiles, writeIfChanged } from "../files.ts";
+import { limitConcurrency } from "../concurrency.ts";
+import { nodeArtFiles, OPEN_FILE_LIMIT, writeIfChanged } from "../files.ts";
 import { buildAtlases, WEBP_PAGES } from "./atlasBuild.ts";
 import { ART_FILES_MODULE, hashGameArt } from "./hashedArt.ts";
 
@@ -33,7 +34,10 @@ export function atlasPlugin(): Plugin & { api: AtlasPluginApi } {
         return;
       }
       const artDir = `${config.publicDir}/${ART_DIR}`;
-      const readArt = async (path: string) => this.fs.readFile(`${artDir}/${path}`);
+      // The atlas build and hashGameArt read every art file in parallel.
+      const readArt = limitConcurrency(OPEN_FILE_LIMIT, async (path: string) =>
+        this.fs.readFile(`${artDir}/${path}`),
+      );
       const decoded = new Map<string, RgbaImage>();
       const art = await generateArtManifest(nodeArtFiles(artDir), decoded);
       if (await writeIfChanged(`${artDir}/${ART_MANIFEST}`, artManifestText(art))) {

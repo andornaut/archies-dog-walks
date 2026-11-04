@@ -2,6 +2,11 @@ import { mkdir, readdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 
 import type { ArtFiles } from "./artManifest.ts";
+import { limitConcurrency } from "./concurrency.ts";
+
+// The most files a build-time reader holds open at once, well under common soft limits on open
+// files (256 on some hosts), since its callers read every art file in parallel.
+export const OPEN_FILE_LIMIT = 32;
 
 // The generated files are committed, so they are written in one stable form: two-space
 // indents and a final newline, as art's tools write JSON.
@@ -100,10 +105,14 @@ export async function writeOrCheck(
   return 0;
 }
 
-// The art directory on disk, for generateArtManifest.
+// The art directory on disk, for generateArtManifest, reading at most OPEN_FILE_LIMIT files at
+// once.
 export function nodeArtFiles(artDir: string): ArtFiles {
   return {
     list: async (dir) => fileNames(join(artDir, dir)),
-    read: async (path) => new Uint8Array(await readFile(join(artDir, path))),
+    read: limitConcurrency(
+      OPEN_FILE_LIMIT,
+      async (path: string) => new Uint8Array(await readFile(join(artDir, path))),
+    ),
   };
 }
