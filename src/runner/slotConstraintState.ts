@@ -32,6 +32,14 @@ const MONOTONE_RULES = new Set([
   "screen-cap",
   "wide-gap",
 ]);
+// An attributed failure of these rules persists while every attributed owner keeps its placement:
+// each needs only the candidate and its owners, and visibility rejects on any same-kind contributor.
+const HELD_RULES = new Set([...MONOTONE_RULES, "kind-cap", "kind-entry", "kind-lane", "kind-row"]);
+
+export type ConflictBlockers<Kind extends string> = readonly (readonly [
+  ConstraintOwner,
+  SlotPlacement<Kind>,
+])[];
 
 function isMonotoneConflict(
   failure: Extract<ConstraintResult<string>, { accepted: false }>["failure"],
@@ -271,6 +279,9 @@ function createNativeSlotState<Kind extends string>(
 
   let immutablePrefix = true;
   const owners = new Map<string, ConstraintOwner>();
+  // Each placed owner's unbound source entry, for conflict blockers that outlive a restore.
+  const sources = new WeakMap<SlotPlacement<Kind>, SlotPlacement<Kind>>();
+  const placed = new Map<ConstraintOwner, SlotPlacement<Kind>>();
   const checkpoints = new WeakMap<
     ConstraintCheckpoint,
     {
@@ -356,6 +367,8 @@ function createNativeSlotState<Kind extends string>(
       board.keep(result.entry);
       owners.set(`${ledger.length}:0`, owner);
       ledger.push({ entry: result.entry, owner });
+      sources.set(result.entry, entry);
+      placed.set(owner, entry);
       immutablePrefix &&= immutableEntry(entry);
     }
     return result;
@@ -475,6 +488,28 @@ function createNativeSlotState<Kind extends string>(
         new Set(remaining).size === remaining.length &&
         remaining.every((owner) => expected.includes(owner))
       );
+    },
+    // The placements a held-rule conflict depends on, or undefined for any other failure.
+    blockersOf(failure: Failure): ConflictBlockers<Kind> | undefined {
+      if (
+        failure.classification !== "conflict" ||
+        failure.owners.length === 0 ||
+        !HELD_RULES.has(failure.rule)
+      ) {
+        return undefined;
+      }
+      const blockers: [ConstraintOwner, SlotPlacement<Kind>][] = [];
+      for (const owner of failure.owners) {
+        const entry = placed.get(owner);
+        if (entry === undefined) {
+          return undefined;
+        }
+        blockers.push([owner, entry]);
+      }
+      return Object.freeze(blockers);
+    },
+    blockersPlaced(blockers: ConflictBlockers<Kind>): boolean {
+      return blockers.every(([owner, entry]) => placed.get(owner) === entry);
     },
     capturePocket<T>(
       step: () => boolean,
@@ -613,8 +648,10 @@ function createNativeSlotState<Kind extends string>(
       ledger = [...saved.entries];
       immutablePrefix = saved.immutablePrefix;
       owners.clear();
-      ledger.forEach(({ owner }, index) => {
+      placed.clear();
+      ledger.forEach(({ entry, owner }, index) => {
         owners.set(`${index}:0`, owner);
+        placed.set(owner, sources.get(entry)!);
       });
     },
     visibilityStatistics() {

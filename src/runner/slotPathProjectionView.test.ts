@@ -134,7 +134,8 @@ describe("native path-projection placement views", () => {
     const full = projection.at(fullWork, anchor, prepared);
     const baseline = createSlotPathProjection(geometry, path).at(baselineWork, anchor, prepared);
     expect(full).toEqual(baseline);
-    expect(fullWork.check.mock.calls.length).toBe(baselineWork.check.mock.calls.length);
+    // The full anchor reuses the path proof the view evaluated, not its catalogue.
+    expect(fullWork.check.mock.calls.length).toBe(baselineWork.check.mock.calls.length - 1);
     expect(fullWork.propagate.mock.calls.length).toBe(baselineWork.propagate.mock.calls.length);
     expect(projection.statistics().indexedTemplates).toBe(
       prepared.placements.length + aliases.length,

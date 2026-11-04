@@ -4,6 +4,8 @@ import type { PreparedSlotKind } from "./slotCandidates";
 
 export interface SlotSourceTraversalWork<Kind extends string> {
   candidates(source: PreparedSlotKind<Kind>): Iterable<SlotSequenceStep<Kind>>;
+  // A value whose recorded rejection still holds is passed on without a scheduling charge.
+  held?(candidate: SlotCandidate<Kind>): boolean;
   propagate(): boolean;
   stopped(): boolean;
 }
@@ -62,16 +64,22 @@ export function* traverseSlotSources<Kind extends string>(
         if (work.stopped()) {
           return { status: "stopped" };
         }
-        if (!work.propagate()) {
-          return { kind: "propagation", status: "budget" };
-        }
-        if (work.stopped()) {
-          return { status: "stopped" };
-        }
         const current = active[index]!;
         const next = current.cursor.next();
         if (work.stopped()) {
           return { status: "stopped" };
+        }
+        if (
+          next.done ||
+          next.value.status === "budget" ||
+          work.held?.(next.value.candidate) !== true
+        ) {
+          if (!work.propagate()) {
+            return { kind: "propagation", status: "budget" };
+          }
+          if (work.stopped()) {
+            return { status: "stopped" };
+          }
         }
         if (next.done) {
           active.splice(index, 1);

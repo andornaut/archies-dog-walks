@@ -50,6 +50,8 @@ export interface SlotWitnessConstructPorts<Kind extends string, Mark> {
   laneClosure?(): { readonly accepted: true } | Rejection<Kind> | undefined;
   preparations(job: WitnessJob<Kind>): Iterable<PreparedSlotKind<Kind>>;
   propagate(): boolean;
+  // Whether a recorded rejection of this choice still holds for the current entries.
+  rejects?(job: WitnessJob<Kind>, candidate: SlotCandidate<Kind>): boolean;
   repairRow?():
     { readonly row: number; readonly status: "row" } | { readonly status: "none" | "budget" };
   restore(mark: Mark): void;
@@ -248,28 +250,49 @@ function* construct<Kind extends string, Mark>(
   };
   const leadingRows = () =>
     stopped() ? undefined : coverageLeadingRows(geometry, coverage(ports.entries()));
+  // A job's source sequence is fixed within one compiled problem; replay it once fully read.
+  const preparationLists = new Map<WitnessJob<Kind>, readonly PreparedSlotKind<Kind>[]>();
   function* readPreparations(job: WitnessJob<Kind>): Generator<PreparedSlotKind<Kind>> {
     if (stopped()) {
+      return;
+    }
+    const known = preparationLists.get(job);
+    if (known !== undefined) {
+      for (const prepared of known) {
+        if (stopped()) {
+          break;
+        }
+        yield prepared;
+      }
+      stopped();
       return;
     }
     const sources = ports.preparations(job);
     if (stopped()) {
       return;
     }
+    const read: PreparedSlotKind<Kind>[] = [];
+    let complete = true;
     for (const prepared of sources) {
       if (stopped()) {
+        complete = false;
         break;
       }
       if (!ports.propagate()) {
         budget = true;
+        complete = false;
         break;
       }
       if (stopped()) {
+        complete = false;
         break;
       }
+      read.push(prepared);
       yield prepared;
     }
-    stopped();
+    if (!stopped() && complete) {
+      preparationLists.set(job, Object.freeze(read));
+    }
   }
   const rowOrder = (job: WitnessJob<Kind>) => {
     const ideal = Math.floor(((job.ordinal + 0.5) * path.length) / Math.max(1, job.total));
@@ -636,6 +659,7 @@ function* construct<Kind extends string, Mark>(
             }
           }
         },
+        held: (candidate) => ports.rejects?.(job, candidate) === true,
         propagate: ports.propagate,
         stopped,
       },

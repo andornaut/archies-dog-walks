@@ -617,6 +617,30 @@ describe("native slot constraint transactions", () => {
       failure: { classification: "intrinsic", rule: "duplicate-owner" },
     });
   });
+  it("holds attributed conflict blockers only while each owner keeps its placement", () => {
+    const owner = { key: "owner" };
+    const incoming = hopper();
+    const state = createSlotConstructionState(geometry, path);
+    const root = state.checkpoint();
+    expect(state.commit(owner, incoming).accepted).toBe(true);
+    const conflict = state.probe({ key: "probe" }, incoming);
+    if (conflict.accepted) {
+      throw new Error("Expected a same-kind conflict");
+    }
+    const blockers = state.blockersOf(conflict.failure)!;
+    expect(blockers).toEqual([[owner, incoming]]);
+    const placed = state.checkpoint();
+    state.restore(root);
+    expect(state.blockersPlaced(blockers)).toBe(false);
+    state.restore(placed);
+    expect(state.blockersPlaced(blockers)).toBe(true);
+    state.restore(root);
+    expect(state.commit(owner, fixed("bench", 2, 4)).accepted).toBe(true);
+    expect(state.blockersPlaced(blockers)).toBe(false);
+    expect(
+      state.blockersOf({ classification: "conflict", owners: [owner], rule: "open-stretches" }),
+    ).toBeUndefined();
+  });
   it("restores every native mover, prize and resting-cell ownership category", () => {
     const cells = new SpawnCells(2, 3, 0);
     cells.standOn(0, 1, true);

@@ -706,13 +706,8 @@ export function createSlotCandidateDomains<Kind extends string>(
         const row = order.rows[0];
         const lane = order.columns[order.columnStart % order.columns.length];
         if (row !== undefined && lane !== undefined) {
-          const checked = projection.at(
-            work,
-            { distance: rows[row]!, lane, row, slot: 0 },
-            prepared,
-            view,
-          );
-          if (checked.status !== "entries") {
+          const checked = projection.guard(work, prepared, view);
+          if (checked.status !== "current") {
             if (checked.status === "unavailable") {
               motionTiers.get(prepared)!.views.delete(order.motionTier!);
             }
@@ -791,7 +786,7 @@ export function createSlotCandidateDomains<Kind extends string>(
           const native = nativeDomain(jobKey, prepared);
           const anchor = `${row}:${lane}${order.motionTier === undefined ? "" : `:tier:${order.motionTier}`}`;
           let projected = native.projected.get(anchor);
-          if (projected === undefined || view !== undefined) {
+          if (projected === undefined) {
             const anchorValue = { distance: rows[row]!, lane, row, slot: 0 };
             const result =
               view === undefined
@@ -804,9 +799,17 @@ export function createSlotCandidateDomains<Kind extends string>(
               yield result;
               return;
             }
-            if (projected === undefined) {
-              projected = wrap(native, jobKey, prepared, row, lane, result.entries);
-              native.projected.set(anchor, projected);
+            projected = wrap(native, jobKey, prepared, row, lane, result.entries);
+            native.projected.set(anchor, projected);
+          } else if (view !== undefined) {
+            // A projected tier anchor revalidates its view without rebuilding the same entries.
+            const checked = projection.guard(work, prepared, view);
+            if (checked.status !== "current") {
+              if (checked.status === "unavailable") {
+                motionTiers.get(prepared)!.views.delete(order.motionTier!);
+              }
+              yield checked;
+              return;
             }
           }
           sequence.pending = projected;

@@ -2,6 +2,7 @@ import type { createSlotCandidateDomains, SlotCandidate } from "./slotCandidateD
 import type { PreparedSlotKind } from "./slotCandidates";
 import type { SlotLaneEffect } from "./slotConfig";
 import type {
+  ConflictBlockers,
   ConstraintEntry,
   ConstraintOwner,
   ConstraintResult,
@@ -124,6 +125,14 @@ export function createSlotWitnessSearch<Kind extends string>(
     }
     const root = state.checkpoint();
     const provenance = new WeakMap<object, SlotCandidate<Kind>>();
+    // Runtime construction rejects a repeated test without native work while every owner of its
+    // recorded conflict keeps its placement. Exact construction keeps native failures for its
+    // pocket proofs and its negative visibility lookup.
+    const reuse = work.minimumDelivery !== undefined;
+    const conflicts = new Map<
+      WitnessJob<Kind>,
+      Map<SlotCandidate<Kind>, { blockers: ConflictBlockers<Kind>; failure: Failure<Kind> }>
+    >();
     const charge = () => !stopped() && work.check() && !stopped();
     const propagate = () => !stopped() && (work.propagate?.() ?? true) && !stopped();
     const selections = (
@@ -284,6 +293,10 @@ export function createSlotWitnessSearch<Kind extends string>(
             }),
         preparations: (job) => job.preparations(),
         propagate,
+        rejects(job, candidate) {
+          const known = conflicts.get(job)?.get(candidate);
+          return known !== undefined && state.blockersPlaced(known.blockers);
+        },
         repairRow() {
           if (!charge()) {
             return { status: "budget" };
@@ -307,6 +320,13 @@ export function createSlotWitnessSearch<Kind extends string>(
           if (stopped()) {
             return undefined;
           }
+          const known = conflicts.get(job)?.get(candidate);
+          if (known !== undefined) {
+            if (state.blockersPlaced(known.blockers)) {
+              return { accepted: false, failure: known.failure };
+            }
+            conflicts.get(job)!.delete(candidate);
+          }
           let intrinsic = domains.cachedIntrinsic(candidate);
           if (intrinsic === undefined) {
             if (!charge()) {
@@ -320,13 +340,20 @@ export function createSlotWitnessSearch<Kind extends string>(
               failure: { classification: "intrinsic", owners: [], rule: intrinsic.rule },
             };
           }
-          const cached = state.lookupNegativeVisibility(propagate, intrinsic, job, candidate.entry);
-          if (cached.status === "budget") {
-            return undefined;
-          }
-          if (cached.status === "blocked") {
-            work.rejected?.(candidate, cached.failure);
-            return { accepted: false, failure: cached.failure };
+          if (!reuse) {
+            const cached = state.lookupNegativeVisibility(
+              propagate,
+              intrinsic,
+              job,
+              candidate.entry,
+            );
+            if (cached.status === "budget") {
+              return undefined;
+            }
+            if (cached.status === "blocked") {
+              work.rejected?.(candidate, cached.failure);
+              return { accepted: false, failure: cached.failure };
+            }
           }
           if (!charge()) {
             return undefined;
@@ -336,6 +363,15 @@ export function createSlotWitnessSearch<Kind extends string>(
             provenance.set(trial.entry, candidate);
           } else {
             work.rejected?.(candidate, trial.failure);
+            const blockers = reuse ? state.blockersOf(trial.failure) : undefined;
+            if (blockers !== undefined) {
+              let byCandidate = conflicts.get(job);
+              if (byCandidate === undefined) {
+                byCandidate = new Map();
+                conflicts.set(job, byCandidate);
+              }
+              byCandidate.set(candidate, { blockers, failure: trial.failure });
+            }
           }
           return trial;
         },

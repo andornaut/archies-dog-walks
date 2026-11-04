@@ -638,6 +638,7 @@ export function createSlotPathProjection<Kind extends string>(
   const plan = { ...geometry, quotas: [] };
   const lanes = new LaneBlocks(plan, rowSpacing(plan), held);
   const catalogues = new WeakMap<PreparedSlotKind<Kind>, PathProjectionCatalogue>();
+  // Path and stop proofs depend only on their keys and the fixed path, so every view shares them.
   const proofs = new Map<string, boolean>();
   const contextShape = () => {
     try {
@@ -670,7 +671,6 @@ export function createSlotPathProjection<Kind extends string>(
     {
       readonly prepared: PreparedSlotKind<Kind>;
       readonly placements: readonly MoverPlacement[];
-      readonly proofs: Map<string, boolean>;
       catalogue?: PathProjectionCatalogue;
     }
   >();
@@ -715,7 +715,7 @@ export function createSlotPathProjection<Kind extends string>(
       return { status: "unknown" };
     }
     const view = Object.freeze({ [pathProjectionViewBrand]: prepared });
-    views.set(view, { placements: Object.freeze(placements), prepared, proofs: new Map() });
+    views.set(view, { placements: Object.freeze(placements), prepared });
     return { status: "view", view };
   };
   const index = (
@@ -823,7 +823,6 @@ export function createSlotPathProjection<Kind extends string>(
       }
     }
     const placements = selected?.placements ?? prepared.placements;
-    const selectedProofs = selected?.proofs ?? proofs;
     const attested = nativePreparations.get(prepared);
     if (
       attested === undefined ||
@@ -888,7 +887,7 @@ export function createSlotPathProjection<Kind extends string>(
           return { kind: "propagation", status: "budget" };
         }
         const pathKey = `path:${anchor.row}:${footprint}`;
-        let pathAccepted = selectedProofs.get(pathKey);
+        let pathAccepted = proofs.get(pathKey);
         if (pathAccepted === undefined) {
           if (!work.check()) {
             return { kind: "candidateChecks", status: "budget" };
@@ -898,7 +897,7 @@ export function createSlotPathProjection<Kind extends string>(
             { lane: placement.lanes.first, row: anchor.row },
             { lanes: placement.lanes.count, rows: placement.rows },
           );
-          selectedProofs.set(pathKey, pathAccepted);
+          proofs.set(pathKey, pathAccepted);
           stats.pathEvaluations++;
         } else {
           stats.pathReuse++;
@@ -943,13 +942,13 @@ export function createSlotPathProjection<Kind extends string>(
           }
           stats.groupLookups++;
           const key = `stop:${mask}:${stop}`;
-          let accepted = selectedProofs.get(key);
+          let accepted = proofs.get(key);
           if (accepted === undefined) {
             if (!work.check()) {
               return { kind: "candidateChecks", status: "budget" };
             }
             accepted = leavesPathOpen(mask, group.members[0]!);
-            selectedProofs.set(key, accepted);
+            proofs.set(key, accepted);
             stats.stopEvaluations++;
           } else {
             stats.stopReuse++;
@@ -993,6 +992,25 @@ export function createSlotPathProjection<Kind extends string>(
   }
   return {
     at,
+    // The view and native source guard of `at`, for an anchor whose entries are already projected.
+    guard(
+      work: PathProjectionWork,
+      prepared: PreparedSlotKind<Kind>,
+      view: SlotPathProjectionView<Kind>,
+    ): { readonly status: "current" } | PathProjectionBudget | { readonly status: "unavailable" } {
+      const selected = views.get(view);
+      if (selected === undefined || selected.prepared !== prepared) {
+        return { status: "unavailable" };
+      }
+      if (!work.check()) {
+        return { kind: "candidateChecks", status: "budget" };
+      }
+      if (!current(prepared)) {
+        views.delete(view);
+        return { status: "unavailable" };
+      }
+      return { status: "current" };
+    },
     motionTiers(
       work: { readonly propagate: () => boolean },
       prepared: PreparedSlotKind<Kind>,

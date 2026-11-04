@@ -180,6 +180,32 @@ describe("fair weighted-source traversal prototype", () => {
     },
   );
 
+  it("passes on a held value in order without its scheduling charge", () => {
+    const test = fixture();
+    const run = (held: ReadonlySet<SlotCandidate<string>>) => {
+      let charges = 0;
+      const { values } = collect(
+        traverseSlotSources(
+          {
+            *candidates(source) {
+              for (const candidate of test.values[test.sources.indexOf(source)]!) {
+                yield { candidate, status: "candidate" as const };
+              }
+            },
+            held: (candidate) => held.has(candidate),
+            propagate: () => ++charges > 0,
+            stopped: () => false,
+          },
+          test.sources,
+        ),
+      );
+      return { charges, values };
+    };
+    const open = run(new Set());
+    const held = run(new Set([test.values[0]![1]!, test.values[2]![0]!]));
+    expect(held.values).toEqual(open.values);
+    expect(open.charges - held.charges).toBe(2);
+  });
   it("retains a native budget result and closes every continuation even when cleanup throws", () => {
     const test = fixture();
     const closed: string[] = [];
