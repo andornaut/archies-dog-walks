@@ -5993,6 +5993,11 @@
       "json": "sprites/fx-tap.json"
     },
     {
+      "key": "fx-tip-sparkle",
+      "png": "sprites/fx-tip-sparkle.png",
+      "json": "sprites/fx-tip-sparkle.json"
+    },
+    {
       "key": "fx-treat-pop",
       "png": "sprites/fx-treat-pop.png",
       "json": "sprites/fx-treat-pop.json"

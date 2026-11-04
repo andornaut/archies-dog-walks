@@ -18,7 +18,17 @@
 //                                                from the feet, three drops thrown off it and
 //                                                one ripple; its ground point, row 40, goes on
 //                                                the dog's feet
-// fx-sparkle       16x16  play (4 frames, 60ms)  twinkle where a treat or tip is collected
+// fx-sparkle       16x16  play (4 frames, 60ms)  twinkle where a treat or gear drop is collected
+// fx-tip-sparkle   9x9    play (4 frames,        the quiet twinkle when a tip is collected, about
+//                         60, 90, 70, 60ms;      4px above the walker's head: a 3x3 amber plus
+//                         280ms in all)          with a yellow centre grows to a 5x5 four-point
+//                                                star (amber tips, yellow arms, a white centre),
+//                                                shrinks to a yellow plus and fades to an amber
+//                                                one, then clears; centred on column 4, row 4.
+//                                                Never under a 3x3 plus, so never a lone pixel,
+//                                                and at most 7x7 with its rim and one white pixel,
+//                                                so it stays quieter than fx-sparkle and the gear
+//                                                drops' sparkle
 // fx-new-best      96x48  play (8 frames, 70ms)  rays, sparkles and stars in yellow, amber and
 //                                                white bursting from behind the ui-new-best
 //                                                ribbon (centred on it), each part in its own rim
@@ -499,6 +509,24 @@ export function sparkle(step: number): Grid {
   return g;
 }
 
+// fx-tip-sparkle's frames, centred in its 9x9 frame before the rim: 1 amber, 2 yellow, 3 white.
+export const TIP_SPARKLE: readonly (readonly string[])[] = [
+  [".1.", "121", ".1."],
+  ["..1..", "..2..", "12321", "..2..", "..1.."],
+  [".2.", "222", ".2."],
+  [".1.", "111", ".1."],
+];
+export const TIP_SPARKLE_MS: readonly number[] = [60, 90, 70, 60];
+
+// 9x9: the tip's twinkle, a plus that grows to a small star and fades, centred on (4, 4).
+export function tipSparkle(step: number): Grid {
+  const g = new Grid(9, 9);
+  const rows = TIP_SPARKLE[step]!;
+  const o = 4 - (rows.length - 1) / 2;
+  stamp(g, rows, o, o, ["amber", "yellow", "white"]);
+  return g;
+}
+
 export const HEART: readonly string[] = [
   ".111.111.",
   "122111111",
@@ -639,6 +667,7 @@ export function* sprites(): Generator<Sprite> {
   yield ["fx-debris-litter", [["play", frames(debrisLitter, 6), 70]]];
   yield ["fx-splash", [["play", frames(splash, 8, "navy"), 60]]];
   yield ["fx-sparkle", [["play", frames(sparkle, 4), 60]]];
+  yield ["fx-tip-sparkle", [["play", frames(tipSparkle, 4), TIP_SPARKLE_MS]]];
   yield [
     "fx-new-best",
     [["play", Array.from({ length: 8 }, (_, i) => newBest(i).outlined(false)), 70]],
