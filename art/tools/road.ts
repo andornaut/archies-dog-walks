@@ -417,79 +417,11 @@ export function walkerArms(
   }
 }
 
-// x * y as an unevaluated sum [hi, lo]: hi is the rounded product and lo its exact error, as C's
-// fma(x, y, -hi) gives it (Dekker's product with Veltkamp's split).
-function product(x: number, y: number): [number, number] {
-  const hi = x * y;
-  const split = (v: number): [number, number] => {
-    const t = v * 134217729;
-    const high = t - (t - v);
-    return [high, v - high];
-  };
-  const [xh, xl] = split(x);
-  const [yh, yl] = split(y);
-  return [hi, xl * yl - (hi - xh * yh - xl * yh - xh * yl)];
-}
-
-// a + b as [sum, error] for |a| >= |b|, the error exact.
-function fastSum(a: number, b: number): [number, number] {
-  const x = a + b;
-  return [x, b - (x - a)];
-}
-
-// The length of a vector, correctly rounded as CPython's math.hypot computes it (vector_norm: a
-// power-of-two scale, a lossless sum of squares and one correction of the square root). Math.hypot
-// can be an ulp off, which moves a limb's edge across a pixel centre.
-function hypot(...coordinates: number[]): number {
-  const abs = coordinates.map(Math.abs);
-  const max = abs.reduce((a, b) => (b > a || Number.isNaN(b) ? b : a), 0);
-  if (max === Infinity || abs.includes(Infinity)) {
-    return Infinity;
-  }
-  if (Number.isNaN(max) || abs.some(Number.isNaN)) {
-    return NaN;
-  }
-  if (max === 0 || abs.length <= 1) {
-    return max;
-  }
-  // 2 ** -e puts max in [0.5, 1); subnormals are first scaled up into the normal range.
-  const tiny = 2 ** -1022;
-  if (max < tiny) {
-    return tiny * hypot(...abs.map((v) => v / tiny));
-  }
-  const e = Math.floor(Math.log2(max)) + 1;
-  let scale = 2 ** -e;
-  if (max * scale >= 1) {
-    scale /= 2;
-  } else if (max * scale < 0.5) {
-    scale *= 2;
-  }
-  let csum = 1;
-  let frac1 = 0;
-  let frac2 = 0;
-  for (const v of abs) {
-    const x = v * scale;
-    const [hi, lo] = product(x, x);
-    const [sum, err] = fastSum(csum, hi);
-    csum = sum;
-    frac1 += lo;
-    frac2 += err;
-  }
-  let h = Math.sqrt(csum - 1 + (frac1 + frac2));
-  const [hi, lo] = product(-h, h);
-  const [sum, err] = fastSum(csum, hi);
-  csum = sum;
-  frac1 += lo;
-  frac2 += err;
-  h += (csum - 1 + (frac1 + frac2)) / (2 * h);
-  return h / scale;
-}
-
 // A solid limb between joints, rasterized on the drawing's own grid.
 export function limbBar(g: Drawable, a: Point, b: Point, width: number, colour: string): void {
   const dx = b[0] - a[0];
   const dy = b[1] - a[1];
-  const length = Math.max(0.001, hypot(dx, dy));
+  const length = Math.max(0.001, Math.hypot(dx, dy));
   const px = (-dy * width) / (2 * length);
   const py = (dx * width) / (2 * length);
   const corners: [Point, Point, Point, Point] = [
