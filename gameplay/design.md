@@ -283,7 +283,7 @@ Walk-only boosts on the fork paths, from a pool of 6. Each fork draws its upgrad
 - Charmer: the first card in each neighbourhood has free money options (hearts and debuffs still cost; see Choice cards)
 - Good leash: no dog pulls toward squirrels
 - Raincoats: puddles and potholes don't make the pack Muddy: no Muddy and no hit stop. A card's Muddy still applies
-- Rush hour (trade-off): twice the tips and treats and more obstacles in the next neighbourhood
+- Rush hour (trade-off): twice the tips and treats and 30% more obstacles in the next neighbourhood
 
 ### Walkers
 
