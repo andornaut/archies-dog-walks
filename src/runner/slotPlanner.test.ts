@@ -68,7 +68,7 @@ const catalogue: readonly SlotKind<string>[] = [
 const context = { limits: SLOT_LIMITS, seed: 7, zoneIndex: 0 };
 
 describe("safe slot planning", () => {
-  it("defaults real seeded planning to original draws and retains the explicit comparison policy", () => {
+  it("plans real seeded movers through original draw frontiers", () => {
     const moving: SlotKind<string> = {
       compile: () => ({
         blocksLane: true,
@@ -91,14 +91,6 @@ describe("safe slot planning", () => {
       capacity: requested,
       guarantees: [{ count: 1, kind: moving.kind, role: moving.role }],
     };
-    const flags: (boolean | undefined)[] = [];
-    const factory = witnessSearch.createSlotWitnessSearch;
-    const forwarded = vi
-      .spyOn(witnessSearch, "createSlotWitnessSearch")
-      .mockImplementation((...args) => {
-        flags.push(args[4].originalDrawsFirst);
-        return factory(...args);
-      });
     let frontierCalls = 0;
     const createDomains = candidateDomains.createSlotCandidateDomains;
     const observed = vi
@@ -114,29 +106,15 @@ describe("safe slot planning", () => {
         };
       });
     try {
-      const results = [undefined, true, false].map((originalDrawsFirst) => {
-        frontierCalls = 0;
-        const result = planSlotSpawns(
-          originalDrawsFirst === undefined ? context : { ...context, originalDrawsFirst },
-          geometry,
-          [moving],
-          [],
-          configuration,
-        );
-        expect(result.status).toBe("complete");
-        if (result.status !== "complete") {
-          throw Error("Expected native seeded fixture completion");
-        }
-        expect(result.activeAudit.status).toBe("valid");
-        expect(result.assignments).toHaveLength(1);
-        return { frontierCalls, result };
-      });
-      expect(flags).toEqual([true, true, false]);
-      expect(results[0]).toEqual(results[1]);
-      expect(results[0]!.frontierCalls).toBeGreaterThan(0);
-      expect(results[2]!.frontierCalls).toBe(0);
+      const result = planSlotSpawns(context, geometry, [moving], [], configuration);
+      expect(result.status).toBe("complete");
+      if (result.status !== "complete") {
+        throw Error("Expected native seeded fixture completion");
+      }
+      expect(result.activeAudit.status).toBe("valid");
+      expect(result.assignments).toHaveLength(1);
+      expect(frontierCalls).toBeGreaterThan(0);
     } finally {
-      forwarded.mockRestore();
       observed.mockRestore();
     }
   });

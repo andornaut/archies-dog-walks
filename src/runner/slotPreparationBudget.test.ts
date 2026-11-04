@@ -35,7 +35,7 @@ const geometry: Omit<SpawnPlan<string>, "quotas"> = {
   stepSeconds: 0.05,
   zoneLength: 2000,
 };
-const context = { delivery: "runtime-90" as const, fairSources: true, seed: 7, zoneIndex: 0 };
+const context = { seed: 7, zoneIndex: 0 };
 const variation = { delaySeconds: 0, lengthShare: 0, speedShare: 0 };
 const prefix: MoverSpec = {
   footprint: { lanes: 1, rows: 1 },

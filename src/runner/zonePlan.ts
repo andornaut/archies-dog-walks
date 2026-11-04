@@ -381,12 +381,8 @@ export function planZoneWithContext(
       guarantees,
     },
     context: {
-      coverageFirst: true,
-      // The 90% floor is the runtime release rule; the search still prefers 100% delivery.
-      delivery: "runtime-90",
-      fairSources: true,
+      // Room for both portfolio attempts, each within SLOT_LIMITS.candidateChecks.
       limits: { ...SLOT_LIMITS, candidateChecks: 2 * SLOT_LIMITS.candidateChecks },
-      runtimeSearch: "original-then-balanced",
       seed: context.seed,
       zoneIndex: context.zoneIndex,
     },

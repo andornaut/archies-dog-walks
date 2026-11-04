@@ -341,7 +341,6 @@ const configuration = {
   guarantees: [{ count: 1, kind: "wall", role: "minorFixed" as const }],
 };
 const context = {
-  delivery: "runtime-90" as const,
   limits: { ...SLOT_LIMITS, anchors: 2000, candidateChecks: 2000 },
   seed: 7,
   zoneIndex: 0,
@@ -383,15 +382,6 @@ describe("runtime delivery producer", () => {
     expect(result).not.toHaveProperty("activeAudit");
     expect(result.diagnostics.candidateChecks).toBeLessThanOrEqual(2000);
     expect(result.diagnostics.propagationChecks).toBeLessThanOrEqual(2000);
-    expect(
-      planSlotSpawns(
-        { ...context, delivery: "exact" },
-        geometry,
-        catalogue,
-        auxiliary,
-        configuration,
-      ).status,
-    ).toBe("unsupported");
     expect(planSlotCapacity(context, geometry, catalogue, auxiliary, configuration).status).toBe(
       "unsupported",
     );

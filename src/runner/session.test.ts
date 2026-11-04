@@ -109,11 +109,11 @@ describe("runStreams", () => {
     if (observation.slots === undefined) {
       throw new Error("Missing structural planning input");
     }
-    expect(observation.slots.input.context).toMatchObject({
-      coverageFirst: true,
-      delivery: "runtime-90",
-      fairSources: true,
-    });
+    expect(Object.keys(observation.slots.input.context).sort()).toEqual([
+      "limits",
+      "seed",
+      "zoneIndex",
+    ]);
     const replayed = replayZoneSlots(
       JSON.parse(JSON.stringify(observation.slots.input)) as typeof observation.slots.input,
     );

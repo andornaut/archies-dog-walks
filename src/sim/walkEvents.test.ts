@@ -84,7 +84,6 @@ describe("simulator spawn observations", () => {
         { blocksLane: false, count: 8, kind: "tip" },
         { blocksLane: false, count: 1, kind: "treat", within: [0, 0] },
       ],
-      context: { ...slotInput().context, delivery: "runtime-90", fairSources: true },
     };
     const encoded = JSON.stringify(input);
     const result = replayZoneSlots(input);
@@ -129,10 +128,6 @@ describe("simulator spawn observations", () => {
     const replayed = replayZoneSlots(JSON.parse(encoded) as typeof input);
     expect(JSON.parse(JSON.stringify(replayed))).toEqual(JSON.parse(JSON.stringify(result)));
     expect(JSON.stringify(input)).toBe(encoded);
-    expect(JSON.parse(encoded).context).toMatchObject({
-      delivery: "runtime-90",
-      fairSources: true,
-    });
     expect(replayZoneCapacity(input).status).toBe("unsupported");
   });
 

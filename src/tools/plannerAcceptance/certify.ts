@@ -48,11 +48,6 @@ export function certifyPlan(
     input.context.seed === observation.context.seed && input.context.zoneIndex === run.zoneIndex,
     "Context mismatch",
   );
-  must(
-    input.context.delivery === "runtime-90" &&
-      input.context.runtimeSearch === "original-then-balanced",
-    "Not the production runtime-90 policy",
-  );
   const zoneId = run.route[run.zoneIndex];
   const zone = gameData.world.zones.find((candidate) => candidate.id === zoneId);
   must(zone !== undefined, `Missing zone ${zoneId}`);

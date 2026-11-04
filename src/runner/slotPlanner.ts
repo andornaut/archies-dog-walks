@@ -61,15 +61,6 @@ export interface SlotPlanningContext {
   readonly seed: number;
   readonly zoneIndex: number;
   readonly limits: SlotLimits;
-  readonly runtimeSearch?: "original-then-balanced";
-  // Runtime plans use runtime-90, whose floor is the release rule; exact by default.
-  readonly delivery?: SlotDeliveryPolicy;
-  // Opens each job's sources progressively in their weighted order; runtime plans set it.
-  readonly fairSources?: boolean;
-  // Places one initial coverage owner before wide guarantees; runtime plans set it.
-  readonly coverageFirst?: boolean;
-  // Tries each draw tuple's native values before later retry tuples; on unless false.
-  readonly originalDrawsFirst?: boolean;
 }
 export interface SlotAttemptDiagnostics {
   readonly candidateChecks: number;
@@ -156,7 +147,9 @@ export class SlotPlanningError<Kind extends string> extends Error {
   }
 }
 
-// Runtime emits only an independently audited actual composition.
+// Runtime emits only an independently audited actual composition. It certifies the runtime-90
+// floor while preferring full delivery, and tries the original ordering, then the balanced one,
+// each within one SLOT_LIMITS.candidateChecks allowance of the context's total limit.
 export function planSlotSpawns<Kind extends string>(
   context: SlotPlanningContext,
   geometry: Omit<SpawnPlan<Kind>, "quotas">,
@@ -172,7 +165,8 @@ export function planSlotSpawns<Kind extends string>(
   return { ...complete, activeAudit: audit };
 }
 
-// Offline capacity certification constructs a separate maximum composition from an empty root.
+// Offline capacity certification constructs a separate maximum composition from an empty root with
+// exact delivery and one attempt, its candidate checks capped at SLOT_LIMITS.candidateChecks.
 export function planSlotCapacity<Kind extends string>(
   context: SlotPlanningContext,
   geometry: Omit<SpawnPlan<Kind>, "quotas">,
@@ -205,16 +199,15 @@ function planSlotComposition<Kind extends string>(
   auxiliary: readonly SpawnQuota<Kind>[],
   config: SlotConfiguration<Kind>,
 ): SlotCompositionResult<Kind> {
-  const policy = purpose === "active" ? (context.delivery ?? "exact") : "exact";
-  const optionalDelivery = policy === "runtime-90";
-  const portfolio = optionalDelivery && context.runtimeSearch === "original-then-balanced";
-  const limits =
-    context.runtimeSearch !== undefined && !optionalDelivery
-      ? {
-          ...context.limits,
-          candidateChecks: Math.min(context.limits.candidateChecks, SLOT_LIMITS.candidateChecks),
-        }
-      : context.limits;
+  // Active plans are the runtime portfolio with optional delivery; capacity plans are exact.
+  const runtime = purpose === "active";
+  const policy: SlotDeliveryPolicy = runtime ? "runtime-90" : "exact";
+  const limits = runtime
+    ? context.limits
+    : {
+        ...context.limits,
+        candidateChecks: Math.min(context.limits.candidateChecks, SLOT_LIMITS.candidateChecks),
+      };
   const attempts: SlotAttemptDiagnostics[] = [];
   let attemptStart = { candidateChecks: 0, propagationChecks: 0 };
   let attemptFloor: SlotAttemptDiagnostics["firstFloor"];
@@ -236,7 +229,7 @@ function planSlotComposition<Kind extends string>(
   };
   const diagnostics = (): SlotDiagnostics => ({
     ...stats,
-    ...(portfolio ? { attempts: [...attempts] } : {}),
+    ...(runtime ? { attempts: [...attempts] } : {}),
     rejections: { ...stats.rejections },
   });
   const unsupported = (
@@ -253,20 +246,13 @@ function planSlotComposition<Kind extends string>(
     status: "unsupported",
   });
   const failures = slotConfigurationFailures(catalogue, limits, config);
-  if (context.runtimeSearch !== undefined && context.runtimeSearch !== "original-then-balanced") {
-    failures.push({ code: "invalid-runtime-search" });
-  }
   if (
-    context.runtimeSearch !== undefined &&
-    (limits.candidateChecks > 2 * SLOT_LIMITS.candidateChecks ||
-      limits.anchors > SLOT_LIMITS.anchors ||
-      limits.compiledTemplates > SLOT_LIMITS.compiledTemplates ||
-      limits.slots > SLOT_LIMITS.slots)
+    limits.candidateChecks > 2 * SLOT_LIMITS.candidateChecks ||
+    limits.anchors > SLOT_LIMITS.anchors ||
+    limits.compiledTemplates > SLOT_LIMITS.compiledTemplates ||
+    limits.slots > SLOT_LIMITS.slots
   ) {
     failures.push({ code: "portfolio-work-limit" });
-  }
-  if (policy !== "exact" && policy !== "runtime-90") {
-    failures.push({ code: "invalid-delivery-policy" });
   }
   const auxiliaryTotal = auxiliary.reduce((total, request) => total + request.count, 0);
   if (auxiliary.some((request) => !Number.isSafeInteger(request.count) || request.count < 0)) {
@@ -456,7 +442,7 @@ function planSlotComposition<Kind extends string>(
       return false;
     }
     if (
-      portfolio &&
+      runtime &&
       type === "candidateChecks" &&
       stats[type] - attemptStart[type] >= SLOT_LIMITS.candidateChecks
     ) {
@@ -487,7 +473,7 @@ function planSlotComposition<Kind extends string>(
   deepFreeze(geometry);
   path = deepFreeze(conditioned.path);
   const domains = createSlotCandidateDomains(geometry, path, {
-    negativeVisibility: !optionalDelivery,
+    negativeVisibility: !runtime,
   });
   const layouts = new Map<string, number>();
   const sourceOrders = new Map<SlotJob<Kind>, readonly SlotSource<Kind>[]>();
@@ -524,7 +510,7 @@ function planSlotComposition<Kind extends string>(
     guaranteed: job.guaranteed === true,
     key: job.key,
     laneEffect: job.laneEffect,
-    ...(optionalDelivery && !job.guaranteed ? { optional: true as const } : {}),
+    ...(runtime && !job.guaranteed ? { optional: true as const } : {}),
     ordinal: job.ordinal,
     phase: job.phase,
     *preparations() {
@@ -644,7 +630,7 @@ function planSlotComposition<Kind extends string>(
     anchor: () => pathBudget("anchors"),
     check: () => pathBudget("candidateChecks"),
     progress: () => {
-      const allowance = portfolio ? SLOT_LIMITS.candidateChecks : limits.candidateChecks;
+      const allowance = runtime ? SLOT_LIMITS.candidateChecks : limits.candidateChecks;
       const share = (type: "candidateChecks" | "propagationChecks") => {
         const used = stats[type] - attemptStart[type];
         const remaining = Math.max(
@@ -666,7 +652,7 @@ function planSlotComposition<Kind extends string>(
         return false;
       }
       if (
-        portfolio &&
+        runtime &&
         stats.propagationChecks - attemptStart.propagationChecks >= SLOT_LIMITS.candidateChecks
       ) {
         attemptStopped = true;
@@ -677,7 +663,7 @@ function planSlotComposition<Kind extends string>(
     },
     stopped: () => workFailure !== undefined || attemptStopped,
   };
-  if (portfolio && !meter.propagate()) {
+  if (runtime && !meter.propagate()) {
     return (
       finishWorkFailure() ?? unsupported("construction", [{ code: "propagation-attempt-budget" }])
     );
@@ -685,7 +671,7 @@ function planSlotComposition<Kind extends string>(
   // Necessary row support shares the native solve allowance and runs only on unsafe prefixes.
   const pocket = createSlotPocketAdapter(meter, geometry, path, domains, witnessJobs);
   const work: WitnessWork<Kind> = {
-    ...(optionalDelivery
+    ...(runtime
       ? {
           certifyPartial(
             selected: readonly WitnessSelection<Kind>[],
@@ -710,15 +696,15 @@ function planSlotComposition<Kind extends string>(
           support: (state) => pocket.check(state, "active"),
         }),
     ...meter,
-    coverageFirst: context.coverageFirst === true,
-    fairSources: context.fairSources === true,
+    coverageFirst: true,
+    fairSources: true,
     floorMet() {
       attemptFloor ??= {
         candidateChecks: stats.candidateChecks - attemptStart.candidateChecks,
         propagationChecks: stats.propagationChecks - attemptStart.propagationChecks,
       };
     },
-    originalDrawsFirst: context.originalDrawsFirst !== false,
+    originalDrawsFirst: true,
     rejected(candidate, failure) {
       const key = `${candidate.prepared.source.kind}:${failure.rule}`;
       stats.rejections[key] = (stats.rejections[key] ?? 0) + 1;
@@ -731,7 +717,7 @@ function planSlotComposition<Kind extends string>(
     ordering: "original" | "balanced",
     status: SlotAttemptDiagnostics["status"],
   ) => {
-    if (portfolio) {
+    if (runtime) {
       attempts.push({
         candidateChecks: stats.candidateChecks - attemptStart.candidateChecks,
         ...(attemptFloor === undefined ? {} : { firstFloor: attemptFloor }),
@@ -755,7 +741,7 @@ function planSlotComposition<Kind extends string>(
   };
   let solved = solve("original");
   if (
-    portfolio &&
+    runtime &&
     workFailure === undefined &&
     solved.status !== "compatible" &&
     solved.status !== "partial" &&

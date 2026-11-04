@@ -41,9 +41,7 @@ const config = {
   guarantees: [{ count: 1, kind: "wall", role: "minorFixed" as const }],
 };
 const context: SlotPlanningContext = {
-  delivery: "runtime-90",
   limits: { ...SLOT_LIMITS, candidateChecks: 65536 },
-  runtimeSearch: "original-then-balanced",
   seed: 7,
   zoneIndex: 0,
 };
@@ -220,7 +218,7 @@ describe("bounded runtime ordering portfolio", () => {
     expect(result.diagnostics.compiledTemplates).toBe(1);
   });
 
-  it.each(["capacity", "numeric-only"] as const)("does not enable fallback for %s", (mode) => {
+  it("does not enable fallback for capacity", () => {
     const create = witnessSearch.createSlotWitnessSearch;
     const search = vi
       .spyOn(witnessSearch, "createSlotWitnessSearch")
@@ -235,15 +233,10 @@ describe("bounded runtime ordering portfolio", () => {
           },
         }),
       );
-    const numeric = { ...context };
-    delete numeric.runtimeSearch;
-    const result =
-      mode === "capacity"
-        ? planSlotCapacity(context, geometry, catalogue(), rewards, config)
-        : planSlotSpawns(numeric, geometry, catalogue(), rewards, config);
+    const result = planSlotCapacity(context, geometry, catalogue(), rewards, config);
     expect(result.status).toBe("unsupported");
     expect(search).toHaveBeenCalledTimes(1);
-    expect(result.diagnostics.propagationChecks).toBe(mode === "capacity" ? 32768 : 65536);
+    expect(result.diagnostics.propagationChecks).toBe(32768);
     expect(result.diagnostics.attempts).toBeUndefined();
   });
 });
