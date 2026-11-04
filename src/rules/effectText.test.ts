@@ -87,10 +87,10 @@ describe("effectText", () => {
       [
         "several effects, naming a debuff",
         [
-          { amount: "encounterLow", change: "lose", kind: "money" },
+          { amount: "encounterHigh", change: "lose", kind: "money" },
           { debuff: "stinky", kind: "debuff" },
         ],
-        `−${dollars("encounterLow")}, ${DEBUFFS.stinky.name}: ${DEBUFFS.stinky.stake.replace(
+        `−${dollars("encounterHigh")}, ${DEBUFFS.stinky.name}: ${DEBUFFS.stinky.stake.replace(
           "{seconds}",
           String(read(TEST_TUNING, "seconds", DEBUFFS.stinky.seconds)),
         )}`,
