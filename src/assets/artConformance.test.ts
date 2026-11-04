@@ -66,8 +66,8 @@ describe("the exported PNGs", () => {
 // Sources whose exports are not named after them, and exports built from no Aseprite source.
 const NAMED_EXPORTS: Readonly<Record<string, readonly string[]>> = {
   appicon: ["public/icons/icon-192.png", "public/icons/icon-512.png"],
-  "favicon-16": [`${ART}/favicon-16.png`],
-  "favicon-32": [`${ART}/favicon.png`],
+  "favicon-16": ["public/icons/favicon-16.png"],
+  "favicon-32": ["public/icons/favicon-32.png"],
   "share-card": ["public/og-image.png"],
 };
 // art/tools/fonts.ts rasterises the fonts from their TTFs; site/ holds the game captures.

@@ -4,9 +4,9 @@
 // leaves out. public/art/index.html, which the build copies as is, keeps linking the plain
 // favicons, which the build copies too.
 export const HASHED_ICONS: readonly string[] = [
-  "/art/favicon-16.png",
-  "/art/favicon.png",
   "/icons/apple-touch-icon.png",
+  "/icons/favicon-16.png",
+  "/icons/favicon-32.png",
   "/icons/icon-192.png",
   "/icons/icon-512.png",
   "/icons/icon-maskable-512.png",
