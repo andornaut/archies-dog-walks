@@ -271,16 +271,34 @@ for (const [section] of PICKER_HUES) {
 // The contrast roads: dslate (dark, the Distillery District's), then the roads an outline must hold 3:1
 // on: tan, pink and skin2 (light) and Kensington Market's stone (mid grey), which takes it nearly to ink.
 export const ROADS: readonly string[] = ["3a4466", "e4a672", "f6757a", "c28569", "8a857c"];
-// The zone roads, the preview grounds when a set names none: Cabbagetown's grey, High Park's tan, the
-// Distillery District's dslate, Kensington Market's stone, The Beaches' cream and Yonge Street's shale.
-export const ZONE_ROADS: readonly string[] = [
-  "8b9bb4",
-  "e4a672",
-  "3a4466",
-  "8a857c",
-  "ead4aa",
-  "353b45",
+// The zones' art ids in the tools' order, which the preview grounds and ui-zone-pips' tags keep.
+const ZONE_ORDER: readonly string[] = [
+  "cabbagetown",
+  "high-park",
+  "distillery-district",
+  "kensington-market",
+  "the-beaches",
+  "yonge-street",
 ];
+const GAME_DATA = new URL("../../shared/export/game-data.json", import.meta.url);
+
+// {art id: road colour hex} for every zone of the game's export, in ZONE_ORDER.
+function zoneRoadColours(): Map<string, string> {
+  const { zones } = JSON.parse(readFileSync(GAME_DATA, "utf8")) as {
+    zones: { art: string; roadColour: string }[];
+  };
+  const roads = new Map(zones.map((z) => [z.art, z.roadColour.replace(/^#+/, "")]));
+  if (roads.size !== ZONE_ORDER.length || ZONE_ORDER.some((art) => !roads.has(art))) {
+    throw new Error(`ZONE_ORDER ${ZONE_ORDER.join(", ")} differs from the export's zones`);
+  }
+  return new Map(ZONE_ORDER.map((art) => [art, roads.get(art)!]));
+}
+
+// Each zone's road colour by art id, in ZONE_ORDER (Cabbagetown's grey, High Park's tan, the
+// Distillery District's dslate, Kensington Market's stone, The Beaches' cream, Yonge Street's shale).
+export const ZONE_ROAD_COLOURS: ReadonlyMap<string, string> = zoneRoadColours();
+// The zone roads, the preview grounds when a set names none.
+export const ZONE_ROADS: readonly string[] = [...ZONE_ROAD_COLOURS.values()];
 
 // A colour's hex: a K name's, or the colour itself.
 export function hexOf(c: string): string {

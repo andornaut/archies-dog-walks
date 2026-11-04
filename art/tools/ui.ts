@@ -39,11 +39,11 @@
 // filled, empty, filled-disabled, empty-disabled), ui-slider-knob (10x16; tags normal, pressed,
 // disabled), icon-sound (tags on, off), icon-sound-panel, icon-music-panel, icon-effects-panel,
 // icon-motion-panel and icon-install-panel (tags on, off), ui-zone-pips (18x8; tags todo, and <zone>
-// and <zone>-done for each zone in ZONE_COLOURS), ui-tile (24x24 nine-slice, 4px on every side;
-// normal frame 0, selected-static 1, disabled 2, selected 3 to 4 at 180ms), ui-touch-drag (104x40,
-// the help screen's swipe, a white glove dragging one lane-width; tags right and left, each a whole
-// swipe of 15 frames timed per frame (TOUCH_MS) and ending on an empty frame, and still (one frame for
-// reduced motion)).
+// and <zone>-done for each zone in pixel.ts's ZONE_ROAD_COLOURS), ui-tile (24x24 nine-slice, 4px on
+// every side; normal frame 0, selected-static 1, disabled 2, selected 3 to 4 at 180ms),
+// ui-touch-drag (104x40, the help screen's swipe, a white glove dragging one lane-width; tags right
+// and left, each a whole swipe of 15 frames timed per frame (TOUCH_MS) and ending on an empty frame,
+// and still (one frame for reduced motion)).
 //
 // Panels, bubbles, plates, tiles and card frames share one chrome (chromeShape); hits.ts, moments.ts,
 // scene.ts and cards.ts draw their plates, callouts and frames with it.
@@ -78,6 +78,7 @@ import {
   type Sprite,
   type Tag,
   toImage,
+  ZONE_ROAD_COLOURS,
 } from "./pixel.ts";
 import { treat } from "./road.ts";
 
@@ -1767,17 +1768,6 @@ export function ownerTab(): Grid {
   return g;
 }
 
-// Each zone's colour on its pip: its road colour, which the zone's road shadow (one ramp step down)
-// dims. In ui-zone-pips' tag order.
-export const ZONE_COLOURS: ReadonlyMap<string, string> = new Map([
-  ["cabbagetown", "grey"],
-  ["high-park", "tan"],
-  ["distillery-district", "dslate"],
-  ["kensington-market", "stone"],
-  ["the-beaches", "cream"],
-  ["yonge-street", "shale"],
-]);
-
 // The colour one ramp step darker than hex c.
 function darker(c: string): string {
   const out = DARKER.get(c);
@@ -1799,9 +1789,9 @@ export function pipRim(wellColour: string): string {
 
 // 18x8, one per zone of the route on the end screen, 3px apart. todo (no zone) is a dashed dbrown rim
 // around the bare well: not yet chosen. <zone> is chosen: a 16x6 well at 1,1 in the zone's road
-// shadow. <zone>-done is the well in the zone's full colour with a tick (white, or plum where white
-// falls under 3:1), so progress never relies on colour alone. A chosen or done pip's rim is pipRim of
-// its well.
+// shadow, its road colour (ZONE_ROAD_COLOURS) one ramp step down. <zone>-done is the well in the
+// zone's road colour with a tick (white, or plum where white falls under 3:1), so progress never
+// relies on colour alone. A chosen or done pip's rim is pipRim of its well.
 export function zonePip(zone: string | null = null, done = false): Grid {
   const g = new Grid(18, 8);
   if (zone === null) {
@@ -1814,7 +1804,7 @@ export function zonePip(zone: string | null = null, done = false): Grid {
     g.rect(1, 1, 16, 6, "ink");
     return g;
   }
-  const fill = ZONE_COLOURS.get(zone)!;
+  const fill = ZONE_ROAD_COLOURS.get(zone)!;
   const wellColour = done ? hexOf(fill) : darker(hexOf(fill));
   g.rect(1, 0, 16, 8, pipRim(wellColour));
   g.rect(0, 1, 18, 6, pipRim(wellColour));
@@ -2267,7 +2257,7 @@ export function* sprites(): Generator<Sprite> {
     "ui-zone-pips",
     [
       still("todo", zonePip()),
-      ...[...ZONE_COLOURS.keys()].flatMap((zone) =>
+      ...[...ZONE_ROAD_COLOURS.keys()].flatMap((zone) =>
         ["", "-done"].map((suffix) => still(zone + suffix, zonePip(zone, Boolean(suffix)))),
       ),
     ],
