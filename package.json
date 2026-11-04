@@ -36,7 +36,7 @@
     "valibot": "1.5.0"
   },
   "devDependencies": {
-    "@andornaut/art-kit": "https://github.com/andornaut/art-kit/releases/download/v0.5.0/art-kit-0.5.0.tgz",
+    "@andornaut/art-kit": "https://github.com/andornaut/art-kit/releases/download/v0.10.0/art-kit-0.10.0.tgz",
     "@eslint/js": "^10.0.1",
     "@jsquash/webp": "1.5.0",
     "@types/node": "^24.19.2",
@@ -51,6 +51,7 @@
     "markdownlint-cli2": "^0.24.0",
     "pngjs": "7.0.0",
     "prettier": "^3.9.10",
+    "skia-canvas": "4.0.0",
     "tsx": "4.23.15",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.71.2",
