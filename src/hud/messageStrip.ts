@@ -20,8 +20,9 @@ import { DEBUFF_BAR } from "./walkHud";
 // (OWNER_LEAD), wrapped onto up to MESSAGE_STRIP.rows rows; an owner the text names has their
 // face inline before their name (faceText.ts); the panel is as tall as the rows it
 // holds, and as the owner's lead. While debuff bars are up it moves under them, rows and all. A
-// line waits its turn, shows, and fades out at the end of its life; one that waits too long is
-// dropped unseen, but for a badge, a hint or a firing. The strip shows while it has a line.
+// line waits its turn, shows, and fades out at the end of its life; one that waits too long, or
+// the oldest such one when too many are waiting, is dropped unseen, but for a badge, a hint or
+// a firing, which only shows late. The strip shows while it has a line.
 
 // What a line is about, and the icon that leads it; or a walk effect, such as a gear, a perk or
 // an upgrade, led by its 16x16 icon.
@@ -266,8 +267,9 @@ export const EMPTY_MESSAGE_STRIP: MessageStripState = { nextId: 0, shown: null, 
 
 // dwellMs: the least a line shows before a waiting line takes its place. lifeMs: how long a
 // line lives from when it showed, its last fadeMs fading out. maxWaiting: lines said faster
-// than they can show beyond this many drop the oldest waiting one. maxWaitMs: a line that has
-// waited this long is dropped, unless it keeps waiting.
+// than they can show beyond this many drop the oldest waiting one that does not keep waiting;
+// lines that keep waiting are never dropped, and may wait beyond this many. maxWaitMs: a line
+// that has waited this long is dropped, unless it keeps waiting.
 interface MessageTiming {
   readonly dwellMs: number;
   readonly fadeMs: number;
@@ -290,6 +292,24 @@ export function messageTiming(data: Pick<GameData, "tuning">): MessageTiming {
   return { ...MESSAGE_TIMING, maxWaitMs: 1000 * seconds };
 }
 
+// Waiting lines past maxWaiting less each oldest one that does not keep waiting, but for spare,
+// until none is left to drop.
+function capWaiting(
+  timing: Pick<MessageTiming, "maxWaiting">,
+  spare: WaitingLine | null,
+  waiting: readonly WaitingLine[],
+): readonly WaitingLine[] {
+  let capped = waiting;
+  while (capped.length > timing.maxWaiting) {
+    const oldest = capped.findIndex((line) => line !== spare && line.keepsWaiting !== true);
+    if (oldest < 0) {
+      return capped;
+    }
+    capped = capped.filter((_, i) => i !== oldest);
+  }
+  return capped;
+}
+
 // Adds a line to wait its turn, unless the same text is already shown or waiting.
 export function sayLine(
   timing: Pick<MessageTiming, "maxWaiting">,
@@ -302,12 +322,12 @@ export function sayLine(
     return state;
   }
   const waiting = [...state.waiting, { ...line, waitedMs: 0 }];
-  return { ...state, waiting: waiting.slice(-timing.maxWaiting) };
+  return { ...state, waiting: capWaiting(timing, null, waiting) };
 }
 
 // Adds a line ahead of every waiting line with its icon, as an urgent hint jumps the hints
 // waiting their turn, unless the same text is already shown or waiting. Past maxWaiting it
-// drops the oldest other waiting line.
+// drops the oldest other waiting line that does not keep waiting.
 export function sayLineAhead(
   timing: Pick<MessageTiming, "maxWaiting">,
   line: MessageLine,
@@ -322,11 +342,7 @@ export function sayLineAhead(
   const at = others.findIndex(({ icon }) => icon === line.icon);
   const waiting =
     at < 0 ? [...others, added] : [...others.slice(0, at), added, ...others.slice(at)];
-  if (waiting.length <= timing.maxWaiting) {
-    return { ...state, waiting };
-  }
-  const oldest = waiting[0] === added ? 1 : 0;
-  return { ...state, waiting: waiting.filter((_, i) => i !== oldest) };
+  return { ...state, waiting: capWaiting(timing, added, waiting) };
 }
 
 // Ages the shown line and the waiting ones dtMs, drops the shown one past its life and each

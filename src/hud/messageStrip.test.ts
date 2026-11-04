@@ -40,7 +40,7 @@ import {
   stepMessageStrip,
   stripLeadSlot,
 } from "./messageStrip";
-import { achievementLine, pullLine } from "./stripLines";
+import { achievementLine, firedLine, pullLine } from "./stripLines";
 import { debuffBarRects } from "./walkHud";
 
 const TIMING = messageTiming(gameData);
@@ -154,17 +154,13 @@ describe("stepMessageStrip", () => {
     expect(waited(said, waitedMs).map(({ text }) => text)).toEqual(waiting);
   });
 
-  it("shows every badge of a burst in turn, a dwell apart, while plain lines past the wait drop", () => {
-    const badges = orderedAchievements(gameData.achievements)
-      .slice(0, maxWaiting / 2)
-      .map((achievement) => achievementLine(gameData, achievement));
-    const plains = keysOf(gameData.dogs)
-      .slice(0, badges.length)
-      .map((dog) => pullLine(gameData, dog));
-    const burst = plains.flatMap((plain, i) => [plain, defined(badges[i])]);
+  // Each line shown, and when, as burst is said at once and the strip steps until all could
+  // have shown; and the strip at the end.
+  const showBurst = (burst: readonly MessageLine[]) => {
     const stepMs = 100;
     const shows: { atMs: number; text: string }[] = [];
     let state = burst.reduce((strip, said) => sayLine(TIMING, said, strip), EMPTY_MESSAGE_STRIP);
+    const said = state;
     for (let atMs = 0; atMs <= burst.length * maxWaitMs; atMs += stepMs) {
       const before = state.shown?.id;
       state = stepMessageStrip(TIMING, atMs === 0 ? 0 : stepMs, state);
@@ -172,17 +168,64 @@ describe("stepMessageStrip", () => {
         shows.push({ atMs, text: state.shown.text });
       }
     }
-    const texts = shows.map(({ text }) => text);
+    const paced = shows.slice(1).every(({ atMs }, i) => atMs - defined(shows[i]).atMs >= dwellMs);
+    return { paced, said, shows, state, texts: shows.map(({ text }) => text) };
+  };
+  const badgeLines = (count: number) =>
+    orderedAchievements(gameData.achievements)
+      .slice(0, count)
+      .map((achievement) => achievementLine(gameData, achievement));
+  const plainLines = (count: number) =>
+    keysOf(gameData.dogs)
+      .slice(0, count)
+      .map((dog) => pullLine(gameData, dog));
+
+  it("shows every badge of a burst in turn, a dwell apart, while plain lines past the wait drop", () => {
+    const badges = badgeLines(maxWaiting / 2);
+    const plains = plainLines(badges.length);
+    const burst = plains.flatMap((plain, i) => [plain, defined(badges[i])]);
+    const { paced, shows, state, texts } = showBurst(burst);
     const plainTexts = plains.map(({ text }) => text);
     expect(texts.filter((text) => !plainTexts.includes(text))).toEqual(
       badges.map(({ text }) => text),
     );
-    expect(shows.slice(1).every(({ atMs }, i) => atMs - defined(shows[i]).atMs >= dwellMs)).toBe(
-      true,
-    );
+    expect(paced).toBe(true);
     const plainShows = shows.filter(({ text }) => plainTexts.includes(text));
     expect(plainShows.every(({ atMs }) => atMs < maxWaitMs)).toBe(true);
     expect(plainShows.length).toBeLessThan(plains.length);
+    expect(state.waiting).toEqual([]);
+  });
+
+  it("drops the oldest plain lines past the most waiting, never a badge, a hint or a firing", () => {
+    const hint = defined(Object.values(gameData.hints)[0]);
+    const kept: MessageLine[] = [
+      ...badgeLines(2),
+      { icon: "hint", keepsWaiting: true, text: hint.text },
+      firedLine(gameData, defined(keysOf(gameData.dogs)[0])),
+    ];
+    const plains = plainLines(maxWaiting);
+    const burst = plains.flatMap((plain, i) =>
+      i < kept.length ? [plain, defined(kept[i])] : [plain],
+    );
+    expect(burst.length).toBeGreaterThan(maxWaiting);
+    const { paced, said, state, texts } = showBurst(burst);
+    const keptTexts = kept.map(({ text }) => text);
+    const droppedTexts = plains.slice(0, burst.length - maxWaiting).map(({ text }) => text);
+    expect(waitingTexts(said)).toEqual(
+      burst.map(({ text }) => text).filter((text) => !droppedTexts.includes(text)),
+    );
+    expect(texts.filter((text) => keptTexts.includes(text))).toEqual(keptTexts);
+    expect(paced).toBe(true);
+    expect(state.waiting).toEqual([]);
+  });
+
+  it("shows every line of a burst of more kept lines than the most waiting", () => {
+    const badges = badgeLines(maxWaiting + 2);
+    expect(badges.length).toBeGreaterThan(maxWaiting);
+    const { paced, said, state, texts } = showBurst(badges);
+    expect(said.waiting.length).toBe(badges.length);
+    expect(texts).toEqual(badges.map(({ text }) => text));
+    expect(paced).toBe(true);
     expect(state.waiting).toEqual([]);
   });
 });
