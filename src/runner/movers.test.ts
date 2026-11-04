@@ -8,15 +8,13 @@ import type { StopLanes } from "../data/types.ts";
 import { laneMask } from "../layout/lanes.ts";
 import { read } from "../rules/units.ts";
 import { defined } from "../testing/defined.ts";
+import { HOP_SEQUENCES_MOST, hopSequences, hopShapes, stepSpots } from "./moverHops.ts";
 import {
   DART_LIFTS,
   DART_VERGE_LANES,
   dartOutcome,
   drawMover,
   drawnCount,
-  HOP_SEQUENCES_MOST,
-  hopSequences,
-  hopShapes,
   leavesPathOpen,
   type MoverCaps,
   type MoverDraws,
@@ -26,7 +24,6 @@ import {
   type OnScreen,
   onScreenOf,
   screenHasRoom,
-  stepSpots,
   stopsOnVerge,
   sweptLanes,
 } from "./moverPlanning.ts";

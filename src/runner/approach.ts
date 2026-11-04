@@ -1,5 +1,5 @@
 import type { RoadPoint } from "./collision.ts";
-import { SIDESTEPS } from "./moverPlanning.ts";
+import { SIDESTEPS } from "./moverHops.ts";
 import { type MoverPath, staysInReach, type StepShape, stepsTaken, takeMove } from "./movers.ts";
 
 // A stalker steps toward the pack while it is still ahead of it. Its first step is chosen as its

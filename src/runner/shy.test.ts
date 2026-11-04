@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { hopShapes } from "./moverPlanning.ts";
+import { hopShapes } from "./moverHops.ts";
 import { laneAt, type StepShape } from "./movers.ts";
 import {
   awayHop,

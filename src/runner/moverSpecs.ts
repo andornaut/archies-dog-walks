@@ -5,14 +5,12 @@ import { chance, type Random, randomPick } from "@andornaut/game-kit/random";
 import type { GameData, MoveCount, Movement, NeighbourhoodId } from "../data/types.ts";
 import { read } from "../rules/units.ts";
 import { assignedMovement, type ProfiledMovement } from "./movementAssignments.ts";
+import { hopSequences, hopShapes, SIDESTEPS } from "./moverHops.ts";
 import {
-  hopSequences,
-  hopShapes,
   type MoverFootprint,
   type MoverMotion,
   type MoverSpec,
   type PlannerStreams,
-  SIDESTEPS,
 } from "./moverPlanning.ts";
 import { type StepShape } from "./movers.ts";
 import { type WalkItemKind } from "./walkItems.ts";

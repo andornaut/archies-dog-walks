@@ -1,7 +1,7 @@
 import type { Movement } from "../data/types.ts";
 import { read } from "../rules/units.ts";
 import { approachOutcomes } from "../runner/approach.ts";
-import { hopShapes, SIDESTEPS } from "../runner/moverPlanning.ts";
+import { hopShapes, SIDESTEPS } from "../runner/moverHops.ts";
 import {
   cuedStep,
   hasStopped,

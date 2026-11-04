@@ -40,13 +40,8 @@ import { heartsByDog } from "../testing/runState.ts";
 import { atPack, data, geometry, inLane, step, walkWith, withHearts } from "../testing/walk.ts";
 import { captureZoneInput, planZoneForSeed } from "../testing/zonePlan.ts";
 import { assignedMovement } from "./movementAssignments.ts";
-import {
-  DART_VERGE_LANES,
-  dartOutcome,
-  drawMover,
-  hopShapes,
-  moverPlacements,
-} from "./moverPlanning.ts";
+import { hopShapes } from "./moverHops.ts";
+import { DART_VERGE_LANES, dartOutcome, drawMover, moverPlacements } from "./moverPlanning.ts";
 import {
   inMotion,
   isPausing,
