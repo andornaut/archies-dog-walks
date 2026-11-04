@@ -1191,8 +1191,11 @@ describe("standing pickups during mover admission", () => {
     const mover = { blocksLane: true, cells: [{ lane: 1, row: 1 }], lanes: 1, rests: [] };
     expect(pickupAllowsMover(pickup, mover)).toBe(true);
     expect(pickupAllowsMover({ ...pickup, moversPassOver: false }, mover)).toBe(false);
-    expect(pickupAllowsMover(pickup, { ...mover, rests: [{ distance: 150, lane: 1 }] })).toBe(
-      false,
-    );
+    expect(
+      pickupAllowsMover(pickup, {
+        ...mover,
+        rests: [{ distance: 150, lane: 1, lanes: 1, length: 20 }],
+      }),
+    ).toBe(false);
   });
 });

@@ -55,6 +55,23 @@ function runs(count: number, overrides: Overrides = {}): RunResult[] {
   );
 }
 
+const FEE_AND_BADGE_SEEDS = [1, 2] as const;
+const feeAndBadgeRuns = new Map<number, RunResult>();
+
+// Fee and badge assertions only read this exact pair of real walks.
+function feeAndBadgeRun(seed: (typeof FEE_AND_BADGE_SEEDS)[number]): RunResult {
+  let result = feeAndBadgeRuns.get(seed);
+  if (result === undefined) {
+    result = simulateRun(
+      gameData,
+      seed,
+      config({ pack: RISKY, policy: "alwaysHearts", skill: SKILL_PRESETS.novice }),
+    );
+    feeAndBadgeRuns.set(seed, result);
+  }
+  return result;
+}
+
 // Each whole-run comparison gets its own execution limit.
 describe("simulateRun", { timeout: 30_000 }, () => {
   describe("seed reproducibility", () => {
@@ -137,10 +154,10 @@ describe("simulateRun", { timeout: 30_000 }, () => {
   });
 
   // What each fee pays is the run rules' own test; this checks the walk pays the dogs it should.
-  it("holds each zone's pay for every dog still walking at its end", () => {
-    const results = runs(2, { pack: RISKY, policy: "alwaysHearts", skill: SKILL_PRESETS.novice });
-
-    for (const result of results) {
+  it.each(FEE_AND_BADGE_SEEDS)(
+    "holds each zone's pay for every dog still walking at its end (seed %i)",
+    (seed) => {
+      const result = feeAndBadgeRun(seed);
       for (const zone of result.zones) {
         const gone = result.firings
           .filter((firing) => firing.zoneIndex <= zone.zoneIndex)
@@ -148,8 +165,8 @@ describe("simulateRun", { timeout: 30_000 }, () => {
         const walking = packOrder(gameData.dogs, RISKY).filter((dog) => !gone.includes(dog));
         expect(zone.fees.map((fee) => fee.dog)).toEqual(walking);
       }
-    }
-  });
+    },
+  );
 
   it("ends with no dogs when every owner has fired you", () => {
     const ended = runs(3, { pack: ["archie"], policy: "alwaysHearts", skill: BLIND }).filter(
@@ -166,10 +183,12 @@ describe("simulateRun", { timeout: 30_000 }, () => {
 
 // The badge counters of a few real walks match what their sessions counted.
 describe("badgeCounters", { timeout: 30_000 }, () => {
-  let results: RunResult[] = [];
-  beforeAll(() => {
-    results = runs(2, { pack: RISKY, policy: "alwaysHearts", skill: SKILL_PRESETS.novice });
-  }, 30_000);
+  const results: RunResult[] = [];
+  for (const seed of FEE_AND_BADGE_SEEDS) {
+    beforeAll(() => {
+      results.push(feeAndBadgeRun(seed));
+    }, 30_000);
+  }
   const counters = () =>
     badgeCounters(
       gameData,
@@ -435,6 +454,7 @@ describe("simulateRun planning diagnostics", () => {
         observeSpawnPlan: (observation, run) => observed.push({ observation, run }),
       });
       expect(result.planningFailure).toEqual({
+        kind: "quota",
         message: "unfilled later quota",
         seed: 7,
         snapshot,

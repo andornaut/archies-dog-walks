@@ -1,4 +1,5 @@
 import { laneMask } from "../layout/lanes";
+import type { MoverSpec } from "./moverPlanning";
 import type { SpawnRejection } from "./spawnAdmission";
 import type { LaneBlocks, PlacedPlaces, SpawnCells } from "./spawnCells";
 import type { FeasibilityObserver } from "./spawnFeasibilityDiagnostics";
@@ -9,7 +10,7 @@ import {
   hitLength,
   lastHitRow,
   lastRowTaken,
-  moverRests,
+  moverRestSpans,
   quotaFootprint,
   type SpawnEvent,
   type SpawnPlan,
@@ -31,6 +32,18 @@ export interface StandingFitContext {
   clearOfMovers(cell: Cell, footprint: Footprint): boolean;
   reject(kind: string, reason: SpawnRejection): false;
 }
+export function standingSpan(
+  context: Pick<StandingFitContext, "plan" | "rows" | "spacing">,
+  cell: Cell,
+  footprint: Footprint,
+  quota: SpawnQuota<string>,
+): { readonly last: number } | { readonly rule: "outside-road" | "outside-rows" } {
+  if (cell.lane + footprint.lanes > context.plan.laneCount) {
+    return { rule: "outside-road" };
+  }
+  const last = lastRowTaken(context.plan, context.spacing, cell, footprint, quota.blocksLane);
+  return last >= context.rows.length ? { rule: "outside-rows" } : { last };
+}
 export function fitsStanding(
   context: StandingFitContext,
   cell: Cell,
@@ -42,21 +55,23 @@ export function fitsStanding(
   if (!canShow(quota, cell)) {
     return false;
   }
-  if (cell.lane + footprint.lanes > plan.laneCount) {
-    return reject(kind, "outside-road");
+  const span = standingSpan(context, cell, footprint, quota);
+  if ("rule" in span) {
+    return reject(kind, span.rule);
   }
-  const last = lastRowTaken(plan, spacing, cell, footprint, blocksLane);
-  if (last >= rows.length) {
-    return reject(kind, "outside-rows");
-  }
+  const { last } = span;
   const covered = laneMask(cell.lane, footprint.lanes);
+  const standingCells: Cell[] = [];
   for (let row = cell.row; row <= last; row++) {
     if ((cells.heldFor(row, quota) & covered) !== 0) {
       context.onFailure?.({ mask: cells.heldFor(row, quota) & covered, row, rule: "cells" });
       return reject(kind, "cells");
     }
+    for (let lane = cell.lane; lane < cell.lane + footprint.lanes; lane++) {
+      standingCells.push({ lane, row });
+    }
   }
-  const needed = footprint.lanes * (last - cell.row + 1);
+  const needed = cells.untaken(standingCells);
   if (footprint.lanes * footprint.rows > 1 && !cells.leavesRoom(needed)) {
     return reject(kind, "reservation");
   }
@@ -129,19 +144,18 @@ export function holdMoverRests(
   plan: SpawnPlan<string>,
   rows: readonly number[],
   cells: Pick<SpawnCells, "holdRest">,
+  spec: Pick<MoverSpec, "footprint" | "hitLength">,
   event: SpawnEvent<string>,
-  footprint: Footprint,
 ): void {
   if (event.mover === undefined) {
     return;
   }
   const oneRowHit = hitLength(plan, 1);
-  const length = hitLength(plan, footprint.rows);
   const roadLanes = laneMask(0, plan.laneCount);
-  for (const rest of moverRests(plan.laneCount, event.distance, event.mover)) {
-    const covered = laneMask(rest.lane, footprint.lanes) & roadLanes;
+  for (const rest of moverRestSpans(plan, spec, event)) {
+    const covered = laneMask(rest.lane, rest.lanes) & roadLanes;
     rows.forEach((rowDistance, row) => {
-      if (rowDistance > rest.distance - oneRowHit && rowDistance < rest.distance + length) {
+      if (rowDistance > rest.distance - oneRowHit && rowDistance < rest.distance + rest.length) {
         cells.holdRest(row, covered);
       }
     });

@@ -80,12 +80,12 @@ import {
   sweptHitDog,
   tickInvulnerability,
 } from "./collision";
+import { componentHitBoxes } from "./componentHitBoxes";
 import { type HeldStep, type HitStop, hitStopLength, startHitStop, tickHitStop } from "./hitStop";
 import { advanceLaneControl, type LaneControl, laneControlIn, steerLane } from "./laneControl";
 import { type LaneMotion, type LaneMotionConfig, laneMotionX, stillInLane } from "./laneMotion";
 import {
   drawnLanes,
-  facesLeft,
   hasLeftRoad,
   hasStopped,
   isSliding,
@@ -99,12 +99,7 @@ import {
 } from "./movers";
 import { drawnObstacleBox, exitLength, type PlacedPart, type RoadLens } from "./obstacleBox";
 import { awayHop, nextShyChoiceAt, shyChoices, type ShyPath, takeHop } from "./shy";
-import {
-  signatureAlive,
-  signatureComponentProgress,
-  signaturePlace,
-  signatureSweeps,
-} from "./signaturePaths";
+import { signatureAlive, signatureSweeps } from "./signaturePaths";
 import type { AdmissionReport } from "./spawnAdmission";
 import { type PathRow, type SpawnEvent, takeDueSpawns } from "./spawning";
 import {
@@ -789,46 +784,6 @@ export function obstacleHitBox(
   const x = (lane + drawn / 2) * cell.length;
   const reach = hitReach(data, geometry, item.kind, moving);
   return { ...drawnObstacleBox(lens, PART_INSET, parts, { feetY, x }, reach), lanes };
-}
-
-function componentHitBoxes(
-  geometry: Pick<RoadGeometry, "cell" | "lens">,
-  item: WalkItem,
-): LanedBox[] | undefined {
-  const { mover } = item;
-  if (mover?.path.motion !== "signature" || mover.path.route.profile.kind !== "delayedTrail") {
-    return undefined;
-  }
-  const { route } = mover.path;
-  const profile = route.profile;
-  if (profile.kind !== "delayedTrail") {
-    return undefined;
-  }
-  const silhouette = COMPONENT_SILHOUETTES[profile.spriteKey];
-  if (silhouette === undefined) {
-    throw new Error(`Missing component silhouette ${profile.spriteKey}`);
-  }
-  const leader = signaturePlace(route, mover.since);
-  return route.componentDelays.map((_, component) => {
-    const point = signaturePlace(route, mover.since, component);
-    const feetY = item.y + item.height + point.y - leader.y;
-    const x = (point.x + 0.5) * geometry.cell.length;
-    const lanes = {
-      left: point.x * geometry.cell.length,
-      right: (point.x + 1) * geometry.cell.length,
-    };
-    const delayed = route.entryEnd + signatureComponentProgress(route, mover.since, component);
-    const drawn = facesLeft(mover.path, delayed)
-      ? { ...silhouette, left: -silhouette.right, right: -silhouette.left }
-      : silhouette;
-    return {
-      ...drawnObstacleBox(geometry.lens, PART_INSET, [{ behind: 0, dx: 0, silhouette: drawn }], {
-        feetY,
-        x,
-      }),
-      lanes,
-    };
-  });
 }
 
 // A logical obstacle may draw separate components. Their gaps stay outside its hit boxes.

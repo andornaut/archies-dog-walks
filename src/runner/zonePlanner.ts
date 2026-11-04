@@ -18,6 +18,7 @@ import {
   type RiderSpan,
 } from "./moverPlanning";
 import { hasLeftRoad, type LaneSpan, type MoverPath, moverPlace } from "./movers";
+import { quietAllowed, type QuietRun as Run, quietRuns } from "./quietRows";
 import { signaturePlace } from "./signaturePaths";
 import {
   type AdmissionReport,
@@ -44,7 +45,7 @@ import {
   hitLength,
   lastHitRow,
   lastRowTaken,
-  moverRests,
+  moverRestSpans,
   pathChanges,
   pathHeldLanes,
   pickupAllowsMover,
@@ -286,52 +287,6 @@ function moverRowsInView(
   );
 }
 
-interface Run {
-  first: number;
-  last: number;
-}
-
-// The most quiet rows a run from first to last of rowCount rows may have: maxEmptyRows; half that,
-// rounded down, for a run from the zone's first row or to its last, so a run across the road where
-// two zones meet keeps near the cap; and none from the first row of a zone whose rows start on the
-// road in view, so something meets the pack soon after it starts.
-function quietAllowed(
-  plan: Pick<SpawnPlan<string>, "firstContactSeconds" | "maxEmptyRows">,
-  rowCount: number,
-  first: number,
-  last: number,
-): number {
-  if (first === 0 && plan.firstContactSeconds !== undefined) {
-    return 0;
-  }
-  return first === 0 || last === rowCount - 1
-    ? Math.floor(plan.maxEmptyRows / 2)
-    : plan.maxEmptyRows;
-}
-
-// The runs of more quiet rows than they may have, rows that come on screen with nothing
-// lane-blocking in view (0 in filled), and how many rows they run over it in all.
-function quietRuns(
-  plan: Pick<SpawnPlan<string>, "firstContactSeconds" | "maxEmptyRows">,
-  filled: Uint8Array,
-): { over: number; runs: Run[] } {
-  const runs: Run[] = [];
-  let over = 0;
-  let first = 0;
-  for (let row = 0; row <= filled.length; row++) {
-    if (row < filled.length && filled[row] === 0) {
-      continue;
-    }
-    const allowed = quietAllowed(plan, filled.length, first, row - 1);
-    if (row - first > allowed) {
-      runs.push({ first, last: row - 1 });
-      over += row - first - allowed;
-    }
-    first = row + 1;
-  }
-  return { over, runs };
-}
-
 // The standing spawns of quotas in the order they are placed, each the ith of its quota's: the
 // kinds take turns, in the order of their spawns' stretches along the zone, so a kind placed later
 // still gets cells in every stretch and each keeps its share of what is placed. Within a turn the
@@ -399,7 +354,6 @@ class ZonePlanner<Kind extends string> {
   // The lane-blocking riders placed, in road and time.
   private readonly riders: RiderSpan[] = [];
   private readonly plan: SpawnPlan<Kind>;
-  private readonly restCache = new WeakMap<MoverPath, ReturnType<typeof moverRests>>();
   private readonly rows: readonly number[];
   private readonly spacing: number;
   private readonly standing: Standing<Kind>[] = [];
@@ -479,7 +433,11 @@ class ZonePlanner<Kind extends string> {
       return true;
     }
     const movingQuota = this.plan.quotas.find((quota) => quota.kind === event.kind);
-    let rests = this.restCache.get(event.mover);
+    const rests = moverRestSpans(
+      this.plan,
+      movingQuota?.mover ?? { footprint: SINGLE_CELL },
+      event,
+    );
     for (const standing of this.events) {
       if (standing.mover !== undefined) {
         continue;
@@ -488,10 +446,6 @@ class ZonePlanner<Kind extends string> {
       const quota = index === undefined ? undefined : this.plan.quotas[index];
       if (quota === undefined || quota.blocksLane) {
         continue;
-      }
-      if (rests === undefined) {
-        rests = moverRests(this.plan.laneCount, 0, event.mover);
-        this.restCache.set(event.mover, rests);
       }
       const row = this.rows.indexOf(standing.distance);
       const footprint = quotaFootprint(quota);
@@ -512,13 +466,12 @@ class ZonePlanner<Kind extends string> {
             lastRow: last,
             moversPassOver: quota.moversPassOver === true,
             moversRestOn: quota.moversRestOn === true,
-            to: itemAt(this.rows, last),
+            to: itemAt(this.rows, last) + hitLength(this.plan, 1),
           },
           {
             blocksLane: movingQuota?.blocksLane ?? false,
             cells,
-            lanes: movingQuota?.mover?.footprint.lanes ?? 1,
-            rests: rests.map((rest) => ({ ...rest, distance: event.distance + rest.distance })),
+            rests,
           },
         )
       ) {
@@ -782,10 +735,10 @@ class ZonePlanner<Kind extends string> {
       if (event.mover === undefined) {
         continue;
       }
-      const footprint =
-        this.plan.quotas.find((quota) => quota.kind === event.kind)?.mover?.footprint ??
-        SINGLE_CELL;
-      holdMoverRests(this.plan, this.rows, this.cells, event, footprint);
+      const spec = this.plan.quotas.find((quota) => quota.kind === event.kind)?.mover ?? {
+        footprint: SINGLE_CELL,
+      };
+      holdMoverRests(this.plan, this.rows, this.cells, spec, event);
     }
   }
 

@@ -22,6 +22,7 @@ import { moverSpec } from "../runner/moverSpecs";
 import { moverOutcomes } from "../runner/outcomes";
 import { NO_PULLS } from "../runner/pulls";
 import { screenRoadGeometry } from "../runner/screenGeometry";
+import { apportionSlotCounts, SLOT_ROLES } from "../runner/slotConfig";
 import { blockingLength } from "../runner/spawning";
 import {
   itemHeight,
@@ -36,12 +37,13 @@ import {
   walkScrollSpeed,
 } from "../runner/walk";
 import { blocksLane, type WalkItem, type WalkItemKind } from "../runner/walkItems";
+import { ZoneSlotPlanningError } from "../runner/zoneSlotInput";
 import type { PackDogs } from "../state/runState";
 import { defined } from "../testing/defined";
 import { hoppingInstead, plannerStreams, sharedWorld } from "../testing/movers";
 import { testState } from "../testing/runState";
 import { IDEAL_SKILL, simConfig } from "../testing/sim";
-import { mapZones } from "../testing/world";
+import { mapZones, minimumSlotConfiguration, slotCapacityForModifier } from "../testing/world";
 import {
   actBot,
   type BotRoad,
@@ -56,8 +58,7 @@ import { type BotSight, moverShows, sightPaths } from "./sight";
 import { type RunResult, type SimData, simulateRun } from "./simulate";
 import { type Skill, SKILL_PRESET_IDS, SKILL_PRESETS } from "./skills";
 
-// Zones a quarter as long, with a quarter of the spawns, so the road is as busy as the game's
-// and a run is cheap.
+// Scale zone length and spawn budgets while retaining the full roster's minimum guarantees.
 function shortZones(data: GameData, share: number): GameData {
   const { counts, seconds } = data.tuning;
   const scaled = (value: number) => Math.round(value * share);
@@ -67,15 +68,32 @@ function shortZones(data: GameData, share: number): GameData {
       ...data.tuning,
       counts: {
         ...counts,
-        minorObstaclesFirstZone: scaled(counts.minorObstaclesFirstZone),
-        minorObstaclesGainPerZone: scaled(counts.minorObstaclesGainPerZone),
-        obstaclesFirstZone: scaled(counts.obstaclesFirstZone),
-        obstaclesGainPerZone: scaled(counts.obstaclesGainPerZone),
         tipsFirstZone: scaled(counts.tipsFirstZone),
         tipsGainPerZone: scaled(counts.tipsGainPerZone),
       },
       seconds: { ...seconds, zoneAtBaseSpeed: seconds.zoneAtBaseSpeed * share },
     },
+    world: mapZones(
+      (zone) => ({
+        ...zone,
+        spawnSlots: slotCapacityForModifier(
+          read(data.tuning, "multipliers", "rushHourObstacles"),
+          minimumSlotConfiguration({
+            capacity: Object.fromEntries(
+              SLOT_ROLES.map((role) => [role, scaled(zone.spawnSlots.capacity[role])]),
+            ) as unknown as typeof zone.spawnSlots.capacity,
+            counts: zone.spawnSlots.counts.map((row) =>
+              apportionSlotCounts(
+                scaled(SLOT_ROLES.reduce((sum, role) => sum + row[role], 0)),
+                row,
+              ),
+            ) as unknown as typeof zone.spawnSlots.counts,
+            guarantees: zone.spawnSlots.guarantees,
+          }),
+        ),
+      }),
+      data.world,
+    ),
   };
 }
 
@@ -86,6 +104,10 @@ function withoutPulls(data: GameData): GameData {
     world: mapZones(
       (zone) => ({
         ...zone,
+        spawnSlots: {
+          ...zone.spawnSlots,
+          guarantees: zone.spawnSlots.guarantees.filter(({ kind }) => kind !== "squirrel"),
+        },
         weights: { ...zone.weights, obstacles: { ...zone.weights.obstacles, squirrel: 0 } },
       }),
       data.world,
@@ -103,7 +125,15 @@ function run(
   pack: PackDogs = NO_CHASER,
   sight: BotSight = "sight",
 ): RunResult {
-  return simulateRun(data, seed, simConfig(skill, pack, {}, sight));
+  const result = simulateRun(data, seed, simConfig(skill, pack, {}, sight));
+  if (result.planningFailure?.kind === "slots") {
+    throw new ZoneSlotPlanningError(result.planningFailure.input, result.planningFailure.result);
+  }
+  expect(
+    result.planningFailure,
+    `seed ${seed}: bot measurement needs a planned run`,
+  ).toBeUndefined();
+  return result;
 }
 
 // Obstacles, minor or not, moving or not, that the pack hit, and that reached it.
@@ -200,14 +230,25 @@ describe("a steering bot", { timeout: 60_000 }, () => {
   it.each([{ first: 58, gain: 1, seed: 1 }])(
     "avoids every obstacle no pull forces, as an ideal player by foresight, at minor counts $first + $gain a zone",
     ({ first, gain, seed }) => {
-      const counts = {
-        ...gameData.tuning.counts,
-        minorObstaclesFirstZone: first,
-        minorObstaclesGainPerZone: gain,
-      };
-      const busy = withoutPulls(
-        shortZones({ ...gameData, tuning: { ...gameData.tuning, counts } }, 0.25),
+      const world = mapZones(
+        (zone) => ({
+          ...zone,
+          spawnSlots: {
+            ...zone.spawnSlots,
+            counts: zone.spawnSlots.counts.map((row, index) => {
+              const split = apportionSlotCounts(first + index * gain, {
+                encounterFixed: 0,
+                encounterMoving: 0,
+                minorFixed: row.minorFixed,
+                minorMoving: row.minorMoving,
+              });
+              return { ...row, minorFixed: split.minorFixed, minorMoving: split.minorMoving };
+            }) as unknown as typeof zone.spawnSlots.counts,
+          },
+        }),
+        gameData.world,
       );
+      const busy = withoutPulls(shortZones({ ...gameData, world }, 0.25));
 
       expect(
         obstacleCounts(busy, [run(busy, seed, IDEAL_SKILL, ["ginger"], "foresight")]).hit,

@@ -1,5 +1,10 @@
 import type { MovementKind } from "../data/types";
 import {
+  alternativeLanesOpen,
+  deterministicOccupancyMasks,
+  reactiveLaneMasks,
+} from "./laneAlternatives";
+import {
   DART_LIFTS,
   isHerring,
   type MoverDraws,
@@ -21,11 +26,9 @@ import {
   type BlockingPlace,
   blockingSpan,
   hitLength,
-  laneTotal,
   lastHitRow,
   lastRowTaken,
-  moverRests,
-  openStretches,
+  moverRestSpans,
   packFitsOnPath,
   pathChanges,
   pathHeldLanes,
@@ -586,12 +589,12 @@ function auditPlan<Kind extends string>(
         !standing.quota.blocksLane &&
         standing.quota.moversRestOn !== true &&
         move.event.mover !== undefined &&
-        moverRests(plan.laneCount, move.event.distance, move.event.mover).some(
+        moverRestSpans(plan, move.quota.mover!, move.event).some(
           (rest) =>
             rest.lane < standing.lane + standing.lanes &&
-            standing.lane < rest.lane + quotaFootprint(move.quota).lanes &&
-            rest.distance >= rows[standing.first]! &&
-            rest.distance <= rows[standing.last]!,
+            standing.lane < rest.lane + rest.lanes &&
+            rest.distance < rows[standing.last]! + hitLength(plan, 1) &&
+            rows[standing.first]! < rest.distance + rest.length,
         )
       ) {
         move.finding.reasons.push("moving rest intersects pickup");
@@ -654,46 +657,45 @@ function auditPlan<Kind extends string>(
     ...cells
       .filter((cell) => cell.quota.blocksLane)
       .map((cell) => ({
+        alternatives: undefined as readonly number[] | undefined,
+        covered: ((1 << cell.lanes) - 1) << cell.lane,
         dart: false,
         finding: cell.finding,
-        mask: ((1 << cell.lanes) - 1) << cell.lane,
+        occupancy: undefined as readonly number[] | undefined,
         row: cell.first,
         rows: quotaFootprint(cell.quota).rows,
       })),
     ...moving
       .filter((move) => move.quota.blocksLane)
       .map((move) => ({
+        alternatives: reactiveLaneMasks(move.quota.mover!.footprint.lanes, move.event.mover!),
+        covered: ((1 << move.proof.block.lanes.count) - 1) << move.proof.block.lanes.first,
         dart: move.proof.block.dart,
         finding: move.finding,
-        mask: ((1 << move.proof.block.lanes.count) - 1) << move.proof.block.lanes.first,
+        occupancy: deterministicOccupancyMasks(
+          plan.laneCount,
+          move.quota.mover!.footprint.lanes,
+          ((1 << move.proof.block.lanes.count) - 1) << move.proof.block.lanes.first,
+          move.event.mover!,
+        ),
         row: move.proof.block.row,
         rows: move.proof.block.rows,
       })),
   ];
   for (let row = 0; row < rows.length; row++) {
-    let walls = 0,
-      darts = 0,
-      gap = 0;
-    const relevant = blocks.filter((block) => {
+    const window = blocks.filter((block) => {
       const span = blockingSpan(plan, spacing, block.row, block.rows);
-      if (row >= block.row && row <= span.lastGap) {
-        gap |= block.mask;
-      }
       return row >= block.row && row <= span.lastRow;
     });
-    for (const block of relevant) {
-      if (block.dart) {
-        darts |= block.mask;
-      } else {
-        walls |= block.mask;
-      }
-    }
+    const gap = blocks.filter((block) => {
+      const span = blockingSpan(plan, spacing, block.row, block.rows);
+      return row >= block.row && row <= span.lastGap;
+    });
     if (
-      plan.laneCount - laneTotal(walls | darts) < plan.minOpenLanes ||
-      plan.laneCount - laneTotal(gap) < plan.minOpenLanes ||
-      !openStretches(plan.laneCount, walls, darts)
+      !alternativeLanesOpen(plan.laneCount, plan.minOpenLanes, true, window) ||
+      !alternativeLanesOpen(plan.laneCount, plan.minOpenLanes, false, gap)
     ) {
-      for (const block of relevant) {
+      for (const block of new Set([...window, ...gap])) {
         block.finding.reasons.push("insufficient open lanes");
       }
     }

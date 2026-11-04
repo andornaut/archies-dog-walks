@@ -5,12 +5,11 @@ import type { EncounterId, ZoneId } from "../data/types";
 import { WORLD } from "../data/world";
 import { currentZone } from "../rules/route";
 import { zoneStats } from "../rules/zones";
-import { plannerStreams } from "../testing/movers";
 import { GAME_ROAD, inZone, LUCKY_IDS, REAL, type Real, realRun } from "../testing/planner";
 import { mapZones } from "../testing/world";
+import { captureZoneInput, planZoneForSeed } from "../testing/zonePlan";
 import { startRoad, zoneLength } from "./walk";
 import { itemCategory } from "./walkItems";
-import { planZone, spawnQuotas } from "./zonePlan";
 
 // The seeds the quota draws sample, and the fewer the planner's placements do, each zone's plan
 // taking a few hundred milliseconds.
@@ -34,12 +33,13 @@ type Place = { position: number; zone: ZoneId };
 const zonedRun = (tuned: Real, place: Place) => inZone(realRun(tuned), place.zone, place.position);
 // A zone's lucky find quotas, drawn as the planner draws them.
 const quotasOf = (tuned: Real, place: Place, seed: number) =>
-  spawnQuotas(tuned, plannerStreams(seed), zonedRun(tuned, place)).filter(({ kind }) =>
-    isLucky(kind),
-  );
+  captureZoneInput(tuned, GAME_ROAD, seed, {
+    road: startRoad(LANE_COUNT),
+    run: zonedRun(tuned, place),
+  }).auxiliary.filter(({ kind }) => isLucky(kind));
 // A zone's lucky finds as the planner places them.
 const findsOf = (tuned: Real, place: Place, seed: number) =>
-  planZone(tuned, GAME_ROAD, plannerStreams(seed), {
+  planZoneForSeed(tuned, GAME_ROAD, seed, {
     road: startRoad(LANE_COUNT),
     run: zonedRun(tuned, place),
   }).road.pending.filter(({ kind }) => isLucky(kind));

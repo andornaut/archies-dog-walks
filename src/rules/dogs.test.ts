@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { DOGS } from "../data/dogs";
-import type { Modifier } from "../data/types";
+import type { Modifier, Zone } from "../data/types";
 import { activeModifier, testState } from "../testing/runState";
 import { TEST_TUNING } from "../testing/tuning";
 import {
@@ -83,7 +83,20 @@ describe("ownerMaxHearts", () => {
 });
 
 describe("zoneStats", () => {
-  const plain = { density: { cards: 1, luckyFinds: 1, minorObstacles: 1, tips: 1 }, speed: 1 };
+  const plain = {
+    density: { luckyFinds: 1, tips: 1 },
+    spawnSlots: {
+      capacity: { encounterFixed: 8, encounterMoving: 4, minorFixed: 12, minorMoving: 4 },
+      counts: [
+        { encounterFixed: 3, encounterMoving: 2, minorFixed: 4, minorMoving: 1 },
+        { encounterFixed: 4, encounterMoving: 2, minorFixed: 6, minorMoving: 1 },
+        { encounterFixed: 5, encounterMoving: 3, minorFixed: 8, minorMoving: 2 },
+        { encounterFixed: 6, encounterMoving: 3, minorFixed: 10, minorMoving: 2 },
+      ],
+      guarantees: [],
+    },
+    speed: 1,
+  } satisfies Pick<Zone, "density" | "speed" | "spawnSlots">;
 
   it("raises the speed per zone, so the same distance takes less time", () => {
     const first = zoneStats(TEST_TUNING, plain, 0);
@@ -94,10 +107,10 @@ describe("zoneStats", () => {
     expect(fourth.duration).toBeCloseTo(240 / 1.6);
   });
 
-  it("adds obstacles and tips per later zone", () => {
+  it("reads explicit hazard rows while keeping reward growth", () => {
     const { counts } = TEST_TUNING;
     expect(zoneStats(TEST_TUNING, plain, 2).obstacles).toBe(
-      counts.obstaclesFirstZone + 2 * counts.obstaclesGainPerZone,
+      plain.spawnSlots.counts[2].encounterFixed + plain.spawnSlots.counts[2].encounterMoving,
     );
     expect(zoneStats(TEST_TUNING, plain, 2).tips).toBe(
       counts.tipsFirstZone + 2 * counts.tipsGainPerZone,
@@ -107,14 +120,15 @@ describe("zoneStats", () => {
   it("multiplies the speed and the counts by the zone's own, rounding the counts", () => {
     const { counts } = TEST_TUNING;
     const busy = {
-      density: { cards: 0.5, luckyFinds: 2, minorObstacles: 0.75, tips: 1.5 },
+      ...plain,
+      density: { luckyFinds: 2, tips: 1.5 },
       speed: 1.25,
     };
     const stats = zoneStats(TEST_TUNING, busy, 0);
     expect(stats.scrollSpeed).toBe(80 * 1.25);
     expect(stats.duration).toBe(240 / 1.25);
-    expect(stats.minorObstacles).toBe(Math.round(counts.minorObstaclesFirstZone * 0.75));
-    expect(stats.obstacles).toBe(Math.round(counts.obstaclesFirstZone * 0.5));
+    expect(stats.minorObstacles).toBe(5);
+    expect(stats.obstacles).toBe(5);
     expect(stats.tips).toBe(Math.round(counts.tipsFirstZone * 1.5));
     expect(stats.luckyFinds).toEqual(
       Object.fromEntries(

@@ -1,16 +1,29 @@
 import type { ZoneId } from "../data/types";
+import type { SlotPlanningFailure } from "../runner/slotPlanner";
 import type { AdmissionReport } from "../runner/spawnAdmission";
 import { SpawnPlanningError, type SpawnPlanSnapshot } from "../runner/spawnSearch";
 import type { SpawnAudit } from "../runner/spawnValidation";
 import type { Walk, WalkStep } from "../runner/walk";
 import type { WalkItemKind } from "../runner/walkItems";
+import type { ZoneSlotDelivery } from "../runner/zonePlan";
+import { type ZoneSlotInput, ZoneSlotPlanningError } from "../runner/zoneSlotInput";
 import type { RunState } from "../state/runState";
 
-export interface PlanningFailure {
-  readonly message: string;
-  readonly seed: number;
-  readonly snapshot: SpawnPlanSnapshot;
-}
+export type PlanningFailure =
+  | {
+      readonly kind: "quota";
+      readonly message: string;
+      readonly seed: number;
+      readonly snapshot: SpawnPlanSnapshot;
+    }
+  | {
+      readonly input: ZoneSlotInput<string>;
+      readonly kind: "slots";
+      readonly message: string;
+      readonly purpose: "runtime-actual";
+      readonly result: SlotPlanningFailure<string>;
+      readonly seed: number;
+    };
 
 export function capturePlanningFailure(
   seed: number,
@@ -20,10 +33,20 @@ export function capturePlanningFailure(
     play();
     return undefined;
   } catch (error) {
+    if (error instanceof ZoneSlotPlanningError) {
+      return {
+        input: error.input,
+        kind: "slots",
+        message: error.message,
+        purpose: "runtime-actual",
+        result: error.result,
+        seed,
+      };
+    }
     if (!(error instanceof SpawnPlanningError)) {
       throw error;
     }
-    return { message: error.message, seed, snapshot: error.snapshot };
+    return { kind: "quota", message: error.message, seed, snapshot: error.snapshot };
   }
 }
 
@@ -44,9 +67,10 @@ export interface SpawnFlow {
 export interface ZoneWalkEvents {
   admission?: AdmissionReport<WalkItemKind>;
   audit?: SpawnAudit;
-  // Configured is the frozen effective quota total after modifiers and weighted selection;
-  // requested per kind partitions that same denominator, before any omission or herring.
+  // Runtime configured counts retain original jobs, including unselected optional jobs.
+  // Per-kind requests describe selected kinds and known omissions only.
   readonly configured: number;
+  readonly slots?: ZoneSlotDelivery;
   readonly herringRendering: "not-simulated";
   readonly modifiers: RunState["modifiers"];
   readonly route: RunState["route"];
@@ -76,13 +100,16 @@ export function plannedWalkEvents(
   run: Pick<RunState, "modifiers" | "route" | "zoneIndex">,
   zone: ZoneId,
   road: {
+    readonly slots?: ZoneSlotDelivery;
     readonly herrings: readonly { readonly kind: WalkItemKind }[];
     readonly pending: readonly { readonly kind: WalkItemKind }[];
     readonly planned: readonly { readonly count: number; readonly kind: WalkItemKind }[];
   },
 ): ZoneWalkEvents {
   const events: ZoneWalkEvents = {
-    configured: road.planned.reduce((sum, { count }) => sum + count, 0),
+    configured:
+      road.slots?.delivery.configured ?? road.planned.reduce((sum, { count }) => sum + count, 0),
+    ...(road.slots === undefined ? {} : { slots: road.slots }),
     herringRendering: "not-simulated",
     kinds: {},
     modifiers: run.modifiers,
@@ -94,6 +121,11 @@ export function plannedWalkEvents(
   };
   for (const { count, kind } of road.planned) {
     flow(events, kind).requested += count;
+  }
+  for (const omission of road.slots?.delivery.omissions ?? []) {
+    if (omission.kind !== undefined) {
+      flow(events, omission.kind).requested += 1;
+    }
   }
   for (const { kind } of road.pending) {
     flow(events, kind).admitted += 1;

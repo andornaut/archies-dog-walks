@@ -344,6 +344,7 @@ function zonesSection(data: GameData): Section {
       "Minutes",
       "Speed (px/s)",
       "Obstacles",
+      "Capacity",
       "Tips",
       "Treats",
       "Lucky",
@@ -356,14 +357,17 @@ function zonesSection(data: GameData): Section {
       "base speed and before upgrades.",
     rows: data.world.zones.map((zone) => {
       const stats = zoneStats(data.tuning, zone, 1);
+      const moving =
+        zone.spawnSlots.counts[1]!.encounterMoving + zone.spawnSlots.counts[1]!.minorMoving;
       return [
         zone.name,
         `${zone.difficultyName} (${zone.difficulty})`,
         `×${zone.speed}`,
-        `${Math.round(zone.moverShare * 100)}%`,
+        `${Math.round((moving / Math.max(1, stats.obstacles + stats.minorObstacles)) * 100)}%`,
         Math.round((stats.duration / 60) * 10) / 10,
         Math.round(stats.scrollSpeed),
-        stats.obstacles,
+        stats.obstacles + stats.minorObstacles,
+        Object.values(zone.spawnSlots.capacity).reduce((total, count) => total + count, 0),
         stats.tips,
         stats.treats,
         Math.round(Object.values(stats.luckyFinds).reduce((sum, n) => sum + n, 0) * 100) / 100,

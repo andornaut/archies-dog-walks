@@ -140,10 +140,6 @@ export interface Tuning {
     readonly maxEmptyRows: number;
     readonly maxMovers: number;
     readonly maxSlowVehicles: number;
-    readonly minorObstaclesFirstZone: number;
-    readonly minorObstaclesGainPerZone: number;
-    readonly obstaclesFirstZone: number;
-    readonly obstaclesGainPerZone: number;
     readonly packSizeMax: number;
     readonly tipsFirstZone: number;
     readonly tipsGainPerZone: number;
@@ -730,16 +726,31 @@ export interface ZoneWeights {
   readonly obstacles: Readonly<Record<ObstacleEncounterId, number>>;
 }
 
+export type SpawnSlotRole = "encounterFixed" | "encounterMoving" | "minorFixed" | "minorMoving";
+
+export type SpawnSlotCounts = Readonly<Record<SpawnSlotRole, number>>;
+
+export interface SpawnSlotGuarantee {
+  readonly count: number;
+  readonly kind: MinorObstacleId | ObstacleEncounterId;
+  readonly role: SpawnSlotRole;
+}
+
+export interface ZoneSpawnSlots {
+  // Delivered ordinary counts at each position in the walk, before upgrade modifiers.
+  readonly counts: readonly [SpawnSlotCounts, ...SpawnSlotCounts[]];
+  // Maximum validated counts, including supported modifiers and unused tuning headroom.
+  readonly capacity: SpawnSlotCounts;
+  // Required kinds consume their role's budget rather than adding spawns.
+  readonly guarantees: readonly SpawnSlotGuarantee[];
+}
+
 export interface Zone {
   // The zone's name in its art keys, such as backdrop-<art>.
   readonly art: string;
-  // Multiply the zone's counts, on top of the per-zone gains in counts: cards scales the
-  // obstacles that open a card, minorObstacles the ones that open none, then tips and each kind
-  // of lucky find's.
+  // Reward count multipliers; hazard counts come only from spawnSlots.
   readonly density: {
-    readonly cards: number;
     readonly luckyFinds: number;
-    readonly minorObstacles: number;
     readonly tips: number;
   };
   readonly difficulty: Difficulty;
@@ -748,14 +759,15 @@ export interface Zone {
   readonly id: string;
   // Hex colours from the art palette. The leash stands out against the zone's road.
   readonly leashColour: string;
-  // The share of the zone's obstacles, minor or not, whose look has a movement that come as
-  // movers, from 0 to 1.
+  // Lucky encounters use this chance for their authored movement. Hazard movement roles
+  // are explicit in spawnSlots.
   readonly moverShare: number;
   readonly name: string;
   readonly roadColour: string;
   readonly roadShadowColour: string;
   // Multiplies the scroll speed, on top of multipliers.scrollSpeedGainPerZone.
   readonly speed: number;
+  readonly spawnSlots: ZoneSpawnSlots;
   readonly weights: ZoneWeights;
 }
 

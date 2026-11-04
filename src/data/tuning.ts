@@ -33,11 +33,6 @@ export const TUNING = {
     maxEmptyRows: 3,
     maxMovers: 10,
     maxSlowVehicles: 4,
-    // Obstacles that open no card, on top of obstaclesFirstZone.
-    minorObstaclesFirstZone: 72,
-    minorObstaclesGainPerZone: 2,
-    obstaclesFirstZone: 25,
-    obstaclesGainPerZone: 3,
     // Every row of spawns leaves at least this many lanes free of obstacles.
     openLanesPerRowMin: 2,
     packSizeMax: 3,
@@ -174,7 +169,7 @@ export const TUNING = {
     quickRecoveryDebuffFactor: 0.5,
     // Running shoes add this much to the walker's agility.
     runningShoesAgility: 1,
-    rushHourObstacles: 1.5,
+    rushHourObstacles: 1.3,
     rushHourTips: 2,
     rushHourTreats: 2,
     scrollSpeedGainPerZone: 0.2,

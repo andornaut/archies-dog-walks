@@ -20,6 +20,8 @@ import {
   picksOf,
   type RunFacts,
 } from "../rules/achievements";
+import { slotCountTotal } from "../runner/slotConfig";
+import { minimumSlotDelivery, SLOT_RUNTIME_DELIVERY_FLOOR } from "../runner/slotDelivery";
 import { blocksLane, isPullObstacle, itemCategory, type WalkItemKind } from "../runner/walkItems";
 import { MAX_RUN_DOGS, TALLY_IDS } from "../save/schema";
 import type { PackDogs } from "../state/runState";
@@ -474,7 +476,12 @@ function summarizeCell(
             },
       route: result.route,
       seed: result.planningFailure?.seed ?? itemAt(seeds, index),
-      zoneIndex: result.planningFailure?.snapshot.context.zoneIndex ?? result.run.zoneIndex,
+      zoneIndex:
+        result.planningFailure === undefined
+          ? result.run.zoneIndex
+          : result.planningFailure.kind === "slots"
+            ? result.planningFailure.input.context.zoneIndex
+            : result.planningFailure.snapshot.context.zoneIndex,
       zones: result.spawnEvents ?? [],
     })),
     spawnSummary: sumSpawnEvents(
@@ -735,11 +742,24 @@ export function formatDeliveryTable(rows: readonly MatrixRow[]): string {
   const sums = sumDeliveries(rows.flatMap((row) => row.delivery));
   return textTable(
     2,
-    ["Pos", "Zone", "Plans", ...DELIVERY_GROUPS.map((group) => DELIVERY_HEADERS[group])],
+    [
+      "Pos",
+      "Zone",
+      "Plans",
+      "Original total",
+      "Delivered total",
+      "Omitted",
+      "Complete plans",
+      "Partial plans",
+      ...DELIVERY_GROUPS.map((group) => DELIVERY_HEADERS[group]),
+    ],
     sums.map((sum) => [
       String(sum.position),
       sum.zone,
       String(sum.plans),
+      ...(["configured", "delivered", "omitted", "completePlans", "partialPlans"] as const).map(
+        (field) => (sum.runtime === undefined ? "unavailable" : String(sum.runtime[field])),
+      ),
       ...DELIVERY_GROUPS.map((group) => perPlan(sum.plans, sum.groups[group])),
     ]),
   );
@@ -766,7 +786,8 @@ export function formatDeliveryKindTable(rows: readonly MatrixRow[]): string {
   );
 }
 
-export const DEFAULT_SPAWN_TARGET = 0.8;
+export const DEFAULT_SPAWN_TARGET =
+  SLOT_RUNTIME_DELIVERY_FLOOR.numerator / SLOT_RUNTIME_DELIVERY_FLOOR.denominator;
 
 export function parseSpawnTarget(text: string): number {
   const target = Number(text);
@@ -778,16 +799,26 @@ export function parseSpawnTarget(text: string): number {
 
 function inconsistentSpawnAudit(zone: ZoneWalkEvents): boolean {
   const audit = zone.audit;
+  const slots = zone.slots;
+  const delivery = slots?.delivery;
+  const certificate = slots?.status === "complete" ? slots.active : slots?.partialAudit;
   return (
-    audit !== undefined &&
-    (audit.requested !== zone.configured ||
-      audit.validPlaced > audit.requested ||
-      ![audit.requested, audit.placed, audit.validPlaced].every(
-        (count) => Number.isSafeInteger(count) && count >= 0,
-      ) ||
-      audit.counts.reduce((n, count) => n + count.requested, 0) !== audit.requested ||
-      audit.counts.reduce((n, count) => n + count.validPlaced, 0) !== audit.validPlaced ||
-      audit.counts.reduce((n, count) => n + count.emitted, 0) !== audit.placed)
+    (delivery !== undefined &&
+      (delivery.configured !== zone.configured ||
+        delivery.delivered + delivery.omissions.length !== delivery.configured ||
+        certificate?.status !== "valid" ||
+        delivery.required !== minimumSlotDelivery(delivery.policy, delivery.configured) ||
+        delivery.delivered < delivery.required ||
+        (slots?.status === "complete" && delivery.omissions.length !== 0))) ||
+    (audit !== undefined &&
+      (audit.requested !== (delivery?.delivered ?? zone.configured) ||
+        audit.validPlaced > audit.requested ||
+        ![audit.requested, audit.placed, audit.validPlaced].every(
+          (count) => Number.isSafeInteger(count) && count >= 0,
+        ) ||
+        audit.counts.reduce((n, count) => n + count.requested, 0) !== audit.requested ||
+        audit.counts.reduce((n, count) => n + count.validPlaced, 0) !== audit.validPlaced ||
+        audit.counts.reduce((n, count) => n + count.emitted, 0) !== audit.placed))
   );
 }
 
@@ -854,9 +885,13 @@ export function sumRoadObstacleEvents(
         .filter(({ kind }) => isRoadObstacle(kind))
         .reduce((sum, count) => sum + count.requested, 0);
       const configured =
-        unknown || zone.audit!.requested !== zone.configured || frozenRequested !== requested
+        unknown ||
+        inconsistentSpawnAudit(zone) ||
+        (zone.slots === undefined && frozenRequested !== requested)
           ? null
-          : requested;
+          : zone.slots === undefined
+            ? requested
+            : slotCountTotal(zone.slots.delivery.configuredByRole);
       return {
         admitted: flows.reduce((sum, flow) => sum + flow.admitted, 0),
         configured,
@@ -909,7 +944,7 @@ const SPAWN_COUNT_FIELDS = [
 type SpawnCountField = (typeof SPAWN_COUNT_FIELDS)[number];
 
 // Every kind uses the full zone-exposure denominator, including draws with zero of that kind.
-// The 80% decision is made independently for each zone plan, never on pooled admission totals.
+// The delivery floor is checked independently per zone, never on pooled admission totals.
 export function sumSpawnEvents(
   records: readonly ZoneWalkEvents[],
   byKind = false,
@@ -969,7 +1004,14 @@ export function sumSpawnEvents(
           SPAWN_COUNT_FIELDS.map((field) => [field, [] as (number | null)[]]),
         ) as Record<SpawnCountField, (number | null)[]>);
       const audited = zone.audit?.counts.filter((count) => kind === "all" || count.kind === kind);
-      const configured = audited?.reduce((n, count) => n + count.requested, 0) ?? null;
+      const configured =
+        zone.slots === undefined
+          ? (audited?.reduce((n, count) => n + count.requested, 0) ?? null)
+          : kind === "all"
+            ? zone.configured
+            : zone.slots.delivery.omissions.some((omission) => omission.kind === undefined)
+              ? null
+              : (zone.kinds[kind as WalkItemKind]?.requested ?? 0);
       exposure.configured = configured;
       sum.configured =
         sum.configured === null || configured === null ? null : sum.configured + configured;
@@ -1021,7 +1063,7 @@ export function sumSpawnEvents(
         ? "invalid"
         : unverified
           ? "unverified"
-          : zone.audit!.validPlaced >= Math.ceil(zone.configured * 0.8) &&
+          : zone.audit!.validPlaced >= minimumSlotDelivery("runtime-90", zone.configured) &&
               zone.audit!.meetsValidPlacementFloor
             ? "met"
             : "below floor";
@@ -1122,7 +1164,7 @@ export function formatSpawnEventTable(rows: readonly MatrixRow[], byKind = false
       "Departed",
       "Requested/exposure mean[min,max]",
       "Valid/configured",
-      "80% safety floor",
+      `${DEFAULT_SPAWN_TARGET * 100}% delivery floor`,
       "100% configured target",
       "Obstacle requested",
       "Obstacle valid",
@@ -1172,7 +1214,24 @@ export function formatSpawnFailures(rows: readonly MatrixRow[], byKind = false):
     3,
     ["Seed", "Zone index", "Kind", "Frozen configured", "Admitted", "Valid", "Snapshot"],
     failures.flatMap((run) => {
-      const quotas = run.failure!.snapshot.plan.quotas;
+      const failure = run.failure!;
+      if (failure.kind === "slots") {
+        return [
+          [
+            String(run.seed),
+            String(run.zoneIndex),
+            "all",
+            String(
+              slotCountTotal(failure.input.config.active) +
+                failure.input.auxiliary.reduce((count, quota) => count + quota.count, 0),
+            ),
+            "unavailable",
+            "unverified",
+            run.snapshotPath ?? "embedded in spawnRuns",
+          ],
+        ];
+      }
+      const quotas = failure.snapshot.plan.quotas;
       const kinds = byKind ? [...new Set(quotas.map(({ kind }) => kind))].sort() : ["all"];
       return kinds.map((kind) => [
         String(run.seed),
@@ -1231,7 +1290,10 @@ export function spawnValidationFailures(target: number, rows: readonly MatrixRow
             ) {
               reasons.push("invalid emitted placements");
             }
-            const floor = Math.ceil(zone.configured * target);
+            const floor = Math.max(
+              Math.ceil(zone.configured * target),
+              zone.slots?.delivery.required ?? 0,
+            );
             if (
               (target === 1 ? audit.validPlaced !== zone.configured : audit.validPlaced < floor) ||
               !audit.meetsValidPlacementFloor

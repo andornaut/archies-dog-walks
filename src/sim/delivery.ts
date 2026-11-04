@@ -1,13 +1,14 @@
 import type { GameData, MovementKind, ZoneId } from "../data/types";
 import { itemCategory, opensACard, type WalkItemKind } from "../runner/walkItems";
+import type { ZoneSlotDelivery } from "../runner/zonePlan";
 
-// What a zone's plan asked for against what it placed on the road. The tuning counts are aims:
-// the planner skips a spawn it has no room for, so placed can fall short of planned.
+// Selected kind quotas and original runtime totals remain separate when jobs are omitted.
 
 // What the counts read of a zone's plan, the road as planZone leaves it: each quota's kind,
 // count and movement, null standing still, and each placed spawn's kind and movement, with no
 // mover standing still.
 export interface ZonePlanView {
+  readonly slots?: ZoneSlotDelivery;
   readonly pending: readonly {
     readonly kind: WalkItemKind;
     readonly mover?: { readonly movement: MovementKind };
@@ -46,6 +47,13 @@ export interface Delivered {
 // One zone's counts, or, summed, every plan of a zone at a walk position: plans counts them.
 // position is 1 for the walk's first zone.
 export interface ZoneDelivery {
+  readonly runtime?: {
+    readonly completePlans: number;
+    readonly configured: number;
+    readonly delivered: number;
+    readonly omitted: number;
+    readonly partialPlans: number;
+  };
   readonly groups: Record<DeliveryGroup, Delivered>;
   readonly kinds: Partial<Record<WalkItemKind, Delivered>>;
   readonly plans: number;
@@ -119,7 +127,24 @@ export function zoneDelivery(
     addTo(groups, deliveryGroup(data, spawn.kind, spawn.mover?.movement ?? null), 1, 0);
     addTo(kinds, spawn.kind, 1, 0);
   }
-  return { groups, kinds, plans: 1, position, zone };
+  return {
+    groups,
+    kinds,
+    plans: 1,
+    position,
+    ...(plan.slots === undefined
+      ? {}
+      : {
+          runtime: {
+            completePlans: Number(plan.slots.status === "complete"),
+            configured: plan.slots.delivery.configured,
+            delivered: plan.slots.delivery.delivered,
+            omitted: plan.slots.delivery.omissions.length,
+            partialPlans: Number(plan.slots.status === "partial"),
+          },
+        }),
+    zone,
+  };
 }
 
 // The deliveries summed by walk position and zone, in walk position then zone id order.
@@ -127,7 +152,7 @@ export function sumDeliveries(deliveries: readonly ZoneDelivery[]): ZoneDelivery
   const sums = new Map<string, ZoneDelivery>();
   for (const delivery of deliveries) {
     const key = `${delivery.position} ${delivery.zone}`;
-    const sum = sums.get(key) ?? {
+    const sum: ZoneDelivery = sums.get(key) ?? {
       groups: noGroups(),
       kinds: {},
       plans: 0,
@@ -140,7 +165,22 @@ export function sumDeliveries(deliveries: readonly ZoneDelivery[]): ZoneDelivery
     for (const [kind, count] of Object.entries(delivery.kinds) as [WalkItemKind, Delivered][]) {
       addTo(sum.kinds, kind, count.placed, count.planned);
     }
-    sums.set(key, { ...sum, plans: sum.plans + delivery.plans });
+    const runtime = delivery.runtime;
+    sums.set(key, {
+      ...sum,
+      plans: sum.plans + delivery.plans,
+      ...(runtime === undefined
+        ? {}
+        : {
+            runtime: {
+              completePlans: (sum.runtime?.completePlans ?? 0) + runtime.completePlans,
+              configured: (sum.runtime?.configured ?? 0) + runtime.configured,
+              delivered: (sum.runtime?.delivered ?? 0) + runtime.delivered,
+              omitted: (sum.runtime?.omitted ?? 0) + runtime.omitted,
+              partialPlans: (sum.runtime?.partialPlans ?? 0) + runtime.partialPlans,
+            },
+          }),
+    });
   }
   return [...sums.values()].sort((a, b) => a.position - b.position || a.zone.localeCompare(b.zone));
 }

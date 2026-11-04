@@ -71,7 +71,8 @@ const USAGE = [
   "            the delivery table: groups gives a column per group, kinds also a line per kind",
   "            (default: groups)",
   "  --spawn-target fraction of frozen configured events independently valid in EVERY zone",
-  "                 (0.8 to 1, default: 0.8; use 1 for the 100% configured target)",
+  `                 (0.8 to 1, default: ${DEFAULT_SPAWN_TARGET}; use 1 for the 100% configured target)`,
+  "                 the runtime delivery policy also applies when a lower target is requested",
   "  --out     also write the matrix and rows as JSON to this file",
   "",
   "Card policies (a safe option leaves no owner whose meter falls at 1 heart or less):",
@@ -284,7 +285,10 @@ async function main(): Promise<void> {
           directory,
           `cell-${cell}-run-${index}-seed-${run.seed}-zone-${run.zoneIndex}.json`,
         );
-        writeFileSync(snapshotPath, `${JSON.stringify(run.failure.snapshot, null, 2)}\n`);
+        writeFileSync(
+          snapshotPath,
+          `${JSON.stringify(run.failure.kind === "slots" ? run.failure.input : run.failure.snapshot, null, 2)}\n`,
+        );
         writeFileSync(`${snapshotPath}.metadata.json`, `${JSON.stringify(run, null, 2)}\n`);
         process.stderr.write(
           `Planning failure: seed ${run.seed}, zone ${run.zoneIndex}, snapshot ${snapshotPath}: ` +

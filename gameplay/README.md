@@ -46,3 +46,7 @@ Some walks should fail: the road stays calm, so losing comes from bumps and choi
 **Walk target:** a walk lasts about 8 minutes, we want to play "one more", and it works by touch on a phone browser.
 
 Version 1 is complete. Tuning continues against the targets above. The game is called Archie's Dog Walks.
+
+Runtime generation targets 100% delivery within its bounded search. The shipping floor is an independently certified 90% of each neighbourhood's original active and auxiliary logical requests, allowing optional reward omissions under the [spawning rules](design.md#spawning-details). Continue optimisation toward 100% while preserving all guaranteed owners, kind and role minima, full movement capabilities, native safety and quiet coverage.
+
+<!-- CLEANUP (added 2026-11-02): retire partial runtime admission once every required case reaches 100% within the bounded search allowance. -->

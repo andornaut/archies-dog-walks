@@ -16,16 +16,19 @@ interface ZoneStats {
   readonly treats: number;
 }
 
-// A zone walked at position zoneIndex, counting from 0. Speed and counts rise with the
-// position, then the zone's own speed and density multiply them. Every zone is the same
-// distance, so a faster zone takes less time.
+// Hazard counts are explicit for the walk position. Reward growth and scroll speed retain
+// their tuning and zone multipliers; every zone covers the same distance.
 export function zoneStats(
   tuning: LiveTuning,
-  zone: Pick<Zone, "density" | "speed">,
+  zone: Pick<Zone, "density" | "spawnSlots" | "speed">,
   zoneIndex: number,
 ): ZoneStats {
   const speedFactor = zoneSpeedFactor(tuning, zone, zoneIndex);
   const { density } = zone;
+  const slots = zone.spawnSlots.counts[zoneIndex];
+  if (slots === undefined) {
+    throw new RangeError(`No spawn slot budget for position ${zoneIndex}`);
+  }
   return {
     duration: seconds(read(tuning, "seconds", "zoneAtBaseSpeed") / speedFactor),
     luckyFinds: Object.fromEntries(
@@ -34,18 +37,8 @@ export function zoneStats(
         count * density.luckyFinds,
       ]),
     ) as Record<LuckyEncounterId, number>,
-    minorObstacles: zoneCount(
-      zoneIndex,
-      read(tuning, "counts", "minorObstaclesFirstZone"),
-      read(tuning, "counts", "minorObstaclesGainPerZone"),
-      density.minorObstacles,
-    ),
-    obstacles: zoneCount(
-      zoneIndex,
-      read(tuning, "counts", "obstaclesFirstZone"),
-      read(tuning, "counts", "obstaclesGainPerZone"),
-      density.cards,
-    ),
+    minorObstacles: slots.minorFixed + slots.minorMoving,
+    obstacles: slots.encounterFixed + slots.encounterMoving,
     scrollSpeed: zoneScrollSpeed(tuning, zone, zoneIndex),
     tips: zoneCount(
       zoneIndex,

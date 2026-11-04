@@ -2,7 +2,13 @@ import { itemAt, partitionPoint } from "@andornaut/game-kit/arrays";
 
 import { laneMask } from "../layout/lanes";
 import { approachOutcomes } from "./approach";
-import { type MoverCaps, type MoverSpec, type PlannerStreams, stopsOnVerge } from "./moverPlanning";
+import {
+  type MoverCaps,
+  type MoverSpec,
+  type MoverStand,
+  type PlannerStreams,
+  stopsOnVerge,
+} from "./moverPlanning";
 import { crossingScroll, laneAt, type MoverPath, moverPlace, type MoverStep } from "./movers";
 import { shyOutcomes } from "./shy";
 import { signaturePlace } from "./signaturePaths";
@@ -351,20 +357,25 @@ export function blockingSpan(plan: SpawnPlan<string>, spacing: number, row: numb
 
 // Whether every stretch of road between walls, the lanes walls blocks, keeps a lane that darts,
 // the lanes the darts sweep, leaves open: a pack anywhere in the stretch can dodge them there.
-export function openStretches(laneCount: number, walls: number, darts: number): boolean {
+export function sweptPockets(laneCount: number, walls: number, darts: number): number {
+  let unsafe = 0;
   let stretch = 0;
   for (let lane = 0; lane <= laneCount; lane++) {
     const bit = 1 << lane;
     if (lane === laneCount || (walls & bit) !== 0) {
       if (stretch !== 0 && (stretch & ~darts) === 0) {
-        return false;
+        unsafe |= stretch;
       }
       stretch = 0;
     } else {
       stretch |= bit;
     }
   }
-  return true;
+  return unsafe;
+}
+
+export function openStretches(laneCount: number, walls: number, darts: number): boolean {
+  return sweptPockets(laneCount, walls, darts) === 0;
 }
 
 // Whether a mover of a motion may take a cell, held by darts or by other spawns or by none: a
@@ -408,8 +419,7 @@ export function pickupAllowsMover(
   mover: {
     readonly blocksLane: boolean;
     readonly cells: readonly Cell[];
-    readonly lanes: number;
-    readonly rests: readonly { readonly distance: number; readonly lane: number }[];
+    readonly rests: readonly MoverStand[];
   },
 ): boolean {
   if (
@@ -428,10 +438,10 @@ export function pickupAllowsMover(
     pickup.moversRestOn === true ||
     !mover.rests.some(
       (rest) =>
-        rest.distance >= pickup.from &&
-        rest.distance <= pickup.to &&
+        rest.distance < pickup.to &&
+        pickup.from < rest.distance + rest.length &&
         rest.lane < pickup.lane + pickup.lanes &&
-        pickup.lane < rest.lane + mover.lanes,
+        pickup.lane < rest.lane + rest.lanes,
     )
   );
 }
@@ -471,6 +481,23 @@ export function moverRests(laneCount: number, cue: number, path: MoverPath): Mov
     default:
       return [last(path.lane, path.steps)];
   }
+}
+
+// Every settled body uses the mover's own footprint and drawn hit length.
+export function moverRestSpans(
+  geometry: Pick<SpawnPlan<string>, "cellInset" | "cellLength" | "laneCount">,
+  spec: Pick<MoverSpec, "footprint" | "hitLength">,
+  event: SpawnEvent<string>,
+): MoverStand[] {
+  if (event.mover === undefined) {
+    return [];
+  }
+  const length = spec.hitLength ?? hitLength(geometry, spec.footprint.rows);
+  return moverRests(geometry.laneCount, event.distance, event.mover).map((rest) => ({
+    ...rest,
+    lanes: spec.footprint.lanes,
+    length,
+  }));
 }
 
 // The guaranteed path, a lane for each row: from pathStart, it holds each lane for at least

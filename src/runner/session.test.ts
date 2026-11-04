@@ -5,6 +5,7 @@ import { pixels } from "@andornaut/game-kit/units";
 import { describe, expect, it } from "vitest";
 
 import { gameData } from "../data";
+import { LANE_COUNT } from "../data/screen";
 import type { CardSource, WalkerId, ZoneId } from "../data/types";
 import { firingTimeline } from "../hud/moments";
 import type { LaneDirection } from "../layout/lanes";
@@ -13,7 +14,6 @@ import { firstZoneId, walkLength } from "../rules/route";
 import { read } from "../rules/units";
 import { mapPack } from "../state/pack";
 import { newRun, type PackDogs } from "../state/runState";
-import { TEST_ROAD_GEOMETRY } from "../testing/packGeometry";
 import { testState } from "../testing/runState";
 import { clampHearts } from "../units";
 import { laneControlIn } from "./laneControl";
@@ -35,14 +35,14 @@ import {
   stepSession,
   zoneStartPoint,
 } from "./session";
-import { itemHeight, startRoad, zoneLength } from "./walk";
+import { itemHeight, packBoxes, startRoad, zoneLength } from "./walk";
 import { type WalkItem } from "./walkItems";
 import type { ZonePlanObservation } from "./zonePlan";
-import { replaySpawnPlan } from "./zonePlanner";
+import { replayZoneSlots } from "./zoneSlotInput";
 
 const SKUNK: CardSource = { affected: ["kilo"], encounter: "skunk", kind: "encounter" };
 const STOP: CardSource = { affected: ["kilo"], encounter: "thief", kind: "encounter" };
-const geometry = () => TEST_ROAD_GEOMETRY;
+const geometry = screenRoadGeometry;
 const FIRING_SECONDS = read(gameData.tuning, "seconds", "firingHoldSeconds");
 
 // The walk started on seed 1: planning its first zone of the game's road is most of a test's
@@ -108,15 +108,24 @@ describe("runStreams", () => {
     );
     expect(observed).toHaveLength(1);
     const observation = itemAt(observed, 0);
-    if (observation.snapshot === undefined) {
-      throw new Error("Missing successful planning snapshot");
+    if (observation.slots === undefined) {
+      throw new Error("Missing structural planning input");
     }
-    const replayed = replaySpawnPlan(
-      JSON.parse(JSON.stringify(observation.snapshot)) as typeof observation.snapshot,
+    expect(observation.slots.input.context).toMatchObject({
+      coverageFirst: true,
+      delivery: "runtime-90",
+      fairSources: true,
+    });
+    const replayed = replayZoneSlots(
+      JSON.parse(JSON.stringify(observation.slots.input)) as typeof observation.slots.input,
     );
-    if (!("planned" in replayed)) {
-      throw new Error(replayed.reason);
+    if (replayed.status === "unsupported") {
+      throw new Error(JSON.stringify(replayed.failures));
     }
+    expect(replayed.status).toBe(observation.slots.status);
+    expect(
+      replayed.status === "complete" ? replayed.activeAudit.status : replayed.partialAudit.status,
+    ).toBe("valid");
     expect(JSON.parse(JSON.stringify(replayed.planned))).toEqual(
       JSON.parse(JSON.stringify(observation.planned)),
     );
@@ -461,7 +470,7 @@ describe("a strain in the session", { timeout: 30_000 }, () => {
       ["cancels the pull on a press toward the edge from the left edge lane", 0, -1, true],
       [
         "cancels the pull on a press toward the edge from the right edge lane",
-        TEST_ROAD_GEOMETRY.laneCount - 1,
+        LANE_COUNT - 1,
         1,
         true,
       ],
@@ -469,7 +478,7 @@ describe("a strain in the session", { timeout: 30_000 }, () => {
       ["keeps the pull on a press toward the squirrel from the left edge lane", 0, 1, false],
       [
         "keeps the pull on a press toward the squirrel from the right edge lane",
-        TEST_ROAD_GEOMETRY.laneCount - 1,
+        LANE_COUNT - 1,
         -1,
         false,
       ],
@@ -567,7 +576,12 @@ describe("a firing's hold", { timeout: 60_000 }, () => {
   };
   // kind in the pack's lane, its bottom just inside the pack's band, met head-on by Kilo.
   const meeting = (kind: WalkItem["kind"], session: Session): Session => {
-    const item: WalkItem = { height: 12, id: 0, kind, lane: 2, laneSpan: 1, y: 560 };
+    const front = itemAt(
+      packBoxes(geometry(session.walk.run), session.walk.road.control.motion, session.walk.run)
+        .dogs,
+      0,
+    );
+    const item: WalkItem = { height: 12, id: 0, kind, lane: 2, laneSpan: 1, y: front.top + 1 };
     const road = { ...session.walk.road, items: [item], nextItemId: 1 };
     return { ...session, walk: { ...session.walk, road } };
   };

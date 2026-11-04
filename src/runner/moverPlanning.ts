@@ -31,6 +31,11 @@ import type { SpawnRejection } from "./spawnAdmission";
 import type { FeasibilityObserver } from "./spawnFeasibilityDiagnostics";
 import { nthStretch, rowsWithin, WHOLE_ZONE } from "./stretches";
 
+export interface MoverPlacementWork {
+  // Admission happens before a unique placement is built; shared prefixes reuse existing values.
+  beforePlacement(): void;
+}
+
 // Planning works in road distance. sightLength is how far a row travels down the road before
 // its window, the stretch of road over which a one-row spawn on it overlaps the pack, which is
 // window long. rowSpacing is the distance between rows, and cellLength a row of a footprint and a
@@ -129,6 +134,10 @@ export interface MoverPlacement {
   readonly selection?: { readonly draws: MoverDraws; readonly lift: number };
   readonly stands: readonly MoverStand[];
   readonly stop?: LaneSpan;
+}
+
+export function isDartPlacement(placement: Pick<MoverPlacement, "path">): boolean {
+  return placement.path.motion === "cross";
 }
 
 // The lanes on the road a box overlaps anywhere from lane position low to high: as collision cuts
@@ -616,6 +625,7 @@ function crossTilts(
 // spawn stands where it crosses. It has placements for each of its stops, from either side, each
 // with the lanes it covers there.
 function crossPlacements(
+  work: MoverPlacementWork | undefined,
   geometry: MoverGeometry,
   spec: MoverSpec,
   motion: Extract<MoverMotion, { kind: "cross" }>,
@@ -651,7 +661,7 @@ function crossPlacements(
   }
   const shared = { crosses, lanesPerPixel, span, stopAfter, tilt, turnAfter, warning };
   if (motion.pause === undefined) {
-    return crossPlacementsAt(geometry, spec, motion, draws, lift, {
+    return crossPlacementsAt(work, geometry, spec, motion, draws, lift, {
       ...shared,
       after: null,
       directions: [1, -1],
@@ -659,7 +669,7 @@ function crossPlacements(
   }
   return motion.pause.stops.flatMap((stop) =>
     ([1, -1] as const).flatMap((direction) =>
-      crossPlacementsAt(geometry, spec, motion, draws, lift, {
+      crossPlacementsAt(work, geometry, spec, motion, draws, lift, {
         ...shared,
         after: stopCrossed(laneCount, span, direction, stop),
         directions: [direction],
@@ -700,6 +710,7 @@ interface CrossShape {
 // A crosser's placements from each of its sides, with its pause, if it has one, at one stop
 // (crossPlacements).
 function crossPlacementsAt(
+  work: MoverPlacementWork | undefined,
   geometry: MoverGeometry,
   spec: MoverSpec,
   motion: Extract<MoverMotion, { kind: "cross" }>,
@@ -792,6 +803,7 @@ function crossPlacementsAt(
     bodyLength(geometry, spec.footprint.rows),
   );
   return shape.directions.map((direction): MoverPlacement => {
+    work?.beforePlacement();
     const path: MoverPath = {
       ...along,
       direction,
@@ -799,8 +811,9 @@ function crossPlacementsAt(
       idle: shown - warning,
       warning: shown,
     };
-    const lanes = sweptLanes(laneCount, path, sightLength, sightLength + window);
     const touched = sweptLanes(laneCount, path, sightLength, sightLength + drawnWindow, inset);
+    // The safe path excludes actual collision contact, not a larger generic one-row body.
+    const lanes = touched;
     const body = {
       from: 0,
       lanes: sweptLanes(laneCount, path, 0, roadLength + bodyTo, inset),
@@ -848,10 +861,11 @@ function crossPlacementsAt(
 // factor; every factor keeps it coming down the road. Its cue shows from as soon as its row comes
 // on screen, and for at least warningSeconds. One that merges moves a lane to either side that
 // stays on the road, one placement each, starting once its travel is its merge's share of the way
-// to the pack's rows, but no sooner than its merge's cue, warningSeconds long, can show once it has
-// entered, nor so late that it is still moving across as it reaches them; with no such moment it
+// to the pack's rows. Its full visible cue may start before body entry; the merge must finish
+// before pack contact. With no room for the complete merge itself, it
 // has no placement. It is placed as a rider over both its lanes, blocking and standing in each.
 function ridePlacements(
+  work: MoverPlacementWork | undefined,
   geometry: MoverGeometry,
   spec: MoverSpec,
   motion: Extract<MoverMotion, { kind: "ride" }>,
@@ -882,13 +896,18 @@ function ridePlacements(
   const [nearest, farthest] = [level(enters), level(gone)].sort((a, b) => a - b);
   // A merge's start, as travel down the road from the road's top, and its length in scroll.
   const mergeLength = (motion.merge?.seconds ?? 0) * scrollSpeed;
-  const mergeFrom = Math.max(
-    warning * speedMultiplier,
-    Math.min((motion.merge?.at ?? 0) * sightLength, sightLength - mergeLength * speedMultiplier),
-  );
-  if (motion.merge !== undefined && mergeFrom + mergeLength * speedMultiplier > sightLength) {
+  const latestMergeFrom = sightLength - mergeLength * speedMultiplier;
+  if (motion.merge !== undefined && latestMergeFrom < 0) {
     return [];
   }
+  const onRoadMergeFrom = Math.max(
+    warning * speedMultiplier,
+    Math.min((motion.merge?.at ?? 0) * sightLength, latestMergeFrom),
+  );
+  // Keep existing feasible timing. A fast rider's cue can start at its visible lane sign
+  // before the body enters, with the full merge ending before the pack-contact boundary.
+  const mergeFrom =
+    onRoadMergeFrom > latestMergeFrom ? Math.max(0, latestMergeFrom - 1e-9) : onRoadMergeFrom;
   const directions = motion.merge === undefined ? [0] : [-1, 1];
   return Array.from({ length: laneCount - across + 1 }, (_, lane) => lane).flatMap((lane) =>
     directions.flatMap((direction): MoverPlacement[] => {
@@ -896,6 +915,7 @@ function ridePlacements(
       if (merged < 0 || merged + across > laneCount) {
         return [];
       }
+      work?.beforePlacement();
       const lanes = { count: across + Math.abs(direction), first: Math.min(lane, merged) };
       const merge =
         direction === 0
@@ -954,6 +974,7 @@ interface StandOffset {
 // spot. It spawns late enough that its furthest spot toward the pack meets the pack no sooner
 // than its row would.
 function standingPlacements(
+  work: MoverPlacementWork | undefined,
   geometry: MoverGeometry,
   spec: MoverSpec,
   spots: readonly StandOffset[],
@@ -971,6 +992,7 @@ function standingPlacements(
   const leaves = maxTravel + roadLength + height - minTravel;
   const placements: MoverPlacement[] = [];
   for (let start = -minLane; start + maxLane + across <= laneCount; start++) {
+    work?.beforePlacement();
     const first = start + minLane;
     const count = maxLane - minLane + across;
     placements.push({
@@ -1033,6 +1055,7 @@ function stepCounts(
 // in the lane it leaves while it comes level with the row it reaches, and in the lane it reaches
 // while still level with the row it leaves.
 function stepsPlacements(
+  work: MoverPlacementWork | undefined,
   geometry: MoverGeometry,
   spec: MoverSpec,
   motion: Extract<MoverMotion, { kind: "steps" }>,
@@ -1047,9 +1070,10 @@ function stepsPlacements(
   const gap = motion.cueEach === true ? Math.max(pause, warning) : pause;
   const drift = motion.drift ?? 0;
   if (motion.shy !== undefined && draws.shy < motion.shy.share) {
-    return shyPlacements(geometry, spec, motion.shy, motion.stepSeconds, count, draws);
+    return shyPlacements(work, geometry, spec, motion.shy, motion.stepSeconds, count, draws);
   }
   const ways = motion.sequences.filter((sequence) => sequence.length === count);
+  const prefixes = new Map<string, MoverPlacement[]>();
   return ways.flatMap((shapes) => {
     const spots: StandOffset[] = [{ lane: 0, travel: 0 }];
     const steps: MoverStep[] = [];
@@ -1090,13 +1114,22 @@ function stepsPlacements(
           ]
         : [];
     });
-    return standingPlacements(geometry, spec, [...spots, ...corners], (lane) => ({
+    // Unexecuted authored tails may share a prefix. Reuse its immutable geometry while
+    // preserving the original sequence order and multiplicity for candidate selection.
+    const key = JSON.stringify([steps, spots, corners]);
+    const existing = prefixes.get(key);
+    if (existing !== undefined) {
+      return existing;
+    }
+    const placements = standingPlacements(work, geometry, spec, [...spots, ...corners], (lane) => ({
       lane,
       motion: "steps",
       movement: spec.movement,
       steps,
       warning,
     }));
+    prefixes.set(key, placements);
+    return placements;
   });
 }
 
@@ -1115,6 +1148,7 @@ function reachesOf(side: number): readonly (readonly [number, number])[] {
 // Choreography ends before pack contact. Reserve its whole continuous body sweep against
 // other spawns, but block the guaranteed path only during actual contact with the pack.
 function signaturePlacements(
+  work: MoverPlacementWork | undefined,
   geometry: MoverGeometry,
   spec: MoverSpec,
   profile: SignatureProfile,
@@ -1178,6 +1212,7 @@ function signaturePlacements(
       if (whole.length === 0) {
         continue;
       }
+      work?.beforePlacement();
       const firstContact =
         contact.length === 0
           ? route.complete + Math.max(0, sightLength - signaturePlace(route, route.complete).y)
@@ -1242,6 +1277,7 @@ function signaturePlacements(
 // draw ranked highest: it may stand at every travel given in every lane of its reach. pathAt makes
 // its path from its start lane and its reach.
 function reachPlacements(
+  work: MoverPlacementWork | undefined,
   geometry: MoverGeometry,
   spec: MoverSpec,
   side: number,
@@ -1253,7 +1289,7 @@ function reachPlacements(
     const spots = Array.from({ length: right - left + 1 }, (_, i) =>
       travels.map((travel) => ({ lane: left + i, travel })),
     ).flat();
-    return standingPlacements(geometry, spec, spots, (lane) =>
+    return standingPlacements(work, geometry, spec, spots, (lane) =>
       pathAt(lane, { count: right - left + 1, first: lane + left }),
     ).map((placement) => ({ ...placement, rank: reaches.length - rank }));
   });
@@ -1268,6 +1304,7 @@ function reachPlacements(
 // the tallest pack's rows at sightLength, is down to its drawn share of the road's length. Each
 // step is its drawn length.
 function approachPlacements(
+  work: MoverPlacementWork | undefined,
   geometry: MoverGeometry,
   spec: MoverSpec,
   motion: Extract<MoverMotion, { kind: "approach" }>,
@@ -1292,7 +1329,7 @@ function approachPlacements(
   const lengths = Array.from({ length: steps }, (_, i) =>
     moveLength(spec.variation, draws, i, motion.stepSeconds * scrollSpeed),
   );
-  return reachPlacements(geometry, spec, draws.side, travels, (lane, reach) => ({
+  return reachPlacements(work, geometry, spec, draws.side, travels, (lane, reach) => ({
     burst: cellLength,
     lane,
     lengths,
@@ -1315,6 +1352,7 @@ function approachPlacements(
 // road, and each later hop, with no cue, starts as the hop before ends, up to its drawn delay
 // later; it makes as many hops as its drawn count, each its drawn length.
 function shyPlacements(
+  work: MoverPlacementWork | undefined,
   geometry: MoverGeometry,
   spec: MoverSpec,
   shy: ShyHops,
@@ -1339,7 +1377,7 @@ function shyPlacements(
     );
   }
   const travels = Array.from({ length: shy.rise + 1 }, (_, row) => -row * cellLength);
-  return reachPlacements(geometry, spec, draws.side, travels, (lane, reach) => ({
+  return reachPlacements(work, geometry, spec, draws.side, travels, (lane, reach) => ({
     burst: cellLength,
     lane,
     lengths,
@@ -1416,18 +1454,28 @@ export function moverPlacements(
   draws: MoverDraws = EVEN_DRAWS,
   lift = 0,
 ): MoverPlacement[] {
+  return moverPlacementsWithWork(undefined, geometry, spec, draws, lift);
+}
+
+export function moverPlacementsWithWork(
+  work: MoverPlacementWork | undefined,
+  geometry: MoverGeometry,
+  spec: MoverSpec,
+  draws: MoverDraws = EVEN_DRAWS,
+  lift = 0,
+): MoverPlacement[] {
   const { motion } = spec;
   switch (motion.kind) {
     case "signature":
-      return signaturePlacements(geometry, spec, motion.profile, draws);
+      return signaturePlacements(work, geometry, spec, motion.profile, draws);
     case "approach":
-      return approachPlacements(geometry, spec, motion, draws);
+      return approachPlacements(work, geometry, spec, motion, draws);
     case "cross":
-      return crossPlacements(geometry, spec, motion, draws, lift);
+      return crossPlacements(work, geometry, spec, motion, draws, lift);
     case "ride":
-      return ridePlacements(geometry, spec, motion, draws);
+      return ridePlacements(work, geometry, spec, motion, draws);
     default:
-      return stepsPlacements(geometry, spec, motion, draws);
+      return stepsPlacements(work, geometry, spec, motion, draws);
   }
 }
 
@@ -1808,7 +1856,7 @@ export function keepMoverSpot(
   spot: Spot,
 ): void {
   const { placement } = spot;
-  const dart = placement.path.motion === "cross";
+  const dart = isDartPlacement(placement);
   const rider = placement.path.motion === "ride";
   placement.cells.forEach(({ lane, row }) => grid.take(dart, lane, spot.row + row, rider));
   const ride = riderSpanOf(geometry, spec, spot.distance + placement.appears, placement);
@@ -1822,6 +1870,11 @@ export function keepMoverSpot(
   grid.block(spot.row, placement.lanes, placement.rows, true, dart);
   grid.stand(standsOf(spot));
   onScreen.push(onScreenOf(placement.path, screenOf(spot)));
+}
+
+export function moverWithinZone(geometry: { readonly zoneLength: number }, spot: Spot): boolean {
+  const [start, end] = screenOf(spot);
+  return start >= 0 && end <= geometry.zoneLength;
 }
 
 export function fitsMoverSpot(
@@ -1839,7 +1892,7 @@ export function fitsMoverSpot(
   const { cells } = placement;
   const body = bodyOf(spot);
   const rider = riderSpanOf(geometry, spec, spot.distance + placement.appears, placement);
-  if (!(start >= 0 && end <= geometry.zoneLength)) {
+  if (!moverWithinZone(geometry, spot)) {
     return reject("outside-zone");
   }
   if (
@@ -1878,13 +1931,8 @@ export function fitsMoverSpot(
     return reject("pack-gap");
   }
   return (
-    grid.block(
-      spot.row,
-      placement.lanes,
-      placement.rows,
-      false,
-      placement.path.motion === "cross",
-    ) || reject("open-lanes")
+    grid.block(spot.row, placement.lanes, placement.rows, false, isDartPlacement(placement)) ||
+    reject("open-lanes")
   );
 }
 
@@ -2090,7 +2138,7 @@ export function placeMoversWithRejections<Kind extends string>(
       );
       const { placement } = spot;
       keepMoverSpot(geometry, placing!, grid, onScreen, spot);
-      const dart = placement.path.motion === "cross";
+      const dart = isDartPlacement(placement);
       const body = bodyOf(spot);
       if (admitted !== undefined) {
         admitted[i] = true;

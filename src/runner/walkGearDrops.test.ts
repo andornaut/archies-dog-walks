@@ -6,13 +6,13 @@ import { SHOP_GEAR } from "../data/shop";
 import type { GearId } from "../data/types";
 import { WORLD } from "../data/world";
 import { gearDropCount, gearInEffect } from "../rules/gearDrops";
-import { plannerStreams } from "../testing/movers";
-import { GAME_ROAD, inZone, REAL, realRun } from "../testing/planner";
+import { defaultRoute } from "../rules/route";
+import { GAME_ROAD, REAL, realRun } from "../testing/planner";
 import { atPack, inLane, step, walkWith } from "../testing/walk";
+import { captureZoneInput, planZoneForSeed } from "../testing/zonePlan";
 import { spacedStretch } from "./stretches";
 import { startRoad, type Walk, zoneLength } from "./walk";
 import { isGearDrop } from "./walkItems";
-import { planZone, spawnQuotas } from "./zonePlan";
 
 const GEAR = keysOf(SHOP_GEAR);
 const POSITIONS = Array.from({ length: WORLD.walkLength }, (_, position) => position);
@@ -21,10 +21,12 @@ const POSITIONS = Array.from({ length: WORLD.walkLength }, (_, position) => posi
 const SEEDS = Array.from({ length: 12 }, (_, i) => i + 1);
 const PLAN_SEEDS = SEEDS.slice(0, 4);
 
-// The real run in the last zone at a walk position, with the Pocket's gear.
+// A real run on the default reachable route, with the Pocket's gear.
 const zonedRun = (position: number, pocket: GearId | null = null) => ({
-  ...inZone(realRun(REAL), WORLD.lastZone, position),
+  ...realRun(REAL),
   gear: pocket,
+  route: defaultRoute(REAL, position + 1),
+  zoneIndex: position,
 });
 
 describe("gear drops on the road", () => {
@@ -66,12 +68,13 @@ describe("gear drop planning", () => {
   // Each zone's drops, counted and placed as the planner places them.
   // The zone's gear drop quotas, drawn as the planner draws them.
   const quotasOf = (position: number, seed: number, pocket: GearId | null = null) =>
-    spawnQuotas(REAL, plannerStreams(seed), zonedRun(position, pocket)).filter(({ kind }) =>
-      isGearDrop(REAL, kind),
-    );
+    captureZoneInput(REAL, GAME_ROAD, seed, {
+      road: startRoad(LANE_COUNT),
+      run: zonedRun(position, pocket),
+    }).auxiliary.filter(({ kind }) => isGearDrop(REAL, kind));
   // The zone's drops as the planner places them.
   const dropsOf = (position: number, seed: number) =>
-    planZone(REAL, GAME_ROAD, plannerStreams(seed), {
+    planZoneForSeed(REAL, GAME_ROAD, seed, {
       road: startRoad(LANE_COUNT),
       run: zonedRun(position),
     }).road.pending.filter(({ kind }) => isGearDrop(REAL, kind));
@@ -135,7 +138,7 @@ describe("gear drop planning", () => {
       const real = { ...REAL, tuning };
       const length = zoneLength(real);
       for (const seed of PLAN_SEEDS) {
-        const { pending } = planZone(real, GAME_ROAD, plannerStreams(seed), {
+        const { pending } = planZoneForSeed(real, GAME_ROAD, seed, {
           road: startRoad(LANE_COUNT),
           run: zonedRun(position),
         }).road;

@@ -40,14 +40,15 @@ import type { LaneDirection } from "../layout/lanes";
 import { earnedByRun, runCountersOf } from "../rules/achievements";
 import { cardFor, type CardView, chooseOption, openCard } from "../rules/choices";
 import { modifiersOf, modifierValue } from "../rules/modifiers";
-import { currentZone } from "../rules/route";
+import { currentZone, defaultRoute, firstZoneId, walkLength } from "../rules/route";
 import { tipValue } from "../rules/run";
 import { read } from "../rules/units";
 import { zoneStats } from "../rules/zones";
 import { mapPack } from "../state/pack";
-import { type ModifierSource, newRun, type PackDogs, type RunState } from "../state/runState";
+import { type ModifierSource, newRun, type PackDogs } from "../state/runState";
 import { packOf, runFactsFor } from "../testing/achievements";
 import { lanesReachedAtEnd, pathShortfalls } from "../testing/avoidable";
+import { defined } from "../testing/defined";
 import { plannerStreams } from "../testing/movers";
 import {
   blockingSpans,
@@ -57,20 +58,16 @@ import {
   inZone,
   LANE_MOVE_WALKERS,
   MINOR_OBSTACLE_IDS,
-  MOVER_SCROLL,
-  moverContact,
   type MoverEvent,
   muddyLaneMove,
   OBSTACLE_IDS,
   packHitLength,
   raised,
   REAL,
-  type Real,
   realRun,
   reweighed,
   ROAD_LENGTH,
   slowestLaneMove,
-  standingSpan,
   walkwayOf,
   ZONE_IDS,
 } from "../testing/planner";
@@ -87,22 +84,24 @@ import {
   walkWith,
   withHearts,
 } from "../testing/walk";
-import { TEST_WORLD, weighedUp } from "../testing/world";
+import { mapZones, TEST_WORLD } from "../testing/world";
+import { captureZoneInput, planZoneForSeed } from "../testing/zonePlan";
 import { cents, clampHearts } from "../units";
 import { approachOutcomes } from "./approach";
 import { stillInLane } from "./laneMotion";
-import { hasLeftRoad, laneAt, type MoverPath, moverPlace } from "./movers";
+import { laneAt, moverPlace } from "./movers";
 import { zoneSkins } from "./obstacleLooks";
 import { shyOutcomes } from "./shy";
-import { WIDE_LANES, zoneRows } from "./spawning";
+import { auditSlotPartialPlan, auditSlotPlan } from "./slotAudit";
+import { SLOT_ROLES } from "./slotConfig";
+import { quietCoverage } from "./slotCoverage";
+import { WIDE_LANES } from "./spawning";
 import {
   collectTip,
   finishZone,
   headHome,
   itemHeight,
   laneMoveSeconds,
-  plannedCellInset,
-  type RoadGeometry,
   startRoad,
   steerWalk,
   stepWalk,
@@ -110,129 +109,163 @@ import {
   walkScrollSpeed,
   zoneLength,
 } from "./walk";
+import { blocksLane, footprintOf, itemCategory, opensACard, type WalkItem } from "./walkItems";
 import {
-  blocksLane,
-  footprintOf,
-  isMinorObstacle,
-  itemCategory,
-  movementOf,
-  opensACard,
-  type WalkItem,
-} from "./walkItems";
-import {
-  firstContactSeconds,
-  minorObstacleWeights,
   obstacleWeights,
-  planZone,
+  planZoneWithContext,
   spawnQuotas,
+  type ZonePlanObservation,
 } from "./zonePlan";
+import { compileZoneSlotInput } from "./zoneSlotInput";
 
-// The scroll since its cue at which a mover's body first shows on the road: at or below the
-// road's top, and not yet off its side. A cue, or a dart waiting at the road's edge, blocks
-// nothing yet.
-function firstInView(mover: MoverPath): number {
-  let since = 0;
-  for (; since < MOVER_SCROLL; since++) {
-    const place = moverPlace(LANE_COUNT, mover, since);
-    if (place.solid && place.travel >= 0 && !hasLeftRoad(LANE_COUNT, place)) {
-      break;
-    }
-  }
-  return since;
-}
-// The lengths of the runs of spawn rows that come on screen with no lane-blocking obstacle in
-// view in them, the zone's first and last rows included. A row comes on screen at its distance,
-// where a standing spawn on it does, and is overlapped by an obstacle whose contact with the
-// pack meets the row's window; a mover counts there once it is in view as the row comes on. The
-// rows are the zone's own (zoneRows), spacing apart, reaching back onto the road in view where the
-// zone starts with spawns there, and ending a spacing before the zone's end. A mover's contact
-// gets a pixel either way, so a rounding error at its edges never decides a row.
-function quietRuns(
-  tuned: Real,
-  road: RoadGeometry,
-  zoned: RunState,
-  zone: ZoneId,
-  pending: Walk["road"]["pending"],
-): number[] {
-  const spacing = gcdOf(pending.flatMap((e) => (e.mover === undefined ? [e.distance] : [])));
-  const contact = firstContactSeconds(tuned, zoned);
-  const rows = zoneRows(
-    {
-      ...(contact === undefined ? {} : { firstContactSeconds: contact }),
-      scrollSpeed: walkScrollSpeed(tuned, zoned),
-      sightLength: road.sightLength,
-      zoneLength: zoneLength(tuned),
+// Fixed weight-query fixtures retain coherent slot roles and minimum guarantees.
+function fixedEncounterZone(zone: Zone, obstacles: Zone["weights"]["obstacles"]): Zone {
+  const guarantees: Zone["spawnSlots"]["guarantees"] = [
+    ...zone.spawnSlots.guarantees.filter(
+      ({ role }) => role === "minorFixed" || role === "minorMoving",
+    ),
+    ...keysOf(obstacles)
+      .filter((kind) => obstacles[kind] > 0)
+      .map((kind) => ({ count: 1, kind, role: "encounterFixed" as const })),
+  ];
+  const counts = {
+    encounterFixed: guarantees.filter(({ role }) => role === "encounterFixed").length,
+    encounterMoving: 0,
+    minorFixed: guarantees
+      .filter(({ role }) => role === "minorFixed")
+      .reduce((sum, { count }) => sum + count, 0),
+    minorMoving: guarantees
+      .filter(({ role }) => role === "minorMoving")
+      .reduce((sum, { count }) => sum + count, 0),
+  };
+  return {
+    ...zone,
+    moverShare: 0,
+    spawnSlots: {
+      capacity: counts,
+      counts: zone.spawnSlots.counts.map(() => counts) as unknown as Zone["spawnSlots"]["counts"],
+      guarantees,
     },
-    spacing,
-  );
-  const window = road.cell.length - 2 * plannedCellInset(tuned, road) + road.tallestPackBand;
-  const shows = pending
-    .filter((event) => blocksLane(tuned, event.kind))
-    .map((event) => {
-      if (event.mover === undefined) {
-        const { distance, length } = standingSpan(tuned, road, zone, event);
-        return { end: distance + length, from: distance, start: distance };
-      }
-      const { end, start } = moverContact("planned", tuned, road, zone, {
-        ...event,
-        mover: event.mover,
-      });
-      return { end: end + 1, from: event.distance + firstInView(event.mover), start: start - 1 };
-    });
-  const runs: number[] = [];
-  let run = 0;
-  for (const row of rows) {
-    const filled = shows.some(
-      ({ end, from, start }) => from <= row && start < row + window && end > row,
-    );
-    if (filled && run > 0) {
-      runs.push(run);
-    }
-    run = filled ? 0 : run + 1;
-  }
-  return run > 0 ? [...runs, run] : runs;
+    weights: { ...zone.weights, obstacles },
+  };
 }
+
 const FRAME = 1 / 60;
 
 // The seeds the game's road sweeps sample: more seeds cover more plans and take longer.
 const SWEEP_SEEDS = [1, 2];
+
+function observedPlan(
+  tuned: Parameters<typeof planZoneWithContext>[0],
+  roadGeometry: Parameters<typeof planZoneWithContext>[1],
+  seed: number,
+  walk: Walk,
+) {
+  let observation: ZonePlanObservation | undefined;
+  const { road } = planZoneWithContext(
+    tuned,
+    roadGeometry,
+    {
+      observePlan: (value) => {
+        observation = value;
+      },
+      seed,
+      zoneIndex: walk.run.zoneIndex,
+    },
+    plannerStreams(seed),
+    walk,
+  );
+  return { road, slots: defined(defined(observation).slots) };
+}
+
+function expectCertifiedDelivery({ road, slots }: ReturnType<typeof observedPlan>): void {
+  const { assignments, delivery, input } = slots;
+  const original =
+    Object.values(input.config.active).reduce((sum, count) => sum + count, 0) +
+    input.auxiliary.reduce((sum, quota) => sum + quota.count, 0);
+  expect(delivery.configured).toBe(original);
+  expect(delivery.delivered).toBe(road.pending.length + road.herrings.length);
+  expect(delivery.delivered + delivery.omissions.length).toBe(original);
+  expect(10 * delivery.delivered).toBeGreaterThanOrEqual(9 * original);
+  expect(slots.status === "complete" ? slots.active.status : slots.partialAudit.status).toBe(
+    "valid",
+  );
+  expect(road.admission?.substitutions).toEqual([]);
+  for (const role of SLOT_ROLES) {
+    expect(delivery.configuredByRole[role]).toBe(input.config.active[role]);
+    expect(assignments.filter((item) => item.role === role).length).toBe(
+      delivery.deliveredByRole[role],
+    );
+  }
+  for (const source of input.catalogue.filter(({ weight }) => weight > 0)) {
+    expect(
+      assignments.some(({ binding, role }) => role === source.role && binding.kind === source.kind),
+    ).toBe(true);
+  }
+  for (const guarantee of input.config.guarantees) {
+    expect(
+      assignments.filter(
+        ({ binding, role }) => role === guarantee.role && binding.kind === guarantee.kind,
+      ).length,
+    ).toBeGreaterThanOrEqual(guarantee.count);
+  }
+}
 
 // The spawn planner takes a few hundred milliseconds a zone of the game's road, so a sweep over it
 // takes several seconds, more on a busy machine.
 describe("planZone", { timeout: 60_000 }, () => {
   // The game's road planned in zone at walk position on seed, for walker, planned once for every
   // check made of it.
-  const realPlans = new Map<string, Walk["road"]>();
-  const realPlan = (
+  const realPlans = new Map<string, ReturnType<typeof observedPlan>>();
+  const realPlanWithDelivery = (
     seed: number,
     zone: ZoneId,
     position: number,
     walker?: WalkerId,
-  ): Walk["road"] => {
+  ) => {
     const key = `${walker ?? ""} ${zone} ${position} ${seed}`;
-    let road = realPlans.get(key);
-    if (road === undefined) {
-      road = planZone(REAL, GAME_ROAD, plannerStreams(seed), {
+    let planned = realPlans.get(key);
+    if (planned === undefined) {
+      planned = observedPlan(REAL, GAME_ROAD, seed, {
         road: startRoad(LANE_COUNT),
         run: inZone(realRun(REAL, walker), zone, position),
-      }).road;
-      realPlans.set(key, road);
+      });
+      realPlans.set(key, planned);
     }
-    return road;
+    return planned;
   };
-  const planned = planZone(data, geometry, plannerStreams(3), walkWith(["kilo"]));
-  const countOf = (category: string) =>
-    planned.road.pending.filter((event) => itemCategory(data, event.kind) === category).length;
+  const realPlan = (seed: number, zone: ZoneId, position: number, walker?: WalkerId) =>
+    realPlanWithDelivery(seed, zone, position, walker).road;
 
-  it("plans the zone's counts of each kind of spawn", () => {
+  it("accounts for the zone's original spawn counts through certified delivery and omissions", () => {
     const { counts } = tuning;
-    expect(countOf("obstacle")).toBe(counts.obstaclesFirstZone);
-    expect(countOf("minor")).toBe(counts.minorObstaclesFirstZone);
-    expect(countOf("tip")).toBe(counts.tipsFirstZone);
-    expect(countOf("treat")).toBe(counts.treatsPerZone);
-    expect(countOf("lucky")).toBe(
-      Object.values(counts.luckyFindsPerZone).reduce((sum, count) => sum + count, 0),
-    );
+    const slots = data.world.zones[0].spawnSlots.counts[0]!;
+    const planned = observedPlan(data, geometry, 3, walkWith(["kilo"]));
+    expectCertifiedDelivery(planned);
+    expect(planned.slots.input.config.active).toEqual(slots);
+    const requested = {
+      lucky: Object.values(counts.luckyFindsPerZone).reduce((sum, count) => sum + count, 0),
+      minor: slots.minorFixed + slots.minorMoving,
+      obstacle: slots.encounterFixed + slots.encounterMoving,
+      tip: counts.tipsFirstZone,
+      treat: counts.treatsPerZone,
+    };
+    for (const [category, count] of Object.entries(requested)) {
+      const omitted = planned.slots.delivery.omissions.filter(({ auxiliary, role }) =>
+        role === "auxiliaryFixed" || role === "auxiliaryMoving"
+          ? itemCategory(
+              data,
+              defined(planned.slots.input.auxiliary[defined(auxiliary).requestIndex]).kind,
+            ) === category
+          : role === "encounterFixed" || role === "encounterMoving"
+            ? category === "obstacle"
+            : category === "minor",
+      ).length;
+      const actual = planned.road.pending.filter(
+        (event) => itemCategory(data, event.kind) === category,
+      ).length;
+      expect(actual + omitted, category).toBe(count);
+    }
   });
 
   // Rush hour's and Keen eye's treatSpawns factors, at the live tuning's values.
@@ -249,7 +282,7 @@ describe("planZone", { timeout: 60_000 }, () => {
         ...walk.run,
         modifiers: factors.map((factor) => activeModifier(source, factor)),
       };
-      const treats = planZone(live, geometry, plannerStreams(3), {
+      const treats = planZoneForSeed(live, geometry, 3, {
         ...walk,
         run,
       }).road.pending.filter(({ kind }) => kind === "treat");
@@ -261,35 +294,70 @@ describe("planZone", { timeout: 60_000 }, () => {
     }
   });
 
-  it("draws only the minor obstacles the current zone weighs above 0", () => {
+  it("passes every positive-weight minor kind unchanged to native planning", () => {
     const walk = walkWith(["kilo"]);
-    // This short-zone fixture checks weights, independently of complete signature routes.
-    const real = { ...data, movementAssignments: {}, world: WORLD };
+    // Full production roles and motion profiles use the production road and duration.
+    const real = REAL;
+    const first = firstZoneId(real);
     for (const zone of ZONE_IDS) {
-      const run = inZone(walk.run, zone, 0);
-      const allowed = minorObstacleWeights(real, run).map(([kind]) => kind as string);
+      const route =
+        zone === first
+          ? defaultRoute(real, 1)
+          : zone === real.world.lastZone
+            ? defaultRoute(real, walkLength(real))
+            : [first, zone];
+      const run = { ...walk.run, route, zoneIndex: route.length - 1 };
+      const expected = Object.entries(currentZone(real, run).weights.minorObstacles).filter(
+        ([, weight]) => weight > 0,
+      );
       for (const seed of [1, 2, 3]) {
-        const kinds = planZone(real, geometry, plannerStreams(seed), { ...walk, run })
-          .road.pending.filter((event) => event.mover === undefined)
-          .map((event) => event.kind as string)
-          .filter((kind) => itemCategory(real, kind as WalkItem["kind"]) === "minor");
-        expect(
-          kinds.filter((kind) => !allowed.includes(kind)),
-          zone,
-        ).toEqual([]);
+        const input = captureZoneInput(real, GAME_ROAD, seed, { ...walk, run });
+        const actual = input.catalogue
+          .filter(({ role }) => role === "minorFixed" || role === "minorMoving")
+          .map(({ kind, weight }) => [kind, weight]);
+        expect(actual, zone).toEqual(expected);
       }
     }
   });
 
-  // The real world with the street cart weighed up (weighedUp), so every zone plans some.
+  // Every zone supplies its own skin pool for a guaranteed static street cart.
   it.each(ZONE_IDS)("dresses every street cart planned in %s in a skin naming it", (zone) => {
     const walk = walkWith(["kilo"]);
-    // Skins do not depend on signature routes, which need the production zone length.
-    const real = weighedUp("streetCart", { ...data, movementAssignments: {}, world: WORLD });
+    const cartSlots = { encounterFixed: 0, encounterMoving: 0, minorFixed: 1, minorMoving: 0 };
+    const real = {
+      ...data,
+      // This single-kind skin fixture has no quiet-row density requirement.
+      tuning: { ...tuning, counts: { ...tuning.counts, maxEmptyRows: Infinity } },
+      world: mapZones(
+        (each) => ({
+          ...each,
+          moverShare: 0,
+          spawnSlots: {
+            capacity: cartSlots,
+            counts: each.spawnSlots.counts.map(
+              () => cartSlots,
+            ) as unknown as Zone["spawnSlots"]["counts"],
+            guarantees: [{ count: 1, kind: "streetCart", role: "minorFixed" }],
+          },
+          weights: {
+            minorObstacles: Object.fromEntries(
+              keysOf(each.weights.minorObstacles).map((kind) => [
+                kind,
+                kind === "streetCart" ? 1 : 0,
+              ]),
+            ) as Zone["weights"]["minorObstacles"],
+            obstacles: Object.fromEntries(
+              keysOf(each.weights.obstacles).map((kind) => [kind, 0]),
+            ) as Zone["weights"]["obstacles"],
+          },
+        }),
+        WORLD,
+      ),
+    };
     const run = inZone(walk.run, zone, 0);
     const skins: string[] = zoneSkins(real, zone, "streetCart");
     const carts = [1, 2, 3].flatMap((seed) =>
-      planZone(real, geometry, plannerStreams(seed), { ...walk, run }).road.pending.filter(
+      planZoneForSeed(real, geometry, seed, { ...walk, run }).road.pending.filter(
         ({ kind }) => kind === "streetCart",
       ),
     );
@@ -299,20 +367,14 @@ describe("planZone", { timeout: 60_000 }, () => {
 
   it("weighs the obstacles by the zone the route is in", () => {
     const { run } = walkWith(["kilo"]);
+    const pool = (kind: "puddle" | "thief") =>
+      Object.fromEntries(
+        keysOf(TEST_WORLD.zones[0].weights.obstacles).map((id) => [id, id === kind ? 2 : 0]),
+      ) as Zone["weights"]["obstacles"];
     const zones: [Zone, ...Zone[]] = [
-      {
-        ...TEST_WORLD.zones[0],
-        weights: {
-          ...TEST_WORLD.zones[0].weights,
-          obstacles: {
-            ...(Object.fromEntries(
-              Object.keys(TEST_WORLD.zones[0].weights.obstacles).map((id) => [id, 0]),
-            ) as Zone["weights"]["obstacles"]),
-            puddle: 2,
-          },
-        },
-      },
-      ...TEST_WORLD.zones.slice(1),
+      fixedEncounterZone(TEST_WORLD.zones[0], pool("puddle")),
+      fixedEncounterZone(TEST_WORLD.zones[1]!, pool("thief")),
+      ...TEST_WORLD.zones.slice(2),
     ];
     const weighed = { ...data, world: { ...TEST_WORLD, zones } };
     const first = inZone(run, zones[0].id as ZoneId, 0);
@@ -321,8 +383,8 @@ describe("planZone", { timeout: 60_000 }, () => {
     expect(obstacleWeights(weighed, other).map(([id]) => id)).toContain("thief");
   });
 
-  // Cards are placed first: none is skipped while a plain obstacle got a place in the zone. Every
-  // zone at each walk position it can take, its quotas drawn as planZone draws them first.
+  // Every card in the frozen structural plan is materialized alongside plain obstacles.
+  // Check each neighbourhood at every walk position it can take.
   const POSITIONS = ZONE_IDS.flatMap((zone): { position: number; zone: ZoneId }[] =>
     zone === WORLD.firstZone
       ? [{ position: 0, zone }]
@@ -330,53 +392,92 @@ describe("planZone", { timeout: 60_000 }, () => {
         ? [{ position: WORLD.walkLength - 1, zone }]
         : Array.from({ length: WORLD.walkLength - 2 }, (_, i) => ({ position: i + 1, zone })),
   );
-  // Every zone at each walk position, planned with a cap of one quiet row, tighter than the
-  // game's so the fill has rows to fill, and without a cap, on one seed: the capped plan has
-  // the same movers, no more of any kind than the zone planned, the fixed obstacles counted together
-  // as one with no room is swapped for another, and never more rows quiet over the cap, and across
-  // the zones it has fewer.
-  it("moves the zone's own fixed obstacles into rows that come on screen quiet over the cap", () => {
-    const cap = 1;
-    const capping = {
-      ...REAL,
-      tuning: { ...TUNING, counts: { ...TUNING.counts, maxEmptyRows: cap } },
-    };
-    const uncapped = {
-      ...REAL,
-      tuning: { ...TUNING, counts: { ...TUNING.counts, maxEmptyRows: Number.POSITIVE_INFINITY } },
-    };
-    const overCap = (zoned: RunState, zone: ZoneId, pending: Walk["road"]["pending"]) =>
-      quietRuns(REAL, GAME_ROAD, zoned, zone, pending).reduce(
-        (sum, run) => sum + Math.max(0, run - cap),
-        0,
-      );
-    const movingObstacles = (pending: Walk["road"]["pending"]) =>
-      pending.filter((event) => event.mover !== undefined && blocksLane(REAL, event.kind));
-    let [cappedOver, uncappedOver] = [0, 0];
-    // A kind may have several quotas, such as one per stepper.
-    const group = (kind: WalkItem["kind"]) =>
-      isMinorObstacle(REAL, kind) && movementOf(REAL, kind) === null ? "fixed" : kind;
-    for (const { position, zone } of POSITIONS) {
+  // Quiet constraints may select different full-profile layouts from the same original requests.
+  it.each(POSITIONS)(
+    "certifies full profiles and native safety under capped and unbounded quiet-row limits in $zone at $position",
+    ({ position, zone }) => {
+      const cap = 1;
+      const capping = {
+        ...REAL,
+        tuning: { ...TUNING, counts: { ...TUNING.counts, maxEmptyRows: cap } },
+      };
+      const uncapped = {
+        ...REAL,
+        tuning: { ...TUNING, counts: { ...TUNING.counts, maxEmptyRows: Number.POSITIVE_INFINITY } },
+      };
       const walk = { road: startRoad(LANE_COUNT), run: inZone(realRun(REAL), zone, position) };
-      const capped = planZone(capping, GAME_ROAD, plannerStreams(1), walk).road;
-      const plain = planZone(uncapped, GAME_ROAD, plannerStreams(1), walk).road.pending;
+      const capped = observedPlan(capping, GAME_ROAD, 1, walk);
+      const plain = observedPlan(uncapped, GAME_ROAD, 1, walk);
       const label = `${zone} at ${position}`;
-      expect(movingObstacles(capped.pending), label).toEqual(movingObstacles(plain));
-      for (const kind of new Set(capped.planned.map((quota) => group(quota.kind)))) {
-        const planned = capped.planned
-          .filter((quota) => group(quota.kind) === kind)
-          .reduce((sum, { count }) => sum + count, 0);
-        const placed = capped.pending.filter((event) => group(event.kind) === kind).length;
-        expect(placed, `${label}: ${kind}`).toBeLessThanOrEqual(planned);
+      const original = currentZone(REAL, walk.run).spawnSlots;
+      expect(capped.slots.input.catalogue, label).toEqual(plain.slots.input.catalogue);
+      expect(capped.slots.input.auxiliary, label).toEqual(plain.slots.input.auxiliary);
+      expect(capped.slots.input.context, label).toEqual(plain.slots.input.context);
+      for (const { observed, quietLimit, tuned } of [
+        { observed: capped, quietLimit: cap, tuned: capping },
+        { observed: plain, quietLimit: null, tuned: uncapped },
+      ]) {
+        expectCertifiedDelivery(observed);
+        const { road, slots } = observed;
+        const { assignments, delivery, input } = slots;
+        expect(input.config, label).toEqual({
+          active: defined(original.counts[position]),
+          capacity: original.capacity,
+          guarantees: original.guarantees,
+        });
+        expect(input.tuning, label).toEqual(tuned.tuning);
+        expect(input.geometry.maxEmptyRows, label).toBe(quietLimit);
+        const { catalogue, geometry } = compileZoneSlotInput(input);
+        const fresh =
+          slots.status === "complete"
+            ? auditSlotPlan(
+                input.context,
+                geometry,
+                [...road.path],
+                catalogue,
+                input.auxiliary,
+                input.config,
+                "active",
+                assignments,
+              )
+            : auditSlotPartialPlan(
+                input.context,
+                geometry,
+                [...road.path],
+                catalogue,
+                input.auxiliary,
+                input.config,
+                delivery.omissions,
+                assignments,
+              );
+        expect(fresh, label).toEqual(
+          slots.status === "complete" ? slots.active : slots.partialAudit,
+        );
+        expect(fresh.status, label).toBe("valid");
+        expect(fresh.violations, label).toEqual([]);
+        expect(fresh.geometry.status, label).toBe("valid");
+        expect(fresh.geometry.missingCoverage, label).toEqual([]);
+        expect(fresh.geometry.requested, label).toBe(delivery.delivered);
+        expect(fresh.geometry.placed, label).toBe(delivery.delivered);
+        expect(fresh.geometry.validPlaced, label).toBe(delivery.delivered);
+        expect(fresh.geometry.findings, label).toHaveLength(delivery.delivered);
+        expect(
+          fresh.geometry.findings.every(
+            ({ coverage, reasons }) => coverage.length === 0 && reasons.length === 0,
+          ),
+          label,
+        ).toBe(true);
+        if (slots.status === "complete") {
+          expect(delivery.delivered, label).toBe(delivery.configured);
+        } else {
+          expect(delivery.delivered, label).toBeLessThan(delivery.configured);
+        }
+        if (quietLimit !== null) {
+          expect(quietCoverage(geometry, assignments).over, label).toBe(0);
+        }
       }
-      const over = overCap(walk.run, zone, capped.pending);
-      const plainOver = overCap(walk.run, zone, plain);
-      expect(over, label).toBeLessThanOrEqual(plainOver);
-      cappedOver += over;
-      uncappedOver += plainOver;
-    }
-    expect(cappedOver).toBeLessThan(uncappedOver);
-  });
+    },
+  );
 
   // A walker's perk tipSpawns factors scale the zone's tips, rounded as Rush hour's are; a
   // walker without one plans the zone's own count.
@@ -395,14 +496,25 @@ describe("planZone", { timeout: 60_000 }, () => {
     },
   );
 
-  it("skips no card for a plain obstacle in any zone at any walk position", () => {
+  it("keeps every selected card and guaranteed kind without substitution in every zone", () => {
     for (const { position, zone } of POSITIONS) {
       const zoned = inZone(realRun(REAL), zone, position);
       for (const seed of SWEEP_SEEDS) {
-        const asked = spawnQuotas(REAL, plannerStreams(seed), zoned)
+        const planned = realPlanWithDelivery(seed, zone, position);
+        expectCertifiedDelivery(planned);
+        const { pending, planned: quotas } = planned.road;
+        const asked = quotas
           .filter(({ kind }) => opensACard(REAL, kind))
           .reduce((sum, { count }) => sum + count, 0);
-        const { pending } = realPlan(seed, zone, position);
+        const authored = currentZone(REAL, zoned).spawnSlots.counts[position]!;
+        expect(planned.slots.input.config.active).toEqual(authored);
+        expect(
+          pending.filter(({ kind }) => itemCategory(REAL, kind) === "obstacle"),
+          `seed ${seed}: encounter slots`,
+        ).toHaveLength(
+          planned.slots.delivery.deliveredByRole.encounterFixed +
+            planned.slots.delivery.deliveredByRole.encounterMoving,
+        );
         const cards = pending.filter(({ kind }) => opensACard(REAL, kind)).length;
         const plain = pending.filter(
           ({ kind }) => blocksLane(REAL, kind) && !opensACard(REAL, kind),
@@ -526,29 +638,35 @@ describe("planZone", { timeout: 60_000 }, () => {
     }
   });
 
-  // Every obstacle's and every minor obstacle's weight raised at once, at the fastest pace in
-  // the last zone, where the road is fastest.
+  // Raise every enabled obstacle's weight without enabling kinds outside its neighbourhood pool.
+  // Use the fastest pace in the last zone, where the road is fastest.
   it("plans a way past every row from the path's start with every obstacle or minor obstacle weighed higher", () => {
     for (const { world } of [
       {
         name: "every obstacle",
         world: reweighed((weights) => ({
           ...weights,
-          obstacles: raised(weights.obstacles, OBSTACLE_IDS),
+          obstacles: raised(
+            weights.obstacles,
+            OBSTACLE_IDS.filter((kind) => weights.obstacles[kind] > 0),
+          ),
         })),
       },
       {
         name: "every minor obstacle",
         world: reweighed((weights) => ({
           ...weights,
-          minorObstacles: raised(weights.minorObstacles, MINOR_OBSTACLE_IDS),
+          minorObstacles: raised(
+            weights.minorObstacles,
+            MINOR_OBSTACLE_IDS.filter((kind) => weights.minorObstacles[kind] > 0),
+          ),
         })),
       },
     ] satisfies readonly { name: string; world: World }[]) {
       const tuned = { ...REAL, world };
       for (const zone of ZONE_IDS) {
         const zoned = inZone(realRun(tuned, FASTEST_WALKER), zone, WORLD.walkLength - 1);
-        const walk = planZone(tuned, GAME_ROAD, plannerStreams(1), {
+        const walk = planZoneForSeed(tuned, GAME_ROAD, 1, {
           road: startRoad(LANE_COUNT),
           run: zoned,
         });
@@ -748,7 +866,7 @@ describe("stepWalk", () => {
   // road from the far edge to the band before the end comes into view too late to reach it.
   it("grabs every treat of a planned zone that reaches the pack", () => {
     // The pack stands in the lane of the lowest treat in view, ignoring obstacles.
-    let walk = planZone(data, geometry, plannerStreams(4), walkWith(["kilo"]));
+    let walk = planZoneForSeed(data, geometry, 4, walkWith(["kilo"]));
     const toBand = geometry.packBand.top - geometry.roadTop;
     const reaching = walk.road.pending.filter(
       ({ distance, kind }) => kind === "treat" && distance + toBand < zoneLength(data),
@@ -1520,7 +1638,7 @@ describe("hit stop", () => {
 
   it("replays a run with hit stops exactly from its input log", () => {
     const setup = { dev: true, seed: 5, speed: 1, zone: 1 };
-    const start = planZone(data, geometry, plannerStreams(5), walkWith(["kilo", "ginger"]));
+    const start = planZoneForSeed(data, geometry, 5, walkWith(["kilo", "ginger"]));
     const steps = 60 * 30;
     // As RunScene steps: the moves due now, each logged at the run time it is applied, then the
     // walk. A move every 13 frames, alternating sides, runs into obstacles.
@@ -1568,7 +1686,7 @@ describe("hit stop", () => {
 
   it("replays lane moves, card choices and heading home to the same final state", () => {
     const setup = { dev: true, seed: 1, speed: 1, zone: 1 };
-    const start = planZone(data, geometry, plannerStreams(1), walkWith(["kilo", "ginger"]));
+    const start = planZoneForSeed(data, geometry, 1, walkWith(["kilo", "ginger"]));
     const homeFrame = 60 * 25;
     // As RunScene steps: the inputs due now, each logged at the run time it is applied, then
     // the walk, then each card it opened, chosen and logged at the run time after the step.
@@ -1736,7 +1854,16 @@ describe("headHome", () => {
 
 describe("obstacleWeights", () => {
   it("weighs every obstacle encounter, and no lucky one", () => {
-    const ids = obstacleWeights(data, walkWith(["lady"]).run).map(([id]) => id as string);
+    const weights = Object.fromEntries(
+      keysOf(TEST_WORLD.zones[0].weights.obstacles).map((id) => [id, 1]),
+    ) as Zone["weights"]["obstacles"];
+    const world: World = {
+      ...TEST_WORLD,
+      zones: [fixedEncounterZone(TEST_WORLD.zones[0], weights), ...TEST_WORLD.zones.slice(1)],
+    };
+    const ids = obstacleWeights({ ...data, world }, walkWith(["lady"]).run).map(
+      ([id]) => id as string,
+    );
     const obstacles = Object.entries(ENCOUNTERS)
       .filter(([, encounter]) => encounter.kind === "obstacle")
       .map(([id]) => id);

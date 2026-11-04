@@ -8,14 +8,14 @@ import type { ZoneId } from "../data/types";
 import { WORLD } from "../data/world";
 import { read } from "../rules/units";
 import { lanesReachedAtEnd, pathShortfalls } from "../testing/avoidable";
-import { type HopMovement, hoppingInstead, plannerStreams, sharedWorld } from "../testing/movers";
+import { type HopMovement, hoppingInstead, sharedWorld } from "../testing/movers";
 import {
   blockingSpans,
+  contactOfSpans,
   FASTEST_WALKER,
   GAME_ROAD,
   inZone,
   MOVER_SCROLL,
-  moverContact,
   moverSpans,
   muddyLaneMove,
   packHitLength,
@@ -31,13 +31,22 @@ import {
   ZONE_IDS,
 } from "../testing/planner";
 import { mapZones } from "../testing/world";
+import { planZoneForSeed } from "../testing/zonePlan";
 import { assignedMovement } from "./movementAssignments";
 import { onScreenOf, sweptLanes } from "./moverPlanning";
 import { crossSpan, hasLeftRoad, type MoverPath, moverPlace } from "./movers";
 import { moverOutcomes } from "./outcomes";
-import { itemHeight, type RoadGeometry, startRoad, type Walk, walkScrollSpeed } from "./walk";
+import { signaturePlace } from "./signaturePaths";
+import { apportionSlotCounts } from "./slotConfig";
+import {
+  componentHitLength,
+  itemHeight,
+  type RoadGeometry,
+  startRoad,
+  type Walk,
+  walkScrollSpeed,
+} from "./walk";
 import { blocksLane, footprintOf, movementOf } from "./walkItems";
-import { planZone } from "./zonePlan";
 
 // While set, the lane-balance bias is off: the planner's only weighted draws are its lane balance
 // (laneBalanceWeight), so even weights draw every place that fits alike.
@@ -83,6 +92,212 @@ function expectCapsOnScreen(movers: readonly { distance: number; mover: MoverPat
   }
 }
 
+// Between these runtime motion boundaries each component is monotone on both axes.
+function motionCuts(path: MoverPath): number[] {
+  const cuts = [0, path.warning];
+  if (path.motion === "signature") {
+    return [
+      ...cuts,
+      path.route.entryEnd,
+      path.route.complete,
+      ...path.route.componentDelays.flatMap((delay) =>
+        path.route.legs.flatMap((leg) => [leg.at + delay, leg.at + leg.length + delay]),
+      ),
+    ];
+  }
+  if (path.motion === "ride") {
+    return path.merge === undefined
+      ? cuts
+      : [...cuts, path.merge.at, path.merge.at + path.merge.length];
+  }
+  if (path.motion !== "cross") {
+    return [...cuts, ...path.steps.flatMap((step) => [step.at, step.at + step.length])];
+  }
+  const pause = path.pause;
+  if (pause !== undefined) {
+    const at = path.warning + pause.after / path.lanesPerPixel;
+    cuts.push(at, at + pause.length);
+  }
+  const after = (lanes: number) =>
+    path.warning +
+    lanes / path.lanesPerPixel +
+    (pause !== undefined && lanes > pause.after ? pause.length : 0);
+  if (path.turnAfter !== null) {
+    cuts.push(after(path.turnAfter));
+  }
+  if (path.stopAfter !== null) {
+    const landing = path.slide === undefined ? path.stopAfter : Math.max(0, path.stopAfter - 1);
+    cuts.push(
+      after(landing),
+      path.warning +
+        (landing + (path.stopAfter - landing) / (path.slide ?? 1)) / path.lanesPerPixel,
+    );
+  }
+  return cuts;
+}
+
+// Evaluate actual bodies independently of planner masks. All lane/contact crossings split the
+// time axis, so endpoints and interval interiors cover every simultaneous occupancy state.
+function maximumContactLanes(
+  tuned: Real,
+  road: RoadGeometry,
+  pending: Walk["road"]["pending"],
+): number {
+  const inset = road.cell.inset / road.cell.length;
+  const end = Math.max(0, ...pending.map(({ distance }) => distance)) + MOVER_SCROLL;
+  const cuts = new Set([0, end]);
+  const actors = pending
+    .filter(({ kind }) => blocksLane(tuned, kind))
+    .map((event) => {
+      const { distance, kind, mover } = event;
+      const offset = distance - road.sightLength;
+      const width = footprintOf(tuned, kind).lanes;
+      const height =
+        mover?.motion === "signature" && mover.route.profile.kind === "delayedTrail"
+          ? componentHitLength(road, mover.route.profile)
+          : itemHeight(tuned, road, kind, mover !== undefined);
+      const paths = (mover === undefined ? [undefined] : moverOutcomes(mover)).map((path) => ({
+        at(scroll: number): ReturnType<typeof moverPlace>[] {
+          const since = scroll - offset;
+          const points =
+            path === undefined
+              ? [{ lanePosition: event.lane, solid: true, travel: since }]
+              : path.motion === "signature"
+                ? path.route.componentDelays.map((_, component) => {
+                    const point = signaturePlace(path.route, since, component);
+                    return { lanePosition: point.x, solid: true, travel: point.y };
+                  })
+                : [moverPlace(LANE_COUNT, path, since)];
+          return points.map((point) => ({ ...point, solid: since >= 0 && point.solid }));
+        },
+        cuts: path === undefined ? [offset] : motionCuts(path).map((at) => at + offset),
+      }));
+      for (const path of paths) {
+        const breaks = [...new Set([0, end, ...path.cuts.filter((at) => at > 0 && at < end)])].sort(
+          (a, b) => a - b,
+        );
+        breaks.forEach((at) => cuts.add(at));
+        for (let index = 1; index < breaks.length; index++) {
+          const from = breaks[index - 1]!,
+            to = breaks[index]!;
+          for (let component = 0; component < path.at(from).length; component++) {
+            const coordinates = [
+              {
+                axis: "travel",
+                levels: [road.sightLength, road.sightLength + height + packHitLength(road)],
+              },
+              {
+                axis: "lanePosition",
+                levels: Array.from({ length: LANE_COUNT }, (_, lane) => [
+                  lane + 1 - inset,
+                  lane - width + inset,
+                ]).flat(),
+              },
+            ] as const;
+            for (const { axis, levels } of coordinates) {
+              const value = (at: number) => path.at(at)[component]![axis];
+              const a = value(from),
+                b = value(to);
+              for (const level of levels) {
+                if (!(level > Math.min(a, b) && level < Math.max(a, b))) {
+                  continue;
+                }
+                let low = from,
+                  high = to;
+                for (let iteration = 0; iteration < 60; iteration++) {
+                  const middle = (low + high) / 2;
+                  if (value(middle) < level === a < b) {
+                    low = middle;
+                  } else {
+                    high = middle;
+                  }
+                }
+                cuts.add((low + high) / 2);
+              }
+            }
+          }
+        }
+      }
+      return { height, paths, width };
+    });
+  const ordered = [...cuts].sort((a, b) => a - b);
+  const samples = [...ordered, ...ordered.slice(1).map((at, index) => (ordered[index]! + at) / 2)];
+  let maximum = 0;
+  for (const at of samples) {
+    let states = [new Set<number>()];
+    for (const { height, paths, width } of actors) {
+      const options = paths.map((path) => {
+        const lanes = new Set<number>();
+        for (const point of path.at(at)) {
+          if (
+            !point.solid ||
+            point.travel < road.sightLength - 1e-9 ||
+            point.travel >= road.sightLength + height + packHitLength(road) - 1e-9
+          ) {
+            continue;
+          }
+          for (let lane = 0; lane < LANE_COUNT; lane++) {
+            if (
+              lane + 0.5 > point.lanePosition - 0.5 + inset + 1e-9 &&
+              lane - 0.5 < point.lanePosition + width - 0.5 - inset - 1e-9
+            ) {
+              lanes.add(lane);
+            }
+          }
+        }
+        return lanes;
+      });
+      const combined = states.flatMap((prior) =>
+        options.map((lanes) => new Set([...prior, ...lanes])),
+      );
+      states = [...new Map(combined.map((lanes) => [[...lanes].sort().join(","), lanes])).values()];
+    }
+    maximum = Math.max(maximum, ...states.map((lanes) => lanes.size));
+  }
+  return maximum;
+}
+
+it("bounds the full contact of unsorted spans without changing them", () => {
+  const spans = Object.freeze([
+    Object.freeze({ distance: 80, lane: 1, laneSpan: 1, length: 5 }),
+    Object.freeze({ distance: 12, lane: 2, laneSpan: 1, length: 60 }),
+    Object.freeze({ distance: 40, lane: 0, laneSpan: 1, length: 90 }),
+  ]);
+  expect(contactOfSpans(spans)).toEqual({ end: 130, start: 12 });
+});
+
+it("distinguishes a changing swept union from concurrent multi-actor contact", () => {
+  const path: MoverPath = {
+    direction: 1,
+    enterTravel: GAME_ROAD.sightLength,
+    idle: 0,
+    lanesPerPixel: 0.04,
+    motion: "cross",
+    movement: "dart",
+    span: 2,
+    stopAfter: null,
+    tilt: 0,
+    turnAfter: null,
+    warning: 0,
+  };
+  const event = { distance: 1000, kind: "ferrets", lane: 0, mover: path } as const;
+  const contactEnd =
+    GAME_ROAD.sightLength +
+    itemHeight(REAL, GAME_ROAD, event.kind, true) +
+    packHitLength(GAME_ROAD);
+  expect(sweptLanes(LANE_COUNT, path, GAME_ROAD.sightLength, contactEnd).count).toBe(LANE_COUNT);
+  expect(maximumContactLanes(REAL, GAME_ROAD, [event])).toBeLessThanOrEqual(LANE_COUNT - 2);
+  expect(
+    maximumContactLanes(REAL, GAME_ROAD, [
+      event,
+      {
+        ...event,
+        mover: { ...path, direction: -1 },
+      },
+    ]),
+  ).toBeGreaterThan(LANE_COUNT - 2);
+});
+
 // Every zone at the fastest pace, with every obstacle that can move moving: a way past every
 // lane-blocking spawn from every lane, at most the caps of movers on screen, the pack-fit gap
 // wherever the path changes lanes between two obstacles, and each mover moving as its kind does.
@@ -105,9 +320,44 @@ describe("the planned road", { timeout: 120_000 }, () => {
     { packs: packs.slice(0, 1), tuned: hopping },
   ];
   // The data with the minor obstacles' counts changed as given.
-  const withMinorCounts = (counts: Partial<Real["tuning"]["counts"]>, tuned: Real): Real => ({
+  const withMinorCounts = (
+    counts: { readonly first?: number; readonly gain?: number },
+    tuned: Real,
+  ): Real => ({
     ...tuned,
-    tuning: { ...tuned.tuning, counts: { ...tuned.tuning.counts, ...counts } },
+    world: mapZones((zone) => {
+      const rows = zone.spawnSlots.counts.map((row, position) => {
+        const total =
+          (counts.first ??
+            zone.spawnSlots.counts[0].minorFixed + zone.spawnSlots.counts[0].minorMoving) +
+          position * (counts.gain ?? 0);
+        const split = apportionSlotCounts(total, {
+          encounterFixed: 0,
+          encounterMoving: 0,
+          minorFixed: row.minorFixed,
+          minorMoving: row.minorMoving,
+        });
+        return { ...row, minorFixed: split.minorFixed, minorMoving: split.minorMoving };
+      }) as unknown as typeof zone.spawnSlots.counts;
+      return {
+        ...zone,
+        spawnSlots: {
+          ...zone.spawnSlots,
+          capacity: {
+            ...zone.spawnSlots.capacity,
+            minorFixed: Math.max(
+              zone.spawnSlots.capacity.minorFixed,
+              ...rows.map((row) => row.minorFixed),
+            ),
+            minorMoving: Math.max(
+              zone.spawnSlots.capacity.minorMoving,
+              ...rows.map((row) => row.minorMoving),
+            ),
+          },
+          counts: rows,
+        },
+      };
+    }, tuned.world),
   });
   // Every zone as the walk's last, and the walk's first zone as its first, whose rows reach back
   // onto the road in view as it starts.
@@ -141,7 +391,7 @@ describe("the planned road", { timeout: 120_000 }, () => {
     let walk = plans.get(passable);
     if (walk === undefined) {
       const { road, seed = 1, tuned, zone, zoneIndex } = passable;
-      walk = planZone(tuned, road, plannerStreams(seed), {
+      walk = planZoneForSeed(tuned, road, seed, {
         road: startRoad(LANE_COUNT),
         run: inZone(realRun(tuned, FASTEST_WALKER), zone, zoneIndex),
       });
@@ -157,21 +407,20 @@ describe("the planned road", { timeout: 120_000 }, () => {
   // gain for each zone walked before it, and counts at which seed 1 plans a dart that leaves the
   // road while it meets the pack, with another obstacle beside it or soon after it in a lane next
   // to its own: the pack-fit gap holds for the lanes and stretch its hit box meets the pack in.
-  it.each([
-    { minorObstaclesGainPerZone: 3 },
-    { minorObstaclesFirstZone: 51, minorObstaclesGainPerZone: 0 },
-    { minorObstaclesFirstZone: 58, minorObstaclesGainPerZone: 1 },
-  ])("keeps every move passable at minor obstacle counts %o", (counts) => {
-    const tuned = withMinorCounts(counts, REAL);
-    expectPassable(zonePlaces.map((place) => ({ ...place, road: GAME_ROAD, tuned })));
-  });
+  it.each([{ gain: 3 }, { first: 51, gain: 0 }, { first: 58, gain: 1 }])(
+    "keeps every move passable at minor obstacle counts %o",
+    (counts) => {
+      const tuned = withMinorCounts(counts, REAL);
+      expectPassable(zonePlaces.map((place) => ({ ...place, road: GAME_ROAD, tuned })));
+    },
+  );
   // Minor obstacle counts at which seed 1, with the lane-balance bias off and every hopper
   // hopping, plans the last zone with a mover just after a card mover stilled for want of room,
   // or with a dart just before a stepper in the lane beside those it meets the pack in: the
   // pack-fit gap holds whatever the bias draws.
   it.each([
-    { minorObstaclesFirstZone: 70, minorObstaclesGainPerZone: 0 },
-    { minorObstaclesFirstZone: 90, minorObstaclesGainPerZone: 1 },
+    { first: 70, gain: 0 },
+    { first: 90, gain: 1 },
   ])("keeps every move passable with the lane-balance bias off: %o", (counts) => {
     unbiased.on = true;
     try {
@@ -191,9 +440,8 @@ describe("the planned road", { timeout: 120_000 }, () => {
   // zone's other minor obstacles together, so every plan has several, planned on many seeds with
   // the zone first in the walk and last: each one crosses as wide as its footprint, some turn
   // back and some cross, and the road stays passable around them (expectPassable). The lanes the
-  // planner blocks for one in the pack's window (sweptLanes), which openLanesPerRowMin and
-  // openStretches weigh, hold every lane its hit box meets the pack in, and leave
-  // openLanesPerRowMin open.
+  // planner reserves for one in the pack's window contain its complete sweep. Actual bodies
+  // across all actors retain openLanesPerRowMin lanes at each instant.
   const WIDE_DARTS = keysOf(REAL.minorObstacles).flatMap((kind) =>
     movementOf(REAL, kind)?.kind === "dart" && footprintOf(REAL, kind).lanes > 1
       ? WORLD.zones
@@ -242,6 +490,9 @@ describe("the planned road", { timeout: 120_000 }, () => {
       );
       expect(wide.length).toBeGreaterThan(0);
       const minOpen = read(tuned.tuning, "counts", "openLanesPerRowMin");
+      expect(maximumContactLanes(tuned, GAME_ROAD, blocking)).toBeLessThanOrEqual(
+        LANE_COUNT - minOpen,
+      );
       for (const dart of wide) {
         expect(crossSpan(dart.mover)).toBe(footprintOf(tuned, kind).lanes);
         const touched = new Set(
@@ -252,7 +503,6 @@ describe("the planned road", { timeout: 120_000 }, () => {
         const { count, first } = sweptLanes(LANE_COUNT, dart.mover, sight, sight + window);
         const swept = Array.from({ length: count }, (_, i) => first + i);
         expect(swept).toEqual(expect.arrayContaining([...touched]));
-        expect(swept.length).toBeLessThanOrEqual(LANE_COUNT - minOpen);
       }
     },
   );
@@ -304,7 +554,7 @@ describe("the planned road", { timeout: 120_000 }, () => {
         }
         const moving = { ...event, mover: event.mover };
         const touched = moverSpans("drawn", tuned, road, zone, moving);
-        const { end, start: meets } = moverContact("drawn", tuned, road, zone, moving);
+        const { end, start: meets } = contactOfSpans(touched);
         return {
           end: end - packHitLength(road),
           label: named,

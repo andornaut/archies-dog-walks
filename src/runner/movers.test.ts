@@ -1851,10 +1851,8 @@ describe("placeMovers", () => {
     },
   );
 
-  // Drawn at 0, each dart sweeps more than 2 lanes in the pack's window from every lift. With no
-  // row fitting a sweep over 2 lanes, one whose kind varies its tilt or speed comes on at the
-  // first of its retries that sweeps 2 or fewer from some lift, and one that varies neither is
-  // dropped. A retry uses no random draw.
+  // Refuse the original tilt and speed at every height. A kind that varies either can use
+  // its first permitted retry; a fixed kind is dropped. A retry uses no random draw.
   it.each([
     { lands: true, name: "another tilt", retried: spec(cross(2, 0.5, 1.5)) },
     {
@@ -1867,7 +1865,6 @@ describe("placeMovers", () => {
     },
     { lands: false, name: "nothing, as its kind varies neither", retried: spec(cross(1.2, 0)) },
   ])("retries a dart with no room as drawn at $name", ({ lands, retried }) => {
-    const most = 2;
     // Every draw 0, counted.
     const place = (grid: Parameters<typeof placeMovers>[3]) => {
       const draws = { movers: 0, spawns: 0 };
@@ -1881,18 +1878,24 @@ describe("placeMovers", () => {
       ]);
       return { draws, placed };
     };
-    const { grid } = freeGrid();
-    const { draws, placed } = place({
-      ...grid,
-      block: (row: number, span: LaneSpan, ...rest: [number, boolean]) =>
-        span.count <= most && grid.block(row, span, ...rest),
-    });
     const drawn = drawMover({ movers: () => 0, spawns: () => 0 });
     const placements = (moverDraws: MoverDraws) =>
       [0, ...DART_LIFTS].flatMap((lift) => moverPlacements(geometry, retried, moverDraws, lift));
-    expect(placements(drawn).every(({ lanes }) => lanes.count > most)).toBe(true);
+    const original = placements(drawn)[0]?.path;
+    if (original?.motion !== "cross") {
+      throw new Error("Expected an original crossing placement");
+    }
+    const permits = (path: MoverPath) =>
+      path.motion === "cross" &&
+      (path.tilt !== original.tilt || path.lanesPerPixel !== original.lanesPerPixel);
+    expect(placements(drawn).every(({ path }) => !permits(path))).toBe(true);
+    const { grid } = freeGrid();
+    const { draws, placed } = place({
+      ...grid,
+      canShow: ({ mover }) => permits(mover),
+    });
     const landing = moverRetries(retried, drawn).find((retry) =>
-      placements(retry).some(({ lanes }) => lanes.count <= most),
+      placements(retry).some(({ path }) => permits(path)),
     );
     expect(landing !== undefined).toBe(lands);
     expect(placed.spawns).toHaveLength(lands ? 1 : 0);

@@ -109,6 +109,10 @@ describe("a simulated run", { timeout: 60_000 }, () => {
     let found: { result: ReturnType<typeof simulateRun>; seed: number } | undefined;
     for (let seed = row.seed; seed < row.seed + SEARCH_SEEDS_MOST && found === undefined; seed++) {
       const result = simulateRun(gameData, seed, config);
+      if (result.planningFailure !== undefined) {
+        throw new Error(`Simulation failed before replay: ${result.planningFailure.message}`);
+      }
+      expect(result.run.phase.kind).toBe("ended");
       const { spent, stored } = result.run.spareTreats;
       if (Math.min(stored, spent) >= spares) {
         found = { result, seed };

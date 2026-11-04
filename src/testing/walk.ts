@@ -20,7 +20,7 @@ import { clampHearts } from "../units";
 import { TEST_ROAD_GEOMETRY } from "./packGeometry";
 import { TEST_TUNING } from "./tuning";
 import { TEST_WALKER_DATA } from "./walkers";
-import { TEST_WORLD } from "./world";
+import { mapZones, minimumSlotConfiguration, TEST_WORLD } from "./world";
 
 // 80px/s for 30s is a 2400px zone: 14 rows of spawns 160px apart.
 export const tuning = {
@@ -28,10 +28,6 @@ export const tuning = {
   counts: {
     ...TEST_TUNING.counts,
     luckyFindsPerZone: { friendlyNeighbour: 1, lostWallet: 1 },
-    minorObstaclesFirstZone: 4,
-    minorObstaclesGainPerZone: 1,
-    obstaclesFirstZone: 6,
-    obstaclesGainPerZone: 1,
     tipsFirstZone: 8,
     tipsGainPerZone: 1,
     treatsPerZone: 2,
@@ -59,7 +55,22 @@ export const data = {
   ...TEST_WALKER_DATA,
   tuning,
   upgrades: UPGRADES,
-  world: TEST_WORLD,
+  world: mapZones(
+    (zone) => ({
+      ...zone,
+      spawnSlots: minimumSlotConfiguration({
+        capacity: { encounterFixed: 14, encounterMoving: 0, minorFixed: 11, minorMoving: 0 },
+        counts: Array.from({ length: TEST_WORLD.walkLength }, (_, index) => ({
+          encounterFixed: 6 + index,
+          encounterMoving: 0,
+          minorFixed: 4 + index,
+          minorMoving: 0,
+        })) as unknown as typeof zone.spawnSlots.counts,
+        guarantees: zone.spawnSlots.guarantees,
+      }),
+    }),
+    TEST_WORLD,
+  ),
 };
 
 export const geometry = TEST_ROAD_GEOMETRY;

@@ -31,6 +31,7 @@ import {
 import { itemCategory, type WalkItem } from "../../runner/walkItems";
 import { firstTag, playTag, showAtDepth } from "../sprites";
 import type { ItemPart, ItemView } from "./itemViews";
+import { riderCuePosition } from "./riderCuePosition";
 import { drawSignatureTrail } from "./signatureView";
 import { DEPTH, JUNCTURE_Y, laneX, LAYOUT, PROJECTION, showOnRoad } from "./stage";
 import { type StandFrame, standPart } from "./standPart";
@@ -168,12 +169,29 @@ export function drawMover(
     if (wander !== undefined && body !== undefined) {
       const top = body.sprite.getTopCenter();
       const cueY = Math.round((top.y ?? 0) + CUE.wander.y);
-      wander.sprite
-        .setOrigin(0, 0)
-        .setPosition(
-          Math.round((top.x ?? 0) + CUE.wander.x),
-          path.motion === "signature" ? Math.max(JUNCTURE_Y, cueY) : cueY,
-        );
+      const bodyCue = { x: (top.x ?? 0) + CUE.wander.x, y: cueY };
+      const laneCue =
+        path.motion === "ride"
+          ? project(PROJECTION, {
+              distance: PROJECTION.footY - (roadTop + CUE.top),
+              x: centreX,
+            })
+          : undefined;
+      const position =
+        laneCue === undefined
+          ? {
+              x: Math.round(bodyCue.x),
+              y: path.motion === "signature" ? Math.max(JUNCTURE_Y, cueY) : cueY,
+            }
+          : riderCuePosition(
+              JUNCTURE_Y,
+              {
+                x: laneCue.x + CUE.wander.x,
+                y: laneCue.y,
+              },
+              place.solid ? bodyCue : undefined,
+            );
+      wander.sprite.setOrigin(0, 0).setPosition(position.x, position.y);
       showBelowJuncture(wander.sprite);
       playTag(wander.sprite, wander.key, WARNING_TAG, still);
     }

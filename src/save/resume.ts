@@ -13,6 +13,7 @@ import type {
   Modifier,
   ProbabilityKey,
   Size,
+  SkinId,
   Stat,
   TallyId,
   UnitGroup,
@@ -22,6 +23,7 @@ import type {
 } from "../data/types";
 import { walkLength } from "../rules/route";
 import type { MoverPath } from "../runner/movers";
+import { obstacleSkins } from "../runner/obstacleLooks";
 import type { Session, StreamDraws } from "../runner/session";
 import type { WalkItemKind } from "../runner/walkItems";
 import type { ActiveModifier, Pack } from "../state/runState";
@@ -127,6 +129,10 @@ function resumeSchema(data: ResumeData) {
   const encounter = knownId<EncounterId>("encounter", keysOf(data.encounters));
   const gear = knownId<GearId>("gear", keysOf(data.shopGear));
   const minorObstacle = knownId<MinorObstacleId>("obstacle", keysOf(data.minorObstacles));
+  const skin = knownId<SkinId>(
+    "obstacle skin",
+    keysOf(data.minorObstacles).flatMap((kind) => obstacleSkins(data, kind)),
+  );
   const tally = knownId<TallyId>("tally", TALLY_IDS);
   const upgrade = knownId<UpgradeId>("upgrade", keysOf(data.upgrades));
   const walker = knownId<WalkerId>("walker", keysOf(data.walkers));
@@ -258,6 +264,7 @@ function resumeSchema(data: ResumeData) {
     lane: integer,
     laneSpan: count,
     mover: v.exactOptional(v.object({ path: moverPath, since: finite })),
+    skin: v.exactOptional(skin),
     y: finite,
   });
   const motion = v.variant("kind", [

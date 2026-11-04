@@ -410,7 +410,6 @@ function noteZonePlan(
   walk: Walk,
 ): void {
   const { run } = walk;
-  tally.deliveries.push(zoneDelivery(data, run.zoneIndex + 1, currentZoneId(data, run), walk.road));
   const observation = observations.get(run.zoneIndex);
   const selected =
     observation === undefined
@@ -418,8 +417,14 @@ function noteZonePlan(
       : {
           herrings: observation.planned.herrings,
           pending: observation.planned.events,
-          planned: observation.plan.quotas,
+          planned: observation.plan.quotas.map(({ count, kind, mover }) => ({
+            count,
+            kind,
+            movement: mover?.movement ?? null,
+          })),
+          ...(observation.slots === undefined ? {} : { slots: observation.slots }),
         };
+  tally.deliveries.push(zoneDelivery(data, run.zoneIndex + 1, currentZoneId(data, run), selected));
   const events = plannedWalkEvents(seed, run, currentZoneId(data, run), selected);
   if (observation !== undefined) {
     events.admission = observation.planned.admission;

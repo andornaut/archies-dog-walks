@@ -175,6 +175,40 @@ describe("encodeResume and launchWalk", () => {
     });
   });
 
+  it("preserves a materialized obstacle skin across a checkpoint roundtrip", () => {
+    const item: WalkItem = {
+      height: 64,
+      id: 8,
+      kind: "streetCart",
+      lane: 3,
+      laneSpan: 2,
+      skin: "hotDogCart",
+      y: 384,
+    };
+    const walk: ResumeWalk = {
+      ...ZONE_START,
+      session: {
+        ...ZONE_START.session,
+        walk: {
+          ...ZONE_START.session.walk,
+          road: { ...ZONE_START.session.walk.road, items: [item], nextItemId: 9 },
+        },
+      },
+    };
+    expect(launchWalk(gameData, true, checkpointFor(walk))).toEqual({
+      kind: "resume",
+      walk: asStored(walk),
+    });
+    const corrupt = edited(walk, (stored) => {
+      const session = stored.session as { walk: { road: { items: { skin: string }[] } } };
+      session.walk.road.items[0]!.skin = "unknownCart";
+    });
+    expect(launchWalk(gameData, true, corrupt)).toMatchObject({
+      kind: "bank",
+      reason: expect.stringContaining("unknown obstacle skin"),
+    });
+  });
+
   // CLEANUP (added 2026-10-29): remove with the schema's default for draws.upgrades.
   it("resumes a walk saved before the upgrades stream with that stream undrawn", () => {
     const old = edited(AT_FORK, (stored) => {

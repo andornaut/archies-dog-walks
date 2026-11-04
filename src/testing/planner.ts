@@ -12,9 +12,11 @@ import { WORLD } from "../data/world";
 import { type PackSprites, PART_INSET } from "../layout/packFormation";
 import { read } from "../rules/units";
 import { slowestDebuffedAgility, slowestPackAgility } from "../rules/walkers";
-import { approachOutcomes } from "../runner/approach";
-import { type MoverPath, moverPlace } from "../runner/movers";
+import { drawnLanes, hasLeftRoad, type MoverPath, moverPlace } from "../runner/movers";
+import { moverOutcomes } from "../runner/outcomes";
+import { signaturePlace } from "../runner/signaturePaths";
 import {
+  componentHitLength,
   itemHeight,
   laneMoveSeconds,
   plannedCellInset,
@@ -167,80 +169,51 @@ export const standingSpan = (
 export type MoverEvent = { distance: number; kind: WalkItem["kind"]; mover: MoverPath };
 // The scroll since its cue over which moverSpans and moverContact look for a mover's contact.
 export const MOVER_SCROLL = Math.ceil(4 * ROAD_LENGTH);
-// Each way a mover may move, the lanes of the game's road its hit box overlaps the pack in at a
-// scroll since its cue, as sizing measures it: a stalker's every way of choosing its steps, or the
-// mover's one path. As collision cuts it, the box spans half a lane either side of each lane it
-// covers, less the inset at each side, so one between lanes touches both.
-function moverContacts(
-  sizing: Sizing,
-  tuned: Real,
-  road: RoadGeometry,
-  zone: ZoneId,
-  event: MoverEvent,
-): ((since: number) => number[])[] {
-  const sight = road.sightLength;
-  const { height, pack } = sized(sizing, tuned, road, zone, event.kind, true);
-  const window = height + pack;
-  const across = footprintOf(tuned, event.kind).lanes;
-  const inset = road.cell.inset / road.cell.length;
-  const paths = event.mover.motion === "approach" ? approachOutcomes(event.mover) : [event.mover];
-  return paths.map((path) => (since) => {
-    const place = moverPlace(LANE_COUNT, path, since);
-    const first = Math.floor(place.lanePosition - 1 + inset) + 1;
-    const last = Math.ceil(place.lanePosition + across - inset) - 1;
-    const overlaps = place.solid && place.travel >= sight && place.travel < sight + window;
-    return Array.from({ length: last - first + 1 }, (_unused, i) => first + i).filter(
-      (lane) => overlaps && lane >= 0 && lane < LANE_COUNT,
-    );
-  });
-}
-// The scroll between inside and outside, a pixel apart, where a mover's contact starts or
-// ends, halved down to a rounding error.
-function contactEdge(touches: (since: number) => boolean, inside: number, outside: number) {
-  let [touching, clear] = [inside, outside];
-  for (let i = 0; i < 50; i++) {
-    const middle = (touching + clear) / 2;
-    if (touches(middle)) {
-      touching = middle;
-    } else {
-      clear = middle;
-    }
-  }
-  return (touching + clear) / 2;
-}
-// The scroll over which a mover overlaps the pack in any lane, from the first moment to the
-// last, by its distance on the road, as sizing measures it: moverSpans' pixel steps put each end
-// up to a pixel late, which shows two movers that meet the pack side by side as a gap of under a
-// pixel.
-export function moverContact(
-  sizing: Sizing,
-  tuned: Real,
-  road: RoadGeometry,
-  zone: ZoneId,
-  event: MoverEvent,
-): { end: number; start: number } {
-  const ends = moverContacts(sizing, tuned, road, zone, event).flatMap((lanesAt) => {
-    const touches = (since: number) => lanesAt(since).length > 0;
-    const touching = Array.from({ length: MOVER_SCROLL }, (_, since) => since).filter(touches);
-    if (touching.length === 0) {
-      return [];
-    }
-    const [first, last] = [itemAt(touching, 0), itemAt(touching, touching.length - 1)];
+// Runtime phase boundaries split each body's motion into monotone pieces.
+function motionCuts(path: MoverPath): number[] {
+  const cuts = [0, path.warning];
+  if (path.motion === "signature") {
     return [
-      {
-        end: contactEdge(touches, last, last + 1),
-        start: first === 0 ? 0 : contactEdge(touches, first, first - 1),
-      },
+      ...cuts,
+      path.route.entryEnd,
+      path.route.complete,
+      ...path.route.componentDelays.flatMap((delay) =>
+        path.route.legs.flatMap((leg) => [leg.at + delay, leg.at + leg.length + delay]),
+      ),
     ];
-  });
-  const at = (since: number) => event.distance + since - road.sightLength;
-  return {
-    end: at(Math.max(...ends.map(({ end }) => end))),
-    start: at(Math.min(...ends.map(({ start }) => start))),
-  };
+  }
+  if (path.motion === "ride") {
+    return path.merge === undefined
+      ? cuts
+      : [...cuts, path.merge.at, path.merge.at + path.merge.length];
+  }
+  if (path.motion !== "cross") {
+    return [...cuts, ...path.steps.flatMap((step) => [step.at, step.at + step.length])];
+  }
+  const pause = path.pause;
+  if (pause !== undefined) {
+    const start = path.warning + pause.after / path.lanesPerPixel;
+    cuts.push(start, start + pause.length);
+  }
+  const after = (lanes: number) =>
+    path.warning +
+    lanes / path.lanesPerPixel +
+    (pause !== undefined && lanes > pause.after ? pause.length : 0);
+  if (path.turnAfter !== null) {
+    cuts.push(after(path.turnAfter));
+  }
+  if (path.stopAfter !== null) {
+    const landing = path.slide === undefined ? path.stopAfter : Math.max(0, path.stopAfter - 1);
+    cuts.push(
+      after(landing),
+      path.warning +
+        (landing + (path.stopAfter - landing) / (path.slide ?? 1)) / path.lanesPerPixel,
+    );
+  }
+  return cuts;
 }
-// A pixel-long span for each pixel of scroll a mover overlaps the pack in each lane of the
-// game's road it covers, as sizing measures it.
+
+// Split at physical lane/contact crossings, without using planner reservations as an oracle.
 export function moverSpans(
   sizing: Sizing,
   tuned: Real,
@@ -248,20 +221,181 @@ export function moverSpans(
   zone: ZoneId,
   event: MoverEvent,
 ): BlockingSpan[] {
-  const sight = road.sightLength;
-  return moverContacts(sizing, tuned, road, zone, event).flatMap((lanesAt) =>
-    Array.from({ length: MOVER_SCROLL }, (_, since) =>
-      lanesAt(since).map((lane) => ({
-        distance: event.distance + since - sight,
-        lane,
-        laneSpan: 1,
-        length: 1,
-      })),
-    ).flat(),
-  );
+  const inset = road.cell.inset / road.cell.length;
+  return moverOutcomes(event.mover).flatMap((path) => {
+    const trail = path.motion === "signature" && path.route.profile.kind === "delayedTrail";
+    const nativeHeight =
+      trail && path.motion === "signature" && path.route.profile.kind === "delayedTrail"
+        ? componentHitLength(road, path.route.profile)
+        : itemHeight(tuned, road, event.kind, true);
+    const width = trail ? 1 : drawnLanes(footprintOf(tuned, event.kind).lanes, path);
+    const measured = sized(sizing, tuned, road, zone, event.kind, true);
+    const contactEnd =
+      road.sightLength +
+      (trail ? nativeHeight + packHitLength(road) : measured.height + measured.pack);
+    const retiredAt = road.sightLength + nativeHeight + packHitLength(road);
+    const points = (since: number): ReturnType<typeof moverPlace>[] => {
+      const result =
+        path.motion === "signature"
+          ? path.route.componentDelays.map((_, component) => {
+              const point = signaturePlace(path.route, since, component);
+              return { lanePosition: point.x, solid: since >= 0, span: width, travel: point.y };
+            })
+          : [moverPlace(LANE_COUNT, path, since)];
+      if (
+        result.length === 0 ||
+        result.some(
+          (point) => !Number.isFinite(point.lanePosition) || !Number.isFinite(point.travel),
+        )
+      ) {
+        throw new Error("Moving contact geometry must have finite body positions");
+      }
+      return result;
+    };
+    const retired = (at: ReturnType<typeof points>) =>
+      at.every((point) => point.travel >= retiredAt) ||
+      at.every(
+        (point) =>
+          hasLeftRoad(LANE_COUNT, point) ||
+          point.travel - nativeHeight >= road.roadBottom - road.roadTop,
+      );
+    const phases = motionCuts(path);
+    if (
+      !phases.every(Number.isFinite) ||
+      !Number.isFinite(retiredAt) ||
+      !Number.isFinite(contactEnd) ||
+      !Number.isFinite(width) ||
+      width <= 0
+    ) {
+      throw new Error("Moving contact geometry must have finite phases and positive body width");
+    }
+    let end = Math.max(MOVER_SCROLL, ...phases);
+    while (!retired(points(end))) {
+      end *= 2;
+      if (!Number.isFinite(end)) {
+        throw new Error("Moving contact geometry must eventually retire");
+      }
+    }
+    // Resolve crossings to a billionth of a cell; keep the full numerical bracket occupied.
+    const tolerance = road.cell.length * 1e-9;
+    const cuts = new Set([0, end, ...phases.filter((at) => at > 0 && at < end)]);
+    const phasesOrdered = [...cuts].sort((a, b) => a - b);
+    for (let i = 1; i < phasesOrdered.length; i++) {
+      const from = phasesOrdered[i - 1]!,
+        to = phasesOrdered[i]!;
+      const first = points(from),
+        last = points(to);
+      for (let component = 0; component < first.length; component++) {
+        const axes = [
+          {
+            axis: "travel",
+            levels: [
+              road.sightLength,
+              contactEnd,
+              retiredAt,
+              road.roadBottom - road.roadTop + nativeHeight,
+            ],
+          },
+          {
+            axis: "lanePosition",
+            levels: [
+              -width,
+              LANE_COUNT,
+              ...Array.from({ length: LANE_COUNT }, (_, lane) => [
+                lane + 1 - inset,
+                lane - width + inset,
+              ]).flat(),
+            ],
+          },
+        ] as const;
+        for (const { axis, levels } of axes) {
+          const a = first[component]![axis],
+            b = last[component]![axis];
+          for (const level of levels) {
+            if (!(level > Math.min(a, b) && level < Math.max(a, b))) {
+              continue;
+            }
+            let low = from,
+              high = to;
+            for (let iteration = 0; iteration < 48; iteration++) {
+              const middle = (low + high) / 2;
+              if (points(middle)[component]![axis] < level === a < b) {
+                low = middle;
+              } else {
+                high = middle;
+              }
+            }
+            if (high - low > tolerance) {
+              throw new Error("Moving contact crossing could not be resolved conservatively");
+            }
+            // Keep both sides of the numerical bracket, preserving conservative coverage.
+            cuts.add(low);
+            cuts.add(high);
+          }
+        }
+      }
+    }
+    const ordered = [...cuts].sort((a, b) => a - b);
+    const spans: BlockingSpan[] = [];
+    for (let i = 1; i < ordered.length; i++) {
+      const from = ordered[i - 1]!,
+        to = ordered[i]!;
+      const samples =
+        to - from <= tolerance
+          ? [points(from), points((from + to) / 2), points(to)]
+          : [points((from + to) / 2)];
+      if (samples.every(retired)) {
+        break;
+      }
+      const lanes = new Set<number>();
+      for (const point of samples.filter((sample) => !retired(sample)).flat()) {
+        if (
+          !point.solid ||
+          hasLeftRoad(LANE_COUNT, point) ||
+          point.travel < road.sightLength ||
+          point.travel >= contactEnd
+        ) {
+          continue;
+        }
+        for (let lane = 0; lane < LANE_COUNT; lane++) {
+          if (point.lanePosition + inset < lane + 1 && point.lanePosition + width - inset > lane) {
+            lanes.add(lane);
+          }
+        }
+      }
+      for (const lane of lanes) {
+        spans.push({
+          distance: event.distance + from - road.sightLength,
+          lane,
+          laneSpan: 1,
+          length: to - from,
+        });
+      }
+    }
+    return spans;
+  });
 }
-// Every lane-blocking spawn's spans on the game's road, at its planned size: a standing one's, or
-// a mover's as it passes the pack. Each is placed by the scroll from the zone's start, so a row
+
+// The envelope of already measured contacts, including every branch and component.
+export function contactOfSpans(spans: readonly BlockingSpan[]): { end: number; start: number } {
+  return {
+    end: Math.max(...spans.map((span) => span.distance + span.length)),
+    start: Math.min(...spans.map((span) => span.distance)),
+  };
+}
+
+// The complete continuous contact interval, including every possible branch and component.
+export function moverContact(
+  sizing: Sizing,
+  tuned: Real,
+  road: RoadGeometry,
+  zone: ZoneId,
+  event: MoverEvent,
+): { end: number; start: number } {
+  return contactOfSpans(moverSpans(sizing, tuned, road, zone, event));
+}
+// Standing spawns retain their conservative row envelope; movers use native authored contact.
+// Each is placed by the scroll from the zone's start, so a row
 // on the road in view as the zone starts, at a negative distance, is walked from the start.
 export const blockingSpans = (
   tuned: Real,
@@ -274,6 +408,6 @@ export const blockingSpans = (
     .flatMap((event) =>
       event.mover === undefined
         ? [standingSpan(tuned, road, zone, event)]
-        : moverSpans("planned", tuned, road, zone, { ...event, mover: event.mover }),
+        : moverSpans("drawn", tuned, road, zone, { ...event, mover: event.mover }),
     )
     .map((span) => ({ ...span, distance: span.distance + road.sightLength }));

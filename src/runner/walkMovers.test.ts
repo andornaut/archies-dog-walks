@@ -16,6 +16,7 @@ import type {
 import { WORLD } from "../data/world";
 import { read } from "../rules/units";
 import { newRun, type PackDogs } from "../state/runState";
+import { moverFixture } from "../testing/moverFixtures";
 import { type HopMovement, hoppingInstead, plannerStreams, sharedWorld } from "../testing/movers";
 import {
   FASTEST_WALKER,
@@ -32,7 +33,16 @@ import {
 } from "../testing/planner";
 import { heartsByDog } from "../testing/runState";
 import { atPack, data, geometry, inLane, step, walkWith, withHearts } from "../testing/walk";
-import { DART_VERGE_LANES, dartOutcome, drawMover, hopShapes, stopsToTry } from "./moverPlanning";
+import { captureZoneInput, planZoneForSeed } from "../testing/zonePlan";
+import { assignedMovement } from "./movementAssignments";
+import {
+  DART_VERGE_LANES,
+  dartOutcome,
+  drawMover,
+  hopShapes,
+  moverPlacements,
+  stopsToTry,
+} from "./moverPlanning";
 import {
   inMotion,
   isPausing,
@@ -43,9 +53,11 @@ import {
   moverTell,
 } from "./movers";
 import { moverMovement, moverSpec } from "./moverSpecs";
+import { makeSlotJobs } from "./slotJobs";
+import { blockingLength, rowSpacing } from "./spawning";
 import { itemHeight, startRoad, stepWalk, type Walk, walkScrollSpeed } from "./walk";
 import { blocksLane, footprintOf, isPullObstacle, type WalkItem } from "./walkItems";
-import { planZone } from "./zonePlan";
+import { compileZoneSlotInput } from "./zoneSlotInput";
 
 // A crosser 2.5 lanes in from the left edge 32px of scroll after its cue's 50px, its hit
 // box then just inside the pack's band.
@@ -236,10 +248,51 @@ describe("movers", { timeout: 120_000 }, () => {
   ];
   const hopping = HOPS.map((hop) => ({ hop, tuned: hoppingInstead(legacyMovers, hop) }));
 
+  // Exercise the real movement adapter and full native catalogue without selecting a whole layout.
+  const nativeMoves = (
+    tuned: Real,
+    zone: ZoneId,
+    controls: { count: number; length: number },
+    kind: WalkItem["kind"],
+  ) => {
+    const run = inZone(realRun(tuned, FASTEST_WALKER), zone, 0);
+    const input = captureZoneInput(tuned, GAME_ROAD, 1, { road: startRoad(LANE_COUNT), run });
+    const { geometry: nativeGeometry } = compileZoneSlotInput(input);
+    const geometry = {
+      ...nativeGeometry,
+      rowSpacing: rowSpacing({ ...nativeGeometry, quotas: [] }),
+      window: blockingLength(nativeGeometry, 1),
+    };
+    const movement = assignedMovement(tuned, zone, kind);
+    if (movement === null) {
+      throw new Error(`Expected a native movement for ${kind}`);
+    }
+    const streams = plannerStreams(1);
+    const spec = moverSpec(tuned, streams, footprintOf(tuned, kind), movement);
+    const drawn = drawMover(streams);
+    const draws = Object.freeze({
+      ...drawn,
+      count: controls.count,
+      delays: Object.freeze(drawn.delays.map(() => 0)),
+      lengths: Object.freeze(drawn.lengths.map(() => controls.length)),
+      shy: 1 - Number.EPSILON,
+    });
+    const placements = moverPlacements(
+      geometry,
+      {
+        ...spec,
+        ...(blocksLane(tuned, kind) ? { hitLength: itemHeight(tuned, GAME_ROAD, kind, true) } : {}),
+      },
+      draws,
+    );
+    expect(placements.length, kind).toBeGreaterThan(0);
+    return { placements, speed: input.geometry.scrollSpeed };
+  };
+
   it("plans the same movers for the same seed", () => {
     const zoned = inZone(realRun(everyMover, FASTEST_WALKER), WORLD.lastZone, WORLD.walkLength - 1);
     const plan = (seed: number) =>
-      planZone(everyMover, GAME_ROAD, plannerStreams(seed), {
+      planZoneForSeed(everyMover, GAME_ROAD, seed, {
         road: startRoad(LANE_COUNT),
         run: zoned,
       }).road.pending;
@@ -248,43 +301,44 @@ describe("movers", { timeout: 120_000 }, () => {
     expect(plan(5)).not.toEqual(first);
   });
 
-  // A hop is one jump of 1 to most spots one way, across, up the road or diagonally up, never
-  // down, sideways only when it says so, as long as the tuning's hop within its jitter; across
-  // zones and seeds at the first zone's pace, the slowest, hoppers make hops of every length they
-  // can, and hop every count of times in their range; a later hop that would come once the
-  // hopper has reached the pack's rows never does.
-  it("hops each hopper its drawn count of times, any way or sideways only", () => {
+  // Count and shape capability is independent of which compatible value a whole layout selects.
+  it("keeps every native hop count and shape, any way or sideways only", () => {
     for (const { hop, tuned } of hopping) {
       const spots = new Set<number>();
       const times = new Set<number>();
       for (const zone of ZONE_IDS) {
-        const zoned = inZone(realRun(tuned, FASTEST_WALKER), zone, 0);
-        const length =
-          read(tuned.tuning, "seconds", "moverHopSeconds") * walkScrollSpeed(tuned, zoned);
-        const jitter = read(tuned.tuning, "seconds", "moverMoveSecondsJitter");
-        for (const seed of [1, 2, 3]) {
-          const walk = planZone(tuned, GAME_ROAD, plannerStreams(seed), {
-            road: startRoad(LANE_COUNT),
-            run: zoned,
-          });
-          for (const { mover } of walk.road.pending) {
-            if (mover?.movement !== "hop") {
-              continue;
-            }
-            expect(mover.motion).toBe("steps");
-            const steps = mover.motion === "steps" ? mover.steps : [];
-            expect(steps.length).toBeGreaterThanOrEqual(1);
-            expect(steps.length).toBeLessThanOrEqual(hop.times.max);
-            times.add(steps.length);
-            for (const { lanes, length: hopLength, travel } of steps) {
-              const rows = -travel / GAME_ROAD.cell.length;
-              expect(rows).toBeGreaterThanOrEqual(0);
-              expect(lanes === 0 || rows === 0 || Math.abs(lanes) === rows).toBe(true);
-              if (hop.sideways === true) {
-                expect(travel).toBe(0);
+        for (let count = hop.times.min; count <= hop.times.max; count++) {
+          for (const lengthDraw of [0, 1 - Number.EPSILON]) {
+            const { placements, speed } = nativeMoves(
+              tuned,
+              zone,
+              {
+                count: (count - hop.times.min + 0.5) / (hop.times.max - hop.times.min + 1),
+                length: lengthDraw,
+              },
+              "bunny",
+            );
+            const length = read(tuned.tuning, "seconds", "moverHopSeconds") * speed;
+            const jitter = read(tuned.tuning, "seconds", "moverMoveSecondsJitter");
+            expect(
+              placements.some(({ path }) => path.motion === "steps" && path.steps.length === count),
+            ).toBe(true);
+            for (const { path: mover } of placements) {
+              expect(mover.motion).toBe("steps");
+              const steps = mover.motion === "steps" ? mover.steps : [];
+              expect(steps.length).toBeGreaterThanOrEqual(1);
+              expect(steps.length).toBeLessThanOrEqual(hop.times.max);
+              times.add(steps.length);
+              for (const { lanes, length: hopLength, travel } of steps) {
+                const rows = -travel / GAME_ROAD.cell.length;
+                expect(rows).toBeGreaterThanOrEqual(0);
+                expect(lanes === 0 || rows === 0 || Math.abs(lanes) === rows).toBe(true);
+                if (hop.sideways === true) {
+                  expect(travel).toBe(0);
+                }
+                expect(Math.abs(hopLength / length - 1)).toBeLessThanOrEqual(jitter + 1e-9);
+                spots.add(Math.max(Math.abs(lanes), rows));
               }
-              expect(Math.abs(hopLength / length - 1)).toBeLessThanOrEqual(jitter + 1e-9);
-              spots.add(Math.max(Math.abs(lanes), rows));
             }
           }
         }
@@ -299,6 +353,10 @@ describe("movers", { timeout: 120_000 }, () => {
   // drawn count of steps, each count in its kind's range coming up, and a stepper or hopper moves
   // at least once and never more than its kind's most.
   const counted = [...OBSTACLE_KINDS, ...LUCKY_IDS].flatMap((kind) => {
+    // Optional friendly-neighbour admission is covered at the native boundary below.
+    if (kind === "friendlyNeighbour") {
+      return [];
+    }
     const movement = movementOf(kind);
     if (movement?.kind === "approach" || movement?.kind === "step") {
       return [{ kind, range: movement.steps }];
@@ -319,7 +377,7 @@ describe("movers", { timeout: 120_000 }, () => {
     let planned = spawnPlans.get(key);
     if (planned === undefined) {
       const zoned = inZone(realRun(everyMover, FASTEST_WALKER), zone, zoneIndex);
-      const walk = planZone(everyMover, GAME_ROAD, plannerStreams(seed), {
+      const walk = planZoneForSeed(everyMover, GAME_ROAD, seed, {
         road: startRoad(LANE_COUNT),
         run: zoned,
       });
@@ -416,12 +474,91 @@ describe("movers", { timeout: 120_000 }, () => {
     }
   });
 
+  // Optional reward profiles retain every configured native count.
+  it("keeps every friendlyNeighbour count in its native full profile", () => {
+    const kind = "friendlyNeighbour";
+    const movement = movementOf(kind);
+    expect(movement?.kind).toBe("step");
+    if (movement?.kind !== "step") {
+      throw new Error("Expected the friendly neighbour's stepping profile");
+    }
+    const range = movement.steps;
+    const counts = new Set<number>();
+    for (let count = range.min; count <= range.max; count++) {
+      const { placements } = nativeMoves(
+        everyMover,
+        WORLD.firstZone,
+        { count: (count - range.min + 0.5) / (range.max - range.min + 1), length: 0.5 },
+        kind,
+      );
+      expect(
+        placements.some(({ path }) => path.motion === "steps" && path.steps.length === count),
+      ).toBe(true);
+      for (const { path } of placements) {
+        expect(path.motion).toBe("steps");
+        if (path.motion === "steps") {
+          expect(path.steps.length).toBeGreaterThanOrEqual(1);
+          expect(path.steps.length).toBeLessThanOrEqual(range.max);
+          counts.add(path.steps.length);
+        }
+      }
+    }
+    expect([...counts].sort()).toEqual(
+      Array.from({ length: range.max - range.min + 1 }, (_, i) => range.min + i),
+    );
+  });
+
   // A lucky find that walks about is planned as a prize, blocking no lane, and like every
   // stepper shows the wander mark before its first step alone.
   const walkingLucky = LUCKY_IDS.filter((kind) => movementOf(kind) !== null);
   it.each(walkingLucky)("plans a walking %s as a prize, cueing its first step only", (kind) => {
     expect(blocksLane(REAL, kind)).toBe(false);
-    for (const { mover } of moversOf(kind)) {
+    // Request a reward without relying on its fractional production quota being rounded up.
+    const prizeData = {
+      ...everyMover,
+      tuning: {
+        ...everyMover.tuning,
+        counts: {
+          ...everyMover.tuning.counts,
+          luckyFindsPerZone: { ...everyMover.tuning.counts.luckyFindsPerZone, [kind]: 1 },
+        },
+      },
+    };
+    const run = inZone(realRun(prizeData, FASTEST_WALKER), WORLD.firstZone, 0);
+    const input = captureZoneInput(prizeData, GAME_ROAD, 1, {
+      road: startRoad(LANE_COUNT),
+      run,
+    });
+    const { catalogue, geometry } = compileZoneSlotInput(input);
+    const jobs = makeSlotJobs(catalogue, input.auxiliary, input.config).filter(({ sources }) =>
+      sources.some((source) => source.kind === kind),
+    );
+    expect(jobs.length, `no native request for walking ${kind}`).toBeGreaterThan(0);
+    const paths = jobs.flatMap((job) => {
+      expect(job.role).toBe("auxiliaryMoving");
+      expect(job.laneEffect).toBe("none");
+      return job.sources.flatMap((source) => {
+        const request = source.compile(plannerStreams(1));
+        expect(request.blocksLane).toBe(false);
+        expect(request.hazard).toBe(false);
+        if (request.mover === undefined) {
+          throw new Error(`Expected a native mover request for walking ${kind}`);
+        }
+        const draws = drawMover(plannerStreams(1));
+        return moverPlacements(
+          {
+            ...geometry,
+            rowSpacing: rowSpacing({ ...geometry, quotas: [] }),
+            window: blockingLength(geometry, 1),
+          },
+          request.mover,
+          { ...draws, count: 1 - Number.EPSILON, delays: draws.delays.map(() => 0) },
+        ).map(({ path }) => path);
+      });
+    });
+    expect(paths.length).toBeGreaterThan(0);
+    expect(paths.some((path) => path.motion === "steps" && path.steps.length > 1)).toBe(true);
+    for (const mover of paths) {
       const steps = mover.motion === "steps" ? mover.steps : [];
       expect(steps.length).toBeGreaterThan(0);
       expect(steps.map(({ uncued }) => uncued === true)).toEqual(steps.map((_, i) => i > 0));
@@ -465,8 +602,32 @@ describe("movers", { timeout: 120_000 }, () => {
   ).filter(
     (kind, i, kinds) => kinds.findIndex((other) => patternKey(other) === patternKey(kind)) === i,
   );
-  // A kind's movers planned in the zones that draw it, searched until enough come up.
-  const pathsOf = (kind: WalkItem["kind"]) => moversOf(kind).map(({ mover }) => mover);
+  const fixturePositions = [0, WORLD.walkLength - 1];
+  const fixtureSeeds = Array.from(
+    { length: Math.ceil(SEARCH_ENOUGH / fixturePositions.length) },
+    (_, index) => index + 1,
+  );
+  const profileFixtures = (
+    placement: "native-default" | "seeded",
+    positions: readonly number[],
+    kind: WalkItem["kind"],
+  ) =>
+    zonesOf(kind).flatMap((zone) =>
+      positions.flatMap((zoneIndex) =>
+        fixtureSeeds.map((seed) =>
+          moverFixture(
+            everyMover,
+            GAME_ROAD,
+            inZone(realRun(everyMover, FASTEST_WALKER), zone, zoneIndex),
+            { placement, seed },
+            kind,
+          ),
+        ),
+      ),
+    );
+  // Motion interpretation uses native profile fixtures, independently of whole-zone selection.
+  const pathsOf = (kind: WalkItem["kind"]) =>
+    profileFixtures("native-default", fixturePositions, kind).map(({ mover }) => mover);
 
   // A stepping pattern moves at least once and at most its most, each step a lane to one side
   // (back the way it came, for a bounce or a sway, so it rocks between two lanes), or in its lane
@@ -561,7 +722,7 @@ describe("movers", { timeout: 120_000 }, () => {
     zonesOf(kind).flatMap((zone) =>
       [0, WORLD.walkLength - 1].flatMap((zoneIndex) => {
         const run = inZone(realRun(tuned, FASTEST_WALKER), zone, zoneIndex);
-        const { road } = planZone(tuned, GAME_ROAD, plannerStreams(seed), {
+        const { road } = planZoneForSeed(tuned, GAME_ROAD, seed, {
           road: startRoad(LANE_COUNT),
           run,
         });
@@ -653,7 +814,6 @@ describe("movers", { timeout: 120_000 }, () => {
         continue;
       }
       if (mover.motion === "ride") {
-        expect(moverTell(mover, mover.warning - 1e-6)?.kind).toBe("down");
         expect(moverTell(mover, (mover.merge?.at ?? 0) - 1e-6)?.kind).toBe("wander");
         continue;
       }
@@ -664,6 +824,32 @@ describe("movers", { timeout: 120_000 }, () => {
       );
     }
   });
+
+  const separateMergeCues = patterned.flatMap((kind) =>
+    zonesOf(kind).flatMap((zone) => {
+      const movement = assignedMovement(everyMover, zone, kind);
+      return movement?.kind === "merge" && movement.signature === undefined ? [{ kind, zone }] : [];
+    }),
+  );
+  it.each(separateMergeCues)(
+    "shows the entry cue before a separate $kind merge cue at the first pace in $zone",
+    ({ kind, zone }) => {
+      for (const seed of fixtureSeeds) {
+        const { mover } = moverFixture(
+          everyMover,
+          GAME_ROAD,
+          inZone(realRun(everyMover, FASTEST_WALKER), zone, 0),
+          { placement: "native-default", seed },
+          kind,
+        );
+        if (mover.motion !== "ride" || mover.merge === undefined) {
+          throw new Error(`Separate entry and merge cues require a merging rider for ${kind}`);
+        }
+        expect(mover.merge.at - mover.merge.cue).toBeGreaterThanOrEqual(mover.warning);
+        expect(moverTell(mover, mover.warning - 1e-6)?.kind).toBe("down");
+      }
+    },
+  );
 
   // It never comes back up the screen toward a pack that has passed it: its travel down the road
   // never falls as the road scrolls, and no step starts once it has reached the pack's rows.
@@ -781,15 +967,35 @@ describe("movers", { timeout: 120_000 }, () => {
       movementOf(kind)?.kind ?? null,
       Object.hasOwn(MINOR_OBSTACLES, kind),
     ]);
-  const edgeKinds = blocking.filter(
+  const allEdgeKinds = blocking.filter(
     (kind, i) => blocking.findIndex((other) => edgeKey(other) === edgeKey(kind)) === i,
   );
   // Each kind is searched until it has started against both edges.
+  const edgeKinds = allEdgeKinds.filter((kind) => movementOf(kind)?.kind !== "approach");
   it.each(edgeKinds)("starts a %s against each edge of the road on some seed", (kind) => {
     const edges = [0, LANE_COUNT - footprintOf(everyMover, kind).lanes];
     const lanesOf = (spawns: readonly Planned[]) => new Set(spawns.map(({ lane }) => lane));
     const spawns = spawnsOfKind(kind, (found) => edges.every((lane) => lanesOf(found).has(lane)));
     expect([...lanesOf(spawns)]).toEqual(expect.arrayContaining(edges));
+  });
+
+  // Widest-reach ranking can select middle starts; the full native catalogue must retain the edges.
+  const nativeEdges = allEdgeKinds.filter((kind) => movementOf(kind)?.kind === "approach");
+  it.each(nativeEdges)("offers a native %s start against each edge of the road", (kind) => {
+    const width = footprintOf(everyMover, kind).lanes;
+    const { placements } = nativeMoves(
+      everyMover,
+      WORLD.firstZone,
+      { count: 0.5, length: 0.5 },
+      kind,
+    );
+    for (const { lane } of placements) {
+      expect(lane).toBeGreaterThanOrEqual(0);
+      expect(lane + width).toBeLessThanOrEqual(LANE_COUNT);
+    }
+    expect([...new Set(placements.map(({ lane }) => lane))]).toEqual(
+      expect.arrayContaining([0, LANE_COUNT - width]),
+    );
   });
 
   // A stalker wider than a lane never fits a lane to either side, so from a middle lane it
@@ -841,18 +1047,10 @@ describe("movers", { timeout: 120_000 }, () => {
                 : [];
           return lengths.map((length) => length / (moveSeconds * speed));
         });
-      // Searched until enough movers have come up and their draws fall either side of 1.
-      const spread = (spawns: readonly Planned[]) => {
-        const drawn = factorsOf(spawns);
-        return drawn.some((factor) => factor < 1) && drawn.some((factor) => factor > 1);
-      };
       const factors = factorsOf(
-        searchSpawns(
-          ZONE_IDS,
-          (spawn) => spawn.mover?.movement === movement,
-          (found) => enough(found) && spread(found),
-          `${movement} mover`,
-        ),
+        [...OBSTACLE_KINDS, ...LUCKY_IDS]
+          .filter((kind) => movementOf(kind)?.kind === movement)
+          .flatMap((kind) => profileFixtures("seeded", fixturePositions, kind)),
       );
       expect(Math.min(...factors)).toBeGreaterThanOrEqual(1 - jitter - 1e-9);
       expect(Math.max(...factors)).toBeLessThanOrEqual(1 + jitter + 1e-9);
@@ -982,7 +1180,7 @@ describe("movers", { timeout: 120_000 }, () => {
     const motions = ZONE_IDS.flatMap((zone) =>
       [1, 2, 3].flatMap((seed) => {
         const zoned = inZone(realRun(shyHops, FASTEST_WALKER), zone, 0);
-        return planZone(shyHops, GAME_ROAD, plannerStreams(seed), {
+        return planZoneForSeed(shyHops, GAME_ROAD, seed, {
           road: startRoad(LANE_COUNT),
           run: zoned,
         }).road.pending.flatMap(({ mover }) => (mover?.movement === "hop" ? [mover.motion] : []));

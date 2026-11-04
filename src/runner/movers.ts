@@ -405,13 +405,11 @@ export function moverTell(path: MoverPath, since: number): MoverTell | null {
     return cued ? { direction: path.direction, kind: "across" } : null;
   }
   if (path.motion === "ride") {
-    if (since < path.warning) {
-      return { kind: path.speedMultiplier > 1 ? "down" : "up" };
-    }
     const { merge } = path;
-    return merge !== undefined && since >= merge.at - merge.cue && since < merge.at
-      ? { kind: "wander" }
-      : null;
+    if (merge !== undefined && since >= merge.at - merge.cue && since < merge.at) {
+      return { kind: "wander" };
+    }
+    return since < path.warning ? { kind: path.speedMultiplier > 1 ? "down" : "up" } : null;
   }
   return cuedStep(path, since) === undefined ? null : { kind: "wander" };
 }

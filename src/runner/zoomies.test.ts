@@ -8,15 +8,24 @@ import type { DebuffDriftMovement, GameData, ZoneId } from "../data/types";
 import type { LaneDirection } from "../layout/lanes";
 import { read } from "../rules/units";
 import { newRun, type RunState } from "../state/runState";
-import { plannerStreams } from "../testing/movers";
+import { planZoneForSeed } from "../testing/zonePlan";
 import { advanceLaneControl, laneControlIn, pullLane } from "./laneControl";
 import { destinationLane, stillInLane } from "./laneMotion";
+import { type MoverPath, moverPlace, moverY } from "./movers";
 import { pullHorizon } from "./pulls";
 import { runStreams } from "./session";
-import { startRoad, steerWalk, stepWalk, type Walk } from "./walk";
+import { compileSignature } from "./signaturePaths";
+import {
+  componentHitLength,
+  obstacleHitBoxes,
+  roadScrollSpeed,
+  startRoad,
+  steerWalk,
+  stepWalk,
+  type Walk,
+} from "./walk";
 import { walkGeometry, walkProjection } from "./walkGeometry";
 import { type WalkItem } from "./walkItems";
-import { planZone } from "./zonePlan";
 import {
   debuffDriftProfile,
   type DebuffMovementClock,
@@ -244,6 +253,92 @@ describe("debuff movement schedule", () => {
     expect(random).not.toHaveBeenCalled();
   });
 
+  it("reverses an automatic drift away from a trailing duckling after its leader clears the pack", () => {
+    const profile = gameData.movementProfiles.ducklingTrail;
+    if (profile?.kind !== "delayedTrail") {
+      throw new Error("Missing duckling trail profile");
+    }
+    const run = zoomed(
+      newRun(gameData, 3, {
+        dogs: ["kilo", "lady", "ginger"],
+        gear: null,
+        walker: "casey",
+      }),
+    );
+    const road = {
+      ...startRoad(LANE_COUNT),
+      control: {
+        ...laneControlIn(stillInLane(2)),
+        heading: -1 as const,
+      },
+    };
+    const speed = roadScrollSpeed(gameData, { road, run });
+    const route = compileSignature(
+      {
+        cellLength: ROAD.cell.length,
+        laneCount: ROAD.laneCount,
+        scrollSpeed: speed,
+        sightLength: ROAD.sightLength,
+      },
+      profile,
+      { count: 0, direction: 1 },
+      {
+        at: 182.49359996058047,
+        lane: 1,
+        span: 1,
+        travel: ROAD.cell.length,
+      },
+    );
+    if (route === null) {
+      throw new Error("Expected the complete duckling route to fit");
+    }
+    const path: MoverPath = {
+      lane: 1,
+      motion: "signature",
+      movement: "follow",
+      route,
+      warning: profile.warningSeconds * speed,
+    };
+    const height = componentHitLength(ROAD, profile);
+    const since = 1236.4935999604313;
+    const trail: WalkItem = {
+      height,
+      id: 30,
+      kind: "ducklings",
+      lane: 1,
+      laneSpan: 1,
+      mover: { path, since },
+      y: moverY(ROAD.roadTop, height, moverPlace(ROAD.laneCount, path, since)),
+    };
+    const walk: Walk = { road: { ...road, items: [trail] }, run };
+    const boxes = obstacleHitBoxes(gameData, ROAD, trail);
+    expect(boxes).toHaveLength(3);
+    expect(boxes[0]!.top).toBeGreaterThan(ROAD.packBand.bottom);
+    expect(boxes[2]!.top).toBeLessThan(ROAD.packBand.bottom);
+    // The same crossing without the automatic guard hits the follower.
+    const crossingSeconds = 4 * STEP_SECONDS;
+    const unsafe = stepWalk(
+      gameData,
+      ROAD,
+      seededRandom(1),
+      crossingSeconds,
+      steerWalk(gameData, LANE_COUNT, -1, walk),
+    );
+    expect(unsafe.bumps.map(({ item }) => item.id)).toContain(trail.id);
+    const drift = stepDebuffMovement(
+      gameData,
+      ROAD,
+      vi.fn().mockReturnValueOnce(0.25582711515016854).mockReturnValueOnce(0.2361587448976934),
+      STEP_SECONDS,
+      { debuff: "zoomies", elapsed: 0.9622712336481093, interval: 0.9706276421248914 },
+      walk,
+    );
+    expect(drift.drifted).toBe(1);
+    expect(destinationLane(drift.walk.road.control.motion)).toBe(3);
+    const safe = stepWalk(gameData, ROAD, seededRandom(1), crossingSeconds, drift.walk);
+    expect(safe.bumps).toEqual([]);
+  });
+
   it("uses the safe opposite or cancels without moving when neither lane is safe", () => {
     for (const [lane, items, expected] of [
       [2, [boardIn(3, 0)], 1],
@@ -416,7 +511,7 @@ describe("the Zoomies on every zone's road", { timeout: 120_000 }, () => {
         walker: "casey",
       });
       const run: RunState = { ...start, invincible: true, route: [zone] };
-      let walk = planZone(gameData, ROAD, plannerStreams(seed), {
+      let walk = planZoneForSeed(gameData, ROAD, seed, {
         road: startRoad(LANE_COUNT),
         run,
       });

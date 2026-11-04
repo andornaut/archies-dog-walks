@@ -278,6 +278,29 @@ it("restores moving masks, rider/body/pack reservations and caps without losing 
       createRepairFeasibility("complete", fixedPlan, path, [standing]).without([]).tryInsert(a),
     ).toBe(false);
   }
+  const prizePlan = {
+    ...fixedPlan,
+    quotas: fixedPlan.quotas.map((quota, index) =>
+      index === 0 ? { ...quota, blocksLane: false, hazard: false } : quota,
+    ),
+  };
+  const prize = { ...a, trace: { ...a.trace, hazard: false } };
+  for (const mode of ["complete", "partial"] as const) {
+    const tx = createRepairFeasibility(mode, prizePlan, path, [prize]).without([]);
+    const before = tx.checkpoint();
+    expect(tx.tryInsertDetailed(solid)).toMatchObject({
+      accepted: false,
+      failure: { classification: "conflict", conflicts: ["0:0"], rule: "body" },
+    });
+    tx.restore(before);
+    expect(tx.tryInsertDetailed(solid)).toMatchObject({
+      accepted: false,
+      failure: { conflicts: ["0:0"], rule: "body" },
+    });
+    expect(
+      createRepairFeasibility(mode, prizePlan, path, [solid]).without([]).tryInsert(prize),
+    ).toBe(false);
+  }
 });
 
 it("rejects incomplete herring geometry and restores its visibility reservations", () => {

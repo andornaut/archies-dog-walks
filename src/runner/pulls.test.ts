@@ -12,7 +12,6 @@ import { RUN_TEXT } from "../data/runText";
 import { SHOP_GEAR } from "../data/shop";
 import type { Modifier } from "../data/types";
 import { UPGRADES } from "../data/upgrades";
-import { WORLD } from "../data/world";
 import { recordInput, replayInputs, startInputLog } from "../dev/inputLog";
 import type { LaneDirection } from "../layout/lanes";
 import { mapPack } from "../state/pack";
@@ -21,9 +20,10 @@ import { plannerStreams } from "../testing/movers";
 import { TEST_ROAD_GEOMETRY } from "../testing/packGeometry";
 import { TEST_TUNING } from "../testing/tuning";
 import { TEST_WALKER_DATA } from "../testing/walkers";
+import { mapZones, minimumSlotConfiguration, TEST_WORLD } from "../testing/world";
 import { laneControlIn } from "./laneControl";
 import { stillInLane } from "./laneMotion";
-import type { MoverPath } from "./movers";
+import { type MoverPath, moverPlace, moverY } from "./movers";
 import {
   laneBlockedWithin,
   NO_PULLS,
@@ -34,9 +34,9 @@ import {
   pullWalk,
   stepPulls,
 } from "./pulls";
-import { startRoad, steerWalk, stepWalk, type Walk } from "./walk";
+import { obstacleHitBoxes, startRoad, steerWalk, stepWalk, type Walk } from "./walk";
 import { type WalkItem } from "./walkItems";
-import { planZone } from "./zonePlan";
+import { planZoneWithContext } from "./zonePlan";
 
 const data = {
   debuffs: DEBUFFS,
@@ -54,8 +54,6 @@ const data = {
     ...TEST_TUNING,
     counts: {
       ...TEST_TUNING.counts,
-      minorObstaclesFirstZone: 4,
-      obstaclesFirstZone: 6,
       tipsFirstZone: 8,
       treatsPerZone: 2,
     },
@@ -69,7 +67,18 @@ const data = {
     },
   },
   upgrades: UPGRADES,
-  world: WORLD,
+  world: mapZones(
+    (zone) => ({
+      ...zone,
+      moverShare: 0,
+      spawnSlots: minimumSlotConfiguration({
+        capacity: { encounterFixed: 6, encounterMoving: 0, minorFixed: 4, minorMoving: 0 },
+        counts: [{ encounterFixed: 6, encounterMoving: 0, minorFixed: 4, minorMoving: 0 }],
+        guarantees: zone.spawnSlots.guarantees,
+      }),
+    }),
+    TEST_WORLD,
+  ),
 };
 const geometry = TEST_ROAD_GEOMETRY;
 const FRAME = 1 / 60;
@@ -354,6 +363,121 @@ describe("the fairness rule", () => {
       expect([0, 1, 2, 3, 4].map((lane) => blocked(lane, horizon))).toEqual(lanes);
     });
 
+    it("blocks a delayed follower after its leader has cleared the pack", () => {
+      const road = {
+        ...geometry,
+        cell: { inset: 12, length: 64 },
+        lens: { centreX: 160, focal: 720, footY: 478, horizonY: -82 },
+        packBand: { bottom: 478, top: 327.157667386609 },
+        roadTop: -242,
+      };
+      const profile = MOVEMENT_PROFILES.ducklingTrail;
+      if (profile === undefined) {
+        throw new Error("Missing duckling trail profile");
+      }
+      const path: MoverPath = {
+        lane: 1,
+        motion: "signature",
+        movement: "follow",
+        route: {
+          complete: 642.4935999605805,
+          componentDelays: [0, 60, 120],
+          cues: [],
+          entryEnd: 182.49359996058047,
+          legs: [
+            {
+              at: 0,
+              easing: "linear",
+              from: { x: 1, y: 64 },
+              length: 182.49359996058047,
+              to: { x: 1, y: 64 },
+            },
+            {
+              at: 182.49359996058047,
+              easing: "sineInOut",
+              from: { x: 1, y: 64 },
+              length: 110,
+              to: { x: 2, y: 86 },
+            },
+            {
+              at: 292.49359996058047,
+              easing: "linear",
+              from: { x: 2, y: 86 },
+              length: 120,
+              to: { x: 2, y: 110 },
+            },
+            {
+              at: 412.49359996058047,
+              easing: "sineInOut",
+              from: { x: 2, y: 110 },
+              length: 110,
+              to: { x: 1, y: 132 },
+            },
+          ],
+          profile,
+          scrollSpeed: 200,
+          tail: { x: 0, y: 1 },
+        },
+        warning: 120,
+      };
+      const shown = (since: number): WalkItem => ({
+        height: 22.422145328719694,
+        id: 30,
+        kind: "ducklings",
+        lane: 1,
+        laneSpan: 1,
+        mover: { path, since },
+        y: moverY(road.roadTop, 22.422145328719694, moverPlace(road.laneCount, path, since)),
+      });
+      const trail = shown(1236.4935999604313);
+      const boxes = obstacleHitBoxes(data, road, trail);
+      expect(boxes[0]?.top).toBeCloseTo(486.07, 2);
+      expect(boxes[2]?.top).toBeCloseTo(460.49, 2);
+      expect(boxes[2]?.bottom).toBeCloseTo(481.46, 2);
+      expect(
+        laneBlockedWithin(data, road, 200, 0.7818181818181819, 1, walkWith(["kilo"], [trail])),
+      ).toBe(true);
+      expect(
+        laneBlockedWithin(data, road, 200, 0.7818181818181819, 2, walkWith(["kilo"], [trail])),
+      ).toBe(false);
+      const cleared = shown(1436.4935999604313);
+      expect(
+        obstacleHitBoxes(data, road, cleared).every(({ top }) => top > road.packBand.bottom),
+      ).toBe(true);
+      expect(
+        laneBlockedWithin(data, road, 200, 0.7818181818181819, 1, walkWith(["kilo"], [cleared])),
+      ).toBe(false);
+    });
+
+    it("retains single-body signature lane sensing", () => {
+      const profile = MOVEMENT_PROFILES.gardenRectangle;
+      if (profile === undefined) {
+        throw new Error("Missing garden rectangle profile");
+      }
+      const path: MoverPath = {
+        lane: 1,
+        motion: "signature",
+        movement: "inLane",
+        route: {
+          complete: 200,
+          componentDelays: [0],
+          cues: [],
+          entryEnd: 0,
+          legs: [
+            { at: 0, easing: "linear", from: { x: 1, y: 540 }, length: 200, to: { x: 1, y: 740 } },
+          ],
+          profile,
+          scrollSpeed: 80,
+          tail: { x: 0, y: 1 },
+        },
+        warning: 0,
+      };
+      const shown = { ...item("gardener", 0, 1, 568), mover: { path, since: 28 } };
+      const walk = walkWith(["kilo"], [shown]);
+      expect(laneBlockedWithin(data, banded, 80, 1, 1, walk)).toBe(true);
+      expect(laneBlockedWithin(data, banded, 80, 1, 2, walk)).toBe(false);
+    });
+
     // A stalker in lane 2 overlapping the band, its step a lane either way or straight on due 5px
     // of scroll on and taking 100px: still to choose, it may step into lane 1 or 3 while it
     // overlaps the band, as it chooses toward wherever the pack has gone; chosen, it blocks only
@@ -444,11 +568,13 @@ describe("replay with pulls", () => {
     // As RunScene steps: the moves due now, each logged, then the pulls, then the walk.
     const play = (seed: number, movesAt: (frame: number, timeMs: number) => LaneDirection[]) => {
       const setup = { dev: true, seed, speed: 1, zone: 1 };
-      const start = planZone(
+      const initial = walkWith(["lady", "kilo"]);
+      const start = planZoneWithContext(
         replayData,
         geometry,
+        { seed, zoneIndex: initial.run.zoneIndex },
         plannerStreams(seed),
-        walkWith(["lady", "kilo"]),
+        initial,
       );
       const rolls = seededRandom(seed + 4);
       let log = startInputLog(setup);

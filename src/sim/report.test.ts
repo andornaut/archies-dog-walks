@@ -4,9 +4,16 @@ import { describe, expect, it, vi } from "vitest";
 import { gameData } from "../data";
 import { DOGS } from "../data/dogs";
 import type { DogId, ZoneId } from "../data/types";
+import type { SlotDelivery, SlotPartialAudit } from "../runner/slotDelivery";
+import { SLOT_LIMITS } from "../runner/slotPlanner";
 import type { SpawnPlanSnapshot } from "../runner/spawnSearch";
 import type { SpawnAudit } from "../runner/spawnValidation";
 import type { WalkItemKind } from "../runner/walkItems";
+import {
+  replayZoneSlots,
+  type ZoneSlotInput,
+  ZoneSlotPlanningError,
+} from "../runner/zoneSlotInput";
 import type { PackDogs } from "../state/runState";
 import { cents } from "../units";
 import { POLICY_IDS } from "./policies";
@@ -18,6 +25,7 @@ import {
   formatDeliveryTable,
   formatKindTable,
   formatSpawnEventTable,
+  formatSpawnFailures,
   formatTable,
   type Matrix,
   MATRIX_HEADERS,
@@ -33,7 +41,7 @@ import {
 } from "./report";
 import * as simulator from "./simulate";
 import { SKILL_PRESET_IDS, SKILL_PRESETS } from "./skills";
-import type { SpawnFlow, ZoneWalkEvents } from "./walkEvents";
+import { capturePlanningFailure, type SpawnFlow, type ZoneWalkEvents } from "./walkEvents";
 
 // These tests cover how report.ts seeds, orders and summarizes runs, not the runs
 // themselves (simulate.test.ts does). A real run costs over a hundred milliseconds, so a stand-in
@@ -378,6 +386,60 @@ const failedSnapshot: SpawnPlanSnapshot = {
 };
 
 describe("spawn reporting", () => {
+  it("reports a structural runtime failure against actual role counts without inventing a kind mix", () => {
+    const cell = itemAt(matrixCells(SMALL), 0);
+    const original = simulator.simulateRun(gameData, 7, {
+      gear: cell.gear,
+      pack: cell.pack.dogs,
+      player: { kind: "skill", sight: "sight", skill: SKILL_PRESETS.typical },
+      policy: cell.policy,
+      route: cell.route,
+      walker: cell.walker,
+    });
+    const { quotas: auxiliary, ...geometry } = failedSnapshot.plan;
+    const input: ZoneSlotInput<string> = {
+      actualRun: original.run,
+      auxiliary,
+      catalogue: [],
+      config: {
+        active: { encounterFixed: 0, encounterMoving: 0, minorFixed: 1, minorMoving: 0 },
+        capacity: { encounterFixed: 0, encounterMoving: 0, minorFixed: 20, minorMoving: 0 },
+        guarantees: [],
+      },
+      context: { limits: SLOT_LIMITS, seed: 7, zoneIndex: 3 },
+      geometry,
+      tuning: gameData.tuning,
+    };
+    const unsupported = replayZoneSlots(input);
+    if (unsupported.status !== "unsupported") {
+      throw Error("Expected missing source diagnostic");
+    }
+    const planningFailure = capturePlanningFailure(7, () => {
+      throw new ZoneSlotPlanningError(input, unsupported);
+    });
+    if (planningFailure === undefined) {
+      throw Error("Expected structural planning failure");
+    }
+    const spy = vi
+      .spyOn(simulator, "simulateRun")
+      .mockReturnValueOnce({ ...original, planningFailure });
+    try {
+      const row = simulateCell(gameData, 7, 1, cell);
+      expect(row).toMatchObject({ planningFailedRuns: 1, runs: 0 });
+      expect(row.spawnRuns[0]).toMatchObject({
+        failure: { input, kind: "slots", purpose: "runtime-actual", result: unsupported },
+        zoneIndex: 3,
+      });
+      const table = formatSpawnFailures([row], true);
+      expect(table).toContain("all");
+      expect(table).toContain("unavailable");
+      expect(table).toContain("unverified");
+      expect(row.spawnRuns[0]!.failure).not.toHaveProperty("snapshot");
+    } finally {
+      spy.mockRestore();
+    }
+  });
+
   it("retains partial failures without adding them to gameplay means", () => {
     const cell = itemAt(matrixCells(SMALL), 0);
     const result = simulator.simulateRun(gameData, 7, {
@@ -392,7 +454,12 @@ describe("spawn reporting", () => {
       ...result,
       earnings: cents(999999),
       finished: false,
-      planningFailure: { message: "unfilled quota", seed: 7, snapshot: failedSnapshot },
+      planningFailure: {
+        kind: "quota" as const,
+        message: "unfilled quota",
+        seed: 7,
+        snapshot: failedSnapshot,
+      },
     };
     const spy = vi
       .spyOn(simulator, "simulateRun")
@@ -464,8 +531,8 @@ describe("spawn reporting", () => {
       ],
       findings: [],
       meetsPlacementFloor: true,
-      meetsValidPlacementFloor: valid >= 8,
-      minimumPlaced: 8,
+      meetsValidPlacementFloor: valid >= 9,
+      minimumPlaced: 9,
       missingCoverage: [],
       placed: valid,
       requested: 10,
@@ -523,18 +590,18 @@ describe("spawn reporting", () => {
       ...zone,
       audit: {
         ...audit(10),
-        counts: [{ emitted: 85, kind: "bench", movement: null, requested: 100, validPlaced: 85 }],
-        minimumPlaced: 80,
-        placed: 85,
+        counts: [{ emitted: 90, kind: "bench", movement: null, requested: 100, validPlaced: 90 }],
+        minimumPlaced: 90,
+        placed: 90,
         requested: 100,
-        validPlaced: 85,
+        validPlaced: 90,
       },
       configured: 100,
     };
     const partialRow = observedRow([partial]);
     expect(spawnValidationFailures(DEFAULT_SPAWN_TARGET, [partialRow])).toEqual([]);
     expect(spawnValidationFailures(parseSpawnTarget("1"), [partialRow])).toEqual([
-      "seed 7, zone 1 highPark: valid 85/100, requires 100",
+      "seed 7, zone 1 highPark: valid 90/100, requires 100",
     ]);
     expect(spawnValidationFailures(1, [observedRow(zones.slice(0, 1))])).toEqual([]);
     expect(sumSpawnEvents([partial])[0]).toMatchObject({
@@ -574,6 +641,134 @@ describe("spawn reporting", () => {
         },
       ]),
     ).toContain("unverified");
+  });
+
+  it("keeps unselected weighted omissions out of per-kind denominators and retains the exact target", () => {
+    const delivery: SlotDelivery<WalkItemKind> = {
+      configured: 10,
+      configuredByRole: {
+        auxiliaryFixed: 0,
+        auxiliaryMoving: 0,
+        encounterFixed: 0,
+        encounterMoving: 0,
+        minorFixed: 10,
+        minorMoving: 0,
+      },
+      delivered: 9,
+      deliveredByRole: {
+        auxiliaryFixed: 0,
+        auxiliaryMoving: 0,
+        encounterFixed: 0,
+        encounterMoving: 0,
+        minorFixed: 9,
+        minorMoving: 0,
+      },
+      floor: { denominator: 10, numerator: 9 },
+      omissions: [
+        { key: "active:minorFixed:9", reason: "not-selected-within-allowance", role: "minorFixed" },
+      ],
+      policy: "runtime-90",
+      required: 9,
+    };
+    const geometry: SpawnAudit = {
+      counts: [{ emitted: 9, kind: "bench", movement: null, requested: 9, validPlaced: 9 }],
+      findings: [],
+      meetsPlacementFloor: true,
+      meetsValidPlacementFloor: true,
+      minimumPlaced: 9,
+      missingCoverage: [],
+      placed: 9,
+      requested: 9,
+      status: "valid",
+      validPlaced: 9,
+      violations: [],
+    };
+    const partialAudit: SlotPartialAudit<WalkItemKind> = {
+      compiledTemplates: 0,
+      delivery,
+      geometry,
+      purpose: "runtime-partial",
+      status: "valid",
+      violations: [],
+    };
+    const zone: ZoneWalkEvents = {
+      audit: geometry,
+      configured: 10,
+      herringRendering: "not-simulated",
+      kinds: {
+        bench: {
+          admitted: 9,
+          departed: 0,
+          encountered: 0,
+          generated: 0,
+          herrings: 0,
+          passed: 0,
+          requested: 9,
+          touched: 0,
+          valid: 9,
+        },
+      },
+      modifiers: [],
+      position: 1,
+      route: ["highPark"],
+      seed: 7,
+      slots: {
+        delivery,
+        partialAudit,
+        status: "partial",
+      },
+      validation: "valid",
+      zone: "highPark",
+    };
+    expect(sumSpawnEvents([zone])[0]).toMatchObject({
+      configured: 10,
+      configuredTargetGoal: "below target",
+      goal: "met",
+      valid: 9,
+      validConfiguredRate: 0.9,
+    });
+    expect(sumSpawnEvents([zone], true)[0]).toMatchObject({
+      configured: null,
+      kind: "bench",
+      requested: 9,
+      valid: 9,
+    });
+    expect(sumRoadObstacleEvents(gameData, [zone])[0]).toMatchObject({
+      configured: 10,
+      requested: 9,
+      valid: 9,
+      validConfiguredRate: 0.9,
+    });
+    const row = {
+      ...itemAt(simulateMatrix(gameData, 1, 1, SMALL), 0),
+      spawnRuns: [
+        {
+          failure: null,
+          modifiers: [],
+          partial: null,
+          route: ["highPark"] as const,
+          seed: 7,
+          zoneIndex: 0,
+          zones: [zone],
+        },
+      ],
+    };
+    expect(spawnValidationFailures(DEFAULT_SPAWN_TARGET, [row])).toEqual([]);
+    expect(spawnValidationFailures(1, [row])).toEqual([
+      "seed 7, zone 1 highPark: valid 9/10, requires 10",
+    ]);
+    const invalid: ZoneWalkEvents = {
+      ...zone,
+      slots: { delivery, partialAudit: { ...partialAudit, status: "invalid" }, status: "partial" },
+    };
+    expect(
+      spawnValidationFailures(DEFAULT_SPAWN_TARGET, [
+        {
+          ...row,
+          spawnRuns: [{ ...row.spawnRuns[0]!, zones: [invalid] }],
+        },
+      ]),
+    ).toHaveLength(1);
   });
   it("separates road obstacles including pulls from lucky finds and preserves unknown validity", () => {
     const minor = Object.keys(gameData.minorObstacles)[0] as WalkItemKind;
