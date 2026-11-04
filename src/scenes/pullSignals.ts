@@ -104,13 +104,14 @@ interface Bubble {
 
 // The bubbles over the dogs and the strain's dotted line and arrow, redrawn every frame.
 export class PullSignals {
+  private readonly scene: Scene;
+  private readonly depth: number;
   private readonly bubbles = new Map<DogId, Bubble>();
   private readonly lines: GameObjects.Graphics;
 
-  constructor(
-    private readonly scene: Scene,
-    private readonly depth: number,
-  ) {
+  constructor(scene: Scene, depth: number) {
+    this.scene = scene;
+    this.depth = depth;
     this.lines = scene.add.graphics().setDepth(depth);
   }
 

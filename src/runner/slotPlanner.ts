@@ -144,10 +144,10 @@ type SlotCompositionResult<Kind extends string> =
   | SlotPlanningFailure<Kind>;
 
 export class SlotPlanningError<Kind extends string> extends Error {
-  constructor(
-    readonly result: Extract<SlotPlanningResult<Kind>, { readonly status: "unsupported" }>,
-  ) {
+  readonly result: Extract<SlotPlanningResult<Kind>, { readonly status: "unsupported" }>;
+  constructor(result: Extract<SlotPlanningResult<Kind>, { readonly status: "unsupported" }>) {
     super(`Unsupported slot configuration (${result.stage}): ${JSON.stringify(result.failures)}`);
+    this.result = result;
     this.name = "SlotPlanningError";
   }
 }

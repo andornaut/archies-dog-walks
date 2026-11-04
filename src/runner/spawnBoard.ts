@@ -68,6 +68,10 @@ export type PlacementResult =
 const identity = (entry: SpawnPlacement<string>) =>
   `${entry.trace.quotaIndex}:${entry.trace.memberIndex}`;
 export class SpawnBoard<Kind extends string> {
+  private readonly mode: "complete" | "partial";
+  private readonly plan: SpawnPlan<Kind>;
+  private readonly lookupQuota:
+    ((entry: SpawnPlacement<Kind>) => SpawnQuota<Kind> | undefined) | undefined;
   private observation: FeasibilityObserver | undefined;
   private readonly spacing: number;
   private readonly rows: readonly number[];
@@ -91,13 +95,15 @@ export class SpawnBoard<Kind extends string> {
   private readonly prizeScreens: OnScreen[] = [];
   private readonly geometry;
   constructor(
-    private readonly mode: "complete" | "partial",
-    private readonly plan: SpawnPlan<Kind>,
+    mode: "complete" | "partial",
+    plan: SpawnPlan<Kind>,
     path: PlannedSpawns<Kind>["path"],
-    private readonly lookupQuota:
-      ((entry: SpawnPlacement<Kind>) => SpawnQuota<Kind> | undefined) | undefined,
+    lookupQuota: ((entry: SpawnPlacement<Kind>) => SpawnQuota<Kind> | undefined) | undefined,
     entries: readonly SpawnPlacement<Kind>[],
   ) {
+    this.mode = mode;
+    this.plan = plan;
+    this.lookupQuota = lookupQuota;
     this.spacing = rowSpacing(plan);
     this.rows = zoneRows(plan, this.spacing);
     const pathLanes = path.map((row) => row.lane);

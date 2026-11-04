@@ -70,6 +70,8 @@ function withoutResume(checkpoint: Checkpoint): Checkpoint {
 // The player's save for this page's life. Every change applies to the save in memory at
 // once, so a scene can read it straight after, and is then written in the order made.
 export class ProfileSession {
+  private readonly awards: AwardContext;
+  private readonly store: SaveStore<SaveDocument>;
   // Earned away from a run's end (on launch or by a purchase), for the home screen to show.
   private celebrations: AchievementId[] = [];
   private document: SaveDocument;
@@ -83,11 +85,13 @@ export class ProfileSession {
   private resumeStopped = false;
 
   private constructor(
-    private readonly awards: AwardContext,
-    private readonly store: SaveStore<SaveDocument>,
+    awards: AwardContext,
+    store: SaveStore<SaveDocument>,
     document: SaveDocument,
     state: StorageState,
   ) {
+    this.awards = awards;
+    this.store = store;
     this.document = document;
     this.state = state;
   }

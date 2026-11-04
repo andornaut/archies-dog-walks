@@ -75,11 +75,13 @@ export function replayZoneCapacity<Kind extends string>(
 }
 
 export class ZoneSlotPlanningError<Kind extends string> extends SlotPlanningError<Kind> {
+  readonly input: ZoneSlotInput<Kind>;
   constructor(
-    readonly input: ZoneSlotInput<Kind>,
+    input: ZoneSlotInput<Kind>,
     result: Extract<SlotPlanningResult<Kind>, { readonly status: "unsupported" }>,
   ) {
     super(result);
+    this.input = input;
     const zone = input.actualRun.route[input.actualRun.zoneIndex] ?? "unknown";
     this.message = `Zone ${zone}, seed ${input.context.seed}, position ${input.context.zoneIndex}: ${this.message}`;
     this.name = "ZoneSlotPlanningError";

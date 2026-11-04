@@ -10,7 +10,10 @@ const sortKeys = (_key: string, item: unknown): unknown =>
 const unsorted = (...entries: [string, unknown][]) => Object.fromEntries(entries);
 
 class Point {
-  constructor(readonly x: number) {}
+  readonly x: number;
+  constructor(x: number) {
+    this.x = x;
+  }
 }
 
 describe("canonicalJson", () => {

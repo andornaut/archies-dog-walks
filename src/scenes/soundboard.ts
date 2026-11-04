@@ -31,13 +31,15 @@ type AdjustableSound = Sound.BaseSound & { setVolume(value: number): unknown };
 // The game's one sound player, shared by every scene so the music outlives scene changes.
 // A key that did not load is skipped and logged once; no method throws.
 class Soundboard {
+  private readonly game: Game;
   private mix: Mix = INITIAL_MIX;
   private music: MusicDeck = NO_MUSIC;
   private readonly musicSounds = new Map<string, AdjustableSound>();
   private recentPlays: RecentPlays = {};
   private readonly reportedKeys = new Set<string>();
 
-  constructor(private readonly game: Game) {
+  constructor(game: Game) {
+    this.game = game;
     game.events.on(Core.Events.STEP, (_time: number, delta: number) => this.step(delta));
     game.events.on(Core.Events.HIDDEN, () => this.setHidden(true));
     game.events.on(Core.Events.VISIBLE, () => this.setHidden(false));

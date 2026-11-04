@@ -13,11 +13,10 @@ export interface SpawnPlanSnapshot<Kind extends string = string> {
 }
 
 export class SpawnPlanningError extends Error {
-  constructor(
-    message: string,
-    readonly snapshot: SpawnPlanSnapshot,
-  ) {
+  readonly snapshot: SpawnPlanSnapshot;
+  constructor(message: string, snapshot: SpawnPlanSnapshot) {
     super(message);
+    this.snapshot = snapshot;
     this.name = "SpawnPlanningError";
   }
 }

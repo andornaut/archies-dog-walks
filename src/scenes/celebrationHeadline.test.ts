@@ -11,14 +11,16 @@ import { addCelebrationHeadline } from "./celebrationHeadline";
 vi.mock("../ui/phaser/displayText", () => ({ addDisplayText: vi.fn() }));
 
 class Label {
+  readonly font: string;
+  text: string;
   scaleX = 1;
   scaleY = 1;
   x = 0;
   y = 0;
-  constructor(
-    readonly font: string,
-    public text: string,
-  ) {}
+  constructor(font: string, text: string) {
+    this.font = font;
+    this.text = text;
+  }
   setScale(scale: number) {
     this.scaleX = scale;
     this.scaleY = scale;
