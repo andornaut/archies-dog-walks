@@ -1,4 +1,4 @@
-import type { SaveStorage } from "@andornaut/game-kit/save/contracts";
+import type { SaveStorage } from "@andornaut/game-kit/save/storage";
 import type { InstallState } from "@andornaut/game-kit/web/pwa/installState";
 import { describe, expect, it } from "vitest";
 
