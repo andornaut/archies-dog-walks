@@ -34,9 +34,9 @@ import { filledImage, paste, resizeNearest } from "@andornaut/art-kit/raster";
 import { type Random, randomInt, randomPick, randomStream } from "@andornaut/game-kit/random";
 
 import { sign, signWidth } from "./fonts.ts";
-import { dk, K, MURAL, rgbPng, run } from "./pixel.ts";
+import { dk, K, LAYOUT, MURAL, rgbPng, run } from "./pixel.ts";
 import { LANE_PAINT } from "./roads.ts";
-import { Canvas, LAYOUT as SCENE_LAYOUT, rgb } from "./scene.ts";
+import { Canvas, rgb } from "./scene.ts";
 
 export { MURAL };
 
@@ -74,17 +74,6 @@ function uniform(rnd: Random, a: number, b: number): number {
 // game's: the horizon and foot rows on screen, the focal length F in road pixels and the road's
 // centre column. The road below the band then shows VISIBLE road pixels, F (1 / s - 1) for the
 // scale s on screen row BAR + H.
-interface Region {
-  height: number;
-  width: number;
-  y: number;
-}
-interface BackdropLayout {
-  camera: { centreX: number; focal: number; footY: number; horizonY: number };
-  lanes: { dividers: number[] };
-  regions: { approach: Region; backdrop: Region; junction: Region; road: Region };
-}
-const LAYOUT = SCENE_LAYOUT as unknown as BackdropLayout;
 const BAND = LAYOUT.regions.backdrop;
 // the band: screen rows BAR to BAR + H - 1
 export const W = BAND.width;

@@ -274,6 +274,126 @@ for (const [section] of PICKER_HUES) {
   DARKER.set(PICKER_UI[`picker${section}Header`]!, PICKER_UI[`picker${section}Body`]!);
 }
 
+// ---------- the game's export ----------
+
+// Game data and layout come from the game's export in shared/export/, never from src/, and only
+// through GAME and LAYOUT. Each type below lists every field an art tool reads, and readExport fails
+// on a file that lacks one.
+
+// A rectangle in the export's layout.
+export interface ExportRect {
+  height: number;
+  width: number;
+  x: number;
+  y: number;
+}
+
+export interface GameData {
+  // Each card face's illustration key and the card-frame tag it shows in.
+  cards: readonly { art: string; frame: string }[];
+  dogs: readonly { id: string; size: string }[];
+  zones: readonly {
+    art: string;
+    id: string;
+    leashColour: string;
+    name: string;
+    roadColour: string;
+    roadShadowColour: string;
+  }[];
+}
+
+export interface Layout {
+  camera: { centreX: number; focal: number; footY: number; horizonY: number };
+  lanes: { dividers: readonly number[] };
+  pack: {
+    collarHeights: Readonly<Record<string, number>>;
+    feet: {
+      lead: Readonly<Record<string, number>>;
+      side: Readonly<Record<string, number>>;
+      sideOfThreeLarge: number;
+      trioLead: Readonly<Record<string, number>>;
+    };
+    laneHalfWidth: number;
+    slots: readonly (readonly string[])[];
+    walkerHands: { heightAboveFeet: number; leftDx: number; rightDx: number };
+  };
+  regions: { approach: ExportRect; backdrop: ExportRect; junction: ExportRect; road: ExportRect };
+  scenes: { home: { petShop: ExportRect & { board: ExportRect } } };
+}
+
+// Every field of GameData, as dotted paths (a segment ending in [] means every element of that array).
+const GAME_FIELDS: readonly string[] = [
+  "cards[].art",
+  "cards[].frame",
+  "dogs[].id",
+  "dogs[].size",
+  "zones[].art",
+  "zones[].id",
+  "zones[].leashColour",
+  "zones[].name",
+  "zones[].roadColour",
+  "zones[].roadShadowColour",
+];
+// Every field of Layout, as GAME_FIELDS.
+const LAYOUT_FIELDS: readonly string[] = [
+  "camera.centreX",
+  "camera.focal",
+  "camera.footY",
+  "camera.horizonY",
+  "lanes.dividers",
+  "pack.collarHeights",
+  "pack.feet.lead",
+  "pack.feet.side",
+  "pack.feet.sideOfThreeLarge",
+  "pack.feet.trioLead",
+  "pack.laneHalfWidth",
+  "pack.slots",
+  "pack.walkerHands.heightAboveFeet",
+  "pack.walkerHands.leftDx",
+  "pack.walkerHands.rightDx",
+  ...["approach", "backdrop", "junction", "road"].flatMap((r) => rectFields(`regions.${r}`)),
+  ...rectFields("scenes.home.petShop"),
+  ...rectFields("scenes.home.petShop.board"),
+];
+
+// A rectangle's four fields under path.
+function rectFields(path: string): string[] {
+  return ["height", "width", "x", "y"].map((field) => `${path}.${field}`);
+}
+
+// Whether value lacks the field at path, a list of path segments as in GAME_FIELDS.
+function absent(value: unknown, path: readonly string[]): boolean {
+  if (!path.length) {
+    return value === undefined || value === null;
+  }
+  const [head, ...rest] = path as [string, ...string[]];
+  const each = head.endsWith("[]");
+  const key = each ? head.slice(0, -2) : head;
+  const next =
+    typeof value === "object" && value !== null
+      ? (value as Record<string, unknown>)[key]
+      : undefined;
+  if (each) {
+    return !Array.isArray(next) || next.some((item) => absent(item, rest));
+  }
+  return absent(next, rest);
+}
+
+// shared/export/<name>, parsed; throws naming every one of fields it lacks.
+function readExport<T>(fields: readonly string[], name: string): T {
+  const value: unknown = JSON.parse(
+    readFileSync(new URL(`../../shared/export/${name}`, import.meta.url), "utf8"),
+  );
+  const missing = fields.filter((field) => absent(value, field.split(".")));
+  if (missing.length) {
+    throw new Error(`shared/export/${name} has no ${missing.join(", ")}`);
+  }
+  return value as T;
+}
+
+export const GAME: GameData = readExport(GAME_FIELDS, "game-data.json");
+export const LAYOUT: Layout = readExport(LAYOUT_FIELDS, "layout.json");
+
 // The zones' art ids in the tools' order, which the preview grounds and ui-zone-pips' tags keep.
 const ZONE_ORDER: readonly string[] = [
   "cabbagetown",
@@ -283,14 +403,10 @@ const ZONE_ORDER: readonly string[] = [
   "the-beaches",
   "yonge-street",
 ];
-const GAME_DATA = new URL("../../shared/export/game-data.json", import.meta.url);
 
 // {art id: road colour hex} for every zone of the game's export, in ZONE_ORDER.
 function zoneRoadColours(): Map<string, string> {
-  const { zones } = JSON.parse(readFileSync(GAME_DATA, "utf8")) as {
-    zones: { art: string; roadColour: string }[];
-  };
-  const roads = new Map(zones.map((z) => [z.art, z.roadColour.replace(/^#+/, "")]));
+  const roads = new Map(GAME.zones.map((z) => [z.art, z.roadColour.replace(/^#+/, "")]));
   if (roads.size !== ZONE_ORDER.length || ZONE_ORDER.some((art) => !roads.has(art))) {
     throw new Error(`ZONE_ORDER ${ZONE_ORDER.join(", ")} differs from the export's zones`);
   }

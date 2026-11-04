@@ -33,6 +33,7 @@ import {
   dk,
   type Drawable,
   edged,
+  GAME,
   Grid,
   K,
   raster,
@@ -1851,8 +1852,7 @@ export const ILLUSTRATIONS = new Map<string, () => Art>([
 // {illustration key: the card-frame tag the game shows it in}, from the game's export: each card
 // face's frame; any other art shows in encounter.
 export function cardFrameTags(): Map<string, string> {
-  const { cards } = sn.GAME as unknown as { cards: { art: string; frame: string }[] };
-  return new Map(cards.map((card) => [card.art, card.frame]));
+  return new Map(GAME.cards.map((card) => [card.art, card.frame]));
 }
 
 export const FRAME_TAGS = cardFrameTags();

@@ -28,7 +28,7 @@ import {
 import { opaqueRect, type RgbaImage } from "@andornaut/art-kit/rgbaImage";
 
 import * as bd from "./backdrops.ts";
-import { PALETTE64, rgbPng, run } from "./pixel.ts";
+import { GAME, PALETTE64, rgbPng, run } from "./pixel.ts";
 import * as sn from "./scene.ts";
 import { planks } from "./screens.ts";
 
@@ -52,28 +52,15 @@ export const BAND_ROWS = bd.H - BAND_TOP;
 // Cabbagetown's zone id.
 export const STREET = [...sn.ZONES].find(([, v]) => v.art === "cabbagetown")![0];
 
-interface Pack {
-  feet: {
-    lead: Record<string, number>;
-    side: Record<string, number>;
-    sideOfThreeLarge: number;
-    trioLead: Record<string, number>;
-  };
-  slots: string[][];
-}
-const PACK = sn.PACK as unknown as Pack;
-
 // The pack's formation, as src/layout/packFormation.ts: each dog's side (lead 0, left -1, right 1)
 // and distance ahead of the feet, the dogs in formation order. One dog leads; two walk side by side;
 // three walk in a triangle, the lead's row keyed by the three sizes and three large dogs' side dogs
 // closer in.
 const SIDES: Readonly<Record<string, number>> = { lead: 0, left: -1, right: 1 };
-const SIZES: ReadonlyMap<string, string> = new Map(
-  (sn.GAME as unknown as { dogs: { id: string; size: string }[] }).dogs.map((d) => [d.id, d.size]),
-);
+const SIZES: ReadonlyMap<string, string> = new Map(GAME.dogs.map((d) => [d.id, d.size]));
 
 export function formation(dogs: readonly string[]): [side: number, row: number][] {
-  const feet = PACK.feet;
+  const feet = sn.PACK.feet;
   const sizes = dogs.map((d) => SIZES.get(d)!);
   let rows =
     sizes.length === 1
@@ -88,7 +75,7 @@ export function formation(dogs: readonly string[]): [side: number, row: number][
   if (sizes.length === 3) {
     rows = [feet.trioLead[sizes.join(" ")]!, ...rows];
   }
-  const slots = PACK.slots[dogs.length - 1]!;
+  const slots = sn.PACK.slots[dogs.length - 1]!;
   return slots.slice(0, rows.length).map((slot, i) => [SIDES[slot]!, -rows[i]!]);
 }
 

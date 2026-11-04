@@ -112,6 +112,7 @@ import {
   type Frame,
   Grid,
   K,
+  LAYOUT,
   rgbPng,
   run,
   savePng,
@@ -121,7 +122,7 @@ import {
   UsageError,
 } from "./pixel.ts";
 import { LIT, rim, scope as roadScope } from "./road.ts";
-import { Canvas, image, LAYOUT, rgb, text, textC, TILES, ZONES } from "./scene.ts";
+import { Canvas, image, rgb, text, textC, TILES, ZONES } from "./scene.ts";
 import { STATES } from "./ui.ts";
 
 // The usage text, naming every image in SCREENS.

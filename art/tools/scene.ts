@@ -1,8 +1,7 @@
 // Shared tools for the pictures composed from exported art (card illustrations, screens, backdrops,
-// the share card): an RGB canvas on the palette, the 3x5 pixel font, the game's data and layout from
-// its export in shared/export/, the zones and their road-<zone> strips (roads.ts), the pack's hands
-// and collars, and the exported sprites and images in public/art/. Run from the repository root. It
-// has no commands.
+// the share card): an RGB canvas on the palette, the 3x5 pixel font, the zones and their road-<zone>
+// strips (roads.ts), the pack's hands and collars from pixel.ts's GAME and LAYOUT, and the exported
+// sprites and images in public/art/. Run from the repository root. It has no commands.
 //
 // Images are art-kit RgbaImages. A paste is masked by the pasted image's alpha, which must be 0 or
 // 255 at every pixel.
@@ -11,7 +10,17 @@ import { readFileSync } from "node:fs";
 import { decodePng } from "@andornaut/art-kit/png";
 import { blankImage, type RgbaImage } from "@andornaut/art-kit/rgbaImage";
 
-import { Grid, HEART, K, readSheet, type SheetRect, type SheetTag, toImage } from "./pixel.ts";
+import {
+  GAME,
+  Grid,
+  HEART,
+  K,
+  LAYOUT,
+  readSheet,
+  type SheetRect,
+  type SheetTag,
+  toImage,
+} from "./pixel.ts";
 import { chrome } from "./ui.ts";
 
 export type Rgb = readonly [number, number, number];
@@ -237,29 +246,12 @@ export function textC(
   text(cv, s, Math.round(mid - textW(s, sc) / 2), y, col, sc, acc);
 }
 
-// ---------- game data and layout, from the game's export in shared/export/ ----------
+// ---------- the zones and the pack, from pixel.ts's GAME and LAYOUT ----------
 
 export function readJson<T = unknown>(path: string): T {
   return JSON.parse(readFileSync(path, "utf8")) as T;
 }
 
-interface GameData {
-  zones: { art: string; id: string; leashColour: string; name: string; roadShadowColour: string }[];
-}
-interface Rect {
-  height: number;
-  width: number;
-  x: number;
-  y: number;
-}
-interface Layout {
-  pack: {
-    collarHeights: Record<string, number>;
-    laneHalfWidth: number;
-    walkerHands: { heightAboveFeet: number; leftDx: number; rightDx: number };
-  };
-  scenes: { home: { petShop: Rect & { board: Rect } } };
-}
 export interface Zone {
   art: string;
   leash: string;
@@ -267,8 +259,6 @@ export interface Zone {
   shadow: string;
 }
 
-export const GAME = readJson<GameData>("shared/export/game-data.json");
-export const LAYOUT = readJson<Layout>("shared/export/layout.json");
 // {zone id: zone} in the world's order: each zone's name, art key, road shadow and leash colours.
 export const ZONES: ReadonlyMap<string, Zone> = new Map(
   GAME.zones.map((z) => [
