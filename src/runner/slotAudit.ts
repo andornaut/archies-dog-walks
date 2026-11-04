@@ -1,4 +1,5 @@
 import type { SpawnSlotCounts, SpawnSlotRole } from "../data/types";
+import { canonicalJson } from "./canonicalJson";
 import { moverLeavesMinimumLanes } from "./laneAlternatives";
 import { moverPlacementsWithWork } from "./moverPlanning";
 import { compileSlotKindDomain, describeSlotKind, slotMotionSelections } from "./slotCandidates";
@@ -26,13 +27,19 @@ import {
 import { auditSpawnPlan, type SpawnAudit } from "./spawnValidation";
 
 function sameJson(a: unknown, b: unknown): boolean {
-  const canonical = (value: unknown) =>
-    JSON.stringify(value, (_key, item: unknown) =>
-      item !== null && typeof item === "object" && !Array.isArray(item)
-        ? Object.fromEntries(Object.entries(item).sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)))
-        : item,
-    );
-  return canonical(a) === canonical(b);
+  return canonicalJson(a) === canonicalJson(b);
+}
+// A value's canonical JSON, computed on first use and then reused.
+function lazyCanonicalJson(value: unknown): () => string | undefined {
+  let known = false;
+  let text: string | undefined;
+  return () => {
+    if (!known) {
+      text = canonicalJson(value);
+      known = true;
+    }
+    return text;
+  };
 }
 function sameAuxiliaryRequest<Kind extends string>(
   actual: SpawnQuota<Kind>,
@@ -195,13 +202,15 @@ function auditSlotAssignments<Kind extends string>(
         };
         const selection = entry.trace.placement?.selection;
         const mover = expected.request.mover;
+        const emittedPath = lazyCanonicalJson(entry.event.mover);
         let motionMatches: boolean;
         if (
           !expected.herring &&
           (mover?.motion.kind === "cross" || mover?.motion.kind === "ride")
         ) {
-          const selected = slotMotionSelections(expected).find((legal) =>
-            sameJson(legal, selection),
+          const emittedSelection = lazyCanonicalJson(selection);
+          const selected = slotMotionSelections(expected).find(
+            (legal) => canonicalJson(legal) === emittedSelection(),
           );
           const placements =
             selected === undefined
@@ -224,18 +233,19 @@ function auditSlotAssignments<Kind extends string>(
             (placement) =>
               (!expected.request.blocksLane ||
                 moverLeavesMinimumLanes(geometry, mover.footprint, placement)) &&
-              sameJson(placement.path, entry.event.mover),
+              canonicalJson(placement.path) === emittedPath(),
           );
         } else {
           // Reactive ranks and counts require the complete fresh domain.
           const domain = compileSlotKindDomain(work, geometry, expected);
+          const emittedDraws = lazyCanonicalJson(selection?.draws);
           motionMatches =
             selection !== undefined &&
             domain.placements.some(
               (placement) =>
-                sameJson(placement.selection?.draws ?? expected.draws, selection.draws) &&
+                canonicalJson(placement.selection?.draws ?? expected.draws) === emittedDraws() &&
                 (placement.selection?.lift ?? 0) === selection.lift &&
-                sameJson(placement.path, entry.event.mover),
+                canonicalJson(placement.path) === emittedPath(),
             );
         }
         if (!entry.herring && entry.event.mover !== undefined && !motionMatches) {
