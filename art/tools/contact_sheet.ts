@@ -62,5 +62,5 @@ const sheet = renderContactSheet(
   sprites,
   grounds,
 );
-await sheet.saveAs(out);
+await sheet.toFile(out);
 console.log("wrote", out);
