@@ -20,7 +20,7 @@ import { plannerStreams } from "../testing/movers";
 import { TEST_ROAD_GEOMETRY } from "../testing/packGeometry";
 import { TEST_TUNING } from "../testing/tuning";
 import { TEST_WALKER_DATA } from "../testing/walkers";
-import { mapZones, minimumSlotConfiguration, TEST_WORLD } from "../testing/world";
+import { mapZones, minimumSlotConfiguration, TEST_WORLD, zoneGuarantees } from "../testing/world";
 import { laneControlIn } from "./laneControl";
 import { stillInLane } from "./laneMotion";
 import { type MoverPath, moverPlace, moverY } from "./movers";
@@ -71,10 +71,9 @@ const data = {
     (zone) => ({
       ...zone,
       moverShare: 0,
-      spawnSlots: minimumSlotConfiguration({
+      spawnSlots: minimumSlotConfiguration(zoneGuarantees({ ...zone, moverShare: 0 }), {
         capacity: { encounterFixed: 6, encounterMoving: 0, minorFixed: 4, minorMoving: 0 },
         counts: [{ encounterFixed: 6, encounterMoving: 0, minorFixed: 4, minorMoving: 0 }],
-        guarantees: zone.spawnSlots.guarantees,
       }),
     }),
     TEST_WORLD,

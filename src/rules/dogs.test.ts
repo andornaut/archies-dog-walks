@@ -93,7 +93,6 @@ describe("zoneStats", () => {
         { encounterFixed: 5, encounterMoving: 3, minorFixed: 8, minorMoving: 2 },
         { encounterFixed: 6, encounterMoving: 3, minorFixed: 10, minorMoving: 2 },
       ],
-      guarantees: [],
     },
     speed: 1,
   } satisfies Pick<Zone, "density" | "speed" | "spawnSlots">;

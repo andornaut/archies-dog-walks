@@ -37,6 +37,7 @@ import {
   walkScrollSpeed,
 } from "../runner/walk";
 import { blocksLane, type WalkItem, type WalkItemKind } from "../runner/walkItems";
+import { zoneSlotGuarantees } from "../runner/zonePlan";
 import { ZoneSlotPlanningError } from "../runner/zoneSlotInput";
 import type { PackDogs } from "../state/runState";
 import { defined } from "../testing/defined";
@@ -78,7 +79,7 @@ function shortZones(data: GameData, share: number): GameData {
         ...zone,
         spawnSlots: slotCapacityForModifier(
           read(data.tuning, "multipliers", "rushHourObstacles"),
-          minimumSlotConfiguration({
+          minimumSlotConfiguration(zoneSlotGuarantees(data, zone), {
             capacity: Object.fromEntries(
               SLOT_ROLES.map((role) => [role, scaled(zone.spawnSlots.capacity[role])]),
             ) as unknown as typeof zone.spawnSlots.capacity,
@@ -88,7 +89,6 @@ function shortZones(data: GameData, share: number): GameData {
                 row,
               ),
             ) as unknown as typeof zone.spawnSlots.counts,
-            guarantees: zone.spawnSlots.guarantees,
           }),
         ),
       }),
@@ -104,10 +104,6 @@ function withoutPulls(data: GameData): GameData {
     world: mapZones(
       (zone) => ({
         ...zone,
-        spawnSlots: {
-          ...zone.spawnSlots,
-          guarantees: zone.spawnSlots.guarantees.filter(({ kind }) => kind !== "squirrel"),
-        },
         weights: { ...zone.weights, obstacles: { ...zone.weights.obstacles, squirrel: 0 } },
       }),
       data.world,

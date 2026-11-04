@@ -2,7 +2,15 @@ import { STEP_SECONDS } from "@andornaut/game-kit/clock/fixedStep";
 import { chanceRound, shuffled } from "@andornaut/game-kit/random";
 import { keysOf } from "@andornaut/game-kit/records";
 
-import type { EncounterId, GameData, MinorObstacleId, ObstacleEncounterId } from "../data/types";
+import type {
+  EncounterId,
+  GameData,
+  MinorObstacleId,
+  ObstacleEncounterId,
+  SpawnSlotRole,
+  Zone,
+  ZoneId,
+} from "../data/types";
 import { PART_INSET } from "../layout/packFormation";
 import { drawGearDrops } from "../rules/gearDrops";
 import { modifiedStat } from "../rules/modifiers";
@@ -16,7 +24,7 @@ import type { PlannerStreams } from "./moverPlanning";
 import { moverMovement, moverSpec } from "./moverSpecs";
 import { pickSkin } from "./obstacleLooks";
 import type { SlotAudit } from "./slotAudit";
-import { apportionSlotCounts, slotCountTotal } from "./slotConfig";
+import { apportionSlotCounts, slotCountTotal, type SlotGuarantee } from "./slotConfig";
 import { minimumSlotDelivery, type SlotDelivery, type SlotPartialAudit } from "./slotDelivery";
 import type { SlotAssignment } from "./slotPlan";
 import { SLOT_LIMITS, type SlotDiagnostics } from "./slotPlanner";
@@ -38,6 +46,7 @@ import {
   footprintOf,
   isMinorObstacle,
   isObstacle,
+  type ObstacleKind,
   opensACard,
   type WalkItemKind,
   type WalkSpawn,
@@ -70,6 +79,76 @@ export function minorObstacleWeights(
   run: Pick<RunState, "route" | "zoneIndex">,
 ): [MinorObstacleId, number][] {
   return positiveWeights(currentZone(data, run).weights.minorObstacles);
+}
+
+type MovementData = Pick<
+  GameData,
+  "encounters" | "minorObstacles" | "movementAssignments" | "movementProfiles"
+>;
+
+// The movement zone gives kind, or null in a zone without movers.
+function zoneMovement(data: MovementData, zone: Zone, kind: ObstacleKind): ProfiledMovement | null {
+  return zone.moverShare <= 0 ? null : assignedMovement(data, zone.id as ZoneId, kind);
+}
+
+// The slot role of a kind from pool with movement.
+function slotRole(pool: "encounter" | "minor", movement: ProfiledMovement | null): SpawnSlotRole {
+  if (pool === "encounter") {
+    return movement === null ? "encounterFixed" : "encounterMoving";
+  }
+  return movement === null ? "minorFixed" : "minorMoving";
+}
+
+const isMovingRole = (role: SpawnSlotRole) => role === "encounterMoving" || role === "minorMoving";
+
+// One guarantee for each kind zone weighs above 0, so every such kind appears at least once.
+// Guaranteed jobs reserve slots in this order: moving roles before fixed roles, then larger
+// footprints (lanes times rows), then more lanes, then kind names in code-unit order.
+export function zoneSlotGuarantees(data: MovementData, zone: Zone): SlotGuarantee<ObstacleKind>[] {
+  const sources = [
+    ...positiveWeights(zone.weights.obstacles).map(([kind]) => ({
+      kind,
+      pool: "encounter" as const,
+    })),
+    ...positiveWeights(zone.weights.minorObstacles).map(([kind]) => ({
+      kind,
+      pool: "minor" as const,
+    })),
+  ].map(({ kind, pool }) => ({
+    footprint: footprintOf(data, kind),
+    kind,
+    role: slotRole(pool, zoneMovement(data, zone, kind)),
+  }));
+  const area = ({ footprint }: (typeof sources)[number]) => footprint.lanes * footprint.rows;
+  return sources
+    .sort(
+      (a, b) =>
+        Number(isMovingRole(b.role)) - Number(isMovingRole(a.role)) ||
+        area(b) - area(a) ||
+        b.footprint.lanes - a.footprint.lanes ||
+        (a.kind < b.kind ? -1 : a.kind > b.kind ? 1 : 0),
+    )
+    .map(({ kind, role }) => ({ count: 1, kind, role }));
+}
+
+// The guarantees name each positive-weight catalogue kind once, in its catalogue role.
+function assertGuaranteesMatchWeights(
+  catalogue: readonly ZoneSlotKind<WalkItemKind>[],
+  guarantees: readonly SlotGuarantee<WalkItemKind>[],
+): void {
+  const key = ({ kind, role }: { kind: string; role: string }) => `${role}:${kind}`;
+  const weighted = catalogue
+    .filter(({ weight }) => weight > 0)
+    .map(key)
+    .sort();
+  const guaranteed = guarantees.map(key).sort();
+  if (
+    guarantees.some(({ count }) => count !== 1) ||
+    weighted.length !== guaranteed.length ||
+    weighted.some((entry, index) => entry !== guaranteed[index])
+  ) {
+    throw new Error("Zone guarantees must name each positive-weight kind once");
+  }
 }
 
 // The walk's first zone starts with spawns on the road in view, the first meeting the pack no
@@ -260,16 +339,8 @@ export function planZoneWithContext(
     ["minor", minorObstacleWeights(data, run)],
   ] as const) {
     for (const [kind, weight] of weights) {
-      const movement =
-        zoneConfig.moverShare <= 0 ? null : assignedMovement(data, currentZoneId(data, run), kind);
-      const role =
-        pool === "encounter"
-          ? movement === null
-            ? "encounterFixed"
-            : "encounterMoving"
-          : movement === null
-            ? "minorFixed"
-            : "minorMoving";
+      const movement = zoneMovement(data, zoneConfig, kind);
+      const role = slotRole(pool, movement);
       const blocking = blocksLane(data, kind);
       catalogue.push({
         footprint: footprintOf(data, kind),
@@ -295,6 +366,8 @@ export function planZoneWithContext(
       });
     }
   }
+  const guarantees = zoneSlotGuarantees(data, zoneConfig);
+  assertGuaranteesMatchWeights(catalogue, guarantees);
   const input: ZoneSlotInput<WalkItemKind> = {
     actualRun: run,
     auxiliary: withHitLengths(auxiliarySpawnQuotas(data, streams, run)).map((quota) => ({
@@ -305,7 +378,7 @@ export function planZoneWithContext(
     config: {
       active,
       capacity: zoneConfig.spawnSlots.capacity,
-      guarantees: zoneConfig.spawnSlots.guarantees,
+      guarantees,
     },
     context: {
       coverageFirst: true,

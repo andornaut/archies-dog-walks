@@ -19,6 +19,7 @@ import type {
   GearId,
   MinorObstacle,
   Size,
+  SpawnSlotRole,
   TallyId,
   WalkerId,
   World,
@@ -84,7 +85,7 @@ import {
   walkWith,
   withHearts,
 } from "../testing/walk";
-import { mapZones, TEST_WORLD } from "../testing/world";
+import { mapZones, TEST_WORLD, zoneGuarantees } from "../testing/world";
 import { captureZoneInput, planZoneForSeed } from "../testing/zonePlan";
 import { cents, clampHearts } from "../units";
 import { approachOutcomes } from "./approach";
@@ -120,33 +121,22 @@ import { compileZoneSlotInput } from "./zoneSlotInput";
 
 // Fixed weight-query fixtures retain coherent slot roles and minimum guarantees.
 function fixedEncounterZone(zone: Zone, obstacles: Zone["weights"]["obstacles"]): Zone {
-  const guarantees: Zone["spawnSlots"]["guarantees"] = [
-    ...zone.spawnSlots.guarantees.filter(
-      ({ role }) => role === "minorFixed" || role === "minorMoving",
-    ),
-    ...keysOf(obstacles)
-      .filter((kind) => obstacles[kind] > 0)
-      .map((kind) => ({ count: 1, kind, role: "encounterFixed" as const })),
-  ];
+  const remade = { ...zone, moverShare: 0, weights: { ...zone.weights, obstacles } };
+  const guarantees = zoneGuarantees(remade);
+  const count = (role: SpawnSlotRole) =>
+    guarantees.filter((guarantee) => guarantee.role === role).length;
   const counts = {
-    encounterFixed: guarantees.filter(({ role }) => role === "encounterFixed").length,
-    encounterMoving: 0,
-    minorFixed: guarantees
-      .filter(({ role }) => role === "minorFixed")
-      .reduce((sum, { count }) => sum + count, 0),
-    minorMoving: guarantees
-      .filter(({ role }) => role === "minorMoving")
-      .reduce((sum, { count }) => sum + count, 0),
+    encounterFixed: count("encounterFixed"),
+    encounterMoving: count("encounterMoving"),
+    minorFixed: count("minorFixed"),
+    minorMoving: count("minorMoving"),
   };
   return {
-    ...zone,
-    moverShare: 0,
+    ...remade,
     spawnSlots: {
       capacity: counts,
       counts: zone.spawnSlots.counts.map(() => counts) as unknown as Zone["spawnSlots"]["counts"],
-      guarantees,
     },
-    weights: { ...zone.weights, obstacles },
   };
 }
 
@@ -337,7 +327,6 @@ describe("planZone", { timeout: 150_000 }, () => {
             counts: each.spawnSlots.counts.map(
               () => cartSlots,
             ) as unknown as Zone["spawnSlots"]["counts"],
-            guarantees: [{ count: 1, kind: "streetCart", role: "minorFixed" }],
           },
           weights: {
             minorObstacles: Object.fromEntries(
@@ -423,7 +412,7 @@ describe("planZone", { timeout: 150_000 }, () => {
         expect(input.config, label).toEqual({
           active: defined(original.counts[position]),
           capacity: original.capacity,
-          guarantees: original.guarantees,
+          guarantees: zoneGuarantees(currentZone(REAL, walk.run)),
         });
         expect(input.tuning, label).toEqual(tuned.tuning);
         expect(input.geometry.maxEmptyRows, label).toBe(quietLimit);

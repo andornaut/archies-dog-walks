@@ -8,6 +8,8 @@ import { forkPaths } from "../rules/route";
 import { unlockPrice } from "../rules/shop";
 import { read } from "../rules/units";
 import { walkerGoal } from "../rules/walkers";
+import { SLOT_ROLES } from "../runner/slotConfig";
+import { zoneSlotGuarantees } from "../runner/zonePlan";
 import { gameData } from ".";
 import { LANE_COUNT, SCREEN_CONFIG } from "./screen";
 import type { CardOption, Effect, EncounterId, ZoneId } from "./types";
@@ -181,6 +183,29 @@ describe("run, world and walkers", () => {
       }
     }
   });
+
+  // Every positive-weight kind appears at least once, so its guarantee fits its role's budget at
+  // every walk position.
+  it.each(world.zones.map((zone) => [zone.name, zone] as const))(
+    "guarantees each positive-weight kind in %s once, within every position's role budget",
+    (_, zone) => {
+      const guarantees = zoneSlotGuarantees(gameData, zone);
+      const weighted = [
+        ...Object.entries(zone.weights.obstacles),
+        ...Object.entries(zone.weights.minorObstacles),
+      ]
+        .filter(([, weight]) => weight > 0)
+        .map(([kind]) => kind);
+      expect(guarantees.map(({ kind }) => kind).sort()).toEqual(weighted.sort());
+      expect(guarantees.every(({ count }) => count === 1)).toBe(true);
+      for (const role of SLOT_ROLES) {
+        const required = guarantees.filter((guarantee) => guarantee.role === role).length;
+        for (const counts of [...zone.spawnSlots.counts, zone.spawnSlots.capacity]) {
+          expect(counts[role], role).toBeGreaterThanOrEqual(required);
+        }
+      }
+    },
+  );
 
   it("weighs every obstacle in every zone, and counts every lucky find per zone, 0 or more", () => {
     const lucky = Object.keys(encounters).filter(

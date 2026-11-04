@@ -731,19 +731,13 @@ export type SpawnSlotRole = "encounterFixed" | "encounterMoving" | "minorFixed" 
 
 export type SpawnSlotCounts = Readonly<Record<SpawnSlotRole, number>>;
 
-interface SpawnSlotGuarantee {
-  readonly count: number;
-  readonly kind: MinorObstacleId | ObstacleEncounterId;
-  readonly role: SpawnSlotRole;
-}
-
+// Each positive-weight kind is guaranteed once, consuming its role's budget rather than adding
+// spawns.
 interface ZoneSpawnSlots {
   // Delivered ordinary counts at each position in the walk, before upgrade modifiers.
   readonly counts: readonly [SpawnSlotCounts, ...SpawnSlotCounts[]];
   // Maximum validated counts, including supported modifiers and unused tuning headroom.
   readonly capacity: SpawnSlotCounts;
-  // Required kinds consume their role's budget rather than adding spawns.
-  readonly guarantees: readonly SpawnSlotGuarantee[];
 }
 
 export interface Zone {
