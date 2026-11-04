@@ -45,4 +45,4 @@ Some walks should fail: the road stays calm, so losing comes from bumps and choi
 
 Version 1 is complete; the user has not yet declared the first release. Until then, a save-format change or a renamed id resets older saves to a default save, with no migration. Tuning continues against the targets above. The game is called Archie's Dog Walks.
 
-Runtime generation targets 100% delivery: planner acceptance requires every plan complete using at most 75% of the per-attempt search allowance. The release floor stays an independently certified 90% of each neighbourhood's original active and auxiliary logical requests, allowing optional reward omissions under the [spawning rules](design.md#spawning-details).
+Runtime generation targets 100% delivery: planner acceptance requires every plan complete within 75% of the per-attempt search allowance. [Spawning details](design.md#spawning-details) holds the release floor and the omission rules.
