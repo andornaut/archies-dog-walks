@@ -67,8 +67,6 @@ export function soundVolumes(settings: Settings): { music: number; sfx: number }
   return { music: settings.musicVolume, sfx: settings.sfxVolume };
 }
 
-export type SettingsRowKind = "button" | "slider" | "switch";
-
 // A row as the layout needs it: its kind and, for a switch or button row, how many lines its
 // note wraps onto.
 export type SettingsRowShape =

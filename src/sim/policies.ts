@@ -219,14 +219,3 @@ export function pickCardOption(
   }
   return { choice: card.skip && picked.harms ? "skip" : picked.choice, fellBack };
 }
-
-// An encounter card's choice by pickCardOption.
-export function chooseCardOption(
-  data: ChoiceData,
-  random: Random,
-  policy: PolicyId,
-  state: RunState,
-  card: CardView,
-): Choice {
-  return pickCardOption(data, random, policy, state, card).choice;
-}

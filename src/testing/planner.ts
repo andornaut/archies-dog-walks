@@ -155,7 +155,7 @@ export const standingSpan = (
   length: plannedHeight(tuned, road, zone, kind) + road.tallestPackBand,
 });
 export type MoverEvent = { distance: number; kind: WalkItem["kind"]; mover: MoverPath };
-// The scroll since its cue over which moverSpans and moverContact look for a mover's contact.
+// The scroll since its cue over which moverSpans looks for a mover's contact.
 export const MOVER_SCROLL = Math.ceil(4 * ROAD_LENGTH);
 // Runtime phase boundaries split each body's motion into monotone pieces.
 function motionCuts(path: MoverPath): number[] {
@@ -370,17 +370,6 @@ export function contactOfSpans(spans: readonly BlockingSpan[]): { end: number; s
     end: Math.max(...spans.map((span) => span.distance + span.length)),
     start: Math.min(...spans.map((span) => span.distance)),
   };
-}
-
-// The complete continuous contact interval, including every possible branch and component.
-export function moverContact(
-  sizing: Sizing,
-  tuned: Real,
-  road: RoadGeometry,
-  zone: ZoneId,
-  event: MoverEvent,
-): { end: number; start: number } {
-  return contactOfSpans(moverSpans(sizing, tuned, road, zone, event));
 }
 // Standing spawns retain their conservative row envelope; movers use native authored contact.
 // Each is placed by the scroll from the zone's start, so a row

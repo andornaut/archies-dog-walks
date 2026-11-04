@@ -7,14 +7,7 @@ import { cardFor } from "../rules/choices";
 import type { RunState } from "../state/runState";
 import { testState } from "../testing/runState";
 import { cents } from "../units";
-import {
-  chooseCardOption,
-  choosePath,
-  LOW_HEARTS,
-  MIXED_PAY_SHARE,
-  pickCardOption,
-  type PolicyId,
-} from "./policies";
+import { choosePath, LOW_HEARTS, MIXED_PAY_SHARE, pickCardOption, type PolicyId } from "./policies";
 
 // The thief's card less its debuff option: a money option and a hearts option, and no debuff.
 const THIEF: CardSource = { affected: ["ginger"], encounter: "thief", kind: "encounter" };
@@ -55,16 +48,16 @@ const NO_DRAWS: Random = () => {
 };
 
 function thiefChoice(policy: PolicyId, state: RunState, random: Random = NO_DRAWS) {
-  return chooseCardOption(
+  return pickCardOption(
     NO_DEBUFF_DATA,
     random,
     policy,
     state,
     cardFor(NO_DEBUFF_DATA, state, THIEF),
-  );
+  ).choice;
 }
 
-describe("chooseCardOption", () => {
+describe("pickCardOption's choice", () => {
   it("takes each policy's option at safe and low hearts, and hearts when no money option is affordable", () => {
     for (const [policy, hearts, money, expected] of [
       ["heartsUnlessLow", SAFE, 5000, HEARTS],
@@ -96,13 +89,13 @@ describe("chooseCardOption", () => {
       const source: CardSource = { affected: ["ginger"], encounter, kind: "encounter" };
 
       expect(
-        chooseCardOption(
+        pickCardOption(
           NO_DEBUFF_DATA,
           NO_DRAWS,
           policy,
           state,
           cardFor(NO_DEBUFF_DATA, state, source),
-        ),
+        ).choice,
       ).toBe(expected);
     },
   );
@@ -172,7 +165,7 @@ describe("the debuff policies", () => {
       const random = draw === null ? NO_DRAWS : () => draw;
 
       expect(
-        chooseCardOption(gameData, random, policy, state, cardFor(gameData, state, source)),
+        pickCardOption(gameData, random, policy, state, cardFor(gameData, state, source)).choice,
       ).toBe(TRIPLE_OPTIONS[expected]);
     },
   );

@@ -80,15 +80,6 @@ export function laidChars(font: string, style: TextFitStyle, text: string): Laid
   return laidGlyphs(game, style.scale, text).map((glyph) => ({ ...glyph, line: 0 }));
 }
 
-// The screen columns each inked glyph of text covers (laidChars).
-function glyphSpans(
-  font: string,
-  style: TextFitStyle,
-  text: string,
-): { left: number; right: number }[] {
-  return laidChars(font, style, text).flatMap((char) => char.ink ?? []);
-}
-
 // The screen columns text inks in a font at a style, its name pills' included, from its left
 // edge.
 export function fontInk(
@@ -136,13 +127,6 @@ export function placedInk(
 export function inkWidth(font: string, style: TextFitStyle, text: string): number {
   const ink = fontInk(font, style, text);
   return ink.right - ink.left;
-}
-
-// The narrowest gap in screen pixels between one inked glyph's last column and the next one's
-// first, or Infinity for text with fewer than two inked glyphs. Below 1, they touch or overlap.
-export function narrowestGlyphGap(font: string, style: TextFitStyle, text: string): number {
-  const spans = glyphSpans(font, style, text);
-  return Math.min(Infinity, ...spans.slice(1).map((span, i) => span.left - (spans[i]?.right ?? 0)));
 }
 
 // Text set in a font in style within room, as fitPixelText sets it, with the widest of its
