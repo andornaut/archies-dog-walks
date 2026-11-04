@@ -31,7 +31,7 @@ jobs:
     name: Test
     runs-on: ubuntu-latest
     # A run takes 5 to 9 minutes on a hosted runner, so a job still going at
-    # 20 has hung. The cap ends it before the bus stops watching CI at 30.
+    # 20 has hung. The cap ends it before delivery-kit stops watching CI at 30.
     timeout-minutes: 20
 
     steps:
