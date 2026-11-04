@@ -33,7 +33,8 @@ import {
 import { mapZones } from "../testing/world.ts";
 import { planZoneForSeed } from "../testing/zonePlan.ts";
 import { assignedMovement } from "./movementAssignments.ts";
-import { onScreenOf, sweptLanes } from "./moverPlanning.ts";
+import { sweptLanes } from "./moverExtents.ts";
+import { onScreenOf } from "./moverPlanning.ts";
 import { crossSpan, hasLeftRoad, type MoverPath, moverPlace } from "./movers.ts";
 import { moverOutcomes } from "./outcomes.ts";
 import { signaturePlace } from "./signaturePaths.ts";

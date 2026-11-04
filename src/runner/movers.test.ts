@@ -9,6 +9,7 @@ import { laneMask } from "../layout/lanes.ts";
 import { read } from "../rules/units.ts";
 import { defined } from "../testing/defined.ts";
 import { DART_LIFTS, drawMover, drawnCount } from "./moverDraws.ts";
+import { sweptLanes } from "./moverExtents.ts";
 import { HOP_SEQUENCES_MOST, hopSequences, hopShapes, stepSpots } from "./moverHops.ts";
 import { type MoverDraws, type MoverGeometry, type MoverSpec } from "./moverModel.ts";
 import {
@@ -21,7 +22,6 @@ import {
   onScreenOf,
   screenHasRoom,
   stopsOnVerge,
-  sweptLanes,
 } from "./moverPlanning.ts";
 import {
   facesLeft,
