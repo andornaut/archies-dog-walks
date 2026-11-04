@@ -150,6 +150,128 @@ export function createSlotWitnessSearch<Kind extends string>(
       return Object.freeze(selected);
     };
     try {
+      // Records a floor-meeting partial layout that beats the incumbent once it is certified.
+      function recordPartial(omissions: readonly WitnessOmission<Kind>[]) {
+        if (stopped()) {
+          return undefined;
+        }
+        const entries = state.entries();
+        if (
+          entries.length < work.minimumDelivery! ||
+          entries.length >= jobs.length ||
+          entries.length <= (incumbent?.selections.length ?? -1)
+        ) {
+          return false;
+        }
+        const present = new Set(entries.map(({ owner }) => owner));
+        if (
+          present.size !== entries.length ||
+          entries.some(({ owner }) => byKey.get(owner.key) !== owner) ||
+          jobs.some((job) => job.guaranteed && !present.has(job))
+        ) {
+          return false;
+        }
+        if (!charge()) {
+          return undefined;
+        }
+        const checked = state.checkComplete();
+        if (!checked.accepted) {
+          if (checked.failure.classification === "unattributed") {
+            partialFailure = checked.failure;
+          }
+          return false;
+        }
+        const selected = selections(entries);
+        if (selected === undefined) {
+          return false;
+        }
+        const reasons = new Map(omissions.map(({ job, reason }) => [job, reason]));
+        const missing = Object.freeze(
+          jobs
+            .filter((job) => !present.has(job))
+            .map((job) =>
+              Object.freeze({
+                job,
+                reason: reasons.get(job) ?? ("not-selected-within-allowance" as const),
+              }),
+            ),
+        );
+        if (
+          missing.some(({ job }) => !job.optional || job.guaranteed) ||
+          work.certifyPartial === undefined ||
+          !work.certifyPartial(selected, missing)
+        ) {
+          return stopped() ? undefined : false;
+        }
+        if (stopped()) {
+          return undefined;
+        }
+        incumbent = Object.freeze({
+          omissions: missing,
+          selections: selected,
+          status: "partial" as const,
+          witness: Object.freeze([...entries]),
+        });
+        return true;
+      }
+      // Tests a value natively, rejecting it at no cost while a recorded conflict still holds.
+      function testCandidate(
+        job: WitnessJob<Kind>,
+        candidate: SlotCandidate<Kind>,
+      ): ConstraintResult<Kind> | undefined {
+        if (stopped()) {
+          return undefined;
+        }
+        const known = conflicts.get(job)?.get(candidate);
+        if (known !== undefined) {
+          if (state.blockersPlaced(known.blockers)) {
+            return { accepted: false, failure: known.failure };
+          }
+          conflicts.get(job)!.delete(candidate);
+        }
+        let intrinsic = domains.cachedIntrinsic(candidate);
+        if (intrinsic === undefined) {
+          if (!charge()) {
+            return undefined;
+          }
+          intrinsic = domains.intrinsic(candidate);
+        }
+        if (!intrinsic.accepted) {
+          return {
+            accepted: false,
+            failure: { classification: "intrinsic", owners: [], rule: intrinsic.rule },
+          };
+        }
+        if (!reuse) {
+          const cached = state.lookupNegativeVisibility(propagate, intrinsic, job, candidate.entry);
+          if (cached.status === "budget") {
+            return undefined;
+          }
+          if (cached.status === "blocked") {
+            work.rejected?.(candidate, cached.failure);
+            return { accepted: false, failure: cached.failure };
+          }
+        }
+        if (!charge()) {
+          return undefined;
+        }
+        const trial = state.commit(job, candidate.entry);
+        if (trial.accepted) {
+          provenance.set(trial.entry, candidate);
+        } else {
+          work.rejected?.(candidate, trial.failure);
+          const blockers = reuse ? state.blockersOf(trial.failure) : undefined;
+          if (blockers !== undefined) {
+            let byCandidate = conflicts.get(job);
+            if (byCandidate === undefined) {
+              byCandidate = new Map();
+              conflicts.set(job, byCandidate);
+            }
+            byCandidate.set(candidate, { blockers, failure: trial.failure });
+          }
+        }
+        return trial;
+      }
       const ports: SlotWitnessConstructPorts<Kind, Mark<Kind>> = {
         ...(work.minimumDelivery !== undefined || work.attestRefutation === undefined
           ? {}
@@ -227,69 +349,7 @@ export function createSlotWitnessSearch<Kind extends string>(
           : {
               bestDelivery: () => incumbent?.selections.length,
               minimumDelivery: work.minimumDelivery,
-              partial(omissions: readonly WitnessOmission<Kind>[]) {
-                if (stopped()) {
-                  return undefined;
-                }
-                const entries = state.entries();
-                if (
-                  entries.length < work.minimumDelivery! ||
-                  entries.length >= jobs.length ||
-                  entries.length <= (incumbent?.selections.length ?? -1)
-                ) {
-                  return false;
-                }
-                const present = new Set(entries.map(({ owner }) => owner));
-                if (
-                  present.size !== entries.length ||
-                  entries.some(({ owner }) => byKey.get(owner.key) !== owner) ||
-                  jobs.some((job) => job.guaranteed && !present.has(job))
-                ) {
-                  return false;
-                }
-                if (!charge()) {
-                  return undefined;
-                }
-                const checked = state.checkComplete();
-                if (!checked.accepted) {
-                  if (checked.failure.classification === "unattributed") {
-                    partialFailure = checked.failure;
-                  }
-                  return false;
-                }
-                const selected = selections(entries);
-                if (selected === undefined) {
-                  return false;
-                }
-                const reasons = new Map(omissions.map(({ job, reason }) => [job, reason]));
-                const missing = Object.freeze(
-                  jobs
-                    .filter((job) => !present.has(job))
-                    .map((job) =>
-                      Object.freeze({
-                        job,
-                        reason: reasons.get(job) ?? ("not-selected-within-allowance" as const),
-                      }),
-                    ),
-                );
-                if (
-                  missing.some(({ job }) => !job.optional || job.guaranteed) ||
-                  work.certifyPartial === undefined ||
-                  !work.certifyPartial(selected, missing)
-                ) {
-                  return stopped() ? undefined : false;
-                }
-                if (stopped()) {
-                  return undefined;
-                }
-                incumbent = Object.freeze({
-                  omissions: missing,
-                  selections: selected,
-                  status: "partial" as const,
-                  witness: Object.freeze([...entries]),
-                });
-                return true;
-              },
+              partial: recordPartial,
             }),
         preparations: (job) => job.preparations(),
         propagate,
@@ -316,65 +376,7 @@ export function createSlotWitnessSearch<Kind extends string>(
           work.minimumDelivery === undefined
             ? (work.support?.(state) ?? { status: "unknown" })
             : { status: "unknown" },
-        test(job, candidate): ConstraintResult<Kind> | undefined {
-          if (stopped()) {
-            return undefined;
-          }
-          const known = conflicts.get(job)?.get(candidate);
-          if (known !== undefined) {
-            if (state.blockersPlaced(known.blockers)) {
-              return { accepted: false, failure: known.failure };
-            }
-            conflicts.get(job)!.delete(candidate);
-          }
-          let intrinsic = domains.cachedIntrinsic(candidate);
-          if (intrinsic === undefined) {
-            if (!charge()) {
-              return undefined;
-            }
-            intrinsic = domains.intrinsic(candidate);
-          }
-          if (!intrinsic.accepted) {
-            return {
-              accepted: false,
-              failure: { classification: "intrinsic", owners: [], rule: intrinsic.rule },
-            };
-          }
-          if (!reuse) {
-            const cached = state.lookupNegativeVisibility(
-              propagate,
-              intrinsic,
-              job,
-              candidate.entry,
-            );
-            if (cached.status === "budget") {
-              return undefined;
-            }
-            if (cached.status === "blocked") {
-              work.rejected?.(candidate, cached.failure);
-              return { accepted: false, failure: cached.failure };
-            }
-          }
-          if (!charge()) {
-            return undefined;
-          }
-          const trial = state.commit(job, candidate.entry);
-          if (trial.accepted) {
-            provenance.set(trial.entry, candidate);
-          } else {
-            work.rejected?.(candidate, trial.failure);
-            const blockers = reuse ? state.blockersOf(trial.failure) : undefined;
-            if (blockers !== undefined) {
-              let byCandidate = conflicts.get(job);
-              if (byCandidate === undefined) {
-                byCandidate = new Map();
-                conflicts.set(job, byCandidate);
-              }
-              byCandidate.set(candidate, { blockers, failure: trial.failure });
-            }
-          }
-          return trial;
-        },
+        test: testCandidate,
       };
       let result = yield* construct.begin({
         ...ports,
