@@ -19,8 +19,8 @@
 // Every texture draws from game-kit's randomStream, one stream per strip named after it, so a
 // build is the same on every run.
 //
-// Run from the repository root. A build overwrites the .aseprite sources, so
-// hand edits to them belong in this file instead. Shared tooling is in pixel.ts.
+// Run from the repository root. A build overwrites the exports, so hand edits to them belong in
+// this file instead. Shared tooling is in pixel.ts.
 import { mkdirSync, writeFileSync } from "node:fs";
 
 import { rgb } from "@andornaut/art-kit/colour";
@@ -37,7 +37,7 @@ import { dk, Grid, PALETTE64, PREVIEW_BACKGROUND, rgbPng, run, toImage } from ".
 const USAGE = `Usage:
   node art/tools/roads.ts preview OUT.png   each zone's road scrolling up: two strips of the zone
                                             before it in ZONES, the start strip, then three of this zone
-  node art/tools/roads.ts build             write art/roads/*.aseprite and public/art/images/*.png`;
+  node art/tools/roads.ts build             write public/art/images/*.png`;
 
 export const W = 320;
 export const H = 64;

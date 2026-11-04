@@ -85,7 +85,7 @@
 // the first paw print and Lady's nose ends at the Pet shop's door pane.
 //
 // Run from the repository root, after the fonts and the sprite builds. A build overwrites the
-// .aseprite sources, so hand edits to them belong in this file instead.
+// exports, so hand edits to them belong in this file instead.
 import { mkdirSync, writeFileSync } from "node:fs";
 
 import {
@@ -131,9 +131,8 @@ const USAGE = `Usage:
   node art/tools/screens.ts shop-preview OUT.png
                                                 ui-pet-shop's tags on the yard at 1x and 4x, and
                                                 screen-home with it in at 1x and 4x
-  node art/tools/screens.ts build screen-home   write only screen-home PNG and Aseprite source
-  node art/tools/screens.ts build               write art/screens/*.aseprite,
-                                                public/art/images/*.png and
+  node art/tools/screens.ts build screen-home   write only the screen-home PNG
+  node art/tools/screens.ts build               write public/art/images/*.png and
                                                 public/art/sprites/ui-loading.*, ui-pet-shop.* and
                                                 ui-pet-shop-board.*`;
 

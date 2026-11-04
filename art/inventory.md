@@ -1,6 +1,6 @@
 # Art Inventory
 
-Every exported art asset. Keys are the `public/art/manifest.json` keys. Type is the manifest list: `sprite` (PNG plus Aseprite JSON, tags from frameTags), `image` (PNG), `font` (BMFont) or `sound`.
+Every exported art asset. Keys are the `public/art/manifest.json` keys. Type is the manifest list: `sprite` (PNG plus JSON in Aseprite's json-hash format, tags from frameTags), `image` (PNG), `font` (BMFont) or `sound`.
 
 `<zone>` is a zone's art id, easiest to hardest: high-park, cabbagetown, kensington-market, the-beaches, distillery-district or yonge-street.
 

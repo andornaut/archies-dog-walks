@@ -7,8 +7,8 @@
 // dogs.ts. Each walker is a head-and-shoulders bust to the bottom edge; their skin, hair, cap, clothes
 // and Trista's tote match their road sprite in road.ts and face in owners.ts.
 //
-// Run from the repository root. A build overwrites the .aseprite sources, so hand edits to them
-// belong in this file instead. Shared tooling is in pixel.ts.
+// Run from the repository root. A build overwrites the exports, so hand edits to them belong in
+// this file instead. Shared tooling is in pixel.ts.
 import { mkdirSync, writeFileSync } from "node:fs";
 
 import { filledImage, paste, resizeNearest, type Rgb } from "@andornaut/art-kit/raster";
@@ -38,8 +38,7 @@ import {
 const USAGE = `Usage:
   node art/tools/portraits.ts preview OUT.png   every portrait beside its face (at 2x), on the
                                                 start screen's tile colours, scaled up
-  node art/tools/portraits.ts build             write art/portraits/*.aseprite and
-                                                public/art/images/*.png`;
+  node art/tools/portraits.ts build             write public/art/images/*.png`;
 
 const S = 64;
 

@@ -11,15 +11,15 @@ The game's pixel art, effects and sound, drawn by script.
 
 ## Scope
 
-- `art/`: the generators in `art/tools/`, the Aseprite sources they write, the source fonts in `art/fonts/` and these docs.
+- `art/`: the generators in `art/tools/`, the source fonts in `art/fonts/` and these docs.
 - `public/art/`: the exported sprites, images, fonts and sounds, `manifest.extra.json` and the `/art/` gallery. Mocks for decisions are shown in the chat, not committed. The game build generates `manifest.json` beside them.
 - Also drawn here: the site's icons, `public/og-image.png` and the art on the home page.
 
 ## Method
 
-The generators are TypeScript modules in `art/tools/`, which Node 24 runs directly. They use the art-kit Node package and its `skia-canvas` peer, pinned in `package-lock.json` and installed by `npm ci`. Drawing, raster operations, export, preview composition and font mechanisms delegate to art-kit. Aseprite writes the sources and sheets, and sox and ffmpeg render the sounds. House palettes, glyph policy, depth geometry and output paths remain local.
+The sources are the generators in `art/tools/`, TypeScript modules that Node 24 runs directly; the exports are their outputs. They use the art-kit Node package and its `skia-canvas` peer, pinned in `package-lock.json` and installed by `npm ci`. Drawing, raster operations, sprite sheet export (`@andornaut/art-kit/spriteSheet`, which writes each sheet PNG and its JSON in Aseprite's json-hash format), preview composition and font mechanisms delegate to art-kit, and sox and ffmpeg render the sounds. House palettes, glyph policy, depth geometry and output paths remain local.
 
-Builds and previews run in the local image `archie-check:node24.21.0-aseprite1.2.30`: `node:24.21.0` with Aseprite 1.2.30 installed from the licensed `Aseprite_1.2.30-1_amd64.deb` in `../game-dev/var/vendor/aseprite`, outside the repository and passed as the `aseprite-deb` build context (with `libgl1`, `libxcursor1` and `libxfixes3`), and `sox` and `ffmpeg` from the Debian bookworm snapshot `20261103T000000Z`. Its recipe, with the build command, is [`docker/archie-check.Dockerfile`](../docker/archie-check.Dockerfile). Gates use upstream `node:24.21.0`.
+Builds and previews run in the local image `archie-check:node24.21.0-sox-ffmpeg`: `node:24.21.0` with `sox` and `ffmpeg` from the Debian bookworm snapshot `20261103T000000Z`. Its recipe, with the build command, is [`docker/archie-check.Dockerfile`](../docker/archie-check.Dockerfile). Gates use upstream `node:24.21.0`.
 
 - `art/tools/<set>.ts` draws every asset except the home page's canvas grabs (`public/art/site/home-road.png` and `home-start.png`). Run `node art/tools/<set>.ts build` (or `preview OUT.png`) from the repository root. Each tool with commands parses them with `pixel.ts`'s `run`: `--help` or `-h` prints the tool's usage to stdout, and an unknown command prints it to stderr and exits 1. Shared drawing tools are in `pixel.ts` (whose only command is `palette`), for pictures composed from exported art in `scene.ts`, and for redrawing a sprite at a depth step in `mini.ts`. `sounds.ts` reads each walk loop's score from `music_<art id with underscores>.ts`. `home_grabs.ts` retakes the two grabs from the built game (its header comment names each grab's scene, seed, save and frame); retake them after any change they show:
   1. Build `dist/` in `node:24.21.0` with `--network none`: `npm ci --offline` from an in-container copy of `.claude/bus/npm-cache`, then `npm run build`, and `docker cp` the built checkout (with `node_modules/`) out.
@@ -27,11 +27,11 @@ Builds and previews run in the local image `archie-check:node24.21.0-aseprite1.2
   3. In `mcr.microsoft.com/playwright/mcp:v0.0.83` with `--entrypoint node`, on the same network and mount, run `node art/tools/home_grabs.ts /tmp/grabs` from the checkout, `docker cp` the two PNGs into `public/art/site/`, and stop both containers. The tool imports Playwright from the image (`PLAYWRIGHT_MODULE`), since the repository does not depend on it. It fails on a grab that is not 360×560 or not opaque, and lists the colours outside the house palette (see Consistency checks).
 
 - A sprite set's `preview OUT.png` (every set built on `pixel.ts`'s `main` or `preview`) writes one contact sheet per distinct ground colour, named `OUT-<hex>.png` after the ground (`OUT-8b9bb4.png` on Cabbagetown's grey), with one row per sprite and every frame in tag order. `hood_parks.ts preview DIR` writes `DIR/road-<hex>.png` and `DIR/hits-<hex>.png` the same way. The other tools' previews write the single `OUT.png` their usage describes.
-- A build writes the set's Aseprite sources under `art/` and exports them to `public/art/` (`sprites/<key>.png` and `.json`, `images/<key>.png`, `fonts/<key>.png` and `.fnt`, `sounds/<key>.ogg` and `.m4a`). Each tool's header comment names its folders. Exceptions:
-  - `appicons.ts` writes `art/appicons/appicon.aseprite`, `favicon-32.aseprite` and `favicon-16.aseprite`, and the app icons and the favicons `favicon-32.png` and `favicon-16.png` in `public/icons/`, drawn from Archie's exported portrait and his face in `dogs.ts`; `share.ts` writes `art/share/share-card.aseprite` and `public/og-image.png`.
-  - `fonts.ts` and `sounds.ts` write no sources. `hood_parks.ts preview` and `sounds.ts preview` take an output folder, not a PNG, and `sounds.ts build` also writes the loop flags in `public/art/manifest.extra.json`.
+- A build writes the set's exports to `public/art/` (`sprites/<key>.png` and `.json`, `images/<key>.png`, `fonts/<key>.png` and `.fnt`, `sounds/<key>.ogg` and `.m4a`). Each tool's header comment names its folders. Exceptions:
+  - `appicons.ts` writes the app icons and the favicons `favicon-32.png` and `favicon-16.png` in `public/icons/`, drawn from Archie's exported portrait and his face in `dogs.ts`; `share.ts` writes `public/og-image.png`.
+  - `hood_parks.ts preview` and `sounds.ts preview` take an output folder, not a PNG, and `sounds.ts build` also writes the loop flags in `public/art/manifest.extra.json`.
   - Extra commands: `backdrops.ts camera`, `backdrops.ts verges` (with `--write`, to `shared/verges.json`), `depths.ts compare DIR`, `hood_city.ts cards OUT.png` and `sounds OUT_DIR`, `hood_markets.ts cards OUT.png` and `sounds OUT_DIR`, `hood_parks.ts sounds OUT_DIR`, `minis.ts compare OUT.png`, `pixel.ts palette` (with `--write`, to `shared/palette.json`), `roadside.ts table` (with `--write`, to `shared/roadside.json`), `screens.ts shop-preview OUT.png` and `sounds.ts one KEY OUT_DIR`.
-- Builds read earlier exports. `node art/tools/build.ts [--check] [SET...]` holds the build order (`SETS`) and the exports each set reads (`NEEDS`), runs every set's build in that order and stops at the first failure. Named sets rebuild those sets and every set that reads their exports. `--check` then fails on any changed or untracked file under the paths the builds write (`art/`, `public/art/`, `public/icons/`, `public/og-image.png` and `shared/`) and lists the paths, so on a clean clone it proves the committed art reproduces. Run it offline in the check image from any checkout or worktree. The command mounts the checkout and the repository's common git directory read-only at their own paths, clones the checked-out commit inside the container and installs from the main checkout's npm cache:
+- Builds read earlier exports. `node art/tools/build.ts [--check] [SET...]` holds the build order (`SETS`) and the exports each set reads (`NEEDS`), runs every set's build in that order and stops at the first failure. Named sets rebuild those sets and every set that reads their exports. `--check` then fails on any changed or untracked file under `art/`, which no build writes, or the paths the builds write (`public/art/`, `public/icons/`, `public/og-image.png` and `shared/`) and lists the paths, so on a clean clone it proves the committed art reproduces. Run it offline in the check image from any checkout or worktree. The command mounts the checkout and the repository's common git directory read-only at their own paths, clones the checked-out commit inside the container and installs from the main checkout's npm cache:
 
   ```sh
   common="$(git rev-parse --path-format=absolute --git-common-dir)"
@@ -40,7 +40,7 @@ Builds and previews run in the local image `archie-check:node24.21.0-aseprite1.2
     --mount type=bind,src="$PWD",dst="$PWD",readonly \
     --mount type=bind,src="$common",dst="$common",readonly \
     --mount type=bind,src="$(dirname "$common")/.claude/bus/npm-cache",dst=/npm-cache,readonly \
-    archie-check:node24.21.0-aseprite1.2.30 \
+    archie-check:node24.21.0-sox-ffmpeg \
     sh -c 'git config --global safe.directory "*" \
       && git clone -q "$SRC" /tmp/work \
       && cp -r /npm-cache /tmp/npm-cache \
@@ -51,7 +51,7 @@ Builds and previews run in the local image `archie-check:node24.21.0-aseprite1.2
   To keep a rebuild, drop `--rm` and `--check` and copy the trees out with `docker cp`.
 
 - `art/tools/contact_sheet.ts` is a nonproduction preview of exported sprites: `node art/tools/contact_sheet.ts OUT.png KEY...` from the repository root. It reads `public/art/sprites/<key>.png` and `.json`, with the `pixel.ts` preview's background, scale and gap, and sizes every cell from the largest frame. It writes one sheet per zone road colour from `shared/export/game-data.json`, named as a set's preview sheets are (`OUT-<hex>.png`).
-- A build overwrites the `.aseprite` files: change the tool, not the sources.
+- A build overwrites its exports: change the tool, not the exports.
 - Each tool's header comment holds its assets' sizes, tags, timings and placement coordinates.
 - Game data and layout come from the game's export in `shared/export/`, never from `src/`. Only `scene.ts` (`game-data.json` and `layout.json`) and `pixel.ts` (the zones' road colours, `ZONE_ROAD_COLOURS`, in the order the preview grounds and `ui-zone-pips` keep) read it; `backdrops.ts`, `cards.ts`, `screens.ts`, and `share.ts` take the zones, the layout and the pack's hands and collars from `scene.ts`, and `contact_sheet.ts`, `ui.ts`'s zone pips and the preview grounds take the road colours from `pixel.ts`. `pixel.ts` also reads the depth steps from `shared/depth-steps.json`. `screens.ts` places the Pet shop at the layout's `scenes.home.petShop` and fails if its frame or board differs from `ui-pet-shop`'s. Every other tool holds its sizes and positions as constants (`ui.ts`'s walk bar cash and effect wells, `roadside.ts`'s sidewalk edge), so a layout change in the game needs the matching change in the tool.
 - Depth variants are redrawn at each step, not downscaled (style guide, Depth scaling).
@@ -59,7 +59,7 @@ Builds and previews run in the local image `archie-check:node24.21.0-aseprite1.2
 
 ### Naming
 
-- The kebab-case manifest key is the file name: `art/<set>/<key>.aseprite` exports to `public/art/sprites/<key>.png` and `.json`, `public/art/images/<key>.png` or `public/art/fonts/<key>.png` and `.fnt`.
+- The kebab-case manifest key is the export's file name: `public/art/sprites/<key>.png` and `.json`, `public/art/images/<key>.png` or `public/art/fonts/<key>.png` and `.fnt`.
 - A key starts with its kind's prefix, as in `inventory.md` (`dog-`, `fx-`, `ui-`); road objects, moving hazards and `logo` use a plain name.
 - A depth variant appends its step (`dog-kilo@50`).
 - Zone keys use the zone's art id, the neighbourhood's name in kebab case: `high-park`, `cabbagetown`, `kensington-market`, `the-beaches`, `distillery-district`, `yonge-street` (easiest to hardest).

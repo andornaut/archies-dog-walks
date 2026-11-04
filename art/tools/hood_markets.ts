@@ -95,8 +95,8 @@
 // every step. The hit bursts follow hits.ts: a 64-unit design drawn 77/64 times bigger, a plum rim
 // round each part.
 //
-// Run from the repository root. A build overwrites the .aseprite sources, so hand edits to them
-// belong in this file instead. Shared tooling is in pixel.ts.
+// Run from the repository root. A build overwrites the exports, so hand edits to them belong in
+// this file instead. Shared tooling is in pixel.ts.
 import { mkdirSync, writeFileSync } from "node:fs";
 
 import { filledImage, paste, resizeNearest } from "@andornaut/art-kit/raster";
@@ -135,10 +135,9 @@ const USAGE = `Usage:
   node art/tools/hood_markets.ts cards OUT.png     every card illustration inside its card frame, 3x
   node art/tools/hood_markets.ts sounds OUT_DIR    write the sounds' .ogg and .m4a files into OUT_DIR
                                                    only
-  node art/tools/hood_markets.ts build             write art/hood-markets/*.aseprite and export the
-                                                   sprites to public/art/sprites/, then the cards to
-                                                   public/art/images/, then
-                                                   the sounds to public/art/sounds/`;
+  node art/tools/hood_markets.ts build             export the sprites to public/art/sprites/, then
+                                                   the cards to public/art/images/, then the sounds
+                                                   to public/art/sounds/`;
 
 // People, movers and card obstacles are drawn PERSON times their design grid, minor obstacles
 // OBSTACLE times their layout pixels.

@@ -40,14 +40,13 @@
 // counters and the gaps between letters, on a solid dred shadow 2px down and right. Display words
 // only, 2 to 7 letters.
 //
-// Run from the repository root. A build overwrites the .aseprite sources, so hand edits to them
-// belong in this file instead. Shared tooling is in pixel.ts.
+// Run from the repository root. A build overwrites the exports, so hand edits to them belong in
+// this file instead. Shared tooling is in pixel.ts.
 import { type Drawable, Grid, main, type Sprite } from "./pixel.ts";
 
 const USAGE = `Usage:
   node art/tools/fx.ts preview OUT.png   every frame of every effect on the zone roads
-  node art/tools/fx.ts build             write art/fx/*.aseprite and export to
-                                         public/art/sprites/`;
+  node art/tools/fx.ts build             export to public/art/sprites/`;
 
 function radians(degrees: number): number {
   return degrees * (Math.PI / 180);

@@ -91,8 +91,8 @@
 // scooter's drawing functions take u, one pixel at the drawn size in full-size units (1 at full size,
 // 1/s on a Mini at scale s), so motion stays 1px in every depth variant.
 //
-// Run from the repository root. A build overwrites the .aseprite sources, so hand edits to them
-// belong in this file instead. Shared tooling is in pixel.ts.
+// Run from the repository root. A build overwrites the exports, so hand edits to them belong in
+// this file instead. Shared tooling is in pixel.ts.
 import { type Scale, small, STEPS } from "./mini.ts";
 import { CAR_SCALE, DRIVE, PULL_OUT } from "./obstacles.ts";
 import {
@@ -125,8 +125,7 @@ import {
 
 const USAGE = `Usage:
   node art/tools/vehicles.ts preview OUT.png   every frame on the zone roads
-  node art/tools/vehicles.ts build             write art/vehicles/*.aseprite and export to
-                                               public/art/sprites/`;
+  node art/tools/vehicles.ts build             export to public/art/sprites/`;
 
 // The grid every drawing here makes and road.ts's face, which mini.ts's small swaps while it runs.
 export const scope: DrawingScope & { faceFront: FaceFront } = {

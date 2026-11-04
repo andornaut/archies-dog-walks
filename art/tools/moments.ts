@@ -18,9 +18,9 @@
 // fx-treat-pop    24x24  play (5 frames, 60ms)  hearts and crumbs bursting where the treat
 //                        lands on the dog's face on its card
 //
-// Run from the repository root. A build overwrites the .aseprite sources, so hand edits to them
-// belong in this file instead. Shared tooling is in pixel.ts, the rim, burst, twinkle and heart
-// helpers in fx.ts, piece in hits.ts.
+// Run from the repository root. A build overwrites the exports, so hand edits to them belong in
+// this file instead. Shared tooling is in pixel.ts, the rim, burst, twinkle and heart helpers in
+// fx.ts, piece in hits.ts.
 import { burst, rim, stamp, star4 } from "./fx.ts";
 import { piece } from "./hits.ts";
 import { type Drawable, Grid, main, type Sprite } from "./pixel.ts";
@@ -29,8 +29,7 @@ import { firedPlate as uiFiredPlate } from "./ui.ts";
 const USAGE = `Usage:
   node art/tools/moments.ts preview OUT.png   every frame of every piece on the card band, top bar
                                               and road colours
-  node art/tools/moments.ts build             write art/moments/*.aseprite and export to
-                                              public/art/sprites/`;
+  node art/tools/moments.ts build             export to public/art/sprites/`;
 
 // The wood card band, the plum top bar and the three light roads, for the preview.
 const GROUNDS: readonly string[] = ["733e39", "3e2731", "e4a672", "c0cbdc", "c28569"];

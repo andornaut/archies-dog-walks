@@ -15,8 +15,8 @@
 // cyan, green, pink, white, yellow), each 4 frames at 100ms tumbling face on, edge on, turning and
 // edge on the other way, in the same plum rim. The game drops them down the dimmed road view.
 //
-// Run from the repository root. A build overwrites the .aseprite sources, so hand edits to them
-// belong in this file instead. Shared tooling is in pixel.ts.
+// Run from the repository root. A build overwrites the exports, so hand edits to them belong in
+// this file instead. Shared tooling is in pixel.ts.
 import { type Random, randomInt, randomStream } from "@andornaut/game-kit/random";
 
 import { fannyPack } from "./drops.ts";
@@ -38,8 +38,7 @@ import { SQUIRREL_FUR } from "./road.ts";
 const USAGE = `Usage:
   node art/tools/badges.ts preview OUT.png   every badge, earned and locked, and the burst, on
                                              dark wood, slate and cream
-  node art/tools/badges.ts build             write art/badges/*.aseprite and export to
-                                             public/art/sprites/`;
+  node art/tools/badges.ts build             export to public/art/sprites/`;
 
 type Draw = (g: Grid) => void;
 type Rows = readonly string[];

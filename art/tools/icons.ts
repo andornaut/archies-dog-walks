@@ -4,8 +4,8 @@
 // tiles' tan and cream), on transparency. The ids are the shop's data ids in kebab case:
 // item-hall-pass is the Hall pass, a cream pass card on a lanyard.
 //
-// Run from the repository root. A build overwrites the .aseprite sources, so hand edits to them
-// belong in this file instead. Shared tooling is in pixel.ts.
+// Run from the repository root. A build overwrites the exports, so hand edits to them belong in
+// this file instead. Shared tooling is in pixel.ts.
 import { mkdirSync, writeFileSync } from "node:fs";
 
 import { filledImage, paste, resizeNearest, type Rgb } from "@andornaut/art-kit/raster";
@@ -17,7 +17,7 @@ import { bitmap, Grid, iconEdge, rgbPng, run, savePng, toImage } from "./pixel.t
 
 const USAGE = `Usage:
   node art/tools/icons.ts preview OUT.png   every icon on the shop's slot colours, scaled up
-  node art/tools/icons.ts build             write art/icons/*.aseprite and public/art/images/*.png`;
+  node art/tools/icons.ts build             write public/art/images/*.png`;
 
 // ---------- gear ----------
 

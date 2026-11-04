@@ -35,9 +35,9 @@
 //                       over its head in font-comic (ring top-left at 6,0) on frames 0 to 3.
 //                       Drawn for a sidestep right; the game mirrors it for a sidestep left
 //
-// Run from the repository root. A build overwrites the .aseprite sources, so hand edits to them
-// belong in this file instead. Shared tooling is in pixel.ts, the rim, burst, twinkle and heart
-// helpers in fx.ts, piece and layer in hits.ts, the broken heart in needs.ts.
+// Run from the repository root. A build overwrites the exports, so hand edits to them belong in
+// this file instead. Shared tooling is in pixel.ts, the rim, burst, twinkle and heart helpers in
+// fx.ts, piece and layer in hits.ts, the broken heart in needs.ts.
 import { burst, rim, stamp, star4 } from "./fx.ts";
 import { layer, piece } from "./hits.ts";
 import { BROKEN, BROKEN_CRACK } from "./needs.ts";
@@ -45,8 +45,7 @@ import { DARKER, Grid, main, type Sprite, ZONE_ROADS } from "./pixel.ts";
 
 const USAGE = `Usage:
   node art/tools/feedback.ts preview OUT.png   every frame on the zone roads and the dimmed roads
-  node art/tools/feedback.ts build             write art/feedback/*.aseprite and export to
-                                               public/art/sprites/`;
+  node art/tools/feedback.ts build             export to public/art/sprites/`;
 
 // The zone roads, then each one ramp step darker: the road dimmed under a card.
 const GROUNDS: readonly string[] = [...ZONE_ROADS, ...ZONE_ROADS.map((c) => DARKER.get(c)!)];

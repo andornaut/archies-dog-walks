@@ -29,17 +29,16 @@
 //                           spreads and sags as it sinks, and breaks into two puffs. Bottom-centre
 //                           on the dog's centre column, 6px below its top opaque row
 //
-// Run from the repository root. A build overwrites the .aseprite sources, so hand edits to them
-// belong in this file instead. Shared tooling is in pixel.ts, the rim and stamp helpers in fx.ts,
-// piece in hits.ts.
+// Run from the repository root. A build overwrites the exports, so hand edits to them belong in
+// this file instead. Shared tooling is in pixel.ts, the rim and stamp helpers in fx.ts, piece in
+// hits.ts.
 import { rim, stamp } from "./fx.ts";
 import { piece } from "./hits.ts";
 import { bitmap, type Drawable, Grid, main, type Sprite } from "./pixel.ts";
 
 const USAGE = `Usage:
   node art/tools/needs.ts preview OUT.png   every frame of every piece on the zone roads
-  node art/tools/needs.ts build             write art/needs/*.aseprite and export them to
-                                            public/art/sprites/`;
+  node art/tools/needs.ts build             export to public/art/sprites/`;
 
 // A filled box with its corners clipped by r pixels on a diagonal.
 function rounded(

@@ -73,8 +73,8 @@
 // Roadside section); `table` prints them as JSON with every prop's across offset resolved and each
 // zone's shadow colour.
 //
-// Run from the repository root. A build overwrites the .aseprite sources, so hand edits to them
-// belong in this file instead. Shared tooling is in pixel.ts.
+// Run from the repository root. A build overwrites the exports, so hand edits to them belong in
+// this file instead. Shared tooling is in pixel.ts.
 import { readFileSync, writeFileSync } from "node:fs";
 
 import { Mini, scaled, STEPS } from "./mini.ts";
@@ -98,8 +98,7 @@ import {
 
 const USAGE = `Usage:
   node art/tools/roadside.ts preview OUT.png   every frame on green, dgreen and dslate
-  node art/tools/roadside.ts build             write art/roadside/*.aseprite and export to
-                                               public/art/sprites/
+  node art/tools/roadside.ts build             export to public/art/sprites/
   node art/tools/roadside.ts table             print the placement table as JSON
   node art/tools/roadside.ts table --write     write it to shared/roadside.json, which the game
                                                reads; build writes it too`;

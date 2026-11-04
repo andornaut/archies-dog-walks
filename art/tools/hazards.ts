@@ -42,8 +42,8 @@
 // (18x27, 12x18), cyclist@75, cyclist@50 (36x54, 24x36) and coyote@75, coyote@50 (36x36, 24x24),
 // each on a Mini at SCALE times the step; depths.ts draws the steps between them.
 //
-// Run from the repository root. A build overwrites the .aseprite sources, so hand edits to them
-// belong in this file instead. Shared tooling is in pixel.ts.
+// Run from the repository root. A build overwrites the exports, so hand edits to them belong in
+// this file instead. Shared tooling is in pixel.ts.
 import { Mini, scaled, SCALES, small as miniSmall, STEPS } from "./mini.ts";
 import {
   type Colour,
@@ -74,8 +74,7 @@ import {
 
 const USAGE = `Usage:
   node art/tools/hazards.ts preview OUT.png   every frame on the zone roads
-  node art/tools/hazards.ts build             write art/hazards/*.aseprite and export to
-                                              public/art/sprites/`;
+  node art/tools/hazards.ts build             export to public/art/sprites/`;
 
 // What makes a pose's grid: a Grid at full size, or a Mini for a depth variant (see small).
 export type GridMaker = (w?: number, h?: number) => Drawable;

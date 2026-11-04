@@ -34,8 +34,7 @@ import { planks } from "./screens.ts";
 
 const USAGE = `Usage:
   node art/tools/share.ts preview OUT.png   the card at 1200x630
-  node art/tools/share.ts build             write art/share/share-card.aseprite (the 300x157
-                                            master) and public/og-image.png`;
+  node art/tools/share.ts build             write public/og-image.png`;
 
 export const W = 300;
 export const H = 157;

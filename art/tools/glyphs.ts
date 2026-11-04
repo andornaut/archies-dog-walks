@@ -36,8 +36,8 @@
 // hollow one is a clay rim, 3.2:1 on the card's cream body, so all five slots show and the filled
 // paws carry the count.
 //
-// Run from the repository root. A build overwrites the .aseprite sources, so hand edits to them
-// belong in this file instead. Shared tooling is in pixel.ts.
+// Run from the repository root. A build overwrites the exports, so hand edits to them belong in
+// this file instead. Shared tooling is in pixel.ts.
 import { mkdirSync, writeFileSync } from "node:fs";
 
 import { blankImage, type RgbaImage } from "@andornaut/art-kit/rgbaImage";
@@ -62,8 +62,7 @@ import { SQUIRREL_FUR } from "./road.ts";
 const USAGE = `Usage:
   node art/tools/glyphs.ts preview OUT.png   every icon on the UI's paper, panel, wood and ink
                                              colours, then ui-difficulty's tags, scaled up
-  node art/tools/glyphs.ts build             write art/glyphs/*.aseprite, export to
-                                             public/art/images/ and public/art/sprites/`;
+  node art/tools/glyphs.ts build             export to public/art/images/ and public/art/sprites/`;
 
 // ---------- traits ----------
 

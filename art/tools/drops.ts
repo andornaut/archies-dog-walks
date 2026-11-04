@@ -22,16 +22,15 @@
 // They take the road outline rule (pixel.ts's roadEdge) and road.ts's LIT rim on their dark colours,
 // so each holds 3:1 on every road.
 //
-// Run from the repository root. A build overwrites the .aseprite sources, so hand edits to them
-// belong in this file instead. Shared tooling is in pixel.ts.
+// Run from the repository root. A build overwrites the exports, so hand edits to them belong in
+// this file instead. Shared tooling is in pixel.ts.
 import { Mini, STEPS } from "./mini.ts";
 import { type Drawable, edged, main, raster, scaleOf, type Sprite } from "./pixel.ts";
 import { lit, SCALE } from "./road.ts";
 
 const USAGE = `Usage:
   node art/tools/drops.ts preview OUT.png   every frame on the zone roads
-  node art/tools/drops.ts build             write art/drops/*.aseprite and export to
-                                            public/art/sprites/`;
+  node art/tools/drops.ts build             export to public/art/sprites/`;
 
 // A pixel map's colours by character.
 export type Cols = Readonly<Record<string, string>>;

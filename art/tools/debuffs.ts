@@ -17,15 +17,14 @@
 // rising or following the pack, in both motion modes. Only an effect actually acquired or refreshed
 // shows this notification and its matching sound, played once for the pack, never per member.
 //
-// Run from the repository root. Edit this script, not the generated sources.
+// Run from the repository root. Edit this script, not the exports.
 import { rim } from "./fx.ts";
 import { type Colour, Grid, main, type Sprite } from "./pixel.ts";
 import { DEBUFF_LOOKS } from "./ui.ts";
 
 const USAGE = `Usage:
   node art/tools/debuffs.ts preview OUT.png   every frame on the neighbourhood roads
-  node art/tools/debuffs.ts build             write art/debuffs/*.aseprite and export
-                                              public/art/sprites/*.png and *.json`;
+  node art/tools/debuffs.ts build             export public/art/sprites/*.png and *.json`;
 
 type Point = readonly [number, number];
 

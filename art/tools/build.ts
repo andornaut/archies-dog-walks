@@ -5,12 +5,13 @@
 // strip (roads), and the others below read the sprites, images and fonts they paste. A set with no
 // entry in NEEDS reads only its own exports, the committed manifest and shared/ tables.
 //
-// --check then fails when a path the builds write (TREES) differs from the index or holds an untracked
-// file, and lists those paths. Builds are deterministic, so on a clean checkout every
-// difference is a generator change. Named sets rebuild those sets and every set downstream of them.
+// --check then fails when a path under TREES (art/ and every path the builds write) differs from the
+// index or holds an untracked file, and lists those paths. Builds are deterministic, so on a clean
+// checkout every difference is a generator change. Named sets rebuild those sets and every set
+// downstream of them.
 //
-// Run from the repository root in the archie-check image (Aseprite, SoX and ffmpeg). It spawns only
-// node and git, and reaches no network.
+// Run from the repository root in the archie-check image (SoX and ffmpeg). It spawns only node and
+// git, and reaches no network.
 import { spawnSync } from "node:child_process";
 import { readdirSync } from "node:fs";
 
@@ -19,9 +20,9 @@ import { run as runCommands, UsageError } from "./pixel.ts";
 const USAGE = `Usage:
   node art/tools/build.ts [--check] [SET...]   rebuild every set, or each SET and the sets that read
                                                its exports, in dependency order; --check then fails
-                                               on any changed or untracked file the builds
-                                               write (art/, public/art/, public/icons/,
-                                               public/og-image.png, shared/)`;
+                                               on any changed or untracked file under art/ or
+                                               the paths the builds write (public/art/,
+                                               public/icons/, public/og-image.png, shared/)`;
 
 // Every set with a build command, in build order: the sets that read no other set's exports
 // (alphabetical), then the sets that do (alphabetical, which meets every entry in NEEDS).
@@ -106,7 +107,7 @@ const NOT_SETS = new Set([
   "scene",
 ]);
 
-// Every path a build writes.
+// art/, which no build writes, and every path a build writes.
 const TREES = ["art", "public/art", "public/icons", "public/og-image.png", "shared"];
 
 function fail(message: string): never {

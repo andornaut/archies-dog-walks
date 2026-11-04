@@ -199,8 +199,8 @@
 // Mini at SCALE x the step, with the original's tags, frame counts and durations, pose offsets
 // snapped to whole pixels at the small size.
 //
-// Run from the repository root. A build overwrites the .aseprite sources, so hand edits to them
-// belong in this file instead. Shared tooling is in pixel.ts.
+// Run from the repository root. A build overwrites the exports, so hand edits to them belong in
+// this file instead. Shared tooling is in pixel.ts.
 import { CYCLIST_RIDE, swayRows } from "./hazards.ts";
 import { scaled, small, snap, STEPS } from "./mini.ts";
 import {
@@ -251,8 +251,7 @@ import {
 const USAGE = `Usage:
   node art/tools/hood_people.ts preview OUT.png   every frame of every sprite and variant on the
                                                   zone roads
-  node art/tools/hood_people.ts build             write art/hood-people/*.aseprite and export to
-                                                  public/art/sprites/`;
+  node art/tools/hood_people.ts build             export to public/art/sprites/`;
 
 // The grid every drawing here makes, which mini.ts's small swaps while it runs. Faces are drawn
 // through road.ts's scope, so small swaps them there.

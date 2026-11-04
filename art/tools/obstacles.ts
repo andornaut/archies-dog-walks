@@ -59,8 +59,8 @@
 // only their rows SCALE times taller. minis.ts and depths.ts run them at SCALE (or CAR_SCALE) times
 // each depth step for the depth variants.
 //
-// Run from the repository root. A build overwrites the .aseprite sources, so hand edits to them
-// belong in this file instead. Shared tooling is in pixel.ts.
+// Run from the repository root. A build overwrites the exports, so hand edits to them belong in
+// this file instead. Shared tooling is in pixel.ts.
 import { type Scale, small } from "./mini.ts";
 import {
   type Colour,
@@ -82,8 +82,7 @@ import { lit, scope as roadScope, treads, unit } from "./road.ts";
 
 const USAGE = `Usage:
   node art/tools/obstacles.ts preview OUT.png   every obstacle on the zone roads
-  node art/tools/obstacles.ts build             write art/obstacles/*.aseprite and export to
-                                                public/art/sprites/`;
+  node art/tools/obstacles.ts build             export to public/art/sprites/`;
 
 function range(start: number, stop: number, step = 1): number[] {
   const out: number[] = [];

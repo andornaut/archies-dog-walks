@@ -49,8 +49,8 @@
 // view facing right in loose-dog's gallop (hazards.ts's CORGI_RUN), without the broken leash.
 //   social-frisbee-dog  a border collie with a red frisbee
 //
-// Run from the repository root. A build overwrites the .aseprite sources, so hand edits to them
-// belong in this file instead. Shared tooling is in pixel.ts.
+// Run from the repository root. A build overwrites the exports, so hand edits to them belong in
+// this file instead. Shared tooling is in pixel.ts.
 import { zoomed as dogZoomed } from "./dogs.ts";
 import { CORGI_RUN, limb } from "./hazards.ts";
 import { type Scale, side, small, snap, STEPS } from "./mini.ts";
@@ -83,8 +83,7 @@ import {
 const USAGE = `Usage:
   node art/tools/animals.ts preview OUT.png   every frame of every sprite and variant on the zone
                                               roads
-  node art/tools/animals.ts build             write art/animals/*.aseprite and export to
-                                              public/art/sprites/`;
+  node art/tools/animals.ts build             export to public/art/sprites/`;
 
 // The grid every drawing here makes, which mini.ts's small swaps for a Mini while it runs.
 export const scope: DrawingScope = {

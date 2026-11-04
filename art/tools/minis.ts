@@ -18,8 +18,8 @@
 // The Mini, small, snap and the depth steps are in mini.ts and the dogs' frames in dogs.ts, which
 // this module imports, so road.ts, obstacles.ts and dogs.ts draw small without importing it.
 //
-// Run from the repository root. A build overwrites the .aseprite sources, so hand edits to them
-// belong in this file instead. Shared tooling is in pixel.ts.
+// Run from the repository root. A build overwrites the exports, so hand edits to them belong in
+// this file instead. Shared tooling is in pixel.ts.
 import { writeFileSync } from "node:fs";
 
 import { rgb } from "@andornaut/art-kit/colour";
@@ -46,8 +46,7 @@ const USAGE = `Usage:
   node art/tools/minis.ts preview OUT.png   every small frame on the zone roads
   node art/tools/minis.ts compare OUT.png   each sprite at 1x, then plain nearest-neighbour and
                                             this file's version at each scale it has, at 4x zoom
-  node art/tools/minis.ts build             write art/minis/*.aseprite and export them to
-                                            public/art/sprites/`;
+  node art/tools/minis.ts build             export to public/art/sprites/`;
 
 function isOptions(v: unknown): v is Record<string, boolean | number> {
   return (

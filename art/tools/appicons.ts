@@ -29,8 +29,8 @@
 //                                    the corners cut by 1px
 //
 // Run from the repository root after portraits: the app icons read Archie's exported portrait. The
-// icons are not in public/art/manifest.json: the pages and the web app manifest link them by path. A
-// build overwrites the .aseprite sources, so change this file or Archie's art, not the sources.
+// icons are not in public/art/manifest.json: the pages and the web app manifest link them by path.
+// A build overwrites the icons, so change this file or Archie's art, not the icons.
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { basename } from "node:path";
 
@@ -48,11 +48,8 @@ const USAGE = `Usage:
   node art/tools/appicons.ts preview OUT.png   every icon at its native size on ink, the maskable
                                                icon cropped to a circle with the safe zone marked,
                                                and the favicons at 1x and 8x
-  node art/tools/appicons.ts build             write public/icons/<icon>.png, the favicons included,
-                                               and the sources art/appicons/appicon.aseprite (the
-                                               master, 64x64: what the 192 and 512 show),
-                                               art/appicons/favicon-32.aseprite and
-                                               art/appicons/favicon-16.aseprite`;
+  node art/tools/appicons.ts build             write public/icons/<icon>.png, the favicons
+                                               included`;
 
 const FAVICON_32 = "public/icons/favicon-32.png";
 const FAVICON_16 = "public/icons/favicon-16.png";

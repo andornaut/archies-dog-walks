@@ -22,9 +22,9 @@
 //                           centred, its line top 3px below the plate's top so the 10px caps sit
 //                           in rows 11 to 20
 //
-// Run from the repository root. A build overwrites the .aseprite sources, so hand edits to them
-// belong in this file instead. Shared tooling is in pixel.ts, the rim, burst, twinkle and heart
-// helpers in fx.ts.
+// Run from the repository root. A build overwrites the exports, so hand edits to them belong in
+// this file instead. Shared tooling is in pixel.ts, the rim, burst, twinkle and heart helpers in
+// fx.ts.
 import * as fx from "./fx.ts";
 import { burst, HEART, SMALL } from "./fx.ts";
 import { Mini, small } from "./mini.ts";
@@ -44,8 +44,7 @@ import { plate } from "./ui.ts";
 
 const USAGE = `Usage:
   node art/tools/hits.ts preview OUT.png   every frame of every piece on the zone roads
-  node art/tools/hits.ts build             write art/hits/*.aseprite and export to
-                                           public/art/sprites/`;
+  node art/tools/hits.ts build             export to public/art/sprites/`;
 
 // The grid every drawing here makes, which mini.ts's small swaps for a Mini while a burst draws.
 export const scope: DrawingScope = {

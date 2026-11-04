@@ -48,8 +48,8 @@
 // Panels, bubbles, plates, tiles and card frames share one chrome (chromeShape); hits.ts, moments.ts,
 // scene.ts and cards.ts draw their plates, callouts and frames with it.
 //
-// Run from the repository root. A build overwrites the .aseprite sources, so hand edits to them
-// belong in this file instead.
+// Run from the repository root. A build overwrites the exports, so hand edits to them belong in
+// this file instead.
 import { mkdirSync, writeFileSync } from "node:fs";
 
 import { rgb } from "@andornaut/art-kit/colour";
@@ -83,8 +83,7 @@ import { treat } from "./road.ts";
 
 const USAGE = `Usage:
   node art/tools/ui.ts preview OUT.png   every piece, scaled up
-  node art/tools/ui.ts build             write art/ui/*.aseprite and export to
-                                         public/art/images/ and public/art/sprites/`;
+  node art/tools/ui.ts build             export to public/art/images/ and public/art/sprites/`;
 
 // ---------- the chrome: one frame for every panel, bubble, plate and card frame ----------
 

@@ -1,4 +1,4 @@
-// Draw everything on the road except the dogs, and build its Aseprite sources and exports.
+// Draw everything on the road except the dogs, and build its exports.
 //
 // People (walkers, forced stops, lucky people, the thief and the other dog's owner) are 48x72, the
 // other dog, skunk and squirrel 48x48 and the pickups 24x24: their drawing functions lay them out on
@@ -41,8 +41,8 @@
 // bob of the head and shoulders). New tags go after the existing ones, so the frame indices the game
 // uses stay put.
 //
-// Run from the repository root. A build overwrites the .aseprite sources, so hand edits to them
-// belong in this file instead. Shared tooling is in pixel.ts.
+// Run from the repository root. A build overwrites the exports, so hand edits to them belong in
+// this file instead. Shared tooling is in pixel.ts.
 import { type Scale, small, snap } from "./mini.ts";
 import {
   type Colour,
@@ -67,8 +67,7 @@ import {
 
 const USAGE = `Usage:
   node art/tools/road.ts preview OUT.png   every frame on the zone roads, scaled up
-  node art/tools/road.ts build             write art/road/*.aseprite, then export
-                                           public/art/sprites/*.png and *.json with Aseprite`;
+  node art/tools/road.ts build             export public/art/sprites/*.png and *.json`;
 
 // m with the sign of v, a negative zero counting as negative.
 function copysign(m: number, v: number): number {

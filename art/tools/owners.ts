@@ -1,4 +1,4 @@
-// Draw the owners' and walkers' faces and build their Aseprite sources and exports.
+// Draw the owners' and walkers' faces and build their exports.
 //
 // face-owner-<dog>: 32x32, chibi, front view, in the house palette with an ink outer line closed
 // under the bust, cel shaded, the face flat with a 1px shadow down its near edge. Tags: happy,
@@ -18,16 +18,15 @@
 // module state, so a drawing never depends on who called it, and portraits.ts draws a walker as
 // WALKERS.get(key)!(FULL, mood).
 //
-// Run from the repository root. A build overwrites the .aseprite sources, so hand edits to them
-// belong in this file instead. Shared tooling is in pixel.ts.
+// Run from the repository root. A build overwrites the exports, so hand edits to them belong in
+// this file instead. Shared tooling is in pixel.ts.
 import { Mini } from "./mini.ts";
 import { type Drawable, edged, Grid, hairline, K, main, raster, type Sprite } from "./pixel.ts";
 import { faceDisc } from "./road.ts";
 
 const USAGE = `Usage:
   node art/tools/owners.ts preview OUT.png   contact sheet of every frame, scaled up
-  node art/tools/owners.ts build             write art/owners/*.aseprite, then export
-                                             public/art/sprites/*.png and *.json with Aseprite`;
+  node art/tools/owners.ts build             export public/art/sprites/*.png and *.json`;
 
 export type Mood = "fired" | "happy" | "neutral" | "upset" | "worried";
 

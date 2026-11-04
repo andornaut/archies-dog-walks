@@ -1,4 +1,4 @@
-// Draw the dogs in code and build their Aseprite sources and exports.
+// Draw the dogs in code and build their exports.
 //
 // Each dog gets two sprites in Endesga 32: a road sprite with coloured outlines and an ink-outlined
 // face:
@@ -22,8 +22,8 @@
 // dogFrames draws a road sprite's tags, here rather than in minis.ts, which draws the dogs' depth
 // variants with it: minis.ts imports this module, so neither imports the other in a cycle.
 //
-// Run from the repository root. A build overwrites the .aseprite sources, so hand edits to them
-// belong in this file instead. Shared tooling is in pixel.ts.
+// Run from the repository root. A build overwrites the exports, so hand edits to them belong in
+// this file instead. Shared tooling is in pixel.ts.
 import { type Scale, side, small, snap } from "./mini.ts";
 import {
   type Colour,
@@ -44,8 +44,7 @@ import { rim, type Rims, scope as roadScope } from "./road.ts";
 
 const USAGE = `Usage:
   node art/tools/dogs.ts preview OUT.png   every frame on the zone roads, scaled up
-  node art/tools/dogs.ts build             write art/dogs/*.aseprite, then export
-                                           public/art/sprites/*.png and *.json with Aseprite`;
+  node art/tools/dogs.ts build             export public/art/sprites/*.png and *.json`;
 
 // The grid every drawing here makes, which mini.ts's small swaps for a Mini while it runs.
 export const scope: DrawingScope = {

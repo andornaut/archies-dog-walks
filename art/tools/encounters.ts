@@ -17,16 +17,15 @@
 // the silhouette holds 3:1 on every road. goose() takes make, the grid maker (a Grid for the 32-unit
 // size, or mini(s)).
 //
-// Run from the repository root. A build overwrites the .aseprite sources, so hand edits to them
-// belong in this file instead. Shared tooling is in pixel.ts.
+// Run from the repository root. A build overwrites the exports, so hand edits to them belong in
+// this file instead. Shared tooling is in pixel.ts.
 import { Mini, STEPS } from "./mini.ts";
 import { type Drawable, edged, Grid, main, type Sprite } from "./pixel.ts";
 import { lit, SCALE } from "./road.ts";
 
 const USAGE = `Usage:
   node art/tools/encounters.ts preview OUT.png   every frame on the zone roads
-  node art/tools/encounters.ts build             write art/encounters/*.aseprite and export to
-                                                 public/art/sprites/`;
+  node art/tools/encounters.ts build             export to public/art/sprites/`;
 
 // The drawings are laid out on a 32-unit design grid; the sprites draw them road.ts's SCALE times
 // larger (32 units are 48px).

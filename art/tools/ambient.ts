@@ -109,9 +109,8 @@
 // - The kite is a diamond quartered red and white with a red and white ribbon tail swaying under it
 //   and its string running down to the lower left.
 //
-// Run from the repository root. A build overwrites the .aseprite sources, so hand edits to them
-// belong in this file instead. Shared tooling is in pixel.ts; the legs, face and rim come from
-// road.ts.
+// Run from the repository root. A build overwrites the exports, so hand edits to them belong in
+// this file instead. Shared tooling is in pixel.ts; the legs, face and rim come from road.ts.
 import { Mini, small, snap, STEPS } from "./mini.ts";
 import {
   bitmap,
@@ -142,8 +141,7 @@ import {
 
 const USAGE = `Usage:
   node art/tools/ambient.ts preview OUT.png   every frame on the zone roads
-  node art/tools/ambient.ts build             write art/ambient/*.aseprite and export to
-                                              public/art/sprites/`;
+  node art/tools/ambient.ts build             export to public/art/sprites/`;
 
 export const DRIVE_MS = 100;
 export const RIDE_MS = 120;

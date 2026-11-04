@@ -97,8 +97,8 @@
 // card-porch-cat-bolt            Archie splashing through a muddy puddle past the lounging cat
 //
 // Run from the repository root. The cards compose the exported sprites, so the build exports the
-// sprites first. A build overwrites the .aseprite sources, so hand edits to them belong in this file
-// instead. Shared tooling is in pixel.ts.
+// sprites first. A build overwrites the exports, so hand edits to them belong in this file instead.
+// Shared tooling is in pixel.ts.
 import { mkdirSync, writeFileSync } from "node:fs";
 
 import { arc, ellipse, line, polygon } from "@andornaut/art-kit/draw";
@@ -144,10 +144,9 @@ const USAGE = `Usage:
                                                  the first three, OUT_DIR/cards.png (every
                                                  illustration in a card frame) and the sounds
   node art/tools/hood_parks.ts sounds OUT_DIR    write the two sounds into OUT_DIR only
-  node art/tools/hood_parks.ts build             write art/hood-parks/*.aseprite, export the
-                                                 sprites to public/art/sprites/, the illustrations
-                                                 to public/art/images/ and the sounds to
-                                                 public/art/sounds/`;
+  node art/tools/hood_parks.ts build             export the sprites to public/art/sprites/, the
+                                                 illustrations to public/art/images/ and the sounds
+                                                 to public/art/sounds/`;
 
 // Animals are laid out on 32 design units and drawn ANIMAL times bigger (48px); minor obstacles in
 // their own pixels, drawn OBSTACLE times bigger.

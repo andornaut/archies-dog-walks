@@ -111,8 +111,8 @@
 // sfx-hit-big-screen-promo   0.54s  camera: two shutter clicks of filtered noise, a rising flash
 //                                   whine and a bright square "ta-da" up a fourth
 //
-// Run from the repository root. A build overwrites the .aseprite sources, so hand edits to them
-// belong in this file instead. Shared tooling is in pixel.ts.
+// Run from the repository root. A build overwrites the exports, so hand edits to them belong in
+// this file instead. Shared tooling is in pixel.ts.
 import { mkdirSync, writeFileSync } from "node:fs";
 
 import { filledImage, paste, resizeNearest } from "@andornaut/art-kit/raster";
@@ -169,9 +169,8 @@ const USAGE = `Usage:
   node art/tools/hood_city.ts preview OUT.png   every frame of every sprite on the zone roads
   node art/tools/hood_city.ts cards OUT.png     every card illustration in its card frame, scaled up
   node art/tools/hood_city.ts sounds OUT_DIR    write the two sounds into OUT_DIR only
-  node art/tools/hood_city.ts build             write art/hood-city/*.aseprite, export the sprites
-                                                to public/art/sprites/, the cards to
-                                                public/art/images/ and the sounds to
+  node art/tools/hood_city.ts build             export the sprites to public/art/sprites/, the cards
+                                                to public/art/images/ and the sounds to
                                                 public/art/sounds/`;
 
 // The people and riders are laid out on 32x48 and drawn at road.ts's SCALE; the minor obstacles in

@@ -26,8 +26,8 @@
 // draws from game-kit's randomStream, one stream per texture named after it, so a build is the
 // same on every run.
 //
-// Run from the repository root. A build overwrites the .aseprite sources, so hand edits to them
-// belong in this file instead.
+// Run from the repository root. A build overwrites the exports, so hand edits to them belong in
+// this file instead.
 import { mkdirSync, writeFileSync } from "node:fs";
 
 import { filledImage, paste, resizeNearest } from "@andornaut/art-kit/raster";
@@ -46,8 +46,7 @@ const USAGE = `Usage:
   node art/tools/backdrops.ts verges            print the verges (VERGES) as JSON
   node art/tools/backdrops.ts verges --write    write them to shared/verges.json, which the game
                                                 reads; build writes it too
-  node art/tools/backdrops.ts build             write art/backdrops/*.aseprite and
-                                                public/art/images/*.png`;
+  node art/tools/backdrops.ts build             write public/art/images/*.png`;
 
 // A painter of the band's flat parts: a colour name per pixel.
 export type Paint = (px: number, py: number) => string;

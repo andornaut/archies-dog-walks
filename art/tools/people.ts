@@ -1,4 +1,4 @@
-// Draw the owners standing, full body, and build their Aseprite sources and exports.
+// Draw the owners standing, full body, and build their exports.
 //
 // owner-<dog>: 32x48, chibi, front view, in the house palette with the road outline and the lit rim,
 // like the forced-stop people in road.ts. Each owner's hair, skin and clothes match their
@@ -8,16 +8,15 @@
 // planted) and wave (2 frames at 300ms: the right arm raised, the hand swinging out and back). Left
 // and right are the viewer's.
 //
-// Run from the repository root. A build overwrites the .aseprite sources, so hand edits to them
-// belong in this file instead. Shared tooling is in pixel.ts; the standing figure, face and rim come
-// from road.ts.
+// Run from the repository root. A build overwrites the exports, so hand edits to them belong in
+// this file instead. Shared tooling is in pixel.ts; the standing figure, face and rim come from
+// road.ts.
 import { type Drawable, edged, type Grid, hairline, K, main, type Sprite } from "./pixel.ts";
 import { BREATH, BREATH_MS, faceDisc, faceFront, LIT, person, rim, type Top } from "./road.ts";
 
 const USAGE = `Usage:
   node art/tools/people.ts preview OUT.png   every frame on the zone roads, scaled up
-  node art/tools/people.ts build             write art/people/*.aseprite, then export
-                                             public/art/sprites/*.png and *.json with Aseprite`;
+  node art/tools/people.ts build             export public/art/sprites/*.png and *.json`;
 
 // The right arm's wave: up, raised straight, or out, the forearm swung outward. null hangs it.
 type Wave = "out" | "up" | null;

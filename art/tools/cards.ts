@@ -17,8 +17,8 @@
 // - card-zone-<zone>: 75x56, a fork's path card: the zone's road, sampled from its road strip,
 //   running to a cross street, with the zone's backdrop scenery beyond it in miniature.
 //
-// Run from the repository root. A build overwrites the .aseprite sources, so hand edits to them
-// belong in this file instead. Shared tooling is in pixel.ts.
+// Run from the repository root. A build overwrites the exports, so hand edits to them belong in
+// this file instead. Shared tooling is in pixel.ts.
 import { mkdirSync, writeFileSync } from "node:fs";
 
 import type { Frame } from "@andornaut/art-kit/grid";
@@ -51,9 +51,8 @@ import { chrome } from "./ui.ts";
 const USAGE = `Usage:
   node art/tools/cards.ts preview OUT.png   every illustration in a card, then the enlarged
                                             frames, scaled up
-  node art/tools/cards.ts build             write art/cards/*.aseprite, the frames to
-                                            public/art/sprites/ and the illustrations and cost
-                                            plaque to public/art/images/`;
+  node art/tools/cards.ts build             write the frames to public/art/sprites/ and the
+                                            illustrations and cost plaque to public/art/images/`;
 
 export const CW = 112;
 export const CH = 153;

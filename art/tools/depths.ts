@@ -17,8 +17,8 @@
 // SCALE and CAR_SCALE) x the step. Offsets that move a part by pixels (a step, a breath, a wag) are
 // snapped to whole pixels at the small size.
 //
-// Run from the repository root. A build overwrites the .aseprite sources, so hand edits to them
-// belong in this file instead. Shared tooling is in pixel.ts.
+// Run from the repository root. A build overwrites the exports, so hand edits to them belong in
+// this file instead. Shared tooling is in pixel.ts.
 import { mkdirSync, writeFileSync } from "node:fs";
 
 import { rgb } from "@andornaut/art-kit/colour";
@@ -46,8 +46,7 @@ const USAGE = `Usage:
   node art/tools/depths.ts compare DIR       DIR/<key>.png per sprite: each frame at 1x, then per
                                              step nearest-neighbour beside the variant, on the
                                              zone roads
-  node art/tools/depths.ts build             write every variant to art/depths/*.aseprite and
-                                             export to public/art/sprites/`;
+  node art/tools/depths.ts build             export every variant to public/art/sprites/`;
 
 // The steps hazards.ts leaves to this file: it builds SCALES itself.
 export const BETWEEN: readonly (readonly [string, number])[] = STEPS.filter(
