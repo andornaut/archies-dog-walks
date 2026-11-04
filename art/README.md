@@ -1,6 +1,6 @@
 # Art
 
-The game's pixel art, effects and sound, drawn by script, and what is left to draw for the first build.
+The game's pixel art, effects and sound, drawn by script.
 
 | Doc                                | What it holds                                                       |
 | ---------------------------------- | ------------------------------------------------------------------- |
@@ -21,7 +21,7 @@ The generators are TypeScript modules in `art/tools/`, which Node 24 runs direct
 
 Builds and previews run in the local image `archie-check:node24.21.0-aseprite1.2.30`: `node:24.21.0` with Aseprite 1.2.30 installed from a licensed `Aseprite_1.2.30-1_amd64.deb` kept outside the repository (with `libgl1`, `libxcursor1` and `libxfixes3`), and `sox` and `ffmpeg` from the Debian bookworm snapshot `20261103T000000Z`. Gates use upstream `node:24.21.0`.
 
-- `art/tools/<set>.ts` draws every asset except the home page's canvas grabs (`home-road`, `home-start`). Run `node art/tools/<set>.ts build` (or `preview OUT.png`) from the repository root. Shared drawing tools are in `pixel.ts` (whose only command is `palette`), and for pictures composed from exported art in `scene.ts`.
+- `art/tools/<set>.ts` draws every asset except the home page's canvas grabs (`home-road`, `home-start`). Run `node art/tools/<set>.ts build` (or `preview OUT.png`) from the repository root. Shared drawing tools are in `pixel.ts` (whose only command is `palette`), for pictures composed from exported art in `scene.ts`, and for redrawing a sprite at a depth step in `mini.ts`. `sounds.ts` reads each walk loop's score from `music_<art id with underscores>.ts`.
 - A sprite set's `preview OUT.png` (every set built on `pixel.ts`'s `main` or `preview`) writes one contact sheet per distinct ground colour, named `OUT-<hex>.png` after the ground (`OUT-8b9bb4.png` on Cabbagetown's grey), with one row per sprite and every frame in tag order. `hood_parks.ts preview DIR` writes `DIR/road-<hex>.png` and `DIR/hits-<hex>.png` the same way. The other tools' previews write the single `OUT.png` their usage describes.
 - A build writes the set's Aseprite sources under `art/` and exports them to `public/art/` (`sprites/<key>.png` and `.json`, `images/<key>.png`, `fonts/<key>.png` and `.fnt`, `sounds/<key>.ogg` and `.m4a`). Each tool's header comment names its folders. Exceptions:
   - `appicons.ts` writes `art/appicon.aseprite`, `art/favicon-32.aseprite` and `art/favicon-16.aseprite`, the app icons in `public/icons/` and the favicons `public/art/favicon.png` and `favicon-16.png`, drawn from Archie's exported portrait and his face in `dogs.ts`; `share.ts` writes `art/share/share-card.aseprite` and `public/og-image.png`.
@@ -47,7 +47,4 @@ Builds and previews run in the local image `archie-check:node24.21.0-aseprite1.2
 - Every export uses only the 64-colour house palette (plus the neutral greys in disabled and locked UI and seven picker-only colours, as the style guide's palette section says), with alpha 0 or 255, at the frame size in `inventory.md`.
 - Check proportion, outline and contrast on every zone's road colour in the script's `preview` and the `/art/` gallery, and road objects in a projected 360×560 view (`npm run art:depth-preview -- <key> [zone]`).
 - Run `npm run check:art` and `npm run art:manifest -- --check` before committing.
-
-## Remaining for the first build
-
-Nothing: new art follows the rulebook as it changes.
+- `npm run art:unused` lists the manifest keys that no source file, game data, shared table or page names. It matches names, not calls, so it misses a key that only an id-keyed family would build: check `fx-hit-`, `sfx-hit-` and `card-` keys against the encounters' ids and options. The [inventory](inventory.md#unused-exports) lists the exports nothing loads.
