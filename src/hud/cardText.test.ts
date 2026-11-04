@@ -7,6 +7,7 @@ import { gameData } from "../data/index.ts";
 import type { ZoneId } from "../data/types.ts";
 import { CARD_LAYOUT, cardEffectArea, plaqueRoom } from "../layout/cardLayout.ts";
 import { cardFor, hasPlaque, type OptionView } from "../rules/choices.ts";
+import { upgradeLine } from "../rules/effectText.ts";
 import { defined } from "../testing/defined.ts";
 import { everyCardOption } from "../testing/everyCardOption.ts";
 import { fontFileMetrics, inkWidth } from "../testing/fontInk.ts";
@@ -85,7 +86,8 @@ describe("a path card", () => {
   it.each(keysOf(gameData.upgrades))(
     "carrying %s shows the upgrade's name in its pill over its cardEffect on the small card",
     (upgrade) => {
-      const { cardEffect: line, name } = gameData.upgrades[upgrade];
+      const { name } = gameData.upgrades[upgrade];
+      const line = upgradeLine(gameData.tuning, "cardEffect", gameData.upgrades[upgrade]);
       expect(line.trim()).not.toBe("");
       const option = defined(
         cardFor(gameData, testState({ kilo: 5 }), {

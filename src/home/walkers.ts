@@ -57,7 +57,7 @@ function walkerInfo(data: WalkerText, walker: WalkerId): string {
 export function walkerDetailLines(data: WalkerText, walker: WalkerId): string[] {
   const { agility, perk } = data.walkers[walker];
   const { name } = data.walkerPerks[perk];
-  const effect = perkEffect(data.tuning, data.walkerPerks[perk]);
+  const effect = perkEffect(data, data.walkerPerks[perk]);
   const percent = agilityPercent(agility);
   return [
     ...(percent === null

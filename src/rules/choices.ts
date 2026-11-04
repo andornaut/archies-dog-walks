@@ -40,7 +40,7 @@ import {
   resolveEffects,
   targetDogs,
 } from "./effects.ts";
-import { cardEffectText, type CardTextContext, sentenceList } from "./effectText.ts";
+import { cardEffectText, type CardTextContext, sentenceList, upgradeLine } from "./effectText.ts";
 import { type ModifiedValue, modifierCause } from "./modified.ts";
 import { forkPaths, type PathSide, pathSide, zoneById } from "./route.ts";
 import { fireOwnersAtZero } from "./run.ts";
@@ -336,7 +336,8 @@ export function forkCard(data: CardData, state: RunState, source: ForkSource): C
         text: data.runText.card.noUpgrade,
       };
     }
-    const { duration, effects } = data.upgrades[upgrade];
+    const card = data.upgrades[upgrade];
+    const { duration, effects } = card;
     const preview = outcomeOf(
       data,
       { affected: [], source: { kind: "upgrade", upgrade } },
@@ -349,7 +350,7 @@ export function forkCard(data: CardData, state: RunState, source: ForkSource): C
       duration,
       fires: preview.fired,
       modified: preview.modified,
-      text: `${data.upgrades[upgrade].name}: ${data.upgrades[upgrade].effect}`,
+      text: `${card.name}: ${upgradeLine(data.tuning, "effect", card)}`,
     };
   });
   return {

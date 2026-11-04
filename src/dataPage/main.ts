@@ -25,6 +25,7 @@ import {
   perkEffect,
   SIZE_NAMES,
 } from "../rules/effectText.ts";
+import { hintText } from "../rules/hints.ts";
 import { modifiersOf } from "../rules/modifiers.ts";
 import { firstZoneId, walkLength, zoneById } from "../rules/route.ts";
 import { price, unlockPrice } from "../rules/shop.ts";
@@ -221,10 +222,10 @@ function hintsSection(data: GameData): Section {
   return {
     headers: ["Hint", "Trigger", "Text"],
     note: "Each shows once, the first time its trigger happens.",
-    rows: Object.entries(data.hints).map(([id, hint]) => [
+    rows: keysOf(data.hints).map((id) => [
       id,
-      triggerText(hint.trigger),
-      hint.text,
+      triggerText(data.hints[id].trigger),
+      hintText(data, id),
     ]),
     title: "First-time hints",
   };
@@ -310,7 +311,7 @@ function walkersSection(data: GameData): Section {
         name,
         `${agilityPercent(walker.agility) ?? "Base"} (${walker.agility})`,
         data.walkerPerks[walker.perk].name,
-        perkEffect(data.tuning, data.walkerPerks[walker.perk]),
+        perkEffect(data, data.walkerPerks[walker.perk]),
         walker.unlock === "start"
           ? "Start"
           : `Finish a walk with ${walker.dogs} ${walker.dogs === 1 ? "dog" : "dogs"}`,

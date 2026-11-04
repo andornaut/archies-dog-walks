@@ -1,7 +1,7 @@
 import { kebabCase } from "../assets/spriteKeys.ts";
 import type { GameData, GearId, UpgradeId, WalkerId, WalkerPerkId } from "../data/types.ts";
 import { gearSourceName } from "../rules/causes.ts";
-import { gearShort, perkEffect } from "../rules/effectText.ts";
+import { gearShort, perkEffect, upgradeLine } from "../rules/effectText.ts";
 import { walkLength } from "../rules/route.ts";
 import { spareTreatSource } from "../rules/spareTreats.ts";
 import { read } from "../rules/units.ts";
@@ -115,16 +115,16 @@ export function effectName(
 
 // What the item does, in one line: the perk's and the upgrade's effect, the gear's short line.
 export function effectLine(
-  data: Pick<GameData, "shopGear" | "tuning" | "upgrades" | "walkerPerks">,
+  data: Pick<GameData, "homeText" | "shopGear" | "tuning" | "upgrades" | "walkerPerks">,
   item: EffectItem,
 ): string {
   switch (item.kind) {
     case "gear":
       return gearShort(data, item.gear);
     case "perk":
-      return perkEffect(data.tuning, data.walkerPerks[item.perk]);
+      return perkEffect(data, data.walkerPerks[item.perk]);
     case "upgrade":
-      return data.upgrades[item.upgrade].effect;
+      return upgradeLine(data.tuning, "effect", data.upgrades[item.upgrade]);
     default:
       return item satisfies never;
   }

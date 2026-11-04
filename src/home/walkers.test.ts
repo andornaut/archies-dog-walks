@@ -95,7 +95,7 @@ describe("walkerDetailLines", () => {
     (walker) => {
       const { agility, perk } = gameData.walkers[walker];
       const { name } = gameData.walkerPerks[perk];
-      const effect = perkEffect(gameData.tuning, gameData.walkerPerks[perk]);
+      const effect = perkEffect(gameData, gameData.walkerPerks[perk]);
       const percent = agilityPercent(agility);
       const detail = gameData.homeText.detail;
       expect(walkerDetailLines(gameData, walker)).toEqual([

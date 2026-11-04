@@ -3,23 +3,24 @@ import type { Upgrade } from "./types.ts";
 // Run-only boosts offered between zones. A picked card leaves the pool for the rest of the run.
 // duration is how long its effects last, which its plaque shows: now, the next zone, or the
 // whole run. cardEffect is the effect in a few words, the line under the name on a path card;
-// effect says it in full where there is room.
+// effect says it in full where there is room. Either may use {hearts}, the signed hearts its
+// hearts effects give, and {tip}, what its tipValue modifiers add to a tip, signed.
 // art is a key into the art manifest's images.
 export const UPGRADES = {
   bellyRubs: {
     art: "card-belly-rubs",
-    cardEffect: "+1♥ each",
+    cardEffect: "{hearts} each",
     duration: "now",
-    effect: "+1♥ each",
+    effect: "{hearts} each",
     effects: [{ amount: 1, kind: "hearts", target: { kind: "all" } }],
     kind: "boost",
     name: "Belly rubs",
   },
   bigTipper: {
     art: "card-big-tipper",
-    cardEffect: "+$1 per tip",
+    cardEffect: "{tip} per tip",
     duration: "nextZone",
-    effect: "+$1 per tip",
+    effect: "{tip} per tip",
     effects: [
       {
         by: "bigTipperTipBonus",

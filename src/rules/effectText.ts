@@ -20,7 +20,9 @@ import type {
   ProbabilityKey,
   SharedHeartsEffect,
   Size,
+  Stat,
   Target,
+  Upgrade,
   WalkerPerk,
 } from "../data/types.ts";
 import { HOME_TEXT_FIELDS, homeLine } from "../home/homeText.ts";
@@ -119,24 +121,63 @@ export function laneSpeedText(tuning: LiveTuning, agility: MultiplierKey): strin
   return percentMagnitude(read(tuning, "multipliers", agility));
 }
 
-// A gear item's shop line, its {percent} the share of the base lane-change speed its agility
-// modifiers add: Running shoes' "30% faster lane changes".
+// What effects' modifiers of a stat add together, in the stat's units.
+function addedTotal(tuning: LiveTuning, stat: Stat, effects: readonly Effect[]): number {
+  return modifiersOf(effects)
+    .filter((modifier) => modifier.operation === "add" && modifier.stat === stat)
+    .reduce((sum, modifier) => sum + modifierValue(tuning, modifier), 0);
+}
+
+// A gear item's shop line, its {maxHearts} what its maxHearts modifiers add, signed, and its
+// {percent} the share of the base lane-change speed its agility modifiers add: Lucky collar's
+// "+1 max ♥ per owner", Running shoes' "30% faster lane changes".
 export function gearShort(data: Pick<GameData, "shopGear" | "tuning">, gear: GearId): string {
   const { effects, short } = data.shopGear[gear];
-  const agility = modifiersOf(effects)
-    .filter((modifier) => modifier.operation === "add" && modifier.stat === "agility")
-    .reduce((sum, modifier) => sum + modifierValue(data.tuning, modifier), 0);
-  return fillNames(short, { percent: percentMagnitude(agility) });
+  const maxHearts = addedTotal(data.tuning, "maxHearts", effects);
+  return fillNames(short, {
+    maxHearts: signedText(maxHearts, String(Math.abs(maxHearts))),
+    percent: percentMagnitude(addedTotal(data.tuning, "agility", effects)),
+  });
+}
+
+// A multiplier as a share of the whole: 0.5 as the words' half, otherwise a whole percent, 0.6
+// as "60%".
+function shareText(words: EffectWords, multiplier: number): string {
+  return multiplier === 0.5 ? words.half : percentMagnitude(multiplier);
 }
 
 // A walker perk's effect line, its {percent} how far the multiplier its percent names is from
-// 1: Keen eye's "25% more tips".
-export function perkEffect(tuning: LiveTuning, perk: WalkerPerk): string {
-  return perk.percent === undefined
-    ? perk.effect
-    : fillNames(perk.effect, {
-        percent: percentMagnitude(read(tuning, "multipliers", perk.percent) - 1),
-      });
+// 1 and its {fraction} the multiplier its fraction names as a share: Keen eye's "25% more
+// tips", Quick recovery's "Debuffs last half as long".
+export function perkEffect(data: Pick<GameData, "homeText" | "tuning">, perk: WalkerPerk): string {
+  const multiplier = (key: MultiplierKey) => read(data.tuning, "multipliers", key);
+  return fillNames(perk.effect, {
+    ...(perk.fraction === undefined
+      ? {}
+      : { fraction: shareText(data.homeText.effect, multiplier(perk.fraction)) }),
+    ...(perk.percent === undefined
+      ? {}
+      : { percent: percentMagnitude(multiplier(perk.percent) - 1) }),
+  });
+}
+
+// An upgrade's effect or cardEffect, its {hearts} the signed hearts its hearts effects give and
+// its {tip} what its tipValue modifiers add to a tip, signed: Belly rubs' "+1♥ each", Big
+// tipper's "+$1 per tip".
+export function upgradeLine(
+  tuning: LiveTuning,
+  key: "cardEffect" | "effect",
+  upgrade: Upgrade,
+): string {
+  const hearts = upgrade.effects.reduce(
+    (sum, effect) => (effect.kind === "hearts" ? sum + effect.amount : sum),
+    0,
+  );
+  const tip = addedTotal(tuning, "tipValue", upgrade.effects);
+  return fillNames(upgrade[key], {
+    hearts: heartsChangeText(hearts),
+    tip: signedText(tip, formatDollars(cents(tip))),
+  });
 }
 
 function addedText(modifier: Modifier, value: number): string {

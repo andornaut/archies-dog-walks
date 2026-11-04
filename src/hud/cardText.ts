@@ -10,7 +10,7 @@ import {
 import type { GameData } from "../data/types.ts";
 import { boxStyle, CARD_LAYOUT, cardEffectBox, FIRES_FIT } from "../layout/cardLayout.ts";
 import { firesText, type OptionView } from "../rules/choices.ts";
-import { formatDollars } from "../rules/effectText.ts";
+import { formatDollars, upgradeLine } from "../rules/effectText.ts";
 import { withNamePills } from "./effectNames.ts";
 import { RUN_TEXT_FIELDS } from "./runText.ts";
 
@@ -54,7 +54,10 @@ export function largeBodyText(
 // What a card's small effect says, its effects' names in their pills: its effect, or for a path
 // card with an upgrade its name over its cardEffect, which the enlarged card says in full;
 // Skip's line for the skip card.
-function smallEffectText(data: Pick<GameData, "runText"> & PillData, option?: OptionView): string {
+function smallEffectText(
+  data: Pick<GameData, "runText" | "tuning"> & PillData,
+  option?: OptionView,
+): string {
   if (option === undefined) {
     return data.runText.card.skipEffect;
   }
@@ -62,7 +65,9 @@ function smallEffectText(data: Pick<GameData, "runText"> & PillData, option?: Op
   const upgrade = id === null ? null : data.upgrades[id];
   return withNamePills(
     data,
-    upgrade === null ? option.text : `${upgrade.name}: ${upgrade.cardEffect}`,
+    upgrade === null
+      ? option.text
+      : `${upgrade.name}: ${upgradeLine(data.tuning, "cardEffect", upgrade)}`,
   );
 }
 
@@ -71,7 +76,7 @@ function smallEffectText(data: Pick<GameData, "runText"> & PillData, option?: Op
 // box with the warning left to the fires marker and the enlarged card, at its size however
 // long. The effect's top is box.y.
 export function smallCardText(
-  data: Pick<GameData, "dogs" | "homeText" | "runText"> & PillData,
+  data: Pick<GameData, "dogs" | "homeText" | "runText" | "tuning"> & PillData,
   body: FontMetrics,
   inkWidth: (style: TextFitStyle, line: string) => number,
   option?: OptionView,

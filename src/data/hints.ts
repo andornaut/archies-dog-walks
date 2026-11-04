@@ -1,6 +1,8 @@
 import type { Hint } from "./types.ts";
 
 // First-time hints: one line each, shown the first time its trigger happens and never again.
+// A line may use {bumpHearts}, the hearts a bump costs, and {treatHearts}, the hearts a treat
+// gives.
 
 export const HINTS = {
   card: {
@@ -28,7 +30,7 @@ export const HINTS = {
     trigger: { kind: "luckyFind" },
   },
   minorBump: {
-    text: "A bump costs the dog's owner 1♥.",
+    text: "A bump costs the dog's owner {bumpHearts}♥.",
     trigger: { kind: "minorBump" },
   },
   moverCue: {
@@ -64,7 +66,7 @@ export const HINTS = {
     trigger: { kind: "tip" },
   },
   treat: {
-    text: "A treat gives its dog's owner +1♥.",
+    text: "A treat gives its dog's owner +{treatHearts}♥.",
     trigger: { kind: "treat" },
   },
 } as const satisfies Record<string, Hint>;

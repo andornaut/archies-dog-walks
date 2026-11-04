@@ -668,6 +668,8 @@ type WalkerUnlock =
 export interface WalkerPerk {
   readonly effect: string;
   readonly effects: NonEmptyEffects;
+  // The multiplier that fills effect's {fraction} as a share of the whole.
+  readonly fraction?: MultiplierKey;
   readonly name: string;
   // The multiplier whose distance from 1 fills effect's {percent}, unsigned.
   readonly percent?: MultiplierKey;
@@ -839,14 +841,15 @@ export interface HomeText {
   // A dog slot's name in the purchase line.
   readonly dogSlotName: string;
   // The words an effect's text is built from, wherever it shows: what each duration adds, a
-  // freeCards modifier's line for one free card and for {count}, a hearts change to each owner
-  // and to the lead dog's owner alone (its signed {hearts}), hearts shared by the pack (their
-  // signed total {hearts}), the text of no effects at all, a free Walk on by's line, and each
-  // stat's name.
+  // freeCards modifier's line for one free card and for {count}, a multiplier of one half as a
+  // share, a hearts change to each owner and to the lead dog's owner alone (its signed
+  // {hearts}), hearts shared by the pack (their signed total {hearts}), the text of no effects
+  // at all, a free Walk on by's line, and each stat's name.
   readonly effect: {
     readonly durations: { readonly [D in Duration]: string };
     readonly freeCard: string;
     readonly freeCards: string;
+    readonly half: string;
     readonly heartsEach: string;
     readonly heartsLead: string;
     readonly heartsShared: string;

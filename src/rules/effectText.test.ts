@@ -21,6 +21,7 @@ import {
   perkEffect,
   sentenceList,
   SIZE_NAMES,
+  upgradeLine,
 } from "./effectText.ts";
 import { read } from "./units.ts";
 
@@ -178,15 +179,66 @@ describe("gearShort", () => {
     const gearData = { shopGear: gameData.shopGear, tuning: TEST_TUNING };
     expect(gearShort(gearData, "runningShoes")).toBe(gameData.shopGear.runningShoes.short);
   });
+
+  it("fills {maxHearts} with what the gear's maxHearts modifiers add, signed", () => {
+    const { short } = gameData.shopGear.luckyCollar;
+    const maxHearts = `+${read(gameData.tuning, "hearts", "luckyCollarMax")}`;
+    expect(gearShort(gameData, "luckyCollar")).toBe(fillNames(short, { maxHearts }));
+  });
 });
 
 describe("perkEffect", () => {
   it("substitutes the named multiplier's change from the base, and keeps a perk without one unchanged", () => {
     const perk = WALKER_PERKS.keenEye;
     const percent = unsignedPercent(read(gameData.tuning, "multipliers", perk.percent) - 1);
-    expect(perkEffect(gameData.tuning, perk)).toBe(fillNames(perk.effect, { percent }));
+    expect(perkEffect(gameData, perk)).toBe(fillNames(perk.effect, { percent }));
     const plain = WALKER_PERKS.longReach;
-    expect(perkEffect(gameData.tuning, plain)).toBe(plain.effect);
+    expect(perkEffect(gameData, plain)).toBe(plain.effect);
+  });
+
+  it("fills {fraction} with the named multiplier as a share: one half in words, else a percent", () => {
+    const perk = WALKER_PERKS.quickRecovery;
+    const factor = read(gameData.tuning, "multipliers", perk.fraction);
+    expect(factor).toBe(0.5);
+    expect(perkEffect(gameData, perk)).toBe(fillNames(perk.effect, { fraction: words.half }));
+    const multipliers = { ...gameData.tuning.multipliers, [perk.fraction]: 0.6 };
+    const tuning = { ...gameData.tuning, multipliers };
+    expect(perkEffect({ ...gameData, tuning }, perk)).toBe(
+      fillNames(perk.effect, { fraction: "60%" }),
+    );
+  });
+
+  it("leaves no {name} unfilled in any perk's line", () => {
+    for (const perk of Object.values(WALKER_PERKS)) {
+      expect(perkEffect(gameData, perk)).not.toMatch(/\{\w+\}/);
+    }
+  });
+});
+
+describe("upgradeLine", () => {
+  it("fills {hearts} with the hearts its hearts effects give, signed", () => {
+    const upgrade = UPGRADES.bellyRubs;
+    const [effect] = upgrade.effects;
+    const hearts = `+${effect.amount}♥`;
+    for (const key of ["cardEffect", "effect"] as const) {
+      expect(upgradeLine(gameData.tuning, key, upgrade)).toBe(fillNames(upgrade[key], { hearts }));
+    }
+  });
+
+  it("fills {tip} with what its tipValue modifiers add to a tip, signed", () => {
+    const upgrade = UPGRADES.bigTipper;
+    const tip = `+${formatDollars(read(gameData.tuning, "money", "bigTipperTipBonus"))}`;
+    for (const key of ["cardEffect", "effect"] as const) {
+      expect(upgradeLine(gameData.tuning, key, upgrade)).toBe(fillNames(upgrade[key], { tip }));
+    }
+  });
+
+  it("leaves no {name} unfilled in any upgrade's lines", () => {
+    for (const upgrade of Object.values(UPGRADES)) {
+      for (const key of ["cardEffect", "effect"] as const) {
+        expect(upgradeLine(gameData.tuning, key, upgrade)).not.toMatch(/\{\w+\}/);
+      }
+    }
   });
 });
 

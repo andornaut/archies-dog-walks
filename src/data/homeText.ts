@@ -39,6 +39,7 @@ export const HOME_TEXT = {
     durations: { nextZone: "next neighbourhood", run: "all walk" },
     freeCard: "first card's cash options free each neighbourhood",
     freeCards: "first {count} cards' cash options free each neighbourhood",
+    half: "half",
     heartsEach: "{hearts} each",
     heartsLead: "{hearts} to the lead dog's owner",
     heartsShared: "{hearts} shared by the pack",

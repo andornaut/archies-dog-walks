@@ -21,7 +21,15 @@ import { stripLine } from "./stripLines.ts";
 
 type MarkData = Pick<
   GameData,
-  "debuffs" | "dogs" | "runText" | "shopGear" | "tuning" | "upgrades" | "walkerPerks" | "walkers"
+  | "debuffs"
+  | "dogs"
+  | "homeText"
+  | "runText"
+  | "shopGear"
+  | "tuning"
+  | "upgrades"
+  | "walkerPerks"
+  | "walkers"
 >;
 
 // The charm a modifier's source shows: its gear (found for a gear drop), its upgrade or the

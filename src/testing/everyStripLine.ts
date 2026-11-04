@@ -8,6 +8,7 @@ import { type FaceText, fillFaceText, ownerFaceText } from "../hud/faceText.ts";
 import type { MessageLine } from "../hud/messageStrip.ts";
 import { STRIP_LINE_FIELDS } from "../hud/runText.ts";
 import { debuffLines } from "../hud/stripLines.ts";
+import { hintText } from "../rules/hints.ts";
 import { minorObstacleNames } from "../runner/obstacleLooks.ts";
 import { inkWidth } from "./fontInk.ts";
 
@@ -45,7 +46,7 @@ export function everyStripLine(
   const sampledObstacles = mode === "representative" ? pick(obstacles, width, 3) : obstacles;
   const amount = "$9,999";
   return [
-    ...Object.values(gameData.hints).map(({ text }) => ({ text })),
+    ...keysOf(gameData.hints).map((id) => ({ text: hintText(gameData, id) })),
     ...gameData.achievements.map(({ name }) => line("achievement", { name })),
     // Each debuff's start line at the largest amounts, its lead in its pill as debuffLines marks it.
     ...keysOf(gameData.debuffs).map((debuff) => {
