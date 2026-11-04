@@ -122,8 +122,12 @@ describe("placeAttachedLights", () => {
     ]);
   });
 
-  it("leaves out a light in a zone it does not show in", () => {
-    expect(placed("kensingtonMarket", [anchorOf({})]).map(({ key }) => key)).toEqual(["test-beam"]);
+  it.each([
+    { key: undefined, keys: ["test-beam"], name: "a light in a zone it does not show in" },
+    { key: "no-such-sprite", keys: [], name: "every light of a sprite that carries none" },
+  ])("leaves out $name", ({ key, keys }) => {
+    const anchor = anchorOf(key === undefined ? {} : { key });
+    expect(placed("kensingtonMarket", [anchor]).map((light) => light.key)).toEqual(keys);
   });
 
   it("follows each sprite, at its own place and scale", () => {
@@ -133,10 +137,6 @@ describe("placeAttachedLights", () => {
       { ...beam, groundY: 400, rotation: QUARTER, scale: 1, x: 104, y: 400 },
       { ...beam, anchor: 1, groundY: 150, rotation: QUARTER, scale: 0.25, x: 201, y: 150 },
     ]);
-  });
-
-  it("places nothing for a sprite that carries no light", () => {
-    expect(placed("yongeStreet", [anchorOf({ key: "no-such-sprite" })])).toEqual([]);
   });
 
   // A 200 x 300 screen. Each lamp's sprite stands past the screen's right or bottom edge; its

@@ -206,13 +206,9 @@ describe("the roadside table", () => {
     expect(ZONES.filter(([, zone]) => !(zone.slot > 0)).map(([art]) => art)).toEqual([]);
   });
 
-  it("has every prop at every depth step in the manifest", () => {
+  it("has every prop at every depth step, and every shadowed key, in the manifest", () => {
     const keys = KEYS.flatMap((key) => DEPTH_STEPS.map(({ suffix }) => `${key}${suffix}`));
-    expect(keys.filter((key) => !MANIFEST_KEYS.has(key))).toEqual([]);
-  });
-
-  it("shadows only keys the manifest has", () => {
-    expect(ROADSIDE.shadowed.filter((key) => !MANIFEST_KEYS.has(key))).toEqual([]);
+    expect([...keys, ...ROADSIDE.shadowed].filter((key) => !MANIFEST_KEYS.has(key))).toEqual([]);
   });
 
   // On a lawn, past the sidewalk; on paving out to the screen's edges, past the curb and strips.
@@ -514,16 +510,14 @@ describe("roadsidePhase", () => {
     }
   });
 
+  // Rounding the distance keeps a prop's phase over a fractional zone start.
   it.each([
-    ["the same place on the two sides", [1200, -231], [1200, 231]],
-    ["neighbouring acrosses", [1200, 231], [1200, 232]],
-    ["neighbouring distances", [1200, 231], [1201, 231]],
-  ] as const)("differs between %s", (_, [distance, across], [other, otherAcross]) => {
-    expect(roadsidePhase(distance, across)).not.toBe(roadsidePhase(other, otherAcross));
-  });
-
-  it("rounds the distance, so a prop keeps its phase over a fractional zone start", () => {
-    expect(roadsidePhase(1200.4, 231)).toBe(roadsidePhase(1200, 231));
+    ["the same place on the two sides", [1200, -231], [1200, 231], false],
+    ["neighbouring acrosses", [1200, 231], [1200, 232], false],
+    ["neighbouring distances", [1200, 231], [1201, 231], false],
+    ["a distance and its fraction", [1200, 231], [1200.4, 231], true],
+  ] as const)("compares the phases of %s", (_, [distance, across], [other, otherAcross], same) => {
+    expect(roadsidePhase(distance, across) === roadsidePhase(other, otherAcross)).toBe(same);
   });
 });
 

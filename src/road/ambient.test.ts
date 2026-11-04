@@ -266,37 +266,22 @@ describe("stepAmbient", () => {
     expect(inBand).toEqual([]);
   });
 
-  it("ends the last zone's movers in a new zone", () => {
+  it.each<[string, (using: AmbientDeps, state: ReturnType<typeof startAmbient>) => void]>([
+    [
+      "in a new zone",
+      (using, state) =>
+        stepAmbient(using, { movers: [], now: 60, travelled: 0, zone: "highPark" }, state),
+    ],
+    ["when cleared", (_, state) => clearAmbient(state)],
+  ])("ends every mover out %s", (_, end) => {
     const state = startAmbient();
     const using = deps(1);
+    const zone = "distilleryDistrict";
     for (let now = 0; now < 60; now += 1) {
-      stepAmbient(
-        using,
-        {
-          movers: gameData.ambient.distilleryDistrict,
-          now,
-          travelled: 0,
-          zone: "distilleryDistrict",
-        },
-        state,
-      );
+      stepAmbient(using, { movers: gameData.ambient[zone], now, travelled: 0, zone }, state);
     }
     expect(state.slots.some((slot) => slot.active)).toBe(true);
-    stepAmbient(using, { movers: [], now: 60, travelled: 0, zone: "highPark" }, state);
-    expect(state.slots.filter((slot) => slot.active)).toEqual([]);
-  });
-
-  it("ends every mover when cleared", () => {
-    const state = startAmbient();
-    const using = deps(2);
-    for (let now = 0; now < 60; now += 1) {
-      stepAmbient(
-        using,
-        { movers: gameData.ambient.kensingtonMarket, now, travelled: 0, zone: "kensingtonMarket" },
-        state,
-      );
-    }
-    clearAmbient(state);
+    end(using, state);
     expect(state.slots.filter((slot) => slot.active)).toEqual([]);
   });
 });

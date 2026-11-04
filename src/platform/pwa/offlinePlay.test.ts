@@ -250,13 +250,15 @@ describe("startOfflinePlay", () => {
     expect(activities.at(-1)).toBe("idle");
   });
 
-  it("settles a failed registration and isolates observer errors from registration and boot", async () => {
-    vi.spyOn(console, "warn").mockImplementation(() => undefined);
+  it("boots after a failed registration, and isolates observer errors from registration and boot", async () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
     const activities: OfflineActivity[] = [];
     const failed = openPage(false, "fails", (activity) => activities.push(activity));
     failed.play.setOnHome(true);
+    await expect(failed.play.bootable).resolves.toBeUndefined();
     await settle();
     expect(activities).toEqual(["idle", "registering", "idle"]);
+    expect(warn).toHaveBeenCalledTimes(1);
     const errors = vi.spyOn(console, "error").mockImplementation(() => undefined);
     const observed = openPage(false, "none", () => {
       throw new Error("observer");
@@ -311,14 +313,6 @@ describe("startOfflinePlay", () => {
     timers.filter(({ ms }) => ms === OPTIONS.bootWaitMs).forEach(({ handler }) => handler());
     await settle();
     expect([before, booted]).toEqual([false, true]);
-  });
-
-  it("boots without the worker when registration fails", async () => {
-    const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
-    const { play } = openPage(false, "fails");
-    play.setOnHome(true);
-    await expect(play.bootable).resolves.toBeUndefined();
-    expect(warn).toHaveBeenCalledTimes(1);
   });
 
   // On the home screen a minute after the launch's check, coming back into view checks again.

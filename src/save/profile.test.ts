@@ -74,15 +74,22 @@ describe("ProfileSession.open", () => {
     expect(stored(entries).bankCents).toBe(12_345 + 1_000);
   });
 
-  it("plays on in memory when storage throws", async () => {
+  // A failed read leaves storage unavailable for the session, though writes would succeed.
+  it.each<[string, SaveStorage]>([
+    ["storage throws", throwing],
+    [
+      "a read fails",
+      { read: () => Promise.reject(new Error("blocked")), write: () => Promise.resolve() },
+    ],
+  ])("plays on in memory, storage unavailable, when %s", async (_, storage) => {
     const { load, session } = await ProfileSession.open(
       awards,
-      gameSaveStore(testContext, throwing),
+      gameSaveStore(testContext, storage),
     );
     expect(load.status).toBe("unavailable");
-    expect(session.storage).toBe("unavailable");
     await session.update((save) => ({ ...save, bankCents: cents(5) }));
     expect(session.save.bankCents).toBe(5);
+    expect(session.storage).toBe("unavailable");
   });
 });
 
@@ -152,16 +159,6 @@ describe("ProfileSession.update", () => {
     full = false;
     await session.update((save) => save);
     expect(session.storage).toBe("available");
-  });
-
-  it("stays unavailable for the session after a failed read, though writes would succeed", async () => {
-    const unreadable: SaveStorage = {
-      read: () => Promise.reject(new Error("blocked")),
-      write: () => Promise.resolve(),
-    };
-    const { session } = await ProfileSession.open(awards, gameSaveStore(testContext, unreadable));
-    await session.update((save) => save);
-    expect(session.storage).toBe("unavailable");
   });
 });
 

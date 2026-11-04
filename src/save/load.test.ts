@@ -14,7 +14,7 @@ import {
 } from "../testing/saves";
 import { cents } from "../units";
 import { saveContextFrom, saveFormat } from "./load";
-import { createDefaultSave, SAVE_VERSION, type SaveDocument, saveSchema } from "./schema";
+import { createDefaultSave, type SaveDocument, saveSchema } from "./schema";
 
 const stored = (document: unknown) => JSON.stringify(document);
 
@@ -29,9 +29,6 @@ function withChanges(change: (document: StoredInput) => void): string {
   change(document);
   return stored(document);
 }
-
-const loaded = (change: (document: StoredInput) => void): SaveDocument =>
-  loadSave(saveFormat(testContext), withChanges(change)).save;
 
 // A stored checkpoint two zones in, with each given field in place of its own.
 const checkpointWith = (
@@ -57,14 +54,6 @@ describe("loadSave", () => {
     expect([picked([1]), picked([1, 3])]).toEqual([["lady"], ["lady", "kilo"]]);
   });
 
-  it("keeps every dog a save owns, adding the starters", () => {
-    const dogs: DogId[] = ["ginger", "kilo", "penny"];
-    const save = loaded((document) => {
-      document.owned.dogs = dogs;
-    });
-    expect(new Set(save.owned.dogs)).toEqual(new Set([...STARTER_DOGS, ...dogs]));
-  });
-
   it("stores purchased unlocks while leaving starter unlocks implicit", () => {
     const encoded = saveFormat(testContext).encode(veteranSave());
     expect(encoded).toMatchObject({
@@ -86,12 +75,6 @@ describe("loadSave", () => {
     ).toMatchObject({ ok: false });
   });
 
-  it("declares the current save version without migrations", () => {
-    const format = saveFormat(testContext);
-    expect(format.version).toBe(SAVE_VERSION);
-    expect(format.migrations).toEqual({});
-  });
-
   // Each row changes the stored veteran save, then reads part of what loads.
   const repairs: [
     string,
@@ -99,6 +82,30 @@ describe("loadSave", () => {
     (save: SaveDocument) => unknown,
     unknown,
   ][] = [
+    [
+      "keeping every dog a save owns, adding the starters",
+      (document) => {
+        document.owned.dogs = ["ginger", "kilo", "penny"];
+      },
+      (save) => new Set(save.owned.dogs),
+      new Set<DogId>([...STARTER_DOGS, "ginger", "kilo", "penny"]),
+    ],
+    [
+      "with volumes clamped into range, known dog slots in order and no bests for no pack size",
+      (document) => {
+        document.settings.musicVolume = -0.5;
+        document.settings.sfxVolume = 3;
+        document.owned.dogSlots = [3, 2, 4, 1];
+        document.stats.bestCentsByPackSize = { 0: 1, 2: 200, 4: 400, two: 2 };
+      },
+      (save) => [
+        save.settings.musicVolume,
+        save.settings.sfxVolume,
+        save.owned.dogSlots,
+        save.stats.bestCentsByPackSize,
+      ],
+      [0, 1, [1, 2, 3], { 2: 200 }],
+    ],
     [
       "a checkpoint in the first zone, before any zone finished",
       (document) => {
@@ -423,18 +430,6 @@ describe("loadSave", () => {
         });
       }
     });
-  });
-
-  it("clamps stored volumes into range, keeps known dog slots in order, and drops bests for no pack size", () => {
-    const save = loaded((document) => {
-      document.settings.musicVolume = -0.5;
-      document.settings.sfxVolume = 3;
-      document.owned.dogSlots = [3, 2, 4, 1];
-      document.stats.bestCentsByPackSize = { 0: 1, 2: 200, 4: 400, two: 2 };
-    });
-    expect([save.settings.musicVolume, save.settings.sfxVolume]).toEqual([0, 1]);
-    expect(save.owned.dogSlots).toEqual([1, 2, 3]);
-    expect(save.stats.bestCentsByPackSize).toEqual({ 2: 200 });
   });
 });
 

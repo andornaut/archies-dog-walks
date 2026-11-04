@@ -68,7 +68,7 @@ describe("hashed game art", () => {
     ]);
   });
 
-  it("uses built atlas bytes and metadata, preserving each remaining source", async () => {
+  it("uses built atlas bytes and metadata, preserving each remaining source, named by its hash", async () => {
     await Promise.all(
       files.map(async (file) => {
         const expected =
@@ -78,14 +78,11 @@ describe("hashed game art", () => {
               ? page
               : await readArt(file.path);
         expect(file.source, file.path).toEqual(expected);
+        expect(file.fileName, file.path).toBe(
+          hashedArtFileName(file.path, contentHash(file.source)),
+        );
       }),
     );
     expect(files.some(({ path }) => path === ART_MANIFEST)).toBe(true);
-  });
-
-  it("names each output by its own content hash", () => {
-    for (const { fileName, path, source } of files) {
-      expect(fileName, path).toBe(hashedArtFileName(path, contentHash(source)));
-    }
   });
 });

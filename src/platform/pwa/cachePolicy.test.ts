@@ -20,29 +20,20 @@ const POLICY: CachePolicy = {
 };
 
 const precached = new Set(["/play/", "/nav.js", "/art/sprite.png"]);
-const fetchOf = (pathname: string) =>
-  strategyFor(POLICY, precached, { isNavigation: false, pathname });
-const navigationTo = (pathname: string) =>
-  strategyFor(POLICY, precached, { isNavigation: true, pathname });
 
 describe("strategyFor", () => {
   it.each([
-    ["the game page", "/play/", "network-first"],
-    ["the game page's other path", "/play/index.html", "network-first"],
-    ["a page outside the precache, left to the browser", "/", "network-only"],
-  ])("navigates to %s by its strategy", (_case, pathname, expected) => {
-    expect(navigationTo(pathname)).toBe(expected);
-  });
-
-  it.each([
-    ["a revalidated URL outside the precache", "/manifest.webmanifest", "network-first"],
-    ["a precached revalidated URL", "/nav.js", "network-first"],
-    ["hashed build output outside the precache", "/assets/play-abc.js", "cache-first"],
-    ["another precached file", "/art/sprite.png", "cache-first"],
-    ["a file outside the precache", "/art/notes.json", "network-only"],
-    ["the service worker", "/sw.js", "network-only"],
-  ])("fetches %s by its strategy", (_case, pathname, expected) => {
-    expect(fetchOf(pathname)).toBe(expected);
+    ["a navigation to the game page", true, "/play/", "network-first"],
+    ["a navigation to the game page's other path", true, "/play/index.html", "network-first"],
+    ["a navigation outside the precache, left to the browser", true, "/", "network-only"],
+    ["a revalidated URL outside the precache", false, "/manifest.webmanifest", "network-first"],
+    ["a precached revalidated URL", false, "/nav.js", "network-first"],
+    ["hashed build output outside the precache", false, "/assets/play-abc.js", "cache-first"],
+    ["another precached file", false, "/art/sprite.png", "cache-first"],
+    ["a file outside the precache", false, "/art/notes.json", "network-only"],
+    ["the service worker", false, "/sw.js", "network-only"],
+  ])("fetches %s by its strategy", (_case, isNavigation, pathname, expected) => {
+    expect(strategyFor(POLICY, precached, { isNavigation, pathname })).toBe(expected);
   });
 });
 

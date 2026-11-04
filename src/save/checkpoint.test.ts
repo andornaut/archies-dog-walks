@@ -81,11 +81,26 @@ describe("zonesFinishedBy", () => {
 describe("bankCheckpoint", () => {
   const banked = bankCheckpoint(testAwards, recordCheckpoint(veteranSave(), checkpoint));
 
-  it("banks the run as gone home and clears the checkpoint", () => {
+  it("banks the run as gone home, credits each dog and records the last walk", () => {
     expect(banked.bankCents).toBe(12_345 + 4_250);
     expect(banked.checkpoint).toBeNull();
     expect(banked.stats.runs).toEqual({ finished: 2, noDogs: 1, wentHome: 3 });
     expect(banked.stats.lifetimeCents).toBe(30_000 + 4_250);
+    expect(banked.stats.dogs).toEqual({
+      ginger: { timesFired: 0, walks: 1, zonesFinished: 2 },
+      kilo: { timesFired: 1, walks: 6, zonesFinished: 14 },
+      lady: { timesFired: 0, walks: 2, zonesFinished: 6 },
+      penny: { timesFired: 1, walks: 1, zonesFinished: 1 },
+    });
+    expect(timesFired(banked.stats)).toBe(2);
+    expect(banked.stats.lastWalk).toEqual({
+      dogs: ["kilo", "ginger", "penny"],
+      earnedCents: 4_250,
+      firings: ["penny"],
+      outcome: "wentHome",
+      route: ["distilleryDistrict", "cabbagetown"],
+      zonesFinished: 2,
+    });
   });
 
   it("banks the run's bumps by kind and tallies, and finishes no walk for its walker", () => {
@@ -101,27 +116,6 @@ describe("bankCheckpoint", () => {
     expect(stats.bumpsByKind).toEqual({ ...veteranSave().stats.bumpsByKind, raccoon: 1 });
     expect(stats.tallies).toEqual({ ...veteranSave().stats.tallies, tips: 7, walletsFound: 1 });
     expect(stats.walkersFinishedWith).toEqual(veteranSave().stats.walkersFinishedWith);
-  });
-
-  it("credits each dog with a walk, its zones finished and its firing", () => {
-    expect(banked.stats.dogs).toEqual({
-      ginger: { timesFired: 0, walks: 1, zonesFinished: 2 },
-      kilo: { timesFired: 1, walks: 6, zonesFinished: 14 },
-      lady: { timesFired: 0, walks: 2, zonesFinished: 6 },
-      penny: { timesFired: 1, walks: 1, zonesFinished: 1 },
-    });
-    expect(timesFired(banked.stats)).toBe(2);
-  });
-
-  it("records the last walk with the zone that just ended", () => {
-    expect(banked.stats.lastWalk).toEqual({
-      dogs: ["kilo", "ginger", "penny"],
-      earnedCents: 4_250,
-      firings: ["penny"],
-      outcome: "wentHome",
-      route: ["distilleryDistrict", "cabbagetown"],
-      zonesFinished: 2,
-    });
   });
 });
 
@@ -247,10 +241,14 @@ describe("achievements at banking", () => {
     zonesFinished: cleanPaws.zonesFinished,
   });
 
-  it("awards what a run earned after those earned before", () => {
+  // Clean Paws is earned for a walk with no bump, not for one with a bump in every zone.
+  it("awards a banked checkpoint's run from its counters, after those earned before", () => {
     const before = veteranSave();
-    const banked = bankCheckpoint(testAwards, recordCheckpoint(before, cleanPawsWalk([])));
-    expect(banked.achievements).toEqual([...before.achievements, "cleanPaws"]);
+    const bankedWith = (bumpsByZone: number[]) =>
+      bankCheckpoint(testAwards, recordCheckpoint(before, cleanPawsWalk(bumpsByZone)));
+    expect(bankedWith([]).achievements).toEqual([...before.achievements, "cleanPaws"]);
+    const bumped = Array.from({ length: cleanPaws.zonesFinished }, () => 1);
+    expect(bankedWith(bumped).achievements).toEqual(before.achievements);
   });
 
   // veteranSave is 2 finished walks into a streak with no firing, and lady finished one.
@@ -419,25 +417,6 @@ describe("achievements at banking", () => {
     const { stats } = recordRunEnd(testAwards, before, runResult(changes));
     expect(stats.walkersFinishedWith).toEqual(walkers);
   });
-
-  // Clean Paws' walk, banked with each run's bumps.
-  const banks: [string, number[], boolean][] = [
-    ["earns Clean Paws for a walk with no bump", [], true],
-    [
-      "not for a walk with a bump in every zone",
-      Array.from({ length: cleanPaws.zonesFinished }, () => 1),
-      false,
-    ],
-  ];
-
-  it.each(banks)(
-    "awards a checkpoint's run from its counters when it is banked: %s",
-    (_name, bumpsByZone, earned) => {
-      const walked = cleanPawsWalk(bumpsByZone);
-      const banked = bankCheckpoint(testAwards, recordCheckpoint(newPlayerSave, walked));
-      expect(banked.achievements.includes("cleanPaws")).toBe(earned);
-    },
-  );
 });
 
 describe("isNewBestWalk", () => {

@@ -35,11 +35,8 @@ const ATTACHED = { dx: 2, dy: -3, light: "glow" };
 const EVERYWHERE = { height: 1e6, width: 1e6, x: -5e5, y: -5e5 };
 
 describe("lightsFrom", () => {
-  it("reads every light art sets out", () => {
+  it("reads every light art sets out, each colour by palette name", () => {
     expect([...LIGHTS.keys()].sort()).toEqual(Object.keys(lightTable.defs).sort());
-  });
-
-  it("reads a light's colour by palette name", () => {
     expect(lightsFrom(tableOf(DEF)).defs.get("glow")?.colour).toBe(paletteColour("cream"));
   });
 

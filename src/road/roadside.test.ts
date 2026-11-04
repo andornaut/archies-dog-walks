@@ -26,19 +26,18 @@ const poolEntry = (change: Record<string, unknown>) => ({
 });
 
 describe("vergeFrom", () => {
-  it("reads colours by palette name and a null walkTo as paving out to the screen's edges", () => {
+  // Colours by palette name, a null walkTo as paving out to the screen's edges, and lights by
+  // zone where it names zones, in every zone where it names none, and none where it lists none.
+  it("reads a verge's colours, sidewalk and lights", () => {
     const verge = vergeFrom(PAVED);
     expect(verge.walkTo).toBe(Number.POSITIVE_INFINITY);
     expect(verge.walkDots[0]?.colours).toEqual([verge.seamColour]);
-  });
-
-  it("reads a verge's lights, by zone where it names zones, and none where it lists none", () => {
     const { pools, ...plain } = PAVED;
     const zone = itemAt(WORLD.zones, 0).id;
     expect(vergeFrom({ ...PAVED, pools: [{ ...POOL, zones: [zone] }] }).pools).toEqual(
       pools.map((pool) => ({ ...pool, zones: [zone] })),
     );
-    expect(vergeFrom(PAVED).pools).toEqual(pools.map((pool) => ({ ...pool, zones: null })));
+    expect(verge.pools).toEqual(pools.map((pool) => ({ ...pool, zones: null })));
     expect(vergeFrom(plain).pools).toEqual([]);
   });
 

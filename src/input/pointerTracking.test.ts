@@ -357,15 +357,37 @@ describe("trackPointer fuzz", () => {
     };
   }
 
-  it("keeps a press tracked only while its gesture is under way, and the lane on the road", () => {
-    // Checked plainly and reported once: an expect per step makes this the slowest test here.
-    const broken: string[] = [];
+  // Runs each seed's world through 80 random steps, calling stepped after each, then lifts every
+  // finger when lifted and hands the world to check.
+  function eachWalked(
+    lifted: boolean,
+    check: (world: World, random: Random) => void,
+    stepped: (world: World, seed: number, step: number) => void = () => undefined,
+  ): void {
     for (let seed = 1; seed <= 300; seed += 1) {
       const random = seededRandom(seed);
       const world = newWorld(random);
       for (let i = 0; i < 80; i += 1) {
         randomStep(world, random);
-        const { control, track } = world;
+        stepped(world, seed, i);
+      }
+      if (lifted) {
+        liftAll(world, random);
+      }
+      check(world, random);
+    }
+  }
+
+  it("keeps a press tracked only while its gesture is under way and the lane on the road, then settles", () => {
+    // Checked plainly and reported once: an expect per step makes this the slowest test here.
+    const broken: string[] = [];
+    eachWalked(
+      false,
+      (world) => {
+        const settled = advanceLaneControl(laneConfig, 5, world.control);
+        expect(settled.motion).toEqual(stillInLane(settled.target));
+      },
+      ({ control, track }, seed, i) => {
         if (
           (track.press === undefined) !== (track.gesture.kind === "idle") ||
           control.target < 0 ||
@@ -373,31 +395,13 @@ describe("trackPointer fuzz", () => {
         ) {
           broken.push(`seed ${seed} step ${i}`);
         }
-      }
-    }
+      },
+    );
     expect(broken).toEqual([]);
   });
 
-  it("settles every lane change once input stops", () => {
-    for (let seed = 1; seed <= 300; seed += 1) {
-      const random = seededRandom(seed);
-      const world = newWorld(random);
-      for (let i = 0; i < 80; i += 1) {
-        randomStep(world, random);
-      }
-      const settled = advanceLaneControl(laneConfig, 5, world.control);
-      expect(settled.motion).toEqual(stillInLane(settled.target));
-    }
-  });
-
   it("moves N lanes for a fresh drag of N lane-widths from any state, clamped to the road", () => {
-    for (let seed = 1; seed <= 300; seed += 1) {
-      const random = seededRandom(seed);
-      const world = newWorld(random);
-      for (let i = 0; i < 80; i += 1) {
-        randomStep(world, random);
-      }
-      liftAll(world, random);
+    eachWalked(true, (world, random) => {
       const lanes = randomInt(random, 1, 5) * (chance(random, 0.5) ? 1 : -1);
       const id = randomInt(random, 0, 2);
       const startX = roadX(random);
@@ -419,17 +423,11 @@ describe("trackPointer fuzz", () => {
       const after = advanceLaneControl(laneConfig, 5, world.control);
       expect(world.track).toEqual(idleTrack);
       expect(destinationLane(after.motion)).toBe(clampIndex(LANES, before + lanes));
-    }
+    });
   });
 
   it("steers N lanes by a new finger's drag while another rests and jitters", () => {
-    for (let seed = 1; seed <= 300; seed += 1) {
-      const random = seededRandom(seed);
-      const world = newWorld(random);
-      for (let i = 0; i < 80; i += 1) {
-        randomStep(world, random);
-      }
-      liftAll(world, random);
+    eachWalked(true, (world, random) => {
       const rest = randomInt(random, 0, 3);
       const id = (rest + randomInt(random, 1, 3)) % 3;
       world.time += 1;
@@ -457,17 +455,11 @@ describe("trackPointer fuzz", () => {
       send(world, "up", id);
       const after = advanceLaneControl(laneConfig, 5, world.control);
       expect(destinationLane(after.motion)).toBe(clampIndex(LANES, before + lanes));
-    }
+    });
   });
 
   it("taps one lane toward the pressed half from any state that allows gameplay", () => {
-    for (let seed = 1; seed <= 300; seed += 1) {
-      const random = seededRandom(seed);
-      const world = newWorld(random);
-      for (let i = 0; i < 80; i += 1) {
-        randomStep(world, random);
-      }
-      liftAll(world, random);
+    eachWalked(true, (world, random) => {
       const id = randomInt(random, 0, 2);
       const x = roadX(random);
       const before = destinationLane(world.control.motion);
@@ -482,7 +474,7 @@ describe("trackPointer fuzz", () => {
       send(world, "up", id);
       const after = advanceLaneControl(laneConfig, 5, world.control);
       expect(destinationLane(after.motion)).toBe(clampIndex(LANES, before + (x < 180 ? -1 : 1)));
-    }
+    });
   });
 });
 

@@ -29,11 +29,8 @@ describe("hashedArtUrls", () => {
   const urlOf = (path: string) => `/${artFiles.get(path) ?? ""}`;
   const listed = hashedArtUrls(artFiles, manifest);
 
-  it.each(Object.entries(sounds))("lists the %s sound files apart", (format, paths) => {
-    expect(listed.sounds[format as keyof typeof sounds]).toEqual(paths.map(urlOf));
-  });
-
-  it("lists every other file in the map by its hashed name", () => {
+  it("lists each format's sound files apart, and every other file in the map, by hashed name", () => {
+    expect(listed.sounds).toEqual({ m4a: sounds.m4a.map(urlOf), ogg: sounds.ogg.map(urlOf) });
     expect(listed.urls).toEqual(others.map(urlOf));
   });
 

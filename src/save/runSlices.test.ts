@@ -106,33 +106,32 @@ describe("runResultOf", () => {
     ]);
   });
 
-  it("ends each slice as heading home, in the zone it was in", () => {
-    for (const [, run] of [
-      ["a run that headed home", { ...midRun, phase: { kind: "ended", reason: "wentHome" } }],
-      ["a run that has not ended", midRun],
-    ] satisfies readonly [string, RunState][]) {
-      expect(runResultOf(data, run)).toMatchObject({
-        earnedCents: midRun.zoneEndMoney,
-        lostCents: midRun.money - midRun.zoneEndMoney,
-        outcome: "wentHome",
-        zone: 3,
-      });
-    }
-  });
-
-  it("banks the last zone's end money of a run every owner fired you out of, losing the rest", () => {
-    const firedOut: RunState = {
-      ...midRun,
-      pack: [
-        { dog: "kilo", status: "fired", zoneIndex: 2 },
-        { dog: "ginger", status: "fired", zoneIndex: 1 },
-      ],
-      phase: { kind: "ended", reason: "noDogs" },
-    };
-    expect(runResultOf(data, firedOut)).toMatchObject({
+  // Heading home or fired out, each in the zone it was in, losing the rest.
+  it.each<[string, RunState, string]>([
+    [
+      "a run that headed home",
+      { ...midRun, phase: { kind: "ended", reason: "wentHome" } },
+      "wentHome",
+    ],
+    ["a run that has not ended", midRun, "wentHome"],
+    [
+      "a run every owner fired you out of",
+      {
+        ...midRun,
+        pack: [
+          { dog: "kilo", status: "fired", zoneIndex: 2 },
+          { dog: "ginger", status: "fired", zoneIndex: 1 },
+        ],
+        phase: { kind: "ended", reason: "noDogs" },
+      },
+      "noDogs",
+    ],
+  ])("ends %s, banking the last zone's end money", (_, run, outcome) => {
+    expect(runResultOf(data, run)).toMatchObject({
       earnedCents: midRun.zoneEndMoney,
       lostCents: midRun.money - midRun.zoneEndMoney,
-      outcome: "noDogs",
+      outcome,
+      zone: 3,
     });
   });
 });

@@ -106,8 +106,8 @@ describe("layoutAtlases", () => {
     sprite("fx-hit-skunk", 2, 32, 32),
   ];
 
-  it("maps every frame of every texture, keeping names, sizes and durations", () => {
-    const { textures: mapped } = layoutAtlases(textures);
+  it("maps every frame of every texture, keeping names, sizes and durations, blitted from its source rect", () => {
+    const { pages, textures: mapped } = layoutAtlases(textures);
     expect(mapped.map(({ key }) => key).sort()).toEqual(textures.map(({ key }) => key).sort());
     for (const source of textures) {
       const texture = mapped.find(({ key }) => key === source.key);
@@ -120,6 +120,15 @@ describe("layoutAtlases", () => {
         })),
       );
       expect(texture?.tags).toEqual(source.tags);
+      texture?.frames.forEach(({ x, y }, i) => {
+        const from = source.frames[i]?.from;
+        expect(pages[texture.page]?.blits).toContainEqual({
+          at: { x, y },
+          bounds: from,
+          from,
+          png: source.png,
+        });
+      });
     }
   });
 
@@ -131,21 +140,6 @@ describe("layoutAtlases", () => {
       ["run", "atlas/run-0"],
       ["road", "atlas/road-0"],
     ]);
-  });
-
-  it("blits each frame from its source rect to its mapped rect", () => {
-    const { pages, textures: mapped } = layoutAtlases(textures);
-    for (const { frames, key, page } of mapped) {
-      const source = textures.find((texture) => texture.key === key);
-      frames.forEach(({ x, y }, i) => {
-        expect(pages[page]?.blits).toContainEqual({
-          at: { x, y },
-          bounds: source?.frames[i]?.from,
-          from: source?.frames[i]?.from,
-          png: source?.png,
-        });
-      });
-    }
   });
 
   it("packs frames with the same from rect once, each keeping its own trim", () => {
