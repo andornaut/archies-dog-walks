@@ -696,15 +696,12 @@ function planSlotComposition<Kind extends string>(
           support: (state) => pocket.check(state, "active"),
         }),
     ...meter,
-    coverageFirst: true,
-    fairSources: true,
     floorMet() {
       attemptFloor ??= {
         candidateChecks: stats.candidateChecks - attemptStart.candidateChecks,
         propagationChecks: stats.propagationChecks - attemptStart.propagationChecks,
       };
     },
-    originalDrawsFirst: true,
     rejected(candidate, failure) {
       const key = `${candidate.prepared.source.kind}:${failure.rule}`;
       stats.rejections[key] = (stats.rejections[key] ?? 0) + 1;

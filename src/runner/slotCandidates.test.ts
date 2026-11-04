@@ -265,7 +265,6 @@ describe("native slot motion retry capabilities", () => {
       complete: state.checkComplete,
       entries: state.entries,
       motionTiers: (kind) => domains.motionTiers(work, kind),
-      originalDrawsFirst: true,
       preparations: (owner) => owner.preparations(),
       propagate: work.propagate,
       restore: state.restore,

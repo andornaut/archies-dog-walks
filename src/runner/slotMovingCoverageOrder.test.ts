@@ -60,7 +60,7 @@ function source(kind: string, blocksLane: boolean, lanes = 1): SlotSource<string
     weight: 1,
   };
 }
-function fixture(pools: readonly (readonly SlotSource<string>[])[], fairSources: boolean) {
+function fixture(pools: readonly (readonly SlotSource<string>[])[]) {
   const prepared = new Map<string, PreparedSlotKind<string>[]>();
   const streams = pools.map(() => ({ movers: vi.fn(() => 0.5), spawns: vi.fn(() => 0.5) }));
   const opened = vi.fn(),
@@ -103,7 +103,6 @@ function fixture(pools: readonly (readonly SlotSource<string>[])[], fairSources:
     checkpoint: state.checkpoint,
     complete: state.checkComplete,
     entries: state.entries,
-    fairSources,
     minimumDelivery: pools.length,
     preparations: (job) => job.preparations(),
     propagate: work.propagate,
@@ -151,34 +150,31 @@ function firstAttempt(f: ReturnType<typeof fixture>) {
 }
 
 describe("moving coverage source priority", () => {
-  it.each([false, true])(
-    "tries a later moving blocker before an earlier nonblocking source with fair traversal %s",
-    (fairSources) => {
-      const ordinary = source("nonblocking", false),
-        blocking = source("blocking", true);
-      const f = fixture([[ordinary], [blocking]], fairSources);
-      const candidate = firstAttempt(f).candidate;
-      expect(candidate.prepared.source).toBe(blocking);
-      const visible = visibleMoverRows(
-        geometry,
-        path.map(({ distance }) => distance),
-        candidate.entry,
-      );
-      expect(
-        coverageLeadingRows(geometry, quietCoverage(geometry, []))!.some((row) =>
-          visible.includes(row),
-        ),
-      ).toBe(true);
-      expect(ordinary.compile).toHaveBeenCalledOnce();
-      expect(blocking.compile).toHaveBeenCalledOnce();
-      expect(f.opened.mock.calls.map(([ordinal]) => ordinal)).toEqual([0, 1]);
-      expect(f.closed.mock.calls.map(([ordinal]) => ordinal)).toEqual([0, 1]);
-      expect(f.state.entries()).toEqual([]);
-    },
-  );
+  it("tries a later moving blocker before an earlier nonblocking source", () => {
+    const ordinary = source("nonblocking", false),
+      blocking = source("blocking", true);
+    const f = fixture([[ordinary], [blocking]]);
+    const candidate = firstAttempt(f).candidate;
+    expect(candidate.prepared.source).toBe(blocking);
+    const visible = visibleMoverRows(
+      geometry,
+      path.map(({ distance }) => distance),
+      candidate.entry,
+    );
+    expect(
+      coverageLeadingRows(geometry, quietCoverage(geometry, []))!.some((row) =>
+        visible.includes(row),
+      ),
+    ).toBe(true);
+    expect(ordinary.compile).toHaveBeenCalledOnce();
+    expect(blocking.compile).toHaveBeenCalledOnce();
+    expect(f.opened.mock.calls.map(([ordinal]) => ordinal)).toEqual([0, 1]);
+    expect(f.closed.mock.calls.map(([ordinal]) => ordinal)).toEqual([0, 1]);
+    expect(f.state.entries()).toEqual([]);
+  });
 
   it("stops a moving coverage sample at the shared budget and restores native state", () => {
-    const f = fixture([[source("blocking", true)]], false);
+    const f = fixture([[source("blocking", true)]]);
     let sampling = false;
     f.work.propagate.mockImplementation(() => !sampling);
     const result = f.construct({

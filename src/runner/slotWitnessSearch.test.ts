@@ -5,7 +5,6 @@ import { prepareSlotKind } from "./slotCandidates.ts";
 import { createSlotConstructionState } from "./slotConstraintState.ts";
 import { quietCoverage } from "./slotCoverage.ts";
 import type { SlotPocketProof } from "./slotPocketSupport.ts";
-import * as constructs from "./slotWitnessConstruct.ts";
 import { createSlotWitnessSearch, type WitnessJob, type WitnessWork } from "./slotWitnessSearch.ts";
 import { rowSpacing, type SpawnPlan, zoneRows } from "./spawning.ts";
 
@@ -68,25 +67,6 @@ function fixture(overrides: Partial<WitnessWork<string>> = {}, auxiliary = false
 }
 
 describe("native composition solve", () => {
-  it("forwards explicit source and draw-frontier opt-ins without bypassing native completion", () => {
-    const factory = vi.spyOn(constructs, "createSlotWitnessConstruct");
-    try {
-      const { search, state } = fixture({ fairSources: true, originalDrawsFirst: true });
-      const created = factory.mock.results[0]!;
-      if (created.type !== "return") {
-        throw Error("Expected native construct factory");
-      }
-      const begin = vi.spyOn(created.value, "begin");
-      const result = search.solve(state);
-      expect(begin.mock.calls[0]![0].fairSources).toBe(true);
-      expect(begin.mock.calls[0]![0].originalDrawsFirst).toBe(true);
-      expect(result.status).toBe("compatible");
-      expect(state.entries()).toEqual([]);
-    } finally {
-      factory.mockRestore();
-    }
-  });
-
   it("returns exact insertion-order provenance and certifies the complete composition once", () => {
     const certify = vi.fn((selections: readonly unknown[]) => selections.length === 4);
     const { jobs, search, state } = fixture({ certify });

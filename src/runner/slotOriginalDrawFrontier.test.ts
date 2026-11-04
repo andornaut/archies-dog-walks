@@ -189,40 +189,37 @@ describe("original draw native frontiers", () => {
     expect([...domains.frontierSequence(work, emptyOrder, job.key, prepared)]).toEqual([]);
   });
 
-  it("visits original draws at later anchors before retry draws while default traversal stays unchanged", () => {
-    for (const originalDrawsFirst of [false, true]) {
-      const { job, path, ports, prepared, state } = fixture();
-      const selected = constructSlotWitness(
-        {
-          ...ports,
-          originalDrawsFirst,
-          test(owner, candidate) {
-            const row = candidate.entry.trace.placement!.block.row;
-            if (row !== 1 && candidate.entry.placement?.selection?.draws === prepared.draws) {
-              return {
-                accepted: false,
-                failure: { classification: "conflict", owners: [], rule: "fixture-anchor" },
-              };
-            }
-            return ports.test(owner, candidate);
-          },
+  it("visits original draws at later anchors before retry draws", () => {
+    const { job, path, ports, prepared, state } = fixture();
+    const selected = constructSlotWitness(
+      {
+        ...ports,
+        test(owner, candidate) {
+          const row = candidate.entry.trace.placement!.block.row;
+          if (row !== 1 && candidate.entry.placement?.selection?.draws === prepared.draws) {
+            return {
+              accepted: false,
+              failure: { classification: "conflict", owners: [], rule: "fixture-anchor" },
+            };
+          }
+          return ports.test(owner, candidate);
         },
-        geometry,
-        path,
-        [job],
-      );
-      expect(selected.status).toBe("compatible");
-      if (selected.status !== "compatible") {
-        throw Error("Expected native complete witness");
-      }
-      const entry = selected.witness[0]!.entry;
-      expect(entry.trace.placement!.selection!.draws === prepared.draws).toBe(originalDrawsFirst);
-      expect(entry.trace.requestedDraws).toBe(prepared.draws);
-      expect(createSlotConstructionState(geometry, path, selected.witness).checkComplete()).toEqual(
-        { accepted: true },
-      );
-      expect(state.entries()).toEqual([]);
+      },
+      geometry,
+      path,
+      [job],
+    );
+    expect(selected.status).toBe("compatible");
+    if (selected.status !== "compatible") {
+      throw Error("Expected native complete witness");
     }
+    const entry = selected.witness[0]!.entry;
+    expect(entry.trace.placement!.selection!.draws).toBe(prepared.draws);
+    expect(entry.trace.requestedDraws).toBe(prepared.draws);
+    expect(createSlotConstructionState(geometry, path, selected.witness).checkComplete()).toEqual({
+      accepted: true,
+    });
+    expect(state.entries()).toEqual([]);
   });
 
   it("resumes the full native source when a tier view becomes unavailable", () => {
@@ -239,7 +236,6 @@ describe("original draw native frontiers", () => {
           }
           yield* ports.candidates(owner, source, order);
         },
-        originalDrawsFirst: true,
       },
       geometry,
       path,
@@ -256,39 +252,34 @@ describe("original draw native frontiers", () => {
     expect(state.entries()).toEqual([]);
   });
 
-  it.each([false, true])(
-    "drains original unsafe fallback before opening a retry tier with fair sources %s",
-    (fairSources) => {
-      const { job, path, ports, prepared, state } = fixture();
-      const orders: SlotCandidateOrder[] = [];
-      const result = constructSlotWitness(
-        {
-          ...ports,
-          candidates(owner, source, order) {
-            orders.push(order);
-            return ports.candidates(owner, source, order);
-          },
-          fairSources,
-          laneClosure: () => ({
-            accepted: false,
-            failure: { classification: "conflict", owners: [], rule: "fixture-closure" },
-          }),
-          originalDrawsFirst: true,
+  it("drains original unsafe fallback before opening a retry tier", () => {
+    const { job, path, ports, prepared, state } = fixture();
+    const orders: SlotCandidateOrder[] = [];
+    const result = constructSlotWitness(
+      {
+        ...ports,
+        candidates(owner, source, order) {
+          orders.push(order);
+          return ports.candidates(owner, source, order);
         },
-        geometry,
-        path,
-        [job],
-      );
-      expect(result.status).toBe("compatible");
-      expect(orders.length).toBeGreaterThan(0);
-      expect(orders.every(({ motionTier }) => motionTier === 0)).toBe(true);
-      if (result.status !== "compatible") {
-        throw Error("Expected native unsafe fallback witness");
-      }
-      expect(result.witness[0]!.entry.trace.placement!.selection!.draws).toBe(prepared.draws);
-      expect(state.entries()).toEqual([]);
-    },
-  );
+        laneClosure: () => ({
+          accepted: false,
+          failure: { classification: "conflict", owners: [], rule: "fixture-closure" },
+        }),
+      },
+      geometry,
+      path,
+      [job],
+    );
+    expect(result.status).toBe("compatible");
+    expect(orders.length).toBeGreaterThan(0);
+    expect(orders.every(({ motionTier }) => motionTier === 0)).toBe(true);
+    if (result.status !== "compatible") {
+      throw Error("Expected native unsafe fallback witness");
+    }
+    expect(result.witness[0]!.entry.trace.placement!.selection!.draws).toBe(prepared.draws);
+    expect(state.entries()).toEqual([]);
+  });
   it("builds native draw groups and every alias ordinal in one shared traversal", () => {
     const native = moverPlanning.moverPlacementsWithWork;
     const repeated = vi

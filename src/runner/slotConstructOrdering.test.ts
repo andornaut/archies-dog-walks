@@ -259,9 +259,10 @@ describe("native envelope metadata consumer", () => {
       rider.placements.length * 2 + following.placements.length * 2,
     );
     expect(after.orderingVisits).toBe(0);
-    // Four source reads and four billed native-origin hint lookups replace the placement scan.
-    expect(after.orderingPropagation).toBe(8);
-    expect(before.orderingPropagation).toBe(18);
+    // Four source reads and four billed native-origin hint lookups replace the placement scan;
+    // source traversal bills one more charge for opening the first source.
+    expect(after.orderingPropagation).toBe(9);
+    expect(before.orderingPropagation).toBe(19);
     expect(before.orderingVisits).toBe(14);
     expect(before.stringifyCalls).toBe(0);
     expect(after.stringifyCalls).toBe(0);

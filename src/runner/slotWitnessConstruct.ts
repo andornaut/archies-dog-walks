@@ -37,16 +37,13 @@ export interface SlotWitnessConstructPorts<Kind extends string, Mark> {
   checkpoint(): Mark;
   complete(): { readonly accepted: true } | Rejection<Kind> | undefined;
   entries(): readonly ConstraintEntry<Kind>[];
-  readonly coverageFirst?: boolean;
-  readonly originalDrawsFirst?: boolean;
+  // Draw tuples' native values, tried before later retry tuples.
   motionTiers?(prepared: PreparedSlotKind<Kind>): SlotMotionTiers;
   readonly minimumDelivery?: number;
   // Failed placement attempts before a frame may omit its optional request; reserve by default.
   readonly omissionAttempts?: number;
   readonly ordinaryOrder?: "original" | "balanced";
   partial?(omissions: readonly WitnessOmission<Kind>[]): boolean | undefined;
-  // Opens each job's sources progressively in their weighted order (traverseSlotSources).
-  readonly fairSources?: boolean;
   hint?(job: WitnessJob<Kind>): SlotCandidate<Kind> | undefined;
   laneClosure?(): { readonly accepted: true } | Rejection<Kind> | undefined;
   preparations(job: WitnessJob<Kind>): Iterable<PreparedSlotKind<Kind>>;
@@ -403,8 +400,7 @@ function* construct<Kind extends string, Mark>(
   };
   function* options(
     scan: SourceScan<Kind>,
-    traversal:
-      { readonly hint: SlotCandidate<Kind> | undefined; readonly seen: Set<string> } | undefined,
+    traversal: { readonly hint: SlotCandidate<Kind> | undefined; readonly seen: Set<string> },
     job: WitnessJob<Kind>,
     prepared: Iterable<PreparedSlotKind<Kind>>,
   ): Generator<Choice<Kind>> {
@@ -415,8 +411,7 @@ function* construct<Kind extends string, Mark>(
     const quietRows = scan.coverage?.leading;
     const covering = scan.coverage?.filter === "anchored";
     const filtered = scan.coverage !== undefined && scan.coverage.filter !== "open";
-    const seen = traversal?.seen ?? new Set<string>();
-    const hint = traversal === undefined ? ports.hint?.(job) : traversal.hint;
+    const { hint, seen } = traversal;
     if (stopped()) {
       return;
     }
@@ -485,7 +480,7 @@ function* construct<Kind extends string, Mark>(
         }
         sourceRows = hinted;
       }
-      const frontiers = ports.originalDrawsFirst === true ? ports.motionTiers?.(source) : undefined;
+      const frontiers = ports.motionTiers?.(source);
       if (frontiers?.status === "budget") {
         budget = true;
         return;
@@ -602,7 +597,8 @@ function* construct<Kind extends string, Mark>(
       yield { status: "source-end" };
     }
   }
-  function* fairOptions(
+  // Opens each job's sources progressively in their weighted order (traverseSlotSources).
+  function* sourceOptions(
     scan: SourceScan<Kind>,
     job: WitnessJob<Kind>,
     prepared: Iterable<PreparedSlotKind<Kind>>,
@@ -668,14 +664,6 @@ function* construct<Kind extends string, Mark>(
       cursor.return({ status: "stopped" });
     }
   }
-  const sourceOptions = (
-    scan: SourceScan<Kind>,
-    job: WitnessJob<Kind>,
-    prepared: Iterable<PreparedSlotKind<Kind>>,
-  ) =>
-    ports.fairSources === true
-      ? fairOptions(scan, job, prepared)
-      : options(scan, undefined, job, prepared);
   const complete = () => {
     if (stopped()) {
       return false;
@@ -946,9 +934,7 @@ function* construct<Kind extends string, Mark>(
     let ordinaryOrder: readonly WitnessJob<Kind>[] | undefined;
     const balancedJobs = () => (ordinaryOrder ??= balancedJobOrder(charge, jobs));
     // Prefer one initial coverage owner before wide guarantees; all ordinary choices remain.
-    let initialCoveragePending =
-      ports.coverageFirst === true &&
-      mandatory.some(({ job, order }) => !job.fixed && order.width > 1);
+    let initialCoveragePending = mandatory.some(({ job, order }) => !job.fixed && order.width > 1);
     // Runtime search orders each job's rows by occupancy pressure; exact construction keeps the
     // fixed row order its pocket proofs replay.
     const ordinaryFrame = (job: WitnessJob<Kind>) => {

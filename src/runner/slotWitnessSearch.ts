@@ -75,9 +75,6 @@ export interface WitnessWork<Kind extends string> {
   readonly floorMet?: () => void;
   readonly minimumDelivery?: number;
   readonly ordinaryOrder?: "original" | "balanced";
-  readonly coverageFirst?: boolean;
-  readonly fairSources?: boolean;
-  readonly originalDrawsFirst?: boolean;
   readonly reserveRestarted?: () => void;
   // Share of the current attempt's work allowance already used, from 0 to 1.
   readonly progress?: () => number;
@@ -340,11 +337,6 @@ export function createSlotWitnessSearch<Kind extends string>(
           return stopped() ? undefined : checked;
         },
         entries: () => state.entries(),
-        ...(work.coverageFirst === undefined ? {} : { coverageFirst: work.coverageFirst }),
-        ...(work.fairSources === undefined ? {} : { fairSources: work.fairSources }),
-        ...(work.originalDrawsFirst === undefined
-          ? {}
-          : { originalDrawsFirst: work.originalDrawsFirst }),
         laneClosure() {
           if (!charge()) {
             return undefined;

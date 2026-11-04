@@ -683,8 +683,9 @@ describe("native witness construction mode", () => {
         ),
       ).toEqual({ status: "budget" });
       expect(preparations).toHaveBeenCalledTimes(stage === "entry" ? 0 : 1);
+      // Source traversal bills opening the source and reaching its end.
       expect(propagate).toHaveBeenCalledTimes(
-        stage === "truncated-preparations" || stage === "domain-eof" ? 1 : 0,
+        stage === "domain-eof" ? 2 : stage === "truncated-preparations" ? 1 : 0,
       );
       expect(candidates).toHaveBeenCalledTimes(stage === "domain-eof" ? 1 : 0);
       expect(test).not.toHaveBeenCalled();
@@ -740,7 +741,7 @@ describe("native witness construction mode", () => {
     const result = construct(warm.ports);
     expect(result.status).toBe("compatible");
     expect(warm.preparations.mock.calls.map(([job]) => job.key)).toEqual(["later", "reward"]);
-    expect(warm.propagate).toHaveBeenCalledTimes(2);
+    expect(warm.propagate).toHaveBeenCalledTimes(8);
     expect(warm.candidates).not.toHaveBeenCalled();
     expect(warm.test).toHaveBeenCalledTimes(3);
     expect(warm.complete.mock.calls).toEqual([[]]);
@@ -818,291 +819,270 @@ describe("native witness construction mode", () => {
     expect(state.entries()).toEqual([]);
   });
 
-  it.each([false, true])(
-    "uses native per-source continuation ordering with fair sources %s",
-    (fairSources) => {
-      const road = { ...geometry, laneCount: 5, maxEmptyRows: Infinity, pathStart: 4 };
-      delete road.firstContactSeconds;
-      const { jobs, path, pin, ports, state } = fixture(road, [
-        { key: "broad", width: 2 },
-        { key: "blocker" },
-      ]);
-      pin(jobs[1]!, 2, 1);
-      const prefix = state.entries();
-      const broad = [...jobs[0]!.preparations()][0]!;
-      const narrow = prepareSlotKind({ movers: () => 0.5, spawns: () => 0.5 }, road, {
-        compile: () => ({ blocksLane: true, first: true, footprint: { lanes: 1, rows: 1 } }),
-        footprint: { lanes: 1, rows: 1 },
-        kind: "narrow",
-        role: "minorFixed",
-        weight: 1,
-      });
-      const prepared: string[] = [],
-        closed: string[] = [],
-        tried: string[] = [];
-      let sourceClosed = false;
-      jobs[0]!.preparations = function* () {
-        try {
-          for (const source of [broad, narrow]) {
-            prepared.push(source.source.kind);
-            yield source;
-          }
-        } finally {
-          sourceClosed = true;
+  it("uses native per-source continuation ordering", () => {
+    const road = { ...geometry, laneCount: 5, maxEmptyRows: Infinity, pathStart: 4 };
+    delete road.firstContactSeconds;
+    const { jobs, path, pin, ports, state } = fixture(road, [
+      { key: "broad", width: 2 },
+      { key: "blocker" },
+    ]);
+    pin(jobs[1]!, 2, 1);
+    const prefix = state.entries();
+    const broad = [...jobs[0]!.preparations()][0]!;
+    const narrow = prepareSlotKind({ movers: () => 0.5, spawns: () => 0.5 }, road, {
+      compile: () => ({ blocksLane: true, first: true, footprint: { lanes: 1, rows: 1 } }),
+      footprint: { lanes: 1, rows: 1 },
+      kind: "narrow",
+      role: "minorFixed",
+      weight: 1,
+    });
+    const prepared: string[] = [],
+      closed: string[] = [],
+      tried: string[] = [];
+    let sourceClosed = false;
+    jobs[0]!.preparations = function* () {
+      try {
+        for (const source of [broad, narrow]) {
+          prepared.push(source.source.kind);
+          yield source;
         }
-      };
-      const trace: unknown[] = [];
-      const hint = vi.fn(() => undefined);
-      const result = constructSlotWitness(
-        {
-          ...ports,
-          *candidates(job, source, order) {
-            try {
-              yield* ports.candidates(job, source, {
-                ...order,
-                rows: order.rows.filter((row) => row === 2),
-              });
-            } finally {
-              closed.push(source.source.kind);
-            }
-          },
-          fairSources,
-          hint,
-          test(job, candidate) {
-            tried.push(candidate.prepared.source.kind);
-            const result = ports.test(job, candidate);
-            trace.push({
+      } finally {
+        sourceClosed = true;
+      }
+    };
+    const trace: unknown[] = [];
+    const hint = vi.fn(() => undefined);
+    const result = constructSlotWitness(
+      {
+        ...ports,
+        *candidates(job, source, order) {
+          try {
+            yield* ports.candidates(job, source, {
+              ...order,
+              rows: order.rows.filter((row) => row === 2),
+            });
+          } finally {
+            closed.push(source.source.kind);
+          }
+        },
+        hint,
+        test(job, candidate) {
+          tried.push(candidate.prepared.source.kind);
+          const result = ports.test(job, candidate);
+          trace.push({
+            kind: candidate.prepared.source.kind,
+            lane: candidate.entry.event.lane,
+            result: result?.accepted === false ? result.failure : result?.accepted,
+            row: path.findIndex(({ distance }) => distance === candidate.entry.event.distance),
+          });
+          return result;
+        },
+      },
+      road,
+      path,
+      jobs,
+    );
+    expect(result.status).toBe("compatible");
+    expect(hint).toHaveBeenCalledOnce();
+    if (result.status !== "compatible") {
+      throw Error("Expected native complete composition");
+    }
+    const selected = result.witness.find(({ owner }) => owner === jobs[0])!;
+    expect(selected.entry.request, JSON.stringify(trace)).toBe(narrow.request);
+    expect(prepared).toEqual(["broad", "narrow"]);
+    expect(tried.slice(0, 3)).toEqual(["broad", "broad", "narrow"]);
+    expect(closed).toContain("broad");
+    expect(sourceClosed).toBe(true);
+    expect(createSlotConstructionState(road, path, result.witness).checkComplete()).toEqual({
+      accepted: true,
+    });
+    expect(state.entries()).toEqual(prefix);
+  });
+
+  it("retains native unsafe FIFO fallback", () => {
+    const { context, jobs, path, ports, road, state } = pocketFixture();
+    const prefix = state.entries();
+    const first = [...jobs[0]!.preparations()][0]!;
+    const compiled: string[] = [];
+    let closed = false;
+    jobs[0]!.preparations = function* () {
+      try {
+        compiled.push("first");
+        yield first;
+        compiled.push("later");
+        yield prepareSlotKind({ movers: () => 0.5, spawns: () => 0.5 }, road, {
+          compile: () => ({ blocksLane: true, first: true, footprint: { lanes: 2, rows: 1 } }),
+          footprint: { lanes: 2, rows: 1 },
+          kind: "later-weighted",
+          role: "minorFixed",
+          weight: 1,
+        });
+      } finally {
+        closed = true;
+      }
+    };
+    const attempted: { kind: string; row: number }[] = [];
+    const advice: { accepted: boolean; row: number }[] = [];
+    const supported: number[] = [];
+    const complete = vi.fn(ports.complete);
+    const result = constructSlotWitness(
+      {
+        ...ports,
+        *candidates(job, prepared, order) {
+          const rows = order.rows.filter((row) => (job === jobs[0] ? [0, 4] : [4]).includes(row));
+          yield* ports.candidates(job, prepared, { columnStart: 0, columns: [3], rows });
+        },
+        complete,
+        laneClosure: () => {
+          const checked = state.checkComplete();
+          const last = state.entries().at(-1)!;
+          if (last.owner === jobs[0] && last.entry.request === first.request) {
+            advice.push({
+              accepted: checked.accepted,
+              row: path.findIndex(({ distance }) => distance === last.entry.event.distance),
+            });
+          }
+          return checked;
+        },
+        support: () => {
+          const last = state.entries().at(-1)!;
+          if (last.owner === jobs[0] && last.entry.request === first.request) {
+            supported.push(
+              path.findIndex(({ distance }) => distance === last.entry.event.distance),
+            );
+          }
+          return { status: "unknown" };
+        },
+        test: (job, candidate) => {
+          if (job === jobs[0]) {
+            attempted.push({
               kind: candidate.prepared.source.kind,
-              lane: candidate.entry.event.lane,
-              result: result?.accepted === false ? result.failure : result?.accepted,
               row: path.findIndex(({ distance }) => distance === candidate.entry.event.distance),
             });
-            return result;
-          },
+          }
+          return ports.test(job, candidate);
         },
-        road,
-        path,
-        jobs,
-      );
-      expect(result.status).toBe("compatible");
-      expect(hint).toHaveBeenCalledOnce();
-      if (result.status !== "compatible") {
-        throw Error("Expected native complete composition");
-      }
-      const selected = result.witness.find(({ owner }) => owner === jobs[0])!;
-      expect(selected.entry.request, JSON.stringify(trace)).toBe(
-        fairSources ? narrow.request : broad.request,
-      );
-      expect(prepared).toEqual(fairSources ? ["broad", "narrow"] : ["broad"]);
-      if (fairSources) {
-        expect(tried.slice(0, 3)).toEqual(["broad", "broad", "narrow"]);
-      }
-      expect(closed).toContain("broad");
-      expect(sourceClosed).toBe(true);
+      },
+      road,
+      path,
+      jobs,
+    );
+    expect(result.status).toBe("compatible");
+    expect(
+      attempted.filter(({ kind }) => kind === first.source.kind).map(({ row }) => row),
+    ).toEqual([0, 4, 0]);
+    expect(advice).toEqual([
+      { accepted: false, row: 0 },
+      { accepted: true, row: 4 },
+    ]);
+    expect(supported).toEqual([4, 0]);
+    expect(compiled).toEqual(["first", "later"]);
+    expect(closed).toBe(true);
+    expect(complete.mock.calls).toEqual([[]]);
+    if (result.status === "compatible") {
+      expect(result.witness[2]!.entry.request).toBe(first.request);
+      expect(result.witness[2]!.entry.event.distance).toBe(path[0]!.distance);
       expect(createSlotConstructionState(road, path, result.witness).checkComplete()).toEqual({
         accepted: true,
       });
-      expect(state.entries()).toEqual(prefix);
-    },
-  );
+    }
+    expect(state.entries()).toEqual(prefix);
+    expect(context()).toBe(0);
+  });
 
-  it.each([false, true])(
-    "retains native unsafe FIFO fallback with fair sources %s",
-    (fairSources) => {
-      const { context, jobs, path, ports, road, state } = pocketFixture();
-      const prefix = state.entries();
-      const first = [...jobs[0]!.preparations()][0]!;
-      const compiled: string[] = [];
-      let closed = false;
-      jobs[0]!.preparations = function* () {
-        try {
-          compiled.push("first");
-          yield first;
-          compiled.push("later");
-          yield prepareSlotKind({ movers: () => 0.5, spawns: () => 0.5 }, road, {
-            compile: () => ({ blocksLane: true, first: true, footprint: { lanes: 2, rows: 1 } }),
-            footprint: { lanes: 2, rows: 1 },
-            kind: "later-weighted",
-            role: "minorFixed",
-            weight: 1,
-          });
-        } finally {
-          closed = true;
-        }
-      };
-      const attempted: { kind: string; row: number }[] = [];
-      const advice: { accepted: boolean; row: number }[] = [];
-      const supported: number[] = [];
-      const complete = vi.fn(ports.complete);
-      const result = constructSlotWitness(
+  it.each(["stop", "budget"] as const)("abandons queued unsafe values on %s", (mode) => {
+    const { context, jobs, path, ports, road, state } = pocketFixture();
+    const prefix = state.entries();
+    const first = [...jobs[0]!.preparations()][0]!;
+    const compiled: string[] = [];
+    let sourceClosed = false;
+    let candidatesClosed = false;
+    let stopped = false;
+    const trial = {};
+    let certificate: object | undefined;
+    jobs[0]!.preparations = function* () {
+      try {
+        compiled.push("first");
+        yield first;
+        compiled.push("later");
+        yield first;
+      } finally {
+        sourceClosed = true;
+      }
+    };
+    const complete = vi.fn(ports.complete);
+    const support = vi.fn(() => ({ status: "unknown" as const }));
+    const laneClosure = vi.fn(() => {
+      expect(certificate).toBe(trial);
+      const checked = state.checkComplete();
+      expect(checked.accepted).toBe(false);
+      return checked;
+    });
+    const test = vi.fn((job: WitnessJob<string>, candidate: SlotCandidate<string>) => {
+      const checked = ports.test(job, candidate);
+      if (checked?.accepted) {
+        certificate = trial;
+      }
+      return checked;
+    });
+    expect(
+      constructSlotWitness(
         {
           ...ports,
           *candidates(job, prepared, order) {
-            const rows = order.rows.filter((row) => (job === jobs[0] ? [0, 4] : [4]).includes(row));
-            yield* ports.candidates(job, prepared, { columnStart: 0, columns: [3], rows });
+            if (!order.rows.includes(0)) {
+              return;
+            }
+            const candidates = ports.candidates(job, prepared, {
+              columnStart: 0,
+              columns: [3],
+              rows: [0],
+            });
+            const cursor = candidates[Symbol.iterator]();
+            try {
+              const step = cursor.next();
+              if (!step.done) {
+                yield step.value;
+                expect(state.entries()).toEqual(prefix);
+                expect(context()).toBe(0);
+                expect(certificate).toBeUndefined();
+                if (mode === "stop") {
+                  stopped = true;
+                }
+                yield { kind: "candidateChecks", status: "budget" };
+              }
+            } finally {
+              cursor.return?.();
+              candidatesClosed = true;
+            }
           },
+          checkpoint: () => ({ caller: ports.checkpoint(), certificate }),
           complete,
-          fairSources,
-          laneClosure: () => {
-            const checked = state.checkComplete();
-            const last = state.entries().at(-1)!;
-            if (last.owner === jobs[0] && last.entry.request === first.request) {
-              advice.push({
-                accepted: checked.accepted,
-                row: path.findIndex(({ distance }) => distance === last.entry.event.distance),
-              });
-            }
-            return checked;
+          laneClosure,
+          restore: (mark) => {
+            ports.restore(mark.caller);
+            certificate = mark.certificate;
           },
-          support: () => {
-            const last = state.entries().at(-1)!;
-            if (last.owner === jobs[0] && last.entry.request === first.request) {
-              supported.push(
-                path.findIndex(({ distance }) => distance === last.entry.event.distance),
-              );
-            }
-            return { status: "unknown" };
-          },
-          test: (job, candidate) => {
-            if (job === jobs[0]) {
-              attempted.push({
-                kind: candidate.prepared.source.kind,
-                row: path.findIndex(({ distance }) => distance === candidate.entry.event.distance),
-              });
-            }
-            return ports.test(job, candidate);
-          },
+          stopped: () => stopped,
+          support,
+          test,
         },
         road,
         path,
         jobs,
-      );
-      expect(result.status).toBe("compatible");
-      expect(
-        attempted.filter(({ kind }) => kind === first.source.kind).map(({ row }) => row),
-      ).toEqual([0, 4, 0]);
-      expect(advice).toEqual([
-        { accepted: false, row: 0 },
-        { accepted: true, row: 4 },
-      ]);
-      expect(supported).toEqual([4, 0]);
-      expect(compiled).toEqual(fairSources ? ["first", "later"] : ["first"]);
-      expect(closed).toBe(true);
-      expect(complete.mock.calls).toEqual([[]]);
-      if (result.status === "compatible") {
-        expect(result.witness[2]!.entry.request).toBe(first.request);
-        expect(result.witness[2]!.entry.event.distance).toBe(path[0]!.distance);
-        expect(createSlotConstructionState(road, path, result.witness).checkComplete()).toEqual({
-          accepted: true,
-        });
-      }
-      expect(state.entries()).toEqual(prefix);
-      expect(context()).toBe(0);
-    },
-  );
-
-  it.each([
-    { fairSources: false, mode: "stop" },
-    { fairSources: false, mode: "budget" },
-    { fairSources: true, mode: "stop" },
-    { fairSources: true, mode: "budget" },
-  ] as const)(
-    "abandons queued unsafe values on $mode with fair sources $fairSources",
-    ({ fairSources, mode }) => {
-      const { context, jobs, path, ports, road, state } = pocketFixture();
-      const prefix = state.entries();
-      const first = [...jobs[0]!.preparations()][0]!;
-      const compiled: string[] = [];
-      let sourceClosed = false;
-      let candidatesClosed = false;
-      let stopped = false;
-      const trial = {};
-      let certificate: object | undefined;
-      jobs[0]!.preparations = function* () {
-        try {
-          compiled.push("first");
-          yield first;
-          compiled.push("later");
-          yield first;
-        } finally {
-          sourceClosed = true;
-        }
-      };
-      const complete = vi.fn(ports.complete);
-      const support = vi.fn(() => ({ status: "unknown" as const }));
-      const laneClosure = vi.fn(() => {
-        expect(certificate).toBe(trial);
-        const checked = state.checkComplete();
-        expect(checked.accepted).toBe(false);
-        return checked;
-      });
-      const test = vi.fn((job: WitnessJob<string>, candidate: SlotCandidate<string>) => {
-        const checked = ports.test(job, candidate);
-        if (checked?.accepted) {
-          certificate = trial;
-        }
-        return checked;
-      });
-      expect(
-        constructSlotWitness(
-          {
-            ...ports,
-            *candidates(job, prepared, order) {
-              if (!order.rows.includes(0)) {
-                return;
-              }
-              const candidates = ports.candidates(job, prepared, {
-                columnStart: 0,
-                columns: [3],
-                rows: [0],
-              });
-              const cursor = candidates[Symbol.iterator]();
-              try {
-                const step = cursor.next();
-                if (!step.done) {
-                  yield step.value;
-                  expect(state.entries()).toEqual(prefix);
-                  expect(context()).toBe(0);
-                  expect(certificate).toBeUndefined();
-                  if (mode === "stop") {
-                    stopped = true;
-                  }
-                  yield { kind: "candidateChecks", status: "budget" };
-                }
-              } finally {
-                cursor.return?.();
-                candidatesClosed = true;
-              }
-            },
-            checkpoint: () => ({ caller: ports.checkpoint(), certificate }),
-            complete,
-            fairSources,
-            laneClosure,
-            restore: (mark) => {
-              ports.restore(mark.caller);
-              certificate = mark.certificate;
-            },
-            stopped: () => stopped,
-            support,
-            test,
-          },
-          road,
-          path,
-          jobs,
-        ),
-      ).toEqual({ status: "budget" });
-      expect(test).toHaveBeenCalledOnce();
-      expect(laneClosure).toHaveBeenCalledOnce();
-      expect(complete).not.toHaveBeenCalled();
-      expect(support).not.toHaveBeenCalled();
-      expect(compiled).toEqual(fairSources ? ["first", "later"] : ["first"]);
-      expect(candidatesClosed).toBe(true);
-      expect(sourceClosed).toBe(true);
-      expect(certificate).toBeUndefined();
-      expect(state.entries()).toEqual(prefix);
-      expect(context()).toBe(0);
-    },
-  );
+      ),
+    ).toEqual({ status: "budget" });
+    expect(test).toHaveBeenCalledOnce();
+    expect(laneClosure).toHaveBeenCalledOnce();
+    expect(complete).not.toHaveBeenCalled();
+    expect(support).not.toHaveBeenCalled();
+    expect(compiled).toEqual(["first", "later"]);
+    expect(candidatesClosed).toBe(true);
+    expect(sourceClosed).toBe(true);
+    expect(certificate).toBeUndefined();
+    expect(state.entries()).toEqual(prefix);
+    expect(context()).toBe(0);
+  });
 
   it.each([false, true])(
     "rejects native stretch failure with early lane closure %s and retains every owner",
@@ -1305,8 +1285,8 @@ describe("native witness construction mode", () => {
         .filter((row) => row !== 1)
         .sort((a, b) => Math.abs(a - ideal) - Math.abs(b - ideal) || a - b);
       expect(rows).toEqual(
-        [first, later].flatMap((source) =>
-          [1, ...fallback].map((row) => ({ kind: source.source.kind, row })),
+        [1, ...fallback].flatMap((row) =>
+          [first, later].map((source) => ({ kind: source.source.kind, row })),
         ),
       );
       expect(trials[0]).toEqual({ accepted: false, row: 1 });
@@ -1645,49 +1625,45 @@ describe("native witness construction mode", () => {
     expect(warm.complete).not.toHaveBeenCalled();
   });
 
-  it.each([false, true])(
-    "tries initial coverage before wide guarantees only when enabled (%s)",
-    (coverageFirst) => {
-      const road = { ...geometry, laneCount: 5, minOpenLanes: 2, pathStart: 4 };
-      delete road.firstContactSeconds;
-      const { context, jobs, path, ports, state } = fixture(road, [
-        { guaranteed: true, key: "wide", moving: true, width: 3 },
-        { guaranteed: true, key: "required-cover" },
-        { key: "cover-a" },
-        { key: "cover-b" },
-        { key: "cover-c" },
-      ]);
-      const accepted: string[] = [];
-      const result = constructSlotWitness(
-        {
-          ...ports,
-          coverageFirst,
-          test(job, candidate) {
-            const result = ports.test(job, candidate);
-            if (result?.accepted) {
-              accepted.push(job.key);
-            }
-            return result;
-          },
+  it("tries initial coverage before wide guarantees", () => {
+    const road = { ...geometry, laneCount: 5, minOpenLanes: 2, pathStart: 4 };
+    delete road.firstContactSeconds;
+    const { context, jobs, path, ports, state } = fixture(road, [
+      { guaranteed: true, key: "wide", moving: true, width: 3 },
+      { guaranteed: true, key: "required-cover" },
+      { key: "cover-a" },
+      { key: "cover-b" },
+      { key: "cover-c" },
+    ]);
+    const accepted: string[] = [];
+    const result = constructSlotWitness(
+      {
+        ...ports,
+        test(job, candidate) {
+          const result = ports.test(job, candidate);
+          if (result?.accepted) {
+            accepted.push(job.key);
+          }
+          return result;
         },
-        road,
-        path,
-        jobs,
-      );
-      expect(accepted[0]).toBe(coverageFirst ? "required-cover" : "wide");
-      expect(result.status).toBe("compatible");
-      if (result.status !== "compatible") {
-        throw new Error("Expected a complete native witness");
-      }
-      expect(new Set(result.witness.map(({ owner }) => owner))).toEqual(new Set(jobs));
-      expect(quietCoverage(road, result.witness).over).toBe(0);
-      expect(createSlotConstructionState(road, path, result.witness).checkComplete()).toEqual({
-        accepted: true,
-      });
-      expect(state.entries()).toEqual([]);
-      expect(context()).toBe(0);
-    },
-  );
+      },
+      road,
+      path,
+      jobs,
+    );
+    expect(accepted[0]).toBe("required-cover");
+    expect(result.status).toBe("compatible");
+    if (result.status !== "compatible") {
+      throw new Error("Expected a complete native witness");
+    }
+    expect(new Set(result.witness.map(({ owner }) => owner))).toEqual(new Set(jobs));
+    expect(quietCoverage(road, result.witness).over).toBe(0);
+    expect(createSlotConstructionState(road, path, result.witness).checkComplete()).toEqual({
+      accepted: true,
+    });
+    expect(state.entries()).toEqual([]);
+    expect(context()).toBe(0);
+  });
 
   it("restores ordinary mandatory choices when the initial fixed coverage domain is empty", () => {
     const road = { ...geometry, laneCount: 5, minOpenLanes: 2, pathStart: 4 };
@@ -1708,7 +1684,6 @@ describe("native witness construction mode", () => {
           visited.push(job.key);
           return ports.candidates(job, prepared, order);
         },
-        coverageFirst: true,
       },
       road,
       path,
@@ -1721,75 +1696,71 @@ describe("native witness construction mode", () => {
     expect(context()).toBe(0);
   });
 
-  it.each([false, true])(
-    "tries native moving gap anchors before an unrelated warm suffix (fair sources %s)",
-    (fairSources) => {
-      const road = { ...geometry, maxEmptyRows: 1 };
-      const { context, jobs, path, pin, ports, state } = fixture(road, [
-        { key: "first" },
-        { key: "second" },
-        { key: "third" },
-        { key: "last" },
-        { key: "moving", moving: true },
-      ]);
-      [0, 2, 4, 7].forEach((row, index) => pin(jobs[index]!, row, 0));
-      const prefix = state.entries();
-      const leading = coverageLeadingRows(road, quietCoverage(road, prefix))!;
-      expect(leading).toEqual([6, 5]);
-      const job = jobs[4]!;
-      const source = [...job.preparations()][0]!;
-      const domains = createSlotCandidateDomains(road, path);
-      const warm = domains.at(job.key, source, 6, 1)[0]!;
-      expect(
-        visibleMoverRows(
-          road,
-          path.map(({ distance }) => distance),
-          warm.entry,
-        ).some((row) => leading.includes(row)),
-      ).toBe(false);
-      const native = state.checkpoint();
-      expect(state.commit(job, warm.entry).accepted).toBe(true);
-      state.restore(native);
-      const accepted: SlotCandidate<string>[] = [];
-      const result = constructSlotWitness(
-        {
-          ...ports,
-          candidates: (owner, prepared, order) =>
-            ports.candidates(owner, prepared, { ...order, columns: [1] }),
-          fairSources,
-          hint: () => warm,
-          minimumDelivery: jobs.length,
-          test(owner, candidate) {
-            const checked = ports.test(owner, candidate);
-            if (checked?.accepted) {
-              accepted.push(candidate);
-            }
-            return checked;
-          },
-        },
-        road,
-        path,
-        jobs,
-      );
-      expect(accepted.length).toBeGreaterThan(0);
-      const visible = visibleMoverRows(
+  it("tries native moving gap anchors before an unrelated warm suffix", () => {
+    const road = { ...geometry, maxEmptyRows: 1 };
+    const { context, jobs, path, pin, ports, state } = fixture(road, [
+      { key: "first" },
+      { key: "second" },
+      { key: "third" },
+      { key: "last" },
+      { key: "moving", moving: true },
+    ]);
+    [0, 2, 4, 7].forEach((row, index) => pin(jobs[index]!, row, 0));
+    const prefix = state.entries();
+    const leading = coverageLeadingRows(road, quietCoverage(road, prefix))!;
+    expect(leading).toEqual([6, 5]);
+    const job = jobs[4]!;
+    const source = [...job.preparations()][0]!;
+    const domains = createSlotCandidateDomains(road, path);
+    const warm = domains.at(job.key, source, 6, 1)[0]!;
+    expect(
+      visibleMoverRows(
         road,
         path.map(({ distance }) => distance),
-        accepted[0]!.entry,
-      );
-      expect(visible.some((row) => leading.includes(row))).toBe(true);
-      expect(accepted[0]).not.toBe(warm);
-      expect(result.status).toBe("compatible");
-      if (result.status === "compatible") {
-        expect(quietCoverage(road, result.witness).over).toBe(0);
-        expect(createSlotConstructionState(road, path, result.witness).checkComplete()).toEqual({
-          accepted: true,
-        });
-      }
-      expect(state.entries()).toEqual(prefix);
-      expect(context()).toBe(0);
-    },
-  );
+        warm.entry,
+      ).some((row) => leading.includes(row)),
+    ).toBe(false);
+    const native = state.checkpoint();
+    expect(state.commit(job, warm.entry).accepted).toBe(true);
+    state.restore(native);
+    const accepted: SlotCandidate<string>[] = [];
+    const result = constructSlotWitness(
+      {
+        ...ports,
+        candidates: (owner, prepared, order) =>
+          ports.candidates(owner, prepared, { ...order, columns: [1] }),
+        hint: () => warm,
+        minimumDelivery: jobs.length,
+        test(owner, candidate) {
+          const checked = ports.test(owner, candidate);
+          if (checked?.accepted) {
+            accepted.push(candidate);
+          }
+          return checked;
+        },
+      },
+      road,
+      path,
+      jobs,
+    );
+    expect(accepted.length).toBeGreaterThan(0);
+    const visible = visibleMoverRows(
+      road,
+      path.map(({ distance }) => distance),
+      accepted[0]!.entry,
+    );
+    expect(visible.some((row) => leading.includes(row))).toBe(true);
+    expect(accepted[0]).not.toBe(warm);
+    expect(result.status).toBe("compatible");
+    if (result.status === "compatible") {
+      expect(quietCoverage(road, result.witness).over).toBe(0);
+      expect(createSlotConstructionState(road, path, result.witness).checkComplete()).toEqual({
+        accepted: true,
+      });
+    }
+    expect(state.entries()).toEqual(prefix);
+    expect(context()).toBe(0);
+  });
 
   it("retains later weighted sources and every ordinary moving anchor during quiet repair", () => {
     const road = { ...geometry, maxEmptyRows: 1 };
@@ -2063,8 +2034,9 @@ describe("runtime row pressure", () => {
     expect(runtime.result.status).toBe("compatible");
     expect(exact.result.status).toBe("compatible");
     expect(exact.second[0]!.row).toBe(exact.ideal);
-    // Rejections other than occupancy leave far rows unpressured, so they come first.
-    expect(Math.abs(runtime.second[0]!.row - runtime.ideal)).toBeGreaterThan(1);
+    // The first kind's repeated occupancy rejections at the ideal row move it behind the second
+    // kind's untried rows.
+    expect(runtime.second[0]!.row).not.toBe(runtime.ideal);
     expect(runtime.second.length).toBeLessThan(exact.second.length);
   });
 });
