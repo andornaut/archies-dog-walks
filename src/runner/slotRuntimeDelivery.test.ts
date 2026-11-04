@@ -4,6 +4,7 @@ import { createSlotCandidateDomains } from "./slotCandidateDomains";
 import { prepareSlotKind } from "./slotCandidates";
 import type { SlotKind } from "./slotConfig";
 import { createSlotConstructionState } from "./slotConstraintState";
+import { SLOT_OMISSION_ATTEMPTS } from "./slotDelivery";
 import { planSlotCapacity, planSlotSpawns, SLOT_LIMITS } from "./slotPlanner";
 import { createSlotWitnessSearch, type WitnessJob } from "./slotWitnessSearch";
 import { rowSpacing, type SpawnPlan, type SpawnQuota, zoneRows } from "./spawning";
@@ -62,22 +63,27 @@ function fixture(missing: number | undefined, guaranteed = 0) {
   return { domains, jobs, path, state };
 }
 
-function repairFixture() {
+// Rejects wall-4's first native commits while its cursor still holds valid values.
+function rejectingFixture(failures = SLOT_OMISSION_ATTEMPTS) {
   const value = fixture(undefined);
-  const prepared = prepareSlotKind({ movers: () => 0, spawns: () => 0 }, geometry, {
-    compile: () => ({
-      blocksLane: true,
-      footprint: { lanes: 1, rows: 1 },
-      within: [0, 1.5 / value.path.length],
-    }),
-    footprint: { lanes: 1, rows: 1 },
-    kind: "wall-4",
-    role: "minorFixed",
-    weight: 1,
-  });
-  value.jobs[4] = { ...value.jobs[4]!, preparations: () => [prepared] };
-  return value;
+  let rejected = 0;
+  const state: typeof value.state = {
+    ...value.state,
+    commit(owner, entry) {
+      if (owner === value.jobs[4] && rejected < failures) {
+        rejected++;
+        return {
+          accepted: false,
+          failure: { classification: "intrinsic", owners: [], rule: "test-rejection" },
+        };
+      }
+      return value.state.commit(owner, entry);
+    },
+  };
+  return { ...value, rejected: () => rejected, state };
 }
+// Each rejected commit also spends its intrinsic and commit checks.
+const REJECTION_CHECKS = 2 * SLOT_OMISSION_ATTEMPTS + 200;
 
 describe("optional native slot delivery", () => {
   it("retains a qualifying native incumbent through budget rollback without full-universe proofs", () => {
@@ -181,8 +187,39 @@ describe("optional native slot delivery", () => {
     expect(state.entries()).toEqual([]);
   });
 
+  it.each([
+    [1, "wall-4"],
+    [SLOT_OMISSION_ATTEMPTS, "wall-5"],
+  ])("after %s failed attempts of optional wall-4, next places %s", (failures, next) => {
+    const { domains, jobs, path, rejected, state } = rejectingFixture(failures);
+    const placed: string[] = [];
+    const result = createSlotWitnessSearch(geometry, path, domains, jobs, {
+      anchor: () => true,
+      certifyPartial: () => true,
+      check: () => true,
+      minimumDelivery: 9,
+      propagate: () => true,
+    }).solve({
+      ...state,
+      commit(owner, entry) {
+        const trial = state.commit(owner, entry);
+        if (trial.accepted && rejected() === failures) {
+          placed.push(owner.key);
+        }
+        return trial;
+      },
+    });
+    expect(rejected()).toBe(failures);
+    expect(placed[0]).toBe(next);
+    expect(result.status).toBe("compatible");
+    if (result.status === "compatible") {
+      expect(result.selections.map(({ owner }) => owner)).toEqual(jobs);
+    }
+    expect(state.entries()).toEqual([]);
+  });
+
   it("resumes a better original placement after its certified omission subtree is dominated", () => {
-    const { domains, jobs, path, state } = repairFixture();
+    const { domains, jobs, path, state } = rejectingFixture();
     let checks = 0;
     let certified = false;
     let repaired = false;
@@ -193,7 +230,7 @@ describe("optional native slot delivery", () => {
         certified = true;
         return true;
       },
-      check: () => ++checks <= 200,
+      check: () => ++checks <= REJECTION_CHECKS,
       minimumDelivery: 9,
       propagate: () => true,
     }).solve({
@@ -218,12 +255,12 @@ describe("optional native slot delivery", () => {
       expect(result.selections).toHaveLength(10);
       expect(result.selections.map(({ owner }) => owner)).toEqual(jobs);
     }
-    expect(checks).toBeLessThanOrEqual(200);
+    expect(checks).toBeLessThanOrEqual(REJECTION_CHECKS);
     expect(state.entries()).toEqual([]);
   });
 
   it("does not bound an omission branch using a native-valid but uncertified prefix", () => {
-    const { domains, jobs, path, state } = repairFixture();
+    const { domains, jobs, path, state } = rejectingFixture();
     let checks = 0;
     let ineligible = false;
     const afterAudit: string[] = [];
@@ -234,7 +271,7 @@ describe("optional native slot delivery", () => {
     const result = createSlotWitnessSearch(geometry, path, domains, jobs, {
       anchor: () => true,
       certifyPartial,
-      check: () => ++checks <= 200,
+      check: () => ++checks <= REJECTION_CHECKS,
       minimumDelivery: 9,
       propagate: () => true,
     }).solve({

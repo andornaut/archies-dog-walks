@@ -5,6 +5,7 @@ This record summarises the runtime spawn planner's contract and the qualificatio
 ## Contract
 
 - **Floor:** a runtime plan is released only as an independently certified layout containing at least 90% of the neighbourhood's original combined active and auxiliary requests. Optional requests, including rewards, may be omitted down to that floor. Guaranteed owners, authored kind and role minima, full movement, native safety and quiet coverage remain mandatory.
+- **Omission:** an optional request is omitted only after 3 failed placement attempts (`SLOT_OMISSION_ATTEMPTS`) or when its domain is exhausted. Guaranteed and other non-optional requests are never omitted.
 - **Search:** the planner tries the original order first, then makes at most one balanced fallback attempt, only after a construction failure.
 - **Budgets:** candidate checks and propagation checks have separate caps, each 65,536 cumulative across both attempts and 32,768 per attempt.
 - **Capacity:** an offline check constructs and independently audits the exact 100% composition. It is a separate, non-gating audit.

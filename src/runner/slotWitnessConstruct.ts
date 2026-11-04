@@ -9,6 +9,7 @@ import type {
 import { nativeSlotPreparationOrderingHint, type PreparedSlotKind } from "./slotCandidates";
 import type { ConstraintEntry, ConstraintOwner, ConstraintResult } from "./slotConstraintState";
 import { coverageLeadingRows, createQuietCoverageState } from "./slotCoverage";
+import { SLOT_OMISSION_ATTEMPTS } from "./slotDelivery";
 import { createMovingCoverageHints } from "./slotMovingCoverageHints";
 import type { SlotPocketProof } from "./slotPocketSupport";
 import { drainSlotSolver } from "./slotSolverSession";
@@ -787,7 +788,7 @@ function* construct<Kind extends string, Mark>(
     readonly job?: WitnessJob<Kind>;
     readonly omissions: readonly WitnessOmission<Kind>[];
     omissionOffered: boolean;
-    tried: boolean;
+    attempts: number;
     deferredIndex: number;
     selected?: Option<Kind>;
     sourceEnded: boolean;
@@ -1100,6 +1101,7 @@ function* construct<Kind extends string, Mark>(
         } else {
           frames.push({
             ...pending,
+            attempts: 0,
             before: ports.checkpoint(),
             closureChecked,
             deferred: [],
@@ -1107,7 +1109,6 @@ function* construct<Kind extends string, Mark>(
             omissionOffered: false,
             omissions: omitted(),
             sourceEnded: false,
-            tried: false,
           });
         }
       }
@@ -1145,9 +1146,10 @@ function* construct<Kind extends string, Mark>(
         descend = true;
         return true;
       };
-      // Offer the omission before an unsuccessful domain can consume the remaining allowance.
-      // The original cursor stays suspended and retains every subsequent native value.
-      if (frame.tried && omit("not-selected-within-allowance")) {
+      // Offer the omission once the request's own failed attempts reach the threshold, so its
+      // domain is explored before the allowance is spent. The original cursor stays suspended
+      // and retains every subsequent native value.
+      if (frame.attempts >= SLOT_OMISSION_ATTEMPTS && omit("not-selected-within-allowance")) {
         continue;
       }
       let option: Option<Kind>;
@@ -1187,7 +1189,7 @@ function* construct<Kind extends string, Mark>(
           defer = value.value.continuation.defer;
         }
       }
-      frame.tried = true;
+      frame.attempts++;
       const admitted = attempt(preferClear, option);
       if (backjump !== undefined && !stopped()) {
         while (frames.length - 1 > backjump) {

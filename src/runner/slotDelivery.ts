@@ -42,6 +42,8 @@ export const SLOT_RUNTIME_DELIVERY_FLOOR = Object.freeze({
   denominator: 10,
   numerator: 9,
 } as const);
+// Failed placement attempts a search frame makes before it may omit its optional request.
+export const SLOT_OMISSION_ATTEMPTS = 3;
 const EXACT_FLOOR = Object.freeze({ denominator: 1, numerator: 1 } as const);
 
 export function slotDeliveryFloor(policy: SlotDeliveryPolicy): SlotDeliveryFloor {
