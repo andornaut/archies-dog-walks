@@ -1264,8 +1264,8 @@ function matched(
   argv: readonly string[],
 ): [Command, string[]] | null {
   for (const [pattern, command] of Object.entries(commands)) {
-    const words = pattern.split(" ");
-    const rest = words.at(-1)!.endsWith("...");
+    const words = pattern === "" ? [] : pattern.split(" ");
+    const rest = words.at(-1)?.endsWith("...") ?? false;
     if (rest ? argv.length < words.length : argv.length !== words.length) {
       continue;
     }
@@ -1280,9 +1280,9 @@ function matched(
 
 // A tool's command line: runs the command whose pattern argv matches. A pattern is the words after
 // the tool's name: an upper-case word (OUT.png, KEY) takes one argument, a last one ending in "..."
-// (KEY...) one or more, and any other word (preview, --write) must appear as written. --help or -h
-// prints doc to stdout; no match, or a command that throws UsageError, prints it to stderr and
-// exits 1.
+// (KEY...) one or more, and any other word (preview, --write) must appear as written; the empty
+// pattern takes no arguments. --help or -h prints doc to stdout; no match, or a command that throws
+// UsageError, prints it to stderr and exits 1.
 export async function run(
   { commands, doc }: { commands: Readonly<Record<string, Command>>; doc: string },
   argv: readonly string[] = process.argv.slice(2),

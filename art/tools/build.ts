@@ -14,6 +14,8 @@
 import { spawnSync } from "node:child_process";
 import { readdirSync } from "node:fs";
 
+import { run as runCommands, UsageError } from "./pixel.ts";
+
 const USAGE = `Usage:
   node art/tools/build.ts [--check] [SET...]   rebuild every set, or each SET and the sets that read
                                                its exports, in dependency order; --check then fails
@@ -174,13 +176,12 @@ function unchanged(): boolean {
   return diff === 0 && !untracked.length;
 }
 
-if (import.meta.main) {
-  const argv = process.argv.slice(2);
-  const check = argv.includes("--check");
-  const named = argv.filter((arg) => arg !== "--check");
+// Rebuild the named sets and those downstream, or every set, then check the trees if check is set.
+function rebuild(check: boolean, named: readonly string[]): void {
   const unknown = named.filter((arg) => !(SETS as readonly string[]).includes(arg));
   if (unknown.length) {
-    fail(`unknown set ${unknown.join(", ")}\n${USAGE}`);
+    console.error(`unknown set ${unknown.join(", ")}`);
+    throw new UsageError();
   }
   const found = problems("art/tools");
   if (found.length) {
@@ -198,4 +199,16 @@ if (import.meta.main) {
   if (check && !unchanged()) {
     fail(`the rebuild differs from the committed ${TREES.join(", ")}`);
   }
+}
+
+if (import.meta.main) {
+  await runCommands({
+    commands: {
+      "": () => rebuild(false, []),
+      "--check": () => rebuild(true, []),
+      "--check SET...": (...sets) => rebuild(true, sets),
+      "SET...": (...sets) => rebuild(false, sets),
+    },
+    doc: USAGE,
+  });
 }
