@@ -36,7 +36,7 @@ interface PackFrame {
 }
 
 // The walker, the dogs on their leashes, and what shows over them: each dog's pull signals
-// and the bursts over it, and the walker's tip sparkle.
+// and the bursts over it, and the tip sparkle over the lead dog.
 export class PackView {
   private readonly dogSprites: ReadonlyMap<DogId, GameObjects.Sprite>;
   // The tag each dog's sprite last played.
@@ -46,6 +46,8 @@ export class PackView {
   private readonly figures: PackFigures;
   // Fired dogs trotting off the road, drawn by their trot and not with the pack.
   private readonly leaving = new Map<DogId, Tweens.Tween>();
+  // The front walking dog in formation order on the last frame drawn, undefined with none.
+  private lead: DogId | undefined;
   private pose: "idle" | "walk" = "walk";
   private readonly pullSignals: PullSignals;
   // Sprites playing a one-off reaction, which the pack's pose waits for.
@@ -64,11 +66,14 @@ export class PackView {
     }
     this.walker = walker;
     this.pullSignals = new PullSignals(scene, DEPTH.fx);
-    this.tipSparkle = new TipSparkle(scene, DEPTH.fx, () => dogTop(walker.sprite));
+    this.tipSparkle = new TipSparkle(scene, DEPTH.fx, () => ({
+      lead: this.lead === undefined ? undefined : this.dogPoint(this.lead),
+      walker: dogTop(walker.sprite),
+    }));
   }
 
-  // A grabbed tip twinkles over the walker, restarting a twinkle still playing; reduced motion
-  // skips it.
+  // A grabbed tip twinkles over the lead dog, or the walker with no dog shown, restarting a
+  // twinkle still playing; reduced motion skips it.
   tipGrabbed(still: boolean): void {
     this.tipSparkle.play(still);
   }
@@ -218,6 +223,7 @@ export class PackView {
     const walkerX = Math.round(laneMotionX(LANE_XS, walk.road.control.motion));
     const footY = PROJECTION.footY;
     const walking = formationOrder(packDogs(walk.run));
+    [this.lead] = walking;
     const placements = packPlacements(PROJECTION, walking.map(packDogOf));
     const pose = halted ? "idle" : "walk";
     const posed = pose !== this.pose;

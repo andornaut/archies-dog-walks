@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 
 import type { WalkStep } from "../../runner/walk.ts";
 import type { WalkItem } from "../../runner/walkItems.ts";
-import { stepSparkles, TIP_SPARKLE, TipSparkle } from "./tipSparkle.ts";
+import { type SparkleTops, stepSparkles, TIP_SPARKLE, TipSparkle } from "./tipSparkle.ts";
 
 const TIP = { id: 1, kind: "tip" } as WalkItem;
 const TREAT = { id: 2, kind: "treat" } as WalkItem;
@@ -20,17 +20,17 @@ function step(collected: WalkItem[], tips: WalkItem[]): Pick<WalkStep, "collecte
 
 describe("stepSparkles", () => {
   it.each([
-    ["a tip sparkles over the walker and not over the pack", [TIP], [TIP], [], true],
-    ["a treat sparkles over the pack and not over the walker", [TREAT], [], [TREAT], false],
+    ["a tip plays the tip sparkle and does not sparkle over the pack", [TIP], [TIP], [], true],
+    ["a treat sparkles over the pack and plays no tip sparkle", [TREAT], [], [TREAT], false],
     ["a tip and a treat sparkle once each, where each belongs", [TIP, TREAT], [TIP], [TREAT], true],
-  ])("%s", (_, collected, tips, overPack, overWalker) => {
-    expect(stepSparkles(step(collected, tips))).toEqual({ overPack, overWalker });
+  ])("%s", (_, collected, tips, overPack, tip) => {
+    expect(stepSparkles(step(collected, tips))).toEqual({ overPack, tip });
   });
 });
 
-// A scene with the tip sparkle's art that records each sprite it adds, each play of the
-// sparkle's tag and where the sprite stands; finish() ends the tag's play.
-function fakeScene() {
+// A scene with the tip sparkle's art, its frames size px, that records each sprite it adds,
+// each play of the sparkle's tag and where the sprite stands; finish() ends the tag's play.
+function fakeScene(size = { height: 9, width: 9 }) {
   const animation = animationKey(TIP_SPARKLE.key, TIP_SPARKLE.tag);
   let listeners: { event: string; listener: () => void }[] = [];
   const plays: string[] = [];
@@ -81,7 +81,14 @@ function fakeScene() {
       },
     },
     anims: { exists: (key: string) => key === animation },
-    textures: { exists: (key: string) => key === TIP_SPARKLE.key },
+    textures: {
+      exists: (key: string) => key === TIP_SPARKLE.key,
+      get: () => ({
+        get: (name: string) =>
+          name === "0" ? { realHeight: size.height, realWidth: size.width } : undefined,
+        getFrameNames: () => ["0"],
+      }),
+    },
   };
   const finish = () => {
     const event = `animationcomplete-${animation}`;
@@ -97,24 +104,64 @@ function fakeScene() {
   };
 }
 
+const LEAD_TOP = { x: 60, y: 200 };
+const WALKER_TOP = { x: 30, y: 150 };
+
 describe("TipSparkle", () => {
-  it("plays once, its centre 8px over the walker's top, following it until it ends", () => {
+  it("plays once, its centre 8px over the lead dog's top, following it until it ends", () => {
     const { finish, plays, scene, sprites } = fakeScene();
-    const walkerTop = { x: 60, y: 200 };
-    const sparkle = new TipSparkle(scene, 1, () => walkerTop);
+    const lead = { ...LEAD_TOP };
+    const sparkle = new TipSparkle(scene, 1, () => ({ lead, walker: WALKER_TOP }));
     sparkle.play(false);
     expect(plays).toHaveLength(1);
     expect(sprites).toEqual([expect.objectContaining({ visible: true, x: 56, y: 188 })]);
-    walkerTop.x = 70;
+    lead.x = 70;
+    lead.y = 196;
     sparkle.follow();
-    expect(sprites[0]).toMatchObject({ x: 66, y: 188 });
+    expect(sprites[0]).toMatchObject({ x: 66, y: 184 });
     finish();
     expect(sprites[0]?.visible).toBe(false);
   });
 
+  it("moves to a new lead dog's top while it plays", () => {
+    const { scene, sprites } = fakeScene();
+    let tops: SparkleTops = { lead: LEAD_TOP, walker: WALKER_TOP };
+    const sparkle = new TipSparkle(scene, 1, () => tops);
+    sparkle.play(false);
+    tops = { lead: { x: 90, y: 210 }, walker: WALKER_TOP };
+    sparkle.follow();
+    expect(sprites[0]).toMatchObject({ x: 86, y: 198 });
+  });
+
+  it("stands over the walker with no lead dog, and moves to a lead dog once one is shown", () => {
+    const { scene, sprites } = fakeScene();
+    let tops: SparkleTops = { lead: undefined, walker: WALKER_TOP };
+    const sparkle = new TipSparkle(scene, 1, () => tops);
+    sparkle.play(false);
+    expect(sprites[0]).toMatchObject({ x: 26, y: 138 });
+    tops = { lead: LEAD_TOP, walker: WALKER_TOP };
+    sparkle.follow();
+    expect(sprites[0]).toMatchObject({ x: 56, y: 188 });
+  });
+
+  it.each([
+    [
+      { height: 9, width: 9 },
+      { x: 56, y: 188 },
+    ],
+    [
+      { height: 11, width: 15 },
+      { x: 53, y: 186 },
+    ],
+  ])("centres a %o frame read from the texture over the lead dog", (size, corner) => {
+    const { scene, sprites } = fakeScene(size);
+    new TipSparkle(scene, 1, () => ({ lead: LEAD_TOP, walker: WALKER_TOP })).play(false);
+    expect(sprites[0]).toMatchObject(corner);
+  });
+
   it("restarts its one sprite for a second tip rather than adding one", () => {
     const { finish, plays, scene, sprites } = fakeScene();
-    const sparkle = new TipSparkle(scene, 1, () => ({ x: 60, y: 200 }));
+    const sparkle = new TipSparkle(scene, 1, () => ({ lead: LEAD_TOP, walker: WALKER_TOP }));
     sparkle.play(false);
     sparkle.play(false);
     expect(sprites).toHaveLength(1);
@@ -128,7 +175,7 @@ describe("TipSparkle", () => {
 
   it("draws and plays nothing with reduced motion", () => {
     const { plays, scene, sprites } = fakeScene();
-    new TipSparkle(scene, 1, () => ({ x: 60, y: 200 })).play(true);
+    new TipSparkle(scene, 1, () => ({ lead: LEAD_TOP, walker: WALKER_TOP })).play(true);
     expect(sprites).toEqual([]);
     expect(plays).toEqual([]);
   });

@@ -328,10 +328,10 @@ export class RunMoments {
     for (const { change, item } of step.tips) {
       this.addChanges(overPack(pack), [change], 0, reached.get(item.id));
     }
-    // A tip twinkles over the walker, its only sparkle; everything else grabbed sparkles over
+    // A tip twinkles over the lead dog, its only sparkle; everything else grabbed sparkles over
     // the pack.
     const sparkles = stepSparkles(step);
-    if (sparkles.overWalker) {
+    if (sparkles.tip) {
       this.deps.pack.tipGrabbed(this.deps.still());
     }
     for (const item of sparkles.overPack) {
