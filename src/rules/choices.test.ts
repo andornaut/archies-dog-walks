@@ -75,8 +75,7 @@ function heartsOf(id: EncounterId): number {
   const effect = option?.effects.find((candidate) => candidate.kind === "hearts");
   return effect?.kind === "hearts" ? effect.amount : 0;
 }
-const letGo = read(TEST_TUNING, "money", "thiefLetGo");
-const high = read(TEST_TUNING, "money", "encounterHigh");
+const optionCost = read(TEST_TUNING, "money", "cardOptionCost");
 
 function choose(state: RunState, source: CardSource, choice: Choice) {
   const opened = openCard(source, state);
@@ -85,7 +84,7 @@ function choose(state: RunState, source: CardSource, choice: Choice) {
 
 describe("cardFor", () => {
   it("disables an option the player cannot afford, with the reason, and rejects choosing it", () => {
-    const state = testState({ ginger: 5, kilo: 5 }, { money: cents(letGo - 100) });
+    const state = testState({ ginger: 5, kilo: 5 }, { money: cents(optionCost - 100) });
     const card = cardFor(data, state, encounter("thief", ["ginger", "kilo"]));
     const letGoOption = optionWith("thief", "money");
     expect(card.title).toBe(ENCOUNTERS.thief.name);
@@ -94,7 +93,7 @@ describe("cardFor", () => {
         index === letGoOption ? { enabled: false, reason: "not enough money" } : { enabled: true },
       ),
     );
-    expect(card.options[letGoOption]?.cost).toBe(letGo);
+    expect(card.options[letGoOption]?.cost).toBe(optionCost);
     expect(() => choose(state, encounter("thief", ["ginger", "kilo"]), letGoOption)).toThrow(
       "not enough money",
     );
@@ -132,7 +131,7 @@ describe("cardFor", () => {
     ]);
     expect(
       card.options[optionWith("thief", "money")]?.breakdown.filter(({ dog }) => dog === null),
-    ).toEqual([{ dog: null, name: letGo?.name, text: `−$${TEST_TUNING.money.thiefLetGo}` }]);
+    ).toEqual([{ dog: null, name: letGo?.name, text: `−$${TEST_TUNING.money.cardOptionCost}` }]);
   });
 
   it("refuses an instant encounter, which opens no card", () => {
@@ -300,8 +299,8 @@ describe("chooseOption", () => {
   it("charges the option's cost and reports the money change", () => {
     const state = testState({ ginger: 5, kilo: 5 }, { money: cents(4000) });
     const outcome = choose(state, encounter("skunk", ["ginger", "kilo"]), groom);
-    expect(outcome.state.money).toBe(4000 - high);
-    expect(outcome.moneyDelta).toBe(-high);
+    expect(outcome.state.money).toBe(4000 - optionCost);
+    expect(outcome.moneyDelta).toBe(-optionCost);
   });
 
   it("fires an owner at 0 hearts, and the money stays", () => {
@@ -337,7 +336,7 @@ describe("chooseOption", () => {
     const first = choose(state, skunk, groom);
     expect(first.state.money).toBe(4000);
     expect(first.state.cardsThisZone).toBe(1);
-    expect(choose(first.state, skunk, groom).state.money).toBe(4000 - high);
+    expect(choose(first.state, skunk, groom).state.money).toBe(4000 - optionCost);
   });
 });
 

@@ -42,7 +42,7 @@ describe("types", () => {
       // @ts-expect-error: a nested table, not an amount
       check<MoneyEffect>({ amount: "feeByTemperament", change: "lose", kind: "money" });
       // @ts-expect-error: a money key added to a hearts stat
-      check<Modifier>({ by: "thiefLetGo", operation: "add", stat: "maxHearts" });
+      check<Modifier>({ by: "cardOptionCost", operation: "add", stat: "maxHearts" });
       expect(check<MoneyEffect>({ amount: "tip", change: "gain", kind: "money" }).kind).toBe(
         "money",
       );

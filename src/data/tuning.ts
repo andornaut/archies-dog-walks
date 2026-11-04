@@ -69,19 +69,12 @@ export const TUNING = {
   money: {
     // Added to each tip while Big tipper is on.
     bigTipperTipBonus: 1,
-    // The Cheese crates' Buy the cheese.
-    cheeseBuy: 20,
-    encounterHigh: 20,
-    // The Green bin spill's Pay for cleanup.
-    greenBinSpillCleanUp: 20,
+    // What every money option on a choice card costs.
+    cardOptionCost: 20,
+    // The Lost wallet's found cash.
     lostWalletKeep: 20,
-    missedTips: 20,
-    // The Dropped ice cream's Buy a new cone.
-    newCone: 20,
     // Each walking dog's pay for a zone, the same in every zone.
     payPerDog: 20,
-    // The Porch cat's Treat bribe.
-    porchCatTreat: 20,
     prices: {
       buddy: 600,
       // The second and third dog slots; every player starts with one.
@@ -100,13 +93,10 @@ export const TUNING = {
       sequoia: 2200,
       whistle: 2500,
     },
-    // The Big screen promo's Buy the merch.
-    promoMerch: 20,
     // What a bump costs in cash while Spotlight lasts, on top of its hearts.
     spotlightBump: 10,
     // The cash every walk starts with, before gear.
     startPurse: 0,
-    thiefLetGo: 20,
     tip: 1,
     // A treat grabbed while every walking owner is at their max and the pack can't hold it as a
     // spare treat pays this as cash.
@@ -114,8 +104,6 @@ export const TUNING = {
     // The Walk bonus: paid into the bank when every dog set out with gets home after the last
     // zone, whatever the pack's size.
     walkBonus: 50,
-    // The Wedding photo shoot's Pay for a reshoot.
-    weddingApology: 20,
   },
   // Factors: 1 changes nothing, 0.75 is 25% less, 2 is double. The "change" values are
   // added per dog instead: 0.25 is 25% more.

@@ -842,7 +842,7 @@
             "art": "card-big-screen-promo-merch",
             "effects": [
               {
-                "amount": "promoMerch",
+                "amount": "cardOptionCost",
                 "change": "lose",
                 "kind": "money"
               }
@@ -899,7 +899,7 @@
             "art": "card-cheese-crates-buy",
             "effects": [
               {
-                "amount": "cheeseBuy",
+                "amount": "cardOptionCost",
                 "change": "lose",
                 "kind": "money"
               }
@@ -957,7 +957,7 @@
             "art": "card-dropped-ice-cream-buy",
             "effects": [
               {
-                "amount": "newCone",
+                "amount": "cardOptionCost",
                 "change": "lose",
                 "kind": "money"
               }
@@ -1038,7 +1038,7 @@
             "art": "card-green-bin-spill-pay",
             "effects": [
               {
-                "amount": "greenBinSpillCleanUp",
+                "amount": "cardOptionCost",
                 "change": "lose",
                 "kind": "money"
               }
@@ -1112,7 +1112,7 @@
             "art": "card-other-dog-sniff",
             "effects": [
               {
-                "amount": "missedTips",
+                "amount": "cardOptionCost",
                 "change": "lose",
                 "kind": "money"
               }
@@ -1180,7 +1180,7 @@
             "art": "card-porch-cat-treat",
             "effects": [
               {
-                "amount": "porchCatTreat",
+                "amount": "cardOptionCost",
                 "change": "lose",
                 "kind": "money"
               }
@@ -1280,7 +1280,7 @@
             "art": "card-skunk-grooming",
             "effects": [
               {
-                "amount": "encounterHigh",
+                "amount": "cardOptionCost",
                 "change": "lose",
                 "kind": "money"
               }
@@ -1363,7 +1363,7 @@
             "art": "card-thief-let-go",
             "effects": [
               {
-                "amount": "thiefLetGo",
+                "amount": "cardOptionCost",
                 "change": "lose",
                 "kind": "money"
               }
@@ -1442,7 +1442,7 @@
             "art": "card-wedding-photo-shoot-reshoot",
             "effects": [
               {
-                "amount": "weddingApology",
+                "amount": "cardOptionCost",
                 "change": "lose",
                 "kind": "money"
               }
@@ -3150,14 +3150,9 @@
     },
     "money": {
       "bigTipperTipBonus": 1,
-      "cheeseBuy": 20,
-      "encounterHigh": 20,
-      "greenBinSpillCleanUp": 20,
+      "cardOptionCost": 20,
       "lostWalletKeep": 20,
-      "missedTips": 20,
-      "newCone": 20,
       "payPerDog": 20,
-      "porchCatTreat": 20,
       "prices": {
         "buddy": 600,
         "dogSlot2": 1000,
@@ -3175,14 +3170,11 @@
         "sequoia": 2200,
         "whistle": 2500
       },
-      "promoMerch": 20,
       "spotlightBump": 10,
       "startPurse": 0,
-      "thiefLetGo": 20,
       "tip": 1,
       "treatCash": 5,
-      "walkBonus": 50,
-      "weddingApology": 20
+      "walkBonus": 50
     },
     "multipliers": {
       "approachSecondRoadShareMax": 0.45,

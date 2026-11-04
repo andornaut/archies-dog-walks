@@ -47,8 +47,8 @@ describe("effectText", () => {
     for (const [, effects, text] of [
       [
         "money once",
-        [{ amount: "thiefLetGo", change: "lose", kind: "money" }],
-        `−${dollars("thiefLetGo")}`,
+        [{ amount: "cardOptionCost", change: "lose", kind: "money" }],
+        `−${dollars("cardOptionCost")}`,
       ],
       [
         "a gain once",
@@ -87,10 +87,10 @@ describe("effectText", () => {
       [
         "several effects, naming a debuff",
         [
-          { amount: "encounterHigh", change: "lose", kind: "money" },
+          { amount: "cardOptionCost", change: "lose", kind: "money" },
           { debuff: "stinky", kind: "debuff" },
         ],
-        `−${dollars("encounterHigh")}, ${DEBUFFS.stinky.name}: ${DEBUFFS.stinky.stake.replace(
+        `−${dollars("cardOptionCost")}, ${DEBUFFS.stinky.name}: ${DEBUFFS.stinky.stake.replace(
           "{seconds}",
           String(read(TEST_TUNING, "seconds", DEBUFFS.stinky.seconds)),
         )}`,

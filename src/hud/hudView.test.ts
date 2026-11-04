@@ -208,14 +208,14 @@ describe("a money change's label", () => {
     ],
     [
       "a card gain",
-      () => resolved({ amount: "encounterHigh", change: "gain", kind: "money" }, skunkIgnore),
-      money(read(tuning, "money", "encounterHigh"), "+"),
+      () => resolved({ amount: "cardOptionCost", change: "gain", kind: "money" }, skunkIgnore),
+      money(read(tuning, "money", "cardOptionCost"), "+"),
       cash(false),
     ],
     [
       "a card cost",
-      () => resolved({ amount: "encounterHigh", change: "lose", kind: "money" }, skunkIgnore),
-      money(read(tuning, "money", "encounterHigh"), "−"),
+      () => resolved({ amount: "cardOptionCost", change: "lose", kind: "money" }, skunkIgnore),
+      money(read(tuning, "money", "cardOptionCost"), "−"),
       bank,
     ],
     [

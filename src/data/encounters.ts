@@ -25,7 +25,7 @@ export const ENCOUNTERS = {
         },
         {
           art: "card-big-screen-promo-merch",
-          effects: [{ amount: "promoMerch", change: "lose", kind: "money" }],
+          effects: [{ amount: "cardOptionCost", change: "lose", kind: "money" }],
           id: "merch",
           name: "Buy the merch",
         },
@@ -56,7 +56,7 @@ export const ENCOUNTERS = {
         },
         {
           art: "card-cheese-crates-buy",
-          effects: [{ amount: "cheeseBuy", change: "lose", kind: "money" }],
+          effects: [{ amount: "cardOptionCost", change: "lose", kind: "money" }],
           id: "buy",
           name: "Buy the cheese",
         },
@@ -87,7 +87,7 @@ export const ENCOUNTERS = {
         },
         {
           art: "card-dropped-ice-cream-buy",
-          effects: [{ amount: "newCone", change: "lose", kind: "money" }],
+          effects: [{ amount: "cardOptionCost", change: "lose", kind: "money" }],
           id: "buy",
           name: "Buy a new cone",
         },
@@ -129,7 +129,7 @@ export const ENCOUNTERS = {
         },
         {
           art: "card-green-bin-spill-pay",
-          effects: [{ amount: "greenBinSpillCleanUp", change: "lose", kind: "money" }],
+          effects: [{ amount: "cardOptionCost", change: "lose", kind: "money" }],
           id: "pay",
           name: "Pay for cleanup",
         },
@@ -165,7 +165,7 @@ export const ENCOUNTERS = {
       options: [
         {
           art: "card-other-dog-sniff",
-          effects: [{ amount: "missedTips", change: "lose", kind: "money" }],
+          effects: [{ amount: "cardOptionCost", change: "lose", kind: "money" }],
           id: "sniff",
           name: "Let them sniff",
         },
@@ -201,7 +201,7 @@ export const ENCOUNTERS = {
         },
         {
           art: "card-porch-cat-treat",
-          effects: [{ amount: "porchCatTreat", change: "lose", kind: "money" }],
+          effects: [{ amount: "cardOptionCost", change: "lose", kind: "money" }],
           id: "treat",
           name: "Treat bribe",
         },
@@ -251,7 +251,7 @@ export const ENCOUNTERS = {
           art: "card-skunk-grooming",
           effects: [
             {
-              amount: "encounterHigh",
+              amount: "cardOptionCost",
               change: "lose",
               kind: "money",
             },
@@ -293,7 +293,7 @@ export const ENCOUNTERS = {
       options: [
         {
           art: "card-thief-let-go",
-          effects: [{ amount: "thiefLetGo", change: "lose", kind: "money" }],
+          effects: [{ amount: "cardOptionCost", change: "lose", kind: "money" }],
           id: "letGo",
           name: "Let the tips go",
         },
@@ -335,7 +335,7 @@ export const ENCOUNTERS = {
         },
         {
           art: "card-wedding-photo-shoot-reshoot",
-          effects: [{ amount: "weddingApology", change: "lose", kind: "money" }],
+          effects: [{ amount: "cardOptionCost", change: "lose", kind: "money" }],
           id: "reshoot",
           name: "Pay for a reshoot",
         },

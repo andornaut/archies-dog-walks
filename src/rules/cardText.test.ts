@@ -11,7 +11,7 @@ import { read } from "./units";
 
 const PACK: readonly DogId[] = ["kilo", "ginger", "reggie"];
 const state = testState({ ginger: 5, kilo: 5, reggie: 5 }, { money: cents(10_000) });
-const { encounterHigh } = gameData.tuning.money;
+const { cardOptionCost } = gameData.tuning.money;
 
 // The name the data gives a card option, by its id.
 function optionName(id: EncounterId, optionId: string): string {
@@ -59,8 +59,8 @@ describe("a card's text for the dogs it catches", () => {
   it("charges the same cash amount for one dog and a full pack", () => {
     for (const affected of [["kilo"], PACK] as const) {
       const view = option(encounter("skunk", affected), "Full groom");
-      expect(view.cost).toBe(dollarsToCents(encounterHigh));
-      expect(view.text).toBe(`−$${encounterHigh}`);
+      expect(view.cost).toBe(dollarsToCents(cardOptionCost));
+      expect(view.text).toBe(`−$${cardOptionCost}`);
     }
   });
 
@@ -112,9 +112,9 @@ describe("a card's text for the dogs it catches", () => {
       },
       {
         cardsThisZone: 1,
-        large: `−$${encounterHigh}`,
+        large: `−$${cardOptionCost}`,
         modifiers: [sweetTalker],
-        text: `−$${encounterHigh}`,
+        text: `−$${cardOptionCost}`,
         why: "a cost once the zone's free card is used says its price",
       },
     ])("$why, on the small and large card", ({ cardsThisZone, large, modifiers, text }) => {
