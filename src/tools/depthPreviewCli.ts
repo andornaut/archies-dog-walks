@@ -35,6 +35,7 @@ import { spriteSource } from "./atlas/atlasLayout";
 import {
   cloneImage,
   crop,
+  depthPreviewArgs,
   drawScaled,
   drawText,
   fill,
@@ -59,11 +60,12 @@ const DIM = [0x8b, 0x9b, 0xb4, 0xff];
 
 const USAGE = "npm run art:depth-preview -- <key> [zone]";
 
-const [key, zoneArg] = process.argv.slice(2).filter((arg) => !arg.startsWith("--"));
-if (key === undefined) {
+const args = depthPreviewArgs(process.argv.slice(2));
+if (args === null) {
   process.stderr.write(`${USAGE}\n`);
   process.exit(1);
 }
+const { key, zone: zoneArg } = args;
 
 const root = process.cwd();
 const artFiles = nodeArtFiles(join(root, PUBLIC_ART));

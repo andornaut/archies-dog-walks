@@ -5,7 +5,7 @@ import { ROAD_CAMERA, SCREEN_LAYOUT } from "../data/screen";
 import { depthDraw } from "../layout/depthScale";
 import { project } from "../layout/projection";
 import { walkProjection } from "../runner/walkGeometry";
-import { type PreviewArt, sweepDistances, sweepRow } from "./depthPreview";
+import { depthPreviewArgs, type PreviewArt, sweepDistances, sweepRow } from "./depthPreview";
 
 const { road } = SCREEN_LAYOUT;
 const lens = walkProjection(ROAD_CAMERA, road);
@@ -33,5 +33,19 @@ describe("sweepRow", () => {
     const row = sweepRow(ARTS, lens, lens.centreX, 0);
     expect(row.drawn.key).toBe("newspaper-box");
     expect(row.rect).toEqual({ height: 32, width: 32, x: lens.centreX - 16, y: lens.footY - 32 });
+  });
+});
+
+describe("depthPreviewArgs", () => {
+  it("takes a key and an optional zone", () => {
+    expect(depthPreviewArgs(["bench"])).toEqual({ key: "bench" });
+    expect(depthPreviewArgs(["bench", "park"])).toEqual({ key: "bench", zone: "park" });
+  });
+
+  it("rejects no key, a flag or a third argument", () => {
+    expect(depthPreviewArgs([])).toBeNull();
+    expect(depthPreviewArgs(["bench", "--check"])).toBeNull();
+    expect(depthPreviewArgs(["--zone", "bench"])).toBeNull();
+    expect(depthPreviewArgs(["bench", "park", "extra"])).toBeNull();
   });
 });

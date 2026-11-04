@@ -63,13 +63,19 @@ export async function writeFiles(root: string, files: ReadonlyMap<string, string
 // A generator CLI's run from the repository root, returning its exit code. With --check it
 // writes nothing and fails if a committed file differs from files, naming the command that
 // regenerates it; otherwise it writes the files that changed, or says that name is up to date.
+// Any other argument prints the usage line and fails.
 export async function writeOrCheck(
   command: string,
   name: string,
   files: ReadonlyMap<string, string>,
 ): Promise<number> {
   const root = process.cwd();
-  if (process.argv.includes("--check")) {
+  const args = process.argv.slice(2);
+  if (args.some((arg) => arg !== "--check")) {
+    process.stderr.write(`${command} [-- --check]\n`);
+    return 1;
+  }
+  if (args.includes("--check")) {
     const stale = await staleFiles(root, files);
     for (const path of stale) {
       process.stderr.write(`${path} is out of date: run ${command}\n`);

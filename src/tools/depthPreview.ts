@@ -9,6 +9,15 @@ import { glyphAdvance, normalizePixelText, PIXEL_GLYPHS } from "../ui/pixelFont"
 // distances, through the walk's projection and depthDraw. These are the pure parts; the
 // script reads the art and writes the PNGs.
 
+// The script's arguments, <key> [zone]: null for no key, any flag or a third argument.
+export function depthPreviewArgs(args: readonly string[]): { key: string; zone?: string } | null {
+  const [key, zone, ...extra] = args;
+  if (key === undefined || extra.length > 0 || args.some((arg) => arg.startsWith("--"))) {
+    return null;
+  }
+  return zone === undefined ? { key } : { key, zone };
+}
+
 // One art step of the sprite: its frame 0 and feet line.
 export interface PreviewArt extends DepthArt {
   readonly image: RgbaImage;
