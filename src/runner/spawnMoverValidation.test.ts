@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import { herringSpawn, type MoverDraws, moverPlacements, type MoverSpec } from "./moverPlanning.ts";
+import { type MoverDraws, type MoverSpec } from "./moverModel.ts";
+import { herringSpawn, moverPlacements } from "./moverPlanning.ts";
 import {
   blockingLength,
   rowSpacing,

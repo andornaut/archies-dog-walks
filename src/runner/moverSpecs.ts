@@ -11,7 +11,7 @@ import {
   type MoverMotion,
   type MoverSpec,
   type PlannerStreams,
-} from "./moverPlanning.ts";
+} from "./moverModel.ts";
 import { type StepShape } from "./movers.ts";
 import { type WalkItemKind } from "./walkItems.ts";
 

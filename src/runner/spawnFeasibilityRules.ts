@@ -1,5 +1,5 @@
 import { laneMask } from "../layout/lanes.ts";
-import type { MoverSpec } from "./moverPlanning.ts";
+import type { MoverSpec } from "./moverModel.ts";
 import type { SpawnRejection } from "./spawnAdmission.ts";
 import type { LaneBlocks, PlacedPlaces, SpawnCells } from "./spawnCells.ts";
 import type { FeasibilityObserver } from "./spawnFeasibilityDiagnostics.ts";

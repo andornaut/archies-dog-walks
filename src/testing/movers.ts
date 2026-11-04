@@ -1,7 +1,7 @@
 import { randomStream, seededRandom } from "@andornaut/game-kit/random";
 
 import type { ConfiguredMovement, GameData, Movement, World } from "../data/types.ts";
-import type { PlannerStreams } from "../runner/moverPlanning.ts";
+import type { PlannerStreams } from "../runner/moverModel.ts";
 import { mapZones } from "./world.ts";
 
 export type HopMovement = Extract<Movement, { kind: "hop" }>;

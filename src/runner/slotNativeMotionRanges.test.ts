@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 
+import type { MoverDraws, MoverPlacement } from "./moverModel.ts";
 import * as moverPlanning from "./moverPlanning.ts";
 import { createSlotPathProjection, prepareSlotKind, slotPlacementsAt } from "./slotCandidates.ts";
 import { rowSpacing, type SpawnPlan, zoneRows } from "./spawning.ts";
@@ -225,18 +226,14 @@ describe("native whole-profile motion ranges", () => {
       expect(() => projection.view({ propagate: () => true }, prepared, refs)).toThrow(TypeError);
       expect(path[0]!.lane).toBe(4);
       expect(
-        projection.view(
-          { propagate: () => true },
-          prepared,
-          new Set<moverPlanning.MoverPlacement>(),
-        ).status,
+        projection.view({ propagate: () => true }, prepared, new Set<MoverPlacement>()).status,
       ).toBe("empty-view");
     }
   });
 
   it("keeps an empty native draw group conditional on its scope and rejects a path change", () => {
     const native = moverPlanning.moverPlacementsWithWork;
-    let original: moverPlanning.MoverDraws | undefined;
+    let original: MoverDraws | undefined;
     const empty = vi
       .spyOn(moverPlanning, "moverPlacementsWithWork")
       .mockImplementation((...args) => {

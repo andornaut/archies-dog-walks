@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 
 import * as laneAlternatives from "./laneAlternatives.ts";
+import type { MoverDraws } from "./moverModel.ts";
 import * as moverPlanning from "./moverPlanning.ts";
 import { createSlotCandidateDomains } from "./slotCandidateDomains.ts";
 import {
@@ -283,7 +284,7 @@ describe("native producer motion indexing", () => {
 
   it("keeps empty producer tiers conditional on current scope and the issuance budget", () => {
     const native = moverPlanning.moverPlacementsWithWork;
-    let original: moverPlanning.MoverDraws | undefined;
+    let original: MoverDraws | undefined;
     const empty = vi
       .spyOn(moverPlanning, "moverPlacementsWithWork")
       .mockImplementation((...args) => {

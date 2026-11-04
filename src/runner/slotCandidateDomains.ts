@@ -1,4 +1,4 @@
-import type { MoverDraws, MoverPlacement } from "./moverPlanning.ts";
+import type { MoverDraws, MoverPlacement } from "./moverModel.ts";
 import {
   createSlotPathProjection,
   isNativeSlotCrossOnly,

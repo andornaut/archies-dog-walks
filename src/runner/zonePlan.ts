@@ -20,7 +20,7 @@ import { slowestDebuffedAgility, slowestPackAgility } from "../rules/walkers.ts"
 import { zoneStats } from "../rules/zones.ts";
 import type { RunState } from "../state/runState.ts";
 import { assignedMovement, type ProfiledMovement } from "./movementAssignments.ts";
-import type { PlannerStreams } from "./moverPlanning.ts";
+import type { PlannerStreams } from "./moverModel.ts";
 import { moverMovement, moverSpec } from "./moverSpecs.ts";
 import { pickSkin } from "./obstacleLooks.ts";
 import type { SlotAudit } from "./slotAudit.ts";

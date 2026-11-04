@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import type { MoverSpec } from "./moverPlanning.ts";
+import type { MoverSpec } from "./moverModel.ts";
 import * as audits from "./slotAudit.ts";
 import {
   isNativeSlotPreparation,

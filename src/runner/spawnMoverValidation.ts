@@ -2,9 +2,9 @@ import {
   type MoverBody,
   type MoverDraws,
   type MoverGeometry,
-  moverPlacements,
   type MoverStand,
-} from "./moverPlanning.ts";
+} from "./moverModel.ts";
+import { moverPlacements } from "./moverPlanning.ts";
 import { crossLength } from "./movers.ts";
 import {
   blockingLength,

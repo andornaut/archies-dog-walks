@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 
 import { MOVEMENT_PROFILES } from "../data/movementProfiles.ts";
-import { moverPlacements, type MoverSpec } from "./moverPlanning.ts";
+import { type MoverSpec } from "./moverModel.ts";
+import { moverPlacements } from "./moverPlanning.ts";
 import {
   blockingLength,
   type PlannedSpawns,

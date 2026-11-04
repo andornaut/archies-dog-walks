@@ -2,13 +2,8 @@ import { itemAt, partitionPoint } from "@andornaut/game-kit/arrays";
 
 import { laneMask } from "../layout/lanes.ts";
 import { approachOutcomes } from "./approach.ts";
-import {
-  type MoverCaps,
-  type MoverSpec,
-  type MoverStand,
-  type PlannerStreams,
-  stopsOnVerge,
-} from "./moverPlanning.ts";
+import { type MoverSpec, type MoverStand, type PlannerStreams } from "./moverModel.ts";
+import { type MoverCaps, stopsOnVerge } from "./moverPlanning.ts";
 import { crossingScroll, laneAt, type MoverPath, moverPlace, type MoverStep } from "./movers.ts";
 import { shyOutcomes } from "./shy.ts";
 import { signaturePlace } from "./signaturePaths.ts";

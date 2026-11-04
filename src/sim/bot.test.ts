@@ -11,12 +11,8 @@ import { PART_INSET } from "../layout/packFormation.ts";
 import { read } from "../rules/units.ts";
 import { hitDog } from "../runner/collision.ts";
 import { type LaneMotion, stillInLane } from "../runner/laneMotion.ts";
-import {
-  DART_LIFTS,
-  type MoverDraws,
-  type MoverFootprint,
-  moverPlacements,
-} from "../runner/moverPlanning.ts";
+import { type MoverDraws, type MoverFootprint } from "../runner/moverModel.ts";
+import { DART_LIFTS, moverPlacements } from "../runner/moverPlanning.ts";
 import { hasLeftRoad, type MoverPath, moverPlace } from "../runner/movers.ts";
 import { moverSpec } from "../runner/moverSpecs.ts";
 import { moverOutcomes } from "../runner/outcomes.ts";
