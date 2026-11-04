@@ -141,8 +141,9 @@ function usage(): string {
                                                 ui-pet-shop-board.*`;
 }
 
-export const W = 360;
-export const H = 560;
+// The screen's size, from the layout's screen.
+export const W = LAYOUT.screen.width;
+export const H = LAYOUT.screen.height;
 export const LOGO_W = 145;
 export const LOGO_H = 41;
 export const SIGN_W = 128;

@@ -26,7 +26,7 @@ import { setTimeout } from "node:timers/promises";
 import { decodePng, encodeRgbPng } from "@andornaut/art-kit/png";
 import type { RgbaImage } from "@andornaut/art-kit/rgbaImage";
 
-import { NEUTRAL_HEX, PALETTE64, PICKER_UI, PNG_OPTIONS, run } from "./pixel.ts";
+import { LAYOUT, NEUTRAL_HEX, PALETTE64, PICKER_UI, PNG_OPTIONS, run } from "./pixel.ts";
 
 // The browser's clock steps one frame at a time, in order, so each loop awaits every step.
 /* eslint-disable no-await-in-loop */
@@ -92,7 +92,8 @@ const CHEATS_KEY = "dog-walker-game:dev-cheats";
 // 2026-10-15 09:00 in Toronto: a weekday autumn morning.
 const CLOCK_START = Date.parse("2026-10-15T09:00:00-04:00");
 const FRAME_MS = 16;
-const HEIGHT = 560;
+// The game canvas at 1x: the layout's screen.
+const HEIGHT = LAYOUT.screen.height;
 // How long a loader's counts must hold, and how long at most a step waits for that, in real time.
 const LOAD_SETTLE_MS = 100;
 const LOAD_WAIT_MS = 60_000;
@@ -127,7 +128,7 @@ const START_SAVE = {
 const USAGE = `Usage:
   node art/tools/home_grabs.ts OUT_DIR [BASE_URL]   write OUT_DIR/home-road.png and home-start.png,
                                                     grabbed from the game at BASE_URL`;
-const WIDTH = 360;
+const WIDTH = LAYOUT.screen.width;
 
 const ALLOWED = new Set(
   [...PALETTE64, ...NEUTRAL_HEX, ...Object.values(PICKER_UI)].map((hex) => hex.toLowerCase()),

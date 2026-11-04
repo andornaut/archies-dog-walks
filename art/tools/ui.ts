@@ -70,6 +70,7 @@ import {
   hexOf,
   iconEdge,
   K,
+  LAYOUT,
   raster,
   rgbPng,
   run,
@@ -1498,20 +1499,30 @@ export function stripWell(): Grid {
 
 // ---------- the walk HUD: the 40-row walk bar, the debuff bars and the dog cards ----------
 
-export const WALK_BAR: readonly [number, number] = [360, 40];
+// The top bar's size, from the layout's regions.topBar.
+export const WALK_BAR: readonly [number, number] = [
+  LAYOUT.regions.topBar.width,
+  LAYOUT.regions.topBar.height,
+];
 // Every top bar (the start screen's, the walk bar, Help's) is 40 rows of flat plum with this trim: a
 // dbrown line on row 1, and the bottom rows brown, dbrown and ink, so the bar ends on a lit edge over
 // the scene.
 export const TOP_BAR_LINE = 1;
 export const TOP_BAR_EDGE: readonly string[] = ["brown", "dbrown", "ink"];
 // The walk bar's cash well, in screen pixels: the start screen's bank well at its narrowest, 3 rows
-// clear of the trim above and below.
-export const WALK_CASH_WELL: readonly [number, number, number, number] = [5, 5, 70, 29];
+// clear of the trim above and below: x, y, width and height from the layout's walkBar.parts.cash.well.
+export const WALK_CASH_WELL: readonly [number, number, number, number] = [
+  LAYOUT.walkBar.parts.cash.well.x,
+  LAYOUT.walkBar.parts.cash.well.y,
+  LAYOUT.walkBar.parts.cash.well.width,
+  LAYOUT.walkBar.parts.cash.well.height,
+];
 // The effect wells the game draws on the bar: six 22x22 wells (the perk, Pocket, found item and three
 // upgrades), 2 columns apart, set evenly between the cash well and Help's face at x 231, on rows 8 to
 // 29, centred on the buttons' faces (rows 9 to 28). The buttons' hits, 34 wide, fill x 224 to 359 at a
-// 34 pitch, each face centred in its hit (faces at 231 + 34i).
-export const EFFECT_WELL = 22;
+// 34 pitch, each face centred in its hit (faces at 231 + 34i). The size is the layout's
+// walkBar.parts.effects.size.
+export const EFFECT_WELL = LAYOUT.walkBar.parts.effects.size;
 
 // 360x40, ui-walk-bar: flat plum with the top bars' trim (dbrown on row 1; brown, dbrown and ink on
 // rows 37 to 39) and the ink cash well at 5,5 70x29, sized for "$888" at 3x with no coin. The game

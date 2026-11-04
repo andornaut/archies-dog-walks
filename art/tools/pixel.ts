@@ -317,8 +317,16 @@ export interface Layout {
     slots: readonly (readonly string[])[];
     walkerHands: { heightAboveFeet: number; leftDx: number; rightDx: number };
   };
-  regions: { approach: ExportRect; backdrop: ExportRect; junction: ExportRect; road: ExportRect };
+  regions: {
+    approach: ExportRect;
+    backdrop: ExportRect;
+    junction: ExportRect;
+    road: ExportRect;
+    topBar: ExportRect;
+  };
   scenes: { home: { petShop: ExportRect & { board: ExportRect } } };
+  screen: ExportRect;
+  walkBar: { parts: { cash: { well: ExportRect }; effects: { size: number } } };
 }
 
 // Every field of GameData, as dotted paths (a segment ending in [] means every element of that array).
@@ -351,9 +359,14 @@ const LAYOUT_FIELDS: readonly string[] = [
   "pack.walkerHands.heightAboveFeet",
   "pack.walkerHands.leftDx",
   "pack.walkerHands.rightDx",
-  ...["approach", "backdrop", "junction", "road"].flatMap((r) => rectFields(`regions.${r}`)),
+  ...["approach", "backdrop", "junction", "road", "topBar"].flatMap((r) =>
+    rectFields(`regions.${r}`),
+  ),
   ...rectFields("scenes.home.petShop"),
   ...rectFields("scenes.home.petShop.board"),
+  ...rectFields("screen"),
+  ...rectFields("walkBar.parts.cash.well"),
+  "walkBar.parts.effects.size",
 ];
 
 // A rectangle's four fields under path.
