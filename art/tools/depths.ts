@@ -60,7 +60,7 @@ export const POSE: readonly string[] = ["arms", "bob", "lf", "rf"];
 type Pose = Readonly<Record<string, boolean | number>>;
 
 // road.ts's dressed(top, q) on a Mini, its pose snapped to whole pixels.
-function dressed(s: number, top: road.Top, q: road.PersonOptions): Drawable {
+export function dressed(s: number, top: road.Top, q: road.PersonOptions): Drawable {
   const entries = Object.entries(q);
   const pose = snap(Object.fromEntries(entries.filter(([k]) => POSE.includes(k))) as Pose, s);
   const rest = Object.fromEntries(entries.filter(([k]) => !POSE.includes(k)));
