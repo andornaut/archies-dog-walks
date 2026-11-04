@@ -1,15 +1,19 @@
 // node art/tools/contact_sheet.ts OUT.png KEY...
 // Nonproduction preview of exported sprites. Reads each key's public/art/sprites/<key>.png and .json
-// and writes one row per sprite and zone road colour, every frame in tag order and each cell sized
-// from the largest frame, with pixel.ts's preview background, scale and gap. The grounds are the
-// zones' road colours from shared/export/game-data.json, so rows follow zone order, not ZONE_ROADS.
-import { readFile, writeFile } from "node:fs/promises";
+// and writes one sheet per zone road colour at pixel.ts's groundSheetPath (OUT-<hex>.png): one row
+// per sprite, every frame in tag order and each cell sized from the largest frame, with pixel.ts's
+// preview background, scale and gap. The grounds are the zones' road colours from
+// shared/export/game-data.json, in zone order rather than ZONE_ROADS order.
+import { writeFileSync } from "node:fs";
+import { readFile } from "node:fs/promises";
 
 import { rgb } from "@andornaut/art-kit/colour";
 import type { Rgb, Sprite, Tag } from "@andornaut/art-kit/frames";
 import type { Frame } from "@andornaut/art-kit/grid";
 import { decodePng, encodeRgbPng } from "@andornaut/art-kit/png";
 import { composeContactSheet } from "@andornaut/art-kit/raster";
+
+import { groundSheetPath } from "./pixel.ts";
 
 interface SheetData {
   frames: Record<string, { frame: { h: number; w: number; x: number; y: number } }>;
@@ -58,10 +62,13 @@ if (!out || !keys.length) {
 }
 const grounds = await zoneRoads(GAME_DATA);
 const sprites = await Promise.all(keys.map((key) => exportedSprite(SPRITES_DIR, key)));
-const sheet = composeContactSheet(
-  { background: BACKGROUND, cellSize: "largest-frame", gap: GAP, resolveRgb: rgb, scale: SCALE },
-  sprites,
-  grounds,
-);
-await writeFile(out, encodeRgbPng({ deflateLevel: 6, deflateStrategy: 0, filterType: -1 }, sheet));
-console.log("wrote", out);
+for (const ground of new Set(grounds)) {
+  const sheet = composeContactSheet(
+    { background: BACKGROUND, cellSize: "largest-frame", gap: GAP, resolveRgb: rgb, scale: SCALE },
+    sprites,
+    [ground],
+  );
+  const path = groundSheetPath(ground, out);
+  writeFileSync(path, encodeRgbPng({ deflateLevel: 6, deflateStrategy: 0, filterType: -1 }, sheet));
+  console.log("wrote", path);
+}

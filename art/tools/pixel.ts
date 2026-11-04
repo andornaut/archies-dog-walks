@@ -533,7 +533,14 @@ export function toImage(px: Frame): RgbaImage {
 // The contact sheet's background, scale and gap.
 export const PREVIEW_BACKGROUND: readonly [number, number, number] = [24, 20, 37];
 
-// Contact sheet: one row per sprite and ground colour, every frame in tag order.
+// A ground's preview sheet path: out without a trailing .png, a hyphen, the ground's hex and .png, so
+// OUT.png on ground 8b9bb4 is OUT-8b9bb4.png.
+export function groundSheetPath(ground: string, out: string): string {
+  return `${out.replace(/\.png$/, "")}-${ground}.png`;
+}
+
+// Contact sheets, one per distinct ground colour at groundSheetPath: one row per sprite, every frame
+// in tag order. One sheet per ground keeps the largest sets' sheets within memory.
 export function preview(
   {
     gap = 4,
@@ -543,12 +550,17 @@ export function preview(
   sprites: readonly Sprite[],
   out: string,
 ): void {
-  const sheet = composeContactSheet(
-    { background: PREVIEW_BACKGROUND, cellSize: "row-first-frame", gap, resolveRgb: rgb, scale },
-    sprites,
-    grounds,
-  );
-  writeFileSync(out, encodeRgbPng({ deflateLevel: 6, deflateStrategy: 0, filterType: -1 }, sheet));
+  for (const ground of new Set(grounds)) {
+    const sheet = composeContactSheet(
+      { background: PREVIEW_BACKGROUND, cellSize: "row-first-frame", gap, resolveRgb: rgb, scale },
+      sprites,
+      [ground],
+    );
+    writeFileSync(
+      groundSheetPath(ground, out),
+      encodeRgbPng({ deflateLevel: 6, deflateStrategy: 0, filterType: -1 }, sheet),
+    );
+  }
 }
 
 // House colours used by a sprite, in exported palette order.
@@ -1228,7 +1240,7 @@ export interface MainOptions {
   sprites: () => Iterable<Sprite>;
 }
 
-// A sprite set's commands: preview OUT.png and build.
+// A sprite set's commands: preview OUT.png (one sheet per ground at groundSheetPath) and build.
 export async function main(
   { apart = [], doc, grounds = ZONE_ROADS, originals, sprites, srcDir }: MainOptions,
   argv: readonly string[] = process.argv.slice(2),

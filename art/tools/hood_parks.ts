@@ -151,9 +151,10 @@ import * as sounds from "./sounds.ts";
 import { chrome } from "./ui.ts";
 
 const USAGE = `Usage:
-  node art/tools/hood_parks.ts preview OUT_DIR   OUT_DIR/road.png (every road sprite and depth step on
-                                                 the zone roads), OUT_DIR/hits.png, OUT_DIR/cards.png
-                                                 (every illustration in a card frame) and the sounds
+  node art/tools/hood_parks.ts preview OUT_DIR   OUT_DIR/road-<hex>.png per zone road (every road
+                                                 sprite and depth step), OUT_DIR/hits-<hex>.png for
+                                                 the first three, OUT_DIR/cards.png (every
+                                                 illustration in a card frame) and the sounds
   node art/tools/hood_parks.ts sounds OUT_DIR    write the two sounds into OUT_DIR only
   node art/tools/hood_parks.ts build             write the .aseprite sources (art/encounters,
                                                  art/obstacles, art/hits, art/cards), export the
