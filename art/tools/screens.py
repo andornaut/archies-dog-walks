@@ -741,48 +741,65 @@ def building(cv, w, h, pressed, door_frame=None):
     full.img.alpha_composite(cv.img, (0, BOARD_RISE))
 
 
+# The keeper's raised near arm in each wave pose: (elbow, hand) offsets from the body's centre column and rows
+# on its clip. -1 lifts the forearm on the way up; 0, 1 and 2 hold the hand at head height, then swing it out
+# and in about the elbow. Upper arm and forearm keep the hanging arm's lengths, so the arm reads as one limb.
+KEEPER_WAVE = {
+    -1: ((-9, 21), (-9, 15)),
+    0: ((-9, 12), (-8, 6)),
+    1: ((-9, 12), (-10, 7)),
+    2: ((-9, 12), (-7, 6)),
+}
+
+
 def shop_keeper(reveal, wave):
-    """A friendly native keeper on a 20x44 clip, behind the door leaf."""
-    g = edged(Grid(20, 44), "ink")
-    cx = 9 + round((1 - reveal) * 4)
+    """A friendly native keeper on a 20x48 clip, behind the door leaf, standing on the doorway's floor with his
+    head 5px under the lintel: a third of his height is head, the rest a short-sleeved shirt and apron over
+    trousers. Both arms hang from the shoulders' top row; the near one raises from there to wave."""
+    g = edged(Grid(20, 48), "ink")
+    cx = 11 + round((1 - reveal) * 4)
     # A short apron exposes two trouser legs, a dark gap and grounded shoes.
-    g.rect(cx - 4, 30, 3, 12, "navy")
-    g.rect(cx - 4, 32, 1, 8, "dslate")
-    g.rect(cx + 1, 30, 3, 12, "navy")
-    g.rect(cx + 1, 32, 1, 8, "dslate")
-    g.rect(cx - 5, 42, 4, 1, "brown")
-    g.rect(cx + 1, 42, 4, 1, "brown")
-    g.rect(cx - 6, 18, 12, 12, "cream")
-    g.rect(cx + 4, 19, 2, 11, "tan")
-    g.rect(cx - 2, 16, 4, 3, "skin2")
-    g.rect(cx - 4, 21, 8, 11, "blue")
-    g.rect(cx - 4, 19, 2, 7, "sky")
-    g.rect(cx + 2, 19, 2, 7, "sky")
-    g.rect(cx - 3, 29, 6, 1, "sky")
-    g.rect(cx - 1, 24, 2, 2, "yellow")
+    g.rect(cx - 4, 30, 3, 16, "navy")
+    g.rect(cx - 4, 32, 1, 12, "dslate")
+    g.rect(cx + 1, 30, 3, 16, "navy")
+    g.rect(cx + 1, 32, 1, 12, "dslate")
+    g.rect(cx - 5, 46, 4, 1, "brown")
+    g.rect(cx + 1, 46, 4, 1, "brown")
+    g.rect(cx - 6, 16, 12, 14, "cream")
+    g.rect(cx + 4, 17, 2, 13, "tan")
+    g.rect(cx - 2, 14, 4, 3, "skin2")
+    g.rect(cx - 4, 20, 8, 12, "blue")
+    g.rect(cx - 4, 17, 2, 7, "sky")
+    g.rect(cx + 2, 17, 2, 7, "sky")
+    g.rect(cx - 3, 31, 6, 1, "sky")
+    g.rect(cx - 1, 23, 2, 2, "yellow")
     # A rounded short haircut, calm eyes and a small open smile.
-    g.cel(cx, 11, 5.5, 6, "skin1", "skin2")
-    g.cel(cx, 7, 5.5, 3, "dbrown", "plum", "brown")
-    g.rect(cx - 5, 9, 1, 4, "dbrown")
-    g.rect(cx + 4, 9, 1, 4, "plum")
-    g.p(cx - 2, 12, "ink")
-    g.p(cx + 2, 12, "ink")
-    g.p(cx - 1, 15, "dred")
-    g.p(cx, 16, "dred")
-    g.p(cx + 1, 15, "dred")
-    # The far arm rests; the near elbow and wrist make one small greeting.
-    g.rect(cx + 6, 20, 2, 10, "cream")
-    g.rect(cx + 6, 29, 2, 4, "skin1")
-    g.rect(cx - 8, 20, 3, 5, "cream")
+    g.cel(cx, 9, 5.5, 6, "skin1", "skin2")
+    g.cel(cx, 5, 5.5, 3, "dbrown", "plum", "brown")
+    g.rect(cx - 5, 7, 1, 4, "dbrown")
+    g.rect(cx + 4, 7, 1, 4, "plum")
+    g.p(cx - 2, 10, "ink")
+    g.p(cx + 2, 10, "ink")
+    g.p(cx - 1, 12, "dred")
+    g.p(cx, 13, "dred")
+    g.p(cx + 1, 12, "dred")
+    # Short sleeves from the shoulder's top row, then bare forearms, the hands at the hips.
+    g.rect(cx + 6, 16, 2, 5, "cream")
+    g.rect(cx + 6, 21, 2, 11, "skin1")
     if wave is None:
-        g.rect(cx - 8, 25, 2, 7, "skin1")
+        g.rect(cx - 8, 16, 3, 5, "cream")
+        g.rect(cx - 8, 21, 2, 11, "skin1")
     else:
-        dx, hand_y = (0, 16) if wave < 0 else ((0, 9), (-1, 8), (1, 8))[wave]
-        hand_x = cx - 7 + dx
+        (ex, ey), (hx, hy) = KEEPER_WAVE[wave]
+        elbow, hand = (cx + ex, ey), (cx + hx, hy)
+        sleeve = (cx - 8 + (elbow[0] - cx + 8) // 2, 18 + (elbow[1] - 18) // 2)
         for offset in (0, 1):
-            g.line(cx - 8 + offset, 24, hand_x + offset, hand_y, "skin1")
-        g.rect(hand_x - 1, hand_y - 2, 3, 3, "skin1")
-        g.p(hand_x, hand_y - 3, "skin1")
+            g.line(cx - 8 + offset, 18, elbow[0] + offset, elbow[1], "skin1")
+            g.line(cx - 8 + offset, 18, sleeve[0] + offset, sleeve[1], "cream")
+            g.line(elbow[0] + offset, elbow[1], hand[0] + offset, hand[1], "skin1")
+        g.rect(cx - 8, 16, 3, 3, "cream")
+        g.rect(hand[0] - 1, hand[1] - 2, 3, 3, "skin1")
+        g.p(hand[0], hand[1] - 3, "skin1")
     return to_image(g.outlined())
 
 
@@ -812,7 +829,7 @@ def shop_door(cv, h, pressed, door_frame):
     cv.fill(79, top + 1, 24, 2, "navy")
     cv.fill(78, 95, 26, 5, "dbrown")
     if reveal is not None:
-        cv.img.alpha_composite(shop_keeper(reveal, wave), (79, 56))
+        cv.img.alpha_composite(shop_keeper(reveal, wave), (79, 52))
     ratio = width / 26
     cv.fill(left, top, width, height, "navy")
     cv.fill(left, top, 1, height, "dslate")
