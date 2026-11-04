@@ -26,7 +26,7 @@ const text = gameData.runText.explain;
 const kilo = gameData.dogs.kilo;
 
 describe("explainDetail", () => {
-  it.each<[string, ExplainTarget, { kind: string; status?: string; title: string }]>([
+  it.each<[string, ExplainTarget, { kind: string; status?: string; title: string } | undefined]>([
     [
       "the walker's perk as its walker",
       { effect: 0, kind: "effect" },
@@ -68,21 +68,20 @@ describe("explainDetail", () => {
         title: kilo.name,
       },
     ],
+    ["nothing for an effect past the walk's", { effect: 4, kind: "effect" }, undefined],
+    ["nothing for a debuff that wore off", { debuff: "stinky", kind: "debuff" }, undefined],
+    ["nothing for a dog not in the pack", { dog: "lady", kind: "dog" }, undefined],
   ])("shows %s", (_name, target, expected) => {
     const detail = explainDetail(gameData, newPlayerSave, run, target);
-    expect({
-      kind: detail?.kind,
-      title: detail?.card.title,
-      ...(expected.status === undefined ? {} : { status: detail?.card.status }),
-    }).toEqual(expected);
-  });
-
-  it.each<[string, ExplainTarget]>([
-    ["an effect past the walk's", { effect: 4, kind: "effect" }],
-    ["a debuff that wore off", { debuff: "stinky", kind: "debuff" }],
-    ["a dog not in the pack", { dog: "lady", kind: "dog" }],
-  ])("shows nothing for %s", (_name, target) => {
-    expect(explainDetail(gameData, newPlayerSave, run, target)).toBeUndefined();
+    expect(
+      detail === undefined
+        ? undefined
+        : {
+            kind: detail.kind,
+            title: detail.card.title,
+            ...(expected?.status === undefined ? {} : { status: detail.card.status }),
+          },
+    ).toEqual(expected);
   });
 
   it("fills the debuff's stake with its whole seconds left", () => {

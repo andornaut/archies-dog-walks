@@ -28,6 +28,20 @@ import {
 } from "./feedback";
 import { changeChipAt, REACH_ICON } from "./hudLanes";
 
+// A heart sprite's frames under tag, and whether its image is opaque at a frame's column and row.
+function tagFrames(key: string, tag: string) {
+  const sheet = JSON.parse(readFileSync(`public/art/sprites/${key}.json`, "utf8")) as {
+    frames: Record<string, { frame: { h: number; w: number; x: number; y: number } }>;
+    meta: { frameTags: { from: number; name: string; to: number }[] };
+  };
+  const image = decodePng(readFileSync(`public/art/sprites/${key}.png`));
+  const tagged = sheet.meta.frameTags.find(({ name }) => name === tag);
+  const frames = Object.values(sheet.frames).slice(tagged?.from ?? 0, (tagged?.to ?? -1) + 1);
+  const opaque = (frame: { x: number; y: number }, x: number, y: number) =>
+    (image.data[((frame.y + y) * image.width + frame.x + x) * 4 + 3] ?? 0) > 0;
+  return { frames: frames.map(({ frame }) => frame), opaque };
+}
+
 describe("heartNoticeLayout", () => {
   it("keeps the number right of the whole heart and translates the pair at either edge", () => {
     const bounds = { bottom: 460, screenWidth: 360 };
@@ -43,18 +57,12 @@ describe("heartNoticeLayout", () => {
       expect(placed.chip.x + placed.chip.width).toBeLessThanOrEqual(bounds.screenWidth);
       expect(placed.frame.y).toBe(heartPopFrame({ x, y: 400 }).y);
     }
-  });
-
-  it("keeps the complete chip above its card lane", () => {
-    const placed = heartNoticeLayout(
-      { bottom: 460, screenWidth: 360 },
-      {
-        chip: { height: 18, width: 30 },
-        frame: heartPopFrame({ x: 100, y: 490 }),
-        inkRight: 31,
-      },
-    );
-    expect(placed.chip.y + placed.chip.height).toBe(460);
+    const low = heartNoticeLayout(bounds, {
+      chip,
+      frame: heartPopFrame({ x: 100, y: 490 }),
+      inkRight: 31,
+    });
+    expect(low.chip.y + low.chip.height, "the chip above its card lane").toBe(bounds.bottom);
   });
 });
 
@@ -148,18 +156,10 @@ describe("money tick", () => {
 describe("the small heart a reached treat flies", () => {
   // The leftmost opaque column of each of a heart sprite's fly frames.
   const flyInkLefts = (key: string): number[] => {
-    const sheet = JSON.parse(readFileSync(`public/art/sprites/${key}.json`, "utf8")) as {
-      frames: Record<string, { frame: { h: number; w: number; x: number; y: number } }>;
-      meta: { frameTags: { from: number; name: string; to: number }[] };
-    };
-    const image = decodePng(readFileSync(`public/art/sprites/${key}.png`));
-    const fly = sheet.meta.frameTags.find(({ name }) => name === "fly");
-    const frames = Object.values(sheet.frames).slice(fly?.from ?? 0, (fly?.to ?? -1) + 1);
-    return frames.map(({ frame }) =>
+    const { frames, opaque } = tagFrames(key, "fly");
+    return frames.map((frame) =>
       Array.from({ length: frame.w }, (_, x) => x).findIndex((x) =>
-        Array.from({ length: frame.h }, (_, y) => y).some(
-          (y) => (image.data[((frame.y + y) * image.width + frame.x + x) * 4 + 3] ?? 0) > 0,
-        ),
+        Array.from({ length: frame.h }, (_, y) => y).some((y) => opaque(frame, x, y)),
       ),
     );
   };
@@ -188,19 +188,11 @@ describe("the small heart a reached treat flies", () => {
 describe("a chip stacked over a dog's heart pop", () => {
   // The top opaque row of a heart sprite's pop tag, across its frames, read from the art.
   const popInkTop = (key: string): number => {
-    const sheet = JSON.parse(readFileSync(`public/art/sprites/${key}.json`, "utf8")) as {
-      frames: Record<string, { frame: { h: number; w: number; x: number; y: number } }>;
-      meta: { frameTags: { from: number; name: string; to: number }[] };
-    };
-    const image = decodePng(readFileSync(`public/art/sprites/${key}.png`));
-    const pop = sheet.meta.frameTags.find(({ name }) => name === "pop");
-    const frames = Object.values(sheet.frames).slice(pop?.from ?? 0, (pop?.to ?? -1) + 1);
+    const { frames, opaque } = tagFrames(key, "pop");
     return Math.min(
-      ...frames.map(({ frame }) =>
+      ...frames.map((frame) =>
         Array.from({ length: frame.h }, (_, y) => y).findIndex((y) =>
-          Array.from({ length: frame.w }, (_, x) => x).some(
-            (x) => (image.data[((frame.y + y) * image.width + frame.x + x) * 4 + 3] ?? 0) > 0,
-          ),
+          Array.from({ length: frame.w }, (_, x) => x).some((x) => opaque(frame, x, y)),
         ),
       ),
     );

@@ -58,36 +58,37 @@ describe("a new walker's bubble", () => {
   });
 
   // Each info line, as Phaser measures its words and the icon's width, inside the room within
-  // the bubble's rim, and its lowest ink 4 rows over the bubble's bottom.
-  it.each(walkers)("sets each of %s's info lines inside the bubble", (walker) => {
-    const { info, rows } = bubbleOf(walker);
-    const bottom = rows.bubble.y + rows.bubble.height - 4;
-    expect(rows.info).toHaveLength(info.length);
-    info.forEach((parts, i) => {
-      const items = infoItems(parts);
-      const { width: lineWidth } = laidInfoLine(
-        (item) =>
-          item.kind === "icon"
-            ? iconSize(item.icon).width
-            : bodyRunWidth({ scale: TEXT_SCALE }, item.text),
-        items,
-      );
-      const row = rows.info[i] ?? { iconY: 0, y: 0 };
-      const lowest = Math.max(
-        row.y + body.inkBottom * TEXT_SCALE,
-        ...items.map((item) => (item.kind === "icon" ? row.iconY + iconSize(item.icon).height : 0)),
-      );
-      expect(lineWidth).toBeLessThanOrEqual(newWalker.info.maxWidth);
-      expect(LAYOUT.centreX - lineWidth / 2).toBeGreaterThanOrEqual(rows.bubble.x);
-      expect(lowest).toBeLessThanOrEqual(bottom);
-    });
-  });
-
-  // The button under the bubble, inside the dimmed area, so clear of the dog row under it.
-  it.each(walkers)("puts %s's button under the bubble, over the dog row", (walker) => {
-    const { rows } = bubbleOf(walker);
-    expect(rows.button.y).toBeGreaterThan(rows.bubble.y + rows.bubble.height);
-    expect(inside(rows.button, LAYOUT.dim)).toBe(true);
-    expect(rows.button.y + rows.button.height).toBeLessThanOrEqual(SCREEN_LAYOUT.dogRow.y);
-  });
+  // the bubble's rim, and its lowest ink 4 rows over the bubble's bottom; the button under the
+  // bubble, inside the dimmed area, so clear of the dog row under it.
+  it.each(walkers)(
+    "sets each of %s's info lines inside the bubble, the button under it",
+    (walker) => {
+      const { info, rows } = bubbleOf(walker);
+      const bottom = rows.bubble.y + rows.bubble.height - 4;
+      expect(rows.info).toHaveLength(info.length);
+      info.forEach((parts, i) => {
+        const items = infoItems(parts);
+        const { width: lineWidth } = laidInfoLine(
+          (item) =>
+            item.kind === "icon"
+              ? iconSize(item.icon).width
+              : bodyRunWidth({ scale: TEXT_SCALE }, item.text),
+          items,
+        );
+        const row = rows.info[i] ?? { iconY: 0, y: 0 };
+        const lowest = Math.max(
+          row.y + body.inkBottom * TEXT_SCALE,
+          ...items.map((item) =>
+            item.kind === "icon" ? row.iconY + iconSize(item.icon).height : 0,
+          ),
+        );
+        expect(lineWidth).toBeLessThanOrEqual(newWalker.info.maxWidth);
+        expect(LAYOUT.centreX - lineWidth / 2).toBeGreaterThanOrEqual(rows.bubble.x);
+        expect(lowest).toBeLessThanOrEqual(bottom);
+      });
+      expect(rows.button.y).toBeGreaterThan(rows.bubble.y + rows.bubble.height);
+      expect(inside(rows.button, LAYOUT.dim)).toBe(true);
+      expect(rows.button.y + rows.button.height).toBeLessThanOrEqual(SCREEN_LAYOUT.dogRow.y);
+    },
+  );
 });

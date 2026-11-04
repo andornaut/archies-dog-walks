@@ -5,20 +5,14 @@ import { gridRects, rectIndexAt } from "./grid";
 const spec = { cellHeight: 50, cellWidth: 112, columns: 3, gapX: 4, gapY: 4 };
 
 describe("gridRects", () => {
-  it("fills rows left to right, then the next row down", () => {
+  it("fills rows left to right, then the next row down, every cell the same size", () => {
     const rects = gridRects(spec, 4, { x: 8, y: 212 });
-    expect(rects.map(({ x, y }) => [x, y])).toEqual([
-      [8, 212],
-      [124, 212],
-      [240, 212],
-      [8, 266],
+    expect(rects.map(({ height, width, x, y }) => [x, y, width, height])).toEqual([
+      [8, 212, 112, 50],
+      [124, 212, 112, 50],
+      [240, 212, 112, 50],
+      [8, 266, 112, 50],
     ]);
-  });
-
-  it("makes every cell the same size", () => {
-    for (const rect of gridRects(spec, 9, { x: 0, y: 0 })) {
-      expect([rect.width, rect.height]).toEqual([112, 50]);
-    }
   });
 });
 

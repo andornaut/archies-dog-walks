@@ -73,29 +73,18 @@ describe("cashChipPlace", () => {
   const wellCentre = TOP_BAR.x + well.x + well.width / 2;
   const barBottom = TOP_BAR.y + TOP_BAR.height;
   // A money label says its amount on one line (every amount fits it: ui/textRoles.test.ts).
-  const chips = [{ lines: 1, scale: CHANGE_LABEL_STYLE.scale, width: MONEY_LABEL.room }];
-  it.each(chips)(
-    "hangs the widest $lines-line chip at $scale x gap rows under the bar, centred under the cash well",
-    (text) => {
-      const { chip } = cashChipPlace(BODY, 0, text);
-      expect(Math.abs(chip.x + chip.width / 2 - wellCentre)).toBeLessThanOrEqual(1);
-      expect(chip.y).toBe(barBottom + MONEY_LABEL.gap);
-    },
-  );
-
-  // Each pair of chip styles, one in a slot and the other in the slot after it.
-  const pairs = chips.flatMap((upper) => chips.map((lower) => ({ lower, upper })));
-  it.each(pairs)(
-    "stacks a $lower.lines-line $lower.scale x chip under a $upper.lines-line $upper.scale x one",
-    ({ lower, upper }) => {
-      for (const slot of [0, 1, 2]) {
-        const above = cashChipPlace(BODY, slot, upper).chip;
-        const below = cashChipPlace(BODY, slot + 1, lower).chip;
-        expect(below.y).toBeGreaterThanOrEqual(above.y + above.height + MONEY_LABEL.gap);
-        expect(Math.abs(below.x + below.width / 2 - wellCentre)).toBeLessThanOrEqual(1);
-      }
-    },
-  );
+  const text = { lines: 1, scale: CHANGE_LABEL_STYLE.scale, width: MONEY_LABEL.room };
+  it("hangs the widest chip gap rows under the bar, the next slots' under it, centred under the cash well", () => {
+    const { chip } = cashChipPlace(BODY, 0, text);
+    expect(Math.abs(chip.x + chip.width / 2 - wellCentre)).toBeLessThanOrEqual(1);
+    expect(chip.y).toBe(barBottom + MONEY_LABEL.gap);
+    for (const slot of [0, 1, 2]) {
+      const above = cashChipPlace(BODY, slot, text).chip;
+      const below = cashChipPlace(BODY, slot + 1, text).chip;
+      expect(below.y).toBeGreaterThanOrEqual(above.y + above.height + MONEY_LABEL.gap);
+      expect(Math.abs(below.x + below.width / 2 - wellCentre)).toBeLessThanOrEqual(1);
+    }
+  });
 });
 
 describe("freeCashSlot", () => {
@@ -209,13 +198,10 @@ describe("cashLostMs", () => {
   const { holdMs } = MONEY_LABEL;
   const { flyMs } = FEEDBACK.heart;
 
-  it("holds and flies the label, then counts the counter down, longer for more cash", () => {
+  it("holds, flies and counts down longer for more cash, and fades in place with reduced motion", () => {
     const small = cashLostMs(false, cents(100));
     expect(small).toBeGreaterThan(holdMs + flyMs);
     expect(cashLostMs(false, cents(300))).toBeGreaterThan(small);
-  });
-
-  it("with reduced motion fades the label in place, whatever the cash", () => {
     expect(cashLostMs(true, cents(100))).toBe(cashLostMs(true, cents(9_000)));
   });
 });

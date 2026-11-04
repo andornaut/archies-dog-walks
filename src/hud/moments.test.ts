@@ -122,13 +122,17 @@ describe("firingLayout", () => {
   };
 
   it.each(EDGE_CARDS)(
-    "centres card %i's 2x face over its owner's tab, the 2x pop level with it",
+    "centres card %i's 2x face over its owner's tab, the pop level with it, the plate under it within the card",
     (_i, card) => {
-      const { face, pop } = firingLayout(screen, card);
+      const { face, plate, pop } = firingLayout(screen, card);
       const tab = ownerTabRect(card);
       expect(face.x).toBe(tab.x + tab.width / 2);
       expect(face.y).toBeLessThan(tab.y);
       expect(pop.y + popSize / 2).toBe(face.y);
+      expect(plate.y).toBeGreaterThanOrEqual(face.y + FACE_HALF);
+      expect(plate.x).toBeGreaterThanOrEqual(card.x);
+      expect(plate.x + plate.width).toBeLessThanOrEqual(card.x + card.width);
+      expect(plate.y + plate.height).toBeLessThan(card.y);
     },
   );
 
@@ -159,17 +163,6 @@ describe("firingLayout", () => {
       );
     }
   });
-
-  it.each(EDGE_CARDS)(
-    "puts card %i's plate under the 2x face, over the card's top and within its sides",
-    (_i, card) => {
-      const { face, plate } = firingLayout(screen, card);
-      expect(plate.y).toBeGreaterThanOrEqual(face.y + FACE_HALF);
-      expect(plate.x).toBeGreaterThanOrEqual(card.x);
-      expect(plate.x + plate.width).toBeLessThanOrEqual(card.x + card.width);
-      expect(plate.y + plate.height).toBeLessThan(card.y);
-    },
-  );
 
   it("points the line's tail down at the top of the 2x face, under the bubble", () => {
     const { face, line, tail } = firingLayout(screen, cards[0] ?? { x: 0, y: 0 });
@@ -238,11 +231,8 @@ describe("trotOffX", () => {
 });
 
 describe("lowHeartDogs and newlyLow", () => {
-  it("finds the walking owners on their last heart, not fired ones", () => {
+  it("finds the walking owners on their last heart and cues only those who just dropped to it", () => {
     expect(lowHeartDogs(PACK)).toEqual(["ginger"]);
-  });
-
-  it("cues only an owner who has just dropped to their last heart", () => {
     expect(newlyLow([], ["ginger"])).toEqual(["ginger"]);
     expect(newlyLow(["ginger"], ["ginger"])).toEqual([]);
     expect(newlyLow(["ginger"], ["ginger", "kilo"])).toEqual(["kilo"]);
@@ -331,13 +321,10 @@ describe("curvePoint", () => {
   const from = { x: 112, y: 21 };
   const to = { x: 40, y: 246 };
 
-  it("starts at from and ends at to", () => {
+  it("throws a treat from from to to, up above both ends on the way", () => {
     const control = arcControl(from, to, 40);
     expect(curvePoint(from, control, to, 0)).toEqual(from);
     expect(curvePoint(from, control, to, 1)).toEqual(to);
-  });
-
-  it("throws a treat up above both ends on the way", () => {
     expect(curvePoint(from, arcControl(from, to, 40), to, 0.25).y).toBeLessThan(from.y);
     const level = { x: 100, y: 100 };
     const start = { x: 0, y: 100 };

@@ -59,14 +59,11 @@ describe("the game pixel font adapter", () => {
     spacing: 1,
   };
 
-  it("passes its glyph content and spacing policy to atlas construction", () => {
+  it("passes its glyph content and spacing policy to atlas construction and advance measurement", () => {
     const atlas = { glyphs: [], height: GLYPH_HEIGHT, width: 0 };
     vi.mocked(buildPixelFontAtlas).mockReturnValueOnce(atlas);
     expect(pixelFontAtlas()).toBe(atlas);
     expect(buildPixelFontAtlas).toHaveBeenCalledWith(context);
-  });
-
-  it("passes the character and the same game font context to advance measurement", () => {
     vi.mocked(fontGlyphAdvance).mockReturnValueOnce(4);
     glyphAdvance("♥");
     expect(fontGlyphAdvance).toHaveBeenCalledWith(context, "♥");

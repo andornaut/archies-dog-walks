@@ -20,14 +20,12 @@ describe("cardHintTriggers", () => {
 });
 
 describe("moverHintTriggers", () => {
-  it("raises the cue hint for an arrow, and none for no cue or the wander mark", () => {
+  it("raises the data's cue hint, said once, for an arrow, and none for no cue or the wander mark", () => {
     expect(moverHintTriggers(null)).toEqual([]);
     expect(moverHintTriggers({ direction: 1, kind: "across" })).toEqual([{ kind: "moverCue" }]);
     expect(moverHintTriggers({ kind: "up" })).toEqual([{ kind: "moverCue" }]);
     expect(moverHintTriggers({ kind: "wander" })).toEqual([]);
-  });
-
-  it("raises a hint that the data has, said once", () => {
+    // The data has the hint, said once.
     const [trigger] = moverHintTriggers({ kind: "down" });
     const hint = trigger === undefined ? null : hintFor(gameData, [], trigger);
     expect(hint).not.toBeNull();

@@ -128,7 +128,7 @@ describe("admitPlay", () => {
     });
   };
 
-  it("admits up to the limit within one window, and again once earlier plays leave it", () => {
+  it("admits up to each cue's limit within one window, and again once earlier plays leave it", () => {
     const burst = Array.from({ length: MAX_PLAYS_PER_WINDOW + 2 }, () => 1000);
     const expected = burst.map((_, index) => index < MAX_PLAYS_PER_WINDOW);
     expect(playAt({}, burst)).toEqual(expected);
@@ -138,12 +138,10 @@ describe("admitPlay", () => {
       false,
       true,
     ]);
-  });
-
-  it("limits each cue separately", () => {
-    const full: RecentPlays = { tip: Array.from({ length: MAX_PLAYS_PER_WINDOW }, () => 1000) };
-    expect(admitPlay(full, "tip", 1000).admitted).toBe(false);
-    expect(admitPlay(full, "treat", 1000).admitted).toBe(true);
+    // Each cue is limited separately.
+    const tips: RecentPlays = { tip: full };
+    expect(admitPlay(tips, "tip", 1000).admitted).toBe(false);
+    expect(admitPlay(tips, "treat", 1000).admitted).toBe(true);
     expect(admitPlay({ tip: [0, 50] }, "tip", 120).recent).toEqual({ tip: [50, 120] });
   });
 });

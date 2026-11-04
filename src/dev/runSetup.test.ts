@@ -119,15 +119,13 @@ describe("parseRunSetup", () => {
 });
 
 describe("the route parameter", () => {
-  it("reads the zones walked up to the starting zone", () => {
+  it("reads the zones walked up to the starting zone, and ignores a bad route with a warning", () => {
     expect(parse("route=distilleryDistrict,highPark,kensingtonMarket&zone=2").setup.route).toEqual([
       "distilleryDistrict",
       "highPark",
       "kensingtonMarket",
     ]);
-  });
-
-  it("ignores a route of unknown or repeated zones, or one that doesn't reach the zone, with a warning", () => {
+    // Unknown or repeated zones, or a route that doesn't reach the zone.
     for (const search of [
       "route=distilleryDistrict,bogus",
       "route=distilleryDistrict,distilleryDistrict",

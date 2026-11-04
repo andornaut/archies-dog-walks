@@ -75,25 +75,6 @@ describe("changeLabels", () => {
     ]);
   });
 
-  it("labels no heart change that nets nothing, such as a loss forgiven whole", () => {
-    const forgiven = {
-      after: clampHearts(10, 5),
-      before: clampHearts(10, 5),
-      causes: [
-        { amount: -1, kind: "bump" },
-        {
-          amount: 1,
-          forgives: true,
-          kind: "modifier",
-          source: { kind: "walker", walker: "casey" },
-        },
-      ],
-      dog: "kilo",
-      kind: "hearts",
-    } as const;
-    expect(changeLabels(AT, [forgiven])).toEqual([]);
-  });
-
   // The heart pop over the dog and the label on its card both show the label's text; a loss
   // forgiven whole has neither.
   it.each([
@@ -125,32 +106,30 @@ describe("changeLabels", () => {
   });
 
   it.each([
-    { by: { debuff: "stinky", kind: "debuff" }, zeroedBy: "stinky" },
-    { by: { kind: "upgrade", upgrade: "bigTipper" }, zeroedBy: undefined },
-  ] as const)("names $zeroedBy as what zeroed a tip cancelled by $by.kind", ({ by, zeroedBy }) => {
+    { by: { debuff: "stinky", kind: "debuff" }, how: "cancelled", paid: 100, zeroedBy: "stinky" },
+    {
+      by: { kind: "upgrade", upgrade: "bigTipper" },
+      how: "cancelled",
+      paid: 100,
+      zeroedBy: undefined,
+    },
+    {
+      by: { debuff: "stinky", kind: "debuff" },
+      how: "only shrunk",
+      paid: 200,
+      zeroedBy: undefined,
+    },
+  ] as const)("names $zeroedBy as what zeroed a tip $how by $by.kind", ({ by, paid, zeroedBy }) => {
     const tip = {
-      amount: cents(0),
+      amount: cents(paid - 100),
       causes: [
-        { amount: 100, kind: "tip" },
+        { amount: paid, kind: "tip" },
         { amount: -100, kind: "modifier", source: by },
       ],
       dog: null,
       kind: "money",
     } as const;
     expect(changeLabels(AT, [tip])[0]?.zeroedBy).toBe(zeroedBy);
-  });
-
-  it("names no debuff on a change a debuff only shrank", () => {
-    const tip = {
-      amount: cents(100),
-      causes: [
-        { amount: 200, kind: "tip" },
-        { amount: -100, kind: "modifier", source: { debuff: "stinky", kind: "debuff" } },
-      ],
-      dog: null,
-      kind: "money",
-    } as const;
-    expect(changeLabels(AT, [tip])[0]?.zeroedBy).toBeUndefined();
   });
 
   it("has no labels without changes, and marks a loss at the bank as no gain", () => {
@@ -301,18 +280,11 @@ describe("reachedLabels", () => {
   it.each([
     ["a tip's money", tip],
     ["a treat's heart", treat],
-  ])("carries the reaching buff's icon on %s label", (_name, change) => {
+  ])("carries the reaching buff's icon on %s label, and none when not reached", (_name, change) => {
     const labels = changeLabels(AT, [change]);
     expect(reachedLabels(reach, labels)).toEqual(
       labels.map((label) => ({ ...label, reachIcon: reach })),
     );
-  });
-
-  it.each([
-    ["a tip's money", tip],
-    ["a treat's heart", treat],
-  ])("keeps %s label as it is when not reached", (_name, change) => {
-    const labels = changeLabels(AT, [change]);
     expect(reachedLabels(undefined, labels)).toEqual(labels);
   });
 });

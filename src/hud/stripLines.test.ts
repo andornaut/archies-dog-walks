@@ -122,6 +122,16 @@ describe("the strip's other lines", () => {
       ["a pull", pullLine(gameData, "kilo").text, fillNames(strip.pull, { dog: kilo.name })],
       ["the lost wallet's money", luckyLine(gameData, "lostWallet")?.text, strip.luckyWallet],
       [
+        "the hearts the friendly neighbour shares",
+        luckyLine(gameData, "friendlyNeighbour"),
+        {
+          icon: "lucky",
+          text: fillNames(strip.luckyNeighbour, {
+            hearts: String(read(gameData.tuning, "hearts", "neighbourHearts")),
+          }),
+        },
+      ],
+      [
         "the Walk bonus",
         fullPackLine(gameData, [
           {
@@ -159,16 +169,6 @@ describe("the strip's other lines", () => {
   });
 });
 
-describe("luckyLine: the friendly neighbour", () => {
-  it("says the hearts the neighbour shares", () => {
-    const hearts = String(read(gameData.tuning, "hearts", "neighbourHearts"));
-    expect(luckyLine(gameData, "friendlyNeighbour")).toEqual({
-      icon: "lucky",
-      text: fillNames(strip.luckyNeighbour, { hearts }),
-    });
-  });
-});
-
 describe("debuffLines", () => {
   const active = (debuff: DebuffId, secondsLeft: number) => ({ debuff, secondsLeft, untilZone: 0 });
   // A debuff's bump cash, for one that makes bumps cost cash, such as Spotlight.
@@ -177,7 +177,13 @@ describe("debuffLines", () => {
     return formatDollars(key === undefined ? cents(0) : read(gameData.tuning, "money", key));
   };
 
-  it("announces every debuff starting and ending", () => {
+  it("announces every debuff starting, restarting and ending, and not one that counts down", () => {
+    expect(
+      debuffChanges({ debuffs: [active("muddy", 5)] }, { debuffs: [active("muddy", 20)] }),
+    ).toEqual({ ended: [], started: [active("muddy", 20)] });
+    expect(
+      debuffChanges({ debuffs: [active("muddy", 5)] }, { debuffs: [active("muddy", 4)] }),
+    ).toEqual({ ended: [], started: [] });
     for (const debuff of keysOf(gameData.debuffs)) {
       const on = { debuffs: [active(debuff, 20)] };
       const off = { debuffs: [] };
@@ -203,15 +209,6 @@ describe("debuffLines", () => {
       expect(named).toEqual([{ kind: debuff, name: gameData.debuffs[debuff].name }]);
     },
   );
-
-  it("announces a debuff that restarts, and not one that counts down", () => {
-    expect(
-      debuffChanges({ debuffs: [active("muddy", 5)] }, { debuffs: [active("muddy", 20)] }),
-    ).toEqual({ ended: [], started: [active("muddy", 20)] });
-    expect(
-      debuffChanges({ debuffs: [active("muddy", 5)] }, { debuffs: [active("muddy", 4)] }),
-    ).toEqual({ ended: [], started: [] });
-  });
 });
 
 describe("gear found line", () => {

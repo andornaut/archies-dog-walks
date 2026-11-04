@@ -57,15 +57,12 @@ const waitingTexts = (state: MessageStripState) => state.waiting.map(({ text }) 
 const BODY = fontFileMetrics("font-body");
 
 describe("sayLine", () => {
-  it("waits a new line and drops a repeat of the shown or a waiting line", () => {
+  it("waits a new line, drops a repeat of the shown or a waiting line, and keeps the newest waiting", () => {
     const showing = after([["a", 0]]);
     const waitingB = sayLine(TIMING, line("b"), showing);
     expect(waitingTexts(waitingB)).toEqual(["b"]);
     expect(waitingTexts(sayLine(TIMING, line("a"), showing))).toEqual([]);
     expect(waitingTexts(sayLine(TIMING, line("b"), waitingB))).toEqual(["b"]);
-  });
-
-  it("keeps the newest waiting lines, dropping the oldest", () => {
     const said = Array.from({ length: maxWaiting + 2 }, (_, i) => String(i));
     const state = said.reduce(
       (strip, text) => sayLine(TIMING, line(text), strip),
@@ -127,7 +124,7 @@ describe("stepMessageStrip", () => {
     ).toBeUndefined();
   });
 
-  it("tells two lines with the same text apart", () => {
+  it("tells a line shown again apart from its first showing", () => {
     const first = after([["a", 0]]);
     const again = after([
       ["a", 0],
@@ -386,18 +383,18 @@ describe("a line's faces", () => {
       Object.values(gameData.dogs).some(({ name }) => text.includes(name)),
   );
 
-  it.each(BAR_COUNTS)("keeps the strip's rows round each inline face under %i bars", (bars) => {
-    const shown = named.map((said) => [said.text, shownLine(bars, said)] as const);
-    expect(shown.some(([, { faces }]) => faces.length > 0)).toBe(true);
-    expect(shown.filter(([, line]) => cramped(line)).map(([text]) => text)).toEqual([]);
-  });
-
-  it.each(BAR_COUNTS)("keeps the strip's rows round each owner's lead under %i bars", (bars) => {
-    const misfits = OWNER_NAMES.flatMap(([dog, name, ink]) =>
-      WALK_QUIP_MOMENTS.flatMap((moment) => gameData.quips[dog][moment])
-        .filter((said) => cramped(shownQuip(bars, ink, plainMarks(said))))
-        .map((said) => `${name}: ${said}`),
-    );
-    expect(misfits).toEqual([]);
-  });
+  it.each(BAR_COUNTS)(
+    "keeps the strip's rows round each inline face and owner's lead under %i bars",
+    (bars) => {
+      const shown = named.map((said) => [said.text, shownLine(bars, said)] as const);
+      expect(shown.some(([, { faces }]) => faces.length > 0)).toBe(true);
+      expect(shown.filter(([, line]) => cramped(line)).map(([text]) => text)).toEqual([]);
+      const misfits = OWNER_NAMES.flatMap(([dog, name, ink]) =>
+        WALK_QUIP_MOMENTS.flatMap((moment) => gameData.quips[dog][moment])
+          .filter((said) => cramped(shownQuip(bars, ink, plainMarks(said))))
+          .map((said) => `${name}: ${said}`),
+      );
+      expect(misfits).toEqual([]);
+    },
+  );
 });

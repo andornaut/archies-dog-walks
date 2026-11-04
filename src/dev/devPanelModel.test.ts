@@ -180,55 +180,29 @@ describe("hasStagedChanges", () => {
   const stageFrom = (applied: Cheats, actions: readonly PanelAction[]) =>
     actions.reduce((state, action) => stagePanel(action, state), openPanel(applied));
 
-  it.each<{ actions: PanelAction[]; applied: Cheats; enabled: boolean; name: string }>([
-    { actions: [], applied: CHEATS_OFF, enabled: false, name: "no cheats, untouched" },
-    { actions: [], applied: every, enabled: false, name: "every cheat, untouched" },
-    {
-      actions: [{ id: "hitBoxes", kind: "toggle", on: true }],
-      applied: CHEATS_OFF,
-      enabled: true,
-      name: "no cheats, a toggle staged",
-    },
-    {
-      actions: [
-        { id: "invincible", kind: "toggle", on: true },
-        { id: "invincible", kind: "toggle", on: false },
-      ],
-      applied: CHEATS_OFF,
-      enabled: false,
-      name: "no cheats, a toggle staged then unstaged",
-    },
-    {
-      actions: [{ id: "invincible", kind: "toggle", on: false }],
-      applied: every,
-      enabled: true,
-      name: "every cheat, a toggle cleared",
-    },
-    {
-      actions: [{ kind: "speed", speed: "slow" }],
-      applied: CHEATS_OFF,
-      enabled: true,
-      name: "no cheats, a speed staged",
-    },
-    {
-      actions: [{ kind: "speed", speed: "normal" }],
-      applied: CHEATS_OFF,
-      enabled: false,
-      name: "no cheats, the applied speed staged",
-    },
-    {
-      actions: [{ kind: "start", start: "highPark" }],
-      applied: CHEATS_OFF,
-      enabled: true,
-      name: "no cheats, a walk chosen as the start",
-    },
-    {
-      actions: [{ kind: "start", start: "highPark" }, { kind: "cancel" }],
-      applied: CHEATS_OFF,
-      enabled: false,
-      name: "no cheats, a walk chosen then cancelled",
-    },
-  ])("enables Apply and Cancel with $name: $enabled", ({ actions, applied, enabled }) => {
+  const invincible = (on: boolean): PanelAction => ({ id: "invincible", kind: "toggle", on });
+  const highPark: PanelAction = { kind: "start", start: "highPark" };
+  it.each<[string, boolean, Cheats, PanelAction[]]>([
+    ["no cheats, untouched", false, CHEATS_OFF, []],
+    ["every cheat, untouched", false, every, []],
+    ["no cheats, a toggle staged", true, CHEATS_OFF, [invincible(true)]],
+    [
+      "no cheats, a toggle staged then unstaged",
+      false,
+      CHEATS_OFF,
+      [invincible(true), invincible(false)],
+    ],
+    ["every cheat, a toggle cleared", true, every, [invincible(false)]],
+    ["no cheats, a speed staged", true, CHEATS_OFF, [{ kind: "speed", speed: "slow" }]],
+    [
+      "no cheats, the applied speed staged",
+      false,
+      CHEATS_OFF,
+      [{ kind: "speed", speed: "normal" }],
+    ],
+    ["no cheats, a walk chosen as the start", true, CHEATS_OFF, [highPark]],
+    ["no cheats, a walk chosen then cancelled", false, CHEATS_OFF, [highPark, { kind: "cancel" }]],
+  ])("enables Apply and Cancel with %s: %s", (_name, enabled, applied, actions) => {
     expect(hasStagedChanges(stageFrom(applied, actions))).toBe(enabled);
   });
 });

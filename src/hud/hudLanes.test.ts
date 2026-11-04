@@ -97,15 +97,12 @@ describe("a reached pickup's chip", () => {
     ]);
   });
 
-  it.each(places)("keeps %s chip as it is when not reached", (_name, place) => {
-    expect(reachChipPlace(place, false, text)).toEqual({ ...place(text), icon: null });
-  });
-
   it.each(places)(
-    "widens %s chip for the icon, held at its left before the text",
+    "widens %s chip for the icon, held at its left before the text, and keeps it when not reached",
     (_name, place) => {
       const { gap, size } = REACH_ICON;
       const plain = place(text);
+      expect(reachChipPlace(place, false, text)).toEqual({ ...plain, icon: null });
       const { chip, icon, text: ink } = reachChipPlace(place, true, text);
       const at = icon ?? { x: Number.NaN, y: Number.NaN };
       expect(chip.width).toBe(plain.chip.width + size + gap);

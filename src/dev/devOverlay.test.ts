@@ -16,7 +16,7 @@ describe("devOverlayLines", () => {
     ]);
   });
 
-  it("adds money and each dog's hearts when a run is supplied", () => {
+  it("adds money and each dog's hearts for a run, and the zone's and last zone's clocks", () => {
     const run = {
       money: cents(1205),
       pack: [
@@ -29,9 +29,6 @@ describe("devOverlayLines", () => {
       "kilo 3hp",
       "bo fired",
     ]);
-  });
-
-  it("shows the zone's road, held, wall-clock and lag time, and the last zone's", () => {
     const time = {
       clocks: {
         current: { heldMs: 12_000, roadMs: 60_000, wallMs: 75_000, zoneIndex: 1 },

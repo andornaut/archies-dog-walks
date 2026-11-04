@@ -144,6 +144,7 @@ describe("the walk bar", () => {
     for (const id of WALK_BAR_BUTTONS) {
       const { face, hit } = BAR.buttons[id];
       expect(2 * (face.x - hit.x) + size).toBe(hit.width);
+      expect(face.y + size).toBeLessThanOrEqual(topBar.y + topBar.height);
     }
   });
 
@@ -161,13 +162,10 @@ describe("the walk bar", () => {
     expect(cash.capsY).toBe(home.bank.capsY);
   });
 
-  it("centres the effect wells down the button faces, 2 columns apart", () => {
+  it("centres the effect wells down the faces, 2 columns apart, as far from the cash as the first face", () => {
     const { buttonFace, effects } = WALK_BAR;
     expect(2 * effects.y + effects.size).toBe(2 * buttonFace.y + buttonFace.size);
     expect(effects.pitch - effects.size).toBe(2);
-  });
-
-  it("sets the effect wells as far from the cash well as from the first button's face", () => {
     const cash = { ...WALK_BAR.cash.well, x: topBar.x + WALK_BAR.cash.well.x };
     const left = (BAR.effectWells[0]?.x ?? 0) - (cash.x + cash.width);
     const lastWell = BAR.effectWells.at(-1) ?? cash;
@@ -248,7 +246,7 @@ describe("maxEffects", () => {
 
 describe("the debuff bars", () => {
   it.each([1, 2])(
-    "stacks %i bars under the walk bar, each the bar's height, full width",
+    "stacks %i bars under the walk bar over the backdrop, each the bar's height, full width",
     (count) => {
       const bars = debuffBarRects(topBar, count);
       expect(bars).toHaveLength(count);
@@ -259,15 +257,10 @@ describe("the debuff bars", () => {
           x: topBar.x,
           y: topBar.y + topBar.height + i * DEBUFF_BAR.height,
         });
+        expect(inside(bar, LAYOUT.backdrop)).toBe(true);
       });
     },
   );
-
-  it("keeps the bars over the backdrop band", () => {
-    for (const bar of debuffBarRects(topBar, 2)) {
-      expect(inside(bar, LAYOUT.backdrop)).toBe(true);
-    }
-  });
 
   const full = DEBUFF_BAR.fill.width;
   it.each<[string, number, number, number]>([
@@ -298,12 +291,6 @@ describe("the neighbourhood's progress line", () => {
       x: empty.frame.x + border,
       y: strip.y + border,
     });
-  });
-
-  it("keeps the strip under every dog card", () => {
-    for (const slot of dogSlots) {
-      expect(rectsOverlap(slot, strip)).toBe(false);
-    }
   });
 
   const length = zoneLength(gameData);
@@ -416,18 +403,15 @@ describe("the dog cards", () => {
     expect(rectsOverlap(area, ownerPhoto)).toBe(false);
   });
 
-  it("keeps LEAD inside the card", () => {
-    expect(inside(lead, card)).toBe(true);
-  });
-
   it("centres Empty's capitals in the card's outline", () => {
     const { empty, size } = DOG_CARD;
     expect(empty.x).toBe(size.width / 2);
     expect(empty.y + Math.floor(TITLE_CAP_ROWS / 2)).toBe(Math.floor(size.height / 2));
   });
 
-  it("keeps the owner's photo inside the card, right of the dog's", () => {
+  it("keeps LEAD and the owner's photo inside the card, the photo right of the dog's", () => {
     const dogFace = frameSize(dogFaceKey(gameData, "kilo"));
+    expect(inside(lead, card)).toBe(true);
     expect(inside(ownerPhoto, card)).toBe(true);
     expect(ownerPhoto.x).toBeGreaterThan(DOG_CARD.dogFace.x + dogFace.width);
   });

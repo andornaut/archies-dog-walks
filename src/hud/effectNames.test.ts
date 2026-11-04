@@ -52,18 +52,18 @@ describe("effectNameMarks", () => {
     expect(marked(`${name}: does a thing`)).toEqual([{ kind: "buff", name }]);
   });
 
+  const [gear] = Object.values(gameData.shopGear);
   it.each([
-    ["no colon after it", "The pack is Muddy for 20s"],
-    ["inside a word", "UnMuddy: clean"],
-    ["a dog's name", "Kilo: −1♥"],
-  ])("marks no name with %s", (_case, text) => {
-    expect(marked(text)).toEqual([]);
-  });
-
-  it("marks every name in a text, in order", () => {
-    const [gear] = Object.values(gameData.shopGear);
-    const text = `Stinky: tips pay nothing, ${gear?.name ?? ""}: helps`;
-    expect(marked(text).map(({ kind }) => kind)).toEqual(["stinky", "buff"]);
+    ["no name with no colon after it", "The pack is Muddy for 20s", []],
+    ["no name inside a word", "UnMuddy: clean", []],
+    ["no dog's name", "Kilo: −1♥", []],
+    [
+      "every name in a text, in order",
+      `Stinky: tips pay nothing, ${gear?.name ?? ""}: helps`,
+      ["stinky", "buff"],
+    ],
+  ])("marks %s", (_case, text, kinds) => {
+    expect(marked(text).map(({ kind }) => kind)).toEqual(kinds);
   });
 });
 

@@ -1,7 +1,6 @@
 import { containsPoint } from "@andornaut/game-kit/rect";
 import { describe, expect, it } from "vitest";
 
-import { SCREEN_LAYOUT } from "../data/screen";
 import type { PressMode } from "../input/pointerTracking";
 import {
   gameplayAllowed,
@@ -19,7 +18,7 @@ import {
   walkPaused,
   walkPresses,
 } from "./topBar";
-import { WALK_BAR, WALK_BAR_BUTTONS, type WalkBarButtonId, walkBarLayout } from "./walkHud";
+import { WALK_BAR_BUTTONS, type WalkBarButtonId } from "./walkHud";
 
 // A card and the zone celebration hold the walk alike.
 const CARD: RunPause = { ...NOTHING_PAUSED, card: true };
@@ -161,29 +160,6 @@ describe("topBarButtonForKey", () => {
     for (const [key, button] of Object.entries(keys)) {
       expect(topBarButtonForKey(false, key), key).toBe(button);
       expect(topBarButtonForKey(true, key), key).toBeUndefined();
-    }
-  });
-});
-
-describe("the walk bar's buttons", () => {
-  it("sets each face in a thumb-wide hit area, left to right, none over the next or the wells", () => {
-    const { topBar } = SCREEN_LAYOUT;
-    const bar = walkBarLayout(topBar);
-    const hits = WALK_BAR_BUTTONS.map((id) => TOP_BAR_BUTTONS[id].hit);
-    hits.slice(1).forEach((hit, i) => {
-      expect(hit.x).toBeGreaterThanOrEqual((hits[i]?.x ?? 0) + (hits[i]?.width ?? 0));
-    });
-    const last = hits.at(-1);
-    expect((last?.x ?? 0) + (last?.width ?? 0)).toBeLessThanOrEqual(topBar.x + topBar.width);
-    const size = WALK_BAR.buttonFace.size;
-    for (const { face, hit } of Object.values(TOP_BAR_BUTTONS)) {
-      expect(hit.width).toBeGreaterThanOrEqual(WALK_BAR.minHitWidth);
-      expect(face.x).toBeGreaterThanOrEqual(hit.x);
-      expect(face.x + size).toBeLessThanOrEqual(hit.x + hit.width);
-      expect(face.y + size).toBeLessThanOrEqual(topBar.y + topBar.height);
-      for (const well of [...bar.effectWells, ...bar.effectHolds]) {
-        expect(well.x + well.width).toBeLessThanOrEqual(hit.x);
-      }
     }
   });
 });

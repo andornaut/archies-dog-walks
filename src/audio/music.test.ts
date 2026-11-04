@@ -29,11 +29,8 @@ const FADE = MUSIC_FADE_MS;
 const CROSS = MUSIC_CROSS_FADE_MS;
 
 describe("musicKey", () => {
-  it("plays the zone's own loop, keyed by its art", () => {
+  it("gives every zone a loop of its own, keyed by its art", () => {
     expect(musicKey({ art: "high-park" })).toBe("music-high-park");
-  });
-
-  it("gives every zone a loop of its own", () => {
     const keys = gameData.world.zones.map(musicKey);
     expect(new Set(keys).size).toBe(gameData.world.zones.length);
   });

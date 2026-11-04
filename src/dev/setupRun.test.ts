@@ -38,13 +38,14 @@ describe("loadoutFor", () => {
 describe("withSetupStart", () => {
   const state = testState({ kilo: 3 });
 
-  it("keeps the run's money and moves it to the setup's zone, on the pre-fork route", () => {
+  it("moves the run to the setup's zone on the pre-fork route, its money the setup's if set", () => {
     expect(withSetupStart(gameData, { ...setup, zone: 3 }, state)).toEqual({
       ...state,
       firstZone: 2,
       route: gameData.world.preForkRoute.slice(0, 3),
       zoneIndex: 2,
     });
+    expect(withSetupStart(gameData, { ...setup, money: 1250 }, state).money).toBe(1250);
   });
 
   const route = ["distilleryDistrict", "theBeaches", "cabbagetown", "highPark"];
@@ -53,9 +54,5 @@ describe("withSetupStart", () => {
     ["walks the setup's route up to its zone", { ...setup, route, zone: 3 }, route.slice(0, 3)],
   ])("%s", (_, from, expected) => {
     expect(withSetupStart(gameData, from, state).route).toEqual(expected);
-  });
-
-  it("replaces the run's money with the setup's", () => {
-    expect(withSetupStart(gameData, { ...setup, money: 1250 }, state).money).toBe(1250);
   });
 });

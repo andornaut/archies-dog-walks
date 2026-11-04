@@ -137,17 +137,12 @@ function homeTargets(exit: boolean): Readonly<Record<string, Point>> {
 
 const NONE = { logbook: false, settings: false };
 
+// The bar reads only which page is open: a card, celebration or confirm over a page acts as the
+// page does.
 const HOME_MODALS: readonly (readonly [string, typeof NONE])[] = [
-  ["nothing on the start screen", NONE],
-  ["a detail card on the start screen", NONE],
-  ["the badge celebration", NONE],
-  ["the Pet shop", NONE],
-  ["a detail card in the Pet shop", NONE],
-  ["a purchase confirm in the Pet shop", NONE],
-  ["the Logbook", { logbook: true, settings: false }],
-  ["a badge card in the Logbook", { logbook: true, settings: false }],
-  ["the settings", { logbook: false, settings: true }],
-  ["the settings' install steps", { logbook: false, settings: true }],
+  ["the start screen or the Pet shop, or a card over either", NONE],
+  ["the Logbook or a badge card in it", { logbook: true, settings: false }],
+  ["the settings or their install steps", { logbook: false, settings: true }],
 ];
 
 const HOME_BASE: Readonly<Record<string, string | undefined>> = {

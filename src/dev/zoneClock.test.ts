@@ -21,14 +21,11 @@ const run = (frames: readonly ClockFrame[], clocks: ZoneClocks = startZoneClocks
   frames.reduce((sum, next) => tickZoneClocks(next, sum), clocks);
 
 describe("tickZoneClocks", () => {
-  it("adds road time, hit stop time and wall-clock time", () => {
+  it("adds road time, hit stop time and wall-clock time, a halted frame's as held", () => {
     const clocks = run([frame({ roadMs: 20 }), frame({ stoppedMs: 20 })]);
     expect(clocks.current).toEqual({ heldMs: 20, roadMs: 20, wallMs: 40, zoneIndex: 0 });
-  });
-
-  it("counts a halted frame's wall-clock time as held", () => {
-    const clocks = run([frame({ frameMs: 5000, halted: true })]);
-    expect(clocks.current).toMatchObject({ heldMs: 5000, roadMs: 0, wallMs: 5000 });
+    const halted = run([frame({ frameMs: 5000, halted: true })]);
+    expect(halted.current).toMatchObject({ heldMs: 5000, roadMs: 0, wallMs: 5000 });
   });
 
   it("closes the zone's clock as the last when a frame starts in the next zone", () => {

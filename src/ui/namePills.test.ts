@@ -51,12 +51,8 @@ describe("a name pill in the body font", () => {
 });
 
 describe("pill openers", () => {
-  // The first and last kinds.
-  it.each([0, 15])("name their kind, %i", (index) => {
-    expect(pillIndex(pillOpener(index))).toBe(index);
-  });
-
-  it("are no other character's", () => {
+  it("name their kind, the first and the last, and are no other character's", () => {
+    expect([0, 15].map((index) => pillIndex(pillOpener(index)))).toEqual([0, 15]);
     expect([..."aZ $"].map(pillIndex)).toEqual([undefined, undefined, undefined, undefined]);
   });
 });
