@@ -760,8 +760,8 @@ export interface Zone {
   readonly id: string;
   // Hex colours from the art palette. The leash stands out against the zone's road.
   readonly leashColour: string;
-  // Lucky encounters use this chance for their authored movement. Hazard movement roles
-  // are explicit in spawnSlots.
+  // The chance that an obstacle or lucky encounter with an authored movement comes as a mover.
+  // 0 or less also turns off the moving spawnSlots roles.
   readonly moverShare: number;
   readonly name: string;
   readonly roadColour: string;
