@@ -63,7 +63,11 @@ export function compactFrames(
       : whole;
     const trimmed = from.width !== whole.width || from.height !== whole.height;
     const cell = blankImage(from.width + 2 * EXTRUDE, from.height + 2 * EXTRUDE);
-    blitExtruded(image, from, EXTRUDE, cell, { x: EXTRUDE, y: EXTRUDE }, whole);
+    blitExtruded(
+      { at: { x: EXTRUDE, y: EXTRUDE }, bounds: whole, extrude: EXTRUDE, from },
+      image,
+      cell,
+    );
     const id = createHash("sha256")
       .update(`${from.width}x${from.height}`)
       .update(cell.data)
