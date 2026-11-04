@@ -297,7 +297,7 @@ export class Art extends sn.Scene {
   // A 9x9 arrow, up (d=-1) or down (d=1): upgrade art shows a change by direction, not a number, so
   // it never goes stale against the tuning.
   arrow(x: number, y: number, d: number, col = "green"): void {
-    this.paste(pixmap(d < 0 ? ARROW : ARROW.toReversed(), { a: col }), x, y);
+    this.paste(pixmap(d < 0 ? ARROW : [...ARROW].reverse(), { a: col }), x, y);
   }
 }
 
