@@ -1,10 +1,10 @@
-import { mkdtemp, readFile, rm } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { writeOrCheck } from "./files";
+import { nodeArtFiles, writeIfChanged, writeOrCheck } from "./files";
 
 let root: string;
 const argv = process.argv;
@@ -44,4 +44,18 @@ describe("writeOrCheck", () => {
       await expect(readFile(join(root, "out.txt"))).rejects.toMatchObject({ code: "ENOENT" });
     },
   );
+});
+
+describe("missing files", () => {
+  it("treats a missing file or folder as absent", async () => {
+    expect(await writeIfChanged(join(root, "new/out.txt"), "text\n")).toBe(true);
+    expect(await nodeArtFiles(root).list("absent")).toEqual([]);
+  });
+
+  it("rethrows any other read error", async () => {
+    await mkdir(join(root, "out.txt"));
+    await writeFile(join(root, "file"), "");
+    await expect(run("--check")).rejects.toMatchObject({ code: "EISDIR" });
+    await expect(nodeArtFiles(root).list("file")).rejects.toMatchObject({ code: "ENOTDIR" });
+  });
 });

@@ -9,11 +9,19 @@ export function jsonText(value: unknown): string {
   return `${JSON.stringify(value, null, 2)}\n`;
 }
 
+function isMissing(error: unknown): boolean {
+  return error instanceof Error && "code" in error && error.code === "ENOENT";
+}
+
+// The text at path; null when it does not exist.
 async function readText(path: string): Promise<string | null> {
   try {
     return await readFile(path, "utf8");
-  } catch {
-    return null;
+  } catch (error) {
+    if (isMissing(error)) {
+      return null;
+    }
+    throw error;
   }
 }
 
@@ -36,8 +44,11 @@ async function fileNames(dir: string): Promise<string[]> {
       .filter((entry) => entry.isFile())
       .map((entry) => entry.name)
       .sort();
-  } catch {
-    return [];
+  } catch (error) {
+    if (isMissing(error)) {
+      return [];
+    }
+    throw error;
   }
 }
 
