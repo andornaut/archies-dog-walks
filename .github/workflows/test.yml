@@ -2,15 +2,13 @@ name: Test
 
 # Every branch, not just main and pull requests: work lands on main directly as
 # often as it arrives through one, so a check that only runs on main is a check
-# that runs after the fact. Documentation and art assets skip the checks;
-# Python art generators run the same lint gate as the application.
+# that runs after the fact. Every push runs the checks, so every commit
+# reports the required Test and Lint statuses.
 on:
   push:
     branches: ["**"]
-    paths: ["**", "!**/*.md", "!art/**", "!gameplay/**", "art/tools/**/*.py"]
   pull_request:
     branches: [main]
-    paths: ["**", "!**/*.md", "!art/**", "!gameplay/**", "art/tools/**/*.py"]
   workflow_dispatch:
 
 permissions:
