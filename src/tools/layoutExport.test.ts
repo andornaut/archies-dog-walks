@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 
-import { ROAD_HIT_SIZE, ROAD_SPRITE_SIZE } from "../assets/spriteKeys.ts";
+import shippedManifest from "../../public/art/manifest.json" with { type: "json" };
+import { parseManifest } from "../assets/manifest.ts";
+import { ROAD_HIT_SIZE, ROAD_SPRITE_SIZE, standsOnGround } from "../assets/spriteKeys.ts";
 import { gameData } from "../data/index.ts";
 import { ROAD_CAMERA, ROAD_FAR_SCALE, SCREEN_LAYOUT } from "../data/screen.ts";
 import { TUNING } from "../data/tuning.ts";
@@ -56,5 +58,14 @@ describe("layoutExport", () => {
     for (const [field, actual, expected] of drawn) {
       expect(actual, field).toEqual(expected);
     }
+  });
+
+  it("exports the ground-sprite rule standsOnGround applies to every shipped sprite", () => {
+    const { groundUiKeys, unmeasuredPrefixes } = layout.groundSprites;
+    const exported = (key: string) =>
+      groundUiKeys.includes(key) || !unmeasuredPrefixes.some((prefix) => key.startsWith(prefix));
+    const keys = parseManifest(shippedManifest).sprites.map(({ key }) => key);
+    expect(keys.filter((key) => exported(key) !== standsOnGround(key))).toEqual([]);
+    expect(groundUiKeys.filter((key) => !keys.includes(key))).toEqual([]);
   });
 });

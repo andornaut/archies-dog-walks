@@ -193,6 +193,21 @@
       }
     ]
   },
+  "groundSprites": {
+    "groundUiKeys": [
+      "ui-warning",
+      "ui-warning-arrow"
+    ],
+    "unmeasuredPrefixes": [
+      "badge-",
+      "card-",
+      "face-",
+      "fx-",
+      "icon-",
+      "portrait-",
+      "ui-"
+    ]
+  },
   "hudLanes": {
     "heartLabels": [
       {

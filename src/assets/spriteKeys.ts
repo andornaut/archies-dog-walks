@@ -146,7 +146,15 @@ export function depthVariantKey(key: string, step: number): string | null {
 // Sprites drawn standing on the road or the backdrop, which need their feet line. Faces,
 // effects, badges, cards, icons and UI are placed by their frame instead, except a mover's
 // cue, which stands on the road (GROUND_UI_KEYS, below its keys).
-const UNMEASURED_PREFIXES = ["badge-", "card-", "face-", "fx-", "icon-", "portrait-", "ui-"];
+export const UNMEASURED_PREFIXES: readonly string[] = [
+  "badge-",
+  "card-",
+  "face-",
+  "fx-",
+  "icon-",
+  "portrait-",
+  "ui-",
+];
 
 export function standsOnGround(key: string): boolean {
   return GROUND_UI_KEYS.has(key) || !UNMEASURED_PREFIXES.some((prefix) => key.startsWith(prefix));
@@ -296,4 +304,4 @@ export const WARNING_TAG = "pulse";
 export const WARNING_DOWN_TAG = "down-pulse";
 export const WARNING_UP_TAG = "up-pulse";
 
-const GROUND_UI_KEYS: ReadonlySet<string> = new Set([WARNING_KEY, WARNING_ARROW_KEY]);
+export const GROUND_UI_KEYS: ReadonlySet<string> = new Set([WARNING_KEY, WARNING_ARROW_KEY]);

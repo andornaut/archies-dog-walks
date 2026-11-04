@@ -3,7 +3,13 @@ import type { Rect } from "@andornaut/game-kit/rect";
 import { type FontMetrics, fontMetrics, inkWidth } from "@andornaut/game-kit/text/bitmapFont";
 
 import { DEPTH_STEPS } from "../assets/depthSteps.ts";
-import { LOADING_ART, ROAD_HIT_SIZE, ROAD_SPRITE_SIZE } from "../assets/spriteKeys.ts";
+import {
+  GROUND_UI_KEYS,
+  LOADING_ART,
+  ROAD_HIT_SIZE,
+  ROAD_SPRITE_SIZE,
+  UNMEASURED_PREFIXES,
+} from "../assets/spriteKeys.ts";
 import { MENU_TEXT } from "../data/menuText.ts";
 import {
   LANE_COUNT,
@@ -206,6 +212,13 @@ export function layoutExport(
       ownerTabs: regions.dogSlots.map(ownerTabRect),
       parts: DOG_CARD,
       slots: regions.dogSlots,
+    },
+    // Which sprites stand on the ground (standsOnGround): every key except those starting with
+    // an unmeasuredPrefixes entry, which are placed by their frame, and groundUiKeys stand on
+    // the ground whatever their prefix.
+    groundSprites: {
+      groundUiKeys: [...GROUND_UI_KEYS].sort(),
+      unmeasuredPrefixes: UNMEASURED_PREFIXES,
     },
     // The walk HUD's transient layers, each kept to its lane: the owners' tabs over the cards'
     // tops, and heart changes by slot.
