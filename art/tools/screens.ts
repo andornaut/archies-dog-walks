@@ -55,18 +55,24 @@
 //
 // ui-pet-shop: a 120x108 sprite, tags normal, pressed and door-wave: the pet shop on the
 // yard's right lot, which opens the shop. The game draws it at PET_SHOP_AT (234,54), its base on
-// the yard's bottom row (161), and its hit area is the frame. The PET SHOP board (BOARD, 3,0 114x22
-// in the frame, 237,54 on screen) spans the parapet, its bottom 2 rows over it, built and coloured
-// as ui-button's go state (green face, yellow highlight, forest lip, ink line), with PET SHOP in the
-// sign letters' shapes at 2x in ink, as the go label. Under it a red and white awning, a display
-// window with a food bag and a puppy behind its bone, and a door with a paw on its glass; rust brick
-// with dbrown mortar, lit ochre on the left, dred on the right, ink outline all round, on a grey
-// step. pressed dips as ui-button does: the front sinks 2px onto the step, the step 1px shallower,
-// and the board loses its lip and highlight to face, as go-pressed. door-wave is frames 2 to 17 at
-// 120ms each (1920ms): the right-hinged door opens, a shopkeeper peeks out and waves inside its
-// aperture, then withdraws as it closes. The building and board stay fixed. Normal frame 0 is the
-// static closed pose. An affordable item in the shop takes ui-afford 2px outside the frame (232,52
-// 124x112).
+// the yard's bottom row (161), and its hit area is the frame. Under the board's place (rows 0 to 21)
+// the frame is clear but for the parapet trim: an ink line on row 20 and cream from row 21, so the
+// board rising 1px shows a third cream row, never a gap. Under the trim a red and white awning, a
+// display window with a food bag and a puppy behind its bone, and a door with a paw on its glass;
+// rust brick with dbrown mortar, lit ochre on the left, dred on the right, ink outline all round,
+// on a grey step. pressed dips as ui-button does: the front sinks 2px onto the step, the step 1px
+// shallower. door-wave is frames 2 to 17 at 120ms each (1920ms): the right-hinged door opens, a
+// shopkeeper peeks out and waves inside its aperture, then withdraws as it closes. The building
+// stays fixed. Normal frame 0 is the static closed pose. An affordable item in the shop takes
+// ui-afford 2px outside the frame (232,52 124x112).
+//
+// ui-pet-shop-board: a 114x24 sprite, tags normal and pressed: the PET SHOP board, drawn over
+// ui-pet-shop at BOARD's offset (3,0 in the shop's frame, 237,54 on screen) with the same origin
+// for both tags. Built and coloured as ui-button's go state (green face, yellow highlight, forest
+// lip, ink line), with PET SHOP in the sign letters' shapes at 2x in ink, as the go label. normal
+// fills rows 0 to 21, its bottom 2 rows over the parapet; pressed sinks 2px with the front (rows 2
+// to 23) and loses its lip and highlight to face, as go-pressed. The game bobs it 1px up as Start
+// walk bobs, and not while pressed.
 //
 // ui-loading-track: a 316x8 image, the sidewalk being walked: Lady's paw prints in dslate,
 // staggered on two rows from Casey's heel to the Pet shop's door. The game draws it at TRACK_AT
@@ -126,7 +132,8 @@ const USAGE = `Usage:
   node art/tools/screens.ts build screen-home   write only screen-home PNG and Aseprite source
   node art/tools/screens.ts build               write art/screens/*.aseprite,
                                                 public/art/images/*.png and
-                                                public/art/sprites/ui-loading.* and ui-pet-shop.*`;
+                                                public/art/sprites/ui-loading.*, ui-pet-shop.* and
+                                                ui-pet-shop-board.*`;
 
 export const W = 360;
 export const H = 560;
@@ -138,10 +145,12 @@ export const SIGN_AT: readonly [number, number] = [6, 106];
 export const PET_SHOP_W = 120;
 export const PET_SHOP_H = 108;
 export const PET_SHOP_AT: readonly [number, number] = [234, 54];
-// The PET SHOP board in the sprite: ui-button's go state 114x22, its bottom 2 rows over the
-// parapet. The building below it starts BOARD_RISE rows down.
+// The PET SHOP board's place in ui-pet-shop: ui-button's go state 114x22, its bottom 2 rows over
+// the parapet. The building below it starts BOARD_RISE rows down. ui-pet-shop-board's frame adds
+// BOARD_DROP rows under it, where pressed sinks.
 export const BOARD: readonly [x: number, y: number, w: number, h: number] = [3, 0, 114, 22];
 export const BOARD_RISE = 4;
+export const BOARD_DROP = 2;
 // Projected door-leaf width, keeper reveal and hand pose. All coordinates stay inside the closed
 // door.
 export type DoorStep = readonly [width: number, reveal: number | null, wave: number | null];
@@ -679,41 +688,54 @@ export interface PetShopOptions {
   pressed?: boolean;
 }
 
-// The shop front, PET_SHOP_W x PET_SHOP_H: the building from BOARD_RISE down, under the board.
-// Everything but the step is drawn t rows lower, so pressed sinks the front 2px onto a step 1px
-// shallower, as ui-button's face sinks into its lip.
+// ui-pet-shop's frame, PET_SHOP_W x PET_SHOP_H: the building from BOARD_RISE down, without its
+// board. Everything but the step is drawn t rows lower, so pressed sinks the front 2px onto a step
+// 1px shallower, as ui-button's face sinks into its lip.
 export function petShop({ doorFrame = null, pressed = false }: PetShopOptions = {}): Clear {
   const cv = clear(PET_SHOP_W, PET_SHOP_H);
   building(cv, PET_SHOP_W, PET_SHOP_H - BOARD_RISE, pressed, doorFrame);
+  return cv;
+}
+
+// ui-pet-shop-board's frame, BOARD's width x its height plus BOARD_DROP.
+export function petShopBoard(pressed = false): Clear {
+  const cv = clear(BOARD[2], BOARD[3] + BOARD_DROP);
   shopBoard(cv, pressed);
   return cv;
 }
 
-// The PET SHOP board at BOARD: ui-button's go state, a green face with a yellow top highlight on a
-// forest lip 4px deep, in an ink line with its corners cut, and PET SHOP in the sign letters' shapes
-// at 2x, filled ink (8.41:1 on green) with no outline or shadow, as the go label. Raised, row 0 is
-// ink, row 1 the highlight, the face runs to row 16, the lip fills rows 17 to 20 and ink row 21; the
-// caps fill rows 4 to 13. Pressed, the lip and highlight give way to face, as go-pressed, and the
-// board rides down with the front: face and letters sink 2px.
+// The shop with its board at rest, as the yard shows them.
+export function petShopFront({ doorFrame = null, pressed = false }: PetShopOptions = {}): Clear {
+  const cv = petShop({ doorFrame, pressed });
+  composite({ x: BOARD[0], y: BOARD[1] }, petShopBoard(pressed).img, cv.img);
+  return cv;
+}
+
+// The PET SHOP board from its frame's top left: ui-button's go state, a green face with a yellow
+// top highlight on a forest lip 4px deep, in an ink line with its corners cut, and PET SHOP in the
+// sign letters' shapes at 2x, filled ink (8.41:1 on green) with no outline or shadow, as the go
+// label. Raised, row 0 is ink, row 1 the highlight, the face runs to row 16, the lip fills rows 17
+// to 20 and ink row 21; the caps fill rows 4 to 13. Pressed, the lip and highlight give way to
+// face, as go-pressed, and the board rides down with the front: face and letters sink BOARD_DROP.
 export function shopBoard(cv: Canvas, pressed: boolean): void {
-  const [bx, by, bw, bh] = BOARD;
-  const t = pressed ? 2 : 0;
+  const [, , bw, bh] = BOARD;
+  const t = pressed ? BOARD_DROP : 0;
   const [face, lip, hi] = STATES.go!;
-  cv.fill(bx + 1, by + t, bw - 2, bh, "ink");
-  cv.fill(bx, by + 1 + t, bw, bh - 2, "ink");
-  cv.fill(bx + 1, by + 1 + t, bw - 2, bh - 2, face);
+  cv.fill(1, t, bw - 2, bh, "ink");
+  cv.fill(0, 1 + t, bw, bh - 2, "ink");
+  cv.fill(1, 1 + t, bw - 2, bh - 2, face);
   if (!pressed) {
-    cv.fill(bx + 1, by + 1, bw - 2, 1, hi!);
-    cv.fill(bx + 1, by + bh - 5, bw - 2, 4, lip!);
+    cv.fill(1, 1, bw - 2, 1, hi!);
+    cv.fill(1, bh - 5, bw - 2, 4, lip!);
   }
   const [letters] = sign("PET SHOP", 2);
   const caps = [...letters].filter(([, c]) => c !== "ink" && c !== "dred").map(([k]) => xy(k));
   const x0 = Math.min(...caps.map(([x]) => x));
   const y0 = Math.min(...caps.map(([, y]) => y));
   const lw = Math.max(...caps.map(([x]) => x)) + 1 - x0;
-  const lx = bx + Math.floor((bw - lw) / 2);
+  const lx = Math.floor((bw - lw) / 2);
   for (const [x, y] of caps) {
-    cv.fill(lx + x - x0, by + 4 + t + y - y0, 1, 1, "ink");
+    cv.fill(lx + x - x0, 4 + t + y - y0, 1, 1, "ink");
   }
 }
 
@@ -1710,7 +1732,7 @@ export function loading(): Canvas {
     YARD_FOOT,
     HOMES.map(doorColumn).map((c) => [c - 9, c + 9] as const),
   );
-  const shop = petShop().img;
+  const shop = petShopFront().img;
   const near = clear(W, H);
   const at = { x: SHOP_AT[0], y: SHOP_AT[1] };
   composite(at, shop, near.img);
@@ -2007,6 +2029,7 @@ export function* sprites(): Generator<Sprite> {
       ],
     ],
   ];
+  yield ["ui-pet-shop-board", pressedTags((pressed) => imageRows(petShopBoard(pressed).img))];
 }
 
 // Block in the UI that sits on a screen, for the preview only (layout from StartScene, StatsScene on
@@ -2033,7 +2056,7 @@ export function ui(cv: Canvas, screen: string): void {
     }
     textC(cv, "HIGH PARK", 327, 75, "white");
     panel(130, 46, 100, 34, "white");
-    cv.paste(petShop().img, PET_SHOP_AT[0], PET_SHOP_AT[1]);
+    cv.paste(petShopFront().img, PET_SHOP_AT[0], PET_SHOP_AT[1]);
     panel(194, 166, 18, 18);
     figure(180, 196, 16, 40, "sky");
     for (const [x, foot] of [
@@ -2127,7 +2150,7 @@ export function preview(out: string, scale = 2): void {
 // ui-pet-shop's tags on the yard at 1x and scale, then screen-home with the building in, at 1x and
 // scale. Also writes the lot around the building at scale beside out, as <out>-lot.png.
 export function shopPreview(out: string, scale = 4): void {
-  const tags = [false, true].map((pressed) => petShop({ pressed }).img);
+  const tags = [false, true].map((pressed) => petShopFront({ pressed }).img);
   const homeCv = home();
   homeCv.paste(tags[0]!, PET_SHOP_AT[0], PET_SHOP_AT[1]);
   const lot = crop(

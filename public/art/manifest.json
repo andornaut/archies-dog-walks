@@ -13170,6 +13170,11 @@
       "json": "sprites/ui-pet-shop.json"
     },
     {
+      "key": "ui-pet-shop-board",
+      "png": "sprites/ui-pet-shop-board.png",
+      "json": "sprites/ui-pet-shop-board.json"
+    },
+    {
       "key": "ui-pull-blocked",
       "png": "sprites/ui-pull-blocked.png",
       "json": "sprites/ui-pull-blocked.json"

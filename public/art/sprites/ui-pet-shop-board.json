@@ -1,0 +1,31 @@
+{ "frames": {
+   "ui-pet-shop-board 0.aseprite": {
+    "frame": { "x": 0, "y": 0, "w": 114, "h": 24 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 114, "h": 24 },
+    "sourceSize": { "w": 114, "h": 24 },
+    "duration": 1000
+   },
+   "ui-pet-shop-board 1.aseprite": {
+    "frame": { "x": 114, "y": 0, "w": 114, "h": 24 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 114, "h": 24 },
+    "sourceSize": { "w": 114, "h": 24 },
+    "duration": 1000
+   }
+ },
+ "meta": {
+  "app": "http://www.aseprite.org/",
+  "version": "1.2.30-x64",
+  "image": "ui-pet-shop-board.png",
+  "format": "RGBA8888",
+  "size": { "w": 228, "h": 24 },
+  "scale": "1",
+  "frameTags": [
+   { "name": "normal", "from": 0, "to": 0, "direction": "forward" },
+   { "name": "pressed", "from": 1, "to": 1, "direction": "forward" }
+  ]
+ }
+}
