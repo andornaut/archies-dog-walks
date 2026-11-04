@@ -10,7 +10,7 @@ import { MOVEMENT_ASSIGNMENTS, MOVEMENT_PROFILES } from "../data/movementProfile
 import { RUN_TEXT } from "../data/runText.ts";
 import { SHOP_GEAR } from "../data/shop.ts";
 import { TUNING } from "../data/tuning.ts";
-import { UPGRADES } from "../data/upgrades.ts";
+import { UPGRADE_DRAW_ORDER, UPGRADES } from "../data/upgrades.ts";
 import { stillInLane } from "../runner/laneMotion.ts";
 import { startRoad, stepWalk, type Walk } from "../runner/walk.ts";
 import { type WalkItem } from "../runner/walkItems.ts";
@@ -54,6 +54,7 @@ export const data = {
   shopGear: SHOP_GEAR,
   ...TEST_WALKER_DATA,
   tuning,
+  upgradeDrawOrder: UPGRADE_DRAW_ORDER,
   upgrades: UPGRADES,
   world: mapZones(
     (zone) => ({

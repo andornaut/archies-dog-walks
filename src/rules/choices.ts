@@ -1,6 +1,5 @@
 import { fillNames } from "@andornaut/game-kit/lines";
 import { type Random, randomInt, randomPick } from "@andornaut/game-kit/random";
-import { keysOf } from "@andornaut/game-kit/records";
 
 import { cardZoneKey } from "../assets/spriteKeys.ts";
 import type {
@@ -456,16 +455,17 @@ export function openCard(source: CardSource, state: RunState): RunState {
 // What count paths carry, in order: one path of a fork with more than one, drawn at random,
 // carries none, so a fork with one path always offers an upgrade; the others carry upgrades
 // drawn at random from those not yet picked this run, none twice, with at most one trade-off:
-// a second trade-off drawn is set aside and another card drawn instead.
+// a second trade-off drawn is set aside and another card drawn instead. The pool keeps
+// upgradeDrawOrder's order, which the draws pick from by position.
 export function offerUpgrades(
-  data: Pick<GameData, "upgrades">,
+  data: Pick<GameData, "upgradeDrawOrder" | "upgrades">,
   random: Random,
   count: number,
   state: Pick<RunState, "upgradesPicked">,
 ): (UpgradeId | null)[] {
   const bare = count > 1 ? randomInt(random, 0, count) : -1;
   const wanted = bare < 0 ? count : count - 1;
-  const pool = keysOf(data.upgrades).filter((id) => !state.upgradesPicked.includes(id));
+  const pool = data.upgradeDrawOrder.filter((id) => !state.upgradesPicked.includes(id));
   const isTradeOff = (id: UpgradeId) => data.upgrades[id].kind === "tradeOff";
   const offered: UpgradeId[] = [];
   while (offered.length < wanted && pool.length > 0) {
@@ -484,7 +484,7 @@ export function offerUpgrades(
 // drawn at random from forks, easiest on the left, each carrying an upgrade or none, drawn from
 // upgrades (offerUpgrades).
 export function offerFork(
-  data: Pick<GameData, "upgrades" | "world">,
+  data: Pick<GameData, "upgradeDrawOrder" | "upgrades" | "world">,
   random: { readonly forks: Random; readonly upgrades: Random },
   state: RunState,
 ): ForkSource {

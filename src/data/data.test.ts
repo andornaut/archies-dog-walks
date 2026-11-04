@@ -25,6 +25,7 @@ const {
   minorObstacles,
   shopGear,
   tuning,
+  upgradeDrawOrder,
   upgrades,
   walkers,
   world,
@@ -111,6 +112,11 @@ describe("cards", () => {
     const removedBeforeLastPick = world.walkLength - 2;
     const mostPaths = forkPaths(gameData, () => 0, [world.firstZone as ZoneId]).length;
     expect(Object.keys(upgrades).length - removedBeforeLastPick).toBeGreaterThanOrEqual(mostPaths);
+  });
+
+  it("lists every upgrade exactly once in the draw order", () => {
+    expect(new Set(upgradeDrawOrder).size).toBe(upgradeDrawOrder.length);
+    expect([...upgradeDrawOrder].sort()).toEqual(keysOf(upgrades).sort());
   });
 
   it("keeps saved option ids unique on each card, and saved badge ids unique", () => {

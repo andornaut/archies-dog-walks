@@ -263,12 +263,14 @@ function upgradesSection(data: GameData): Section {
   return {
     facets: ["Kind"],
     headers: ["Upgrade", "Kind", "Effect", "Art"],
-    rows: Object.values(data.upgrades).map((upgrade) => [
-      upgrade.name,
-      upgrade.kind === "tradeOff" ? "trade-off" : "boost",
-      effectText(data, upgrade.effects),
-      upgrade.art,
-    ]),
+    rows: data.upgradeDrawOrder
+      .map((id) => data.upgrades[id])
+      .map((upgrade) => [
+        upgrade.name,
+        upgrade.kind === "tradeOff" ? "trade-off" : "boost",
+        effectText(data, upgrade.effects),
+        upgrade.art,
+      ]),
     title: "Upgrades",
   };
 }

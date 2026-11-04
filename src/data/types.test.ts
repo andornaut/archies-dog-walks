@@ -18,7 +18,9 @@ import type {
   MoneyEffect,
   MovementAssignment,
   Upgrade,
+  UpgradeId,
 } from "./types.ts";
+import type { UPGRADE_DRAW_ORDER } from "./upgrades.ts";
 
 // Type-level checks: tsc (npm run check) fails if a @ts-expect-error line stops erroring.
 const check = <T>(value: T): T => value;
@@ -138,6 +140,11 @@ describe("types", () => {
     {
       // @ts-expect-error: an empty pack
       check<Pack>([]);
+    }
+
+    // Lists every upgrade in the draw order.
+    {
+      expectTypeOf<Exclude<UpgradeId, (typeof UPGRADE_DRAW_ORDER)[number]>>().toBeNever();
     }
   });
 });

@@ -1380,6 +1380,8 @@ export interface GameData {
   readonly runText: RunText;
   readonly shopGear: Readonly<Record<GearId, Gear>>;
   readonly tuning: LiveTuning;
+  // Every upgrade once, in the order the forks draw from (UPGRADE_DRAW_ORDER).
+  readonly upgradeDrawOrder: readonly UpgradeId[];
   readonly upgrades: Readonly<Record<UpgradeId, Upgrade>>;
   readonly walkerPerks: Readonly<Record<WalkerPerkId, WalkerPerk>>;
   readonly walkers: Readonly<Record<WalkerId, Walker>>;

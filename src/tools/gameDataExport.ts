@@ -46,6 +46,13 @@ function entries<Id extends string, T>(record: Readonly<Record<Id, T>>): [Id, T]
   return Object.entries(record) as [Id, T][];
 }
 
+// The upgrades in the forks' draw order.
+function upgradeEntries(
+  data: Pick<GameData, "upgradeDrawOrder" | "upgrades">,
+): [UpgradeId, GameData["upgrades"][UpgradeId]][] {
+  return data.upgradeDrawOrder.map((id) => [id, data.upgrades[id]]);
+}
+
 // An option's id is its art key less the card's prefix: card-lost-wallet-keep is "keep".
 function optionId(sourceId: string, art: string): string | null {
   const prefix = `card-${kebabCase(sourceId)}-`;
@@ -111,18 +118,16 @@ function cardFaces(data: GameData): CardFace[] {
     text: zone.difficultyName,
     title: data.runText.card.forkTitle,
   }));
-  const upgradeCards = entries<UpgradeId, GameData["upgrades"][UpgradeId]>(data.upgrades).map(
-    ([id, upgrade]): CardFace => ({
-      art: upgrade.art,
-      frame: "route",
-      id,
-      index: null,
-      name: upgrade.name,
-      source: { id, kind: "upgrade" },
-      text: effectText(data, upgrade.effects),
-      title: data.runText.card.forkTitle,
-    }),
-  );
+  const upgradeCards = upgradeEntries(data).map(([id, upgrade]): CardFace => ({
+    art: upgrade.art,
+    frame: "route",
+    id,
+    index: null,
+    name: upgrade.name,
+    source: { id, kind: "upgrade" },
+    text: effectText(data, upgrade.effects),
+    title: data.runText.card.forkTitle,
+  }));
   const skip: CardFace = {
     art: SKIP_CARD_ART,
     frame: "encounter",
@@ -215,9 +220,7 @@ export function gameDataExport(data: GameData) {
     movementAssignments: data.movementAssignments,
     movementProfiles: data.movementProfiles,
     tuning,
-    upgrades: entries<UpgradeId, GameData["upgrades"][UpgradeId]>(data.upgrades).map(
-      ([id, upgrade]) => ({ id, ...upgrade }),
-    ),
+    upgrades: upgradeEntries(data).map(([id, upgrade]) => ({ id, ...upgrade })),
     walkers: entries<WalkerId, GameData["walkers"][WalkerId]>(data.walkers).map(([id, walker]) => ({
       id,
       ...walker,

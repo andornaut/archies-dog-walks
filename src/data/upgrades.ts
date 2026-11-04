@@ -32,6 +32,23 @@ export const UPGRADES = {
     kind: "boost",
     name: "Big tipper",
   },
+  charmer: {
+    art: "card-charmer",
+    cardEffect: "Free $ card",
+    duration: "run",
+    effect: "First card: cash options free",
+    effects: [
+      {
+        by: "charmerFreeCards",
+        duration: "run",
+        kind: "modifier",
+        operation: "add",
+        stat: "freeCards",
+      },
+    ],
+    kind: "boost",
+    name: "Charmer",
+  },
   goodLeash: {
     art: "card-good-leash",
     cardEffect: "No pulls",
@@ -92,23 +109,16 @@ export const UPGRADES = {
     kind: "tradeOff",
     name: "Rush hour",
   },
-  // The pool order feeds the seeded upgrade draws, so charmer keeps its drawn position.
-  // eslint-disable-next-line sort-keys
-  charmer: {
-    art: "card-charmer",
-    cardEffect: "Free $ card",
-    duration: "run",
-    effect: "First card: cash options free",
-    effects: [
-      {
-        by: "charmerFreeCards",
-        duration: "run",
-        kind: "modifier",
-        operation: "add",
-        stat: "freeCards",
-      },
-    ],
-    kind: "boost",
-    name: "Charmer",
-  },
 } as const satisfies Record<string, Upgrade>;
+
+// The pool the forks draw upgrades from, in order: a seed's draws pick by position here, so
+// reordering it changes which upgrades every seed offers. It lists every upgrade once, and the
+// data page and the game data export list the upgrades in this order too.
+export const UPGRADE_DRAW_ORDER = [
+  "bellyRubs",
+  "bigTipper",
+  "goodLeash",
+  "raincoats",
+  "rushHour",
+  "charmer",
+] as const satisfies readonly (keyof typeof UPGRADES)[];

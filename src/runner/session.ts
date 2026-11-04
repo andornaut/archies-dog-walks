@@ -1,6 +1,6 @@
 import { type Random, randomStream } from "@andornaut/game-kit/random";
 
-import type { CardSource, DogId } from "../data/types.ts";
+import type { CardSource, DogId, GameData } from "../data/types.ts";
 import type { LaneDirection } from "../layout/lanes.ts";
 import type { MoneyChange } from "../rules/causes.ts";
 import {
@@ -35,7 +35,7 @@ import { type DebuffMovementClock, hasDebuffDrift, stepDebuffMovement } from "./
 // Zoomies' drift, the walk, the firing hold, then the queued cards, the zone's end and the next
 // zone's plan. The walk stands still while a card waits for its choice.
 
-export type SessionData = CardData & PullData & WalkData;
+export type SessionData = CardData & Pick<GameData, "upgradeDrawOrder"> & PullData & WalkData;
 
 // The run's random streams, each named from the seed, so a seed replays the same walk however
 // the walk is driven. forks draws a fork's paths and upgrades what they carry, which the walk

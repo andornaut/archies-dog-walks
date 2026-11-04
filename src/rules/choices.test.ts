@@ -10,7 +10,7 @@ import { QUIPS } from "../data/quips.ts";
 import { RUN_TEXT } from "../data/runText.ts";
 import { SHOP_GEAR } from "../data/shop.ts";
 import type { CardOption, CardSource, DogId, EncounterId, UpgradeId } from "../data/types.ts";
-import { UPGRADES } from "../data/upgrades.ts";
+import { UPGRADE_DRAW_ORDER, UPGRADES } from "../data/upgrades.ts";
 import { newRun, type RunState } from "../state/runState.ts";
 import { activeModifier, heartsByDog, testState } from "../testing/runState.ts";
 import { TEST_TUNING } from "../testing/tuning.ts";
@@ -41,6 +41,7 @@ const data = {
   shopGear: SHOP_GEAR,
   ...TEST_WALKER_DATA,
   tuning: TEST_TUNING,
+  upgradeDrawOrder: UPGRADE_DRAW_ORDER,
   upgrades: UPGRADES,
   world: TEST_WORLD,
 };

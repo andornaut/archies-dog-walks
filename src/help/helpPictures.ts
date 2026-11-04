@@ -1,5 +1,4 @@
 import { itemAt } from "@andornaut/game-kit/arrays";
-import { keysOf } from "@andornaut/game-kit/records";
 import type { Point, Rect } from "@andornaut/game-kit/rect";
 import { pixels } from "@andornaut/game-kit/units";
 
@@ -413,12 +412,12 @@ function pulls(data: GameData): HelpPicture {
 }
 
 // The fork after the first neighbourhood, its paths easiest on the left, each carrying an
-// upgrade in the upgrades' order.
+// upgrade in the forks' draw order.
 function zones(data: GameData): HelpPicture {
   const { dogs, lane } = HELP_SCENES.zones;
   const run = startRun(data, dogs);
   const paths = forkPaths(data, () => 0, run.route);
-  const upgrades = keysOf(data.upgrades).slice(0, paths.length);
+  const upgrades = data.upgradeDrawOrder.slice(0, paths.length);
   return {
     ...STILL,
     card: forkCard(data, run, { kind: "fork", paths, upgrades }),

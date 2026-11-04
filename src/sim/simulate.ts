@@ -78,7 +78,13 @@ export type SimData = ChoiceData &
   WalkData &
   Pick<
     GameData,
-    "achievements" | "defaultWalker" | "dogSlots" | "runText" | "upgrades" | "walkerPerks"
+    | "achievements"
+    | "defaultWalker"
+    | "dogSlots"
+    | "runText"
+    | "upgradeDrawOrder"
+    | "upgrades"
+    | "walkerPerks"
   >;
 
 // Who plays the walk: a steering bot of a skill, reading movers by sight or by foresight, plays

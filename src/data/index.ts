@@ -17,7 +17,7 @@ import { RUN_TEXT } from "./runText.ts";
 import { SHOP_GEAR } from "./shop.ts";
 import { TUNING } from "./tuning.ts";
 import type { AchievementTier, GameData } from "./types.ts";
-import { UPGRADES } from "./upgrades.ts";
+import { UPGRADE_DRAW_ORDER, UPGRADES } from "./upgrades.ts";
 import { DEFAULT_WALKER, WALKER_PERKS, WALKERS } from "./walkers.ts";
 import { WORLD } from "./world.ts";
 
@@ -53,6 +53,7 @@ function toGameData(values: ValueExports): GameData {
     runText: values.RUN_TEXT,
     shopGear: values.SHOP_GEAR,
     tuning: values.TUNING,
+    upgradeDrawOrder: values.UPGRADE_DRAW_ORDER,
     upgrades: values.UPGRADES,
     walkerPerks: values.WALKER_PERKS,
     walkers: values.WALKERS,
@@ -80,6 +81,7 @@ const INITIAL_VALUES = {
   SHOP_GEAR,
   TUNING,
   UPGRADES,
+  UPGRADE_DRAW_ORDER,
   WALKERS,
   WALKER_PERKS,
   WORLD,
