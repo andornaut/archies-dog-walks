@@ -8,6 +8,7 @@ import { describe, expect, it } from "vitest";
 import { gameData } from "../data";
 import { SCREEN_LAYOUT } from "../data/screen";
 import type { QuipMoment } from "../data/types";
+import { orderedAchievements } from "../rules/achievementOrder";
 import { bodyRunWidth } from "../testing/bodyFont";
 import { defined } from "../testing/defined";
 import { everyStripLine } from "../testing/everyStripLine";
@@ -39,6 +40,7 @@ import {
   stepMessageStrip,
   stripLeadSlot,
 } from "./messageStrip";
+import { achievementLine, pullLine } from "./stripLines";
 import { debuffBarRects } from "./walkHud";
 
 const TIMING = messageTiming(gameData);
@@ -150,6 +152,38 @@ describe("stepMessageStrip", () => {
     ["a firing", { ...line("b", "fired"), keepsWaiting: true as const }, 10 * maxWaitMs, ["b"]],
   ])("keeps %s waiting %i ms as %j", (_name, said, waitedMs, waiting) => {
     expect(waited(said, waitedMs).map(({ text }) => text)).toEqual(waiting);
+  });
+
+  it("shows every badge of a burst in turn, a dwell apart, while plain lines past the wait drop", () => {
+    const badges = orderedAchievements(gameData.achievements)
+      .slice(0, maxWaiting / 2)
+      .map((achievement) => achievementLine(gameData, achievement));
+    const plains = keysOf(gameData.dogs)
+      .slice(0, badges.length)
+      .map((dog) => pullLine(gameData, dog));
+    const burst = plains.flatMap((plain, i) => [plain, defined(badges[i])]);
+    const stepMs = 100;
+    const shows: { atMs: number; text: string }[] = [];
+    let state = burst.reduce((strip, said) => sayLine(TIMING, said, strip), EMPTY_MESSAGE_STRIP);
+    for (let atMs = 0; atMs <= burst.length * maxWaitMs; atMs += stepMs) {
+      const before = state.shown?.id;
+      state = stepMessageStrip(TIMING, atMs === 0 ? 0 : stepMs, state);
+      if (state.shown !== null && state.shown.id !== before) {
+        shows.push({ atMs, text: state.shown.text });
+      }
+    }
+    const texts = shows.map(({ text }) => text);
+    const plainTexts = plains.map(({ text }) => text);
+    expect(texts.filter((text) => !plainTexts.includes(text))).toEqual(
+      badges.map(({ text }) => text),
+    );
+    expect(shows.slice(1).every(({ atMs }, i) => atMs - defined(shows[i]).atMs >= dwellMs)).toBe(
+      true,
+    );
+    const plainShows = shows.filter(({ text }) => plainTexts.includes(text));
+    expect(plainShows.every(({ atMs }) => atMs < maxWaitMs)).toBe(true);
+    expect(plainShows.length).toBeLessThan(plains.length);
+    expect(state.waiting).toEqual([]);
   });
 });
 

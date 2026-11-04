@@ -21,7 +21,7 @@ import { DEBUFF_BAR } from "./walkHud";
 // face inline before their name (faceText.ts); the panel is as tall as the rows it
 // holds, and as the owner's lead. While debuff bars are up it moves under them, rows and all. A
 // line waits its turn, shows, and fades out at the end of its life; one that waits too long is
-// dropped unseen, but for a hint or a firing. The strip shows while it has a line.
+// dropped unseen, but for a badge, a hint or a firing. The strip shows while it has a line.
 
 // What a line is about, and the icon that leads it; or a walk effect, such as a gear, a perk or
 // an upgrade, led by its 16x16 icon.
@@ -236,7 +236,7 @@ export function messageRows(
 // (marks) is drawn led by their face, but for an owner whose face and name lead the line. names:
 // effects' names the line sets apart in their colours, beyond the "Name:" leads every line's
 // names get (effectNameMarks), as a debuff's start line marks its lead. keepsWaiting: the line
-// waits its turn however long it takes, as a hint or a firing does.
+// waits its turn however long it takes, as a badge, a hint or a firing does.
 export interface MessageLine extends FaceText {
   readonly icon: MessageLead;
   readonly keepsWaiting?: true;

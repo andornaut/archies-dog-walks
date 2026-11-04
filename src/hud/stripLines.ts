@@ -1,6 +1,7 @@
 import { fillLine, fillNames } from "@andornaut/game-kit/lines";
 
-import type { DebuffId, DogId, EncounterId, GameData, GearId } from "../data/types";
+import type { Achievement, DebuffId, DogId, EncounterId, GameData, GearId } from "../data/types";
+import { achievementLabel } from "../rules/achievementOrder";
 import { type Change, type HeartChange, heartsForgiven, type MoneyChange } from "../rules/causes";
 import { debuffFields, formatDollars } from "../rules/effectText";
 import { spareTreatGiver, spareTreatSource } from "../rules/spareTreats";
@@ -180,6 +181,19 @@ export function firedLine(data: StripData, dog: DogId): MessageLine {
     icon: "fired",
     keepsWaiting: true,
     ...ownerLine(data, "fired", dog, { dog: data.dogs[dog].name }),
+  };
+}
+
+// A badge earned, which waits its turn on the strip however long it takes.
+export function achievementLine(
+  data: Pick<GameData, "menuText" | "runText">,
+  achievement: Pick<Achievement, "difficulty" | "name">,
+): MessageLine {
+  const name = achievementLabel(data, achievement);
+  return {
+    icon: "achievement",
+    keepsWaiting: true,
+    text: stripLine(data, "achievement", { name }),
   };
 }
 

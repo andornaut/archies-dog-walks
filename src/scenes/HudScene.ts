@@ -41,7 +41,7 @@ import {
   moneyFlightPath,
   stackOrders,
 } from "../hud/moneyLabels";
-import { stripLine } from "../hud/stripLines";
+import { achievementLine } from "../hud/stripLines";
 import {
   buttonIcon,
   pauseButtonIcon,
@@ -74,7 +74,7 @@ import {
   zoneShare,
 } from "../hud/walkHud";
 import { zonePillLayout } from "../hud/zonePill";
-import { achievementLabel, orderedAchievements } from "../rules/achievementOrder";
+import { orderedAchievements } from "../rules/achievementOrder";
 import { ownerMaxHearts } from "../rules/dogs";
 import { debuffLasting } from "../rules/durations";
 import { hintFor, hintJumpsQueue } from "../rules/hints";
@@ -1186,11 +1186,8 @@ export class HudScene extends Scene {
     for (const achievement of orderedAchievements(gameData.achievements).filter(({ id }) =>
       ids.includes(id),
     )) {
-      const text = stripLine(gameData, "achievement", {
-        name: achievementLabel(gameData, achievement),
-      });
       soundboardOf(this).play("badge");
-      this.messages.say({ icon: "achievement", text });
+      this.messages.say(achievementLine(gameData, achievement));
     }
   }
 
