@@ -89,7 +89,6 @@
 import { execFileSync } from "node:child_process";
 import { mkdirSync, writeFileSync } from "node:fs";
 
-import { encodeRgbaPng, encodeRgbPng } from "@andornaut/art-kit/png";
 import {
   composite,
   crop,
@@ -114,6 +113,8 @@ import {
   type Frame,
   Grid,
   K,
+  rgbPng,
+  savePng,
   type Sprite,
   type Tag,
   toImage,
@@ -173,8 +174,6 @@ export const DOOR_WAVE: readonly DoorStep[] = [
   [26, null, null],
 ];
 export const DOOR_WAVE_MS = 120;
-
-const PNG = { deflateLevel: 6, deflateStrategy: 0, filterType: -1 };
 
 // A pixel rectangle, as art-kit's raster ops take it.
 type Rect = Parameters<typeof crop>[0];
@@ -2144,7 +2143,7 @@ export function preview(out: string, scale = 2): void {
       sheet,
     );
   });
-  writeFileSync(out, encodeRgbPng(PNG, sheet));
+  writeFileSync(out, rgbPng(sheet));
 }
 
 // ui-pet-shop's tags on the yard at 1x and scale, then screen-home with the building in, at 1x and
@@ -2199,10 +2198,10 @@ export function shopPreview(out: string, scale = 4): void {
     resizeNearest(W * scale, H * scale, opaque(homeCv.img)),
     sheet,
   );
-  writeFileSync(out, encodeRgbPng(PNG, sheet));
+  writeFileSync(out, rgbPng(sheet));
   writeFileSync(
     out.replaceAll(".png", "-lot.png"),
-    encodeRgbPng(PNG, resizeNearest(lot.width * scale, lot.height * scale, lot)),
+    rgbPng(resizeNearest(lot.width * scale, lot.height * scale, lot)),
   );
 }
 
@@ -2213,10 +2212,7 @@ export async function build(only?: string): Promise<void> {
   for (const [k, draw] of screens) {
     const png = `public/art/images/${k}.png`;
     const cv = draw();
-    writeFileSync(
-      png,
-      cv instanceof Clear ? encodeRgbaPng(PNG, cv.img) : encodeRgbPng(PNG, cv.img),
-    );
+    writeFileSync(png, cv instanceof Clear ? savePng(cv.img) : rgbPng(cv.img));
     execFileSync("aseprite", ["-b", png, "--save-as", `art/screens/${k}.aseprite`], {
       stdio: "inherit",
     });

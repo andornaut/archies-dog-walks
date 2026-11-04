@@ -54,7 +54,6 @@ import { execFileSync } from "node:child_process";
 import { mkdirSync, writeFileSync } from "node:fs";
 
 import { rgb } from "@andornaut/art-kit/colour";
-import { encodeRgbaPng, encodeRgbPng } from "@andornaut/art-kit/png";
 import { filledImage, paste, resizeNearest } from "@andornaut/art-kit/raster";
 import type { RgbaImage } from "@andornaut/art-kit/rgbaImage";
 
@@ -73,6 +72,8 @@ import {
   iconEdge,
   K,
   raster,
+  rgbPng,
+  savePng,
   type Sprite,
   type Tag,
   toImage,
@@ -2275,8 +2276,6 @@ export function* sprites(): Generator<Sprite> {
 
 // ---------- preview and build ----------
 
-const PNG = { deflateLevel: 6, deflateStrategy: 0, filterType: -1 };
-
 // Every piece in rows that wrap at width, so the 360px walk bar gets a row of its own.
 export function preview(out: string, scale = 3, width = 380): void {
   const pieces = [...IMAGES.values()].map((draw) => draw());
@@ -2305,7 +2304,7 @@ export function preview(out: string, scale = 3, width = 380): void {
     }
     y += rowHeight(r);
   }
-  writeFileSync(out, encodeRgbPng(PNG, resizeNearest(width * scale, height * scale, sheet)));
+  writeFileSync(out, rgbPng(resizeNearest(width * scale, height * scale, sheet)));
 }
 
 export async function build(): Promise<void> {
@@ -2313,7 +2312,7 @@ export async function build(): Promise<void> {
   mkdirSync("public/art/images", { recursive: true });
   for (const [key, draw] of IMAGES) {
     const png = `public/art/images/${key}.png`;
-    writeFileSync(png, encodeRgbaPng(PNG, draw()));
+    writeFileSync(png, savePng(draw()));
     execFileSync("aseprite", ["-b", png, "--save-as", `art/ui/${key}.aseprite`], {
       stdio: "inherit",
     });

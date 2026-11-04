@@ -25,8 +25,6 @@ import { execFileSync } from "node:child_process";
 import { mkdirSync, writeFileSync } from "node:fs";
 
 import { rgb } from "@andornaut/art-kit/colour";
-import { encodeRgbPng } from "@andornaut/art-kit/png";
-import type { RgbaImage } from "@andornaut/art-kit/rgbaImage";
 import {
   type Random,
   randomInt,
@@ -35,7 +33,7 @@ import {
   shuffled,
 } from "@andornaut/game-kit/random";
 
-import { dk, Grid, PALETTE64, PREVIEW_BACKGROUND, toImage } from "./pixel.ts";
+import { dk, Grid, PALETTE64, PREVIEW_BACKGROUND, rgbPng, toImage } from "./pixel.ts";
 
 const USAGE = `Usage:
   node art/tools/roads.ts preview OUT.png   each zone's road scrolling up: two strips of the zone
@@ -781,11 +779,6 @@ function check(key: string, g: Grid): void {
   }
 }
 
-// An opaque strip or sheet as an RGB PNG, which Aseprite opens as a Background layer.
-function savePng(image: RgbaImage): Uint8Array {
-  return encodeRgbPng({ deflateLevel: 6, deflateStrategy: 0, filterType: -1 }, image);
-}
-
 export function preview(out: string, scale = 2, gap = 8): void {
   const tiles = new Map(images());
   for (const [key, g] of tiles) {
@@ -818,7 +811,7 @@ export function preview(out: string, scale = 2, gap = 8): void {
       );
     });
   });
-  writeFileSync(out, savePng({ data, height, width }));
+  writeFileSync(out, rgbPng({ data, height, width }));
 }
 
 export function build(): void {
@@ -828,7 +821,7 @@ export function build(): void {
   for (const [key, g] of images()) {
     check(key, g);
     const png = `public/art/images/${key}.png`;
-    writeFileSync(png, savePng(toImage(g.px)));
+    writeFileSync(png, rgbPng(toImage(g.px)));
     execFileSync("aseprite", ["-b", png, "--save-as", `art/roads/${key}.aseprite`], {
       stdio: "inherit",
     });

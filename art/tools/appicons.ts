@@ -43,7 +43,7 @@ import type { RgbaImage } from "@andornaut/art-kit/rgbaImage";
 
 import * as dogs from "./dogs.ts";
 import { scaled, small } from "./mini.ts";
-import { K, PALETTE64 } from "./pixel.ts";
+import { K, PALETTE64, PNG_OPTIONS } from "./pixel.ts";
 import { scope as roadScope } from "./road.ts";
 
 const USAGE = `Usage:
@@ -325,8 +325,9 @@ export function icons(): Map<string, Icon> {
   return out;
 }
 
-function savePng(icon: Icon, optimize = false): Uint8Array {
-  const options = { deflateLevel: optimize ? 9 : 6, deflateStrategy: 0, filterType: -1 };
+// An icon as an RGB PNG if opaque, else RGBA; optimize compresses the shipped icons harder.
+function iconPng(icon: Icon, optimize = false): Uint8Array {
+  const options = optimize ? { ...PNG_OPTIONS, deflateLevel: 9 } : PNG_OPTIONS;
   return icon.opaque ? encodeRgbPng(options, icon.image) : encodeRgbaPng(options, icon.image);
 }
 
@@ -371,7 +372,7 @@ export function preview(out: string, gap = 16, zoom = 8): void {
     paste({ at: { x, y: gap * 2 + 512 }, keepAlpha: true, mask: "alpha" }, im, sheet);
     x += im.width + gap;
   }
-  writeFileSync(out, savePng({ image: sheet, opaque: true }));
+  writeFileSync(out, iconPng({ image: sheet, opaque: true }));
 }
 
 // The master at 1x: the portrait on sky, MASTER square, centred as the icons centre it.
@@ -393,7 +394,7 @@ export function build(): void {
   mkdirSync("public/icons", { recursive: true });
   const imgs = icons();
   for (const [path, icon] of imgs) {
-    writeFileSync(path, savePng(icon, true));
+    writeFileSync(path, iconPng(icon, true));
   }
   const sources = new Map<string, Icon>([
     ["art/appicon.aseprite", { image: master(), opaque: true }],
@@ -404,7 +405,7 @@ export function build(): void {
   try {
     for (const [src, icon] of sources) {
       const png = join(tmp, `${basename(src, ".aseprite")}.png`);
-      writeFileSync(png, savePng(icon));
+      writeFileSync(png, iconPng(icon));
       execFileSync("aseprite", ["-b", png, "--save-as", src], { stdio: "inherit" });
     }
   } finally {

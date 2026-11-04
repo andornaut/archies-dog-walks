@@ -41,7 +41,6 @@
 import { execFileSync } from "node:child_process";
 import { mkdirSync, writeFileSync } from "node:fs";
 
-import { encodeRgbaPng } from "@andornaut/art-kit/png";
 import { blankImage, type RgbaImage } from "@andornaut/art-kit/rgbaImage";
 
 import { burst, star4 } from "./fx.ts";
@@ -53,6 +52,7 @@ import {
   Grid,
   iconEdge,
   K,
+  savePng,
   type Sprite,
   type Tag,
   toImage,
@@ -1355,10 +1355,6 @@ export function preview(out: string, scale = 6): void {
 }
 
 // ---------- building ----------
-
-function savePng(image: RgbaImage): Uint8Array {
-  return encodeRgbaPng({ deflateLevel: 6, deflateStrategy: 0, filterType: -1 }, image);
-}
 
 export async function build(): Promise<void> {
   mkdirSync("art/glyphs", { recursive: true });

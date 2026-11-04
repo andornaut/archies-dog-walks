@@ -12,7 +12,6 @@
 import { execFileSync } from "node:child_process";
 import { mkdirSync, writeFileSync } from "node:fs";
 
-import { encodeRgbaPng, encodeRgbPng } from "@andornaut/art-kit/png";
 import { filledImage, paste, resizeNearest, type Rgb } from "@andornaut/art-kit/raster";
 import type { RgbaImage } from "@andornaut/art-kit/rgbaImage";
 
@@ -30,6 +29,8 @@ import {
   K,
   PREVIEW_BACKGROUND,
   raster,
+  rgbPng,
+  savePng,
   scaleOf,
   toImage,
 } from "./pixel.ts";
@@ -892,10 +893,6 @@ function faces(): Frame[] {
   ];
 }
 
-function savePng(image: RgbaImage): Uint8Array {
-  return encodeRgbaPng({ deflateLevel: 6, deflateStrategy: 0, filterType: -1 }, image);
-}
-
 // One row per dog, then per walker: its happy face at 2x, then the portrait on the dog pick's tile
 // colours and the detail card well's sky.
 export function preview(out: string, scale = 4): void {
@@ -930,7 +927,7 @@ export function preview(out: string, scale = 4): void {
       );
     });
   });
-  writeFileSync(out, encodeRgbPng({ deflateLevel: 6, deflateStrategy: 0, filterType: -1 }, sheet));
+  writeFileSync(out, rgbPng(sheet));
 }
 
 export function build(): void {

@@ -116,9 +116,7 @@
 import { execFileSync } from "node:child_process";
 import { mkdirSync, writeFileSync } from "node:fs";
 
-import { encodeRgbPng } from "@andornaut/art-kit/png";
 import { filledImage, paste, resizeNearest } from "@andornaut/art-kit/raster";
-import type { RgbaImage } from "@andornaut/art-kit/rgbaImage";
 
 import { dressed } from "./depths.ts";
 import { burst } from "./fx.ts";
@@ -139,6 +137,7 @@ import {
   type Point,
   preview,
   raster,
+  rgbPng,
   rowScaleOf,
   scaleOf,
   type Sprite,
@@ -1673,11 +1672,6 @@ const ILLUSTRATIONS: ReadonlyMap<string, (cards: Cards) => Art> = new Map([
   ["card-big-screen-promo-merch", cardMerch],
   ["card-big-screen-promo-push-through", cardPushThrough],
 ]);
-
-// An opaque image as an RGB PNG.
-function rgbPng(image: RgbaImage): Uint8Array {
-  return encodeRgbPng({ deflateLevel: 6, deflateStrategy: 0, filterType: -1 }, image);
-}
 
 // Every card illustration inside an encounter card frame, scaled up, with the illustrations added to
 // cards.ts's for the run.

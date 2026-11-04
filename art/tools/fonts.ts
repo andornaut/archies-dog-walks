@@ -47,7 +47,6 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import { rgb } from "@andornaut/art-kit/colour";
 import { buildBitmapFont } from "@andornaut/art-kit/fonts";
 import { buildBitmapFontFromGlyphs, type GlyphKerning } from "@andornaut/art-kit/glyphAtlas";
-import { encodeRgbaPng, encodeRgbPng } from "@andornaut/art-kit/png";
 import {
   channel,
   crop,
@@ -59,7 +58,7 @@ import {
 import { blankImage, opaqueRect, type RgbaImage } from "@andornaut/art-kit/rgbaImage";
 
 import { LETTERS, word, wordSize } from "./fx.ts";
-import { Grid, HEART, K, toImage } from "./pixel.ts";
+import { Grid, HEART, K, rgbPng, savePng, toImage } from "./pixel.ts";
 
 const USAGE = `Usage:
   node art/tools/fonts.ts preview OUT.png   a sample of every font but font-comic, scaled up
@@ -600,8 +599,6 @@ export function drawText(
 
 // ---------- writing ----------
 
-const PNG = { deflateLevel: 6, deflateStrategy: 0, filterType: -1 };
-
 function writeFont(
   {
     base,
@@ -630,7 +627,7 @@ function writeFont(
     gl,
   );
   mkdirSync("public/art/fonts", { recursive: true });
-  writeFileSync(`public/art/fonts/${key}.png`, encodeRgbaPng(PNG, font.image));
+  writeFileSync(`public/art/fonts/${key}.png`, savePng(font.image));
   writeFileSync(`public/art/fonts/${key}.fnt`, font.xml);
 }
 
@@ -707,10 +704,7 @@ export function preview(out: string, scale = 3): void {
       y += LINE_HEIGHT + 2;
     }
   }
-  writeFileSync(
-    out,
-    encodeRgbPng(PNG, resizeNearest(sheet.width * scale, sheet.height * scale, sheet)),
-  );
+  writeFileSync(out, rgbPng(resizeNearest(sheet.width * scale, sheet.height * scale, sheet)));
 }
 
 if (import.meta.main) {

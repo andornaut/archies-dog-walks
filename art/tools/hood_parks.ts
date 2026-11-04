@@ -103,7 +103,6 @@ import { execFileSync } from "node:child_process";
 import { mkdirSync, writeFileSync } from "node:fs";
 
 import { arc, ellipse, line, polygon } from "@andornaut/art-kit/draw";
-import { encodeRgbPng } from "@andornaut/art-kit/png";
 import { filledImage, paste, resizeNearest, type Rgba } from "@andornaut/art-kit/raster";
 import type { RgbaImage } from "@andornaut/art-kit/rgbaImage";
 
@@ -125,6 +124,7 @@ import {
   type Point,
   preview as sheet,
   raster,
+  rgbPng,
   roadEdge,
   rowScaleOf,
   scaleOf,
@@ -1560,11 +1560,6 @@ function card(key: string, scale = 1): RgbaImage {
   const bg = filledImage([...sn.rgb("dbrown"), 255], im.width, im.height);
   paste({ at: { x: 0, y: 0 }, keepAlpha: true, mask: "alpha" }, im, bg);
   return resizeNearest(bg.width * scale, bg.height * scale, bg);
-}
-
-// An opaque image as an RGB PNG.
-function rgbPng(image: RgbaImage): Uint8Array {
-  return encodeRgbPng({ deflateLevel: 6, deflateStrategy: 0, filterType: -1 }, image);
 }
 
 // ---------- sprites ----------

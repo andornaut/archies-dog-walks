@@ -12,7 +12,12 @@ import { export as exportSprite } from "@andornaut/art-kit/aseprite";
 import { contrast as colourContrast, rgb } from "@andornaut/art-kit/colour";
 import { opaque_cols as frameCols, opaque_rows as frameRows } from "@andornaut/art-kit/frames";
 import { type Colour, type Edge, type Frame, Grid as DrawingGrid } from "@andornaut/art-kit/grid";
-import { decodePng, encodeRgbPng } from "@andornaut/art-kit/png";
+import {
+  decodePng,
+  encodeRgbaPng,
+  encodeRgbPng,
+  type RgbaPngOptions,
+} from "@andornaut/art-kit/png";
 import { composeContactSheet } from "@andornaut/art-kit/raster";
 import type { RgbaImage } from "@andornaut/art-kit/rgbaImage";
 
@@ -529,6 +534,19 @@ export function toImage(px: Frame): RgbaImage {
   return { data, height, width };
 }
 
+// The PNG encoder setting every export and preview uses.
+export const PNG_OPTIONS: RgbaPngOptions = { deflateLevel: 6, deflateStrategy: 0, filterType: -1 };
+
+// An image with clear pixels as an RGBA PNG.
+export function savePng(image: RgbaImage): Uint8Array {
+  return encodeRgbaPng(PNG_OPTIONS, image);
+}
+
+// An opaque image as an RGB PNG, which Aseprite opens as a Background layer.
+export function rgbPng(image: RgbaImage): Uint8Array {
+  return encodeRgbPng(PNG_OPTIONS, image);
+}
+
 // The contact sheet's background, scale and gap.
 export const PREVIEW_BACKGROUND: readonly [number, number, number] = [24, 20, 37];
 
@@ -555,10 +573,7 @@ export function preview(
       sprites,
       [ground],
     );
-    writeFileSync(
-      groundSheetPath(ground, out),
-      encodeRgbPng({ deflateLevel: 6, deflateStrategy: 0, filterType: -1 }, sheet),
-    );
+    writeFileSync(groundSheetPath(ground, out), rgbPng(sheet));
   }
 }
 

@@ -100,7 +100,6 @@
 import { execFileSync } from "node:child_process";
 import { mkdirSync, writeFileSync } from "node:fs";
 
-import { encodeRgbPng } from "@andornaut/art-kit/png";
 import { filledImage, paste, resizeNearest } from "@andornaut/art-kit/raster";
 import type { RgbaImage } from "@andornaut/art-kit/rgbaImage";
 
@@ -121,6 +120,7 @@ import {
   type Point,
   preview,
   raster,
+  rgbPng,
   rowScaleOf,
   scaleOf,
   type Sprite,
@@ -2251,11 +2251,6 @@ const CARDS: ReadonlyMap<string, (cards: Cards) => Art> = new Map([
   [`card-${GREEN_BIN_SPILL}-pay`, cardBinPay],
   [`card-${GREEN_BIN_SPILL}-wade-through`, cardBinWadeThrough],
 ]);
-
-// An opaque image as an RGB PNG.
-function rgbPng(image: RgbaImage): Uint8Array {
-  return encodeRgbPng({ deflateLevel: 6, deflateStrategy: 0, filterType: -1 }, image);
-}
 
 // Every card illustration inside an encounter card frame, cost plaque included.
 async function cardPreview(out: string, scale = 3): Promise<void> {

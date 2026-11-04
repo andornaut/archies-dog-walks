@@ -16,7 +16,7 @@
 import { execFileSync } from "node:child_process";
 import { mkdirSync, readFileSync, unlinkSync, writeFileSync } from "node:fs";
 
-import { decodePng, encodeRgbPng } from "@andornaut/art-kit/png";
+import { decodePng } from "@andornaut/art-kit/png";
 import {
   channel,
   crop,
@@ -29,7 +29,7 @@ import {
 import { opaqueRect, type RgbaImage } from "@andornaut/art-kit/rgbaImage";
 
 import * as bd from "./backdrops.ts";
-import { PALETTE64 } from "./pixel.ts";
+import { PALETTE64, rgbPng } from "./pixel.ts";
 import * as sn from "./scene.ts";
 import { planks } from "./screens.ts";
 
@@ -37,8 +37,6 @@ const USAGE = `Usage:
   node art/tools/share.ts preview OUT.png   the card at 1200x630
   node art/tools/share.ts build             write art/share/share-card.aseprite (the 300x157
                                             master) and public/og-image.png`;
-
-const PNG = { deflateLevel: 6, deflateStrategy: 0, filterType: -1 };
 
 export const W = 300;
 export const H = 157;
@@ -324,12 +322,12 @@ export function build(): void {
   check(img);
   mkdirSync("art/share", { recursive: true });
   const master = "art/share/share-card.png";
-  writeFileSync(master, encodeRgbPng(PNG, img));
+  writeFileSync(master, rgbPng(img));
   execFileSync("aseprite", ["-b", master, "--save-as", "art/share/share-card.aseprite"], {
     stdio: "inherit",
   });
   unlinkSync(master);
-  writeFileSync("public/og-image.png", encodeRgbPng(PNG, final(img)));
+  writeFileSync("public/og-image.png", rgbPng(final(img)));
   console.log("built share-card");
 }
 
@@ -338,7 +336,7 @@ if (import.meta.main) {
   if (argv.length === 2 && argv[0] === "preview") {
     const img = card();
     check(img);
-    writeFileSync(argv[1]!, encodeRgbPng(PNG, final(img)));
+    writeFileSync(argv[1]!, rgbPng(final(img)));
   } else if (argv.length === 1 && argv[0] === "build") {
     build();
   } else {

@@ -9,13 +9,12 @@
 import { execFileSync } from "node:child_process";
 import { mkdirSync, writeFileSync } from "node:fs";
 
-import { encodeRgbaPng, encodeRgbPng, type RgbaPngOptions } from "@andornaut/art-kit/png";
 import { filledImage, paste, resizeNearest, type Rgb } from "@andornaut/art-kit/raster";
 import type { RgbaImage } from "@andornaut/art-kit/rgbaImage";
 
 import { fannyPack as dropsFannyPack } from "./drops.ts";
 import { Mini } from "./mini.ts";
-import { bitmap, Grid, iconEdge, toImage } from "./pixel.ts";
+import { bitmap, Grid, iconEdge, rgbPng, savePng, toImage } from "./pixel.ts";
 
 const USAGE = `Usage:
   node art/tools/icons.ts preview OUT.png   every icon on the shop's slot colours, scaled up
@@ -163,8 +162,6 @@ export function image(draw: (g: Grid) => void): RgbaImage {
 
 // ---------- preview ----------
 
-const PNG: RgbaPngOptions = { deflateLevel: 6, deflateStrategy: 0, filterType: -1 };
-
 // Every icon on the shop's slot colours, scaled up.
 export function preview(out: string, scale = 4): void {
   const grounds: readonly Rgb[] = [
@@ -188,7 +185,7 @@ export function preview(out: string, scale = 4): void {
       );
     });
   });
-  writeFileSync(out, encodeRgbPng(PNG, sheet));
+  writeFileSync(out, rgbPng(sheet));
 }
 
 // ---------- building ----------
@@ -200,7 +197,7 @@ export function build(): void {
   for (const [name, draw] of ICONS) {
     const key = `item-${name}`;
     const png = `public/art/images/${key}.png`;
-    writeFileSync(png, encodeRgbaPng(PNG, image(draw)));
+    writeFileSync(png, savePng(image(draw)));
     execFileSync("aseprite", ["-b", png, "--save-as", `art/icons/${key}.aseprite`], {
       stdio: "inherit",
     });

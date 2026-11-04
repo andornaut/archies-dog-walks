@@ -31,12 +31,11 @@
 import { execFileSync } from "node:child_process";
 import { mkdirSync, writeFileSync } from "node:fs";
 
-import { encodeRgbPng } from "@andornaut/art-kit/png";
 import { filledImage, paste, resizeNearest } from "@andornaut/art-kit/raster";
 import { type Random, randomInt, randomPick, randomStream } from "@andornaut/game-kit/random";
 
 import { sign, signWidth } from "./fonts.ts";
-import { dk, K, MURAL } from "./pixel.ts";
+import { dk, K, MURAL, rgbPng } from "./pixel.ts";
 import { LANE_PAINT } from "./roads.ts";
 import { Canvas, LAYOUT as SCENE_LAYOUT, rgb } from "./scene.ts";
 
@@ -3998,15 +3997,13 @@ export function camera(): void {
   }
 }
 
-const PNG = { deflateLevel: 6, deflateStrategy: 0, filterType: -1 };
-
 export function preview(out: string, scaleBy = 3): void {
   const sheet = filledImage([...rgb("ink"), 255], W * scaleBy, (H + 6) * ZONES.size * scaleBy);
   [...ZONES.values()].forEach((draw, i) => {
     const img = resizeNearest(W * scaleBy, H * scaleBy, draw().img);
     paste({ at: { x: 0, y: i * (H + 6) * scaleBy } }, img, sheet);
   });
-  writeFileSync(out, encodeRgbPng(PNG, sheet));
+  writeFileSync(out, rgbPng(sheet));
 }
 
 export function build(): void {
@@ -4014,7 +4011,7 @@ export function build(): void {
   mkdirSync("public/art/images", { recursive: true });
   for (const [key, draw] of ZONES) {
     const png = `public/art/images/${key}.png`;
-    writeFileSync(png, encodeRgbPng(PNG, draw().img));
+    writeFileSync(png, rgbPng(draw().img));
     execFileSync("aseprite", ["-b", png, "--save-as", `art/backdrops/${key}.aseprite`], {
       stdio: "inherit",
     });

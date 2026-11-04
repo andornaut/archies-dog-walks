@@ -10,10 +10,10 @@ import { readFile } from "node:fs/promises";
 import { rgb } from "@andornaut/art-kit/colour";
 import type { Rgb, Sprite, Tag } from "@andornaut/art-kit/frames";
 import type { Frame } from "@andornaut/art-kit/grid";
-import { decodePng, encodeRgbPng } from "@andornaut/art-kit/png";
+import { decodePng } from "@andornaut/art-kit/png";
 import { composeContactSheet } from "@andornaut/art-kit/raster";
 
-import { groundSheetPath } from "./pixel.ts";
+import { groundSheetPath, rgbPng } from "./pixel.ts";
 
 interface SheetData {
   frames: Record<string, { frame: { h: number; w: number; x: number; y: number } }>;
@@ -69,6 +69,6 @@ for (const ground of new Set(grounds)) {
     [ground],
   );
   const path = groundSheetPath(ground, out);
-  writeFileSync(path, encodeRgbPng({ deflateLevel: 6, deflateStrategy: 0, filterType: -1 }, sheet));
+  writeFileSync(path, rgbPng(sheet));
   console.log("wrote", path);
 }

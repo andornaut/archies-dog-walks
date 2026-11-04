@@ -23,7 +23,6 @@ import { execFileSync } from "node:child_process";
 import { mkdirSync, writeFileSync } from "node:fs";
 
 import type { Frame } from "@andornaut/art-kit/grid";
-import { encodeRgbaPng, encodeRgbPng } from "@andornaut/art-kit/png";
 import { crop, fill, filledImage, paste, resizeNearest } from "@andornaut/art-kit/raster";
 import { blankImage, opaqueRect, type RgbaImage } from "@andornaut/art-kit/rgbaImage";
 
@@ -38,6 +37,8 @@ import {
   Grid,
   K,
   raster,
+  rgbPng,
+  savePng,
   type Sprite,
   type Tag,
   toImage,
@@ -1904,8 +1905,6 @@ export function mockCard(
   return bg;
 }
 
-const PNG = { deflateLevel: 6, deflateStrategy: 0, filterType: -1 };
-
 // Every illustration in a normal card, then one enlarged card per card type.
 export function preview(out: string, scale = 3): void {
   const keys = [...ILLUSTRATIONS.keys()];
@@ -1933,7 +1932,7 @@ export function preview(out: string, scale = 3): void {
     const card = resizeNearest(LW * scale, LH * scale, mockCard(kind, key, { large: true }));
     paste({ at: { x: i * (LW + 6) * scale, y: (CH + 6) * rows * scale } }, card, sheet);
   });
-  writeFileSync(out, encodeRgbPng(PNG, sheet));
+  writeFileSync(out, rgbPng(sheet));
 }
 
 function saveAs(png: string, source: string): void {
@@ -1946,13 +1945,10 @@ export async function build(): Promise<void> {
   for (const [key, draw] of ILLUSTRATIONS) {
     const png = `public/art/images/${key}.png`;
     const art = draw();
-    writeFileSync(png, art.clear ? encodeRgbaPng(PNG, art.img) : encodeRgbPng(PNG, art.img));
+    writeFileSync(png, art.clear ? savePng(art.img) : rgbPng(art.img));
     saveAs(png, `art/cards/${key}.aseprite`);
   }
-  writeFileSync(
-    "public/art/images/card-cost.png",
-    encodeRgbaPng(PNG, toImage(cardCost().outlined(false))),
-  );
+  writeFileSync("public/art/images/card-cost.png", savePng(toImage(cardCost().outlined(false))));
   saveAs("public/art/images/card-cost.png", "art/cards/card-cost.aseprite");
   console.log("built", [...ILLUSTRATIONS.keys(), "card-cost"].join(", "));
 }
