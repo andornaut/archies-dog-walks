@@ -67,7 +67,7 @@ let updateFlow: UpdateFlow | undefined;
 // Resolves once the game may show its first screen and write its save (UpdateFlow.bootable).
 let ready: Promise<void> = Promise.resolve();
 // Registration readiness and update-offer visibility follow the actual start screen.
-let registrationHook: (ready: boolean) => void = () => undefined;
+let registrationHook: () => void = () => undefined;
 let offerHook: (visible: boolean) => void = () => undefined;
 // Whether the home screen shows the update plate.
 let updateShown = false;
@@ -102,8 +102,8 @@ function registerServiceWorker(): void {
     page,
   );
   updateFlow = play.flow;
-  registrationHook = (ready) => play.setRegistrationReady(ready);
-  offerHook = (visible) => play.setOfferVisible(visible);
+  registrationHook = () => play.registrationReady();
+  offerHook = (visible) => play.flow.setOfferVisible(visible);
   ready = play.bootable;
 }
 
@@ -197,7 +197,9 @@ export function stopWakeLock(): void {
 // Whether the home screen is in front, the only place the update plate shows. A first visit
 // registers the service worker on its first arrival home.
 export function setOnHomeScreen(onHome: boolean): void {
-  registrationHook(onHome);
+  if (onHome) {
+    registrationHook();
+  }
   offerHook(onHome);
 }
 
