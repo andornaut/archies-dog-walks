@@ -126,13 +126,16 @@ function standsOf(spot: Spot): MoverStand[] {
 }
 
 // Commits an already selected compiled candidate without changing its motion.
-export function keepMoverSpot(
-  geometry: MoverGeometry,
-  spec: MoverSpec,
-  grid: MoverGrid,
-  onScreen: OnScreen[],
-  spot: Spot,
-): void {
+// What a kept spot is recorded in: the road's geometry, the planner's grid and the movers on
+// screen that its caps count.
+interface SpotKeep {
+  readonly geometry: MoverGeometry;
+  readonly grid: MoverGrid;
+  readonly onScreen: OnScreen[];
+}
+
+export function keepMoverSpot(keep: SpotKeep, spec: MoverSpec, spot: Spot): void {
+  const { geometry, grid, onScreen } = keep;
   const { placement } = spot;
   const dart = isDartPlacement(placement);
   const rider = placement.path.motion === "ride";
@@ -155,16 +158,24 @@ export function moverWithinZone(geometry: { readonly zoneLength: number }, spot:
   return start >= 0 && end <= geometry.zoneLength;
 }
 
+// What a spot is fitted against: the road's geometry and the zone's length, the screen caps, the
+// planner's grid and the movers on screen that its caps count, and reject, which records why a
+// spot does not fit.
+interface SpotFit {
+  readonly caps: MoverCaps;
+  readonly geometry: MoverGeometry & { readonly zoneLength: number };
+  readonly grid: MoverGrid;
+  readonly onScreen: readonly OnScreen[];
+  readonly reject: (reason: SpawnRejection) => false;
+}
+
 export function fitsMoverSpot(
-  geometry: MoverGeometry & { readonly zoneLength: number },
-  caps: MoverCaps,
-  grid: MoverGrid,
-  onScreen: readonly OnScreen[],
+  fit: SpotFit,
   spec: MoverSpec,
   kind: string | undefined,
-  reject: (reason: SpawnRejection) => false,
   spot: Spot,
 ): boolean {
+  const { caps, geometry, grid, onScreen, reject } = fit;
   const [start, end] = screenOf(spot);
   const { placement } = spot;
   const { cells } = placement;

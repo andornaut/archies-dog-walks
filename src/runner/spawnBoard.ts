@@ -885,16 +885,18 @@ export class SpawnBoard<Kind extends string> {
     }
     const spot = this.spot(entry, false)!;
     return fitsMoverSpot(
-      this.geometry,
-      this.plan.moverCaps,
-      this.grid(quota, entry),
-      quota.blocksLane ? this.screens : this.prizeScreens,
+      {
+        caps: this.plan.moverCaps,
+        geometry: this.geometry,
+        grid: this.grid(quota, entry),
+        onScreen: quota.blocksLane ? this.screens : this.prizeScreens,
+        reject: (rule) => {
+          this.observation?.({ intrinsic: rule === "outside-zone", rule });
+          return false;
+        },
+      },
       quota.mover!,
       quota.kind,
-      (rule) => {
-        this.observation?.({ intrinsic: rule === "outside-zone", rule });
-        return false;
-      },
       spot,
     );
   }
@@ -915,10 +917,12 @@ export class SpawnBoard<Kind extends string> {
           throw new Error("Missing compiled repair placement");
         }
         keepMoverSpot(
-          this.geometry,
+          {
+            geometry: this.geometry,
+            grid: this.grid(quota, entry),
+            onScreen: quota.blocksLane ? this.screens : this.prizeScreens,
+          },
           quota.mover,
-          this.grid(quota, entry),
-          quota.blocksLane ? this.screens : this.prizeScreens,
           spot,
         );
         holdMoverRests(this.plan, this.rows, this.cells, quota.mover, entry.event);
