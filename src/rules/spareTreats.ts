@@ -1,11 +1,11 @@
-import type { GameData } from "../data/types";
-import { heartsOf, packDogs } from "../state/pack";
-import type { EffectSource, RunState } from "../state/runState";
-import type { Change, HeartChange } from "./causes";
-import { ownerMaxHearts } from "./dogs";
-import { changeHearts } from "./effects";
-import { modifiedStat } from "./modifiers";
-import { read } from "./units";
+import type { GameData } from "../data/types.ts";
+import { heartsOf, packDogs } from "../state/pack.ts";
+import type { EffectSource, RunState } from "../state/runState.ts";
+import type { Change, HeartChange } from "./causes.ts";
+import { ownerMaxHearts } from "./dogs.ts";
+import { changeHearts } from "./effects.ts";
+import { modifiedStat } from "./modifiers.ts";
+import { read } from "./units.ts";
 
 // Spare treats: with a spareTreats modifier in effect, such as the Fanny pack's, a treat grabbed
 // while every walking owner is at their max is held for later instead of paying cash, and the next

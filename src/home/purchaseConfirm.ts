@@ -1,9 +1,9 @@
 import { fillLine } from "@andornaut/game-kit/lines";
 
-import type { GameData } from "../data/types";
-import { isConfirmKey, isPauseKey } from "../input/keyBindings";
-import type { SaveDocument } from "../save/schema";
-import { type Cents, cents } from "../units";
+import type { GameData } from "../data/types.ts";
+import { isConfirmKey, isPauseKey } from "../input/keyBindings.ts";
+import type { SaveDocument } from "../save/schema.ts";
+import { type Cents, cents } from "../units.ts";
 import {
   buy,
   type BuyResult,
@@ -11,8 +11,8 @@ import {
   isAffordable,
   type Purchase,
   purchasePrice,
-} from "./home";
-import { HOME_TEXT_FIELDS } from "./homeText";
+} from "./home.ts";
+import { HOME_TEXT_FIELDS } from "./homeText.ts";
 
 type ShopData = Pick<GameData, "dogSlots" | "dogs" | "shopGear" | "tuning">;
 

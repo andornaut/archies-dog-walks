@@ -1,6 +1,6 @@
 import { Core, type Game } from "phaser";
 
-import { SCENE_KEYS } from "./sceneKeys";
+import { SCENE_KEYS } from "./sceneKeys.ts";
 
 // Reports on each change whether the home screen is in front: StartScene running, not stopped
 // for a walk or paused under help, settings or stats. Polled per step, so StartScene needs no

@@ -4,10 +4,10 @@ import { fillLine } from "@andornaut/game-kit/lines";
 import type { Rect } from "@andornaut/game-kit/rect";
 import { type GameObjects, Scene } from "phaser";
 
-import { ownerFaceKey, ZONE_PIPS_KEY } from "../assets/spriteKeys";
-import { gameData } from "../data";
-import { SCREEN_CONFIG, SCREEN_LAYOUT } from "../data/screen";
-import { badgeStripHits, type BadgeView } from "../home/badgesView";
+import { ownerFaceKey, ZONE_PIPS_KEY } from "../assets/spriteKeys.ts";
+import { gameData } from "../data/index.ts";
+import { SCREEN_CONFIG, SCREEN_LAYOUT } from "../data/screen.ts";
+import { badgeStripHits, type BadgeView } from "../home/badgesView.ts";
 import {
   END_LAYOUT,
   endBadgeRows,
@@ -21,25 +21,25 @@ import {
   quipTextY,
   sideTotalAmountY,
   sideTotalBand,
-} from "../home/endLayout";
+} from "../home/endLayout.ts";
 import {
   closingLines,
   earningsBreakdown,
   type EndTarget,
   endTargetAt,
   zonePips,
-} from "../home/endView";
-import { bobOffset } from "../home/feedback";
-import { signedShortDollarText } from "../home/home";
-import { MENU_TEXT_FIELDS } from "../home/menuText";
+} from "../home/endView.ts";
+import { bobOffset } from "../home/feedback.ts";
+import { signedShortDollarText } from "../home/home.ts";
+import { MENU_TEXT_FIELDS } from "../home/menuText.ts";
 import {
   homecomers,
   type ReturnPhase,
   returnPhase,
   walkUpOffset,
   waveOffset,
-} from "../home/returnHome";
-import { pipTag } from "../hud/hudView";
+} from "../home/returnHome.ts";
+import { pipTag } from "../hud/hudView.ts";
 import {
   type HoldPress,
   holdRule,
@@ -47,16 +47,16 @@ import {
   startHold,
   tickHold,
   TILE_SLOP_PX,
-} from "../input/hold";
-import { isConfirmKey } from "../input/keyBindings";
-import { screenArea } from "../input/outsideTap";
-import { PackFigures } from "../pack/phaser/packFigures";
-import { stopWakeLock } from "../pwa";
-import { walkLength } from "../rules/route";
-import type { LastWalk } from "../save/schema";
-import { PALETTE } from "../ui/palette";
-import { addDisplayText } from "../ui/phaser/displayText";
-import { fillRect } from "../ui/phaser/draw";
+} from "../input/hold.ts";
+import { isConfirmKey } from "../input/keyBindings.ts";
+import { screenArea } from "../input/outsideTap.ts";
+import { PackFigures } from "../pack/phaser/packFigures.ts";
+import { stopWakeLock } from "../pwa/index.ts";
+import { walkLength } from "../rules/route.ts";
+import type { LastWalk } from "../save/schema.ts";
+import { PALETTE } from "../ui/palette.ts";
+import { addDisplayText } from "../ui/phaser/displayText.ts";
+import { fillRect } from "../ui/phaser/draw.ts";
 import {
   addPixelText,
   fitPixelText,
@@ -64,29 +64,29 @@ import {
   pixelFontMetrics,
   setPixelText,
   withProbe,
-} from "../ui/phaser/pixelText";
-import { onceBeforeRender } from "../ui/phaser/rampDim";
-import { TEXT_SCALE, textOnLines } from "../ui/textFit";
+} from "../ui/phaser/pixelText.ts";
+import { onceBeforeRender } from "../ui/phaser/rampDim.ts";
+import { TEXT_SCALE, textOnLines } from "../ui/textFit.ts";
 import {
   addBadgeCelebration,
   addBadgeDetail,
   addBurst,
   addCheeringFace,
   NEW_BEST_BURST,
-} from "./badges";
-import { listenOutsideTap, onBackPressed } from "./overlay";
-import { addOwnerFigure, ownerSpriteKey } from "./ownerFigure";
+} from "./badges.ts";
+import { listenOutsideTap, onBackPressed } from "./overlay.ts";
+import { addOwnerFigure, ownerSpriteKey } from "./ownerFigure.ts";
 import {
   currentSettings,
   lastRunEnd,
   profileSave,
   walkerInUse,
   walkerSpriteKey,
-} from "./profileStore";
-import { SCENE_KEYS } from "./sceneKeys";
-import { soundboardOf } from "./soundboard";
-import { firstTag, playTag } from "./sprites";
-import { listenTargetPress, sameByValue, type TargetPressListener } from "./targetPress";
+} from "./profileStore.ts";
+import { SCENE_KEYS } from "./sceneKeys.ts";
+import { soundboardOf } from "./soundboard.ts";
+import { firstTag, playTag } from "./sprites.ts";
+import { listenTargetPress, sameByValue, type TargetPressListener } from "./targetPress.ts";
 import {
   addBodyText,
   addMenuButton,
@@ -95,7 +95,7 @@ import {
   addTagImage,
   addTapBurst,
   BODY_TEXT,
-} from "./uiKit";
+} from "./uiKit.ts";
 
 const END_SCREEN_KEY = "screen-end";
 const LOGO = { ...END_LAYOUT.logo, key: "logo" };

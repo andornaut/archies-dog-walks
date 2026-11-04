@@ -1,7 +1,7 @@
 import type { Scene } from "phaser";
 
-import { deviceSettings, type ProfileSession } from "../save/profile";
-import { DEFAULT_SETTINGS, type Settings } from "../save/schema";
+import { deviceSettings, type ProfileSession } from "../save/profile.ts";
+import { DEFAULT_SETTINGS, type Settings } from "../save/schema.ts";
 
 export const PROFILE_SESSION_KEY = "profileSession";
 

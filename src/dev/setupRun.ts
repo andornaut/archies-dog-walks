@@ -1,9 +1,9 @@
-import type { DogId, GearId, WalkerId, ZoneId } from "../data/types";
-import { defaultRoute, type RouteData } from "../rules/route";
-import { packDogsOf } from "../state/pack";
-import type { Loadout, RunState } from "../state/runState";
-import { cents } from "../units";
-import type { RunSetup } from "./runSetup";
+import type { DogId, GearId, WalkerId, ZoneId } from "../data/types.ts";
+import { defaultRoute, type RouteData } from "../rules/route.ts";
+import { packDogsOf } from "../state/pack.ts";
+import type { Loadout, RunState } from "../state/runState.ts";
+import { cents } from "../units.ts";
+import type { RunSetup } from "./runSetup.ts";
 
 // The setup's pack, gear and walker over a fallback loadout, such as the save's last one.
 export function loadoutFor(fallback: Loadout, setup: RunSetup<DogId, GearId, WalkerId>): Loadout {

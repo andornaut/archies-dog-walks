@@ -5,7 +5,7 @@ import {
 } from "@andornaut/game-kit/art/aseprite";
 import * as v from "valibot";
 
-import { isPlainObject, objectMessage, parseOrThrow, record } from "./jsonSchema";
+import { isPlainObject, objectMessage, parseOrThrow, record } from "./jsonSchema.ts";
 
 const frameIndex = v.pipe(
   v.number("must be a number"),

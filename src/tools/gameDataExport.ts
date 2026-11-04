@@ -1,4 +1,4 @@
-import { SKIP_CARD_ART } from "../assets/cardArt";
+import { SKIP_CARD_ART } from "../assets/cardArt.ts";
 import {
   backdropKey,
   cardFrameTag,
@@ -16,7 +16,7 @@ import {
   roadStartKey,
   roadTileKey,
   zoneIconKey,
-} from "../assets/spriteKeys";
+} from "../assets/spriteKeys.ts";
 import type {
   CardOption,
   CardSource,
@@ -27,11 +27,11 @@ import type {
   MinorObstacleId,
   UpgradeId,
   WalkerId,
-} from "../data/types";
-import { sizeHearts } from "../rules/dogs";
-import { effectText } from "../rules/effectText";
-import { faceMood } from "../rules/treats";
-import { minorLook, obstacleSkins } from "../runner/obstacleLooks";
+} from "../data/types.ts";
+import { sizeHearts } from "../rules/dogs.ts";
+import { effectText } from "../rules/effectText.ts";
+import { faceMood } from "../rules/treats.ts";
+import { minorLook, obstacleSkins } from "../runner/obstacleLooks.ts";
 
 // The game data art's tools read, as shared/export/game-data.json. Every entry spreads its
 // data module's fields as they are, so a field added to the data shows up here unchanged,

@@ -1,7 +1,7 @@
-import type { DebuffId, DogId, EncounterId, LiveTuning, Stat } from "../data/types";
-import type { ActiveModifier, ModifierSource } from "../state/runState";
-import type { Change, ModifierCause } from "./causes";
-import { statParts } from "./modifiers";
+import type { DebuffId, DogId, EncounterId, LiveTuning, Stat } from "../data/types.ts";
+import type { ActiveModifier, ModifierSource } from "../state/runState.ts";
+import type { Change, ModifierCause } from "./causes.ts";
+import { statParts } from "./modifiers.ts";
 
 // What a modified value is a value of.
 export type ModifiedSubject =

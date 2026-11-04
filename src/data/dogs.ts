@@ -1,4 +1,4 @@
-import type { Dog } from "./types";
+import type { Dog } from "./types.ts";
 
 // The roster: three dogs of each size. A dog's size sets its owner's hearts.
 export const DOGS = {

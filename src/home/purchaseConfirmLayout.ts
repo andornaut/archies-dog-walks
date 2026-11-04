@@ -1,19 +1,19 @@
 import { type FontMetrics, inkRowsFromCapTop } from "@andornaut/game-kit/text/bitmapFont";
 
-import { SCREEN_CONFIG } from "../data/screen";
-import { barTitleRoom } from "../ui/barTitle";
-import { BUTTON_SIZE } from "../ui/buttonGeometry";
-import { closeControl } from "../ui/closeControl";
-import { helpCapDy } from "../ui/labelHelpGap";
-import { overlayRegion } from "./homeBar";
-import { cardTitleRow, HOME_LAYOUT } from "./homeLayout";
+import { SCREEN_CONFIG } from "../data/screen.ts";
+import { barTitleRoom } from "../ui/barTitle.ts";
+import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";
+import { closeControl } from "../ui/closeControl.ts";
+import { helpCapDy } from "../ui/labelHelpGap.ts";
+import { overlayRegion } from "./homeBar.ts";
+import { cardTitleRow, HOME_LAYOUT } from "./homeLayout.ts";
 import {
   MODAL,
   modalActionWidth,
   modalPanelWidth,
   modalRect,
   modalTitleWidth,
-} from "./modalLayout";
+} from "./modalLayout.ts";
 
 const CARD = HOME_LAYOUT.card;
 const BUTTON_HEIGHT = BUTTON_SIZE.compact.height;

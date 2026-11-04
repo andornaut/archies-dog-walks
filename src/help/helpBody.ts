@@ -1,8 +1,8 @@
 import { fillNames } from "@andornaut/game-kit/lines";
 
-import type { GameData, HelpPage } from "../data/types";
-import { dodgeInText, formatDollars } from "../rules/effectText";
-import { read, readTable } from "../rules/units";
+import type { GameData, HelpPage } from "../data/types.ts";
+import { dodgeInText, formatDollars } from "../rules/effectText.ts";
+import { read, readTable } from "../rules/units.ts";
 
 // The {name}s a help page's body may use, each filled from the game data when the page shows,
 // so a tuning change never leaves a stale number.

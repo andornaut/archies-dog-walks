@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { lostTouches } from "./touches";
+import { lostTouches } from "./touches.ts";
 
 describe("lostTouches", () => {
   it("counts touches", () => {

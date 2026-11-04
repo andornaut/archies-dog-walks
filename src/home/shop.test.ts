@@ -4,22 +4,22 @@ import { rectsOverlap } from "@andornaut/game-kit/rect";
 import { inkRowsFromCapTop } from "@andornaut/game-kit/text/bitmapFont";
 import { describe, expect, it } from "vitest";
 
-import { gameData } from "../data";
-import type { DogId, LiveTuning } from "../data/types";
-import { TITLE_CAP_ROWS } from "../hud/walkHud";
-import { scrollMax } from "../input/listScroll";
-import { MIN_TAP_SIZE } from "../layout/screenLayout";
-import { sizeHearts } from "../rules/dogs";
-import { capitalize, SIZE_NAMES } from "../rules/effectText";
-import { startingDogSlots, unlockPrice } from "../rules/shop";
-import type { Owned } from "../save/schema";
-import { fontFileMetrics, inkWidth, placedInk } from "../testing/fontInk";
-import { TEST_TUNING } from "../testing/tuning";
-import { GREYED, pictureBox, SELECT_OUTSET } from "../ui/selection";
-import { TEXT_SCALE } from "../ui/textFit";
-import { cents } from "../units";
-import { FEEDBACK } from "./feedback";
-import { gearByPrice, type Purchase } from "./home";
+import { gameData } from "../data/index.ts";
+import type { DogId, LiveTuning } from "../data/types.ts";
+import { TITLE_CAP_ROWS } from "../hud/walkHud.ts";
+import { scrollMax } from "../input/listScroll.ts";
+import { MIN_TAP_SIZE } from "../layout/screenLayout.ts";
+import { sizeHearts } from "../rules/dogs.ts";
+import { capitalize, SIZE_NAMES } from "../rules/effectText.ts";
+import { startingDogSlots, unlockPrice } from "../rules/shop.ts";
+import type { Owned } from "../save/schema.ts";
+import { fontFileMetrics, inkWidth, placedInk } from "../testing/fontInk.ts";
+import { TEST_TUNING } from "../testing/tuning.ts";
+import { GREYED, pictureBox, SELECT_OUTSET } from "../ui/selection.ts";
+import { TEXT_SCALE } from "../ui/textFit.ts";
+import { cents } from "../units.ts";
+import { FEEDBACK } from "./feedback.ts";
+import { gearByPrice, type Purchase } from "./home.ts";
 import {
   dogRows,
   gearRows,
@@ -34,7 +34,7 @@ import {
   type ShopTab,
   shopTabOf,
   slotRows,
-} from "./shop";
+} from "./shop.ts";
 import {
   rowRects,
   SHOP_LAYOUT,
@@ -44,8 +44,8 @@ import {
   shopMessageCapTop,
   shopScrollbar,
   shopTabRects,
-} from "./shopLayout";
-import { STATS_TABS } from "./statsLayout";
+} from "./shopLayout.ts";
+import { STATS_TABS } from "./statsLayout.ts";
 
 const data = { ...gameData, tuning: TEST_TUNING };
 const dollars = (amount: number) => cents(amount * 100);

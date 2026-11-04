@@ -3,22 +3,22 @@ import { insetRect, type Rect } from "@andornaut/game-kit/rect";
 import { inkRowsOfLines } from "@andornaut/game-kit/text/bitmapFont";
 import { type GameObjects, Scene } from "phaser";
 
-import { SKIP_CARD_ART } from "../assets/cardArt";
+import { SKIP_CARD_ART } from "../assets/cardArt.ts";
 import {
   CARD_FRAME_KEY,
   cardFrameTag,
   DIFFICULTY_KEY,
   encounterSpriteKey,
-} from "../assets/spriteKeys";
-import { gameData } from "../data";
-import { SCREEN_LAYOUT } from "../data/screen";
-import type { CardSource } from "../data/types";
-import { type OptionMarks, optionMarks } from "../hud/buffMarks";
-import { largeBodyText, plaqueTexts, smallCardText } from "../hud/cardText";
-import { type HoldPress, holdRule, startHold, tickHold } from "../input/hold";
-import { cardNumberForKey, menuKeyActs } from "../input/keyBindings";
-import { keyNumbersShown } from "../input/keyNumbers";
-import { cardCharmPlates } from "../layout/buffLayout";
+} from "../assets/spriteKeys.ts";
+import { gameData } from "../data/index.ts";
+import { SCREEN_LAYOUT } from "../data/screen.ts";
+import type { CardSource } from "../data/types.ts";
+import { type OptionMarks, optionMarks } from "../hud/buffMarks.ts";
+import { largeBodyText, plaqueTexts, smallCardText } from "../hud/cardText.ts";
+import { type HoldPress, holdRule, startHold, tickHold } from "../input/hold.ts";
+import { cardNumberForKey, menuKeyActs } from "../input/keyBindings.ts";
+import { keyNumbersShown } from "../input/keyNumbers.ts";
+import { cardCharmPlates } from "../layout/buffLayout.ts";
 import {
   CARD_LAYOUT,
   cardRowIn,
@@ -29,7 +29,7 @@ import {
   largeCardHeight,
   largeCardRect,
   plaqueRoom,
-} from "../layout/cardLayout";
+} from "../layout/cardLayout.ts";
 import {
   type CardView,
   type Choice,
@@ -37,14 +37,14 @@ import {
   hasPlaque,
   MAX_CARD_OPTIONS,
   type OptionView,
-} from "../rules/choices";
-import { cardHeader } from "../ui/cardRow";
-import { rectIndexAt } from "../ui/grid";
-import { PLAIN_ITEM, tileState } from "../ui/interaction";
-import { PALETTE } from "../ui/palette";
-import { addDisplayText, hasDisplayFont } from "../ui/phaser/displayText";
-import { drawRing, fillRect } from "../ui/phaser/draw";
-import { greyTextureKey } from "../ui/phaser/greyTextures";
+} from "../rules/choices.ts";
+import { cardHeader } from "../ui/cardRow.ts";
+import { rectIndexAt } from "../ui/grid.ts";
+import { PLAIN_ITEM, tileState } from "../ui/interaction.ts";
+import { PALETTE } from "../ui/palette.ts";
+import { addDisplayText, hasDisplayFont } from "../ui/phaser/displayText.ts";
+import { drawRing, fillRect } from "../ui/phaser/draw.ts";
+import { greyTextureKey } from "../ui/phaser/greyTextures.ts";
 import {
   addPixelText,
   fitPixelText,
@@ -55,20 +55,20 @@ import {
   setFittedText,
   setPixelText,
   withProbe,
-} from "../ui/phaser/pixelText";
-import { addRampDim } from "../ui/phaser/rampDim";
-import { GREYED } from "../ui/selection";
-import { addCardCharm } from "./buffCharm";
-import { addNamePills } from "./effectNameColours";
-import { onSceneEvent } from "./overlay";
-import { currentSettings } from "./profileStore";
-import { refuseControl } from "./refuseControl";
-import { SCENE_KEYS } from "./sceneKeys";
-import { type ScenePicture, showAsPicture } from "./scenePicture";
-import { guardScreenInput } from "./screenGuard";
-import { addStandingSprite, playFirstTag, playTag } from "./sprites";
-import { listenTargetPress, type TargetPressListener } from "./targetPress";
-import { addMenuButton, addNineSlice, listenButtonTap, tagFrame } from "./uiKit";
+} from "../ui/phaser/pixelText.ts";
+import { addRampDim } from "../ui/phaser/rampDim.ts";
+import { GREYED } from "../ui/selection.ts";
+import { addCardCharm } from "./buffCharm.ts";
+import { addNamePills } from "./effectNameColours.ts";
+import { onSceneEvent } from "./overlay.ts";
+import { currentSettings } from "./profileStore.ts";
+import { refuseControl } from "./refuseControl.ts";
+import { SCENE_KEYS } from "./sceneKeys.ts";
+import { type ScenePicture, showAsPicture } from "./scenePicture.ts";
+import { guardScreenInput } from "./screenGuard.ts";
+import { addStandingSprite, playFirstTag, playTag } from "./sprites.ts";
+import { listenTargetPress, type TargetPressListener } from "./targetPress.ts";
+import { addMenuButton, addNineSlice, listenButtonTap, tagFrame } from "./uiKit.ts";
 
 export interface CardSceneData {
   // Called with the option's data index, or "skip"; the run decides what happens next.

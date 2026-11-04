@@ -7,12 +7,12 @@ import {
   type TextFitStyle,
 } from "@andornaut/game-kit/text/textFit";
 
-import type { GameData } from "../data/types";
-import { boxStyle, CARD_LAYOUT, cardEffectBox, FIRES_FIT } from "../layout/cardLayout";
-import { firesText, type OptionView } from "../rules/choices";
-import { formatDollars } from "../rules/effectText";
-import { withNamePills } from "./effectNames";
-import { RUN_TEXT_FIELDS } from "./runText";
+import type { GameData } from "../data/types.ts";
+import { boxStyle, CARD_LAYOUT, cardEffectBox, FIRES_FIT } from "../layout/cardLayout.ts";
+import { firesText, type OptionView } from "../rules/choices.ts";
+import { formatDollars } from "../rules/effectText.ts";
+import { withNamePills } from "./effectNames.ts";
+import { RUN_TEXT_FIELDS } from "./runText.ts";
 
 // What a card's plaque may say, longest first: the first that fits its room is shown. A path
 // card's plaque shows how long its upgrade lasts instead of a cost; another option's, its

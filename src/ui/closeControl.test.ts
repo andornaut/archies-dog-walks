@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import { inside } from "../testing/rects";
-import { closeControl, closeFace, pageCloseControl } from "./closeControl";
+import { inside } from "../testing/rects.ts";
+import { closeControl, closeFace, pageCloseControl } from "./closeControl.ts";
 
 const card = { height: 120, width: 200, x: 24, y: 140 };
 const screen = { height: 640, width: 360, x: 0, y: 0 };

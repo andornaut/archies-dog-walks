@@ -3,15 +3,15 @@ import { rectsOverlap } from "@andornaut/game-kit/rect";
 import { inkRowsOfLines } from "@andornaut/game-kit/text/bitmapFont";
 import { describe, expect, it } from "vitest";
 
-import { gameData } from "../data";
-import { SCREEN_LAYOUT } from "../data/screen";
-import { dollarText } from "../home/home";
-import { overlayRegion } from "../home/homeBar";
-import { modalActionWidth } from "../home/modalLayout";
-import { walkLength } from "../rules/route";
-import { bodyTextWidth } from "../testing/bodyFont";
-import { fontFileMetrics, inkWidth } from "../testing/fontInk";
-import { cents } from "../units";
+import { gameData } from "../data/index.ts";
+import { SCREEN_LAYOUT } from "../data/screen.ts";
+import { dollarText } from "../home/home.ts";
+import { overlayRegion } from "../home/homeBar.ts";
+import { modalActionWidth } from "../home/modalLayout.ts";
+import { walkLength } from "../rules/route.ts";
+import { bodyTextWidth } from "../testing/bodyFont.ts";
+import { fontFileMetrics, inkWidth } from "../testing/fontInk.ts";
+import { cents } from "../units.ts";
 import {
   HOME_QUESTION_ANSWERS,
   homeQuestionLayout,
@@ -22,8 +22,8 @@ import {
   PAUSE_NOTE_WIDTH,
   pauseMenuLayout,
   QUIT_QUESTION_ANSWERS,
-} from "./pauseMenu";
-import { TOP_BAR_BUTTONS } from "./topBar";
+} from "./pauseMenu.ts";
+import { TOP_BAR_BUTTONS } from "./topBar.ts";
 
 const { walkView } = SCREEN_LAYOUT;
 const BODY = fontFileMetrics("font-body");

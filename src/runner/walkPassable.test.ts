@@ -2,13 +2,13 @@ import { STEP_SECONDS } from "@andornaut/game-kit/clock/fixedStep";
 import { keysOf } from "@andornaut/game-kit/records";
 import { describe, expect, it, vi } from "vitest";
 
-import { LANE_COUNT } from "../data/screen";
-import { TUNING } from "../data/tuning";
-import type { ZoneId } from "../data/types";
-import { WORLD } from "../data/world";
-import { read } from "../rules/units";
-import { lanesReachedAtEnd, pathShortfalls } from "../testing/avoidable";
-import { type HopMovement, hoppingInstead, sharedWorld } from "../testing/movers";
+import { LANE_COUNT } from "../data/screen.ts";
+import { TUNING } from "../data/tuning.ts";
+import type { ZoneId } from "../data/types.ts";
+import { WORLD } from "../data/world.ts";
+import { read } from "../rules/units.ts";
+import { lanesReachedAtEnd, pathShortfalls } from "../testing/avoidable.ts";
+import { type HopMovement, hoppingInstead, sharedWorld } from "../testing/movers.ts";
 import {
   blockingSpans,
   contactOfSpans,
@@ -29,15 +29,15 @@ import {
   walkwayOf,
   widerRows,
   ZONE_IDS,
-} from "../testing/planner";
-import { mapZones } from "../testing/world";
-import { planZoneForSeed } from "../testing/zonePlan";
-import { assignedMovement } from "./movementAssignments";
-import { onScreenOf, sweptLanes } from "./moverPlanning";
-import { crossSpan, hasLeftRoad, type MoverPath, moverPlace } from "./movers";
-import { moverOutcomes } from "./outcomes";
-import { signaturePlace } from "./signaturePaths";
-import { apportionSlotCounts } from "./slotConfig";
+} from "../testing/planner.ts";
+import { mapZones } from "../testing/world.ts";
+import { planZoneForSeed } from "../testing/zonePlan.ts";
+import { assignedMovement } from "./movementAssignments.ts";
+import { onScreenOf, sweptLanes } from "./moverPlanning.ts";
+import { crossSpan, hasLeftRoad, type MoverPath, moverPlace } from "./movers.ts";
+import { moverOutcomes } from "./outcomes.ts";
+import { signaturePlace } from "./signaturePaths.ts";
+import { apportionSlotCounts } from "./slotConfig.ts";
 import {
   componentHitLength,
   itemHeight,
@@ -45,8 +45,8 @@ import {
   startRoad,
   type Walk,
   walkScrollSpeed,
-} from "./walk";
-import { blocksLane, footprintOf, movementOf, type WalkItemKind } from "./walkItems";
+} from "./walk.ts";
+import { blocksLane, footprintOf, movementOf, type WalkItemKind } from "./walkItems.ts";
 
 // While set, weightedPick ignores its weights, so every weighted planner draw is even.
 const unbiased = vi.hoisted(() => ({ on: false }));

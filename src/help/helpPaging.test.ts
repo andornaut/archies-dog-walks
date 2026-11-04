@@ -6,7 +6,7 @@ import {
   type HelpAction,
   helpButtons,
   type HelpOutcome,
-} from "./helpPaging";
+} from "./helpPaging.ts";
 
 const PAGES = 6;
 const LAST = PAGES - 1;

@@ -1,9 +1,14 @@
 import type { Scene } from "phaser";
 
-import { modalTitleLayout } from "../home/modalLayout";
-import { PALETTE } from "../ui/palette";
-import { type FontRole, labelInkWidth, pixelFontMetrics, withProbe } from "../ui/phaser/pixelText";
-import { TEXT_SCALE } from "../ui/textFit";
+import { modalTitleLayout } from "../home/modalLayout.ts";
+import { PALETTE } from "../ui/palette.ts";
+import {
+  type FontRole,
+  labelInkWidth,
+  pixelFontMetrics,
+  withProbe,
+} from "../ui/phaser/pixelText.ts";
+import { TEXT_SCALE } from "../ui/textFit.ts";
 
 // Measure actual game glyph ink without changing its role's font size.
 export function modalTextWidth(scene: Scene, font: FontRole, values: readonly string[]): number {

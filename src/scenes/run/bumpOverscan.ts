@@ -1,7 +1,7 @@
 import type { Rect } from "@andornaut/game-kit/rect";
 import type { GameObjects, Scene } from "phaser";
 
-import { bumpOverscan } from "../../layout/bumpFlash";
+import { bumpOverscan } from "../../layout/bumpFlash.ts";
 
 interface OverscanView {
   depth: number;

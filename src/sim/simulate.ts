@@ -2,7 +2,7 @@ import { STEP_SECONDS } from "@andornaut/game-kit/clock/fixedStep";
 import { type Random, randomStream } from "@andornaut/game-kit/random";
 import { keysOf } from "@andornaut/game-kit/records";
 
-import { LANE_COUNT } from "../data/screen";
+import { LANE_COUNT } from "../data/screen.ts";
 import type {
   AchievementId,
   DebuffId,
@@ -11,21 +11,21 @@ import type {
   GearId,
   WalkerId,
   ZoneId,
-} from "../data/types";
-import type { InputEvent } from "../dev/inputLog";
+} from "../data/types.ts";
+import type { InputEvent } from "../dev/inputLog.ts";
 import {
   earnedByRun,
   lastHeartOwnersOf,
   runCountersOf,
   type RunFacts,
-} from "../rules/achievements";
-import { type CardView, type Choice, type ChoiceData } from "../rules/choices";
-import { currentZoneId } from "../rules/route";
-import { endReasonOf, walkEarnings } from "../rules/run";
-import { advanceLaneControl, pullLane } from "../runner/laneControl";
-import { destinationLane } from "../runner/laneMotion";
-import { hasLeftRoad, moverPlace, moverY } from "../runner/movers";
-import { screenRoadGeometry } from "../runner/screenGeometry";
+} from "../rules/achievements.ts";
+import { type CardView, type Choice, type ChoiceData } from "../rules/choices.ts";
+import { currentZoneId } from "../rules/route.ts";
+import { endReasonOf, walkEarnings } from "../rules/run.ts";
+import { advanceLaneControl, pullLane } from "../runner/laneControl.ts";
+import { destinationLane } from "../runner/laneMotion.ts";
+import { hasLeftRoad, moverPlace, moverY } from "../runner/movers.ts";
+import { screenRoadGeometry } from "../runner/screenGeometry.ts";
 import {
   chooseCard,
   runStreams,
@@ -34,8 +34,8 @@ import {
   type SessionStep,
   startSession,
   stepSession,
-} from "../runner/session";
-import { auditSpawnPlan } from "../runner/spawnValidation";
+} from "../runner/session.ts";
+import { auditSpawnPlan } from "../runner/spawnValidation.ts";
 import {
   laneMotionConfig,
   laneMoveSeconds,
@@ -45,12 +45,12 @@ import {
   type Walk,
   type WalkData,
   type WalkStep,
-} from "../runner/walk";
-import { blocksLane, type WalkItemKind } from "../runner/walkItems";
-import type { ZonePlanObservation } from "../runner/zonePlan";
-import { packDogs } from "../state/pack";
-import { newRun, type PackDogs, type RunState } from "../state/runState";
-import { addCents, type Cents, cents } from "../units";
+} from "../runner/walk.ts";
+import { blocksLane, type WalkItemKind } from "../runner/walkItems.ts";
+import type { ZonePlanObservation } from "../runner/zonePlan.ts";
+import { packDogs } from "../state/pack.ts";
+import { newRun, type PackDogs, type RunState } from "../state/runState.ts";
+import { addCents, type Cents, cents } from "../units.ts";
 import {
   actBot,
   type BotRoad,
@@ -59,11 +59,11 @@ import {
   observeDrift,
   observePulls,
   observeRoad,
-} from "./bot";
-import { type ZoneDelivery, zoneDelivery } from "./delivery";
-import { choosePath, pickCardOption, type PolicyId, type RoutePolicyId } from "./policies";
-import type { BotSight } from "./sight";
-import type { Skill } from "./skills";
+} from "./bot.ts";
+import { type ZoneDelivery, zoneDelivery } from "./delivery.ts";
+import { choosePath, pickCardOption, type PolicyId, type RoutePolicyId } from "./policies.ts";
+import type { BotSight } from "./sight.ts";
+import type { Skill } from "./skills.ts";
 import {
   attachSpawnAudit,
   capturePlanningFailure,
@@ -71,7 +71,7 @@ import {
   type PlanningFailure,
   recordWalkEvents,
   type ZoneWalkEvents,
-} from "./walkEvents";
+} from "./walkEvents.ts";
 
 export type SimData = ChoiceData &
   WalkData &

@@ -1,13 +1,13 @@
 import { fillLine, fillNames } from "@andornaut/game-kit/lines";
 import { describe, expect, it } from "vitest";
 
-import { gameData } from "../data";
-import { maxHearts, placeInPack } from "../rules/dogs";
-import { testState } from "../testing/runState";
-import { newPlayerSave } from "../testing/saves";
-import { explainDetail } from "./explain";
-import { RUN_TEXT_FIELDS } from "./runText";
-import type { ExplainTarget } from "./walkHud";
+import { gameData } from "../data/index.ts";
+import { maxHearts, placeInPack } from "../rules/dogs.ts";
+import { testState } from "../testing/runState.ts";
+import { newPlayerSave } from "../testing/saves.ts";
+import { explainDetail } from "./explain.ts";
+import { RUN_TEXT_FIELDS } from "./runText.ts";
+import type { ExplainTarget } from "./walkHud.ts";
 
 // Kilo walks at 2 hearts with Lucky collar in the Pocket, a Whistle found, the Raincoats upgrade
 // in effect and Muddy on the pack: the effects are the walker's perk, the Pocket's gear, the found

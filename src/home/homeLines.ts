@@ -1,15 +1,15 @@
 import { fillLine } from "@andornaut/game-kit/lines";
 
-import type { DogId, GameData, HomeText, WalkerId } from "../data/types";
-import { packPlace, packSizeRaise } from "../rules/dogs";
-import { modifiersOf } from "../rules/modifiers";
-import { walkerOrder } from "../rules/walkers";
-import type { StorageState } from "../save/profile";
-import { type LastWalk, MAX_RUN_DOGS, type Owned } from "../save/schema";
-import { packOrder } from "../state/pack";
-import type { Cents } from "../units";
-import { dollarText, type HomeLoadout, packCapacity, type Purchase } from "./home";
-import { HOME_TEXT_FIELDS, homeLine } from "./homeText";
+import type { DogId, GameData, HomeText, WalkerId } from "../data/types.ts";
+import { packPlace, packSizeRaise } from "../rules/dogs.ts";
+import { modifiersOf } from "../rules/modifiers.ts";
+import { walkerOrder } from "../rules/walkers.ts";
+import type { StorageState } from "../save/profile.ts";
+import { type LastWalk, MAX_RUN_DOGS, type Owned } from "../save/schema.ts";
+import { packOrder } from "../state/pack.ts";
+import type { Cents } from "../units.ts";
+import { dollarText, type HomeLoadout, packCapacity, type Purchase } from "./home.ts";
+import { HOME_TEXT_FIELDS, homeLine } from "./homeText.ts";
 
 export type WalkerLine = keyof HomeText["bubble"];
 

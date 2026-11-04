@@ -3,19 +3,19 @@ import { sentences } from "@andornaut/game-kit/lines";
 import { containsPoint, insetRect, type Rect } from "@andornaut/game-kit/rect";
 import type { Scene } from "phaser";
 
-import { modalActionWidth } from "../home/modalLayout";
-import { NOTE_PLATE, notePartTops, type pauseMenuLayout } from "../hud/pauseMenu";
-import { cardNumberForKey, menuKeyActs } from "../input/keyBindings";
-import { withKeyNumber } from "../input/keyNumbers";
-import { closeControl } from "../ui/closeControl";
-import { rectIndexAt } from "../ui/grid";
-import { PALETTE } from "../ui/palette";
-import { fillRect } from "../ui/phaser/draw";
-import { addPixelText, pixelFontMetrics, wrapPixelText } from "../ui/phaser/pixelText";
-import { addCardClose, addCardTitle } from "./homePanels";
-import { modalTextWidth } from "./modalMeasure";
-import { listenTargetPress } from "./targetPress";
-import { addMenuButton, addRimmedPanel, addTapBurst, type MenuButton } from "./uiKit";
+import { modalActionWidth } from "../home/modalLayout.ts";
+import { NOTE_PLATE, notePartTops, type pauseMenuLayout } from "../hud/pauseMenu.ts";
+import { cardNumberForKey, menuKeyActs } from "../input/keyBindings.ts";
+import { withKeyNumber } from "../input/keyNumbers.ts";
+import { closeControl } from "../ui/closeControl.ts";
+import { rectIndexAt } from "../ui/grid.ts";
+import { PALETTE } from "../ui/palette.ts";
+import { fillRect } from "../ui/phaser/draw.ts";
+import { addPixelText, pixelFontMetrics, wrapPixelText } from "../ui/phaser/pixelText.ts";
+import { addCardClose, addCardTitle } from "./homePanels.ts";
+import { modalTextWidth } from "./modalMeasure.ts";
+import { listenTargetPress } from "./targetPress.ts";
+import { addMenuButton, addRimmedPanel, addTapBurst, type MenuButton } from "./uiKit.ts";
 
 // A button on the panel: its label and what a press, a tap or its number key, does.
 export interface PanelEntry {

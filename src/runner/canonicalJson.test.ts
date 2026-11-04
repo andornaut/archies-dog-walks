@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { canonicalJson } from "./canonicalJson";
+import { canonicalJson } from "./canonicalJson.ts";
 
 const sortKeys = (_key: string, item: unknown): unknown =>
   item !== null && typeof item === "object" && !Array.isArray(item)

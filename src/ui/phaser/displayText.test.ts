@@ -1,7 +1,7 @@
 import type { Scene } from "phaser";
 import { describe, expect, it } from "vitest";
 
-import { addDisplayText } from "./displayText";
+import { addDisplayText } from "./displayText.ts";
 
 interface Drawn {
   font: string;

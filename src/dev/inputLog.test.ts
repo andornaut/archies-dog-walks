@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { defined } from "../testing/defined";
+import { defined } from "../testing/defined.ts";
 import {
   decodeInputLog,
   encodeInputLog,
@@ -12,8 +12,8 @@ import {
   startInputLog,
   takeCardChoice,
   takeDueInputs,
-} from "./inputLog";
-import type { RunSetup, RunSetupLimits } from "./runSetup";
+} from "./inputLog.ts";
+import type { RunSetup, RunSetupLimits } from "./runSetup.ts";
 
 const limits: RunSetupLimits<"bo" | "kilo", "collar"> = {
   dogIds: ["bo", "kilo"],

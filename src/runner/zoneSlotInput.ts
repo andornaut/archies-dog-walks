@@ -1,8 +1,8 @@
-import type { GameData } from "../data/types";
-import type { RunState } from "../state/runState";
-import type { ProfiledMovement } from "./movementAssignments";
-import { moverSpec } from "./moverSpecs";
-import type { SlotConfiguration, SlotKind } from "./slotConfig";
+import type { GameData } from "../data/types.ts";
+import type { RunState } from "../state/runState.ts";
+import type { ProfiledMovement } from "./movementAssignments.ts";
+import { moverSpec } from "./moverSpecs.ts";
+import type { SlotConfiguration, SlotKind } from "./slotConfig.ts";
 import {
   planSlotCapacity,
   planSlotSpawns,
@@ -10,8 +10,8 @@ import {
   type SlotPlanningContext,
   SlotPlanningError,
   type SlotPlanningResult,
-} from "./slotPlanner";
-import type { SpawnPlan, SpawnQuota } from "./spawning";
+} from "./slotPlanner.ts";
+import type { SpawnPlan, SpawnQuota } from "./spawning.ts";
 
 export interface ZoneSlotKind<Kind extends string> extends Omit<SlotKind<Kind>, "compile"> {
   readonly movement: ProfiledMovement | null;

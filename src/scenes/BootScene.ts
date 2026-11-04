@@ -5,9 +5,9 @@ import type { ProgressHandle } from "@andornaut/game-kit/progressState";
 import { keysOf } from "@andornaut/game-kit/records";
 import { GameObjects, type Loader, Scene, Sound } from "phaser";
 
-import { animationSpecs, type AsepriteSheet } from "../assets/asepriteAnimations";
-import { loadsFirst } from "../assets/atlasGroups";
-import { type AssetManifest, parseManifest, type SpriteAsset } from "../assets/manifest";
+import { animationSpecs, type AsepriteSheet } from "../assets/asepriteAnimations.ts";
+import { loadsFirst } from "../assets/atlasGroups.ts";
+import { type AssetManifest, parseManifest, type SpriteAsset } from "../assets/manifest.ts";
 import {
   addAtlasFonts,
   addAtlasTextures,
@@ -18,7 +18,7 @@ import {
   queueFonts,
   queueManifestArt,
   smoothDepthArt,
-} from "../assets/phaser/manifestArt";
+} from "../assets/phaser/manifestArt.ts";
 import {
   DOG_FRAME_SIDES,
   dogFaceKey,
@@ -29,27 +29,32 @@ import {
   ownerCardFaceKey,
   ownerFaceKey,
   ROAD_SPRITE_SIZE,
-} from "../assets/spriteKeys";
-import { HOME_CUES, soundKeysOf } from "../audio/sound";
-import { gameData } from "../data";
-import { SCREEN_LAYOUT } from "../data/screen";
-import type { EncounterId } from "../data/types";
-import { devRunLoadout, namesRunSetup } from "../dev/devStart";
-import { pageSearch } from "../dev/devTools";
-import { pageRunSetup } from "../dev/pageRunSetup";
+} from "../assets/spriteKeys.ts";
+import { HOME_CUES, soundKeysOf } from "../audio/sound.ts";
+import { gameData } from "../data/index.ts";
+import { SCREEN_LAYOUT } from "../data/screen.ts";
+import type { EncounterId } from "../data/types.ts";
+import { devRunLoadout, namesRunSetup } from "../dev/devStart.ts";
+import { pageSearch } from "../dev/devTools.ts";
+import { pageRunSetup } from "../dev/pageRunSetup.ts";
 import {
   bootProgress,
   LOADING_TRACK,
   loadingWalkerAt,
   stepFraction,
-} from "../layout/loadingScreen";
-import { browserSoundFormat, launchReady, startWakeLock, unlockAudioOnFirstGesture } from "../pwa";
-import { PALETTE } from "../ui/palette";
-import { addFilledRect } from "../ui/phaser/draw";
-import { addPillGlyphs, registerFallbackPixelFont } from "../ui/phaser/pixelText";
-import { GAME_PROGRESS_STYLE } from "../ui/progressBar";
-import { markArtReady, walkArtProgress } from "./artReady";
-import { onLoadProgress } from "./loadProgress";
+} from "../layout/loadingScreen.ts";
+import {
+  browserSoundFormat,
+  launchReady,
+  startWakeLock,
+  unlockAudioOnFirstGesture,
+} from "../pwa/index.ts";
+import { PALETTE } from "../ui/palette.ts";
+import { addFilledRect } from "../ui/phaser/draw.ts";
+import { addPillGlyphs, registerFallbackPixelFont } from "../ui/phaser/pixelText.ts";
+import { GAME_PROGRESS_STYLE } from "../ui/progressBar.ts";
+import { markArtReady, walkArtProgress } from "./artReady.ts";
+import { onLoadProgress } from "./loadProgress.ts";
 import {
   currentSettings,
   openProfile,
@@ -57,11 +62,11 @@ import {
   resumesWalk,
   takeResumedWalk,
   walkerInUse,
-} from "./profileStore";
-import { nextRunStart } from "./run/runRecorder";
-import { resumedRunSceneData, runSceneData } from "./run/runStart";
-import { SCENE_KEYS } from "./sceneKeys";
-import { ensurePlaceholder, measureSprite, playTag } from "./sprites";
+} from "./profileStore.ts";
+import { nextRunStart } from "./run/runRecorder.ts";
+import { resumedRunSceneData, runSceneData } from "./run/runStart.ts";
+import { SCENE_KEYS } from "./sceneKeys.ts";
+import { ensurePlaceholder, measureSprite, playTag } from "./sprites.ts";
 
 // Processing yields to the next frame once a batch has run this long: less once the home
 // screen shows, which then shares the frame.

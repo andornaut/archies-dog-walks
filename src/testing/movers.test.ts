@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
 
-import { gameData } from "../data";
-import type { GameData } from "../data/types";
-import { WORLD } from "../data/world";
-import { assignedMovement } from "../runner/movementAssignments";
-import { type HopMovement, hoppingInstead } from "./movers";
+import { gameData } from "../data/index.ts";
+import type { GameData } from "../data/types.ts";
+import { WORLD } from "../data/world.ts";
+import { assignedMovement } from "../runner/movementAssignments.ts";
+import { type HopMovement, hoppingInstead } from "./movers.ts";
 
 const hop: HopMovement = { kind: "hop", most: 2, times: { max: 2, min: 1 } };
 

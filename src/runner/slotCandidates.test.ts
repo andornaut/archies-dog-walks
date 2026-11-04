@@ -1,27 +1,33 @@
 import { describe, expect, it, vi } from "vitest";
 
-import { moverLeavesMinimumLanes } from "./laneAlternatives";
-import * as motion from "./moverPlanning";
-import { DART_LIFTS, drawMover, moverPlacements, moverRetries } from "./moverPlanning";
-import { auditSlotPartialPlan, auditSlotPlan } from "./slotAudit";
-import { createSlotCandidateDomains } from "./slotCandidateDomains";
+import { moverLeavesMinimumLanes } from "./laneAlternatives.ts";
+import * as motion from "./moverPlanning.ts";
+import { DART_LIFTS, drawMover, moverPlacements, moverRetries } from "./moverPlanning.ts";
+import { auditSlotPartialPlan, auditSlotPlan } from "./slotAudit.ts";
+import { createSlotCandidateDomains } from "./slotCandidateDomains.ts";
 import {
   compileSlotKindDomain,
   describeSlotKind,
   prepareSlotKind,
   slotMotionSelections,
   slotPlacementsAt,
-} from "./slotCandidates";
-import type { SlotConfiguration, SlotKind, SlotSource } from "./slotConfig";
-import { createSlotConstructionState } from "./slotConstraintState";
-import * as entropy from "./slotEntropy";
-import { slotMotionStreams } from "./slotEntropy";
-import { makeSlotJobs } from "./slotJobs";
-import type { SlotAssignment } from "./slotPlan";
-import { constructSlotWitness, type SlotWitnessConstructPorts } from "./slotWitnessConstruct";
-import type { WitnessJob } from "./slotWitnessSearch";
-import { blockingLength, rowSpacing, type SpawnPlan, type SpawnQuota, zoneRows } from "./spawning";
-import { auditMoverGeometry } from "./spawnMoverValidation";
+} from "./slotCandidates.ts";
+import type { SlotConfiguration, SlotKind, SlotSource } from "./slotConfig.ts";
+import { createSlotConstructionState } from "./slotConstraintState.ts";
+import * as entropy from "./slotEntropy.ts";
+import { slotMotionStreams } from "./slotEntropy.ts";
+import { makeSlotJobs } from "./slotJobs.ts";
+import type { SlotAssignment } from "./slotPlan.ts";
+import { constructSlotWitness, type SlotWitnessConstructPorts } from "./slotWitnessConstruct.ts";
+import type { WitnessJob } from "./slotWitnessSearch.ts";
+import {
+  blockingLength,
+  rowSpacing,
+  type SpawnPlan,
+  type SpawnQuota,
+  zoneRows,
+} from "./spawning.ts";
+import { auditMoverGeometry } from "./spawnMoverValidation.ts";
 
 const context = { seed: 3, zoneIndex: 0 };
 const key = "active:minorMoving:0";

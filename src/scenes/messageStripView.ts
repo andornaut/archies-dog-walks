@@ -1,9 +1,9 @@
 import { type TextFitStyle } from "@andornaut/game-kit/text/textFit";
 import type { GameObjects, Scene } from "phaser";
 
-import { gameData } from "../data";
-import { faceTextWithNamePills, type NameMark } from "../hud/effectNames";
-import { type FaceRow, type FaceText, inlineFaceBox, withoutFace } from "../hud/faceText";
+import { gameData } from "../data/index.ts";
+import { faceTextWithNamePills, type NameMark } from "../hud/effectNames.ts";
+import { type FaceRow, type FaceText, inlineFaceBox, withoutFace } from "../hud/faceText.ts";
 import {
   EMPTY_MESSAGE_STRIP,
   isOwnerLead,
@@ -23,8 +23,8 @@ import {
   sayLineAhead,
   stepMessageStrip,
   stripLeadSlot,
-} from "../hud/messageStrip";
-import { PALETTE } from "../ui/palette";
+} from "../hud/messageStrip.ts";
+import { PALETTE } from "../ui/palette.ts";
 import {
   addPixelText,
   inkSpan,
@@ -33,9 +33,9 @@ import {
   placePixelText,
   setPixelText,
   withProbe,
-} from "../ui/phaser/pixelText";
-import { addFaceRows, addFramedOwnerFace, measureRuns } from "./faceTextView";
-import { addPanel } from "./uiKit";
+} from "../ui/phaser/pixelText.ts";
+import { addFaceRows, addFramedOwnerFace, measureRuns } from "./faceTextView.ts";
+import { addPanel } from "./uiKit.ts";
 
 // A line said from the run scene, as a MessageLine: the HUD shows it on its message strip.
 export const MESSAGE_EVENT = "message";

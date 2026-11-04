@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { clampHearts } from "./units";
+import { clampHearts } from "./units.ts";
 
 describe("units", () => {
   it("holds hearts within 0 and the max", () => {

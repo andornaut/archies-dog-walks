@@ -1,16 +1,16 @@
 import { browserExitPage, exitApp } from "@andornaut/game-kit/web/pwa/dom/exitApp";
 import type { Scene } from "phaser";
 
-import { homeBarAction, homeBarButtonAt } from "../home/homeBar";
-import type { HomeBarButton } from "../home/homeLayout";
-import { openGuard } from "../input/openGuard";
-import { whenArtReady } from "./artReady";
-import { openHelp } from "./helpScreen";
-import { BAR_MUTED_EVENT, onSceneEvent, openOverlay } from "./overlay";
-import { toggleMuted } from "./profileStore";
-import { SCENE_KEYS, type SceneKey } from "./sceneKeys";
-import type { SettingsData } from "./SettingsScene";
-import { listenTargetPress } from "./targetPress";
+import { homeBarAction, homeBarButtonAt } from "../home/homeBar.ts";
+import type { HomeBarButton } from "../home/homeLayout.ts";
+import { openGuard } from "../input/openGuard.ts";
+import { whenArtReady } from "./artReady.ts";
+import { openHelp } from "./helpScreen.ts";
+import { BAR_MUTED_EVENT, onSceneEvent, openOverlay } from "./overlay.ts";
+import { toggleMuted } from "./profileStore.ts";
+import { SCENE_KEYS, type SceneKey } from "./sceneKeys.ts";
+import type { SettingsData } from "./SettingsScene.ts";
+import { listenTargetPress } from "./targetPress.ts";
 
 // Emitted on game.events as the top bar opens help, the Logbook or the settings: the Logbook,
 // the settings and the badge celebration close, and the start screen and the Pet shop close any

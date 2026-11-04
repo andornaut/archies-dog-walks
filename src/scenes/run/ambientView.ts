@@ -3,8 +3,8 @@ import { getOrInsertComputed } from "@andornaut/game-kit/maps";
 import type { Random } from "@andornaut/game-kit/random";
 import type { GameObjects, Scene } from "phaser";
 
-import { AMBIENT_VARIANTS, IDLE_TAG } from "../../assets/spriteKeys";
-import type { AmbientMover, ZoneId } from "../../data/types";
+import { AMBIENT_VARIANTS, IDLE_TAG } from "../../assets/spriteKeys.ts";
+import type { AmbientMover, ZoneId } from "../../data/types.ts";
 import {
   type AmbientDeps,
   type AmbientFrame,
@@ -13,9 +13,9 @@ import {
   placeAmbient,
   startAmbient,
   stepAmbient,
-} from "../../road/ambient";
-import { firstTag, playTag, showAtDepth } from "../sprites";
-import { DEPTH, LAYOUT, PROJECTION, showOnRoad } from "./stage";
+} from "../../road/ambient.ts";
+import { firstTag, playTag, showAtDepth } from "../sprites.ts";
+import { DEPTH, LAYOUT, PROJECTION, showOnRoad } from "./stage.ts";
 
 // The art of a slot with no mover: none.
 const NO_ART: readonly string[] = [];

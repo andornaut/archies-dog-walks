@@ -1,4 +1,4 @@
-import type { Upgrade } from "./types";
+import type { Upgrade } from "./types.ts";
 
 // Run-only boosts offered between zones. A picked card leaves the pool for the rest of the run.
 // duration is how long its effects last, which its plaque shows: now, the next zone, or the

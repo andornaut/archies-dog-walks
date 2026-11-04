@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
 
-import { ROAD_HIT_SIZE, ROAD_SPRITE_SIZE } from "../assets/spriteKeys";
-import { gameData } from "../data";
-import { ROAD_CAMERA, ROAD_FAR_SCALE, SCREEN_LAYOUT } from "../data/screen";
-import { TUNING } from "../data/tuning";
+import { ROAD_HIT_SIZE, ROAD_SPRITE_SIZE } from "../assets/spriteKeys.ts";
+import { gameData } from "../data/index.ts";
+import { ROAD_CAMERA, ROAD_FAR_SCALE, SCREEN_LAYOUT } from "../data/screen.ts";
+import { TUNING } from "../data/tuning.ts";
 import {
   COLLAR_HEIGHTS,
   DOG_SILHOUETTES,
@@ -13,10 +13,10 @@ import {
   PART_INSET,
   WALKER_HANDS,
   WALKER_SILHOUETTES,
-} from "../layout/packFormation";
-import { walkerFootY } from "../layout/screenLayout";
-import { walkProjection } from "../runner/walkGeometry";
-import { layoutExport } from "./layoutExport";
+} from "../layout/packFormation.ts";
+import { walkerFootY } from "../layout/screenLayout.ts";
+import { walkProjection } from "../runner/walkGeometry.ts";
+import { layoutExport } from "./layoutExport.ts";
 
 const layout = layoutExport(gameData);
 const { road } = SCREEN_LAYOUT;

@@ -1,23 +1,23 @@
 import { describe, expect, it } from "vitest";
 
-import { gameData } from "../data";
+import { gameData } from "../data/index.ts";
 import {
   MOVEMENT_ASSIGNMENTS,
   MOVEMENT_PROFILE_KEYS,
   MOVEMENT_PROFILES,
-} from "../data/movementProfiles";
-import type { EncounterId, MinorObstacleId, NeighbourhoodId } from "../data/types";
-import { PART_INSET } from "../layout/packFormation";
-import { hoppingInstead, plannerStreams } from "../testing/movers";
-import { GAME_ROAD, inZone, REAL, realRun } from "../testing/planner";
-import { assignedMovement } from "./movementAssignments";
-import { type MoverDraws, type MoverGeometry, moverPlacements } from "./moverPlanning";
-import { moverTell } from "./movers";
-import { moverSpec } from "./moverSpecs";
-import { signaturePlace, validateSignature } from "./signaturePaths";
-import { blockingLength } from "./spawning";
-import { componentHitLength, itemHeight, plannedCellInset, walkScrollSpeed } from "./walk";
-import { footprintOf } from "./walkItems";
+} from "../data/movementProfiles.ts";
+import type { EncounterId, MinorObstacleId, NeighbourhoodId } from "../data/types.ts";
+import { PART_INSET } from "../layout/packFormation.ts";
+import { hoppingInstead, plannerStreams } from "../testing/movers.ts";
+import { GAME_ROAD, inZone, REAL, realRun } from "../testing/planner.ts";
+import { assignedMovement } from "./movementAssignments.ts";
+import { type MoverDraws, type MoverGeometry, moverPlacements } from "./moverPlanning.ts";
+import { moverTell } from "./movers.ts";
+import { moverSpec } from "./moverSpecs.ts";
+import { signaturePlace, validateSignature } from "./signaturePaths.ts";
+import { blockingLength } from "./spawning.ts";
+import { componentHitLength, itemHeight, plannedCellInset, walkScrollSpeed } from "./walk.ts";
+import { footprintOf } from "./walkItems.ts";
 
 const contexts = Object.entries(MOVEMENT_ASSIGNMENTS).flatMap(([kind, assignment]) => {
   if (assignment.kind !== "byZone") {

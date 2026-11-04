@@ -1,14 +1,14 @@
 import type { SaveStore, StoreLoadResult } from "@andornaut/game-kit/save/saveStore";
 
-import type { AchievementId, HintId } from "../data/types";
-import { newlyEarned } from "../rules/achievements";
-import type { Change } from "../rules/causes";
-import type { Cents } from "../units";
-import { earnedIfBanked } from "./achievementPreview";
-import { awardAchievements, type AwardContext, earnedSince } from "./achievements";
-import { bankCheckpoint, recordCheckpoint, recordRunEnd, type RunResult } from "./checkpoint";
-import type { LaunchWalk, ResumeWalk } from "./resume";
-import type { Checkpoint, SaveDocument, Settings } from "./schema";
+import type { AchievementId, HintId } from "../data/types.ts";
+import { newlyEarned } from "../rules/achievements.ts";
+import type { Change } from "../rules/causes.ts";
+import type { Cents } from "../units.ts";
+import { earnedIfBanked } from "./achievementPreview.ts";
+import { awardAchievements, type AwardContext, earnedSince } from "./achievements.ts";
+import { bankCheckpoint, recordCheckpoint, recordRunEnd, type RunResult } from "./checkpoint.ts";
+import type { LaunchWalk, ResumeWalk } from "./resume.ts";
+import type { Checkpoint, SaveDocument, Settings } from "./schema.ts";
 
 // "unavailable" once storage could not be read, or while the last write failed: play goes on with
 // the save in memory, and the home screen says progress won't be saved. A later write that succeeds

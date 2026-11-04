@@ -1,8 +1,8 @@
-import { gameData } from "../data";
-import type { GameData } from "../data/types";
-import { jsonText } from "./files";
-import { gameDataExport } from "./gameDataExport";
-import { layoutExport } from "./layoutExport";
+import { gameData } from "../data/index.ts";
+import type { GameData } from "../data/types.ts";
+import { jsonText } from "./files.ts";
+import { gameDataExport } from "./gameDataExport.ts";
+import { layoutExport } from "./layoutExport.ts";
 
 // Where npm run export:data writes, relative to the repository root.
 export const DATA_EXPORT_DIR = "shared/export";

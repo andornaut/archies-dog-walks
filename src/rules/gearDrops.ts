@@ -1,16 +1,16 @@
 import { chanceRound, type Random, weightedPick } from "@andornaut/game-kit/random";
 import { keysOf } from "@andornaut/game-kit/records";
 
-import type { GameData, GearId, LiveTuning } from "../data/types";
-import { mapPack } from "../state/pack";
-import type { EffectSource, ModifierSource, RunState } from "../state/runState";
-import { clampHearts } from "../units";
-import { ownerMaxHearts } from "./dogs";
-import { resolveEffects } from "./effects";
-import type { ModifiedValue } from "./modified";
-import { price } from "./shop";
-import { holdSpareTreats } from "./spareTreats";
-import { readTable } from "./units";
+import type { GameData, GearId, LiveTuning } from "../data/types.ts";
+import { mapPack } from "../state/pack.ts";
+import type { EffectSource, ModifierSource, RunState } from "../state/runState.ts";
+import { clampHearts } from "../units.ts";
+import { ownerMaxHearts } from "./dogs.ts";
+import { resolveEffects } from "./effects.ts";
+import type { ModifiedValue } from "./modified.ts";
+import { price } from "./shop.ts";
+import { holdSpareTreats } from "./spareTreats.ts";
+import { readTable } from "./units.ts";
 
 // Gear drops: a gear item found on the road, which a neighbourhood places at random. Grabbing
 // one puts the item in effect, on top of the Pocket's gear, until the walk ends or another drop

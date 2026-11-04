@@ -1,17 +1,17 @@
 import { describe, expect, it } from "vitest";
 
-import { gameData } from "../data";
-import type { EncounterId, HintId } from "../data/types";
-import { hintFor } from "../rules/hints";
-import { testState } from "../testing/runState";
-import { atPack, step, walkWith } from "../testing/walk";
+import { gameData } from "../data/index.ts";
+import type { EncounterId, HintId } from "../data/types.ts";
+import { hintFor } from "../rules/hints.ts";
+import { testState } from "../testing/runState.ts";
+import { atPack, step, walkWith } from "../testing/walk.ts";
 import {
   cardHintTriggers,
   moverHintTriggers,
   runHintTriggers,
   startHintTriggers,
   stepHintTriggers,
-} from "./hintTriggers";
+} from "./hintTriggers.ts";
 
 describe("cardHintTriggers", () => {
   it("raises the fork hint for a fork, and the encounter's and the card's for an encounter", () => {

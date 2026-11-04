@@ -1,15 +1,15 @@
 import { fillLine, fillNames } from "@andornaut/game-kit/lines";
 
-import type { GameData, WalkerId } from "../data/types";
-import { earningsKind } from "../home/endView";
-import { signedDollarText } from "../home/home";
-import type { Change } from "../rules/causes";
-import { agilityPercent } from "../rules/effectText";
-import { newWalkers } from "../rules/walkers";
-import type { RunState } from "../state/runState";
-import { type Cents, cents } from "../units";
-import { perkIconKey } from "./effectIcons";
-import { RUN_TEXT_FIELDS as FIELDS } from "./runText";
+import type { GameData, WalkerId } from "../data/types.ts";
+import { earningsKind } from "../home/endView.ts";
+import { signedDollarText } from "../home/home.ts";
+import type { Change } from "../rules/causes.ts";
+import { agilityPercent } from "../rules/effectText.ts";
+import { newWalkers } from "../rules/walkers.ts";
+import type { RunState } from "../state/runState.ts";
+import { type Cents, cents } from "../units.ts";
+import { perkIconKey } from "./effectIcons.ts";
+import { RUN_TEXT_FIELDS as FIELDS } from "./runText.ts";
 
 // The walker in use cheering over a zone's fees and tips, once its fee coins have landed, after
 // each zone but the last.

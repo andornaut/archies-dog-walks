@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
 
-import { gameData } from "../data";
-import type { GameData, SignatureProfile } from "../data/types";
-import { assignedMovement } from "./movementAssignments";
-import { movementOf } from "./walkItems";
+import { gameData } from "../data/index.ts";
+import type { GameData, SignatureProfile } from "../data/types.ts";
+import { assignedMovement } from "./movementAssignments.ts";
+import { movementOf } from "./walkItems.ts";
 
 const profile: SignatureProfile = {
   finishAheadSeconds: 1,

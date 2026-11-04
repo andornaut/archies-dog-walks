@@ -1,9 +1,9 @@
 import { precachePlugin as kitPrecachePlugin } from "@andornaut/game-kit/web/pwa/vite/precachePlugin";
 import type { Plugin } from "vite";
 
-import type { ArtFileMap } from "../assets/artUrl";
-import { CACHE_POLICY } from "./cachePolicy";
-import { artHashedFiles } from "./precacheArt";
+import type { ArtFileMap } from "../assets/artUrl.ts";
+import { CACHE_POLICY } from "./cachePolicy.ts";
+import { artHashedFiles } from "./precacheArt.ts";
 
 interface PrecachePluginOptions {
   // The game's art files, as atlasPlugin hashed them for this build.

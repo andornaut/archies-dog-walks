@@ -1,7 +1,7 @@
-import { visibleMoverRows } from "./moverCoverage";
-import type { PreparedSlotKind } from "./slotCandidates";
-import type { SlotPlacement } from "./slotFeasibility";
-import { rowSpacing, type SpawnPlan } from "./spawning";
+import { visibleMoverRows } from "./moverCoverage.ts";
+import type { PreparedSlotKind } from "./slotCandidates.ts";
+import type { SlotPlacement } from "./slotFeasibility.ts";
+import { rowSpacing, type SpawnPlan } from "./spawning.ts";
 
 interface HintWork {
   propagate(): boolean;

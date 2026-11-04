@@ -1,6 +1,6 @@
-import type { SpawnSlotCounts, SpawnSlotRole } from "../data/types";
-import type { PlannerStreams } from "./moverPlanning";
-import { type Footprint, quotaFootprint, type SpawnQuota } from "./spawning";
+import type { SpawnSlotCounts, SpawnSlotRole } from "../data/types.ts";
+import type { PlannerStreams } from "./moverPlanning.ts";
+import { type Footprint, quotaFootprint, type SpawnQuota } from "./spawning.ts";
 
 // Tie order for integer allocation and stable role iteration.
 export const SLOT_ROLES = [

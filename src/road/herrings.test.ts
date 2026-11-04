@@ -3,19 +3,19 @@ import { seededRandom } from "@andornaut/game-kit/random";
 import { keysOf } from "@andornaut/game-kit/records";
 import { describe, expect, it } from "vitest";
 
-import { LANE_COUNT } from "../data/screen";
-import type { MinorObstacleId, ZoneId } from "../data/types";
-import { read } from "../rules/units";
-import { drawMover, isHerring } from "../runner/moverPlanning";
-import { moverPlace, moverTell } from "../runner/movers";
-import { moverSpec } from "../runner/moverSpecs";
-import { startRoad, stepWalk, type Walk, zoneLength } from "../runner/walk";
-import { footprintOf } from "../runner/walkItems";
-import { planZone } from "../runner/zonePlan";
-import { plannerStreams } from "../testing/movers";
-import { FASTEST_WALKER, GAME_ROAD, inZone, REAL, type Real, realRun } from "../testing/planner";
-import { distractionScroll } from "./distractions";
-import { herringNow } from "./herrings";
+import { LANE_COUNT } from "../data/screen.ts";
+import type { MinorObstacleId, ZoneId } from "../data/types.ts";
+import { read } from "../rules/units.ts";
+import { drawMover, isHerring } from "../runner/moverPlanning.ts";
+import { moverPlace, moverTell } from "../runner/movers.ts";
+import { moverSpec } from "../runner/moverSpecs.ts";
+import { startRoad, stepWalk, type Walk, zoneLength } from "../runner/walk.ts";
+import { footprintOf } from "../runner/walkItems.ts";
+import { planZone } from "../runner/zonePlan.ts";
+import { plannerStreams } from "../testing/movers.ts";
+import { FASTEST_WALKER, GAME_ROAD, inZone, REAL, type Real, realRun } from "../testing/planner.ts";
+import { distractionScroll } from "./distractions.ts";
+import { herringNow } from "./herrings.ts";
 
 // The kinds with red herrings, each with its share and the zones that weigh it above 0.
 const HERRING_KINDS = keysOf(REAL.minorObstacles).flatMap((kind: MinorObstacleId) => {

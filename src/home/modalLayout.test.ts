@@ -2,22 +2,22 @@ import { MODAL_CONTENT } from "@andornaut/game-kit/modalLayout";
 import { insetRect, rectsOverlap } from "@andornaut/game-kit/rect";
 import { describe, expect, it } from "vitest";
 
-import { gameData } from "../data";
-import { SCREEN_CONFIG, SCREEN_LAYOUT } from "../data/screen";
-import { fontFileMetrics, inkWidth } from "../testing/fontInk";
-import { inside } from "../testing/rects";
-import { barTitleLeft } from "../ui/barTitle";
-import { closeControl } from "../ui/closeControl";
-import { TEXT_STYLE } from "../ui/textFit";
-import { overlayRegion } from "./homeBar";
-import { cardTitleRow, HOME_LAYOUT, updateModalLayout } from "./homeLayout";
+import { gameData } from "../data/index.ts";
+import { SCREEN_CONFIG, SCREEN_LAYOUT } from "../data/screen.ts";
+import { fontFileMetrics, inkWidth } from "../testing/fontInk.ts";
+import { inside } from "../testing/rects.ts";
+import { barTitleLeft } from "../ui/barTitle.ts";
+import { closeControl } from "../ui/closeControl.ts";
+import { TEXT_STYLE } from "../ui/textFit.ts";
+import { overlayRegion } from "./homeBar.ts";
+import { cardTitleRow, HOME_LAYOUT, updateModalLayout } from "./homeLayout.ts";
 import {
   MODAL,
   modalPanelWidth,
   modalRect,
   modalTitleLayout,
   modalTitleWidth,
-} from "./modalLayout";
+} from "./modalLayout.ts";
 
 it("uses the full logical viewport for narrow content and still respects a smaller safe area", () => {
   expect(modalPanelWidth(328, 80)).toBe(180);

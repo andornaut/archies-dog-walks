@@ -5,23 +5,23 @@ import { itemAt } from "@andornaut/game-kit/arrays";
 import type { Point } from "@andornaut/game-kit/rect";
 import { describe, expect, it } from "vitest";
 
-import shippedManifest from "../../public/art/manifest.json";
-import { DEPTH_STEPS } from "../assets/depthSteps";
-import { gameData } from "../data";
-import { ROAD_CAMERA, SCREEN_LAYOUT } from "../data/screen";
-import type { ZoneId } from "../data/types";
-import { WORLD } from "../data/world";
-import { distanceAtY, project } from "../layout/projection";
-import { walkProjection } from "../runner/walkGeometry";
+import shippedManifest from "../../public/art/manifest.json" with { type: "json" };
+import { DEPTH_STEPS } from "../assets/depthSteps.ts";
+import { gameData } from "../data/index.ts";
+import { ROAD_CAMERA, SCREEN_LAYOUT } from "../data/screen.ts";
+import type { ZoneId } from "../data/types.ts";
+import { WORLD } from "../data/world.ts";
+import { distanceAtY, project } from "../layout/projection.ts";
+import { walkProjection } from "../runner/walkGeometry.ts";
 import {
   CARRIED_LIGHT_UP,
   carriedLightReach,
   distanceBehind,
   newAttachedLightPlaces,
   placeAttachedLights,
-} from "./lightPlaces";
-import { LIGHT_ATTACHMENTS } from "./lights";
-import { curbBand, curbFits, VERGES, VERGES_BY_ART, walkFrom } from "./roadside";
+} from "./lightPlaces.ts";
+import { LIGHT_ATTACHMENTS } from "./lights.ts";
+import { curbBand, curbFits, VERGES, VERGES_BY_ART, walkFrom } from "./roadside.ts";
 import {
   eachRoadsideProp,
   idleFrame,
@@ -41,7 +41,7 @@ import {
   type RoadsideZone,
   slotProps,
   START_STRIP_LENGTH,
-} from "./roadsideProps";
+} from "./roadsideProps.ts";
 
 const LAYOUT = SCREEN_LAYOUT;
 const PROJECTION = walkProjection(ROAD_CAMERA, LAYOUT.road);

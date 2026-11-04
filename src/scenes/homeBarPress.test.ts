@@ -4,8 +4,8 @@ import type { Point, Rect } from "@andornaut/game-kit/rect";
 import type { Scene } from "phaser";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { HOME_LAYOUT, homeBarButtons } from "../home/homeLayout";
-import { listenHomeBar } from "./homeBarPress";
+import { HOME_LAYOUT, homeBarButtons } from "../home/homeLayout.ts";
+import { listenHomeBar } from "./homeBarPress.ts";
 
 const PAGE = { page: "the browser's window" };
 const exitApp = vi.fn();

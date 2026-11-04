@@ -2,7 +2,7 @@ import { itemAt } from "@andornaut/game-kit/arrays";
 import type { Rect } from "@andornaut/game-kit/rect";
 import { describe, expect, it } from "vitest";
 
-import { cardHeader, cardRowRects } from "./cardRow";
+import { cardHeader, cardRowRects } from "./cardRow.ts";
 
 const area = { height: 450, width: 280, x: 80, y: 190 };
 const spec = { cardHeight: 140, cardWidth: 83, gap: 8, maxCount: 3 };

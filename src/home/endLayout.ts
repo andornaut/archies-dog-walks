@@ -5,10 +5,10 @@ import {
   inkRowsOfLines,
 } from "@andornaut/game-kit/text/bitmapFont";
 
-import { helpCapDy } from "../ui/labelHelpGap";
-import { TEXT_SCALE } from "../ui/textFit";
-import { badgeStripMinHeight, badgeStripRows } from "./badgesView";
-import { HOME_LAYOUT } from "./homeLayout";
+import { helpCapDy } from "../ui/labelHelpGap.ts";
+import { TEXT_SCALE } from "../ui/textFit.ts";
+import { badgeStripMinHeight, badgeStripRows } from "./badgesView.ts";
+import { HOME_LAYOUT } from "./homeLayout.ts";
 
 // The end screen's geometry, with every text at 2x.
 const PANEL = { height: 304, width: 312, x: 24, y: 112 };

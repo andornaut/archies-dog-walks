@@ -1,15 +1,15 @@
 import type { GameObjects, Scene } from "phaser";
 
-import { dogSpriteKey } from "../../assets/spriteKeys";
-import { gameData } from "../../data";
-import type { DogId } from "../../data/types";
-import type { DepthDraw } from "../../layout/depthScale";
-import { PACK_DEPTH, tautLeashLine } from "../../layout/packFormation";
-import type { Shadow } from "../../scenes/run/stage";
-import { addStandingSprite, playTag, showAtDepth, spriteMetrics } from "../../scenes/sprites";
-import { PALETTE } from "../../ui/palette";
-import { drawPixelLine, drawShadow } from "../../ui/phaser/draw";
-import { type Feet, type LeashLine, leashLine, packLayers, type StandingDog } from "../packDraw";
+import { dogSpriteKey } from "../../assets/spriteKeys.ts";
+import { gameData } from "../../data/index.ts";
+import type { DogId } from "../../data/types.ts";
+import type { DepthDraw } from "../../layout/depthScale.ts";
+import { PACK_DEPTH, tautLeashLine } from "../../layout/packFormation.ts";
+import type { Shadow } from "../../scenes/run/stage.ts";
+import { addStandingSprite, playTag, showAtDepth, spriteMetrics } from "../../scenes/sprites.ts";
+import { PALETTE } from "../../ui/palette.ts";
+import { drawPixelLine, drawShadow } from "../../ui/phaser/draw.ts";
+import { type Feet, type LeashLine, leashLine, packLayers, type StandingDog } from "../packDraw.ts";
 
 // The leashes' colour off the road, at the start screen's gate and on the end screen's walk
 // home; on the road each zone sets its own.

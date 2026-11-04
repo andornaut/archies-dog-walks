@@ -6,7 +6,7 @@ import {
   startZoneClocks,
   tickZoneClocks,
   type ZoneClocks,
-} from "./zoneClock";
+} from "./zoneClock.ts";
 
 const frame = (overrides: Partial<ClockFrame>): ClockFrame => ({
   frameMs: 20,

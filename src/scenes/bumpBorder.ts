@@ -1,10 +1,10 @@
 import type { GameObjects, Scene } from "phaser";
 
-import { SCREEN_CONFIG } from "../data/screen";
-import { BUMP_FLASH, bumpBorder, bumpFlashOn } from "../layout/bumpFlash";
-import { PALETTE } from "../ui/palette";
-import { fillRect } from "../ui/phaser/draw";
-import { HUD_DEPTH } from "./hudDepth";
+import { SCREEN_CONFIG } from "../data/screen.ts";
+import { BUMP_FLASH, bumpBorder, bumpFlashOn } from "../layout/bumpFlash.ts";
+import { PALETTE } from "../ui/palette.ts";
+import { fillRect } from "../ui/phaser/draw.ts";
+import { HUD_DEPTH } from "./hudDepth.ts";
 
 const SCREEN = { height: SCREEN_CONFIG.height, width: SCREEN_CONFIG.width, x: 0, y: 0 };
 

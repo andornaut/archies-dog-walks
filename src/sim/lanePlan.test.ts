@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { type LanePlanConfig, planLanes, type PlanStart } from "./lanePlan";
+import { type LanePlanConfig, planLanes, type PlanStart } from "./lanePlan.ts";
 
 const MOVE = 0.18;
 const CONFIG: LanePlanConfig = {

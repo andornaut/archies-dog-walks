@@ -6,9 +6,9 @@ import {
 } from "@andornaut/game-kit/text/phaser/phaserBitmapFont";
 import type { GameObjects, Scene } from "phaser";
 
-import { CELEBRATION_LAYOUT as LAYOUT } from "../hud/celebrationLayout";
-import { PALETTE } from "../ui/palette";
-import { addDisplayText } from "../ui/phaser/displayText";
+import { CELEBRATION_LAYOUT as LAYOUT } from "../hud/celebrationLayout.ts";
+import { PALETTE } from "../ui/palette.ts";
+import { addDisplayText } from "../ui/phaser/displayText.ts";
 
 function labelFont(scene: Scene, label: GameObjects.BitmapText): BitmapFont {
   const { data } = scene.cache.bitmapFont.get(label.font) as { data: PhaserFontData };

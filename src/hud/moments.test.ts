@@ -4,20 +4,20 @@ import { inkRowsFromCapTop } from "@andornaut/game-kit/text/bitmapFont";
 import type { TextFitStyle } from "@andornaut/game-kit/text/textFit";
 import { describe, expect, it } from "vitest";
 
-import { gameData } from "../data";
-import { SCREEN_CONFIG, SCREEN_LAYOUT } from "../data/screen";
-import { maxHearts } from "../rules/dogs";
-import { modifiersOf } from "../rules/modifiers";
-import { faceMood } from "../rules/treats";
-import type { Pack } from "../state/runState";
-import { bodyRunWidth } from "../testing/bodyFont";
-import { defined } from "../testing/defined";
-import { fitInFont, fontFileMetrics } from "../testing/fontInk";
-import { PACK_PLACES } from "../testing/packPlaces";
-import { plainMarks } from "../ui/pixelFont";
-import { cents, clampHearts } from "../units";
-import { inlineFaceBox, styledFaceRows } from "./faceText";
-import { linePanels } from "./messageStrip";
+import { gameData } from "../data/index.ts";
+import { SCREEN_CONFIG, SCREEN_LAYOUT } from "../data/screen.ts";
+import { maxHearts } from "../rules/dogs.ts";
+import { modifiersOf } from "../rules/modifiers.ts";
+import { faceMood } from "../rules/treats.ts";
+import type { Pack } from "../state/runState.ts";
+import { bodyRunWidth } from "../testing/bodyFont.ts";
+import { defined } from "../testing/defined.ts";
+import { fitInFont, fontFileMetrics } from "../testing/fontInk.ts";
+import { PACK_PLACES } from "../testing/packPlaces.ts";
+import { plainMarks } from "../ui/pixelFont.ts";
+import { cents, clampHearts } from "../units.ts";
+import { inlineFaceBox, styledFaceRows } from "./faceText.ts";
+import { linePanels } from "./messageStrip.ts";
 import {
   arcControl,
   bowRightControl,
@@ -45,8 +45,8 @@ import {
   payoutFlights,
   payoutMs,
   trotOffX,
-} from "./moments";
-import { ownerTabRect } from "./walkHud";
+} from "./moments.ts";
+import { ownerTabRect } from "./walkHud.ts";
 
 const walking = (dog: "lady" | "ginger" | "kilo", hearts: number) =>
   ({ dog, hearts: clampHearts(10, hearts), status: "walking" }) as const;

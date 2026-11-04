@@ -1,9 +1,9 @@
-import type { CardSource, HintTrigger, LiveTuning } from "../data/types";
-import { packSizeBonus, placeInPack } from "../rules/dogs";
-import type { MoverTell } from "../runner/movers";
-import type { WalkStep } from "../runner/walk";
-import type { RunState } from "../state/runState";
-import { lowHeartDogs } from "./moments";
+import type { CardSource, HintTrigger, LiveTuning } from "../data/types.ts";
+import { packSizeBonus, placeInPack } from "../rules/dogs.ts";
+import type { MoverTell } from "../runner/movers.ts";
+import type { WalkStep } from "../runner/walk.ts";
+import type { RunState } from "../state/runState.ts";
+import { lowHeartDogs } from "./moments.ts";
 
 // The hint triggers a card raises as it opens: a fork its own, an obstacle's its encounter's,
 // then cards in general.

@@ -1,21 +1,21 @@
 import { describe, expect, it, vi } from "vitest";
 
-import { TEST_TUNING } from "../testing/tuning";
-import { moverSpec } from "./moverSpecs";
-import { createSlotCandidateDomains } from "./slotCandidateDomains";
-import { prepareSlotKind, slotPlacementsAt } from "./slotCandidates";
+import { TEST_TUNING } from "../testing/tuning.ts";
+import { moverSpec } from "./moverSpecs.ts";
+import { createSlotCandidateDomains } from "./slotCandidateDomains.ts";
+import { prepareSlotKind, slotPlacementsAt } from "./slotCandidates.ts";
 import {
   createSlotConstraintState,
   createSlotConstructionState,
   createSlotIntrinsicProbe,
-} from "./slotConstraintState";
-import { slotMotionStreams } from "./slotEntropy";
-import { materialiseSlotPlan } from "./slotPlan";
-import { SpawnBoard } from "./spawnBoard";
-import { LaneBlocks, SpawnCells } from "./spawnCells";
-import { rowSpacing, type SpawnPlan, zoneRows } from "./spawning";
-import { auditSpawnPlan } from "./spawnValidation";
-import * as visibility from "./spawnVisibility";
+} from "./slotConstraintState.ts";
+import { slotMotionStreams } from "./slotEntropy.ts";
+import { materialiseSlotPlan } from "./slotPlan.ts";
+import { SpawnBoard } from "./spawnBoard.ts";
+import { LaneBlocks, SpawnCells } from "./spawnCells.ts";
+import { rowSpacing, type SpawnPlan, zoneRows } from "./spawning.ts";
+import { auditSpawnPlan } from "./spawnValidation.ts";
+import * as visibility from "./spawnVisibility.ts";
 
 const geometry: Omit<SpawnPlan<string>, "quotas"> = {
   cellInset: 5,

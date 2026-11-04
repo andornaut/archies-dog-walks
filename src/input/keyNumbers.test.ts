@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { keyNumbersShown, noteKeyPress, withKeyNumber } from "./keyNumbers";
+import { keyNumbersShown, noteKeyPress, withKeyNumber } from "./keyNumbers.ts";
 
 describe("key numbers", () => {
   it("stay hidden until a key is pressed, then show for the rest of the session", () => {

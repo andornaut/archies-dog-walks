@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { type Box, type LanedBox, type PackBoxes, sweptHitDog } from "./collision";
+import { type Box, type LanedBox, type PackBoxes, sweptHitDog } from "./collision.ts";
 
 const box = (left: number, top: number): LanedBox => ({
   bottom: top + 4,

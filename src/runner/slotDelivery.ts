@@ -1,7 +1,7 @@
-import { SLOT_ROLES, type SlotConfiguration, type SlotPlanningRole } from "./slotConfig";
-import type { SlotAssignment } from "./slotPlan";
-import type { SpawnQuota } from "./spawning";
-import type { SpawnAudit } from "./spawnValidation";
+import { SLOT_ROLES, type SlotConfiguration, type SlotPlanningRole } from "./slotConfig.ts";
+import type { SlotAssignment } from "./slotPlan.ts";
+import type { SpawnQuota } from "./spawning.ts";
+import type { SpawnAudit } from "./spawnValidation.ts";
 
 export type SlotDeliveryPolicy = "exact" | "runtime-90";
 export type SlotDeliveryCounts = Readonly<Record<SlotPlanningRole, number>>;

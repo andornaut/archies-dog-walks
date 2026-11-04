@@ -7,10 +7,10 @@ import { blankImage, blitExtruded, opaqueRect, type RgbaImage } from "@andornaut
 import { encodeLosslessWebp } from "@andornaut/art-kit/webp";
 import { getOrInsertComputed } from "@andornaut/game-kit/maps";
 
-import { atlasGroupOf } from "../../assets/atlasGroups";
-import type { AtlasManifest } from "../../assets/atlasManifest";
-import { type AssetManifest, parseManifest } from "../../assets/manifest";
-import { disabledArtKey, greyForDisabledTile, greysOnTile } from "../../ui/disabledArt";
+import { atlasGroupOf } from "../../assets/atlasGroups.ts";
+import type { AtlasManifest } from "../../assets/atlasManifest.ts";
+import { type AssetManifest, parseManifest } from "../../assets/manifest.ts";
+import { disabledArtKey, greyForDisabledTile, greysOnTile } from "../../ui/disabledArt.ts";
 import {
   EXTRUDE,
   imageSource,
@@ -19,7 +19,7 @@ import {
   type SourceFrame,
   type SourceTexture,
   spriteSource,
-} from "./atlasLayout";
+} from "./atlasLayout.ts";
 
 export interface AtlasBuild {
   // Each page's file, by its path relative to the art directory.

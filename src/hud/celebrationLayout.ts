@@ -5,13 +5,13 @@ import {
 } from "@andornaut/game-kit/text/bitmapFont";
 import { type FittedText } from "@andornaut/game-kit/text/textFit";
 
-import { ROAD_SPRITE_SIZE } from "../assets/spriteKeys";
-import { SCREEN_CONFIG, SCREEN_LAYOUT } from "../data/screen";
-import { MODAL, modalActionWidth } from "../home/modalLayout";
-import { WIDE_BUTTON } from "../layout/screenLayout";
-import { LABEL_HELP_GAP } from "../ui/labelHelpGap";
-import { TEXT_SCALE, TEXT_STYLE, textOnLines } from "../ui/textFit";
-import type { LinePart } from "./zoneCelebration";
+import { ROAD_SPRITE_SIZE } from "../assets/spriteKeys.ts";
+import { SCREEN_CONFIG, SCREEN_LAYOUT } from "../data/screen.ts";
+import { MODAL, modalActionWidth } from "../home/modalLayout.ts";
+import { WIDE_BUTTON } from "../layout/screenLayout.ts";
+import { LABEL_HELP_GAP } from "../ui/labelHelpGap.ts";
+import { TEXT_SCALE, TEXT_STYLE, textOnLines } from "../ui/textFit.ts";
+import type { LinePart } from "./zoneCelebration.ts";
 
 const SCREEN_WIDTH = SCREEN_CONFIG.width;
 const CENTRE_X = SCREEN_WIDTH / 2;

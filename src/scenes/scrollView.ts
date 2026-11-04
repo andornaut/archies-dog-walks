@@ -1,8 +1,8 @@
 import { containsPoint, type Rect } from "@andornaut/game-kit/rect";
 import type { GameObjects, Input, Scene } from "phaser";
 
-import { gameData } from "../data";
-import { SCREEN_CONFIG } from "../data/screen";
+import { gameData } from "../data/index.ts";
+import { SCREEN_CONFIG } from "../data/screen.ts";
 import {
   dragScroll,
   isDragging,
@@ -12,15 +12,15 @@ import {
   releaseScroll,
   type ScrollRule,
   wheelScroll,
-} from "../input/listScroll";
-import { read } from "../rules/units";
-import { PALETTE } from "../ui/palette";
-import { fillRect } from "../ui/phaser/draw";
-import type { ScrollbarRects } from "../ui/scrollbar";
-import { listenOnePress } from "./onePress";
-import { currentSettings } from "./profileStore";
-import { paintRectMask } from "./rectMask";
-import { addNineSlice } from "./uiKit";
+} from "../input/listScroll.ts";
+import { read } from "../rules/units.ts";
+import { PALETTE } from "../ui/palette.ts";
+import { fillRect } from "../ui/phaser/draw.ts";
+import type { ScrollbarRects } from "../ui/scrollbar.ts";
+import { listenOnePress } from "./onePress.ts";
+import { currentSettings } from "./profileStore.ts";
+import { paintRectMask } from "./rectMask.ts";
+import { addNineSlice } from "./uiKit.ts";
 
 // A scrolling list's fling, and its drag once a press travels past the tap distance.
 export const LIST_SCROLL_RULE: ScrollRule = {

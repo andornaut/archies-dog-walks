@@ -8,7 +8,7 @@ import {
   startMove,
   stillInLane,
   turnAround,
-} from "./laneMotion";
+} from "./laneMotion.ts";
 
 const config = { laneCount: 5, moveDuration: 0.2 };
 const laneXs = [108, 164, 220, 276, 332];

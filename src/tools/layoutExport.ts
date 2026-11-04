@@ -2,40 +2,40 @@ import { wrapWords } from "@andornaut/game-kit/lines";
 import type { Rect } from "@andornaut/game-kit/rect";
 import { type FontMetrics, fontMetrics, inkWidth } from "@andornaut/game-kit/text/bitmapFont";
 
-import { DEPTH_STEPS } from "../assets/depthSteps";
-import { LOADING_ART, ROAD_HIT_SIZE, ROAD_SPRITE_SIZE } from "../assets/spriteKeys";
-import { MENU_TEXT } from "../data/menuText";
+import { DEPTH_STEPS } from "../assets/depthSteps.ts";
+import { LOADING_ART, ROAD_HIT_SIZE, ROAD_SPRITE_SIZE } from "../assets/spriteKeys.ts";
+import { MENU_TEXT } from "../data/menuText.ts";
 import {
   LANE_COUNT,
   ROAD_CAMERA,
   ROAD_FAR_SCALE,
   SCREEN_CONFIG,
   SCREEN_LAYOUT,
-} from "../data/screen";
-import type { GameData } from "../data/types";
-import { dotRects, HELP_LAYOUT } from "../help/helpLayout";
-import { END_LAYOUT } from "../home/endLayout";
-import { overlayRegion } from "../home/homeBar";
+} from "../data/screen.ts";
+import type { GameData } from "../data/types.ts";
+import { dotRects, HELP_LAYOUT } from "../help/helpLayout.ts";
+import { END_LAYOUT } from "../home/endLayout.ts";
+import { overlayRegion } from "../home/homeBar.ts";
 import {
   HOME_LAYOUT,
   homeBarButtons,
   updateModalLayout,
   updateModalText,
-} from "../home/homeLayout";
-import { MODAL, modalActionWidth } from "../home/modalLayout";
-import { noteRoomForControl, settingsLayout, type SettingsRowShape } from "../home/settings";
-import { SHOP_TABS } from "../home/shop";
-import { SHOP_LAYOUT, shopTabRects } from "../home/shopLayout";
-import { STATS_LAYOUT, statsTabRects } from "../home/statsLayout";
+} from "../home/homeLayout.ts";
+import { MODAL, modalActionWidth } from "../home/modalLayout.ts";
+import { noteRoomForControl, settingsLayout, type SettingsRowShape } from "../home/settings.ts";
+import { SHOP_TABS } from "../home/shop.ts";
+import { SHOP_LAYOUT, shopTabRects } from "../home/shopLayout.ts";
+import { STATS_LAYOUT, statsTabRects } from "../home/statsLayout.ts";
 import {
   CELEBRATION_LAYOUT,
   GREETING_FIT,
   newWalkerRows,
   ZONE_EARNINGS_FIT,
   zoneDoneRows,
-} from "../hud/celebrationLayout";
-import { INLINE_FACE, inlineFaceBox } from "../hud/faceText";
-import { hudLanes } from "../hud/hudLanes";
+} from "../hud/celebrationLayout.ts";
+import { INLINE_FACE, inlineFaceBox } from "../hud/faceText.ts";
+import { hudLanes } from "../hud/hudLanes.ts";
 import {
   type LeadSlot,
   messagePanel,
@@ -44,9 +44,9 @@ import {
   ownerLeadLayout,
   ownerLeadPanel,
   stripLeadSlot,
-} from "../hud/messageStrip";
-import { PAUSE_MENU_ITEMS, PAUSE_NOTE_LINES, pauseMenuLayout } from "../hud/pauseMenu";
-import { buttonIcon, TOP_BAR_BUTTONS } from "../hud/topBar";
+} from "../hud/messageStrip.ts";
+import { PAUSE_MENU_ITEMS, PAUSE_NOTE_LINES, pauseMenuLayout } from "../hud/pauseMenu.ts";
+import { buttonIcon, TOP_BAR_BUTTONS } from "../hud/topBar.ts";
 import {
   type BarButton,
   DEBUFF_BAR,
@@ -59,17 +59,17 @@ import {
   walkBarLayout,
   ZONE_PROGRESS,
   zoneProgressLayout,
-} from "../hud/walkHud";
+} from "../hud/walkHud.ts";
 import {
   CARD_LAYOUT,
   cardEffectArea,
   cardRows,
   largeBodyBox,
   largeCardRect,
-} from "../layout/cardLayout";
-import { COMIC_WORDS } from "../layout/comicWords";
-import { laneCentreXs, laneDividerXs } from "../layout/lanes";
-import { LOADING_TRACK, LOADING_WALKER } from "../layout/loadingScreen";
+} from "../layout/cardLayout.ts";
+import { COMIC_WORDS } from "../layout/comicWords.ts";
+import { laneCentreXs, laneDividerXs } from "../layout/lanes.ts";
+import { LOADING_TRACK, LOADING_WALKER } from "../layout/loadingScreen.ts";
 import {
   COLLAR_HEIGHTS,
   DOG_SILHOUETTES,
@@ -79,21 +79,21 @@ import {
   PART_INSET,
   WALKER_HANDS,
   WALKER_SILHOUETTES,
-} from "../layout/packFormation";
+} from "../layout/packFormation.ts";
 import {
   columnSpan,
   distanceAtY,
   lineColumn,
   type RoadProjection,
   rowScale,
-} from "../layout/projection";
-import { walkerFootY } from "../layout/screenLayout";
-import { MAX_CARD_OPTIONS } from "../rules/choices";
-import { read } from "../rules/units";
-import { walkProjection } from "../runner/walkGeometry";
-import { gridRects } from "../ui/grid";
-import { plainMarks } from "../ui/pixelFont";
-import { readBitmapFont } from "./fontFile";
+} from "../layout/projection.ts";
+import { walkerFootY } from "../layout/screenLayout.ts";
+import { MAX_CARD_OPTIONS } from "../rules/choices.ts";
+import { read } from "../rules/units.ts";
+import { walkProjection } from "../runner/walkGeometry.ts";
+import { gridRects } from "../ui/grid.ts";
+import { plainMarks } from "../ui/pixelFont.ts";
+import { readBitmapFont } from "./fontFile.ts";
 
 // The screen geometry art's tools read, as shared/export/layout.json, all in screen pixels
 // unless a comment says otherwise. Each block is read from the module the game draws by.

@@ -1,4 +1,4 @@
-import table from "../../shared/depth-steps.json";
+import table from "../../shared/depth-steps.json" with { type: "json" };
 
 // A road sprite's depth steps, from shared/depth-steps.json, which art's tools read too. Each
 // step's art is the sprite's key plus the step's suffix: dog-kilo@88 is dog-kilo at 0.875.

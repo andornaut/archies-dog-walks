@@ -3,9 +3,9 @@ import { readFile } from "node:fs/promises";
 import { blankImage } from "@andornaut/art-kit/rgbaImage";
 import { describe, expect, it } from "vitest";
 
-import { type ArtFiles, artManifestText, generateArtManifest } from "./artManifest";
-import { encodePng } from "./atlas/atlasBuild";
-import { nodeArtFiles } from "./files";
+import { type ArtFiles, artManifestText, generateArtManifest } from "./artManifest.ts";
+import { encodePng } from "./atlas/atlasBuild.ts";
+import { nodeArtFiles } from "./files.ts";
 
 const ART_DIR = new URL("../../public/art/", import.meta.url);
 

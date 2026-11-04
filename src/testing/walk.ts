@@ -1,26 +1,26 @@
 // The walk tests' data, road and helpers that build and step a walk.
 import { seededRandom } from "@andornaut/game-kit/random";
 
-import { DEBUFFS } from "../data/debuffs";
-import { DOGS } from "../data/dogs";
-import { ENCOUNTERS } from "../data/encounters";
-import { HOME_TEXT } from "../data/homeText";
-import { MINOR_OBSTACLES } from "../data/minorObstacles";
-import { MOVEMENT_ASSIGNMENTS, MOVEMENT_PROFILES } from "../data/movementProfiles";
-import { RUN_TEXT } from "../data/runText";
-import { SHOP_GEAR } from "../data/shop";
-import { TUNING } from "../data/tuning";
-import { UPGRADES } from "../data/upgrades";
-import { stillInLane } from "../runner/laneMotion";
-import { startRoad, stepWalk, type Walk } from "../runner/walk";
-import { type WalkItem } from "../runner/walkItems";
-import { mapPack } from "../state/pack";
-import { newRun, type PackDogs } from "../state/runState";
-import { clampHearts } from "../units";
-import { TEST_ROAD_GEOMETRY } from "./packGeometry";
-import { TEST_TUNING } from "./tuning";
-import { TEST_WALKER_DATA } from "./walkers";
-import { mapZones, minimumSlotConfiguration, TEST_WORLD, zoneGuarantees } from "./world";
+import { DEBUFFS } from "../data/debuffs.ts";
+import { DOGS } from "../data/dogs.ts";
+import { ENCOUNTERS } from "../data/encounters.ts";
+import { HOME_TEXT } from "../data/homeText.ts";
+import { MINOR_OBSTACLES } from "../data/minorObstacles.ts";
+import { MOVEMENT_ASSIGNMENTS, MOVEMENT_PROFILES } from "../data/movementProfiles.ts";
+import { RUN_TEXT } from "../data/runText.ts";
+import { SHOP_GEAR } from "../data/shop.ts";
+import { TUNING } from "../data/tuning.ts";
+import { UPGRADES } from "../data/upgrades.ts";
+import { stillInLane } from "../runner/laneMotion.ts";
+import { startRoad, stepWalk, type Walk } from "../runner/walk.ts";
+import { type WalkItem } from "../runner/walkItems.ts";
+import { mapPack } from "../state/pack.ts";
+import { newRun, type PackDogs } from "../state/runState.ts";
+import { clampHearts } from "../units.ts";
+import { TEST_ROAD_GEOMETRY } from "./packGeometry.ts";
+import { TEST_TUNING } from "./tuning.ts";
+import { TEST_WALKER_DATA } from "./walkers.ts";
+import { mapZones, minimumSlotConfiguration, TEST_WORLD, zoneGuarantees } from "./world.ts";
 
 // 80px/s for 30s is a 2400px zone: 14 rows of spawns 160px apart.
 export const tuning = {

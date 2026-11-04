@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
 
-import { moverBodyTag } from "../assets/spriteKeys";
-import { MOVEMENT_PROFILES } from "../data/movementProfiles";
-import type { SignatureProfile } from "../data/types";
-import { GAME_ROAD } from "../testing/planner";
-import { inMotion, type MoverPath } from "./movers";
+import { moverBodyTag } from "../assets/spriteKeys.ts";
+import { MOVEMENT_PROFILES } from "../data/movementProfiles.ts";
+import type { SignatureProfile } from "../data/types.ts";
+import { GAME_ROAD } from "../testing/planner.ts";
+import { inMotion, type MoverPath } from "./movers.ts";
 import {
   compileSignature,
   signatureAlive,
@@ -13,7 +13,7 @@ import {
   signaturePlace,
   signatureSweeps,
   signatureTravelSweeps,
-} from "./signaturePaths";
+} from "./signaturePaths.ts";
 
 const geometry = { cellLength: 30, laneCount: 5, scrollSpeed: 30, sightLength: 600 };
 const common = { finishAheadSeconds: 1, warningSeconds: 0.3 };

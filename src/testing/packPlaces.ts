@@ -1,4 +1,4 @@
-import type { PackPlace } from "../rules/dogs";
+import type { PackPlace } from "../rules/dogs.ts";
 
 // A dog walked alone.
 export const LONE: PackPlace = { lead: true, size: 1 };

@@ -1,4 +1,4 @@
-import type { MenuText } from "./types";
+import type { MenuText } from "./types.ts";
 
 // The menus' and pages' text. A {name} is filled in by the game, and src/home/menuText.ts
 // lists the names each line may use.

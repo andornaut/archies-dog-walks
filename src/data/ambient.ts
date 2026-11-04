@@ -1,4 +1,4 @@
-import type { AmbientMover, ZoneId } from "./types";
+import type { AmbientMover, ZoneId } from "./types.ts";
 
 // The ambient movers: scenery that moves across the backdrop's cross street and beside the
 // road, with no effect on play. Each zone lists its kinds; perMinute sets how often each sets

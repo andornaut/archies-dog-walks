@@ -2,17 +2,17 @@ import { clamp01 } from "@andornaut/game-kit/numbers";
 import { type Random, weightedPick } from "@andornaut/game-kit/random";
 import { keysOf } from "@andornaut/game-kit/records";
 
-import { minorObstacleSpriteKey } from "../assets/spriteKeys";
-import type { DistractionPattern, GameData, MinorObstacleId, Zone } from "../data/types";
-import { read, readTable } from "../rules/units";
-import { type Box, overlaps } from "../runner/collision";
-import { DART_VERGE_LANES, stopsOnVerge } from "../runner/moverPlanning";
-import { drawnLanes, hasLeftRoad, type MoverOnRoad, moverPlace, moverY } from "../runner/movers";
-import { minorLook } from "../runner/obstacleLooks";
-import { signaturePlace, signatureSweeps } from "../runner/signaturePaths";
-import { itemHeight, type RoadGeometry, zoneLength } from "../runner/walk";
-import { footprintOf, type WalkItem, type WalkSpawn } from "../runner/walkItems";
-import { eachRoadsideProp, type RoadsideTable, START_STRIP_LENGTH } from "./roadsideProps";
+import { minorObstacleSpriteKey } from "../assets/spriteKeys.ts";
+import type { DistractionPattern, GameData, MinorObstacleId, Zone } from "../data/types.ts";
+import { read, readTable } from "../rules/units.ts";
+import { type Box, overlaps } from "../runner/collision.ts";
+import { DART_VERGE_LANES, stopsOnVerge } from "../runner/moverPlanning.ts";
+import { drawnLanes, hasLeftRoad, type MoverOnRoad, moverPlace, moverY } from "../runner/movers.ts";
+import { minorLook } from "../runner/obstacleLooks.ts";
+import { signaturePlace, signatureSweeps } from "../runner/signaturePaths.ts";
+import { itemHeight, type RoadGeometry, zoneLength } from "../runner/walk.ts";
+import { footprintOf, type WalkItem, type WalkSpawn } from "../runner/walkItems.ts";
+import { eachRoadsideProp, type RoadsideTable, START_STRIP_LENGTH } from "./roadsideProps.ts";
 
 // The distraction movers: red herrings. They wear the zone's own hazards (distractionKinds), step
 // on and off the road's edges in the top part of the road, and are gone before their row nears the

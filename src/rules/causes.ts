@@ -1,12 +1,12 @@
 import { assertNever } from "@andornaut/game-kit/assertNever";
 import { fillNames, signedText } from "@andornaut/game-kit/lines";
 
-import type { DogId, GameData, GearId } from "../data/types";
-import { minorObstacleName } from "../runner/obstacleLooks";
-import type { ActiveModifier, EffectSource, ModifierSource } from "../state/runState";
-import { type Cents, type Hearts, roundDollars } from "../units";
-import { heartsChangeText } from "./effectText";
-import type { Contribution } from "./modifiers";
+import type { DogId, GameData, GearId } from "../data/types.ts";
+import { minorObstacleName } from "../runner/obstacleLooks.ts";
+import type { ActiveModifier, EffectSource, ModifierSource } from "../state/runState.ts";
+import { type Cents, type Hearts, roundDollars } from "../units.ts";
+import { heartsChangeText } from "./effectText.ts";
+import type { Contribution } from "./modifiers.ts";
 
 // One reason behind a change, with how much of the change it accounts for, in the change's
 // unit: hearts, or cents for money. A change's causes sum to the change. The first is the

@@ -1,9 +1,9 @@
 import { vi } from "vitest";
 
-import type { WalkItemKind } from "../runner/walkItems";
-import { planZoneWithContext } from "../runner/zonePlan";
-import * as slotInput from "../runner/zoneSlotInput";
-import { plannerStreams } from "./movers";
+import type { WalkItemKind } from "../runner/walkItems.ts";
+import { planZoneWithContext } from "../runner/zonePlan.ts";
+import * as slotInput from "../runner/zoneSlotInput.ts";
+import { plannerStreams } from "./movers.ts";
 
 type PlanArguments = Parameters<typeof planZoneWithContext>;
 

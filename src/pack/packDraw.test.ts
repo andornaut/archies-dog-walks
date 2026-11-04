@@ -1,13 +1,13 @@
 import { itemAt } from "@andornaut/game-kit/arrays";
 import { describe, expect, it } from "vitest";
 
-import { ROAD_CAMERA, SCREEN_LAYOUT } from "../data/screen";
-import type { DogId } from "../data/types";
-import { END_LAYOUT } from "../home/endLayout";
-import { HOME_LAYOUT } from "../home/homeLayout";
-import { everyPack, formationOrder, packDogOf, packPlacements } from "../layout/packFormation";
-import { walkProjection } from "../runner/walkGeometry";
-import { type Feet, packLayers, type StandingDog } from "./packDraw";
+import { ROAD_CAMERA, SCREEN_LAYOUT } from "../data/screen.ts";
+import type { DogId } from "../data/types.ts";
+import { END_LAYOUT } from "../home/endLayout.ts";
+import { HOME_LAYOUT } from "../home/homeLayout.ts";
+import { everyPack, formationOrder, packDogOf, packPlacements } from "../layout/packFormation.ts";
+import { walkProjection } from "../runner/walkGeometry.ts";
+import { type Feet, packLayers, type StandingDog } from "./packDraw.ts";
 
 const PROJECTION = walkProjection(ROAD_CAMERA, SCREEN_LAYOUT.road);
 const WALKER: Feet = { footY: 100, x: 180 };

@@ -1,6 +1,6 @@
-import type { GameData, MovementKind, ZoneId } from "../data/types";
-import { itemCategory, opensACard, type WalkItemKind } from "../runner/walkItems";
-import type { ZoneSlotDelivery } from "../runner/zonePlan";
+import type { GameData, MovementKind, ZoneId } from "../data/types.ts";
+import { itemCategory, opensACard, type WalkItemKind } from "../runner/walkItems.ts";
+import type { ZoneSlotDelivery } from "../runner/zonePlan.ts";
 
 // Selected kind quotas and original runtime totals remain separate when jobs are omitted.
 

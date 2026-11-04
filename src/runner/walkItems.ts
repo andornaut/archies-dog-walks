@@ -6,9 +6,9 @@ import type {
   MinorObstacleId,
   Movement,
   SkinId,
-} from "../data/types";
-import type { MoverItem } from "./movers";
-import { type Footprint, SINGLE_CELL, type SpawnEvent } from "./spawning";
+} from "../data/types.ts";
+import type { MoverItem } from "./movers.ts";
+import { type Footprint, SINGLE_CELL, type SpawnEvent } from "./spawning.ts";
 
 export type PickupKind = "tip" | "treat";
 // A road item's kind: an encounter, a minor obstacle, a pickup, or a gear drop by its gear.

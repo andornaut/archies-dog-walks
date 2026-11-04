@@ -4,15 +4,15 @@ import type { Rect } from "@andornaut/game-kit/rect";
 import { inkRowsFromCapTop } from "@andornaut/game-kit/text/bitmapFont";
 import { describe, expect, it } from "vitest";
 
-import { gameData } from "../data";
-import { scrollMax } from "../input/listScroll";
-import { read } from "../rules/units";
-import { bodyTextWidth } from "../testing/bodyFont";
-import { fontFileMetrics, fontInk, inkWidth, placedInk } from "../testing/fontInk";
-import { veteranSave } from "../testing/saves";
-import { plainMarks } from "../ui/pixelFont";
-import { TEXT_SCALE } from "../ui/textFit";
-import { cents } from "../units";
+import { gameData } from "../data/index.ts";
+import { scrollMax } from "../input/listScroll.ts";
+import { read } from "../rules/units.ts";
+import { bodyTextWidth } from "../testing/bodyFont.ts";
+import { fontFileMetrics, fontInk, inkWidth, placedInk } from "../testing/fontInk.ts";
+import { veteranSave } from "../testing/saves.ts";
+import { plainMarks } from "../ui/pixelFont.ts";
+import { TEXT_SCALE } from "../ui/textFit.ts";
+import { cents } from "../units.ts";
 import {
   BADGE_STRIP,
   badgeProgress,
@@ -20,9 +20,9 @@ import {
   earnedText,
   wallCell,
   wallRects,
-} from "./badgesView";
-import { MENU_TEXT_FIELDS } from "./menuText";
-import { shopScrollbar } from "./shopLayout";
+} from "./badgesView.ts";
+import { MENU_TEXT_FIELDS } from "./menuText.ts";
+import { shopScrollbar } from "./shopLayout.ts";
 import {
   badgesBottom,
   DETAIL_TEXT_WIDTH,
@@ -42,8 +42,8 @@ import {
   walksHeadingTops,
   wallLineTops,
   wallRowHeight,
-} from "./statsLayout";
-import { overallRows } from "./statsView";
+} from "./statsLayout.ts";
+import { overallRows } from "./statsView.ts";
 
 const BODY = fontFileMetrics("font-body");
 const TITLE = fontFileMetrics("font-title");

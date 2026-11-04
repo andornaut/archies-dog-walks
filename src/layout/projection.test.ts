@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import { ROAD_CAMERA, ROAD_FAR_SCALE, SCREEN_CONFIG, SCREEN_LAYOUT } from "../data/screen";
-import { TUNING } from "../data/tuning";
+import { ROAD_CAMERA, ROAD_FAR_SCALE, SCREEN_CONFIG, SCREEN_LAYOUT } from "../data/screen.ts";
+import { TUNING } from "../data/tuning.ts";
 import {
   columnSpan,
   distanceAtY,
@@ -12,8 +12,8 @@ import {
   roadXAt,
   scaleAt,
   screenYAt,
-} from "./projection";
-import { walkerFootY } from "./screenLayout";
+} from "./projection.ts";
+import { walkerFootY } from "./screenLayout.ts";
 
 const { backdrop, road } = SCREEN_LAYOUT;
 const projection = roadProjection(ROAD_CAMERA, walkerFootY(road), road);

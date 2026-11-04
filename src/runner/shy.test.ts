@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import { hopShapes } from "./moverPlanning";
-import { laneAt, type StepShape } from "./movers";
+import { hopShapes } from "./moverPlanning.ts";
+import { laneAt, type StepShape } from "./movers.ts";
 import {
   awayHop,
   nextShyChoiceAt,
@@ -10,7 +10,7 @@ import {
   shyOutcomes,
   type ShyPath,
   takeHop,
-} from "./shy";
+} from "./shy.ts";
 
 const CELL = 50;
 const LANES = 5;

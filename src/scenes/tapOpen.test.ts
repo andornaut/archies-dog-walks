@@ -4,9 +4,9 @@ import { readdirSync, readFileSync } from "node:fs";
 import type { Scene } from "phaser";
 import { describe, expect, it } from "vitest";
 
-import { openOverlay } from "./overlay";
-import { SCENE_KEYS, TAP_BURST_SCENE_KEY } from "./sceneKeys";
-import { addTapBurst } from "./uiKit";
+import { openOverlay } from "./overlay.ts";
+import { SCENE_KEYS, TAP_BURST_SCENE_KEY } from "./sceneKeys.ts";
+import { addTapBurst } from "./uiKit.ts";
 
 type Status = "paused" | "running" | "stopped";
 

@@ -1,9 +1,9 @@
 import { describe, expect, it, vi } from "vitest";
 
-import { overlayRegion } from "../home/homeBar";
-import { updateModalLayout } from "../home/homeLayout";
-import type { PlateMode } from "../home/homeLines";
-import { StartScene } from "./StartScene";
+import { overlayRegion } from "../home/homeBar.ts";
+import { updateModalLayout } from "../home/homeLayout.ts";
+import type { PlateMode } from "../home/homeLines.ts";
+import { StartScene } from "./StartScene.ts";
 
 const acceptUpdate = vi.fn();
 const dismissUpdateOffer = vi.fn();
@@ -12,8 +12,8 @@ vi.mock("phaser", () => ({
   Scene: class {},
   Scenes: { Events: {} },
 }));
-vi.mock("../pwa", async (original) => ({
-  ...(await original<typeof import("../pwa")>()),
+vi.mock("../pwa/index.ts", async (original) => ({
+  ...(await original<typeof import("../pwa/index.ts")>()),
   acceptUpdate: () => acceptUpdate(),
   dismissUpdateOffer: () => dismissUpdateOffer(),
 }));

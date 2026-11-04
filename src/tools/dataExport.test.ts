@@ -2,8 +2,8 @@ import { readFile } from "node:fs/promises";
 
 import { describe, expect, it } from "vitest";
 
-import { gameData } from "../data";
-import { dataExportFiles } from "./dataExport";
+import { gameData } from "../data/index.ts";
+import { dataExportFiles } from "./dataExport.ts";
 
 const ROOT = new URL("../../", import.meta.url);
 

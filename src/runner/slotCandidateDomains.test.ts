@@ -1,21 +1,21 @@
 import { describe, expect, it, vi } from "vitest";
 
-import { gameData } from "../data";
-import { plannerStreams } from "../testing/movers";
-import { GAME_ROAD } from "../testing/planner";
-import { assignedMovement } from "./movementAssignments";
-import { moverSpec } from "./moverSpecs";
+import { gameData } from "../data/index.ts";
+import { plannerStreams } from "../testing/movers.ts";
+import { GAME_ROAD } from "../testing/planner.ts";
+import { assignedMovement } from "./movementAssignments.ts";
+import { moverSpec } from "./moverSpecs.ts";
 import {
   createSlotCandidateDomains,
   type SlotCandidate,
   type SlotOwnerDomainToken,
-} from "./slotCandidateDomains";
-import * as native from "./slotCandidates";
-import { slotMotionStreams } from "./slotEntropy";
-import { createSlotFeasibility } from "./slotFeasibility";
-import { rowSpacing, type SpawnPlan, zoneRows } from "./spawning";
-import { itemHeight } from "./walk";
-import { footprintOf } from "./walkItems";
+} from "./slotCandidateDomains.ts";
+import * as native from "./slotCandidates.ts";
+import { slotMotionStreams } from "./slotEntropy.ts";
+import { createSlotFeasibility } from "./slotFeasibility.ts";
+import { rowSpacing, type SpawnPlan, zoneRows } from "./spawning.ts";
+import { itemHeight } from "./walk.ts";
+import { footprintOf } from "./walkItems.ts";
 
 const geometry: Omit<SpawnPlan<string>, "quotas"> = {
   cellInset: 5,

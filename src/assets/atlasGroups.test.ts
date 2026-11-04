@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import { atlasGroupOf, filtersLinear, pageGroupOf, steppedBases } from "./atlasGroups";
-import { LOADING_ART } from "./spriteKeys";
+import { atlasGroupOf, filtersLinear, pageGroupOf, steppedBases } from "./atlasGroups.ts";
+import { LOADING_ART } from "./spriteKeys.ts";
 
 describe("atlasGroupOf", () => {
   // The loading screen's art is boot; the home screen's road art is home; the rest goes by key

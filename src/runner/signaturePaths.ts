@@ -1,6 +1,6 @@
 import { easeProgress, type Easing, type Point, progressAt } from "@andornaut/game-kit/motion";
 
-import type { MoveCount, SignatureProfile } from "../data/types";
+import type { MoveCount, SignatureProfile } from "../data/types.ts";
 
 interface SignatureGeometry {
   readonly cellLength: number;

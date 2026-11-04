@@ -1,8 +1,8 @@
 import { itemAt } from "@andornaut/game-kit/arrays";
 import { type Random, randomInt, seededRandom } from "@andornaut/game-kit/random";
 
-import type { MoveCount, MovementKind, SignatureProfile, StopLanes } from "../data/types";
-import { type LaneDirection, laneMask } from "../layout/lanes";
+import type { MoveCount, MovementKind, SignatureProfile, StopLanes } from "../data/types.ts";
+import { type LaneDirection, laneMask } from "../layout/lanes.ts";
 import {
   type ApproachTiming,
   crossingScroll,
@@ -14,15 +14,15 @@ import {
   moverPlace,
   type MoverStep,
   type StepShape,
-} from "./movers";
+} from "./movers.ts";
 import {
   compileSignature,
   signaturePlace,
   type SignatureSweep,
   signatureTravelSweeps,
-} from "./signaturePaths";
-import type { SpawnRejection } from "./spawnAdmission";
-import type { FeasibilityObserver } from "./spawnFeasibilityDiagnostics";
+} from "./signaturePaths.ts";
+import type { SpawnRejection } from "./spawnAdmission.ts";
+import type { FeasibilityObserver } from "./spawnFeasibilityDiagnostics.ts";
 
 export interface MoverPlacementWork {
   // Admission happens before a unique placement is built; shared prefixes reuse existing values.

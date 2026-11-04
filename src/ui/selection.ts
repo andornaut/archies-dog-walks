@@ -1,6 +1,6 @@
 // How a tile, tab or row shows its interaction state, as ui-tile draws it: normal is cream,
 // selected gold, disabled flat grey. Colours are the scenes' PALETTE names.
-import type { ButtonState, ItemLook, TileState } from "./interaction";
+import type { ButtonState, ItemLook, TileState } from "./interaction.ts";
 
 // Every colour a disabled, short or locked item draws in, the neutral greys among them:
 // - affordBox: the box behind the portrait or icon of an item the player can buy now, its art

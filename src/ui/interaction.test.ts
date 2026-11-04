@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { cents } from "../units";
+import { cents } from "../units.ts";
 import {
   type ArtLook,
   type ButtonState,
@@ -13,8 +13,8 @@ import {
   PLAIN_ITEM,
   type TileState,
   tileState,
-} from "./interaction";
-import { GREYED, type PictureBox, pictureBox } from "./selection";
+} from "./interaction.ts";
+import { GREYED, type PictureBox, pictureBox } from "./selection.ts";
 
 describe("tileState", () => {
   it("shows each item as normal, selected or disabled by its pick and room", () => {

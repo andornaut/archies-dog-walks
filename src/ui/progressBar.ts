@@ -1,6 +1,6 @@
 import type { ProgressBarStyle } from "@andornaut/game-kit/progress";
 
-import { PALETTE } from "./palette";
+import { PALETTE } from "./palette.ts";
 
 export const GAME_PROGRESS = {
   border: 1,

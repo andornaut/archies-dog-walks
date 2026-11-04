@@ -1,10 +1,10 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import * as candidates from "./slotCandidates";
-import type { SlotPlacement } from "./slotFeasibility";
-import { guaranteeCompatiblePath } from "./slotPath";
-import { SpawnBoard } from "./spawnBoard";
-import * as spawning from "./spawning";
+import * as candidates from "./slotCandidates.ts";
+import type { SlotPlacement } from "./slotFeasibility.ts";
+import { guaranteeCompatiblePath } from "./slotPath.ts";
+import { SpawnBoard } from "./spawnBoard.ts";
+import * as spawning from "./spawning.ts";
 
 const geometry: Omit<spawning.SpawnPlan<string>, "quotas"> = {
   cellInset: 5,

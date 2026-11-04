@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import type { GestureAction } from "./gestures";
+import type { GestureAction } from "./gestures.ts";
 import {
   cardNumberForKey,
   isConfirmKey,
@@ -10,7 +10,7 @@ import {
   laneDirectionForKey,
   menuKeyActs,
   walkKeyAction,
-} from "./keyBindings";
+} from "./keyBindings.ts";
 
 describe("key bindings", () => {
   // Each binding read over every key listed, by key; undefined or false for a key it ignores.

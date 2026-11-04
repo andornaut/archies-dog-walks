@@ -4,22 +4,22 @@ import { keysOf } from "@andornaut/game-kit/records";
 import { pixels } from "@andornaut/game-kit/units";
 import { describe, expect, it } from "vitest";
 
-import { gameData } from "../data";
-import { LANE_COUNT } from "../data/screen";
-import type { CardSource, WalkerId, ZoneId } from "../data/types";
-import { firingTimeline } from "../hud/moments";
-import type { LaneDirection } from "../layout/lanes";
-import { cardFor, offerFork, openCard } from "../rules/choices";
-import { firstZoneId, walkLength } from "../rules/route";
-import { read } from "../rules/units";
-import { mapPack } from "../state/pack";
-import { newRun, type PackDogs } from "../state/runState";
-import { testState } from "../testing/runState";
-import { clampHearts } from "../units";
-import { laneControlIn } from "./laneControl";
-import { stillInLane } from "./laneMotion";
-import { NO_PULLS, type Strain } from "./pulls";
-import { screenRoadGeometry } from "./screenGeometry";
+import { gameData } from "../data/index.ts";
+import { LANE_COUNT } from "../data/screen.ts";
+import type { CardSource, WalkerId, ZoneId } from "../data/types.ts";
+import { firingTimeline } from "../hud/moments.ts";
+import type { LaneDirection } from "../layout/lanes.ts";
+import { cardFor, offerFork, openCard } from "../rules/choices.ts";
+import { firstZoneId, walkLength } from "../rules/route.ts";
+import { read } from "../rules/units.ts";
+import { mapPack } from "../state/pack.ts";
+import { newRun, type PackDogs } from "../state/runState.ts";
+import { testState } from "../testing/runState.ts";
+import { clampHearts } from "../units.ts";
+import { laneControlIn } from "./laneControl.ts";
+import { stillInLane } from "./laneMotion.ts";
+import { NO_PULLS, type Strain } from "./pulls.ts";
+import { screenRoadGeometry } from "./screenGeometry.ts";
 import {
   chooseCard,
   chooseShownCard,
@@ -34,11 +34,11 @@ import {
   startSession,
   stepSession,
   zoneStartPoint,
-} from "./session";
-import { itemHeight, packBoxes, startRoad, zoneLength } from "./walk";
-import { type WalkItem } from "./walkItems";
-import type { ZonePlanObservation } from "./zonePlan";
-import { replayZoneSlots } from "./zoneSlotInput";
+} from "./session.ts";
+import { itemHeight, packBoxes, startRoad, zoneLength } from "./walk.ts";
+import { type WalkItem } from "./walkItems.ts";
+import type { ZonePlanObservation } from "./zonePlan.ts";
+import { replayZoneSlots } from "./zoneSlotInput.ts";
 
 const SKUNK: CardSource = { affected: ["kilo"], encounter: "skunk", kind: "encounter" };
 const STOP: CardSource = { affected: ["kilo"], encounter: "thief", kind: "encounter" };

@@ -8,36 +8,36 @@ import {
 } from "@andornaut/game-kit/clock/fixedStep";
 import { Scene } from "phaser";
 
-import { musicKey } from "../audio/music";
-import { gameData } from "../data";
-import { LANE_COUNT } from "../data/screen";
-import type { DogId } from "../data/types";
+import { musicKey } from "../audio/music.ts";
+import { gameData } from "../data/index.ts";
+import { LANE_COUNT } from "../data/screen.ts";
+import type { DogId } from "../data/types.ts";
 import {
   type Cheats,
   cheatsFrom,
   DEV_CHEATS_KEY,
   timeScaleOf,
   withCheats,
-} from "../dev/devPanelModel";
-import type { InputEvent } from "../dev/inputLog";
-import type { RunSetup } from "../dev/runSetup";
-import { withSetupStart } from "../dev/setupRun";
-import { startZoneClocks, tickZoneClocks, type ZoneClocks } from "../dev/zoneClock";
-import { effectItems } from "../hud/effectIcons";
-import { cardHintTriggers, startHintTriggers } from "../hud/hintTriggers";
-import { homeQuestionNote, pauseNote } from "../hud/homeQuestion";
-import { NOTHING_PAUSED, type RunPause, walkBackAction, walkPaused } from "../hud/topBar";
-import { type ExplainShown } from "../hud/walkHud";
+} from "../dev/devPanelModel.ts";
+import type { InputEvent } from "../dev/inputLog.ts";
+import type { RunSetup } from "../dev/runSetup.ts";
+import { withSetupStart } from "../dev/setupRun.ts";
+import { startZoneClocks, tickZoneClocks, type ZoneClocks } from "../dev/zoneClock.ts";
+import { effectItems } from "../hud/effectIcons.ts";
+import { cardHintTriggers, startHintTriggers } from "../hud/hintTriggers.ts";
+import { homeQuestionNote, pauseNote } from "../hud/homeQuestion.ts";
+import { NOTHING_PAUSED, type RunPause, walkBackAction, walkPaused } from "../hud/topBar.ts";
+import { type ExplainShown } from "../hud/walkHud.ts";
 import {
   newWalkerCelebrations,
   playInTurn,
   type ZoneCelebration,
   zoneCelebration,
-} from "../hud/zoneCelebration";
-import { onFrameTurnChange, PHONE_EVENTS, startWakeLock, stopWakeLock } from "../pwa";
-import { type CardView, type Choice, outcomeChanges } from "../rules/choices";
-import { currentZone, currentZoneId, previousZone, previousZoneId } from "../rules/route";
-import { screenRoadGeometry } from "../runner/screenGeometry";
+} from "../hud/zoneCelebration.ts";
+import { onFrameTurnChange, PHONE_EVENTS, startWakeLock, stopWakeLock } from "../pwa/index.ts";
+import { type CardView, type Choice, outcomeChanges } from "../rules/choices.ts";
+import { currentZone, currentZoneId, previousZone, previousZoneId } from "../rules/route.ts";
+import { screenRoadGeometry } from "../runner/screenGeometry.ts";
 import {
   chooseShownCard,
   forkPoint,
@@ -52,17 +52,17 @@ import {
   stepSession,
   unplannedStart,
   zoneStartPoint,
-} from "../runner/session";
-import { startRoad, type Walk } from "../runner/walk";
-import { dogsFinishedWith } from "../save/checkpoint";
-import type { ResumeWalk } from "../save/resume";
-import { checkpointOf, runResultOf } from "../save/runSlices";
-import { type Loadout, newRun, type RunState } from "../state/runState";
-import { colourFromHex, PALETTE } from "../ui/palette";
-import type { HudSceneData } from "./HudScene";
-import type { HudRun, RunHudView } from "./hudWalk";
-import { onWindowEvent } from "./overlay";
-import type { PauseSceneData } from "./PauseScene";
+} from "../runner/session.ts";
+import { startRoad, type Walk } from "../runner/walk.ts";
+import { dogsFinishedWith } from "../save/checkpoint.ts";
+import type { ResumeWalk } from "../save/resume.ts";
+import { checkpointOf, runResultOf } from "../save/runSlices.ts";
+import { type Loadout, newRun, type RunState } from "../state/runState.ts";
+import { colourFromHex, PALETTE } from "../ui/palette.ts";
+import type { HudSceneData } from "./HudScene.ts";
+import type { HudRun, RunHudView } from "./hudWalk.ts";
+import { onWindowEvent } from "./overlay.ts";
+import type { PauseSceneData } from "./PauseScene.ts";
 import {
   applySound,
   checkpointRun,
@@ -72,27 +72,27 @@ import {
   profileSave,
   type Settings,
   walkerSpriteKey,
-} from "./profileStore";
-import { AmbientView } from "./run/ambientView";
-import { BackdropView } from "./run/backdropView";
-import { DistractionView } from "./run/distractionView";
-import { HitBoxView } from "./run/hitBoxView";
-import { blendWalk, leadWalk, stepAlpha } from "./run/interpolate";
-import { ensureRoadPlaceholders, ItemViews } from "./run/itemViews";
-import { LightsView } from "./run/lightsView";
-import { MenuFlow } from "./run/menuFlow";
-import { PackView } from "./run/packView";
-import { ZoneBanner, zoneBannerMs } from "./run/roadBanners";
-import { RoadsideView } from "./run/roadsideView";
-import { RoadArt, RoadView } from "./run/roadView";
-import { RunInput } from "./run/runInput";
-import { RunMoments, showHint } from "./run/runMoments";
-import { emitDevState, RunRecorder } from "./run/runRecorder";
-import { type RunRandom, runRandom } from "./run/runStart";
-import { ShadowPool } from "./run/shadowPool";
-import { LAYOUT, overPack, packPoint } from "./run/stage";
-import { SCENE_KEYS } from "./sceneKeys";
-import { soundboardOf } from "./soundboard";
+} from "./profileStore.ts";
+import { AmbientView } from "./run/ambientView.ts";
+import { BackdropView } from "./run/backdropView.ts";
+import { DistractionView } from "./run/distractionView.ts";
+import { HitBoxView } from "./run/hitBoxView.ts";
+import { blendWalk, leadWalk, stepAlpha } from "./run/interpolate.ts";
+import { ensureRoadPlaceholders, ItemViews } from "./run/itemViews.ts";
+import { LightsView } from "./run/lightsView.ts";
+import { MenuFlow } from "./run/menuFlow.ts";
+import { PackView } from "./run/packView.ts";
+import { ZoneBanner, zoneBannerMs } from "./run/roadBanners.ts";
+import { RoadsideView } from "./run/roadsideView.ts";
+import { RoadArt, RoadView } from "./run/roadView.ts";
+import { RunInput } from "./run/runInput.ts";
+import { RunMoments, showHint } from "./run/runMoments.ts";
+import { emitDevState, RunRecorder } from "./run/runRecorder.ts";
+import { type RunRandom, runRandom } from "./run/runStart.ts";
+import { ShadowPool } from "./run/shadowPool.ts";
+import { LAYOUT, overPack, packPoint } from "./run/stage.ts";
+import { SCENE_KEYS } from "./sceneKeys.ts";
+import { soundboardOf } from "./soundboard.ts";
 
 // How the walk starts, from runSceneData: its setup, the loadout and dog slots it walks with, and
 // the inputs that drive it when it replays a log. A walk the launch resumes (resumedRunSceneData)

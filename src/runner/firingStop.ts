@@ -1,5 +1,5 @@
-import type { DogId } from "../data/types";
-import { type HeldStep, type HitStop, startHitStop } from "./hitStop";
+import type { DogId } from "../data/types.ts";
+import { type HeldStep, type HitStop, startHitStop } from "./hitStop.ts";
 
 // What a firing leaves the walk with: the stop it holds the walk in, and what is still queued
 // outside it.

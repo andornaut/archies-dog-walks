@@ -8,22 +8,22 @@ import { inkRowsOfLines } from "@andornaut/game-kit/text/bitmapFont";
 import type { TextFitStyle } from "@andornaut/game-kit/text/textFit";
 import { describe, expect, it } from "vitest";
 
-import { SKIP_CARD_ART } from "../assets/cardArt";
-import { DIFFICULTY_KEY } from "../assets/spriteKeys";
-import { gameData } from "../data";
-import { SCREEN_LAYOUT } from "../data/screen";
-import { charmEffects } from "../hud/buffMarks";
-import { largeBodyText, smallCardText } from "../hud/cardText";
-import { type EffectItem, effectName } from "../hud/effectIcons";
-import { pillKind } from "../hud/effectNames";
-import { MAX_CARD_OPTIONS } from "../rules/choices";
-import { everyCardOption } from "../testing/everyCardOption";
-import { fontFileMetrics, inkWidth } from "../testing/fontInk";
-import { inside } from "../testing/rects";
-import { CARD_HEADER } from "../ui/cardRow";
-import { pillIndex, pillRows } from "../ui/namePills";
-import { plainMarks } from "../ui/pixelFont";
-import { CARD_CHARMS_HEIGHT, cardCharmPlates, cardCharmWidth, CHARM } from "./buffLayout";
+import { SKIP_CARD_ART } from "../assets/cardArt.ts";
+import { DIFFICULTY_KEY } from "../assets/spriteKeys.ts";
+import { gameData } from "../data/index.ts";
+import { SCREEN_LAYOUT } from "../data/screen.ts";
+import { charmEffects } from "../hud/buffMarks.ts";
+import { largeBodyText, smallCardText } from "../hud/cardText.ts";
+import { type EffectItem, effectName } from "../hud/effectIcons.ts";
+import { pillKind } from "../hud/effectNames.ts";
+import { MAX_CARD_OPTIONS } from "../rules/choices.ts";
+import { everyCardOption } from "../testing/everyCardOption.ts";
+import { fontFileMetrics, inkWidth } from "../testing/fontInk.ts";
+import { inside } from "../testing/rects.ts";
+import { CARD_HEADER } from "../ui/cardRow.ts";
+import { pillIndex, pillRows } from "../ui/namePills.ts";
+import { plainMarks } from "../ui/pixelFont.ts";
+import { CARD_CHARMS_HEIGHT, cardCharmPlates, cardCharmWidth, CHARM } from "./buffLayout.ts";
 import {
   CARD_LAYOUT,
   CARD_ROW_BLOCK_HEIGHT,
@@ -34,7 +34,7 @@ import {
   largeBodyStyle,
   largeCardHeight,
   largeCardRect,
-} from "./cardLayout";
+} from "./cardLayout.ts";
 
 describe("largeCardHeight", () => {
   it.each([

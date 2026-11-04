@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import { newPlayerSave, veteranSave } from "../testing/saves";
-import { statsPage } from "./stats";
+import { newPlayerSave, veteranSave } from "../testing/saves.ts";
+import { statsPage } from "./stats.ts";
 
 describe("statsPage", () => {
   it("sums the runs, dog walks and firings, and names the owner who fired you most", () => {

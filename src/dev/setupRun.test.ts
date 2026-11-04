@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import { gameData } from "../data";
-import type { DogId, GearId, WalkerId } from "../data/types";
-import type { Loadout } from "../state/runState";
-import { testState } from "../testing/runState";
-import type { RunSetup } from "./runSetup";
-import { loadoutFor, withSetupStart } from "./setupRun";
+import { gameData } from "../data/index.ts";
+import type { DogId, GearId, WalkerId } from "../data/types.ts";
+import type { Loadout } from "../state/runState.ts";
+import { testState } from "../testing/runState.ts";
+import type { RunSetup } from "./runSetup.ts";
+import { loadoutFor, withSetupStart } from "./setupRun.ts";
 
 const fallback: Loadout = { dogs: ["lady"], gear: "luckyCollar", walker: "casey" };
 const setup: RunSetup<DogId, GearId, WalkerId> = { dev: false, seed: 1, speed: 1, zone: 1 };

@@ -13,8 +13,8 @@ import {
   widestLine,
 } from "@andornaut/game-kit/text/textFit";
 
-import { readBitmapFont } from "../tools/fontFile";
-import { inkWithPills, type LaidChar, pillGlyphAdvances } from "../ui/namePills";
+import { readBitmapFont } from "../tools/fontFile.ts";
+import { inkWithPills, type LaidChar, pillGlyphAdvances } from "../ui/namePills.ts";
 
 const GAME_FONTS = new Map<string, BitmapFont>();
 

@@ -2,7 +2,7 @@ import { wrapWords } from "@andornaut/game-kit/lines";
 import type { Rect } from "@andornaut/game-kit/rect";
 import type { FontMetrics } from "@andornaut/game-kit/text/bitmapFont";
 
-import { HOME_LAYOUT, SPEECH_ROOM, speechBubbleHeight, speechPads } from "./homeLayout";
+import { HOME_LAYOUT, SPEECH_ROOM, speechBubbleHeight, speechPads } from "./homeLayout.ts";
 
 const OWNER = HOME_LAYOUT.speech.owner;
 

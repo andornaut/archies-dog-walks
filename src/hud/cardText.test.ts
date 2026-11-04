@@ -3,17 +3,17 @@ import { inkRowsOfLines } from "@andornaut/game-kit/text/bitmapFont";
 import { fitsRoom, type TextFitStyle } from "@andornaut/game-kit/text/textFit";
 import { describe, expect, it } from "vitest";
 
-import { gameData } from "../data";
-import type { ZoneId } from "../data/types";
-import { CARD_LAYOUT, cardEffectArea, plaqueRoom } from "../layout/cardLayout";
-import { cardFor, hasPlaque, type OptionView } from "../rules/choices";
-import { defined } from "../testing/defined";
-import { everyCardOption } from "../testing/everyCardOption";
-import { fontFileMetrics, inkWidth } from "../testing/fontInk";
-import { testState } from "../testing/runState";
-import { plainMarks } from "../ui/pixelFont";
-import { plaqueTexts, smallCardText } from "./cardText";
-import { withNamePills } from "./effectNames";
+import { gameData } from "../data/index.ts";
+import type { ZoneId } from "../data/types.ts";
+import { CARD_LAYOUT, cardEffectArea, plaqueRoom } from "../layout/cardLayout.ts";
+import { cardFor, hasPlaque, type OptionView } from "../rules/choices.ts";
+import { defined } from "../testing/defined.ts";
+import { everyCardOption } from "../testing/everyCardOption.ts";
+import { fontFileMetrics, inkWidth } from "../testing/fontInk.ts";
+import { testState } from "../testing/runState.ts";
+import { plainMarks } from "../ui/pixelFont.ts";
+import { plaqueTexts, smallCardText } from "./cardText.ts";
+import { withNamePills } from "./effectNames.ts";
 
 const BODY = fontFileMetrics("font-body");
 const ONE: TextFitStyle = { scale: 1 };

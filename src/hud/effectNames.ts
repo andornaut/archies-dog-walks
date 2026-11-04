@@ -1,8 +1,8 @@
 import { keysOf } from "@andornaut/game-kit/records";
 
-import type { DebuffId, GameData } from "../data/types";
-import { inPill } from "../ui/namePills";
-import type { FaceText } from "./faceText";
+import type { DebuffId, GameData } from "../data/types.ts";
+import { inPill } from "../ui/namePills.ts";
+import type { FaceText } from "./faceText.ts";
 
 // An effect's name where it sits beside its description, set in a pill of its kind's colours: a
 // debuff's own, or the one every buff (gear, a walker's perk or an upgrade) shares.

@@ -1,13 +1,13 @@
 import { fillNames } from "@andornaut/game-kit/lines";
 import { describe, expect, it } from "vitest";
 
-import { gameData } from "../data";
-import type { CardSource, DogId, EncounterId } from "../data/types";
-import { largeBodyText } from "../hud/cardText";
-import { activeModifier, testState } from "../testing/runState";
-import { cents, dollarsToCents } from "../units";
-import { cardFor } from "./choices";
-import { read } from "./units";
+import { gameData } from "../data/index.ts";
+import type { CardSource, DogId, EncounterId } from "../data/types.ts";
+import { largeBodyText } from "../hud/cardText.ts";
+import { activeModifier, testState } from "../testing/runState.ts";
+import { cents, dollarsToCents } from "../units.ts";
+import { cardFor } from "./choices.ts";
+import { read } from "./units.ts";
 
 const PACK: readonly DogId[] = ["kilo", "ginger", "reggie"];
 const state = testState({ ginger: 5, kilo: 5, reggie: 5 }, { money: cents(10_000) });

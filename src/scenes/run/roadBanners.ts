@@ -1,20 +1,20 @@
 import { type Point, type Rect, rectAboveIn, rectsOverlap } from "@andornaut/game-kit/rect";
 import type { GameObjects, Scene } from "phaser";
 
-import { debuffIconKey } from "../../assets/iconKeys";
-import { gearIconKey } from "../../assets/spriteKeys";
-import { gameData } from "../../data";
-import { SCREEN_CONFIG } from "../../data/screen";
-import type { DebuffId, EncounterId, GearId } from "../../data/types";
-import { zoneBannerHeading } from "../../hud/zoneCelebration";
-import { currentZone } from "../../rules/route";
-import type { RunState } from "../../state/runState";
-import { PALETTE } from "../../ui/palette";
-import { addDisplayText } from "../../ui/phaser/displayText";
-import { fillRect } from "../../ui/phaser/draw";
-import { addPixelText } from "../../ui/phaser/pixelText";
-import { fadeAway } from "../uiKit";
-import { DEPTH, LAYOUT } from "./stage";
+import { debuffIconKey } from "../../assets/iconKeys.ts";
+import { gearIconKey } from "../../assets/spriteKeys.ts";
+import { gameData } from "../../data/index.ts";
+import { SCREEN_CONFIG } from "../../data/screen.ts";
+import type { DebuffId, EncounterId, GearId } from "../../data/types.ts";
+import { zoneBannerHeading } from "../../hud/zoneCelebration.ts";
+import { currentZone } from "../../rules/route.ts";
+import type { RunState } from "../../state/runState.ts";
+import { PALETTE } from "../../ui/palette.ts";
+import { addDisplayText } from "../../ui/phaser/displayText.ts";
+import { fillRect } from "../../ui/phaser/draw.ts";
+import { addPixelText } from "../../ui/phaser/pixelText.ts";
+import { fadeAway } from "../uiKit.ts";
+import { DEPTH, LAYOUT } from "./stage.ts";
 
 // A pickup's art pops up over where it was grabbed, its bottom lift pixels over that point, then
 // floats rise pixels up as it fades.

@@ -4,7 +4,7 @@ import { join } from "node:path";
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { nodeArtFiles, writeIfChanged, writeOrCheck } from "./files";
+import { nodeArtFiles, writeIfChanged, writeOrCheck } from "./files.ts";
 
 let root: string;
 const argv = process.argv;

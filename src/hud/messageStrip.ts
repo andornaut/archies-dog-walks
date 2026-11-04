@@ -6,13 +6,13 @@ import {
   inkRowsOfLines,
 } from "@andornaut/game-kit/text/bitmapFont";
 
-import { SCREEN_LAYOUT } from "../data/screen";
-import type { DogId, GameData } from "../data/types";
-import { read } from "../rules/units";
-import { effectIconKey, type EffectItem } from "./effectIcons";
-import type { NameMark } from "./effectNames";
-import { type FaceBox, type FaceRow, faceRows, type FaceText } from "./faceText";
-import { DEBUFF_BAR } from "./walkHud";
+import { SCREEN_LAYOUT } from "../data/screen.ts";
+import type { DogId, GameData } from "../data/types.ts";
+import { read } from "../rules/units.ts";
+import { effectIconKey, type EffectItem } from "./effectIcons.ts";
+import type { NameMark } from "./effectNames.ts";
+import { type FaceBox, type FaceRow, faceRows, type FaceText } from "./faceText.ts";
+import { DEBUFF_BAR } from "./walkHud.ts";
 
 // The message strip: what just happened, in a ui-panel across the top of the backdrop band's
 // flat sky, under the walk bar and clear of the cross street and the far road. It shows one

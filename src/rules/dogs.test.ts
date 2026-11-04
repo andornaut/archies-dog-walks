@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
 
-import { DOGS } from "../data/dogs";
-import type { Modifier, Zone } from "../data/types";
-import { activeModifier, testState } from "../testing/runState";
-import { TEST_TUNING } from "../testing/tuning";
+import { DOGS } from "../data/dogs.ts";
+import type { Modifier, Zone } from "../data/types.ts";
+import { activeModifier, testState } from "../testing/runState.ts";
+import { TEST_TUNING } from "../testing/tuning.ts";
 import {
   maxHearts,
   ownerMaxHearts,
@@ -12,8 +12,8 @@ import {
   packSizeRaise,
   sizeHearts,
   startHearts,
-} from "./dogs";
-import { zoneStats } from "./zones";
+} from "./dogs.ts";
+import { zoneStats } from "./zones.ts";
 
 const collar: readonly Modifier[] = [{ by: "luckyCollarMax", operation: "add", stat: "maxHearts" }];
 

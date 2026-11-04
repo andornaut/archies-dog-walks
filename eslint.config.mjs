@@ -35,7 +35,7 @@ const BOUNDARIES = [
 ];
 
 // The bounded contexts: the folders of src/ each context's files may import, besides its own.
-// "folder/module" allows one module of a folder: each is an import that a later move removes,
+// "folder/module.ts" allows one module of a folder: each is an import that a later move removes,
 // by moving the module into a context or the importer out of one. The boundaries above govern
 // src/testing/.
 const CONTEXTS = {
@@ -43,15 +43,15 @@ const CONTEXTS = {
   road: [
     "assets",
     "data",
-    "layout/crossStreet",
-    "layout/lanes",
-    "layout/projection",
-    "layout/roadRaster",
-    "layout/screenLayout",
-    "rules/route",
-    "rules/units",
+    "layout/crossStreet.ts",
+    "layout/lanes.ts",
+    "layout/projection.ts",
+    "layout/roadRaster.ts",
+    "layout/screenLayout.ts",
+    "rules/route.ts",
+    "rules/units.ts",
     "runner",
-    "state/runState",
+    "state/runState.ts",
     "tools/atlas/shared/png.ts",
   ],
   ui: ["assets"],

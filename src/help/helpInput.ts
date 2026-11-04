@@ -1,11 +1,11 @@
 import type { Point } from "@andornaut/game-kit/rect";
 
-import { gameData } from "../data";
-import { exceedsTapDistance, swipeDirection } from "../input/gestures";
-import { isConfirmKey, isPauseKey, laneDirectionForKey } from "../input/keyBindings";
-import { read } from "../rules/units";
-import { helpActionAt } from "./helpLayout";
-import type { HelpAction } from "./helpPaging";
+import { gameData } from "../data/index.ts";
+import { exceedsTapDistance, swipeDirection } from "../input/gestures.ts";
+import { isConfirmKey, isPauseKey, laneDirectionForKey } from "../input/keyBindings.ts";
+import { read } from "../rules/units.ts";
+import { helpActionAt } from "./helpLayout.ts";
+import type { HelpAction } from "./helpPaging.ts";
 
 // A swipe turns a page once it travels this far.
 const SWIPE_MIN_DISTANCE = 40;

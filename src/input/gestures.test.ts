@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 
-import { type ScreenConfig, screenLayout } from "../layout/screenLayout";
-import { advanceLaneControl, laneControlIn, steerLane } from "../runner/laneControl";
-import { type LaneMotion, stillInLane } from "../runner/laneMotion";
+import { type ScreenConfig, screenLayout } from "../layout/screenLayout.ts";
+import { advanceLaneControl, laneControlIn, steerLane } from "../runner/laneControl.ts";
+import { type LaneMotion, stillInLane } from "../runner/laneMotion.ts";
 import {
   type GestureAction,
   type GestureContext,
@@ -12,7 +12,7 @@ import {
   pointerDown,
   pointerMove,
   pointerUp,
-} from "./gestures";
+} from "./gestures.ts";
 
 // Road y 40-470 with its lanes at x 40-320, so five lanes are 56px wide and the centre is
 // x 180; dog cards x 0-120, 120-240 and 240-360 at y 470-560. A drag's first step is at 20px.

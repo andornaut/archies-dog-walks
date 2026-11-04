@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { artFileUrl } from "./artUrl";
+import { artFileUrl } from "./artUrl.ts";
 
 describe("artFileUrl", () => {
   const hashed = "atlas/run-0.png";

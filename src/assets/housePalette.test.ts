@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { ONE_STEP_DARKER, PALETTE_COLOURS, paletteColour } from "./housePalette";
+import { ONE_STEP_DARKER, PALETTE_COLOURS, paletteColour } from "./housePalette.ts";
 
 describe("the house ramp", () => {
   it("defines a path from every palette colour to ink without another cycle", () => {

@@ -1,7 +1,7 @@
-import type { DogId } from "../data/types";
-import type { EndReason } from "../state/runState";
-import { type Cents, cents } from "../units";
-import type { DogStats, SaveStats } from "./schema";
+import type { DogId } from "../data/types.ts";
+import type { EndReason } from "../state/runState.ts";
+import { type Cents, cents } from "../units.ts";
+import type { DogStats, SaveStats } from "./schema.ts";
 
 // A dog's stats before its first walk.
 export const ZERO_DOG_STATS: DogStats = { timesFired: 0, walks: 0, zonesFinished: 0 };

@@ -6,10 +6,10 @@ import {
   MOVER_SPRITE_KEYS,
   ROAD_SPRITE_SIZE,
   SKUNK_CLOUD_KEY,
-} from "../assets/spriteKeys";
-import type { EncounterId, GameData, MinorObstacleId, SkinId } from "../data/types";
-import { minorLook } from "../runner/obstacleLooks";
-import type { Silhouette } from "./packFormation";
+} from "../assets/spriteKeys.ts";
+import type { EncounterId, GameData, MinorObstacleId, SkinId } from "../data/types.ts";
+import { minorLook } from "../runner/obstacleLooks.ts";
+import type { Silhouette } from "./packFormation.ts";
 
 // What an obstacle draws on the road, which is what it collides as: each of its sprites and that
 // sprite's opaque pixels. An obstacle hits a dog or the walker where these visibly overlap them.

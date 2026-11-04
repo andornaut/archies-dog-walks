@@ -1,10 +1,10 @@
 import { describe, expect, it, vi } from "vitest";
 
-import { createSlotCandidateDomains, type SlotOwnerWallsToken } from "./slotCandidateDomains";
-import { prepareSlotKind } from "./slotCandidates";
-import { createSlotConstructionState, type SlotPocketScope } from "./slotConstraintState";
-import { createSlotPocketAdapter } from "./slotPocketAdapter";
-import { rowSpacing, type SpawnPlan, zoneRows } from "./spawning";
+import { createSlotCandidateDomains, type SlotOwnerWallsToken } from "./slotCandidateDomains.ts";
+import { prepareSlotKind } from "./slotCandidates.ts";
+import { createSlotConstructionState, type SlotPocketScope } from "./slotConstraintState.ts";
+import { createSlotPocketAdapter } from "./slotPocketAdapter.ts";
+import { rowSpacing, type SpawnPlan, zoneRows } from "./spawning.ts";
 
 const geometry: Omit<SpawnPlan<string>, "quotas"> = {
   cellInset: 5,

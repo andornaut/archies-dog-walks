@@ -1,6 +1,6 @@
 import type { GameObjects, Scene } from "phaser";
 
-import { PALETTE } from "../ui/palette";
+import { PALETTE } from "../ui/palette.ts";
 
 // Rejected choices retain their grey chrome and briefly emphasise their labels.
 export const REFUSE = { flashMs: 80, flashes: 4, shake: 3, shakeMs: 40 } as const;

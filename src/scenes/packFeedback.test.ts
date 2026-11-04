@@ -1,9 +1,9 @@
 import type { GameObjects, Scene } from "phaser";
 import { describe, expect, it } from "vitest";
 
-import { gameData } from "../data";
-import { floatValue } from "./buffCharm";
-import { playDodge, playForgiven } from "./packFeedback";
+import { gameData } from "../data/index.ts";
+import { floatValue } from "./buffCharm.ts";
+import { playDodge, playForgiven } from "./packFeedback.ts";
 
 // A drawn part: a label with its text, a box, or a container of parts in its own order.
 interface Part {

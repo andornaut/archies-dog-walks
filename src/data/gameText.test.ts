@@ -1,10 +1,10 @@
 import { type FieldTable, strayNames } from "@andornaut/game-kit/lines";
 import { describe, expect, it } from "vitest";
 
-import { HOME_TEXT_FIELDS } from "../home/homeText";
-import { MENU_TEXT_FIELDS } from "../home/menuText";
-import { RUN_TEXT_FIELDS } from "../hud/runText";
-import { gameData } from "./";
+import { HOME_TEXT_FIELDS } from "../home/homeText.ts";
+import { MENU_TEXT_FIELDS } from "../home/menuText.ts";
+import { RUN_TEXT_FIELDS } from "../hud/runText.ts";
+import { gameData } from "./index.ts";
 
 describe("the game's text", () => {
   it("uses only the names each home, menu and run line is given", () => {

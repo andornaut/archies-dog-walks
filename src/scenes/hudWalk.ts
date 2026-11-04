@@ -1,11 +1,11 @@
 import type { Point } from "@andornaut/game-kit/rect";
 import type { Events } from "phaser";
 
-import type { DogId } from "../data/types";
-import type { RunPause } from "../hud/topBar";
-import type { ExplainTarget } from "../hud/walkHud";
-import type { RunState } from "../state/runState";
-import type { PauseSceneData } from "./PauseScene";
+import type { DogId } from "../data/types.ts";
+import type { RunPause } from "../hud/topBar.ts";
+import type { ExplainTarget } from "../hud/walkHud.ts";
+import type { RunState } from "../state/runState.ts";
+import type { PauseSceneData } from "./PauseScene.ts";
 
 // What the HUD draws: the run, the dogs the open card affects, what a held press explains and
 // the pack's centre across the screen.

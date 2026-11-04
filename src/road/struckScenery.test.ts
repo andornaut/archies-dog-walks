@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 
-import type { WalkItem } from "../runner/walkItems";
-import { defined } from "../testing/defined";
-import { type KeptScenery, struckBy, struckNow } from "./struckScenery";
+import type { WalkItem } from "../runner/walkItems.ts";
+import { defined } from "../testing/defined.ts";
+import { type KeptScenery, struckBy, struckNow } from "./struckScenery.ts";
 
 const ROAD_BOTTOM = 600;
 const HIT_ZONE = 1;

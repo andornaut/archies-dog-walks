@@ -9,8 +9,8 @@ import {
   seconds,
 } from "@andornaut/game-kit/units";
 
-import type { LiveTuning, NumberKeys, UnitGroup } from "../data/types";
-import { type Cents, dollarsToCents } from "../units";
+import type { LiveTuning, NumberKeys, UnitGroup } from "../data/types.ts";
+import { type Cents, dollarsToCents } from "../units.ts";
 
 // What reading a value from each tuning group gives. Hearts values in the tuning are
 // amounts and caps, not meters, so they stay plain numbers until clampHearts.

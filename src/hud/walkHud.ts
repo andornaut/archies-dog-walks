@@ -3,17 +3,17 @@ import { clamp01 } from "@andornaut/game-kit/numbers";
 import { progressBarLayout } from "@andornaut/game-kit/progress";
 import { containsPoint, type Point, type Rect } from "@andornaut/game-kit/rect";
 
-import { gameData } from "../data";
-import { SCREEN_CONFIG } from "../data/screen";
-import type { DebuffId, DogId, GameData } from "../data/types";
-import type { ScreenLayout } from "../layout/screenLayout";
-import { walkLength } from "../rules/route";
-import { zoneLength } from "../runner/walk";
-import type { RunState } from "../state/runState";
-import { GAME_PROGRESS, GAME_PROGRESS_STYLE } from "../ui/progressBar";
-import { TOP_BAR_FACE, TOP_BAR_WELL, wellCapsTop } from "../ui/topBarTrim";
-import { type EffectItem, maxEffects } from "./effectIcons";
-import { heartRows } from "./hudView";
+import { gameData } from "../data/index.ts";
+import { SCREEN_CONFIG } from "../data/screen.ts";
+import type { DebuffId, DogId, GameData } from "../data/types.ts";
+import type { ScreenLayout } from "../layout/screenLayout.ts";
+import { walkLength } from "../rules/route.ts";
+import { zoneLength } from "../runner/walk.ts";
+import type { RunState } from "../state/runState.ts";
+import { GAME_PROGRESS, GAME_PROGRESS_STYLE } from "../ui/progressBar.ts";
+import { TOP_BAR_FACE, TOP_BAR_WELL, wellCapsTop } from "../ui/topBarTrim.ts";
+import { type EffectItem, maxEffects } from "./effectIcons.ts";
+import { heartRows } from "./hudView.ts";
 
 // The walk screen's HUD: the walk bar (ui-walk-bar) across the top, a full-width bar per active
 // debuff under it, a card per dog slot along the bottom and the neighbourhood's progress line

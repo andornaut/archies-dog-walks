@@ -1,6 +1,6 @@
-import type { MoverDraws, MoverVisibilityProof } from "./moverPlanning";
-import type { SpawnRejection } from "./spawnAdmission";
-import type { FeasibilityObserver } from "./spawnFeasibilityDiagnostics";
+import type { MoverDraws, MoverVisibilityProof } from "./moverPlanning.ts";
+import type { SpawnRejection } from "./spawnAdmission.ts";
+import type { FeasibilityObserver } from "./spawnFeasibilityDiagnostics.ts";
 
 // Distances are cumulative road scroll. A reservation covers one logical obstacle,
 // including its cue and any scenery left after contact.

@@ -1,8 +1,8 @@
 import { wrapWords } from "@andornaut/game-kit/lines";
 import { describe, expect, it } from "vitest";
 
-import { bodyTextWidth } from "../testing/bodyFont";
-import { fontInk, laidChars } from "../testing/fontInk";
+import { bodyTextWidth } from "../testing/bodyFont.ts";
+import { fontInk, laidChars } from "../testing/fontInk.ts";
 import {
   inkWithPills,
   inPill,
@@ -11,7 +11,7 @@ import {
   pillIndex,
   pillOpener,
   pillRows,
-} from "./namePills";
+} from "./namePills.ts";
 
 const NAME = "Running shoes";
 const TEXT = `${inPill(2, NAME)} faster lane changes`;

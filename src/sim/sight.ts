@@ -1,7 +1,7 @@
-import type { Movement } from "../data/types";
-import { read } from "../rules/units";
-import { approachOutcomes } from "../runner/approach";
-import { hopShapes, SIDESTEPS } from "../runner/moverPlanning";
+import type { Movement } from "../data/types.ts";
+import { read } from "../rules/units.ts";
+import { approachOutcomes } from "../runner/approach.ts";
+import { hopShapes, SIDESTEPS } from "../runner/moverPlanning.ts";
 import {
   cuedStep,
   hasStopped,
@@ -11,12 +11,12 @@ import {
   type MoverStep,
   type StepShape,
   turnedBack,
-} from "../runner/movers";
-import { STEP_SHAPES } from "../runner/moverSpecs";
-import { shyOutcomes } from "../runner/shy";
-import { signaturePlace } from "../runner/signaturePaths";
-import { type RoadGeometry, type WalkData } from "../runner/walk";
-import { movementOf, type WalkItem } from "../runner/walkItems";
+} from "../runner/movers.ts";
+import { STEP_SHAPES } from "../runner/moverSpecs.ts";
+import { shyOutcomes } from "../runner/shy.ts";
+import { signaturePlace } from "../runner/signaturePaths.ts";
+import { type RoadGeometry, type WalkData } from "../runner/walk.ts";
+import { movementOf, type WalkItem } from "../runner/walkItems.ts";
 
 // How a bot reads a mover: by sight, only what a player sees of it, or by foresight, its whole
 // planned path, every way it may yet choose its moves included.

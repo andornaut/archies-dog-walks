@@ -5,19 +5,19 @@ import { fittingText, type TextFitStyle } from "@andornaut/game-kit/text/textFit
 import { buildLabel } from "@andornaut/game-kit/web/build/buildLabel";
 import { describe, expect, it } from "vitest";
 
-import { gameData } from "../data";
-import { SCREEN_CONFIG } from "../data/screen";
-import { DEFAULT_SETTINGS } from "../save/schema";
-import { defined } from "../testing/defined";
-import { fitInFont, fontFileMetrics, gameGlyphs, inkWidth, placedInk } from "../testing/fontInk";
-import { inside } from "../testing/rects";
-import { SETTINGS_EXPORT_ROWS } from "../tools/layoutExport";
-import { barTitleRoom } from "../ui/barTitle";
-import { closeFace } from "../ui/closeControl";
-import { LABEL_HELP_GAP } from "../ui/labelHelpGap";
-import { cardTitleRow } from "./homeLayout";
-import { MENU_TEXT_FIELDS } from "./menuText";
-import { MODAL, modalActionWidth, modalTitleLayout } from "./modalLayout";
+import { gameData } from "../data/index.ts";
+import { SCREEN_CONFIG } from "../data/screen.ts";
+import { DEFAULT_SETTINGS } from "../save/schema.ts";
+import { defined } from "../testing/defined.ts";
+import { fitInFont, fontFileMetrics, gameGlyphs, inkWidth, placedInk } from "../testing/fontInk.ts";
+import { inside } from "../testing/rects.ts";
+import { SETTINGS_EXPORT_ROWS } from "../tools/layoutExport.ts";
+import { barTitleRoom } from "../ui/barTitle.ts";
+import { closeFace } from "../ui/closeControl.ts";
+import { LABEL_HELP_GAP } from "../ui/labelHelpGap.ts";
+import { cardTitleRow } from "./homeLayout.ts";
+import { MENU_TEXT_FIELDS } from "./menuText.ts";
+import { MODAL, modalActionWidth, modalTitleLayout } from "./modalLayout.ts";
 import {
   INSTALL_STEPS,
   INSTALL_STEPS_FIT,
@@ -33,7 +33,7 @@ import {
   volumeStepAt,
   volumeStepForKey,
   volumeSteps,
-} from "./settings";
+} from "./settings.ts";
 
 // The first pixel row under a card's title row.
 const belowTitleRow = (card: Rect): number => {

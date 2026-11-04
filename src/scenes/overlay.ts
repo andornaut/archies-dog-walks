@@ -6,12 +6,12 @@ import {
 import { catchOutsideTaps } from "@andornaut/game-kit/input/phaser/catchOutsideTaps";
 import type { Events, Scene } from "phaser";
 
-import { gameData } from "../data";
-import { openGuard } from "../input/openGuard";
-import { PHONE_EVENTS } from "../pwa";
-import { read } from "../rules/units";
-import { listenPagePresses } from "./pagePresses";
-import type { SceneKey } from "./sceneKeys";
+import { gameData } from "../data/index.ts";
+import { openGuard } from "../input/openGuard.ts";
+import { PHONE_EVENTS } from "../pwa/index.ts";
+import { read } from "../rules/units.ts";
+import { listenPagePresses } from "./pagePresses.ts";
+import type { SceneKey } from "./sceneKeys.ts";
 
 // Emitted on game.events, with whether sound is now muted, when a top bar's Sound button is
 // tapped over an overlay (the home top bar's, or the walk bar's), so the screen under it and the

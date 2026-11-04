@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 
-import { TUNING } from "../data/tuning";
-import { read } from "../rules/units";
-import { GRACE_BLINK, graceAlpha } from "./graceBlink";
+import { TUNING } from "../data/tuning.ts";
+import { read } from "../rules/units.ts";
+import { GRACE_BLINK, graceAlpha } from "./graceBlink.ts";
 
 const WINDOW = read(TUNING, "seconds", "collisionGrace");
 const { blinkSeconds, dimAlpha } = GRACE_BLINK;

@@ -2,9 +2,9 @@ import { seededRandom } from "@andornaut/game-kit/random";
 import { keysOf } from "@andornaut/game-kit/records";
 import { describe, expect, it } from "vitest";
 
-import { MINOR_OBSTACLES } from "../data/minorObstacles";
-import { LANE_COUNT } from "../data/screen";
-import { TUNING } from "../data/tuning";
+import { MINOR_OBSTACLES } from "../data/minorObstacles.ts";
+import { LANE_COUNT } from "../data/screen.ts";
+import { TUNING } from "../data/tuning.ts";
 import type {
   EncounterId,
   MinorObstacleId,
@@ -12,12 +12,17 @@ import type {
   ObstacleEncounterId,
   StopLanes,
   ZoneId,
-} from "../data/types";
-import { WORLD } from "../data/world";
-import { read } from "../rules/units";
-import { newRun, type PackDogs } from "../state/runState";
-import { moverFixture } from "../testing/moverFixtures";
-import { type HopMovement, hoppingInstead, plannerStreams, sharedWorld } from "../testing/movers";
+} from "../data/types.ts";
+import { WORLD } from "../data/world.ts";
+import { read } from "../rules/units.ts";
+import { newRun, type PackDogs } from "../state/runState.ts";
+import { moverFixture } from "../testing/moverFixtures.ts";
+import {
+  type HopMovement,
+  hoppingInstead,
+  plannerStreams,
+  sharedWorld,
+} from "../testing/movers.ts";
 import {
   FASTEST_WALKER,
   GAME_ROAD,
@@ -30,18 +35,18 @@ import {
   type Real,
   realRun,
   ZONE_IDS,
-} from "../testing/planner";
-import { heartsByDog } from "../testing/runState";
-import { atPack, data, geometry, inLane, step, walkWith, withHearts } from "../testing/walk";
-import { captureZoneInput, planZoneForSeed } from "../testing/zonePlan";
-import { assignedMovement } from "./movementAssignments";
+} from "../testing/planner.ts";
+import { heartsByDog } from "../testing/runState.ts";
+import { atPack, data, geometry, inLane, step, walkWith, withHearts } from "../testing/walk.ts";
+import { captureZoneInput, planZoneForSeed } from "../testing/zonePlan.ts";
+import { assignedMovement } from "./movementAssignments.ts";
 import {
   DART_VERGE_LANES,
   dartOutcome,
   drawMover,
   hopShapes,
   moverPlacements,
-} from "./moverPlanning";
+} from "./moverPlanning.ts";
 import {
   inMotion,
   isPausing,
@@ -50,13 +55,13 @@ import {
   moverPlace,
   type MoverStep,
   moverTell,
-} from "./movers";
-import { moverMovement, moverSpec } from "./moverSpecs";
-import { makeSlotJobs } from "./slotJobs";
-import { blockingLength, rowSpacing } from "./spawning";
-import { itemHeight, startRoad, stepWalk, type Walk, walkScrollSpeed } from "./walk";
-import { blocksLane, footprintOf, isPullObstacle, type WalkItem } from "./walkItems";
-import { compileZoneSlotInput } from "./zoneSlotInput";
+} from "./movers.ts";
+import { moverMovement, moverSpec } from "./moverSpecs.ts";
+import { makeSlotJobs } from "./slotJobs.ts";
+import { blockingLength, rowSpacing } from "./spawning.ts";
+import { itemHeight, startRoad, stepWalk, type Walk, walkScrollSpeed } from "./walk.ts";
+import { blocksLane, footprintOf, isPullObstacle, type WalkItem } from "./walkItems.ts";
+import { compileZoneSlotInput } from "./zoneSlotInput.ts";
 
 // A crosser 2.5 lanes in from the left edge 32px of scroll after its cue's 50px, its hit
 // box then just inside the pack's band.

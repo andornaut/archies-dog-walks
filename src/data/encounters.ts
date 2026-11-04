@@ -1,4 +1,4 @@
-import type { Encounter, EncounterId } from "./types";
+import type { Encounter, EncounterId } from "./types.ts";
 
 // Things the pack bumps into: obstacles by accident and lucky finds on purpose. A card
 // obstacle opens a card for the whole pack with its options shown left to right in this order;

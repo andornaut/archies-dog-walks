@@ -1,8 +1,8 @@
-import type { SpawnSlotCounts, SpawnSlotRole } from "../data/types";
-import { canonicalJson } from "./canonicalJson";
-import { moverLeavesMinimumLanes } from "./laneAlternatives";
-import { moverPlacementsWithWork } from "./moverPlanning";
-import { compileSlotKindDomain, describeSlotKind, slotMotionSelections } from "./slotCandidates";
+import type { SpawnSlotCounts, SpawnSlotRole } from "../data/types.ts";
+import { canonicalJson } from "./canonicalJson.ts";
+import { moverLeavesMinimumLanes } from "./laneAlternatives.ts";
+import { moverPlacementsWithWork } from "./moverPlanning.ts";
+import { compileSlotKindDomain, describeSlotKind, slotMotionSelections } from "./slotCandidates.ts";
 import {
   SLOT_ROLES,
   type SlotConfiguration,
@@ -10,12 +10,12 @@ import {
   slotFootprint,
   type SlotKind,
   type SlotSource,
-} from "./slotConfig";
-import { quietCoverage } from "./slotCoverage";
-import { describeSlotDelivery, type SlotOmission, type SlotPartialAudit } from "./slotDelivery";
-import { slotMotionStreams, type SlotSeedContext } from "./slotEntropy";
-import { makeSlotJobs } from "./slotJobs";
-import { materialiseSlotPlan, type SlotAssignment } from "./slotPlan";
+} from "./slotConfig.ts";
+import { quietCoverage } from "./slotCoverage.ts";
+import { describeSlotDelivery, type SlotOmission, type SlotPartialAudit } from "./slotDelivery.ts";
+import { slotMotionStreams, type SlotSeedContext } from "./slotEntropy.ts";
+import { makeSlotJobs } from "./slotJobs.ts";
+import { materialiseSlotPlan, type SlotAssignment } from "./slotPlan.ts";
 import {
   blockingLength,
   type PlannedSpawns,
@@ -23,8 +23,8 @@ import {
   rowSpacing,
   type SpawnPlan,
   type SpawnQuota,
-} from "./spawning";
-import { auditSpawnPlan, type SpawnAudit } from "./spawnValidation";
+} from "./spawning.ts";
+import { auditSpawnPlan, type SpawnAudit } from "./spawnValidation.ts";
 
 function sameJson(a: unknown, b: unknown): boolean {
   return canonicalJson(a) === canonicalJson(b);

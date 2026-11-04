@@ -4,15 +4,15 @@ import { randomStream } from "@andornaut/game-kit/random";
 import { keysOf } from "@andornaut/game-kit/records";
 import { describe, expect, it } from "vitest";
 
-import shippedManifest from "../../public/art/manifest.json";
-import { parseManifest } from "../assets/manifest";
-import { ROAD_SPRITE_SIZE } from "../assets/spriteKeys";
-import { gameData } from "../data";
-import { ROAD_CAMERA, SCREEN_LAYOUT } from "../data/screen";
-import type { AmbientMover, ZoneId } from "../data/types";
-import { CROSS_STREET } from "../layout/crossStreet";
-import { scaleAtY } from "../layout/projection";
-import { walkProjection } from "../runner/walkGeometry";
+import shippedManifest from "../../public/art/manifest.json" with { type: "json" };
+import { parseManifest } from "../assets/manifest.ts";
+import { ROAD_SPRITE_SIZE } from "../assets/spriteKeys.ts";
+import { gameData } from "../data/index.ts";
+import { ROAD_CAMERA, SCREEN_LAYOUT } from "../data/screen.ts";
+import type { AmbientMover, ZoneId } from "../data/types.ts";
+import { CROSS_STREET } from "../layout/crossStreet.ts";
+import { scaleAtY } from "../layout/projection.ts";
+import { walkProjection } from "../runner/walkGeometry.ts";
 import {
   AMBIENT_LIMIT,
   type AmbientDeps,
@@ -27,8 +27,8 @@ import {
   skyRows,
   startAmbient,
   stepAmbient,
-} from "./ambient";
-import { curbBand, VERGES } from "./roadside";
+} from "./ambient.ts";
+import { curbBand, VERGES } from "./roadside.ts";
 
 const LAYOUT = SCREEN_LAYOUT;
 const PROJECTION = walkProjection(ROAD_CAMERA, LAYOUT.road);

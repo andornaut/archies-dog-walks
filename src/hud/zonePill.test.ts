@@ -1,12 +1,12 @@
 import { keysOf } from "@andornaut/game-kit/records";
 import { describe, expect, it } from "vitest";
 
-import { gameData } from "../data";
-import { SCREEN_LAYOUT } from "../data/screen";
-import { fontInk } from "../testing/fontInk";
-import { inside } from "../testing/rects";
-import { debuffBarRects, zoneProgressText } from "./walkHud";
-import { ZONE_PILL, zonePillLayout } from "./zonePill";
+import { gameData } from "../data/index.ts";
+import { SCREEN_LAYOUT } from "../data/screen.ts";
+import { fontInk } from "../testing/fontInk.ts";
+import { inside } from "../testing/rects.ts";
+import { debuffBarRects, zoneProgressText } from "./walkHud.ts";
+import { ZONE_PILL, zonePillLayout } from "./zonePill.ts";
 
 const { screen, topBar } = SCREEN_LAYOUT;
 const inkOf = (text: string) => {

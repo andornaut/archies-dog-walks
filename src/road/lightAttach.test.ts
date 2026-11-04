@@ -1,13 +1,13 @@
 import type { Rect } from "@andornaut/game-kit/rect";
 import { describe, expect, it, vi } from "vitest";
 
-import type { ZoneId } from "../data/types";
+import type { ZoneId } from "../data/types.ts";
 import {
   anchorSprite,
   type LightAnchor,
   newAttachedLightPlaces,
   placeAttachedLights,
-} from "./lightPlaces";
+} from "./lightPlaces.ts";
 
 // Art's lights, with test sprites: one carrying a pulsing glow in Yonge Street alone and a cone
 // set to point left, one whose cone faces the road, one drawn facing the pack with a headlamp

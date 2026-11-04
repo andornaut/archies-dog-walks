@@ -8,8 +8,8 @@ import {
   playMusic,
   stopAllMusic,
   trackVolume,
-} from "../audio/music";
-import { shouldResumeAudio } from "../audio/resume";
+} from "../audio/music.ts";
+import { shouldResumeAudio } from "../audio/resume.ts";
 import {
   admitContactPlay,
   admitPlay,
@@ -22,8 +22,8 @@ import {
   soundKeyFor,
   soundKeysOf,
   type Volumes,
-} from "../audio/sound";
-import { AUDIO_UNLOCK_EVENTS, PHONE_EVENTS } from "../pwa";
+} from "../audio/sound.ts";
+import { AUDIO_UNLOCK_EVENTS, PHONE_EVENTS } from "../pwa/index.ts";
 
 // Every concrete sound class (Web Audio, HTML5 audio, no audio) has setVolume; BaseSound does not.
 type AdjustableSound = Sound.BaseSound & { setVolume(value: number): unknown };

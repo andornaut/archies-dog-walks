@@ -4,18 +4,18 @@ import { STEP_SECONDS } from "@andornaut/game-kit/clock/fixedStep";
 import { randomStream } from "@andornaut/game-kit/random";
 import { describe, expect, it } from "vitest";
 
-import shippedManifest from "../../public/art/manifest.json";
-import { minorObstacleSpriteKey } from "../assets/spriteKeys";
-import { gameData } from "../data";
-import { LANE_COUNT, ROAD_CAMERA, SCREEN_LAYOUT } from "../data/screen";
-import type { MinorObstacleId } from "../data/types";
-import { laneCentreXs } from "../layout/lanes";
-import { currentZone } from "../rules/route";
-import { read } from "../rules/units";
-import { DART_VERGE_LANES } from "../runner/moverPlanning";
-import { moverPlace } from "../runner/movers";
-import { minorLook } from "../runner/obstacleLooks";
-import { screenRoadGeometry } from "../runner/screenGeometry";
+import shippedManifest from "../../public/art/manifest.json" with { type: "json" };
+import { minorObstacleSpriteKey } from "../assets/spriteKeys.ts";
+import { gameData } from "../data/index.ts";
+import { LANE_COUNT, ROAD_CAMERA, SCREEN_LAYOUT } from "../data/screen.ts";
+import type { MinorObstacleId } from "../data/types.ts";
+import { laneCentreXs } from "../layout/lanes.ts";
+import { currentZone } from "../rules/route.ts";
+import { read } from "../rules/units.ts";
+import { DART_VERGE_LANES } from "../runner/moverPlanning.ts";
+import { moverPlace } from "../runner/movers.ts";
+import { minorLook } from "../runner/obstacleLooks.ts";
+import { screenRoadGeometry } from "../runner/screenGeometry.ts";
 import {
   chooseCard,
   runStreams,
@@ -23,12 +23,12 @@ import {
   type SessionEvent,
   startSession,
   stepSession,
-} from "../runner/session";
-import { startRoad, zoneLength } from "../runner/walk";
-import { walkProjection } from "../runner/walkGeometry";
-import { type WalkItem } from "../runner/walkItems";
-import { newRun } from "../state/runState";
-import { defined } from "../testing/defined";
+} from "../runner/session.ts";
+import { startRoad, zoneLength } from "../runner/walk.ts";
+import { walkProjection } from "../runner/walkGeometry.ts";
+import { type WalkItem } from "../runner/walkItems.ts";
+import { newRun } from "../state/runState.ts";
+import { defined } from "../testing/defined.ts";
 import {
   type Distraction,
   type DistractionDeps,
@@ -41,13 +41,13 @@ import {
   planDistractions,
   startDistractions,
   stepDistractions,
-} from "./distractions";
+} from "./distractions.ts";
 import {
   eachRoadsideProp,
   ROADSIDE,
   type RoadsideTable,
   START_STRIP_LENGTH,
-} from "./roadsideProps";
+} from "./roadsideProps.ts";
 
 const LAYOUT = SCREEN_LAYOUT;
 const CENTRE_X = walkProjection(ROAD_CAMERA, LAYOUT.road).centreX;

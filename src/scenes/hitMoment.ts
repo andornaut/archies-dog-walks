@@ -1,16 +1,16 @@
 import { type Point, type Rect, rectAboveIn } from "@andornaut/game-kit/rect";
 import type { GameObjects, Scene } from "phaser";
 
-import { kebabCase } from "../assets/spriteKeys";
-import { SCREEN_CONFIG } from "../data/screen";
-import type { Encounter, EncounterId } from "../data/types";
-import { encounterFlashColour } from "../layout/bumpFlash";
-import { burstWordPlace, COMIC_WORDS } from "../layout/comicWords";
-import { PALETTE } from "../ui/palette";
-import { addDisplayText } from "../ui/phaser/displayText";
-import { letterEffect, loadedComicWordWidth } from "./comicWord";
-import { playEffect } from "./sprites";
-import { addNineSlice, tagFrame } from "./uiKit";
+import { kebabCase } from "../assets/spriteKeys.ts";
+import { SCREEN_CONFIG } from "../data/screen.ts";
+import type { Encounter, EncounterId } from "../data/types.ts";
+import { encounterFlashColour } from "../layout/bumpFlash.ts";
+import { burstWordPlace, COMIC_WORDS } from "../layout/comicWords.ts";
+import { PALETTE } from "../ui/palette.ts";
+import { addDisplayText } from "../ui/phaser/displayText.ts";
+import { letterEffect, loadedComicWordWidth } from "./comicWord.ts";
+import { playEffect } from "./sprites.ts";
+import { addNineSlice, tagFrame } from "./uiKit.ts";
 
 // An encounter hit's moment, played over the hit stop before its card: a burst over the pack
 // lettered with the obstacle's word, a flash down both edges of the field, the encounter's

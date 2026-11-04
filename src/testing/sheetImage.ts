@@ -1,6 +1,6 @@
 import { blankImage, type RgbaImage } from "@andornaut/art-kit/rgbaImage";
 
-import type { SourceTexture } from "../tools/atlas/atlasLayout";
+import type { SourceTexture } from "../tools/atlas/atlasLayout.ts";
 
 // A sprite sheet drawn from text, its frames side by side and named by index: "." is a clear
 // pixel and any other character an opaque colour of its own.

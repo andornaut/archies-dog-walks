@@ -1,15 +1,15 @@
 import { animationKey } from "@andornaut/game-kit/art/aseprite";
 
-import { moverBodyTag } from "../../assets/spriteKeys";
-import { animationPhaseAt } from "../../layout/animationPhase";
-import { project } from "../../layout/projection";
-import { facesLeft, inMotion, type MoverOnRoad } from "../../runner/movers";
-import { signatureComponentProgress, signaturePlace } from "../../runner/signaturePaths";
-import type { WalkItem } from "../../runner/walkItems";
-import { playTag, showAtDepth, spriteMetrics } from "../sprites";
-import type { ItemView } from "./itemViews";
-import { DEPTH, laneX, PROJECTION, showOnRoad } from "./stage";
-import type { StandFrame } from "./standPart";
+import { moverBodyTag } from "../../assets/spriteKeys.ts";
+import { animationPhaseAt } from "../../layout/animationPhase.ts";
+import { project } from "../../layout/projection.ts";
+import { facesLeft, inMotion, type MoverOnRoad } from "../../runner/movers.ts";
+import { signatureComponentProgress, signaturePlace } from "../../runner/signaturePaths.ts";
+import type { WalkItem } from "../../runner/walkItems.ts";
+import { playTag, showAtDepth, spriteMetrics } from "../sprites.ts";
+import type { ItemView } from "./itemViews.ts";
+import { DEPTH, laneX, PROJECTION, showOnRoad } from "./stage.ts";
+import type { StandFrame } from "./standPart.ts";
 
 // A true trail draws each component on its own delayed path position, baseline and phase.
 // Cue sprites remain in the standard slots after the leader and are drawn by moverView.

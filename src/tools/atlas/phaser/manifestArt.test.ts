@@ -6,11 +6,11 @@ import { keysOf } from "@andornaut/game-kit/records";
 import type { Scene, Textures } from "phaser";
 import { describe, expect, it } from "vitest";
 
-import type { AssetManifest } from "../../../assets/manifest";
-import { addAtlasFrame, smoothDepthArt } from "../../../assets/phaser/manifestArt";
-import { sheetFromRows } from "../../../testing/sheetImage";
-import { compactFrames, drawPage } from "../atlasBuild";
-import { layoutAtlases } from "../atlasLayout";
+import type { AssetManifest } from "../../../assets/manifest.ts";
+import { addAtlasFrame, smoothDepthArt } from "../../../assets/phaser/manifestArt.ts";
+import { sheetFromRows } from "../../../testing/sheetImage.ts";
+import { compactFrames, drawPage } from "../atlasBuild.ts";
+import { layoutAtlases } from "../atlasLayout.ts";
 
 // Phaser's frame and its image render nodes, which place a sprite's quad and pick its texels,
 // loaded from its sources: the package's bundle needs a browser.

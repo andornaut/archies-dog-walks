@@ -2,9 +2,9 @@ import { keysOf } from "@andornaut/game-kit/records";
 import { containsPoint, type Rect, rectsOverlap } from "@andornaut/game-kit/rect";
 import { describe, expect, it } from "vitest";
 
-import { gameData } from "../data";
-import { SCREEN_CONFIG } from "../data/screen";
-import { minorLook } from "../runner/obstacleLooks";
+import { gameData } from "../data/index.ts";
+import { SCREEN_CONFIG } from "../data/screen.ts";
+import { minorLook } from "../runner/obstacleLooks.ts";
 import {
   BUMP_FLASH,
   bumpBorder,
@@ -12,7 +12,7 @@ import {
   bumpOverscan,
   type BumpSource,
   FLASH_COLOURS,
-} from "./bumpFlash";
+} from "./bumpFlash.ts";
 
 const MINOR_OBSTACLES = keysOf(gameData.minorObstacles);
 // Every encounter a pack bumps into: an obstacle that opens a card or applies on contact, not a

@@ -2,9 +2,9 @@ import { isOutside } from "@andornaut/game-kit/input/outsideTap";
 import { containsPoint, type Rect } from "@andornaut/game-kit/rect";
 import { describe, expect, it } from "vitest";
 
-import { SCREEN_LAYOUT } from "../data/screen";
-import { TOP_BAR_BUTTONS } from "../hud/topBar";
-import { walkBarLayout } from "../hud/walkHud";
+import { SCREEN_LAYOUT } from "../data/screen.ts";
+import { TOP_BAR_BUTTONS } from "../hud/topBar.ts";
+import { walkBarLayout } from "../hud/walkHud.ts";
 import {
   homeBackAction,
   type HomeBarAction,
@@ -12,8 +12,8 @@ import {
   homeBarButtonAt,
   overlayRegion,
   regionOutside,
-} from "./homeBar";
-import { HOME_BAR_BUTTONS, HOME_LAYOUT, type HomeBarButton, homeBarButtons } from "./homeLayout";
+} from "./homeBar.ts";
+import { HOME_BAR_BUTTONS, HOME_LAYOUT, type HomeBarButton, homeBarButtons } from "./homeLayout.ts";
 
 const centre = (rect: Rect) => ({ x: rect.x + rect.width / 2, y: rect.y + rect.height / 2 });
 const BAR_BOTTOM = HOME_LAYOUT.topBar.height - 1;

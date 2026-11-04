@@ -1,22 +1,22 @@
 import { keysOf } from "@andornaut/game-kit/records";
 import { describe, expect, it } from "vitest";
 
-import { DEBUFFS } from "../data/debuffs";
-import { DOGS } from "../data/dogs";
-import { DOG_SLOTS } from "../data/dogSlots";
-import { ENCOUNTERS } from "../data/encounters";
-import { HOME_TEXT } from "../data/homeText";
-import { QUIPS } from "../data/quips";
-import { SHOP_GEAR } from "../data/shop";
-import type { DogId, GearId, LiveTuning } from "../data/types";
-import { WORLD } from "../data/world";
-import { price, unlockPrice } from "../rules/shop";
-import { read, readTable } from "../rules/units";
-import type { Owned } from "../save/schema";
-import { defined } from "../testing/defined";
-import { newPlayerSave, STARTER_DOGS } from "../testing/saves";
-import { TEST_TUNING } from "../testing/tuning";
-import { cents } from "../units";
+import { DEBUFFS } from "../data/debuffs.ts";
+import { DOGS } from "../data/dogs.ts";
+import { DOG_SLOTS } from "../data/dogSlots.ts";
+import { ENCOUNTERS } from "../data/encounters.ts";
+import { HOME_TEXT } from "../data/homeText.ts";
+import { QUIPS } from "../data/quips.ts";
+import { SHOP_GEAR } from "../data/shop.ts";
+import type { DogId, GearId, LiveTuning } from "../data/types.ts";
+import { WORLD } from "../data/world.ts";
+import { price, unlockPrice } from "../rules/shop.ts";
+import { read, readTable } from "../rules/units.ts";
+import type { Owned } from "../save/schema.ts";
+import { defined } from "../testing/defined.ts";
+import { newPlayerSave, STARTER_DOGS } from "../testing/saves.ts";
+import { TEST_TUNING } from "../testing/tuning.ts";
+import { cents } from "../units.ts";
 import {
   buy,
   type BuyResult,
@@ -38,7 +38,7 @@ import {
   signedShortDollarText,
   tapDog,
   tapGear,
-} from "./home";
+} from "./home.ts";
 
 const emptyLoadout: HomeLoadout = { dogs: [], gear: null };
 

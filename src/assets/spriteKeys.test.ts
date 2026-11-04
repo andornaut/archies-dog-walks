@@ -2,12 +2,12 @@ import { animationKey } from "@andornaut/game-kit/art/aseprite";
 import { keysOf } from "@andornaut/game-kit/records";
 import { describe, expect, it } from "vitest";
 
-import manifest from "../../public/art/manifest.json";
-import { MINOR_OBSTACLES } from "../data/minorObstacles";
-import { SHOP_GEAR } from "../data/shop";
-import type { MinorLookId, MinorObstacle, SkinId } from "../data/types";
-import { WORLD } from "../data/world";
-import { animationSpecs } from "./asepriteAnimations";
+import manifest from "../../public/art/manifest.json" with { type: "json" };
+import { MINOR_OBSTACLES } from "../data/minorObstacles.ts";
+import { SHOP_GEAR } from "../data/shop.ts";
+import type { MinorLookId, MinorObstacle, SkinId } from "../data/types.ts";
+import { WORLD } from "../data/world.ts";
+import { animationSpecs } from "./asepriteAnimations.ts";
 import {
   backdropKey,
   CARD_FRAME_KEY,
@@ -27,7 +27,7 @@ import {
   WARNING_UP_TAG,
   WARNING_WANDER_KEY,
   zoneIconKey,
-} from "./spriteKeys";
+} from "./spriteKeys.ts";
 
 const spriteKeys = new Set(manifest.sprites.map(({ key }) => key));
 const images = new Set(manifest.images.map(({ key }) => key));

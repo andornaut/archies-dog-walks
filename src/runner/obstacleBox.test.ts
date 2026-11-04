@@ -6,20 +6,20 @@ import { getOrInsertComputed } from "@andornaut/game-kit/maps";
 import { keysOf } from "@andornaut/game-kit/records";
 import { describe, expect, it } from "vitest";
 
-import { depthVariantKey } from "../assets/spriteKeys";
-import { gameData } from "../data";
-import { LANE_COUNT, ROAD_CAMERA, SCREEN_LAYOUT } from "../data/screen";
-import type { DogId, EncounterId, MinorObstacleId } from "../data/types";
-import { type DepthArt, depthDraw } from "../layout/depthScale";
-import { obstacleParts } from "../layout/obstacleArt";
-import { everyPack, PART_INSET } from "../layout/packFormation";
-import { project, SCALE_STEPS, screenYAt } from "../layout/projection";
-import { testState } from "../testing/runState";
-import { spriteSource } from "../tools/atlas/atlasLayout";
-import { type DogBox, hitDog, type LanedBox, type ScaledBox } from "./collision";
-import { stillInLane } from "./laneMotion";
-import { drawnObstacleBox } from "./obstacleBox";
-import { screenRoadGeometry } from "./screenGeometry";
+import { depthVariantKey } from "../assets/spriteKeys.ts";
+import { gameData } from "../data/index.ts";
+import { LANE_COUNT, ROAD_CAMERA, SCREEN_LAYOUT } from "../data/screen.ts";
+import type { DogId, EncounterId, MinorObstacleId } from "../data/types.ts";
+import { type DepthArt, depthDraw } from "../layout/depthScale.ts";
+import { obstacleParts } from "../layout/obstacleArt.ts";
+import { everyPack, PART_INSET } from "../layout/packFormation.ts";
+import { project, SCALE_STEPS, screenYAt } from "../layout/projection.ts";
+import { testState } from "../testing/runState.ts";
+import { spriteSource } from "../tools/atlas/atlasLayout.ts";
+import { type DogBox, hitDog, type LanedBox, type ScaledBox } from "./collision.ts";
+import { stillInLane } from "./laneMotion.ts";
+import { drawnObstacleBox } from "./obstacleBox.ts";
+import { screenRoadGeometry } from "./screenGeometry.ts";
 import {
   hitReach,
   itemHeight,
@@ -28,9 +28,9 @@ import {
   packBoxes,
   plannedCellInset,
   type RoadGeometry,
-} from "./walk";
-import { walkProjection } from "./walkGeometry";
-import { footprintOf } from "./walkItems";
+} from "./walk.ts";
+import { walkProjection } from "./walkGeometry.ts";
+import { footprintOf } from "./walkItems.ts";
 
 type Kind = EncounterId | MinorObstacleId;
 

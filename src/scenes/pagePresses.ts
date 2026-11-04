@@ -9,8 +9,8 @@ import {
 } from "@andornaut/game-kit/web/input/dom/pagePresses";
 import type { Scene } from "phaser";
 
-import type { Press } from "../input/pointerTracking";
-import { pageFrameTurn } from "../pwa";
+import type { Press } from "../input/pointerTracking.ts";
+import { pageFrameTurn } from "../pwa/index.ts";
 
 // What a press on the bare page does, at points in game pixels, unclamped. onBare: whether the
 // release came on the bare page.

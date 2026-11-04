@@ -1,15 +1,15 @@
 import { describe, expect, it } from "vitest";
 
-import { TUNING } from "../data/tuning";
-import { moverPlacements } from "./moverPlanning";
-import { moverSpec } from "./moverSpecs";
-import { prepareSlotKind, slotPlacementsAt } from "./slotCandidates";
-import type { SlotKind } from "./slotConfig";
-import { createSlotConstructionState } from "./slotConstraintState";
-import { slotMotionStreams } from "./slotEntropy";
-import { materialiseSlotPlan } from "./slotPlan";
-import { blockingLength, rowSpacing, type SpawnPlan, zoneRows } from "./spawning";
-import { auditSpawnPlan } from "./spawnValidation";
+import { TUNING } from "../data/tuning.ts";
+import { moverPlacements } from "./moverPlanning.ts";
+import { moverSpec } from "./moverSpecs.ts";
+import { prepareSlotKind, slotPlacementsAt } from "./slotCandidates.ts";
+import type { SlotKind } from "./slotConfig.ts";
+import { createSlotConstructionState } from "./slotConstraintState.ts";
+import { slotMotionStreams } from "./slotEntropy.ts";
+import { materialiseSlotPlan } from "./slotPlan.ts";
+import { blockingLength, rowSpacing, type SpawnPlan, zoneRows } from "./spawning.ts";
+import { auditSpawnPlan } from "./spawnValidation.ts";
 
 const context = { seed: 32, zoneIndex: 0 };
 const key = "active:minorMoving:10";

@@ -1,11 +1,11 @@
 import { fillLine } from "@andornaut/game-kit/lines";
 import { describe, expect, it } from "vitest";
 
-import { DOGS } from "../data/dogs";
-import { MENU_TEXT } from "../data/menuText";
-import { newPlayerSave, veteranSave } from "../testing/saves";
-import { MENU_TEXT_FIELDS } from "./menuText";
-import { dogRows, overallRows } from "./statsView";
+import { DOGS } from "../data/dogs.ts";
+import { MENU_TEXT } from "../data/menuText.ts";
+import { newPlayerSave, veteranSave } from "../testing/saves.ts";
+import { MENU_TEXT_FIELDS } from "./menuText.ts";
+import { dogRows, overallRows } from "./statsView.ts";
 
 const data = { dogs: DOGS, menuText: MENU_TEXT };
 const words = MENU_TEXT.stats;

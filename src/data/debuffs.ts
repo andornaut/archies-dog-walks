@@ -1,4 +1,4 @@
-import type { Debuff } from "./types";
+import type { Debuff } from "./types.ts";
 
 // Applying a debuff the pack already has restarts its time; debuffs never stack. Nothing
 // cures one: it runs out. Zoomies follows active manual steering, or draws a random

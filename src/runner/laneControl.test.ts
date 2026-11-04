@@ -6,8 +6,8 @@ import {
   laneControlIn,
   pullLane,
   steerLane,
-} from "./laneControl";
-import { destinationLane, stillInLane } from "./laneMotion";
+} from "./laneControl.ts";
+import { destinationLane, stillInLane } from "./laneMotion.ts";
 
 const config = { laneCount: 5, moveDuration: 0.2 };
 

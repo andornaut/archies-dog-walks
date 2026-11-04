@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { assetUrl, parseManifest } from "./manifest";
+import { assetUrl, parseManifest } from "./manifest.ts";
 
 const valid = {
   fonts: [{ fnt: "fonts/pixel.fnt", key: "pixel", png: "fonts/pixel.png" }],

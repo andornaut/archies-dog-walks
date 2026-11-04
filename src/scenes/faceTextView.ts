@@ -2,8 +2,8 @@ import type { Rect } from "@andornaut/game-kit/rect";
 import type { TextFitStyle } from "@andornaut/game-kit/text/textFit";
 import type { GameObjects, Scene } from "phaser";
 
-import { ownerCardFaceKey } from "../assets/spriteKeys";
-import { gameData } from "../data";
+import { ownerCardFaceKey } from "../assets/spriteKeys.ts";
+import { gameData } from "../data/index.ts";
 import {
   type FaceBox,
   type FaceRow,
@@ -11,9 +11,9 @@ import {
   inlineFaceBox,
   type OwnerFace,
   styledFaceRows,
-} from "../hud/faceText";
-import { PALETTE } from "../ui/palette";
-import { drawFramedRect } from "../ui/phaser/draw";
+} from "../hud/faceText.ts";
+import { PALETTE } from "../ui/palette.ts";
+import { drawFramedRect } from "../ui/phaser/draw.ts";
 import {
   addPixelText,
   pixelFontMetrics,
@@ -21,9 +21,9 @@ import {
   scalePixelText,
   setPixelText,
   withProbe,
-} from "../ui/phaser/pixelText";
-import { addNamePills } from "./effectNameColours";
-import { playFirstTag } from "./sprites";
+} from "../ui/phaser/pixelText.ts";
+import { addNamePills } from "./effectNameColours.ts";
+import { playFirstTag } from "./sprites.ts";
 
 // Walk text with owners' faces inline before their names (hud/faceText.ts), drawn in the body
 // font: each row's runs of text, and each face in its 1px ink frame over tan.

@@ -8,9 +8,9 @@ import { isMainThread, parentPort, Worker, workerData } from "node:worker_thread
 import { itemAt } from "@andornaut/game-kit/arrays";
 import { keysOf } from "@andornaut/game-kit/records";
 
-import { gameData } from "../data";
-import type { GearId } from "../data/types";
-import { DEFAULT_ROUTE_POLICY, MIXED_PAY_SHARE, POLICY_IDS, ROUTE_POLICY_IDS } from "./policies";
+import { gameData } from "../data/index.ts";
+import type { GearId } from "../data/types.ts";
+import { DEFAULT_ROUTE_POLICY, MIXED_PAY_SHARE, POLICY_IDS, ROUTE_POLICY_IDS } from "./policies.ts";
 import {
   DEFAULT_MATRIX,
   DEFAULT_SPAWN_TARGET,
@@ -28,9 +28,9 @@ import {
   parseSpawnTarget,
   simulateCell,
   spawnValidationFailures,
-} from "./report";
-import { BOT_SIGHTS } from "./sight";
-import { SKILL_PRESET_IDS, SKILL_PRESETS } from "./skills";
+} from "./report.ts";
+import { BOT_SIGHTS } from "./sight.ts";
+import { SKILL_PRESET_IDS, SKILL_PRESETS } from "./skills.ts";
 
 const DEFAULT_RUNS = 1000;
 const WALKER_IDS = keysOf(gameData.walkers);

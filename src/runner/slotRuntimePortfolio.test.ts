@@ -1,15 +1,15 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import * as audit from "./slotAudit";
-import type { SlotKind } from "./slotConfig";
+import * as audit from "./slotAudit.ts";
+import type { SlotKind } from "./slotConfig.ts";
 import {
   planSlotCapacity,
   planSlotSpawns,
   SLOT_LIMITS,
   type SlotPlanningContext,
-} from "./slotPlanner";
-import * as witnessSearch from "./slotWitnessSearch";
-import type { SpawnPlan } from "./spawning";
+} from "./slotPlanner.ts";
+import * as witnessSearch from "./slotWitnessSearch.ts";
+import type { SpawnPlan } from "./spawning.ts";
 
 const geometry: Omit<SpawnPlan<string>, "quotas"> = {
   cellInset: 5,

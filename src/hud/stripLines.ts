@@ -1,17 +1,22 @@
 import { fillLine, fillNames } from "@andornaut/game-kit/lines";
 
-import type { Achievement, DebuffId, DogId, EncounterId, GameData, GearId } from "../data/types";
-import { achievementLabel } from "../rules/achievementOrder";
-import { type Change, type HeartChange, heartsForgiven, type MoneyChange } from "../rules/causes";
-import { debuffFields, formatDollars } from "../rules/effectText";
-import { spareTreatGiver, spareTreatSource } from "../rules/spareTreats";
-import type { FaceMood, TreatGrabbed } from "../rules/treats";
-import { read } from "../rules/units";
-import type { ActiveDebuff, EffectSource, RunState } from "../state/runState";
-import { debuffNameMarks } from "./effectNames";
-import { type FaceText, fillFaceLine, ownerFaceText } from "./faceText";
-import type { MessageIcon, MessageLine } from "./messageStrip";
-import { STRIP_LINE_FIELDS } from "./runText";
+import type { Achievement, DebuffId, DogId, EncounterId, GameData, GearId } from "../data/types.ts";
+import { achievementLabel } from "../rules/achievementOrder.ts";
+import {
+  type Change,
+  type HeartChange,
+  heartsForgiven,
+  type MoneyChange,
+} from "../rules/causes.ts";
+import { debuffFields, formatDollars } from "../rules/effectText.ts";
+import { spareTreatGiver, spareTreatSource } from "../rules/spareTreats.ts";
+import type { FaceMood, TreatGrabbed } from "../rules/treats.ts";
+import { read } from "../rules/units.ts";
+import type { ActiveDebuff, EffectSource, RunState } from "../state/runState.ts";
+import { debuffNameMarks } from "./effectNames.ts";
+import { type FaceText, fillFaceLine, ownerFaceText } from "./faceText.ts";
+import type { MessageIcon, MessageLine } from "./messageStrip.ts";
+import { STRIP_LINE_FIELDS } from "./runText.ts";
 
 // The message strip's lines for what just happened on the road, from the walk's events.
 

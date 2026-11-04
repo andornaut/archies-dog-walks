@@ -16,7 +16,7 @@ import {
   type SoundCue,
   soundKeyFor,
   soundKeysOf,
-} from "./sound";
+} from "./sound.ts";
 
 const mix = (overrides: Partial<Mix>): Mix => ({
   ...INITIAL_MIX,

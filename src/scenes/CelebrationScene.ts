@@ -2,9 +2,9 @@ import { containsPoint, type Rect } from "@andornaut/game-kit/rect";
 import { inkRowsFromCapTop } from "@andornaut/game-kit/text/bitmapFont";
 import { Scene } from "phaser";
 
-import { gameData } from "../data";
-import { SCREEN_LAYOUT } from "../data/screen";
-import type { AchievementId, DogId } from "../data/types";
+import { gameData } from "../data/index.ts";
+import { SCREEN_LAYOUT } from "../data/screen.ts";
+import type { AchievementId, DogId } from "../data/types.ts";
 import {
   BADGE_STRIP,
   badgeRowNames,
@@ -12,32 +12,32 @@ import {
   celebrationTitle,
   earnedBadges,
   stripUnderClose,
-} from "../home/badgesView";
-import { overlayRegion, regionOutside } from "../home/homeBar";
+} from "../home/badgesView.ts";
+import { overlayRegion, regionOutside } from "../home/homeBar.ts";
 import {
   MODAL,
   modalActionWidth,
   modalPanelWidth,
   modalRect,
   modalTitleWidth,
-} from "../home/modalLayout";
-import { isConfirmKey, isPauseKey, menuKeyActs } from "../input/keyBindings";
-import { exitShown } from "../pwa";
-import { achievementLabel } from "../rules/achievementOrder";
-import { BUTTON_SIZE } from "../ui/buttonGeometry";
-import { closeControl } from "../ui/closeControl";
-import { labelInkWidth, pixelFontMetrics, withProbe } from "../ui/phaser/pixelText";
-import { addRampDim } from "../ui/phaser/rampDim";
-import { addBadgeCelebration, addCheeringFace } from "./badges";
-import { listenHomeBar } from "./homeBarPress";
-import { addCardClose } from "./homePanels";
-import { modalTextWidth } from "./modalMeasure";
-import { closeOverlay, listenDismiss } from "./overlay";
-import { currentSettings } from "./profileStore";
-import { SCENE_KEYS, type SceneKey } from "./sceneKeys";
-import { soundboardOf } from "./soundboard";
-import { listenTargetPress } from "./targetPress";
-import { addMenuButton, addTapBurst, BODY_TEXT } from "./uiKit";
+} from "../home/modalLayout.ts";
+import { isConfirmKey, isPauseKey, menuKeyActs } from "../input/keyBindings.ts";
+import { exitShown } from "../pwa/index.ts";
+import { achievementLabel } from "../rules/achievementOrder.ts";
+import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";
+import { closeControl } from "../ui/closeControl.ts";
+import { labelInkWidth, pixelFontMetrics, withProbe } from "../ui/phaser/pixelText.ts";
+import { addRampDim } from "../ui/phaser/rampDim.ts";
+import { addBadgeCelebration, addCheeringFace } from "./badges.ts";
+import { listenHomeBar } from "./homeBarPress.ts";
+import { addCardClose } from "./homePanels.ts";
+import { modalTextWidth } from "./modalMeasure.ts";
+import { closeOverlay, listenDismiss } from "./overlay.ts";
+import { currentSettings } from "./profileStore.ts";
+import { SCENE_KEYS, type SceneKey } from "./sceneKeys.ts";
+import { soundboardOf } from "./soundboard.ts";
+import { listenTargetPress } from "./targetPress.ts";
+import { addMenuButton, addTapBurst, BODY_TEXT } from "./uiKit.ts";
 
 export interface CelebrationSceneData {
   achievements: readonly AchievementId[];

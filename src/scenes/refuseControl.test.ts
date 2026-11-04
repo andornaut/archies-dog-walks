@@ -1,8 +1,8 @@
 import type { GameObjects, Scene } from "phaser";
 import { describe, expect, it, vi } from "vitest";
 
-import { PALETTE } from "../ui/palette";
-import { REFUSE, refuseControl } from "./refuseControl";
+import { PALETTE } from "../ui/palette.ts";
+import { REFUSE, refuseControl } from "./refuseControl.ts";
 
 function fixture() {
   const tint = 0x123456;

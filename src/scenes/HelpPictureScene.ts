@@ -2,9 +2,9 @@ import { animationKey } from "@andornaut/game-kit/art/aseprite";
 import type { Rect } from "@andornaut/game-kit/rect";
 import { Events, type GameObjects, Scene, Scenes } from "phaser";
 
-import { gameData } from "../data";
-import { SCREEN_LAYOUT } from "../data/screen";
-import type { HelpPictureId } from "../data/types";
+import { gameData } from "../data/index.ts";
+import { SCREEN_LAYOUT } from "../data/screen.ts";
+import type { HelpPictureId } from "../data/types.ts";
 import {
   type DragLoop,
   type DragMoment,
@@ -13,30 +13,30 @@ import {
   helpPicture,
   stillDragMoment,
   TOUCH_DRAG,
-} from "../help/helpPictures";
-import { changeLabels } from "../hud/hudView";
-import { NOTHING_PAUSED } from "../hud/topBar";
-import { DOG_REACTIONS } from "../layout/hitEffects";
-import { currentZone } from "../rules/route";
-import { read } from "../rules/units";
-import { laneControlIn } from "../runner/laneControl";
-import { laneMotionX } from "../runner/laneMotion";
-import type { Walk } from "../runner/walk";
-import { colourFromHex } from "../ui/palette";
-import type { CardSceneData } from "./CardScene";
-import type { HudSceneData } from "./HudScene";
-import type { HudWalk } from "./hudWalk";
-import { onceSceneEvent } from "./overlay";
-import { currentSettings, walkerSpriteKey } from "./profileStore";
-import { ensureRoadPlaceholders, ItemViews } from "./run/itemViews";
-import { PackView } from "./run/packView";
-import { RoadArt, RoadView } from "./run/roadView";
-import { CHANGE_LABELS_EVENT } from "./run/runMoments";
-import { ShadowPool } from "./run/shadowPool";
-import { DEPTH, LANE_XS, overPack, packPoint } from "./run/stage";
-import { SCENE_KEYS } from "./sceneKeys";
-import { freezeScene, type ScenePicture, showAsPicture } from "./scenePicture";
-import { tagFrame } from "./uiKit";
+} from "../help/helpPictures.ts";
+import { changeLabels } from "../hud/hudView.ts";
+import { NOTHING_PAUSED } from "../hud/topBar.ts";
+import { DOG_REACTIONS } from "../layout/hitEffects.ts";
+import { currentZone } from "../rules/route.ts";
+import { read } from "../rules/units.ts";
+import { laneControlIn } from "../runner/laneControl.ts";
+import { laneMotionX } from "../runner/laneMotion.ts";
+import type { Walk } from "../runner/walk.ts";
+import { colourFromHex } from "../ui/palette.ts";
+import type { CardSceneData } from "./CardScene.ts";
+import type { HudSceneData } from "./HudScene.ts";
+import type { HudWalk } from "./hudWalk.ts";
+import { onceSceneEvent } from "./overlay.ts";
+import { currentSettings, walkerSpriteKey } from "./profileStore.ts";
+import { ensureRoadPlaceholders, ItemViews } from "./run/itemViews.ts";
+import { PackView } from "./run/packView.ts";
+import { RoadArt, RoadView } from "./run/roadView.ts";
+import { CHANGE_LABELS_EVENT } from "./run/runMoments.ts";
+import { ShadowPool } from "./run/shadowPool.ts";
+import { DEPTH, LANE_XS, overPack, packPoint } from "./run/stage.ts";
+import { SCENE_KEYS } from "./sceneKeys.ts";
+import { freezeScene, type ScenePicture, showAsPicture } from "./scenePicture.ts";
+import { tagFrame } from "./uiKit.ts";
 
 // The picture's pack, and a redraw of it for a walk with the pack elsewhere.
 interface PackDraw {

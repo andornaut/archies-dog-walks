@@ -1,7 +1,7 @@
 import { mkdir, readdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 
-import type { ArtFiles } from "./artManifest";
+import type { ArtFiles } from "./artManifest.ts";
 
 // The generated files are committed, so they are written in one stable form: two-space
 // indents and a final newline, as art's tools write JSON.

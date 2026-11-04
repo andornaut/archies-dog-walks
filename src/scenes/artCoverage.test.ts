@@ -4,11 +4,11 @@ import type { Scene } from "phaser";
 import * as v from "valibot";
 import { describe, expect, it } from "vitest";
 
-import shippedManifest from "../../public/art/manifest.json";
-import { animationSpecs } from "../assets/asepriteAnimations";
-import { splitDepthKey, stepSize } from "../assets/depthSteps";
-import { debuffIconKey, SQUIRREL_ICON_KEY } from "../assets/iconKeys";
-import { parseManifest } from "../assets/manifest";
+import shippedManifest from "../../public/art/manifest.json" with { type: "json" };
+import { animationSpecs } from "../assets/asepriteAnimations.ts";
+import { splitDepthKey, stepSize } from "../assets/depthSteps.ts";
+import { debuffIconKey, SQUIRREL_ICON_KEY } from "../assets/iconKeys.ts";
+import { parseManifest } from "../assets/manifest.ts";
 import {
   AMBIENT_VARIANTS,
   CARD_FRAME_KEY,
@@ -33,32 +33,32 @@ import {
   STANDING_TAGS,
   ZONE_CELEBRATION_ART,
   ZONE_PIPS_KEY,
-} from "../assets/spriteKeys";
-import { musicKey } from "../audio/music";
-import { hitCue, SOUND_KEYS, soundKeyFor, soundKeysOf } from "../audio/sound";
-import { gameData } from "../data";
-import type { CardSource, EncounterId, ZoneId } from "../data/types";
-import { TOUCH_DRAG } from "../help/helpPictures";
-import { badgeWall } from "../home/badgesView";
-import { HOME_LAYOUT } from "../home/homeLayout";
-import { effectIconKey, type EffectItem, walkBarIconKey } from "../hud/effectIcons";
-import { type PipState, pipTag } from "../hud/hudView";
-import { MESSAGE_ICONS } from "../hud/messageStrip";
-import { cardOwnerMood } from "../hud/moments";
-import { DOG_REACTIONS, HIT_ART } from "../layout/hitEffects";
-import { SCALE_STEPS } from "../layout/projection";
-import { cardFor } from "../rules/choices";
-import { hitLabel } from "../rules/encounters";
-import { faceMood } from "../rules/treats";
-import { minorLooks } from "../runner/obstacleLooks";
-import type { PullPose } from "../runner/pulls";
-import { testState } from "../testing/runState";
-import { clampHearts } from "../units";
-import { FEEDBACK_ART } from "./feedbackArt";
-import { hitBurstKey, hitLook } from "./hitMoment";
-import { DETAIL_WELL_KEY } from "./homePanels";
-import { BADGE_KEYS, SHOP_ART } from "./itemArt";
-import { TIP_SPARKLE } from "./run/tipSparkle";
+} from "../assets/spriteKeys.ts";
+import { musicKey } from "../audio/music.ts";
+import { hitCue, SOUND_KEYS, soundKeyFor, soundKeysOf } from "../audio/sound.ts";
+import { gameData } from "../data/index.ts";
+import type { CardSource, EncounterId, ZoneId } from "../data/types.ts";
+import { TOUCH_DRAG } from "../help/helpPictures.ts";
+import { badgeWall } from "../home/badgesView.ts";
+import { HOME_LAYOUT } from "../home/homeLayout.ts";
+import { effectIconKey, type EffectItem, walkBarIconKey } from "../hud/effectIcons.ts";
+import { type PipState, pipTag } from "../hud/hudView.ts";
+import { MESSAGE_ICONS } from "../hud/messageStrip.ts";
+import { cardOwnerMood } from "../hud/moments.ts";
+import { DOG_REACTIONS, HIT_ART } from "../layout/hitEffects.ts";
+import { SCALE_STEPS } from "../layout/projection.ts";
+import { cardFor } from "../rules/choices.ts";
+import { hitLabel } from "../rules/encounters.ts";
+import { faceMood } from "../rules/treats.ts";
+import { minorLooks } from "../runner/obstacleLooks.ts";
+import type { PullPose } from "../runner/pulls.ts";
+import { testState } from "../testing/runState.ts";
+import { clampHearts } from "../units.ts";
+import { FEEDBACK_ART } from "./feedbackArt.ts";
+import { hitBurstKey, hitLook } from "./hitMoment.ts";
+import { DETAIL_WELL_KEY } from "./homePanels.ts";
+import { BADGE_KEYS, SHOP_ART } from "./itemArt.ts";
+import { TIP_SPARKLE } from "./run/tipSparkle.ts";
 
 const manifest = parseManifest(shippedManifest);
 const images = new Set(manifest.images.map(({ key }) => key));

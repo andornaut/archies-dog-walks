@@ -4,8 +4,8 @@ import {
   type MoverGeometry,
   moverPlacements,
   type MoverStand,
-} from "./moverPlanning";
-import { crossLength } from "./movers";
+} from "./moverPlanning.ts";
+import { crossLength } from "./movers.ts";
 import {
   blockingLength,
   rowSpacing,
@@ -13,7 +13,7 @@ import {
   type SpawnPlan,
   type SpawnQuota,
   zoneRows,
-} from "./spawning";
+} from "./spawning.ts";
 
 export interface MoverProof {
   readonly block: {

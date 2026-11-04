@@ -1,14 +1,14 @@
 import { keysOf } from "@andornaut/game-kit/records";
 import { describe, expect, it } from "vitest";
 
-import { gameData } from "../data";
-import type { MinorObstacleId, Movement } from "../data/types";
-import type { MoverPath } from "../runner/movers";
-import { screenRoadGeometry } from "../runner/screenGeometry";
-import { walkScrollSpeed } from "../runner/walk";
-import { type WalkItem, type WalkItemKind } from "../runner/walkItems";
-import { testState } from "../testing/runState";
-import { sightPaths } from "./sight";
+import { gameData } from "../data/index.ts";
+import type { MinorObstacleId, Movement } from "../data/types.ts";
+import type { MoverPath } from "../runner/movers.ts";
+import { screenRoadGeometry } from "../runner/screenGeometry.ts";
+import { walkScrollSpeed } from "../runner/walk.ts";
+import { type WalkItem, type WalkItemKind } from "../runner/walkItems.ts";
+import { testState } from "../testing/runState.ts";
+import { sightPaths } from "./sight.ts";
 
 const run = testState({ lady: 3 });
 const road = {

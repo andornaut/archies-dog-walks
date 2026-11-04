@@ -2,21 +2,21 @@ import { STEP_SECONDS } from "@andornaut/game-kit/clock/fixedStep";
 import { pixels } from "@andornaut/game-kit/units";
 import { describe, expect, it } from "vitest";
 
-import { gameData } from "../../data";
-import { LANE_COUNT } from "../../data/screen";
-import type { LaneMotion } from "../../runner/laneMotion";
-import { screenRoadGeometry } from "../../runner/screenGeometry";
+import { gameData } from "../../data/index.ts";
+import { LANE_COUNT } from "../../data/screen.ts";
+import type { LaneMotion } from "../../runner/laneMotion.ts";
+import { screenRoadGeometry } from "../../runner/screenGeometry.ts";
 import {
   runStreams,
   type Session,
   type SessionInput,
   startSession,
   stepSession,
-} from "../../runner/session";
-import { laneMoveSeconds, startRoad, type Walk } from "../../runner/walk";
-import { type WalkItem } from "../../runner/walkItems";
-import { newRun } from "../../state/runState";
-import { blendWalk, leadWalk, stepAlpha } from "./interpolate";
+} from "../../runner/session.ts";
+import { laneMoveSeconds, startRoad, type Walk } from "../../runner/walk.ts";
+import { type WalkItem } from "../../runner/walkItems.ts";
+import { newRun } from "../../state/runState.ts";
+import { blendWalk, leadWalk, stepAlpha } from "./interpolate.ts";
 
 const STEP_MS = STEP_SECONDS * 1000;
 const RUN = newRun(gameData, 3, { dogs: ["kilo"], gear: null, walker: "casey" });

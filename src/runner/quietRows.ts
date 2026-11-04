@@ -1,4 +1,4 @@
-import type { SpawnPlan } from "./spawning";
+import type { SpawnPlan } from "./spawning.ts";
 
 interface QuietRun {
   first: number;

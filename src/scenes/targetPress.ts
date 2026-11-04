@@ -1,8 +1,8 @@
 import type { Input, Scene } from "phaser";
 
-import { pressDown, pressUp, type TargetPress } from "../input/targetPress";
-import { listenOnePress } from "./onePress";
-import { afterMsUnderOverlay } from "./overlayClock";
+import { pressDown, pressUp, type TargetPress } from "../input/targetPress.ts";
+import { listenOnePress } from "./onePress.ts";
+import { afterMsUnderOverlay } from "./overlayClock.ts";
 
 interface TargetPressHandlers<T> {
   // How long a tapped target stays pressed before onTap, counted from the press. 0 by default.

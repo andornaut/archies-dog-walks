@@ -1,12 +1,12 @@
-import type { DogId, GameData } from "../data/types";
-import { heartsOf, packDogs } from "../state/pack";
-import type { RunState } from "../state/runState";
-import { addCents } from "../units";
-import type { HeartChange, MoneyChange } from "./causes";
-import { ownerMaxHearts } from "./dogs";
-import { changeHearts } from "./effects";
-import { storeSpareTreat } from "./spareTreats";
-import { read } from "./units";
+import type { DogId, GameData } from "../data/types.ts";
+import { heartsOf, packDogs } from "../state/pack.ts";
+import type { RunState } from "../state/runState.ts";
+import { addCents } from "../units.ts";
+import type { HeartChange, MoneyChange } from "./causes.ts";
+import { ownerMaxHearts } from "./dogs.ts";
+import { changeHearts } from "./effects.ts";
+import { storeSpareTreat } from "./spareTreats.ts";
+import { read } from "./units.ts";
 
 export type FaceMood = "happy" | "neutral" | "upset";
 

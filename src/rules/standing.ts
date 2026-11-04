@@ -1,9 +1,9 @@
-import type { GameData } from "../data/types";
-import { packDogs } from "../state/pack";
-import type { RunState } from "../state/runState";
-import { baseMaxHearts, placeInPack } from "./dogs";
-import { type ModifiedValue, statModified } from "./modified";
-import { read } from "./units";
+import type { GameData } from "../data/types.ts";
+import { packDogs } from "../state/pack.ts";
+import type { RunState } from "../state/runState.ts";
+import { baseMaxHearts, placeInPack } from "./dogs.ts";
+import { type ModifiedValue, statModified } from "./modified.ts";
+import { read } from "./units.ts";
 
 type StandingData = Pick<GameData, "dogs" | "tuning" | "walkers">;
 

@@ -1,23 +1,23 @@
-import { ACHIEVEMENTS } from "./achievements";
-import { AMBIENT } from "./ambient";
-import { DEBUFFS } from "./debuffs";
-import { DOGS } from "./dogs";
-import { DOG_SLOTS } from "./dogSlots";
-import { ENCOUNTERS } from "./encounters";
-import { HELP_PAGES } from "./help";
-import { HINTS } from "./hints";
-import { HOME_TEXT } from "./homeText";
-import { MENU_TEXT } from "./menuText";
-import { MINOR_OBSTACLES } from "./minorObstacles";
-import { MOVEMENT_ASSIGNMENTS, MOVEMENT_PROFILES } from "./movementProfiles";
-import { QUIPS } from "./quips";
-import { RUN_TEXT } from "./runText";
-import { SHOP_GEAR } from "./shop";
-import { TUNING } from "./tuning";
-import type { GameData } from "./types";
-import { UPGRADES } from "./upgrades";
-import { DEFAULT_WALKER, WALKER_PERKS, WALKERS } from "./walkers";
-import { WORLD } from "./world";
+import { ACHIEVEMENTS } from "./achievements.ts";
+import { AMBIENT } from "./ambient.ts";
+import { DEBUFFS } from "./debuffs.ts";
+import { DOGS } from "./dogs.ts";
+import { DOG_SLOTS } from "./dogSlots.ts";
+import { ENCOUNTERS } from "./encounters.ts";
+import { HELP_PAGES } from "./help.ts";
+import { HINTS } from "./hints.ts";
+import { HOME_TEXT } from "./homeText.ts";
+import { MENU_TEXT } from "./menuText.ts";
+import { MINOR_OBSTACLES } from "./minorObstacles.ts";
+import { MOVEMENT_ASSIGNMENTS, MOVEMENT_PROFILES } from "./movementProfiles.ts";
+import { QUIPS } from "./quips.ts";
+import { RUN_TEXT } from "./runText.ts";
+import { SHOP_GEAR } from "./shop.ts";
+import { TUNING } from "./tuning.ts";
+import type { GameData } from "./types.ts";
+import { UPGRADES } from "./upgrades.ts";
+import { DEFAULT_WALKER, WALKER_PERKS, WALKERS } from "./walkers.ts";
+import { WORLD } from "./world.ts";
 
 function toGameData(values: ValueExports): GameData {
   return {

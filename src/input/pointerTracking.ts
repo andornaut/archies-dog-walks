@@ -8,8 +8,15 @@ import {
   pointerDown,
   pointerMove,
   pointerUp,
-} from "./gestures";
-import { type HoldPress, type HoldRule, moveHold, releaseHold, startHold, tickHold } from "./hold";
+} from "./gestures.ts";
+import {
+  type HoldPress,
+  type HoldRule,
+  moveHold,
+  releaseHold,
+  startHold,
+  tickHold,
+} from "./hold.ts";
 
 // cancel: the browser called the press off (a system gesture, an incoming call).
 export type PointerPhase = "cancel" | "down" | "move" | "up";

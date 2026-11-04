@@ -1,4 +1,4 @@
-import sharedPalette from "../../shared/palette.json";
+import sharedPalette from "../../shared/palette.json" with { type: "json" };
 
 // The Endesga 32 colours the scenes draw with.
 const ENDESGA = {

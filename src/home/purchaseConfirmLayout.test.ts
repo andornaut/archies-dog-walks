@@ -2,18 +2,18 @@ import { insetRect, rectsOverlap } from "@andornaut/game-kit/rect";
 import { inkRowsFromCapTop } from "@andornaut/game-kit/text/bitmapFont";
 import { describe, expect, it } from "vitest";
 
-import { gameData } from "../data";
-import { MIN_TAP_SIZE } from "../layout/screenLayout";
-import { fontFileMetrics, inkWidth } from "../testing/fontInk";
-import { inside } from "../testing/rects";
-import { newPlayerSave } from "../testing/saves";
-import { closeControl } from "../ui/closeControl";
-import { TEXT_STYLE } from "../ui/textFit";
-import { cents } from "../units";
-import { MODAL } from "./modalLayout";
-import { confirmLines } from "./purchaseConfirm";
-import { purchaseConfirmLayout } from "./purchaseConfirmLayout";
-import { dogRows, gearRows, slotRows } from "./shop";
+import { gameData } from "../data/index.ts";
+import { MIN_TAP_SIZE } from "../layout/screenLayout.ts";
+import { fontFileMetrics, inkWidth } from "../testing/fontInk.ts";
+import { inside } from "../testing/rects.ts";
+import { newPlayerSave } from "../testing/saves.ts";
+import { closeControl } from "../ui/closeControl.ts";
+import { TEXT_STYLE } from "../ui/textFit.ts";
+import { cents } from "../units.ts";
+import { MODAL } from "./modalLayout.ts";
+import { confirmLines } from "./purchaseConfirm.ts";
+import { purchaseConfirmLayout } from "./purchaseConfirmLayout.ts";
+import { dogRows, gearRows, slotRows } from "./shop.ts";
 
 const owned = { ...newPlayerSave.owned, dogSlots: [], dogs: [], gear: [] };
 const rows = [

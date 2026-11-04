@@ -1,6 +1,6 @@
-import { laneMask } from "../layout/lanes";
-import { type PreparedSlotKind, slotPlacementsAt } from "./slotCandidates";
-import { createSlotFeasibility, type SlotPlacement } from "./slotFeasibility";
+import { laneMask } from "../layout/lanes.ts";
+import { type PreparedSlotKind, slotPlacementsAt } from "./slotCandidates.ts";
+import { createSlotFeasibility, type SlotPlacement } from "./slotFeasibility.ts";
 import {
   blockingSpan,
   packFitsOnPath,
@@ -10,7 +10,7 @@ import {
   quotaFootprint,
   rowSpacing,
   type SpawnPlan,
-} from "./spawning";
+} from "./spawning.ts";
 
 type Geometry<Kind extends string> = Omit<SpawnPlan<Kind>, "quotas">;
 export interface GuaranteedPathSource<Kind extends string> {

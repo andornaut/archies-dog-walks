@@ -2,15 +2,15 @@ import { STEP_SECONDS } from "@andornaut/game-kit/clock/fixedStep";
 import { randomStream } from "@andornaut/game-kit/random";
 import { describe, expect, it } from "vitest";
 
-import { gameData } from "../data";
-import { LANE_COUNT, ROAD_CAMERA, SCREEN_LAYOUT } from "../data/screen";
-import { distanceAtY } from "../layout/projection";
-import { startAmbient, stepAmbient } from "../road/ambient";
-import { newRoadsidePlaces, placeRoadside, ROADSIDE } from "../road/roadsideProps";
-import { type KeptScenery, struckBy, struckNow } from "../road/struckScenery";
-import { currentZone, currentZoneId, zoneAt } from "../rules/route";
-import { newRun } from "../state/runState";
-import { screenRoadGeometry } from "./screenGeometry";
+import { gameData } from "../data/index.ts";
+import { LANE_COUNT, ROAD_CAMERA, SCREEN_LAYOUT } from "../data/screen.ts";
+import { distanceAtY } from "../layout/projection.ts";
+import { startAmbient, stepAmbient } from "../road/ambient.ts";
+import { newRoadsidePlaces, placeRoadside, ROADSIDE } from "../road/roadsideProps.ts";
+import { type KeptScenery, struckBy, struckNow } from "../road/struckScenery.ts";
+import { currentZone, currentZoneId, zoneAt } from "../rules/route.ts";
+import { newRun } from "../state/runState.ts";
+import { screenRoadGeometry } from "./screenGeometry.ts";
 import {
   chooseCard,
   runStreams,
@@ -18,9 +18,9 @@ import {
   type SessionEvent,
   startSession,
   stepSession,
-} from "./session";
-import { startRoad, zoneLength } from "./walk";
-import { walkProjection } from "./walkGeometry";
+} from "./session.ts";
+import { startRoad, zoneLength } from "./walk.ts";
+import { walkProjection } from "./walkGeometry.ts";
 
 const STEPS = 60 * 90;
 const LAYOUT = SCREEN_LAYOUT;

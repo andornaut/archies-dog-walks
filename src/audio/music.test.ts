@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { gameData } from "../data";
+import { gameData } from "../data/index.ts";
 import {
   advanceDeck,
   advanceMusic,
@@ -16,8 +16,8 @@ import {
   stopAllMusic,
   stopMusic,
   trackVolume,
-} from "./music";
-import { INITIAL_MIX, type Mix, PAUSED_MUSIC_DUCK } from "./sound";
+} from "./music.ts";
+import { INITIAL_MIX, type Mix, PAUSED_MUSIC_DUCK } from "./sound.ts";
 
 const fading = (
   level: number,

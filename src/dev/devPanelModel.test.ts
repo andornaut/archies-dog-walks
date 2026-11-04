@@ -1,13 +1,13 @@
 import { describe, expect, it } from "vitest";
 
-import { gameData } from "../data";
-import { changeHearts } from "../rules/effects";
-import { firstZoneId } from "../rules/route";
-import { saveContextFrom } from "../save/load";
-import { createDefaultSave } from "../save/schema";
-import { heartsOf } from "../state/pack";
-import { testState } from "../testing/runState";
-import { newPlayerSave, veteranSave } from "../testing/saves";
+import { gameData } from "../data/index.ts";
+import { changeHearts } from "../rules/effects.ts";
+import { firstZoneId } from "../rules/route.ts";
+import { saveContextFrom } from "../save/load.ts";
+import { createDefaultSave } from "../save/schema.ts";
+import { heartsOf } from "../state/pack.ts";
+import { testState } from "../testing/runState.ts";
+import { newPlayerSave, veteranSave } from "../testing/saves.ts";
 import {
   applyPanel,
   applySaveEdit,
@@ -36,9 +36,9 @@ import {
   startChoices,
   timeScaleOf,
   withCheats,
-} from "./devPanelModel";
-import { runSetupLimitsFor } from "./pageRunSetup";
-import { parseRunSetup } from "./runSetup";
+} from "./devPanelModel.ts";
+import { runSetupLimitsFor } from "./pageRunSetup.ts";
+import { parseRunSetup } from "./runSetup.ts";
 
 const context = saveContextFrom(gameData);
 const every = CHEAT_TOGGLES.reduce(

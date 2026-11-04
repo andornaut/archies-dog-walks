@@ -3,8 +3,8 @@ import {
   type PlacementResult,
   SpawnBoard,
   type SpawnPlacement,
-} from "./spawnBoard";
-import type { PlannedSpawns, SpawnPlan, SpawnQuota } from "./spawning";
+} from "./spawnBoard.ts";
+import type { PlannedSpawns, SpawnPlan, SpawnQuota } from "./spawning.ts";
 
 export interface SlotPlacement<Kind extends string> extends SpawnPlacement<Kind> {
   // A slot is bound to a kind only after its complete geometry has been checked.

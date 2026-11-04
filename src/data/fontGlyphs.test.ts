@@ -2,8 +2,8 @@ import { describe, expect, it } from "vitest";
 
 import bodyFont from "../../public/art/fonts/font-body.fnt?raw";
 import titleFont from "../../public/art/fonts/font-title.fnt?raw";
-import { plainMarks } from "../ui/pixelFont";
-import { gameData } from "./index";
+import { plainMarks } from "../ui/pixelFont.ts";
+import { gameData } from "./index.ts";
 
 // The characters a bitmap font file has a glyph for.
 function fontChars(fnt: string): Set<string> {

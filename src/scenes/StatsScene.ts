@@ -2,8 +2,8 @@ import { clampIndex } from "@andornaut/game-kit/arrays";
 import { containsPoint, insetRect, type Rect } from "@andornaut/game-kit/rect";
 import { type GameObjects, Scene } from "phaser";
 
-import { dogFaceKey } from "../assets/spriteKeys";
-import { gameData } from "../data";
+import { dogFaceKey } from "../assets/spriteKeys.ts";
+import { gameData } from "../data/index.ts";
 import {
   BADGE_TEXT_COLOURS,
   badgeProgress,
@@ -13,10 +13,10 @@ import {
   wallCell,
   type WallCellLines,
   wallRects,
-} from "../home/badgesView";
-import { FEEDBACK } from "../home/feedback";
-import { focusDirectionForKey } from "../home/focus";
-import { overlayRegion, regionOutside } from "../home/homeBar";
+} from "../home/badgesView.ts";
+import { FEEDBACK } from "../home/feedback.ts";
+import { focusDirectionForKey } from "../home/focus.ts";
+import { overlayRegion, regionOutside } from "../home/homeBar.ts";
 import {
   badgesBottom,
   DOG_STATS,
@@ -35,9 +35,9 @@ import {
   walksHeadingTops,
   wallLineTops,
   wallRowHeight,
-} from "../home/statsLayout";
-import { dogRows, overallRows, type StatsRow } from "../home/statsView";
-import { isConfirmKey, isPauseKey, menuKeyActs } from "../input/keyBindings";
+} from "../home/statsLayout.ts";
+import { dogRows, overallRows, type StatsRow } from "../home/statsView.ts";
+import { isConfirmKey, isPauseKey, menuKeyActs } from "../input/keyBindings.ts";
 import {
   type ListScroll,
   listScroll,
@@ -46,23 +46,23 @@ import {
   scrollBy,
   scrollMax,
   stepScroll,
-} from "../input/listScroll";
-import { exitShown } from "../pwa";
-import { rectIndexAt } from "../ui/grid";
-import { PALETTE } from "../ui/palette";
-import { fillRect } from "../ui/phaser/draw";
+} from "../input/listScroll.ts";
+import { exitShown } from "../pwa/index.ts";
+import { rectIndexAt } from "../ui/grid.ts";
+import { PALETTE } from "../ui/palette.ts";
+import { fillRect } from "../ui/phaser/draw.ts";
 import {
   type FontRole,
   inkSpan,
   pixelFontMetrics,
   setPixelText,
   withProbe,
-} from "../ui/phaser/pixelText";
-import { addBadge, addBadgeDetail, BADGE_SIZE } from "./badges";
-import { listenHomeBar } from "./homeBarPress";
-import { closeOverlay, listenDismiss, type OverlayData } from "./overlay";
-import { currentSettings, profileSave } from "./profileStore";
-import { SCENE_KEYS, type SceneKey } from "./sceneKeys";
+} from "../ui/phaser/pixelText.ts";
+import { addBadge, addBadgeDetail, BADGE_SIZE } from "./badges.ts";
+import { listenHomeBar } from "./homeBarPress.ts";
+import { closeOverlay, listenDismiss, type OverlayData } from "./overlay.ts";
+import { currentSettings, profileSave } from "./profileStore.ts";
+import { SCENE_KEYS, type SceneKey } from "./sceneKeys.ts";
 import {
   addScrollbar,
   LIST_SCROLL_RULE,
@@ -70,10 +70,10 @@ import {
   maskToRect,
   placeScrollbar,
   type ScrollbarView,
-} from "./scrollView";
-import { addCountNote, addShopPage, addShopTabs, placeInkRight } from "./shopPage";
-import { listenTargetPress, sameByValue, type TargetPressListener } from "./targetPress";
-import { addBodyText, addTagImage, addTapBurst, BODY_TEXT, clearScene, tagFrame } from "./uiKit";
+} from "./scrollView.ts";
+import { addCountNote, addShopPage, addShopTabs, placeInkRight } from "./shopPage.ts";
+import { listenTargetPress, sameByValue, type TargetPressListener } from "./targetPress.ts";
+import { addBodyText, addTagImage, addTapBurst, BODY_TEXT, clearScene, tagFrame } from "./uiKit.ts";
 
 type Tab = StatsTab;
 type Target = "close" | { badge: number } | { tab: number };

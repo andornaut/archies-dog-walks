@@ -1,7 +1,7 @@
 import type { Point } from "@andornaut/game-kit/rect";
 import { describe, expect, it } from "vitest";
 
-import { arrowheadPixels, compassStep } from "./arrowhead";
+import { arrowheadPixels, compassStep } from "./arrowhead.ts";
 
 const key = ({ x, y }: Point) => `${x},${y}`;
 // A pixel offset reflected across the line through the tip along step.

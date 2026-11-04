@@ -10,7 +10,13 @@ import { registerPixelFont } from "@andornaut/game-kit/text/phaser/registerPixel
 import { type FittedText, fittingText, type TextFitStyle } from "@andornaut/game-kit/text/textFit";
 import type { GameObjects, Scene, Types } from "phaser";
 
-import { inkWithPills, type LaidChar, laidPills, pillGlyphAdvances, pillRows } from "../namePills";
+import {
+  inkWithPills,
+  type LaidChar,
+  laidPills,
+  pillGlyphAdvances,
+  pillRows,
+} from "../namePills.ts";
 import {
   GLYPH_HEIGHT,
   glyphAdvance,
@@ -18,7 +24,7 @@ import {
   normalizePixelText,
   pixelFontAtlas,
   plainMarks,
-} from "../pixelFont";
+} from "../pixelFont.ts";
 
 // body: mixed case, for running text, card effects and labels. title: capitals, for
 // titles, numbers, money and buttons. Both are white glyphs, tinted to a palette colour.

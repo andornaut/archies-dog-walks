@@ -1,10 +1,10 @@
 import { type Seconds } from "@andornaut/game-kit/units";
 import { describe, expect, expectTypeOf, it } from "vitest";
 
-import { read } from "../rules/units";
-import type { Pack } from "../state/runState";
-import { type Cents, type Hearts } from "../units";
-import { TUNING } from "./tuning";
+import { read } from "../rules/units.ts";
+import type { Pack } from "../state/runState.ts";
+import { type Cents, type Hearts } from "../units.ts";
+import { TUNING } from "./tuning.ts";
 import type {
   AchievementCondition,
   CardOptions,
@@ -18,7 +18,7 @@ import type {
   MoneyEffect,
   MovementAssignment,
   Upgrade,
-} from "./types";
+} from "./types.ts";
 
 // Type-level checks: tsc (npm run check) fails if a @ts-expect-error line stops erroring.
 const check = <T>(value: T): T => value;

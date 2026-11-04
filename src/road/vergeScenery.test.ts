@@ -1,13 +1,13 @@
 import { describe, expect, it } from "vitest";
 
-import { ROAD_SPRITE_SIZE } from "../assets/spriteKeys";
-import { LANE_COUNT, SCREEN_CONFIG } from "../data/screen";
-import { WORLD } from "../data/world";
-import { DART_VERGE_LANES } from "../runner/moverPlanning";
-import { type MoverPath, moverPlace } from "../runner/movers";
-import { curbBand, VERGES } from "./roadside";
-import type { KeptScenery } from "./struckScenery";
-import { goesToVerge, vergeNow } from "./vergeScenery";
+import { ROAD_SPRITE_SIZE } from "../assets/spriteKeys.ts";
+import { LANE_COUNT, SCREEN_CONFIG } from "../data/screen.ts";
+import { WORLD } from "../data/world.ts";
+import { DART_VERGE_LANES } from "../runner/moverPlanning.ts";
+import { type MoverPath, moverPlace } from "../runner/movers.ts";
+import { curbBand, VERGES } from "./roadside.ts";
+import type { KeptScenery } from "./struckScenery.ts";
+import { goesToVerge, vergeNow } from "./vergeScenery.ts";
 
 const ROAD = { laneCount: LANE_COUNT, roadBottom: 700, roadTop: 0 };
 const KEPT_ZONE = 1;

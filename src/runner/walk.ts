@@ -4,7 +4,7 @@ import { getOrInsertComputed } from "@andornaut/game-kit/maps";
 import { chance, type Random } from "@andornaut/game-kit/random";
 import { type Pixels, pixels } from "@andornaut/game-kit/units";
 
-import { IDLE_TAG, MOVING_TAGS } from "../assets/spriteKeys";
+import { IDLE_TAG, MOVING_TAGS } from "../assets/spriteKeys.ts";
 import type {
   CardSource,
   DogId,
@@ -14,31 +14,36 @@ import type {
   MinorObstacleId,
   MovementKind,
   SignatureProfile,
-} from "../data/types";
-import type { LaneDirection } from "../layout/lanes";
+} from "../data/types.ts";
+import type { LaneDirection } from "../layout/lanes.ts";
 import {
   COMPONENT_SILHOUETTES,
   hasObstacleArt,
   obstacleParts,
   obstacleSilhouette,
-} from "../layout/obstacleArt";
-import { formationOrder, PART_INSET } from "../layout/packFormation";
-import { countBump, countLandedBump, countTally } from "../rules/achievements";
-import { type HeartChange, modifierCauses, type MoneyChange, negatedCauses } from "../rules/causes";
-import { applyInstantEncounter, applyMinorContact, type ChoiceOutcome } from "../rules/choices";
-import { expireAtZoneEnd, tickDebuffs } from "../rules/durations";
-import { changeHearts } from "../rules/effects";
-import { affectedDogs, hitLabel, opensCard } from "../rules/encounters";
-import { grabGear } from "../rules/gearDrops";
+} from "../layout/obstacleArt.ts";
+import { formationOrder, PART_INSET } from "../layout/packFormation.ts";
+import { countBump, countLandedBump, countTally } from "../rules/achievements.ts";
+import {
+  type HeartChange,
+  modifierCauses,
+  type MoneyChange,
+  negatedCauses,
+} from "../rules/causes.ts";
+import { applyInstantEncounter, applyMinorContact, type ChoiceOutcome } from "../rules/choices.ts";
+import { expireAtZoneEnd, tickDebuffs } from "../rules/durations.ts";
+import { changeHearts } from "../rules/effects.ts";
+import { affectedDogs, hitLabel, opensCard } from "../rules/encounters.ts";
+import { grabGear } from "../rules/gearDrops.ts";
 import {
   changeModified,
   type ModifiedValue,
   modifiedValue,
   modifierCause,
   modifierCausesOf,
-} from "../rules/modified";
-import { modifiedStat } from "../rules/modifiers";
-import { currentZone, walkLength } from "../rules/route";
+} from "../rules/modified.ts";
+import { modifiedStat } from "../rules/modifiers.ts";
+import { currentZone, walkLength } from "../rules/route.ts";
 import {
   bumpCash,
   bumpParts,
@@ -46,16 +51,16 @@ import {
   fullPackBonus,
   payZone,
   tipValue,
-} from "../rules/run";
-import { spendSpareTreat } from "../rules/spareTreats";
-import { reachModified } from "../rules/standing";
-import { grabTreat, type TreatGrabbed } from "../rules/treats";
-import { read } from "../rules/units";
-import { packAgility } from "../rules/walkers";
-import { zoneScrollSpeed } from "../rules/zones";
-import { packDogs } from "../state/pack";
-import type { RunState } from "../state/runState";
-import { addCents } from "../units";
+} from "../rules/run.ts";
+import { spendSpareTreat } from "../rules/spareTreats.ts";
+import { reachModified } from "../rules/standing.ts";
+import { grabTreat, type TreatGrabbed } from "../rules/treats.ts";
+import { read } from "../rules/units.ts";
+import { packAgility } from "../rules/walkers.ts";
+import { zoneScrollSpeed } from "../rules/zones.ts";
+import { packDogs } from "../state/pack.ts";
+import type { RunState } from "../state/runState.ts";
+import { addCents } from "../units.ts";
 import {
   approachChoices,
   type ApproachPath,
@@ -63,7 +68,7 @@ import {
   nextChoiceAt,
   nextStepAt,
   takeStep,
-} from "./approach";
+} from "./approach.ts";
 import {
   type Box,
   collideWithPack,
@@ -79,11 +84,17 @@ import {
   type ScaledBox,
   sweptHitDog,
   tickInvulnerability,
-} from "./collision";
-import { componentHitBoxes } from "./componentHitBoxes";
-import { type HeldStep, type HitStop, hitStopLength, startHitStop, tickHitStop } from "./hitStop";
-import { advanceLaneControl, type LaneControl, laneControlIn, steerLane } from "./laneControl";
-import { type LaneMotion, type LaneMotionConfig, laneMotionX, stillInLane } from "./laneMotion";
+} from "./collision.ts";
+import { componentHitBoxes } from "./componentHitBoxes.ts";
+import {
+  type HeldStep,
+  type HitStop,
+  hitStopLength,
+  startHitStop,
+  tickHitStop,
+} from "./hitStop.ts";
+import { advanceLaneControl, type LaneControl, laneControlIn, steerLane } from "./laneControl.ts";
+import { type LaneMotion, type LaneMotionConfig, laneMotionX, stillInLane } from "./laneMotion.ts";
 import {
   drawnLanes,
   hasLeftRoad,
@@ -96,12 +107,12 @@ import {
   type MoverPath,
   moverPlace,
   moverY,
-} from "./movers";
-import { drawnObstacleBox, exitLength, type PlacedPart, type RoadLens } from "./obstacleBox";
-import { awayHop, nextShyChoiceAt, shyChoices, type ShyPath, takeHop } from "./shy";
-import { signatureAlive, signatureSweeps } from "./signaturePaths";
-import type { AdmissionReport } from "./spawnAdmission";
-import { type PathRow, type SpawnEvent, takeDueSpawns } from "./spawning";
+} from "./movers.ts";
+import { drawnObstacleBox, exitLength, type PlacedPart, type RoadLens } from "./obstacleBox.ts";
+import { awayHop, nextShyChoiceAt, shyChoices, type ShyPath, takeHop } from "./shy.ts";
+import { signatureAlive, signatureSweeps } from "./signaturePaths.ts";
+import type { AdmissionReport } from "./spawnAdmission.ts";
+import { type PathRow, type SpawnEvent, takeDueSpawns } from "./spawning.ts";
 import {
   blocksLane,
   footprintOf,
@@ -118,7 +129,7 @@ import {
   type WalkItem,
   type WalkItemKind,
   type WalkSpawn,
-} from "./walkItems";
+} from "./walkItems.ts";
 
 export type WalkData = Pick<
   GameData,

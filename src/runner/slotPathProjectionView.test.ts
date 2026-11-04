@@ -1,15 +1,15 @@
 import { describe, expect, it, vi } from "vitest";
 
-import { plannerStreams } from "../testing/movers";
-import { createSlotCandidateDomains } from "./slotCandidateDomains";
+import { plannerStreams } from "../testing/movers.ts";
+import { createSlotCandidateDomains } from "./slotCandidateDomains.ts";
 import {
   createSlotPathProjection,
   prepareSlotKind,
   type SlotPathProjectionView,
   slotPlacementsAt,
-} from "./slotCandidates";
-import type { SlotKind } from "./slotConfig";
-import { rowSpacing, type SpawnPlan, zoneRows } from "./spawning";
+} from "./slotCandidates.ts";
+import type { SlotKind } from "./slotConfig.ts";
+import { rowSpacing, type SpawnPlan, zoneRows } from "./spawning.ts";
 
 function fixture(blocksLane = true) {
   const caps = { darts: 1, slowVehicles: 1, total: 3 };

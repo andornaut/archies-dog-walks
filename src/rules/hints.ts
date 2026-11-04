@@ -1,6 +1,6 @@
 import { keysOf } from "@andornaut/game-kit/records";
 
-import type { GameData, HintId, HintTrigger } from "../data/types";
+import type { GameData, HintId, HintTrigger } from "../data/types.ts";
 
 function matches(trigger: HintTrigger, event: HintTrigger): boolean {
   if (trigger.kind === "encounter") {

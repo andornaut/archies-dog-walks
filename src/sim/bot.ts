@@ -2,15 +2,15 @@ import { STEP_SECONDS } from "@andornaut/game-kit/clock/fixedStep";
 import { getOrInsertComputed } from "@andornaut/game-kit/maps";
 import { chance, type Random } from "@andornaut/game-kit/random";
 
-import type { DebuffId, DogId } from "../data/types";
-import { type LaneDirection, laneMask } from "../layout/lanes";
-import { type RoadProjection, screenXAt } from "../layout/projection";
-import { type LanedBox, type ScaledBox, sweptOverlapAt } from "../runner/collision";
-import { type LaneControl, steerLane } from "../runner/laneControl";
-import { hasLeftRoad, laneAt, type MoverPath, moverPlace, moverY } from "../runner/movers";
-import { moverOutcomes } from "../runner/outcomes";
-import { contactWindow, type PullEvent, type Pulls } from "../runner/pulls";
-import { signatureAlive } from "../runner/signaturePaths";
+import type { DebuffId, DogId } from "../data/types.ts";
+import { type LaneDirection, laneMask } from "../layout/lanes.ts";
+import { type RoadProjection, screenXAt } from "../layout/projection.ts";
+import { type LanedBox, type ScaledBox, sweptOverlapAt } from "../runner/collision.ts";
+import { type LaneControl, steerLane } from "../runner/laneControl.ts";
+import { hasLeftRoad, laneAt, type MoverPath, moverPlace, moverY } from "../runner/movers.ts";
+import { moverOutcomes } from "../runner/outcomes.ts";
+import { contactWindow, type PullEvent, type Pulls } from "../runner/pulls.ts";
+import { signatureAlive } from "../runner/signaturePaths.ts";
 import {
   laneMotionConfig,
   laneMoveSeconds,
@@ -20,14 +20,14 @@ import {
   steerWalk,
   type Walk,
   type WalkData,
-} from "../runner/walk";
+} from "../runner/walk.ts";
 import {
   isObstacleCategory,
   isPullObstacle,
   itemCategory,
   type WalkItem,
-} from "../runner/walkItems";
-import type { RunState } from "../state/runState";
+} from "../runner/walkItems.ts";
+import type { RunState } from "../state/runState.ts";
 import {
   type LaneHazard,
   type LanePrize,
@@ -35,9 +35,9 @@ import {
   planLanes,
   type PlannedMove,
   WAIT_MARGIN,
-} from "./lanePlan";
-import { type BotSight, moverShows, sightPaths } from "./sight";
-import type { Skill } from "./skills";
+} from "./lanePlan.ts";
+import { type BotSight, moverShows, sightPaths } from "./sight.ts";
+import type { Skill } from "./skills.ts";
 
 // The walk as the bot reads it: speed is the scroll speed in pixels per second.
 export interface BotRoad {

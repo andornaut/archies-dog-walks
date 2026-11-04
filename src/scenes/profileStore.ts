@@ -2,21 +2,26 @@ import type { StoreLoadResult } from "@andornaut/game-kit/save/saveStore";
 import { localSaveStorage } from "@andornaut/game-kit/web/save/dom/localSaveStorage";
 import { type Game, type Scene, Scenes } from "phaser";
 
-import { gameData } from "../data";
-import type { AchievementId, HintId, WalkerId } from "../data/types";
-import { soundVolumes } from "../home/settings";
-import type { Change } from "../rules/causes";
-import type { RunResult } from "../save/checkpoint";
-import { saveContextFrom } from "../save/load";
-import { newPlayerOnDevice, ProfileSession, type RunEnd, type StorageState } from "../save/profile";
-import { encodeResume, launchWalk, type ResumeWalk } from "../save/resume";
-import { type Checkpoint, type SaveDocument, type Settings } from "../save/schema";
-import { pageSaveStore, RESUME_BACKUP_KEY } from "../save/storage";
-import { currentSettings, PROFILE_SESSION_KEY as SESSION_KEY } from "./sceneSettings";
-import { soundboardOf } from "./soundboard";
+import { gameData } from "../data/index.ts";
+import type { AchievementId, HintId, WalkerId } from "../data/types.ts";
+import { soundVolumes } from "../home/settings.ts";
+import type { Change } from "../rules/causes.ts";
+import type { RunResult } from "../save/checkpoint.ts";
+import { saveContextFrom } from "../save/load.ts";
+import {
+  newPlayerOnDevice,
+  ProfileSession,
+  type RunEnd,
+  type StorageState,
+} from "../save/profile.ts";
+import { encodeResume, launchWalk, type ResumeWalk } from "../save/resume.ts";
+import { type Checkpoint, type SaveDocument, type Settings } from "../save/schema.ts";
+import { pageSaveStore, RESUME_BACKUP_KEY } from "../save/storage.ts";
+import { currentSettings, PROFILE_SESSION_KEY as SESSION_KEY } from "./sceneSettings.ts";
+import { soundboardOf } from "./soundboard.ts";
 
-export type { Settings } from "../save/schema";
-export { currentSettings } from "./sceneSettings";
+export type { Settings } from "../save/schema.ts";
+export { currentSettings } from "./sceneSettings.ts";
 
 // The player's save, shared by every scene through the game's registry. BootScene opens it
 // before any other scene runs.

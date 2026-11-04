@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import type { CardSource } from "../data/types";
-import { type HitStop, hitStopLength, startHitStop, tickHitStop } from "./hitStop";
+import type { CardSource } from "../data/types.ts";
+import { type HitStop, hitStopLength, startHitStop, tickHitStop } from "./hitStop.ts";
 
 const LENGTHS = { encounter: 1, minor: 0.6 };
 const CARD: CardSource = { affected: ["kilo"], encounter: "skunk", kind: "encounter" };

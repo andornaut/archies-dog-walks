@@ -1,16 +1,16 @@
 import { fillNames } from "@andornaut/game-kit/lines";
 import { describe, expect, it } from "vitest";
 
-import { gameData } from "../data";
-import { DEBUFFS } from "../data/debuffs";
-import { ENCOUNTERS } from "../data/encounters";
-import { HOME_TEXT } from "../data/homeText";
-import { TUNING } from "../data/tuning";
-import type { Effect, MoneyKey, MultiplierKey } from "../data/types";
-import { UPGRADES } from "../data/upgrades";
-import { WALKER_PERKS } from "../data/walkers";
-import { TEST_TUNING } from "../testing/tuning";
-import { cents } from "../units";
+import { DEBUFFS } from "../data/debuffs.ts";
+import { ENCOUNTERS } from "../data/encounters.ts";
+import { HOME_TEXT } from "../data/homeText.ts";
+import { gameData } from "../data/index.ts";
+import { TUNING } from "../data/tuning.ts";
+import type { Effect, MoneyKey, MultiplierKey } from "../data/types.ts";
+import { UPGRADES } from "../data/upgrades.ts";
+import { WALKER_PERKS } from "../data/walkers.ts";
+import { TEST_TUNING } from "../testing/tuning.ts";
+import { cents } from "../units.ts";
 import {
   agilityPercent,
   capitalize,
@@ -21,8 +21,8 @@ import {
   perkEffect,
   sentenceList,
   SIZE_NAMES,
-} from "./effectText";
-import { read } from "./units";
+} from "./effectText.ts";
+import { read } from "./units.ts";
 
 // The game's chances, which the test tuning pins to 0, so a dodge reads as one in so many.
 const data = {

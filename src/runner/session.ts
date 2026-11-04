@@ -1,8 +1,8 @@
 import { type Random, randomStream } from "@andornaut/game-kit/random";
 
-import type { CardSource, DogId } from "../data/types";
-import type { LaneDirection } from "../layout/lanes";
-import type { MoneyChange } from "../rules/causes";
+import type { CardSource, DogId } from "../data/types.ts";
+import type { LaneDirection } from "../layout/lanes.ts";
+import type { MoneyChange } from "../rules/causes.ts";
 import {
   type CardData,
   cardFor,
@@ -12,11 +12,11 @@ import {
   chooseOption,
   offerFork,
   openCard,
-} from "../rules/choices";
-import { read } from "../rules/units";
-import type { RunState } from "../state/runState";
-import { holdForFiring } from "./firingStop";
-import { NO_PULLS, type PullData, type Pulls, type PullStep, stepPulls } from "./pulls";
+} from "../rules/choices.ts";
+import { read } from "../rules/units.ts";
+import type { RunState } from "../state/runState.ts";
+import { holdForFiring } from "./firingStop.ts";
+import { NO_PULLS, type PullData, type Pulls, type PullStep, stepPulls } from "./pulls.ts";
 import {
   finishZone,
   headHome,
@@ -27,9 +27,9 @@ import {
   type WalkData,
   type WalkStep,
   zoneLength,
-} from "./walk";
-import { planZoneWithContext, type ZonePlanObservation } from "./zonePlan";
-import { type DebuffMovementClock, hasDebuffDrift, stepDebuffMovement } from "./zoomies";
+} from "./walk.ts";
+import { planZoneWithContext, type ZonePlanObservation } from "./zonePlan.ts";
+import { type DebuffMovementClock, hasDebuffDrift, stepDebuffMovement } from "./zoomies.ts";
 
 // One walk's step order, shared by the run scene and the simulator: the inputs, the pulls, the
 // Zoomies' drift, the walk, the firing hold, then the queued cards, the zone's end and the next

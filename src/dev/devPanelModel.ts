@@ -3,13 +3,13 @@
 import { assertNever } from "@andornaut/game-kit/assertNever";
 import { keysOf } from "@andornaut/game-kit/records";
 
-import type { GameData, ZoneId } from "../data/types";
-import { firstZoneId, type RouteData } from "../rules/route";
-import { MAX_RUN_DOGS, type SaveDocument } from "../save/schema";
-import type { RunState } from "../state/runState";
-import { addCents, type Cents, cents } from "../units";
-import { stripDevParams } from "./devStart";
-import { type RunSetup, runSetupLink } from "./runSetup";
+import type { GameData, ZoneId } from "../data/types.ts";
+import { firstZoneId, type RouteData } from "../rules/route.ts";
+import { MAX_RUN_DOGS, type SaveDocument } from "../save/schema.ts";
+import type { RunState } from "../state/runState.ts";
+import { addCents, type Cents, cents } from "../units.ts";
+import { stripDevParams } from "./devStart.ts";
+import { type RunSetup, runSetupLink } from "./runSetup.ts";
 
 // sessionStorage: an input log, as encodeInputLog writes it, for the next run to play back.
 // The run that reads it should remove it, so a reload plays normally.

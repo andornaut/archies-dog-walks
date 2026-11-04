@@ -2,8 +2,8 @@ import { type SaveKeys, type SaveStore, saveStore } from "@andornaut/game-kit/sa
 import type { SaveStorage } from "@andornaut/game-kit/save/storage";
 import { localSaveStorage } from "@andornaut/game-kit/web/save/dom/localSaveStorage";
 
-import { type SaveContext, saveFormat } from "./load";
-import type { SaveDocument } from "./schema";
+import { type SaveContext, saveFormat } from "./load.ts";
+import type { SaveDocument } from "./schema.ts";
 
 export const SAVE_KEYS: SaveKeys = {
   backup: "dog-walker-game:save-backup",

@@ -1,11 +1,11 @@
 import { blankImage } from "@andornaut/art-kit/rgbaImage";
 import { describe, expect, it } from "vitest";
 
-import { ROAD_CAMERA, SCREEN_LAYOUT } from "../data/screen";
-import { depthDraw } from "../layout/depthScale";
-import { project } from "../layout/projection";
-import { walkProjection } from "../runner/walkGeometry";
-import { depthPreviewArgs, type PreviewArt, sweepDistances, sweepRow } from "./depthPreview";
+import { ROAD_CAMERA, SCREEN_LAYOUT } from "../data/screen.ts";
+import { depthDraw } from "../layout/depthScale.ts";
+import { project } from "../layout/projection.ts";
+import { walkProjection } from "../runner/walkGeometry.ts";
+import { depthPreviewArgs, type PreviewArt, sweepDistances, sweepRow } from "./depthPreview.ts";
 
 const { road } = SCREEN_LAYOUT;
 const lens = walkProjection(ROAD_CAMERA, road);

@@ -3,4 +3,4 @@
 // module runs, and an error thrown while one loads shows it rather than a blank page. The
 // screen imports only its own words (src/data/menuText.ts) and the palette, not the game data,
 // for the same reason.
-import "./crashScreen";
+import "./crashScreen.ts";

@@ -1,8 +1,8 @@
 import type { Scene } from "phaser";
 import { describe, expect, it, vi } from "vitest";
 
-import { type AtlasManifest, atlasPageKey } from "../atlasManifest";
-import { atlasPageBytes } from "./manifestArt";
+import { type AtlasManifest, atlasPageKey } from "../atlasManifest.ts";
+import { atlasPageBytes } from "./manifestArt.ts";
 
 vi.mock("virtual:art-files", () => ({ default: new Map() }));
 

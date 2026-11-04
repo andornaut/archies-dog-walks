@@ -1,7 +1,7 @@
 import { seededRandom } from "@andornaut/game-kit/random";
 import { describe, expect, it } from "vitest";
 
-import { WORLD } from "../data/world";
+import { WORLD } from "../data/world.ts";
 import {
   currentZone,
   defaultRoute,
@@ -10,7 +10,7 @@ import {
   unwalkedZones,
   walkLength,
   zoneAt,
-} from "./route";
+} from "./route.ts";
 
 const data = { world: WORLD };
 const order = WORLD.zones.map(({ id }) => id);

@@ -1,11 +1,11 @@
 import type { RgbaImage } from "@andornaut/art-kit/rgbaImage";
 import type { Plugin } from "vite";
 
-import type { ArtFileMap } from "../../assets/artUrl";
-import { ART_DIR, ART_MANIFEST, artManifestText, generateArtManifest } from "../artManifest";
-import { nodeArtFiles, writeIfChanged } from "../files";
-import { buildAtlases, WEBP_PAGES } from "./atlasBuild";
-import { ART_FILES_MODULE, hashGameArt } from "./hashedArt";
+import type { ArtFileMap } from "../../assets/artUrl.ts";
+import { ART_DIR, ART_MANIFEST, artManifestText, generateArtManifest } from "../artManifest.ts";
+import { nodeArtFiles, writeIfChanged } from "../files.ts";
+import { buildAtlases, WEBP_PAGES } from "./atlasBuild.ts";
+import { ART_FILES_MODULE, hashGameArt } from "./hashedArt.ts";
 
 // Vite's prefix for a module id that names no file.
 const RESOLVED_ART_FILES_MODULE = `\0${ART_FILES_MODULE}`;

@@ -2,26 +2,32 @@ import { itemAt } from "@andornaut/game-kit/arrays";
 import { insetRect, type Point, type Rect } from "@andornaut/game-kit/rect";
 import { Scene, Scenes } from "phaser";
 
-import { gameData } from "../data";
-import type { HelpPictureId } from "../data/types";
-import { helpBody } from "../help/helpBody";
-import { helpActionForKey, helpActionForPointer } from "../help/helpInput";
-import { dotRects, HELP_LAYOUT, helpActionAt } from "../help/helpLayout";
-import { applyHelpAction, clampPage, type HelpAction, helpButtons } from "../help/helpPaging";
-import { closeHelp } from "../help/helpSeen";
-import { screenArea } from "../input/outsideTap";
-import { LABEL_HELP_GAP } from "../ui/labelHelpGap";
-import { PALETTE } from "../ui/palette";
-import { addFilledRect } from "../ui/phaser/draw";
-import { addPixelText, wrapPixelText } from "../ui/phaser/pixelText";
-import { TEXT_SCALE } from "../ui/textFit";
-import { topBarRects } from "../ui/topBarTrim";
-import type { HelpPictureData } from "./HelpPictureScene";
-import { listenOnePress } from "./onePress";
-import { closeOverlay, listenDismiss, type OverlayData } from "./overlay";
-import { updateProfile } from "./profileStore";
-import { SCENE_KEYS, type SceneKey } from "./sceneKeys";
-import { addCloseButton, addMenuButton, addTapBurst, clearScene, type MenuButton } from "./uiKit";
+import { gameData } from "../data/index.ts";
+import type { HelpPictureId } from "../data/types.ts";
+import { helpBody } from "../help/helpBody.ts";
+import { helpActionForKey, helpActionForPointer } from "../help/helpInput.ts";
+import { dotRects, HELP_LAYOUT, helpActionAt } from "../help/helpLayout.ts";
+import { applyHelpAction, clampPage, type HelpAction, helpButtons } from "../help/helpPaging.ts";
+import { closeHelp } from "../help/helpSeen.ts";
+import { screenArea } from "../input/outsideTap.ts";
+import { LABEL_HELP_GAP } from "../ui/labelHelpGap.ts";
+import { PALETTE } from "../ui/palette.ts";
+import { addFilledRect } from "../ui/phaser/draw.ts";
+import { addPixelText, wrapPixelText } from "../ui/phaser/pixelText.ts";
+import { TEXT_SCALE } from "../ui/textFit.ts";
+import { topBarRects } from "../ui/topBarTrim.ts";
+import type { HelpPictureData } from "./HelpPictureScene.ts";
+import { listenOnePress } from "./onePress.ts";
+import { closeOverlay, listenDismiss, type OverlayData } from "./overlay.ts";
+import { updateProfile } from "./profileStore.ts";
+import { SCENE_KEYS, type SceneKey } from "./sceneKeys.ts";
+import {
+  addCloseButton,
+  addMenuButton,
+  addTapBurst,
+  clearScene,
+  type MenuButton,
+} from "./uiKit.ts";
 
 // Emitted on game.events when the help closes, by any route.
 export const HELP_CLOSED_EVENT = "help-closed";

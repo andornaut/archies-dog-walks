@@ -1,8 +1,8 @@
-import type { GameData } from "../data/types";
-import { hasLeftRoad, moverPlace, moverY } from "../runner/movers";
-import type { SpawnEvent } from "../runner/spawning";
-import { itemHeight, type RoadGeometry } from "../runner/walk";
-import { footprintOf, type WalkItem, type WalkItemKind } from "../runner/walkItems";
+import type { GameData } from "../data/types.ts";
+import { hasLeftRoad, moverPlace, moverY } from "../runner/movers.ts";
+import type { SpawnEvent } from "../runner/spawning.ts";
+import { itemHeight, type RoadGeometry } from "../runner/walk.ts";
+import { footprintOf, type WalkItem, type WalkItemKind } from "../runner/walkItems.ts";
 
 // The red herring crossers (herringSpawn in src/runner/moverPlanning.ts): a share of a kind's
 // planned crossers, such as the tourist train, that the planner leaves off the road. Each crosses

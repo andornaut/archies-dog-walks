@@ -1,14 +1,14 @@
 import { itemAt, partitionPoint, removeItem } from "@andornaut/game-kit/arrays";
 
-import { laneMask } from "../layout/lanes";
+import { laneMask } from "../layout/lanes.ts";
 import {
   alternativeLanesOpen,
   type LaneAlternativeBlock,
   requiredAlternativeWalls,
-} from "./laneAlternatives";
-import { moverReservationsMayShare } from "./moverPlanning";
-import type { LaneSpan, MoverPath } from "./movers";
-import type { FeasibilityObserver } from "./spawnFeasibilityDiagnostics";
+} from "./laneAlternatives.ts";
+import { moverReservationsMayShare } from "./moverPlanning.ts";
+import type { LaneSpan, MoverPath } from "./movers.ts";
+import type { FeasibilityObserver } from "./spawnFeasibilityDiagnostics.ts";
 import {
   addLanes,
   type BlockingPlace,
@@ -24,7 +24,7 @@ import {
   type PathChange,
   type SpawnPlan,
   type SpawnQuota,
-} from "./spawning";
+} from "./spawning.ts";
 
 // Every block kept: its first row, the last row whose window and the last whose gap it
 // overlaps, and its lanes.

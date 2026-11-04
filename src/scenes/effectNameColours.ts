@@ -1,9 +1,9 @@
 import type { GameObjects } from "phaser";
 
-import { type EffectNameKind, pillKind } from "../hud/effectNames";
-import { PALETTE } from "../ui/palette";
-import { fillCutRect } from "../ui/phaser/draw";
-import { labelPills } from "../ui/phaser/pixelText";
+import { type EffectNameKind, pillKind } from "../hud/effectNames.ts";
+import { PALETTE } from "../ui/palette.ts";
+import { fillCutRect } from "../ui/phaser/draw.ts";
+import { labelPills } from "../ui/phaser/pixelText.ts";
 
 type PaletteName = keyof typeof PALETTE;
 

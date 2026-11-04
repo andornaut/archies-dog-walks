@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 
-import { type Contact, pathShortfalls } from "../testing/avoidable";
-import type { MoverPath } from "./movers";
-import { SpawnCells } from "./spawnCells";
+import { type Contact, pathShortfalls } from "../testing/avoidable.ts";
+import type { MoverPath } from "./movers.ts";
+import { SpawnCells } from "./spawnCells.ts";
 import {
   hitLength,
   moverMayTake,
@@ -17,7 +17,7 @@ import {
   type SpawnPlan,
   spawnRowDistances,
   takeDueSpawns,
-} from "./spawning";
+} from "./spawning.ts";
 
 type Kind = "obstacle" | "tip" | "treat";
 

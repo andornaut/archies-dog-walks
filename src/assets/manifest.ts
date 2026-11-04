@@ -1,7 +1,7 @@
 import * as v from "valibot";
 
-import { DEPTH_STEPS } from "./depthSteps";
-import { parseOrThrow, record } from "./jsonSchema";
+import { DEPTH_STEPS } from "./depthSteps.ts";
+import { parseOrThrow, record } from "./jsonSchema.ts";
 
 // Where a road sprite stands, measured from frame 0 by the art pipeline, in frame pixels.
 export interface SpriteAnchor {

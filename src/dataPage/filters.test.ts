@@ -10,7 +10,7 @@ import {
   type Row,
   serializeFilters,
   toggleFilter,
-} from "./filters";
+} from "./filters.ts";
 
 const filters = (entries: Record<string, string[]>): Filters =>
   new Map(Object.entries(entries).map(([key, values]) => [key, new Set(values)]));

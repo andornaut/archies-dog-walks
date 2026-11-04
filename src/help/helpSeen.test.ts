@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { closeHelp, type HelpSeenSave, startWalkOpensHelp } from "./helpSeen";
+import { closeHelp, type HelpSeenSave, startWalkOpensHelp } from "./helpSeen.ts";
 
 type StartAction = "help" | "startWalk";
 

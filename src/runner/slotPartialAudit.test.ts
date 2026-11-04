@@ -1,15 +1,15 @@
 import { describe, expect, it } from "vitest";
 
-import { auditSlotPartialPlan, auditSlotPlan } from "./slotAudit";
-import { prepareSlotKind, slotPlacementsAt } from "./slotCandidates";
-import type { SlotConfiguration, SlotKind } from "./slotConfig";
-import { createSlotConstructionState } from "./slotConstraintState";
-import { minimumSlotDelivery, type SlotOmission } from "./slotDelivery";
-import { slotMotionStreams } from "./slotEntropy";
-import { makeSlotJobs } from "./slotJobs";
-import { materialisePartialSlotPlan, type SlotAssignment } from "./slotPlan";
-import { rowSpacing, type SpawnPlan, type SpawnQuota, zoneRows } from "./spawning";
-import { auditSpawnPlan } from "./spawnValidation";
+import { auditSlotPartialPlan, auditSlotPlan } from "./slotAudit.ts";
+import { prepareSlotKind, slotPlacementsAt } from "./slotCandidates.ts";
+import type { SlotConfiguration, SlotKind } from "./slotConfig.ts";
+import { createSlotConstructionState } from "./slotConstraintState.ts";
+import { minimumSlotDelivery, type SlotOmission } from "./slotDelivery.ts";
+import { slotMotionStreams } from "./slotEntropy.ts";
+import { makeSlotJobs } from "./slotJobs.ts";
+import { materialisePartialSlotPlan, type SlotAssignment } from "./slotPlan.ts";
+import { rowSpacing, type SpawnPlan, type SpawnQuota, zoneRows } from "./spawning.ts";
+import { auditSpawnPlan } from "./spawnValidation.ts";
 
 const geometry: Omit<SpawnPlan<string>, "quotas"> = {
   cellInset: 5,

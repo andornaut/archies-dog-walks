@@ -1,11 +1,11 @@
 import type { Rect } from "@andornaut/game-kit/rect";
 import { type FontMetrics, inkRowsOfLines } from "@andornaut/game-kit/text/bitmapFont";
 
-import { helpCapDy } from "../ui/labelHelpGap";
-import { type ScrollbarRects, scrollbarRects } from "../ui/scrollbar";
-import { BADGE_STRIP, type WallCellLines } from "./badgesView";
-import { MODAL } from "./modalLayout";
-import { SHOP_LAYOUT, shopListFrame, shopTabRects } from "./shopLayout";
+import { helpCapDy } from "../ui/labelHelpGap.ts";
+import { type ScrollbarRects, scrollbarRects } from "../ui/scrollbar.ts";
+import { BADGE_STRIP, type WallCellLines } from "./badgesView.ts";
+import { MODAL } from "./modalLayout.ts";
+import { SHOP_LAYOUT, shopListFrame, shopTabRects } from "./shopLayout.ts";
 
 export type StatsTab = "badges" | "dogs" | "runs";
 

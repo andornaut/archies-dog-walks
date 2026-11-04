@@ -1,10 +1,10 @@
 import { itemAt } from "@andornaut/game-kit/arrays";
 import { describe, expect, it, vi } from "vitest";
 
-import { ROAD_CAMERA, SCREEN_CONFIG } from "../data/screen";
-import type { ZoneId } from "../data/types";
-import { project, roadProjection } from "../layout/projection";
-import { screenLayout, walkerFootY } from "../layout/screenLayout";
+import { ROAD_CAMERA, SCREEN_CONFIG } from "../data/screen.ts";
+import type { ZoneId } from "../data/types.ts";
+import { project, roadProjection } from "../layout/projection.ts";
+import { screenLayout, walkerFootY } from "../layout/screenLayout.ts";
 import {
   distanceBehind,
   type LightPlace,
@@ -14,16 +14,16 @@ import {
   poolZs,
   type VergeLightFrame,
   type VergeLightStage,
-} from "./lightPlaces";
-import { lightOriginY, LIGHTS } from "./lights";
-import { VERGES } from "./roadside";
-import { START_STRIP_LENGTH } from "./roadsideProps";
+} from "./lightPlaces.ts";
+import { lightOriginY, LIGHTS } from "./lights.ts";
+import { VERGES } from "./roadside.ts";
+import { START_STRIP_LENGTH } from "./roadsideProps.ts";
 
 // Yonge Street's verge made over as the test verge, with a light every 128, and The Beaches'
 // as the same verge with its lights shown in Yonge Street alone.
 vi.mock("../../shared/verges.json", async (importOriginal) => {
   const { default: table } = await importOriginal<{ default: Record<string, unknown> }>();
-  const { PAVED_VERGE } = await import("../testing/verges");
+  const { PAVED_VERGE } = await import("../testing/verges.ts");
   const yongeOnly = PAVED_VERGE.pools.map((pool) => ({ ...pool, zones: ["yongeStreet"] }));
   return {
     default: {

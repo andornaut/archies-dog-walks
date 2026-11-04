@@ -1,12 +1,12 @@
 import { fillLine } from "@andornaut/game-kit/lines";
 
-import type { GameData, WalkerId } from "../data/types";
-import { agilityPercent, perkEffect } from "../rules/effectText";
-import { walkerGoal } from "../rules/walkers";
-import type { Owned, SaveDocument } from "../save/schema";
-import { type ItemTile, itemTile } from "../ui/interaction";
-import { togglePick } from "./home";
-import { HOME_TEXT_FIELDS, homeLine } from "./homeText";
+import type { GameData, WalkerId } from "../data/types.ts";
+import { agilityPercent, perkEffect } from "../rules/effectText.ts";
+import { walkerGoal } from "../rules/walkers.ts";
+import type { Owned, SaveDocument } from "../save/schema.ts";
+import { type ItemTile, itemTile } from "../ui/interaction.ts";
+import { togglePick } from "./home.ts";
+import { HOME_TEXT_FIELDS, homeLine } from "./homeText.ts";
 
 type WalkerText = Pick<GameData, "homeText" | "tuning" | "walkerPerks" | "walkers">;
 

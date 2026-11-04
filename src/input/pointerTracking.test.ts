@@ -8,17 +8,17 @@ import {
 } from "@andornaut/game-kit/random";
 import { describe, expect, it } from "vitest";
 
-import { walkPaused } from "../hud/topBar";
-import { type ScreenConfig, screenLayout } from "../layout/screenLayout";
+import { walkPaused } from "../hud/topBar.ts";
+import { type ScreenConfig, screenLayout } from "../layout/screenLayout.ts";
 import {
   advanceLaneControl,
   type LaneControl,
   laneControlIn,
   pullLane,
   steerLane,
-} from "../runner/laneControl";
-import { destinationLane, stillInLane } from "../runner/laneMotion";
-import type { GestureAction } from "./gestures";
+} from "../runner/laneControl.ts";
+import { destinationLane, stillInLane } from "../runner/laneMotion.ts";
+import type { GestureAction } from "./gestures.ts";
 import {
   idleTrack,
   type PointerPhase,
@@ -28,7 +28,7 @@ import {
   tickTrack,
   type TrackContext,
   trackPointer,
-} from "./pointerTracking";
+} from "./pointerTracking.ts";
 
 // Road y 40-470 with its lanes at x 40-320, five of 56px; the top bar is y 0-40 and the
 // dog cards y 470-560. A drag's first step is at 20px.

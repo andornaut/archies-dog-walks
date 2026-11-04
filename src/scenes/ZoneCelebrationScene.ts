@@ -3,8 +3,8 @@ import { guardSceneInput } from "@andornaut/game-kit/input/phaser/guardSceneInpu
 import type { Rect } from "@andornaut/game-kit/rect";
 import { type GameObjects, Math as PhaserMath, Scene } from "phaser";
 
-import { ZONE_CELEBRATION_ART as ART } from "../assets/spriteKeys";
-import { gameData } from "../data";
+import { ZONE_CELEBRATION_ART as ART } from "../assets/spriteKeys.ts";
+import { gameData } from "../data/index.ts";
 import {
   CELEBRATION_LAYOUT as LAYOUT,
   GREETING_FIT,
@@ -13,34 +13,40 @@ import {
   laidInfoLine,
   newWalkerRows,
   zoneDoneRows,
-} from "../hud/celebrationLayout";
+} from "../hud/celebrationLayout.ts";
 import {
   type CelebrationText,
   celebrationText,
   type LinePart,
   type ZoneCelebration,
-} from "../hud/zoneCelebration";
-import { cardNumberForKey, isConfirmKey, isPauseKey, menuKeyActs } from "../input/keyBindings";
-import { keyNumbersShown } from "../input/keyNumbers";
-import { PALETTE } from "../ui/palette";
-import { fillRect } from "../ui/phaser/draw";
+} from "../hud/zoneCelebration.ts";
+import { cardNumberForKey, isConfirmKey, isPauseKey, menuKeyActs } from "../input/keyBindings.ts";
+import { keyNumbersShown } from "../input/keyNumbers.ts";
+import { PALETTE } from "../ui/palette.ts";
+import { fillRect } from "../ui/phaser/draw.ts";
 import {
   addPixelText,
   fitPixelText,
   pixelFontMetrics,
   setPixelText,
   withProbe,
-} from "../ui/phaser/pixelText";
-import { addRampDim } from "../ui/phaser/rampDim";
-import { addConfetti } from "./badges";
-import { addCelebrationHeadline } from "./celebrationHeadline";
-import { modalTextWidth } from "./modalMeasure";
-import { closeOverlay, type OverlayData } from "./overlay";
-import { currentSettings, walkerSpriteKey } from "./profileStore";
-import { SCENE_KEYS } from "./sceneKeys";
-import { soundboardOf } from "./soundboard";
-import { playFirstTag } from "./sprites";
-import { addMenuButton, addPanel, BODY_TEXT, listenButtonTap, MENU_BUTTON_KEY_GAP } from "./uiKit";
+} from "../ui/phaser/pixelText.ts";
+import { addRampDim } from "../ui/phaser/rampDim.ts";
+import { addConfetti } from "./badges.ts";
+import { addCelebrationHeadline } from "./celebrationHeadline.ts";
+import { modalTextWidth } from "./modalMeasure.ts";
+import { closeOverlay, type OverlayData } from "./overlay.ts";
+import { currentSettings, walkerSpriteKey } from "./profileStore.ts";
+import { SCENE_KEYS } from "./sceneKeys.ts";
+import { soundboardOf } from "./soundboard.ts";
+import { playFirstTag } from "./sprites.ts";
+import {
+  addMenuButton,
+  addPanel,
+  BODY_TEXT,
+  listenButtonTap,
+  MENU_BUTTON_KEY_GAP,
+} from "./uiKit.ts";
 
 export interface ZoneCelebrationSceneData extends OverlayData {
   celebration: ZoneCelebration;

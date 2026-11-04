@@ -1,9 +1,9 @@
-import type { MovementKind } from "../data/types";
+import type { MovementKind } from "../data/types.ts";
 import {
   alternativeLanesOpen,
   deterministicOccupancyMasks,
   reactiveLaneMasks,
-} from "./laneAlternatives";
+} from "./laneAlternatives.ts";
 import {
   DART_LIFTS,
   isHerring,
@@ -13,14 +13,14 @@ import {
   type MoverVisibilityProof,
   onScreenOf,
   ridersMeet,
-} from "./moverPlanning";
+} from "./moverPlanning.ts";
 import {
   signatureFinishClearance,
   signaturePlace,
   type SignatureSweep,
   signatureSweeps,
   signatureTravelSweeps,
-} from "./signaturePaths";
+} from "./signaturePaths.ts";
 import {
   blockingLength,
   type BlockingPlace,
@@ -41,10 +41,10 @@ import {
   type SpawnQuota,
   WIDE_LANES,
   zoneRows,
-} from "./spawning";
-import { auditHerringGeometry, auditMoverGeometry } from "./spawnMoverValidation";
-import type { SpawnVisibility, SpawnVisibilityTrace } from "./spawnVisibility";
-import { rowsWithin, WHOLE_ZONE } from "./stretches";
+} from "./spawning.ts";
+import { auditHerringGeometry, auditMoverGeometry } from "./spawnMoverValidation.ts";
+import type { SpawnVisibility, SpawnVisibilityTrace } from "./spawnVisibility.ts";
+import { rowsWithin, WHOLE_ZONE } from "./stretches.ts";
 
 export interface SpawnFinding {
   readonly source: "events" | "herrings";

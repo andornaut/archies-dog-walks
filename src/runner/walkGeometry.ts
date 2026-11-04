@@ -1,6 +1,6 @@
 import type { Rect } from "@andornaut/game-kit/rect";
 
-import { ROAD_HIT_SIZE } from "../assets/spriteKeys";
+import { ROAD_HIT_SIZE } from "../assets/spriteKeys.ts";
 import {
   packOnRoad,
   packOutline,
@@ -8,10 +8,10 @@ import {
   PART_INSET,
   type PartBox,
   tallestPackLength,
-} from "../layout/packFormation";
-import { type RoadCamera, type RoadProjection, roadProjection } from "../layout/projection";
-import { walkerFootY } from "../layout/screenLayout";
-import type { RoadGeometry } from "./walk";
+} from "../layout/packFormation.ts";
+import { type RoadCamera, type RoadProjection, roadProjection } from "../layout/projection.ts";
+import { walkerFootY } from "../layout/screenLayout.ts";
+import type { RoadGeometry } from "./walk.ts";
 
 // A pickup's, lucky find's or gear drop's hit box is its lanes less the inset at each side, a
 // cell's spare width beside ROAD_HIT_SIZE, so one lane hits 40px wide on 64px lanes, whatever size

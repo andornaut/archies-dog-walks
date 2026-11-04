@@ -1,4 +1,4 @@
-import type { Achievement } from "./types";
+import type { Achievement } from "./types.ts";
 
 // Badges display by difficulty, retaining this order within each tier.
 // Each is earned once every condition holds; the wall shows the goal under a locked badge.

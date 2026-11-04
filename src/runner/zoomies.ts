@@ -2,11 +2,11 @@ import { SECONDS_EPSILON } from "@andornaut/game-kit/clock/fixedStep";
 import type { Random } from "@andornaut/game-kit/random";
 import { keysOf } from "@andornaut/game-kit/records";
 
-import type { DebuffDriftMovement, DebuffId, GameData } from "../data/types";
-import type { LaneDirection } from "../layout/lanes";
-import { read } from "../rules/units";
-import { laneBlockedForPull, type PullData, type PullGeometry } from "./pulls";
-import { steerWalk, type Walk } from "./walk";
+import type { DebuffDriftMovement, DebuffId, GameData } from "../data/types.ts";
+import type { LaneDirection } from "../layout/lanes.ts";
+import { read } from "../rules/units.ts";
+import { laneBlockedForPull, type PullData, type PullGeometry } from "./pulls.ts";
+import { steerWalk, type Walk } from "./walk.ts";
 
 // One active movement owner shares one walking-time clock and one in-memory next interval.
 export interface DebuffMovementClock {

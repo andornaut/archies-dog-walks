@@ -1,8 +1,8 @@
 import { installCrashScreen } from "@andornaut/game-kit/web/crash/dom/crashScreen";
 import { afterEach, expect, it, vi } from "vitest";
 
-import palette from "../../shared/palette.json";
-import { MENU_TEXT } from "../data/menuText";
+import palette from "../../shared/palette.json" with { type: "json" };
+import { MENU_TEXT } from "../data/menuText.ts";
 
 vi.mock("@andornaut/game-kit/web/crash/dom/crashScreen", () => ({ installCrashScreen: vi.fn() }));
 vi.mock("virtual:art-files", () => ({
@@ -21,7 +21,7 @@ it("installs the kit crash screen with the game words, palette and portrait", as
   vi.stubGlobal("location", { search: "" });
   const screen = { stopGameOnCrash: vi.fn() };
   vi.mocked(installCrashScreen).mockReturnValueOnce(screen);
-  const { CRASH_SCREEN } = await import("./crashScreen");
+  const { CRASH_SCREEN } = await import("./crashScreen.ts");
   expect(CRASH_SCREEN).toBe(screen);
   expect(installCrashScreen).toHaveBeenCalledWith(window, {
     buildLabel: expect.any(String),

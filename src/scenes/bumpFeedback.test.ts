@@ -3,9 +3,9 @@ import { EventEmitter } from "node:events";
 import type { Scene } from "phaser";
 import { describe, expect, it, vi } from "vitest";
 
-import { BumpBorder } from "./bumpBorder";
-import { BumpOverscan } from "./run/bumpOverscan";
-import { cancelRoadShake, shakeRoad } from "./run/hitFx";
+import { BumpBorder } from "./bumpBorder.ts";
+import { BumpOverscan } from "./run/bumpOverscan.ts";
+import { cancelRoadShake, shakeRoad } from "./run/hitFx.ts";
 
 vi.mock("phaser", () => ({ TintModes: { FILL: 1 } }));
 

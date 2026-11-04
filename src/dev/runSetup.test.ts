@@ -8,7 +8,7 @@ import {
   type RunSetupLimits,
   runSetupLink,
   runSetupToQuery,
-} from "./runSetup";
+} from "./runSetup.ts";
 
 const limits: RunSetupLimits<"bo" | "kilo" | "rex" | "zip", "collar" | "shoes"> = {
   dogIds: ["bo", "kilo", "rex", "zip"],

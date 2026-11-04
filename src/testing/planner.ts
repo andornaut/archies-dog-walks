@@ -2,18 +2,18 @@
 // road and pack, and each lane-blocking spawn's spans and contact with the pack.
 import { keysOf } from "@andornaut/game-kit/records";
 
-import { MINOR_OBSTACLES } from "../data/minorObstacles";
-import { LANE_COUNT, ROAD_CAMERA, SCREEN_LAYOUT } from "../data/screen";
-import { TUNING } from "../data/tuning";
-import type { WalkerId, World, Zone, ZoneId } from "../data/types";
-import { DEFAULT_WALKER, WALKERS } from "../data/walkers";
-import { WORLD } from "../data/world";
-import { type PackSprites, PART_INSET } from "../layout/packFormation";
-import { read } from "../rules/units";
-import { slowestDebuffedAgility, slowestPackAgility } from "../rules/walkers";
-import { drawnLanes, hasLeftRoad, type MoverPath, moverPlace } from "../runner/movers";
-import { moverOutcomes } from "../runner/outcomes";
-import { signaturePlace } from "../runner/signaturePaths";
+import { MINOR_OBSTACLES } from "../data/minorObstacles.ts";
+import { LANE_COUNT, ROAD_CAMERA, SCREEN_LAYOUT } from "../data/screen.ts";
+import { TUNING } from "../data/tuning.ts";
+import type { WalkerId, World, Zone, ZoneId } from "../data/types.ts";
+import { DEFAULT_WALKER, WALKERS } from "../data/walkers.ts";
+import { WORLD } from "../data/world.ts";
+import { type PackSprites, PART_INSET } from "../layout/packFormation.ts";
+import { read } from "../rules/units.ts";
+import { slowestDebuffedAgility, slowestPackAgility } from "../rules/walkers.ts";
+import { drawnLanes, hasLeftRoad, type MoverPath, moverPlace } from "../runner/movers.ts";
+import { moverOutcomes } from "../runner/outcomes.ts";
+import { signaturePlace } from "../runner/signaturePaths.ts";
 import {
   componentHitLength,
   itemHeight,
@@ -22,13 +22,13 @@ import {
   type Walk,
   walkScrollSpeed,
   zoneLength,
-} from "../runner/walk";
-import { walkGeometry, walkProjection } from "../runner/walkGeometry";
-import { blocksLane, footprintOf, type WalkItem } from "../runner/walkItems";
-import { newRun, type RunState } from "../state/runState";
-import { type BlockingSpan } from "./avoidable";
-import { data } from "./walk";
-import { mapZones } from "./world";
+} from "../runner/walk.ts";
+import { walkGeometry, walkProjection } from "../runner/walkGeometry.ts";
+import { blocksLane, footprintOf, type WalkItem } from "../runner/walkItems.ts";
+import { newRun, type RunState } from "../state/runState.ts";
+import { type BlockingSpan } from "./avoidable.ts";
+import { data } from "./walk.ts";
+import { mapZones } from "./world.ts";
 
 // The real world, as the integrity tests read it.
 export const REAL = { ...data, tuning: TUNING, world: WORLD };

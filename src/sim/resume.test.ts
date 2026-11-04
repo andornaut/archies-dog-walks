@@ -1,10 +1,10 @@
 import { STEP_SECONDS } from "@andornaut/game-kit/clock/fixedStep";
 import { beforeAll, describe, expect, it } from "vitest";
 
-import { gameData } from "../data";
-import { LANE_COUNT } from "../data/screen";
-import { type InputEvent, takeCardChoice, takeDueInputs } from "../dev/inputLog";
-import { screenRoadGeometry } from "../runner/screenGeometry";
+import { gameData } from "../data/index.ts";
+import { LANE_COUNT } from "../data/screen.ts";
+import { type InputEvent, takeCardChoice, takeDueInputs } from "../dev/inputLog.ts";
+import { screenRoadGeometry } from "../runner/screenGeometry.ts";
 import {
   chooseCard,
   forkPoint,
@@ -16,14 +16,14 @@ import {
   startSession,
   stepSession,
   zoneStartPoint,
-} from "../runner/session";
-import { startRoad } from "../runner/walk";
-import { encodeResume, launchWalk, type ResumeWalk } from "../save/resume";
-import { checkpointOf } from "../save/runSlices";
-import { newRun, type PackDogs, type RunState } from "../state/runState";
-import { simConfig } from "../testing/sim";
-import { simulateRun } from "./simulate";
-import { SKILL_PRESETS } from "./skills";
+} from "../runner/session.ts";
+import { startRoad } from "../runner/walk.ts";
+import { encodeResume, launchWalk, type ResumeWalk } from "../save/resume.ts";
+import { checkpointOf } from "../save/runSlices.ts";
+import { newRun, type PackDogs, type RunState } from "../state/runState.ts";
+import { simConfig } from "../testing/sim.ts";
+import { simulateRun } from "./simulate.ts";
+import { SKILL_PRESETS } from "./skills.ts";
 
 const PACK: PackDogs = ["kilo", "lady"];
 const CONFIG = simConfig(SKILL_PRESETS.typical, PACK, { gear: "fannyPack", policy: "mixed" });

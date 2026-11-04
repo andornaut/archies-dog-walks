@@ -1,15 +1,15 @@
 import { containsPoint, type Point, type Rect } from "@andornaut/game-kit/rect";
 
-import { SCREEN_LAYOUT } from "../data/screen";
-import { HOME_BAR_LAST_FACE, HOME_LAYOUT } from "../home/homeLayout";
-import { TITLE_CAP_ROWS } from "../hud/walkHud";
-import { MIN_TAP_SIZE } from "../layout/screenLayout";
-import { BUTTON_SIZE } from "../ui/buttonGeometry";
-import { pageCloseControl } from "../ui/closeControl";
-import { rectIndexAt } from "../ui/grid";
-import { LABEL_HELP_GAP } from "../ui/labelHelpGap";
-import { TEXT_SCALE } from "../ui/textFit";
-import type { HelpAction } from "./helpPaging";
+import { SCREEN_LAYOUT } from "../data/screen.ts";
+import { HOME_BAR_LAST_FACE, HOME_LAYOUT } from "../home/homeLayout.ts";
+import { TITLE_CAP_ROWS } from "../hud/walkHud.ts";
+import { MIN_TAP_SIZE } from "../layout/screenLayout.ts";
+import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";
+import { pageCloseControl } from "../ui/closeControl.ts";
+import { rectIndexAt } from "../ui/grid.ts";
+import { LABEL_HELP_GAP } from "../ui/labelHelpGap.ts";
+import { TEXT_SCALE } from "../ui/textFit.ts";
+import type { HelpAction } from "./helpPaging.ts";
 
 const { screen: SCREEN } = SCREEN_LAYOUT;
 const { height, width } = SCREEN;

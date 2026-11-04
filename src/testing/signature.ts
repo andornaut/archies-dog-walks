@@ -1,9 +1,9 @@
-import type { SignatureProfile } from "../data/types";
-import type { MoverPath } from "../runner/movers";
-import { compileSignature } from "../runner/signaturePaths";
-import { componentHitLength } from "../runner/walk";
-import type { WalkItem } from "../runner/walkItems";
-import { geometry } from "./walk";
+import type { SignatureProfile } from "../data/types.ts";
+import type { MoverPath } from "../runner/movers.ts";
+import { compileSignature } from "../runner/signaturePaths.ts";
+import { componentHitLength } from "../runner/walk.ts";
+import type { WalkItem } from "../runner/walkItems.ts";
+import { geometry } from "./walk.ts";
 
 export function signatureTrail(delays: readonly [number, number]) {
   const profile: Extract<SignatureProfile, { kind: "delayedTrail" }> = {

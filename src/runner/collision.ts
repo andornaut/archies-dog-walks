@@ -1,5 +1,5 @@
-import { screenXAt } from "../layout/projection";
-import type { RoadItem } from "./roadItems";
+import { screenXAt } from "../layout/projection.ts";
+import type { RoadItem } from "./roadItems.ts";
 
 // A box in road pixels: x across the road from its left edge, y down the screen.
 export interface Box {

@@ -1,10 +1,10 @@
 import * as v from "valibot";
 
-import lightTable from "../../shared/lights.json";
-import { paletteColour } from "../assets/housePalette";
-import { parseOrThrow } from "../assets/jsonSchema";
-import type { ZoneId } from "../data/types";
-import { WORLD } from "../data/world";
+import lightTable from "../../shared/lights.json" with { type: "json" };
+import { paletteColour } from "../assets/housePalette.ts";
+import { parseOrThrow } from "../assets/jsonSchema.ts";
+import type { ZoneId } from "../data/types.ts";
+import { WORLD } from "../data/world.ts";
 
 // Lights: hard-stepped glows added over what lies under them, as art sets them out in
 // shared/lights.json. Each def is a shape width by height px at full size (scale 1, the walker's

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { type LaneDirection, laneMask, moveLane } from "./lanes";
+import { type LaneDirection, laneMask, moveLane } from "./lanes.ts";
 
 describe("laneMask", () => {
   it.each([

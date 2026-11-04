@@ -1,7 +1,7 @@
 import { itemAt } from "@andornaut/game-kit/arrays";
 import { keysOf } from "@andornaut/game-kit/records";
 
-import { DOGS } from "../data/dogs";
+import { DOGS } from "../data/dogs.ts";
 import type {
   AchievementCondition,
   DebuffId,
@@ -12,31 +12,36 @@ import type {
   TallyId,
   WalkerId,
   ZoneId,
-} from "../data/types";
-import { DEFAULT_WALKER } from "../data/walkers";
+} from "../data/types.ts";
+import { DEFAULT_WALKER } from "../data/walkers.ts";
 import {
   type AchievementData,
   conditionHolds,
   picksOf,
   type RunFacts,
-} from "../rules/achievements";
-import { slotCountTotal } from "../runner/slotConfig";
-import { minimumSlotDelivery, SLOT_RUNTIME_DELIVERY_FLOOR } from "../runner/slotDelivery";
-import { blocksLane, isPullObstacle, itemCategory, type WalkItemKind } from "../runner/walkItems";
-import { MAX_RUN_DOGS, TALLY_IDS } from "../save/schema";
-import type { PackDogs } from "../state/runState";
-import { type Delivered, DELIVERY_GROUPS, sumDeliveries, type ZoneDelivery } from "./delivery";
-import { DEFAULT_ROUTE_POLICY, POLICY_IDS, type PolicyId, type RoutePolicyId } from "./policies";
-import type { BotSight } from "./sight";
+} from "../rules/achievements.ts";
+import { slotCountTotal } from "../runner/slotConfig.ts";
+import { minimumSlotDelivery, SLOT_RUNTIME_DELIVERY_FLOOR } from "../runner/slotDelivery.ts";
+import {
+  blocksLane,
+  isPullObstacle,
+  itemCategory,
+  type WalkItemKind,
+} from "../runner/walkItems.ts";
+import { MAX_RUN_DOGS, TALLY_IDS } from "../save/schema.ts";
+import type { PackDogs } from "../state/runState.ts";
+import { type Delivered, DELIVERY_GROUPS, sumDeliveries, type ZoneDelivery } from "./delivery.ts";
+import { DEFAULT_ROUTE_POLICY, POLICY_IDS, type PolicyId, type RoutePolicyId } from "./policies.ts";
+import type { BotSight } from "./sight.ts";
 import {
   type ItemCount,
   type RunResult,
   type SimData,
   type SimPlayer,
   simulateRun,
-} from "./simulate";
-import { SKILL_PRESET_IDS, SKILL_PRESETS, type SkillPresetId } from "./skills";
-import type { ZoneWalkEvents } from "./walkEvents";
+} from "./simulate.ts";
+import { SKILL_PRESET_IDS, SKILL_PRESETS, type SkillPresetId } from "./skills.ts";
+import type { ZoneWalkEvents } from "./walkEvents.ts";
 
 export interface NamedPack {
   readonly dogs: PackDogs;

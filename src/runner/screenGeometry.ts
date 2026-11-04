@@ -1,11 +1,11 @@
 import { getOrInsertComputed } from "@andornaut/game-kit/maps";
 
-import { LANE_COUNT, ROAD_CAMERA, SCREEN_LAYOUT } from "../data/screen";
-import { formationOrder } from "../layout/packFormation";
-import { packDogs } from "../state/pack";
-import type { RunState } from "../state/runState";
-import type { RoadGeometry } from "./walk";
-import { walkGeometry, walkProjection } from "./walkGeometry";
+import { LANE_COUNT, ROAD_CAMERA, SCREEN_LAYOUT } from "../data/screen.ts";
+import { formationOrder } from "../layout/packFormation.ts";
+import { packDogs } from "../state/pack.ts";
+import type { RunState } from "../state/runState.ts";
+import type { RoadGeometry } from "./walk.ts";
+import { walkGeometry, walkProjection } from "./walkGeometry.ts";
 
 const ROAD = SCREEN_LAYOUT.road;
 const VIEW = walkProjection(ROAD_CAMERA, ROAD);

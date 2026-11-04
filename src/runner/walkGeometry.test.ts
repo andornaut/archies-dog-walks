@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import { ROAD_HIT_SIZE, ROAD_SPRITE_SIZE } from "../assets/spriteKeys";
-import { LANE_COUNT, ROAD_CAMERA, SCREEN_LAYOUT } from "../data/screen";
-import { TUNING } from "../data/tuning";
-import { tallestPackLength } from "../layout/packFormation";
-import { walkerFootY } from "../layout/screenLayout";
-import { walkGeometry, walkProjection } from "./walkGeometry";
+import { ROAD_HIT_SIZE, ROAD_SPRITE_SIZE } from "../assets/spriteKeys.ts";
+import { LANE_COUNT, ROAD_CAMERA, SCREEN_LAYOUT } from "../data/screen.ts";
+import { TUNING } from "../data/tuning.ts";
+import { tallestPackLength } from "../layout/packFormation.ts";
+import { walkerFootY } from "../layout/screenLayout.ts";
+import { walkGeometry, walkProjection } from "./walkGeometry.ts";
 
 const gameRoad = SCREEN_LAYOUT.road;
 const projection = walkProjection(ROAD_CAMERA, gameRoad);

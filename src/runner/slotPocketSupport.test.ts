@@ -1,13 +1,13 @@
 import { describe, expect, it, vi } from "vitest";
 
-import type { ConstraintOwner, ConstraintResult } from "./slotConstraintState";
+import type { ConstraintOwner, ConstraintResult } from "./slotConstraintState.ts";
 import {
   checkSlotPocketSupport,
   type SlotPocketRejection,
   type SlotPocketSupportPorts,
   type SlotPocketTrial,
   type SlotPocketValue,
-} from "./slotPocketSupport";
+} from "./slotPocketSupport.ts";
 
 type Failure = Extract<ConstraintResult<string>, { accepted: false }>["failure"];
 interface Value {

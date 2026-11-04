@@ -1,8 +1,8 @@
 import type { Rect } from "@andornaut/game-kit/rect";
 import type { GameObjects, Scene } from "phaser";
 
-import { PALETTE } from "../ui/palette";
-import { fillRect } from "../ui/phaser/draw";
+import { PALETTE } from "../ui/palette.ts";
+import { fillRect } from "../ui/phaser/draw.ts";
 
 export type SelectionRing = "frame" | "shop" | "tile";
 interface OrbitSegment {

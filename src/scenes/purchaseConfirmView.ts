@@ -1,17 +1,17 @@
 import type { Rect } from "@andornaut/game-kit/rect";
 import type { GameObjects, Scene } from "phaser";
 
-import type { DetailPicture } from "../home/detail";
-import type { ConfirmChoice, ConfirmLines } from "../home/purchaseConfirm";
-import { purchaseConfirmLayout } from "../home/purchaseConfirmLayout";
-import { closeControl } from "../ui/closeControl";
-import { PALETTE } from "../ui/palette";
-import { addModalShade } from "../ui/phaser/draw";
-import { addPixelText, pixelFontMetrics } from "../ui/phaser/pixelText";
-import { TEXT_SCALE } from "../ui/textFit";
-import { addDetailWell, addModalCard } from "./homePanels";
-import { modalTextWidth } from "./modalMeasure";
-import { addMenuButton } from "./uiKit";
+import type { DetailPicture } from "../home/detail.ts";
+import type { ConfirmChoice, ConfirmLines } from "../home/purchaseConfirm.ts";
+import { purchaseConfirmLayout } from "../home/purchaseConfirmLayout.ts";
+import { closeControl } from "../ui/closeControl.ts";
+import { PALETTE } from "../ui/palette.ts";
+import { addModalShade } from "../ui/phaser/draw.ts";
+import { addPixelText, pixelFontMetrics } from "../ui/phaser/pixelText.ts";
+import { TEXT_SCALE } from "../ui/textFit.ts";
+import { addDetailWell, addModalCard } from "./homePanels.ts";
+import { modalTextWidth } from "./modalMeasure.ts";
+import { addMenuButton } from "./uiKit.ts";
 
 // Everything the purchase confirm draws from. The scene that opens it routes its taps and keys
 // through the model in home/purchaseConfirm; the view only draws.

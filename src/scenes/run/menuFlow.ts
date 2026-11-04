@@ -1,14 +1,14 @@
 import type { Scene } from "phaser";
 
-import type { HomeNoteLine } from "../../hud/homeQuestion";
-import { playerPaused, type RunPause } from "../../hud/topBar";
-import type { CardView, Choice } from "../../rules/choices";
-import type { CardSceneData } from "../CardScene";
-import type { PauseOverlay, PauseSceneData } from "../PauseScene";
-import { SCENE_KEYS, type SceneKey } from "../sceneKeys";
-import type { SettingsScene } from "../SettingsScene";
-import { soundboardOf } from "../soundboard";
-import type { ZoneCelebrationSceneData } from "../ZoneCelebrationScene";
+import type { HomeNoteLine } from "../../hud/homeQuestion.ts";
+import { playerPaused, type RunPause } from "../../hud/topBar.ts";
+import type { CardView, Choice } from "../../rules/choices.ts";
+import type { CardSceneData } from "../CardScene.ts";
+import type { PauseOverlay, PauseSceneData } from "../PauseScene.ts";
+import { SCENE_KEYS, type SceneKey } from "../sceneKeys.ts";
+import type { SettingsScene } from "../SettingsScene.ts";
+import { soundboardOf } from "../soundboard.ts";
+import type { ZoneCelebrationSceneData } from "../ZoneCelebrationScene.ts";
 
 // What the menus need of the run.
 interface MenuFlowHost {

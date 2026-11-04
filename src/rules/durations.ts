@@ -1,9 +1,9 @@
 import { assertNever } from "@andornaut/game-kit/assertNever";
 
-import type { Duration, LiveTuning, SecondsKey } from "../data/types";
-import type { ActiveDebuff, RunState } from "../state/runState";
-import { modifiedStat } from "./modifiers";
-import { read } from "./units";
+import type { Duration, LiveTuning, SecondsKey } from "../data/types.ts";
+import type { ActiveDebuff, RunState } from "../state/runState.ts";
+import { modifiedStat } from "./modifiers.ts";
+import { read } from "./units.ts";
 
 // The last zone an effect lasts through, by zone index. Absent: it lasts the run.
 export interface Lasting {

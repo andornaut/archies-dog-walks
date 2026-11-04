@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
 
-import { gameData } from "../data";
-import { newPlayerSave, STARTER_DOGS, veteranSave } from "../testing/saves";
-import { HOME_LAYOUT } from "./homeLayout";
-import { porchOwners } from "./porch";
+import { gameData } from "../data/index.ts";
+import { newPlayerSave, STARTER_DOGS, veteranSave } from "../testing/saves.ts";
+import { HOME_LAYOUT } from "./homeLayout.ts";
+import { porchOwners } from "./porch.ts";
 
 describe("porchOwners", () => {
   it("has the starter owners wait before the first walk, without a picked dog, and nobody after", () => {

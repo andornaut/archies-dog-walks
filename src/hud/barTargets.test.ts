@@ -1,11 +1,23 @@
 import type { Point, Rect } from "@andornaut/game-kit/rect";
 import { describe, expect, it } from "vitest";
 
-import { SCREEN_LAYOUT } from "../data/screen";
-import { homeBarAction, homeBarButtonAt } from "../home/homeBar";
-import { HOME_LAYOUT, homeBarButtons } from "../home/homeLayout";
-import { NOTHING_PAUSED, type RunPause, topBarAction, topBarButtonAt, walkPresses } from "./topBar";
-import { type ExplainShown, explainTargetAt, opensOnTap, WALK_BAR, walkBarLayout } from "./walkHud";
+import { SCREEN_LAYOUT } from "../data/screen.ts";
+import { homeBarAction, homeBarButtonAt } from "../home/homeBar.ts";
+import { HOME_LAYOUT, homeBarButtons } from "../home/homeLayout.ts";
+import {
+  NOTHING_PAUSED,
+  type RunPause,
+  topBarAction,
+  topBarButtonAt,
+  walkPresses,
+} from "./topBar.ts";
+import {
+  type ExplainShown,
+  explainTargetAt,
+  opensOnTap,
+  WALK_BAR,
+  walkBarLayout,
+} from "./walkHud.ts";
 
 // Every button on a top bar acts as it does with nothing open, under every card and overlay
 // that leaves the bar lit, and nothing else on the walk acts under them: a well or a dog card

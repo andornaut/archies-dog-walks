@@ -1,6 +1,12 @@
-import { laneMask } from "../layout/lanes";
-import type { LaneSpan, MoverPath } from "./movers";
-import { type Footprint, laneTotal, openStretches, type SpawnPlan, sweptPockets } from "./spawning";
+import { laneMask } from "../layout/lanes.ts";
+import type { LaneSpan, MoverPath } from "./movers.ts";
+import {
+  type Footprint,
+  laneTotal,
+  openStretches,
+  type SpawnPlan,
+  sweptPockets,
+} from "./spawning.ts";
 
 // Reactive positions are exclusive; a one-lane transition overlaps both endpoint footprints.
 export function reactiveLaneMasks(width: number, path: MoverPath): readonly number[] | undefined {

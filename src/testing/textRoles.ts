@@ -6,15 +6,15 @@ import { type TextFitStyle } from "@andornaut/game-kit/text/textFit";
 import { buildLabel } from "@andornaut/game-kit/web/build/buildLabel";
 import { UNKNOWN_COMMIT } from "@andornaut/game-kit/web/build/buildVersion";
 
-import { gameData } from "../data";
-import { SCREEN_LAYOUT } from "../data/screen";
+import { gameData } from "../data/index.ts";
+import { SCREEN_LAYOUT } from "../data/screen.ts";
 import {
   BADGE_NAME_STYLE,
   BADGE_STRIP,
   badgeStrip,
   CELEBRATION_PANEL,
   celebrationTitle,
-} from "../home/badgesView";
+} from "../home/badgesView.ts";
 import {
   breakdownLabelRoom,
   END_LAYOUT,
@@ -22,13 +22,13 @@ import {
   QUIP_TEXT_ROOM,
   SIDE_LABEL_ROOM,
   sideTotalLabelRoom,
-} from "../home/endLayout";
+} from "../home/endLayout.ts";
 import {
   dollarAmountText,
   dollarText,
   shortDollarAmountText,
   signedShortDollarText,
-} from "../home/home";
+} from "../home/home.ts";
 import {
   BANK_ROOM,
   bankAmountText,
@@ -37,12 +37,12 @@ import {
   DOG_TILE_TEXT_ROOM,
   HOME_LAYOUT,
   UPDATE_MODAL_ROOM,
-} from "../home/homeLayout";
-import { messageLine, PLATE_MODES } from "../home/homeLines";
-import { MENU_TEXT_FIELDS } from "../home/menuText";
-import { modalTitleLayout } from "../home/modalLayout";
-import { confirmLines } from "../home/purchaseConfirm";
-import { PURCHASE_CONFIRM_ROOMS } from "../home/purchaseConfirmLayout";
+} from "../home/homeLayout.ts";
+import { messageLine, PLATE_MODES } from "../home/homeLines.ts";
+import { MENU_TEXT_FIELDS } from "../home/menuText.ts";
+import { modalTitleLayout } from "../home/modalLayout.ts";
+import { confirmLines } from "../home/purchaseConfirm.ts";
+import { PURCHASE_CONFIRM_ROOMS } from "../home/purchaseConfirmLayout.ts";
 import {
   INSTALL_STEPS_FIT,
   installStepsLayout,
@@ -50,17 +50,17 @@ import {
   SETTINGS_BUILD_LABEL,
   SETTINGS_NOTE_STYLE,
   settingsLayout,
-} from "../home/settings";
-import { dogRows, gearRows, type ShopRow, slotRows } from "../home/shop";
-import { SHOP_LAYOUT, SHOP_MESSAGE_FIT, shopRowTextRoom } from "../home/shopLayout";
-import { largeBodyText, smallCardText } from "../hud/cardText";
-import { CELEBRATION_LAYOUT, GREETING_FIT, ZONE_EARNINGS_FIT } from "../hud/celebrationLayout";
-import { faceTextWithNamePills } from "../hud/effectNames";
-import { type FaceText, inlineFaceBox, styledFaceRows } from "../hud/faceText";
-import { CHANGE_LABEL_STYLE, changeLabelRoom, hudLanes } from "../hud/hudLanes";
-import { messageStripLayout, ownerLeadLayout, stripLeadSlot } from "../hud/messageStrip";
-import { FIRED_LINE_FIT, LOW_CHIP_FIT, lowHeartsText } from "../hud/moments";
-import { MONEY_LABEL } from "../hud/moneyLabels";
+} from "../home/settings.ts";
+import { dogRows, gearRows, type ShopRow, slotRows } from "../home/shop.ts";
+import { SHOP_LAYOUT, SHOP_MESSAGE_FIT, shopRowTextRoom } from "../home/shopLayout.ts";
+import { largeBodyText, smallCardText } from "../hud/cardText.ts";
+import { CELEBRATION_LAYOUT, GREETING_FIT, ZONE_EARNINGS_FIT } from "../hud/celebrationLayout.ts";
+import { faceTextWithNamePills } from "../hud/effectNames.ts";
+import { type FaceText, inlineFaceBox, styledFaceRows } from "../hud/faceText.ts";
+import { CHANGE_LABEL_STYLE, changeLabelRoom, hudLanes } from "../hud/hudLanes.ts";
+import { messageStripLayout, ownerLeadLayout, stripLeadSlot } from "../hud/messageStrip.ts";
+import { FIRED_LINE_FIT, LOW_CHIP_FIT, lowHeartsText } from "../hud/moments.ts";
+import { MONEY_LABEL } from "../hud/moneyLabels.ts";
 import {
   HOME_QUESTION_ANSWERS,
   NOTE_PLATE,
@@ -70,10 +70,10 @@ import {
   PAUSE_NOTE_WIDTH,
   pauseMenuLayout,
   QUIT_QUESTION_ANSWERS,
-} from "../hud/pauseMenu";
-import { DOG_CARD, WALK_BAR } from "../hud/walkHud";
-import { celebrationText } from "../hud/zoneCelebration";
-import { zonePillNameRoom } from "../hud/zonePill";
+} from "../hud/pauseMenu.ts";
+import { DOG_CARD, WALK_BAR } from "../hud/walkHud.ts";
+import { celebrationText } from "../hud/zoneCelebration.ts";
+import { zonePillNameRoom } from "../hud/zonePill.ts";
 import {
   boxStyle,
   CARD_LAYOUT,
@@ -81,26 +81,26 @@ import {
   FIRES_FIT,
   largeBodyBox,
   largeBodyStyle,
-} from "../layout/cardLayout";
-import { amountText } from "../rules/causes";
-import { firesText } from "../rules/choices";
-import { payFor } from "../rules/run";
-import { startingDogSlots } from "../rules/shop";
-import { read } from "../rules/units";
-import type { Owned } from "../save/schema";
-import { readBitmapFont } from "../tools/fontFile";
-import { barTitleRoom } from "../ui/barTitle";
-import { type CloseControl, closeControl } from "../ui/closeControl";
-import { plainMarks } from "../ui/pixelFont";
-import { TEXT_SCALE, TEXT_STYLE, textOnLines } from "../ui/textFit";
-import { cents } from "../units";
-import { bodyRunWidth } from "./bodyFont";
-import { defined } from "./defined";
-import { everyCardOption } from "./everyCardOption";
-import { everyStripLine } from "./everyStripLine";
-import { fitInFont, fontFileMetrics, inkWidth } from "./fontInk";
-import { newPlayerSave } from "./saves";
-import { TEST_TUNING } from "./tuning";
+} from "../layout/cardLayout.ts";
+import { amountText } from "../rules/causes.ts";
+import { firesText } from "../rules/choices.ts";
+import { payFor } from "../rules/run.ts";
+import { startingDogSlots } from "../rules/shop.ts";
+import { read } from "../rules/units.ts";
+import type { Owned } from "../save/schema.ts";
+import { readBitmapFont } from "../tools/fontFile.ts";
+import { barTitleRoom } from "../ui/barTitle.ts";
+import { type CloseControl, closeControl } from "../ui/closeControl.ts";
+import { plainMarks } from "../ui/pixelFont.ts";
+import { TEXT_SCALE, TEXT_STYLE, textOnLines } from "../ui/textFit.ts";
+import { cents } from "../units.ts";
+import { bodyRunWidth } from "./bodyFont.ts";
+import { defined } from "./defined.ts";
+import { everyCardOption } from "./everyCardOption.ts";
+import { everyStripLine } from "./everyStripLine.ts";
+import { fitInFont, fontFileMetrics, inkWidth } from "./fontInk.ts";
+import { newPlayerSave } from "./saves.ts";
+import { TEST_TUNING } from "./tuning.ts";
 
 // Every string the data puts in each text role, set at the role's one size as the game sets it,
 // filled with the widest names and the largest amounts its template takes. overflow says how it

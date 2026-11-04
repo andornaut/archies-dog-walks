@@ -1,7 +1,7 @@
-import type { BotSight } from "../sim/sight";
-import type { SimConfig } from "../sim/simulate";
-import type { Skill } from "../sim/skills";
-import type { PackDogs } from "../state/runState";
+import type { BotSight } from "../sim/sight.ts";
+import type { SimConfig } from "../sim/simulate.ts";
+import type { Skill } from "../sim/skills.ts";
+import type { PackDogs } from "../state/runState.ts";
 
 // A bot that sees everything at once, never errs and plans over all it sees.
 export const IDEAL_SKILL: Skill = {

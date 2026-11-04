@@ -1,4 +1,4 @@
-import type { MovementKind } from "../data/types";
+import type { MovementKind } from "../data/types.ts";
 
 // A failed candidate check, not proof that no arrangement can admit the quota.
 export type SpawnRejection =

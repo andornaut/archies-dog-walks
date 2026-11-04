@@ -1,4 +1,4 @@
-import type { RunText } from "./types";
+import type { RunText } from "./types.ts";
 
 // The walk's text. A {name} is filled in by the game, and src/hud/runText.ts lists the names
 // each line may use.

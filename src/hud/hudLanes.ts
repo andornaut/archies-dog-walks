@@ -1,9 +1,9 @@
 import type { Point, Rect } from "@andornaut/game-kit/rect";
 import { type FontMetrics, inkRowsOfLines } from "@andornaut/game-kit/text/bitmapFont";
 
-import type { ScreenLayout } from "../layout/screenLayout";
-import { TEXT_STYLE } from "../ui/textFit";
-import { OWNER_TAB } from "./walkHud";
+import type { ScreenLayout } from "../layout/screenLayout.ts";
+import { TEXT_STYLE } from "../ui/textFit.ts";
+import { OWNER_TAB } from "./walkHud.ts";
 
 // Each transient layer of the walk's HUD keeps to its own lane, so none covers another. The
 // message strip (messageStrip.ts) runs across the top of the backdrop band under the walk bar,

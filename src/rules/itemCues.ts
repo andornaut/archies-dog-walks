@@ -1,5 +1,5 @@
-import type { GameData } from "../data/types";
-import { isObstacle, type WalkItemKind } from "../runner/walkItems";
+import type { GameData } from "../data/types.ts";
+import { isObstacle, type WalkItemKind } from "../runner/walkItems.ts";
 
 type CueData = Pick<GameData, "encounters" | "minorObstacles">;
 

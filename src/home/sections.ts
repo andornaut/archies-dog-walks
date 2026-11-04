@@ -1,7 +1,7 @@
-import type { GameData, WalkerId } from "../data/types";
-import type { Owned } from "../save/schema";
-import type { HomeLoadout } from "./home";
-import { packCountLine } from "./homeLines";
+import type { GameData, WalkerId } from "../data/types.ts";
+import type { Owned } from "../save/schema.ts";
+import type { HomeLoadout } from "./home.ts";
+import { packCountLine } from "./homeLines.ts";
 
 // The home screen's three framed sections, each a card with a heading band.
 export type SectionId = "dogs" | "pocket" | "walker";

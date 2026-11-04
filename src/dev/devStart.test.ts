@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
 
-import type { DogId, GearId, WalkerId } from "../data/types";
-import type { HomeLoadout } from "../home/home";
-import type { Loadout } from "../state/runState";
-import { devRunLoadout, homeRunSetup, namesRunSetup, stripDevParams } from "./devStart";
-import type { RunSetup } from "./runSetup";
+import type { DogId, GearId, WalkerId } from "../data/types.ts";
+import type { HomeLoadout } from "../home/home.ts";
+import type { Loadout } from "../state/runState.ts";
+import { devRunLoadout, homeRunSetup, namesRunSetup, stripDevParams } from "./devStart.ts";
+import type { RunSetup } from "./runSetup.ts";
 
 const setup: RunSetup<DogId, GearId, WalkerId> = { dev: false, seed: 1, speed: 1, zone: 1 };
 

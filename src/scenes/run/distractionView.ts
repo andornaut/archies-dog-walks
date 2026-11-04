@@ -4,9 +4,9 @@ import { getOrInsertComputed } from "@andornaut/game-kit/maps";
 import type { Random } from "@andornaut/game-kit/random";
 import type { GameObjects, Scene } from "phaser";
 
-import { IDLE_TAG } from "../../assets/spriteKeys";
-import { gameData } from "../../data";
-import { project } from "../../layout/projection";
+import { IDLE_TAG } from "../../assets/spriteKeys.ts";
+import { gameData } from "../../data/index.ts";
+import { project } from "../../layout/projection.ts";
 import {
   type Distraction,
   type DistractionDeps,
@@ -14,14 +14,14 @@ import {
   placeDistraction,
   startDistractions,
   stepDistractions,
-} from "../../road/distractions";
-import { ROADSIDE } from "../../road/roadsideProps";
-import { currentZone, previousZone } from "../../rules/route";
-import { screenRoadGeometry } from "../../runner/screenGeometry";
-import type { Walk } from "../../runner/walk";
-import type { WalkItem } from "../../runner/walkItems";
-import { firstTag, playTag, showAtDepth, spriteMetrics } from "../sprites";
-import { DEPTH, LANE_XS, laneX, PROJECTION, ROW_DEPTH, showOnRoad } from "./stage";
+} from "../../road/distractions.ts";
+import { ROADSIDE } from "../../road/roadsideProps.ts";
+import { currentZone, previousZone } from "../../rules/route.ts";
+import { screenRoadGeometry } from "../../runner/screenGeometry.ts";
+import type { Walk } from "../../runner/walk.ts";
+import type { WalkItem } from "../../runner/walkItems.ts";
+import { firstTag, playTag, showAtDepth, spriteMetrics } from "../sprites.ts";
+import { DEPTH, LANE_XS, laneX, PROJECTION, ROW_DEPTH, showOnRoad } from "./stage.ts";
 
 // The tags a distraction moves in, the first its art has: it walks, or hops.
 const MOVING_TAGS = ["walk", "hop", "run"] as const;

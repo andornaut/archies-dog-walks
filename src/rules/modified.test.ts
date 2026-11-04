@@ -1,15 +1,15 @@
 import { keysOf } from "@andornaut/game-kit/records";
 import { describe, expect, it } from "vitest";
 
-import { DEBUFFS } from "../data/debuffs";
-import { DOGS } from "../data/dogs";
-import { ENCOUNTERS } from "../data/encounters";
-import { HOME_TEXT } from "../data/homeText";
-import { MINOR_OBSTACLES } from "../data/minorObstacles";
-import { QUIPS } from "../data/quips";
-import { RUN_TEXT } from "../data/runText";
-import { SHOP_GEAR } from "../data/shop";
-import { TUNING } from "../data/tuning";
+import { DEBUFFS } from "../data/debuffs.ts";
+import { DOGS } from "../data/dogs.ts";
+import { ENCOUNTERS } from "../data/encounters.ts";
+import { HOME_TEXT } from "../data/homeText.ts";
+import { MINOR_OBSTACLES } from "../data/minorObstacles.ts";
+import { QUIPS } from "../data/quips.ts";
+import { RUN_TEXT } from "../data/runText.ts";
+import { SHOP_GEAR } from "../data/shop.ts";
+import { TUNING } from "../data/tuning.ts";
 import type {
   CardOption,
   CardSource,
@@ -18,18 +18,23 @@ import type {
   UpgradeId,
   WalkerId,
   WalkerPerkId,
-} from "../data/types";
-import { UPGRADES } from "../data/upgrades";
-import { type EffectSource, type ModifierSource, newRun, type RunState } from "../state/runState";
-import { TEST_TUNING } from "../testing/tuning";
-import { TEST_WALKER_DATA } from "../testing/walkers";
-import { TEST_WORLD } from "../testing/world";
-import { cardFor, chooseOption, openCard } from "./choices";
-import { maxHearts, placeInPack } from "./dogs";
-import { applyEffects } from "./effects";
-import type { ModifiedValue } from "./modified";
-import { standingModified } from "./standing";
-import { read } from "./units";
+} from "../data/types.ts";
+import { UPGRADES } from "../data/upgrades.ts";
+import {
+  type EffectSource,
+  type ModifierSource,
+  newRun,
+  type RunState,
+} from "../state/runState.ts";
+import { TEST_TUNING } from "../testing/tuning.ts";
+import { TEST_WALKER_DATA } from "../testing/walkers.ts";
+import { TEST_WORLD } from "../testing/world.ts";
+import { cardFor, chooseOption, openCard } from "./choices.ts";
+import { maxHearts, placeInPack } from "./dogs.ts";
+import { applyEffects } from "./effects.ts";
+import type { ModifiedValue } from "./modified.ts";
+import { standingModified } from "./standing.ts";
+import { read } from "./units.ts";
 
 // The test tuning with every walker's perk in force.
 const tuning = {

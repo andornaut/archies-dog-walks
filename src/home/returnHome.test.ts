@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 
-import type { DogId } from "../data/types";
-import type { LastWalk } from "../save/schema";
-import { homecomers, RETURN_HOME, returnPhase, walkUpOffset, waveOffset } from "./returnHome";
+import type { DogId } from "../data/types.ts";
+import type { LastWalk } from "../save/schema.ts";
+import { homecomers, RETURN_HOME, returnPhase, walkUpOffset, waveOffset } from "./returnHome.ts";
 
 const WAVING_MS = RETURN_HOME.waveMs * RETURN_HOME.waves;
 

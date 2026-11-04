@@ -1,30 +1,30 @@
 import * as random from "@andornaut/game-kit/random";
 import { describe, expect, it, vi } from "vitest";
 
-import { testState } from "../testing/runState";
-import { TEST_TUNING } from "../testing/tuning";
-import { moverPlace, moverTell } from "./movers";
-import { moverSpec } from "./moverSpecs";
-import { auditSlotPlan } from "./slotAudit";
-import * as candidateDomains from "./slotCandidateDomains";
-import { prepareSlotKind, slotPlacementsAt } from "./slotCandidates";
-import { apportionSlotCounts, type SlotConfiguration, type SlotKind } from "./slotConfig";
-import * as constraintState from "./slotConstraintState";
-import { coverageLeadingRows, quietCoverage } from "./slotCoverage";
-import { slotMotionStreams } from "./slotEntropy";
-import * as slotFeasibility from "./slotFeasibility";
-import { makeSlotJobs } from "./slotJobs";
-import { materialiseSlotPlan } from "./slotPlan";
-import { planSlotCapacity, planSlotSpawns, SLOT_LIMITS } from "./slotPlanner";
-import * as witnessSearch from "./slotWitnessSearch";
-import { rowSpacing, type SpawnPlan, zoneRows } from "./spawning";
-import { auditSpawnPlan } from "./spawnValidation";
+import { testState } from "../testing/runState.ts";
+import { TEST_TUNING } from "../testing/tuning.ts";
+import { moverPlace, moverTell } from "./movers.ts";
+import { moverSpec } from "./moverSpecs.ts";
+import { auditSlotPlan } from "./slotAudit.ts";
+import * as candidateDomains from "./slotCandidateDomains.ts";
+import { prepareSlotKind, slotPlacementsAt } from "./slotCandidates.ts";
+import { apportionSlotCounts, type SlotConfiguration, type SlotKind } from "./slotConfig.ts";
+import * as constraintState from "./slotConstraintState.ts";
+import { coverageLeadingRows, quietCoverage } from "./slotCoverage.ts";
+import { slotMotionStreams } from "./slotEntropy.ts";
+import * as slotFeasibility from "./slotFeasibility.ts";
+import { makeSlotJobs } from "./slotJobs.ts";
+import { materialiseSlotPlan } from "./slotPlan.ts";
+import { planSlotCapacity, planSlotSpawns, SLOT_LIMITS } from "./slotPlanner.ts";
+import * as witnessSearch from "./slotWitnessSearch.ts";
+import { rowSpacing, type SpawnPlan, zoneRows } from "./spawning.ts";
+import { auditSpawnPlan } from "./spawnValidation.ts";
 import {
   compileZoneSlotInput,
   replayZoneSlots,
   type ZoneSlotInput,
   ZoneSlotPlanningError,
-} from "./zoneSlotInput";
+} from "./zoneSlotInput.ts";
 
 const geometry: Omit<SpawnPlan<string>, "quotas"> = {
   cellInset: 5,

@@ -1,13 +1,13 @@
 import { describe, expect, it, vi } from "vitest";
 
-import { createSlotCandidateDomains } from "./slotCandidateDomains";
-import type { PreparedSlotKind } from "./slotCandidates";
-import * as preparation from "./slotCandidates";
-import type { SlotSource } from "./slotConfig";
-import { createSlotConstructionState } from "./slotConstraintState";
-import { constructSlotWitness, type SlotWitnessConstructPorts } from "./slotWitnessConstruct";
-import type { WitnessJob } from "./slotWitnessSearch";
-import { rowSpacing, type SpawnPlan, zoneRows } from "./spawning";
+import { createSlotCandidateDomains } from "./slotCandidateDomains.ts";
+import type { PreparedSlotKind } from "./slotCandidates.ts";
+import * as preparation from "./slotCandidates.ts";
+import type { SlotSource } from "./slotConfig.ts";
+import { createSlotConstructionState } from "./slotConstraintState.ts";
+import { constructSlotWitness, type SlotWitnessConstructPorts } from "./slotWitnessConstruct.ts";
+import type { WitnessJob } from "./slotWitnessSearch.ts";
+import { rowSpacing, type SpawnPlan, zoneRows } from "./spawning.ts";
 
 const geometry: Omit<SpawnPlan<string>, "quotas"> = {
   cellInset: 5,

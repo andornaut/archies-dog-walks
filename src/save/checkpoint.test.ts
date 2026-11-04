@@ -1,14 +1,14 @@
 import { keysOf } from "@andornaut/game-kit/records";
 import { describe, expect, it } from "vitest";
 
-import { gameData } from "../data";
-import type { DogId, WalkerId, ZoneId } from "../data/types";
-import { buy } from "../home/home";
-import { walkerGoal } from "../rules/walkers";
-import type { EndReason } from "../state/runState";
-import { packOf, runFactsFor } from "../testing/achievements";
-import { newPlayerSave, quietCounters, testAwards, veteranSave } from "../testing/saves";
-import { cents } from "../units";
+import { gameData } from "../data/index.ts";
+import type { DogId, WalkerId, ZoneId } from "../data/types.ts";
+import { buy } from "../home/home.ts";
+import { walkerGoal } from "../rules/walkers.ts";
+import type { EndReason } from "../state/runState.ts";
+import { packOf, runFactsFor } from "../testing/achievements.ts";
+import { newPlayerSave, quietCounters, testAwards, veteranSave } from "../testing/saves.ts";
+import { cents } from "../units.ts";
 import {
   bankCheckpoint,
   isNewBestWalk,
@@ -16,9 +16,9 @@ import {
   recordRunEnd,
   type RunResult,
   zonesFinishedBy,
-} from "./checkpoint";
-import { type Checkpoint, type SaveDocument } from "./schema";
-import { bestWalkCents, timesFired } from "./stats";
+} from "./checkpoint.ts";
+import { type Checkpoint, type SaveDocument } from "./schema.ts";
+import { bestWalkCents, timesFired } from "./stats.ts";
 
 // veteranSave: bank 12,345, best walk 9,000 over 4 zones, lifetime 30,000 of which 2,000 starting
 // cash, best zone 4, runs

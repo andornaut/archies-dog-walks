@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
 
-import { signaturePlace } from "../../runner/signaturePaths";
-import { signatureTrail } from "../../testing/signature";
-import { geometry, walkWith } from "../../testing/walk";
-import { blendWalk } from "./interpolate";
+import { signaturePlace } from "../../runner/signaturePaths.ts";
+import { signatureTrail } from "../../testing/signature.ts";
+import { geometry, walkWith } from "../../testing/walk.ts";
+import { blendWalk } from "./interpolate.ts";
 
 describe("component interpolation", () => {
   it("shares one immutable route and interpolates progress before evaluating each curved phase", () => {

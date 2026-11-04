@@ -1,13 +1,13 @@
 import { keysOf } from "@andornaut/game-kit/records";
 import { describe, expect, it } from "vitest";
 
-import { gameData } from "../data";
-import type { DogId, GearId, WalkerId } from "../data/types";
-import type { Owned } from "../save/schema";
-import { TEST_TUNING } from "../testing/tuning";
-import { tapDog, tapGear, togglePick } from "./home";
-import { homeSections, type SectionId, startReady } from "./sections";
-import { tapWalker } from "./walkers";
+import { gameData } from "../data/index.ts";
+import type { DogId, GearId, WalkerId } from "../data/types.ts";
+import type { Owned } from "../save/schema.ts";
+import { TEST_TUNING } from "../testing/tuning.ts";
+import { tapDog, tapGear, togglePick } from "./home.ts";
+import { homeSections, type SectionId, startReady } from "./sections.ts";
+import { tapWalker } from "./walkers.ts";
 
 const data = { ...gameData, tuning: TEST_TUNING };
 const [dog] = keysOf(gameData.dogs);

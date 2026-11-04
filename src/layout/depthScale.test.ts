@@ -2,16 +2,16 @@ import { itemAt } from "@andornaut/game-kit/arrays";
 import { keysOf } from "@andornaut/game-kit/records";
 import { describe, expect, it } from "vitest";
 
-import shippedManifest from "../../public/art/manifest.json";
-import { DEPTH_STEPS, splitDepthKey, stepSize } from "../assets/depthSteps";
-import { parseManifest } from "../assets/manifest";
-import { depthVariantKey, dogSpriteKey, standsOnGround } from "../assets/spriteKeys";
-import { gameData } from "../data";
-import { ROAD_CAMERA, SCREEN_LAYOUT } from "../data/screen";
-import { walkProjection } from "../runner/walkGeometry";
-import { type DepthArt, depthDraw } from "./depthScale";
-import { PACK_DEPTH } from "./packFormation";
-import { SCALE_STEPS, scaleAt } from "./projection";
+import shippedManifest from "../../public/art/manifest.json" with { type: "json" };
+import { DEPTH_STEPS, splitDepthKey, stepSize } from "../assets/depthSteps.ts";
+import { parseManifest } from "../assets/manifest.ts";
+import { depthVariantKey, dogSpriteKey, standsOnGround } from "../assets/spriteKeys.ts";
+import { gameData } from "../data/index.ts";
+import { ROAD_CAMERA, SCREEN_LAYOUT } from "../data/screen.ts";
+import { walkProjection } from "../runner/walkGeometry.ts";
+import { type DepthArt, depthDraw } from "./depthScale.ts";
+import { PACK_DEPTH } from "./packFormation.ts";
+import { SCALE_STEPS, scaleAt } from "./projection.ts";
 
 const manifest = parseManifest(shippedManifest);
 const sprites = new Map(manifest.sprites.map((entry) => [entry.key, entry]));

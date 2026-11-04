@@ -1,9 +1,9 @@
 import { blankImage, type RgbaImage } from "@andornaut/art-kit/rgbaImage";
 import type { Rect } from "@andornaut/game-kit/rect";
 
-import { type DepthArt, type DepthDraw, depthDraw } from "../layout/depthScale";
-import { project, type RoadProjection } from "../layout/projection";
-import { glyphAdvance, normalizePixelText, PIXEL_GLYPHS } from "../ui/pixelFont";
+import { type DepthArt, type DepthDraw, depthDraw } from "../layout/depthScale.ts";
+import { project, type RoadProjection } from "../layout/projection.ts";
+import { glyphAdvance, normalizePixelText, PIXEL_GLYPHS } from "../ui/pixelFont.ts";
 
 // npm run art:depth-preview: a road sprite drawn as the game draws it at a sweep of
 // distances, through the walk's projection and depthDraw. These are the pure parts; the

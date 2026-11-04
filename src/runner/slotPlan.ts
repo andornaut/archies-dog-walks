@@ -1,8 +1,8 @@
-import type { SpawnSlotRole } from "../data/types";
-import { minimumSlotDelivery, type SlotDelivery } from "./slotDelivery";
-import type { SlotPlacement } from "./slotFeasibility";
-import type { AdmissionReport } from "./spawnAdmission";
-import type { PlannedSpawns, SpawnPlan } from "./spawning";
+import type { SpawnSlotRole } from "../data/types.ts";
+import { minimumSlotDelivery, type SlotDelivery } from "./slotDelivery.ts";
+import type { SlotPlacement } from "./slotFeasibility.ts";
+import type { AdmissionReport } from "./spawnAdmission.ts";
+import type { PlannedSpawns, SpawnPlan } from "./spawning.ts";
 
 export interface SlotAssignment<Kind extends string> {
   readonly auxiliary?: { readonly requestIndex: number; readonly memberIndex: number };

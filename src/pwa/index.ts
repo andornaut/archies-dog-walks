@@ -34,13 +34,13 @@ import {
   watchFrameTurn,
 } from "@andornaut/game-kit/web/view/dom/watchFrameTurn";
 
-import { chooseSoundFormat, type SoundFormat } from "../audio/soundFormat";
-import { dispatchPhoneEvent, PHONE_EVENTS } from "./events";
-import { createInstallNudge, type InstallNudge } from "./installNudge";
-import { reportOfflineActivity } from "./offlineProgress";
+import { chooseSoundFormat, type SoundFormat } from "../audio/soundFormat.ts";
+import { dispatchPhoneEvent, PHONE_EVENTS } from "./events.ts";
+import { createInstallNudge, type InstallNudge } from "./installNudge.ts";
+import { reportOfflineActivity } from "./offlineProgress.ts";
 
-export { AUDIO_UNLOCK_EVENTS, unlockAudioOnFirstGesture } from "./audioUnlock";
-export { PHONE_EVENTS } from "./events";
+export { AUDIO_UNLOCK_EVENTS, unlockAudioOnFirstGesture } from "./audioUnlock.ts";
+export { PHONE_EVENTS } from "./events.ts";
 export type { InstallOutcome } from "@andornaut/game-kit/web/pwa/dom/installFlow";
 export {
   type InstallState,

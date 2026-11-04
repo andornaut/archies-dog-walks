@@ -1,13 +1,13 @@
 import { fillNames } from "@andornaut/game-kit/lines";
 import { describe, expect, it } from "vitest";
 
-import { gameData } from "../data";
-import type { DogId, LiveTuning, WalkerId } from "../data/types";
-import type { StorageState } from "../save/profile";
-import type { LastWalk } from "../save/schema";
-import { TEST_TUNING } from "../testing/tuning";
-import { cents } from "../units";
-import type { HomeLoadout } from "./home";
+import { gameData } from "../data/index.ts";
+import type { DogId, LiveTuning, WalkerId } from "../data/types.ts";
+import type { StorageState } from "../save/profile.ts";
+import type { LastWalk } from "../save/schema.ts";
+import { TEST_TUNING } from "../testing/tuning.ts";
+import { cents } from "../units.ts";
+import type { HomeLoadout } from "./home.ts";
 import {
   bubbleSpeech,
   bubbleTurnLine,
@@ -23,7 +23,7 @@ import {
   walkerLineKey,
   walkerSays,
   walkersUnlockedSince,
-} from "./homeLines";
+} from "./homeLines.ts";
 
 const data = { ...gameData, tuning: TEST_TUNING };
 // The home text, with test lines for every message these tests check.

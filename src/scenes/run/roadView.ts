@@ -2,9 +2,9 @@ import { getOrInsertComputed } from "@andornaut/game-kit/maps";
 import type { Rect } from "@andornaut/game-kit/rect";
 import { type Scene, type Textures, WEBGL } from "phaser";
 
-import { backdropKey, roadStartKey, roadTileKey } from "../../assets/spriteKeys";
-import { gameData } from "../../data";
-import type { Zone } from "../../data/types";
+import { backdropKey, roadStartKey, roadTileKey } from "../../assets/spriteKeys.ts";
+import { gameData } from "../../data/index.ts";
+import type { Zone } from "../../data/types.ts";
 import {
   drawRoad,
   type PixelImage,
@@ -14,12 +14,12 @@ import {
   roadRaster,
   solidStrip,
   STRIP,
-} from "../../layout/roadRaster";
-import { previousZone } from "../../rules/route";
-import type { Walk } from "../../runner/walk";
-import { colourFromHex } from "../../ui/palette";
-import { BumpOverscan } from "./bumpOverscan";
-import { DEPTH, LAYOUT, PROJECTION } from "./stage";
+} from "../../layout/roadRaster.ts";
+import { previousZone } from "../../rules/route.ts";
+import type { Walk } from "../../runner/walk.ts";
+import { colourFromHex } from "../../ui/palette.ts";
+import { BumpOverscan } from "./bumpOverscan.ts";
+import { DEPTH, LAYOUT, PROJECTION } from "./stage.ts";
 
 const ROAD_TEXTURE = "road-projected";
 

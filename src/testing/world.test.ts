@@ -1,19 +1,19 @@
 import { describe, expect, it } from "vitest";
 
-import { TUNING } from "../data/tuning";
-import type { SpawnSlotCounts, Zone } from "../data/types";
-import { WORLD } from "../data/world";
-import { read } from "../rules/units";
+import { TUNING } from "../data/tuning.ts";
+import type { SpawnSlotCounts, Zone } from "../data/types.ts";
+import { WORLD } from "../data/world.ts";
+import { read } from "../rules/units.ts";
 import {
   apportionSlotCounts,
   SLOT_ROLES,
   slotConfigurationFailures,
   slotCountTotal,
   type SlotKind,
-} from "../runner/slotConfig";
-import { makeSlotJobs } from "../runner/slotJobs";
-import { SLOT_LIMITS } from "../runner/slotPlanner";
-import { minimumSlotConfiguration, slotCapacityForModifier, zoneGuarantees } from "./world";
+} from "../runner/slotConfig.ts";
+import { makeSlotJobs } from "../runner/slotJobs.ts";
+import { SLOT_LIMITS } from "../runner/slotPlanner.ts";
+import { minimumSlotConfiguration, slotCapacityForModifier, zoneGuarantees } from "./world.ts";
 
 const factor = read(TUNING, "multipliers", "rushHourObstacles");
 

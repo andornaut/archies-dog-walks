@@ -2,19 +2,19 @@ import { loadSave } from "@andornaut/game-kit/save/versionedSave";
 import * as v from "valibot";
 import { describe, expect, it } from "vitest";
 
-import { gameData } from "../data";
-import type { DogId } from "../data/types";
-import { defined, present } from "../testing/defined";
+import { gameData } from "../data/index.ts";
+import type { DogId } from "../data/types.ts";
+import { defined, present } from "../testing/defined.ts";
 import {
   newPlayerSave,
   quietCounters,
   STARTER_DOGS,
   testContext,
   veteranSave,
-} from "../testing/saves";
-import { cents } from "../units";
-import { saveContextFrom, saveFormat } from "./load";
-import { createDefaultSave, type SaveDocument, saveSchema } from "./schema";
+} from "../testing/saves.ts";
+import { cents } from "../units.ts";
+import { saveContextFrom, saveFormat } from "./load.ts";
+import { createDefaultSave, type SaveDocument, saveSchema } from "./schema.ts";
 
 const stored = (document: unknown) => JSON.stringify(document);
 

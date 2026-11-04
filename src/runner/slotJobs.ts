@@ -1,4 +1,4 @@
-import type { SpawnSlotRole } from "../data/types";
+import type { SpawnSlotRole } from "../data/types.ts";
 import {
   SLOT_ROLES,
   type SlotConfiguration,
@@ -7,8 +7,8 @@ import {
   type SlotLaneEffect,
   type SlotPlanningRole,
   type SlotSource,
-} from "./slotConfig";
-import { type SpawnQuota } from "./spawning";
+} from "./slotConfig.ts";
+import { type SpawnQuota } from "./spawning.ts";
 
 export interface SlotJob<Kind extends string> {
   readonly auxiliary?: { readonly requestIndex: number; readonly memberIndex: number };

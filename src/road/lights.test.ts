@@ -4,13 +4,13 @@ import { decodePng } from "@andornaut/art-kit/png";
 import { itemAt } from "@andornaut/game-kit/arrays";
 import { describe, expect, it } from "vitest";
 
-import manifest from "../../public/art/manifest.json";
-import depthSteps from "../../shared/depth-steps.json";
-import lightTable from "../../shared/lights.json";
-import { paletteColour } from "../assets/housePalette";
-import { WORLD } from "../data/world";
-import { newAttachedLightPlaces, placeAttachedLights } from "./lightPlaces";
-import { bakeLight, LIGHT_ATTACHMENTS, type LightDef, LIGHTS, lightsFrom } from "./lights";
+import manifest from "../../public/art/manifest.json" with { type: "json" };
+import depthSteps from "../../shared/depth-steps.json" with { type: "json" };
+import lightTable from "../../shared/lights.json" with { type: "json" };
+import { paletteColour } from "../assets/housePalette.ts";
+import { WORLD } from "../data/world.ts";
+import { newAttachedLightPlaces, placeAttachedLights } from "./lightPlaces.ts";
+import { bakeLight, LIGHT_ATTACHMENTS, type LightDef, LIGHTS, lightsFrom } from "./lights.ts";
 
 // A light as art writes it, with its colour by palette name.
 const DEF = {

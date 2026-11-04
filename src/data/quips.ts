@@ -1,4 +1,4 @@
-import type { DogId, Quips } from "./types";
+import type { DogId, Quips } from "./types.ts";
 
 // What each dog's owner says, in their own voice: two lines per moment.
 // "happier" and "upset" follow a choice that raised or lowered their hearts; "fired" is at 0;

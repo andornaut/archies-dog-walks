@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { splitDepthKey, stepSize } from "./depthSteps";
+import { splitDepthKey, stepSize } from "./depthSteps.ts";
 
 describe("stepSize", () => {
   // Rounding halves up.

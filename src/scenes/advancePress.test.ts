@@ -4,9 +4,9 @@ import { guardSceneInput } from "@andornaut/game-kit/input/phaser/guardSceneInpu
 import type { Scene } from "phaser";
 import { describe, expect, it, vi } from "vitest";
 
-import { END_LAYOUT } from "../home/endLayout";
-import { type EndTarget, endTargetAt } from "../home/endView";
-import { listenTargetPress, sameByValue } from "./targetPress";
+import { END_LAYOUT } from "../home/endLayout.ts";
+import { type EndTarget, endTargetAt } from "../home/endView.ts";
+import { listenTargetPress, sameByValue } from "./targetPress.ts";
 
 vi.mock("phaser", () => ({ Scenes: { Events: { SHUTDOWN: "shutdown", UPDATE: "update" } } }));
 

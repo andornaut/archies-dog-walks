@@ -1,11 +1,11 @@
-import { MINOR_OBSTACLES } from "./minorObstacles";
+import { MINOR_OBSTACLES } from "./minorObstacles.ts";
 import type {
   EncounterId,
   MinorObstacleId,
   MovementAssignment,
   MovementProfileId,
   SignatureProfile,
-} from "./types";
+} from "./types.ts";
 
 export const MOVEMENT_PROFILE_KEYS = [
   "cartTurnExit",

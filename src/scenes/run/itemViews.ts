@@ -13,29 +13,29 @@ import {
   WARNING_ARROW_KEY,
   WARNING_KEY,
   WARNING_WANDER_KEY,
-} from "../../assets/spriteKeys";
-import { gameData } from "../../data";
-import { LANE_COUNT } from "../../data/screen";
-import type { EncounterId, GearId, HintTrigger, MinorObstacleId } from "../../data/types";
-import { moverHintTriggers } from "../../hud/hintTriggers";
-import { obstacleParts } from "../../layout/obstacleArt";
-import { herringNow } from "../../road/herrings";
-import { type KeptScenery, struckBy, struckNow } from "../../road/struckScenery";
-import { goesToVerge, vergeNow } from "../../road/vergeScenery";
-import { type MoverOnRoad, moverTell } from "../../runner/movers";
-import { minorLooks } from "../../runner/obstacleLooks";
-import { screenRoadGeometry } from "../../runner/screenGeometry";
-import { signaturePlace } from "../../runner/signaturePaths";
-import type { SpawnEvent } from "../../runner/spawning";
-import { type RoadGeometry, type Walk, type WalkStep } from "../../runner/walk";
-import { walkGeometry } from "../../runner/walkGeometry";
-import { itemCategory, type WalkItem, type WalkItemKind } from "../../runner/walkItems";
-import { PALETTE } from "../../ui/palette";
-import { addStandingSprite, ensurePlaceholder } from "../sprites";
-import { applyItemCue } from "./itemCueViews";
-import { drawMover, MOVER_CUE_PARTS, moverBodyKey } from "./moverView";
-import { DEPTH, LANE_XS, LAYOUT, PROJECTION, ROW_DEPTH, type Shadow } from "./stage";
-import { type StandFrame, standPart } from "./standPart";
+} from "../../assets/spriteKeys.ts";
+import { gameData } from "../../data/index.ts";
+import { LANE_COUNT } from "../../data/screen.ts";
+import type { EncounterId, GearId, HintTrigger, MinorObstacleId } from "../../data/types.ts";
+import { moverHintTriggers } from "../../hud/hintTriggers.ts";
+import { obstacleParts } from "../../layout/obstacleArt.ts";
+import { herringNow } from "../../road/herrings.ts";
+import { type KeptScenery, struckBy, struckNow } from "../../road/struckScenery.ts";
+import { goesToVerge, vergeNow } from "../../road/vergeScenery.ts";
+import { type MoverOnRoad, moverTell } from "../../runner/movers.ts";
+import { minorLooks } from "../../runner/obstacleLooks.ts";
+import { screenRoadGeometry } from "../../runner/screenGeometry.ts";
+import { signaturePlace } from "../../runner/signaturePaths.ts";
+import type { SpawnEvent } from "../../runner/spawning.ts";
+import { type RoadGeometry, type Walk, type WalkStep } from "../../runner/walk.ts";
+import { walkGeometry } from "../../runner/walkGeometry.ts";
+import { itemCategory, type WalkItem, type WalkItemKind } from "../../runner/walkItems.ts";
+import { PALETTE } from "../../ui/palette.ts";
+import { addStandingSprite, ensurePlaceholder } from "../sprites.ts";
+import { applyItemCue } from "./itemCueViews.ts";
+import { drawMover, MOVER_CUE_PARTS, moverBodyKey } from "./moverView.ts";
+import { DEPTH, LANE_XS, LAYOUT, PROJECTION, ROW_DEPTH, type Shadow } from "./stage.ts";
+import { type StandFrame, standPart } from "./standPart.ts";
 
 // Road art that may be missing is drawn as a box this tall, as wide as its art: its lanes
 // less the lane's spare width beside a 1-lane sprite.

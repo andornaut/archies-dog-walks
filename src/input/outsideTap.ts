@@ -1,7 +1,7 @@
 import type { OutsideArea } from "@andornaut/game-kit/input/outsideTap";
 import type { Rect } from "@andornaut/game-kit/rect";
 
-import { SCREEN_LAYOUT } from "../data/screen";
+import { SCREEN_LAYOUT } from "../data/screen.ts";
 
 // The area around covered on the whole screen, where a tap outside an overlay's panel counts
 // (the kit's outsideTap). A full-screen page covers the screen itself, so no point on the canvas

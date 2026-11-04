@@ -1,7 +1,7 @@
 import type { HoldRule } from "@andornaut/game-kit/input/hold";
 
-import type { LiveTuning } from "../data/types";
-import { read } from "../rules/units";
+import type { LiveTuning } from "../data/types.ts";
+import { read } from "../rules/units.ts";
 
 export {
   type HoldPress,

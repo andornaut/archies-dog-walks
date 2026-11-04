@@ -1,15 +1,15 @@
 import { fillNames } from "@andornaut/game-kit/lines";
 import { describe, expect, it } from "vitest";
 
-import { gameData } from "../data";
-import type { DogId } from "../data/types";
-import { dollarText } from "../home/home";
-import { currentZone, defaultRoute, walkLength } from "../rules/route";
-import { read } from "../rules/units";
-import type { RunState } from "../state/runState";
-import { testState } from "../testing/runState";
-import { cents } from "../units";
-import { homeQuestionNote, pauseNote } from "./homeQuestion";
+import { gameData } from "../data/index.ts";
+import type { DogId } from "../data/types.ts";
+import { dollarText } from "../home/home.ts";
+import { currentZone, defaultRoute, walkLength } from "../rules/route.ts";
+import { read } from "../rules/units.ts";
+import type { RunState } from "../state/runState.ts";
+import { testState } from "../testing/runState.ts";
+import { cents } from "../units.ts";
+import { homeQuestionNote, pauseNote } from "./homeQuestion.ts";
 
 type Slots = Readonly<Partial<Record<DogId, number | "fired">>>;
 

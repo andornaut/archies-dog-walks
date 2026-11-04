@@ -1,11 +1,11 @@
 import { itemAt } from "@andornaut/game-kit/arrays";
 import { keysOf } from "@andornaut/game-kit/records";
 
-import { DOGS } from "../data/dogs";
-import { LANE_COUNT, SCREEN_CONFIG } from "../data/screen";
-import type { DogId, Size, WalkerId } from "../data/types";
-import { packOrder } from "../state/pack";
-import { distanceAtY, type RoadProjection, scaleAt } from "./projection";
+import { DOGS } from "../data/dogs.ts";
+import { LANE_COUNT, SCREEN_CONFIG } from "../data/screen.ts";
+import type { DogId, Size, WalkerId } from "../data/types.ts";
+import { packOrder } from "../state/pack.ts";
+import { distanceAtY, type RoadProjection, scaleAt } from "./projection.ts";
 
 // The pack walks in a formation set by its dogs' sizes, close in front of the walker, and
 // uses fixed contact rectangles for the walker and dogs. A pickup touches their combined

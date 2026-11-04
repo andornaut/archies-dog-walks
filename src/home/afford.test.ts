@@ -1,13 +1,13 @@
 import { describe, expect, it } from "vitest";
 
-import { gameData } from "../data";
-import { unlockPrice } from "../rules/shop";
-import type { LastWalk, Owned } from "../save/schema";
-import { STARTER_DOGS } from "../testing/saves";
-import { TEST_TUNING } from "../testing/tuning";
-import { cents } from "../units";
-import { bankAtLastVisit, newlyAffordable } from "./afford";
-import { isAffordable, type Purchase } from "./home";
+import { gameData } from "../data/index.ts";
+import { unlockPrice } from "../rules/shop.ts";
+import type { LastWalk, Owned } from "../save/schema.ts";
+import { STARTER_DOGS } from "../testing/saves.ts";
+import { TEST_TUNING } from "../testing/tuning.ts";
+import { cents } from "../units.ts";
+import { bankAtLastVisit, newlyAffordable } from "./afford.ts";
+import { isAffordable, type Purchase } from "./home.ts";
 
 const data = { ...gameData, tuning: TEST_TUNING };
 const dollars = (amount: number) => cents(amount * 100);

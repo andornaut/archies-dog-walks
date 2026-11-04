@@ -4,8 +4,8 @@ import { snapshotRemapped } from "@andornaut/game-kit/view/phaser/snapshotRemap"
 import type { Scene } from "phaser";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { addDim, addModalShade } from "./draw";
-import { addRampDim } from "./rampDim";
+import { addDim, addModalShade } from "./draw.ts";
+import { addRampDim } from "./rampDim.ts";
 
 vi.mock("@andornaut/game-kit/view/phaser/snapshotRemap", () => ({ snapshotRemapped: vi.fn() }));
 vi.mock("phaser", () => ({

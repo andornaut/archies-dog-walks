@@ -1,4 +1,4 @@
-import type { MoverDraws, MoverPlacement } from "./moverPlanning";
+import type { MoverDraws, MoverPlacement } from "./moverPlanning.ts";
 import {
   createSlotPathProjection,
   isNativeSlotCrossOnly,
@@ -7,7 +7,7 @@ import {
   type PreparedSlotKind,
   type SlotPathProjectionView,
   slotPlacementsAt,
-} from "./slotCandidates";
+} from "./slotCandidates.ts";
 import {
   type ConstraintOwner,
   createSlotIntrinsicProbe,
@@ -17,9 +17,15 @@ import {
   type SlotPocketScope,
   slotPocketScopeMatches,
   slotPocketScopeOwner,
-} from "./slotConstraintState";
-import type { SlotPlacement } from "./slotFeasibility";
-import { blockingSpan, type PlannedSpawns, rowSpacing, type SpawnPlan, zoneRows } from "./spawning";
+} from "./slotConstraintState.ts";
+import type { SlotPlacement } from "./slotFeasibility.ts";
+import {
+  blockingSpan,
+  type PlannedSpawns,
+  rowSpacing,
+  type SpawnPlan,
+  zoneRows,
+} from "./spawning.ts";
 
 export interface SlotCandidate<Kind extends string> {
   // Unbound native template. The transactional state owns temporary trace identity.

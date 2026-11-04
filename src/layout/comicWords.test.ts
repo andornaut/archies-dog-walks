@@ -2,12 +2,12 @@ import { keysOf } from "@andornaut/game-kit/records";
 import { describe, expect, it } from "vitest";
 
 import comicFont from "../../public/art/fonts/font-comic.fnt?raw";
-import shippedManifest from "../../public/art/manifest.json";
-import { kebabCase } from "../assets/spriteKeys";
-import { gameData } from "../data";
-import type { EncounterId } from "../data/types";
-import { hitWord } from "../rules/encounters";
-import { burstWordPlace, COMIC_WORDS, type ComicGlyph, comicWordWidth } from "./comicWords";
+import shippedManifest from "../../public/art/manifest.json" with { type: "json" };
+import { kebabCase } from "../assets/spriteKeys.ts";
+import { gameData } from "../data/index.ts";
+import type { EncounterId } from "../data/types.ts";
+import { hitWord } from "../rules/encounters.ts";
+import { burstWordPlace, COMIC_WORDS, type ComicGlyph, comicWordWidth } from "./comicWords.ts";
 
 // font-comic's glyphs by character, read from its .fnt.
 const glyphs = new Map(

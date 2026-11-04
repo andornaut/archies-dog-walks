@@ -3,12 +3,12 @@ import { readFileSync } from "node:fs";
 import { decodePng } from "@andornaut/art-kit/png";
 import { describe, expect, it } from "vitest";
 
-import { minorObstacleSpriteKey } from "../assets/spriteKeys";
-import { gameData } from "../data";
-import type { EncounterId, MinorObstacleId, SkinId } from "../data/types";
-import { obstacleSkins } from "../runner/obstacleLooks";
-import { spriteSource } from "../tools/atlas/atlasLayout";
-import { OBSTACLE_SILHOUETTES, obstacleParts, POSE_SILHOUETTES } from "./obstacleArt";
+import { minorObstacleSpriteKey } from "../assets/spriteKeys.ts";
+import { gameData } from "../data/index.ts";
+import type { EncounterId, MinorObstacleId, SkinId } from "../data/types.ts";
+import { obstacleSkins } from "../runner/obstacleLooks.ts";
+import { spriteSource } from "../tools/atlas/atlasLayout.ts";
+import { OBSTACLE_SILHOUETTES, obstacleParts, POSE_SILHOUETTES } from "./obstacleArt.ts";
 
 const MANIFEST = JSON.parse(readFileSync("public/art/manifest.json", "utf8")) as {
   sprites: { anchor?: { feetY: number }; key: string }[];

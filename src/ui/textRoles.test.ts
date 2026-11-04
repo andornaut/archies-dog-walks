@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { textRoleCases } from "../testing/textRoles";
+import { textRoleCases } from "../testing/textRoles.ts";
 
 const CASES = textRoleCases();
 

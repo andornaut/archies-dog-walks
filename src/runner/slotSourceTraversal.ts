@@ -1,5 +1,5 @@
-import type { SlotCandidate, SlotSequenceStep } from "./slotCandidateDomains";
-import type { PreparedSlotKind } from "./slotCandidates";
+import type { SlotCandidate, SlotSequenceStep } from "./slotCandidateDomains.ts";
+import type { PreparedSlotKind } from "./slotCandidates.ts";
 
 export interface SlotSourceTraversalWork<Kind extends string> {
   candidates(source: PreparedSlotKind<Kind>): Iterable<SlotSequenceStep<Kind>>;

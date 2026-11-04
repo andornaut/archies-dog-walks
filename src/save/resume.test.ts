@@ -1,28 +1,28 @@
 import { encodeSave } from "@andornaut/game-kit/save/versionedSave";
 import { describe, expect, it, vi } from "vitest";
 
-import { gameData } from "../data";
-import { LANE_COUNT } from "../data/screen";
-import type { ZoneId } from "../data/types";
-import { firstZoneId } from "../rules/route";
-import { moverPlace } from "../runner/movers";
-import { screenRoadGeometry } from "../runner/screenGeometry";
+import { gameData } from "../data/index.ts";
+import { LANE_COUNT } from "../data/screen.ts";
+import type { ZoneId } from "../data/types.ts";
+import { firstZoneId } from "../rules/route.ts";
+import { moverPlace } from "../runner/movers.ts";
+import { screenRoadGeometry } from "../runner/screenGeometry.ts";
 import {
   NO_DRAWS,
   resumeSession,
   runStreams,
   startSession,
   unplannedStart,
-} from "../runner/session";
-import { componentHitLength, itemHeight, startRoad } from "../runner/walk";
-import { footprintOf, type WalkItem } from "../runner/walkItems";
-import { newRun, type RunState } from "../state/runState";
-import { newPlayerSave, testContext } from "../testing/saves";
-import { clampHearts } from "../units";
-import { saveFormat } from "./load";
-import { encodeResume, launchWalk, RESUME_VERSION, type ResumeWalk } from "./resume";
-import { checkpointOf } from "./runSlices";
-import type { Checkpoint } from "./schema";
+} from "../runner/session.ts";
+import { componentHitLength, itemHeight, startRoad } from "../runner/walk.ts";
+import { footprintOf, type WalkItem } from "../runner/walkItems.ts";
+import { newRun, type RunState } from "../state/runState.ts";
+import { newPlayerSave, testContext } from "../testing/saves.ts";
+import { clampHearts } from "../units.ts";
+import { saveFormat } from "./load.ts";
+import { encodeResume, launchWalk, RESUME_VERSION, type ResumeWalk } from "./resume.ts";
+import { checkpointOf } from "./runSlices.ts";
+import type { Checkpoint } from "./schema.ts";
 
 const FIRST = firstZoneId(gameData);
 const SECOND: ZoneId = "cabbagetown";

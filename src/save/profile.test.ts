@@ -2,15 +2,15 @@ import { keysOf } from "@andornaut/game-kit/records";
 import { memoryStorage, type SaveStorage } from "@andornaut/game-kit/save/storage";
 import { describe, expect, it, vi } from "vitest";
 
-import { gameData } from "../data";
-import { packOf, runFactsFor, saveFor } from "../testing/achievements";
-import { quietCounters, testAwards, testContext, veteranSave } from "../testing/saves";
-import { cents } from "../units";
-import { earnedSince } from "./achievements";
-import { ProfileSession } from "./profile";
-import type { LaunchWalk, ResumeWalk } from "./resume";
-import { type Checkpoint, DEFAULT_SETTINGS, SAVE_VERSION, type SaveDocument } from "./schema";
-import { gameSaveStore, SAVE_KEYS } from "./storage";
+import { gameData } from "../data/index.ts";
+import { packOf, runFactsFor, saveFor } from "../testing/achievements.ts";
+import { quietCounters, testAwards, testContext, veteranSave } from "../testing/saves.ts";
+import { cents } from "../units.ts";
+import { earnedSince } from "./achievements.ts";
+import { ProfileSession } from "./profile.ts";
+import type { LaunchWalk, ResumeWalk } from "./resume.ts";
+import { type Checkpoint, DEFAULT_SETTINGS, SAVE_VERSION, type SaveDocument } from "./schema.ts";
+import { gameSaveStore, SAVE_KEYS } from "./storage.ts";
 
 const awards = testAwards;
 

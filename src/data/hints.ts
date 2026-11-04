@@ -1,4 +1,4 @@
-import type { Hint } from "./types";
+import type { Hint } from "./types.ts";
 
 // First-time hints: one line each, shown the first time its trigger happens and never again.
 

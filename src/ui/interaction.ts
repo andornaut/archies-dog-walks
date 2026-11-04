@@ -1,5 +1,5 @@
-import type { Cents } from "../units";
-import type { PlateKind } from "./selection";
+import type { Cents } from "../units.ts";
+import type { PlateKind } from "./selection.ts";
 
 // Every tappable item and button shows one of these. disabled cannot be chosen; normal can;
 // selected is picked, equipped or open; primary is the screen's one call to action.

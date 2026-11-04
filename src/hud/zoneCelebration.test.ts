@@ -2,13 +2,13 @@ import { fillNames } from "@andornaut/game-kit/lines";
 import { keysOf } from "@andornaut/game-kit/records";
 import { describe, expect, it } from "vitest";
 
-import { gameData } from "../data";
-import type { WalkerId } from "../data/types";
-import type { Change, MoneyChange } from "../rules/causes";
-import { agilityPercent } from "../rules/effectText";
-import { walkerGoal, walkerOrder } from "../rules/walkers";
-import { cents, type Hearts } from "../units";
-import { perkIconKey } from "./effectIcons";
+import { gameData } from "../data/index.ts";
+import type { WalkerId } from "../data/types.ts";
+import type { Change, MoneyChange } from "../rules/causes.ts";
+import { agilityPercent } from "../rules/effectText.ts";
+import { walkerGoal, walkerOrder } from "../rules/walkers.ts";
+import { cents, type Hearts } from "../units.ts";
+import { perkIconKey } from "./effectIcons.ts";
 import {
   celebrationText,
   newWalkerCelebrations,
@@ -16,7 +16,7 @@ import {
   zoneBannerHeading,
   type ZoneCelebration,
   zoneCelebration,
-} from "./zoneCelebration";
+} from "./zoneCelebration.ts";
 
 const DISTILLERY_DISTRICT =
   gameData.world.zones.find(({ id }) => id === "distilleryDistrict")?.name ?? "";

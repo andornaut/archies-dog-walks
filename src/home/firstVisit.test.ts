@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
 
-import { gameData } from "../data";
-import type { DogId } from "../data/types";
-import { newPlayerSave } from "../testing/saves";
-import { homeSections, startReady } from "./sections";
+import { gameData } from "../data/index.ts";
+import type { DogId } from "../data/types.ts";
+import { newPlayerSave } from "../testing/saves.ts";
+import { homeSections, startReady } from "./sections.ts";
 
 describe("a first visit", () => {
   it("is ready to start with a dog: the saved walker counts", () => {

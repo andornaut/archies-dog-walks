@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { type SpawnVisibility, visibilityRejection } from "./spawnVisibility";
+import { type SpawnVisibility, visibilityRejection } from "./spawnVisibility.ts";
 
 const shown = (entry: number, lane: number, kind = "dog"): SpawnVisibility => ({
   entry,

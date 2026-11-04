@@ -3,14 +3,14 @@ import { readFileSync } from "node:fs";
 import { decodePng } from "@andornaut/art-kit/png";
 import { describe, expect, it } from "vitest";
 
-import { gameData } from "../data";
-import { SCREEN_CONFIG } from "../data/screen";
-import { CHARM } from "../layout/buffLayout";
-import { fontFileMetrics } from "../testing/fontInk";
-import { readBitmapFont } from "../tools/fontFile";
-import { plainMarks } from "../ui/pixelFont";
-import { TEXT_SCALE } from "../ui/textFit";
-import { cents } from "../units";
+import { gameData } from "../data/index.ts";
+import { SCREEN_CONFIG } from "../data/screen.ts";
+import { CHARM } from "../layout/buffLayout.ts";
+import { fontFileMetrics } from "../testing/fontInk.ts";
+import { readBitmapFont } from "../tools/fontFile.ts";
+import { plainMarks } from "../ui/pixelFont.ts";
+import { TEXT_SCALE } from "../ui/textFit.ts";
+import { cents } from "../units.ts";
 import {
   chipLeft,
   FEEDBACK,
@@ -25,8 +25,8 @@ import {
   stackOverPop,
   tickMs,
   tickShown,
-} from "./feedback";
-import { changeChipAt, REACH_ICON } from "./hudLanes";
+} from "./feedback.ts";
+import { changeChipAt, REACH_ICON } from "./hudLanes.ts";
 
 // A heart sprite's frames under tag, and whether its image is opaque at a frame's column and row.
 function tagFrames(key: string, tag: string) {

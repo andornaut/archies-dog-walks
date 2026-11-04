@@ -4,16 +4,16 @@ import { containsPoint, insetRect, type Rect } from "@andornaut/game-kit/rect";
 import { fittingText } from "@andornaut/game-kit/text/textFit";
 import { type GameObjects, Scene, Scenes } from "phaser";
 
-import { BUILD_LABEL } from "../buildLabel";
-import { gameData } from "../data";
-import { SCREEN_CONFIG, SCREEN_LAYOUT } from "../data/screen";
-import type { MenuText } from "../data/types";
-import { FEEDBACK } from "../home/feedback";
-import { type Focus, focusDirectionForKey, moveFocus } from "../home/focus";
-import { type OverlayRegion, overlayRegion, regionOutside } from "../home/homeBar";
-import { cardTitleRow } from "../home/homeLayout";
-import { MENU_TEXT_FIELDS } from "../home/menuText";
-import { modalActionWidth } from "../home/modalLayout";
+import { BUILD_LABEL } from "../buildLabel.ts";
+import { gameData } from "../data/index.ts";
+import { SCREEN_CONFIG, SCREEN_LAYOUT } from "../data/screen.ts";
+import type { MenuText } from "../data/types.ts";
+import { FEEDBACK } from "../home/feedback.ts";
+import { type Focus, focusDirectionForKey, moveFocus } from "../home/focus.ts";
+import { type OverlayRegion, overlayRegion, regionOutside } from "../home/homeBar.ts";
+import { cardTitleRow } from "../home/homeLayout.ts";
+import { MENU_TEXT_FIELDS } from "../home/menuText.ts";
+import { modalActionWidth } from "../home/modalLayout.ts";
 import {
   INSTALL_STEPS_FIT,
   type InstallStepsLayout,
@@ -34,8 +34,8 @@ import {
   volumeStepAt,
   volumeStepForKey,
   volumeSteps,
-} from "../home/settings";
-import { isConfirmKey, isMuteKey, isPauseKey, menuKeyActs } from "../input/keyBindings";
+} from "../home/settings.ts";
+import { isConfirmKey, isMuteKey, isPauseKey, menuKeyActs } from "../input/keyBindings.ts";
 import {
   exitShown,
   installApp,
@@ -44,13 +44,13 @@ import {
   type MenuInstallBrowser,
   offersInstall,
   onInstallStateChange,
-} from "../pwa";
-import type { Settings } from "../save/schema";
-import { barTitleRoom } from "../ui/barTitle";
-import { closeFace } from "../ui/closeControl";
-import { PLAIN_ITEM, tileState } from "../ui/interaction";
-import { PALETTE } from "../ui/palette";
-import { addModalShade, drawFocusRing, fillRect } from "../ui/phaser/draw";
+} from "../pwa/index.ts";
+import type { Settings } from "../save/schema.ts";
+import { barTitleRoom } from "../ui/barTitle.ts";
+import { closeFace } from "../ui/closeControl.ts";
+import { PLAIN_ITEM, tileState } from "../ui/interaction.ts";
+import { PALETTE } from "../ui/palette.ts";
+import { addModalShade, drawFocusRing, fillRect } from "../ui/phaser/draw.ts";
 import {
   addPixelText,
   fitPixelText,
@@ -60,14 +60,14 @@ import {
   placePixelText,
   setPixelText,
   withProbe,
-} from "../ui/phaser/pixelText";
-import { addRampDim } from "../ui/phaser/rampDim";
-import { GREYED } from "../ui/selection";
-import { TEXT_SCALE } from "../ui/textFit";
-import { listenHomeBar } from "./homeBarPress";
-import { addModalCard } from "./homePanels";
-import { measureModalTitle, modalTextWidth } from "./modalMeasure";
-import { listenOnePress } from "./onePress";
+} from "../ui/phaser/pixelText.ts";
+import { addRampDim } from "../ui/phaser/rampDim.ts";
+import { GREYED } from "../ui/selection.ts";
+import { TEXT_SCALE } from "../ui/textFit.ts";
+import { listenHomeBar } from "./homeBarPress.ts";
+import { addModalCard } from "./homePanels.ts";
+import { measureModalTitle, modalTextWidth } from "./modalMeasure.ts";
+import { listenOnePress } from "./onePress.ts";
 import {
   BAR_MUTED_EVENT,
   closeOverlay,
@@ -75,12 +75,12 @@ import {
   onBackPressed,
   onSceneEvent,
   type OverlayData,
-} from "./overlay";
-import { currentSettings, setSettings } from "./profileStore";
-import { refuseControl } from "./refuseControl";
-import { SCENE_KEYS, type SceneKey } from "./sceneKeys";
-import { soundboardOf } from "./soundboard";
-import { listenTargetPress, sameByValue } from "./targetPress";
+} from "./overlay.ts";
+import { currentSettings, setSettings } from "./profileStore.ts";
+import { refuseControl } from "./refuseControl.ts";
+import { SCENE_KEYS, type SceneKey } from "./sceneKeys.ts";
+import { soundboardOf } from "./soundboard.ts";
+import { listenTargetPress, sameByValue } from "./targetPress.ts";
 import {
   addBodyText,
   addMenuButton,
@@ -90,7 +90,7 @@ import {
   addTapBurst,
   BODY_TEXT,
   clearScene,
-} from "./uiKit";
+} from "./uiKit.ts";
 
 // Emitted on game.events when settings close.
 export const SETTINGS_CLOSED_EVENT = "settings-closed";

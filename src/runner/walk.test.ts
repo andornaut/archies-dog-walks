@@ -5,14 +5,14 @@ import { keysOf } from "@andornaut/game-kit/records";
 import { pixels } from "@andornaut/game-kit/units";
 import { describe, expect, it } from "vitest";
 
-import { ACHIEVEMENTS } from "../data/achievements";
-import { DEBUFFS } from "../data/debuffs";
-import { DOGS } from "../data/dogs";
-import { DOG_SLOTS } from "../data/dogSlots";
-import { ENCOUNTERS } from "../data/encounters";
-import { LANE_COUNT } from "../data/screen";
-import { SHOP_GEAR } from "../data/shop";
-import { TUNING } from "../data/tuning";
+import { ACHIEVEMENTS } from "../data/achievements.ts";
+import { DEBUFFS } from "../data/debuffs.ts";
+import { DOGS } from "../data/dogs.ts";
+import { DOG_SLOTS } from "../data/dogSlots.ts";
+import { ENCOUNTERS } from "../data/encounters.ts";
+import { LANE_COUNT } from "../data/screen.ts";
+import { SHOP_GEAR } from "../data/shop.ts";
+import { TUNING } from "../data/tuning.ts";
 import type {
   Effect,
   EncounterId,
@@ -25,10 +25,10 @@ import type {
   World,
   Zone,
   ZoneId,
-} from "../data/types";
-import { UPGRADES } from "../data/upgrades";
-import { DEFAULT_WALKER, WALKER_PERKS, WALKERS } from "../data/walkers";
-import { WORLD } from "../data/world";
+} from "../data/types.ts";
+import { UPGRADES } from "../data/upgrades.ts";
+import { DEFAULT_WALKER, WALKER_PERKS, WALKERS } from "../data/walkers.ts";
+import { WORLD } from "../data/world.ts";
 import {
   type CardChoice,
   recordInput,
@@ -36,21 +36,21 @@ import {
   startInputLog,
   type StepInput,
   takeDueInputs,
-} from "../dev/inputLog";
-import type { LaneDirection } from "../layout/lanes";
-import { earnedByRun, runCountersOf } from "../rules/achievements";
-import { cardFor, type CardView, chooseOption, openCard } from "../rules/choices";
-import { modifiersOf, modifierValue } from "../rules/modifiers";
-import { currentZone, defaultRoute, firstZoneId, walkLength } from "../rules/route";
-import { tipValue } from "../rules/run";
-import { read } from "../rules/units";
-import { zoneStats } from "../rules/zones";
-import { mapPack } from "../state/pack";
-import { type ModifierSource, newRun, type PackDogs } from "../state/runState";
-import { packOf, runFactsFor } from "../testing/achievements";
-import { lanesReachedAtEnd, pathShortfalls } from "../testing/avoidable";
-import { defined } from "../testing/defined";
-import { plannerStreams } from "../testing/movers";
+} from "../dev/inputLog.ts";
+import type { LaneDirection } from "../layout/lanes.ts";
+import { earnedByRun, runCountersOf } from "../rules/achievements.ts";
+import { cardFor, type CardView, chooseOption, openCard } from "../rules/choices.ts";
+import { modifiersOf, modifierValue } from "../rules/modifiers.ts";
+import { currentZone, defaultRoute, firstZoneId, walkLength } from "../rules/route.ts";
+import { tipValue } from "../rules/run.ts";
+import { read } from "../rules/units.ts";
+import { zoneStats } from "../rules/zones.ts";
+import { mapPack } from "../state/pack.ts";
+import { type ModifierSource, newRun, type PackDogs } from "../state/runState.ts";
+import { packOf, runFactsFor } from "../testing/achievements.ts";
+import { lanesReachedAtEnd, pathShortfalls } from "../testing/avoidable.ts";
+import { defined } from "../testing/defined.ts";
+import { plannerStreams } from "../testing/movers.ts";
 import {
   blockingSpans,
   FASTEST_WALKER,
@@ -71,8 +71,8 @@ import {
   slowestLaneMove,
   walkwayOf,
   ZONE_IDS,
-} from "../testing/planner";
-import { activeModifier, heartsByDog } from "../testing/runState";
+} from "../testing/planner.ts";
+import { activeModifier, heartsByDog } from "../testing/runState.ts";
 import {
   atPack,
   data,
@@ -84,19 +84,19 @@ import {
   tuning,
   walkWith,
   withHearts,
-} from "../testing/walk";
-import { mapZones, TEST_WORLD, zoneGuarantees } from "../testing/world";
-import { captureZoneInput, planZoneForSeed } from "../testing/zonePlan";
-import { cents, clampHearts } from "../units";
-import { approachOutcomes } from "./approach";
-import { stillInLane } from "./laneMotion";
-import { laneAt, moverPlace } from "./movers";
-import { zoneSkins } from "./obstacleLooks";
-import { shyOutcomes } from "./shy";
-import { auditSlotPartialPlan, auditSlotPlan } from "./slotAudit";
-import { SLOT_ROLES } from "./slotConfig";
-import { quietCoverage } from "./slotCoverage";
-import { WIDE_LANES } from "./spawning";
+} from "../testing/walk.ts";
+import { mapZones, TEST_WORLD, zoneGuarantees } from "../testing/world.ts";
+import { captureZoneInput, planZoneForSeed } from "../testing/zonePlan.ts";
+import { cents, clampHearts } from "../units.ts";
+import { approachOutcomes } from "./approach.ts";
+import { stillInLane } from "./laneMotion.ts";
+import { laneAt, moverPlace } from "./movers.ts";
+import { zoneSkins } from "./obstacleLooks.ts";
+import { shyOutcomes } from "./shy.ts";
+import { auditSlotPartialPlan, auditSlotPlan } from "./slotAudit.ts";
+import { SLOT_ROLES } from "./slotConfig.ts";
+import { quietCoverage } from "./slotCoverage.ts";
+import { WIDE_LANES } from "./spawning.ts";
 import {
   collectTip,
   finishZone,
@@ -109,15 +109,15 @@ import {
   type Walk,
   walkScrollSpeed,
   zoneLength,
-} from "./walk";
-import { blocksLane, footprintOf, itemCategory, opensACard, type WalkItem } from "./walkItems";
+} from "./walk.ts";
+import { blocksLane, footprintOf, itemCategory, opensACard, type WalkItem } from "./walkItems.ts";
 import {
   auxiliarySpawnQuotas,
   obstacleWeights,
   planZoneWithContext,
   type ZonePlanObservation,
-} from "./zonePlan";
-import { compileZoneSlotInput } from "./zoneSlotInput";
+} from "./zonePlan.ts";
+import { compileZoneSlotInput } from "./zoneSlotInput.ts";
 
 // Fixed weight-query fixtures retain coherent slot roles and minimum guarantees.
 function fixedEncounterZone(zone: Zone, obstacles: Zone["weights"]["obstacles"]): Zone {

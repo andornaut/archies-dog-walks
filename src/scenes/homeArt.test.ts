@@ -3,13 +3,13 @@ import { existsSync, readFileSync } from "node:fs";
 import { keysOf } from "@andornaut/game-kit/records";
 import { describe, expect, it } from "vitest";
 
-import shippedManifest from "../../public/art/manifest.json";
-import { loadsFirst } from "../assets/atlasGroups";
-import { parseManifest } from "../assets/manifest";
-import * as spriteKeys from "../assets/spriteKeys";
-import { type BaseCue, HOME_CUES, SOUND_KEYS } from "../audio/sound";
-import { gameData } from "../data";
-import { ownerSpriteKey } from "./ownerFigure";
+import shippedManifest from "../../public/art/manifest.json" with { type: "json" };
+import { loadsFirst } from "../assets/atlasGroups.ts";
+import { parseManifest } from "../assets/manifest.ts";
+import * as spriteKeys from "../assets/spriteKeys.ts";
+import { type BaseCue, HOME_CUES, SOUND_KEYS } from "../audio/sound.ts";
+import { gameData } from "../data/index.ts";
+import { ownerSpriteKey } from "./ownerFigure.ts";
 
 // Boot loads only the loadsFirst art and the HOME_CUES sounds before the home screen shows.
 // These tests read the source of the home screen and the menus it opens to check that every key

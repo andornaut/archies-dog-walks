@@ -1,20 +1,20 @@
 import { describe, expect, it, vi } from "vitest";
 
-import { TEST_TUNING } from "../testing/tuning";
-import { alternativeLanesOpen, requiredAlternativeWalls } from "./laneAlternatives";
-import { moverSpec } from "./moverSpecs";
+import { TEST_TUNING } from "../testing/tuning.ts";
+import { alternativeLanesOpen, requiredAlternativeWalls } from "./laneAlternatives.ts";
+import { moverSpec } from "./moverSpecs.ts";
 import {
   createSlotCandidateDomains,
   type SlotCandidate,
   type SlotOwnerDomainToken,
-} from "./slotCandidateDomains";
+} from "./slotCandidateDomains.ts";
 import {
   isNativeSlotCrossOnly,
   nativeSlotPreparationWallRows,
   prepareSlotKind,
-} from "./slotCandidates";
-import { createSlotConstructionState, projectSlotWalls } from "./slotConstraintState";
-import { rowSpacing, type SpawnPlan, zoneRows } from "./spawning";
+} from "./slotCandidates.ts";
+import { createSlotConstructionState, projectSlotWalls } from "./slotConstraintState.ts";
+import { rowSpacing, type SpawnPlan, zoneRows } from "./spawning.ts";
 
 const geometry: Omit<SpawnPlan<string>, "quotas"> = {
   cellInset: 5,

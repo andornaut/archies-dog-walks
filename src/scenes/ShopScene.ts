@@ -2,14 +2,14 @@ import { clampIndex } from "@andornaut/game-kit/arrays";
 import { containsPoint, type Rect } from "@andornaut/game-kit/rect";
 import { type GameObjects, type Input, Scene } from "phaser";
 
-import { dogFaceKey, gearIconKey } from "../assets/spriteKeys";
-import { gameData } from "../data";
-import { dogDetail, gearDetail } from "../home/detail";
-import { FEEDBACK, shakeOffset } from "../home/feedback";
-import { focusDirectionForKey } from "../home/focus";
-import { dollarText, type Purchase } from "../home/home";
-import { overlayRegion, regionOutside } from "../home/homeBar";
-import { type HomeAction, messageLine } from "../home/homeLines";
+import { dogFaceKey, gearIconKey } from "../assets/spriteKeys.ts";
+import { gameData } from "../data/index.ts";
+import { dogDetail, gearDetail } from "../home/detail.ts";
+import { FEEDBACK, shakeOffset } from "../home/feedback.ts";
+import { focusDirectionForKey } from "../home/focus.ts";
+import { dollarText, type Purchase } from "../home/home.ts";
+import { overlayRegion, regionOutside } from "../home/homeBar.ts";
+import { type HomeAction, messageLine } from "../home/homeLines.ts";
 import {
   answerPurchase,
   type ConfirmChoice,
@@ -17,7 +17,7 @@ import {
   keyAnswer,
   type PendingPurchase,
   requestPurchase,
-} from "../home/purchaseConfirm";
+} from "../home/purchaseConfirm.ts";
 import {
   dogRows,
   gearRows,
@@ -30,7 +30,7 @@ import {
   shopRowLook,
   type ShopTab,
   slotRows,
-} from "../home/shop";
+} from "../home/shop.ts";
 import {
   rowRects,
   SHOP_LAYOUT,
@@ -41,7 +41,7 @@ import {
   shopRowTextTops,
   shopScrollbar,
   shopTabRects,
-} from "../home/shopLayout";
+} from "../home/shopLayout.ts";
 import {
   type HoldPress,
   holdRule,
@@ -49,8 +49,8 @@ import {
   startHold,
   tickHold,
   TILE_SLOP_PX,
-} from "../input/hold";
-import { isConfirmKey, isPauseKey, menuKeyActs } from "../input/keyBindings";
+} from "../input/hold.ts";
+import { isConfirmKey, isPauseKey, menuKeyActs } from "../input/keyBindings.ts";
 import {
   type ListScroll,
   listScroll,
@@ -59,18 +59,18 @@ import {
   scrollMax,
   scrollToShow,
   stepScroll,
-} from "../input/listScroll";
-import { exitShown } from "../pwa";
-import type { SaveDocument } from "../save/schema";
-import type { ArtLook } from "../ui/interaction";
-import { PALETTE } from "../ui/palette";
-import { fillRect } from "../ui/phaser/draw";
-import { fitPixelText, pixelFontMetrics, placePixelText } from "../ui/phaser/pixelText";
-import { GREYED, pictureBox, type PlateKind } from "../ui/selection";
-import { cents } from "../units";
-import type { CelebrationSceneData } from "./CelebrationScene";
-import { listenHomeBar } from "./homeBarPress";
-import { drawDetailCard } from "./homePanels";
+} from "../input/listScroll.ts";
+import { exitShown } from "../pwa/index.ts";
+import type { SaveDocument } from "../save/schema.ts";
+import type { ArtLook } from "../ui/interaction.ts";
+import { PALETTE } from "../ui/palette.ts";
+import { fillRect } from "../ui/phaser/draw.ts";
+import { fitPixelText, pixelFontMetrics, placePixelText } from "../ui/phaser/pixelText.ts";
+import { GREYED, pictureBox, type PlateKind } from "../ui/selection.ts";
+import { cents } from "../units.ts";
+import type { CelebrationSceneData } from "./CelebrationScene.ts";
+import { listenHomeBar } from "./homeBarPress.ts";
+import { drawDetailCard } from "./homePanels.ts";
 import {
   addPlate,
   addTileBadge,
@@ -78,11 +78,16 @@ import {
   plateColours,
   purchasePicture,
   SHOP_ART,
-} from "./itemArt";
-import { closeOverlay, listenDismiss, openOverlay, type OverlayData } from "./overlay";
-import { currentSettings, profileSave, purchaseInProfile, takeCelebrations } from "./profileStore";
-import { drawPurchaseConfirm, type PurchaseConfirmHits } from "./purchaseConfirmView";
-import { SCENE_KEYS, type SceneKey } from "./sceneKeys";
+} from "./itemArt.ts";
+import { closeOverlay, listenDismiss, openOverlay, type OverlayData } from "./overlay.ts";
+import {
+  currentSettings,
+  profileSave,
+  purchaseInProfile,
+  takeCelebrations,
+} from "./profileStore.ts";
+import { drawPurchaseConfirm, type PurchaseConfirmHits } from "./purchaseConfirmView.ts";
+import { SCENE_KEYS, type SceneKey } from "./sceneKeys.ts";
 import {
   addScrollbar,
   LIST_SCROLL_RULE,
@@ -90,9 +95,9 @@ import {
   maskToRect,
   placeScrollbar,
   type ScrollbarView,
-} from "./scrollView";
-import { addCountNote, addShopPage, addShopTabs } from "./shopPage";
-import { listenTargetPress, sameByValue, type TargetPressListener } from "./targetPress";
+} from "./scrollView.ts";
+import { addCountNote, addShopPage, addShopTabs } from "./shopPage.ts";
+import { listenTargetPress, sameByValue, type TargetPressListener } from "./targetPress.ts";
 import {
   addBodyText,
   addGraphicsIn,
@@ -105,7 +110,7 @@ import {
   selectOuter,
   tagFrame,
   tileTextureKey,
-} from "./uiKit";
+} from "./uiKit.ts";
 
 // The caller pauses itself and launches the shop, on the tab of focus and framing its row
 // when given, else on the Dogs tab; the shop resumes it on close.

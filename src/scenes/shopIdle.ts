@@ -1,9 +1,9 @@
 import { animationKey } from "@andornaut/game-kit/art/aseprite";
 import type { GameObjects, Scene } from "phaser";
 
-import { bobOffset } from "../home/feedback";
-import { playTagOnce } from "./sprites";
-import type { IconButton } from "./uiKit";
+import { bobOffset } from "../home/feedback.ts";
+import { playTagOnce } from "./sprites.ts";
+import type { IconButton } from "./uiKit.ts";
 
 const INVITATION_EVERY_MS = 7000;
 const INVITATION_TAG = "door-wave";

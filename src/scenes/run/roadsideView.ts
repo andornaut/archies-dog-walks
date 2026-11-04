@@ -2,11 +2,11 @@ import { animationKey } from "@andornaut/game-kit/art/aseprite";
 import { getOrInsertComputed } from "@andornaut/game-kit/maps";
 import type { GameObjects, Scene } from "phaser";
 
-import { IDLE_TAG } from "../../assets/spriteKeys";
-import { gameData } from "../../data";
-import type { DepthDraw } from "../../layout/depthScale";
-import { distanceAtY } from "../../layout/projection";
-import { CARRIED_LIGHT_UP, carriedLightReach, distanceBehind } from "../../road/lightPlaces";
+import { IDLE_TAG } from "../../assets/spriteKeys.ts";
+import { gameData } from "../../data/index.ts";
+import type { DepthDraw } from "../../layout/depthScale.ts";
+import { distanceAtY } from "../../layout/projection.ts";
+import { CARRIED_LIGHT_UP, carriedLightReach, distanceBehind } from "../../road/lightPlaces.ts";
 import {
   idleFrame,
   newRoadsidePlaces,
@@ -18,11 +18,19 @@ import {
   type RoadsideLights,
   type RoadsidePlace,
   type RoadsideStage,
-} from "../../road/roadsideProps";
-import { zoneLength } from "../../runner/walk";
-import { showAtDepth, spriteMetrics } from "../sprites";
-import { ShadowPool } from "./shadowPool";
-import { DEPTH, JUNCTURE_Y, LAYOUT, PROJECTION, ROW_DEPTH, sceneryFade, showOnRoad } from "./stage";
+} from "../../road/roadsideProps.ts";
+import { zoneLength } from "../../runner/walk.ts";
+import { showAtDepth, spriteMetrics } from "../sprites.ts";
+import { ShadowPool } from "./shadowPool.ts";
+import {
+  DEPTH,
+  JUNCTURE_Y,
+  LAYOUT,
+  PROJECTION,
+  ROW_DEPTH,
+  sceneryFade,
+  showOnRoad,
+} from "./stage.ts";
 
 // The roadside props' sprites, a fixed pool made once and reused frame to frame: each drawn
 // through the projection from its depth steps like the road's sprites, cut off at the

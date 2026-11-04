@@ -1,6 +1,6 @@
 import type { PixelBounds } from "@andornaut/game-kit/opaqueBounds";
 
-import type { SpriteAnchor } from "./manifest";
+import type { SpriteAnchor } from "./manifest.ts";
 
 // Where a ground sprite stands, from the opaque bounds of its frame 0: feetY is its last
 // opaque row, which the sprite's origin puts on the feet line, and opaqueWidth how wide its

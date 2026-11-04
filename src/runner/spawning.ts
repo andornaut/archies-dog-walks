@@ -1,19 +1,19 @@
 import { itemAt, partitionPoint } from "@andornaut/game-kit/arrays";
 
-import { laneMask } from "../layout/lanes";
-import { approachOutcomes } from "./approach";
+import { laneMask } from "../layout/lanes.ts";
+import { approachOutcomes } from "./approach.ts";
 import {
   type MoverCaps,
   type MoverSpec,
   type MoverStand,
   type PlannerStreams,
   stopsOnVerge,
-} from "./moverPlanning";
-import { crossingScroll, laneAt, type MoverPath, moverPlace, type MoverStep } from "./movers";
-import { shyOutcomes } from "./shy";
-import { signaturePlace } from "./signaturePaths";
-import type { AdmissionReport } from "./spawnAdmission";
-import type { SpawnVisibilityTrace } from "./spawnVisibility";
+} from "./moverPlanning.ts";
+import { crossingScroll, laneAt, type MoverPath, moverPlace, type MoverStep } from "./movers.ts";
+import { shyOutcomes } from "./shy.ts";
+import { signaturePlace } from "./signaturePaths.ts";
+import type { AdmissionReport } from "./spawnAdmission.ts";
+import type { SpawnVisibilityTrace } from "./spawnVisibility.ts";
 
 // What a spawn covers: lanes across, and rows along the road of footprint.cellLength each.
 export interface Footprint {

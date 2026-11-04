@@ -1,17 +1,17 @@
 import { describe, expect, it } from "vitest";
 
-import { gameData } from "../data";
-import type { Effect } from "../data/types";
-import { dollarAmountText } from "../home/home";
-import type { Change } from "../rules/causes";
-import { resolveEffects } from "../rules/effects";
-import { formatDollars } from "../rules/effectText";
-import { bumpCash, tipValue } from "../rules/run";
-import { read } from "../rules/units";
-import { activeModifier, testState } from "../testing/runState";
-import { type Cents, cents, clampHearts } from "../units";
-import { perkIconKey } from "./effectIcons";
-import { type ChangeLabel, changeLabels, heartRows, reachedLabels, totalLabel } from "./hudView";
+import { gameData } from "../data/index.ts";
+import type { Effect } from "../data/types.ts";
+import { dollarAmountText } from "../home/home.ts";
+import type { Change } from "../rules/causes.ts";
+import { resolveEffects } from "../rules/effects.ts";
+import { formatDollars } from "../rules/effectText.ts";
+import { bumpCash, tipValue } from "../rules/run.ts";
+import { read } from "../rules/units.ts";
+import { activeModifier, testState } from "../testing/runState.ts";
+import { type Cents, cents, clampHearts } from "../units.ts";
+import { perkIconKey } from "./effectIcons.ts";
+import { type ChangeLabel, changeLabels, heartRows, reachedLabels, totalLabel } from "./hudView.ts";
 
 const { tuning } = gameData;
 // Where the money changed hands.

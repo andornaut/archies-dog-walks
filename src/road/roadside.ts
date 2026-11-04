@@ -1,12 +1,12 @@
 import * as v from "valibot";
 
-import vergeTable from "../../shared/verges.json";
-import { paletteColour } from "../assets/housePalette";
-import { parseOrThrow } from "../assets/jsonSchema";
-import { SCREEN_CONFIG } from "../data/screen";
-import type { ZoneId } from "../data/types";
-import { WORLD } from "../data/world";
-import { lightKeySchema, lightZonesSchema, zonesOf } from "./lights";
+import vergeTable from "../../shared/verges.json" with { type: "json" };
+import { paletteColour } from "../assets/housePalette.ts";
+import { parseOrThrow } from "../assets/jsonSchema.ts";
+import { SCREEN_CONFIG } from "../data/screen.ts";
+import type { ZoneId } from "../data/types.ts";
+import { WORLD } from "../data/world.ts";
+import { lightKeySchema, lightZonesSchema, zonesOf } from "./lights.ts";
 
 // What lies beside the projected road, as art/tools/backdrops.ts paints it below the
 // backdrops' streets, so the verge under the band continues the band's bottom row. across is

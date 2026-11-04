@@ -1,7 +1,7 @@
 import { animationSpecs as sheetAnimations } from "@andornaut/game-kit/art/aseprite";
 import { describe, expect, it, vi } from "vitest";
 
-import { animationSpecs } from "./asepriteAnimations";
+import { animationSpecs } from "./asepriteAnimations.ts";
 
 vi.mock("@andornaut/game-kit/art/aseprite", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@andornaut/game-kit/art/aseprite")>();

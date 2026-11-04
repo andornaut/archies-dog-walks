@@ -6,9 +6,9 @@ import {
 import { isHashedAssetUrl } from "@andornaut/game-kit/web/pwa/cachePolicy";
 import { describe, expect, it } from "vitest";
 
-import { CACHE_POLICY } from "../pwa/cachePolicy";
-import { hashedArtFileName } from "../tools/atlas/hashedArt";
-import { FILE_RULES, navWithoutStylesheet, PAGE_RULES } from "./securityPolicy";
+import { CACHE_POLICY } from "../pwa/cachePolicy.ts";
+import { hashedArtFileName } from "../tools/atlas/hashedArt.ts";
+import { FILE_RULES, navWithoutStylesheet, PAGE_RULES } from "./securityPolicy.ts";
 
 describe("navWithoutStylesheet", () => {
   const pages: [string, string, boolean][] = [

@@ -6,11 +6,11 @@ import {
 } from "@andornaut/game-kit/text/bitmapFont";
 import { type TextFitStyle } from "@andornaut/game-kit/text/textFit";
 
-import { BUTTON_SIZE } from "../ui/buttonGeometry";
-import { CARD_HEADER, cardRowRects, type CardRowSpec } from "../ui/cardRow";
-import { PILL_IMAGE_GAP, pillRiseOverCaps } from "../ui/namePills";
-import { TEXT_SCALE } from "../ui/textFit";
-import { CARD_CHARMS_HEIGHT } from "./buffLayout";
+import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";
+import { CARD_HEADER, cardRowRects, type CardRowSpec } from "../ui/cardRow.ts";
+import { PILL_IMAGE_GAP, pillRiseOverCaps } from "../ui/namePills.ts";
+import { TEXT_SCALE } from "../ui/textFit.ts";
+import { CARD_CHARMS_HEIGHT } from "./buffLayout.ts";
 
 // The choice cards: the card-frame sprite's parts in card pixels, the row of cards centred
 // on the road, and the enlarged card a hold opens, card-frame-large, centred in the dimmed band

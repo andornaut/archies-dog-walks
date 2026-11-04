@@ -1,8 +1,8 @@
 import { describe, expect, it, vi } from "vitest";
 
-import * as moverPlanning from "./moverPlanning";
-import { createSlotPathProjection, prepareSlotKind, slotPlacementsAt } from "./slotCandidates";
-import { rowSpacing, type SpawnPlan, zoneRows } from "./spawning";
+import * as moverPlanning from "./moverPlanning.ts";
+import { createSlotPathProjection, prepareSlotKind, slotPlacementsAt } from "./slotCandidates.ts";
+import { rowSpacing, type SpawnPlan, zoneRows } from "./spawning.ts";
 
 function fixture() {
   const geometry: Omit<SpawnPlan<string>, "quotas"> = {

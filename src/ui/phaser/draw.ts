@@ -3,8 +3,8 @@ import { insetRect, type Point, type Rect, ringRects } from "@andornaut/game-kit
 import { MODAL_DIM } from "@andornaut/game-kit/view/modalDim";
 import type { GameObjects, Scene, Textures } from "phaser";
 
-import { PALETTE } from "../palette";
-import { pixelEllipseSpans, pixelLinePoints, shadowRadiusX } from "../pixelShapes";
+import { PALETTE } from "../palette.ts";
+import { pixelEllipseSpans, pixelLinePoints, shadowRadiusX } from "../pixelShapes.ts";
 
 export function addFilledRect(scene: Scene, colour: number, rect: Rect): GameObjects.Rectangle {
   return scene.add.rectangle(rect.x, rect.y, rect.width, rect.height, colour).setOrigin(0);

@@ -3,7 +3,7 @@ import { EventEmitter } from "node:events";
 import type { GameObjects, Scene } from "phaser";
 import { describe, expect, it, vi } from "vitest";
 
-import { addSelectionOrbit, selectionOrbitSegments, type SelectionRing } from "./selectionOrbit";
+import { addSelectionOrbit, selectionOrbitSegments, type SelectionRing } from "./selectionOrbit.ts";
 
 const rect = { height: 44, width: 77, x: 0, y: 0 };
 const colourAt = (time: number, x: number, y: number) =>

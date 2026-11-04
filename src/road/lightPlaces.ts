@@ -1,16 +1,16 @@
 import type { Rect } from "@andornaut/game-kit/rect";
 
-import type { ZoneId } from "../data/types";
-import { project, type RoadProjection } from "../layout/projection";
+import type { ZoneId } from "../data/types.ts";
+import { project, type RoadProjection } from "../layout/projection.ts";
 import {
   LIGHT_ATTACHMENTS,
   type LightAttachment,
   type LightDef,
   lightOriginY,
   LIGHTS,
-} from "./lights";
-import { type VergePool, VERGES } from "./roadside";
-import { type RoadsideLightReach, type RoadsideSign, START_STRIP_LENGTH } from "./roadsideProps";
+} from "./lights.ts";
+import { type VergePool, VERGES } from "./roadside.ts";
+import { type RoadsideLightReach, type RoadsideSign, START_STRIP_LENGTH } from "./roadsideProps.ts";
 
 // Where the verges' lights are drawn each frame: every pool light from behind the walker's feet
 // to the stage's reach, on the zone whose road lies there, projected like the roadside props,

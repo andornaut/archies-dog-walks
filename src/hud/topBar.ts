@@ -1,9 +1,14 @@
 import { containsPoint, type Point } from "@andornaut/game-kit/rect";
 
-import { SCREEN_LAYOUT } from "../data/screen";
-import { isMuteKey, isPauseKey } from "../input/keyBindings";
-import type { PressMode } from "../input/pointerTracking";
-import { type BarButton, WALK_BAR_BUTTONS, type WalkBarButtonId, walkBarLayout } from "./walkHud";
+import { SCREEN_LAYOUT } from "../data/screen.ts";
+import { isMuteKey, isPauseKey } from "../input/keyBindings.ts";
+import type { PressMode } from "../input/pointerTracking.ts";
+import {
+  type BarButton,
+  WALK_BAR_BUTTONS,
+  type WalkBarButtonId,
+  walkBarLayout,
+} from "./walkHud.ts";
 
 // The walk bar's buttons (walkHud.ts), left to right. A press in a button's hit area is that
 // button's and never a road gesture. "sound" toggles mute, as the M key and the Settings switch

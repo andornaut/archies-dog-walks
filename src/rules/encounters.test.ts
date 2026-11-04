@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
 
-import type { DogId, EncounterId } from "../data/types";
-import type { RunState } from "../state/runState";
-import { testState } from "../testing/runState";
-import { affectedDogs, opensCard } from "./encounters";
+import type { DogId, EncounterId } from "../data/types.ts";
+import type { RunState } from "../state/runState.ts";
+import { testState } from "../testing/runState.ts";
+import { affectedDogs, opensCard } from "./encounters.ts";
 
 const pack = testState({ ginger: 5, kilo: 5, pepe: 5 });
 const everyDog: DogId[] = ["ginger", "kilo", "pepe"];

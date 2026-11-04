@@ -1,14 +1,14 @@
 import type { Scene } from "phaser";
 import { describe, expect, it, vi } from "vitest";
 
-import { gameData } from "../data";
-import { CELEBRATION_LAYOUT } from "../hud/celebrationLayout";
-import { celebrationText } from "../hud/zoneCelebration";
-import { fontFileMetrics, fontInk, phaserFontData } from "../testing/fontInk";
-import { addDisplayText } from "../ui/phaser/displayText";
-import { addCelebrationHeadline } from "./celebrationHeadline";
+import { gameData } from "../data/index.ts";
+import { CELEBRATION_LAYOUT } from "../hud/celebrationLayout.ts";
+import { celebrationText } from "../hud/zoneCelebration.ts";
+import { fontFileMetrics, fontInk, phaserFontData } from "../testing/fontInk.ts";
+import { addDisplayText } from "../ui/phaser/displayText.ts";
+import { addCelebrationHeadline } from "./celebrationHeadline.ts";
 
-vi.mock("../ui/phaser/displayText", () => ({ addDisplayText: vi.fn() }));
+vi.mock("../ui/phaser/displayText.ts", () => ({ addDisplayText: vi.fn() }));
 
 class Label {
   readonly font: string;

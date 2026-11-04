@@ -3,10 +3,10 @@ import { readFile } from "node:fs/promises";
 import { PNG } from "pngjs";
 import { describe, expect, it } from "vitest";
 
-import palette from "../../shared/palette.json";
-import { gameData } from "../data";
-import { helpBodyValues } from "../help/helpBody";
-import { rosterRows } from "../home/home";
+import palette from "../../shared/palette.json" with { type: "json" };
+import { gameData } from "../data/index.ts";
+import { helpBodyValues } from "../help/helpBody.ts";
+import { rosterRows } from "../home/home.ts";
 
 const HOME_PAGE = new URL("../../pages/index.html", import.meta.url);
 const SKY_BACKDROP = new URL("../../public/art/images/backdrop-yonge-street.png", import.meta.url);

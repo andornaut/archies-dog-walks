@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { chooseSoundFormat, SOUND_FORMAT_MIME_TYPES } from "./soundFormat";
+import { chooseSoundFormat, SOUND_FORMAT_MIME_TYPES } from "./soundFormat.ts";
 
 const browserPlaying =
   (...playable: string[]) =>

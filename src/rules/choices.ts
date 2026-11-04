@@ -2,7 +2,7 @@ import { fillNames } from "@andornaut/game-kit/lines";
 import { type Random, randomInt, randomPick } from "@andornaut/game-kit/random";
 import { keysOf } from "@andornaut/game-kit/records";
 
-import { cardZoneKey } from "../assets/spriteKeys";
+import { cardZoneKey } from "../assets/spriteKeys.ts";
 import type {
   CardOption,
   CardSource,
@@ -16,11 +16,11 @@ import type {
   UpgradeDuration,
   UpgradeId,
   ZoneId,
-} from "../data/types";
-import { packDogs, walkingAmong } from "../state/pack";
-import type { EffectSource, RunState } from "../state/runState";
-import { type Cents, cents, type Hearts } from "../units";
-import { countOptionPick } from "./achievements";
+} from "../data/types.ts";
+import { packDogs, walkingAmong } from "../state/pack.ts";
+import type { EffectSource, RunState } from "../state/runState.ts";
+import { type Cents, cents, type Hearts } from "../units.ts";
+import { countOptionPick } from "./achievements.ts";
 import {
   amountText,
   type CauseData,
@@ -31,8 +31,8 @@ import {
   heartsForgiven,
   isNamedCause,
   type MoneyChange,
-} from "./causes";
-import { debuffLasting } from "./durations";
+} from "./causes.ts";
+import { debuffLasting } from "./durations.ts";
 import {
   baseMoneyCost,
   type EffectContext,
@@ -40,12 +40,12 @@ import {
   moneyCost,
   resolveEffects,
   targetDogs,
-} from "./effects";
-import { cardEffectText, type CardTextContext, sentenceList } from "./effectText";
-import { type ModifiedValue, modifierCause } from "./modified";
-import { forkPaths, type PathSide, pathSide, zoneById } from "./route";
-import { fireOwnersAtZero } from "./run";
-import { spendSpareTreat } from "./spareTreats";
+} from "./effects.ts";
+import { cardEffectText, type CardTextContext, sentenceList } from "./effectText.ts";
+import { type ModifiedValue, modifierCause } from "./modified.ts";
+import { forkPaths, type PathSide, pathSide, zoneById } from "./route.ts";
+import { fireOwnersAtZero } from "./run.ts";
+import { spendSpareTreat } from "./spareTreats.ts";
 
 export type ChoiceData = CauseData & Pick<GameData, "dogs" | "homeText" | "tuning" | "world">;
 

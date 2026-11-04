@@ -2,9 +2,9 @@ import { animationKey } from "@andornaut/game-kit/art/aseprite";
 import type { Point } from "@andornaut/game-kit/rect";
 import type { GameObjects, Scene } from "phaser";
 
-import type { WalkStep } from "../../runner/walk";
-import type { WalkItem } from "../../runner/walkItems";
-import { playTagOnce } from "../sprites";
+import type { WalkStep } from "../../runner/walk.ts";
+import type { WalkItem } from "../../runner/walkItems.ts";
+import { playTagOnce } from "../sprites.ts";
 
 // The sprite a collected tip twinkles once over the walker: 9x9, drawn with its centre pixel
 // (anchor, from its top-left) gap px plus its half height above the walker's top opaque row,

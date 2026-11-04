@@ -3,20 +3,20 @@ import { rectsOverlap } from "@andornaut/game-kit/rect";
 import { inkRowsFromCapTop } from "@andornaut/game-kit/text/bitmapFont";
 import { describe, expect, it } from "vitest";
 
-import { gameData } from "../data";
-import { HOME_BAR_LAST_FACE, HOME_LAYOUT } from "../home/homeLayout";
-import { TITLE_CAP_ROWS } from "../hud/walkHud";
-import { MIN_TAP_SIZE } from "../layout/screenLayout";
-import { bodyTextWidth } from "../testing/bodyFont";
-import { fontFileMetrics, gameFont, placedInk } from "../testing/fontInk";
-import { inside } from "../testing/rects";
-import { closeFace } from "../ui/closeControl";
-import { LABEL_HELP_GAP } from "../ui/labelHelpGap";
-import { TEXT_SCALE } from "../ui/textFit";
-import { topBarContentRows, topBarRects } from "../ui/topBarTrim";
-import { helpBody } from "./helpBody";
-import { CLOSE_HIT_RECT, dotRects, HELP_LAYOUT, helpActionAt, tapRect } from "./helpLayout";
-import type { HelpAction } from "./helpPaging";
+import { gameData } from "../data/index.ts";
+import { HOME_BAR_LAST_FACE, HOME_LAYOUT } from "../home/homeLayout.ts";
+import { TITLE_CAP_ROWS } from "../hud/walkHud.ts";
+import { MIN_TAP_SIZE } from "../layout/screenLayout.ts";
+import { bodyTextWidth } from "../testing/bodyFont.ts";
+import { fontFileMetrics, gameFont, placedInk } from "../testing/fontInk.ts";
+import { inside } from "../testing/rects.ts";
+import { closeFace } from "../ui/closeControl.ts";
+import { LABEL_HELP_GAP } from "../ui/labelHelpGap.ts";
+import { TEXT_SCALE } from "../ui/textFit.ts";
+import { topBarContentRows, topBarRects } from "../ui/topBarTrim.ts";
+import { helpBody } from "./helpBody.ts";
+import { CLOSE_HIT_RECT, dotRects, HELP_LAYOUT, helpActionAt, tapRect } from "./helpLayout.ts";
+import type { HelpAction } from "./helpPaging.ts";
 
 // Help's top bar is the home pages': as tall, trimmed alike, its heading's capitals and close
 // face centred down the rows between the trim's line and edge as the home bar's button faces

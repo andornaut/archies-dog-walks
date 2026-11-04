@@ -1,13 +1,19 @@
 import { type Random, seededRandom } from "@andornaut/game-kit/random";
 import { describe, expect, it } from "vitest";
 
-import { gameData } from "../data";
-import type { CardOptions, CardSource, EncounterId } from "../data/types";
-import { cardFor } from "../rules/choices";
-import type { RunState } from "../state/runState";
-import { testState } from "../testing/runState";
-import { cents } from "../units";
-import { choosePath, LOW_HEARTS, MIXED_PAY_SHARE, pickCardOption, type PolicyId } from "./policies";
+import { gameData } from "../data/index.ts";
+import type { CardOptions, CardSource, EncounterId } from "../data/types.ts";
+import { cardFor } from "../rules/choices.ts";
+import type { RunState } from "../state/runState.ts";
+import { testState } from "../testing/runState.ts";
+import { cents } from "../units.ts";
+import {
+  choosePath,
+  LOW_HEARTS,
+  MIXED_PAY_SHARE,
+  pickCardOption,
+  type PolicyId,
+} from "./policies.ts";
 
 // The thief's card less its debuff option: a money option and a hearts option, and no debuff.
 const THIEF: CardSource = { affected: ["ginger"], encounter: "thief", kind: "encounter" };

@@ -1,7 +1,7 @@
 import { expect, it } from "vitest";
 
-import type { MoverPath } from "../runner/movers";
-import { blockingSpans, GAME_ROAD, REAL } from "./planner";
+import type { MoverPath } from "../runner/movers.ts";
+import { blockingSpans, GAME_ROAD, REAL } from "./planner.ts";
 
 it("retains actual return-dart contact without extending it past runtime retirement", () => {
   const mover: MoverPath = {

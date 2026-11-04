@@ -2,14 +2,14 @@ import { fillNames } from "@andornaut/game-kit/lines";
 import { keysOf } from "@andornaut/game-kit/records";
 import { describe, expect, it } from "vitest";
 
-import { gameData } from "../data";
-import { MINOR_OBSTACLES } from "../data/minorObstacles";
-import type { Debuff, DebuffId, GearId } from "../data/types";
-import type { HeartChange, MoneyChange } from "../rules/causes";
-import { formatDollars } from "../rules/effectText";
-import { read } from "../rules/units";
-import { defined } from "../testing/defined";
-import { cents, clampHearts } from "../units";
+import { gameData } from "../data/index.ts";
+import { MINOR_OBSTACLES } from "../data/minorObstacles.ts";
+import type { Debuff, DebuffId, GearId } from "../data/types.ts";
+import type { HeartChange, MoneyChange } from "../rules/causes.ts";
+import { formatDollars } from "../rules/effectText.ts";
+import { read } from "../rules/units.ts";
+import { defined } from "../testing/defined.ts";
+import { cents, clampHearts } from "../units.ts";
 import {
   bumpLines,
   debuffChanges,
@@ -22,7 +22,7 @@ import {
   pullLine,
   STRIP_OWNER_MOODS,
   treatLine,
-} from "./stripLines";
+} from "./stripLines.ts";
 
 const { strip } = gameData.runText;
 const kilo = gameData.dogs.kilo;

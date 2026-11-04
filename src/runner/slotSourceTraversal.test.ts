@@ -4,10 +4,10 @@ import {
   createSlotCandidateDomains,
   type SlotCandidate,
   type SlotSequenceStep,
-} from "./slotCandidateDomains";
-import { prepareSlotKind } from "./slotCandidates";
-import { traverseSlotSources } from "./slotSourceTraversal";
-import { rowSpacing, type SpawnPlan, zoneRows } from "./spawning";
+} from "./slotCandidateDomains.ts";
+import { prepareSlotKind } from "./slotCandidates.ts";
+import { traverseSlotSources } from "./slotSourceTraversal.ts";
+import { rowSpacing, type SpawnPlan, zoneRows } from "./spawning.ts";
 
 const geometry: Omit<SpawnPlan<string>, "quotas"> = {
   cellInset: 0,

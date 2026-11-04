@@ -2,8 +2,8 @@ import "./main.css";
 
 import { keysOf } from "@andornaut/game-kit/records";
 
-import { badgeKey } from "../assets/spriteKeys";
-import { gameData, onGameDataChange } from "../data";
+import { badgeKey } from "../assets/spriteKeys.ts";
+import { gameData, onGameDataChange } from "../data/index.ts";
 import type {
   GameData,
   HintTrigger,
@@ -12,9 +12,9 @@ import type {
   QuipMoment,
   Unlock,
   Zone,
-} from "../data/types";
-import { achievementConditionText } from "../rules/achievements";
-import { maxHearts, sizeHearts } from "../rules/dogs";
+} from "../data/types.ts";
+import { achievementConditionText } from "../rules/achievements.ts";
+import { maxHearts, sizeHearts } from "../rules/dogs.ts";
 import {
   agilityPercent,
   capitalize,
@@ -23,11 +23,11 @@ import {
   formatDollars,
   perkEffect,
   SIZE_NAMES,
-} from "../rules/effectText";
-import { modifiersOf } from "../rules/modifiers";
-import { firstZoneId, walkLength, zoneById } from "../rules/route";
-import { price, unlockPrice } from "../rules/shop";
-import { zoneStats } from "../rules/zones";
+} from "../rules/effectText.ts";
+import { modifiersOf } from "../rules/modifiers.ts";
+import { firstZoneId, walkLength, zoneById } from "../rules/route.ts";
+import { price, unlockPrice } from "../rules/shop.ts";
+import { zoneStats } from "../rules/zones.ts";
 import {
   activeValues,
   type Cell,
@@ -43,7 +43,7 @@ import {
   slug,
   TABLES_KEY,
   toggleFilter,
-} from "./filters";
+} from "./filters.ts";
 
 interface Section {
   // The headers of the columns a reader can filter the rows by, one row of pills each.

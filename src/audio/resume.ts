@@ -1,7 +1,7 @@
 // When to resume a stopped AudioContext. No Phaser here: the soundboard in src/scenes/ asks on
 // each gesture, on each return to the foreground, and when the settings unmute.
 
-import type { Mix } from "./sound";
+import type { Mix } from "./sound.ts";
 
 // iOS leaves a context "interrupted" after a call or Siri and "suspended" after switching apps,
 // and either stays silent until resumed. "closed" cannot resume.

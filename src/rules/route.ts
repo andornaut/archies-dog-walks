@@ -1,8 +1,8 @@
 import { itemAt } from "@andornaut/game-kit/arrays";
 import { type Random, randomPick } from "@andornaut/game-kit/random";
 
-import type { GameData, Zone, ZoneId } from "../data/types";
-import type { RunState } from "../state/runState";
+import type { GameData, Zone, ZoneId } from "../data/types.ts";
+import type { RunState } from "../state/runState.ts";
 
 export type RouteData = Pick<GameData, "world">;
 

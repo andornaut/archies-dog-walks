@@ -1,13 +1,13 @@
 import { weightedPick } from "@andornaut/game-kit/random";
 
-import { deepFreeze } from "./deepFreeze";
-import { auditSlotPartialPlan, auditSlotPlan, type SlotAudit } from "./slotAudit";
-import { createSlotCandidateDomains } from "./slotCandidateDomains";
+import { deepFreeze } from "./deepFreeze.ts";
+import { auditSlotPartialPlan, auditSlotPlan, type SlotAudit } from "./slotAudit.ts";
+import { createSlotCandidateDomains } from "./slotCandidateDomains.ts";
 import {
   isNativeSlotPreparation,
   type PreparedSlotKind,
   prepareSlotKindWithin,
-} from "./slotCandidates";
+} from "./slotCandidates.ts";
 import {
   type SlotConfiguration,
   slotConfigurationFailures,
@@ -16,8 +16,8 @@ import {
   type SlotKind,
   type SlotLimits,
   type SlotSource,
-} from "./slotConfig";
-import { createSlotConstructionState } from "./slotConstraintState";
+} from "./slotConfig.ts";
+import { createSlotConstructionState } from "./slotConstraintState.ts";
 import {
   describeSlotDelivery,
   minimumSlotDelivery,
@@ -25,19 +25,23 @@ import {
   type SlotDeliveryPolicy,
   type SlotOmission,
   type SlotPartialAudit,
-} from "./slotDelivery";
-import { slotMotionStreams, slotRandom } from "./slotEntropy";
-import { makeSlotJobs, type SlotJob } from "./slotJobs";
-import { guaranteeCompatiblePath } from "./slotPath";
-import { materialisePartialSlotPlan, materialiseSlotPlan, type SlotAssignment } from "./slotPlan";
-import { createSlotPocketAdapter } from "./slotPocketAdapter";
+} from "./slotDelivery.ts";
+import { slotMotionStreams, slotRandom } from "./slotEntropy.ts";
+import { makeSlotJobs, type SlotJob } from "./slotJobs.ts";
+import { guaranteeCompatiblePath } from "./slotPath.ts";
+import {
+  materialisePartialSlotPlan,
+  materialiseSlotPlan,
+  type SlotAssignment,
+} from "./slotPlan.ts";
+import { createSlotPocketAdapter } from "./slotPocketAdapter.ts";
 import {
   createSlotWitnessSearch,
   type WitnessJob,
   type WitnessOmission,
   type WitnessSelection,
   type WitnessWork,
-} from "./slotWitnessSearch";
+} from "./slotWitnessSearch.ts";
 import {
   drawPath,
   type PlannedSpawns,
@@ -45,7 +49,7 @@ import {
   type SpawnPlan,
   type SpawnQuota,
   zoneRows,
-} from "./spawning";
+} from "./spawning.ts";
 
 export const SLOT_LIMITS: SlotLimits = {
   anchors: 32768,

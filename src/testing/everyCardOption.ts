@@ -1,11 +1,11 @@
 import { keysOf } from "@andornaut/game-kit/records";
 
-import { gameData } from "../data";
-import type { ZoneId } from "../data/types";
-import { largeBodyText } from "../hud/cardText";
-import { cardFor, type OptionView } from "../rules/choices";
-import { cents } from "../units";
-import { testState } from "./runState";
+import { gameData } from "../data/index.ts";
+import type { ZoneId } from "../data/types.ts";
+import { largeBodyText } from "../hud/cardText.ts";
+import { cardFor, type OptionView } from "../rules/choices.ts";
+import { cents } from "../units.ts";
+import { testState } from "./runState.ts";
 
 // Every card option the data can deal: each encounter's card for each dog alone and for the
 // three longest-named dogs together, on their last heart (so options fire them) and on five,

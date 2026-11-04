@@ -1,10 +1,10 @@
 import { keysOf } from "@andornaut/game-kit/records";
 import { describe, expect, it } from "vitest";
 
-import { gameData } from "../data";
-import type { DogId, Size, WalkerId } from "../data/types";
-import { newRun } from "../state/runState";
-import { read } from "./units";
+import { gameData } from "../data/index.ts";
+import type { DogId, Size, WalkerId } from "../data/types.ts";
+import { newRun } from "../state/runState.ts";
+import { read } from "./units.ts";
 import {
   newWalkers,
   packAgility,
@@ -12,7 +12,7 @@ import {
   walkerAgility,
   walkerGoal,
   walkerOrder,
-} from "./walkers";
+} from "./walkers.ts";
 
 const WALKER_IDS = keysOf(gameData.walkers);
 

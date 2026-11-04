@@ -2,24 +2,24 @@ import { itemAt } from "@andornaut/game-kit/arrays";
 import { keysOf } from "@andornaut/game-kit/records";
 import { beforeAll, describe, expect, it, vi } from "vitest";
 
-import { gameData } from "../data";
-import type { DebuffId } from "../data/types";
-import { currentZoneId } from "../rules/route";
-import { bumpCash, tipValue } from "../rules/run";
-import { NO_PULLS } from "../runner/pulls";
-import * as sessions from "../runner/session";
-import { SpawnPlanningError, type SpawnPlanSnapshot } from "../runner/spawnSearch";
-import { startRoad, type WalkStep } from "../runner/walk";
-import type { WalkItemKind } from "../runner/walkItems";
-import type { ZonePlanObservation } from "../runner/zonePlan";
-import { TALLY_IDS } from "../save/schema";
-import { packDogs, packOrder } from "../state/pack";
-import type { PackDogs, RunState } from "../state/runState";
-import { defined } from "../testing/defined";
-import { activeModifier, testState } from "../testing/runState";
-import { IDEAL_SKILL, simConfig } from "../testing/sim";
-import { cents } from "../units";
-import { badgeCounters } from "./report";
+import { gameData } from "../data/index.ts";
+import type { DebuffId } from "../data/types.ts";
+import { currentZoneId } from "../rules/route.ts";
+import { bumpCash, tipValue } from "../rules/run.ts";
+import { NO_PULLS } from "../runner/pulls.ts";
+import * as sessions from "../runner/session.ts";
+import { SpawnPlanningError, type SpawnPlanSnapshot } from "../runner/spawnSearch.ts";
+import { startRoad, type WalkStep } from "../runner/walk.ts";
+import type { WalkItemKind } from "../runner/walkItems.ts";
+import type { ZonePlanObservation } from "../runner/zonePlan.ts";
+import { TALLY_IDS } from "../save/schema.ts";
+import { packDogs, packOrder } from "../state/pack.ts";
+import type { PackDogs, RunState } from "../state/runState.ts";
+import { defined } from "../testing/defined.ts";
+import { activeModifier, testState } from "../testing/runState.ts";
+import { IDEAL_SKILL, simConfig } from "../testing/sim.ts";
+import { cents } from "../units.ts";
+import { badgeCounters } from "./report.ts";
 import {
   type DebuffCosts,
   type DebuffsByZone,
@@ -28,8 +28,8 @@ import {
   type RunResult,
   type SimConfig,
   simulateRun,
-} from "./simulate";
-import { type Skill, SKILL_PRESETS } from "./skills";
+} from "./simulate.ts";
+import { type Skill, SKILL_PRESETS } from "./skills.ts";
 
 const TRIO: PackDogs = ["ginger", "lady", "kilo"];
 const RISKY: PackDogs = ["buddy", "archie", "sequoia"];

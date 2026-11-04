@@ -1,16 +1,16 @@
 import { keysOf } from "@andornaut/game-kit/records";
 import { describe, expect, it } from "vitest";
 
-import { DOGS } from "../data/dogs";
-import { SHOP_GEAR } from "../data/shop";
-import { TUNING } from "../data/tuning";
-import type { DogId, Modifier, Size } from "../data/types";
-import { PACK_PLACES, placeName } from "../testing/packPlaces";
-import { testState } from "../testing/runState";
-import { TEST_TUNING } from "../testing/tuning";
-import { maxHearts, packPlace } from "./dogs";
-import { modifiersOf } from "./modifiers";
-import { type FaceMood, faceMood, treatRecipient } from "./treats";
+import { DOGS } from "../data/dogs.ts";
+import { SHOP_GEAR } from "../data/shop.ts";
+import { TUNING } from "../data/tuning.ts";
+import type { DogId, Modifier, Size } from "../data/types.ts";
+import { PACK_PLACES, placeName } from "../testing/packPlaces.ts";
+import { testState } from "../testing/runState.ts";
+import { TEST_TUNING } from "../testing/tuning.ts";
+import { maxHearts, packPlace } from "./dogs.ts";
+import { modifiersOf } from "./modifiers.ts";
+import { type FaceMood, faceMood, treatRecipient } from "./treats.ts";
 
 describe("faceMood", () => {
   const { faceHappyWithin, faceNeutralFrom } = TUNING.hearts;

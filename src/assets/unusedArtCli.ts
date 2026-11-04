@@ -3,9 +3,9 @@
 // Informational: it exits 0 whatever it finds.
 import { readdirSync, readFileSync } from "node:fs";
 
-import { gameData } from "../data";
-import { parseManifest } from "./manifest";
-import { keyNames, unusedKeys } from "./unusedArt";
+import { gameData } from "../data/index.ts";
+import { parseManifest } from "./manifest.ts";
+import { keyNames, unusedKeys } from "./unusedArt.ts";
 
 const sources = readdirSync("src", { encoding: "utf8", recursive: true })
   .filter((path) => path.endsWith(".ts") && !path.endsWith(".test.ts"))

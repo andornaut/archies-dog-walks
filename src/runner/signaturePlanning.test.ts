@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import type { SignatureProfile } from "../data/types";
+import type { SignatureProfile } from "../data/types.ts";
 import {
   type MoverGeometry,
   moverPlacements,
@@ -8,8 +8,8 @@ import {
   type MoverSpec,
   onScreenOf,
   screenHasRoom,
-} from "./moverPlanning";
-import { signaturePlace } from "./signaturePaths";
+} from "./moverPlanning.ts";
+import { signaturePlace } from "./signaturePaths.ts";
 
 const common = { finishAheadSeconds: 1, warningSeconds: 0.3 };
 const profiles: readonly SignatureProfile[] = [

@@ -10,12 +10,12 @@ import "./crash.css";
 import { installCrashScreen } from "@andornaut/game-kit/web/crash/dom/crashScreen";
 import artFiles from "virtual:art-files";
 
-import palette from "../../shared/palette.json";
-import { artFileUrl } from "../assets/artUrl";
-import { BUILD_LABEL } from "../buildLabel";
-import { MENU_TEXT } from "../data/menuText";
-import { pageSearch } from "../dev/devTools";
-import { devInSearch } from "../dev/runSetup";
+import palette from "../../shared/palette.json" with { type: "json" };
+import { artFileUrl } from "../assets/artUrl.ts";
+import { BUILD_LABEL } from "../buildLabel.ts";
+import { MENU_TEXT } from "../data/menuText.ts";
+import { pageSearch } from "../dev/devTools.ts";
+import { devInSearch } from "../dev/runSetup.ts";
 
 const colour = (name: keyof typeof palette) => `#${palette[name].hex}`;
 

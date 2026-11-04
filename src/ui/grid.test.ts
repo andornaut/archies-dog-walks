@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { gridRects, rectIndexAt } from "./grid";
+import { gridRects, rectIndexAt } from "./grid.ts";
 
 const spec = { cellHeight: 50, cellWidth: 112, columns: 3, gapX: 4, gapY: 4 };
 

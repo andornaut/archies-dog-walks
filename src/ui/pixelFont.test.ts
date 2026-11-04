@@ -11,7 +11,7 @@ import {
   PIXEL_GLYPHS,
   pixelFontAtlas,
   plainMarks,
-} from "./pixelFont";
+} from "./pixelFont.ts";
 
 vi.mock("@andornaut/game-kit/text/pixelFont", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@andornaut/game-kit/text/pixelFont")>();

@@ -2,8 +2,8 @@ import { animationKey } from "@andornaut/game-kit/art/aseprite";
 import { insetRect, type Point, type Rect } from "@andornaut/game-kit/rect";
 import type { GameObjects, Scene, Tweens } from "phaser";
 
-import { SCREEN_CONFIG } from "../data/screen";
-import type { DogId } from "../data/types";
+import { SCREEN_CONFIG } from "../data/screen.ts";
+import type { DogId } from "../data/types.ts";
 import {
   FEEDBACK,
   heartNoticeLayout,
@@ -11,19 +11,19 @@ import {
   heartPopCovers,
   heartPopFrame,
   reachIconBeside,
-} from "../hud/feedback";
-import type { ChangeLabel } from "../hud/hudView";
-import { arcControl } from "../hud/moments";
-import { slotIndexOf } from "../state/pack";
-import { PALETTE } from "../ui/palette";
-import { CREAM_PANEL_COLOURS, drawFramedRect, drawRing } from "../ui/phaser/draw";
-import { addPixelText, inkSpan } from "../ui/phaser/pixelText";
-import { arcFlight } from "./arcFlight";
-import { FEEDBACK_ART } from "./feedbackArt";
-import { HUD_DEPTH } from "./hudDepth";
-import type { HudWalk } from "./hudWalk";
-import { playEffect, playTag, playTagOnce } from "./sprites";
-import { TimedGroup } from "./timedGroup";
+} from "../hud/feedback.ts";
+import type { ChangeLabel } from "../hud/hudView.ts";
+import { arcControl } from "../hud/moments.ts";
+import { slotIndexOf } from "../state/pack.ts";
+import { PALETTE } from "../ui/palette.ts";
+import { CREAM_PANEL_COLOURS, drawFramedRect, drawRing } from "../ui/phaser/draw.ts";
+import { addPixelText, inkSpan } from "../ui/phaser/pixelText.ts";
+import { arcFlight } from "./arcFlight.ts";
+import { FEEDBACK_ART } from "./feedbackArt.ts";
+import { HUD_DEPTH } from "./hudDepth.ts";
+import type { HudWalk } from "./hudWalk.ts";
+import { playEffect, playTag, playTagOnce } from "./sprites.ts";
+import { TimedGroup } from "./timedGroup.ts";
 
 // Padding around the actual ink of the 2x signed number.
 const CHIP_PAD = 4;

@@ -1,15 +1,15 @@
 import { keysOf } from "@andornaut/game-kit/records";
 import { describe, expect, it } from "vitest";
 
-import { gameData } from "../data";
-import type { LiveTuning } from "../data/types";
-import { startingDogSlots } from "../rules/shop";
-import type { Owned } from "../save/schema";
-import { TEST_TUNING } from "../testing/tuning";
-import { cents } from "../units";
-import { dollarText } from "./home";
-import { type ShopRow, shopRowId, slotRows } from "./shop";
-import { slotSign, slotSignPurchase } from "./slotSign";
+import { gameData } from "../data/index.ts";
+import type { LiveTuning } from "../data/types.ts";
+import { startingDogSlots } from "../rules/shop.ts";
+import type { Owned } from "../save/schema.ts";
+import { TEST_TUNING } from "../testing/tuning.ts";
+import { cents } from "../units.ts";
+import { dollarText } from "./home.ts";
+import { type ShopRow, shopRowId, slotRows } from "./shop.ts";
+import { slotSign, slotSignPurchase } from "./slotSign.ts";
 
 const starting = startingDogSlots(gameData);
 const dogs = keysOf(gameData.dogs).filter((dog) => gameData.dogs[dog].unlock === "start");

@@ -1,16 +1,16 @@
 import { describe, expect, it } from "vitest";
 
-import { DEBUFFS } from "../data/debuffs";
-import { DOGS } from "../data/dogs";
-import { ENCOUNTERS } from "../data/encounters";
-import { TUNING } from "../data/tuning";
-import type { DogId, Effect } from "../data/types";
-import type { ActiveModifier, EffectSource, RunState } from "../state/runState";
-import { LONE } from "../testing/packPlaces";
-import { activeModifier, heartsByDog, testState } from "../testing/runState";
-import { TEST_TUNING } from "../testing/tuning";
-import { cents } from "../units";
-import { maxHearts, ownerMaxHearts } from "./dogs";
+import { DEBUFFS } from "../data/debuffs.ts";
+import { DOGS } from "../data/dogs.ts";
+import { ENCOUNTERS } from "../data/encounters.ts";
+import { TUNING } from "../data/tuning.ts";
+import type { DogId, Effect } from "../data/types.ts";
+import type { ActiveModifier, EffectSource, RunState } from "../state/runState.ts";
+import { LONE } from "../testing/packPlaces.ts";
+import { activeModifier, heartsByDog, testState } from "../testing/runState.ts";
+import { TEST_TUNING } from "../testing/tuning.ts";
+import { cents } from "../units.ts";
+import { maxHearts, ownerMaxHearts } from "./dogs.ts";
 import {
   applyEffects,
   type EffectContext,
@@ -18,8 +18,8 @@ import {
   resolveEffects,
   shareHearts,
   targetDogs,
-} from "./effects";
-import { read } from "./units";
+} from "./effects.ts";
+import { read } from "./units.ts";
 
 const data = { debuffs: DEBUFFS, dogs: DOGS, encounters: ENCOUNTERS, tuning: TEST_TUNING };
 const SKUNK_IGNORE: EffectSource = { encounter: "skunk", kind: "encounter", option: 2 };

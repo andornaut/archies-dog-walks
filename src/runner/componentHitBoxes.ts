@@ -1,10 +1,10 @@
-import { COMPONENT_SILHOUETTES } from "../layout/obstacleArt";
-import { PART_INSET } from "../layout/packFormation";
-import type { LanedBox } from "./collision";
-import { facesLeft } from "./movers";
-import { drawnObstacleBox, type RoadLens } from "./obstacleBox";
-import { signatureComponentProgress, signaturePlace } from "./signaturePaths";
-import type { WalkItem } from "./walkItems";
+import { COMPONENT_SILHOUETTES } from "../layout/obstacleArt.ts";
+import { PART_INSET } from "../layout/packFormation.ts";
+import type { LanedBox } from "./collision.ts";
+import { facesLeft } from "./movers.ts";
+import { drawnObstacleBox, type RoadLens } from "./obstacleBox.ts";
+import { signatureComponentProgress, signaturePlace } from "./signaturePaths.ts";
+import type { WalkItem } from "./walkItems.ts";
 
 export function componentHitBoxes(
   geometry: { readonly cell: { readonly length: number }; readonly lens: RoadLens },

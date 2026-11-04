@@ -3,8 +3,8 @@ import { getOrInsertComputed } from "@andornaut/game-kit/maps";
 import type { Loader, Scene, Textures } from "phaser";
 import artFiles from "virtual:art-files";
 
-import { artFileUrl } from "../artUrl";
-import { filtersLinear, steppedBases } from "../atlasGroups";
+import { artFileUrl } from "../artUrl.ts";
+import { filtersLinear, steppedBases } from "../atlasGroups.ts";
 import {
   asepriteSheetOf,
   ATLAS_MANIFEST_PATH,
@@ -14,8 +14,8 @@ import {
   type AtlasTexture,
   BASE_FRAME,
   parseAtlasManifest,
-} from "../atlasManifest";
-import { type AssetManifest, parseManifest } from "../manifest";
+} from "../atlasManifest.ts";
+import { type AssetManifest, parseManifest } from "../manifest.ts";
 
 // The URL of an art file by its path under /art/: in a build, its content-hashed copy, so the
 // code loads its own build's art whatever the service worker or the browser has cached.

@@ -1,4 +1,4 @@
-import type { DogSlot } from "./types";
+import type { DogSlot } from "./types.ts";
 
 // The dog slots in order: the first is owned from the start, the others are bought on the
 // home screen at any time.

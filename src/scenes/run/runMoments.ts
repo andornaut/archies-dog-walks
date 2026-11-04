@@ -2,10 +2,10 @@ import type { Random } from "@andornaut/game-kit/random";
 import type { Point, Rect } from "@andornaut/game-kit/rect";
 import type { Scene } from "phaser";
 
-import { debuffSoundCue } from "../../audio/sound";
-import { choiceCues, contactCues, pullCues, stepCues } from "../../audio/stepCues";
-import { gameData } from "../../data";
-import type { DogId, EncounterId, HintId, HintTrigger } from "../../data/types";
+import { debuffSoundCue } from "../../audio/sound.ts";
+import { choiceCues, contactCues, pullCues, stepCues } from "../../audio/stepCues.ts";
+import { gameData } from "../../data/index.ts";
+import type { DogId, EncounterId, HintId, HintTrigger } from "../../data/types.ts";
 import {
   type BuffPop,
   heartPopDogs,
@@ -16,12 +16,12 @@ import {
   roadMarks,
   stepValues,
   walkStartMarks,
-} from "../../hud/buffMarks";
-import { type EffectItem, effectItems, gearWell } from "../../hud/effectIcons";
-import { heartPopFrame, stackOverPop } from "../../hud/feedback";
-import { stepHintTriggers } from "../../hud/hintTriggers";
-import { changeLabels, reachedLabels, totalLabel } from "../../hud/hudView";
-import type { MessageLine } from "../../hud/messageStrip";
+} from "../../hud/buffMarks.ts";
+import { type EffectItem, effectItems, gearWell } from "../../hud/effectIcons.ts";
+import { heartPopFrame, stackOverPop } from "../../hud/feedback.ts";
+import { stepHintTriggers } from "../../hud/hintTriggers.ts";
+import { changeLabels, reachedLabels, totalLabel } from "../../hud/hudView.ts";
+import type { MessageLine } from "../../hud/messageStrip.ts";
 import {
   endScreenDelayMs,
   FIRING_EVENT,
@@ -38,8 +38,8 @@ import {
   type SpareTreatCue,
   TREAT_EVENT,
   type TreatCue,
-} from "../../hud/moments";
-import { cashLostLabel, cashLostMs } from "../../hud/moneyLabels";
+} from "../../hud/moments.ts";
+import { cashLostLabel, cashLostMs } from "../../hud/moneyLabels.ts";
 import {
   bumpLines,
   debuffChanges,
@@ -52,9 +52,9 @@ import {
   pullLine,
   spareTreatUsedLine,
   treatGrabLine,
-} from "../../hud/stripLines";
-import { BUFF_POP, CHARM, charmByWalkerRect, charmOverRect } from "../../layout/buffLayout";
-import { bumpFlash, type BumpSource } from "../../layout/bumpFlash";
+} from "../../hud/stripLines.ts";
+import { BUFF_POP, CHARM, charmByWalkerRect, charmOverRect } from "../../layout/buffLayout.ts";
+import { bumpFlash, type BumpSource } from "../../layout/bumpFlash.ts";
 import {
   contactDebuffBatch,
   ContactImpactFrame,
@@ -65,52 +65,52 @@ import {
   obstacleMotion,
   splashEffect,
   whiteFlash,
-} from "../../layout/hitEffects";
+} from "../../layout/hitEffects.ts";
 import {
   type Change,
   type HeartChange,
   heartsForgiven,
   type MoneyChange,
-} from "../../rules/causes";
-import { type ChoiceOutcome, outcomeChanges, type QuipCue, quipLine } from "../../rules/choices";
-import { hitWord } from "../../rules/encounters";
-import { hintFor } from "../../rules/hints";
-import { walkLength } from "../../rules/route";
-import { walkEarnings } from "../../rules/run";
-import { spareTreatGiver, spareTreatSource } from "../../rules/spareTreats";
-import { read } from "../../rules/units";
-import { minorLook, minorObstacleName } from "../../runner/obstacleLooks";
-import type { PullStep } from "../../runner/pulls";
-import type { EncounterCard, MinorBump, WalkStep } from "../../runner/walk";
-import type { WalkItem } from "../../runner/walkItems";
+} from "../../rules/causes.ts";
+import { type ChoiceOutcome, outcomeChanges, type QuipCue, quipLine } from "../../rules/choices.ts";
+import { hitWord } from "../../rules/encounters.ts";
+import { hintFor } from "../../rules/hints.ts";
+import { walkLength } from "../../rules/route.ts";
+import { walkEarnings } from "../../rules/run.ts";
+import { spareTreatGiver, spareTreatSource } from "../../rules/spareTreats.ts";
+import { read } from "../../rules/units.ts";
+import { minorLook, minorObstacleName } from "../../runner/obstacleLooks.ts";
+import type { PullStep } from "../../runner/pulls.ts";
+import type { EncounterCard, MinorBump, WalkStep } from "../../runner/walk.ts";
+import type { WalkItem } from "../../runner/walkItems.ts";
 import {
   type AchievementPreview,
   NOTHING_PREVIEWED,
   previewAchievements,
-} from "../../save/achievementPreview";
-import type { RunResult } from "../../save/checkpoint";
-import { packDogs } from "../../state/pack";
-import type { EffectSource, EndReason, RunState } from "../../state/runState";
-import { PALETTE } from "../../ui/palette";
-import { fillRect } from "../../ui/phaser/draw";
-import { pixelLinePoints } from "../../ui/pixelShapes";
-import { floatValue, popCharm } from "../buffCharm";
-import { FEEDBACK_ART } from "../feedbackArt";
-import { hitLabelOf, hitLook, playEdgeFlash, playHitMoment } from "../hitMoment";
-import { sayMessage } from "../messageStripView";
-import { floatChipHeight, type HeartPopPlace, playDodge, playForgiven } from "../packFeedback";
-import { earnedIfBanked, shownHints } from "../profileStore";
-import { dogTop } from "../pullSignals";
-import { SCENE_KEYS } from "../sceneKeys";
-import { soundboardOf } from "../soundboard";
-import { playEffect, tagTopY } from "../sprites";
-import { playContactDebuff } from "./contactDebuffFx";
-import { flashWhite, moveObstacle, playHitEffects, shakeRoad } from "./hitFx";
-import type { ItemViews } from "./itemViews";
-import type { PackView } from "./packView";
-import { showDebuffPopup, showGearPopup, showInstantPopup } from "./roadBanners";
-import { DEPTH, firingSeconds, LAYOUT, overPack } from "./stage";
-import { stepSparkles } from "./tipSparkle";
+} from "../../save/achievementPreview.ts";
+import type { RunResult } from "../../save/checkpoint.ts";
+import { packDogs } from "../../state/pack.ts";
+import type { EffectSource, EndReason, RunState } from "../../state/runState.ts";
+import { PALETTE } from "../../ui/palette.ts";
+import { fillRect } from "../../ui/phaser/draw.ts";
+import { pixelLinePoints } from "../../ui/pixelShapes.ts";
+import { floatValue, popCharm } from "../buffCharm.ts";
+import { FEEDBACK_ART } from "../feedbackArt.ts";
+import { hitLabelOf, hitLook, playEdgeFlash, playHitMoment } from "../hitMoment.ts";
+import { sayMessage } from "../messageStripView.ts";
+import { floatChipHeight, type HeartPopPlace, playDodge, playForgiven } from "../packFeedback.ts";
+import { earnedIfBanked, shownHints } from "../profileStore.ts";
+import { dogTop } from "../pullSignals.ts";
+import { SCENE_KEYS } from "../sceneKeys.ts";
+import { soundboardOf } from "../soundboard.ts";
+import { playEffect, tagTopY } from "../sprites.ts";
+import { playContactDebuff } from "./contactDebuffFx.ts";
+import { flashWhite, moveObstacle, playHitEffects, shakeRoad } from "./hitFx.ts";
+import type { ItemViews } from "./itemViews.ts";
+import type { PackView } from "./packView.ts";
+import { showDebuffPopup, showGearPopup, showInstantPopup } from "./roadBanners.ts";
+import { DEPTH, firingSeconds, LAYOUT, overPack } from "./stage.ts";
+import { stepSparkles } from "./tipSparkle.ts";
 
 // How long the step's hit stop holds the road, or a plain obstacle's stop while it has none.
 function stopMs(step: WalkStep): number {

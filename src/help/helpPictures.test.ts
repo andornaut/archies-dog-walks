@@ -1,15 +1,15 @@
 import { itemAt } from "@andornaut/game-kit/arrays";
 import { describe, expect, it } from "vitest";
 
-import { gameData } from "../data";
-import { ROAD_CAMERA, SCREEN_CONFIG, SCREEN_LAYOUT } from "../data/screen";
-import type { HelpPictureId } from "../data/types";
-import { cardRowIn } from "../layout/cardLayout";
-import { screenYAt } from "../layout/projection";
-import { currentZoneId, forkPaths } from "../rules/route";
-import { walkProjection } from "../runner/walkGeometry";
-import { cardHeader } from "../ui/cardRow";
-import { HELP_LAYOUT } from "./helpLayout";
+import { gameData } from "../data/index.ts";
+import { ROAD_CAMERA, SCREEN_CONFIG, SCREEN_LAYOUT } from "../data/screen.ts";
+import type { HelpPictureId } from "../data/types.ts";
+import { cardRowIn } from "../layout/cardLayout.ts";
+import { screenYAt } from "../layout/projection.ts";
+import { currentZoneId, forkPaths } from "../rules/route.ts";
+import { walkProjection } from "../runner/walkGeometry.ts";
+import { cardHeader } from "../ui/cardRow.ts";
+import { HELP_LAYOUT } from "./helpLayout.ts";
 import {
   dragGlide,
   type DragLoop,
@@ -19,7 +19,7 @@ import {
   type PictureStrip,
   stillDragMoment,
   TOUCH_DRAG,
-} from "./helpPictures";
+} from "./helpPictures.ts";
 
 const SCREEN = SCREEN_LAYOUT;
 const PROJECTION = walkProjection(ROAD_CAMERA, SCREEN.road);

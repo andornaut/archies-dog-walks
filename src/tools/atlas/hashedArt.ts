@@ -1,9 +1,9 @@
 import { contentHash } from "@andornaut/game-kit/web/build/vite/contentHash";
 
-import { ATLAS_MANIFEST_PATH, type AtlasManifest } from "../../assets/atlasManifest";
-import type { AssetManifest } from "../../assets/manifest";
-import { ART_MANIFEST } from "../artManifest";
-import type { AtlasBuild } from "./atlasBuild";
+import { ATLAS_MANIFEST_PATH, type AtlasManifest } from "../../assets/atlasManifest.ts";
+import type { AssetManifest } from "../../assets/manifest.ts";
+import { ART_MANIFEST } from "../artManifest.ts";
+import type { AtlasBuild } from "./atlasBuild.ts";
 
 // The module a build fills with the game's ArtFileMap (src/assets/artUrl.ts). The dev server's
 // map is empty, so every file loads from its own path there.

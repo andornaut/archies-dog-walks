@@ -2,28 +2,33 @@ import { seededRandom } from "@andornaut/game-kit/random";
 import { keysOf } from "@andornaut/game-kit/records";
 import { describe, expect, it } from "vitest";
 
-import { DEBUFFS } from "../data/debuffs";
-import { DOGS } from "../data/dogs";
-import { ENCOUNTERS } from "../data/encounters";
-import { HOME_TEXT } from "../data/homeText";
-import { MINOR_OBSTACLES } from "../data/minorObstacles";
-import { MOVEMENT_ASSIGNMENTS, MOVEMENT_PROFILES } from "../data/movementProfiles";
-import { RUN_TEXT } from "../data/runText";
-import { SHOP_GEAR } from "../data/shop";
-import type { Modifier } from "../data/types";
-import { UPGRADES } from "../data/upgrades";
-import { recordInput, replayInputs, startInputLog } from "../dev/inputLog";
-import type { LaneDirection } from "../layout/lanes";
-import { mapPack } from "../state/pack";
-import { newRun, type PackDogs } from "../state/runState";
-import { plannerStreams } from "../testing/movers";
-import { TEST_ROAD_GEOMETRY } from "../testing/packGeometry";
-import { TEST_TUNING } from "../testing/tuning";
-import { TEST_WALKER_DATA } from "../testing/walkers";
-import { mapZones, minimumSlotConfiguration, TEST_WORLD, zoneGuarantees } from "../testing/world";
-import { laneControlIn } from "./laneControl";
-import { stillInLane } from "./laneMotion";
-import { type MoverPath, moverPlace, moverY } from "./movers";
+import { DEBUFFS } from "../data/debuffs.ts";
+import { DOGS } from "../data/dogs.ts";
+import { ENCOUNTERS } from "../data/encounters.ts";
+import { HOME_TEXT } from "../data/homeText.ts";
+import { MINOR_OBSTACLES } from "../data/minorObstacles.ts";
+import { MOVEMENT_ASSIGNMENTS, MOVEMENT_PROFILES } from "../data/movementProfiles.ts";
+import { RUN_TEXT } from "../data/runText.ts";
+import { SHOP_GEAR } from "../data/shop.ts";
+import type { Modifier } from "../data/types.ts";
+import { UPGRADES } from "../data/upgrades.ts";
+import { recordInput, replayInputs, startInputLog } from "../dev/inputLog.ts";
+import type { LaneDirection } from "../layout/lanes.ts";
+import { mapPack } from "../state/pack.ts";
+import { newRun, type PackDogs } from "../state/runState.ts";
+import { plannerStreams } from "../testing/movers.ts";
+import { TEST_ROAD_GEOMETRY } from "../testing/packGeometry.ts";
+import { TEST_TUNING } from "../testing/tuning.ts";
+import { TEST_WALKER_DATA } from "../testing/walkers.ts";
+import {
+  mapZones,
+  minimumSlotConfiguration,
+  TEST_WORLD,
+  zoneGuarantees,
+} from "../testing/world.ts";
+import { laneControlIn } from "./laneControl.ts";
+import { stillInLane } from "./laneMotion.ts";
+import { type MoverPath, moverPlace, moverY } from "./movers.ts";
 import {
   laneBlockedWithin,
   NO_PULLS,
@@ -33,10 +38,10 @@ import {
   type PullStep,
   pullWalk,
   stepPulls,
-} from "./pulls";
-import { obstacleHitBoxes, startRoad, steerWalk, stepWalk, type Walk } from "./walk";
-import { type WalkItem } from "./walkItems";
-import { planZoneWithContext } from "./zonePlan";
+} from "./pulls.ts";
+import { obstacleHitBoxes, startRoad, steerWalk, stepWalk, type Walk } from "./walk.ts";
+import { type WalkItem } from "./walkItems.ts";
+import { planZoneWithContext } from "./zonePlan.ts";
 
 const data = {
   debuffs: DEBUFFS,

@@ -2,7 +2,7 @@ import type {
   createSlotCandidateDomains,
   SlotCandidate,
   SlotOwnerWallsToken,
-} from "./slotCandidateDomains";
+} from "./slotCandidateDomains.ts";
 import {
   type ConstraintCheckpoint,
   type ConstraintOwner,
@@ -11,7 +11,7 @@ import {
   type SlotPocketObligation,
   type SlotPocketOwner,
   slotPocketScopeMatches,
-} from "./slotConstraintState";
+} from "./slotConstraintState.ts";
 import {
   checkSlotPocketSupport,
   type SlotPocketDomainStep,
@@ -19,8 +19,8 @@ import {
   type SlotPocketRejection,
   type SlotPocketSupportPorts,
   type SlotPocketSupportResult,
-} from "./slotPocketSupport";
-import type { PlannedSpawns, SpawnPlan } from "./spawning";
+} from "./slotPocketSupport.ts";
+import type { PlannedSpawns, SpawnPlan } from "./spawning.ts";
 
 export interface SlotPocketWork {
   readonly adviceLimit?: number;

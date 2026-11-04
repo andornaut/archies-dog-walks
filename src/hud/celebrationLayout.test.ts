@@ -5,14 +5,14 @@ import { keysOf } from "@andornaut/game-kit/records";
 import { fitsRoom, fittingText, type TextFitStyle } from "@andornaut/game-kit/text/textFit";
 import { describe, expect, it } from "vitest";
 
-import { gameData } from "../data";
-import { SCREEN_LAYOUT } from "../data/screen";
-import type { WalkerId } from "../data/types";
-import { bodyRunWidth } from "../testing/bodyFont";
-import { fontFileMetrics, inkWidth } from "../testing/fontInk";
-import { inside } from "../testing/rects";
-import { plainMarks } from "../ui/pixelFont";
-import { TEXT_SCALE } from "../ui/textFit";
+import { gameData } from "../data/index.ts";
+import { SCREEN_LAYOUT } from "../data/screen.ts";
+import type { WalkerId } from "../data/types.ts";
+import { bodyRunWidth } from "../testing/bodyFont.ts";
+import { fontFileMetrics, inkWidth } from "../testing/fontInk.ts";
+import { inside } from "../testing/rects.ts";
+import { plainMarks } from "../ui/pixelFont.ts";
+import { TEXT_SCALE } from "../ui/textFit.ts";
 import {
   CELEBRATION_LAYOUT as LAYOUT,
   GREETING_FIT,
@@ -20,8 +20,8 @@ import {
   infoItems,
   laidInfoLine,
   newWalkerRows,
-} from "./celebrationLayout";
-import { celebrationText } from "./zoneCelebration";
+} from "./celebrationLayout.ts";
+import { celebrationText } from "./zoneCelebration.ts";
 
 // Each walker's bubble, laid out from their greeting and info lines as the scene lays it out.
 describe("a new walker's bubble", () => {

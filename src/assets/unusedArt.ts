@@ -1,8 +1,8 @@
 import ts from "typescript";
 
-import { splitDepthKey } from "./depthSteps";
-import type { AssetManifest } from "./manifest";
-import { kebabCase } from "./spriteKeys";
+import { splitDepthKey } from "./depthSteps.ts";
+import type { AssetManifest } from "./manifest.ts";
+import { kebabCase } from "./spriteKeys.ts";
 
 // The names source code and game data could build a manifest key from: every string literal,
 // every template literal's fixed parts, and every string in the game data.

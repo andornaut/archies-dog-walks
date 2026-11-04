@@ -2,7 +2,7 @@ import { readFile } from "node:fs/promises";
 
 import { describe, expect, it } from "vitest";
 
-import palette from "../../shared/palette.json";
+import palette from "../../shared/palette.json" with { type: "json" };
 
 const GAME_ENTRY = new URL("../main.ts", import.meta.url);
 const GAME_PAGE = new URL("../../pages/play/index.html", import.meta.url);

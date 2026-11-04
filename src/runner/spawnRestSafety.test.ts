@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
 
-import { prepareSlotKind, slotPlacementsAt } from "./slotCandidates";
-import { createSlotConstructionState } from "./slotConstraintState";
-import { materialiseSlotPlan } from "./slotPlan";
-import { moverRestSpans, rowSpacing, type SpawnPlan, zoneRows } from "./spawning";
-import { auditSpawnPlan } from "./spawnValidation";
+import { prepareSlotKind, slotPlacementsAt } from "./slotCandidates.ts";
+import { createSlotConstructionState } from "./slotConstraintState.ts";
+import { materialiseSlotPlan } from "./slotPlan.ts";
+import { moverRestSpans, rowSpacing, type SpawnPlan, zoneRows } from "./spawning.ts";
+import { auditSpawnPlan } from "./spawnValidation.ts";
 
 const geometry: Omit<SpawnPlan<string>, "quotas"> = {
   cellInset: 5,

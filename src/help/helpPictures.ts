@@ -3,7 +3,7 @@ import { keysOf } from "@andornaut/game-kit/records";
 import type { Point, Rect } from "@andornaut/game-kit/rect";
 import { pixels } from "@andornaut/game-kit/units";
 
-import { LANE_COUNT, ROAD_CAMERA, SCREEN_CONFIG, SCREEN_LAYOUT } from "../data/screen";
+import { LANE_COUNT, ROAD_CAMERA, SCREEN_CONFIG, SCREEN_LAYOUT } from "../data/screen.ts";
 import type {
   CardSource,
   DogId,
@@ -11,27 +11,27 @@ import type {
   GameData,
   HelpPictureId,
   MinorObstacleId,
-} from "../data/types";
-import { cardRowIn } from "../layout/cardLayout";
-import { laneCentreXs } from "../layout/lanes";
-import type { Change } from "../rules/causes";
-import { cardFor, type CardView, forkCard, MAX_CARD_OPTIONS } from "../rules/choices";
-import { firstZoneId, forkPaths, middleZoneId } from "../rules/route";
-import { tipValue } from "../rules/run";
-import { read } from "../rules/units";
-import { laneControlIn } from "../runner/laneControl";
-import { type LaneMotion, stillInLane } from "../runner/laneMotion";
-import type { MoverOnRoad } from "../runner/movers";
-import { NO_PULLS, type Pulls } from "../runner/pulls";
-import { screenRoadGeometry } from "../runner/screenGeometry";
-import { itemHeight, startRoad, type Walk, zoneLength } from "../runner/walk";
-import { walkProjection } from "../runner/walkGeometry";
-import { type WalkItem, type WalkItemKind } from "../runner/walkItems";
-import { heartsOf, mapPack } from "../state/pack";
-import { newRun, type PackDogs, type PackSlot, type RunState } from "../state/runState";
-import { cardHeader } from "../ui/cardRow";
-import { addCents, cents, clampHearts } from "../units";
-import { HELP_LAYOUT } from "./helpLayout";
+} from "../data/types.ts";
+import { cardRowIn } from "../layout/cardLayout.ts";
+import { laneCentreXs } from "../layout/lanes.ts";
+import type { Change } from "../rules/causes.ts";
+import { cardFor, type CardView, forkCard, MAX_CARD_OPTIONS } from "../rules/choices.ts";
+import { firstZoneId, forkPaths, middleZoneId } from "../rules/route.ts";
+import { tipValue } from "../rules/run.ts";
+import { read } from "../rules/units.ts";
+import { laneControlIn } from "../runner/laneControl.ts";
+import { type LaneMotion, stillInLane } from "../runner/laneMotion.ts";
+import type { MoverOnRoad } from "../runner/movers.ts";
+import { NO_PULLS, type Pulls } from "../runner/pulls.ts";
+import { screenRoadGeometry } from "../runner/screenGeometry.ts";
+import { itemHeight, startRoad, type Walk, zoneLength } from "../runner/walk.ts";
+import { walkProjection } from "../runner/walkGeometry.ts";
+import { type WalkItem, type WalkItemKind } from "../runner/walkItems.ts";
+import { heartsOf, mapPack } from "../state/pack.ts";
+import { newRun, type PackDogs, type PackSlot, type RunState } from "../state/runState.ts";
+import { cardHeader } from "../ui/cardRow.ts";
+import { addCents, cents, clampHearts } from "../units.ts";
+import { HELP_LAYOUT } from "./helpLayout.ts";
 
 // Each help page's picture: a moment of the walk screen, drawn by the game's own road, pack, HUD
 // and card renderers at their screen positions, still but for the lanes page's drag. The

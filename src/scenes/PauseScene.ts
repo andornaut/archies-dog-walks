@@ -1,29 +1,29 @@
 import { Core, Scene, Scenes } from "phaser";
 
-import { gameData } from "../data";
-import { SCREEN_LAYOUT } from "../data/screen";
-import { overlayRegion, regionOutside } from "../home/homeBar";
-import type { HomeNoteLine } from "../hud/homeQuestion";
+import { gameData } from "../data/index.ts";
+import { SCREEN_LAYOUT } from "../data/screen.ts";
+import { overlayRegion, regionOutside } from "../home/homeBar.ts";
+import type { HomeNoteLine } from "../hud/homeQuestion.ts";
 import {
   HOME_QUESTION_ANSWERS,
   homeQuestionLayout,
   PAUSE_MENU_ITEMS,
   type PauseMenuItem,
   pauseMenuLayout,
-} from "../hud/pauseMenu";
-import { WALKER_SILHOUETTES } from "../layout/packFormation";
-import { walkerFootY } from "../layout/screenLayout";
-import { exitShown } from "../pwa";
-import { PALETTE } from "../ui/palette";
-import { addRampDim } from "../ui/phaser/rampDim";
-import { HELP_CLOSED_EVENT } from "./HelpScene";
-import { openHelp } from "./helpScreen";
-import { listenOutsideTap, onceSceneEvent, openOverlay } from "./overlay";
-import { addQuestionPanel, type PanelEntry } from "./questionPanel";
-import type { RunScene } from "./RunScene";
-import { SCENE_KEYS } from "./sceneKeys";
-import { SETTINGS_CLOSED_EVENT, type SettingsData } from "./SettingsScene";
-import { soundboardOf } from "./soundboard";
+} from "../hud/pauseMenu.ts";
+import { WALKER_SILHOUETTES } from "../layout/packFormation.ts";
+import { walkerFootY } from "../layout/screenLayout.ts";
+import { exitShown } from "../pwa/index.ts";
+import { PALETTE } from "../ui/palette.ts";
+import { addRampDim } from "../ui/phaser/rampDim.ts";
+import { HELP_CLOSED_EVENT } from "./HelpScene.ts";
+import { openHelp } from "./helpScreen.ts";
+import { listenOutsideTap, onceSceneEvent, openOverlay } from "./overlay.ts";
+import { addQuestionPanel, type PanelEntry } from "./questionPanel.ts";
+import type { RunScene } from "./RunScene.ts";
+import { SCENE_KEYS } from "./sceneKeys.ts";
+import { SETTINGS_CLOSED_EVENT, type SettingsData } from "./SettingsScene.ts";
+import { soundboardOf } from "./soundboard.ts";
 
 // Help or the settings, opened at once over the menu from the walk bar: alone, closing it
 // resumes the walk; opened over the menu or the question, closing it shows the menu again.

@@ -4,13 +4,13 @@ import { animationKey } from "@andornaut/game-kit/art/aseprite";
 import type { GameObjects, Scene } from "phaser";
 import { describe, expect, it } from "vitest";
 
-import petShopSheet from "../../public/art/sprites/ui-pet-shop.json";
-import { animationSpecs } from "../assets/asepriteAnimations";
-import { FEEDBACK } from "../home/feedback";
-import { HOME_LAYOUT } from "../home/homeLayout";
-import { addShopBoard, addShopIdle } from "./shopIdle";
-import { playTag, playTagOnce, showAtDepth } from "./sprites";
-import { addSelectTile } from "./uiKit";
+import petShopSheet from "../../public/art/sprites/ui-pet-shop.json" with { type: "json" };
+import { animationSpecs } from "../assets/asepriteAnimations.ts";
+import { FEEDBACK } from "../home/feedback.ts";
+import { HOME_LAYOUT } from "../home/homeLayout.ts";
+import { addShopBoard, addShopIdle } from "./shopIdle.ts";
+import { playTag, playTagOnce, showAtDepth } from "./sprites.ts";
+import { addSelectTile } from "./uiKit.ts";
 
 const KEY = "dog-kilo";
 

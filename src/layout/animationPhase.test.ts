@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { animationPhaseAt } from "./animationPhase";
+import { animationPhaseAt } from "./animationPhase.ts";
 
 describe("animation phase", () => {
   it("replays variable frame durations in any query order and wraps negative phases", () => {

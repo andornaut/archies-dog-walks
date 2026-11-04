@@ -3,10 +3,10 @@ import { modalWidth } from "@andornaut/game-kit/modalLayout";
 import { insetRect, type Rect, rectAboveIn, rectsOverlap } from "@andornaut/game-kit/rect";
 import type { FontMetrics } from "@andornaut/game-kit/text/bitmapFont";
 
-import { SCREEN_CONFIG } from "../data/screen";
-import { BUTTON_SIZE } from "../ui/buttonGeometry";
-import { MODAL } from "../ui/modalGeometry";
-import { TEXT_SCALE } from "../ui/textFit";
+import { SCREEN_CONFIG } from "../data/screen.ts";
+import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";
+import { MODAL } from "../ui/modalGeometry.ts";
+import { TEXT_SCALE } from "../ui/textFit.ts";
 
 export { MODAL };
 

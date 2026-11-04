@@ -1,20 +1,20 @@
 import { describe, expect, it, vi } from "vitest";
 
-import { visibleMoverRows } from "./moverCoverage";
-import { createSlotCandidateDomains, type SlotCandidate } from "./slotCandidateDomains";
-import { prepareSlotKind } from "./slotCandidates";
-import { createSlotConstructionState } from "./slotConstraintState";
-import { coverageLeadingRows, quietCoverage } from "./slotCoverage";
-import { createMovingCoverageHints } from "./slotMovingCoverageHints";
-import { createSlotPocketAdapter } from "./slotPocketAdapter";
-import { createSlotSolverSession } from "./slotSolverSession";
+import { visibleMoverRows } from "./moverCoverage.ts";
+import { createSlotCandidateDomains, type SlotCandidate } from "./slotCandidateDomains.ts";
+import { prepareSlotKind } from "./slotCandidates.ts";
+import { createSlotConstructionState } from "./slotConstraintState.ts";
+import { coverageLeadingRows, quietCoverage } from "./slotCoverage.ts";
+import { createMovingCoverageHints } from "./slotMovingCoverageHints.ts";
+import { createSlotPocketAdapter } from "./slotPocketAdapter.ts";
+import { createSlotSolverSession } from "./slotSolverSession.ts";
 import {
   constructSlotWitness,
   createSlotWitnessConstruct,
   type SlotWitnessConstructPorts,
-} from "./slotWitnessConstruct";
-import type { WitnessJob } from "./slotWitnessSearch";
-import { rowSpacing, type SpawnPlan, zoneRows } from "./spawning";
+} from "./slotWitnessConstruct.ts";
+import type { WitnessJob } from "./slotWitnessSearch.ts";
+import { rowSpacing, type SpawnPlan, zoneRows } from "./spawning.ts";
 
 const geometry: Omit<SpawnPlan<string>, "quotas"> = {
   cellInset: 5,

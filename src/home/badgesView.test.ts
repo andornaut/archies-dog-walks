@@ -3,17 +3,17 @@ import { fillNames, wrapWords } from "@andornaut/game-kit/lines";
 import { keysOf } from "@andornaut/game-kit/records";
 import { describe, expect, it } from "vitest";
 
-import { badgeKey } from "../assets/spriteKeys";
-import { gameData } from "../data";
-import type { AchievementCondition, ZoneId } from "../data/types";
-import { orderedAchievements } from "../rules/achievementOrder";
-import type { SaveDocument } from "../save/schema";
-import { defined } from "../testing/defined";
-import { inkWidth } from "../testing/fontInk";
-import { newPlayerSave } from "../testing/saves";
-import { closeControl } from "../ui/closeControl";
-import { TEXT_SCALE } from "../ui/textFit";
-import { cents, dollarsToCents } from "../units";
+import { badgeKey } from "../assets/spriteKeys.ts";
+import { gameData } from "../data/index.ts";
+import type { AchievementCondition, ZoneId } from "../data/types.ts";
+import { orderedAchievements } from "../rules/achievementOrder.ts";
+import type { SaveDocument } from "../save/schema.ts";
+import { defined } from "../testing/defined.ts";
+import { inkWidth } from "../testing/fontInk.ts";
+import { newPlayerSave } from "../testing/saves.ts";
+import { closeControl } from "../ui/closeControl.ts";
+import { TEXT_SCALE } from "../ui/textFit.ts";
+import { cents, dollarsToCents } from "../units.ts";
 import {
   BADGE_STRIP,
   badgeProgress,
@@ -29,9 +29,9 @@ import {
   wallCell,
   wallCellLines,
   wallRects,
-} from "./badgesView";
-import { dollarText } from "./home";
-import { STATS_LAYOUT } from "./statsLayout";
+} from "./badgesView.ts";
+import { dollarText } from "./home.ts";
+import { STATS_LAYOUT } from "./statsLayout.ts";
 
 // The condition kinds a save counts across walks, and a save that has counted n of one.
 const COUNTED_KINDS = [

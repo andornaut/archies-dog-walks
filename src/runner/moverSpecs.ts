@@ -2,9 +2,9 @@ import { itemAt } from "@andornaut/game-kit/arrays";
 import { assertNever } from "@andornaut/game-kit/assertNever";
 import { chance, type Random, randomPick } from "@andornaut/game-kit/random";
 
-import type { GameData, MoveCount, Movement, NeighbourhoodId } from "../data/types";
-import { read } from "../rules/units";
-import { assignedMovement, type ProfiledMovement } from "./movementAssignments";
+import type { GameData, MoveCount, Movement, NeighbourhoodId } from "../data/types.ts";
+import { read } from "../rules/units.ts";
+import { assignedMovement, type ProfiledMovement } from "./movementAssignments.ts";
 import {
   hopSequences,
   hopShapes,
@@ -13,9 +13,9 @@ import {
   type MoverSpec,
   type PlannerStreams,
   SIDESTEPS,
-} from "./moverPlanning";
-import { type StepShape } from "./movers";
-import { type WalkItemKind } from "./walkItems";
+} from "./moverPlanning.ts";
+import { type StepShape } from "./movers.ts";
+import { type WalkItemKind } from "./walkItems.ts";
 
 // The movement a drawn spawn moves with: an obstacle, minor or not, or a lucky encounter with a
 // movement comes as a mover at a chance of share. Other spawns never move and draw nothing, as

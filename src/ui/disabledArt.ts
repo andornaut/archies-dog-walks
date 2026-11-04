@@ -1,6 +1,6 @@
-import { remapToGrey } from "../assets/greyRamp";
-import { NEUTRAL_RAMP } from "./palette";
-import { GREYED } from "./selection";
+import { remapToGrey } from "../assets/greyRamp.ts";
+import { NEUTRAL_RAMP } from "./palette.ts";
+import { GREYED } from "./selection.ts";
 
 // The pictures a disabled tile draws in grey (uiKit's tileTextureKey and addTileSprite): each
 // dog's and walker's face, gear item and walker perk icon, and the dog slot's icon.

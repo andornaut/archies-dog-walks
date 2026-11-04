@@ -1,22 +1,22 @@
 import { keysOf } from "@andornaut/game-kit/records";
 import { describe, expect, it } from "vitest";
 
-import { DEBUFFS } from "../data/debuffs";
-import { DOGS } from "../data/dogs";
-import { ENCOUNTERS } from "../data/encounters";
-import { HOME_TEXT } from "../data/homeText";
-import { MINOR_OBSTACLES } from "../data/minorObstacles";
-import { QUIPS } from "../data/quips";
-import { RUN_TEXT } from "../data/runText";
-import { SHOP_GEAR } from "../data/shop";
-import type { CardOption, CardSource, DogId, EncounterId, UpgradeId } from "../data/types";
-import { UPGRADES } from "../data/upgrades";
-import { newRun, type RunState } from "../state/runState";
-import { activeModifier, heartsByDog, testState } from "../testing/runState";
-import { TEST_TUNING } from "../testing/tuning";
-import { TEST_WALKER_DATA } from "../testing/walkers";
-import { TEST_WORLD } from "../testing/world";
-import { cents } from "../units";
+import { DEBUFFS } from "../data/debuffs.ts";
+import { DOGS } from "../data/dogs.ts";
+import { ENCOUNTERS } from "../data/encounters.ts";
+import { HOME_TEXT } from "../data/homeText.ts";
+import { MINOR_OBSTACLES } from "../data/minorObstacles.ts";
+import { QUIPS } from "../data/quips.ts";
+import { RUN_TEXT } from "../data/runText.ts";
+import { SHOP_GEAR } from "../data/shop.ts";
+import type { CardOption, CardSource, DogId, EncounterId, UpgradeId } from "../data/types.ts";
+import { UPGRADES } from "../data/upgrades.ts";
+import { newRun, type RunState } from "../state/runState.ts";
+import { activeModifier, heartsByDog, testState } from "../testing/runState.ts";
+import { TEST_TUNING } from "../testing/tuning.ts";
+import { TEST_WALKER_DATA } from "../testing/walkers.ts";
+import { TEST_WORLD } from "../testing/world.ts";
+import { cents } from "../units.ts";
 import {
   applyInstantEncounter,
   cardFor,
@@ -26,9 +26,9 @@ import {
   offerFork,
   offerUpgrades,
   openCard,
-} from "./choices";
-import { placeInPack, startHearts } from "./dogs";
-import { read } from "./units";
+} from "./choices.ts";
+import { placeInPack, startHearts } from "./dogs.ts";
+import { read } from "./units.ts";
 
 const data = {
   debuffs: DEBUFFS,

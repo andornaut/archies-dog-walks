@@ -1,6 +1,6 @@
 import { Scene } from "phaser";
 
-import { TAP_BURST_SCENE_KEY } from "./sceneKeys";
+import { TAP_BURST_SCENE_KEY } from "./sceneKeys.ts";
 
 // Every tap burst (addTapBurst) plays here, over every other scene but the dev overlay. It starts
 // with the game, is never paused or stopped and takes no input, so a burst plays out whatever the

@@ -3,19 +3,19 @@ import { EventEmitter } from "node:events";
 import type { Scene } from "phaser";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { heartPopFrame } from "../hud/feedback";
-import type { ChangeLabel } from "../hud/hudView";
-import { readBitmapFont } from "../tools/fontFile";
-import { addPixelText } from "../ui/phaser/pixelText";
-import { plainMarks } from "../ui/pixelFont";
-import { HeartFeedback } from "./heartFeedback";
-import { playTagOnce } from "./sprites";
+import { heartPopFrame } from "../hud/feedback.ts";
+import type { ChangeLabel } from "../hud/hudView.ts";
+import { readBitmapFont } from "../tools/fontFile.ts";
+import { addPixelText } from "../ui/phaser/pixelText.ts";
+import { plainMarks } from "../ui/pixelFont.ts";
+import { HeartFeedback } from "./heartFeedback.ts";
+import { playTagOnce } from "./sprites.ts";
 
-vi.mock("../ui/phaser/pixelText", async (original) => ({
-  ...(await original<typeof import("../ui/phaser/pixelText")>()),
+vi.mock("../ui/phaser/pixelText.ts", async (original) => ({
+  ...(await original<typeof import("../ui/phaser/pixelText.ts")>()),
   addPixelText: vi.fn(),
 }));
-vi.mock("./sprites", () => ({ playEffect: vi.fn(), playTag: vi.fn(), playTagOnce: vi.fn() }));
+vi.mock("./sprites.ts", () => ({ playEffect: vi.fn(), playTag: vi.fn(), playTagOnce: vi.fn() }));
 
 class Display extends EventEmitter {
   active = true;

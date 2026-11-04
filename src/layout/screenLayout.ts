@@ -1,6 +1,6 @@
 import type { Rect } from "@andornaut/game-kit/rect";
 
-import { BUTTON_SIZE } from "../ui/buttonGeometry";
+import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";
 
 // The smallest tap target each way, in game pixels: 48 CSS pixels on a 390px-wide phone.
 export const MIN_TAP_SIZE = BUTTON_SIZE.icon.target;

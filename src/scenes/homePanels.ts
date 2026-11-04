@@ -1,9 +1,14 @@
 import { insetRect, type Point, type Rect } from "@andornaut/game-kit/rect";
 import type { GameObjects, Scene } from "phaser";
 
-import { ownerFaceKey } from "../assets/spriteKeys";
-import { gameData } from "../data";
-import { type DetailCard, type DetailPart, detailParts, type DetailPicture } from "../home/detail";
+import { ownerFaceKey } from "../assets/spriteKeys.ts";
+import { gameData } from "../data/index.ts";
+import {
+  type DetailCard,
+  type DetailPart,
+  detailParts,
+  type DetailPicture,
+} from "../home/detail.ts";
 import {
   CARD_TEXT_ROOM,
   cardTitleRow,
@@ -11,25 +16,25 @@ import {
   detailOwner,
   type DetailRow,
   HOME_LAYOUT,
-} from "../home/homeLayout";
-import { MODAL, modalPanelWidth, modalRect, modalTitleWidth } from "../home/modalLayout";
-import { withNamePills } from "../hud/effectNames";
-import { barTitleLeft, barTitleRoom } from "../ui/barTitle";
-import { type CloseControl, closeControl } from "../ui/closeControl";
-import { PALETTE } from "../ui/palette";
-import { addModalShade, drawFramedRect, drawRing } from "../ui/phaser/draw";
+} from "../home/homeLayout.ts";
+import { MODAL, modalPanelWidth, modalRect, modalTitleWidth } from "../home/modalLayout.ts";
+import { withNamePills } from "../hud/effectNames.ts";
+import { barTitleLeft, barTitleRoom } from "../ui/barTitle.ts";
+import { type CloseControl, closeControl } from "../ui/closeControl.ts";
+import { PALETTE } from "../ui/palette.ts";
+import { addModalShade, drawFramedRect, drawRing } from "../ui/phaser/draw.ts";
 import {
   addPixelText,
   inkSpan,
   pixelFontMetrics,
   placePixelText,
   wrapPixelText,
-} from "../ui/phaser/pixelText";
-import { AFFORD_OUTSET } from "../ui/selection";
-import { TEXT_SCALE } from "../ui/textFit";
-import { addNamePills } from "./effectNameColours";
-import { measureModalTitle, modalTextWidth } from "./modalMeasure";
-import { playFirstTag } from "./sprites";
+} from "../ui/phaser/pixelText.ts";
+import { AFFORD_OUTSET } from "../ui/selection.ts";
+import { TEXT_SCALE } from "../ui/textFit.ts";
+import { addNamePills } from "./effectNameColours.ts";
+import { measureModalTitle, modalTextWidth } from "./modalMeasure.ts";
+import { playFirstTag } from "./sprites.ts";
 import {
   addBodyText,
   addCloseButton,
@@ -39,7 +44,7 @@ import {
   type IconButton,
   selectOuter,
   type SliceKey,
-} from "./uiKit";
+} from "./uiKit.ts";
 
 // The home screen's drawing beyond its tiles: the gold outline on the Pet shop while the
 // player can afford something in it, and the detail card that opens over the screen. Positions

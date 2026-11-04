@@ -1,8 +1,8 @@
 import type { Rect } from "@andornaut/game-kit/rect";
 import { type FontMetrics, inkRowsOfLines } from "@andornaut/game-kit/text/bitmapFont";
 
-import { MODAL, modalPanelWidth, modalRect, modalTitleWidth } from "../home/modalLayout";
-import { BUTTON_SIZE } from "../ui/buttonGeometry";
+import { MODAL, modalPanelWidth, modalRect, modalTitleWidth } from "../home/modalLayout.ts";
+import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";
 
 // The menu's buttons, top to bottom; each one's label is menuText.pause[item].
 export const PAUSE_MENU_ITEMS = ["resume", "help", "settings", "headHome"] as const;

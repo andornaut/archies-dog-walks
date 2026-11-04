@@ -1,18 +1,18 @@
 import type { Rect } from "@andornaut/game-kit/rect";
 import type { GameObjects, Scene } from "phaser";
 
-import { ownerFaceKey } from "../assets/spriteKeys";
-import { gameData } from "../data";
-import { SCREEN_LAYOUT } from "../data/screen";
-import type { DogId } from "../data/types";
-import { OWNER_TAB, ownerTabRect } from "../hud/walkHud";
-import { PALETTE } from "../ui/palette";
-import { drawFramedRect } from "../ui/phaser/draw";
-import { addPixelText } from "../ui/phaser/pixelText";
-import { HUD_DEPTH } from "./hudDepth";
-import { playFirstTag } from "./sprites";
-import type { TimedGroup } from "./timedGroup";
-import { fadeAway } from "./uiKit";
+import { ownerFaceKey } from "../assets/spriteKeys.ts";
+import { gameData } from "../data/index.ts";
+import { SCREEN_LAYOUT } from "../data/screen.ts";
+import type { DogId } from "../data/types.ts";
+import { OWNER_TAB, ownerTabRect } from "../hud/walkHud.ts";
+import { PALETTE } from "../ui/palette.ts";
+import { drawFramedRect } from "../ui/phaser/draw.ts";
+import { addPixelText } from "../ui/phaser/pixelText.ts";
+import { HUD_DEPTH } from "./hudDepth.ts";
+import { playFirstTag } from "./sprites.ts";
+import type { TimedGroup } from "./timedGroup.ts";
+import { fadeAway } from "./uiKit.ts";
 
 const LAYOUT = SCREEN_LAYOUT;
 const POP_MS = 120;

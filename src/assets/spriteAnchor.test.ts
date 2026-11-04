@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { spriteAnchor } from "./spriteAnchor";
+import { spriteAnchor } from "./spriteAnchor.ts";
 
 describe("spriteAnchor", () => {
   it("stands a sprite on its last opaque row, and a blank frame on its bottom row", () => {

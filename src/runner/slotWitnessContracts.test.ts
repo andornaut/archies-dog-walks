@@ -1,26 +1,26 @@
 import { describe, expect, it } from "vitest";
 
-import { gameData } from "../data";
-import { GAME_ROAD } from "../testing/planner";
-import { assignedMovement } from "./movementAssignments";
-import { moverSpec } from "./moverSpecs";
-import { auditSlotPlan } from "./slotAudit";
-import { createSlotCandidateDomains } from "./slotCandidateDomains";
-import { prepareSlotKind } from "./slotCandidates";
-import type { SlotConfiguration, SlotKind } from "./slotConfig";
-import { createSlotConstructionState } from "./slotConstraintState";
-import { slotMotionStreams, slotRandom, type SlotSeedContext } from "./slotEntropy";
-import { materialiseSlotPlan, type SlotAssignment } from "./slotPlan";
+import { gameData } from "../data/index.ts";
+import { GAME_ROAD } from "../testing/planner.ts";
+import { assignedMovement } from "./movementAssignments.ts";
+import { moverSpec } from "./moverSpecs.ts";
+import { auditSlotPlan } from "./slotAudit.ts";
+import { createSlotCandidateDomains } from "./slotCandidateDomains.ts";
+import { prepareSlotKind } from "./slotCandidates.ts";
+import type { SlotConfiguration, SlotKind } from "./slotConfig.ts";
+import { createSlotConstructionState } from "./slotConstraintState.ts";
+import { slotMotionStreams, slotRandom, type SlotSeedContext } from "./slotEntropy.ts";
+import { materialiseSlotPlan, type SlotAssignment } from "./slotPlan.ts";
 import {
   createSlotWitnessSearch,
   type WitnessJob,
   type WitnessSelection,
   type WitnessWork,
-} from "./slotWitnessSearch";
-import { rowSpacing, type SpawnPlan, zoneRows } from "./spawning";
-import { auditSpawnPlan } from "./spawnValidation";
-import { itemHeight } from "./walk";
-import { footprintOf } from "./walkItems";
+} from "./slotWitnessSearch.ts";
+import { rowSpacing, type SpawnPlan, zoneRows } from "./spawning.ts";
+import { auditSpawnPlan } from "./spawnValidation.ts";
+import { itemHeight } from "./walk.ts";
+import { footprintOf } from "./walkItems.ts";
 
 type Geometry = Omit<SpawnPlan<string>, "quotas">;
 const context = { seed: 3, zoneIndex: 3 };

@@ -1,6 +1,6 @@
 import { insetRect, type Rect, ringRects } from "@andornaut/game-kit/rect";
 
-import type { EncounterId, MinorLookId } from "../data/types";
+import type { EncounterId, MinorLookId } from "../data/types.ts";
 
 // Every bump flashes the screen in the bump's colour and nudges the road: a minor obstacle's
 // hit, a mover's included and one that costs cash while Spotlight lasts, and a card or contact

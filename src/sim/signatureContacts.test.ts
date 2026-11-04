@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 
-import { signatureTrail } from "../testing/signature";
-import { data, geometry } from "../testing/walk";
-import { moverHazards } from "./bot";
+import { signatureTrail } from "../testing/signature.ts";
+import { data, geometry } from "../testing/walk.ts";
+import { moverHazards } from "./bot.ts";
 
 describe("component hazards", () => {
   it("reads separated follower contact windows after the leader has left", () => {

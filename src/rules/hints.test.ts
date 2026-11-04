@@ -1,9 +1,9 @@
 import { keysOf } from "@andornaut/game-kit/records";
 import { describe, expect, it } from "vitest";
 
-import { HINTS } from "../data/hints";
-import type { HintId } from "../data/types";
-import { hintFor, hintJumpsQueue } from "./hints";
+import { HINTS } from "../data/hints.ts";
+import type { HintId } from "../data/types.ts";
+import { hintFor, hintJumpsQueue } from "./hints.ts";
 
 const data = { hints: HINTS };
 

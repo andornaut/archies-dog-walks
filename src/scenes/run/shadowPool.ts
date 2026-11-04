@@ -1,8 +1,8 @@
 import type { GameObjects, Scene } from "phaser";
 
-import { shadowFrame, uploadShadowFrames } from "../../ui/phaser/draw";
-import { spriteMetrics } from "../sprites";
-import { DEPTH, type Shadow } from "./stage";
+import { shadowFrame, uploadShadowFrames } from "../../ui/phaser/draw.ts";
+import { spriteMetrics } from "../sprites.ts";
+import { DEPTH, type Shadow } from "./stage.ts";
 
 // A Shadow placer that takes each shadow's colour and opacity.
 type ColouredShadow = (

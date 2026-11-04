@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { pixelEllipseSpans, pixelLinePoints, type PixelSpan } from "./pixelShapes";
+import { pixelEllipseSpans, pixelLinePoints, type PixelSpan } from "./pixelShapes.ts";
 
 const pixelsOf = (spans: PixelSpan[]) =>
   spans.flatMap(({ width, x, y }) => Array.from({ length: width }, (_, i) => `${x + i},${y}`));

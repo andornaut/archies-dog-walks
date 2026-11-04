@@ -3,7 +3,7 @@ import { EventEmitter } from "node:events";
 import type { Scene } from "phaser";
 import { describe, expect, it, vi } from "vitest";
 
-import { onLoadProgress } from "./loadProgress";
+import { onLoadProgress } from "./loadProgress.ts";
 
 function fixture() {
   const file = { bytesTotal: 100, key: "atlas" };

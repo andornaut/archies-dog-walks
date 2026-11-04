@@ -2,14 +2,14 @@ import { clamp01 } from "@andornaut/game-kit/numbers";
 import type { Rect } from "@andornaut/game-kit/rect";
 import { type FontMetrics, inkRowsOfLines } from "@andornaut/game-kit/text/bitmapFont";
 
-import { laneDirectionForKey } from "../input/keyBindings";
-import type { Settings } from "../save/schema";
-import { BUTTON_SIZE } from "../ui/buttonGeometry";
-import { type CloseControl, closeControl } from "../ui/closeControl";
-import { helpCapDy, LABEL_HELP_GAP } from "../ui/labelHelpGap";
-import { TEXT_SCALE, textOnLines } from "../ui/textFit";
-import { HOME_LAYOUT } from "./homeLayout";
-import { MODAL, modalPanelWidth, modalRect, modalTitleWidth } from "./modalLayout";
+import { laneDirectionForKey } from "../input/keyBindings.ts";
+import type { Settings } from "../save/schema.ts";
+import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";
+import { type CloseControl, closeControl } from "../ui/closeControl.ts";
+import { helpCapDy, LABEL_HELP_GAP } from "../ui/labelHelpGap.ts";
+import { TEXT_SCALE, textOnLines } from "../ui/textFit.ts";
+import { HOME_LAYOUT } from "./homeLayout.ts";
+import { MODAL, modalPanelWidth, modalRect, modalTitleWidth } from "./modalLayout.ts";
 
 // The settings screen moves a volume in 5% steps, from 0 to 1.
 export const VOLUME_STEPS = 20;

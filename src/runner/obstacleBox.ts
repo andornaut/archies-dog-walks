@@ -1,6 +1,6 @@
-import type { Silhouette } from "../layout/packFormation";
-import { distanceAtY, roadXAt, scaleAt, screenXAt, screenYAt } from "../layout/projection";
-import type { ScaledBox } from "./collision";
+import type { Silhouette } from "../layout/packFormation.ts";
+import { distanceAtY, roadXAt, scaleAt, screenXAt, screenYAt } from "../layout/projection.ts";
+import type { ScaledBox } from "./collision.ts";
 
 // An obstacle's hit box is what it draws, as the pack's parts are: the bounding box of its
 // sprites' opaque pixels at its depth, less an inset on every side. Rows run down the flat road,

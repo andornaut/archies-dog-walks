@@ -2,9 +2,9 @@ import { contentHash } from "@andornaut/game-kit/web/build/vite/contentHash";
 import { isHashedAssetUrl } from "@andornaut/game-kit/web/pwa/cachePolicy";
 import { describe, expect, it } from "vitest";
 
-import { hashedArtFileName } from "../tools/atlas/hashedArt";
-import { CACHE_POLICY } from "./cachePolicy";
-import { hashedArtUrls } from "./precacheArt";
+import { hashedArtFileName } from "../tools/atlas/hashedArt.ts";
+import { CACHE_POLICY } from "./cachePolicy.ts";
+import { hashedArtUrls } from "./precacheArt.ts";
 
 describe("hashedArtUrls", () => {
   const manifest = {

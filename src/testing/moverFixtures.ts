@@ -1,22 +1,22 @@
-import type { GameData } from "../data/types";
-import { PART_INSET } from "../layout/packFormation";
-import { currentZoneId } from "../rules/route";
-import { read } from "../rules/units";
-import { assignedMovement } from "../runner/movementAssignments";
-import { drawMover, moverPlacements } from "../runner/moverPlanning";
-import type { MoverPath } from "../runner/movers";
-import { moverSpec } from "../runner/moverSpecs";
-import { blockingLength } from "../runner/spawning";
+import type { GameData } from "../data/types.ts";
+import { PART_INSET } from "../layout/packFormation.ts";
+import { currentZoneId } from "../rules/route.ts";
+import { read } from "../rules/units.ts";
+import { assignedMovement } from "../runner/movementAssignments.ts";
+import { drawMover, moverPlacements } from "../runner/moverPlanning.ts";
+import type { MoverPath } from "../runner/movers.ts";
+import { moverSpec } from "../runner/moverSpecs.ts";
+import { blockingLength } from "../runner/spawning.ts";
 import {
   componentHitLength,
   itemHeight,
   plannedCellInset,
   type RoadGeometry,
   walkScrollSpeed,
-} from "../runner/walk";
-import { blocksLane, footprintOf, type WalkItemKind } from "../runner/walkItems";
-import type { RunState } from "../state/runState";
-import { plannerStreams } from "./movers";
+} from "../runner/walk.ts";
+import { blocksLane, footprintOf, type WalkItemKind } from "../runner/walkItems.ts";
+import type { RunState } from "../state/runState.ts";
+import { plannerStreams } from "./movers.ts";
 
 type FixtureData = Pick<
   GameData,

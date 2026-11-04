@@ -1,4 +1,4 @@
-import { SCREEN_CONFIG } from "../data/screen";
+import { SCREEN_CONFIG } from "../data/screen.ts";
 
 // The backdrops' cross street, as the band rows its ambient movers stand on: the bottom row of
 // each sidewalk and lane (far sidewalk 39 to 36 rows over the band's bottom edge, far lane 33 to

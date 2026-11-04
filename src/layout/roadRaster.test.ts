@@ -5,10 +5,10 @@ import { itemAt } from "@andornaut/game-kit/arrays";
 import { keysOf } from "@andornaut/game-kit/records";
 import { describe, expect, it } from "vitest";
 
-import { roadTileKey } from "../assets/spriteKeys";
-import { gameData } from "../data";
-import { ROAD_CAMERA, SCREEN_CONFIG, SCREEN_LAYOUT } from "../data/screen";
-import type { ZoneId } from "../data/types";
+import { roadTileKey } from "../assets/spriteKeys.ts";
+import { gameData } from "../data/index.ts";
+import { ROAD_CAMERA, SCREEN_CONFIG, SCREEN_LAYOUT } from "../data/screen.ts";
+import type { ZoneId } from "../data/types.ts";
 import {
   crossesLine,
   dotColour,
@@ -20,8 +20,8 @@ import {
   vergeBase,
   VERGES,
   walkFrom,
-} from "../road/roadside";
-import { roadProjection, rowScale } from "./projection";
+} from "../road/roadside.ts";
+import { roadProjection, rowScale } from "./projection.ts";
 import {
   drawRoad,
   LINE_RUN,
@@ -37,8 +37,8 @@ import {
   stripLevels,
   stripLines,
   stripSeams,
-} from "./roadRaster";
-import { walkerFootY } from "./screenLayout";
+} from "./roadRaster.ts";
+import { walkerFootY } from "./screenLayout.ts";
 
 const { approach, junction, rasterView: view, road } = SCREEN_LAYOUT;
 // The road's far row, nearest row and middle row, and the backdrop's bottom row above the far

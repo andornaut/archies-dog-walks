@@ -1,25 +1,25 @@
 import { fillLine, fillNames } from "@andornaut/game-kit/lines";
 
-import { debuffIconKey } from "../assets/iconKeys";
-import { dogPortraitKey, gearIconKey, walkerPortraitKey } from "../assets/spriteKeys";
-import type { GameData } from "../data/types";
+import { debuffIconKey } from "../assets/iconKeys.ts";
+import { dogPortraitKey, gearIconKey, walkerPortraitKey } from "../assets/spriteKeys.ts";
+import type { GameData } from "../data/types.ts";
 import {
   type DetailCard,
   type DetailPicture,
   dogDetail,
   gearDetail,
   walkerDetail,
-} from "../home/detail";
-import { ownerMaxHearts } from "../rules/dogs";
-import { capitalize, debuffFields } from "../rules/effectText";
-import type { Owned, SaveStats } from "../save/schema";
-import { heartsOf } from "../state/pack";
-import type { RunState } from "../state/runState";
-import type { Cents } from "../units";
-import { extraHearts } from "./buffMarks";
-import { effectIconKey, effectItems, effectName } from "./effectIcons";
-import { RUN_TEXT_FIELDS } from "./runText";
-import type { ExplainTarget } from "./walkHud";
+} from "../home/detail.ts";
+import { ownerMaxHearts } from "../rules/dogs.ts";
+import { capitalize, debuffFields } from "../rules/effectText.ts";
+import type { Owned, SaveStats } from "../save/schema.ts";
+import { heartsOf } from "../state/pack.ts";
+import type { RunState } from "../state/runState.ts";
+import type { Cents } from "../units.ts";
+import { extraHearts } from "./buffMarks.ts";
+import { effectIconKey, effectItems, effectName } from "./effectIcons.ts";
+import { RUN_TEXT_FIELDS } from "./runText.ts";
+import type { ExplainTarget } from "./walkHud.ts";
 
 type ExplainData = Pick<
   GameData,

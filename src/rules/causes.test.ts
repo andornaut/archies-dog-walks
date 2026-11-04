@@ -1,21 +1,21 @@
 import { describe, expect, it } from "vitest";
 
-import { DEBUFFS } from "../data/debuffs";
-import { DOGS } from "../data/dogs";
-import { ENCOUNTERS } from "../data/encounters";
-import { RUN_TEXT } from "../data/runText";
-import { SHOP_GEAR } from "../data/shop";
-import type { DogId, Effect } from "../data/types";
-import { UPGRADES } from "../data/upgrades";
-import type { EffectSource, RunState } from "../state/runState";
-import { LONE } from "../testing/packPlaces";
-import { activeModifier, testState } from "../testing/runState";
-import { TEST_TUNING } from "../testing/tuning";
-import { TEST_WALKER_DATA } from "../testing/walkers";
-import { type Change, changeAmount } from "./causes";
-import { maxHearts } from "./dogs";
-import { resolveEffects } from "./effects";
-import { tipValue } from "./run";
+import { DEBUFFS } from "../data/debuffs.ts";
+import { DOGS } from "../data/dogs.ts";
+import { ENCOUNTERS } from "../data/encounters.ts";
+import { RUN_TEXT } from "../data/runText.ts";
+import { SHOP_GEAR } from "../data/shop.ts";
+import type { DogId, Effect } from "../data/types.ts";
+import { UPGRADES } from "../data/upgrades.ts";
+import type { EffectSource, RunState } from "../state/runState.ts";
+import { LONE } from "../testing/packPlaces.ts";
+import { activeModifier, testState } from "../testing/runState.ts";
+import { TEST_TUNING } from "../testing/tuning.ts";
+import { TEST_WALKER_DATA } from "../testing/walkers.ts";
+import { type Change, changeAmount } from "./causes.ts";
+import { maxHearts } from "./dogs.ts";
+import { resolveEffects } from "./effects.ts";
+import { tipValue } from "./run.ts";
 
 const data = {
   debuffs: DEBUFFS,

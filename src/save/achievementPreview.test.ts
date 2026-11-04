@@ -1,22 +1,22 @@
 import { describe, expect, it } from "vitest";
 
-import { gameData } from "../data";
-import type { AchievementCondition, AchievementId } from "../data/types";
-import { countBump, countLandedBump } from "../rules/achievements";
-import { walkLength } from "../rules/route";
-import { finishZone, headHome } from "../runner/walk";
-import { newRun, type RunState } from "../state/runState";
-import { earningsGoal, packOf, runFactsFor } from "../testing/achievements";
-import { newPlayerSave, testAwards } from "../testing/saves";
+import { gameData } from "../data/index.ts";
+import type { AchievementCondition, AchievementId } from "../data/types.ts";
+import { countBump, countLandedBump } from "../rules/achievements.ts";
+import { walkLength } from "../rules/route.ts";
+import { finishZone, headHome } from "../runner/walk.ts";
+import { newRun, type RunState } from "../state/runState.ts";
+import { earningsGoal, packOf, runFactsFor } from "../testing/achievements.ts";
+import { newPlayerSave, testAwards } from "../testing/saves.ts";
 import {
   type AchievementPreview,
   earnedIfBanked,
   NOTHING_PREVIEWED,
   previewAchievements,
-} from "./achievementPreview";
-import { earnedSince } from "./achievements";
-import { recordCheckpoint, recordRunEnd } from "./checkpoint";
-import { checkpointOf, runResultOf } from "./runSlices";
+} from "./achievementPreview.ts";
+import { earnedSince } from "./achievements.ts";
+import { recordCheckpoint, recordRunEnd } from "./checkpoint.ts";
+import { checkpointOf, runResultOf } from "./runSlices.ts";
 
 const start = newRun(gameData, 2, { dogs: ["ginger", "kilo"], gear: null, walker: "casey" });
 const zoneDone = (run: RunState) => finishZone(gameData, run).run;

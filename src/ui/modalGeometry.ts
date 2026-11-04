@@ -1,6 +1,6 @@
 import { MODAL_CONTENT } from "@andornaut/game-kit/modalLayout";
 
-import { BUTTON_SIZE } from "./buttonGeometry";
+import { BUTTON_SIZE } from "./buttonGeometry.ts";
 
 const GROUP_GAP = 8;
 

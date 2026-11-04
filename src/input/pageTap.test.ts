@@ -2,9 +2,9 @@ import { clampInto, containsPoint, type Point, type Rect } from "@andornaut/game
 import { type FrameTurn, pageToGame } from "@andornaut/game-kit/view/pagePoint";
 import { describe, expect, it } from "vitest";
 
-import { LANE_COUNT, SCREEN_CONFIG, SCREEN_LAYOUT } from "../data/screen";
-import { type GestureContext, pointerDown, pointerMove } from "./gestures";
-import { walkPagePoint } from "./pageTap";
+import { LANE_COUNT, SCREEN_CONFIG, SCREEN_LAYOUT } from "../data/screen.ts";
+import { type GestureContext, pointerDown, pointerMove } from "./gestures.ts";
+import { walkPagePoint } from "./pageTap.ts";
 
 // The game page in a browser tab: #game is the frame's width, from under the 33px nav bar to over
 // the 24px dev bar, and the canvas fills it as src/main.ts asks of Phaser's Scale Manager

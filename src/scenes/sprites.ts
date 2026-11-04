@@ -3,11 +3,11 @@ import { getOrInsertComputed } from "@andornaut/game-kit/maps";
 import { opaqueBoundsOfRgba, type PixelBounds } from "@andornaut/game-kit/opaqueBounds";
 import type { GameObjects, Scene } from "phaser";
 
-import type { SpriteAnchor } from "../assets/manifest";
-import { spriteAnchor } from "../assets/spriteAnchor";
-import { depthVariantKey, ROAD_SPRITE_SIZE, standsOnGround } from "../assets/spriteKeys";
-import { type DepthArt, type DepthDraw, depthDraw } from "../layout/depthScale";
-import { SCALE_STEPS } from "../layout/projection";
+import type { SpriteAnchor } from "../assets/manifest.ts";
+import { spriteAnchor } from "../assets/spriteAnchor.ts";
+import { depthVariantKey, ROAD_SPRITE_SIZE, standsOnGround } from "../assets/spriteKeys.ts";
+import { type DepthArt, type DepthDraw, depthDraw } from "../layout/depthScale.ts";
+import { SCALE_STEPS } from "../layout/projection.ts";
 
 // feetY is the line the sprite stands on, measured from the top of its frame, and
 // opaqueWidth how wide its drawn pixels are; both from its first frame.

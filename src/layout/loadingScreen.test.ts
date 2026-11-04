@@ -6,7 +6,7 @@ import {
   LOADING_TRACK,
   LOADING_WALKER_SIZE,
   loadingWalkerAt,
-} from "./loadingScreen";
+} from "./loadingScreen.ts";
 
 describe("bootProgress", () => {
   // The first 0.9 over the network load, the rest while the assets are processed, and a

@@ -1,14 +1,14 @@
 import type { Point, Rect } from "@andornaut/game-kit/rect";
 import type { FontMetrics } from "@andornaut/game-kit/text/bitmapFont";
 
-import { SCREEN_LAYOUT } from "../data/screen";
-import { amountText } from "../rules/causes";
-import { type Cents, cents } from "../units";
-import { FEEDBACK, tickMs } from "./feedback";
-import { CHANGE_LABEL_STYLE, changeChipAt, changeLabelRoom } from "./hudLanes";
-import type { ChangeLabel } from "./hudView";
-import { arcControl, TOP_BAR_POINTS } from "./moments";
-import { WALK_BAR } from "./walkHud";
+import { SCREEN_LAYOUT } from "../data/screen.ts";
+import { amountText } from "../rules/causes.ts";
+import { type Cents, cents } from "../units.ts";
+import { FEEDBACK, tickMs } from "./feedback.ts";
+import { CHANGE_LABEL_STYLE, changeChipAt, changeLabelRoom } from "./hudLanes.ts";
+import type { ChangeLabel } from "./hudView.ts";
+import { arcControl, TOP_BAR_POINTS } from "./moments.ts";
+import { WALK_BAR } from "./walkHud.ts";
 
 const WALK_BAR_RECT = SCREEN_LAYOUT.topBar;
 

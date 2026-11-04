@@ -1,25 +1,25 @@
 import { describe, expect, it } from "vitest";
 
-import { gameData } from "../data";
-import { SLOT_LIMITS } from "../runner/slotPlanner";
-import { SpawnPlanningError, type SpawnPlanSnapshot } from "../runner/spawnSearch";
-import { type SpawnAudit } from "../runner/spawnValidation";
-import type { WalkItemKind } from "../runner/walkItems";
-import type { ZoneSlotDelivery } from "../runner/zonePlan";
+import { gameData } from "../data/index.ts";
+import { SLOT_LIMITS } from "../runner/slotPlanner.ts";
+import { SpawnPlanningError, type SpawnPlanSnapshot } from "../runner/spawnSearch.ts";
+import { type SpawnAudit } from "../runner/spawnValidation.ts";
+import type { WalkItemKind } from "../runner/walkItems.ts";
+import type { ZoneSlotDelivery } from "../runner/zonePlan.ts";
 import {
   replayZoneCapacity,
   replayZoneSlots,
   type ZoneSlotInput,
   ZoneSlotPlanningError,
-} from "../runner/zoneSlotInput";
-import { step, walkWith } from "../testing/walk";
-import { sumDeliveries, zoneDelivery } from "./delivery";
+} from "../runner/zoneSlotInput.ts";
+import { step, walkWith } from "../testing/walk.ts";
+import { sumDeliveries, zoneDelivery } from "./delivery.ts";
 import {
   attachSpawnAudit,
   capturePlanningFailure,
   plannedWalkEvents,
   recordWalkEvents,
-} from "./walkEvents";
+} from "./walkEvents.ts";
 
 const snapshot: SpawnPlanSnapshot<WalkItemKind> = {
   context: { seed: 7, zoneIndex: 3 },

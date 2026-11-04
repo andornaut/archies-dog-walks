@@ -2,9 +2,9 @@ import type { Rect } from "@andornaut/game-kit/rect";
 import type { Textures } from "phaser";
 import { describe, expect, it } from "vitest";
 
-import { SCREEN_CONFIG } from "../data/screen";
-import { shopListFrame } from "../home/shopLayout";
-import { paintRectMask } from "./rectMask";
+import { SCREEN_CONFIG } from "../data/screen.ts";
+import { shopListFrame } from "../home/shopLayout.ts";
+import { paintRectMask } from "./rectMask.ts";
 
 // A texture manager whose canvases record the rects painted white on them since their last
 // clear, and how many canvases it made and refreshes they had.

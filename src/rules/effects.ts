@@ -9,10 +9,10 @@ import type {
   MoneyEffect,
   SharedHeartsEffect,
   Target,
-} from "../data/types";
-import { heartsOf, mapPack, packDogs, packOrder, walkingAmong } from "../state/pack";
-import type { ActiveModifier, EffectSource, RunState } from "../state/runState";
-import { type Cents, cents, clampHearts, roundDollars } from "../units";
+} from "../data/types.ts";
+import { heartsOf, mapPack, packDogs, packOrder, walkingAmong } from "../state/pack.ts";
+import type { ActiveModifier, EffectSource, RunState } from "../state/runState.ts";
+import { type Cents, cents, clampHearts, roundDollars } from "../units.ts";
 import {
   type Cause,
   causesTotal,
@@ -21,12 +21,12 @@ import {
   type HeartChange,
   type ModifierCause,
   type MoneyChange,
-} from "./causes";
-import { ownerMaxHearts } from "./dogs";
-import { debuffLasting, lastingFor, longerLasting } from "./durations";
-import { changeModified, type ModifiedValue, modifiedValue, statModified } from "./modified";
-import { modifiedStat } from "./modifiers";
-import { read } from "./units";
+} from "./causes.ts";
+import { ownerMaxHearts } from "./dogs.ts";
+import { debuffLasting, lastingFor, longerLasting } from "./durations.ts";
+import { changeModified, type ModifiedValue, modifiedValue, statModified } from "./modified.ts";
+import { modifiedStat } from "./modifiers.ts";
+import { read } from "./units.ts";
 
 type RulesData = Pick<GameData, "debuffs" | "dogs" | "encounters" | "tuning">;
 

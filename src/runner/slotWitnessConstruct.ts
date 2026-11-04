@@ -1,22 +1,22 @@
-import { visibleMoverRows } from "./moverCoverage";
+import { visibleMoverRows } from "./moverCoverage.ts";
 import type {
   SlotCandidate,
   SlotCandidateOrder,
   SlotFrontierSequenceStep,
   SlotMotionTiers,
   SlotSequenceStep,
-} from "./slotCandidateDomains";
-import { nativeSlotPreparationOrderingHint, type PreparedSlotKind } from "./slotCandidates";
-import type { ConstraintEntry, ConstraintOwner, ConstraintResult } from "./slotConstraintState";
-import { coverageLeadingRows, createQuietCoverageState } from "./slotCoverage";
-import { SLOT_OMISSION_ATTEMPTS, SLOT_ROW_PRESSURE } from "./slotDelivery";
-import { createMovingCoverageHints } from "./slotMovingCoverageHints";
-import type { SlotPocketProof } from "./slotPocketSupport";
-import { drainSlotSolver } from "./slotSolverSession";
-import { traverseSlotSources } from "./slotSourceTraversal";
-import { balancedJobOrder, idealRowOrder, motionRank, rotatedColumns } from "./slotWitnessOrder";
-import type { WitnessJob, WitnessOmission } from "./slotWitnessSearch";
-import { blockingSpan, type PlannedSpawns, quotaFootprint, type SpawnPlan } from "./spawning";
+} from "./slotCandidateDomains.ts";
+import { nativeSlotPreparationOrderingHint, type PreparedSlotKind } from "./slotCandidates.ts";
+import type { ConstraintEntry, ConstraintOwner, ConstraintResult } from "./slotConstraintState.ts";
+import { coverageLeadingRows, createQuietCoverageState } from "./slotCoverage.ts";
+import { SLOT_OMISSION_ATTEMPTS, SLOT_ROW_PRESSURE } from "./slotDelivery.ts";
+import { createMovingCoverageHints } from "./slotMovingCoverageHints.ts";
+import type { SlotPocketProof } from "./slotPocketSupport.ts";
+import { drainSlotSolver } from "./slotSolverSession.ts";
+import { traverseSlotSources } from "./slotSourceTraversal.ts";
+import { balancedJobOrder, idealRowOrder, motionRank, rotatedColumns } from "./slotWitnessOrder.ts";
+import type { WitnessJob, WitnessOmission } from "./slotWitnessSearch.ts";
+import { blockingSpan, type PlannedSpawns, quotaFootprint, type SpawnPlan } from "./spawning.ts";
 
 type Rejection<Kind extends string> = Extract<ConstraintResult<Kind>, { accepted: false }>;
 export type SlotWitnessBranchSupport<Kind extends string> =

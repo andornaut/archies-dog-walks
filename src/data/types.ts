@@ -1,17 +1,17 @@
 import type { MenuInstallBrowser } from "@andornaut/game-kit/web/pwa/installState";
 
-import type { ACHIEVEMENTS } from "./achievements";
-import type { DEBUFFS } from "./debuffs";
-import type { DOGS } from "./dogs";
-import type { ENCOUNTERS } from "./encounters";
-import type { HINTS } from "./hints";
-import type { MINOR_OBSTACLES } from "./minorObstacles";
-import type { MOVEMENT_PROFILE_KEYS } from "./movementProfiles";
-import type { SHOP_GEAR } from "./shop";
-import type { TUNING } from "./tuning";
-import type { UPGRADES } from "./upgrades";
-import type { WALKER_PERKS, WALKERS } from "./walkers";
-import type { WORLD } from "./world";
+import type { ACHIEVEMENTS } from "./achievements.ts";
+import type { DEBUFFS } from "./debuffs.ts";
+import type { DOGS } from "./dogs.ts";
+import type { ENCOUNTERS } from "./encounters.ts";
+import type { HINTS } from "./hints.ts";
+import type { MINOR_OBSTACLES } from "./minorObstacles.ts";
+import type { MOVEMENT_PROFILE_KEYS } from "./movementProfiles.ts";
+import type { SHOP_GEAR } from "./shop.ts";
+import type { TUNING } from "./tuning.ts";
+import type { UPGRADES } from "./upgrades.ts";
+import type { WALKER_PERKS, WALKERS } from "./walkers.ts";
+import type { WORLD } from "./world.ts";
 
 // The rule vocabulary: adding a value means new rules code, not only data.
 export type EncounterId =

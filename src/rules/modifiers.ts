@@ -1,7 +1,7 @@
 import { assertNever } from "@andornaut/game-kit/assertNever";
 
-import type { Effect, LiveTuning, Modifier, ModifierEffect, Stat } from "../data/types";
-import { read } from "./units";
+import type { Effect, LiveTuning, Modifier, ModifierEffect, Stat } from "../data/types.ts";
+import { read } from "./units.ts";
 
 // An "add" value is in its stat's unit (cents for money stats); a "multiply" value is a factor.
 export function modifierValue(tuning: LiveTuning, modifier: Modifier): number {

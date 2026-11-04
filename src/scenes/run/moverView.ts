@@ -10,13 +10,13 @@ import {
   WARNING_KEY,
   WARNING_TAG,
   WARNING_UP_TAG,
-} from "../../assets/spriteKeys";
-import { gameData } from "../../data";
-import { LANE_COUNT } from "../../data/screen";
-import type { EncounterId, MinorObstacleId } from "../../data/types";
-import { moverBodyArt } from "../../layout/obstacleArt";
-import { project } from "../../layout/projection";
-import { read } from "../../rules/units";
+} from "../../assets/spriteKeys.ts";
+import { gameData } from "../../data/index.ts";
+import { LANE_COUNT } from "../../data/screen.ts";
+import type { EncounterId, MinorObstacleId } from "../../data/types.ts";
+import { moverBodyArt } from "../../layout/obstacleArt.ts";
+import { project } from "../../layout/projection.ts";
+import { read } from "../../rules/units.ts";
 import {
   drawnLanes,
   facesLeft,
@@ -27,14 +27,14 @@ import {
   type MoverOnRoad,
   moverPlace,
   moverTell,
-} from "../../runner/movers";
-import { itemCategory, type WalkItem } from "../../runner/walkItems";
-import { firstTag, playTag, showAtDepth } from "../sprites";
-import type { ItemPart, ItemView } from "./itemViews";
-import { riderCuePosition } from "./riderCuePosition";
-import { drawSignatureTrail } from "./signatureView";
-import { DEPTH, JUNCTURE_Y, laneX, LAYOUT, PROJECTION, showOnRoad } from "./stage";
-import { type StandFrame, standPart } from "./standPart";
+} from "../../runner/movers.ts";
+import { itemCategory, type WalkItem } from "../../runner/walkItems.ts";
+import { firstTag, playTag, showAtDepth } from "../sprites.ts";
+import type { ItemPart, ItemView } from "./itemViews.ts";
+import { riderCuePosition } from "./riderCuePosition.ts";
+import { drawSignatureTrail } from "./signatureView.ts";
+import { DEPTH, JUNCTURE_Y, laneX, LAYOUT, PROJECTION, showOnRoad } from "./stage.ts";
+import { type StandFrame, standPart } from "./standPart.ts";
 
 // A mover's cue, in road pixels before projection: its sign inset from the road's edge, or
 // down from the far end of the road for an in-lane mover, and the arrow a sign's width beside

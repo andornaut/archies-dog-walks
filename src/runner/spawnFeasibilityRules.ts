@@ -1,8 +1,8 @@
-import { laneMask } from "../layout/lanes";
-import type { MoverSpec } from "./moverPlanning";
-import type { SpawnRejection } from "./spawnAdmission";
-import type { LaneBlocks, PlacedPlaces, SpawnCells } from "./spawnCells";
-import type { FeasibilityObserver } from "./spawnFeasibilityDiagnostics";
+import { laneMask } from "../layout/lanes.ts";
+import type { MoverSpec } from "./moverPlanning.ts";
+import type { SpawnRejection } from "./spawnAdmission.ts";
+import type { LaneBlocks, PlacedPlaces, SpawnCells } from "./spawnCells.ts";
+import type { FeasibilityObserver } from "./spawnFeasibilityDiagnostics.ts";
 import {
   blockingPlace,
   type Cell,
@@ -16,7 +16,7 @@ import {
   type SpawnPlan,
   type SpawnQuota,
   WIDE_LANES,
-} from "./spawning";
+} from "./spawning.ts";
 export interface StandingFitContext {
   readonly laneMode?: "complete" | "partial";
   onFailure?: FeasibilityObserver;

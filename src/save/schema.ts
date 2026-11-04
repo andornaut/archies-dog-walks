@@ -11,10 +11,10 @@ import type {
   TallyId,
   WalkerId,
   ZoneId,
-} from "../data/types";
-import type { RunCounters } from "../rules/achievements";
-import type { EndReason } from "../state/runState";
-import { type Cents, cents as toCents } from "../units";
+} from "../data/types.ts";
+import type { RunCounters } from "../rules/achievements.ts";
+import type { EndReason } from "../state/runState.ts";
+import { type Cents, cents as toCents } from "../units.ts";
 
 export const SAVE_VERSION = 23;
 

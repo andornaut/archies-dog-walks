@@ -1,8 +1,8 @@
 import type { Point } from "@andornaut/game-kit/rect";
 import { describe, expect, it } from "vitest";
 
-import { helpActionForKey, helpActionForPointer } from "./helpInput";
-import type { HelpAction } from "./helpPaging";
+import { helpActionForKey, helpActionForPointer } from "./helpInput.ts";
+import type { HelpAction } from "./helpPaging.ts";
 
 const advance: HelpAction = { kind: "advance" };
 const close: HelpAction = { kind: "close" };

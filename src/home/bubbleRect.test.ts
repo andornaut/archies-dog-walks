@@ -7,15 +7,15 @@ import { insetRect, rectsOverlap } from "@andornaut/game-kit/rect";
 import { inkRowsFromCapTop, inkRowsOfLines } from "@andornaut/game-kit/text/bitmapFont";
 import { describe, expect, it } from "vitest";
 
-import { gameData } from "../data";
-import type { DogId } from "../data/types";
-import { withNamePills } from "../hud/effectNames";
-import type { Owned } from "../save/schema";
-import { bodyTextWidth } from "../testing/bodyFont";
-import { fontFileMetrics, inkWidth } from "../testing/fontInk";
-import { hasPill, PILL_SPACE, pillRows } from "../ui/namePills";
-import { plainMarks } from "../ui/pixelFont";
-import { cents } from "../units";
+import { gameData } from "../data/index.ts";
+import type { DogId } from "../data/types.ts";
+import { withNamePills } from "../hud/effectNames.ts";
+import type { Owned } from "../save/schema.ts";
+import { bodyTextWidth } from "../testing/bodyFont.ts";
+import { fontFileMetrics, inkWidth } from "../testing/fontInk.ts";
+import { hasPill, PILL_SPACE, pillRows } from "../ui/namePills.ts";
+import { plainMarks } from "../ui/pixelFont.ts";
+import { cents } from "../units.ts";
 import {
   bubbleLines,
   bubbleRect,
@@ -23,11 +23,11 @@ import {
   ownerColumn,
   ownerPlace,
   speechLines,
-} from "./bubbleRect";
-import { dogInfo, gearInfo } from "./home";
-import { HOME_LAYOUT, SPEECH_ROOM } from "./homeLayout";
-import { walkerSays } from "./homeLines";
-import { tapWalker } from "./walkers";
+} from "./bubbleRect.ts";
+import { dogInfo, gearInfo } from "./home.ts";
+import { HOME_LAYOUT, SPEECH_ROOM } from "./homeLayout.ts";
+import { walkerSays } from "./homeLines.ts";
+import { tapWalker } from "./walkers.ts";
 
 const { board } = HOME_LAYOUT.petShop;
 const { gap, gate, walkerAtGate } = HOME_LAYOUT;

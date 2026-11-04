@@ -1,16 +1,16 @@
 import type { Rect } from "@andornaut/game-kit/rect";
 import type { GameObjects, Scene } from "phaser";
 
-import { dogPortraitKey, gearIconKey } from "../assets/spriteKeys";
-import { gameData } from "../data";
-import type { DetailPicture } from "../home/detail";
-import type { Purchase } from "../home/home";
-import type { Badge } from "../ui/interaction";
-import { PALETTE } from "../ui/palette";
-import { fillCutRect, fillRect } from "../ui/phaser/draw";
-import { addPixelText, pixelFontMetrics } from "../ui/phaser/pixelText";
-import { PLATE_LOOKS, type PlateKind } from "../ui/selection";
-import { TEXT_SCALE } from "../ui/textFit";
+import { dogPortraitKey, gearIconKey } from "../assets/spriteKeys.ts";
+import { gameData } from "../data/index.ts";
+import type { DetailPicture } from "../home/detail.ts";
+import type { Purchase } from "../home/home.ts";
+import type { Badge } from "../ui/interaction.ts";
+import { PALETTE } from "../ui/palette.ts";
+import { fillCutRect, fillRect } from "../ui/phaser/draw.ts";
+import { addPixelText, pixelFontMetrics } from "../ui/phaser/pixelText.ts";
+import { PLATE_LOOKS, type PlateKind } from "../ui/selection.ts";
+import { TEXT_SCALE } from "../ui/textFit.ts";
 
 // The home screen's and the shop's art keys, each with a drawn stand-in below while missing.
 export const SHOP_ART = {

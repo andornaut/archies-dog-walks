@@ -11,14 +11,14 @@ import type {
   OptionPicks,
   TallyId,
   Threshold,
-} from "../data/types";
-import { minorObstacleNames } from "../runner/obstacleLooks";
-import type { SaveDocument, SaveStats } from "../save/schema";
-import { lifetimeEarnedNet, timesFired, walksFinished, walksPlayed } from "../save/stats";
-import type { RunState } from "../state/runState";
-import { type Cents, dollarsToCents } from "../units";
-import { orderedAchievements } from "./achievementOrder";
-import { walkLength } from "./route";
+} from "../data/types.ts";
+import { minorObstacleNames } from "../runner/obstacleLooks.ts";
+import type { SaveDocument, SaveStats } from "../save/schema.ts";
+import { lifetimeEarnedNet, timesFired, walksFinished, walksPlayed } from "../save/stats.ts";
+import type { RunState } from "../state/runState.ts";
+import { type Cents, dollarsToCents } from "../units.ts";
+import { orderedAchievements } from "./achievementOrder.ts";
+import { walkLength } from "./route.ts";
 
 export type AchievementData = Pick<
   GameData,

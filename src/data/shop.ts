@@ -1,4 +1,4 @@
-import type { Gear } from "./types";
+import type { Gear } from "./types.ts";
 
 // Permanent gear, bought once at the Pet shop and kept. Up to counts.loadoutMax goes in the
 // Pocket for a walk.

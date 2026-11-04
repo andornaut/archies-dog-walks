@@ -8,21 +8,21 @@ import { inkRowsFromCapTop } from "@andornaut/game-kit/text/bitmapFont";
 import { pixels } from "@andornaut/game-kit/units";
 import { describe, expect, it } from "vitest";
 
-import { dogFaceKey, ownerCardFaceKey } from "../assets/spriteKeys";
-import { gameData } from "../data";
-import { SCREEN_CONFIG, SCREEN_LAYOUT } from "../data/screen";
-import type { DebuffId, DogId } from "../data/types";
-import { dollarAmountText } from "../home/home";
-import { HOME_BAR_LAST_FACE, HOME_LAYOUT } from "../home/homeLayout";
-import { maxHearts } from "../rules/dogs";
-import { modifiersOf } from "../rules/modifiers";
-import { zoneLength } from "../runner/walk";
-import { fontFileMetrics, fontInk } from "../testing/fontInk";
-import { LONE } from "../testing/packPlaces";
-import { inside } from "../testing/rects";
-import { plainMarks } from "../ui/pixelFont";
-import { cents } from "../units";
-import { maxEffects } from "./effectIcons";
+import { dogFaceKey, ownerCardFaceKey } from "../assets/spriteKeys.ts";
+import { gameData } from "../data/index.ts";
+import { SCREEN_CONFIG, SCREEN_LAYOUT } from "../data/screen.ts";
+import type { DebuffId, DogId } from "../data/types.ts";
+import { dollarAmountText } from "../home/home.ts";
+import { HOME_BAR_LAST_FACE, HOME_LAYOUT } from "../home/homeLayout.ts";
+import { maxHearts } from "../rules/dogs.ts";
+import { modifiersOf } from "../rules/modifiers.ts";
+import { zoneLength } from "../runner/walk.ts";
+import { fontFileMetrics, fontInk } from "../testing/fontInk.ts";
+import { LONE } from "../testing/packPlaces.ts";
+import { inside } from "../testing/rects.ts";
+import { plainMarks } from "../ui/pixelFont.ts";
+import { cents } from "../units.ts";
+import { maxEffects } from "./effectIcons.ts";
 import {
   cardHearts,
   cashLeft,
@@ -48,7 +48,7 @@ import {
   ZONE_PROGRESS,
   zoneProgressLayout,
   zoneShare,
-} from "./walkHud";
+} from "./walkHud.ts";
 
 const LAYOUT = SCREEN_LAYOUT;
 const { dogSlots, topBar } = LAYOUT;

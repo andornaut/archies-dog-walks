@@ -1,6 +1,6 @@
-import type { AchievementId } from "../data/types";
-import { type AchievementData, newlyEarned, type RunFacts } from "../rules/achievements";
-import type { SaveDocument } from "./schema";
+import type { AchievementId } from "../data/types.ts";
+import { type AchievementData, newlyEarned, type RunFacts } from "../rules/achievements.ts";
+import type { SaveDocument } from "./schema.ts";
 
 // What awarding needs: the achievements and the content their "all" counts.
 export interface AwardContext {

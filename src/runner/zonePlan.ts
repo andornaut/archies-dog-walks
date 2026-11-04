@@ -10,27 +10,27 @@ import type {
   SpawnSlotRole,
   Zone,
   ZoneId,
-} from "../data/types";
-import { PART_INSET } from "../layout/packFormation";
-import { drawGearDrops } from "../rules/gearDrops";
-import { modifiedStat } from "../rules/modifiers";
-import { currentZone, currentZoneId } from "../rules/route";
-import { read } from "../rules/units";
-import { slowestDebuffedAgility, slowestPackAgility } from "../rules/walkers";
-import { zoneStats } from "../rules/zones";
-import type { RunState } from "../state/runState";
-import { assignedMovement, type ProfiledMovement } from "./movementAssignments";
-import type { PlannerStreams } from "./moverPlanning";
-import { moverMovement, moverSpec } from "./moverSpecs";
-import { pickSkin } from "./obstacleLooks";
-import type { SlotAudit } from "./slotAudit";
-import { apportionSlotCounts, slotCountTotal, type SlotGuarantee } from "./slotConfig";
-import { minimumSlotDelivery, type SlotDelivery, type SlotPartialAudit } from "./slotDelivery";
-import type { SlotAssignment } from "./slotPlan";
-import { SLOT_LIMITS, type SlotDiagnostics } from "./slotPlanner";
-import type { PlannedSpawns, SpawnPlan, SpawnQuota } from "./spawning";
-import { type SpawnPlanSnapshot, type SpawnSearchContext } from "./spawnSearch";
-import { spacedStretch } from "./stretches";
+} from "../data/types.ts";
+import { PART_INSET } from "../layout/packFormation.ts";
+import { drawGearDrops } from "../rules/gearDrops.ts";
+import { modifiedStat } from "../rules/modifiers.ts";
+import { currentZone, currentZoneId } from "../rules/route.ts";
+import { read } from "../rules/units.ts";
+import { slowestDebuffedAgility, slowestPackAgility } from "../rules/walkers.ts";
+import { zoneStats } from "../rules/zones.ts";
+import type { RunState } from "../state/runState.ts";
+import { assignedMovement, type ProfiledMovement } from "./movementAssignments.ts";
+import type { PlannerStreams } from "./moverPlanning.ts";
+import { moverMovement, moverSpec } from "./moverSpecs.ts";
+import { pickSkin } from "./obstacleLooks.ts";
+import type { SlotAudit } from "./slotAudit.ts";
+import { apportionSlotCounts, slotCountTotal, type SlotGuarantee } from "./slotConfig.ts";
+import { minimumSlotDelivery, type SlotDelivery, type SlotPartialAudit } from "./slotDelivery.ts";
+import type { SlotAssignment } from "./slotPlan.ts";
+import { SLOT_LIMITS, type SlotDiagnostics } from "./slotPlanner.ts";
+import type { PlannedSpawns, SpawnPlan, SpawnQuota } from "./spawning.ts";
+import { type SpawnPlanSnapshot, type SpawnSearchContext } from "./spawnSearch.ts";
+import { spacedStretch } from "./stretches.ts";
 import {
   componentHitLength,
   itemHeight,
@@ -40,7 +40,7 @@ import {
   type WalkData,
   walkScrollSpeed,
   zoneLength,
-} from "./walk";
+} from "./walk.ts";
 import {
   blocksLane,
   footprintOf,
@@ -50,13 +50,13 @@ import {
   opensACard,
   type WalkItemKind,
   type WalkSpawn,
-} from "./walkItems";
+} from "./walkItems.ts";
 import {
   replayZoneSlots,
   type ZoneSlotInput,
   type ZoneSlotKind,
   ZoneSlotPlanningError,
-} from "./zoneSlotInput";
+} from "./zoneSlotInput.ts";
 
 // The entries of a zone's weights above 0, in the data's order.
 function positiveWeights<Id extends string>(weights: Readonly<Record<Id, number>>): [Id, number][] {

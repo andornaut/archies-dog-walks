@@ -1,7 +1,7 @@
 import { remapRgb } from "@andornaut/game-kit/rgba";
 import { describe, expect, it, vi } from "vitest";
 
-import { greyFor, remapToGrey } from "./greyRamp";
+import { greyFor, remapToGrey } from "./greyRamp.ts";
 
 vi.mock("@andornaut/game-kit/rgba", () => ({ remapRgb: vi.fn() }));
 

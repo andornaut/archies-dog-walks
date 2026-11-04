@@ -5,28 +5,28 @@ import {
   inkRowsOfLines,
 } from "@andornaut/game-kit/text/bitmapFont";
 
-import { SCREEN_CONFIG, SCREEN_LAYOUT } from "../data/screen";
-import type { DogId } from "../data/types";
-import { ownerPhotoRect, WALK_BAR, WALK_BAR_BUTTONS } from "../hud/walkHud";
-import type { PackPlacement } from "../layout/packFormation";
-import { barTitleRoom } from "../ui/barTitle";
-import { BUTTON_SIZE } from "../ui/buttonGeometry";
-import { closeControl } from "../ui/closeControl";
-import type { GridSpec } from "../ui/grid";
-import { helpCapDy } from "../ui/labelHelpGap";
-import { MARK_OFFSET } from "../ui/mark";
-import { hasPill, PILL_IMAGE_GAP, pillDropUnderInk, pillRiseOverCaps } from "../ui/namePills";
-import { BUTTON_LIP_PX } from "../ui/selection";
-import { TOP_BAR_FACE, TOP_BAR_HEIGHT, TOP_BAR_MID, TOP_BAR_WELL } from "../ui/topBarTrim";
-import { FEEDBACK } from "./feedback";
+import { SCREEN_CONFIG, SCREEN_LAYOUT } from "../data/screen.ts";
+import type { DogId } from "../data/types.ts";
+import { ownerPhotoRect, WALK_BAR, WALK_BAR_BUTTONS } from "../hud/walkHud.ts";
+import type { PackPlacement } from "../layout/packFormation.ts";
+import { barTitleRoom } from "../ui/barTitle.ts";
+import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";
+import { closeControl } from "../ui/closeControl.ts";
+import type { GridSpec } from "../ui/grid.ts";
+import { helpCapDy } from "../ui/labelHelpGap.ts";
+import { MARK_OFFSET } from "../ui/mark.ts";
+import { hasPill, PILL_IMAGE_GAP, pillDropUnderInk, pillRiseOverCaps } from "../ui/namePills.ts";
+import { BUTTON_LIP_PX } from "../ui/selection.ts";
+import { TOP_BAR_FACE, TOP_BAR_HEIGHT, TOP_BAR_MID, TOP_BAR_WELL } from "../ui/topBarTrim.ts";
+import { FEEDBACK } from "./feedback.ts";
 import {
   MODAL,
   modalActionWidth,
   modalPanelWidth,
   modalRect,
   modalTitleWidth,
-} from "./modalLayout";
-import type { SectionId } from "./sections";
+} from "./modalLayout.ts";
+import type { SectionId } from "./sections.ts";
 
 // Every tappable thing is at least 44 game pixels (48 CSS pixels on a 390px-wide phone) on
 // each side, except the top bar's buttons, 34 wide in the walk bar's columns; tiles side by

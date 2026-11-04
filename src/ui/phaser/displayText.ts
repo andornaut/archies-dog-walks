@@ -1,7 +1,7 @@
 import type { GameObjects, Scene } from "phaser";
 
-import { plainMarks } from "../pixelFont";
-import { addPixelText, bitmapFontHasChars, type PixelTextStyle } from "./pixelText";
+import { plainMarks } from "../pixelFont.ts";
+import { addPixelText, bitmapFontHasChars, type PixelTextStyle } from "./pixelText.ts";
 
 // The sign logo's lettering: capitals with the outline and shadow baked in, so it is never
 // tinted. yellow is for dark panels; cream is for where yellow clashes.

@@ -5,13 +5,13 @@ import { itemAt } from "@andornaut/game-kit/arrays";
 import { keysOf } from "@andornaut/game-kit/records";
 import { describe, expect, it } from "vitest";
 
-import { dogSpriteKey } from "../assets/spriteKeys";
-import { gameData } from "../data";
-import { LANE_COUNT, ROAD_CAMERA, SCREEN_LAYOUT } from "../data/screen";
-import type { DogId, Size, WalkerId } from "../data/types";
-import { walkProjection } from "../runner/walkGeometry";
-import { spriteSource } from "../tools/atlas/atlasLayout";
-import { laneCentreXs } from "./lanes";
+import { dogSpriteKey } from "../assets/spriteKeys.ts";
+import { gameData } from "../data/index.ts";
+import { LANE_COUNT, ROAD_CAMERA, SCREEN_LAYOUT } from "../data/screen.ts";
+import type { DogId, Size, WalkerId } from "../data/types.ts";
+import { walkProjection } from "../runner/walkGeometry.ts";
+import { spriteSource } from "../tools/atlas/atlasLayout.ts";
+import { laneCentreXs } from "./lanes.ts";
 import {
   COLLAR_HEIGHTS,
   DOG_SILHOUETTES,
@@ -32,8 +32,8 @@ import {
   tautLeashLine,
   unionBox,
   WALKER_SILHOUETTES,
-} from "./packFormation";
-import { distanceAtY, project, scaleAt, screenYAt } from "./projection";
+} from "./packFormation.ts";
+import { distanceAtY, project, scaleAt, screenYAt } from "./projection.ts";
 
 const ROAD = SCREEN_LAYOUT.road;
 // The game's projection, its feet on the walker's feet line.

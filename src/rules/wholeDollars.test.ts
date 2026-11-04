@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { amountText } from "./causes";
+import { amountText } from "./causes.ts";
 
 describe("a money change's amount", () => {
   it("shows whole dollars, rounding half up and a part-dollar loss to $1", () => {

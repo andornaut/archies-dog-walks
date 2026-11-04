@@ -3,7 +3,7 @@ import type { RgbaImage } from "@andornaut/art-kit/rgbaImage";
 import { opaqueBoundsOfRgba } from "@andornaut/game-kit/opaqueBounds";
 import * as v from "valibot";
 
-import { isPlainObject, parseOrThrow } from "../assets/jsonSchema";
+import { isPlainObject, parseOrThrow } from "../assets/jsonSchema.ts";
 import {
   type AssetManifest,
   type FontAsset,
@@ -12,11 +12,11 @@ import {
   type SoundAsset,
   type SpriteAnchor,
   type SpriteAsset,
-} from "../assets/manifest";
-import { spriteAnchor } from "../assets/spriteAnchor";
-import { standsOnGround } from "../assets/spriteKeys";
-import { spriteSource } from "./atlas/atlasLayout";
-import { jsonText } from "./files";
+} from "../assets/manifest.ts";
+import { spriteAnchor } from "../assets/spriteAnchor.ts";
+import { standsOnGround } from "../assets/spriteKeys.ts";
+import { spriteSource } from "./atlas/atlasLayout.ts";
+import { jsonText } from "./files.ts";
 
 // public/art/manifest.json, derived from the files under public/art/. A key is its file's
 // name less the extension, and its kind is the folder it is in:

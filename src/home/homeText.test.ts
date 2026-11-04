@@ -2,8 +2,8 @@ import { placeholders } from "@andornaut/game-kit/lines";
 import { keysOf } from "@andornaut/game-kit/records";
 import { describe, expect, it } from "vitest";
 
-import { gameData } from "../data";
-import { HOME_TEXT_FIELDS } from "./homeText";
+import { gameData } from "../data/index.ts";
+import { HOME_TEXT_FIELDS } from "./homeText.ts";
 
 describe("the home text", () => {
   const { bubble } = gameData.homeText;

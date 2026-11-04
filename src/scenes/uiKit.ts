@@ -2,10 +2,10 @@ import { animationKey } from "@andornaut/game-kit/art/aseprite";
 import { containsPoint, insetRect, type Point, type Rect } from "@andornaut/game-kit/rect";
 import type { GameObjects, Scene, Tweens } from "phaser";
 
-import { SCREEN_LAYOUT } from "../data/screen";
-import { FEEDBACK, loopFrame } from "../home/feedback";
-import { BUTTON_SIZE } from "../ui/buttonGeometry";
-import type { CloseControl } from "../ui/closeControl";
+import { SCREEN_LAYOUT } from "../data/screen.ts";
+import { FEEDBACK, loopFrame } from "../home/feedback.ts";
+import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";
+import type { CloseControl } from "../ui/closeControl.ts";
 import {
   type ArtLook,
   buttonState,
@@ -13,9 +13,9 @@ import {
   PLAIN_ITEM,
   type TileState,
   tileState,
-} from "../ui/interaction";
-import { MARK_OFFSET } from "../ui/mark";
-import { PALETTE } from "../ui/palette";
+} from "../ui/interaction.ts";
+import { MARK_OFFSET } from "../ui/mark.ts";
+import { PALETTE } from "../ui/palette.ts";
 import {
   CREAM_PANEL_COLOURS,
   drawFramedRect,
@@ -23,15 +23,15 @@ import {
   drawRing,
   fillCutRect,
   fillRect,
-} from "../ui/phaser/draw";
-import { disabledTextureKey } from "../ui/phaser/greyTextures";
+} from "../ui/phaser/draw.ts";
+import { disabledTextureKey } from "../ui/phaser/greyTextures.ts";
 import {
   addPixelText,
   inkSpan,
   type PixelTextStyle,
   scalePixelText,
   setPixelText,
-} from "../ui/phaser/pixelText";
+} from "../ui/phaser/pixelText.ts";
 import {
   BUTTON_COLOURS,
   BUTTON_LIP_PX,
@@ -40,14 +40,14 @@ import {
   SELECT_OUTSET,
   type SelectLook,
   selectLook,
-} from "../ui/selection";
-import { TEXT_SCALE } from "../ui/textFit";
-import { refuseControl } from "./refuseControl";
-import { TAP_BURST_SCENE_KEY } from "./sceneKeys";
-import { currentSettings } from "./sceneSettings";
-import { addSelectionOrbit } from "./selectionOrbit";
-import { playEffect, playTag } from "./sprites";
-import { listenTargetPress } from "./targetPress";
+} from "../ui/selection.ts";
+import { TEXT_SCALE } from "../ui/textFit.ts";
+import { refuseControl } from "./refuseControl.ts";
+import { TAP_BURST_SCENE_KEY } from "./sceneKeys.ts";
+import { currentSettings } from "./sceneSettings.ts";
+import { addSelectionOrbit } from "./selectionOrbit.ts";
+import { playEffect, playTag } from "./sprites.ts";
+import { listenTargetPress } from "./targetPress.ts";
 
 // Body text at 2x in plum, the screens' default text.
 export const BODY_TEXT = { colour: PALETTE.plum, scale: TEXT_SCALE } as const;

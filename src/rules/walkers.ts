@@ -1,12 +1,12 @@
 import { keysOf } from "@andornaut/game-kit/records";
 
-import type { Effect, GameData, Modifier, Walker, WalkerId } from "../data/types";
-import { packDogs } from "../state/pack";
-import type { RunState } from "../state/runState";
-import { dogAgility } from "./dogs";
-import { modifiedStat } from "./modifiers";
-import { packModifiers } from "./run";
-import { read } from "./units";
+import type { Effect, GameData, Modifier, Walker, WalkerId } from "../data/types.ts";
+import { packDogs } from "../state/pack.ts";
+import type { RunState } from "../state/runState.ts";
+import { dogAgility } from "./dogs.ts";
+import { modifiedStat } from "./modifiers.ts";
+import { packModifiers } from "./run.ts";
+import { read } from "./units.ts";
 
 type WalkerData = Pick<GameData, "walkerPerks" | "walkers">;
 

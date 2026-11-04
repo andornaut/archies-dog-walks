@@ -1,10 +1,10 @@
 import { keysOf } from "@andornaut/game-kit/records";
 import { describe, expect, it } from "vitest";
 
-import { dogFaceKey, gearIconKey } from "../../assets/spriteKeys";
-import { gameData } from "../../data";
-import { effectIconKey, walkerEffectItems } from "../../hud/effectIcons";
-import { greysOnTile } from "../../ui/disabledArt";
+import { dogFaceKey, gearIconKey } from "../../assets/spriteKeys.ts";
+import { gameData } from "../../data/index.ts";
+import { effectIconKey, walkerEffectItems } from "../../hud/effectIcons.ts";
+import { greysOnTile } from "../../ui/disabledArt.ts";
 
 // The pictures the home screen's and the shop's tiles draw through tileTextureKey and
 // addTileSprite, each of which a disabled tile greys: the build must pack a grey copy of each.

@@ -5,18 +5,18 @@ import { type Rect } from "@andornaut/game-kit/rect";
 import { inkRowsFromCapTop } from "@andornaut/game-kit/text/bitmapFont";
 import { describe, expect, it } from "vitest";
 
-import { gameData } from "../data";
-import { SCREEN_LAYOUT } from "../data/screen";
-import type { QuipMoment } from "../data/types";
-import { orderedAchievements } from "../rules/achievementOrder";
-import { bodyRunWidth } from "../testing/bodyFont";
-import { defined } from "../testing/defined";
-import { everyStripLine } from "../testing/everyStripLine";
-import { fontFileMetrics, inkWidth } from "../testing/fontInk";
-import { inside } from "../testing/rects";
-import { plainMarks } from "../ui/pixelFont";
-import { faceTextWithNamePills } from "./effectNames";
-import { type FaceText, inlineFaceBox } from "./faceText";
+import { gameData } from "../data/index.ts";
+import { SCREEN_LAYOUT } from "../data/screen.ts";
+import type { QuipMoment } from "../data/types.ts";
+import { orderedAchievements } from "../rules/achievementOrder.ts";
+import { bodyRunWidth } from "../testing/bodyFont.ts";
+import { defined } from "../testing/defined.ts";
+import { everyStripLine } from "../testing/everyStripLine.ts";
+import { fontFileMetrics, inkWidth } from "../testing/fontInk.ts";
+import { inside } from "../testing/rects.ts";
+import { plainMarks } from "../ui/pixelFont.ts";
+import { faceTextWithNamePills } from "./effectNames.ts";
+import { type FaceText, inlineFaceBox } from "./faceText.ts";
 import {
   EMPTY_MESSAGE_STRIP,
   type LeadSlot,
@@ -39,9 +39,9 @@ import {
   sayLineAhead,
   stepMessageStrip,
   stripLeadSlot,
-} from "./messageStrip";
-import { achievementLine, firedLine, pullLine } from "./stripLines";
-import { debuffBarRects } from "./walkHud";
+} from "./messageStrip.ts";
+import { achievementLine, firedLine, pullLine } from "./stripLines.ts";
+import { debuffBarRects } from "./walkHud.ts";
 
 const TIMING = messageTiming(gameData);
 const { dwellMs, fadeMs, lifeMs, maxWaitMs, maxWaiting } = TIMING;

@@ -1,20 +1,20 @@
 import { keysOf } from "@andornaut/game-kit/records";
 import { describe, expect, it } from "vitest";
 
-import { TUNING } from "../data/tuning";
-import { WORLD } from "../data/world";
-import { FASTEST_WALKER, GAME_ROAD, inZone, REAL, realRun } from "../testing/planner";
-import { mapZones } from "../testing/world";
-import { captureZoneInput } from "../testing/zonePlan";
-import { moverSpec } from "./moverSpecs";
-import { prepareSlotKind, slotPlacementsAt } from "./slotCandidates";
-import { slotMotionStreams, slotRandom } from "./slotEntropy";
-import { createSlotFeasibility } from "./slotFeasibility";
-import { makeSlotJobs } from "./slotJobs";
-import { guaranteeCompatiblePath } from "./slotPath";
-import { drawPath, PATH_HOLD_ROWS, pathReach, rowSpacing, zoneRows } from "./spawning";
-import { startRoad } from "./walk";
-import { compileZoneSlotInput, type ZoneSlotKind } from "./zoneSlotInput";
+import { TUNING } from "../data/tuning.ts";
+import { WORLD } from "../data/world.ts";
+import { FASTEST_WALKER, GAME_ROAD, inZone, REAL, realRun } from "../testing/planner.ts";
+import { mapZones } from "../testing/world.ts";
+import { captureZoneInput } from "../testing/zonePlan.ts";
+import { moverSpec } from "./moverSpecs.ts";
+import { prepareSlotKind, slotPlacementsAt } from "./slotCandidates.ts";
+import { slotMotionStreams, slotRandom } from "./slotEntropy.ts";
+import { createSlotFeasibility } from "./slotFeasibility.ts";
+import { makeSlotJobs } from "./slotJobs.ts";
+import { guaranteeCompatiblePath } from "./slotPath.ts";
+import { drawPath, PATH_HOLD_ROWS, pathReach, rowSpacing, zoneRows } from "./spawning.ts";
+import { startRoad } from "./walk.ts";
+import { compileZoneSlotInput, type ZoneSlotKind } from "./zoneSlotInput.ts";
 
 const captured = [
   {

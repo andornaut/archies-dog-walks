@@ -1,13 +1,13 @@
 import { fillLine } from "@andornaut/game-kit/lines";
 
-import type { GameData } from "../data/types";
-import { dollarText } from "../home/home";
-import { MENU_TEXT_FIELDS } from "../home/menuText";
-import { currentZone, walkLength } from "../rules/route";
-import { payZone, walkEarnings } from "../rules/run";
-import type { RunState } from "../state/runState";
-import { addCents, type Cents } from "../units";
-import { RUN_TEXT_FIELDS } from "./runText";
+import type { GameData } from "../data/types.ts";
+import { dollarText } from "../home/home.ts";
+import { MENU_TEXT_FIELDS } from "../home/menuText.ts";
+import { currentZone, walkLength } from "../rules/route.ts";
+import { payZone, walkEarnings } from "../rules/run.ts";
+import type { RunState } from "../state/runState.ts";
+import { addCents, type Cents } from "../units.ts";
+import { RUN_TEXT_FIELDS } from "./runText.ts";
 
 // One line of the Home question's note, by what it says: lose (drawn red) or zonesLeft.
 export interface HomeNoteLine {

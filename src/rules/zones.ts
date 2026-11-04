@@ -1,7 +1,7 @@
 import { type Pixels, pixels, type Seconds, seconds } from "@andornaut/game-kit/units";
 
-import type { LiveTuning, LuckyEncounterId, Zone } from "../data/types";
-import { read } from "./units";
+import type { LiveTuning, LuckyEncounterId, Zone } from "../data/types.ts";
+import { read } from "./units.ts";
 
 interface ZoneStats {
   // At base speed and before upgrades.

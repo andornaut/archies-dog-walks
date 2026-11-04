@@ -1,18 +1,18 @@
 import { keysOf } from "@andornaut/game-kit/records";
 import { describe, expect, it } from "vitest";
 
-import { LANE_COUNT } from "../data/screen";
-import { SHOP_GEAR } from "../data/shop";
-import type { GearId } from "../data/types";
-import { WORLD } from "../data/world";
-import { gearDropCount, gearInEffect } from "../rules/gearDrops";
-import { defaultRoute } from "../rules/route";
-import { GAME_ROAD, REAL, realRun } from "../testing/planner";
-import { atPack, inLane, step, walkWith } from "../testing/walk";
-import { captureZoneInput, planZoneForSeed } from "../testing/zonePlan";
-import { spacedStretch } from "./stretches";
-import { startRoad, type Walk, zoneLength } from "./walk";
-import { isGearDrop } from "./walkItems";
+import { LANE_COUNT } from "../data/screen.ts";
+import { SHOP_GEAR } from "../data/shop.ts";
+import type { GearId } from "../data/types.ts";
+import { WORLD } from "../data/world.ts";
+import { gearDropCount, gearInEffect } from "../rules/gearDrops.ts";
+import { defaultRoute } from "../rules/route.ts";
+import { GAME_ROAD, REAL, realRun } from "../testing/planner.ts";
+import { atPack, inLane, step, walkWith } from "../testing/walk.ts";
+import { captureZoneInput, planZoneForSeed } from "../testing/zonePlan.ts";
+import { spacedStretch } from "./stretches.ts";
+import { startRoad, type Walk, zoneLength } from "./walk.ts";
+import { isGearDrop } from "./walkItems.ts";
 
 const GEAR = keysOf(SHOP_GEAR);
 const POSITIONS = Array.from({ length: WORLD.walkLength }, (_, position) => position);

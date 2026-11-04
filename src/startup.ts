@@ -1,13 +1,13 @@
 // Install error handling before importing the game's renderer and other modules.
-import "./crash/install";
+import "./crash/install.ts";
 import "@andornaut/game-kit/web/view/frameTurnPortraitGame.css";
 import "./main.css";
 
 import { createDomProgressBar } from "@andornaut/game-kit/web/progress/dom/progressBar";
 
-import { SCREEN_CONFIG, SCREEN_LAYOUT } from "./data/screen";
-import { GAME_PROGRESS_STYLE } from "./ui/progressBar";
-import { startupLoad, startupProgress } from "./ui/startupProgress";
+import { SCREEN_CONFIG, SCREEN_LAYOUT } from "./data/screen.ts";
+import { GAME_PROGRESS_STYLE } from "./ui/progressBar.ts";
+import { startupLoad, startupProgress } from "./ui/startupProgress.ts";
 
 const parent = document.getElementById("game");
 if (parent !== null) {
@@ -55,7 +55,7 @@ if (parent !== null) {
 }
 
 // Module download and renderer setup have no measurable denominator.
-void import("./main").catch((error: unknown) => {
+void import("./main.ts").catch((error: unknown) => {
   startupLoad.finish();
   throw error;
 });

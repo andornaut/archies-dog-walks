@@ -1,16 +1,16 @@
 import { keysOf } from "@andornaut/game-kit/records";
 import { describe, expect, it } from "vitest";
 
-import { gameData } from "../data";
-import type { AchievementCondition, DogId, TallyId, ZoneId } from "../data/types";
-import { type SaveDocument } from "../save/schema";
-import type { RunState } from "../state/runState";
-import { runFactsFor, saveFor } from "../testing/achievements";
-import { defined } from "../testing/defined";
-import { testState } from "../testing/runState";
-import { newPlayerSave, veteranSave } from "../testing/saves";
-import { cents } from "../units";
-import { orderedAchievements } from "./achievementOrder";
+import { gameData } from "../data/index.ts";
+import type { AchievementCondition, DogId, TallyId, ZoneId } from "../data/types.ts";
+import { type SaveDocument } from "../save/schema.ts";
+import type { RunState } from "../state/runState.ts";
+import { runFactsFor, saveFor } from "../testing/achievements.ts";
+import { defined } from "../testing/defined.ts";
+import { testState } from "../testing/runState.ts";
+import { newPlayerSave, veteranSave } from "../testing/saves.ts";
+import { cents } from "../units.ts";
+import { orderedAchievements } from "./achievementOrder.ts";
 import {
   achievementConditionText,
   conditionHolds,
@@ -22,7 +22,7 @@ import {
   newlyEarned,
   runCountersOf,
   type RunFacts,
-} from "./achievements";
+} from "./achievements.ts";
 
 const facts = (changes: Partial<RunFacts> = {}): RunFacts => ({
   bumpsByKind: {},

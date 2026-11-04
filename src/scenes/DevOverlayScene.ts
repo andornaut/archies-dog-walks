@@ -1,12 +1,12 @@
 import { type GameObjects, Scene, Scenes } from "phaser";
 
-import { SCREEN_LAYOUT } from "../data/screen";
-import { DEV_STATE_EVENT, devOverlayLines, type DevState } from "../dev/devOverlay";
-import { cheatsFrom, DEV_CHEATS_KEY } from "../dev/devPanelModel";
-import { pageRunSetup } from "../dev/pageRunSetup";
-import { runSetupLink } from "../dev/runSetup";
-import { onSceneEvent } from "./overlay";
-import { SCENE_KEYS } from "./sceneKeys";
+import { SCREEN_LAYOUT } from "../data/screen.ts";
+import { DEV_STATE_EVENT, devOverlayLines, type DevState } from "../dev/devOverlay.ts";
+import { cheatsFrom, DEV_CHEATS_KEY } from "../dev/devPanelModel.ts";
+import { pageRunSetup } from "../dev/pageRunSetup.ts";
+import { runSetupLink } from "../dev/runSetup.ts";
+import { onSceneEvent } from "./overlay.ts";
+import { SCENE_KEYS } from "./sceneKeys.ts";
 
 const DEV_OVERLAY_SCENE_KEY = "dev-overlay";
 

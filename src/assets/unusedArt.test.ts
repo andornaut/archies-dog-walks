@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { keyNames, unusedKeys } from "./unusedArt";
+import { keyNames, unusedKeys } from "./unusedArt.ts";
 
 const sprite = (key: string) => ({ json: `sprites/${key}.json`, key, png: `sprites/${key}.png` });
 

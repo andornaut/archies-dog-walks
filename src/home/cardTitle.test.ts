@@ -1,14 +1,14 @@
 import type { Rect } from "@andornaut/game-kit/rect";
 import { describe, expect, it } from "vitest";
 
-import { fontFileMetrics, inkWidth } from "../testing/fontInk";
-import { cardTitles } from "../testing/textRoles";
-import { BAR_TITLE, barTitleLeft, barTitleRoom } from "../ui/barTitle";
-import { type CloseControl, closeControl } from "../ui/closeControl";
-import { plainMarks } from "../ui/pixelFont";
-import { TEXT_STYLE } from "../ui/textFit";
-import { cardTitleRow } from "./homeLayout";
-import { modalTitleLayout } from "./modalLayout";
+import { fontFileMetrics, inkWidth } from "../testing/fontInk.ts";
+import { cardTitles } from "../testing/textRoles.ts";
+import { BAR_TITLE, barTitleLeft, barTitleRoom } from "../ui/barTitle.ts";
+import { type CloseControl, closeControl } from "../ui/closeControl.ts";
+import { plainMarks } from "../ui/pixelFont.ts";
+import { TEXT_STYLE } from "../ui/textFit.ts";
+import { cardTitleRow } from "./homeLayout.ts";
+import { modalTitleLayout } from "./modalLayout.ts";
 
 // The clear space on either side of title ink, after the correct corner-control reservation.
 function clearSpace(bar: Rect, close: CloseControl, width: number) {

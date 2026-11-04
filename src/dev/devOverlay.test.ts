@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 
-import { cents } from "../units";
-import { devOverlayLines, type DevState } from "./devOverlay";
-import type { RunSetup } from "./runSetup";
+import { cents } from "../units.ts";
+import { devOverlayLines, type DevState } from "./devOverlay.ts";
+import type { RunSetup } from "./runSetup.ts";
 
 const setup: RunSetup = { dev: true, seed: 42, speed: 1.5, zone: 1 };
 const state: DevState = { scrollSpeed: 180.4, setup, zoneDistance: 1234.9, zoneIndex: 1 };

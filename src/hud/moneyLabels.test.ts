@@ -1,15 +1,15 @@
 import { inkRowsOfLines } from "@andornaut/game-kit/text/bitmapFont";
 import { describe, expect, it } from "vitest";
 
-import { SCREEN_CONFIG, SCREEN_LAYOUT } from "../data/screen";
-import { amountText } from "../rules/causes";
-import { fontFileMetrics } from "../testing/fontInk";
-import { cents } from "../units";
-import { perkIconKey } from "./effectIcons";
-import { FEEDBACK } from "./feedback";
-import { CHANGE_CHIP, CHANGE_LABEL_STYLE } from "./hudLanes";
-import { type ChangeLabel, changeLabels, reachedLabels } from "./hudView";
-import { curvePoint, TOP_BAR_POINTS } from "./moments";
+import { SCREEN_CONFIG, SCREEN_LAYOUT } from "../data/screen.ts";
+import { amountText } from "../rules/causes.ts";
+import { fontFileMetrics } from "../testing/fontInk.ts";
+import { cents } from "../units.ts";
+import { perkIconKey } from "./effectIcons.ts";
+import { FEEDBACK } from "./feedback.ts";
+import { CHANGE_CHIP, CHANGE_LABEL_STYLE } from "./hudLanes.ts";
+import { type ChangeLabel, changeLabels, reachedLabels } from "./hudView.ts";
+import { curvePoint, TOP_BAR_POINTS } from "./moments.ts";
 import {
   cashChipPlace,
   cashLostLabel,
@@ -20,8 +20,8 @@ import {
   moneyChipPlace,
   moneyFlightPath,
   stackOrders,
-} from "./moneyLabels";
-import { WALK_BAR } from "./walkHud";
+} from "./moneyLabels.ts";
+import { WALK_BAR } from "./walkHud.ts";
 
 const BODY = fontFileMetrics("font-body");
 const { width: SCREEN_WIDTH } = SCREEN_CONFIG;

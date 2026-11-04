@@ -1,7 +1,7 @@
 import { expect, it } from "vitest";
 
-import { gameData } from "../data";
-import { holdRule, TILE_SLOP_PX } from "./hold";
+import { gameData } from "../data/index.ts";
+import { holdRule, TILE_SLOP_PX } from "./hold.ts";
 
 it("reads the live game hold time in milliseconds and retains the requested slop", () => {
   const tuning = {

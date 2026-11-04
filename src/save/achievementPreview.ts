@@ -1,10 +1,10 @@
-import type { AchievementId, GameData } from "../data/types";
-import { isMoneyGoal } from "../rules/achievements";
-import type { RunState } from "../state/runState";
-import { type AwardContext, earnedSince } from "./achievements";
-import { recordRunEnd, type RunResult } from "./checkpoint";
-import { runResultOf } from "./runSlices";
-import type { SaveDocument } from "./schema";
+import type { AchievementId, GameData } from "../data/types.ts";
+import { isMoneyGoal } from "../rules/achievements.ts";
+import type { RunState } from "../state/runState.ts";
+import { type AwardContext, earnedSince } from "./achievements.ts";
+import { recordRunEnd, type RunResult } from "./checkpoint.ts";
+import { runResultOf } from "./runSlices.ts";
+import type { SaveDocument } from "./schema.ts";
 
 // The achievements banking result into save would newly earn, without writing anything.
 export function earnedIfBanked(

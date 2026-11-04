@@ -2,13 +2,13 @@ import { drawProgressBar } from "@andornaut/game-kit/progress/phaser/drawProgres
 import type { Point, Rect } from "@andornaut/game-kit/rect";
 import { type GameObjects, Scene } from "phaser";
 
-import { debuffIconKey } from "../assets/iconKeys";
-import { dogCardTag, dogFaceKey, ownerCardFaceKey } from "../assets/spriteKeys";
-import { gameData } from "../data";
-import { SCREEN_CONFIG, SCREEN_LAYOUT } from "../data/screen";
-import type { AchievementId, DebuffId, DogId, HintTrigger } from "../data/types";
-import { FEEDBACK as MENU_FEEDBACK } from "../home/feedback";
-import { dollarAmountText } from "../home/home";
+import { debuffIconKey } from "../assets/iconKeys.ts";
+import { dogCardTag, dogFaceKey, ownerCardFaceKey } from "../assets/spriteKeys.ts";
+import { gameData } from "../data/index.ts";
+import { SCREEN_CONFIG, SCREEN_LAYOUT } from "../data/screen.ts";
+import type { AchievementId, DebuffId, DogId, HintTrigger } from "../data/types.ts";
+import { FEEDBACK as MENU_FEEDBACK } from "../home/feedback.ts";
+import { dollarAmountText } from "../home/home.ts";
 import {
   effectIconKey,
   type EffectItem,
@@ -16,10 +16,10 @@ import {
   effectItemsKey,
   perkIconKey,
   spareTreatWell,
-} from "../hud/effectIcons";
-import { explainDetail } from "../hud/explain";
-import { FEEDBACK } from "../hud/feedback";
-import { runHintTriggers } from "../hud/hintTriggers";
+} from "../hud/effectIcons.ts";
+import { explainDetail } from "../hud/explain.ts";
+import { FEEDBACK } from "../hud/feedback.ts";
+import { runHintTriggers } from "../hud/hintTriggers.ts";
 import {
   CHANGE_LABEL_STYLE,
   changeChipPlace,
@@ -27,10 +27,10 @@ import {
   type HudLanes,
   hudLanes,
   reachChipPlace,
-} from "../hud/hudLanes";
-import type { ChangeLabel } from "../hud/hudView";
-import type { MessageLine } from "../hud/messageStrip";
-import { cardOwnerMood, FORGIVEN_EVENT, type ForgivenCue } from "../hud/moments";
+} from "../hud/hudLanes.ts";
+import type { ChangeLabel } from "../hud/hudView.ts";
+import type { MessageLine } from "../hud/messageStrip.ts";
+import { cardOwnerMood, FORGIVEN_EVENT, type ForgivenCue } from "../hud/moments.ts";
 import {
   cashChipPlace,
   freeCashSlot,
@@ -40,8 +40,8 @@ import {
   moneyChipPlace,
   moneyFlightPath,
   stackOrders,
-} from "../hud/moneyLabels";
-import { achievementLine } from "../hud/stripLines";
+} from "../hud/moneyLabels.ts";
+import { achievementLine } from "../hud/stripLines.ts";
 import {
   buttonIcon,
   pauseButtonIcon,
@@ -51,7 +51,7 @@ import {
   topBarAction,
   topBarButtonAt,
   topBarButtonForKey,
-} from "../hud/topBar";
+} from "../hud/topBar.ts";
 import {
   type BarButton,
   cardHearts,
@@ -72,19 +72,19 @@ import {
   zoneProgressLayout,
   zoneProgressText,
   zoneShare,
-} from "../hud/walkHud";
-import { zonePillLayout } from "../hud/zonePill";
-import { orderedAchievements } from "../rules/achievementOrder";
-import { ownerMaxHearts } from "../rules/dogs";
-import { debuffLasting } from "../rules/durations";
-import { hintFor, hintJumpsQueue } from "../rules/hints";
-import { currentZone } from "../rules/route";
-import { walkEarnings } from "../rules/run";
-import { faceMood } from "../rules/treats";
-import { read } from "../rules/units";
-import { heartsOf, slotIndexOf } from "../state/pack";
-import type { PackSlot, RunState } from "../state/runState";
-import { PALETTE } from "../ui/palette";
+} from "../hud/walkHud.ts";
+import { zonePillLayout } from "../hud/zonePill.ts";
+import { orderedAchievements } from "../rules/achievementOrder.ts";
+import { ownerMaxHearts } from "../rules/dogs.ts";
+import { debuffLasting } from "../rules/durations.ts";
+import { hintFor, hintJumpsQueue } from "../rules/hints.ts";
+import { currentZone } from "../rules/route.ts";
+import { walkEarnings } from "../rules/run.ts";
+import { faceMood } from "../rules/treats.ts";
+import { read } from "../rules/units.ts";
+import { heartsOf, slotIndexOf } from "../state/pack.ts";
+import type { PackSlot, RunState } from "../state/runState.ts";
+import { PALETTE } from "../ui/palette.ts";
 import {
   addFilledRect,
   CREAM_PANEL_COLOURS,
@@ -92,7 +92,7 @@ import {
   drawFramedRect,
   drawHeart,
   fillRect,
-} from "../ui/phaser/draw";
+} from "../ui/phaser/draw.ts";
 import {
   addPixelText,
   fitPixelText,
@@ -101,27 +101,27 @@ import {
   placePixelText,
   scalePixelText,
   setPixelText,
-} from "../ui/phaser/pixelText";
-import { GAME_PROGRESS_STYLE } from "../ui/progressBar";
-import { topBarRects } from "../ui/topBarTrim";
-import { type Cents, cents } from "../units";
-import { arcFlight } from "./arcFlight";
-import { addCharm, glintWell } from "./buffCharm";
-import { BumpBorder } from "./bumpBorder";
-import { CardScene } from "./CardScene";
-import { changeLabelColour } from "./changeLabelColours";
-import { DEBUFF_COLOURS } from "./debuffColours";
-import { HudFeedback } from "./feedbackMoments";
-import { HeartFeedback, heartPops } from "./heartFeedback";
-import { drawDetailCard } from "./homePanels";
-import { HUD_DEPTH } from "./hudDepth";
-import type { HudRun, HudWalk, RunHudView } from "./hudWalk";
-import { MESSAGE_EVENT, MessageStrip } from "./messageStripView";
-import { listenOnePress } from "./onePress";
-import { BAR_MUTED_EVENT, onSceneEvent } from "./overlay";
-import { OwnerTabs } from "./ownerTabs";
-import { isMuted, markHintShown, profileSave, shownHints, toggleMuted } from "./profileStore";
-import { cancelRoadShake } from "./run/hitFx";
+} from "../ui/phaser/pixelText.ts";
+import { GAME_PROGRESS_STYLE } from "../ui/progressBar.ts";
+import { topBarRects } from "../ui/topBarTrim.ts";
+import { type Cents, cents } from "../units.ts";
+import { arcFlight } from "./arcFlight.ts";
+import { addCharm, glintWell } from "./buffCharm.ts";
+import { BumpBorder } from "./bumpBorder.ts";
+import { CardScene } from "./CardScene.ts";
+import { changeLabelColour } from "./changeLabelColours.ts";
+import { DEBUFF_COLOURS } from "./debuffColours.ts";
+import { HudFeedback } from "./feedbackMoments.ts";
+import { HeartFeedback, heartPops } from "./heartFeedback.ts";
+import { drawDetailCard } from "./homePanels.ts";
+import { HUD_DEPTH } from "./hudDepth.ts";
+import type { HudRun, HudWalk, RunHudView } from "./hudWalk.ts";
+import { MESSAGE_EVENT, MessageStrip } from "./messageStripView.ts";
+import { listenOnePress } from "./onePress.ts";
+import { BAR_MUTED_EVENT, onSceneEvent } from "./overlay.ts";
+import { OwnerTabs } from "./ownerTabs.ts";
+import { isMuted, markHintShown, profileSave, shownHints, toggleMuted } from "./profileStore.ts";
+import { cancelRoadShake } from "./run/hitFx.ts";
 import {
   ACHIEVEMENTS_EVENT,
   BUFF_GLINT_EVENT,
@@ -131,12 +131,12 @@ import {
   type OwnerQuip,
   QUIPS_EVENT,
   type RaisedHint,
-} from "./run/runMoments";
-import { SCENE_KEYS, type SceneKey } from "./sceneKeys";
-import { type ScenePicture, showAsPicture } from "./scenePicture";
-import { soundboardOf } from "./soundboard";
-import { playTag } from "./sprites";
-import { TimedGroup } from "./timedGroup";
+} from "./run/runMoments.ts";
+import { SCENE_KEYS, type SceneKey } from "./sceneKeys.ts";
+import { type ScenePicture, showAsPicture } from "./scenePicture.ts";
+import { soundboardOf } from "./soundboard.ts";
+import { playTag } from "./sprites.ts";
+import { TimedGroup } from "./timedGroup.ts";
 import {
   addIconButton,
   addNineSlice,
@@ -148,7 +148,7 @@ import {
   setDollarAmount,
   settingsIcon,
   soundIcon,
-} from "./uiKit";
+} from "./uiKit.ts";
 
 const LAYOUT = SCREEN_LAYOUT;
 const BAR = walkBarLayout(LAYOUT.topBar);

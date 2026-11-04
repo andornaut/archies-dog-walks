@@ -1,7 +1,7 @@
 import type { Rect } from "@andornaut/game-kit/rect";
 
-import { BUTTON_SIZE } from "./buttonGeometry";
-import { MODAL } from "./modalGeometry";
+import { BUTTON_SIZE } from "./buttonGeometry.ts";
+import { MODAL } from "./modalGeometry.ts";
 
 // Modal close faces sit 6px inside the top-right corner, within a 44px corner target.
 // Full pages keep their separate top-right control placement.

@@ -1,4 +1,4 @@
-import type { Achievement, AchievementDifficulty, GameData } from "../data/types";
+import type { Achievement, AchievementDifficulty, GameData } from "../data/types.ts";
 
 const DIFFICULTY_ORDER: Readonly<Record<AchievementDifficulty, number>> = {
   easy: 0,

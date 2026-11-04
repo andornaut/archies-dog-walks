@@ -22,12 +22,12 @@ import type {
   Size,
   Target,
   WalkerPerk,
-} from "../data/types";
-import { HOME_TEXT_FIELDS, homeLine } from "../home/homeText";
-import { type Cents, cents } from "../units";
-import type { ModifiedValue } from "./modified";
-import { modifiersOf, modifierValue } from "./modifiers";
-import { read } from "./units";
+} from "../data/types.ts";
+import { HOME_TEXT_FIELDS, homeLine } from "../home/homeText.ts";
+import { type Cents, cents } from "../units.ts";
+import type { ModifiedValue } from "./modified.ts";
+import { modifiersOf, modifierValue } from "./modifiers.ts";
+import { read } from "./units.ts";
 
 type TextData = Pick<GameData, "debuffs" | "encounters" | "homeText" | "tuning">;
 type WordsData = Pick<GameData, "homeText" | "tuning">;

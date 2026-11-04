@@ -1,6 +1,6 @@
-import type { DogId, GameData, Size } from "../data/types";
-import type { Hearts } from "../units";
-import type { Pack, PackDogs, PackSlot, RunState } from "./runState";
+import type { DogId, GameData, Size } from "../data/types.ts";
+import type { Hearts } from "../units.ts";
+import type { Pack, PackDogs, PackSlot, RunState } from "./runState.ts";
 
 const SIZE_ORDER: readonly Size[] = ["large", "medium", "small"];
 

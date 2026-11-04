@@ -3,9 +3,9 @@ import { readFileSync } from "node:fs";
 import { decodePng } from "@andornaut/art-kit/png";
 import { describe, expect, it } from "vitest";
 
-import { SCREEN_CONFIG } from "../data/screen";
-import { PALETTE } from "../ui/palette";
-import { TOP_BAR_TRIM, topBarRects } from "../ui/topBarTrim";
+import { SCREEN_CONFIG } from "../data/screen.ts";
+import { PALETTE } from "../ui/palette.ts";
+import { TOP_BAR_TRIM, topBarRects } from "../ui/topBarTrim.ts";
 
 // The walk bar's art, ui-walk-bar, is the one top bar art draws: its first column, clear of its
 // wells, as the colour of each row.

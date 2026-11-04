@@ -2,12 +2,12 @@ import { itemAt } from "@andornaut/game-kit/arrays";
 import { type Random, seededRandom } from "@andornaut/game-kit/random";
 import { describe, expect, it } from "vitest";
 
-import { MINOR_OBSTACLES } from "../data/minorObstacles";
-import { TUNING } from "../data/tuning";
-import type { StopLanes } from "../data/types";
-import { laneMask } from "../layout/lanes";
-import { read } from "../rules/units";
-import { defined } from "../testing/defined";
+import { MINOR_OBSTACLES } from "../data/minorObstacles.ts";
+import { TUNING } from "../data/tuning.ts";
+import type { StopLanes } from "../data/types.ts";
+import { laneMask } from "../layout/lanes.ts";
+import { read } from "../rules/units.ts";
+import { defined } from "../testing/defined.ts";
 import {
   DART_LIFTS,
   DART_VERGE_LANES,
@@ -29,7 +29,7 @@ import {
   stepSpots,
   stopsOnVerge,
   sweptLanes,
-} from "./moverPlanning";
+} from "./moverPlanning.ts";
 import {
   facesLeft,
   hasLeftRoad,
@@ -45,9 +45,9 @@ import {
   type MoverTell,
   moverTell,
   type StepShape,
-} from "./movers";
-import { moverOutcomes } from "./outcomes";
-import { moverRests } from "./spawning";
+} from "./movers.ts";
+import { moverOutcomes } from "./outcomes.ts";
+import { moverRests } from "./spawning.ts";
 
 // 100px/s: a 1s warning is 100px, and a crosser at 2 lanes a second crosses 0.02 lanes a pixel.
 const geometry: MoverGeometry = {

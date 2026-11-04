@@ -5,10 +5,10 @@ import {
 } from "@andornaut/game-kit/web/save/dom/pageSessionStore";
 import type { Game } from "phaser";
 
-import { gameData } from "../../data";
-import { DEV_STATE_EVENT, type DevState } from "../../dev/devOverlay";
-import { DEV_LAST_LOG_KEY, DEV_REPLAY_KEY } from "../../dev/devPanelModel";
-import { devToolsOn } from "../../dev/devTools";
+import { gameData } from "../../data/index.ts";
+import { DEV_STATE_EVENT, type DevState } from "../../dev/devOverlay.ts";
+import { DEV_LAST_LOG_KEY, DEV_REPLAY_KEY } from "../../dev/devPanelModel.ts";
+import { devToolsOn } from "../../dev/devTools.ts";
 import {
   type CardChoice,
   decodeInputLog,
@@ -20,12 +20,12 @@ import {
   startInputLog,
   takeCardChoice,
   takeDueInputs,
-} from "../../dev/inputLog";
-import { pageRunSetup, runSetupLimitsFor } from "../../dev/pageRunSetup";
-import type { RunSetup } from "../../dev/runSetup";
-import { expectedRoadMs, type ZoneClocks } from "../../dev/zoneClock";
-import type { SessionInput } from "../../runner/session";
-import { roadScrollSpeed, type Walk, zoneLength } from "../../runner/walk";
+} from "../../dev/inputLog.ts";
+import { pageRunSetup, runSetupLimitsFor } from "../../dev/pageRunSetup.ts";
+import type { RunSetup } from "../../dev/runSetup.ts";
+import { expectedRoadMs, type ZoneClocks } from "../../dev/zoneClock.ts";
+import type { SessionInput } from "../../runner/session.ts";
+import { roadScrollSpeed, type Walk, zoneLength } from "../../runner/walk.ts";
 
 // How a run starts: its setup, and the inputs that drive it when it replays a log.
 export interface RunStart {

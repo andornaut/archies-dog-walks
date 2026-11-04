@@ -1,5 +1,5 @@
-import { deepFreeze } from "./deepFreeze";
-import { moverLeavesMinimumLanes } from "./laneAlternatives";
+import { deepFreeze } from "./deepFreeze.ts";
+import { moverLeavesMinimumLanes } from "./laneAlternatives.ts";
 import {
   DART_LIFTS,
   drawMover,
@@ -13,11 +13,11 @@ import {
   type MoverPlacementWork,
   moverRetries,
   type PlannerStreams,
-} from "./moverPlanning";
-import { crossLength } from "./movers";
-import { slotFootprint, type SlotSource } from "./slotConfig";
-import type { SlotPlacement } from "./slotFeasibility";
-import { LaneBlocks } from "./spawnCells";
+} from "./moverPlanning.ts";
+import { crossLength } from "./movers.ts";
+import { slotFootprint, type SlotSource } from "./slotConfig.ts";
+import type { SlotPlacement } from "./slotFeasibility.ts";
+import { LaneBlocks } from "./spawnCells.ts";
 import {
   blockingLength,
   pathHeldLanes,
@@ -26,7 +26,7 @@ import {
   rowSpacing,
   type SpawnPlan,
   type SpawnQuota,
-} from "./spawning";
+} from "./spawning.ts";
 
 type Geometry<Kind extends string> = Omit<SpawnPlan<Kind>, "quotas">;
 export interface SlotKindDescriptor<Kind extends string> {

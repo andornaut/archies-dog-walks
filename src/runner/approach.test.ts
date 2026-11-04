@@ -7,8 +7,8 @@ import {
   nearestStep,
   nextChoiceAt,
   takeStep,
-} from "./approach";
-import { moverTell, stepsTaken } from "./movers";
+} from "./approach.ts";
+import { moverTell, stepsTaken } from "./movers.ts";
 
 const CELL = 64;
 // A stalker in lane 2 that may step within lanes 1 to 3 and a row down, its one step pending

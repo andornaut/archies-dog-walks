@@ -1,10 +1,10 @@
-import { nextChoiceAt } from "./approach";
-import { drawnLanes, moverPlace } from "./movers";
-import { nextShyChoiceAt } from "./shy";
-import { signaturePlace } from "./signaturePaths";
-import { slotFootprint } from "./slotConfig";
-import type { SlotPlacement } from "./slotFeasibility";
-import type { SpawnPlan } from "./spawning";
+import { nextChoiceAt } from "./approach.ts";
+import { drawnLanes, moverPlace } from "./movers.ts";
+import { nextShyChoiceAt } from "./shy.ts";
+import { signaturePlace } from "./signaturePaths.ts";
+import { slotFootprint } from "./slotConfig.ts";
+import type { SlotPlacement } from "./slotFeasibility.ts";
+import type { SpawnPlan } from "./spawning.ts";
 
 // Credit body geometry at row arrival, independently of pack contact and swept reservations.
 export function visibleMoverRows<Kind extends string>(

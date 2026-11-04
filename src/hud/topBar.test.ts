@@ -1,7 +1,7 @@
 import { containsPoint } from "@andornaut/game-kit/rect";
 import { describe, expect, it } from "vitest";
 
-import type { PressMode } from "../input/pointerTracking";
+import type { PressMode } from "../input/pointerTracking.ts";
 import {
   gameplayAllowed,
   NOTHING_PAUSED,
@@ -17,8 +17,8 @@ import {
   walkBackAction,
   walkPaused,
   walkPresses,
-} from "./topBar";
-import { WALK_BAR_BUTTONS, type WalkBarButtonId } from "./walkHud";
+} from "./topBar.ts";
+import { WALK_BAR_BUTTONS, type WalkBarButtonId } from "./walkHud.ts";
 
 // A card and the zone celebration hold the walk alike.
 const CARD: RunPause = { ...NOTHING_PAUSED, card: true };

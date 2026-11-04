@@ -6,16 +6,16 @@ import {
   moverPlacements,
   moverRetries,
   type MoverSpec,
-} from "./moverPlanning";
+} from "./moverPlanning.ts";
 import {
   compileSlotKindDomain,
   describeSlotKind,
   isNativeSlotPreparation,
   prepareSlotKind,
   slotMotionSelections,
-} from "./slotCandidates";
-import type { SlotKind, SlotSource } from "./slotConfig";
-import { blockingLength, rowSpacing, type SpawnPlan } from "./spawning";
+} from "./slotCandidates.ts";
+import type { SlotKind, SlotSource } from "./slotConfig.ts";
+import { blockingLength, rowSpacing, type SpawnPlan } from "./spawning.ts";
 
 const geometry: Omit<SpawnPlan<string>, "quotas"> = {
   cellInset: 5,

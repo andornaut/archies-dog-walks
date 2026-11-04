@@ -1,6 +1,6 @@
 import type { Loader, Scene } from "phaser";
 
-import { byteFraction, type FileProgress, UNKNOWN_FILE_BYTES } from "../layout/loadingScreen";
+import { byteFraction, type FileProgress, UNKNOWN_FILE_BYTES } from "../layout/loadingScreen.ts";
 
 // Reports how far the scene's load is, by bytes, on each file's progress. A file weighs its
 // size from expectedBytes by key, else its size once the server sends it, else

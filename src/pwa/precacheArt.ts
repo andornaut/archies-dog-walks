@@ -1,9 +1,9 @@
 import type { HashedFiles } from "@andornaut/game-kit/web/pwa/vite/precachePlugin";
 
-import type { ArtFileMap } from "../assets/artUrl";
-import { parseManifest } from "../assets/manifest";
-import type { SoundFormat } from "../audio/soundFormat";
-import { ART_MANIFEST } from "../tools/artManifest";
+import type { ArtFileMap } from "../assets/artUrl.ts";
+import { parseManifest } from "../assets/manifest.ts";
+import type { SoundFormat } from "../audio/soundFormat.ts";
+import { ART_MANIFEST } from "../tools/artManifest.ts";
 
 // The art the game loads, as the URLs of its hashed files: the sound files by format, for the
 // worker to store the one the page plays, and every other file. Only the map's files are listed,

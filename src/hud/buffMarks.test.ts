@@ -2,18 +2,18 @@ import { fillNames } from "@andornaut/game-kit/lines";
 import { keysOf } from "@andornaut/game-kit/records";
 import { describe, expect, it } from "vitest";
 
-import { gameData } from "../data";
-import type { DogId, Size } from "../data/types";
-import { gearSourceName } from "../rules/causes";
-import type { OptionView } from "../rules/choices";
-import { laneSpeedText } from "../rules/effectText";
-import { grabGear } from "../rules/gearDrops";
-import { type ModifiedValue, modifierCause } from "../rules/modified";
-import { read } from "../rules/units";
-import type { WalkItem } from "../runner/walkItems";
-import { packDogs } from "../state/pack";
-import { type ModifierSource, newRun } from "../state/runState";
-import { cents } from "../units";
+import { gameData } from "../data/index.ts";
+import type { DogId, Size } from "../data/types.ts";
+import { gearSourceName } from "../rules/causes.ts";
+import type { OptionView } from "../rules/choices.ts";
+import { laneSpeedText } from "../rules/effectText.ts";
+import { grabGear } from "../rules/gearDrops.ts";
+import { type ModifiedValue, modifierCause } from "../rules/modified.ts";
+import { read } from "../rules/units.ts";
+import type { WalkItem } from "../runner/walkItems.ts";
+import { packDogs } from "../state/pack.ts";
+import { type ModifierSource, newRun } from "../state/runState.ts";
+import { cents } from "../units.ts";
 import {
   type BuffPop,
   extraHearts,
@@ -23,8 +23,8 @@ import {
   type ReachLine,
   roadMarks,
   walkStartMarks,
-} from "./buffMarks";
-import { effectIconKey, type EffectItem, effectName } from "./effectIcons";
+} from "./buffMarks.ts";
+import { effectIconKey, type EffectItem, effectName } from "./effectIcons.ts";
 
 const { card, seconds } = gameData.runText;
 const SWEET_TALKER: ModifierSource = { kind: "upgrade", upgrade: "sweetTalker" };

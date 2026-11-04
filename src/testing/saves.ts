@@ -1,13 +1,13 @@
 // Shared save fixtures, with real dog, gear, hint and walker ids.
 import { keysOf } from "@andornaut/game-kit/records";
 
-import { gameData } from "../data";
-import type { DogId } from "../data/types";
-import type { RunCounters } from "../rules/achievements";
-import type { AwardContext } from "../save/achievements";
-import type { SaveContext } from "../save/load";
-import { createDefaultSave, SAVE_VERSION, type SaveDocument } from "../save/schema";
-import { cents } from "../units";
+import { gameData } from "../data/index.ts";
+import type { DogId } from "../data/types.ts";
+import type { RunCounters } from "../rules/achievements.ts";
+import type { AwardContext } from "../save/achievements.ts";
+import type { SaveContext } from "../save/load.ts";
+import { createDefaultSave, SAVE_VERSION, type SaveDocument } from "../save/schema.ts";
+import { cents } from "../units.ts";
 
 // The dogs every player owns from the start, as the data marks them.
 export const STARTER_DOGS: readonly DogId[] = keysOf(gameData.dogs).filter(

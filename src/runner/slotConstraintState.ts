@@ -1,8 +1,8 @@
-import type { PreparedSlotKind } from "./slotCandidates";
-import type { SlotPlacement } from "./slotFeasibility";
-import { type PlacementRejection, SpawnBoard } from "./spawnBoard";
-import type { PlannedSpawns, SpawnPlan } from "./spawning";
-import type { SpawnVisibilityTrace } from "./spawnVisibility";
+import type { PreparedSlotKind } from "./slotCandidates.ts";
+import type { SlotPlacement } from "./slotFeasibility.ts";
+import { type PlacementRejection, SpawnBoard } from "./spawnBoard.ts";
+import type { PlannedSpawns, SpawnPlan } from "./spawning.ts";
+import type { SpawnVisibilityTrace } from "./spawnVisibility.ts";
 
 export interface ConstraintOwner {
   readonly key: string;

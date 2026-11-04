@@ -2,18 +2,18 @@ import { animationKey } from "@andornaut/game-kit/art/aseprite";
 import type { Point } from "@andornaut/game-kit/rect";
 import type { GameObjects, Scene } from "phaser";
 
-import { gameData } from "../data";
-import { SCREEN_CONFIG } from "../data/screen";
-import { chipLeft, FEEDBACK, type LabelAnchor, stackOverPop } from "../hud/feedback";
-import { changeChipAt } from "../hud/hudLanes";
-import { COMIC_WORDS } from "../layout/comicWords";
-import { PALETTE } from "../ui/palette";
-import { CREAM_PANEL_COLOURS, drawFramedRect } from "../ui/phaser/draw";
-import { addPixelText, inkSpan, pixelFontMetrics, placePixelText } from "../ui/phaser/pixelText";
-import { TEXT_SCALE } from "../ui/textFit";
-import { letterEffect } from "./comicWord";
-import { playTagOnce } from "./sprites";
-import { fadeAway } from "./uiKit";
+import { gameData } from "../data/index.ts";
+import { SCREEN_CONFIG } from "../data/screen.ts";
+import { chipLeft, FEEDBACK, type LabelAnchor, stackOverPop } from "../hud/feedback.ts";
+import { changeChipAt } from "../hud/hudLanes.ts";
+import { COMIC_WORDS } from "../layout/comicWords.ts";
+import { PALETTE } from "../ui/palette.ts";
+import { CREAM_PANEL_COLOURS, drawFramedRect } from "../ui/phaser/draw.ts";
+import { addPixelText, inkSpan, pixelFontMetrics, placePixelText } from "../ui/phaser/pixelText.ts";
+import { TEXT_SCALE } from "../ui/textFit.ts";
+import { letterEffect } from "./comicWord.ts";
+import { playTagOnce } from "./sprites.ts";
+import { fadeAway } from "./uiKit.ts";
 
 // A sidestep puff, 48x48, laid on the dog's frame and lettered with the dodge word.
 const DODGE_ART = { key: "fx-dodge", tag: "play" } as const;

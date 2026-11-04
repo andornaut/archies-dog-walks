@@ -10,21 +10,27 @@ import {
   gearIconKey,
   ownerFaceKey,
   walkerPortraitKey,
-} from "../assets/spriteKeys";
-import { gameData } from "../data";
-import { SCREEN_LAYOUT } from "../data/screen";
-import type { DogId, GearId, WalkerId } from "../data/types";
-import { clearRunOverrides } from "../dev/pageRunSetup";
-import { startWalkOpensHelp } from "../help/helpSeen";
-import { bankAtLastVisit, newlyAffordable } from "../home/afford";
-import { bubbleLines, bubbleRect, bubbleSize, ownerColumn, ownerPlace } from "../home/bubbleRect";
+} from "../assets/spriteKeys.ts";
+import { gameData } from "../data/index.ts";
+import { SCREEN_LAYOUT } from "../data/screen.ts";
+import type { DogId, GearId, WalkerId } from "../data/types.ts";
+import { clearRunOverrides } from "../dev/pageRunSetup.ts";
+import { startWalkOpensHelp } from "../help/helpSeen.ts";
+import { bankAtLastVisit, newlyAffordable } from "../home/afford.ts";
+import {
+  bubbleLines,
+  bubbleRect,
+  bubbleSize,
+  ownerColumn,
+  ownerPlace,
+} from "../home/bubbleRect.ts";
 import {
   type DetailCard,
   type DetailPicture,
   dogDetail,
   gearDetail,
   walkerDetail,
-} from "../home/detail";
+} from "../home/detail.ts";
 import {
   badgePopOffset,
   bobOffset,
@@ -33,8 +39,8 @@ import {
   pressDip,
   settleDelay,
   shakeOffset,
-} from "../home/feedback";
-import { type Focus, focusDirectionForKey, moveFocus } from "../home/focus";
+} from "../home/feedback.ts";
+import { type Focus, focusDirectionForKey, moveFocus } from "../home/focus.ts";
 import {
   dogInfo,
   dollarAmountText,
@@ -51,8 +57,8 @@ import {
   shortDollarAmountText,
   tapDog,
   tapGear,
-} from "../home/home";
-import { homeBackAction, homeBarButtonAt, overlayRegion, regionOutside } from "../home/homeBar";
+} from "../home/home.ts";
+import { homeBackAction, homeBarButtonAt, overlayRegion, regionOutside } from "../home/homeBar.ts";
 import {
   bankAmountText,
   bankWell,
@@ -64,7 +70,7 @@ import {
   sectionFill,
   slotSignText,
   updateModalLayout,
-} from "../home/homeLayout";
+} from "../home/homeLayout.ts";
 import {
   bubbleSpeech,
   bubbleTurnLine,
@@ -78,8 +84,8 @@ import {
   walkerLineKey,
   walkerSays,
   walkersUnlockedSince,
-} from "../home/homeLines";
-import { porchOwners } from "../home/porch";
+} from "../home/homeLines.ts";
+import { porchOwners } from "../home/porch.ts";
 import {
   homeSections,
   type Section,
@@ -87,18 +93,18 @@ import {
   type Sections,
   type SectionState,
   startReady,
-} from "../home/sections";
-import { shopAffordable } from "../home/shop";
-import { slotSign, slotSignPurchase } from "../home/slotSign";
-import { tapWalker, walkerTile } from "../home/walkers";
+} from "../home/sections.ts";
+import { shopAffordable } from "../home/shop.ts";
+import { slotSign, slotSignPurchase } from "../home/slotSign.ts";
+import { tapWalker, walkerTile } from "../home/walkers.ts";
 import {
   EFFECT_ICON_SIZE,
   effectIconFallback,
   effectIconKey,
   walkerEffectItems,
-} from "../hud/effectIcons";
-import { withNamePills } from "../hud/effectNames";
-import { downTail } from "../hud/moments";
+} from "../hud/effectIcons.ts";
+import { withNamePills } from "../hud/effectNames.ts";
+import { downTail } from "../hud/moments.ts";
 import {
   type HoldPress,
   holdRule,
@@ -107,10 +113,16 @@ import {
   startHold,
   tickHold,
   TILE_SLOP_PX,
-} from "../input/hold";
-import { isConfirmKey, isExitKey, isMuteKey, isPauseKey, menuKeyActs } from "../input/keyBindings";
-import type { PackPlacement } from "../layout/packFormation";
-import { addFigure, PackFigures } from "../pack/phaser/packFigures";
+} from "../input/hold.ts";
+import {
+  isConfirmKey,
+  isExitKey,
+  isMuteKey,
+  isPauseKey,
+  menuKeyActs,
+} from "../input/keyBindings.ts";
+import type { PackPlacement } from "../layout/packFormation.ts";
+import { addFigure, PackFigures } from "../pack/phaser/packFigures.ts";
 import {
   acceptUpdate,
   beginUpdateOfferVisit,
@@ -122,22 +134,22 @@ import {
   startWakeLock,
   stopWakeLock,
   updatePlateShown,
-} from "../pwa";
-import { offlineProgress } from "../pwa/offlineProgress";
-import { walkerOrder } from "../rules/walkers";
-import type { SaveDocument } from "../save/schema";
-import { walksFinished, walksPlayed } from "../save/stats";
-import { packDogsOf } from "../state/pack";
-import { closeControl } from "../ui/closeControl";
-import { gridRects, rectIndexAt } from "../ui/grid";
+} from "../pwa/index.ts";
+import { offlineProgress } from "../pwa/offlineProgress.ts";
+import { walkerOrder } from "../rules/walkers.ts";
+import type { SaveDocument } from "../save/schema.ts";
+import { walksFinished, walksPlayed } from "../save/stats.ts";
+import { packDogsOf } from "../state/pack.ts";
+import { closeControl } from "../ui/closeControl.ts";
+import { gridRects, rectIndexAt } from "../ui/grid.ts";
 import {
   type ArtLook,
   buttonState,
   type ItemTile,
   itemTile,
   itemTileLook,
-} from "../ui/interaction";
-import { PALETTE } from "../ui/palette";
+} from "../ui/interaction.ts";
+import { PALETTE } from "../ui/palette.ts";
 import {
   addModalShade,
   drawFocusRing,
@@ -145,7 +157,7 @@ import {
   drawRing,
   drawShadow,
   fillRect,
-} from "../ui/phaser/draw";
+} from "../ui/phaser/draw.ts";
 import {
   addPixelText,
   type FontRole,
@@ -154,19 +166,19 @@ import {
   placePixelText,
   setPixelText,
   withProbe,
-} from "../ui/phaser/pixelText";
-import { GAME_PROGRESS_STYLE } from "../ui/progressBar";
-import { BUTTON_COLOURS, GREYED, pictureBox, type SelectLook } from "../ui/selection";
-import { TEXT_SCALE } from "../ui/textFit";
-import { topBarRects } from "../ui/topBarTrim";
-import type { Cents } from "../units";
-import { artReady, walkArtProgress, whenArtReady } from "./artReady";
-import type { CelebrationSceneData } from "./CelebrationScene";
-import { addNamePills } from "./effectNameColours";
-import { HELP_CLOSED_EVENT } from "./HelpScene";
-import { openHelp } from "./helpScreen";
-import { exitGame, HOME_PAGE_OPENING_EVENT, openHomePage } from "./homeBarPress";
-import { addAffordFrame, addModalCard, drawDetailCard } from "./homePanels";
+} from "../ui/phaser/pixelText.ts";
+import { GAME_PROGRESS_STYLE } from "../ui/progressBar.ts";
+import { BUTTON_COLOURS, GREYED, pictureBox, type SelectLook } from "../ui/selection.ts";
+import { TEXT_SCALE } from "../ui/textFit.ts";
+import { topBarRects } from "../ui/topBarTrim.ts";
+import type { Cents } from "../units.ts";
+import { artReady, walkArtProgress, whenArtReady } from "./artReady.ts";
+import type { CelebrationSceneData } from "./CelebrationScene.ts";
+import { addNamePills } from "./effectNameColours.ts";
+import { HELP_CLOSED_EVENT } from "./HelpScene.ts";
+import { openHelp } from "./helpScreen.ts";
+import { exitGame, HOME_PAGE_OPENING_EVENT, openHomePage } from "./homeBarPress.ts";
+import { addAffordFrame, addModalCard, drawDetailCard } from "./homePanels.ts";
 import {
   addPlate,
   addTileBadge,
@@ -174,9 +186,9 @@ import {
   plateColours,
   purchasePicture,
   SHOP_ART,
-} from "./itemArt";
-import { modalTextWidth } from "./modalMeasure";
-import { listenOnePress } from "./onePress";
+} from "./itemArt.ts";
+import { modalTextWidth } from "./modalMeasure.ts";
+import { listenOnePress } from "./onePress.ts";
 import {
   BAR_MUTED_EVENT,
   listenOutsideTap,
@@ -186,9 +198,9 @@ import {
   onWindowEvent,
   openOverlay,
   type OverlayData,
-} from "./overlay";
-import { afterMsUnderOverlay } from "./overlayClock";
-import { addOwnerFigure } from "./ownerFigure";
+} from "./overlay.ts";
+import { afterMsUnderOverlay } from "./overlayClock.ts";
+import { addOwnerFigure } from "./ownerFigure.ts";
 import {
   currentSettings,
   isMuted,
@@ -198,20 +210,20 @@ import {
   toggleMuted,
   updateProfile,
   walkerSpriteKey,
-} from "./profileStore";
-import { emphasiseRefusedControl } from "./refuseControl";
-import { nextRunStart } from "./run/runRecorder";
-import { type RunPick, runSceneData } from "./run/runStart";
-import { SCENE_KEYS } from "./sceneKeys";
-import { SETTINGS_CLOSED_EVENT } from "./SettingsScene";
-import { addShopBoard, addShopIdle, type ShopBoard, type ShopIdle } from "./shopIdle";
+} from "./profileStore.ts";
+import { emphasiseRefusedControl } from "./refuseControl.ts";
+import { nextRunStart } from "./run/runRecorder.ts";
+import { type RunPick, runSceneData } from "./run/runStart.ts";
+import { SCENE_KEYS } from "./sceneKeys.ts";
+import { SETTINGS_CLOSED_EVENT } from "./SettingsScene.ts";
+import { addShopBoard, addShopIdle, type ShopBoard, type ShopIdle } from "./shopIdle.ts";
 import {
   SHOP_CHANGED_EVENT,
   SHOP_CLOSED_EVENT,
   type ShopClosed,
   type ShopSceneData,
-} from "./ShopScene";
-import { playEffect, playTag, spriteMetrics } from "./sprites";
+} from "./ShopScene.ts";
+import { playEffect, playTag, spriteMetrics } from "./sprites.ts";
 import {
   addBodyText,
   addGraphicsIn,
@@ -236,7 +248,7 @@ import {
   settingsIcon,
   soundIcon,
   tileTextureKey,
-} from "./uiKit";
+} from "./uiKit.ts";
 
 const SCREEN = SCREEN_LAYOUT.screen;
 const HOME_REGION = overlayRegion("home");

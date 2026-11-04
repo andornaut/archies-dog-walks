@@ -7,24 +7,24 @@ import { insetRect, type Rect, rectsOverlap } from "@andornaut/game-kit/rect";
 import { inkRowsFromCapTop, inkRowsOfLines } from "@andornaut/game-kit/text/bitmapFont";
 import { describe, expect, it } from "vitest";
 
-import { ownerFaceKey } from "../assets/spriteKeys";
-import { gameData } from "../data";
-import { SCREEN_CONFIG, SCREEN_LAYOUT } from "../data/screen";
-import type { WalkerId } from "../data/types";
-import { ownerPhotoRect, WALK_BAR } from "../hud/walkHud";
-import { MIN_TAP_SIZE } from "../layout/screenLayout";
-import { unlockPrice } from "../rules/shop";
-import type { Owned } from "../save/schema";
-import { bodyTextWidth } from "../testing/bodyFont";
-import { fontFileMetrics, fontInk, fontInkRows, inkWidth } from "../testing/fontInk";
-import { inside } from "../testing/rects";
-import { closeControl } from "../ui/closeControl";
-import { gridRects } from "../ui/grid";
-import { MARK_OFFSET } from "../ui/mark";
-import { plainMarks } from "../ui/pixelFont";
-import { AFFORD_OUTSET } from "../ui/selection";
-import { TEXT_SCALE } from "../ui/textFit";
-import { cents } from "../units";
+import { ownerFaceKey } from "../assets/spriteKeys.ts";
+import { gameData } from "../data/index.ts";
+import { SCREEN_CONFIG, SCREEN_LAYOUT } from "../data/screen.ts";
+import type { WalkerId } from "../data/types.ts";
+import { ownerPhotoRect, WALK_BAR } from "../hud/walkHud.ts";
+import { MIN_TAP_SIZE } from "../layout/screenLayout.ts";
+import { unlockPrice } from "../rules/shop.ts";
+import type { Owned } from "../save/schema.ts";
+import { bodyTextWidth } from "../testing/bodyFont.ts";
+import { fontFileMetrics, fontInk, fontInkRows, inkWidth } from "../testing/fontInk.ts";
+import { inside } from "../testing/rects.ts";
+import { closeControl } from "../ui/closeControl.ts";
+import { gridRects } from "../ui/grid.ts";
+import { MARK_OFFSET } from "../ui/mark.ts";
+import { plainMarks } from "../ui/pixelFont.ts";
+import { AFFORD_OUTSET } from "../ui/selection.ts";
+import { TEXT_SCALE } from "../ui/textFit.ts";
+import { cents } from "../units.ts";
 import {
   type DetailCard,
   type DetailPart,
@@ -32,9 +32,9 @@ import {
   dogDetail,
   gearDetail,
   walkerDetail,
-} from "./detail";
-import { FEEDBACK } from "./feedback";
-import { dollarAmountText, dollarText, shortDollarAmountText } from "./home";
+} from "./detail.ts";
+import { FEEDBACK } from "./feedback.ts";
+import { dollarAmountText, dollarText, shortDollarAmountText } from "./home.ts";
 import {
   BANK_ROOM,
   bankAmountText,
@@ -53,7 +53,7 @@ import {
   sectionFill,
   slotSignText,
   updateModalText,
-} from "./homeLayout";
+} from "./homeLayout.ts";
 
 const { dogOrigin, dogTiles, sectionFrame, sections, startButton, walkerOrigin, walkerTiles } =
   HOME_LAYOUT;

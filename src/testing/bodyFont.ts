@@ -1,6 +1,6 @@
 import type { TextFitStyle } from "@andornaut/game-kit/text/textFit";
 
-import { gameGlyphs } from "./fontInk";
+import { gameGlyphs } from "./fontInk.ts";
 
 // A line's width in screen pixels in the body font at scale: the sum of its glyphs' advances,
 // as Phaser measures a label's width, from the font's .fnt and its pill glyphs.

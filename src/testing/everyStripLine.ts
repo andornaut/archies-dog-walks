@@ -1,15 +1,15 @@
 import { fillNames } from "@andornaut/game-kit/lines";
 import { keysOf } from "@andornaut/game-kit/records";
 
-import { gameData } from "../data";
-import { SIZE_STRIP_LINES } from "../hud/buffMarks";
-import { effectLine } from "../hud/effectIcons";
-import { type FaceText, fillFaceText, ownerFaceText } from "../hud/faceText";
-import type { MessageLine } from "../hud/messageStrip";
-import { STRIP_LINE_FIELDS } from "../hud/runText";
-import { debuffLines } from "../hud/stripLines";
-import { minorObstacleNames } from "../runner/obstacleLooks";
-import { inkWidth } from "./fontInk";
+import { gameData } from "../data/index.ts";
+import { SIZE_STRIP_LINES } from "../hud/buffMarks.ts";
+import { effectLine } from "../hud/effectIcons.ts";
+import { type FaceText, fillFaceText, ownerFaceText } from "../hud/faceText.ts";
+import type { MessageLine } from "../hud/messageStrip.ts";
+import { STRIP_LINE_FIELDS } from "../hud/runText.ts";
+import { debuffLines } from "../hud/stripLines.ts";
+import { minorObstacleNames } from "../runner/obstacleLooks.ts";
+import { inkWidth } from "./fontInk.ts";
 
 // Strip lines with two-digit counts and the largest amounts. Representative mode samples
 // dog, owner and obstacle widths while keeping every line template.

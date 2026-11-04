@@ -1,10 +1,10 @@
 import * as random from "@andornaut/game-kit/random";
 import { describe, expect, it, vi } from "vitest";
 
-import type { SlotKind } from "./slotConfig";
-import { planSlotSpawns, SLOT_LIMITS } from "./slotPlanner";
-import * as witnessSearch from "./slotWitnessSearch";
-import type { SpawnPlan } from "./spawning";
+import type { SlotKind } from "./slotConfig.ts";
+import { planSlotSpawns, SLOT_LIMITS } from "./slotPlanner.ts";
+import * as witnessSearch from "./slotWitnessSearch.ts";
+import type { SpawnPlan } from "./spawning.ts";
 
 const geometry: Omit<SpawnPlan<string>, "quotas"> = {
   cellInset: 5,

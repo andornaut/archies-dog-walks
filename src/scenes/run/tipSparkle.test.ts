@@ -2,9 +2,9 @@ import { animationKey } from "@andornaut/game-kit/art/aseprite";
 import type { Scene } from "phaser";
 import { describe, expect, it } from "vitest";
 
-import type { WalkStep } from "../../runner/walk";
-import type { WalkItem } from "../../runner/walkItems";
-import { stepSparkles, TIP_SPARKLE, TipSparkle } from "./tipSparkle";
+import type { WalkStep } from "../../runner/walk.ts";
+import type { WalkItem } from "../../runner/walkItems.ts";
+import { stepSparkles, TIP_SPARKLE, TipSparkle } from "./tipSparkle.ts";
 
 const TIP = { id: 1, kind: "tip" } as WalkItem;
 const TREAT = { id: 2, kind: "treat" } as WalkItem;

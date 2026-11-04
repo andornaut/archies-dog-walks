@@ -1,8 +1,8 @@
-import { visibleMoverRows } from "./moverCoverage";
-import { quietRuns } from "./quietRows";
-import type { SlotPlacement } from "./slotFeasibility";
-import type { SlotAssignment } from "./slotPlan";
-import { blockingSpan, quotaFootprint, rowSpacing, type SpawnPlan, zoneRows } from "./spawning";
+import { visibleMoverRows } from "./moverCoverage.ts";
+import { quietRuns } from "./quietRows.ts";
+import type { SlotPlacement } from "./slotFeasibility.ts";
+import type { SlotAssignment } from "./slotPlan.ts";
+import { blockingSpan, quotaFootprint, rowSpacing, type SpawnPlan, zoneRows } from "./spawning.ts";
 
 // A coverage reservation may use any leading row that preserves the quiet-run bound.
 export function coverageLeadingRows<Kind extends string>(

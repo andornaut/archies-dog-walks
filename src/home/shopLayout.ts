@@ -1,14 +1,14 @@
 import type { Rect } from "@andornaut/game-kit/rect";
 import { type FontMetrics, inkRowsFromCapTop } from "@andornaut/game-kit/text/bitmapFont";
 
-import { DOG_SLOTS } from "../data/dogSlots";
-import { TITLE_CAP_ROWS } from "../hud/walkHud";
-import { BUTTON_SIZE } from "../ui/buttonGeometry";
-import { pageCloseControl } from "../ui/closeControl";
-import { helpCapDy } from "../ui/labelHelpGap";
-import { type ScrollbarRects, scrollbarRects } from "../ui/scrollbar";
-import { SELECT_OUTSET } from "../ui/selection";
-import { TEXT_SCALE, TEXT_STYLE } from "../ui/textFit";
+import { DOG_SLOTS } from "../data/dogSlots.ts";
+import { TITLE_CAP_ROWS } from "../hud/walkHud.ts";
+import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";
+import { pageCloseControl } from "../ui/closeControl.ts";
+import { helpCapDy } from "../ui/labelHelpGap.ts";
+import { type ScrollbarRects, scrollbarRects } from "../ui/scrollbar.ts";
+import { SELECT_OUTSET } from "../ui/selection.ts";
+import { TEXT_SCALE, TEXT_STYLE } from "../ui/textFit.ts";
 
 // The Pet shop page under the home screen's top bar, which stays in view with the bank:
 // a card with its title and close control, the Dogs and Gear tabs, and each tab's

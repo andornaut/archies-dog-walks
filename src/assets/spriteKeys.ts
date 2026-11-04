@@ -10,8 +10,8 @@ import type {
   Size,
   WalkerId,
   Zone,
-} from "../data/types";
-import { depthStepOfScale } from "./depthSteps";
+} from "../data/types.ts";
+import { depthStepOfScale } from "./depthSteps.ts";
 
 export const CARD_FRAME_KEY = "card-frame";
 type CardFrameTag = "encounter" | "route";

@@ -1,10 +1,10 @@
-import type { GameData } from "../data/types";
-import { lastHeartOwnersOf, runCountersOf } from "../rules/achievements";
-import { walkLength } from "../rules/route";
-import { endReasonOf, walkEarnings } from "../rules/run";
-import type { RunState } from "../state/runState";
-import type { RunResult } from "./checkpoint";
-import type { Checkpoint, DogRun } from "./schema";
+import type { GameData } from "../data/types.ts";
+import { lastHeartOwnersOf, runCountersOf } from "../rules/achievements.ts";
+import { walkLength } from "../rules/route.ts";
+import { endReasonOf, walkEarnings } from "../rules/run.ts";
+import type { RunState } from "../state/runState.ts";
+import type { RunResult } from "./checkpoint.ts";
+import type { Checkpoint, DogRun } from "./schema.ts";
 
 type RunSliceData = Pick<GameData, "world">;
 

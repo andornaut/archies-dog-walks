@@ -1,9 +1,9 @@
 import { progressAt, segmentAt } from "@andornaut/game-kit/motion";
 
-import type { MovementKind } from "../data/types";
-import type { LaneDirection } from "../layout/lanes";
-import type { RoadItem } from "./roadItems";
-import { signatureAlive, type SignaturePath, signaturePlace } from "./signaturePaths";
+import type { MovementKind } from "../data/types.ts";
+import type { LaneDirection } from "../layout/lanes.ts";
+import type { RoadItem } from "./roadItems.ts";
+import { signatureAlive, type SignaturePath, signaturePlace } from "./signaturePaths.ts";
 
 // Moving hazards. Everything here is measured in road scroll rather than time, so a mover
 // keeps step with the road: it freezes when the road does, and a replay of the same scroll

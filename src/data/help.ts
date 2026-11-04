@@ -1,4 +1,4 @@
-import type { HelpPage } from "./types";
+import type { HelpPage } from "./types.ts";
 
 // The "How to walk" help screen: one page per entry, in this order.
 // - art: which picture of the walk screen the page shows (src/help/helpPictures.ts).

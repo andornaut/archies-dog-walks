@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 
-import manifest from "../../public/art/manifest.json";
-import { gameData } from "../data";
-import { SKIP_CARD_ART } from "./cardArt";
+import manifest from "../../public/art/manifest.json" with { type: "json" };
+import { gameData } from "../data/index.ts";
+import { SKIP_CARD_ART } from "./cardArt.ts";
 
 const images = new Set(manifest.images.map(({ key }) => key));
 

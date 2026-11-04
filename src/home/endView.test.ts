@@ -1,10 +1,16 @@
 import { describe, expect, it } from "vitest";
 
-import { gameData } from "../data";
-import { QUIPS } from "../data/quips";
-import type { Cause, Change, MoneyChange } from "../rules/causes";
-import { cents, type Hearts } from "../units";
-import { closingLines, earningsBreakdown, type EndTarget, endTargetAt, zonePips } from "./endView";
+import { gameData } from "../data/index.ts";
+import { QUIPS } from "../data/quips.ts";
+import type { Cause, Change, MoneyChange } from "../rules/causes.ts";
+import { cents, type Hearts } from "../units.ts";
+import {
+  closingLines,
+  earningsBreakdown,
+  type EndTarget,
+  endTargetAt,
+  zonePips,
+} from "./endView.ts";
 
 const money = (amount: number, base: Cause): MoneyChange => ({
   amount: cents(amount),

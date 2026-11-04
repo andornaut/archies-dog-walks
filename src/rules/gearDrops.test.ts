@@ -3,27 +3,27 @@ import { seededRandom } from "@andornaut/game-kit/random";
 import { keysOf } from "@andornaut/game-kit/records";
 import { describe, expect, it } from "vitest";
 
-import { DEBUFFS } from "../data/debuffs";
-import { DOGS } from "../data/dogs";
-import { ENCOUNTERS } from "../data/encounters";
-import { HOME_TEXT } from "../data/homeText";
-import { MINOR_OBSTACLES } from "../data/minorObstacles";
-import { QUIPS } from "../data/quips";
-import { RUN_TEXT } from "../data/runText";
-import { SHOP_GEAR } from "../data/shop";
-import type { CardSource, GearId } from "../data/types";
-import { UPGRADES } from "../data/upgrades";
-import { mapPack } from "../state/pack";
-import { newRun, type RunState } from "../state/runState";
-import { defined } from "../testing/defined";
-import { heartsByDog } from "../testing/runState";
-import { TEST_TUNING } from "../testing/tuning";
-import { TEST_WALKER_DATA } from "../testing/walkers";
-import { TEST_WORLD } from "../testing/world";
-import { cents, clampHearts } from "../units";
-import { gearSourceName } from "./causes";
-import { cardFor } from "./choices";
-import { ownerMaxHearts } from "./dogs";
+import { DEBUFFS } from "../data/debuffs.ts";
+import { DOGS } from "../data/dogs.ts";
+import { ENCOUNTERS } from "../data/encounters.ts";
+import { HOME_TEXT } from "../data/homeText.ts";
+import { MINOR_OBSTACLES } from "../data/minorObstacles.ts";
+import { QUIPS } from "../data/quips.ts";
+import { RUN_TEXT } from "../data/runText.ts";
+import { SHOP_GEAR } from "../data/shop.ts";
+import type { CardSource, GearId } from "../data/types.ts";
+import { UPGRADES } from "../data/upgrades.ts";
+import { mapPack } from "../state/pack.ts";
+import { newRun, type RunState } from "../state/runState.ts";
+import { defined } from "../testing/defined.ts";
+import { heartsByDog } from "../testing/runState.ts";
+import { TEST_TUNING } from "../testing/tuning.ts";
+import { TEST_WALKER_DATA } from "../testing/walkers.ts";
+import { TEST_WORLD } from "../testing/world.ts";
+import { cents, clampHearts } from "../units.ts";
+import { gearSourceName } from "./causes.ts";
+import { cardFor } from "./choices.ts";
+import { ownerMaxHearts } from "./dogs.ts";
 import {
   drawGearDrops,
   foundGearSource,
@@ -31,11 +31,11 @@ import {
   gearDropWeights,
   gearInEffect,
   grabGear,
-} from "./gearDrops";
-import { price } from "./shop";
-import { spareTreatRoom } from "./spareTreats";
-import { read } from "./units";
-import { packAgility } from "./walkers";
+} from "./gearDrops.ts";
+import { price } from "./shop.ts";
+import { spareTreatRoom } from "./spareTreats.ts";
+import { read } from "./units.ts";
+import { packAgility } from "./walkers.ts";
 
 const data = {
   debuffs: DEBUFFS,

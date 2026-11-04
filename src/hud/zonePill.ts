@@ -1,6 +1,6 @@
 import type { Rect } from "@andornaut/game-kit/rect";
 
-import { debuffBarRects } from "./walkHud";
+import { debuffBarRects } from "./walkHud.ts";
 
 // The neighbourhood pill (ui-zone-pill, a three-slice with 4px ends): the zone's name and its
 // place in the walk ("n of N"), in the body font at 1x, centred across the screen gap rows under

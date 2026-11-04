@@ -1,8 +1,8 @@
 import type { Point } from "@andornaut/game-kit/rect";
 
-import type { DebuffId, Effect, GameData, MinorObstacleId } from "../data/types";
-import type { WalkStep } from "../runner/walk";
-import type { RunState } from "../state/runState";
+import type { DebuffId, Effect, GameData, MinorObstacleId } from "../data/types.ts";
+import type { WalkStep } from "../runner/walk.ts";
+import type { RunState } from "../state/runState.ts";
 
 // Cosmetic cues for hits and applied contact debuffs, over the road at its fx depth. Debuff
 // bursts read outcome application counts; no cue changes the walk.

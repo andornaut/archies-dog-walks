@@ -1,9 +1,9 @@
 import { getOrInsertComputed } from "@andornaut/game-kit/maps";
 import { BlendModes, GameObjects, type Scene } from "phaser";
 
-import { gameData } from "../../data";
-import type { ZoneId } from "../../data/types";
-import { distanceAtY } from "../../layout/projection";
+import { gameData } from "../../data/index.ts";
+import type { ZoneId } from "../../data/types.ts";
+import { distanceAtY } from "../../layout/projection.ts";
 import {
   anchorSprite,
   distanceBehind,
@@ -16,17 +16,17 @@ import {
   VERGE_LIGHT_LIMIT,
   type VergeLightFrame,
   type VergeLightStage,
-} from "../../road/lightPlaces";
+} from "../../road/lightPlaces.ts";
 import {
   type BakedLight,
   bakeLight,
   LIGHT_ATTACHMENTS,
   LIGHTS,
   lightTextureKey,
-} from "../../road/lights";
-import { zoneLength } from "../../runner/walk";
-import { spriteMetrics } from "../sprites";
-import { DEPTH, JUNCTURE_Y, LAYOUT, PROJECTION, sceneryFade, showOnRoad } from "./stage";
+} from "../../road/lights.ts";
+import { zoneLength } from "../../runner/walk.ts";
+import { spriteMetrics } from "../sprites.ts";
+import { DEPTH, JUNCTURE_Y, LAYOUT, PROJECTION, sceneryFade, showOnRoad } from "./stage.ts";
 
 // The lights' sprites: each light def baked once into a texture of its stepped rings, drawn
 // with an additive blend over the road, the backdrop's approach and the shadows and under every

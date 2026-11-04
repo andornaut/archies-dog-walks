@@ -1,10 +1,10 @@
 import { keysOf } from "@andornaut/game-kit/records";
 import { describe, expect, it } from "vitest";
 
-import { gameData } from "../data";
-import type { EncounterId, MinorObstacleId, MovementKind, ZoneId } from "../data/types";
-import type { WalkItemKind } from "../runner/walkItems";
-import { defined } from "../testing/defined";
+import { gameData } from "../data/index.ts";
+import type { EncounterId, MinorObstacleId, MovementKind, ZoneId } from "../data/types.ts";
+import type { WalkItemKind } from "../runner/walkItems.ts";
+import { defined } from "../testing/defined.ts";
 import {
   DELIVERY_GROUPS,
   type DeliveryGroup,
@@ -12,7 +12,7 @@ import {
   type ZoneDelivery,
   zoneDelivery,
   type ZonePlanView,
-} from "./delivery";
+} from "./delivery.ts";
 
 const [FIRST_ZONE, SECOND_ZONE] = gameData.world.zones.map(({ id }) => id as ZoneId) as [
   ZoneId,

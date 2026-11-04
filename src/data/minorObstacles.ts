@@ -1,4 +1,4 @@
-import type { MinorObstacle } from "./types";
+import type { MinorObstacle } from "./types.ts";
 
 // Obstacles that open no card. Shapes are lanes across by rows along the road; each zone
 // weighs how often they appear there, in world.ts, and one with zones appears only in those.

@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 
-import { DOG_SLOTS } from "../data/dogSlots";
-import { TEST_TUNING } from "../testing/tuning";
-import { cheapestDogSlot } from "./shop";
+import { DOG_SLOTS } from "../data/dogSlots.ts";
+import { TEST_TUNING } from "../testing/tuning.ts";
+import { cheapestDogSlot } from "./shop.ts";
 
 // Slot prices in dollars, slot 2 then slot 3.
 const withPrices = (dogSlot2: number, dogSlot3: number) => ({

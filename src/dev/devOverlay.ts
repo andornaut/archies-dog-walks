@@ -1,7 +1,7 @@
-import { formatDollars } from "../rules/effectText";
-import type { Cents } from "../units";
-import type { RunSetup } from "./runSetup";
-import { lagMs, type ZoneClock, type ZoneClocks } from "./zoneClock";
+import { formatDollars } from "../rules/effectText.ts";
+import type { Cents } from "../units.ts";
+import type { RunSetup } from "./runSetup.ts";
+import { lagMs, type ZoneClock, type ZoneClocks } from "./zoneClock.ts";
 
 // Emitted on game.events with a DevState by whichever scene runs the road.
 export const DEV_STATE_EVENT = "dev-state";

@@ -2,24 +2,24 @@ import { fillLine, wrapWords } from "@andornaut/game-kit/lines";
 import type { Rect } from "@andornaut/game-kit/rect";
 import { type TextFitStyle } from "@andornaut/game-kit/text/textFit";
 
-import { badgeKey } from "../assets/spriteKeys";
+import { badgeKey } from "../assets/spriteKeys.ts";
 import type {
   AchievementCondition,
   AchievementDifficulty,
   AchievementId,
   GameData,
-} from "../data/types";
-import { MIN_TAP_SIZE } from "../layout/screenLayout";
-import { orderedAchievements } from "../rules/achievementOrder";
-import { achievementProgress } from "../rules/achievements";
-import type { SaveDocument } from "../save/schema";
-import { closeControl } from "../ui/closeControl";
-import { GREYED } from "../ui/selection";
-import { TEXT_SCALE } from "../ui/textFit";
-import { dollarsToCents } from "../units";
-import { dollarText } from "./home";
-import { MENU_TEXT_FIELDS } from "./menuText";
-import { MODAL } from "./modalLayout";
+} from "../data/types.ts";
+import { MIN_TAP_SIZE } from "../layout/screenLayout.ts";
+import { orderedAchievements } from "../rules/achievementOrder.ts";
+import { achievementProgress } from "../rules/achievements.ts";
+import type { SaveDocument } from "../save/schema.ts";
+import { closeControl } from "../ui/closeControl.ts";
+import { GREYED } from "../ui/selection.ts";
+import { TEXT_SCALE } from "../ui/textFit.ts";
+import { dollarsToCents } from "../units.ts";
+import { dollarText } from "./home.ts";
+import { MENU_TEXT_FIELDS } from "./menuText.ts";
+import { MODAL } from "./modalLayout.ts";
 
 export interface BadgeView {
   readonly art: string;

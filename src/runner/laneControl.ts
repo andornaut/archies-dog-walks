@@ -1,6 +1,6 @@
 import { clampIndex } from "@andornaut/game-kit/arrays";
 
-import type { LaneDirection } from "../layout/lanes";
+import type { LaneDirection } from "../layout/lanes.ts";
 import {
   destinationLane,
   type LaneMotion,
@@ -8,7 +8,7 @@ import {
   startMove,
   stillInLane,
   turnAround,
-} from "./laneMotion";
+} from "./laneMotion.ts";
 
 // target is the lane the pack heads for, one lane-change at a time; each steer moves it by
 // one, so a quick drag across three lanes ends three lanes over. heading is the way the

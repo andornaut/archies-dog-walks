@@ -1,12 +1,12 @@
 import type { GameObjects, Scene } from "phaser";
 
-import { SCREEN_CONFIG } from "../data/screen";
-import { SHOP_LAYOUT, shopTabFace, shopTabRects } from "../home/shopLayout";
-import { PALETTE } from "../ui/palette";
-import { fillRect } from "../ui/phaser/draw";
-import { inkSpan, placePixelText } from "../ui/phaser/pixelText";
-import { addFramedPageCard } from "./homePanels";
-import { addBodyText, addGraphicsIn, addTab } from "./uiKit";
+import { SCREEN_CONFIG } from "../data/screen.ts";
+import { SHOP_LAYOUT, shopTabFace, shopTabRects } from "../home/shopLayout.ts";
+import { PALETTE } from "../ui/palette.ts";
+import { fillRect } from "../ui/phaser/draw.ts";
+import { inkSpan, placePixelText } from "../ui/phaser/pixelText.ts";
+import { addFramedPageCard } from "./homePanels.ts";
+import { addBodyText, addGraphicsIn, addTab } from "./uiKit.ts";
 
 // The page the Pet shop and the Logbook share, under the home screen's top bar.
 

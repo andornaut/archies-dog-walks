@@ -4,18 +4,23 @@ import { inkRowsFromCapTop } from "@andornaut/game-kit/text/bitmapFont";
 import { fittingText, type TextFitStyle } from "@andornaut/game-kit/text/textFit";
 import { describe, expect, it } from "vitest";
 
-import { gameData } from "../data";
-import { SCREEN_CONFIG } from "../data/screen";
-import type { DogId, GearId, WalkerId } from "../data/types";
-import { GREETING_FIT, greetingLineTops, infoItems, newWalkerRows } from "../hud/celebrationLayout";
-import { celebrationText } from "../hud/zoneCelebration";
-import type { Owned } from "../save/schema";
-import { fontFileMetrics, gameGlyphs, inkWidth } from "../testing/fontInk";
-import { veteranSave } from "../testing/saves";
-import { plainMarks } from "../ui/pixelFont";
-import { TEXT_SCALE } from "../ui/textFit";
-import { cents } from "../units";
-import { badgeProgress, badgeWall, wallCell } from "./badgesView";
+import { gameData } from "../data/index.ts";
+import { SCREEN_CONFIG } from "../data/screen.ts";
+import type { DogId, GearId, WalkerId } from "../data/types.ts";
+import {
+  GREETING_FIT,
+  greetingLineTops,
+  infoItems,
+  newWalkerRows,
+} from "../hud/celebrationLayout.ts";
+import { celebrationText } from "../hud/zoneCelebration.ts";
+import type { Owned } from "../save/schema.ts";
+import { fontFileMetrics, gameGlyphs, inkWidth } from "../testing/fontInk.ts";
+import { veteranSave } from "../testing/saves.ts";
+import { plainMarks } from "../ui/pixelFont.ts";
+import { TEXT_SCALE } from "../ui/textFit.ts";
+import { cents } from "../units.ts";
+import { badgeProgress, badgeWall, wallCell } from "./badgesView.ts";
 import {
   type DetailCard,
   type DetailPart,
@@ -23,16 +28,16 @@ import {
   dogDetail,
   gearDetail,
   walkerDetail,
-} from "./detail";
-import { quipCapsTop, quipTextY } from "./endLayout";
-import { dollarText } from "./home";
-import { CARD_TEXT_ROOM, detailCardLayout, detailOwner, type DetailRow } from "./homeLayout";
-import { MENU_TEXT_FIELDS } from "./menuText";
-import { confirmLeftCapTop, purchaseConfirmLayout } from "./purchaseConfirmLayout";
-import { SETTINGS_ROW, settingsLayout } from "./settings";
-import { dogRows, gearRows, slotRows } from "./shop";
-import { shopRowTextTops } from "./shopLayout";
-import { detailTextTops, STATS_LAYOUT, wallLineTops } from "./statsLayout";
+} from "./detail.ts";
+import { quipCapsTop, quipTextY } from "./endLayout.ts";
+import { dollarText } from "./home.ts";
+import { CARD_TEXT_ROOM, detailCardLayout, detailOwner, type DetailRow } from "./homeLayout.ts";
+import { MENU_TEXT_FIELDS } from "./menuText.ts";
+import { confirmLeftCapTop, purchaseConfirmLayout } from "./purchaseConfirmLayout.ts";
+import { SETTINGS_ROW, settingsLayout } from "./settings.ts";
+import { dogRows, gearRows, slotRows } from "./shop.ts";
+import { shopRowTextTops } from "./shopLayout.ts";
+import { detailTextTops, STATS_LAYOUT, wallLineTops } from "./statsLayout.ts";
 
 type Font = "font-body" | "font-title";
 

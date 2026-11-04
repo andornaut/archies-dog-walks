@@ -1,5 +1,5 @@
-import type { GameData, Movement, NeighbourhoodId, SignatureProfile } from "../data/types";
-import { isGearDrop, isPickup, movementOf, type WalkItemKind } from "./walkItems";
+import type { GameData, Movement, NeighbourhoodId, SignatureProfile } from "../data/types.ts";
+import { isGearDrop, isPickup, movementOf, type WalkItemKind } from "./walkItems.ts";
 
 // Legacy movement retains its animation vocabulary; a named profile supplies the actual path.
 export type ProfiledMovement = Movement & { readonly signature?: SignatureProfile };

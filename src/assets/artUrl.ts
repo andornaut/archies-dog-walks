@@ -1,4 +1,4 @@
-import { assetUrl } from "./manifest";
+import { assetUrl } from "./manifest.ts";
 
 // The art files a build's game loads, each by its path under /art/ (as the art and atlas
 // manifests name it), mapped to its content-hashed file in the build output. The build compiles

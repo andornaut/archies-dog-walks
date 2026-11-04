@@ -1,13 +1,13 @@
 import { fillLine } from "@andornaut/game-kit/lines";
 import { keysOf } from "@andornaut/game-kit/records";
 
-import type { GameData } from "../data/types";
-import { capitalize, gearShort } from "../rules/effectText";
-import { unlockPrice } from "../rules/shop";
-import type { Owned } from "../save/schema";
-import type { ItemLook } from "../ui/interaction";
-import type { Cents } from "../units";
-import { purchases } from "./afford";
+import type { GameData } from "../data/types.ts";
+import { capitalize, gearShort } from "../rules/effectText.ts";
+import { unlockPrice } from "../rules/shop.ts";
+import type { Owned } from "../save/schema.ts";
+import type { ItemLook } from "../ui/interaction.ts";
+import type { Cents } from "../units.ts";
+import { purchases } from "./afford.ts";
 import {
   cheapestFirst,
   dogKindText,
@@ -15,8 +15,8 @@ import {
   isAffordable,
   type Purchase,
   purchasePrice,
-} from "./home";
-import { HOME_TEXT_FIELDS, homeLine } from "./homeText";
+} from "./home.ts";
+import { HOME_TEXT_FIELDS, homeLine } from "./homeText.ts";
 
 type ShopData = Pick<GameData, "dogSlots" | "dogs" | "homeText" | "shopGear" | "tuning">;
 

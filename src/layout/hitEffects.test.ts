@@ -1,11 +1,11 @@
 import { keysOf } from "@andornaut/game-kit/records";
 import { describe, expect, it } from "vitest";
 
-import { gameData } from "../data";
-import type { Effect, MinorObstacleId } from "../data/types";
-import { applyInstantEncounter, applyMinorContact } from "../rules/choices";
-import type { RunState } from "../state/runState";
-import { testState } from "../testing/runState";
+import { gameData } from "../data/index.ts";
+import type { Effect, MinorObstacleId } from "../data/types.ts";
+import { applyInstantEncounter, applyMinorContact } from "../rules/choices.ts";
+import type { RunState } from "../state/runState.ts";
+import { testState } from "../testing/runState.ts";
 import {
   contactDebuffBatch,
   contactDebuffEffects,
@@ -21,7 +21,7 @@ import {
   splashEffect,
   type StruckDog,
   whiteFlash,
-} from "./hitEffects";
+} from "./hitEffects.ts";
 
 const TOP = { x: 151, y: 402 };
 const struck = (kind: HitKind, obstacle: MinorObstacleId | null): StruckDog => ({

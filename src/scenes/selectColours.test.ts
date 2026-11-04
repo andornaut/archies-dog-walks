@@ -1,24 +1,24 @@
 import { keysOf } from "@andornaut/game-kit/records";
 import { describe, expect, it } from "vitest";
 
-import { greyFor } from "../assets/greyRamp";
-import { gameData } from "../data";
-import { BADGE_TEXT_COLOURS } from "../home/badgesView";
-import { END_LAYOUT } from "../home/endLayout";
-import { SETTINGS_BUILD_LABEL } from "../home/settings";
-import { STATS_LAYOUT } from "../home/statsLayout";
-import type { EffectNameKind } from "../hud/effectNames";
-import { changeLabels } from "../hud/hudView";
-import type { Change } from "../rules/causes";
-import { tipValue } from "../rules/run";
-import { testState } from "../testing/runState";
-import { NEUTRAL_RAMP, PALETTE } from "../ui/palette";
-import { CREAM_PANEL_COLOURS } from "../ui/phaser/draw";
-import { BUTTON_COLOURS, GREYED, pictureBox, PLATE_LOOKS, selectLook } from "../ui/selection";
-import { cents } from "../units";
-import { CHANGE_COLOURS, changeLabelColour } from "./changeLabelColours";
-import { DEBUFF_COLOURS } from "./debuffColours";
-import { EFFECT_PILLS, pillColours } from "./effectNameColours";
+import { greyFor } from "../assets/greyRamp.ts";
+import { gameData } from "../data/index.ts";
+import { BADGE_TEXT_COLOURS } from "../home/badgesView.ts";
+import { END_LAYOUT } from "../home/endLayout.ts";
+import { SETTINGS_BUILD_LABEL } from "../home/settings.ts";
+import { STATS_LAYOUT } from "../home/statsLayout.ts";
+import type { EffectNameKind } from "../hud/effectNames.ts";
+import { changeLabels } from "../hud/hudView.ts";
+import type { Change } from "../rules/causes.ts";
+import { tipValue } from "../rules/run.ts";
+import { testState } from "../testing/runState.ts";
+import { NEUTRAL_RAMP, PALETTE } from "../ui/palette.ts";
+import { CREAM_PANEL_COLOURS } from "../ui/phaser/draw.ts";
+import { BUTTON_COLOURS, GREYED, pictureBox, PLATE_LOOKS, selectLook } from "../ui/selection.ts";
+import { cents } from "../units.ts";
+import { CHANGE_COLOURS, changeLabelColour } from "./changeLabelColours.ts";
+import { DEBUFF_COLOURS } from "./debuffColours.ts";
+import { EFFECT_PILLS, pillColours } from "./effectNameColours.ts";
 
 // The band an earned badge's row lies on, and the end screen's TOTAL row's.
 const BAND = PALETTE[STATS_LAYOUT.wall.earned.fill];

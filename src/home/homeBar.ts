@@ -1,10 +1,10 @@
 import type { OutsideArea } from "@andornaut/game-kit/input/outsideTap";
 import { containsPoint, type Rect } from "@andornaut/game-kit/rect";
 
-import { SCREEN_LAYOUT } from "../data/screen";
-import { walkBarLayout } from "../hud/walkHud";
-import { screenArea } from "../input/outsideTap";
-import { HOME_LAYOUT, type HomeBarButton, homeBarButtons } from "./homeLayout";
+import { SCREEN_LAYOUT } from "../data/screen.ts";
+import { walkBarLayout } from "../hud/walkHud.ts";
+import { screenArea } from "../input/outsideTap.ts";
+import { HOME_LAYOUT, type HomeBarButton, homeBarButtons } from "./homeLayout.ts";
 
 // Where an overlay sits: on a home page (the start screen, the Pet shop, the Logbook), or on a
 // walk.

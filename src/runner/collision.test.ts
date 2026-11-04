@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
 
-import { gameData } from "../data";
-import type { DogId } from "../data/types";
-import { unionBox } from "../layout/packFormation";
-import { testState } from "../testing/runState";
+import { gameData } from "../data/index.ts";
+import type { DogId } from "../data/types.ts";
+import { unionBox } from "../layout/packFormation.ts";
+import { testState } from "../testing/runState.ts";
 import {
   type Box,
   collideWithPack,
@@ -16,13 +16,13 @@ import {
   pickupDog,
   type ScaledBox,
   tickInvulnerability,
-} from "./collision";
-import { stillInLane } from "./laneMotion";
-import type { MoverPath } from "./movers";
-import type { RoadItem } from "./roadItems";
-import { screenRoadGeometry } from "./screenGeometry";
-import { itemHeight, obstacleHitBox, packBoxes } from "./walk";
-import { footprintOf, type WalkItem } from "./walkItems";
+} from "./collision.ts";
+import { stillInLane } from "./laneMotion.ts";
+import type { MoverPath } from "./movers.ts";
+import type { RoadItem } from "./roadItems.ts";
+import { screenRoadGeometry } from "./screenGeometry.ts";
+import { itemHeight, obstacleHitBox, packBoxes } from "./walk.ts";
+import { footprintOf, type WalkItem } from "./walkItems.ts";
 
 type Kind = "obstacle" | "tip";
 

@@ -3,8 +3,8 @@ import { modalDimmer } from "@andornaut/game-kit/view/modalDim";
 import { snapshotRemapped } from "@andornaut/game-kit/view/phaser/snapshotRemap";
 import { Core, type GameObjects, type Scene, Scenes } from "phaser";
 
-import { ONE_STEP_DARKER } from "../../assets/housePalette";
-import { addModalShade } from "./draw";
+import { ONE_STEP_DARKER } from "../../assets/housePalette.ts";
+import { addModalShade } from "./draw.ts";
 
 // The part of a scene rect its main camera shows, in the scene's coordinates and on the game's
 // canvas, or undefined when the camera shows none of it.

@@ -1,17 +1,17 @@
 import { keysOf } from "@andornaut/game-kit/records";
 import { describe, expect, it } from "vitest";
 
-import { gameData } from "../data";
-import { cardEffectText, type CardTextContext } from "../rules/effectText";
-import { PILL_CLOSE, PILL_SPACE, pillIndex } from "../ui/namePills";
-import { cents } from "../units";
+import { gameData } from "../data/index.ts";
+import { cardEffectText, type CardTextContext } from "../rules/effectText.ts";
+import { PILL_CLOSE, PILL_SPACE, pillIndex } from "../ui/namePills.ts";
+import { cents } from "../units.ts";
 import {
   debuffNameMarks,
   effectNameMarks,
   faceTextWithNamePills,
   pillKind,
   withNamePills,
-} from "./effectNames";
+} from "./effectNames.ts";
 
 // The text each mark covers, with its kind.
 function marked(text: string): { kind: string; name: string }[] {

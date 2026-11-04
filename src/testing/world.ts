@@ -1,10 +1,10 @@
-import { ENCOUNTERS } from "../data/encounters";
-import { MINOR_OBSTACLES } from "../data/minorObstacles";
-import { MOVEMENT_ASSIGNMENTS, MOVEMENT_PROFILES } from "../data/movementProfiles";
-import type { SpawnSlotRole, World, Zone, ZoneWeights } from "../data/types";
-import { WORLD } from "../data/world";
-import { apportionSlotCounts, SLOT_ROLES, slotCountTotal } from "../runner/slotConfig";
-import { zoneSlotGuarantees } from "../runner/zonePlan";
+import { ENCOUNTERS } from "../data/encounters.ts";
+import { MINOR_OBSTACLES } from "../data/minorObstacles.ts";
+import { MOVEMENT_ASSIGNMENTS, MOVEMENT_PROFILES } from "../data/movementProfiles.ts";
+import type { SpawnSlotRole, World, Zone, ZoneWeights } from "../data/types.ts";
+import { WORLD } from "../data/world.ts";
+import { apportionSlotCounts, SLOT_ROLES, slotCountTotal } from "../runner/slotConfig.ts";
+import { zoneSlotGuarantees } from "../runner/zonePlan.ts";
 
 // The world with each zone made over by remake, the first zone still first.
 export function mapZones(remake: (zone: Zone) => Zone, world: World): World {

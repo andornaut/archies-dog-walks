@@ -1,7 +1,7 @@
-import { roadCameraFor } from "../layout/projection";
-import { type ScreenConfig, screenLayout, walkerFootY } from "../layout/screenLayout";
-import { TOP_BAR_HEIGHT } from "../ui/topBarTrim";
-import { TUNING } from "./tuning";
+import { roadCameraFor } from "../layout/projection.ts";
+import { type ScreenConfig, screenLayout, walkerFootY } from "../layout/screenLayout.ts";
+import { TOP_BAR_HEIGHT } from "../ui/topBarTrim.ts";
+import { TUNING } from "./tuning.ts";
 
 // Internal render resolution: portrait, scaled to the window without smoothing.
 // The backdrop band ends backdropHeight rows under the walk bar, and its bottom rows,

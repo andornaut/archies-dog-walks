@@ -1,14 +1,14 @@
 import { describe, expect, it } from "vitest";
 
-import { DEBUFFS } from "../data/debuffs";
-import { DOGS } from "../data/dogs";
-import type { ZoneId } from "../data/types";
-import { WORLD } from "../data/world";
-import type { EndReason, RunState } from "../state/runState";
-import { activeModifier, heartsByDog, testState } from "../testing/runState";
-import { TEST_TUNING } from "../testing/tuning";
-import { TEST_WORLD } from "../testing/world";
-import { cents } from "../units";
+import { DEBUFFS } from "../data/debuffs.ts";
+import { DOGS } from "../data/dogs.ts";
+import type { ZoneId } from "../data/types.ts";
+import { WORLD } from "../data/world.ts";
+import type { EndReason, RunState } from "../state/runState.ts";
+import { activeModifier, heartsByDog, testState } from "../testing/runState.ts";
+import { TEST_TUNING } from "../testing/tuning.ts";
+import { TEST_WORLD } from "../testing/world.ts";
+import { cents } from "../units.ts";
 import {
   endReasonOf,
   fireOwnersAtZero,
@@ -16,8 +16,8 @@ import {
   payZone,
   tipValue,
   walkEarnings,
-} from "./run";
-import { read } from "./units";
+} from "./run.ts";
+import { read } from "./units.ts";
 
 const data = { debuffs: DEBUFFS, dogs: DOGS, tuning: TEST_TUNING, world: TEST_WORLD };
 const bigTipper = activeModifier(

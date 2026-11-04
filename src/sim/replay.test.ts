@@ -1,9 +1,9 @@
 import { STEP_SECONDS } from "@andornaut/game-kit/clock/fixedStep";
 import { beforeAll, describe, expect, it } from "vitest";
 
-import { gameData } from "../data";
-import { LANE_COUNT } from "../data/screen";
-import type { GearId } from "../data/types";
+import { gameData } from "../data/index.ts";
+import { LANE_COUNT } from "../data/screen.ts";
+import type { GearId } from "../data/types.ts";
 import {
   decodeInputLog,
   encodeInputLog,
@@ -11,17 +11,17 @@ import {
   replayInputs,
   takeCardChoice,
   takeDueInputs,
-} from "../dev/inputLog";
-import { runSetupLimitsFor } from "../dev/pageRunSetup";
-import { loadoutFor, withSetupStart } from "../dev/setupRun";
-import { screenRoadGeometry } from "../runner/screenGeometry";
-import { chooseCard, runStreams, startSession, stepSession } from "../runner/session";
-import { startRoad } from "../runner/walk";
-import { newRun, type RunState } from "../state/runState";
-import { simConfig } from "../testing/sim";
-import type { PolicyId } from "./policies";
-import { simulateRun } from "./simulate";
-import { SKILL_PRESETS, type SkillPresetId } from "./skills";
+} from "../dev/inputLog.ts";
+import { runSetupLimitsFor } from "../dev/pageRunSetup.ts";
+import { loadoutFor, withSetupStart } from "../dev/setupRun.ts";
+import { screenRoadGeometry } from "../runner/screenGeometry.ts";
+import { chooseCard, runStreams, startSession, stepSession } from "../runner/session.ts";
+import { startRoad } from "../runner/walk.ts";
+import { newRun, type RunState } from "../state/runState.ts";
+import { simConfig } from "../testing/sim.ts";
+import type { PolicyId } from "./policies.ts";
+import { simulateRun } from "./simulate.ts";
+import { SKILL_PRESETS, type SkillPresetId } from "./skills.ts";
 
 // The run scene's replay, without the scene: the run started from the log's setup, each step's
 // inputs taken as they fall due, and each card's choice taken as it opens.

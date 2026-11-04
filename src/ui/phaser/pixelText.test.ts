@@ -2,12 +2,12 @@ import { registerPixelFont } from "@andornaut/game-kit/text/phaser/registerPixel
 import type { GameObjects, Scene } from "phaser";
 import { describe, expect, it, vi } from "vitest";
 
-import shippedManifest from "../../../public/art/manifest.json";
-import { parseManifest } from "../../assets/manifest";
-import { fontInk, laidChars, phaserFontData } from "../../testing/fontInk";
-import { inPill, laidPills } from "../namePills";
-import { GLYPH_HEIGHT, glyphAdvance, LINE_HEIGHT, PIXEL_GLYPHS } from "../pixelFont";
-import { addPixelText, type FontRole, labelPills, registerFallbackPixelFont } from "./pixelText";
+import shippedManifest from "../../../public/art/manifest.json" with { type: "json" };
+import { parseManifest } from "../../assets/manifest.ts";
+import { fontInk, laidChars, phaserFontData } from "../../testing/fontInk.ts";
+import { inPill, laidPills } from "../namePills.ts";
+import { GLYPH_HEIGHT, glyphAdvance, LINE_HEIGHT, PIXEL_GLYPHS } from "../pixelFont.ts";
+import { addPixelText, type FontRole, labelPills, registerFallbackPixelFont } from "./pixelText.ts";
 
 vi.mock("@andornaut/game-kit/text/phaser/registerPixelFont", () => ({
   registerPixelFont: vi.fn(),

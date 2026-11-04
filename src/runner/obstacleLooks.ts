@@ -1,6 +1,6 @@
 import { type Random, randomPick } from "@andornaut/game-kit/random";
 
-import type { GameData, MinorLookId, MinorObstacleId, SkinId } from "../data/types";
+import type { GameData, MinorLookId, MinorObstacleId, SkinId } from "../data/types.ts";
 
 type LookData = Pick<GameData, "minorObstacles">;
 

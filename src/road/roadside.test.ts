@@ -4,9 +4,9 @@ import { readFileSync } from "node:fs";
 import { itemAt } from "@andornaut/game-kit/arrays";
 import { describe, expect, it } from "vitest";
 
-import { SCREEN_CONFIG } from "../data/screen";
-import { WORLD } from "../data/world";
-import { PAVED_VERGE } from "../testing/verges";
+import { SCREEN_CONFIG } from "../data/screen.ts";
+import { WORLD } from "../data/world.ts";
+import { PAVED_VERGE } from "../testing/verges.ts";
 import {
   curbBand,
   curbFits,
@@ -16,7 +16,7 @@ import {
   vergeFrom,
   VERGES_BY_ART,
   walkFrom,
-} from "./roadside";
+} from "./roadside.ts";
 
 const ROAD_HALF = SCREEN_CONFIG.roadWidth / 2;
 const VERGE_ARTS = Object.entries(VERGES_BY_ART);

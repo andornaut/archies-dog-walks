@@ -1,20 +1,20 @@
 import { clampInto, type Point } from "@andornaut/game-kit/rect";
 import type { Input, Scene } from "phaser";
 
-import { gameData } from "../../data";
-import { LANE_COUNT } from "../../data/screen";
-import { gameplayAllowed, type RunPause, topBarButtonAt, walkPresses } from "../../hud/topBar";
+import { gameData } from "../../data/index.ts";
+import { LANE_COUNT } from "../../data/screen.ts";
+import { gameplayAllowed, type RunPause, topBarButtonAt, walkPresses } from "../../hud/topBar.ts";
 import {
   debuffBarRects,
   type ExplainShown,
   type ExplainTarget,
   explainTargetAt,
   opensOnTap,
-} from "../../hud/walkHud";
-import type { GestureAction } from "../../input/gestures";
-import { holdRule } from "../../input/hold";
-import { walkKeyAction } from "../../input/keyBindings";
-import { walkPagePoint } from "../../input/pageTap";
+} from "../../hud/walkHud.ts";
+import type { GestureAction } from "../../input/gestures.ts";
+import { holdRule } from "../../input/hold.ts";
+import { walkKeyAction } from "../../input/keyBindings.ts";
+import { walkPagePoint } from "../../input/pageTap.ts";
 import {
   idleTrack,
   type PointerPhase,
@@ -25,15 +25,15 @@ import {
   tickTrack,
   type TrackContext,
   trackPointer,
-} from "../../input/pointerTracking";
-import type { LaneDirection } from "../../layout/lanes";
-import { read } from "../../rules/units";
-import type { SessionInput } from "../../runner/session";
-import { steerWalk, type Walk } from "../../runner/walk";
-import { listenPagePresses } from "../pagePresses";
-import { addTapBurst } from "../uiKit";
-import { leadWalk } from "./interpolate";
-import { LAYOUT } from "./stage";
+} from "../../input/pointerTracking.ts";
+import type { LaneDirection } from "../../layout/lanes.ts";
+import { read } from "../../rules/units.ts";
+import type { SessionInput } from "../../runner/session.ts";
+import { steerWalk, type Walk } from "../../runner/walk.ts";
+import { listenPagePresses } from "../pagePresses.ts";
+import { addTapBurst } from "../uiKit.ts";
+import { leadWalk } from "./interpolate.ts";
+import { LAYOUT } from "./stage.ts";
 
 // What the walk's input reads of the run. explainShown: what the HUD shows that a held press
 // can explain.

@@ -1,5 +1,5 @@
-import type { PreparedSlotKind } from "./slotCandidates";
-import type { WitnessJob } from "./slotWitnessSearch";
+import type { PreparedSlotKind } from "./slotCandidates.ts";
+import type { WitnessJob } from "./slotWitnessSearch.ts";
 
 // Static orders for witness construction. They order choices only, never native admission.
 

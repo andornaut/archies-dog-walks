@@ -16,15 +16,15 @@ import type {
   UpgradeId,
   WalkerId,
   ZoneId,
-} from "../data/types";
-import { packPlace, startHearts } from "../rules/dogs";
-import type { Lasting } from "../rules/durations";
-import { applyEffects } from "../rules/effects";
-import { firstZoneId } from "../rules/route";
-import { read } from "../rules/units";
-import { walkerEffects } from "../rules/walkers";
-import { type Cents, cents, type Hearts } from "../units";
-import { packFor, packOrder } from "./pack";
+} from "../data/types.ts";
+import { packPlace, startHearts } from "../rules/dogs.ts";
+import type { Lasting } from "../rules/durations.ts";
+import { applyEffects } from "../rules/effects.ts";
+import { firstZoneId } from "../rules/route.ts";
+import { read } from "../rules/units.ts";
+import { walkerEffects } from "../rules/walkers.ts";
+import { type Cents, cents, type Hearts } from "../units.ts";
+import { packFor, packOrder } from "./pack.ts";
 
 // A run in progress. Plain JSON throughout: arrays for sets, records for maps, numbers for
 // units, so a slice of it can be saved and loaded as it is.

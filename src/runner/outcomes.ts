@@ -1,6 +1,6 @@
-import { approachOutcomes } from "./approach";
-import type { MoverPath } from "./movers";
-import { shyOutcomes } from "./shy";
+import { approachOutcomes } from "./approach.ts";
+import type { MoverPath } from "./movers.ts";
+import { shyOutcomes } from "./shy.ts";
 
 // Every path a mover may yet take: its own, or, for a stalker or shy hopper with moves still to
 // choose, every way it may choose them, since each choice waits on where the pack is then.

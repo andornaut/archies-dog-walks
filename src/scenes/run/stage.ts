@@ -2,15 +2,15 @@ import { itemAt } from "@andornaut/game-kit/arrays";
 import type { Point } from "@andornaut/game-kit/rect";
 import type { GameObjects } from "phaser";
 
-import { gameData } from "../../data";
-import { LANE_COUNT, ROAD_CAMERA, SCREEN_LAYOUT } from "../../data/screen";
-import { laneCentreXs } from "../../layout/lanes";
-import { walkerFootY } from "../../layout/screenLayout";
-import { fadeIn, rowsHidden } from "../../road/roadClip";
-import { read } from "../../rules/units";
-import { laneMotionX } from "../../runner/laneMotion";
-import type { Walk } from "../../runner/walk";
-import { walkProjection } from "../../runner/walkGeometry";
+import { gameData } from "../../data/index.ts";
+import { LANE_COUNT, ROAD_CAMERA, SCREEN_LAYOUT } from "../../data/screen.ts";
+import { laneCentreXs } from "../../layout/lanes.ts";
+import { walkerFootY } from "../../layout/screenLayout.ts";
+import { fadeIn, rowsHidden } from "../../road/roadClip.ts";
+import { read } from "../../rules/units.ts";
+import { laneMotionX } from "../../runner/laneMotion.ts";
+import type { Walk } from "../../runner/walk.ts";
+import { walkProjection } from "../../runner/walkGeometry.ts";
 
 // The walk's fixed screen geometry and draw order, shared by the run scene's views.
 

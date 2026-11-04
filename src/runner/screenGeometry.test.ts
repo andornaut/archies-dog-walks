@@ -1,18 +1,18 @@
 import { keysOf } from "@andornaut/game-kit/records";
 import { describe, expect, it } from "vitest";
 
-import { gameData } from "../data";
-import { ENCOUNTERS } from "../data/encounters";
-import { MINOR_OBSTACLES } from "../data/minorObstacles";
-import { ROAD_CAMERA, SCREEN_CONFIG, SCREEN_LAYOUT } from "../data/screen";
-import { screenYAt } from "../layout/projection";
-import { testState } from "../testing/runState";
-import { hitDog, itemBox, pickupDog } from "./collision";
-import { stillInLane } from "./laneMotion";
-import { screenRoadGeometry } from "./screenGeometry";
-import { itemHeight, obstacleHitBox, packBoxes } from "./walk";
-import { walkProjection } from "./walkGeometry";
-import { isObstacle, type WalkItemKind } from "./walkItems";
+import { ENCOUNTERS } from "../data/encounters.ts";
+import { gameData } from "../data/index.ts";
+import { MINOR_OBSTACLES } from "../data/minorObstacles.ts";
+import { ROAD_CAMERA, SCREEN_CONFIG, SCREEN_LAYOUT } from "../data/screen.ts";
+import { screenYAt } from "../layout/projection.ts";
+import { testState } from "../testing/runState.ts";
+import { hitDog, itemBox, pickupDog } from "./collision.ts";
+import { stillInLane } from "./laneMotion.ts";
+import { screenRoadGeometry } from "./screenGeometry.ts";
+import { itemHeight, obstacleHitBox, packBoxes } from "./walk.ts";
+import { walkProjection } from "./walkGeometry.ts";
+import { isObstacle, type WalkItemKind } from "./walkItems.ts";
 
 const DATA = { encounters: ENCOUNTERS, minorObstacles: MINOR_OBSTACLES };
 const LAYOUT = SCREEN_LAYOUT;

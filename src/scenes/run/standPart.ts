@@ -1,8 +1,8 @@
-import { project } from "../../layout/projection";
-import type { WalkItem } from "../../runner/walkItems";
-import { playFirstTag, showAtDepth } from "../sprites";
-import type { ItemPart } from "./itemViews";
-import { DEPTH, PROJECTION, type Shadow, showOnRoad } from "./stage";
+import { project } from "../../layout/projection.ts";
+import type { WalkItem } from "../../runner/walkItems.ts";
+import { playFirstTag, showAtDepth } from "../sprites.ts";
+import type { ItemPart } from "./itemViews.ts";
+import { DEPTH, PROJECTION, type Shadow, showOnRoad } from "./stage.ts";
 
 // What a frame draws standing items with: the first of tags each sprite has plays, the walk's
 // halted or walking tags.

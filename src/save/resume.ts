@@ -20,15 +20,15 @@ import type {
   UpgradeId,
   WalkerId,
   ZoneId,
-} from "../data/types";
-import { walkLength } from "../rules/route";
-import type { MoverPath } from "../runner/movers";
-import { obstacleSkins } from "../runner/obstacleLooks";
-import type { Session, StreamDraws } from "../runner/session";
-import type { WalkItemKind } from "../runner/walkItems";
-import type { ActiveModifier, Pack } from "../state/runState";
-import { type Cents, type Hearts } from "../units";
-import { type Checkpoint, MAX_RUN_DOGS, TALLY_IDS } from "./schema";
+} from "../data/types.ts";
+import { walkLength } from "../rules/route.ts";
+import type { MoverPath } from "../runner/movers.ts";
+import { obstacleSkins } from "../runner/obstacleLooks.ts";
+import type { Session, StreamDraws } from "../runner/session.ts";
+import type { WalkItemKind } from "../runner/walkItems.ts";
+import type { ActiveModifier, Pack } from "../state/runState.ts";
+import { type Cents, type Hearts } from "../units.ts";
+import { type Checkpoint, MAX_RUN_DOGS, TALLY_IDS } from "./schema.ts";
 
 // A walk saved where it can resume: at its start, at a fork, or as a zone starts, its zone not
 // yet planned (src/runner/session.ts resumeSession). The session is as the walk left it, so the

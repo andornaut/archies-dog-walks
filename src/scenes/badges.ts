@@ -2,9 +2,9 @@ import { fillLine } from "@andornaut/game-kit/lines";
 import type { Rect } from "@andornaut/game-kit/rect";
 import type { GameObjects, Scene } from "phaser";
 
-import { ownerFaceKey } from "../assets/spriteKeys";
-import { gameData } from "../data";
-import type { AchievementId, DogId } from "../data/types";
+import { ownerFaceKey } from "../assets/spriteKeys.ts";
+import { gameData } from "../data/index.ts";
+import type { AchievementId, DogId } from "../data/types.ts";
 import {
   BADGE_STRIP,
   BADGE_TEXT_COLOURS,
@@ -16,14 +16,19 @@ import {
   earnedBadges,
   panelBadgeStrip,
   stripUnderClose,
-} from "../home/badgesView";
-import { MENU_TEXT_FIELDS } from "../home/menuText";
-import { MODAL, modalPanelWidth, modalRect } from "../home/modalLayout";
-import { DETAIL_TEXT_WIDTH, detailPanel, detailTextTops, STATS_LAYOUT } from "../home/statsLayout";
-import { achievementLabel } from "../rules/achievementOrder";
-import { closeControl } from "../ui/closeControl";
-import { PALETTE } from "../ui/palette";
-import { addModalShade } from "../ui/phaser/draw";
+} from "../home/badgesView.ts";
+import { MENU_TEXT_FIELDS } from "../home/menuText.ts";
+import { MODAL, modalPanelWidth, modalRect } from "../home/modalLayout.ts";
+import {
+  DETAIL_TEXT_WIDTH,
+  detailPanel,
+  detailTextTops,
+  STATS_LAYOUT,
+} from "../home/statsLayout.ts";
+import { achievementLabel } from "../rules/achievementOrder.ts";
+import { closeControl } from "../ui/closeControl.ts";
+import { PALETTE } from "../ui/palette.ts";
+import { addModalShade } from "../ui/phaser/draw.ts";
 import {
   addPixelText,
   labelInkWidth,
@@ -31,12 +36,12 @@ import {
   type PixelTextStyle,
   withProbe,
   wrapPixelText,
-} from "../ui/phaser/pixelText";
-import { TEXT_SCALE } from "../ui/textFit";
-import { addCardTitle } from "./homePanels";
-import { modalTextWidth } from "./modalMeasure";
-import { playTag, playTagOnce } from "./sprites";
-import { addBodyText, addCloseButton, addPanel, BODY_TEXT, tagFrame } from "./uiKit";
+} from "../ui/phaser/pixelText.ts";
+import { TEXT_SCALE } from "../ui/textFit.ts";
+import { addCardTitle } from "./homePanels.ts";
+import { modalTextWidth } from "./modalMeasure.ts";
+import { playTag, playTagOnce } from "./sprites.ts";
+import { addBodyText, addCloseButton, addPanel, BODY_TEXT, tagFrame } from "./uiKit.ts";
 
 export const BADGE_SIZE = BADGE_STRIP.badgeSize;
 const BURST_TAG = "play";

@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
 
-import { gameData } from "../data";
-import type { Effect, UpgradeDuration, UpgradeId } from "../data/types";
-import { testState } from "../testing/runState";
-import { cardFor } from "./choices";
+import { gameData } from "../data/index.ts";
+import type { Effect, UpgradeDuration, UpgradeId } from "../data/types.ts";
+import { testState } from "../testing/runState.ts";
+import { cardFor } from "./choices.ts";
 
 // How long an effect lasts, as an upgrade's duration names it.
 function effectDuration(effect: Effect): UpgradeDuration {

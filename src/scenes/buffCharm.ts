@@ -1,18 +1,18 @@
 import { insetRect, type Point, type Rect } from "@andornaut/game-kit/rect";
 import type { GameObjects, Scene } from "phaser";
 
-import { gameData } from "../data";
-import type { CardCharm } from "../hud/buffMarks";
-import { effectIconFallback, type EffectItem, walkBarIconKey } from "../hud/effectIcons";
-import type { LabelAnchor } from "../hud/feedback";
-import { BUFF_POP, cardCharmWidth, CHARM, sparkleAt } from "../layout/buffLayout";
-import { PALETTE } from "../ui/palette";
-import { addFilledRect, drawRing } from "../ui/phaser/draw";
-import { addPixelText, inkSpan } from "../ui/phaser/pixelText";
-import { floatLabel } from "./packFeedback";
-import { playEffect } from "./sprites";
-import type { TimedGroup } from "./timedGroup";
-import { addNineSlice, fadeAway } from "./uiKit";
+import { gameData } from "../data/index.ts";
+import type { CardCharm } from "../hud/buffMarks.ts";
+import { effectIconFallback, type EffectItem, walkBarIconKey } from "../hud/effectIcons.ts";
+import type { LabelAnchor } from "../hud/feedback.ts";
+import { BUFF_POP, cardCharmWidth, CHARM, sparkleAt } from "../layout/buffLayout.ts";
+import { PALETTE } from "../ui/palette.ts";
+import { addFilledRect, drawRing } from "../ui/phaser/draw.ts";
+import { addPixelText, inkSpan } from "../ui/phaser/pixelText.ts";
+import { floatLabel } from "./packFeedback.ts";
+import { playEffect } from "./sprites.ts";
+import type { TimedGroup } from "./timedGroup.ts";
+import { addNineSlice, fadeAway } from "./uiKit.ts";
 
 // A buff's charm and the value it made, as cards, the road and the walk bar draw them.
 

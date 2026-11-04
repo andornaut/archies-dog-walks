@@ -1,12 +1,12 @@
 import { type Random, randomStream } from "@andornaut/game-kit/random";
 
-import type { DogId } from "../../data/types";
-import type { RunSetup } from "../../dev/runSetup";
-import { loadoutFor } from "../../dev/setupRun";
-import type { ResumeWalk } from "../../save/resume";
-import type { Loadout, PackDogs } from "../../state/runState";
-import type { RunSceneData } from "../RunScene";
-import type { RunStart } from "./runRecorder";
+import type { DogId } from "../../data/types.ts";
+import type { RunSetup } from "../../dev/runSetup.ts";
+import { loadoutFor } from "../../dev/setupRun.ts";
+import type { ResumeWalk } from "../../save/resume.ts";
+import type { Loadout, PackDogs } from "../../state/runState.ts";
+import type { RunSceneData } from "../RunScene.ts";
+import type { RunStart } from "./runRecorder.ts";
 
 // The streams only the run's views draw from, each named from the setup's seed beside the
 // session's own (runStreams).

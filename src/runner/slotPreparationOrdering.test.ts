@@ -1,14 +1,14 @@
 import { describe, expect, it, vi } from "vitest";
 
-import type { MoverSpec } from "./moverPlanning";
+import type { MoverSpec } from "./moverPlanning.ts";
 import {
   isNativeSlotPreparation,
   nativeSlotPreparationOrderingHint,
   prepareSlotKind,
   prepareSlotKindWithin,
-} from "./slotCandidates";
-import type { SlotSource } from "./slotConfig";
-import type { SpawnPlan } from "./spawning";
+} from "./slotCandidates.ts";
+import type { SlotSource } from "./slotConfig.ts";
+import type { SpawnPlan } from "./spawning.ts";
 
 const geometry: Omit<SpawnPlan<string>, "quotas"> = {
   cellInset: 5,

@@ -1,4 +1,4 @@
-import type { WalkItem } from "../runner/walkItems";
+import type { WalkItem } from "../runner/walkItems.ts";
 
 // An item kept on the road as scenery: the item as the walk last had it, and the zone and how
 // far into it the walk was then. Scenery is drawn only: the walk never sees it, so it collides

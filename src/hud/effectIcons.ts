@@ -1,11 +1,11 @@
-import { kebabCase } from "../assets/spriteKeys";
-import type { GameData, GearId, UpgradeId, WalkerId, WalkerPerkId } from "../data/types";
-import { gearSourceName } from "../rules/causes";
-import { gearShort, perkEffect } from "../rules/effectText";
-import { walkLength } from "../rules/route";
-import { spareTreatSource } from "../rules/spareTreats";
-import { read } from "../rules/units";
-import type { EffectSource, RunState } from "../state/runState";
+import { kebabCase } from "../assets/spriteKeys.ts";
+import type { GameData, GearId, UpgradeId, WalkerId, WalkerPerkId } from "../data/types.ts";
+import { gearSourceName } from "../rules/causes.ts";
+import { gearShort, perkEffect } from "../rules/effectText.ts";
+import { walkLength } from "../rules/route.ts";
+import { spareTreatSource } from "../rules/spareTreats.ts";
+import { read } from "../rules/units.ts";
+import type { EffectSource, RunState } from "../state/runState.ts";
 
 // An effect in force on the walk, shown as an icon in the walk bar's effect wells. Holding one
 // explains it. A gear drop's charm is its gear, found, which has no well of its own.

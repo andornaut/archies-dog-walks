@@ -1,5 +1,5 @@
 // First, so the crash screen catches an error thrown while any other module loads.
-import "./crash/install";
+import "./crash/install.ts";
 // Turns the page frame on a touch screen in landscape before any script runs; main.css reads its
 // --inset-* safe-area insets.
 import "@andornaut/game-kit/web/view/frameTurnPortraitGame.css";
@@ -10,42 +10,42 @@ import { capFrameRate } from "@andornaut/game-kit/clock/phaser/capFrameRate";
 import { followFrameTurn } from "@andornaut/game-kit/web/view/phaser/followFrameTurn";
 import { Core, Game, Scale, WEBGL } from "phaser";
 
-import { CRASH_SCREEN } from "./crash/crashScreen";
-import { SCREEN_CONFIG } from "./data/screen";
-import { applyPendingSaveEdits, type DevPanelHost, mountDevPanel } from "./dev/devPanel";
-import { DEV_CHEATS_KEY } from "./dev/devPanelModel";
-import { devToolsOn } from "./dev/devTools";
-import { pageRunSetup } from "./dev/pageRunSetup";
-import { noteKeyPress } from "./input/keyNumbers";
-import { lostTouches } from "./input/touches";
+import { CRASH_SCREEN } from "./crash/crashScreen.ts";
+import { SCREEN_CONFIG } from "./data/screen.ts";
+import { applyPendingSaveEdits, type DevPanelHost, mountDevPanel } from "./dev/devPanel.ts";
+import { DEV_CHEATS_KEY } from "./dev/devPanelModel.ts";
+import { devToolsOn } from "./dev/devTools.ts";
+import { pageRunSetup } from "./dev/pageRunSetup.ts";
+import { noteKeyPress } from "./input/keyNumbers.ts";
+import { lostTouches } from "./input/touches.ts";
 import {
   noteWalkStarted,
   pageFrameWatch,
   setOnHomeScreen,
   setupPhoneApp,
   storagePersistence,
-} from "./pwa";
-import { BootScene } from "./scenes/BootScene";
-import { CardScene } from "./scenes/CardScene";
-import { CelebrationScene } from "./scenes/CelebrationScene";
-import { DevOverlayScene } from "./scenes/DevOverlayScene";
-import { EndScene } from "./scenes/EndScene";
-import { HelpPictureScene } from "./scenes/HelpPictureScene";
-import { HelpScene } from "./scenes/HelpScene";
-import { watchHomeScreen } from "./scenes/homeScreen";
-import { HudScene } from "./scenes/HudScene";
-import { PauseScene } from "./scenes/PauseScene";
-import { stopResuming } from "./scenes/profileStore";
-import { QuitScene } from "./scenes/QuitScene";
-import { RunScene } from "./scenes/RunScene";
-import { SCENE_KEYS } from "./scenes/sceneKeys";
-import { SettingsScene } from "./scenes/SettingsScene";
-import { ShopScene } from "./scenes/ShopScene";
-import { StartScene } from "./scenes/StartScene";
-import { StatsScene } from "./scenes/StatsScene";
-import { TapBurstScene } from "./scenes/TapBurstScene";
-import { ZoneCelebrationScene } from "./scenes/ZoneCelebrationScene";
-import { startupLoad } from "./ui/startupProgress";
+} from "./pwa/index.ts";
+import { BootScene } from "./scenes/BootScene.ts";
+import { CardScene } from "./scenes/CardScene.ts";
+import { CelebrationScene } from "./scenes/CelebrationScene.ts";
+import { DevOverlayScene } from "./scenes/DevOverlayScene.ts";
+import { EndScene } from "./scenes/EndScene.ts";
+import { HelpPictureScene } from "./scenes/HelpPictureScene.ts";
+import { HelpScene } from "./scenes/HelpScene.ts";
+import { watchHomeScreen } from "./scenes/homeScreen.ts";
+import { HudScene } from "./scenes/HudScene.ts";
+import { PauseScene } from "./scenes/PauseScene.ts";
+import { stopResuming } from "./scenes/profileStore.ts";
+import { QuitScene } from "./scenes/QuitScene.ts";
+import { RunScene } from "./scenes/RunScene.ts";
+import { SCENE_KEYS } from "./scenes/sceneKeys.ts";
+import { SettingsScene } from "./scenes/SettingsScene.ts";
+import { ShopScene } from "./scenes/ShopScene.ts";
+import { StartScene } from "./scenes/StartScene.ts";
+import { StatsScene } from "./scenes/StatsScene.ts";
+import { TapBurstScene } from "./scenes/TapBurstScene.ts";
+import { ZoneCelebrationScene } from "./scenes/ZoneCelebrationScene.ts";
+import { startupLoad } from "./ui/startupProgress.ts";
 
 // The dev panel's view of the game: the cheats are a registry entry RunScene reads each frame.
 function devPanelHost(game: Game): DevPanelHost {

@@ -1,4 +1,4 @@
-import type { Walker, WalkerPerk } from "./types";
+import type { Walker, WalkerPerk } from "./types.ts";
 
 // Each walker's one perk: its name, its effect in one line for the walker's detail card and
 // the top bar's icon, and its effects, which last every walk the walker walks, as gear's do.

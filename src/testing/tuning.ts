@@ -1,5 +1,5 @@
-import { TUNING } from "../data/tuning";
-import type { LiveTuning } from "../data/types";
+import { TUNING } from "../data/tuning.ts";
+import type { LiveTuning } from "../data/types.ts";
 
 // tuning with every walker's perk changing nothing, so a test that is not about walkers walks
 // with any of them alike.

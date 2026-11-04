@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { slotShown } from "./walkHud";
+import { slotShown } from "./walkHud.ts";
 
 describe("slotShown", () => {
   it("shows a dog's slot, an owned empty slot as empty, and hides slots past those owned", () => {

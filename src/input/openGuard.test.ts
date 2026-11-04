@@ -2,7 +2,7 @@ import { EventEmitter } from "node:events";
 
 import { describe, expect, it } from "vitest";
 
-import { openGuard } from "./openGuard";
+import { openGuard } from "./openGuard.ts";
 
 describe("an open guard", () => {
   // Each character of the script in order: an open asked of owner a or b, or a game step's

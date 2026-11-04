@@ -1,6 +1,6 @@
-import { focusDirectionForKey } from "../home/focus";
-import type { LaneDirection } from "../layout/lanes";
-import type { GestureAction } from "./gestures";
+import { focusDirectionForKey } from "../home/focus.ts";
+import type { LaneDirection } from "../layout/lanes.ts";
+import type { GestureAction } from "./gestures.ts";
 
 const LANE_CHANGE_KEYS: Partial<Record<string, LaneDirection>> = {
   a: -1,

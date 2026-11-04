@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 
-import type { CardSource, DogId } from "../data/types";
-import { type FiringHold, holdForFiring } from "./firingStop";
-import type { HitStop } from "./hitStop";
+import type { CardSource, DogId } from "../data/types.ts";
+import { type FiringHold, holdForFiring } from "./firingStop.ts";
+import type { HitStop } from "./hitStop.ts";
 
 const SKUNK: CardSource = { affected: ["kilo"], encounter: "skunk", kind: "encounter" };
 const STOP: CardSource = { affected: ["kilo"], encounter: "thief", kind: "encounter" };

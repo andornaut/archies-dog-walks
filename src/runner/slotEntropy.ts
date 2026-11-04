@@ -1,6 +1,6 @@
 import { randomStream } from "@andornaut/game-kit/random";
 
-import type { PlannerStreams } from "./moverPlanning";
+import type { PlannerStreams } from "./moverPlanning.ts";
 
 export interface SlotSeedContext {
   readonly seed: number;

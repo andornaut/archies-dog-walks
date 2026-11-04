@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import { settingsAllowSound, shouldResumeAudio } from "./resume";
-import { INITIAL_MIX, type Mix } from "./sound";
+import { settingsAllowSound, shouldResumeAudio } from "./resume.ts";
+import { INITIAL_MIX, type Mix } from "./sound.ts";
 
 const STATES = ["interrupted", "suspended", "running", "closed"];
 // A running or closed context is never resumed.

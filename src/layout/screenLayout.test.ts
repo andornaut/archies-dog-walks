@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 
-import { LANE_COUNT, SCREEN_CONFIG } from "../data/screen";
-import { CROSS_STREET } from "./crossStreet";
-import { screenLayout } from "./screenLayout";
+import { LANE_COUNT, SCREEN_CONFIG } from "../data/screen.ts";
+import { CROSS_STREET } from "./crossStreet.ts";
+import { screenLayout } from "./screenLayout.ts";
 
 describe("screenLayout", () => {
   it("splits the game's road into 64px lanes", () => {

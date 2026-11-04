@@ -1,17 +1,17 @@
 import { describe, expect, it } from "vitest";
 
-import { DEBUFFS } from "../data/debuffs";
-import { DOGS } from "../data/dogs";
-import { ENCOUNTERS } from "../data/encounters";
-import { SHOP_GEAR } from "../data/shop";
-import { WORLD } from "../data/world";
-import { newRun, type RunState } from "../state/runState";
-import { defined } from "../testing/defined";
-import { quietCounters } from "../testing/saves";
-import { TEST_TUNING } from "../testing/tuning";
-import { TEST_WALKER_DATA } from "../testing/walkers";
-import { cents, clampHearts } from "../units";
-import { checkpointOf, runResultOf } from "./runSlices";
+import { DEBUFFS } from "../data/debuffs.ts";
+import { DOGS } from "../data/dogs.ts";
+import { ENCOUNTERS } from "../data/encounters.ts";
+import { SHOP_GEAR } from "../data/shop.ts";
+import { WORLD } from "../data/world.ts";
+import { newRun, type RunState } from "../state/runState.ts";
+import { defined } from "../testing/defined.ts";
+import { quietCounters } from "../testing/saves.ts";
+import { TEST_TUNING } from "../testing/tuning.ts";
+import { TEST_WALKER_DATA } from "../testing/walkers.ts";
+import { cents, clampHearts } from "../units.ts";
+import { checkpointOf, runResultOf } from "./runSlices.ts";
 
 const data = {
   debuffs: DEBUFFS,

@@ -7,11 +7,11 @@ import type {
   MultiplierKey,
   PackSize,
   Size,
-} from "../data/types";
-import type { RunState } from "../state/runState";
-import { clampHearts, type Hearts } from "../units";
-import { modifiedStat } from "./modifiers";
-import { read, readTable } from "./units";
+} from "../data/types.ts";
+import type { RunState } from "../state/runState.ts";
+import { clampHearts, type Hearts } from "../units.ts";
+import { modifiedStat } from "./modifiers.ts";
+import { read, readTable } from "./units.ts";
 
 // A dog's place in the pack a walk set out with, for the pack-size bonus: how many dogs the
 // pack has, and whether the dog leads it.

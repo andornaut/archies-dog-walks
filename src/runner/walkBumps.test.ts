@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
 
-import { atPack, data, geometry, step, walkWith } from "../testing/walk";
-import { hitDog } from "./collision";
-import { type MoverPath, moverPlace, turnedBack } from "./movers";
-import { obstacleHitBox, packBoxes, roadScrollSpeed } from "./walk";
-import type { WalkItem } from "./walkItems";
+import { atPack, data, geometry, step, walkWith } from "../testing/walk.ts";
+import { hitDog } from "./collision.ts";
+import { type MoverPath, moverPlace, turnedBack } from "./movers.ts";
+import { obstacleHitBox, packBoxes, roadScrollSpeed } from "./walk.ts";
+import type { WalkItem } from "./walkItems.ts";
 
 describe("a resolved bump", () => {
   it("retires a returning mover, collects during grace and allows a different spawn of its kind", () => {

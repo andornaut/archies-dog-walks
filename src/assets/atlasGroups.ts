@@ -1,5 +1,5 @@
-import { splitDepthKey } from "./depthSteps";
-import { LOADING_ART } from "./spriteKeys";
+import { splitDepthKey } from "./depthSteps.ts";
+import { LOADING_ART } from "./spriteKeys.ts";
 
 // Pages in load order: the loading screen's art first, so it shows while the rest loads.
 export const ATLAS_GROUPS = ["boot", "ui", "home", "run", "road"] as const;

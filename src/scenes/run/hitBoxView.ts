@@ -1,13 +1,13 @@
 import type { GameObjects, Scene } from "phaser";
 
-import { gameData } from "../../data";
-import { project, screenXAt, screenYAt } from "../../layout/projection";
-import type { Box, ScaledBox } from "../../runner/collision";
-import { screenRoadGeometry } from "../../runner/screenGeometry";
-import { obstacleHitBoxes, packBoxes, type Walk, walkItemBox } from "../../runner/walk";
-import { isObstacle } from "../../runner/walkItems";
-import { PALETTE } from "../../ui/palette";
-import { DEPTH, LAYOUT, PROJECTION } from "./stage";
+import { gameData } from "../../data/index.ts";
+import { project, screenXAt, screenYAt } from "../../layout/projection.ts";
+import type { Box, ScaledBox } from "../../runner/collision.ts";
+import { screenRoadGeometry } from "../../runner/screenGeometry.ts";
+import { obstacleHitBoxes, packBoxes, type Walk, walkItemBox } from "../../runner/walk.ts";
+import { isObstacle } from "../../runner/walkItems.ts";
+import { PALETTE } from "../../ui/palette.ts";
+import { DEPTH, LAYOUT, PROJECTION } from "./stage.ts";
 
 // Over every road sprite and burst, under the popups and banners.
 const HIT_BOX_DEPTH = DEPTH.fx + 1;

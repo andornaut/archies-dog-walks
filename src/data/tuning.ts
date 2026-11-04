@@ -1,4 +1,4 @@
-import type { Tuning } from "./types";
+import type { Tuning } from "./types.ts";
 
 // Every number the game is tuned by, grouped by unit. Starting values, to be tuned by playing.
 // Cards, gear and debuffs name these keys rather than repeating the numbers, and the

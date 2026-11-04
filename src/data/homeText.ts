@@ -1,4 +1,4 @@
-import type { HomeText } from "./types";
+import type { HomeText } from "./types.ts";
 
 // The home screen's text. A {name} is filled in by the game, and src/home/homeText.ts lists
 // the names each line may use. {slot} is a slot number in dogSlotName, and the slot's name

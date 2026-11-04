@@ -1,28 +1,28 @@
 import { itemAt } from "@andornaut/game-kit/arrays";
 import type { GameObjects, Scene, Tweens } from "phaser";
 
-import { SQUIRREL_ICON_KEY } from "../../assets/iconKeys";
-import { dogSpriteKey } from "../../assets/spriteKeys";
-import { gameData } from "../../data";
-import type { DogId } from "../../data/types";
-import { graceAlpha } from "../../layout/graceBlink";
-import { formationOrder, packDogOf, packPlacements } from "../../layout/packFormation";
-import { distanceAtY, project } from "../../layout/projection";
-import type { StandingDog } from "../../pack/packDraw";
-import { type Figure, PackFigures } from "../../pack/phaser/packFigures";
-import { currentZone } from "../../rules/route";
-import { read } from "../../rules/units";
-import { laneMotionX } from "../../runner/laneMotion";
-import { pullPose, type Pulls } from "../../runner/pulls";
-import type { Walk } from "../../runner/walk";
-import { packDogs } from "../../state/pack";
-import { colourFromHex } from "../../ui/palette";
-import { playBarkWord } from "../comicWord";
-import { trotOffRoad } from "../feedbackMoments";
-import { type DogSignal, dogTop, iconArt, playPullFail, PullSignals } from "../pullSignals";
-import { playEffect, playTag, playTagOnce, spriteMetrics } from "../sprites";
-import { DEPTH, LANE_XS, LAYOUT, PROJECTION, type Shadow } from "./stage";
-import { TipSparkle } from "./tipSparkle";
+import { SQUIRREL_ICON_KEY } from "../../assets/iconKeys.ts";
+import { dogSpriteKey } from "../../assets/spriteKeys.ts";
+import { gameData } from "../../data/index.ts";
+import type { DogId } from "../../data/types.ts";
+import { graceAlpha } from "../../layout/graceBlink.ts";
+import { formationOrder, packDogOf, packPlacements } from "../../layout/packFormation.ts";
+import { distanceAtY, project } from "../../layout/projection.ts";
+import type { StandingDog } from "../../pack/packDraw.ts";
+import { type Figure, PackFigures } from "../../pack/phaser/packFigures.ts";
+import { currentZone } from "../../rules/route.ts";
+import { read } from "../../rules/units.ts";
+import { laneMotionX } from "../../runner/laneMotion.ts";
+import { pullPose, type Pulls } from "../../runner/pulls.ts";
+import type { Walk } from "../../runner/walk.ts";
+import { packDogs } from "../../state/pack.ts";
+import { colourFromHex } from "../../ui/palette.ts";
+import { playBarkWord } from "../comicWord.ts";
+import { trotOffRoad } from "../feedbackMoments.ts";
+import { type DogSignal, dogTop, iconArt, playPullFail, PullSignals } from "../pullSignals.ts";
+import { playEffect, playTag, playTagOnce, spriteMetrics } from "../sprites.ts";
+import { DEPTH, LANE_XS, LAYOUT, PROJECTION, type Shadow } from "./stage.ts";
+import { TipSparkle } from "./tipSparkle.ts";
 
 // What the pack is drawn with each frame besides the walk.
 interface PackFrame {

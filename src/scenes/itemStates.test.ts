@@ -3,17 +3,17 @@ import { isDeepStrictEqual } from "node:util";
 import { keysOf } from "@andornaut/game-kit/records";
 import { describe, expect, it } from "vitest";
 
-import { gameData } from "../data";
-import type { DogId } from "../data/types";
-import { dollarText, isAffordable, type Purchase, purchasePrice } from "../home/home";
-import { HOME_LAYOUT } from "../home/homeLayout";
-import { walkerTile } from "../home/walkers";
-import type { Owned } from "../save/schema";
-import { bodyTextWidth } from "../testing/bodyFont";
-import { fontFileMetrics } from "../testing/fontInk";
-import { type ItemLook, itemTile, itemTileLook } from "../ui/interaction";
-import { cents } from "../units";
-import { PLATE_PAD } from "./itemArt";
+import { gameData } from "../data/index.ts";
+import type { DogId } from "../data/types.ts";
+import { dollarText, isAffordable, type Purchase, purchasePrice } from "../home/home.ts";
+import { HOME_LAYOUT } from "../home/homeLayout.ts";
+import { walkerTile } from "../home/walkers.ts";
+import type { Owned } from "../save/schema.ts";
+import { bodyTextWidth } from "../testing/bodyFont.ts";
+import { fontFileMetrics } from "../testing/fontInk.ts";
+import { type ItemLook, itemTile, itemTileLook } from "../ui/interaction.ts";
+import { cents } from "../units.ts";
+import { PLATE_PAD } from "./itemArt.ts";
 
 const OWNED: Owned = { dogSlots: [1], dogs: [], gear: [], walkers: [] };
 const DOGS = keysOf(gameData.dogs);

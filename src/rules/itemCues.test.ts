@@ -1,8 +1,8 @@
 import { keysOf } from "@andornaut/game-kit/records";
 import { describe, expect, it } from "vitest";
 
-import { gameData } from "../data";
-import { bobOffset, itemBobs } from "./itemCues";
+import { gameData } from "../data/index.ts";
+import { bobOffset, itemBobs } from "./itemCues.ts";
 
 describe("itemBobs", () => {
   it("bobs only pickups and lucky finds", () => {

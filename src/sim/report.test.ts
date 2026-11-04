@@ -1,22 +1,22 @@
 import { itemAt } from "@andornaut/game-kit/arrays";
 import { describe, expect, it, vi } from "vitest";
 
-import { gameData } from "../data";
-import { DOGS } from "../data/dogs";
-import type { DogId, ZoneId } from "../data/types";
-import type { SlotDelivery, SlotPartialAudit } from "../runner/slotDelivery";
-import { SLOT_LIMITS } from "../runner/slotPlanner";
-import type { SpawnPlanSnapshot } from "../runner/spawnSearch";
-import type { SpawnAudit } from "../runner/spawnValidation";
-import type { WalkItemKind } from "../runner/walkItems";
+import { DOGS } from "../data/dogs.ts";
+import { gameData } from "../data/index.ts";
+import type { DogId, ZoneId } from "../data/types.ts";
+import type { SlotDelivery, SlotPartialAudit } from "../runner/slotDelivery.ts";
+import { SLOT_LIMITS } from "../runner/slotPlanner.ts";
+import type { SpawnPlanSnapshot } from "../runner/spawnSearch.ts";
+import type { SpawnAudit } from "../runner/spawnValidation.ts";
+import type { WalkItemKind } from "../runner/walkItems.ts";
 import {
   replayZoneSlots,
   type ZoneSlotInput,
   ZoneSlotPlanningError,
-} from "../runner/zoneSlotInput";
-import type { PackDogs } from "../state/runState";
-import { cents } from "../units";
-import { POLICY_IDS } from "./policies";
+} from "../runner/zoneSlotInput.ts";
+import type { PackDogs } from "../state/runState.ts";
+import { cents } from "../units.ts";
+import { POLICY_IDS } from "./policies.ts";
 import {
   DEFAULT_MATRIX,
   DEFAULT_SPAWN_TARGET,
@@ -38,22 +38,22 @@ import {
   spawnValidationFailures,
   sumRoadObstacleEvents,
   sumSpawnEvents,
-} from "./report";
-import * as simulator from "./simulate";
-import { SKILL_PRESET_IDS, SKILL_PRESETS } from "./skills";
-import { capturePlanningFailure, type SpawnFlow, type ZoneWalkEvents } from "./walkEvents";
+} from "./report.ts";
+import * as simulator from "./simulate.ts";
+import { SKILL_PRESET_IDS, SKILL_PRESETS } from "./skills.ts";
+import { capturePlanningFailure, type SpawnFlow, type ZoneWalkEvents } from "./walkEvents.ts";
 
 // These tests cover how report.ts seeds, orders and summarizes runs, not the runs
 // themselves (simulate.test.ts does). A real run costs over a hundred milliseconds, so a stand-in
 // replaces it: like the real one, it draws only from its seed, so a seed fixes its result.
-vi.mock("./simulate", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("./simulate")>();
-  const { cents } = await import("../units");
-  const { newRun } = await import("../state/runState");
-  const { runCountersOf } = await import("../rules/achievements");
+vi.mock("./simulate.ts", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("./simulate.ts")>();
+  const { cents } = await import("../units.ts");
+  const { newRun } = await import("../state/runState.ts");
+  const { runCountersOf } = await import("../rules/achievements.ts");
   const { seededRandom } = await import("@andornaut/game-kit/random");
-  const { SKILL_PRESETS } = await import("./skills");
-  const { zoneDelivery } = await import("./delivery");
+  const { SKILL_PRESETS } = await import("./skills.ts");
+  const { zoneDelivery } = await import("./delivery.ts");
   const simulateRun: typeof actual.simulateRun = (data, seed, config) => {
     const random = seededRandom(seed);
     // A novice finishes half its walks and is fired twice in each.

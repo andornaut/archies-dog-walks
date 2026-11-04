@@ -11,13 +11,13 @@ import { decodePng } from "@andornaut/art-kit/png";
 import { blankImage, type RgbaImage } from "@andornaut/art-kit/rgbaImage";
 import { itemAt } from "@andornaut/game-kit/arrays";
 
-import type { AssetManifest } from "../assets/manifest";
-import { backdropKey, depthVariantKey, roadTileKey } from "../assets/spriteKeys";
-import { gameData } from "../data";
-import { LANE_COUNT, ROAD_CAMERA, SCREEN_CONFIG, SCREEN_LAYOUT } from "../data/screen";
-import type { Zone } from "../data/types";
-import { laneCentreXs } from "../layout/lanes";
-import { SCALE_STEPS } from "../layout/projection";
+import type { AssetManifest } from "../assets/manifest.ts";
+import { backdropKey, depthVariantKey, roadTileKey } from "../assets/spriteKeys.ts";
+import { gameData } from "../data/index.ts";
+import { LANE_COUNT, ROAD_CAMERA, SCREEN_CONFIG, SCREEN_LAYOUT } from "../data/screen.ts";
+import type { Zone } from "../data/types.ts";
+import { laneCentreXs } from "../layout/lanes.ts";
+import { SCALE_STEPS } from "../layout/projection.ts";
 import {
   drawRoad,
   type PixelImage,
@@ -26,12 +26,12 @@ import {
   roadRaster,
   solidStrip,
   STRIP,
-} from "../layout/roadRaster";
-import { walkProjection } from "../runner/walkGeometry";
-import { GLYPH_HEIGHT } from "../ui/pixelFont";
-import { ART_DIR, ART_MANIFEST, generateArtManifest, measureAnchor } from "./artManifest";
-import { encodePng } from "./atlas/atlasBuild";
-import { spriteSource } from "./atlas/atlasLayout";
+} from "../layout/roadRaster.ts";
+import { walkProjection } from "../runner/walkGeometry.ts";
+import { GLYPH_HEIGHT } from "../ui/pixelFont.ts";
+import { ART_DIR, ART_MANIFEST, generateArtManifest, measureAnchor } from "./artManifest.ts";
+import { encodePng } from "./atlas/atlasBuild.ts";
+import { spriteSource } from "./atlas/atlasLayout.ts";
 import {
   cloneImage,
   crop,
@@ -44,8 +44,8 @@ import {
   sweepDistances,
   sweepRow,
   upscale,
-} from "./depthPreview";
-import { nodeArtFiles } from "./files";
+} from "./depthPreview.ts";
+import { nodeArtFiles } from "./files.ts";
 
 const PUBLIC_ART = `public/${ART_DIR}`;
 const OUT_DIR = "out/depth-preview";

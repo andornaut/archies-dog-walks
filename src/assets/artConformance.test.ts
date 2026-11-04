@@ -4,7 +4,7 @@ import { basename, join } from "node:path";
 import { decodePng } from "@andornaut/art-kit/png";
 import { describe, expect, it } from "vitest";
 
-import palette from "../../shared/palette.json";
+import palette from "../../shared/palette.json" with { type: "json" };
 
 // Art's conformance rules over every committed export (art/style-guide.md, art/inventory.md).
 

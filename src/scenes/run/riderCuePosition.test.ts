@@ -1,6 +1,6 @@
 import { expect, it } from "vitest";
 
-import { riderCuePosition } from "./riderCuePosition";
+import { riderCuePosition } from "./riderCuePosition.ts";
 
 it("keeps a pre-entry or clipped rider cue visibly anchored in its actual lane", () => {
   const lane = { x: 43.4, y: 70 };

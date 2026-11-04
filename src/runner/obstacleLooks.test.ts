@@ -1,9 +1,9 @@
 import { seededRandom } from "@andornaut/game-kit/random";
 import { describe, expect, it } from "vitest";
 
-import { gameData } from "../data";
-import { defined } from "../testing/defined";
-import { minorLook, minorObstacleName, pickSkin, zoneSkins } from "./obstacleLooks";
+import { gameData } from "../data/index.ts";
+import { defined } from "../testing/defined.ts";
+import { minorLook, minorObstacleName, pickSkin, zoneSkins } from "./obstacleLooks.ts";
 
 const ZONES = gameData.world.zones.map(({ id, name }) => ({
   id,

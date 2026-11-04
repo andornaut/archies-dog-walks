@@ -1,12 +1,16 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import type { MoverSpec } from "./moverPlanning";
-import * as audits from "./slotAudit";
-import { isNativeSlotPreparation, prepareSlotKind, prepareSlotKindWithin } from "./slotCandidates";
-import type { SlotKind } from "./slotConfig";
-import * as entropy from "./slotEntropy";
-import { planSlotSpawns, SLOT_LIMITS } from "./slotPlanner";
-import type { SpawnPlan, SpawnQuota } from "./spawning";
+import type { MoverSpec } from "./moverPlanning.ts";
+import * as audits from "./slotAudit.ts";
+import {
+  isNativeSlotPreparation,
+  prepareSlotKind,
+  prepareSlotKindWithin,
+} from "./slotCandidates.ts";
+import type { SlotKind } from "./slotConfig.ts";
+import * as entropy from "./slotEntropy.ts";
+import { planSlotSpawns, SLOT_LIMITS } from "./slotPlanner.ts";
+import type { SpawnPlan, SpawnQuota } from "./spawning.ts";
 
 const geometry: Omit<SpawnPlan<string>, "quotas"> = {
   cellInset: 5,

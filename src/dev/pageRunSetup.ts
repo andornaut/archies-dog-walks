@@ -1,12 +1,12 @@
 import { keysOf } from "@andornaut/game-kit/records";
 
-import { gameData } from "../data";
-import type { DogId, GameData, GearId, WalkerId } from "../data/types";
-import { walkLength } from "../rules/route";
-import { MAX_RUN_DOGS } from "../save/schema";
-import { homeRunSetup, stripDevParams } from "./devStart";
-import { pageSearch } from "./devTools";
-import { type ParsedRunSetup, parseRunSetup, randomSeed, type RunSetupLimits } from "./runSetup";
+import { gameData } from "../data/index.ts";
+import type { DogId, GameData, GearId, WalkerId } from "../data/types.ts";
+import { walkLength } from "../rules/route.ts";
+import { MAX_RUN_DOGS } from "../save/schema.ts";
+import { homeRunSetup, stripDevParams } from "./devStart.ts";
+import { pageSearch } from "./devTools.ts";
+import { type ParsedRunSetup, parseRunSetup, randomSeed, type RunSetupLimits } from "./runSetup.ts";
 
 const SPEED_LIMITS = { max: 10, min: 0.1 };
 

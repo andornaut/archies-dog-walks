@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { whenSettled } from "./generatedFilesPlugin";
+import { whenSettled } from "./generatedFilesPlugin.ts";
 
 afterEach(() => {
   vi.useRealTimers();

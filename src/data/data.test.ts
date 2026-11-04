@@ -1,18 +1,18 @@
 import { keysOf } from "@andornaut/game-kit/records";
 import { describe, expect, it } from "vitest";
 
-import manifestJson from "../../public/art/manifest.json";
-import { parseManifest } from "../assets/manifest";
-import { badgeKey } from "../assets/spriteKeys";
-import { forkPaths } from "../rules/route";
-import { unlockPrice } from "../rules/shop";
-import { read } from "../rules/units";
-import { walkerGoal } from "../rules/walkers";
-import { SLOT_ROLES } from "../runner/slotConfig";
-import { zoneSlotGuarantees } from "../runner/zonePlan";
-import { gameData } from ".";
-import { LANE_COUNT, SCREEN_CONFIG } from "./screen";
-import type { CardOption, Effect, EncounterId, ZoneId } from "./types";
+import manifestJson from "../../public/art/manifest.json" with { type: "json" };
+import { parseManifest } from "../assets/manifest.ts";
+import { badgeKey } from "../assets/spriteKeys.ts";
+import { forkPaths } from "../rules/route.ts";
+import { unlockPrice } from "../rules/shop.ts";
+import { read } from "../rules/units.ts";
+import { walkerGoal } from "../rules/walkers.ts";
+import { SLOT_ROLES } from "../runner/slotConfig.ts";
+import { zoneSlotGuarantees } from "../runner/zonePlan.ts";
+import { gameData } from "./index.ts";
+import { LANE_COUNT, SCREEN_CONFIG } from "./screen.ts";
+import type { CardOption, Effect, EncounterId, ZoneId } from "./types.ts";
 
 // Invariants the rulebook states about the content and numbers, checked on the real data.
 const {

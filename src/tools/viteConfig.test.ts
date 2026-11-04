@@ -17,7 +17,7 @@ const { base, factory } = vi.hoisted(() => {
 vi.mock("@andornaut/game-kit/web/build/vite/gameConfig", () => ({ gameViteConfig: factory }));
 
 it("discovers only game source tests while preserving the configured plugins and test options", async () => {
-  const { default: config } = await import("../../vite.config");
+  const { default: config } = await import("../../vite.config.ts");
   const resolved = await config;
   expect(factory).toHaveBeenCalledOnce();
   expect(factory).toHaveBeenCalledWith(

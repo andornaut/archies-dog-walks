@@ -7,13 +7,13 @@ import { inkRowsFromCapTop, inkRowsOfLines } from "@andornaut/game-kit/text/bitm
 import { fittingText } from "@andornaut/game-kit/text/textFit";
 import { describe, expect, it } from "vitest";
 
-import { gameData } from "../data";
-import { SCREEN_CONFIG } from "../data/screen";
-import { MIN_TAP_SIZE } from "../layout/screenLayout";
-import { defined } from "../testing/defined";
-import { fontFileMetrics, fontInkRows, inkWidth, placedInk } from "../testing/fontInk";
-import { TEXT_SCALE, TEXT_STYLE, textOnLines } from "../ui/textFit";
-import { cents } from "../units";
+import { gameData } from "../data/index.ts";
+import { SCREEN_CONFIG } from "../data/screen.ts";
+import { MIN_TAP_SIZE } from "../layout/screenLayout.ts";
+import { defined } from "../testing/defined.ts";
+import { fontFileMetrics, fontInkRows, inkWidth, placedInk } from "../testing/fontInk.ts";
+import { TEXT_SCALE, TEXT_STYLE, textOnLines } from "../ui/textFit.ts";
+import { cents } from "../units.ts";
 import {
   BADGE_STRIP,
   badgeNameTops,
@@ -21,7 +21,7 @@ import {
   badgeStripRows,
   CELEBRATION_PANEL,
   panelBadgeStrip,
-} from "./badgesView";
+} from "./badgesView.ts";
 import {
   END_LAYOUT,
   endBadgeRows,
@@ -41,10 +41,10 @@ import {
   quipTextY,
   sideTotalAmountY,
   sideTotalBand,
-} from "./endLayout";
-import { endTargetAt } from "./endView";
-import { signedShortDollarText } from "./home";
-import { MENU_TEXT_FIELDS } from "./menuText";
+} from "./endLayout.ts";
+import { endTargetAt } from "./endView.ts";
+import { signedShortDollarText } from "./home.ts";
+import { MENU_TEXT_FIELDS } from "./menuText.ts";
 
 const { badges, breakdown, panel: most, quips, side } = END_LAYOUT;
 const BODY = fontFileMetrics("font-body");

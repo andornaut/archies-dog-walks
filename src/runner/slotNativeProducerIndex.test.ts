@@ -1,8 +1,8 @@
 import { describe, expect, it, vi } from "vitest";
 
-import * as laneAlternatives from "./laneAlternatives";
-import * as moverPlanning from "./moverPlanning";
-import { createSlotCandidateDomains } from "./slotCandidateDomains";
+import * as laneAlternatives from "./laneAlternatives.ts";
+import * as moverPlanning from "./moverPlanning.ts";
+import { createSlotCandidateDomains } from "./slotCandidateDomains.ts";
 import {
   compileSlotKindDomain,
   createSlotPathProjection,
@@ -10,8 +10,8 @@ import {
   prepareSlotKind,
   prepareSlotKindWithin,
   slotPlacementsAt,
-} from "./slotCandidates";
-import { rowSpacing, type SpawnPlan, zoneRows } from "./spawning";
+} from "./slotCandidates.ts";
+import { rowSpacing, type SpawnPlan, zoneRows } from "./spawning.ts";
 
 function inputs(kind: "cross" | "ride" = "ride") {
   const geometry: Omit<SpawnPlan<string>, "quotas"> = {

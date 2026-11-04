@@ -1,8 +1,8 @@
 import type { Scene } from "phaser";
 
-import { remapToGrey } from "../../assets/greyRamp";
-import { disabledArtKey, greyForDisabledTile } from "../disabledArt";
-import { NEUTRAL_RAMP } from "../palette";
+import { remapToGrey } from "../../assets/greyRamp.ts";
+import { disabledArtKey, greyForDisabledTile } from "../disabledArt.ts";
+import { NEUTRAL_RAMP } from "../palette.ts";
 
 // A copy of a texture with remap applied to its pixels, made once and kept under copyKey,
 // with the same frames. Returns the original key when the copy cannot be made.

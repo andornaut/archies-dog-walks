@@ -2,12 +2,12 @@ import { animationKey } from "@andornaut/game-kit/art/aseprite";
 import type { Point, Rect } from "@andornaut/game-kit/rect";
 import type { Animations, GameObjects, Scene, Tweens, Types } from "phaser";
 
-import { ownerFaceKey, WARNING_KEY, WARNING_TAG } from "../assets/spriteKeys";
-import { gameData } from "../data";
-import { SCREEN_CONFIG, SCREEN_LAYOUT } from "../data/screen";
-import type { DogId } from "../data/types";
-import { type MoneyTick, retarget, tickShown } from "../hud/feedback";
-import type { ChangeLabel } from "../hud/hudView";
+import { ownerFaceKey, WARNING_KEY, WARNING_TAG } from "../assets/spriteKeys.ts";
+import { gameData } from "../data/index.ts";
+import { SCREEN_CONFIG, SCREEN_LAYOUT } from "../data/screen.ts";
+import type { DogId } from "../data/types.ts";
+import { type MoneyTick, retarget, tickShown } from "../hud/feedback.ts";
+import type { ChangeLabel } from "../hud/hudView.ts";
 import {
   arcControl,
   bowRightControl,
@@ -39,29 +39,29 @@ import {
   TREAT_EVENT,
   type TreatCue,
   trotOffX,
-} from "../hud/moments";
-import { playerPaused, type RunPause, walkPaused } from "../hud/topBar";
-import { DOG_CARD } from "../hud/walkHud";
-import { slotIndexOf } from "../state/pack";
-import type { RunState } from "../state/runState";
-import { PALETTE } from "../ui/palette";
-import { addDisplayText } from "../ui/phaser/displayText";
-import { CREAM_PANEL_COLOURS, drawFramedRect, drawRing } from "../ui/phaser/draw";
+} from "../hud/moments.ts";
+import { playerPaused, type RunPause, walkPaused } from "../hud/topBar.ts";
+import { DOG_CARD } from "../hud/walkHud.ts";
+import { slotIndexOf } from "../state/pack.ts";
+import type { RunState } from "../state/runState.ts";
+import { PALETTE } from "../ui/palette.ts";
+import { addDisplayText } from "../ui/phaser/displayText.ts";
+import { CREAM_PANEL_COLOURS, drawFramedRect, drawRing } from "../ui/phaser/draw.ts";
 import {
   addPixelText,
   fitPixelText,
   pixelFontMetrics,
   placePixelText,
-} from "../ui/phaser/pixelText";
-import { type Cents, cents } from "../units";
-import { arcFlight } from "./arcFlight";
-import { addFaceRows, fitFaceRows } from "./faceTextView";
-import { HUD_DEPTH } from "./hudDepth";
-import type { HudWalk } from "./hudWalk";
-import { onSceneEvent } from "./overlay";
-import { firstTag, playEffect, playTag } from "./sprites";
-import { TimedGroup } from "./timedGroup";
-import { addPanel, artFits, tagFrame } from "./uiKit";
+} from "../ui/phaser/pixelText.ts";
+import { type Cents, cents } from "../units.ts";
+import { arcFlight } from "./arcFlight.ts";
+import { addFaceRows, fitFaceRows } from "./faceTextView.ts";
+import { HUD_DEPTH } from "./hudDepth.ts";
+import type { HudWalk } from "./hudWalk.ts";
+import { onSceneEvent } from "./overlay.ts";
+import { firstTag, playEffect, playTag } from "./sprites.ts";
+import { TimedGroup } from "./timedGroup.ts";
+import { addPanel, artFits, tagFrame } from "./uiKit.ts";
 
 const LAYOUT = SCREEN_LAYOUT;
 // The owner's 32x32 face is drawn at 2x. The pop shows no face on its first frame, the face

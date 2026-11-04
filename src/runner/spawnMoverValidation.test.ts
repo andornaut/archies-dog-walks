@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { herringSpawn, type MoverDraws, moverPlacements, type MoverSpec } from "./moverPlanning";
+import { herringSpawn, type MoverDraws, moverPlacements, type MoverSpec } from "./moverPlanning.ts";
 import {
   blockingLength,
   rowSpacing,
@@ -8,8 +8,12 @@ import {
   type SpawnPlan,
   type SpawnQuota,
   zoneRows,
-} from "./spawning";
-import { auditHerringGeometry, auditMoverGeometry, type MoverProof } from "./spawnMoverValidation";
+} from "./spawning.ts";
+import {
+  auditHerringGeometry,
+  auditMoverGeometry,
+  type MoverProof,
+} from "./spawnMoverValidation.ts";
 
 const plan: SpawnPlan<string> = {
   cellInset: -5,

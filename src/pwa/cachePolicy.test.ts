@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import { hashedArtFileName } from "../tools/atlas/hashedArt";
-import { CACHE_POLICY } from "./cachePolicy";
+import { hashedArtFileName } from "../tools/atlas/hashedArt.ts";
+import { CACHE_POLICY } from "./cachePolicy.ts";
 
 describe("the game's cache policy", () => {
   it("puts the game's hashed art under its configured immutable prefix", () => {

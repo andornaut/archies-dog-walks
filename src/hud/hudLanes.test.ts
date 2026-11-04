@@ -4,9 +4,9 @@ import { type Point, type Rect, rectsOverlap } from "@andornaut/game-kit/rect";
 import { inkRowsOfLines } from "@andornaut/game-kit/text/bitmapFont";
 import { describe, expect, it } from "vitest";
 
-import { SCREEN_CONFIG, SCREEN_LAYOUT } from "../data/screen";
-import { fontFileMetrics } from "../testing/fontInk";
-import { perkIconKey } from "./effectIcons";
+import { SCREEN_CONFIG, SCREEN_LAYOUT } from "../data/screen.ts";
+import { fontFileMetrics } from "../testing/fontInk.ts";
+import { perkIconKey } from "./effectIcons.ts";
 import {
   CHANGE_CHIP,
   CHANGE_LABEL_STYLE,
@@ -16,10 +16,10 @@ import {
   hudLanes,
   REACH_ICON,
   reachChipPlace,
-} from "./hudLanes";
-import { messageStripLayout } from "./messageStrip";
-import { cashChipPlace } from "./moneyLabels";
-import { DOG_CARD, ownerTabRect } from "./walkHud";
+} from "./hudLanes.ts";
+import { messageStripLayout } from "./messageStrip.ts";
+import { cashChipPlace } from "./moneyLabels.ts";
+import { DOG_CARD, ownerTabRect } from "./walkHud.ts";
 
 const layout = SCREEN_LAYOUT;
 const BODY = fontFileMetrics("font-body");

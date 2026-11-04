@@ -4,15 +4,15 @@ import {
   createSlotCandidateDomains,
   type SlotCandidate,
   type SlotOwnerDomainToken,
-} from "./slotCandidateDomains";
+} from "./slotCandidateDomains.ts";
 import {
   isNativeSlotPreparation,
   nativeSlotPreparationOrderingHint,
   nativeSlotPreparationWallRows,
   prepareSlotKind,
-} from "./slotCandidates";
-import { createSlotConstructionState } from "./slotConstraintState";
-import { rowSpacing, type SpawnPlan, zoneRows } from "./spawning";
+} from "./slotCandidates.ts";
+import { createSlotConstructionState } from "./slotConstraintState.ts";
+import { rowSpacing, type SpawnPlan, zoneRows } from "./spawning.ts";
 
 const geometry: Omit<SpawnPlan<string>, "quotas"> = {
   cellInset: 5,

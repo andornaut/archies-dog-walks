@@ -2,19 +2,19 @@ import { STEP_SECONDS } from "@andornaut/game-kit/clock/fixedStep";
 import { seededRandom } from "@andornaut/game-kit/random";
 import { describe, expect, it, vi } from "vitest";
 
-import { gameData } from "../data";
-import { LANE_COUNT, ROAD_CAMERA, SCREEN_LAYOUT } from "../data/screen";
-import type { DebuffDriftMovement, GameData, ZoneId } from "../data/types";
-import type { LaneDirection } from "../layout/lanes";
-import { read } from "../rules/units";
-import { newRun, type RunState } from "../state/runState";
-import { planZoneForSeed } from "../testing/zonePlan";
-import { advanceLaneControl, laneControlIn, pullLane } from "./laneControl";
-import { destinationLane, stillInLane } from "./laneMotion";
-import { type MoverPath, moverPlace, moverY } from "./movers";
-import { pullHorizon } from "./pulls";
-import { runStreams } from "./session";
-import { compileSignature } from "./signaturePaths";
+import { gameData } from "../data/index.ts";
+import { LANE_COUNT, ROAD_CAMERA, SCREEN_LAYOUT } from "../data/screen.ts";
+import type { DebuffDriftMovement, GameData, ZoneId } from "../data/types.ts";
+import type { LaneDirection } from "../layout/lanes.ts";
+import { read } from "../rules/units.ts";
+import { newRun, type RunState } from "../state/runState.ts";
+import { planZoneForSeed } from "../testing/zonePlan.ts";
+import { advanceLaneControl, laneControlIn, pullLane } from "./laneControl.ts";
+import { destinationLane, stillInLane } from "./laneMotion.ts";
+import { type MoverPath, moverPlace, moverY } from "./movers.ts";
+import { pullHorizon } from "./pulls.ts";
+import { runStreams } from "./session.ts";
+import { compileSignature } from "./signaturePaths.ts";
 import {
   componentHitLength,
   obstacleHitBoxes,
@@ -23,15 +23,15 @@ import {
   steerWalk,
   stepWalk,
   type Walk,
-} from "./walk";
-import { walkGeometry, walkProjection } from "./walkGeometry";
-import { type WalkItem } from "./walkItems";
+} from "./walk.ts";
+import { walkGeometry, walkProjection } from "./walkGeometry.ts";
+import { type WalkItem } from "./walkItems.ts";
 import {
   debuffDriftProfile,
   type DebuffMovementClock,
   hasDebuffDrift,
   stepDebuffMovement,
-} from "./zoomies";
+} from "./zoomies.ts";
 
 const ROAD = (() => {
   const road = SCREEN_LAYOUT.road;

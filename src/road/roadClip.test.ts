@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import { SCREEN_LAYOUT } from "../data/screen";
-import { fadeIn, rowsAboveJuncture, rowsHidden } from "./roadClip";
+import { SCREEN_LAYOUT } from "../data/screen.ts";
+import { fadeIn, rowsAboveJuncture, rowsHidden } from "./roadClip.ts";
 
 const { approach, junction, road } = SCREEN_LAYOUT;
 const JUNCTURE = junction.y;

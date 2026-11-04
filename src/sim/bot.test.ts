@@ -4,26 +4,26 @@ import { seededRandom } from "@andornaut/game-kit/random";
 import { keysOf } from "@andornaut/game-kit/records";
 import { describe, expect, it } from "vitest";
 
-import { gameData } from "../data";
-import type { GameData, Movement, ZoneId } from "../data/types";
-import type { LaneDirection } from "../layout/lanes";
-import { PART_INSET } from "../layout/packFormation";
-import { read } from "../rules/units";
-import { hitDog } from "../runner/collision";
-import { type LaneMotion, stillInLane } from "../runner/laneMotion";
+import { gameData } from "../data/index.ts";
+import type { GameData, Movement, ZoneId } from "../data/types.ts";
+import type { LaneDirection } from "../layout/lanes.ts";
+import { PART_INSET } from "../layout/packFormation.ts";
+import { read } from "../rules/units.ts";
+import { hitDog } from "../runner/collision.ts";
+import { type LaneMotion, stillInLane } from "../runner/laneMotion.ts";
 import {
   DART_LIFTS,
   type MoverDraws,
   type MoverFootprint,
   moverPlacements,
-} from "../runner/moverPlanning";
-import { hasLeftRoad, type MoverPath, moverPlace } from "../runner/movers";
-import { moverSpec } from "../runner/moverSpecs";
-import { moverOutcomes } from "../runner/outcomes";
-import { NO_PULLS } from "../runner/pulls";
-import { screenRoadGeometry } from "../runner/screenGeometry";
-import { apportionSlotCounts, SLOT_ROLES } from "../runner/slotConfig";
-import { blockingLength } from "../runner/spawning";
+} from "../runner/moverPlanning.ts";
+import { hasLeftRoad, type MoverPath, moverPlace } from "../runner/movers.ts";
+import { moverSpec } from "../runner/moverSpecs.ts";
+import { moverOutcomes } from "../runner/outcomes.ts";
+import { NO_PULLS } from "../runner/pulls.ts";
+import { screenRoadGeometry } from "../runner/screenGeometry.ts";
+import { apportionSlotCounts, SLOT_ROLES } from "../runner/slotConfig.ts";
+import { blockingLength } from "../runner/spawning.ts";
 import {
   itemHeight,
   laneMoveSeconds,
@@ -35,16 +35,16 @@ import {
   sweptPackBoxes,
   type Walk,
   walkScrollSpeed,
-} from "../runner/walk";
-import { blocksLane, type WalkItem, type WalkItemKind } from "../runner/walkItems";
-import { zoneSlotGuarantees } from "../runner/zonePlan";
-import { ZoneSlotPlanningError } from "../runner/zoneSlotInput";
-import type { PackDogs } from "../state/runState";
-import { defined } from "../testing/defined";
-import { hoppingInstead, plannerStreams, sharedWorld } from "../testing/movers";
-import { testState } from "../testing/runState";
-import { IDEAL_SKILL, simConfig } from "../testing/sim";
-import { mapZones, minimumSlotConfiguration, slotCapacityForModifier } from "../testing/world";
+} from "../runner/walk.ts";
+import { blocksLane, type WalkItem, type WalkItemKind } from "../runner/walkItems.ts";
+import { zoneSlotGuarantees } from "../runner/zonePlan.ts";
+import { ZoneSlotPlanningError } from "../runner/zoneSlotInput.ts";
+import type { PackDogs } from "../state/runState.ts";
+import { defined } from "../testing/defined.ts";
+import { hoppingInstead, plannerStreams, sharedWorld } from "../testing/movers.ts";
+import { testState } from "../testing/runState.ts";
+import { IDEAL_SKILL, simConfig } from "../testing/sim.ts";
+import { mapZones, minimumSlotConfiguration, slotCapacityForModifier } from "../testing/world.ts";
 import {
   actBot,
   type BotRoad,
@@ -54,10 +54,10 @@ import {
   newBot,
   observeDrift,
   observeRoad,
-} from "./bot";
-import { type BotSight, moverShows, sightPaths } from "./sight";
-import { type RunResult, type SimData, simulateRun } from "./simulate";
-import { type Skill, SKILL_PRESET_IDS, SKILL_PRESETS } from "./skills";
+} from "./bot.ts";
+import { type BotSight, moverShows, sightPaths } from "./sight.ts";
+import { type RunResult, type SimData, simulateRun } from "./simulate.ts";
+import { type Skill, SKILL_PRESET_IDS, SKILL_PRESETS } from "./skills.ts";
 
 // Scale zone length and spawn budgets while retaining the full roster's minimum guarantees.
 function shortZones(data: GameData, share: number): GameData {

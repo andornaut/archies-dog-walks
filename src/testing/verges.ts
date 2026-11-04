@@ -1,6 +1,6 @@
 import { itemAt } from "@andornaut/game-kit/arrays";
 
-import { LIGHTS } from "../road/lights";
+import { LIGHTS } from "../road/lights.ts";
 
 // A light art sets out, whichever it is, so the fixture follows renames.
 const SOME_LIGHT = itemAt([...LIGHTS.keys()], 0);

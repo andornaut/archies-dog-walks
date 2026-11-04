@@ -1,10 +1,15 @@
 import { type GameObjects, type Scene, TintModes } from "phaser";
 
-import { BUMP_FLASH, bumpWorldOffset } from "../../layout/bumpFlash";
-import { type FlashCue, HIT_ART, type HitEffect, type MotionStep } from "../../layout/hitEffects";
-import { playEffect } from "../sprites";
-import { tagFrame } from "../uiKit";
-import type { StruckBody } from "./itemViews";
+import { BUMP_FLASH, bumpWorldOffset } from "../../layout/bumpFlash.ts";
+import {
+  type FlashCue,
+  HIT_ART,
+  type HitEffect,
+  type MotionStep,
+} from "../../layout/hitEffects.ts";
+import { playEffect } from "../sprites.ts";
+import { tagFrame } from "../uiKit.ts";
+import type { StruckBody } from "./itemViews.ts";
 
 const WHITE = 0xffffff;
 

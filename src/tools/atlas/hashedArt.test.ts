@@ -1,10 +1,10 @@
 import { contentHash } from "@andornaut/game-kit/web/build/vite/contentHash";
 import { beforeAll, describe, expect, it } from "vitest";
 
-import { ATLAS_MANIFEST_PATH, type AtlasManifest } from "../../assets/atlasManifest";
-import type { AssetManifest } from "../../assets/manifest";
-import { ART_MANIFEST } from "../artManifest";
-import { type HashedArtFile, hashedArtFileName, hashGameArt } from "./hashedArt";
+import { ATLAS_MANIFEST_PATH, type AtlasManifest } from "../../assets/atlasManifest.ts";
+import type { AssetManifest } from "../../assets/manifest.ts";
+import { ART_MANIFEST } from "../artManifest.ts";
+import { type HashedArtFile, hashedArtFileName, hashGameArt } from "./hashedArt.ts";
 
 describe("hashedArtFileName", () => {
   it.each([

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { focusDirectionForKey, moveFocus } from "./focus";
+import { focusDirectionForKey, moveFocus } from "./focus.ts";
 
 // Three rows of 3 dogs, 5 gear items, Start walk, 4 walkers.
 const rows = [3, 3, 3, 5, 1, 4];

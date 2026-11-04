@@ -1,4 +1,4 @@
-import type { ConstraintOwner, ConstraintResult } from "./slotConstraintState";
+import type { ConstraintOwner, ConstraintResult } from "./slotConstraintState.ts";
 
 type Failure = Extract<ConstraintResult<string>, { accepted: false }>["failure"];
 interface ConflictAssignment {

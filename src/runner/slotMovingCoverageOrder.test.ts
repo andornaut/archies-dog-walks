@@ -1,14 +1,17 @@
 import { describe, expect, it, vi } from "vitest";
 
-import { visibleMoverRows } from "./moverCoverage";
-import { createSlotCandidateDomains, type SlotCandidate } from "./slotCandidateDomains";
-import { type PreparedSlotKind, prepareSlotKind } from "./slotCandidates";
-import type { SlotSource } from "./slotConfig";
-import { createSlotConstructionState } from "./slotConstraintState";
-import { coverageLeadingRows, quietCoverage } from "./slotCoverage";
-import { createSlotWitnessConstruct, type SlotWitnessConstructPorts } from "./slotWitnessConstruct";
-import type { WitnessJob } from "./slotWitnessSearch";
-import { rowSpacing, type SpawnPlan, zoneRows } from "./spawning";
+import { visibleMoverRows } from "./moverCoverage.ts";
+import { createSlotCandidateDomains, type SlotCandidate } from "./slotCandidateDomains.ts";
+import { type PreparedSlotKind, prepareSlotKind } from "./slotCandidates.ts";
+import type { SlotSource } from "./slotConfig.ts";
+import { createSlotConstructionState } from "./slotConstraintState.ts";
+import { coverageLeadingRows, quietCoverage } from "./slotCoverage.ts";
+import {
+  createSlotWitnessConstruct,
+  type SlotWitnessConstructPorts,
+} from "./slotWitnessConstruct.ts";
+import type { WitnessJob } from "./slotWitnessSearch.ts";
+import { rowSpacing, type SpawnPlan, zoneRows } from "./spawning.ts";
 
 const geometry: Omit<SpawnPlan<string>, "quotas"> = {
   cellInset: 5,

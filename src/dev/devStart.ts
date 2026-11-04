@@ -1,9 +1,9 @@
-import type { DogId, GearId, WalkerId } from "../data/types";
-import type { HomeLoadout } from "../home/home";
-import { packDogsOf } from "../state/pack";
-import type { Loadout } from "../state/runState";
-import { PARAM_NAMES, type RunSetup } from "./runSetup";
-import { loadoutFor } from "./setupRun";
+import type { DogId, GearId, WalkerId } from "../data/types.ts";
+import type { HomeLoadout } from "../home/home.ts";
+import { packDogsOf } from "../state/pack.ts";
+import type { Loadout } from "../state/runState.ts";
+import { PARAM_NAMES, type RunSetup } from "./runSetup.ts";
+import { loadoutFor } from "./setupRun.ts";
 
 // Every parameter that overrides a walk: all but `dev`, which only shows the overlay.
 const OVERRIDE_PARAMS = PARAM_NAMES.filter((name) => name !== "dev");

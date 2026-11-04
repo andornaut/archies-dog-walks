@@ -3,7 +3,7 @@ import { encodeRgbaPng } from "@andornaut/art-kit/png";
 import type { RgbaImage } from "@andornaut/art-kit/rgbaImage";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { encodePng } from "./atlasBuild";
+import { encodePng } from "./atlasBuild.ts";
 
 vi.mock("@andornaut/art-kit/indexedPng", () => ({ encodeIndexedPng: vi.fn() }));
 vi.mock("@andornaut/art-kit/png", async (original) => ({

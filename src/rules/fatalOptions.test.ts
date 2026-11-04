@@ -1,12 +1,12 @@
 import { fillNames } from "@andornaut/game-kit/lines";
 import { describe, expect, it } from "vitest";
 
-import { gameData } from "../data";
-import type { CardSource, DogId } from "../data/types";
-import { testState } from "../testing/runState";
-import { TEST_TUNING } from "../testing/tuning";
-import { firedByText } from "./causes";
-import { cardFor, firesText } from "./choices";
+import { gameData } from "../data/index.ts";
+import type { CardSource, DogId } from "../data/types.ts";
+import { testState } from "../testing/runState.ts";
+import { TEST_TUNING } from "../testing/tuning.ts";
+import { firedByText } from "./causes.ts";
+import { cardFor, firesText } from "./choices.ts";
 
 const data = { ...gameData, tuning: TEST_TUNING };
 // Skunk's hearts option, its name, and what it costs each owner.

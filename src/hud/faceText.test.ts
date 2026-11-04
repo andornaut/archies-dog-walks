@@ -4,14 +4,14 @@ import { inkRowsFromCapTop } from "@andornaut/game-kit/text/bitmapFont";
 import type { TextFitStyle } from "@andornaut/game-kit/text/textFit";
 import { describe, expect, it } from "vitest";
 
-import { gameData } from "../data";
-import type { DogId } from "../data/types";
-import type { HeartChange } from "../rules/causes";
-import type { FaceMood } from "../rules/treats";
-import { bodyRunWidth } from "../testing/bodyFont";
-import { defined } from "../testing/defined";
-import { fontFileMetrics } from "../testing/fontInk";
-import { clampHearts } from "../units";
+import { gameData } from "../data/index.ts";
+import type { DogId } from "../data/types.ts";
+import type { HeartChange } from "../rules/causes.ts";
+import type { FaceMood } from "../rules/treats.ts";
+import { bodyRunWidth } from "../testing/bodyFont.ts";
+import { defined } from "../testing/defined.ts";
+import { fontFileMetrics } from "../testing/fontInk.ts";
+import { clampHearts } from "../units.ts";
 import {
   faceRows,
   type FaceText,
@@ -21,10 +21,16 @@ import {
   ownerFaceText,
   styledFaceRows,
   withoutFace,
-} from "./faceText";
-import { MESSAGE_STRIP, messageStripLayout } from "./messageStrip";
-import { lowHeartsText } from "./moments";
-import { bumpLines, firedLine, forgivenLines, spareTreatUsedLine, treatLine } from "./stripLines";
+} from "./faceText.ts";
+import { MESSAGE_STRIP, messageStripLayout } from "./messageStrip.ts";
+import { lowHeartsText } from "./moments.ts";
+import {
+  bumpLines,
+  firedLine,
+  forgivenLines,
+  spareTreatUsedLine,
+  treatLine,
+} from "./stripLines.ts";
 
 const BODY = fontFileMetrics("font-body");
 const AT_2X = { scale: MESSAGE_STRIP.scale };

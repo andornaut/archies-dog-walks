@@ -11,11 +11,11 @@ import {
   sessionWrite,
 } from "@andornaut/game-kit/web/save/dom/pageSessionStore";
 
-import { gameData } from "../data";
-import { saveContextFrom } from "../save/load";
-import { loadedSave, newPlayerOnDevice } from "../save/profile";
-import { createDefaultSave } from "../save/schema";
-import { pageSaveStore } from "../save/storage";
+import { gameData } from "../data/index.ts";
+import { saveContextFrom } from "../save/load.ts";
+import { loadedSave, newPlayerOnDevice } from "../save/profile.ts";
+import { createDefaultSave } from "../save/schema.ts";
+import { pageSaveStore } from "../save/storage.ts";
 import {
   applyPanel,
   applySaveEdit,
@@ -40,9 +40,9 @@ import {
   stagePanel,
   startChoices,
   type StartTarget,
-} from "./devPanelModel";
-import { stripDevParams } from "./devStart";
-import { randomSeed } from "./runSetup";
+} from "./devPanelModel.ts";
+import { stripDevParams } from "./devStart.ts";
+import { randomSeed } from "./runSetup.ts";
 
 export interface DevPanelHost {
   // What the browser answered when asked to keep the game's storage.

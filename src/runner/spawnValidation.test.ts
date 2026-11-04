@@ -1,15 +1,15 @@
 import { describe, expect, it } from "vitest";
 
-import { MOVEMENT_PROFILES } from "../data/movementProfiles";
-import { moverPlacements, type MoverSpec } from "./moverPlanning";
+import { MOVEMENT_PROFILES } from "../data/movementProfiles.ts";
+import { moverPlacements, type MoverSpec } from "./moverPlanning.ts";
 import {
   blockingLength,
   type PlannedSpawns,
   rowSpacing,
   type SpawnPlan,
   zoneRows,
-} from "./spawning";
-import { auditSpawnPlan, type SpawnAuditTrace } from "./spawnValidation";
+} from "./spawning.ts";
+import { auditSpawnPlan, type SpawnAuditTrace } from "./spawnValidation.ts";
 
 const plan: SpawnPlan<string> = {
   cellInset: 5,

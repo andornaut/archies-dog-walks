@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import { TEST_TUNING } from "../testing/tuning";
-import { moverSpec } from "./moverSpecs";
-import { createSlotCandidateDomains, type SlotCandidate } from "./slotCandidateDomains";
-import { type PreparedSlotKind, prepareSlotKind } from "./slotCandidates";
-import { projectSlotWalls, type SlotPocketScope } from "./slotConstraintState";
-import { rowSpacing, type SpawnPlan, zoneRows } from "./spawning";
+import { TEST_TUNING } from "../testing/tuning.ts";
+import { moverSpec } from "./moverSpecs.ts";
+import { createSlotCandidateDomains, type SlotCandidate } from "./slotCandidateDomains.ts";
+import { type PreparedSlotKind, prepareSlotKind } from "./slotCandidates.ts";
+import { projectSlotWalls, type SlotPocketScope } from "./slotConstraintState.ts";
+import { rowSpacing, type SpawnPlan, zoneRows } from "./spawning.ts";
 
 const geometry: Omit<SpawnPlan<string>, "quotas"> = {
   cellInset: 5,

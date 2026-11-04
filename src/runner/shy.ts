@@ -1,4 +1,4 @@
-import type { RoadPoint } from "./collision";
+import type { RoadPoint } from "./collision.ts";
 import {
   laneAt,
   type MoverPath,
@@ -6,7 +6,7 @@ import {
   type StepShape,
   stepsTaken,
   takeMove,
-} from "./movers";
+} from "./movers.ts";
 
 // A shy hopper hops away from the pack as the pack draws near. Its first hop is chosen as its cue
 // begins, and each later one, with no cue, as it starts, from where the pack is then: of the hops

@@ -1,22 +1,26 @@
-import type { createSlotCandidateDomains, SlotCandidate } from "./slotCandidateDomains";
-import type { PreparedSlotKind } from "./slotCandidates";
-import type { SlotLaneEffect } from "./slotConfig";
+import type { createSlotCandidateDomains, SlotCandidate } from "./slotCandidateDomains.ts";
+import type { PreparedSlotKind } from "./slotCandidates.ts";
+import type { SlotLaneEffect } from "./slotConfig.ts";
 import type {
   ConflictBlockers,
   ConstraintEntry,
   ConstraintOwner,
   ConstraintResult,
   createSlotConstraintState,
-} from "./slotConstraintState";
-import { SLOT_OMISSION_ATTEMPTS, SLOT_OMISSION_RESERVE, type SlotOmission } from "./slotDelivery";
-import type { SlotPocketProof, SlotPocketSupportResult } from "./slotPocketSupport";
-import { createSlotSolverSession, drainSlotSolver } from "./slotSolverSession";
+} from "./slotConstraintState.ts";
+import {
+  SLOT_OMISSION_ATTEMPTS,
+  SLOT_OMISSION_RESERVE,
+  type SlotOmission,
+} from "./slotDelivery.ts";
+import type { SlotPocketProof, SlotPocketSupportResult } from "./slotPocketSupport.ts";
+import { createSlotSolverSession, drainSlotSolver } from "./slotSolverSession.ts";
 import {
   createSlotWitnessConstruct,
   type SlotWitnessConstructPorts,
   type SlotWitnessRefutationAttestation,
-} from "./slotWitnessConstruct";
-import type { PlannedSpawns, SpawnPlan } from "./spawning";
+} from "./slotWitnessConstruct.ts";
+import type { PlannedSpawns, SpawnPlan } from "./spawning.ts";
 
 export interface WitnessJob<Kind extends string> extends ConstraintOwner {
   readonly fixed: boolean;

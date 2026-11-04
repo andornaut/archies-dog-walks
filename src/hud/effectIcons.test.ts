@@ -1,17 +1,17 @@
 import { keysOf } from "@andornaut/game-kit/records";
 import { describe, expect, it } from "vitest";
 
-import manifest from "../../public/art/manifest.json";
-import { gameData } from "../data";
-import { modifiersOf } from "../rules/modifiers";
-import { activeModifier, testState } from "../testing/runState";
+import manifest from "../../public/art/manifest.json" with { type: "json" };
+import { gameData } from "../data/index.ts";
+import { modifiersOf } from "../rules/modifiers.ts";
+import { activeModifier, testState } from "../testing/runState.ts";
 import {
   effectIconKey,
   type EffectItem,
   effectItems,
   spareTreatWell,
   walkerEffectItems,
-} from "./effectIcons";
+} from "./effectIcons.ts";
 
 describe("effectItems", () => {
   it("lists the perk, the Pocket's gear, the found gear, then the upgrades in pick order", () => {

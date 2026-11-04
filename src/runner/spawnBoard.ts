@@ -1,5 +1,5 @@
-import { laneMask } from "../layout/lanes";
-import { deterministicOccupancyMasks, reactiveLaneMasks } from "./laneAlternatives";
+import { laneMask } from "../layout/lanes.ts";
+import { deterministicOccupancyMasks, reactiveLaneMasks } from "./laneAlternatives.ts";
 import {
   fitsMoverSpot,
   keepMoverSpot,
@@ -14,9 +14,9 @@ import {
   type RiderSpan,
   riderSpanOf,
   type Spot,
-} from "./moverPlanning";
-import { LaneBlocks, PlacedPlaces, SpawnCells } from "./spawnCells";
-import type { FeasibilityObserver, FeasibilityWitness } from "./spawnFeasibilityDiagnostics";
+} from "./moverPlanning.ts";
+import { LaneBlocks, PlacedPlaces, SpawnCells } from "./spawnCells.ts";
+import type { FeasibilityObserver, FeasibilityWitness } from "./spawnFeasibilityDiagnostics.ts";
 import {
   fitsStanding,
   holdMoverRests,
@@ -24,7 +24,7 @@ import {
   sharesRoad,
   type StandingFitContext,
   standingSpan,
-} from "./spawnFeasibilityRules";
+} from "./spawnFeasibilityRules.ts";
 import {
   blockingLength,
   blockingPlace,
@@ -45,10 +45,10 @@ import {
   type SpawnQuota,
   WIDE_LANES,
   zoneRows,
-} from "./spawning";
-import { auditHerringGeometry } from "./spawnMoverValidation";
-import { type SpawnVisibilityTrace, visibilityRejection } from "./spawnVisibility";
-import { rowsWithin, WHOLE_ZONE } from "./stretches";
+} from "./spawning.ts";
+import { auditHerringGeometry } from "./spawnMoverValidation.ts";
+import { type SpawnVisibilityTrace, visibilityRejection } from "./spawnVisibility.ts";
+import { rowsWithin, WHOLE_ZONE } from "./stretches.ts";
 export interface SpawnPlacement<Kind extends string> {
   readonly event: SpawnEvent<Kind>;
   readonly herring: boolean;

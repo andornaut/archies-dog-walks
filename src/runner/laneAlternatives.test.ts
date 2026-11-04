@@ -4,10 +4,10 @@ import {
   alternativeLanesOpen,
   deterministicOccupancyMasks,
   reactiveLaneMasks,
-} from "./laneAlternatives";
-import { drawnLanes, type MoverPath, moverPlace } from "./movers";
-import { LaneBlocks } from "./spawnCells";
-import type { SpawnPlan } from "./spawning";
+} from "./laneAlternatives.ts";
+import { drawnLanes, type MoverPath, moverPlace } from "./movers.ts";
+import { LaneBlocks } from "./spawnCells.ts";
+import type { SpawnPlan } from "./spawning.ts";
 
 const reactive: MoverPath = {
   burst: 64,

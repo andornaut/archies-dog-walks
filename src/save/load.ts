@@ -16,8 +16,8 @@ import type {
   TallyId,
   WalkerId,
   ZoneId,
-} from "../data/types";
-import { startingDogSlots } from "../rules/shop";
+} from "../data/types.ts";
+import { startingDogSlots } from "../rules/shop.ts";
 import {
   createDefaultSave,
   MAX_RUN_DOGS,
@@ -29,7 +29,7 @@ import {
   type StoredSave,
   storedSave,
   TALLY_IDS,
-} from "./schema";
+} from "./schema.ts";
 
 // The content ids the game currently has.
 interface KnownIds {

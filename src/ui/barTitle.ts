@@ -1,7 +1,7 @@
 import type { Rect } from "@andornaut/game-kit/rect";
 
-import type { CloseControl } from "./closeControl";
-import { MODAL } from "./modalGeometry";
+import type { CloseControl } from "./closeControl.ts";
+import { MODAL } from "./modalGeometry.ts";
 
 // Modal titles reserve the full close hit plus its gap symmetrically on both sides.
 // Pages retain their face-only clearance.

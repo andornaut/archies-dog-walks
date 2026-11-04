@@ -1,16 +1,16 @@
 import { Scene } from "phaser";
 
-import { gameData } from "../data";
-import { overlayRegion, regionOutside } from "../home/homeBar";
-import { HOME_LAYOUT } from "../home/homeLayout";
-import { homeQuestionLayout, QUIT_QUESTION_ANSWERS } from "../hud/pauseMenu";
-import { isPauseKey, menuKeyActs } from "../input/keyBindings";
-import { exitShown } from "../pwa";
-import { addRampDim } from "../ui/phaser/rampDim";
-import { exitGame, listenHomeBar } from "./homeBarPress";
-import { closeOverlay, listenDismiss, type OverlayData } from "./overlay";
-import { addQuestionPanel } from "./questionPanel";
-import { SCENE_KEYS } from "./sceneKeys";
+import { gameData } from "../data/index.ts";
+import { overlayRegion, regionOutside } from "../home/homeBar.ts";
+import { HOME_LAYOUT } from "../home/homeLayout.ts";
+import { homeQuestionLayout, QUIT_QUESTION_ANSWERS } from "../hud/pauseMenu.ts";
+import { isPauseKey, menuKeyActs } from "../input/keyBindings.ts";
+import { exitShown } from "../pwa/index.ts";
+import { addRampDim } from "../ui/phaser/rampDim.ts";
+import { exitGame, listenHomeBar } from "./homeBarPress.ts";
+import { closeOverlay, listenDismiss, type OverlayData } from "./overlay.ts";
+import { addQuestionPanel } from "./questionPanel.ts";
+import { SCENE_KEYS } from "./sceneKeys.ts";
 
 // Quit? over the dimmed home screen, which back asks with nothing open, laid out as the Home
 // question: Keep playing closes it, as back, Escape, P and a tap outside do; Quit leaves the game

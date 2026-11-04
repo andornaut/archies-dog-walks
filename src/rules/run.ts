@@ -1,7 +1,7 @@
-import type { DogId, GameData, LiveTuning } from "../data/types";
-import { mapPack, packDogs } from "../state/pack";
-import type { ActiveModifier, EndReason, RunState } from "../state/runState";
-import { addCents, type Cents, cents, roundDollars } from "../units";
+import type { DogId, GameData, LiveTuning } from "../data/types.ts";
+import { mapPack, packDogs } from "../state/pack.ts";
+import type { ActiveModifier, EndReason, RunState } from "../state/runState.ts";
+import { addCents, type Cents, cents, roundDollars } from "../units.ts";
 import {
   type Cause,
   causesTotal,
@@ -9,9 +9,9 @@ import {
   modifierCauses,
   type MoneyChange,
   negatedCauses,
-} from "./causes";
-import { type StatParts, statParts } from "./modifiers";
-import { read } from "./units";
+} from "./causes.ts";
+import { type StatParts, statParts } from "./modifiers.ts";
+import { read } from "./units.ts";
 
 // The modifiers the pack's debuffs apply, such as Stinky's on tipValue.
 function debuffModifiers(

@@ -3,13 +3,13 @@ import { EventEmitter } from "node:events";
 import type { Scene } from "phaser";
 import { describe, expect, it, vi } from "vitest";
 
-import { debuffIconKey } from "../../assets/iconKeys";
-import { SCREEN_CONFIG } from "../../data/screen";
-import { fadeAway } from "../uiKit";
-import { popUpArt, showDebuffPopup } from "./roadBanners";
-import { DEPTH } from "./stage";
+import { debuffIconKey } from "../../assets/iconKeys.ts";
+import { SCREEN_CONFIG } from "../../data/screen.ts";
+import { fadeAway } from "../uiKit.ts";
+import { popUpArt, showDebuffPopup } from "./roadBanners.ts";
+import { DEPTH } from "./stage.ts";
 
-vi.mock("../uiKit", () => ({ fadeAway: vi.fn() }));
+vi.mock("../uiKit.ts", () => ({ fadeAway: vi.fn() }));
 
 class Image extends EventEmitter {
   active = true;

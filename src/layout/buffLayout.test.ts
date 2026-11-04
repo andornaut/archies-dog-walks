@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { BUFF_POP, charmByWalkerRect } from "./buffLayout";
+import { BUFF_POP, charmByWalkerRect } from "./buffLayout.ts";
 
 describe("charmByWalkerRect", () => {
   it("sits beside the walker's head, left of the walker's centre", () => {

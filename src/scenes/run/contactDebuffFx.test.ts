@@ -4,15 +4,15 @@ import type { Point } from "@andornaut/game-kit/rect";
 import type { Scene } from "phaser";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { SCREEN_LAYOUT } from "../../data/screen";
-import type { DogId } from "../../data/types";
-import { type DebuffHitEffect, HIT_ART } from "../../layout/hitEffects";
-import { playTagOnce } from "../sprites";
-import { tagFrame } from "../uiKit";
-import { playContactDebuff } from "./contactDebuffFx";
+import { SCREEN_LAYOUT } from "../../data/screen.ts";
+import type { DogId } from "../../data/types.ts";
+import { type DebuffHitEffect, HIT_ART } from "../../layout/hitEffects.ts";
+import { playTagOnce } from "../sprites.ts";
+import { tagFrame } from "../uiKit.ts";
+import { playContactDebuff } from "./contactDebuffFx.ts";
 
-vi.mock("../sprites", () => ({ playTagOnce: vi.fn() }));
-vi.mock("../uiKit", () => ({ tagFrame: vi.fn() }));
+vi.mock("../sprites.ts", () => ({ playTagOnce: vi.fn() }));
+vi.mock("../uiKit.ts", () => ({ tagFrame: vi.fn() }));
 
 class Display extends EventEmitter {
   active = true;

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { FEEDBACK, loopFrame, settleDelay, shakeOffset } from "./feedback";
+import { FEEDBACK, loopFrame, settleDelay, shakeOffset } from "./feedback.ts";
 
 describe("shakeOffset", () => {
   it("swings within the shake width, settles once it is over and is still with reduced motion or no shake", () => {

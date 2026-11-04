@@ -1,9 +1,9 @@
 import type { Point } from "@andornaut/game-kit/rect";
 
-import { zonePipTag } from "../assets/spriteKeys";
-import type { DebuffId, DogId, GameData, ZoneId } from "../data/types";
-import { amountText, type Change, changeAmount, type MoneyChange } from "../rules/causes";
-import { zoneById } from "../rules/route";
+import { zonePipTag } from "../assets/spriteKeys.ts";
+import type { DebuffId, DogId, GameData, ZoneId } from "../data/types.ts";
+import { amountText, type Change, changeAmount, type MoneyChange } from "../rules/causes.ts";
+import { zoneById } from "../rules/route.ts";
 
 // A floating label for a change: over the dog's slot (dog), from where money changed hands to
 // the bank (bank), or, for a money gain, from by the cash total into it (cash), tip marking a

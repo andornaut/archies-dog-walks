@@ -1,9 +1,9 @@
 import { expect, it } from "vitest";
 
-import { MOVEMENT_PROFILES } from "../data/movementProfiles";
-import { visibleMoverRows } from "./moverCoverage";
-import type { MoverPath } from "./movers";
-import type { SlotPlacement } from "./slotFeasibility";
+import { MOVEMENT_PROFILES } from "../data/movementProfiles.ts";
+import { visibleMoverRows } from "./moverCoverage.ts";
+import type { MoverPath } from "./movers.ts";
+import type { SlotPlacement } from "./slotFeasibility.ts";
 
 const geometry = {
   cellLength: 64,

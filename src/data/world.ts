@@ -1,4 +1,4 @@
-import type { World } from "./types";
+import type { World } from "./types.ts";
 
 // The first world. A walk starts on firstZone, then picks each next zone at a fork from those
 // not yet walked. Zones are listed from easiest to hardest, and each is the same distance.
