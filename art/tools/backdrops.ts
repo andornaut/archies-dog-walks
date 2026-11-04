@@ -44,8 +44,9 @@ export { MURAL };
 const USAGE = `Usage:
   node art/tools/backdrops.ts preview OUT.png   all six, stacked, scaled up
   node art/tools/backdrops.ts camera            print the camera, the join with the road and the sidewalks
-  node art/tools/backdrops.ts verges [--write]  print the verges (VERGES) as JSON, or write
-                                                them to shared/verges.json, which build also writes
+  node art/tools/backdrops.ts verges            print the verges (VERGES) as JSON
+  node art/tools/backdrops.ts verges --write    write them to shared/verges.json, which the game
+                                                reads; build writes it too
   node art/tools/backdrops.ts build             write art/backdrops/*.aseprite and
                                                 public/art/images/*.png`;
 
@@ -1186,9 +1187,14 @@ export function verge(zone: string, road: RoadPaint, patches: readonly Patch[] =
 
 export const VERGES_JSON = "shared/verges.json";
 
-// Write VERGES to VERGES_JSON, keyed by art id, colours by K name, for the game.
+// VERGES as VERGES_JSON holds it: keyed by art id, colours by K name.
+export function vergesJson(): string {
+  return `${JSON.stringify(VERGES, null, 2)}\n`;
+}
+
+// Write VERGES to VERGES_JSON, for the game.
 export function writeVerges(): void {
-  writeFileSync(VERGES_JSON, `${JSON.stringify(VERGES, null, 2)}\n`);
+  writeFileSync(VERGES_JSON, vergesJson());
 }
 
 // A wrought-iron front fence whose bars end on row y + 3: a bar every 3 columns under a top rail,
@@ -4028,7 +4034,7 @@ if (import.meta.main) {
       },
       camera: () => camera(),
       "preview OUT.png": (out) => preview(out),
-      verges: () => console.log(JSON.stringify(VERGES, null, 2)),
+      verges: () => process.stdout.write(vergesJson()),
       "verges --write": () => writeVerges(),
     },
     doc: USAGE,

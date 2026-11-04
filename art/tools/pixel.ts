@@ -1344,15 +1344,28 @@ export function paletteTable(): Record<string, { darker: string; hex: string }> 
   );
 }
 
+// paletteTable as PALETTE_JSON holds it.
+export function paletteJson(): string {
+  return `${JSON.stringify(paletteTable(), null, 2)}\n`;
+}
+
+// Write paletteTable to PALETTE_JSON, for the game's dark ramp.
+export function writePalette(): void {
+  writeFileSync(PALETTE_JSON, paletteJson());
+}
+
 const USAGE = `Usage:
-  node art/tools/pixel.ts palette   write shared/palette.json: every colour by K name, its hex and
-                                    the name of the colour one ramp step darker (DARKER), for the
-                                    game's dark ramp`;
+  node art/tools/pixel.ts palette           print the palette as JSON: every colour by K name, its
+                                            hex and the name of the colour one ramp step darker
+                                            (DARKER)
+  node art/tools/pixel.ts palette --write   write it to shared/palette.json, which the game's dark
+                                            ramp reads`;
 
 if (import.meta.main) {
   await run({
     commands: {
-      palette: () => writeFileSync(PALETTE_JSON, `${JSON.stringify(paletteTable(), null, 2)}\n`),
+      palette: () => process.stdout.write(paletteJson()),
+      "palette --write": () => writePalette(),
     },
     doc: USAGE,
   });
