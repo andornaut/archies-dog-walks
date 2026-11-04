@@ -1,20 +1,12 @@
-# Check image archie-check:node24.21.0-aseprite1.2.30: upstream node:24.21.0 with headless Aseprite
-# 1.2.30 for the art export checks, and SoX and ffmpeg for the sound builds.
-# Build from the repository root. The licensed Aseprite_1.2.30-1_amd64.deb lives in the sibling
-# game-dev checkout at var/vendor/aseprite/, which is never committed:
-# docker build -f docker/archie-check.Dockerfile --build-context aseprite-deb=../game-dev/var/vendor/aseprite -t archie-check:node24.21.0-aseprite1.2.30 docker
-# The licensed vendor .deb comes from the named build context aseprite-deb, outside the repository.
-# The binary links libGL, libXcursor and libXfixes, which the package does not declare; apt resolves
-# libGL through Mesa. Batch mode opens no display, so no X server is installed. SoX and ffmpeg are
-# pinned because the sound builds must reproduce byte-identical output.
+# Check image archie-check:node24.21.0-sox-ffmpeg: upstream node:24.21.0 with SoX and ffmpeg for the
+# sound builds. Build from the repository root:
+# docker build -f docker/archie-check.Dockerfile -t archie-check:node24.21.0-sox-ffmpeg docker
+# SoX and ffmpeg are pinned because the sound builds must reproduce byte-identical output.
 FROM node:24.21.0
 
 ARG SNAPSHOT=20261103T000000Z
 
-RUN --mount=type=bind,from=aseprite-deb,target=/mnt/aseprite-deb \
-    set -eu \
-    && cp /mnt/aseprite-deb/Aseprite_1.2.30-1_amd64.deb /tmp/ \
-    && echo "0180ae561b83817bd63764589aba4eba9c2e5d4e8380387bf52f04f54b9a5ea7  /tmp/Aseprite_1.2.30-1_amd64.deb" | sha256sum -c - \
+RUN set -eu \
     && rm -f /etc/apt/sources.list.d/debian.sources \
     && printf '%s\n' \
         "deb [check-valid-until=no] https://snapshot.debian.org/archive/debian/${SNAPSHOT} bookworm main" \
@@ -23,19 +15,11 @@ RUN --mount=type=bind,from=aseprite-deb,target=/mnt/aseprite-deb \
         > /etc/apt/sources.list \
     && apt-get update \
     && apt-get install --yes --no-install-recommends \
-        /tmp/Aseprite_1.2.30-1_amd64.deb \
         ffmpeg=7:5.1.9-0+deb12u1 \
-        libgl1=1.6.0-1 \
-        libxcursor1=1:1.2.1-1 \
-        libxfixes3=1:6.0.0-2 \
         sox=14.4.2+git20190427-3.5 \
-    && rm -f /tmp/Aseprite_1.2.30-1_amd64.deb \
     && rm -rf /var/lib/apt/lists/* \
-    && if ldd /usr/bin/aseprite | grep 'not found'; then exit 1; fi \
-    && dpkg-query -W -f '${Version}\n' aseprite | grep -qx 1.2.30-1 \
     && dpkg-query -W -f '${Version}\n' ffmpeg | grep -qx 7:5.1.9-0+deb12u1 \
     && dpkg-query -W -f '${Version}\n' sox | grep -qx 14.4.2+git20190427-3.5 \
-    && aseprite -b --version \
     && sox --version \
     && ffmpeg -version \
     && node --eval "if (process.versions.node !== '24.21.0') process.exit(1)"
