@@ -33,9 +33,7 @@ function galleryPalette(): Record<string, string> {
 const hexOf = (name: string) => `#${palette[name as keyof typeof palette].hex}`;
 
 describe("art gallery", () => {
-  // Art's Kensington Market ground fix (#5e2620 to the road's #8a857c) makes this pass: switch
-  // it.fails to it when that fix lands.
-  it.fails("offers each zone's road and the High Park verge as grounds in their colours", () => {
+  it("offers each zone's road and the High Park verge as grounds in their colours", () => {
     const swatches = groundSwatches();
     const roads = gameData.zones.map(({ name }) => {
       const title = [...swatches.keys()].find((key) => key.startsWith(`${name} road`));
