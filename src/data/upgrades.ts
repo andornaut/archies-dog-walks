@@ -92,6 +92,8 @@ export const UPGRADES = {
     kind: "tradeOff",
     name: "Rush hour",
   },
+  // The pool order feeds the seeded upgrade draws, so charmer keeps its drawn position.
+  // eslint-disable-next-line sort-keys
   charmer: {
     art: "card-charmer",
     cardEffect: "Free $ card",
