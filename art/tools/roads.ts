@@ -25,7 +25,7 @@ import { execFileSync } from "node:child_process";
 import { mkdirSync, writeFileSync } from "node:fs";
 
 import { rgb } from "@andornaut/art-kit/colour";
-import { encodeRgbaPng } from "@andornaut/art-kit/png";
+import { encodeRgbPng } from "@andornaut/art-kit/png";
 import type { RgbaImage } from "@andornaut/art-kit/rgbaImage";
 import {
   type Random,
@@ -781,8 +781,9 @@ function check(key: string, g: Grid): void {
   }
 }
 
+// An opaque strip or sheet as an RGB PNG, which Aseprite opens as a Background layer.
 function savePng(image: RgbaImage): Uint8Array {
-  return encodeRgbaPng({ deflateLevel: 6, deflateStrategy: 0, filterType: -1 }, image);
+  return encodeRgbPng({ deflateLevel: 6, deflateStrategy: 0, filterType: -1 }, image);
 }
 
 export function preview(out: string, scale = 2, gap = 8): void {
