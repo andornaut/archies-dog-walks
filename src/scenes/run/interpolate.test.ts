@@ -101,7 +101,7 @@ describe("blendWalk", () => {
   });
 });
 
-// Its queued-steps case takes about 7 s on a busy machine; the limit is four times that.
+// Its queued-steps case takes about 4 s in an idle 4-CPU container; the limit is over 4 times that.
 describe("leadWalk", { timeout: 30_000 }, () => {
   // The pack's lane motion drawn for a walk, the inputs queued for its next step and the
   // seconds banked toward that step.
@@ -176,8 +176,19 @@ describe("leadWalk", { timeout: 30_000 }, () => {
   });
 
   // A started walk stepped `steps` times with a move right on the first step, so a lane move
-  // may be under way.
+  // may be under way. Each count's session is started and stepped once for every case that reads
+  // it, since starting a walk plans its first zone.
+  const stepped = new Map<number, Session>();
   function steppedSession(steps: number): Session {
+    let session = stepped.get(steps);
+    if (session === undefined) {
+      session = stepFreshSession(steps);
+      stepped.set(steps, session);
+    }
+    return session;
+  }
+
+  function stepFreshSession(steps: number): Session {
     const streams = runStreams(3);
     let session = startSession(gameData, streams, screenRoadGeometry, {
       road: startRoad(LANE_COUNT),

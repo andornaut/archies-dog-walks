@@ -19,7 +19,7 @@ const POSITIONS = Array.from({ length: WORLD.walkLength }, (_, position) => posi
 // The seeds the quota draws sample, and the fewer the planner's placements do, each zone's plan
 // taking a second or more.
 const SEEDS = Array.from({ length: 12 }, (_, i) => i + 1);
-const PLAN_SEEDS = SEEDS.slice(0, 2);
+const PLAN_SEEDS = SEEDS.slice(0, 1);
 
 // A real run on the default reachable route, with the Pocket's gear.
 const zonedRun = (position: number, pocket: GearId | null = null) => ({

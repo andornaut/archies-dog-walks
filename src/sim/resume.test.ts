@@ -116,14 +116,20 @@ function walkReaching(): { inputs: readonly InputEvent[]; run: RunState; seed: n
 // A walk saved between zones and resumed from its checkpoint, as the next launch does, plays the
 // rest of the walk as the walk itself did: the run's streams take up where they were, each zone
 // is planned from the seed as before, and transient movement timing starts fresh at the boundary.
-describe("a walk resumed from its checkpoint", () => {
+// Each case plays the rest of the walk, up to about 11 s in an idle 4-CPU container, and gets more
+// than 4 times that.
+describe("a walk resumed from its checkpoint", { timeout: 60_000 }, () => {
   const CASES: readonly { point: Point; zone: number }[] = [
     { point: "zoneStart", zone: 2 },
     { point: "fork", zone: 2 },
     { point: "zoneStart", zone: 3 },
   ];
-  // The walk played once from its start in the game, saved at every case's point.
+  // The walk simulated, then played once from its start in the game, saved at every case's point:
+  // a hook each, so each holds one walk's work.
   let played: ReturnType<typeof playOn>;
+  beforeAll(() => {
+    walkReaching();
+  }, 90_000);
   beforeAll(() => {
     const { inputs, seed } = walkReaching();
     const streams = runStreams(seed);

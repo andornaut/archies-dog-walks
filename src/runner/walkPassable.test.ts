@@ -413,9 +413,16 @@ describe("the planned road", { timeout: 200_000 }, () => {
     return walk;
   };
 
-  it("keeps every move passable in every zone, at the shares, with a taller pack and hopping", () => {
-    expectPassable(PASSABLE);
-  });
+  it.each(zonePlaces)(
+    "keeps every move passable in $zone at walk position $zoneIndex, at the shares, with a taller pack and hopping",
+    ({ zone, zoneIndex }) => {
+      const cases = PASSABLE.filter(
+        (passable) => passable.zone === zone && passable.zoneIndex === zoneIndex,
+      );
+      expect(cases.length).toBeGreaterThan(0);
+      expectPassable(cases);
+    },
+  );
   // Other minor obstacle counts on the game's pack: denser, the last zone's count rising by the
   // gain for each zone walked before it, and counts at which seed 1 plans a dart that leaves the
   // road while it meets the pack, with another obstacle beside it or soon after it in a lane next

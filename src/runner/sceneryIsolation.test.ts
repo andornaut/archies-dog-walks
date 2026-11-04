@@ -137,10 +137,21 @@ function walk(
 }
 
 describe("scenery layers", { timeout: 30_000 }, () => {
+  // The walk with no layer, walked once for every layer compared with it.
+  const plainWalks = new Map<number, ReturnType<typeof walk>>();
+  const plainWalk = (seed: number) => {
+    let plain = plainWalks.get(seed);
+    if (plain === undefined) {
+      plain = walk(seed, null);
+      plainWalks.set(seed, plain);
+    }
+    return plain;
+  };
+
   it.each(Object.keys(LAYERS).map((name) => [name, 1] as const))(
     "%s leaves a same-seed walk unchanged, seed %i",
     (name, seed) => {
-      const plain = walk(seed, null);
+      const plain = plainWalk(seed);
       const layered = walk(seed, LAYERS[name]?.(seed) ?? null);
       expect(layered.out).toBeGreaterThan(0);
       expect(layered.session).toEqual(plain.session);

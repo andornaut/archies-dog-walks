@@ -56,37 +56,42 @@ function runs(count: number, overrides: Overrides = {}): RunResult[] {
 }
 
 const FEE_AND_BADGE_SEEDS = [1, 2] as const;
+const FEE_AND_BADGE = config({ pack: RISKY, policy: "alwaysHearts", skill: SKILL_PRESETS.novice });
 const feeAndBadgeRuns = new Map<number, RunResult>();
 
-// Fee and badge assertions only read this exact pair of real walks.
+// Fee, badge and reproducibility assertions only read this exact pair of real walks.
 function feeAndBadgeRun(seed: (typeof FEE_AND_BADGE_SEEDS)[number]): RunResult {
   let result = feeAndBadgeRuns.get(seed);
   if (result === undefined) {
-    result = simulateRun(
-      gameData,
-      seed,
-      config({ pack: RISKY, policy: "alwaysHearts", skill: SKILL_PRESETS.novice }),
-    );
+    result = simulateRun(gameData, seed, FEE_AND_BADGE);
     feeAndBadgeRuns.set(seed, result);
   }
   return result;
 }
 
-// Each whole-run comparison gets its own execution limit.
-describe("simulateRun", { timeout: 30_000 }, () => {
-  describe("seed reproducibility", () => {
-    const risky = config({ pack: RISKY, skill: SKILL_PRESETS.novice });
-    let first: RunResult;
-    beforeAll(() => {
-      first = simulateRun(gameData, 7, risky);
-    }, 30_000);
+// One whole walk takes up to about 15 s in an idle 4-CPU container, so a test or hook that
+// simulates one gets 5 times that.
+const WALK_TIMEOUT = 75_000;
 
+function beforeFeeAndBadgeRuns(): void {
+  for (const seed of FEE_AND_BADGE_SEEDS) {
+    beforeAll(() => {
+      feeAndBadgeRun(seed);
+    }, WALK_TIMEOUT);
+  }
+}
+
+describe("simulateRun", { timeout: WALK_TIMEOUT }, () => {
+  beforeFeeAndBadgeRuns();
+
+  // A fresh walk matches the shared walk of its seed, and the other shared walk differs.
+  describe("seed reproducibility", () => {
     it("gives the same result for the same seed", () => {
-      expect(simulateRun(gameData, 7, risky)).toEqual(first);
+      expect(simulateRun(gameData, 1, FEE_AND_BADGE)).toEqual(feeAndBadgeRun(1));
     });
 
     it("gives a different result for a different seed", () => {
-      expect(simulateRun(gameData, 8, risky)).not.toEqual(first);
+      expect(feeAndBadgeRun(2)).not.toEqual(feeAndBadgeRun(1));
     });
   });
 
@@ -182,13 +187,12 @@ describe("simulateRun", { timeout: 30_000 }, () => {
 });
 
 // The badge counters of a few real walks match what their sessions counted.
-describe("badgeCounters", { timeout: 30_000 }, () => {
+describe("badgeCounters", () => {
+  beforeFeeAndBadgeRuns();
   const results: RunResult[] = [];
-  for (const seed of FEE_AND_BADGE_SEEDS) {
-    beforeAll(() => {
-      results.push(feeAndBadgeRun(seed));
-    }, 30_000);
-  }
+  beforeAll(() => {
+    results.push(...FEE_AND_BADGE_SEEDS.map(feeAndBadgeRun));
+  });
   const counters = () =>
     badgeCounters(
       gameData,

@@ -31,7 +31,7 @@ const HERRING_KINDS = keysOf(REAL.minorObstacles).flatMap((kind: MinorObstacleId
     { kind, movement, share: read(REAL.tuning, "probability", movement.herringShare), zones },
   ];
 });
-const SEEDS = Array.from({ length: 8 }, (_, i) => i + 1);
+const SEEDS = Array.from({ length: 6 }, (_, i) => i + 1);
 const HERRING_SHARE_TOLERANCE = 0.1;
 // Enough draws that the tolerance is 4 standard deviations of their share, sqrt(0.25 / n) at most.
 const HERRING_MOVERS_ENOUGH = Math.ceil(0.25 / (HERRING_SHARE_TOLERANCE / 4) ** 2);

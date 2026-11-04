@@ -496,8 +496,9 @@ describe("planZone", { timeout: 150_000 }, () => {
     },
   );
 
-  it("keeps every selected card and guaranteed kind without substitution in every zone", () => {
-    for (const { position, zone } of POSITIONS) {
+  it.each(POSITIONS)(
+    "keeps every selected card and guaranteed kind without substitution in $zone at walk position $position",
+    ({ position, zone }) => {
       const zoned = inZone(realRun(REAL), zone, position);
       for (const seed of SWEEP_SEEDS) {
         const planned = realPlanWithDelivery(seed, zone, position);
@@ -522,8 +523,8 @@ describe("planZone", { timeout: 150_000 }, () => {
         expect(plain.length, `seed ${seed}`).toBeGreaterThan(0);
         expect(cards, `seed ${seed}`).toBe(asked);
       }
-    }
-  });
+    },
+  );
 
   // Where a mover stands once it has made its last move, as the walk moves it: a dart that stops
   // short, and a stepper, hopper or stalker whichever way it chooses its moves. Each is the
