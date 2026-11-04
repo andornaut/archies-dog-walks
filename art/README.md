@@ -17,7 +17,7 @@ The game's pixel art, effects and sound, drawn by script, and what is left to dr
 
 ## Method
 
-The generators are TypeScript modules in `art/tools/`, which Node 24 runs directly. They use the art-kit 0.12 Node package and its `skia-canvas` peer, pinned in `package-lock.json` and installed by `npm ci`. Drawing, raster operations, export, preview composition and font mechanisms delegate to art-kit. Aseprite writes the sources and sheets, and sox and ffmpeg render the sounds. House palettes, glyph policy, depth geometry and output paths remain local.
+The generators are TypeScript modules in `art/tools/`, which Node 24 runs directly. They use the art-kit Node package and its `skia-canvas` peer, pinned in `package-lock.json` and installed by `npm ci`. Drawing, raster operations, export, preview composition and font mechanisms delegate to art-kit. Aseprite writes the sources and sheets, and sox and ffmpeg render the sounds. House palettes, glyph policy, depth geometry and output paths remain local.
 
 - `art/tools/<set>.ts` draws every asset except the home page's canvas grabs (`home-road`, `home-start`). Run `node art/tools/<set>.ts build` (or `preview OUT.png`) from the repository root. Shared drawing tools are in `pixel.ts` (whose only command is `palette`), and for pictures composed from exported art in `scene.ts`.
 - A build writes the set's Aseprite sources under `art/` and exports them to `public/art/` (`sprites/<key>.png` and `.json`, `images/<key>.png`, `fonts/<key>.png` and `.fnt`, `sounds/<key>.ogg` and `.m4a`). Each tool's header comment names its folders. Exceptions:
