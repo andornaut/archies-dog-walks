@@ -5,10 +5,56 @@ import type { MoverPlacement, PlacementContext } from "./moverModel.ts";
 import type { LaneSpan } from "./movers.ts";
 import {
   compileSignature,
+  type SignaturePath,
   signaturePlace,
   type SignatureSweep,
   signatureTravelSweeps,
 } from "./signaturePaths.ts";
+
+// The part of a sweep on the road, where its lane position is between left and right. Only exit
+// legs may cross a road edge, and those legs are linear in x.
+function sweepOnRoad(
+  route: SignaturePath,
+  left: number,
+  right: number,
+  sweep: SignatureSweep,
+): SignatureSweep[] {
+  const dx = sweep.to.x - sweep.from.x;
+  if (dx === 0) {
+    return sweep.from.x > left && sweep.from.x < right ? [sweep] : [];
+  }
+  const fractions = [(left - sweep.from.x) / dx, (right - sweep.from.x) / dx].sort((a, b) => a - b);
+  const first = Math.max(0, fractions[0] ?? 0);
+  const last = Math.min(1, fractions[1] ?? 1);
+  if (first >= last) {
+    return [];
+  }
+  const start = sweep.start + (sweep.end - sweep.start) * first;
+  const end = sweep.start + (sweep.end - sweep.start) * last;
+  return [
+    {
+      component: sweep.component,
+      end,
+      from: signaturePlace(route, start, sweep.component),
+      start,
+      to: signaturePlace(route, end, sweep.component),
+    },
+  ];
+}
+
+// The lanes a mover span lanes wide touches over sweeps, its box cut lanes inside a lane at each
+// side.
+function sweepsLaneSpan(
+  laneCount: number,
+  span: number,
+  cut: number,
+  sweeps: readonly SignatureSweep[],
+): LaneSpan {
+  const points = sweeps.flatMap((sweep) => [sweep.from.x, sweep.to.x]);
+  return points.length === 0
+    ? { count: 0, first: 0 }
+    : laneSpan(laneCount, Math.min(...points), Math.max(...points) + span - 1, cut);
+}
 
 // Choreography ends before pack contact. Reserve its whole continuous body sweep against
 // other spawns, but block the guaranteed path only during actual contact with the pack.
@@ -38,34 +84,8 @@ export function signaturePlacements(
       if (route === null) {
         continue;
       }
-      // Only exit legs may cross a road edge, and those legs are linear in X.
-      const onRoad = (cut: number, sweep: SignatureSweep): SignatureSweep[] => {
-        const dx = sweep.to.x - sweep.from.x;
-        const left = -span + cut;
-        const right = laneCount - cut;
-        if (dx === 0) {
-          return sweep.from.x > left && sweep.from.x < right ? [sweep] : [];
-        }
-        const fractions = [(left - sweep.from.x) / dx, (right - sweep.from.x) / dx].sort(
-          (a, b) => a - b,
-        );
-        const first = Math.max(0, fractions[0] ?? 0);
-        const last = Math.min(1, fractions[1] ?? 1);
-        if (first >= last) {
-          return [];
-        }
-        const start = sweep.start + (sweep.end - sweep.start) * first;
-        const end = sweep.start + (sweep.end - sweep.start) * last;
-        return [
-          {
-            component: sweep.component,
-            end,
-            from: signaturePlace(route, start, sweep.component),
-            start,
-            to: signaturePlace(route, end, sweep.component),
-          },
-        ];
-      };
+      const onRoad = (cut: number, sweep: SignatureSweep) =>
+        sweepOnRoad(route, -span + cut, laneCount - cut, sweep);
       const whole = signatureTravelSweeps(route, 0, roadLength + height).flatMap((sweep) =>
         onRoad(0, sweep),
       );
@@ -81,12 +101,8 @@ export function signaturePlacements(
           ? route.complete + Math.max(0, sightLength - signaturePlace(route, route.complete).y)
           : Math.min(...contact.map((sweep) => sweep.start));
       const appears = sightLength - firstContact;
-      const sweptSpan = (sweeps: readonly SignatureSweep[], cut = 0): LaneSpan => {
-        const points = sweeps.flatMap((sweep) => [sweep.from.x, sweep.to.x]);
-        return points.length === 0
-          ? { count: 0, first: 0 }
-          : laneSpan(laneCount, Math.min(...points), Math.max(...points) + span - 1, cut);
-      };
+      const sweptSpan = (sweeps: readonly SignatureSweep[], cut = 0) =>
+        sweepsLaneSpan(laneCount, span, cut, sweeps);
       const levels = whole.flatMap((sweep) => [
         appears + sweep.start - sweep.from.y,
         appears + sweep.end - sweep.to.y,
