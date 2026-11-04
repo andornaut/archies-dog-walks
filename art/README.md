@@ -31,7 +31,25 @@ Builds and previews run in the local image `archie-check:node24.21.0-aseprite1.2
   - `appicons.ts` writes `art/appicon.aseprite`, `art/favicon-32.aseprite` and `art/favicon-16.aseprite`, the app icons in `public/icons/` and the favicons `public/art/favicon.png` and `favicon-16.png`, drawn from Archie's exported portrait and his face in `dogs.ts`; `share.ts` writes `art/share/share-card.aseprite` and `public/og-image.png`.
   - `fonts.ts` and `sounds.ts` write no sources. `hood_parks.ts preview` and `sounds.ts preview` take an output folder, not a PNG, and `sounds.ts build` also writes the loop flags in `public/art/manifest.extra.json`.
   - Extra commands: `backdrops.ts camera`, `backdrops.ts verges` (with `--write`, to `shared/verges.json`), `depths.ts compare DIR`, `hood_city.ts cards OUT.png` and `sounds OUT_DIR`, `hood_markets.ts cards OUT.png` and `sounds OUT_DIR`, `hood_parks.ts sounds OUT_DIR`, `minis.ts compare OUT.png`, `pixel.ts palette` (to `shared/palette.json`), `roadside.ts table` (with `--write`, to `shared/roadside.json`), `screens.ts shop-preview OUT.png` and `sounds.ts one KEY OUT_DIR`.
-- Builds read earlier exports, so a full rebuild runs `roads` before every set that composes the road strips, `dogs`, `owners` and `road` before `cards`, `portraits` before `appicons` and `screens`, `hazards` before `depths`, `backdrops` before `roadside`, `glyphs` before `hood_city`, `ui` before `hood_markets`, and `fonts`, `backdrops` and `screens` before `share`.
+- Builds read earlier exports. `node art/tools/build.ts [--check] [SET...]` holds the build order (`SETS`) and the exports each set reads (`NEEDS`), runs every set's build in that order and stops at the first failure. Named sets rebuild those sets and every set that reads their exports. `--check` then fails on any changed or untracked file under the paths the builds write (`art/`, `public/art/`, `public/icons/`, `public/og-image.png` and `shared/`) and lists the paths, so on a clean clone it proves the committed art reproduces. Run it offline in the check image from any checkout or worktree. The command mounts the checkout and the repository's common git directory read-only at their own paths, clones the checked-out commit inside the container and installs from the main checkout's npm cache:
+
+  ```sh
+  common="$(git rev-parse --path-format=absolute --git-common-dir)"
+  docker run --rm --network none --cpus 4 --memory 16g \
+    --user 19001:19001 --group-add "$(stat -c %g .)" -e HOME=/tmp -e SRC="$PWD" \
+    --mount type=bind,src="$PWD",dst="$PWD",readonly \
+    --mount type=bind,src="$common",dst="$common",readonly \
+    --mount type=bind,src="$(dirname "$common")/.claude/bus/npm-cache",dst=/npm-cache,readonly \
+    archie-check:node24.21.0-aseprite1.2.30 \
+    sh -c 'git config --global safe.directory "*" \
+      && git clone -q "$SRC" /tmp/work \
+      && cp -r /npm-cache /tmp/npm-cache \
+      && cd /tmp/work && npm ci --offline --cache /tmp/npm-cache \
+      && node art/tools/build.ts --check'
+  ```
+
+  To keep a rebuild, drop `--rm` and `--check` and copy the trees out with `docker cp`.
+
 - `art/tools/contact_sheet.ts` is a nonproduction preview of exported sprites: `node art/tools/contact_sheet.ts OUT.png KEY...` from the repository root. It reads `public/art/sprites/<key>.png` and `.json`, with the `pixel.ts` preview's background, scale and gap, and sizes every cell from the largest frame. It writes one sheet per zone road colour from `shared/export/game-data.json`, named as a set's preview sheets are (`OUT-<hex>.png`).
 - A build overwrites the `.aseprite` files: change the tool, not the sources.
 - Each tool's header comment holds its assets' sizes, tags, timings and placement coordinates.
