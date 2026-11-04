@@ -4,11 +4,10 @@ The design of the game, its targets, and how it is tuned and tested. A pixel-art
 
 ## Docs
 
-| Doc                                | What it holds                                       | Changes when                 |
-| ---------------------------------- | --------------------------------------------------- | ---------------------------- |
-| [`card-design.md`](card-design.md) | Card principles, current choices and approved fixes | A card design decision lands |
-| [`design.md`](design.md)           | The rulebook: rules and content                     | A design decision lands      |
-| [`ideas.md`](ideas.md)             | Undecided and cut ideas                             | Every design session         |
+| Doc                      | What it holds                   | Changes when            |
+| ------------------------ | ------------------------------- | ----------------------- |
+| [`design.md`](design.md) | The rulebook: rules and content | A design decision lands |
+| [`ideas.md`](ideas.md)   | Undecided and cut ideas         | Every design session    |
 
 Docs state the current rule only; git keeps the history. An idea stays in `ideas.md` until agreed, then moves to the doc it belongs in.
 
@@ -46,4 +45,4 @@ Some walks should fail: the road stays calm, so losing comes from bumps and choi
 
 Version 1 is complete. Tuning continues against the targets above. The game is called Archie's Dog Walks.
 
-Runtime generation targets 100% delivery: planner acceptance requires every plan complete using at most 75% of the per-attempt search allowance. The release floor stays an independently certified 90% of each neighbourhood's original active and auxiliary logical requests, allowing optional reward omissions under the [spawning rules](design.md#spawning-details). Guaranteed owners, kind and role minima, full movement capabilities, native safety and quiet coverage are never traded for delivery.
+Runtime generation targets 100% delivery: planner acceptance requires every plan complete using at most 75% of the per-attempt search allowance. The release floor stays an independently certified 90% of each neighbourhood's original active and auxiliary logical requests, allowing optional reward omissions under the [spawning rules](design.md#spawning-details).

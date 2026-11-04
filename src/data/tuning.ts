@@ -269,8 +269,8 @@ export const TUNING = {
     spotlightSeconds: 60,
     // How long the Stinky debuff lasts, in walking time.
     stinkySeconds: 60,
-    // A message strip line still waiting its turn this long is dropped unseen, but for a hint or
-    // a firing, which wait however long it takes.
+    // A message strip line still waiting its turn this long is dropped unseen, but for a badge
+    // line, a hint or the firing line, which wait however long it takes.
     stripLineWaitSeconds: 3,
     // Every zone is the same distance: zone 1 takes this long, later zones less as speed rises.
     zoneAtBaseSpeed: 148,
