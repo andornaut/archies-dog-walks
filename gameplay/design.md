@@ -274,8 +274,8 @@ Each mover draws how many times it moves when it comes on, within its kind's ran
 - **Owner faces:** an owner at full hearts looks happy, whatever their max. Below full, an owner looks upset at 1♥, neutral at 2♥ or when more than one heart below their max, and happy otherwise (one below for an owner with more than 3♥)
 - **Return home:** the end screen shows the walker and pack coming back up the front path while the owners wave; fired dogs are absent
 - **Road markers:** things worth grabbing (tips, treats and lucky finds) bob gently; obstacles carry no marker. With reduced motion nothing bobs
-- **Tip grabbed:** an amber sparkle twinkles once, briefly, just above the lead dog's head, and is a tip's only sparkle; tips grabbed together restart it rather than adding more. With reduced motion it doesn't play
-- **Treat grabbed:** the owner smiles and the heart change plays (see Heart changes)
+- **Tip grabbed:** an amber coin sparkle twinkles once, briefly, just above the lead dog's head (above the walker's when no dog is shown), and is a tip's only sparkle; tips and cash treats grabbed together restart it rather than adding more. With reduced motion it doesn't play
+- **Treat grabbed:** the owner smiles and the heart change plays (see Heart changes). A treat that pays cash instead plays the tip's coin sparkle, as its only sparkle. The Lost wallet, neighbourhood pay and the Walk bonus keep their own animations and play no coin sparkle
 
 ### Neighbourhood celebration
 
