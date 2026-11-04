@@ -209,7 +209,7 @@ Each acquired or refreshed contact debuff shows one effect at the ordered pack's
 
 ### Ambient
 
-Cosmetic movers drawn by `art/tools/ambient.py` (style guide, Ambient). The cross street draws all but the sky movers from `@50`.
+Cosmetic movers drawn by `art/tools/ambient.ts` (style guide, Ambient). The cross street draws all but the sky movers from `@50`.
 
 | Key                                                       | Type   | Size                       | Tags                               | Note                                                  |
 | --------------------------------------------------------- | ------ | -------------------------- | ---------------------------------- | ----------------------------------------------------- |
@@ -235,7 +235,7 @@ Cosmetic movers drawn by `art/tools/ambient.py` (style guide, Ambient). The cros
 
 ### Roadside props
 
-Placed by the style guide's Roadside table (`shared/roadside.json`): the lawn props beyond the sidewalks, the curb props on them. Drawn by `art/tools/roadside.py`, each with one `idle` tag: a still frame, or for a prop with a light or a flag a slow loop that rests on frame 0 most of the time.
+Placed by the style guide's Roadside table (`shared/roadside.json`): the lawn props beyond the sidewalks, the curb props on them. Drawn by `art/tools/roadside.ts`, each with one `idle` tag: a still frame, or for a prop with a light or a flag a slow loop that rests on frame 0 most of the time.
 
 | Key                                   | Size    | Tags   | Note                                                                                                 |
 | ------------------------------------- | ------- | ------ | ---------------------------------------------------------------------------------------------------- |
@@ -363,7 +363,7 @@ Card keys use the data keys (`card-skunk-rinse`, `card-belly-rubs`). The neighbo
 
 | Key                                                                                                                          | Type   | Size                  | Tags                                                                                                 | Note                                                                                                                                                    |
 | ---------------------------------------------------------------------------------------------------------------------------- | ------ | --------------------- | ---------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| App icons (not in manifest)                                                                                                  | PNG    | 16, 32, 180, 192, 512 |                                                                                                      | `art/tools/appicons.py`                                                                                                                                 |
+| App icons (not in manifest)                                                                                                  | PNG    | 16, 32, 180, 192, 512 |                                                                                                      | `art/tools/appicons.ts`                                                                                                                                 |
 | `font-body`, `font-title`                                                                                                    | font   | 8px                   |                                                                                                      | Includes `$` and a drawn `♥`                                                                                                                            |
 | `font-comic`                                                                                                                 | font   | 7px caps              |                                                                                                      | Colours baked in: draw untinted                                                                                                                         |
 | `font-display`, `font-display-cream`                                                                                         | font   | 10px caps             |                                                                                                      | Colours baked in: draw untinted                                                                                                                         |

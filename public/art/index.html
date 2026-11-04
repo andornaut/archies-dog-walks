@@ -146,7 +146,7 @@ canvas, .view img { display: block; image-rendering: pixelated; image-rendering:
 (() => {
 "use strict";
 const BASE = "/art/";
-// The house palette in pixel.py order (Endesga 32, the Toronto colours, the neutral greys), as K name and hex.
+// The house palette in pixel.ts order (Endesga 32, the Toronto colours, the neutral greys), as K name and hex.
 const PAL = "rust:be4a2f ochre:d77643 cream:ead4aa tan:e4a672 brown:b86f50 dbrown:733e39 plum:3e2731 dred:a22633 red:e43b44 orange:f77622 amber:feae34 yellow:fee761 green:63c74d dgreen:3e8948 forest:265c42 teal:193c3e blue:124e89 sky:0099db cyan:2ce8f5 white:ffffff lgrey:c0cbdc grey:8b9bb4 slate:5a6988 dslate:3a4466 navy:262b44 ink:181425 hot:ff0044 purple:68386c mauve:b55088 pink:f6757a skin1:e8b796 skin2:c28569 moss:9cb04a olive:6b8a35 dolive:445a26 canopy:357a2f pine:1e4d2b fir:11301c brick:8e3b2b dbrick:5e2620 clay:9a6a4a bark:523a2c walnut:2e2019 driftwood:a99c86 stone:8a857c dstone:625e58 ash:57606a shale:353b45 coal:26292f ttc:da291c turquoise:35c2a6 dturq:1f8a7a lilac:a77bd9 violet:6d4bb0 lime:b2d94a foam:a8e0e6 shallow:58b8c9 lake:2f7fa6 dlake:1d5576 gold:f9c74f peach:ff9e6b haze:cfe3ea azure:3d86e0 cobalt:2654b0 nlgrey:d8d8d8 ngrey:a4a4a4 nslate:727272 ndslate:4a4a4a".split(" ").map(p => p.split(":"));
 const $ = id => document.getElementById(id);
 const el = (tag, props = {}, kids = []) => {
