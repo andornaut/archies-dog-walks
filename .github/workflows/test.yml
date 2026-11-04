@@ -30,10 +30,9 @@ jobs:
   test:
     name: Test
     runs-on: ubuntu-latest
-    # Capped well under the six-hour default. The planner's whole-walk tests
-    # run the suite past fifteen minutes on a hosted runner, so a job still
-    # going at forty has hung rather than failed.
-    timeout-minutes: 40
+    # A run takes 5 to 9 minutes on a hosted runner, so a job still going at
+    # 20 has hung. The cap ends it before the bus stops watching CI at 30.
+    timeout-minutes: 20
 
     steps:
       - name: Checkout code
