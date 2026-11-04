@@ -3,6 +3,7 @@ import { readdirSync } from "node:fs";
 import js from "@eslint/js";
 import { defineConfig } from "eslint/config";
 import { createNodeResolver } from "eslint-plugin-import-x/node-resolver";
+import extensions from "eslint-plugin-import-x/rules/extensions";
 import noCycle from "eslint-plugin-import-x/rules/no-cycle";
 import globals from "globals";
 import ts from "typescript-eslint";
@@ -12,6 +13,17 @@ import { plugins, sourceRules, toolingRules } from "./eslint.config.base.mjs";
 const SOURCE_FILES = ["art/tools/**/*.ts", "src/**/*.ts"];
 const PHASER_FILES = ["src/main.ts", "src/scenes/**", "src/**/phaser/**"];
 const TEST_FILES = ["src/**/*.test.ts"];
+const CONFIG_FILES = ["*.ts", "*.js", "*.mjs"];
+
+// One plugin object for every config that uses import-x: ESLint refuses two different objects
+// under the same plugin name for one file.
+const IMPORT_X = {
+  plugins: { "import-x": { rules: { extensions, "no-cycle": noCycle } } },
+  settings: {
+    "import-x/extensions": [".ts"],
+    "import-x/resolver-next": [createNodeResolver({ extensions: [".ts", ".js"] })],
+  },
+};
 
 // The import boundaries, one row each: the files outside `except` may not import what `forbid`
 // names. Logic, layout and data stay free of Phaser and the scenes, so they run in unit tests
@@ -175,17 +187,20 @@ export default defineConfig(
   // No import cycles: a module in a cycle can run before what it imports has loaded. Type-only
   // imports are erased at build time, so they never form one.
   {
+    ...IMPORT_X,
     files: SOURCE_FILES,
-    plugins: { "import-x": { rules: { "no-cycle": noCycle } } },
     rules: { "import-x/no-cycle": "error" },
-    settings: {
-      "import-x/extensions": [".ts"],
-      "import-x/resolver-next": [createNodeResolver({ extensions: [".ts", ".js"] })],
-    },
+  },
+  // Every relative import names its file, ./x.ts or ./dir/index.ts, so plain node runs the source
+  // with type stripping and no resolver. Package imports keep their exported subpaths.
+  {
+    ...IMPORT_X,
+    files: [...SOURCE_FILES, ...CONFIG_FILES],
+    rules: { "import-x/extensions": ["error", "ignorePackages", { checkTypeImports: true }] },
   },
   // Config files: they produce what ships rather than being it.
   {
-    files: ["*.ts", "*.js", "*.mjs"],
+    files: CONFIG_FILES,
     plugins,
     rules: toolingRules,
   },
