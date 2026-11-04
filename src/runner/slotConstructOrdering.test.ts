@@ -299,19 +299,21 @@ describe("native envelope metadata consumer", () => {
     expect(after.orderingVisits).toBe(0);
   });
 
-  it.each(["foreign", "stale"] as const)(
+  it.each(["foreign", "frozen"] as const)(
     "preserves the source universe for %s preparations",
     (kind) => {
       const { following } = profiles();
       const input = kind === "foreign" ? { ...following } : following;
-      if (kind === "stale") {
-        Object.defineProperty(following.source, "weight", { value: 9 });
+      if (kind === "frozen") {
+        expect(() => Object.defineProperty(following.source, "weight", { value: 9 })).toThrow(
+          TypeError,
+        );
       }
       const before = scanned([[input]]);
       const after = run([[input]]);
       expect(after.result).toEqual(before.result);
       expect(after.calls).toEqual(before.calls);
-      // Foreign wrappers retain both old scans; an original native hint may remain stale.
+      // Foreign wrappers retain both old scans; a native preparation uses its ordering hint.
       expect(after.orderingVisits).toBe(kind === "foreign" ? before.orderingVisits : 0);
       expect(after.orderingPropagation).toBe(
         before.orderingPropagation! + (kind === "foreign" ? 2 : 1 - input.placements.length),

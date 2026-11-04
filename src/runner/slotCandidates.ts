@@ -1,3 +1,4 @@
+import { deepFreeze } from "./deepFreeze";
 import { moverLeavesMinimumLanes } from "./laneAlternatives";
 import {
   DART_LIFTS,
@@ -80,27 +81,18 @@ const readonlyMembers = (members: Set<MoverPlacement>): ReadonlySet<MoverPlaceme
   });
   return view;
 };
+// Native preparations are deeply frozen, borrowed source and profile included, so a registered
+// preparation keeps the shape it was compiled with.
 const nativePreparations = new WeakMap<
   PreparedSlotKind<string>,
   {
-    readonly compile: SlotSource<string>["compile"];
     readonly crossOnly: boolean;
     readonly hasStops: boolean;
     readonly maximumRows: number | undefined;
     readonly motion: NativeMotionIndex | undefined;
     readonly ordering: SlotPreparationOrdering;
-    readonly shape: string | undefined;
   }
 >();
-const preparationShape = (prepared: PreparedSlotKind<string>) => {
-  try {
-    return JSON.stringify(prepared, (_key, value: unknown) =>
-      typeof value === "number" && !Number.isFinite(value) ? { numeric: String(value) } : value,
-    );
-  } catch {
-    return undefined;
-  }
-};
 
 function nativePreparation<Kind extends string>(
   motion: NativeMotionIndex | undefined,
@@ -124,27 +116,18 @@ function nativePreparation<Kind extends string>(
           ? Math.max(maximumRows, placement.rows)
           : undefined;
     }
-    if (placement.stop !== undefined) {
-      Object.freeze(placement.stop);
-      hasStops = true;
-    }
-    Object.freeze(placement);
+    hasStops ||= placement.stop !== undefined;
   }
-  Object.freeze(prepared.columns);
-  Object.freeze(prepared.placements);
-  Object.freeze(prepared.request);
-  Object.freeze(prepared);
+  deepFreeze(prepared);
   if (maximumRows !== undefined && (!Number.isSafeInteger(maximumRows) || maximumRows < 1)) {
     maximumRows = undefined;
   }
   nativePreparations.set(prepared, {
-    compile: prepared.source.compile,
     crossOnly,
     hasStops,
     maximumRows,
     motion,
     ordering: Object.freeze({ envelopeWidth }),
-    shape: preparationShape(prepared),
   });
   return prepared;
 }
@@ -154,17 +137,11 @@ export function isNativeSlotCrossOnly(prepared: PreparedSlotKind<string>): boole
 }
 
 export function isNativeSlotPreparation(prepared: PreparedSlotKind<string>): boolean {
-  const saved = nativePreparations.get(prepared);
-  return (
-    saved !== undefined &&
-    saved.compile === prepared.source.compile &&
-    saved.shape !== undefined &&
-    saved.shape === preparationShape(prepared)
-  );
+  return nativePreparations.has(prepared);
 }
 
-// This preparation-time hint may stay stale after borrowed data changes. It only orders choices;
-// it never attests admission, row support or a complete domain traversal.
+// This preparation-time hint only orders choices; it never attests admission, row support or a
+// complete domain traversal.
 export function nativeSlotPreparationOrderingHint(
   work: { readonly propagate: () => boolean },
   prepared: PreparedSlotKind<string>,
@@ -615,23 +592,14 @@ export function createSlotPathProjection<Kind extends string>(
   geometry: Geometry<Kind>,
   path: PlannedSpawns<Kind>["path"],
 ) {
+  deepFreeze(geometry);
+  deepFreeze(path);
   const held = pathHeldLanes(path.map((row) => row.lane));
   const plan = { ...geometry, quotas: [] };
   const lanes = new LaneBlocks(plan, rowSpacing(plan), held);
   const catalogues = new WeakMap<PreparedSlotKind<Kind>, PathProjectionCatalogue>();
   // Path and stop proofs depend only on their keys and the fixed path, so every view shares them.
   const proofs = new Map<string, boolean>();
-  const contextShape = () => {
-    try {
-      return JSON.stringify([geometry, path], (_key, value: unknown) =>
-        typeof value === "number" && !Number.isFinite(value) ? { numeric: String(value) } : value,
-      );
-    } catch {
-      return undefined;
-    }
-  };
-  const origin = contextShape();
-  const matchesOrigin = () => origin !== undefined && contextShape() === origin;
   type PropagationBudget = PathProjectionBudget & { readonly kind: "propagation" };
   interface PreparationIndex {
     readonly aliases: ReadonlyMap<MoverPlacement, readonly number[]>;
@@ -657,7 +625,6 @@ export function createSlotPathProjection<Kind extends string>(
   >();
   const stats = {
     catalogues: 0,
-    contextChecks: 0,
     footprintGroups: 0,
     groupLookups: 0,
     groups: 0,
@@ -675,12 +642,7 @@ export function createSlotPathProjection<Kind extends string>(
     stopReuse: 0,
   };
   const current = (prepared: PreparedSlotKind<Kind>) => {
-    stats.contextChecks++;
-    if (!matchesOrigin()) {
-      indices.delete(prepared);
-      return false;
-    }
-    // The full native shape guard remains visible separately from indexed placement work.
+    // Native registration checks stay visible separately from indexed placement work.
     stats.nativeChecks++;
     if (!isNativeSlotPreparation(prepared)) {
       indices.delete(prepared);

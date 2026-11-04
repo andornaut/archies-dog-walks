@@ -126,12 +126,8 @@ describe("compiled native slot domains", () => {
     ).toBeUndefined();
     const mover = values[0]!.entry.event.mover!;
     const warning = mover.warning;
-    try {
-      Reflect.set(mover, "warning", warning + 1);
-      expect(domains.attestsCompleteOwnerDomain(work, scope, owner, values, token!)).toBe(false);
-    } finally {
-      Reflect.set(mover, "warning", warning);
-    }
+    expect(Reflect.set(mover, "warning", warning + 1)).toBe(false);
+    expect(mover.warning).toBe(warning);
     expect(domains.attestsCompleteOwnerDomain(work, scope, owner, values, token!)).toBe(true);
     owner.preparations = () => [];
     expect(domains.attestsCompleteOwnerDomain(work, scope, owner, values, token!)).toBe(false);
@@ -348,8 +344,8 @@ describe("compiled native slot domains", () => {
     expect(Object.isFrozen(prepared)).toBe(true);
     expect(Object.isFrozen(prepared.placements)).toBe(true);
     expect(Object.isFrozen(template.stop)).toBe(true);
-    expect(Object.isFrozen(source)).toBe(false);
-    expect(Object.isFrozen(prepared.request.mover)).toBe(false);
+    expect(Object.isFrozen(source)).toBe(true);
+    expect(Object.isFrozen(prepared.request.mover)).toBe(true);
     const blockedPath = path.map((row) => ({ ...row, lane: template.stop!.first }));
     const projection = native.createSlotPathProjection(geometry, blockedPath);
     const anchor = { distance: path[4]!.distance, lane: template.lane, row: 4, slot: 0 };

@@ -208,10 +208,10 @@ describe("native producer motion indexing", () => {
           ...new Set(prepared.placements.filter((entry) => entry.selection!.draws === draw)),
         ]);
       });
-      expect(changed).toBe(!metered);
-      expect(Object.isFrozen(selected)).toBe(metered);
-      expect(Object.isFrozen(selected.draws)).toBe(false);
-      expect(Object.isFrozen(prepared.request.mover)).toBe(false);
+      expect(changed).toBe(false);
+      expect(Object.isFrozen(selected)).toBe(true);
+      expect(Object.isFrozen(selected.draws)).toBe(true);
+      expect(Object.isFrozen(prepared.request.mover)).toBe(true);
     }
   });
 
@@ -302,7 +302,7 @@ describe("native producer motion indexing", () => {
       expect(
         actual.projection.view({ propagate: () => false }, actual.prepared, actual.selected),
       ).toEqual({ kind: "propagation", status: "budget" });
-      expect(
+      expect(() =>
         actual.projection.view(
           {
             propagate: () => {
@@ -313,7 +313,8 @@ describe("native producer motion indexing", () => {
           actual.prepared,
           actual.selected,
         ),
-      ).toEqual({ status: "unknown" });
+      ).toThrow(TypeError);
+      expect(actual.path[0]!.lane).toBe(4);
       expect(actual.projection.statistics()).toMatchObject({
         membershipBuilds: 0,
         membershipVisits: 0,
@@ -361,55 +362,55 @@ describe("native producer motion indexing", () => {
   });
 
   it.each(["compile", "geometry", "nested", "path"] as const)(
-    "rejects %s mutation at the final copy callback and retains all spent copy work",
+    "rejects %s mutation at the final copy callback and publishes the unchanged view",
     (subject) => {
       const actual = fixture();
       const compile = actual.source.compile;
       const warning = actual.prepared.placements[0]!.path.warning;
-      const mutate = () => {
+      const snapshot = JSON.stringify([actual.geometry, actual.path, actual.prepared]);
+      const mutate = (): boolean => {
         if (subject === "compile") {
-          Reflect.set(actual.source, "compile", (...args: Parameters<typeof compile>) =>
+          return Reflect.set(actual.source, "compile", (...args: Parameters<typeof compile>) =>
             compile(...args),
           );
-          return () => Reflect.set(actual.source, "compile", compile);
         }
-        if (subject === "geometry") {
-          actual.geometry.roadLength++;
-          return () => actual.geometry.roadLength--;
+        if (subject === "nested") {
+          return Reflect.set(actual.prepared.placements[0]!.path, "warning", warning + 1);
         }
-        if (subject === "path") {
-          actual.path[0]!.lane = 3;
-          return () => {
-            actual.path[0]!.lane = 4;
-          };
+        try {
+          if (subject === "geometry") {
+            actual.geometry.roadLength++;
+          } else {
+            actual.path[0]!.lane = 3;
+          }
+          return true;
+        } catch (error) {
+          expect(error).toBeInstanceOf(TypeError);
+          return false;
         }
-        Reflect.set(actual.prepared.placements[0]!.path, "warning", warning + 1);
-        return () => Reflect.set(actual.prepared.placements[0]!.path, "warning", warning);
       };
-      let restore = () => {};
+      let changed: boolean | undefined;
       let calls = 0;
-      try {
-        expect(
-          actual.projection.view(
-            {
-              propagate: () => {
-                if (++calls === actual.count + 1) {
-                  restore = mutate();
-                }
-                return true;
-              },
+      expect(
+        actual.projection.view(
+          {
+            propagate: () => {
+              if (++calls === actual.count + 1) {
+                changed = mutate();
+              }
+              return true;
             },
-            actual.prepared,
-            actual.selected,
-          ),
-        ).toEqual({ status: "unknown" });
-        expect(calls).toBe(actual.count + 1);
-        expect(actual.projection.motionTiers({ propagate: () => true }, actual.prepared)).toEqual({
-          status: "unknown",
-        });
-      } finally {
-        restore();
-      }
+          },
+          actual.prepared,
+          actual.selected,
+        ).status,
+      ).toBe("view");
+      expect(calls).toBe(actual.count + 1);
+      expect(changed).toBe(false);
+      expect(JSON.stringify([actual.geometry, actual.path, actual.prepared])).toBe(snapshot);
+      expect(actual.projection.motionTiers({ propagate: () => true }, actual.prepared).status).toBe(
+        "tiers",
+      );
       let refused = 0;
       expect(
         actual.projection.view(
@@ -419,9 +420,6 @@ describe("native producer motion indexing", () => {
         ),
       ).toEqual({ kind: "propagation", status: "budget" });
       expect(refused).toBe(actual.count + 1);
-      expect(
-        actual.projection.view({ propagate: () => true }, actual.prepared, actual.selected).status,
-      ).toBe("view");
       expect(actual.projection.statistics().membershipVisits).toBe(0);
     },
   );

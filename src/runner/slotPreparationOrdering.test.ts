@@ -89,21 +89,21 @@ it("reuses a frozen full-profile minimum from native preparation without compili
   expect(template).toHaveBeenCalledTimes(compiled);
 });
 
-it("requires the original native identity, source method and borrowed profile shape", () => {
+it("requires the original native identity and freezes the borrowed source and profile", () => {
   const { footprint, motion, source } = profile();
   const prepared = prepareSlotKind(streams(), geometry, source);
+  const snapshot = JSON.stringify(prepared);
   expect(isNativeSlotPreparation(prepared)).toBe(true);
   expect(isNativeSlotPreparation({ ...prepared })).toBe(false);
-  footprint.rows++;
-  expect(isNativeSlotPreparation(prepared)).toBe(false);
-  footprint.rows--;
-  motion.steps.max++;
-  expect(isNativeSlotPreparation(prepared)).toBe(false);
-  motion.steps.max--;
-  expect(isNativeSlotPreparation(prepared)).toBe(true);
+  expect(() => footprint.rows++).toThrow(TypeError);
+  expect(() => motion.steps.max++).toThrow(TypeError);
   const compile = source.compile;
-  Object.defineProperty(source, "compile", { value: () => compile(streams()) });
-  expect(isNativeSlotPreparation(prepared)).toBe(false);
+  expect(() =>
+    Object.defineProperty(source, "compile", { value: () => compile(streams()) }),
+  ).toThrow(TypeError);
+  expect(source.compile).toBe(compile);
+  expect(JSON.stringify(prepared)).toBe(snapshot);
+  expect(isNativeSlotPreparation(prepared)).toBe(true);
 });
 
 describe("complete native ordering boundaries", () => {

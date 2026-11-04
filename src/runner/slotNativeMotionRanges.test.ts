@@ -186,33 +186,32 @@ describe("native whole-profile motion ranges", () => {
     ).toThrow(error);
   });
 
-  it("rejects source mutation in the final native-copy callback before publishing ordering authority", () => {
+  it("rejects a source replacement in the final native-copy callback and still publishes the view", () => {
     const { count, prepared, projection, selected, source } = fixture();
     const compile = source.compile;
     let calls = 0;
-    try {
-      const result = projection.view(
-        {
-          propagate: () => {
-            if (++calls === count + 1) {
-              Reflect.set(source, "compile", (...args: Parameters<typeof compile>) =>
-                compile(...args),
-              );
-            }
-            return true;
-          },
+    let replaced: boolean | undefined;
+    const result = projection.view(
+      {
+        propagate: () => {
+          if (++calls === count + 1) {
+            replaced = Reflect.set(source, "compile", (...args: Parameters<typeof compile>) =>
+              compile(...args),
+            );
+          }
+          return true;
         },
-        prepared,
-        selected,
-      );
-      expect(calls).toBe(count + 1);
-      expect(result).toEqual({ status: "unknown" });
-    } finally {
-      Reflect.set(source, "compile", compile);
-    }
+      },
+      prepared,
+      selected,
+    );
+    expect(calls).toBe(count + 1);
+    expect(replaced).toBe(false);
+    expect(source.compile).toBe(compile);
+    expect(result.status).toBe("view");
   });
 
-  it("checks selector callback staleness before publishing nonempty or empty ordering facts", () => {
+  it("rejects a path change in the selector callback before publishing ordering facts", () => {
     for (const empty of [false, true]) {
       const { path, prepared, projection, selected } = fixture();
       const refs = new Set(empty ? [] : selected);
@@ -223,10 +222,8 @@ describe("native whole-profile motion ranges", () => {
           path[0]!.lane = 3;
         },
       });
-      expect(projection.view({ propagate: () => true }, prepared, refs)).toEqual({
-        status: "unknown",
-      });
-      path[0]!.lane = 4;
+      expect(() => projection.view({ propagate: () => true }, prepared, refs)).toThrow(TypeError);
+      expect(path[0]!.lane).toBe(4);
       expect(
         projection.view(
           { propagate: () => true },
@@ -237,7 +234,7 @@ describe("native whole-profile motion ranges", () => {
     }
   });
 
-  it("keeps an empty native draw group conditional on its current full preparation and scope", () => {
+  it("keeps an empty native draw group conditional on its scope and rejects a path change", () => {
     const native = moverPlanning.moverPlacementsWithWork;
     let original: moverPlanning.MoverDraws | undefined;
     const empty = vi
@@ -256,7 +253,7 @@ describe("native whole-profile motion ranges", () => {
         kind: "propagation",
         status: "budget",
       });
-      expect(
+      expect(() =>
         projection.view(
           {
             propagate: () => {
@@ -267,8 +264,8 @@ describe("native whole-profile motion ranges", () => {
           prepared,
           selected,
         ),
-      ).toEqual({ status: "unknown" });
-      path[0]!.lane = 4;
+      ).toThrow(TypeError);
+      expect(path[0]!.lane).toBe(4);
       expect(projection.statistics().indexedTemplates).toBe(0);
     } finally {
       empty.mockRestore();

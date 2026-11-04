@@ -264,10 +264,9 @@ describe("native pocket proof boundaries", () => {
     expect(counted.anchor.mock.calls.length).toBeLessThan(oracleWork.anchor.mock.calls.length);
     expect(domains.statistics().projection.indexedTemplates).toBe(0);
     expect(domains.attestOwnerWalls(work, scope, 4, owner, values, end.token)).toBe(true);
-    expect(Reflect.set(crossing.placements[0]!.path, "motion", "ride")).toBe(true);
-    expect(isNativeSlotCrossOnly(crossing)).toBe(false);
-    expect(domains.attestOwnerWalls(work, scope, 4, owner, values, end.token)).toBe(false);
-    expect([...domains.completeOwnerWalls(work, scope, 4, owner)]).toEqual([{ status: "unknown" }]);
+    expect(Reflect.set(crossing.placements[0]!.path, "motion", "ride")).toBe(false);
+    expect(isNativeSlotCrossOnly(crossing)).toBe(true);
+    expect(domains.attestOwnerWalls(work, scope, 4, owner, values, end.token)).toBe(true);
   });
 
   it("keeps every moving supplier across its compiled block span while omitting zero-wall anchors", () => {
@@ -328,9 +327,11 @@ describe("native pocket proof boundaries", () => {
     );
     expect(counted.anchor.mock.calls.length).toBeLessThan(fullWork.anchor.mock.calls.length);
     expect(domains.attestOwnerWalls(work, scope, row, owner, values, end.token)).toBe(true);
-    expect(Reflect.set(prepared.placements[0]!.path, "speedMultiplier", 0.25)).toBe(true);
-    expect(nativeSlotPreparationWallRows(prepared)).toBeUndefined();
-    expect(domains.attestOwnerWalls(work, scope, row, owner, values, end.token)).toBe(false);
+    const rows = nativeSlotPreparationWallRows(prepared);
+    expect(rows).toBeDefined();
+    expect(Reflect.set(prepared.placements[0]!.path, "speedMultiplier", 0.25)).toBe(false);
+    expect(nativeSlotPreparationWallRows(prepared)).toBe(rows);
+    expect(domains.attestOwnerWalls(work, scope, row, owner, values, end.token)).toBe(true);
   });
 
   it("binds pocket obligations to the exact native prefix and restores their context", () => {
@@ -446,11 +447,10 @@ describe("native pocket proof boundaries", () => {
     expect(state.additionStable(() => true, scope, {}, second, b.entry, failed.failure)).toBe(
       false,
     );
-    Object.assign(b.entry.request.footprint!, { rows: 2 });
+    expect(() => Object.assign(b.entry.request.footprint!, { rows: 2 })).toThrow(TypeError);
     expect(state.additionStable(() => true, scope, context, second, b.entry, failed.failure)).toBe(
-      false,
+      true,
     );
-    Object.assign(b.entry.request.footprint!, { rows: 1 });
     expect(
       state.additionStable(() => true, scope, context, second, b.entry, { ...failed.failure }),
     ).toBe(false);

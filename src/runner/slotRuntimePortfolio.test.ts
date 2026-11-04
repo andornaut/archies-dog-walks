@@ -249,27 +249,36 @@ describe("bounded runtime ordering portfolio", () => {
 });
 
 it.each(["source", "geometry", "cyclic-geometry"] as const)(
-  "does not fallback through changed %s facts",
+  "falls back through frozen %s facts",
   (change) => {
     const create = witnessSearch.createSlotWitnessSearch;
     const road = { ...geometry };
     const kinds = catalogue();
+    const compile = kinds[0]!.compile;
+    const rejected: unknown[] = [];
     const searchSpy = vi
       .spyOn(witnessSearch, "createSlotWitnessSearch")
       .mockImplementation((nativeRoad, path, domains, jobs, work) => {
+        const primary = searchSpy.mock.calls.length === 1;
         let state: Parameters<ReturnType<typeof create>["solve"]>[0];
         const search = create(nativeRoad, path, domains, jobs, {
           ...work,
           check() {
-            if (state.entries().length > 0) {
-              if (change === "source") {
-                Object.defineProperty(kinds[0]!, "compile", {
-                  value: () => ({ blocksLane: false }),
-                });
-              } else if (change === "geometry") {
-                road.cellInset++;
-              } else {
-                Object.assign(road, { changed: road });
+            if (primary && state.entries().length > 0) {
+              if (rejected.length === 0) {
+                try {
+                  if (change === "source") {
+                    Object.defineProperty(kinds[0]!, "compile", {
+                      value: () => ({ blocksLane: false }),
+                    });
+                  } else if (change === "geometry") {
+                    road.cellInset++;
+                  } else {
+                    Object.assign(road, { changed: road });
+                  }
+                } catch (error) {
+                  rejected.push(error);
+                }
               }
               while (work.propagate!()) {
                 /* Consume the real shared allowance. */
@@ -283,21 +292,17 @@ it.each(["source", "geometry", "cyclic-geometry"] as const)(
           ...search,
           solve(value) {
             state = value;
-            const result = search.solve(value);
-            expect(value.entries()).toEqual([]);
-            return result;
+            return search.solve(value);
           },
         };
       });
     const result = planSlotSpawns(context, road, kinds, rewards, config);
-    expect(searchSpy).toHaveBeenCalledTimes(1);
-    expect(result).toMatchObject({
-      failures: [
-        { code: change === "source" ? "stale-prepared-source" : "changed-portfolio-context" },
-      ],
-      stage: "invariant",
-      status: "unsupported",
-    });
+    expect(rejected).toHaveLength(1);
+    expect(rejected[0]).toBeInstanceOf(TypeError);
+    expect(kinds[0]!.compile).toBe(compile);
+    expect(road).toEqual(geometry);
+    expect(searchSpy).toHaveBeenCalledTimes(2);
+    expect(result.status).toBe("complete");
   },
 );
 

@@ -189,11 +189,14 @@ describe("native slot constraint transactions", () => {
     });
     expect(state.probe(nextOwner, changed)).toMatchObject({ failure: { rule: "trace-binding" } });
     const footprint = equivalent.entry.request.footprint!;
-    Reflect.set(footprint, "lanes", 2);
-    expect(state.lookupNegativeVisibility(() => true, proof, nextOwner, equivalent.entry)).toEqual({
-      status: "miss",
+    expect(Reflect.set(footprint, "lanes", 2)).toBe(false);
+    expect(footprint.lanes).toBe(1);
+    expect(
+      state.lookupNegativeVisibility(() => true, proof, nextOwner, equivalent.entry),
+    ).toMatchObject({
+      failure: { owners: [firstOwner], rule: "kind-lane" },
+      status: "blocked",
     });
-    Reflect.set(footprint, "lanes", 1);
     expect(state.commit({ key: "unrelated" }, unrelated.entry).accepted).toBe(true);
     coldStep.mockClear();
     expect(state.lookupNegativeVisibility(coldStep, proof, nextOwner, equivalent.entry)).toEqual({

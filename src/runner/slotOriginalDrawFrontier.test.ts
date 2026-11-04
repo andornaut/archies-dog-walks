@@ -182,25 +182,10 @@ describe("original draw native frontiers", () => {
     const resumed = [...domains.frontierSequence(work, order, job.key, prepared)];
     expect(resumed.some(({ status }) => status === "candidate")).toBe(true);
     const warning = prepared.placements[0]!.path.warning;
-    try {
-      Reflect.set(prepared.placements[0]!.path, "warning", warning + 1);
-      expect([...domains.frontierSequence(work, order, job.key, prepared)]).toEqual([
-        { status: "unavailable" },
-      ]);
-    } finally {
-      Reflect.set(prepared.placements[0]!.path, "warning", warning);
-    }
+    expect(Reflect.set(prepared.placements[0]!.path, "warning", warning + 1)).toBe(false);
+    expect(prepared.placements[0]!.path.warning).toBe(warning);
     expect([...domains.frontierSequence(work, order, job.key, prepared)]).toEqual(resumed);
     const emptyOrder = { ...order, rows: [path.length - 1] };
-    expect([...domains.frontierSequence(work, emptyOrder, job.key, prepared)]).toEqual([]);
-    try {
-      Reflect.set(prepared.placements[0]!.path, "warning", warning + 1);
-      expect([...domains.frontierSequence(work, emptyOrder, job.key, prepared)]).toEqual([
-        { status: "unavailable" },
-      ]);
-    } finally {
-      Reflect.set(prepared.placements[0]!.path, "warning", warning);
-    }
     expect([...domains.frontierSequence(work, emptyOrder, job.key, prepared)]).toEqual([]);
   });
 
@@ -361,7 +346,6 @@ describe("original draw native frontiers", () => {
       expect(projection.motionTiers({ propagate: warm }, prepared)).toEqual(indexed);
       expect(warm).not.toHaveBeenCalled();
       expect(projection.statistics().nativeChecks).toBeGreaterThan(0);
-      expect(projection.statistics().contextChecks).toBeGreaterThan(0);
       expect(JSON.stringify(prepared)).toBe(snapshot);
     } finally {
       repeated.mockRestore();
@@ -412,7 +396,7 @@ describe("original draw native frontiers", () => {
     expect(boundary).toHaveBeenCalledTimes(prepared.placements.length);
   });
 
-  it("publishes neither index after callback interruption or a source change during the traversal", () => {
+  it("publishes no index after callback interruption and rejects a source change during the traversal", () => {
     const { path, prepared } = fixture();
     const projection = createSlotPathProjection(geometry, path);
     const interrupted = vi.fn(() => {
@@ -424,55 +408,41 @@ describe("original draw native frontiers", () => {
     expect(projection.statistics().membershipBuilds).toBe(0);
     const compile = prepared.source.compile;
     let calls = 0;
-    try {
-      expect(
-        projection.motionTiers(
-          {
-            propagate: () => {
-              if (++calls === prepared.placements.length) {
-                Reflect.set(prepared.source, "compile", (...args: Parameters<typeof compile>) =>
-                  compile(...args),
-                );
-              }
-              return true;
-            },
+    let replaced: boolean | undefined;
+    expect(
+      projection.motionTiers(
+        {
+          propagate: () => {
+            if (++calls === prepared.placements.length) {
+              replaced = Reflect.set(
+                prepared.source,
+                "compile",
+                (...args: Parameters<typeof compile>) => compile(...args),
+              );
+            }
+            return true;
           },
-          prepared,
-        ),
-      ).toEqual({ status: "unknown" });
-      expect(calls).toBe(prepared.placements.length);
-      expect(projection.statistics().membershipBuilds).toBe(0);
-    } finally {
-      Reflect.set(prepared.source, "compile", compile);
-    }
-    const restored = vi.fn(() => true);
-    expect(projection.motionTiers({ propagate: restored }, prepared).status).toBe("tiers");
-    expect(restored).toHaveBeenCalledTimes(prepared.placements.length);
+        },
+        prepared,
+      ).status,
+    ).toBe("tiers");
+    expect(calls).toBe(prepared.placements.length);
+    expect(replaced).toBe(false);
+    expect(prepared.source.compile).toBe(compile);
+    expect(projection.statistics().membershipBuilds).toBe(1);
   });
 
-  it("invalidates shared indices on stale source and context, including warm tier adapter calls", () => {
+  it("keeps shared indices warm while the frozen source and context reject changes", () => {
     const { domains, path, prepared, work } = fixture();
     expect(domains.motionTiers(work, prepared).status).toBe("tiers");
-    const lane = path[0]!.lane;
-    try {
+    expect(() => {
       path[0]!.lane = 3;
-      expect(domains.motionTiers(work, prepared)).toEqual({ status: "unknown" });
-    } finally {
-      path[0]!.lane = lane;
-    }
-    work.propagate.mockClear();
-    expect(domains.motionTiers(work, prepared).status).toBe("tiers");
-    expect(work.propagate).toHaveBeenCalledTimes(prepared.placements.length);
+    }).toThrow(TypeError);
     const warning = prepared.placements[0]!.path.warning;
-    try {
-      Reflect.set(prepared.placements[0]!.path, "warning", warning + 1);
-      expect(domains.motionTiers(work, prepared)).toEqual({ status: "unknown" });
-    } finally {
-      Reflect.set(prepared.placements[0]!.path, "warning", warning);
-    }
+    expect(Reflect.set(prepared.placements[0]!.path, "warning", warning + 1)).toBe(false);
     work.propagate.mockClear();
     expect(domains.motionTiers(work, prepared).status).toBe("tiers");
-    expect(work.propagate).toHaveBeenCalledTimes(prepared.placements.length);
+    expect(work.propagate).not.toHaveBeenCalled();
     expect(domains.motionTiers(work, { ...prepared })).toEqual({ status: "unknown" });
   });
 });

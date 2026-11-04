@@ -207,10 +207,12 @@ describe("native row-wall frontier", () => {
       ),
     ).toBe(false);
     const oldLane = test.path[1]!.lane;
-    test.path[1]!.lane = (oldLane + 1) % geometry.laneCount;
+    expect(() => {
+      test.path[1]!.lane = (oldLane + 1) % geometry.laneCount;
+    }).toThrow(TypeError);
     expect(
       test.domains.attestOwnerWalls(work, test.scope, row, test.owner, result.values, result.token),
-    ).toBe(false);
+    ).toBe(true);
   });
 
   it("cannot complete or attest a stopped, budgeted or unattested frontier", () => {
@@ -283,16 +285,18 @@ describe("native row-wall frontier", () => {
     expect(old.at(-1)?.status).toBe("complete");
   });
 
-  it.each(["omitted profile mutation", "appended supplier"] as const)(
-    "invalidates completeness after %s with the same preparation method",
+  it.each(["rejected profile mutation", "appended supplier"] as const)(
+    "keeps completeness only while the suppliers are unchanged after a %s",
     (change) => {
       const test = fixture();
       const result = frontier(test, 4);
       expect(
         test.domains.attestOwnerWalls(work, test.scope, 4, test.owner, result.values, result.token),
       ).toBe(true);
-      if (change === "omitted profile mutation") {
-        Object.assign(test.reactive.request.mover!, { warningSeconds: 9 });
+      if (change === "rejected profile mutation") {
+        expect(() => Object.assign(test.reactive.request.mover!, { warningSeconds: 9 })).toThrow(
+          TypeError,
+        );
       } else {
         test.pool.push(
           prepareSlotKind(streams(), geometry, {
@@ -306,7 +310,7 @@ describe("native row-wall frontier", () => {
       }
       expect(
         test.domains.attestOwnerWalls(work, test.scope, 4, test.owner, result.values, result.token),
-      ).toBe(false);
+      ).toBe(change === "rejected profile mutation");
     },
   );
 });

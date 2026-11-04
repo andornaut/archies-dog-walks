@@ -162,20 +162,10 @@ describe("native path-projection placement views", () => {
       status: "budget",
     });
     const compile = source.compile;
-    try {
-      Reflect.set(source, "compile", () => compile(plannerStreams(3)));
-      expect(projection.view(work(), prepared, empty)).toEqual({ status: "unknown" });
-    } finally {
-      Reflect.set(source, "compile", compile);
-    }
-    expect(projection.view(work(), prepared, empty)).toEqual({ status: "empty-view" });
-    const lane = path[0]!.lane;
-    try {
+    expect(Reflect.set(source, "compile", () => compile(plannerStreams(3)))).toBe(false);
+    expect(() => {
       path[0]!.lane = 3;
-      expect(projection.view(work(), prepared, empty)).toEqual({ status: "unknown" });
-    } finally {
-      path[0]!.lane = lane;
-    }
+    }).toThrow(TypeError);
     const restored = work();
     expect(projection.view(restored, prepared, empty)).toEqual({ status: "empty-view" });
     expect(restored.propagate).toHaveBeenCalledOnce();
@@ -213,7 +203,7 @@ describe("native path-projection placement views", () => {
     });
   });
 
-  it("rejects foreign membership and invalidated source or original context without issuing new authority", () => {
+  it("rejects foreign membership and changes to the frozen source and context", () => {
     const { anchor, caps, footprint, geometry, path, prepared, selected, source } = fixture();
     const projection = createSlotPathProjection(geometry, path);
     const view = issued(projection, prepared, selected);
@@ -230,21 +220,18 @@ describe("native path-projection placement views", () => {
     });
     expect(projection.at(work(), anchor, prepared, { ...view })).toEqual({ status: "unavailable" });
     const originalCompile = source.compile;
-    Object.defineProperty(source, "compile", { value: () => originalCompile(plannerStreams(3)) });
-    expect(projection.view(work(), prepared, new Set([selected]))).toEqual({ status: "unknown" });
-    Object.defineProperty(source, "compile", { value: originalCompile });
-    footprint.rows++;
-    expect(projection.at(work(), anchor, prepared, view)).toEqual({ status: "unavailable" });
-    expect(projection.view(work(), prepared, new Set([selected]))).toEqual({ status: "unknown" });
-    footprint.rows--;
-    path[0]!.lane = 3;
-    expect(projection.at(work(), anchor, prepared, view)).toEqual({ status: "unavailable" });
-    expect(projection.view(work(), prepared, new Set([selected]))).toEqual({ status: "unknown" });
-    const beforeRegistration = createSlotPathProjection(geometry, path);
-    caps.total++;
-    expect(beforeRegistration.view(work(), prepared, new Set([selected]))).toEqual({
-      status: "unknown",
-    });
+    expect(() =>
+      Object.defineProperty(source, "compile", {
+        value: () => originalCompile(plannerStreams(3)),
+      }),
+    ).toThrow(TypeError);
+    expect(() => footprint.rows++).toThrow(TypeError);
+    expect(() => {
+      path[0]!.lane = 3;
+    }).toThrow(TypeError);
+    expect(() => caps.total++).toThrow(TypeError);
+    expect(projection.at(work(), anchor, prepared, view).status).toBe("entries");
+    expect(projection.view(work(), prepared, new Set([selected])).status).toBe("view");
   });
 
   it("retains spent work on interruption and resumes only the independent view catalogue", () => {

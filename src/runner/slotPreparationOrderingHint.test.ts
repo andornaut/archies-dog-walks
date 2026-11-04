@@ -67,7 +67,7 @@ function fixture() {
   return { path, prepared };
 }
 
-it("keeps an old ordering hint separate from current native geometry and domain proof authority", () => {
+it("rejects a placement change and keeps the ordering hint, wall rows and domain proof", () => {
   const { path, prepared } = fixture();
   const domains = createSlotCandidateDomains(geometry, path);
   const owner = { key: "owner", phase: "active" as const, preparations: () => [prepared] };
@@ -104,22 +104,17 @@ it("keeps an old ordering hint separate from current native geometry and domain 
   expect(Object.isFrozen(original.hint)).toBe(true);
   const span = candidate.entry.placement!.lanes;
   const count = span.count;
-  try {
-    Reflect.set(span, "count", geometry.laneCount);
-    expect(nativeSlotPreparationOrderingHint(work, prepared)).toEqual(original);
-    expect(isNativeSlotPreparation(prepared)).toBe(false);
-    expect(nativeSlotPreparationWallRows(prepared)).toBeUndefined();
-    expect(domains.attestsCompleteOwnerDomain(work, scope, owner, values, token!)).toBe(false);
-    expect([...domains.completeOwnerDomain(work, scope, owner)]).toContainEqual({
-      status: "unknown",
-    });
-    expect(
-      createSlotConstructionState(geometry, path).commit(owner, candidate.entry).accepted,
-    ).toBe(false);
-  } finally {
-    Reflect.set(span, "count", count);
-  }
+  const rows = nativeSlotPreparationWallRows(prepared);
+  expect(rows).toBeDefined();
+  expect(Reflect.set(span, "count", geometry.laneCount)).toBe(false);
+  expect(span.count).toBe(count);
+  expect(nativeSlotPreparationOrderingHint(work, prepared)).toEqual(original);
   expect(isNativeSlotPreparation(prepared)).toBe(true);
+  expect(nativeSlotPreparationWallRows(prepared)).toBe(rows);
+  expect(domains.attestsCompleteOwnerDomain(work, scope, owner, values, token!)).toBe(true);
+  expect(createSlotConstructionState(geometry, path).commit(owner, candidate.entry).accepted).toBe(
+    true,
+  );
 });
 
 it("charges every lookup and leaves foreign objects unknown without reading their catalogue", () => {

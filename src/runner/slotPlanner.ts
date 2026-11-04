@@ -1,5 +1,6 @@
 import { weightedPick } from "@andornaut/game-kit/random";
 
+import { deepFreeze } from "./deepFreeze";
 import { auditSlotPartialPlan, auditSlotPlan, type SlotAudit } from "./slotAudit";
 import { createSlotCandidateDomains } from "./slotCandidateDomains";
 import {
@@ -478,7 +479,9 @@ function planSlotComposition<Kind extends string>(
       { code: "guarantee-path-domain", kind: conditioned.failedKind },
     ]);
   }
-  path = conditioned.path;
+  // The second attempt reuses the domains and preparations built on this frozen context.
+  deepFreeze(geometry);
+  path = deepFreeze(conditioned.path);
   const domains = createSlotCandidateDomains(geometry, path, {
     negativeVisibility: !optionalDelivery,
   });
@@ -670,23 +673,10 @@ function planSlotComposition<Kind extends string>(
     },
     stopped: () => workFailure !== undefined || attemptStopped,
   };
-  const contextShape = () => {
-    try {
-      return JSON.stringify([geometry, path], (_key, value: unknown) =>
-        typeof value === "number" && !Number.isFinite(value) ? { numeric: String(value) } : value,
-      );
-    } catch {
-      return undefined;
-    }
-  };
   if (portfolio && !meter.propagate()) {
     return (
       finishWorkFailure() ?? unsupported("construction", [{ code: "propagation-attempt-budget" }])
     );
-  }
-  const origin = portfolio ? contextShape() : undefined;
-  if (portfolio && origin === undefined) {
-    return unsupported("invariant", [{ code: "changed-portfolio-context" }]);
   }
   // Necessary row support shares the native solve allowance and runs only on unsafe prefixes.
   const pocket = createSlotPocketAdapter(meter, geometry, path, domains, witnessJobs);
@@ -772,9 +762,8 @@ function planSlotComposition<Kind extends string>(
       propagationChecks: stats.propagationChecks,
     };
     attemptStopped = false;
-    if (meter.propagate() && contextShape() !== origin) {
-      workFailure = unsupported("invariant", [{ code: "changed-portfolio-context" }]);
-    }
+    // The balanced attempt bills one boundary check, then one per reused preparation.
+    meter.propagate();
     for (const prepared of preparedCache.values()) {
       if (!meter.propagate()) {
         break;

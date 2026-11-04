@@ -229,15 +229,9 @@ describe("native slot motion retry capabilities", () => {
     expect([
       ...domains.frontierSequence({ ...work, propagate: () => false }, order, key, prepared),
     ]).toEqual([{ kind: "propagation", status: "budget" }]);
-    const lane = path[0]!.lane;
-    try {
+    expect(() => {
       path[0]!.lane = 3;
-      expect([...domains.frontierSequence(work, order, key, prepared)]).toEqual([
-        { status: "unavailable" },
-      ]);
-    } finally {
-      path[0]!.lane = lane;
-    }
+    }).toThrow(TypeError);
     expect([...domains.frontierSequence(work, order, key, prepared)]).toEqual([
       { status: "empty-tier" },
     ]);
@@ -418,13 +412,15 @@ describe("native slot motion retry capabilities", () => {
     { kind: ride, name: "ride" },
   ])(
     "freshly compiles and draws once while billing only the selected native $name tier",
-    ({ kind }) => {
+    ({ kind: authored }) => {
+      // Native preparation freezes its source, so the compile spy needs an unprepared copy.
+      const kind = { ...authored };
       const f = auditedFixture();
-      if (kind !== source) {
+      if (authored !== source) {
         const prepared = prepareSlotKind(
           slotMotionStreams(context, key, kind.kind),
           geometry,
-          kind,
+          authored,
         );
         const entry = slotPlacementsAt(
           geometry,
