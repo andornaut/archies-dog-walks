@@ -1850,7 +1850,7 @@ function figure(
   return toImage(drawn(PERSON, weddingPhotoShoot, { flash, parts, pay }).outlined());
 }
 
-// The first opaque row of image, as Pillow's getbbox()[1] gives it.
+// The first opaque row of image.
 function topRow(image: RgbaImage): number {
   for (let y = 0; y < image.height; y++) {
     for (let x = 0; x < image.width; x++) {
@@ -2252,7 +2252,7 @@ const CARDS: ReadonlyMap<string, (cards: Cards) => Art> = new Map([
   [`card-${GREEN_BIN_SPILL}-wade-through`, cardBinWadeThrough],
 ]);
 
-// An RGB PNG as Pillow saves one by default.
+// An opaque image as an RGB PNG.
 function rgbPng(image: RgbaImage): Uint8Array {
   return encodeRgbPng({ deflateLevel: 6, deflateStrategy: 0, filterType: -1 }, image);
 }

@@ -41,7 +41,7 @@ export function side(v: number, s: number): number {
   return Math.floor(v * s + 0.5 + 1e-9);
 }
 
-// Python's list indexing: a negative index counts from the end, and one past either end fails.
+// items[i], where a negative index counts from the end and one past either end fails.
 function at<T>(items: readonly T[], i: number): T {
   const j = i < 0 ? items.length + i : i;
   if (j < 0 || j >= items.length) {
@@ -325,7 +325,7 @@ export function snap(
 ): Record<string, number> {
   const out: Record<string, number> = {};
   for (const [k, value] of Object.entries(q)) {
-    // A flag counts as 1, as Python's True does.
+    // A flag counts as 1.
     const v = Number(value);
     let n = Math.floor(Math.abs(v) * s);
     if (v < 0 || !FEET.has(k)) {
@@ -334,7 +334,7 @@ export function snap(
       }
       n = v ? Math.max(1, n) : 0;
     }
-    // Python's math.copysign: a zero offset keeps its sign.
+    // A zero offset keeps its sign.
     out[k] = (Object.is(v, -0) || v < 0 ? -n : n) / s;
   }
   return out;

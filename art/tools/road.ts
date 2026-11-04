@@ -70,7 +70,7 @@ const USAGE = `Usage:
   node art/tools/road.ts build             write art/road/*.aseprite, then export
                                            public/art/sprites/*.png and *.json with Aseprite`;
 
-// Python's math.copysign: m with the sign of v, a negative zero counting as negative.
+// m with the sign of v, a negative zero counting as negative.
 function copysign(m: number, v: number): number {
   return v < 0 || Object.is(v, -0) ? -Math.abs(m) : Math.abs(m);
 }

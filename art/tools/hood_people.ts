@@ -2054,7 +2054,6 @@ export const SPINNER_RIM: Rims = { ...LIT, cobalt: ["azure", null] };
 
 // points [along, across] turned turn degrees anticlockwise on screen about SIGN_PIVOT, raised b rows.
 export function turned(points: readonly Point[], turn: number, b: number): Point[] {
-  // Python's math.radians: the product with pi / 180.
   const a = turn * (Math.PI / 180);
   const c = Math.cos(a);
   const s = Math.sin(a);

@@ -1112,7 +1112,7 @@ export function despeckle(g: Drawable, colours: readonly (string | null)[]): voi
       const nb = [px[y - 1]![x]!, px[y + 1]![x]!, px[y]![x - 1]!, px[y]![x + 1]!];
       const c = px[y]![x];
       if (c && coat.has(c) && nb.every(Boolean) && !nb.includes(c)) {
-        // the first of the most common, as Python's max(nb, key=nb.count) takes it
+        // the first of the most common
         const count = (v: string): number => nb.filter((n) => n === v).length;
         lone.push([x, y, nb.reduce((best, v) => (count(v) > count(best) ? v : best))]);
       }
@@ -1430,7 +1430,7 @@ export function dogFrames(
   const size = (j: number): number => Object.values(poses[j]!).reduce((a, v) => a + Math.abs(v), 0);
   for (let i = 1; i < frames.length; i++) {
     if (sameFrame(frames[i]!, frames[i - 1]!)) {
-      // the first of the two on a tie, as Python's max takes it
+      // the first of the two on a tie
       const k = size(i) > size(i - 1) ? i : i - 1;
       frames[k] = frame(poses[k]!, true);
     }

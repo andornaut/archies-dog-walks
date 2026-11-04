@@ -770,7 +770,7 @@ function opened(frames: readonly CellFrame[], r: number): [number, number, numbe
   return out;
 }
 
-// Compare tuples of numbers in order, as Python compares them.
+// Compare tuples of numbers lexicographically.
 function compareTuples(a: readonly number[], b: readonly number[]): number {
   for (let i = 0; i < a.length; i++) {
     if (a[i] !== b[i]) {

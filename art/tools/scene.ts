@@ -32,7 +32,7 @@ export function rgb(c: string): Rgb {
 
 // ---------- images ----------
 
-// A copy of image, alpha set opaque everywhere: Pillow's convert("RGB").
+// A copy of image, alpha set opaque everywhere.
 export function opaque(image: RgbaImage): RgbaImage {
   const data = new Uint8Array(image.data);
   for (let i = 3; i < data.length; i += 4) {

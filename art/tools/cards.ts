@@ -73,8 +73,8 @@ export const KINDS: readonly string[] = ["encounter", "route"];
 // and its joints.
 export const GROUND_KEEP = 0.04;
 
-// The opaque rows and columns of image as Pillow's getbbox() gives them: [left, upper, right,
-// lower], right and lower exclusive.
+// The bounding box of image's opaque pixels as [left, upper, right, lower], right and lower
+// exclusive.
 function bbox(image: RgbaImage): [number, number, number, number] {
   const r = opaqueRect({ height: image.height, width: image.width, x: 0, y: 0 }, image);
   if (!r) {

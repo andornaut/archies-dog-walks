@@ -1785,7 +1785,7 @@ function card(key: string, scale = 1): RgbaImage {
   return resizeNearest(bg.width * scale, bg.height * scale, bg);
 }
 
-// An RGB PNG as Pillow saves one by default.
+// An opaque image as an RGB PNG.
 function rgbPng(image: RgbaImage): Uint8Array {
   return encodeRgbPng({ deflateLevel: 6, deflateStrategy: 0, filterType: -1 }, image);
 }

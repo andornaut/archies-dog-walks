@@ -1731,7 +1731,7 @@ const ILLUSTRATIONS: ReadonlyMap<string, (cards: Cards) => Art> = new Map([
   ["card-big-screen-promo-push-through", cardPushThrough],
 ]);
 
-// An RGB PNG as Pillow saves one by default.
+// An opaque image as an RGB PNG.
 function rgbPng(image: RgbaImage): Uint8Array {
   return encodeRgbPng({ deflateLevel: 6, deflateStrategy: 0, filterType: -1 }, image);
 }
