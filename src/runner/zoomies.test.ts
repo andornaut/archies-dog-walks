@@ -42,7 +42,7 @@ const STEER_EVERY = 200;
 const ZOOMIES = { debuff: "zoomies", secondsLeft: 20, untilZone: 0 } as const;
 const FIXED: DebuffDriftMovement = {
   direction: "heading",
-  interval: { kind: "fixed", seconds: "zoomiesDriftSeconds" },
+  interval: { kind: "fixed", seconds: "zoomiesDriftMaxSeconds" },
   kind: "drift",
 };
 const UNIFORM: DebuffDriftMovement = {
@@ -66,7 +66,7 @@ const uniform: GameData = {
     },
   },
 };
-const EVERY = read(fixed.tuning, "seconds", "zoomiesDriftSeconds");
+const EVERY = read(fixed.tuning, "seconds", "zoomiesDriftMaxSeconds");
 const zoomed = (run: RunState): RunState => ({
   ...run,
   debuffs: [{ ...ZOOMIES, untilZone: run.zoneIndex }],
@@ -149,7 +149,7 @@ describe("debuff movement profiles", () => {
       name: `the unsupported strategy ${JSON.stringify(movement)}`,
     })),
     ...[0, -1, Number.NaN, Number.POSITIVE_INFINITY].map((seconds) => ({
-      data: timed(fixed, { zoomiesDriftSeconds: seconds }),
+      data: timed(fixed, { zoomiesDriftMaxSeconds: seconds }),
       error: unordered,
       name: `the fixed interval ${seconds}`,
     })),
@@ -398,7 +398,7 @@ describe("debuff movement schedule", () => {
       ...fixed,
       tuning: {
         ...fixed.tuning,
-        seconds: { ...fixed.tuning.seconds, zoomiesDriftSeconds: seconds },
+        seconds: { ...fixed.tuning.seconds, zoomiesDriftMaxSeconds: seconds },
       },
     };
     let current = stepDebuffMovement(data, ROAD, () => 0, 0, null, walkIn(2, 1));

@@ -52,7 +52,7 @@ describe("types", () => {
     {
       type Movement = NonNullable<Debuff["movement"]>;
       // @ts-expect-error: no such movement mechanism
-      check<Movement>({ every: "zoomiesDriftSeconds", kind: "teleport" });
+      check<Movement>({ every: "zoomiesDriftMaxSeconds", kind: "teleport" });
       // @ts-expect-error: a money key is not an interval
       check<Movement>({ every: "tip", kind: "drift" });
     }
