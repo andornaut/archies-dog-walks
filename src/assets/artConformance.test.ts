@@ -1,4 +1,4 @@
-import { existsSync, readdirSync, readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { basename, join } from "node:path";
 
 import { decodePng } from "@andornaut/art-kit/png";
@@ -63,50 +63,9 @@ describe("the exported PNGs", () => {
   });
 });
 
-// Sources whose exports are not named after them, and exports built from no Aseprite source.
-const NAMED_EXPORTS: Readonly<Record<string, readonly string[]>> = {
-  appicon: ["public/icons/icon-192.png", "public/icons/icon-512.png"],
-  "favicon-16": ["public/icons/favicon-16.png"],
-  "favicon-32": ["public/icons/favicon-32.png"],
-  "share-card": ["public/og-image.png"],
-};
-// art/tools/fonts.ts rasterises the fonts from their TTFs; site/ holds the game captures.
-const UNSOURCED_DIRS = [`${ART}/fonts`, `${ART}/site`];
-
-describe("the Aseprite sources", () => {
-  const sources = filesUnder("art", ".aseprite");
-  const exports = [...filesUnder(`${ART}/images`, ".png"), ...filesUnder(`${ART}/sprites`, ".png")];
-  const exportStems = new Set(exports.map((path) => stem(path, ".png")));
-
-  it("are uniquely named", () => {
-    const names = sources.map((path) => stem(path, ".aseprite"));
-    expect(names.filter((name, i) => names.indexOf(name) !== i)).toEqual([]);
-  });
-
-  it("each have their export", () => {
-    const missing = sources.filter((path) => {
-      const name = stem(path, ".aseprite");
-      const named = NAMED_EXPORTS[name];
-      if (named !== undefined) {
-        return !named.every((out) => existsSync(out));
-      }
-      return !exportStems.has(name);
-    });
-    expect(missing).toEqual([]);
-  });
-
-  it("cover every sprite and image export", () => {
-    const names = new Set(sources.map((path) => stem(path, ".aseprite")));
-    const unsourced = exports.filter((path) => !names.has(stem(path, ".png")));
-    const named = new Set(Object.values(NAMED_EXPORTS).flat());
-    const stray = filesUnder(ART, ".png").filter(
-      (path) =>
-        !path.startsWith(`${ART}/images/`) &&
-        !path.startsWith(`${ART}/sprites/`) &&
-        !named.has(path) &&
-        !UNSOURCED_DIRS.some((dir) => path.startsWith(`${dir}/`)),
-    );
-    expect([...unsourced, ...stray]).toEqual([]);
+describe("the art sources", () => {
+  it("are the tools, with no Aseprite files committed", () => {
+    expect(filesUnder("art", ".aseprite")).toEqual([]);
   });
 });
 
