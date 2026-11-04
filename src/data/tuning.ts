@@ -259,8 +259,8 @@ export const TUNING = {
     pullReactionWindow: 0.6,
     // How long a dog strains toward its target, with its bubble, before it pulls.
     pullTell: 1,
-    // The neighbourhood celebration and every choice card take no tap, press or key until this
-    // long after they are first drawn, so a tap meant for the road never answers them.
+    // Every choice card takes no tap, press or key until this long after it is first drawn, so a
+    // tap meant for the road never answers it.
     screenTapGuard: 1,
     // A shy hopper's first hop's cue begins once the road between it and the pack's rows is down
     // to this long of the road's travel: its cue, its longest hop, pathReactionMargin and a lane

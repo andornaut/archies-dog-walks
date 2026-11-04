@@ -9,8 +9,8 @@ The game grows sideways rather than upward. A world is a set of neighbourhoods w
 ## Other ideas for later
 
 - Accounts and cloud saves
-- Art polish beyond a basic pixel pass; sound beyond a few effects and one music loop
-- Card variety: once the numbers are tuned, give each shared card obstacle a look per neighbourhood, so the three don't repeat; its options stay the same everywhere
+- Art polish beyond a basic pixel pass
+- Card variety: once the numbers are tuned, give each shared card obstacle a look per neighbourhood, so the shared cards don't repeat; its options stay the same everywhere
 - Cosmetics: 2 accessories per dog, each made for that dog ($60 each; e.g. Ginger tiara and pearl collar, Kilo beanie and trail pack, Pepe beret and bow tie); 6 leash colours ($30 each); 6 home screen decor pieces with fixed spots in the gate scene ($50 to $130)
 - Dog training: two courses per owned dog: Heel (the dog strains twice as long before it pulls, $80) and Good manners (its owner has +1 max ♥, $120)
 - House hub: a home base you decorate and improve with mostly cosmetic unlocks

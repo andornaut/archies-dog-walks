@@ -26,11 +26,7 @@ All nine card obstacles conform to the three-category principle. The table lists
 | Thief               | Let the tips go: $20   | Grab it back: lose 1 heart each       | Dogs give chase: Zoomies |
 | Wedding photo shoot | Pay for a reshoot: $20 | Walk around: lose 1 heart each        | Pose: Spotlight          |
 
-The capybara in High Park and the busker on Yonge Street are regular bumps. Trash cans appear only in High Park and apply Stinky. Zookeeper is absent from the badge set.
-
-### Modifiers
-
-Hall pass replaces the costliest heart choice with a free Skip while available. Charmer can waive a monetary choice's cost, Second chance can forgive a heart loss and Quick recovery can shorten a debuff. These existing modifiers apply to the base choices above.
+Hall pass, Charmer, Second chance and Quick recovery modify these base choices; [`design.md`](design.md#choice-cards) states how.
 
 ## Neighbourhood effect mix
 
@@ -45,4 +41,4 @@ The table lists available debuffs by source, not the number of encounters in a w
 | Distillery District | Muddy, Spotlight, Stinky | Spotlight, Stinky, Zoomies |
 | Yonge Street        | Muddy, Stinky, Zoomies   | Muddy, Spotlight, Zoomies  |
 
-Yonge Street has six effect-source types: Big screen promo, Green bin spill and Thief offer cards; Pothole, Seagull and Sign spinner apply effects on contact. Green bin spill occupies a fixed visual family in place of Sandwich board. High Park has 22 encounter-pool obstacles and 58 plain obstacles, and Yonge Street has 49 and 91 respectively. Source opportunities depend on these pool counts and the weights within each pool; they do not measure actual hits or effect choices.
+Yonge Street has six effect-source types: Big screen promo, Green bin spill and Thief offer cards; Pothole, Seagull and Sign spinner apply effects on contact. Source opportunities depend on each neighbourhood's encounter-pool and plain-obstacle counts in [`world.ts`](../src/data/world.ts) and the weights within each pool; they do not measure actual hits or effect choices.
