@@ -165,6 +165,7 @@ export const MINOR_OBSTACLES = {
       stops: { max: 3, min: 2 },
     },
     name: "Gardener",
+    onFoot: true,
     shape: { lanes: 1, rows: 1 },
   },
   goose: {

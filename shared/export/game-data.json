@@ -2106,6 +2106,7 @@
         }
       },
       "name": "Gardener",
+      "onFoot": true,
       "shape": {
         "lanes": 1,
         "rows": 1
