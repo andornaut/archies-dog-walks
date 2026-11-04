@@ -21,9 +21,6 @@
 //                                    each side
 // roadside-dune-grass       60x48    a tuft of dune grass, moss and olive blades with gold tips
 // roadside-fruit-stand      108x84   a tiered fruit stand under a little striped awning
-// roadside-garden-car       108x96   the Garden Car on Augusta Avenue from the front, a mural-painted
-//                                    sedan heaped with plants in flower, its wheels sunk in greenery;
-//                                    drawn but not placed
 // roadside-gas-lamp         36x150   a heritage street lamp, its lantern lit gold
 // roadside-hot-dog-stand    90x126   a red park kiosk under a flat white roof, a hot dog on its sign
 // roadside-ice-cream-stand  90x126   a foam beach kiosk under a flat turquoise roof, a soft-serve cone
@@ -303,135 +300,6 @@ function fruitStand(): Design {
         g.ell(x0 + 3 + k * 5, y - 1, 2.4, 2.2, fruits[k % 2]!);
       }
     });
-  };
-  return { draw, h, w };
-}
-
-type Lobe = readonly [number, number, number, number];
-
-// The Garden Car on Augusta Avenue from the front: an old rust sedan painted in patches of mural
-// colour, round headlights either side of a chrome grille, sunflowers rising from the trunk behind,
-// leaves inside its windshield, its roof and hood heaped with plants in flower and its wheels sunk in
-// a bank of greenery. Its turquoise patch is a step lighter than dturq, which reads as a hole through
-// the car. No neighbourhood places it.
-function gardenCar(): Design {
-  const w = 72;
-  const h = 64;
-
-  // Lobes of greenery, shaded pine lower right and lit moss upper left over canopy.
-  const leaves = (g: Drawable, lobes: readonly Lobe[]): void => {
-    for (const [x, y, rx, ry] of lobes) {
-      g.ell(x, y, rx, ry, "pine");
-    }
-    for (const [x, y, rx, ry] of lobes) {
-      g.ell(x - 1, y - 1, rx - 1, ry - 1, "canopy");
-    }
-    for (const [x, y, rx, ry] of lobes) {
-      g.ell(x - 2, y - 2, rx / 3, ry / 3, "moss");
-    }
-  };
-
-  const flowers = (g: Drawable, heads: readonly (readonly [number, number, string])[]): void => {
-    for (const [x, y, c] of heads) {
-      g.ell(x, y, 1.6, 1.6, c);
-    }
-  };
-
-  const draw = (g: Drawable): void => {
-    // the cabin: rust pillars round a windshield full of leaves, side mirrors at its foot
-    g.tri([10, 32], [20, 15], [20, 32], "rust");
-    g.tri([62, 32], [52, 15], [52, 32], "dbrown");
-    g.rect(20, 15, 32, 17, "rust");
-    g.tri([15, 31], [23, 18], [23, 31], "olive");
-    g.tri([57, 31], [49, 18], [49, 31], "olive");
-    g.rect(23, 18, 26, 13, "olive");
-    bar(g, [40, 18], [33, 30], "pine", 3);
-    bar(g, [46, 18], [40, 30], "pine", 1);
-    leaves(g, [
-      [22, 28, 5, 4],
-      [50, 28, 5, 4],
-    ]);
-    g.rect(5, 26, 6, 3, "rust");
-    g.rect(61, 26, 6, 3, "dbrown");
-    // the front: a body in mural patches, round headlights, the grille and a chrome bumper
-    g.rect(4, 32, 64, 16, "rust");
-    for (const [x, y, ww, hh, c] of [
-      [4, 32, 14, 9, "gold"],
-      [54, 32, 14, 9, "turquoise"],
-      [18, 41, 10, 7, "lilac"],
-      [44, 41, 10, 7, "moss"],
-      [28, 32, 8, 2, "pink"],
-      [40, 32, 6, 2, "gold"],
-    ] as const) {
-      g.rect(x, y, ww, hh, c);
-    }
-    g.rect(65, 32, 3, 16, "dbrown");
-    g.rect(4, 32, 64, 1, "ochre");
-    for (const x of [12, 60]) {
-      g.ell(x, 37, 4, 4, "coal");
-      g.ell(x, 37, 2.8, 2.8, "cream");
-      g.ell(x - 1, 36, 1.2, 1.2, "white");
-    }
-    g.rect(24, 35, 24, 7, "coal");
-    for (let x = 26; x < 47; x += 4) {
-      g.rect(x, 36, 2, 5, "ash");
-    }
-    g.rect(2, 44, 68, 3, "lgrey");
-    g.rect(2, 46, 68, 1, "grey");
-    // the wheels, sunk in greenery
-    for (const x of [8, 54]) {
-      g.rect(x, 47, 10, 8, "coal");
-    }
-    // sunflowers growing up from the trunk behind, plants heaped on the roof and hood, trailing down
-    // the pillars, and banked round the wheels
-    for (const [x, y] of [
-      [13, 6],
-      [59, 8],
-    ] as const) {
-      g.rect(x - 0.5, y, 1, 12, "canopy");
-      g.ell(x, y, 3, 3, "amber");
-      g.ell(x - 0.5, y - 0.5, 2, 2, "yellow");
-      g.ell(x, y, 1.2, 1.2, "brown");
-    }
-    leaves(g, [
-      [24, 13, 9, 6],
-      [36, 9, 12, 7],
-      [48, 13, 9, 6],
-    ]);
-    for (const [x, y, n] of [
-      [21, 18, 6],
-      [50, 18, 7],
-    ] as const) {
-      g.rect(x, y, 1.5, n, "canopy");
-    }
-    leaves(g, [
-      [10, 31, 6, 3],
-      [22, 31, 7, 3],
-      [36, 30, 8, 3],
-      [50, 31, 7, 3],
-      [62, 31, 6, 3],
-    ]);
-    leaves(g, [
-      [10, 56, 8, 6],
-      [22, 57, 7, 5],
-      [36, 56, 9, 6],
-      [50, 57, 7, 5],
-      [62, 56, 8, 6],
-    ]);
-    // flowers spaced out in red, yellow and pink, a few to each heap, so the greenery reads as one
-    // mass
-    flowers(g, [
-      [22, 8, "red"],
-      [35, 3, "yellow"],
-      [48, 8, "pink"],
-      [10, 30, "yellow"],
-      [30, 29, "red"],
-      [44, 29, "pink"],
-      [62, 30, "red"],
-      [12, 53, "red"],
-      [36, 53, "yellow"],
-      [60, 53, "pink"],
-    ]);
   };
   return { draw, h, w };
 }
@@ -1327,7 +1195,6 @@ export const PROPS: ReadonlyMap<string, Prop> = new Map([
   ["roadside-tree-maple", still(lobedTree("canopy", "pine", "moss"))],
   ["roadside-tree-oak", still(lobedTree("pine", "fir", "canopy", { big: true, trunk: "bark" }))],
   ["roadside-fruit-stand", still(fruitStand())],
-  ["roadside-garden-car", still(gardenCar())],
   ["roadside-dune-grass", still(duneGrass())],
   ["roadside-transit-stop", still(transitStop())],
   ["roadside-hot-dog-stand", still(hotDogStand())],

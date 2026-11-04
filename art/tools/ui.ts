@@ -11,14 +11,14 @@
 // nine-slice, 4px corners), ui-hint (24x24 nine-slice, 8px corners), ui-hint-tail (8x6), ui-new-best
 // (72x20 ribbon, text baked in with font-title); the start screen's ui-detail-card (24x24 nine-slice,
 // 8px corners) and ui-detail-well (68x68); the shop list's ui-scroll-track (8x24) and ui-scroll-thumb
-// (6x24, three-slices with 3px caps); the walker section's ui-cork (32x32 solid pickerWalkerBody tile),
-// the dogs section's ui-plaid (16x16 solid pickerDogsBody tile), the Pocket section's ui-denim (16x16
-// solid pickerPocketBody tile), ui-stitch-h (8x2) and ui-stitch-v (2x8, seamless stitch runs), all
-// repeated with TileSprite; the card rows' ui-strip-well (24x24 nine-slice, the band behind a card
-// row's subtitle), ui-quip (24x24 nine-slice, 8px corners), ui-quip-tail (6x8), ui-quip-tail-down and
-// ui-quip-tail-up (8x6), ui-celebrate-burst (148x132, the starburst behind the walker in the zone
-// celebration), ui-zone-banner (248x48); the start screen top bar's bank well, drawn at (5, 5) in
-// three pieces that stretch it to the bank's width, ui-home-cash-well-left, ui-home-cash-well-mid
+// (6x24, three-slices with 3px caps); the walker section's ui-cork (32x32 solid pickerWalkerBody
+// tile), the dogs section's ui-plaid (16x16 solid pickerDogsBody tile), the Pocket section's ui-denim
+// (16x16 solid pickerPocketBody tile), all repeated with TileSprite; the card rows' ui-strip-well
+// (24x24 nine-slice, the band behind a card row's subtitle), ui-quip (24x24 nine-slice, 8px corners),
+// ui-quip-tail (6x8), ui-quip-tail-down and ui-quip-tail-up (8x6), ui-celebrate-burst (148x132, the
+// starburst behind the walker in the zone celebration), ui-zone-banner (248x48); the start screen top
+// bar's bank well, drawn at (5, 5) in three pieces that stretch it to the bank's width,
+// ui-home-cash-well-left, ui-home-cash-well-mid
 // (repeated across) and ui-home-cash-well-right (1x29 each); the walk HUD's ui-walk-bar (360x40),
 // ui-effect-well (22x22), ui-zone-pill (13x13 three-slice, 4px ends), ui-dog-card-band (360x76, drawn
 // at (0, 480)), ui-lead-tag (27x11, LEAD baked in with font-title) and ui-owner-tab (36x36).
@@ -1032,7 +1032,7 @@ export function dogSlot(): Grid {
   return g;
 }
 
-// ---------- plates: the fired plate and the payout tag (hits.ts draws the hit label with plate) ----------
+// ---------- plates: the fired plate (hits.ts draws the hit label with plate) ----------
 
 // ui-fired-plate's 24x24 nine-slice, 8px corners: a plate in face with a white stamp line 2px inside
 // the face, its corners cut so it reads as a stamp's rounded border. The game stretches it to 116x28
@@ -1043,29 +1043,6 @@ export function firedPlate(face: string, lit: string, shade: string): Grid {
   g.rect(7, 17, 10, 1, "white");
   g.rect(6, 7, 1, 10, "white");
   g.rect(17, 7, 1, 10, "white");
-  return g;
-}
-
-// ui-payout-label's 24x16 three-slice, 8px caps; columns 8 to 15 are uniform. A cream price tag in the
-// chrome, its left cap a point stepping in 1px every 2 rows with a punched hole in a plum ring. Forest
-// text holds 5.39:1 on the cream, caps in rows 3 to 12.
-export function payoutLabel(): Grid {
-  const inside = (x: number, y: number): boolean => {
-    const left = Math.floor((Math.trunc(Math.abs(y - 7.5)) + 1) / 2);
-    const right = y === 0 || y === 15 ? 21 : y === 1 || y === 14 ? 22 : 23;
-    return left <= x && x <= right;
-  };
-  const g = chromeShape({}, new Grid(24, 16), inside);
-  g.rect(4, 6, 4, 4, "plum");
-  g.rect(5, 7, 2, 2, null);
-  for (const [x, y] of [
-    [4, 6],
-    [7, 6],
-    [4, 9],
-    [7, 9],
-  ] as const) {
-    g.p(x, y, "cream");
-  }
   return g;
 }
 
@@ -1462,10 +1439,8 @@ export function section(state: string): Grid {
   return g;
 }
 
-// The retained fill tile sizes for ui-denim and ui-plaid.
+// The fill tile size of ui-denim and ui-plaid.
 export const FABRIC = 16;
-export const STITCH_DASH = 5;
-export const STITCH_GAP = 3;
 
 // 16x16 solid pickerPocketBody tile, half the pink header's linear RGB.
 export function denim(): Grid {
@@ -1488,24 +1463,6 @@ export function cork(): Grid {
 export function plaid(): Grid {
   const g = new Grid(FABRIC, FABRIC);
   g.rect(0, 0, FABRIC, FABRIC, "pickerDogsBody");
-  return g;
-}
-
-// A seamless run of the Pocket's stitch line, repeated (TileSprite) along it: tan dashes STITCH_DASH
-// long with STITCH_GAP gaps, each on a 1px navy shadow below (ui-stitch-h, 8x2) or to the right
-// (ui-stitch-v, 2x8). Tiled from the line's start, the first dash sits at its start.
-export function stitch(horizontal: boolean): Grid {
-  const n = STITCH_DASH + STITCH_GAP;
-  const g = horizontal ? new Grid(n, 2) : new Grid(2, n);
-  for (let i = 0; i < STITCH_DASH; i++) {
-    if (horizontal) {
-      g.p(i, 0, "tan");
-      g.p(i, 1, "navy");
-    } else {
-      g.p(0, i, "tan");
-      g.p(1, i, "navy");
-    }
-  }
   return g;
 }
 
@@ -2209,8 +2166,6 @@ export const IMAGES: ReadonlyMap<string, () => RgbaImage> = new Map([
   ["ui-cork", () => flat(cork())],
   ["ui-denim", () => flat(denim())],
   ["ui-plaid", () => flat(plaid())],
-  ["ui-stitch-h", () => flat(stitch(true))],
-  ["ui-stitch-v", () => flat(stitch(false))],
 ]);
 
 // One tag of single-frame states, each at 1000ms.

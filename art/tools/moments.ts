@@ -1,5 +1,5 @@
 // Draw the feedback moments over the dog cards: the firing moment's plate and pop, the fee payout's
-// flying coin and amount plate, and the treat's landing pop. Effects carry the 1px plum rim, so they
+// flying coin, and the treat's landing pop. Effects carry the 1px plum rim, so they
 // hold on the light roads while their fills carry the wood card band, the navy dog card and the plum
 // top bar. Plates are ui.ts's chrome: a cream band inside ink and plum lines, so they read on the card
 // band and on every road.
@@ -15,9 +15,6 @@
 //                        stays behind the face, and the game holds the last frame
 // fx-coin-fly     12x12  spin (4 frames, 80ms)  a coin turning edge-on and back as it flies
 //                        from a dog card to the bank
-// ui-payout-label 24x16  normal (1 frame)  three-slice, 8px caps: a cream price tag with a
-//                        punched hole in its pointed left cap. Stretched to 60x16 for "+$20"
-//                        in forest font-title at 2x: caps in rows 3 to 12, ink from x=9
 // fx-treat-pop    24x24  play (5 frames, 60ms)  hearts and crumbs bursting where the treat
 //                        lands on the dog's face on its card
 //
@@ -27,7 +24,7 @@
 import { burst, rim, stamp, star4 } from "./fx.ts";
 import { piece } from "./hits.ts";
 import { type Drawable, Grid, main, type Sprite } from "./pixel.ts";
-import { firedPlate as uiFiredPlate, payoutLabel as uiPayoutLabel } from "./ui.ts";
+import { firedPlate as uiFiredPlate } from "./ui.ts";
 
 const USAGE = `Usage:
   node art/tools/moments.ts preview OUT.png   every frame of every piece on the card band, top bar
@@ -208,11 +205,6 @@ function coinFly(step: number): Grid {
   return rim(g);
 }
 
-// 24x16 three-slice, 8px caps: ui.ts's chrome price tag (payoutLabel).
-function payoutLabel(): Grid {
-  return uiPayoutLabel();
-}
-
 // ---------- treat given ----------
 
 // Four 2x2 crumbs of the treat's bone, thrown out from the second frame on, after the white pop.
@@ -269,7 +261,6 @@ export function* sprites(): Generator<Sprite> {
   yield ["ui-fired-plate", [["normal", [firedPlate(...FIRED_PLATE).outlined(false)], 1000]]];
   yield ["fx-fired-pop", [["play", frames(firedPop, 6), 70]]];
   yield ["fx-coin-fly", [["spin", frames(coinFly, 4), 80]]];
-  yield ["ui-payout-label", [["normal", [payoutLabel().outlined(false)], 1000]]];
   yield ["fx-treat-pop", [["play", frames(treatPop, 5), 60]]];
 }
 

@@ -26,9 +26,9 @@
 //                             for the walk bar's 22x22 effect wells: the same subject and colours
 // icon-badge, icon-bump,      the walk's message strip, beside its lines, on cream: badge (a red
 // icon-fired, icon-hint,      ribbon rosette round a cream face with a gold centre, on two navy
-// icon-last-heart, icon-lucky tails), bump (an amber impact burst), fired (a pink slip under a dred
-//                             stamp), hint (a white i on a sky disc), last-heart (a red heart
-//                             cracked down from its notch), lucky (a four-leaf clover with a twinkle)
+// icon-lucky                  tails), bump (an amber impact burst), fired (a pink slip under a dred
+//                             stamp), hint (a white i on a sky disc), lucky (a four-leaf clover with
+//                             a twinkle)
 // The upgrade and gear ids are the data ids in kebab case.
 //
 // Sprite: ui-difficulty (55x10; tags 1 to 5), a zone's difficulty under its name on a fork's path
@@ -1118,28 +1118,6 @@ export function hint(): Grid {
   return g;
 }
 
-// One big red heart, lit pink at its top left and shaded dred, cracked from its notch half way down.
-export function lastHeart(): Grid {
-  const g = new Grid(16, 16);
-  for (const cx of [5, 11]) {
-    g.cel(cx, 6, 3.8, 3.8, "red", "dred", "pink");
-  }
-  g.tri([1.2, 7.2], [14.8, 7.2], [8, 14.6], "red");
-  g.tri([8, 14.6], [14.8, 7.2], [12.6, 9.6], "dred");
-  for (const [x, y] of [
-    [8, 3],
-    [8, 4],
-    [7, 5],
-    [7, 6],
-    [8, 7],
-    [9, 8],
-    [8, 9],
-  ] as const) {
-    g.p(x, y, "plum");
-  }
-  return g;
-}
-
 // A four-leaf clover on its stem, green shaded dgreen, each leaf notched at its tip and veined dgreen
 // to the centre, with a yellow twinkle at the top right.
 export function lucky(): Grid {
@@ -1232,7 +1210,6 @@ export const IMAGES: ReadonlyMap<string, () => Grid> = new Map([
   ["icon-bump", bump],
   ["icon-fired", fired],
   ["icon-hint", hint],
-  ["icon-last-heart", lastHeart],
   ["icon-lucky", lucky],
 ]);
 

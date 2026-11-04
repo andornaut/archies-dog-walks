@@ -84,13 +84,10 @@
 // opening on hits.ts's impact eight-point star in the encounter's colour:
 // fx-hit-porch-cat        play (8 frames, 70ms)  a hiss puff with three red claw scratches across
 //                                                it, calico fur tufts flying out
-// fx-hit-escaped-capybara play (8 frames, 70ms)  a soft dust poof with grass blades and brown fur
-//                                                tufts thrown up, then a calm heart rising
 //
 // Sounds, in sounds.ts's format and rendered by its renderEffects:
 // sfx-hit-porch-cat        0.49s  a hiss of pink noise stepping down two bands, then a square "mrr"
 //                                 rising into a falling "ow"
-// sfx-hit-escaped-capybara 0.44s  a low square "huff", then three soft rising triangle chirps
 //
 // Card illustrations, 75x56, composed from the exported sprites as cards.ts composes its own:
 // card-porch-cat-stand           Archie standing firm on his leash while the cat swipes up at his
@@ -98,13 +95,6 @@
 // card-porch-cat-treat           the cat lounging over a treat under rising hearts, Archie sitting
 //                                calm beside it
 // card-porch-cat-bolt            Archie splashing through a muddy puddle past the lounging cat
-// card-escaped-capybara-help     the zookeeper in an olive shirt and a bush hat leading the
-//                                capybara off on a rope, a heart over the capybara
-// card-escaped-capybara-call-zoo a phone ringing in a callout over the capybara, chewing on the
-//                                trail, Archie waiting on his leash
-// card-escaped-capybara-drag     the capybara chewing up the trail, Archie leaning hard toward it,
-//                                hauled away on his leash taut off the bottom right, dust at his
-//                                paws
 //
 // Run from the repository root. The cards compose the exported sprites, so the build exports the
 // sprites first. A build overwrites the .aseprite sources, so hand edits to them belong in this file
@@ -118,7 +108,6 @@ import { filledImage, paste, resizeNearest, type Rgba } from "@andornaut/art-kit
 import type { RgbaImage } from "@andornaut/art-kit/rgbaImage";
 
 import * as cards from "./cards.ts";
-import * as fx from "./fx.ts";
 import * as hits from "./hits.ts";
 import { small, snap, STEPS } from "./mini.ts";
 import * as obstacles from "./obstacles.ts";
@@ -148,7 +137,6 @@ import * as road from "./road.ts";
 import { LIT, lit, rim, scope as roadScope, unit } from "./road.ts";
 import * as sn from "./scene.ts";
 import * as sounds from "./sounds.ts";
-import { chrome } from "./ui.ts";
 
 const USAGE = `Usage:
   node art/tools/hood_parks.ts preview OUT_DIR   OUT_DIR/road-<hex>.png per zone road (every road
@@ -1387,97 +1375,9 @@ export function hitPorchCat(step: number): Drawable {
   return g;
 }
 
-// Grass blades thrown up by the capybara: [vx, vy, colour] per blade.
-const BLADES: readonly (readonly [number, number, string])[] = [
-  [-8, -9, "green"],
-  [-3, -11, "dgreen"],
-  [4, -10, "green"],
-  [9, -8, "dgreen"],
-  [-11, -4, "green"],
-  [12, -3, "green"],
-];
-
-// A grass blade 4px tall, 2px thick at its foot and 1px at its tip, leaning lean pixels a row.
-function blade(g: Drawable, x: number, y: number, lean: number, col: string): void {
-  hits.dots(
-    g,
-    x,
-    y,
-    range(0, 4).flatMap((k) =>
-      range(0, k < 3 ? 2 : 1).map((i) => [Math.round(k * lean) + i, -k, col] as const),
-    ),
-  );
-}
-
-// A soft bump: a cream dust poof with brown fur tufts and grass blades thrown up out of it, then the
-// poof settles and a heart rises, since the capybara takes it calmly.
-export function hitEscapedCapybara(step: number): Drawable {
-  const g = hits.scope.Grid(64, 64);
-  const cx = 32;
-  const cy = 40;
-  if (step === 0) {
-    hits.impact(g, "brown", cx, cy);
-    return hits.rim(g);
-  }
-  const r = [0, 10, 13, 14, 12, 9, 6, 0][step]!;
-  if (r) {
-    hits.piece(g, (p) => {
-      for (let k = 0; k < 6; k++) {
-        const a = radians(k * 60 + 15 + step * 11);
-        p.ell(
-          cx + Math.cos(a) * r * 0.75,
-          cy + Math.sin(a) * r * 0.55,
-          r * 0.55,
-          r * 0.45,
-          "cream",
-          "tan",
-        );
-      }
-      p.ell(cx, cy, r * 0.75, r * 0.55, "cream", "tan");
-    });
-  }
-  if (step >= 2) {
-    const t = step - 1;
-    for (const [vx, vy, col] of BLADES) {
-      const x = cx + vx * t * 0.7;
-      const y = cy - 2 + vy * t * 0.7 + 0.9 * t * t;
-      if (x >= 3 && x < 60 && y >= 5 && y < 60) {
-        hits.piece(g, (p) => {
-          blade(p, x, y, Math.sign(vx), col);
-        });
-      }
-    }
-    (
-      [
-        [-6, "brown"],
-        [7, "dbrown"],
-        [1, "brown"],
-      ] as const
-    ).forEach(([vx, col], i) => {
-      const x = cx + vx * t;
-      const y = cy - 6 - t * 4 + t * t * 0.8;
-      if (x >= 3 && x < 60 && y >= 3 && y < 60) {
-        hits.piece(g, (p) => {
-          hits.tuft(p, x, y, col, (step + i) % 2);
-        });
-      }
-    });
-  }
-  if (step >= 4) {
-    const y = cy - 14 - (step - 4) * 5;
-    hits.piece(g, (p) => {
-      hits.stamp(p, step === 4 ? fx.SMALL : fx.HEART, 30, y);
-    });
-  }
-  return g;
-}
-
 // Each burst: its drawing and its frame count, as hits.ts's HITS has them.
 const HITS: ReadonlyMap<string, readonly [draw: (step: number) => Drawable, frames: number]> =
-  new Map([
-    ["fx-hit-porch-cat", [hitPorchCat, 8]],
-    ["fx-hit-escaped-capybara", [hitEscapedCapybara, 8]],
-  ]);
+  new Map([["fx-hit-porch-cat", [hitPorchCat, 8]]]);
 
 // Every burst: play, 8 frames at 70ms, as hits.ts's.
 function* hitSprites(): Generator<Sprite> {
@@ -1494,34 +1394,6 @@ function* hitSprites(): Generator<Sprite> {
 // Each sound: tone() calls as sounds.ts's EFFECTS has them, [wave, seconds, freq, start seconds,
 // options].
 const EFFECTS: sounds.Effects = {
-  // A low "huff" through the nose, then three soft chirps rising, each quieter.
-  "sfx-hit-escaped-capybara": [
-    [
-      "pinknoise",
-      0.12,
-      null,
-      0.01,
-      { attack: 0.025, high: 250, low: 1200, release: 0.7, shape: "h", vol: 0.3 },
-    ],
-    ["triangle", 0.14, [300, 170], 0.01, { attack: 0.025, release: 0.7, shape: "h", vol: 0.3 }],
-    [
-      "square",
-      0.14,
-      [300, 170],
-      0.01,
-      { attack: 0.025, low: 900, release: 0.7, shape: "h", vol: 0.9 },
-    ],
-    ["triangle", 0.08, [880, 1250], 0.18, { attack: 0.012, release: 0.6, vol: 0.9 }],
-    ["triangle", 0.08, [940, 1330], 0.26, { attack: 0.012, release: 0.6, vol: 0.77 }],
-    ["triangle", 0.1, [990, 1450], 0.34, { attack: 0.012, release: 0.7, vol: 0.65 }],
-    [
-      "square",
-      0.08,
-      [880, 1250],
-      0.18,
-      { attack: 0.012, duty: 25, low: 2500, release: 0.6, vol: 0.12 },
-    ],
-  ],
   // A hiss falling from a high band to a lower one, then a "mrr" rising into a falling "ow".
   "sfx-hit-porch-cat": [
     [
@@ -1580,38 +1452,8 @@ function renderSounds(outDir: string): string[] {
 
 // ---------- card illustrations ----------
 
-// The zones the cards stand on, by game id: Cabbagetown's street and High Park's trail.
+// The zone the cards stand on, by game id: Cabbagetown's street.
 const CABBAGETOWN = "cabbagetown";
-const HIGH_PARK = "highPark";
-
-// The zookeeper facing the player: an olive work shirt with a pocket and a tan bush hat, one arm held
-// out low with the lead (screen right; the card mirrors him).
-function keeperTop(g: Drawable, b: number): void {
-  g.rect(9, 21 + b, 14, 13, "olive");
-  g.rect(20, 21 + b, 3, 13, "dolive");
-  g.rect(9, 21 + b, 1, 12, "moss");
-  g.rect(11, 24 + b, 4, 3, "dolive");
-  g.rect(15, 21 + b, 2, 3, "moss");
-  g.rect(5, 22 + b, 4, 9, "olive");
-  g.rect(5, 31 + b, 4, 3, "skin1");
-  road.backArm(
-    g,
-    23,
-    4,
-    22 + b,
-    [
-      [8, "olive", null],
-      [3, "skin1", null],
-    ],
-    { out: 1 },
-  );
-  road.faceDisc(g, 16, 13.5 + b, 7.5, 7.5, "skin1", "skin2");
-  roadScope.faceFront!(g, 16, 14 + b);
-  g.cel(16, 8 + b, 7.5, 3.5, "tan", "brown", "cream");
-  g.rect(5, 9 + b, 22, 2, "tan");
-  g.rect(5, 10 + b, 22, 1, "brown");
-  g.rect(9, 7 + b, 14, 1, "dbrown");
-}
 
 // A drawn grid's outlined frame as an image.
 function picture(g: Drawable): RgbaImage {
@@ -1703,76 +1545,10 @@ function porchCatBolt(): cards.Art {
   return a;
 }
 
-// Help the keeper: the zookeeper in khaki and a bush hat leads the capybara off on a rope, a heart
-// over the capybara.
-function escapedCapybaraHelp(): cards.Art {
-  const a = new cards.Art();
-  a.ground(HIGH_PARK);
-  a.put("escaped-capybara", "walk", 22, 50, { i: 1 });
-  const keeper = picture(
-    road.drawn(road.SCALE, road.dressed, keeperTop, { legs: "clay", shoes: "dbrown" }),
-  );
-  a.paste(keeper, 40, -3, true);
-  a.line(33, 29, 47, 43, "bark");
-  a.line(34, 29, 48, 43, "walnut");
-  a.heart(16, 8, "red", "pink");
-  return a;
-}
-
-// A 9x14 mobile phone at (x, y): a navy body, a cyan screen with a green call key, and ring arcs
-// either side when ring.
-function phone(a: cards.Art, x: number, y: number, ring: boolean): void {
-  a.fill(x, y, 9, 14, "ink");
-  a.fill(x + 1, y + 1, 7, 12, "navy");
-  a.fill(x + 2, y + 2, 5, 7, "cyan");
-  a.fill(x + 2, y + 2, 5, 1, "white");
-  a.fill(x + 3, y + 10, 3, 2, "green");
-  if (ring) {
-    for (const d of [2, 4]) {
-      a.fill(x - d, y + 3, 1, 8, "white");
-      a.fill(x + 8 + d, y + 3, 1, 8, "white");
-    }
-  }
-}
-
-// Call the zoo: a phone rings in a callout over the capybara, chewing on the trail, Archie waiting on
-// his leash.
-function escapedCapybaraCallZoo(): cards.Art {
-  const a = new cards.Art();
-  a.ground(HIGH_PARK);
-  a.put("escaped-capybara", "idle", 24, 44);
-  a.paste(toImage(chrome(new Grid(21, 22), 0, 0, 21, 22).px), 4, 2);
-  phone(a, 10, 6, true);
-  const c = a.dog("archie", "idle", 58, 58);
-  a.lead(58, c, 62);
-  return a;
-}
-
-// A 5x3 puff of trail dust kicked up at a paw, cream lit white.
-function puff(a: cards.Art, x: number, y: number): void {
-  a.fill(x + 1, y, 3, 1, "white");
-  a.fill(x, y + 1, 5, 2, "cream");
-}
-
-// Drag them away: the capybara chewing up the trail at the left, Archie leaning hard toward it with
-// his paws dug in, hauled away by his leash taut off the bottom right, dust kicking up at his paws.
-function escapedCapybaraDrag(): cards.Art {
-  const a = new cards.Art();
-  a.ground(HIGH_PARK);
-  a.put("escaped-capybara@75", "idle", 16, 34);
-  const c = a.dog("archie", "pull", 48, 58, { flip: true });
-  a.lead(48, c, 68, 2);
-  puff(a, 36, 53);
-  return a;
-}
-
 const ILLUSTRATIONS: ReadonlyMap<string, () => cards.Art> = new Map([
   ["card-porch-cat-stand", porchCatStand],
   ["card-porch-cat-treat", porchCatTreat],
   ["card-porch-cat-bolt", porchCatBolt],
-  ["card-escaped-capybara-help", escapedCapybaraHelp],
-  ["card-escaped-capybara-call-zoo", escapedCapybaraCallZoo],
-  ["card-escaped-capybara-drag", escapedCapybaraDrag],
 ]);
 
 // The illustration in an encounter card frame, cost plaque included, as cards.ts's mockCard shows

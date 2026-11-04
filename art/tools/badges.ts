@@ -1,4 +1,4 @@
-// Draw the 41 achievement badges and the celebration burst.
+// Draw the 40 achievement badges and the celebration burst.
 //
 // badge-<achievement>: 32x32 medals, rimmed by category (firsts bronze, mastery silver, collection
 // gold, legend purple with gold studs for the one hardest badge, silly pink), each with its own emblem
@@ -868,26 +868,6 @@ function paparazzi(g: Grid): void {
   bitmap(g, 6, 6, LAMP, { d: "dslate", g: "grey", s: "slate", w: "white" });
 }
 
-// The escaped capybara side on, facing right, its blunt snout and small ear under its keeper's khaki
-// safari hat.
-function zookeeper(g: Grid): void {
-  g.ell(13, 19, 7.5, 5, "brown", "dbrown", "tan");
-  g.rect(18, 13, 6, 8, "brown");
-  g.rect(23, 14, 3, 6, "brown");
-  g.rect(18, 20, 8, 1, "dbrown");
-  g.rect(25, 15, 1, 2, "dbrown");
-  g.p(24, 18, "plum");
-  g.p(21, 15, "ink");
-  g.rect(17, 12, 2, 2, "dbrown");
-  for (const x of [8, 11, 15, 18]) {
-    g.rect(x, 22, 2, 3, "dbrown");
-  }
-  g.rect(16, 11, 10, 1, "ochre");
-  g.rect(18, 8, 6, 3, "ochre");
-  g.rect(18, 8, 6, 1, "tan");
-  g.rect(18, 10, 6, 1, "dbrown");
-}
-
 // The wedding photographer's camera face on, its flash popping, the bride's red and pink bouquet in
 // its white ribbon before it.
 function sayCheese(g: Grid): void {
@@ -1059,7 +1039,6 @@ const ICONS: ReadonlyMap<string, Draw> = new Map([
   ["whole-city", wholeCity],
   ["yoink", yoink],
   ["youre-fired", youreFired],
-  ["zookeeper", zookeeper],
   ["zoomies", zoomies],
 ]);
 
@@ -1104,7 +1083,6 @@ export const BADGES: ReadonlyMap<string, string> = new Map([
   ["trash-panda", "silly"],
   ["yoink", "silly"],
   ["youre-fired", "silly"],
-  ["zookeeper", "silly"],
   ["zoomies", "silly"],
 ]);
 

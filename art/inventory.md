@@ -1,6 +1,6 @@
 # Art Inventory
 
-Every exported art asset. Keys are the `public/art/manifest.json` keys. Type is the manifest list: `sprite` (PNG plus Aseprite JSON, tags from frameTags), `image` (PNG), `font` (BMFont) or `sound`. The exports nothing loads are listed under [Unused exports](#unused-exports).
+Every exported art asset. Keys are the `public/art/manifest.json` keys. Type is the manifest list: `sprite` (PNG plus Aseprite JSON, tags from frameTags), `image` (PNG), `font` (BMFont) or `sound`.
 
 `<zone>` is a zone's art id, easiest to hardest: high-park, cabbagetown, kensington-market, the-beaches, distillery-district or yonge-street.
 
@@ -388,17 +388,3 @@ The runtime selection treatment uses one shared 2400ms clockwise border helper o
 ## Sounds
 
 `music-cabbagetown`, `music-distillery-district`, `music-high-park`, `music-kensington-market`, `music-the-beaches`, `music-yonge-street`, `sfx-badge`, `sfx-bark`, `sfx-bump`, `sfx-card`, `sfx-debuff-<debuff>`, `sfx-dodge`, `sfx-fired`, `sfx-friendly-neighbour`, `sfx-gear-found`, `sfx-heart-lost`, `sfx-hit-<encounter>`, `sfx-lost-wallet`, `sfx-new-best`, `sfx-tip`, `sfx-treat`, `sfx-zone-done`.
-
-## Unused exports
-
-Exported and listed in the manifest, but nothing in the game or the site loads them. Their generators still draw them.
-
-| Key                                                                                          | Type          | Source                                      | Why nothing loads it                                                                    |
-| -------------------------------------------------------------------------------------------- | ------------- | ------------------------------------------- | --------------------------------------------------------------------------------------- |
-| `badge-zookeeper`                                                                            | sprite        | `badges.ts`                                 | No achievement has the id                                                               |
-| `card-escaped-capybara-call-zoo`, `card-escaped-capybara-drag`, `card-escaped-capybara-help` | image         | `hood_parks.ts`                             | The escaped capybara is a minor obstacle with no card, and no option's `art` names them |
-| `fx-hit-escaped-capybara`, `sfx-hit-escaped-capybara`                                        | sprite, sound | `hood_parks.ts`                             | Hit bursts and sounds are keyed by encounter id, and the capybara is no encounter       |
-| `icon-last-heart`                                                                            | image         | `glyphs.ts`                                 | No message strip line leads with it                                                     |
-| `roadside-garden-car`                                                                        | sprite        | `roadside.ts`                               | `shared/roadside.json` places it nowhere                                                |
-| `ui-payout-label`                                                                            | sprite        | `moments.ts` (from `ui.ts`'s `payoutLabel`) | The zone's total shows in a change chip by the cash                                     |
-| `ui-stitch-h`, `ui-stitch-v`                                                                 | image         | `ui.ts`                                     | The start screen's sections have no stitching                                           |
