@@ -1,7 +1,8 @@
 // node art/tools/contact_sheet.ts OUT.png KEY...
 // Nonproduction preview: the Node counterpart of pixel.py's preview. Reads each key's exported
 // public/art/sprites/<key>.png and .json and writes one row per sprite and zone road colour, every
-// frame in tag order, with pixel.py's background, grounds, scale and gap so the two sheets compare.
+// frame in tag order, with pixel.py's background, scale and gap. The grounds are the zones' road
+// colours from shared/export/game-data.json, so rows follow zone order, not pixel.py's ZONE_ROADS.
 import { readFile } from "node:fs/promises";
 
 import { rgb } from "@andornaut/art-kit/colour";
@@ -15,18 +16,16 @@ interface SheetData {
 }
 
 const BACKGROUND: Rgb = [24, 20, 37];
+const GAME_DATA = "shared/export/game-data.json";
 const GAP = 4;
-// pixel.py's ZONE_ROADS, in its order, by palette name.
-const GROUNDS = ["grey", "tan", "dslate", "stone", "cream", "shale"];
-const PALETTE_JSON = "shared/palette.json";
 const SCALE = 6;
 const SPRITES_DIR = "public/art/sprites";
 const USAGE = "node art/tools/contact_sheet.ts OUT.png KEY...";
 
-/** Resolves a palette name through shared/palette.json, or a bare hex colour as itself. */
-async function paletteResolver(path: string): Promise<(colour: string) => Rgb> {
-  const palette = JSON.parse(await readFile(path, "utf8")) as Record<string, { hex: string }>;
-  return (colour) => rgb(Object.hasOwn(palette, colour) ? palette[colour]!.hex : colour);
+/** Each zone's road colour as bare hex, in zone order. */
+async function zoneRoads(path: string): Promise<string[]> {
+  const data = JSON.parse(await readFile(path, "utf8")) as { zones: { roadColour: string }[] };
+  return data.zones.map(({ roadColour }) => roadColour.replace(/^#/, ""));
 }
 
 /** An exported sprite's frames as rows of hex colours (null where clear), grouped by its tags. */
@@ -56,12 +55,12 @@ if (!out || !keys.length) {
   console.error(USAGE);
   process.exit(2);
 }
-const resolveRgb = await paletteResolver(PALETTE_JSON);
+const grounds = await zoneRoads(GAME_DATA);
 const sprites = await Promise.all(keys.map((key) => exportedSprite(SPRITES_DIR, key)));
 const sheet = renderContactSheet(
-  { background: BACKGROUND, gap: GAP, resolveRgb, scale: SCALE },
+  { background: BACKGROUND, gap: GAP, resolveRgb: rgb, scale: SCALE },
   sprites,
-  GROUNDS,
+  grounds,
 );
 await sheet.saveAs(out);
 console.log("wrote", out);
