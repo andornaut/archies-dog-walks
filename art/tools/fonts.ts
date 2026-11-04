@@ -41,17 +41,10 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 
 import { rgb } from "@andornaut/art-kit/colour";
-import { buildBitmapFont } from "@andornaut/art-kit/fonts";
+import { rasteriseGlyphs } from "@andornaut/art-kit/fonts";
 import { buildBitmapFontFromGlyphs, type GlyphKerning } from "@andornaut/art-kit/glyphAtlas";
-import {
-  channel,
-  crop,
-  fill,
-  filledImage,
-  resizeNearest,
-  type Rgba,
-} from "@andornaut/art-kit/raster";
-import { blankImage, opaqueRect, type RgbaImage } from "@andornaut/art-kit/rgbaImage";
+import { channel, fill, filledImage, resizeNearest, type Rgba } from "@andornaut/art-kit/raster";
+import { blankImage, type RgbaImage } from "@andornaut/art-kit/rgbaImage";
 
 import { LETTERS, word, wordSize } from "./fx.ts";
 import { Grid, HEART, K, rgbPng, run, savePng, toImage } from "./pixel.ts";
@@ -454,42 +447,22 @@ function rasterized(
   size: number,
   characters: readonly string[],
 ): { ascent: number; descent: number; glyphs: Map<string, Glyph> } {
-  const font = buildBitmapFont({
+  const { base, glyphs, lineHeight } = rasteriseGlyphs({
     antialias: false,
-    atlasWidth: ATLAS_W,
     characters,
     hinting: false,
-    key: "raster",
     path,
     size,
   });
-  const { base, glyphs: placed, lineHeight } = font.metadata;
-  const { height, width } = font.image;
-  const pixels = font.image.getContext("2d").getImageData(0, 0, width, height).data;
-  const atlas: RgbaImage = { data: new Uint8Array(pixels), height, width };
-  for (let i = 3; i < atlas.data.length; i += 4) {
-    if (atlas.data[i] !== 0 && atlas.data[i] !== 255) {
-      throw new RangeError(`${path} rasterized partial coverage at ${size}px`);
+  for (const { image } of glyphs.values()) {
+    if (!image) {
+      continue;
     }
-  }
-  const glyphs = new Map<string, Glyph>();
-  for (const ch of characters) {
-    const g = placed.get(ch)!;
-    const ink =
-      g.width && g.height
-        ? opaqueRect({ height: g.height, width: g.width, x: g.x, y: g.y }, atlas)
-        : undefined;
-    glyphs.set(
-      ch,
-      ink
-        ? {
-            image: crop(ink, atlas),
-            xadvance: g.xadvance,
-            xoffset: g.xoffset + ink.x - g.x,
-            yoffset: g.yoffset + ink.y - g.y,
-          }
-        : { image: undefined, xadvance: g.xadvance, xoffset: 0, yoffset: 0 },
-    );
+    for (let i = 3; i < image.data.length; i += 4) {
+      if (image.data[i] !== 0 && image.data[i] !== 255) {
+        throw new RangeError(`${path} rasterized partial coverage at ${size}px`);
+      }
+    }
   }
   return { ascent: base, descent: lineHeight - base, glyphs };
 }

@@ -7,10 +7,9 @@ import { writeFileSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 
 import { rgb } from "@andornaut/art-kit/colour";
-import type { Sprite, Tag } from "@andornaut/art-kit/frames";
 import type { Frame } from "@andornaut/art-kit/grid";
 import { decodePng } from "@andornaut/art-kit/png";
-import { composeContactSheet } from "@andornaut/art-kit/raster";
+import { composeContactSheet, type Sprite, type Tag } from "@andornaut/art-kit/raster";
 
 import { groundSheetPath, PREVIEW_BACKGROUND, rgbPng, run, ZONE_ROADS } from "./pixel.ts";
 
@@ -43,7 +42,7 @@ async function exportedSprite(dir: string, key: string): Promise<Sprite> {
   const marks = data.meta.frameTags?.length
     ? data.meta.frameTags
     : [{ from: 0, name: "", to: frames.length - 1 }];
-  const tags: Tag[] = marks.map(({ from, name, to }) => [name, frames.slice(from, to + 1), null]);
+  const tags: Tag[] = marks.map(({ from, name, to }) => [name, frames.slice(from, to + 1), 0]);
   return [key, tags];
 }
 

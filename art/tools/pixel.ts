@@ -4,8 +4,14 @@
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 
 import { contrast as colourContrast, rgb } from "@andornaut/art-kit/colour";
-import { opaque_cols as frameCols, opaque_rows as frameRows } from "@andornaut/art-kit/frames";
-import { type Colour, type Edge, type Frame, Grid as DrawingGrid } from "@andornaut/art-kit/grid";
+import {
+  type Colour,
+  type Edge,
+  type Frame,
+  Grid as DrawingGrid,
+  opaqueCols as frameCols,
+  opaqueRows as frameRows,
+} from "@andornaut/art-kit/grid";
 import {
   decodePng,
   encodeRgbaPng,
