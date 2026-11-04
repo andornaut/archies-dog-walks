@@ -64,7 +64,6 @@ import {
   type Sprite,
   type Tag,
 } from "./pixel.ts";
-import { roundHalfEven } from "./py.ts";
 
 const USAGE = `Usage:
   node art/tools/road.ts preview OUT.png   every frame on the zone roads, scaled up
@@ -381,8 +380,8 @@ export function backArm(
     sum += h;
     ends.push(sum);
   }
-  const first = roundHalfEven(top * s);
-  const last = roundHalfEven((top + ends.at(-1)!) * s);
+  const first = Math.round(top * s);
+  const last = Math.round((top + ends.at(-1)!) * s);
   // one rect per row of the grid's own pixels, so the arm has no gaps at any scale or bob
   for (let py = first; py < last; py++) {
     const d = py / s - top;
@@ -418,11 +417,79 @@ export function walkerArms(
   }
 }
 
+// x * y as an unevaluated sum [hi, lo]: hi is the rounded product and lo its exact error, as C's
+// fma(x, y, -hi) gives it (Dekker's product with Veltkamp's split).
+function product(x: number, y: number): [number, number] {
+  const hi = x * y;
+  const split = (v: number): [number, number] => {
+    const t = v * 134217729;
+    const high = t - (t - v);
+    return [high, v - high];
+  };
+  const [xh, xl] = split(x);
+  const [yh, yl] = split(y);
+  return [hi, xl * yl - (hi - xh * yh - xl * yh - xh * yl)];
+}
+
+// a + b as [sum, error] for |a| >= |b|, the error exact.
+function fastSum(a: number, b: number): [number, number] {
+  const x = a + b;
+  return [x, b - (x - a)];
+}
+
+// The length of a vector, correctly rounded as CPython's math.hypot computes it (vector_norm: a
+// power-of-two scale, a lossless sum of squares and one correction of the square root). Math.hypot
+// can be an ulp off, which moves a limb's edge across a pixel centre.
+function hypot(...coordinates: number[]): number {
+  const abs = coordinates.map(Math.abs);
+  const max = abs.reduce((a, b) => (b > a || Number.isNaN(b) ? b : a), 0);
+  if (max === Infinity || abs.includes(Infinity)) {
+    return Infinity;
+  }
+  if (Number.isNaN(max) || abs.some(Number.isNaN)) {
+    return NaN;
+  }
+  if (max === 0 || abs.length <= 1) {
+    return max;
+  }
+  // 2 ** -e puts max in [0.5, 1); subnormals are first scaled up into the normal range.
+  const tiny = 2 ** -1022;
+  if (max < tiny) {
+    return tiny * hypot(...abs.map((v) => v / tiny));
+  }
+  const e = Math.floor(Math.log2(max)) + 1;
+  let scale = 2 ** -e;
+  if (max * scale >= 1) {
+    scale /= 2;
+  } else if (max * scale < 0.5) {
+    scale *= 2;
+  }
+  let csum = 1;
+  let frac1 = 0;
+  let frac2 = 0;
+  for (const v of abs) {
+    const x = v * scale;
+    const [hi, lo] = product(x, x);
+    const [sum, err] = fastSum(csum, hi);
+    csum = sum;
+    frac1 += lo;
+    frac2 += err;
+  }
+  let h = Math.sqrt(csum - 1 + (frac1 + frac2));
+  const [hi, lo] = product(-h, h);
+  const [sum, err] = fastSum(csum, hi);
+  csum = sum;
+  frac1 += lo;
+  frac2 += err;
+  h += (csum - 1 + (frac1 + frac2)) / (2 * h);
+  return h / scale;
+}
+
 // A solid limb between joints, rasterized on the drawing's own grid.
 export function limbBar(g: Drawable, a: Point, b: Point, width: number, colour: string): void {
   const dx = b[0] - a[0];
   const dy = b[1] - a[1];
-  const length = Math.max(0.001, Math.hypot(dx, dy));
+  const length = Math.max(0.001, hypot(dx, dy));
   const px = (-dy * width) / (2 * length);
   const py = (dx * width) / (2 * length);
   const corners: [Point, Point, Point, Point] = [
@@ -843,7 +910,7 @@ export function lean(source: Drawable, k: number): Drawable {
     out.edge = g.edge;
   }
   for (let y = 0; y < g.h; y++) {
-    const dx = roundHalfEven((k * f * Math.max(0, 44 * f - y)) / (36 * f));
+    const dx = Math.round((k * f * Math.max(0, 44 * f - y)) / (36 * f));
     for (let x = 0; x < g.w; x++) {
       if (g.px[y]![x] && x + dx >= 0 && x + dx < g.w) {
         out.px[y]![x + dx] = g.px[y]![x]!;
@@ -878,9 +945,9 @@ export const raisedArm: RaisedArm = (g, x, w, top, bottom, dx, parts) => {
     // each run of rows with the same shift is one rect, so drawn bigger the arm stays solid
     let yy = y;
     while (yy < end) {
-      const s = roundHalfEven((dx * (bottom - yy)) / (bottom - top));
+      const s = Math.round((dx * (bottom - yy)) / (bottom - top));
       let n = 1;
-      while (yy + n < end && roundHalfEven((dx * (bottom - yy - n)) / (bottom - top)) === s) {
+      while (yy + n < end && Math.round((dx * (bottom - yy - n)) / (bottom - top)) === s) {
         n += 1;
       }
       g.rect(x + s, yy, w, n, fill);
@@ -890,7 +957,7 @@ export const raisedArm: RaisedArm = (g, x, w, top, bottom, dx, parts) => {
     y = end;
   });
   // the thumb, so the hand reads as an open palm
-  g.p(x + roundHalfEven((dx * (bottom - top - 1)) / (bottom - top)) - 1, top + 1, parts[0]![1]);
+  g.p(x + Math.round((dx * (bottom - top - 1)) / (bottom - top)) - 1, top + 1, parts[0]![1]);
 };
 
 // The painter the front views raise their arm with; cheering swaps it while it draws.
@@ -1367,7 +1434,7 @@ export function cheering(
     // the mirrored arm's thumb goes on the hand's inner (right) side, as a mirror of the raised one's
     const left = 32 - x - w;
     lift(g, left, w, top, bottom, -swing, parts);
-    const thumb = left + roundHalfEven((-swing * (bottom - top - 1)) / (bottom - top)) - 1;
+    const thumb = left + Math.round((-swing * (bottom - top - 1)) / (bottom - top)) - 1;
     g.p(thumb, top + 1, null);
     g.p(thumb + w + 1, top + 1, parts[0]![1]);
   };
@@ -1448,7 +1515,7 @@ export function treat({ lift = 0 }: { lift?: number } = {}): Drawable {
   g.rect(4, y + 2, 8, 1, "lgrey");
   treatHeart(g, 8, y + 1.5, lift < 0);
   const inner = raster(lit(g));
-  inner.px = hopped(inner.px, roundHalfEven(-lift * scaleOf(g)));
+  inner.px = hopped(inner.px, Math.round(-lift * scaleOf(g)));
   return g;
 }
 
@@ -1468,7 +1535,7 @@ export function tip(rx: number): Drawable {
     g.p(7, 6, "orange");
     g.p(9, 9, "orange");
   }
-  g.p(roundHalfEven(8 - rx * 0.55), 5, "white");
+  g.p(Math.round(8 - rx * 0.55), 5, "white");
   return g;
 }
 
@@ -1695,8 +1762,8 @@ export function puddle(f: number | boolean, w = 112, h = 48): Drawable {
     for (const [cx, cy, rx, ry] of lobes) {
       g.ell(cx, cy + 2, rx - 1.5, ry - 2, "sky");
     }
-    g.rect(roundHalfEven(w * 0.16), roundHalfEven(h * 0.4), roundHalfEven(w * 0.08), 2, "white");
-    g.rect(roundHalfEven(w * 0.14), roundHalfEven(h * 0.4) + 2, roundHalfEven(w * 0.13), 1, "cyan");
+    g.rect(Math.round(w * 0.16), Math.round(h * 0.4), Math.round(w * 0.08), 2, "white");
+    g.rect(Math.round(w * 0.14), Math.round(h * 0.4) + 2, Math.round(w * 0.13), 1, "cyan");
   }
   const s = f ? 1 : 0;
   for (const [fx, fy, fw] of [
@@ -1707,9 +1774,9 @@ export function puddle(f: number | boolean, w = 112, h = 48): Drawable {
   ] as const) {
     if (w > 40 || fx < 0.7) {
       g.rect(
-        roundHalfEven(fx * w) + (fx < 0.5 ? s : -s),
-        roundHalfEven(fy * h),
-        Math.max(2, roundHalfEven(fw * w)),
+        Math.round(fx * w) + (fx < 0.5 ? s : -s),
+        Math.round(fy * h),
+        Math.max(2, Math.round(fw * w)),
         1,
         "cyan",
       );
@@ -1835,17 +1902,14 @@ export function pothole(f: number | boolean, w = 112, h = 48): Drawable {
   // An ink line through run's corners on the drawn grid, unbroken at every scale, over a grey one a
   // pixel lower, lit along its lower edge.
   const crack = (run: readonly Point[]): void => {
-    const pts = run.map(([x, y]) => [roundHalfEven(x * s), roundHalfEven(y * s)] as const);
+    const pts = run.map(([x, y]) => [Math.round(x * s), Math.round(y * s)] as const);
     const ink: (readonly [number, number])[] = [];
     for (let i = 0; i + 1 < pts.length; i++) {
       const [x0, y0] = pts[i]!;
       const [x1, y1] = pts[i + 1]!;
       const n = Math.max(Math.abs(x1 - x0), Math.abs(y1 - y0), 1);
       for (let k = 0; k <= n; k++) {
-        ink.push([
-          roundHalfEven(x0 + ((x1 - x0) * k) / n),
-          roundHalfEven(y0 + ((y1 - y0) * k) / n),
-        ]);
+        ink.push([Math.round(x0 + ((x1 - x0) * k) / n), Math.round(y0 + ((y1 - y0) * k) / n)]);
       }
     }
     const inkSet = new Set(ink.map(([x, y]) => key(x, y)));
@@ -1860,8 +1924,8 @@ export function pothole(f: number | boolean, w = 112, h = 48): Drawable {
   };
 
   fan(POTHOLE_EDGE, "coal");
-  const d = Math.max(2, roundHalfEven(POTHOLE_DEPTH * s));
-  const band = Math.max(1, roundHalfEven(2 * s));
+  const d = Math.max(2, Math.round(POTHOLE_DEPTH * s));
+  const band = Math.max(1, Math.round(2 * s));
   const hole = new Set<string>();
   const holeCells: [number, number][] = [];
   for (let y = 0; y < px.h; y++) {
@@ -1878,7 +1942,7 @@ export function pothole(f: number | boolean, w = 112, h = 48): Drawable {
   for (const [x, y] of holeCells) {
     top.set(x, Math.min(top.get(x) ?? y, y));
   }
-  const r = Math.max(1, roundHalfEven(POTHOLE_FOOT * s));
+  const r = Math.max(1, Math.round(POTHOLE_FOOT * s));
   const foot = new Map<number, number>();
   for (const x of top.keys()) {
     let sum = 0;
@@ -1942,7 +2006,7 @@ export function pothole(f: number | boolean, w = 112, h = 48): Drawable {
         }
       }
     }
-    const edge = Math.max(1, roundHalfEven(POTHOLE_SLAB_EDGE * s));
+    const edge = Math.max(1, Math.round(POTHOLE_SLAB_EDGE * s));
     for (const [x, y] of mineCells) {
       if (!mine.has(key(x, y - 1))) {
         px.p(x, y, "lgrey");
@@ -2651,7 +2715,7 @@ export function treads(
   u = 1,
   back = false,
 ): void {
-  const last = Math.floor(roundHalfEven(h / u) / 4) + 2;
+  const last = Math.floor(Math.round(h / u) / 4) + 2;
   for (let k = -1; k < last; k++) {
     const ty = y + ((back ? f : 3 - f) + 4 * k) * u;
     if (y <= ty && ty + u <= y + h + 1e-9) {
