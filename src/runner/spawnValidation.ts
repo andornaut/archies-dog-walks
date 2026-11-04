@@ -6,13 +6,10 @@ import {
 } from "./laneAlternatives.ts";
 import { DART_LIFTS, moverRetries } from "./moverDraws.ts";
 import { type MoverDraws } from "./moverModel.ts";
-import {
-  isHerring,
-  moverReservationsMayShare,
-  type MoverVisibilityProof,
-  onScreenOf,
-  ridersMeet,
-} from "./moverPlanning.ts";
+import { isHerring } from "./moverPlanning.ts";
+import { onScreenOf } from "./moverScreen.ts";
+import { moverReservationsMayShare, type MoverVisibilityProof } from "./moverSpots.ts";
+import { ridersMeet } from "./riderSpans.ts";
 import {
   signatureFinishClearance,
   signaturePlace,

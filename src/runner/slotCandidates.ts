@@ -7,14 +7,9 @@ import {
   type MoverPlacementWork,
   type PlannerStreams,
 } from "./moverModel.ts";
-import {
-  herringSpawn,
-  isDartPlacement,
-  isHerring,
-  leavesPathOpen,
-  moverPlacementsWithWork,
-} from "./moverPlanning.ts";
+import { herringSpawn, isHerring, moverPlacementsWithWork } from "./moverPlanning.ts";
 import { crossLength } from "./movers.ts";
+import { isDartPlacement, leavesPathOpen } from "./moverSpots.ts";
 import { slotFootprint, type SlotSource } from "./slotConfig.ts";
 import type { SlotPlacement } from "./slotFeasibility.ts";
 import { LaneBlocks } from "./spawnCells.ts";

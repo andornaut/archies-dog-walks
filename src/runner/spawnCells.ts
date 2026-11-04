@@ -6,8 +6,8 @@ import {
   type LaneAlternativeBlock,
   requiredAlternativeWalls,
 } from "./laneAlternatives.ts";
-import { moverReservationsMayShare } from "./moverPlanning.ts";
 import type { LaneSpan, MoverPath } from "./movers.ts";
+import { moverReservationsMayShare } from "./moverSpots.ts";
 import type { FeasibilityObserver } from "./spawnFeasibilityDiagnostics.ts";
 import {
   addLanes,

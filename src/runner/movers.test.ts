@@ -12,17 +12,7 @@ import { DART_LIFTS, drawMover, drawnCount } from "./moverDraws.ts";
 import { sweptLanes } from "./moverExtents.ts";
 import { HOP_SEQUENCES_MOST, hopSequences, hopShapes, stepSpots } from "./moverHops.ts";
 import { type MoverDraws, type MoverGeometry, type MoverSpec } from "./moverModel.ts";
-import {
-  DART_VERGE_LANES,
-  dartOutcome,
-  leavesPathOpen,
-  type MoverCaps,
-  moverPlacements,
-  type OnScreen,
-  onScreenOf,
-  screenHasRoom,
-  stopsOnVerge,
-} from "./moverPlanning.ts";
+import { DART_VERGE_LANES, dartOutcome, moverPlacements, stopsOnVerge } from "./moverPlanning.ts";
 import {
   facesLeft,
   hasLeftRoad,
@@ -39,6 +29,8 @@ import {
   moverTell,
   type StepShape,
 } from "./movers.ts";
+import { type MoverCaps, type OnScreen, onScreenOf, screenHasRoom } from "./moverScreen.ts";
+import { leavesPathOpen } from "./moverSpots.ts";
 import { moverOutcomes } from "./outcomes.ts";
 import { moverRests } from "./spawning.ts";
 

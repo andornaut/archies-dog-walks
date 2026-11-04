@@ -1,5 +1,5 @@
 import type { MoverDraws } from "./moverModel.ts";
-import type { MoverVisibilityProof } from "./moverPlanning.ts";
+import type { MoverVisibilityProof } from "./moverSpots.ts";
 import type { SpawnRejection } from "./spawnAdmission.ts";
 import type { FeasibilityObserver } from "./spawnFeasibilityDiagnostics.ts";
 

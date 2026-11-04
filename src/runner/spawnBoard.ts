@@ -1,19 +1,16 @@
 import { laneMask } from "../layout/lanes.ts";
 import { deterministicOccupancyMasks, reactiveLaneMasks } from "./laneAlternatives.ts";
 import { type MoverBody, type MoverPlacement } from "./moverModel.ts";
+import { type OnScreen, onScreenOf } from "./moverScreen.ts";
 import {
   fitsMoverSpot,
   keepMoverSpot,
   leavesPathOpen,
   type MoverGrid,
   moverWithinZone,
-  type OnScreen,
-  onScreenOf,
-  ridersMeet,
-  type RiderSpan,
-  riderSpanOf,
   type Spot,
-} from "./moverPlanning.ts";
+} from "./moverSpots.ts";
+import { ridersMeet, type RiderSpan, riderSpanOf } from "./riderSpans.ts";
 import { LaneBlocks, PlacedPlaces, SpawnCells } from "./spawnCells.ts";
 import type { FeasibilityObserver, FeasibilityWitness } from "./spawnFeasibilityDiagnostics.ts";
 import {
