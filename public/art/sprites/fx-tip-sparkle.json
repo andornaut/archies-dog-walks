@@ -1,35 +1,51 @@
 { "frames": {
    "fx-tip-sparkle 0.aseprite": {
-    "frame": { "x": 0, "y": 0, "w": 9, "h": 9 },
+    "frame": { "x": 0, "y": 0, "w": 13, "h": 13 },
     "rotated": false,
     "trimmed": false,
-    "spriteSourceSize": { "x": 0, "y": 0, "w": 9, "h": 9 },
-    "sourceSize": { "w": 9, "h": 9 },
-    "duration": 60
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 13, "h": 13 },
+    "sourceSize": { "w": 13, "h": 13 },
+    "duration": 40
    },
    "fx-tip-sparkle 1.aseprite": {
-    "frame": { "x": 9, "y": 0, "w": 9, "h": 9 },
+    "frame": { "x": 13, "y": 0, "w": 13, "h": 13 },
     "rotated": false,
     "trimmed": false,
-    "spriteSourceSize": { "x": 0, "y": 0, "w": 9, "h": 9 },
-    "sourceSize": { "w": 9, "h": 9 },
-    "duration": 90
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 13, "h": 13 },
+    "sourceSize": { "w": 13, "h": 13 },
+    "duration": 50
    },
    "fx-tip-sparkle 2.aseprite": {
-    "frame": { "x": 18, "y": 0, "w": 9, "h": 9 },
+    "frame": { "x": 26, "y": 0, "w": 13, "h": 13 },
     "rotated": false,
     "trimmed": false,
-    "spriteSourceSize": { "x": 0, "y": 0, "w": 9, "h": 9 },
-    "sourceSize": { "w": 9, "h": 9 },
-    "duration": 70
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 13, "h": 13 },
+    "sourceSize": { "w": 13, "h": 13 },
+    "duration": 90
    },
    "fx-tip-sparkle 3.aseprite": {
-    "frame": { "x": 27, "y": 0, "w": 9, "h": 9 },
+    "frame": { "x": 39, "y": 0, "w": 13, "h": 13 },
     "rotated": false,
     "trimmed": false,
-    "spriteSourceSize": { "x": 0, "y": 0, "w": 9, "h": 9 },
-    "sourceSize": { "w": 9, "h": 9 },
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 13, "h": 13 },
+    "sourceSize": { "w": 13, "h": 13 },
+    "duration": 70
+   },
+   "fx-tip-sparkle 4.aseprite": {
+    "frame": { "x": 52, "y": 0, "w": 13, "h": 13 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 13, "h": 13 },
+    "sourceSize": { "w": 13, "h": 13 },
     "duration": 60
+   },
+   "fx-tip-sparkle 5.aseprite": {
+    "frame": { "x": 65, "y": 0, "w": 13, "h": 13 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 13, "h": 13 },
+    "sourceSize": { "w": 13, "h": 13 },
+    "duration": 50
    }
  },
  "meta": {
@@ -37,10 +53,10 @@
   "version": "1.2.30-x64",
   "image": "fx-tip-sparkle.png",
   "format": "RGBA8888",
-  "size": { "w": 36, "h": 9 },
+  "size": { "w": 78, "h": 13 },
   "scale": "1",
   "frameTags": [
-   { "name": "play", "from": 0, "to": 3, "direction": "forward" }
+   { "name": "play", "from": 0, "to": 5, "direction": "forward" }
   ]
  }
 }
