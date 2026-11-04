@@ -1,5 +1,5 @@
 import { STEP_SECONDS } from "@andornaut/game-kit/clock/fixedStep";
-import { chanceRound, shuffled, weightedPick } from "@andornaut/game-kit/random";
+import { chanceRound, shuffled } from "@andornaut/game-kit/random";
 import { keysOf } from "@andornaut/game-kit/records";
 
 import type { EncounterId, GameData, MinorObstacleId, ObstacleEncounterId } from "../data/types";
@@ -81,81 +81,13 @@ export function firstContactSeconds(
   return run.zoneIndex === 0 ? read(data.tuning, "seconds", "firstZoneContact") : undefined;
 }
 
-// Each obstacle and minor obstacle is drawn first by the zone's weights, so its shape is known
-// when it is placed. Rush hour and the like scale both obstacle counts, the tips and the treats.
-// Then each obstacle whose look moves comes as a mover at the zone's mover share: one quota per
-// kind, and one per stepper, whose steps are its own. A pull obstacle blocks no lane, moving or
-// not (blocksLane). Then the zone's lucky finds: of each kind, zoneStats' luckyFinds rounded by
-// chanceRound, in the kinds' order, then shuffled, each a quota of its own held to its spaced
-// stretch of the zone (spacedStretch) and, where its look moves, a mover at the mover share; a
-// lucky find blocks no lane. Last, the zone's gear drops (drawGearDrops), each a quota of its own
-// that blocks no lane, held to its spaced stretch.
-export function spawnQuotas(
-  data: WalkData,
-  streams: PlannerStreams,
-  run: RunState,
-): SpawnQuota<WalkItemKind>[] {
-  const random = streams.spawns;
-  const zone = currentZone(data, run);
-  const zoneId = currentZoneId(data, run);
-  const stats = zoneStats(data.tuning, zone, run.zoneIndex);
-  const scaled = (stat: "obstacleSpawns" | "tipSpawns" | "treatSpawns", base: number) =>
-    Math.round(modifiedStat(data.tuning, run.modifiers, stat, base));
-  const drawn = <Kind extends WalkItemKind>(
-    count: number,
-    weights: readonly (readonly [Kind, number])[],
-  ) => {
-    const ids = weights.map(([id]) => id);
-    const odds = weights.map(([, weight]) => weight);
-    return weights.length === 0
-      ? []
-      : Array.from({ length: count }, () => weightedPick(random, ids, odds));
-  };
-  const kinds: WalkItemKind[] = [
-    ...drawn(scaled("obstacleSpawns", stats.obstacles), obstacleWeights(data, run)),
-    ...drawn(scaled("obstacleSpawns", stats.minorObstacles), minorObstacleWeights(data, run)),
-  ];
-  const quotas = new Map<WalkItemKind, number>();
-  const movers = new Map<
-    WalkItemKind,
-    { readonly count: number; readonly movement: ProfiledMovement }
-  >();
-  const steppers: SpawnQuota<WalkItemKind>[] = [];
-  const count = <Key>(map: Map<Key, number>, key: Key) => map.set(key, (map.get(key) ?? 0) + 1);
-  const moverQuota = (kind: WalkItemKind, movement: ProfiledMovement, moverCount: number) => ({
-    blocksLane: blocksLane(data, kind),
-    count: moverCount,
-    first: opensACard(data, kind),
-    kind,
-    mover: moverSpec(data, streams, footprintOf(data, kind), movement),
-  });
-  for (const kind of kinds) {
-    const movement = moverMovement(data, random, zone.moverShare, zoneId, kind);
-    if (movement === null) {
-      count(quotas, kind);
-    } else if (movement.kind === "step") {
-      steppers.push(moverQuota(kind, movement, 1));
-    } else {
-      movers.set(kind, { count: (movers.get(kind)?.count ?? 0) + 1, movement });
-    }
-  }
-  return [
-    ...[...movers].map(([kind, { count: moverCount, movement }]) =>
-      moverQuota(kind, movement, moverCount),
-    ),
-    ...steppers,
-    ...[...quotas].map(([kind, kindCount]) => ({
-      blocksLane: blocksLane(data, kind),
-      count: kindCount,
-      first: opensACard(data, kind),
-      footprint: footprintOf(data, kind),
-      kind,
-    })),
-    ...auxiliarySpawnQuotas(data, streams, run),
-  ];
-}
-
-function auxiliarySpawnQuotas(
+// A zone's auxiliary requests, drawn from its spawns stream: of each lucky find kind, zoneStats'
+// luckyFinds rounded by chanceRound, in the kinds' order, then shuffled, each a quota of its own
+// held to its spaced stretch of the zone (spacedStretch) and, where its look moves, a mover at the
+// zone's mover share; then its gear drops (drawGearDrops), each a quota of its own held to its
+// spaced stretch; then its tips and treats, scaled as Rush hour and the like scale them. None
+// blocks a lane.
+export function auxiliarySpawnQuotas(
   data: WalkData,
   streams: PlannerStreams,
   run: RunState,

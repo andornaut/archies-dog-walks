@@ -111,9 +111,9 @@ import {
 } from "./walk";
 import { blocksLane, footprintOf, itemCategory, opensACard, type WalkItem } from "./walkItems";
 import {
+  auxiliarySpawnQuotas,
   obstacleWeights,
   planZoneWithContext,
-  spawnQuotas,
   type ZonePlanObservation,
 } from "./zonePlan";
 import { compileZoneSlotInput } from "./zoneSlotInput";
@@ -490,7 +490,9 @@ describe("planZone", { timeout: 150_000 }, () => {
       for (const { position, zone } of POSITIONS) {
         const zoned = inZone(realRun(REAL, walker), zone, position);
         const base = zoneStats(TUNING, currentZone(REAL, zoned), position).tips;
-        const tips = spawnQuotas(REAL, plannerStreams(1), zoned).find(({ kind }) => kind === "tip");
+        const tips = auxiliarySpawnQuotas(REAL, plannerStreams(1), zoned).find(
+          ({ kind }) => kind === "tip",
+        );
         expect(tips?.count, `${zone} at ${position}`).toBe(Math.round(base * factor));
       }
     },
@@ -553,7 +555,7 @@ describe("planZone", { timeout: 150_000 }, () => {
     ({ position, zone }) => {
       const zoned = inZone(realRun(REAL), zone, position);
       for (const seed of SWEEP_SEEDS) {
-        const quotas = spawnQuotas(REAL, plannerStreams(seed), zoned);
+        const quotas = auxiliarySpawnQuotas(REAL, plannerStreams(seed), zoned);
         const { road, slots } = realPlanWithDelivery(seed, zone, position);
         const { pending } = road;
         // One quota of each pickup kind, and one native request of each lucky find admitted.
