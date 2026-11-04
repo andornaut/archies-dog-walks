@@ -84,9 +84,15 @@ describe("bounded runtime ordering portfolio", () => {
       expect(result.diagnostics.attempts).toEqual([
         expect.objectContaining({
           ordering: "original",
+          reserveRestart: false,
           status: partial ? "partial" : "compatible",
         }),
       ]);
+      const [attempt] = result.diagnostics.attempts!;
+      expect(attempt!.firstFloor!.candidateChecks).toBeLessThanOrEqual(attempt!.candidateChecks);
+      expect(attempt!.firstFloor!.propagationChecks).toBeLessThanOrEqual(
+        attempt!.propagationChecks,
+      );
     },
   );
 

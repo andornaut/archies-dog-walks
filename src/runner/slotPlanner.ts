@@ -68,8 +68,12 @@ export interface SlotPlanningContext {
 }
 export interface SlotAttemptDiagnostics {
   readonly candidateChecks: number;
+  // The attempt's own work when it first held a layout meeting the delivery floor.
+  readonly firstFloor?: { readonly candidateChecks: number; readonly propagationChecks: number };
   readonly ordering: "original" | "balanced";
   readonly propagationChecks: number;
+  // Whether the attempt restarted with the reserve omission threshold (SLOT_OMISSION_RESERVE).
+  readonly reserveRestart: boolean;
   readonly status: "compatible" | "partial" | "blocked" | "budget";
 }
 export interface SlotDiagnostics {
@@ -208,6 +212,8 @@ function planSlotComposition<Kind extends string>(
       : context.limits;
   const attempts: SlotAttemptDiagnostics[] = [];
   let attemptStart = { candidateChecks: 0, propagationChecks: 0 };
+  let attemptFloor: SlotAttemptDiagnostics["firstFloor"];
+  let attemptRestarted = false;
   let attemptStopped = false;
   const assignments: SlotAssignment<Kind>[] = [];
   let path: PlannedSpawns<Kind>["path"] = [];
@@ -710,10 +716,19 @@ function planSlotComposition<Kind extends string>(
     ...meter,
     coverageFirst: context.coverageFirst === true,
     fairSources: context.fairSources === true,
+    floorMet() {
+      attemptFloor ??= {
+        candidateChecks: stats.candidateChecks - attemptStart.candidateChecks,
+        propagationChecks: stats.propagationChecks - attemptStart.propagationChecks,
+      };
+    },
     originalDrawsFirst: context.originalDrawsFirst !== false,
     rejected(candidate, failure) {
       const key = `${candidate.prepared.source.kind}:${failure.rule}`;
       stats.rejections[key] = (stats.rejections[key] ?? 0) + 1;
+    },
+    reserveRestarted() {
+      attemptRestarted = true;
     },
   };
   const recordAttempt = (
@@ -723,11 +738,15 @@ function planSlotComposition<Kind extends string>(
     if (portfolio) {
       attempts.push({
         candidateChecks: stats.candidateChecks - attemptStart.candidateChecks,
+        ...(attemptFloor === undefined ? {} : { firstFloor: attemptFloor }),
         ordering,
         propagationChecks: stats.propagationChecks - attemptStart.propagationChecks,
+        reserveRestart: attemptRestarted,
         status,
       });
     }
+    attemptFloor = undefined;
+    attemptRestarted = false;
   };
   const solve = (ordering: "original" | "balanced") => {
     const board = createSlotConstructionState(geometry, path);

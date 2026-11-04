@@ -111,6 +111,26 @@ describe("native composition solve", () => {
     expect(state.entries()).toEqual([]);
   });
 
+  it.each([
+    { progress: 0, restarts: 0 },
+    { progress: 1, restarts: 1 },
+  ])(
+    "reports $restarts reserve restarts and the first floor-meeting layout at progress $progress",
+    ({ progress, restarts }) => {
+      const floorMet = vi.fn();
+      const reserveRestarted = vi.fn();
+      const { search, state } = fixture({
+        floorMet,
+        minimumDelivery: 3,
+        progress: () => progress,
+        reserveRestarted,
+      });
+      expect(search.solve(state).status).toBe("compatible");
+      expect(reserveRestarted).toHaveBeenCalledTimes(restarts);
+      expect(floorMet).toHaveBeenCalledOnce();
+    },
+  );
+
   it("rejects a nonempty root without moving or rebinding its native entries", () => {
     const { domains, jobs, search, state } = fixture();
     const job = jobs[0]!;

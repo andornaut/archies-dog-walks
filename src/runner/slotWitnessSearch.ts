@@ -67,11 +67,14 @@ export interface WitnessWork<Kind extends string> {
     selections: readonly WitnessSelection<Kind>[],
     omissions: readonly WitnessOmission<Kind>[],
   ) => boolean;
+  // Diagnostic observers: the search's first floor-meeting layout and its reserve restart.
+  readonly floorMet?: () => void;
   readonly minimumDelivery?: number;
   readonly ordinaryOrder?: "original" | "balanced";
   readonly coverageFirst?: boolean;
   readonly fairSources?: boolean;
   readonly originalDrawsFirst?: boolean;
+  readonly reserveRestarted?: () => void;
   // Share of the current attempt's work allowance already used, from 0 to 1.
   readonly progress?: () => number;
   readonly propagate?: () => boolean;
@@ -205,6 +208,9 @@ export function createSlotWitnessSearch<Kind extends string>(
         }
         if (stopped()) {
           return undefined;
+        }
+        if (incumbent === undefined) {
+          work.floorMet?.();
         }
         incumbent = Object.freeze({
           omissions: missing,
@@ -384,6 +390,7 @@ export function createSlotWitnessSearch<Kind extends string>(
       });
       if (!halted() && reserveDue()) {
         reserving = true;
+        work.reserveRestarted?.();
         result = yield* construct.begin({
           ...ports,
           omissionAttempts: SLOT_OMISSION_ATTEMPTS.reserve,
@@ -409,6 +416,9 @@ export function createSlotWitnessSearch<Kind extends string>(
         return { status: "blocked" };
       }
       const selected = selections(result.witness);
+      if (selected !== undefined && incumbent === undefined) {
+        work.floorMet?.();
+      }
       return selected === undefined
         ? {
             failure: {
