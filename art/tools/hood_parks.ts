@@ -94,7 +94,7 @@
 //                                nose, plum-rimmed white claw slashes beside his head
 // card-porch-cat-treat           the cat lounging over a treat under rising hearts, Archie sitting
 //                                calm beside it
-// card-porch-cat-bolt            Archie splashing through a muddy puddle past the lounging cat
+// card-porch-cat-splash-past     Archie splashing through a muddy puddle past the lounging cat
 //
 // Run from the repository root. The cards compose the exported sprites, so the build exports the
 // sprites first. A build overwrites the exports, so hand edits to them belong in this file instead.
@@ -1502,7 +1502,7 @@ function porchCatTreat(): cards.Art {
 }
 
 // Splash past: Archie splashes through a muddy puddle beside the lounging calico.
-function porchCatBolt(): cards.Art {
+function porchCatSplashPast(): cards.Art {
   const ink = (c: string): Rgba => [...sn.rgb(c), 255];
   const a = new cards.Art();
   a.ground(CABBAGETOWN);
@@ -1546,7 +1546,7 @@ function porchCatBolt(): cards.Art {
 const ILLUSTRATIONS: ReadonlyMap<string, () => cards.Art> = new Map([
   ["card-porch-cat-stand", porchCatStand],
   ["card-porch-cat-treat", porchCatTreat],
-  ["card-porch-cat-bolt", porchCatBolt],
+  ["card-porch-cat-splash-past", porchCatSplashPast],
 ]);
 
 // The illustration in an encounter card frame, cost plaque included, as cards.ts's mockCard shows

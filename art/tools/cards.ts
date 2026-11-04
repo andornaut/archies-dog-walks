@@ -1134,7 +1134,7 @@ export function raincoats(): Art {
   return a;
 }
 
-export function sweetTalker(): Art {
+export function charmer(): Art {
   const a = new Art();
   a.grass();
   a.face("face-owner-pepe", "happy", 6, 14);
@@ -1838,7 +1838,7 @@ export const ILLUSTRATIONS = new Map<string, () => Art>([
   ["card-big-tipper", bigTipper],
   ["card-rush-hour", rushHour],
   ["card-raincoats", raincoats],
-  ["card-sweet-talker", sweetTalker],
+  ["card-charmer", charmer],
   ["card-skip", skip],
   ["card-zone-cabbagetown", cabbagetownView],
   ["card-zone-high-park", highParkView],

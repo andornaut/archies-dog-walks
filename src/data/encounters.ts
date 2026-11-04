@@ -149,7 +149,7 @@ export const ENCOUNTERS = {
     name: "Lost wallet",
     resolution: {
       art: "card-lost-wallet-keep",
-      effects: [{ amount: "lostWalletKeep", change: "gain", kind: "money" }],
+      effects: [{ amount: "lostWalletJackpot", change: "gain", kind: "money" }],
       kind: "instant",
       tally: "walletsFound",
     },
@@ -206,9 +206,9 @@ export const ENCOUNTERS = {
           name: "Treat bribe",
         },
         {
-          art: "card-porch-cat-bolt",
+          art: "card-porch-cat-splash-past",
           effects: [{ debuff: "muddy", kind: "debuff" }],
-          id: "bolt",
+          id: "splashPast",
           name: "Splash past",
         },
       ],

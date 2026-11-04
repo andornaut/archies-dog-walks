@@ -200,10 +200,10 @@ describe("a money change's label", () => {
       "a lucky find",
       () =>
         resolved(
-          { amount: "lostWalletKeep", change: "gain", kind: "money" },
+          { amount: "lostWalletJackpot", change: "gain", kind: "money" },
           { encounter: "lostWallet", kind: "instant" },
         ),
-      money(read(tuning, "money", "lostWalletKeep"), "+"),
+      money(read(tuning, "money", "lostWalletJackpot"), "+"),
       cash(false),
     ],
     [

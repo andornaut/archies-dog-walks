@@ -52,8 +52,8 @@ describe("effectText", () => {
       ],
       [
         "a gain once",
-        [{ amount: "lostWalletKeep", change: "gain", kind: "money" }],
-        `+${dollars("lostWalletKeep")}`,
+        [{ amount: "lostWalletJackpot", change: "gain", kind: "money" }],
+        `+${dollars("lostWalletJackpot")}`,
       ],
       [
         "hearts each",
@@ -132,12 +132,12 @@ describe("effectText", () => {
       ["a free Walk on by", [{ kind: "skipOption" }], capitalize(words.skipOption)],
       [
         "free cards as cash options free",
-        [{ by: "sweetTalkerFreeCards", kind: "modifier", operation: "add", stat: "freeCards" }],
+        [{ by: "charmerFreeCards", kind: "modifier", operation: "add", stat: "freeCards" }],
         capitalize(
-          read(TEST_TUNING, "counts", "sweetTalkerFreeCards") === 1
+          read(TEST_TUNING, "counts", "charmerFreeCards") === 1
             ? words.freeCard
             : fillNames(words.freeCards, {
-                count: String(read(TEST_TUNING, "counts", "sweetTalkerFreeCards")),
+                count: String(read(TEST_TUNING, "counts", "charmerFreeCards")),
               }),
         ),
       ],

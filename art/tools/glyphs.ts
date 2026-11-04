@@ -18,9 +18,9 @@
 // icon-spotlight              a debuff's bar and message line: a stage spotlight at the top left
 //                             throwing a yellow beam down onto its white-lit pool
 // icon-upgrade-<upgrade>      the shop, the cards and the message strip: belly-rubs (a hand under a
-//                             heart), big-tipper (coins and an up arrow), good-leash (a calm dog
-//                             sitting politely), raincoats (a yellow raincoat), rush-hour (an alarm
-//                             clock), sweet-talker (a speech bubble with $ and a down arrow)
+//                             heart), big-tipper (coins and an up arrow), charmer (a speech bubble
+//                             with $ and a down arrow), good-leash (a calm dog sitting politely),
+//                             raincoats (a yellow raincoat), rush-hour (an alarm clock)
 // icon-gear-<gear>            the shop and the message strip: the shop's item art (icons.ts) at 16x16
 // <key>-20                    each icon-perk-*, icon-upgrade-* and icon-gear-* drawn again at 20x20
 //                             for the walk bar's 22x22 effect wells: the same subject and colours
@@ -511,7 +511,7 @@ export function raincoats(): Grid {
 }
 
 // A speech bubble saying money goes down.
-export function sweetTalker(): Grid {
+export function charmer(): Grid {
   const g = new Grid(16, 16);
   g.rect(2, 2, 12, 9, "white");
   g.rect(1, 3, 14, 7, "white");
@@ -878,7 +878,7 @@ export function rushHour20(): Grid {
 }
 
 // A speech bubble saying money goes down: a forest $ and a dred arrow down.
-export function sweetTalker20(): Grid {
+export function charmer20(): Grid {
   const g = new Grid(20, 20);
   bubble20(g, "white", "lgrey");
   bitmap(
@@ -1184,7 +1184,7 @@ export const IMAGES: ReadonlyMap<string, () => Grid> = new Map([
   ["icon-upgrade-good-leash", goodLeash],
   ["icon-upgrade-raincoats", raincoats],
   ["icon-upgrade-rush-hour", rushHour],
-  ["icon-upgrade-sweet-talker", sweetTalker],
+  ["icon-upgrade-charmer", charmer],
   ["icon-gear-whistle", gearWhistle],
   ["icon-gear-fanny-pack", gearFannyPack],
   ["icon-gear-lucky-collar", gearLuckyCollar],
@@ -1199,7 +1199,7 @@ export const IMAGES: ReadonlyMap<string, () => Grid> = new Map([
   ["icon-upgrade-good-leash-20", goodLeash20],
   ["icon-upgrade-raincoats-20", raincoats20],
   ["icon-upgrade-rush-hour-20", rushHour20],
-  ["icon-upgrade-sweet-talker-20", sweetTalker20],
+  ["icon-upgrade-charmer-20", charmer20],
   ["icon-gear-whistle-20", gearWhistle20],
   ["icon-gear-fanny-pack-20", gearFannyPack20],
   ["icon-gear-lucky-collar-20", gearLuckyCollar20],

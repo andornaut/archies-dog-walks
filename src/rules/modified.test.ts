@@ -138,7 +138,7 @@ const sources = {
   quickRecovery: { kind: "walker", walker: walkerWith("quickRecovery") },
   runningShoes: { gear: "runningShoes", kind: "gear" },
   secondChance: { kind: "walker", walker: walkerWith("secondChance") },
-  sweetTalker: { kind: "upgrade", upgrade: "sweetTalker" },
+  charmer: { kind: "upgrade", upgrade: "charmer" },
 } as const satisfies Record<string, EffectSource>;
 
 const by = (amount: number, source: ModifierSource) => [{ amount, kind: "modifier", source }];
@@ -154,12 +154,12 @@ describe("a card option's modified values", () => {
   it.each([
     [
       "Charmer waives the cost",
-      () => optionModified("thief", thiefPays.index, runWith(PLAIN, null, ["sweetTalker"])),
+      () => optionModified("thief", thiefPays.index, runWith(PLAIN, null, ["charmer"])),
       [
         {
           after: 0,
           before: -letGo,
-          by: by(letGo, sources.sweetTalker),
+          by: by(letGo, sources.charmer),
           subject: { kind: "money" },
         },
       ],

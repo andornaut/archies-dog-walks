@@ -96,9 +96,9 @@ describe("a card's text for the dogs it catches", () => {
   });
 
   describe("with Charmer", () => {
-    const sweetTalker = activeModifier(
-      { kind: "upgrade", upgrade: "sweetTalker" },
-      { by: "sweetTalkerFreeCards", operation: "add", stat: "freeCards" },
+    const charmer = activeModifier(
+      { kind: "upgrade", upgrade: "charmer" },
+      { by: "charmerFreeCards", operation: "add", stat: "freeCards" },
     );
     const groom = "Full groom";
 
@@ -106,14 +106,14 @@ describe("a card's text for the dogs it catches", () => {
       {
         cardsThisZone: 0,
         large: gameData.runText.card.free,
-        modifiers: [sweetTalker],
+        modifiers: [charmer],
         text: gameData.runText.card.free,
         why: "a waived cost says FREE",
       },
       {
         cardsThisZone: 1,
         large: `−$${cardOptionCost}`,
-        modifiers: [sweetTalker],
+        modifiers: [charmer],
         text: `−$${cardOptionCost}`,
         why: "a cost once the zone's free card is used says its price",
       },

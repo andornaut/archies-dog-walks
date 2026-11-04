@@ -13696,6 +13696,10 @@
       "png": "images/card-big-tipper.png"
     },
     {
+      "key": "card-charmer",
+      "png": "images/card-charmer.png"
+    },
+    {
       "key": "card-cheese-crates-buy",
       "png": "images/card-cheese-crates-buy.png"
     },
@@ -13760,8 +13764,8 @@
       "png": "images/card-other-dog-sniff.png"
     },
     {
-      "key": "card-porch-cat-bolt",
-      "png": "images/card-porch-cat-bolt.png"
+      "key": "card-porch-cat-splash-past",
+      "png": "images/card-porch-cat-splash-past.png"
     },
     {
       "key": "card-porch-cat-stand",
@@ -13794,10 +13798,6 @@
     {
       "key": "card-skunk-rinse",
       "png": "images/card-skunk-rinse.png"
-    },
-    {
-      "key": "card-sweet-talker",
-      "png": "images/card-sweet-talker.png"
     },
     {
       "key": "card-thief-give-chase",
@@ -14032,6 +14032,14 @@
       "png": "images/icon-upgrade-big-tipper-20.png"
     },
     {
+      "key": "icon-upgrade-charmer",
+      "png": "images/icon-upgrade-charmer.png"
+    },
+    {
+      "key": "icon-upgrade-charmer-20",
+      "png": "images/icon-upgrade-charmer-20.png"
+    },
+    {
       "key": "icon-upgrade-good-leash",
       "png": "images/icon-upgrade-good-leash.png"
     },
@@ -14054,14 +14062,6 @@
     {
       "key": "icon-upgrade-rush-hour-20",
       "png": "images/icon-upgrade-rush-hour-20.png"
-    },
-    {
-      "key": "icon-upgrade-sweet-talker",
-      "png": "images/icon-upgrade-sweet-talker.png"
-    },
-    {
-      "key": "icon-upgrade-sweet-talker-20",
-      "png": "images/icon-upgrade-sweet-talker-20.png"
     },
     {
       "key": "icon-zone-cabbagetown",

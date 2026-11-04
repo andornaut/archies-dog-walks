@@ -161,11 +161,11 @@ describe("applyInstantEncounter", () => {
   it("pays a lost wallet at once", () => {
     const state = testState({ kilo: 5, sequoia: 3 });
     const outcome = applyInstantEncounter(data, state, "lostWallet", ["kilo", "sequoia"]);
-    const keep = read(TEST_TUNING, "money", "lostWalletKeep");
-    expect(outcome.moneyDelta).toBe(keep);
+    const jackpot = read(TEST_TUNING, "money", "lostWalletJackpot");
+    expect(outcome.moneyDelta).toBe(jackpot);
     expect(heartsByDog(outcome.state)).toEqual(heartsByDog(state));
     expect(outcome.moneyChanges[0]?.causes).toEqual([
-      { amount: keep, kind: "effect", source: { encounter: "lostWallet", kind: "instant" } },
+      { amount: jackpot, kind: "effect", source: { encounter: "lostWallet", kind: "instant" } },
     ]);
     expect(outcome.state.phase).toEqual({ kind: "walking" });
     expect(outcome.quips).toEqual([]);
@@ -324,13 +324,13 @@ describe("chooseOption", () => {
   });
 
   it("makes the zone's first card free with Charmer, and the next one not", () => {
-    const sweetTalker = activeModifier(
-      { kind: "upgrade", upgrade: "sweetTalker" },
-      { by: "sweetTalkerFreeCards", operation: "add", stat: "freeCards" },
+    const charmer = activeModifier(
+      { kind: "upgrade", upgrade: "charmer" },
+      { by: "charmerFreeCards", operation: "add", stat: "freeCards" },
     );
     const state = testState(
       { ginger: 5, kilo: 5 },
-      { modifiers: [sweetTalker], money: cents(4000) },
+      { modifiers: [charmer], money: cents(4000) },
     );
     const skunk = encounter("skunk", ["ginger", "kilo"]);
     const first = choose(state, skunk, groom);

@@ -222,9 +222,9 @@
       "title": "Porch cat"
     },
     {
-      "art": "card-porch-cat-bolt",
+      "art": "card-porch-cat-splash-past",
       "frame": "encounter",
-      "id": "bolt",
+      "id": "splash-past",
       "index": 2,
       "name": "Splash past",
       "source": {
@@ -495,13 +495,13 @@
       "title": "Which way?"
     },
     {
-      "art": "card-sweet-talker",
+      "art": "card-charmer",
       "frame": "route",
-      "id": "sweetTalker",
+      "id": "charmer",
       "index": null,
       "name": "Charmer",
       "source": {
-        "id": "sweetTalker",
+        "id": "charmer",
         "kind": "upgrade"
       },
       "text": "First card's cash options free each neighbourhood all walk",
@@ -1080,7 +1080,7 @@
         "art": "card-lost-wallet-keep",
         "effects": [
           {
-            "amount": "lostWalletKeep",
+            "amount": "lostWalletJackpot",
             "change": "gain",
             "kind": "money"
           }
@@ -1189,14 +1189,14 @@
             "name": "Treat bribe"
           },
           {
-            "art": "card-porch-cat-bolt",
+            "art": "card-porch-cat-splash-past",
             "effects": [
               {
                 "debuff": "muddy",
                 "kind": "debuff"
               }
             ],
-            "id": "bolt",
+            "id": "splashPast",
             "name": "Splash past"
           }
         ]
@@ -3100,6 +3100,7 @@
   },
   "tuning": {
     "counts": {
+      "charmerFreeCards": 1,
       "dartLanesPerSecond": 3,
       "dartStopLanesMax": 4,
       "dartStopLanesMin": 2,
@@ -3123,7 +3124,6 @@
       "maxSlowVehicles": 4,
       "openLanesPerRowMin": 2,
       "packSizeMax": 3,
-      "sweetTalkerFreeCards": 1,
       "tipsFirstZone": 31,
       "tipsGainPerZone": -3,
       "treatsPerZone": 4
@@ -3151,7 +3151,7 @@
     "money": {
       "bigTipperTipBonus": 1,
       "cardOptionCost": 20,
-      "lostWalletKeep": 20,
+      "lostWalletJackpot": 20,
       "payPerDog": 20,
       "prices": {
         "buddy": 600,
@@ -3363,14 +3363,14 @@
       "name": "Rush hour"
     },
     {
-      "id": "sweetTalker",
-      "art": "card-sweet-talker",
+      "id": "charmer",
+      "art": "card-charmer",
       "cardEffect": "Free $ card",
       "duration": "run",
       "effect": "First card: cash options free",
       "effects": [
         {
-          "by": "sweetTalkerFreeCards",
+          "by": "charmerFreeCards",
           "duration": "run",
           "kind": "modifier",
           "operation": "add",

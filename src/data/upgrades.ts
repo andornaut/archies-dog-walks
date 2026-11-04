@@ -92,14 +92,14 @@ export const UPGRADES = {
     kind: "tradeOff",
     name: "Rush hour",
   },
-  sweetTalker: {
-    art: "card-sweet-talker",
+  charmer: {
+    art: "card-charmer",
     cardEffect: "Free $ card",
     duration: "run",
     effect: "First card: cash options free",
     effects: [
       {
-        by: "sweetTalkerFreeCards",
+        by: "charmerFreeCards",
         duration: "run",
         kind: "modifier",
         operation: "add",

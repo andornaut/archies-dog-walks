@@ -66,7 +66,7 @@ function zoneStartRun(): RunState {
       { dog: "lady", status: "fired", zoneIndex: 0 },
     ],
     route: [FIRST, SECOND],
-    upgradesPicked: ["sweetTalker"],
+    upgradesPicked: ["charmer"],
     zoneIndex: 1,
   };
 }
@@ -102,7 +102,7 @@ const AT_FORK: ResumeWalk = {
   ...ZONE_START,
   session: {
     ...ZONE_START.session,
-    queue: [{ kind: "fork", paths: [SECOND, "theBeaches"], upgrades: ["sweetTalker", null] }],
+    queue: [{ kind: "fork", paths: [SECOND, "theBeaches"], upgrades: ["charmer", null] }],
     walk: { ...ZONE_START.session.walk, run: { ...zoneStartRun(), route: [FIRST] } },
   },
 };

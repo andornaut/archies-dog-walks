@@ -1256,7 +1256,7 @@ describe("stepWalk", () => {
     expect(cards).toEqual([]);
     expect(instants.map(({ encounter }) => encounter)).toEqual(["lostWallet"]);
     expect(instants[0]?.outcome.quips).toEqual([]);
-    expect(after.run.money).toBe(walk.run.money + read(tuning, "money", "lostWalletKeep"));
+    expect(after.run.money).toBe(walk.run.money + read(tuning, "money", "lostWalletJackpot"));
     expect(after.run.phase).toEqual({ kind: "walking" });
   });
 

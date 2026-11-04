@@ -6,6 +6,8 @@ import type { Tuning } from "./types.ts";
 export const TUNING = {
   // Plain counts.
   counts: {
+    // Charmer makes this many encounter cards each zone cost no money.
+    charmerFreeCards: 1,
     // A darting mover crosses the road this many lanes a second.
     dartLanesPerSecond: 3,
     // A dart that stops does so in a lane drawn per dart, between these many lanes from the edge
@@ -36,8 +38,6 @@ export const TUNING = {
     // Every row of spawns leaves at least this many lanes free of obstacles.
     openLanesPerRowMin: 2,
     packSizeMax: 3,
-    // Charmer makes this many encounter cards each zone cost no money.
-    sweetTalkerFreeCards: 1,
     tipsFirstZone: 31,
     tipsGainPerZone: -3,
     treatsPerZone: 4,
@@ -72,7 +72,7 @@ export const TUNING = {
     // What every money option on a choice card costs.
     cardOptionCost: 20,
     // The Lost wallet's found cash.
-    lostWalletKeep: 20,
+    lostWalletJackpot: 20,
     // Each walking dog's pay for a zone, the same in every zone.
     payPerDog: 20,
     prices: {

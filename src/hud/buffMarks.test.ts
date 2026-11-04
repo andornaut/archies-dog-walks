@@ -27,7 +27,7 @@ import {
 import { effectIconKey, type EffectItem, effectName } from "./effectIcons.ts";
 
 const { card, seconds } = gameData.runText;
-const SWEET_TALKER: ModifierSource = { kind: "upgrade", upgrade: "sweetTalker" };
+const CHARMER: ModifierSource = { kind: "upgrade", upgrade: "charmer" };
 const CASEY: ModifierSource = { kind: "walker", walker: "casey" };
 const caseyPerk = { kind: "perk", perk: gameData.walkers.casey.perk } as const;
 const kilo = gameData.dogs.kilo.name;
@@ -57,13 +57,13 @@ const option = (modified: readonly ModifiedValue[], text = "Hose it off"): Optio
 
 describe("optionMarks", () => {
   const forgiven = value({ dog: "kilo", kind: "hearts" }, -1, [[1, CASEY]]);
-  const waived = value({ kind: "money" }, -1000, [[1000, SWEET_TALKER]]);
+  const waived = value({ kind: "money" }, -1000, [[1000, CHARMER]]);
   const ADA: ModifierSource = { kind: "walker", walker: "ada" };
   const adaPerk = { kind: "perk", perk: gameData.walkers.ada.perk } as const;
   const shortened = value({ debuff: "muddy", kind: "debuffSeconds" }, 30, [[-15, ADA]]);
   const hallPass = { gear: "hallPass", kind: "gear" } as const;
   const skip = value({ kind: "skip" }, 0, [[1, hallPass]]);
-  const sweetTalker = { kind: "upgrade", upgrade: "sweetTalker" } as const;
+  const charmer = { kind: "upgrade", upgrade: "charmer" } as const;
   const charm = (item: EffectItem, effect: keyof typeof card.charmEffect) => ({
     effect: card.charmEffect[effect],
     item,
@@ -76,7 +76,7 @@ describe("optionMarks", () => {
       view: option([]),
     },
     {
-      expected: { charms: [charm(sweetTalker, "freeCards")], forgiven: null, plaque: card.free },
+      expected: { charms: [charm(charmer, "freeCards")], forgiven: null, plaque: card.free },
       name: "a cost Charmer waived, as FREE alone",
       view: option([waived]),
     },
@@ -99,7 +99,7 @@ describe("optionMarks", () => {
     },
     {
       expected: {
-        charms: [charm(adaPerk, "debuffSeconds"), charm(sweetTalker, "freeCards")],
+        charms: [charm(adaPerk, "debuffSeconds"), charm(charmer, "freeCards")],
         forgiven: null,
         plaque: card.free,
       },
@@ -224,14 +224,14 @@ describe("roadMarks", () => {
         bump: false,
         dog: null,
         item: null,
-        value: value({ kind: "money" }, -300, [[300, SWEET_TALKER]]),
+        value: value({ kind: "money" }, -300, [[300, CHARMER]]),
       },
       pops: [
         {
           ...plain,
           at: { kind: "pack" },
           chip: gameData.runText.waivedCost,
-          item: { kind: "upgrade", upgrade: "sweetTalker" },
+          item: { kind: "upgrade", upgrade: "charmer" },
         },
       ],
     },

@@ -27,9 +27,9 @@ const context = (affected: readonly DogId[]): EffectContext => ({
   affected,
   source: SKUNK_IGNORE,
 });
-const sweetTalker = activeModifier(
-  { kind: "upgrade", upgrade: "sweetTalker" },
-  { by: "sweetTalkerFreeCards", operation: "add", stat: "freeCards" },
+const charmer = activeModifier(
+  { kind: "upgrade", upgrade: "charmer" },
+  { by: "charmerFreeCards", operation: "add", stat: "freeCards" },
 );
 
 describe("applyEffects: hearts", () => {
@@ -239,7 +239,7 @@ describe("resolveEffects: changes and their causes", () => {
       change: "lose",
       kind: "money",
     };
-    const state = testState({ ginger: 5, kilo: 5 }, { modifiers: [sweetTalker] });
+    const state = testState({ ginger: 5, kilo: 5 }, { modifiers: [charmer] });
     const { changes } = resolveEffects(data, context(["ginger", "kilo"]), [towel], state);
     expect(changes).toEqual([]);
     expect(moneyCost(data, state, [towel])).toBe(0);
@@ -264,14 +264,14 @@ describe("moneyCost and applyEffects: money", () => {
     kind: "money",
   };
   const gain: Effect = {
-    amount: "lostWalletKeep",
+    amount: "lostWalletJackpot",
     change: "gain",
     kind: "money",
   };
 
   // Charmer, with cardsThisZone cards resolved this zone.
   const talked = (slots: Parameters<typeof testState>[0], cardsThisZone = 0) =>
-    testState(slots, { cardsThisZone, modifiers: [sweetTalker] });
+    testState(slots, { cardsThisZone, modifiers: [charmer] });
   const cost = read(TEST_TUNING, "money", "cardOptionCost");
 
   it("charges a cost once, nothing on the zone's first card with Charmer", () => {
@@ -288,7 +288,7 @@ describe("moneyCost and applyEffects: money", () => {
 
   it("adds gains and subtracts costs", () => {
     const start = testState({ ginger: 5, kilo: 5 }, { money: cents(5000) });
-    const gained = read(TEST_TUNING, "money", "lostWalletKeep");
+    const gained = read(TEST_TUNING, "money", "lostWalletJackpot");
     expect(applyEffects(data, context([]), [gain], start).money).toBe(5000 + gained);
     expect(applyEffects(data, context([]), [towel], start).money).toBe(5000 - cost);
   });
