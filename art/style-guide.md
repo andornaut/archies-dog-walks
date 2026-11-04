@@ -50,8 +50,7 @@ Every piece is very readable, clean and not busy, judged at the size it's shown:
 
 ## Palette and outlines
 
-- Neutral picker UI uses six UI-only colours (`PICKER_UI` in `pixel.ts`), leaving the house palette order and ramps fixed. The neutral Walker, Dogs and Pocket headers share OKLCH lightness 0.55 and chroma 0.105 at hues 230°, 290° and 350° before nearest-byte sRGB rounding. Each body is `encode_sRGB(0.5 × decode_sRGB(header))`, rounded to the nearest byte. Header tokens darken to their matching bodies; bodies darken to ink.
-- A picker section with a selection uses the amber header (`#feae34`) and `pickerSelectedBody` (`#bb7f23`), derived as `encode_sRGB(0.5 × decode_sRGB(amber))` with nearest-byte rounding. Unselected sections keep their matched blue, violet or pink header/body pair; an empty optional Pocket stays pink, and a selected Pocket uses amber.
+- Neutral picker UI uses six UI-only colours (`PICKER_UI` in `pixel.ts`) and the amber selected pair, leaving the house palette order and ramps fixed. Their values and derivation are under Sizing and spacing in [`controls.md`](controls.md#sizing-and-spacing). Header tokens darken to their matching bodies; bodies darken to ink.
 - A 64-colour house palette, each pixel opaque or fully transparent: [Endesga 32](https://lospec.com/palette-list/endesga-32) and the 32 Toronto colours (`TORONTO_HEX` in `art/tools/pixel.ts`; `PALETTE64` is both). Colour names are the `K` names in `pixel.ts`. Each Toronto ramp ends on an Endesga colour (`DARKER`):
 
 | Group               | Colours, light to dark down each ramp                                                  |
