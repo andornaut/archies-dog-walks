@@ -243,8 +243,6 @@ function crossPlacementsAt(
       warning: shown,
     };
     const touched = sweptLanes(laneCount, path, sightLength, sightLength + drawnWindow, inset);
-    // The safe path excludes actual collision contact, not a larger generic one-row body.
-    const lanes = touched;
     const body = {
       from: 0,
       lanes: sweptLanes(laneCount, path, 0, roadLength + bodyTo, inset),
@@ -255,7 +253,8 @@ function crossPlacementsAt(
       ...("pause" in pause ? { body } : {}),
       cells: blockCells(firstRow, lastRow - firstRow + 1, 0, laneCount),
       lane: direction === 1 ? 0 : laneCount - span,
-      lanes,
+      // It blocks the lanes of its collision contact, not a larger one-row body.
+      lanes: touched,
       path,
       rows,
       screen: [appears, appears + shown + moving],
