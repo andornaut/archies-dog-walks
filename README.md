@@ -41,7 +41,7 @@ The site's pages are in `pages/`, each at its URL's path (`pages/play/index.html
 Art build tools are TypeScript modules in `art/tools/`, which Node runs directly on the versioned [art-kit release](https://github.com/andornaut/art-kit/releases/tag/v0.12.0) pinned in `package-lock.json`, for example
 `node art/tools/glyphs.ts build`.
 
-Run local checks in a `node:24.21.0` container as `--user 19001:19001 --group-add "$(stat -c %g <checkout>)" -e HOME=/tmp`, with read-only mounts and outputs copied out with `docker cp`.
+Run local checks in a `node:24.21.0` container as `--user 19001:19001 --group-add "$(stat -c %g <checkout>)" -e HOME=/tmp`. Bind-mount host paths only with `--mount type=bind,src=<path>,dst=<path>,readonly`, never `-v`, which creates a missing source as root. Copy outputs out with `docker cp`.
 
 WORKAROUND: Parent-scoped development overrides pin [KaTeX](https://github.com/advisories/GHSA-238p-pmpm-9mq7) `0.18.2`, [minimatch](https://github.com/advisories/GHSA-g3hv-75wg-m249) `11.0.3` and [re2js](https://github.com/advisories/GHSA-gg6h-894w-4m9c) `2.8.7`. ESLint loads the cycle rule and resolver through exported plugin subpaths because the full plugin imports an unused rule requiring the removed minimatch `makeRe` API. Keep cycle detection enabled. Remove each override when its parent range supports the patched version; restore the full plugin import when it supports minimatch 11.
 
