@@ -17,7 +17,7 @@ The folder READMEs describe the current design and implementation:
 
 ## Developing
 
-Use Node 24.21.0 (`.nvmrc`) and Python 3.12 or newer. Run `npm ci` and `npm run install:python` to install the project-local art environment and Ruff, then:
+Use Node 24.21.0 (`.nvmrc`). Run `npm ci`, then:
 
 | Command                                     | Does                                                                       |
 | ------------------------------------------- | -------------------------------------------------------------------------- |
@@ -31,7 +31,7 @@ Use Node 24.21.0 (`.nvmrc`) and Python 3.12 or newer. Run `npm ci` and `npm run 
 | `npm run dev`                               | Dev server                                                                 |
 | `npm run export:data [-- --check]`          | Write `shared/export/` from the game's modules, or fail if it differs      |
 | `npm run format`                            | Rewrite files with Prettier and apply ESLint fixes                         |
-| `npm run lint`                              | Prettier, ESLint, markdownlint and Ruff                                    |
+| `npm run lint`                              | Prettier, ESLint and markdownlint                                          |
 | `npm run preview`                           | Build, then serve it through `wrangler dev`                                |
 | `npm run simulate -- --help`                | Simulate runs ([src/README.md](src/README.md), Simulator)                  |
 | `npm test`                                  | Run the unit tests                                                         |
@@ -41,12 +41,7 @@ The site's pages are in `pages/`, each at its URL's path (`pages/play/index.html
 Art build tools are TypeScript modules in `art/tools/`, which Node runs directly on the versioned [art-kit release](https://github.com/andornaut/art-kit/releases/tag/v0.12.0) pinned in `package-lock.json`, for example
 `node art/tools/glyphs.ts build`.
 
-The isolated check image supplies both runtimes without installing system packages:
-
-```bash
-docker build --tag game-check:node24.21.0-python3.12 - \
-  < scripts/check.Dockerfile
-```
+Run local checks in a `node:24.21.0` container as `--user 19001:19001 --group-add "$(stat -c %g <checkout>)" -e HOME=/tmp`, with read-only mounts and outputs copied out with `docker cp`.
 
 WORKAROUND: Parent-scoped development overrides pin [KaTeX](https://github.com/advisories/GHSA-238p-pmpm-9mq7) `0.18.2`, [minimatch](https://github.com/advisories/GHSA-g3hv-75wg-m249) `11.0.3` and [re2js](https://github.com/advisories/GHSA-gg6h-894w-4m9c) `2.8.7`. ESLint loads the cycle rule and resolver through exported plugin subpaths because the full plugin imports an unused rule requiring the removed minimatch `makeRe` API. Keep cycle detection enabled. Remove each override when its parent range supports the patched version; restore the full plugin import when it supports minimatch 11.
 

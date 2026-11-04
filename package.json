@@ -16,7 +16,7 @@
     "build:deploy": "npm run build",
     "preview": "npm run build && wrangler dev",
     "check": "tsc",
-    "lint": "prettier --check . && eslint --max-warnings 0 . && markdownlint-cli2 && npm run lint:python",
+    "lint": "prettier --check . && eslint --max-warnings 0 . && markdownlint-cli2",
     "format": "prettier --write . && eslint --fix .",
     "test": "vitest run",
     "check:art": "vitest run src/assets/ src/scenes/artCoverage.test.ts src/tools/artManifest.test.ts src/tools/atlas/",
@@ -26,9 +26,7 @@
     "art:manifest": "tsx src/tools/artManifestCli.ts",
     "art:depth-preview": "tsx src/tools/depthPreviewCli.ts",
     "deploy": "npm run build && wrangler deploy",
-    "clean": "rm -rf dist .wrangler",
-    "install:python": "bash scripts/install-python-tools.sh",
-    "lint:python": "node_modules/.bin/ruff check --no-cache art/tools"
+    "clean": "rm -rf dist .wrangler"
   },
   "dependencies": {
     "@andornaut/game-kit": "https://github.com/andornaut/game-kit/releases/download/v0.4.0/game-kit-0.4.0.tgz",
