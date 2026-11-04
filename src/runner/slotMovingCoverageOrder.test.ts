@@ -5,7 +5,7 @@ import { createSlotCandidateDomains, type SlotCandidate } from "./slotCandidateD
 import { type PreparedSlotKind, prepareSlotKind } from "./slotCandidates";
 import type { SlotSource } from "./slotConfig";
 import { createSlotConstructionState } from "./slotConstraintState";
-import { nextCoverageRows } from "./slotCoverage";
+import { coverageLeadingRows, quietCoverage } from "./slotCoverage";
 import { createSlotWitnessConstruct, type SlotWitnessConstructPorts } from "./slotWitnessConstruct";
 import type { WitnessJob } from "./slotWitnessSearch";
 import { rowSpacing, type SpawnPlan, zoneRows } from "./spawning";
@@ -161,7 +161,11 @@ describe("moving coverage source priority", () => {
         path.map(({ distance }) => distance),
         candidate.entry,
       );
-      expect(nextCoverageRows(geometry, [])!.some((row) => visible.includes(row))).toBe(true);
+      expect(
+        coverageLeadingRows(geometry, quietCoverage(geometry, []))!.some((row) =>
+          visible.includes(row),
+        ),
+      ).toBe(true);
       expect(ordinary.compile).toHaveBeenCalledOnce();
       expect(blocking.compile).toHaveBeenCalledOnce();
       expect(f.opened.mock.calls.map(([ordinal]) => ordinal)).toEqual([0, 1]);

@@ -5,13 +5,6 @@ import type { SlotAssignment } from "./slotPlan";
 import { blockingSpan, quotaFootprint, rowSpacing, type SpawnPlan, zoneRows } from "./spawning";
 
 // A coverage reservation may use any leading row that preserves the quiet-run bound.
-export function nextCoverageRows<Kind extends string>(
-  geometry: Omit<SpawnPlan<Kind>, "quotas">,
-  assignments: readonly Pick<SlotAssignment<Kind>, "entry">[],
-): number[] | undefined {
-  return coverageLeadingRows(geometry, quietCoverage(geometry, assignments));
-}
-
 export function coverageLeadingRows<Kind extends string>(
   geometry: Omit<SpawnPlan<Kind>, "quotas">,
   coverage: ReturnType<typeof quietRuns>,

@@ -7,7 +7,6 @@ import {
 } from "./slotCandidateDomains";
 import {
   isNativeSlotPreparation,
-  nativeSlotPreparationOrdering,
   nativeSlotPreparationOrderingHint,
   nativeSlotPreparationWallRows,
   prepareSlotKind,
@@ -109,7 +108,6 @@ it("keeps an old ordering hint separate from current native geometry and domain 
     Reflect.set(span, "count", geometry.laneCount);
     expect(nativeSlotPreparationOrderingHint(work, prepared)).toEqual(original);
     expect(isNativeSlotPreparation(prepared)).toBe(false);
-    expect(nativeSlotPreparationOrdering(work, prepared)).toEqual({ status: "unknown" });
     expect(nativeSlotPreparationWallRows(prepared)).toBeUndefined();
     expect(domains.attestsCompleteOwnerDomain(work, scope, owner, values, token!)).toBe(false);
     expect([...domains.completeOwnerDomain(work, scope, owner)]).toContainEqual({

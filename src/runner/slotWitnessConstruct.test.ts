@@ -4,7 +4,7 @@ import { visibleMoverRows } from "./moverCoverage";
 import { createSlotCandidateDomains, type SlotCandidate } from "./slotCandidateDomains";
 import { prepareSlotKind } from "./slotCandidates";
 import { createSlotConstructionState } from "./slotConstraintState";
-import { nextCoverageRows, quietCoverage } from "./slotCoverage";
+import { coverageLeadingRows, quietCoverage } from "./slotCoverage";
 import { createMovingCoverageHints } from "./slotMovingCoverageHints";
 import { createSlotPocketAdapter } from "./slotPocketAdapter";
 import { createSlotSolverSession } from "./slotSolverSession";
@@ -1422,7 +1422,7 @@ describe("native witness construction mode", () => {
     ]);
     positions.forEach(([row, lane], index) => pin(jobs[index]!, row, lane));
     const prefix = state.entries();
-    expect(nextCoverageRows(road, prefix)).toEqual([1]);
+    expect(coverageLeadingRows(road, quietCoverage(road, prefix))).toEqual([1]);
     const before = state.checkpoint();
     pin(jobs.at(-1)!, 0, 1);
     expect(quietCoverage(road, state.entries())).toEqual({ over: 0, runs: [] });
@@ -1734,7 +1734,7 @@ describe("native witness construction mode", () => {
       ]);
       [0, 2, 4, 7].forEach((row, index) => pin(jobs[index]!, row, 0));
       const prefix = state.entries();
-      const leading = nextCoverageRows(road, prefix)!;
+      const leading = coverageLeadingRows(road, quietCoverage(road, prefix))!;
       expect(leading).toEqual([6, 5]);
       const job = jobs[4]!;
       const source = [...job.preparations()][0]!;

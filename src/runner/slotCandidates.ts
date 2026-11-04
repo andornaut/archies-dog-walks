@@ -45,10 +45,6 @@ export interface SlotPreparationWork {
 export interface SlotPreparationOrdering {
   readonly envelopeWidth: number;
 }
-export type SlotPreparationOrderingResult =
-  | { readonly ordering: SlotPreparationOrdering; readonly status: "ordering" }
-  | { readonly status: "unknown" }
-  | { readonly kind: "propagation"; readonly status: "budget" };
 export type SlotPreparationOrderingHintResult =
   | { readonly hint: SlotPreparationOrdering; readonly status: "hint" }
   | { readonly status: "unknown" }
@@ -167,23 +163,8 @@ export function isNativeSlotPreparation(prepared: PreparedSlotKind<string>): boo
   );
 }
 
-// Ordering metadata never attests admission, row support or a complete domain traversal.
-export function nativeSlotPreparationOrdering(
-  work: { readonly propagate: () => boolean },
-  prepared: PreparedSlotKind<string>,
-): SlotPreparationOrderingResult {
-  if (!nativePreparations.has(prepared)) {
-    return { status: "unknown" };
-  }
-  if (!work.propagate()) {
-    return { kind: "propagation", status: "budget" };
-  }
-  return isNativeSlotPreparation(prepared)
-    ? { ordering: nativePreparations.get(prepared)!.ordering, status: "ordering" }
-    : { status: "unknown" };
-}
-
-// This preparation-time hint may stay stale after borrowed data changes. It only orders choices.
+// This preparation-time hint may stay stale after borrowed data changes. It only orders choices;
+// it never attests admission, row support or a complete domain traversal.
 export function nativeSlotPreparationOrderingHint(
   work: { readonly propagate: () => boolean },
   prepared: PreparedSlotKind<string>,

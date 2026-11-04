@@ -10,7 +10,7 @@ import * as candidateDomains from "./slotCandidateDomains";
 import { prepareSlotKind, slotPlacementsAt } from "./slotCandidates";
 import { apportionSlotCounts, type SlotConfiguration, type SlotKind } from "./slotConfig";
 import * as constraintState from "./slotConstraintState";
-import { nextCoverageRows } from "./slotCoverage";
+import { coverageLeadingRows, quietCoverage } from "./slotCoverage";
 import { slotMotionStreams } from "./slotEntropy";
 import * as slotFeasibility from "./slotFeasibility";
 import { makeSlotJobs } from "./slotJobs";
@@ -509,8 +509,15 @@ describe("safe slot planning", () => {
 
   it("tries the full coverage window and derives later windows from actual coverage", () => {
     const coveredGeometry = { ...geometry, maxEmptyRows: 3 };
-    expect(nextCoverageRows(coveredGeometry, [])).toEqual([1, 0]);
-    expect(nextCoverageRows({ ...coveredGeometry, firstContactSeconds: 2 }, [])).toEqual([0]);
+    expect(coverageLeadingRows(coveredGeometry, quietCoverage(coveredGeometry, []))).toEqual([
+      1, 0,
+    ]);
+    expect(
+      coverageLeadingRows(
+        { ...coveredGeometry, firstContactSeconds: 2 },
+        quietCoverage({ ...coveredGeometry, firstContactSeconds: 2 }, []),
+      ),
+    ).toEqual([0]);
     const prepared = prepareSlotKind(
       slotMotionStreams(context, "coverage", "bench"),
       coveredGeometry,
@@ -529,7 +536,9 @@ describe("safe slot planning", () => {
       phase: "active" as const,
       role: "minorFixed" as const,
     };
-    expect(nextCoverageRows(coveredGeometry, [reservation])).toEqual([4, 3, 2, 1]);
+    expect(
+      coverageLeadingRows(coveredGeometry, quietCoverage(coveredGeometry, [reservation])),
+    ).toEqual([4, 3, 2, 1]);
   });
 
   it("uses an earlier legal coverage row without losing the final quiet bound", () => {

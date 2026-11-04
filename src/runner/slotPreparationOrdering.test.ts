@@ -2,7 +2,8 @@ import { describe, expect, it, vi } from "vitest";
 
 import type { MoverSpec } from "./moverPlanning";
 import {
-  nativeSlotPreparationOrdering,
+  isNativeSlotPreparation,
+  nativeSlotPreparationOrderingHint,
   prepareSlotKind,
   prepareSlotKindWithin,
 } from "./slotCandidates";
@@ -73,15 +74,15 @@ it("reuses a frozen full-profile minimum from native preparation without compili
   const draws = [random.movers.mock.calls.length, random.spawns.mock.calls.length];
   const compiled = template.mock.calls.length;
   const guard = work();
-  const first = nativeSlotPreparationOrdering(guard, prepared);
-  const second = nativeSlotPreparationOrdering(guard, prepared);
-  expect(first).toEqual({ ordering: { envelopeWidth: 4 }, status: "ordering" });
+  const first = nativeSlotPreparationOrderingHint(guard, prepared);
+  const second = nativeSlotPreparationOrderingHint(guard, prepared);
+  expect(first).toEqual({ hint: { envelopeWidth: 4 }, status: "hint" });
   expect(second).toEqual(first);
-  if (first.status !== "ordering" || second.status !== "ordering") {
+  if (first.status !== "hint" || second.status !== "hint") {
     throw Error("Missing ordering snapshot");
   }
-  expect(first.ordering).toBe(second.ordering);
-  expect(Object.isFrozen(first.ordering)).toBe(true);
+  expect(first.hint).toBe(second.hint);
+  expect(Object.isFrozen(first.hint)).toBe(true);
   expect(guard.propagate).toHaveBeenCalledTimes(2);
   expect(compile).toHaveBeenCalledTimes(1);
   expect([random.movers.mock.calls.length, random.spawns.mock.calls.length]).toEqual(draws);
@@ -91,20 +92,18 @@ it("reuses a frozen full-profile minimum from native preparation without compili
 it("requires the original native identity, source method and borrowed profile shape", () => {
   const { footprint, motion, source } = profile();
   const prepared = prepareSlotKind(streams(), geometry, source);
-  expect(nativeSlotPreparationOrdering({ propagate: () => false }, prepared)).toEqual({
-    kind: "propagation",
-    status: "budget",
-  });
-  expect(nativeSlotPreparationOrdering(work(), { ...prepared })).toEqual({ status: "unknown" });
+  expect(isNativeSlotPreparation(prepared)).toBe(true);
+  expect(isNativeSlotPreparation({ ...prepared })).toBe(false);
   footprint.rows++;
-  expect(nativeSlotPreparationOrdering(work(), prepared)).toEqual({ status: "unknown" });
+  expect(isNativeSlotPreparation(prepared)).toBe(false);
   footprint.rows--;
   motion.steps.max++;
-  expect(nativeSlotPreparationOrdering(work(), prepared)).toEqual({ status: "unknown" });
+  expect(isNativeSlotPreparation(prepared)).toBe(false);
   motion.steps.max--;
+  expect(isNativeSlotPreparation(prepared)).toBe(true);
   const compile = source.compile;
   Object.defineProperty(source, "compile", { value: () => compile(streams()) });
-  expect(nativeSlotPreparationOrdering(work(), prepared)).toEqual({ status: "unknown" });
+  expect(isNativeSlotPreparation(prepared)).toBe(false);
 });
 
 describe("complete native ordering boundaries", () => {
@@ -123,9 +122,9 @@ describe("complete native ordering boundaries", () => {
       prepareSlotKind(streams(), outside, source),
     ]) {
       expect(prepared.placements).toEqual([]);
-      expect(nativeSlotPreparationOrdering(work(), prepared)).toEqual({
-        ordering: { envelopeWidth: 2 },
-        status: "ordering",
+      expect(nativeSlotPreparationOrderingHint(work(), prepared)).toEqual({
+        hint: { envelopeWidth: 2 },
+        status: "hint",
       });
     }
   });
@@ -158,9 +157,9 @@ describe("complete native ordering boundaries", () => {
     const prepared = prepareSlotKind(streams(), geometry, source);
     expect(prepared.placements.length).toBeGreaterThan(0);
     expect(Math.min(...prepared.placements.map(({ lanes }) => lanes.count))).toBe(0);
-    expect(nativeSlotPreparationOrdering(work(), prepared)).toEqual({
-      ordering: { envelopeWidth: 0 },
-      status: "ordering",
+    expect(nativeSlotPreparationOrderingHint(work(), prepared)).toEqual({
+      hint: { envelopeWidth: 0 },
+      status: "hint",
     });
   });
 });
