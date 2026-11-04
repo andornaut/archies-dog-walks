@@ -107,8 +107,9 @@ describe("zoneDelivery", () => {
     expect(delivery.groups[group]).toEqual({ placed, planned });
   });
 
-  it("covers every group", () => {
+  it("covers every group, and names the zone and its walk position, as one plan", () => {
     expect(Object.keys(delivery.groups).sort()).toEqual([...DELIVERY_GROUPS].sort());
+    expect(delivery).toMatchObject({ plans: 1, position: 2, zone: FIRST_ZONE });
   });
 
   it.each<[WalkItemKind, number, number]>([
@@ -120,10 +121,6 @@ describe("zoneDelivery", () => {
   ])("counts %s as %i placed of %i planned, moving or not", (kind, placed, planned) => {
     expect(delivery.kinds[kind]).toEqual({ placed, planned });
   });
-
-  it("names the zone and its walk position, as one plan", () => {
-    expect(delivery).toMatchObject({ plans: 1, position: 2, zone: FIRST_ZONE });
-  });
 });
 
 describe("sumDeliveries", () => {
@@ -134,11 +131,12 @@ describe("sumDeliveries", () => {
     delivery,
   ]);
 
-  it("gives one sum per walk position and zone, by position then zone id", () => {
+  it("gives one sum per walk position and zone, by position then zone id, leaving the deliveries as they were", () => {
     expect(sums.map(({ plans, position, zone }) => [position, zone, plans])).toEqual([
       [1, SECOND_ZONE, 1],
       ...[FIRST_ZONE, SECOND_ZONE].sort().map((zone) => [2, zone, zone === FIRST_ZONE ? 2 : 1]),
     ]);
+    expect(delivery.groups.tips).toEqual({ placed: 4, planned: 5 });
   });
 
   it.each<[DeliveryGroup | WalkItemKind, number, number]>([
@@ -152,9 +150,5 @@ describe("sumDeliveries", () => {
       ...sum.groups,
     };
     expect(counts[key]).toEqual({ placed, planned });
-  });
-
-  it("leaves the deliveries it sums as they were", () => {
-    expect(delivery.groups.tips).toEqual({ placed: 4, planned: 5 });
   });
 });

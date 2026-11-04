@@ -18,7 +18,7 @@ const order = WORLD.zones.map(({ id }) => id);
 describe("forkPaths", () => {
   const last = WORLD.lastZone;
 
-  it("offers three unwalked zones but the last, easiest on the left", () => {
+  it("offers three unwalked zones but the last, easiest on the left, and only the last before it", () => {
     for (let seed = 1; seed <= 20; seed++) {
       const paths = forkPaths(data, seededRandom(seed), ["distilleryDistrict"]);
       expect(paths).toHaveLength(3);
@@ -26,9 +26,6 @@ describe("forkPaths", () => {
       expect(paths).not.toContain(last);
       expect([...paths].sort((a, b) => order.indexOf(a) - order.indexOf(b))).toEqual(paths);
     }
-  });
-
-  it("offers only the last zone at the fork before it", () => {
     const route = order.filter((zone) => zone !== last).slice(0, WORLD.walkLength - 1);
     expect(forkPaths(data, seededRandom(1), route)).toEqual([last]);
   });

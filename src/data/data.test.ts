@@ -47,17 +47,29 @@ describe("roster", () => {
   });
 });
 
-describe("hearts", () => {
-  it("keeps real owner heart limits positive whole numbers", () => {
-    const limits = [tuning.hearts.maxOwnerHearts, ...Object.values(tuning.hearts.maxBySize)];
-    expect(limits.every((limit) => Number.isInteger(limit) && limit > 0)).toBe(true);
+describe("numbers", () => {
+  it("keeps owner heart limits, a dog's pay and badge thresholds positive whole numbers", () => {
+    const thresholds = gameData.achievements.flatMap(({ conditions }) =>
+      conditions.flatMap((condition) =>
+        "count" in condition
+          ? [condition.count]
+          : "dollars" in condition
+            ? [condition.dollars]
+            : "packSize" in condition
+              ? [condition.packSize]
+              : [],
+      ),
+    );
+    const numbers = [
+      tuning.hearts.maxOwnerHearts,
+      ...Object.values(tuning.hearts.maxBySize),
+      tuning.money.payPerDog,
+      ...thresholds.filter((threshold): threshold is number => threshold !== "all"),
+    ];
+    expect(numbers.filter((n) => !Number.isInteger(n) || n <= 0)).toEqual([]);
   });
-});
 
-describe("money", () => {
-  it("pays a whole number of dollars a dog, and names only positive amounts in money effects", () => {
-    expect(Number.isInteger(tuning.money.payPerDog)).toBe(true);
-    expect(tuning.money.payPerDog).toBeGreaterThan(0);
+  it("names only positive money effect amounts, and prices every gear item, locked dog and dog slot above $0", () => {
     const amounts = [...cardOptions, ...instantEffects.map((effects) => ({ effects }))].flatMap(
       (option) =>
         option.effects.flatMap((effect) => (effect.kind === "money" ? [effect.amount] : [])),
@@ -65,9 +77,6 @@ describe("money", () => {
     for (const amount of amounts) {
       expect(read(tuning, "money", amount)).toBeGreaterThan(0);
     }
-  });
-
-  it("prices every gear item, locked dog and bought dog slot above $0", () => {
     for (const gear of Object.values(shopGear)) {
       expect(tuning.money.prices[gear.price]).toBeGreaterThan(0);
     }
@@ -92,26 +101,25 @@ describe("cards", () => {
     }
   });
 
-  it("has enough upgrades for every pick when picked cards leave the pool", () => {
-    const picks = world.walkLength - 1;
-    const removedBeforeLastPick = picks - 1;
+  it("leaves enough unwalked zones for three paths, and upgrades for every path, at every fork", () => {
+    expect(world.zones.length - (world.walkLength - 1)).toBeGreaterThanOrEqual(3);
+    // Picked upgrades leave the pool.
+    const removedBeforeLastPick = world.walkLength - 2;
     const mostPaths = forkPaths(gameData, () => 0, [world.firstZone as ZoneId]).length;
     expect(Object.keys(upgrades).length - removedBeforeLastPick).toBeGreaterThanOrEqual(mostPaths);
   });
 
-  it("keeps saved option ids unique on each card", () => {
+  it("keeps saved option ids unique on each card, and saved badge ids unique", () => {
     for (const card of cards) {
       const ids = card.options.map((option) => option.id);
       expect(new Set(ids).size, card.name).toBe(ids.length);
     }
+    const badges = gameData.achievements.map(({ id }) => id);
+    expect(new Set(badges).size).toBe(badges.length);
   });
 });
 
 describe("run, world and walkers", () => {
-  it("leaves enough unwalked zones for three paths at every fork", () => {
-    expect(world.zones.length - (world.walkLength - 1)).toBeGreaterThanOrEqual(3);
-  });
-
   it("gives every walk position a gear drop count of 0 or more, and every gear item a road kind of its own", () => {
     const drops = tuning.counts.gearDropsPerZone as Readonly<Record<number, number>>;
     const positions = Array.from({ length: world.walkLength }, (_, i) => i + 1);
@@ -288,31 +296,6 @@ describe("run, world and walkers", () => {
         (goal) => goal === null || (Number.isInteger(goal) && goal >= 1 && goal <= dogSlots.length),
       ),
     ).toBe(true);
-  });
-});
-
-describe("achievements", () => {
-  const { achievements } = gameData;
-
-  it("keeps saved badge ids unique", () => {
-    expect(new Set(achievements.map(({ id }) => id)).size).toBe(achievements.length);
-  });
-
-  it("keeps every numeric threshold a positive whole number", () => {
-    const thresholds = achievements.flatMap(({ conditions }) =>
-      conditions.flatMap((condition) =>
-        "count" in condition
-          ? [condition.count]
-          : "dollars" in condition
-            ? [condition.dollars]
-            : "packSize" in condition
-              ? [condition.packSize]
-              : [],
-      ),
-    );
-    for (const threshold of thresholds) {
-      expect(threshold === "all" || (Number.isInteger(threshold) && threshold > 0)).toBe(true);
-    }
   });
 });
 

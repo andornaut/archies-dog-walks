@@ -74,50 +74,27 @@ describe("applyEffects: hearts", () => {
 });
 
 describe("shareHearts", () => {
-  it.each<[string, DogId[], number, [DogId, number][]]>([
-    ["a lone dog gets the whole total", ["reggie"], 3, [["reggie", 3]]],
-    [
-      "a pair's front dog gets the one left over",
-      ["reggie", "kilo"],
-      3,
-      [
-        ["kilo", 2],
-        ["reggie", 1],
-      ],
-    ],
-    [
-      "a trio gets one each",
-      ["reggie", "pepe", "kilo"],
-      3,
-      [
-        ["kilo", 1],
-        ["pepe", 1],
-        ["reggie", 1],
-      ],
-    ],
+  // Each share in the order shareHearts gives them, front dogs first.
+  it.each<[string, DogId[], number, Partial<Record<DogId, number>>]>([
+    ["a lone dog gets the whole total", ["reggie"], 3, { reggie: 3 }],
+    ["a pair's front dog gets the one left over", ["reggie", "kilo"], 3, { kilo: 2, reggie: 1 }],
+    ["a trio gets one each", ["reggie", "pepe", "kilo"], 3, { kilo: 1, pepe: 1, reggie: 1 }],
     [
       "the front dogs first, when more are left over",
       ["reggie", "pepe", "kilo"],
       5,
-      [
-        ["kilo", 2],
-        ["pepe", 2],
-        ["reggie", 1],
-      ],
+      { kilo: 2, pepe: 2, reggie: 1 },
     ],
     [
       "nothing for a dog whose share is nothing",
       ["reggie", "pepe", "kilo"],
       2,
-      [
-        ["kilo", 1],
-        ["pepe", 1],
-      ],
+      { kilo: 1, pepe: 1 },
     ],
-    ["nothing among no dogs", [], 3, []],
+    ["nothing among no dogs", [], 3, {}],
   ])("shares %s", (_name, dogs, total, expected) => {
     expect(shareHearts(data, dogs, total)).toEqual(
-      expected.map(([dog, hearts]) => ({ dog, hearts })),
+      Object.entries(expected).map(([dog, hearts]) => ({ dog, hearts })),
     );
   });
 });
@@ -228,7 +205,7 @@ describe("resolveEffects: changes and their causes", () => {
       target: { kind: "all" },
     });
 
-    it("forgives up to its allowance of a loss, reporting it when nothing is lost", () => {
+    it("forgives up to its allowance of a loss, reporting it, and no more once it is used this zone", () => {
       for (const loss of [1, 2] as const) {
         const forgiven = Math.min(loss, allowance);
         const state = testState({ kilo: full }, { modifiers: [secondChance] });
@@ -247,9 +224,6 @@ describe("resolveEffects: changes and their causes", () => {
         ]);
         expect(applied.state.heartsForgiven).toBe(forgiven);
       }
-    });
-
-    it("forgives no more once its allowance is used this zone", () => {
       const used = testState(
         { kilo: full },
         { heartsForgiven: allowance, modifiers: [secondChance] },
@@ -358,27 +332,36 @@ describe("applyEffects: other kinds", () => {
     expect(state.debuffs[0]?.secondsLeft).toBe(read(TEST_TUNING, "seconds", "stinkySeconds") / 2);
   });
 
-  it("records an immunity once", () => {
-    const raincoats: Effect = { duration: "run", encounter: "puddle", kind: "immune" };
-    const state = applyEffects(data, context([]), [raincoats, raincoats], testState({ kilo: 5 }));
-    expect(state.immunities).toEqual([{ encounter: "puddle", source: SKUNK_IGNORE }]);
-  });
-
-  it("keeps a modifier, with its source, for the rules that read its stat", () => {
-    const bigTipper: Effect = {
-      by: "bigTipperTipBonus",
-      duration: "run",
-      kind: "modifier",
-      operation: "add",
-      stat: "tipValue",
-    };
-    const state = applyEffects(data, context([]), [bigTipper], testState({ kilo: 5 }));
-    expect(state.modifiers).toEqual([{ ...bigTipper, source: SKUNK_IGNORE }]);
-  });
-
-  it("offers a free Skip, naming what gave it", () => {
-    const skip: Effect = { kind: "skipOption" };
-    const state = applyEffects(data, context([]), [skip], testState({ ginger: 5, kilo: 5 }));
-    expect(state.skipPass).toEqual(SKUNK_IGNORE);
-  });
+  const raincoats: Effect = { duration: "run", encounter: "puddle", kind: "immune" };
+  const bigTipper: Effect = {
+    by: "bigTipperTipBonus",
+    duration: "run",
+    kind: "modifier",
+    operation: "add",
+    stat: "tipValue",
+  };
+  it.each([
+    {
+      effects: [raincoats, raincoats],
+      expected: { immunities: [{ encounter: "puddle", source: SKUNK_IGNORE }] },
+      name: "records an immunity once",
+    },
+    {
+      effects: [bigTipper],
+      expected: { modifiers: [{ ...bigTipper, source: SKUNK_IGNORE }] },
+      name: "keeps a modifier, with its source, for the rules that read its stat",
+    },
+    {
+      effects: [{ kind: "skipOption" } as const],
+      expected: { skipPass: SKUNK_IGNORE },
+      name: "offers a free Skip, naming what gave it",
+    },
+  ] satisfies { effects: Effect[]; expected: Partial<RunState>; name: string }[])(
+    "$name",
+    ({ effects, expected }) => {
+      const state = applyEffects(data, context([]), effects, testState({ kilo: 5 }));
+      const keys = Object.keys(expected) as (keyof RunState)[];
+      expect(Object.fromEntries(keys.map((key) => [key, state[key]]))).toEqual(expected);
+    },
+  );
 });

@@ -161,23 +161,22 @@ describe("simulateMatrix", () => {
     expect(new Set(cells.map(({ gear }) => gear))).toEqual(new Set([null]));
   });
 
-  it("runs each gear as its own cell, after the player and before the pack", () => {
-    const rows = simulateMatrix(gameData, 3, 2, {
+  it("runs each gear as its own cell after the player, and each walker after the pack", () => {
+    const gearRows = simulateMatrix(gameData, 3, 2, {
       ...SMALL,
       gears: [null, "runningShoes"],
       players: [{ kind: "skill", preset: "typical" }],
       policies: ["heartsUnlessLow"],
     });
 
-    expect(rows.map(({ gear, pack }) => [gear, pack])).toEqual([
+    expect(gearRows.map(({ gear, pack }) => [gear, pack])).toEqual([
       ["none", "Kilo"],
       ["none", "Risky trio"],
       ["runningShoes", "Kilo"],
       ["runningShoes", "Risky trio"],
     ]);
-  });
 
-  it("gives a row per walker after each pack, the walker named in its own column", () => {
+    // A row per walker after each pack, the walker named in its own column.
     const walkers = {
       ...SMALL,
       packs: SMALL.packs.slice(0, 1),
@@ -194,7 +193,7 @@ describe("simulateMatrix", () => {
     expect(formatTable(rows).split("\n")[0]).toMatch(/Pack +Walker/);
   });
 
-  it("gives one row per cell, in policy, player, then pack order", () => {
+  it("gives one row per cell, in policy, player, then pack order, and a table line per row", () => {
     const rows = simulateMatrix(gameData, 3, 4, SMALL);
 
     expect(rows.map(({ pack, player, policy }) => [policy, player, pack])).toEqual([
@@ -214,16 +213,19 @@ describe("simulateMatrix", () => {
       expect(row.finishedShare).toBeGreaterThanOrEqual(0);
       expect(row.finishedShare).toBeLessThanOrEqual(1);
     }
+    expect(formatTable(rows).split("\n")).toHaveLength(rows.length + 1);
+    // With no card chosen, no share of choices paid.
+    const paid = rows.map((row) => itemAt(rowCells(row), MATRIX_HEADERS.indexOf("Paid")));
+    expect(new Set(paid)).toEqual(new Set(["-"]));
+    expect(formatKindTable(gameData, rows).split("\n")).toHaveLength(rows.length + 1);
+    expect(formatDebuffCostTable(gameData, rows).split("\n")).toHaveLength(rows.length + 1);
   });
 
-  it("gives the same rows for the same seed", () => {
+  it("gives the same rows for the same seed, and a cell the same row whatever else the matrix holds", () => {
     const first = simulateMatrix(gameData, 5, 3, SMALL);
 
     expect(simulateMatrix(gameData, 5, 3, SMALL)).toEqual(first);
     expect(simulateMatrix(gameData, 6, 3, SMALL)).not.toEqual(first);
-  });
-
-  it("gives a cell the same row whatever else the matrix holds", () => {
     const [alone] = simulateMatrix(gameData, 5, 3, {
       ...SMALL,
       packs: SMALL.packs.slice(1),
@@ -231,7 +233,7 @@ describe("simulateMatrix", () => {
       policies: ["alwaysPay"],
     });
 
-    expect(simulateMatrix(gameData, 5, 3, SMALL).at(-1)).toEqual(alone);
+    expect(first.at(-1)).toEqual(alone);
   });
 
   it("seeds a pack from its dog ids, not its names", () => {
@@ -289,17 +291,6 @@ describe("simulateMatrix", () => {
       expect(row?.firedShare).toBe(expected);
       expect(row?.meanFirings).toBe(expected * 2);
     }
-  });
-
-  it("formats a header line and one line per row", () => {
-    const rows = simulateMatrix(gameData, 3, 2, SMALL);
-
-    expect(formatTable(rows).split("\n")).toHaveLength(rows.length + 1);
-    // With no card chosen, no share of choices paid.
-    const paid = rows.map((row) => itemAt(rowCells(row), MATRIX_HEADERS.indexOf("Paid")));
-    expect(new Set(paid)).toEqual(new Set(["-"]));
-    expect(formatKindTable(gameData, rows).split("\n")).toHaveLength(rows.length + 1);
-    expect(formatDebuffCostTable(gameData, rows).split("\n")).toHaveLength(rows.length + 1);
   });
 
   it("gives the share of cards a policy with a fallback fell back on, and null for the others", () => {
@@ -384,6 +375,79 @@ const failedSnapshot: SpawnPlanSnapshot = {
     zoneLength: 1000,
   },
 };
+
+// A kind's flow through the walk, none of it unless changes says.
+const flow = (changes: Partial<SpawnFlow>): SpawnFlow => ({
+  admitted: 0,
+  departed: 0,
+  encountered: 0,
+  generated: 0,
+  herrings: 0,
+  passed: 0,
+  requested: 0,
+  touched: 0,
+  valid: 0,
+  ...changes,
+});
+
+const benchCount = (validPlaced: number, requested: number): SpawnAudit["counts"][number] => ({
+  emitted: validPlaced,
+  kind: "bench",
+  movement: null,
+  requested,
+  validPlaced,
+});
+
+// A valid audit of counts that meets its floors, every requested item its minimum, unless changes
+// says otherwise.
+function spawnAudit(counts: SpawnAudit["counts"], changes: Partial<SpawnAudit> = {}): SpawnAudit {
+  const sum = (key: "emitted" | "requested" | "validPlaced") =>
+    counts.reduce((total, count) => total + count[key], 0);
+  return {
+    counts,
+    findings: [],
+    meetsPlacementFloor: true,
+    meetsValidPlacementFloor: true,
+    minimumPlaced: sum("requested"),
+    missingCoverage: [],
+    placed: sum("emitted"),
+    requested: sum("requested"),
+    status: "valid",
+    validPlaced: sum("validPlaced"),
+    violations: [],
+    ...changes,
+  };
+}
+
+// A validated walk's first zone, highPark, configured for 10.
+const zoneEvents = (changes: Partial<ZoneWalkEvents>): ZoneWalkEvents => ({
+  configured: 10,
+  herringRendering: "not-simulated",
+  kinds: {},
+  modifiers: [],
+  position: 1,
+  route: ["highPark"],
+  seed: 7,
+  validation: "valid",
+  zone: "highPark",
+  ...changes,
+});
+
+// A matrix row whose one spawn run observed zones.
+const observedRow = <Row extends object>(row: Row, zones: readonly ZoneWalkEvents[]) => ({
+  ...row,
+  spawnRuns: [
+    {
+      failure: null,
+      modifiers: [],
+      partial: null,
+      route: ["highPark"] as const,
+      seed: 7,
+      zoneIndex: 0,
+      zones,
+    },
+  ],
+});
 
 describe("spawn reporting", () => {
   it("reports a structural runtime failure against actual role counts without inventing a kind mix", () => {
@@ -495,28 +559,22 @@ describe("spawn reporting", () => {
   });
 
   it("keeps unknown validity and validates floor and configured target per zone", () => {
-    const flow = {
-      admitted: 10,
-      departed: 8,
-      encountered: 2,
-      generated: 9,
-      herrings: 1,
-      passed: 6,
-      requested: 10,
-      touched: 1,
-      valid: null,
-    };
-    const zone: ZoneWalkEvents = {
-      configured: 10,
-      herringRendering: "not-simulated",
-      kinds: { bench: flow },
-      modifiers: [],
-      position: 1,
-      route: ["highPark"],
-      seed: 7,
+    const zone = zoneEvents({
+      kinds: {
+        bench: flow({
+          admitted: 10,
+          departed: 8,
+          encountered: 2,
+          generated: 9,
+          herrings: 1,
+          passed: 6,
+          requested: 10,
+          touched: 1,
+          valid: null,
+        }),
+      },
       validation: "unverified",
-      zone: "highPark",
-    };
+    });
     expect(sumSpawnEvents([zone])[0]).toMatchObject({
       configured: null,
       encountered: 2,
@@ -525,21 +583,11 @@ describe("spawn reporting", () => {
       herrings: 1,
       valid: null,
     });
-    const audit = (valid: number): SpawnAudit => ({
-      counts: [
-        { emitted: valid, kind: "bench", movement: null, requested: 10, validPlaced: valid },
-      ],
-      findings: [],
-      meetsPlacementFloor: true,
-      meetsValidPlacementFloor: valid >= 9,
-      minimumPlaced: 9,
-      missingCoverage: [],
-      placed: valid,
-      requested: 10,
-      status: "valid",
-      validPlaced: valid,
-      violations: [],
-    });
+    const audit = (valid: number) =>
+      spawnAudit([benchCount(valid, 10)], {
+        meetsValidPlacementFloor: valid >= 9,
+        minimumPlaced: 9,
+      });
     const zones = [
       { ...zone, audit: audit(10), validation: "valid" as const },
       { ...zone, audit: audit(6), kinds: {}, validation: "valid" as const },
@@ -569,46 +617,26 @@ describe("spawn reporting", () => {
       }),
       0,
     );
-    const observedRow = (observed: readonly ZoneWalkEvents[]) => ({
-      ...row,
-      spawnRuns: [
-        {
-          failure: null,
-          modifiers: [],
-          partial: null,
-          route: ["highPark"] as const,
-          seed: 7,
-          zoneIndex: 0,
-          zones: observed,
-        },
-      ],
-    });
-    expect(spawnValidationFailures(DEFAULT_SPAWN_TARGET, [observedRow(zones.slice(0, 1))])).toEqual(
-      [],
-    );
+    const failures = (observed: readonly ZoneWalkEvents[], target = DEFAULT_SPAWN_TARGET) =>
+      spawnValidationFailures(target, [observedRow(row, observed)]);
+    expect(failures(zones.slice(0, 1))).toEqual([]);
     const partial: ZoneWalkEvents = {
       ...zone,
-      audit: {
-        ...audit(10),
-        counts: [{ emitted: 90, kind: "bench", movement: null, requested: 100, validPlaced: 90 }],
-        minimumPlaced: 90,
-        placed: 90,
-        requested: 100,
-        validPlaced: 90,
-      },
+      audit: spawnAudit([benchCount(90, 100)], { minimumPlaced: 90 }),
       configured: 100,
     };
-    const partialRow = observedRow([partial]);
-    expect(spawnValidationFailures(DEFAULT_SPAWN_TARGET, [partialRow])).toEqual([]);
-    expect(spawnValidationFailures(parseSpawnTarget("1"), [partialRow])).toEqual([
+    expect(failures([partial])).toEqual([]);
+    expect(failures([partial], parseSpawnTarget("1"))).toEqual([
       "seed 7, zone 1 highPark: valid 90/100, requires 100",
     ]);
-    expect(spawnValidationFailures(1, [observedRow(zones.slice(0, 1))])).toEqual([]);
+    expect(failures(zones.slice(0, 1), 1)).toEqual([]);
     expect(sumSpawnEvents([partial])[0]).toMatchObject({
       configuredTargetGoal: "below target",
       goal: "met",
     });
-    expect(formatSpawnEventTable([partialRow])).toContain("100% configured target");
+    expect(formatSpawnEventTable([observedRow(row, [partial])])).toContain(
+      "100% configured target",
+    );
     for (const target of ["", "NaN", "0.79", "1.01"]) {
       expect(() => parseSpawnTarget(target)).toThrow("--spawn-target takes a fraction");
     }
@@ -619,50 +647,25 @@ describe("spawn reporting", () => {
       { ...zone, audit: { ...audit(10), missingCoverage: ["moving bodies"] } },
       { ...zone, audit: { ...audit(10), requested: 11 } },
     ]) {
-      expect(spawnValidationFailures(DEFAULT_SPAWN_TARGET, [observedRow([observed])])).toHaveLength(
-        1,
-      );
+      expect(failures([observed])).toHaveLength(1);
     }
-    expect(
-      formatSpawnEventTable([
-        {
-          ...row,
-          spawnRuns: [
-            {
-              failure: null,
-              modifiers: [],
-              partial: null,
-              route: ["highPark"],
-              seed: 7,
-              zoneIndex: 0,
-              zones: [zone],
-            },
-          ],
-        },
-      ]),
-    ).toContain("unverified");
+    expect(formatSpawnEventTable([observedRow(row, [zone])])).toContain("unverified");
   });
 
   it("keeps unselected weighted omissions out of per-kind denominators and retains the exact target", () => {
+    const byRole = (minorFixed: number) => ({
+      auxiliaryFixed: 0,
+      auxiliaryMoving: 0,
+      encounterFixed: 0,
+      encounterMoving: 0,
+      minorFixed,
+      minorMoving: 0,
+    });
     const delivery: SlotDelivery<WalkItemKind> = {
       configured: 10,
-      configuredByRole: {
-        auxiliaryFixed: 0,
-        auxiliaryMoving: 0,
-        encounterFixed: 0,
-        encounterMoving: 0,
-        minorFixed: 10,
-        minorMoving: 0,
-      },
+      configuredByRole: byRole(10),
       delivered: 9,
-      deliveredByRole: {
-        auxiliaryFixed: 0,
-        auxiliaryMoving: 0,
-        encounterFixed: 0,
-        encounterMoving: 0,
-        minorFixed: 9,
-        minorMoving: 0,
-      },
+      deliveredByRole: byRole(9),
       floor: { denominator: 10, numerator: 9 },
       omissions: [
         { key: "active:minorFixed:9", reason: "not-selected-within-allowance", role: "minorFixed" },
@@ -670,19 +673,7 @@ describe("spawn reporting", () => {
       policy: "runtime-90",
       required: 9,
     };
-    const geometry: SpawnAudit = {
-      counts: [{ emitted: 9, kind: "bench", movement: null, requested: 9, validPlaced: 9 }],
-      findings: [],
-      meetsPlacementFloor: true,
-      meetsValidPlacementFloor: true,
-      minimumPlaced: 9,
-      missingCoverage: [],
-      placed: 9,
-      requested: 9,
-      status: "valid",
-      validPlaced: 9,
-      violations: [],
-    };
+    const geometry = spawnAudit([benchCount(9, 9)]);
     const partialAudit: SlotPartialAudit<WalkItemKind> = {
       compiledTemplates: 0,
       delivery,
@@ -691,35 +682,11 @@ describe("spawn reporting", () => {
       status: "valid",
       violations: [],
     };
-    const zone: ZoneWalkEvents = {
+    const zone = zoneEvents({
       audit: geometry,
-      configured: 10,
-      herringRendering: "not-simulated",
-      kinds: {
-        bench: {
-          admitted: 9,
-          departed: 0,
-          encountered: 0,
-          generated: 0,
-          herrings: 0,
-          passed: 0,
-          requested: 9,
-          touched: 0,
-          valid: 9,
-        },
-      },
-      modifiers: [],
-      position: 1,
-      route: ["highPark"],
-      seed: 7,
-      slots: {
-        delivery,
-        partialAudit,
-        status: "partial",
-      },
-      validation: "valid",
-      zone: "highPark",
-    };
+      kinds: { bench: flow({ admitted: 9, requested: 9, valid: 9 }) },
+      slots: { delivery, partialAudit, status: "partial" },
+    });
     expect(sumSpawnEvents([zone])[0]).toMatchObject({
       configured: 10,
       configuredTargetGoal: "below target",
@@ -739,22 +706,9 @@ describe("spawn reporting", () => {
       valid: 9,
       validConfiguredRate: 0.9,
     });
-    const row = {
-      ...itemAt(simulateMatrix(gameData, 1, 1, SMALL), 0),
-      spawnRuns: [
-        {
-          failure: null,
-          modifiers: [],
-          partial: null,
-          route: ["highPark"] as const,
-          seed: 7,
-          zoneIndex: 0,
-          zones: [zone],
-        },
-      ],
-    };
-    expect(spawnValidationFailures(DEFAULT_SPAWN_TARGET, [row])).toEqual([]);
-    expect(spawnValidationFailures(1, [row])).toEqual([
+    const row = itemAt(simulateMatrix(gameData, 1, 1, SMALL), 0);
+    expect(spawnValidationFailures(DEFAULT_SPAWN_TARGET, [observedRow(row, [zone])])).toEqual([]);
+    expect(spawnValidationFailures(1, [observedRow(row, [zone])])).toEqual([
       "seed 7, zone 1 highPark: valid 9/10, requires 10",
     ]);
     const invalid: ZoneWalkEvents = {
@@ -762,14 +716,10 @@ describe("spawn reporting", () => {
       slots: { delivery, partialAudit: { ...partialAudit, status: "invalid" }, status: "partial" },
     };
     expect(
-      spawnValidationFailures(DEFAULT_SPAWN_TARGET, [
-        {
-          ...row,
-          spawnRuns: [{ ...row.spawnRuns[0]!, zones: [invalid] }],
-        },
-      ]),
+      spawnValidationFailures(DEFAULT_SPAWN_TARGET, [observedRow(row, [invalid])]),
     ).toHaveLength(1);
   });
+
   it("separates road obstacles including pulls from lucky finds and preserves unknown validity", () => {
     const minor = Object.keys(gameData.minorObstacles)[0] as WalkItemKind;
     const card = Object.entries(gameData.encounters).find(
@@ -785,52 +735,20 @@ describe("spawn reporting", () => {
       Object.keys(gameData.shopGear)[0],
     ] as WalkItemKind[];
     const flows = Object.fromEntries(
-      kinds.map((kind) => [
-        kind,
-        {
-          admitted: 2,
-          departed: 0,
-          encountered: 0,
-          generated: 0,
-          herrings: 0,
-          passed: 0,
-          requested: 3,
-          touched: 0,
-          valid: 2,
-        } satisfies SpawnFlow,
-      ]),
+      kinds.map((kind) => [kind, flow({ admitted: 2, requested: 3, valid: 2 })]),
     );
-    const counts = kinds.map((kind) => ({
-      emitted: 2,
-      kind,
-      movement: null,
-      requested: 3,
-      validPlaced: 2,
-    }));
-    const zone: ZoneWalkEvents = {
-      audit: {
-        counts,
-        findings: [],
-        meetsPlacementFloor: false,
-        meetsValidPlacementFloor: false,
-        minimumPlaced: Math.ceil(kinds.length * 3 * 0.8),
-        missingCoverage: [],
-        placed: kinds.length * 2,
-        requested: kinds.length * 3,
-        status: "valid",
-        validPlaced: kinds.length * 2,
-        violations: [],
-      },
+    const zone = zoneEvents({
+      audit: spawnAudit(
+        kinds.map((kind) => ({ emitted: 2, kind, movement: null, requested: 3, validPlaced: 2 })),
+        {
+          meetsPlacementFloor: false,
+          meetsValidPlacementFloor: false,
+          minimumPlaced: Math.ceil(kinds.length * 3 * 0.8),
+        },
+      ),
       configured: kinds.length * 3,
-      herringRendering: "not-simulated",
       kinds: flows,
-      modifiers: [],
-      position: 1,
-      route: ["highPark"],
-      seed: 7,
-      validation: "valid",
-      zone: "highPark",
-    };
+    });
     expect(sumRoadObstacleEvents(gameData, [zone])).toEqual([
       {
         admitted: road.length * 2,

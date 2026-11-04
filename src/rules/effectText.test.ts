@@ -181,15 +181,12 @@ describe("gearShort", () => {
 });
 
 describe("perkEffect", () => {
-  it("substitutes the named multiplier's change from the base", () => {
+  it("substitutes the named multiplier's change from the base, and keeps a perk without one unchanged", () => {
     const perk = WALKER_PERKS.keenEye;
     const percent = unsignedPercent(read(gameData.tuning, "multipliers", perk.percent) - 1);
     expect(perkEffect(gameData.tuning, perk)).toBe(fillNames(perk.effect, { percent }));
-  });
-
-  it("keeps a perk without a percentage unchanged", () => {
-    const perk = WALKER_PERKS.longReach;
-    expect(perkEffect(gameData.tuning, perk)).toBe(perk.effect);
+    const plain = WALKER_PERKS.longReach;
+    expect(perkEffect(gameData.tuning, plain)).toBe(plain.effect);
   });
 });
 

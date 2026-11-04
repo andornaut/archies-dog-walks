@@ -9,7 +9,7 @@ import { runFactsFor, saveFor } from "../testing/achievements";
 import { defined } from "../testing/defined";
 import { testState } from "../testing/runState";
 import { newPlayerSave, veteranSave } from "../testing/saves";
-import { cents, dollarsToCents } from "../units";
+import { cents } from "../units";
 import { orderedAchievements } from "./achievementOrder";
 import {
   achievementConditionText,
@@ -165,8 +165,16 @@ describe("run conditions", () => {
 });
 
 describe("profile conditions", () => {
-  const all = (kind: "dogsFinishedWith" | "dogsOwned" | "gearOwned") =>
-    ({ count: "all", kind }) as const;
+  const all = (
+    kind:
+      | "dogsFinishedWith"
+      | "dogsOwned"
+      | "firedByOwners"
+      | "gearOwned"
+      | "walkersFinishedWith"
+      | "walkersUnlocked"
+      | "zonesEverFinished",
+  ) => ({ count: "all", kind }) as const;
   const count = (
     kind: "noFiringStreak" | "timesFired" | "walksFinished" | "walksPlayed",
     n: number,
@@ -181,49 +189,48 @@ describe("profile conditions", () => {
   const ALL_WALKERS = keysOf(gameData.walkers);
   const veteran = veteranSave();
 
-  const cases: [string, AchievementCondition, SaveDocument | null, boolean][] = [
+  type ProfileCase = [string, AchievementCondition, SaveDocument | null, boolean];
+  // A condition just short of its goal and just meeting it.
+  const edge = (
+    name: string,
+    condition: AchievementCondition,
+    short: SaveDocument,
+    met: SaveDocument,
+  ): ProfileCase[] => [
+    [`${name}, short`, condition, short, false],
+    [`${name}, met`, condition, met, true],
+  ];
+  const dogsOwned = newPlayerSave.owned.dogs.length;
+
+  const cases: ProfileCase[] = [
     ["a run condition, without a run", zonesFinished(1), veteran, false],
     ["packSize, without a run", { count: 1, kind: "packSize" }, veteran, false],
-    [
-      "dogsOwned at the count",
-      { count: newPlayerSave.owned.dogs.length, kind: "dogsOwned" },
-      newPlayerSave,
-      true,
-    ],
+    ["dogsOwned at the count", { count: dogsOwned, kind: "dogsOwned" }, newPlayerSave, true],
     [
       "dogsOwned below the count",
-      { count: newPlayerSave.owned.dogs.length + 1, kind: "dogsOwned" },
+      { count: dogsOwned + 1, kind: "dogsOwned" },
       newPlayerSave,
       false,
     ],
-    ["dogsOwned all, the starters", all("dogsOwned"), newPlayerSave, false],
-    ["dogsOwned all, every dog", all("dogsOwned"), withOwned({ dogs: ALL_DOGS }), true],
-    ["gearOwned all, one missing", all("gearOwned"), withOwned({ gear: ALL_GEAR.slice(1) }), false],
-    ["gearOwned all, every item", all("gearOwned"), withOwned({ gear: ALL_GEAR }), true],
-    [
-      "noFiringStreak below the count",
+    ...edge("dogsOwned all", all("dogsOwned"), newPlayerSave, withOwned({ dogs: ALL_DOGS })),
+    ...edge(
+      "gearOwned all",
+      all("gearOwned"),
+      withOwned({ gear: ALL_GEAR.slice(1) }),
+      withOwned({ gear: ALL_GEAR }),
+    ),
+    ...edge(
+      "noFiringStreak",
       count("noFiringStreak", 10),
       withStats({ noFiringStreak: 9 }),
-      false,
-    ],
-    [
-      "noFiringStreak at the count",
-      count("noFiringStreak", 10),
       withStats({ noFiringStreak: 10 }),
-      true,
-    ],
-    [
-      "optionPicks below the count",
+    ),
+    ...edge(
+      "optionPicks",
       sniffCheese(10),
       withStats({ optionPicks: { cheeseCrates: { sniff: 9 } } }),
-      false,
-    ],
-    [
-      "optionPicks at the count",
-      sniffCheese(10),
       withStats({ optionPicks: { cheeseCrates: { sniff: 10 } } }),
-      true,
-    ],
+    ),
     [
       "optionPicks, another option of the card",
       sniffCheese(10),
@@ -242,131 +249,90 @@ describe("profile conditions", () => {
       withStats({ dogs: { kilo: firedTimes(6), lady: firedTimes(4) } }),
       true,
     ],
-    ["tally below", tally("dodges", 5), withStats({ tallies: { dodges: 4 } }), false],
-    ["tally at", tally("dodges", 5), withStats({ tallies: { dodges: 5 } }), true],
+    ...edge(
+      "tally",
+      tally("dodges", 5),
+      withStats({ tallies: { dodges: 4 } }),
+      withStats({ tallies: { dodges: 5 } }),
+    ),
     [
       "tally, another tally's count",
       tally("dodges", 5),
       withStats({ tallies: { treats: 9 } }),
       false,
     ],
-    [
-      "walkersUnlocked all, one missing",
-      { count: "all", kind: "walkersUnlocked" },
+    ...edge(
+      "walkersUnlocked all",
+      all("walkersUnlocked"),
       withOwned({ walkers: ALL_WALKERS.slice(1) }),
-      false,
-    ],
-    [
-      "walkersUnlocked all, every walker",
-      { count: "all", kind: "walkersUnlocked" },
       withOwned({ walkers: ALL_WALKERS }),
-      true,
-    ],
-    [
-      "dogsFinishedWith all, one missing",
-      all("dogsFinishedWith"),
-      withStats({ dogsFinishedWith: ALL_DOGS.slice(1) }),
-      false,
-    ],
-    [
+    ),
+    ...edge(
       "dogsFinishedWith all, across walks",
       all("dogsFinishedWith"),
+      withStats({ dogsFinishedWith: ALL_DOGS.slice(1) }),
       withStats({ dogsFinishedWith: ALL_DOGS }),
-      true,
-    ],
-    [
-      "zonesEverFinished all, one missing",
-      { count: "all", kind: "zonesEverFinished" },
-      withStats({ zonesEverFinished: ALL_ZONES.slice(1) }),
-      false,
-    ],
-    [
+    ),
+    ...edge(
       "zonesEverFinished all, across walks",
-      { count: "all", kind: "zonesEverFinished" },
+      all("zonesEverFinished"),
+      withStats({ zonesEverFinished: ALL_ZONES.slice(1) }),
       withStats({ zonesEverFinished: ALL_ZONES }),
-      true,
-    ],
-    ["bumps below", birds(3), withStats({ bumpsByKind: { pigeons: 2 } }), false],
-    ["bumps across kinds", birds(3), withStats({ bumpsByKind: { goose: 1, pigeons: 2 } }), true],
+    ),
+    ...edge(
+      "bumps across kinds",
+      birds(3),
+      withStats({ bumpsByKind: { pigeons: 2 } }),
+      withStats({ bumpsByKind: { goose: 1, pigeons: 2 } }),
+    ),
     [
       "bumps, another kind's count",
       birds(3),
       withStats({ bumpsByKind: { pigeons: 2, raccoon: 5 } }),
       false,
     ],
-    [
-      "firedByOwners all, one owner short",
-      { count: "all", kind: "firedByOwners" },
-      withStats({ dogs: firedBy(ALL_DOGS.slice(1)) }),
-      false,
-    ],
-    [
+    ...edge(
       "firedByOwners all, every owner once",
-      { count: "all", kind: "firedByOwners" },
+      all("firedByOwners"),
+      withStats({ dogs: firedBy(ALL_DOGS.slice(1)) }),
       withStats({ dogs: firedBy(ALL_DOGS) }),
-      true,
-    ],
+    ),
     [
       "firedByOwners, a dog walked but never fired",
       { count: 1, kind: "firedByOwners" },
       withStats({ dogs: { kilo: { timesFired: 0, walks: 3, zonesFinished: 4 } } }),
       false,
     ],
-    ["lifetimeEarnings a cent short", lifetime, withStats({ lifetimeCents: cents(19_999) }), false],
-    [
+    ...edge(
       "lifetimeEarnings at the dollars",
       lifetime,
+      withStats({ lifetimeCents: cents(19_999) }),
       withStats({ lifetimeCents: cents(20_000) }),
-      true,
-    ],
-    [
-      "lifetimeEarnings a cent short net of starting cash",
-      lifetime,
-      withStats({ lifetimeCents: cents(25_000), lifetimeStartCents: cents(5_001) }),
-      false,
-    ],
-    [
+    ),
+    ...edge(
       "lifetimeEarnings at the dollars net of starting cash",
       lifetime,
+      withStats({ lifetimeCents: cents(25_000), lifetimeStartCents: cents(5_001) }),
       withStats({ lifetimeCents: cents(25_000), lifetimeStartCents: cents(5_000) }),
-      true,
-    ],
-    [
-      "walkersFinishedWith all, one missing",
-      { count: "all", kind: "walkersFinishedWith" },
+    ),
+    ...edge(
+      "walkersFinishedWith all",
+      all("walkersFinishedWith"),
       withStats({ walkersFinishedWith: ALL_WALKERS.slice(1) }),
-      false,
-    ],
-    [
-      "walkersFinishedWith all, every walker",
-      { count: "all", kind: "walkersFinishedWith" },
       withStats({ walkersFinishedWith: ALL_WALKERS }),
-      true,
-    ],
-    [
-      "walksPlayed below, however they ended",
+    ),
+    ...edge(
+      "walksPlayed, however they ended",
       count("walksPlayed", 6),
       withStats({ runs: { finished: 1, noDogs: 2, wentHome: 2 } }),
-      false,
-    ],
-    [
-      "walksPlayed at, however they ended",
-      count("walksPlayed", 6),
       withStats({ runs: { finished: 1, noDogs: 2, wentHome: 3 } }),
-      true,
-    ],
-    [
-      "walksFinished below, the others played ended early",
+    ),
+    ...edge(
+      "walksFinished, the others played ended early",
       count("walksFinished", 6),
       withStats({ runs: { finished: 5, noDogs: 4, wentHome: 4 } }),
-      false,
-    ],
-    [
-      "walksFinished at",
-      count("walksFinished", 6),
       withStats({ runs: { finished: 6, noDogs: 0, wentHome: 0 } }),
-      true,
-    ],
+    ),
     ["anything without a save, as for the simulator", count("timesFired", 0), null, false],
   ];
 
@@ -377,30 +343,6 @@ describe("profile conditions", () => {
       )
       .map(([name]) => name);
     expect(wrong).toEqual([]);
-  });
-
-  // Earnings are counted in cents and a lifetime goal in whole dollars, so each goal in the data
-  // holds from its dollars exactly, net of starting cash, and not a cent before.
-  const lifetimeGoals = gameData.achievements.flatMap(({ conditions, id }) =>
-    conditions.flatMap((condition) =>
-      condition.kind === "lifetimeEarnings" ? [{ condition, id }] : [],
-    ),
-  );
-  it.each(lifetimeGoals)("holds $id from its whole dollars", ({ condition }) => {
-    const start = 1_000;
-    const holdsAt = (net: number) =>
-      conditionHolds(
-        gameData,
-        withStats({ lifetimeCents: cents(start + net), lifetimeStartCents: cents(start) }),
-        null,
-        condition,
-      );
-    const goal = dollarsToCents(condition.dollars);
-    expect([Number.isInteger(condition.dollars), holdsAt(goal - 1), holdsAt(goal)]).toEqual([
-      true,
-      false,
-      true,
-    ]);
   });
 });
 

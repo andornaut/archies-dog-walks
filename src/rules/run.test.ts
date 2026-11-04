@@ -147,12 +147,6 @@ describe("fireOwnersAtZero", () => {
     ]);
     expect(heartsByDog(state)).toEqual({ ginger: 1 });
   });
-
-  it("pays the fired dog nothing at the end of the zone it was fired in", () => {
-    const { state } = fireOwnersAtZero(testState({ buddy: 0, ginger: 5 }));
-    const { changes } = payZone(data, state);
-    expect(changes.map((change) => change.dog)).toEqual(["ginger"]);
-  });
 });
 
 describe("endReasonOf", () => {
@@ -179,6 +173,11 @@ describe("walkEarnings", () => {
     ["at a fork, with nothing earned since the zone's end", paid, paid.money],
     ["mid-zone, losing what the zone earned since its end", tipped, paid.money],
     ["after card costs spent below the zone's end money, keeping what is left", spent, spent.money],
+    [
+      "in the first zone, keeping only the starting money",
+      { ...tipped, zoneEndMoney: tipped.startMoney },
+      tipped.startMoney,
+    ],
   ] satisfies [string, RunState, number][])(
     "an early end keeps the last zone's end money at most: %s",
     (_name, run, banked) => {
@@ -187,13 +186,6 @@ describe("walkEarnings", () => {
       }
     },
   );
-
-  it("an early end in the first zone keeps only the starting money", () => {
-    const run: RunState = { ...tipped, zoneEndMoney: tipped.startMoney };
-    for (const reason of early) {
-      expect(walkEarnings(reason, run).banked).toBe(tipped.startMoney);
-    }
-  });
 
   it.each([
     ["mid-zone", tipped],

@@ -68,71 +68,25 @@ describe("treatRecipient", () => {
   const [small] = ofSize("small") as [DogId];
   const [large] = ofSize("large") as [DogId];
 
-  // Each pack in front-to-back order, each owner's hearts given as how many below their max.
-  const cases: [string, [DogId, number][], DogId, DogId][] = [
-    [
-      "its own owner below their max",
-      [
-        [first, 0],
-        [second, 1],
-        [third, 2],
-      ],
-      second,
-      second,
-    ],
-    [
-      "the owner with the fewest hearts",
-      [
-        [first, 0],
-        [second, 1],
-        [third, 2],
-      ],
-      first,
-      third,
-    ],
-    [
-      "the dog nearer the front on a tie",
-      [
-        [first, 0],
-        [second, 1],
-        [third, 1],
-      ],
-      first,
-      second,
-    ],
-    [
-      "the touched dog with every owner at their max",
-      [
-        [first, 0],
-        [second, 0],
-      ],
-      second,
-      second,
-    ],
+  // Each pack in front-to-back order, with how many hearts below their max each owner is.
+  const cases: [string, DogId[], number[], DogId, DogId][] = [
+    ["its own owner below their max", [first, second, third], [0, 1, 2], second, second],
+    ["the owner with the fewest hearts", [first, second, third], [0, 1, 2], first, third],
+    ["the dog nearer the front on a tie", [first, second, third], [0, 1, 1], first, second],
+    ["the touched dog with every owner at their max", [first, second], [0, 0], second, second],
     [
       "an owner below their max over a full one with fewer",
-      [
-        [large, 0],
-        [small, 0],
-        [first, 1],
-      ],
+      [large, small, first],
+      [0, 0, 1],
       large,
       first,
     ],
   ];
 
   it("gives the treat to its own owner, else the neediest owner below their max", () => {
-    for (const [name, pack, touched, expected] of cases) {
+    for (const [name, pack, below, touched, expected] of cases) {
       const run = testState(
-        Object.fromEntries(
-          pack.map(([dog, below]) => [
-            dog,
-            max(
-              pack.map(([each]) => each),
-              dog,
-            ) - below,
-          ]),
-        ),
+        Object.fromEntries(pack.map((dog, index) => [dog, max(pack, dog) - (below[index] ?? 0)])),
       );
       expect(treatRecipient(data, run, touched), name).toBe(expected);
     }

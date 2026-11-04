@@ -199,7 +199,8 @@ describe("a pattern mover's sight reading", () => {
     });
   });
 
-  // A merge to the left at 300 px of scroll, its cue 60 px long.
+  // A merge to the left at 300 px of scroll, its cue 60 px long; a dive 2.5 lanes to its stop at
+  // 0.01 lanes a pixel, landing 1.5 lanes in.
   const MERGE = kindMoving((movement) => movement.kind === "merge");
   const merging: MoverPath = {
     ...rider,
@@ -207,21 +208,15 @@ describe("a pattern mover's sight reading", () => {
     merge: { at: 300, cue: 60, lanes: -1, length: 40 },
     movement: "merge",
   };
-  it.each([
-    { name: "before its cue", shows: false, since: 239 },
-    { name: "as its cue shows", shows: true, since: 241 },
-  ])("reads a merge $name: $shows", ({ shows, since }) => {
-    const read = sightPaths(road, since, item(MERGE, merging, since));
-    expect(read.map((path) => path.motion === "ride" && path.merge !== undefined)).toEqual([shows]);
-  });
-
-  // A dive 2.5 lanes to its stop at 0.01 lanes a pixel, landing 1.5 lanes in.
   const dive: MoverPath = { ...dart, movement: "dive", slide: 0.5, stopAfter: 2.5, tilt: 0 };
+  const merges = (path: MoverPath) => path.motion === "ride" && path.merge !== undefined;
+  const stops = (path: MoverPath) => path.motion === "cross" && path.stopAfter !== null;
   it.each([
-    { name: "before it lands", since: dart.warning + 140, stops: false },
-    { name: "as it slides", since: dart.warning + 160, stops: true },
-  ])("reads a dive's stop $name: $stops", ({ since, stops }) => {
-    const read = sightPaths(road, since, item(DIVE, dive, since));
-    expect(read.map((path) => path.motion === "cross" && path.stopAfter !== null)).toEqual([stops]);
+    ["a merge before its cue", false, MERGE, merging, merges, 239],
+    ["a merge as its cue shows", true, MERGE, merging, merges, 241],
+    ["a dive's stop before it lands", false, DIVE, dive, stops, dart.warning + 140],
+    ["a dive's stop as it slides", true, DIVE, dive, stops, dart.warning + 160],
+  ] as const)("reads %s: %s", (_name, shows, kind, path, read, since) => {
+    expect(sightPaths(road, since, item(kind, path, since)).map(read)).toEqual([shows]);
   });
 });

@@ -31,22 +31,16 @@ const skunk = (affected: DogId[]): CardSource => ({
 });
 
 describe("an option that would fire an owner", () => {
-  it("flags each option that can fire an owner", () => {
-    for (const { fires, hearts } of [
-      { fires: ["kilo"], hearts: NOSE_EFFECT, why: "a meter landing on 0" },
-      { fires: [], hearts: NOSE_EFFECT + 1, why: "a meter left above 0" },
-    ]) {
-      const option = cardFor(data, testState({ kilo: hearts }), skunk(["kilo"])).options.find(
+  // The option with the meter landing on 0, and left above it.
+  it("flags each option that can fire an owner, saying who fires you in plain words", () => {
+    const nose = (hearts: number) =>
+      cardFor(data, testState({ kilo: hearts }), skunk(["kilo"])).options.find(
         ({ index }) => index === HOLD_YOUR_NOSE,
       );
-      expect(option?.fires).toEqual(fires);
-    }
-  });
-
-  it("says who fires you in plain words, not as a meter held at 0", () => {
-    const option = cardFor(data, testState({ kilo: NOSE_EFFECT }), skunk(["kilo"])).options.find(
-      ({ index }) => index === HOLD_YOUR_NOSE,
-    );
+    expect(nose(NOSE_EFFECT + 1)?.fires).toEqual([]);
+    const option = nose(NOSE_EFFECT);
+    expect(option?.fires).toEqual(["kilo"]);
+    // Not as a meter held at 0.
     expect(option?.breakdown.map(({ dog, name, text }) => [dog, text, name])).toEqual([
       ["kilo", `−${NOSE_EFFECT}♥`, NOSE_NAME],
       ["kilo", "", firedByText(data, "kilo")],

@@ -84,7 +84,7 @@ function choose(state: RunState, source: CardSource, choice: Choice) {
 }
 
 describe("cardFor", () => {
-  it("disables an option the player cannot afford, with the reason", () => {
+  it("disables an option the player cannot afford, with the reason, and rejects choosing it", () => {
     const state = testState({ ginger: 5, kilo: 5 }, { money: cents(letGo - 100) });
     const card = cardFor(data, state, encounter("thief", ["ginger", "kilo"]));
     const letGoOption = optionWith("thief", "money");
@@ -95,6 +95,9 @@ describe("cardFor", () => {
       ),
     );
     expect(card.options[letGoOption]?.cost).toBe(letGo);
+    expect(() => choose(state, encounter("thief", ["ginger", "kilo"]), letGoOption)).toThrow(
+      "not enough money",
+    );
   });
 
   it("keeps every card's free option enabled with no money", () => {
@@ -301,13 +304,6 @@ describe("chooseOption", () => {
     expect(outcome.moneyDelta).toBe(-high);
   });
 
-  it("rejects a disabled option", () => {
-    const state = testState({ ginger: 5, kilo: 5 }, { money: cents(0) });
-    expect(() =>
-      choose(state, encounter("thief", ["ginger", "kilo"]), optionWith("thief", "money")),
-    ).toThrow("not enough money");
-  });
-
   it("fires an owner at 0 hearts, and the money stays", () => {
     const state = testState({ ginger: 5, pepe: -lost }, { money: cents(5000), zoneIndex: 2 });
     const outcome = choose(state, encounter("skunk", ["pepe"]), nose);
@@ -346,19 +342,15 @@ describe("chooseOption", () => {
 });
 
 describe("offerUpgrades", () => {
-  it("never offers an upgrade already picked", () => {
+  it("never offers an upgrade already picked, offers the only ones left, and fails with fewer", () => {
     const all = keysOf(UPGRADES);
     const picked = testState({ kilo: 5 }, { upgradesPicked: all.slice(0, 2) });
     const offer = offerUpgrades(data, () => 0, 3, picked);
     expect(offer).toHaveLength(3);
     expect(offer.filter((id) => id !== null && all.slice(0, 2).includes(id))).toEqual([]);
-  });
-
-  it("offers the only ones left when the rest are picked, and fails with fewer", () => {
-    const all = keysOf(UPGRADES);
     const left = testState({ kilo: 5 }, { upgradesPicked: all.slice(0, all.length - 2) });
-    const offer = offerUpgrades(data, () => 0.5, 3, left);
-    expect(offer.filter((id) => id !== null).sort()).toEqual(all.slice(-2).sort());
+    const lastOffer = offerUpgrades(data, () => 0.5, 3, left);
+    expect(lastOffer.filter((id) => id !== null).sort()).toEqual(all.slice(-2).sort());
     const fewer = testState({ kilo: 5 }, { upgradesPicked: all.slice(0, all.length - 1) });
     expect(() => offerUpgrades(data, () => 0, 3, fewer)).toThrow("Fewer than 2");
   });

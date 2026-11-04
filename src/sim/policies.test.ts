@@ -65,24 +65,19 @@ function thiefChoice(policy: PolicyId, state: RunState, random: Random = NO_DRAW
 }
 
 describe("chooseCardOption", () => {
-  it("takes each policy's option at safe and low hearts", () => {
-    for (const [policy, hearts, expected] of [
-      ["heartsUnlessLow", SAFE, HEARTS],
-      ["heartsUnlessLow", LOW, PAY],
-      ["alwaysHearts", LOW, HEARTS],
-      ["alwaysPay", SAFE, PAY],
+  it("takes each policy's option at safe and low hearts, and hearts when no money option is affordable", () => {
+    for (const [policy, hearts, money, expected] of [
+      ["heartsUnlessLow", SAFE, 5000, HEARTS],
+      ["heartsUnlessLow", LOW, 5000, PAY],
+      ["alwaysHearts", LOW, 5000, HEARTS],
+      ["alwaysPay", SAFE, 5000, PAY],
+      ["heartsUnlessLow", SAFE, 0, HEARTS],
+      ["alwaysPay", SAFE, 0, HEARTS],
     ] as const) {
-      const state = testState({ ginger: hearts }, { money: cents(5000) });
+      const state = testState({ ginger: hearts }, { money: cents(money) });
 
-      expect(thiefChoice(policy, state)).toBe(expected);
+      expect(thiefChoice(policy, state), `${policy} at ${hearts} with ${money}`).toBe(expected);
     }
-  });
-
-  it("takes hearts when no money option is affordable", () => {
-    const state = testState({ ginger: SAFE }, { money: cents(0) });
-
-    expect(thiefChoice("heartsUnlessLow", state)).toBe(HEARTS);
-    expect(thiefChoice("alwaysPay", state)).toBe(HEARTS);
   });
 
   // A card with Hall pass's Skip: the encounter, the policy and the owner's hearts, and
@@ -116,12 +111,10 @@ describe("chooseCardOption", () => {
 describe("the mixed policy", () => {
   const rich = (hearts: number) => testState({ ginger: hearts }, { money: cents(5000) });
 
-  it("pays for the cheapest safe option on a draw below the pay share, else takes hearts", () => {
+  it("pays on a draw below the pay share, else takes hearts, keeping heartsUnlessLow's guard", () => {
     expect(thiefChoice("mixed", rich(SAFE), () => MIXED_PAY_SHARE - 0.01)).toBe(PAY);
     expect(thiefChoice("mixed", rich(SAFE), () => MIXED_PAY_SHARE)).toBe(HEARTS);
-  });
-
-  it("keeps heartsUnlessLow's guard, and takes hearts with nothing affordable, without drawing", () => {
+    // heartsUnlessLow's guard, and hearts with nothing affordable, draw nothing.
     expect(thiefChoice("mixed", rich(LOW))).toBe(PAY);
     expect(thiefChoice("mixed", testState({ ginger: SAFE }, { money: cents(0) }))).toBe(HEARTS);
   });
@@ -225,7 +218,7 @@ describe("pickCardOption", () => {
 });
 
 describe("choosePath", () => {
-  it("goes straight down the middle, left to the easiest or right to the hardest", () => {
+  it("goes straight down the middle, left to the easiest, right to the hardest or at random", () => {
     const never = () => {
       throw new Error("A fixed route policy draws nothing");
     };
@@ -234,9 +227,7 @@ describe("choosePath", () => {
     expect(choosePath(never, "right", 3)).toBe(2);
     expect(choosePath(never, "straight", 2)).toBe(0);
     expect(choosePath(never, "straight", 1)).toBe(0);
-  });
-
-  it("draws the random path from its random", () => {
+    // The random path draws from its random.
     expect([0, 0.4, 0.99].map((roll) => choosePath(() => roll, "random", 3))).toEqual([0, 1, 2]);
   });
 });

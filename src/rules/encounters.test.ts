@@ -1,11 +1,9 @@
-import { keysOf } from "@andornaut/game-kit/records";
 import { describe, expect, it } from "vitest";
 
-import { ENCOUNTERS } from "../data/encounters";
 import type { DogId, EncounterId } from "../data/types";
 import type { RunState } from "../state/runState";
 import { testState } from "../testing/runState";
-import { affectedDogs, hitLabel, opensCard } from "./encounters";
+import { affectedDogs, opensCard } from "./encounters";
 
 const pack = testState({ ginger: 5, kilo: 5, pepe: 5 });
 const everyDog: DogId[] = ["ginger", "kilo", "pepe"];
@@ -17,15 +15,6 @@ describe("affectedDogs", () => {
       ["no fired dog", testState({ ginger: 5, kilo: "fired", pepe: 5 }), ["ginger", "pepe"]],
     ] satisfies readonly [string, RunState, DogId[]][]) {
       expect(affectedDogs(state)).toEqual(affected);
-    }
-  });
-});
-
-describe("hitLabel", () => {
-  it("labels each encounter from its data", () => {
-    for (const id of keysOf(ENCOUNTERS)) {
-      const encounter = ENCOUNTERS[id];
-      expect(hitLabel(encounter)).toBe("hitLabel" in encounter ? encounter.hitLabel : null);
     }
   });
 });

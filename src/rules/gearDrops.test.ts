@@ -128,7 +128,7 @@ describe("gear drop pick", () => {
     }
   });
 
-  it("draws each item about as often as its weight's share", () => {
+  it("draws each item about as often as its weight's share, the same from the same seed", () => {
     const weights = gearDropWeights(data, []);
     const total = weights.reduce((sum, [, weight]) => sum + weight, 0);
     const random = seededRandom(7);
@@ -143,6 +143,10 @@ describe("gear drop pick", () => {
     for (const [gear, weight] of weights) {
       expect((counts.get(gear) ?? 0) / runs).toBeCloseTo(weight / total, 1);
     }
+    // The same seed draws the same drops.
+    const first = walkWith(null);
+    const draws = [1, 2].map(() => drawGearDrops(data, seededRandom(31), first));
+    expect(draws[0]).toEqual(draws[1]);
   });
 
   // The Pocket's item and the found one are never drawn, nor an item drawn earlier in the same
@@ -165,15 +169,6 @@ describe("gear drop pick", () => {
       }
     }
   });
-
-  it.each(POSITIONS.slice(0, 1))(
-    "draws the same drops from the same seed at position %i",
-    (position) => {
-      const run = walkWith(null, { zoneIndex: position - 1 });
-      const draws = [1, 2].map(() => drawGearDrops(data, seededRandom(position * 31), run));
-      expect(draws[0]).toEqual(draws[1]);
-    },
-  );
 });
 
 describe("grabbing a gear drop", () => {
@@ -211,20 +206,11 @@ describe("grabbing a gear drop", () => {
     expect(swap.run).toEqual(grabGear(data, next, run).run);
   });
 
-  it("raises each owner's max with Lucky collar, not their hearts", () => {
-    const run = walkWith(null);
-    const grabbed = grabGear(data, "luckyCollar", run).run;
-    for (const dog of ["buddy", "reggie"] as const) {
-      expect(ownerMaxHearts(data, grabbed, dog)).toBe(
-        ownerMaxHearts(data, run, dog) + read(TEST_TUNING, "hearts", "luckyCollarMax"),
-      );
-    }
-    expect(grabbed.pack).toEqual(run.pack);
-  });
-
-  it("lowers each owner's max when a found Lucky collar goes back, and hearts above it to it", () => {
+  // The ACTS table below checks the raised max.
+  it("raises no hearts with a found Lucky collar, and lowers hearts above the max when it goes back", () => {
     const run = walkWith(null);
     const collared = grabGear(data, "luckyCollar", run).run;
+    expect(collared.pack).toEqual(run.pack);
     const full: RunState = {
       ...collared,
       pack: mapPack(

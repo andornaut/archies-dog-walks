@@ -283,45 +283,32 @@ describe("simulator spawn observations", () => {
     moved.encounterHits.push({ affected: ["ginger"], encounter: "thief", kind: "encounter" });
     moved.encounterItems = [carriedCard];
     recordWalkEvents(origins, current, before, moved);
-    expect(original.kinds.bench).toMatchObject({
-      admitted: 1,
-      departed: 1,
-      encountered: 1,
-      generated: 0,
-      requested: 1,
-      touched: 0,
-    });
-    expect(original.kinds.thief).toMatchObject({
-      admitted: 1,
-      departed: 1,
-      encountered: 1,
-      generated: 0,
-      requested: 1,
-      touched: 1,
-    });
-    expect(current.kinds.bench).toMatchObject({
-      admitted: 1,
-      departed: 0,
-      encountered: 0,
-      generated: 1,
-      requested: 1,
-      touched: 0,
-    });
-    expect(current.kinds.thief).toMatchObject({
-      admitted: 1,
-      departed: 0,
-      encountered: 0,
-      generated: 1,
-      requested: 1,
-      touched: 0,
-    });
-    expect(current.kinds.tip).toMatchObject({
-      admitted: 1,
-      departed: 1,
-      encountered: 1,
-      generated: 1,
-      requested: 1,
-      touched: 1,
+    // Admitted, departed, encountered, generated, requested and touched.
+    const counted = (events: typeof current, kind: WalkItemKind) => {
+      const counts = events.kinds[kind];
+      return counts === undefined
+        ? undefined
+        : [
+            counts.admitted,
+            counts.departed,
+            counts.encountered,
+            counts.generated,
+            counts.requested,
+            counts.touched,
+          ];
+    };
+    expect({
+      currentBench: counted(current, "bench"),
+      currentThief: counted(current, "thief"),
+      currentTip: counted(current, "tip"),
+      originalBench: counted(original, "bench"),
+      originalThief: counted(original, "thief"),
+    }).toEqual({
+      currentBench: [1, 0, 0, 1, 1, 0],
+      currentThief: [1, 0, 0, 1, 1, 0],
+      currentTip: [1, 1, 1, 1, 1, 1],
+      originalBench: [1, 1, 1, 0, 1, 0],
+      originalThief: [1, 1, 1, 0, 1, 1],
     });
     expect(current.configured).toBe(3);
     expect(origins.has(12)).toBe(false);

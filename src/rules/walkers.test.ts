@@ -124,11 +124,10 @@ describe("newWalkers", () => {
     },
   );
 
-  it.each(WALKER_IDS)("leaves %s out once owned", (walker) => {
-    expect(newWalkers(gameData, [walker], 4)).not.toContain(walker);
-  });
-
-  it("unlocks only the starting walkers for a walk not finished", () => {
+  it("leaves out each walker once owned, and unlocks only the starting walkers for a walk not finished", () => {
+    for (const walker of WALKER_IDS) {
+      expect(newWalkers(gameData, [walker], 4), walker).not.toContain(walker);
+    }
     expect(newWalkers(gameData, [], null)).toEqual(starting);
   });
 });
