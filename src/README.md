@@ -7,7 +7,7 @@
 - **Hosting:** Cloudflare Workers static assets, no Worker script.
 - **Platforms:** web, phone browser first. iOS and Android later by wrapping the web build with Capacitor.
 - **Repo:** GitHub repository `andornaut/archies-dog-walks`.
-- **Tooling:** follows `andornaut/cloudflare-starter`: Vitest, ESLint with the shared house rules, Prettier, markdownlint, husky and lint-staged, and Dependabot. The Node version, the npm commands and CI are in the [root README](../README.md#developing).
+- **Tooling:** follows `andornaut/cloudflare-starter`: Vitest, ESLint with the shared house rules, Prettier, markdownlint and Dependabot. The Node version, the npm commands and CI are in the [root README](../README.md#developing).
 
 ## Site
 

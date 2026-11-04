@@ -9,7 +9,6 @@
     "node": ">=24.21.0"
   },
   "scripts": {
-    "prepare": "husky",
     "dev": "vite",
     "prebuild": "npm run export:data",
     "build": "vite build",
@@ -44,8 +43,6 @@
     "eslint-plugin-simple-import-sort": "^14.0.0",
     "eslint-plugin-sort-destructure-keys": "^3.0.0",
     "globals": "^17.13.0",
-    "husky": "^9.1.7",
-    "lint-staged": "^17.6.0",
     "markdownlint-cli2": "^0.24.0",
     "pngjs": "7.0.0",
     "prettier": "^3.9.10",
