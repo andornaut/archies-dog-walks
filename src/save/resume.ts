@@ -330,9 +330,7 @@ function resumeSchema(data: ResumeData) {
   const draws = v.pipe(count, v.maxValue(MAX_DRAWS));
   return v.pipe(
     v.object({
-      // CLEANUP (added 2026-10-29): a walk saved before the upgrades stream has no count for it;
-      // remove the default once no saved walk can predate it.
-      draws: v.object({ cards: draws, forks: draws, upgrades: v.optional(draws, 0) }),
+      draws: v.object({ cards: draws, forks: draws, upgrades: draws }),
       seed: v.pipe(count, v.maxValue(MAX_SEED)),
       session,
     }),

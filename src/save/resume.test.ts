@@ -209,17 +209,6 @@ describe("encodeResume and launchWalk", () => {
     });
   });
 
-  // CLEANUP (added 2026-10-29): remove with the schema's default for draws.upgrades.
-  it("resumes a walk saved before the upgrades stream with that stream undrawn", () => {
-    const old = edited(AT_FORK, (stored) => {
-      delete (stored.draws as Record<string, unknown>).upgrades;
-    });
-    expect(launchWalk(gameData, true, old)).toEqual({
-      kind: "resume",
-      walk: asStored({ ...AT_FORK, draws: { ...AT_FORK.draws, upgrades: 0 } }),
-    });
-  });
-
   it.each([
     { name: "walk start", walk: START },
     { name: "fork", walk: AT_FORK },
