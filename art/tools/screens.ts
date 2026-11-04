@@ -124,17 +124,21 @@ import { LIT, rim, scope as roadScope } from "./road.ts";
 import { Canvas, image, LAYOUT, rgb, text, textC, TILES, ZONES } from "./scene.ts";
 import { STATES } from "./ui.ts";
 
-const USAGE = `Usage:
+// The usage text, naming every image in SCREENS.
+function usage(): string {
+  return `Usage:
   node art/tools/screens.ts preview OUT.png     the logo, the ui-loading frames, then every
                                                 screen, scaled up, and every screen again with
                                                 its UI blocked in
   node art/tools/screens.ts shop-preview OUT.png
                                                 ui-pet-shop's tags on the yard at 1x and 4x, and
                                                 screen-home with it in at 1x and 4x
-  node art/tools/screens.ts build screen-home   write only the screen-home PNG
+  node art/tools/screens.ts build SCREEN        write only the SCREEN PNG, one of
+                                                ${[...SCREENS.keys()].join(", ")}
   node art/tools/screens.ts build               write public/art/images/*.png and
                                                 public/art/sprites/ui-loading.*, ui-pet-shop.* and
                                                 ui-pet-shop-board.*`;
+}
 
 export const W = 360;
 export const H = 560;
@@ -2238,6 +2242,7 @@ if (import.meta.main) {
       build: () => build(),
       "build SCREEN": (screen) => {
         if (!SCREENS.has(screen)) {
+          console.error(`unknown screen ${screen}`);
           throw new UsageError();
         }
         return build(screen);
@@ -2245,6 +2250,6 @@ if (import.meta.main) {
       "preview OUT.png": (out) => preview(out),
       "shop-preview OUT.png": (out) => shopPreview(out),
     },
-    doc: USAGE,
+    doc: usage(),
   });
 }

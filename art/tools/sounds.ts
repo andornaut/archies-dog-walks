@@ -60,7 +60,7 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-import { run as runCommands } from "./pixel.ts";
+import { run as runCommands, UsageError } from "./pixel.ts";
 
 const USAGE = `Usage:
   node art/tools/sounds.ts preview OUT_DIR   write the .ogg and .m4a files into OUT_DIR only
@@ -1107,8 +1107,13 @@ if (import.meta.main) {
   runCommands({
     commands: {
       build: () => build(),
-      "one KEY OUT_DIR": async (key, dir) =>
-        console.log("wrote", (await render(dir, [key])).join(", ")),
+      "one KEY OUT_DIR": async (key, dir) => {
+        if (!EFFECTS[key] && !MUSIC.includes(key)) {
+          console.error(`unknown sound ${key}`);
+          throw new UsageError();
+        }
+        console.log("wrote", (await render(dir, [key])).join(", "));
+      },
       "preview OUT_DIR": async (dir) => console.log("wrote", (await render(dir)).join(", ")),
     },
     doc: USAGE,
