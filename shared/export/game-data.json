@@ -3152,7 +3152,6 @@
       "bigTipperTipBonus": 1,
       "cheeseBuy": 20,
       "encounterHigh": 20,
-      "encounterLow": 20,
       "greenBinSpillCleanUp": 20,
       "lostWalletKeep": 20,
       "missedTips": 20,
@@ -3260,7 +3259,6 @@
       "zoneAtBaseSpeed": 148,
       "zoomiesDriftMaxSeconds": 1.12,
       "zoomiesDriftMinSeconds": 0.48,
-      "zoomiesDriftSeconds": 1,
       "zoomiesSeconds": 40
     }
   },

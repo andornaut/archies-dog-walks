@@ -72,7 +72,6 @@ export const TUNING = {
     // The Cheese crates' Buy the cheese.
     cheeseBuy: 20,
     encounterHigh: 20,
-    encounterLow: 20,
     // The Green bin spill's Pay for cleanup.
     greenBinSpillCleanUp: 20,
     lostWalletKeep: 20,
@@ -278,8 +277,6 @@ export const TUNING = {
     // Bounds for uniformly random Zoomies drift intervals, in seconds of walking.
     zoomiesDriftMaxSeconds: 1.12,
     zoomiesDriftMinSeconds: 0.48,
-    // Fixed-strategy drift interval, in seconds of walking.
-    zoomiesDriftSeconds: 1,
     // How long the Zoomies debuff lasts, in walking time.
     zoomiesSeconds: 40,
   },
