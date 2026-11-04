@@ -304,6 +304,9 @@ export interface GameData {
 
 export interface Layout {
   camera: { centreX: number; focal: number; footY: number; horizonY: number };
+  // The sprites the game places by their frame (keys under unmeasuredPrefixes, except groundUiKeys)
+  // rather than standing them on the ground.
+  groundSprites: { groundUiKeys: readonly string[]; unmeasuredPrefixes: readonly string[] };
   lanes: { dividers: readonly number[] };
   pack: {
     collarHeights: Readonly<Record<string, number>>;
@@ -348,6 +351,8 @@ const LAYOUT_FIELDS: readonly string[] = [
   "camera.focal",
   "camera.footY",
   "camera.horizonY",
+  "groundSprites.groundUiKeys",
+  "groundSprites.unmeasuredPrefixes",
   "lanes.dividers",
   "pack.collarHeights",
   "pack.feet.lead",
@@ -1147,16 +1152,11 @@ function squatted(tags: readonly CellTag[], w: number, h: number): CellTag[] {
   return regrouped(tags, frames);
 }
 
-// The keys public/art/manifest.json lists without an anchor: the game does not stand them on the
-// ground (overlays, icons and the like), so they keep their place in their frame.
-function unanchored(): Set<string> {
-  if (!existsSync("public/art/manifest.json")) {
-    return new Set();
-  }
-  const { sprites } = JSON.parse(readFileSync("public/art/manifest.json", "utf8")) as {
-    sprites: { anchor?: unknown; key: string }[];
-  };
-  return new Set(sprites.filter((s) => !("anchor" in s)).map((s) => s.key));
+// Whether the game places key by its frame rather than standing it on the ground (overlays, icons
+// and the like, by the layout's groundSprites), so it keeps its place in its frame.
+function unanchored(key: string): boolean {
+  const { groundUiKeys, unmeasuredPrefixes } = LAYOUT.groundSprites;
+  return !groundUiKeys.includes(key) && unmeasuredPrefixes.some((prefix) => key.startsWith(prefix));
 }
 
 // tags with their frames, in order, replaced by frames.
@@ -1298,7 +1298,6 @@ export function depthSettled(
   }
   const full = new Map<string, readonly CellTag[]>([...(originals ?? []), ...sprites]);
   const scales = depthScales();
-  const free = unanchored();
   const settled = new Map<string, CellFrame>();
   const frame0 = (key: string): CellFrame | null => {
     const done = settled.get(key);
@@ -1333,7 +1332,7 @@ export function depthSettled(
       .map(([, s]) => s);
     const [w, h] = depthEnvelope(frame0Full[0]!.length, frame0Full.length, steps).get(scale)!;
     tags = squatted(tags, w, h);
-    if (!free.has(base)) {
+    if (!unanchored(base)) {
       const larger = Math.min(...steps.filter((s) => s > scale), 1);
       const lkey = larger < 1 ? base + [...scales].find(([, s]) => s === larger)![0] : base;
       let frameL = frame0(lkey);
