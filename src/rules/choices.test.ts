@@ -328,10 +328,7 @@ describe("chooseOption", () => {
       { kind: "upgrade", upgrade: "charmer" },
       { by: "charmerFreeCards", operation: "add", stat: "freeCards" },
     );
-    const state = testState(
-      { ginger: 5, kilo: 5 },
-      { modifiers: [charmer], money: cents(4000) },
-    );
+    const state = testState({ ginger: 5, kilo: 5 }, { modifiers: [charmer], money: cents(4000) });
     const skunk = encounter("skunk", ["ginger", "kilo"]);
     const first = choose(state, skunk, groom);
     expect(first.state.money).toBe(4000);
