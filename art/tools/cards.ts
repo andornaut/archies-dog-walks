@@ -812,24 +812,6 @@ export function neighbourTake(): Art {
 
 // ---------- upgrades and the Skip option ----------
 
-export function disc(
-  a: Art,
-  cx: number,
-  cy: number,
-  r: number,
-  col: string,
-  edge: string | null = null,
-): void {
-  for (let dy = -r; dy < r + 1; dy++) {
-    for (let dx = -r; dx < r + 1; dx++) {
-      const d = dx * dx + dy * dy;
-      if (d <= r * r) {
-        a.fill(cx + dx, cy + dy, 1, 1, edge && d > (r - 1) * (r - 1) ? edge : col);
-      }
-    }
-  }
-}
-
 // A leg w pixels thick along the joints pts.
 export function limb(
   g: Drawable,

@@ -8,13 +8,13 @@
 //   retriever mix), medium 48x48 (Archie, Lady, Pepe the miniature poodle) and small 38x38 (Buddy,
 //   Ginger, Reggie), the large dogs drawn DOG_ZOOM narrower and the small dogs DOG_ZOOM larger (more
 //   down than across). Its drawing functions take 32-unit design coordinates and run on a mini.ts Mini
-//   at roadScale(name) (the side / 32), which keeps 1px lines and single pixels 1px; features drawn
-//   pixel by pixel take trail(), so they stay unbroken. Tags: walk (8 frames, 75ms), react (4, 60ms:
-//   compression, tuck, landing and settle), pull (4, 80ms, leaning right and scrabbling; the game
-//   mirrors it for left), tell (4, 125ms, the lean before a pull, head and shoulders pitched toward it
-//   and the neck stretched; the game adds the fx-bark pop), idle (4, 300ms, standing while the walk
-//   pauses: a slow tail wag, a 1px breath and a twitch of the right ear) and shake (4, 60ms, a quick
-//   shake-off after an encounter hit, throwing droplets and settling on its centre).
+//   at roadScale(name) (the side / 32), which keeps 1px lines and single pixels 1px. Tags: walk (8
+//   frames, 75ms), react (4, 60ms: compression, tuck, landing and settle), pull (4, 80ms, leaning
+//   right and scrabbling; the game mirrors it for left), tell (4, 125ms, the lean before a pull, head
+//   and shoulders pitched toward it and the neck stretched; the game adds the fx-bark pop), idle (4,
+//   300ms, standing while the walk pauses: a slow tail wag, a 1px breath and a twitch of the right
+//   ear) and shake (4, 60ms, a quick shake-off after an encounter hit, throwing droplets and settling
+//   on its centre).
 // - face-dog-<name>: the dog's face on its card and in the picker, a 32x32 frame, the face drawn
 //   FACE_SIDE big and sat on the bottom edge, the size classes one even step apart and the large dogs
 //   zoomed to fill it. Tags: happy, neutral, upset.
@@ -34,11 +34,9 @@ import {
   Grid,
   K,
   main,
-  type Point,
   raster,
   roadEdge,
   rowScaleOf,
-  scaleOf,
   type Sprite,
   type Tag,
 } from "./pixel.ts";
@@ -1023,33 +1021,6 @@ export function puff(
     g.ell(cx, cy, rx + 1, ry + 1, CURL[1]);
   }
   g.ell(cx, cy, rx, ry, CURL[0], CURL[1], Math.min(rx, ry) >= 3 ? CURL[2] : null);
-}
-
-// A 1px trail of pixels at the design points pts, in order. Drawn bigger, a step between two touching
-// points can open a 1px gap; the gap is filled so the trail stays unbroken and 1px wide.
-export function trail(g: Drawable, pts: readonly Point[], c: Colour): void {
-  const s = scaleOf(g);
-  if (s <= 1) {
-    for (const [x, y] of pts) {
-      g.p(x, y, c);
-    }
-    return;
-  }
-  const px = raster(g);
-  let last: [Point, Point] | null = null;
-  for (const [x, y] of pts) {
-    const here: Point = [Math.floor((x + 0.5) * s), Math.floor((y + 0.5) * s)];
-    if (last && Math.max(Math.abs(x - last[0][0]), Math.abs(y - last[0][1])) <= 1) {
-      const [ax, ay] = last[1];
-      const [bx, by] = here;
-      const n = Math.max(Math.abs(bx - ax), Math.abs(by - ay));
-      for (let t = 1; t < n; t++) {
-        px.p(ax + Math.round(((bx - ax) * t) / n), ay + Math.round(((by - ay) * t) / n), c);
-      }
-    }
-    px.p(here[0], here[1], c);
-    last = [[x, y], here];
-  }
 }
 
 // The shake-off's water: droplets thrown d pixels out from both flanks, rising as they fly. Each is

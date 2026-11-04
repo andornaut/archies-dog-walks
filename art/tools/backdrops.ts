@@ -348,16 +348,6 @@ export type HouseParts = readonly [off: number, ww: number, wh: number, doorH: n
 export const HOUSE: HouseParts = [6, 12, 10, 18];
 // SLIM is the slim house's windows and door: tall windows either side of the door.
 export const SLIM: HouseParts = [4, 8, 10, 13];
-// The lit left edge of a roof, a ramp step lighter than the roof.
-export const RAKE: ReadonlyMap<string, string> = new Map([
-  ["slate", "grey"],
-  ["dslate", "slate"],
-  ["navy", "dslate"],
-  ["purple", "mauve"],
-  ["plum", "purple"],
-  ["dred", "red"],
-  ["brown", "tan"],
-]);
 
 export interface HouseOptions {
   base?: number;
@@ -512,24 +502,6 @@ export function tree(
       }
     }
   }
-}
-
-// A picket fence whose pickets end on row y + 3, h rows tall.
-export function fence(
-  cv: Canvas,
-  {
-    col = "white",
-    h = 14,
-    x0 = 0,
-    x1 = W,
-    y = 104,
-  }: { col?: string; h?: number; x0?: number; x1?: number; y?: number } = {},
-): void {
-  for (let x = x0; x < x1; x += 6) {
-    cv.fill(x, y + 4 - h, 4, h, col);
-    cv.fill(x + 3, y + 5 - h, 1, h - 1, "lgrey");
-  }
-  cv.fill(x0, y + 4 - Math.round(h * 0.7), x1 - x0, 2, "lgrey");
 }
 
 // A bush's three lobes, (x, y, radius); SHRUB is the backdrops' smaller one.
@@ -865,14 +837,6 @@ export function path(
   }
 }
 
-// A mailbox whose post stands on row y.
-export function mailbox(cv: Canvas, x: number, y: number, col = "red"): void {
-  cv.fill(x, y - 9, 2, 9, "dbrown");
-  cv.fill(x - 3, y - 14, 8, 5, col);
-  cv.fill(x - 3, y - 10, 8, 1, dk(col));
-  cv.fill(x + 5, y - 16, 2, 3, "amber");
-}
-
 // Lawn texture follows the road strips' rule: mown stripes run along the street and converge toward
 // its centre line (stripes across it band and shimmer as rows span more lawn), their widths vary,
 // and each ends where it would draw under 4px wide. Tufts are 2-row marks, placed irregularly and
@@ -952,37 +916,6 @@ export function sunburst(
       const ang = Math.atan2(px + 0.5 - cx, cy - py - 0.5);
       const ray = Math.floor(ang / (Math.PI / (2 * n)) + 0.5);
       cv.fill(px, py, 1, 1, ((ray % 2) + 2) % 2 ? a : b);
-    }
-  }
-}
-
-// A string of pennants hung from x0 to x1 on row y, sagging sag rows in the middle, one every every
-// columns.
-export function bunting(
-  cv: Canvas,
-  x0: number,
-  x1: number,
-  y: number,
-  sag: number,
-  cols: readonly string[],
-  { every = 7, line = "plum" }: { every?: number; line?: string } = {},
-): void {
-  let k = 0;
-  for (let x = x0; x < x1; x++) {
-    const t = (x - x0) / Math.max(1, x1 - x0 - 1);
-    const yy = Math.round(y + sag * 4 * t * (1 - t));
-    cv.fill(x, yy, 1, 1, line);
-    if ((x - x0) % every === 1 && x + 5 <= x1) {
-      for (let r = 0; r < 4; r++) {
-        cv.fill(
-          x + Math.floor(r / 2),
-          yy + 1 + r,
-          5 - Math.floor(r / 2) * 2,
-          1,
-          cols[k % cols.length]!,
-        );
-      }
-      k += 1;
     }
   }
 }
