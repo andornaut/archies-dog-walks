@@ -43,6 +43,6 @@ Some walks should fail: the road stays calm, so losing comes from bumps and choi
 
 **Walk target:** a walk lasts about 8 minutes, we want to play "one more", and it works by touch on a phone browser.
 
-Version 1 is complete. Tuning continues against the targets above. The game is called Archie's Dog Walks.
+Version 1 is complete; the user has not yet declared the first release. Until then, a save-format change or a renamed id resets older saves to a default save, with no migration. Tuning continues against the targets above. The game is called Archie's Dog Walks.
 
 Runtime generation targets 100% delivery: planner acceptance requires every plan complete using at most 75% of the per-attempt search allowance. The release floor stays an independently certified 90% of each neighbourhood's original active and auxiliary logical requests, allowing optional reward omissions under the [spawning rules](design.md#spawning-details).
