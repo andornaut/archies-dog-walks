@@ -6,7 +6,7 @@ Format: `- [status] **Idea**: short description · notes`. Statuses: **floated**
 
 ## Look and feel
 
-- [floated] **Walk the sidewalk, not the road**: the pack walks a sidewalk, park path or boardwalk instead of the road, so the scene reads as a walk · pairs with Sidewalk lanes in [`next.md`](next.md)
+- [floated] **Walk the sidewalk, not the road**: the pack walks a sidewalk, park path or boardwalk instead of the road, so the scene reads as a walk
 
 ## Cut
 

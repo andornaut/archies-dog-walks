@@ -4,12 +4,11 @@ The design of the game, its targets, and how it is tuned and tested. A pixel-art
 
 ## Docs
 
-| Doc                                | What it holds                                       | Changes when                     |
-| ---------------------------------- | --------------------------------------------------- | -------------------------------- |
-| [`card-design.md`](card-design.md) | Card principles, current choices and approved fixes | A card design decision lands     |
-| [`design.md`](design.md)           | The rulebook: rules and content                     | A design decision lands          |
-| [`ideas.md`](ideas.md)             | Undecided and cut ideas                             | Every design session             |
-| [`next.md`](next.md)               | Everything set aside for later, unscheduled         | Something is set aside for later |
+| Doc                                | What it holds                                       | Changes when                 |
+| ---------------------------------- | --------------------------------------------------- | ---------------------------- |
+| [`card-design.md`](card-design.md) | Card principles, current choices and approved fixes | A card design decision lands |
+| [`design.md`](design.md)           | The rulebook: rules and content                     | A design decision lands      |
+| [`ideas.md`](ideas.md)             | Undecided and cut ideas                             | Every design session         |
 
 Docs state the current rule only; git keeps the history. An idea stays in `ideas.md` until agreed, then moves to the doc it belongs in.
 
