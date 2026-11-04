@@ -9,7 +9,7 @@ import ts from "typescript-eslint";
 
 import { plugins, sourceRules, toolingRules } from "./eslint.config.base.mjs";
 
-const SOURCE_FILES = ["src/**/*.ts"];
+const SOURCE_FILES = ["art/tools/**/*.ts", "src/**/*.ts"];
 const PHASER_FILES = ["src/main.ts", "src/scenes/**", "src/**/phaser/**"];
 const TEST_FILES = ["src/**/*.test.ts"];
 
@@ -164,7 +164,7 @@ export default defineConfig(
       globals: { ...globals.browser, ...globals.node },
     },
   },
-  // The house rules, over what this ships. max-len is inert here: prettier
+  // The house rules, over what this ships and art/tools/. max-len is inert here: prettier
   // wraps at 100 in this repository, inside the 120 the rule allows.
   {
     files: SOURCE_FILES,
