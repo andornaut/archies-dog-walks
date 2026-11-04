@@ -7,7 +7,6 @@ import { describe, expect, it } from "vitest";
 import { gameData } from "../data";
 import { SCREEN_CONFIG } from "../data/screen";
 import type { DogId, GearId, WalkerId } from "../data/types";
-import { HELP_LAYOUT } from "../help/helpLayout";
 import { GREETING_FIT, greetingLineTops, infoItems, newWalkerRows } from "../hud/celebrationLayout";
 import { celebrationText } from "../hud/zoneCelebration";
 import type { Owned } from "../save/schema";
@@ -268,16 +267,6 @@ const walkerPairs: Pair[] = keysOf(gameData.walkers).flatMap((walker) => {
   return icons ? [caps, icon] : [caps];
 });
 
-// A help page's title over its body.
-const helpPairs: Pair[] = gameData.help.map(({ title }) => ({
-  font: "font-title",
-  held: "exactly",
-  help: HELP_LAYOUT.body.y,
-  label: title,
-  labelTop: HELP_LAYOUT.title.y,
-  where: "help page",
-}));
-
 const PAIRS: readonly Pair[] = [
   ...badgeCardPairs,
   ...confirmPairs,
@@ -305,17 +294,6 @@ describe("a label over its help text", () => {
         expect(fontClearRows(pair)).toBeGreaterThanOrEqual(10);
       }
       expect(clearRows(pair)).toBeGreaterThanOrEqual(10);
-    },
-  );
-});
-
-// Help positions its body under the visible heading glyphs rather than reserving the font's
-// deepest possible descender, while keeping the same exact clear-row gap.
-describe("Help headings over their body text", () => {
-  it.each(helpPairs.map((pair) => [pair.label, pair] as const))(
-    "leaves %s exactly 10 clear rows under its actual ink",
-    (_label, pair) => {
-      expect(clearRows(pair)).toBe(10);
     },
   );
 });

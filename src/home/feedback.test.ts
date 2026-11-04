@@ -3,14 +3,11 @@ import { describe, expect, it } from "vitest";
 import { FEEDBACK, loopFrame, settleDelay, shakeOffset } from "./feedback";
 
 describe("shakeOffset", () => {
-  it("swings within the shake width and settles once the shake is over", () => {
+  it("swings within the shake width, settles once it is over and is still with reduced motion or no shake", () => {
     const offsets = Array.from({ length: 32 }, (_, i) => shakeOffset(false, 1000 + i * 10, 1000));
     expect(offsets.some((offset) => offset !== 0)).toBe(true);
     expect(offsets.every((offset) => Math.abs(offset) <= FEEDBACK.shakePx)).toBe(true);
     expect(shakeOffset(false, 1000 + FEEDBACK.shakeMs, 1000)).toBe(0);
-  });
-
-  it("is still with reduced motion or no shake", () => {
     expect(shakeOffset(true, 1100, 1000)).toBe(0);
     expect(shakeOffset(false, 1100, undefined)).toBe(0);
   });

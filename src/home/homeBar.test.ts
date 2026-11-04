@@ -67,12 +67,7 @@ describe.each([true, false])("the top bar with Exit shown %s", (exit) => {
     expect(isOutside(regionOutside(exit, region, []), point)).toBe(outside);
   });
 
-  // The bar's buttons left to right, Exit last where it shows, and what a press finds on each.
-  it("lists its buttons left to right, Exit last where it shows", () => {
-    const order = ["logbook", "help", "mute", "settings", ...(exit ? ["exit"] : [])];
-    expect(homeBarButtons(exit).map(([id]) => id)).toEqual(order);
-  });
-
+  // What a press finds on each button (their order: homeLayout.test.ts).
   it.each(HOME_BAR_BUTTONS.map((id) => [id, centres[id]] as const))(
     "homeBarButtonAt finds %s at its centre where it shows",
     (id, point) => {

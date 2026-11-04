@@ -76,11 +76,8 @@ const BADGE_COUNTS = Array.from(
 describe("the side column's total row", () => {
   const amountY = sideTotalAmountY(BODY, TITLE);
 
-  it("ends TOTAL's capitals and the walk's total's on one row at 2x", () => {
+  it("ends TOTAL's capitals and the walk's total's on one row at 2x, the row under both inks", () => {
     expect(amountY + BODY.capHeight * 2).toBe(side.totalY + TITLE.capHeight * 2);
-  });
-
-  it("ends under the lowest ink of TOTAL and the walk's total at 2x", () => {
     const lowest = Math.max(
       side.totalY + inkRowsFromCapTop(TITLE) * 2,
       amountY + inkRowsFromCapTop(BODY) * 2,
@@ -102,10 +99,21 @@ describe("the side column's total band", () => {
   // The band round a total whose ink ends at the side column's right.
   const placed = () => sideTotalBand(BODY, TITLE, side.right);
 
-  it("pads TOTAL's ink and the total's by padX columns either side", () => {
-    const { fill } = placed();
+  // padX columns either side of the ink, a lip row under the fill and an outline round both,
+  // under the zone count's ink and inside the panel's frame.
+  it("pads the ink by padX, with a lip and outline, under the zone count inside the frame", () => {
+    const { fill, lip, outline } = placed();
     expect(side.x + labelInk.left - fill.x).toBe(band.padX);
     expect(fill.x + fill.width - side.right).toBe(band.padX);
+    expect(lip).toEqual({ ...fill, height: 1, y: fill.y + fill.height });
+    expect(outline).toEqual({
+      height: fill.height + lip.height + 2,
+      width: fill.width + 2,
+      x: fill.x - 1,
+      y: fill.y - 1,
+    });
+    expect(outline.y).toBeGreaterThan(side.pipsY + inkRowsFromCapTop(BODY) * 2);
+    expect(outline.x + outline.width).toBeLessThanOrEqual(most.x + most.width - 2);
   });
 
   // The row's ink, TOTAL's and the amount's, from its highest row to its lowest.
@@ -130,23 +138,6 @@ describe("the side column's total band", () => {
     const { fill } = placed();
     expect(Math.min(...amounts.map((amount) => rowInk(amount).top)) - fill.y).toBe(band.padY);
     expect(fill.y + fill.height - (side.totalY + side.totalHeight)).toBe(band.padY);
-  });
-
-  it("draws a lip row under the fill and an outline round both", () => {
-    const { fill, lip, outline } = placed();
-    expect(lip).toEqual({ ...fill, height: 1, y: fill.y + fill.height });
-    expect(outline).toEqual({
-      height: fill.height + lip.height + 2,
-      width: fill.width + 2,
-      x: fill.x - 1,
-      y: fill.y - 1,
-    });
-  });
-
-  it("keeps the band under the zone count's ink and inside the panel's frame", () => {
-    const { outline } = placed();
-    expect(outline.y).toBeGreaterThan(side.pipsY + inkRowsFromCapTop(BODY) * 2);
-    expect(outline.x + outline.width).toBeLessThanOrEqual(most.x + most.width - 2);
   });
 
   // The rule over the owners' rows sits at least 2 clear rows under the band at every count of
@@ -379,28 +370,20 @@ describe("an owner's row", () => {
 
   // A one-line happy row's bubble is the well's height; any other grows down to hold its text.
   it.each(rows)(
-    "starts $text's bubble on the well's top, at least the well's height",
+    "sizes $text's bubble at least the well's height, the row ending under it and the name",
     ({ fired, lines }) => {
       const row = { fired, lines };
       const height = quipBubbleHeight(FONTS, row);
       expect(height).toBeGreaterThanOrEqual(well.size);
       expect(height === well.size).toBe(!fired && lines === 1);
-      expect(well.y).toBe(0);
+      expect(quipRowHeight(FONTS, row)).toBe(Math.max(height, nameY + bodyInk));
     },
   );
 
-  it.each(rows)(
-    "ends $text's row under its bubble and the name's lowest ink",
-    ({ fired, lines }) => {
-      const row = { fired, lines };
-      expect(well.y + well.size).toBeLessThanOrEqual(nameY);
-      expect(quipRowHeight(FONTS, row)).toBe(
-        Math.max(quipBubbleHeight(FONTS, row), nameY + bodyInk),
-      );
-    },
-  );
-
+  // The bubble starts on the well's top; the name sits under the well.
   it("puts the bubble at the left and the well at the right, inside the panel's frame", () => {
+    expect(well.y).toBe(0);
+    expect(well.y + well.size).toBeLessThanOrEqual(nameY);
     expect(bubble.x).toBeGreaterThanOrEqual(most.x + 2);
     expect(textX).toBeGreaterThan(bubble.x);
     expect(bubble.x + bubble.width).toBeLessThan(well.x);
@@ -430,11 +413,13 @@ describe("an owner's row", () => {
 // ui/textRoles.test.ts).
 describe("a badge strip's names", () => {
   // The title, the badges and a 2-line name each keep their ink inside the panel's 2px frame,
-  // in order down the strip: the end screen's and a celebration's over the home screen.
+  // in order down the strip: the end screen's and a celebration's over the home screen. The
+  // last of the most rows' badges keeps inside the frame too.
   it.each([
-    ["the end screen", badges.height],
-    ["a celebration", CELEBRATION_PANEL.badgesHeight],
-  ] as const)("keeps %s's strip inside its panel", (_, height) => {
+    ["the end screen", badges.height, endBadgeStrip(BADGE_STRIP.maxRows).height],
+    ["a celebration", CELEBRATION_PANEL.badgesHeight, CELEBRATION_PANEL.badgesHeight],
+  ] as const)("keeps %s's strip and its last row of badges inside its panel", (_, height, full) => {
+    const { maxRows, perRow } = BADGE_STRIP;
     const titleInk = BADGE_STRIP.titleY + inkRowsFromCapTop(TITLE) * TEXT_SCALE;
     const badgeBottom = BADGE_STRIP.badgeTop + BADGE_STRIP.badgeSize;
     const tops = badgeNameTops(BADGE_STRIP.nameLines, 0);
@@ -442,18 +427,9 @@ describe("a badge strip's names", () => {
     expect(titleInk).toBeLessThanOrEqual(BADGE_STRIP.badgeTop);
     expect(tops[0]).toBeGreaterThan(badgeBottom);
     expect(nameInk).toBeLessThanOrEqual(height - 2);
-  });
-
-  // The last of the most rows' badges keeps inside the frame, on the end screen and a
-  // celebration.
-  it.each([
-    ["the end screen", endBadgeStrip(BADGE_STRIP.maxRows).height],
-    ["a celebration", CELEBRATION_PANEL.badgesHeight],
-  ] as const)("keeps %s's last row of badges inside its panel", (_, height) => {
-    const { maxRows, perRow } = BADGE_STRIP;
-    const rect = { height, width: CELEBRATION_PANEL.width, x: 0, y: 0 };
+    const rect = { height: full, width: CELEBRATION_PANEL.width, x: 0, y: 0 };
     const last = defined(panelBadgeStrip(rect, maxRows, perRow * maxRows).slots.at(-1));
-    expect(last.top + BADGE_STRIP.badgeSize).toBeLessThanOrEqual(height - BADGE_STRIP.frame);
+    expect(last.top + BADGE_STRIP.badgeSize).toBeLessThanOrEqual(full - BADGE_STRIP.frame);
   });
 });
 
@@ -473,24 +449,16 @@ describe("a badge strip's tap targets", () => {
     return { hits, rect, strip: panelBadgeStrip(rect, rows, count) };
   };
 
-  it.each(BADGE_COUNTS)(
-    "gives each of %i badges a target at least the minimum, inside the panel's frame",
-    (count) => {
-      const { hits, rect } = laid(count);
-      const inner = insetRect(frame, rect);
-      for (const hit of hits) {
-        expect(hit.width).toBeGreaterThanOrEqual(MIN_TAP_SIZE);
-        expect(hit.height).toBeGreaterThanOrEqual(MIN_TAP_SIZE);
-        expect(within(inner, hit)).toBe(true);
-      }
-    },
-  );
-
-  it.each(BADGE_COUNTS)("covers each of %i badges and its name, edge to edge", (count) => {
+  // Each target at least the minimum inside the panel's frame, covering its badge and name,
+  // edge to edge with the next, and each row centred on the strip.
+  it.each(BADGE_COUNTS)("covers %i badges and names edge to edge, rows centred", (count) => {
     const { hits, rect, strip } = laid(count);
+    const inner = insetRect(frame, rect);
     const nameInkBottom =
       defined(badgeNameTops(nameLines, rect.y).at(-1)) + inkRowsFromCapTop(BODY) * TEXT_SCALE;
     hits.forEach((hit, i) => {
+      expect(Math.min(hit.width, hit.height)).toBeGreaterThanOrEqual(MIN_TAP_SIZE);
+      expect(within(inner, hit)).toBe(true);
       const { centreX, top } = defined(strip.slots[i]);
       const badge = { height: badgeSize, width: badgeSize, x: centreX - half, y: rect.y + top };
       expect(within(hit, badge)).toBe(true);
@@ -508,10 +476,6 @@ describe("a badge strip's tap targets", () => {
         expect(rectsOverlap(hit, other)).toBe(false);
       });
     });
-  });
-
-  it.each(BADGE_COUNTS)("centres each row of %i badges on the strip", (count) => {
-    const { hits, rect } = laid(count);
     const centre = rect.x + rect.width / 2;
     for (const top of new Set(hits.map(({ y }) => y))) {
       const row = hits.filter(({ y }) => y === top);

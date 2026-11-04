@@ -32,53 +32,59 @@ const hearts: Change = {
 describe("earningsBreakdown", () => {
   const labels = gameData.menuText.end.earnings;
 
-  it("totals pay, tips and card costs, and ignores heart changes", () => {
-    const changes = [pay(1_000), tip(150), tip(100), card(-400), hearts, pay(1_000)];
-    expect(earningsBreakdown(gameData, changes, { earned: cents(1_850), lost: cents(0) })).toEqual([
-      { amount: 2_000, kind: "fees", label: labels.fees },
-      { amount: 250, kind: "tips", label: labels.tips },
-      { amount: -400, kind: "cardCosts", label: labels.cardCosts },
-    ]);
-  });
-
-  it("counts a treat's cash in the Tips row", () => {
-    const changes = [pay(1_000), tip(100), treat(500)];
+  // Each line as [kind, amount], labelled from the data.
+  it.each<[string, Change[], number, number, [keyof typeof labels, number][]]>([
+    [
+      "totals pay, tips and card costs, and ignores heart changes",
+      [pay(1_000), tip(150), tip(100), card(-400), hearts, pay(1_000)],
+      1_850,
+      0,
+      [
+        ["fees", 2_000],
+        ["tips", 250],
+        ["cardCosts", -400],
+      ],
+    ],
+    [
+      "counts a treat's cash in the Tips row",
+      [pay(1_000), tip(100), treat(500)],
+      1_600,
+      0,
+      [
+        ["fees", 1_000],
+        ["tips", 600],
+        ["cardCosts", 0],
+      ],
+    ],
+    [
+      "adds lucky finds and starting money only when the run had some",
+      [pay(1_000), card(500)],
+      2_500,
+      0,
+      [
+        ["fees", 1_000],
+        ["tips", 0],
+        ["luckyFinds", 500],
+        ["cardCosts", 0],
+        ["start", 1_000],
+      ],
+    ],
+    [
+      "shows the cash lost when every owner fired you as a cost, left out of the earnings",
+      [pay(1_000), tip(300), card(-100)],
+      1_000,
+      200,
+      [
+        ["fees", 1_000],
+        ["tips", 300],
+        ["cardCosts", -100],
+        ["cashLost", -200],
+      ],
+    ],
+  ])("%s", (_, changes, earned, lost, lines) => {
     expect(
-      earningsBreakdown(gameData, changes, { earned: cents(1_600), lost: cents(0) }).map(
-        ({ amount, kind }) => [kind, amount],
-      ),
-    ).toEqual([
-      ["fees", 1_000],
-      ["tips", 600],
-      ["cardCosts", 0],
-    ]);
-  });
-
-  it("adds lucky finds and starting money only when the run had some", () => {
-    const changes = [pay(1_000), card(500)];
-    expect(
-      earningsBreakdown(gameData, changes, { earned: cents(2_500), lost: cents(0) }).map(
-        ({ amount, kind }) => [kind, amount],
-      ),
-    ).toEqual([
-      ["fees", 1_000],
-      ["tips", 0],
-      ["luckyFinds", 500],
-      ["cardCosts", 0],
-      ["start", 1_000],
-    ]);
-  });
-
-  it("shows the cash lost when every owner fired you as a cost, left out of the earnings", () => {
-    const changes = [pay(1_000), tip(300), card(-100)];
-    expect(
-      earningsBreakdown(gameData, changes, { earned: cents(1_000), lost: cents(200) }),
-    ).toEqual([
-      { amount: 1_000, kind: "fees", label: labels.fees },
-      { amount: 300, kind: "tips", label: labels.tips },
-      { amount: -100, kind: "cardCosts", label: labels.cardCosts },
-      { amount: -200, kind: "cashLost", label: labels.cashLost },
-    ]);
+      earningsBreakdown(gameData, changes, { earned: cents(earned), lost: cents(lost) }),
+    ).toEqual(lines.map(([kind, amount]) => ({ amount, kind, label: labels[kind] })));
   });
 
   it.each([

@@ -91,14 +91,11 @@ describe("newRun", () => {
     expect(state.modifiers.every(({ untilZone }) => untilZone === undefined)).toBe(true);
   });
 
-  it("takes no more dogs than the player owns slots", () => {
+  it("takes no more dogs than the player owns slots, and each dog once", () => {
     const pair = { dogs: ["ginger", "kilo"], gear: null, walker: "casey" } as const;
     expect(() => newRun(data, 1, pair)).toThrow("needs that many dog slots");
     expect(heartsByDog(newRun(data, 2, pair))).toEqual(startsOf(pair.dogs));
     expect(newRun(data, 1, { dogs: ["kilo"], gear: null, walker: "casey" }).pack).toHaveLength(1);
-  });
-
-  it("rejects a dog listed twice", () => {
     expect(() => newRun(data, 3, { dogs: ["kilo", "kilo"], gear: null, walker: "casey" })).toThrow(
       "only once",
     );

@@ -73,10 +73,9 @@ const rows = [
 ] as const;
 
 describe("home layout", () => {
-  it("keeps six pixels above the contiguous picker and Start stack and two below", () => {
+  it("keeps the hero gap above the contiguous picker and Start stack and two below", () => {
     const { gateBar, heroSectionGap, sectionGap, startGap } = HOME_LAYOUT;
     expect(sections.walker.y - gateBar.y - gateBar.height).toBe(heroSectionGap);
-    expect(heroSectionGap).toBe(6);
     const stack = [sections.walker, sections.dogs, sections.pocket];
     for (let i = 1; i < stack.length; i += 1) {
       const above = stack[i - 1];
@@ -88,6 +87,8 @@ describe("home layout", () => {
     expect(
       inside(insetRect(-HOME_LAYOUT.startFocusOutset, startButton), SCREEN_LAYOUT.screen),
     ).toBe(true);
+    // Start walk's loading label leaves a margin inside the button (its fit: ui/textRoles.test.ts).
+    expect(HOME_LAYOUT.startLoading.room).toBeLessThan(startButton.width);
   });
 
   it("keeps full-size home pending progress clear of the divider, picker and Start target", () => {
@@ -187,24 +188,18 @@ describe("home layout", () => {
       left: section.x + sectionFrame.edge,
       right: section.x + section.width - sectionFrame.edge,
     };
-    it("keep the selected mark inside the section's frame", () => {
+    it("keep the selected mark inside the frame and below the heading, evenly spaced", () => {
+      const { capHeight } = fontFileMetrics("font-title");
+      const headingBottom = section.y + HOME_LAYOUT.bandText.y + capHeight * TEXT_SCALE;
       expect(Math.min(...tiles.map((tile) => tile.x)) + MARK_OFFSET.x).toBeGreaterThanOrEqual(
         inner.left,
       );
-    });
-    it("keep the selected mark below the band's heading", () => {
-      const { capHeight } = fontFileMetrics("font-title");
-      const headingBottom = section.y + HOME_LAYOUT.bandText.y + capHeight * TEXT_SCALE;
       expect(Math.min(...tiles.map((tile) => tile.y)) + MARK_OFFSET.y).toBeGreaterThanOrEqual(
         headingBottom,
       );
-    });
-    it("end inside the frame", () => {
       expect(Math.max(...tiles.map((tile) => tile.x + tile.width))).toBeLessThanOrEqual(
         inner.right,
       );
-    });
-    it("are spaced evenly along a row", () => {
       const row = tiles.filter((tile) => tile.y === tiles[0]?.y);
       const gaps = row
         .slice(1)
@@ -248,13 +243,10 @@ describe("the Pocket's tiles", () => {
 describe("Pet shop", () => {
   const { board, ...shop } = HOME_LAYOUT.petShop;
 
-  it("holds its board inside its frame, at the top", () => {
+  it("holds its board at the top of its frame, under the street sign with room for the bob", () => {
     expect(board.y).toBe(shop.y);
     expect(board.x).toBeGreaterThanOrEqual(shop.x);
     expect(board.x + board.width).toBeLessThanOrEqual(shop.x + shop.width);
-  });
-
-  it("leaves room under the street sign for the bob", () => {
     const { streetSign } = HOME_LAYOUT;
     expect(shop.y - FEEDBACK.shopBobSteps.length).toBeGreaterThan(0);
     expect(Math.min(...FEEDBACK.shopBobSteps)).toBeGreaterThanOrEqual(-2);
@@ -309,17 +301,12 @@ describe.each([
     },
   );
 
-  it("runs the hit areas side by side, none over another, to the screen's right edge", () => {
+  // After the bank's widest well, ending on the face Help's close control takes.
+  it("runs the hit areas side by side to the screen's right edge", () => {
     const ends = hits.map((hit) => hit.x + hit.width);
     expect(hits.slice(1).map((hit) => hit.x)).toEqual(ends.slice(0, -1));
     expect(ends.at(-1)).toBe(SCREEN_CONFIG.width);
-  });
-
-  it("ends on the face Help's close control takes", () => {
     expect(buttons.at(-1)?.[1].face).toEqual(HOME_BAR_LAST_FACE);
-  });
-
-  it("keeps the bank's widest well before the first face", () => {
     const { well } = HOME_LAYOUT.topBar;
     expect(well.x + well.maxWidth).toBeLessThan(buttons[0]?.[1].face.x ?? 0);
   });
@@ -538,12 +525,6 @@ describe("a detail card", () => {
     },
   );
 
-  // Every card's status or price is its last row, under the well at the text margin: the well's
-  // left edge.
-  it("sets the status at the text margin, the well's left edge", () => {
-    expect(pad).toBe(well.x);
-  });
-
   // A dog's or walker's status sits a paragraph's 28 rows under its last line's capitals.
   it.each(
     cards.flatMap(([kind, card]) => (kind === "gear" ? [] : [[card.title, kind, card] as const])),
@@ -591,7 +572,7 @@ describe("a detail card", () => {
   );
 
   it.each(dogCards)(
-    "sets the photo, name and role of %s's owner, %s, %s, inside the card, clear of its other parts",
+    "sets the photo, name and role of %s's owner, %s, %s, inside the card, clear of all else, level with the well",
     (_title, name, role, card) => {
       const rows = rowsOf("dog", card);
       const layout = detailCardLayout(BODY, rows);
@@ -640,18 +621,7 @@ describe("a detail card", () => {
       expect(texts.flatMap((a, i) => texts.slice(i + 1).filter((b) => rectsOverlap(a, b)))).toEqual(
         [],
       );
-    },
-  );
-
-  it.each(dogCards)(
-    "sets the well's bottom row level with %s's owner's photo's",
-    (_title, _name, role, card) => {
-      const rows = rowsOf("dog", card);
-      const layout = detailCardLayout(BODY, rows);
-      const ownerIndex = rows.beside.findIndex((row) => typeof row !== "number");
-      const at = { x: besideX, y: layout.beside[ownerIndex] ?? 0 };
-      const { photo } = detailOwner(BODY, at, roleLines(role).length);
-      expect(layout.wellY + well.size).toBe(photo.y + photo.height);
+      expect(layout.wellY + well.size).toBe(spot.photo.y + spot.photo.height);
     },
   );
 
@@ -675,9 +645,12 @@ describe("a detail card", () => {
     expect(size).toEqual({ h: face, w: face });
   });
 
-  it("frames the face as the walk's dog card does", () => {
+  // Every card's status or price is its last row, under the well at the text margin: the well's
+  // left edge.
+  it("frames the face as the walk's dog card does, the well at the text margin", () => {
     const spot = detailOwner(BODY, { x: besideX, y: 40 }, 1);
     expect(spot.photo).toEqual(ownerPhotoRect(face, spot.face));
+    expect(pad).toBe(well.x);
   });
 
   // The rows a part leaves above and below it inside its row.
@@ -702,13 +675,6 @@ describe("a detail card", () => {
       expect(spot.role.y).toBeGreaterThan(spot.name.y + inkRowsFromCapTop(BODY) * 2);
     },
   );
-});
-
-// Start walk's labels keep inside the button (each fits the room: ui/textRoles.test.ts).
-describe("Start walk's loading label", () => {
-  it("leaves a margin inside the button", () => {
-    expect(HOME_LAYOUT.startLoading.room).toBeLessThan(startButton.width);
-  });
 });
 
 // The dog slot sign hangs on the Pet shop's front, its board inside its art and its outline
@@ -745,21 +711,18 @@ describe("the dog slot sign", () => {
     expect(rectsOverlap(hit, rect)).toBe(false);
   });
 
-  it("draws its board inside its art, in the gate scene", () => {
+  // Its cream inside its board, the board inside its art and a hit area at least 44 a side on
+  // the shop, and its outline inside the shop's, in the gate scene.
+  it("nests its cream, board, hit area and outline in the art, the shop and the gate", () => {
+    expect(inside(cream, board)).toBe(true);
     expect(inside(board, { ...frameSize(key), ...art })).toBe(true);
+    expect(inside(board, hit)).toBe(true);
+    expect(Math.min(hit.height, hit.width)).toBeGreaterThanOrEqual(44);
+    expect(inside(hit, petShop)).toBe(true);
+    expect(inside(outline, insetRect(-AFFORD_OUTSET, petShop))).toBe(true);
     expect(
       inside(outline, { height: gate.height, width: SCREEN_CONFIG.width, x: 0, y: gate.y }),
     ).toBe(true);
-  });
-
-  it("keeps its outline inside the Pet shop's and its hit area on the shop", () => {
-    expect(inside(outline, insetRect(-AFFORD_OUTSET, petShop))).toBe(true);
-    expect(inside(hit, petShop)).toBe(true);
-  });
-
-  it("covers the board with a hit area at least 44 a side", () => {
-    expect(Math.min(hit.height, hit.width)).toBeGreaterThanOrEqual(44);
-    expect(inside(board, hit)).toBe(true);
   });
 
   // Each price once: slots at one price set the same line.
@@ -776,10 +739,6 @@ describe("the dog slot sign", () => {
     { capY: headCapY, text: gameData.homeText.slotSign },
     ...prices.map((text) => ({ capY: priceCapY, text })),
   ];
-
-  it("finds its cream inside the board", () => {
-    expect(inside(cream, board)).toBe(true);
-  });
 
   it.each(lines)("sets $text on the cream", ({ capY, text }) => {
     const width = inkWidth("font-body", { scale }, text);
@@ -803,14 +762,11 @@ describe("the update modal", () => {
   const TITLE = fontFileMetrics("font-title");
   const { capY } = updateModalText(TITLE);
 
-  it("keeps its card below the live top bar and inside the screen", () => {
+  it("centres the button inside its card, under the top bar, clear of its title and close control", () => {
     expect(
       inside(panel, { height: SCREEN_CONFIG.height, width: SCREEN_CONFIG.width, x: 0, y: 0 }),
     ).toBe(true);
     expect(panel.y).toBeGreaterThan(HOME_LAYOUT.topBar.height);
-  });
-
-  it("centres the button inside the modal, clear of its title and close control", () => {
     expect(inside(button, panel)).toBe(true);
     expect(button.x + button.width / 2).toBe(panel.x + panel.width / 2);
     const close = closeControl(panel).hit;
@@ -818,12 +774,9 @@ describe("the update modal", () => {
     expect(button.y).toBeGreaterThan(cardTitleRow(panel).y + cardTitleRow(panel).height);
   });
 
-  it("covers the standard button with its full tap target", () => {
+  it("covers the button with a full tap target, its fixed-size label inside its face", () => {
     expect(hit.height).toBeGreaterThanOrEqual(MIN_TAP_SIZE);
     expect(inside(button, hit)).toBe(true);
-  });
-
-  it("keeps the fixed-size button label inside its face", () => {
     expect(capY).toBeGreaterThanOrEqual(button.y);
     expect(capY + TITLE.capHeight * TEXT_SCALE).toBeLessThanOrEqual(button.y + button.height);
   });

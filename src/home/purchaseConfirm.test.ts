@@ -30,7 +30,7 @@ const count = (save: SaveDocument, purchase: Purchase): number =>
       : save.owned.dogSlots.filter((slot) => slot === purchase.slot).length;
 
 describe("requestPurchase", () => {
-  it.each(forSale)("asks to confirm a $kind the bank covers, at its price or more", (item) => {
+  it.each(forSale)("asks to confirm a $kind the bank covers, refusing one a cent short", (item) => {
     const price = priceOf(item.purchase);
     for (const spare of [0, 1, 10_000]) {
       const request = requestPurchase(data, withBank(price + spare), item.name, item.purchase);
@@ -39,16 +39,10 @@ describe("requestPurchase", () => {
         pending: { bankAfter: spare, name: item.name, price, purchase: item.purchase },
       });
     }
-  });
-
-  it.each(forSale)("refuses a $kind the bank is short of, with no confirm", (item) => {
-    const request = requestPurchase(
-      data,
-      withBank(priceOf(item.purchase) - 1),
-      item.name,
-      item.purchase,
-    );
-    expect(request).toEqual({ kind: "refused", reason: "cantAfford" });
+    expect(requestPurchase(data, withBank(price - 1), item.name, item.purchase)).toEqual({
+      kind: "refused",
+      reason: "cantAfford",
+    });
   });
 
   it("refuses something owned as not for sale", () => {
@@ -73,24 +67,23 @@ describe("answerPurchase", () => {
     };
   };
 
-  it.each(forSale)("buys a $kind exactly once on Buy, leaving the bank it showed", (item) => {
-    const { pending, result, save } = answered(item, "buy");
-    expect(result.kind).toBe("bought");
-    if (result.kind === "bought") {
-      expect(result.save.bankCents).toBe(pending.bankAfter);
-      expect(count(result.save, item.purchase)).toBe(count(save, item.purchase) + 1);
-    }
-  });
-
-  it.each(forSale)("buys no $kind on Cancel", (item) => {
-    expect(answered(item, "cancel").result).toEqual({ kind: "cancelled" });
-  });
-
-  it.each(forSale)("refuses a $kind whose price the bank no longer covers", (item) => {
-    const { pending } = answered(item, "buy");
-    const result = answerPurchase(data, withBank(pending.price - 1), pending, "buy");
-    expect(result).toEqual({ kind: "refused", reason: "cantAfford" });
-  });
+  // Buy, then a Buy the bank no longer covers, then Cancel.
+  it.each(forSale)(
+    "buys a $kind exactly once on Buy, leaving the bank it showed, and none on a short bank or Cancel",
+    (item) => {
+      const { pending, result, save } = answered(item, "buy");
+      expect(result.kind).toBe("bought");
+      if (result.kind === "bought") {
+        expect(result.save.bankCents).toBe(pending.bankAfter);
+        expect(count(result.save, item.purchase)).toBe(count(save, item.purchase) + 1);
+      }
+      expect(answerPurchase(data, withBank(pending.price - 1), pending, "buy")).toEqual({
+        kind: "refused",
+        reason: "cantAfford",
+      });
+      expect(answered(item, "cancel").result).toEqual({ kind: "cancelled" });
+    },
+  );
 });
 
 // One key of each answer: the keyBindings tests check every confirm and pause key.
@@ -139,14 +132,12 @@ describe("every buy point", () => {
     expect(callers).toEqual(["home/purchaseConfirm.ts"]);
   });
 
-  const savers = calling("purchaseInProfile").filter((path) => path !== "scenes/profileStore.ts");
-
-  it("saves a purchase somewhere", () => {
+  it("saves a purchase only where it asks to confirm and answers the confirm", () => {
+    const savers = calling("purchaseInProfile").filter((path) => path !== "scenes/profileStore.ts");
     expect(savers.length).toBeGreaterThan(0);
-  });
-
-  it.each(savers)("%s asks to confirm and saves only what the confirm bought", (path) => {
-    expect(calling("requestPurchase")).toContain(path);
-    expect(calling("answerPurchase")).toContain(path);
+    for (const path of savers) {
+      expect(calling("requestPurchase"), path).toContain(path);
+      expect(calling("answerPurchase"), path).toContain(path);
+    }
   });
 });

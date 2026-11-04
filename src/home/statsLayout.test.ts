@@ -161,6 +161,13 @@ const wallRows = wallRects(
   wallCells.map((cell) => wallRowHeight(wallLineTops(BODY, cell))),
 );
 const dogStatRows = DOG_STATS.map((stat) => ({ label: words.dogColumns[stat], value: "9999" }));
+// The Walks tab's rows with a best walk with the fullest pack.
+const fullPack = keysOf(gameData.dogs).slice(0, read(gameData.tuning, "counts", "packSizeMax"));
+const { outcomes, overall } = overallRows(gameData, {
+  ...save.stats,
+  bestCentsByPackSize: { [fullPack.length]: cents(999_900) },
+  bestWalk: { dogs: fullPack, zonesFinished: 4 },
+});
 
 describe("the Walks and Dogs tabs' rows", () => {
   it.each([...walksRows, ...dogStatRows].map((row) => [row.label, row.value] as const))(
@@ -172,16 +179,10 @@ describe("the Walks and Dogs tabs' rows", () => {
 });
 
 describe("the Dogs tab's blocks", () => {
-  it.each([[WIDEST_DOG_TITLE] as const])(
-    "fits %s's name beside its face, clear of the scrollbar",
-    (name) => {
-      expect(titleRight(rows.left + dogs.nameDx, name)).toBeLessThanOrEqual(BAR_LEFT);
-    },
-  );
-
-  // Each block: the face left of the name, the face and the name's ink over the rows, the
-  // last row's ink over the rule above the next block.
-  it("keeps each block's face, name, rows and rule in order", () => {
+  // Each block: the face left of the name, the widest name clear of the scrollbar, the face and
+  // the name's ink over the rows, the last row's ink over the rule above the next block.
+  it(`keeps each block's face, name (${WIDEST_DOG_TITLE}'s at widest), rows and rule in order`, () => {
+    expect(titleRight(rows.left + dogs.nameDx, WIDEST_DOG_TITLE)).toBeLessThanOrEqual(BAR_LEFT);
     const top = dogBlockTop(0);
     const nameInk = top + dogs.nameY + inkRowsFromCapTop(TITLE) * TEXT_SCALE;
     const lastRowInk = inkBottom(top + dogs.rowsY + (DOG_STATS.length - 1) * rows.pitch);
@@ -195,12 +196,6 @@ describe("the Dogs tab's blocks", () => {
 // blocks: the first heading level with the first block, and each later heading the blocks' gap
 // under the previous section's last row's pitch.
 describe("the Walks tab's sections", () => {
-  const fullPack = keysOf(gameData.dogs).slice(0, read(gameData.tuning, "counts", "packSizeMax"));
-  const { outcomes, overall } = overallRows(gameData, {
-    ...save.stats,
-    bestCentsByPackSize: { [fullPack.length]: cents(999_900) },
-    bestWalk: { dogs: fullPack, zonesFinished: 4 },
-  });
   const sections = [
     { heading: words.sections.overall, rows: overall.length },
     { heading: words.sections.runs, rows: outcomes.length },
@@ -222,7 +217,9 @@ describe("the Walks tab's sections", () => {
 });
 
 // A tab's values end as far in from the card's right edge as its labels start from its left,
-// with no scrollbar; beside one they end at the rows' right edge, as the shop's rows do.
+// with no scrollbar; beside one they end at the rows' right edge, as the shop's rows do. The
+// earned count with every badge earned, ending there beside the scrollbar, starts inside the
+// rows.
 describe("the rows' right edge", () => {
   it.each<[string, boolean, number]>([
     ["with no scrollbar", false, panel.x + panel.width - (rows.left - panel.x)],
@@ -230,12 +227,8 @@ describe("the rows' right edge", () => {
   ])("%s", (_, scrolls, right) => {
     expect(statsListFrame(scrolls).right).toBe(right);
   });
-});
 
-// The earned count with every badge earned, ending at the list's right text edge beside the
-// scrollbar, starts inside the rows.
-describe("the earned count", () => {
-  it("fits between the rows' edges", () => {
+  it("fits the earned count between the rows' edges", () => {
     const all = badgeWall(gameData, { achievements: BADGES.map(({ id }) => id) });
     const text = earnedText(gameData, all);
     const left = statsListFrame(true).right - inkWidth("font-body", STYLE, text);
@@ -275,12 +268,6 @@ describe("each tab's scroll", () => {
   const lastCell = wallCells.at(-1);
   const lastTop =
     lastCell === undefined ? wallText.y : (wallLineTops(BODY, lastCell).at(-1) ?? wallText.y);
-  const fullPack = dogIds.slice(0, read(gameData.tuning, "counts", "packSizeMax"));
-  const { outcomes, overall } = overallRows(gameData, {
-    ...save.stats,
-    bestCentsByPackSize: { [fullPack.length]: cents(999_900) },
-    bestWalk: { dogs: fullPack, zonesFinished: 4 },
-  });
   const walks = [overall.length, outcomes.length];
   const lastHeading = walksHeadingTops(walks).at(-1) ?? 0;
   const walksLastRow = lastHeading + STATS_LAYOUT.walks.rowsY + (outcomes.length - 1) * rows.pitch;

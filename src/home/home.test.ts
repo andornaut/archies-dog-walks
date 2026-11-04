@@ -165,19 +165,15 @@ describe("tapDog and tapGear", () => {
 });
 
 describe("packCapacity", () => {
+  const max = read(TEST_TUNING, "counts", "packSizeMax");
   it.each([
     ["the starting slot", [1], 1],
     ["slots bought in order", [1, 2], 2],
     ["a later slot bought first", [1, 3], 2],
     ["every slot", [1, 2, 3], 3],
-  ])("holds one dog per slot owned, whichever they are: %s", (_, dogSlots, expected) => {
+    ["more slots than a pack holds", Array.from({ length: max + 2 }, (_, i) => i + 1), max],
+  ])("holds a dog per slot owned, whichever, up to a pack: %s", (_, dogSlots, expected) => {
     expect(packCapacity(data, { dogSlots })).toBe(expected);
-  });
-
-  it("holds no more than a pack can, however many slots", () => {
-    const max = read(TEST_TUNING, "counts", "packSizeMax");
-    const many = Array.from({ length: max + 2 }, (_, i) => i + 1);
-    expect(packCapacity(data, { dogSlots: many })).toBe(max);
   });
 });
 

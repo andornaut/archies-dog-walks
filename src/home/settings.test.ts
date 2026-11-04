@@ -228,19 +228,13 @@ describe("the settings card", () => {
     ]);
   });
 
-  it.each(SHIPPED_ROWS.map((row, i) => [row.label, i] as const))(
-    "makes the %s row a tap target at least 44 px each way",
-    (_, i) => {
-      const rect = rows[i]?.rect;
-      expect(Math.min(rect?.height ?? 0, rect?.width ?? 0)).toBeGreaterThanOrEqual(44);
-    },
-  );
-
   // The row's parts in reading order: nothing overlaps, and the label's line and the note's
   // lines run left of the control or the percentage.
   it.each(SHIPPED_ROWS.map((row, i) => [row.label, i] as const))(
-    "keeps the %s row's parts apart",
+    "makes the %s row a tap target at least 44 px each way, its parts apart",
     (_, i) => {
+      const rect = rows[i]?.rect;
+      expect(Math.min(rect?.height ?? 0, rect?.width ?? 0)).toBeGreaterThanOrEqual(44);
       const parts = new Map(rowParts(i));
       const control = parts.get("control") ?? parts.get("percentage");
       for (const [name, ink] of parts) {
@@ -286,8 +280,6 @@ const labelGlyphs = [...WIDEST_LABEL].flatMap((char) => {
 });
 const labelInkBottom =
   Math.max(...labelGlyphs.map((glyph) => glyph.yOffset + glyph.height)) - bodyFont.capTop;
-// ui-detail-card's frame along its bottom: a tan shade, a dark brown line and an ink line.
-const CARD_FRAME_BOTTOM = 3;
 
 describe.each([
   ["with the Install row", shapes],
@@ -305,13 +297,9 @@ describe.each([
     (last.control?.y ?? 0) + (last.control?.height ?? 0),
   );
 
-  it("sets its capitals the label-to-help gap under the last row's lowest ink", () => {
+  it("sets its capitals the label-to-help gap under the last row, the modal inset over the card's edge", () => {
     expect(buildLabelY - lastInk).toBe(LABEL_HELP_GAP);
-  });
-
-  it("leaves the modal inset from its lowest ink to the card's outer bottom edge", () => {
-    const innerBottom = panel.y + panel.height - CARD_FRAME_BOTTOM;
-    expect(innerBottom + CARD_FRAME_BOTTOM - (buildLabelY + labelInkBottom)).toBe(MODAL.pad);
+    expect(panel.y + panel.height - (buildLabelY + labelInkBottom)).toBe(MODAL.pad);
   });
 
   // A tap on the label lands on the card outside every row, so it neither acts nor closes it.
@@ -378,11 +366,8 @@ describe.each(keysOf(gameData.menuText.settings.installSteps))(
       );
     });
 
-    it("starts the steps under the title row", () => {
+    it("starts the steps under the title row, the button glyph on their first line's capitals", () => {
       expect(steps.y).toBeGreaterThan(belowTitleRow(card));
-    });
-
-    it("centres the button glyph on the first line's capitals, left of the steps", () => {
       expect(2 * (icon.y - steps.y) + size).toBe(body.capHeight * 2);
       expect(icon.x + size).toBeLessThan(steps.x);
       expect(glyph.y).toBeGreaterThan(belowTitleRow(card));

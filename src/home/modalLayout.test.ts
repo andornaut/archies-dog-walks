@@ -42,24 +42,20 @@ it("omits absent title reserves and rejects a word wider than the fixed-font tit
 const area = overlayRegion("home");
 const body = { height: 80, width: 180 };
 
+// Centred in the full viewport rather than its dim region, whether or not a protected
+// character overlaps.
 it.each([
-  { height: 100, width: 100, x: 130, y: 180 },
-  { height: 100, width: 100, x: 130, y: 300 },
-  { height: 150, width: 60, x: 120, y: 190 },
-])("keeps vertical centring when a protected character overlaps at $x,$y", (avoid) => {
-  const placed = modalRect(area, avoid, body);
-  expect(inside(placed, insetRect(MODAL.margin, area))).toBe(true);
+  ["home", area, { height: 100, width: 100, x: 130, y: 180 }],
+  ["home", area, { height: 100, width: 100, x: 130, y: 300 }],
+  ["home", area, { height: 150, width: 60, x: 120, y: 190 }],
+  ["home", area, undefined],
+  ["walk", SCREEN_LAYOUT.walkView, undefined],
+] as const)("centres a modal on the screen over the %s region, avoiding %j", (_, region, avoid) => {
+  const placed = modalRect(region, avoid, body);
+  expect(inside(placed, insetRect(MODAL.margin, region))).toBe(true);
   expect(placed.y + placed.height / 2).toBe(SCREEN_CONFIG.height / 2);
+  expect(placed).toMatchObject(body);
 });
-
-it.each([overlayRegion("home"), SCREEN_LAYOUT.walkView])(
-  "centres in the full viewport rather than its dim region",
-  (region) => {
-    const placed = modalRect(region, undefined, body);
-    expect(placed.y + placed.height / 2).toBe(SCREEN_CONFIG.height / 2);
-    expect(placed).toMatchObject(body);
-  },
-);
 
 it("clamps a tall full-size panel inside the protected walk region", () => {
   const bounds = insetRect(MODAL.margin, SCREEN_LAYOUT.walkView);

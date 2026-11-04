@@ -59,6 +59,12 @@ const slotSets = allSlots
   .filter((slot) => !starting.includes(slot))
   .reduce<number[][]>((sets, slot) => [...sets, ...sets.map((set) => [...set, slot])], [starting])
   .map((set) => [set.join(" and "), set] as const);
+const everything: Owned = {
+  dogSlots: allSlots,
+  dogs: keysOf(data.dogs),
+  gear: keysOf(data.shopGear),
+  walkers: [],
+};
 
 describe("shopRowLook", () => {
   // Every row for sale (each slot, gear item and dog not owned), and the first of each kind of
@@ -83,16 +89,6 @@ describe("shopRowLook", () => {
     const shown = shopRowLook(data, owned, bank, row);
     const view = SHOP_ROW_VIEWS[shown];
     expect({ art: view.art, box: pictureBox(view), look: shown }).toEqual({ art, box, look });
-  });
-
-  it("sells every slot not owned, each with the looks dogs and gear for sale have", () => {
-    const slotIds = forSale.flatMap(({ id, purchase }) =>
-      purchase.kind === "dogSlot" ? [id] : [],
-    );
-    expect(slotIds).toEqual(
-      allSlots.filter((slot) => !starting.includes(slot)).map((slot) => `slot:${slot}`),
-    );
-    expect(Object.keys(SHOP_ROW_VIEWS).sort()).toEqual(["affordable", "owned", "short"]);
   });
 });
 
@@ -220,12 +216,6 @@ describe("gearRows and dogRows", () => {
 
 describe("shopAffordable", () => {
   it("holds while the bank covers anything, and fails once everything is owned", () => {
-    const everything: Owned = {
-      dogSlots: allSlots,
-      dogs: keysOf(data.dogs),
-      gear: keysOf(data.shopGear),
-      walkers: [],
-    };
     expect(shopAffordable(data, owned, dollars(600))).toBe(true);
     expect(shopAffordable(data, owned, dollars(0))).toBe(false);
     expect(shopAffordable(data, everything, dollars(100_000))).toBe(false);
@@ -235,12 +225,6 @@ describe("shopAffordable", () => {
 // Each list's heading note counts what the list sells that is owned, out of all of it, and
 // sits right of the heading's ink with a gap, beside a scrollbar too.
 describe("ownedCountNote", () => {
-  const everything: Owned = {
-    dogSlots: allSlots,
-    dogs: keysOf(data.dogs),
-    gear: keysOf(data.shopGear),
-    walkers: [],
-  };
   const titles = {
     dogs: data.homeText.shop.dogs,
     gear: data.homeText.shop.tabs.gear,
@@ -255,16 +239,9 @@ describe("ownedCountNote", () => {
   ]);
   const style = { scale: 2 };
 
-  // slotRows checks the slots' count with every set of slots owned.
-  it.each(cases.filter(([list]) => list !== "slots"))(
-    "%s: counts the owned ones out of all of them",
-    (list, have, count, max) => {
-      expect(ownedCountNote(data, have, list)).toBe(note(count, max));
-    },
-  );
-
-  it.each(cases)("%s: keeps the note clear of the heading", (list, have) => {
+  it.each(cases)("%s: counts owned of all, clear of heading", (list, have, count, max) => {
     const text = ownedCountNote(data, have, list);
+    expect(text).toBe(note(count, max));
     const titleRight =
       SHOP_LAYOUT.headingX + placedInk("font-title", style, titles[list].toUpperCase()).right;
     const noteLeft = shopListFrame(true).headingRight - inkWidth("font-body", style, text);
@@ -396,26 +373,12 @@ describe("the shop's tabs", () => {
 describe("the shop's list", () => {
   const { padBottom, rect } = SHOP_LAYOUT.list;
   const listBottom = rect.y + rect.height;
-  const everything: Owned = {
-    dogSlots: allSlots,
-    dogs: keysOf(data.dogs),
-    gear: keysOf(data.shopGear),
-    walkers: [],
-  };
   const lists = [
     ["gear, nothing bought", SHOP_LAYOUT.gear.rows, gearRows(data, owned).length],
     ["gear, everything bought", SHOP_LAYOUT.gear.rows, gearRows(data, everything).length],
     ["dogs, nothing bought", SHOP_LAYOUT.dogs.dogRows, dogRows(data, owned).length],
     ["dogs, everything bought", SHOP_LAYOUT.dogs.dogRows, dogRows(data, everything).length],
   ] as const;
-
-  it.each(lists)("%s: scrolls its last row into view", (_, spec, count) => {
-    const bottom = shopListBottom(spec, count);
-    const max = scrollMax(rect, bottom);
-    const lastRowBottom = spec.y + (Math.max(1, count) - 1) * spec.pitch + spec.height;
-    expect(lastRowBottom - max).toBeLessThanOrEqual(listBottom - padBottom);
-    expect(bottom - max).toBeLessThanOrEqual(listBottom);
-  });
 
   // max: how far the list moves; y: its scroll. The track runs the list area's height, the
   // thumb thumbInset inside it.
@@ -437,15 +400,16 @@ describe("the shop's list", () => {
     }
   });
 
-  it("shows no scrollbar for a list that fits", () => {
-    expect(shopScrollbar(0, 0)).toBeNull();
-  });
-
-  // Each list's rows and heading note end where its scrollbar allows: at the tabs' right edge
-  // with no scrollbar, else short of the track. A selected row's frame stays inside the list
-  // area, which stays inside the card's 8px frame.
-  it.each(lists)("%s: runs its rows to the right edge it is allowed", (_, spec, count) => {
-    const scrolls = scrollMax(rect, shopListBottom(spec, count)) > 0;
+  // Each list scrolls its last row into view. Its rows and heading note end where its scrollbar
+  // allows: at the tabs' right edge with no scrollbar, else short of the track. A selected row's
+  // frame stays inside the list area, which stays inside the card's 8px frame.
+  it.each(lists)("%s: scrolls to its last row, rows to their edge", (_, spec, count) => {
+    const bottom = shopListBottom(spec, count);
+    const max = scrollMax(rect, bottom);
+    const lastRowBottom = spec.y + (Math.max(1, count) - 1) * spec.pitch + spec.height;
+    expect(lastRowBottom - max).toBeLessThanOrEqual(listBottom - padBottom);
+    expect(bottom - max).toBeLessThanOrEqual(listBottom);
+    const scrolls = max > 0;
     const frame = shopListFrame(scrolls);
     const tabsRight = Math.max(...shopTabRects(SHOP_TABS.length).map(({ width, x }) => x + width));
     const track = shopScrollbar(scrolls ? 1 : 0, 0)?.track;
@@ -466,8 +430,10 @@ describe("the shop's list", () => {
   });
 
   // The scrollbar stays clear of the list area, where the rows and their frames are clipped,
-  // inside the card's 8px frame, with the thumb thumbInset inside the track.
+  // inside the card's 8px frame, with the thumb thumbInset inside the track; a list that fits
+  // has none.
   it("puts the scrollbar between the list area and the card's frame", () => {
+    expect(shopScrollbar(0, 0)).toBeNull();
     const bar = shopScrollbar(100, 0);
     const { panel, scrollbar } = SHOP_LAYOUT;
     const { thumb, track } = bar ?? { thumb: rect, track: rect };

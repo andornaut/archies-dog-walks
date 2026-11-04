@@ -172,7 +172,9 @@ describe("badgeWall", () => {
     const wall = badgeWall(data, { achievements: [a.id, c.id] });
     expect(wall.map(({ id }) => id)).toEqual([b.id, d.id, c.id, a.id]);
     expect(wall.filter(({ earned }) => earned).map(({ id }) => id)).toEqual([c.id, a.id]);
-    expect(earnedBadges(data, [a.id, d.id, c.id]).map(({ id }) => id)).toEqual([d.id, c.id, a.id]);
+    const shown = earnedBadges(data, [a.id, d.id, c.id]);
+    expect(shown.map(({ id }) => id)).toEqual([d.id, c.id, a.id]);
+    expect(shown.every(({ earned }) => earned)).toBe(true);
     expect(achievements.map(({ id }) => id)).toEqual([a.id, b.id, c.id, d.id]);
   });
 
@@ -183,16 +185,6 @@ describe("badgeWall", () => {
     expect(wall[0]).toMatchObject({ art: badgeKey(first.id), earned: true, name: first.name });
     expect(wall.filter(({ earned }) => earned).map(({ id }) => id)).toEqual([first.id, "squirrel"]);
     expect(earnedText(gameData, wall)).toBe(`2/${gameData.achievements.length} earned`);
-  });
-});
-
-describe("earnedBadges", () => {
-  it("lists the badges named, earned, in difficulty order whatever order they came in", () => {
-    const ids = orderedAchievements(gameData.achievements).map(({ id }) => id);
-    const [first, second, last] = [defined(ids[0]), defined(ids[2]), defined(ids.at(-1))];
-    const shown = earnedBadges(gameData, [last, first, second]);
-    expect(shown.map(({ id }) => id)).toEqual([first, second, last]);
-    expect(shown.every(({ earned }) => earned)).toBe(true);
   });
 });
 

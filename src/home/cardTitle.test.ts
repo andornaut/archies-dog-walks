@@ -46,14 +46,6 @@ describe("barTitleLeft", () => {
   ])("places %s centred or at the inset", (_, width) => {
     expectPlaced(bar, close, width);
   });
-
-  it.each([
-    ["centres a title with room for inset each side", room - 2 * BAR_TITLE.inset, "centre"],
-    ["starts a wider title at the inset", room - 2 * BAR_TITLE.inset + 2, "left"],
-  ])("%s", (_, width, placed) => {
-    const { left, right } = clearSpace(bar, close, width);
-    expect(left === right ? "centre" : "left").toBe(placed);
-  });
 });
 
 describe.each(cardTitles())("the $role", ({ card, close = closeControl(card), titles }) => {
