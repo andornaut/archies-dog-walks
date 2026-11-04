@@ -14,7 +14,7 @@ import type { RgbaImage } from "@andornaut/art-kit/rgbaImage";
 
 import { fannyPack as dropsFannyPack } from "./drops.ts";
 import { Mini } from "./mini.ts";
-import { bitmap, Grid, iconEdge, rgbPng, savePng, toImage } from "./pixel.ts";
+import { bitmap, Grid, iconEdge, rgbPng, run, savePng, toImage } from "./pixel.ts";
 
 const USAGE = `Usage:
   node art/tools/icons.ts preview OUT.png   every icon on the shop's slot colours, scaled up
@@ -207,13 +207,8 @@ export function build(): void {
 }
 
 if (import.meta.main) {
-  const argv = process.argv.slice(2);
-  if (argv.length === 2 && argv[0] === "preview") {
-    preview(argv[1]!);
-  } else if (argv.length === 1 && argv[0] === "build") {
-    build();
-  } else {
-    console.error(USAGE);
-    process.exit(1);
-  }
+  await run({
+    commands: { build: () => build(), "preview OUT.png": (out) => preview(out) },
+    doc: USAGE,
+  });
 }

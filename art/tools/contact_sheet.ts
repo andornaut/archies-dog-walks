@@ -1,4 +1,3 @@
-// node art/tools/contact_sheet.ts OUT.png KEY...
 // Nonproduction preview of exported sprites. Reads each key's public/art/sprites/<key>.png and .json
 // and writes one sheet per zone road colour at pixel.ts's groundSheetPath (OUT-<hex>.png): one row
 // per sprite, every frame in tag order and each cell sized from the largest frame, with pixel.ts's
@@ -13,7 +12,7 @@ import type { Frame } from "@andornaut/art-kit/grid";
 import { decodePng } from "@andornaut/art-kit/png";
 import { composeContactSheet } from "@andornaut/art-kit/raster";
 
-import { groundSheetPath, rgbPng } from "./pixel.ts";
+import { groundSheetPath, rgbPng, run } from "./pixel.ts";
 
 interface SheetData {
   frames: Record<string, { frame: { h: number; w: number; x: number; y: number } }>;
@@ -25,7 +24,8 @@ const GAME_DATA = "shared/export/game-data.json";
 const GAP = 4;
 const SCALE = 6;
 const SPRITES_DIR = "public/art/sprites";
-const USAGE = "node art/tools/contact_sheet.ts OUT.png KEY...";
+const USAGE = `Usage:
+  node art/tools/contact_sheet.ts OUT.png KEY...   OUT-<hex>.png per zone road colour`;
 
 /** Each zone's road colour as bare hex, in zone order. */
 async function zoneRoads(path: string): Promise<string[]> {
@@ -55,20 +55,31 @@ async function exportedSprite(dir: string, key: string): Promise<Sprite> {
   return [key, tags];
 }
 
-const [out, ...keys] = process.argv.slice(2);
-if (!out || !keys.length) {
-  console.error(USAGE);
-  process.exit(2);
+// One sheet per zone road colour of the keys' exported sprites, at out's groundSheetPath.
+async function contactSheets(keys: readonly string[], out: string): Promise<void> {
+  const grounds = await zoneRoads(GAME_DATA);
+  const sprites = await Promise.all(keys.map((key) => exportedSprite(SPRITES_DIR, key)));
+  for (const ground of new Set(grounds)) {
+    const sheet = composeContactSheet(
+      {
+        background: BACKGROUND,
+        cellSize: "largest-frame",
+        gap: GAP,
+        resolveRgb: rgb,
+        scale: SCALE,
+      },
+      sprites,
+      [ground],
+    );
+    const path = groundSheetPath(ground, out);
+    writeFileSync(path, rgbPng(sheet));
+    console.log("wrote", path);
+  }
 }
-const grounds = await zoneRoads(GAME_DATA);
-const sprites = await Promise.all(keys.map((key) => exportedSprite(SPRITES_DIR, key)));
-for (const ground of new Set(grounds)) {
-  const sheet = composeContactSheet(
-    { background: BACKGROUND, cellSize: "largest-frame", gap: GAP, resolveRgb: rgb, scale: SCALE },
-    sprites,
-    [ground],
-  );
-  const path = groundSheetPath(ground, out);
-  writeFileSync(path, rgbPng(sheet));
-  console.log("wrote", path);
+
+if (import.meta.main) {
+  await run({
+    commands: { "OUT.png KEY...": (out, ...keys) => contactSheets(keys, out) },
+    doc: USAGE,
+  });
 }

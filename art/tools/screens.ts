@@ -114,10 +114,12 @@ import {
   Grid,
   K,
   rgbPng,
+  run,
   savePng,
   type Sprite,
   type Tag,
   toImage,
+  UsageError,
 } from "./pixel.ts";
 import { LIT, rim, scope as roadScope } from "./road.ts";
 import { Canvas, image, rgb, text, textC, TILES, ZONES } from "./scene.ts";
@@ -2224,17 +2226,18 @@ export async function build(only?: string): Promise<void> {
 }
 
 if (import.meta.main) {
-  const argv = process.argv.slice(2);
-  if (argv.length === 2 && argv[0] === "preview") {
-    preview(argv[1]!);
-  } else if (argv.length === 2 && argv[0] === "shop-preview") {
-    shopPreview(argv[1]!);
-  } else if (argv.length === 2 && argv[0] === "build" && SCREENS.has(argv[1]!)) {
-    await build(argv[1]!);
-  } else if (argv.length === 1 && argv[0] === "build") {
-    await build();
-  } else {
-    console.error(USAGE);
-    process.exit(1);
-  }
+  await run({
+    commands: {
+      build: () => build(),
+      "build SCREEN": (screen) => {
+        if (!SCREENS.has(screen)) {
+          throw new UsageError();
+        }
+        return build(screen);
+      },
+      "preview OUT.png": (out) => preview(out),
+      "shop-preview OUT.png": (out) => shopPreview(out),
+    },
+    doc: USAGE,
+  });
 }

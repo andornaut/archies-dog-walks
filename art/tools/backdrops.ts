@@ -35,7 +35,7 @@ import { filledImage, paste, resizeNearest } from "@andornaut/art-kit/raster";
 import { type Random, randomInt, randomPick, randomStream } from "@andornaut/game-kit/random";
 
 import { sign, signWidth } from "./fonts.ts";
-import { dk, K, MURAL, rgbPng } from "./pixel.ts";
+import { dk, K, MURAL, rgbPng, run } from "./pixel.ts";
 import { LANE_PAINT } from "./roads.ts";
 import { Canvas, LAYOUT as SCENE_LAYOUT, rgb } from "./scene.ts";
 
@@ -4020,20 +4020,17 @@ export function build(): void {
 }
 
 if (import.meta.main) {
-  const argv = process.argv.slice(2);
-  if (argv.length === 2 && argv[0] === "preview") {
-    preview(argv[1]!);
-  } else if (argv.length === 1 && argv[0] === "camera") {
-    camera();
-  } else if (argv.length === 1 && argv[0] === "verges") {
-    console.log(JSON.stringify(VERGES, null, 2));
-  } else if (argv.length === 2 && argv[0] === "verges" && argv[1] === "--write") {
-    writeVerges();
-  } else if (argv.length === 1 && argv[0] === "build") {
-    build();
-    writeVerges();
-  } else {
-    console.error(USAGE);
-    process.exit(1);
-  }
+  await run({
+    commands: {
+      build: () => {
+        build();
+        writeVerges();
+      },
+      camera: () => camera(),
+      "preview OUT.png": (out) => preview(out),
+      verges: () => console.log(JSON.stringify(VERGES, null, 2)),
+      "verges --write": () => writeVerges(),
+    },
+    doc: USAGE,
+  });
 }

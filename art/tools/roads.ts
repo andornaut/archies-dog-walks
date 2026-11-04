@@ -33,7 +33,7 @@ import {
   shuffled,
 } from "@andornaut/game-kit/random";
 
-import { dk, Grid, PALETTE64, PREVIEW_BACKGROUND, rgbPng, toImage } from "./pixel.ts";
+import { dk, Grid, PALETTE64, PREVIEW_BACKGROUND, rgbPng, run, toImage } from "./pixel.ts";
 
 const USAGE = `Usage:
   node art/tools/roads.ts preview OUT.png   each zone's road scrolling up: two strips of the zone
@@ -831,13 +831,8 @@ export function build(): void {
 }
 
 if (import.meta.main) {
-  const argv = process.argv.slice(2);
-  if (argv.length === 2 && argv[0] === "preview") {
-    preview(argv[1]!);
-  } else if (argv.length === 1 && argv[0] === "build") {
-    build();
-  } else {
-    console.error(USAGE);
-    process.exit(1);
-  }
+  await run({
+    commands: { build: () => build(), "preview OUT.png": (out) => preview(out) },
+    doc: USAGE,
+  });
 }

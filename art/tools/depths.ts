@@ -31,10 +31,9 @@ import * as minis from "./minis.ts";
 import * as obstacles from "./obstacles.ts";
 import {
   build,
-  depthSettled,
   type Drawable,
   type Frame,
-  preview,
+  main,
   PREVIEW_BACKGROUND,
   type Sprite,
   type Tag,
@@ -466,15 +465,14 @@ export function compare(
 }
 
 if (import.meta.main) {
-  const argv = process.argv.slice(2);
-  if (argv.length === 2 && argv[0] === "preview") {
-    preview({ grounds: ZONE_ROADS }, depthSettled({ originals: originals() }, sprites()), argv[1]!);
-  } else if (argv.length === 2 && argv[0] === "compare") {
-    compare({}, argv[1]!);
-  } else if (argv.length === 1 && argv[0] === "build") {
-    await build({ originals: originals() }, "art/depths", checked(sprites()));
-  } else {
-    console.error(USAGE);
-    process.exit(1);
-  }
+  await main({
+    commands: {
+      build: () => build({ originals: originals() }, "art/depths", checked(sprites())),
+      "compare DIR": (dir) => compare({}, dir),
+    },
+    doc: USAGE,
+    originals,
+    sprites,
+    srcDir: "art/depths",
+  });
 }

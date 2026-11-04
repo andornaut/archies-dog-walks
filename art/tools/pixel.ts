@@ -1,11 +1,6 @@
 // Shared pixel-art tooling: a drawing grid on the house palette with coloured outlines, the depth
 // settling of road sprites, and the step that turns frames into an Aseprite source and a PNG + JSON
 // export. Run the art scripts from the repository root.
-//
-// Usage:
-//   node art/tools/pixel.ts palette   write shared/palette.json: every colour by K name, its hex and
-//                                     the name of the colour one ramp step darker (DARKER), for the
-//                                     game's dark ramp
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 
 import { export as exportSprite } from "@andornaut/art-kit/aseprite";
@@ -1229,10 +1224,77 @@ export async function build(
   console.log("built", built.join(", "));
 }
 
+// ---------- commands ----------
+
+// A command's handler, given the arguments its pattern names (see run).
+export type Command = (...args: string[]) => unknown;
+
+// Thrown by a command whose arguments do not fit it, so run prints the usage text.
+export class UsageError extends Error {}
+
+const HELP: ReadonlySet<string> = new Set(["--help", "-h"]);
+
+// A pattern word in upper case (OUT.png, KEY, KEY...) takes an argument; any other must appear as
+// written.
+function isArgument(word: string): boolean {
+  return /^[A-Z]/.test(word);
+}
+
+// The command whose pattern argv matches, and the arguments it takes, or null.
+function matched(
+  commands: Readonly<Record<string, Command>>,
+  argv: readonly string[],
+): [Command, string[]] | null {
+  for (const [pattern, command] of Object.entries(commands)) {
+    const words = pattern.split(" ");
+    const rest = words.at(-1)!.endsWith("...");
+    if (rest ? argv.length < words.length : argv.length !== words.length) {
+      continue;
+    }
+    // The word each argument fills: a last word ending in "..." fills every one past it.
+    const fills = argv.map((_, i) => words[Math.min(i, words.length - 1)]!);
+    if (fills.every((word, i) => isArgument(word) || word === argv[i])) {
+      return [command, argv.filter((_, i) => isArgument(fills[i]!))];
+    }
+  }
+  return null;
+}
+
+// A tool's command line: runs the command whose pattern argv matches. A pattern is the words after
+// the tool's name: an upper-case word (OUT.png, KEY) takes one argument, a last one ending in "..."
+// (KEY...) one or more, and any other word (preview, --write) must appear as written. --help or -h
+// prints doc to stdout; no match, or a command that throws UsageError, prints it to stderr and
+// exits 1.
+export async function run(
+  { commands, doc }: { commands: Readonly<Record<string, Command>>; doc: string },
+  argv: readonly string[] = process.argv.slice(2),
+): Promise<void> {
+  if (argv.length === 1 && HELP.has(argv[0]!)) {
+    console.log(doc);
+    return;
+  }
+  try {
+    const found = matched(commands, argv);
+    if (found === null) {
+      throw new UsageError();
+    }
+    await found[0](...found[1]);
+  } catch (error) {
+    if (!(error instanceof UsageError)) {
+      throw error;
+    }
+    console.error(doc);
+    process.exit(1);
+  }
+}
+
 export interface MainOptions {
   // The tags settled on their own (see depthSettled).
   apart?: readonly string[];
-  // The usage text a wrong command prints.
+  // The set's other commands by pattern (see run). One named "build" or "preview OUT.png" replaces
+  // the default.
+  commands?: Readonly<Record<string, Command>>;
+  // The usage text.
   doc: string;
   // The preview's ground colours.
   grounds?: readonly string[];
@@ -1244,19 +1306,24 @@ export interface MainOptions {
   sprites: () => Iterable<Sprite>;
 }
 
-// A sprite set's commands: preview OUT.png (one sheet per ground at groundSheetPath) and build.
+// A sprite set's command line (see run): preview OUT.png (one sheet per ground at groundSheetPath),
+// build and the set's other commands.
 export async function main(
-  { apart = [], doc, grounds = ZONE_ROADS, originals, sprites, srcDir }: MainOptions,
+  { apart = [], commands = {}, doc, grounds = ZONE_ROADS, originals, sprites, srcDir }: MainOptions,
   argv: readonly string[] = process.argv.slice(2),
 ): Promise<void> {
-  if (argv.length === 2 && argv[0] === "preview") {
-    preview({ grounds }, depthSettled({ apart, originals: originals?.() }, sprites()), argv[1]!);
-  } else if (argv.length === 1 && argv[0] === "build") {
-    await build({ apart, originals: originals?.() }, srcDir, sprites());
-  } else {
-    console.error(doc);
-    process.exit(1);
-  }
+  await run(
+    {
+      commands: {
+        build: () => build({ apart, originals: originals?.() }, srcDir, sprites()),
+        "preview OUT.png": (out) =>
+          preview({ grounds }, depthSettled({ apart, originals: originals?.() }, sprites()), out),
+        ...commands,
+      },
+      doc,
+    },
+    argv,
+  );
 }
 
 export const PALETTE_JSON = "shared/palette.json";
@@ -1283,10 +1350,10 @@ const USAGE = `Usage:
                                     game's dark ramp`;
 
 if (import.meta.main) {
-  if (process.argv.length === 3 && process.argv[2] === "palette") {
-    writeFileSync(PALETTE_JSON, `${JSON.stringify(paletteTable(), null, 2)}\n`);
-  } else {
-    console.error(USAGE);
-    process.exit(1);
-  }
+  await run({
+    commands: {
+      palette: () => writeFileSync(PALETTE_JSON, `${JSON.stringify(paletteTable(), null, 2)}\n`),
+    },
+    doc: USAGE,
+  });
 }

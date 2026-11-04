@@ -139,6 +139,7 @@ import {
   raster,
   rgbPng,
   rowScaleOf,
+  run,
   scaleOf,
   type Sprite,
   swapped,
@@ -1788,17 +1789,13 @@ async function buildAll(): Promise<void> {
 }
 
 if (import.meta.main) {
-  const argv = process.argv.slice(2);
-  if (argv.length === 2 && argv[0] === "preview") {
-    preview({}, depthSettled({}, [...sprites(), ...bursts()]), argv[1]!);
-  } else if (argv.length === 2 && argv[0] === "cards") {
-    await cardsPreview(argv[1]!);
-  } else if (argv.length === 2 && argv[0] === "sounds") {
-    console.log("wrote", renderSounds(argv[1]!).join(", "));
-  } else if (argv.length === 1 && argv[0] === "build") {
-    await buildAll();
-  } else {
-    console.error(USAGE);
-    process.exit(1);
-  }
+  await run({
+    commands: {
+      build: () => buildAll(),
+      "cards OUT.png": (out) => cardsPreview(out),
+      "preview OUT.png": (out) => preview({}, depthSettled({}, [...sprites(), ...bursts()]), out),
+      "sounds OUT_DIR": (dir) => console.log("wrote", renderSounds(dir).join(", ")),
+    },
+    doc: USAGE,
+  });
 }

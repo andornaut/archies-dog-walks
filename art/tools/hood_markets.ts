@@ -108,7 +108,6 @@ import { small, STEPS } from "./mini.ts";
 import * as ob from "./obstacles.ts";
 import {
   build as buildSprites,
-  depthSettled,
   type Drawable,
   type DrawingScope,
   edged,
@@ -117,8 +116,8 @@ import {
   Grid,
   HEART,
   K,
+  main,
   type Point,
-  preview,
   raster,
   rgbPng,
   rowScaleOf,
@@ -126,7 +125,6 @@ import {
   type Sprite,
   type Tag,
   toImage,
-  ZONE_ROADS,
 } from "./pixel.ts";
 import * as road from "./road.ts";
 import { faceDisc, lit, scope as roadScope } from "./road.ts";
@@ -2399,19 +2397,18 @@ function renderSounds(outDir: string): void {
 }
 
 if (import.meta.main) {
-  const argv = process.argv.slice(2);
-  if (argv.length === 2 && argv[0] === "preview") {
-    preview({ grounds: ZONE_ROADS }, depthSettled({}, sprites()), argv[1]!);
-  } else if (argv.length === 2 && argv[0] === "cards") {
-    await cardPreview(argv[1]!);
-  } else if (argv.length === 2 && argv[0] === "sounds") {
-    renderSounds(argv[1]!);
-  } else if (argv.length === 1 && argv[0] === "build") {
-    await buildSprites({}, SRC, sprites());
-    await buildCards();
-    renderSounds("public/art/sounds");
-  } else {
-    console.error(USAGE);
-    process.exit(1);
-  }
+  await main({
+    commands: {
+      build: async () => {
+        await buildSprites({}, SRC, sprites());
+        await buildCards();
+        renderSounds("public/art/sounds");
+      },
+      "cards OUT.png": (out) => cardPreview(out),
+      "sounds OUT_DIR": (dir) => renderSounds(dir),
+    },
+    doc: USAGE,
+    sprites,
+    srcDir: SRC,
+  });
 }

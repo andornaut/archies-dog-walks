@@ -37,10 +37,6 @@
 // In-art signs (shop boards, the High Park gate, the Distillery and TTC signs) use the same letters and
 // outline at 1x, with a 1px shadow, through sign().
 //
-// Usage:
-//   node art/tools/fonts.ts preview OUT.png   a sample of every font but font-comic, scaled up
-//   node art/tools/fonts.ts build             write public/art/fonts/*.png and *.fnt
-//
 // Run from the repository root.
 import { mkdirSync, writeFileSync } from "node:fs";
 
@@ -58,7 +54,7 @@ import {
 import { blankImage, opaqueRect, type RgbaImage } from "@andornaut/art-kit/rgbaImage";
 
 import { LETTERS, word, wordSize } from "./fx.ts";
-import { Grid, HEART, K, rgbPng, savePng, toImage } from "./pixel.ts";
+import { Grid, HEART, K, rgbPng, run, savePng, toImage } from "./pixel.ts";
 
 const USAGE = `Usage:
   node art/tools/fonts.ts preview OUT.png   a sample of every font but font-comic, scaled up
@@ -708,13 +704,8 @@ export function preview(out: string, scale = 3): void {
 }
 
 if (import.meta.main) {
-  const argv = process.argv.slice(2);
-  if (argv.length === 2 && argv[0] === "preview") {
-    preview(argv[1]!);
-  } else if (argv.length === 1 && argv[0] === "build") {
-    build();
-  } else {
-    console.error(USAGE);
-    process.exit(1);
-  }
+  await run({
+    commands: { build: () => build(), "preview OUT.png": (out) => preview(out) },
+    doc: USAGE,
+  });
 }

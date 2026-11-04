@@ -50,12 +50,6 @@
  * as mono 44.1kHz Ogg Vorbis plus AAC (.m4a), since iOS Safari cannot play Ogg, and a build stops if
  * either file decodes to a peak at or over -1 dBFS.
  *
- * Usage:
- *   node art/tools/sounds.ts preview OUT_DIR   write the .ogg and .m4a files into OUT_DIR only
- *   node art/tools/sounds.ts one KEY OUT_DIR   write one sound's .ogg and .m4a into OUT_DIR
- *   node art/tools/sounds.ts build             write public/art/sounds/*.ogg and *.m4a, and flag
- *                                              the music as looping in public/art/manifest.extra.json
- *
  * Run from the repository root. Needs sox and ffmpeg. Every run is identical: sox runs in
  * repeatable mode (fixed noise seed, no dither) and ffmpeg in bitexact mode, so a rebuild only
  * changes files when this script changes.
@@ -65,6 +59,8 @@ import { spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+
+import { run as runCommands } from "./pixel.ts";
 
 const USAGE = `Usage:
   node art/tools/sounds.ts preview OUT_DIR   write the .ogg and .m4a files into OUT_DIR only
@@ -1105,23 +1101,18 @@ async function build(): Promise<void> {
   console.log("built", keys.join(", "));
 }
 
-async function main(argv: readonly string[]): Promise<void> {
-  const [command, ...args] = argv;
-  if (command === "preview" && args.length === 1) {
-    console.log("wrote", (await render(args[0] ?? "")).join(", "));
-  } else if (command === "one" && args.length === 2) {
-    console.log("wrote", (await render(args[1] ?? "", [args[0] ?? ""])).join(", "));
-  } else if (command === "build" && args.length === 0) {
-    await build();
-  } else {
-    fail(USAGE);
-  }
-}
-
 // Not awaited at the top level: a music module imports this one, so this module must finish
 // evaluating before track() imports it.
 if (import.meta.main) {
-  main(process.argv.slice(2)).catch((error: unknown) => {
+  runCommands({
+    commands: {
+      build: () => build(),
+      "one KEY OUT_DIR": async (key, dir) =>
+        console.log("wrote", (await render(dir, [key])).join(", ")),
+      "preview OUT_DIR": async (dir) => console.log("wrote", (await render(dir)).join(", ")),
+    },
+    doc: USAGE,
+  }).catch((error: unknown) => {
     console.error(error);
     process.exitCode = 1;
   });

@@ -29,7 +29,7 @@ import {
 import { opaqueRect, type RgbaImage } from "@andornaut/art-kit/rgbaImage";
 
 import * as bd from "./backdrops.ts";
-import { PALETTE64, rgbPng } from "./pixel.ts";
+import { PALETTE64, rgbPng, run } from "./pixel.ts";
 import * as sn from "./scene.ts";
 import { planks } from "./screens.ts";
 
@@ -332,15 +332,15 @@ export function build(): void {
 }
 
 if (import.meta.main) {
-  const argv = process.argv.slice(2);
-  if (argv.length === 2 && argv[0] === "preview") {
-    const img = card();
-    check(img);
-    writeFileSync(argv[1]!, rgbPng(final(img)));
-  } else if (argv.length === 1 && argv[0] === "build") {
-    build();
-  } else {
-    console.error(USAGE);
-    process.exit(1);
-  }
+  await run({
+    commands: {
+      build: () => build(),
+      "preview OUT.png": (out) => {
+        const img = card();
+        check(img);
+        writeFileSync(out, rgbPng(final(img)));
+      },
+    },
+    doc: USAGE,
+  });
 }

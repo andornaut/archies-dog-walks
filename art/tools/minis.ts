@@ -395,13 +395,12 @@ export function compare(
 }
 
 if (import.meta.main) {
-  const argv = process.argv.slice(2);
-  if (argv.length === 2 && argv[0] === "compare") {
-    compare({}, argv[1]!);
-  } else {
-    await main(
-      { apart: dogs.LEAN_TAGS, doc: USAGE, originals, sprites, srcDir: "art/minis" },
-      argv,
-    );
-  }
+  await main({
+    apart: dogs.LEAN_TAGS,
+    commands: { "compare OUT.png": (out) => compare({}, out) },
+    doc: USAGE,
+    originals,
+    sprites,
+    srcDir: "art/minis",
+  });
 }

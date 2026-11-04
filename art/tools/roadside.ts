@@ -79,16 +79,19 @@ import { readFileSync, writeFileSync } from "node:fs";
 
 import { Mini, scaled, STEPS } from "./mini.ts";
 import {
+  build,
   type Colour,
+  depthSettled,
   dk,
   type Drawable,
   edged,
   type Frame,
   K,
-  main,
   MURAL,
   type Point,
+  preview,
   raster,
+  run,
   scaleOf,
   type Sprite,
 } from "./pixel.ts";
@@ -1700,16 +1703,20 @@ export function writeTable(): void {
 }
 
 if (import.meta.main) {
-  const argv = process.argv.slice(2);
-  if (argv.length === 1 && argv[0] === "table") {
-    process.stdout.write(tableJson());
-  } else if (argv.length === 2 && argv[0] === "table" && argv[1] === "--write") {
-    writeTable();
-  } else {
-    checkPlacement();
-    await main({ doc: USAGE, grounds: GROUNDS, sprites, srcDir: "art/roadside" }, argv);
-    if (argv.length === 1 && argv[0] === "build") {
-      writeTable();
-    }
-  }
+  await run({
+    commands: {
+      build: async () => {
+        checkPlacement();
+        await build({}, "art/roadside", sprites());
+        writeTable();
+      },
+      "preview OUT.png": (out) => {
+        checkPlacement();
+        preview({ grounds: GROUNDS }, depthSettled({}, sprites()), out);
+      },
+      table: () => process.stdout.write(tableJson()),
+      "table --write": () => writeTable(),
+    },
+    doc: USAGE,
+  });
 }

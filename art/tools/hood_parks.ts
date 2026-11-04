@@ -127,6 +127,7 @@ import {
   rgbPng,
   roadEdge,
   rowScaleOf,
+  run,
   scaleOf,
   type Sprite,
   type Tag,
@@ -1691,15 +1692,12 @@ async function build(): Promise<void> {
 }
 
 if (import.meta.main) {
-  const argv = process.argv.slice(2);
-  if (argv.length === 2 && argv[0] === "preview") {
-    await preview(argv[1]!);
-  } else if (argv.length === 2 && argv[0] === "sounds") {
-    console.log("wrote", renderSounds(argv[1]!).join(", "));
-  } else if (argv.length === 1 && argv[0] === "build") {
-    await build();
-  } else {
-    console.error(USAGE);
-    process.exit(1);
-  }
+  await run({
+    commands: {
+      build: () => build(),
+      "preview OUT_DIR": (dir) => preview(dir),
+      "sounds OUT_DIR": (dir) => console.log("wrote", renderSounds(dir).join(", ")),
+    },
+    doc: USAGE,
+  });
 }

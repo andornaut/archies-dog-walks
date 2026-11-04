@@ -30,6 +30,7 @@ import {
   PREVIEW_BACKGROUND,
   raster,
   rgbPng,
+  run,
   savePng,
   scaleOf,
   toImage,
@@ -945,13 +946,8 @@ export function build(): void {
 }
 
 if (import.meta.main) {
-  const argv = process.argv.slice(2);
-  if (argv.length === 2 && argv[0] === "preview") {
-    preview(argv[1]!);
-  } else if (argv.length === 1 && argv[0] === "build") {
-    build();
-  } else {
-    console.error(USAGE);
-    process.exit(1);
-  }
+  await run({
+    commands: { build: () => build(), "preview OUT.png": (out) => preview(out) },
+    doc: USAGE,
+  });
 }
