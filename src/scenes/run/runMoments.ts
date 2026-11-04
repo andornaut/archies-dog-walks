@@ -110,6 +110,7 @@ import type { ItemViews } from "./itemViews";
 import type { PackView } from "./packView";
 import { showDebuffPopup, showGearPopup, showInstantPopup } from "./roadBanners";
 import { DEPTH, firingSeconds, LAYOUT, overPack } from "./stage";
+import { stepSparkles } from "./tipSparkle";
 
 // How long the step's hit stop holds the road, or a plain obstacle's stop while it has none.
 function stopMs(step: WalkStep): number {
@@ -327,7 +328,13 @@ export class RunMoments {
     for (const { change, item } of step.tips) {
       this.addChanges(overPack(pack), [change], 0, reached.get(item.id));
     }
-    for (const item of step.collected) {
+    // A tip twinkles over the walker, its only sparkle; everything else grabbed sparkles over
+    // the pack.
+    const sparkles = stepSparkles(step);
+    if (sparkles.overWalker) {
+      this.deps.pack.tipGrabbed(this.deps.still());
+    }
+    for (const item of sparkles.overPack) {
       playEffect(this.scene, "fx-sparkle", "play", overPack(pack), DEPTH.fx);
       if (item.kind === "treat") {
         this.hint({ kind: "treat" });

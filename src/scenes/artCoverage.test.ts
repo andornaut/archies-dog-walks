@@ -58,6 +58,7 @@ import { FEEDBACK_ART } from "./feedbackArt";
 import { hitBurstKey, hitLook } from "./hitMoment";
 import { DETAIL_WELL_KEY } from "./homePanels";
 import { BADGE_KEYS, SHOP_ART } from "./itemArt";
+import { TIP_SPARKLE } from "./run/tipSparkle";
 
 const manifest = parseManifest(shippedManifest);
 const images = new Set(manifest.images.map(({ key }) => key));
@@ -374,6 +375,7 @@ describe("screen and card art", () => {
         ];
       },
     ],
+    ["tags the walker's tip sparkle", () => missingTags(TIP_SPARKLE.key, [TIP_SPARKLE.tag])],
   ])("%s", expectNone);
 });
 

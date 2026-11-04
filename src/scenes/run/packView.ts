@@ -22,6 +22,7 @@ import { trotOffRoad } from "../feedbackMoments";
 import { type DogSignal, dogTop, iconArt, playPullFail, PullSignals } from "../pullSignals";
 import { playEffect, playTag, playTagOnce, spriteMetrics } from "../sprites";
 import { DEPTH, LANE_XS, LAYOUT, PROJECTION, type Shadow } from "./stage";
+import { TipSparkle } from "./tipSparkle";
 
 // What the pack is drawn with each frame besides the walk.
 interface PackFrame {
@@ -35,7 +36,7 @@ interface PackFrame {
 }
 
 // The walker, the dogs on their leashes, and what shows over them: each dog's pull signals
-// and the bursts over it.
+// and the bursts over it, and the walker's tip sparkle.
 export class PackView {
   private readonly dogSprites: ReadonlyMap<DogId, GameObjects.Sprite>;
   // The tag each dog's sprite last played.
@@ -50,6 +51,7 @@ export class PackView {
   // Sprites playing a one-off reaction, which the pack's pose waits for.
   private readonly reacting = new Set<GameObjects.Sprite>();
   private readonly scene: Scene;
+  private readonly tipSparkle: TipSparkle;
   private readonly walker: Figure;
 
   constructor(scene: Scene, dogs: readonly DogId[], walkerSprite: string) {
@@ -62,6 +64,13 @@ export class PackView {
     }
     this.walker = walker;
     this.pullSignals = new PullSignals(scene, DEPTH.fx);
+    this.tipSparkle = new TipSparkle(scene, DEPTH.fx, () => dogTop(walker.sprite));
+  }
+
+  // A grabbed tip twinkles over the walker, restarting a twinkle still playing; reduced motion
+  // skips it.
+  tipGrabbed(still: boolean): void {
+    this.tipSparkle.play(still);
   }
 
   // The dog's centre column and top opaque row on the road, while it is shown there.
@@ -258,6 +267,7 @@ export class PackView {
     if (posed && !this.reacting.has(walker.sprite)) {
       playTag(walker.sprite, walker.key, pose, still && halted);
     }
+    this.tipSparkle.follow();
     this.drawSignals(walking, frame);
   }
 
