@@ -24,8 +24,8 @@ export const EARNED_KEYS: SaveKeys = {
   save: "dog-walker-game:achievements",
 };
 
-// The earned record's format version. Before v1 ships, a change to the record's format bumps it
-// and an older record resets, with no migrations.
+// The earned record's format version. Until the user declares the first release, a change to the
+// record's format bumps it and an older record resets, with no migrations.
 export const EARNED_VERSION = 1;
 
 // Where a checkpoint's resume point that could not be read is copied as the launch banks it.
