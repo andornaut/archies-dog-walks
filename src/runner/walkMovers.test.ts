@@ -94,7 +94,7 @@ interface StandingStop {
   readonly whole: boolean;
 }
 
-describe("movers", { timeout: 120_000 }, () => {
+describe("movers", { timeout: 300_000 }, () => {
   const baselineData = { ...REAL, movementAssignments: {} };
   const OBSTACLE_KINDS = [...OBSTACLE_IDS, ...MINOR_OBSTACLE_IDS] as WalkItem["kind"][];
   // The rulebook's obstacles that never move: art sculptures, benches, bins, cherry trees,

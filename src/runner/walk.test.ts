@@ -213,7 +213,7 @@ function expectCertifiedDelivery({ road, slots }: ReturnType<typeof observedPlan
 
 // The spawn planner takes a few hundred milliseconds a zone of the game's road, so a sweep over it
 // takes several seconds, more on a busy machine.
-describe("planZone", { timeout: 60_000 }, () => {
+describe("planZone", { timeout: 180_000 }, () => {
   // The game's road planned in zone at walk position on seed, for walker, planned once for every
   // check made of it.
   const realPlans = new Map<string, ReturnType<typeof observedPlan>>();

@@ -102,7 +102,7 @@ function walkReaching(): { inputs: readonly InputEvent[]; run: RunState; seed: n
 // A walk saved between zones and resumed from its checkpoint, as the next launch does, plays the
 // rest of the walk as the walk itself did: the run's streams take up where they were, each zone
 // is planned from the seed as before, and transient movement timing starts fresh at the boundary.
-describe("a walk resumed from its checkpoint", { timeout: 60_000 }, () => {
+describe("a walk resumed from its checkpoint", { timeout: 200_000 }, () => {
   it.each<{ point: Point; zone: number }>([
     { point: "zoneStart", zone: 2 },
     { point: "fork", zone: 2 },

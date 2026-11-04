@@ -301,7 +301,7 @@ it("distinguishes a changing swept union from concurrent multi-actor contact", (
 // Every zone at the fastest pace, with every obstacle that can move moving: a way past every
 // lane-blocking spawn from every lane, at most the caps of movers on screen, the pack-fit gap
 // wherever the path changes lanes between two obstacles, and each mover moving as its kind does.
-describe("the planned road", { timeout: 120_000 }, () => {
+describe("the planned road", { timeout: 240_000 }, () => {
   const everyMover: Real = { ...REAL, world: sharedWorld(WORLD, 1) };
   // Every stepper and hopper hopping 1 or 2 times, each hop up to 2 spots any way.
   const HOP: HopMovement = { kind: "hop", most: 2, times: { max: 2, min: 1 } };

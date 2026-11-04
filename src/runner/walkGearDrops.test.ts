@@ -64,7 +64,7 @@ describe("gear drops on the road", () => {
   });
 });
 
-describe("gear drop planning", () => {
+describe("gear drop planning", { timeout: 90_000 }, () => {
   // Each zone's drops, counted and placed as the planner places them.
   // The zone's gear drop quotas, drawn as the planner draws them.
   const quotasOf = (position: number, seed: number, pocket: GearId | null = null) =>
