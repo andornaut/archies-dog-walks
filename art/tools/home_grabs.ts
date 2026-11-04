@@ -1,4 +1,3 @@
-// node art/tools/home_grabs.ts OUT_DIR [BASE_URL]
 // Retake the home page's canvas grabs, home-road.png and home-start.png (360x560, the game canvas
 // at 1x), from a built game served at BASE_URL (default http://<previewHost>:4173, the preview
 // container vite.config.ts names, adw-preview), and write them to OUT_DIR. Copy them to
@@ -27,7 +26,7 @@ import { setTimeout } from "node:timers/promises";
 import { decodePng, encodeRgbPng } from "@andornaut/art-kit/png";
 import type { RgbaImage } from "@andornaut/art-kit/rgbaImage";
 
-import { NEUTRAL_HEX, PALETTE64, PICKER_UI } from "./pixel.ts";
+import { NEUTRAL_HEX, PALETTE64, PICKER_UI, PNG_OPTIONS, run } from "./pixel.ts";
 
 // The browser's clock steps one frame at a time, in order, so each loop awaits every step.
 /* eslint-disable no-await-in-loop */
@@ -125,7 +124,9 @@ const START_SAVE = {
   },
   walker: "trista",
 };
-const USAGE = "node art/tools/home_grabs.ts OUT_DIR [BASE_URL]";
+const USAGE = `Usage:
+  node art/tools/home_grabs.ts OUT_DIR [BASE_URL]   write OUT_DIR/home-road.png and home-start.png,
+                                                    grabbed from the game at BASE_URL`;
 const WIDTH = 360;
 
 const ALLOWED = new Set(
@@ -322,39 +323,48 @@ function strayColours(image: RgbaImage): Map<string, number> {
   return strays;
 }
 
-const [outDir, baseUrl = BASE_URL] = process.argv.slice(2);
-if (!outDir) {
-  console.error(USAGE);
-  process.exit(2);
-}
-const { chromium } = (await import(PLAYWRIGHT_MODULE)) as Playwright;
-const browser = await chromium.launch({
-  args: ["--no-sandbox"],
-  channel: "chromium",
-  headless: true,
-});
-const faults: string[] = [];
-try {
-  mkdirSync(outDir, { recursive: true });
-  const grabs: [string, RgbaImage][] = [
-    ["home-road", await roadGrab(baseUrl, browser)],
-    ["home-start", await startGrab(baseUrl, browser)],
-  ];
-  for (const [name, image] of grabs) {
-    faults.push(...grabFaults(name, image));
-    const path = `${outDir}/${name}.png`;
-    writeFileSync(
-      path,
-      encodeRgbPng({ deflateLevel: 9, deflateStrategy: 0, filterType: -1 }, image),
-    );
-    const strays = strayColours(image);
-    const covered = [...strays.values()].reduce((sum, n) => sum + n, 0);
-    console.log("wrote", path, `(${strays.size} colours outside the house palette, ${covered} px)`);
+// Grab both pictures from the game at baseUrl into outDir, and fail on a fault.
+async function grabAll(baseUrl: string, outDir: string): Promise<void> {
+  const { chromium } = (await import(PLAYWRIGHT_MODULE)) as Playwright;
+  const browser = await chromium.launch({
+    args: ["--no-sandbox"],
+    channel: "chromium",
+    headless: true,
+  });
+  const faults: string[] = [];
+  try {
+    mkdirSync(outDir, { recursive: true });
+    const grabs: [string, RgbaImage][] = [
+      ["home-road", await roadGrab(baseUrl, browser)],
+      ["home-start", await startGrab(baseUrl, browser)],
+    ];
+    for (const [name, image] of grabs) {
+      faults.push(...grabFaults(name, image));
+      const path = `${outDir}/${name}.png`;
+      writeFileSync(path, encodeRgbPng({ ...PNG_OPTIONS, deflateLevel: 9 }, image));
+      const strays = strayColours(image);
+      const covered = [...strays.values()].reduce((sum, n) => sum + n, 0);
+      console.log(
+        "wrote",
+        path,
+        `(${strays.size} colours outside the house palette, ${covered} px)`,
+      );
+    }
+  } finally {
+    await browser.close();
   }
-} finally {
-  await browser.close();
+  if (faults.length) {
+    console.error(faults.join("\n"));
+    process.exit(1);
+  }
 }
-if (faults.length) {
-  console.error(faults.join("\n"));
-  process.exit(1);
+
+if (import.meta.main) {
+  await run({
+    commands: {
+      OUT_DIR: (outDir) => grabAll(BASE_URL, outDir),
+      "OUT_DIR BASE_URL": (outDir, baseUrl) => grabAll(baseUrl, outDir),
+    },
+    doc: USAGE,
+  });
 }
