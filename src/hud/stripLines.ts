@@ -14,7 +14,7 @@ import type { FaceMood, TreatGrabbed } from "../rules/treats.ts";
 import { read } from "../rules/units.ts";
 import type { ActiveDebuff, EffectSource, RunState } from "../state/runState.ts";
 import { debuffNameMarks } from "./effectNames.ts";
-import { type FaceText, fillFaceLine, ownerFaceText } from "./faceText.ts";
+import { type FaceText, fillFaceText, ownerFaceText } from "./faceText.ts";
 import type { MessageIcon, MessageLine } from "./messageStrip.ts";
 import { STRIP_LINE_FIELDS } from "./runText.ts";
 
@@ -57,7 +57,7 @@ function ownerLine<K extends OwnerKey>(
   const all = { ...fields, owner } as Readonly<
     Record<(typeof STRIP_LINE_FIELDS)[K][number], FaceText | string>
   >;
-  return fillFaceLine(STRIP_LINE_FIELDS, data.runText.strip, key, all);
+  return fillFaceText(data.runText.strip[key], all);
 }
 
 // The lines for a plain obstacle that landed on dog: a dodge; or the hearts its owner lost, then

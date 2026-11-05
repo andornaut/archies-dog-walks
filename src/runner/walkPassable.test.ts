@@ -499,7 +499,7 @@ describe("the planned road", { timeout: 200_000 }, () => {
   });
   it.each(WIDE_DART_CASES)(
     "places $kind in $zone (zone $zoneIndex, seed $seed) by every placement rule",
-    ({ kind, passable, zone }) => {
+    ({ kind, passable }) => {
       const { tuned } = passable;
       expectPassable([passable]);
       const blocking = planOf(passable).road.pending.filter((event) =>
@@ -516,10 +516,10 @@ describe("the planned road", { timeout: 200_000 }, () => {
       for (const dart of wide) {
         expect(crossSpan(dart.mover)).toBe(footprintOf(tuned, kind).lanes);
         const touched = new Set(
-          moverSpans("planned", tuned, GAME_ROAD, zone, dart).map(({ lane }) => lane),
+          moverSpans("planned", tuned, GAME_ROAD, dart).map(({ lane }) => lane),
         );
         const sight = GAME_ROAD.sightLength;
-        const window = standingSpan(tuned, GAME_ROAD, zone, { ...dart, lane: 0 }).length;
+        const window = standingSpan(tuned, GAME_ROAD, { ...dart, lane: 0 }).length;
         const { count, first } = sweptLanes(LANE_COUNT, dart.mover, sight, sight + window);
         const swept = Array.from({ length: count }, (_, i) => first + i);
         expect(swept).toEqual(expect.arrayContaining([...touched]));
@@ -549,7 +549,7 @@ describe("the planned road", { timeout: 200_000 }, () => {
       const margin = read(tuned.tuning, "seconds", "pathReactionMargin") * speed;
       const fit = (moves: number) => packHitLength(road) + moves * laneMove + margin - 1;
       const blocking = walk.road.pending.filter((event) => blocksLane(tuned, event.kind));
-      const spans = blockingSpans(tuned, road, zone, blocking);
+      const spans = blockingSpans(tuned, road, blocking);
       const start = walk.road.path[0]?.lane ?? -1;
       const label = `${zone} ${zoneIndex}`;
       expect(lanesReachedAtEnd(walkwayOf(tuned, road, zoned), spans, start), label).not.toEqual([]);
@@ -573,7 +573,7 @@ describe("the planned road", { timeout: 200_000 }, () => {
           };
         }
         const moving = { ...event, mover: event.mover };
-        const touched = moverSpans("drawn", tuned, road, zone, moving);
+        const touched = moverSpans("drawn", tuned, road, moving);
         const { end, start: meets } = contactOfSpans(touched);
         return {
           end: end - packHitLength(road),

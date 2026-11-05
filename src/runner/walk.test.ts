@@ -670,7 +670,7 @@ describe("planZone", { timeout: 150_000 }, () => {
           road: startRoad(LANE_COUNT),
           run: zoned,
         });
-        const spans = blockingSpans(tuned, GAME_ROAD, zone, walk.road.pending);
+        const spans = blockingSpans(tuned, GAME_ROAD, walk.road.pending);
         const start = walk.road.path[0]?.lane ?? -1;
         const reached = lanesReachedAtEnd(walkwayOf(tuned, GAME_ROAD, zoned), spans, start);
         expect(reached, `${zone}, from lane ${start}`).not.toEqual([]);

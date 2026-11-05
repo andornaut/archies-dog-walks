@@ -16,7 +16,7 @@ it("retains actual return-dart contact without extending it past runtime retirem
     turnAfter: 4.992472470039502,
     warning: 433.85220198390573,
   };
-  const spans = blockingSpans(REAL, GAME_ROAD, "highPark", [
+  const spans = blockingSpans(REAL, GAME_ROAD, [
     { distance: 17995, kind: "otherDog", lane: 4, mover },
   ]);
   const touches = (lane: number, at: number) =>

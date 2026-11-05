@@ -212,8 +212,8 @@ describe("a card's effect pills", () => {
   const opaque = (png: Image) => (x: number, y: number) =>
     (png.data[(y * png.width + x) * 4 + 3] ?? 0) > 0;
   const range = (length: number) => Array.from({ length }, (_, i) => i);
-  // The lowest row of rect in png with a pixel ink says is inked, from rect's top; -1 for none.
-  const lowestRow = (png: Image, rect: Rect, ink: (x: number, y: number) => boolean) =>
+  // The lowest row of rect with a pixel ink says is inked, from rect's top; -1 for none.
+  const lowestRow = (rect: Rect, ink: (x: number, y: number) => boolean) =>
     Math.max(
       -1,
       ...range(rect.height).filter((row) =>
@@ -246,7 +246,7 @@ describe("a card's effect pills", () => {
           x: frame.x + x - outline,
           y: frame.y,
         };
-        return lowestRow(png, window, (col, row) => pixel(png, col, row) !== background);
+        return lowestRow(window, (col, row) => pixel(png, col, row) !== background);
       }),
     );
   };
@@ -260,13 +260,12 @@ describe("a card's effect pills", () => {
       ...Object.values(gameData.upgrades).map((upgrade) => upgrade.art),
     ].map((key) => {
       const png = image(`images/${key}.png`);
-      return lowestRow(png, { height: art.height, width: art.width, x: 0, y: 0 }, opaque(png));
+      return lowestRow({ height: art.height, width: art.width, x: 0, y: 0 }, opaque(png));
     }),
   );
   const pawsPng = image(`sprites/${DIFFICULTY_KEY}.png`);
   const pawsInk =
-    paws.y +
-    Math.max(...frames(DIFFICULTY_KEY).map((frame) => lowestRow(pawsPng, frame, opaque(pawsPng))));
+    paws.y + Math.max(...frames(DIFFICULTY_KEY).map((frame) => lowestRow(frame, opaque(pawsPng))));
   // A first line's pills' top, its capitals on row caps, at 2x.
   const pillTop = (caps: number) => caps - body.capTop * 2 + pillRows(2).top;
   // The lowest row the image over a pill at top inks, in card pixels: a card's illustration or

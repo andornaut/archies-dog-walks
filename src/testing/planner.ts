@@ -114,12 +114,7 @@ export const gcdOf = (values: readonly number[]): number =>
   }, 0);
 // The length the planner gives a spawn's hit box: its rows less the planned inset at each end,
 // which covers its drawn hit box (itemHeight) whatever obstacle it is.
-const plannedHeight = (
-  tuned: Real,
-  road: RoadGeometry,
-  zone: ZoneId,
-  kind: WalkItem["kind"],
-): number =>
+const plannedHeight = (tuned: Real, road: RoadGeometry, kind: WalkItem["kind"]): number =>
   blocksLane(tuned, kind)
     ? footprintOf(tuned, kind).rows * road.cell.length - 2 * plannedCellInset(tuned, road)
     : itemHeight(tuned, road, kind, false);
@@ -135,24 +130,22 @@ const sized = (
   sizing: Sizing,
   tuned: Real,
   road: RoadGeometry,
-  zone: ZoneId,
   kind: WalkItem["kind"],
   moving: boolean,
 ): { height: number; pack: number } =>
   sizing === "planned"
-    ? { height: plannedHeight(tuned, road, zone, kind), pack: road.tallestPackBand }
+    ? { height: plannedHeight(tuned, road, kind), pack: road.tallestPackBand }
     : { height: itemHeight(tuned, road, kind, moving), pack: packHitLength(road) };
 // A standing spawn's span on the game's road.
 export const standingSpan = (
   tuned: Real,
   road: RoadGeometry,
-  zone: ZoneId,
   { distance, kind, lane }: { distance: number; kind: WalkItem["kind"]; lane: number },
 ): BlockingSpan => ({
   distance,
   lane,
   laneSpan: footprintOf(tuned, kind).lanes,
-  length: plannedHeight(tuned, road, zone, kind) + road.tallestPackBand,
+  length: plannedHeight(tuned, road, kind) + road.tallestPackBand,
 });
 export type MoverEvent = { distance: number; kind: WalkItem["kind"]; mover: MoverPath };
 // The scroll since its cue over which moverSpans looks for a mover's contact.
@@ -206,7 +199,6 @@ export function moverSpans(
   sizing: Sizing,
   tuned: Real,
   road: RoadGeometry,
-  zone: ZoneId,
   event: MoverEvent,
 ): BlockingSpan[] {
   const inset = road.cell.inset / road.cell.length;
@@ -217,7 +209,7 @@ export function moverSpans(
         ? componentHitLength(road, path.route.profile)
         : itemHeight(tuned, road, event.kind, true);
     const width = trail ? 1 : drawnLanes(footprintOf(tuned, event.kind).lanes, path);
-    const measured = sized(sizing, tuned, road, zone, event.kind, true);
+    const measured = sized(sizing, tuned, road, event.kind, true);
     const contactEnd =
       road.sightLength +
       (trail ? nativeHeight + packHitLength(road) : measured.height + measured.pack);
@@ -377,14 +369,13 @@ export function contactOfSpans(spans: readonly BlockingSpan[]): { end: number; s
 export const blockingSpans = (
   tuned: Real,
   road: RoadGeometry,
-  zone: ZoneId,
   pending: Walk["road"]["pending"],
 ): BlockingSpan[] =>
   pending
     .filter((event) => blocksLane(tuned, event.kind))
     .flatMap((event) =>
       event.mover === undefined
-        ? [standingSpan(tuned, road, zone, event)]
-        : moverSpans("drawn", tuned, road, zone, { ...event, mover: event.mover }),
+        ? [standingSpan(tuned, road, event)]
+        : moverSpans("drawn", tuned, road, { ...event, mover: event.mover }),
     )
     .map((span) => ({ ...span, distance: span.distance + road.sightLength }));

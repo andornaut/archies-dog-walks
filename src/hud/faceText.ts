@@ -86,20 +86,6 @@ export function fillFaceText(
   return marks.length === 0 ? { text } : { marks, text };
 }
 
-// The line at key in a group, with the names its table lists filled in, as fillLine fills them,
-// a face text's marks kept.
-export function fillFaceLine<
-  Table extends Readonly<Record<string, readonly string[]>>,
-  K extends keyof Table & string,
->(
-  table: Table,
-  lines: Readonly<Record<NoInfer<K>, string>>,
-  key: K,
-  fields: Readonly<Record<Table[K][number], FaceText | string>>,
-): FaceText {
-  return fillFaceText(lines[key], fields);
-}
-
 // The text with the marks for dog left out, as a line led by that owner's own face shows it.
 export function withoutFace(dog: DogId | undefined, line: FaceText): FaceText {
   const marks = (line.marks ?? []).filter((mark) => mark.dog !== dog);
