@@ -776,10 +776,20 @@ const LEAF_SHAPES: Readonly<Record<LeafShape, Maps>> = {
   ],
 };
 // The printed leaf on the bag's side.
-const PRINT: Maps = [["..#..", "#.#.#", "#####", ".###.", "..#.."], [".#.", "###", ".#."]];
+const PRINT: Maps = [
+  ["..#..", "#.#.#", "#####", ".###.", "..#.."],
+  [".#.", "###", ".#."],
+];
 // The leaves spilling from the mouth, back to front: [column, row, shape, tone, quarter turns,
 // mirrored]. The idle lifts BAG_LIFTED.
-type Spill = readonly [x: number, y: number, shape: LeafShape, tone: number, turn: number, flip: boolean];
+type Spill = readonly [
+  x: number,
+  y: number,
+  shape: LeafShape,
+  tone: number,
+  turn: number,
+  flip: boolean,
+];
 const BAG_SPILL: readonly Spill[] = [
   [25.5, 32, "maple", 1, 0, false],
   [31, 35.5, "oval", 2, 3, false],
