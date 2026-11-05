@@ -1,5 +1,4 @@
-import { EventEmitter } from "node:events";
-
+import { sceneStub } from "@andornaut/game-kit/testing/phaser/sceneStub";
 import type { Scene } from "phaser";
 import { describe, expect, it, vi } from "vitest";
 
@@ -37,23 +36,9 @@ class Graphics {
 
 function fixture() {
   const loop = { time: 0 };
-  const roadEvents = new EventEmitter();
-  const hudEvents = new EventEmitter();
   const graphics: Graphics[] = [];
-  const camera = {
-    scrollX: 0,
-    scrollY: 0,
-    setScroll: vi.fn((x: number, y: number) => {
-      camera.scrollX = x;
-      camera.scrollY = y;
-    }),
-  };
-  const road = {
-    cameras: { main: camera },
-    events: roadEvents,
-    game: { loop },
-  } as unknown as Scene;
-  const hud = {
+  const road = sceneStub(vi.fn, { game: { loop } });
+  const hud = sceneStub(vi.fn, {
     add: {
       graphics: () => {
         const g = new Graphics();
@@ -61,16 +46,27 @@ function fixture() {
         return g;
       },
     },
-    events: hudEvents,
     game: { loop },
-  } as unknown as Scene;
-  const border = new BumpBorder(hud);
+  });
+  const camera = road.cameras.main;
+  const roadEvents = road.events;
+  const hudEvents = hud.events;
+  const border = new BumpBorder(hud as unknown as Scene);
   const tick = (time: number) => {
     loop.time = time;
     roadEvents.emit("postupdate");
     hudEvents.emit("postupdate");
   };
-  return { border, camera, graphics, hudEvents, loop, road, roadEvents, tick };
+  return {
+    border,
+    camera,
+    graphics,
+    hudEvents,
+    loop,
+    road: road as unknown as Scene,
+    roadEvents,
+    tick,
+  };
 }
 
 describe("physical hit feedback", () => {
@@ -105,7 +101,7 @@ describe("physical hit feedback", () => {
     tick(199);
     border.flash(false, 0x00ffff);
     shakeRoad(road);
-    expect(camera.setScroll.mock.calls.slice(-2)).toEqual([
+    expect(vi.mocked(camera.setScroll).mock.calls.slice(-2)).toEqual([
       [0, 0],
       [-5, -5],
     ]);
@@ -174,7 +170,7 @@ it("copies atlas edge frames at background depth and reuses them without changin
     has: (name: string) => frames.has(name),
   };
   const images: { depth: number; height: number; width: number; x: number; y: number }[] = [];
-  const scene = {
+  const scene = sceneStub(vi.fn, {
     add: {
       image: (x: number, y: number) => {
         const image = {
@@ -204,7 +200,7 @@ it("copies atlas edge frames at background depth and reuses them without changin
       get: () => texture,
       getFrame: () => ({ cutHeight: 158, cutWidth: 360, cutX: 96, cutY: 32, sourceIndex: 1 }),
     },
-  } as unknown as Scene;
+  }) as unknown as Scene;
   const padding = new BumpOverscan(scene, {
     depth: -3,
     kind: "backdrop",

@@ -1,5 +1,6 @@
+import { sceneStub } from "@andornaut/game-kit/testing/phaser/sceneStub";
 import type { GameObjects, Scene } from "phaser";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { gameData } from "../data/index.ts";
 import { floatValue } from "./buffCharm.ts";
@@ -39,7 +40,7 @@ function fakeScene(): { drawn: () => Part[]; scene: Scene } {
     };
     return object;
   };
-  const scene = {
+  const scene = sceneStub(vi.fn, {
     add: {
       bitmapText: (_x: number, _y: number, _font: string, text: string) =>
         add({ children: [], depth: 0, kind: "label", text }),
@@ -50,9 +51,8 @@ function fakeScene(): { drawn: () => Part[]; scene: Scene } {
       },
       graphics: () => add({ children: [], depth: 0, kind: "box", text: "" }),
     },
-    cache: { bitmapFont: { exists: () => false } },
     tweens: { add: () => ({}) },
-  };
+  });
   return { drawn: () => list, scene: scene as unknown as Scene };
 }
 

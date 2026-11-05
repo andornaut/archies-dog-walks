@@ -1,5 +1,6 @@
 import { EventEmitter } from "node:events";
 
+import { sceneStub } from "@andornaut/game-kit/testing/phaser/sceneStub";
 import type { Scene } from "phaser";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -54,7 +55,7 @@ function fixture(still = false) {
     sprites: Display[] = [],
     labels: Display[] = [];
   const timers: { callback: () => void; paused: boolean }[] = [];
-  const scene = {
+  const scene = sceneStub(vi.fn, {
     add: {
       container: (x: number, y: number, children: Display[]) => {
         const group = new Display().setPosition(x, y);
@@ -78,7 +79,7 @@ function fixture(still = false) {
         return timer;
       },
     },
-  };
+  });
   vi.mocked(addPixelText).mockImplementation((_scene, _x, _y, value, style) => {
     const label = new Display();
     label.scaleX = label.scaleY = style.scale ?? 1;

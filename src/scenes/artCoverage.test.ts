@@ -1,8 +1,9 @@
 import { animationKey } from "@andornaut/game-kit/art/aseprite";
 import { keysOf } from "@andornaut/game-kit/records";
+import { sceneStub } from "@andornaut/game-kit/testing/phaser/sceneStub";
 import type { Scene } from "phaser";
 import * as v from "valibot";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import shippedManifest from "../../public/art/manifest.json" with { type: "json" };
 import { animationSpecs } from "../assets/asepriteAnimations.ts";
@@ -143,9 +144,9 @@ const CARD_OWNER_MOODS = [
 ];
 
 // A scene that has loaded exactly the shipped art.
-const loadedScene = {
+const loadedScene = sceneStub(vi.fn, {
   textures: { exists: (key: string) => images.has(key) || sprites.has(key) },
-} as unknown as Scene;
+}) as unknown as Scene;
 
 // A named check and the art it finds missing, which must be none. A check may also assert that
 // what it walks is not empty.

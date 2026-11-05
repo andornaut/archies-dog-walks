@@ -1,5 +1,6 @@
 import { EventEmitter } from "node:events";
 
+import { sceneStub } from "@andornaut/game-kit/testing/phaser/sceneStub";
 import type { GameObjects, Scene } from "phaser";
 import { describe, expect, it, vi } from "vitest";
 
@@ -71,10 +72,9 @@ describe("clockwise selection orbit", () => {
   );
 
   it("shares one update owner, keeps reduced motion static and cleans the final listener", () => {
-    const events = new EventEmitter();
     const graphics: (EventEmitter & { clear: ReturnType<typeof vi.fn>; destroy: () => void })[] =
       [];
-    const scene = {
+    const scene = sceneStub(vi.fn, {
       add: {
         graphics: () => {
           const emitter = new EventEmitter();
@@ -92,9 +92,9 @@ describe("clockwise selection orbit", () => {
           return g;
         },
       },
-      events,
       time: { now: 0 },
-    };
+    });
+    const { events } = scene;
     const parent = { add: vi.fn() };
     const add = (kind: SelectionRing, reduced: boolean) =>
       addSelectionOrbit(

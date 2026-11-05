@@ -1,8 +1,9 @@
 import { EventEmitter } from "node:events";
 import { readdirSync, readFileSync } from "node:fs";
 
+import { sceneStub } from "@andornaut/game-kit/testing/phaser/sceneStub";
 import type { Scene } from "phaser";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { openOverlay } from "./overlay.ts";
 import { SCENE_KEYS, TAP_BURST_SCENE_KEY } from "./sceneKeys.ts";
@@ -14,14 +15,14 @@ type Status = "paused" | "running" | "stopped";
 // Phaser's do, and whose tap burst layer draws each burst as a sprite that stays until it is
 // destroyed.
 function fakeGame() {
-  const events = new EventEmitter();
+  const { game } = sceneStub(vi.fn);
   const statuses = new Map<string, Status>([
     [SCENE_KEYS.start, "running"],
     [TAP_BURST_SCENE_KEY, "running"],
   ]);
   const queue: string[] = [];
   const bursts: { destroyed: boolean }[] = [];
-  const layer = {
+  const layer = sceneStub(vi.fn, {
     add: {
       sprite: () => {
         const burst = Object.assign(new EventEmitter(), {
@@ -39,10 +40,10 @@ function fakeGame() {
     },
     anims: { exists: () => true },
     textures: { exists: () => true },
-  };
+  });
   const sceneFor = (key: string) =>
-    ({
-      game: { events },
+    sceneStub(vi.fn, {
+      game,
       scene: {
         get: (other: string) => (other === TAP_BURST_SCENE_KEY ? layer : sceneFor(other)),
         launch: (other: string) => queue.push(`start ${other}`),
@@ -51,12 +52,12 @@ function fakeGame() {
     }) as unknown as Scene;
   // One game step: Phaser applies the queued operations between its prestep and poststep.
   const step = () => {
-    events.emit("prestep");
+    game.events.emit("prestep");
     for (const op of queue.splice(0)) {
       const [kind = "", key = ""] = op.split(" ");
       statuses.set(key, kind === "pause" ? "paused" : "running");
     }
-    events.emit("poststep");
+    game.events.emit("poststep");
   };
   return { bursts, queue, sceneFor, statuses, step };
 }

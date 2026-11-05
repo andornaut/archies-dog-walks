@@ -1,6 +1,7 @@
 import { EventEmitter } from "node:events";
 
 import { guardSceneInput } from "@andornaut/game-kit/input/phaser/guardSceneInput";
+import { sceneStub } from "@andornaut/game-kit/testing/phaser/sceneStub";
 import type { Scene } from "phaser";
 import { describe, expect, it, vi } from "vitest";
 
@@ -11,14 +12,15 @@ import { listenTargetPress, sameByValue } from "./targetPress.ts";
 vi.mock("phaser", () => ({ Scenes: { Events: { SHUTDOWN: "shutdown", UPDATE: "update" } } }));
 
 function screen() {
-  const events = new EventEmitter();
   const pointer = { id: 1, isDown: true, wasCanceled: false, x: 0, y: 0 };
   const input = Object.assign(new EventEmitter(), {
     enabled: true,
     keyboard: { enabled: true },
     manager: { pointers: [pointer] },
   });
-  const scene = { events, input, time: { now: 0 } } as unknown as Scene;
+  const stub = sceneStub(vi.fn, { input, time: { now: 0 } });
+  const { events } = stub;
+  const scene = stub as unknown as Scene;
   const guard = guardSceneInput(0, scene);
   let cardOpen = false;
   const home = vi.fn();

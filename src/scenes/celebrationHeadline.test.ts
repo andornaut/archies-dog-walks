@@ -1,3 +1,4 @@
+import { sceneStub } from "@andornaut/game-kit/testing/phaser/sceneStub";
 import type { Scene } from "phaser";
 import { describe, expect, it, vi } from "vitest";
 
@@ -53,9 +54,10 @@ describe("full-scene celebration headings", () => {
       labels.push(label);
       return label as unknown as ReturnType<typeof addDisplayText>;
     });
-    const scene = {
-      cache: { bitmapFont: { get: (key: string) => ({ data: phaserFontData(key) }) } },
-    };
+    const scene = sceneStub(vi.fn);
+    for (const font of ["font-display", "font-display-cream"]) {
+      scene.cache.bitmapFont.add(font, { data: phaserFontData(font) });
+    }
     addCelebrationHeadline(scene as unknown as Scene, { subtitle: welcome.subtitle, title });
     expect(labels.map(({ text }) => text)).toEqual([...lines, welcome.subtitle.toUpperCase()]);
     expect(labels.map(({ scaleX }) => scaleX)).toEqual([3, 3, 1]);

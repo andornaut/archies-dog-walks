@@ -1,6 +1,7 @@
 import { EventEmitter } from "node:events";
 
 import type { Point } from "@andornaut/game-kit/rect";
+import { sceneStub } from "@andornaut/game-kit/testing/phaser/sceneStub";
 import type { Scene } from "phaser";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -72,7 +73,6 @@ class Display extends EventEmitter {
 function fixture(duration = 1200) {
   const bursts: Display[] = [];
   const groups: Display[] = [];
-  const events = new EventEmitter();
   const remove = vi.fn();
   const mask = { destroy: vi.fn() };
   const graphics = {
@@ -89,7 +89,7 @@ function fixture(duration = 1200) {
     bursts.push(image);
     return image;
   };
-  const scene = {
+  const scene = sceneStub(vi.fn, {
     add: {
       container: vi.fn((_x: number, _y: number, children: Display[]) => {
         const group = new Display();
@@ -101,7 +101,6 @@ function fixture(duration = 1200) {
       sprite: vi.fn(burst),
     },
     anims: { get: vi.fn(() => ({ duration })) },
-    events,
     make: { graphics: vi.fn(() => graphics) },
     textures: { exists: vi.fn(() => true) },
     time: {
@@ -110,9 +109,9 @@ function fixture(duration = 1200) {
         return { remove };
       }),
     },
-  };
+  });
   vi.mocked(tagFrame).mockReturnValue("peak");
-  return { bursts, events, graphics, groups, mask, remove, scene, timers };
+  return { bursts, events: scene.events, graphics, groups, mask, remove, scene, timers };
 }
 
 const view = SCREEN_LAYOUT.roadView;

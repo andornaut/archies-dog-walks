@@ -1,8 +1,9 @@
 import { EventEmitter } from "node:events";
 
 import { animationKey } from "@andornaut/game-kit/art/aseprite";
+import { sceneStub } from "@andornaut/game-kit/testing/phaser/sceneStub";
 import type { GameObjects, Scene } from "phaser";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import petShopSheet from "../../public/art/sprites/ui-pet-shop.json" with { type: "json" };
 import { animationSpecs } from "../assets/asepriteAnimations.ts";
@@ -192,7 +193,7 @@ function shopIdleScene(loaded = true, sheet?: unknown) {
     scene: { anims: { exists: () => loaded } },
   });
   const children: unknown[] = [];
-  const scene = {
+  const scene = sceneStub(vi.fn, {
     add: {
       sprite: (x: number, y: number, key: string, frame: string) => {
         expect({ frame, key, x, y }).toEqual({
@@ -207,7 +208,7 @@ function shopIdleScene(loaded = true, sheet?: unknown) {
     anims: { get: () => (loaded ? tag : undefined) },
     events,
     time,
-  };
+  });
   const idle = addShopIdle(
     scene as unknown as Scene,
     { add: (child: unknown) => children.push(child) } as unknown as GameObjects.Container,
@@ -420,7 +421,6 @@ describe("Pet shop idle invitation", () => {
 });
 
 function tileScene(animated: boolean, reducedMotion: boolean) {
-  const update = new Set<() => void>();
   const frames = [
     { duration: 130, textureFrame: "selected-first" },
     { duration: 70, textureFrame: "selected-second" },
@@ -434,7 +434,7 @@ function tileScene(animated: boolean, reducedMotion: boolean) {
   let face: { frame: { name: string }; height: number; width: number } | undefined;
   const time = { now: 0 };
   const container = () => ({ add: () => undefined });
-  const scene = {
+  const scene = sceneStub(vi.fn, {
     add: {
       container,
       graphics: () => {
@@ -488,14 +488,9 @@ function tileScene(animated: boolean, reducedMotion: boolean) {
       exists: (key: string) => animations.has(key),
       get: (key: string) => animations.get(key),
     },
-    events: {
-      off: (_event: string, callback: () => void) => update.delete(callback),
-      on: (_event: string, callback: () => void) => update.add(callback),
-      once: () => undefined,
-    },
     textures: { exists: () => true },
     time,
-  };
+  });
   const rect = { height: 44, width: 77, x: 14, y: 201 };
   addSelectTile(scene as unknown as Scene, container() as unknown as GameObjects.Container, rect, {
     edge: true,
@@ -508,9 +503,9 @@ function tileScene(animated: boolean, reducedMotion: boolean) {
       destroy?.();
       graphics.forEach((g) => g.destroy());
     },
+    events: scene.events,
     face: () => face,
     time,
-    update,
   };
 }
 
@@ -521,15 +516,15 @@ describe("selected tile faces", () => {
       const shown = tileScene(true, reduced);
       expect(shown.face()?.frame.name).toBe("legacy-selected");
       shown.time.now = 130;
-      shown.update.forEach((callback) => callback());
+      shown.events.emit("update");
       expect(shown.face()).toMatchObject({
         frame: { name: "legacy-selected" },
         height: 44,
         width: 77,
       });
-      expect(shown.update.size).toBe(reduced ? 0 : 1);
+      expect(shown.events.listenerCount("update")).toBe(reduced ? 0 : 1);
       shown.destroy();
-      expect(shown.update.size).toBe(0);
+      expect(shown.events.listenerCount("update")).toBe(0);
     },
   );
 });

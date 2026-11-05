@@ -1,5 +1,6 @@
 import { EventEmitter } from "node:events";
 
+import { sceneStub } from "@andornaut/game-kit/testing/phaser/sceneStub";
 import type { Scene } from "phaser";
 import { describe, expect, it, vi } from "vitest";
 
@@ -8,8 +9,8 @@ import { onLoadProgress } from "./loadProgress.ts";
 function fixture() {
   const file = { bytesTotal: 100, key: "atlas" };
   const load = Object.assign(new EventEmitter(), { list: [file] });
-  const events = new EventEmitter();
-  return { events, file, load, scene: { events, load } as unknown as Scene };
+  const scene = sceneStub(vi.fn, { load });
+  return { events: scene.events, file, load, scene: scene as unknown as Scene };
 }
 
 describe("loading progress phases", () => {

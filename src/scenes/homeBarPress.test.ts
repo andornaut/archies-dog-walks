@@ -1,6 +1,7 @@
 import { EventEmitter } from "node:events";
 
 import type { Point, Rect } from "@andornaut/game-kit/rect";
+import { sceneStub } from "@andornaut/game-kit/testing/phaser/sceneStub";
 import type { Scene } from "phaser";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -22,13 +23,11 @@ const centre = (rect: Rect): Point => ({ x: rect.x + rect.width / 2, y: rect.y +
 // An overlay scene on a home page whose input takes one pointer's presses.
 function fakeOverlay() {
   const input = Object.assign(new EventEmitter(), { manager: { pointers: [] } });
-  const scene = {
-    events: new EventEmitter(),
-    game: { events: new EventEmitter() },
+  const scene = sceneStub(vi.fn, {
     input,
     scene: { isActive: () => false, isPaused: () => false },
     time: { now: 0 },
-  } as unknown as Scene;
+  }) as unknown as Scene;
   const pointer = (point: Point) => ({ ...point, id: 1, isDown: false, wasCanceled: false });
   return {
     down: (point: Point) => input.emit("pointerdown", pointer(point)),

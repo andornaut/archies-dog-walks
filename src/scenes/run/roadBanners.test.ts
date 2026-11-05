@@ -1,5 +1,6 @@
 import { EventEmitter } from "node:events";
 
+import { sceneStub } from "@andornaut/game-kit/testing/phaser/sceneStub";
 import type { Scene } from "phaser";
 import { describe, expect, it, vi } from "vitest";
 
@@ -48,7 +49,7 @@ function fixture() {
     images.push(added);
     return added;
   });
-  const scene = { add: { image }, textures: { exists: () => true } };
+  const scene = sceneStub(vi.fn, { add: { image }, textures: { exists: () => true } });
   return { image, images, scene: scene as unknown as Scene };
 }
 

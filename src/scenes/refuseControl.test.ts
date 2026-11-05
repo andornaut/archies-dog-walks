@@ -1,3 +1,4 @@
+import { sceneStub } from "@andornaut/game-kit/testing/phaser/sceneStub";
 import type { GameObjects, Scene } from "phaser";
 import { describe, expect, it, vi } from "vitest";
 
@@ -17,13 +18,13 @@ function fixture() {
   const callbacks: (() => void)[] = [];
   const add = vi.fn();
   const delayedCall = vi.fn((_: number, callback: () => void) => callbacks.push(callback));
-  const scene = {
+  const scene = sceneStub(vi.fn, {
     time: {
       addEvent: vi.fn((event: { callback: () => void }) => callbacks.push(event.callback)),
       delayedCall,
     },
     tweens: { add },
-  } as unknown as Scene;
+  }) as unknown as Scene;
   return { add, callbacks, delayedCall, label, scene, tint };
 }
 

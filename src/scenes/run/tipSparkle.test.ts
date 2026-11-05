@@ -1,6 +1,7 @@
 import { animationKey } from "@andornaut/game-kit/art/aseprite";
-import type { Scene } from "phaser";
-import { describe, expect, it } from "vitest";
+import { sceneStub } from "@andornaut/game-kit/testing/phaser/sceneStub";
+import type { Scene, Textures } from "phaser";
+import { describe, expect, it, vi } from "vitest";
 
 import type { WalkStep } from "../../runner/walk.ts";
 import type { WalkItem } from "../../runner/walkItems.ts";
@@ -102,7 +103,7 @@ function fakeScene(size = { height: 9, width: 9 }) {
   let listeners: { event: string; listener: () => void }[] = [];
   const plays: string[] = [];
   const sprites: unknown[] = [];
-  const scene = {
+  const scene = sceneStub(vi.fn, {
     add: {
       sprite: () => {
         let playing: string | undefined;
@@ -147,16 +148,13 @@ function fakeScene(size = { height: 9, width: 9 }) {
         return sprite;
       },
     },
-    anims: { exists: (key: string) => key === animation },
-    textures: {
-      exists: (key: string) => key === TIP_SPARKLE.key,
-      get: () => ({
-        get: (name: string) =>
-          name === "0" ? { realHeight: size.height, realWidth: size.width } : undefined,
-        getFrameNames: () => ["0"],
-      }),
-    },
-  };
+  });
+  scene.anims.create({ key: animation });
+  scene.textures.list[TIP_SPARKLE.key] = {
+    get: (name: string) =>
+      name === "0" ? { realHeight: size.height, realWidth: size.width } : undefined,
+    getFrameNames: () => ["0"],
+  } as unknown as Textures.Texture;
   const finish = () => {
     const event = `animationcomplete-${animation}`;
     const heard = listeners.filter((entry) => entry.event === event);
