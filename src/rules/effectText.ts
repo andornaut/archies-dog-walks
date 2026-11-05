@@ -135,16 +135,12 @@ function multipliedTotal(tuning: LiveTuning, stat: Stat, effects: readonly Effec
     .reduce((product, modifier) => product * modifierValue(tuning, modifier), 1);
 }
 
-// A gear item's shop line, its {maxHearts} what its maxHearts modifiers add, signed, and its
-// {percent} the share of the base lane-change speed its agility modifiers add: Lucky collar's
-// "+1 max ♥ per owner", Running shoes' "30% faster lane changes".
+// A gear item's shop line, its {maxHearts} what its maxHearts modifiers add, signed: Lucky
+// collar's "+1 max ♥ per owner".
 export function gearShort(data: Pick<GameData, "shopGear" | "tuning">, gear: GearId): string {
   const { effects, short } = data.shopGear[gear];
   const maxHearts = addedTotal(data.tuning, "maxHearts", effects);
-  return fillNames(short, {
-    maxHearts: signedText(maxHearts, String(Math.abs(maxHearts))),
-    percent: percentMagnitude(addedTotal(data.tuning, "agility", effects)),
-  });
+  return fillNames(short, { maxHearts: signedText(maxHearts, String(Math.abs(maxHearts))) });
 }
 
 // A multiplier as a share of the whole: 0.5 as the words' half, otherwise a whole percent, 0.6
@@ -154,8 +150,8 @@ function shareText(words: EffectWords, multiplier: number): string {
 }
 
 // A walker perk's effect line, its {percent} how far the multiplier its percent names is from
-// 1 and its {fraction} the multiplier its fraction names as a share: Keen eye's "25% more
-// tips", Quick recovery's "Debuffs last half as long".
+// 1 and its {fraction} the multiplier its fraction names as a share: Keen eye's "50% more
+// tips and treats", Quick recovery's "Debuffs last half as long".
 export function perkEffect(data: Pick<GameData, "homeText" | "tuning">, perk: WalkerPerk): string {
   const multiplier = (key: MultiplierKey) => read(data.tuning, "multipliers", key);
   return fillNames(perk.effect, {

@@ -2,8 +2,7 @@ import type { Gear } from "./types.ts";
 
 // Permanent gear, bought once at the Pet shop and kept. Up to counts.loadoutMax goes in the
 // Pocket for a walk.
-// A short line may use {maxHearts}, what its maxHearts modifiers add, signed, and {percent},
-// the share of the base lane-change speed its agility modifiers add.
+// A short line may use {maxHearts}, what its maxHearts modifiers add, signed.
 // Locked dogs are sold too: those with unlock "shop" in dogs.ts, at their price.
 export const SHOP_GEAR = {
   fannyPack: {
