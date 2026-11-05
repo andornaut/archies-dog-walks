@@ -668,11 +668,7 @@ type WalkerUnlock =
 export interface WalkerPerk {
   readonly effect: string;
   readonly effects: NonEmptyEffects;
-  // The multiplier that fills effect's {fraction} as a share of the whole.
-  readonly fraction?: MultiplierKey;
   readonly name: string;
-  // The multiplier whose distance from 1 fills effect's {percent}, unsigned.
-  readonly percent?: MultiplierKey;
 }
 
 // A walker the player can pick, walking with its agility and the effects of its perk. agility

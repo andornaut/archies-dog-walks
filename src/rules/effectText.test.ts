@@ -188,20 +188,20 @@ describe("gearShort", () => {
 });
 
 describe("perkEffect", () => {
-  it("substitutes the named multiplier's change from the base, and keeps a perk without one unchanged", () => {
+  it("substitutes its multiply modifiers' change from the base, and keeps a perk without one unchanged", () => {
     const perk = WALKER_PERKS.keenEye;
-    const percent = unsignedPercent(read(gameData.tuning, "multipliers", perk.percent) - 1);
+    const percent = unsignedPercent(read(gameData.tuning, "multipliers", perk.effects[0].by) - 1);
     expect(perkEffect(gameData, perk)).toBe(fillNames(perk.effect, { percent }));
     const plain = WALKER_PERKS.longReach;
     expect(perkEffect(gameData, plain)).toBe(plain.effect);
   });
 
-  it("fills {fraction} with the named multiplier as a share: one half in words, else a percent", () => {
+  it("fills {fraction} with its multiply modifier as a share: one half in words, else a percent", () => {
     const perk = WALKER_PERKS.quickRecovery;
-    const factor = read(gameData.tuning, "multipliers", perk.fraction);
-    expect(factor).toBe(0.5);
+    const key = perk.effects[0].by;
+    expect(read(gameData.tuning, "multipliers", key)).toBe(0.5);
     expect(perkEffect(gameData, perk)).toBe(fillNames(perk.effect, { fraction: words.half }));
-    const multipliers = { ...gameData.tuning.multipliers, [perk.fraction]: 0.6 };
+    const multipliers = { ...gameData.tuning.multipliers, [key]: 0.6 };
     const tuning = { ...gameData.tuning, multipliers };
     expect(perkEffect({ ...gameData, tuning }, perk)).toBe(
       fillNames(perk.effect, { fraction: "60%" }),
@@ -211,6 +211,15 @@ describe("perkEffect", () => {
   it("leaves no {name} unfilled in any perk's line", () => {
     for (const perk of Object.values(WALKER_PERKS)) {
       expect(perkEffect(gameData, perk)).not.toMatch(/\{\w+\}/);
+    }
+  });
+
+  it("reads one factor from each perk, which all its multiply modifiers share", () => {
+    for (const perk of Object.values(WALKER_PERKS)) {
+      const factors = perk.effects.flatMap((effect) =>
+        effect.operation === "multiply" ? [read(gameData.tuning, "multipliers", effect.by)] : [],
+      );
+      expect(new Set(factors).size).toBeLessThanOrEqual(1);
     }
   });
 });

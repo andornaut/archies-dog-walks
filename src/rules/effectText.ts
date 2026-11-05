@@ -149,19 +149,27 @@ function shareText(words: EffectWords, multiplier: number): string {
   return multiplier === 0.5 ? words.half : percentMagnitude(multiplier);
 }
 
-// A walker perk's effect line, its {percent} how far the multiplier its percent names is from
-// 1 and its {fraction} the multiplier its fraction names as a share: Keen eye's "50% more
-// tips and treats", Quick recovery's "Debuffs last half as long".
+// The factor a perk's multiply modifiers apply, which they share, or undefined for a perk
+// without one.
+function perkMultiplier(tuning: LiveTuning, perk: WalkerPerk): number | undefined {
+  const multiply = modifiersOf(perk.effects).find(({ operation }) => operation === "multiply");
+  return multiply === undefined ? undefined : modifierValue(tuning, multiply);
+}
+
+// A walker perk's effect line, its {percent} how far its multiply modifiers' factor is from 1,
+// unsigned, and its {fraction} that factor as a share: Keen eye's "50% more tips and treats",
+// Quick recovery's "Debuffs last half as long".
 export function perkEffect(data: Pick<GameData, "homeText" | "tuning">, perk: WalkerPerk): string {
-  const multiplier = (key: MultiplierKey) => read(data.tuning, "multipliers", key);
-  return fillNames(perk.effect, {
-    ...(perk.fraction === undefined
+  const factor = perkMultiplier(data.tuning, perk);
+  return fillNames(
+    perk.effect,
+    factor === undefined
       ? {}
-      : { fraction: shareText(data.homeText.effect, multiplier(perk.fraction)) }),
-    ...(perk.percent === undefined
-      ? {}
-      : { percent: percentMagnitude(multiplier(perk.percent) - 1) }),
-  });
+      : {
+          fraction: shareText(data.homeText.effect, factor),
+          percent: percentMagnitude(factor - 1),
+        },
+  );
 }
 
 // An upgrade's effect or cardEffect, its {hearts} the signed hearts its hearts effects give, its

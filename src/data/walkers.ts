@@ -2,9 +2,9 @@ import type { Walker, WalkerPerk } from "./types.ts";
 
 // Each walker's one perk: its name, its effect in one line for the walker's detail card and
 // the top bar's icon, and its effects, which last every walk the walker walks, as gear's do.
-// The art is icon-perk-<kebab id>. An effect line's {percent} is how far the multiplier the perk's
-// percent names is from 1, unsigned: 1.25 as "25%". Its {fraction} is the multiplier the perk's
-// fraction names, as a share: 0.5 as homeText's half, otherwise a whole percent such as "60%".
+// The art is icon-perk-<kebab id>. An effect line's {percent} is how far the factor the perk's
+// multiply modifiers share is from 1, unsigned: 1.25 as "25%". Its {fraction} is that factor as
+// a share: 0.5 as homeText's half, otherwise a whole percent such as "60%".
 export const WALKER_PERKS = {
   keenEye: {
     effect: "{percent} more tips and treats",
@@ -13,7 +13,6 @@ export const WALKER_PERKS = {
       { by: "keenEyePickups", kind: "modifier", operation: "multiply", stat: "tipSpawns" },
     ],
     name: "Keen eye",
-    percent: "keenEyePickups",
   },
   longReach: {
     effect: "Grabs tips and treats a lane to each side",
@@ -33,7 +32,6 @@ export const WALKER_PERKS = {
         stat: "debuffSeconds",
       },
     ],
-    fraction: "quickRecoveryDebuffFactor",
     name: "Quick recovery",
   },
   secondChance: {
