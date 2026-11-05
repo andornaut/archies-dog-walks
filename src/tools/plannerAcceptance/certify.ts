@@ -4,12 +4,13 @@ import { canonicalJson } from "../../runner/canonicalJson.ts";
 import { auditSlotPartialPlan, auditSlotPlan } from "../../runner/slotAudit.ts";
 import { apportionSlotCounts, SLOT_ROLES, slotCountTotal } from "../../runner/slotConfig.ts";
 import { quietCoverage } from "../../runner/slotCoverage.ts";
+import { minimumSlotDelivery } from "../../runner/slotDelivery.ts";
 import { materialisePartialSlotPlan, materialiseSlotPlan } from "../../runner/slotPlan.ts";
 import type { SpawnAudit } from "../../runner/spawnValidation.ts";
 import { type ZonePlanObservation, zoneSlotGuarantees } from "../../runner/zonePlan.ts";
 import { compileZoneSlotInput } from "../../runner/zoneSlotInput.ts";
 import type { RunState } from "../../state/runState.ts";
-import { floorCount, type PlanEvidence } from "./verdict.ts";
+import type { PlanEvidence } from "./verdict.ts";
 import { visibleWitness } from "./visibility.ts";
 
 // An evidence defect that makes a plan's checks meaningless, as opposed to a failed criterion.
@@ -67,7 +68,7 @@ export function certifyPlan(
   );
   const auxiliary = input.auxiliary.reduce((total, quota) => total + quota.count, 0);
   const configured = slotCountTotal(roles) + auxiliary;
-  const required = floorCount(configured);
+  const required = minimumSlotDelivery("runtime-90", configured);
   const { assignments, delivery } = slots;
   const delivered = assignments.length;
   must(

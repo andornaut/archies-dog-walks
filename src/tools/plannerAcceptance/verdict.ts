@@ -1,6 +1,8 @@
 // The planner acceptance verdict: pure checks over each plan's independently gathered evidence.
 // The criteria follow gameplay/design.md (Spawning details) and the gameplay acceptance rule.
 
+import { minimumSlotDelivery } from "../../runner/slotDelivery.ts";
+
 export const ACCEPTANCE_PACK = ["ginger", "lady", "kilo"] as const;
 export const ACCEPTANCE_ROUTES = ["left", "straight", "right"] as const;
 export const ACCEPTANCE_SEEDS = [
@@ -10,9 +12,6 @@ export const ACCEPTANCE_SEEDS = [
 export const PLANS_PER_WALK = 4;
 // The share of the per-attempt allowance a plan's peak search may use.
 export const SEARCH_SHARE = 3 / 4;
-// The release floor: the slots a plan must deliver, at least 90% of its configured slots. Integer
-// arithmetic keeps the ceiling exact.
-export const floorCount = (configured: number) => Math.ceil((9 * configured) / 10);
 
 export interface AttemptEvidence {
   readonly candidateChecks: number;
@@ -72,7 +71,8 @@ const PLAN_CRITERIA = {
   fallbacks: (_allowance: number, plan: PlanEvidence) =>
     plan.attempts.every((attempt) => attempt.ordering === "original"),
   floor: (_allowance: number, plan: PlanEvidence) =>
-    plan.required === floorCount(plan.configured) && plan.delivered >= plan.required,
+    plan.required === minimumSlotDelivery("runtime-90", plan.configured) &&
+    plan.delivered >= plan.required,
   guarantees: (_allowance: number, plan: PlanEvidence) =>
     plan.guarantees.every((guarantee) => guarantee.selected >= guarantee.count),
   safety: (_allowance: number, plan: PlanEvidence) =>
