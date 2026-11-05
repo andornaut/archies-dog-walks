@@ -261,6 +261,7 @@ One word per moment, 2 to 7 letters, readable at 1×, built like the yard sign's
   - `fallen-log` is dark ridged bark with a pale ringed sawn end and no legs, unlike the tan slatted `bench` and the green `hedge`.
   - `green-bin-spill` lies knocked over on its front, its lid propped open and a wheel up, scraps and a banana peel spilling out, unlike the upright `trash-can`.
   - `iron-fence-2` and `iron-fence-3` are black iron pickets between ball-capped posts on a pale stone curb, unlike the brick and white newel posts of `porch-steps` and the green `hedge`.
+  - `leaf-bag` is a kraft paper yard-waste bag tipped on its side, its mouth flaring past the body in a lit lip round a dark inside and spilling crimson, red and brown leaves, unlike the plastic `green-bin-spill` and the gardener's green wheelbarrow.
   - `little-free-library` is a house-shaped cabinet under a pitched roof with book spines behind its glass door, unlike the flat-topped, painted `curb-utility-box`.
   - `newspaper-box` is three chained boxes in bold colours on a concrete pad, a lane wide, unlike `curb-mailbox`, a single red box under a dome with no window.
   - `porch-cat` is a white calico, unlike the tuxedo `chase-cat` and the ginger `ambient-cat`.

@@ -7329,84 +7329,84 @@
       }
     },
     {
-      "key": "leaf-pile",
-      "png": "sprites/leaf-pile.png",
-      "json": "sprites/leaf-pile.json",
+      "key": "leaf-bag",
+      "png": "sprites/leaf-bag.png",
+      "json": "sprites/leaf-bag.json",
       "anchor": {
         "feetY": 47,
-        "opaqueWidth": 44
+        "opaqueWidth": 45
       }
     },
     {
-      "key": "leaf-pile@50",
-      "png": "sprites/leaf-pile@50.png",
-      "json": "sprites/leaf-pile@50.json",
+      "key": "leaf-bag@50",
+      "png": "sprites/leaf-bag@50.png",
+      "json": "sprites/leaf-bag@50.json",
       "anchor": {
         "feetY": 23,
-        "opaqueWidth": 22
+        "opaqueWidth": 23
       }
     },
     {
-      "key": "leaf-pile@56",
-      "png": "sprites/leaf-pile@56.png",
-      "json": "sprites/leaf-pile@56.json",
+      "key": "leaf-bag@56",
+      "png": "sprites/leaf-bag@56.png",
+      "json": "sprites/leaf-bag@56.json",
       "anchor": {
         "feetY": 26,
         "opaqueWidth": 25
       }
     },
     {
-      "key": "leaf-pile@62",
-      "png": "sprites/leaf-pile@62.png",
-      "json": "sprites/leaf-pile@62.json",
+      "key": "leaf-bag@62",
+      "png": "sprites/leaf-bag@62.png",
+      "json": "sprites/leaf-bag@62.json",
       "anchor": {
         "feetY": 29,
         "opaqueWidth": 28
       }
     },
     {
-      "key": "leaf-pile@69",
-      "png": "sprites/leaf-pile@69.png",
-      "json": "sprites/leaf-pile@69.json",
+      "key": "leaf-bag@69",
+      "png": "sprites/leaf-bag@69.png",
+      "json": "sprites/leaf-bag@69.json",
       "anchor": {
         "feetY": 32,
-        "opaqueWidth": 30
+        "opaqueWidth": 31
       }
     },
     {
-      "key": "leaf-pile@75",
-      "png": "sprites/leaf-pile@75.png",
-      "json": "sprites/leaf-pile@75.json",
+      "key": "leaf-bag@75",
+      "png": "sprites/leaf-bag@75.png",
+      "json": "sprites/leaf-bag@75.json",
       "anchor": {
         "feetY": 35,
-        "opaqueWidth": 33
+        "opaqueWidth": 34
       }
     },
     {
-      "key": "leaf-pile@81",
-      "png": "sprites/leaf-pile@81.png",
-      "json": "sprites/leaf-pile@81.json",
+      "key": "leaf-bag@81",
+      "png": "sprites/leaf-bag@81.png",
+      "json": "sprites/leaf-bag@81.json",
       "anchor": {
         "feetY": 38,
-        "opaqueWidth": 35
+        "opaqueWidth": 37
       }
     },
     {
-      "key": "leaf-pile@88",
-      "png": "sprites/leaf-pile@88.png",
-      "json": "sprites/leaf-pile@88.json",
+      "key": "leaf-bag@88",
+      "png": "sprites/leaf-bag@88.png",
+      "json": "sprites/leaf-bag@88.json",
       "anchor": {
         "feetY": 41,
-        "opaqueWidth": 38
+        "opaqueWidth": 39
       }
     },
     {
-      "key": "leaf-pile@94",
-      "png": "sprites/leaf-pile@94.png",
-      "json": "sprites/leaf-pile@94.json",
+      "key": "leaf-bag@94",
+      "png": "sprites/leaf-bag@94.png",
+      "json": "sprites/leaf-bag@94.json",
       "anchor": {
         "feetY": 44,
-        "opaqueWidth": 41
+        "opaqueWidth": 42
       }
     },
     {

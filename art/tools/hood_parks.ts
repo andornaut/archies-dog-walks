@@ -59,11 +59,13 @@
 //                             outline round the iron, so the gaps stay clear at @50. idle (4 frames,
 //                             500ms): a white glint along the top rail on frame 2
 // iron-fence-3        176x36  3 lanes: the same fence, a lane wider
-// leaf-pile           48x48   1 lane, a raked dome of autumn leaves cel shaded brick, lit crimson and
-//                             shaded dbrick, its rim ragged with red, brown and dbrick leaves and a
-//                             few more over its face, a red maple leaf on top; no gold or orange, so
-//                             it never reads as a tip coin; idle (4 frames, 400ms): the maple leaf
-//                             lifts 1px and turns over on frame 2
+// leaf-bag            48x48   1 lane, a Toronto kraft paper yard-waste bag tipped over on its side,
+//                             skin2 paper lit skin1 and shaded brown, its top edge sagging soft, a
+//                             dgreen leaf printed on its side, its mouth flaring wider than the body
+//                             in a lit lip round a dark inside, spilling crimson, red and brown maple,
+//                             oak and oval leaves onto the road; no gold, amber or orange, so it never
+//                             reads as a tip coin; idle (4 frames, 400ms): the outermost maple leaf
+//                             lifts 3px and turns over on frame 2 and settles to 1px on frame 3
 // little-free-library 48x48   1 lane, a little free library: a turquoise cabinet shaped like a tiny
 //                             house under a brick-shingled gable with a cream bargeboard and finial,
 //                             its cream-framed glass door showing two shelves of bright book spines,
@@ -113,6 +115,7 @@ import {
   build as buildSprites,
   type Colour,
   depthSettled,
+  dk,
   type Drawable,
   type DrawingScope,
   type Edge,
@@ -699,45 +702,9 @@ const PILE_COLOURS: readonly (readonly [string, string])[] = [
   ["amber", "ochre"],
   ["rust", "dbrick"],
 ];
-// The heap's leaves: [fill, shade] on its lit upper left, its brown middle and its dark lower right.
-const HEAP_COLOURS: readonly (readonly [string, string])[] = [
-  ["red", "dred"],
-  ["brown", "dbrown"],
-  ["dbrick", "walnut"],
-];
-// The heap's dome under its leaves: base, lower-right shade and upper-left light.
-const HEAP_CEL = ["brick", "dbrick", "dred"] as const;
-// The rows of leaves along the heap's rim, RIM_STEP apart, and the ones over its face: [left column,
-// top row, tone].
-const RIM_STEP = 3;
+// A leaf lying on the fallen log: [column, row, colour index], LEAF wide.
 type Leaf = readonly [x: number, y: number, tone: number];
-const FACE_LEAVES: readonly Leaf[] = [
-  [11, 29, 0],
-  [17, 34, 1],
-  [21, 28, 1],
-  [27, 33, 2],
-];
-// The heap: a dome, centre (PILE_X, PILE_Y), radii PILE_R, laid out in leaves LEAF wide.
-const PILE_X = 20;
-const PILE_Y = 39;
-const PILE_R: Point = [18, 17];
 const LEAF = 7;
-// The red maple leaf on top, character maps in drawn pixels (r TTC red, d its dred shade and stem): a
-// top lobe, two side lobes and two small lower ones at full size and the larger steps, three points
-// below them.
-const MAPLE: readonly string[] = [
-  "....r....",
-  "...rrr...",
-  ".r.rrr.r.",
-  ".rrrrrrr.",
-  "rrrrrrrrd",
-  ".rrrrrdd.",
-  "..rr.dd..",
-  "....d....",
-];
-const MAPLE_SMALL: readonly string[] = ["..r..", "r.r.r", "rrrrd", ".rdd.", "..d.."];
-// The pile's idle: rest, rest, the maple leaf lifted 1px and turned over, rest.
-const LEAF_PILE_IDLE: readonly [readonly number[], number] = [[0, 0, 1, 0], 400];
 
 // A LEAF-wide leaf lying flat, pointed at both ends, 4 rows deep: its upper half fill, its lower
 // shade.
@@ -746,57 +713,239 @@ function lens(g: Drawable, x: number, y: number, fill: string, shade: string): v
   g.tri([x, y + 2], [x + LEAF / 2, y + 4], [x + LEAF, y + 2], shade);
 }
 
-// The maple leaf centred on layout column cx with its stem's foot on layout row bottom, pixel for
-// pixel in drawn pixels so its points stay sharp at every step, lifted lift drawn pixels and mirrored
-// when flip.
-function maple(g: Drawable, cx: number, bottom: number, lift: number, flip: boolean): void {
-  const px = raster(g);
-  const s = scaleOf(g);
-  const leaf = s >= 0.9 ? MAPLE : MAPLE_SMALL;
-  const x0 = Math.round(cx * s - leaf[0]!.length / 2);
-  const y0 = Math.round(bottom * s) - leaf.length - lift;
-  leaf.forEach((row, j) => {
-    const chars = flip ? [...row].reverse() : [...row];
-    chars.forEach((ch, i) => {
-      if (ch !== ".") {
-        px.p(x0 + i, y0 + j, ch === "r" ? "ttc" : "dred");
+// The leaf bag's idle: rest, rest, the outermost maple leaf lifted 3px and turned over, then 1px.
+const LEAF_BAG_IDLE: readonly [readonly number[], number] = [[0, 0, 1, 2], 400];
+// Toronto's kraft paper yard-waste bag: skin2 paper lit skin1 and shaded brown, a dgreen leaf printed
+// on it, walnut inside.
+const PAPER = { fill: "skin2", inside: "walnut", light: "skin1", print: "dgreen", shade: "brown" };
+// The bag on its side, in layout pixels: its closed end at column BAG_X0, the mouth's fold at
+// BAG_X1, the top edge on row BAG_TOP at the ends sagging BAG_SAG in the middle; the mouth's lip
+// centred on BAG_MOUTH with radii BAG_LIP, flaring past the body, round a dark hole BAG_HOLE.
+const BAG_X0 = 3;
+const BAG_X1 = 24;
+const BAG_TOP = 26;
+const BAG_SAG = 1.5;
+const BAG_MOUTH: Point = [25, 32.5];
+const BAG_LIP: Point = [5, 9.5];
+const BAG_HOLE: Point = [3.2, 7.5];
+// The leaves' tones, [fill, light, shade]: crimson, red and brown, with no gold, amber or orange so
+// they never read as a tip coin; a red leaf's light stays red so it never reads as a heart.
+type Tone = readonly [fill: string, light: string, shade: string];
+const BAG_TONES: readonly Tone[] = [
+  ["ttc", "ttc", "dred"],
+  ["red", "red", "dred"],
+  ["brown", "tan", "dbrown"],
+];
+// Leaf shapes in drawn pixels, # the blade and v the midrib and stem, from the @75 step up and below
+// it.
+type LeafShape = "maple" | "oak" | "oval";
+type Maps = readonly [large: readonly string[], small: readonly string[]];
+const LEAF_SHAPES: Readonly<Record<LeafShape, Maps>> = {
+  maple: [
+    [
+      "....#....",
+      "..#.#.#..",
+      "..##v##..",
+      "#.##v##.#",
+      "####v####",
+      ".###v###.",
+      "..##v##..",
+      "....v....",
+      "....v....",
+    ],
+    ["...#...", ".#.#.#.", ".##v##.", "###v###", ".##v##.", "...v..."],
+  ],
+  oak: [
+    [
+      "...#...",
+      "..###..",
+      ".##v##.",
+      "..#v#..",
+      ".##v##.",
+      "###v###",
+      ".##v##.",
+      "..#v#..",
+      "...v...",
+      "...v...",
+    ],
+    ["..#..", ".#v#.", "##v##", ".#v#.", "##v##", ".#v#.", "..v.."],
+  ],
+  oval: [
+    ["...#...", "..###..", ".##v##.", ".##v##.", "###v###", ".##v##.", "..#v#..", "...v..."],
+    ["..#..", ".#v#.", "##v##", "##v##", ".#v#.", "..v.."],
+  ],
+};
+// The printed leaf on the bag's side.
+const PRINT: Maps = [["..#..", "#.#.#", "#####", ".###.", "..#.."], [".#.", "###", ".#."]];
+// The leaves spilling from the mouth, back to front: [column, row, shape, tone, quarter turns,
+// mirrored]. The idle lifts BAG_LIFTED.
+type Spill = readonly [x: number, y: number, shape: LeafShape, tone: number, turn: number, flip: boolean];
+const BAG_SPILL: readonly Spill[] = [
+  [25.5, 32, "maple", 1, 0, false],
+  [31, 35.5, "oval", 2, 3, false],
+  [36.5, 34, "maple", 0, 0, true],
+  [27.5, 38.5, "oak", 2, 1, false],
+  [34.5, 38.5, "oak", 1, 1, false],
+];
+const BAG_LIFTED = 2;
+
+// rows turned a quarter turn clockwise turn times.
+function turned(rows: readonly string[], turn: number): string[] {
+  let out = [...rows];
+  for (let q = 0; q < turn % 4; q++) {
+    const h = out.length;
+    const prev = out;
+    out = Array.from({ length: prev[0]!.length }, (_, y) =>
+      Array.from({ length: h }, (__, x) => prev[h - 1 - x]![y]).join(""),
+    );
+  }
+  return out;
+}
+
+// The leaf bag's pixels, drawn on g's drawn grid in drawn pixels from layout coordinates, so each leaf
+// keeps its shape at every step. Each leaf takes a ring two ramp steps below its fill between it and
+// what lies under it; done clears the rings left on the silhouette, where the road outline goes.
+class BagPixels {
+  readonly px: Grid;
+  readonly ring = new Set<string>();
+  readonly s: number;
+
+  constructor(g: Drawable) {
+    this.px = raster(g);
+    this.s = scaleOf(g);
+  }
+
+  set(x: number, y: number, c: string, ring = false): void {
+    if (x < 0 || y < 0 || x >= this.px.w || y >= this.px.h) {
+      return;
+    }
+    this.px.p(x, y, c);
+    if (ring) {
+      this.ring.add(`${x},${y}`);
+    } else {
+      this.ring.delete(`${x},${y}`);
+    }
+  }
+
+  // An ellipse in layout pixels.
+  oval([cx, cy]: Point, [rx, ry]: Point, c: string): void {
+    for (let y = 0; y < this.px.h; y++) {
+      for (let x = 0; x < this.px.w; x++) {
+        if ((((x + 0.5) / this.s - cx) / rx) ** 2 + (((y + 0.5) / this.s - cy) / ry) ** 2 <= 1) {
+          this.set(x, y, c);
+        }
       }
+    }
+  }
+
+  // Layout columns x0 to x1, each from row top(column) down to row bottom(column).
+  span(
+    x0: number,
+    x1: number,
+    top: (x: number) => number,
+    bottom: (x: number) => number,
+    c: string,
+  ): void {
+    for (let x = Math.round(x0 * this.s); x < Math.round(x1 * this.s); x++) {
+      const u = (x + 0.5) / this.s;
+      for (let y = Math.round(top(u) * this.s); y < Math.round(bottom(u) * this.s); y++) {
+        this.set(x, y, c);
+      }
+    }
+  }
+
+  // A character map centred on layout point (cx, cy) and lifted lift drawn pixels: # in fill and v in
+  // shade; a leaf also takes its ring, light along its upper-left edge and shade along its lower right.
+  stamp(
+    maps: Maps,
+    [cx, cy]: Point,
+    [fill, light, shade]: Tone,
+    { flip = false, leaf = true, lift = 0, turn = 0 } = {},
+  ): void {
+    let rows = turned(maps[this.s >= 0.9 ? 0 : 1], turn);
+    if (flip) {
+      rows = rows.map((r) => [...r].reverse().join(""));
+    }
+    const h = rows.length;
+    const w = rows[0]!.length;
+    const x0 = Math.round(cx * this.s) - Math.floor(w / 2);
+    const y0 = Math.round(cy * this.s) - Math.floor(h / 2) - lift;
+    const on = (i: number, j: number): boolean =>
+      j >= 0 && j < h && i >= 0 && i < w && rows[j]![i] !== ".";
+    if (leaf) {
+      const ring = dk(dk(fill));
+      for (let j = -1; j <= h; j++) {
+        for (let i = -1; i <= w; i++) {
+          if (!on(i, j) && (on(i - 1, j) || on(i + 1, j) || on(i, j - 1) || on(i, j + 1))) {
+            this.set(x0 + i, y0 + j, ring, true);
+          }
+        }
+      }
+    }
+    for (let j = 0; j < h; j++) {
+      for (let i = 0; i < w; i++) {
+        if (!on(i, j)) {
+          continue;
+        }
+        let c = fill;
+        if (rows[j]![i] === "v") {
+          c = shade;
+        } else if (leaf && (!on(i, j - 1) || !on(i - 1, j))) {
+          c = light;
+        } else if (leaf && (!on(i, j + 1) || !on(i + 1, j))) {
+          c = shade;
+        }
+        this.set(x0 + i, y0 + j, c);
+      }
+    }
+  }
+
+  done(): void {
+    const { px } = this;
+    const clear = (x: number, y: number): boolean =>
+      x < 0 || y < 0 || x >= px.w || y >= px.h || !px.px[y]![x];
+    const edge = [...this.ring]
+      .map((k) => k.split(",").map(Number) as [number, number])
+      .filter(([x, y]) => clear(x - 1, y) || clear(x + 1, y) || clear(x, y - 1) || clear(x, y + 1));
+    for (const [x, y] of edge) {
+      px.p(x, y, null);
+    }
+  }
+}
+
+// A Toronto kraft paper yard-waste bag tipped over on its side across the path, its open mouth to the
+// right spilling crimson, red and brown leaves (no gold, amber or orange, so they never read as a tip
+// coin): a soft body whose top edge sags in the middle, lit skin1 along the top and its closed end,
+// shaded brown along the bottom and in a fold band by the mouth, a dgreen leaf printed on its side.
+// The mouth flares past the body, a lit lip round a dark inside, so it reads as a bag, not a box.
+// lift 1 lifts the outermost maple leaf 3 drawn pixels and turns it over; 2 lets it settle to 1.
+export function leafBag(lift = 0): Drawable {
+  const g = edged(scope.Grid(SIZE, SIZE));
+  const b = new BagPixels(g);
+  const mid = (BAG_X0 + BAG_X1) / 2;
+  const half = (BAG_X1 - BAG_X0) / 2;
+  const top = (x: number): number => BAG_TOP + BAG_SAG * (1 - ((x - mid) / half) ** 2);
+  const end = (): number => BAG_TOP + 1;
+  const floor = (): number => SIZE;
+  b.span(BAG_X0, BAG_X0 + 1, end, floor, PAPER.fill);
+  b.span(BAG_X0 + 1, BAG_X1, top, floor, PAPER.fill);
+  b.span(BAG_X0 + 1, BAG_X1, top, (x) => top(x) + 1.5, PAPER.light);
+  b.span(BAG_X0, BAG_X0 + 2, end, floor, PAPER.light);
+  b.span(BAG_X0 + 1, BAG_X1, () => SIZE - 3, floor, PAPER.shade);
+  b.span(BAG_X1 - 6, BAG_X1 - 4, top, floor, PAPER.shade);
+  b.stamp(PRINT, [11, 33], [PAPER.print, PAPER.print, PAPER.print], { leaf: false });
+  b.oval(BAG_MOUTH, BAG_LIP, PAPER.light);
+  b.oval([BAG_MOUTH[0] + 0.5, BAG_MOUTH[1]], BAG_HOLE, PAPER.inside);
+  BAG_SPILL.forEach(([x, y, shape, tone, turn, flip], i) => {
+    const lifted = i === BAG_LIFTED && lift > 0;
+    b.stamp(LEAF_SHAPES[shape], [x, y], BAG_TONES[tone]!, {
+      flip: lifted ? lift !== 1 : flip,
+      lift: lifted ? (lift === 1 ? 3 : 1) : 0,
+      turn,
     });
   });
-}
-
-// [x, y, colour index into HEAP_COLOURS] for every leaf drawn on the heap, back rows first: the two
-// at each row's ends, their tips on the dome's rim so it is ragged all round, then a few over its
-// face, each in the tone of the band it lies on.
-function pileLeaves(): Leaf[] {
-  const out: Leaf[] = [];
-  const [rx, ry] = PILE_R;
-  for (let y = PILE_Y - ry + 1; y < PILE_Y - 3; y += RIM_STEP) {
-    const half = rx * Math.sqrt(Math.max(0, 1 - ((y + 2 - PILE_Y) / ry) ** 2));
-    if (2 * half < 2 * LEAF) {
-      out.push([PILE_X - LEAF / 2, y, 0]);
-      continue;
-    }
-    out.push([PILE_X - half, y, 0], [PILE_X + half - LEAF, y, y > PILE_Y - ry / 2 ? 2 : 1]);
-  }
-  return [...out, ...FACE_LEAVES];
-}
-
-// A raked heap of autumn leaves in reds, crimson and browns, with no gold or orange so it never reads
-// as a tip coin: a low dome cel shaded brick, lit crimson on its upper left and shaded dbrick on its
-// lower right, a few big leaves along its rim standing proud so its edge is ragged with their tips
-// (red down the lit left side, brown on the upper right, dbrick on the lower right) and a few more
-// over its face, each lit on its upper half; a red maple leaf lies on top, its edge lit red rather
-// than pink so it never reads as a heart. lift raises the maple leaf 1 drawn pixel and turns it over.
-function leafPile(lift = 0): Drawable {
-  const g = edged(scope.Grid(SIZE, SIZE));
-  const [rx, ry] = PILE_R;
-  g.cel(PILE_X, PILE_Y, rx - 2, ry - 2, ...HEAP_CEL);
-  for (const [x, y, k] of pileLeaves()) {
-    lens(g, x, y, ...HEAP_COLOURS[k]!);
-  }
-  maple(g, 20, 23.7, lift, Boolean(lift));
-  return lit(g, { dred: ["red", null] });
+  b.done();
+  return g;
 }
 
 // The steps' idle: rest, rest, the candle guttering low, then flaring.
@@ -1603,7 +1752,7 @@ function* roadSprites(suffix: string, step: number): Generator<Sprite> {
   ];
   yield [`cherry-trees${suffix}`, idle((f: number) => cherryTrees(f), CHERRY_IDLE)];
   yield [`fallen-log${suffix}`, idle((f: Point) => fallenLog(f), FALLEN_LOG_IDLE)];
-  yield [`leaf-pile${suffix}`, idle(leafPile, LEAF_PILE_IDLE)];
+  yield [`leaf-bag${suffix}`, idle(leafBag, LEAF_BAG_IDLE)];
   yield [`little-free-library${suffix}`, idle(littleFreeLibrary, LIBRARY_IDLE)];
   yield [`porch-steps${suffix}`, idle(porchSteps, PORCH_STEPS_IDLE)];
   for (const lanes of [2, 3]) {

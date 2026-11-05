@@ -1,5 +1,5 @@
 { "frames": {
-   "leaf-pile@56 0.aseprite": {
+   "leaf-bag@56 0.aseprite": {
     "frame": { "x": 0, "y": 0, "w": 27, "h": 27 },
     "rotated": false,
     "trimmed": false,
@@ -7,7 +7,7 @@
     "sourceSize": { "w": 27, "h": 27 },
     "duration": 400
    },
-   "leaf-pile@56 1.aseprite": {
+   "leaf-bag@56 1.aseprite": {
     "frame": { "x": 27, "y": 0, "w": 27, "h": 27 },
     "rotated": false,
     "trimmed": false,
@@ -15,7 +15,7 @@
     "sourceSize": { "w": 27, "h": 27 },
     "duration": 400
    },
-   "leaf-pile@56 2.aseprite": {
+   "leaf-bag@56 2.aseprite": {
     "frame": { "x": 54, "y": 0, "w": 27, "h": 27 },
     "rotated": false,
     "trimmed": false,
@@ -23,7 +23,7 @@
     "sourceSize": { "w": 27, "h": 27 },
     "duration": 400
    },
-   "leaf-pile@56 3.aseprite": {
+   "leaf-bag@56 3.aseprite": {
     "frame": { "x": 81, "y": 0, "w": 27, "h": 27 },
     "rotated": false,
     "trimmed": false,
@@ -35,7 +35,7 @@
  "meta": {
   "app": "http://www.aseprite.org/",
   "version": "1.2.30-x64",
-  "image": "leaf-pile@56.png",
+  "image": "leaf-bag@56.png",
   "format": "RGBA8888",
   "size": { "w": 108, "h": 27 },
   "scale": "1",
