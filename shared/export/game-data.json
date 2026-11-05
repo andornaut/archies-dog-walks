@@ -3320,8 +3320,7 @@
       "distractionLeaveLingerShare": 0.3,
       "distractionVisitLingerShare": 0.35,
       "goodLeashSquirrelPull": 0,
-      "keenEyeTipSpawns": 1.5,
-      "keenEyeTreatSpawns": 1.5,
+      "keenEyePickups": 1.5,
       "largeDogAgility": -0.1,
       "minPackAgility": 0.9,
       "moverSpeedJitter": 0.25,
@@ -3329,8 +3328,7 @@
       "quickRecoveryDebuffFactor": 0.5,
       "runningShoesAgility": 1,
       "rushHourObstacles": 1.3,
-      "rushHourTips": 2,
-      "rushHourTreats": 2,
+      "rushHourPickups": 2,
       "scrollSpeedGainPerZone": 0.2,
       "smallDogAgility": 0.1,
       "stinkyTipValue": 0
@@ -3391,7 +3389,6 @@
       "id": "bellyRubs",
       "art": "card-belly-rubs",
       "cardEffect": "+1♥ each",
-      "duration": "now",
       "effect": "+1♥ each",
       "effects": [
         {
@@ -3403,13 +3400,13 @@
         }
       ],
       "kind": "boost",
-      "name": "Belly rubs"
+      "name": "Belly rubs",
+      "duration": "now"
     },
     {
       "id": "bigTipper",
       "art": "card-big-tipper",
       "cardEffect": "+$1 per tip",
-      "duration": "nextZone",
       "effect": "+$1 per tip",
       "effects": [
         {
@@ -3421,13 +3418,13 @@
         }
       ],
       "kind": "boost",
-      "name": "Big tipper"
+      "name": "Big tipper",
+      "duration": "nextZone"
     },
     {
       "id": "goodLeash",
       "art": "card-good-leash",
       "cardEffect": "No pulls",
-      "duration": "run",
       "effect": "No pulls",
       "effects": [
         {
@@ -3439,13 +3436,13 @@
         }
       ],
       "kind": "boost",
-      "name": "Good leash"
+      "name": "Good leash",
+      "duration": "run"
     },
     {
       "id": "raincoats",
       "art": "card-raincoats",
       "cardEffect": "Puddle-safe",
-      "duration": "run",
       "effect": "No Muddy from puddles or potholes",
       "effects": [
         {
@@ -3460,17 +3457,17 @@
         }
       ],
       "kind": "boost",
-      "name": "Raincoats"
+      "name": "Raincoats",
+      "duration": "run"
     },
     {
       "id": "rushHour",
       "art": "card-rush-hour",
       "cardEffect": "More of all",
-      "duration": "nextZone",
       "effect": "Tips, treats ×2, more obstacles",
       "effects": [
         {
-          "by": "rushHourTips",
+          "by": "rushHourPickups",
           "duration": "nextZone",
           "kind": "modifier",
           "operation": "multiply",
@@ -3484,7 +3481,7 @@
           "stat": "obstacleSpawns"
         },
         {
-          "by": "rushHourTreats",
+          "by": "rushHourPickups",
           "duration": "nextZone",
           "kind": "modifier",
           "operation": "multiply",
@@ -3492,13 +3489,13 @@
         }
       ],
       "kind": "tradeOff",
-      "name": "Rush hour"
+      "name": "Rush hour",
+      "duration": "nextZone"
     },
     {
       "id": "charmer",
       "art": "card-charmer",
       "cardEffect": "Free $ card",
-      "duration": "run",
       "effect": "First card: cash options free",
       "effects": [
         {
@@ -3510,7 +3507,8 @@
         }
       ],
       "kind": "boost",
-      "name": "Charmer"
+      "name": "Charmer",
+      "duration": "run"
     }
   ],
   "walkers": [
