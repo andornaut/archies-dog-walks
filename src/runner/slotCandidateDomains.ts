@@ -19,6 +19,7 @@ import {
   slotPocketScopeOwner,
 } from "./slotConstraintState.ts";
 import type { SlotPlacement } from "./slotFeasibility.ts";
+import { SpawnRetentionError } from "./spawnCells.ts";
 import {
   blockingSpan,
   type PlannedSpawns,
@@ -895,7 +896,10 @@ export function createSlotCandidateDomains<Kind extends string>(
             row,
             candidate.entry,
           );
-        } catch {
+        } catch (error) {
+          if (!(error instanceof SpawnRetentionError)) {
+            throw error;
+          }
           return { status: "unknown" };
         }
         if (work.stopped() || mask === undefined) {

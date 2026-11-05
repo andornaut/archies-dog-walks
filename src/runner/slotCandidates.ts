@@ -25,6 +25,15 @@ import {
 } from "./spawning.ts";
 
 type Geometry<Kind extends string> = Omit<SpawnPlan<Kind>, "quotas">;
+// A source profile that does not compile, or compiles to a request inconsistent with its role or
+// footprint. A compile failure is kept as the cause.
+export class SlotProfileError extends Error {
+  constructor(message: string, options?: ErrorOptions) {
+    super(message, options);
+    this.name = "SlotProfileError";
+  }
+}
+
 export interface SlotKindDescriptor<Kind extends string> {
   readonly draws?: MoverDraws;
   readonly herring: boolean;
@@ -207,22 +216,29 @@ export function describeSlotKind<Kind extends string>(
   streams: PlannerStreams,
   source: SlotSource<Kind>,
 ): SlotKindDescriptor<Kind> {
-  const compiled = source.compile(streams);
+  let compiled: ReturnType<SlotSource<Kind>["compile"]>;
+  try {
+    compiled = source.compile(streams);
+  } catch (error) {
+    throw new SlotProfileError(`Slot profile does not compile: ${source.role}:${source.kind}`, {
+      cause: error,
+    });
+  }
   const hazard = source.role !== "auxiliaryFixed" && source.role !== "auxiliaryMoving";
   if (compiled.hazard !== undefined && compiled.hazard !== hazard) {
-    throw new Error(`Slot hazard role mismatch: ${source.role}:${source.kind}`);
+    throw new SlotProfileError(`Slot hazard role mismatch: ${source.role}:${source.kind}`);
   }
   const request: SpawnQuota<Kind> = { ...compiled, count: 1, hazard, kind: source.kind };
   const footprint = slotFootprint(request);
   if (footprint.lanes !== source.footprint.lanes || footprint.rows !== source.footprint.rows) {
-    throw new Error(`Slot footprint mismatch: ${source.role}:${source.kind}`);
+    throw new SlotProfileError(`Slot footprint mismatch: ${source.role}:${source.kind}`);
   }
   const moving =
     source.role === "encounterMoving" ||
     source.role === "minorMoving" ||
     source.role === "auxiliaryMoving";
   if (moving !== (request.mover !== undefined)) {
-    throw new Error(`Slot profile role mismatch: ${source.role}:${source.kind}`);
+    throw new SlotProfileError(`Slot profile role mismatch: ${source.role}:${source.kind}`);
   }
   if (request.mover === undefined) {
     return { herring: false, request, source };

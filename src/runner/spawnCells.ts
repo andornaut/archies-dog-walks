@@ -36,6 +36,15 @@ interface Block extends LaneAlternativeBlock {
   row: number;
 }
 
+// A placement the lane board cannot retain: it lacks its compiled request or placement, or it
+// extends past the zone's rows.
+export class SpawnRetentionError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "SpawnRetentionError";
+  }
+}
+
 // The lanes the lane-blocking spawns block in each row's window and in the gap after it, the
 // blocks kept, and the rows wide ones' hit boxes are on. pathHeld is the lanes the path keeps
 // clear in each row's window and gap, a row for each of the zone's rows.
@@ -195,7 +204,7 @@ export class LaneBlocks {
   ): void {
     const { lastGap, lastRow } = blockingSpan(this.plan, this.spacing, cell.row, footprint.rows);
     if (cell.row < 0 || lastRow >= this.pathHeld.length || lastGap >= this.pathHeld.length - 1) {
-      throw new Error("Retained block exceeds zone rows");
+      throw new SpawnRetentionError("Retained block exceeds zone rows");
     }
     const covered = laneMask(cell.lane, footprint.lanes);
     const swept = dart ? this.dartBlocked : this.wallBlocked;

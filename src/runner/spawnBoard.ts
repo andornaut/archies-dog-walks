@@ -11,7 +11,7 @@ import {
   type Spot,
 } from "./moverSpots.ts";
 import { ridersMeet, type RiderSpan, riderSpanOf } from "./riderSpans.ts";
-import { LaneBlocks, PlacedPlaces, SpawnCells } from "./spawnCells.ts";
+import { LaneBlocks, PlacedPlaces, SpawnCells, SpawnRetentionError } from "./spawnCells.ts";
 import type { FeasibilityObserver, FeasibilityWitness } from "./spawnFeasibilityDiagnostics.ts";
 import {
   fitsStanding,
@@ -903,7 +903,7 @@ export class SpawnBoard<Kind extends string> {
   keep(entry: SpawnPlacement<Kind>): void {
     const quota = this.quota(entry);
     if (quota === undefined) {
-      throw new Error("Missing repair request identity");
+      throw new SpawnRetentionError("Missing repair request identity");
     }
     if (!entry.herring) {
       if (entry.event.mover === undefined) {
@@ -914,7 +914,7 @@ export class SpawnBoard<Kind extends string> {
       } else {
         const spot = this.spot(entry, true);
         if (spot === undefined || quota.mover === undefined) {
-          throw new Error("Missing compiled repair placement");
+          throw new SpawnRetentionError("Missing compiled repair placement");
         }
         keepMoverSpot(
           {

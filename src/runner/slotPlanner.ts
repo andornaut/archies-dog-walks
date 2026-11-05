@@ -7,6 +7,7 @@ import {
   isNativeSlotPreparation,
   type PreparedSlotKind,
   prepareSlotKindWithin,
+  SlotProfileError,
 } from "./slotCandidates.ts";
 import {
   type SlotConfiguration,
@@ -411,7 +412,10 @@ function planSlotComposition<Kind extends string>(
       }
       preparedCache.set(key, option);
       return option;
-    } catch {
+    } catch (error) {
+      if (!(error instanceof SlotProfileError)) {
+        throw error;
+      }
       workFailure = unsupported("configuration", [
         { code: "invalid-profile", kind: source.kind, role: job.role },
       ]);
