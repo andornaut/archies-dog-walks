@@ -32,6 +32,7 @@ import type {
 import { DEV_CHEATS_KEY, DEV_SAVE_EDITS_KEY } from "../dev/devPanelModel.ts";
 import { DEV_GAME_GLOBAL } from "../dev/devTools.ts";
 import { sizeHearts } from "../rules/dogs.ts";
+import { upgradeDuration } from "../rules/durations.ts";
 import { effectText, gearShort, upgradeLine } from "../rules/effectText.ts";
 import { faceMood } from "../rules/treats.ts";
 import { weightedZones } from "../rules/zones.ts";
@@ -229,6 +230,7 @@ export function gameDataExport(data: GameData) {
       id,
       ...upgrade,
       cardEffect: upgradeLine(tuning, "cardEffect", upgrade),
+      duration: upgradeDuration(upgrade),
       effect: upgradeLine(tuning, "effect", upgrade),
     })),
     walkers: entries<WalkerId, GameData["walkers"][WalkerId]>(data.walkers).map(([id, walker]) => ({

@@ -31,7 +31,7 @@ import {
   isNamedCause,
   type MoneyChange,
 } from "./causes.ts";
-import { debuffLasting } from "./durations.ts";
+import { debuffLasting, upgradeDuration } from "./durations.ts";
 import {
   baseMoneyCost,
   type EffectContext,
@@ -337,7 +337,7 @@ export function forkCard(data: CardData, state: RunState, source: ForkSource): C
       };
     }
     const card = data.upgrades[upgrade];
-    const { duration, effects } = card;
+    const { effects } = card;
     const preview = outcomeOf(
       data,
       { affected: [], source: { kind: "upgrade", upgrade } },
@@ -347,7 +347,7 @@ export function forkCard(data: CardData, state: RunState, source: ForkSource): C
     return {
       ...shared,
       breakdown: breakdownOf(data, preview),
-      duration,
+      duration: upgradeDuration(card),
       fires: preview.fired,
       modified: preview.modified,
       text: `${card.name}: ${upgradeLine(data.tuning, "effect", card)}`,

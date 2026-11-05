@@ -1,8 +1,8 @@
 import type { Upgrade } from "./types.ts";
 
 // Run-only boosts offered between zones. A picked card leaves the pool for the rest of the run.
-// duration is how long its effects last, which its plaque shows: now, the next zone, or the
-// whole run. cardEffect is the effect in a few words, the line under the name on a path card;
+// Its effects share one duration, which its plaque shows: now (an effect without one), the next
+// zone, or the whole run. cardEffect is the effect in a few words, the line under the name on a path card;
 // effect says it in full where there is room. Either may use {hearts}, the signed hearts its
 // hearts effects give, {spawns}, what its tipSpawns modifiers multiply tips by, as "×2", and
 // {tip}, what its tipValue modifiers add to a tip, signed.
@@ -11,7 +11,6 @@ export const UPGRADES = {
   bellyRubs: {
     art: "card-belly-rubs",
     cardEffect: "{hearts} each",
-    duration: "now",
     effect: "{hearts} each",
     effects: [{ amount: 1, kind: "hearts", target: { kind: "all" } }],
     kind: "boost",
@@ -20,7 +19,6 @@ export const UPGRADES = {
   bigTipper: {
     art: "card-big-tipper",
     cardEffect: "{tip} per tip",
-    duration: "nextZone",
     effect: "{tip} per tip",
     effects: [
       {
@@ -37,7 +35,6 @@ export const UPGRADES = {
   charmer: {
     art: "card-charmer",
     cardEffect: "Free $ card",
-    duration: "run",
     effect: "First card: cash options free",
     effects: [
       {
@@ -54,7 +51,6 @@ export const UPGRADES = {
   goodLeash: {
     art: "card-good-leash",
     cardEffect: "No pulls",
-    duration: "run",
     effect: "No pulls",
     effects: [
       {
@@ -71,7 +67,6 @@ export const UPGRADES = {
   raincoats: {
     art: "card-raincoats",
     cardEffect: "Puddle-safe",
-    duration: "run",
     effect: "No Muddy from puddles or potholes",
     effects: [
       { duration: "run", encounter: "puddle", kind: "immune" },
@@ -83,7 +78,6 @@ export const UPGRADES = {
   rushHour: {
     art: "card-rush-hour",
     cardEffect: "More of all",
-    duration: "nextZone",
     effect: "Tips, treats {spawns}, more obstacles",
     effects: [
       {

@@ -1,6 +1,13 @@
 import { assertNever } from "@andornaut/game-kit/assertNever";
 
-import type { Duration, LiveTuning, SecondsKey } from "../data/types.ts";
+import type {
+  Duration,
+  Effect,
+  LiveTuning,
+  SecondsKey,
+  Upgrade,
+  UpgradeDuration,
+} from "../data/types.ts";
 import type { ActiveDebuff, RunState } from "../state/runState.ts";
 import { modifiedStat } from "./modifiers.ts";
 import { read } from "./units.ts";
@@ -30,6 +37,19 @@ export function lastingFor(
     default:
       return assertNever(duration);
   }
+}
+
+// How long an effect lasts, as an upgrade card's plaque names it: a modifier's or immunity's
+// duration, else "now".
+export function effectDuration(effect: Effect): UpgradeDuration {
+  return (effect.kind === "modifier" || effect.kind === "immune") && effect.duration !== undefined
+    ? effect.duration
+    : "now";
+}
+
+// How long an upgrade's effects last, which they share: its card's plaque.
+export function upgradeDuration(upgrade: Pick<Upgrade, "effects">): UpgradeDuration {
+  return effectDuration(upgrade.effects[0]);
 }
 
 // The later of two lastings: a refreshed effect keeps whichever runs longer.

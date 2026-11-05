@@ -1,22 +1,17 @@
 import { describe, expect, it } from "vitest";
 
 import { gameData } from "../data/index.ts";
-import type { Effect, UpgradeDuration, UpgradeId } from "../data/types.ts";
+import type { UpgradeId } from "../data/types.ts";
 import { testState } from "../testing/runState.ts";
 import { cardFor } from "./choices.ts";
-
-// How long an effect lasts, as an upgrade's duration names it.
-function effectDuration(effect: Effect): UpgradeDuration {
-  if ((effect.kind === "modifier" || effect.kind === "immune") && effect.duration !== undefined) {
-    return effect.duration;
-  }
-  return "now";
-}
+import { effectDuration, upgradeDuration } from "./durations.ts";
 
 describe("an upgrade's duration", () => {
-  it("agrees with the effects of every upgrade", () => {
-    for (const [, upgrade] of Object.entries(gameData.upgrades)) {
-      expect(new Set(upgrade.effects.map(effectDuration))).toEqual(new Set([upgrade.duration]));
+  it("is one every effect of every upgrade shares", () => {
+    for (const upgrade of Object.values(gameData.upgrades)) {
+      expect(new Set(upgrade.effects.map(effectDuration))).toEqual(
+        new Set([upgradeDuration(upgrade)]),
+      );
     }
   });
 
@@ -28,7 +23,7 @@ describe("an upgrade's duration", () => {
       upgrades,
     });
     expect(card.options.map(({ duration }) => duration)).toEqual(
-      upgrades.map((id) => gameData.upgrades[id].duration),
+      upgrades.map((id) => upgradeDuration(gameData.upgrades[id])),
     );
   });
 });

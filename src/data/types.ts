@@ -638,7 +638,6 @@ export interface Upgrade {
   readonly art: string;
   // Its effect in a few words, under its name on a fork's path card.
   readonly cardEffect: string;
-  readonly duration: UpgradeDuration;
   // Its effect in full, on the enlarged path card, its effect icon's hold and the message strip.
   readonly effect: string;
   readonly effects: NonEmptyEffects;
