@@ -25,9 +25,19 @@ describe("a line that says its number in words", () => {
   it("agrees with the tuning value it names", () => {
     for (const [line, words, value, expected] of [
       [upgrades.charmer.effect, "First card", read(tuning, "counts", "charmerFreeCards"), 1],
-      [upgrades.goodLeash.effect, "No pulls", read(tuning, "multipliers", "goodLeashSquirrelPull"), 0],
+      [
+        upgrades.goodLeash.effect,
+        "No pulls",
+        read(tuning, "multipliers", "goodLeashSquirrelPull"),
+        0,
+      ],
       [walkerPerks.longReach.effect, "a lane", read(tuning, "counts", "longReachLanes"), 1],
-      [walkerPerks.secondChance.effect, "First ♥", read(tuning, "hearts", "secondChanceForgiven"), 1],
+      [
+        walkerPerks.secondChance.effect,
+        "First ♥",
+        read(tuning, "hearts", "secondChanceForgiven"),
+        1,
+      ],
       [shopGear.fannyPack.short, "a spare treat", read(tuning, "counts", "fannyPackTreats"), 1],
       [debuffs.stinky.stake, "pay nothing", read(tuning, "multipliers", "stinkyTipValue"), 0],
     ] as const) {
