@@ -3,8 +3,9 @@ import { dirname, join } from "node:path";
 
 import type { RgbaImage } from "@andornaut/art-kit/rgbaImage";
 import { keysOf } from "@andornaut/game-kit/records";
+import { sceneStub } from "@andornaut/game-kit/testing/phaser/sceneStub";
 import type { Scene, Textures } from "phaser";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import type { AssetManifest } from "../../../assets/manifest.ts";
 import { addAtlasFrame, smoothDepthArt } from "../../../assets/phaser/manifestArt.ts";
@@ -270,25 +271,17 @@ describe("smoothDepthArt", () => {
       "ui-heart": { scaleMode: NEAREST },
     };
     let uploads = 0;
-    const textures = new Map(
-      Object.entries(sources).map(([key, source]) => [
-        key,
-        {
-          setFilter(mode: number) {
-            uploads += 1;
-            source.scaleMode = mode;
-          },
-          source: [source],
+    const stub = sceneStub(vi.fn);
+    for (const [key, source] of Object.entries(sources)) {
+      stub.textures.list[key] = {
+        setFilter(mode: number) {
+          uploads += 1;
+          source.scaleMode = mode;
         },
-      ]),
-    );
-    const scene = {
-      textures: {
-        exists: (key: string) => textures.has(key),
-        get: (key: string) => textures.get(key),
-      },
-    } as unknown as Scene;
-    return { scene, sources, uploads: () => uploads };
+        source: [source],
+      } as unknown as Textures.Texture;
+    }
+    return { scene: stub as unknown as Scene, sources, uploads: () => uploads };
   }
 
   it.each([
