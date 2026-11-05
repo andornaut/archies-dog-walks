@@ -1,8 +1,9 @@
 // Retake the home page's canvas grabs, home-road.png and home-start.png (360x560, the game canvas
 // at 1x), from a built game served at BASE_URL (default http://<previewHost>:4173, the preview
-// container the export's devHarness.previewHost names), and write them to OUT_DIR. The storage
-// keys and the pull message (PULL_TEXT) come from devHarness too. Copy them to
-// public/art/site/ to update the home page. Run from the repository root.
+// container the export's devHarness.previewHost names), and write them to OUT_DIR. The game's
+// dev=1 global (PAGE_GLOBAL), the storage keys and the pull message (PULL_TEXT) come from
+// devHarness too. Copy them to public/art/site/ to update the home page. Run from the repository
+// root.
 //
 // - home-road: High Park on ROAD_QUERY's seed, Trista walking Archie, Lady and Ginger with Running
 //   shoes and $50, ROAD_HOLD_MS after the message strip first reads PULL_TEXT (on seed 1, Ginger
@@ -79,9 +80,14 @@ interface PageGame {
   renderer: { snapshot(callback: (image: unknown) => void): void };
   scene: { scenes: PageScene[] };
 }
-type PageGlobal = typeof globalThis & { dogWalkerGame?: PageGame; homeGrab?: string };
+// The page's globals by name: the game sits under the export's devHarness.pageGlobal.
+type PageGames = Partial<Record<string, PageGame>>;
+type PageGlobal = typeof globalThis & { homeGrab?: string };
 
 const HARNESS = GAME.devHarness;
+// The global the game sets with dev=1. Page functions run in the browser, so it reaches them as
+// an argument.
+const PAGE_GLOBAL = HARNESS.pageGlobal;
 
 // The preview server, by its container name.
 const BASE_URL = `http://${HARNESS.previewHost}:4173`;
@@ -137,15 +143,18 @@ const ALLOWED = new Set(
   [...PALETTE64, ...NEUTRAL_HEX, ...Object.values(PICKER_UI)].map((hex) => hex.toLowerCase()),
 );
 
-/** Whether the scene keyed `key` is running. */
-function sceneActive(key: string): boolean {
-  const game = (globalThis as PageGlobal).dogWalkerGame;
+/** Whether the scene keyed `key` is running, in the game at global `pageGlobal`. */
+function sceneActive([pageGlobal, key]: readonly [string, string]): boolean {
+  const game = (globalThis as unknown as PageGames)[pageGlobal];
   return game?.scene.scenes.some((s) => s.sys.settings.key === key && s.sys.isActive()) ?? false;
 }
 
-/** Whether any running scene shows a text object whose text includes `text`. */
-function showsText(text: string): boolean {
-  const game = (globalThis as PageGlobal).dogWalkerGame;
+/**
+ * Whether any running scene, in the game at global `pageGlobal`, shows a text object whose text
+ * includes `text`.
+ */
+function showsText([pageGlobal, text]: readonly [string, string]): boolean {
+  const game = (globalThis as unknown as PageGames)[pageGlobal];
   const has = (objects: readonly PageObject[]): boolean =>
     objects.some((o) => (typeof o.text === "string" && o.text.includes(text)) || has(o.list ?? []));
   return game?.scene.scenes.some((s) => s.sys.isActive() && has(s.sys.displayList.list)) ?? false;
@@ -155,8 +164,8 @@ function showsText(text: string): boolean {
  * The loaders' progress: null once the game is made and no scene is loading, and otherwise the
  * files in flight and each loading scene's counts (no game yet counts as a file in flight).
  */
-function loadState(): { counts: string; inflight: number } | null {
-  const game = (globalThis as PageGlobal).dogWalkerGame;
+function loadState(pageGlobal: string): { counts: string; inflight: number } | null {
+  const game = (globalThis as unknown as PageGames)[pageGlobal];
   if (game === undefined) {
     return { counts: "", inflight: 1 };
   }
@@ -177,13 +186,13 @@ function loadState(): { counts: string; inflight: number } | null {
  */
 async function step(page: Page): Promise<void> {
   const deadline = Date.now() + LOAD_WAIT_MS;
-  let state = await page.evaluate(loadState, null);
+  let state = await page.evaluate(loadState, PAGE_GLOBAL);
   while (state !== null) {
     if (Date.now() > deadline) {
       throw new Error(`a load took more than ${LOAD_WAIT_MS} ms`);
     }
     await setTimeout(LOAD_SETTLE_MS);
-    const now = await page.evaluate(loadState, null);
+    const now = await page.evaluate(loadState, PAGE_GLOBAL);
     if (now !== null && now.inflight === 0 && now.counts === state.counts) {
       break;
     }
@@ -212,13 +221,13 @@ async function stepFor(page: Page, ms: number): Promise<void> {
 
 /** The canvas as the next frame draws it, from Phaser's renderer snapshot. */
 async function snapshot(page: Page): Promise<RgbaImage> {
-  await page.evaluate(() => {
+  await page.evaluate((pageGlobal) => {
     const page = globalThis as PageGlobal;
     delete page.homeGrab;
-    page.dogWalkerGame?.renderer.snapshot((image) => {
+    (globalThis as unknown as PageGames)[pageGlobal]?.renderer.snapshot((image) => {
       page.homeGrab = (image as HTMLImageElement).src;
     });
-  }, null);
+  }, PAGE_GLOBAL);
   await stepUntil(page, () => (globalThis as PageGlobal).homeGrab !== undefined, null);
   const url = await page.evaluate(() => (globalThis as PageGlobal).homeGrab ?? "", null);
   return decodePng(Buffer.from(url.replace(/^data:image\/png;base64,/, ""), "base64"));
@@ -249,12 +258,13 @@ async function roadGrab(baseUrl: string, browser: Browser): Promise<RgbaImage> {
     [CHEATS_KEY, JSON.stringify(ROAD_CHEATS)] as const,
   );
   await page.goto(`${baseUrl}/play/?${ROAD_QUERY}`);
-  await stepUntil(page, sceneActive, "run");
-  for (let frame = 0; !(await page.evaluate(showsText, PULL_TEXT)); frame += 1) {
+  await stepUntil(page, sceneActive, [PAGE_GLOBAL, "run"] as const);
+  const pull = [PAGE_GLOBAL, PULL_TEXT] as const;
+  for (let frame = 0; !(await page.evaluate(showsText, pull)); frame += 1) {
     if (frame === MAX_FRAMES) {
       throw new Error(`gave up waiting for "${PULL_TEXT}"`);
     }
-    if (await page.evaluate(sceneActive, "card")) {
+    if (await page.evaluate(sceneActive, [PAGE_GLOBAL, "card"] as const)) {
       await stepFor(page, CARD_READ_MS);
       await page.keyboard.press("1");
     }
@@ -276,7 +286,7 @@ async function newSave(baseUrl: string, browser: Browser): Promise<Record<string
     [SAVE_EDITS_KEY, JSON.stringify([{ amount: START_BANK_CENTS, kind: "addMoney" }])] as const,
   );
   await page.goto(`${baseUrl}/play/?dev=1`);
-  await stepUntil(page, sceneActive, "start");
+  await stepUntil(page, sceneActive, [PAGE_GLOBAL, "start"] as const);
   const text = await page.evaluate((key) => localStorage.getItem(key), SAVE_KEY);
   await context.close();
   if (text === null) {
@@ -299,7 +309,7 @@ async function startGrab(baseUrl: string, browser: Browser): Promise<RgbaImage> 
     [SAVE_KEY, JSON.stringify(save)] as const,
   );
   await page.goto(`${baseUrl}/play/?dev=1`);
-  await stepUntil(page, sceneActive, "start");
+  await stepUntil(page, sceneActive, [PAGE_GLOBAL, "start"] as const);
   await stepFor(page, START_SETTLE_MS);
   const image = await snapshot(page);
   await context.close();

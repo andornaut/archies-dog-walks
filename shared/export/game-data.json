@@ -574,6 +574,7 @@
     }
   ],
   "devHarness": {
+    "pageGlobal": "archiesDogWalksGame",
     "previewHost": "adw-preview",
     "storageKeys": {
       "devCheats": "archies-dog-walks:dev-cheats",

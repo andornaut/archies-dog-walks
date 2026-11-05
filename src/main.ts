@@ -14,7 +14,7 @@ import { CRASH_SCREEN } from "./crash/crashScreen.ts";
 import { SCREEN_CONFIG } from "./data/screen.ts";
 import { applyPendingSaveEdits, type DevPanelHost, mountDevPanel } from "./dev/devPanel.ts";
 import { DEV_CHEATS_KEY } from "./dev/devPanelModel.ts";
-import { devToolsOn } from "./dev/devTools.ts";
+import { DEV_GAME_GLOBAL, devToolsOn } from "./dev/devTools.ts";
 import { pageRunSetup } from "./dev/pageRunSetup.ts";
 import { noteKeyPress } from "./input/keyNumbers.ts";
 import { lostTouches } from "./input/touches.ts";
@@ -161,7 +161,7 @@ function bootGame(): Game {
 
   // With dev=1, the game is reachable from the console and from headless checks.
   if (pageRunSetup().setup.dev) {
-    Object.assign(globalThis, { archiesDogWalksGame: game });
+    Object.assign(globalThis, { [DEV_GAME_GLOBAL]: game });
   }
 
   game.events.once(Core.Events.POST_RENDER, () => startupLoad.finish());

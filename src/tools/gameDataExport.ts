@@ -30,6 +30,7 @@ import type {
   WalkerId,
 } from "../data/types.ts";
 import { DEV_CHEATS_KEY, DEV_SAVE_EDITS_KEY } from "../dev/devPanelModel.ts";
+import { DEV_GAME_GLOBAL } from "../dev/devTools.ts";
 import { sizeHearts } from "../rules/dogs.ts";
 import { effectText, gearShort, upgradeLine } from "../rules/effectText.ts";
 import { faceMood } from "../rules/treats.ts";
@@ -148,9 +149,11 @@ export function gameDataExport(data: GameData) {
   return {
     cards: cardFaces(data),
     debuffs: entries(data.debuffs).map(([id, debuff]) => ({ id, ...debuff })),
-    // What a browser harness that drives the game needs: the preview server's container name,
-    // the storage keys the dev panel and the save use, and the text it waits for.
+    // What a browser harness that drives the game needs: the dev=1 game global, the preview
+    // server's container name, the storage keys the dev panel and the save use, and the text it
+    // waits for.
     devHarness: {
+      pageGlobal: DEV_GAME_GLOBAL,
       previewHost: PREVIEW_HOST,
       storageKeys: {
         devCheats: DEV_CHEATS_KEY,
