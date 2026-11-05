@@ -46,6 +46,7 @@ import {
   upscale,
 } from "./depthPreview.ts";
 import { nodeArtFiles } from "./files.ts";
+import { USAGE_EXIT_CODE } from "./usage.ts";
 
 const PUBLIC_ART = `public/${ART_DIR}`;
 const OUT_DIR = "out/depth-preview";
@@ -63,7 +64,7 @@ const USAGE = "npm run art:depth-preview -- <key> [zone]";
 const args = depthPreviewArgs(process.argv.slice(2));
 if (args === null) {
   process.stderr.write(`${USAGE}\n`);
-  process.exit(1);
+  process.exit(USAGE_EXIT_CODE);
 }
 const { key, zone: zoneArg } = args;
 

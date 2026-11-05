@@ -39,7 +39,7 @@ describe("writeOrCheck", () => {
     "prints the usage line and fails for %s, writing nothing",
     async (...args: string[]) => {
       const stderr = vi.spyOn(process.stderr, "write").mockReturnValue(true);
-      expect(await run(...args)).toBe(1);
+      expect(await run(...args)).toBe(2);
       expect(stderr).toHaveBeenCalledWith("npm run gen [-- --check]\n");
       await expect(readFile(join(root, "out.txt"))).rejects.toMatchObject({ code: "ENOENT" });
     },

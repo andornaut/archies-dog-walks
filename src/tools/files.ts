@@ -3,6 +3,7 @@ import { dirname, join } from "node:path";
 
 import type { ArtFiles } from "./artManifest.ts";
 import { limitConcurrency } from "./concurrency.ts";
+import { USAGE_EXIT_CODE } from "./usage.ts";
 
 // The most files a build-time reader holds open at once, well under common soft limits on open
 // files (256 on some hosts), since its callers read every art file in parallel.
@@ -79,7 +80,7 @@ export async function writeFiles(root: string, files: ReadonlyMap<string, string
 // A generator CLI's run from the repository root, returning its exit code. With --check it
 // writes nothing and fails if a committed file differs from files, naming the command that
 // regenerates it; otherwise it writes the files that changed, or says that name is up to date.
-// Any other argument prints the usage line and fails.
+// Any other argument prints the usage line and fails with USAGE_EXIT_CODE.
 export async function writeOrCheck(
   command: string,
   name: string,
@@ -89,7 +90,7 @@ export async function writeOrCheck(
   const args = process.argv.slice(2);
   if (args.some((arg) => arg !== "--check")) {
     process.stderr.write(`${command} [-- --check]\n`);
-    return 1;
+    return USAGE_EXIT_CODE;
   }
   if (args.includes("--check")) {
     const stale = await staleFiles(root, files);

@@ -10,6 +10,7 @@ import { keysOf } from "@andornaut/game-kit/records";
 
 import { gameData } from "../data/index.ts";
 import type { GearId } from "../data/types.ts";
+import { USAGE_EXIT_CODE, UsageError } from "../tools/usage.ts";
 import { DEFAULT_ROUTE_POLICY, MIXED_PAY_SHARE, POLICY_IDS, ROUTE_POLICY_IDS } from "./policies.ts";
 import {
   DEFAULT_MATRIX,
@@ -132,7 +133,7 @@ interface Job {
 function parseWhole(flag: string, min: number, text: string): number {
   const value = Number(text);
   if (text === "" || !Number.isInteger(value) || value < min) {
-    throw new Error(`${flag} takes a whole number from ${min}, not ${text}`);
+    throw new UsageError(`${flag} takes a whole number from ${min}, not ${text}`);
   }
   return value;
 }
@@ -140,7 +141,7 @@ function parseWhole(flag: string, min: number, text: string): number {
 function parseId<Id extends string>(flag: string, ids: readonly Id[], text: string): Id {
   const found = ids.find((candidate) => candidate === text);
   if (found === undefined) {
-    throw new Error(`${flag} takes ${ids.join(", ")}, not ${text}`);
+    throw new UsageError(`${flag} takes ${ids.join(", ")}, not ${text}`);
   }
   return found;
 }
@@ -154,7 +155,7 @@ function parseGears(text: string): (GearId | null)[] {
   return text.split(",").map((id) => {
     const gear = id === "none" ? null : ids.find((candidate) => candidate === id);
     if (gear === undefined) {
-      throw new Error(`--gear takes none, ${ids.join(", ")}, not ${id}`);
+      throw new UsageError(`--gear takes none, ${ids.join(", ")}, not ${id}`);
     }
     return gear;
   });
@@ -175,7 +176,7 @@ function parseArgs(args: readonly string[]): Options {
     const flag = args[i];
     const value = args[i + 1];
     if (value === undefined) {
-      throw new Error(`${flag} needs a value`);
+      throw new UsageError(`${flag} needs a value`);
     }
     switch (flag) {
       case "--bot":
@@ -215,7 +216,7 @@ function parseArgs(args: readonly string[]): Options {
         seed = parseWhole(flag, 0, value);
         break;
       default:
-        throw new Error(`Unknown option ${flag}\n\n${USAGE}`);
+        throw new UsageError(`Unknown option ${flag}\n\n${USAGE}`);
     }
   }
   if (skills.length > 0) {
@@ -359,7 +360,7 @@ async function main(): Promise<void> {
 if (isMainThread) {
   main().catch((error: unknown) => {
     process.stderr.write(`${error instanceof Error ? error.message : String(error)}\n`);
-    process.exitCode = 1;
+    process.exitCode = error instanceof UsageError ? USAGE_EXIT_CODE : 1;
   });
 } else {
   parentPort?.postMessage(runJob(workerData as Job));

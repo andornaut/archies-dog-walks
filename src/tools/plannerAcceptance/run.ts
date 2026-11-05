@@ -8,6 +8,7 @@ import { type RunResult, simulateRun } from "../../sim/simulate.ts";
 import { SKILL_PRESETS } from "../../sim/skills.ts";
 import type { ZoneWalkEvents } from "../../sim/walkEvents.ts";
 import type { RunState } from "../../state/runState.ts";
+import { UsageError } from "../usage.ts";
 import { certifyPlan, geometryValid } from "./certify.ts";
 import {
   ACCEPTANCE_PACK,
@@ -74,9 +75,6 @@ function walkEvidence(observed: readonly Observed[], result: RunResult): WalkEvi
 }
 
 const json = (value: unknown) => `${JSON.stringify(value, null, 2)}\n`;
-
-// A caller mistake the CLI reports as a message, not a stack trace.
-export class UsageError extends Error {}
 
 // Runs the fixed acceptance batch into out, route outer and seed inner, and stops at the first
 // walk with a failed criterion or evidence defect, keeping that walk's observations. Returns
