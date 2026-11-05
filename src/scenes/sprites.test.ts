@@ -162,7 +162,6 @@ function shopIdleScene(loaded = true, sheet?: unknown) {
   }
   const normal = new Face();
   const pressed = new Face();
-  const time = { now: 0 };
   const events = new EventEmitter();
   const plays: { key: string; repeat: number; time: number }[] = [];
   const animation = animationKey(normal.texture.key, "door-wave");
@@ -207,8 +206,8 @@ function shopIdleScene(loaded = true, sheet?: unknown) {
     },
     anims: { get: () => (loaded ? tag : undefined) },
     events,
-    time,
   });
+  const { time } = scene;
   const idle = addShopIdle(
     scene as unknown as Scene,
     { add: (child: unknown) => children.push(child) } as unknown as GameObjects.Container,
@@ -432,7 +431,6 @@ function tileScene(animated: boolean, reducedMotion: boolean) {
   let destroy: (() => void) | undefined;
   const graphics: { destroy: () => void }[] = [];
   let face: { frame: { name: string }; height: number; width: number } | undefined;
-  const time = { now: 0 };
   const container = () => ({ add: () => undefined });
   const scene = sceneStub(vi.fn, {
     add: {
@@ -489,8 +487,8 @@ function tileScene(animated: boolean, reducedMotion: boolean) {
       get: (key: string) => animations.get(key),
     },
     textures: { exists: () => true },
-    time,
   });
+  const { time } = scene;
   const rect = { height: 44, width: 77, x: 14, y: 201 };
   addSelectTile(scene as unknown as Scene, container() as unknown as GameObjects.Container, rect, {
     edge: true,
