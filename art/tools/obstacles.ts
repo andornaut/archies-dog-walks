@@ -108,8 +108,8 @@ export function span(lanes: number): number {
   return (64 * lanes - 16) / SCALE;
 }
 
-export const DOUBLE_LANE_SPAN = span(2);
-export const TRIPLE_LANE_SPAN = span(3);
+const DOUBLE_LANE_SPAN = span(2);
+const TRIPLE_LANE_SPAN = span(3);
 
 // draw(...args) on a Mini at scale s, or [sx, sy] for its columns and rows.
 export function drawn<A extends unknown[], R>(s: Scale, draw: (...args: A) => R, ...args: A): R {
@@ -117,7 +117,7 @@ export function drawn<A extends unknown[], R>(s: Scale, draw: (...args: A) => R,
 }
 
 // The pixel edge of a full-size coordinate on the grid holding g's pixels.
-export function pixelEdge(g: Drawable): (v: number) => number {
+function pixelEdge(g: Drawable): (v: number) => number {
   const s = scaleOf(g);
   return (v) => Math.floor(v * s + 0.5);
 }
@@ -198,7 +198,7 @@ export const TEXTURE_MIN = 0.7;
 
 // The hedge's layout height, 5 rows over a lane spanner's ROW: drawn at SCALE it is 42 rows, and every
 // depth step a whole number of rows.
-export const HEDGE_ROWS = 35;
+const HEDGE_ROWS = 35;
 
 // Wide, seen side on: a rounded top edge of leaf clumps about 13px apart, alternately 2px higher, no
 // top surface, lit green on their top-left edges; the rounded ends as tall as the body; a teal band at
@@ -330,7 +330,7 @@ export const DELIVERY_IDLE: readonly [readonly number[], number] = [[0, 0, 1, 2]
 
 // The smallest column scale the delivery truck's label keeps its three lines at: under it (@62 and
 // @50) they land on adjacent rows and run together.
-export const LABEL_MIN = 0.7;
+const LABEL_MIN = 0.7;
 
 // A box van from straight behind, a lane wide and taller than the parked car: a brown box lit tan
 // along its top and left edges with mirrors at its sides and amber marker lights on the roof, a tan
@@ -432,11 +432,11 @@ export const STREETCAR_IDLE: readonly [readonly boolean[], number] = [
   400,
 ];
 // Its drive's sideways sway, in drawn pixels per frame, as the bogies roll under it.
-export const STREETCAR_SWAY: readonly number[] = [0, 1, 0, -1];
+const STREETCAR_SWAY: readonly number[] = [0, 1, 0, -1];
 
 // What the obstacles draw through (see pixel.ts's DrawingScope): their grid, and the letters
 // lettering spells with, which hood_city.ts swaps for a set with its route's digits.
-export interface ObstaclesScope extends DrawingScope {
+interface ObstaclesScope extends DrawingScope {
   LETTERS: Readonly<Record<string, readonly string[]>>;
 }
 
@@ -720,10 +720,10 @@ export function taxi({
 export const HOT_DOG_CART_IDLE: readonly [readonly number[], number] = [[0, 1], 500];
 
 // The hot dog cart's steam wisps: each drawn row's sideways offset, from the lid up.
-export const STEAM_WAVE: readonly number[] = [0, 1, 1, 0, -1, -1];
+const STEAM_WAVE: readonly number[] = [0, 1, 1, 0, -1, -1];
 
 // roadEdge, but the steam (haze, which nothing else on the cart uses) takes no outline.
-export function cartEdge(c: string): string | null {
+function cartEdge(c: string): string | null {
   return c === K.haze ? null : roadEdge(c);
 }
 
@@ -731,7 +731,7 @@ export function cartEdge(c: string): string | null {
 const CART_EDGE = cartEdge as Edge;
 
 // A street cart's two wheels, behind its box: ink tires, grey hubs.
-export function cartWheels(g: Drawable, w: number): void {
+function cartWheels(g: Drawable, w: number): void {
   for (const x of [19, w - 19]) {
     g.cel(x, 48, 6, 6.5, "ink", null, "dslate");
     g.cel(x, 48, 2, 2, "grey", null, "lgrey");
@@ -739,21 +739,12 @@ export function cartWheels(g: Drawable, w: number): void {
 }
 
 // A cart umbrella's colours: [[lit, lit], [shade, shade]].
-export type UmbrellaColours = readonly [
-  lit: readonly [string, string],
-  shade: readonly [string, string],
-];
+type UmbrellaColours = readonly [lit: readonly [string, string], shade: readonly [string, string]];
 
 // A street cart's umbrella: six wedges from its tip at row top to row base, a scallop under each.
 // cols is [[lit, lit], [shade, shade]]: the left three wedges take the lit pair in turn, the right
 // three the shaded pair.
-export function cartUmbrella(
-  g: Drawable,
-  w: number,
-  cols: UmbrellaColours,
-  top = 2,
-  base = 15,
-): void {
+function cartUmbrella(g: Drawable, w: number, cols: UmbrellaColours, top = 2, base = 15): void {
   const c = w / 2;
   const left = 8;
   const right = w - 8;
@@ -770,14 +761,14 @@ export function cartUmbrella(
 }
 
 // A street cart's umbrella pole, from row top down to the counter.
-export function cartPole(g: Drawable, w: number, top: number): void {
+function cartPole(g: Drawable, w: number, top: number): void {
   const c = w / 2;
   g.rect(c - 1, top, 2, 28 - top, "slate");
   g.rect(c - 1, top, 1, 28 - top, "grey");
 }
 
 // A street cart's counter lip, then its box: lit down its left in light, shaded down its right.
-export function cartBox(
+function cartBox(
   g: Drawable,
   w: number,
   body: string,
@@ -866,7 +857,7 @@ export const ICE_CREAM_CART_IDLE: readonly [readonly number[], number] = [[0, 1]
 
 // A waffle cone point down from its rim on row y0, lit tan on its left half and shaded ochre on its
 // right, crosshatched in 1px brown lines 3px apart down to TEXTURE_MIN.
-export function waffle(g: Drawable, x0: number, x1: number, y0: number, tip: number): void {
+function waffle(g: Drawable, x0: number, x1: number, y0: number, tip: number): void {
   const cx = (x0 + x1) / 2;
   g.tri([x0, y0], [x1, y0], [cx, tip], "tan");
   g.tri([cx, y0], [x1, y0], [cx, tip], "ochre");
@@ -950,7 +941,7 @@ export function iceCreamCart({
 // The flower cart's idle: the middle tulip nods a drawn pixel right on frame 1.
 export const FLOWER_CART_IDLE: readonly [readonly number[], number] = [[0, 1], 500];
 // Cut flowers by colour and shade: pink, white, lilac, red.
-export const FLOWERS: readonly (readonly [string, string])[] = [
+const FLOWERS: readonly (readonly [string, string])[] = [
   ["pink", "mauve"],
   ["white", "lgrey"],
   ["lilac", "violet"],
@@ -959,7 +950,7 @@ export const FLOWERS: readonly (readonly [string, string])[] = [
 
 // A tulip with its cup's top on row y: a cup of three points, its right side in sh, on a stem with a
 // leaf each side. nod moves the cup that many layout pixels right, the stem held still.
-export function tulip(g: Drawable, x: number, y: number, col: string, sh: string, nod = 0): void {
+function tulip(g: Drawable, x: number, y: number, col: string, sh: string, nod = 0): void {
   g.rect(x - 0.5, y + 5, 1.5, 7, "canopy");
   g.tri([x + 0.5, y + 11], [x + 4.5, y + 6.5], [x + 1, y + 11.5], "moss");
   g.tri([x - 0.5, y + 11], [x - 4, y + 7.5], [x - 0.5, y + 10], "moss");
@@ -1025,12 +1016,12 @@ export function flowerCart({
 // The fruit cart's idle: the apple on top of the left heap rocks a drawn pixel right on frame 1.
 export const FRUIT_CART_IDLE: readonly [readonly number[], number] = [[0, 1], 500];
 // Produce by colour, shade and light: apples, limes, cabbages, grapes, eggplants.
-export type Produce = readonly [fill: string, shade: string, light: string | null];
-export const APPLES: Produce = ["red", "dred", "pink"];
-export const LIMES: Produce = ["lime", "green", null];
-export const CABBAGES: Produce = ["moss", "olive", "lime"];
-export const GRAPES: Produce = ["lilac", "violet", null];
-export const EGGPLANTS: Produce = ["purple", "plum", "mauve"];
+type Produce = readonly [fill: string, shade: string, light: string | null];
+const APPLES: Produce = ["red", "dred", "pink"];
+const LIMES: Produce = ["lime", "green", null];
+const CABBAGES: Produce = ["moss", "olive", "lime"];
+const GRAPES: Produce = ["lilac", "violet", null];
+const EGGPLANTS: Produce = ["purple", "plum", "mauve"];
 
 // The street cart's Kensington Market skin, laid out on span(2) x 55 and drawn at SCALE to 112x66: a
 // canopy green box under a moss and cream umbrella, two pale bins tilted on the counter, heaped in two
@@ -1081,7 +1072,7 @@ export function fruitCart({
 // frame 1.
 export const NEWSPAPER_CART_IDLE: readonly [readonly number[], number] = [[0, 1], 500];
 // The magazines' covers by colour and shade.
-export const COVERS: readonly (readonly [string, string])[] = [
+const COVERS: readonly (readonly [string, string])[] = [
   ["pink", "mauve"],
   ["white", "lgrey"],
   ["lime", "green"],

@@ -41,10 +41,10 @@ const USAGE = `Usage:
 
 export const W = 320;
 export const H = 64;
-export const LANE = 64;
+const LANE = 64;
 // The period of every joint or seam across the road: the road scrolls up to 11 px a frame at 30 fps, and a
 // pattern that repeats in under twice that strobes like a wagon wheel, its motion seeming to reverse.
-export const SEAM_PERIOD = 32;
+const SEAM_PERIOD = 32;
 export const DIVIDERS: readonly number[] = [1, 2, 3, 4].map((k) => k * LANE - 1);
 
 // ---------- randomness ----------
@@ -706,7 +706,7 @@ export const ZONES: ReadonlyMap<string, readonly [ground: Draw, lines: Draw]> = 
 ]);
 
 // The zone's strip; with y0..y1, only those rows are drawn (the rest stay empty).
-export function strip(zone: string, y0 = 0, y1 = H): Grid {
+function strip(zone: string, y0 = 0, y1 = H): Grid {
   const [ground, lines] = ZONES.get(zone)!;
   const g = new Grid(W, H);
   clip(g, y0, y1, (s) => {
@@ -720,7 +720,7 @@ export function strip(zone: string, y0 = 0, y1 = H): Grid {
 
 // Strip rows of the cross street, first and past-last: the zone's own strip is above it and
 // the game draws the previous zone's strip below it.
-export const CROSSING = [20, 64] as const;
+const CROSSING = [20, 64] as const;
 
 // A neutral cross street in dslate asphalt, so a start strip follows any zone. Up
 // the road: the near curb's top (rows 60 to 63) and rounded edge (58, 59), the asphalt with a
@@ -759,7 +759,7 @@ function start(zone: string): Grid {
 }
 
 // Every image's key and grid.
-export function images(): [string, Grid][] {
+function images(): [string, Grid][] {
   const zones = [...ZONES.keys()];
   return [
     ...zones.map((zone): [string, Grid] => [`road-${zone}`, strip(zone)]),
@@ -778,7 +778,7 @@ function check(key: string, g: Grid): void {
   }
 }
 
-export function preview(out: string, scale = 2, gap = 8): void {
+function preview(out: string, scale = 2, gap = 8): void {
   const tiles = new Map(images());
   for (const [key, g] of tiles) {
     check(key, g);
@@ -813,7 +813,7 @@ export function preview(out: string, scale = 2, gap = 8): void {
   writeFileSync(out, rgbPng({ data, height, width }));
 }
 
-export function build(): void {
+function build(): void {
   mkdirSync("public/art/images", { recursive: true });
   const built: string[] = [];
   for (const [key, g] of images()) {

@@ -71,7 +71,7 @@ const USAGE = `Usage:
 // gap that parts it from the back), b belly, s feet, w eye glint, n nose. The tail rises from the
 // haunch as a separate plume and curls over at the top, so the shape reads as a squirrel and not a
 // dark blob.
-export const CHASER: readonly string[] = [
+const CHASER: readonly string[] = [
   "..........lll...",
   ".........lfffl..",
   "........lff.ffl.",
@@ -92,7 +92,7 @@ export const CHASER: readonly string[] = [
 
 // Toronto's black squirrel in road.ts's SQUIRREL_FUR, side on facing left, sitting up, its tail a
 // plume standing up behind it and curling over at the top, a white glint for its eye.
-export function chaser(): Grid {
+function chaser(): Grid {
   const f = SQUIRREL_FUR;
   const g = new Grid(16, 16);
   bitmap(g, 0, 0, CHASER, {
@@ -111,7 +111,7 @@ export function chaser(): Grid {
 
 // An hourglass in a brown frame, its sand nearly all run through, a white speed tick at each side: a
 // debuff over in half the time. It keeps a clear ring round it for its outline.
-export function quickRecovery(): Grid {
+function quickRecovery(): Grid {
   const g = new Grid(16, 16);
   g.rect(3, 1, 10, 1, "brown");
   g.rect(3, 13, 10, 1, "brown");
@@ -133,7 +133,7 @@ export function quickRecovery(): Grid {
 }
 
 // A pink speech bubble holding a red heart.
-export function secondChance(): Grid {
+function secondChance(): Grid {
   const g = new Grid(16, 16);
   g.rect(2, 1, 12, 10, "pink");
   g.rect(1, 2, 14, 8, "pink");
@@ -144,7 +144,7 @@ export function secondChance(): Grid {
 }
 
 // A broad open palm and wrist above the green two-way reach arrow.
-export function longReach(): Grid {
+function longReach(): Grid {
   const g = new Grid(16, 16);
   g.rect(6, 3, 6, 5, "skin1");
   for (const [x, y] of [
@@ -168,7 +168,7 @@ export function longReach(): Grid {
 
 // A magnifying glass, its cyan lens over the treat (a white bone with a red heart on its shaft), its
 // brown handle down to the right.
-export function keenEye(): Grid {
+function keenEye(): Grid {
   const g = new Grid(16, 16);
   for (let i = 0; i < 4; i++) {
     g.rect(10 + i, 10 + i, 2, 2, "brown");
@@ -183,7 +183,7 @@ export function keenEye(): Grid {
 
 // A 16x16 zone picture drawn only inside the 1px ring its outline takes, with iconEdge outlines, so a
 // picture that fills its frame is outlined on every side.
-export class Zone extends Grid {
+class Zone extends Grid {
   constructor() {
     super(16, 16);
     this.edge = iconEdge;
@@ -198,7 +198,7 @@ export class Zone extends Grid {
 
 // A bay-and-gable house: a steep slate gable trimmed in white, a lit attic window in it, over brick, a
 // bay of lit windows.
-export function cabbagetown(): Grid {
+function cabbagetown(): Grid {
   const g = new Zone();
   g.tri([1.5, 7.5], [8, 1], [14.5, 7.5], "dslate");
   for (let k = 0; k < 6; k++) {
@@ -217,7 +217,7 @@ export function cabbagetown(): Grid {
 }
 
 // A dark pine on the park's grass, a cherry in blossom behind it.
-export function highPark(): Grid {
+function highPark(): Grid {
   const g = new Zone();
   g.ell(4, 6, 3.5, 3.5, "pink", "mauve");
   g.p(3, 5, "white");
@@ -236,7 +236,7 @@ export function highPark(): Grid {
 }
 
 // A brick warehouse with an arched lit window, its chimney stack beside it.
-export function distilleryDistrict(): Grid {
+function distilleryDistrict(): Grid {
   const g = new Zone();
   g.rect(11, 1, 3, 6, "brick");
   g.rect(13, 1, 1, 6, "dbrick");
@@ -251,7 +251,7 @@ export function distilleryDistrict(): Grid {
 }
 
 // A painted house turned shop: a turquoise wall under a violet gable, a striped awning.
-export function kensingtonMarket(): Grid {
+function kensingtonMarket(): Grid {
   const g = new Zone();
   g.tri([1.5, 6.5], [8, 1], [14.5, 6.5], "violet");
   g.rect(2, 6, 12, 9, "turquoise");
@@ -267,7 +267,7 @@ export function kensingtonMarket(): Grid {
 }
 
 // The lifeguard station: a white tower under a red roof, over the lake.
-export function theBeaches(): Grid {
+function theBeaches(): Grid {
   const g = new Zone();
   g.tri([3.5, 6.5], [8, 2], [12.5, 6.5], "ttc");
   g.rect(4, 6, 8, 5, "white");
@@ -282,7 +282,7 @@ export function theBeaches(): Grid {
 }
 
 // The CN Tower over downtown blocks.
-export function yongeStreet(): Grid {
+function yongeStreet(): Grid {
   const g = new Zone();
   g.rect(7, 1, 1, 3, "grey");
   g.rect(6, 4, 3, 2, "lgrey");
@@ -302,7 +302,7 @@ export function yongeStreet(): Grid {
 // ---------- debuffs: distinct material silhouettes with a shared plum keyline ----------
 
 // A water drop: a point at (cx, top) over a round base of radius r.
-export function drop(
+function drop(
   g: Drawable,
   cx: number,
   top: number,
@@ -319,7 +319,7 @@ export function drop(
 const plumEdge = (): string => K.plum!;
 
 // A sky-blue drop entering a broad brown mud splash, with a tan front lip.
-export function muddy(): Grid {
+function muddy(): Grid {
   const g = new Grid(16, 16);
   g.edge = plumEdge;
   g.tri([7, 1], [3, 7], [10, 7], "sky");
@@ -335,7 +335,7 @@ export function muddy(): Grid {
 }
 
 // A green paw rushing right with a broad yellow lightning tail.
-export function zoomies(): Grid {
+function zoomies(): Grid {
   const g = new Grid(16, 16);
   g.edge = plumEdge;
   g.rect(9, 3, 2, 3, "green");
@@ -351,7 +351,7 @@ export function zoomies(): Grid {
 }
 
 // A blue stage lamp throwing a broad yellow beam onto a white-lit pool.
-export function spotlight(): Grid {
+function spotlight(): Grid {
   const g = new Grid(16, 16);
   g.edge = plumEdge;
   g.tri([5, 5], [7, 5], [14, 13], "yellow");
@@ -373,7 +373,7 @@ export function spotlight(): Grid {
 // walk bar's wells and their darker outlines sink, so the silhouette is the fill. Dark ramp colours
 // (dbrown, dred, forest, blue) appear only inside a lighter fill.
 
-export const BIG_HEART: readonly string[] = [
+const BIG_HEART: readonly string[] = [
   ".111.111.",
   "11111111p",
   "1111111pp",
@@ -384,13 +384,13 @@ export const BIG_HEART: readonly string[] = [
   "....p....",
 ];
 
-export function heart(g: Drawable, x: number, y: number): void {
+function heart(g: Drawable, x: number, y: number): void {
   bitmap(g, x, y, BIG_HEART, { "1": "red", p: "hot" });
   g.p(x + 1, y + 1, "pink");
 }
 
 // A hand rubbing below a heart.
-export function bellyRubs(): Grid {
+function bellyRubs(): Grid {
   const g = new Grid(16, 16);
   heart(g, 6, 1);
   bitmap(
@@ -411,7 +411,7 @@ export function bellyRubs(): Grid {
 }
 
 // A stack of coins with an arrow up.
-export function bigTipper(): Grid {
+function bigTipper(): Grid {
   const g = new Grid(16, 16);
   for (const [x, y] of [
     [1, 12],
@@ -433,7 +433,7 @@ export function bigTipper(): Grid {
 // Good leash, as a calm dog: a brown dog sitting politely side on, facing left, head up, a yellow
 // twinkle of good manners at its shoulder. o fur (brown), h shade (dbrown), e ear (dbrown), m chest
 // and muzzle (tan), k eye and nose (ink), c collar (red).
-export const CALM_DOG_COLS: Readonly<Record<string, string>> = {
+const CALM_DOG_COLS: Readonly<Record<string, string>> = {
   c: "red",
   e: "dbrown",
   h: "dbrown",
@@ -441,7 +441,7 @@ export const CALM_DOG_COLS: Readonly<Record<string, string>> = {
   m: "tan",
   o: "brown",
 };
-export const CALM_DOG: readonly string[] = [
+const CALM_DOG: readonly string[] = [
   "................",
   "..oooo..........",
   ".ooooee.........",
@@ -459,7 +459,7 @@ export const CALM_DOG: readonly string[] = [
   "................",
   "................",
 ];
-export const CALM_DOG_20: readonly string[] = [
+const CALM_DOG_20: readonly string[] = [
   "....................",
   "...ooooo............",
   "..oooooee...........",
@@ -483,7 +483,7 @@ export const CALM_DOG_20: readonly string[] = [
 ];
 
 // A calm dog, sitting politely with its head up and a twinkle of good manners: no squirrel pulls it.
-export function goodLeash(): Grid {
+function goodLeash(): Grid {
   const g = new Grid(16, 16);
   bitmap(g, 0, 0, CALM_DOG, CALM_DOG_COLS);
   star4(g, 12, 3, 1, "yellow");
@@ -491,7 +491,7 @@ export function goodLeash(): Grid {
 }
 
 // A yellow hooded coat with one dark hood opening, two sleeves and a clear hem.
-export function raincoats(): Grid {
+function raincoats(): Grid {
   const g = new Grid(16, 16);
   bitmap(g, 5, 1, ["..yyy..", ".yyyyy.", "yyddday", "yyddday", ".yyyyy."], {
     a: "amber",
@@ -512,7 +512,7 @@ export function raincoats(): Grid {
 }
 
 // A speech bubble saying money goes down.
-export function charmer(): Grid {
+function charmer(): Grid {
   const g = new Grid(16, 16);
   g.rect(2, 2, 12, 9, "white");
   g.rect(1, 3, 14, 7, "white");
@@ -524,7 +524,7 @@ export function charmer(): Grid {
 }
 
 // An alarm clock ringing.
-export function rushHour(): Grid {
+function rushHour(): Grid {
   const g = new Grid(16, 16);
   g.ell(3.5, 3.5, 2.5, 2.5, "amber", "orange", "yellow");
   g.ell(12.5, 3.5, 2.5, 2.5, "amber", "orange", "yellow");
@@ -540,7 +540,7 @@ export function rushHour(): Grid {
 // The gear, after its 32x32 item art in icons.ts.
 
 // A silver whistle with a dark mouthpiece and one separated cyan sound stroke.
-export function gearWhistle(): Grid {
+function gearWhistle(): Grid {
   const g = new Grid(16, 16);
   g.ell(6.5, 10, 5.5, 4.8, "lgrey", "grey", "white");
   g.rect(6, 6, 9, 4, "lgrey");
@@ -563,11 +563,11 @@ export function gearWhistle(): Grid {
 }
 
 // A deep forest-green pouch with a visible belt, zipper and pale logo.
-export function gearFannyPack(): Grid {
+function gearFannyPack(): Grid {
   return fannyPackIcon(16);
 }
 
-export function gearHallPass(): Grid {
+function gearHallPass(): Grid {
   const g = new Grid(16, 16);
   g.p(3, 0, "sky");
   g.p(4, 1, "sky");
@@ -595,7 +595,7 @@ export function gearHallPass(): Grid {
   return g;
 }
 
-export const SHOE_COLS: Readonly<Record<string, string>> = {
+const SHOE_COLS: Readonly<Record<string, string>> = {
   b: "blue",
   c: "cyan",
   g: "grey",
@@ -605,7 +605,7 @@ export const SHOE_COLS: Readonly<Record<string, string>> = {
   s: "sky",
   w: "white",
 };
-export const SHOE_16: readonly string[] = [
+const SHOE_16: readonly string[] = [
   "..........oo..",
   "......cccnnno.",
   ".....cwwnnnss.",
@@ -619,13 +619,13 @@ export const SHOE_16: readonly string[] = [
 
 // A low running shoe side on, the toe to the left: a sky upper lit cyan along its top, white laces, a
 // navy collar, an orange stripe and heel tab, and a white sole on an lgrey outsole.
-export function gearRunningShoes(): Grid {
+function gearRunningShoes(): Grid {
   const g = new Grid(16, 16);
   bitmap(g, 1, 4, SHOE_16, SHOE_COLS);
   return g;
 }
 
-export function gearLuckyCollar(): Grid {
+function gearLuckyCollar(): Grid {
   const g = new Grid(16, 16);
   g.ell(8, 6, 6.5, 4.5, "red", null, "pink");
   g.ell(8, 6, 4.5, 2.5, null);
@@ -646,7 +646,7 @@ export function gearLuckyCollar(): Grid {
 // The same subject, colours and silhouette as its 16x16 icon, redrawn with the room spent on detail.
 // Like the 16x16 icons', every fill that carries a shape holds 3:1 or more on the well's ink.
 
-export const BIG_HEART_20: readonly string[] = [
+const BIG_HEART_20: readonly string[] = [
   ".111...111.",
   "11111.11111",
   "11111111111",
@@ -659,14 +659,14 @@ export const BIG_HEART_20: readonly string[] = [
 ];
 
 // An 11x9 heart, red with a hot right side, lit white at the top of its left lobe.
-export function heart20(g: Drawable, x: number, y: number): void {
+function heart20(g: Drawable, x: number, y: number): void {
   bitmap(g, x, y, BIG_HEART_20, { "1": "red", p: "hot" });
   g.p(x + 1, y + 1, "white");
   g.p(x + 2, y + 1, "pink");
 }
 
 // A pink speech bubble holding a red heart, its tail down to the right.
-export function secondChance20(): Grid {
+function secondChance20(): Grid {
   const g = new Grid(20, 20);
   g.rect(2, 1, 16, 13, "pink");
   g.rect(1, 2, 18, 11, "pink");
@@ -681,7 +681,7 @@ export function secondChance20(): Grid {
 
 // A stack of five coins under a sixth seen from above, and a green arrow up beside it, filling the
 // well as the other effect icons do.
-export function bigTipper20(): Grid {
+function bigTipper20(): Grid {
   const g = new Grid(20, 20);
   for (const [x, y] of [
     [2, 16],
@@ -703,7 +703,7 @@ export function bigTipper20(): Grid {
 
 // The running shoe of gearRunningShoes with room for a second lace, a toe spring and a lugged
 // outsole.
-export function gearRunningShoes20(): Grid {
+function gearRunningShoes20(): Grid {
   const g = new Grid(20, 20);
   bitmap(
     g,
@@ -731,12 +731,7 @@ export function gearRunningShoes20(): Grid {
 
 // An 18x12 speech bubble with clipped corners, shaded along its foot and right side, its tail down to
 // the left.
-export function bubble20(
-  g: Drawable,
-  fill: string,
-  shade: string,
-  lit: string | null = null,
-): void {
+function bubble20(g: Drawable, fill: string, shade: string, lit: string | null = null): void {
   g.rect(2, 1, 16, 12, fill);
   g.rect(1, 2, 18, 10, fill);
   g.rect(2, 12, 16, 1, shade);
@@ -750,7 +745,7 @@ export function bubble20(
 }
 
 // An hourglass in a brown frame, its sand nearly all run through, a white speed tick at each side.
-export function quickRecovery20(): Grid {
+function quickRecovery20(): Grid {
   const g = new Grid(20, 20);
   g.rect(4, 1, 12, 1, "brown");
   g.rect(4, 17, 12, 1, "brown");
@@ -773,7 +768,7 @@ export function quickRecovery20(): Grid {
 }
 
 // A native twenty-pixel palm with separated fingers, a thumb and a green reach arrow.
-export function longReach20(): Grid {
+function longReach20(): Grid {
   const g = new Grid(20, 20);
   g.rect(6, 4, 9, 6, "skin1");
   for (const [x, y] of [
@@ -797,7 +792,7 @@ export function longReach20(): Grid {
 
 // A magnifying glass, its cyan lens over the treat (a white bone with a red heart on its shaft), its
 // brown handle down to the right.
-export function keenEye20(): Grid {
+function keenEye20(): Grid {
   const g = new Grid(20, 20);
   for (let i = 0; i < 5; i++) {
     g.rect(13 + i, 13 + i, 2, 2, "brown");
@@ -812,7 +807,7 @@ export function keenEye20(): Grid {
 }
 
 // A hand, palm up, rubbing below a heart.
-export function bellyRubs20(): Grid {
+function bellyRubs20(): Grid {
   const g = new Grid(20, 20);
   heart20(g, 6, 1);
   bitmap(
@@ -835,7 +830,7 @@ export function bellyRubs20(): Grid {
 }
 
 // The calm dog of goodLeash, sitting politely with its twinkle.
-export function goodLeash20(): Grid {
+function goodLeash20(): Grid {
   const g = new Grid(20, 20);
   bitmap(g, 0, 0, CALM_DOG_20, CALM_DOG_COLS);
   star4(g, 15, 4, 2, "yellow");
@@ -843,7 +838,7 @@ export function goodLeash20(): Grid {
 }
 
 // A native twenty-pixel raincoat with a single hood opening and broad yellow panels.
-export function raincoats20(): Grid {
+function raincoats20(): Grid {
   const g = new Grid(20, 20);
   bitmap(g, 7, 1, ["..yyyy..", ".yyyyyy.", "yydddday", "yydddday", "yydddday", ".yyyyyy."], {
     a: "amber",
@@ -864,7 +859,7 @@ export function raincoats20(): Grid {
 }
 
 // An alarm clock ringing: two amber bells, a red case on lgrey feet and a white face.
-export function rushHour20(): Grid {
+function rushHour20(): Grid {
   const g = new Grid(20, 20);
   g.ell(4.5, 4.5, 3, 3, "amber", "orange", "yellow");
   g.ell(15.5, 4.5, 3, 3, "amber", "orange", "yellow");
@@ -879,7 +874,7 @@ export function rushHour20(): Grid {
 }
 
 // A speech bubble saying money goes down: a forest $ and a dred arrow down.
-export function charmer20(): Grid {
+function charmer20(): Grid {
   const g = new Grid(20, 20);
   bubble20(g, "white", "lgrey");
   bitmap(
@@ -901,7 +896,7 @@ export function charmer20(): Grid {
 
 // The whistle: a silver sports whistle side on with an ink slot, a dred paw on the barrel and three
 // cyan sound lines fanning up from the slot.
-export function gearWhistle20(): Grid {
+function gearWhistle20(): Grid {
   const g = new Grid(20, 20);
   g.ell(8, 13.5, 7, 6, "lgrey", "grey", "white");
   g.rect(8, 8, 12, 5, "lgrey");
@@ -934,12 +929,12 @@ export function gearWhistle20(): Grid {
 }
 
 // A native twenty-pixel waist pack with a broad pouch and a separate buckle.
-export function gearFannyPack20(): Grid {
+function gearFannyPack20(): Grid {
   return fannyPackIcon(20);
 }
 
 // Redraw each small glyph on its native grid without changing the shared pickup design.
-export function fannyPackIcon(size: number): Grid {
+function fannyPackIcon(size: number): Grid {
   const g = new Grid(size, size);
   if (size === 16) {
     g.rect(0, 4, 16, 2, "dslate");
@@ -998,7 +993,7 @@ export function gearHallPass20(): Grid {
 }
 
 // The lucky collar: a red collar lit pink with an amber tag stamped with a green clover.
-export function gearLuckyCollar20(): Grid {
+function gearLuckyCollar20(): Grid {
   const g = new Grid(20, 20);
   g.ell(10, 7, 8, 5.5, "red", null, "pink");
   g.ell(10, 7, 5.5, 3, null);
@@ -1023,7 +1018,7 @@ export function gearLuckyCollar20(): Grid {
 // a badge with t its tan crescent and g a gold centre; b blue tails shaded n navy, splayed and notched
 // at their ends. The red mass, the scallops and the dark tails keep it from reading as a coin, the
 // hint's disc or a heart.
-export const BADGE: readonly string[] = [
+const BADGE: readonly string[] = [
   "................",
   ".....ll..rr.....",
   "....lrrllrrd....",
@@ -1044,7 +1039,7 @@ export const BADGE: readonly string[] = [
 
 // A red ribbon rosette with a cream badge face and a gold centre, on two navy tails, for a badge
 // earned.
-export function badge(): Grid {
+function badge(): Grid {
   const g = new Grid(16, 16);
   bitmap(g, 0, 0, BADGE, {
     b: "blue",
@@ -1060,7 +1055,7 @@ export function badge(): Grid {
 }
 
 // An impact burst, as fx-bump: an amber eight-point star round a yellow one and a white core.
-export function bump(): Grid {
+function bump(): Grid {
   const g = new Grid(16, 16);
   burst(g, 8, 8, 7.4, 3.6, 8, "amber", 22.5);
   burst(g, 8, 8, 4.4, 2.2, 8, "yellow", 22.5);
@@ -1072,7 +1067,7 @@ export function bump(): Grid {
 // f its mauve crease, t plum lines of text, s the dred stamp across the page's lower half, l its white
 // lettering. The page shows its fold, its text and its foot around the stamp, so it reads as a letter
 // and not a box.
-export const FIRED: readonly string[] = [
+const FIRED: readonly string[] = [
   "................",
   "...pppppppf.....",
   "...pppppppwf....",
@@ -1093,7 +1088,7 @@ export const FIRED: readonly string[] = [
 
 // A pink slip: a page with lines of plum text and its top corner folded down, a dred stamp across it
 // lettered in a white line, as the empty ui-dog-card's FIRED plate.
-export function fired(): Grid {
+function fired(): Grid {
   const g = new Grid(16, 16);
   bitmap(g, 0, 0, FIRED, {
     f: "mauve",
@@ -1108,7 +1103,7 @@ export function fired(): Grid {
 }
 
 // A white i on a sky disc, lit cyan at its top left and shaded blue at its lower right.
-export function hint(): Grid {
+function hint(): Grid {
   const g = new Grid(16, 16);
   g.cel(8, 8, 6.6, 6.6, "sky", "blue", "cyan");
   g.rect(7, 3, 2, 2, "white");
@@ -1120,7 +1115,7 @@ export function hint(): Grid {
 
 // A four-leaf clover on its stem, green shaded dgreen, each leaf notched at its tip and veined dgreen
 // to the centre, with a yellow twinkle at the top right.
-export function lucky(): Grid {
+function lucky(): Grid {
   const g = new Grid(16, 16);
   for (let i = 0; i < 5; i++) {
     g.p(9 + i, 10 + i, "dgreen");
@@ -1165,7 +1160,7 @@ export function lucky(): Grid {
 }
 
 // Every image by key, in build order.
-export const IMAGES: ReadonlyMap<string, () => Grid> = new Map([
+const IMAGES: ReadonlyMap<string, () => Grid> = new Map([
   ["icon-trait-chaser", chaser],
   ["icon-perk-keen-eye", keenEye],
   ["icon-perk-long-reach", longReach],
@@ -1215,7 +1210,7 @@ export const IMAGES: ReadonlyMap<string, () => Grid> = new Map([
 
 // ---------- the difficulty marker on a fork's path card ----------
 
-export const PAW_PRINT: readonly string[] = [
+const PAW_PRINT: readonly string[] = [
   "..ff.ff..",
   "..ff.ff..",
   "ff.....ff",
@@ -1236,7 +1231,7 @@ const SIDES: readonly (readonly [number, number])[] = [
 // One 11x10 paw at x0: filled is amber, shaded orange along the pad's foot, outlined in plum by hand;
 // hollow is a clay rim with no outline, 3.2:1 on cream, so every empty slot shows but stays lighter
 // than a filled paw.
-export function paw(g: Drawable, x0: number, filled: boolean): void {
+function paw(g: Drawable, x0: number, filled: boolean): void {
   const cells: [number, number][] = PAW_PRINT.flatMap((row, y) =>
     [...row].flatMap((ch, x): [number, number][] => (ch === "f" ? [[x, y]] : [])),
   );
@@ -1261,7 +1256,7 @@ export function paw(g: Drawable, x0: number, filled: boolean): void {
 
 // 55x10: n filled paws, then hollow ones, out of five. The filled paw's plum outline holds 9.4:1 on
 // cream; the hollow clay rim holds 3.2:1.
-export function difficulty(n: number): Grid {
+function difficulty(n: number): Grid {
   const g = new Grid(55, 10);
   for (let i = 0; i < 5; i++) {
     paw(g, i * 11, i < n);
@@ -1270,7 +1265,7 @@ export function difficulty(n: number): Grid {
 }
 
 // Every sprite: [key, [[tag, frames, duration ms]]].
-export function* sprites(): Generator<Sprite> {
+function* sprites(): Generator<Sprite> {
   yield [
     "ui-difficulty",
     [1, 2, 3, 4, 5].map((n): Tag => [String(n), [difficulty(n).outlined(false)], 1000]),
@@ -1323,7 +1318,7 @@ function stamp(target: RgbaImage, x: number, y: number, scale: number, source: R
 }
 
 // Every icon on the UI's paper, panel, wood and ink colours, then ui-difficulty's tags, scaled up.
-export function preview(out: string, scale = PREVIEW_SCALE): void {
+function preview(out: string, scale = PREVIEW_SCALE): void {
   const grounds: readonly Rgb[] = [
     [234, 212, 170],
     [228, 166, 114],
@@ -1356,7 +1351,7 @@ export function preview(out: string, scale = PREVIEW_SCALE): void {
 
 // ---------- building ----------
 
-export async function build(): Promise<void> {
+async function build(): Promise<void> {
   mkdirSync("public/art/images", { recursive: true });
   for (const [key, draw] of IMAGES) {
     const png = `public/art/images/${key}.png`;

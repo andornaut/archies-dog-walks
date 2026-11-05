@@ -21,13 +21,13 @@ const USAGE = `Usage:
 // The right arm's wave: up, raised straight, or out, the forearm swung outward. null hangs it.
 type Wave = "out" | "up" | null;
 
-export const OWNER_WAVE: readonly Wave[] = ["up", "out"];
-export const WAVE_MS = 300;
+const OWNER_WAVE: readonly Wave[] = ["up", "out"];
+const WAVE_MS = 300;
 
 // Both arms. The left hangs at rest, holding the owner's prop; the right hangs too, or waves: up is
 // the arm raised straight with the hand open above the shoulder, out swings the forearm and hand 3px
 // outward. short sleeves end at the elbow, leaving the forearm bare.
-export function arms(
+function arms(
   g: Drawable,
   b: number,
   wave: Wave,
@@ -62,7 +62,7 @@ export function arms(
 
 // Work gloves over the hands arms drew, the right one wherever wave puts it, each with a cuff at the
 // wrist.
-export function gloves(g: Drawable, b: number, wave: Wave, glove: string, cuff: string): void {
+function gloves(g: Drawable, b: number, wave: Wave, glove: string, cuff: string): void {
   const hands: Record<string, readonly [number, number]> = {
     none: [23, 31],
     out: [26, 9],
@@ -97,7 +97,7 @@ function cheeks(g: Drawable, b: number, c = "pink"): void {
 // jacket over a white top, a denim-blue skirt and white sneakers, and a silver vlog camera on a short
 // grip held up in her left hand beside her hair: a red recording light on its body, a top plate, and a
 // round navy lens with a lit glass turned on her face.
-export function eveTop(wave: Wave): Top {
+function eveTop(wave: Wave): Top {
   return (g, b) => {
     // the skirt, flared at the hem
     g.rect(11, 35 + b, 10, 3, "blue");
@@ -171,7 +171,7 @@ export function eveTop(wave: Wave): Top {
 
 // Eve's slim legs, 3px each below the skirt, in place of the 4px the standing figure draws, over her
 // sneakers.
-export function eveLegs(g: Drawable, b: number): void {
+function eveLegs(g: Drawable, b: number): void {
   for (let y = 38 + b; y < 45; y++) {
     g.rect(11, y, 10, 1, null);
   }
@@ -185,7 +185,7 @@ export function eveLegs(g: Drawable, b: number): void {
 // Ryan, site engineer, dramatic: a blond forelock under a white hard hat, a yellow hi-vis vest with
 // silver stripes over a blue work shirt with its sleeves rolled up, slate work trousers, brown boots,
 // and rolled plans in his left hand.
-export function ryanTop(wave: Wave): Top {
+function ryanTop(wave: Wave): Top {
   return (g, b) => {
     torso(g, b, "blue", "navy");
     // the vest: two yellow panels, open down the front, each crossed by a silver stripe
@@ -225,7 +225,7 @@ export function ryanTop(wave: Wave): Top {
 // back tight into a low ponytail behind the left shoulder, heavy brown brows, a dark leather flight
 // jacket with a cream fleece collar and gold wings, open over a white shirt and a round belly, slate
 // trousers, and a red model plane held nose up on his left fist.
-export function ralphTop(wave: Wave): Top {
+function ralphTop(wave: Wave): Top {
   return (g, b) => {
     torso(g, b, "dbrown", "plum");
     // the belly, rounding the jacket out over the ribbed waistband
@@ -301,7 +301,7 @@ export function ralphTop(wave: Wave): Top {
 
 // Ms. Tara, dog-show judge, fussy: tall blonde updo, amber earrings, red lips, a purple blazer over a
 // white blouse and pearls, a pencil skirt, her hands empty.
-export function taraTop(wave: Wave): Top {
+function taraTop(wave: Wave): Top {
   return (g, b) => {
     g.rect(10, 33 + b, 12, 6, "purple");
     g.rect(19, 33 + b, 3, 6, "plum");
@@ -335,7 +335,7 @@ export function taraTop(wave: Wave): Top {
 // Clare, psychology student, laid-back: fair skin, brown hair to the shoulders with a side-swept
 // fringe and a pink clip, a cosy green knit sweater with a ribbed hem over a white collar, a navy
 // skirt, and her psychology textbook in her left hand.
-export function clareTop(wave: Wave): Top {
+function clareTop(wave: Wave): Top {
   return (g, b) => {
     g.rect(10, 33 + b, 12, 5, "navy");
     g.rect(19, 33 + b, 3, 5, "ink");
@@ -371,7 +371,7 @@ export function clareTop(wave: Wave): Top {
 // Kiwi, grandmother, laid-back: a cloud of short white curls, a blue cardigan lit sky on its left,
 // over a white blouse with a kiwi-slice brooch, a grey skirt, red shoes, and a ball of pink yarn on two
 // knitting needles in her left hand.
-export function kiwiTop(wave: Wave): Top {
+function kiwiTop(wave: Wave): Top {
   return (g, b) => {
     g.rect(10, 33 + b, 12, 5, "slate");
     g.rect(19, 33 + b, 3, 5, "dslate");
@@ -422,7 +422,7 @@ export function kiwiTop(wave: Wave): Top {
 // Aunt Judy, tennis star, dramatic: older and fit, a silver high ponytail, a cyan visor, a sleeveless
 // white tennis dress with a cyan V neck, armholes and hem, a cyan sweatband on the right wrist, white
 // socks and shoes, and her racket held up in her left hand.
-export function auntJudyTop(wave: Wave): Top {
+function auntJudyTop(wave: Wave): Top {
   return (g, b) => {
     // the high ponytail, from row 2, so the outline closes over it on the breath's raised frame
     g.cel(25, 7 + b, 3, 5, "lgrey", "grey", "white");
@@ -492,7 +492,7 @@ export function auntJudyTop(wave: Wave): Top {
 
 // Aunt Judy's white tennis socks, a cyan stripe round each top. They stay planted while the torso
 // bobs, so they take no bob.
-export function auntJudyLegs(g: Drawable): void {
+function auntJudyLegs(g: Drawable): void {
   for (const x of [11, 17]) {
     g.rect(x, 41, 4, 2, "white");
     g.rect(x, 41, 4, 1, "cyan");
@@ -502,7 +502,7 @@ export function auntJudyLegs(g: Drawable): void {
 // Gadget, inspector, fussy: black hair under a brown brimmed hat, a tan trench coat belted at the
 // waist with its collar turned up, over a white shirt and red tie, and a magnifying glass in his left
 // hand.
-export function gadgetTop(wave: Wave): Top {
+function gadgetTop(wave: Wave): Top {
   return (g, b) => {
     // the coat runs down over the knees
     g.rect(9, 33 + b, 14, 6, "tan");
@@ -543,7 +543,7 @@ export function gadgetTop(wave: Wave): Top {
 // its front, an olive work polo with a moss collar and an orange logo, amber work gloves, khaki work
 // shorts, brown work boots, and a turquoise leaf blower in his left hand, its nozzle down to the grass
 // and two leaves blowing off it.
-export function jasonTop(wave: Wave): Top {
+function jasonTop(wave: Wave): Top {
   return (g, b) => {
     // the work shorts, a seam down the middle
     g.rect(10, 33 + b, 12, 4, "driftwood");
@@ -589,7 +589,7 @@ export function jasonTop(wave: Wave): Top {
 }
 
 // An owner's top, leg and shoe colours, and what draws over the legs after them.
-export interface Owner {
+interface Owner {
   extra: ((g: Drawable, b: number) => void) | null;
   legs: string;
   shoes: string;
@@ -597,7 +597,7 @@ export interface Owner {
 }
 
 // Every owner by dog, in owners.ts's OWNERS order.
-export const OWNERS: ReadonlyMap<string, Owner> = new Map([
+const OWNERS: ReadonlyMap<string, Owner> = new Map([
   ["ginger", { extra: eveLegs, legs: "skin1", shoes: "white", top: eveTop }],
   ["reggie", { extra: null, legs: "slate", shoes: "dbrown", top: ryanTop }],
   ["buddy", { extra: null, legs: "skin2", shoes: "dbrown", top: jasonTop }],
@@ -610,10 +610,7 @@ export const OWNERS: ReadonlyMap<string, Owner> = new Map([
 ]);
 
 // One owner standing, with the road outline and the lit rim.
-export function owner(
-  dog: string,
-  { bob = 0, wave = null }: { bob?: number; wave?: Wave } = {},
-): Grid {
+function owner(dog: string, { bob = 0, wave = null }: { bob?: number; wave?: Wave } = {}): Grid {
   const { extra, legs, shoes, top } = OWNERS.get(dog)!;
   const g = edged(person(top(wave), { bob, legs, shoes }));
   if (extra) {
@@ -623,7 +620,7 @@ export function owner(
 }
 
 // Every sprite: [key, [[tag, frames, duration ms]]].
-export function* sprites(): Generator<Sprite> {
+function* sprites(): Generator<Sprite> {
   for (const dog of OWNERS.keys()) {
     yield [
       `owner-${dog}`,

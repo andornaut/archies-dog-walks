@@ -216,14 +216,7 @@ export function word<G extends Drawable>(
 }
 
 // A 1px line from (x0, y0) to (x1, y1).
-export function line(
-  g: Drawable,
-  x0: number,
-  y0: number,
-  x1: number,
-  y1: number,
-  col: string,
-): void {
+function line(g: Drawable, x0: number, y0: number, x1: number, y1: number, col: string): void {
   const n = Math.max(Math.abs(x1 - x0), Math.abs(y1 - y0), 1);
   for (let i = 0; i < Math.round(n) + 1; i++) {
     g.p(Math.round(x0 + ((x1 - x0) * i) / n), Math.round(y0 + ((y1 - y0) * i) / n), col);
@@ -231,7 +224,7 @@ export function line(
 }
 
 // count straight lines from radius r0 to r1 round (cx, cy): the comic impact lines.
-export function rays(
+function rays(
   g: Drawable,
   cx: number,
   cy: number,
@@ -256,7 +249,7 @@ export function rays(
 
 // 48x48, centred on the contact point: a white pip, the full amber star with white impact lines in its
 // gaps, a hotter orange star, then the star shrinking away, so it ends without a scatter of specks.
-export function bump(step: number): Grid {
+function bump(step: number): Grid {
   const g = new Grid(48, 48);
   const c = 24;
   if (step === 0) {
@@ -280,7 +273,7 @@ export function bump(step: number): Grid {
 // 64x64, centred on the contact point, for a mover: a white star inside a ring of impact lines, a
 // four-layer star (orange, amber, yellow, white core) with the lines thrown wide, then the star
 // shrinking away.
-export function bumpBig(step: number): Grid {
+function bumpBig(step: number): Grid {
   const g = new Grid(64, 64);
   const c = 32;
   if (step === 0) {
@@ -302,14 +295,7 @@ export function bumpBig(step: number): Grid {
 }
 
 // A ripple ring about 2px thick around (cx, cy).
-export function ripple(
-  g: Drawable,
-  cx: number,
-  cy: number,
-  rx: number,
-  ry: number,
-  col: string,
-): void {
+function ripple(g: Drawable, cx: number, cy: number, rx: number, ry: number, col: string): void {
   for (let y = 0; y < g.h; y++) {
     for (let x = 0; x < g.w; x++) {
       const dx = x + 0.5 - cx;
@@ -325,7 +311,7 @@ export function ripple(
 }
 
 // A jet of water from (x0, y0) to (x1, y1), w0 thick at its foot tapering to w1 at its tip.
-export function jet(
+function jet(
   g: Drawable,
   x0: number,
   y0: number,
@@ -344,22 +330,22 @@ export function jet(
 
 // The splash's crown: five jets of water fanning out from the feet (base dx, tip dx, tip height) at
 // full height, and the crown's height by frame: it rises over 3 frames and sinks over 3.
-export const SPLASH_JETS: readonly (readonly [number, number, number])[] = [
+const SPLASH_JETS: readonly (readonly [number, number, number])[] = [
   [-7, -22, -9],
   [-3, -11, -18],
   [0, 0, -23],
   [3, 11, -18],
   [7, 22, -9],
 ];
-export const SPLASH_HEIGHT: readonly number[] = [0.45, 0.85, 1.0, 0.8, 0.55, 0.3, 0, 0];
+const SPLASH_HEIGHT: readonly number[] = [0.45, 0.85, 1.0, 0.8, 0.55, 0.3, 0, 0];
 // The splash's ground point, where the dog's feet meet the water: the frame's centre column, row 40.
-export const SPLASH_GROUND: readonly [number, number] = [32, 40];
+const SPLASH_GROUND: readonly [number, number] = [32, 40];
 
 // 64x48, its ground point 8px above the frame's bottom: a crown of five cyan jets tapering from a pool
 // of water at the feet, rising and sinking; three round drops thrown off the middle jets' tips, rising
 // and falling, each with a white glint; and one ripple spreading from frame 3. One cyan, a navy
 // outline, no specks, so it reads at a glance.
-export function splash(step: number): Grid {
+function splash(step: number): Grid {
   const g = new Grid(64, 48);
   const [cx, gy] = SPLASH_GROUND;
   if (step >= 3) {
@@ -388,7 +374,7 @@ export function splash(step: number): Grid {
 }
 
 // A 4x3 leaf (3x4 when flip) with clipped corners and a lit tip.
-export function leaf(
+function leaf(
   g: Drawable,
   x: number,
   y: number,
@@ -406,7 +392,7 @@ export function leaf(
 }
 
 // Leaves knocked out of a hedge (dx, dy per frame), the frame's centre on the contact point.
-export const LEAVES: readonly (readonly [number, number])[] = [
+const LEAVES: readonly (readonly [number, number])[] = [
   [-6, -5],
   [-3.5, -7],
   [-1, -6],
@@ -420,7 +406,7 @@ export const LEAVES: readonly (readonly [number, number])[] = [
 
 // 48x48, centred on the contact point: leaves knocked out of a hedge, flung up and out, then
 // fluttering down as they turn, with a twig.
-export function debrisLeaves(step: number): Grid {
+function debrisLeaves(step: number): Grid {
   const g = new Grid(48, 48);
   const t = step + 1;
   LEAVES.forEach(([vx, vy], i) => {
@@ -454,7 +440,7 @@ const LITTER: readonly (readonly [number, number])[] = [
 
 // 48x48, centred on the contact point: litter thrown out of a trash can, arcing up and falling, each
 // piece turning as it goes: two paper balls, a crumpled sheet, a can and a banana peel.
-export function debrisLitter(step: number): Grid {
+function debrisLitter(step: number): Grid {
   const g = new Grid(48, 48);
   const t = step + 1;
   LITTER.forEach(([vx, vy], i) => {
@@ -498,7 +484,7 @@ const SPARKLE_SPECKS: readonly (readonly [number, number])[] = [
 ];
 
 // 16x16: a twinkle that flares, throws four specks and fades.
-export function sparkle(step: number): Grid {
+function sparkle(step: number): Grid {
   const g = new Grid(16, 16);
   const r = [2, 5, 3, 1][step]!;
   star4(g, 8, 8, r, ["white", "yellow", "amber", "yellow"][step]!);
@@ -514,7 +500,7 @@ export function sparkle(step: number): Grid {
 // tapering from a solid core to 1px tips. heat colours it: 2 a white plus in the core, 1 a white
 // centre, 0 all yellow, -1 amber round a yellow centre. From r 2 up, the outer two pixels of each
 // arm (the tip alone at r 2) are amber.
-export function glint(g: Drawable, cx: number, cy: number, r: number, heat: number): void {
+function glint(g: Drawable, cx: number, cy: number, r: number, heat: number): void {
   const half = (d: number): number => Math.floor((r - d) / 2);
   for (let dy = -r; dy <= r; dy++) {
     for (let dx = -r; dx <= r; dx++) {
@@ -537,7 +523,7 @@ export function glint(g: Drawable, cx: number, cy: number, r: number, heat: numb
 }
 
 // fx-tip-sparkle's frames as glint's [r, heat], their durations and the square frame's side.
-export const TIP_SPARKLE: readonly (readonly [number, number])[] = [
+const TIP_SPARKLE: readonly (readonly [number, number])[] = [
   [1, -1],
   [2, 1],
   [4, 2],
@@ -545,11 +531,11 @@ export const TIP_SPARKLE: readonly (readonly [number, number])[] = [
   [2, 0],
   [1, -1],
 ];
-export const TIP_SPARKLE_MS: readonly number[] = [40, 50, 90, 70, 60, 50];
-export const TIP_SPARKLE_SIZE = 13;
+const TIP_SPARKLE_MS: readonly number[] = [40, 50, 90, 70, 60, 50];
+const TIP_SPARKLE_SIZE = 13;
 
 // The tip's glint in a size-square frame, centred: it grows to its peak and shrinks away.
-export function tipSparkle(
+function tipSparkle(
   step: number,
   frames: readonly (readonly [number, number])[] = TIP_SPARKLE,
   size = TIP_SPARKLE_SIZE,
@@ -599,10 +585,10 @@ export function stamp(
 }
 
 // fx-new-best is centred on the 72x20 ui-new-best ribbon, whose top-left sits at RIBBON in the frame.
-export const RIBBON: readonly [number, number] = [12, 14];
+const RIBBON: readonly [number, number] = [12, 14];
 // Sparkles thrown out from behind the ribbon, slowing as they go: (x, y on the ribbon's edge, full
 // throw dx, dy, first frame, colour). They keep inside the frame's bands above, below and beside it.
-export const SPARKS: readonly (readonly [number, number, number, number, number, string])[] = [
+const SPARKS: readonly (readonly [number, number, number, number, number, string])[] = [
   [20, 14, -6, -9, 0, "white"],
   [40, 14, -3, -10, 1, "yellow"],
   [58, 14, 4, -11, 0, "white"],
@@ -615,7 +601,7 @@ export const SPARKS: readonly (readonly [number, number, number, number, number,
 ];
 // Stars that pop out over the ribbon's edges and arc out under a little gravity: (x, y, dx, dy per
 // frame, first frame).
-export const STARS: readonly (readonly [number, number, number, number, number])[] = [
+const STARS: readonly (readonly [number, number, number, number, number])[] = [
   [30, 14, -2, -2.6, 0],
   [66, 14, 2.2, -2.8, 1],
   [48, 14, 0.3, -2.4, 3],
@@ -624,7 +610,7 @@ export const STARS: readonly (readonly [number, number, number, number, number])
 ];
 
 // Rim src on its own and lay it over dst, so overlapping parts keep their outlines apart.
-export function over(dst: Drawable, src: Drawable): void {
+function over(dst: Drawable, src: Drawable): void {
   rim(src);
   src.px.forEach((row, y) =>
     row.forEach((c, x) => {
@@ -639,7 +625,7 @@ export function over(dst: Drawable, src: Drawable): void {
 // fading, in yellow, amber and white only. Each part carries its own plum rim, for the cream panel and
 // the yellow end of the sunset, laid over the ones behind it, and the ribbon's own area is left clear
 // so the burst comes from behind it.
-export function newBest(step: number): Grid {
+function newBest(step: number): Grid {
   const g = new Grid(96, 48);
   const [cx, cy] = [48, 24];
   if (step < 4) {
@@ -694,7 +680,7 @@ function frames(draw: (i: number) => Grid, n: number, col?: string): Grid["px"][
 }
 
 // Every sprite: [key, [[tag, frames, duration in ms]]].
-export function* sprites(): Generator<Sprite> {
+function* sprites(): Generator<Sprite> {
   yield ["fx-bump", [["play", frames(bump, 6), 50]]];
   yield ["fx-bump-big", [["play", frames(bumpBig, 7), 50]]];
   yield ["fx-debris-leaves", [["play", frames(debrisLeaves, 6), 70]]];

@@ -143,7 +143,7 @@ function whistle(g: Grid): void {
 }
 
 // The icons by shop id, in build order.
-export const ICONS: ReadonlyMap<string, (g: Grid) => void> = new Map([
+const ICONS: ReadonlyMap<string, (g: Grid) => void> = new Map([
   ["whistle", whistle],
   ["fanny-pack", fannyPack],
   ["hall-pass", hallPass],
@@ -152,7 +152,7 @@ export const ICONS: ReadonlyMap<string, (g: Grid) => void> = new Map([
 ]);
 
 // One icon on a 32x32 grid, outlined with iconEdge, as an RGBA image.
-export function image(draw: (g: Grid) => void): RgbaImage {
+function image(draw: (g: Grid) => void): RgbaImage {
   const g = new Grid(32, 32);
   g.edge = iconEdge;
   draw(g);
@@ -162,7 +162,7 @@ export function image(draw: (g: Grid) => void): RgbaImage {
 // ---------- preview ----------
 
 // Every icon on the shop's slot colours, scaled up.
-export function preview(out: string, scale = 4): void {
+function preview(out: string, scale = 4): void {
   const grounds: readonly Rgb[] = [
     [234, 212, 170],
     [228, 166, 114],
@@ -189,7 +189,7 @@ export function preview(out: string, scale = 4): void {
 
 // ---------- building ----------
 
-export function build(): void {
+function build(): void {
   mkdirSync("public/art/images", { recursive: true });
   const built: string[] = [];
   for (const [name, draw] of ICONS) {

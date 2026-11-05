@@ -305,7 +305,7 @@ function check(name: string, icon: Icon, size: number): void {
 }
 
 // path: icon for every icon the site serves.
-export function icons(): Map<string, Icon> {
+function icons(): Map<string, Icon> {
   const subject = portrait();
   const out = new Map<string, Icon>();
   for (const [name, size, scale] of ICONS) {
@@ -328,7 +328,7 @@ function iconPng(icon: Icon, optimize = false): Uint8Array {
   return icon.opaque ? encodeRgbPng(options, icon.image) : encodeRgbaPng(options, icon.image);
 }
 
-export function preview(out: string, gap = 16, zoom = 8): void {
+function preview(out: string, gap = 16, zoom = 8): void {
   const imgs = icons();
   const big = imgs.get("public/icons/icon-maskable-512.png")!.image;
   const size = big.width;
@@ -371,7 +371,7 @@ export function preview(out: string, gap = 16, zoom = 8): void {
   writeFileSync(out, iconPng({ image: sheet, opaque: true }));
 }
 
-export function build(): void {
+function build(): void {
   mkdirSync("public/icons", { recursive: true });
   const imgs = icons();
   for (const [path, icon] of imgs) {

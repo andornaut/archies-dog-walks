@@ -104,15 +104,15 @@ const USAGE = `Usage:
   node art/tools/roadside.ts table --write     write it to shared/roadside.json, which the game
                                                reads; build writes it too`;
 
-export const SCALE = 1.5;
-export const STILL_MS = 1000;
+const SCALE = 1.5;
+const STILL_MS = 1000;
 
 // ---------- the props: front elevations, in design units ----------
 // Each draw(g, f) paints on a grid of the prop's design size, frame f of its idle; base = h - 2 is
 // the ground row, so the outline closes under it, and the outer ring of the frame stays clear.
 
 // A prop's design size and drawing.
-export interface Design {
+interface Design {
   draw: (g: Drawable, f: number) => void;
   h: number;
   w: number;
@@ -155,7 +155,7 @@ function field(g: Drawable, colourAt: ColourAt): void {
 }
 
 // The gas lamp's lantern at each idle frame, full flame to low: [glass, highlight] colours.
-export const GAS_FLAME: readonly (readonly [string, string])[] = [
+const GAS_FLAME: readonly (readonly [string, string])[] = [
   ["gold", "cream"],
   ["gold", "gold"],
   ["amber", "gold"],
@@ -196,7 +196,7 @@ function gasLamp(): Design {
 }
 
 // The street lamp's lens beneath each head at each idle frame, lit to off: [rim, core] colours.
-export const LAMP_LENS: readonly (readonly [string, string])[] = [
+const LAMP_LENS: readonly (readonly [string, string])[] = [
   ["cream", "white"],
   ["cream", "cream"],
   ["lgrey", "cream"],
@@ -615,7 +615,7 @@ function muralWall(): Design {
 }
 
 // The shopfronts' sign letters at each idle frame, lit to dimmed.
-export const SHOP_LETTERS: readonly string[] = ["cream", "tan", "clay"];
+const SHOP_LETTERS: readonly string[] = ["cream", "tan", "clay"];
 
 // A Kensington vintage shop seen from the street: a painted wall under a walnut coping, a sign board
 // lettered in cream, a striped awning with a scalloped hem, a display window onto a rail of
@@ -679,7 +679,7 @@ function shopfront(wall: string, awning: string, sign: string, rail: readonly st
 
 // The Leuty's flag at each idle frame: the column, in design units, of a fold's shadow 3 units wide
 // running out along it from the pole, or null when it hangs flat.
-export const LEUTY_FOLD: readonly (number | null)[] = [null, 35, 39];
+const LEUTY_FOLD: readonly (number | null)[] = [null, 35, 39];
 
 // The Leuty Lifeguard Station: a white clapboard house on driftwood stilts under a red hipped roof, a
 // windowed lookout on top under its own red cap, the flag up. Frame f draws the flag with its fold at
@@ -726,7 +726,7 @@ function leuty(): Design {
 }
 
 // The Beaches' umbrella and chair colourways: each a pair of stripe colours, [first, second].
-export const BEACH_STRIPES: ReadonlyMap<string, readonly [string, string]> = new Map([
+const BEACH_STRIPES: ReadonlyMap<string, readonly [string, string]> = new Map([
   ["blue", ["azure", "white"]],
   ["coral", ["turquoise", "pink"]],
   ["green", ["green", "yellow"]],
@@ -1132,7 +1132,7 @@ function mailbox(): Design {
 }
 
 // The pay station's screen at each idle frame, lit to dimmed.
-export const PAY_SCREEN: readonly string[] = ["cyan", "sky", "blue"];
+const PAY_SCREEN: readonly string[] = ["cyan", "sky", "blue"];
 
 // A pay-and-display machine: an lgrey cabinet shaded stone, a lit screen, a keypad, a coin slot and a
 // ticket slot, under a white P on a forest disc on a post. Frame f draws the screen in PAY_SCREEN[f],
@@ -1166,7 +1166,7 @@ function payStation(): Design {
 
 // A prop: its design, its idle frames' drawing arguments, the ms of every frame (or of each frame in
 // turn), and whether it stands free and casts the game's ground shadow.
-export interface Prop {
+interface Prop {
   design: Design;
   frames: readonly number[];
   ms: number | readonly number[];
@@ -1180,7 +1180,7 @@ function still(design: Design): Prop {
 const SHOP_IDLE = { frames: [0, 1, 2, 1], ms: [2400, 300, 600, 300], shadowed: true };
 
 // Every prop by key, in build and table order.
-export const PROPS: ReadonlyMap<string, Prop> = new Map([
+const PROPS: ReadonlyMap<string, Prop> = new Map([
   [
     "roadside-gas-lamp",
     { design: gasLamp(), frames: [0, 1, 2, 1], ms: [2600, 250, 350, 250], shadowed: true },
@@ -1265,13 +1265,13 @@ function prop(key: string): Prop {
 }
 
 // A prop's frame at a depth step, in pixels: [w, h].
-export function size(key: string, step = 1): [number, number] {
+function size(key: string, step = 1): [number, number] {
   const { h, w } = prop(key).design;
   return [scaled(w, SCALE * step), scaled(h, SCALE * step)];
 }
 
 // One idle frame of a prop at a depth step, outlined, as rows of hex colours or null.
-export function drawFrame(key: string, step: number, f: number): Frame {
+function drawFrame(key: string, step: number, f: number): Frame {
   const { draw, h, w } = prop(key).design;
   const g = edged(new Mini(SCALE * step, w, h));
   draw(g, f);
@@ -1296,7 +1296,7 @@ export function drawFrame(key: string, step: number, f: number): Frame {
 }
 
 // Every sprite: every prop at full size, then at every depth step.
-export function* sprites(): Generator<Sprite> {
+function* sprites(): Generator<Sprite> {
   for (const [suffix, step] of [
     ["", 1] as const,
     ...STEPS.map(([s, q]) => [`@${s}`, q] as const),
@@ -1313,12 +1313,12 @@ export function* sprites(): Generator<Sprite> {
 // inner edge.
 
 // A placed prop: [key, across, dz].
-export type Placed = readonly [key: string, across: number, dz: number];
+type Placed = readonly [key: string, across: number, dz: number];
 type Group = readonly Placed[];
 
 // A side's lot and gap cycle (see PLACEMENT). Built from entries, not literals, so the table keeps
 // this key order.
-export interface Side {
+interface Side {
   gapStart: number;
   gapStride: number;
   lotStart: number;
@@ -1326,7 +1326,7 @@ export interface Side {
   offset: number;
 }
 
-export interface Placement {
+interface Placement {
   gaps: readonly Group[];
   lots: readonly Group[];
   sides: Readonly<Record<"left" | "right", Side>>;
@@ -1354,7 +1354,7 @@ function floorMod(a: number, m: number): number {
 }
 
 // The across of a prop's centre, in whole road px, whose frame's inner edge is at inner or beyond.
-export function atInner(key: string, inner: number): number {
+function atInner(key: string, inner: number): number {
   return Math.ceil(inner + size(key)[0] / 2);
 }
 
@@ -1382,7 +1382,7 @@ function gap(...props: readonly (readonly [string, number, number])[]): Group {
 // the right side's 140 px after the left's, so over both sides they stand 140 and 420 px apart in
 // turn. Street lamps stand every lot: 280 px a side, one every 140 px, alternating sides. A zone with
 // no lamps has one empty lot.
-export const SIDES: Readonly<Record<"left" | "right", Side>> = {
+const SIDES: Readonly<Record<"left" | "right", Side>> = {
   left: sideOf(0, 0, 1, 0, 1),
   right: sideOf(1, 0, 1, 2, 1),
 };
@@ -1390,7 +1390,7 @@ export const SIDES: Readonly<Record<"left" | "right", Side>> = {
 // How many slots the right side's lamps stand after the left's for a lamp every `every` lots: an odd
 // count, since lots stand on even slots on the left and odd slots on the right; halfway (every) for
 // an odd every, else every - 1.
-export function lampLag(every: number): number {
+function lampLag(every: number): number {
   return every % 2 ? every : every - 1;
 }
 
@@ -1441,7 +1441,7 @@ function sparse(
 
 const GAS_LAMP: Lamp = ["gas-lamp", 213, 2];
 
-export const PLACEMENT: ReadonlyMap<string, Placement> = new Map([
+const PLACEMENT: ReadonlyMap<string, Placement> = new Map([
   ["cabbagetown", sparse(["tree-maple", 220, 0], ["tree-maple", 220, 0], undefined, GAS_LAMP)],
   ["high-park", sparse(["tree-oak", 220, 0], ["hot-dog-stand", 216, 0])],
   ["distillery-district", sparse(null, ["love-lock", 216, 0], undefined, GAS_LAMP)],
@@ -1495,24 +1495,24 @@ export const PLACEMENT: ReadonlyMap<string, Placement> = new Map([
 // the screen's edge counting as a sidewalk PAVED wide. The band comes from the verges the game reads
 // (VERGES_JSON); a zone with no band has no curb props. Every slot on a side takes a group, slot n
 // groups[(start + n * stride) % groups.length]; across is the frame's centre, the band's middle.
-export const VERGES_JSON = "shared/verges.json";
-export const PAVED = 44;
-export const CURB_CLEAR = 2;
+const VERGES_JSON = "shared/verges.json";
+const PAVED = 44;
+const CURB_CLEAR = 2;
 // Half a slot further than the lawn props, so a curb prop never stands abreast of one.
-export const CURB_DZ = 70;
-export const CURB_SIDES = {
+const CURB_DZ = 70;
+const CURB_SIDES = {
   left: { start: 0, stride: 1 },
   right: { start: 1, stride: 1 },
 } as const;
 
 // The fields of a verge in VERGES_JSON that the curb band reads.
-export interface Verge {
+interface Verge {
   curbTo: number;
   strips: readonly { to: number }[];
   walkTo: number | null;
 }
 
-export interface Curb {
+interface Curb {
   groups: readonly Group[];
   sides: typeof CURB_SIDES;
 }
@@ -1522,7 +1522,7 @@ function readVerges(): Readonly<Record<string, Verge>> {
 }
 
 // The curb band of a verge, [from, to] across, or null.
-export function curbBand(verge: Verge): [number, number] | null {
+function curbBand(verge: Verge): [number, number] | null {
   const start = verge.strips.length > 0 ? verge.strips.at(-1)!.to : verge.curbTo;
   const walk = verge.walkTo === null ? start + PAVED : Math.max(start, verge.walkTo);
   const band: [number, number] = [start + CURB_CLEAR, walk - CURB_CLEAR];
@@ -1546,7 +1546,7 @@ function curb(verges: Readonly<Record<string, Verge>>, zone: string, ...names: s
 
 const VERGES = readVerges();
 
-export const CURB: ReadonlyMap<string, Curb> = new Map([
+const CURB: ReadonlyMap<string, Curb> = new Map([
   ["cabbagetown", curb(VERGES, "cabbagetown", "hydrant", "urn")],
   ["distillery-district", curb(VERGES, "distillery-district", "barrel", "bollard")],
   ["kensington-market", curb(VERGES, "kensington-market", "bike-ring", "utility-box", "mailbox")],
@@ -1555,7 +1555,7 @@ export const CURB: ReadonlyMap<string, Curb> = new Map([
 ]);
 
 // Each zone's ground shadow under a free-standing prop: a darker tone of its lawn or paving.
-export const SHADOWS: Readonly<Record<string, string>> = {
+const SHADOWS: Readonly<Record<string, string>> = {
   cabbagetown: "dolive",
   "distillery-district": "dbrown",
   "high-park": "fir",
@@ -1565,8 +1565,8 @@ export const SHADOWS: Readonly<Record<string, string>> = {
 };
 
 // Props that stand free and take the game's ground shadow.
-export const SHADOWED: readonly string[] = [...PROPS].filter(([, p]) => p.shadowed).map(([k]) => k);
-export const TABLE_JSON = "shared/roadside.json";
+const SHADOWED: readonly string[] = [...PROPS].filter(([, p]) => p.shadowed).map(([k]) => k);
+const TABLE_JSON = "shared/roadside.json";
 
 // The slots n in one cycle of a zone's lots and gaps at which a side's lot holds props, and the
 // cycle's length.
@@ -1615,7 +1615,7 @@ function checkLamps(zone: string, p: Placement): void {
 // Every lawn prop's frame clears the sidewalk by at least 4 road px, at no k do the two sides take
 // the same gap that holds props, the lots' lamps keep their rhythm (checkLamps), and every curb
 // prop's frame lies wholly inside its zone's curb band.
-export function checkPlacement(): void {
+function checkPlacement(): void {
   const walk = 208;
   for (const [zone, p] of PLACEMENT) {
     for (const group of [...p.lots, ...p.gaps]) {
@@ -1665,7 +1665,7 @@ function propEntries(group: Group): Record<string, number | string>[] {
 
 // The placement table as JSON, with the shadowed keys that a zone places. Each zone's fields are
 // built from entries so the table keeps its order: slot, lots, gaps, sides, shadowColour, curb.
-export function table(): { shadowed: string[]; zones: Record<string, unknown> } {
+function table(): { shadowed: string[]; zones: Record<string, unknown> } {
   checkPlacement();
   const zones: [string, unknown][] = [];
   const placed = new Set<string>();
@@ -1692,12 +1692,12 @@ export function table(): { shadowed: string[]; zones: Record<string, unknown> } 
 }
 
 // The placement table as table() prints it.
-export function tableJson(): string {
+function tableJson(): string {
   return `${JSON.stringify(table(), null, 2)}\n`;
 }
 
 // Write the placement table to TABLE_JSON, for the game to read.
-export function writeTable(): void {
+function writeTable(): void {
   writeFileSync(TABLE_JSON, tableJson());
 }
 

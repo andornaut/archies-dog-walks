@@ -54,11 +54,11 @@ export const scope: DrawingScope = {
 // ROAD_SIZE is the medium dogs' frame side. Each dog's 32-unit design is rasterized at
 // roadScale(name) (DOG_SIZE / 32) on a Mini that keeps 1px lines and single pixels 1px; its depth
 // variants at that times the step. Faces are 32x32 frames, the face drawn at FACE_SIDE / 32.
-export const ROAD_SIZE = 48;
+const ROAD_SIZE = 48;
 
 // A pose's offsets by key (see pose).
-export type Pose = Readonly<Record<string, number>>;
-export type PoseKey =
+type Pose = Readonly<Record<string, number>>;
+type PoseKey =
   | "bl"
   | "blx"
   | "bob"
@@ -77,11 +77,11 @@ export type PoseKey =
   | "tail"
   | "twitch";
 // Every pose key with its value.
-export type FullPose = Readonly<Record<PoseKey, number>> & Pose;
+type FullPose = Readonly<Record<PoseKey, number>> & Pose;
 
 // A 600ms diagonal trot: a planted paw, toe-off, a folded return and contact. Eight distinct phases
 // keep the spine quiet while the paws, tail and ears follow the stride.
-export const WALK: readonly Pose[] = [
+const WALK: readonly Pose[] = [
   { bl: 0, blx: 0, br: 0, brx: 0, fl: 0, flop: 0, flx: 0, fr: 0, frx: 0, tail: -1 },
   { bl: 0, blx: 0, br: -1, brx: 0, fl: -1, flop: 0, flx: 0, fr: 0, frx: 0, tail: -1 },
   { bl: 0, blx: 0, br: -2, brx: -1, fl: -2, flop: 1, flx: 1, fr: 0, frx: 0, tail: 0 },
@@ -92,7 +92,7 @@ export const WALK: readonly Pose[] = [
   { bl: -1, blx: 1, br: 0, brx: 0, fl: 0, flop: -1, flx: 0, fr: -1, frx: -1, tail: -1 },
 ];
 // Compress, tuck, land and settle, with four 60ms poses.
-export const REACT: readonly Pose[] = [
+const REACT: readonly Pose[] = [
   { bob: 1, ears: 1, tail: 0 },
   { bl: -3, bob: -2, br: -3, ears: -1, fl: -3, fr: -3, tail: 0 },
   { bl: -2, bob: -1, br: -2, fl: -2, flop: 1, fr: -2, tail: 0 },
@@ -101,7 +101,7 @@ export const REACT: readonly Pose[] = [
 // Straining at the leash, leaning right: the front paws scrabble one after the other with the hind
 // legs dug in, the lean surging 2 and 3 units with the shoulders following (pitch) and the neck
 // stretched forward (reach), as in the tell, and the tail flicking; 4 frames at 80ms.
-export const PULL: readonly Pose[] = [
+const PULL: readonly Pose[] = [
   { bl: 1, bob: 0, br: 1, fl: -1, fr: -1, lean: 2, pitch: 1, reach: 1, tail: -2 },
   { bl: 1, bob: 0, br: 1, fl: -2, fr: -1, lean: 3, pitch: 1, reach: 1, tail: -2 },
   { bl: 1, bob: 0, br: 1, fl: -1, fr: -2, lean: 3, pitch: 1, reach: 1, tail: -1 },
@@ -111,7 +111,7 @@ export const PULL: readonly Pose[] = [
 // toward what it wants, the head 2 and 3 units across with the shoulders following (pitch) and the
 // neck stretched forward (reach), rising on its toes and settling, the tail wagging high and the
 // right ear flicking; 4 frames at 125ms.
-export const TELL: readonly Pose[] = [
+const TELL: readonly Pose[] = [
   { bob: 0, ears: -1, lean: 2, pitch: 1, reach: 1, tail: 1 },
   { bob: -1, ears: -1, lean: 3, pitch: 1, reach: 1, tail: 2 },
   { bob: -1, ears: -1, lean: 3, pitch: 1, reach: 1, tail: 1, twitch: -1 },
@@ -119,7 +119,7 @@ export const TELL: readonly Pose[] = [
 ];
 // Standing still: the tail swings across and back, the body breathes 1px up over the middle two
 // beats with the feet planted, and the right ear lifts 1px as the tail comes home.
-export const IDLE: readonly Pose[] = [
+const IDLE: readonly Pose[] = [
   { tail: -1 },
   { bob: -1, tail: 0 },
   { bob: -1, tail: 1 },
@@ -128,7 +128,7 @@ export const IDLE: readonly Pose[] = [
 // Shaking off after an encounter hit: the head whips 2px and the body 1px left and right (lean, with
 // the hind legs planted), the ears and tail flick against it, and droplets fly off on the middle two
 // beats, spray pixels out from the flanks.
-export const SHAKE: readonly Pose[] = [
+const SHAKE: readonly Pose[] = [
   { ears: -1, lean: -2, tail: 1 },
   { ears: 1, lean: 2, spray: 2, tail: -2, twitch: -1 },
   { ears: -1, lean: -1, spray: 3.5, tail: 2 },
@@ -138,9 +138,9 @@ export const SHAKE: readonly Pose[] = [
 // depthSettled), so a change to a lean never moves the cuts in the other tags.
 export const LEAN_TAGS: readonly string[] = ["pull", "tell"];
 // A road tag: [name, poses, duration ms].
-export type RoadTag = readonly [tag: string, poses: readonly Pose[], ms: number];
+type RoadTag = readonly [tag: string, poses: readonly Pose[], ms: number];
 // Idle and shake follow the first four tags.
-export const ROAD_TAGS: readonly RoadTag[] = [
+const ROAD_TAGS: readonly RoadTag[] = [
   ["walk", WALK, 75],
   ["react", REACT, 60],
   ["pull", PULL, 80],
@@ -150,7 +150,7 @@ export const ROAD_TAGS: readonly RoadTag[] = [
 ];
 // The heavy Malamute starts on diagonal recovery, so the pack's gaits do not all share one contact
 // beat.
-export const WALK_PHASE: Readonly<Record<string, number>> = { kilo: 2 };
+const WALK_PHASE: Readonly<Record<string, number>> = { kilo: 2 };
 
 // The breed's complete tag cycles, with an explicit starting phase for its walk.
 export function* roadTags(name: string): Generator<RoadTag> {
@@ -165,8 +165,8 @@ export function* roadTags(name: string): Generator<RoadTag> {
   }
 }
 
-export type Mood = "happy" | "neutral" | "upset";
-export const FACE_TAGS: readonly Mood[] = ["happy", "neutral", "upset"];
+type Mood = "happy" | "neutral" | "upset";
+const FACE_TAGS: readonly Mood[] = ["happy", "neutral", "upset"];
 
 const POSE_DEFAULTS: FullPose = {
   bl: 0,
@@ -195,17 +195,17 @@ const POSE_DEFAULTS: FullPose = {
 // across together, over the planted hind legs; reach lifts the head up the screen, away from the
 // walker, as a dog stretches its neck toward what it wants. flx/frx/blx/brx move returning paws
 // inward independently of their vertical lift, keeping the planted diagonal pair stable.
-export function pose(q: Pose): FullPose {
+function pose(q: Pose): FullPose {
   return { ...POSE_DEFAULTS, ...q };
 }
 
 // A dog's road drawing for a pose and its face drawing for a mood.
-export type RoadDraw = (q: Pose) => Drawable;
-export type FaceDraw = (mood: Mood) => Drawable;
+type RoadDraw = (q: Pose) => Drawable;
+type FaceDraw = (mood: Mood) => Drawable;
 
 // ---------- Kilo: Alaskan Malamute, large, grey and white, blue eyes, orange harness ----------
 
-export function kiloRoad(pq: Pose): Drawable {
+function kiloRoad(pq: Pose): Drawable {
   const g = edged(scope.Grid());
   const q = pose(pq);
   // o shifts the body down so the big head has headroom to lean
@@ -260,9 +260,9 @@ export function kiloRoad(pq: Pose): Drawable {
 
 // Kilo's grey coat lit where its silhouette faces up or left, so the dark head and ears hold on the
 // dslate road.
-export const KILO_RIM: Rims = { dslate: ["grey", null], slate: ["grey", null] };
+const KILO_RIM: Rims = { dslate: ["grey", null], slate: ["grey", null] };
 
-export function kiloFace(mood: Mood): Drawable {
+function kiloFace(mood: Mood): Drawable {
   const g = edged(scope.Grid(), "ink", true);
   const d = droop(mood);
   // a Malamute's ears: small, set wide on the broad skull, their tips rounded
@@ -294,7 +294,7 @@ export function kiloFace(mood: Mood): Drawable {
 
 // ---------- Lady: beagle, medium, tricolour, long ears, green collar ----------
 
-export function ladyRoad(pq: Pose): Drawable {
+function ladyRoad(pq: Pose): Drawable {
   const g = edged(scope.Grid());
   const q = pose(pq);
   const b = q.bob;
@@ -330,7 +330,7 @@ export function ladyRoad(pq: Pose): Drawable {
   return g;
 }
 
-export function ladyFace(mood: Mood): Drawable {
+function ladyFace(mood: Mood): Drawable {
   const g = edged(scope.Grid(), "ink", true);
   g.cel(16, 28.5, 6.5, 3, "white", "lgrey");
   g.cel(16, 15.5, 9, 8, "ochre", "rust", "tan");
@@ -350,7 +350,7 @@ export function ladyFace(mood: Mood): Drawable {
 
 // ---------- Ginger: Maltese, small, white, pink bow ----------
 
-export function gingerRoad(pq: Pose): Drawable {
+function gingerRoad(pq: Pose): Drawable {
   const g = edged(scope.Grid());
   const q = pose(pq);
   const b = q.bob;
@@ -390,7 +390,7 @@ export function gingerRoad(pq: Pose): Drawable {
   return g;
 }
 
-export function gingerFace(mood: Mood): Drawable {
+function gingerFace(mood: Mood): Drawable {
   const g = edged(scope.Grid(), "ink", true);
   g.cel(16, 26.5, 6, 3.5, "white", "lgrey");
   const d = droop(mood);
@@ -410,7 +410,7 @@ export function gingerFace(mood: Mood): Drawable {
 
 // ---------- Reggie: pug, small, fawn, black mask, red bandana ----------
 
-export function reggieRoad(pq: Pose): Drawable {
+function reggieRoad(pq: Pose): Drawable {
   const g = edged(scope.Grid());
   const q = pose(pq);
   const b = q.bob;
@@ -444,7 +444,7 @@ export function reggieRoad(pq: Pose): Drawable {
   return g;
 }
 
-export function reggieFace(mood: Mood): Drawable {
+function reggieFace(mood: Mood): Drawable {
   const g = edged(scope.Grid(), "ink", true);
   g.tri([8, 26], [24, 26], [16, 31], "red");
   g.p(13, 27, "white");
@@ -464,7 +464,7 @@ export function reggieFace(mood: Mood): Drawable {
 
 // ---------- Buddy: Jack Russell, small, white with tan patches, red collar ----------
 
-export function buddyRoad(pq: Pose): Drawable {
+function buddyRoad(pq: Pose): Drawable {
   const g = edged(scope.Grid());
   const q = pose(pq);
   const b = q.bob;
@@ -499,7 +499,7 @@ export function buddyRoad(pq: Pose): Drawable {
   return g;
 }
 
-export function buddyFace(mood: Mood): Drawable {
+function buddyFace(mood: Mood): Drawable {
   const g = edged(scope.Grid(), "ink", true);
   g.cel(16, 16, 9, 8, "white", "lgrey");
   g.cel(10.5, 12.5, 4, 4, "ochre", "rust", "tan");
@@ -521,22 +521,22 @@ export function buddyFace(mood: Mood): Drawable {
 // ---------- Pepe: miniature poodle, medium, black with a white stripe, show-clip pom-poms ----------
 
 // A colour ramp: fill, shade and light (or null).
-export type Ramp = readonly [fill: string, shade: string, light: string | null];
+type Ramp = readonly [fill: string, shade: string, light: string | null];
 
 // Pepe's coat: the curls (fill, shade, light), the shaved skin and the white stripe (fill, shade).
 export const CURL: Ramp = ["navy", "ink", "dslate"];
 export const SHAVED: Ramp = ["slate", "dslate", "grey"];
-export const STRIPE: readonly [string, string] = ["white", "lgrey"];
+const STRIPE: readonly [string, string] = ["white", "lgrey"];
 
 const PEPE_COAT = new Set([...CURL, ...SHAVED].map((n) => K[n!]));
 
 // Pepe's outline: grey round the black coat, which has no fill that holds against the dslate road,
 // and the road outline round everything else.
-export function pepeEdge(c: string): string {
+function pepeEdge(c: string): string {
   return PEPE_COAT.has(c) ? K.grey! : roadEdge(c);
 }
 
-export function pepeRoad(pq: Pose): Drawable {
+function pepeRoad(pq: Pose): Drawable {
   const g = edged(scope.Grid(), pepeEdge);
   const q = pose(pq);
   const b = q.bob;
@@ -595,7 +595,7 @@ export function pepeRoad(pq: Pose): Drawable {
   return g;
 }
 
-export function pepeFace(mood: Mood): Drawable {
+function pepeFace(mood: Mood): Drawable {
   const g = edged(scope.Grid(), "ink", true);
   const d = droop(mood);
   g.cel(16, 28.5, 6.5, 3, ...CURL);
@@ -630,7 +630,7 @@ export function pepeFace(mood: Mood): Drawable {
 export const COAT: Ramp = ["brown", "dbrown", "skin2"];
 export const EAR: readonly [string, string] = ["brown", "dbrown"];
 
-export function archieRoad(pq: Pose): Drawable {
+function archieRoad(pq: Pose): Drawable {
   const g = edged(scope.Grid());
   const q = pose(pq);
   const b = q.bob;
@@ -701,7 +701,7 @@ export function archieRoad(pq: Pose): Drawable {
 }
 
 // Archie's brown coat lit where its silhouette faces up or left, so it holds on the dslate road.
-export const ARCHIE_RIM: Rims = { brown: ["tan", null], dbrown: ["skin2", null] };
+const ARCHIE_RIM: Rims = { brown: ["tan", null], dbrown: ["skin2", null] };
 // Archie's face's eyes: each 3x3 iris's left column and its colour, far eye first, and their top row.
 export const ARCHIE_EYES: readonly (readonly [number, string])[] = [
   [10, "sky"],
@@ -755,7 +755,7 @@ export function archieFace(mood: Mood): Drawable {
 
 // ---------- Sequoia: Great Pyrenees, large, giant white fluff, collar with a bell ----------
 
-export function sequoiaRoad(pq: Pose): Drawable {
+function sequoiaRoad(pq: Pose): Drawable {
   const g = edged(scope.Grid());
   const q = pose(pq);
   const b = q.bob;
@@ -802,7 +802,7 @@ export function sequoiaRoad(pq: Pose): Drawable {
   return g;
 }
 
-export function sequoiaFace(mood: Mood): Drawable {
+function sequoiaFace(mood: Mood): Drawable {
   const g = edged(scope.Grid(), "ink", true);
   const d = droop(mood);
   g.cel(16, 28, 9, 3.5, "white", "lgrey");
@@ -831,7 +831,7 @@ export function sequoiaFace(mood: Mood): Drawable {
 // Penny's coat, one ramp cel shaded: base, shade, light.
 export const GOLD: Ramp = ["amber", "orange", "yellow"];
 
-export function pennyRoad(pq: Pose): Drawable {
+function pennyRoad(pq: Pose): Drawable {
   const g = edged(scope.Grid());
   const q = pose(pq);
   const b = q.bob;
@@ -891,19 +891,12 @@ export function pennyRoad(pq: Pose): Drawable {
 
 // A rounded mass of Penny's coat: the base lit along its top left, over its shade cast 1px down and
 // right, so the shade is a thin rim and not a diagonal plane that would swallow the ears and tail.
-export function gold(
-  g: Drawable,
-  cx: number,
-  cy: number,
-  rx: number,
-  ry: number,
-  power = 2.6,
-): void {
+function gold(g: Drawable, cx: number, cy: number, rx: number, ry: number, power = 2.6): void {
   g.blob(cx + 0.8, cy + 0.8, rx, ry, GOLD[1], null, null, power);
   g.blob(cx, cy, rx, ry, GOLD[0], null, GOLD[2], power);
 }
 
-export function pennyFace(mood: Mood): Drawable {
+function pennyFace(mood: Mood): Drawable {
   const g = edged(scope.Grid(), "ink", true);
   const d = droop(mood);
   g.cel(16, 28.5, 8.5, 3.5, ...GOLD);
@@ -972,15 +965,15 @@ export function inlay(g: Drawable, line: string, draw: (t: Drawable) => void): v
 }
 
 // One native output row in the drawing grid's design coordinates.
-export function nativeRow(g: Drawable): number {
+function nativeRow(g: Drawable): number {
   return 1 / rowScaleOf(g);
 }
 
 // A hind paw: [x, y, rx, ry].
-export type Paw = readonly [x: number, y: number, rx: number, ry: number];
+type Paw = readonly [x: number, y: number, rx: number, ry: number];
 
 // Separate planted toes from shaded returning toes in front of the breed's lower coat.
-export function hindPaws(
+function hindPaws(
   g: Drawable,
   q: FullPose,
   coat: readonly [string, string],
@@ -1001,21 +994,14 @@ export function hindPaws(
 // ---------- shared features ----------
 
 // How far the ears sag, in pixels: perked when happy, relaxed when neutral, flat when upset.
-export function droop(mood: Mood): number {
+function droop(mood: Mood): number {
   return { happy: 0, neutral: 1, upset: 3 }[mood];
 }
 
 // A clipped poodle pom-pom in Pepe's curls (CURL), shaded on its lower right, with a highlight only
 // on a puff big enough to hold one as a shape, so the coat carries no single-pixel texture. ring sets
 // it apart from the puffs it is drawn over with a 1px ring in the shade.
-export function puff(
-  g: Drawable,
-  cx: number,
-  cy: number,
-  rx: number,
-  ry: number,
-  ring = false,
-): void {
+function puff(g: Drawable, cx: number, cy: number, rx: number, ry: number, ring = false): void {
   if (ring) {
     g.ell(cx, cy, rx + 1, ry + 1, CURL[1]);
   }
@@ -1025,7 +1011,7 @@ export function puff(
 // The shake-off's water: droplets thrown d pixels out from both flanks, rising as they fly. Each is
 // 1px, cyan or white, so the road outline rings it and it holds on every road. out starts them that
 // much further out, for a coat whose flanks or ears reach past the others'.
-export function spray(g: Drawable, d: number, out = 0): void {
+function spray(g: Drawable, d: number, out = 0): void {
   if (!d) {
     return;
   }
@@ -1042,7 +1028,7 @@ export function spray(g: Drawable, d: number, out = 0): void {
 }
 
 // A white or light grey coat's underside, one ramp step darker: white to lgrey, lgrey to grey.
-export const UNDERSIDE: ReadonlyMap<string, string> = new Map([
+const UNDERSIDE: ReadonlyMap<string, string> = new Map([
   ["ffffff", "c0cbdc"],
   ["c0cbdc", "8b9bb4"],
 ]);
@@ -1050,7 +1036,7 @@ export const UNDERSIDE: ReadonlyMap<string, string> = new Map([
 // Darken a white or grey coat's lower-right silhouette one ramp step: every coat pixel with open
 // road below it or to its right. The coat keeps its colour, and its shade sits a step darker, so a
 // white dog keeps its mass on the light roads. Works on the grid a small version draws to as well.
-export function underside(g: Drawable): void {
+function underside(g: Drawable): void {
   const px = raster(g).px;
   const h = px.length;
   const w = px[0]!.length;
@@ -1071,7 +1057,7 @@ export function underside(g: Drawable): void {
 // Fill every lone pixel of the given coat colours, one that none of its four opaque neighbours
 // shares, with its neighbours' most common colour, so overlapping puffs leave no single-pixel texture
 // to shimmer at road scale. Works on the grid a small version draws to as well.
-export function despeckle(g: Drawable, colours: readonly (string | null)[]): void {
+function despeckle(g: Drawable, colours: readonly (string | null)[]): void {
   const px = raster(g).px;
   const h = px.length;
   const w = px[0]!.length;
@@ -1096,7 +1082,7 @@ export function despeckle(g: Drawable, colours: readonly (string | null)[]): voi
 // A bow: Ginger's is pink, Pepe's show ribbon mauve tied in purple. The knot and folds take the second
 // colour; folds false leaves the folds out, for a bow too small at road scale for them to land on its
 // wings.
-export function bow(
+function bow(
   g: Drawable,
   cx: number,
   y: number,
@@ -1119,7 +1105,7 @@ export function bow(
 
 // Two eyes at columns lx and rx, row y: 2x2 ink with a glint, or 3x3 in iris with a pupil. A happy
 // face has pink cheeks under them; an upset one slanted brows and a tear.
-export function eyes(
+function eyes(
   g: Drawable,
   lx: number,
   rx: number,
@@ -1155,7 +1141,7 @@ export function eyes(
 }
 
 // happy: a wide open grin with the tongue out; neutral: a closed line; upset: a deep frown.
-export function mouth(g: Drawable, y: number, mood: Mood): void {
+function mouth(g: Drawable, y: number, mood: Mood): void {
   if (mood === "happy") {
     g.p(13, y, "ink");
     g.p(18, y, "ink");
@@ -1195,12 +1181,12 @@ export const DOGS: Readonly<Record<string, readonly [road: RoadDraw, face: FaceD
 
 // Each dog's road sprite side, by its size class: large 54, medium ROAD_SIZE (48) and small 38, about
 // 1.1x, 1x and 0.8x.
-export const SIZE_CLASS: Readonly<Record<string, number>> = {
+const SIZE_CLASS: Readonly<Record<string, number>> = {
   large: 54,
   medium: ROAD_SIZE,
   small: 38,
 };
-export const DOG_CLASS: Readonly<Record<string, string>> = {
+const DOG_CLASS: Readonly<Record<string, string>> = {
   archie: "medium",
   buddy: "small",
   ginger: "small",
@@ -1222,7 +1208,7 @@ export const DOG_FEET: Readonly<Record<string, number>> = Object.fromEntries(
   ]),
 );
 // How much bigger a dog is drawn inside its frame: one factor, or [across, down].
-export type Zoom = Scale;
+type Zoom = Scale;
 // How much bigger a dog is drawn inside its frame, across and down. The large dogs are drawn
 // narrower, Kilo and Sequoia about 30px wide and Penny 28 at full size; the small dogs fill more of
 // theirs, about 20px wide (Buddy 19) and 31 to 32 tall. So the widths step about 30, 24 and 20.
@@ -1289,10 +1275,10 @@ export function roadScale(name: string): number {
 // ---------- road frames ----------
 
 // The design column a zoomed dog grows about: its centre.
-export const DOG_AXIS = 16;
+const DOG_AXIS = 16;
 
 // The last row of frame f with an opaque pixel.
-export function bottom(f: Frame): number {
+function bottom(f: Frame): number {
   let last = -Infinity;
   f.forEach((row, y) => {
     if (row.some(Boolean)) {

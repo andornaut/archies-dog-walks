@@ -156,7 +156,7 @@ interface MarketsScope extends DrawingScope {
 
 // The grid every drawing here makes and the face it draws, which mini.ts's small swaps while it
 // runs. The face is road.ts's, so small swaps it here too, as it does in road.ts's scope.
-export const scope: MarketsScope = {
+const scope: MarketsScope = {
   Grid: (w = 32, h = 32) => new Grid(w, h),
   faceFront: road.faceFront,
 };
@@ -1817,7 +1817,7 @@ function* burstSprites(): Generator<Sprite> {
 }
 
 // Every sprite: the road sprites, their depth variants, then the hit bursts.
-export function* sprites(): Generator<Sprite> {
+function* sprites(): Generator<Sprite> {
   yield* roadSprites();
   for (const [suffix, s] of STEPS) {
     for (const [key, tags] of roadSprites(s)) {

@@ -252,7 +252,7 @@ function dodge(step: number): Grid {
 }
 
 // Every sprite: [key, [[tag, frames, duration in ms]]].
-export function* sprites(): Generator<Sprite> {
+function* sprites(): Generator<Sprite> {
   const frames = (draw: (i: number) => Grid, items: readonly number[]): Grid["px"][] =>
     items.map((i) => draw(i).outlined(false));
   yield [

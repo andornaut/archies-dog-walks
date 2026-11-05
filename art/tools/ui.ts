@@ -88,7 +88,7 @@ const USAGE = `Usage:
 
 // ---------- the chrome: one frame for every panel, bubble, plate and card frame ----------
 
-export interface ChromeColours {
+interface ChromeColours {
   // The face, under any text.
   face?: string;
   // The inner line, or null to leave it out, for shapes too small to hold it.
@@ -109,7 +109,7 @@ const SIDES: readonly (readonly [number, number])[] = [
 // face's bottom row and right column. openEdge(x, y) is true for points off the grid that continue
 // the shape, so a tail laid over a bubble's rim stays open on that side. Ink holds 3:1 on the light
 // roads, the cream face on navy, ink and dark wood; text sits on the face.
-export function chromeShape<G extends Drawable>(
+function chromeShape<G extends Drawable>(
   {
     face = "cream",
     line = "plum",
@@ -155,7 +155,7 @@ export function chromeShape<G extends Drawable>(
 }
 
 // A box with each corner cut on a diagonal r pixels long, as an inside(x, y) test.
-export function roundedInside(
+function roundedInside(
   x0: number,
   y0: number,
   w: number,
@@ -224,13 +224,13 @@ function rows(
 // 9.42:1 and dred 5.07:1.
 
 // The speaker, note and effects inks: face, shade on the lower-right edges, and the mute X.
-export type Ink = readonly [face: string, shade: string, x: string];
-export const NAVY_FACE: Ink = ["cream", "tan", "pink"];
-export const CREAM_PANEL: Ink = ["dbrown", "plum", "dred"];
+type Ink = readonly [face: string, shade: string, x: string];
+const NAVY_FACE: Ink = ["cream", "tan", "pink"];
+const CREAM_PANEL: Ink = ["dbrown", "plum", "dred"];
 
 // Amber bars, like the Home glyph, so the walk controls stand apart from the cream help and sound
 // glyphs.
-export function pause(): Grid {
+function pause(): Grid {
   const g = new Grid(16, 16);
   g.rect(4, 3, 3, 10, "amber");
   g.rect(9, 3, 3, 10, "amber");
@@ -241,7 +241,7 @@ export function pause(): Grid {
 
 // The pause button's face while paused: an amber triangle as tall as the pause bars, its lower edge
 // orange, 1px right of centre so it looks centred.
-export function play(): Grid {
+function play(): Grid {
   const g = new Grid(16, 16);
   for (let j = 0; j < 10; j++) {
     const w = Math.round(Math.min(j, 9 - j) * 1.6) + 2;
@@ -255,7 +255,7 @@ export function play(): Grid {
 
 // The Home button: a house as tall as the pause bars, amber with orange on its lower-right edges like
 // them, a chimney on the right slope and a doorway the navy face shows through.
-export function homeIcon(): Grid {
+function homeIcon(): Grid {
   const g = new Grid(16, 16);
   rows(
     g,
@@ -279,7 +279,7 @@ export function homeIcon(): Grid {
 }
 
 // A bold question mark, 2px strokes with a tan right edge like the pause bars.
-export function helpIcon(): Grid {
+function helpIcon(): Grid {
   const g = new Grid(16, 16);
   rows(
     g,
@@ -303,7 +303,7 @@ export function helpIcon(): Grid {
   return g;
 }
 
-export function close(): Grid {
+function close(): Grid {
   const g = new Grid(16, 16);
   for (let i = 0; i < 9; i++) {
     g.rect(3 + i, 3 + i, 2, 2, "cream");
@@ -312,7 +312,7 @@ export function close(): Grid {
   return g;
 }
 
-export function lock(): Grid {
+function lock(): Grid {
   const g = new Grid(16, 16);
   g.ell(8, 6, 4, 4.5, "grey", "slate", "lgrey");
   g.ell(8, 6.5, 2, 3, null);
@@ -324,19 +324,11 @@ export function lock(): Grid {
 }
 
 // The $ on icon-bill, 5x7: a stroke down the middle through an S.
-export const DOLLAR: readonly string[] = [
-  "..a..",
-  ".aaaa",
-  "a.a..",
-  ".aaa.",
-  "..a.a",
-  "aaaa.",
-  "..a..",
-];
+const DOLLAR: readonly string[] = ["..a..", ".aaaa", "a.a..", ".aaa.", "..a.a", "aaaa.", "..a.."];
 
 // A green dollar bill, its border and its seal's ring in dgreen round a white $, on an item for sale
 // the bank covers, where icon-lock marks one it does not: the two differ by shape as well as colour.
-export function bill(): Grid {
+function bill(): Grid {
   const g = new Grid(16, 16);
   g.rect(1, 4, 14, 9, "green");
   g.rect(1, 12, 14, 1, "dgreen");
@@ -350,14 +342,14 @@ export function bill(): Grid {
 
 // The treat pickup's bone and heart as road.ts's treat lays them out at 16x16 (idle frame 0), outlined
 // with iconEdge as the content icons are.
-export function treatIcon(): Drawable {
+function treatIcon(): Drawable {
   const g = treat({ lift: 0 });
   raster(g).edge = iconEdge;
   return g;
 }
 
 // Three broad pink wisps above a mauve gas cloud, with a shared plum keyline.
-export function stinky(): Frame {
+function stinky(): Frame {
   const g = new Grid(16, 16);
   g.edge = () => K.plum!;
   for (const [x, y] of [
@@ -380,7 +372,7 @@ export function stinky(): Frame {
 }
 
 // The X that marks a muted icon, 5x5 in 2px strokes from (x, y).
-export function muteX(g: Drawable, x: number, y: number, col: string): void {
+function muteX(g: Drawable, x: number, y: number, col: string): void {
   for (let i = 0; i < 4; i++) {
     g.rect(x + i, y + i, 2, 2, col);
     g.rect(x + 3 - i, y + i, 2, 2, col);
@@ -391,7 +383,7 @@ export function muteX(g: Drawable, x: number, y: number, col: string): void {
 // the music note (an eighth note, its flag curling right) is bare for on and has the same X below its
 // flag for off. Neither has an outline, which would fill the gaps between the waves. ink is NAVY_FACE
 // or CREAM_PANEL.
-export function speaker(ink: Ink, on: boolean, note = false): Grid {
+function speaker(ink: Ink, on: boolean, note = false): Grid {
   const [face, shade, xCol] = ink;
   const g = new Grid(16, 16);
   if (note) {
@@ -447,7 +439,7 @@ export function speaker(ink: Ink, on: boolean, note = false): Grid {
 
 // The Settings Effects row: a four-point sparkle with two small ones in the waves' place for on, and
 // the speaker's X there instead for off.
-export function effects(ink: Ink, on: boolean): Grid {
+function effects(ink: Ink, on: boolean): Grid {
   const [face, shade, xCol] = ink;
   const g = new Grid(16, 16);
   rows(
@@ -483,7 +475,7 @@ export function effects(ink: Ink, on: boolean): Grid {
 }
 
 // Reduced motion: a large ball resting on a line when on, travelling past three trails when off.
-export function motion(ink: Ink, on: boolean): Grid {
+function motion(ink: Ink, on: boolean): Grid {
   const [face, shade] = ink;
   const g = new Grid(16, 16);
   g.ell(11.5, on ? 10 : 7, 4.2, 4.2, face, shade);
@@ -504,7 +496,7 @@ export function motion(ink: Ink, on: boolean): Grid {
 
 // The Settings Install app row: a phone, its screen a gap the panel shows through, with a down arrow
 // into the screen for on and the speaker's X in the arrow's place for off.
-export function install(ink: Ink, on: boolean): Grid {
+function install(ink: Ink, on: boolean): Grid {
   const [face, shade, xCol] = ink;
   const g = new Grid(16, 16);
   rows(
@@ -540,7 +532,7 @@ export function install(ink: Ink, on: boolean): Grid {
 
 // Safari's Share button, for the iOS install steps card: a box open at the top with an arrow rising
 // out of it, its chevron head and box in 2px strokes, in the -panel icons' inks.
-export function shareIcon(): Grid {
+function shareIcon(): Grid {
   const [face, shade] = CREAM_PANEL;
   const g = new Grid(16, 16);
   rows(
@@ -572,7 +564,7 @@ export function shareIcon(): Grid {
 
 // The browser menu button, for the Firefox for Android install steps card: three round 4x4 dots
 // stacked on the centre line with 2px gaps, lit like icon-share.
-export function browserMenuIcon(): Grid {
+function browserMenuIcon(): Grid {
   const [face, shade] = CREAM_PANEL;
   const g = new Grid(16, 16);
   for (const top of [0, 6, 12]) {
@@ -582,7 +574,7 @@ export function browserMenuIcon(): Grid {
 }
 
 // icon-update, 16x16 fills: lime lights the top-left edges, dgreen shades the lower-right.
-export const UPDATE_ROWS: readonly string[] = [
+const UPDATE_ROWS: readonly string[] = [
   "................",
   "................",
   "......LLLL......",
@@ -604,7 +596,7 @@ export const UPDATE_ROWS: readonly string[] = [
 // The home screen's update notice: a green down arrow, its head 12 wide over a 4-wide shaft, pointing
 // into a tray of 2px walls and floor, with 2px or more clear between the head and the walls. One
 // forest line round every fill, which holds 3:1 on cream and tan as iconEdge's outline on green does.
-export function updateIcon(): Grid {
+function updateIcon(): Grid {
   const g = edged(new Grid(16, 16), "forest");
   bitmap(g, 0, 0, UPDATE_ROWS, { D: "dgreen", G: "green", L: "lime" });
   return g;
@@ -612,7 +604,7 @@ export function updateIcon(): Grid {
 
 // An open ledger, its two pages bowed up from the spine with three ruled lines each; the spine is a
 // navy gap, so the face shows through.
-export function logbookIcon(): Grid {
+function logbookIcon(): Grid {
   const g = new Grid(16, 16);
   rows(
     g,
@@ -640,7 +632,7 @@ export function logbookIcon(): Grid {
 // A cog: eight teeth around a ring with an eight-sided hole, the shape the sibling duck-platformer
 // game's Settings button shares, cream with tan on the lower-right edges like the other navy-face
 // glyphs.
-export function settingsIcon(): Grid {
+function settingsIcon(): Grid {
   const g = new Grid(16, 16);
   rows(
     g,
@@ -672,7 +664,7 @@ export function settingsIcon(): Grid {
 // The home top bar's Exit button: a doorway with an arrow leaving it to the right, the shape the
 // sibling duck-platformer game's shares, cream with tan on the lower-right edges like the other
 // navy-face glyphs.
-export function exitIcon(): Grid {
+function exitIcon(): Grid {
   const g = new Grid(16, 16);
   rows(
     g,
@@ -700,7 +692,7 @@ export function exitIcon(): Grid {
 // 8x7: a full heart is filled dark red; an empty one is a dark brown outline, so the two differ by fill
 // as well as colour (5:1 or more on cream). dark is for the navy dog card: the full heart red (3.31:1)
 // lit pink and white, the empty one a grey outline (4.93:1).
-export function heart(full: boolean, dark = false): Grid {
+function heart(full: boolean, dark = false): Grid {
   const g = new Grid(8, 7);
   const on = (x: number, y: number): boolean =>
     y >= 0 && y < HEART.length && x >= 0 && x < HEART[y]!.length && HEART[y]![x] === "1";
@@ -726,12 +718,12 @@ export function heart(full: boolean, dark = false): Grid {
 // ---------- nine-slices and badges ----------
 
 // 24x24 nine-slice (4px corners): the chrome box (chrome) with its corners cut 1px.
-export function panel(): Grid {
+function panel(): Grid {
   return chrome(new Grid(24, 24), 0, 0, 24, 24);
 }
 
 // An interaction state's face, its lip and a button face's top highlight.
-export type State = readonly [face: string, lip: string | null, hi: string | null];
+type State = readonly [face: string, lip: string | null, hi: string | null];
 
 // The interaction states shared by tiles and buttons: each state's face, its lip and a button face's
 // top highlight. normal is the chrome's cream, selected the gold of ui-section's complete state, go the
@@ -763,7 +755,7 @@ const BUTTON_KINDS: Readonly<Record<string, string>> = {
 // Raised, row 0 is ink, row 1 the highlight, the face runs to row 18, the lip fills rows 19 to 22 and
 // ink row 23. Sunk, rows 0 and 1 are clear, row 2 is ink and the face fills rows 3 to 22, 2px lower,
 // so every row from 3 to 18 is plain face and the plate stretches cleanly.
-export function button(state: string): Grid {
+function button(state: string): Grid {
   const kind = BUTTON_KINDS[state];
   if (kind === undefined) {
     throw new RangeError(`No button state ${state}`);
@@ -782,10 +774,10 @@ export function button(state: string): Grid {
   return g;
 }
 
-export const TILE = 24;
+const TILE = 24;
 // A normal tile's lip: brown, not the chrome's tan, so it reads apart from the tan box behind an owned
 // item's picture, which sits on it.
-export const TILE_LIP = "brown";
+const TILE_LIP = "brown";
 
 // 24x24 nine-slice, 4px on every side: a pickable tile (walker, dog or gear) in one of the interaction
 // states. normal is the chrome's ink and plum lines and cream face on a TILE_LIP lip 2px deep at the
@@ -793,7 +785,7 @@ export const TILE_LIP = "brown";
 // amber band and an orange line round a yellow face on a 1px amber lip. disabled (not owned and short,
 // the pack full, not available) is flat in the neutral greys: an ink line, an nslate line and an ngrey
 // face with no lip. Content sits from 3px in.
-export function tile(state: string, phase: number | null = null): Grid {
+function tile(state: string, phase: number | null = null): Grid {
   const [face, stateLip] = STATES[state]!;
   const lip = state === "normal" ? TILE_LIP : stateLip;
   const g = new Grid(TILE, TILE);
@@ -824,7 +816,7 @@ export function tile(state: string, phase: number | null = null): Grid {
 // 20x20, for a 16x16 icon at (2, 1), or (2, 3) when pressed: a navy face in a tan rim on a brown lip,
 // so the rim holds 6.5:1 on the plum bar and 4.5:1 on the home street. Pressed, the face sinks 2px
 // into its lip.
-export function iconButton(state: string): Grid {
+function iconButton(state: string): Grid {
   const top = state === "pressed" ? 2 : 0;
   const g = new Grid(20, 20);
   if (!top) {
@@ -842,7 +834,7 @@ export function iconButton(state: string): Grid {
 // 32x16, for the Settings panel's cream: a plum-rimmed track with the cream knob at the right and a
 // white tick on forest when on, at the left with a white cross on slate when off, so the state reads
 // by knob side and glyph as well as colour.
-export function toggle(on: boolean): Grid {
+function toggle(on: boolean): Grid {
   const [track, sh] = on ? ["forest", "teal"] : ["slate", "dslate"];
   const g = new Grid(32, 16);
   for (let dy = 0; dy < 16; dy++) {
@@ -883,7 +875,7 @@ export function toggle(on: boolean): Grid {
 // filled is a solid forest bar in a plum rim the full 10px tall; empty is a hollow plum groove 6px tall
 // in rows 2 to 7, so the level reads by height and fill as well as colour. The plum rim holds 9.42:1 on
 // cream and forest 5.39:1. Muted (on false), both keep their shapes in the neutral greys.
-export function sliderTrack(filled: boolean, on = true): Grid {
+function sliderTrack(filled: boolean, on = true): Grid {
   const [rim, face, hi, sh, inner] = on
     ? ["plum", "forest", "dgreen", "teal", "tan"]
     : ["nslate", "ngrey", "nlgrey", "nslate", "nlgrey"];
@@ -912,7 +904,7 @@ const KNOBS: Readonly<Record<string, readonly [string, string, string, string]>>
 // 10x16, drawn 3px above the track so it overhangs it 3px each way. A cream face in a plum rim on a tan
 // lip; dragged, the face sinks 2px into its lip and turns yellow, the active-state face. Disabled while
 // sound is muted.
-export function sliderKnob(state: string): Grid {
+function sliderKnob(state: string): Grid {
   const [rim, face, sh, grip] = KNOBS[state]!;
   const top = state === "pressed" ? 2 : 0;
   const g = new Grid(10, 16);
@@ -928,7 +920,7 @@ export function sliderKnob(state: string): Grid {
 
 // 24x24 nine-slice (8px corners): the first-run hint, the chrome box with corners cut 2px, so it reads
 // apart from the rounder quip bubble. Text in font-body, plum (9.42:1).
-export function hint(): Grid {
+function hint(): Grid {
   return chrome(new Grid(24, 24), 0, 0, 24, 24, { r: 2 });
 }
 
@@ -953,39 +945,33 @@ function tail(
 // 8x6, a tail pointing down from a bubble's bottom rim to its tip column: cream in an ink line, the
 // lip down its right side. Its top row lies over the rim's ink row, open there, so the cream meets the
 // bubble's plum line.
-export function downTail(tip: number): Grid {
+function downTail(tip: number): Grid {
   return tail(8, DOWN_TAILS.get(tip)!, (x, y) => y < 0 && x >= 1 && x < 7);
 }
 
 // 8x6, centred under the hint bubble with its top row over the bubble's bottom rim; the tip is at
 // columns 3 and 4.
-export function hintTail(): Grid {
+function hintTail(): Grid {
   return downTail(4);
 }
 
 let titleCache: Glyphs | undefined;
 
 // font-title's glyphs (fonts.ts's titleGlyphs), rasterised once.
-export function titleGlyphs(): Glyphs {
+function titleGlyphs(): Glyphs {
   titleCache ??= fontTitleGlyphs();
   return titleCache;
 }
 
 // image with text baked in, in font-title and colour col, from column x, each glyph's yoffset below
 // row y.
-export function baked(
-  image: RgbaImage,
-  text: string,
-  x: number,
-  y: number,
-  col: string,
-): RgbaImage {
+function baked(image: RgbaImage, text: string, x: number, y: number, col: string): RgbaImage {
   drawText({ glyphs: titleGlyphs(), rgba: [...rgb(hexOf(col)), 255] }, text, x, y, image);
   return image;
 }
 
 // 72x20: the end screen's NEW BEST! ribbon, the words baked in white font-title.
-export function newBest(): RgbaImage {
+function newBest(): RgbaImage {
   const g = new Grid(72, 20);
   g.tri([0, 4], [8, 4], [4, 10], "dred");
   g.tri([0, 16], [8, 16], [4, 10], "dred");
@@ -1006,7 +992,7 @@ export function newBest(): RgbaImage {
 // dred under its eaves, tan walls shaded brown on the right, a plum door under a cream bone plaque, a
 // dbrown base) with a green plus badge at the top right. Every fill takes iconEdge's outline, so it
 // holds 3:1 on cream and tan as the item-<gear> art does.
-export function dogSlot(): Grid {
+function dogSlot(): Grid {
   const g = edged(new Grid(32, 32), iconEdge);
   for (let y = 5; y < 15; y++) {
     const half = y - 5 + 3;
@@ -1054,7 +1040,7 @@ export function firedPlate(face: string, lit: string, shade: string): Grid {
 // No two dogs share one, and none is a zone colour. Sequoia's is his collar's blue, not its sky, which
 // backs every owner's photo; Archie's is rust, for his brown coat; Pepe's is his show bow's mauve,
 // which holds his black coat's ink line at 3.83:1. In ui-dog-card's tag order.
-export const DOG_COLOURS: ReadonlyMap<string, string> = new Map([
+const DOG_COLOURS: ReadonlyMap<string, string> = new Map([
   ["ginger", "pink"],
   ["reggie", "red"],
   ["buddy", "dred"],
@@ -1068,7 +1054,7 @@ export const DOG_COLOURS: ReadonlyMap<string, string> = new Map([
 ]);
 
 // True when every pixel within r of (x, y) is on the card.
-export function interior(
+function interior(
   solid: (x: number, y: number) => boolean,
   x: number,
   y: number,
@@ -1085,7 +1071,7 @@ export function interior(
 }
 
 // A debuff bar's face, the empty track, the track's fill and the name's colour.
-export type DebuffLook = readonly [face: string, shade: string, fill: string, name: string];
+type DebuffLook = readonly [face: string, shade: string, fill: string, name: string];
 
 // Each debuff's bar under the walk bar: its face, the empty track, the track's fill and the name's
 // colour, in ui-debuff-bar's tag order. The name holds 4.5:1 or more on the face: ink on brown 4.66:1,
@@ -1098,17 +1084,17 @@ export const DEBUFF_LOOKS: ReadonlyMap<string, DebuffLook> = new Map([
   ["zoomies", ["green", "forest", "yellow", "ink"]],
   ["spotlight", ["blue", "navy", "yellow", "white"]],
 ]);
-export const DEBUFF_BAR: readonly [number, number] = [360, 16];
+const DEBUFF_BAR: readonly [number, number] = [360, 16];
 // The bar's track, in bar pixels: its ink frame, and the run the game fills inside it.
-export const DEBUFF_TRACK: readonly [number, number, number, number] = [68, 4, 288, 7];
-export const DEBUFF_FILL: readonly [number, number, number, number] = [69, 5, 286, 5];
+const DEBUFF_TRACK: readonly [number, number, number, number] = [68, 4, 288, 7];
+const DEBUFF_FILL: readonly [number, number, number, number] = [69, 5, 286, 5];
 
 // 360x16, ui-debuff-bar: one active debuff, drawn full width under the walk bar. The face in the
 // debuff's colour (rows 0 to 13), its shade along row 14 and an ink line on row 15 against the sky; the
 // track's ink frame at x 68 to 355, rows 4 to 10, round an empty track in the shade (x 69 to 354, rows
 // 5 to 9). The game draws icon-<debuff> at (4, 0), the name at x 24 with its capitals on rows 5 to 9,
 // and the fill across the track from x 69.
-export function debuffBar(debuff: string): Grid {
+function debuffBar(debuff: string): Grid {
   const [face, shade] = DEBUFF_LOOKS.get(debuff)!;
   const [w, h] = DEBUFF_BAR;
   const g = new Grid(w, h);
@@ -1126,7 +1112,7 @@ export function debuffBar(debuff: string): Grid {
 // ---------- wood ----------
 
 // Plum wood across g from row top, h rows: h short dbrown grain lines at scattered rows and columns.
-export function wood(g: Drawable, top: number, h: number): void {
+function wood(g: Drawable, top: number, h: number): void {
   g.rect(0, top, g.w, h, "plum");
   for (let i = 0; i < h; i++) {
     g.rect((i * 53) % (g.w - 8), top + 4 + ((i * 11) % (h - 9)), 4 + (i % 4) * 3, 1, "dbrown");
@@ -1136,7 +1122,7 @@ export function wood(g: Drawable, top: number, h: number): void {
 // ---------- selection and feedback ----------
 
 // Move a two-pixel cream edge accent around a fixed gold frame, never across its face.
-export function selectionGlints<G extends Drawable>(g: G, phase: number | boolean): G {
+function selectionGlints<G extends Drawable>(g: G, phase: number | boolean): G {
   const gold = new Set([K.amber, K.orange]);
   g.px.forEach((row, y) => {
     row.forEach((colour, x) => {
@@ -1153,7 +1139,7 @@ export function selectionGlints<G extends Drawable>(g: G, phase: number | boolea
 // 24x24 nine-slice (8px corners): the frame around a selected tile or active control. An ink edge on
 // both sides of a 2px amber band, so it stands out on any background (ink on tan or cream is 9:1 or
 // more); a cream accent alternates between the top/left and bottom/right gold edges.
-export function selectFrame(glow: boolean): Grid {
+function selectFrame(glow: boolean): Grid {
   const g = new Grid(24, 24);
   g.rect(1, 0, 22, 24, "ink");
   g.rect(0, 1, 24, 22, "ink");
@@ -1175,7 +1161,7 @@ export function selectFrame(glow: boolean): Grid {
 // 1px ink keylines; diagonal pairs of cream corner marks exchange 12px and 7px lengths without moving
 // the row or changing its availability. Reduced motion holds the first phase. The 5px ring covers only
 // the row's first two border pixels inside its edge.
-export function shopFocusFrame(short: boolean): Grid {
+function shopFocusFrame(short: boolean): Grid {
   const g = new Grid(32, 32);
   g.rect(0, 0, 32, 32, "ink");
   g.rect(1, 1, 30, 30, "cyan");
@@ -1218,7 +1204,7 @@ const TICK: readonly (readonly [number, number])[] = [
 ];
 
 // 16x16: the green badge on a selected tile, numbered by pick order, or a tick.
-export function checkBadge(label: string): Grid {
+function checkBadge(label: string): Grid {
   const g = new Grid(16, 16);
   g.ell(8, 8, 7, 7, "green", "dgreen");
   if (label === "tick") {
@@ -1248,7 +1234,7 @@ const TAP_INKS: readonly (readonly [string | null, string])[] = [
 // 16x16, 4 frames: sparks flying out from where a tap lands, each a 2px streak with an orange or rust
 // head and a lighter tail, cooling to lone rust specks in the last frame, so the burst shows on the
 // cream panels and the light roads as well as on the dark ones.
-export function tapBurst(step: number): Grid {
+function tapBurst(step: number): Grid {
   const g = new Grid(16, 16);
   const r = [1, 3, 5, 7][step]!;
   const [tailInk, head] = TAP_INKS[step]!;
@@ -1268,7 +1254,7 @@ export function tapBurst(step: number): Grid {
 
 // 16x16, 4 frames: a puff of dust when a dog joins the pack and hops onto the gate path, its last wisps
 // light grey with no shade, so it thins out rather than flashing white.
-export function dust(step: number): Grid {
+function dust(step: number): Grid {
   const g = new Grid(16, 16);
   const spread = [2, 3.5, 5, 6][step]!;
   const size = [2.2, 3, 2.8, 1.8][step]!;
@@ -1285,7 +1271,7 @@ export function dust(step: number): Grid {
 // ---------- start screen: afford outline, detail card, section frames ----------
 
 // One coin stud, 7x7, lit from the top left: P plum rim, Y yellow, A amber, O orange.
-export const COIN: readonly string[] = [
+const COIN: readonly string[] = [
   "..PPP..",
   ".PYYAP.",
   "PYYAAAP",
@@ -1332,7 +1318,7 @@ const GLINTS: ReadonlyMap<number, readonly [studs: Points, rays: Points]> = new 
 // along the line over two frames: 1 lights the top-left stud with rays heading right and down the
 // line, 2 lights the top-right and bottom-left studs as the rays arrive, all inside the corner slices
 // so the stretched edges stay plain.
-export function affordFrame(glint: number): Grid {
+function affordFrame(glint: number): Grid {
   const g = new Grid(24, 24);
   g.rect(1, 0, 22, 24, "plum");
   g.rect(0, 1, 24, 22, "plum");
@@ -1370,14 +1356,14 @@ export function affordFrame(glint: number): Grid {
 
 // 24x24 nine-slice (8px corners): the hold-to-open detail card, the chrome box with corners cut 2px;
 // the paper starts 2px in.
-export function detailCard(): Grid {
+function detailCard(): Grid {
   return chrome(new Grid(24, 24), 0, 0, 24, 24, { r: 2 });
 }
 
 // 8x24 three-slice (3px caps; the middle rows tile): the shop list's scrollbar track, a navy groove in
 // a 1px ink edge with its corners cut, as tall as the list. Navy holds 9.59:1 on the card's cream and
 // the ink edge 12.44:1.
-export function scrollTrack(): Grid {
+function scrollTrack(): Grid {
   const g = new Grid(8, 24);
   g.rect(1, 0, 6, 24, "ink");
   g.rect(0, 1, 8, 22, "ink");
@@ -1389,7 +1375,7 @@ export function scrollTrack(): Grid {
 // ui-scroll-track so it fills the groove's width. The gold accent of a picked tab, yellow with amber on
 // its right column and bottom row and its corners cut: yellow holds 11.13:1 on the track's navy and
 // 14.43:1 on its ink edge.
-export function scrollThumb(): Grid {
+function scrollThumb(): Grid {
   const g = new Grid(6, 24);
   g.rect(1, 0, 4, 24, "yellow");
   g.rect(0, 1, 6, 22, "yellow");
@@ -1403,7 +1389,7 @@ export function scrollThumb(): Grid {
 // face or a 32x32 gear icon at 2x), drawn at 2,2. The chrome's ink and plum lines around sky, which
 // every portrait reads on, with a blue shadow line under the top and left edges where the recess is in
 // shadow.
-export function detailWell(): Grid {
+function detailWell(): Grid {
   const g = new Grid(68, 68);
   g.rect(1, 0, 66, 68, "ink");
   g.rect(0, 1, 68, 66, "ink");
@@ -1414,10 +1400,10 @@ export function detailWell(): Grid {
   return g;
 }
 
-export const SECTION_W = 24;
-export const SECTION_H = 32;
+const SECTION_W = 24;
+const SECTION_H = 32;
 // Each section state's heading face, in ui-section's tag order.
-export const SECTION_FACES: ReadonlyMap<string, string> = new Map([
+const SECTION_FACES: ReadonlyMap<string, string> = new Map([
   ["complete", "amber"],
   ["neutral", "violet"],
   ["neutral-walker", "pickerWalkerHeader"],
@@ -1432,7 +1418,7 @@ export const SECTION_FACES: ReadonlyMap<string, string> = new Map([
 // note in rows 8 to 17: ink on complete amber, white on every neutral heading. Neutral hues share OKLCH
 // lightness 0.55 and chroma 0.105 before byte rounding. Existing tag indices and nine-slice caps stay
 // fixed.
-export function section(state: string): Grid {
+function section(state: string): Grid {
   const g = new Grid(SECTION_W, SECTION_H);
   g.rect(0, 0, SECTION_W, SECTION_H, "plum");
   g.rect(1, 1, SECTION_W - 2, SECTION_H - 2, null);
@@ -1442,27 +1428,27 @@ export function section(state: string): Grid {
 }
 
 // The fill tile size of ui-denim and ui-plaid.
-export const FABRIC = 16;
+const FABRIC = 16;
 
 // 16x16 solid pickerPocketBody tile, half the pink header's linear RGB.
-export function denim(): Grid {
+function denim(): Grid {
   const g = new Grid(FABRIC, FABRIC);
   g.rect(0, 0, FABRIC, FABRIC, "pickerPocketBody");
   return g;
 }
 
 // The retained ui-cork tile side.
-export const CORK = 32;
+const CORK = 32;
 
 // 32x32 solid pickerWalkerBody tile, half the blue header's linear RGB.
-export function cork(): Grid {
+function cork(): Grid {
   const g = new Grid(CORK, CORK);
   g.rect(0, 0, CORK, CORK, "pickerWalkerBody");
   return g;
 }
 
 // 16x16 solid pickerDogsBody tile, half the violet header's linear RGB.
-export function plaid(): Grid {
+function plaid(): Grid {
   const g = new Grid(FABRIC, FABRIC);
   g.rect(0, 0, FABRIC, FABRIC, "pickerDogsBody");
   return g;
@@ -1471,7 +1457,7 @@ export function plaid(): Grid {
 // ---------- walk screen and card rows: the strip well, zone progress, quips, zone banner ----------
 
 // A recessed ink slot in the wood: clipped corners and a dark brown lip below and to the right.
-export function well(g: Drawable, x: number, y: number, w: number, h: number): void {
+function well(g: Drawable, x: number, y: number, w: number, h: number): void {
   g.rect(x + 1, y, w - 2, h, "ink");
   g.rect(x, y + 1, w, h - 2, "ink");
   g.rect(x + 1, y + h - 1, w - 2, 1, "dbrown");
@@ -1481,7 +1467,7 @@ export function well(g: Drawable, x: number, y: number, w: number, h: number): v
 // 24x24 nine-slice (8px corners): the band behind a card row's subtitle, plum wood in a 1px ink outline
 // with rounded corners round an ink well, its rim 3 rows deep at top and bottom and 3 columns at the
 // sides. Each corner steps 2 columns in over a row. Stretch it to the subtitle's width.
-export function stripWell(): Grid {
+function stripWell(): Grid {
   const g = new Grid(24, 24);
   g.rect(0, 2, 24, 20, "plum");
   for (const y of [1, 22]) {
@@ -1500,18 +1486,18 @@ export function stripWell(): Grid {
 // ---------- the walk HUD: the 40-row walk bar, the debuff bars and the dog cards ----------
 
 // The top bar's size, from the layout's regions.topBar.
-export const WALK_BAR: readonly [number, number] = [
+const WALK_BAR: readonly [number, number] = [
   LAYOUT.regions.topBar.width,
   LAYOUT.regions.topBar.height,
 ];
 // Every top bar (the start screen's, the walk bar, Help's) is 40 rows of flat plum with this trim: a
 // dbrown line on row 1, and the bottom rows brown, dbrown and ink, so the bar ends on a lit edge over
 // the scene.
-export const TOP_BAR_LINE = 1;
-export const TOP_BAR_EDGE: readonly string[] = ["brown", "dbrown", "ink"];
+const TOP_BAR_LINE = 1;
+const TOP_BAR_EDGE: readonly string[] = ["brown", "dbrown", "ink"];
 // The walk bar's cash well, in screen pixels: the start screen's bank well at its narrowest, 3 rows
 // clear of the trim above and below: x, y, width and height from the layout's walkBar.parts.cash.well.
-export const WALK_CASH_WELL: readonly [number, number, number, number] = [
+const WALK_CASH_WELL: readonly [number, number, number, number] = [
   LAYOUT.walkBar.parts.cash.well.x,
   LAYOUT.walkBar.parts.cash.well.y,
   LAYOUT.walkBar.parts.cash.well.width,
@@ -1522,12 +1508,12 @@ export const WALK_CASH_WELL: readonly [number, number, number, number] = [
 // 29, centred on the buttons' faces (rows 9 to 28). The buttons' hits, 34 wide, fill x 224 to 359 at a
 // 34 pitch, each face centred in its hit (faces at 231 + 34i). The size is the layout's
 // walkBar.parts.effects.size.
-export const EFFECT_WELL = LAYOUT.walkBar.parts.effects.size;
+const EFFECT_WELL = LAYOUT.walkBar.parts.effects.size;
 
 // 360x40, ui-walk-bar: flat plum with the top bars' trim (dbrown on row 1; brown, dbrown and ink on
 // rows 37 to 39) and the ink cash well at 5,5 70x29, sized for "$888" at 3x with no coin. The game
 // draws the effect wells, the Help, Sound, Settings and Pause buttons and every text and icon on it.
-export function walkBar(): Grid {
+function walkBar(): Grid {
   const [w, h] = WALK_BAR;
   const g = new Grid(w, h);
   g.rect(0, 0, w, h, "plum");
@@ -1538,19 +1524,19 @@ export function walkBar(): Grid {
 }
 
 // The start screen top bar's bank well, in screen pixels at its narrowest: the walk bar's cash well.
-export const HOME_CASH_WELL = WALK_CASH_WELL;
+const HOME_CASH_WELL = WALK_CASH_WELL;
 
 // The start screen top bar's bank well in three pieces, left to right, each one column of a well with
 // the walk bar's clipped corners and dbrown lip: its first, any middle one and its last. The game
 // stretches it to the bank's width and centres the bank in it. Every middle column is the same, so the
 // middle repeats with no seam.
-export const HOME_CASH_WELL_PIECES: readonly string[] = ["left", "mid", "right"];
+const HOME_CASH_WELL_PIECES: readonly string[] = ["left", "mid", "right"];
 
 // 1x29, ui-home-cash-well-<piece>: one column of the bank well, so the game can draw the well as wide
 // as the bank needs. left: the ink side, its top and bottom pixels clipped for the corners. mid: ink
 // over the dbrown lip's row, repeated (TileSprite) between the caps. right: the dbrown lip's side,
 // clipped top and bottom. left + mid x (w - 2) + right is the well w wide.
-export function homeCashWellPiece(piece: string): Grid {
+function homeCashWellPiece(piece: string): Grid {
   const h = HOME_CASH_WELL[3];
   const n = HOME_CASH_WELL_PIECES.length;
   const whole = new Grid(n, h);
@@ -1568,7 +1554,7 @@ export function homeCashWellPiece(piece: string): Grid {
 
 // 22x22, ui-effect-well: an ink well for one active effect's 20x20 icon at (1, 1), with the walk bar's
 // wells' clipped corners and dbrown lip.
-export function effectWell(): Grid {
+function effectWell(): Grid {
   const g = new Grid(EFFECT_WELL, EFFECT_WELL);
   well(g, 0, 0, EFFECT_WELL, EFFECT_WELL);
   return g;
@@ -1576,13 +1562,13 @@ export function effectWell(): Grid {
 
 // The neighbourhood pill on the walk: 13 rows, its ends 4 columns each with two corner steps, so the
 // game stretches it as a three-slice to the label's width.
-export const PILL: readonly [number, number] = [13, 13];
+const PILL: readonly [number, number] = [13, 13];
 
 // 13x13 three-slice (4px ends), ui-zone-pill: the walk's neighbourhood label, centred just under the
 // walk bar, where the message strip may cover it. A navy face with a lighter top row in a 1px ink line,
 // its corners stepped two pixels, so it reads on every backdrop. The game sets the name in cream and
 // "n of N" in lgrey, font-body at 1x, their capitals on row 4, 6 columns in from each end.
-export function zonePill(): Grid {
+function zonePill(): Grid {
   const [w, h] = PILL;
   const g = new Grid(w, h);
   g.rect(2, 0, w - 4, h, "ink");
@@ -1597,28 +1583,28 @@ export function zonePill(): Grid {
 // The dog card: 120x70 in its slot, the chrome on x 1 to 118 and rows 0 to 69, so a 1px gap runs down
 // each side and the card's foot sits on the band's last row, over the neighbourhood progress line. The
 // cards are navy, so the eye stays on the road and the dogs' photos and hearts carry the row.
-export const DOG_CARD: readonly [number, number] = [120, 70];
-export const DOG_CARD_FRAME: readonly [number, number, number, number] = [1, 0, 118, 70];
+const DOG_CARD: readonly [number, number] = [120, 70];
+const DOG_CARD_FRAME: readonly [number, number, number, number] = [1, 0, 118, 70];
 // The header's rows (2 to 15) and the ink rule under it.
-export const DOG_CARD_RULE = 16;
+const DOG_CARD_RULE = 16;
 // The photo in the body (the navy on x 3 to 115 and rows 17 to 66): 3 columns of navy to its left, as
 // the owner's column keeps to its right, 6 rows above it and 8 below.
-export const DOG_PHOTO: readonly [number, number] = [6, 23];
+const DOG_PHOTO: readonly [number, number] = [6, 23];
 // The owner's photo, x, y and side: 3 columns right of the dog's and level with its top, an ink frame
 // round a white mat round sky, as ui-owner-tab frames the owner, for the 20x20 face-owner-<dog>-20.
-export const DOG_CARD_OWNER: readonly [number, number, number] = [45, 23, 24];
+const DOG_CARD_OWNER: readonly [number, number, number] = [45, 23, 24];
 // The hearts area the heart-loss flash fills, as x, y, w, h: one row of six hearts from (45,52), its
 // foot level with the dog's photo, with a pixel round them. The only part of the card it touches, so
 // the warn rim stays the card's only border.
-export const DOG_CARD_HEARTS: readonly [number, number, number, number] = [44, 51, 55, 9];
+const DOG_CARD_HEARTS: readonly [number, number, number, number] = [44, 51, 55, 9];
 // The empty card's FIRED plate, x, y, w and h: a band across the empty photo, centred on it, the
 // plate's sides on the photo's frame.
-export const DOG_CARD_FIRED: readonly [number, number, number, number] = [6, 32, 36, 17];
+const DOG_CARD_FIRED: readonly [number, number, number, number] = [6, 32, 36, 17];
 // Each heart-loss frame: the flash's colour and how many of the area's pixels it fills (1 every pixel,
 // 2 a checkerboard, 4 one in four), so it bursts white and dithers away. White keeps the hearts drawn
 // over it readable (red 4.19:1, the grey outlines 2.82:1), where a red or pink flash would swallow the
 // red hearts (1.0:1 and 1.55:1).
-export const DOG_CARD_HEART_LOSS: readonly (readonly [string, number])[] = [
+const DOG_CARD_HEART_LOSS: readonly (readonly [string, number])[] = [
   ["white", 1],
   ["white", 1],
   ["white", 2],
@@ -1635,7 +1621,7 @@ export const DOG_CARD_HEART_LOSS: readonly (readonly [string, number])[] = [
 // across the foot of the dog's photo. The empty card (a fired dog's) is dslate in the same frame, with
 // a dslate photo crossed by a dred plate built as ui-fired-plate (6,32 36x17, its face 10,36 28x9) for
 // FIRED, and the owner's photo.
-export function dogCard(dog: string): Grid {
+function dogCard(dog: string): Grid {
   const empty = dog === "empty";
   const face = empty ? "dslate" : "navy";
   const [w, h] = DOG_CARD;
@@ -1665,7 +1651,7 @@ export function dogCard(dog: string): Grid {
 }
 
 // Whether (x, y) is on the empty dog card's drawn pixels.
-export function dogCardSolid(): (x: number, y: number) => boolean {
+function dogCardSolid(): (x: number, y: number) => boolean {
   const card = dogCard("empty").px;
   const [w, h] = DOG_CARD;
   return (x, y) => x >= 0 && x < w && y >= 0 && y < h && card[y]![x] !== null;
@@ -1679,7 +1665,7 @@ const WARN_INKS: readonly (readonly [string, string])[] = [
 
 // 120x70, ui-dog-card-warn: a 2px rim inside the card's outline, for an owner at one heart; steps 0 to
 // 2 run dim to bright. The outer pixel holds 7.35:1 on the wood and 7.49:1 on navy.
-export function dogCardWarn(step: number): Grid {
+function dogCardWarn(step: number): Grid {
   const [outer, inner] = WARN_INKS[step]!;
   const solid = dogCardSolid();
   const [w, h] = DOG_CARD;
@@ -1703,7 +1689,7 @@ export function dogCardWarn(step: number): Grid {
 // and text that fills only the hearts area (44,51 55x9, its corners cut 1px), never the card's edge or
 // header: frames 0 and 1 white (13.89:1 on navy), then white on a checkerboard and on one pixel in
 // four, so the flash clears.
-export function dogCardHeartLoss(step: number): Grid {
+function dogCardHeartLoss(step: number): Grid {
   const [colour, every] = DOG_CARD_HEART_LOSS[step]!;
   const [x0, y0, w, h] = DOG_CARD_HEARTS;
   const inside = roundedInside(x0, y0, w, h, 1);
@@ -1725,17 +1711,17 @@ export function dogCardHeartLoss(step: number): Grid {
   return g;
 }
 
-export const CARD_BAND: readonly [number, number] = [360, 76];
+const CARD_BAND: readonly [number, number] = [360, 76];
 // The band's top rows, where the road ends: a dithered ink shadow cast onto the road (rows 0 and 1, a
 // quarter then three quarters of their pixels), then the trim: ink, a lit tan line and ink (rows 2 to
 // 4), then the wood.
-export const CARD_BAND_TRIM: readonly string[] = ["ink", "tan", "ink"];
+const CARD_BAND_TRIM: readonly string[] = ["ink", "tan", "ink"];
 
 // 360x76, ui-dog-card-band: drawn at (0, 480) under the cards. Rows 0 and 1 (screen 480 and 481) are a
 // dithered ink shadow over the road's last rows, clear between its pixels; rows 2 to 4 (482 to 484) the
 // trim, ink, tan and ink, so the road ends on a lit edge; then plum wood, which shows on row 5 (485)
 // above the cards and between them.
-export function dogCardBand(): Grid {
+function dogCardBand(): Grid {
   const [w, h] = CARD_BAND;
   const g = new Grid(w, h);
   wood(g, 2, h - 2);
@@ -1753,7 +1739,7 @@ export function dogCardBand(): Grid {
 
 // 27x11, ui-lead-tag: the front dog's tag, LEAD in font-title, ink on a yellow face (14.43:1) with an
 // amber foot, in an ink line with its corners cut 1px.
-export function leadTag(): RgbaImage {
+function leadTag(): RgbaImage {
   const w = 27;
   const h = 11;
   const g = new Grid(w, h);
@@ -1767,7 +1753,7 @@ export function leadTag(): RgbaImage {
 // 36x36, ui-owner-tab: the owner's photo that pops in on a dog card's top-right corner: an ink frame
 // round a white mat round sky (2,2 32x32) for the owner's 32x32 face, with plum mounts on its bottom
 // corners where it meets the card.
-export function ownerTab(): Grid {
+function ownerTab(): Grid {
   const g = new Grid(36, 36);
   g.rect(0, 0, 36, 36, "ink");
   g.rect(1, 1, 34, 34, "white");
@@ -1788,7 +1774,7 @@ function darker(c: string): string {
 
 // A zone pip's rim: its well's colour stepped down its ramp, at least one step, until it holds 3:1 on
 // the end screen's cream panel, so every pip shows its edge there, the cream Beaches pip too.
-export function pipRim(wellColour: string): string {
+function pipRim(wellColour: string): string {
   let c = darker(hexOf(wellColour));
   while (contrast(c, "cream") < 3) {
     c = darker(c);
@@ -1801,7 +1787,7 @@ export function pipRim(wellColour: string): string {
 // shadow, its road colour (ZONE_ROAD_COLOURS) one ramp step down. <zone>-done is the well in the
 // zone's road colour with a tick (white, or plum where white falls under 3:1), so progress never
 // relies on colour alone. A chosen or done pip's rim is pipRim of its well.
-export function zonePip(zone: string | null = null, done = false): Grid {
+function zonePip(zone: string | null = null, done = false): Grid {
   const g = new Grid(18, 8);
   if (zone === null) {
     for (let x = 1; x < 17; x += 3) {
@@ -1837,13 +1823,13 @@ export function zonePip(zone: string | null = null, done = false): Grid {
 
 // 8x6, ui-quip-tail turned to point down from a bubble above the owner's tab. Place its top row over
 // the bubble's bottom rim so the cream runs through; the tip is at column 5, row 5.
-export function quipTailDown(): Grid {
+function quipTailDown(): Grid {
   return downTail(5);
 }
 
 // 8x6, ui-quip-tail-down turned to point up from a bubble's top rim at the speaker above it. Place its
 // bottom row over the bubble's top rim so the cream runs through; the tip is at column 3, row 0.
-export function quipTailUp(): Grid {
+function quipTailUp(): Grid {
   return tail(
     8,
     ["...#....", "..###...", "..####..", ".######.", ".######.", "########"],
@@ -1851,12 +1837,12 @@ export function quipTailUp(): Grid {
   );
 }
 
-export const CELEBRATE_BURST: readonly [number, number] = [148, 132];
+const CELEBRATE_BURST: readonly [number, number] = [148, 132];
 
 // 148x132: the starburst behind the cheering walker in the zone celebration, a round burst: a yellow
 // body (an ellipse with 62x54 half axes) ringed by 18 amber spikes 10px long, in a 1px ink outline,
 // with a white glint along the body's upper left. No text goes on it.
-export function celebrateBurst(): Grid {
+function celebrateBurst(): Grid {
   const [w, h] = CELEBRATE_BURST;
   const points = 18;
   const spike = 10;
@@ -1906,13 +1892,13 @@ export function celebrateBurst(): Grid {
 
 // 24x24 nine-slice (8px corners): the owner's speech bubble, the chrome box with corners cut 3px,
 // rounder than the hint. Text in font-body, plum (9.42:1).
-export function quip(): Grid {
+function quip(): Grid {
   return chrome(new Grid(24, 24), 0, 0, 24, 24, { r: 3 });
 }
 
 // 6x8, pointing left at the speaker (flipped for a bubble on its left): cream in an ink line. Place its
 // right column over the bubble's left rim so the cream meets the bubble's plum line.
-export function quipTail(): Grid {
+function quipTail(): Grid {
   return tail(
     6,
     ["....##", "...###", "..####", ".#####", "######", ".#####", "...###", ".....#"],
@@ -1924,7 +1910,7 @@ export function quipTail(): Grid {
 // writes two lines in font-title, plum, centred on x=124: the world and zone number ("TORONTO,
 // NEIGHBOURHOOD 2") with its caps in rows 11 to 15, and the zone name at x2 ("KENSINGTON MARKET", up to
 // 192px wide) with its caps in rows 27 to 36, under the dotted divider.
-export function zoneBanner(): Grid {
+function zoneBanner(): Grid {
   const g = new Grid(248, 48);
   const ribbon = new Grid(248, 48);
   for (const x0 of [0, 220]) {
@@ -1952,14 +1938,14 @@ export function zoneBanner(): Grid {
 // ui-touch-drag: the help screen's swipe, a white glove dragging one lane-width (64px) on a 104x40
 // frame. The fingertip's contact row is TOUCH_Y; a swipe right runs from column TOUCH_FROM to TOUCH_TO
 // and a swipe left back again, so the anchor (TOUCH_FROM, TOUCH_Y) stands on lane 1's centre.
-export const TOUCH_SIZE: readonly [number, number] = [104, 40];
-export const TOUCH_Y = 6;
-export const TOUCH_FROM = 20;
-export const TOUCH_TO = 84;
+const TOUCH_SIZE: readonly [number, number] = [104, 40];
+const TOUCH_Y = 6;
+const TOUCH_FROM = 20;
+const TOUCH_TO = 84;
 // The glove, a right hand from the back pointing up, outlined in ink: the fingertip's contact pixel is
 // column TOUCH_TIP of row 0. W white, L lgrey shade, G grey creases and the line above the cuff, C and
 // D the cuff and its shade.
-export const TOUCH_GLOVE: readonly string[] = [
+const TOUCH_GLOVE: readonly string[] = [
   ".....WW.........",
   "....WWWW........",
   "....WWWL........",
@@ -1984,8 +1970,8 @@ export const TOUCH_GLOVE: readonly string[] = [
   "....CCCCCCCCCCD.",
   "....CCCCCCCCCCD.",
 ];
-export const TOUCH_TIP = 5;
-export const TOUCH_GLOVE_COLS: Readonly<Record<string, string>> = {
+const TOUCH_TIP = 5;
+const TOUCH_GLOVE_COLS: Readonly<Record<string, string>> = {
   C: "white",
   D: "lgrey",
   G: "grey",
@@ -1994,10 +1980,10 @@ export const TOUCH_GLOVE_COLS: Readonly<Record<string, string>> = {
 };
 // The drag's offsets from its start, eased in and out over 7 frames; the glove off the glass stands
 // TOUCH_HOVER down and right of the contact.
-export const TOUCH_OFFSETS: readonly number[] = [4, 12, 24, 38, 51, 60, 64];
-export const TOUCH_HOVER: readonly [number, number] = [2, 3];
+const TOUCH_OFFSETS: readonly number[] = [4, 12, 24, 38, 51, 60, 64];
+const TOUCH_HOVER: readonly [number, number] = [2, 3];
 // Per-frame ms of one swipe: hover, press (2), drag (7), hold (2), lift (2) and the empty pause.
-export const TOUCH_MS: readonly number[] = [
+const TOUCH_MS: readonly number[] = [
   300,
   80,
   100,
@@ -2009,11 +1995,11 @@ export const TOUCH_MS: readonly number[] = [
   350,
 ];
 // The still for reduced motion: the swipe right's fifth drag frame, its whole trail kept.
-export const TOUCH_STILL = 4;
+const TOUCH_STILL = 4;
 
 // One layer of a touch frame, outlined in ink on its own, so a later layer's line sits over an earlier
 // layer's fill (the glove's line over the trail and the ring).
-export function touchLayer(draw: (g: Grid) => void): Frame {
+function touchLayer(draw: (g: Grid) => void): Frame {
   const g = new Grid(...TOUCH_SIZE);
   draw(g);
   g.edge = () => K.ink!;
@@ -2021,14 +2007,14 @@ export function touchLayer(draw: (g: Grid) => void): Frame {
 }
 
 // The press ring (yellow) or the lift ring (lgrey) round the contact at column x, under the glove.
-export function touchRing(x: number, r: number, col: string): Frame {
+function touchRing(x: number, r: number, col: string): Frame {
   return touchLayer((g) => {
     g.ell(x + 0.5, TOUCH_Y + 0.5, r, r, col);
     g.ell(x + 0.5, TOUCH_Y + 0.5, r - 1.25, r - 1.25, null);
   });
 }
 
-export function touchGlove(x: number, dx = 0, dy = 0): Frame {
+function touchGlove(x: number, dx = 0, dy = 0): Frame {
   return touchLayer((g) =>
     bitmap(g, x - TOUCH_TIP + dx, TOUCH_Y + dy, TOUCH_GLOVE, TOUCH_GLOVE_COLS),
   );
@@ -2038,7 +2024,7 @@ export function touchGlove(x: number, dx = 0, dy = 0): Frame {
 // the finger, then lgrey, then grey, none past 48px. fade draws the tail in 12px per frame once the
 // finger stops. whole keeps every dot back to the start, white then lgrey, for a still that shows the
 // whole path (grey dots vanish on Cabbagetown's grey road).
-export function touchTrail(head: number, start: number, fade = 0, whole = false): Frame {
+function touchTrail(head: number, start: number, fade = 0, whole = false): Frame {
   const way = head >= start ? 1 : -1;
   return touchLayer((g) => {
     for (let x = start; (head - x) * way > 5; x += 4 * way) {
@@ -2057,7 +2043,7 @@ export function touchTrail(head: number, start: number, fade = 0, whole = false)
 }
 
 // The layers drawn in order, each one's pixels over the ones before.
-export function touchFrame(...layers: readonly Frame[]): Frame {
+function touchFrame(...layers: readonly Frame[]): Frame {
   const [w, h] = TOUCH_SIZE;
   const out: Frame = Array.from({ length: h }, () => Array<string | null>(w).fill(null));
   for (const layer of layers) {
@@ -2075,7 +2061,7 @@ export function touchFrame(...layers: readonly Frame[]): Frame {
 // One swipe from column start, way 1 (right) or -1 (left), as TOUCH_MS times it: the glove hovers off
 // the glass, presses (the yellow ring grows), drags with the ring round the fingertip and the dots
 // behind, holds while the dots draw in, lifts (the lgrey ring grows as the glove leaves) and is gone.
-export function touchSwipe(start: number, way: number): Frame[] {
+function touchSwipe(start: number, way: number): Frame[] {
   const end = start + 64 * way;
   const [hx, hy] = TOUCH_HOVER;
   const frames = [
@@ -2099,12 +2085,12 @@ export function touchSwipe(start: number, way: number): Frame[] {
 }
 
 // The reduced-motion still: the swipe right's drag frame TOUCH_STILL, its whole trail kept.
-export function touchStill(): Frame {
+function touchStill(): Frame {
   const x = TOUCH_FROM + TOUCH_OFFSETS[TOUCH_STILL]!;
   return touchFrame(touchTrail(x, TOUCH_FROM, 0, true), touchRing(x, 3.5, "yellow"), touchGlove(x));
 }
 
-export function touchTags(): Tag[] {
+function touchTags(): Tag[] {
   return [
     ["right", touchSwipe(TOUCH_FROM, 1), TOUCH_MS],
     ["left", touchSwipe(TOUCH_TO, -1), TOUCH_MS],
@@ -2123,7 +2109,7 @@ function edgedImage(g: Drawable): RgbaImage {
 }
 
 // Every image by key, in build order.
-export const IMAGES: ReadonlyMap<string, () => RgbaImage> = new Map([
+const IMAGES: ReadonlyMap<string, () => RgbaImage> = new Map([
   ["icon-pause", () => flat(pause())],
   ["icon-play", () => flat(play())],
   ["icon-home", () => flat(homeIcon())],
@@ -2175,7 +2161,7 @@ function still(name: string, g: Drawable, outline = false): Tag {
 }
 
 // Every sprite: [key, [[tag, frames, duration ms]]].
-export function* sprites(): Generator<Sprite> {
+function* sprites(): Generator<Sprite> {
   yield [
     "ui-dog-card",
     [
@@ -2277,7 +2263,7 @@ export function* sprites(): Generator<Sprite> {
 // ---------- preview and build ----------
 
 // Every piece in rows that wrap at width, so the 360px walk bar gets a row of its own.
-export function preview(out: string, scale = 3, width = 380): void {
+function preview(out: string, scale = 3, width = 380): void {
   const pieces = [...IMAGES.values()].map((draw) => draw());
   for (const [, tags] of sprites()) {
     pieces.push(...tags.flatMap(([, fs]) => fs.map(toImage)));
@@ -2307,7 +2293,7 @@ export function preview(out: string, scale = 3, width = 380): void {
   writeFileSync(out, rgbPng(resizeNearest(width * scale, height * scale, sheet)));
 }
 
-export async function build(): Promise<void> {
+async function build(): Promise<void> {
   mkdirSync("public/art/images", { recursive: true });
   for (const [key, draw] of IMAGES) {
     const png = `public/art/images/${key}.png`;

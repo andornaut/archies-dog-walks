@@ -61,18 +61,18 @@ export const AW = 75;
 export const AH = 56;
 // The illustration's top left on card-frame, centred across the card, and the badge spot's (the
 // cost plaque's), centred under the body.
-export const ART_X = Math.floor((CW - AW) / 2);
-export const ART_Y = 16;
-export const BADGE_X = Math.floor((CW - 71) / 2);
-export const BADGE_Y = 134;
+const ART_X = Math.floor((CW - AW) / 2);
+const ART_Y = 16;
+const BADGE_X = Math.floor((CW - 71) / 2);
+const BADGE_Y = 134;
 // card-frame-large keeps the 83x140 layout doubled.
-export const LBW = 83;
-export const LBH = 140;
+const LBW = 83;
+const LBH = 140;
 // The frame's tags: the game draws encounter for an obstacle and route for a fork.
-export const KINDS: readonly string[] = ["encounter", "route"];
+const KINDS: readonly string[] = ["encounter", "route"];
 // A card's ground keeps only the road strip's colours that cover this share of its scrap: the paving
 // and its joints.
-export const GROUND_KEEP = 0.04;
+const GROUND_KEEP = 0.04;
 
 // The bounding box of image's opaque pixels as [left, upper, right, lower], right and lower
 // exclusive.
@@ -122,13 +122,13 @@ export function cardFrame(kind: string): Grid {
   return g;
 }
 
-export const LW = 2 * LBW;
-export const LH = 2 * LBH;
+const LW = 2 * LBW;
+const LH = 2 * LBH;
 
 // The tap-to-enlarge card: the 83x140 layout (LBW x LBH) at twice the size with 1px detail, so the
 // illustration shows at 2x and the body has room for the modifiers behind the numbers. The chrome's
 // lines and lip are 2px.
-export function cardFrameLarge(kind: string): Grid {
+function cardFrameLarge(kind: string): Grid {
   void kind;
   const g = new Grid(LW, LH);
   const small = chrome(new Grid(LBW, LBH), 0, 0, LBW, LBH).px;
@@ -155,7 +155,7 @@ export function cardCost(): Grid {
 
 // ---------- illustration helpers ----------
 
-export interface PutOptions {
+interface PutOptions {
   flip?: boolean;
   i?: number;
   shadow?: boolean;
@@ -318,7 +318,7 @@ export function pixmap(
   return toImage(g.outlined());
 }
 
-export const ARROW: readonly string[] = [
+const ARROW: readonly string[] = [
   "...a...",
   "..aaa..",
   ".aaaaa.",
@@ -332,7 +332,7 @@ export const ARROW: readonly string[] = [
 
 // 49x22: a clawfoot tub from the front, its lip wider than its body, shaded on the right and
 // underneath, on two grey feet, outlined in dslate so it holds on the grey tiles.
-export function tub(): RgbaImage {
+function tub(): RgbaImage {
   const g = new Grid(49, 22);
   g.rect(0, 0, 49, 3, "white");
   g.rect(0, 2, 49, 1, "lgrey");
@@ -351,7 +351,7 @@ export function tub(): RgbaImage {
 }
 
 // 51x9: white puffs shaded lgrey along the tub's lip, over the dog's legs.
-export function foam(): RgbaImage {
+function foam(): RgbaImage {
   const g = new Grid(51, 9);
   for (const [cx, cy, r] of [
     [5, 5, 3.2],
@@ -369,7 +369,7 @@ export function foam(): RgbaImage {
 }
 
 // A 5x5 white ring with a glint, slate-lined, floating over the tiles.
-export function bathBubble(): RgbaImage {
+function bathBubble(): RgbaImage {
   const g = new Grid(5, 5);
   g.ell(2.5, 2.5, 2.5, 2.5, "white");
   g.ell(2.5, 2.5, 1.5, 1.5, null);
@@ -378,7 +378,7 @@ export function bathBubble(): RgbaImage {
   return toImage(g.outlined());
 }
 
-export function skunkGrooming(): Art {
+function skunkGrooming(): Art {
   const a = new Art();
   a.tilesBg();
   a.put("dog-archie", "walk", 37, 44, { shadow: false });
@@ -395,7 +395,7 @@ export function skunkGrooming(): Art {
 }
 
 // A 2x2 cyan drop lit white at its top left, in a sky rim.
-export function sprayDrop(): RgbaImage {
+function sprayDrop(): RgbaImage {
   const g = new Grid(2, 2);
   g.rect(0, 0, 2, 2, "cyan");
   g.p(0, 0, "white");
@@ -405,7 +405,7 @@ export function sprayDrop(): RgbaImage {
 
 // 24x16: the hose lying on the lawn from the left edge, a grey spray nozzle at its end pointing up
 // and right.
-export function hose(): RgbaImage {
+function hose(): RgbaImage {
   const g = new Grid(24, 16);
   for (let x = 0; x < 14; x++) {
     g.rect(x, 12 + (x >= 4 && x < 10 ? 1 : 0), 1, 2, "forest");
@@ -420,7 +420,7 @@ export function hose(): RgbaImage {
 
 // The hose on the lawn sprays an arc of drops onto Archie's back; the stink lines stay, as he is
 // still Stinky.
-export function skunkRinse(): Art {
+function skunkRinse(): Art {
   const a = new Art();
   a.grass();
   a.put("dog-archie", "walk", 44, 50, { i: 1 });
@@ -439,7 +439,7 @@ export function skunkRinse(): Art {
   return a;
 }
 
-export function skunkIgnore(): Art {
+function skunkIgnore(): Art {
   const a = new Art();
   a.ground("distilleryDistrict");
   a.put("skunk", "idle", 18, 44);
@@ -450,11 +450,11 @@ export function skunkIgnore(): Art {
 }
 
 // Cards show a 32x16 puddle; the road's is two lanes wide.
-export function smallPuddle(f = 0): RgbaImage {
+function smallPuddle(f = 0): RgbaImage {
   return toImage(road.puddle(f, 32, 16).outlined(false));
 }
 
-export function otherDogSniff(): Art {
+function otherDogSniff(): Art {
   const a = new Art();
   a.ground("highPark");
   a.put("other-dog", "walk", 46, 42);
@@ -467,7 +467,7 @@ export function otherDogSniff(): Art {
   return a;
 }
 
-export function otherDogPullAway(): Art {
+function otherDogPullAway(): Art {
   const a = new Art();
   a.ground("highPark");
   a.put("other-dog", "walk", 52, 44);
@@ -489,7 +489,7 @@ const BROKEN_HEART: readonly string[] = [
   "....r..r....",
 ];
 
-export function brokenHeart(a: Art, x: number, y: number): void {
+function brokenHeart(a: Art, x: number, y: number): void {
   const g = new Grid(14, 10);
   BROKEN_HEART.forEach((row, yy) => {
     [...row].forEach((c, xx) => {
@@ -503,7 +503,7 @@ export function brokenHeart(a: Art, x: number, y: number): void {
 }
 
 // Archie continues on his leash past the waiting corgi under a broken heart.
-export function otherDogKeepMoving(): Art {
+function otherDogKeepMoving(): Art {
   const a = new Art();
   a.ground("highPark");
   a.fill(0, 0, AW, AH, "tan");
@@ -515,13 +515,13 @@ export function otherDogKeepMoving(): Art {
 }
 
 // road.ts's tip pouch, outlined: road.TIP_POUCH held close, road.FAR_POUCH in a distant hand.
-export function tipPouch({ far = false }: { far?: boolean } = {}): RgbaImage {
+function tipPouch({ far = false }: { far?: boolean } = {}): RgbaImage {
   return pixmap(far ? road.FAR_POUCH : road.TIP_POUCH, road.POUCH_INK);
 }
 
 // road.drawn(s, draw, ...args) as an outlined image, leaned k layout pixels as road.lean leans a
 // person: the thief at scale s (road.SCALE is his road size).
-export function thief<A extends unknown[]>(
+function thief<A extends unknown[]>(
   { k = 0 }: { k?: number },
   s: number,
   draw: (...args: A) => Drawable,
@@ -533,7 +533,7 @@ export function thief<A extends unknown[]>(
 
 // thiefTop without the pouch, his free arm (screen left) out level from the shoulder to grab: a
 // lgrey sleeve banded ink as his shirt is, the hand at its end.
-export function thiefReaching(g: Drawable, b: number): void {
+function thiefReaching(g: Drawable, b: number): void {
   road.thiefTop(g, b, 0, false);
   g.rect(5, 22 + b, 4, 12, null);
   g.rect(2, 22 + b, 8, 4, "lgrey");
@@ -544,7 +544,7 @@ export function thiefReaching(g: Drawable, b: number): void {
 }
 
 // img standing on its shadow with its bottom row on foot; returns its top left.
-export function stand(
+function stand(
   a: Art,
   img: RgbaImage,
   cx: number,
@@ -561,20 +561,13 @@ export function stand(
 }
 
 // A 5x3 puff of dust kicked up at a paw, lgrey lit white.
-export function dust(a: Art, x: number, y: number): void {
+function dust(a: Art, x: number, y: number): void {
   a.fill(x + 1, y, 3, 1, "white");
   a.fill(x, y + 1, 5, 2, "lgrey");
 }
 
 // White motion ticks beside the ears of key's frame put at cx, foot: the ears flapping as it bounds.
-export function earsFlying(
-  a: Art,
-  key: string,
-  tag: string,
-  cx: number,
-  foot: number,
-  i = 0,
-): void {
+function earsFlying(a: Art, key: string, tag: string, cx: number, foot: number, i = 0): void {
   const f = sn.frame(key, tag, i);
   const [x0, y0, x1] = bbox(f);
   const left = Math.round(cx - f.width / 2);
@@ -590,7 +583,7 @@ export function earsFlying(
 
 // Let the tips go: Archie stands watching the thief run off up the street with the walker's green
 // tip pouch swinging from his hand, dust puffing at his heels.
-export function thiefLetGo(): Art {
+function thiefLetGo(): Art {
   const a = new Art();
   a.ground("distilleryDistrict");
   const s = 0.8;
@@ -616,7 +609,7 @@ export function thiefLetGo(): Art {
 // the pouch's drawstring pulled taut to his fist; Archie, dug in on the left, has the pouch's other
 // end in his mouth, out of sight behind his head, and his leash runs off the bottom edge. Strain
 // ticks either side of the pouch and a red ! over Archie.
-export function thiefGrabBack(): Art {
+function thiefGrabBack(): Art {
   const a = new Art();
   a.ground("distilleryDistrict");
   const s = 1.2;
@@ -646,7 +639,7 @@ export function thiefGrabBack(): Art {
 // Dogs give chase: Archie in full zoomies up the street after the thief, who runs off at the right
 // clutching the tip pouch. Archie bounds off the ground over his shadow, ears flapping, his leash
 // streaming back off the bottom edge, two lgrey speed lines under him and dust kicked up at his paws.
-export function thiefGiveChase(): Art {
+function thiefGiveChase(): Art {
   const a = new Art();
   a.ground("distilleryDistrict");
   const s = 0.65;
@@ -674,7 +667,7 @@ export function thiefGiveChase(): Art {
 // ---------- lucky encounters ----------
 
 // The found wallet's $: 5x9, bold enough to read at 1x on the front bill.
-export const BILL_DOLLAR: readonly string[] = [
+const BILL_DOLLAR: readonly string[] = [
   "..x..",
   ".xxxx",
   "x.x..",
@@ -689,7 +682,7 @@ export const BILL_DOLLAR: readonly string[] = [
 // 44x34, the found wallet close up: a brown leather wallet, lit tan along its top and stitched, its
 // flap tab on the right with an amber snap, two green bills standing up out of it, the front one lit
 // along its top with a white $.
-export function foundWallet(): Grid {
+function foundWallet(): Grid {
   const g = edged(new Grid(44, 34));
   // the bills, the back one a shade darker and set left, standing up out of the wallet
   g.rect(7, 2, 22, 16, "dgreen");
@@ -718,7 +711,7 @@ export function foundWallet(): Grid {
 // The found wallet, big and alone with a glint, cut out to float over the road: a lucky find shows
 // the thing found. Its two sparkles are solid yellow plus signs, 5px across, so they read as glints
 // and not as scattered dots.
-export function walletKeep(): Art {
+function walletKeep(): Art {
   const a = new Art({ clear: true });
   const img = toImage(foundWallet().outlined());
   const x = Math.floor((AW - img.width) / 2);
@@ -738,7 +731,7 @@ export function walletKeep(): Art {
 // ears, hearts rising from the dog. Her road sprite's lowered forearm is cut away and her arm drawn
 // raised instead: a mauve sleeve shaded purple in a plum outline, her hand on the dog's crown. Her
 // floating heart sits above the art window, so it is left out here. Cut out to float over the road.
-export function neighbourTake(): Art {
+function neighbourTake(): Art {
   const a = new Art({ clear: true });
   a.put("dog-archie", "idle", 47, 57, { shadow: false });
   const her = sn.frame("friendly-neighbour", "wave", 1);
@@ -814,12 +807,7 @@ export function neighbourTake(): Art {
 // ---------- upgrades and the Skip option ----------
 
 // A leg w pixels thick along the joints pts.
-export function limb(
-  g: Drawable,
-  pts: readonly (readonly [number, number])[],
-  col: string,
-  w = 2,
-): void {
+function limb(g: Drawable, pts: readonly (readonly [number, number])[], col: string, w = 2): void {
   for (let j = 0; j + 1 < pts.length; j++) {
     const [x0, y0] = pts[j]!;
     const [x1, y1] = pts[j + 1]!;
@@ -831,9 +819,9 @@ export function limb(
 }
 
 // A paw seen from below, 5x5: three toe beans over the main pad, all pink on the white sock.
-export const PAW: readonly string[] = ["pwpwp", "wwwww", "wpppw", "wpppw", ".www."];
+const PAW: readonly string[] = ["pwpwp", "wwwww", "wpppw", "wpppw", ".www."];
 
-export function paw(g: Drawable, x: number, y: number, col = "white"): void {
+function paw(g: Drawable, x: number, y: number, col = "white"): void {
   PAW.forEach((row, j) => {
     [...row].forEach((ch, i) => {
       if (ch !== ".") {
@@ -846,7 +834,7 @@ export function paw(g: Drawable, x: number, y: number, col = "white"): void {
 // Archie's bobtail on card-belly-rubs, laid at 2,20 of rolledOver's grid (b brown, d dbrown, p plum,
 // w white, . left as drawn): three locks fanned out to the left, the middle one tipped white, a plum
 // line where they meet the rump.
-export const BOBTAIL: readonly string[] = [
+const BOBTAIL: readonly string[] = [
   "..bb...",
   "..bbbbp",
   "...ddbp",
@@ -856,7 +844,7 @@ export const BOBTAIL: readonly string[] = [
   "..bbbdp",
   "..bd...",
 ];
-export const BOBTAIL_INK: Readonly<Record<string, string>> = {
+const BOBTAIL_INK: Readonly<Record<string, string>> = {
   b: "brown",
   d: "dbrown",
   p: "plum",
@@ -871,7 +859,7 @@ export const BOBTAIL_INK: Readonly<Record<string, string>> = {
 // white blaze and muzzle and copper brows and cheeks, eyes shut in happy arcs and mouth open in a
 // grin with the tongue out, the rose ears flopped on the grass. The red bandana rings the neck, its
 // point lying on the white chest. 50x36 with its outline; the collar's lower end is at 32,28.
-export function rolledOver(): RgbaImage {
+function rolledOver(): RgbaImage {
   const g = new Grid(50, 36);
   // far legs first, shaded: a hind leg splayed at the knee and a front leg flopped at the wrist
   limb(
@@ -996,7 +984,7 @@ export function rolledOver(): RgbaImage {
 }
 
 // A 1px motion arc beside a kicking paw, bowed away from it (d=1 right, -1 left).
-export function kick(a: Art, x: number, y: number, d: number): void {
+function kick(a: Art, x: number, y: number, d: number): void {
   for (const [dy, dx] of [
     [0, 0],
     [1, 1],
@@ -1007,7 +995,7 @@ export function kick(a: Art, x: number, y: number, d: number): void {
   }
 }
 
-export function bellyRubs(): Art {
+function bellyRubs(): Art {
   const a = new Art();
   a.grass();
   a.paste(rolledOver(), 12, 10);
@@ -1024,7 +1012,7 @@ export function bellyRubs(): Art {
   return a;
 }
 
-export function goodLeash(): Art {
+function goodLeash(): Art {
   const a = new Art();
   a.ground("highPark");
   a.put("squirrel", "idle", 58, 37);
@@ -1048,7 +1036,7 @@ export function goodLeash(): Art {
   return a;
 }
 
-export function bigTipper(): Art {
+function bigTipper(): Art {
   const a = new Art();
   a.ground("kensingtonMarket");
   // three coins face on, stacked two and one, under an up arrow
@@ -1063,7 +1051,7 @@ export function bigTipper(): Art {
   return a;
 }
 
-export function rushHour(): Art {
+function rushHour(): Art {
   const a = new Art();
   a.ground("distilleryDistrict");
   a.put("skunk", "idle", 52, 55);
@@ -1082,7 +1070,7 @@ export function rushHour(): Art {
 // corners rounded and a straight hem, lit along its top and shaded down its right side and along the
 // hem, and the hood folded down at the nape over it, casting an orange line on the coat. In an
 // outline.
-export function raincoat(): RgbaImage {
+function raincoat(): RgbaImage {
   const g = new Grid(24, 17);
   const coat: (readonly [number, number])[] = [
     [3, 20],
@@ -1114,7 +1102,7 @@ export function raincoat(): RgbaImage {
 }
 
 // Archie in a yellow raincoat, standing in a puddle in the rain.
-export function raincoats(): Art {
+function raincoats(): Art {
   const a = new Art();
   a.ground("distilleryDistrict");
   a.paste(smallPuddle(1), 22, 38);
@@ -1135,7 +1123,7 @@ export function raincoats(): Art {
   return a;
 }
 
-export function charmer(): Art {
+function charmer(): Art {
   const a = new Art();
   a.grass();
   a.face("face-owner-pepe", "happy", 6, 14);
@@ -1150,7 +1138,7 @@ export function charmer(): Art {
 
 // Walk on by: the skunk waits at the left while Archie trots on past it up the street, and the Hall
 // pass held up over them (glyphs.ts's 20x20 icon).
-export function skip(): Art {
+function skip(): Art {
   const a = new Art();
   a.ground("distilleryDistrict");
   a.put("skunk", "idle", 16, 49);
@@ -1166,32 +1154,27 @@ export function skip(): Art {
 // from WALK_Y, the far curb from CURB_Y, the cross street from CROSS_Y with its centre line on
 // LINE_Y, and from STUB_Y the zone's road in projection, sampled from its road strip: SPREAD * (row
 // centre - HORIZON) pixels either side of the centre, the curb, sidewalk and lawn beside it.
-export const FAR_Y = 21;
-export const WALK_Y = 22;
-export const CURB_Y = 25;
-export const CROSS_Y = 26;
-export const LINE_Y = 29;
-export const STUB_Y = 33;
-export const HORIZON = 12.0;
-export const SPREAD = 0.75;
+const FAR_Y = 21;
+const WALK_Y = 22;
+const CURB_Y = 25;
+const CROSS_Y = 26;
+const LINE_Y = 29;
+const STUB_Y = 33;
+const HORIZON = 12.0;
+const SPREAD = 0.75;
 // A stub row samples strip row FOCAL / scale: about 2 rows apart near, 7 far.
-export const FOCAL = 16;
+const FOCAL = 16;
 // A stub divider's dashes repeat every 1 / DASH of log(row centre - HORIZON).
-export const DASH = 5.0;
+const DASH = 5.0;
 // A far house's windows and door, as backdrops.ts's house parts.
-export const MINI: bd.HouseParts = [2, 6, 5, 7];
+const MINI: bd.HouseParts = [2, 6, 5, 7];
 
-export function tufted(lawn = "green", rate = 0.05): bd.Paint {
+function tufted(lawn = "green", rate = 0.05): bd.Paint {
   return (px, py) => (bd.noise(px, py) < rate || bd.noise(px, py - 1) < rate ? dk(lawn) : lawn);
 }
 
 // A ground of base with about one fleck in n, and a sparser second fleck.
-export function flecked(
-  base: string,
-  fleck: string,
-  n = 23,
-  second: string | null = null,
-): bd.Paint {
+function flecked(base: string, fleck: string, n = 23, second: string | null = null): bd.Paint {
   return (px, py) => {
     if (bd.hashed(px, py, n)) {
       return fleck;
@@ -1201,13 +1184,13 @@ export function flecked(
 }
 
 // The promenade's boards across the cross street, a seam every 5 columns.
-export function boards(px: number, py: number): string {
+function boards(px: number, py: number): string {
   return px % 5 === 0 ? "tan" : flecked("cream", "tan", 27)(px, py);
 }
 
-export const DEFAULT_LAWN = tufted();
+const DEFAULT_LAWN = tufted();
 
-export interface ZoneViewOptions {
+interface ZoneViewOptions {
   curb?: string | null;
   edge?: string | null;
   lawn?: bd.Paint;
@@ -1220,7 +1203,7 @@ export interface ZoneViewOptions {
 // centre line, dashed [on, period] or solid with null, over an edge row where given, or null for a
 // lane with no line. walk and curb are the sidewalks' and curbs' colours, null where the zone has
 // none, and walkFleck the sidewalks' flecks.
-export class ZoneView extends Art {
+class ZoneView extends Art {
   readonly curb: string | null;
   readonly dash: readonly [number, number] | null;
   readonly duty: number;
@@ -1421,7 +1404,7 @@ export class ZoneView extends Art {
 
 // ---------- the Toronto neighbourhoods' path cards, after their backdrops ----------
 
-export function cabbagetownView(): ZoneView {
+function cabbagetownView(): ZoneView {
   const a = new ZoneView(
     "cabbagetown",
     flecked("grey", "slate", 53),
@@ -1482,7 +1465,7 @@ export function cabbagetownView(): ZoneView {
 }
 
 // The zoo's llama at the card's scale, as backdrops.ts's LLAMA: facing left, its far side driftwood.
-export const MINI_LLAMA: readonly string[] = [
+const MINI_LLAMA: readonly string[] = [
   ".c....",
   "cc....",
   ".c....",
@@ -1492,7 +1475,7 @@ export const MINI_LLAMA: readonly string[] = [
   ".s..s.",
 ];
 
-export function highParkView(): ZoneView {
+function highParkView(): ZoneView {
   const trail = flecked("tan", "brown", 23, "skin2");
   const dark = tufted("pine");
   // the cross path's middle worn skin1 in broken runs, as the backdrop's, with no line painted on it
@@ -1566,7 +1549,7 @@ export function highParkView(): ZoneView {
   return a;
 }
 
-export function distilleryView(): ZoneView {
+function distilleryView(): ZoneView {
   const paving = flecked("brown", "brick", 19);
   const a = new ZoneView("distillery-district", flecked("dslate", "navy", 61), paving, null, null, {
     curb: null,
@@ -1623,7 +1606,7 @@ export function distilleryView(): ZoneView {
   return a;
 }
 
-export function kensingtonView(): ZoneView {
+function kensingtonView(): ZoneView {
   const verge = bd.VERGES["kensington-market"]!;
   const paving = bd.vergePaving("kensington-market");
   const a = new ZoneView("kensington-market", () => bd.KENSINGTON_ROAD, paving, "plum", [3, 6], {
@@ -1668,7 +1651,7 @@ export function kensingtonView(): ZoneView {
   return a;
 }
 
-export function beachesView(): ZoneView {
+function beachesView(): ZoneView {
   const sand = flecked("driftwood", "stone", 43);
   const a = new ZoneView("the-beaches", boards, sand, "dbrown", [4, 9], {
     curb: null,
@@ -1709,7 +1692,7 @@ export function beachesView(): ZoneView {
   return a;
 }
 
-export function yongeView(): ZoneView {
+function yongeView(): ZoneView {
   const paving = flecked("dslate", "slate", 67);
   const a = new ZoneView("yonge-street", flecked("shale", "ash", 41), paving, "amber", [4, 8], {
     curb: "grey",
@@ -1851,18 +1834,18 @@ export const ILLUSTRATIONS = new Map<string, () => Art>([
 
 // {illustration key: the card-frame tag the game shows it in}, from the game's export: each card
 // face's frame; any other art shows in encounter.
-export function cardFrameTags(): Map<string, string> {
+function cardFrameTags(): Map<string, string> {
   return new Map(GAME.cards.map((card) => [card.art, card.frame]));
 }
 
-export const FRAME_TAGS = cardFrameTags();
+const FRAME_TAGS = cardFrameTags();
 
 // The frame an illustration shows in, as the game picks it.
-export function cardKind(key: string): string {
+function cardKind(key: string): string {
   return FRAME_TAGS.get(key) ?? "encounter";
 }
 
-export function* frameSprite(): Generator<Sprite> {
+function* frameSprite(): Generator<Sprite> {
   yield ["card-frame", KINDS.map((kind): Tag => [kind, [cardFrame(kind).outlined(false)], 1000])];
   yield [
     "card-frame-large",
@@ -1905,7 +1888,7 @@ export function mockCard(
 }
 
 // Every illustration in a normal card, then one enlarged card per card type.
-export function preview(out: string, scale = 3): void {
+function preview(out: string, scale = 3): void {
   const keys = [...ILLUSTRATIONS.keys()];
   const cols = 10;
   const rows = Math.floor((keys.length + cols - 1) / cols);
@@ -1934,7 +1917,7 @@ export function preview(out: string, scale = 3): void {
   writeFileSync(out, rgbPng(sheet));
 }
 
-export async function build(): Promise<void> {
+async function build(): Promise<void> {
   await buildSprites({}, frameSprite());
   mkdirSync("public/art/images", { recursive: true });
   for (const [key, draw] of ILLUSTRATIONS) {

@@ -77,10 +77,10 @@ const USAGE = `Usage:
   node art/tools/hazards.ts build             export to public/art/sprites/`;
 
 // What makes a pose's grid: a Grid at full size, or a Mini for a depth variant (see small).
-export type GridMaker = (w?: number, h?: number) => Drawable;
+type GridMaker = (w?: number, h?: number) => Drawable;
 
 // The grid every drawing here makes and road.ts's face, which mini.ts's small swaps while it runs.
-export const scope: DrawingScope & { faceFront: FaceFront } = {
+const scope: DrawingScope & { faceFront: FaceFront } = {
   Grid: (w = 32, h = 32) => new Grid(w, h),
   faceFront,
 };
@@ -97,7 +97,7 @@ function range(start: number, stop: number): number[] {
 
 // A squirrel-dash pose: body lift, body stretch, front and hind paw positions (x, y of the paw's
 // top-left pixel) and the tail tip's offset as it streams.
-export interface SquirrelPose {
+interface SquirrelPose {
   dy?: number;
   front?: Point;
   hind?: Point;
@@ -108,7 +108,7 @@ export interface SquirrelPose {
 
 // A bounding gallop, one pose per frame. Laid out small, as road.ts's squirrel is: a design unit is
 // 1.5px at full size, so thirds land on whole pixels.
-export const SQUIRREL_RUN: readonly SquirrelPose[] = [
+const SQUIRREL_RUN: readonly SquirrelPose[] = [
   // gathered
   { dy: 0, front: [17 + 1 / 3, 26 + 2 / 3], hind: [14, 26 + 2 / 3], st: -2 / 3, tail: [0, 0] },
   // hind push off
@@ -131,14 +131,14 @@ export const SQUIRREL_RUN: readonly SquirrelPose[] = [
   },
 ];
 // Waiting at the road's edge: crouched with all four paws under, the plume flicking forward and back.
-export const SQUIRREL_IDLE: readonly SquirrelPose[] = [
+const SQUIRREL_IDLE: readonly SquirrelPose[] = [
   { ...SQUIRREL_RUN[0], st: 0 },
   { ...SQUIRREL_RUN[0], st: 0, tail: [-2 / 3, 2 / 3] },
 ];
 
 // Toronto's black squirrel in road.ts's SQUIRREL_FUR, lit by LIT's rim, small beside the pack as
 // road.ts's squirrel is. new makes the grid: a Grid at full size, or a Mini for a depth variant.
-export function squirrelDash({
+function squirrelDash({
   dy = 0,
   front = [17 + 1 / 3, 26 + 2 / 3],
   hind = [14, 26 + 2 / 3],
@@ -194,7 +194,7 @@ export function squirrelDash({
 
 // A loose-dog pose: body lift, the near front and hind paws' top-left pixels, and the broken leash's
 // wave, a 1px offset for each of its three trailing points.
-export interface CorgiPose {
+interface CorgiPose {
   bob?: number;
   front?: Point;
   hind?: Point;
@@ -215,7 +215,7 @@ export const CORGI_RUN: readonly CorgiPose[] = [
   { bob: -1, front: [20, 27], hind: [6, 25], leash: [-1, 0, 1] },
 ];
 // Waiting at the road's edge: standing square, a breath lifting the body, the leash drifting.
-export const CORGI_IDLE: readonly CorgiPose[] = [
+const CORGI_IDLE: readonly CorgiPose[] = [
   { bob: 0, front: [18, 27], hind: [8, 27], leash: [0, 1, 0] },
   { bob: -1, front: [18, 27], hind: [8, 27], leash: [1, 0, -1] },
 ];
@@ -238,7 +238,7 @@ export function limb(
 
 // new makes the grid, as for squirrelDash. The dog sits 1px lower than bob says, so the ear tips
 // keep their outline in flight.
-export function corgiSide({
+function corgiSide({
   bob = 0,
   front = [14, 27],
   hind = [11, 27],
@@ -323,7 +323,7 @@ export function corgiSide({
 // row, 2 rows above the frame's bottom (the ball's outline touches it on contact, and the shadow is
 // centred on it), and the stripes' width, spacing and step per frame (whole cycles over the 6
 // frames, so the loop has no jump).
-export const BALL_LAYOUT = {
+const BALL_LAYOUT = {
   heights: [0, 11, 15, 17, 15, 11],
   round: [9, 9],
   shadow: [21, 17, 14, 11, 14, 17],
@@ -331,10 +331,10 @@ export const BALL_LAYOUT = {
   stretch: [7, 10.4],
   width: 28,
 } as const;
-export const BALL_SIZE: Point = [24, 36];
+const BALL_SIZE: Point = [24, 36];
 
 // The bounce's layout at one depth step (see BALL_LAYOUT).
-export interface BallStep {
+interface BallStep {
   ground: number;
   heights: readonly number[];
   round: Point;
@@ -346,7 +346,7 @@ export interface BallStep {
 }
 
 // The bounce's layout by depth step, for the full size and each of mini.ts's STEPS.
-export function ballSteps(): Map<number, BallStep> {
+function ballSteps(): Map<number, BallStep> {
   const out = new Map<number, BallStep>();
   const radii = (v: readonly number[], k: number): Point => [v[0]! * k, v[1]! * k];
   for (const s of [1, ...STEPS.map(([, v]) => v)]) {
@@ -366,13 +366,13 @@ export function ballSteps(): Map<number, BallStep> {
   return out;
 }
 
-export const BALL = ballSteps();
+const BALL = ballSteps();
 
 // Frame f of the bounce at scale s: squashed on contact (f 0), stretched on the frames either side of
 // it, round at the top; rest draws it round on the ground, as frame 0 otherwise, its stripes rolled
 // rock pixels. It is white with two red stripes rolling across, so it reads on the dslate road as
 // well as the light ones.
-export function ballBounce(f: number, s = 1, rest = false, rock = 0): Frame {
+function ballBounce(f: number, s = 1, rest = false, rock = 0): Frame {
   const q = BALL.get(s)!;
   const [w, h] = q.size;
   const up = q.heights[f]!;
@@ -427,7 +427,7 @@ export function ballBounce(f: number, s = 1, rest = false, rock = 0): Frame {
 // ---------- cyclist: front view, riding down a lane at the player ----------
 
 // A cyclist pose: the left and right foot rows (the pedals go round) and the sway.
-export interface CyclistPose {
+interface CyclistPose {
   lf?: number;
   rf?: number;
   sway?: number;
@@ -442,7 +442,7 @@ export const CYCLIST_RIDE: readonly Required<CyclistPose>[] = [
 ];
 
 // The rider facing the player, laid out on 32x48; cyclistAt draws it at size and adds the sway.
-export function cyclist({ lf = 36, rf = 41 }: CyclistPose = {}): Drawable {
+function cyclist({ lf = 36, rf = 41 }: CyclistPose = {}): Drawable {
   const g = edged(scope.Grid(32, 48));
   // front wheel: a tire seen edge-on, with a mudguard and the fork
   g.blob(16, 39.5, 2.5, 7, "ink");
@@ -515,7 +515,7 @@ export function swayRows(g: Drawable, k: number, bottom: number): void {
 
 // cyclist on a Mini at SCALE x step s. At full size the rider leans (road.ts's lean shears about the
 // feet); smaller, the rows above the handlebar shift sideways, which keeps the bars and wheel put.
-export function cyclistAt(s: number, { lf = 36, rf = 41, sway = 0 }: CyclistPose = {}): Drawable {
+function cyclistAt(s: number, { lf = 36, rf = 41, sway = 0 }: CyclistPose = {}): Drawable {
   const g = miniSmall(roadScope, scope, SCALE * s, cyclist, { lf, rf });
   if (s === 1) {
     return sway ? edged(lean(g, sway)) : raster(g);
@@ -529,7 +529,7 @@ export function cyclistAt(s: number, { lf = 36, rf = 41, sway = 0 }: CyclistPose
 
 // A coyote pose: each paw's lift off the road (fl, fr the far and near front paws, bl, br the far and
 // near hind ones), the body's offset (negative is up), the head's and the near ear's flick.
-export interface CoyotePose {
+interface CoyotePose {
   bl?: number;
   bob?: number;
   br?: number;
@@ -542,24 +542,24 @@ export interface CoyotePose {
 
 // The stalk, one pose per frame. A slow creep: one diagonal pair lifts while the body sinks to slink
 // under it, then the other, the head held level.
-export const COYOTE_WALK: readonly CoyotePose[] = [
+const COYOTE_WALK: readonly CoyotePose[] = [
   { bl: 1, bob: 1, fr: 2, head: -1 },
   {},
   { bob: 1, br: 1, fl: 2, head: -1 },
   {},
 ];
 // Crouched and watching: a breath (the body 1px up) and the near ear flicking back.
-export const COYOTE_IDLE: readonly CoyotePose[] = [{}, { bob: -1, ear: 1 }];
+const COYOTE_IDLE: readonly CoyotePose[] = [{}, { bob: -1, ear: 1 }];
 // A quick low lunge for each step, never rising off its crouch: a sink onto the haunches, the push
 // with the front paws up and the ears pinned back, the reach with the head thrust lower still, and
 // the landing.
-export const COYOTE_STEP: readonly CoyotePose[] = [
+const COYOTE_STEP: readonly CoyotePose[] = [
   { bob: 1, head: 1 },
   { ear: 1, fl: 2, fr: 2, head: 1 },
   { bob: 1, ear: 1, fl: 1, fr: 2, head: 2 },
   { bl: 1, bob: 1, br: 1 },
 ];
-export const COYOTE_OFFSETS: readonly string[] = ["bl", "bob", "br", "ear", "fl", "fr", "head"];
+const COYOTE_OFFSETS: readonly string[] = ["bl", "bob", "br", "ear", "fl", "fr", "head"];
 
 // A lean tawny coyote creeping at the pack, three-quarter front and angled right. The back slopes
 // from the shoulders, hunched high, down to the hips, and the belly tucks up between the legs. The
@@ -569,7 +569,7 @@ export const COYOTE_OFFSETS: readonly string[] = ["bl", "bob", "br", "ear", "fl"
 // lit edge and the far ones a shade darker and 1px shorter. A dark saddle down the back, a cream
 // muzzle, throat and chest, a dark stripe down the front of the near foreleg. new makes the grid, as
 // for squirrelDash.
-export function coyote({
+function coyote({
   bl = 0,
   bob = 0,
   br = 0,
@@ -661,7 +661,7 @@ export function coyote({
 
 // A yellow warning triangle with a bold "!", built row by row; big is the pulse frame, 1px larger
 // all round.
-export function warning(big: boolean): Drawable {
+function warning(big: boolean): Drawable {
   const g = edged(scope.Grid(16, 16), "ink");
   const [top, bottom, slope] = big ? [2, 14, 0.55] : [3, 13, 0.5];
   for (let y = top; y <= bottom; y++) {
@@ -676,7 +676,7 @@ export function warning(big: boolean): Drawable {
 // A yellow arrow pointing right, down when down is true or up when up is; shift nudges it along its
 // direction on the pulse frame. The down arrow is the right one transposed, so its shading lands on
 // the right, and the up arrow is the down one flipped.
-export function warningArrow(shift: number, down = false, up = false): Drawable {
+function warningArrow(shift: number, down = false, up = false): Drawable {
   const g = edged(scope.Grid(16, 16), "ink");
   const px = raster(g);
   const s = shift;
@@ -702,7 +702,7 @@ export function warningArrow(shift: number, down = false, up = false): Drawable 
 
 // The "?": [x, y, w, h] rects on the 16x16 frame, the hook from its top bar round to the stem, then
 // the dot.
-export const QUERY: readonly (readonly [number, number, number, number])[] = [
+const QUERY: readonly (readonly [number, number, number, number])[] = [
   [5, 2, 6, 3],
   [4, 3, 2, 3],
   [10, 3, 3, 5],
@@ -713,7 +713,7 @@ export const QUERY: readonly (readonly [number, number, number, number])[] = [
 
 // A bold yellow "?" in the warning cues' style, ink outlined, amber along each part's bottom; lift
 // raises it on the pulse frame.
-export function warningWander(lift: number): Drawable {
+function warningWander(lift: number): Drawable {
   const g = edged(scope.Grid(16, 16), "ink");
   for (const [x, y, w, h] of QUERY) {
     g.rect(x, y - lift, w, h, "yellow");
@@ -736,13 +736,13 @@ export function warningWander(lift: number): Drawable {
 }
 
 // An offset in full-size pixels that moves whole pixels at scale s, at least one if it moves at all.
-export function snap(v: number, s: number): number {
+function snap(v: number, s: number): number {
   return v ? (Math.sign(v) * Math.max(1, Math.floor(Math.abs(v) * s))) / s : 0;
 }
 
 // Pose q at depth step s (1 for the full size), drawn on a Mini at SCALE x s, its offset keys snapped
 // to whole pixels there.
-export function small<Q extends object>(
+function small<Q extends object>(
   s: number,
   q: Q,
   offsets: readonly string[],
@@ -757,8 +757,8 @@ export function small<Q extends object>(
 }
 
 // the squirrel's tail sway is left unsnapped
-export const SQUIRREL_OFFSETS: readonly string[] = ["dy"];
-export const CORGI_OFFSETS: readonly string[] = ["bob", "leash"];
+const SQUIRREL_OFFSETS: readonly string[] = ["dy"];
+const CORGI_OFFSETS: readonly string[] = ["bob", "leash"];
 
 // [key + suffix, tags] for the road hazards at depth step s; depths.ts draws the steps between
 // SCALES with this too.

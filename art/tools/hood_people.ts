@@ -255,7 +255,7 @@ const USAGE = `Usage:
 
 // The grid every drawing here makes, which mini.ts's small swaps while it runs. Faces are drawn
 // through road.ts's scope, so small swaps them there.
-export const scope: DrawingScope = {
+const scope: DrawingScope = {
   Grid: (w = 32, h = 32) => new Grid(w, h),
 };
 
@@ -283,7 +283,7 @@ function stride(q: WalkerPose): Pick<WalkerPose, "bob" | "lf" | "rf"> {
 // The tourist's top for road.ts's person: shorts over the bare legs, the holiday shirt, the backpack,
 // the camera, the map and the sun hat. The map hand (screen left) stays; the free arm (screen right)
 // swings.
-export function touristTop(g: Drawable, b: number, arms = 0): void {
+function touristTop(g: Drawable, b: number, arms = 0): void {
   // shorts over the bare legs, each leg its own short leg
   g.rect(10, 33 + b, 12, 3, "driftwood");
   for (const x of [10, 17]) {
@@ -349,27 +349,27 @@ export function touristTop(g: Drawable, b: number, arms = 0): void {
   g.p(22, 17 + b, "pink");
 }
 
-export const TOURIST = { legs: "skin1", shoes: "brown" } as const;
-export const TOURIST_RIM: Rims = { ...LIT, dturq: ["turquoise", null] };
+const TOURIST = { legs: "skin1", shoes: "brown" } as const;
+const TOURIST_RIM: Rims = { ...LIT, dturq: ["turquoise", null] };
 
 // The tourist facing the player, with the road outline and the lit rim.
-export function tourist(q: PersonOptions = {}): Drawable {
+function tourist(q: PersonOptions = {}): Drawable {
   return rim(edged(person(touristTop, { grounded: true, ...TOURIST, ...q })), TOURIST_RIM);
 }
 
 // ---------- couple: arm in arm, facing the player, two lanes ----------
 
 // The couple's design grid: 112 px wide at SCALE, 48 rows.
-export const COUPLE_W = 112 / SCALE;
+const COUPLE_W = 112 / SCALE;
 // The left edge of each person's 32-column cell: the man's, then the woman's, their bodies 10
 // columns apart.
-export const MAN = COUPLE_W / 2 - 27;
-export const WOMAN = COUPLE_W / 2 - 3;
-export const COUPLE_WALK = HUMAN_WALK;
-export const COUPLE_WALK_MS = 80;
+const MAN = COUPLE_W / 2 - 27;
+const WOMAN = COUPLE_W / 2 - 3;
+const COUPLE_WALK = HUMAN_WALK;
+const COUPLE_WALK_MS = 80;
 
 // The group's identity-specific clothing over planted support and bent recovery legs.
-export function frontLegs(
+function frontLegs(
   g: Drawable,
   x0: number,
   b: number,
@@ -383,7 +383,7 @@ export function frontLegs(
 }
 
 // The couple facing the player, strolling arm in arm, in step.
-export function couple({ arms = 0, bob = 0, lf = 0, rf = 0 }: WalkerPose = {}): Drawable {
+function couple({ arms = 0, bob = 0, lf = 0, rf = 0 }: WalkerPose = {}): Drawable {
   const g = edged(scope.Grid(COUPLE_W, 48));
   const b = bob;
   const m = MAN;
@@ -482,22 +482,22 @@ export function couple({ arms = 0, bob = 0, lf = 0, rf = 0 }: WalkerPose = {}): 
 // ---------- busker: facing the player, behind the open guitar case ----------
 
 // A busker or strolling-busker idle pose: the strumming hand down (strum) and the head's nod.
-export interface StrumPose {
+interface StrumPose {
   nod?: number;
   strum?: number;
 }
 
 // Strumming: the hand down over the sound hole, back up, down, up, the head nodding 1px on the
 // second beat. 4 frames at 150ms.
-export const BUSKER_IDLE: readonly StrumPose[] = [
+const BUSKER_IDLE: readonly StrumPose[] = [
   { strum: 0 },
   { strum: 1 },
   { nod: 1, strum: 0 },
   { nod: 1, strum: 1 },
 ];
-export const BUSKER_IDLE_MS = 150;
-export const BUSKER = { legs: "blue", shoes: "dbrown" } as const;
-export const BUSKER_RIM: Rims = {
+const BUSKER_IDLE_MS = 150;
+const BUSKER = { legs: "blue", shoes: "dbrown" } as const;
+const BUSKER_RIM: Rims = {
   ...LIT,
   blue: ["sky", null],
   dolive: ["olive", null],
@@ -505,10 +505,10 @@ export const BUSKER_RIM: Rims = {
 };
 
 // A note, drawn in the grid's own pixels so it keeps its strokes at any scale.
-export const NOTE: readonly string[] = ["..##", "..#.", "..#.", "###.", "##.."];
+const NOTE: readonly string[] = ["..##", "..#.", "..#.", "###.", "##.."];
 
 // NOTE with its top-left at design (x, y), one drawn pixel per character; a 1x2 dash below 1x.
-export function note(g: Drawable, x: number, y: number, c: string): void {
+function note(g: Drawable, x: number, y: number, c: string): void {
   const s = scaleOf(g);
   if (s < 1) {
     raster(g).rect(scaled(x, s), scaled(y, rowScaleOf(g)), 1, 2, c);
@@ -518,13 +518,7 @@ export function note(g: Drawable, x: number, y: number, c: string): void {
 }
 
 // A character map with its top-left at design (x, y), one drawn pixel per character.
-export function bitmapAt(
-  g: Drawable,
-  rows: readonly string[],
-  x: number,
-  y: number,
-  c: string,
-): void {
+function bitmapAt(g: Drawable, rows: readonly string[], x: number, y: number, c: string): void {
   const s = scaleOf(g);
   const sy = rowScaleOf(g);
   const px = raster(g);
@@ -540,7 +534,7 @@ export function bitmapAt(
 // The busker's top for road.ts's person: the plaid shirt, the guitar across him, the fretting hand
 // on its neck (screen right), the strumming hand over the sound hole (strum 1 lower), the bearded
 // head (nod lowers it a row) and the open case in front of his legs.
-export function buskerTop(strum = 0, nod = 0): (g: Drawable, b: number) => void {
+function buskerTop(strum = 0, nod = 0): (g: Drawable, b: number) => void {
   return (g, b) => {
     const h = b + nod;
     // the plaid shirt, lit down its left side, checked in dolive
@@ -627,11 +621,7 @@ export function buskerTop(strum = 0, nod = 0): (g: Drawable, b: number) => void 
 }
 
 // The busker facing the player, with the road outline and the lit rim.
-export function busker({
-  bob = 0,
-  nod = 0,
-  strum = 0,
-}: StrumPose & { bob?: number } = {}): Drawable {
+function busker({ bob = 0, nod = 0, strum = 0 }: StrumPose & { bob?: number } = {}): Drawable {
   return rim(edged(person(buskerTop(strum, nod), { bob, ...BUSKER })), BUSKER_RIM);
 }
 
@@ -639,7 +629,7 @@ export function busker({
 
 // A strolling-busker pose: the walk's legs and bob, the strum and nod, the flourish ("up", "down" or
 // "out") and the rising note's top-left.
-export interface StrollingPose extends StrumPose, WalkerPose {
+interface StrollingPose extends StrumPose, WalkerPose {
   flourish?: string | null;
   note?: Point | null;
 }
@@ -649,30 +639,30 @@ export interface StrollingPose extends StrumPose, WalkerPose {
 // head nodding 1px on the second beat, 4 frames at 150ms as the busker's. Cue: a strum flourish, the
 // hand thrown up, swept down past the sound hole and flung out low, a note rising beside his hat, 4
 // frames at 120ms.
-export const STROLLING_WALK = PERSON_WALK;
-export const STROLLING_IDLE: readonly StrollingPose[] = [
+const STROLLING_WALK = PERSON_WALK;
+const STROLLING_IDLE: readonly StrollingPose[] = [
   { strum: 0 },
   { strum: 1 },
   { nod: 1, strum: 0 },
   { nod: 1, strum: 1 },
 ];
-export const STROLLING_IDLE_MS = 150;
-export const STROLLING_CUE: readonly StrollingPose[] = [
+const STROLLING_IDLE_MS = 150;
+const STROLLING_CUE: readonly StrollingPose[] = [
   { flourish: "up" },
   { flourish: "down", strum: 2 },
   { flourish: "out", note: [3, 13] },
   { flourish: "out", note: [2, 9] },
 ];
-export const STROLLING_CUE_MS = 120;
-export const STROLLING = { legs: "brown", shoes: "dbrown" } as const;
-export const STROLLING_RIM: Rims = { ...LIT, green: ["lime", null], violet: ["lilac", null] };
+const STROLLING_CUE_MS = 120;
+const STROLLING = { legs: "brown", shoes: "dbrown" } as const;
+const STROLLING_RIM: Rims = { ...LIT, green: ["lime", null], violet: ["lilac", null] };
 
 // The strolling busker's top for road.ts's person: shaggy dark brown hair to the jaw under a violet
 // felt hat with a pink band and a red feather, a plain lime shirt, a cherry-red guitar slung on a
 // leather strap, the fretting hand on its neck (screen right) and the strumming hand over the sound
 // hole (strum lowers it), or thrown up, down or out in the flourish. In a walk frame the swing of the
 // free arms becomes the strum.
-export function strollingTop(
+function strollingTop(
   strum = 0,
   nod = 0,
   flourish: string | null = null,
@@ -764,7 +754,7 @@ export function strollingTop(
 }
 
 // The strolling busker facing the player, with the road outline and the lit rim.
-export function strollingBusker({
+function strollingBusker({
   flourish = null,
   nod = 0,
   note: noteAt = null,
@@ -781,17 +771,17 @@ export function strollingBusker({
 
 // The stilt walker's design grid: 32 columns by STILT_ROWS, so 48x96 at SCALE, a third taller than
 // the other movers' 48x72 so it stands a head and a half over them.
-export const STILT_ROWS = 64;
+const STILT_ROWS = 64;
 // The planted shoes' top row and each leg's left column (screen left, then screen right).
-export const STILT_SHOE = 60;
-export const STILT_LEGS: readonly [number, number] = [8, 18];
+const STILT_SHOE = 60;
+const STILT_LEGS: readonly [number, number] = [8, 18];
 // The trousers' three bold stripes on each leg, from screen left, and their shade down the right
 // column.
-export const STILT_STRIPES: readonly [string, string, string] = ["yellow", "violet", "yellow"];
-export const STILT_SHADE = "amber";
+const STILT_STRIPES: readonly [string, string, string] = ["yellow", "violet", "yellow"];
+const STILT_SHADE = "amber";
 // Each arm pose's gloves, [screen left, screen right], on the design grid before the sway and the
 // bob.
-export const STILT_ARMS: Readonly<Record<string, readonly [Point, Point]>> = {
+const STILT_ARMS: Readonly<Record<string, readonly [Point, Point]>> = {
   in: [
     [4, 31],
     [28, 31],
@@ -824,7 +814,7 @@ export const STILT_ARMS: Readonly<Record<string, readonly [Point, Point]>> = {
 
 // A stilt-walker pose: each shoe's lift (negative is up), the body's bob and sway and the arms'
 // STILT_ARMS pose.
-export interface StiltPose {
+interface StiltPose {
   arms?: string;
   bob?: number;
   lf?: number;
@@ -836,28 +826,28 @@ export interface StiltPose {
 // swaying 1px over the planted leg and the arms swinging out against the legs. Idle: waving the
 // screen-right glove beside the hat, swaying. Cue: the wind-up before each step, the arms dropped to
 // the sides as the body sinks, then swung up into a V as the first knee lifts.
-export const STILT_WALK: readonly StiltPose[] = [
+const STILT_WALK: readonly StiltPose[] = [
   { arms: "left-low", lf: -8, sway: 1 },
   { arms: "out", bob: -1, lf: -2 },
   { arms: "right-low", rf: -8, sway: -1 },
   { arms: "out", bob: -1, rf: -2 },
 ];
-export const STILT_WALK_MS = 150;
-export const STILT_IDLE: readonly StiltPose[] = [{ arms: "wave" }, { arms: "wave-out", sway: 1 }];
-export const STILT_IDLE_MS = 300;
-export const STILT_CUE: readonly StiltPose[] = [
+const STILT_WALK_MS = 150;
+const STILT_IDLE: readonly StiltPose[] = [{ arms: "wave" }, { arms: "wave-out", sway: 1 }];
+const STILT_IDLE_MS = 300;
+const STILT_CUE: readonly StiltPose[] = [
   { arms: "in", bob: 1 },
   { arms: "out" },
   { arms: "v", bob: -1, lf: -3 },
 ];
-export const STILT_CUE_MS = 120;
-export const STILT_RIM: Rims = { ...LIT, cobalt: ["azure", null], violet: ["lilac", null] };
+const STILT_CUE_MS = 120;
+const STILT_RIM: Rims = { ...LIT, cobalt: ["azure", null], violet: ["lilac", null] };
 
 // The stilt walker facing the player: yellow and violet striped trousers down over the stilts to big
 // black shoes, an oversized patched denim jacket, white gloves, a red bow tie, curly orange hair and a
 // green top hat with a pink band and a daisy. lf and rf lift each shoe (negative is up), bob lifts the
 // body, sway moves the body above the legs sideways and arms names the gloves' pose in STILT_ARMS.
-export function stiltWalker({
+function stiltWalker({
   arms = "out",
   bob = 0,
   lf = 0,
@@ -949,32 +939,32 @@ export function stiltWalker({
 // ---------- delivery-cyclist: facing the player, riding down a lane at it ----------
 
 // A delivery-cyclist pose: each foot's row, the rider's sway and the merge's tilt.
-export interface DeliveryPose {
+interface DeliveryPose {
   lf?: number;
   rf?: number;
   sway?: number;
   tilt?: number;
 }
 
-export const DELIVERY_RIDE: readonly DeliveryPose[] = CYCLIST_RIDE;
-export const DELIVERY_RIDE_MS = 90;
+const DELIVERY_RIDE: readonly DeliveryPose[] = CYCLIST_RIDE;
+const DELIVERY_RIDE_MS = 90;
 // Merging a lane right (the game mirrors it for left), as the taxi's merge: still pedalling
 // CYCLIST_RIDE's stroke, the bike and box leaning DELIVERY_TILT layout pixels right at the top about
 // the handlebar, the tire swinging out left under it, the head upright over the neck. 4 frames at
 // 100ms.
-export const DELIVERY_TILT = 4;
-export const DELIVERY_MERGE: readonly DeliveryPose[] = CYCLIST_RIDE.map((q) => ({
+const DELIVERY_TILT = 4;
+const DELIVERY_MERGE: readonly DeliveryPose[] = CYCLIST_RIDE.map((q) => ({
   lf: q.lf,
   rf: q.rf,
   tilt: DELIVERY_TILT,
 }));
-export const DELIVERY_MERGE_MS = 100;
+const DELIVERY_MERGE_MS = 100;
 // The layout rows the merge's tilt turns about (the handlebar) and carries the head by (the neck).
-export const DELIVERY_PIVOT = 24;
-export const DELIVERY_NECK = 20;
+const DELIVERY_PIVOT = 24;
+const DELIVERY_NECK = 20;
 // The headlamp's layout point, over the mudguard.
-export const DELIVERY_LAMP: Point = [16, 31];
-export const DELIVERY_RIM: Rims = {
+const DELIVERY_LAMP: Point = [16, 31];
+const DELIVERY_RIM: Rims = {
   ...LIT,
   blue: ["sky", null],
   dturq: ["turquoise", null],
@@ -984,7 +974,7 @@ export const DELIVERY_RIM: Rims = {
 // The delivery rider facing the player, laid out on 32x48 as hazards.ts's cyclist is; deliveryAt
 // draws it at size and adds the sway. part "body" leaves out the head and the headlamp and "head"
 // draws only the head, for the merge's tilt, which puts the headlamp on after it shears the body.
-export function deliveryCyclist({
+function deliveryCyclist({
   lf = 36,
   part = "all",
   rf = 41,
@@ -1060,7 +1050,7 @@ function headlampAt(g: Drawable, at: Point): void {
 }
 
 // The delivery rider's head on g: the face, then a black helmet with a grey vent stripe.
-export function deliveryHead(g: Drawable): void {
+function deliveryHead(g: Drawable): void {
   faceDisc(g, 16, 14, 7.5, 6.5, "skin2", "brown");
   roadScope.faceFront(g, 16, 13.5);
   g.cel(16, 9, 8, 4, "navy", "ink", "dslate");
@@ -1074,7 +1064,7 @@ export function deliveryHead(g: Drawable): void {
 // about the feet); smaller, the rows above the handlebar shift sideways, which keeps the bars and
 // wheel put. tilt instead leans the whole bike into a merge, tilt layout pixels right at the top (see
 // deliveryTilted).
-export function deliveryAt(
+function deliveryAt(
   s: number,
   { lf = 36, rf = 41, sway = 0, tilt = 0 }: DeliveryPose = {},
 ): Drawable {
@@ -1096,7 +1086,7 @@ export function deliveryAt(
 // handlebar (DELIVERY_PIVOT), tilt layout pixels right at the top row and the tire swinging out left
 // under it as a rider countersteering into a turn; the head (its pixels as drawn in whole) carried
 // along unsheared by the neck's shift, so it stays upright over the tilted shoulders.
-export function deliveryTilted(whole: Grid, body: Grid, head: Grid, tilt: number, p: number): Grid {
+function deliveryTilted(whole: Grid, body: Grid, head: Grid, tilt: number, p: number): Grid {
   const pivot = DELIVERY_PIVOT * p;
   const shift = (y: number): number => Math.round((tilt * p * (pivot - y - 0.5)) / pivot);
   const out = raster(edged(scope.Grid(whole.w, whole.h)));
@@ -1125,7 +1115,7 @@ export function deliveryTilted(whole: Grid, body: Grid, head: Grid, tilt: number
 // ---------- segway-tour-rider: facing the player, standing on a Segway coming down a lane at it ----------
 
 // A segway-tour-rider pose: the bob, the tread's phase and the pennant's flutter.
-export interface SegwayPose {
+interface SegwayPose {
   bob?: number;
   flag?: number;
   roll?: number;
@@ -1134,7 +1124,7 @@ export interface SegwayPose {
 // Riding: nothing to pedal, so the rider bobs 1px over the cobbles on frames 1 and 2, the knees
 // taking it, the tread falls down both tires 1px a frame and the pennant flutters, its tip up, level,
 // down, level. 4 frames at 90ms.
-export const SEGWAY_RIDE: readonly Required<SegwayPose>[] = (
+const SEGWAY_RIDE: readonly Required<SegwayPose>[] = (
   [
     [0, -1],
     [1, 0],
@@ -1142,8 +1132,8 @@ export const SEGWAY_RIDE: readonly Required<SegwayPose>[] = (
     [0, 0],
   ] as const
 ).map(([b, f], k) => ({ bob: b, flag: f, roll: k }));
-export const SEGWAY_RIDE_MS = 90;
-export const SEGWAY_RIM: Rims = { ...LIT, cobalt: ["azure", null], dstone: ["stone", null] };
+const SEGWAY_RIDE_MS = 90;
+const SEGWAY_RIM: Rims = { ...LIT, cobalt: ["azure", null], dstone: ["stone", null] };
 
 // A Segway tour rider facing the player, standing upright on the platform between its two wheels,
 // laid out on 32x48 as deliveryCyclist is: a white bike helmet with two vents and dark straps, black
@@ -1153,7 +1143,7 @@ export const SEGWAY_RIM: Rims = { ...LIT, cobalt: ["azure", null], dstone: ["sto
 // screen-right shoulder a whip pole with an orange pennant at its tip. bob lowers everything above
 // the shoes; roll is the tread's phase; flag moves the pennant's tip up (-1) or down (1). The road
 // outline and the lit rim.
-export function segwayTourRider({ bob = 0, flag = 0, roll = 0 }: SegwayPose = {}): Drawable {
+function segwayTourRider({ bob = 0, flag = 0, roll = 0 }: SegwayPose = {}): Drawable {
   const g = edged(scope.Grid(32, 48));
   const b = bob;
   // the whip pole up from the back of the platform, the orange pennant flying from its tip
@@ -1246,7 +1236,7 @@ export function segwayTourRider({ bob = 0, flag = 0, roll = 0 }: SegwayPose = {}
 
 // A gardener pose: the walk's legs and bob, the tread's phase and the barrow's tip, as digit
 // strings, choices rather than offsets, so they skip the snap.
-export interface GardenerPose {
+interface GardenerPose {
   bob?: number;
   lf?: number;
   rf?: number;
@@ -1256,25 +1246,25 @@ export interface GardenerPose {
 
 // Pushing: PERSON_WALK's stride at the stroller's pace, the barrow rolling steadily in front, its
 // tire's tread marks rolling 1 drawn pixel down a frame. 4 frames at 160ms.
-export const GARDENER_PUSH: readonly GardenerPose[] = PERSON_WALK.map((q, n) => ({
+const GARDENER_PUSH: readonly GardenerPose[] = PERSON_WALK.map((q, n) => ({
   ...stride(q),
   roll: String(n),
 }));
-export const GARDENER_PUSH_MS = 160;
+const GARDENER_PUSH_MS = 160;
 // Stopped: the barrow tipped forward onto its nose, the handles up at the chest, breathing.
-export const GARDENER_IDLE: readonly GardenerPose[] = BREATH.map((b) => ({ bob: b, tilt: "2" }));
+const GARDENER_IDLE: readonly GardenerPose[] = BREATH.map((b) => ({ bob: b, tilt: "2" }));
 // Righting the barrow before a restart: tipped, halfway, level, then braced to push.
-export const GARDENER_CUE: readonly GardenerPose[] = [
+const GARDENER_CUE: readonly GardenerPose[] = [
   { tilt: "2" },
   { tilt: "1" },
   { tilt: "0" },
   { bob: -1, tilt: "0" },
 ];
-export const GARDENER_CUE_MS = 200;
+const GARDENER_CUE_MS = 200;
 // The leaves on the heap in the tray, red and orange with no gold or amber, which read as coins:
 // [column from the heap's centre, depth down the heap as a fraction of its height, colour], each 3.5
 // by 2, so they hold 2px at the smallest step. The lower ones show as the barrow tips forward.
-export const GARDENER_LEAVES: readonly (readonly [number, number, string])[] = [
+const GARDENER_LEAVES: readonly (readonly [number, number, string])[] = [
   [-8, 0.1, "orange"],
   [-2.5, 0, "red"],
   [3.5, 0.05, "orange"],
@@ -1285,7 +1275,7 @@ export const GARDENER_LEAVES: readonly (readonly [number, number, string])[] = [
   [-8.5, 0.55, "red"],
   [-1.5, 0.6, "red"],
 ];
-export const GARDENER_RIM: Rims = {
+const GARDENER_RIM: Rims = {
   ...LIT,
   dgreen: ["green", null],
   dolive: ["olive", null],
@@ -1295,7 +1285,7 @@ export const GARDENER_RIM: Rims = {
 
 // An arm reaching from (x0, y0) to (x1, y1), w square at each step: parts are [share, colour] along
 // it from the shoulder.
-export function limb(
+function limb(
   g: Drawable,
   x0: number,
   y0: number,
@@ -1315,7 +1305,7 @@ export function limb(
 // The gardener facing the player, walking behind the wheelbarrow as it rolls at the player. tilt 1
 // and 2 tip the barrow forward onto its nose, the handles rising; roll moves the tire's tread down a
 // pixel.
-export function gardener({
+function gardener({
   bob = 0,
   lf = 0,
   rf = 0,
@@ -1420,7 +1410,7 @@ export function gardener({
 
 // A park-rangers-cart pose: the drive frame (null at rest), the beacon, the ranger's look and his
 // pointing hand.
-export interface RangerPose {
+interface RangerPose {
   light?: number;
   look?: number;
   point?: number;
@@ -1431,23 +1421,18 @@ export interface RangerPose {
 // 2; 4 frames at 100ms, as every drive. Stopped: the amber light blinks while the ranger looks left,
 // then right; 4 frames at 400ms. Restarting: the ranger jabs a finger ahead, the light flashing; 4
 // frames at 120ms.
-export const RANGER_PUSH: readonly RangerPose[] = range(0, 4).map((r) => ({ roll: r }));
-export const RANGER_PUSH_MS = 100;
-export const RANGER_IDLE: readonly RangerPose[] = [
-  {},
-  { light: 1, look: -1 },
-  {},
-  { light: 1, look: 1 },
-];
-export const RANGER_IDLE_MS = 400;
-export const RANGER_CUE: readonly RangerPose[] = [
+const RANGER_PUSH: readonly RangerPose[] = range(0, 4).map((r) => ({ roll: r }));
+const RANGER_PUSH_MS = 100;
+const RANGER_IDLE: readonly RangerPose[] = [{}, { light: 1, look: -1 }, {}, { light: 1, look: 1 }];
+const RANGER_IDLE_MS = 400;
+const RANGER_CUE: readonly RangerPose[] = [
   { light: 1, point: 1 },
   { point: 2 },
   { light: 1, point: 1 },
   { point: 2 },
 ];
-export const RANGER_CUE_MS = 120;
-export const RANGER_RIM: Rims = { ...LIT, dolive: ["olive", null], olive: ["moss", null] };
+const RANGER_CUE_MS = 120;
+const RANGER_RIM: Rims = { ...LIT, dolive: ["olive", null], olive: ["moss", null] };
 
 // A park ranger's small utility cart coming down its lane at the pack, facing the player, laid out on
 // 32x48 and drawn at SCALE as the pedicab is: a white roof on two posts with an amber light on top,
@@ -1458,7 +1443,7 @@ export const RANGER_RIM: Rims = { ...LIT, dolive: ["olive", null], olive: ["moss
 // tires (still at rest) and the body dips 1px onto them on frames 1 and 2. light lights the amber
 // beacon, look turns the ranger's eyes (-1 screen left, 1 right) and point raises his free hand
 // pointing ahead (2 a pixel higher).
-export function parkRangersCart({
+function parkRangersCart({
   light = 0,
   look = 0,
   point = 0,
@@ -1590,7 +1575,7 @@ export function parkRangersCart({
 
 // An ice-cream-bike pose: each foot's row, the tread's frame (null for none), the rider's sway and
 // bob, the cone offered and lifted, and the bell's ring (0 for none).
-export interface IcePose {
+interface IcePose {
   bob?: number;
   lf?: number;
   lift?: number;
@@ -1603,28 +1588,25 @@ export interface IcePose {
 
 // Pedalling: each foot's row under the box (the pedals go round), the wheels' tread roll and the
 // rider's 1px sway toward the foot pushing down; 4 frames at 120ms.
-export const ICE_PUSH: readonly IcePose[] = [
+const ICE_PUSH: readonly IcePose[] = [
   { lf: 41, rf: 44, roll: 0, sway: -2 / 3 },
   { lf: 42.5, rf: 42.5, roll: 1 },
   { lf: 44, rf: 41, roll: 2, sway: 2 / 3 },
   { lf: 42.5, rf: 42.5, roll: 3 },
 ];
-export const ICE_PUSH_MS = 120;
+const ICE_PUSH_MS = 120;
 // Stopped: the feet down, a cone held out in the screen-right hand, lifted 1px on frame 1 as the
 // rider breathes; 2 frames at 400ms.
-export const ICE_IDLE: readonly IcePose[] = [
-  { offer: true },
-  { bob: -2 / 3, lift: 2 / 3, offer: true },
-];
-export const ICE_IDLE_MS = 400;
+const ICE_IDLE: readonly IcePose[] = [{ offer: true }, { bob: -2 / 3, lift: 2 / 3, offer: true }];
+const ICE_IDLE_MS = 400;
 // Restarting: the thumb on the bell, the bell rocking and its ring marks flashing out; 2 frames at
 // 150ms.
-export const ICE_CUE: readonly IcePose[] = [{ ring: 1 }, { ring: 2 }];
-export const ICE_CUE_MS = 150;
-export const ICE_RIM: Rims = { ...LIT, blue: ["sky", null] };
+const ICE_CUE: readonly IcePose[] = [{ ring: 1 }, { ring: 2 }];
+const ICE_CUE_MS = 150;
+const ICE_RIM: Rims = { ...LIT, blue: ["sky", null] };
 // The ring marks over the bell, in drawn pixels so they keep their strokes at any scale: three
 // strokes fanning out: up and up-left on ring 1, all three further out on ring 2.
-export const RING: readonly (readonly string[])[] = [
+const RING: readonly (readonly string[])[] = [
   [
     "......#...",
     "......#...",
@@ -1647,7 +1629,7 @@ export const RING: readonly (readonly string[])[] = [
 
 // In design columns x0 to x1 and rows above y1, where inside(x, y) holds, swap each drawn pixel's
 // colour by swap (K names).
-export function recolour(
+function recolour(
   g: Drawable,
   x0: number,
   x1: number,
@@ -1678,7 +1660,7 @@ export function recolour(
 // bar along the box's back, a gold bell at its left end. sway moves the rider (not the umbrella or
 // box) sideways; roll (0 to 3) falls the tread down the tires; offer holds a strawberry cone out in
 // the screen-right hand, lift raising it; ring rocks the bell and draws its ring marks.
-export function iceCreamBike({
+function iceCreamBike({
   bob = 0,
   lf = 42.5,
   lift = 0,
@@ -1790,7 +1772,7 @@ export function iceCreamBike({
 
 // A food-cart-vendor pose: the walk's legs and bob, the cloth's reach in design columns (null to
 // push), the bell ("up" or "ring") and the tread's phase.
-export interface CartPose {
+interface CartPose {
   bell?: string | null;
   bob?: number;
   lf?: number;
@@ -1802,31 +1784,31 @@ export interface CartPose {
 // Pushing the cart: PERSON_WALK's stride under the cart and the 1px bob, the stroller's pace, while
 // the tires' tread rolls down a row a frame (tread, in the drawn grid's own pixels). 4 frames at
 // 160ms.
-export const CART_PUSH: readonly CartPose[] = PERSON_WALK.map((q) => ({
+const CART_PUSH: readonly CartPose[] = PERSON_WALK.map((q) => ({
   bob: q.bob ?? 0,
   lf: q.lf ?? 0,
   rf: q.rf ?? 0,
 }));
-export const CART_PUSH_MS = 160;
+const CART_PUSH_MS = 160;
 // Stopped: wiping the counter, the cloth out to the middle and back, breathing (frame 0 the rest
 // pose); 4 frames at 250ms.
-export const CART_IDLE: readonly CartPose[] = [
+const CART_IDLE: readonly CartPose[] = [
   { wipe: 0 },
   { wipe: 3 },
   { bob: -1, wipe: 6 },
   { bob: -1, wipe: 3 },
 ];
-export const CART_IDLE_MS = 250;
+const CART_IDLE_MS = 250;
 // Setting off again: the hand up over the counter bell, then down on it as it rings, twice. 4 frames
 // at 200ms.
-export const CART_CUE: readonly CartPose[] = [
+const CART_CUE: readonly CartPose[] = [
   { bell: "up" },
   { bell: "ring" },
   { bell: "up" },
   { bell: "ring" },
 ];
-export const CART_CUE_MS = 200;
-export const CART_RIM: Rims = {
+const CART_CUE_MS = 200;
+const CART_RIM: Rims = {
   ...LIT,
   dturq: ["turquoise", null],
   moss: ["lime", null],
@@ -1835,14 +1817,7 @@ export const CART_RIM: Rims = {
 
 // Tread marks on an edge-on tire spanning design columns x to x + 1 and rows y0 to y1, in the drawn
 // grid's own pixels so they stay 1px at every step: every fourth row, rolling down a row each phase.
-export function treadRows(
-  g: Drawable,
-  x: number,
-  y0: number,
-  y1: number,
-  phase: number,
-  c: string,
-): void {
+function treadRows(g: Drawable, x: number, y0: number, y1: number, phase: number, c: string): void {
   const s = scaleOf(g);
   const px = raster(g);
   const x0 = scaled(x, s);
@@ -1866,7 +1841,7 @@ export function treadRows(
 // corners and his jeans and brown shoes walking under it. wipe (design columns) puts his right hand
 // (screen right) on the counter with a cloth; bell "up" lifts that hand over the bell, "ring" rings
 // it; otherwise both hands are on the push bar behind the cart. The road outline and the lit rim.
-export function foodCartVendor({
+function foodCartVendor({
   bell = null,
   bob = 0,
   lf = 0,
@@ -1998,7 +1973,7 @@ export function foodCartVendor({
 // The arrow sign, pointing right, about its pivot (the hands, at the centre of the board): [along,
 // across] corners in design pixels. The board is yellow, rimmed red, its arrow shape the only mark on
 // it.
-export const SIGN_BOARD: readonly Point[] = [
+const SIGN_BOARD: readonly Point[] = [
   [-10, -3],
   [2, -3],
   [2, -6.5],
@@ -2007,7 +1982,7 @@ export const SIGN_BOARD: readonly Point[] = [
   [2, 3],
   [-10, 3],
 ];
-export const SIGN_FACE: readonly Point[] = [
+const SIGN_FACE: readonly Point[] = [
   [-8.3, -1.3],
   [3.6, -1.3],
   [3.6, -3.4],
@@ -2017,10 +1992,10 @@ export const SIGN_FACE: readonly Point[] = [
   [-8.3, 1.3],
 ];
 // Where the hands hold the sign, in front of the hips.
-export const SIGN_PIVOT: Point = [16, 32];
+const SIGN_PIVOT: Point = [16, 32];
 
 // A sign-spinner pose: the sign's turn in degrees, the bob and the feet's lift.
-export interface SpinnerPose {
+interface SpinnerPose {
   bob?: number;
   lf?: number;
   rf?: number;
@@ -2030,29 +2005,29 @@ export interface SpinnerPose {
 // The twirl: the sign turned 45 degrees a frame, anticlockwise on screen, a full turn in 8 frames at
 // 120ms; the fast spin before each hop turns it 90 degrees a frame, 4 frames at 60ms, the knees bent
 // 1px for the hop.
-export const SPINNER_IDLE: readonly SpinnerPose[] = range(0, 8).map((k) => ({ turn: 45 * k }));
-export const SPINNER_IDLE_MS = 120;
-export const SPINNER_CUE: readonly SpinnerPose[] = range(0, 4).map((k) => ({
+const SPINNER_IDLE: readonly SpinnerPose[] = range(0, 8).map((k) => ({ turn: 45 * k }));
+const SPINNER_IDLE_MS = 120;
+const SPINNER_CUE: readonly SpinnerPose[] = range(0, 4).map((k) => ({
   bob: 1,
   turn: 90 * k,
 }));
-export const SPINNER_CUE_MS = 60;
+const SPINNER_CUE_MS = 60;
 // The hop sideways across a lane, the sign held level pointing the way (the game mirrors the sprite
 // for a hop to the left): crouched, pushing off stretched, tucked at the top with the feet drawn up
 // under the body, reaching down to land. The head clears the frame's top by a row at the top of the
 // hop.
-export const SPINNER_HOP: readonly SpinnerPose[] = [
+const SPINNER_HOP: readonly SpinnerPose[] = [
   { bob: 1 },
   { bob: -2, lf: -2, rf: -2 },
   { bob: -2, lf: -6, rf: -6 },
   { bob: -1, lf: -3, rf: -3 },
 ];
-export const SPINNER_HOP_MS = 75;
-export const SPINNER = { legs: "dslate", shoes: "white" } as const;
-export const SPINNER_RIM: Rims = { ...LIT, cobalt: ["azure", null] };
+const SPINNER_HOP_MS = 75;
+const SPINNER = { legs: "dslate", shoes: "white" } as const;
+const SPINNER_RIM: Rims = { ...LIT, cobalt: ["azure", null] };
 
 // points [along, across] turned turn degrees anticlockwise on screen about SIGN_PIVOT, raised b rows.
-export function turned(points: readonly Point[], turn: number, b: number): Point[] {
+function turned(points: readonly Point[], turn: number, b: number): Point[] {
   const a = turn * (Math.PI / 180);
   const c = Math.cos(a);
   const s = Math.sin(a);
@@ -2062,7 +2037,7 @@ export function turned(points: readonly Point[], turn: number, b: number): Point
 
 // A polygon that is convex but for its arrow's notches, filled as triangles: the shaft's two corners
 // with the head's root, then the head.
-export function fan(g: Drawable, pts: readonly Point[], c: string): void {
+function fan(g: Drawable, pts: readonly Point[], c: string): void {
   const [t0, s0, h0, tip, h1, s1, t1] = pts as [Point, Point, Point, Point, Point, Point, Point];
   g.tri(t0, s0, s1, c);
   g.tri(t0, s1, t1, c);
@@ -2073,7 +2048,7 @@ export function fan(g: Drawable, pts: readonly Point[], c: string): void {
 // along its lower and right edges against the red. Drawn under 1x, the face is its shaft alone, so
 // the head stays a solid red point: an inset head that small rasterizes as a bar across the shaft and
 // reads as a cross.
-export function arrowSign(g: Drawable, turn: number, b: number): void {
+function arrowSign(g: Drawable, turn: number, b: number): void {
   fan(g, turned(SIGN_BOARD, turn, b), "red");
   if (scaleOf(g) >= 1) {
     fan(g, turned(SIGN_FACE, turn, b), "yellow");
@@ -2120,7 +2095,7 @@ export function arrowSign(g: Drawable, turn: number, b: number): void {
 // The sign spinner's top for road.ts's person: the bright azure tee, both arms down and in to the
 // sign's middle, the head in a red cap and black sunglasses, then the sign in front of the hips and
 // the hands over it.
-export function spinnerTop(turn = 0): (g: Drawable, b: number) => void {
+function spinnerTop(turn = 0): (g: Drawable, b: number) => void {
   return (g, b) => {
     // the tee, shaded down its right side, a white crew neck
     g.rect(9, 21 + b, 14, 13, "azure");
@@ -2159,7 +2134,7 @@ export function spinnerTop(turn = 0): (g: Drawable, b: number) => void {
 }
 
 // The sign spinner facing the player, with the road outline and the lit rim.
-export function signSpinner({ bob = 0, lf = 0, rf = 0, turn = 0 }: SpinnerPose = {}): Drawable {
+function signSpinner({ bob = 0, lf = 0, rf = 0, turn = 0 }: SpinnerPose = {}): Drawable {
   return rim(edged(person(spinnerTop(turn), { bob, lf, rf, ...SPINNER })), SPINNER_RIM);
 }
 
@@ -2167,7 +2142,7 @@ export function signSpinner({ bob = 0, lf = 0, rf = 0, turn = 0 }: SpinnerPose =
 
 // A hopscotch-kid pose: the bob, the standing foot's lift, the hands' rise and see-saw, the bent
 // leg's kick, the ponytail's drop and the lean at the head.
-export interface KidPose {
+interface KidPose {
   arms?: number;
   bob?: number;
   foot?: number;
@@ -2180,35 +2155,35 @@ export interface KidPose {
 // The hop sideways across a lane on the one foot: crouched on it, pushing off with the arms flung up,
 // at the top with the foot tucked up and the ponytail floating, landing crouched on the same foot.
 // The game mirrors the sprite for a hop to the left.
-export const KID_HOP: readonly KidPose[] = [
+const KID_HOP: readonly KidPose[] = [
   { arms: -1, bob: 2, kick: -1 },
   { arms: 2, bob: -2, foot: -2, kick: 1, sway: 1, tail: 1 },
   { arms: 3, bob: -4, foot: -5, kick: 2, sway: 1, tail: -1 },
   { arms: 1, bob: 1, tail: 1 },
 ];
-export const KID_HOP_MS = 75;
+const KID_HOP_MS = 75;
 // Balancing on the one foot between hops: the arms see-saw and the body wobbles 1px each way.
-export const KID_IDLE: readonly KidPose[] = [
+const KID_IDLE: readonly KidPose[] = [
   { sway: -1, tilt: 1 },
   { sway: 1, tilt: -1 },
 ];
-export const KID_IDLE_MS = 300;
+const KID_IDLE_MS = 300;
 // The wind-up before each hop, played once over 600ms: the arms swing down as the knee dips, then up
 // as it straightens to go.
-export const KID_CUE: readonly KidPose[] = [
+const KID_CUE: readonly KidPose[] = [
   { arms: -2, bob: 1 },
   { arms: -4, bob: 2, kick: -1 },
   { arms: 1, bob: 1 },
 ];
-export const KID_CUE_MS = 200;
-export const KID_RIM: Rims = { ...LIT, cobalt: ["azure", null] };
+const KID_CUE_MS = 200;
+const KID_RIM: Rims = { ...LIT, cobalt: ["azure", null] };
 // How many rows lower than road.ts's person's adults the kid's hips, top and head sit, its legs that
 // much shorter.
-export const KID_DROP = 2;
+const KID_DROP = 2;
 
 // White stripes across the pink top, lgrey over its mauve shade: every third drawn row from the
 // collar, at least every other one, so they stay even at every size.
-export function kidStripes(g: Drawable, light: string, shade: string, b: number): void {
+function kidStripes(g: Drawable, light: string, shade: string, b: number): void {
   const px = raster(g);
   const s = scaleOf(g);
   const period = Math.max(2, Math.floor(3 * s + 0.5));
@@ -2232,7 +2207,7 @@ export function kidStripes(g: Drawable, light: string, shade: string, b: number)
 // standing leg (screen left) lifted foot rows by a hop, the other bent up behind, its sneaker kick
 // rows higher; the arms out for balance, the hands arms rows up, see-sawing tilt rows; the ponytail
 // tail rows down; the body leaning sway pixels at the head. The road outline and the lit rim.
-export function hopscotchKid({
+function hopscotchKid({
   arms = 0,
   bob = 0,
   foot = 0,
@@ -2312,15 +2287,15 @@ export function hopscotchKid({
 // The tour group's design grid: 112 px wide at SCALE, 48 rows, as the couple's. The left edge of each
 // person's 32-column cell: the guide in front, the tourists behind (their feet BEHIND rows higher)
 // and beside.
-export const TOUR_W = 112 / SCALE;
-export const GUIDE = TOUR_W / 2 - 20;
-export const TOUR_LEFT = GUIDE - 16;
-export const TOUR_RIGHT = GUIDE + 24;
-export const BEHIND = -2;
+const TOUR_W = 112 / SCALE;
+const GUIDE = TOUR_W / 2 - 20;
+const TOUR_LEFT = GUIDE - 16;
+const TOUR_RIGHT = GUIDE + 24;
+const BEHIND = -2;
 
 // A tour-group pose: the guide's (g), the left tourist's (l) and the right tourist's (r) feet, bob
 // and arm swing, and the flag's dip.
-export interface TourPose {
+interface TourPose {
   dip?: number;
   garms?: number;
   gbob?: number;
@@ -2338,7 +2313,7 @@ export interface TourPose {
 
 // Walk frame frame for the group: the guide on COUPLE_WALK's frame, each tourist lag frames behind,
 // so the group shuffles out of step.
-export function tourPoses(frame: number, lag = 4): TourPose {
+function tourPoses(frame: number, lag = 4): TourPose {
   const walk = COUPLE_WALK;
   const out: Record<string, number> = {};
   for (const [who, k] of [
@@ -2354,13 +2329,13 @@ export function tourPoses(frame: number, lag = 4): TourPose {
   return out;
 }
 
-export const TOUR_WALK: readonly TourPose[] = range(0, COUPLE_WALK.length).map((f) => tourPoses(f));
-export const TOUR_WALK_MS = COUPLE_WALK_MS;
+const TOUR_WALK: readonly TourPose[] = range(0, COUPLE_WALK.length).map((f) => tourPoses(f));
+const TOUR_WALK_MS = COUPLE_WALK_MS;
 // The flag dipping before a step: half down, all the way, half down; 3 frames at 200ms, the mover's
 // cue.
-export const TOUR_CUE: readonly TourPose[] = [{ dip: 2 }, { dip: 5 }, { dip: 2 }];
-export const TOUR_CUE_MS = 200;
-export const TOUR_RIM: Rims = {
+const TOUR_CUE: readonly TourPose[] = [{ dip: 2 }, { dip: 5 }, { dip: 2 }];
+const TOUR_CUE_MS = 200;
+const TOUR_RIM: Rims = {
   ...LIT,
   cobalt: ["azure", null],
   dstone: ["stone", null],
@@ -2370,14 +2345,7 @@ export const TOUR_RIM: Rims = {
 // The tourist behind the guide's right (screen left): a wide pink sun hat with a white band over long
 // dark brown hair, a peach tee, denim shorts and white trainers, a compact camera on a wrist strap in
 // the swinging outer hand.
-export function tourLeft(
-  g: Drawable,
-  x: number,
-  b: number,
-  lf: number,
-  rf: number,
-  arms: number,
-): void {
+function tourLeft(g: Drawable, x: number, b: number, lf: number, rf: number, arms: number): void {
   const y = b + BEHIND;
   for (const hx of [7, 22]) {
     g.rect(x + hx, 10 + y, 3, 12, "dbrown");
@@ -2415,14 +2383,7 @@ export function tourLeft(
 
 // The tourist behind the guide's left (screen right): a white bucket hat, sunglasses, an azure tee,
 // tan shorts and sandals, a big black camera on a neck strap, its lens to the player.
-export function tourRight(
-  g: Drawable,
-  x: number,
-  b: number,
-  lf: number,
-  rf: number,
-  arms: number,
-): void {
+function tourRight(g: Drawable, x: number, b: number, lf: number, rf: number, arms: number): void {
   const y = b + BEHIND;
   frontLegs(g, x, y, lf + BEHIND, rf + BEHIND, ["skin1", "skin2"], "dbrown");
   g.rect(x + 10, 33 + y, 12, 4, "tan");
@@ -2465,7 +2426,7 @@ export function tourRight(
 // stone shorts, the left arm (screen right) up holding a closed red umbrella with a yellow pennant
 // tied at its tip. dip lowers the tip that many rows, the umbrella seen tipping toward the player,
 // the pennant hanging lower as it comes down.
-export function tourGuide(
+function tourGuide(
   g: Drawable,
   x: number,
   b: number,
@@ -2541,7 +2502,7 @@ export function tourGuide(
 
 // The tour group facing the player: the tourists behind, then the guide in front, with the road
 // outline and the lit rim.
-export function tourGroup({
+function tourGroup({
   dip = 0,
   garms = 0,
   gbob = 0,
@@ -2566,7 +2527,7 @@ export function tourGroup({
 // ---------- volleyball-player: side on, darting across the road after a ball ----------
 
 // A volleyball-player frame: the VOLLEY_POSES key, the bob and the ponytail's swing.
-export interface VolleyFrame {
+interface VolleyFrame {
   bob?: number;
   pose?: string;
   tail?: number;
@@ -2575,40 +2536,40 @@ export interface VolleyFrame {
 // Running across: the near leg reaching forward to plant as the far foot kicks up behind, the far
 // knee coming through under the body (1px higher), the same on the other side; the arms pump against
 // the legs. 4 frames at 100ms, social-frisbee-dog's run.
-export const VOLLEY_RUN: readonly VolleyFrame[] = [
+const VOLLEY_RUN: readonly VolleyFrame[] = [
   { pose: "run-reach", tail: 0 },
   { bob: -1, pose: "run-pass", tail: 1 },
   { pose: "run-kick", tail: 0 },
   { bob: -1, pose: "run-tuck", tail: 1 },
 ];
-export const VOLLEY_RUN_MS = 100;
+const VOLLEY_RUN_MS = 100;
 // Diving one lane: the push off, arms out low after the ball; flat out in the air, the near forearm
 // under it; the belly landing, the ball popped up off the fist and the sand kicked up; the slide, the
 // ball going up out of the frame and the sand flying. 4 frames at 90ms, about the time the dart takes
 // to cross a lane.
-export const VOLLEY_DIVE: readonly VolleyFrame[] = [
+const VOLLEY_DIVE: readonly VolleyFrame[] = [
   "dive-launch",
   "dive-fly",
   "dive-land",
   "dive-slide",
 ].map((p) => ({ pose: p }));
-export const VOLLEY_DIVE_MS = 90;
+const VOLLEY_DIVE_MS = 90;
 // Lying where they landed, on the belly, propped on the elbows with the feet up behind: at rest, a
 // breath (the head and shoulders 1px higher), then a thumbs up held over two frames, a breath on the
 // second. 4 frames at 400ms, frame 0 the rest pose.
-export const VOLLEY_IDLE: readonly VolleyFrame[] = [
+const VOLLEY_IDLE: readonly VolleyFrame[] = [
   { pose: "lie" },
   { bob: -1, pose: "lie" },
   { pose: "lie-thumb" },
   { bob: -1, pose: "lie-thumb" },
 ];
-export const VOLLEY_IDLE_MS = 400;
+const VOLLEY_IDLE_MS = 400;
 
 // A limb's two joints: [elbow, hand] for an arm, [knee, foot] for a leg.
-export type Joints = readonly [Point, Point];
+type Joints = readonly [Point, Point];
 
 // A volleyball-player pose's joints in design units, side on facing right.
-export interface VolleyPose {
+interface VolleyPose {
   ball?: Point;
   farArm: Joints;
   farLeg: Joints;
@@ -2628,7 +2589,7 @@ export interface VolleyPose {
 // road and stays put under a bob. Every limb, ball and puff keeps clear of the frame's sides, so the
 // outline closes round it at every step. front turns the face to the player, as the lying player does
 // to give the thumbs up.
-export const VOLLEY_LAND = {
+const VOLLEY_LAND = {
   farArm: [
     [21.5, 42.2],
     [27.5, 42.5],
@@ -2641,7 +2602,7 @@ export const VOLLEY_LAND = {
   ],
   sh: [15.5, 40.5],
 } as const satisfies Partial<VolleyPose>;
-export const VOLLEY_LIE = {
+const VOLLEY_LIE = {
   farArm: [
     [17.5, 43],
     [24.5, 43],
@@ -2659,7 +2620,7 @@ export const VOLLEY_LIE = {
   ],
   sh: [15, 40],
 } as const satisfies Partial<VolleyPose>;
-export const VOLLEY_POSES: Readonly<Record<string, VolleyPose>> = {
+const VOLLEY_POSES: Readonly<Record<string, VolleyPose>> = {
   "dive-fly": {
     ball: [27, 36],
     farArm: [
@@ -2838,10 +2799,10 @@ export const VOLLEY_POSES: Readonly<Record<string, VolleyPose>> = {
     sh: [17, 22],
   },
 };
-export const VOLLEY_RIM: Rims = { ...LIT, dturq: ["turquoise", null] };
+const VOLLEY_RIM: Rims = { ...LIT, dturq: ["turquoise", null] };
 
 // A limb w thick from a to b, as a quadrilateral, with a round joint at b.
-export function volleyBar(g: Drawable, a: Point, b: Point, w: number, c: string): void {
+function volleyBar(g: Drawable, a: Point, b: Point, w: number, c: string): void {
   const dx = b[0] - a[0];
   const dy = b[1] - a[1];
   const n = Math.max(1e-6, (dx * dx + dy * dy) ** 0.5);
@@ -2869,11 +2830,7 @@ export function volleyBall(g: Drawable, cx: number, cy: number): void {
 // a red racerback tank with a white side stripe, navy shorts, bare legs and bare feet. pose is a
 // VOLLEY_POSES key; bob lifts all but the feet planted on row 44 or below; tail swings the ponytail
 // down behind.
-export function volleyballPlayer({
-  bob = 0,
-  pose = "run-reach",
-  tail = 0,
-}: VolleyFrame = {}): Drawable {
+function volleyballPlayer({ bob = 0, pose = "run-reach", tail = 0 }: VolleyFrame = {}): Drawable {
   const q = VOLLEY_POSES[pose]!;
   const g = edged(scope.Grid(32, 48));
   const b = bob;
@@ -2975,7 +2932,7 @@ export function volleyballPlayer({
 
 // A granny-cart-shopper pose: the walk's legs and bob, the cart's tip, the tread's phase (a digit
 // string, a choice rather than an offset) and the greens' nod.
-export interface GrannyPose {
+interface GrannyPose {
   bob?: number;
   lf?: number;
   nod?: number;
@@ -2988,41 +2945,41 @@ export interface GrannyPose {
 // beside her, the tread falling down its tires a drawn pixel a frame and the greens nodding on the
 // passing frames. Idle: BREATH with the cart stood upright. Cue, before each step: tipping the cart
 // back, braced, halfway and over, 3 frames at 150ms.
-export const GRANNY_WALK: readonly GrannyPose[] = HUMAN_WALK.map((q, n) => ({
+const GRANNY_WALK: readonly GrannyPose[] = HUMAN_WALK.map((q, n) => ({
   ...stride(q),
   nod: q.bob ? -q.bob : 0,
   roll: String(Math.floor(n / 2)),
   tip: 1,
 }));
-export const GRANNY_IDLE: readonly GrannyPose[] = BREATH.map((b) => ({ bob: b }));
-export const GRANNY_CUE: readonly GrannyPose[] = [{ bob: 1 }, { bob: 1, tip: 1 }, { tip: 2 }];
-export const GRANNY_CUE_MS = 150;
-export const GRANNY_RIM: Rims = { ...LIT, dgreen: ["green", null], forest: ["green", null] };
+const GRANNY_IDLE: readonly GrannyPose[] = BREATH.map((b) => ({ bob: b }));
+const GRANNY_CUE: readonly GrannyPose[] = [{ bob: 1 }, { bob: 1, tip: 1 }, { tip: 2 }];
+const GRANNY_CUE_MS = 150;
+const GRANNY_RIM: Rims = { ...LIT, dgreen: ["green", null], forest: ["green", null] };
 // The cart's tartan: red, crossed by dgreen bands (forest where they cross), as [start, width] in
 // layout columns from the bag's left edge and rows from its top, and a thin cream line down column
 // TARTAN_LINE.
-export const TARTAN_COLUMNS: readonly (readonly [number, number])[] = [
+const TARTAN_COLUMNS: readonly (readonly [number, number])[] = [
   [2, 2],
   [6, 1],
 ];
-export const TARTAN_ROWS: readonly (readonly [number, number])[] = [
+const TARTAN_ROWS: readonly (readonly [number, number])[] = [
   [2, 2],
   [6, 1],
 ];
-export const TARTAN_LINE = 5;
+const TARTAN_LINE = 5;
 // The bag: its left column, width, top row and bottom row, and the row its frame leans about.
-export const BAG_X = 22.5;
-export const BAG_W = 8.5;
-export const BAG_TOP = 30.5;
-export const BAG_BOTTOM = 40.5;
-export const CART_FOOT = 41;
+const BAG_X = 22.5;
+const BAG_W = 8.5;
+const BAG_TOP = 30.5;
+const BAG_BOTTOM = 40.5;
+const CART_FOOT = 41;
 // The wheels' centre columns, edge-on either side of the bag's foot.
-export const WHEELS: readonly [number, number] = [21.6, 30.4];
+const WHEELS: readonly [number, number] = [21.6, 30.4];
 
 // The market shopper facing the player, pulling her tartan shopping cart beside her (screen right)
 // with a cloth tote in her other hand. tip leans the cart's top that many layout pixels toward her,
 // about its wheels; roll moves the tires' tread down a pixel; nod drops the greens that many rows.
-export function grannyCartShopper({
+function grannyCartShopper({
   bob = 0,
   lf = 0,
   nod = 0,
@@ -3173,7 +3130,7 @@ export function grannyCartShopper({
 
 // A keg-dolly-worker pose: the walk's legs and bob, the dolly's tip and tilt, the tread's phase and
 // the screen-right hand's lift off the lid (null for on the handle).
-export interface KegPose {
+interface KegPose {
   bob?: number;
   lf?: number;
   rf?: number;
@@ -3187,9 +3144,9 @@ export interface KegPose {
 // tilt rows further back toward the worker, the kegs riding steady while he walks behind with
 // PERSON_WALK's stride and bob, the tires' tread rolling 1 drawn pixel down a frame (roll). 4 frames
 // at 160ms, as the gardener's push.
-export const KEG_TIP = 3.5;
-export const KEG_TILT = 1;
-export const KEG_PUSH: readonly KegPose[] = PERSON_WALK.map((q, n) => ({
+const KEG_TIP = 3.5;
+const KEG_TILT = 1;
+const KEG_PUSH: readonly KegPose[] = PERSON_WALK.map((q, n) => ({
   bob: q.bob ?? 0,
   lf: q.lf ?? 0,
   rf: q.rf ?? 0,
@@ -3197,36 +3154,36 @@ export const KEG_PUSH: readonly KegPose[] = PERSON_WALK.map((q, n) => ({
   tilt: KEG_TILT,
   tip: KEG_TIP,
 }));
-export const KEG_PUSH_MS = 160;
+const KEG_PUSH_MS = 160;
 // Stopped: the dolly stood upright on its nose plate, the screen-right hand flat on the keg's lid
 // steadying the load, breathing: BREATH, the hand staying on the lid. 2 frames at BREATH_MS.
-export const KEG_IDLE: readonly KegPose[] = BREATH.map((b) => ({ bob: b, steady: 0 }));
+const KEG_IDLE: readonly KegPose[] = BREATH.map((b) => ({ bob: b, steady: 0 }));
 // Restarting: both hands on the handles, braced low, then rocking the dolly back onto its wheels,
 // halfway and over, then braced to push. 4 frames at 200ms, as the gardener's cue.
-export const KEG_CUE: readonly KegPose[] = [
+const KEG_CUE: readonly KegPose[] = [
   { bob: 1 },
   { bob: 1, tip: KEG_TIP / 2 },
   { tilt: KEG_TILT, tip: KEG_TIP },
   { bob: -1, tilt: KEG_TILT, tip: KEG_TIP },
 ];
-export const KEG_CUE_MS = 200;
-export const KEG_RIM: Rims = { ...LIT, green: ["green", null] };
+const KEG_CUE_MS = 200;
+const KEG_RIM: Rims = { ...LIT, green: ["green", null] };
 // The load's columns and vertical half-spans, the rails just outside them, and the wheels' centres
 // and radii: small, tucked in behind the rails' feet beside the bottom keg, as on a real hand truck.
-export const KEG_X0 = 9.5;
-export const KEG_X1 = 22.5;
-export const KEG_H = 6.5;
+const KEG_X0 = 9.5;
+const KEG_X1 = 22.5;
+const KEG_H = 6.5;
 // Clearance between the vertical spans, included in the continuous keg body.
-export const KEG_GAP = 1.5;
-export const DOLLY_RAILS: readonly [number, number] = [7.5, 22.5];
-export const RAIL_W = 2;
-export const DOLLY_WHEELS: readonly [number, number] = [7, 25];
-export const WHEEL_RX = 2.2;
-export const WHEEL_RY = 4;
+const KEG_GAP = 1.5;
+const DOLLY_RAILS: readonly [number, number] = [7.5, 22.5];
+const RAIL_W = 2;
+const DOLLY_WHEELS: readonly [number, number] = [7, 25];
+const WHEEL_RX = 2.2;
+const WHEEL_RY = 4;
 
 // One tall cylindrical steel keg, with a curved lid and two separated rolling hoops. Its envelope
 // follows the existing load and leaves the dolly and worker registration unchanged.
-export function keg(g: Drawable, y0: number, height: number): void {
+function keg(g: Drawable, y0: number, height: number): void {
   const x0 = KEG_X0;
   const x1 = KEG_X1;
   const w = KEG_X1 - KEG_X0;
@@ -3254,7 +3211,7 @@ export function keg(g: Drawable, y0: number, height: number): void {
 // wheels, and tilt lifts the lid and the handles that many rows more, the keg's top tipped back
 // toward him; roll moves the tires' tread down a pixel; steady puts his screen-right hand on the
 // keg's lid, lifted that many rows off it.
-export function kegDollyWorker({
+function kegDollyWorker({
   bob = 0,
   lf = 0,
   rf = 0,
@@ -3345,7 +3302,7 @@ export function kegDollyWorker({
 // ---------- every sprite at a depth step ----------
 
 // A pose q with its numeric offsets snapped to whole pixels at p.
-export function posed<Q extends object>(q: Q, p: number): Q {
+function posed<Q extends object>(q: Q, p: number): Q {
   const offsets: Record<string, number> = {};
   for (const [k, v] of Object.entries(q)) {
     if (typeof v === "number") {
@@ -3356,7 +3313,7 @@ export function posed<Q extends object>(q: Q, p: number): Q {
 }
 
 // [key + suffix, tags] for every sprite at depth step s (1 for the full size).
-export function* steps(suffix: string, s: number): Generator<Sprite> {
+function* steps(suffix: string, s: number): Generator<Sprite> {
   const p = SCALE * s;
   const person = <Q extends object>(draw: (q: Q) => Drawable, q: Q): Frame =>
     small(roadScope, roadScope, p, draw, posed(q, p)).outlined();
@@ -3555,7 +3512,7 @@ export function* steps(suffix: string, s: number): Generator<Sprite> {
 }
 
 // Every sprite and its depth variants: [key, [[tag, frames, duration ms]]].
-export function* sprites(): Generator<Sprite> {
+function* sprites(): Generator<Sprite> {
   yield* steps("", 1);
   for (const [suffix, s] of STEPS) {
     yield* steps(`@${suffix}`, s);

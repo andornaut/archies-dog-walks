@@ -59,12 +59,12 @@ function isOptions(v: unknown): v is Record<string, boolean | number> {
 }
 
 // road.ts's wallet on a Mini at scale s, with the road outline and road.ts's WALLET_RIM.
-export function wallet(s: number, glint: boolean): Drawable {
+function wallet(s: number, glint: boolean): Drawable {
   return small(road.scope, road.scope, s, road.wallet, glint);
 }
 
 // road.ts's draw(q) on a Mini at scale s, its offsets snapped to whole pixels as snap has them.
-export function shrunk<Q extends object>(s: number, draw: (q: Q) => Drawable, q: Q): Drawable {
+function shrunk<Q extends object>(s: number, draw: (q: Q) => Drawable, q: Q): Drawable {
   const snapped = snap(q as Readonly<Record<string, boolean | number>>, s) as unknown as Q;
   return small(road.scope, road.scope, s, draw, snapped);
 }
@@ -72,7 +72,7 @@ export function shrunk<Q extends object>(s: number, draw: (q: Q) => Drawable, q:
 // A grid that passes every draw on to g except rects, pixels, ellipses and cel ovals in the colours
 // drop, so a drawing's face can be left off and painted at the small size instead. It draws no blob
 // and has no outline of its own.
-export class Faceless implements Drawable {
+class Faceless implements Drawable {
   readonly drop: ReadonlySet<string | undefined>;
   readonly g: Drawable;
 
@@ -156,7 +156,7 @@ export class Faceless implements Drawable {
 // ink with a white glint at its top-left (a 1px eye is all glint, so the dark face keeps its two
 // bright eyes), centred where it is at full size; the nose fills the gap between them on the row
 // under them.
-export function squirrelHead(
+function squirrelHead(
   full: (g: Drawable, x: number, y: number) => void,
   s: number,
   g: Drawable,
@@ -179,7 +179,7 @@ export function squirrelHead(
 
 // road.ts's squirrel drawing draw on a Mini at scale s, with squirrelHead's face. A trailing options
 // object's offsets snap to whole pixels as snap has them.
-export function squirrel<A extends unknown[]>(
+function squirrel<A extends unknown[]>(
   s: number,
   draw: (...args: A) => Drawable,
   ...args: A
@@ -205,7 +205,7 @@ function frames(gs: readonly Drawable[], outline = true): Frame[] {
 // [key, tags] for every sprite this file draws small, at scale s. road.ts's sprites are drawn at its
 // SCALE x s and obstacles.ts's at its SCALE x s, as those files draw them at their SCALE. The trash
 // can's lift and the bench's leaf are in drawn pixels, so they stay 1px here.
-export function* variants(s: number): Generator<Sprite> {
+function* variants(s: number): Generator<Sprite> {
   const p = road.SCALE * s;
   const o = obstacles.SCALE * s;
   yield [
@@ -330,7 +330,7 @@ export function nearest(f: Frame, s: number): Frame {
 
 // Per sprite and ground, a line of every frame at 1x, then for each scale the sprite has a line of
 // nearest-neighbour beside this file's version, as an opaque PNG at out.
-export function compare(
+function compare(
   {
     gap = PREVIEW_GAP,
     grounds = ["3a4466", "c0cbdc"],

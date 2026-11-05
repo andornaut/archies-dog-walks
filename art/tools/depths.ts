@@ -50,11 +50,11 @@ const USAGE = `Usage:
   node art/tools/depths.ts build             export every variant to public/art/sprites/`;
 
 // The steps hazards.ts leaves to this file: it builds SCALES itself.
-export const BETWEEN: readonly (readonly [string, number])[] = STEPS.filter(
+const BETWEEN: readonly (readonly [string, number])[] = STEPS.filter(
   ([suffix]) => !SCALES.some(([x]) => x === suffix),
 );
 // The pose arguments of road.ts's person that move a part by pixels.
-export const POSE: readonly string[] = ["arms", "bob", "lf", "rf"];
+const POSE: readonly string[] = ["arms", "bob", "lf", "rf"];
 
 type Pose = Readonly<Record<string, boolean | number>>;
 
@@ -93,7 +93,7 @@ function outlined(gs: readonly Drawable[], outline = true): Frame[] {
 // [key, tags] at scale s for the road sprites only this file draws small, with the tags road.ts's
 // and obstacles.ts's sprites give them. road.ts's people are drawn at its SCALE x s, since their
 // drawing functions lay them out SCALE times smaller than they export.
-export function* own(s: number): Generator<Sprite> {
+function* own(s: number): Generator<Sprite> {
   const breath = road.BREATH;
   const ms = road.BREATH_MS;
   const p = road.SCALE * s;
@@ -344,12 +344,12 @@ export function* own(s: number): Generator<Sprite> {
 }
 
 // [key, tags] at scale s for hazards.ts's sprites, whose @75 and @50 it draws itself.
-export function* hazard(s: number): Generator<Sprite> {
+function* hazard(s: number): Generator<Sprite> {
   yield* hazards.steps("", s);
 }
 
 // [key@suffix, tags] for each scale and each source's sprites at it.
-export function* steps(
+function* steps(
   scales: readonly (readonly [string, number])[],
   ...sources: ((s: number) => Iterable<Sprite>)[]
 ): Generator<Sprite> {
@@ -363,13 +363,13 @@ export function* steps(
 }
 
 // Every variant: this file's own at every step, then the hazards at the steps in BETWEEN.
-export function* sprites(): Generator<Sprite> {
+function* sprites(): Generator<Sprite> {
   yield* steps(STEPS, own);
   yield* steps(BETWEEN, hazard);
 }
 
 // Every full-size road sprite, by key.
-export function originals(): Map<string, readonly Tag[]> {
+function originals(): Map<string, readonly Tag[]> {
   const out = new Map<string, readonly Tag[]>();
   for (const set of [road.sprites, obstacles.sprites, hazards.sprites]) {
     for (const [key, tags] of set()) {
@@ -380,7 +380,7 @@ export function originals(): Map<string, readonly Tag[]> {
 }
 
 // variants, after checking each keeps its original's tags, frame counts and durations.
-export function checked(variants: Iterable<Sprite>): Sprite[] {
+function checked(variants: Iterable<Sprite>): Sprite[] {
   const full = originals();
   const out = [...variants];
   const shape = (tags: readonly Tag[]): string =>
@@ -398,7 +398,7 @@ export function checked(variants: Iterable<Sprite>): Sprite[] {
 
 // Per sprite with a variant here or in minis.ts, a sheet DIR/<key>.png with a band per zone road:
 // each frame at 1x, then per step a line of nearest-neighbour beside the variant.
-export function compare(
+function compare(
   { gap = PREVIEW_GAP, scale = 4 }: { gap?: number; scale?: number },
   outDir: string,
 ): void {

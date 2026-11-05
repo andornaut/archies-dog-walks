@@ -36,21 +36,21 @@ const USAGE = `Usage:
   node art/tools/share.ts preview OUT.png   the card at 1200x630
   node art/tools/share.ts build             write public/og-image.png`;
 
-export const W = 300;
-export const H = 157;
-export const SCALE = 4;
-export const OUT_W = 1200;
-export const OUT_H = 630;
-export const TAGLINE: readonly string[] = ["A COZY", "PIXEL-ART", "DOG-WALKING", "LANE RUNNER"];
+const W = 300;
+const H = 157;
+const SCALE = 4;
+const OUT_W = 1200;
+const OUT_H = 630;
+const TAGLINE: readonly string[] = ["A COZY", "PIXEL-ART", "DOG-WALKING", "LANE RUNNER"];
 
 // The window onto Cabbagetown: its left edge, and the backdrop rows it shows above the road.
-export const VIEW_X = 152;
-export const VIEW_W = W - 1 - VIEW_X;
+const VIEW_X = 152;
+const VIEW_W = W - 1 - VIEW_X;
 // The first backdrop row shown, 46 rows over the far side's ground row.
-export const BAND_TOP = bd.BASE - 46;
-export const BAND_ROWS = bd.H - BAND_TOP;
+const BAND_TOP = bd.BASE - 46;
+const BAND_ROWS = bd.H - BAND_TOP;
 // Cabbagetown's zone id.
-export const STREET = [...sn.ZONES].find(([, v]) => v.art === "cabbagetown")![0];
+const STREET = [...sn.ZONES].find(([, v]) => v.art === "cabbagetown")![0];
 
 // The pack's formation, as src/layout/packFormation.ts: each dog's side (lead 0, left -1, right 1)
 // and distance ahead of the feet, the dogs in formation order. One dog leads; two walk side by side;
@@ -59,7 +59,7 @@ export const STREET = [...sn.ZONES].find(([, v]) => v.art === "cabbagetown")![0]
 const SIDES: Readonly<Record<string, number>> = { lead: 0, left: -1, right: 1 };
 const SIZES: ReadonlyMap<string, string> = new Map(GAME.dogs.map((d) => [d.id, d.size]));
 
-export function formation(dogs: readonly string[]): [side: number, row: number][] {
+function formation(dogs: readonly string[]): [side: number, row: number][] {
   const feet = sn.PACK.feet;
   const sizes = dogs.map((d) => SIZES.get(d)!);
   let rows =
@@ -81,15 +81,10 @@ export function formation(dogs: readonly string[]): [side: number, row: number][
 
 // ---------- font-title, read from its BMFont export ----------
 
-export type BmGlyph = readonly [
-  mask: Plane | null,
-  xoffset: number,
-  yoffset: number,
-  xadvance: number,
-];
+type BmGlyph = readonly [mask: Plane | null, xoffset: number, yoffset: number, xadvance: number];
 
 // {char: (mask, xoffset, yoffset, xadvance)} from public/art/fonts/<key>.fnt and its atlas.
-export function bmfont(key: string): Map<string, BmGlyph> {
+function bmfont(key: string): Map<string, BmGlyph> {
   const src = readFileSync(`public/art/fonts/${key}.fnt`, "utf8");
   const atlas = decodePng(readFileSync(`public/art/fonts/${key}.png`));
   const out = new Map<string, BmGlyph>();
@@ -109,14 +104,14 @@ export function bmfont(key: string): Map<string, BmGlyph> {
   return out;
 }
 
-export const TITLE = bmfont("font-title");
+const TITLE = bmfont("font-title");
 
 function glyph(ch: string): BmGlyph {
   return TITLE.get(ch)!;
 }
 
 // The inked width of s at scale sc: the advances, less the trailing gap of the last glyph.
-export function titleW(s: string, sc: number): number {
+function titleW(s: string, sc: number): number {
   const chars = [...s];
   const [mask, ox] = glyph(chars.at(-1)!);
   const advances = chars.slice(0, -1).reduce((sum, ch) => sum + glyph(ch)[3], 0);
@@ -124,7 +119,7 @@ export function titleW(s: string, sc: number): number {
 }
 
 // s in font-title at sc, centred on mid with its cap tops on row y, in col with a 1px rim all round.
-export function label(
+function label(
   cv: sn.Canvas,
   s: string,
   mid: number,
@@ -178,7 +173,7 @@ export function label(
 
 // VIEW_W x (H - 2): the backdrop's street around its vanishing point, then the road strip sampled as
 // the street keeps widening toward the viewer, with the pack walking up it.
-export function streetView(): RgbaImage {
+function streetView(): RgbaImage {
   const cx = Math.floor(VIEW_W / 2);
   const zone = sn.ZONES.get(STREET)!;
   const view = new sn.Scene(VIEW_W, H - 2);
@@ -216,7 +211,7 @@ export function streetView(): RgbaImage {
 // The pack at full size with the walker's feet on row base: the dogs in the game's formation, far
 // ones first, then a leash from her hand to each collar, then Casey over them, so the leashes pass
 // behind her and show only from her hands to the collars.
-export function pack(view: sn.Scene, cx: number, base: number): void {
+function pack(view: sn.Scene, cx: number, base: number): void {
   const stand = (key: string, x: number, feet: number, shadow = true): void => {
     const f = sn.frame(key, "walk");
     if (shadow) {
@@ -245,7 +240,7 @@ export function pack(view: sn.Scene, cx: number, base: number): void {
 
 // ---------- the card ----------
 
-export function card(): RgbaImage {
+function card(): RgbaImage {
   const cv = new sn.Canvas(W, H);
   // dark wood boards, then a post between them and the window
   planks(cv, 0, 0, VIEW_X, H, 11, { seed: 21 });
@@ -273,7 +268,7 @@ export function card(): RgbaImage {
   return cv.img;
 }
 
-export function check(img: RgbaImage): void {
+function check(img: RgbaImage): void {
   const pal = new Set(PALETTE64.map((c) => sn.rgb(c).join(",")));
   const bad = new Set<string>();
   for (let i = 0; i < img.data.length; i += 4) {
@@ -289,7 +284,7 @@ export function check(img: RgbaImage): void {
 }
 
 // The card at SCALE, padded with the ink border to OUT_W x OUT_H.
-export function final(img: RgbaImage): RgbaImage {
+function final(img: RgbaImage): RgbaImage {
   const big = resizeNearest(W * SCALE, H * SCALE, img);
   const out = filledImage([...sn.rgb("ink"), 255], OUT_W, OUT_H);
   paste(
@@ -302,7 +297,7 @@ export function final(img: RgbaImage): RgbaImage {
   return out;
 }
 
-export function build(): void {
+function build(): void {
   const img = card();
   check(img);
   writeFileSync("public/og-image.png", rgbPng(final(img)));

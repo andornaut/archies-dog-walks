@@ -33,13 +33,13 @@ const USAGE = `Usage:
   node art/tools/drops.ts build             export to public/art/sprites/`;
 
 // A pixel map's colours by character.
-export type Cols = Readonly<Record<string, string>>;
+type Cols = Readonly<Record<string, string>>;
 // A pixel map, one character a pixel.
-export type Rows = readonly string[];
+type Rows = readonly string[];
 
 // The sparkle's two frames by size, in drawn pixels: w white, y yellow. From 1.2x a plus twinkles to
 // a four-point star; below it a 3x3 yellow plus flashes white, so it never shrinks to a lone pixel.
-export const SPARKLES: readonly (readonly [small: Rows, big: Rows])[] = [
+const SPARKLES: readonly (readonly [small: Rows, big: Rows])[] = [
   [
     [".y.", "ywy", ".y."],
     [".w.", "wyw", ".w."],
@@ -49,12 +49,12 @@ export const SPARKLES: readonly (readonly [small: Rows, big: Rows])[] = [
     ["..y..", "..w..", "ywwwy", "..w..", "..y.."],
   ],
 ];
-export const SPARKLE_COLS: Cols = { w: "white", y: "yellow" };
+const SPARKLE_COLS: Cols = { w: "white", y: "yellow" };
 // The idle: the sparkle small, then big.
-export const IDLE_MS = 500;
+const IDLE_MS = 500;
 
 // rows (one character a pixel, '.' clear) centred on design point (cx, cy), drawn in g's own pixels.
-export function stamp(g: Drawable, cx: number, cy: number, rows: Rows, cols: Cols): void {
+function stamp(g: Drawable, cx: number, cy: number, rows: Rows, cols: Cols): void {
   const s = scaleOf(g);
   const px = raster(g);
   const x0 = Math.floor(cx * s + 0.5 - rows[0]!.length / 2);
@@ -70,14 +70,14 @@ export function stamp(g: Drawable, cx: number, cy: number, rows: Rows, cols: Col
 
 // The pickup's sparkle centred on design point (cx, cy): from 1.2x the plus and the star, below it
 // the plus, yellow then white. big picks the second frame.
-export function sparkle(g: Drawable, cx: number, cy: number, big: number): void {
+function sparkle(g: Drawable, cx: number, cy: number, big: number): void {
   const k = scaleOf(g) >= 1.2 ? 1 : 0;
   stamp(g, cx, cy, SPARKLES[k]![big]!, SPARKLE_COLS);
 }
 
 // A paw print centred on design point (cx, cy), in drawn pixels: three toes over a pad from 1.2x, a
 // 2px pad below it.
-export function paw(g: Drawable, cx: number, cy: number, c = "dred"): void {
+function paw(g: Drawable, cx: number, cy: number, c = "dred"): void {
   if (scaleOf(g) >= 1.2) {
     stamp(g, cx, cy, ["1.1.1", ".....", ".111.", ".111."], { 1: c });
   } else {
@@ -117,7 +117,7 @@ export function fannyPack(g: Drawable): void {
 // A cream pass card under a red header band, its lgrey clip on a sky lanyard whose two straps (blue
 // on their inner edges from 1.2x, solid sky below it, where the edge would break into specks) rise
 // steeply out of the frame's top, a dred paw stamp on the left and brown lines of print on the right.
-export function hallPass(g: Drawable): void {
+function hallPass(g: Drawable): void {
   for (let i = 0; i < 5; i++) {
     g.rect(5.6 - 0.45 * i, 5.2 - i, 1.4, 1, "sky");
     g.rect(8.2 + 0.45 * i, 5.2 - i, 1.4, 1, "sky");
@@ -140,7 +140,7 @@ export function hallPass(g: Drawable): void {
 
 // A red collar lit pink, seen as a ring, with a round amber tag hanging under it stamped with a green
 // clover.
-export function luckyCollar(g: Drawable): void {
+function luckyCollar(g: Drawable): void {
   g.ell(7.5, 6.5, 6.3, 4.2, "red", "dred", "pink");
   g.ell(7.5, 6.3, 3.9, 2.2, null);
   g.ell(7.5, 12, 3, 3, "amber", "orange", "yellow");
@@ -151,7 +151,7 @@ export function luckyCollar(g: Drawable): void {
 // A low running shoe side on, the toe to the left: a sky upper rising to the heel, lit cyan along its
 // top, white laces, a navy collar, an orange stripe and heel tab, and a white sole on an lgrey
 // outsole.
-export function runningShoes(g: Drawable): void {
+function runningShoes(g: Drawable): void {
   g.tri([1, 11.5], [14.5, 11.5], [13.5, 4.5], "cyan");
   g.tri([2.3, 11.5], [14.5, 11.5], [14, 5.6], "sky");
   g.rect(9.3, 4.6, 4.2, 1.6, "navy");
@@ -178,7 +178,7 @@ export function runningShoes(g: Drawable): void {
 // A silver sports whistle side on, lit white along its top: a round barrel, its mouthpiece running
 // right with a dslate slot on top, never under 2px, and from 1.2x two cyan sound lines rising from the
 // slot. The barrel's paw stamp is left off: at road size it reads as a face.
-export function whistle(g: Drawable): void {
+function whistle(g: Drawable): void {
   g.ell(6.5, 10.3, 5.2, 4.7, "lgrey", "grey", "white");
   g.rect(6.5, 6.5, 8.2, 4, "lgrey");
   g.rect(6.5, 6.5, 8.2, 0.7, "white");
@@ -208,7 +208,7 @@ export function whistle(g: Drawable): void {
 
 // Each drop: its drawing and its sparkle's centre in design units, in the top corner its gear leaves
 // clear.
-export const DROPS: ReadonlyMap<
+const DROPS: ReadonlyMap<
   string,
   readonly [draw: (g: Drawable) => void, sparkle: readonly [number, number]]
 > = new Map([
@@ -221,7 +221,7 @@ export const DROPS: ReadonlyMap<
 
 // drop-<name> at scale s (road.ts's SCALE x the step): the gear, lit, then its sparkle, small (big 0)
 // or big (1).
-export function drop(name: string, s: number, big: number): Mini {
+function drop(name: string, s: number, big: number): Mini {
   const entry = DROPS.get(name);
   if (entry === undefined) {
     throw new RangeError(`No drop ${name}`);
@@ -237,7 +237,7 @@ export function drop(name: string, s: number, big: number): Mini {
 // ---------- build ----------
 
 // Every drop at full size, then at each step: [key, [["idle", frames, ms]]].
-export function* sprites(): Generator<Sprite> {
+function* sprites(): Generator<Sprite> {
   for (const [suffix, step] of [
     ["", 1] as const,
     ...STEPS.map(([k, v]) => [`@${k}`, v] as const),

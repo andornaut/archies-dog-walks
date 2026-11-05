@@ -1042,7 +1042,7 @@ const ICONS: ReadonlyMap<string, Draw> = new Map([
 ]);
 
 // Each badge's category, in build order.
-export const BADGES: ReadonlyMap<string, string> = new Map([
+const BADGES: ReadonlyMap<string, string> = new Map([
   ["double-leash", "firsts"],
   ["pack-leader", "firsts"],
   ["round-trip", "firsts"],
@@ -1106,7 +1106,7 @@ const NEIGHBOURS: readonly Point[] = [
   [1, 0],
 ];
 
-export function badge(name: string, locked = false): Grid {
+function badge(name: string, locked = false): Grid {
   const category = BADGES.get(name)!;
   const [rim, rimSh, rimLi] = RIMS[category]!;
   const stud = STUDS[category] ?? rimSh;
@@ -1257,7 +1257,7 @@ const TUMBLE: readonly Point[] = [
 // 64x64: confetti thrown out from behind the badge, slowing, then falling and drifting, 10 frames.
 // Each piece carries a 1px plum rim so the light colours hold on the cream end panel as well as the
 // dark wood; a piece drawn later covers an earlier one, rim and all, so overlaps stay apart.
-export function confetti(step: number): Grid {
+function confetti(step: number): Grid {
   const g = new Grid(64, 64);
   for (const [a, reach, fall, drift, phase, last, col] of PIECES) {
     if (step > last) {
@@ -1312,7 +1312,7 @@ const BIT_COLOURS: readonly string[] = ["amber", "cyan", "green", "pink", "white
 
 // 6x6: one bit of the zone celebration's falling confetti in col, frame step of its tumble, in the
 // effects' 1px plum rim.
-export function confettiBit(col: string, step: number): Grid {
+function confettiBit(col: string, step: number): Grid {
   const g = new Grid(6, 6);
   const cells = BIT_TUMBLE[step]!;
   for (const [x, y] of cells) {
@@ -1331,7 +1331,7 @@ export function confettiBit(col: string, step: number): Grid {
 // ---------- build ----------
 
 // Every sprite: [key, [[tag, frames, ms]]].
-export function* sprites(): Generator<Sprite> {
+function* sprites(): Generator<Sprite> {
   for (const name of BADGES.keys()) {
     yield [
       `badge-${name}`,

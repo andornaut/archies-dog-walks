@@ -180,7 +180,7 @@ const CAR = obstacles.CAR_SCALE;
 
 // The grid every drawing here makes, which mini.ts's small swaps while it runs. Faces are drawn
 // through road.ts's scope, so small swaps them there.
-export const scope: DrawingScope = {
+const scope: DrawingScope = {
   Grid: (w = 32, h = 32) => new Grid(w, h),
 };
 
@@ -201,13 +201,13 @@ function emptyFrame(w: number, h: number): Colour[][] {
 }
 
 // The drawn pixel of design point (x, y) on g.
-export function pxAt(g: Drawable, x: number, y: number): [number, number] {
+function pxAt(g: Drawable, x: number, y: number): [number, number] {
   return [Math.floor(x * scaleOf(g) + 0.5), Math.floor(y * rowScaleOf(g) + 0.5)];
 }
 
 // A character map centred on design point (cx, cy), pixel for pixel on the drawn grid, so it keeps
 // its pixels at any scale.
-export function stamp(
+function stamp(
   g: Drawable,
   rows: readonly string[],
   cx: number,
@@ -231,7 +231,7 @@ export function stamp(
 
 // A waffle cone held point down: a triangle from its rim (x0 to x1 on row y0) to its point on row
 // apex, tan lit on the left and ochre on the right, hatched in brown.
-export function waffle(g: Drawable, x0: number, x1: number, y0: number, apex: number): void {
+function waffle(g: Drawable, x0: number, x1: number, y0: number, apex: number): void {
   const mid = (x0 + x1) / 2;
   g.tri([x0, y0], [x1, y0], [mid, apex], "tan");
   g.tri([mid, y0], [x1, y0], [mid, apex], "ochre");
@@ -245,12 +245,12 @@ export function waffle(g: Drawable, x0: number, x1: number, y0: number, apex: nu
 }
 
 // A top for kid() or road.ts's person: top(g, bob, arms).
-export type Top = (g: Drawable, b: number, arms?: number) => void;
+type Top = (g: Drawable, b: number, arms?: number) => void;
 
 // The kid with the dropped cone, for kid(): a peach sundress, brown pigtails tied with red bobbles,
 // looking down at the cone, her brows up and her mouth turned down; tear puts a cyan tear on her
 // cheek.
-export function kidTop(tear = false): Top {
+function kidTop(tear = false): Top {
   return (g, b, arms = 0) => {
     // the arms hang by her sides, the hands open, the free one swinging with the walk
     for (const [x, side] of [
@@ -303,7 +303,7 @@ export function kidTop(tear = false): Top {
   };
 }
 
-export interface KidPose {
+interface KidPose {
   arms?: number;
   bob?: number;
   lf?: number;
@@ -313,7 +313,7 @@ export interface KidPose {
 // A kid facing the player, drawn shorter than road.ts's person's adults: legs, sandals and the
 // caller's top(g, bob, arms) over them, then the dropped cone upside down beside her right foot in
 // its pink puddle. The road outline and the lit rim.
-export function kid(top: Top, { arms = 0, bob = 0, lf = 0, rf = 0 }: KidPose = {}): Drawable {
+function kid(top: Top, { arms = 0, bob = 0, lf = 0, rf = 0 }: KidPose = {}): Drawable {
   const g = edged(scope.Grid(32, 48));
   for (const [x, f] of [
     [10, lf],
@@ -345,22 +345,19 @@ export function kid(top: Top, { arms = 0, bob = 0, lf = 0, rf = 0 }: KidPose = {
 }
 
 // kid() with kidTop, the tear on its own key.
-export function droppedIceCream({
-  tear = false,
-  ...q
-}: KidPose & { tear?: boolean } = {}): Drawable {
+function droppedIceCream({ tear = false, ...q }: KidPose & { tear?: boolean } = {}): Drawable {
   return kid(kidTop(tear), q);
 }
 
 // ---------- big-screen-promo: the street team promoter ----------
 
-export const STAR: readonly string[] = ["..#..", ".###.", "#####", ".###.", ".#.#."];
+const STAR: readonly string[] = ["..#..", ".###.", "#####", ".###.", ".#.#."];
 
 // The promoter, for road.ts's person (legs "navy" and shoes "white": black jeans and white sneakers):
 // a turquoise tee with a yellow star, an amber cap, a TV camera on her right shoulder (screen left)
 // with its lens to the player and a red tally light (dred when tally is off), and a mic with a hot
 // pink flag held out at shoulder height in her other hand.
-export function promoTop(tally = true): Top {
+function promoTop(tally = true): Top {
   return (g, b) => {
     // the mic arm (screen right): the sleeve and forearm up to the hand, the mic in it
     g.rect(23, 22 + b, 4, 3, "turquoise");
@@ -405,7 +402,7 @@ export function promoTop(tally = true): Top {
 
 // ---------- rollerblader ----------
 
-export interface RollerPose {
+interface RollerPose {
   push?: "left" | "right";
   roll?: number;
   sway?: number;
@@ -413,20 +410,20 @@ export interface RollerPose {
 
 // The skating stride: the foot pushing out to its side (none while both glide), the sway toward the
 // gliding foot and the tread's roll. 4 frames at 100ms.
-export const ROLLER_RIDE: readonly RollerPose[] = [
+const ROLLER_RIDE: readonly RollerPose[] = [
   { push: "left", roll: 0, sway: 1 },
   { roll: 1 },
   { push: "right", roll: 2, sway: -1 },
   { roll: 3 },
 ];
-export const ROLLER_RIDE_MS = 100;
+const ROLLER_RIDE_MS = 100;
 
 // A skater coming down the road at the pack, facing the player: gold hair, sunglasses, a lime tank
 // top, blue shorts, bare legs with white knee pads, white inline skates with a violet cuff and a
 // yellow wheel edge-on under each, its tread rolling. push is the side ("left" or "right", screen
 // left and right) whose leg pushes out, its foot 4 design pixels out and 1 up; the other glides under
 // the body, and the body sways sway drawn pixels toward it, the hips and legs put.
-export function rollerblader({ push, roll = 0, sway = 0 }: RollerPose = {}): Drawable {
+function rollerblader({ push, roll = 0, sway = 0 }: RollerPose = {}): Drawable {
   const g = edged(scope.Grid(32, 48));
   const px = raster(g);
   const u = unit(g)[1];
@@ -507,20 +504,20 @@ export function rollerblader({ push, roll = 0, sway = 0 }: RollerPose = {}): Dra
 
 // ---------- pedicab ----------
 
-export interface PedicabPose {
+interface PedicabPose {
   lf?: number;
   rf?: number;
   roll?: number;
 }
 
 // Pedalling: each foot's row (the pedals go round) and the tread's roll; 4 frames at 120ms.
-export const PEDICAB_RIDE: readonly PedicabPose[] = [
+const PEDICAB_RIDE: readonly PedicabPose[] = [
   { lf: 39, rf: 44, roll: 0 },
   { lf: 41, rf: 42, roll: 1 },
   { lf: 44, rf: 39, roll: 2 },
   { lf: 42, rf: 41, roll: 3 },
 ];
-export const PEDICAB_RIDE_MS = 120;
+const PEDICAB_RIDE_MS = 120;
 
 // A bike taxi coming down the road at the pack, facing the player. Further up the road, so standing
 // higher: a cobalt canopy lit azure, edged by a white scalloped valance on grey posts, shading a
@@ -529,7 +526,7 @@ export const PEDICAB_RIDE_MS = 120;
 // purple tee and a white headband, the hands on the handlebar, the legs either side of the front
 // tire, edge-on under its mudguard and a lit headlamp on the fork crown (road.ts's headlamp), the
 // tread falling down it 1px a frame; the cab's two wheels show either side.
-export function pedicab({ lf = 39, rf = 44, roll = 0 }: PedicabPose = {}): Drawable {
+function pedicab({ lf = 39, rf = 44, roll = 0 }: PedicabPose = {}): Drawable {
   const g = edged(scope.Grid(32, 48));
   const u = unit(g)[1];
   // the cab's wheels, behind and to the sides
@@ -611,15 +608,15 @@ export function pedicab({ lf = 39, rf = 44, roll = 0 }: PedicabPose = {}): Drawa
 
 // ---------- beach umbrella: someone's spot set up in the road ----------
 
-export const UMBRELLA_IDLE: readonly [readonly number[], number] = [[0, 0, 2, 0], 450];
-export const UMBRELLA_H = 60;
+const UMBRELLA_IDLE: readonly [readonly number[], number] = [[0, 0, 2, 0], 450];
+const UMBRELLA_H = 60;
 
 // A beach spot set up in the road, front on, laid out on obstacles.ts's SIZE by UMBRELLA_H: a red and
 // white umbrella planted in a mound of sand, leaning right, its peaked canopy of eight wedges, the
 // right ones shaded, scalloped round its rim; a towel striped lilac and white spread in front of it
 // and a sky blue cooler with a white lid and a grey handle beside it on the right. lift lifts that
 // many of the valance's scallops a pixel, from its right end, as a breeze catches it.
-export function beachUmbrella(lift = 0): Drawable {
+function beachUmbrella(lift = 0): Drawable {
   const g = edged(scope.Grid(obstacles.SIZE, UMBRELLA_H));
   const uy = unit(g)[1];
   const tilt = radians(7);
@@ -693,8 +690,8 @@ export function beachUmbrella(lift = 0): Drawable {
 
 // ---------- sandcastle ----------
 
-export const SANDCASTLE_IDLE: readonly [readonly number[], number] = [[0, 1, 2, 1], 400];
-export const SANDCASTLE_H = 60;
+const SANDCASTLE_IDLE: readonly [readonly number[], number] = [[0, 1, 2, 1], 400];
+const SANDCASTLE_H = 60;
 
 // A sandcastle, front on, laid out on obstacles.ts's SIZE by SANDCASTLE_H: two bucket towers and a
 // wider, taller middle tower behind, each notched along its top with gaps as wide as its merlons,
@@ -702,7 +699,7 @@ export const SANDCASTLE_H = 60;
 // over the middle tower, all on a mound of sand. Tan, lit cream on the left, shaded brown on the
 // right. The bucket rings on the towers are drawn down to obstacles.ts's TEXTURE_MIN. flutter lifts
 // the pennant's tip that many pixels, its hoist held still.
-export function sandcastle(flutter = 0): Drawable {
+function sandcastle(flutter = 0): Drawable {
   const g = edged(scope.Grid(obstacles.SIZE, SANDCASTLE_H));
   const uy = unit(g)[1];
   const fine = scaleOf(g) >= obstacles.TEXTURE_MIN;
@@ -760,15 +757,15 @@ export function sandcastle(flutter = 0): Drawable {
 
 // ---------- lifeguard chair ----------
 
-export const LIFEGUARD_IDLE: readonly [readonly number[], number] = [[0, 0, 2, 0], 450];
-export const LIFEGUARD_H = 60;
+const LIFEGUARD_IDLE: readonly [readonly number[], number] = [[0, 0, 2, 0], 450];
+const LIFEGUARD_H = 60;
 
 // A tall lifeguard chair, front on, laid out on obstacles.ts's SIZE by LIFEGUARD_H: two driftwood legs
 // splayed to the sand with ladder rungs between, a footrest, the seat with a red back panel and a
 // white cross on it, a yellow and white umbrella over the seat on a grey pole and an orange life ring
 // hung on the left leg. lift lifts that many of the valance's scallops a pixel, from its right end,
 // as a breeze catches it.
-export function lifeguardChair(lift = 0): Drawable {
+function lifeguardChair(lift = 0): Drawable {
   const g = edged(scope.Grid(obstacles.SIZE, LIFEGUARD_H));
   const uy = unit(g)[1];
   // the legs, splayed from the seat to the sand, lit on their left
@@ -837,24 +834,24 @@ export function lifeguardChair(lift = 0): Drawable {
 
 // ---------- volleyball net ----------
 
-export const NET_IDLE: readonly [readonly number[], number] = [[0, 0, 1, 0], 450];
+const NET_IDLE: readonly [readonly number[], number] = [[0, 0, 1, 0], 450];
 // Below this scale the half-sunk volleyball rasterizes as a square chip, so the far steps leave it
 // out.
-export const BALL_MIN = 0.85;
+const BALL_MIN = 0.85;
 // The mesh's holes while it is drawn and outlined, so the outline does not fill them; net() clears
 // them after.
-export const HOLE = "000001";
+const HOLE = "000001";
 // The nets' layout rows: taller than obstacles.ts's ROW so the net reads at @50, a multiple of 5 so
 // every depth step is a whole number of rows at obstacles.ts's SCALE.
-export const NET_ROWS = 35;
+const NET_ROWS = 35;
 // The net's top and bottom rows in layout pixels, and its mesh pitch in drawn pixels: a 1px coal line
 // every NET_PITCH pixels round holes NET_PITCH - 1 across.
-export const NET_TOP = 5;
-export const NET_BOTTOM = 24;
-export const NET_PITCH = 4;
+const NET_TOP = 5;
+const NET_BOTTOM = 24;
+const NET_PITCH = 4;
 
 // obstacles.ts's whiteKeyline, and no outline beside a hole.
-export function netEdge(c: string): string | null {
+function netEdge(c: string): string | null {
   return c === HOLE ? null : obstacles.whiteKeyline(c);
 }
 
@@ -869,7 +866,7 @@ const NET_EDGE = netEdge as Edge;
 // each post's inner side, with a volleyball (hood_people.ts's volleyBall) half sunk in it by the right
 // post, left out below BALL_MIN. breeze lifts the bottom band's middle half and bends each antenna's
 // tip outward 1px.
-export function volleyballNet(lanes: number, breeze = 0): Drawable {
+function volleyballNet(lanes: number, breeze = 0): Drawable {
   const w = obstacles.span(lanes);
   const h = NET_ROWS;
   const g = edged(scope.Grid(w, h), NET_EDGE);
@@ -940,17 +937,17 @@ function holesCleared(frame: Frame): Frame {
 }
 
 // volleyballNet at s, outlined, its holes cleared.
-export function net(s: Scale, lanes: number, breeze: number): Frame {
+function net(s: Scale, lanes: number, breeze: number): Frame {
   return holesCleared(small(roadScope, scope, s, volleyballNet, lanes, breeze).outlined());
 }
 
 // ---------- streetcar platform ----------
 
 // The platform's idle: rest, then the shelter's ad panel light dips on frame 1.
-export const PLATFORM_IDLE: readonly [readonly number[], number] = [[0, 1], 500];
+const PLATFORM_IDLE: readonly [readonly number[], number] = [[0, 1], 500];
 // The platform's layout rows: taller than obstacles.ts's ROW so the shelter stands as tall as a
 // person, a multiple of 5 so every depth step is a whole number of rows at obstacles.ts's SCALE.
-export const PLATFORM_ROWS = 40;
+const PLATFORM_ROWS = 40;
 
 // A TTC streetcar stop island in front elevation across 3 lanes, laid out in obstacles.ts's pixels
 // (obstacles.ts's span(3) by PLATFORM_ROWS) and drawn on the drawn grid so every line keeps its width
@@ -959,7 +956,7 @@ export const PLATFORM_ROWS = 40;
 // frame posts round navy panes with cyan glints, a lit ad panel at its left end; a grey railing at
 // the platform's left end and a TTC stop sign, red round a white band, on a slate pole at its right,
 // the sign clear over the roof line. dim dips the ad panel's light.
-export function streetcarPlatform(dim = 0): Drawable {
+function streetcarPlatform(dim = 0): Drawable {
   const w = obstacles.span(3);
   const g = edged(scope.Grid(w, PLATFORM_ROWS), NET_EDGE);
   const px = raster(g);
@@ -1058,14 +1055,14 @@ export function streetcarPlatform(dim = 0): Drawable {
 }
 
 // streetcarPlatform at s, outlined, the railing's gaps cleared.
-export function platform(s: Scale, dim: number): Frame {
+function platform(s: Scale, dim: number): Frame {
   return holesCleared(small(roadScope, scope, s, streetcarPlatform, dim).outlined());
 }
 
 // ---------- newspaper boxes ----------
 
-export const NEWS_IDLE: readonly [readonly number[], number] = [[0, 0, 1, 0], 400];
-export type NewsBox = readonly [
+const NEWS_IDLE: readonly [readonly number[], number] = [[0, 0, 1, 0], 400];
+type NewsBox = readonly [
   x: number,
   w: number,
   top: number,
@@ -1075,7 +1072,7 @@ export type NewsBox = readonly [
 ];
 // Each box: its left edge, width, top row, body, shade and masthead bar colours. The red one is the
 // tallest and, drawn last, stands in front of its neighbours.
-export const NEWS_BOXES: readonly NewsBox[] = [
+const NEWS_BOXES: readonly NewsBox[] = [
   [3, 11, 11, "sky", "blue", "blue"],
   [26, 11, 12, "yellow", "amber", "red"],
   [14, 12, 8, "red", "dred", "dred"],
@@ -1086,7 +1083,7 @@ export const NEWS_BOXES: readonly NewsBox[] = [
 // a pull handle, a coal plinth, the body shaded down its right. Below obstacles.ts's TEXTURE_MIN the
 // paper shows only its headline and the handle is left off, so the small steps keep a white page in
 // each window.
-export function newsBoxFront(
+function newsBoxFront(
   g: Drawable,
   x: number,
   w: number,
@@ -1128,7 +1125,7 @@ export function newsBoxFront(
 // white masthead band, a window onto a folded paper, a coin panel and a coal plinth, a chain sagging
 // in two loops along their feet to an amber padlock, a plain lgrey line, and a paper left lying on
 // the yellow box's lid. lift raises the paper's loose corner that many drawn pixels.
-export function newspaperBox(lift = 0): Drawable {
+function newspaperBox(lift = 0): Drawable {
   const g = edged(scope.Grid(obstacles.SIZE, obstacles.SIZE));
   // the pad, a sliver of its top over its front
   g.rect(1, 34, 38, 3, "grey");
@@ -1158,15 +1155,15 @@ export function newspaperBox(lift = 0): Drawable {
 // ---------- ttc-bus ----------
 
 // 3x5 letters for the bus's route sign and wordmark: obstacles.ts's LETTERS and the route's digits.
-export const LETTERS: Readonly<Record<string, readonly string[]>> = {
+const LETTERS: Readonly<Record<string, readonly string[]>> = {
   ...obstacles.LETTERS,
   "7": ["111", "001", "010", "010", "010"],
   "9": ["111", "101", "111", "001", "111"],
 };
-export const BUS_IDLE: readonly [readonly number[], number] = [[0, 1], 400];
+const BUS_IDLE: readonly [readonly number[], number] = [[0, 1], 400];
 
 // obstacles.ts's lettering with LETTERS, so it spells the route too.
-export function lettering(
+function lettering(
   g: Drawable,
   cx: number,
   y: number,
@@ -1185,7 +1182,7 @@ export function lettering(
 // "TTC" in white, the engine grille's slats, the tail lights and blinkers at the outer corners; the
 // bumper and both rear tires, black, no bogie. blink 1 lights the left blinker. roll (0 to 3) is a
 // drive frame: tread lines climb the tires and the body dips 1px onto them on frames 1 and 2.
-export function ttcBus(blink = 0, { roll = null }: { roll?: number | null } = {}): Drawable {
+function ttcBus(blink = 0, { roll = null }: { roll?: number | null } = {}): Drawable {
   const g = edged(scope.Grid(56, 55));
   const px = raster(g);
   const uy = unit(g)[1];
@@ -1252,11 +1249,11 @@ export function ttcBus(blink = 0, { roll = null }: { roll?: number | null } = {}
 
 // ---------- hit bursts (hits.ts's layout: 64x64, drawn hits.ts's BURST_SCALE times bigger) ----------
 
-export const SPRINKLES: readonly string[] = ["yellow", "cyan", "white", "lime"];
+const SPRINKLES: readonly string[] = ["yellow", "cyan", "white", "lime"];
 
 // The impact star in pink, then the strawberry scoop shoots up off a pink splat, peaks and drops back
 // as drops and sprinkles fly out of the splat and the empty cone tumbles away to the right.
-export function hitDroppedIceCream(step: number): Drawable {
+function hitDroppedIceCream(step: number): Drawable {
   const g = hits.scope.Grid(64, 64);
   const cx = 32;
   const cy = 40;
@@ -1317,7 +1314,7 @@ export function hitDroppedIceCream(step: number): Drawable {
 
 // The impact star in amber, then a white camera flash with yellow rays that shrinks away while
 // four-point flashes pop round it in turn and confetti in cyan, pink and yellow falls.
-export function hitBigScreenPromo(step: number): Drawable {
+function hitBigScreenPromo(step: number): Drawable {
   const g = hits.scope.Grid(64, 64);
   const cx = 32;
   const cy = 36;
@@ -1368,7 +1365,7 @@ export function hitBigScreenPromo(step: number): Drawable {
   return g;
 }
 
-export const HITS: ReadonlyMap<string, (step: number) => Drawable> = new Map([
+const HITS: ReadonlyMap<string, (step: number) => Drawable> = new Map([
   ["fx-hit-dropped-ice-cream", hitDroppedIceCream],
   ["fx-hit-big-screen-promo", hitBigScreenPromo],
 ]);
@@ -1376,7 +1373,7 @@ export const HITS: ReadonlyMap<string, (step: number) => Drawable> = new Map([
 // ---------- build: the road sprites at full size and every depth step ----------
 
 // A pose q with its numeric offsets snapped to whole pixels at s, its named choices as given.
-export function posed<Q extends object>(q: Q, s: number): Q {
+function posed<Q extends object>(q: Q, s: number): Q {
   const offsets: Record<string, number> = {};
   for (const [k, v] of Object.entries(q)) {
     if (typeof v === "number") {
@@ -1483,7 +1480,7 @@ function* steps(suffix: string, s: number): Generator<Sprite> {
 }
 
 // Every road sprite at full size, then at every depth step: [key, [[tag, frames, duration ms]]].
-export function* sprites(): Generator<Sprite> {
+function* sprites(): Generator<Sprite> {
   yield* steps("", 1);
   for (const [suffix, s] of STEPS) {
     yield* steps(`@${suffix}`, s);
@@ -1491,7 +1488,7 @@ export function* sprites(): Generator<Sprite> {
 }
 
 // The hit bursts.
-export function* bursts(): Generator<Sprite> {
+function* bursts(): Generator<Sprite> {
   for (const [key, draw] of HITS) {
     const frames = range(0, 8).map((i) => hits.burstFrame(draw, i).outlined(false));
     yield [key, [["play", frames, 70] satisfies Tag]];
@@ -1502,7 +1499,7 @@ export function* bursts(): Generator<Sprite> {
 
 // The kid holding a new cone up in her right hand (screen right), smiling, for the buy card: drawn at
 // road.ts's SCALE with no dropped cone.
-export function kidWithCone(lift = 0): Drawable {
+function kidWithCone(lift = 0): Drawable {
   const top: Top = (g, b) => {
     kidTop()(g, b);
     // the happy face over the sad one: eyes, cheeks and a smile
@@ -1536,7 +1533,7 @@ export function kidWithCone(lift = 0): Drawable {
 }
 
 // The promoter's tee held up as merch, 30x24: turquoise lit foam, shaded dturq, the star on its front.
-export function merchTee(): Drawable {
+function merchTee(): Drawable {
   const g = edged(scope.Grid(30, 24));
   g.rect(7, 3, 16, 19, "turquoise");
   g.rect(20, 3, 3, 19, "dturq");
@@ -1711,7 +1708,7 @@ async function buildCards(): Promise<void> {
 
 // ---------- sounds ----------
 
-export const EFFECTS: Effects = {
+const EFFECTS: Effects = {
   // two shutter clicks, a flash whine rising, a bright "ta-da"
   "sfx-hit-big-screen-promo": [
     [
@@ -1770,7 +1767,7 @@ export const EFFECTS: Effects = {
 };
 
 // Write the two sounds into outDir; return their keys.
-export function renderSounds(outDir: string): string[] {
+function renderSounds(outDir: string): string[] {
   return renderEffects(outDir, EFFECTS);
 }
 

@@ -29,13 +29,13 @@ const USAGE = `Usage:
 
 // The drawings are laid out on a 32-unit design grid; the sprites draw them road.ts's SCALE times
 // larger (32 units are 48px).
-export const BIG = SCALE;
+const BIG = SCALE;
 
 // A grid maker: a 32x32 design grid unless w and h say otherwise.
-export type GridMaker = (w?: number, h?: number) => Drawable;
+type GridMaker = (w?: number, h?: number) => Drawable;
 
 // A grid maker for a depth variant at scale s.
-export function mini(s: number): GridMaker {
+function mini(s: number): GridMaker {
   return (w = 32, h = 32) => new Mini(s, w, h);
 }
 
@@ -44,7 +44,7 @@ export function mini(s: number): GridMaker {
 // The goose's pose: fa and fb move the near and far feet along the ground, bob lifts the body
 // (negative is up), flap moves the wing tips down (negative is up), beak opens it (0 shut, 1 open, 2
 // wide) and thrust pushes the head forward.
-export interface GoosePose {
+interface GoosePose {
   beak?: number;
   bob?: number;
   fa?: number;
@@ -55,7 +55,7 @@ export interface GoosePose {
 
 // Side view facing right, in pose q on a grid from make. The white takes the road outline; the
 // orange beak and feet carry it on every road.
-export function goose(
+function goose(
   make: GridMaker = (w = 32, h = 32) => new Grid(w, h),
   { beak = 1, bob = 0, fa = 0, fb = 0, flap = 0, thrust = 0 }: GoosePose = {},
 ): Drawable {
@@ -109,16 +109,16 @@ export function goose(
 
 // The waddle: the near foot back, passing, forward, passing; the body bobs on the passing frames, and
 // the wings beat with the stride, raised on the steps and swept down as the body rises.
-export const GOOSE_RUN: readonly GoosePose[] = [
+const GOOSE_RUN: readonly GoosePose[] = [
   { fa: -2, fb: 2, flap: -1 },
   { bob: -1, flap: 2 },
   { fa: 2, fb: -2, flap: -1 },
   { bob: -1, flap: 2 },
 ];
 // The honk: open, a thrust with the beak wide, open, shut.
-export const GOOSE_IDLE: readonly GoosePose[] = [{}, { beak: 2, thrust: 1 }, {}, { beak: 0 }];
+const GOOSE_IDLE: readonly GoosePose[] = [{}, { beak: 2, thrust: 1 }, {}, { beak: 0 }];
 // The pose keys that are offsets, which move whole pixels at every scale.
-export const GOOSE_OFFSETS: ReadonlySet<string> = new Set(["bob", "fa", "fb", "flap", "thrust"]);
+const GOOSE_OFFSETS: ReadonlySet<string> = new Set(["bob", "fa", "fb", "flap", "thrust"]);
 
 // ---------- build ----------
 
@@ -131,7 +131,7 @@ function snapped(s: number, keys: ReadonlySet<string>, q: GoosePose): GoosePose 
 
 // The goose at full size, then its depth variants, each drawn at BIG times its step: [key, [[tag,
 // frames, ms]]].
-export function* sprites(): Generator<Sprite> {
+function* sprites(): Generator<Sprite> {
   for (const [suffix, step] of [
     ["", 1] as const,
     ...STEPS.map(([k, v]) => [`@${k}`, v] as const),

@@ -28,19 +28,19 @@ const USAGE = `Usage:
   node art/tools/owners.ts preview OUT.png   contact sheet of every frame, scaled up
   node art/tools/owners.ts build             export public/art/sprites/*.png and *.json`;
 
-export type Mood = "fired" | "happy" | "neutral" | "upset" | "worried";
+type Mood = "fired" | "happy" | "neutral" | "upset" | "worried";
 
-export const MOODS: readonly Mood[] = ["happy", "neutral", "upset", "fired", "worried"];
+const MOODS: readonly Mood[] = ["happy", "neutral", "upset", "fired", "worried"];
 
 // The small face's side, in pixels.
-export const SMALL = 20;
+const SMALL = 20;
 
 // expression's options. wide marks the dramatic owners, whose faces go further. brow is the brows'
 // colour (feat unless given). whites sets a white beside each pupil, so the eyes read on dark skin.
 // glasses frames each eye in that colour, lips paints the closed mouth's middle (not while firing)
 // and nose, a skin shade, puts a nose pixel between the eyes, as the walkers' sprites and portraits
 // have. smallExpression leaves out lashes, glasses and nose.
-export interface ExpressionOptions {
+interface ExpressionOptions {
   blush?: string;
   brow?: string | null;
   feat?: string;
@@ -52,25 +52,19 @@ export interface ExpressionOptions {
   whites?: boolean;
 }
 
-export type Expression = (g: Drawable, mood: Mood, options?: ExpressionOptions) => void;
+type Expression = (g: Drawable, mood: Mood, options?: ExpressionOptions) => void;
 
 // What a face draws at one size: the grid it draws on, with its ink line, and the expression drawn
 // on it.
-export interface FaceSize {
+interface FaceSize {
   expression: Expression;
   face: () => Drawable;
 }
 
 // One face: an owner's or a walker's, in a mood, at a size.
-export type FaceDraw = (size: FaceSize, mood: Mood) => Drawable;
+type FaceDraw = (size: FaceSize, mood: Mood) => Drawable;
 
-export function base(
-  g: Drawable,
-  skin: string,
-  shade: string,
-  shirt: string,
-  shirtSh: string,
-): void {
+function base(g: Drawable, skin: string, shade: string, shirt: string, shirtSh: string): void {
   g.rect(8, 27, 16, 1, shirt);
   g.rect(6, 28, 20, 3, shirt);
   g.rect(21, 28, 5, 3, shirtSh);
@@ -86,7 +80,7 @@ export function base(
 // middle over a frown, angry and sad; fired narrows the eyes under brows pinched down hard; worried
 // lifts the brows' inner ends over eyes gone wide, white either side of the pupil, with a small
 // wobbly mouth and a big sweat bead.
-export function expression(
+function expression(
   g: Drawable,
   mood: Mood,
   {
@@ -254,7 +248,7 @@ export function expression(
 // expression drawn at 20x20 on a Mini's own pixels, one feature per pixel: eyes at x 7 and 12 on rows
 // 10 and 11, brows on row 9 (raised to 8), the mouth on rows 13 and 14. Lashes, glasses and the nose
 // are left out at this size.
-export function smallExpression(
+function smallExpression(
   g: Drawable,
   mood: Mood,
   {
@@ -382,14 +376,14 @@ export const FULL: FaceSize = {
 
 // The SMALL x SMALL face: the 32x32 drawing's hair, clothes and props rasterized small by a Mini, with
 // its own ink line, under the expression drawn natively by smallExpression.
-export const SMALL_FACE: FaceSize = {
+const SMALL_FACE: FaceSize = {
   expression: smallExpression,
   face: () => edged(new Mini(SMALL / 32), "ink", true),
 };
 
 // YouTuber, dramatic: a young girl with no lashes drawn, long blonde hair past the shoulders with a
 // swept fringe, gold hoop earrings, a bright pink puffer jacket over a white top.
-export function eve(size: FaceSize, mood: Mood): Drawable {
+function eve(size: FaceSize, mood: Mood): Drawable {
   const g = size.face();
   // the hair behind the face, down past the jaw
   g.cel(16, 14, 10, 9, "yellow", "amber");
@@ -416,7 +410,7 @@ export function eve(size: FaceSize, mood: Mood): Drawable {
 
 // Site engineer, dramatic: a blond forelock under a white hard hat, a yellow hi-vis vest with silver
 // stripes over a blue work shirt.
-export function ryan(size: FaceSize, mood: Mood): Drawable {
+function ryan(size: FaceSize, mood: Mood): Drawable {
   const g = size.face();
   base(g, "skin2", "brown", "blue", "navy");
   // the work shirt's collar, then the vest's two panels either side of the open front
@@ -447,7 +441,7 @@ export function ryan(size: FaceSize, mood: Mood): Drawable {
 // sandy-blonde hair pulled back tight into a low ponytail behind the left shoulder, heavy brown
 // brows, a dark leather flight jacket with a cream fleece collar over a white shirt, and gold wings
 // pinned on the chest.
-export function ralph(size: FaceSize, mood: Mood): Drawable {
+function ralph(size: FaceSize, mood: Mood): Drawable {
   const g = size.face();
   const mini = g instanceof Mini;
   // the ponytail behind the head, hanging from the nape down behind the left shoulder, with a dbrown
@@ -523,7 +517,7 @@ export function ralph(size: FaceSize, mood: Mood): Drawable {
 }
 
 // Dog-show judge, fussy: tall blonde updo, pearls, red lips, purple blazer.
-export function tara(size: FaceSize, mood: Mood): Drawable {
+function tara(size: FaceSize, mood: Mood): Drawable {
   const g = size.face();
   base(g, "skin1", "skin2", "purple", "plum");
   g.tri([13, 27], [19, 27], [16, 31], "white");
@@ -549,7 +543,7 @@ export function tara(size: FaceSize, mood: Mood): Drawable {
 
 // Psychology student, laid-back: fair skin, brown hair to the shoulders with a side-swept fringe and
 // a pink clip, a cosy green knit sweater with a white collar.
-export function clare(size: FaceSize, mood: Mood): Drawable {
+function clare(size: FaceSize, mood: Mood): Drawable {
   const g = size.face();
   // the hair falling behind the face to the shoulders
   g.cel(16, 14, 10, 10, "dbrown", "plum", "brown");
@@ -581,7 +575,7 @@ export function clare(size: FaceSize, mood: Mood): Drawable {
 
 // Grandmother, laid-back: a cloud of short white curls, a blue cardigan lit sky on its left, over a
 // white collar, a kiwi-slice brooch.
-export function kiwi(size: FaceSize, mood: Mood): Drawable {
+function kiwi(size: FaceSize, mood: Mood): Drawable {
   const g = size.face();
   // the perm: round curls from ear to ear over the crown, each lit white and shaded lgrey
   for (const [cx, cy] of [
@@ -616,7 +610,7 @@ export function kiwi(size: FaceSize, mood: Mood): Drawable {
 
 // Tennis star, dramatic: older and fit, a silver high ponytail, a cyan visor, a sleeveless white
 // tennis dress with a cyan V neck.
-export function auntJudy(size: FaceSize, mood: Mood): Drawable {
+function auntJudy(size: FaceSize, mood: Mood): Drawable {
   const g = size.face();
   // the high ponytail behind the head, swinging out to the right
   g.cel(25, 9, 3, 6, "lgrey", "grey", "white");
@@ -655,7 +649,7 @@ export function auntJudy(size: FaceSize, mood: Mood): Drawable {
 
 // Inspector, fussy: black hair under a brown brimmed hat, a tan trench coat with its collar turned up
 // over a white shirt and a red tie.
-export function gadget(size: FaceSize, mood: Mood): Drawable {
+function gadget(size: FaceSize, mood: Mood): Drawable {
   const g = size.face();
   base(g, "skin1", "skin2", "tan", "brown");
   g.tri([13, 27], [19, 27], [16, 31], "white");
@@ -684,7 +678,7 @@ export function gadget(size: FaceSize, mood: Mood): Drawable {
 // Lawn care pro, laid-back: short brown hair under an orange baseball cap with a moss leaf on its
 // front, an olive work polo with a moss collar, its placket open at the neck, and an orange logo on
 // the chest.
-export function jason(size: FaceSize, mood: Mood): Drawable {
+function jason(size: FaceSize, mood: Mood): Drawable {
   const g = size.face();
   base(g, "skin2", "brown", "olive", "dolive");
   // the polo's collar points either side of the placket, and the logo on the right of the chest
@@ -803,7 +797,7 @@ const SMALL_FIXES: ReadonlyMap<string, (g: Drawable) => void> = new Map([
 // ---------- the walkers' portraits, for the walker picker ----------
 
 // Casey, the cap-and-hoodie walker.
-export function casey(size: FaceSize, mood: Mood): Drawable {
+function casey(size: FaceSize, mood: Mood): Drawable {
   const g = size.face();
   base(g, "skin1", "skin2", "sky", "blue");
   g.ell(16, 28, 4, 2, "blue");
@@ -816,7 +810,7 @@ export function casey(size: FaceSize, mood: Mood): Drawable {
 }
 
 // Ada, 11, mixed race, caramel skin, long black curls falling straight down; yellow tee.
-export function ada(size: FaceSize, mood: Mood): Drawable {
+function ada(size: FaceSize, mood: Mood): Drawable {
   const g = size.face();
   // black hair falling in ringlets past the shoulders, their ends bunched into bumps along the edges
   g.cel(16, 13, 10, 9, "navy", "ink", "dslate");
@@ -849,7 +843,7 @@ export function ada(size: FaceSize, mood: Mood): Drawable {
 
 // Mr. B, 45, Black, bald, an oval face, a beard along the jaw and under the chin, no moustache; lilac
 // tee.
-export function mrB(size: FaceSize, mood: Mood): Drawable {
+function mrB(size: FaceSize, mood: Mood): Drawable {
   const g = size.face();
   // the lilac tee, shaded violet on the right, with a violet collar, as on his road sprite
   g.rect(8, 27, 16, 1, "lilac");
@@ -879,7 +873,7 @@ export function mrB(size: FaceSize, mood: Mood): Drawable {
 }
 
 // Trista, 50, dirty blonde bob to the shoulders, cute: round glasses, green cardigan, white collar.
-export function trista(size: FaceSize, mood: Mood): Drawable {
+function trista(size: FaceSize, mood: Mood): Drawable {
   const g = size.face();
   // light brown hair, darker than her skin, with golden amber streaks
   g.cel(16, 14, 10, 10, "brown", "dbrown", "tan");
@@ -911,7 +905,7 @@ export const WALKERS: ReadonlyMap<string, FaceDraw> = new Map([
 ]);
 
 // Every owner's face, by dog, in the build's order (people.ts's OWNERS keeps it).
-export const OWNERS: ReadonlyMap<string, FaceDraw> = new Map([
+const OWNERS: ReadonlyMap<string, FaceDraw> = new Map([
   ["ginger", eve],
   ["reggie", ryan],
   ["buddy", jason],
@@ -924,7 +918,7 @@ export const OWNERS: ReadonlyMap<string, FaceDraw> = new Map([
 ]);
 
 // The owner's face at SMALL x SMALL, the owner drawn at SMALL_FACE with the dog's SMALL_FIXES.
-export function small(dog: string, mood: Mood): Drawable {
+function small(dog: string, mood: Mood): Drawable {
   const draw = OWNERS.get(dog);
   if (draw === undefined) {
     throw new RangeError(`No owner for ${dog}`);
@@ -935,7 +929,7 @@ export function small(dog: string, mood: Mood): Drawable {
 }
 
 // Every sprite: [key, [[tag, frames, duration ms]]].
-export function* sprites(): Generator<Sprite> {
+function* sprites(): Generator<Sprite> {
   for (const [dog, draw] of OWNERS) {
     yield [`face-owner-${dog}`, MOODS.map((m) => [m, [draw(FULL, m).outlined()], 1000] as const)];
     yield [

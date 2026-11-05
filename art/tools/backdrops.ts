@@ -52,7 +52,7 @@ const USAGE = `Usage:
 export type Paint = (px: number, py: number) => string;
 // A painter of the street's stub: a colour name per pixel, from its world position x across and z
 // along, the length of road span its row covers, and the pixel.
-export type RoadPaint = (x: number, z: number, span: number, px: number, py: number) => string;
+type RoadPaint = (x: number, z: number, span: number, px: number, py: number) => string;
 
 // ---------- randomness ----------
 
@@ -76,16 +76,16 @@ function uniform(rnd: Random, a: number, b: number): number {
 // scale s on screen row BAR + H.
 const BAND = LAYOUT.regions.backdrop;
 // the band: screen rows BAR to BAR + H - 1
-export const W = BAND.width;
+const W = BAND.width;
 export const H = BAND.height;
 // the status bar's height: band row y is screen row BAR + y
-export const BAR = BAND.y;
+const BAR = BAND.y;
 const CAMERA = LAYOUT.camera;
 // the road's centre column, and its vanishing point's
 export const CX = CAMERA.centreX;
-export const YH = CAMERA.horizonY;
-export const FOOT = CAMERA.footY;
-export const F = CAMERA.focal;
+const YH = CAMERA.horizonY;
+const FOOT = CAMERA.footY;
+const F = CAMERA.focal;
 
 // Sign lettering: the yard sign's letters at scale in col, a 1px ink outline and a dred shadow
 // (fonts.sign), 8 rows at 1x from the outline's top on row y to the shadow, centred on column mid
@@ -107,10 +107,10 @@ export function word(
 }
 
 // A cloud as (x, base row, width, puff): puff is the tallest lobe's radius.
-export type Cloud = readonly [x: number, y: number, w: number, puff: number];
+type Cloud = readonly [x: number, y: number, w: number, puff: number];
 
 // The sky: top, flat, down to row CALM, then low, with clouds.
-export function sky(
+function sky(
   cv: Canvas,
   {
     clouds = [],
@@ -168,14 +168,14 @@ export function cloud(
 }
 
 // A banded sky down to row bottom whose top band also fills the calm rows above CALM.
-export function sunset(cv: Canvas, cols: readonly string[], bottom: number): [number, number][] {
+function sunset(cv: Canvas, cols: readonly string[], bottom: number): [number, number][] {
   cv.fill(0, 0, W, CALM, cols[0]!);
   return bands(cv, CALM, bottom, cols);
 }
 
 // Far rolling hills: a silhouette of col from about row top (up to amp rows lower) down to row
 // bottom, edge on its top row. Returns the top row of each column.
-export function hills(
+function hills(
   cv: Canvas,
   top: number,
   bottom: number,
@@ -196,7 +196,7 @@ export function hills(
 }
 
 // A far house of a roofline: (x, w, wall rows).
-export type Roof = readonly [x: number, w: number, wallH: number];
+type Roof = readonly [x: number, w: number, wallH: number];
 
 // Far houses as one silhouette of col standing on row base, each under a steep gable that narrows
 // a column a side per row, half as tall as the house is wide.
@@ -210,7 +210,7 @@ export function roofline(cv: Canvas, base: number, roofs: readonly Roof[], col: 
 }
 
 // Gulls far off: a 5px wing pair each, at (x, y).
-export function birds(
+function birds(
   cv: Canvas,
   spots: readonly (readonly [number, number])[],
   { col = "plum" }: { col?: string } = {},
@@ -332,11 +332,11 @@ export function ground(
 // A house's windows and door: the window frame's offset below the eaves, its width and height, and
 // the door's height.
 export type HouseParts = readonly [off: number, ww: number, wh: number, doorH: number];
-export const HOUSE: HouseParts = [6, 12, 10, 18];
+const HOUSE: HouseParts = [6, 12, 10, 18];
 // SLIM is the slim house's windows and door: tall windows either side of the door.
-export const SLIM: HouseParts = [4, 8, 10, 13];
+const SLIM: HouseParts = [4, 8, 10, 13];
 
-export interface HouseOptions {
+interface HouseOptions {
   base?: number;
   curtains?: string | undefined;
   door?: string;
@@ -410,7 +410,7 @@ export function house(
 
 // A window in a plum frame on a white sill: glass (cyan) with white glazing bars, or curtains drawn
 // closed with lamplight between them.
-export function window(
+function window(
   cv: Canvas,
   wx: number,
   wy: number,
@@ -435,7 +435,7 @@ export function window(
 
 // A dormer centred on column cx, its cap from row top and its front down to row bottom: a small
 // gable of roof over a wall front holding one window.
-export function dormerWindow(
+function dormerWindow(
   cv: Canvas,
   cx: number,
   top: number,
@@ -456,7 +456,7 @@ export function dormerWindow(
   window(cv, fx + 2, frontY + 1, 6, bottom - frontY - 3, { curtains });
 }
 
-export interface TreeOptions {
+interface TreeOptions {
   base?: number;
   girth?: number;
   leaf?: string;
@@ -492,8 +492,8 @@ export function tree(
 }
 
 // A bush's three lobes, (x, y, radius); SHRUB is the backdrops' smaller one.
-export type Lobes = readonly (readonly [dx: number, dy: number, r: number])[];
-export const BUSH: Lobes = [
+type Lobes = readonly (readonly [dx: number, dy: number, r: number])[];
+const BUSH: Lobes = [
   [0, 0, 6],
   [8, -2, 7],
   [16, 0, 6],
@@ -541,20 +541,20 @@ export function flowers(
 // are road pixels at scale 1: x across from the road's centre line, z along the road ahead of the
 // feet, h up from the ground.
 
-export const KS = FOOT - YH;
+const KS = FOOT - YH;
 // scale on the band's bottom row
-export const S0 = (BAR + H - 0.5 - YH) / KS;
+const S0 = (BAR + H - 0.5 - YH) / KS;
 // road in view below the band, to its bottom edge
-export const VISIBLE = (F * KS) / (BAR + H - YH) - F;
+const VISIBLE = (F * KS) / (BAR + H - YH) - F;
 // the road distance on the band's bottom row
-export const Z0 = F / S0 - F;
+const Z0 = F / S0 - F;
 // half the road, then the outer edges of the curb and the sidewalk, across from the road's centre,
 // as Cabbagetown's verge (VERGES)
 export const ROAD = Math.floor(LAYOUT.regions.road.width / 2);
-export const CURB = 164;
+const CURB = 164;
 export const WALK = 208;
 // lane divider lines, from the road's centre
-export const DIVIDERS: readonly number[] = LAYOUT.lanes.dividers.map((x) => x - CX);
+const DIVIDERS: readonly number[] = LAYOUT.lanes.dividers.map((x) => x - CX);
 // The cross street, in band rows from the far side down: the far sidewalk, the far curb, the road,
 // the near curb and the near sidewalk, which the street's stub (rows STUB to the bottom) opens into.
 // These rows are drawn flat rather than to the projection, which would spread the cross street over
@@ -563,15 +563,15 @@ export const DIVIDERS: readonly number[] = LAYOUT.lanes.dividers.map((x) => x - 
 // approach region. The near curb and sidewalk are the junction region's rows above it, where the
 // game's road raster starts, drawing only the road surface between the near corners, so the corners
 // stay the backdrop's.
-export const STUB = LAYOUT.regions.approach.y - BAR;
-export const NEAR_CURB = LAYOUT.regions.junction.y - BAR;
-export const FAR_WALK = STUB - 20;
-export const FAR_CURB = STUB - 16;
-export const CROSS = STUB - 14;
+const STUB = LAYOUT.regions.approach.y - BAR;
+const NEAR_CURB = LAYOUT.regions.junction.y - BAR;
+const FAR_WALK = STUB - 20;
+const FAR_CURB = STUB - 16;
+const CROSS = STUB - 14;
 // the cross street's centre line
-export const LINE = STUB - 10;
+const LINE = STUB - 10;
 // the near corners' curb radius, in pixels
-export const CORNER = 5;
+const CORNER = 5;
 // the far side's ground row: the houses stand on it
 export const BASE = STUB - 24;
 // The sky above row CALM, 70 rows over the far side's ground row, is one flat colour: the debuff
@@ -580,15 +580,15 @@ export const BASE = STUB - 24;
 // half covered while a message shows: Cabbagetown's old trees, chapel spire, far downtown towers and
 // stars; High Park's oaks, ridge and clouds; the Distillery District's chimney stack, water tower and
 // condo towers; The Beaches' high clouds and tall trees; and Yonge Street's skyline, moon and stars.
-export const CALM = BASE - 70;
+const CALM = BASE - 70;
 
 // Scale of the ground at row centre yc (y + 0.5).
-export function scale(yc: number): number {
+function scale(yc: number): number {
   return (BAR + yc - YH) / KS;
 }
 
 // Band position of the ground point x across, z along, and its scale.
-export function at(x: number, z: number): [number, number, number] {
+function at(x: number, z: number): [number, number, number] {
   const s = F / (F + z);
   return [CX + x * s, YH + KS * s - BAR, s];
 }
@@ -613,7 +613,7 @@ function pixelAt(cv: Canvas, x: number, y: number): string {
 }
 
 // Paint the street's stub, rows STUB to the bottom.
-export function street(cv: Canvas, paint: RoadPaint): void {
+function street(cv: Canvas, paint: RoadPaint): void {
   for (let py = STUB; py < H; py++) {
     const s = scale(py + 0.5);
     const z = F / s - F;
@@ -625,15 +625,15 @@ export function street(cv: Canvas, paint: RoadPaint): void {
 }
 
 // Whether a line every period along the road falls in this row.
-export function crosses(z: number, span: number, period: number): boolean {
+function crosses(z: number, span: number, period: number): boolean {
   return Math.floor(z / period) !== Math.floor((z - Math.max(span, 1)) / period);
 }
 
-export type Dash = readonly [on: number, period: number];
+type Dash = readonly [on: number, period: number];
 
 // The stub's lane dividers, 1px wide; dashes stop where a row spans too much road. mark and edge are
 // a colour, or one per divider, left to right.
-export function lanes(
+function lanes(
   cv: Canvas,
   mark: string | readonly string[],
   {
@@ -666,7 +666,7 @@ export function lanes(
 // How far pixel px, py lies inside a near corner, in pixels, or below 0 on the road. The corners are
 // the blocks either side of the stub, below the cross street, rounded where the stub's curb turns
 // into the near curb.
-export function cornerDepth(px: number, py: number): number {
+function cornerDepth(px: number, py: number): number {
   const dx = Math.abs(px + 0.5 - CX) - ROAD * scale(py + 0.5);
   const dy = py + 0.5 - NEAR_CURB;
   if (dx < CORNER && dy < CORNER) {
@@ -676,18 +676,18 @@ export function cornerDepth(px: number, py: number): number {
 }
 
 // Cabbagetown's cross street sidewalk, plain stone without seams, as its verge's.
-export function slabs(): string {
+function slabs(): string {
   return "stone";
 }
 
 // A flat lawn: 2-row tufts of the darker green, placed irregularly.
-export function grass(lawn = "green", rate = 0.03): Paint {
+function grass(lawn = "green", rate = 0.03): Paint {
   return (px, py) => (noise(px, py) < rate || noise(px, py - 1) < rate ? dk(lawn) : lawn);
 }
 
-export type Bend = (px: number) => number;
+type Bend = (px: number) => number;
 
-export function noBend(): number {
+function noBend(): number {
   return 0;
 }
 
@@ -696,7 +696,7 @@ export function noBend(): number {
 // leaves the road without curbs, as the park's paths are. bend(px) raises the far side by that many
 // rows at column px, for a street that curves away. The road is one flat colour, road's most common,
 // with no texture: flecks or seams across the far street read as artefacts.
-export function cross(
+function cross(
   cv: Canvas,
   road: Paint,
   edge: string,
@@ -757,7 +757,7 @@ export function cross(
 
 // The cross street's centre line on row LINE, dashed at world x like the stub's dividers, with edge
 // on the row below it; raised by half the far side's bend.
-export function crossLine(
+function crossLine(
   cv: Canvas,
   mark: string,
   {
@@ -783,7 +783,7 @@ export function crossLine(
 }
 
 // Far treetops or rooftops along row, rising lo to hi rows.
-export function treeline(
+function treeline(
   cv: Canvas,
   row: number,
   cols: readonly [string, string],
@@ -800,7 +800,7 @@ export function treeline(
 }
 
 // Paint the far side's ground, rows y0 to y1.
-export function yard(cv: Canvas, y0: number, y1: number, paint: Paint): void {
+function yard(cv: Canvas, y0: number, y1: number, paint: Paint): void {
   for (let py = y0; py < y1; py++) {
     for (let px = 0; px < W; px++) {
       cv.fill(px, py, 1, 1, paint(px, py));
@@ -809,14 +809,7 @@ export function yard(cv: Canvas, y0: number, y1: number, paint: Paint): void {
 }
 
 // A front path from a door on row y0 down to the sidewalk on row y1, widening as it nears.
-export function path(
-  cv: Canvas,
-  x: number,
-  y0: number,
-  y1: number,
-  col = "lgrey",
-  edge = "grey",
-): void {
+function path(cv: Canvas, x: number, y0: number, y1: number, col = "lgrey", edge = "grey"): void {
   for (let py = y0; py < y1; py++) {
     const grow = Math.floor((py - y0) / 3);
     cv.fill(x - grow, py, 12 + 2 * grow, 1, col);
@@ -828,11 +821,11 @@ export function path(
 // its centre line (stripes across it band and shimmer as rows span more lawn), their widths vary,
 // and each ends where it would draw under 4px wide. Tufts are 2-row marks, placed irregularly and
 // thinning out with distance.
-export const MOWN: readonly number[] = [44, 62, 36, 70, 50, 58, 40, 66];
+const MOWN: readonly number[] = [44, 62, 36, 70, 50, 58, 40, 66];
 
 // Whether the lawn at x across falls in a darker mown stripe, at ground scale s. Only the front
 // lawns, out to 300 past the sidewalk, are mown.
-export function mown(x: number, s: number): boolean {
+function mown(x: number, s: number): boolean {
   let a = Math.abs(x) - WALK;
   let i = 0;
   if (a >= 300) {
@@ -846,23 +839,16 @@ export function mown(x: number, s: number): boolean {
 }
 
 // A 2-row grass mark here: about rate of pixels on the band's bottom row, fewer further off.
-export function tuft(px: number, py: number, s: number, rate = 0.03): boolean {
+function tuft(px: number, py: number, s: number, rate = 0.03): boolean {
   const p = rate * (s / S0) ** 2;
   return noise(px, py) < p || noise(px, py - 1) < p;
 }
 
 // A rough patch as a world ellipse (x, z, rx, rz).
-export type Patch = readonly [x: number, z: number, rx: number, rz: number];
+type Patch = readonly [x: number, z: number, rx: number, rz: number];
 
 // n rough patches either side of the street, dropping any that would draw under 6 rows tall.
-export function rough(
-  seed: string,
-  n: number,
-  x0: number,
-  x1: number,
-  z0: number,
-  z1: number,
-): Patch[] {
+function rough(seed: string, n: number, x0: number, x1: number, z0: number, z1: number): Patch[] {
   const rnd = stream(seed);
   const out: Patch[] = [];
   while (out.length < n) {
@@ -878,7 +864,7 @@ export function rough(
 }
 
 // A stub road painter as the cross street's: its middle, with no lines across.
-export function flat(road: RoadPaint): Paint {
+function flat(road: RoadPaint): Paint {
   return (px, py) => road(0, 0, 99, px, py);
 }
 
@@ -907,14 +893,7 @@ export function sunburst(
   }
 }
 
-export function outlineBox(
-  cv: Canvas,
-  x: number,
-  y: number,
-  w: number,
-  h: number,
-  col: string,
-): void {
+function outlineBox(cv: Canvas, x: number, y: number, w: number, h: number, col: string): void {
   cv.fill(x, y, w, 1, col);
   cv.fill(x, y + h - 1, w, 1, col);
   cv.fill(x, y, 1, h, col);
@@ -924,7 +903,7 @@ export function outlineBox(
 // A shopfront facing the camera, rows top to base, drawn as a toy box: flat colour blocks inside a
 // 1px line, a shaded top and right side, a sign board in the sign letters, an awning striped awn and
 // stripe, the shop window in glass and the door.
-export function shopfront(
+function shopfront(
   cv: Canvas,
   x: number,
   w: number,
@@ -967,17 +946,10 @@ export function shopfront(
 }
 
 // A cat sitting on a far fence, side-on, its tail curled up: x body, o its lit back.
-export const FENCE_CAT: readonly string[] = [
-  "x.x...",
-  "xxx...",
-  "xxx..x",
-  ".xxx.x",
-  ".xoxxx",
-  ".xxxx.",
-];
+const FENCE_CAT: readonly string[] = ["x.x...", "xxx...", "xxx..x", ".xxx.x", ".xoxxx", ".xxxx."];
 
 // A small cat sitting on a fence top, its feet on row y.
-export function fenceCat(cv: Canvas, x: number, y: number, col = "plum", lit = "purple"): void {
+function fenceCat(cv: Canvas, x: number, y: number, col = "plum", lit = "purple"): void {
   FENCE_CAT.forEach((row, j) => {
     [...row].forEach((ch, i) => {
       if (ch !== ".") {
@@ -988,7 +960,7 @@ export function fenceCat(cv: Canvas, x: number, y: number, col = "plum", lit = "
 }
 
 // The crescent's far side rises 5 rows at the street's end and none at the band's edges.
-export function crescentBend(px: number): number {
+function crescentBend(px: number): number {
   return Math.round(5 * Math.max(0.0, 1 - ((px + 0.5 - CX) / (W / 2)) ** 2));
 }
 
@@ -997,11 +969,11 @@ export function crescentBend(px: number): number {
 // of The Beaches to Yonge Street's evening and Kensington Market's Pedestrian Sunday at twilight, and
 // each has its own sky.
 
-export interface VergeDots {
+interface VergeDots {
   colours: string[];
   share: number;
 }
-export interface Verge {
+interface Verge {
   curbColour: string;
   curbTo: number;
   leaves: boolean;
@@ -1111,7 +1083,7 @@ export const VERGES: Readonly<Record<string, Verge>> = {
 
 // The dot colour a noise value in [0, 1) picks, or null: each dot takes its share of the range in
 // turn, its colours equal parts of that share (as the game's verge dots).
-export function dotted(dots: readonly VergeDots[], value: number): string | null {
+function dotted(dots: readonly VergeDots[], value: number): string | null {
   let v = value;
   for (const d of dots) {
     if (v < d.share) {
@@ -1131,7 +1103,7 @@ export function vergePaving(zone: string): Paint {
 
 // A stub painter for a Toronto neighbourhood: road inside the road, then its verge (VERGES), with
 // rough patches as world ellipses.
-export function verge(zone: string, road: RoadPaint, patches: readonly Patch[] = []): RoadPaint {
+function verge(zone: string, road: RoadPaint, patches: readonly Patch[] = []): RoadPaint {
   const v = VERGES[zone]!;
   const walkTo = v.walkTo ?? 10 ** 6;
 
@@ -1172,15 +1144,15 @@ export function verge(zone: string, road: RoadPaint, patches: readonly Patch[] =
   };
 }
 
-export const VERGES_JSON = "shared/verges.json";
+const VERGES_JSON = "shared/verges.json";
 
 // VERGES as VERGES_JSON holds it: keyed by art id, colours by K name.
-export function vergesJson(): string {
+function vergesJson(): string {
   return `${JSON.stringify(VERGES, null, 2)}\n`;
 }
 
 // Write VERGES to VERGES_JSON, for the game.
-export function writeVerges(): void {
+function writeVerges(): void {
   writeFileSync(VERGES_JSON, vergesJson());
 }
 
@@ -1261,7 +1233,7 @@ export function bayGable(
 // The Necropolis chapel's tower between the roofs, from row top down to row base: red brick banded in
 // stone under its belfry, buttresses below, lit lancets, a pinnacle on each corner, a slate spire
 // spire rows tall narrowing in steps, and a cream cross.
-export function necropolis(cv: Canvas, cx: number, top: number, base: number, spire = 26): void {
+function necropolis(cv: Canvas, cx: number, top: number, base: number, spire = 26): void {
   cv.fill(cx - 4, top, 9, base - top, "brick");
   cv.fill(cx + 3, top, 2, base - top, "dbrick");
   for (const y of [top + 2, top + 12, top + 13]) {
@@ -1293,7 +1265,7 @@ export function necropolis(cv: Canvas, cx: number, top: number, base: number, sp
 
 // A mature street tree on row base: a 4-wide trunk under a wide crown of three lobes whose top row
 // is top, the big one radius r over two smaller ones low on each side, shaded lower right.
-export function oldTree(
+function oldTree(
   cv: Canvas,
   cx: number,
   top: number,
@@ -1324,7 +1296,7 @@ export function oldTree(
 
 // The downtown towers far off to the southwest, one flat silhouette of col standing on row base:
 // flat-topped slabs of differing heights and the CN Tower's antenna, SkyPod, main pod and shaft.
-export function downtown(cv: Canvas, base: number, col = "violet"): void {
+function downtown(cv: Canvas, base: number, col = "violet"): void {
   for (const [x, w, top] of [
     [100, 8, 56],
     [108, 6, 50],
@@ -1350,18 +1322,18 @@ export function downtown(cv: Canvas, base: number, col = "violet"): void {
 }
 
 // the Necropolis chapel's column: the gap between the second and third houses, left treeless
-export const CHAPEL = 87;
+const CHAPEL = 87;
 // the old trees behind the houses, in the gaps between them: (column, crown's top row, radius)
-export const OLD_TREES: readonly (readonly [number, number, number])[] = [
+const OLD_TREES: readonly (readonly [number, number, number])[] = [
   [25, 42, 15],
   [211, 44, 14],
   [273, 40, 16],
   [335, 44, 14],
 ];
 // the gap in front of the downtown towers, a young tree that leaves them in view
-export const YOUNG_TREE = 149;
+const YOUNG_TREE = 149;
 
-export function cabbagetown(): Canvas {
+function cabbagetown(): Canvas {
   const cv = new Canvas(W, H);
   // a lavender dusk, a last gold glow over the hills, a crescent moon and the first stars
   cv.fill(0, 0, W, CALM, "lilac");
@@ -1471,7 +1443,7 @@ export function cabbagetown(): Canvas {
 
 // A cherry tree in blossom on row base: a dark trunk under a wide crown of pink lobes, mauve on the
 // lower right, white petals picked out on the lit upper left.
-export function cherry(cv: Canvas, cx: number, cy: number, r: number, base: number): void {
+function cherry(cv: Canvas, cx: number, cy: number, r: number, base: number): void {
   cv.fill(cx - 1, cy, 2, base - cy, "dbrown");
   const lobes = [
     [cx - r, cy + 1, r * 0.8],
@@ -1494,7 +1466,7 @@ export function cherry(cv: Canvas, cx: number, cy: number, r: number, base: numb
 
 // The castle playground's wooden towers over the trees, centred on cx and standing on row base: two
 // round-topped towers under red cones with pennants, a crenellated wall between them, a lookout door.
-export function castle(cv: Canvas, cx: number, base: number): void {
+function castle(cv: Canvas, cx: number, base: number): void {
   cv.fill(cx - 10, base - 14, 20, 14, "brown");
   for (let x = cx - 10; x < cx + 10; x += 4) {
     cv.fill(x, base - 16, 2, 2, "brown");
@@ -1522,7 +1494,7 @@ export function castle(cv: Canvas, cx: number, base: number): void {
 
 // A hot dog cart by the zoo gate, side on with its wheels on row base: a stainless box with a
 // counter, ketchup and mustard on it, under a red and yellow striped umbrella.
-export function hotDogCart(cv: Canvas, cx: number, base: number): void {
+function hotDogCart(cv: Canvas, cx: number, base: number): void {
   for (let k = 0; k < 4; k++) {
     for (let x = cx - 2 - 2 * k; x < cx + 3 + 2 * k; x++) {
       cv.fill(x, base - 22 + k, 1, 1, Math.floor((x - cx + 9) / 3) % 2 ? "red" : "yellow");
@@ -1545,7 +1517,7 @@ export function hotDogCart(cv: Canvas, cx: number, base: number): void {
 
 // A far wooded ridge in col: round treetops of radius about r along a rolling crest from row top
 // (amp rows lower at its dips), filled down to row bottom.
-export function ridge(
+function ridge(
   cv: Canvas,
   top: number,
   bottom: number,
@@ -1580,7 +1552,7 @@ export function ridge(
 // A tall black oak of the savannah: a trunk on row base forking under a broad, ragged crown w wide
 // of flat-bottomed lobes, its top on row top; hi on the lit upper left, shade on the lower right and
 // along each lobe's underside.
-export function oak(
+function oak(
   cv: Canvas,
   cx: number,
   top: number,
@@ -1633,7 +1605,7 @@ export function oak(
 // The zoo's animals, side on and facing left, as rows of fills: a bison (walnut forequarters and
 // hump, bark hindquarters, a cream horn) and a llama (cream, driftwood on its shaded right and
 // underside and its far legs).
-export const BISON: readonly string[] = [
+const BISON: readonly string[] = [
   "......wwww..........",
   "....wwwwwwww........",
   "...wwwwwwwwwwbbbbb..",
@@ -1647,13 +1619,13 @@ export const BISON: readonly string[] = [
   "......ww.ww...dd.dd.",
   "......ww.ww...dd.dd.",
 ];
-export const BISON_COLOURS: Readonly<Record<string, string>> = {
+const BISON_COLOURS: Readonly<Record<string, string>> = {
   b: "bark",
   d: "walnut",
   h: "cream",
   w: "walnut",
 };
-export const LLAMA: readonly string[] = [
+const LLAMA: readonly string[] = [
   ".c.c........",
   ".ccc........",
   "cccc........",
@@ -1691,7 +1663,7 @@ export function figure(
 
 // A split-rail paddock fence on row base, columns x0 to x1 - 1: bark posts h rows tall every every
 // columns and at the far end, two tan rails with brown under them.
-export function splitRail(
+function splitRail(
   cv: Canvas,
   x0: number,
   x1: number,
@@ -1715,7 +1687,7 @@ export function splitRail(
 // behind split rails either side, a bison in the left one and a llama in the right; a closed plank
 // double gate, each leaf Z-braced, between two log posts under a log crossbeam with cut ends; and a
 // plank sign hung from the beam, HIGH PARK ZOO in cream.
-export function zooGate(cv: Canvas): void {
+function zooGate(cv: Canvas): void {
   for (let py = BASE - 12; py < BASE + 6; py++) {
     for (let px = 118; px < 244; px++) {
       cv.fill(px, py, 1, 1, noise(px, py) < 0.04 || noise(px, py - 1) < 0.04 ? "dolive" : "olive");
@@ -1760,7 +1732,7 @@ export function zooGate(cv: Canvas): void {
   word(cv, "HIGH PARK ZOO", CX, BASE - 29, "cream");
 }
 
-export function highPark(): Canvas {
+function highPark(): Canvas {
   const cv = new Canvas(W, H);
   // a deep clear blue, two white clouds high over the oaks
   sky(cv, {
@@ -1972,7 +1944,7 @@ export function warehouse(
 // The Gooderham & Worts chimney stack standing on row BASE: brick stepping in a column a side at 30
 // and 62 rows below its top, its right 3 columns in shade, a dbrick cap, a band below it and another
 // at the lower step.
-export function chimney(cv: Canvas, x: number, top: number, w = 12): void {
+function chimney(cv: Canvas, x: number, top: number, w = 12): void {
   const steps = [
     [top, w - 4],
     [top + 30, w - 2],
@@ -1991,7 +1963,7 @@ export function chimney(cv: Canvas, x: number, top: number, w = 12): void {
 
 // A rooftop water tower whose feet stand on row low: two dstone legs legs rows tall, X-braced, under
 // a bark wooden tank on a walnut ledge and a stepped walnut cap.
-export function waterTower(cv: Canvas, tx: number, low: number, legs = 13): void {
+function waterTower(cv: Canvas, tx: number, low: number, legs = 13): void {
   const tank = low - legs;
   for (const lx of [tx - 7, tx + 6]) {
     cv.fill(lx, tank, 2, legs, "dstone");
@@ -2008,7 +1980,7 @@ export function waterTower(cv: Canvas, tx: number, low: number, legs = 13): void
 
 // A far glass condo tower from row top down to row BASE, dim in the haze: a flat body, its right
 // quarter in shade, a 2-row crown, and floor lines every 4 rows a step lighter across the lit part.
-export function condo(
+function condo(
   cv: Canvas,
   x: number,
   w: number,
@@ -2028,7 +2000,7 @@ export function condo(
 
 // A sign board centred on column mid from row y: a coal frame round a board of 9 rows, the text in
 // sign lettering.
-export function signBoard(
+function signBoard(
   cv: Canvas,
   mid: number,
   y: number,
@@ -2045,7 +2017,7 @@ export function signBoard(
 
 // The chocolate shop's painted bar, as rows of fills: a milk chocolate bar of scored squares in a
 // coal outline, its foil peeled back at the right over a red wrapper with a cream band.
-export const CHOCOLATE_BAR: readonly string[] = [
+const CHOCOLATE_BAR: readonly string[] = [
   "kkkkkkkkk...",
   "kbbbdbbbk...",
   "kbbbdbbbk...",
@@ -2064,7 +2036,7 @@ export const CHOCOLATE_BAR: readonly string[] = [
   "krrrrrrrk...",
   "kkkkkkkkk...",
 ];
-export const CHOCOLATE_COLOURS: Readonly<Record<string, string>> = {
+const CHOCOLATE_COLOURS: Readonly<Record<string, string>> = {
   b: "brown",
   c: "cream",
   d: "dbrown",
@@ -2075,8 +2047,8 @@ export const CHOCOLATE_COLOURS: Readonly<Record<string, string>> = {
 };
 
 // The paintings hung in a gallery's windows: (sky or ground, lower field, a spot of colour).
-export type Scheme = readonly [string, string, string];
-export const PAINTINGS: readonly Scheme[] = [
+type Scheme = readonly [string, string, string];
+const PAINTINGS: readonly Scheme[] = [
   ["azure", "moss", "red"],
   ["mauve", "peach", "gold"],
   ["teal", "lilac", "white"],
@@ -2084,14 +2056,7 @@ export const PAINTINGS: readonly Scheme[] = [
 ];
 
 // A painting in a gold frame shaded ochre on its right and bottom: two fields and a spot of colour.
-export function painting(
-  cv: Canvas,
-  x: number,
-  y: number,
-  w: number,
-  h: number,
-  scheme: Scheme,
-): void {
+function painting(cv: Canvas, x: number, y: number, w: number, h: number, scheme: Scheme): void {
   const [a, b, c] = scheme;
   cv.fill(x, y, w, h, "gold");
   cv.fill(x + w - 1, y, 1, h, "ochre");
@@ -2105,7 +2070,7 @@ export function painting(
 // A brick warehouse whose ground floor is an art gallery: two tall coal-framed shop windows lit
 // skin1, framed paintings hung in them, a GALLERY board over a dturq door between them, the upper
 // floor's arched windows above.
-export function gallery(
+function gallery(
   cv: Canvas,
   x: number,
   w: number,
@@ -2139,7 +2104,7 @@ export function gallery(
 // The Young Centre, a tank house turned theatre: dark brick with two rows of arched windows, its
 // ground floor a glazed lobby lit gold with theatregoers' silhouettes inside, and a marquee over the
 // doors, its THEATRE board in gold letters edged with yellow bulbs.
-export function theatre(
+function theatre(
   cv: Canvas,
   x: number,
   w: number,
@@ -2175,7 +2140,7 @@ export function theatre(
 
 // A café's market umbrella on a cream pole from row base: a canopy of col widening to 21 columns
 // over 4 rows, its eave a ramp step darker with a valance dotted in trim, and a finial.
-export function cafeUmbrella(
+function cafeUmbrella(
   cv: Canvas,
   cx: number,
   base: number,
@@ -2203,7 +2168,7 @@ export function cafeUmbrella(
 
 // A round bistro table with a red flower and a cream cup, and a chair either side, in coal iron on
 // row base.
-export function bistroSet(cv: Canvas, cx: number, base: number): void {
+function bistroSet(cv: Canvas, cx: number, base: number): void {
   cv.fill(cx - 4, base - 6, 9, 1, "lgrey");
   cv.fill(cx, base - 5, 1, 5, "coal");
   cv.fill(cx - 2, base - 1, 5, 1, "coal");
@@ -2222,7 +2187,7 @@ export function bistroSet(cv: Canvas, cx: number, base: number): void {
 // A restaurant patio from column x0 to x1 on row base: bistro sets under umbrellas every 26 columns,
 // their canopies alternating the two cols, behind a low coal rail with a geranium planter at each
 // end.
-export function bistroPatio(
+function bistroPatio(
   cv: Canvas,
   x0: number,
   x1: number,
@@ -2249,7 +2214,7 @@ export function bistroPatio(
 }
 
 // Still Dancing's loops of track, from the top: (rows below the cupola, radius, colour, tilt).
-export const DANCING_LOOPS: readonly (readonly [number, number, string, number])[] = [
+const DANCING_LOOPS: readonly (readonly [number, number, string, number])[] = [
   [6, 9, "red", 0.35],
   [18, 11, "turquoise", -0.3],
   [31, 10, "lilac", 0.25],
@@ -2259,7 +2224,7 @@ export const DANCING_LOOPS: readonly (readonly [number, number, string, number])
 // Still Dancing, Dennis Oppenheim's sculpture in the square, standing on row base: a coal mast on a
 // tripod, lit ash on its left, ringed by four tilted loops of coloured track, their far halves a ramp
 // step darker behind it, under a gold cupola on row top.
-export function stillDancing(cv: Canvas, cx: number, base: number, top: number): void {
+function stillDancing(cv: Canvas, cx: number, base: number, top: number): void {
   for (const fx of [-10, 0, 10]) {
     cv.line(cx + fx, base, cx, base - 22, "coal");
   }
@@ -2288,7 +2253,7 @@ export function stillDancing(cv: Canvas, cx: number, base: number, top: number):
 }
 
 // The LOVE sign's heart, beside its letters.
-export const LOVE_HEART: readonly string[] = [
+const LOVE_HEART: readonly string[] = [
   ".##.##.",
   "#######",
   "#######",
@@ -2299,7 +2264,7 @@ export const LOVE_HEART: readonly string[] = [
 
 // The LOVE sign standing on row base, centred on column cx: a ttc heart and the red letters LOVE on
 // a coal rail on two posts, padlocks hung along the rail.
-export function loveSign(cv: Canvas, cx: number, base: number): void {
+function loveSign(cv: Canvas, cx: number, base: number): void {
   const w = signWidth("LOVE") + 12;
   const x0 = Math.round(cx - w / 2);
   const top = base - 17;
@@ -2322,7 +2287,7 @@ export function loveSign(cv: Canvas, cx: number, base: number): void {
 
 // Far passers-by on row base, one at each column in spots: 3 columns wide and 10 rows tall, coal
 // legs, a top of a mixed colour shaded on its right column, a face and hair.
-export function strollers(cv: Canvas, spots: readonly number[], base: number, seed: string): void {
+function strollers(cv: Canvas, spots: readonly number[], base: number, seed: string): void {
   const rnd = stream(seed);
   for (const x of spots) {
     const top = randomPick(rnd, ["dred", "teal", "cream", "mauve", "navy", "ochre", "forest"]);
@@ -2338,7 +2303,7 @@ export function strollers(cv: Canvas, spots: readonly number[], base: number, se
 // The golden-hour sky's bands, from the top, down to the square's roof.
 export const DISTILLERY_SKY: readonly string[] = ["peach", "orange", "amber"];
 
-export function distillery(): Canvas {
+function distillery(): Canvas {
   const cv = new Canvas(W, H);
   // Trinity Square at golden hour: bands of peach, orange and amber, the striped sun low over the
   // square's far side, gulls
@@ -2427,7 +2392,7 @@ export const FADED: ReadonlyMap<string, string> = new Map([
 ]);
 
 // n soot streaks 2px wide running down from row y, each 3 to 8 rows long, between columns x0 and x1.
-export function streaks(
+function streaks(
   cv: Canvas,
   x0: number,
   x1: number,
@@ -2445,7 +2410,7 @@ export function streaks(
 
 // A throw-up: two bubble letters in one fill inside a 1px coal outline, a 2x2 counter in each, so
 // every mark is 2px or more.
-export const THROWUP: readonly string[] = [
+const THROWUP: readonly string[] = [
   ".xxxx.xxxx.",
   "xoooxxooox.",
   "xoxxoxoxxox",
@@ -2455,7 +2420,7 @@ export const THROWUP: readonly string[] = [
 ];
 
 // A throw-up with its top left at x, y, mirrored with flip.
-export function throwUp(cv: Canvas, x: number, y: number, fill: string, flip = false): void {
+function throwUp(cv: Canvas, x: number, y: number, fill: string, flip = false): void {
   THROWUP.forEach((row, j) => {
     const chars = [...row];
     (flip ? chars.reverse() : chars).forEach((ch, i) => {
@@ -2470,7 +2435,7 @@ export function throwUp(cv: Canvas, x: number, y: number, fill: string, flip = f
 // vent, two tall sashes in stone trim upstairs (lamplight in the left), the shopfront below under a
 // faded awning, soot streaks down the wall and a dirty band along its foot; tag, a colour, sprays a
 // throw-up between the sashes. Its paint is worn (WORN_WALL, WORN_ROOF, FADED).
-export function victorian(
+function victorian(
   cv: Canvas,
   cx: number,
   w: number,
@@ -2516,11 +2481,11 @@ export function victorian(
   cv.fill(x + 1, BASE - 2, w - 2, 2, dk(wallC));
 }
 
-export type Point = readonly [x: number, y: number];
+type Point = readonly [x: number, y: number];
 
 // A wooden hydro pole 2 wide from the far sidewalk up to just under CALM, a crossarm near its top.
 // Returns the crossarm's left and right ends, where the wires hang.
-export function hydroPole(cv: Canvas, x: number): [Point, Point] {
+function hydroPole(cv: Canvas, x: number): [Point, Point] {
   cv.fill(x, CALM + 3, 2, FAR_WALK - CALM - 4, "bark");
   cv.fill(x - 4, CALM + 6, 10, 2, "walnut");
   return [
@@ -2541,7 +2506,7 @@ export function wire(cv: Canvas, a: Point, b: Point, sag: number): void {
 
 // Empty produce crates stacked n high on row base, each offset a column: clay with bark slats and
 // ends.
-export function crateStack(cv: Canvas, x: number, base: number, n: number): void {
+function crateStack(cv: Canvas, x: number, base: number, n: number): void {
   for (let k = 0; k < n; k++) {
     const y = base - 5 * (k + 1);
     cv.fill(x + (k % 2), y, 12, 5, "clay");
@@ -2554,7 +2519,7 @@ export function crateStack(cv: Canvas, x: number, base: number, n: number): void
 // A laneway wall 16 wide, rows top to base, painted with a mural: diagonal bands of MURAL's paint a
 // ramp step darker, so the walls at the band's edges sit behind the shopfronts, under a walnut
 // coping, a dog's face looking out of them, the paint stopping short of the ground.
-export function mural(cv: Canvas, x0: number, top: number, base: number, flip: boolean): void {
+function mural(cv: Canvas, x0: number, top: number, base: number, flip: boolean): void {
   for (let py = top; py < base; py++) {
     for (let px = x0; px < x0 + 16; px++) {
       const u = flip ? x0 + 15 - px : px - x0;
@@ -2582,7 +2547,7 @@ export function mural(cv: Canvas, x0: number, top: number, base: number, flip: b
 }
 
 // A 1px circle of radius r round cx, cy.
-export function ring(cv: Canvas, cx: number, cy: number, r: number, col: string): void {
+function ring(cv: Canvas, cx: number, cy: number, r: number, col: string): void {
   for (let a = 0; a < 360; a += 6) {
     const t = a * (Math.PI / 180);
     cv.fill(Math.round(cx + r * Math.cos(t)), Math.round(cy + r * Math.sin(t)), 1, 1, col);
@@ -2591,7 +2556,7 @@ export function ring(cv: Canvas, cx: number, cy: number, r: number, col: string)
 
 // A bicycle side on, 15 wide and 9 tall, its wheels on row base: coal tires round ash hubs, a
 // diamond frame, a saddle, and the handlebars at the front (right, or left when flipped).
-export function bike(cv: Canvas, x: number, base: number, frame = "red", flip = false): void {
+function bike(cv: Canvas, x: number, base: number, frame = "red", flip = false): void {
   const atX = (dx: number): number => x + (flip ? 14 - dx : dx);
 
   for (const wx of [2, 12]) {
@@ -2632,7 +2597,7 @@ export function bike(cv: Canvas, x: number, base: number, frame = "red", flip = 
   cv.fill(Math.min(atX(10), atX(13)), base - 9, 3, 1, "coal");
 }
 
-export const GARMENTS: readonly string[] = [
+const GARMENTS: readonly string[] = [
   "red",
   "dturq",
   "gold",
@@ -2646,7 +2611,7 @@ export const GARMENTS: readonly string[] = [
 // A vintage clothes rail out front, w wide: two coal posts and a rail 14 rows up, hung with shirts
 // and dresses in GARMENTS from the first, each 3 wide on a hanger, every third a dress flaring at the
 // hem, its right column in shade.
-export function clothesRack(cv: Canvas, x: number, w: number, base: number, first = 0): void {
+function clothesRack(cv: Canvas, x: number, w: number, base: number, first = 0): void {
   const top = base - 14;
   cv.fill(x, top, 1, 14, "coal");
   cv.fill(x + w - 1, top, 1, 14, "coal");
@@ -2666,7 +2631,7 @@ export function clothesRack(cv: Canvas, x: number, w: number, base: number, firs
 
 // A busker's pitch with no one at it, on row base: an amp and a guitar leaning on it beside its open
 // case, below the shop's sign board.
-export function busker(cv: Canvas, x: number, base: number): void {
+function busker(cv: Canvas, x: number, base: number): void {
   cv.fill(x, base - 8, 8, 8, "coal");
   cv.fill(x + 1, base - 7, 6, 5, "ash");
   cv.fill(x + 3, base - 5, 2, 2, "coal");
@@ -2687,7 +2652,7 @@ export function busker(cv: Canvas, x: number, base: number): void {
 }
 
 // A cafe table under an umbrella striped a and b, a chair each side, on row base.
-export function patio(cv: Canvas, cx: number, base: number, a: string, b: string): void {
+function patio(cv: Canvas, cx: number, base: number, a: string, b: string): void {
   umbrella(cv, cx, base, a, b);
   cv.fill(cx - 4, base - 5, 9, 1, "walnut");
   cv.fill(cx, base - 4, 1, 4, "walnut");
@@ -2702,7 +2667,7 @@ export function patio(cv: Canvas, cx: number, base: number, a: string, b: string
 export const KENSINGTON_ROAD = "stone";
 export const KENSINGTON_GUTTER = "dstone";
 
-export function kensington(): Canvas {
+function kensington(): Canvas {
   const cv = new Canvas(W, H);
   // a Pedestrian Sunday at twilight: a sunburst of purple rays from the end of the street, flat
   // violet beyond its arc
@@ -2790,7 +2755,7 @@ export function kensington(): Canvas {
 }
 
 // A white clapboard lifeguard station with a red hipped roof and a lookout, on stilts, on row base.
-export function leuty(cv: Canvas, cx: number, base: number): void {
+function leuty(cv: Canvas, cx: number, base: number): void {
   for (const x of [cx - 9, cx + 7]) {
     cv.fill(x, base - 8, 2, 8, "driftwood");
   }
@@ -2828,7 +2793,7 @@ export function umbrella(cv: Canvas, cx: number, base: number, a: string, b: str
 // base: buff brick Art Deco halls under hipped copper roofs, the grand middle hall raised high over
 // its wings, tall arched windows under a tan string course, a stone plinth and the main doors in a
 // stone surround.
-export function rcHarris(cv: Canvas, x0: number, base: number): void {
+function rcHarris(cv: Canvas, x0: number, base: number): void {
   cv.fill(x0 - 8, base - 1, W - x0 + 8, 4, "moss");
   cv.fill(x0 - 8, base + 2, W - x0 + 8, 1, "olive");
   for (const [x, w, wallH, roofH] of [
@@ -2897,7 +2862,7 @@ export function shadeTree(
 // A weeping willow on row base: a round crown on row cy whose streamers flare 2 columns past it and
 // hang to ragged tips above the ground; olive, moss on the lit left, dolive on the right and in the
 // gaps between streamers, lime along the crown's lit top.
-export function willow(
+function willow(
   cv: Canvas,
   cx: number,
   cy: number,
@@ -2926,7 +2891,7 @@ export function willow(
 
 // Beach volleyball players side on, facing right: rows from the top down to the feet, h hair, s
 // skin, t swimsuit. block and spike are jumps, drawn in the air.
-export const PLAYER: ReadonlyMap<string, readonly string[]> = new Map([
+const PLAYER: ReadonlyMap<string, readonly string[]> = new Map([
   [
     "block",
     [
@@ -2979,7 +2944,7 @@ export const PLAYER: ReadonlyMap<string, readonly string[]> = new Map([
 
 // A beach volleyball player (PLAYER) from column x, feet on row base, or lift rows above it in a
 // jump; flip faces left.
-export function player(
+function player(
   cv: Canvas,
   x: number,
   base: number,
@@ -3004,7 +2969,7 @@ export function player(
 // A volleyball net seen end on, running away from the camera between posts at near and far, (column,
 // ground row): white posts, the far one lgrey and a row shorter, and between their tops a white tape
 // over deep rows of coal mesh, its bottom cord coal.
-export function net(
+function net(
   cv: Canvas,
   near: Point,
   far: Point,
@@ -3031,7 +2996,7 @@ export function net(
 // corner is column x on row base: the net runs away from the camera across the court's middle, a red
 // player digs at the back and a red player jumps to block as a blue player leaps to spike the ball
 // over the net, the blue partner ready behind.
-export function volleyball(cv: Canvas, x: number, base: number): void {
+function volleyball(cv: Canvas, x: number, base: number): void {
   cv.fill(x, base, 80, 1, "lake");
   cv.fill(x + 12, base - 8, 74, 1, "lake");
   cv.line(x, base, x + 12, base - 8, "lake");
@@ -3049,7 +3014,7 @@ export function volleyball(cv: Canvas, x: number, base: number): void {
   cv.fill(x + 46, base - 24, 1, 1, "lgrey");
 }
 
-export function beaches(): Canvas {
+function beaches(): Canvas {
   const cv = new Canvas(W, H);
   // a warm yellow late afternoon over the lake: two high summer cumulus in the gold, small clouds
   // low over the water, and gulls
@@ -3149,10 +3114,8 @@ export function beaches(): Canvas {
 
 // The CN Tower close up, each row's half-width from the top: the SkyPod, then the main pod, a cap
 // over a skirt of window rings, its underside narrowing into the shaft.
-export const CN_SKY_POD: readonly number[] = [3, 5, 6, 6, 5, 4];
-export const CN_POD: readonly number[] = [
-  9, 14, 17, 19, 20, 21, 21, 21, 21, 20, 18, 15, 12, 9, 7, 5,
-];
+const CN_SKY_POD: readonly number[] = [3, 5, 6, 6, 5, 4];
+const CN_POD: readonly number[] = [9, 14, 17, 19, 20, 21, 21, 21, 21, 20, 18, 15, 12, 9, 7, 5];
 
 // The CN Tower at night, huge and close, the tallest structure in the city, centred on column cx, in
 // an ink outline, lgrey lit white on its left and grey in shade on its right: its antenna, 2 columns
@@ -3161,7 +3124,7 @@ export const CN_POD: readonly number[] = [
 // of lit 2x2 windows gold and amber at its widest, a ring of cream ones under a grey band, its
 // underside in shade; then the shaft flares from 9 columns under the pod to 29 at the street,
 // widening faster toward its foot as the real tower's three legs do, down to row base.
-export function cnTower(cv: Canvas, cx: number, base: number, skyPod: number, pod: number): void {
+function cnTower(cv: Canvas, cx: number, base: number, skyPod: number, pod: number): void {
   const rows = new Map<number, number>();
   for (let y = 0; y < skyPod; y++) {
     rows.set(y, 0);
@@ -3221,14 +3184,14 @@ export function cnTower(cv: Canvas, cx: number, base: number, skyPod: number, po
 }
 
 // A rooftop antenna h rows tall from row top, a red light at its tip.
-export function mast(cv: Canvas, cx: number, top: number, h: number): void {
+function mast(cv: Canvas, cx: number, top: number, h: number): void {
   cv.fill(cx, top, 1, h, "ash");
   cv.fill(cx, top, 1, 1, "red");
 }
 
 // Scotia Plaza: red granite in brick and dbrick facets, its top stepped down to a chevron notch, a
 // few windows lit.
-export function scotia(cv: Canvas, x: number, w: number, top: number): void {
+function scotia(cv: Canvas, x: number, w: number, top: number): void {
   for (let k = 0; k < Math.floor(w / 2); k++) {
     const notch = Math.floor(Math.abs(Math.floor(w / 4) - k) / 2);
     cv.fill(x + k, top + notch, 1, BASE - top, "brick");
@@ -3243,7 +3206,7 @@ export function scotia(cv: Canvas, x: number, w: number, top: number): void {
 }
 
 // A full moon: a haze disc lit white on its upper left, three lgrey seas.
-export function fullMoon(cv: Canvas, cx: number, cy: number, r: number): void {
+function fullMoon(cv: Canvas, cx: number, cy: number, r: number): void {
   for (let dy = -r; dy < r + 1; dy++) {
     for (let dx = -r; dx < r + 1; dx++) {
       if (dx * dx + dy * dy <= r * (r + 1)) {
@@ -3262,7 +3225,7 @@ export function fullMoon(cv: Canvas, cx: number, cy: number, r: number): void {
 
 // Lit windows across columns x0..x1 and rows y0..y1 in blocks, never speckle: a floor every 4 rows,
 // a 2x2 window every 3 columns, lit in runs of 2 to 4 windows of one colour; rate sets how many.
-export function lit(
+function lit(
   cv: Canvas,
   x0: number,
   x1: number,
@@ -3294,7 +3257,7 @@ export type Tower = readonly [x: number, w: number, top: number, wall: string];
 
 // The towers behind the front row: silhouettes standing on BASE, with runs of lit windows, gold and
 // amber and a few pink and cyan.
-export function skyline(cv: Canvas, towers: readonly Tower[]): void {
+function skyline(cv: Canvas, towers: readonly Tower[]): void {
   towers.forEach(([x, w, top, wall], k) => {
     cv.fill(x, top, w, BASE - top, wall);
     lit(cv, x + 2, x + w - 1, top + 3, BASE, `far-${k}`, 0.3, [
@@ -3312,7 +3275,7 @@ export function skyline(cv: Canvas, towers: readonly Tower[]): void {
 // seams lgrey arcs nested at its right foot, lit white along its upper left, an ink line along its
 // top arc so it reads apart from light scenery behind it. Its foot stays hidden behind the nearer
 // towers.
-export function skydome(cv: Canvas, x: number, w: number, wall: number, ry: number): void {
+function skydome(cv: Canvas, x: number, w: number, wall: number, ry: number): void {
   const rx = w / 2;
 
   function inside(px: number, py: number, r: number): boolean {
@@ -3356,7 +3319,7 @@ export function skydome(cv: Canvas, x: number, w: number, wall: number, ry: numb
 }
 
 // A tower's stepped top: steps rows each 2 columns narrower a side, above row top.
-export function crown(
+function crown(
   cv: Canvas,
   x: number,
   w: number,
@@ -3373,7 +3336,7 @@ export function crown(
 
 // A Royal Bank Plaza tower: gold glass in sawtooth facets, a gold and amber pair lit and ochre in
 // shade every 4 columns, ochre floors every 3 rows.
-export function royalBank(cv: Canvas, x: number, w: number, top: number): void {
+function royalBank(cv: Canvas, x: number, w: number, top: number): void {
   crown(cv, x, w, top, "gold");
   for (let c = x + 1; c < x + w - 1; c++) {
     cv.fill(c, top + 1, 1, BASE - top - 1, ["gold", "gold", "amber", "ochre"][(c - x) % 4]!);
@@ -3387,7 +3350,7 @@ export function royalBank(cv: Canvas, x: number, w: number, top: number): void {
 
 // First Canadian Place: white marble, grey fins every 3 columns, its notched corners in grey, the red
 // BMO band at the top.
-export function firstCanadian(cv: Canvas, x: number, w: number, top: number): void {
+function firstCanadian(cv: Canvas, x: number, w: number, top: number): void {
   crown(cv, x, w, top, "lgrey", "coal", 1);
   cv.fill(x, top, w, BASE - top, "lgrey");
   for (let c = x + 3; c < x + w - 3; c += 3) {
@@ -3403,7 +3366,7 @@ export function firstCanadian(cv: Canvas, x: number, w: number, top: number): vo
 
 // A TD Centre tower: black steel and bronze glass, coal in an ink grid every 3 columns and rows,
 // whole runs of each floor lit, the green logo near the top and an ash edge to the light.
-export function dominion(cv: Canvas, x: number, w: number, top: number, seed: number): void {
+function dominion(cv: Canvas, x: number, w: number, top: number, seed: number): void {
   cv.fill(x, top, w, BASE - top, "coal");
   for (let c = x + 3; c < x + w - 1; c += 3) {
     cv.fill(c, top + 1, 1, BASE - top - 1, "ink");
@@ -3427,7 +3390,7 @@ export function dominion(cv: Canvas, x: number, w: number, top: number, seed: nu
 
 // A glass tower at night: dark glass, a floor line every 3 rows, its right side in shade, some
 // floors' windows lit.
-export function glassTower(
+function glassTower(
   cv: Canvas,
   x: number,
   w: number,
@@ -3447,10 +3410,10 @@ export function glassTower(
 }
 
 // Screen art: drawn on the screen x, y, w, h in big shapes.
-export type ScreenArt = (cv: Canvas, x: number, y: number, w: number, h: number) => void;
+type ScreenArt = (cv: Canvas, x: number, y: number, w: number, h: number) => void;
 
 // A video screen: back inside an ink frame 1px round it, and art on it.
-export function screen(
+function screen(
   cv: Canvas,
   x: number,
   y: number,
@@ -3467,7 +3430,7 @@ export function screen(
 }
 
 // A paw print, 11 by 10: four toe beans over the pad.
-export const PAW: readonly string[] = [
+const PAW: readonly string[] = [
   "..##...##..",
   ".####.####.",
   ".####.####.",
@@ -3481,7 +3444,7 @@ export const PAW: readonly string[] = [
 ];
 
 // A white paw print in the middle of a screen.
-export function pawArt(cv: Canvas, x: number, y: number, w: number, h: number): void {
+function pawArt(cv: Canvas, x: number, y: number, w: number, h: number): void {
   const px = x + Math.floor((w - PAW[0]!.length) / 2);
   const py = y + Math.floor((h - PAW.length) / 2);
   PAW.forEach((row, j) => {
@@ -3494,7 +3457,7 @@ export function pawArt(cv: Canvas, x: number, y: number, w: number, h: number): 
 }
 
 // Screen art: text in the sign letters, centred on the screen.
-export function wordArt(text: string, col: string): ScreenArt {
+function wordArt(text: string, col: string): ScreenArt {
   return (cv, x, y, w, h) => {
     word(cv, text, x + w / 2, y + Math.floor((h - 8) / 2), col);
   };
@@ -3503,7 +3466,7 @@ export function wordArt(text: string, col: string): ScreenArt {
 // The Yonge-Dundas tower: shale from row top with runs of lit windows over its wall of screens, low
 // enough to show while a message is up: the giant LIVE! screen at 2x on cobalt over blue from row 62
 // and, under it, three ads (EAT on red, a paw print on turquoise, NEW on hot pink).
-export function dundasScreens(cv: Canvas, x: number, w: number, top: number): void {
+function dundasScreens(cv: Canvas, x: number, w: number, top: number): void {
   cv.fill(x, top, w, BASE - top, "shale");
   outlineBox(cv, x, top, w, BASE - top + 1, "ink");
   lit(cv, x + 2, x + w - 3, top + 3, 59, "dundas", 0.5, ["gold", "amber"]);
@@ -3530,7 +3493,7 @@ export function dundasScreens(cv: Canvas, x: number, w: number, top: number): vo
 // A tower's lit podium seen from far off, rows BASE - 18 to BASE: coal under an ash top edge, its
 // floors lit in runs of 2x2 windows, gold, amber and cream, with no doors or shopfronts; and over it
 // a neon sign, (word, colour), on an ink board edged in its colour.
-export function streetLevel(
+function streetLevel(
   cv: Canvas,
   x: number,
   w: number,
@@ -3553,7 +3516,7 @@ export function streetLevel(
 // A lit podium's light on the far sidewalk, rows BASE to FAR_WALK, under columns x0 to x1: stone on
 // its first 2 rows inside a dstone edge, each row out a column wider a side, with no pixel in the
 // column ranges skip (the side street's mouth).
-export function frontPool(
+function frontPool(
   cv: Canvas,
   x0: number,
   x1: number,
@@ -3574,7 +3537,7 @@ export function frontPool(
 
 // A 2px-deep border of marquee bulbs round the box x, y, w, h: 2x2 bulbs every 4 px on ink, the
 // colours in turn.
-export function bulbs(
+function bulbs(
   cv: Canvas,
   x: number,
   y: number,
@@ -3607,7 +3570,7 @@ export function bulbs(
 
 // A vertical neon sign hung from a wall: an ink board from row top with text read down it, a letter
 // every 7 rows, edged in col.
-export function blade(cv: Canvas, x: number, top: number, text: string, col: string): void {
+function blade(cv: Canvas, x: number, top: number, text: string, col: string): void {
   const h = 7 * [...text].length + 3;
   cv.fill(x, top, 9, h, "ink");
   outlineBox(cv, x, top, 9, h, col);
@@ -3621,7 +3584,7 @@ export function blade(cv: Canvas, x: number, top: number, text: string, col: str
 // down to the street, its right 3 columns navy in shade, white-foam mullions every 4 columns and 4
 // rows, its floors lit gold and amber in long runs of 3x3 panes; and on the roof the EATON CENTRE
 // sign: cyan letters on an ink board in a 2px border of marquee bulbs, on coal legs.
-export function eatonCentre(cv: Canvas, x: number, w: number, top: number): void {
+function eatonCentre(cv: Canvas, x: number, w: number, top: number): void {
   const vault = 7;
   for (let dy = 0; dy < vault; dy++) {
     const half = Math.round((w / 2) * Math.sqrt(1 - ((vault - dy) / vault) ** 2));
@@ -3666,7 +3629,7 @@ export function eatonCentre(cv: Canvas, x: number, w: number, top: number): void
 
 // A car in a jam far down a side street, w columns wide on row y: from behind, a slate body with red
 // tail lights at its corners; from the front, gold headlights.
-export function carLights(cv: Canvas, cx: number, y: number, w: number, back: boolean): void {
+function carLights(cv: Canvas, cx: number, y: number, w: number, back: boolean): void {
   const h = Math.max(2, Math.round(w * 0.6));
   const x = cx - Math.floor(w / 2);
   cv.fill(x, y - h + 1, w, h, "slate");
@@ -3681,7 +3644,7 @@ export function carLights(cv: Canvas, cx: number, y: number, w: number, back: bo
 
 // A TTC bus from behind at the mouth of the side street: white over red, a dark back window, red
 // tail lights low at its corners and an amber route sign.
-export function busBack(cv: Canvas, cx: number, y: number): void {
+function busBack(cv: Canvas, cx: number, y: number): void {
   cv.fill(cx - 6, y - 12, 13, 13, "ink");
   cv.fill(cx - 5, y - 11, 11, 6, "white");
   cv.fill(cx - 5, y - 5, 11, 5, "ttc");
@@ -3698,7 +3661,7 @@ export function busBack(cv: Canvas, cx: number, y: number): void {
 // a far block at its end; a shale road between stone curbs; and gridlock on it, cars going away
 // showing their tail lights on the left, cars coming in their headlights on the right, a TTC bus at
 // the mouth.
-export function sideStreet(cv: Canvas, x0: number, x1: number, vy: number, rise = 34): void {
+function sideStreet(cv: Canvas, x0: number, x1: number, vy: number, rise = 34): void {
   const mid = (x0 + x1 + 1) / 2;
   const floor = FAR_WALK - 1;
   const half = (x1 - x0 + 1) / 2;
@@ -3745,7 +3708,7 @@ export function sideStreet(cv: Canvas, x0: number, x1: number, vy: number, rise 
 
 // A theatre's vertical blade sign, 13 columns wide from row top: text read down it in col on cream,
 // a letter every step rows, in a 2px border of marquee bulbs, on a coal bracket down to row base.
-export function elgin(
+function elgin(
   cv: Canvas,
   x: number,
   top: number,
@@ -3763,7 +3726,7 @@ export function elgin(
 
 // A theatre marquee over a street level, columns x to x + w - 1, rows BASE - 25 to BASE - 11: text in
 // col on a cream board in a 2px border of marquee bulbs.
-export function marquee(cv: Canvas, x: number, w: number, text: string, col: string): void {
+function marquee(cv: Canvas, x: number, w: number, text: string, col: string): void {
   const y = BASE - 25;
   cv.fill(x, y, w, 15, "ink");
   cv.fill(x + 2, y + 2, w - 4, 11, "cream");
@@ -3772,7 +3735,7 @@ export function marquee(cv: Canvas, x: number, w: number, text: string, col: str
 }
 
 // One ramp step lighter, for the street's glow on the towers' feet.
-export const UP: ReadonlyMap<string, string> = new Map([
+const UP: ReadonlyMap<string, string> = new Map([
   ["navy", "dslate"],
   ["dslate", "slate"],
   ["dlake", "lake"],
@@ -3790,7 +3753,7 @@ export const UP: ReadonlyMap<string, string> = new Map([
   ["teal", "dturq"],
 ]);
 // Each house colour's name by "r,g,b", the first name for a colour two names share.
-export const NAMES: ReadonlyMap<string, string> = new Map(
+const NAMES: ReadonlyMap<string, string> = new Map(
   Object.entries(K)
     .reverse()
     .map(([n, h]) => [rgb(h).join(","), n]),
@@ -3798,7 +3761,7 @@ export const NAMES: ReadonlyMap<string, string> = new Map(
 
 // The street's glow on the towers' feet: every pixel on rows y0 to y1 with a lighter step in UP takes
 // it.
-export function uplight(cv: Canvas, y0: number, y1: number): void {
+function uplight(cv: Canvas, y0: number, y1: number): void {
   for (let y = y0; y < y1; y++) {
     for (let x = 0; x < W; x++) {
       const n = NAMES.get(pixelAt(cv, x, y));
@@ -3812,7 +3775,7 @@ export function uplight(cv: Canvas, y0: number, y1: number): void {
 
 // A crosswalk over the cross street, w columns centred on mid: white bars along the street on every
 // other row, the road between them clear of the centre line.
-export function crosswalk(cv: Canvas, mid: number, w: number, road: string): void {
+function crosswalk(cv: Canvas, mid: number, w: number, road: string): void {
   const x = Math.round(mid - w / 2);
   cv.fill(x, CROSS + 1, w, NEAR_CURB - CROSS - 1, road);
   for (let py = CROSS + 1; py < NEAR_CURB; py += 2) {
@@ -3822,7 +3785,7 @@ export function crosswalk(cv: Canvas, mid: number, w: number, road: string): voi
 
 export const YONGE_SKY: readonly string[] = ["slate", "dslate", "purple", "mauve"];
 
-export function yonge(): Canvas {
+function yonge(): Canvas {
   const cv = new Canvas(W, H);
   // an evening sky, slate down to dslate and purple, a mauve city glow at the horizon, a full moon
   // and a few stars
@@ -3957,7 +3920,7 @@ export function yonge(): Canvas {
 }
 
 // Each backdrop's key and drawing.
-export const ZONES: ReadonlyMap<string, () => Canvas> = new Map([
+const ZONES: ReadonlyMap<string, () => Canvas> = new Map([
   ["backdrop-cabbagetown", cabbagetown],
   ["backdrop-high-park", highPark],
   ["backdrop-distillery-district", distillery],
@@ -3967,7 +3930,7 @@ export const ZONES: ReadonlyMap<string, () => Canvas> = new Map([
 ]);
 
 // Print the camera, the bottom row's join with the road and the sidewalks, in band pixels.
-export function camera(): void {
+function camera(): void {
   const column = (x: number, py: number): number => CX + x * scale(py + 0.5);
   console.log(
     `camera: yH ${YH}, footY ${FOOT}, r ${(KS / F).toFixed(4)}, f ${F.toFixed(1)}, centre x ${CX}; ` +
@@ -3990,7 +3953,7 @@ export function camera(): void {
   }
 }
 
-export function preview(out: string, scaleBy = 3): void {
+function preview(out: string, scaleBy = 3): void {
   const sheet = filledImage([...rgb("ink"), 255], W * scaleBy, (H + 6) * ZONES.size * scaleBy);
   [...ZONES.values()].forEach((draw, i) => {
     const img = resizeNearest(W * scaleBy, H * scaleBy, draw().img);
@@ -3999,7 +3962,7 @@ export function preview(out: string, scaleBy = 3): void {
   writeFileSync(out, rgbPng(sheet));
 }
 
-export function build(): void {
+function build(): void {
   mkdirSync("public/art/images", { recursive: true });
   for (const [key, draw] of ZONES) {
     const png = `public/art/images/${key}.png`;

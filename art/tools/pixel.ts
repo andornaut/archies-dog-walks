@@ -68,7 +68,7 @@ const ENDESGA: readonly (readonly [string, string])[] = [
 // Every house colour by name, in palette order: Endesga 32, the neutral greys, the Toronto colours,
 // then the picker-only UI tones.
 export const K: Record<string, string> = Object.fromEntries(ENDESGA);
-export const PALETTE: readonly string[] = ENDESGA.map(([, hex]) => hex);
+const PALETTE: readonly string[] = ENDESGA.map(([, hex]) => hex);
 // The colour one ramp step darker than each colour, by hex.
 export const DARKER = new Map<string, string>(
   [
@@ -115,7 +115,7 @@ function pair(text: string): [string, string] {
 // The neutral greys, outside Endesga 32 and allowed only for disabled and locked UI (a disabled tile,
 // button, slider or knob, a locked item's well): the neutral counterparts of lgrey, grey, slate and
 // dslate. Ink stays the darkest step.
-export const NEUTRAL: Readonly<Record<string, string>> = {
+const NEUTRAL: Readonly<Record<string, string>> = {
   ndslate: "4a4a4a",
   ngrey: "a4a4a4",
   nlgrey: "d8d8d8",
@@ -167,7 +167,7 @@ const TORONTO_ENTRIES: readonly (readonly [string, string])[] = [
   ["azure", "3d86e0"],
   ["cobalt", "2654b0"],
 ];
-export const TORONTO_HEX: readonly string[] = TORONTO_ENTRIES.map(([, hex]) => hex);
+const TORONTO_HEX: readonly string[] = TORONTO_ENTRIES.map(([, hex]) => hex);
 Object.assign(K, Object.fromEntries(TORONTO_ENTRIES));
 export const PALETTE64: readonly string[] = [...PALETTE, ...TORONTO_HEX];
 for (const p of [
@@ -223,7 +223,7 @@ function pickerEncode(channels: readonly number[]): string {
 }
 
 // One picker hue at the shared perceptual lightness and chroma.
-export function pickerHeader(lightness: number, chroma: number, hue: number): string {
+function pickerHeader(lightness: number, chroma: number, hue: number): string {
   // Oklab matrices: https://bottosson.github.io/posts/oklab/#converting-from-linear-srgb-to-oklab
   const angle = hue * (Math.PI / 180);
   const a = chroma * Math.cos(angle);
@@ -239,7 +239,7 @@ export function pickerHeader(lightness: number, chroma: number, hue: number): st
 }
 
 // A picker header's linear sRGB scaled by factor, encoded with nearest-byte rounding.
-export function pickerBody(factor: number, header: string): string {
+function pickerBody(factor: number, header: string): string {
   const encoded = [0, 2, 4].map(
     (start) => Number.parseInt(header.slice(start, start + 2), 16) / 255,
   );
@@ -248,10 +248,10 @@ export function pickerBody(factor: number, header: string): string {
 }
 
 // Picker-only colours extend K without changing the house palette or its ramps.
-export const PICKER_LIGHTNESS = 0.55;
-export const PICKER_CHROMA = 0.105;
-export const PICKER_BODY_FACTOR = 0.5;
-export const PICKER_HUES: readonly (readonly [string, number])[] = [
+const PICKER_LIGHTNESS = 0.55;
+const PICKER_CHROMA = 0.105;
+const PICKER_BODY_FACTOR = 0.5;
+const PICKER_HUES: readonly (readonly [string, number])[] = [
   ["Dogs", 290],
   ["Pocket", 350],
   ["Walker", 230],
@@ -281,14 +281,14 @@ for (const [section] of PICKER_HUES) {
 // on a file that lacks one.
 
 // A rectangle in the export's layout.
-export interface ExportRect {
+interface ExportRect {
   height: number;
   width: number;
   x: number;
   y: number;
 }
 
-export interface GameData {
+interface GameData {
   // Each card face's illustration key and the card-frame tag it shows in.
   cards: readonly { art: string; frame: string }[];
   dogs: readonly { id: string; size: string }[];
@@ -302,7 +302,7 @@ export interface GameData {
   }[];
 }
 
-export interface Layout {
+interface Layout {
   camera: { centreX: number; focal: number; footY: number; horizonY: number };
   // The sprites the game places by their frame (keys under unmeasuredPrefixes, except groundUiKeys)
   // rather than standing them on the ground.
@@ -454,7 +454,7 @@ export function vergeGrounds(): string[] {
 
 // The contrast roads: the Distillery District's (dark), then the roads an outline must hold 3:1 on: tan,
 // pink and skin2 (light) and Kensington Market's (mid grey), which takes it nearly to ink.
-export const ROADS: readonly string[] = [
+const ROADS: readonly string[] = [
   ZONE_ROAD_COLOURS.get("distillery-district")!,
   K.tan!,
   K.pink!,
@@ -782,13 +782,13 @@ export interface SheetTag {
 }
 // An exported sprite: its sheet PNG, each frame's rectangle in order and its tags (none when the JSON
 // lists no frameTags).
-export interface SpriteSheet {
+interface SpriteSheet {
   frames: SheetRect[];
   image: RgbaImage;
   tags: SheetTag[];
 }
 
-export const SPRITES_DIR = "public/art/sprites";
+const SPRITES_DIR = "public/art/sprites";
 
 // public/art/sprites/<key>.png and .json, decoded.
 export function readSheet(key: string): SpriteSheet {
@@ -830,7 +830,7 @@ function exported(key: string): Frame | null {
 }
 
 // tags with every frame moved dy rows down (up when negative) in its frame.
-export function shifted<T extends Cell>(tags: readonly CellTag<T>[], dy: number): CellTag<T>[] {
+function shifted<T extends Cell>(tags: readonly CellTag<T>[], dy: number): CellTag<T>[] {
   const move = (f: T[][]): T[][] => {
     const blank = Array.from({ length: Math.abs(dy) }, () =>
       Array<T>(f[0]!.length).fill(null as T),
@@ -920,7 +920,7 @@ function seated(key: string, tags: readonly CellTag[], feet: number): CellTag[] 
 // scaled down to it. A frame, floor(side x scale + 0.5), can round its shorter side past that. So each
 // step's art keeps to the full size scaled to its own side plus one, rounded down, and to the next
 // larger step's art, so no step is bigger than a larger one.
-export function depthEnvelope(
+function depthEnvelope(
   w: number,
   h: number,
   scales: readonly number[],
@@ -1212,9 +1212,7 @@ function shortened(
 // shortened), in place of the settle's choice. dog-penny@69 takes out row 27: in her shake frames the
 // collar's and the tag's outlines share one colour, whose count passes withoutRows's rarity cutoff, so
 // the settle would take out row 14, through her left ear.
-export const PINNED_CUTS: ReadonlyMap<string, readonly number[]> = new Map([
-  ["dog-penny@69", [27]],
-]);
+const PINNED_CUTS: ReadonlyMap<string, readonly number[]> = new Map([["dog-penny@69", [27]]]);
 
 function partition(key: string): [string, boolean, string] {
   const i = key.indexOf("@");
@@ -1417,7 +1415,7 @@ export async function build(
 // ---------- commands ----------
 
 // A command's handler, given the arguments its pattern names (see run).
-export type Command = (...args: string[]) => unknown;
+type Command = (...args: string[]) => unknown;
 
 // Thrown by a command whose arguments do not fit it, so run prints the usage text.
 export class UsageError extends Error {}
@@ -1478,7 +1476,7 @@ export async function run(
   }
 }
 
-export interface MainOptions {
+interface MainOptions {
   // The tags settled on their own (see depthSettled).
   apart?: readonly string[];
   // The set's other commands by pattern (see run). One named "build" or "preview OUT.png" replaces
@@ -1514,11 +1512,11 @@ export async function main(
   );
 }
 
-export const PALETTE_JSON = "shared/palette.json";
+const PALETTE_JSON = "shared/palette.json";
 
 // Every colour by K name, including picker-only UI tones: its hex and the name of the colour one ramp
 // step darker.
-export function paletteTable(): Record<string, { darker: string; hex: string }> {
+function paletteTable(): Record<string, { darker: string; hex: string }> {
   const names = new Map(Object.entries(K).map(([k, v]) => [v, k]));
   // Entries, not a literal, so the written keys keep their order: hex, then darker.
   return Object.fromEntries(
@@ -1533,12 +1531,12 @@ export function paletteTable(): Record<string, { darker: string; hex: string }> 
 }
 
 // paletteTable as PALETTE_JSON holds it.
-export function paletteJson(): string {
+function paletteJson(): string {
   return `${JSON.stringify(paletteTable(), null, 2)}\n`;
 }
 
 // Write paletteTable to PALETTE_JSON, for the game's dark ramp.
-export function writePalette(): void {
+function writePalette(): void {
   writeFileSync(PALETTE_JSON, paletteJson());
 }
 

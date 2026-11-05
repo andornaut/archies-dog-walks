@@ -142,22 +142,22 @@ function usage(): string {
 }
 
 // The screen's size, from the layout's screen.
-export const W = LAYOUT.screen.width;
-export const H = LAYOUT.screen.height;
-export const LOGO_W = 145;
-export const LOGO_H = 41;
-export const SIGN_W = 128;
-export const SIGN_H = 38;
-export const SIGN_AT: readonly [number, number] = [6, 106];
-export const PET_SHOP_W = 120;
-export const PET_SHOP_H = 108;
+const W = LAYOUT.screen.width;
+const H = LAYOUT.screen.height;
+const LOGO_W = 145;
+const LOGO_H = 41;
+const SIGN_W = 128;
+const SIGN_H = 38;
+const SIGN_AT: readonly [number, number] = [6, 106];
+const PET_SHOP_W = 120;
+const PET_SHOP_H = 108;
 // Where the game draws ui-pet-shop on the start screen, from the layout export's home Pet shop.
 const PET_SHOP = LAYOUT.scenes.home.petShop;
-export const PET_SHOP_AT: readonly [number, number] = [PET_SHOP.x, PET_SHOP.y];
+const PET_SHOP_AT: readonly [number, number] = [PET_SHOP.x, PET_SHOP.y];
 // The PET SHOP board's place in ui-pet-shop: ui-button's go state 114x22, its bottom 2 rows over
 // the parapet. The building below it starts BOARD_RISE rows down. ui-pet-shop-board's frame adds
 // BOARD_DROP rows under it, where pressed sinks.
-export const BOARD: readonly [x: number, y: number, w: number, h: number] = [3, 0, 114, 22];
+const BOARD: readonly [x: number, y: number, w: number, h: number] = [3, 0, 114, 22];
 // The frame and board the game places must be the ones drawn here.
 if (
   PET_SHOP.width !== PET_SHOP_W ||
@@ -169,12 +169,12 @@ if (
 ) {
   throw new Error(`Pet shop layout ${JSON.stringify(PET_SHOP)} differs from ui-pet-shop`);
 }
-export const BOARD_RISE = 4;
-export const BOARD_DROP = 2;
+const BOARD_RISE = 4;
+const BOARD_DROP = 2;
 // Projected door-leaf width, keeper reveal and hand pose. All coordinates stay inside the closed
 // door.
-export type DoorStep = readonly [width: number, reveal: number | null, wave: number | null];
-export const DOOR_WAVE: readonly DoorStep[] = [
+type DoorStep = readonly [width: number, reveal: number | null, wave: number | null];
+const DOOR_WAVE: readonly DoorStep[] = [
   [26, null, null],
   [22, null, null],
   [14, 0, null],
@@ -192,18 +192,18 @@ export const DOOR_WAVE: readonly DoorStep[] = [
   [22, null, null],
   [26, null, null],
 ];
-export const DOOR_WAVE_MS = 120;
+const DOOR_WAVE_MS = 120;
 
 // A pixel rectangle, as art-kit's raster ops take it.
 type Rect = Parameters<typeof crop>[0];
 
 // The grid every drawing here makes, which small() swaps for a Mini while it draws ui-loading.
-export const scope: DrawingScope = {
+const scope: DrawingScope = {
   Grid: (w = 32, h = 32) => new Grid(w, h),
 };
 
 // A small deterministic generator, so a rebuild draws the same specks.
-export function rand(seed: number): () => number {
+function rand(seed: number): () => number {
   let s = seed >>> 0;
   return () => {
     s = (s * 1664525 + 1013904223) >>> 0;
@@ -213,14 +213,14 @@ export function rand(seed: number): () => number {
 
 // A canvas with a transparent background, for the logo and the pasted strips. A build saves it as
 // an RGBA PNG; a Canvas as an RGB one.
-export class Clear extends Canvas {
+class Clear extends Canvas {
   constructor(w: number, h: number) {
     super(w, h);
     this.img = blankImage(w, h);
   }
 }
 
-export function clear(w: number, h: number): Clear {
+function clear(w: number, h: number): Clear {
   return new Clear(w, h);
 }
 
@@ -255,7 +255,7 @@ function rect(x0: number, y0: number, x1: number, y1: number): Rect {
 
 // A fallen leaf lying askew, 3x3 on a diagonal with its stem a ramp step darker at the narrow end,
 // tilted the other way on an odd column, so the leaves never read as crosses or sparkles.
-export function leaf(cv: Canvas, x: number, y: number, col = "orange"): void {
+function leaf(cv: Canvas, x: number, y: number, col = "orange"): void {
   const flip = x % 2;
   for (const [dx, dy] of [
     [2, 0],
@@ -317,20 +317,20 @@ export function planks(
 
 // ---------- logo ----------
 
-export const PAW: readonly string[] = [".#.#.", "#...#", ".###.", ".###."];
+const PAW: readonly string[] = [".#.#.", "#...#", ".###.", ".###."];
 
 // The comic letters' apostrophe, 2px wide like their stems, for ARCHIE'S.
-export const APOSTROPHE: readonly string[] = ["##", "##", "#."];
+const APOSTROPHE: readonly string[] = ["##", "##", "#."];
 // The bandana's rows under the portrait's collar (row 41), and the column its point is centred on.
-export const BANDANA_ROWS = 8;
-export const BANDANA_MID = 30.5;
+const BANDANA_ROWS = 8;
+const BANDANA_MID = 30.5;
 
 // A lettering: {"x,y": colour name}.
-export type Lettering = ReadonlyMap<string, string>;
+type Lettering = ReadonlyMap<string, string>;
 
 // The yard sign's board, w x h: a plum rim with rounded corners, a light trim (cream top, tan
 // sides) so it keeps its edge on the dark yard, a dark-stained dbrown face, and a brown lip.
-export function board(cv: Canvas, x: number, y: number, w: number, h: number): void {
+function board(cv: Canvas, x: number, y: number, w: number, h: number): void {
   cv.fill(x + 1, y, w - 2, h, "plum");
   cv.fill(x, y + 1, w, h - 2, "plum");
   cv.fill(x + 1, y + 1, w - 2, h - 5, "tan");
@@ -345,7 +345,7 @@ function corner(keys: Iterable<string>): [number, number] {
 }
 
 // Draw a lettering at x, y by its top-left inked pixel.
-export function lettering(px: Lettering, cv: Canvas, x: number, y: number): void {
+function lettering(px: Lettering, cv: Canvas, x: number, y: number): void {
   const [x0, y0] = corner(px.keys());
   for (const [k, col] of px) {
     const [px_, py] = xy(k);
@@ -354,7 +354,7 @@ export function lettering(px: Lettering, cv: Canvas, x: number, y: number): void
 }
 
 // The width and height of a lettering (or any "x,y" keyed pixels).
-export function extent(px: ReadonlyMap<string, unknown>): [number, number] {
+function extent(px: ReadonlyMap<string, unknown>): [number, number] {
   const pts = [...px.keys()].map(xy);
   const xs = pts.map((p) => p[0]);
   const ys = pts.map((p) => p[1]);
@@ -363,7 +363,7 @@ export function extent(px: ReadonlyMap<string, unknown>): [number, number] {
 
 // text in the comic letters (fx.ts's LETTERS and APOSTROPHE), built as fx.ts's word builds them:
 // letters 1px apart, a 1px ink ring that fills the gaps, a solid dred shadow 2px down and right.
-export function comic(textIn: string, fillColour: string): Lettering {
+function comic(textIn: string, fillColour: string): Lettering {
   const letters = new Set<string>();
   let x = 1;
   for (const ch of textIn) {
@@ -408,12 +408,12 @@ export function comic(textIn: string, fillColour: string): Lettering {
 }
 
 // A pixel of Archie's face in portrait-dog-archie, where bust() gathers his head from.
-export const HEAD_SEED: readonly [number, number] = [29, 25];
+const HEAD_SEED: readonly [number, number] = [29, 25];
 
 // Archie's head from portrait-dog-archie (its rows 10 to 41, the collar's ink line last, only what
 // joins his face, so the tip of his tail is left out) over a short bandana in a closed ink line:
 // {"x,y": RGBA} from the portrait's top-left.
-export function bust(): Map<string, Rgba> {
+function bust(): Map<string, Rgba> {
   const img = image("portrait-dog-archie");
   const rows = new Map<string, Rgba>();
   for (let y = 10; y < 42; y++) {
@@ -466,7 +466,7 @@ export function bust(): Map<string, Rgba> {
   );
 }
 
-export function logo(): Clear {
+function logo(): Clear {
   const cv = clear(LOGO_W, LOGO_H);
   const head = bust();
   for (const [k, c] of head) {
@@ -487,13 +487,13 @@ export function logo(): Clear {
 // ---------- screen-home ----------
 
 // crowns' leaf lobes: (cx, cy, radius), back to front.
-export type Lobe = readonly [cx: number, cy: number, rad: number];
+type Lobe = readonly [cx: number, cy: number, rad: number];
 
 // A crown of round lobes, back to front, lit as one mass from the top left: each lobe takes a
 // crescent of shade along its lower right rim and of light along its upper left, the shade only where
 // the lobe lies off the crown's lit side and the light only off its shaded side, so the lobes read as
 // clumps of one tree rather than separate balls.
-export function crowns(
+function crowns(
   cv: Canvas,
   lobes: readonly Lobe[],
   lit: string,
@@ -584,7 +584,7 @@ function courtyardPaving(cv: Canvas): void {
   cv.fill(164, 97, 1, 67, "driftwood");
 }
 
-export function home(): Canvas {
+function home(): Canvas {
   const cv = new Canvas(W, H);
   cv.fill(0, 0, W, H, "dbrown");
   cv.fill(0, 0, W, 38, "plum");
@@ -669,7 +669,7 @@ export function home(): Canvas {
 
 // ---------- ui-pet-shop ----------
 
-export const BONE: readonly string[] = [
+const BONE: readonly string[] = [
   "..cc.......cc..",
   ".cccc.....cccc.",
   "ccccccccccccccc",
@@ -680,7 +680,7 @@ export const BONE: readonly string[] = [
 
 // 17x21: a tan puppy sitting up in the shop window, front view, floppy brown ears, a white muzzle
 // and chest, a pink tongue out; cel shaded in an ink line, as the faces are.
-export function windowPuppy(): Drawable {
+function windowPuppy(): Drawable {
   const g = edged(scope.Grid(17, 21), "ink");
   g.cel(8.5, 16, 5.5, 4.5, "tan", "brown");
   g.cel(8.5, 16.5, 2.5, 3, "white", "lgrey");
@@ -700,7 +700,7 @@ export function windowPuppy(): Drawable {
   return g;
 }
 
-export interface PetShopOptions {
+interface PetShopOptions {
   // A DOOR_WAVE frame index for door-wave, or null for the static closed door.
   doorFrame?: number | null;
   pressed?: boolean;
@@ -709,21 +709,21 @@ export interface PetShopOptions {
 // ui-pet-shop's frame, PET_SHOP_W x PET_SHOP_H: the building from BOARD_RISE down, without its
 // board. Everything but the step is drawn t rows lower, so pressed sinks the front 2px onto a step
 // 1px shallower, as ui-button's face sinks into its lip.
-export function petShop({ doorFrame = null, pressed = false }: PetShopOptions = {}): Clear {
+function petShop({ doorFrame = null, pressed = false }: PetShopOptions = {}): Clear {
   const cv = clear(PET_SHOP_W, PET_SHOP_H);
   building(cv, PET_SHOP_W, PET_SHOP_H - BOARD_RISE, pressed, doorFrame);
   return cv;
 }
 
 // ui-pet-shop-board's frame, BOARD's width x its height plus BOARD_DROP.
-export function petShopBoard(pressed = false): Clear {
+function petShopBoard(pressed = false): Clear {
   const cv = clear(BOARD[2], BOARD[3] + BOARD_DROP);
   shopBoard(cv, pressed);
   return cv;
 }
 
 // The shop with its board at rest, as the yard shows them.
-export function petShopFront({ doorFrame = null, pressed = false }: PetShopOptions = {}): Clear {
+function petShopFront({ doorFrame = null, pressed = false }: PetShopOptions = {}): Clear {
   const cv = petShop({ doorFrame, pressed });
   composite({ x: BOARD[0], y: BOARD[1] }, petShopBoard(pressed).img, cv.img);
   return cv;
@@ -735,7 +735,7 @@ export function petShopFront({ doorFrame = null, pressed = false }: PetShopOptio
 // label. Raised, row 0 is ink, row 1 the highlight, the face runs to row 16, the lip fills rows 17
 // to 20 and ink row 21; the caps fill rows 4 to 13. Pressed, the lip and highlight give way to
 // face, as go-pressed, and the board rides down with the front: face and letters sink BOARD_DROP.
-export function shopBoard(cv: Canvas, pressed: boolean): void {
+function shopBoard(cv: Canvas, pressed: boolean): void {
   const [, , bw, bh] = BOARD;
   const t = pressed ? BOARD_DROP : 0;
   const [face, lip, hi] = STATES.go!;
@@ -759,7 +759,7 @@ export function shopBoard(cv: Canvas, pressed: boolean): void {
 
 // The shop below the board, w x h from BOARD_RISE down: walls, parapet, awning, window, door and
 // step.
-export function building(
+function building(
   full: Canvas,
   w: number,
   h: number,
@@ -910,7 +910,7 @@ const KEEPER_WAVE: ReadonlyMap<
 // with his head 5px under the lintel: a third of his height is head, the rest a short-sleeved shirt
 // and apron over trousers. Both arms hang from the shoulders' top row; the near one raises from there
 // to wave. The keeper draws lines, which only a full-size Grid has, so it is never drawn small.
-export function shopKeeper(reveal: number, wave: number | null): RgbaImage {
+function shopKeeper(reveal: number, wave: number | null): RgbaImage {
   const g = edged(new Grid(20, 48), "ink");
   const cx = 11 + Math.round((1 - reveal) * 4);
   // A short apron exposes two trouser legs, a dark gap and grounded shoes.
@@ -965,7 +965,7 @@ export function shopKeeper(reveal: number, wave: number | null): RgbaImage {
 }
 
 // The static closed door or a projected right-hinged leaf over the keeper.
-export function shopDoor(cv: Canvas, h: number, pressed: boolean, doorFrame: number | null): void {
+function shopDoor(cv: Canvas, h: number, pressed: boolean, doorFrame: number | null): void {
   const t = pressed ? 2 : 0;
   const [dx, dy, dw] = [76, 44 + t, 30];
   cv.fill(dx - 1, dy - 1, dw + 2, h - dy + 1, "ink");
@@ -1016,37 +1016,34 @@ export function shopDoor(cv: Canvas, h: number, pressed: boolean, doorFrame: num
 }
 
 // An RGBA image as sprite frame rows: hex colours, null where clear.
-export function imageRows(img: RgbaImage): Frame {
+function imageRows(img: RgbaImage): Frame {
   return Array.from({ length: img.height }, (_, y) =>
     Array.from({ length: img.width }, (_, x) => (alphaAt(img, x, y) ? hexAt(img, x, y) : null)),
   );
 }
 
 // The sky after dark, top to horizon: night falling over a last mauve glow, on screen-loading.
-export const NIGHT_SKY: readonly string[] = ["navy", "purple", "mauve"];
+const NIGHT_SKY: readonly string[] = ["navy", "purple", "mauve"];
 
 // ---------- screen-end ----------
 
-export const END_STREET = 370; // top of the street strip on screen-end
+const END_STREET = 370; // top of the street strip on screen-end
 // The street strip's front yards, the lawn from its row 104; the sidewalk, curb and gutter's 20 rows
 // follow, so the road starts on screen row END_ROAD, 3 rows over the button's top (514) and 2 over
 // its 1px bob
-export const END_YARD = 17;
-export const END_WALK = 104 + END_YARD; // the strip's first sidewalk row
-export const END_ROAD = END_STREET + END_WALK + 20;
+const END_YARD = 17;
+const END_WALK = 104 + END_YARD; // the strip's first sidewalk row
+const END_ROAD = END_STREET + END_WALK + 20;
 // Cabbagetown's dusk, top to horizon, as its backdrop: lilac over pink and peach to a gold glow.
-export const DUSK_SKY: readonly string[] = ["lilac", "pink", "peach", "gold"];
+const DUSK_SKY: readonly string[] = ["lilac", "pink", "peach", "gold"];
 // The CN Tower's centre column, foot and mast tip on screen-end.
-export const END_CN: readonly [number, number, number] = [306, 96, 4];
-export const END_RIDGE = 43; // the house's roof ridge on screen-end, under the logo's foot
+const END_CN: readonly [number, number, number] = [306, 96, 4];
+const END_RIDGE = 43; // the house's roof ridge on screen-end, under the logo's foot
 // Where EndScene draws the logo, 107,2.
-export const END_LOGO_AT: readonly [number, number] = [
-  Math.floor((W - LOGO_W) / 2),
-  END_RIDGE - LOGO_H,
-];
+const END_LOGO_AT: readonly [number, number] = [Math.floor((W - LOGO_W) / 2), END_RIDGE - LOGO_H];
 
 // An end-screen sash: warm glass behind orange curtains, or a room left dark, in a shaded frame.
-export function endWindow(
+function endWindow(
   cv: Canvas,
   x: number,
   y: number,
@@ -1073,7 +1070,7 @@ export function endWindow(
 }
 
 // An end-screen bay-and-gable with defined eaves and bay ledges, each room lit separately.
-export function endHouse(
+function endHouse(
   cv: Canvas,
   cx: number,
   w: number,
@@ -1161,7 +1158,7 @@ function endLawns(cv: Canvas): void {
   }
 }
 
-export function end(): Canvas {
+function end(): Canvas {
   const cv = new Canvas(W, H);
   // Cabbagetown's dusk, twice: behind the house down to its lawn, and behind the panel down to the
   // far rooftops of the street below; the CN Tower lit over the roofs at the right
@@ -1348,47 +1345,47 @@ export function end(): Canvas {
 
 // ---------- screen-loading, ui-loading-track, ui-loading ----------
 
-export const SKY_FOOT = 356; // NIGHT_SKY's bands end here, behind the skyline's foot
+const SKY_FOOT = 356; // NIGHT_SKY's bands end here, behind the skyline's foot
 // The iron fences' and the Pet shop's bottom row: the sidewalk starts under it.
-export const YARD_FOOT = 414;
-export const CURB = 470; // the sidewalk's last row is CURB - 1; the curb, then the street
+const YARD_FOOT = 414;
+const CURB = 470; // the sidewalk's last row is CURB - 1; the curb, then the street
 // The logo at 2x, 290x82, inside the navy band.
-export const LOADING_LOGO_AT: readonly [number, number] = [Math.floor((W - 2 * LOGO_W) / 2), 74];
+const LOADING_LOGO_AT: readonly [number, number] = [Math.floor((W - 2 * LOGO_W) / 2), 74];
 // ui-pet-shop's building on the corner lot.
-export const SHOP_AT: readonly [number, number] = [W - 4 - PET_SHOP_W, YARD_FOOT - PET_SHOP_H];
+const SHOP_AT: readonly [number, number] = [W - 4 - PET_SHOP_W, YARD_FOOT - PET_SHOP_H];
 // ui-pet-shop's display window and door pane in its frame, left lit on screen-loading.
-export const SHOP_WINDOW = rect(9, 47, 67, 96);
-export const SHOP_DOOR_PANE = rect(82, 54, 100, 68);
+const SHOP_WINDOW = rect(9, 47, 67, 96);
+const SHOP_DOOR_PANE = rect(82, 54, 100, 68);
 // The display window's and door pane's day glass, lamplit at night; the door's cream paw turns clay
 // on it.
-export const SHOP_GLOW: ReadonlyMap<string, string> = new Map([
+const SHOP_GLOW: ReadonlyMap<string, string> = new Map([
   [K.sky!, "gold"],
   [K.cyan!, "yellow"],
   [K.blue!, "ochre"],
 ]);
 // The track's end and Lady's last nose column, at the Pet shop's door pane (318 to 335).
-export const TRACK_END = 332;
-export const LAMP_X = 227;
-export const MOON: readonly [number, number] = [40, 42];
-export const PAIR_W = 98;
-export const PAIR_H = 84;
-export const PAIR_FEET = 81; // the pair's bottom opaque row (the shoes' and paws' outline) in its frame
-export const WALK_FOOT = 460; // the screen row the pair's feet stand on
+const TRACK_END = 332;
+const LAMP_X = 227;
+const MOON: readonly [number, number] = [40, 42];
+const PAIR_W = 98;
+const PAIR_H = 84;
+const PAIR_FEET = 81; // the pair's bottom opaque row (the shoes' and paws' outline) in its frame
+const WALK_FOOT = 460; // the screen row the pair's feet stand on
 // Casey's rear heel on the contact frames and Lady's nose, opaque columns.
-export const PAIR_HEEL = 10;
-export const PAIR_NOSE = 97;
-export const TRACK_AT: readonly [number, number] = [16, WALK_FOOT - 4];
-export const TRACK_W = TRACK_END - TRACK_AT[0];
-export const TRACK_H = 8;
+const PAIR_HEEL = 10;
+const PAIR_NOSE = 97;
+const TRACK_AT: readonly [number, number] = [16, WALK_FOOT - 4];
+const TRACK_W = TRACK_END - TRACK_AT[0];
+const TRACK_H = 8;
 // Where the game draws ui-loading (origin top left) at progress 0, and how far right it walks by 1:
 // Casey's heel starts on the first paw print and Lady's nose ends at the Pet shop's door. Its feet
 // stand on WALK_FOOT.
-export const PAIR_AT: readonly [number, number] = [TRACK_AT[0] - PAIR_HEEL, WALK_FOOT - PAIR_FEET];
-export const PAIR_TRAVEL = TRACK_AT[0] + TRACK_W - PAIR_NOSE - 1 - PAIR_AT[0];
+const PAIR_AT: readonly [number, number] = [TRACK_AT[0] - PAIR_HEEL, WALK_FOOT - PAIR_FEET];
+const PAIR_TRAVEL = TRACK_AT[0] + TRACK_W - PAIR_NOSE - 1 - PAIR_AT[0];
 
 // The skyline, far back: (left, width, top, wall) for each downtown tower, its foot hidden behind
 // the street.
-export const TOWERS: readonly bd.Tower[] = [
+const TOWERS: readonly bd.Tower[] = [
   [-6, 28, 286, "dslate"],
   [44, 18, 270, "navy"],
   [110, 24, 258, "dslate"],
@@ -1399,11 +1396,11 @@ export const TOWERS: readonly bd.Tower[] = [
   [338, 26, 272, "dslate"],
 ];
 // The CN Tower's centre column, its foot and its mast's tip.
-export const CN_X = 258;
-export const CN_FOOT = 372;
-export const CN_TIP = 150;
+const CN_X = 258;
+const CN_FOOT = 372;
+const CN_TIP = 150;
 // The near row, Cabbagetown's bay-and-gables, the lit windows by their order in victorian.
-export type Home = readonly [
+type Home = readonly [
   x: number,
   w: number,
   wall: string,
@@ -1412,16 +1409,16 @@ export type Home = readonly [
   bayLeft: boolean,
   lit: readonly number[],
 ];
-export const HOMES: readonly Home[] = [
+const HOMES: readonly Home[] = [
   [-10, 76, "brick", "stone", "forest", false, [0, 2, 3, 5]],
   [66, 76, "dbrick", "driftwood", "ttc", true, [0, 1, 2, 4, 6]],
   [142, 76, "brick", "stone", "navy", true, [1, 3, 4, 5]],
 ];
-export const HOME_BASE = YARD_FOOT - 10; // the houses' ground row, over the front yards
+const HOME_BASE = YARD_FOOT - 10; // the houses' ground row, over the front yards
 
 // A transparent strip drawn in daylight, turned to night: every colour steps ramp steps darker, the
 // window glass lit yellow and the white mullions beside it amber.
-export function afterDark(img: RgbaImage, steps = 2): RgbaImage {
+function afterDark(img: RgbaImage, steps = 2): RgbaImage {
   const { height: h, width: w } = img;
   const out: RgbaImage = { data: new Uint8Array(img.data), height: h, width: w };
   const cyan = K.cyan!;
@@ -1466,7 +1463,7 @@ export function afterDark(img: RgbaImage, steps = 2): RgbaImage {
 }
 
 // n single specks in lgrey and slate between rows top and bottom.
-export function stars(cv: Canvas, r: () => number, top: number, bottom: number, n: number): void {
+function stars(cv: Canvas, r: () => number, top: number, bottom: number, n: number): void {
   for (let i = 0; i < n; i++) {
     const x = Math.trunc(r() * W);
     const y = top + Math.trunc(r() * (bottom - top));
@@ -1476,7 +1473,7 @@ export function stars(cv: Canvas, r: () => number, top: number, bottom: number, 
 
 // A downtown tower in silhouette from row top down to the street, a 3-row crown stepped in 3 columns
 // a side, and its lit floors: 2x1 gold windows on a 4-column, 5-row grid, about one in five lit.
-export function towerBlock(
+function towerBlock(
   cv: Canvas,
   x: number,
   w: number,
@@ -1499,7 +1496,7 @@ export function towerBlock(
 // The CN Tower lit for the night: a tapering haze shaft in its floodlight, shaded on the right, the
 // main pod at 62% of its height with a ring of gold windows, the SkyPod above it, then the mast, a
 // red beacon at its tip.
-export function cnTower(cv: Canvas, cx: number, foot: number, tip: number, lit = true): void {
+function cnTower(cv: Canvas, cx: number, foot: number, tip: number, lit = true): void {
   const h = foot - tip;
   const pod = foot - Math.round(h * 0.62);
   const skyPod = foot - Math.round(h * 0.81);
@@ -1537,7 +1534,7 @@ export function cnTower(cv: Canvas, cx: number, foot: number, tip: number, lit =
 
 // A sash window in a trim frame on a sill: lit gold glass behind amber curtains drawn back to its
 // sides, or dark shale glass. arch rounds its head.
-export function litWindow(
+function litWindow(
   cv: Canvas,
   x: number,
   y: number,
@@ -1563,7 +1560,7 @@ export function litWindow(
 }
 
 // The centre column of a HOMES house's front door, on the half its bay leaves.
-export function doorColumn(homeRow: Home): number {
+function doorColumn(homeRow: Home): number {
   const [x, w, , , , bayLeft] = homeRow;
   const bw = Math.floor(w / 2) - 2;
   return (bayLeft ? x + w - 3 - bw : x + 3) + Math.floor(bw / 2);
@@ -1575,7 +1572,7 @@ export function doorColumn(homeRow: Home): number {
 // its shaded sides) and the front door with its transom on the other, a window over it, and a stone
 // stoop. lit lists which windows glow: 0 the attic, 1 to 3 the bay's lower storey, 4 to 6 its upper
 // one, then the window over the door as 7.
-export function victorian(
+function victorian(
   cv: Canvas,
   x: number,
   w: number,
@@ -1641,7 +1638,7 @@ export function victorian(
 
 // A coal wrought-iron fence on row foot - 1, 9 rows tall: a bar every 3 columns, every other one
 // topped with a spear, between two rails, left open over gaps ([left, right) column pairs).
-export function ironFence(
+function ironFence(
   cv: Canvas,
   x0: number,
   x1: number,
@@ -1668,7 +1665,7 @@ export function ironFence(
 
 // A Toronto heritage street lamp: a coal post from row top down to foot, a fluted base, and an acorn
 // lantern lit yellow with a gold rim, a cap and a finial.
-export function heritageLamp(cv: Canvas, x: number, foot: number, top: number): void {
+function heritageLamp(cv: Canvas, x: number, foot: number, top: number): void {
   cv.fill(x - 1, top, 3, foot - top, "coal");
   cv.fill(x - 1, top, 1, foot - top, "ash");
   cv.fill(x - 3, foot - 10, 7, 10, "coal");
@@ -1686,7 +1683,7 @@ export function heritageLamp(cv: Canvas, x: number, foot: number, top: number): 
 
 // A TTC streetcar stop: a coal pole on row foot - 1 carrying the red and white stop sign, a white
 // streetcar on its red face.
-export function ttcStop(cv: Canvas, x: number, foot: number): void {
+function ttcStop(cv: Canvas, x: number, foot: number): void {
   cv.fill(x, foot - 58, 2, 58, "coal");
   cv.fill(x - 6, foot - 72, 14, 16, "white");
   cv.fill(x - 5, foot - 71, 12, 14, "ttc");
@@ -1698,7 +1695,7 @@ export function ttcStop(cv: Canvas, x: number, foot: number): void {
   cv.fill(x, foot - 70, 2, 2, "white");
 }
 
-export function loading(): Canvas {
+function loading(): Canvas {
   const cv = new Canvas(W, H);
   const r = rand(13);
   // the night sky in bands, navy down to a mauve glow over the city, stars and a crescent moon in the
@@ -1804,7 +1801,7 @@ export function loading(): Canvas {
 
 // The sidewalk being walked: Lady's paw prints in dslate (3.39:1 on the night sidewalk's grey), left
 // and right paws 8px apart, staggered on two rows, from Casey's heel to the Pet shop's door.
-export function loadingTrack(): Clear {
+function loadingTrack(): Clear {
   const cv = clear(TRACK_W, TRACK_H);
   for (let n = 0, x = 0; x < TRACK_W - 4; n++, x += 8) {
     const y = n % 2 ? 0 : 4;
@@ -1819,7 +1816,7 @@ export function loadingTrack(): Clear {
   return cv;
 }
 
-export const SCREENS: ReadonlyMap<string, () => Canvas> = new Map<string, () => Canvas>([
+const SCREENS: ReadonlyMap<string, () => Canvas> = new Map<string, () => Canvas>([
   ["logo", logo],
   ["screen-home", home],
   ["screen-end", end],
@@ -1829,14 +1826,14 @@ export const SCREENS: ReadonlyMap<string, () => Canvas> = new Map<string, () => 
 
 // ui-loading is drawn on a PAIR_DESIGN design grid at PAIR_SCALE on a Mini that keeps 1px lines and
 // single pixels 1px, so Casey stands 84 rows tall and Lady 56.
-export const PAIR_DESIGN: readonly [number, number] = [56, 48];
-export const PAIR_SCALE = 1.75;
+const PAIR_DESIGN: readonly [number, number] = [56, 48];
+const PAIR_SCALE = 1.75;
 // The pair's stride, one pose per frame: Casey's near and far feet (forward of the hip, in design px)
 // and which is lifted, the body's bob, Lady's near front and hind paws, its bob and its tail's wag.
 // Contact frames (0, 2) plant both feet apart; on the passing frames (1, 3) the swinging foot lifts
 // 1px under the hip as the body rises 1px, as the walkers' stride has it, and Lady's diagonal pairs
 // swap with its ears lagging.
-export interface PairPose {
+interface PairPose {
   bob: number;
   dbob: number;
   far: number;
@@ -1847,20 +1844,20 @@ export interface PairPose {
   near: number;
   wag: number;
 }
-export const PAIR_WALK: readonly PairPose[] = [
+const PAIR_WALK: readonly PairPose[] = [
   { bob: 0, dbob: 0, far: -4, flop: 0, front: 2, hind: -2, lift: null, near: 4, wag: -1 },
   { bob: -1, dbob: -1, far: 0, flop: 1, front: 0, hind: 0, lift: "far", near: 0, wag: 0 },
   { bob: 0, dbob: 0, far: 4, flop: 0, front: -2, hind: 2, lift: null, near: -4, wag: 1 },
   { bob: -1, dbob: -1, far: 0, flop: 1, front: 0, hind: 0, lift: "near", near: 0, wag: 0 },
 ];
-export const PAIR_WALK_MS = 160;
+const PAIR_WALK_MS = 160;
 // Casey's hand and Lady's collar on the design grid, before the bob: the leash's two ends.
-export const HAND: readonly [number, number] = [21, 28];
-export const COLLAR: readonly [number, number] = [44, 28];
+const HAND: readonly [number, number] = [21, 28];
+const COLLAR: readonly [number, number] = [44, 28];
 
 // One of Casey's legs, from the hip (x, row) to its shoe on row 43, the foot lift rows up: 3 wide, in
 // 2-row steps so it stays unbroken at any scale, the shoe pointing right.
-export function leg(
+function leg(
   g: Drawable,
   hip: readonly [number, number],
   foot: number,
@@ -1884,7 +1881,7 @@ export function leg(
 
 // One of Lady's legs, from the hip or shoulder to its paw on row 45: the coat colour above a white
 // sock 3 rows deep.
-export function dogLeg(
+function dogLeg(
   g: Drawable,
   hip: readonly [number, number],
   paw: number,
@@ -1904,7 +1901,7 @@ export function dogLeg(
 
 // One frame of ui-loading on the PAIR_DESIGN grid: Casey side on, walking right, and Lady trotting
 // ahead of her, cel shaded with the road outline and the lit rim, as the road sprites.
-export function pairDesign({
+function pairDesign({
   bob = 0,
   dbob = 0,
   far = 0,
@@ -1985,7 +1982,7 @@ export function pairDesign({
 // PAIR_W x PAIR_H, one frame of the walk: pairDesign at PAIR_SCALE, outlined, then the leash sagging
 // 1px wide from Casey's hand to Lady's collar, over the outline: plum, as on Cabbagetown's grey road,
 // since the night sidewalk is grey (4.84:1).
-export function pair(step: number): Frame {
+function pair(step: number): Frame {
   const q = PAIR_WALK[step]!;
   const g = small(roadScope, scope, PAIR_SCALE, pairDesign, q);
   const px = g.outlined();
@@ -2010,14 +2007,14 @@ export function pair(step: number): Frame {
 
 // The dog-slot sign hung from the Pet shop's awning across its front, which the game draws at 255,88:
 // the frame's size, and the cream board in the frame, where the game writes its two lines.
-export const SLOT_SIGN_W = 81;
-export const SLOT_SIGN_H = 30;
-export const SLOT_BOARD: readonly [x: number, y: number, w: number, h: number] = [1, 5, 79, 24];
+const SLOT_SIGN_W = 81;
+const SLOT_SIGN_H = 30;
+const SLOT_BOARD: readonly [x: number, y: number, w: number, h: number] = [1, 5, 79, 24];
 
 // ui-slot-sign: a cream board in a 1px dbrown frame, lit white along its top and tan along its
 // bottom, hung by two dbrown cords from the awning's bottom edge. pressed lets the board drop 1px on
 // longer cords.
-export function slotSign(pressed = false): Frame {
+function slotSign(pressed = false): Frame {
   const g = scope.Grid(SLOT_SIGN_W, SLOT_SIGN_H);
   const [x, y, w, h] = SLOT_BOARD;
   const d = pressed ? 1 : 0;
@@ -2031,7 +2028,7 @@ export function slotSign(pressed = false): Frame {
   return g.outlined(false);
 }
 
-export function* sprites(): Generator<Sprite> {
+function* sprites(): Generator<Sprite> {
   const pressedTags = (draw: (pressed: boolean) => Frame): Tag[] =>
     ["normal", "pressed"].map((tag): Tag => [tag, [draw(tag === "pressed")], 1000]);
   yield ["ui-slot-sign", pressedTags(slotSign)];
@@ -2052,7 +2049,7 @@ export function* sprites(): Generator<Sprite> {
 
 // Block in the UI that sits on a screen, for the preview only (layout from StartScene, StatsScene on
 // its badges tab, EndScene and loadingScreen.ts, which draws no text).
-export function ui(cv: Canvas, screen: string): void {
+function ui(cv: Canvas, screen: string): void {
   const panel = (x: number, y: number, w: number, h: number, face = "cream"): void => {
     cv.fill(x, y, w, h, "plum");
     cv.fill(x + 1, y + 1, w - 2, h - 2, face);
@@ -2127,7 +2124,7 @@ export function ui(cv: Canvas, screen: string): void {
   }
 }
 
-export function preview(out: string, scale = 2): void {
+function preview(out: string, scale = 2): void {
   const keys = [...SCREENS.keys()].filter((k) => k.startsWith("screen-"));
   const shots = [...keys.map((k) => [k, false] as const), ...keys.map((k) => [k, true] as const)];
   const gap = 8;
@@ -2167,7 +2164,7 @@ export function preview(out: string, scale = 2): void {
 
 // ui-pet-shop's tags on the yard at 1x and scale, then screen-home with the building in, at 1x and
 // scale. Also writes the lot around the building at scale beside out, as <out>-lot.png.
-export function shopPreview(out: string, scale = 4): void {
+function shopPreview(out: string, scale = 4): void {
   const tags = [false, true].map((pressed) => petShopFront({ pressed }).img);
   const homeCv = home();
   homeCv.paste(tags[0]!, PET_SHOP_AT[0], PET_SHOP_AT[1]);
@@ -2224,7 +2221,7 @@ export function shopPreview(out: string, scale = 4): void {
   );
 }
 
-export async function build(only?: string): Promise<void> {
+async function build(only?: string): Promise<void> {
   const screens = only === undefined ? SCREENS : new Map([[only, SCREENS.get(only)!]]);
   mkdirSync("public/art/images", { recursive: true });
   for (const [k, draw] of screens) {

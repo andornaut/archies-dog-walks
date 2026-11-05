@@ -298,7 +298,7 @@ const DEBUFFS: ReadonlyMap<string, (step: number) => Grid> = new Map([
 ]);
 
 // Every sprite: [key, [[tag, frames, duration in ms]]].
-export function* sprites(): Generator<Sprite> {
+function* sprites(): Generator<Sprite> {
   for (const [name, draw] of DEBUFFS) {
     yield [
       `fx-debuff-${name}`,

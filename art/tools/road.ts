@@ -88,7 +88,7 @@ function key(x: number, y: number): string {
 
 // What a sprite's frames are drawn on: each module's grid, swapped for a Mini by small(), and the
 // drawings small() and minis.ts draw at the small size in its place.
-export interface RoadScope extends DrawingScope {
+interface RoadScope extends DrawingScope {
   faceFront: FaceFront;
   squirrelHead: (g: Drawable, x: number, y: number) => void;
 }
@@ -147,7 +147,7 @@ export function faceDisc(
 
 // A rim colour pair: lit where an edge faces up or left, shade (or null, leaving it dark) where it
 // faces right or down.
-export type RimPair = readonly [lit: string, shade: string | null];
+type RimPair = readonly [lit: string, shade: string | null];
 export type Rims = Readonly<Record<string, RimPair>>;
 
 // Light a dark figure's silhouette so it holds on the dslate road: an edge pixel of a colour in rims
@@ -313,7 +313,7 @@ export function headlamp<G extends Drawable>(
 export const SCALE = 1.5;
 // The ice cream truck is drawn in its own pixels at 56x50, then on a Mini that keeps its 56 columns
 // (a lane less 4px each side) and draws its rows ROW_SCALE times.
-export const ROW_SCALE = 1.2;
+const ROW_SCALE = 1.2;
 export const TRUCK_SCALE: readonly [number, number] = [1, ROW_SCALE];
 
 function isOptions(v: unknown): v is Record<string, unknown> {
@@ -345,7 +345,7 @@ export function drawn<A extends unknown[], R>(s: Scale, draw: (...args: A) => R,
 }
 
 // draw(...args) at SCALE: a person, an animal or a pickup.
-export function big<A extends unknown[], R>(draw: (...args: A) => R, ...args: A): R {
+function big<A extends unknown[], R>(draw: (...args: A) => R, ...args: A): R {
   return drawn(SCALE, draw, ...args);
 }
 
@@ -399,7 +399,7 @@ export function backArm(
 // much. flare throws both hands that many pixels out from the sides and reach shortens both arms,
 // for a start or a stumble. sway carries both arms that many pixels sideways with the shoulders as
 // the upper body sways.
-export function walkerArms(
+function walkerArms(
   g: Drawable,
   xs: readonly [number, number],
   w: number,
@@ -419,7 +419,7 @@ export function walkerArms(
 }
 
 // A solid limb between joints, rasterized on the drawing's own grid.
-export function limbBar(g: Drawable, a: Point, b: Point, width: number, colour: string): void {
+function limbBar(g: Drawable, a: Point, b: Point, width: number, colour: string): void {
   const dx = b[0] - a[0];
   const dy = b[1] - a[1];
   const length = Math.max(0.001, Math.hypot(dx, dy));
@@ -436,14 +436,14 @@ export function limbBar(g: Drawable, a: Point, b: Point, width: number, colour: 
 }
 
 // Move the hips toward the planted leg while the other knee recovers.
-export function supportShift(lf: number, rf: number): number {
+function supportShift(lf: number, rf: number): number {
   if (rf < lf) {
     return -2 / 3;
   }
   return lf < rf ? 2 / 3 : 0;
 }
 
-export interface LegOptions {
+interface LegOptions {
   centres?: readonly [number, number];
   top?: number;
   width?: number;
@@ -497,7 +497,7 @@ export interface WalkerPose {
 // Casey's cap and ponytail above a shaped hoodie, with bent elbows and recovery knees. The head rides
 // the hoodie: it bobs and sways with the shoulders, so the neck keeps its length and stays centred on
 // the collar.
-export function caseyBack({
+function caseyBack({
   arms = 0,
   bob = 0,
   flare = 0,
@@ -542,7 +542,7 @@ export function caseyBack({
 // Ada, 11, mixed race, caramel skin, long black curls falling straight down: yellow tee, blue shorts.
 // She stands 4px shorter than the adults: her head and body sit lower and her legs are shorter. Her
 // shorts, tee, arms and hair sway together, so the hidden neck stays joined to the shoulders.
-export function adaBack({
+function adaBack({
   arms = 0,
   bob = 0,
   flare = 0,
@@ -630,7 +630,7 @@ export function adaBack({
 
 // Mr. B, 45, Black, bald (his beard is under his chin, out of sight from behind): lilac tee, navy
 // track pants, sneakers. The tee's lilac is a hue no road has, so he reads on all six.
-export function mrBBack({
+function mrBBack({
   arms = 0,
   bob = 0,
   flare = 0,
@@ -687,7 +687,7 @@ export function mrBBack({
 
 // Trista, 50, dirty blonde bob to the shoulders, cute: green cardigan, brown skirt, tights, brown
 // flats.
-export function tristaBack({
+function tristaBack({
   arms = 0,
   bob = 0,
   flare = 0,
@@ -759,16 +759,16 @@ export function tristaBack({
 
 // Ada's curly locks as [x, top row, rows, colour], each a 1px line swinging along CURL_WAVE as it
 // falls, two rows at a time, so every pixel of a lock touches the next.
-export const CURL_LOCKS: readonly (readonly [number, number, number, string])[] = [
+const CURL_LOCKS: readonly (readonly [number, number, number, string])[] = [
   [11, 20, 10, "dslate"],
   [15, 19, 10, "dslate"],
   [19, 21, 8, "ink"],
 ];
-export const CURL_WAVE: readonly number[] = [0, 0, 1, 1, 0, 0, -1, -1];
+const CURL_WAVE: readonly number[] = [0, 0, 1, 1, 0, 0, -1, -1];
 
 // [first row, rows] of each straight run of a lock length rows long: a run is one 1px-wide rect, so
 // drawn bigger the lock stays unbroken.
-export function curlRuns(length: number): [number, number][] {
+function curlRuns(length: number): [number, number][] {
   const out: [number, number][] = [];
   let k = 0;
   while (k < length) {
@@ -785,9 +785,9 @@ export function curlRuns(length: number): [number, number][] {
   return out;
 }
 
-export type WalkerDraw = (pose?: WalkerPose) => Drawable;
+type WalkerDraw = (pose?: WalkerPose) => Drawable;
 
-export const WALKERS: readonly (readonly [string, WalkerDraw])[] = [
+const WALKERS: readonly (readonly [string, WalkerDraw])[] = [
   ["walker-casey", caseyBack],
   ["walker-ada", adaBack],
   ["walker-mr-b", mrBBack],
@@ -809,26 +809,26 @@ export const HUMAN_WALK_MS = 50;
 // The walkers' upper body (head, neck, torso and arms) sways as one a beat after the hips settle over
 // the planted foot, so the head never slides on the shoulders. The neutral first pose keeps the
 // pack's visibility stable. A 2/3 design-pixel movement is one native export pixel.
-export const WALKER_SWAY: readonly number[] = [0, -2 / 3, -2 / 3, 0, 2 / 3, 2 / 3, 0, 0];
-export const WALKER_WALK: readonly WalkerPose[] = HUMAN_WALK.map((pose, i) => ({
+const WALKER_SWAY: readonly number[] = [0, -2 / 3, -2 / 3, 0, 2 / 3, 2 / 3, 0, 0];
+const WALKER_WALK: readonly WalkerPose[] = HUMAN_WALK.map((pose, i) => ({
   ...pose,
   sway: WALKER_SWAY[i]!,
 }));
-export const WALKER_WALK_MS = 80;
-export const WALKER_REACT: readonly WalkerPose[] = [
+const WALKER_WALK_MS = 80;
+const WALKER_REACT: readonly WalkerPose[] = [
   { bob: -4, flare: 3, lf: -4, reach: 1, rf: -4 },
   { bob: -1, flare: 1, lf: -1, rf: -1 },
 ];
 // A bump: lurch left with the arms up, wobble back, steady (a right lean would push a tote out of the
 // frame). Each pose is [lean, walker pose].
-export const WALKER_STUMBLE: readonly (readonly [number, WalkerPose])[] = [
+const WALKER_STUMBLE: readonly (readonly [number, WalkerPose])[] = [
   [-2, { arms: 1, flare: 2, rf: -3 }],
   [1, { arms: -1, flare: 3, lf: -1 }],
   [-1, { arms: -1, bob: -2 / 3, flare: 1, lf: -2 }],
   [0, {}],
 ];
 // Waiting while the walk pauses: feet planted, arms at rest, a 1px breath.
-export const WALKER_IDLE: readonly WalkerPose[] = [{}, { bob: -1 }];
+const WALKER_IDLE: readonly WalkerPose[] = [{}, { bob: -1 }];
 // The breathing bob every standing person shares, and its frame duration in ms.
 export const BREATH: readonly number[] = [0, -1];
 export const BREATH_MS = 400;
@@ -868,7 +868,7 @@ export function lean(source: Drawable, k: number): Drawable {
 // A walker waving, facing the camera: the same clothes, colours and frame as the back view, feet on
 // the same rows, the left arm (screen right) raised and swinging from the shoulder.
 
-export type RaisedArm = (
+type RaisedArm = (
   g: Drawable,
   x: number,
   w: number,
@@ -908,7 +908,7 @@ export const raisedArm: RaisedArm = (g, x, w, top, bottom, dx, parts) => {
 const painters: { raisedArm: RaisedArm } = { raisedArm };
 
 // Eyes for dark skin: a white beside each ink pupil, so they hold on the face.
-export function frontEyes(g: Drawable, cx: number, y: number): void {
+function frontEyes(g: Drawable, cx: number, y: number): void {
   for (const x of [cx - 5, cx + 3]) {
     g.rect(x, y, 1, 2, "white");
     g.rect(x + 1, y, 1, 2, "ink");
@@ -917,12 +917,7 @@ export function frontEyes(g: Drawable, cx: number, y: number): void {
 
 // [left column, top row, size] in pixels of each eye faceFront draws at (cx, y) with spread: 2px at
 // 1x, and on a Mini the eyes mini.ts's faceFront draws at its scale.
-export function eyeBoxes(
-  g: Drawable,
-  cx: number,
-  y: number,
-  spread = 4,
-): [number, number, number][] {
+function eyeBoxes(g: Drawable, cx: number, y: number, spread = 4): [number, number, number][] {
   const s = scaleOf(g);
   const n = Math.max(1, Math.floor(2 * s + 0.5));
   const top = Math.floor((y + 1) * s + 0.5 - n / 2);
@@ -933,14 +928,7 @@ export function eyeBoxes(
 // corners cut, and a bridge between them a row under the eyes' top. Inside each ring the lens shows
 // skin with a 2px pupil glinting white at its top-left, set toward the nose, so they read as glasses
 // and not sunglasses. Drawn in pixels round the eyes, so they fit them at any scale.
-export function glasses(
-  g: Drawable,
-  cx: number,
-  y: number,
-  c: string,
-  spread = 4,
-  skin = "skin1",
-): void {
+function glasses(g: Drawable, cx: number, y: number, c: string, spread = 4, skin = "skin1"): void {
   const px = raster(g);
   const [[lx, top, n], [rx]] = eyeBoxes(g, cx, y, spread) as [
     [number, number, number],
@@ -967,7 +955,7 @@ export function glasses(
 
 // A small nose between the eyes faceFront draws at (cx, y), just under their bottom row: a 1px
 // shadow down its right side and a pixel at its tip, so glasses have something to sit on.
-export function nose(g: Drawable, cx: number, y: number, c = "skin2", spread = 4): void {
+function nose(g: Drawable, cx: number, y: number, c = "skin2", spread = 4): void {
   const px = raster(g);
   const [[lx, top, n], [rx]] = eyeBoxes(g, cx, y, spread) as [
     [number, number, number],
@@ -1007,14 +995,14 @@ export function raiseMouth(
 }
 
 // A walker's front-view pose: the wave's hand swing and the bob.
-export interface FrontPose {
+interface FrontPose {
   bob?: number;
   wave?: number;
 }
 
 // Casey facing the camera: the amber cap's orange brim over the eyes, sky hoodie with a blue kangaroo
 // pocket and white drawstrings, jeans, white sneakers.
-export function caseyFront({ bob = 0, wave = 0 }: FrontPose = {}): Drawable {
+function caseyFront({ bob = 0, wave = 0 }: FrontPose = {}): Drawable {
   const g = scope.Grid(32, 48);
   const b = bob;
   for (const x of [11, 17]) {
@@ -1061,7 +1049,7 @@ export function caseyFront({ bob = 0, wave = 0 }: FrontPose = {}): Drawable {
 
 // Ada facing the camera, 4px shorter than the adults: long black curls framing her face and falling
 // past her shoulders, a pink clip, yellow tee, blue shorts.
-export function adaFront({ bob = 0, wave = 0 }: FrontPose = {}): Drawable {
+function adaFront({ bob = 0, wave = 0 }: FrontPose = {}): Drawable {
   const g = scope.Grid(32, 48);
   const b = bob;
   for (const x of [12, 17]) {
@@ -1124,7 +1112,7 @@ export function adaFront({ bob = 0, wave = 0 }: FrontPose = {}): Drawable {
 
 // Mr. B facing the camera: bald, the chin-strap beard along his jaw and under his chin, a smile,
 // lilac tee, navy track pants with a grey stripe, white sneakers.
-export function mrBFront({ bob = 0, wave = 0 }: FrontPose = {}): Drawable {
+function mrBFront({ bob = 0, wave = 0 }: FrontPose = {}): Drawable {
   const g = scope.Grid(32, 48);
   const b = bob;
   for (const x of [11, 17]) {
@@ -1178,7 +1166,7 @@ const MR_B_RIM: Rims = {
 
 // Mr. B absorbed in his phone: bald head bowed, pupils down toward a small side-held phone, bare
 // upper lip, chin beard.
-export function mrBPhone({ bob = 0, tap = 0 }: { bob?: number; tap?: number } = {}): Drawable {
+function mrBPhone({ bob = 0, tap = 0 }: { bob?: number; tap?: number } = {}): Drawable {
   const g = scope.Grid(32, 48);
   const b = bob;
   for (const x of [11, 17]) {
@@ -1237,7 +1225,7 @@ export function mrBPhone({ bob = 0, tap = 0 }: { bob?: number; tap?: number } = 
 // Trista facing the camera: a dirty blonde bob framing her face with a side-swept fringe, round
 // glasses, a green cardigan open over a white blouse, brown skirt, tights, brown flats, her apple tote
 // on her right shoulder (screen left).
-export function tristaFront({ bob = 0, wave = 0 }: FrontPose = {}): Drawable {
+function tristaFront({ bob = 0, wave = 0 }: FrontPose = {}): Drawable {
   const g = scope.Grid(32, 48);
   const b = bob;
   for (const x of [11, 17]) {
@@ -1306,17 +1294,17 @@ export function tristaFront({ bob = 0, wave = 0 }: FrontPose = {}): Drawable {
   });
 }
 
-export type FrontDraw = (pose?: FrontPose) => Drawable;
+type FrontDraw = (pose?: FrontPose) => Drawable;
 
-export const WAVES: ReadonlyMap<string, FrontDraw> = new Map([
+const WAVES: ReadonlyMap<string, FrontDraw> = new Map([
   ["walker-casey", caseyFront],
   ["walker-ada", adaFront],
   ["walker-mr-b", mrBFront],
   ["walker-trista", tristaFront],
 ]);
 // The hand's swing right of the shoulder, one frame each: out, further, back.
-export const WALKER_WAVE: readonly number[] = [1, 3, 4, 3];
-export const WALKER_WAVE_MS = 150;
+const WALKER_WAVE: readonly number[] = [1, 3, 4, 3];
+const WALKER_WAVE_MS = 150;
 
 // ---------- the walkers cheering (front view) ----------
 // The wave drawing with both arms raised: the hanging arm is cleared, then the right arm is raised as
@@ -1324,7 +1312,7 @@ export const WALKER_WAVE_MS = 150;
 // 32x48 design grid as rects [x0, x1, y0, y1: columns x0 to x1 - 1, rows y0 to y1 - 1 before the
 // crouch] and its colours; only those colours are cleared, so what overlaps the arm (Trista's tote)
 // stays.
-export const CHEER_ARMS: ReadonlyMap<
+const CHEER_ARMS: ReadonlyMap<
   string,
   readonly [readonly (readonly [number, number, number, number])[], readonly string[]]
 > = new Map([
@@ -1344,21 +1332,17 @@ export const CHEER_ARMS: ReadonlyMap<
 ]);
 // One frame each: [crouch in design pixels, the hands' swing out from the shoulders, hop in pixels]:
 // crouch, take off, the top of the hop, land.
-export const WALKER_CHEER: readonly (readonly [number, number, number])[] = [
+const WALKER_CHEER: readonly (readonly [number, number, number])[] = [
   [2, 1, 0],
   [0, 3, 2],
   [0, 4, 3],
   [1, 3, 0],
 ];
-export const WALKER_CHEER_MS = 120;
+const WALKER_CHEER_MS = 120;
 
 // key's front view (WAVES) with both arms raised swing design pixels out from the shoulders,
 // crouched bob.
-export function cheering(
-  name: string,
-  swing: number,
-  { bob = 0 }: { bob?: number } = {},
-): Drawable {
+function cheering(name: string, swing: number, { bob = 0 }: { bob?: number } = {}): Drawable {
   const [rects, cols] = CHEER_ARMS.get(name)!;
   const hexes = new Set(cols.map((c) => K[c]!));
   const lift = painters.raisedArm;
@@ -1391,7 +1375,7 @@ export function cheering(
 }
 
 // A frame's pixel rows moved hop rows up, the feet off the ground.
-export function hopped(rows: Frame, hop: number): Frame {
+function hopped(rows: Frame, hop: number): Frame {
   return [
     ...rows.slice(hop),
     ...Array.from({ length: Math.max(0, hop) }, () => Array<Colour>(rows[0]!.length).fill(null)),
@@ -1405,7 +1389,7 @@ export const TREAT_IDLE: readonly { lift: number }[] = [{ lift: 0 }, { lift: -1 
 // The heart on the treat's bone, by its width in drawn pixels: 1 red, d dred, l the lit pixel (pink,
 // white when it glints; the 3-wide heart is too small for one). treatHeart picks the widest that
 // suits the scale it is drawn at.
-export const TREAT_HEARTS: ReadonlyMap<number, readonly string[]> = new Map([
+const TREAT_HEARTS: ReadonlyMap<number, readonly string[]> = new Map([
   [7, [".11.11.", "1l11111", "111111d", ".1111d.", "..11d..", "...1..."]],
   [5, ["11.11", "1l11d", ".11d.", "..1.."]],
   [3, ["1.1", "111", ".1."]],
@@ -1413,7 +1397,7 @@ export const TREAT_HEARTS: ReadonlyMap<number, readonly string[]> = new Map([
 
 // A TREAT_HEARTS heart centred on (cx, cy) in design pixels, drawn pixel for pixel at g's scale (as
 // faceFront draws a face) so it keeps its shape at every size: 7 wide from 1.3x, 5 from 0.9x, else 3.
-export function treatHeart(g: Drawable, cx: number, cy: number, glint: boolean): void {
+function treatHeart(g: Drawable, cx: number, cy: number, glint: boolean): void {
   const s = scaleOf(g);
   let w = 3;
   if (s >= 1.3) {
@@ -1485,7 +1469,7 @@ export function tip(rx: number): Drawable {
 
 // ---------- encounters (facing the player) ----------
 
-export interface SkunkPose {
+interface SkunkPose {
   blink?: boolean;
   pawL?: number;
   pawR?: number;
@@ -1586,14 +1570,7 @@ export const SQUIRREL_EYE_SPREAD = 4 / 3;
 // the body into a plume rx wide at the top, its tip flicked out, with a lighter streak down its core,
 // so it reads apart from the darker body in front of it. sway moves the plume sideways and leaves the
 // stem on the body.
-export function squirrelTail(
-  g: Drawable,
-  x: number,
-  y: number,
-  rx: number,
-  ry: number,
-  sway = 0,
-): void {
+function squirrelTail(g: Drawable, x: number, y: number, rx: number, ry: number, sway = 0): void {
   const f = SQUIRREL_FUR;
   g.cel(x - 0.5, y + 0.4 * ry, rx - 1, 0.6 * ry, f.fur, f.shade, f.lit);
   const px = x + sway;
@@ -1623,7 +1600,7 @@ export function squirrel({ tail = 0 }: { tail?: number } = {}): Drawable {
 
 // The squirrel's head facing the player, its eyes' centres on row y and either side of column x, with
 // its ears, an ink chin line parting it from the body, and its face.
-export function squirrelHead(g: Drawable, x: number, y: number): void {
+function squirrelHead(g: Drawable, x: number, y: number): void {
   const f = SQUIRREL_FUR;
   g.tri([x - 3, y - 0.7], [x - 2.3, y - 3.3], [x - 0.9, y - 2], f.fur);
   g.tri([x + 3, y - 0.7], [x + 2.3, y - 3.3], [x + 0.9, y - 2], f.fur);
@@ -1643,7 +1620,7 @@ export function squirrelHead(g: Drawable, x: number, y: number): void {
 
 // One frame of the squirrel's bound: [body y, head y, tail [x, y, rx, ry], front paws [left x, right
 // x, y, height]].
-export type SquirrelBound = readonly [
+type SquirrelBound = readonly [
   body: number,
   head: number,
   tail: readonly [number, number, number, number],
@@ -1654,7 +1631,7 @@ export type SquirrelBound = readonly [
 // its eyes raster alike every frame. It lands stretched low and wide with its tail streaming up
 // behind, crouches to push off with its tail swinging over, flies gathered 2px higher with its paws
 // tucked under its chin and its tail arched, then reaches down for the next landing.
-export const SQUIRREL_BOUND: readonly SquirrelBound[] = [
+const SQUIRREL_BOUND: readonly SquirrelBound[] = [
   [25.3, 23 + 1 / 3, [21.8, 20, 3, 5.6], [12, 18 + 2 / 3, 27 + 2 / 3, 4 / 3]],
   [24.7, 22, [21.6, 18.8, 3, 5.6], [12 + 2 / 3, 18, 27 + 1 / 3, 4 / 3]],
   [23.4, 20 + 2 / 3, [21, 17.3, 3, 5.4], [13 + 1 / 3, 17 + 1 / 3, 26, 4 / 3]],
@@ -1731,8 +1708,8 @@ export function puddle(f: number | boolean, w = 112, h = 48): Drawable {
 
 // The pothole's edge, star-shaped about POTHOLE_CENTRE, as [x, y] corners on its 112x48 frame, joined
 // straight: the far rim broken into teeth and steps, the near rim smoother with one chip out of it.
-export const POTHOLE_CENTRE: Point = [54, 25];
-export const POTHOLE_EDGE: readonly Point[] = [
+const POTHOLE_CENTRE: Point = [54, 25];
+const POTHOLE_EDGE: readonly Point[] = [
   [8, 28],
   [10, 21],
   [14, 19],
@@ -1774,14 +1751,14 @@ export const POTHOLE_EDGE: readonly Point[] = [
   [9, 33],
 ];
 // How many rows the far wall drops to the water.
-export const POTHOLE_DEPTH = 12;
+const POTHOLE_DEPTH = 12;
 // How many pixels each side the wall's foot smooths the far rim's top over, so its teeth stay on the
 // rim.
-export const POTHOLE_FOOT = 5;
+const POTHOLE_FOOT = 5;
 // The slabs of the near lip broken and tipped into the water, as four corners clockwise from the top
 // left: a grey face, lgrey along its broken top edge, over an ash edge POTHOLE_SLAB_EDGE rows deep
 // along its bottom.
-export const POTHOLE_SLABS: readonly (readonly [Point, Point, Point, Point])[] = [
+const POTHOLE_SLABS: readonly (readonly [Point, Point, Point, Point])[] = [
   [
     [19, 35],
     [31, 34],
@@ -1789,10 +1766,10 @@ export const POTHOLE_SLABS: readonly (readonly [Point, Point, Point, Point])[] =
     [14, 40],
   ],
 ];
-export const POTHOLE_SLAB_EDGE = 1;
+const POTHOLE_SLAB_EDGE = 1;
 // The cracks running out from the rim into the road, each a run of [x, y] corners: an ink line over a
 // grey one, lit along its lower edge.
-export const POTHOLE_CRACKS: readonly (readonly Point[])[] = [
+const POTHOLE_CRACKS: readonly (readonly Point[])[] = [
   [
     [23, 10],
     [19, 7],
@@ -1817,7 +1794,7 @@ export const POTHOLE_CRACKS: readonly (readonly Point[])[] = [
   ],
 ];
 // The water's white glint, [x, y, w, h]; it moves a pixel right on frame 1.
-export const POTHOLE_GLINT: readonly [number, number, number, number] = [54, 31, 7, 2];
+const POTHOLE_GLINT: readonly [number, number, number, number] = [54, 31, 7, 2];
 
 // The road's 2-lane pothole, 112x48 like the puddle, a ground decal with no outline, seen from the
 // walker's eye: a coal far wall dropping POTHOLE_DEPTH rows from a broken far rim, its cut asphalt ash
@@ -1973,7 +1950,7 @@ export function pothole(f: number | boolean, w = 112, h = 48): Drawable {
 // top, its base on the frame's last row. A swollen puff still stops a pixel short of the frame's top
 // and sides, so no lobe is clipped flat; along the bottom the frame's last row cuts them level, where
 // the haze meets the road.
-export const CLOUD_PUFFS: readonly (readonly [number, number, number])[] = [
+const CLOUD_PUFFS: readonly (readonly [number, number, number])[] = [
   [44, 28, 30],
   [22, 31, 15],
   [66, 31, 15],
@@ -1987,12 +1964,12 @@ export const CLOUD_PUFFS: readonly (readonly [number, number, number])[] = [
   [19, 24, 7],
   [70, 24, 7],
 ];
-export const CLOUD_SQUASH = 0.42;
-export const CLOUD_W = 88;
-export const CLOUD_H = 40;
-export const CLOUD_SIZE: readonly [number, number] = [112, 60];
+const CLOUD_SQUASH = 0.42;
+const CLOUD_W = 88;
+const CLOUD_H = 40;
+const CLOUD_SIZE: readonly [number, number] = [112, 60];
 // Where each stink wisp starts, trailing 6 design rows down.
-export const CLOUD_WISPS: readonly Point[] = [
+const CLOUD_WISPS: readonly Point[] = [
   [22, 25],
   [62, 22],
   [72, 30],
@@ -2085,7 +2062,7 @@ export function skunkCloud(step: number, s = 1): Drawable {
   return g;
 }
 
-export interface CorgiPose {
+interface CorgiPose {
   bl?: number;
   bob?: number;
   br?: number;
@@ -2243,7 +2220,7 @@ export function dressed(top: Top, q: PersonOptions = {}): Drawable {
 // else ink. The sleeves take lgrey for light, so the arms stay apart from the white-striped chest.
 // Drawn in pixels at the grid's scale, every stripe pair 4 x scale rows tall (the light the shorter
 // half), so drawn bigger the stripes stay even instead of breaking up into 1px rows.
-export function stripes(
+function stripes(
   g: Drawable,
   x: number,
   y0: number,
@@ -2275,7 +2252,7 @@ export function stripes(
 // (POUCHES, widest first), pouchPx picking by the grid's scale, so it stays a clean bitmap at every
 // depth step and never shrinks below TIP_POUCH, which still reads at @50. The cards hold TIP_POUCH
 // close and FAR_POUCH in a distant hand.
-export const BIG_POUCH: readonly string[] = [
+const BIG_POUCH: readonly string[] = [
   "...c.c...",
   "....c....",
   "..lgcgf..",
@@ -2301,7 +2278,7 @@ export const TIP_POUCH: readonly string[] = [
   "..fff..",
 ];
 export const FAR_POUCH: readonly string[] = [".c.c.", "..c..", ".lgf.", "lgygf", "lgggf", ".fff."];
-export const POUCHES: readonly (readonly string[])[] = [BIG_POUCH, TIP_POUCH];
+const POUCHES: readonly (readonly string[])[] = [BIG_POUCH, TIP_POUCH];
 export const POUCH_INK: Readonly<Record<string, string>> = {
   a: "amber",
   c: "cream",
@@ -2312,12 +2289,12 @@ export const POUCH_INK: Readonly<Record<string, string>> = {
 };
 // The pouch's width in design pixels on the thief: BIG_POUCH from the full size down to @88,
 // TIP_POUCH below.
-export const POUCH_WIDTH = 6.5;
+const POUCH_WIDTH = 6.5;
 
 // The tip pouch from POUCHES hanging from a fist: centred on design column cx, its drawstring's top
 // on the last pixel row above design row fist, where the fist ends; the widest no wider than
 // POUCH_WIDTH design pixels at the grid's scale (the smallest at least).
-export function pouchPx(g: Drawable, cx: number, fist: number): void {
+function pouchPx(g: Drawable, cx: number, fist: number): void {
   const s = scaleOf(g);
   const px = raster(g);
   const sy = rowScaleOf(g);
@@ -2427,7 +2404,7 @@ export function thiefFleeing(stride: number, pouch = true): Drawable {
 // The neighbour's hearts, widest first: red, shaded dred down the right, lit pink and white at the top
 // of the left lobe. heartPx picks the widest that fits the grid's scale, so the heart stays a clean
 // bitmap at every depth step instead of a blur of scaled curves.
-export const HEARTS: readonly (readonly string[])[] = [
+const HEARTS: readonly (readonly string[])[] = [
   [
     ".111...111.",
     "1wh11.11111",
@@ -2452,7 +2429,7 @@ export const HEARTS: readonly (readonly string[])[] = [
   [".11.11.", "1wh1111", "1h1111d", ".1111d.", "..11d..", "...d..."],
   [".1.1.", "1h11d", ".11d.", "..d.."],
 ];
-export const HEART_INK: Readonly<Record<string, string>> = {
+const HEART_INK: Readonly<Record<string, string>> = {
   1: "red",
   d: "dred",
   h: "pink",
@@ -2461,7 +2438,7 @@ export const HEART_INK: Readonly<Record<string, string>> = {
 
 // A heart from HEARTS centred on design column cx with its top on design row top: the widest no wider
 // than width design pixels at the grid's scale (the smallest at least), then smaller steps down.
-export function heartPx(g: Drawable, cx: number, top: number, width: number, smaller = 0): void {
+function heartPx(g: Drawable, cx: number, top: number, width: number, smaller = 0): void {
   const s = scaleOf(g);
   const px = raster(g);
   const sy = rowScaleOf(g);
@@ -2542,10 +2519,10 @@ export function neighbourTop(pet: boolean, beat: number): Top {
 
 // The $ on the wallet's bill, in drawn pixels so it stays exact at any scale: 3x7 down to the 1.1x
 // depth step, a 1px stroke below that, where the bill is too short for it.
-export const WALLET_DOLLAR: readonly string[] = [".1.", "111", "1..", "111", "..1", "111", ".1."];
+const WALLET_DOLLAR: readonly string[] = [".1.", "111", "1..", "111", "..1", "111", ".1."];
 
 // The wallet's rim: LIT, with a dimmer brown down the leather's shaded sides.
-export const WALLET_RIM: Rims = { ...LIT, dbrown: ["skin2", "brown"], plum: ["skin2", "brown"] };
+const WALLET_RIM: Rims = { ...LIT, dbrown: ["skin2", "brown"], plum: ["skin2", "brown"] };
 
 // The lost wallet, with the road outline: one green bill lit along its top edge stands up out of a
 // brown leather wallet, a white $ on it; the wallet's flap tab on the right has an amber snap. The
@@ -2585,7 +2562,7 @@ export function wallet(glint: boolean): Drawable {
 
 // The bark pop: a white bubble with red sound arcs, one arc and then, popped bigger, a second outside
 // it, outlined in plum on every side so it holds on the light roads.
-export function bark(isBig: boolean): Drawable {
+function bark(isBig: boolean): Drawable {
   const g = edged(scope.Grid(16, 16), "plum");
   const r = isBig ? 6 : 5;
   g.ell(8.5, 7, r, r - 0.5, "white", "lgrey");
@@ -2784,7 +2761,7 @@ export function stair(
 
 // The mail carrier: a sky-blue shirt and cap, a navy brim, dark skin and a mailbag on a strap; the
 // free arm swings, the one by the bag stays.
-export function mailTop(g: Drawable, b: number, arms = 0): void {
+function mailTop(g: Drawable, b: number, arms = 0): void {
   g.rect(9, 21 + b, 14, 12, "sky");
   g.rect(20, 21 + b, 3, 12, "blue");
   g.rect(15, 21 + b, 2, 12, "cyan");
@@ -2900,9 +2877,9 @@ export function stroller({ bob = 0, lf = 0, rf = 0 }: WalkerPose = {}): Drawable
   return rim(g, { ...LIT, teal: ["dgreen", null] });
 }
 
-export type Side = "left" | "right";
+type Side = "left" | "right";
 
-export interface JoggerPose {
+interface JoggerPose {
   bob?: number;
   knee?: Side | null;
   passing?: Side | null;
@@ -3005,14 +2982,14 @@ export function jogger({
 }
 
 // The bib's number, 3x5 digits drawn in the grid's own pixels, as WALLET_DOLLAR is.
-export const BIB: readonly (readonly string[])[] = [
+const BIB: readonly (readonly string[])[] = [
   ["111", "001", "010", "100", "100"],
   ["111", "100", "111", "001", "111"],
 ];
 
 // The race number "75" centred on design point (cx, cy), 1px apart, in ink; under 1.5x the bib is too
 // small for digits and takes a 1px ink bar instead.
-export function bib(g: Drawable, cx: number, cy: number): void {
+function bib(g: Drawable, cx: number, cy: number): void {
   const s = scaleOf(g);
   const px = raster(g);
   const sy = rowScaleOf(g);
@@ -3035,7 +3012,7 @@ export function bib(g: Drawable, cx: number, cy: number): void {
   });
 }
 
-export interface BikePose {
+interface BikePose {
   flutter?: readonly [number, number, number];
   lf?: number;
   rf?: number;

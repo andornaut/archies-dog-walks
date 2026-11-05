@@ -259,7 +259,7 @@ export class Mini implements Drawable {
 // centred where it is at full size, with its white glint at the top-left when it is 2px. The mouth is
 // 2 x s wide on the row under the mouth's full-size row; from 0.75x it keeps its upturned corners,
 // unless they would touch the eyes.
-export function faceFront(
+function faceFront(
   s: number,
   g: Drawable,
   cx: number,

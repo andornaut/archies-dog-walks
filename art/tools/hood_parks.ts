@@ -154,7 +154,7 @@ const ANIMAL = road.SCALE;
 const OBSTACLE = obstacles.SCALE;
 
 // The grid every drawing here makes, which mini.ts's small swaps for a Mini while a sprite draws.
-export const scope: DrawingScope = {
+const scope: DrawingScope = {
   Grid: (w = 32, h = 32) => new Grid(w, h),
 };
 
@@ -236,7 +236,7 @@ const PORCH_CAT_WALK: readonly PorchCatPose[] = [
 // cards only, raises the near front paw up and out ahead, claws out, and narrows the eyes. Its coat is
 // white, so it reads apart from the tuxedo chase-cat and the ginger ambient-cat; the road outline
 // holds it on the light roads.
-export function porchCat({
+function porchCat({
   blink = false,
   bob = 0,
   far = 0,
@@ -334,7 +334,7 @@ const CAPYBARA_WALK_MS = 160;
 // is ahead), b the other pair; a foot swinging ahead lifts 1px. bob lifts the body (negative is up),
 // chew drops the jaw, ear lifts the ear (negative is up) and blink shuts the eye. No tail, so it never
 // reads as a dog.
-export function escapedCapybara({
+function escapedCapybara({
   a = 0,
   b = 0,
   blink = false,
@@ -463,7 +463,7 @@ const WING_STROKES: ReadonlyMap<Wing, readonly [tip: Point, back: Point]> = new 
 // under a red comb, a red wattle under an amber beak, on thin yellow legs. bob lifts the body
 // (negative is up), wing is the near wing's stroke (fold, up, mid or down), near and far are the feet,
 // and reach pulls the head back and up from its running stretch (negative is back).
-export function hen({
+function hen({
   bob = 0,
   far = [13 + 1 / 3, 27 + 1 / 3],
   near = [16, 27 + 1 / 3],
@@ -668,7 +668,7 @@ const FERRET_RIMS = Object.fromEntries(Object.entries(LIT).filter(([c]) => c !==
 // A pair of ferrets bounding across the road together, side view facing right: a champagne behind and
 // up the road, a sable ahead and nearer, nose to tail, so the pair reads as one. near and far are each
 // one's FERRET_BOUND pose; sniff lifts the sable's head and flicks the champagne's tail.
-export function ferrets({
+function ferrets({
   far = FERRET_STAND,
   near = FERRET_STAND,
   sniff = 0,
@@ -788,7 +788,7 @@ function pileLeaves(): Leaf[] {
 // (red down the lit left side, brown on the upper right, dbrick on the lower right) and a few more
 // over its face, each lit on its upper half; a red maple leaf lies on top, its edge lit red rather
 // than pink so it never reads as a heart. lift raises the maple leaf 1 drawn pixel and turns it over.
-export function leafPile(lift = 0): Drawable {
+function leafPile(lift = 0): Drawable {
   const g = edged(scope.Grid(SIZE, SIZE));
   const [rx, ry] = PILE_R;
   g.cel(PILE_X, PILE_Y, rx - 2, ry - 2, ...HEAP_CEL);
@@ -817,7 +817,7 @@ const BRICK = 5;
 // dbrick courses (below obstacles.ts's TEXTURE_MIN, one course line and no joints); tall white newel
 // posts under ball caps either side. A jack-o'-lantern sits on the top step, its eyes and grin cut
 // dark with a candle glowing amber inside; flicker 1 dims the glow to orange, 2 flares it yellow.
-export function porchSteps(flicker = 0): Drawable {
+function porchSteps(flicker = 0): Drawable {
   const g = edged(scope.Grid(SIZE, SIZE));
   const fine = scaleOf(g) >= obstacles.TEXTURE_MIN;
   for (const [top, x0, x1] of STEPS_ROWS) {
@@ -894,7 +894,7 @@ const LOWER_BOOKS: readonly Book[] = [
 // its sill, the post set in a small wooden planter of leaves. glint 1 and 2 run a white glint across
 // the glass, left then right, 2px wide down to obstacles.ts's TEXTURE_MIN; at rest a short glint sits
 // in its top left corner.
-export function littleFreeLibrary(glint = 0): Drawable {
+function littleFreeLibrary(glint = 0): Drawable {
   const g = edged(scope.Grid(SIZE, SIZE));
   // the planter: a wooden box lit tan along its cap, shaded down its right, leaves heaped round the
   // post
@@ -1003,7 +1003,7 @@ const FALLEN_LOG_WIDTH = obstacles.span(2);
 // jutting out of the bark. A broken branch stub rises from its back at the left, its snapped end pale;
 // moss grows over its back and down its side, two tan-capped mushrooms stand on it and fallen leaves
 // lie along its foot. leaf offsets the amber leaf on its back.
-export function fallenLog(leaf: Point = [0, 0], w = FALLEN_LOG_WIDTH): Drawable {
+function fallenLog(leaf: Point = [0, 0], w = FALLEN_LOG_WIDTH): Drawable {
   const g = edged(scope.Grid(w, ROW));
   const [ux, uy] = unit(g);
   const cut = w - 8;
@@ -1140,7 +1140,7 @@ const CHERRY_TREES_WIDTH = obstacles.span(3);
 // driftwood and shaded dstone along its foot. pose 1 sways each crown's top lobes 1 drawn pixel
 // right, and pose 2 shows one petal, 2 drawn pixels square, drifting down between the first two
 // trunks.
-export function cherryTrees(pose = 0, w = CHERRY_TREES_WIDTH): Drawable {
+function cherryTrees(pose = 0, w = CHERRY_TREES_WIDTH): Drawable {
   const g = edged(scope.Grid(w, GROVE_H));
   const [ux, uy] = unit(g);
   const sway = pose === 1;
@@ -1209,7 +1209,7 @@ function fenceEdge(c: string): string | null {
 // at the far steps), all on a low curb of pale driftwood stone lit cream along its top. The iron is
 // coal lit ash along the rails' and the posts' upper and left edges, the posts shaded ink down their
 // right. glint 1 runs a white glint along the top rail's lit edge in the first section.
-export function ironFence(lanes: number, glint = 0): Drawable {
+function ironFence(lanes: number, glint = 0): Drawable {
   const w = obstacles.span(lanes);
   const g = edged(scope.Grid(w, ROW), fenceEdge as Edge);
   const px = raster(g);
@@ -1311,7 +1311,7 @@ function scratch(g: Drawable, x: number, y: number, length: number): void {
 
 // The cat lashes out: a hiss puff swells while three bowed claw scratches slash down across it, red
 // lit pink, then the puff breaks up and calico fur tufts fly out and fall.
-export function hitPorchCat(step: number): Drawable {
+function hitPorchCat(step: number): Drawable {
   const g = hits.scope.Grid(64, 64);
   const cx = 32;
   const cy = 36;

@@ -894,7 +894,7 @@ function faces(): Frame[] {
 
 // One row per dog, then per walker: its happy face at 2x, then the portrait on the dog pick's tile
 // colours and the detail card well's sky.
-export function preview(out: string, scale = 4): void {
+function preview(out: string, scale = 4): void {
   const grounds: readonly Rgb[] = [
     [228, 166, 114],
     [234, 212, 170],
@@ -929,7 +929,7 @@ export function preview(out: string, scale = 4): void {
   writeFileSync(out, rgbPng(sheet));
 }
 
-export function build(): void {
+function build(): void {
   mkdirSync("public/art/images", { recursive: true });
   const keys = portraits();
   for (const [key, draw, side] of keys) {

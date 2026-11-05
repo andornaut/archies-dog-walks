@@ -86,7 +86,7 @@ const USAGE = `Usage:
   node art/tools/animals.ts build             export to public/art/sprites/`;
 
 // The grid every drawing here makes, which mini.ts's small swaps for a Mini while it runs.
-export const scope: DrawingScope = {
+const scope: DrawingScope = {
   Grid: (w = 32, h = 32) => new Grid(w, h),
 };
 
@@ -124,7 +124,7 @@ function paw(
 // A tuxedo cat sitting facing the player, its paws on rows 28 and 29: black coat, white bib, muzzle
 // and paws, green eyes, its tail curling up its right side with a white tip. tail swishes the tail 1px
 // right.
-export function cat({ tail = 0 }: { tail?: number } = {}): Drawable {
+function cat({ tail = 0 }: { tail?: number } = {}): Drawable {
   const g = edged(scope.Grid());
   g.cel(23 + tail, 22, 2, 6, "navy", "ink", "dslate");
   g.cel(22.5 + tail, 15.5, 2, 2, "white", "lgrey");
@@ -141,7 +141,7 @@ export function cat({ tail = 0 }: { tail?: number } = {}): Drawable {
 // y, front paws [left x, right x, top row, rows], tail [x, y, ry]. It lands stretched low and wide,
 // pushes off, flies gathered 4 units higher with its paws tucked and its tail flung up, then reaches
 // down for the next landing.
-export const CAT_BOUND: readonly (readonly [
+const CAT_BOUND: readonly (readonly [
   body: Oval,
   head: number,
   paws: readonly [number, number, number, number],
@@ -154,7 +154,7 @@ export const CAT_BOUND: readonly (readonly [
 ];
 
 // The cat bounding down the road at the player, a front elevation, at phase 0 to 3 of CAT_BOUND.
-export function catRun({ phase }: { phase: number }): Drawable {
+function catRun({ phase }: { phase: number }): Drawable {
   const g = edged(scope.Grid());
   const [[bx, by, brx, bry], hy, [lx, rx, py, ph], [tx, ty, tr]] = CAT_BOUND[phase]!;
   g.cel(tx, ty, 2, tr, "navy", "ink", "dslate");
@@ -224,7 +224,7 @@ function pigeon(
 }
 
 // The flock's spots: [x, feet row], the two behind, then the one in front.
-export const FLOCK: readonly Point[] = [
+const FLOCK: readonly Point[] = [
   [8, 21],
   [24, 22],
   [16, 29],
@@ -234,7 +234,7 @@ const FLIPS = [1, -1, 1] as const;
 
 type Lift = readonly [number, number, number];
 
-export interface PigeonsPose {
+interface PigeonsPose {
   lift?: Lift;
   peck?: boolean;
   wings?: number | null;
@@ -242,11 +242,7 @@ export interface PigeonsPose {
 
 // Three pigeons, two behind and one in front; peck has the front one peck, wings (see pigeon) spreads
 // the back right one's against the others', and lift raises each by its pixels.
-export function pigeons({
-  lift = [0, 0, 0],
-  peck = false,
-  wings = null,
-}: PigeonsPose = {}): Drawable {
+function pigeons({ lift = [0, 0, 0], peck = false, wings = null }: PigeonsPose = {}): Drawable {
   const g = edged(scope.Grid());
   const u = 1 / scaleOf(g);
   FLOCK.forEach(([x, y], i) => {
@@ -260,7 +256,7 @@ export function pigeons({
 
 // The flock's flutter down the road, each frame [wings, lift per pigeon]: wings beat down as the
 // flock hops, the front pigeon a beat behind the two at the back.
-export const PIGEONS_RUN: readonly (readonly [number, Lift])[] = [
+const PIGEONS_RUN: readonly (readonly [number, Lift])[] = [
   [-1, [0, 0, 1]],
   [0, [2, 2, 0]],
   [1, [3, 3, 2]],
@@ -285,14 +281,14 @@ function pigeonBack(g: Drawable, cx: number, cy: number, wings: number): void {
 
 // The flock taking off up the road, seen from behind: each frame [wings, rise per pigeon], the wings
 // beating up, out, down and out while the three climb and fall a pixel or two against each other.
-export const PIGEONS_FLEE: readonly (readonly [number, Lift])[] = [
+const PIGEONS_FLEE: readonly (readonly [number, Lift])[] = [
   [-1, [0, 1, 0]],
   [0, [1, 2, 1]],
   [1, [2, 2, 3]],
   [0, [1, 1, 2]],
 ];
 // Where each pigeon flies: its body's centre, the two ahead higher up.
-export const FLYERS: readonly Point[] = [
+const FLYERS: readonly Point[] = [
   [9, 13],
   [23, 11],
   [16, 22],
@@ -300,7 +296,7 @@ export const FLYERS: readonly Point[] = [
 
 // The flock flying off up the road, seen from behind: wings for all three, the middle one's against
 // the others', and rise lifting each by its pixels.
-export function pigeonsFleeing({ rise, wings }: { rise: Lift; wings: number }): Drawable {
+function pigeonsFleeing({ rise, wings }: { rise: Lift; wings: number }): Drawable {
   const g = edged(scope.Grid());
   const u = 1 / scaleOf(g);
   FLYERS.forEach(([x, y], i) => {
@@ -309,7 +305,7 @@ export function pigeonsFleeing({ rise, wings }: { rise: Lift; wings: number }): 
   return lit(g);
 }
 
-export interface DucklingPose {
+interface DucklingPose {
   peep?: boolean;
   step?: number;
   wing?: number;
@@ -349,7 +345,7 @@ function duckling(
 }
 
 // The ducklings' spots, as FLOCK.
-export const BROOD: readonly Point[] = [
+const BROOD: readonly Point[] = [
   [8, 22],
   [24, 23],
   [16, 29],
@@ -357,7 +353,7 @@ export const BROOD: readonly Point[] = [
 
 // Three ducklings, one in front; peep opens the front one's bill, wing and step (the back right
 // one's the other foot) make the waddle, and lift raises each by its pixels.
-export function ducklings({
+function ducklings({
   lift = [0, 0, 0],
   peep = false,
   step = 0,
@@ -373,7 +369,7 @@ export function ducklings({
 
 // The waddle-run down the road: a foot lifted with the wings out, both feet down as the brood bobs up
 // a pixel, the other foot lifted, down again.
-export const DUCKLINGS_RUN: readonly (DucklingPose & { lift?: Lift })[] = [
+const DUCKLINGS_RUN: readonly (DucklingPose & { lift?: Lift })[] = [
   { step: -1, wing: 1 },
   { lift: [1, 1, 1] },
   { step: 1, wing: 1 },
@@ -417,7 +413,7 @@ function ducklingSide(g: Drawable, cx: number, by: number, phase: number): void 
 
 // The brood hopping across the road in side view, facing right, in a line: the leader at phase, each
 // behind it a frame later.
-export function ducklingsHop({ phase }: { phase: number }): Drawable {
+function ducklingsHop({ phase }: { phase: number }): Drawable {
   const g = edged(scope.Grid());
   (
     [
@@ -433,11 +429,11 @@ export function ducklingsHop({ phase }: { phase: number }): Drawable {
 
 // One existing bird at the flock's native scale, isolated before birds overlap. Cropping this
 // rectangle from the combined flock would retain other birds or lose occluded pixels.
-export const DUCKLING_CROP: readonly [number, number, number, number] = [9, 12, 20, 24];
+const DUCKLING_CROP: readonly [number, number, number, number] = [9, 12, 20, 24];
 
 // The existing front bird centred at (16,29), or its existing side-view hop. lift is a rendered
 // pixel, as in ducklings(); neither pose changes the bird's native size or design.
-export function ducklingComponent({
+function ducklingComponent({
   lift = 0,
   peep = false,
   phase = null,
@@ -456,7 +452,7 @@ export function ducklingComponent({
 // A white rabbit facing the player: long ears with pink insides, a round head with a pink nose.
 // Sitting (bound null), its big hind feet either side on rows 28 and 29, twitch raising the right ear
 // 1px and the nose; bound is a frame of RABBIT_BOUND, the run at the player.
-export function rabbit({
+function rabbit({
   bound = null,
   twitch = 0,
 }: { bound?: number | null; twitch?: number } = {}): Drawable {
@@ -513,7 +509,7 @@ export function rabbit({
 // The rabbit's bound at the player, as CAT_BOUND: body [x, y, rx, ry], head y, ears (units above the
 // head), front paws [left x, right x, top row, rows]. It lands low and long with its ears laid back,
 // pushes off, flies gathered with its ears up, then reaches down.
-export const RABBIT_BOUND: readonly (readonly [
+const RABBIT_BOUND: readonly (readonly [
   body: Oval,
   head: number,
   ears: number,
@@ -556,7 +552,7 @@ function ear(g: Drawable, base: Point, tip: Point, c: string, inner: string | nu
 // crouches with its ears back, leaps stretched forward and up with the hind legs pushing off, flies 8
 // units up gathered with its ears raised, then lands on its front paws with the hind feet swinging up
 // behind.
-export const RABBIT_HOP: readonly (readonly [
+const RABBIT_HOP: readonly (readonly [
   body: Oval,
   haunch: readonly [number, number, number],
   head: Point,
@@ -601,7 +597,7 @@ export const RABBIT_HOP: readonly (readonly [
 // The white rabbit hopping across the road in side view, facing right, at phase 0 to 3 of RABBIT_HOP:
 // the far ear, front paw and hind foot a shade darker behind the near ones, a white puff of tail and
 // a pink nose. The game mirrors it for a hop to the left.
-export function rabbitHop({ phase }: { phase: number }): Drawable {
+function rabbitHop({ phase }: { phase: number }): Drawable {
   const g = edged(scope.Grid());
   const [body, [hx, hy, hr], [dx, dy], [tx, ty], [fx, fy, fl], [px, py, ph]] = RABBIT_HOP[phase]!;
   ear(g, [dx - 3, dy - 2.5], [tx - 2, ty + 1], "lgrey");
@@ -629,14 +625,14 @@ export function rabbitHop({ phase }: { phase: number }): Drawable {
 // The lumps of the snatchers' loot bundle about its centre: [dx, dy, rx, ry], the two at the bottom
 // side by side and the one over them smaller, so it reads as a soft knotted bundle and not a round
 // coin.
-export const BUNDLE: readonly Oval[] = [
+const BUNDLE: readonly Oval[] = [
   [-2, 1, 2.8, 2.6],
   [2.2, 1.2, 2.6, 2.4],
   [0, -1.4, 2.8, 2.4],
 ];
 // The bundle's size where a snatcher carries it slung, swinging or in a beak, so it fits over a
 // shoulder and under a beak; its knot stays full size, so its parts stay 2px.
-export const SLUNG = 0.75;
+const SLUNG = 0.75;
 
 // The snatchers' loot, centred on (x, y): a lumpy grey-brown cloth bundle, dstone lit stone, in a coal
 // line, gathered at the top under a knot whose two ends flare up either side. Grey, never tan, and
@@ -678,7 +674,7 @@ function bundle(
 // rounded ears rimmed white; and the bushy tail's bold rings, lgrey and coal, ending in an ink tip.
 // RACCOON_LIT is its rim for road.ts's lit: the coat lit driftwood, the legs stone, the paws and mask
 // ash.
-export const RACCOON_LIT: Rims = {
+const RACCOON_LIT: Rims = {
   coal: ["ash", null],
   dstone: ["stone", null],
   ink: ["ash", null],
@@ -739,7 +735,7 @@ function raccoonFace(
 }
 
 // A standing Snatch animal's pose: lf and rf lift a foot; bob raises everything above the legs.
-export interface StandingPose {
+interface StandingPose {
   bob?: number;
   lf?: number;
   rf?: number;
@@ -749,7 +745,7 @@ export interface StandingPose {
 // legs and paws, the black mask between white brows and a white pointed snout, rounded white-rimmed
 // ears, the bushy ringed tail curling up its right side past its shoulder, and the loot bundle
 // clutched at its chest.
-export function raccoon({ bob = 0, lf = 0, rf = 0 }: StandingPose = {}): Drawable {
+function raccoon({ bob = 0, lf = 0, rf = 0 }: StandingPose = {}): Drawable {
   const g = edged(scope.Grid(32, 48));
   const b = bob;
   // the ringed tail, from behind the right hip up its side, ending above the shoulder
@@ -790,19 +786,19 @@ export function raccoon({ bob = 0, lf = 0, rf = 0 }: StandingPose = {}): Drawabl
 
 // A run up the road, seen from behind, 4 frames: the stride (-1 the left knee up, 1 the right, 0
 // passing with both feet down) and the body's lift, highest off the pushing foot.
-export const FLEE: readonly { bob: number; stride: number }[] = [
+const FLEE: readonly { bob: number; stride: number }[] = [
   { bob: -2, stride: -1 },
   { bob: -1, stride: 0 },
   { bob: -2, stride: 1 },
   { bob: -1, stride: 0 },
 ];
-export const FLEE_MS = 90;
+const FLEE_MS = 90;
 
 // The raccoon running off up the road, seen from behind: the lifted leg short, the other planted, the
 // bushy ringed tail swinging down its back against the stride and the loot bundle bouncing over its
 // right shoulder, the white-rimmed ears and the mask's tips showing past its cheeks. stride 0 is the
 // passing frame, both feet down and the arms at its sides; bob lifts it.
-export function raccoonFleeing({ bob = -1, stride }: { bob?: number; stride: number }): Drawable {
+function raccoonFleeing({ bob = -1, stride }: { bob?: number; stride: number }): Drawable {
   const g = edged(scope.Grid(32, 48));
   const s = stride;
   const b = bob;
@@ -850,7 +846,7 @@ export function raccoonFleeing({ bob = -1, stride }: { bob?: number; stride: num
 
 // The raccoon on all fours: lf, rf, lh and rh lift a paw (negative up); sink lowers the body, and head
 // the head, which otherwise holds level; ear pins the ears back and out.
-export interface StalkPose {
+interface StalkPose {
   ear?: number;
   head?: number;
   lf?: number;
@@ -863,30 +859,30 @@ export interface StalkPose {
 // The raccoon's creep at the pack, as the coyote's (hazards.ts's COYOTE_WALK): one diagonal pair lifts
 // (lf, rf the front paws, lh, rh the hind ones, negative up) while the body sinks 1px under the level
 // head, then the other.
-export const RACCOON_STALK: readonly StalkPose[] = [
+const RACCOON_STALK: readonly StalkPose[] = [
   { lf: -2, rh: -1, sink: 1 },
   {},
   { lh: -1, rf: -2, sink: 1 },
   {},
 ];
-export const RACCOON_STALK_MS = 120;
+const RACCOON_STALK_MS = 120;
 // A quick low lunge for each lane step, as the coyote's (hazards.ts's COYOTE_STEP): a sink onto the
 // haunches, the push with both front paws up and the ears pinned back, the reach with the head thrust
 // lower still, and the landing on the hind paws.
-export const RACCOON_STEP: readonly StalkPose[] = [
+const RACCOON_STEP: readonly StalkPose[] = [
   { head: 1, sink: 1 },
   { ear: 1, head: 1, lf: -2, rf: -2 },
   { ear: 1, head: 2, lf: -1, rf: -2, sink: 1 },
   { lh: -1, rh: -1, sink: 1 },
 ];
-export const RACCOON_STEP_MS = 80;
+const RACCOON_STEP_MS = 80;
 
 // The raccoon creeping at the player on all fours, face on, its paws on row 44: a low head under
 // rounded white-rimmed ears that stand clear of its hunched, rounded back, the mask and pointed white
 // snout fixed forward, the loot bundle slung over its right shoulder, the bushy ringed tail swept out
 // past its right hip, dark forelegs splayed either side of a pale chest and the hind paws peeking out
 // under it.
-export function raccoonStalking({
+function raccoonStalking({
   ear = 0,
   head = 0,
   lf = 0,
@@ -954,7 +950,7 @@ export function raccoonStalking({
 // A seagull standing facing the player, its feet on row 44: white head and chest, grey wings folded
 // at its sides with black tips, pink legs, a yellow bill with the red spot, and the loot bundle
 // hanging from it.
-export function seagull({ bob = 0, lf = 0, rf = 0 }: StandingPose = {}): Drawable {
+function seagull({ bob = 0, lf = 0, rf = 0 }: StandingPose = {}): Drawable {
   const g = edged(scope.Grid(32, 48));
   const b = bob;
   for (const [x, f] of [
@@ -997,7 +993,7 @@ export function seagull({ bob = 0, lf = 0, rf = 0 }: StandingPose = {}): Drawabl
 
 // The seagull's wingbeat flying off: wings -1 raised, 0 level, 1 swept down; it climbs a pixel on the
 // downstroke.
-export const SEAGULL_FLEE: readonly { bob?: number; wings: number }[] = [
+const SEAGULL_FLEE: readonly { bob?: number; wings: number }[] = [
   { wings: -1 },
   { wings: 0 },
   { bob: -1, wings: 1 },
@@ -1007,7 +1003,7 @@ export const SEAGULL_FLEE: readonly { bob?: number; wings: number }[] = [
 // The seagull flying off up the road, seen from behind: grey back, white head and tail, wings spread
 // with black tips at wings (-1 raised, 0 level, 1 swept down), the bundle dangling under it and its
 // feet tucked.
-export function seagullFleeing({ bob = 0, wings }: { bob?: number; wings: number }): Drawable {
+function seagullFleeing({ bob = 0, wings }: { bob?: number; wings: number }): Drawable {
   const g = edged(scope.Grid(32, 48));
   const a = wings;
   const y0 = 20 + bob;
@@ -1031,7 +1027,7 @@ export function seagullFleeing({ bob = 0, wings }: { bob?: number; wings: number
 // ---------- Social ----------
 
 // A Social dog's pose, as road.ts's corgi has it: leg offsets, bob, tail and twitch.
-export interface CollieOptions {
+interface CollieOptions {
   bl?: number;
   bob?: number;
   br?: number;
@@ -1044,7 +1040,7 @@ export interface CollieOptions {
 // A border collie trotting at the player with a red frisbee gripped at the side of its mouth: black
 // coat, white blaze, ruff and socks, half-pricked ears with folded tips, the plume of its tail over
 // its right shoulder.
-export function collie({
+function collie({
   bl = 0,
   bob = 0,
   br = 0,
@@ -1099,7 +1095,7 @@ export function collie({
 
 // A Social dog's side view, for sideDog: the coat [fill, shade, light] and its far legs, the white
 // underside, the leg and sock colours, the muzzle and the eye.
-export interface SideSpec {
+interface SideSpec {
   coat: readonly [string, string, string];
   eye: string;
   far: string;
@@ -1110,7 +1106,7 @@ export interface SideSpec {
 }
 
 // A Social dog's gallop pose: body lift and the near front and hind paws' top-left pixels.
-export interface SidePose {
+interface SidePose {
   bob?: number;
   front?: Point;
   hind?: Point;
@@ -1119,7 +1115,7 @@ export interface SidePose {
 // A Social dog galloping across the road in side view, facing right, on hazards.ts's corgiSide
 // skeleton: the same body, hips, shoulders and paw positions per frame (hazards.ts's CORGI_RUN), so it
 // runs in the loose dog's pose, without the broken leash, the frisbee in its mouth.
-export function sideDog(
+function sideDog(
   spec: SideSpec,
   { bob = 0, front = [14, 27], hind = [11, 27] }: SidePose = {},
 ): Drawable {
@@ -1166,7 +1162,7 @@ export function sideDog(
 
 // A tag's drawing and its poses, one frame each. draw is a method so a table can hold drawings of
 // different pose types.
-export interface Posed<Q extends object = object> {
+interface Posed<Q extends object = object> {
   draw(q: Q): Drawable;
   poses: readonly Q[];
 }
@@ -1176,7 +1172,7 @@ function posed<Q extends object>(draw: (q: Q) => Drawable, poses: readonly Q[]):
 }
 
 // The Social dogs: [key, front-view drawing, side view for sideDog].
-export const DOGS: readonly (readonly [string, (q: CollieOptions) => Drawable, SideSpec])[] = [
+const DOGS: readonly (readonly [string, (q: CollieOptions) => Drawable, SideSpec])[] = [
   [
     "social-frisbee-dog",
     collie,
@@ -1194,22 +1190,22 @@ export const DOGS: readonly (readonly [string, (q: CollieOptions) => Drawable, S
 // Each Chase animal's frame side: the 32-unit design drawn at side / 32. The cat and the rabbit sit at
 // the small dogs' 38, smaller than a medium dog (48); the pigeons and the ducklings are a flock of
 // three birds a third of a dog's width each, in the same frame.
-export const CHASE_SIDE = 38;
+const CHASE_SIDE = 38;
 // Each Snatch animal's frame: its 32x48 design drawn at side / 32, so a 38x57 raccoon standing about
 // as tall as a medium dog, and a 32x48 seagull a head shorter.
-export const SNATCH_SIDE: Readonly<Record<string, number>> = {
+const SNATCH_SIDE: Readonly<Record<string, number>> = {
   "snatch-raccoon": 38,
   "snatch-seagull": 32,
 };
 // The Social dogs are medium dogs, 48x48 like the pack's, drawn SOCIAL_ZOOM narrower in that frame
 // (as dogs.ts's DOG_ZOOM draws the large dogs), so the collie is about 26px wide face on.
-export const SOCIAL_SIDE = 48;
-export const SOCIAL_ZOOM = 0.82;
+const SOCIAL_SIDE = 48;
+const SOCIAL_ZOOM = 0.82;
 
 const phases = [0, 1, 2, 3].map((phase) => ({ phase }));
 
 // The Chase animals: [key, idle, run, extra tags [[tag, poses, ms]]].
-export const CHASE: readonly (readonly [
+const CHASE: readonly (readonly [
   key: string,
   idle: Posed,
   run: Posed,
@@ -1250,35 +1246,34 @@ export const CHASE: readonly (readonly [
     [["hop", posed(rabbitHop, phases), 100]],
   ],
 ];
-export const CHASE_IDLE_MS = 300;
-export const CHASE_RUN_MS = 80;
+const CHASE_IDLE_MS = 300;
+const CHASE_RUN_MS = 80;
 // The Snatch animals: [key, standing drawing, flee].
-export const SNATCH: readonly (readonly [string, (q: StandingPose) => Drawable, Posed])[] = [
+const SNATCH: readonly (readonly [string, (q: StandingPose) => Drawable, Posed])[] = [
   ["snatch-raccoon", raccoon, posed(raccoonFleeing, FLEE)],
   ["snatch-seagull", seagull, posed(seagullFleeing, SEAGULL_FLEE)],
 ];
 // A Snatch animal's tags after idle: [[tag, poses, ms]]. They are settled at each depth step apart
 // from the standing tags (pixel.ts's depthSettled), so the crouch takes out its own rows and leaves
 // the standing frames as they were.
-export const SNATCH_EXTRA: ReadonlyMap<string, readonly (readonly [string, Posed, number])[]> =
-  new Map([
+const SNATCH_EXTRA: ReadonlyMap<string, readonly (readonly [string, Posed, number])[]> = new Map([
+  [
+    "snatch-raccoon",
     [
-      "snatch-raccoon",
-      [
-        ["stalk", posed(raccoonStalking, RACCOON_STALK), RACCOON_STALK_MS],
-        ["step", posed(raccoonStalking, RACCOON_STEP), RACCOON_STEP_MS],
-      ],
+      ["stalk", posed(raccoonStalking, RACCOON_STALK), RACCOON_STALK_MS],
+      ["step", posed(raccoonStalking, RACCOON_STEP), RACCOON_STEP_MS],
     ],
-  ]);
+  ],
+]);
 // road.ts's PERSON_WALK's feet and bob: a snatcher holds its bundle, so it has no free arm to swing.
-export const SNATCH_WALK: readonly StandingPose[] = PERSON_WALK.map((q) =>
+const SNATCH_WALK: readonly StandingPose[] = PERSON_WALK.map((q) =>
   Object.fromEntries(Object.entries(q).filter(([k]) => ["bob", "lf", "rf"].includes(k))),
 );
-export const APART: readonly string[] = [
+const APART: readonly string[] = [
   ...new Set([...SNATCH_EXTRA.values()].flatMap((extra) => extra.map(([tag]) => tag))),
 ];
 // The pose arguments that move a part by pixels, snapped to whole pixels at each scale.
-export const POSE: readonly string[] = [
+const POSE: readonly string[] = [
   "bl",
   "bob",
   "br",
@@ -1296,7 +1291,7 @@ export const POSE: readonly string[] = [
 ];
 
 // draw(q) on a mini.ts Mini at scale s, or [sx, sy], its pixel offsets snapped to whole pixels there.
-export function drawn<Q extends object>(s: Scale, draw: (q: Q) => Drawable, q: Q): Frame {
+function drawn<Q extends object>(s: Scale, draw: (q: Q) => Drawable, q: Q): Frame {
   const entries = Object.entries(q) as [string, boolean | number][];
   const pose = snap(
     Object.fromEntries(entries.filter(([k]) => POSE.includes(k))),
@@ -1308,12 +1303,12 @@ export function drawn<Q extends object>(s: Scale, draw: (q: Q) => Drawable, q: Q
 
 // A Social dog's frame: draw at s, SOCIAL_ZOOM narrower, set in the side(32, s) frame about its
 // centre.
-export function zoomed<Q extends object>(s: number, draw: (q: Q) => Drawable, q: Q): Frame {
+function zoomed<Q extends object>(s: number, draw: (q: Q) => Drawable, q: Q): Frame {
   return dogZoomed(drawn([s * SOCIAL_ZOOM, s], draw, q), s, [SOCIAL_ZOOM, 1], 0);
 }
 
 // [key, tags] for every animal at depth step step (1 at full size), at its frame side / 32 x step.
-export function* animals(step: number): Generator<Sprite> {
+function* animals(step: number): Generator<Sprite> {
   const c = (CHASE_SIDE / 32) * step;
   const frames = ({ draw, poses }: Posed, s: number): Frame[] =>
     poses.map((q) => drawn(s, (x) => draw(x), q));
@@ -1378,7 +1373,7 @@ export function* animals(step: number): Generator<Sprite> {
 }
 
 // Every animal at full size, then at each depth step.
-export function sprites(): Sprite[] {
+function sprites(): Sprite[] {
   return [
     ...animals(1),
     ...STEPS.flatMap(([suffix, step]) =>

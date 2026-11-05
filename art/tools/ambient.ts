@@ -144,34 +144,34 @@ const USAGE = `Usage:
   node art/tools/ambient.ts preview OUT.png   every frame on each verge's ground (walkColour)
   node art/tools/ambient.ts build             export to public/art/sprites/`;
 
-export const DRIVE_MS = 100;
-export const RIDE_MS = 120;
+const DRIVE_MS = 100;
+const RIDE_MS = 120;
 // The lawn animals are laid out on 32x32 and drawn ANIMAL_SCALE times larger, 40x40.
-export const ANIMAL_SCALE = 1.25;
-export const IDLE_MS = 400;
-export const RUN_MS = 90;
-export const HOP_MS = 110;
-export const FLY_MS = 90;
-export const PLANE_MS = 250;
-export const BALLOON_MS = 300;
-export const PIGEON_MS = 90;
-export const HELICOPTER_MS = 80;
-export const GEESE_MS = 140;
-export const TURBOPROP_MS = 90;
-export const BANNER_PLANE_MS = 120;
-export const GULLS_MS = 120;
-export const HAWK_MS = 250;
-export const PARTY_BALLOONS_MS = 250;
-export const BLIMP_MS = 200;
-export const AIRLINER_MS = 200;
-export const BATS_MS = 80;
-export const KITE_MS = 200;
+const ANIMAL_SCALE = 1.25;
+const IDLE_MS = 400;
+const RUN_MS = 90;
+const HOP_MS = 110;
+const FLY_MS = 90;
+const PLANE_MS = 250;
+const BALLOON_MS = 300;
+const PIGEON_MS = 90;
+const HELICOPTER_MS = 80;
+const GEESE_MS = 140;
+const TURBOPROP_MS = 90;
+const BANNER_PLANE_MS = 120;
+const GULLS_MS = 120;
+const HAWK_MS = 250;
+const PARTY_BALLOONS_MS = 250;
+const BLIMP_MS = 200;
+const AIRLINER_MS = 200;
+const BATS_MS = 80;
+const KITE_MS = 200;
 
 // ---------- the pedestrian, laid out on 32x48 as road.ts's person tops are ----------
 
 // The student facing the walker: a red jacket with its zip, the backpack's straps over the
 // shoulders, its free arms swinging as it walks, and headphones over dark brown hair.
-export function studentFront(g: Drawable, b: number, arms = 0): void {
+function studentFront(g: Drawable, b: number, arms = 0): void {
   g.rect(9, 21 + b, 14, 13, "red");
   g.rect(20, 21 + b, 3, 13, "dred");
   g.rect(15, 21 + b, 2, 13, "dred");
@@ -201,7 +201,7 @@ export function studentFront(g: Drawable, b: number, arms = 0): void {
 // The student walking away: the green backpack over the red jacket, its pocket and zip, the ponytail
 // over the backpack's top, tied in red, the headphones' band over it and a cup over each ear; its
 // arms swing as it walks.
-export function studentBack(g: Drawable, b: number, arms = 0): void {
+function studentBack(g: Drawable, b: number, arms = 0): void {
   g.rect(9, 21 + b, 14, 13, "red");
   g.rect(20, 21 + b, 3, 13, "dred");
   g.rect(9, 32 + b, 14, 2, "dred");
@@ -226,16 +226,16 @@ export function studentBack(g: Drawable, b: number, arms = 0): void {
   g.rect(23, 10 + b, 4, 6, "blue");
 }
 
-export const LEGS = { legs: "sky", shoes: "white" };
+const LEGS = { legs: "sky", shoes: "white" };
 
 // Walk frame step at road.ts's SCALE x the depth step (s), with HUMAN_WALK's planted legs.
-export function walking(s: number, top: Top, step: number): Frame {
+function walking(s: number, top: Top, step: number): Frame {
   const q = snap(HUMAN_WALK[step] as Readonly<Record<string, number>>, s);
   return small(roadScope, roadScope, s, dressed, top, { grounded: true, ...LEGS, ...q }).outlined();
 }
 
 // The pedestrian's front and back views at a depth step.
-export function* pedestrians(suffix: string, step: number): Generator<Sprite> {
+function* pedestrians(suffix: string, step: number): Generator<Sprite> {
   const s = SCALE * step;
   for (const [key, top] of [
     ["ambient-pedestrian", studentFront],
@@ -252,7 +252,7 @@ export function* pedestrians(suffix: string, step: number): Generator<Sprite> {
 
 // A hub's spoke a frame, an eighth of a turn clockwise each, as a wheel rolling right turns: |, /, -
 // and \, as offsets from the hub's centre.
-export const SPOKES: readonly (readonly Point[])[] = [
+const SPOKES: readonly (readonly Point[])[] = [
   [
     [0, -2],
     [0, -1],
@@ -275,17 +275,17 @@ export const SPOKES: readonly (readonly Point[])[] = [
   ],
 ];
 // Every car's roof row; the frame keeps 2 clear rows above it and 2 columns each side.
-export const ROOF = 3;
+const ROOF = 3;
 // A tire's radius; it rises 3 rows into the body.
-export const TIRE = 5;
+const TIRE = 5;
 
 // A block over a car's body: x0, x1, y0, y1 (inclusive) and its colour.
-export type Band = readonly [x0: number, x1: number, y0: number, y1: number, c: string];
+type Band = readonly [x0: number, x1: number, y0: number, y1: number, c: string];
 // A span of columns, first and last.
-export type Span = readonly [number, number];
+type Span = readonly [number, number];
 
 // A car's side profile: see Car.
-export interface CarOptions {
+interface CarOptions {
   back: number;
   bands?: readonly Band[];
   belt: number;
@@ -311,7 +311,7 @@ export interface CarOptions {
 // edge, 2 in from the frame's. The extras: upper, the greenhouse's paint; pillars and doors, their
 // columns; bands, blocks over the body; rack and pod, a roof rack's or a roof pod's columns; sign,
 // the columns of an amber-lit destination sign along the greenhouse's top; lamp, the lamps' top row.
-export class Car {
+class Car {
   readonly body: number;
   readonly cy: number;
   readonly end: number;
@@ -449,7 +449,7 @@ export class Car {
 }
 
 // ambient-car is the sedan; the other bodies are extra keys the game may take in turn.
-export const CARS: ReadonlyMap<string, Car> = new Map([
+const CARS: ReadonlyMap<string, Car> = new Map([
   [
     "ambient-car",
     new Car({
@@ -545,7 +545,7 @@ export const CARS: ReadonlyMap<string, Car> = new Map([
 ]);
 
 // Every car at a depth step.
-export function* cars(suffix: string, step: number): Generator<Sprite> {
+function* cars(suffix: string, step: number): Generator<Sprite> {
   const s = SCALE * step;
   for (const [key, car] of CARS) {
     yield [`${key}${suffix}`, [["drive", [0, 1, 2, 3].map((r) => car.draw(s, r)), DRIVE_MS]]];
@@ -556,21 +556,21 @@ export function* cars(suffix: string, step: number): Generator<Sprite> {
 
 // The bike in design units: hubs, the bottom bracket, the seat cluster, the head tube's top and
 // bottom.
-export const REAR: Point = [9, 38.5];
-export const FRONT: Point = [33, 38.5];
-export const BB: Point = [20, 39];
-export const SEAT: Point = [16, 26];
-export const HEAD: Point = [30, 25];
-export const FORK: Point = [31, 29];
+const REAR: Point = [9, 38.5];
+const FRONT: Point = [33, 38.5];
+const BB: Point = [20, 39];
+const SEAT: Point = [16, 26];
+const HEAD: Point = [30, 25];
+const FORK: Point = [31, 29];
 // A wheel's radius: an ink tire 1.2 thick round an lgrey rim 0.8 thick, clear inside.
-export const WHEEL = 8;
-export const CRANK = 4;
-export const HIP: Point = [16.5, 22];
-export const THIGH = 10;
-export const SHIN = 11;
+const WHEEL = 8;
+const CRANK = 4;
+const HIP: Point = [16.5, 22];
+const THIGH = 10;
+const SHIN = 11;
 // The near pedal a frame, a quarter turn clockwise each, as the wheels turn: top, front, bottom,
 // back.
-export const PEDAL: readonly Point[] = [
+const PEDAL: readonly Point[] = [
   [0, -1],
   [1, 0],
   [0, 1],
@@ -578,12 +578,12 @@ export const PEDAL: readonly Point[] = [
 ];
 
 // What bar draws on.
-export interface Triangles {
+interface Triangles {
   tri(a: Point, b: Point, c: Point, col: Colour): void;
 }
 
 // A straight bar w thick from a to b, as a quadrilateral.
-export function bar(g: Triangles, a: Point, b: Point, w: number, c: Colour): void {
+function bar(g: Triangles, a: Point, b: Point, w: number, c: Colour): void {
   const dx = b[0] - a[0];
   const dy = b[1] - a[1];
   const n = Math.max(1e-6, Math.hypot(dx, dy));
@@ -600,7 +600,7 @@ export function bar(g: Triangles, a: Point, b: Point, w: number, c: Colour): voi
 }
 
 // Where the knee bends between hip and foot, forward of the line between them.
-export function knee(hip: Point, foot: Point): Point {
+function knee(hip: Point, foot: Point): Point {
   const dx = foot[0] - hip[0];
   const dy = foot[1] - hip[1];
   const d = Math.max(1e-6, Math.hypot(dx, dy));
@@ -617,7 +617,7 @@ export function knee(hip: Point, foot: Point): Point {
 }
 
 // A Mini seen through a column offset: every shape lands dx design units to the right.
-export class Shift implements Triangles {
+class Shift implements Triangles {
   readonly dx: number;
   readonly g: Mini;
 
@@ -647,7 +647,7 @@ export class Shift implements Triangles {
 // red bike, side on, riding right. The cranks turn a quarter a frame with the feet on the pedals, the
 // spokes a sixteenth (a cross of them, so the loop is seamless), and the rider's back and head sit
 // 1px lower on frames 1 and 3. The spokes go on after the outline, so the road shows between them.
-export function cyclist(s: number, f: number): Frame {
+function cyclist(s: number, f: number): Frame {
   const [w, h] = [44, 48];
   const g = new Shift(edged(new Mini(s, w, h)), 1);
   const b = f === 1 || f === 3 ? 1 / s : 0;
@@ -727,7 +727,7 @@ export function cyclist(s: number, f: number): Frame {
 }
 
 // The cyclist at a depth step.
-export function* bikes(suffix: string, step: number): Generator<Sprite> {
+function* bikes(suffix: string, step: number): Generator<Sprite> {
   const s = SCALE * step;
   yield [`ambient-bike${suffix}`, [["ride", [0, 1, 2, 3].map((f) => cyclist(s, f)), RIDE_MS]]];
 }
@@ -737,10 +737,10 @@ export function* bikes(suffix: string, step: number): Generator<Sprite> {
 // measures its feet from.
 
 // A lawn animal's drawing on its grid.
-export type AnimalDraw = (g: Drawable) => void;
+type AnimalDraw = (g: Drawable) => void;
 
 // A cat run frame: body dy, arch lift, near and far front feet, near and far back feet, tail tip.
-export type CatRun = readonly [
+type CatRun = readonly [
   dy: number,
   arch: number,
   nf: Point,
@@ -750,10 +750,10 @@ export type CatRun = readonly [
   tail: Point,
 ];
 // A cat pose: a run frame, or sat up for the idle, its tail's tip flicking on "sit-tail".
-export type CatPose = "sit" | "sit-tail" | CatRun;
+type CatPose = "sit" | "sit-tail" | CatRun;
 
 // A ginger tabby side on in pose: sat up for the idle, its tail curled round, or a gallop frame.
-export function gingerCat(pose: CatPose): AnimalDraw {
+function gingerCat(pose: CatPose): AnimalDraw {
   return (g) => {
     if (typeof pose === "string") {
       g.cel(17, 30, 4, 1.5, "rust");
@@ -816,26 +816,20 @@ export function gingerCat(pose: CatPose): AnimalDraw {
 
 // The cat's gallop: stretched out, landing on its front feet, gathered with its body lifted over its
 // feet, pushing off. arch lifts the body by that many units.
-export const CAT_RUN: readonly CatRun[] = [
+const CAT_RUN: readonly CatRun[] = [
   [0, 0, [28, 28.5], [26.5, 29.5], [3.5, 27.5], [5, 28.5], [3.5, 9]],
   [1, 0, [23, 29.5], [25, 29.5], [6, 28], [8, 29], [3.5, 12]],
   [-1, 2, [17, 29.5], [19, 29], [14, 29.5], [12, 29], [4, 8]],
   [0, 1, [27, 25], [25, 26], [6, 29.5], [8, 29.5], [3.5, 10]],
 ];
-export const CAT_IDLE: readonly CatPose[] = ["sit", "sit-tail"];
+const CAT_IDLE: readonly CatPose[] = ["sit", "sit-tail"];
 
 // A rabbit pose: body dy, stretch, ear tilt, hind foot dx, front paw [dx, dy].
-export type RabbitPose = readonly [
-  dy: number,
-  stretch: number,
-  tilt: number,
-  hind: number,
-  paw: Point,
-];
+type RabbitPose = readonly [dy: number, stretch: number, tilt: number, hind: number, paw: Point];
 
 // A brown cottontail rabbit side on in pose; a nose twitch shows on the idle's second frame (stretch
 // -1).
-export function cottontail(pose: RabbitPose): AnimalDraw {
+function cottontail(pose: RabbitPose): AnimalDraw {
   const [dy, stretch, tilt, hind, paw] = pose;
   return (g) => {
     const bx = 14 + stretch;
@@ -861,11 +855,11 @@ export function cottontail(pose: RabbitPose): AnimalDraw {
 
 // Idle: sat still, then the nose twitches and the ears tip back. Hop: crouched, launching stretched
 // out, airborne at the top, landing on the front paws.
-export const RABBIT_IDLE: readonly RabbitPose[] = [
+const RABBIT_IDLE: readonly RabbitPose[] = [
   [0, 0, 0, 0, [0, 0]],
   [0, -1, 1, 0, [0, 0]],
 ];
-export const RABBIT_HOP: readonly RabbitPose[] = [
+const RABBIT_HOP: readonly RabbitPose[] = [
   [0, -1, 2, 1, [0, 0]],
   [-3, 2, 3, -3, [3, -1]],
   [-5, 2, 4, -1, [3, -2]],
@@ -873,11 +867,11 @@ export const RABBIT_HOP: readonly RabbitPose[] = [
 ];
 
 // A wing position: raised, spread or swept down.
-export type Wing = "down" | "level" | "up";
+type Wing = "down" | "level" | "up";
 
 // A robin side on, facing right. With no wing it stands on the lawn (peck tips its head to the
 // ground); in flight, wing is up, level or down, the legs tucked and the body a little higher.
-export function robin({
+function robin({
   peck = false,
   wing = null,
 }: { peck?: boolean; wing?: Wing | null } = {}): AnimalDraw {
@@ -914,8 +908,8 @@ export function robin({
   };
 }
 
-export const BIRD_IDLE: readonly AnimalDraw[] = [robin(), robin({ peck: true })];
-export const BIRD_FLY: readonly AnimalDraw[] = [
+const BIRD_IDLE: readonly AnimalDraw[] = [robin(), robin({ peck: true })];
+const BIRD_FLY: readonly AnimalDraw[] = [
   robin({ wing: "up" }),
   robin({ wing: "level" }),
   robin({ wing: "down" }),
@@ -923,14 +917,14 @@ export const BIRD_FLY: readonly AnimalDraw[] = [
 ];
 
 // One frame of a lawn animal at scale s, outlined and rimmed.
-export function animal(s: number, draw: AnimalDraw): Frame {
+function animal(s: number, draw: AnimalDraw): Frame {
   const g = edged(new Mini(s, 32, 32));
   draw(g);
   return lit(g).outlined();
 }
 
 // The lawn animals at a depth step; idle first, so frame 0 is the rest pose.
-export function* animals(suffix: string, step: number): Generator<Sprite> {
+function* animals(suffix: string, step: number): Generator<Sprite> {
   const s = ANIMAL_SCALE * step;
   const tag = (name: string, draws: readonly AnimalDraw[], ms: number): Tag => [
     name,
@@ -954,13 +948,13 @@ export function* animals(suffix: string, step: number): Generator<Sprite> {
 // ---------- the sky movers: full size only, facing right ----------
 
 // A sky mover's grid, with one ink line round every fill.
-export function skyGrid(w: number, h: number): Grid {
+function skyGrid(w: number, h: number): Grid {
   return edged(new Grid(w, h), "ink");
 }
 
 // frame with c on each [x, y] of points, drawn past the outline: a line one pixel thin, such as a
 // rope, a skid or a rotor blur, that an ink line round it would thicken.
-export function over(c: string, points: Iterable<Point>, frame: Frame): Frame {
+function over(c: string, points: Iterable<Point>, frame: Frame): Frame {
   for (const [x, y] of points) {
     frame[y]![x] = K[c] ?? c;
   }
@@ -980,7 +974,7 @@ function range(a: number, b: number): number[] {
 // The jet side on, facing right: a white fuselage over a grey belly with one row of windows, a
 // rounded nose and cockpit glass, a swept red fin, the swept wing below with its engine, and the
 // wingtip light and the belly beacon red (light) or flashing white.
-export function plane(light: string): Frame {
+function plane(light: string): Frame {
   const g = skyGrid(26, 10);
   g.rect(2, 1, 2, 1, "red");
   g.rect(2, 2, 3, 1, "red");
@@ -1002,12 +996,12 @@ export function plane(light: string): Frame {
   return g.outlined();
 }
 
-export const BALLOON_GORES: readonly string[] = ["red", "amber"];
+const BALLOON_GORES: readonly string[] = ["red", "amber"];
 
 // The hot air balloon: a teardrop envelope of seven curved gores, red and amber, shaded down its
 // right side and glinting at its upper left, two ink ropes to a wicker basket, and the burner flaring
 // (flame) or low, bobbed bob rows down.
-export function balloon(bob: number, flame: boolean): Frame {
+function balloon(bob: number, flame: boolean): Frame {
   const g = skyGrid(18, 26);
   const [cx, cy, r] = [9.0, 8.5, 7.5];
   for (let y = 1; y < 18; y++) {
@@ -1055,7 +1049,7 @@ export function balloon(bob: number, flame: boolean): Frame {
 
 // One pigeon seen as a chevron centred on (cx, cy): a slate body over a grey tail, its pale wings
 // raised in a V (up), spread in a shallow one (level) or swept down.
-export function pigeon(g: Drawable, cx: number, cy: number, wing: Wing): void {
+function pigeon(g: Drawable, cx: number, cy: number, wing: Wing): void {
   const rows = { down: [1, 1, 0], level: [-1, 0, 0], up: [-2, -1, 0] }[wing];
   rows.forEach((dy, i) => {
     g.p(cx - 3 + i, cy + dy, "lgrey");
@@ -1066,18 +1060,18 @@ export function pigeon(g: Drawable, cx: number, cy: number, wing: Wing): void {
 }
 
 // Each pigeon's centre and wingbeat phase.
-export const PIGEON_FLOCK: readonly (readonly [number, number, number])[] = [
+const PIGEON_FLOCK: readonly (readonly [number, number, number])[] = [
   [5, 9, 1],
   [13, 4, 3],
   [17, 11, 2],
   [24, 6, 0],
   [30, 10, 2],
 ];
-export const WINGBEAT: readonly Wing[] = ["up", "level", "down", "level"];
+const WINGBEAT: readonly Wing[] = ["up", "level", "down", "level"];
 
 // Frame i of the pigeon flock: five grey chevrons in a loose straggle, each a different step through
 // its wingbeat (up, level, down, level), so the flock shimmers.
-export function pigeons(i: number): Frame {
+function pigeons(i: number): Frame {
   const g = skyGrid(36, 15);
   for (const [cx, cy, phase] of PIGEON_FLOCK) {
     pigeon(g, cx, cy, WINGBEAT[(i + phase) % 4]!);
@@ -1088,7 +1082,7 @@ export function pigeons(i: number): Frame {
 // The helicopter side on, facing right: a red cabin with a glass bubble at the nose, a tapered tail
 // boom to a fin, the main rotor a long blur (rotor 0) or a broken one (rotor 1) and the tail rotor a
 // short blur, one pixel thin past the outline, skids under it, and the fin's beacon red when light.
-export function helicopter(rotor: number, light: boolean): Frame {
+function helicopter(rotor: number, light: boolean): Frame {
   const g = skyGrid(26, 12);
   g.cel(15.5, 5.5, 6, 3, "red", "dred", "pink");
   g.rect(3, 4, 8, 1, "red");
@@ -1128,7 +1122,7 @@ export function helicopter(rotor: number, light: boolean): Frame {
 // One Canada goose side on with its body's back row at (ox + 1, oy), facing right: a dark brown body
 // and darker wing, a black tail, its neck a straight black line out to a black head with a white
 // chinstrap, and its wing up, level or down.
-export function goose(g: Drawable, ox: number, oy: number, wing: Wing): void {
+function goose(g: Drawable, ox: number, oy: number, wing: Wing): void {
   g.p(ox, oy, "ink");
   g.rect(ox + 1, oy, 5, 1, "dbrown");
   g.rect(ox + 2, oy + 1, 4, 1, "dbrown");
@@ -1146,7 +1140,7 @@ export function goose(g: Drawable, ox: number, oy: number, wing: Wing): void {
 }
 
 // Each goose's back-row origin and wingbeat phase.
-export const GEESE_V: readonly (readonly [number, number, number])[] = [
+const GEESE_V: readonly (readonly [number, number, number])[] = [
   [25, 8, 0],
   [14, 5, 1],
   [3, 2, 2],
@@ -1157,7 +1151,7 @@ export const GEESE_V: readonly (readonly [number, number, number])[] = [
 // Frame i of the geese: five in a V, the leader at the point on the right and two down each arm,
 // each a step behind the one ahead in its wingbeat. They are drawn dark with no outline, as birds
 // far off read against the dusk.
-export function geese(i: number): Frame {
+function geese(i: number): Frame {
   const g = new Grid(36, 18);
   for (const [ox, oy, phase] of GEESE_V) {
     goose(g, ox, oy, WINGBEAT[(i + phase) % 4]!);
@@ -1169,7 +1163,7 @@ export function geese(i: number): Frame {
 // belly and one row of windows, a navy T-tail, the high wing along the roof with its engine hung
 // forward, the propeller a tall slate disc with a blade bright at the top (blade 0) or the bottom
 // (blade 1), and the belly beacon red when light.
-export function turboprop(blade: number, light: boolean): Frame {
+function turboprop(blade: number, light: boolean): Frame {
   const g = skyGrid(32, 12);
   g.rect(1, 1, 8, 1, "navy");
   g.rect(4, 2, 2, 3, "navy");
@@ -1198,7 +1192,7 @@ export function turboprop(blade: number, light: boolean): Frame {
 // and wing, cyan cockpit glass and fixed gear, its propeller a slate disc with a blade bright at the
 // top, then the bottom, towing a white banner of red lettering on a rope one pixel thin. The banner's
 // tail ripples a pixel up and down, the wave travelling back along it.
-export function bannerPlane(f: number): Frame {
+function bannerPlane(f: number): Frame {
   const g = skyGrid(39, 10);
   for (let x = 1; x < 17; x++) {
     const k = 16 - x;
@@ -1229,13 +1223,13 @@ export function bannerPlane(f: number): Frame {
 
 // A gull seen head on, its wings bent at the wrist: raised in a V (up), in an M (level) or swept
 // down.
-export const GULL: Readonly<Record<Wing, readonly string[]>> = {
+const GULL: Readonly<Record<Wing, readonly string[]>> = {
   down: ["", "", "..wwwwwww..", ".w..www..w.", "w....w....w"],
   level: ["", ".ww.....ww.", "w..ww.ww..w", "....www....", ".....w....."],
   up: ["w.........w", ".w.......w.", "..ww...ww..", "....www....", ".....w....."],
 };
 // Each gull's centre and wingbeat phase.
-export const GULL_FLOCK: readonly (readonly [number, number, number])[] = [
+const GULL_FLOCK: readonly (readonly [number, number, number])[] = [
   [6, 8, 0],
   [18, 4, 2],
   [29, 9, 1],
@@ -1243,7 +1237,7 @@ export const GULL_FLOCK: readonly (readonly [number, number, number])[] = [
 
 // Frame i of the gulls: three white gulls, larger than the pigeons and bent at the wrist, a grey tail
 // and an amber beak each, each a different step through its wingbeat.
-export function gulls(i: number): Frame {
+function gulls(i: number): Frame {
   const g = skyGrid(36, 12);
   for (const [cx, cy, phase] of GULL_FLOCK) {
     bitmap(g, cx - 5, cy - 3, GULL[WINGBEAT[(i + phase) % 4]!], { w: "white" });
@@ -1255,7 +1249,7 @@ export function gulls(i: number): Frame {
 
 // A red-tailed hawk soaring, seen from below: brown head, dark leading edges and fingertips, cream
 // wing linings, a dark belly band and the fanned rust tail.
-export const HAWK: readonly string[] = [
+const HAWK: readonly string[] = [
   "..........bb..........",
   "..dddddddcbbcddddddd..",
   "kkcccccccccccccccccckk",
@@ -1265,7 +1259,7 @@ export const HAWK: readonly string[] = [
   ".........rrrr.........",
   "........rrrrrr........",
 ];
-export const HAWK_COLOURS: Readonly<Record<string, string>> = {
+const HAWK_COLOURS: Readonly<Record<string, string>> = {
   b: "brown",
   c: "cream",
   d: "dbrown",
@@ -1275,7 +1269,7 @@ export const HAWK_COLOURS: Readonly<Record<string, string>> = {
 
 // The hawk banking: tilt lifts its left wing (1) or its right (-1) a pixel at the tip, or holds it
 // level (0).
-export function hawk(tilt: number): Frame {
+function hawk(tilt: number): Frame {
   const g = skyGrid(24, 10);
   HAWK.forEach((line, y) => {
     [...line].forEach((ch, x) => {
@@ -1289,7 +1283,7 @@ export function hawk(tilt: number): Frame {
 }
 
 // Party balloons as [centre x, centre y, colour, phase]: each rises and falls a pixel out of step.
-export const PARTY_BALLOONS: readonly (readonly [number, number, string, number])[] = [
+const PARTY_BALLOONS: readonly (readonly [number, number, string, number])[] = [
   [4, 6.5, "red", 0],
   [8.5, 4.5, "sky", 2],
   [13, 6.5, "yellow", 1],
@@ -1297,7 +1291,7 @@ export const PARTY_BALLOONS: readonly (readonly [number, number, string, number]
 
 // Frame f of the party balloons: red, sky and yellow, each glinting at its upper left and bobbing a
 // pixel out of step with the others, on ink strings that gather to one knot, its loose end swinging.
-export function partyBalloons(f: number): Frame {
+function partyBalloons(f: number): Frame {
   const g = skyGrid(17, 27);
   const knots: Point[] = [];
   for (const [x, y, c, phase] of PARTY_BALLOONS) {
@@ -1332,7 +1326,7 @@ export function partyBalloons(f: number): Frame {
 // Frame f of the blimp, side on, facing right: a white envelope shaded lgrey down its lower right,
 // red fins above and below its tail and a red one between them, a navy sign along its side whose
 // amber lights chase toward the nose, and a gondola with cyan windows under it.
-export function blimp(f: number): Frame {
+function blimp(f: number): Frame {
   const g = skyGrid(31, 12);
   g.tri([0, 1], [5, 1], [8, 5], "red");
   g.tri([0, 10], [5, 10], [8, 6], "red");
@@ -1352,7 +1346,7 @@ export function blimp(f: number): Frame {
 // Frame f of the airliner far overhead, side on, facing right: a white fuselage with a blue fin, a
 // slate wing and engine, and a white contrail one pixel thin behind it whose far end breaks into
 // dashes that drift back.
-export function airliner(f: number): Frame {
+function airliner(f: number): Frame {
   const g = skyGrid(36, 7);
   g.rect(25, 1, 2, 3, "blue");
   g.rect(25, 3, 10, 2, "white");
@@ -1371,13 +1365,13 @@ export function airliner(f: number): Frame {
 
 // A bat seen head on, an ink silhouette: ears and body between its wings, raised, spread with a
 // scalloped trailing edge, or down.
-export const BAT: Readonly<Record<Wing, readonly string[]>> = {
+const BAT: Readonly<Record<Wing, readonly string[]>> = {
   down: ["", "", "...b.b...", "..bbbbb..", ".b.bbb.b.", "b...b...b"],
   level: ["", "", "...b.b...", "bb.bbb.bb", ".bbbbbbb.", ".b..b..b."],
   up: ["b.......b", "bb.b.b.bb", ".bbbbbbb.", "..bbbbb..", "....b...."],
 };
 // Each bat's centre and wingbeat phase.
-export const BAT_FLOCK: readonly (readonly [number, number, number])[] = [
+const BAT_FLOCK: readonly (readonly [number, number, number])[] = [
   [4, 7, 0],
   [15, 4, 1],
   [24, 8, 3],
@@ -1386,7 +1380,7 @@ export const BAT_FLOCK: readonly (readonly [number, number, number])[] = [
 // Frame i of the bats: three at dusk, each a step out of time with the next, fluttering a pixel up
 // and down as it beats. Like the geese they are dark with no outline, in ink so they hold on every
 // sky.
-export function bats(i: number): Frame {
+function bats(i: number): Frame {
   const g = new Grid(29, 11);
   for (const [cx, cy, phase] of BAT_FLOCK) {
     const k = (i + phase) % 4;
@@ -1397,7 +1391,7 @@ export function bats(i: number): Frame {
 
 // Frame f of the kite: a diamond quartered red and white, a red and white ribbon tail swaying down
 // from it, the wave travelling down the tail, and its string one pixel thin down to the lower left.
-export function kite(f: number): Frame {
+function kite(f: number): Frame {
   const g = skyGrid(17, 28);
   const [top, right, bottom, left, mid]: Point[] = [
     [10, 1],
@@ -1422,7 +1416,7 @@ export function kite(f: number): Frame {
 }
 
 // The sky movers, each at full size only.
-export function* skyMovers(): Generator<Sprite> {
+function* skyMovers(): Generator<Sprite> {
   yield ["ambient-plane", [["fly", [plane("red"), plane("white")], PLANE_MS]]];
   yield [
     "ambient-balloon",
@@ -1469,7 +1463,7 @@ export function* skyMovers(): Generator<Sprite> {
 
 // Every ambient sprite at full size, then at every depth step, then the sky movers: [key, [[tag,
 // frames, ms]]].
-export function* sprites(): Generator<Sprite> {
+function* sprites(): Generator<Sprite> {
   for (const [suffix, step] of [
     ["", 1] as const,
     ...STEPS.map(([k, v]) => [`@${k}`, v] as const),

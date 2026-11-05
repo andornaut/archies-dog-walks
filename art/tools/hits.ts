@@ -63,17 +63,17 @@ const WAVE: readonly number[] = [0, 1, 1, 1, 0, -1, -1, -1];
 // The bursts are laid out on a 64x64 design and drawn BURST_SCALE times bigger, 77x77, on a Mini that
 // keeps 1px lines 1px (burstFrame). Pixel maps, twinkles and the rim go on the drawn grid pixel for
 // pixel, at the drawn place of their design position, so they keep their pixels.
-export const BURST = 64;
-export const BURST_SCALE = 77 / BURST;
+const BURST = 64;
+const BURST_SCALE = 77 / BURST;
 // How much bigger frame 0's impact star is than its base radius, 16, for punch.
-export const IMPACT = 1.25;
+const IMPACT = 1.25;
 
 function radians(degrees: number): number {
   return degrees * (Math.PI / 180);
 }
 
 // Where design point (x, y) lands on g's pixels: scaled to the nearest pixel on a Mini, else itself.
-export function drawnAt(g: Drawable, x: number, y: number): [number, number] {
+function drawnAt(g: Drawable, x: number, y: number): [number, number] {
   return g instanceof Mini ? [Math.round(x * g.s), Math.round(y * g.s)] : [x, y];
 }
 
@@ -84,7 +84,7 @@ export function rim<G extends Drawable>(g: G, col = "plum"): G {
 }
 
 // fx.stamp pixel for pixel from the drawn place of (x0, y0).
-export function stamp(
+function stamp(
   g: Drawable,
   rows: readonly string[],
   x0: number,
@@ -174,7 +174,7 @@ type Puff = readonly [cx: number, cy: number, r: number];
 // shaded purple on their lower right and lit pink on their upper left, so the pink carries the dslate
 // road and the plum rim the light roads. Stink squiggles rise out of it, pink with a plum side, so
 // they read over the cloud and on every road.
-export function hitSkunk(step: number): Drawable {
+function hitSkunk(step: number): Drawable {
   const g = scope.Grid(64, 64);
   if (step === 0) {
     impact(g, "mauve");
@@ -317,7 +317,7 @@ function coin(g: Drawable, x: number, y: number, spin: number): void {
 
 // A dust poof; the snatched tip pouch shoots straight up out of it while three coins fly out and
 // fall. No second ring of puffs, so the pouch carries the moment.
-export function hitThief(step: number): Drawable {
+function hitThief(step: number): Drawable {
   const g = scope.Grid(64, 64);
   const [cx, cy] = [32, 40];
   if (step === 0) {
@@ -359,7 +359,7 @@ export function hitThief(step: number): Drawable {
   return g;
 }
 
-export const TUFTS: readonly string[] = ["cream", "white", "tan", "lgrey", "brown", "grey"];
+const TUFTS: readonly string[] = ["cream", "white", "tan", "lgrey", "brown", "grey"];
 
 // A fur tuft, 2px thick so it reads as a clump in a few frames: two prongs over a base, or (flipped) a
 // diagonal wisp.
@@ -394,7 +394,7 @@ export function tuft(g: Drawable, x: number, y: number, col: string, flip: numbe
 
 // A cartoon tangle: a jostling dust cloud with leash loops in it, fur tufts flying off, then hearts
 // popping up as the dogs make friends.
-export function hitOtherDog(step: number): Drawable {
+function hitOtherDog(step: number): Drawable {
   const g = scope.Grid(64, 64);
   const [cx, cy] = [32, 38];
   if (step === 0) {
@@ -528,19 +528,17 @@ function labelPlate(face: string, lit: string, shade: string): Grid {
 }
 
 // Each burst: its drawing and its frame count.
-export const HITS: ReadonlyMap<
-  string,
-  readonly [draw: (step: number) => Drawable, frames: number]
-> = new Map([
-  ["fx-hit-skunk", [hitSkunk, 8]],
-  ["fx-hit-thief", [hitThief, 8]],
-  ["fx-hit-other-dog", [hitOtherDog, 8]],
-]);
+const HITS: ReadonlyMap<string, readonly [draw: (step: number) => Drawable, frames: number]> =
+  new Map([
+    ["fx-hit-skunk", [hitSkunk, 8]],
+    ["fx-hit-thief", [hitThief, 8]],
+    ["fx-hit-other-dog", [hitOtherDog, 8]],
+  ]);
 
 const range = (n: number): number[] => Array.from({ length: n }, (_, i) => i);
 
 // Every sprite: [key, [[tag, frames, duration in ms]]].
-export function* sprites(): Generator<Sprite> {
+function* sprites(): Generator<Sprite> {
   for (const [key, [draw, frames]] of HITS) {
     yield [key, [["play", range(frames).map((i) => burstFrame(draw, i).outlined(false)), 70]]];
   }

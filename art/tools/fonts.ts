@@ -56,7 +56,7 @@ const USAGE = `Usage:
 
 // A glyph: its image (white on clear for a tinted font, baked colours otherwise; none for a space),
 // the offsets of its top-left from the pen and the line's top, and the pen's advance.
-export interface Glyph {
+interface Glyph {
   image: RgbaImage | undefined;
   xadvance: number;
   xoffset: number;
@@ -66,12 +66,11 @@ export interface Glyph {
 export type Glyphs = ReadonlyMap<string, Glyph>;
 
 // The TrueType fonts by key: face, file and pixel size.
-export const FONTS: ReadonlyMap<string, readonly [face: string, path: string, size: number]> =
-  new Map([
-    ["font-body", ["Tiny5", "art/fonts/tiny5/Tiny5.ttf", 8]],
-    ["font-title", ["Silkscreen", "art/fonts/silkscreen/Silkscreen-Regular.ttf", 8]],
-  ]);
-export const CHARS: readonly string[] = [
+const FONTS: ReadonlyMap<string, readonly [face: string, path: string, size: number]> = new Map([
+  ["font-body", ["Tiny5", "art/fonts/tiny5/Tiny5.ttf", 8]],
+  ["font-title", ["Silkscreen", "art/fonts/silkscreen/Silkscreen-Regular.ttf", 8]],
+]);
+const CHARS: readonly string[] = [
   ...Array.from({ length: 95 }, (_, i) => String.fromCharCode(32 + i)),
   "·",
   "♥",
@@ -163,7 +162,7 @@ const ATLAS_W = 128;
 
 // The yard sign's letters, 5 rows from the top of the capitals, one cell a row. A glyph with more rows
 // starts RISE[ch] rows above the capitals ($) or runs below them (the comma's tail).
-export const SIGN: ReadonlyMap<string, readonly string[]> = new Map([
+const SIGN: ReadonlyMap<string, readonly string[]> = new Map([
   ["A", [".###.", "#...#", "#####", "#...#", "#...#"]],
   ["B", ["####.", "#...#", "####.", "#...#", "####."]],
   ["C", [".####", "#....", "#....", "#....", ".####"]],
@@ -219,13 +218,13 @@ const DISPLAY: ReadonlyMap<string, string> = new Map([
   ["font-display", "yellow"],
   ["font-display-cream", "cream"],
 ]);
-export const DISPLAY_SCALE = 2;
+const DISPLAY_SCALE = 2;
 // The capitals' fill starts this far below the line's top at 2x, leaving room for the $ and its outline.
-export const CAP_TOP = 3;
-export const LINE_HEIGHT = 18;
+const CAP_TOP = 3;
+const LINE_HEIGHT = 18;
 
 // A sign pixel's colour name, keyed by "x,y".
-export type SignPixels = Map<string, string>;
+type SignPixels = Map<string, string>;
 
 const at = (x: number, y: number): string => `${x},${y}`;
 
@@ -243,7 +242,7 @@ function signRows(ch: string): readonly string[] {
 }
 
 // The glyph's filled cells as [column, row], rows from the top of the capitals.
-export function cells(ch: string): [number, number][] {
+function cells(ch: string): [number, number][] {
   const rise = RISE.get(ch) ?? 0;
   return signRows(ch).flatMap((row, j) =>
     [...row].flatMap((c, i): [number, number][] => (c === "#" ? [[i, j - rise]] : [])),
@@ -252,7 +251,7 @@ export function cells(ch: string): [number, number][] {
 
 // Whether b can sit a cell closer after a: their fills stay two cells apart, so each letter keeps
 // its own outline.
-export function kerned(a: string, b: string): boolean {
+function kerned(a: string, b: string): boolean {
   if (!SIGN.has(a) || !SIGN.has(b)) {
     return false;
   }
@@ -347,7 +346,7 @@ function opaqueRgba(col: string): Rgba {
 }
 
 // font-display's glyphs in fillColour.
-export function displayGlyphs(fillColour: string): Map<string, Glyph> {
+function displayGlyphs(fillColour: string): Map<string, Glyph> {
   const out = new Map<string, Glyph>([
     [
       " ",
@@ -392,7 +391,7 @@ const COMIC_BASE = 8;
 const COMIC_SPACE = 4;
 
 // font-comic's glyphs.
-export function comicGlyphs(): Map<string, Glyph> {
+function comicGlyphs(): Map<string, Glyph> {
   const out = new Map<string, Glyph>([
     [" ", { image: undefined, xadvance: COMIC_SPACE, xoffset: 0, yoffset: 0 }],
   ]);
@@ -432,7 +431,7 @@ function maskImage(rows: readonly string[]): RgbaImage {
 }
 
 // image one row taller, its row drawn twice.
-export function repeatRow(row: number, image: RgbaImage): RgbaImage {
+function repeatRow(row: number, image: RgbaImage): RgbaImage {
   const stride = image.width * 4;
   const out = blankImage(image.width, image.height + 1);
   out.data.set(image.data.subarray(0, (row + 1) * stride), 0);
@@ -470,7 +469,7 @@ function rasterized(
 
 // The TrueType font at path and size as the game's glyphs, with the overrides drawn in place of its own,
 // and its ascent and descent.
-export function glyphs(
+function glyphs(
   path: string,
   size: number,
 ): { ascent: number; descent: number; glyphs: Map<string, Glyph> } {
@@ -601,7 +600,7 @@ function writeFont(
   writeFileSync(`public/art/fonts/${key}.fnt`, font.xml);
 }
 
-export function build(): void {
+function build(): void {
   for (const [key, [face, path, size]] of FONTS) {
     const { ascent, descent, glyphs: gl } = glyphs(path, size);
     writeFont(
@@ -637,7 +636,7 @@ export function build(): void {
   console.log("built", [...FONTS.keys(), ...DISPLAY.keys(), COMIC].join(", "));
 }
 
-export function preview(out: string, scale = 3): void {
+function preview(out: string, scale = 3): void {
   const samples = [
     "ARCHIE'S DOG WALKS  $42  ZONE 1: HIGH PARK",
     "Eve: No rush, dear. ♥",

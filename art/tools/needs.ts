@@ -214,7 +214,7 @@ function pullFail(step: number): Grid {
 }
 
 // Every sprite: [key, [[tag, frames, duration in ms]]].
-export function* sprites(): Generator<Sprite> {
+function* sprites(): Generator<Sprite> {
   // idle leads, so frame 0 (the anchor the game measures) is the rest pose
   yield [
     "ui-pull-bubble",

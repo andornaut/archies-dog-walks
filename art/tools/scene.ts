@@ -23,12 +23,10 @@ import {
 } from "./pixel.ts";
 import { chrome } from "./ui.ts";
 
-export type Rgb = readonly [number, number, number];
+type Rgb = readonly [number, number, number];
 
 // Every house colour by name as RGB.
-export const HEX: ReadonlyMap<string, Rgb> = new Map(
-  Object.entries(K).map(([k, v]) => [k, parseHex(v)]),
-);
+const HEX: ReadonlyMap<string, Rgb> = new Map(Object.entries(K).map(([k, v]) => [k, parseHex(v)]));
 
 function parseHex(c: string): Rgb {
   return [0, 2, 4].map((i) => Number.parseInt(c.slice(i, i + 2), 16)) as unknown as Rgb;
@@ -42,7 +40,7 @@ export function rgb(c: string): Rgb {
 // ---------- images ----------
 
 // A copy of image, alpha set opaque everywhere.
-export function opaque(image: RgbaImage): RgbaImage {
+function opaque(image: RgbaImage): RgbaImage {
   const data = new Uint8Array(image.data);
   for (let i = 3; i < data.length; i += 4) {
     data[i] = 255;
@@ -51,7 +49,7 @@ export function opaque(image: RgbaImage): RgbaImage {
 }
 
 // The pixels of image inside [x0, x1) x [y0, y1), clear past its edges.
-export function crop(image: RgbaImage, x0: number, y0: number, x1: number, y1: number): RgbaImage {
+function crop(image: RgbaImage, x0: number, y0: number, x1: number, y1: number): RgbaImage {
   const out = blankImage(x1 - x0, y1 - y0);
   for (let y = Math.max(y0, 0); y < Math.min(y1, image.height); y++) {
     for (let x = Math.max(x0, 0); x < Math.min(x1, image.width); x++) {
@@ -63,7 +61,7 @@ export function crop(image: RgbaImage, x0: number, y0: number, x1: number, y1: n
 }
 
 // image flipped left to right.
-export function flipped(image: RgbaImage): RgbaImage {
+function flipped(image: RgbaImage): RgbaImage {
   const out = blankImage(image.width, image.height);
   for (let y = 0; y < image.height; y++) {
     for (let x = 0; x < image.width; x++) {
@@ -79,7 +77,7 @@ export function flipped(image: RgbaImage): RgbaImage {
 
 // Lay sprite on target with its top-left at (x, y), clipped to target, masked by its alpha: every
 // opaque pixel replaces the one under it and every clear one leaves it.
-export function pasteMasked(target: RgbaImage, sprite: RgbaImage, x: number, y: number): void {
+function pasteMasked(target: RgbaImage, sprite: RgbaImage, x: number, y: number): void {
   for (let sy = 0; sy < sprite.height; sy++) {
     const ty = y + sy;
     if (ty < 0 || ty >= target.height) {
@@ -151,7 +149,7 @@ export class Canvas {
 // ---------- pixel font (3x5) ----------
 
 // Each glyph's 3x5 bits, row by row.
-export const G: ReadonlyMap<string, string> = new Map([
+const G: ReadonlyMap<string, string> = new Map([
   ["A", "010101111101101"],
   ["B", "110101110101110"],
   ["C", "011100100100011"],
@@ -203,7 +201,7 @@ export const G: ReadonlyMap<string, string> = new Map([
 ]);
 
 // The width of s in the 3x5 font at scale sc: 3 columns a glyph, 1 between.
-export function textW(s: string, sc = 1): number {
+function textW(s: string, sc = 1): number {
   return Math.max(0, 4 * sc * [...s].length - sc);
 }
 
@@ -248,11 +246,11 @@ export function textC(
 
 // ---------- the zones and the pack, from pixel.ts's GAME and LAYOUT ----------
 
-export function readJson<T = unknown>(path: string): T {
+function readJson<T = unknown>(path: string): T {
   return JSON.parse(readFileSync(path, "utf8")) as T;
 }
 
-export interface Zone {
+interface Zone {
   art: string;
   leash: string;
   name: string;
@@ -283,11 +281,11 @@ export const HANDS: readonly [number, number, number] = [
   PACK.walkerHands.rightDx,
   PACK.walkerHands.heightAboveFeet,
 ];
-export const COLLARS: Readonly<Record<string, number>> = PACK.collarHeights;
+const COLLARS: Readonly<Record<string, number>> = PACK.collarHeights;
 export const COLLAR = Math.max(...Object.values(COLLARS));
 // Each sprite's anchor (feetY, opaqueWidth) from the manifest, empty for one the game does not stand
 // on the ground.
-export const ANCHORS: ReadonlyMap<string, { feetY?: number; opaqueWidth?: number }> = new Map(
+const ANCHORS: ReadonlyMap<string, { feetY?: number; opaqueWidth?: number }> = new Map(
   readJson<{ sprites: { anchor?: { feetY: number; opaqueWidth: number }; key: string }[] }>(
     "public/art/manifest.json",
   ).sprites.map((s) => [s.key, s.anchor ?? {}]),
@@ -306,12 +304,12 @@ export function sideDx(key: string, side: number): number {
 
 // ---------- exported sprites ----------
 
-export type Sheet = readonly [image: RgbaImage, frames: SheetRect[], tags: Map<string, SheetTag>];
+type Sheet = readonly [image: RgbaImage, frames: SheetRect[], tags: Map<string, SheetTag>];
 
 const SHEETS = new Map<string, Sheet>();
 
 // An exported sprite: its sheet, each frame's rectangle and {tag name: tag}.
-export function sheet(key: string): Sheet {
+function sheet(key: string): Sheet {
   let out = SHEETS.get(key);
   if (!out) {
     const { frames, image, tags } = readSheet(key);

@@ -74,7 +74,7 @@ export const PEAK_DB = -4;
 // One sixteenth note at about 100 BPM. 6608 is a multiple of 16, so the 192 sixteenths of a loop
 // fill whole 1024-sample AAC frames and decoders that keep the encoder's end padding still loop
 // without a gap.
-export const STEP = 6608;
+const STEP = 6608;
 // Effects are levelled by their loudness on a phone speaker: the loudest momentary (400 ms)
 // loudness of the sound high-passed at 300 Hz, as ffmpeg's ebur128 filter measures it, in LUFS. A
 // phone speaker plays little below 300 Hz, so a thud's low body does not count toward it. Every
@@ -108,7 +108,7 @@ const NOTES: Readonly<Record<string, number>> = { A: 0, B: 2, C: -9, D: -7, E: -
 
 export type Wave = "pinknoise" | "square" | "triangle";
 /** A note name such as "F#4", a frequency in Hz, or [from, to] for an exponential sweep. */
-export type Pitch = number | string;
+type Pitch = number | string;
 export type Freq = Pitch | readonly [Pitch, Pitch] | null;
 
 export interface ToneOptions {
@@ -134,7 +134,7 @@ export interface ToneOptions {
 }
 
 /** One tone() call of an effect: wave, seconds, freq, start seconds and options. */
-export type EffectNote = readonly [
+type EffectNote = readonly [
   wave: Wave,
   seconds: number,
   freq: Freq,
@@ -147,7 +147,7 @@ export type Score = readonly (readonly [string, number])[];
 /** Renders one note of a score into path, length samples long. */
 export type Play = (path: string, length: number, note: string) => void;
 /** Renders a neighbourhood's loop into out, using tmp for its parts. */
-export type Music = (tmp: string, out: string) => void;
+type Music = (tmp: string, out: string) => void;
 
 function fail(message: string): never {
   console.error(message);
@@ -254,7 +254,7 @@ export function tone(
   sox("-r", String(RATE), "-c", "1", "-n", "-e", "floating-point", "-b", "32", path, ...chain);
 }
 
-export function rest(path: string, length: number): void {
+function rest(path: string, length: number): void {
   sox(
     "-r",
     String(RATE),
@@ -298,7 +298,7 @@ export function concat(paths: readonly string[], out: string): void {
 export const DARK = ["lowpass", "3000"] as const;
 
 // Effects: each is a list of tone() calls, [wave, seconds, freq, start seconds, options].
-export const EFFECTS: Effects = {
+const EFFECTS: Effects = {
   "sfx-badge": [
     ["square", 0.08, "D6", 0, { duty: 25, fx: DARK, low: 3000, release: 0.4, vol: 0.5 }],
     ["square", 0.08, "F#6", 0.08, { duty: 25, fx: DARK, low: 3000, release: 0.4, vol: 0.5 }],
@@ -917,7 +917,7 @@ export function voice(tmp: string, name: string, score: Score, play: Play, step 
 
 // Each neighbourhood's walk music, by art id. Its loop is music-<art id>, rendered by music(tmp,
 // out) in art/tools/music_<art id with underscores>.ts.
-export const ZONE_MUSIC = [
+const ZONE_MUSIC = [
   "cabbagetown",
   "distillery-district",
   "high-park",
@@ -925,10 +925,10 @@ export const ZONE_MUSIC = [
   "the-beaches",
   "yonge-street",
 ] as const;
-export const MUSIC: readonly string[] = ZONE_MUSIC.map((zone) => `music-${zone}`);
+const MUSIC: readonly string[] = ZONE_MUSIC.map((zone) => `music-${zone}`);
 
 /** The function that renders a music key into a wav: music(tmp, out). */
-export async function track(key: string): Promise<Music> {
+async function track(key: string): Promise<Music> {
   const name = key.replace(/^music-/u, "").replaceAll("-", "_");
   const module = (await import(`./music_${name}.ts`)) as { music: Music };
   return module.music;
@@ -1057,7 +1057,7 @@ export function renderEffects(outDir: string, effects: Effects): string[] {
 }
 
 /** Write each sound in keys into outDir as .ogg and .m4a; return the keys. */
-export async function render(
+async function render(
   outDir: string,
   keys: readonly string[] = [...Object.keys(EFFECTS), ...MUSIC],
 ): Promise<string[]> {
@@ -1084,7 +1084,7 @@ export async function render(
  * Flag each music key as looping in the manifest sidecar, keeping every other entry: the game build
  * reads the flags from there, since a sound file cannot say it loops.
  */
-export function markLoops(keys: readonly string[], path = "public/art/manifest.extra.json"): void {
+function markLoops(keys: readonly string[], path = "public/art/manifest.extra.json"): void {
   const extra = (existsSync(path) ? JSON.parse(readFileSync(path, "utf8")) : {}) as {
     sounds?: Record<string, Record<string, unknown>>;
   };

@@ -254,7 +254,7 @@ function treatPop(step: number): Grid {
 }
 
 // Every sprite: [key, [[tag, frames, duration in ms]]].
-export function* sprites(): Generator<Sprite> {
+function* sprites(): Generator<Sprite> {
   const frames = (draw: (i: number) => Grid, n: number): Grid["px"][] =>
     Array.from({ length: n }, (_, i) => draw(i).outlined(false));
   yield ["ui-fired-plate", [["normal", [firedPlate(...FIRED_PLATE).outlined(false)], 1000]]];

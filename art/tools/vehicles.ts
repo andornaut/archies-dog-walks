@@ -128,7 +128,7 @@ const USAGE = `Usage:
   node art/tools/vehicles.ts build             export to public/art/sprites/`;
 
 // The grid every drawing here makes and road.ts's face, which mini.ts's small swaps while it runs.
-export const scope: DrawingScope & { faceFront: FaceFront } = {
+const scope: DrawingScope & { faceFront: FaceFront } = {
   Grid: (w = 32, h = 32) => new Grid(w, h),
   faceFront,
 };
@@ -150,11 +150,11 @@ function sizes(): (readonly [string, number])[] {
 // The garbage truck is laid out on 56x50 and drawn as obstacles.ts's deliveryTruck is, its columns
 // kept (a lane less 4px each side) and its rows TRUCK_SCALE times taller: 56x60, taller than the
 // delivery truck's 54 and as tall as road.ts's iceCreamTruck.
-export const TRUCK_W = 56;
-export const TRUCK_H = 50;
-export const TRUCK_SCALE = CAR_SCALE;
+const TRUCK_W = 56;
+const TRUCK_H = 50;
+const TRUCK_SCALE = CAR_SCALE;
 
-export function frame(w: number, h: number): Drawable {
+function frame(w: number, h: number): Drawable {
   return edged(scope.Grid(w, h));
 }
 
@@ -174,7 +174,7 @@ function dipped(px: Grid, body: Frame, under: Frame, dip: number): void {
 // step, both rear wheels and an amber beacon on the roof that blinks (f 1 off). roll (0 to 3) is a
 // drive frame, reversing down the lane at the pack: tread lines fall down the tires 1px a frame and
 // the body dips 1px onto them on frames 1 and 2.
-export function garbageTruck(f: number, roll: number | null = null): Drawable {
+function garbageTruck(f: number, roll: number | null = null): Drawable {
   const w = TRUCK_W;
   const g = edged(scope.Grid(TRUCK_W, TRUCK_H));
   const px = raster(g);
@@ -233,12 +233,12 @@ export function garbageTruck(f: number, roll: number | null = null): Drawable {
 }
 
 // garbageTruck's drive frame roll, its beacon lit on frames 0 and 1.
-export function truckDriving(roll: number): Drawable {
+function truckDriving(roll: number): Drawable {
   return garbageTruck(roll < 2 ? 0 : 1, roll);
 }
 
 // Two flies circling over the truck's roof, [x, y] per idle frame in layout pixels.
-export const TRUCK_FLIES: readonly (readonly [Point, Point])[] = [
+const TRUCK_FLIES: readonly (readonly [Point, Point])[] = [
   [
     [12, 4],
     [14, 2],
@@ -252,7 +252,7 @@ export const TRUCK_FLIES: readonly (readonly [Point, Point])[] = [
 // A garbage truck frame f at depth step step on a Mini at TRUCK_SCALE x step, outlined, with its
 // flies on it after the outline: one ink pixel below 0.75x, else a 2x1 ink body under a white and
 // lgrey wing.
-export function truck(draw: (f: number) => Drawable, f: number, step: number): Frame {
+function truck(draw: (f: number) => Drawable, f: number, step: number): Frame {
   const sx = TRUCK_SCALE[0] * step;
   const sy = TRUCK_SCALE[1] * step;
   const out = drawn([sx, sy], draw, f).outlined();
@@ -277,18 +277,18 @@ export function truck(draw: (f: number) => Drawable, f: number, step: number): F
 
 // The scooter is laid out on 32x48 and drawn at road.ts's SCALE, 48x72, as hazards.ts's cyclist is: a
 // two-wheeler a rider sits on, so the rider is a road person's size.
-export const SCOOTER_W = 32;
-export const SCOOTER_H = 48;
+const SCOOTER_W = 32;
+const SCOOTER_H = 48;
 // The ride's 4 frames, each this long: the tire's tread falls 1px a frame, as the garbage truck's
 // reverse.
-export const SCOOTER_RIDE_MS = 100;
+const SCOOTER_RIDE_MS = 100;
 
 // A sky scooter from behind: its tire between the two round side cowls, the tail light and plate
 // under the seat, the leg shield and handlebar with its mirrors over it. Parked (roll null), it
 // stands on its stand and blink lights both indicators on the cowls. roll (0 to 3) is a pull-out
 // frame: tread lines climb the tire 1px a frame (road.ts's treads) and the stand is up; pulling out,
 // the right indicator is lit on frames 0 and 1. u is one pixel at the drawn size, in layout units.
-export function scooter(blink = false, u = 1, roll: number | null = null): Drawable {
+function scooter(blink = false, u = 1, roll: number | null = null): Drawable {
   const g = frame(SCOOTER_W, SCOOTER_H);
   const px = raster(g);
   // the tire first, so the body lies over it
@@ -341,7 +341,7 @@ export function scooter(blink = false, u = 1, roll: number | null = null): Drawa
 }
 
 // scooter's pull-out frame roll, riderless.
-export function scooterPulling(roll: number, u = 1): Drawable {
+function scooterPulling(roll: number, u = 1): Drawable {
   return scooter(false, u, roll);
 }
 
@@ -353,7 +353,7 @@ export function scooterPulling(roll: number, u = 1): Drawable {
 // the shield: an open white helmet with a sky stripe over the face, a purple jacket, brown gloves on
 // the grips. The scooter and rider dip 1px onto the tire on frames 1 and 2. u is one pixel at the
 // drawn size, in layout units.
-export function scooterRiding(roll: number, u = 1): Drawable {
+function scooterRiding(roll: number, u = 1): Drawable {
   const g = frame(SCOOTER_W, SCOOTER_H);
   const px = raster(g);
   // the tire first, so the body can dip over it
@@ -412,7 +412,7 @@ export function scooterRiding(roll: number, u = 1): Drawable {
 }
 
 // The scooter's motion tags after its idle: [tag, drawing, frame arguments, ms per frame].
-export const SCOOTER_MOVES: readonly (readonly [
+const SCOOTER_MOVES: readonly (readonly [
   string,
   (roll: number, u?: number) => Drawable,
   readonly number[],
@@ -425,7 +425,7 @@ export const SCOOTER_MOVES: readonly (readonly [
 // ---------- the crossers' shared parts ----------
 
 // A crosser's tags: [tag, one pose per frame, ms per frame].
-export type CrosserTags<Q> = readonly (readonly [string, readonly Q[], number])[];
+type CrosserTags<Q> = readonly (readonly [string, readonly Q[], number])[];
 
 // The crossers draw in layers, each on an empty grid, merged over the ones before it after moving it
 // dy rows down.
@@ -447,13 +447,13 @@ function layered(g: Drawable, layers: readonly (readonly [() => void, number])[]
   px.px = out;
 }
 
-export function quad(g: Drawable, a: Point, b: Point, c: Point, d: Point, col: Colour): void {
+function quad(g: Drawable, a: Point, b: Point, c: Point, d: Point, col: Colour): void {
   g.tri(a, b, c, col);
   g.tri(a, c, d, col);
 }
 
 // A 1px line in drawn pixels through the design points pts, so a spoke stays one pixel at any scale.
-export function strand(g: Drawable, pts: readonly Point[], c: Colour): void {
+function strand(g: Drawable, pts: readonly Point[], c: Colour): void {
   const s = scaleOf(g);
   const px = raster(g);
   for (let i = 1; i < pts.length; i++) {
@@ -473,7 +473,7 @@ export function strand(g: Drawable, pts: readonly Point[], c: Colour): void {
 }
 
 // A 1px row in drawn pixels from design column x0 to x1 on design row y, so a stripe stays one pixel.
-export function row(g: Drawable, x0: number, x1: number, y: number, c: Colour): void {
+function row(g: Drawable, x0: number, x1: number, y: number, c: Colour): void {
   const s = scaleOf(g);
   raster(g).rect(
     Math.floor(x0 * s),
@@ -486,7 +486,7 @@ export function row(g: Drawable, x0: number, x1: number, y: number, c: Colour): 
 
 // A glint across glass in drawn pixels: a stroke 2px wide from design (x, y1) leaning right up to row
 // y0, a column right every two rows, as road.ts's ttc bus's glints lean.
-export function glint(g: Drawable, x: number, y0: number, y1: number, c = "dslate"): void {
+function glint(g: Drawable, x: number, y0: number, y1: number, c = "dslate"): void {
   const s = scaleOf(g);
   const px = raster(g);
   const column = Math.floor(x * s);
@@ -500,7 +500,7 @@ export function glint(g: Drawable, x: number, y0: number, y1: number, c = "dslat
 }
 
 // A small face's 1px eyes and mouth, in drawn pixels.
-export function eyes(g: Drawable, cx: number, y: number): void {
+function eyes(g: Drawable, cx: number, y: number): void {
   g.p(cx - 1.4, y, "ink");
   g.p(cx + 1.0, y, "ink");
   g.p(cx - 0.2, y + 2, "dbrown");
@@ -510,16 +510,16 @@ export function eyes(g: Drawable, cx: number, y: number): void {
 
 // The key, and the tourist train's design grid: 176x64 at road.ts's SCALE, as the couple's 112
 // columns are laid out.
-export const TRAIN_KEY = "tourist-train";
-export const TRAIN_W = 176 / SCALE;
-export const TRAIN_H = 64 / SCALE;
+const TRAIN_KEY = "tourist-train";
+const TRAIN_W = 176 / SCALE;
+const TRAIN_H = 64 / SCALE;
 // The wheels' centre row and radius, the feet a row above the frame's bottom row so the outline
 // closes under them.
-export const TRAIN_AXLE = 37.2;
-export const TRAIN_WHEEL = 4.4;
+const TRAIN_AXLE = 37.2;
+const TRAIN_WHEEL = 4.4;
 
 // A tourist-train pose: the push frame, the waving passenger's hand and the whistle's puff.
-export interface TrainPose {
+interface TrainPose {
   roll?: number | null;
   toot?: number;
   wave?: number;
@@ -531,15 +531,15 @@ const PUSH: readonly { roll: number }[] = [0, 1, 2, 3].map((roll) => ({ roll }))
 // its wheels on frames 1 and 2 and the cars bob 1px in turn; 4 frames at 100ms, as every drive.
 // Stopped: the second car's middle passenger waves, the hand swung out on frame 2; 4 frames at
 // 400ms. Restarting: the whistle's puff grows out of the stack and lifts away; 3 frames at 120ms.
-export const TRAIN_TAGS: CrosserTags<TrainPose> = [
+const TRAIN_TAGS: CrosserTags<TrainPose> = [
   ["push", PUSH, 100],
   ["idle", [{}, { wave: 1 }, { wave: 2 }, { wave: 1 }], 400],
   ["cue", [{ toot: 1 }, { toot: 2 }, { toot: 3 }], 120],
 ];
 // A car's passenger: the top's and the hair's colours.
-export type Passenger = readonly [top: string, hair: string];
+type Passenger = readonly [top: string, hair: string];
 // Each car's left column and its passengers, back to front.
-export const TRAIN_CARS: readonly (readonly [number, readonly Passenger[]])[] = [
+const TRAIN_CARS: readonly (readonly [number, readonly Passenger[]])[] = [
   [
     2,
     [
@@ -560,7 +560,7 @@ export const TRAIN_CARS: readonly (readonly [number, readonly Passenger[]])[] = 
 
 // A black tire side on round a red hub, two spokes crossing it turned a quarter of their spacing a
 // frame (roll 0 to 3), so the loop is seamless, and an amber axle cap.
-export function trainWheel(g: Drawable, cx: number, roll: number): void {
+function trainWheel(g: Drawable, cx: number, roll: number): void {
   const r = TRAIN_WHEEL;
   const cy = TRAIN_AXLE;
   g.ell(cx, cy, r, r, "ink");
@@ -584,7 +584,7 @@ export function trainWheel(g: Drawable, cx: number, roll: number): void {
 
 // A canopy seen side on: a red roof line over a cream valance with a scalloped red hem, its back
 // (right) end shaded.
-export function canopy(g: Drawable, x0: number, x1: number, y: number): void {
+function canopy(g: Drawable, x0: number, x1: number, y: number): void {
   g.rect(x0 - 0.5, y, x1 - x0 + 1, 1, "red");
   let x = x0;
   let i = 0;
@@ -603,7 +603,7 @@ export function canopy(g: Drawable, x0: number, x1: number, y: number): void {
 // An open car from x0, 36 columns long: three passengers in its bays under the canopy, the striped
 // bench boards, the chassis and two wheels. wave raises the middle passenger's hand (2 swings it
 // out).
-export function trainCar(g: Drawable, x0: number, heads: readonly Passenger[], wave = 0): void {
+function trainCar(g: Drawable, x0: number, heads: readonly Passenger[], wave = 0): void {
   g.rect(x0 + 1, 10, 34, 13, "navy");
   heads.forEach(([top, hair], i) => {
     const cx = x0 + 6.5 + i * 11.5;
@@ -644,7 +644,7 @@ export function trainCar(g: Drawable, x0: number, heads: readonly Passenger[], w
 }
 
 // The engine, its cab at the back (left) and the boiler in front.
-export function trainEngine(g: Drawable, toot = 0): void {
+function trainEngine(g: Drawable, toot = 0): void {
   // the open cab: the driver in a hickory-striped cap and blue overalls with a red neckerchief
   g.rect(81, 10, 10, 13, "navy");
   g.cel(86, 21.5, 4, 2.5, "blue", "navy", "sky", 3);
@@ -710,7 +710,7 @@ export function trainEngine(g: Drawable, toot = 0): void {
 // roll (0 to 3) is a push frame: the spokes turn, the engine dips onto its wheels on frames 1 and 2
 // and the cars bob in turn; wave raises the waving passenger's hand (2 swings it out), toot (1 to 3)
 // is the whistle's puff.
-export function touristTrain({ roll = null, toot = 0, wave = 0 }: TrainPose = {}): Drawable {
+function touristTrain({ roll = null, toot = 0, wave = 0 }: TrainPose = {}): Drawable {
   const g = edged(scope.Grid(TRAIN_W, TRAIN_H));
   const moving = roll !== null;
   const dip = roll === 1 || roll === 2 ? 1 : 0;
@@ -746,25 +746,25 @@ export function touristTrain({ roll = null, toot = 0, wave = 0 }: TrainPose = {}
 // ---------- Crosstown bus ----------
 
 // The key, and the bus's design grid: 176x64 at road.ts's SCALE, as the tourist train's.
-export const BUS_KEY = "crosstown-bus";
-export const BUS_W = TRAIN_W;
-export const BUS_H = TRAIN_H;
+const BUS_KEY = "crosstown-bus";
+const BUS_W = TRAIN_W;
+const BUS_H = TRAIN_H;
 // The body's rear and front columns, its roof, belt (white over red) and sill rows; the wheels'
 // centre row, radius and columns, the feet a row above the frame's bottom row as the train's.
-export const BUS_REAR = 2;
-export const BUS_FRONT = 112;
-export const BUS_ROOF = 4;
-export const BUS_BELT = 22;
-export const BUS_SILL = 36.5;
-export const BUS_AXLE = 37.2;
-export const BUS_WHEEL = 4.6;
-export const BUS_WHEELS: readonly number[] = [28, 89];
+const BUS_REAR = 2;
+const BUS_FRONT = 112;
+const BUS_ROOF = 4;
+const BUS_BELT = 22;
+const BUS_SILL = 36.5;
+const BUS_AXLE = 37.2;
+const BUS_WHEEL = 4.6;
+const BUS_WHEELS: readonly number[] = [28, 89];
 // The doors' left columns, middle and front, each BUS_DOOR wide.
-export const BUS_DOORS: readonly number[] = [52, 98];
-export const BUS_DOOR = 7.5;
+const BUS_DOORS: readonly number[] = [52, 98];
+const BUS_DOOR = 7.5;
 
 // A crosstown-bus pose: the push frame, the doors open, the kneel and the indicator lit.
-export interface BusPose {
+interface BusPose {
   blink?: number;
   doors?: number;
   kneel?: number;
@@ -776,7 +776,7 @@ export interface BusPose {
 // open, the body kneels 1px on frames 1 and 2; 4 frames at 400ms. Pulling away: the doors shut and
 // the front indicator blinks, the body up off its kneel from frame 1 and the wheels a quarter turned
 // on frame 2; 3 frames at 120ms, the train's.
-export const BUS_TAGS: CrosserTags<BusPose> = [
+const BUS_TAGS: CrosserTags<BusPose> = [
   ["push", PUSH, 100],
   ["idle", [{ doors: 1 }, { doors: 1, kneel: 1 }, { doors: 1, kneel: 1 }, { doors: 1 }], 400],
   ["cue", [{ blink: 1, kneel: 1 }, {}, { blink: 1, roll: 1 }], 120],
@@ -785,7 +785,7 @@ export const BUS_TAGS: CrosserTags<BusPose> = [
 // A black tire side on round a flat grey hub, a dslate spoke across the hub turned an eighth of a
 // turn clockwise a frame (roll 0 to 3: |, /, - and \), as a wheel rolling right turns; the spoke's
 // two ends make the loop seamless.
-export function busWheel(g: Drawable, cx: number, roll: number): void {
+function busWheel(g: Drawable, cx: number, roll: number): void {
   const r = BUS_WHEEL;
   const cy = BUS_AXLE;
   g.ell(cx, cy, r, r, "ink");
@@ -808,7 +808,7 @@ export function busWheel(g: Drawable, cx: number, roll: number): void {
 // A glass door from the window band's top to the sill in an lgrey frame: shut, two navy leaves split
 // down the middle; open, the leaves folded back to its sides on the lit doorway, a yellow pole up it
 // and its grey step.
-export function busDoor(g: Drawable, x0: number, open: number | boolean): void {
+function busDoor(g: Drawable, x0: number, open: number | boolean): void {
   const top = BUS_ROOF + 4;
   const w = BUS_DOOR;
   g.rect(x0, top, w, BUS_SILL - top, "lgrey");
@@ -838,7 +838,7 @@ export function busDoor(g: Drawable, x0: number, open: number | boolean): void {
 // band, the roof pod at the back, the amber destination sign over the front door and windshield, the
 // red lower body with a white stripe and a dred sill, the two doors, the dark wheel arches, the
 // bumpers, the headlamp and the indicator, the mirror on its arm off the front of the roof.
-export function busBody(g: Drawable, doors = 0, blink = 0): void {
+function busBody(g: Drawable, doors = 0, blink = 0): void {
   const x0 = BUS_REAR;
   const x1 = BUS_FRONT;
   const top = BUS_ROOF;
@@ -903,12 +903,7 @@ export function busBody(g: Drawable, doors = 0, blink = 0): void {
 // A TTC bus crossing Yonge Street side on, facing right (see the header). roll (0 to 3) is a push
 // frame: the spokes turn and the body dips onto its wheels on frames 1 and 2; doors opens both doors,
 // kneel dips the body 1px at the stop, blink lights the indicator.
-export function crosstownBus({
-  blink = 0,
-  doors = 0,
-  kneel = 0,
-  roll = null,
-}: BusPose = {}): Drawable {
+function crosstownBus({ blink = 0, doors = 0, kneel = 0, roll = null }: BusPose = {}): Drawable {
   const g = edged(scope.Grid(BUS_W, BUS_H));
   const dip = roll === 1 || roll === 2 || kneel ? 1 : 0;
   layered(g, [
@@ -928,29 +923,29 @@ export function crosstownBus({
 // ---------- brewery dray ----------
 
 // The key, and the dray's design grid: 176x64 at road.ts's SCALE, as the tourist train's.
-export const DRAY_KEY = "brewery-dray";
-export const DRAY_W = TRAIN_W;
-export const DRAY_H = TRAIN_H;
+const DRAY_KEY = "brewery-dray";
+const DRAY_W = TRAIN_W;
+const DRAY_H = TRAIN_H;
 // The flatbed's rear and front columns and its deck's top row; the kegs' width, height and pitch, the
 // bottom tier's count and the top tier's, stepped up at the back; the tug's rear and front columns,
 // its body's top row and the cab roof's row; the wheels' columns, on the bus's axle and radius.
-export const DRAY_BED = 2;
-export const DRAY_BED_FRONT = 70;
-export const DRAY_DECK = 28.5;
-export const DRAY_KEG_W = 10;
-export const DRAY_KEG_H = 11;
-export const DRAY_KEG_PITCH = 11;
-export const DRAY_KEGS = 6;
-export const DRAY_TOP_KEGS = 3;
-export const DRAY_TUG = 73;
-export const DRAY_TUG_FRONT = 114.5;
-export const DRAY_TUG_TOP = 22.5;
-export const DRAY_ROOF = 6;
-export const DRAY_WHEELS: readonly number[] = [13, 57];
-export const DRAY_TUG_WHEELS: readonly number[] = [82, 105];
+const DRAY_BED = 2;
+const DRAY_BED_FRONT = 70;
+const DRAY_DECK = 28.5;
+const DRAY_KEG_W = 10;
+const DRAY_KEG_H = 11;
+const DRAY_KEG_PITCH = 11;
+const DRAY_KEGS = 6;
+const DRAY_TOP_KEGS = 3;
+const DRAY_TUG = 73;
+const DRAY_TUG_FRONT = 114.5;
+const DRAY_TUG_TOP = 22.5;
+const DRAY_ROOF = 6;
+const DRAY_WHEELS: readonly number[] = [13, 57];
+const DRAY_TUG_WHEELS: readonly number[] = [82, 105];
 
 // A brewery-dray pose: the push frame, the driver's wave and the beacon lit.
-export interface DrayPose {
+interface DrayPose {
   blink?: number;
   roll?: number | null;
   wave?: number;
@@ -960,7 +955,7 @@ export interface DrayPose {
 // 1 and 2 and the flatbed bobs 1px in turn; 4 frames at 100ms, as every drive. Stopped: the driver
 // waves out of the open cab, the hand swung out on frame 2; 4 frames at 400ms. Pulling away: the roof
 // beacon blinks, the wheels a quarter turned on frame 2; 3 frames at 120ms, the train's.
-export const DRAY_TAGS: CrosserTags<DrayPose> = [
+const DRAY_TAGS: CrosserTags<DrayPose> = [
   ["push", PUSH, 100],
   ["idle", [{}, { wave: 1 }, { wave: 2 }, { wave: 1 }], 400],
   ["cue", [{ blink: 1 }, {}, { blink: 1, roll: 1 }], 120],
@@ -969,7 +964,7 @@ export const DRAY_TAGS: CrosserTags<DrayPose> = [
 // An upright wooden keg side on from its top-left corner (x, y): oak staves lit down the left and
 // shaded down the right, bellied a little at the middle, a pale chime at its top and two dark iron
 // hoops.
-export function keg(g: Drawable, x: number, y: number): void {
+function keg(g: Drawable, x: number, y: number): void {
   const w = DRAY_KEG_W;
   const h = DRAY_KEG_H;
   g.rect(x + 1, y, w - 2, h, "brown");
@@ -986,7 +981,7 @@ export function keg(g: Drawable, x: number, y: number): void {
 
 // The flatbed trailer: two tiers of kegs, the top one stepped up over the back, a yellow ratchet
 // strap over each, on a dslate steel deck with a tail lamp at the back.
-export function flatbed(g: Drawable): void {
+function flatbed(g: Drawable): void {
   const x0 = DRAY_BED;
   const x1 = DRAY_BED_FRONT;
   const deck = DRAY_DECK;
@@ -1016,7 +1011,7 @@ export function flatbed(g: Drawable): void {
 
 // The electric tug, its open cab at the back (left) under a flat roof, the driver at the wheel behind
 // the raked windscreen, the low brick red nose in front with the lit headlamp.
-export function tug(g: Drawable, wave = 0, blink = 0): void {
+function tug(g: Drawable, wave = 0, blink = 0): void {
   const x0 = DRAY_TUG;
   const x1 = DRAY_TUG_FRONT;
   const top = DRAY_TUG_TOP;
@@ -1074,7 +1069,7 @@ export function tug(g: Drawable, wave = 0, blink = 0): void {
 // pulling a flatbed of wooden kegs. roll (0 to 3) is a push frame: the spokes turn, the tug dips onto
 // its wheels on frames 1 and 2 and the flatbed bobs in turn; wave raises the driver's hand (2 swings
 // it out), blink lights the roof beacon.
-export function breweryDray({ blink = 0, roll = null, wave = 0 }: DrayPose = {}): Drawable {
+function breweryDray({ blink = 0, roll = null, wave = 0 }: DrayPose = {}): Drawable {
   const g = edged(scope.Grid(DRAY_W, DRAY_H));
   const moving = roll !== null;
   const dip = roll === 1 || roll === 2 ? 1 : 0;
@@ -1097,19 +1092,19 @@ export function breweryDray({ blink = 0, roll = null, wave = 0 }: DrayPose = {})
 // ---------- lifeguard patrol buggy ----------
 
 // The key, and the buggy's design grid: 112x64 at road.ts's SCALE, two lanes on the train's grid.
-export const BUGGY_KEY = "patrol-buggy";
-export const BUGGY_W = 112 / SCALE;
-export const BUGGY_H = TRAIN_H;
+const BUGGY_KEY = "patrol-buggy";
+const BUGGY_W = 112 / SCALE;
+const BUGGY_H = TRAIN_H;
 // The buggy's wheels (columns, radius) and the trailer's, each on its axle row, their feet on the
 // train's row.
-export const BUGGY_FEET = TRAIN_AXLE + TRAIN_WHEEL;
-export const BUGGY_WHEELS: readonly number[] = [37, 64.5];
-export const BUGGY_WHEEL = 5.4;
-export const TRAILER_WHEEL_X = 13;
-export const TRAILER_WHEEL = 3.8;
+const BUGGY_FEET = TRAIN_AXLE + TRAIN_WHEEL;
+const BUGGY_WHEELS: readonly number[] = [37, 64.5];
+const BUGGY_WHEEL = 5.4;
+const TRAILER_WHEEL_X = 13;
+const TRAILER_WHEEL = 3.8;
 
 // A patrol-buggy pose: the push frame, the flag's flap and the light bar's flash.
-export interface BuggyPose {
+interface BuggyPose {
   flap?: number;
   flash?: number;
   roll?: number | null;
@@ -1120,7 +1115,7 @@ export interface BuggyPose {
 // flag on its whip pole flutters, its fly end lifting on frames 1 to 3 and furthest on frame 2; 4
 // frames at 400ms. Pulling away: the roll bar's light bar flashes, the wheels a quarter turned on
 // frame 2; 3 frames at 120ms, the train's.
-export const BUGGY_TAGS: CrosserTags<BuggyPose> = [
+const BUGGY_TAGS: CrosserTags<BuggyPose> = [
   ["push", PUSH, 100],
   ["idle", [{}, { flap: 1 }, { flap: 2 }, { flap: 1 }], 400],
   ["cue", [{ flash: 1 }, {}, { flash: 1, roll: 1 }], 120],
@@ -1128,7 +1123,7 @@ export const BUGGY_TAGS: CrosserTags<BuggyPose> = [
 
 // A black tire side on round a white hub, its feet on BUGGY_FEET, a dslate spoke across the hub
 // turned an eighth of a turn clockwise a frame (roll 0 to 3), as busWheel's.
-export function buggyWheel(g: Drawable, cx: number, r: number, roll: number): void {
+function buggyWheel(g: Drawable, cx: number, r: number, roll: number): void {
   const cy = BUGGY_FEET - r;
   g.ell(cx, cy, r, r, "ink");
   g.rect(cx - r + 0.6, cy - 1.5, 0.75, 3, "dslate");
@@ -1150,7 +1145,7 @@ export function buggyWheel(g: Drawable, cx: number, r: number, roll: number): vo
 // The trailer behind the buggy: a dslate frame on one small wheel's fender, a red tail light at its
 // back, its tongue to the hitch, and the rescue board lying on it, yellow with a white lit top, grab
 // handles along its amber rail, its nose turned up at the front.
-export function trailer(g: Drawable): void {
+function trailer(g: Drawable): void {
   g.rect(2, 31, 21, 3, "dslate");
   row(g, 2, 23, 31, "slate");
   g.rect(22, 32, 7, 1.5, "ink");
@@ -1172,7 +1167,7 @@ export function trailer(g: Drawable): void {
 // rescue cross on its side, the seat and the lifeguard in a red tank top driving, the white roll bar
 // over them with its light bar, the red hood sloping to the headlamp, the bumpers and the black
 // running board between the wheel arches.
-export function buggyBody(g: Drawable, flap = 0, flash = 0): void {
+function buggyBody(g: Drawable, flap = 0, flash = 0): void {
   // the whip pole and the surf flag on it, red over yellow, flying back; flap lifts its fly end
   g.rect(28.5, 2, 1, 23, "dslate");
   const lift = [0, 0.75, 1.5][flap]!;
@@ -1233,7 +1228,7 @@ export function buggyBody(g: Drawable, flap = 0, flash = 0): void {
 // the header). roll (0 to 3) is a push frame: the spokes turn, the buggy dips onto its wheels on
 // frames 1 and 2 and the trailer bobs in turn; flap lifts the surf flag's fly end (2 furthest), flash
 // lights the light bar.
-export function patrolBuggy({ flap = 0, flash = 0, roll = null }: BuggyPose = {}): Drawable {
+function patrolBuggy({ flap = 0, flash = 0, roll = null }: BuggyPose = {}): Drawable {
   const g = edged(scope.Grid(BUGGY_W, BUGGY_H));
   const moving = roll !== null;
   const dip = roll === 1 || roll === 2 ? 1 : 0;
@@ -1262,7 +1257,7 @@ function crosser<Q>(draw: (q: Q) => Drawable, tags: CrosserTags<Q>, s: number): 
 // Every sprite: [key, [[tag, frames, duration ms]]] at full size, then at every depth step: the
 // garbage truck on a Mini at TRUCK_SCALE x the step, the scooter, the tourist train, the TTC bus, the
 // brewery dray and the patrol buggy at road.ts's SCALE x the step.
-export function* sprites(): Generator<Sprite> {
+function* sprites(): Generator<Sprite> {
   const [drive, driveMs] = DRIVE;
   for (const [suffix, step] of sizes()) {
     yield [
