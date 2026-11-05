@@ -1,5 +1,6 @@
 import { gameViteConfig } from "@andornaut/game-kit/web/build/vite/gameConfig";
 
+import { PREVIEW_HOST } from "./src/tools/previewHost.ts";
 import type * as ConfigModules from "./src/tools/viteConfigModules.ts";
 
 // The parent Vite and Vitest config loads the plugins below from
@@ -42,9 +43,7 @@ export default gameViteConfig<typeof ConfigModules>({
       modules.securityHeadersPlugin(),
     ];
   },
-  // The container name the Playwright MCP reaches the dev or preview server by, over the
-  // playwright-mcp Docker network. Vite rejects any other Host header.
-  previewHost: "adw-preview",
+  previewHost: PREVIEW_HOST,
   repoRoot: import.meta.dirname,
   // Whole-walk tests run several seconds alone and several times that on a loaded host or a
   // CI runner, so the default 5 s is too tight; the slowest blocks set their own, longer limit.

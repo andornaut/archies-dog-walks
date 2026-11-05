@@ -29,11 +29,14 @@ import type {
   UpgradeId,
   WalkerId,
 } from "../data/types.ts";
+import { DEV_CHEATS_KEY, DEV_SAVE_EDITS_KEY } from "../dev/devPanelModel.ts";
 import { sizeHearts } from "../rules/dogs.ts";
 import { effectText } from "../rules/effectText.ts";
 import { faceMood } from "../rules/treats.ts";
 import { weightedZones } from "../rules/zones.ts";
 import { minorLook, obstacleSkins } from "../runner/obstacleLooks.ts";
+import { SAVE_KEYS } from "../save/storage.ts";
+import { PREVIEW_HOST } from "./previewHost.ts";
 
 // The game data art's tools read, as shared/export/game-data.json. Every entry spreads its
 // data module's fields as they are, so a field added to the data shows up here unchanged,
@@ -139,6 +142,17 @@ export function gameDataExport(data: GameData) {
   return {
     cards: cardFaces(data),
     debuffs: entries(data.debuffs).map(([id, debuff]) => ({ id, ...debuff })),
+    // What a browser harness that drives the game needs: the preview server's container name,
+    // the storage keys the dev panel and the save use, and the text it waits for.
+    devHarness: {
+      previewHost: PREVIEW_HOST,
+      storageKeys: {
+        devCheats: DEV_CHEATS_KEY,
+        devSaveEdits: DEV_SAVE_EDITS_KEY,
+        save: SAVE_KEYS.save,
+      },
+      text: { pull: data.runText.strip.pull },
+    },
     dogs: entries<DogId, GameData["dogs"][DogId]>(data.dogs).map(([id, dog]) => {
       const hearts = sizeHearts(tuning, dog);
       return {

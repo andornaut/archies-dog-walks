@@ -573,6 +573,17 @@
       "stake": "drifts for {seconds}s"
     }
   ],
+  "devHarness": {
+    "previewHost": "adw-preview",
+    "storageKeys": {
+      "devCheats": "dog-walker-game:dev-cheats",
+      "devSaveEdits": "dog-walker-game:dev-save-edits",
+      "save": "dog-walker-game:save"
+    },
+    "text": {
+      "pull": "{dog} spotted a squirrel!"
+    }
+  },
   "dogs": [
     {
       "id": "archie",
