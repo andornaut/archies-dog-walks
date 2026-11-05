@@ -31,7 +31,7 @@ import type {
 } from "../data/types.ts";
 import { DEV_CHEATS_KEY, DEV_SAVE_EDITS_KEY } from "../dev/devPanelModel.ts";
 import { sizeHearts } from "../rules/dogs.ts";
-import { effectText } from "../rules/effectText.ts";
+import { effectText, gearShort, upgradeLine } from "../rules/effectText.ts";
 import { faceMood } from "../rules/treats.ts";
 import { weightedZones } from "../rules/zones.ts";
 import { minorLook, obstacleSkins } from "../runner/obstacleLooks.ts";
@@ -40,7 +40,8 @@ import { PREVIEW_HOST } from "./previewHost.ts";
 
 // The game data art's tools read, as shared/export/game-data.json. Every entry spreads its
 // data module's fields as they are, so a field added to the data shows up here unchanged,
-// then adds what the game derives from it: art keys, card text and per-dog figures.
+// then adds what the game derives from it: art keys, card text and per-dog figures. A gear
+// item's short line and an upgrade's cardEffect and effect are filled as players see them.
 
 function entries<Id extends string, T>(record: Readonly<Record<Id, T>>): [Id, T][] {
   return Object.entries(record) as [Id, T][];
@@ -194,6 +195,7 @@ export function gameDataExport(data: GameData) {
       id,
       ...gear,
       iconKey: gearIconKey(id),
+      short: gearShort(data, id),
     })),
     help: data.help,
     minorObstacles: entries<MinorObstacleId, GameData["minorObstacles"][MinorObstacleId]>(
@@ -220,7 +222,12 @@ export function gameDataExport(data: GameData) {
     movementAssignments: data.movementAssignments,
     movementProfiles: data.movementProfiles,
     tuning,
-    upgrades: upgradeEntries(data).map(([id, upgrade]) => ({ id, ...upgrade })),
+    upgrades: upgradeEntries(data).map(([id, upgrade]) => ({
+      id,
+      ...upgrade,
+      cardEffect: upgradeLine(tuning, "cardEffect", upgrade),
+      effect: upgradeLine(tuning, "effect", upgrade),
+    })),
     walkers: entries<WalkerId, GameData["walkers"][WalkerId]>(data.walkers).map(([id, walker]) => ({
       id,
       ...walker,
