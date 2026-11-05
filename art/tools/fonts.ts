@@ -11,7 +11,8 @@
 //
 // font-body and font-title are SIL Open Font License fonts; the font files and licences are in
 // art/fonts/. Their glyphs are white on transparent so the game tints them. Printable ASCII, the
-// middle dot (U+00B7) and a drawn heart for ♥ (U+2665), which neither font has. Skia rasterizes them
+// middle dot (U+00B7) and a drawn heart for ♥ (U+2665), which Tiny5 maps and Silkscreen does not;
+// both fonts use the drawn one. Skia rasterizes them
 // unhinted without antialiasing, so every pixel is fully on or off.
 //
 // font-body keeps Tiny5's 10-row line and its capitals' top on row 2, a row taller than Tiny5 so
