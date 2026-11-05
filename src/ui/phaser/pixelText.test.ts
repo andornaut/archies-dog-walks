@@ -1,3 +1,4 @@
+import { sceneStub } from "@andornaut/game-kit/testing/phaser/sceneStub";
 import { registerPixelFont } from "@andornaut/game-kit/text/phaser/registerPixelFont";
 import type { GameObjects, Scene } from "phaser";
 import { describe, expect, it, vi } from "vitest";
@@ -47,7 +48,7 @@ const FONTS: Readonly<Record<FontRole, string>> = { body: "font-body", title: "f
 // label is drawn.
 function fakeScene(): { drawn: { x: number }[]; scene: Scene } {
   const drawn: { x: number }[] = [];
-  const scene = {
+  const scene = sceneStub(vi.fn, {
     add: {
       bitmapText: (x: number) => {
         drawn.push({ x });
@@ -60,13 +61,10 @@ function fakeScene(): { drawn: { x: number }[]; scene: Scene } {
         return label;
       },
     },
-    cache: {
-      bitmapFont: {
-        exists: (key: string) => Object.values(FONTS).includes(key),
-        get: (key: string) => ({ data: phaserFontData(key) }),
-      },
-    },
-  };
+  });
+  for (const key of Object.values(FONTS)) {
+    scene.cache.bitmapFont.add(key, { data: phaserFontData(key) });
+  }
   return { drawn, scene: scene as unknown as Scene };
 }
 

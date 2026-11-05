@@ -1,5 +1,6 @@
+import { sceneStub } from "@andornaut/game-kit/testing/phaser/sceneStub";
 import type { Scene } from "phaser";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { addDisplayText } from "./displayText.ts";
 
@@ -16,7 +17,7 @@ function fakeScene(fonts: Readonly<Record<string, string>>): { drawn: Drawn[]; s
   const drawn: Drawn[] = [];
   const glyphs = (chars: string) =>
     Object.fromEntries([...chars].map((char) => [char.codePointAt(0), { kerning: {} }]));
-  const scene = {
+  const scene = sceneStub(vi.fn, {
     add: {
       bitmapText: (_x: number, y: number, font: string, text: string) => {
         const entry: Drawn = { font, text, tint: undefined, y };
@@ -33,19 +34,16 @@ function fakeScene(fonts: Readonly<Record<string, string>>): { drawn: Drawn[]; s
         return label;
       },
     },
-    cache: {
-      bitmapFont: {
-        exists: (key: string) => key in fonts,
-        // Each font's capitals start 4 rows into its line, as font-title's do.
-        get: (key: string) => ({
-          data: {
-            chars: { ...glyphs(fonts[key] ?? ""), [72]: { height: 5, kerning: {}, yOffset: 4 } },
-            lineHeight: 12,
-          },
-        }),
+  });
+  // Each font's capitals start 4 rows into its line, as font-title's do.
+  for (const [key, chars] of Object.entries(fonts)) {
+    scene.cache.bitmapFont.add(key, {
+      data: {
+        chars: { ...glyphs(chars), [72]: { height: 5, kerning: {}, yOffset: 4 } },
+        lineHeight: 12,
       },
-    },
-  };
+    });
+  }
   return { drawn, scene: scene as unknown as Scene };
 }
 

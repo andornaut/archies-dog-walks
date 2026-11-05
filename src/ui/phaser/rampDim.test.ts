@@ -1,5 +1,4 @@
-import { EventEmitter } from "node:events";
-
+import { sceneStub } from "@andornaut/game-kit/testing/phaser/sceneStub";
 import { snapshotRemapped } from "@andornaut/game-kit/view/phaser/snapshotRemap";
 import type { Scene } from "phaser";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -50,8 +49,7 @@ function fixture() {
     x: 0,
     y: 0,
   };
-  const gameEvents = new EventEmitter();
-  const scene = {
+  const stub = sceneStub(vi.fn, {
     add: {
       image: () => {
         const image = new Display();
@@ -73,11 +71,10 @@ function fixture() {
       },
     },
     cameras: { cameras: [camera], main: camera },
-    events: new EventEmitter(),
-    game: { events: gameEvents },
     scene: { key: "settings" },
-  } as unknown as Scene;
-  return { camera, gameEvents, images, rectangles, scene };
+  });
+  const scene = stub as unknown as Scene;
+  return { camera, gameEvents: stub.game.events, images, rectangles, scene };
 }
 
 const area = { height: 300, width: 360, x: 0, y: 40 };
