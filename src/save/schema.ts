@@ -15,7 +15,7 @@ import type { RunCounters } from "../rules/achievements.ts";
 import type { EndReason } from "../state/runState.ts";
 import { type Cents, cents as toCents } from "../units.ts";
 
-export const SAVE_VERSION = 25;
+export const SAVE_VERSION = 26;
 
 // Every tally the save keeps; a stored key outside it is dropped on load. A record, so a new
 // TallyId fails to compile until it is listed here.

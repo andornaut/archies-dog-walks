@@ -108,7 +108,7 @@ const MINOR_FLASH_COLOURS: Readonly<Record<MinorLookId, BorderColour>> = {
   jogger: "orange",
   kegDollyWorker: "orange",
   kidOnABike: "yellow",
-  leafPile: "orange",
+  leafBag: "tan",
   lifeguardChair: "red",
   littleFreeLibrary: "cyan",
   mailCarrier: "cyan",
