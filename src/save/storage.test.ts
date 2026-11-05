@@ -27,8 +27,8 @@ describe("gameSaveStore", () => {
     expect(saveFormat).toHaveBeenLastCalledWith(testContext);
     expect(saveStore).toHaveBeenCalledWith(storage, SAVE_KEYS, format);
     expect(SAVE_KEYS).toEqual({
-      backup: "dog-walker-game:save-backup",
-      save: "dog-walker-game:save",
+      backup: "archies-dog-walks:save-backup",
+      save: "archies-dog-walks:save",
     });
   });
 

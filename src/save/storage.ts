@@ -14,14 +14,14 @@ import { type SaveContext, saveFormat } from "./load.ts";
 import type { SaveDocument } from "./schema.ts";
 
 export const SAVE_KEYS: SaveKeys = {
-  backup: "dog-walker-game:save-backup",
-  save: "dog-walker-game:save",
+  backup: "archies-dog-walks:save-backup",
+  save: "archies-dog-walks:save",
 };
 
 // The earned badges, kept apart from the save: the ids earned and those not yet celebrated.
 export const EARNED_KEYS: SaveKeys = {
-  backup: "dog-walker-game:achievements-backup",
-  save: "dog-walker-game:achievements",
+  backup: "archies-dog-walks:achievements-backup",
+  save: "archies-dog-walks:achievements",
 };
 
 // The earned record's format version. Until the user declares the first release, a change to the
@@ -29,7 +29,7 @@ export const EARNED_KEYS: SaveKeys = {
 export const EARNED_VERSION = 1;
 
 // Where a checkpoint's resume point that could not be read is copied as the launch banks it.
-export const RESUME_BACKUP_KEY = "dog-walker-game:resume-backup";
+export const RESUME_BACKUP_KEY = "archies-dog-walks:resume-backup";
 
 // The game's save in storage, in its format for context.
 export function gameSaveStore(context: SaveContext, storage: SaveStorage): SaveStore<SaveDocument> {

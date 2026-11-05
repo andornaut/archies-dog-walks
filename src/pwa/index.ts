@@ -76,7 +76,7 @@ let updateShown = false;
 // start screen and activates only after the player chooses Update now.
 const BOOT_WAIT_MS = 4000;
 // The history state key of the entry that keeps back on the game (the kit's guardBackNavigation).
-const BACK_GUARD_STATE_KEY = "dogWalkerBackGuard";
+const BACK_GUARD_STATE_KEY = "archiesDogWalksBackGuard";
 
 // The production build only: the dev server has no sw.js, and a worker would serve stale
 // modules over hot reloads. The kit's offline play: a page a version controls registers now, so

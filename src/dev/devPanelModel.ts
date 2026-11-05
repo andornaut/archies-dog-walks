@@ -13,16 +13,16 @@ import { type RunSetup, runSetupLink } from "./runSetup.ts";
 
 // sessionStorage: an input log, as encodeInputLog writes it, for the next run to play back.
 // The run that reads it should remove it, so a reload plays normally.
-export const DEV_REPLAY_KEY = "dog-walker-game:dev-replay";
+export const DEV_REPLAY_KEY = "archies-dog-walks:dev-replay";
 // sessionStorage: the last finished run's input log, as encodeInputLog writes it. RunScene
 // writes it at run end.
-export const DEV_LAST_LOG_KEY = "dog-walker-game:dev-last-log";
+export const DEV_LAST_LOG_KEY = "archies-dog-walks:dev-last-log";
 // sessionStorage and the game registry: the cheats, as encodeCheats writes them. They last
 // for the tab, so a walk the panel starts keeps them, and never reach the save.
-export const DEV_CHEATS_KEY = "dog-walker-game:dev-cheats";
+export const DEV_CHEATS_KEY = "archies-dog-walks:dev-cheats";
 // sessionStorage: save edits, as encodeSaveEdits writes them, applied at the next boot before
 // the game loads the save, so the page being left cannot write its save over them.
-export const DEV_SAVE_EDITS_KEY = "dog-walker-game:dev-save-edits";
+export const DEV_SAVE_EDITS_KEY = "archies-dog-walks:dev-save-edits";
 
 // The walk's movement speed under the speed cheat.
 type Speed = "fast" | "normal" | "slow";

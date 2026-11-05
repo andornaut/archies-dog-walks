@@ -161,7 +161,7 @@ function bootGame(): Game {
 
   // With dev=1, the game is reachable from the console and from headless checks.
   if (pageRunSetup().setup.dev) {
-    Object.assign(globalThis, { dogWalkerGame: game });
+    Object.assign(globalThis, { archiesDogWalksGame: game });
   }
 
   game.events.once(Core.Events.POST_RENDER, () => startupLoad.finish());

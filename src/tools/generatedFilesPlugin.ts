@@ -112,6 +112,6 @@ export function generatedFilesPlugin({ repoRoot }: GeneratedFilesPluginOptions):
         }
       });
     },
-    name: "dog-walker-generated-files",
+    name: "archies-dog-walks-generated-files",
   };
 }

@@ -4,7 +4,7 @@
 import type { SaveStorage } from "@andornaut/game-kit/save/storage";
 import { type InstallState, offersInstall } from "@andornaut/game-kit/web/pwa/installState";
 
-export const INSTALL_NUDGE_KEY = "dog-walker-game:install-nudged";
+export const INSTALL_NUDGE_KEY = "archies-dog-walks:install-nudged";
 const SHOWN = "1";
 
 export interface InstallNudge {

@@ -63,7 +63,7 @@ export function atlasPlugin(): Plugin & { api: AtlasPluginApi } {
         ? `export default new Map(${JSON.stringify([...artFiles])});`
         : undefined;
     },
-    name: "dog-walker-atlas",
+    name: "archies-dog-walks-atlas",
     resolveId(id) {
       return id === ART_FILES_MODULE ? RESOLVED_ART_FILES_MODULE : undefined;
     },

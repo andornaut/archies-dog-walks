@@ -576,9 +576,9 @@
   "devHarness": {
     "previewHost": "adw-preview",
     "storageKeys": {
-      "devCheats": "dog-walker-game:dev-cheats",
-      "devSaveEdits": "dog-walker-game:dev-save-edits",
-      "save": "dog-walker-game:save"
+      "devCheats": "archies-dog-walks:dev-cheats",
+      "devSaveEdits": "archies-dog-walks:dev-save-edits",
+      "save": "archies-dog-walks:save"
     },
     "text": {
       "pull": "{dog} spotted a squirrel!"
