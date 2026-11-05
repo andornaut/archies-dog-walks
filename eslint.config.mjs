@@ -167,7 +167,7 @@ function boundaryConfigs() {
 export default defineConfig(
   {
     // Task worktrees and generated output are checked separately.
-    ignores: [".claude/", ".wrangler/", "dist/", "node_modules/"],
+    ignores: [".claude/", ".worktrees/", ".wrangler/", "dist/", "node_modules/"],
   },
   js.configs.recommended,
   ts.configs.recommended,
