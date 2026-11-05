@@ -2,6 +2,7 @@ import { readdirSync } from "node:fs";
 
 import js from "@eslint/js";
 import { defineConfig } from "eslint/config";
+// WORKAROUND: https://github.com/un-ts/eslint-plugin-import-x/issues/569
 import { createNodeResolver } from "eslint-plugin-import-x/node-resolver";
 import extensions from "eslint-plugin-import-x/rules/extensions";
 import noCycle from "eslint-plugin-import-x/rules/no-cycle";
