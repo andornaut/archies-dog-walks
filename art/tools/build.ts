@@ -1,33 +1,36 @@
-// Rebuild the art: run `node art/tools/<set>.ts build` for every set, in an order where each set runs
-// after the sets whose exports it reads, and stop at the first failure.
+// Rebuild the art on art-kit's build runner: run `node art/tools/<set>.ts build` for every set, in an
+// order where each set runs after the sets whose exports it reads, and stop at the first failure.
 //
 // Builds read earlier exports from public/art/: every set that imports scene.ts reads each zone's road
 // strip (roads), and the others below read the sprites, images and fonts they paste. A set with no
 // entry in NEEDS reads only its own exports, the committed manifest and shared/ tables.
 //
-// --check then fails when a path under TREES (art/ and every path the builds write) differs from the
-// index or holds an untracked file, and lists those paths. Builds are deterministic, so on a clean
-// checkout every difference is a generator change. Named sets rebuild those sets and every set
-// downstream of them.
+// --check then fails when the rebuild changes, removes or adds a file under CHECK_PATHS (art/ and
+// every path the builds write), and lists those paths. It compares the files before and after the
+// rebuild and needs no git. Builds are deterministic, so on a clean checkout every difference is a
+// generator change. Named sets rebuild those sets and every set downstream of them.
 //
 // Run from the repository root in the archie-check image (SoX and ffmpeg). It spawns only node and
-// git, and reaches no network.
+// reaches no network.
 import { spawnSync } from "node:child_process";
 import { readdirSync } from "node:fs";
 
-import { run as runCommands, UsageError } from "./pixel.ts";
+import { buildCommand, type BuildSets } from "@andornaut/art-kit/build";
+
+import { run as runCommands } from "./pixel.ts";
 
 const USAGE = `Usage:
   node art/tools/build.ts [--check] [SET...]   rebuild every set, or each SET and the sets that read
                                                its exports, in dependency order; --check then fails
-                                               on any changed or untracked file under art/ or
-                                               the paths the builds write (public/art/,
+                                               on any file the rebuild changed, removed or added
+                                               under art/ or the paths the builds write (public/art/,
                                                public/icons/, public/og-image.png and
                                                shared/palette.json, roadside.json and
                                                verges.json)`;
 
 // Every set with a build command, in build order: the sets that read no other set's exports
-// (alphabetical), then the sets that do (alphabetical, which meets every entry in NEEDS).
+// (alphabetical), then the sets that do (alphabetical, which meets every entry in NEEDS). art-kit
+// breaks ties in its build order by declaration order, so it runs the sets in this order.
 const SETS = [
   "ambient",
   "animals",
@@ -112,7 +115,7 @@ const NOT_SETS = new Set([
 // art/, which no build writes, and every path a build writes: shared/palette.json (pixel),
 // shared/roadside.json (roadside) and shared/verges.json (backdrops). The rest of shared/ is the
 // game's.
-const TREES = [
+const CHECK_PATHS = [
   "art",
   "public/art",
   "public/icons",
@@ -121,11 +124,6 @@ const TREES = [
   "shared/roadside.json",
   "shared/verges.json",
 ];
-
-function fail(message: string): never {
-  console.error(message);
-  process.exit(1);
-}
 
 // Problems with SETS and NEEDS: a module in dir that is neither a set nor listed in NOT_SETS, or a set
 // ordered before one it needs.
@@ -148,79 +146,48 @@ function problems(dir: string): string[] {
   return out;
 }
 
-// The named sets and every set that reads their exports, directly or through another, in build order;
-// every set when none is named.
-function selected(named: readonly ArtSet[]): ArtSet[] {
-  if (!named.length) {
-    return [...SETS];
-  }
-  const chosen = new Set<ArtSet>(named);
-  for (const set of SETS) {
-    if (NEEDS[set]?.some((need) => chosen.has(need))) {
-      chosen.add(set);
-    }
-  }
-  return SETS.filter((set) => chosen.has(set));
-}
-
-function run(command: string, args: readonly string[]): number {
-  const result = spawnSync(command, args, { stdio: "inherit" });
+// Run the set's build in its own node process; a nonzero exit fails the set.
+function spawnBuild(set: ArtSet): void {
+  const result = spawnSync(process.execPath, [`art/tools/${set}.ts`, "build"], {
+    stdio: "inherit",
+  });
   if (result.error) {
-    fail(`${command}: ${result.error.message}`);
+    throw result.error;
   }
-  return result.status ?? 1;
+  if (result.status !== 0) {
+    throw new Error(`exit ${result.status ?? result.signal}`);
+  }
 }
 
-// The changed and untracked paths under TREES, printed; true when there are none.
-function unchanged(): boolean {
-  const diff = run("git", ["diff", "--exit-code", "--name-status", "--", ...TREES]);
-  const others = spawnSync(
-    "git",
-    ["ls-files", "--others", "--exclude-standard", "-z", "--", ...TREES],
-    { encoding: "utf8" },
-  );
-  if (others.status !== 0) {
-    fail(`git ls-files: ${others.stderr || others.error?.message}`);
-  }
-  const untracked = others.stdout.split("\0").filter(Boolean);
-  for (const path of untracked) {
-    console.log(`?\t${path}`);
-  }
-  return diff === 0 && !untracked.length;
+const BUILD_SETS: BuildSets = Object.fromEntries(
+  SETS.map((set) => [set, { build: () => spawnBuild(set), needs: NEEDS[set] ?? [] }]),
+);
+
+// Hand art-kit the `[--check] [SET...]` arguments and exit with its status: 0, 1 for a failing build
+// or check differences, or 2 for an unknown set.
+async function build(argv: readonly string[]): Promise<void> {
+  const options = { check: { paths: CHECK_PATHS }, sets: BUILD_SETS, usage: USAGE };
+  const status = await buildCommand(options, argv);
+  process.exitCode = status;
 }
 
-// Rebuild the named sets and those downstream, or every set, then check the trees if check is set.
-function rebuild(check: boolean, named: readonly string[]): void {
-  const unknown = named.filter((arg) => !(SETS as readonly string[]).includes(arg));
-  if (unknown.length) {
-    console.error(`unknown set ${unknown.join(", ")}`);
-    throw new UsageError();
-  }
+// Check SETS and NEEDS, then build.
+function rebuild(argv: readonly string[]): Promise<void> {
   const found = problems("art/tools");
   if (found.length) {
-    fail(found.join("\n"));
+    console.error(found.join("\n"));
+    process.exit(1);
   }
-  const started = performance.now();
-  for (const set of selected(named as ArtSet[])) {
-    console.log(`build ${set}`);
-    const status = run(process.execPath, [`art/tools/${set}.ts`, "build"]);
-    if (status !== 0) {
-      fail(`${set} build failed (exit ${status})`);
-    }
-  }
-  console.log(`built in ${((performance.now() - started) / 1000).toFixed(0)}s`);
-  if (check && !unchanged()) {
-    fail(`the rebuild differs from the committed ${TREES.join(", ")}`);
-  }
+  return build(argv);
 }
 
 if (import.meta.main) {
   await runCommands({
     commands: {
-      "": () => rebuild(false, []),
-      "--check": () => rebuild(true, []),
-      "--check SET...": (...sets) => rebuild(true, sets),
-      "SET...": (...sets) => rebuild(false, sets),
+      "": () => rebuild([]),
+      "--check": () => rebuild(["--check"]),
+      "--check SET...": (...sets) => rebuild(["--check", ...sets]),
+      "SET...": (...sets) => rebuild(sets),
     },
     doc: USAGE,
   });
