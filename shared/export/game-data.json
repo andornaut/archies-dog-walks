@@ -1535,7 +1535,7 @@
       ],
       "name": "Lucky collar",
       "price": "luckyCollar",
-      "short": "{maxHearts} max ♥ per owner",
+      "short": "+1 max ♥ per owner",
       "iconKey": "item-lucky-collar"
     },
     {
@@ -3389,9 +3389,9 @@
     {
       "id": "bellyRubs",
       "art": "card-belly-rubs",
-      "cardEffect": "{hearts} each",
+      "cardEffect": "+1♥ each",
       "duration": "now",
-      "effect": "{hearts} each",
+      "effect": "+1♥ each",
       "effects": [
         {
           "amount": 1,
@@ -3407,9 +3407,9 @@
     {
       "id": "bigTipper",
       "art": "card-big-tipper",
-      "cardEffect": "{tip} per tip",
+      "cardEffect": "+$1 per tip",
       "duration": "nextZone",
-      "effect": "{tip} per tip",
+      "effect": "+$1 per tip",
       "effects": [
         {
           "by": "bigTipperTipBonus",
