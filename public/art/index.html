@@ -187,8 +187,8 @@ const familyOf = key => {
 };
 
 const prefs = { zoom: 3, ground: "#181425" };
-try { Object.assign(prefs, JSON.parse(localStorage.getItem("dwg-art-gallery") || "{}")); } catch (e) { /* storage unavailable */ }
-const savePrefs = () => { try { localStorage.setItem("dwg-art-gallery", JSON.stringify(prefs)); } catch (e) { /* storage unavailable */ } };
+try { Object.assign(prefs, JSON.parse(localStorage.getItem("archies-dog-walks-art-gallery") || "{}")); } catch (e) { /* storage unavailable */ }
+const savePrefs = () => { try { localStorage.setItem("archies-dog-walks-art-gallery", JSON.stringify(prefs)); } catch (e) { /* storage unavailable */ } };
 const groundInputs = [...document.querySelectorAll('input[name="ground"]')];
 if (!groundInputs.some(i => i.value === prefs.ground)) prefs.ground = groundInputs[0].value;
 if (![...$("zoom").options].some(o => Number(o.value) === prefs.zoom)) prefs.zoom = 3;

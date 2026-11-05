@@ -1,6 +1,7 @@
 // Retake the home page's canvas grabs, home-road.png and home-start.png (360x560, the game canvas
 // at 1x), from a built game served at BASE_URL (default http://<previewHost>:4173, the preview
-// container vite.config.ts names, adw-preview), and write them to OUT_DIR. Copy them to
+// container the export's devHarness.previewHost names), and write them to OUT_DIR. The storage
+// keys and the pull message (PULL_TEXT) come from devHarness too. Copy them to
 // public/art/site/ to update the home page. Run from the repository root.
 //
 // - home-road: High Park on ROAD_QUERY's seed, Trista walking Archie, Lady and Ginger with Running
@@ -20,13 +21,13 @@
 // Playwright is not a dependency of this repository: the module is imported from
 // PLAYWRIGHT_MODULE, which defaults to the copy in the Playwright MCP image
 // (mcr.microsoft.com/playwright/mcp), the image this runs in. art/README.md has the steps.
-import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { mkdirSync, writeFileSync } from "node:fs";
 import { setTimeout } from "node:timers/promises";
 
 import { decodePng, encodeRgbPng } from "@andornaut/art-kit/png";
 import type { RgbaImage } from "@andornaut/art-kit/rgbaImage";
 
-import { LAYOUT, NEUTRAL_HEX, PALETTE64, PICKER_UI, PNG_OPTIONS, run } from "./pixel.ts";
+import { GAME, LAYOUT, NEUTRAL_HEX, PALETTE64, PICKER_UI, PNG_OPTIONS, run } from "./pixel.ts";
 
 // The browser's clock steps one frame at a time, in order, so each loop awaits every step.
 /* eslint-disable no-await-in-loop */
@@ -80,15 +81,13 @@ interface PageGame {
 }
 type PageGlobal = typeof globalThis & { dogWalkerGame?: PageGame; homeGrab?: string };
 
-// The preview server, by the container name vite.config.ts gives it (previewHost).
-const PREVIEW_HOST = /previewHost:\s*"([^"]+)"/.exec(readFileSync("vite.config.ts", "utf8"))?.[1];
-if (PREVIEW_HOST === undefined) {
-  throw new Error("vite.config.ts names no previewHost");
-}
-const BASE_URL = `http://${PREVIEW_HOST}:4173`;
+const HARNESS = GAME.devHarness;
+
+// The preview server, by its container name.
+const BASE_URL = `http://${HARNESS.previewHost}:4173`;
 // How long a card that opens on the walk shows before its first option is picked (key 1).
 const CARD_READ_MS = 640;
-const CHEATS_KEY = "dog-walker-game:dev-cheats";
+const CHEATS_KEY = HARNESS.storageKeys.devCheats;
 // 2026-10-15 09:00 in Toronto: a weekday autumn morning.
 const CLOCK_START = Date.parse("2026-10-15T09:00:00-04:00");
 const FRAME_MS = 16;
@@ -100,15 +99,19 @@ const LOAD_WAIT_MS = 60_000;
 // The most frames to wait for a scene or a moment before giving up.
 const MAX_FRAMES = 60 * 60 * 3;
 const PLAYWRIGHT_MODULE = process.env.PLAYWRIGHT_MODULE ?? "/app/node_modules/playwright/index.mjs";
-const PULL_TEXT = "spotted a squirrel!";
+// The pull message for any dog: the export's text without its `{dog} ` prefix.
+const PULL_TEXT = HARNESS.text.pull.replace(/^\{dog\} /, "");
+if (PULL_TEXT === HARNESS.text.pull) {
+  throw new Error(`devHarness.text.pull "${HARNESS.text.pull}" does not start with "{dog} "`);
+}
 // The dev panel's Invincible owners cheat: the unsteered walk's bumps cost no hearts, so no owner
 // fires you before the grab.
 const ROAD_CHEATS = { devStats: false, hitBoxes: false, invincible: true, speed: "normal" };
 const ROAD_HOLD_MS = 400;
 const ROAD_QUERY =
   "dev=1&gear=runningShoes&money=5000&pack=archie,lady,ginger&seed=1&walker=trista";
-const SAVE_EDITS_KEY = "dog-walker-game:dev-save-edits";
-const SAVE_KEY = "dog-walker-game:save";
+const SAVE_EDITS_KEY = HARNESS.storageKeys.devSaveEdits;
+const SAVE_KEY = HARNESS.storageKeys.save;
 // The start screen's bank, added to a new player's $0 by the dev panel's save edit, which also
 // makes the game write its save.
 const START_BANK_CENTS = 60_000;
