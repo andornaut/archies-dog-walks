@@ -128,6 +128,13 @@ function addedTotal(tuning: LiveTuning, stat: Stat, effects: readonly Effect[]):
     .reduce((sum, modifier) => sum + modifierValue(tuning, modifier), 0);
 }
 
+// What effects' modifiers of a stat multiply it by together.
+function multipliedTotal(tuning: LiveTuning, stat: Stat, effects: readonly Effect[]): number {
+  return modifiersOf(effects)
+    .filter((modifier) => modifier.operation === "multiply" && modifier.stat === stat)
+    .reduce((product, modifier) => product * modifierValue(tuning, modifier), 1);
+}
+
 // A gear item's shop line, its {maxHearts} what its maxHearts modifiers add, signed, and its
 // {percent} the share of the base lane-change speed its agility modifiers add: Lucky collar's
 // "+1 max ♥ per owner", Running shoes' "30% faster lane changes".
@@ -161,9 +168,9 @@ export function perkEffect(data: Pick<GameData, "homeText" | "tuning">, perk: Wa
   });
 }
 
-// An upgrade's effect or cardEffect, its {hearts} the signed hearts its hearts effects give and
-// its {tip} what its tipValue modifiers add to a tip, signed: Belly rubs' "+1♥ each", Big
-// tipper's "+$1 per tip".
+// An upgrade's effect or cardEffect, its {hearts} the signed hearts its hearts effects give, its
+// {spawns} what its tipSpawns modifiers multiply tips by, as "×2", and its {tip} what its
+// tipValue modifiers add to a tip, signed: Belly rubs' "+1♥ each", Big tipper's "+$1 per tip".
 export function upgradeLine(
   tuning: LiveTuning,
   key: "cardEffect" | "effect",
@@ -176,6 +183,7 @@ export function upgradeLine(
   const tip = addedTotal(tuning, "tipValue", upgrade.effects);
   return fillNames(upgrade[key], {
     hearts: heartsChangeText(hearts),
+    spawns: `×${multipliedTotal(tuning, "tipSpawns", upgrade.effects)}`,
     tip: signedText(tip, formatDollars(cents(tip))),
   });
 }

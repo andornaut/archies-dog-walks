@@ -166,7 +166,7 @@ export const ACHIEVEMENTS = [
   {
     badgeLine: "Everyone gets a turn.",
     conditions: [{ count: "all", kind: "walkersFinishedWith" }],
-    goal: "Finish a walk with each of the four walkers",
+    goal: "Finish a walk with each of the {count} walkers",
     id: "tagTeam",
     name: "Tag Team",
     shortGoal: "Finish with every walker",

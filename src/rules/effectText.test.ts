@@ -233,6 +233,14 @@ describe("upgradeLine", () => {
     }
   });
 
+  it("fills {spawns} with what its tipSpawns modifiers multiply tips by", () => {
+    const upgrade = UPGRADES.rushHour;
+    const spawns = `×${read(gameData.tuning, "multipliers", "rushHourTips")}`;
+    expect(upgradeLine(gameData.tuning, "effect", upgrade)).toBe(
+      fillNames(upgrade.effect, { spawns }),
+    );
+  });
+
   it("leaves no {name} unfilled in any upgrade's lines", () => {
     for (const upgrade of Object.values(UPGRADES)) {
       for (const key of ["cardEffect", "effect"] as const) {

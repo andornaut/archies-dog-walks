@@ -4,7 +4,8 @@ import type { Upgrade } from "./types.ts";
 // duration is how long its effects last, which its plaque shows: now, the next zone, or the
 // whole run. cardEffect is the effect in a few words, the line under the name on a path card;
 // effect says it in full where there is room. Either may use {hearts}, the signed hearts its
-// hearts effects give, and {tip}, what its tipValue modifiers add to a tip, signed.
+// hearts effects give, {spawns}, what its tipSpawns modifiers multiply tips by, as "×2", and
+// {tip}, what its tipValue modifiers add to a tip, signed.
 // art is a key into the art manifest's images.
 export const UPGRADES = {
   bellyRubs: {
@@ -83,7 +84,7 @@ export const UPGRADES = {
     art: "card-rush-hour",
     cardEffect: "More of all",
     duration: "nextZone",
-    effect: "Tips, treats ×2, more obstacles",
+    effect: "Tips, treats {spawns}, more obstacles",
     effects: [
       {
         by: "rushHourTips",
