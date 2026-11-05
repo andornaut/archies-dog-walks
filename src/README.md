@@ -11,7 +11,7 @@
 
 ## Site
 
-The pages and `public/` are laid out in the [root README](../README.md#developing). `pages/` is Vite's root, its HTML pages the build inputs, and they load modules as `/src/...`, which `vite.config.ts` aliases to the repository's `src/`. The game installs the versioned `@andornaut/game-kit` release pinned by URL and integrity in `package-lock.json`. TypeScript, tsx, Vite and Vitest resolve its compiled JavaScript and declaration exports through native package resolution. `SOURCE_COMMIT` in the installed package records the canonical source revision. `vite.config.ts` imports `gameViteConfig` from the kit's `web/build/vite/gameConfig`; it loads `src/tools/viteConfigModules.ts` through Vite’s module runner. Vitest transforms the installed package so game tests can mock Phaser at the package boundary; test discovery remains limited to `src/**/*.test.ts`.
+The pages and `public/` are laid out in the [root README](../README.md#developing). `pages/` is Vite's root, its HTML pages the build inputs, and they load modules as `/src/...`, which `vite.config.ts` aliases to the repository's `src/`. The game installs the versioned `@andornaut/game-kit` release pinned by URL and integrity in `package-lock.json`. Node, TypeScript, Vite and Vitest resolve its compiled JavaScript and declaration exports through native package resolution. `SOURCE_COMMIT` in the installed package records the canonical source revision. `vite.config.ts` imports `gameViteConfig` from the kit's `web/build/vite/gameConfig`; it loads `src/tools/viteConfigModules.ts` through Vite’s module runner. Vitest transforms the installed package so game tests can mock Phaser at the package boundary; test discovery remains limited to `src/**/*.test.ts`.
 
 ## Architecture
 
