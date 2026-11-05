@@ -237,7 +237,7 @@ export const MINOR_OBSTACLES = {
     name: "Kid on a bike",
     shape: { lanes: 1, rows: 1 },
   },
-  leafPile: { name: "Leaf pile", shape: { lanes: 1, rows: 1 } },
+  leafBag: { name: "Leaf bag", shape: { lanes: 1, rows: 1 } },
   lifeguardChair: {
     name: "Lifeguard chair",
     shape: { lanes: 1, rows: 1 },
