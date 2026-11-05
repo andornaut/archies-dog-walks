@@ -17,17 +17,22 @@ The folder READMEs describe the current design and implementation:
 
 ## Developing
 
-Run commands in a Node 24.21.0 container (`.nvmrc`) with the checkout mounted read-only and copied inside:
+Run commands in a Node 24.21.0 container (`.nvmrc`) with the checkout mounted read-only and copied inside, without the agent worktrees and `node_modules`:
 
 ```sh
-docker run --rm -it --cpus 4 \
+docker run -it --name adw-dev --cpus 4 \
   --user 19001:19001 --group-add "$(stat -c %g .)" -e HOME=/tmp \
   --mount type=bind,src="$PWD",dst=/src,readonly \
+  -p 5173:5173 -p 8787:8787 \
   node:24.21.0 \
-  sh -c 'cp -r /src /tmp/work && cd /tmp/work && npm ci && npm test'
+  sh -c 'mkdir /tmp/work && cd /tmp/work \
+    && tar -C /src --exclude=./.claude --exclude=./.worktrees --exclude=./node_modules -cf - . | tar -xf - \
+    && npm ci && npm test'
+docker cp adw-dev:/tmp/work/out/. ./out
+docker rm adw-dev
 ```
 
-Replace `npm test` with any command in the table; each runs inside that container. Mount host paths only with `--mount`, never `-v`, which creates a missing source as root, and copy outputs out with `docker cp`.
+Replace `npm test` with any command in the table. The container is named and kept after it exits so `docker cp` can copy outputs out (here `out/`); remove it with `docker rm` before the next run. Serve the dev server with `npm run dev -- --host 0.0.0.0` (<http://localhost:5173/play/>) and the preview with `npm run preview -- --ip 0.0.0.0` (<http://localhost:8787/play/>). Mount host paths only with `--mount`, never `-v`, which creates a missing source as root.
 
 | Command                                     | Does                                                                       |
 | ------------------------------------------- | -------------------------------------------------------------------------- |
