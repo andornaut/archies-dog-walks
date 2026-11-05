@@ -1,14 +1,9 @@
 import { expect, it, vi } from "vitest";
 
-import {
-  createSlotCandidateDomains,
-  type SlotCandidate,
-  type SlotOwnerDomainToken,
-} from "./slotCandidateDomains.ts";
+import { createSlotCandidateDomains } from "./slotCandidateDomains.ts";
 import {
   isNativeSlotPreparation,
   nativeSlotPreparationOrderingHint,
-  nativeSlotPreparationWallRows,
   prepareSlotKind,
 } from "./slotCandidates.ts";
 import { createSlotConstructionState } from "./slotConstraintState.ts";
@@ -67,32 +62,17 @@ function fixture() {
   return { path, prepared };
 }
 
-it("rejects a placement change and keeps the ordering hint, wall rows and domain proof", () => {
+it("rejects a placement change and keeps the ordering hint", () => {
   const { path, prepared } = fixture();
   const domains = createSlotCandidateDomains(geometry, path);
-  const owner = { key: "owner", phase: "active" as const, preparations: () => [prepared] };
-  const scope = domains.pocketScope([owner]);
-  const work = {
-    anchor: () => true,
-    check: () => true,
-    propagate: () => true,
-    stopped: () => false,
-  };
-  const values: SlotCandidate<string>[] = [];
-  let token: SlotOwnerDomainToken | undefined;
-  for (const step of domains.completeOwnerDomain(work, scope, owner)) {
-    if (step.status === "candidate") {
-      values.push(step.value);
-    } else if (step.status === "complete") {
-      token = step.token;
-    } else {
-      throw Error(`Unexpected native domain status ${step.status}`);
-    }
+  const owner = { key: "owner" };
+  const work = { anchor: () => true, check: () => true, propagate: () => true };
+  const order = { columnStart: 0, columns: prepared.columns, rows: path.map((_row, row) => row) };
+  const first = domains.sequence(work, order, owner.key, prepared).next().value;
+  if (first?.status !== "candidate") {
+    throw Error("Missing native candidate");
   }
-  expect(values.length).toBeGreaterThan(0);
-  expect(token).toBeDefined();
-  expect(domains.attestsCompleteOwnerDomain(work, scope, owner, values, token!)).toBe(true);
-  const candidate = values[0]!;
+  const candidate = first.candidate;
   expect(createSlotConstructionState(geometry, path).commit(owner, candidate.entry).accepted).toBe(
     true,
   );
@@ -104,14 +84,10 @@ it("rejects a placement change and keeps the ordering hint, wall rows and domain
   expect(Object.isFrozen(original.hint)).toBe(true);
   const span = candidate.entry.placement!.lanes;
   const count = span.count;
-  const rows = nativeSlotPreparationWallRows(prepared);
-  expect(rows).toBeDefined();
   expect(Reflect.set(span, "count", geometry.laneCount)).toBe(false);
   expect(span.count).toBe(count);
   expect(nativeSlotPreparationOrderingHint(work, prepared)).toEqual(original);
   expect(isNativeSlotPreparation(prepared)).toBe(true);
-  expect(nativeSlotPreparationWallRows(prepared)).toBe(rows);
-  expect(domains.attestsCompleteOwnerDomain(work, scope, owner, values, token!)).toBe(true);
   expect(createSlotConstructionState(geometry, path).commit(owner, candidate.entry).accepted).toBe(
     true,
   );

@@ -1,10 +1,9 @@
 import { describe, expect, it, vi } from "vitest";
 
-import { createSlotCandidateDomains, type SlotCandidate } from "./slotCandidateDomains.ts";
+import { createSlotCandidateDomains } from "./slotCandidateDomains.ts";
 import { prepareSlotKind } from "./slotCandidates.ts";
 import { createSlotConstructionState } from "./slotConstraintState.ts";
 import { quietCoverage } from "./slotCoverage.ts";
-import type { SlotPocketProof } from "./slotPocketSupport.ts";
 import { createSlotWitnessSearch, type WitnessJob, type WitnessWork } from "./slotWitnessSearch.ts";
 import { rowSpacing, type SpawnPlan, zoneRows } from "./spawning.ts";
 
@@ -324,81 +323,4 @@ describe("native composition solve", () => {
     expect(() => interrupted.cancel()).toThrow(failure);
     expect(commit).toHaveBeenCalledTimes(calls);
   });
-  it.each(["attested", "unknown", "foreign", "budget"] as const)(
-    "uses only current attested dependencies for ancestor backjump (%s)",
-    (mode) => {
-      const issued = new WeakMap<object, readonly { owner: object; entry: object }[]>();
-      let badTrials = 0;
-      let stale = 0;
-      const fixtureState = fixture(
-        {
-          attestRefutation(current, proof) {
-            const saved = issued.get(proof);
-            const entries = current.entries();
-            if (
-              saved === undefined ||
-              saved.length !== entries.length ||
-              saved.some(
-                (entry, index) =>
-                  entry.owner !== entries[index]!.owner || entry.entry !== entries[index]!.entry,
-              )
-            ) {
-              stale++;
-              return { status: "unknown" };
-            }
-            if (mode === "unknown") {
-              return { status: "unknown" };
-            }
-            if (mode === "budget") {
-              return { status: "budget" };
-            }
-            return {
-              dependencies: mode === "foreign" ? [{ key: jobs[0]!.key }] : [jobs[0]!],
-              status: "attested",
-            };
-          },
-          support() {
-            const entries = state.entries();
-            if (entries.length === 2 && entries[0]!.entry.event.lane === 0) {
-              badTrials++;
-              if (badTrials === 2) {
-                return { status: "budget" };
-              }
-              const proof = {} as SlotPocketProof<SlotCandidate<string>>;
-              issued.set(proof, entries);
-              return { proof, status: "refuted" };
-            }
-            return { status: "unknown" };
-          },
-        },
-        true,
-      );
-      const { jobs, state } = fixtureState;
-      const session = fixtureState.search.start(state);
-      let progress = session.advance(1);
-      while (progress.status === "pending") {
-        progress = session.advance(1);
-      }
-      expect(state.entries()).toEqual([]);
-      if (mode === "attested") {
-        expect(progress.status).toBe("complete");
-        expect(badTrials).toBe(1);
-        expect(stale).toBeGreaterThan(0);
-        if (progress.status === "complete" && progress.result.status === "compatible") {
-          expect(progress.result.selections[0]!.entry.event.lane).not.toBe(0);
-          expect(
-            createSlotConstructionState(
-              geometry,
-              fixtureState.path,
-              progress.result.witness,
-            ).checkComplete(),
-          ).toEqual({ accepted: true });
-        }
-      } else {
-        expect(progress).toEqual({ result: { status: "budget" }, status: "unsupported" });
-        expect(badTrials).toBe(mode === "budget" ? 1 : 2);
-      }
-      expect(session.advance(1)).toEqual(progress);
-    },
-  );
 });

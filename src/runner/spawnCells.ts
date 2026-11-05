@@ -1,11 +1,7 @@
 import { itemAt, partitionPoint, removeItem } from "@andornaut/game-kit/arrays";
 
 import { laneMask } from "../layout/lanes.ts";
-import {
-  alternativeLanesOpen,
-  type LaneAlternativeBlock,
-  requiredAlternativeWalls,
-} from "./laneAlternatives.ts";
+import { alternativeLanesOpen, type LaneAlternativeBlock } from "./laneAlternatives.ts";
 import type { LaneSpan, MoverPath } from "./movers.ts";
 import { moverReservationsMayShare } from "./moverSpots.ts";
 import type { FeasibilityObserver } from "./spawnFeasibilityDiagnostics.ts";
@@ -268,35 +264,6 @@ export class LaneBlocks {
       }
     }
     return true;
-  }
-
-  requiredWalls(step: () => boolean, row: number) {
-    return requiredAlternativeWalls(
-      step,
-      this.plan.laneCount,
-      this.blocks.filter((block) => row >= block.row && row <= block.lastRow),
-    );
-  }
-
-  guaranteedWalls(step: () => boolean, row: number): number | undefined {
-    let walls = 0;
-    for (const block of this.blocks) {
-      if (!step()) {
-        return undefined;
-      }
-      if (block.dart || row < block.row || row > block.lastRow) {
-        continue;
-      }
-      let guaranteed = block.covered;
-      for (const mask of block.alternatives ?? [block.covered]) {
-        if (!step()) {
-          return undefined;
-        }
-        guaranteed &= mask;
-      }
-      walls |= guaranteed;
-    }
-    return walls;
   }
 
   // The block kept last.

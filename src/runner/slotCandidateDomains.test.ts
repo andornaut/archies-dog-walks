@@ -5,11 +5,7 @@ import { plannerStreams } from "../testing/movers.ts";
 import { GAME_ROAD } from "../testing/planner.ts";
 import { assignedMovement } from "./movementAssignments.ts";
 import { moverSpec } from "./moverSpecs.ts";
-import {
-  createSlotCandidateDomains,
-  type SlotCandidate,
-  type SlotOwnerDomainToken,
-} from "./slotCandidateDomains.ts";
+import { createSlotCandidateDomains } from "./slotCandidateDomains.ts";
 import * as native from "./slotCandidates.ts";
 import { slotMotionStreams } from "./slotEntropy.ts";
 import { createSlotFeasibility } from "./slotFeasibility.ts";
@@ -76,64 +72,6 @@ const stopSource = {
 };
 
 describe("compiled native slot domains", () => {
-  it("attests exact full owner EOF without row projections and rejects changed native provenance", () => {
-    const prepared = native.prepareSlotKind(plannerStreams(3), geometry, stopSource);
-    const owner = { key: "owner", phase: "active" as const, preparations: () => [prepared] };
-    const domains = createSlotCandidateDomains(geometry, path);
-    const scope = domains.pocketScope([owner]);
-    const work = {
-      anchor: () => true,
-      check: () => true,
-      propagate: () => true,
-      stopped: () => false,
-    };
-    const values: SlotCandidate<string>[] = [];
-    let token: SlotOwnerDomainToken | undefined;
-    for (const step of domains.completeOwnerDomain(work, scope, owner)) {
-      if (step.status === "candidate") {
-        values.push(step.value);
-      } else if (step.status === "complete") {
-        token = step.token;
-      } else {
-        throw new Error(`Unexpected native frontier ${step.status}`);
-      }
-    }
-    expect(values.length).toBeGreaterThan(1);
-    expect(token).toBeDefined();
-    const projections = vi.spyOn(domains, "guaranteedWalls");
-    expect(domains.attestsCompleteOwnerDomain(work, scope, owner, values, token!)).toBe(true);
-    expect(projections).not.toHaveBeenCalled();
-    expect(domains.attestsCompleteOwnerDomain(work, scope, owner, values.slice(1), token!)).toBe(
-      false,
-    );
-    expect(
-      domains.attestsCompleteOwnerDomain(work, scope, owner, [...values].reverse(), token!),
-    ).toBe(false);
-    expect(domains.attestsCompleteOwnerDomain(work, scope, owner, values, { ...token! })).toBe(
-      false,
-    );
-    expect(domains.attestsCompleteOwnerDomain(work, scope, { ...owner }, values, token!)).toBe(
-      false,
-    );
-    expect(
-      domains.attestsCompleteOwnerDomain(
-        { ...work, propagate: () => false },
-        scope,
-        owner,
-        values,
-        token!,
-      ),
-    ).toBeUndefined();
-    const mover = values[0]!.entry.event.mover!;
-    const warning = mover.warning;
-    expect(Reflect.set(mover, "warning", warning + 1)).toBe(false);
-    expect(mover.warning).toBe(warning);
-    expect(domains.attestsCompleteOwnerDomain(work, scope, owner, values, token!)).toBe(true);
-    owner.preparations = () => [];
-    expect(domains.attestsCompleteOwnerDomain(work, scope, owner, values, token!)).toBe(false);
-    projections.mockRestore();
-  });
-
   it("enumerates once with stable identities and exact repeated weighted occurrences", () => {
     const prepared = native.prepareSlotKind(plannerStreams(3), geometry, {
       compile: () => ({

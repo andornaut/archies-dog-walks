@@ -4,9 +4,7 @@ import type { ProfiledMovement } from "./movementAssignments.ts";
 import { moverSpec } from "./moverSpecs.ts";
 import type { SlotConfiguration, SlotKind } from "./slotConfig.ts";
 import {
-  planSlotCapacity,
   planSlotSpawns,
-  type SlotCapacityResult,
   type SlotPlanningContext,
   SlotPlanningError,
   type SlotPlanningResult,
@@ -64,14 +62,6 @@ export function replayZoneSlots<Kind extends string>(
 ): SlotPlanningResult<Kind> {
   const { catalogue, geometry } = compileZoneSlotInput(input);
   return planSlotSpawns(input.context, geometry, catalogue, input.auxiliary, input.config);
-}
-
-// Offline capacity construction is independent of a runtime layout or prefix.
-export function replayZoneCapacity<Kind extends string>(
-  input: ZoneSlotInput<Kind>,
-): SlotCapacityResult<Kind> {
-  const { catalogue, geometry } = compileZoneSlotInput(input);
-  return planSlotCapacity(input.context, geometry, catalogue, input.auxiliary, input.config);
 }
 
 export class ZoneSlotPlanningError<Kind extends string> extends SlotPlanningError<Kind> {

@@ -1,4 +1,3 @@
-import type { PreparedSlotKind } from "./slotCandidates.ts";
 import type { SlotPlacement } from "./slotFeasibility.ts";
 import { type PlacementRejection, SpawnBoard } from "./spawnBoard.ts";
 import type { PlannedSpawns, SpawnPlan } from "./spawning.ts";
@@ -22,34 +21,27 @@ export type ConstraintResult<Kind extends string> =
         readonly rule: string;
       };
     };
-// These native failures cannot be repaired by adding unrelated prefix entries.
-const MONOTONE_RULES = new Set([
+// An attributed failure of these rules persists while every attributed owner keeps its placement:
+// each needs only the candidate and its owners, and visibility rejects on any same-kind contributor.
+const HELD_RULES = new Set([
   "body",
   "cells",
+  "kind-cap",
+  "kind-entry",
+  "kind-lane",
+  "kind-row",
   "open-lanes",
   "pack-gap",
   "rider-gap",
   "screen-cap",
   "wide-gap",
 ]);
-// An attributed failure of these rules persists while every attributed owner keeps its placement:
-// each needs only the candidate and its owners, and visibility rejects on any same-kind contributor.
-const HELD_RULES = new Set([...MONOTONE_RULES, "kind-cap", "kind-entry", "kind-lane", "kind-row"]);
 
 export type ConflictBlockers<Kind extends string> = readonly (readonly [
   ConstraintOwner,
   SlotPlacement<Kind>,
 ])[];
 
-function isMonotoneConflict(
-  failure: Extract<ConstraintResult<string>, { accepted: false }>["failure"],
-): boolean {
-  return (
-    failure.classification === "conflict" &&
-    failure.owners.length > 0 &&
-    MONOTONE_RULES.has(failure.rule)
-  );
-}
 export type NegativeVisibilityLookup<Kind extends string> =
   | { readonly status: "miss" }
   | { readonly status: "budget" }
@@ -57,108 +49,6 @@ export type NegativeVisibilityLookup<Kind extends string> =
       readonly status: "blocked";
       readonly failure: Extract<ConstraintResult<Kind>, { accepted: false }>["failure"];
     };
-// A compiled scope keeps its complete owner/source pools fixed. Rebind changed pools in a new scope.
-export interface SlotPocketOwner extends ConstraintOwner {
-  readonly phase: "active" | "capacity";
-  preparations(): Iterable<PreparedSlotKind<string>>;
-}
-const pocketScopeBrand: unique symbol = Symbol("slot-pocket-scope");
-export interface SlotPocketScope {
-  readonly [pocketScopeBrand]: true;
-}
-interface PocketScopeRecord {
-  readonly geometry: object;
-  readonly path: object;
-  readonly shape: string | undefined;
-  readonly owners: readonly {
-    owner: SlotPocketOwner;
-    key: string;
-    phase: SlotPocketOwner["phase"];
-    preparations: SlotPocketOwner["preparations"];
-  }[];
-}
-const pocketScopes = new WeakMap<SlotPocketScope, PocketScopeRecord>();
-export function createSlotPocketScope(
-  geometry: object,
-  path: object,
-  owners: readonly SlotPocketOwner[],
-): SlotPocketScope {
-  const scope = Object.freeze({ [pocketScopeBrand]: true as const });
-  pocketScopes.set(scope, {
-    geometry,
-    owners: owners.map((owner) => ({
-      key: owner.key,
-      owner,
-      phase: owner.phase,
-      preparations: owner.preparations,
-    })),
-    path,
-    shape: fingerprint([geometry, path]),
-  });
-  return scope;
-}
-export function slotPocketScopeMatches(
-  scope: SlotPocketScope,
-  geometry: object,
-  path: object,
-): boolean {
-  const record = pocketScopes.get(scope);
-  return (
-    record !== undefined &&
-    record.geometry === geometry &&
-    record.path === path &&
-    record.shape !== undefined &&
-    record.shape === fingerprint([geometry, path]) &&
-    new Set(record.owners.map((saved) => saved.key)).size === record.owners.length &&
-    record.owners.every(
-      ({ key, owner, phase, preparations }) =>
-        owner.key === key && owner.phase === phase && owner.preparations === preparations,
-    )
-  );
-}
-export function slotPocketScopeOwner(
-  scope: SlotPocketScope,
-  owner: ConstraintOwner,
-): SlotPocketOwner | undefined {
-  const record = pocketScopes.get(scope)?.owners.find((saved) => saved.owner === owner);
-  return record !== undefined &&
-    record.owner.key === record.key &&
-    record.owner.phase === record.phase &&
-    record.owner.preparations === record.preparations
-    ? record.owner
-    : undefined;
-}
-export interface SlotPocketObligation {
-  readonly scope: SlotPocketScope;
-  readonly context: object;
-  readonly row: number;
-  readonly requiredWalls: number;
-}
-export type SlotPocketExplanation =
-  | { readonly status: "clear" }
-  | { readonly status: "obligation"; readonly obligation: SlotPocketObligation }
-  | { readonly status: "unknown" }
-  | { readonly status: "budget" }
-  | {
-      readonly status: "fatal";
-      readonly failure: Extract<ConstraintResult<string>, { accepted: false }>["failure"];
-    };
-
-export function projectSlotWalls<Kind extends string>(
-  step: () => boolean,
-  geometry: Omit<SpawnPlan<Kind>, "quotas">,
-  path: PlannedSpawns<Kind>["path"],
-  row: number,
-  entry: SlotPlacement<Kind>,
-): number | undefined {
-  if (!step()) {
-    return undefined;
-  }
-  const board = nativeSlotBoard("partial", geometry, path);
-  board.keep(entry);
-  return board.guaranteedWalls(step, row);
-}
-
 interface IntrinsicAttestation {
   readonly entry: SlotPlacement<string>;
   readonly fingerprint: string;
@@ -249,37 +139,6 @@ function createNativeSlotState<Kind extends string>(
   };
   let ledger: ConstraintEntry<Kind>[] = [];
   type Failure = Extract<ConstraintResult<Kind>, { accepted: false }>["failure"];
-  type NativePrefix = readonly (ConstraintEntry<Kind> & { readonly shape: string | undefined })[];
-  const snapshotPrefix = (): NativePrefix =>
-    ledger.map((saved) => ({ ...saved, shape: fingerprint(saved.entry) }));
-  const failures = new WeakMap<
-    Failure,
-    {
-      owner: ConstraintOwner;
-      entry: SlotPlacement<Kind>;
-      entryShape: string | undefined;
-      failureShape: string | undefined;
-      failureOwners: readonly ConstraintOwner[];
-      prefix: NativePrefix;
-      rejection: PlacementRejection | undefined;
-      scope: SlotPocketScope;
-      context: object;
-    }
-  >();
-  let pocketCapture:
-    | { readonly scope: SlotPocketScope; readonly context: object; readonly prefix: NativePrefix }
-    | undefined;
-  const obligations = new WeakMap<SlotPocketObligation, NativePrefix>();
-  const samePrefix = (prefix: NativePrefix) =>
-    prefix.length === ledger.length &&
-    prefix.every(
-      (saved, index) =>
-        saved.owner === ledger[index]!.owner &&
-        saved.entry === ledger[index]!.entry &&
-        saved.shape !== undefined &&
-        saved.shape === fingerprint(saved.entry),
-    );
-
   let immutablePrefix = true;
   const owners = new Map<string, ConstraintOwner>();
   // Each placed owner's unbound source entry, for conflict blockers that outlive a restore.
@@ -331,7 +190,7 @@ function createNativeSlotState<Kind extends string>(
     const accepted = board.probe(bound, (failure) => {
       rejection ??= failure;
     });
-    const result: ConstraintResult<Kind> = accepted
+    return accepted
       ? { accepted: true, entry: bound }
       : failureOf(
           rejection ?? {
@@ -340,29 +199,6 @@ function createNativeSlotState<Kind extends string>(
             rule: "unattributed",
           },
         );
-    if (!result.accepted && pocketCapture !== undefined) {
-      const capture = pocketCapture;
-      if (
-        immutablePrefix &&
-        immutableEntry(entry) &&
-        slotPocketScopeMatches(capture.scope, geometry, path) &&
-        slotPocketScopeOwner(capture.scope, owner) !== undefined &&
-        samePrefix(capture.prefix)
-      ) {
-        failures.set(result.failure, {
-          context: capture.context,
-          entry,
-          entryShape: fingerprint(entry),
-          failureOwners: result.failure.owners.slice(),
-          failureShape: fingerprint(result.failure),
-          owner,
-          prefix: capture.prefix,
-          rejection,
-          scope: capture.scope,
-        });
-      }
-    }
-    return result;
   };
   const commit = (owner: ConstraintOwner, entry: SlotPlacement<Kind>): ConstraintResult<Kind> => {
     const result = probe(owner, entry);
@@ -394,104 +230,6 @@ function createNativeSlotState<Kind extends string>(
         );
   };
   return {
-    additionStable(
-      step: () => boolean,
-      scope: SlotPocketScope,
-      context: object,
-      owner: ConstraintOwner,
-      entry: SlotPlacement<Kind>,
-      failure: Failure,
-    ): boolean | undefined {
-      if (!step()) {
-        return undefined;
-      }
-      const saved = failures.get(failure);
-      if (
-        !slotPocketScopeMatches(scope, geometry, path) ||
-        saved === undefined ||
-        saved.owner !== owner ||
-        saved.entry !== entry ||
-        !samePrefix(saved.prefix) ||
-        !immutablePrefix ||
-        !immutableEntry(entry) ||
-        saved.entryShape === undefined ||
-        saved.entryShape !== fingerprint(entry) ||
-        saved.failureShape !== fingerprint(failure) ||
-        saved.failureOwners.length !== failure.owners.length ||
-        saved.failureOwners.some((owner, index) => owner !== failure.owners[index])
-      ) {
-        return false;
-      }
-      if (saved.scope !== scope || saved.context !== context) {
-        return false;
-      }
-      let stable: boolean | undefined = isMonotoneConflict(failure);
-      if (!stable && failure.rule === "kind-row" && saved.rejection !== undefined) {
-        stable = board.kindRowPair(step, entry, saved.rejection);
-      }
-      if (stable) {
-        if (
-          !slotPocketScopeMatches(scope, geometry, path) ||
-          !samePrefix(saved.prefix) ||
-          saved.entryShape !== fingerprint(entry)
-        ) {
-          return false;
-        }
-      }
-      return stable;
-    },
-    attestsPocket(
-      scope: SlotPocketScope,
-      context: object,
-      obligation: SlotPocketObligation,
-    ): boolean {
-      const prefix = obligations.get(obligation);
-      return (
-        prefix !== undefined &&
-        obligation.scope === scope &&
-        obligation.context === context &&
-        slotPocketScopeMatches(scope, geometry, path) &&
-        samePrefix(prefix)
-      );
-    },
-    attestsPocketOwners(
-      step: () => boolean,
-      scope: SlotPocketScope,
-      remaining: readonly ConstraintOwner[],
-    ): boolean | undefined {
-      if (!step()) {
-        return undefined;
-      }
-      if (!slotPocketScopeMatches(scope, geometry, path)) {
-        return false;
-      }
-      const record = pocketScopes.get(scope)!;
-      const present = new Set<ConstraintOwner>();
-      for (const { owner } of ledger) {
-        if (!step()) {
-          return undefined;
-        }
-        const known = slotPocketScopeOwner(scope, owner);
-        if (known === undefined || known.phase !== "active") {
-          return false;
-        }
-        present.add(owner);
-      }
-      const expected: ConstraintOwner[] = [];
-      for (const saved of record.owners) {
-        if (!step()) {
-          return undefined;
-        }
-        if (saved.phase === "active" && !present.has(saved.owner)) {
-          expected.push(saved.owner);
-        }
-      }
-      return (
-        remaining.length === expected.length &&
-        new Set(remaining).size === remaining.length &&
-        remaining.every((owner) => expected.includes(owner))
-      );
-    },
     // The placements a held-rule conflict depends on, or undefined for any other failure.
     blockersOf(failure: Failure): ConflictBlockers<Kind> | undefined {
       if (
@@ -514,33 +252,6 @@ function createNativeSlotState<Kind extends string>(
     blockersPlaced(blockers: ConflictBlockers<Kind>): boolean {
       return blockers.every(([owner, entry]) => placed.get(owner) === entry);
     },
-    capturePocket<T>(
-      step: () => boolean,
-      scope: SlotPocketScope,
-      context: object,
-      run: () => T,
-    ):
-      | { readonly result: T; readonly status: "captured" }
-      | { readonly status: "unknown" }
-      | { readonly status: "budget" } {
-      if (!step()) {
-        return { status: "budget" };
-      }
-      if (
-        !slotPocketScopeMatches(scope, geometry, path) ||
-        !immutablePrefix ||
-        ledger.some((saved) => slotPocketScopeOwner(scope, saved.owner) === undefined)
-      ) {
-        return { status: "unknown" };
-      }
-      const previous = pocketCapture;
-      pocketCapture = { context, prefix: snapshotPrefix(), scope };
-      try {
-        return { result: run(), status: "captured" };
-      } finally {
-        pocketCapture = previous;
-      }
-    },
     checkComplete: complete,
     checkpoint(): ConstraintCheckpoint {
       const mark: ConstraintCheckpoint = { [checkpointBrand]: true };
@@ -554,45 +265,6 @@ function createNativeSlotState<Kind extends string>(
     commit,
     entries(): readonly ConstraintEntry<Kind>[] {
       return ledger.slice();
-    },
-    explainPocket(
-      step: () => boolean,
-      scope: SlotPocketScope,
-      context: object,
-    ): SlotPocketExplanation {
-      if (!step()) {
-        return { status: "budget" };
-      }
-      if (!slotPocketScopeMatches(scope, geometry, path)) {
-        return { status: "unknown" };
-      }
-      const result = complete();
-      if (result.accepted) {
-        return { status: "clear" };
-      }
-      if (result.failure.classification === "unattributed") {
-        return { failure: result.failure, status: "fatal" };
-      }
-      if (
-        !immutablePrefix ||
-        ledger.some((saved) => slotPocketScopeOwner(scope, saved.owner) === undefined)
-      ) {
-        return { status: "unknown" };
-      }
-      const row = result.failure.row;
-      if (result.failure.rule !== "open-stretches" || row === undefined) {
-        return { status: "unknown" };
-      }
-      const required = board.requiredWalls(step, row);
-      if (required.status === "budget") {
-        return required;
-      }
-      if (required.mask === 0) {
-        return { status: "unknown" };
-      }
-      const obligation = Object.freeze({ context, requiredWalls: required.mask, row, scope });
-      obligations.set(obligation, snapshotPrefix());
-      return { obligation, status: "obligation" };
     },
     lookupNegativeVisibility(
       step: () => boolean,

@@ -511,59 +511,6 @@ export class SpawnBoard<Kind extends string> {
     }
   }
 
-  kindRowPair(
-    step: () => boolean,
-    entry: SpawnPlacement<Kind>,
-    failure: PlacementRejection,
-  ): boolean | undefined {
-    if (
-      failure.rule !== "kind-row" ||
-      failure.classification !== "conflict" ||
-      failure.conflicts.length === 0 ||
-      !Object.isFrozen(entry.trace)
-    ) {
-      return false;
-    }
-    const quota = this.quota(entry);
-    if (quota === undefined) {
-      return false;
-    }
-    const incoming = this.visibilityPrerequisite(entry, quota);
-    if (incoming === undefined || !incoming.hazard) {
-      return false;
-    }
-    const wanted = new Set(failure.conflicts);
-    const matching = this.entries.filter((other) => wanted.has(identity(other)));
-    if (matching.length !== wanted.size) {
-      return false;
-    }
-    for (const other of matching) {
-      if (!step()) {
-        return undefined;
-      }
-      if (!Object.isFrozen(other.trace)) {
-        return false;
-      }
-      if (
-        visibilityRejection(
-          this.plan.scrollSpeed * this.plan.stepSeconds,
-          [other.trace],
-          incoming,
-        ) === "kind-row"
-      ) {
-        return true;
-      }
-    }
-    return false;
-  }
-
-  requiredWalls(step: () => boolean, row: number) {
-    return this.lanes.requiredWalls(step, row);
-  }
-  guaranteedWalls(step: () => boolean, row: number): number | undefined {
-    return this.lanes.guaranteedWalls(step, row);
-  }
-
   openStretchRow(): number | undefined {
     let row: number | undefined;
     this.lanes.keepsAllLanesOpen((witness) => {

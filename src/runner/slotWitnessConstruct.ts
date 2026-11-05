@@ -7,11 +7,10 @@ import type {
   SlotSequenceStep,
 } from "./slotCandidateDomains.ts";
 import { nativeSlotPreparationOrderingHint, type PreparedSlotKind } from "./slotCandidates.ts";
-import type { ConstraintEntry, ConstraintOwner, ConstraintResult } from "./slotConstraintState.ts";
+import type { ConstraintEntry, ConstraintResult } from "./slotConstraintState.ts";
 import { coverageLeadingRows, createQuietCoverageState } from "./slotCoverage.ts";
 import { SLOT_OMISSION_ATTEMPTS, SLOT_ROW_PRESSURE } from "./slotDelivery.ts";
 import { createMovingCoverageHints } from "./slotMovingCoverageHints.ts";
-import type { SlotPocketProof } from "./slotPocketSupport.ts";
 import { drainSlotSolver } from "./slotSolverSession.ts";
 import { traverseSlotSources } from "./slotSourceTraversal.ts";
 import { balancedJobOrder, idealRowOrder, motionRank, rotatedColumns } from "./slotWitnessOrder.ts";
@@ -19,15 +18,7 @@ import type { WitnessJob, WitnessOmission } from "./slotWitnessSearch.ts";
 import { blockingSpan, type PlannedSpawns, quotaFootprint, type SpawnPlan } from "./spawning.ts";
 
 type Rejection<Kind extends string> = Extract<ConstraintResult<Kind>, { accepted: false }>;
-export type SlotWitnessBranchSupport<Kind extends string> =
-  | { readonly proof?: SlotPocketProof<SlotCandidate<Kind>>; readonly status: "refuted" }
-  | { readonly status: "unknown" | "budget" }
-  | { readonly failure: Rejection<Kind>["failure"]; readonly status: "fatal" };
-export type SlotWitnessRefutationAttestation =
-  | { readonly dependencies: readonly ConstraintOwner[]; readonly status: "attested" }
-  | { readonly status: "unknown" | "budget" };
 export interface SlotWitnessConstructPorts<Kind extends string, Mark> {
-  attestRefutation?(proof: SlotPocketProof<SlotCandidate<Kind>>): SlotWitnessRefutationAttestation;
   bestDelivery?(): number | undefined;
   candidates(
     job: WitnessJob<Kind>,
@@ -54,7 +45,6 @@ export interface SlotWitnessConstructPorts<Kind extends string, Mark> {
     { readonly row: number; readonly status: "row" } | { readonly status: "none" | "budget" };
   restore(mark: Mark): void;
   stopped?(): boolean;
-  support?(): SlotWitnessBranchSupport<Kind>;
   test(job: WitnessJob<Kind>, candidate: SlotCandidate<Kind>): ConstraintResult<Kind> | undefined;
 }
 export type SlotWitnessConstructResult<Kind extends string> =
@@ -676,42 +666,9 @@ function* construct<Kind extends string, Mark>(
     }
     return !stopped() && result?.accepted === true;
   };
-  const learned = new Set<SlotPocketProof<SlotCandidate<Kind>>>();
-  let backjump: number | undefined;
   // The native rule that rejected the latest tested value, if any.
   let rejectedRule: string | undefined;
   let fullCompletion = false;
-  const attest = (proof: SlotPocketProof<SlotCandidate<Kind>>, current: WitnessJob<Kind>) => {
-    const result = ports.attestRefutation?.(proof);
-    budget ||= result?.status === "budget";
-    if (stopped() || result?.status !== "attested") {
-      return false;
-    }
-    const entries = ports.entries();
-    const dependencies = new Set(result.dependencies);
-    if (
-      dependencies.size !== result.dependencies.length ||
-      result.dependencies.some(
-        (owner) =>
-          byKey.get(owner.key) !== owner || !entries.some((entry) => entry.owner === owner),
-      )
-    ) {
-      return false;
-    }
-    const indices = result.dependencies.map((owner) =>
-      owner === current
-        ? frames.length - 1
-        : frames.findIndex((frame) => frame.selected?.job === owner),
-    );
-    // A dependency outside the search frames cannot justify an ancestor jump.
-    if (indices.length > 0 && indices.every((index) => index >= 0)) {
-      const target = Math.max(...indices);
-      if (target < frames.length - 1) {
-        backjump = target;
-      }
-    }
-    return true;
-  };
   const attempt = (
     preferClear: boolean,
     { candidate, job }: Option<Kind>,
@@ -719,7 +676,6 @@ function* construct<Kind extends string, Mark>(
     if (stopped()) {
       return "rejected";
     }
-    backjump = undefined;
     const before = ports.checkpoint();
     if (stopped()) {
       return "rejected";
@@ -752,33 +708,7 @@ function* construct<Kind extends string, Mark>(
         ports.restore(before);
         return "rejected";
       }
-      // Reuse only a native reattestation of the exact current conditional context.
-      for (const proof of learned) {
-        if (attest(proof, job)) {
-          ports.restore(before);
-          return "rejected";
-        }
-        if (stopped()) {
-          ports.restore(before);
-          return "rejected";
-        }
-      }
-      const support = ports.support?.();
-      budget ||= support?.status === "budget";
-      if (support?.status === "fatal") {
-        fatal = support.failure;
-      }
-      if (
-        !stopped() &&
-        support?.status === "refuted" &&
-        support.proof !== undefined &&
-        attest(support.proof, job)
-      ) {
-        learned.add(support.proof);
-      }
-      if (!stopped() && support?.status !== "refuted") {
-        return "accepted";
-      }
+      return "accepted";
     }
     ports.restore(before);
     return "rejected";
@@ -936,7 +866,7 @@ function* construct<Kind extends string, Mark>(
     // Prefer one initial coverage owner before wide guarantees; all ordinary choices remain.
     let initialCoveragePending = mandatory.some(({ job, order }) => !job.fixed && order.width > 1);
     // Runtime search orders each job's rows by occupancy pressure; exact construction keeps the
-    // fixed row order its pocket proofs replay.
+    // fixed row order.
     const ordinaryFrame = (job: WitnessJob<Kind>) => {
       const pressure =
         ports.minimumDelivery === undefined
@@ -1172,17 +1102,6 @@ function* construct<Kind extends string, Mark>(
           pressuredRow,
           (frame.pressure!.rejections.get(pressuredRow) ?? 0) + 1,
         );
-      }
-      if (backjump !== undefined && !stopped()) {
-        while (frames.length - 1 > backjump) {
-          const abandoned = frames.pop()!;
-          abandoned.cursor.return(undefined);
-          ports.restore(abandoned.before);
-          closureChecked = abandoned.closureChecked;
-          restoreOmissions(abandoned.omissions);
-        }
-        backjump = undefined;
-        continue;
       }
       if (admitted === "deferred") {
         if (defer !== undefined) {

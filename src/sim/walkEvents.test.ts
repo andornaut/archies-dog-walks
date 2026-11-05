@@ -7,7 +7,6 @@ import { type SpawnAudit } from "../runner/spawnValidation.ts";
 import type { WalkItemKind } from "../runner/walkItems.ts";
 import type { ZoneSlotDelivery } from "../runner/zonePlan.ts";
 import {
-  replayZoneCapacity,
   replayZoneSlots,
   type ZoneSlotInput,
   ZoneSlotPlanningError,
@@ -128,25 +127,18 @@ describe("simulator spawn observations", () => {
     const replayed = replayZoneSlots(JSON.parse(encoded) as typeof input);
     expect(JSON.parse(JSON.stringify(replayed))).toEqual(JSON.parse(JSON.stringify(result)));
     expect(JSON.stringify(input)).toBe(encoded);
-    expect(replayZoneCapacity(input).status).toBe("unsupported");
   });
 
-  it("replays actual counts separately from an independent authored maximum", () => {
+  it("replays actual counts below the authored maximum", () => {
     const input = slotInput();
-    const actual = replayZoneSlots(input),
-      capacity = replayZoneCapacity(input);
+    const actual = replayZoneSlots(input);
     expect(actual.status).toBe("complete");
-    expect(capacity.status).toBe("complete");
-    if (actual.status !== "complete" || capacity.status !== "complete") {
-      throw Error("Expected independent valid layouts");
+    if (actual.status !== "complete") {
+      throw Error("Expected a valid layout");
     }
     expect(actual.assignments).toHaveLength(1);
     expect(actual.activeAudit.status).toBe("valid");
-    expect(actual).not.toHaveProperty("capacityAudit");
     expect(actual).not.toHaveProperty("capacityWitness");
-    expect(capacity.assignments).toHaveLength(2);
-    expect(capacity.capacityAudit.status).toBe("valid");
-    expect(capacity).not.toHaveProperty("activeAudit");
     expect(input.config.active.minorFixed).toBe(1);
   });
 

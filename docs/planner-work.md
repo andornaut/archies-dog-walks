@@ -8,9 +8,9 @@ This record summarises the runtime spawn planner's contract and the qualificatio
 - **Omission:** each attempt first explores, omitting an optional request only after 128 failed placement attempts or when its domain is exhausted. If the attempt holds no floor-meeting layout once it has used three quarters of its candidate or propagation allowance, it restarts from the empty layout for the rest of that allowance and omits after 3 failed attempts (`SLOT_OMISSION_ATTEMPTS`, `SLOT_OMISSION_RESERVE`). The restart stays inside the same attempt and counters. Guaranteed and other non-optional requests are never omitted. Each runtime attempt's diagnostics, never its plan, record whether the restart fired (`reserveRestart`) and its candidate and propagation checks when it first held a floor-meeting layout (`firstFloor`).
 - **Search:** the planner tries the original order first, then makes at most one balanced fallback attempt, only after a construction failure. Every search opens each job's kinds progressively in their seeded weighted order, places one initial coverage owner before wide guarantees, and tries each draw tuple's native values before its retry tuples. Runtime planning has no other mode: the planning context holds only the seed, zone index and work limits.
 - **Budgets:** candidate checks and propagation checks have separate caps, each 65,536 cumulative across both attempts and 32,768 per attempt. Anchors (cap 32,768) and compiled templates (cap 65,536) are also cumulative across both attempts.
-- **Reuse:** runtime search records each native rejection whose rule depends only on the candidate and its attributed owners (cells, bodies, lanes, gaps, screen caps and same-kind visibility). While every such owner keeps its placement, a repeated test of that candidate is rejected again with no check and its traversal step with no propagation; the decision is the one the native test would make. This replaces the negative visibility lookup in runtime search; exact construction keeps it. Path and stop proofs are shared across motion tiers, and a projected tier anchor revalidates its view without rebuilding its entries.
+- **Reuse:** runtime search records each native rejection whose rule depends only on the candidate and its attributed owners (cells, bodies, lanes, gaps, screen caps and same-kind visibility). While every such owner keeps its placement, a repeated test of that candidate is rejected again with no check and its traversal step with no propagation; the decision is the one the native test would make. This replaces the negative visibility lookup in runtime search; exact construction (the witness search without a delivery floor, which only unit tests run) keeps it. Path and stop proofs are shared across motion tiers, and a projected tier anchor revalidates its view without rebuilding its entries.
 - **Row order:** runtime search tries a job's rows nearest its ideal row first. Within one search frame, whose earlier placements stay fixed, a row where two of the job's values have been rejected for occupied cells or bodies moves behind the job's untried rows (`SLOT_ROW_PRESSURE`). Each kind keeps its own row sequence; job order, the seeded kind order and the domain are unchanged, so a value that would have waited behind a saturated row is reached before the omission threshold. Exact construction keeps the fixed order.
-- **Capacity:** an offline check (`planSlotCapacity`, through `replayZoneCapacity`) constructs and independently audits the exact 100% composition in one attempt of at most 32,768 candidate checks. It is the only exact entry point, and a separate, non-gating audit.
+- **Capacity:** authored capacity ceilings are configuration limits only: a count above its ceiling is a configuration failure, and no planner path constructs or audits the maximum composition.
 
 ## Architecture
 
@@ -21,22 +21,21 @@ The data flow:
 | Capture zone inputs and replay context                                     | `src/runner/zoneSlotInput.ts`, `zonePlan.ts`                                   |
 | Validate configuration, draw kinds and movement, prepare candidate domains | `slotConfig.ts`, `slotJobs.ts`, `slotCandidates.ts`, `slotCandidateDomains.ts` |
 | Construct a path and search compatible assignments                         | `slotPath.ts`, `slotWitnessSearch.ts`, `slotWitnessConstruct.ts`               |
-| Check native constraints and conditional proof support                     | `slotConstraintState.ts`, `slotPocketAdapter.ts`, `slotPocketSupport.ts`       |
+| Check native constraints                                                   | `slotConstraintState.ts`                                                       |
 | Independently audit original requests and materialise delivery             | `slotAudit.ts`, `slotDelivery.ts`, `slotPlan.ts`                               |
-| Coordinate runtime and independent capacity planning                       | `slotPlanner.ts`                                                               |
+| Coordinate runtime planning                                                | `slotPlanner.ts`                                                               |
 
-Weights, random draws, movement profiles and original request counts remain frozen through the native safety boundary. A conditional refutation needs native attestation before it can prune search; pocket support and refutation attestation run only in exact construction, which the offline capacity audit uses, not in runtime 90% construction. Budget exhaustion or an unfinished prefix is unknown, not a certificate of impossibility or valid partial delivery.
+Weights, random draws, movement profiles and original request counts remain frozen through the native safety boundary. Budget exhaustion or an unfinished prefix is unknown, not a certificate of impossibility or valid partial delivery.
 
 ## Qualification
 
 Counts apply only to the stated source and test collection; they do not transfer to a different tree.
 
-| Source                     | Result                                                                 |
-| -------------------------- | ---------------------------------------------------------------------- |
-| `49d51685` + row order     | 72-plan acceptance: 72/72 complete; peak 23,323 of 32,768 per attempt  |
-| `5a2c4cd3` runtime-16      | 16/16 valid: 12 complete, 4 partial; 3,005 of 3,033 requests delivered |
-| `5a2c4cd3` original-41     | 41/41 valid: 40 complete, 1 partial; 62 assertion uses, 10 quiet pairs |
-| `38ef5717` runtime-16      | 16/16 valid: 7 complete, 9 partial                                     |
-| `38ef5717` original-41     | 41/41 valid: 33 complete, 8 partial; 62 assertion uses, 10 quiet pairs |
-| `38ef5717` unit suite      | 6,950 passed                                                           |
-| `f88074c7` strict capacity | 3/6 complete, kept as a separate offline result                        |
+| Source                 | Result                                                                 |
+| ---------------------- | ---------------------------------------------------------------------- |
+| `49d51685` + row order | 72-plan acceptance: 72/72 complete; peak 23,323 of 32,768 per attempt  |
+| `5a2c4cd3` runtime-16  | 16/16 valid: 12 complete, 4 partial; 3,005 of 3,033 requests delivered |
+| `5a2c4cd3` original-41 | 41/41 valid: 40 complete, 1 partial; 62 assertion uses, 10 quiet pairs |
+| `38ef5717` runtime-16  | 16/16 valid: 7 complete, 9 partial                                     |
+| `38ef5717` original-41 | 41/41 valid: 33 complete, 8 partial; 62 assertion uses, 10 quiet pairs |
+| `38ef5717` unit suite  | 6,950 passed                                                           |

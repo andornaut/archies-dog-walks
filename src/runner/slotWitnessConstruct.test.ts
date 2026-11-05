@@ -6,7 +6,6 @@ import { prepareSlotKind } from "./slotCandidates.ts";
 import { createSlotConstructionState } from "./slotConstraintState.ts";
 import { coverageLeadingRows, quietCoverage } from "./slotCoverage.ts";
 import { createMovingCoverageHints } from "./slotMovingCoverageHints.ts";
-import { createSlotPocketAdapter } from "./slotPocketAdapter.ts";
 import { createSlotSolverSession } from "./slotSolverSession.ts";
 import {
   constructSlotWitness,
@@ -483,62 +482,6 @@ describe("native witness construction mode", () => {
     expect(context()).toBe(0);
   });
 
-  it("consumes a native-issued conditional refutation without inventing smaller dependencies", () => {
-    const road = {
-      ...geometry,
-      laneCount: 5,
-      maxEmptyRows: Infinity,
-      minOpenLanes: 2,
-      pathStart: 0,
-      zoneLength: 2000,
-    };
-    delete road.firstContactSeconds;
-    const { context, jobs, path, pin, ports, state } = fixture(road, [
-      { key: "wall" },
-      { key: "dart", moving: true },
-      { key: "subject" },
-      { key: "repair" },
-    ]);
-    jobs[1]!.preparations = () => [crossing(road)];
-    pin(jobs[0]!, 4, 2);
-    pin(jobs[1]!, 4, 4);
-    const root = state.entries();
-    const domains = createSlotCandidateDomains(road, path);
-    const adapter = createSlotPocketAdapter(
-      { anchor: () => true, check: () => true, propagate: ports.propagate, stopped: () => false },
-      road,
-      path,
-      domains,
-      jobs,
-    );
-    const attestRefutation = vi.fn((proof: Parameters<typeof adapter.attestRefutation>[1]) => {
-      const result = adapter.attestRefutation(state, proof);
-      expect(result).toEqual({
-        dependencies: state.entries().map(({ owner }) => owner),
-        status: "attested",
-      });
-      expect(result.status === "attested" && result.dependencies).toContain(jobs[2]);
-      return result;
-    });
-    const result = constructSlotWitness(
-      {
-        ...ports,
-        attestRefutation,
-        *candidates(job, prepared) {
-          yield* ports.candidates(job, prepared, { columnStart: 0, columns: [1], rows: [10] });
-        },
-        support: () => adapter.check(state, "active"),
-      },
-      road,
-      path,
-      jobs,
-    );
-    expect(result).toEqual({ status: "inconclusive" });
-    expect(attestRefutation).toHaveBeenCalledOnce();
-    expect(state.entries()).toEqual(root);
-    expect(context()).toBe(0);
-  });
-
   it("completes mixed jobs and coverage without changing the pinned proposal or active entries", () => {
     const { context, jobs, path, pin, ports, state } = fixture(geometry, [
       { guaranteed: true, key: "pinned" },
@@ -775,7 +718,6 @@ describe("native witness construction mode", () => {
       [jobs[2], 3],
     ]);
     const complete = vi.fn(ports.complete);
-    const support = vi.fn(() => ({ status: "unknown" as const }));
     let repairable = false;
     const tested: string[] = [];
     const result = constructSlotWitness(
@@ -791,7 +733,6 @@ describe("native witness construction mode", () => {
           }
         },
         complete,
-        support,
         test: (job, candidate) => {
           const result = ports.test(job, candidate);
           tested.push(`${job.key}:${result?.accepted}`);
@@ -809,7 +750,6 @@ describe("native witness construction mode", () => {
     expect(tested).toEqual(["wall:true", "dart:true", "repair:true"]);
     expect(repairable).toBe(true);
     expect(result.status).toBe("compatible");
-    expect(support).toHaveBeenCalledTimes(3);
     expect(complete.mock.calls).toEqual([[]]);
     if (result.status === "compatible") {
       expect(createSlotConstructionState(road, path, result.witness).checkComplete()).toEqual({
@@ -923,7 +863,6 @@ describe("native witness construction mode", () => {
     };
     const attempted: { kind: string; row: number }[] = [];
     const advice: { accepted: boolean; row: number }[] = [];
-    const supported: number[] = [];
     const complete = vi.fn(ports.complete);
     const result = constructSlotWitness(
       {
@@ -943,15 +882,6 @@ describe("native witness construction mode", () => {
             });
           }
           return checked;
-        },
-        support: () => {
-          const last = state.entries().at(-1)!;
-          if (last.owner === jobs[0] && last.entry.request === first.request) {
-            supported.push(
-              path.findIndex(({ distance }) => distance === last.entry.event.distance),
-            );
-          }
-          return { status: "unknown" };
         },
         test: (job, candidate) => {
           if (job === jobs[0]) {
@@ -975,7 +905,6 @@ describe("native witness construction mode", () => {
       { accepted: false, row: 0 },
       { accepted: true, row: 4 },
     ]);
-    expect(supported).toEqual([4, 0]);
     expect(compiled).toEqual(["first", "later"]);
     expect(closed).toBe(true);
     expect(complete.mock.calls).toEqual([[]]);
@@ -1011,7 +940,6 @@ describe("native witness construction mode", () => {
       }
     };
     const complete = vi.fn(ports.complete);
-    const support = vi.fn(() => ({ status: "unknown" as const }));
     const laneClosure = vi.fn(() => {
       expect(certificate).toBe(trial);
       const checked = state.checkComplete();
@@ -1064,7 +992,6 @@ describe("native witness construction mode", () => {
             certificate = mark.certificate;
           },
           stopped: () => stopped,
-          support,
           test,
         },
         road,
@@ -1075,7 +1002,6 @@ describe("native witness construction mode", () => {
     expect(test).toHaveBeenCalledOnce();
     expect(laneClosure).toHaveBeenCalledOnce();
     expect(complete).not.toHaveBeenCalled();
-    expect(support).not.toHaveBeenCalled();
     expect(compiled).toEqual(["first", "later"]);
     expect(candidatesClosed).toBe(true);
     expect(sourceClosed).toBe(true);
@@ -1521,43 +1447,6 @@ describe("native witness construction mode", () => {
     expect(state.entries()).toEqual([]);
     expect(context()).toBe(0);
   });
-
-  it.each(["refuted", "budget", "fatal"] as const)(
-    "handles conditional support %s without retaining its hypothetical state",
-    (status) => {
-      const road = { ...geometry, maxEmptyRows: Infinity };
-      const { context, jobs, path, ports, state } = fixture(road, [{ key: "subject" }]);
-      const failure = { classification: "unattributed" as const, owners: [], rule: "overflow" };
-      let attempts = 0;
-      const complete = vi.fn(ports.complete);
-      const result = constructSlotWitness(
-        {
-          ...ports,
-          complete,
-          support: () => {
-            attempts++;
-            return status === "fatal" ? { failure, status } : { status };
-          },
-        },
-        road,
-        path,
-        jobs,
-      );
-      expect(result).toEqual(
-        status === "fatal"
-          ? { failure, status: "blocked" }
-          : { status: status === "refuted" ? "inconclusive" : "budget" },
-      );
-      if (status === "refuted") {
-        expect(attempts).toBeGreaterThan(1);
-      } else {
-        expect(attempts).toBe(1);
-      }
-      expect(complete).not.toHaveBeenCalled();
-      expect(state.entries()).toEqual([]);
-      expect(context()).toBe(0);
-    },
-  );
 
   it("invalidates job metadata and old hints when the preparation method is replaced", () => {
     const road = { ...geometry, maxEmptyRows: Infinity };

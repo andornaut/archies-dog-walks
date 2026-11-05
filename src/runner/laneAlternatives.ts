@@ -1,12 +1,6 @@
 import { laneMask } from "../layout/lanes.ts";
 import type { LaneSpan, MoverPath } from "./movers.ts";
-import {
-  type Footprint,
-  laneTotal,
-  openStretches,
-  type SpawnPlan,
-  sweptPockets,
-} from "./spawning.ts";
+import { type Footprint, laneTotal, openStretches, type SpawnPlan } from "./spawning.ts";
 
 // Reactive positions are exclusive; a one-lane transition overlaps both endpoint footprints.
 export function reactiveLaneMasks(width: number, path: MoverPath): readonly number[] | undefined {
@@ -171,46 +165,4 @@ function stretchStates(
     states = next;
   }
   return states;
-}
-
-export function requiredAlternativeWalls(
-  step: () => boolean,
-  laneCount: number,
-  blocks: readonly LaneAlternativeBlock[],
-): { readonly status: "complete"; readonly mask: number } | { readonly status: "budget" } {
-  let walls = 0,
-    darts = 0;
-  const exclusive: LaneAlternativeBlock[] = [];
-  for (const block of blocks) {
-    if (!step()) {
-      return { status: "budget" };
-    }
-    if (block.alternatives !== undefined) {
-      exclusive.push(block);
-    } else if (block.dart) {
-      darts |= block.covered;
-    } else {
-      walls |= block.covered;
-    }
-  }
-  const states = stretchStates(step, walls, darts, exclusive);
-  if (states === undefined) {
-    return { status: "budget" };
-  }
-  let required = 0;
-  while (true) {
-    let next = required;
-    for (const [walls, darts] of states) {
-      for (const dart of darts) {
-        if (!step()) {
-          return { status: "budget" };
-        }
-        next |= sweptPockets(laneCount, walls | required, dart);
-      }
-    }
-    if (next === required) {
-      return { mask: required, status: "complete" };
-    }
-    required = next;
-  }
 }

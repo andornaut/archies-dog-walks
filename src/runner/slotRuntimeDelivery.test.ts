@@ -5,7 +5,7 @@ import { prepareSlotKind } from "./slotCandidates.ts";
 import type { SlotKind } from "./slotConfig.ts";
 import { createSlotConstructionState } from "./slotConstraintState.ts";
 import { SLOT_OMISSION_ATTEMPTS } from "./slotDelivery.ts";
-import { planSlotCapacity, planSlotSpawns, SLOT_LIMITS } from "./slotPlanner.ts";
+import { planSlotSpawns, SLOT_LIMITS } from "./slotPlanner.ts";
 import { createSlotWitnessSearch, type WitnessJob } from "./slotWitnessSearch.ts";
 import { rowSpacing, type SpawnPlan, type SpawnQuota, zoneRows } from "./spawning.ts";
 
@@ -101,8 +101,6 @@ describe("optional native slot delivery", () => {
       return true;
     };
     const certify = vi.fn(() => true);
-    const support = vi.fn(() => ({ status: "unknown" as const }));
-    const attestRefutation = vi.fn(() => ({ status: "unknown" as const }));
     const snapshots: string[][] = [];
     const certifyPartial = vi.fn((selected: readonly { readonly job: WitnessJob<string> }[]) => {
       snapshots.push(selected.map(({ job }) => job.key));
@@ -111,14 +109,12 @@ describe("optional native slot delivery", () => {
     });
     const result = createSlotWitnessSearch(geometry, path, domains, jobs, {
       anchor: () => true,
-      attestRefutation,
       certify,
       certifyPartial,
       check,
       minimumDelivery: 9,
       propagate: () => true,
       stopped: () => stopped,
-      support,
     }).solve(state);
     expect(result.status).toBe("partial");
     if (result.status !== "partial") {
@@ -137,8 +133,6 @@ describe("optional native slot delivery", () => {
     );
     expect(certifyPartial).toHaveBeenCalledOnce();
     expect(certify).not.toHaveBeenCalled();
-    expect(support).not.toHaveBeenCalled();
-    expect(attestRefutation).not.toHaveBeenCalled();
     expect(state.entries()).toEqual([]);
   });
 
@@ -382,9 +376,6 @@ describe("runtime delivery producer", () => {
     expect(result).not.toHaveProperty("activeAudit");
     expect(result.diagnostics.candidateChecks).toBeLessThanOrEqual(2000);
     expect(result.diagnostics.propagationChecks).toBeLessThanOrEqual(2000);
-    expect(planSlotCapacity(context, geometry, catalogue, auxiliary, configuration).status).toBe(
-      "unsupported",
-    );
   });
 
   it("returns strict complete delivery when the last optional reward also fits", () => {

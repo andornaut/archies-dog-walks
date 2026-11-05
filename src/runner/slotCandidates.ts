@@ -91,9 +91,7 @@ const readonlyMembers = (members: Set<MoverPlacement>): ReadonlySet<MoverPlaceme
 const nativePreparations = new WeakMap<
   PreparedSlotKind<string>,
   {
-    readonly crossOnly: boolean;
     readonly hasStops: boolean;
-    readonly maximumRows: number | undefined;
     readonly motion: NativeMotionIndex | undefined;
     readonly ordering: SlotPreparationOrdering;
   }
@@ -105,40 +103,17 @@ function nativePreparation<Kind extends string>(
 ): PreparedSlotKind<Kind> {
   let hasStops = false;
   let envelopeWidth = prepared.placements.length === 0 ? prepared.source.footprint.lanes : Infinity;
-  let crossOnly = prepared.request.mover !== undefined && prepared.placements.length > 0;
-  let maximumRows =
-    prepared.request.mover === undefined
-      ? quotaFootprint(prepared.request).rows
-      : prepared.placements.length > 0
-        ? 0
-        : undefined;
   for (const placement of prepared.placements) {
     envelopeWidth = Math.min(envelopeWidth, placement.lanes.count);
-    crossOnly &&= isDartPlacement(placement);
-    if (maximumRows !== undefined) {
-      maximumRows =
-        Number.isSafeInteger(placement.rows) && placement.rows > 0
-          ? Math.max(maximumRows, placement.rows)
-          : undefined;
-    }
     hasStops ||= placement.stop !== undefined;
   }
   deepFreeze(prepared);
-  if (maximumRows !== undefined && (!Number.isSafeInteger(maximumRows) || maximumRows < 1)) {
-    maximumRows = undefined;
-  }
   nativePreparations.set(prepared, {
-    crossOnly,
     hasStops,
-    maximumRows,
     motion,
     ordering: Object.freeze({ envelopeWidth }),
   });
   return prepared;
-}
-
-export function isNativeSlotCrossOnly(prepared: PreparedSlotKind<string>): boolean {
-  return isNativeSlotPreparation(prepared) && nativePreparations.get(prepared)!.crossOnly;
 }
 
 export function isNativeSlotPreparation(prepared: PreparedSlotKind<string>): boolean {
@@ -156,14 +131,6 @@ export function nativeSlotPreparationOrderingHint(
   }
   const origin = nativePreparations.get(prepared);
   return origin === undefined ? { status: "unknown" } : { hint: origin.ordering, status: "hint" };
-}
-
-export function nativeSlotPreparationWallRows(
-  prepared: PreparedSlotKind<string>,
-): number | undefined {
-  return isNativeSlotPreparation(prepared)
-    ? nativePreparations.get(prepared)!.maximumRows
-    : undefined;
 }
 
 export function prepareSlotKind<Kind extends string>(

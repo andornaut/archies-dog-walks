@@ -35,7 +35,6 @@ import {
   materialiseSlotPlan,
   type SlotAssignment,
 } from "./slotPlan.ts";
-import { createSlotPocketAdapter } from "./slotPocketAdapter.ts";
 import {
   createSlotWitnessSearch,
   type WitnessJob,
@@ -89,7 +88,7 @@ export interface SlotDiagnostics {
 export interface SlotCertificate<Kind extends string> {
   readonly assignments: readonly SlotAssignment<Kind>[];
   readonly audit: SlotAudit;
-  readonly phase: "active" | "capacity";
+  readonly phase: "active";
   readonly plan: SpawnPlan<Kind>;
   readonly planned: PlannedSpawns<Kind>;
 }
@@ -128,16 +127,6 @@ export type SlotPlanningResult<Kind extends string> =
     })
   | SlotCompositionPartial<Kind>
   | SlotPlanningFailure<Kind>;
-export type SlotCapacityResult<Kind extends string> =
-  | (SlotCompositionComplete<Kind> & { readonly capacityAudit: SlotAudit })
-  | SlotPlanningFailure<Kind>;
-type SlotCompositionResult<Kind extends string> =
-  | (SlotCompositionComplete<Kind> & {
-      readonly audit: SlotAudit;
-      readonly delivery: SlotDelivery<Kind>;
-    })
-  | SlotCompositionPartial<Kind>
-  | SlotPlanningFailure<Kind>;
 
 export class SlotPlanningError<Kind extends string> extends Error {
   readonly result: Extract<SlotPlanningResult<Kind>, { readonly status: "unsupported" }>;
@@ -158,57 +147,8 @@ export function planSlotSpawns<Kind extends string>(
   auxiliary: readonly SpawnQuota<Kind>[],
   config: SlotConfiguration<Kind>,
 ): SlotPlanningResult<Kind> {
-  const result = planSlotComposition("active", context, geometry, catalogue, auxiliary, config);
-  if (result.status !== "complete") {
-    return result;
-  }
-  const { audit, ...complete } = result;
-  return { ...complete, activeAudit: audit };
-}
-
-// Offline capacity certification constructs a separate maximum composition from an empty root with
-// exact delivery and one attempt, its candidate checks capped at SLOT_LIMITS.candidateChecks.
-export function planSlotCapacity<Kind extends string>(
-  context: SlotPlanningContext,
-  geometry: Omit<SpawnPlan<Kind>, "quotas">,
-  catalogue: readonly SlotKind<Kind>[],
-  auxiliary: readonly SpawnQuota<Kind>[],
-  config: SlotConfiguration<Kind>,
-): SlotCapacityResult<Kind> {
-  const result = planSlotComposition("capacity", context, geometry, catalogue, auxiliary, config);
-  if (result.status === "unsupported") {
-    return result;
-  }
-  if (result.status === "partial") {
-    throw new Error("Independent capacity construction must remain exact");
-  }
-  return {
-    assignments: result.assignments,
-    capacityAudit: result.audit,
-    diagnostics: result.diagnostics,
-    plan: result.plan,
-    planned: result.planned,
-    status: "complete",
-  };
-}
-
-function planSlotComposition<Kind extends string>(
-  purpose: "active" | "capacity",
-  context: SlotPlanningContext,
-  geometry: Omit<SpawnPlan<Kind>, "quotas">,
-  catalogue: readonly SlotKind<Kind>[],
-  auxiliary: readonly SpawnQuota<Kind>[],
-  config: SlotConfiguration<Kind>,
-): SlotCompositionResult<Kind> {
-  // Active plans are the runtime portfolio with optional delivery; capacity plans are exact.
-  const runtime = purpose === "active";
-  const policy: SlotDeliveryPolicy = runtime ? "runtime-90" : "exact";
-  const limits = runtime
-    ? context.limits
-    : {
-        ...context.limits,
-        candidateChecks: Math.min(context.limits.candidateChecks, SLOT_LIMITS.candidateChecks),
-      };
+  const policy: SlotDeliveryPolicy = "runtime-90";
+  const limits = context.limits;
   const attempts: SlotAttemptDiagnostics[] = [];
   let attemptStart = { candidateChecks: 0, propagationChecks: 0 };
   let attemptFloor: SlotAttemptDiagnostics["firstFloor"];
@@ -230,7 +170,7 @@ function planSlotComposition<Kind extends string>(
   };
   const diagnostics = (): SlotDiagnostics => ({
     ...stats,
-    ...(runtime ? { attempts: [...attempts] } : {}),
+    attempts: [...attempts],
     rejections: { ...stats.rejections },
   });
   const unsupported = (
@@ -344,8 +284,7 @@ function planSlotComposition<Kind extends string>(
   ) {
     return unsupported("configuration", [{ code: "invalid-quiet-row-limit" }]);
   }
-  const composition = { ...config, active: purpose === "active" ? config.active : config.capacity };
-  const originalJobs = makeSlotJobs(catalogue, auxiliary, composition);
+  const originalJobs = makeSlotJobs(catalogue, auxiliary, config);
   const guarantees = originalJobs.filter((job) => job.guaranteed === true);
   const preparedCache = new Map<string, PreparedSlotKind<Kind>>();
   let workFailure: Extract<SlotPlanningResult<Kind>, { status: "unsupported" }> | undefined;
@@ -446,7 +385,6 @@ function planSlotComposition<Kind extends string>(
       return false;
     }
     if (
-      runtime &&
       type === "candidateChecks" &&
       stats[type] - attemptStart[type] >= SLOT_LIMITS.candidateChecks
     ) {
@@ -476,9 +414,7 @@ function planSlotComposition<Kind extends string>(
   // The second attempt reuses the domains and preparations built on this frozen context.
   deepFreeze(geometry);
   path = deepFreeze(conditioned.path);
-  const domains = createSlotCandidateDomains(geometry, path, {
-    negativeVisibility: !runtime,
-  });
+  const domains = createSlotCandidateDomains(geometry, path, { negativeVisibility: false });
   const layouts = new Map<string, number>();
   const sourceOrders = new Map<SlotJob<Kind>, readonly SlotSource<Kind>[]>();
   const orderSources = (job: SlotJob<Kind>) => {
@@ -514,7 +450,7 @@ function planSlotComposition<Kind extends string>(
     guaranteed: job.guaranteed === true,
     key: job.key,
     laneEffect: job.laneEffect,
-    ...(runtime && !job.guaranteed ? { optional: true as const } : {}),
+    ...(job.guaranteed ? {} : { optional: true as const }),
     ordinal: job.ordinal,
     phase: job.phase,
     *preparations() {
@@ -605,7 +541,7 @@ function planSlotComposition<Kind extends string>(
     stats.certificateTemplates += audit.compiledTemplates;
     return audit;
   };
-  const certify = (phase: "active" | "capacity", ledger: readonly SlotAssignment<Kind>[]) => {
+  const certify = (ledger: readonly SlotAssignment<Kind>[]) => {
     const audit = auditSlotPlan(
       context,
       geometry,
@@ -613,7 +549,7 @@ function planSlotComposition<Kind extends string>(
       catalogue,
       auxiliary,
       config,
-      phase,
+      "active",
       ledger,
     );
     stats.audits++;
@@ -621,20 +557,19 @@ function planSlotComposition<Kind extends string>(
     return audit;
   };
   const certificate = (
-    phase: "active" | "capacity",
     audit: SlotAudit,
     ledger: readonly SlotAssignment<Kind>[],
   ): SlotCertificate<Kind> => ({
     ...materialiseSlotPlan(geometry, path, ledger),
     assignments: ledger,
     audit,
-    phase,
+    phase: "active",
   });
   const meter = {
     anchor: () => pathBudget("anchors"),
     check: () => pathBudget("candidateChecks"),
     progress: () => {
-      const allowance = runtime ? SLOT_LIMITS.candidateChecks : limits.candidateChecks;
+      const allowance = SLOT_LIMITS.candidateChecks;
       const share = (type: "candidateChecks" | "propagationChecks") => {
         const used = stats[type] - attemptStart[type];
         const remaining = Math.max(
@@ -655,10 +590,7 @@ function planSlotComposition<Kind extends string>(
         ]);
         return false;
       }
-      if (
-        runtime &&
-        stats.propagationChecks - attemptStart.propagationChecks >= SLOT_LIMITS.candidateChecks
-      ) {
+      if (stats.propagationChecks - attemptStart.propagationChecks >= SLOT_LIMITS.candidateChecks) {
         attemptStopped = true;
         return false;
       }
@@ -667,38 +599,29 @@ function planSlotComposition<Kind extends string>(
     },
     stopped: () => workFailure !== undefined || attemptStopped,
   };
-  if (runtime && !meter.propagate()) {
+  if (!meter.propagate()) {
     return (
       finishWorkFailure() ?? unsupported("construction", [{ code: "propagation-attempt-budget" }])
     );
   }
-  // Necessary row support shares the native solve allowance and runs only on unsafe prefixes.
-  const pocket = createSlotPocketAdapter(meter, geometry, path, domains, witnessJobs);
   const work: WitnessWork<Kind> = {
-    ...(runtime
-      ? {
-          certifyPartial(
-            selected: readonly WitnessSelection<Kind>[],
-            missing: readonly WitnessOmission<Kind>[],
-          ) {
-            const ledger = bind(selected),
-              omissions = bindOmissions(missing);
-            if (ledger === undefined || omissions === undefined) {
-              workFailure = unsupported("invariant", [{ code: "missing-selected-source" }]);
-              return false;
-            }
-            const audit = certifyPartial(omissions, ledger);
-            if (audit.status !== "valid" && audit.failure === "invariant") {
-              workFailure = unsupported("invariant", [{ code: "partial-slot-audit" }]);
-            }
-            return audit.status === "valid";
-          },
-          minimumDelivery: minimumSlotDelivery(policy, originalJobs.length),
-        }
-      : {
-          attestRefutation: (state, proof) => pocket.attestRefutation(state, proof),
-          support: (state) => pocket.check(state, "active"),
-        }),
+    certifyPartial(
+      selected: readonly WitnessSelection<Kind>[],
+      missing: readonly WitnessOmission<Kind>[],
+    ) {
+      const ledger = bind(selected),
+        omissions = bindOmissions(missing);
+      if (ledger === undefined || omissions === undefined) {
+        workFailure = unsupported("invariant", [{ code: "missing-selected-source" }]);
+        return false;
+      }
+      const audit = certifyPartial(omissions, ledger);
+      if (audit.status !== "valid" && audit.failure === "invariant") {
+        workFailure = unsupported("invariant", [{ code: "partial-slot-audit" }]);
+      }
+      return audit.status === "valid";
+    },
+    minimumDelivery: minimumSlotDelivery(policy, originalJobs.length),
     ...meter,
     floorMet() {
       attemptFloor ??= {
@@ -718,16 +641,14 @@ function planSlotComposition<Kind extends string>(
     ordering: "original" | "balanced",
     status: SlotAttemptDiagnostics["status"],
   ) => {
-    if (runtime) {
-      attempts.push({
-        candidateChecks: stats.candidateChecks - attemptStart.candidateChecks,
-        ...(attemptFloor === undefined ? {} : { firstFloor: attemptFloor }),
-        ordering,
-        propagationChecks: stats.propagationChecks - attemptStart.propagationChecks,
-        reserveRestart: attemptRestarted,
-        status,
-      });
-    }
+    attempts.push({
+      candidateChecks: stats.candidateChecks - attemptStart.candidateChecks,
+      ...(attemptFloor === undefined ? {} : { firstFloor: attemptFloor }),
+      ordering,
+      propagationChecks: stats.propagationChecks - attemptStart.propagationChecks,
+      reserveRestart: attemptRestarted,
+      status,
+    });
     attemptFloor = undefined;
     attemptRestarted = false;
   };
@@ -742,7 +663,6 @@ function planSlotComposition<Kind extends string>(
   };
   let solved = solve("original");
   if (
-    runtime &&
     workFailure === undefined &&
     solved.status !== "compatible" &&
     solved.status !== "partial" &&
@@ -824,20 +744,20 @@ function planSlotComposition<Kind extends string>(
   }
   assignments.push(...selected);
   stats.commits = assignments.length;
-  const audit = certify(purpose, assignments);
+  const audit = certify(assignments);
   if (audit.status !== "valid") {
     return unsupported(
       "invariant",
       [{ code: "final-slot-audit" }],
-      [certificate(purpose, audit, assignments)],
+      [certificate(audit, assignments)],
     );
   }
   stats.activeCommits = assignments.length;
   return {
     ...materialiseSlotPlan(geometry, path, assignments),
+    activeAudit: audit,
     assignments,
-    audit,
-    delivery: describeSlotDelivery(policy, composition, auxiliary, [], assignments),
+    delivery: describeSlotDelivery(policy, config, auxiliary, [], assignments),
     diagnostics: diagnostics(),
     status: "complete",
   };

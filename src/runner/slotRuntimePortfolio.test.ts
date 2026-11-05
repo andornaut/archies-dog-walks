@@ -2,12 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import * as audit from "./slotAudit.ts";
 import type { SlotKind } from "./slotConfig.ts";
-import {
-  planSlotCapacity,
-  planSlotSpawns,
-  SLOT_LIMITS,
-  type SlotPlanningContext,
-} from "./slotPlanner.ts";
+import { planSlotSpawns, SLOT_LIMITS, type SlotPlanningContext } from "./slotPlanner.ts";
 import * as witnessSearch from "./slotWitnessSearch.ts";
 import type { SpawnPlan } from "./spawning.ts";
 
@@ -216,28 +211,6 @@ describe("bounded runtime ordering portfolio", () => {
     expect(result.status).toBe("unsupported");
     expect(search).toHaveBeenCalledTimes(1);
     expect(result.diagnostics.compiledTemplates).toBe(1);
-  });
-
-  it("does not enable fallback for capacity", () => {
-    const create = witnessSearch.createSlotWitnessSearch;
-    const search = vi
-      .spyOn(witnessSearch, "createSlotWitnessSearch")
-      .mockImplementation((road, path, domains, jobs, work) =>
-        create(road, path, domains, jobs, {
-          ...work,
-          check() {
-            while (work.propagate!()) {
-              /* Consume the real shared allowance. */
-            }
-            return false;
-          },
-        }),
-      );
-    const result = planSlotCapacity(context, geometry, catalogue(), rewards, config);
-    expect(result.status).toBe("unsupported");
-    expect(search).toHaveBeenCalledTimes(1);
-    expect(result.diagnostics.propagationChecks).toBe(32768);
-    expect(result.diagnostics.attempts).toBeUndefined();
   });
 });
 

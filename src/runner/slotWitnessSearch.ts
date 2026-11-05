@@ -13,12 +13,10 @@ import {
   SLOT_OMISSION_RESERVE,
   type SlotOmission,
 } from "./slotDelivery.ts";
-import type { SlotPocketProof, SlotPocketSupportResult } from "./slotPocketSupport.ts";
 import { createSlotSolverSession, drainSlotSolver } from "./slotSolverSession.ts";
 import {
   createSlotWitnessConstruct,
   type SlotWitnessConstructPorts,
-  type SlotWitnessRefutationAttestation,
 } from "./slotWitnessConstruct.ts";
 import type { PlannedSpawns, SpawnPlan } from "./spawning.ts";
 
@@ -60,10 +58,6 @@ export type WitnessResult<Kind extends string> =
   | { readonly status: "blocked"; readonly failure?: Failure<Kind> }
   | { readonly status: "budget" };
 export interface WitnessWork<Kind extends string> {
-  readonly attestRefutation?: (
-    state: ConstraintState<Kind>,
-    proof: SlotPocketProof<SlotCandidate<Kind>>,
-  ) => SlotWitnessRefutationAttestation;
   readonly anchor: () => boolean;
   readonly check: () => boolean;
   readonly certify?: (selections: readonly WitnessSelection<Kind>[]) => boolean;
@@ -81,7 +75,6 @@ export interface WitnessWork<Kind extends string> {
   readonly propagate?: () => boolean;
   readonly rejected?: (candidate: SlotCandidate<Kind>, failure: Failure<Kind>) => void;
   readonly stopped?: () => boolean;
-  readonly support?: (state: ConstraintState<Kind>) => SlotPocketSupportResult<SlotCandidate<Kind>>;
 }
 
 // One native transaction selects entries before independent materialisation audits.
@@ -131,7 +124,7 @@ export function createSlotWitnessSearch<Kind extends string>(
     const provenance = new WeakMap<object, SlotCandidate<Kind>>();
     // Runtime construction rejects a repeated test without native work while every owner of its
     // recorded conflict keeps its placement. Exact construction keeps native failures for its
-    // pocket proofs and its negative visibility lookup.
+    // negative visibility lookup.
     const reuse = work.minimumDelivery !== undefined;
     const conflicts = new Map<
       WitnessJob<Kind>,
@@ -280,12 +273,6 @@ export function createSlotWitnessSearch<Kind extends string>(
         return trial;
       }
       const ports: SlotWitnessConstructPorts<Kind, Mark<Kind>> = {
-        ...(work.minimumDelivery !== undefined || work.attestRefutation === undefined
-          ? {}
-          : {
-              attestRefutation: (proof: SlotPocketProof<SlotCandidate<Kind>>) =>
-                work.attestRefutation!(state, proof),
-            }),
         candidates(job, prepared, order) {
           return (order.motionTier === undefined ? domains.sequence : domains.frontierSequence)(
             { anchor: work.anchor, check: charge, propagate },
@@ -374,10 +361,6 @@ export function createSlotWitnessSearch<Kind extends string>(
           state.restore(mark);
         },
         stopped,
-        support: () =>
-          work.minimumDelivery === undefined
-            ? (work.support?.(state) ?? { status: "unknown" })
-            : { status: "unknown" },
         test: testCandidate,
       };
       let result = yield* construct.begin({

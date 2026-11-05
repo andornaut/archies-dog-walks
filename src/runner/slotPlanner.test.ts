@@ -15,7 +15,7 @@ import { slotMotionStreams } from "./slotEntropy.ts";
 import * as slotFeasibility from "./slotFeasibility.ts";
 import { makeSlotJobs } from "./slotJobs.ts";
 import { materialiseSlotPlan } from "./slotPlan.ts";
-import { planSlotCapacity, planSlotSpawns, SLOT_LIMITS } from "./slotPlanner.ts";
+import { planSlotSpawns, SLOT_LIMITS } from "./slotPlanner.ts";
 import * as witnessSearch from "./slotWitnessSearch.ts";
 import { rowSpacing, type SpawnPlan, zoneRows } from "./spawning.ts";
 import { auditSpawnPlan } from "./spawnValidation.ts";
@@ -206,7 +206,6 @@ describe("safe slot planning", () => {
       ]);
       expect(result.planned.events).toHaveLength(4);
       expect(result).not.toHaveProperty("capacityWitness");
-      expect(result).not.toHaveProperty("capacityAudit");
       expect(result.diagnostics.audits).toBe(1);
       expect(result.activeAudit.status).toBe("valid");
     } finally {
@@ -263,60 +262,45 @@ describe("safe slot planning", () => {
     });
     try {
       const compiled = compileZoneSlotInput(input);
-      for (const purpose of ["active", "capacity"] as const) {
-        const run = () =>
-          purpose === "active"
-            ? replayZoneSlots(input)
-            : planSlotCapacity(
-                input.context,
-                compiled.geometry,
-                compiled.catalogue,
-                input.auxiliary,
-                input.config,
-              );
-        calls.clear();
-        const baseline = run();
-        const baselineCalls = structuredClone(calls);
-        calls.clear();
-        const replayed = run();
-        expect(baseline.status).toBe("complete");
-        expect(replayed).toEqual(baseline);
-        expect(calls).toEqual(baselineCalls);
-        expect([...calls.values()].every(({ seed }) => seed === context.seed)).toBe(true);
-        if (replayed.status !== "complete") {
-          throw new Error("Expected complete production-profile certification");
-        }
-        const moving = replayed.assignments.find(({ entry }) => entry.event.mover !== undefined);
-        expect(moving, purpose).toBeDefined();
-        for (const suffix of ["motion", "steps"]) {
-          const key = `slots-0-${moving!.key}-${moving!.binding.kind}-${suffix}`;
-          expect(calls.get(key)?.values.length, key).toBeGreaterThan(0);
-        }
-        for (const { binding, entry, key } of replayed.assignments) {
-          const source = compiled.catalogue.find(
-            (candidate) => candidate.kind === binding.kind && candidate.role === binding.role,
-          )!;
-          const prepared = prepareSlotKind(
-            {
-              movers: stream(context.seed, `slots-0-${key}-${source.kind}-motion`),
-              spawns: stream(context.seed, `slots-0-${key}-${source.kind}-steps`),
-            },
-            compiled.geometry,
-            source,
-          );
-          expect(entry.request).toEqual(prepared.request);
-          if (entry.event.mover !== undefined) {
-            expect(prepared.placements.map(({ path }) => path)).toContainEqual(entry.event.mover);
-            expect(entry.trace.requestedDraws).toEqual(prepared.draws);
-          }
-        }
-        expect(replayed).toHaveProperty(
-          purpose === "active" ? "activeAudit.status" : "capacityAudit.status",
-          "valid",
-        );
-        expect(replayed.assignments.every(({ phase }) => phase === "active")).toBe(true);
-        expect(replayed).not.toHaveProperty("capacityWitness");
+      calls.clear();
+      const baseline = replayZoneSlots(input);
+      const baselineCalls = structuredClone(calls);
+      calls.clear();
+      const replayed = replayZoneSlots(input);
+      expect(baseline.status).toBe("complete");
+      expect(replayed).toEqual(baseline);
+      expect(calls).toEqual(baselineCalls);
+      expect([...calls.values()].every(({ seed }) => seed === context.seed)).toBe(true);
+      if (replayed.status !== "complete") {
+        throw new Error("Expected complete production-profile certification");
       }
+      const moving = replayed.assignments.find(({ entry }) => entry.event.mover !== undefined);
+      expect(moving).toBeDefined();
+      for (const suffix of ["motion", "steps"]) {
+        const key = `slots-0-${moving!.key}-${moving!.binding.kind}-${suffix}`;
+        expect(calls.get(key)?.values.length, key).toBeGreaterThan(0);
+      }
+      for (const { binding, entry, key } of replayed.assignments) {
+        const source = compiled.catalogue.find(
+          (candidate) => candidate.kind === binding.kind && candidate.role === binding.role,
+        )!;
+        const prepared = prepareSlotKind(
+          {
+            movers: stream(context.seed, `slots-0-${key}-${source.kind}-motion`),
+            spawns: stream(context.seed, `slots-0-${key}-${source.kind}-steps`),
+          },
+          compiled.geometry,
+          source,
+        );
+        expect(entry.request).toEqual(prepared.request);
+        if (entry.event.mover !== undefined) {
+          expect(prepared.placements.map(({ path }) => path)).toContainEqual(entry.event.mover);
+          expect(entry.trace.requestedDraws).toEqual(prepared.draws);
+        }
+      }
+      expect(replayed.activeAudit.status).toBe("valid");
+      expect(replayed.assignments.every(({ phase }) => phase === "active")).toBe(true);
+      expect(replayed).not.toHaveProperty("capacityWitness");
     } finally {
       observed.mockRestore();
     }
@@ -395,26 +379,15 @@ describe("safe slot planning", () => {
     });
   });
 
-  it("certifies the maximum composition independently without changing the actual result", () => {
+  it("certifies the actual composition and rejects a changed binding", () => {
     const result = planSlotSpawns(context, geometry, catalogue, [], config);
     expect(result.status).toBe("complete");
     if (result.status !== "complete") {
       return;
     }
-    const capacity = planSlotCapacity(context, geometry, catalogue, [], config);
-    expect(capacity.status).toBe("complete");
-    if (capacity.status !== "complete") {
-      throw new Error("Expected independent maximum certification");
-    }
     expect(result.planned.events).toHaveLength(3);
-    expect(capacity.planned.events).toHaveLength(4);
     expect(result.activeAudit.status).toBe("valid");
-    expect(capacity.capacityAudit.status).toBe("valid");
-    expect(result).not.toHaveProperty("capacityAudit");
     expect(result).not.toHaveProperty("capacityWitness");
-    expect(capacity).not.toHaveProperty("activeAudit");
-    expect(capacity.assignments.every(({ phase }) => phase === "active")).toBe(true);
-    expect(capacity.diagnostics.audits).toBe(1);
     expect(planSlotSpawns(context, geometry, catalogue, [], config)).toEqual(result);
     const changed = result.assignments.map((assignment, index) =>
       index === 0
@@ -435,7 +408,7 @@ describe("safe slot planning", () => {
     ).toBe("invalid");
   });
 
-  it("returns the audited actual layout when independent maximum construction is exhausted", () => {
+  it("returns the audited actual layout and rejects an active count above capacity", () => {
     const road = { ...geometry, zoneLength: 300 };
     const configuration = {
       active: { ...empty, minorFixed: 2 },
@@ -450,13 +423,6 @@ describe("safe slot planning", () => {
     expect(actual.activeAudit.status).toBe("valid");
     expect(actual.assignments).toHaveLength(2);
     expect(actual.diagnostics.audits).toBe(1);
-    const maximum = planSlotCapacity(context, road, catalogue, [], configuration);
-    expect(maximum.status).toBe("unsupported");
-    if (maximum.status !== "unsupported") {
-      throw new Error("Expected bounded maximum construction to fail");
-    }
-    expect(maximum.stage).toBe("construction");
-    expect(maximum).not.toHaveProperty("plan");
     expect(planSlotSpawns(context, road, catalogue, [], configuration)).toEqual(actual);
     const invalid = planSlotSpawns(context, road, catalogue, [], {
       ...configuration,
