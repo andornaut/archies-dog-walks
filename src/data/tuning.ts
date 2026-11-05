@@ -137,10 +137,8 @@ export const TUNING = {
     // its time on screen before it steps back off.
     distractionVisitLingerShare: 0.35,
     goodLeashSquirrelPull: 0,
-    // How many tips appear while Mr. B's Keen eye walks.
-    keenEyeTipSpawns: 1.5,
-    // How many treats appear while Mr. B's Keen eye walks.
-    keenEyeTreatSpawns: 1.5,
+    // How many tips and treats appear while Mr. B's Keen eye walks.
+    keenEyePickups: 1.5,
     // Each large dog in the pack adds this to the walker's agility.
     largeDogAgility: -0.1,
     // Large dogs never take the pack's agility below this, or below the walker's own when lower.
@@ -157,8 +155,8 @@ export const TUNING = {
     // Running shoes add this much to the walker's agility.
     runningShoesAgility: 1,
     rushHourObstacles: 1.3,
-    rushHourTips: 2,
-    rushHourTreats: 2,
+    // How many tips and treats appear while Rush hour lasts.
+    rushHourPickups: 2,
     scrollSpeedGainPerZone: 0.2,
     // Each small dog in the pack adds this to the walker's agility.
     smallDogAgility: 0.1,

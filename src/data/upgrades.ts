@@ -87,7 +87,7 @@ export const UPGRADES = {
     effect: "Tips, treats {spawns}, more obstacles",
     effects: [
       {
-        by: "rushHourTips",
+        by: "rushHourPickups",
         duration: "nextZone",
         kind: "modifier",
         operation: "multiply",
@@ -101,7 +101,7 @@ export const UPGRADES = {
         stat: "obstacleSpawns",
       },
       {
-        by: "rushHourTreats",
+        by: "rushHourPickups",
         duration: "nextZone",
         kind: "modifier",
         operation: "multiply",

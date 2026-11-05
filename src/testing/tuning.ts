@@ -10,8 +10,7 @@ function withNeutralWalkers(tuning: LiveTuning): LiveTuning {
     hearts: { ...tuning.hearts, secondChanceForgiven: 0 },
     multipliers: {
       ...tuning.multipliers,
-      keenEyeTipSpawns: 1,
-      keenEyeTreatSpawns: 1,
+      keenEyePickups: 1,
       quickRecoveryDebuffFactor: 1,
     },
   };

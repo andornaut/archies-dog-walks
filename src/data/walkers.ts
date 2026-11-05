@@ -9,11 +9,11 @@ export const WALKER_PERKS = {
   keenEye: {
     effect: "{percent} more tips and treats",
     effects: [
-      { by: "keenEyeTreatSpawns", kind: "modifier", operation: "multiply", stat: "treatSpawns" },
-      { by: "keenEyeTipSpawns", kind: "modifier", operation: "multiply", stat: "tipSpawns" },
+      { by: "keenEyePickups", kind: "modifier", operation: "multiply", stat: "treatSpawns" },
+      { by: "keenEyePickups", kind: "modifier", operation: "multiply", stat: "tipSpawns" },
     ],
     name: "Keen eye",
-    percent: "keenEyeTipSpawns",
+    percent: "keenEyePickups",
   },
   longReach: {
     effect: "Grabs tips and treats a lane to each side",

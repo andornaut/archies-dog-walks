@@ -110,9 +110,9 @@ describe("effectText", () => {
         "a duration every phrase shares once, at the end",
         UPGRADES.rushHour.effects,
         capitalize(
-          `+${percent("rushHourTips")}% ${words.stats.tipSpawns}, ` +
+          `+${percent("rushHourPickups")}% ${words.stats.tipSpawns}, ` +
             `+${percent("rushHourObstacles")}% ${words.stats.obstacleSpawns}, ` +
-            `+${percent("rushHourTreats")}% ${words.stats.treatSpawns} ${words.durations.nextZone}`,
+            `+${percent("rushHourPickups")}% ${words.stats.treatSpawns} ${words.durations.nextZone}`,
         ),
       ],
       [
@@ -235,7 +235,7 @@ describe("upgradeLine", () => {
 
   it("fills {spawns} with what its tipSpawns modifiers multiply tips by", () => {
     const upgrade = UPGRADES.rushHour;
-    const spawns = `×${read(gameData.tuning, "multipliers", "rushHourTips")}`;
+    const spawns = `×${read(gameData.tuning, "multipliers", "rushHourPickups")}`;
     expect(upgradeLine(gameData.tuning, "effect", upgrade)).toBe(
       fillNames(upgrade.effect, { spawns }),
     );
