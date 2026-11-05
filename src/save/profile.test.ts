@@ -2,6 +2,7 @@ import type { EarnedRecord } from "@andornaut/game-kit/achievements";
 import { keysOf } from "@andornaut/game-kit/records";
 import { memoryStorage, type SaveStorage } from "@andornaut/game-kit/save/storage";
 import { encodeSave } from "@andornaut/game-kit/save/versionedSave";
+import { storageFixture } from "@andornaut/game-kit/testing/storageFixture";
 import { describe, expect, it, vi } from "vitest";
 
 import { gameData } from "../data/index.ts";
@@ -76,11 +77,6 @@ const settle = () =>
     setTimeout(resolve, 0);
   });
 
-const throwing: SaveStorage = {
-  read: () => Promise.reject(new Error("blocked")),
-  write: () => Promise.reject(new Error("blocked")),
-};
-
 describe("ProfileSession.open", () => {
   it("starts a new player from the defaults, through newPlayer", async () => {
     const { session } = await ProfileSession.open(awards, storesOn(memoryStorage()), (save) => ({
@@ -124,11 +120,8 @@ describe("ProfileSession.open", () => {
 
   // A failed read leaves storage unavailable for the session, though writes would succeed.
   it.each<[string, SaveStorage]>([
-    ["storage throws", throwing],
-    [
-      "a read fails",
-      { read: () => Promise.reject(new Error("blocked")), write: () => Promise.resolve() },
-    ],
+    ["storage throws", storageFixture({ unavailable: true })],
+    ["a read fails", storageFixture({ readThrows: new Error("blocked") })],
   ])("plays on in memory, storage unavailable, when %s", async (_, storage) => {
     const { load, session } = await ProfileSession.open(awards, storesOn(storage));
     expect(load.status).toBe("unavailable");
@@ -213,15 +206,11 @@ describe("ProfileSession.update", () => {
   });
 
   it("reports storage unavailable while writes fail, and available once one succeeds", async () => {
-    let full = true;
-    const flaky: SaveStorage = {
-      read: async () => null,
-      write: () => (full ? Promise.reject(new Error("quota")) : Promise.resolve()),
-    };
+    const flaky = storageFixture({ quota: 0 });
     const { session } = await ProfileSession.open(awards, storesOn(flaky));
     await session.update((save) => save);
     expect(session.storage).toBe("unavailable");
-    full = false;
+    delete flaky.failures.quota;
     await session.update((save) => save);
     expect(session.storage).toBe("available");
   });
