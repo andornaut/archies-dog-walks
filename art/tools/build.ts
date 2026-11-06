@@ -5,13 +5,13 @@
 // strip (roads), and the others below read the sprites, images and fonts they paste. A set with no
 // entry in NEEDS reads only its own exports, the committed manifest and shared/ tables.
 //
-// --check fails when a file under CHECK_PATHS (art/ and every path the builds write) differed from
-// the git index or was untracked before the rebuild, or the rebuild changes, removes or adds one,
-// and lists those paths. Builds are deterministic, so on a clean checkout every difference is a
-// generator change. Named sets rebuild those sets and every set downstream of them.
+// --check snapshots every file under CHECK_PATHS (art/ and every path the builds write) before the
+// rebuild and fails when the rebuild changes, removes or adds one, listing those paths. It needs no
+// git. Builds are deterministic, so on a clean checkout every difference is a generator change.
+// Named sets rebuild those sets and every set downstream of them.
 //
 // Run from the repository root in the archie-check image (SoX and ffmpeg). It spawns only node and
-// git, and reaches no network.
+// reaches no network.
 import { buildCommand, type BuildSets, nodeBuild } from "@andornaut/art-kit/build";
 
 const USAGE = `Usage:
@@ -133,7 +133,7 @@ const BUILD_SETS: BuildSets = Object.fromEntries(
 if (import.meta.main) {
   process.exitCode = await buildCommand(
     {
-      check: { index: true, paths: CHECK_PATHS },
+      check: { paths: CHECK_PATHS },
       modules: { ...TOOLS, nonSets: NOT_SETS },
       sets: BUILD_SETS,
       strictOrder: true,
