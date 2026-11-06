@@ -3,13 +3,14 @@
   "git": { "main": "main", "remote": "origin", "github": "andornaut/archies-dog-walks" },
   "schedule": { "departures": ["00"], "timezone": "America/Toronto" },
   "gate": {
-    "image": "node:24.21.0",
+    "image": "archie-check:node24.21.0-sox-ffmpeg",
     "install": "npm ci",
     "steps": [
       { "name": "check", "run": "npm run check" },
       { "name": "lint", "run": "npm run lint" },
       { "name": "test", "run": "npm test -- --maxWorkers=4" },
-      { "name": "build", "run": "npm run build" }
+      { "name": "build", "run": "npm run build" },
+      { "name": "art", "run": "node art/tools/build.ts --check" }
     ]
   },
   "resources": { "cpus": 4, "loadLimit": 24 },
