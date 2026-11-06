@@ -331,13 +331,14 @@ One step's cut is pinned (`PINNED_CUTS` in `pixel.ts`): `dog-penny@69` takes out
 
 - 320×64 (`art/tools/roads.ts`), tiling vertically with no seam: patterns repeat every 64 rows or a divisor of it.
 - The base is the zone's road colour (`src/data/world.ts`), so the game's shadow, one ramp step down, matches. Base (shadow): Cabbagetown grey (slate), High Park tan (brown), Distillery District dslate (navy), Kensington Market stone (dstone), The Beaches cream (tan), Yonge Street shale (coal). Every road sprite's light rim holds on shale at least as well as on dslate.
-- The four lane dividers sit at x = 64k−1, 2px wide, one look per zone. Kensington Market paints each divider its own dark colour (`LANE_PAINT` in `roads.ts`: dbrick, navy, fir, plum), each holding 3:1 on its stone, none of them gold, amber or orange, which read as coins.
+- The only lines along the road are a zone's lane marks, so nothing else reads as an extra lane. Streets (Cabbagetown, Kensington Market, Yonge Street) have four lane dividers at x = 64k−1, 2px wide, one look per zone. Kensington Market paints each divider its own dark colour (`LANE_PAINT` in `roads.ts`: dbrick, navy, fir, plum), each holding 3:1 on its stone, none of them gold, amber or orange, which read as coins.
+- High Park is a path: no dividers, and one foot-worn track down the centre of each lane (x about 32 + 64k), ragged and broken, never painted. The Beaches (sand) and the Distillery District (brick in staggered courses) have no lane marks.
 - Curbs and verges stay inside the outer 5 to 8px of the strip, clear of the 8px each side of a 48px sprite in its lane.
 - Every zone has a start strip: a neutral cross street (near curb, asphalt with a zebra, far curb) on rows 20 to 63 and the zone's strip on rows 0 to 19, so it follows any zone at a fork.
 - The rows from the road's far edge down to about y 214 sample the strip shrunk 4×, so lane dashes and texture along the road repeat every 8 rows or more, lines across the road are at least 2 rows tall and low in contrast, fine detail runs along the road, and small texture is spaced irregularly.
 - Texture on the road is sparse grit of 2px or more, with no single-pixel specks and no grit lighter than a pale road (Cabbagetown's grey): either shimmers as the road scrolls and competes with the road objects.
 - Leaves on the road are never gold, amber or orange, which read as the tip coin: Cabbagetown's are green (moss, olive, dolive).
-- Joints and seams across the road repeat every 32 rows (`SEAM_PERIOD` in `roads.ts`) or not at all: the road scrolls up to 11 px a frame at 30 fps, and a shorter period strobes, its motion seeming to stall or reverse. Paving with short joints lays them along the road, each column's joints at its own row.
+- Joints and seams across the road repeat every 32 rows (`SEAM_PERIOD` in `roads.ts`) or not at all: the road scrolls up to 11 px a frame at 30 fps, and a shorter period strobes, its motion seeming to stall or reverse. Paving with joints across the road staggers its joints along it, so none runs past one course.
 
 ### Verges
 

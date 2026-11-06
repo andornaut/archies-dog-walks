@@ -1248,7 +1248,8 @@ class ZoneView extends Art {
     this.strip = g.px.map((row) => [...row]);
     lines(g);
     // each of the stub's dividers takes its strip line's colour, solid or dashed as the strip's are;
-    // a strip with no lines (High Park's path) leaves the stub without them
+    // a strip with no lines (High Park's path, The Beaches' sand, the Distillery District's brick) leaves
+    // the stub without them
     const marked = roads.DIVIDERS.map((x) => {
       const m: string[] = [];
       for (let y = 0; y < roads.H; y++) {

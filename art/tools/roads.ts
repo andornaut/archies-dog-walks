@@ -10,11 +10,18 @@
 //                    strip, the start strip, then this zone's strip.
 //
 // Each strip keeps its zone's road colour (the game data's roadColour) as the base, so
-// the game's shadows (one ramp step darker) still match. The four lane dividers sit
-// at x = 64k-1 (2px wide) and share one look per zone (Kensington Market's are
-// painted a colour each), so lane edges stay readable at speed; the outer 5 to 8 px
-// of each side is a curb or verge, which an outer lane's 56px sprite (4 px in from
-// its 64px lane's edge) overlaps by up to 4 px.
+// the game's shadows (one ramp step darker) still match. The outer 5 to 8 px of each side
+// is a curb or verge, which an outer lane's 56px sprite (4 px in from its 64px lane's
+// edge) overlaps by up to 4 px. The only lines along the road are a zone's lane marks,
+// so nothing else reads as an extra lane:
+//
+// Streets      Cabbagetown, Kensington Market and Yonge Street: four lane dividers at
+//              x = 64k-1 (2px wide), one look per zone (Kensington Market's painted a
+//              colour each), so lane edges stay readable at speed.
+// Path         High Park: no dividers; one foot-worn track down the centre of each of
+//              the five lanes (x about 32 + 64k), ragged and broken, never painted.
+// Unmarked     The Beaches: sand with ripples and damp patches, no lines along it.
+//              Distillery District: brick in staggered courses, no lane marks.
 //
 // Every texture draws from game-kit's randomStream, one stream per strip named after it, so a
 // build is the same on every run.
@@ -24,13 +31,7 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 
 import { rgb } from "@andornaut/art-kit/colour";
-import {
-  type Random,
-  randomInt,
-  randomPick,
-  randomStream,
-  shuffled,
-} from "@andornaut/game-kit/random";
+import { type Random, randomInt, randomPick, randomStream } from "@andornaut/game-kit/random";
 
 import { dk, Grid, PALETTE64, PREVIEW_BACKGROUND, rgbPng, run, toImage } from "./pixel.ts";
 
@@ -60,19 +61,6 @@ function stream(name: string): Random {
 // An integer in lo..hi, both included.
 function randint(rnd: Random, lo: number, hi: number): number {
   return randomInt(rnd, lo, hi + 1);
-}
-
-// k distinct items in a random order.
-function sample<T>(rnd: Random, items: readonly T[], k: number): T[] {
-  return shuffled(rnd, items).slice(0, k);
-}
-
-function range(start: number, stop: number, step = 1): number[] {
-  const out: number[] = [];
-  for (let v = start; v < stop; v += step) {
-    out.push(v);
-  }
-  return out;
 }
 
 // ---------- drawing ----------
@@ -186,8 +174,8 @@ function meander(
   }
 }
 
-// High Park's path has no lines between its lanes: a dirt path, unlike the streets.
-function highParkLines(): void {}
+// A path's or unmarked paving's lane marks: none.
+function noLines(): void {}
 
 // Pedestrian Sunday's painted lane lines, one colour per divider, left to right: dark paint, each holding 3:1
 // or more on Kensington Market's stone asphalt, and none gold, amber or orange, which read as coins.
@@ -255,13 +243,6 @@ function cabbagetownLines(g: Grid): void {
     for (let i = 0; i < 2; i++) {
       g.p(x + randomInt(rnd, 0, 2), y + randomInt(rnd, 1, 11), "lgrey");
     }
-  }
-}
-
-function beachesLines(g: Grid): void {
-  for (const x of DIVIDERS) {
-    // dbrown (5.9:1 on the boards), 20 rows in 64: a longer rhythm than High Park's
-    g.rect(x, 6, 2, 20, "dbrown");
   }
 }
 
@@ -365,31 +346,51 @@ function root(g: Grid, rnd: Random, x0: number, y0: number, dx: number, steps: n
   }
 }
 
-// Packed earth on High Park's trail: skin1 worn patches down the middle of each lane where feet go,
-// scuffed cream; skin2 damp patches and 2px grit; roots creeping in from the undergrowth; stones,
-// needles and fallen leaves, with no single-pixel specks; ragged pine undergrowth along both edges with grass
-// spilling onto the dirt.
+// Packed earth on High Park's trail: one worn skin1 track down the centre of each lane where feet go,
+// its edges ragged and its width wobbling, broken by stretches of bare earth, with cream scuffs; skin2
+// damp patches on the tracks and 2px grit; roots creeping in from the undergrowth; stones, needles and
+// fallen leaves, with no single-pixel specks; ragged pine undergrowth along both edges with grass
+// spilling onto the dirt. Nothing between the lanes runs along the road.
 function highParkGround(g: Grid): void {
   const rnd = stream("road-high-park");
   g.rect(0, 0, W, H, "tan");
-  // worn ground down each lane where feet go: skin1 patches chained along the lane's middle, drifting
-  // side to side, overlapping or leaving a gap, so the lane wears unevenly rather than in a stripe;
-  // swept clean of the grit around them but for a cream scuff
   const worn = new Grid(W, H);
   for (let k = 0; k < W / LANE; k++) {
     const cx = k * LANE + LANE / 2;
-    let drift = randint(rnd, -3, 3);
+    // the track's centre drifts a pixel or two and its width wobbles, both repeating every 64 rows
+    const drift = meander(rnd, -2, 2, [6, 12]);
+    const seed = rnd() * 2 * Math.PI;
+    // one or two bare breaks, 4 to 9 rows each, where the earth shows through but for a few worn tufts
+    const bare = new Set<number>();
+    const breaks = randint(rnd, 1, 2);
     const y0 = randomInt(rnd, 0, H);
-    let y = y0;
-    while (y < y0 + H - 6) {
-      const w = randint(rnd, 7, 13);
-      const h = randint(rnd, 14, 26);
-      oval(worn, rnd, cx + drift - Math.floor(w / 2), y, w, h, "skin1");
-      const sx = cx + drift + randint(rnd, -2, 1);
-      const sy = y + randint(rnd, 3, h - 6);
-      wrect(worn, sx, sy, 1, randint(rnd, 2, 3), "cream");
-      drift = Math.max(-8, Math.min(8, drift + randint(rnd, -4, 4)));
-      y += randint(rnd, Math.floor(h / 2), h + 8);
+    for (let b = 0; b < breaks; b++) {
+      const at = y0 + b * (H / 2) + randint(rnd, -6, 6);
+      const len = randint(rnd, 4, 9);
+      for (let j = 0; j < len; j++) {
+        bare.add((at + j) % H);
+      }
+    }
+    for (let y = 0; y < H; y++) {
+      const half = wave(y, seed, 2.5, 1.2);
+      const c = cx + drift[y]!;
+      // each edge ragged by a pixel, row by row
+      const left = c - Math.floor(half) - randomPick(rnd, [0, 0, 1]);
+      const right = c + Math.ceil(half) + randomPick(rnd, [0, 0, 1]);
+      if (bare.has(y)) {
+        if (rnd() < 0.5) {
+          wrect(worn, c + randint(rnd, -2, 1), y, 2, 1, "skin1");
+        }
+        continue;
+      }
+      wrect(worn, left, y, right - left, 1, "skin1");
+    }
+    // cream scuffs where the wear is freshest
+    for (let i = 0; i < 3; i++) {
+      const y = randomInt(rnd, 0, H);
+      if (!bare.has(y)) {
+        wrect(worn, cx + drift[y]! + randint(rnd, -1, 0), y, 1, randint(rnd, 2, 3), "cream");
+      }
     }
   }
   specks(g, rnd, 30, "skin2", 9, W - 9, 1);
@@ -415,12 +416,12 @@ function highParkGround(g: Grid): void {
       x += run;
     }
   }
-  // damp patches, long along the road so each looks round in the view, under 8 columns wide so none
-  // reads as a seam across the road, with a brown wet spot
-  for (const [x, y] of scatter(rnd, 9, 10, W - 16, 16, {
-    ok: (px) => (px + 2) % LANE > 4 && (px + 2) % LANE < 54,
+  // damp patches on the tracks, long along the road so each looks round in the view, under 8 columns
+  // wide (4 or 5, a ragged row 7 at most) so none reads as a seam across the road, with a brown wet spot
+  for (const [x, y] of scatter(rnd, 7, 10, W - 16, 16, {
+    ok: (px) => Math.abs(((px + 3) % LANE) - LANE / 2) <= 3,
   })) {
-    const w = randint(rnd, 4, 7);
+    const w = randint(rnd, 4, 5);
     const h = randint(rnd, 6, 12);
     oval(g, rnd, x, y, w, h, "skin2");
     wp(g, x + Math.floor(w / 2), y + Math.floor(h / 2), "brown");
@@ -492,39 +493,43 @@ function highParkGround(g: Grid): void {
   }
 }
 
-// Dslate cobbles laid long along the road: columns 16 wide, each cobble 30 rows long over a 2-row navy
-// joint, so a column's joints repeat every 32 rows (SEAM_PERIOD); each column starts its cobbles at its own
-// multiple of 4, never within 4 rows of its neighbour's, so no joint runs across the road. Each cobble's
-// corners are rounded off in navy and its top left glints slate; 1px navy joints between the columns, a
-// navy pit in some cobbles; brick gutters along both sides.
+// Dslate brick in courses across the road, each 30 rows over a 2-row navy joint, so the joints across
+// repeat every 32 rows (SEAM_PERIOD); each course's bricks are BRICK wide over a 1px navy joint along the
+// road, the next course's staggered half a brick, so no joint along the road runs past one course and
+// none reads as a lane line. Each brick's corners are rounded off in navy and its top left glints slate,
+// a navy pit in some; brick gutters along both sides.
+const BRICK = 40;
+
 function distilleryGround(g: Grid): void {
   const rnd = stream("road-distillery-district");
   g.rect(0, 0, W, H, "dslate");
-  let phase = 0;
-  for (let x = 0; x < W; x += 16) {
-    const prev = phase;
-    phase = randomPick(
-      rnd,
-      range(0, SEAM_PERIOD, 4).filter(
-        (p) => Math.min(Math.abs(p - prev), SEAM_PERIOD - Math.abs(p - prev)) > 4,
-      ),
-    );
-    g.rect(x + 15, 0, 1, H, "navy");
-    for (let y = phase; y < phase + H; y += SEAM_PERIOD) {
-      wrect(g, x, y + SEAM_PERIOD - 2, 15, 2, "navy");
+  const offset = randomInt(rnd, 0, BRICK);
+  for (let course = 0; course < H / SEAM_PERIOD; course++) {
+    const y = course * SEAM_PERIOD;
+    g.rect(0, y + SEAM_PERIOD - 2, W, 2, "navy");
+    const shift = offset + (course % 2) * (BRICK / 2);
+    for (let x = shift - BRICK; x < W; x += BRICK) {
+      const x0 = Math.max(0, x);
+      const x1 = Math.min(W, x + BRICK - 1);
+      if (x + BRICK - 1 < W) {
+        g.rect(x + BRICK - 1, y, 1, SEAM_PERIOD - 2, "navy");
+      }
       for (const [cx, cy] of [
         [x, y],
-        [x + 14, y],
+        [x + BRICK - 2, y],
         [x, y + SEAM_PERIOD - 3],
-        [x + 14, y + SEAM_PERIOD - 3],
+        [x + BRICK - 2, y + SEAM_PERIOD - 3],
       ] as const) {
-        wp(g, cx, cy, "navy");
+        if (cx >= 0 && cx < W) {
+          g.p(cx, cy, "navy");
+        }
       }
-      wrect(g, x + 1, y + 1, 3, 1, "slate");
-      wp(g, x + 1, y + 2, "slate");
-      if (rnd() < 0.5) {
-        const px = x + randomInt(rnd, 4, 13);
-        wp(g, px, y + randomInt(rnd, 4, 26), "navy");
+      if (x >= 0) {
+        g.rect(x + 1, y + 1, 3, 1, "slate");
+        g.p(x + 1, y + 2, "slate");
+      }
+      if (x1 - x0 > 8 && rnd() < 0.5) {
+        g.p(randomInt(rnd, x0 + 4, x1 - 4), y + randomInt(rnd, 4, 26), "navy");
       }
     }
   }
@@ -541,34 +546,12 @@ function distilleryGround(g: Grid): void {
   g.rect(0, 0, 1, H, "rust");
 }
 
-// A pale granite curbstone on each lane line every 64 rows: lgrey, 22 rows long, a stone edge.
-function distilleryLines(g: Grid): void {
-  for (const x of DIVIDERS) {
-    g.rect(x, 0, 2, 22, "lgrey");
-    g.rect(x + 1, 0, 1, 22, "stone");
-  }
-}
-
-// Worn stone asphalt with no joints across it: long dstone patches, 2px or more even in the far rows, which
-// sample the strip shrunk 4x; sparse 2px dstone grit and irregular dstone cracks along the road; dstone gutters
-// on the outer 4 columns inside a coal seam, a coal joint every 32 rows.
+// Worn stone asphalt with no joints across it: sparse 2px dstone grit and short irregular dstone cracks,
+// nothing long enough along the road to read beside the painted dividers as a lane line; dstone gutters on
+// the outer 4 columns inside a coal seam, a coal joint every 32 rows.
 function kensingtonGround(g: Grid): void {
   const rnd = stream("road-kensington-market");
   g.rect(0, 0, W, H, "stone");
-  // patches 4 or 5 wide (7 at most where a ragged row spreads), so none reads as a seam across the road, and
-  // 14 to 22 long, so the far rows still show them 2px or more; one to a lane and half of the strip
-  const bands = [
-    [18, 44],
-    [50, 76],
-  ] as const;
-  const slots = range(0, W / LANE).flatMap((lane) => [0, 1].map((band) => [lane, band] as const));
-  for (const [lane, band] of sample(rnd, slots, 6)) {
-    const h = randint(rnd, 14, 22);
-    const w = randint(rnd, 4, 5);
-    const [lo, hi] = bands[band]!;
-    const x = lane * LANE + randint(rnd, 10, LANE - 18);
-    oval(g, rnd, x, randint(rnd, lo, hi - h), w, h, "dstone");
-  }
   grit(g, rnd, 24, ["dstone"]);
   cracks(
     g,
@@ -595,39 +578,30 @@ function kensingtonGround(g: Grid): void {
   }
 }
 
-// A boardwalk, weathered: some boards skin1, sand drifted in skin1 along the edge beams, the
-// beams driftwood.
+// Sand, its base cream: ripples across the road in short tan arcs over a skin1 shadow, each under 8
+// columns wide so none reads as a seam across the road and spaced irregularly; damp skin1 patches (4 or
+// 5 wide, a ragged row 7 at most); 2px tan and driftwood grit (shell and pebble); nothing running along
+// the road; sand drifted in skin1 against driftwood edging along both sides.
 function beachesGround(g: Grid): void {
   const rnd = stream("road-the-beaches");
   g.rect(0, 0, W, H, "cream");
-  const boards = range(0, W, 16);
-  let tinted = false;
-  for (const x0 of boards) {
-    tinted = !tinted && rnd() < 0.05;
-    if (tinted) {
-      g.rect(x0, 0, 15, H, "skin1");
+  for (const [x, y] of scatter(rnd, 8, 10, W - 18, 18)) {
+    oval(g, rnd, x, y, randint(rnd, 4, 5), randint(rnd, 5, 9), "skin1");
+  }
+  for (const [x, y] of scatter(rnd, 46, 7, W - 13, 8)) {
+    // a ripple: 4 to 7 columns, bowed a row up or down at its middle, shaded on its near side
+    const w = randint(rnd, 4, 7);
+    const bow = randomPick(rnd, [-1, 1]);
+    for (let i = 0; i < w; i++) {
+      const dy = i > 0 && i < w - 1 ? bow : 0;
+      wp(g, x + i, y + dy, "tan");
+      if (rnd() < 0.7) {
+        wp(g, x + i, y + dy + 1, "skin1");
+      }
     }
-    const grains = randomInt(rnd, 1, 3);
-    for (let i = 0; i < grains; i++) {
-      const x = x0 + randomInt(rnd, 1, 14);
-      const y = randomInt(rnd, 0, H);
-      wrect(g, x, y, 1, randomInt(rnd, 5, 12), "tan");
-    }
   }
-  for (const x0 of boards.slice(1)) {
-    g.rect(x0 - 1, 0, 1, H, "tan");
-  }
-  for (const x0 of boards) {
-    const y = randomInt(rnd, 0, H);
-    wrect(g, x0, y, 15, 2, "tan");
-    wp(g, x0 + 3, y - 2, "driftwood");
-    wp(g, x0 + 11, y + 3, "driftwood");
-  }
-  for (const [x, y] of scatter(rnd, 7, 8, W - 8, 20, { ok: (px) => px % 16 < 13 })) {
-    wrect(g, x, y, 2, 2, "tan");
-    wp(g, x + 1, y + 1, "brown");
-  }
-  // sand drifted onto the boards beside each beam, 1 to 3 columns, wobbling down the strip
+  grit(g, rnd, 14, ["tan", "tan", "driftwood"]);
+  // sand drifted against the edging, 1 to 3 columns, wobbling down the strip
   for (let y = 0; y < H; y++) {
     for (const [side, seed] of [
       [0, 0.8],
@@ -648,9 +622,9 @@ function beachesGround(g: Grid): void {
   }
 }
 
-// Dark concrete: shale slabs a lane wide and 32 rows long, their 2-row expansion joints in coal
-// across the road and 1px along it under the lane lines, sparse ash and coal grit, a few coal cracks;
-// dstone granite gutters, their joints in shale every 32 rows.
+// Dark concrete: shale slabs 32 rows long, their 2-row coal expansion joints across the road only, so
+// the only lines along it are the lane dividers; sparse ash and coal grit, a few coal cracks; dstone granite
+// gutters, their joints in shale every 32 rows.
 function yongeGround(g: Grid): void {
   const rnd = stream("road-yonge-street");
   g.rect(0, 0, W, H, "shale");
@@ -667,9 +641,6 @@ function yongeGround(g: Grid): void {
   );
   for (const y of [14, 46]) {
     g.rect(0, y, W, 2, "coal");
-  }
-  for (const x of DIVIDERS) {
-    g.rect(x, 0, 1, H, "coal");
   }
   for (const [x0, line] of [
     [0, 5],
@@ -698,10 +669,10 @@ type Draw = (g: Grid) => void;
 // Each zone's ground and lane lines, easiest to hardest, as the fork cards sort them.
 export const ZONES: ReadonlyMap<string, readonly [ground: Draw, lines: Draw]> = new Map([
   ["cabbagetown", [cabbagetownGround, cabbagetownLines]],
-  ["high-park", [highParkGround, highParkLines]],
-  ["distillery-district", [distilleryGround, distilleryLines]],
+  ["high-park", [highParkGround, noLines]],
+  ["distillery-district", [distilleryGround, noLines]],
   ["kensington-market", [kensingtonGround, kensingtonLines]],
-  ["the-beaches", [beachesGround, beachesLines]],
+  ["the-beaches", [beachesGround, noLines]],
   ["yonge-street", [yongeGround, yongeLines]],
 ]);
 

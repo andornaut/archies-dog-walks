@@ -2364,7 +2364,6 @@ function distillery(): Canvas {
   // no centre line
   cross(cv, () => "dslate", "brick", paving, { curb: null });
   street(cv, verge("distillery-district", road));
-  lanes(cv, "lgrey", { dash: [22, 64], edge: "stone" });
   return cv;
 }
 
@@ -3085,13 +3084,10 @@ function beaches(): Canvas {
 
   yard(cv, BASE, FAR_WALK, sand);
 
-  const boards: RoadPaint = (x, _z, _span, px, py) => {
-    const a = Math.abs(x);
-    if (a >= ROAD - 4) {
+  // the road is sand between driftwood edging, as its strip, with no lane marks
+  const beach: RoadPaint = (x, _z, _span, px, py) => {
+    if (Math.abs(x) >= ROAD - 4) {
       return "driftwood";
-    }
-    if ((a % 16) * scale(py + 0.5) < 1) {
-      return "tan";
     }
     return hashed(px, py, 27) ? "tan" : "cream";
   };
@@ -3107,8 +3103,7 @@ function beaches(): Canvas {
 
   cross(cv, crossBoards, "tan", sand, { curb: null });
   crossLine(cv, "dbrown", { dash: [10, 64] });
-  street(cv, verge("the-beaches", boards));
-  lanes(cv, "dbrown", { dash: [20, 64] });
+  street(cv, verge("the-beaches", beach));
   return cv;
 }
 
