@@ -719,13 +719,15 @@ const LEAF_BAG_IDLE: readonly [readonly number[], number] = [[0, 0, 1, 2], 400];
 // on it, walnut inside.
 const PAPER = { fill: "skin2", inside: "walnut", light: "skin1", print: "dgreen", shade: "brown" };
 // The bag on its side, in layout pixels: its closed end at column BAG_X0, the mouth's fold at
-// BAG_X1, the top edge on row BAG_TOP at the ends sagging BAG_SAG in the middle; the mouth's lip
-// centred on BAG_MOUTH with radii BAG_LIP, flaring past the body, round a dark hole BAG_HOLE.
-const BAG_X0 = 3;
-const BAG_X1 = 24;
-const BAG_TOP = 26;
+// BAG_X1, the top edge on row BAG_TOP at the ends sagging BAG_SAG in the middle and its bottom on
+// row BAG_FLOOR, inside the SIZE frame so its outline closes; the mouth's lip centred on BAG_MOUTH
+// with radii BAG_LIP, flaring past the body to the floor, round a dark hole BAG_HOLE.
+const BAG_X0 = 1;
+const BAG_X1 = 22;
+const BAG_TOP = 22;
+const BAG_FLOOR = 38;
 const BAG_SAG = 1.5;
-const BAG_MOUTH: Point = [25, 32.5];
+const BAG_MOUTH: Point = [23, 28.5];
 const BAG_LIP: Point = [5, 9.5];
 const BAG_HOLE: Point = [3.2, 7.5];
 // The leaves' tones, [fill, light, shade]: crimson, red and brown, with no gold, amber or orange so
@@ -791,11 +793,11 @@ type Spill = readonly [
   flip: boolean,
 ];
 const BAG_SPILL: readonly Spill[] = [
-  [25.5, 32, "maple", 1, 0, false],
-  [31, 35.5, "oval", 2, 3, false],
-  [36.5, 34, "maple", 0, 0, true],
-  [27.5, 38.5, "oak", 2, 1, false],
-  [34.5, 38.5, "oak", 1, 1, false],
+  [23.5, 28, "maple", 1, 0, false],
+  [29, 31.5, "oval", 2, 3, false],
+  [34.5, 30, "maple", 0, 0, true],
+  [25.5, 34.5, "oak", 2, 1, false],
+  [32.5, 34.5, "oak", 1, 1, false],
 ];
 const BAG_LIFTED = 2;
 
@@ -936,14 +938,14 @@ export function leafBag(lift = 0): Drawable {
   const half = (BAG_X1 - BAG_X0) / 2;
   const top = (x: number): number => BAG_TOP + BAG_SAG * (1 - ((x - mid) / half) ** 2);
   const end = (): number => BAG_TOP + 1;
-  const floor = (): number => SIZE;
+  const floor = (): number => BAG_FLOOR;
   b.span(BAG_X0, BAG_X0 + 1, end, floor, PAPER.fill);
   b.span(BAG_X0 + 1, BAG_X1, top, floor, PAPER.fill);
   b.span(BAG_X0 + 1, BAG_X1, top, (x) => top(x) + 1.5, PAPER.light);
   b.span(BAG_X0, BAG_X0 + 2, end, floor, PAPER.light);
-  b.span(BAG_X0 + 1, BAG_X1, () => SIZE - 3, floor, PAPER.shade);
+  b.span(BAG_X0 + 1, BAG_X1, () => BAG_FLOOR - 3, floor, PAPER.shade);
   b.span(BAG_X1 - 6, BAG_X1 - 4, top, floor, PAPER.shade);
-  b.stamp(PRINT, [11, 33], [PAPER.print, PAPER.print, PAPER.print], { leaf: false });
+  b.stamp(PRINT, [9, 29], [PAPER.print, PAPER.print, PAPER.print], { leaf: false });
   b.oval(BAG_MOUTH, BAG_LIP, PAPER.light);
   b.oval([BAG_MOUTH[0] + 0.5, BAG_MOUTH[1]], BAG_HOLE, PAPER.inside);
   BAG_SPILL.forEach(([x, y, shape, tone, turn, flip], i) => {

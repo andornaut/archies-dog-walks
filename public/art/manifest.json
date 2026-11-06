@@ -7333,8 +7333,8 @@
       "png": "sprites/leaf-bag.png",
       "json": "sprites/leaf-bag.json",
       "anchor": {
-        "feetY": 47,
-        "opaqueWidth": 45
+        "feetY": 46,
+        "opaqueWidth": 47
       }
     },
     {
@@ -7343,7 +7343,7 @@
       "json": "sprites/leaf-bag@50.json",
       "anchor": {
         "feetY": 23,
-        "opaqueWidth": 23
+        "opaqueWidth": 24
       }
     },
     {
@@ -7352,7 +7352,7 @@
       "json": "sprites/leaf-bag@56.json",
       "anchor": {
         "feetY": 26,
-        "opaqueWidth": 25
+        "opaqueWidth": 26
       }
     },
     {
@@ -7361,7 +7361,7 @@
       "json": "sprites/leaf-bag@62.json",
       "anchor": {
         "feetY": 29,
-        "opaqueWidth": 28
+        "opaqueWidth": 29
       }
     },
     {
@@ -7370,7 +7370,7 @@
       "json": "sprites/leaf-bag@69.json",
       "anchor": {
         "feetY": 32,
-        "opaqueWidth": 31
+        "opaqueWidth": 32
       }
     },
     {
@@ -7379,7 +7379,7 @@
       "json": "sprites/leaf-bag@75.json",
       "anchor": {
         "feetY": 35,
-        "opaqueWidth": 34
+        "opaqueWidth": 35
       }
     },
     {
@@ -7388,7 +7388,7 @@
       "json": "sprites/leaf-bag@81.json",
       "anchor": {
         "feetY": 38,
-        "opaqueWidth": 37
+        "opaqueWidth": 38
       }
     },
     {
@@ -7397,7 +7397,7 @@
       "json": "sprites/leaf-bag@88.json",
       "anchor": {
         "feetY": 41,
-        "opaqueWidth": 39
+        "opaqueWidth": 41
       }
     },
     {
@@ -7406,7 +7406,7 @@
       "json": "sprites/leaf-bag@94.json",
       "anchor": {
         "feetY": 44,
-        "opaqueWidth": 42
+        "opaqueWidth": 44
       }
     },
     {
