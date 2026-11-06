@@ -34,7 +34,7 @@ export interface PauseOverlay {
 
 // menu is the pause menu, its note saying what End walk keeps; homeQuestion asks whether to
 // end the walk, for the pause menu's and a fork card's End walk, its note saying what
-// going home gives up.
+// going home keeps and gives up.
 export type PauseSceneData = {
   onHeadHome: () => void;
   onResume: () => void;
@@ -45,6 +45,7 @@ export type PauseSceneData = {
 
 // The Home question's note lines' colours, by what they say.
 const NOTE_COLOURS: Readonly<Record<HomeNoteLine["kind"], number>> = {
+  keep: PALETTE.plum,
   lose: PALETTE.darkRed,
   zonesLeft: PALETTE.plum,
 };

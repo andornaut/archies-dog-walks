@@ -36,7 +36,7 @@ describe("homeQuestionNote", () => {
     ["card costs spent below the last zone's end money", { buddy: 3 }, 1, zoneEnd - tip],
     ["a lone dog in the last zone, with tips earned", { buddy: 4 }, zones - 1, zoneEnd + tip],
   ] satisfies [string, Slots, number, number][])(
-    "states what the zone has earned and the zones left that going home gives up: %s",
+    "states what going home keeps, then what the zone has earned and the zones left that it gives up: %s",
     (_name, slots, zoneIndex, money) => {
       const run = testState(slots, { ...holding(money), route, zoneIndex });
       const walking = Object.values(slots).filter((hearts) => hearts !== "fired").length;
@@ -47,6 +47,7 @@ describe("homeQuestionNote", () => {
         zone: currentZone(gameData, run).name,
       };
       expect(homeQuestionNote(gameData, run)).toEqual([
+        { kind: "keep", text: pauseNote(gameData, run) },
         { kind: "lose", text: fillNames(words.lose, named) },
         ...(left > 0
           ? [{ kind: "zonesLeft", text: fillNames(words.zonesLeft, { count: String(left) }) }]
@@ -58,11 +59,16 @@ describe("homeQuestionNote", () => {
   it.each([
     ["a full pack", { ginger: 5 }],
     ["an owner who fired you", { ginger: 5, kilo: "fired" }],
-  ] satisfies [string, Slots][])("gives up nothing at a fork, with %s", (_name, slots) => {
-    const fork = { ...holding(zoneEnd), route: route.slice(0, 1), zoneIndex: 1 };
-    const lines = homeQuestionNote(gameData, testState(slots, fork));
-    expect(lines.filter(({ kind }) => kind === "lose")).toEqual([]);
-  });
+  ] satisfies [string, Slots][])(
+    "states what going home keeps and gives up nothing at a fork, with %s",
+    (_name, slots) => {
+      const fork = { ...holding(zoneEnd), route: route.slice(0, 1), zoneIndex: 1 };
+      const run = testState(slots, fork);
+      const lines = homeQuestionNote(gameData, run);
+      expect(lines[0]).toEqual({ kind: "keep", text: pauseNote(gameData, run) });
+      expect(lines.filter(({ kind }) => kind === "lose")).toEqual([]);
+    },
+  );
 });
 
 describe("pauseNote", () => {

@@ -6,12 +6,12 @@ import { MENU_TEXT_FIELDS } from "../home/menuText.ts";
 import { currentZone, walkLength } from "../rules/route.ts";
 import { payZone, walkEarnings } from "../rules/run.ts";
 import type { RunState } from "../state/runState.ts";
-import { addCents, type Cents } from "../units.ts";
+import { addCents, type Cents, cents } from "../units.ts";
 import { RUN_TEXT_FIELDS } from "./runText.ts";
 
-// One line of the Home question's note, by what it says: lose (drawn red) or zonesLeft.
+// One line of the Home question's note, by what it says: keep, lose (drawn red) or zonesLeft.
 export interface HomeNoteLine {
-  readonly kind: "lose" | "zonesLeft";
+  readonly kind: "keep" | "lose" | "zonesLeft";
   readonly text: string;
 }
 
@@ -40,19 +40,21 @@ export function pauseNote(data: Pick<GameData, "menuText">, run: RunState): stri
     : fillLine(fields, words, "note", { cash, kept: dollarText(banked) });
 }
 
-// What heading home now gives up (headHomeLoss), with no line at a fork. Then the zones left
-// after this one, when any are.
+// How much of the cash heading home keeps, in the pause menu's note's words (pauseNote). Then
+// what it gives up (headHomeLoss), when anything: never at a fork. Then the zones left after
+// this one, when any are.
 export function homeQuestionNote(
-  data: Pick<GameData, "runText" | "tuning" | "world">,
+  data: Pick<GameData, "menuText" | "runText" | "tuning" | "world">,
   run: RunState,
 ): HomeNoteLine[] {
   const fields = RUN_TEXT_FIELDS.homeQuestion;
   const words = data.runText.homeQuestion;
   const fork = atFork(run);
   const left = walkLength(data) - run.zoneIndex - (fork ? 0 : 1);
-  const lines: HomeNoteLine[] = [];
-  if (!fork) {
-    const named = { lost: dollarText(headHomeLoss(data, run)), zone: currentZone(data, run).name };
+  const lines: HomeNoteLine[] = [{ kind: "keep", text: pauseNote(data, run) }];
+  const lost = fork ? cents(0) : headHomeLoss(data, run);
+  if (lost > 0) {
+    const named = { lost: dollarText(lost), zone: currentZone(data, run).name };
     lines.push({ kind: "lose", text: fillLine(fields, words, "lose", named) });
   }
   if (left > 0) {
