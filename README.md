@@ -23,7 +23,6 @@ The project gate is `make check`. Make uses the shared launcher in `tests/contai
 | ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
 | `make build`                                         | Export data, build `dist/`, verify deterministic art, then replace the ignored host `dist/` output     |
 | `make check`                                         | Run lint, test and build in isolated snapshots, without exporting generated files                      |
-| `make check-info`                                    | Print the version 1 JSON gate description                                                              |
 | `make exec COMMAND='npm run format'`                 | Run an explicit writable checkout command; its marker blocks snapshot checks until execution is closed |
 | `make lint`                                          | TypeScript, Prettier, ESLint and Markdownlint                                                          |
 | `make test`                                          | Run the game tests with four workers by default                                                        |
