@@ -1,20 +1,30 @@
-// Whether the page offers the dev tools: the dev panel, its cheats and save edits, a replay log
-// and a URL's run setup. Only a browser tab does; the installed app plays as shipped. Its
-// display mode does not change while it runs, so the page is tested once, on first use.
-import { pageRunsAsApp } from "@andornaut/game-kit/web/pwa/dom/installFlow";
+// Browser tabs offer development tools; installed app windows play as shipped.
+import { runsInAppWindow } from "@andornaut/game-kit/web/pwa/appWindow";
+import { INSTALLED_APP_DISPLAY_QUERY } from "@andornaut/game-kit/web/pwa/backNavigation";
 
 // The global that holds the game when dev=1, for the console and headless checks.
 export const DEV_GAME_GLOBAL = "archiesDogWalksGame";
 
-let on: boolean | undefined;
-
 export function devToolsOn(): boolean {
-  on ??= !pageRunsAsApp(globalThis.window);
-  return on;
+  return !runsInAppWindow(globalThis.window);
 }
 
-// The page's URL search as the game reads it: empty in the installed app, so no link sets a
-// run up there.
+// Recheck restored pages and foregrounded windows as well as display-mode changes.
+export function watchDevTools(listener: (on: boolean) => void): () => void {
+  const mode = window.matchMedia(INSTALLED_APP_DISPLAY_QUERY);
+  const update = () => listener(devToolsOn());
+  mode.addEventListener("change", update);
+  window.addEventListener("pageshow", update);
+  document.addEventListener("visibilitychange", update);
+  update();
+  return () => {
+    mode.removeEventListener("change", update);
+    window.removeEventListener("pageshow", update);
+    document.removeEventListener("visibilitychange", update);
+  };
+}
+
+// Installed app windows read no run setup from their URL.
 export function pageSearch(): string {
   return devToolsOn() ? globalThis.location.search : "";
 }

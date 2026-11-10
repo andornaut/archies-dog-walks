@@ -1,6 +1,6 @@
 // The dev panel: plain HTML under the game canvas. A thin bar that opens a sheet of cheats for
-// a person testing the game. The top section (start and cheats) is staged until Apply; the
-// save cheats below it act at once. The game reaches it only through DevPanelHost, so this
+// a person testing the game. Save-changing actions act at once; run controls are staged until
+// Apply. The game reaches it only through DevPanelHost, so this
 // module needs no Phaser.
 import "./devPanel.css";
 
@@ -21,8 +21,10 @@ import { EARNED_KEYS, earnedRecordFormat, pageSaveStore } from "../save/storage.
 import {
   applyPanel,
   applySaveEdit,
+  CHEAT_GROUPS,
   CHEAT_TOGGLES,
   type Cheats,
+  CHEATS_OFF,
   cheatsInUse,
   decodeCheats,
   decodeSaveEdits,
@@ -44,6 +46,7 @@ import {
   type StartTarget,
 } from "./devPanelModel.ts";
 import { stripDevParams } from "./devStart.ts";
+import { devToolsOn, watchDevTools } from "./devTools.ts";
 import { randomSeed } from "./runSetup.ts";
 
 export interface DevPanelHost {
@@ -95,6 +98,9 @@ async function resetEarned(): Promise<void> {
     console.warn(`Dev panel: earned badges not reset: ${loaded.reason}`);
     return;
   }
+  if (!devToolsOn()) {
+    return;
+  }
   const saved = await store.save(format.fresh());
   if (saved.status !== "saved") {
     console.warn(`Dev panel: earned badges not reset: ${saved.reason}`);
@@ -106,7 +112,7 @@ async function resetEarned(): Promise<void> {
 export async function applyPendingSaveEdits(): Promise<void> {
   const edits = decodeSaveEdits(sessionRead(DEV_SAVE_EDITS_KEY));
   sessionRemove(DEV_SAVE_EDITS_KEY);
-  if (edits.length === 0) {
+  if (!devToolsOn() || edits.length === 0) {
     return;
   }
   try {
@@ -122,6 +128,9 @@ export async function applyPendingSaveEdits(): Promise<void> {
       (save, edit) => applySaveEdit(gameData, newPlayer, edit, save),
       loadedSave(loaded, newPlayerOnDevice),
     );
+    if (!devToolsOn()) {
+      return;
+    }
     const saved = await store.save(edited);
     if (saved.status !== "saved") {
       console.warn(`Dev panel: save edits not applied: ${saved.reason}`);
@@ -137,6 +146,9 @@ export async function applyPendingSaveEdits(): Promise<void> {
 // Queues the edit for the next boot and loads the start screen, without the URL's run
 // overrides so no walk starts.
 function editSave(edit: SaveEdit): void {
+  if (!devToolsOn()) {
+    return;
+  }
   const queued = decodeSaveEdits(sessionRead(DEV_SAVE_EDITS_KEY));
   if (!sessionWrite(DEV_SAVE_EDITS_KEY, encodeSaveEdits([...queued, edit]))) {
     console.warn("Dev panel: sessionStorage unavailable; the save is unchanged");
@@ -164,6 +176,9 @@ function startSelect(): HTMLSelectElement {
 // Writes the cheats for the tab and loads the chosen start. With no cheat in use, nothing is
 // left in sessionStorage, as a new tab starts.
 function applyAndGo(state: PanelState): void {
+  if (!devToolsOn()) {
+    return;
+  }
   const href = globalThis.location.href;
   const { cheats, url } = applyPanel(gameData, href, randomSeed(), state);
   if (cheatsInUse(cheats)) {
@@ -178,13 +193,13 @@ function applyAndGo(state: PanelState): void {
   }
 }
 
-export function mountDevPanel(host: DevPanelHost, container: HTMLElement | null): void {
+export function mountDevPanel(host: DevPanelHost, container: HTMLElement | null): () => void {
   if (container === null) {
     console.warn("Dev panel: the page has no #dev-panel element");
-    return;
+    return () => {};
   }
   let state = openPanel(decodeCheats(sessionRead(DEV_CHEATS_KEY)));
-  host.setCheats(state.applied);
+  host.setCheats(devToolsOn() ? state.applied : CHEATS_OFF);
 
   const sheet = el("div", { className: "dev-sheet", hidden: true, id: "dev-sheet" });
   sheet.setAttribute("role", "dialog");
@@ -209,13 +224,16 @@ export function mountDevPanel(host: DevPanelHost, container: HTMLElement | null)
     barLabel.textContent = cheatsInUse(applied) ? `Dev ${arrow} cheats on` : `Dev ${arrow}`;
   };
   const stage = (action: PanelAction) => {
+    if (!devToolsOn()) {
+      return;
+    }
     state = stagePanel(action, state);
     render();
   };
   // Visibility does not change staged edits; only Cancel discards them.
   const setOpen = (open: boolean) => {
-    sheet.hidden = !open;
-    bar.setAttribute("aria-expanded", String(open));
+    sheet.hidden = !(open && devToolsOn());
+    bar.setAttribute("aria-expanded", String(!sheet.hidden));
     render();
   };
 
@@ -260,7 +278,7 @@ export function mountDevPanel(host: DevPanelHost, container: HTMLElement | null)
   const reset = button(
     "Reset save",
     () => {
-      if (globalThis.confirm("Reset save to a new player?")) {
+      if (devToolsOn() && globalThis.confirm("Reset save to a new player?")) {
         editSave(RESET_SAVE);
       }
     },
@@ -292,16 +310,30 @@ export function mountDevPanel(host: DevPanelHost, container: HTMLElement | null)
   });
 
   sheet.append(
-    el("h2", { textContent: "Changes your walks" }),
+    el("h2", { textContent: CHEAT_GROUPS.save.label }),
+    el("p", { className: "dev-note", textContent: CHEAT_GROUPS.save.description }),
+    el("div", { className: "dev-save" }, ...saveCheats, reset),
+    el("hr", { className: "dev-divider" }),
+    el("h2", { textContent: CHEAT_GROUPS.run.label }),
+    el("p", { className: "dev-note", textContent: CHEAT_GROUPS.run.description }),
     controls,
     el("div", { className: "dev-actions" }, cancel, apply),
-    el("hr", { className: "dev-divider" }),
-    el("h2", { textContent: "Changes your save" }),
-    el("div", { className: "dev-save" }, ...saveCheats, reset),
     persistence,
   );
   container.append(bar, sheet);
-  // The page starts it hidden, for the installed app, which mounts no panel.
-  container.hidden = false;
   setOpen(false);
+  const stopWatching = watchDevTools((on) => {
+    container.hidden = !on;
+    host.setCheats(on ? state.applied : CHEATS_OFF);
+    if (!on) {
+      setOpen(false);
+    }
+  });
+  return () => {
+    stopWatching();
+    host.setCheats(CHEATS_OFF);
+    container.hidden = true;
+    bar.remove();
+    sheet.remove();
+  };
 }

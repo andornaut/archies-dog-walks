@@ -24,6 +24,11 @@ export const DEV_CHEATS_KEY = "archies-dog-walks:dev-cheats";
 // the game loads the save, so the page being left cannot write its save over them.
 export const DEV_SAVE_EDITS_KEY = "archies-dog-walks:dev-save-edits";
 
+export const CHEAT_GROUPS = {
+  run: { description: "Applies to this run only.", label: "Run-only" },
+  save: { description: "Changes your saved progress.", label: "Save-changing" },
+} as const;
+
 // The walk's movement speed under the speed cheat.
 type Speed = "fast" | "normal" | "slow";
 
