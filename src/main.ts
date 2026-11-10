@@ -134,7 +134,8 @@ function bootGame(): Game {
   capFrameRate(MENU_FPS, () => game.scene.isActive(SCENE_KEYS.run), game);
   // The installed app has no dev panel, so its #dev-panel stays hidden and no cheat is set.
   if (devToolsOn()) {
-    mountDevPanel(devPanelHost(game), document.getElementById("dev-panel"));
+    const disposeDevPanel = mountDevPanel(devPanelHost(game), document.getElementById("dev-panel"));
+    game.events.once(Core.Events.DESTROY, disposeDevPanel);
   }
 
   // Captured before the scenes see it, so the key that opens a menu already shows its numbers.
@@ -174,6 +175,6 @@ function bootGame(): Game {
 // The game boots at once, loading while the service worker checks for a newer version. BootScene
 // holds the first screen and save until launchReady; updates activate only after acceptance.
 // Queued dev-panel save edits finish before boot, so the game loads the edited save. The
-// installed app writes none.
+// installed app discards queued edits without changing its save.
 setupPhoneApp();
-void (devToolsOn() ? applyPendingSaveEdits() : Promise.resolve()).then(bootGame);
+void applyPendingSaveEdits().then(bootGame);
