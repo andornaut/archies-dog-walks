@@ -17,41 +17,37 @@ The folder READMEs describe the current design and implementation:
 
 ## Developing
 
-Run commands in a Node 24.21.0 container (`.nvmrc`) with the checkout mounted read-only and copied inside, without the agent worktrees and `node_modules`:
+The project gate is `make check`. Make uses the shared launcher in `tests/container/run`, the pinned image recipe in `tests/container/Dockerfile`, and the project commands in `tests/container/check`.
 
-```sh
-docker run -it --name adw-dev --cpus 4 \
-  --user 19001:19001 --group-add "$(stat -c %g .)" -e HOME=/tmp \
-  --mount type=bind,src="$PWD",dst=/src,readonly \
-  -p 5173:5173 -p 8787:8787 \
-  node:24.21.0 \
-  sh -c 'mkdir /tmp/work && cd /tmp/work \
-    && tar -C /src --exclude=./.claude --exclude=./.worktrees --exclude=./node_modules -cf - . | tar -xf - \
-    && npm ci && npm test'
-docker cp adw-dev:/tmp/work/out/. ./out
-docker rm adw-dev
-```
+| Command                                              | Does                                                                                                   |
+| ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| `make build`                                         | Export data, build `dist/`, verify deterministic art, then replace the ignored host `dist/` output     |
+| `make check`                                         | Run lint, test and build in isolated snapshots, without exporting generated files                      |
+| `make check-info`                                    | Print the version 1 JSON gate description                                                              |
+| `make exec COMMAND='npm run format'`                 | Run an explicit writable checkout command; its marker blocks snapshot checks until execution is closed |
+| `make lint`                                          | TypeScript, Prettier, ESLint and Markdownlint                                                          |
+| `make test`                                          | Run the game tests with four workers by default                                                        |
+| `make test TEST_ARGS='src/home/modalLayout.test.ts'` | Run a focused selection                                                                                |
 
-Replace `npm test` with any command in the table. The container is named and kept after it exits so `docker cp` can copy outputs out (here `out/`); remove it with `docker rm` before the next run. Serve the dev server with `npm run dev -- --host 0.0.0.0` (<http://localhost:5173/play/>) and the preview with `npm run preview -- --ip 0.0.0.0` (<http://localhost:8787/play/>). Mount host paths only with `--mount`, never `-v`, which creates a missing source as root.
+The launcher admits each image build and check only below host load 20. It accounts for four CPUs and bounded memory, fingerprints the source snapshot, and rejects a result if source changes. `BUILD_OUTPUTS` and `TEST_OUTPUTS` declare ignored generated paths to export; aggregate `make check` exports none. `COMMAND` is an explicit command, not a source file or test selector.
+
+Native npm aliases call the project recipes directly in the current environment. This preserves use inside an existing delivery container and forwards `npm test -- <arguments>` unchanged. `npm run check` remains TypeScript-only, `npm run lint` runs the three linters, and `npm run build` exports data before Vite. Make adds TypeScript to its lint category and deterministic art validation to its build category. The package has no host `prebuild` lifecycle hook.
+
+Development and art utilities retain their npm commands:
 
 | Command                                     | Does                                                                       |
 | ------------------------------------------- | -------------------------------------------------------------------------- |
-| `npm run art:depth-preview -- <key> [zone]` | Draw a road sprite at a sweep of distances into `out/depth-preview/<key>/` |
-| `npm run art:manifest [-- --check]`         | Write `public/art/manifest.json` from the art files, or fail if it differs |
-| `npm run art:unused`                        | List manifest keys no source file, game data, shared table or page names   |
-| `npm run build`                             | Build to `dist/`                                                           |
-| `npm run check`                             | Type check with tsc                                                        |
-| `npm run check:art`                         | Run only the art tests                                                     |
-| `npm run clean`                             | Remove the build and Wrangler state                                        |
-| `npm run dev`                               | Dev server                                                                 |
-| `npm run export:data [-- --check]`          | Write `shared/export/` from the game's modules, or fail if it differs      |
-| `npm run format`                            | Rewrite files with Prettier and apply ESLint fixes                         |
-| `npm run lint`                              | Prettier, ESLint and markdownlint                                          |
-| `npm run planner:acceptance -- <out-dir>`   | Run the planner acceptance batch ([src/README.md](src/README.md))          |
-| `npm run preview`                           | Build, then serve it through `wrangler dev`                                |
-| `npm run simulate -- --help`                | Simulate runs ([src/README.md](src/README.md), Simulator)                  |
-| `npm test`                                  | Run the unit tests                                                         |
-| `npm run test:game-kit`                     | Run the game tests game-kit's release proof runs                           |
+| `npm run art:depth-preview -- <key> [zone]` | Draw road sprites into `out/depth-preview/<key>/`                          |
+| `npm run art:manifest -- --check`           | Check the art manifest                                                     |
+| `npm run art:unused`                        | List unused art keys                                                       |
+| `npm run check:art`                         | Run the art tests                                                          |
+| `npm run dev`                               | Start the Vite dev server                                                  |
+| `npm run export:data -- --check`            | Check generated data exports                                               |
+| `npm run format`                            | Apply Prettier and ESLint fixes                                            |
+| `npm run planner:acceptance -- <out-dir>`   | Run the approved planner acceptance batch ([src/README.md](src/README.md)) |
+| `npm run preview`                           | Build, then serve through Wrangler                                         |
+| `npm run simulate -- --help`                | Describe simulator options                                                 |
+| `npm run test:game-kit`                     | Run the game-owned game-kit consumer checks                                |
 
 The site's pages are in `pages/`, each at its URL's path (`pages/play/index.html` is `/play/`), and Vite bundles the TypeScript they load. `public/` is copied into the build unchanged: the art, the nav bar, the icons, and the art gallery, `public/art/index.html`. `shared/` holds the files art's tools and the game both read. The game imports shared helpers through `@andornaut/game-kit/<path>`, installed from the [game-kit release](https://github.com/andornaut/game-kit/releases) pinned in `package.json`. The installed package records its source revision in `SOURCE_COMMIT`.
 
@@ -60,7 +56,7 @@ Art build tools are TypeScript modules in `art/tools/`, which Node runs directly
 
 WORKAROUND: Parent-scoped development overrides pin [KaTeX](https://github.com/advisories/GHSA-238p-pmpm-9mq7) `0.18.2`, [minimatch](https://github.com/advisories/GHSA-g3hv-75wg-m249) `11.0.3` and [re2js](https://github.com/advisories/GHSA-gg6h-894w-4m9c) `2.8.7`. ESLint loads the cycle and extensions rules and the resolver through exported plugin subpaths because the full plugin imports an unused rule requiring the removed minimatch `makeRe` API ([eslint-plugin-import-x#569](https://github.com/un-ts/eslint-plugin-import-x/issues/569)). Keep cycle detection and required import extensions enabled. Remove each override when its parent range supports the patched version; restore the full plugin import when it supports minimatch 11.
 
-CI runs check, lint, test and build, and the AI attributions scan.
+CI runs `make lint`, `make test` and `make build`, plus the AI attributions scan.
 
 ## Deploying
 

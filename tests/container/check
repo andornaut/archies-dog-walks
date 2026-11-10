@@ -1,0 +1,52 @@
+#!/bin/sh
+set -eu
+
+# Make launches the container; native npm aliases use these same direct recipes.
+category=${1:-check}
+if [ "$#" -gt 0 ]; then shift; fi
+case "${category}" in
+    typecheck|lint-only|test|bundle|art-check|exec)
+        if [ ! -d node_modules ]; then cp -R /opt/check/node_modules node_modules; fi
+        ;;
+esac
+case "${category}" in
+    check)
+        for category in ${CHECK_TASKS:-lint test build}; do "$0" "${category}"; done
+        ;;
+    lint)
+        "$0" typecheck
+        "$0" lint-only
+        ;;
+    typecheck)
+        exec node node_modules/typescript/bin/tsc "$@"
+        ;;
+    lint-only)
+        node node_modules/prettier/bin/prettier.cjs --check .
+        node node_modules/eslint/bin/eslint.js --max-warnings 0 .
+        node_modules/.bin/markdownlint-cli2
+        ;;
+    test)
+        exec node node_modules/vitest/vitest.mjs run --maxWorkers=4 "$@"
+        ;;
+    build)
+        "$0" bundle "$@"
+        "$0" art-check
+        ;;
+    bundle)
+        node src/tools/dataExportCli.ts
+        WORKERS_CI_COMMIT_SHA=${WORKERS_CI_COMMIT_SHA:-${CHECK_REVISION:-}}
+        export WORKERS_CI_COMMIT_SHA
+        node node_modules/vite/bin/vite.js build "$@"
+        ;;
+    art-check)
+        exec node art/tools/build.ts --check "$@"
+        ;;
+    exec)
+        if [ "$#" -gt 0 ]; then exec "$@"; fi
+        exec sh -ec "${COMMAND:?COMMAND is required}"
+        ;;
+    *)
+        printf 'Unknown project check category: %s\n' "${category}" >&2
+        exit 2
+        ;;
+esac
