@@ -1,6 +1,6 @@
-// The site navigation bar: Home, Play, Tuning, the art gallery, the repository on GitHub and the
-// project's Cloudflare dashboard. Every link is a page on this site, the root of an external
-// site, or this project's dashboard. A page loads it with
+// The site navigation bar sorts links alphabetically, with Home immediately before Gallery.
+// Every link is a page on this site, the root of an external site, or this project's
+// dashboard. A page loads it with
 // <link rel="stylesheet" href="/nav.css"> and <script src="/nav.js" defer></script> in its head
 // and adds nothing else. The page links the stylesheet, rather than this script injecting it, so
 // the bar's style blocks the first paint and the CSP's 'self' covers it. The bar is one row that
@@ -35,12 +35,12 @@
   };
 
   ul.append(
+    item("Cloudflare", DASHBOARD),
     item("Home", "/"),
-    item("Play", "/play/"),
-    item("Tuning", "/tuning/"),
     item("Gallery", "/art/"),
     item("GitHub", REPO),
-    item("Cloudflare", DASHBOARD),
+    item("Play", "/play/"),
+    item("Tuning", "/tuning/"),
   );
 
   const installed = matchMedia(
