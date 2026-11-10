@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "git": { "main": "main", "remote": "origin", "github": "andornaut/archies-dog-walks" },
-  "schedule": { "departures": ["00"], "timezone": "America/Toronto" },
+  "schedule": { "departures": ["10"], "timezone": "America/Toronto" },
   "gate": {
     "image": "archie-check:node24.21.0-sox-ffmpeg",
     "install": "npm ci",
