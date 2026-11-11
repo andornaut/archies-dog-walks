@@ -1,13 +1,14 @@
-import { itemAt } from "@andornaut/game-kit/arrays";
-import { sentences } from "@andornaut/game-kit/lines";
-import { containsPoint, insetRect, type Rect } from "@andornaut/game-kit/rect";
+import { containsPoint, type Rect } from "@andornaut/game-kit/rect";
 import type { Scene } from "phaser";
 
-import { modalActionWidth } from "../home/modalLayout.ts";
-import { NOTE_PLATE, notePartTops, type pauseMenuLayout } from "../hud/pauseMenu.ts";
+import { NOTE_PLATE, type pauseMenuLayout } from "../hud/pauseMenu.ts";
+import {
+  type PanelMeasure,
+  type PanelNotePart,
+  type QuestionPanelView,
+  questionPanelView,
+} from "../hud/questionPanelView.ts";
 import { cardNumberForKey, menuKeyActs } from "../input/keyBindings.ts";
-import { withKeyNumber } from "../input/keyNumbers.ts";
-import { closeControl } from "../ui/closeControl.ts";
 import { rectIndexAt } from "../ui/grid.ts";
 import { PALETTE } from "../ui/palette.ts";
 import { fillRect } from "../ui/phaser/draw.ts";
@@ -23,13 +24,7 @@ export interface PanelEntry {
   readonly press: () => void;
 }
 
-// A part of the panel's note, in its own colour, starting a line of its own.
-interface PanelNotePart {
-  readonly colour: number;
-  readonly text: string;
-}
-
-interface QuestionPanel {
+export interface QuestionPanel {
   readonly avoid?: Rect;
   // What the close control in the panel's top-right corner does, as a tap outside the panel does.
   readonly close: () => void;
@@ -44,65 +39,54 @@ interface QuestionPanel {
   readonly title: string;
 }
 
-// The pause menu's panel, and each question laid out as it is (the Home question, Quit?), centred
-// in area: its title beside the close control in its top-right corner, as on every modal card,
-// the buttons, and the note plate. A press counts where it began and ended on the same button or
-// the close control, which wins where their tap areas meet, so the release that closes the panel
-// is never what is under it. Returns what a tap outside the panel must miss: the panel and the
-// buttons' hit areas.
+// The panel's text measured on the bitmap fonts scene draws it in.
+export function canvasPanelMeasure(scene: Scene): PanelMeasure {
+  return {
+    body: pixelFontMetrics(scene, "body"),
+    inkWidth: (font, line) => modalTextWidth(scene, font, [line]),
+    title: pixelFontMetrics(scene, "title"),
+    wrapNote: (width, text) =>
+      wrapPixelText(scene, { colour: PALETTE.plum, scale: NOTE_PLATE.scale }, width, text),
+  };
+}
+
+// The panel's view, centred in area and measured on scene's fonts.
+export function questionView(scene: Scene, area: Rect, question: QuestionPanel): QuestionPanelView {
+  return questionPanelView(canvasPanelMeasure(scene), area, {
+    avoid: question.avoid,
+    labels: question.entries.map(({ label }) => label),
+    layout: question.layout,
+    note: question.note,
+    sentenceLines: question.sentenceLines,
+    title: question.title,
+  });
+}
+
+// The pause menu's panel, and each question laid out as it is (the Home question, Quit?), drawn
+// on the canvas from its view (questionPanelView). A press counts where it began and ended on
+// the same button or the close control, which wins where their tap areas meet, so the release
+// that closes the panel is never what is under it. Returns what a tap outside the panel must
+// miss: the panel and the buttons' hit areas.
 export function addQuestionPanel(scene: Scene, area: Rect, question: QuestionPanel): Rect[] {
   const { entries } = question;
-  const body = pixelFontMetrics(scene, "body");
-  const measures = {
-    avoid: question.avoid,
-    buttonCount: entries.length,
-    buttonWidths: entries.map((entry, i) =>
-      modalActionWidth(modalTextWidth(scene, "title", [withKeyNumber(i + 1, entry.label)])),
-    ),
-    noteWidth: modalTextWidth(
-      scene,
-      "body",
-      question.note.map(({ text }) => text),
-    ),
-    titleWidth: modalTextWidth(scene, "title", [question.title]),
-  };
-  const preview = question.layout(body, area, { ...measures, noteLines: 0 });
-  const noteWidth = preview.notePlate.width - 2 * NOTE_PLATE.padX;
-  // The note wraps at 2x.
-  const noteParts = question.note.map(({ colour, text }) => {
-    const style = { colour, scale: NOTE_PLATE.scale };
-    const said = question.sentenceLines ? sentences(text) : [text];
-    return { lines: said.flatMap((part) => wrapPixelText(scene, style, noteWidth, part)), style };
-  });
-  const noteLines = noteParts.reduce((sum, part) => sum + part.lines.length, 0);
-  const layout = question.layout(body, area, { ...measures, noteLines });
-  const { panel } = layout;
+  const view = questionView(scene, area, question);
+  const { panel } = view;
 
   addRimmedPanel(scene, panel);
-  const centre = panel.x + panel.width / 2;
-  addCardTitle(scene, panel, question.title, true, layout.titleY);
-  const close = closeControl(panel);
+  addCardTitle(scene, panel, question.title, true, view.titleY);
   const closeButton = addCardClose(scene, scene.add.container(0, 0), panel, false);
-  const buttons: MenuButton[] = entries.map((entry, i) =>
-    addMenuButton(scene, itemAt(layout.buttons, i), withKeyNumber(i + 1, entry.label), {
-      available: true,
-      primary: i === 0,
-    }),
+  const buttons: MenuButton[] = view.buttons.map(({ primary, rect, text }) =>
+    addMenuButton(scene, rect, text.text, { available: true, primary }),
   );
-  if (noteParts.length > 0) {
-    fillRect(scene.add.graphics(), PALETTE.tan, layout.notePlate);
-    const tops = notePartTops(
-      body,
-      layout.notePlate,
-      noteParts.map((part) => part.lines.length),
-    );
-    noteParts.forEach((part, i) => {
-      addPixelText(scene, centre, itemAt(tops, i), part.lines.join("\n"), {
-        ...part.style,
-        align: "centre",
+  if (view.notePlate !== undefined) {
+    fillRect(scene.add.graphics(), PALETTE.tan, view.notePlate);
+    for (const line of view.note) {
+      addPixelText(scene, line.centreX, line.capTop, line.text, {
+        colour: line.colour,
         originX: 0.5,
+        scale: line.scale,
       });
-    });
+    }
   }
 
   // A button by its index, or the close control.
@@ -114,7 +98,14 @@ export function addQuestionPanel(scene: Scene, area: Rect, question: QuestionPan
       closeButton.setPressed(pressed === "close");
     },
     onTap: (target) => (target === "close" ? question.close() : entries[target]?.press()),
-    targetAt: (x, y) => (containsPoint(close.hit, x, y) ? "close" : rectIndexAt(layout.hits, x, y)),
+    targetAt: (x, y) =>
+      containsPoint(view.close.hit, x, y)
+        ? "close"
+        : rectIndexAt(
+            view.buttons.map(({ hit }) => hit),
+            x,
+            y,
+          ),
   });
   scene.input.keyboard?.on("keydown", (event: KeyboardEvent) => {
     const number = cardNumberForKey(entries.length, event.key);
@@ -122,5 +113,5 @@ export function addQuestionPanel(scene: Scene, area: Rect, question: QuestionPan
       entries[number - 1]?.press();
     }
   });
-  return [insetRect(-1, panel), ...layout.hits];
+  return [...view.covered];
 }
