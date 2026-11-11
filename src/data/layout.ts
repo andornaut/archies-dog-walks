@@ -427,7 +427,7 @@ export const CELEBRATIONS = {
     // The dotted rule: its columns, dot step, and row under the bubble's top.
     rule: { fromX: 36, step: 3, toX: 323, y: 43 },
     // The tail's left edge, and its top from the bubble's top.
-    tail: { x: 176, y: -5 },
+    tail: { x: 176, y: -4 },
   },
   // The run-in: the burst's row, and the column the walker runs in from.
   runIn: { burstY: 52, fromX: 400 },
