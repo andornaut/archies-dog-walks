@@ -13,7 +13,7 @@ Docs state the current rule only; git keeps the history. An idea stays in `ideas
 
 ## Scope
 
-Gameplay owns the rulebook and the values and content in the data value files (every `src/data/*.ts` except `types.ts`, `index.ts`, `screen.ts` and the tests). A new field or effect kind goes through tech.
+Gameplay owns the rulebook and the values and content in the data value files (every `src/data/*.ts` except `index.ts`, `layout.ts`, `screen.ts`, `types.ts` and the tests). A new field or effect kind goes through tech.
 
 ## Method
 
