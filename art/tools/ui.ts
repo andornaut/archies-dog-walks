@@ -2,13 +2,14 @@
 //
 // Images (16x16 icons unless noted): icon-pause, icon-play, icon-home, icon-help, icon-close,
 // icon-logbook, icon-settings, icon-exit, icon-share (Safari's Share button, on the iOS install steps
-// card), icon-browser-menu (the browser menu button's three dots, on the Firefox for Android install
-// steps card), icon-update (a green down arrow into a tray, on the home screen's update notice),
-// icon-lock, icon-bill (a green dollar bill with a white $, on an item for sale the bank covers),
-// icon-treat (the treat pickup, its bone and heart as road.ts's treat lays them out at 16x16, for the
-// message strip), icon-stinky; icon-dog-slot (32x32, a pack slot for sale in the shop: a doghouse with
-// a green plus badge, as the shop's item-<gear> art, outlined with iconEdge); ui-panel (24x24
-// nine-slice, 4px corners), ui-hint (24x24 nine-slice, 8px corners), ui-hint-tail (8x6), ui-new-best
+// card), icon-browser-menu (the browser menu button's three dots, on the Chrome for Android and
+// Firefox for Android install steps cards), icon-update (a green down arrow into a tray, on the home
+// screen's update notice), icon-lock, icon-bill (a green dollar bill with a white $, on an item for
+// sale the bank covers), icon-treat (the treat pickup, its bone and heart as road.ts's treat lays
+// them out at 16x16, for the message strip), icon-stinky; icon-dog-slot (32x32, a pack slot for
+// sale in the shop: a doghouse with a green plus badge, as the shop's item-<gear> art, outlined
+// with iconEdge); ui-panel (24x24 nine-slice, 4px corners), ui-hint (24x24 nine-slice, 8px corners),
+// ui-hint-tail (8x6), ui-new-best
 // (72x20 ribbon, text baked in with font-title); the start screen's ui-detail-card (24x24 nine-slice,
 // 8px corners) and ui-detail-well (68x68); the shop list's ui-scroll-track (8x24) and ui-scroll-thumb
 // (6x24, three-slices with 3px caps); the walker section's ui-cork (32x32 solid pickerWalkerBody
@@ -562,8 +563,8 @@ function shareIcon(): Grid {
   return g;
 }
 
-// The browser menu button, for the Firefox for Android install steps card: three round 4x4 dots
-// stacked on the centre line with 2px gaps, lit like icon-share.
+// The browser menu button, for the Chrome for Android and Firefox for Android install steps cards:
+// three round 4x4 dots stacked on the centre line with 2px gaps, lit like icon-share.
 function browserMenuIcon(): Grid {
   const [face, shade] = CREAM_PANEL;
   const g = new Grid(16, 16);
