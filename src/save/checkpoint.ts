@@ -1,9 +1,5 @@
 import type { DogId, EncounterId, OptionPicks, WalkerId, ZoneId } from "../data/types.ts";
-import {
-  type AchievementData,
-  type RunCounters,
-  type RunFacts,
-} from "../rules/achievements.ts";
+import { type AchievementData, type RunCounters, type RunFacts } from "../rules/achievements.ts";
 import { newWalkers } from "../rules/walkers.ts";
 import type { EndReason } from "../state/runState.ts";
 import { addCents, type Cents, cents } from "../units.ts";
@@ -157,14 +153,12 @@ function bankRun(context: AwardContext, run: BankedRun, save: SaveDocument): Sav
     },
     stats: {
       ...stats,
-      bestCentsByPackSize:
-        isNewBestWalk(stats, walkDogs.length, earnedCents)
-          ? { ...stats.bestCentsByPackSize, [walkDogs.length]: earnedCents }
-          : stats.bestCentsByPackSize,
-      bestWalk:
-        beatsBestWalk(stats, earnedCents)
-          ? { dogs: walkDogs, zonesFinished }
-          : stats.bestWalk,
+      bestCentsByPackSize: isNewBestWalk(stats, walkDogs.length, earnedCents)
+        ? { ...stats.bestCentsByPackSize, [walkDogs.length]: earnedCents }
+        : stats.bestCentsByPackSize,
+      bestWalk: beatsBestWalk(stats, earnedCents)
+        ? { dogs: walkDogs, zonesFinished }
+        : stats.bestWalk,
       bestZoneFinished: Math.max(stats.bestZoneFinished, walkedOf(zonesFinished)),
       bumpsByKind: addCounts(stats.bumpsByKind, run.counters.bumpsByKind),
       dogs,
