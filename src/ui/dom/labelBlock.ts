@@ -13,7 +13,7 @@ import {
   wholeArtPixels,
 } from "../domScale.ts";
 import { laidPills, pillRows } from "../namePills.ts";
-import { penRuns, setBox, spokenText } from "./pixelLine.ts";
+import { displayGlyphs, penRuns, setBox, spokenText } from "./pixelLine.ts";
 import type { WEB_FONTS } from "./uiLayer.ts";
 
 // A canvas label as the HTML interface draws it in its web font: its text as the bitmap font
@@ -29,6 +29,10 @@ export interface DomLabelLine {
   readonly pen: number;
   readonly text: string;
 }
+
+// The data key a scene sets on a label it places itself about its middle, as the display
+// lettering's centred lines, whose origin is their left: align takes it over the label's origin.
+export const LABEL_ALIGN_DATA = "htmlAlign";
 
 export interface DomLabel {
   // How its lines align on the canvas: from their start, about their middle or to their end.
@@ -146,7 +150,13 @@ export function drawLabel(
     const span = doc.createElement("span");
     span.className = `adw-text adw-font-${label.font}`;
     span.setAttribute("aria-hidden", "true");
-    span.textContent = run.text;
+    if (label.font === "display") {
+      span.append(...displayGlyphs(doc, run.text));
+      // The display font's ring and shadow, a font pixel a step (uiStyle.ts).
+      span.style.setProperty("--adw-k", `${place.fontSize / 8}px`);
+    } else {
+      span.textContent = run.text;
+    }
     const named =
       run.pill === undefined || label.pills === "grey" ? undefined : input.pillColours(run.pill);
     Object.assign(span.style, {

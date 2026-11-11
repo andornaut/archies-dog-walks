@@ -7,6 +7,7 @@ import {
 import type { GameObjects, Scene } from "phaser";
 
 import { CELEBRATION_LAYOUT as LAYOUT } from "../hud/celebrationLayout.ts";
+import { LABEL_ALIGN_DATA } from "../ui/dom/labelBlock.ts";
 import { PALETTE } from "../ui/palette.ts";
 import { addDisplayText } from "../ui/phaser/displayText.ts";
 
@@ -33,6 +34,8 @@ function placeInk(
   });
   const inkTop = Math.min(...glyphs.map((glyph) => glyph.yOffset)) * scale;
   label.setScale(scale).setPosition(Math.round(LAYOUT.centreX - (left + right) / 2), top - inkTop);
+  // Its ink is centred, so the HTML interface lays it out about its middle.
+  label.setData(LABEL_ALIGN_DATA, "centre");
 }
 
 // Full-scene celebration headings keep their size, word-wrap, and reserve a fixed two-line slot.

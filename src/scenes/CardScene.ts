@@ -40,6 +40,7 @@ import {
   type OptionView,
 } from "../rules/choices.ts";
 import { cardHeader } from "../ui/cardRow.ts";
+import { LABEL_ALIGN_DATA } from "../ui/dom/labelBlock.ts";
 import { rectIndexAt } from "../ui/grid.ts";
 import { PLAIN_ITEM, tileState } from "../ui/interaction.ts";
 import { PALETTE } from "../ui/palette.ts";
@@ -204,7 +205,7 @@ export class CardScene extends Scene {
       snapCentre(
         addDisplayText(this, centreX, header.titleTop, view.title, { colour: PALETTE.white }),
         centreX,
-      );
+      ).setData(LABEL_ALIGN_DATA, "centre");
     } else {
       this.centred(centreX + 1, header.titleTop + 1, view.title, PALETTE.ink, title);
       this.centred(centreX, header.titleTop, view.title, PALETTE.white, title);

@@ -146,8 +146,7 @@ export function setBox(
 const hex = (colour: number) => `#${colour.toString(16).padStart(6, "0")}`;
 
 // A text line's element: its text, font and colour; placeText positions it. Display text is a
-// span a character, so each glyph's ring and shadow paint over the glyph before it, as the
-// canvas draws its glyphs in order; the font still kerns across them.
+// span a character (displayGlyphs).
 export function createTextLine(doc: Document, line: DomTextLine): HTMLElement {
   const element = doc.createElement("span");
   element.className = `adw-text adw-font-${line.font}`;
@@ -158,16 +157,23 @@ export function createTextLine(doc: Document, line: DomTextLine): HTMLElement {
     return element;
   }
   element.setAttribute("aria-label", text);
-  for (const char of text) {
+  element.append(...displayGlyphs(doc, text));
+  return element;
+}
+
+// Display text's characters, a span each, the heart red: each glyph's ring and shadow paint over
+// the glyph before it, as the canvas draws its glyphs in order, and the font still kerns across
+// them.
+export function displayGlyphs(doc: Document, text: string): HTMLElement[] {
+  return [...text].map((char) => {
     const glyph = doc.createElement("span");
     glyph.setAttribute("aria-hidden", "true");
     glyph.textContent = char;
     if (char === DISPLAY_HEART.char) {
       glyph.style.color = hex(DISPLAY_HEART.colour);
     }
-    element.append(glyph);
-  }
-  return element;
+    return glyph;
+  });
 }
 
 // Positions element as line, in its container whose corner is at origin game pixels.

@@ -16,6 +16,7 @@ import { addRampDim } from "../ui/phaser/rampDim.ts";
 import { addConfetti } from "./badges.ts";
 import { addCelebrationHeadline } from "./celebrationHeadline.ts";
 import { addDetailText } from "./homePanels.ts";
+import { addHtmlLabels } from "./htmlLabels.ts";
 import { canvasCelebrationMeasure } from "./modalMeasure.ts";
 import { closeOverlay, type OverlayData } from "./overlay.ts";
 import { currentSettings, walkerSpriteKey } from "./profileStore.ts";
@@ -95,6 +96,8 @@ export class ZoneCelebrationScene extends Scene {
     // press bursts where it lands, as over the canvas's button.
     const html = addHtmlZoneCelebration(this, view, `${text.title} ${text.subtitle}`, finish);
     if (html !== undefined) {
+      // The headline's display lettering too, which the celebration's dialog names.
+      addHtmlLabels(this, undefined);
       listenTargetPress<never>(this, {
         onDown: (pointer) => addTapBurst(this, pointer.x, pointer.y),
         onPressed: () => undefined,

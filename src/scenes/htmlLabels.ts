@@ -2,9 +2,10 @@ import { Core, type GameObjects, type Scene, Scenes } from "phaser";
 
 import { SCREEN_CONFIG } from "../data/screen.ts";
 import { pillKind } from "../hud/effectNames.ts";
-import { type DomLabel, drawLabel } from "../ui/dom/labelBlock.ts";
+import { type DomLabel, drawLabel, LABEL_ALIGN_DATA } from "../ui/dom/labelBlock.ts";
 import { deviceX, deviceY, gridTransform } from "../ui/domScale.ts";
 import { PALETTE } from "../ui/palette.ts";
+import { displayBitmapFont } from "../ui/phaser/displayText.ts";
 import {
   GREY_PILL,
   type LabelNamePills,
@@ -17,11 +18,19 @@ import { htmlPanelPlace } from "./questionPanel.ts";
 // in the body or title font, and its name pills, while the canvas draws the scene's art and takes
 // its presses. The labels stay the scene's, which places, shows, hides, tints and moves them as
 // ever (a refusal's shake and flash, a held card's enlarging); before each frame the HTML follows
-// what changed, and the scene's camera draws them no more. Labels in another font, such as the
-// display font's art lettering, stay on the canvas.
+// what changed, and the scene's camera draws them no more. The display lettering draws in its web
+// font in the colour its bitmap font bakes in, both of whose variants share their glyphs.
 
-// The bitmap fonts the HTML draws, by their keys in Phaser's cache.
-const FONTS = { "font-body": "body", "font-title": "title" } as const;
+// The fonts the HTML draws, by the bitmap fonts' keys in Phaser's cache, and the colour a
+// display variant draws in, untinted on the canvas.
+const FONTS: Readonly<
+  Record<string, { readonly colour?: number; readonly font: DomLabel["font"] }>
+> = {
+  "font-body": { font: "body" },
+  "font-display": { colour: PALETTE.yellow, font: "display" },
+  "font-display-cream": { colour: PALETTE.cream, font: "display" },
+  "font-title": { font: "title" },
+};
 
 export interface HtmlLabels {
   destroy(): void;
@@ -49,23 +58,26 @@ function placed(label: GameObjects.BitmapText): { shown: boolean; x: number; y: 
 // The label as the HTML draws it: its lines, each from where Phaser starts its pen.
 function domLabel(
   label: GameObjects.BitmapText,
-  font: DomLabel["font"],
+  face: NonNullable<(typeof FONTS)[string]>,
   at: { x: number; y: number },
 ): DomLabel {
   const { characters, wrappedText } = label.getTextBounds(false);
   const text = label.maxWidth > 0 && wrappedText !== "" ? wrappedText : label.text;
   const pills = label.getData(NAME_PILLS_DATA) as LabelNamePills | undefined;
-  // Phaser's align: 1 centres a block's lines on its widest, 2 sets them to its right.
+  // Phaser's align: 1 centres a block's lines on its widest, 2 sets them to its right. A label
+  // its scene places about its middle itself says so (LABEL_ALIGN_DATA).
+  const set = label.getData(LABEL_ALIGN_DATA) as DomLabel["align"] | undefined;
   const align =
-    label.originX === 0.5 || label.align === 1
+    set ??
+    (label.originX === 0.5 || label.align === 1
       ? "centre"
       : label.originX === 1 || label.align === 2
         ? "end"
-        : "start";
+        : "start");
   return {
     align,
-    colour: label.tintTopLeft,
-    font,
+    colour: face.colour ?? label.tintTopLeft,
+    font: face.font,
     lines: text.split("\n").map((line, i) => {
       const first = characters.find((char) => char.line === i);
       return { pen: first === undefined ? 0 : first.x - first.glyph.xOffset, text: line };
@@ -88,23 +100,30 @@ function labelsIn(list: readonly GameObjects.GameObject[]): GameObjects.BitmapTe
   );
 }
 
-// scene's labels in HTML, named title for a screen reader, until the scene shuts down: shown
-// while the scene runs and shows, and hidden while it is paused or hidden (the walk's cards under
-// the pause menu). Returns undefined where the canvas must draw them: the page's switch is off,
-// or its fonts are not ready.
-export function addHtmlLabels(scene: Scene, title: string): HtmlLabels | undefined {
+// scene's labels in HTML until the scene shuts down: shown while the scene runs and shows, and
+// hidden while it is paused or hidden (the walk's cards under the pause menu). With a title, a
+// dialog it names for a screen reader, focused as it shows; with none, lettering another dialog
+// names (a celebration's headline), which a screen reader skips. Returns undefined where the
+// canvas must draw them: the page's switch is off, or its fonts are not ready.
+export function addHtmlLabels(scene: Scene, title: string | undefined): HtmlLabels | undefined {
   const place = htmlPanelPlace(scene);
+  const display = displayBitmapFont(scene);
   if (place === undefined) {
     return undefined;
   }
+  const fonts = { ...place.fonts, ...(display === undefined ? {} : { display }) };
   const { layer } = place;
   const doc = layer.element.ownerDocument;
   const dialog = doc.createElement("div");
   dialog.className = "adw-dialog adw-passive";
-  dialog.setAttribute("role", "dialog");
-  dialog.setAttribute("aria-modal", "true");
-  dialog.setAttribute("aria-label", title);
-  dialog.tabIndex = -1;
+  if (title === undefined) {
+    dialog.setAttribute("aria-hidden", "true");
+  } else {
+    dialog.setAttribute("role", "dialog");
+    dialog.setAttribute("aria-modal", "true");
+    dialog.setAttribute("aria-label", title);
+    dialog.tabIndex = -1;
+  }
   dialog.hidden = true;
   layer.element.append(dialog);
 
@@ -117,7 +136,7 @@ export function addHtmlLabels(scene: Scene, title: string): HtmlLabels | undefin
     if (hidden !== dialog.hidden) {
       dialog.hidden = hidden;
       // Focus starts on the dialog itself as it shows, as on every HTML panel.
-      if (!hidden) {
+      if (!hidden && title !== undefined) {
         dialog.focus({ preventScroll: true });
       } else if (dialog.contains(doc.activeElement)) {
         (doc.activeElement as HTMLElement).blur();
@@ -133,10 +152,9 @@ export function addHtmlLabels(scene: Scene, title: string): HtmlLabels | undefin
     }
     const seen = new Set<GameObjects.BitmapText>();
     for (const label of labelsIn(scene.children.list)) {
-      const font = FONTS[label.font as keyof typeof FONTS] as
-        (typeof FONTS)[keyof typeof FONTS] | undefined;
-      const bitmap = font === undefined ? undefined : place.fonts[font];
-      if (font === undefined || bitmap === undefined || !label.active) {
+      const face = FONTS[label.font];
+      const bitmap = face === undefined ? undefined : fonts[face.font];
+      if (face === undefined || bitmap === undefined || !label.active) {
         continue;
       }
       seen.add(label);
@@ -155,7 +173,7 @@ export function addHtmlLabels(scene: Scene, title: string): HtmlLabels | undefin
         mirrored.set(label, entry);
       }
       const at = placed(label);
-      const view = domLabel(label, font, at);
+      const view = domLabel(label, face, at);
       const key = JSON.stringify([frame, at.shown, view]);
       if (key === entry.key) {
         continue;

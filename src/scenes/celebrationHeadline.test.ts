@@ -6,6 +6,7 @@ import { gameData } from "../data/index.ts";
 import { CELEBRATION_LAYOUT } from "../hud/celebrationLayout.ts";
 import { celebrationText } from "../hud/zoneCelebration.ts";
 import { fontFileMetrics, fontInk, phaserFontData } from "../testing/fontInk.ts";
+import { LABEL_ALIGN_DATA } from "../ui/dom/labelBlock.ts";
 import { addDisplayText } from "../ui/phaser/displayText.ts";
 import { addCelebrationHeadline } from "./celebrationHeadline.ts";
 
@@ -36,6 +37,11 @@ class Label {
     this.text = text;
     return this;
   }
+  readonly data = new Map<string, unknown>();
+  setData(key: string, value: unknown) {
+    this.data.set(key, value);
+    return this;
+  }
 }
 
 const welcome = celebrationText(gameData, { kind: "newWalker", walker: "mrB" });
@@ -61,6 +67,12 @@ describe("full-scene celebration headings", () => {
     addCelebrationHeadline(scene as unknown as Scene, { subtitle: welcome.subtitle, title });
     expect(labels.map(({ text }) => text)).toEqual([...lines, welcome.subtitle.toUpperCase()]);
     expect(labels.map(({ scaleX }) => scaleX)).toEqual([3, 3, 1]);
+    // Each line's ink is centred, so the HTML interface lays it out about its middle.
+    expect(labels.map(({ data }) => data.get(LABEL_ALIGN_DATA))).toEqual([
+      "centre",
+      "centre",
+      "centre",
+    ]);
     expect(
       labels.map((label) => label.y + fontFileMetrics(label.font).letterTop * label.scaleY),
     ).toEqual([44, 94, 146]);
