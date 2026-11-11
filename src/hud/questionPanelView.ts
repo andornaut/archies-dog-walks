@@ -99,16 +99,18 @@ export interface QuestionPanelView {
 }
 
 // A modal card's or panel's title in plum on its title row beside the close control in its
-// top-right corner, each line's ink centred in the room the control leaves, its first line's
-// capitals at capTop, as the canvas draws it (addCardTitle).
+// top-right corner, or with none where it does not close, each line's ink centred in the room
+// the control leaves, its first line's capitals at capTop, as the canvas draws it
+// (addCardTitle).
 export function panelTitle(
   measure: PanelMeasure,
   panel: Rect,
   capTop: number,
   title: string,
+  closes = true,
 ): PanelText[] {
   const row = cardTitleRow(panel);
-  const close = closeControl(panel);
+  const close = closes ? closeControl(panel) : undefined;
   const titled = modalTitleLayout(
     { font: measure.title, widthOf: (line) => measure.inkWidth("title", line) },
     barTitleRoom(row, close),

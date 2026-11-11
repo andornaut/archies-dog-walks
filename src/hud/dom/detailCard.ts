@@ -1,3 +1,4 @@
+import type { Rect } from "@andornaut/game-kit/rect";
 import type { BitmapFont } from "@andornaut/game-kit/text/bitmapFont";
 
 import { domArtPath } from "../../assets/domArt.ts";
@@ -95,6 +96,13 @@ function aimed(
   return Math.min(Math.max(at, from), to);
 }
 
+// The device column of art at game column x hanging off frame's right side: as many whole art
+// pixels in from the snapped frame's right edge (frameRect) as at 1x.
+function fromRight(scale: DomScale, frame: Rect, x: number): number {
+  const box = frameRect(scale, frame);
+  return box.left + box.width - (frame.x + frame.width - x) * artPixel(scale);
+}
+
 // Art from its top-left, each art pixel art.scale times artPixel device pixels: an image's whole
 // file, or a sheet's frame, hidden until the sheet's JSON says where the frame is. Art in a box
 // sits whole art pixels into it, rounded down where it is centred on a half pixel.
@@ -107,6 +115,9 @@ export function artPart(
 ): DomPart {
   const element = doc.createElement("span");
   element.className = "adw-art";
+  if (art.flipX === true) {
+    element.style.transform = "scaleX(-1)";
+  }
   const kind = art.sheet === undefined ? "image" : "sheet";
   element.style.backgroundImage = `url("${input.artUrl(domArtPath(kind, art.key, "png"))}")`;
   let frame: SheetFrame | undefined;
@@ -124,13 +135,14 @@ export function artPart(
     setBox(element, {
       height,
       left:
-        left +
-        (centre !== undefined
-          ? wholeArtPixels(at, exactDeviceX(at, centre.x) - width / 2 - left)
-          : art.aim === undefined
-            ? into(holder.x, art.x)
-            : aimed(at, holder, art.aim, width)) +
-        shift(at),
+        (art.right !== undefined
+          ? fromRight(at, art.right, art.x)
+          : left +
+            (centre !== undefined
+              ? wholeArtPixels(at, exactDeviceX(at, centre.x) - width / 2 - left)
+              : art.aim === undefined
+                ? into(holder.x, art.x)
+                : aimed(at, holder, art.aim, width))) + shift(at),
       top:
         top +
         (centre === undefined
@@ -181,8 +193,16 @@ export function textPart(
   });
   const block = {
     ...text,
-    // A left-aligned title label's ink starts at x, as addPixelText places it; body text's pen.
-    anchor: text.align === "centre" ? "centre" : font === "title" ? "ink" : "pen",
+    // A left-aligned label starts its pen at x in the body font and its ink in the title font,
+    // as addPixelText places it.
+    anchor:
+      text.align === "centre"
+        ? "centre"
+        : text.align === "right"
+          ? "right"
+          : font === "title"
+            ? "ink"
+            : "pen",
     ...(text.spans === undefined ? {} : { breaks: [new Set(spans.map(({ from }) => from))] }),
     font,
     scale: text.scale ?? TEXT_SCALE,

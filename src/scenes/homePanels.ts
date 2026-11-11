@@ -183,12 +183,13 @@ export function addDetailWell(scene: Scene, parent: GameObjects.Container, rect:
 }
 
 // A detail card's art: an image, or a sheet's tag's first frame, or its default frame.
-function addDetailArt(scene: Scene, art: DetailArt): GameObjects.Image {
+export function addDetailArt(scene: Scene, art: DetailArt): GameObjects.Image {
   const { key, scale, sheet, x, y } = art;
+  const flipX = art.flipX === true;
   if (sheet?.tag === undefined) {
-    return scene.add.image(x, y, key).setOrigin(0).setScale(scale);
+    return scene.add.image(x, y, key).setOrigin(0).setScale(scale).setFlipX(flipX);
   }
-  const sprite = scene.add.sprite(x, y, key).setOrigin(0).setScale(scale);
+  const sprite = scene.add.sprite(x, y, key).setOrigin(0).setScale(scale).setFlipX(flipX);
   playFirstTag(sprite, key, [sheet.tag]);
   return sprite;
 }
@@ -231,7 +232,8 @@ export function addDetailText(
   const scale = text.scale ?? TEXT_SCALE;
   const font = text.font ?? "body";
   const centred = text.align === "centre";
-  const style = { colour: text.colour, font, scale, ...(centred ? { originX: 0.5 } : {}) };
+  const originX = centred ? 0.5 : text.align === "right" ? 1 : undefined;
+  const style = { colour: text.colour, font, scale, ...(originX === undefined ? {} : { originX }) };
   const pitch = pixelFontMetrics(scene, font).lineHeight * scale;
   const labels = centred
     ? text.lines.map((line, i) => addPixelText(scene, text.x, text.capTop + i * pitch, line, style))

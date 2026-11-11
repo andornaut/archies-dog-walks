@@ -56,8 +56,13 @@ export interface DetailArt {
   // Art centred on a point (a badge on its card) sits with its middle there, whole art pixels
   // from its holder's corner.
   readonly centre?: Point;
+  // Art drawn mirrored left to right, as a tail turned to point the other way.
+  readonly flipX?: boolean;
   readonly holder?: Point;
   readonly key: string;
+  // Art that hangs off a frame's right side (a bubble's tail) sits as far in from the frame's
+  // snapped right edge (frameRect) in whole art pixels as it does at 1x.
+  readonly right?: Rect;
   readonly scale: number;
   readonly sheet?: { readonly tag: string | undefined };
   readonly size: DetailArtSize;
@@ -75,11 +80,12 @@ export interface DetailFramed {
 
 // Text in font, body where undefined, at scale, 2x where undefined: left-aligned, its pen (in the
 // title font its ink) starting at x, as addPixelText places a label, or each line centred on x
-// (centre, as a label with originX 0.5 there), its first line's capitals at capTop, its lines a
-// font line apart, each effect's name a line leads with in its pill. A one-line text may be runs
-// in colours of their own (spans), their texts the line's, run together.
+// (centre, as a label with originX 0.5 there), or one line's advance ending at x (right, as a
+// label with originX 1 there), its first line's capitals at capTop, its lines a font line apart,
+// each effect's name a line leads with in its pill. A one-line text may be runs in colours of
+// their own (spans), their texts the line's, run together.
 export interface DetailText {
-  readonly align?: "centre" | "left";
+  readonly align?: "centre" | "left" | "right";
   readonly capTop: number;
   readonly colour: number;
   readonly font?: "body" | "title";

@@ -12,6 +12,7 @@ import {
   ownerFaceKey,
   walkerPortraitKey,
   ZONE_CELEBRATION_ART,
+  ZONE_PIPS_KEY,
 } from "./spriteKeys.ts";
 
 // The dog slot's icon, as the shop's rows and the purchase confirm draw it (SHOP_ART in
@@ -102,12 +103,17 @@ function logbookArtKeys(data: Pick<GameData, "achievements" | "dogs">): string[]
   ];
 }
 
+// The End screen's art (src/home/endScreenView.ts): the zone pips' sheet and each owner's
+// bubble's tail, besides the ui-quip its greeting shares with the celebrations.
+const END_ART_KEYS = [ZONE_PIPS_KEY, "ui-quip-tail"];
+
 export const DOM_ART_KEYS: ReadonlySet<string> = new Set([
   ...DOM_STYLE_ART.map(([, key]) => key),
   ...detailArtKeys(gameData),
   ...SETTINGS_ART_KEYS,
   ...celebrationArtKeys(gameData),
   ...logbookArtKeys(gameData),
+  ...END_ART_KEYS,
 ]);
 
 // A DOM art file's path under /art/: an image's PNG, or a sprite sheet's PNG or JSON.

@@ -10,7 +10,7 @@ import { type Cents, cents } from "../units.ts";
 type EarningsKind =
   "cardCosts" | "cashLost" | "fees" | "fullPack" | "luckyFinds" | "start" | "tips";
 
-interface EarningsLine {
+export interface EarningsLine {
   readonly amount: Cents;
   readonly kind: EarningsKind;
   readonly label: string;

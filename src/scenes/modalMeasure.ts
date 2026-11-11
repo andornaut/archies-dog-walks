@@ -1,6 +1,8 @@
 import type { Scene } from "phaser";
 
 import type { DetailMeasure } from "../home/detailCardView.ts";
+import { QUIP_TEXT_ROOM } from "../home/endLayout.ts";
+import type { EndMeasure } from "../home/endScreenView.ts";
 import { modalTitleLayout } from "../home/modalLayout.ts";
 import { GREETING_FIT } from "../hud/celebrationLayout.ts";
 import type { CelebrationMeasure } from "../hud/celebrationView.ts";
@@ -10,6 +12,7 @@ import { PALETTE } from "../ui/palette.ts";
 import {
   fitPixelText,
   type FontRole,
+  inkSpan,
   labelInkWidth,
   pixelFontMetrics,
   setPixelText,
@@ -86,6 +89,25 @@ export function canvasCelebrationMeasure(scene: Scene): CelebrationMeasure {
       withProbe(scene, DETAIL_TEXT, (probe) => {
         setPixelText(probe, text);
         return fitPixelText(probe, GREETING_FIT, 0, 0);
+      }),
+  };
+}
+
+// The End screen's text measured as a detail card's is, each closing line fitted in its bubble's
+// room in the body font at 2x.
+export function canvasEndMeasure(scene: Scene): EndMeasure {
+  return {
+    ...canvasDetailMeasure(scene),
+    fitQuip: (style, text) =>
+      withProbe(scene, DETAIL_TEXT, (probe) => {
+        setPixelText(probe, text);
+        const fitted = fitPixelText(probe, { room: QUIP_TEXT_ROOM, style }, 0, 0);
+        return { lines: fitted.lines, scale: fitted.style.scale };
+      }),
+    span: (font, scale, text) =>
+      withProbe(scene, { colour: PALETTE.plum, font, scale }, (probe) => {
+        setPixelText(probe, text);
+        return { ...inkSpan(probe), width: probe.displayWidth };
       }),
   };
 }

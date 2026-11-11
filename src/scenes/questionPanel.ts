@@ -8,6 +8,7 @@ import { SCREEN_CONFIG } from "../data/screen.ts";
 import type { HelpView } from "../help/helpView.ts";
 import type { BadgeCardView } from "../home/badgeCardView.ts";
 import type { DetailCardView } from "../home/detailCardView.ts";
+import type { EndScreenView } from "../home/endScreenView.ts";
 import type { LogbookView } from "../home/logbookView.ts";
 import type { ConfirmChoice } from "../home/purchaseConfirm.ts";
 import type { PurchaseConfirmCardView } from "../home/purchaseConfirmCardView.ts";
@@ -19,6 +20,7 @@ import {
   showZoneCelebration,
 } from "../hud/dom/celebration.ts";
 import { showDetailCard } from "../hud/dom/detailCard.ts";
+import { type DomEndScreen, showEndScreen } from "../hud/dom/endScreen.ts";
 import { showHelpScreen } from "../hud/dom/helpScreen.ts";
 import { type LogbookScroll, showLogbook } from "../hud/dom/logbook.ts";
 import { showPurchaseConfirm } from "../hud/dom/purchaseConfirm.ts";
@@ -42,6 +44,7 @@ import { loadSheet } from "../ui/dom/sheetFrames.ts";
 import { uiLayer } from "../ui/dom/uiLayer.ts";
 import { rectIndexAt } from "../ui/grid.ts";
 import { PALETTE } from "../ui/palette.ts";
+import { displayBitmapFont } from "../ui/phaser/displayText.ts";
 import { addModalShade, fillRect } from "../ui/phaser/draw.ts";
 import { addPixelText, pixelBitmapFont } from "../ui/phaser/pixelText.ts";
 import { pillColours } from "./effectNameColours.ts";
@@ -488,6 +491,19 @@ export function addHtmlBadgeCelebration(
         scene,
         showBadgeCelebration(place.layer, { ...htmlArtInput(place), close, view }),
       );
+}
+
+// The End screen's text, pips, bubbles and Back to title in the HTML layer, laid out as the
+// canvas draws them (endScreenView), over the parts the canvas keeps; it takes no presses.
+// Returns it, for its scene to show Back to title pressed or bobbing, or undefined where the
+// canvas must draw them, as while the display lettering's font is missing.
+export function addHtmlEndScreen(scene: Scene, view: EndScreenView): DomEndScreen | undefined {
+  const place = htmlPanelPlace(scene);
+  const display = displayBitmapFont(scene);
+  if (place === undefined || display === undefined) {
+    return undefined;
+  }
+  return followScene(scene, showEndScreen(place.layer, { ...htmlArtInput(place), display, view }));
 }
 
 // The help screen in the HTML layer, laid out as the canvas draws it (helpView), over the dark

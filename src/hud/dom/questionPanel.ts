@@ -45,7 +45,8 @@ export interface DomPart {
 export interface DomQuestionPanelInput {
   // What the close control does; undefined draws it as a picture, and a panel with no buttons
   // then takes no presses: every press goes through to the canvas, whose scene closes it. null
-  // draws no close control. Then its accessible name, and what each button does, in order.
+  // draws no close control, and a panel with no buttons then takes no presses either. Then its
+  // accessible name, and what each button does, in order.
   readonly close: (() => void) | null | undefined;
   readonly closeLabel: string;
   // Whether a panel that takes no presses shows its close control pressed.
@@ -152,7 +153,8 @@ export function showQuestionPanel(layer: UiLayer, input: DomQuestionPanelInput):
   const id = `adw-panel-${panels}`;
   const { view } = input;
   const dialog = doc.createElement("div");
-  const passive = input.close === undefined && input.presses.length === 0;
+  // A panel with no buttons and no close control to press takes no presses.
+  const passive = (input.close ?? undefined) === undefined && input.presses.length === 0;
   dialog.className = passive ? "adw-dialog adw-passive" : "adw-dialog";
   dialog.setAttribute("role", "dialog");
   dialog.setAttribute("aria-modal", "true");

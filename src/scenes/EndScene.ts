@@ -1,37 +1,16 @@
 import { itemAt } from "@andornaut/game-kit/arrays";
 import { guardSceneInput } from "@andornaut/game-kit/input/phaser/guardSceneInput";
-import { fillLine } from "@andornaut/game-kit/lines";
 import type { Rect } from "@andornaut/game-kit/rect";
 import { type GameObjects, Scene } from "phaser";
 
-import { ownerFaceKey, ZONE_PIPS_KEY } from "../assets/spriteKeys.ts";
+import { ownerFaceKey } from "../assets/spriteKeys.ts";
 import { gameData } from "../data/index.ts";
 import { SCREEN_CONFIG, SCREEN_LAYOUT } from "../data/screen.ts";
 import { badgeStripHits, type BadgeView } from "../home/badgesView.ts";
-import {
-  END_LAYOUT,
-  endBadgeRows,
-  endPanelLayout,
-  endResultsPlacement,
-  grantedQuipLines,
-  QUIP_LINES,
-  QUIP_TEXT_ROOM,
-  quipCapsTop,
-  quipNameX,
-  quipTextY,
-  sideTotalAmountY,
-  sideTotalBand,
-} from "../home/endLayout.ts";
-import {
-  closingLines,
-  earningsBreakdown,
-  type EndTarget,
-  endTargetAt,
-  zonePips,
-} from "../home/endView.ts";
+import { END_LAYOUT } from "../home/endLayout.ts";
+import { endScreenView } from "../home/endScreenView.ts";
+import { closingLines, earningsBreakdown, type EndTarget, endTargetAt } from "../home/endView.ts";
 import { bobOffset } from "../home/feedback.ts";
-import { signedShortDollarText } from "../home/home.ts";
-import { MENU_TEXT_FIELDS } from "../home/menuText.ts";
 import {
   homecomers,
   type ReturnPhase,
@@ -39,7 +18,7 @@ import {
   walkUpOffset,
   waveOffset,
 } from "../home/returnHome.ts";
-import { pipTag } from "../hud/hudView.ts";
+import type { DomEndScreen } from "../hud/dom/endScreen.ts";
 import {
   type HoldPress,
   holdRule,
@@ -52,28 +31,23 @@ import { isConfirmKey } from "../input/keyBindings.ts";
 import { screenArea } from "../input/outsideTap.ts";
 import { PackFigures } from "../pack/phaser/packFigures.ts";
 import { stopWakeLock } from "../pwa/index.ts";
-import { walkLength } from "../rules/route.ts";
 import type { LastWalk } from "../save/schema.ts";
 import { PALETTE } from "../ui/palette.ts";
-import { addDisplayText } from "../ui/phaser/displayText.ts";
+import { addDisplayText, hasDisplayFont } from "../ui/phaser/displayText.ts";
 import { fillRect } from "../ui/phaser/draw.ts";
-import {
-  addPixelText,
-  fitPixelText,
-  inkSpan,
-  pixelFontMetrics,
-  setPixelText,
-  withProbe,
-} from "../ui/phaser/pixelText.ts";
+import { addPixelText, inkSpan } from "../ui/phaser/pixelText.ts";
 import { onceBeforeRender } from "../ui/phaser/rampDim.ts";
-import { TEXT_SCALE, textOnLines } from "../ui/textFit.ts";
+import { TEXT_SCALE } from "../ui/textFit.ts";
 import {
   addBadgeCelebration,
   addBadgeDetail,
   addBurst,
   addCheeringFace,
+  badgeCelebrationNames,
   NEW_BEST_BURST,
 } from "./badges.ts";
+import { addDetailContent } from "./homePanels.ts";
+import { canvasEndMeasure } from "./modalMeasure.ts";
 import { listenOutsideTap, onBackPressed } from "./overlay.ts";
 import { addOwnerFigure, ownerSpriteKey } from "./ownerFigure.ts";
 import {
@@ -83,41 +57,23 @@ import {
   walkerInUse,
   walkerSpriteKey,
 } from "./profileStore.ts";
+import { addHtmlEndScreen } from "./questionPanel.ts";
 import { SCENE_KEYS } from "./sceneKeys.ts";
 import { soundboardOf } from "./soundboard.ts";
 import { firstTag, playTag } from "./sprites.ts";
 import { listenTargetPress, sameByValue, type TargetPressListener } from "./targetPress.ts";
-import {
-  addBodyText,
-  addMenuButton,
-  addPanel,
-  addScreenBackdrop,
-  addTagImage,
-  addTapBurst,
-  BODY_TEXT,
-} from "./uiKit.ts";
+import { addMenuButton, addPanel, addScreenBackdrop, addTapBurst } from "./uiKit.ts";
 
 const END_SCREEN_KEY = "screen-end";
 const LOGO = { ...END_LAYOUT.logo, key: "logo" };
 const RIBBON = { ...END_LAYOUT.ribbon, dropMs: 360, key: "ui-new-best", riseFrom: 12 };
 const RIBBON_BURST = END_LAYOUT.ribbonBurst;
-const TITLE_Y = END_LAYOUT.titleY;
-const BREAKDOWN = END_LAYOUT.breakdown;
 const SIDE = END_LAYOUT.side;
-const QUIPS = END_LAYOUT.quips;
 const BADGE_SOUND_AFTER_BEST_MS = 1200;
 const RETURN_HOME_SCENE = END_LAYOUT.returnHome;
 const BUTTON: Rect = END_LAYOUT.button;
 // An open badge's card, over the badges just earned.
 const CARD_DEPTH = 2;
-
-// Money gained in forest and lost in darkRed, each with its sign, on the cream panel.
-function amountColour(amount: number): number {
-  if (amount === 0) {
-    return PALETTE.plum;
-  }
-  return amount > 0 ? PALETTE.forest : PALETTE.darkRed;
-}
 
 // The walk's result, already banked: what made up the total, zones walked, the bank, a ribbon
 // for a new best walk, and a closing line from each owner. Badges the run earned burst in
@@ -136,6 +92,8 @@ export class EndScene extends Scene {
   // Back to title, which bobs as Start walk does, and still while pressed.
   private button: { readonly container: GameObjects.Container; pressed: boolean } | undefined;
   private returnHomeStep: (() => void) | undefined;
+  // The screen's text, pips, bubbles and Back to title in HTML, where they draw there.
+  private html: DomEndScreen | undefined;
 
   constructor() {
     super(SCENE_KEYS.end);
@@ -149,6 +107,7 @@ export class EndScene extends Scene {
     const goHome = () => this.scene.start(SCENE_KEYS.start);
     this.returnHomeStep = undefined;
     this.button = undefined;
+    this.html = undefined;
     this.badges = [];
     this.card = undefined;
     this.hold = undefined;
@@ -176,151 +135,123 @@ export class EndScene extends Scene {
       const { height, width, x, y } = RIBBON_BURST;
       addBurst(this, reduced, NEW_BEST_BURST, 1, x + width / 2, y + height / 2);
     }
-    const lines =
-      ended === null
-        ? []
-        : earningsBreakdown(gameData, ended.changes, {
-            earned: walk.earnedCents,
-            lost: ended.lostCents,
-          });
-    const closing = closingLines(gameData, Math.random, walk);
-    const text = (x: number, y: number, value: string, colour: number, originX = 0) =>
-      addBodyText(this, undefined, { x, y }, value, { colour, originX });
-    const title = (x: number, y: number, value: string, colour: number, originX = 0) =>
-      addBodyText(this, undefined, { x, y }, value, { colour, font: "title", originX });
-    const body = pixelFontMetrics(this, "body");
-    const fonts = { body, title: pixelFontMetrics(this, "title") };
-    // The badges wrap onto a second row past BADGE_STRIP.perRow while the panel, every closing
-    // line on one line, has room above it. A closing line wraps onto a second line at 2x while
-    // the panel has room for it, the panel growing into the badge strip's area when no badge
-    // shows.
-    const badgeRows = endBadgeRows(fonts, lines.length, closing, earned.length);
-    const quipFit = (lines: number) => ({ room: QUIP_TEXT_ROOM, style: textOnLines(lines) });
-    const wanted = closing.map((line) => {
-      const { lines: shown } = withProbe(this, BODY_TEXT, (probe) => {
-        setPixelText(probe, line.text);
-        return fitPixelText(probe, quipFit(QUIP_LINES), 0, 0);
-      });
-      return { fired: line.fired, lines: Math.min(QUIP_LINES, shown.length) };
+    const view = endScreenView(gameData, canvasEndMeasure(this), {
+      closing: closingLines(gameData, Math.random, walk),
+      earned,
+      lines:
+        ended === null
+          ? []
+          : earningsBreakdown(gameData, ended.changes, {
+              earned: walk.earnedCents,
+              lost: ended.lostCents,
+            }),
+      stripNames: (strip, rows) => badgeCelebrationNames(this, strip, rows, earned, false),
+      walk,
     });
-    const quipLines = grantedQuipLines(fonts, badgeRows, lines.length, wanted);
-    const quipRows = closing.map(({ fired }, i) => ({ fired, lines: itemAt(quipLines, i) }));
-    const { panel, rows } = endPanelLayout(fonts, lines.length, quipRows);
-    const placement = endResultsPlacement(badgeRows, panel);
-    const { strip } = placement;
-    addPanel(this, panel);
+    const { results, strip } = view;
+    // In HTML where the page's switch is on and its fonts are ready, over the parts the canvas
+    // keeps, else all on the canvas.
+    const html = hasDisplayFont(this, results.title.text)
+      ? addHtmlEndScreen(this, view)
+      : undefined;
+    this.html = html;
+    addPanel(this, results.panel);
     const g = this.add.graphics();
-
-    const words = gameData.menuText.end;
-    addDisplayText(this, SCREEN_CONFIG.width / 2, TITLE_Y, words.titles[walk.outcome], {
-      colour: PALETTE.plum,
-      font: "title",
-      originX: 0.5,
-      scale: TEXT_SCALE,
-    });
+    const { band } = results;
+    fillRect(g, PALETTE[SIDE.band.outline], band.outline);
+    fillRect(g, PALETTE[SIDE.band.fill], band.fill);
+    fillRect(g, PALETTE[SIDE.band.lip], band.lip);
+    fillRect(g, PALETTE.tan, results.rule);
+    for (const well of results.wells) {
+      fillRect(g, PALETTE.tan, well);
+    }
+    for (const face of results.faces) {
+      if (face.cheering) {
+        addCheeringFace(this, reduced, face.dog, face.x, face.y);
+      } else {
+        const key = ownerFaceKey(gameData, face.dog);
+        const sprite = this.add.sprite(face.x, face.y, key).setOrigin(0);
+        playTag(sprite, key, face.fired ? "fired" : "happy", reduced);
+      }
+    }
+    if (html === undefined) {
+      const { title } = results;
+      addDisplayText(this, title.centreX, title.capTop, title.text, {
+        colour: PALETTE.plum,
+        font: "title",
+        originX: 0.5,
+        scale: TEXT_SCALE,
+      });
+    }
     if (newBest) {
       this.showRibbon(reduced);
       soundboardOf(this).play("newBest");
     }
-
-    // Each amount in the short form from a thousand dollars, the labels clear of it.
-    let y = BREAKDOWN.top;
-    for (const line of lines) {
-      const amount = signedShortDollarText(line.amount);
-      text(BREAKDOWN.amountRight, y, amount, amountColour(line.amount), 1);
-      text(BREAKDOWN.label, y, line.label, PALETTE.plum);
-      y += BREAKDOWN.pitch;
-    }
-
-    text(SIDE.x, BREAKDOWN.top, words.zonesWalked, PALETTE.plum);
-    zonePips(walkLength(gameData), walk).forEach((pip, i) => {
-      const x = SIDE.x + i * SIDE.pipPitch;
-      const tag = pipTag(gameData, { state: pip, zone: walk.route[i] ?? null });
-      if (addTagImage(this, ZONE_PIPS_KEY, tag, x, SIDE.pipsY) === undefined) {
-        fillRect(g, pip === "todo" ? PALETTE.grey : PALETTE.forest, {
-          height: 8,
-          width: 18,
-          x,
-          y: SIDE.pipsY,
+    if (html === undefined) {
+      for (const box of results.framed) {
+        fillRect(g, box.fill, box.rect);
+      }
+      for (const bubble of results.bubbles) {
+        addPanel(this, bubble, "ui-quip");
+      }
+      addDetailContent(this, this.add.container(0, 0), { ...results, framed: [] });
+      // Each owner's name under the well, at 1x, its ink centred there.
+      for (const name of results.names) {
+        const label = addPixelText(this, 0, name.capTop, name.text, {
+          colour: name.colour,
+          scale: name.scale,
         });
+        const ink = inkSpan(label);
+        label.setX(name.centreX - (ink.right - ink.left) / 2 - ink.left);
       }
-    });
-    const zones = `${walk.zonesFinished}/${walkLength(gameData)}`;
-    text(SIDE.right, SIDE.pipsY, zones, PALETTE.plum, 1);
-    // The walk's total under the pips in the body font, as the breakdown's amounts are, on
-    // TOTAL's row, clear of its title-font label, both on the row's band.
-    const totalText = signedShortDollarText(walk.earnedCents);
-    const totalY = sideTotalAmountY(body, fonts.title);
-    const { band } = SIDE;
-    const amount = text(SIDE.right, totalY, totalText, PALETTE[band.text.amount], 1);
-    title(SIDE.x, SIDE.totalY, words.total, PALETTE[band.text.label]);
-    const amountInkRight = amount.x - amount.displayWidth + inkSpan(amount).right;
-    const { fill, lip, outline } = sideTotalBand(body, fonts.title, amountInkRight);
-    fillRect(g, PALETTE[band.outline], outline);
-    fillRect(g, PALETTE[band.fill], fill);
-    fillRect(g, PALETTE[band.lip], lip);
-
-    const quipsTop = rows[0]?.top ?? 0;
-    const { rule } = QUIPS;
-    fillRect(g, PALETTE.tan, { height: 1, width: rule.width, x: rule.x, y: quipsTop - rule.above });
-    const celebrating = earned.length > 0;
-    closing.forEach((line, i) => {
-      const { bubble: bubbleHeight, top: row } = itemAt(rows, i);
-      const { well } = QUIPS;
-      fillRect(g, PALETTE.tan, { height: well.size, width: well.size, x: well.x, y: row + well.y });
-      const faceX = QUIPS.face.x;
-      const faceY = row + QUIPS.face.y;
-      if (celebrating && !line.fired) {
-        addCheeringFace(this, reduced, line.dog, faceX, faceY);
-      } else {
-        const key = ownerFaceKey(gameData, line.dog);
-        const face = this.add.sprite(faceX, faceY, key).setOrigin(0);
-        playTag(face, key, line.fired ? "fired" : "happy", reduced);
-      }
-      const { bubble, nameY, textX } = QUIPS;
-      this.addBubble({ height: bubbleHeight, width: bubble.width, x: bubble.x, y: row });
-      // The owner's name under the well, at 1x.
-      const owner = gameData.dogs[line.dog].owner.name;
-      const name = addPixelText(this, 0, row + nameY, owner, { colour: PALETTE.rust, scale: 1 });
-      const nameInk = inkSpan(name);
-      name.setX(quipNameX(nameInk.right - nameInk.left) - nameInk.left);
-      const quipRow = itemAt(quipRows, i);
-      if (line.fired) {
-        const header = fillLine(MENU_TEXT_FIELDS.end, words, "firedYou", { owner });
-        title(textX, row + quipCapsTop(fonts, quipRow), header, PALETTE.darkRed);
-      }
-      const textY = row + quipTextY(fonts, quipRow);
-      const quip = text(textX, textY, line.text, PALETTE.plum);
-      fitPixelText(quip, quipFit(quipRow.lines), textX, textY);
-    });
+    }
 
     // Move the complete results group together, including its ribbon, bursts and owner rows.
     const resultObjects = this.children.getChildren().slice(resultsStart);
-    this.add.container(0, placement.offsetY).add(resultObjects);
+    this.add.container(0, view.offsetY).add(resultObjects);
 
+    const celebrating = strip !== undefined;
     if (celebrating) {
-      this.badges = addBadgeCelebration(this, reduced, strip, badgeRows, earned, false);
+      this.badges = addBadgeCelebration(
+        this,
+        reduced,
+        strip.panel,
+        strip.rows,
+        earned,
+        false,
+        html === undefined,
+      );
       // After a new best's fanfare, so the two do not play over each other.
       this.time.delayedCall(newBest ? BADGE_SOUND_AFTER_BEST_MS : 0, () =>
         soundboardOf(this).play("badge"),
       );
     }
 
+    const words = gameData.menuText.end;
     const container = this.add.container(0, 0);
-    const button = addMenuButton(
-      this,
-      BUTTON,
-      words.headHome,
-      { available: true, labelAt: END_LAYOUT.buttonLabel, primary: true },
-      container,
-    );
+    const button =
+      html === undefined
+        ? addMenuButton(
+            this,
+            BUTTON,
+            words.headHome,
+            { available: true, labelAt: END_LAYOUT.buttonLabel, primary: true },
+            container,
+          )
+        : undefined;
     this.button = { container, pressed: false };
-    const badgeHits = badgeStripHits(strip, badgeRows, this.badges.length);
+    const badgeHits =
+      strip === undefined ? [] : badgeStripHits(strip.panel, strip.rows, this.badges.length);
     // Badges have no tap action of their own, so a tap opens a badge's card as a hold does.
     // With a card open, a tap anywhere closes it.
     this.presses = listenTargetPress<EndTarget>(this, {
       onDown: (pointer, target) => {
-        addTapBurst(this, pointer.x, pointer.y);
+        // Over the HTML, so a burst on Back to title shows over it.
+        if (html === undefined) {
+          addTapBurst(this, pointer.x, pointer.y);
+        } else {
+          html.burst({ x: pointer.x, y: pointer.y });
+        }
         const at = { x: pointer.x, y: pointer.y };
         const rule = holdRule(gameData.tuning, TILE_SLOP_PX);
         this.hold =
@@ -336,7 +267,7 @@ export class EndScene extends Scene {
       },
       onPressed: (target) => {
         const pressed = target === "home";
-        button.setPressed(pressed);
+        button?.setPressed(pressed);
         if (this.button !== undefined) {
           this.button.pressed = pressed;
         }
@@ -384,9 +315,15 @@ export class EndScene extends Scene {
     this.closeCard();
     this.card = this.add.container(0, 0).setDepth(CARD_DEPTH);
     addBadgeDetail(this, this.card, SCREEN_LAYOUT.screen, this.reduced, true, badge);
+    // CLEANUP (added 2026-11-11): the screen's HTML hides under the canvas card; remove once the
+    // End screen's badge card draws in HTML.
+    this.html?.setShown(false);
   }
 
   private closeCard(): void {
+    if (this.card !== undefined) {
+      this.html?.setShown(true);
+    }
     this.card?.destroy();
     this.card = undefined;
   }
@@ -465,7 +402,9 @@ export class EndScene extends Scene {
     this.returnHomeStep?.();
     if (this.button !== undefined) {
       const { container, pressed } = this.button;
-      container.setY(pressed ? 0 : bobOffset(this.reduced, this.time.now, true));
+      const bob = pressed ? 0 : bobOffset(this.reduced, this.time.now, true);
+      container.setY(bob);
+      this.html?.setButton(pressed, bob);
     }
     if (this.hold !== undefined) {
       const { fire, press } = tickHold(this.time.now, this.hold.press);
@@ -475,16 +414,6 @@ export class EndScene extends Scene {
         this.presses?.cancel();
         this.openCard(this.hold.badge);
       }
-    }
-  }
-
-  // A ui-quip speech bubble with its tail flipped to point right at the face, or a framed box
-  // while it is missing.
-  private addBubble(rect: Rect): void {
-    addPanel(this, rect, "ui-quip");
-    if (this.textures.exists("ui-quip-tail")) {
-      const tail = this.add.image(QUIPS.tail.x, rect.y + QUIPS.tail.y, "ui-quip-tail");
-      tail.setOrigin(0).setFlipX(true);
     }
   }
 
