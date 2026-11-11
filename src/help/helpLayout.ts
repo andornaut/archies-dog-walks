@@ -40,23 +40,23 @@ export const HELP_LAYOUT = {
   },
   close: { ...pageCloseControl(SCREEN), ...HOME_BAR_LAST_FACE },
   // A tap target apart, so each dot's target is its own slot, ending above Previous's and
-  // Next's.
+  // Next's, the small button gap over their faces.
   dots: {
     centreX: width / 2,
     size: HELP.dots.size,
     spacing: MIN_TAP_SIZE,
-    y: height - HELP.dots.bottom,
+    y: height - HELP.buttonsBottom - BUTTON_SIZE.smallGap - HELP.dots.size,
   },
   heading: { x: HELP.headingX, y: HOME_BAR.mid - (TITLE_CAP_ROWS * TEXT_SCALE) / 2 },
   illustration: ILLUSTRATION,
   next: {
     ...BUTTON_SIZE.compact,
-    x: width / 2 + BUTTON_SIZE.pairGap / 2,
+    x: width / 2 + BUTTON_SIZE.gap / 2,
     y: height - HELP.buttonsBottom,
   },
   previous: {
     ...BUTTON_SIZE.compact,
-    x: width / 2 - BUTTON_SIZE.pairGap / 2 - BUTTON_SIZE.compact.width,
+    x: width / 2 - BUTTON_SIZE.gap / 2 - BUTTON_SIZE.compact.width,
     y: height - HELP.buttonsBottom,
   },
   screen: SCREEN,

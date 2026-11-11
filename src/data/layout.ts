@@ -4,6 +4,7 @@
 // fixed by the art drawn at that size or place; change them only with the art.
 
 import type { Point, Rect } from "@andornaut/game-kit/rect";
+import { BUTTON_GAP, SMALL_BUTTON_GAP } from "@andornaut/game-kit/ui/spacing";
 
 // Shared controls
 
@@ -11,12 +12,16 @@ import type { Point, Rect } from "@andornaut/game-kit/rect";
 export const BUTTON_SIZE = {
   // A card's or modal's button.
   compact: { height: 44, width: 128 },
+  // The gap between neighbouring buttons' faces, side by side or stacked, the compact and modal
+  // buttons and full-width rows counting as standard: every game's.
+  gap: BUTTON_GAP,
   // art: ui-icon-button's face side, the glyph drawn on it, and the square press target round it.
   icon: { face: 20, glyph: 16, target: 44 },
-  // The gap between a pair of buttons side by side.
-  pairGap: 12,
   // How far a pressed face sinks.
   press: 2,
+  // The gap between neighbouring faces where either is smaller than a standard button's: every
+  // game's.
+  smallGap: SMALL_BUTTON_GAP,
   // An overlay's or a screen's full-width button.
   wide: { height: 44, width: 296 },
 } as const;
@@ -719,8 +724,8 @@ export const BADGE_CELEBRATION = { facesHeight: 44, width: 344, x: 8 } as const;
 export const SHOP_PAGE = {
   // The close face's inset from the card's top-right corner.
   closeInset: 8,
-  // The Gear tab's rows' height and pitch.
-  gearRows: { height: 50, pitch: 60 },
+  // The Gear tab's rows' height.
+  gearRows: { height: 50 },
   // The list area: the card's frame round it, the rows of card under the last row, the rows a
   // page key keeps in view, and its width beside a scrollbar.
   list: { frame: 8, padBottom: 8, pageOverlap: 48, width: 322 },
@@ -756,8 +761,8 @@ export const SHOP_PAGE = {
   // The scrollbar: the thumb's inset and least height, the thumb's and track's widths, and the
   // track's left edge.
   scrollbar: { thumbInset: 1, thumbMin: 16, thumbWidth: 6, trackWidth: 8, x: 336 },
-  // The Dogs tab's slot and dog rows' height and pitch.
-  slotRows: { height: 48, pitch: 54 },
+  // The Dogs tab's slot and dog rows' height.
+  slotRows: { height: 48 },
   // The tabs: their rows under the close target, the face's top in the press area and its
   // height, the gap between tabs, the press area's height, and the rows down to the list.
   tab: { closeGap: 4, drawDy: 8, drawHeight: 28, gap: 8, height: 44, listGap: 6 },
@@ -802,8 +807,8 @@ export const LOGBOOK_PAGE = {
     earned: { bandY: 2, checkDx: 20, checkDy: -1, checkSize: 16 },
     // The rows under the last row.
     foot: 16,
-    // The gap between rows.
-    gap: 8,
+    // The gap between rows, which open their badges as buttons do.
+    gap: BUTTON_GAP,
     // The first row's top under the earned count's capitals.
     rowsDy: 20,
   },
@@ -857,8 +862,8 @@ export const HELP_SCREEN = {
   body: { lineHeight: 18, maxLines: 6, scale: 2, width: 336, x: 12 },
   // Previous's and Next's top, up from the bottom.
   buttonsBottom: 56,
-  // The page dots' top, up from the bottom, and their side.
-  dots: { bottom: 84, size: 8 },
+  // The page dots' side.
+  dots: { size: 8 },
   // The heading's left edge.
   headingX: 12,
   // The picture's height.

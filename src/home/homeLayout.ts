@@ -675,7 +675,8 @@ export function updateModalLayout(
 ) {
   const actionWidth = modalActionWidth(ink.action);
   const cancelWidth = ink.cancel === undefined ? undefined : modalActionWidth(ink.cancel);
-  const actionsWidth = actionWidth + (cancelWidth === undefined ? 0 : cancelWidth + MODAL.gap);
+  const actionsWidth =
+    actionWidth + (cancelWidth === undefined ? 0 : cancelWidth + BUTTON_SIZE.gap);
   const stacked = actionsWidth > area.width - 2 * (MODAL.margin + MODAL.pad);
   const groupWidth = stacked ? Math.max(actionWidth, cancelWidth ?? 0) : actionsWidth;
   const width = modalPanelWidth(
@@ -687,7 +688,7 @@ export function updateModalLayout(
     area,
     { ...GATE, width: area.width, x: area.x },
     {
-      height: MODAL.header + height + (stacked ? height + MODAL.rowGap : 0) + MODAL.pad,
+      height: MODAL.header + height + (stacked ? height + BUTTON_SIZE.gap : 0) + MODAL.pad,
       width,
     },
   );
@@ -704,8 +705,8 @@ export function updateModalLayout(
   const button = {
     height,
     width: stacked ? groupWidth : actionWidth,
-    x: left + (cancelWidth === undefined || stacked ? 0 : cancelWidth + MODAL.gap),
-    y: panel.y + MODAL.header + (stacked ? height + MODAL.rowGap : 0),
+    x: left + (cancelWidth === undefined || stacked ? 0 : cancelWidth + BUTTON_SIZE.gap),
+    y: panel.y + MODAL.header + (stacked ? height + BUTTON_SIZE.gap : 0),
   };
   return { button, cancel, hit: button, panel };
 }

@@ -17,7 +17,7 @@ export const QUIT_QUESTION_ANSWERS = ["keepPlaying", "quit"] as const;
 
 // Offsets from the panel's top-left corner, and the room under the last part.
 const TITLE_Y = MODAL.pad;
-const BUTTON = { ...BUTTON_SIZE.wide, gap: MODAL.rowGap, x: MODAL.pad, y: MODAL.header };
+const BUTTON = { ...BUTTON_SIZE.wide, gap: BUTTON_SIZE.gap, x: MODAL.pad, y: MODAL.header };
 
 // The width a button's label has, its key number included, 4px in from each side. The panel's
 // title is placed beside its close control, as on every modal card (addCardTitle).

@@ -71,7 +71,9 @@ const FIRST_ROWS_Y = PLATE.y + PLATE.height + TAB_GAP;
 const HEADING_TO_ROWS = FIRST_ROWS_Y - FIRST_HEADING_Y;
 const ROWS_TO_HEADING = FIRST_HEADING_Y - TAB_BOTTOM;
 const SLOT_HEADING_Y = FIRST_HEADING_Y;
-const SLOT_ROWS = { ...SHOP.slotRows, y: FIRST_ROWS_Y };
+// A list's rows, height tall, the button gap apart.
+const listRows = ({ height }: { height: number }) => ({ height, pitch: height + BUTTON_SIZE.gap });
+const SLOT_ROWS = { ...listRows(SHOP.slotRows), y: FIRST_ROWS_Y };
 const DOG_HEADING_Y =
   SLOT_ROWS.y + (DOG_SLOTS.length - 1) * SLOT_ROWS.pitch + SLOT_ROWS.height + ROWS_TO_HEADING;
 
@@ -87,7 +89,7 @@ export const SHOP_LAYOUT = {
   // The Gear tab: its heading and rows.
   gear: {
     headingY: FIRST_HEADING_Y,
-    rows: { ...SHOP.gearRows, y: FIRST_ROWS_Y },
+    rows: { ...listRows(SHOP.gearRows), y: FIRST_ROWS_Y },
   },
   // Headings sit on the card at the rows' left, a note right-aligned at their right.
   headingX: ROW_X,

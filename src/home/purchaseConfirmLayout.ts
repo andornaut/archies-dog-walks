@@ -37,7 +37,7 @@ export function purchaseConfirmLayout(
   ink: { buy: number; cancel: number; left: number; price: number; title: number },
 ) {
   const actions = { buy: modalActionWidth(ink.buy), cancel: modalActionWidth(ink.cancel) };
-  const actionsWidth = actions.buy + actions.cancel + MODAL.gap;
+  const actionsWidth = actions.buy + actions.cancel + BUTTON_SIZE.gap;
   const width = modalPanelWidth(
     SCREEN_CONFIG.width - 2 * MODAL.margin,
     Math.max(
@@ -62,7 +62,7 @@ export function purchaseConfirmLayout(
   const action = (choice: "buy" | "cancel") => ({
     height: BUTTON_HEIGHT,
     width: actions[choice],
-    x: middle - actionsWidth / 2 + (choice === "buy" ? actions.cancel + MODAL.gap : 0),
+    x: middle - actionsWidth / 2 + (choice === "buy" ? actions.cancel + BUTTON_SIZE.gap : 0),
     y: placed.y + buttonsTop,
   });
   return {

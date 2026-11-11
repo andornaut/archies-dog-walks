@@ -10,6 +10,7 @@ import { MIN_TAP_SIZE } from "../layout/screenLayout.ts";
 import { bodyTextWidth } from "../testing/bodyFont.ts";
 import { fontFileMetrics, gameFont, placedInk } from "../testing/fontInk.ts";
 import { inside } from "../testing/rects.ts";
+import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";
 import { closeFace } from "../ui/closeControl.ts";
 import { LABEL_HELP_GAP } from "../ui/labelHelpGap.ts";
 import { TEXT_SCALE } from "../ui/textFit.ts";
@@ -88,14 +89,15 @@ describe("help tap targets", () => {
 describe("helpActionAt", () => {
   // Taps at the edges of each target and just outside them.
   it("maps a tap on each target to its action, and one outside them to none", () => {
+    const dotTop = tapRect(dotRects(7)[0]!).y;
     const taps: [number, number, HelpAction | undefined][] = [
       [330, 20, { kind: "close" }],
       [HELP_LAYOUT.previous.x, HELP_LAYOUT.previous.y, { kind: "previous" }],
       [HELP_LAYOUT.next.x, HELP_LAYOUT.next.y, { kind: "advance" }],
-      [26, 458, { kind: "goTo", page: 0 }],
-      [333, 482, { kind: "goTo", page: 6 }],
+      [26, dotTop, { kind: "goTo", page: 0 }],
+      [333, dotTop + MIN_TAP_SIZE / 2, { kind: "goTo", page: 6 }],
       [180, 200, undefined],
-      [180, 457, undefined],
+      [180, dotTop - 1, undefined],
     ];
     for (const [x, y, expected] of taps) {
       expect(helpActionAt(7, { x, y }), `${x}, ${y}`).toEqual(expected);
@@ -104,6 +106,22 @@ describe("helpActionAt", () => {
 });
 
 const BODY = fontFileMetrics("font-body");
+
+// Previous and Next are a pair of standard buttons, and the page dots small ones over them.
+it.each([
+  [
+    "Previous to Next",
+    HELP_LAYOUT.next.x - HELP_LAYOUT.previous.x - HELP_LAYOUT.previous.width,
+    BUTTON_SIZE.gap,
+  ],
+  [
+    "the dots to the buttons",
+    HELP_LAYOUT.next.y - HELP_LAYOUT.dots.y - HELP_LAYOUT.dots.size,
+    BUTTON_SIZE.smallGap,
+  ],
+])("keeps the button gap from %s", (_name, gap, expected) => {
+  expect(gap).toBe(expected);
+});
 
 describe("help pages", () => {
   const { lineHeight, maxLines, scale, width, y } = HELP_LAYOUT.body;

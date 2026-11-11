@@ -7,6 +7,7 @@ import { SCREEN_CONFIG, SCREEN_LAYOUT } from "../data/screen.ts";
 import { fontFileMetrics, inkWidth } from "../testing/fontInk.ts";
 import { inside } from "../testing/rects.ts";
 import { barTitleLeft } from "../ui/barTitle.ts";
+import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";
 import { closeControl } from "../ui/closeControl.ts";
 import { TEXT_STYLE } from "../ui/textFit.ts";
 import { overlayRegion } from "./homeBar.ts";
@@ -110,12 +111,12 @@ describe.each(["newerSave", "update"] as const)("%s notice", (mode) => {
 it("places update cancellation beside its primary action and stacks the whole group when necessary", () => {
   const paired = updateModalLayout(area, { action: 100, cancel: 60, title: 160 });
   expect(paired.cancel).toBeDefined();
-  expect(paired.cancel!.x + paired.cancel!.width + MODAL.gap).toBe(paired.button.x);
+  expect(paired.cancel!.x + paired.cancel!.width + BUTTON_SIZE.gap).toBe(paired.button.x);
   expect(paired.cancel!.y).toBe(paired.button.y);
   const stacked = updateModalLayout(area, { action: 180, cancel: 120, title: 160 });
   expect(stacked.cancel!.x).toBe(stacked.button.x);
   expect(stacked.cancel!.width).toBe(stacked.button.width);
-  expect(stacked.cancel!.y + stacked.cancel!.height + MODAL.rowGap).toBe(stacked.button.y);
+  expect(stacked.cancel!.y + stacked.cancel!.height + BUTTON_SIZE.gap).toBe(stacked.button.y);
   expect(inside(stacked.button, stacked.panel)).toBe(true);
   expect(updateModalLayout(area, { action: 100, title: 160 }).cancel).toBeUndefined();
 });
