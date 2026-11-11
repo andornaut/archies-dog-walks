@@ -258,6 +258,7 @@ export function showQuestionPanel(layer: UiLayer, input: DomQuestionPanelInput):
     element.className = [
       "adw-button",
       ...(button.primary ? ["adw-go"] : []),
+      ...(button.secondary === true ? ["adw-secondary"] : []),
       ...(button.available === false ? ["adw-disabled"] : []),
     ].join(" ");
     if (passive) {
@@ -267,7 +268,8 @@ export function showQuestionPanel(layer: UiLayer, input: DomQuestionPanelInput):
       element.setAttribute("aria-label", button.label);
       element.setAttribute("aria-keyshortcuts", String(i + 1));
     }
-    if (passive && button.pressed === true && button.available !== false) {
+    // Shown pressed as the scene says too, as a key's dip before it acts.
+    if (button.pressed === true && button.available !== false) {
       element.setAttribute("data-pressed", "");
     }
     const face = doc.createElement("span");

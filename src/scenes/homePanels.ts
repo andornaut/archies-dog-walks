@@ -206,7 +206,7 @@ export function detailView(
 export function addDetailContent(
   scene: Scene,
   parent: GameObjects.Container,
-  view: DetailCardView,
+  view: Pick<DetailCardView, "art" | "framed" | "texts">,
 ): void {
   for (const box of view.framed) {
     const g = scene.add.graphics();
@@ -219,19 +219,20 @@ export function addDetailContent(
   }
 }
 
-// A view's text as labels, in parent when given: left-aligned with its pen at x, or each line
-// centred there as a label with originX 0.5, each effect's name in its pill, and each span in a
-// colour of its own drawn again over its place in the line, measured from the line's start
-// through the span, since a trailing space has no width.
+// A view's text as labels in its font, in parent when given: left-aligned with its pen at x, or
+// each line centred there as a label with originX 0.5, each effect's name in its pill, and each
+// span in a colour of its own drawn again over its place in the line, measured from the line's
+// start through the span, since a trailing space has no width.
 export function addDetailText(
   scene: Scene,
   parent: GameObjects.Container | undefined,
   text: DetailText,
 ): GameObjects.BitmapText[] {
   const scale = text.scale ?? TEXT_SCALE;
+  const font = text.font ?? "body";
   const centred = text.align === "centre";
-  const style = { colour: text.colour, scale, ...(centred ? { originX: 0.5 } : {}) };
-  const pitch = pixelFontMetrics(scene, "body").lineHeight * scale;
+  const style = { colour: text.colour, font, scale, ...(centred ? { originX: 0.5 } : {}) };
+  const pitch = pixelFontMetrics(scene, font).lineHeight * scale;
   const labels = centred
     ? text.lines.map((line, i) => addPixelText(scene, text.x, text.capTop + i * pitch, line, style))
     : [addPixelText(scene, text.x, text.capTop, text.lines.join("\n"), style)];

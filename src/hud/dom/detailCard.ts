@@ -30,7 +30,7 @@ import {
 
 export interface DomDetailCardInput extends Pick<
   DomQuestionPanelInput,
-  "close" | "closeLabel" | "fonts" | "toGame"
+  "close" | "closeLabel" | "closePressed" | "fonts" | "toGame"
 > {
   // An art file's URL by its path under /art/.
   readonly artUrl: (path: string) => string;
@@ -47,7 +47,7 @@ const hex = (colour: number) => `#${colour.toString(16).padStart(6, "0")}`;
 let cards = 0;
 
 // A framed box, whole art pixels from its corner, its fill an art pixel inside its border.
-function framedPart(doc: Document, view: DetailCardView["framed"][number]): DomPart {
+export function framedPart(doc: Document, view: DetailCardView["framed"][number]): DomPart {
   const element = doc.createElement("div");
   element.className = "adw-framed";
   element.style.backgroundColor = hex(view.border);
@@ -158,21 +158,22 @@ export function textPart(
 ): DomPart {
   const element = doc.createElement("p");
   element.className = "adw-lines";
+  const font = text.font ?? "body";
   // Where each span starts in the line as the font draws it, and its colour.
   let next = 0;
   const spans = (text.spans ?? []).map((span) => {
     const from = next;
-    next += [...shownText("body", span.text)].length;
+    next += [...shownText(font, span.text)].length;
     return { colour: span.colour, from };
   });
   const block = {
     ...text,
     anchor: text.align === "centre" ? "centre" : "pen",
     ...(text.spans === undefined ? {} : { breaks: [new Set(spans.map(({ from }) => from))] }),
-    font: "body",
+    font,
     scale: text.scale ?? TEXT_SCALE,
   } as const;
-  const bitmap: BitmapFont = input.fonts.body;
+  const bitmap: BitmapFont = input.fonts[font];
   // The runs and pills are the same at every scale.
   const first = blockPlace(bitmap, { dpr: 1, origin: { x: 0, y: 0 }, unit: 1 }, block);
   const pills = first.pills.map(({ index }) => {
@@ -188,7 +189,7 @@ export function textPart(
   // Each run's colour: its pill's name colour, or the text's.
   const runs = first.runs.map((run) => {
     const span = doc.createElement("span");
-    span.className = "adw-text adw-font-body";
+    span.className = `adw-text adw-font-${font}`;
     span.setAttribute("aria-hidden", "true");
     span.textContent = run.text;
     const named = run.pill === undefined ? undefined : input.pillColours(run.pill);
@@ -198,7 +199,7 @@ export function textPart(
   });
   const spoken = doc.createElement("span");
   spoken.className = "adw-spoken";
-  spoken.textContent = `${text.lines.map((line) => spokenText(shownText("body", line))).join(" ")} `;
+  spoken.textContent = `${text.lines.map((line) => spokenText(shownText(font, line))).join(" ")} `;
   element.append(...pills.map(({ pill }) => pill), ...runs, spoken);
   return {
     element,
@@ -252,6 +253,7 @@ export function showDetailCard(layer: UiLayer, input: DomDetailCardInput): DomQu
   return showQuestionPanel(layer, {
     close: input.close,
     closeLabel: input.closeLabel,
+    ...(input.closePressed === undefined ? {} : { closePressed: input.closePressed }),
     describedBy: texts.id,
     fonts: input.fonts,
     numberKeys: false,

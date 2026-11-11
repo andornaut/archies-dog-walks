@@ -1,12 +1,14 @@
 import { containsPoint, type Point, type Rect } from "@andornaut/game-kit/rect";
 import { pageToGame } from "@andornaut/game-kit/view/pagePoint";
-import { type Scene, Scenes } from "phaser";
+import { type GameObjects, type Scene, Scenes } from "phaser";
 
 import { artUrl } from "../assets/artFiles.ts";
 import { gameData } from "../data/index.ts";
 import { SCREEN_CONFIG } from "../data/screen.ts";
 import type { HelpView } from "../help/helpView.ts";
 import type { DetailCardView } from "../home/detailCardView.ts";
+import type { ConfirmChoice } from "../home/purchaseConfirm.ts";
+import type { PurchaseConfirmCardView } from "../home/purchaseConfirmCardView.ts";
 import type { ZoneCelebrationView } from "../hud/celebrationView.ts";
 import {
   type BadgeCelebrationView,
@@ -15,6 +17,7 @@ import {
 } from "../hud/dom/celebration.ts";
 import { showDetailCard } from "../hud/dom/detailCard.ts";
 import { showHelpScreen } from "../hud/dom/helpScreen.ts";
+import { showPurchaseConfirm } from "../hud/dom/purchaseConfirm.ts";
 import {
   type DomQuestionPanel,
   type DomQuestionPanelInput,
@@ -35,10 +38,10 @@ import { loadSheet } from "../ui/dom/sheetFrames.ts";
 import { uiLayer } from "../ui/dom/uiLayer.ts";
 import { rectIndexAt } from "../ui/grid.ts";
 import { PALETTE } from "../ui/palette.ts";
-import { fillRect } from "../ui/phaser/draw.ts";
+import { addModalShade, fillRect } from "../ui/phaser/draw.ts";
 import { addPixelText, pixelBitmapFont } from "../ui/phaser/pixelText.ts";
 import { pillColours } from "./effectNameColours.ts";
-import { addCardClose, addCardTitle } from "./homePanels.ts";
+import { addCardClose, addCardTitle, drawDetailCardView } from "./homePanels.ts";
 import { canvasPanelMeasure } from "./modalMeasure.ts";
 import { listenTargetPress } from "./targetPress.ts";
 import { addMenuButton, addRimmedPanel, addTapBurst, type MenuButton } from "./uiKit.ts";
@@ -233,18 +236,85 @@ export function addHtmlModalCard(
 
 // A detail card in the HTML layer, laid out as the canvas draws it (detailCardView), its close
 // control doing close, or a picture of one on a card that takes no presses, as the walk's
-// explanation, which a press anywhere closes. Returns it, for its scene to destroy as the card
-// closes, or undefined where the canvas must draw it (drawDetailCard).
+// explanation, which a press anywhere closes, shown pressed while closePressed. Returns it, for
+// its scene to destroy as the card closes, or undefined where the canvas must draw it
+// (drawDetailCard).
 export function addHtmlDetailCard(
   scene: Scene,
   view: DetailCardView,
   close: (() => void) | undefined,
+  closePressed = false,
 ): DomQuestionPanel | undefined {
   const place = htmlPanelPlace(scene);
   if (place === undefined) {
     return undefined;
   }
-  const panel = showDetailCard(place.layer, { ...htmlArtInput(place), close, view });
+  const panel = showDetailCard(place.layer, { ...htmlArtInput(place), close, closePressed, view });
+  return followScene(scene, panel);
+}
+
+// An HTML panel a scene that draws itself again on every change keeps while what it shows is
+// the same: the panel shown for key, or undefined where the canvas draws it.
+export interface KeptPanel {
+  readonly key: string;
+  readonly panel: DomQuestionPanel | undefined;
+}
+
+// kept while key is unchanged, else kept's panel destroyed and show's for key in its place;
+// undefined, with kept's panel destroyed, where key is undefined.
+export function keepPanel(
+  kept: KeptPanel | undefined,
+  key: string | undefined,
+  show: () => DomQuestionPanel | undefined,
+): KeptPanel | undefined {
+  if (kept !== undefined && kept.key === key) {
+    return kept;
+  }
+  kept?.panel?.destroy();
+  return key === undefined ? undefined : { key, panel: show() };
+}
+
+// A held item's detail card over a dim layer over dim, its close control shown pressed or not,
+// which a press anywhere closes: in HTML over the canvas's dim, kept while it shows the same
+// (keepPanel), else on the canvas (drawDetailCardView). Returns the HTML kept.
+export function addDetailCardOver(
+  scene: Scene,
+  parent: GameObjects.Container,
+  dim: Rect,
+  closePressed: boolean,
+  view: DetailCardView,
+  kept: KeptPanel | undefined,
+): KeptPanel | undefined {
+  const html = keepPanel(kept, JSON.stringify([view, closePressed]), () =>
+    addHtmlDetailCard(scene, view, undefined, closePressed),
+  );
+  if (html?.panel === undefined) {
+    drawDetailCardView(scene, parent, dim, closePressed, view);
+  } else {
+    parent.add(addModalShade(scene, dim));
+  }
+  return html;
+}
+
+// The purchase confirm in the HTML layer, laid out as the canvas draws it
+// (purchaseConfirmCardView), each answer and the close control, which cancels, doing answer.
+// Returns it, for its scene to destroy as the confirm closes, or undefined where the canvas must
+// draw it (drawPurchaseConfirm).
+export function addHtmlPurchaseConfirm(
+  scene: Scene,
+  view: PurchaseConfirmCardView,
+  answer: (choice: ConfirmChoice) => void,
+): DomQuestionPanel | undefined {
+  const place = htmlPanelPlace(scene);
+  if (place === undefined) {
+    return undefined;
+  }
+  const panel = showPurchaseConfirm(place.layer, {
+    ...htmlArtInput(place),
+    buy: () => answer("buy"),
+    cancel: () => answer("cancel"),
+    view,
+  });
   return followScene(scene, panel);
 }
 

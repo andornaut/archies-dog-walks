@@ -64,13 +64,13 @@ import { exitShown } from "../pwa/index.ts";
 import type { SaveDocument } from "../save/schema.ts";
 import type { ArtLook } from "../ui/interaction.ts";
 import { PALETTE } from "../ui/palette.ts";
-import { fillRect } from "../ui/phaser/draw.ts";
+import { addModalShade, fillRect } from "../ui/phaser/draw.ts";
 import { fitPixelText, pixelFontMetrics, placePixelText } from "../ui/phaser/pixelText.ts";
 import { GREYED, pictureBox, type PlateKind } from "../ui/selection.ts";
 import { cents } from "../units.ts";
 import type { CelebrationSceneData } from "./CelebrationScene.ts";
 import { listenHomeBar } from "./homeBarPress.ts";
-import { drawDetailCard } from "./homePanels.ts";
+import { detailView } from "./homePanels.ts";
 import {
   addPlate,
   addTileBadge,
@@ -86,7 +86,17 @@ import {
   purchaseInProfile,
   takeCelebrations,
 } from "./profileStore.ts";
-import { drawPurchaseConfirm, type PurchaseConfirmHits } from "./purchaseConfirmView.ts";
+import {
+  drawPurchaseConfirm,
+  type PurchaseConfirmHits,
+  purchaseConfirmView,
+} from "./purchaseConfirmView.ts";
+import {
+  addDetailCardOver,
+  addHtmlPurchaseConfirm,
+  keepPanel,
+  type KeptPanel,
+} from "./questionPanel.ts";
 import { SCENE_KEYS, type SceneKey } from "./sceneKeys.ts";
 import {
   addScrollbar,
@@ -187,6 +197,9 @@ export class ShopScene extends Scene {
   private confirmHits: PurchaseConfirmHits | undefined;
   private containers = new Map<string, GameObjects.Container>();
   private detail: Purchase | undefined;
+  // The detail card and the purchase confirm drawn in HTML, while each is open.
+  private htmlConfirm: KeptPanel | undefined;
+  private htmlDetail: KeptPanel | undefined;
   private focusId: string | null = null;
   // The open list's area, rows' width and heading note's right edge, by whether it scrolls.
   private frame = shopListFrame(false);
@@ -217,6 +230,9 @@ export class ShopScene extends Scene {
     this.confirmHits = undefined;
     this.detail = undefined;
     this.hold = undefined;
+    // The scene's shutdown destroyed any HTML card.
+    this.htmlConfirm = undefined;
+    this.htmlDetail = undefined;
     this.message = null;
     this.pressed = undefined;
     this.scroll = listScroll(0);
@@ -679,23 +695,40 @@ export class ShopScene extends Scene {
     if (this.message !== null) {
       this.drawMessage(root, this.message);
     }
-    if (this.detail !== undefined) {
+    if (this.detail === undefined) {
+      this.htmlDetail?.panel?.destroy();
+      this.htmlDetail = undefined;
+    } else {
       this.drawDetail(save, this.detail);
     }
-    if (this.confirm !== undefined) {
+    if (this.confirm === undefined) {
+      this.htmlConfirm?.panel?.destroy();
+      this.htmlConfirm = undefined;
+    } else {
       this.drawConfirm(this.confirm);
     }
   }
 
-  // The purchase confirm over the shop: its card, and the dim around it that cancels.
+  // The purchase confirm over the shop: its card, and the dim around it that cancels. In HTML
+  // where the page's switch is on and its fonts are ready, kept while it shows the same, over the
+  // canvas's dim, else on the canvas.
   private drawConfirm(pending: PendingPurchase): void {
     const pressed = this.pressed?.kind === "confirm" ? this.pressed.choice : undefined;
-    this.confirmHits = drawPurchaseConfirm(this, this.add.container(0, 0), {
-      closePressed: this.pressed?.kind === "confirmClose",
+    const view = purchaseConfirmView(this, {
       lines: confirmLines(gameData, pending),
       picture: purchasePicture(pending.purchase),
       pressed,
     });
+    this.confirmHits = view.hits;
+    const layer = this.add.container(0, 0);
+    this.htmlConfirm = keepPanel(this.htmlConfirm, JSON.stringify(view), () =>
+      addHtmlPurchaseConfirm(this, view, (choice) => this.answer(choice)),
+    );
+    if (this.htmlConfirm?.panel === undefined) {
+      drawPurchaseConfirm(this, layer, view, this.pressed?.kind === "confirmClose");
+    } else {
+      layer.add(addModalShade(this, view.dim));
+    }
   }
 
   // The message on the ui-hint plate across the list's top, on one line at 2x.
@@ -885,6 +918,11 @@ export class ShopScene extends Scene {
         ? dogDetail(gameData, save.owned, save.bankCents, purchase.dog)
         : gearDetail(gameData, save.owned, save.bankCents, save.lastLoadout, purchase.gear);
     const dim = overlayRegion("home");
-    drawDetailCard(this, layer, dim, false, card, purchasePicture(purchase), purchase.kind);
+    const view = detailView(this, dim, {
+      card,
+      kind: purchase.kind,
+      picture: purchasePicture(purchase),
+    });
+    this.htmlDetail = addDetailCardOver(this, layer, dim, false, view, this.htmlDetail);
   }
 }

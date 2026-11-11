@@ -108,6 +108,9 @@ export const UI_STYLE = `
 .adw-button[data-pressed] .adw-face{border-image-source:var(--adw-ui-button-pressed)}
 .adw-button.adw-go .adw-face{border-image-source:var(--adw-ui-button-go);background-color:var(--adw-green)}
 .adw-button.adw-go[data-pressed] .adw-face{border-image-source:var(--adw-ui-button-go-pressed)}
+.adw-button.adw-secondary .adw-face{border-image-source:var(--adw-ui-button-secondary)}
+.adw-button.adw-secondary[data-pressed] .adw-face{
+  border-image-source:var(--adw-ui-button-secondary-pressed)}
 .adw-button[data-pressed] .adw-text,.adw-close[data-pressed] .adw-close-glyph{transform:translateY(${px(2)})}
 .adw-close-face{background:var(--adw-ui-icon-button-normal) 0 0/100% 100%;image-rendering:pixelated}
 .adw-close[data-pressed] .adw-close-face{background-image:var(--adw-ui-icon-button-pressed)}

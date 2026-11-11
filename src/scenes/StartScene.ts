@@ -180,7 +180,7 @@ import { addNamePills } from "./effectNameColours.ts";
 import { HELP_CLOSED_EVENT } from "./HelpScene.ts";
 import { openHelp } from "./helpScreen.ts";
 import { exitGame, HOME_PAGE_OPENING_EVENT, openHomePage } from "./homeBarPress.ts";
-import { addAffordFrame, addModalCard, drawDetailCard } from "./homePanels.ts";
+import { addAffordFrame, addModalCard, detailView } from "./homePanels.ts";
 import {
   addPlate,
   addTileBadge,
@@ -213,7 +213,7 @@ import {
   updateProfile,
   walkerSpriteKey,
 } from "./profileStore.ts";
-import { addHtmlModalCard } from "./questionPanel.ts";
+import { addDetailCardOver, addHtmlModalCard, type KeptPanel } from "./questionPanel.ts";
 import { emphasiseRefusedControl } from "./refuseControl.ts";
 import { nextRunStart } from "./run/runRecorder.ts";
 import { type RunPick, runSceneData } from "./run/runStart.ts";
@@ -456,6 +456,8 @@ export class StartScene extends Scene {
   private overlay: Overlay | undefined;
   // The update notice drawn in HTML, while one is open, and the notice it shows.
   private htmlNotice: { readonly card: DomQuestionPanel; readonly mode: PlateMode } | undefined;
+  // The detail card drawn in HTML, while one is open.
+  private htmlDetail: KeptPanel | undefined;
   private overlayLayer: GameObjects.Container | undefined;
   // A press that began while a panel was open: it never reaches the tiles under it.
   private overlayPress: { x: number; y: number } | undefined;
@@ -510,6 +512,8 @@ export class StartScene extends Scene {
     this.exit = exitShown();
     this.focus = null;
     this.hold = undefined;
+    // The scene's shutdown destroyed any HTML card.
+    this.htmlDetail = undefined;
     this.overlay = undefined;
     this.overlayPress = undefined;
     this.shownUpdate = undefined;
@@ -1508,6 +1512,10 @@ export class StartScene extends Scene {
       this.htmlNotice?.card.destroy();
       this.htmlNotice = undefined;
     }
+    if (overlay === undefined || "mode" in overlay) {
+      this.htmlDetail?.panel?.destroy();
+      this.htmlDetail = undefined;
+    }
     if (overlay === undefined) {
       return;
     }
@@ -1518,16 +1526,16 @@ export class StartScene extends Scene {
     const { target } = overlay;
     const card = this.detailCard(save, target);
     const picture = this.detailPicture(target);
-    const rect = drawDetailCard(
+    const view = detailView(this, HOME_REGION, { card, kind: target.kind, picture });
+    this.htmlDetail = addDetailCardOver(
       this,
       layer,
       HOME_REGION,
       this.closePressed(),
-      card,
-      picture,
-      target.kind,
+      view,
+      this.htmlDetail,
     );
-    this.overlay = { ...overlay, rect };
+    this.overlay = { ...overlay, rect: view.card.panel };
   }
 
   // A dog, gear item or walker's full card, owned or not.

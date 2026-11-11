@@ -76,6 +76,8 @@ export interface PanelButton {
   readonly pressed?: boolean;
   readonly primary: boolean;
   readonly rect: Rect;
+  // Whether a button that is not primary wears the secondary look, as a card's own controls do.
+  readonly secondary?: boolean;
   readonly text: PanelText;
 }
 
@@ -239,6 +241,8 @@ export interface CardAction {
   readonly label: string;
   readonly primary: boolean;
   readonly rect: Rect;
+  // The secondary look, as the purchase confirm's Cancel wears.
+  readonly secondary?: boolean;
 }
 
 // A modal card laid out by its caller (an update notice's, updateModalLayout): the ui-detail-card
@@ -251,9 +255,10 @@ export function modalCardView(
   actions: readonly CardAction[],
 ): QuestionPanelView {
   const titleY = cardTitleRow(card).y + HOME_LAYOUT.card.titleRow.titleY;
-  const buttons = actions.map(({ label, primary, rect }) =>
-    panelButton(measure, rect, primary, label),
-  );
+  const buttons = actions.map(({ label, primary, rect, secondary }) => ({
+    ...panelButton(measure, rect, primary, label),
+    ...(secondary === true ? { secondary } : {}),
+  }));
   return {
     buttons,
     close: closeControl(card),
