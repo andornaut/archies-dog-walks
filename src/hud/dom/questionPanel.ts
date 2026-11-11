@@ -8,16 +8,17 @@ import {
   createTextLine,
   type DomTextLine,
   placeBox,
+  placeFrame,
   placeText,
   setBox,
 } from "../../ui/dom/pixelLine.ts";
 import type { UiLayer } from "../../ui/dom/uiLayer.ts";
 import {
   artPixel,
-  deviceRect,
   deviceX,
   deviceY,
   type DomScale,
+  frameRect,
   gridTransform,
 } from "../../ui/domScale.ts";
 import type { PanelText, QuestionPanelView } from "../questionPanelView.ts";
@@ -103,6 +104,9 @@ export function showQuestionPanel(layer: UiLayer, input: DomQuestionPanelInput):
   const placed: ((scale: DomScale) => void)[] = [];
   const box = (element: HTMLElement, origin: Point, rect: Rect) =>
     placed.push((scale) => placeBox(scale, origin, element, rect));
+  // A nine-slice frame, whole art pixels wide and tall.
+  const frame = (element: HTMLElement, origin: Point, rect: Rect) =>
+    placed.push((scale) => placeFrame(scale, origin, element, rect));
   const text = (parent: HTMLElement, origin: Point, line: DomTextLine) => {
     const element = createTextLine(doc, line);
     parent.append(element);
@@ -115,16 +119,16 @@ export function showQuestionPanel(layer: UiLayer, input: DomQuestionPanelInput):
     dialog.style.width = `${deviceX(scale, SCREEN_CONFIG.width)}px`;
     dialog.style.height = `${deviceY(scale, SCREEN_CONFIG.height)}px`;
     dialog.style.transform = gridTransform(scale);
-    const frame = deviceRect(scale, view.panel);
+    const outer = frameRect(scale, view.panel);
     const pixel = artPixel(scale);
     setBox(rim, {
-      height: frame.height + 2 * pixel,
-      left: frame.left - pixel,
-      top: frame.top - pixel,
-      width: frame.width + 2 * pixel,
+      height: outer.height + 2 * pixel,
+      left: outer.left - pixel,
+      top: outer.top - pixel,
+      width: outer.width + 2 * pixel,
     });
   });
-  box(panel, ORIGIN, view.panel);
+  frame(panel, ORIGIN, view.panel);
   for (const part of input.parts ?? []) {
     dialog.append(part.element);
     placed.push(part.place);
@@ -209,7 +213,7 @@ export function showQuestionPanel(layer: UiLayer, input: DomQuestionPanelInput):
     face.className = "adw-face";
     element.append(face);
     box(element, ORIGIN, button.hit);
-    box(face, button.hit, button.rect);
+    frame(face, button.hit, button.rect);
     text(element, button.hit, button.text).setAttribute("aria-hidden", "true");
     pressable(element, () => input.presses[i]?.());
     return element;

@@ -61,6 +61,16 @@ export function deviceRect(scale: DomScale, rect: Rect): DeviceRect {
   };
 }
 
+// A frame's rect in device pixels: deviceRect's corner, its width and height the nearest whole
+// number of art pixels (at least one), so the bands of its far edges sit on the same art-pixel
+// phase as its near edges'.
+export function frameRect(scale: DomScale, rect: Rect): DeviceRect {
+  const box = deviceRect(scale, rect);
+  const pixel = artPixel(scale);
+  const snap = (length: number) => Math.max(1, Math.round(length / pixel)) * pixel;
+  return { ...box, height: snap(box.height), width: snap(box.width) };
+}
+
 // The device pixels one art pixel takes: the fit rounded down to whole device pixels, at least
 // one, so every pixel of a frame, a rim or an icon is the same size.
 export function artPixel(scale: DomScale): number {

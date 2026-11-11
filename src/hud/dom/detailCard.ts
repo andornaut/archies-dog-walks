@@ -5,7 +5,7 @@ import type { DetailArt, DetailCardView, DetailText } from "../../home/detailCar
 import { blockPlace, setBox, shownText, spokenText } from "../../ui/dom/pixelLine.ts";
 import { type SheetFrame, sheetFrame } from "../../ui/dom/sheetFrames.ts";
 import type { UiLayer } from "../../ui/dom/uiLayer.ts";
-import { artPixel, deviceRect, deviceX, deviceY, type DomScale } from "../../ui/domScale.ts";
+import { artPixel, deviceX, deviceY, type DomScale, frameRect } from "../../ui/domScale.ts";
 import { TEXT_SCALE } from "../../ui/textFit.ts";
 import {
   type DomPart,
@@ -50,7 +50,7 @@ function framedPart(doc: Document, view: DetailCardView["framed"][number]): DomP
   return {
     element,
     place: (scale) => {
-      const box = deviceRect(scale, view.rect);
+      const box = frameRect(scale, view.rect);
       const pixel = artPixel(scale);
       setBox(element, box);
       setBox(fill, {

@@ -6,7 +6,7 @@ import {
   laidGlyphs,
 } from "@andornaut/game-kit/text/bitmapFont";
 
-import { deviceRect, deviceX, deviceY, type DomScale, fontPixel } from "../domScale.ts";
+import { deviceRect, deviceX, deviceY, type DomScale, fontPixel, frameRect } from "../domScale.ts";
 import { laidPills, PILL_CLOSE, PILL_SPACE, pillIndex, pillRows } from "../namePills.ts";
 import { plainMarks } from "../pixelFont.ts";
 import { WEB_FONTS } from "./uiLayer.ts";
@@ -73,6 +73,22 @@ export function textPlace(
 // Places element over rect, in device pixels from its container's corner at origin.
 export function placeBox(scale: DomScale, origin: Origin, element: HTMLElement, rect: Rect): void {
   const box = deviceRect(scale, rect);
+  setBox(element, {
+    ...box,
+    left: box.left - deviceX(scale, origin.x),
+    top: box.top - deviceY(scale, origin.y),
+  });
+}
+
+// Places element over rect as a frame (frameRect), in device pixels from its container's corner
+// at origin.
+export function placeFrame(
+  scale: DomScale,
+  origin: Origin,
+  element: HTMLElement,
+  rect: Rect,
+): void {
+  const box = frameRect(scale, rect);
   setBox(element, {
     ...box,
     left: box.left - deviceX(scale, origin.x),
