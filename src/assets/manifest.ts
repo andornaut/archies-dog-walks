@@ -20,6 +20,8 @@ export interface FontAsset {
   fnt: string;
   key: string;
   png: string;
+  // The same glyphs as a web font, for the HTML interface's text, where the font has one.
+  woff?: string;
 }
 
 export interface ImageAsset {
@@ -73,7 +75,9 @@ const pathField = v.pipe(
 
 const manifestSchema = v.pipe(
   record({
-    fonts: list(record({ fnt: pathField, key: keyField, png: pathField })),
+    fonts: list(
+      record({ fnt: pathField, key: keyField, png: pathField, woff: v.exactOptional(pathField) }),
+    ),
     images: list(record({ key: keyField, png: pathField })),
     sounds: list(
       record({

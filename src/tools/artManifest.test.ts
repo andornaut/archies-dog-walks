@@ -59,6 +59,7 @@ describe("generateArtManifest", () => {
       memoryArt({
         "fonts/font-body.fnt": FONT,
         "fonts/font-body.png": "",
+        "fonts/font-body.woff": "",
         "images/card-skip.png": "",
         "manifest.extra.json": JSON.stringify({ sounds: { "music-walk": { loop: true } } }),
         "sounds/music-walk.m4a": "",
@@ -72,7 +73,14 @@ describe("generateArtManifest", () => {
       }),
     );
     expect(manifest).toEqual({
-      fonts: [{ fnt: "fonts/font-body.fnt", key: "font-body", png: "fonts/font-body.png" }],
+      fonts: [
+        {
+          fnt: "fonts/font-body.fnt",
+          key: "font-body",
+          png: "fonts/font-body.png",
+          woff: "fonts/font-body.woff",
+        },
+      ],
       images: [{ key: "card-skip", png: "images/card-skip.png" }],
       sounds: [
         {
@@ -95,7 +103,7 @@ describe("generateArtManifest", () => {
     });
   });
 
-  it("fails on a missing pair, a stray file, a bad sidecar or a font page that is not beside it", async () => {
+  it("fails on a missing pair, a stray file, a bad sidecar, a misplaced font page or a lone web font", async () => {
     const cases: { error: string; files: Record<string, string>; name: string }[] = [
       {
         error: "sprites/newspaper-box.png has no sprites/newspaper-box.json",
@@ -126,6 +134,11 @@ describe("generateArtManifest", () => {
         error: "names page font-body.png",
         files: { "fonts/font-body.fnt": FONT },
         name: "a font whose page is not a PNG beside it",
+      },
+      {
+        error: "fonts/font-comic.woff has no fonts/font-comic.fnt",
+        files: { "fonts/font-comic.woff": "" },
+        name: "a web font without its bitmap font",
       },
     ];
     await Promise.all(

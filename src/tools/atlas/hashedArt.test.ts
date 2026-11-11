@@ -18,12 +18,13 @@ describe("hashedArtFileName", () => {
 const manifest: AssetManifest = {
   fonts: [
     { fnt: "fonts/packed.fnt", key: "packed-font", png: "fonts/packed.png" },
-    { fnt: "fonts/own.fnt", key: "own-font", png: "fonts/own.png" },
+    { fnt: "fonts/own.fnt", key: "own-font", png: "fonts/own.png", woff: "fonts/own.woff" },
   ],
   images: [
     { key: "packed-image", png: "images/packed.png" },
     { key: "own-image", png: "images/own.png" },
     { key: "shared-image", png: "sprites/shared.png" },
+    { key: "ui-panel", png: "images/ui-panel.png" },
   ],
   sounds: [{ key: "sound", m4a: "sounds/sound.m4a", ogg: "sounds/sound.ogg" }],
   sprites: [
@@ -33,7 +34,7 @@ const manifest: AssetManifest = {
 };
 const atlas: AtlasManifest = {
   pages: [{ bytes: 3, file: "atlas/ui-0.webp", group: "ui", height: 4, width: 4 }],
-  textures: ["packed-font", "packed-image", "packed-sprite"].map((key) => ({
+  textures: ["packed-font", "packed-image", "packed-sprite", "ui-panel"].map((key) => ({
     frames: [{ h: 1, name: "0", w: 1, x: 1, y: 1 }],
     key,
     page: 0,
@@ -42,7 +43,8 @@ const atlas: AtlasManifest = {
 const page = new Uint8Array([7, 8, 9]);
 const readArt = async (path: string) => new TextEncoder().encode(`source:${path}`);
 
-// Packed and unpacked entries exercise each asset category; the shared PNG must emit once.
+// Packed and unpacked entries exercise each asset category; the shared PNG must emit once, and
+// the HTML interface's packed art and the web fonts emit as files of their own.
 describe("hashed game art", () => {
   let files: HashedArtFile[];
   beforeAll(async () => {
@@ -52,14 +54,16 @@ describe("hashed game art", () => {
     });
   });
 
-  it("emits every required path once in sorted order without packed source files", () => {
+  it("emits every required path once in sorted order without packed canvas-only files", () => {
     expect(files.map(({ path }) => path)).toEqual([
       "atlas-manifest.json",
       "atlas/ui-0.webp",
       "fonts/own.fnt",
       "fonts/own.png",
+      "fonts/own.woff",
       "fonts/packed.fnt",
       "images/own.png",
+      "images/ui-panel.png",
       "manifest.json",
       "sounds/sound.m4a",
       "sounds/sound.ogg",

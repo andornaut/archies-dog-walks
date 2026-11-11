@@ -1,9 +1,8 @@
 import { itemAt } from "@andornaut/game-kit/arrays";
 import { getOrInsertComputed } from "@andornaut/game-kit/maps";
 import type { Loader, Scene, Textures } from "phaser";
-import artFiles from "virtual:art-files";
 
-import { artFileUrl } from "../artUrl.ts";
+import { artUrl } from "../artFiles.ts";
 import { filtersLinear, steppedBases } from "../atlasGroups.ts";
 import {
   asepriteSheetOf,
@@ -17,11 +16,7 @@ import {
 } from "../atlasManifest.ts";
 import { type AssetManifest, parseManifest } from "../manifest.ts";
 
-// The URL of an art file by its path under /art/: in a build, its content-hashed copy, so the
-// code loads its own build's art whatever the service worker or the browser has cached.
-export function artUrl(path: string): string {
-  return artFileUrl(import.meta.env.BASE_URL, artFiles, path);
-}
+export { artUrl };
 
 export const MANIFEST_CACHE_KEY = "art-manifest";
 const ATLAS_CACHE_KEY = "art-atlas-manifest";

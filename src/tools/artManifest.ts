@@ -23,7 +23,8 @@ import { jsonText } from "./files.ts";
 // - sprites/<key>.png with sprites/<key>.json (an Aseprite hash export) is a sprite. A sprite
 //   standsOnGround picks gets an anchor measured from frame 0, as the game measures it.
 // - images/<key>.png is an image.
-// - fonts/<key>.fnt is a font, with the PNG its one page names.
+// - fonts/<key>.fnt is a font, with the PNG its one page names, and fonts/<key>.woff, where there
+//   is one, the same glyphs as a web font.
 // - sounds/<key>.ogg with sounds/<key>.m4a is a sound.
 // Whatever a file cannot say is in the sidecar manifest.extra.json: a sound's loop flag.
 
@@ -164,7 +165,12 @@ export async function generateArtManifest(
     png: `images/${key}.png`,
   }));
 
-  const fontFiles = await stemsByExt(files, "fonts", ["fnt", "png"]);
+  const fontFiles = await stemsByExt(files, "fonts", ["fnt", "png", "woff"]);
+  for (const stem of stemsOf(fontFiles, "woff")) {
+    if (!stemsOf(fontFiles, "fnt").has(stem)) {
+      throw new Error(`fonts/${stem}.woff has no fonts/${stem}.fnt`);
+    }
+  }
   const pagePngs = new Set<string>();
   const fonts = await Promise.all(
     [...stemsOf(fontFiles, "fnt")].map(async (key): Promise<FontAsset> => {
@@ -181,7 +187,8 @@ export async function generateArtManifest(
         throw new Error(`${fnt} names page ${page}, which is not a PNG in fonts/`);
       }
       pagePngs.add(stem);
-      return { fnt, key, png: `fonts/${page}` };
+      const font: FontAsset = { fnt, key, png: `fonts/${page}` };
+      return stemsOf(fontFiles, "woff").has(key) ? { ...font, woff: `fonts/${key}.woff` } : font;
     }),
   );
   for (const stem of stemsOf(fontFiles, "png")) {
@@ -220,7 +227,7 @@ export async function generateArtManifest(
 // The manifest's fields in the order art's tools have always written them, so the generated
 // file diffs cleanly against theirs.
 const LIST_ORDER = ["sprites", "fonts", "images", "sounds"] as const;
-const FIELD_ORDER = ["key", "png", "json", "fnt", "ogg", "m4a", "loop", "anchor"];
+const FIELD_ORDER = ["key", "png", "json", "fnt", "woff", "ogg", "m4a", "loop", "anchor"];
 
 function ordered(entry: object): Record<string, unknown> {
   const fields = new Map(Object.entries(entry));

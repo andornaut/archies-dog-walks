@@ -1,6 +1,7 @@
 import { contentHash } from "@andornaut/game-kit/web/build/vite/contentHash";
 
 import { ATLAS_MANIFEST_PATH, type AtlasManifest } from "../../assets/atlasManifest.ts";
+import { DOM_ART_KEYS } from "../../assets/domArt.ts";
 import type { AssetManifest } from "../../assets/manifest.ts";
 import { ART_MANIFEST } from "../artManifest.ts";
 import type { AtlasBuild } from "./atlasBuild.ts";
@@ -14,16 +15,18 @@ export const ART_FILES_MODULE = "virtual:art-files";
 const HASHED_ART_DIR = "assets/art";
 
 // Every file under /art/ a build's game loads: the art manifest, the atlas manifest and its
-// pages, each font's .fnt, both files of each sound (the page plays one format), and the files
-// of the fonts, images and sprites the atlas leaves out. Sorted, each once.
+// pages, each font's .fnt and web font, both files of each sound (the page plays one format), and
+// the files of the fonts, images and sprites the atlas leaves out or the HTML interface draws
+// (DOM_ART_KEYS), since CSS loads whole files. Sorted, each once.
 function gameArtPaths(manifest: AssetManifest, atlas: AtlasManifest): string[] {
   const atlased = new Set(atlas.textures.map(({ key }) => key));
-  const own = ({ key }: { key: string }) => !atlased.has(key);
+  const own = ({ key }: { key: string }) => !atlased.has(key) || DOM_ART_KEYS.has(key);
   const paths = [
     ART_MANIFEST,
     ATLAS_MANIFEST_PATH,
     ...atlas.pages.map(({ file }) => file),
     ...manifest.fonts.flatMap((font) => (own(font) ? [font.fnt, font.png] : [font.fnt])),
+    ...manifest.fonts.flatMap(({ woff }) => (woff === undefined ? [] : [woff])),
     ...manifest.images.filter(own).map(({ png }) => png),
     ...manifest.sounds.flatMap(({ m4a, ogg }) => [m4a, ogg]),
     ...manifest.sprites.filter(own).flatMap(({ json, png }) => [json, png]),
