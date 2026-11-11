@@ -104,6 +104,10 @@ interface Entry {
   option?: OptionView;
 }
 
+// The label across a card's top, on its cream frame: in the body text's colours, a disabled
+// card's grey.
+const BAND_LABEL = { disabled: PALETTE[GREYED.text], enabled: PALETTE.plum } as const;
+
 // The label on a card's band: its option's, or Skip.
 function bandLabel(entry: Entry): string {
   return entry.option?.label ?? gameData.runText.card.skip;
@@ -399,7 +403,7 @@ export class CardScene extends Scene {
       fillRect(g, PALETTE.plum, card);
       fillRect(g, PALETTE.cream, insetRect(4, card));
     }
-    this.centred(x + LARGE.width / 2, y + LARGE.band.y + 5, bandLabel(entry), PALETTE.white);
+    this.centred(x + LARGE.width / 2, y + LARGE.band.y + 5, bandLabel(entry), BAND_LABEL.enabled);
     const art = illustrationKey(option);
     if (this.textures.exists(art)) {
       this.add
@@ -602,7 +606,12 @@ export class CardScene extends Scene {
       });
     }
 
-    this.centred(x + CARD.width / 2, y + BAND.y + 3, bandLabel(entry), PALETTE.white);
+    this.centred(
+      x + CARD.width / 2,
+      y + BAND.y + 3,
+      bandLabel(entry),
+      grey ? BAND_LABEL.disabled : BAND_LABEL.enabled,
+    );
 
     const art = { ...ART, x: x + ART.x, y: y + ART.y };
     const illustration = illustrationKey(entry.option);
