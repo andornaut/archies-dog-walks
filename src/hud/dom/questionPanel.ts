@@ -12,6 +12,7 @@ import {
   placeText,
   setBox,
 } from "../../ui/dom/pixelLine.ts";
+import { shadePart } from "../../ui/dom/shade.ts";
 import type { UiLayer } from "../../ui/dom/uiLayer.ts";
 import {
   artPixel,
@@ -62,6 +63,9 @@ export interface DomQuestionPanelInput {
   // Drawn over the frame, under the title.
   readonly parts?: readonly DomPart[];
   readonly presses: readonly (() => void)[];
+  // The HTML shade over this rect under the panel, in place of a dim on the canvas, where HTML
+  // under it must be dimmed too.
+  readonly shade?: Rect;
   // The page point of a press as a game point, through the page frame's turn.
   readonly toGame: (client: Point) => Point;
   readonly view: QuestionPanelView;
@@ -77,6 +81,9 @@ export interface DomQuestionPanel {
   // Shakes the index-th button and flashes its label, as the canvas refuses a disabled
   // control (refuseControl): still, its label red, under reduced motion.
   refuse(index: number, refusal: DomRefusal): void;
+  // Lets the panel take no presses and no focus while another's shade dims it (a celebration
+  // under the pause menu), and take them again.
+  setInert(inert: boolean): void;
   // Hides the panel while a canvas page covers it (help, the settings), and shows it again.
   setShown(shown: boolean): void;
 }
@@ -152,6 +159,10 @@ export function showQuestionPanel(layer: UiLayer, input: DomQuestionPanelInput):
   // Focus starts on the dialog itself, so no button shows the keyboard's ring until Tab.
   dialog.tabIndex = -1;
 
+  const shade = input.shade === undefined ? undefined : shadePart(doc, input.shade);
+  if (shade !== undefined) {
+    dialog.append(shade.element);
+  }
   // A question's ui-panel in its rim, or a modal card's ui-detail-card.
   const rim = doc.createElement("div");
   rim.className = "adw-rim";
@@ -191,6 +202,9 @@ export function showQuestionPanel(layer: UiLayer, input: DomQuestionPanelInput):
       width: outer.width + 2 * pixel,
     });
   });
+  if (shade !== undefined) {
+    placed.push(shade.place);
+  }
   frame(panel, ORIGIN, view.panel);
   for (const part of input.parts ?? []) {
     dialog.append(part.element);
@@ -364,6 +378,7 @@ export function showQuestionPanel(layer: UiLayer, input: DomQuestionPanelInput):
     if (
       input.numberKeys &&
       !dialog.hidden &&
+      !inert &&
       number !== undefined &&
       menuKeyActs(event.repeat, event.key)
     ) {
@@ -371,6 +386,7 @@ export function showQuestionPanel(layer: UiLayer, input: DomQuestionPanelInput):
     }
   };
   doc.defaultView?.addEventListener("keydown", onKey);
+  let inert = false;
 
   const place = (scale: DomScale) => {
     for (const part of placed) {
@@ -420,6 +436,14 @@ export function showQuestionPanel(layer: UiLayer, input: DomQuestionPanelInput):
       button.classList.add(refusing);
       doc.defaultView?.setTimeout(() => button.classList.remove(refusing), total);
     },
+    setInert(next) {
+      inert = next;
+      dialog.inert = next;
+      dialog.classList.toggle("adw-inert", next);
+      if (next) {
+        blur();
+      }
+    },
     setShown(shown) {
       if (shown === !dialog.hidden) {
         return;
@@ -428,7 +452,7 @@ export function showQuestionPanel(layer: UiLayer, input: DomQuestionPanelInput):
         blur();
       }
       dialog.hidden = !shown;
-      if (shown) {
+      if (shown && !inert) {
         focusFirst();
       }
     },

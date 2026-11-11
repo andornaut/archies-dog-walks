@@ -1,4 +1,3 @@
-import { fillLine } from "@andornaut/game-kit/lines";
 import type { Rect } from "@andornaut/game-kit/rect";
 import type { GameObjects, Scene } from "phaser";
 
@@ -6,8 +5,13 @@ import { ownerFaceKey } from "../assets/spriteKeys.ts";
 import { gameData } from "../data/index.ts";
 import type { AchievementId, DogId } from "../data/types.ts";
 import {
+  type BadgeCardView,
+  badgeCardView,
+  type BurstEffect,
+  CONFETTI,
+} from "../home/badgeCardView.ts";
+import {
   BADGE_STRIP,
-  BADGE_TEXT_COLOURS,
   badgeNameTops,
   type BadgeRowNames,
   badgeRowNames,
@@ -18,30 +22,15 @@ import {
   stripUnderClose,
 } from "../home/badgesView.ts";
 import type { DetailText } from "../home/detailCardView.ts";
-import { MENU_TEXT_FIELDS } from "../home/menuText.ts";
-import { MODAL, modalPanelWidth, modalRect } from "../home/modalLayout.ts";
-import {
-  DETAIL_TEXT_WIDTH,
-  detailPanel,
-  detailTextTops,
-  STATS_LAYOUT,
-} from "../home/statsLayout.ts";
 import { achievementLabel } from "../rules/achievements.ts";
-import { closeControl } from "../ui/closeControl.ts";
 import { PALETTE } from "../ui/palette.ts";
-import { addModalShade } from "../ui/phaser/draw.ts";
-import {
-  labelInkWidth,
-  pixelFontMetrics,
-  type PixelTextStyle,
-  withProbe,
-  wrapPixelText,
-} from "../ui/phaser/pixelText.ts";
+import { addModalShade, fillRect } from "../ui/phaser/draw.ts";
+import { labelInkWidth, type PixelTextStyle, withProbe } from "../ui/phaser/pixelText.ts";
 import { TEXT_SCALE } from "../ui/textFit.ts";
-import { addCardTitle, addDetailText } from "./homePanels.ts";
-import { modalTextWidth } from "./modalMeasure.ts";
+import { addCardTitle, addDetailContent, addDetailText } from "./homePanels.ts";
+import { canvasDetailMeasure } from "./modalMeasure.ts";
 import { playTag, playTagOnce } from "./sprites.ts";
-import { addBodyText, addCloseButton, addPanel, BODY_TEXT, tagFrame } from "./uiKit.ts";
+import { addCloseButton, addPanel, tagFrame } from "./uiKit.ts";
 
 export const BADGE_SIZE = BADGE_STRIP.badgeSize;
 const BURST_TAG = "play";
@@ -71,12 +60,8 @@ export function addBadge(
 
 // A one-shot effect's play tag centred on a point: it plays once and is removed, or with
 // reduced motion holds one still frame.
-interface Burst {
-  readonly key: string;
-  readonly stillFrame: number;
-}
+type Burst = Pick<BurstEffect, "key" | "stillFrame">;
 
-const CONFETTI: Burst = { key: "fx-confetti", stillFrame: 4 };
 export const NEW_BEST_BURST: Burst = { key: "fx-new-best", stillFrame: 3 };
 
 export function addBurst(
@@ -208,14 +193,41 @@ export function badgeCelebrationNames(
   });
 }
 
-const DETAIL_TEXT = STATS_LAYOUT.detailText;
-// The badge and its confetti are drawn at 2x, so the burst shows around the bigger badge.
-const DETAIL_BADGE_SCALE = 2;
+// A badge's card's view (badgeCardView), measured on scene's fonts and art.
+export function badgeCard(
+  scene: Scene,
+  dim: Rect,
+  card: Parameters<typeof badgeCardView>[3],
+): BadgeCardView {
+  return badgeCardView(gameData, canvasDetailMeasure(scene), dim, card);
+}
+
+// A badge's card in parent as its view lays it out: the dim, the ui-panel, the close control,
+// any confetti behind the badge, the badge at 2x, then its name, status, goal and line.
+export function drawBadgeCard(
+  scene: Scene,
+  parent: GameObjects.Container,
+  view: BadgeCardView,
+): void {
+  parent.add([addModalShade(scene, view.dim), addPanel(scene, view.panel)]);
+  addCloseButton(scene, parent, view.close, false);
+  const { confetti } = view;
+  if (confetti !== undefined) {
+    const { at, scale, still } = confetti;
+    const sprite = addConfetti(scene, still, scale, at.x, at.y);
+    if (sprite !== undefined) {
+      parent.add(sprite);
+    }
+  }
+  const g = scene.add.graphics();
+  view.fills.forEach(({ colour, rect }) => fillRect(g, colour, rect));
+  parent.add(g);
+  addDetailContent(scene, parent, { ...view, framed: [] });
+}
 
 // A badge's card, the one every screen opens on a badge, in parent over dim, the part of the
-// screen it dims: the badge at 2x with its name, status, goal and line, and the close control in
-// its corner. An earned badge bursts with confetti when burst is set, or with reduced motion
-// shows a still frame of it. Returns the card's rect.
+// screen it dims (badgeCardView). An earned badge bursts with confetti when burst is set, or
+// with reduced motion shows a still frame of it. Returns the card's rect.
 export function addBadgeDetail(
   scene: Scene,
   parent: GameObjects.Container,
@@ -224,54 +236,9 @@ export function addBadgeDetail(
   burst: boolean,
   badge: BadgeView,
 ): Rect {
-  const words = gameData.menuText.stats;
-  const wrap = (text: string) => wrapPixelText(scene, BODY_TEXT, DETAIL_TEXT_WIDTH, text);
-  const goal = wrap(badge.goal);
-  const status = `${badge.earned ? words.badgeEarned : words.badgeLocked} (${words.badgeDifficulty[badge.tier]})`;
-  const line = wrap(
-    fillLine(MENU_TEXT_FIELDS.stats, words, "badgeLine", { line: badge.badgeLine }),
-  );
-  const fonts = { body: pixelFontMetrics(scene, "body"), title: pixelFontMetrics(scene, "title") };
-  const measured = detailPanel(fonts, goal.length, line.length);
-  const width = modalPanelWidth(
-    dim.width - 2 * MODAL.margin,
-    Math.max(
-      BADGE_SIZE * DETAIL_BADGE_SCALE + 2 * MODAL.pad,
-      modalTextWidth(scene, "title", [badge.name]) + 2 * MODAL.pad,
-      modalTextWidth(scene, "body", [status, ...goal, ...line]) + 2 * MODAL.pad,
-    ),
-  );
-  const panel = modalRect(dim, undefined, { height: measured.height, width });
-  const tops = detailTextTops(fonts, goal.length);
-  parent.add([addModalShade(scene, dim), addPanel(scene, panel)]);
-  addCloseButton(scene, parent, closeControl(panel), false);
-  const centre = panel.x + panel.width / 2;
-  const badgeY = panel.y + DETAIL_TEXT.badgeY;
-  if (badge.earned && (burst || reduced)) {
-    const confetti = addConfetti(scene, reduced, DETAIL_BADGE_SCALE, centre, badgeY);
-    if (confetti !== undefined) {
-      parent.add(confetti);
-    }
-  }
-  parent.add(addBadge(scene, badge.art, badge.earned, centre, badgeY).setScale(DETAIL_BADGE_SCALE));
-  // An earned badge's card: a plum name and goal, a forest status, a dark brown line.
-  const locked = BADGE_TEXT_COLOURS.locked;
-  const colours = badge.earned
-    ? { goal: PALETTE.plum, line: PALETTE.darkBrown, name: PALETTE.plum, status: PALETTE.forest }
-    : {
-        goal: PALETTE[locked.goal],
-        line: PALETTE[locked.goal],
-        name: PALETTE[locked.name],
-        status: PALETTE[locked.status],
-      };
-  const text = (y: number, value: string, style: Partial<PixelTextStyle>) =>
-    addBodyText(scene, parent, { x: centre, y: panel.y + y }, value, { originX: 0.5, ...style });
-  text(DETAIL_TEXT.nameY, badge.name, { colour: colours.name, font: "title" });
-  text(tops.status, status, { colour: colours.status });
-  // The goal and line centred under the name, each line of them centred on the card.
-  text(tops.goal, goal.join("\n"), { align: "centre", colour: colours.goal });
-  text(tops.line, line.join("\n"), { align: "centre", colour: colours.line });
-  return panel;
+  const view = badgeCard(scene, dim, { badge, burst, reduced });
+  drawBadgeCard(scene, parent, view);
+  return view.panel;
 }
 
 // A strip's names set as badgeRowNames gives them, measured on the font they are drawn in.

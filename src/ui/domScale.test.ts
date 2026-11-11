@@ -75,7 +75,10 @@ describe("domScale", () => {
     expect(UI_STYLE).toContain(`4 4 4 4 fill / ${panel} stretch`);
     const card = [8, 8, 8, 8].map(slice).join(" ");
     expect(UI_STYLE).toContain(`8 8 8 8 fill / ${card} stretch`);
-    expect(UI_STYLE.match(/border-image:[^}]*image-rendering:pixelated/g)).toHaveLength(3);
+    // The scrollbar's track and thumb: their end caps whole, no side slices.
+    const caps = [3, 0, 3, 0].map((n) => (n === 0 ? "0" : slice(n))).join(" ");
+    expect(UI_STYLE.split(`3 0 3 0 fill / ${caps} stretch`)).toHaveLength(3);
+    expect(UI_STYLE.match(/border-image:[^}]*image-rendering:pixelated/g)).toHaveLength(5);
   });
 
   it("keeps an exact fit's pixels exact", () => {

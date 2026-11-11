@@ -1,3 +1,5 @@
+import { MODAL_DIM } from "@andornaut/game-kit/view/modalDim";
+
 import { SLICES } from "../../data/layout.ts";
 import { CONTROL_STATE_STYLE } from "./controlStateStyle.ts";
 import { SETTINGS_STYLE } from "./settingsStyle.ts";
@@ -22,6 +24,20 @@ export function nineSlice(
   return `border-style:solid;border-color:transparent;border-width:${widths};
   border-image:var(--adw-${art}) ${top} ${right} ${bottom} ${left} fill / ${widths} stretch;
   background-clip:padding-box;image-rendering:pixelated`;
+}
+
+// The modal shade's alpha as the canvas blends it: WebGL takes a fill's alpha in whole 255ths,
+// rounded down, so the HTML shade takes the same.
+export const SHADE_ALPHA = Math.floor(MODAL_DIM.fallbackAlpha * 255) / 255;
+
+// A scrollbar's part: the art's end caps (its SLICES top and bottom) drawn whole and its middle
+// stretched, with no side slices.
+function capsSlice(key: "ui-scroll-thumb" | "ui-scroll-track"): string {
+  const { bottom, top } = SLICES[key];
+  const widths = `${px(top as 3)} 0 ${px(bottom as 3)} 0`;
+  return `position:absolute;box-sizing:border-box;border-style:solid;border-color:transparent;
+  border-width:${widths};border-image:var(--adw-${key}) ${top} 0 ${bottom} 0 fill / ${widths} stretch;
+  image-rendering:pixelated`;
 }
 
 // A box's outline less a square cut long at each corner, its edges on whole pixels so none is
@@ -87,7 +103,7 @@ export const UI_STYLE = `
 .adw-card{${nineSlice("ui-detail-card", "ui-detail-card")};background-color:var(--adw-cream)}
 .adw-plate{background:var(--adw-tan)}
 /* A panel that takes no presses: every press goes through to the canvas. */
-.adw-dialog.adw-passive *{pointer-events:none}
+.adw-dialog.adw-passive *,.adw-dialog.adw-inert *{pointer-events:none}
 /* A detail card's framed boxes, art and name pills; --adw-cut is a pill's snapped corner. */
 .adw-framed,.adw-art,.adw-pill{position:absolute;box-sizing:border-box;pointer-events:none}
 .adw-art{background-repeat:no-repeat;background-size:100% 100%;image-rendering:pixelated}
@@ -120,6 +136,13 @@ export const UI_STYLE = `
 .adw-button:focus-visible .adw-face::after,.adw-close:focus-visible .adw-close-face::after{
   content:"";position:absolute;inset:${px(1)};border:${px(2)} solid var(--adw-cyan);
   box-shadow:0 0 0 ${px(1)} var(--adw-ink),inset 0 0 0 ${px(1)} var(--adw-ink)}
+/* The shade under a modal panel: ink at the canvas's modal shade's alpha, blended as it blends. */
+.adw-shade{position:absolute;pointer-events:none;background:var(--adw-ink);opacity:${SHADE_ALPHA}}
+/* A list's view: its content clipped to it and moved up by its scroll. */
+.adw-clip,.adw-scrolled{position:absolute;pointer-events:none}
+.adw-clip{overflow:hidden}
+.adw-scroll-track{${capsSlice("ui-scroll-track")}}
+.adw-scroll-thumb{${capsSlice("ui-scroll-thumb")}}
 /* fx-tap's 4 frames side by side, 60ms each; --adw-burst is the burst's snapped side. */
 .adw-burst{position:absolute;pointer-events:none;background:var(--adw-fx-tap) 0 0/400% 100%;
   image-rendering:pixelated;animation:adw-burst 240ms steps(4) forwards}

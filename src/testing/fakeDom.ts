@@ -57,7 +57,15 @@ export class FakeElement extends FakeTarget {
         .filter((name) => name !== "" && !names.includes(name))
         .join(" ");
     },
+    toggle: (name: string, on: boolean) => {
+      if (on) {
+        this.classList.add(name);
+      } else {
+        this.classList.remove(name);
+      }
+    },
   };
+  inert = false;
   hidden = false;
   id = "";
   parent: FakeElement | undefined;

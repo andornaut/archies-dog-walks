@@ -53,6 +53,9 @@ export interface DetailArt {
     readonly edge: Rect;
     readonly inset: { readonly left: number; readonly right: number };
   };
+  // Art centred on a point (a badge on its card) sits with its middle there, whole art pixels
+  // from its holder's corner.
+  readonly centre?: Point;
   readonly holder?: Point;
   readonly key: string;
   readonly scale: number;
@@ -70,11 +73,11 @@ export interface DetailFramed {
   readonly rect: Rect;
 }
 
-// Text in font, body where undefined, at scale, 2x where undefined: left-aligned, its pen
-// starting at x, or each line centred on x (centre, as a label with originX 0.5 there), its first
-// line's capitals at capTop, its lines a font line apart, each effect's name a line leads with in
-// its pill. A one-line text may be runs in colours of their own (spans), their texts the line's,
-// run together.
+// Text in font, body where undefined, at scale, 2x where undefined: left-aligned, its pen (in the
+// title font its ink) starting at x, as addPixelText places a label, or each line centred on x
+// (centre, as a label with originX 0.5 there), its first line's capitals at capTop, its lines a
+// font line apart, each effect's name a line leads with in its pill. A one-line text may be runs
+// in colours of their own (spans), their texts the line's, run together.
 export interface DetailText {
   readonly align?: "centre" | "left";
   readonly capTop: number;

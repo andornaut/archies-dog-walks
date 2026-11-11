@@ -105,6 +105,20 @@ describe("the HTML pause menu", () => {
     expect(presses[0]).not.toHaveBeenCalled();
   });
 
+  it("dimmed under another's shade, shows but takes no number keys and no focus", () => {
+    const { dialog, doc, presses, shown } = menu();
+    shown.setShown(false);
+    shown.setInert(true);
+    shown.setShown(true);
+    expect(dialog.className).toContain("adw-inert");
+    expect(doc.activeElement).toBeUndefined();
+    doc.defaultView.fire("keydown", { key: "1", repeat: false });
+    expect(presses[0]).not.toHaveBeenCalled();
+    shown.setInert(false);
+    doc.defaultView.fire("keydown", { key: "1", repeat: false });
+    expect(presses[0]).toHaveBeenCalledOnce();
+  });
+
   it("focuses itself, so no button shows a ring until Tab, then keeps Tab among its controls", () => {
     const { buttons, dialog, doc, shown } = menu();
     expect(doc.activeElement).toBe(dialog);

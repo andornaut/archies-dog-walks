@@ -5,6 +5,7 @@ import type { GameObjects, Scene, Tweens } from "phaser";
 import { SLICES } from "../data/layout.ts";
 import { SCREEN_LAYOUT } from "../data/screen.ts";
 import { FEEDBACK, loopFrame } from "../home/feedback.ts";
+import { SELECT_FRAME } from "../home/shopPageView.ts";
 import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";
 import type { CloseControl } from "../ui/closeControl.ts";
 import {
@@ -547,11 +548,12 @@ function addSelectFrame(
 ): void {
   const outer = selectOuter(rect, outset);
   const g = scene.add.graphics();
+  const { amber, dots, keyline } = SELECT_FRAME;
   drawStaticRing(g, outer);
-  drawRing(g, PALETTE.amber, insetRect(1, outer), 2);
-  drawRing(g, PALETTE.ink, insetRect(3, outer), 1);
-  for (const y of [outer.y + 1, outer.y + outer.height - 2]) {
-    for (const x of [outer.x + 1, outer.x + outer.width - 2]) {
+  drawRing(g, PALETTE.amber, insetRect(amber.inset, outer), amber.width);
+  drawRing(g, PALETTE.ink, insetRect(keyline.inset, outer), keyline.width);
+  for (const y of [outer.y + dots.inset, outer.y + outer.height - dots.inset - 1]) {
+    for (const x of [outer.x + dots.inset, outer.x + outer.width - dots.inset - 1]) {
       fillRect(g, PALETTE.ink, { height: 1, width: 1, x, y });
     }
   }

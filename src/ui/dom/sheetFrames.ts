@@ -71,3 +71,59 @@ export function loadSheet(url: string): Promise<unknown> {
   }
   return sheet;
 }
+
+// A frame of a tag as it plays: its rect in the sheet and how long it shows.
+export interface TagFrame extends SheetFrame {
+  readonly durationMs: number;
+}
+
+// The frames of the sheet's tag in the order it plays them forward, each with its duration, as
+// its Aseprite JSON lists them; none where the sheet lacks the tag. Throws on a file that is not
+// such a sheet.
+export function sheetTagFrames(json: unknown, tag: string): TagFrame[] {
+  const sheet = json as {
+    frames?: Record<string, { duration?: unknown; frame?: unknown }>;
+    meta?: {
+      frameTags?: { from?: unknown; name?: unknown; to?: unknown }[];
+      size?: { h?: unknown; w?: unknown };
+    };
+  };
+  const named = sheet.meta?.frameTags?.find(({ name }) => name === tag);
+  const size = { h: sheet.meta?.size?.h, w: sheet.meta?.size?.w };
+  if (!isNumber(size.h) || !isNumber(size.w)) {
+    throw new Error("Not an Aseprite sheet");
+  }
+  if (named === undefined || !isNumber(named.from) || !isNumber(named.to)) {
+    return [];
+  }
+  const frames = Object.values(sheet.frames ?? {}).slice(named.from, named.to + 1);
+  return frames.map(({ duration, frame }) => {
+    if (!isRect(frame) || !isNumber(duration)) {
+      throw new Error("Not an Aseprite sheet");
+    }
+    return {
+      durationMs: duration,
+      height: frame.h,
+      sheet: { height: size.h as number, width: size.w as number },
+      width: frame.w,
+      x: frame.x,
+      y: frame.y,
+    };
+  });
+}
+
+// The index of the frame a tag playing once shows elapsedMs after it starts, or undefined once
+// it has played.
+export function playingFrame(
+  frames: readonly Pick<TagFrame, "durationMs">[],
+  elapsedMs: number,
+): number | undefined {
+  let end = 0;
+  for (const [i, { durationMs }] of frames.entries()) {
+    end += durationMs;
+    if (elapsedMs < end) {
+      return i;
+    }
+  }
+  return undefined;
+}

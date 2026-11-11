@@ -11,6 +11,7 @@ import {
   deviceY,
   type DomScale,
   exactDeviceX,
+  exactDeviceY,
   frameRect,
   wholeArtPixels,
 } from "../../ui/domScale.ts";
@@ -116,13 +117,25 @@ export function artPart(
     const holder = art.holder ?? art;
     const into = (from: number, to: number) => Math.floor(to - from) * artPixel(at);
     const width = art.size.width * pixel;
+    const height = art.size.height * pixel;
+    const left = deviceX(at, holder.x);
+    const top = deviceY(at, holder.y);
+    const { centre } = art;
     setBox(element, {
-      height: art.size.height * pixel,
+      height,
       left:
-        deviceX(at, holder.x) +
-        (art.aim === undefined ? into(holder.x, art.x) : aimed(at, holder, art.aim, width)) +
+        left +
+        (centre !== undefined
+          ? wholeArtPixels(at, exactDeviceX(at, centre.x) - width / 2 - left)
+          : art.aim === undefined
+            ? into(holder.x, art.x)
+            : aimed(at, holder, art.aim, width)) +
         shift(at),
-      top: deviceY(at, holder.y) + into(holder.y, art.y),
+      top:
+        top +
+        (centre === undefined
+          ? into(holder.y, art.y)
+          : wholeArtPixels(at, exactDeviceY(at, centre.y) - height / 2 - top)),
       width,
     });
     if (frame !== undefined) {
@@ -168,7 +181,8 @@ export function textPart(
   });
   const block = {
     ...text,
-    anchor: text.align === "centre" ? "centre" : "pen",
+    // A left-aligned title label's ink starts at x, as addPixelText places it; body text's pen.
+    anchor: text.align === "centre" ? "centre" : font === "title" ? "ink" : "pen",
     ...(text.spans === undefined ? {} : { breaks: [new Set(spans.map(({ from }) => from))] }),
     font,
     scale: text.scale ?? TEXT_SCALE,

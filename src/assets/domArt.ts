@@ -4,6 +4,7 @@ import { gameData } from "../data/index.ts";
 import type { GameData } from "../data/types.ts";
 import { debuffIconKey, perkIconKey, upgradeIconKey } from "./iconKeys.ts";
 import {
+  badgeKey,
   DETAIL_WELL_KEY,
   dogFaceKey,
   dogPortraitKey,
@@ -83,14 +84,30 @@ export const DOM_STYLE_ART: readonly (readonly ["image" | "sheet", string])[] = 
     "ui-icon-button-pressed",
     "ui-panel",
     "ui-quip",
+    "ui-scroll-thumb",
+    "ui-scroll-track",
   ].map((key) => ["image", key] as const),
 ];
+
+// The Logbook's art (src/home/logbookView.ts) and every badge's card (src/home/badgeCardView.ts):
+// each badge's sheet, each dog's face sheet, the earned tick, the scrollbar, and the confetti.
+function logbookArtKeys(data: Pick<GameData, "achievements" | "dogs">): string[] {
+  return [
+    "fx-confetti",
+    "ui-check",
+    "ui-scroll-thumb",
+    "ui-scroll-track",
+    ...data.achievements.map(({ id }) => badgeKey(id)),
+    ...keysOf(data.dogs).map((dog) => dogFaceKey(data, dog)),
+  ];
+}
 
 export const DOM_ART_KEYS: ReadonlySet<string> = new Set([
   ...DOM_STYLE_ART.map(([, key]) => key),
   ...detailArtKeys(gameData),
   ...SETTINGS_ART_KEYS,
   ...celebrationArtKeys(gameData),
+  ...logbookArtKeys(gameData),
 ]);
 
 // A DOM art file's path under /art/: an image's PNG, or a sprite sheet's PNG or JSON.

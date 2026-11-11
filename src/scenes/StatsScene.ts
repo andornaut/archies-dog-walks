@@ -1,44 +1,24 @@
 import { clampIndex } from "@andornaut/game-kit/arrays";
-import { containsPoint, insetRect, type Rect } from "@andornaut/game-kit/rect";
+import { containsPoint, type Rect } from "@andornaut/game-kit/rect";
 import { type GameObjects, Scene } from "phaser";
 
-import { dogFaceKey } from "../assets/spriteKeys.ts";
 import { gameData } from "../data/index.ts";
-import {
-  BADGE_TEXT_COLOURS,
-  badgeProgress,
-  type BadgeView,
-  badgeWall,
-  earnedText,
-  wallCell,
-  type WallCellLines,
-  wallRects,
-} from "../home/badgesView.ts";
+import { type BadgeView, badgeWall } from "../home/badgesView.ts";
 import { FEEDBACK } from "../home/feedback.ts";
 import { focusDirectionForKey } from "../home/focus.ts";
 import { overlayRegion, regionOutside } from "../home/homeBar.ts";
+import { type LogbookView, logbookView } from "../home/logbookView.ts";
 import {
-  badgesBottom,
-  DOG_STATS,
-  dogBlockTop,
-  dogsBottom,
-  type DogStat,
-  earnedBand,
-  earnedCheck,
   STATS_LAYOUT,
   STATS_TABS,
-  statsListFrame,
   statsScrollbar,
   type StatsTab,
   statsTabRects,
-  walksBottom,
-  walksHeadingTops,
-  wallLineTops,
-  wallRowHeight,
 } from "../home/statsLayout.ts";
-import { dogRows, overallRows, type StatsRow } from "../home/statsView.ts";
+import type { LogbookScroll } from "../hud/dom/logbook.ts";
 import { isConfirmKey, isPauseKey, menuKeyActs } from "../input/keyBindings.ts";
 import {
+  isDragging,
   type ListScroll,
   listScroll,
   pageKeyScroll,
@@ -49,19 +29,14 @@ import {
 } from "../input/listScroll.ts";
 import { exitShown } from "../pwa/index.ts";
 import { rectIndexAt } from "../ui/grid.ts";
-import { PALETTE } from "../ui/palette.ts";
 import { fillRect } from "../ui/phaser/draw.ts";
-import {
-  type FontRole,
-  inkSpan,
-  pixelFontMetrics,
-  setPixelText,
-  withProbe,
-} from "../ui/phaser/pixelText.ts";
-import { addBadge, addBadgeDetail, BADGE_SIZE } from "./badges.ts";
+import { badgeCard, drawBadgeCard } from "./badges.ts";
 import { listenHomeBar } from "./homeBarPress.ts";
+import { addDetailContent } from "./homePanels.ts";
+import { canvasDetailMeasure } from "./modalMeasure.ts";
 import { closeOverlay, listenDismiss, type OverlayData } from "./overlay.ts";
 import { currentSettings, earnedAchievements, profileSave } from "./profileStore.ts";
+import { addHtmlBadgeCard, addHtmlLogbook, keepPanel, type KeptPanel } from "./questionPanel.ts";
 import { SCENE_KEYS, type SceneKey } from "./sceneKeys.ts";
 import {
   addScrollbar,
@@ -71,9 +46,9 @@ import {
   placeScrollbar,
   type ScrollbarView,
 } from "./scrollView.ts";
-import { addCountNote, addShopPage, addShopTabs, placeInkRight } from "./shopPage.ts";
+import { addShopPage, addShopTabs } from "./shopPage.ts";
 import { listenTargetPress, sameByValue, type TargetPressListener } from "./targetPress.ts";
-import { addBodyText, addTagImage, addTapBurst, BODY_TEXT, clearScene, tagFrame } from "./uiKit.ts";
+import { addTapBurst, clearScene } from "./uiKit.ts";
 
 type Tab = StatsTab;
 type Target = "close" | { badge: number } | { tab: number };
@@ -84,12 +59,6 @@ const TABS = STATS_TABS;
 const TAB_RECTS: readonly Rect[] = statsTabRects();
 const CLOSE = STATS_LAYOUT.close;
 const PANEL: Rect = STATS_LAYOUT.panel;
-const LEFT = STATS_LAYOUT.rows.left;
-const PITCH = STATS_LAYOUT.rows.pitch;
-const DOGS = STATS_LAYOUT.dogs;
-const WALL = STATS_LAYOUT.wall;
-const EARNED = WALL.earned;
-const WALL_TEXT = STATS_LAYOUT.wallText;
 const VIEW: Rect = STATS_LAYOUT.view;
 const SCROLL = STATS_LAYOUT.scroll;
 // A screen-sized texture, white over the view: the mask that clips each tab's content to it.
@@ -107,11 +76,10 @@ export class StatsScene extends Scene {
   private burst = false;
   // The open tab's content, clipped to the view and moved up by the scroll.
   private content: GameObjects.Container | undefined;
-  // Where text() adds its text: the content while the open tab draws.
-  private drawingInto: GameObjects.Container | undefined;
   private detail: number | undefined;
-  // The open tab's view and its values' right edge, by whether it scrolls.
-  private frame = statsListFrame(false);
+  // The page and an open badge's card drawn in HTML, while each shows.
+  private htmlCard: KeptPanel | undefined;
+  private htmlPage: KeptPanel | undefined;
   private pressed: Target | undefined;
   private presses: TargetPressListener | undefined;
   private resumeKey: SceneKey | undefined;
@@ -127,6 +95,9 @@ export class StatsScene extends Scene {
 
   create(data?: OverlayData): void {
     this.resumeKey = data?.resume;
+    // The scene's shutdown destroyed any HTML page and card.
+    this.htmlCard = undefined;
+    this.htmlPage = undefined;
     this.pressed = undefined;
     this.detail = undefined;
     this.scroll = listScroll(0);
@@ -137,7 +108,15 @@ export class StatsScene extends Scene {
     // closes the detail, and one off the card closes the page, as on the shop.
     this.presses = listenTargetPress<Press>(this, {
       dipMs: (target) => (typeof target === "object" && "tab" in target ? FEEDBACK.pressDipMs : 0),
-      onDown: (pointer) => addTapBurst(this, pointer.x, pointer.y),
+      onDown: (pointer) => {
+        // Over the HTML page and card, so a burst shows over them.
+        const html = this.htmlCard?.panel ?? this.htmlPage?.panel;
+        if (html === undefined) {
+          addTapBurst(this, pointer.x, pointer.y);
+        } else {
+          html.burst({ x: pointer.x, y: pointer.y });
+        }
+      },
       onPressed: (target) => {
         this.pressed = target === "dismiss" ? undefined : target;
         this.render();
@@ -280,33 +259,64 @@ export class StatsScene extends Scene {
     closeOverlay(this.resumeKey, this);
   }
 
-  // Text at 2x, in the open tab's content when there is one.
-  private text(
-    x: number,
-    y: number,
-    value: string,
-    options: { align?: "centre"; colour?: number; font?: FontRole; originX?: number } = {},
-  ): GameObjects.BitmapText {
-    return addBodyText(this, this.drawingInto, { x, y }, value, options);
+  // The list's scroll as the HTML follows it: settled while no drag or fling moves it.
+  private htmlScroll(): LogbookScroll {
+    const { max, velocity, y } = this.scroll;
+    return { max, settled: !isDragging(this.scroll) && velocity === 0, y };
   }
 
-  // Each row's label's ink from the left and its value's ink up to the right, from y, so the
-  // label and the value are as far in from the card's frame on a tab with no scrollbar.
-  private rows(y: number, rows: readonly StatsRow[]): void {
-    rows.forEach(({ label, value }, i) => {
-      const top = y + i * PITCH;
-      this.text(LEFT, top, label, { colour: PALETTE.darkBrown });
-      placeInkRight(this.text(0, top, value), this.frame.right, top);
-    });
-  }
-
+  // The page, its tabs and the open tab, and an open badge's card: in HTML where the page's
+  // switch is on and its fonts are ready, each kept while it shows the same, else on the canvas.
   private render(): void {
     clearScene(this);
     this.content = undefined;
-    this.drawingInto = undefined;
+    this.scrollbar = undefined;
     const words = gameData.menuText.stats;
+    const pressed = this.pressed;
+    const view = logbookView(canvasDetailMeasure(this), gameData, {
+      badges: this.badges(),
+      closePressed: pressed === "close",
+      pressedTab: typeof pressed === "object" && "tab" in pressed ? pressed.tab : undefined,
+      save: profileSave(this),
+      tab: this.tab,
+    });
+    this.wallRows = [...view.wallRows];
+    this.scroll = resizeScroll(scrollMax(VIEW, view.content.bottom), this.scroll);
+    const open = this.detail === undefined ? undefined : this.badges()[this.detail];
+    const card =
+      open === undefined
+        ? undefined
+        : badgeCard(this, overlayRegion("home"), {
+            badge: open,
+            burst: this.burst,
+            reduced: currentSettings(this).reducedMotion,
+          });
+    this.burst = false;
+    const page = this.htmlPage;
+    this.htmlPage = keepPanel(page, JSON.stringify(view), () =>
+      addHtmlLogbook(this, view, () => this.htmlScroll()),
+    );
+    // A page drawn again goes over the card, which must then be drawn again over it.
+    if (this.htmlPage !== page) {
+      this.htmlCard?.panel?.destroy();
+      this.htmlCard = undefined;
+    }
+    this.htmlCard = keepPanel(this.htmlCard, card && JSON.stringify(card), () =>
+      card === undefined ? undefined : addHtmlBadgeCard(this, card),
+    );
+    if (this.htmlPage?.panel === undefined) {
+      this.drawPage(view, words);
+    }
+    if (card !== undefined && this.htmlCard?.panel === undefined) {
+      drawBadgeCard(this, this.add.container(0, 0), card);
+    }
+  }
+
+  // The page, its tabs and the open tab's content on the canvas, as its view lays them out, the
+  // content clipped to the view and moved up by the scroll.
+  private drawPage(view: LogbookView, words: typeof gameData.menuText.stats): void {
     const root = this.add.container(0, 0);
-    addShopPage(this, root, this.pressed === "close", words.title);
+    addShopPage(this, root, view.page.closePressed, words.title);
     addShopTabs(
       this,
       root,
@@ -319,183 +329,18 @@ export class StatsScene extends Scene {
     const content = this.add.container(0, 0);
     root.add(content);
     this.content = content;
-    this.drawingInto = content;
-    // Laid out with no scrollbar, then again beside one if it scrolls.
-    this.frame = statsListFrame(false);
-    let bottom = this.drawTab();
-    if (scrollMax(VIEW, bottom) > 0) {
-      content.removeAll(true);
-      this.frame = statsListFrame(true);
-      bottom = this.drawTab();
+    const g = this.add.graphics();
+    content.add(g);
+    for (const { colour, rect } of view.content.fills) {
+      fillRect(g, colour, rect);
     }
-    this.drawingInto = undefined;
-    maskToRect(this, VIEW_MASK_KEY, this.frame.rect, content);
-    this.scroll = resizeScroll(scrollMax(VIEW, bottom), this.scroll);
+    addDetailContent(this, content, view.content);
+    maskToRect(this, VIEW_MASK_KEY, view.frame.rect, content);
     this.scrollbar = addScrollbar(this, root, statsScrollbar(this.scroll.max, this.scroll.y));
     this.placeContent();
-    const open = this.detail === undefined ? undefined : this.badges()[this.detail];
-    if (open !== undefined) {
-      this.drawDetail(open);
-    }
-  }
-
-  // The open tab's content, laid out from its top; returns its bottom.
-  private drawTab(): number {
-    switch (this.tab) {
-      case "runs":
-        return this.drawRuns();
-      case "dogs":
-        return this.drawDogs();
-      case "badges":
-        return this.drawBadges();
-      default:
-        return this.tab satisfies never;
-    }
   }
 
   private badges(): BadgeView[] {
     return badgeWall(gameData, earnedAchievements(this));
-  }
-
-  private drawRuns(): number {
-    const { stats } = profileSave(this);
-    const { outcomes, overall } = overallRows(gameData, stats);
-    const words = gameData.menuText.stats;
-    const { rowsY } = STATS_LAYOUT.walks;
-    const sections = [
-      { heading: words.sections.overall, rows: overall },
-      { heading: words.sections.runs, rows: outcomes },
-    ];
-    const counts = sections.map(({ rows }) => rows.length);
-    const tops = walksHeadingTops(counts);
-    sections.forEach(({ heading, rows }, i) => {
-      const y = tops[i] ?? 0;
-      this.text(LEFT, y, heading, { font: "title" });
-      this.rows(y + rowsY, rows);
-    });
-    return walksBottom(counts);
-  }
-
-  // A block per dog: its face and name, then its walks, neighbourhoods and firings, one per
-  // row, with a rule between blocks.
-  private drawDogs(): number {
-    const save = profileSave(this);
-    const labels = gameData.menuText.stats.dogColumns;
-    const lines = this.add.graphics();
-    this.content?.add(lines);
-    const dogs = dogRows(gameData, save.owned, save.stats);
-    dogs.forEach((row, i) => {
-      const top = dogBlockTop(i);
-      if (i > 0) {
-        fillRect(lines, PALETTE.tan, {
-          height: 1,
-          width: this.frame.right - LEFT + 2 * DOGS.ruleDx,
-          x: LEFT - DOGS.ruleDx,
-          y: top - DOGS.ruleAbove,
-        });
-      }
-      const face = dogFaceKey(gameData, row.dog);
-      this.content?.add(
-        this.add.image(LEFT, top, face, tagFrame(this, face, "happy")).setOrigin(0),
-      );
-      this.text(LEFT + DOGS.nameDx, top + DOGS.nameY, row.name, { font: "title" });
-      const values: Record<DogStat, number> = {
-        fired: row.timesFired,
-        walks: row.walks,
-        zones: row.zonesFinished,
-      };
-      this.rows(
-        top + DOGS.rowsY,
-        DOG_STATS.map((stat) => ({ label: labels[stat], value: String(values[stat]) })),
-      );
-    });
-    return dogsBottom(dogs.length);
-  }
-
-  // The earned count at the rows' right, then a badge per row: earned ones in colour with a green name
-  // on a gold band, ticked, locked ones greyed; each with its goal, or its short goal where the
-  // full one does not fit, and a locked one that counts across walks with its progress.
-  private drawBadges(): number {
-    const save = profileSave(this);
-    const badges = this.badges();
-    addCountNote(
-      this,
-      this.drawingInto,
-      this.frame.right,
-      WALL.headingY,
-      earnedText(gameData, badges),
-    );
-    const cells = withProbe(this, BODY_TEXT, (probe) => {
-      const inkWidth = (line: string) => {
-        setPixelText(probe, line);
-        const ink = inkSpan(probe);
-        return ink.right - ink.left;
-      };
-      return badges.map((badge) => {
-        const cell = wallCell(WALL_TEXT, inkWidth, badge, badgeProgress(gameData, save, badge));
-        return {
-          ...cell,
-          name: [...cell.name, gameData.menuText.stats.badgeDifficulty[badge.tier]],
-        };
-      });
-    });
-    // Each line's capitals' top, the goal's clear of the name's line.
-    const body = pixelFontMetrics(this, "body");
-    const tops = cells.map((cell) => wallLineTops(body, cell));
-    // Each row as tall as its badge or its text, whichever is taller.
-    this.wallRows = wallRects(WALL, tops.map(wallRowHeight));
-    badges.forEach((badge, i) => {
-      const rect = this.wallRows[i];
-      const cell = cells[i];
-      if (rect !== undefined && cell !== undefined) {
-        this.drawWallBadge(badge, cell, { rect, tops: tops[i] ?? [] });
-      }
-    });
-    return badgesBottom(this.wallRows);
-  }
-
-  // A wall row: its badge, and its text's lines with their capitals' tops at tops under the
-  // row's top.
-  private drawWallBadge(
-    badge: BadgeView,
-    cell: WallCellLines,
-    at: { rect: Rect; tops: readonly number[] },
-  ): void {
-    const { rect } = at;
-    if (badge.earned) {
-      const band = earnedBand(rect);
-      const g = this.add.graphics();
-      fillRect(g, PALETTE[EARNED.outline], band);
-      fillRect(g, PALETTE[EARNED.fill], insetRect(1, band));
-      this.content?.add(g);
-    }
-    const half = BADGE_SIZE / 2;
-    const badgeY = rect.y + WALL.badgeTop + half;
-    this.content?.add(addBadge(this, badge.art, badge.earned, rect.x + half, badgeY));
-    if (badge.earned) {
-      const check = earnedCheck(rect);
-      const tick = addTagImage(this, "ui-check", "tick", check.x, check.y);
-      if (tick !== undefined) {
-        this.content?.add(tick);
-      }
-    }
-    const colours = BADGE_TEXT_COLOURS[badge.earned ? "earned" : "locked"];
-    const lines = [
-      ...cell.name.map((line) => [line, colours.name] as const),
-      ...[...cell.goal, ...cell.progress].map((line) => [line, colours.goal] as const),
-    ];
-    lines.forEach(([line, colour], i) => {
-      const y = rect.y + (at.tops[i] ?? 0);
-      this.text(rect.x + WALL_TEXT.x, y, line, { colour: PALETTE[colour] });
-    });
-  }
-
-  // The tapped badge's card (addBadgeDetail); an earned one bursts with confetti as it opens.
-  // Any tap closes it.
-  private drawDetail(badge: BadgeView): void {
-    const reduced = currentSettings(this).reducedMotion;
-    const dim = overlayRegion("home");
-    addBadgeDetail(this, this.add.container(0, 0), dim, reduced, this.burst, badge);
-    this.burst = false;
   }
 }

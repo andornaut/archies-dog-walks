@@ -1,15 +1,18 @@
 import { containsPoint, type Point, type Rect } from "@andornaut/game-kit/rect";
 import { pageToGame } from "@andornaut/game-kit/view/pagePoint";
-import { type GameObjects, type Scene, Scenes } from "phaser";
+import { Core, type GameObjects, type Scene, Scenes } from "phaser";
 
 import { artUrl } from "../assets/artFiles.ts";
 import { gameData } from "../data/index.ts";
 import { SCREEN_CONFIG } from "../data/screen.ts";
 import type { HelpView } from "../help/helpView.ts";
+import type { BadgeCardView } from "../home/badgeCardView.ts";
 import type { DetailCardView } from "../home/detailCardView.ts";
+import type { LogbookView } from "../home/logbookView.ts";
 import type { ConfirmChoice } from "../home/purchaseConfirm.ts";
 import type { PurchaseConfirmCardView } from "../home/purchaseConfirmCardView.ts";
 import type { ZoneCelebrationView } from "../hud/celebrationView.ts";
+import { showBadgeCard } from "../hud/dom/badgeCard.ts";
 import {
   type BadgeCelebrationView,
   showBadgeCelebration,
@@ -17,6 +20,7 @@ import {
 } from "../hud/dom/celebration.ts";
 import { showDetailCard } from "../hud/dom/detailCard.ts";
 import { showHelpScreen } from "../hud/dom/helpScreen.ts";
+import { type LogbookScroll, showLogbook } from "../hud/dom/logbook.ts";
 import { showPurchaseConfirm } from "../hud/dom/purchaseConfirm.ts";
 import {
   type DomQuestionPanel,
@@ -186,19 +190,21 @@ export function followScene<P extends Pick<DomQuestionPanel, "destroy" | "setSho
 function showHtmlPanel(
   scene: Scene,
   place: NonNullable<ReturnType<typeof htmlPanelPlace>>,
-  controls: Pick<DomQuestionPanelInput, "close" | "numberKeys" | "presses">,
+  controls: Pick<DomQuestionPanelInput, "close" | "numberKeys" | "presses" | "shade">,
   view: QuestionPanelView,
 ): DomQuestionPanel {
   const panel = showQuestionPanel(place.layer, { ...controls, ...htmlPanelInput(place), view });
-  return followScene(scene, panel);
+  return followScene(scene, controls.shade === undefined ? panel : shadeOver(panel));
 }
 
-// The question in the HTML layer, laid out as the canvas draws it (questionPanelView). Returns
-// what a tap outside must miss, or undefined where the canvas must draw it (addQuestionPanel).
+// The question in the HTML layer, laid out as the canvas draws it (questionPanelView), over the
+// HTML shade over area where shade is set. Returns what a tap outside must miss, or undefined
+// where the canvas must draw it (addQuestionPanel).
 export function addHtmlQuestionPanel(
   scene: Scene,
   area: Rect,
   question: QuestionPanel,
+  shade = false,
 ): Rect[] | undefined {
   const place = htmlPanelPlace(scene);
   if (place === undefined) {
@@ -206,7 +212,8 @@ export function addHtmlQuestionPanel(
   }
   const view = questionView(scene, area, question);
   const presses = question.entries.map(({ press }) => press);
-  showHtmlPanel(scene, place, { close: question.close, numberKeys: true, presses }, view);
+  const controls = { close: question.close, numberKeys: true, presses };
+  showHtmlPanel(scene, place, shade ? { ...controls, shade: area } : controls, view);
   return [...view.covered];
 }
 
@@ -318,6 +325,53 @@ export function addHtmlPurchaseConfirm(
   return followScene(scene, panel);
 }
 
+// Calls step before every frame scene's game draws, until the returned stop is called.
+function everyFrame(scene: Scene): (step: () => void) => () => void {
+  return (step) => {
+    scene.game.events.on(Core.Events.PRE_RENDER, step);
+    return () => scene.game.events.off(Core.Events.PRE_RENDER, step);
+  };
+}
+
+// The Logbook in the HTML layer, laid out as the canvas draws it (logbookView), following the
+// scroll before every frame. It takes no presses. Returns it, for its scene to replace as what it
+// shows changes, or undefined where the canvas must draw it.
+export function addHtmlLogbook(
+  scene: Scene,
+  view: LogbookView,
+  scroll: () => LogbookScroll,
+): DomQuestionPanel | undefined {
+  const place = htmlPanelPlace(scene);
+  if (place === undefined) {
+    return undefined;
+  }
+  const panel = showLogbook(place.layer, {
+    ...htmlArtInput(place),
+    everyFrame: everyFrame(scene),
+    scroll,
+    view,
+  });
+  return followScene(scene, panel);
+}
+
+// A badge's card in the HTML layer, laid out as the canvas draws it (badgeCardView), over the
+// HTML shade, its confetti played by scene's clock. It takes no presses: its scene closes it.
+// Returns it, for its scene to destroy as the card closes, or undefined where the canvas must
+// draw it (drawBadgeCard).
+export function addHtmlBadgeCard(scene: Scene, view: BadgeCardView): DomQuestionPanel | undefined {
+  const place = htmlPanelPlace(scene);
+  if (place === undefined) {
+    return undefined;
+  }
+  const panel = showBadgeCard(place.layer, {
+    ...htmlArtInput(place),
+    everyFrame: everyFrame(scene),
+    now: () => scene.time.now,
+    view,
+  });
+  return followScene(scene, panel);
+}
+
 // What a celebration's HTML draws with beyond a panel's: art files, sheets and pill colours.
 function htmlArtInput(place: NonNullable<ReturnType<typeof htmlPanelPlace>>) {
   return {
@@ -341,15 +395,82 @@ export function addHtmlZoneCelebration(
   press: () => void,
 ): DomQuestionPanel | undefined {
   const place = htmlPanelPlace(scene);
-  // followScene hides it while the pause menu pauses the scene.
-  // CLEANUP (added 2026-11-11): remove once shades draw in HTML and the celebration can show
-  // dimmed and non-pressable under the pause menu.
-  return place === undefined
-    ? undefined
-    : followScene(
-        scene,
-        showZoneCelebration(place.layer, { ...htmlArtInput(place), label, press, view }),
-      );
+  if (place === undefined) {
+    return undefined;
+  }
+  const panel = showZoneCelebration(place.layer, { ...htmlArtInput(place), label, press, view });
+  return dimUnderPause(scene, followScene(scene, panel));
+}
+
+// HTML a scene draws that the pause menu's shade dims while it pauses the scene: shown under the
+// menu, taking no presses or focus, and hidden while help or the settings cover the menu.
+export interface Dimmable {
+  focusControl?: (index: number | undefined) => void;
+  setInert(inert: boolean): void;
+  setShown(shown: boolean): void;
+}
+
+// HTML paused under the pause menu, which its shade dims while it shows.
+const dimmedUnder = new Set<Dimmable>();
+
+// html, which the pause menu's shade dims while it pauses scene, in place of hiding it, until it
+// is destroyed.
+export function dimUnderPause<P extends Dimmable & { destroy(): void }>(scene: Scene, html: P): P {
+  const pause = () => dimmedUnder.add(html);
+  // As the scene resumes it takes presses and focus again.
+  const resume = () => {
+    if (dimmedUnder.delete(html)) {
+      html.setInert(false);
+      html.setShown(true);
+      html.focusControl?.(undefined);
+    }
+  };
+  const stop = () => {
+    scene.events.off(Scenes.Events.PAUSE, pause);
+    scene.events.off(Scenes.Events.RESUME, resume);
+    scene.events.off(Scenes.Events.SHUTDOWN, stop);
+    dimmedUnder.delete(html);
+  };
+  scene.events.on(Scenes.Events.PAUSE, pause);
+  scene.events.on(Scenes.Events.RESUME, resume);
+  // The scene's shutdown destroys html itself.
+  scene.events.once(Scenes.Events.SHUTDOWN, stop);
+  return {
+    ...html,
+    destroy: () => {
+      stop();
+      html.destroy();
+    },
+  };
+}
+
+// Whether HTML lies under the pause menu that its shade must dim: a paused celebration's, where
+// the menu draws in HTML.
+export function pauseShadesHtml(scene: Scene): boolean {
+  return dimmedUnder.size > 0 && htmlPanelPlace(scene) !== undefined;
+}
+
+// The pause menu's HTML panel, over the HTML shade where it dims the panels paused under it
+// (pauseShadesHtml), which show under it while it shows and hide while it hides.
+function shadeOver(panel: DomQuestionPanel): DomQuestionPanel {
+  const dim = (shown: boolean) => {
+    for (const under of dimmedUnder) {
+      under.setInert(true);
+      under.setShown(shown);
+    }
+  };
+  dim(true);
+  return {
+    ...panel,
+    destroy: () => {
+      dim(false);
+      panel.destroy();
+    },
+    setShown: (shown) => {
+      dim(shown);
+      panel.setShown(shown);
+    },
+  };
 }
 
 // A badge celebration's title, names, close control and button in the HTML layer over the panel

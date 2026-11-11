@@ -20,7 +20,7 @@ import { addHtmlLabels } from "./htmlLabels.ts";
 import { canvasCelebrationMeasure } from "./modalMeasure.ts";
 import { closeOverlay, type OverlayData } from "./overlay.ts";
 import { currentSettings, walkerSpriteKey } from "./profileStore.ts";
-import { addHtmlZoneCelebration } from "./questionPanel.ts";
+import { addHtmlZoneCelebration, dimUnderPause } from "./questionPanel.ts";
 import { SCENE_KEYS } from "./sceneKeys.ts";
 import { soundboardOf } from "./soundboard.ts";
 import { playFirstTag } from "./sprites.ts";
@@ -96,8 +96,12 @@ export class ZoneCelebrationScene extends Scene {
     // press bursts where it lands, as over the canvas's button.
     const html = addHtmlZoneCelebration(this, view, `${text.title} ${text.subtitle}`, finish);
     if (html !== undefined) {
-      // The headline's display lettering too, which the celebration's dialog names.
-      addHtmlLabels(this, undefined);
+      // The headline's display lettering too, which the celebration's dialog names, dimmed with
+      // it under the pause menu.
+      const labels = addHtmlLabels(this, undefined);
+      if (labels !== undefined) {
+        dimUnderPause(this, labels);
+      }
       listenTargetPress<never>(this, {
         onDown: (pointer) => addTapBurst(this, pointer.x, pointer.y),
         onPressed: () => undefined,

@@ -34,6 +34,10 @@ const FONTS: Readonly<
 
 export interface HtmlLabels {
   destroy(): void;
+  // While the scene is paused, whether the labels show anyway, dimmed under the pause menu's
+  // shade (dimUnderPause in src/scenes/questionPanel.ts); they take no presses either way.
+  setInert(inert: boolean): void;
+  setShown(shown: boolean): void;
 }
 
 interface Mirrored {
@@ -128,11 +132,13 @@ export function addHtmlLabels(scene: Scene, title: string | undefined): HtmlLabe
   layer.element.append(dialog);
 
   const mirrored = new Map<GameObjects.BitmapText, Mirrored>();
+  // Shown while the scene is paused, under the pause menu's shade.
+  let shownPaused = false;
   const camera = scene.cameras.main;
   let placedAt = "";
   const sync = () => {
     const scale = layer.scale();
-    const hidden = !scene.sys.isActive() || !scene.sys.isVisible();
+    const hidden = !scene.sys.isVisible() || (!scene.sys.isActive() && !shownPaused);
     if (hidden !== dialog.hidden) {
       dialog.hidden = hidden;
       // Focus starts on the dialog itself as it shows, as on every HTML panel.
@@ -213,5 +219,16 @@ export function addHtmlLabels(scene: Scene, title: string | undefined): HtmlLabe
     dialog.remove();
   };
   scene.events.once(Scenes.Events.SHUTDOWN, destroy);
-  return { destroy };
+  return {
+    destroy,
+    setInert: (inert) => {
+      if (!inert) {
+        shownPaused = false;
+      }
+    },
+    setShown: (shown) => {
+      shownPaused = shown;
+      sync();
+    },
+  };
 }
