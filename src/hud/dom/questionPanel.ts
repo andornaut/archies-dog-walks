@@ -34,6 +34,9 @@ import type { PanelText, QuestionPanelView } from "../questionPanelView.ts";
 // A part a panel draws beyond its frame, title, note and buttons (a detail card's well, art and
 // text), placed again as the scale changes.
 export interface DomPart {
+  // The part's controls, which Tab reaches before the panel's buttons and close control, in
+  // order; keys on them go through to the scene under, which acts on its own focus.
+  readonly controls?: readonly HTMLElement[];
   readonly element: HTMLElement;
   readonly place: (scale: DomScale) => void;
 }
@@ -46,6 +49,8 @@ export interface DomQuestionPanelInput {
   readonly closeLabel: string;
   // The id of the part that describes the panel, if any.
   readonly describedBy?: string;
+  // Told the index (focusControl's) of the control focus moves to, or undefined for the dialog.
+  readonly onFocus?: (index: number | undefined) => void;
   readonly fonts: Readonly<Record<PanelText["font"], BitmapFont>>;
   // Whether keys 1 to n press the buttons, as on the pause menu and the questions.
   readonly numberKeys: boolean;
@@ -59,6 +64,9 @@ export interface DomQuestionPanelInput {
 
 export interface DomQuestionPanel {
   destroy(): void;
+  // Focuses the parts' controls, then the buttons, then the close control, by index, or the
+  // dialog itself for undefined, as the scene's own focus moves.
+  focusControl(index: number | undefined): void;
   // Hides the panel while a canvas page covers it (help, the settings), and shows it again.
   setShown(shown: boolean): void;
 }
@@ -71,6 +79,29 @@ const CLOSE_ART = { glyph: { size: 16, x: 2, y: 1 } } as const;
 
 // art: fx-tap's side.
 const BURST_SIDE = 16;
+
+// fx-tap's burst in parent, centred where a press landed.
+export function addTapBurst(
+  layer: UiLayer,
+  parent: HTMLElement,
+  toGame: (client: Point) => Point,
+  event: PointerEvent,
+): void {
+  const at = toGame({ x: event.clientX, y: event.clientY });
+  const element = parent.ownerDocument.createElement("span");
+  element.className = "adw-burst";
+  const scale = layer.scale();
+  const side = BURST_SIDE * artPixel(scale);
+  setBox(element, {
+    height: side,
+    left: deviceX(scale, at.x) - side / 2,
+    top: deviceY(scale, at.y) - side / 2,
+    width: side,
+  });
+  element.style.setProperty("--adw-burst", `${side}px`);
+  element.addEventListener("animationend", () => element.remove());
+  parent.append(element);
+}
 
 // Ids that tie each panel's dialog to its title and note.
 let panels = 0;
@@ -164,22 +195,7 @@ export function showQuestionPanel(layer: UiLayer, input: DomQuestionPanelInput):
     dialog.append(plate, note);
   }
 
-  const burst = (event: PointerEvent) => {
-    const at = input.toGame({ x: event.clientX, y: event.clientY });
-    const element = doc.createElement("span");
-    element.className = "adw-burst";
-    const scale = layer.scale();
-    const side = BURST_SIDE * artPixel(scale);
-    setBox(element, {
-      height: side,
-      left: deviceX(scale, at.x) - side / 2,
-      top: deviceY(scale, at.y) - side / 2,
-      width: side,
-    });
-    element.style.setProperty("--adw-burst", `${side}px`);
-    element.addEventListener("animationend", () => element.remove());
-    dialog.append(element);
-  };
+  const burst = (event: PointerEvent) => addTapBurst(layer, dialog, input.toGame, event);
   // Shows a control pressed while a press that began on it stays on it, as the canvas's do.
   // Releasing the implicit capture a touch takes lets the press leave the control, so click,
   // which fires only where the press began and ended, presses it.
@@ -260,17 +276,22 @@ export function showQuestionPanel(layer: UiLayer, input: DomQuestionPanelInput):
   for (const type of passive ? [] : ["mousedown", "touchstart"]) {
     dialog.addEventListener(type, (event) => event.stopPropagation());
   }
-  const focusables = passive ? buttons : [...buttons, close as HTMLButtonElement];
+  const native: HTMLElement[] = passive ? buttons : [...buttons, close];
+  const focusables = [...(input.parts ?? []).flatMap((part) => part.controls ?? []), ...native];
+  dialog.addEventListener("focusin", (event) => {
+    const at = focusables.indexOf(event.target as HTMLElement);
+    input.onFocus?.(at === -1 ? undefined : at);
+  });
   dialog.addEventListener("keydown", (event) => {
     // Enter and Space press the focused control natively; the scene under never hears them.
-    if (isConfirmKey(event.key) && focusables.includes(event.target as HTMLButtonElement)) {
+    if (isConfirmKey(event.key) && native.includes(event.target as HTMLElement)) {
       event.stopPropagation();
       return;
     }
     if (event.key !== "Tab") {
       return;
     }
-    const at = focusables.indexOf(doc.activeElement as HTMLButtonElement);
+    const at = focusables.indexOf(doc.activeElement as HTMLElement);
     const step = event.shiftKey ? focusables.length - 1 : 1;
     // From the dialog itself, Tab enters at the first button and Shift+Tab at the close control.
     const next =
@@ -313,6 +334,12 @@ export function showQuestionPanel(layer: UiLayer, input: DomQuestionPanelInput):
       stopScale();
       doc.defaultView?.removeEventListener("keydown", onKey);
       dialog.remove();
+    },
+    focusControl(index) {
+      const control = index === undefined ? undefined : focusables[index];
+      if (doc.activeElement !== (control ?? dialog)) {
+        (control ?? dialog).focus({ preventScroll: true });
+      }
     },
     setShown(shown) {
       if (shown === !dialog.hidden) {

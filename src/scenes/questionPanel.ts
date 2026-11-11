@@ -124,7 +124,7 @@ export function addQuestionPanel(scene: Scene, area: Rect, question: QuestionPan
 
 // The HTML layer and the bitmap fonts that lay out its web fonts' text, where the page's switch
 // is on and both are ready, else undefined: the canvas draws the panel.
-function htmlPanelPlace(scene: Scene) {
+export function htmlPanelPlace(scene: Scene) {
   const layer = uiLayer();
   const body = pixelBitmapFont(scene, "body");
   const title = pixelBitmapFont(scene, "title");
@@ -135,7 +135,7 @@ function htmlPanelPlace(scene: Scene) {
 
 // What every HTML panel in place is given: the shared close label, the fonts and the page point
 // of a press as a game point, through the page frame's turn.
-function htmlPanelInput(place: NonNullable<ReturnType<typeof htmlPanelPlace>>) {
+export function htmlPanelInput(place: NonNullable<ReturnType<typeof htmlPanelPlace>>) {
   const { layer } = place;
   return {
     closeLabel: gameData.menuText.common.close,
@@ -147,7 +147,10 @@ function htmlPanelInput(place: NonNullable<ReturnType<typeof htmlPanelPlace>>) {
 
 // panel, hidden while the scene is paused or asleep under a canvas page (help, the settings)
 // and gone with the scene, or by destroy, which stops it following the scene.
-function followScene(scene: Scene, panel: DomQuestionPanel): DomQuestionPanel {
+export function followScene<P extends Pick<DomQuestionPanel, "destroy" | "setShown">>(
+  scene: Scene,
+  panel: P,
+): P {
   const listeners = [
     [Scenes.Events.PAUSE, () => panel.setShown(false)],
     [Scenes.Events.RESUME, () => panel.setShown(true)],
@@ -165,7 +168,7 @@ function followScene(scene: Scene, panel: DomQuestionPanel): DomQuestionPanel {
     scene.events.on(type, listener);
   }
   scene.events.once(Scenes.Events.SHUTDOWN, destroy);
-  return { destroy, setShown: (shown) => panel.setShown(shown) };
+  return { ...panel, destroy };
 }
 
 // A panel's view in the HTML layer, following its scene (followScene).

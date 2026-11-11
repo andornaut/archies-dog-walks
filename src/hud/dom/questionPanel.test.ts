@@ -21,6 +21,7 @@ interface FakeEvent {
   pointerId?: number;
   repeat?: boolean;
   shiftKey?: boolean;
+  target?: unknown;
   preventDefault?: () => void;
   stopPropagation?: () => void;
 }
@@ -350,5 +351,52 @@ describe("an HTML detail card that takes no presses", () => {
     expect(art?.style.visibility).toBe("");
     // An art pixel is 2 device pixels at DPR 2, and the tag's frame starts 32 art pixels in.
     expect(art?.style.backgroundPosition).toBe("-64px 0px");
+  });
+});
+
+describe("an HTML panel's part controls", () => {
+  it("come first in Tab's order and tell the scene where focus moves, which it can move", () => {
+    const doc = new FakeDocument();
+    const element = doc.createElement("div");
+    const layer = {
+      element,
+      onScale: () => () => undefined,
+      ready: () => true,
+      scale: () => domScale(2, { height: 560, width: 360, x: 0, y: 0 }),
+      update: () => undefined,
+    } as unknown as UiLayer;
+    const rows = [doc.createElement("div"), doc.createElement("div")];
+    const focused: (number | undefined)[] = [];
+    const shown = showQuestionPanel(layer, {
+      close: vi.fn(),
+      closeLabel: gameData.menuText.common.close,
+      fonts: { body: gameFont("font-body"), title: gameFont("font-title") },
+      numberKeys: false,
+      onFocus: (index) => focused.push(index),
+      parts: [
+        {
+          controls: rows as unknown as HTMLElement[],
+          element: doc.createElement("div") as unknown as HTMLElement,
+          place: () => undefined,
+        },
+      ],
+      presses: [],
+      toGame: (point) => point,
+      view: modalCardView(MEASURE, { height: 120, width: 280, x: 40, y: 200 }, "Settings", []),
+    });
+    const [dialog] = element.children;
+    const tab = () =>
+      dialog?.fire("keydown", { key: "Tab", preventDefault: () => undefined, shiftKey: false });
+    tab();
+    expect(doc.activeElement).toBe(rows[0]);
+    // Enter on a part's control goes through to the scene, which presses what its focus is on.
+    const stopPropagation = vi.fn();
+    dialog?.fire("keydown", { key: "Enter", stopPropagation, target: rows[0] });
+    expect(stopPropagation).not.toHaveBeenCalled();
+    shown.focusControl(1);
+    expect(doc.activeElement).toBe(rows[1]);
+    dialog?.fire("focusin", { target: rows[1] });
+    dialog?.fire("focusin", { target: dialog });
+    expect(focused).toEqual([1, undefined]);
   });
 });

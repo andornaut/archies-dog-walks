@@ -10,7 +10,14 @@ import { describe, expect, it } from "vitest";
 import { gameFont } from "../../testing/fontInk.ts";
 import { deviceX, deviceY, domScale, fontPixel } from "../domScale.ts";
 import { inPill, laidPills, PILL, pillRows } from "../namePills.ts";
-import { blockPlace, penRuns, shownText, spokenText, textPlace } from "./pixelLine.ts";
+import {
+  blockPlace,
+  boundsAdvance,
+  penRuns,
+  shownText,
+  spokenText,
+  textPlace,
+} from "./pixelLine.ts";
 
 const ORIGIN = { x: 0, y: 0 };
 
@@ -125,5 +132,27 @@ describe("a block of text with name pills", () => {
     ]);
     expect(place.cut).toBe(pixel);
     expect(place.runs.at(-1)?.top).toBe(lineTop);
+  });
+});
+
+describe("a block's anchor", () => {
+  it.each([
+    ["pen", 0],
+    ["ink", -leftBearing((char) => gameFont("font-title").glyphs.get(char), "MUSIC")],
+    ["right", -boundsAdvance(gameFont("font-title"), "45%")],
+  ] as const)("starts the pen from x by the %s anchor", (anchor, offset) => {
+    const font = gameFont("font-title");
+    const scale = domScale(2, { height: 560, width: 360, x: 0, y: 0 });
+    const text = anchor === "right" ? "45%" : "MUSIC";
+    const place = blockPlace(font, scale, {
+      anchor,
+      capTop: 200,
+      colour: 0,
+      font: "title",
+      lines: [text],
+      scale: 2,
+      x: 100,
+    });
+    expect(place.runs[0]?.left).toBe(deviceX(scale, 100) + offset * fontPixel(scale, 2));
   });
 });

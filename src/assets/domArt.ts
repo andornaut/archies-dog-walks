@@ -35,6 +35,21 @@ function detailArtKeys(
   ];
 }
 
+// The settings card's art (src/home/settingsView.ts): each row's icon sheet, the switch, the
+// slider and its knob, and the install steps' button glyphs.
+const SETTINGS_ART_KEYS = [
+  "icon-browser-menu",
+  "icon-effects-panel",
+  "icon-install-panel",
+  "icon-motion-panel",
+  "icon-music-panel",
+  "icon-share",
+  "icon-sound-panel",
+  "ui-slider",
+  "ui-slider-knob",
+  "ui-switch",
+];
+
 export const DOM_ART_KEYS: ReadonlySet<string> = new Set([
   "fx-tap",
   "icon-close",
@@ -51,6 +66,7 @@ export const DOM_ART_KEYS: ReadonlySet<string> = new Set([
   "ui-icon-button-pressed",
   "ui-panel",
   ...detailArtKeys(gameData),
+  ...SETTINGS_ART_KEYS,
 ]);
 
 // A DOM art file's path under /art/: an image's PNG, or a sprite sheet's PNG or JSON.

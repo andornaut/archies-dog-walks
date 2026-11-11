@@ -64,6 +64,7 @@ const ART_PROPERTIES: readonly (readonly [string, string])[] = [
   ["--adw-ui-button-go-pressed", "images/ui-button-go-pressed.png"],
   ["--adw-ui-button-normal", "images/ui-button-normal.png"],
   ["--adw-ui-button-pressed", "images/ui-button-pressed.png"],
+  ["--adw-ui-button-secondary", "images/ui-button-secondary.png"],
   ["--adw-ui-detail-card", "images/ui-detail-card.png"],
   ["--adw-ui-icon-button-normal", "images/ui-icon-button-normal.png"],
   ["--adw-ui-icon-button-pressed", "images/ui-icon-button-pressed.png"],

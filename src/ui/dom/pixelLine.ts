@@ -4,6 +4,7 @@ import {
   type BitmapFont,
   fontMetrics,
   laidGlyphs,
+  leftBearing,
 } from "@andornaut/game-kit/text/bitmapFont";
 
 import { deviceRect, deviceX, deviceY, type DomScale, fontPixel, frameRect } from "../domScale.ts";
@@ -196,15 +197,47 @@ export function spokenText(line: string): string {
     .join("");
 }
 
-// A left-aligned block of text: its pen starting at x and its first line's capitals at capTop
-// (game pixels), its lines a font line apart, each effect's name set in a pill.
+// A left-aligned block of text: its pen starting at x, or its first line's ink starting there
+// (ink, as a left-aligned title label's does), or its widest line's advance ending there (right,
+// as a right-aligned label's does), and its first line's capitals at capTop (game pixels), its
+// lines a font line apart, each effect's name set in a pill.
 export interface DomTextBlock {
+  readonly anchor?: "ink" | "pen" | "right";
   readonly capTop: number;
   readonly colour: number;
   readonly font: keyof typeof WEB_FONTS;
   readonly lines: readonly string[];
   readonly scale: number;
   readonly x: number;
+}
+
+// The widest a line's pen reaches, in font pixels: the furthest any glyph's advance ends, as
+// Phaser bounds a label.
+export function boundsAdvance(bitmap: BitmapFont, line: string): number {
+  let pen = 0;
+  let widest = 0;
+  let previous: string | undefined;
+  for (const char of line) {
+    const glyph = bitmap.glyphs.get(char);
+    if (glyph === undefined) {
+      continue;
+    }
+    pen += previous === undefined ? 0 : (bitmap.kernings.get(previous + char) ?? 0);
+    widest = Math.max(widest, pen + glyph.advance);
+    pen += glyph.advance;
+    previous = char;
+  }
+  return widest;
+}
+
+// Where a block's pen starts from x, in font pixels, by its anchor.
+function penOffset(bitmap: BitmapFont, block: DomTextBlock): number {
+  const lines = block.lines.map((line) => shownText(block.font, line));
+  const anchor = block.anchor ?? "pen";
+  if (anchor === "ink") {
+    return -leftBearing((char) => bitmap.glyphs.get(char), lines[0] ?? "");
+  }
+  return anchor === "right" ? -Math.max(0, ...lines.map((line) => boundsAdvance(bitmap, line))) : 0;
 }
 
 // Where a block's parts go, in whole device pixels from the layer's corner: each run of text,
@@ -224,7 +257,7 @@ export function blockPlace(
   readonly runs: readonly (PenRun & { readonly left: number; readonly top: number })[];
 } {
   const pixel = fontPixel(scale, block.scale);
-  const left = deviceX(scale, block.x);
+  const left = deviceX(scale, block.x) + penOffset(bitmap, block) * pixel;
   const { capTop } = fontMetrics(bitmap);
   const rows = pillRows(1);
   const lines = block.lines.map((line, i) => ({

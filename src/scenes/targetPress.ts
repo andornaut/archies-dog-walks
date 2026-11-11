@@ -23,9 +23,13 @@ interface TargetPressHandlers<T> {
   targetAt: (x: number, y: number) => T | undefined;
 }
 
-export interface TargetPressListener {
+export interface TargetPressListener<T = unknown> {
   // Drops the press under way, so its release taps nothing; for a press a hold has taken.
   cancel(): void;
+  // A press Phaser never hears (one on the HTML interface) landing on target, then lifting over
+  // released, or cancelled, followed as a press on the canvas is.
+  down(target: T | undefined): void;
+  up(released: T | undefined, cancelled: boolean): void;
 }
 
 const NO_DIP = () => 0;
@@ -42,51 +46,57 @@ export function sameByValue<T>(a: T, b: T | undefined): boolean {
 export function listenTargetPress<T>(
   scene: Scene,
   handlers: TargetPressHandlers<T>,
-): TargetPressListener {
+): TargetPressListener<T> {
   const rule = {
     dipMs: handlers.dipMs ?? NO_DIP,
     opens: handlers.opens ?? OPENS_NOTHING,
     same: handlers.same ?? IDENTICAL,
   };
   let press: TargetPress<T> | undefined;
+  const down = (target: T | undefined) => {
+    press = pressDown(scene.time.now, target);
+    handlers.onPressed(target);
+  };
+  const up = (released: T | undefined, cancelled: boolean) => {
+    const release = pressUp(rule, scene.time.now, cancelled, press, released);
+    press = undefined;
+    // A press that landed during the dip keeps showing pressed.
+    const lift = () => {
+      if (press === undefined) {
+        handlers.onPressed(undefined);
+      }
+    };
+    if (release.kind === "tap" && release.delayMs > 0) {
+      scene.time.delayedCall(release.delayMs, () => {
+        lift();
+        handlers.onTap(release.target);
+      });
+      return;
+    }
+    if (release.kind === "tap" && release.liftMs > 0) {
+      afterMsUnderOverlay(scene, release.liftMs, lift);
+    } else {
+      handlers.onPressed(undefined);
+    }
+    if (release.kind === "tap") {
+      handlers.onTap(release.target);
+    }
+  };
   listenOnePress(scene, {
     down: (pointer) => {
       const target = handlers.targetAt(pointer.x, pointer.y);
-      press = pressDown(scene.time.now, target);
-      handlers.onPressed(target);
+      down(target);
       handlers.onDown?.(pointer, target);
     },
     move: (pointer) => handlers.onMove?.(pointer),
-    up: (pointer, cancelled) => {
-      const released = cancelled ? undefined : handlers.targetAt(pointer.x, pointer.y);
-      const release = pressUp(rule, scene.time.now, cancelled, press, released);
-      press = undefined;
-      // A press that landed during the dip keeps showing pressed.
-      const lift = () => {
-        if (press === undefined) {
-          handlers.onPressed(undefined);
-        }
-      };
-      if (release.kind === "tap" && release.delayMs > 0) {
-        scene.time.delayedCall(release.delayMs, () => {
-          lift();
-          handlers.onTap(release.target);
-        });
-        return;
-      }
-      if (release.kind === "tap" && release.liftMs > 0) {
-        afterMsUnderOverlay(scene, release.liftMs, lift);
-      } else {
-        handlers.onPressed(undefined);
-      }
-      if (release.kind === "tap") {
-        handlers.onTap(release.target);
-      }
-    },
+    up: (pointer, cancelled) =>
+      up(cancelled ? undefined : handlers.targetAt(pointer.x, pointer.y), cancelled),
   });
   return {
     cancel: () => {
       press = undefined;
     },
+    down,
+    up,
   };
 }
