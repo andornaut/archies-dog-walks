@@ -1,8 +1,10 @@
 # Check image archie-check:node24.21.0-sox-ffmpeg: upstream node:24.21.0 with SoX and ffmpeg for the
-# sound builds. Build from the repository root:
+# sound builds and ShellCheck 0.11.0 for lint. Build from the repository root:
 # docker build -f docker/archie-check.Dockerfile -t archie-check:node24.21.0-sox-ffmpeg docker
 # SoX and ffmpeg are pinned because the sound builds must reproduce byte-identical output.
 FROM node:24.21.0
+
+COPY --from=koalaman/shellcheck:v0.11.0 /bin/shellcheck /usr/local/bin/shellcheck
 
 ARG SNAPSHOT=20261103T000000Z
 

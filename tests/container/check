@@ -21,6 +21,8 @@ case "${category}" in
         exec node node_modules/typescript/bin/tsc "$@"
         ;;
     lint-only)
+        shellcheck -- tests/container/run tests/container/check tests/container/admit
+        shellcheck --shell=sh -- .husky/pre-commit
         node node_modules/prettier/bin/prettier.cjs --check .
         node node_modules/eslint/bin/eslint.js --max-warnings 0 .
         node_modules/.bin/markdownlint-cli2

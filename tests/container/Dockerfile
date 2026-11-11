@@ -1,5 +1,7 @@
 FROM node:24.21.0
 
+COPY --from=koalaman/shellcheck:v0.11.0 /bin/shellcheck /usr/local/bin/shellcheck
+
 ARG SNAPSHOT=20261103T000000Z
 
 RUN set -eu \
