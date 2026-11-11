@@ -1,9 +1,13 @@
 import { itemAt } from "@andornaut/game-kit/arrays";
 import type { ProgressValue } from "@andornaut/game-kit/progress";
-import { drawProgressBar } from "@andornaut/game-kit/progress/phaser/drawProgressBar";
-import type { ProgressHandle } from "@andornaut/game-kit/progressState";
+import { drawProgressDisplay } from "@andornaut/game-kit/progress/phaser/drawProgressBar";
+import {
+  createProgressDisplay,
+  createProgressState,
+  type ProgressHandle,
+} from "@andornaut/game-kit/progressState";
 import { keysOf } from "@andornaut/game-kit/records";
-import { GameObjects, type Loader, Scene, Sound } from "phaser";
+import { GameObjects, type Loader, Scene, Scenes, Sound } from "phaser";
 
 import { animationSpecs, type AsepriteSheet } from "../assets/asepriteAnimations.ts";
 import { loadsFirst } from "../assets/atlasGroups.ts";
@@ -52,7 +56,7 @@ import {
 import { PALETTE } from "../ui/palette.ts";
 import { addFilledRect } from "../ui/phaser/draw.ts";
 import { addPillGlyphs, registerFallbackPixelFont } from "../ui/phaser/pixelText.ts";
-import { GAME_PROGRESS_STYLE } from "../ui/progressBar.ts";
+import { GAME_PROGRESS_STYLE, LOADING_MOTION, LOADING_TIMING } from "../ui/progressBar.ts";
 import { markArtReady, walkArtProgress } from "./artReady.ts";
 import { onLoadProgress } from "./loadProgress.ts";
 import {
@@ -127,6 +131,8 @@ function placeholderSizes(): Map<string, Size> {
 export class BootScene extends Scene {
   private bar: GameObjects.Graphics | undefined;
   private artProgress: ProgressHandle | undefined;
+  // The loading screen's own load, which its bar draws each frame.
+  private bootLoad: ProgressHandle | undefined;
   private manifest: AssetManifest = { fonts: [], images: [], sounds: [], sprites: [] };
   private walker: GameObjects.Sprite | undefined;
 
@@ -138,7 +144,31 @@ export class BootScene extends Scene {
     this.artProgress = undefined;
     this.events.once("shutdown", () => this.artProgress?.finish());
     this.bar = this.add.graphics().setDepth(1);
-    this.showProgress(undefined);
+    const loading = createProgressState();
+    const display = createProgressDisplay(LOADING_TIMING.fullMs);
+    const stop = loading.subscribe(display.report);
+    this.bootLoad = loading.begin();
+    // The scene's update event runs while it loads too, unlike its update method.
+    const draw = () => {
+      const { bar } = this;
+      if (bar !== undefined) {
+        bar.clear();
+        const shown = display.at(this.time.now);
+        drawProgressDisplay(
+          bar,
+          GAME_PROGRESS_STYLE,
+          LOADING_MOTION,
+          SCREEN_LAYOUT.zoneProgress,
+          shown,
+        );
+      }
+    };
+    this.events.on(Scenes.Events.UPDATE, draw);
+    this.events.once(Scenes.Events.SHUTDOWN, () => {
+      this.events.off(Scenes.Events.UPDATE, draw);
+      stop();
+      this.bootLoad = undefined;
+    });
     this.load.on("loaderror", (file: Loader.File) => {
       console.warn(`Asset failed to load, using a placeholder: ${file.key} (${file.url})`);
     });
@@ -247,10 +277,7 @@ export class BootScene extends Scene {
       this.walker?.setPosition(at.x, at.y);
     }
     this.artProgress?.progress(progress);
-    if (this.bar !== undefined) {
-      this.bar.clear();
-      drawProgressBar(this.bar, GAME_PROGRESS_STYLE, SCREEN_LAYOUT.zoneProgress, progress);
-    }
+    this.bootLoad?.progress(progress);
   }
 
   // Registers the loaded sprites that include accepts and draws a placeholder for each such key

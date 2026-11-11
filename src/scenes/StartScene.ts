@@ -1,6 +1,6 @@
 import { clampIndex, itemAt } from "@andornaut/game-kit/arrays";
-import type { ProgressValue } from "@andornaut/game-kit/progress";
-import { drawProgressBar } from "@andornaut/game-kit/progress/phaser/drawProgressBar";
+import { drawProgressDisplay } from "@andornaut/game-kit/progress/phaser/drawProgressBar";
+import { createProgressDisplay } from "@andornaut/game-kit/progressState";
 import { containsPoint, insetRect, type Rect } from "@andornaut/game-kit/rect";
 import { Core, type GameObjects, Scene, Scenes, type Time } from "phaser";
 
@@ -169,7 +169,7 @@ import {
   setPixelText,
   withProbe,
 } from "../ui/phaser/pixelText.ts";
-import { GAME_PROGRESS_STYLE } from "../ui/progressBar.ts";
+import { GAME_PROGRESS_STYLE, LOADING_MOTION, LOADING_TIMING } from "../ui/progressBar.ts";
 import { BUTTON_COLOURS, GREYED, pictureBox, type SelectLook } from "../ui/selection.ts";
 import { TEXT_SCALE } from "../ui/textFit.ts";
 import { topBarRects } from "../ui/topBarTrim.ts";
@@ -443,9 +443,11 @@ export class StartScene extends Scene {
   // runs once it has, and Start walk shows held down and dimmed while it waits.
   private artWait: { action: () => void; kind: "help" | "start" } | undefined;
   private entry: object | undefined;
+  // The loading line, drawn each frame: the walk's load while Start walk waits, else the
+  // offline install's.
   private waitBar: GameObjects.Graphics | undefined;
-  private waitProgress: ProgressValue;
-  private offlinePending = false;
+  private walkDisplay = createProgressDisplay(LOADING_TIMING.fullMs);
+  private offlineDisplay = createProgressDisplay(LOADING_TIMING.fullMs);
   // Whether the top bar shows Exit (exitShown).
   private exit = true;
   private focus: Focus | null = null;
@@ -499,16 +501,10 @@ export class StartScene extends Scene {
     this.artWait = undefined;
     this.entry = undefined;
     this.waitBar = undefined;
-    const stopProgress = walkArtProgress.subscribe(({ active, value }) => {
-      this.waitProgress = active ? value : undefined;
-      this.drawLoadingProgress();
-    });
-    this.events.once("shutdown", stopProgress);
-    const stopOfflineProgress = offlineProgress.subscribe(({ active }) => {
-      this.offlinePending = active;
-      this.drawLoadingProgress();
-    });
-    this.events.once("shutdown", stopOfflineProgress);
+    this.walkDisplay = createProgressDisplay(LOADING_TIMING.fullMs);
+    this.events.once("shutdown", walkArtProgress.subscribe(this.walkDisplay.report));
+    this.offlineDisplay = createProgressDisplay(LOADING_TIMING.fullMs);
+    this.events.once("shutdown", offlineProgress.subscribe(this.offlineDisplay.report));
     this.exit = exitShown();
     this.focus = null;
     this.hold = undefined;
@@ -683,6 +679,9 @@ export class StartScene extends Scene {
       this.pending.forEach((timer) => timer.remove());
       this.pending.clear();
       this.artWait = undefined;
+      if (this.entry !== undefined) {
+        this.walkDisplay.report({ active: false, value: undefined });
+      }
       this.entry = undefined;
       this.waitBar?.setVisible(false);
       const lifted = this.closePressed();
@@ -1166,9 +1165,9 @@ export class StartScene extends Scene {
       this.entry = entry;
       startWakeLock();
       this.artWait = { action: () => undefined, kind: "start" };
-      this.waitProgress = undefined;
+      // Planning has no denominator, so its line travels; paint it before planning blocks.
+      this.walkDisplay.report({ active: true, value: undefined });
       this.render();
-      // Paint the pending line before synchronous planning; it has no percentage denominator.
       onceSceneEvent(this, this.game.events, Core.Events.POST_RENDER, () => {
         if (this.entry !== entry) {
           return;
@@ -1223,6 +1222,7 @@ export class StartScene extends Scene {
       }
     }
     this.place(now);
+    this.drawLoadingProgress(now);
   }
 
   // Moves what dips, bobs, shakes, hops and pops to where it is at now.
@@ -2231,22 +2231,20 @@ export class StartScene extends Scene {
     });
   }
 
-  private drawLoadingProgress(): void {
+  private drawLoadingProgress(now: number): void {
     const bar = this.waitBar;
     if (bar === undefined) {
       return;
     }
-    const waitingForWalk = this.artWait?.kind === "start";
-    const shown = waitingForWalk || this.offlinePending;
-    bar.setVisible(shown).clear();
-    if (shown) {
-      drawProgressBar(
-        bar,
-        GAME_PROGRESS_STYLE,
-        HOME_LAYOUT.loadingProgress,
-        waitingForWalk ? this.waitProgress : undefined,
-      );
-    }
+    const display = this.artWait?.kind === "start" ? this.walkDisplay : this.offlineDisplay;
+    bar.clear();
+    drawProgressDisplay(
+      bar,
+      GAME_PROGRESS_STYLE,
+      LOADING_MOTION,
+      HOME_LAYOUT.loadingProgress,
+      display.at(now),
+    );
   }
 
   // Start walk keeps its words and place in every state but one. Ready, it is primary: the
@@ -2257,7 +2255,7 @@ export class StartScene extends Scene {
   private drawStartButton(root: GameObjects.Container, ready: boolean): void {
     this.waitBar = this.add.graphics();
     root.add(this.waitBar);
-    this.drawLoadingProgress();
+    this.drawLoadingProgress(this.time.now);
     const { width, x, y } = START_BUTTON;
     const container = this.add.container(0, 0);
     root.add(container);

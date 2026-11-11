@@ -1,12 +1,13 @@
 // Install error handling before importing the game's renderer and other modules.
 import "./crash/install.ts";
 import "@andornaut/game-kit/web/view/frameTurnPortraitGame.css";
+import "@andornaut/game-kit/web/progress/dom/progressBar.css";
 import "./main.css";
 
 import { createDomProgressBar } from "@andornaut/game-kit/web/progress/dom/progressBar";
 
 import { SCREEN_CONFIG, SCREEN_LAYOUT } from "./data/screen.ts";
-import { GAME_PROGRESS_STYLE } from "./ui/progressBar.ts";
+import { domLoadingTiming, GAME_PROGRESS_STYLE, LOADING_STEPS_PROPERTY } from "./ui/progressBar.ts";
 import { startupLoad, startupProgress } from "./ui/startupProgress.ts";
 
 const parent = document.getElementById("game");
@@ -20,7 +21,9 @@ if (parent !== null) {
     transformOrigin: "top left",
   });
   parent.append(view);
-  const bar = createDomProgressBar(view, GAME_PROGRESS_STYLE, SCREEN_LAYOUT.zoneProgress);
+  const { steps, timing } = domLoadingTiming(SCREEN_LAYOUT.zoneProgress);
+  const bar = createDomProgressBar(view, GAME_PROGRESS_STYLE, SCREEN_LAYOUT.zoneProgress, timing);
+  bar.element.style.setProperty(LOADING_STEPS_PROPERTY, String(steps));
   bar.element.setAttribute("aria-label", parent.getAttribute("aria-label") ?? document.title);
   const place = () => {
     const scale = Math.min(
@@ -33,25 +36,22 @@ if (parent !== null) {
   const resize = new ResizeObserver(place);
   resize.observe(parent);
   place();
-  const stop = startupProgress.subscribe(({ active, value }) => {
-    view.hidden = !active;
-    bar.update(value);
-    if (!active) {
-      resize.disconnect();
-      bar.remove();
-      view.remove();
+  const close = () => {
+    stop();
+    resize.disconnect();
+    bar.remove();
+    view.remove();
+  };
+  // A finished measured load shows full until the stylesheet hides it; a finished load of
+  // unknown size hides the bar at once, which then goes. startupLoad is under way as this
+  // subscribes, so the first report never hides it.
+  const stop = startupProgress.subscribe((snapshot) => {
+    bar.report(snapshot);
+    if (bar.element.hidden) {
+      close();
     }
   });
-  window.addEventListener(
-    "pagehide",
-    () => {
-      stop();
-      resize.disconnect();
-      bar.remove();
-      view.remove();
-    },
-    { once: true },
-  );
+  window.addEventListener("pagehide", close, { once: true });
 }
 
 // Module download and renderer setup have no measurable denominator.
