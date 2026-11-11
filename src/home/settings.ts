@@ -251,9 +251,9 @@ export function settingsLayout(
   };
 }
 
-// The install steps for a browser's own menu: a detail card, wide enough for its title clear of
-// the close control, centred on the screen, with its title and close control, and under the
-// title row the 16x16 glyph of the browser's button, centred on the first line's capitals (icon.dy
+// The browser's own install steps: a detail card, wide enough for its title clear of the close
+// control, centred on the screen, with its title and close control, and under the title row the
+// 16x16 glyph of the button the steps start from, centred on the first line's capitals (icon.dy
 // from their top), then the steps in body text, wrapped to up to lines lines a linePitch apart.
 export const INSTALL_STEPS = {
   foot: MODAL.pad,

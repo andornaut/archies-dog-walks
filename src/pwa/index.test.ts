@@ -14,7 +14,7 @@ vi.mock("@andornaut/game-kit/web/pwa/dom/offlinePlay", () => ({
   }),
 }));
 vi.mock("@andornaut/game-kit/web/pwa/dom/installFlow", () => ({
-  watchInstall: () => ({ onChange: () => () => undefined, state: () => "unsupported" }),
+  watchInstall: () => ({ onChange: () => () => undefined, state: () => "steps" }),
 }));
 vi.mock("@andornaut/game-kit/web/pwa/dom/visibility", () => ({ watchVisibility: () => undefined }));
 vi.mock("@andornaut/game-kit/web/pwa/dom/wakeLock", () => ({

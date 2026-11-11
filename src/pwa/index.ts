@@ -21,7 +21,7 @@ import {
   createScreenWakeLock,
   type ScreenWakeLock,
 } from "@andornaut/game-kit/web/pwa/dom/wakeLock";
-import type { InstallState, MenuInstallBrowser } from "@andornaut/game-kit/web/pwa/installState";
+import type { InstallState, InstallStepsKind } from "@andornaut/game-kit/web/pwa/installState";
 import { serviceWorkerUrl } from "@andornaut/game-kit/web/pwa/serviceWorkerUrl";
 import {
   requestPersistentStorage,
@@ -44,7 +44,7 @@ export { PHONE_EVENTS } from "./events.ts";
 export type { InstallOutcome } from "@andornaut/game-kit/web/pwa/dom/installFlow";
 export {
   type InstallState,
-  type MenuInstallBrowser,
+  type InstallStepsKind,
   offersInstall,
 } from "@andornaut/game-kit/web/pwa/installState";
 export type { StoragePersistence } from "@andornaut/game-kit/web/pwa/storagePersistence";
@@ -239,8 +239,9 @@ export function storagePersistence(): Promise<StoragePersistence> {
   return persistence;
 }
 
+// Before setupPhoneApp there is no install flow, and nothing offers to install.
 export function installState(): InstallState {
-  return installFlow?.state() ?? "unsupported";
+  return installFlow?.state() ?? "installed";
 }
 
 // Calls listener on each change of the install state until the returned function is called.
@@ -248,15 +249,15 @@ export function onInstallStateChange(listener: (state: InstallState) => void): (
   return installFlow?.onChange(listener) ?? (() => undefined);
 }
 
-// Shows the browser's install prompt, or tells the caller to show menuBrowser's steps. Call it
+// Shows the browser's install prompt, or tells the caller to show stepsKind's steps. Call it
 // from the player's tap: the browser shows its prompt only during a gesture.
 export function installApp(): Promise<InstallOutcome> {
-  return installFlow?.install() ?? Promise.resolve("unavailable");
+  return installFlow?.install() ?? Promise.resolve("steps");
 }
 
-// The browser that installs only from its own menu, whose steps installApp's menuSteps calls for.
-export function menuBrowser(): MenuInstallBrowser | undefined {
-  return installFlow?.menuBrowser;
+// The browser whose install steps installApp's steps outcome calls for.
+export function stepsKind(): InstallStepsKind {
+  return installFlow?.stepsKind ?? "other";
 }
 
 // Whether the start screen should suggest installing now: once per device, while the state

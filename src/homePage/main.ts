@@ -3,8 +3,8 @@
 import { wireInstallButton } from "@andornaut/game-kit/web/pwa/dom/installButton";
 import { watchInstall } from "@andornaut/game-kit/web/pwa/dom/installFlow";
 
-// Elements in pages/index.html. The steps dialog holds one section per browser, each marked
-// data-browser with its MenuInstallBrowser and titled by its h2.
+// Elements in pages/index.html. The steps dialog holds one section per InstallStepsKind, each
+// marked data-steps with its kind and titled by its h2.
 const INSTALL_ID = "install";
 const STEPS_ID = "install-steps";
 

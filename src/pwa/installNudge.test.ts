@@ -6,8 +6,9 @@ import { createInstallNudge, INSTALL_NUDGE_KEY } from "./installNudge.ts";
 
 describe("createInstallNudge", () => {
   it.each<[InstallState, boolean]>([
-    ["prompt", true],
     ["installed", false],
+    ["prompt", true],
+    ["steps", true],
   ])("is due for %s on a device that has not seen it: %s", async (state, expected) => {
     const nudge = createInstallNudge(storageFixture());
     await nudge.ready;

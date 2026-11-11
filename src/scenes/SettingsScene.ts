@@ -40,10 +40,10 @@ import {
   exitShown,
   installApp,
   installState,
-  menuBrowser,
-  type MenuInstallBrowser,
+  type InstallStepsKind,
   offersInstall,
   onInstallStateChange,
+  stepsKind,
 } from "../pwa/index.ts";
 import type { Settings } from "../save/schema.ts";
 import { barTitleRoom } from "../ui/barTitle.ts";
@@ -97,8 +97,8 @@ export const SETTINGS_CLOSED_EVENT = "settings-closed";
 
 type SwitchKey = "muted" | "reducedMotion";
 type SettingsWord = Exclude<keyof MenuText["settings"], "installSteps" | "volume">;
-// The open install steps' card, with the browser whose steps it shows.
-type OpenSteps = InstallStepsLayout & { readonly browser: MenuInstallBrowser };
+// The open install steps' card, with the kind of steps it shows.
+type OpenSteps = InstallStepsLayout & { readonly kind: InstallStepsKind };
 
 // Each row carries a 16x16 -panel icon with on and off tags, and the menuText.settings keys
 // of its label, its note and its button's label.
@@ -149,9 +149,10 @@ const INSTALL_ROW: Row = {
   label: "install",
   note: "installNote",
 };
-// The button each browser's install steps start from, drawn before them: Safari's Share, or
-// Firefox's menu.
-const STEPS_ICONS: Readonly<Record<MenuInstallBrowser, string>> = {
+// The button the install steps start from, drawn before them: the three-dot menu of Chrome or
+// Firefox for Android, or Safari's Share. Other kinds draw none.
+const STEPS_ICONS: Readonly<Partial<Record<InstallStepsKind, string>>> = {
+  chromiumAndroid: "icon-browser-menu",
   firefoxAndroid: "icon-browser-menu",
   ios: "icon-share",
 };
@@ -224,16 +225,15 @@ export interface SettingsData extends OverlayData {
   readonly region: OverlayRegion;
 }
 
-// Sound on or off, music and effects volume, reduced motion and, until the game is installed
-// where it can be, Install, reachable from the home screen and the pause menu. The card draws
-// over the screen it opens from, its dim part ramp-dimmed as under the pause menu. Every change
-// is saved and applied at once. The build's label sits under the rows. A switch row is normal and
-// shows its setting in its switch; a tap dips the row, then flips it. A tap anywhere on the
-// Install row, its Get button included, dips it, then opens the browser's install prompt or, in
-// a browser that installs only from its own menu (iOS, Firefox for Android), a card with that
-// browser's steps over the settings. Up and Down move the keyboard's focus through the rows and
-// the close control; Enter or Space presses the focused row, and on a slider the left and right
-// keys, Home and End set the volume.
+// Sound on or off, music and effects volume, reduced motion and, until the game is installed,
+// Install, reachable from the home screen and the pause menu. The card draws over the screen it
+// opens from, its dim part ramp-dimmed as under the pause menu. Every change is saved and applied
+// at once. The build's label sits under the rows. A switch row is normal and shows its setting in
+// its switch; a tap dips the row, then flips it. A tap anywhere on the Install row, its Get button
+// included, dips it, then opens the browser's install prompt or, where the browser holds none, a
+// card with that browser's own install steps over the settings. Up and Down move the keyboard's
+// focus through the rows and the close control; Enter or Space presses the focused row, and on a
+// slider the left and right keys, Home and End set the volume.
 export class SettingsScene extends Scene {
   private sliderLabels = new Map<VolumeKey, GameObjects.BitmapText[]>();
   private dim: Rect = SCREEN_LAYOUT.screen;
@@ -246,7 +246,7 @@ export class SettingsScene extends Scene {
   private pressed: Target | undefined;
   private resumeKey: SceneKey | undefined;
   private rows: readonly Row[] = SETTING_ROWS;
-  // The install steps' card and the browser whose steps it shows, while it is open.
+  // The install steps' card and the kind of steps it shows, while it is open.
   private steps: OpenSteps | undefined;
 
   constructor() {
@@ -420,18 +420,17 @@ export class SettingsScene extends Scene {
   }
 
   // The browser's install prompt, asked for while the tap still counts as the player's
-  // gesture, or the steps for the browser's own menu.
+  // gesture, or the browser's own install steps when it holds no prompt.
   private install(): void {
     void installApp().then((outcome) => {
-      const browser = menuBrowser();
-      if (outcome === "menuSteps" && browser !== undefined && this.scene.isActive()) {
-        this.openSteps(browser);
+      if (outcome === "steps" && this.scene.isActive()) {
+        this.openSteps(stepsKind());
       }
     });
   }
 
-  private openSteps(browser: MenuInstallBrowser): void {
-    const words = gameData.menuText.settings.installSteps[browser];
+  private openSteps(kind: InstallStepsKind): void {
+    const words = gameData.menuText.settings.installSteps[kind];
     const lines = stepsLines(this, words.steps);
     const ink = {
       steps: modalTextWidth(this, "body", lines),
@@ -448,7 +447,7 @@ export class SettingsScene extends Scene {
         ...ink,
         titleExtraHeight: extraHeight,
       }),
-      browser,
+      kind,
     };
     this.render();
   }
@@ -570,15 +569,16 @@ export class SettingsScene extends Scene {
   }
 
   // The install steps' card over the dimmed settings: its title, its close control, and the
-  // browser's button glyph and steps under the title, the glyph left out while missing.
+  // glyph of the button the steps start from and the steps under the title, the glyph left out
+  // where the kind has none or while it is missing.
   private drawSteps(steps: OpenSteps): void {
-    const words = gameData.menuText.settings.installSteps[steps.browser];
-    const icon = STEPS_ICONS[steps.browser];
+    const words = gameData.menuText.settings.installSteps[steps.kind];
+    const icon = STEPS_ICONS[steps.kind];
     addModalShade(this, this.dim);
     addModalCard(this, this.add.container(0, 0), steps.card, words.title, {
       pressed: this.pressed?.kind === "stepsClose",
     });
-    if (this.textures.exists(icon)) {
+    if (icon !== undefined && this.textures.exists(icon)) {
       this.add.image(steps.icon.x, steps.icon.y, icon).setOrigin(0);
     }
     const text = addBodyText(this, undefined, steps.steps, words.steps);

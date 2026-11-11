@@ -313,8 +313,8 @@ describe.each([
 
 describe.each(keysOf(gameData.menuText.settings.installSteps))(
   "the %s install steps' card",
-  (browser) => {
-    const { steps: installSteps, title } = gameData.menuText.settings.installSteps[browser];
+  (kind) => {
+    const { steps: installSteps, title } = gameData.menuText.settings.installSteps[kind];
     const { room, style } = INSTALL_STEPS_FIT;
     const fitted = fitInFont("font-body", style, room, installSteps);
     const stepsInk = Math.max(...fitted.lines.map((line) => inkWidth("font-body", style, line)));

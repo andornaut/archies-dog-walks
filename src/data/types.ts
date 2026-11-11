@@ -1,5 +1,5 @@
 import type { AchievementDef, Threshold } from "@andornaut/game-kit/achievements";
-import type { MenuInstallBrowser } from "@andornaut/game-kit/web/pwa/installState";
+import type { InstallStepsKind } from "@andornaut/game-kit/web/pwa/installState";
 
 import type { ACHIEVEMENTS } from "./achievements.ts";
 import type { DEBUFFS } from "./debuffs.ts";
@@ -1169,10 +1169,10 @@ export interface MenuText {
     readonly install: string;
     readonly installButton: string;
     readonly installNote: string;
-    // The card the row opens in a browser that installs only from its own menu, with no install
-    // prompt: each such browser's title and steps.
+    // The card the row opens when the browser holds no install prompt: each InstallStepsKind's
+    // title and steps.
     readonly installSteps: Readonly<
-      Record<MenuInstallBrowser, { readonly steps: string; readonly title: string }>
+      Record<InstallStepsKind, { readonly steps: string; readonly title: string }>
     >;
     readonly motion: string;
     readonly motionNote: string;
