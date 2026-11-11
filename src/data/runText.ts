@@ -47,7 +47,7 @@ export const RUN_TEXT = {
   homeQuestion: {
     headHome: "End walk",
     keepWalking: "Keep walking",
-    lose: "You give up {lost} from {zone}.",
+    lose: "{zone}: {lost} lost",
     title: "End the walk?",
     zonesLeft: "Neighbourhoods left: {count}",
   },
