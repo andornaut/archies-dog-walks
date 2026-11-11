@@ -5,6 +5,7 @@ import { DOM_ART_KEYS } from "../../assets/domArt.ts";
 import type { AssetManifest } from "../../assets/manifest.ts";
 import { ART_MANIFEST } from "../artManifest.ts";
 import type { AtlasBuild } from "./atlasBuild.ts";
+import { disabledArtFiles } from "./disabledFiles.ts";
 
 // The module a build fills with the game's ArtFileMap (src/assets/artUrl.ts). The dev server's
 // map is empty, so every file loads from its own path there.
@@ -51,19 +52,24 @@ export interface HashedArtFile {
   source: Uint8Array;
 }
 
-// Each file gameArtPaths names, with its hashed name and its bytes: the atlas manifest and pages
-// from the atlas build, the rest read by readArt, by path relative to the art directory.
+// Each file gameArtPaths names, with its hashed name and its bytes, and the grey copy of each of
+// disabledKeys (DOM_DISABLED_ART_KEYS) the HTML interface draws (disabledArtFiles): the atlas
+// manifest and pages from the atlas build, the rest read by readArt, by path relative to the art
+// directory.
 export async function hashGameArt(
   readArt: (path: string) => Promise<Uint8Array>,
+  disabledKeys: ReadonlySet<string>,
   manifest: AssetManifest,
   { files, manifest: atlas }: Pick<AtlasBuild, "files" | "manifest">,
 ): Promise<HashedArtFile[]> {
-  const built = new Map(files).set(
+  const disabled = await disabledArtFiles(readArt, manifest, disabledKeys);
+  const built = new Map([...files, ...disabled]).set(
     ATLAS_MANIFEST_PATH,
     new TextEncoder().encode(JSON.stringify(atlas)),
   );
+  const paths = [...gameArtPaths(manifest, atlas), ...disabled.keys()].sort();
   return Promise.all(
-    gameArtPaths(manifest, atlas).map(async (path) => {
+    paths.map(async (path) => {
       const source = built.get(path) ?? (await readArt(path));
       return { fileName: hashedArtFileName(path, contentHash(source)), path, source };
     }),

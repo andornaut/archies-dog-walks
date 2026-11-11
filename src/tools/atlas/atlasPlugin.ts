@@ -1,11 +1,17 @@
+import { readFile } from "node:fs/promises";
+
 import type { RgbaImage } from "@andornaut/art-kit/rgbaImage";
-import type { Plugin } from "vite";
+import type { Plugin, ViteDevServer } from "vite";
 
 import type { ArtFileMap } from "../../assets/artUrl.ts";
+import { DOM_DISABLED_ART_KEYS } from "../../assets/domArt.ts";
+import { parseManifest } from "../../assets/manifest.ts";
+import { disabledArtPath } from "../../ui/disabledArt.ts";
 import { ART_DIR, ART_MANIFEST, artManifestText, generateArtManifest } from "../artManifest.ts";
 import { limitConcurrency } from "../concurrency.ts";
 import { nodeArtFiles, OPEN_FILE_LIMIT, writeIfChanged } from "../files.ts";
 import { buildAtlases, WEBP_PAGES } from "./atlasBuild.ts";
+import { disabledArtFile } from "./disabledFiles.ts";
 import { ART_FILES_MODULE, hashGameArt } from "./hashedArt.ts";
 
 // Vite's prefix for a module id that names no file.
@@ -21,7 +27,8 @@ interface AtlasPluginApi {
 // pages, lossless WebPs, with an atlas manifest mapping each key and frame to its page and rect. Every file the
 // game loads (both manifests, the pages, the fonts, the sounds and any key the atlas leaves
 // out) goes to the build output under a content-hashed name (src/tools/atlas/hashedArt.ts),
-// and the game reads the names from the ART_FILES_MODULE map. The dev server's map is empty.
+// and the game reads the names from the ART_FILES_MODULE map, as do the disabled tiles' grey
+// copies the HTML interface draws (disabledArtFiles). The dev server's map is empty.
 // The files under public/art/ are also copied as they are, for the dev server, the art gallery
 // and the site's pages.
 export function atlasPlugin(): Plugin & { api: AtlasPluginApi } {
@@ -52,11 +59,37 @@ export function atlasPlugin(): Plugin & { api: AtlasPluginApi } {
           `atlas: ${file} ${width}x${height}, ${(bytes / 1024).toFixed(1)} kB (${group})`,
         );
       }
-      const hashed = await hashGameArt(readArt, art, atlas);
+      const hashed = await hashGameArt(readArt, DOM_DISABLED_ART_KEYS, art, atlas);
       for (const { fileName, source } of hashed) {
         this.emitFile({ fileName, source, type: "asset" });
       }
       artFiles = new Map(hashed.map(({ fileName, path }) => [path, fileName]));
+    },
+    // The dev server serves each disabled copy the HTML interface draws (DOM_DISABLED_ART_KEYS)
+    // at its path under /art/, made from the files on disk as a build makes it.
+    configureServer(server: ViteDevServer) {
+      const artDir = `${server.config.publicDir}/${ART_DIR}`;
+      const prefix = `${server.config.base}${ART_DIR}/`;
+      const keys = new Map(
+        [...DOM_DISABLED_ART_KEYS].flatMap((key) =>
+          (["image", "sheet"] as const).map((kind) => [disabledArtPath(kind, key), key]),
+        ),
+      );
+      const readArt = async (path: string) => new Uint8Array(await readFile(`${artDir}/${path}`));
+      server.middlewares.use((request, response, next) => {
+        const url = request.url?.split("?")[0] ?? "";
+        const key = url.startsWith(prefix) ? keys.get(url.slice(prefix.length)) : undefined;
+        if (key === undefined) {
+          next();
+          return;
+        }
+        void (async () => {
+          const text = new TextDecoder().decode(await readArt(ART_MANIFEST));
+          const { source } = await disabledArtFile(readArt, parseManifest(JSON.parse(text)), key);
+          response.setHeader("Content-Type", "image/png");
+          response.end(source);
+        })().catch(next);
+      });
     },
     load(id) {
       return id === RESOLVED_ART_FILES_MODULE

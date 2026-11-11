@@ -48,7 +48,7 @@ const readArt = async (path: string) => new TextEncoder().encode(`source:${path}
 describe("hashed game art", () => {
   let files: HashedArtFile[];
   beforeAll(async () => {
-    files = await hashGameArt(readArt, manifest, {
+    files = await hashGameArt(readArt, new Set(), manifest, {
       files: new Map([["atlas/ui-0.webp", page]]),
       manifest: atlas,
     });

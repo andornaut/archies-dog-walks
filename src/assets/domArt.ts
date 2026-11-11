@@ -5,6 +5,7 @@ import type { GameData } from "../data/types.ts";
 import { debuffIconKey, perkIconKey, upgradeIconKey } from "./iconKeys.ts";
 import {
   DETAIL_WELL_KEY,
+  dogFaceKey,
   dogPortraitKey,
   gearIconKey,
   ownerFaceKey,
@@ -81,3 +82,21 @@ export const DOM_ART_KEYS: ReadonlySet<string> = new Set([
 export function domArtPath(kind: "image" | "sheet", key: string, ext: "json" | "png"): string {
   return `${kind === "image" ? "images" : "sprites"}/${key}.${ext}`;
 }
+
+// The tile pictures whose disabled tile's grey copy (disabledArtPath in src/ui/disabledArt.ts) the
+// HTML interface draws: each dog's face, each walker's face and perk icon, each gear item's icon
+// and the dog slot's icon. A build writes each copy as a file of its own from the remap the atlas
+// packs it with, beside its key's files; a sheet's copy keeps its key's JSON frames.
+function disabledTileArtKeys(
+  data: Pick<GameData, "dogs" | "shopGear" | "walkerPerks" | "walkers">,
+): string[] {
+  return [
+    ...keysOf(data.dogs).map((dog) => dogFaceKey(data, dog)),
+    ...keysOf(data.walkers).map((walker) => data.walkers[walker].portraitKey),
+    ...keysOf(data.walkerPerks).map(perkIconKey),
+    ...keysOf(data.shopGear).map(gearIconKey),
+    "icon-dog-slot",
+  ];
+}
+
+export const DOM_DISABLED_ART_KEYS: ReadonlySet<string> = new Set(disabledTileArtKeys(gameData));

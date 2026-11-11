@@ -1,3 +1,4 @@
+import { domArtPath } from "../assets/domArt.ts";
 import { remapToGrey } from "../assets/greyRamp.ts";
 import { NEUTRAL_RAMP } from "./palette.ts";
 import { GREYED } from "./selection.ts";
@@ -16,6 +17,13 @@ export function greysOnTile(key: string): boolean {
 // The texture key of a key's grey copy for a disabled tile.
 export function disabledArtKey(key: string): string {
   return `${key}-disabled`;
+}
+
+// The path under /art/ of a key's grey copy's PNG as a file of its own, an image's or a sprite
+// sheet's, whose frames are its key's (domArtPath(kind, key, "json")), as the HTML interface draws
+// it (DOM_DISABLED_ART_KEYS).
+export function disabledArtPath(kind: "image" | "sheet", key: string): string {
+  return domArtPath(kind, disabledArtKey(key), "png");
 }
 
 // RGBA pixels remapped in place to a disabled tile's grey: each colour moved to the colour of
