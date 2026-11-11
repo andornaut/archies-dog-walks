@@ -6,6 +6,7 @@ import {
 } from "@andornaut/game-kit/text/bitmapFont";
 import { type TextFitStyle } from "@andornaut/game-kit/text/textFit";
 
+import { FIRED_LINE, LOW_CHIP, MOMENT_PARTS } from "../data/layout.ts";
 import { SCREEN_CONFIG } from "../data/screen.ts";
 import type { DogId, GameData } from "../data/types.ts";
 import { type FaceMood, faceMood } from "../rules/treats.ts";
@@ -112,7 +113,7 @@ export function downTail(exists: (key: string) => boolean): DownTail | undefined
 }
 
 // A bubble keeps the screen's gutter, this many pixels, from either edge.
-const BUBBLE_GUTTER = 8;
+const BUBBLE_GUTTER = MOMENT_PARTS.bubbleGutter;
 
 // The left edge of a bubble width wide centred on centreX, kept inside the screen's gutter.
 export function bubbleX(screenWidth: number, centreX: number, width: number): number {
@@ -124,8 +125,8 @@ export function bubbleX(screenWidth: number, centreX: number, width: number): nu
 // Fired lines' bubbles all sit on one row, over the owners' faces. One opening beside
 // another keeps LINE_GAP pixels from it, and its tail starts at least LINE_TAIL_INSET in from
 // its edges, past the bubble's rim.
-const LINE_GAP = 2;
-const LINE_TAIL_INSET = 4;
+const LINE_GAP = MOMENT_PARTS.lineGap;
+const LINE_TAIL_INSET = MOMENT_PARTS.lineTailInset;
 
 // The left edge of a fired line's bubble width wide: centred over its tail (bubbleX), else the
 // nearest place just beside an open bubble, inside the screen's gutter, clear of every open
@@ -181,12 +182,13 @@ export function firingTimeline(seconds: number, still: boolean): FiringTimeline 
 // the card's top, as wide as the card's name and PLATE_REACH more each side, and the fired
 // line's bubble centred over line, its bottom edge on it, with the 8x6 tail's top row at tail.y
 // over the bubble's rim, its tip at tail.x, LINE_CLEARANCE over the face's top.
-const PLATE_REACH = 4;
-const PLATE_HEIGHT = 28;
-const PLATE_GAP = 4;
+const FIRING = MOMENT_PARTS.firing;
+const PLATE_REACH = FIRING.plateReach;
+const PLATE_HEIGHT = FIRING.plateHeight;
+const PLATE_GAP = FIRING.plateGap;
 const FACE_HALF = 32;
-const LIFT = 50;
-const LINE_CLEARANCE = 6;
+const LIFT = FIRING.lift;
+const LINE_CLEARANCE = FIRING.lineClearance;
 const FACE = {
   x: OWNER_TAB.x + OWNER_TAB.size / 2,
   y: OWNER_TAB.y + OWNER_TAB.size / 2 - LIFT,
@@ -201,7 +203,7 @@ export const FIRING_PARTS = {
     y: -PLATE_HEIGHT - PLATE_GAP,
   },
   // "FIRED!" is centred across the plate, the top of its capitals this far down.
-  plateText: { y: 9 },
+  plateText: { y: FIRING.plateTextY },
   pop: { x: FACE.x - 2 * FACE_HALF, y: FACE.y - 2 * FACE_HALF },
   popSize: 4 * FACE_HALF,
   tail: { x: FACE.x, y: FACE.y - FACE_HALF - LINE_CLEARANCE - 1 },
@@ -269,16 +271,7 @@ export function newlyLow(before: readonly DogId[], now: readonly DogId[]): DogId
 // screen. The text sits padX in from the box's sides, its capitals padTop under the box's top
 // and its lowest ink padBottom over the box's bottom, in the body font's rows. The owner's
 // inline face keeps faceInset rows inside the box's top and bottom, the box growing to hold it.
-export const LOW_CHIP = {
-  dx: 2,
-  faceInset: 2,
-  gap: 6,
-  margin: 2,
-  padBottom: 3,
-  padTop: 5,
-  padX: 2,
-  rise: 8,
-} as const;
+export { LOW_CHIP };
 
 // The low-hearts chip's line, its owner's name led by their face, upset.
 export function lowHeartsText(data: Pick<GameData, "dogs" | "runText">, dog: DogId): FaceText {
@@ -316,7 +309,7 @@ export function lowChipPlace(
 // A fired line's bubble: its line wrapped onto up to lines lines at scale, no wider than
 // maxWidth less padding each side, its first line's capitals padding under the bubble's top
 // and its last line's lowest ink padding over its bottom, a line of the body font apart.
-export const FIRED_LINE = { lines: 3, maxWidth: 200, padding: 6, scale: 2 } as const;
+export { FIRED_LINE };
 
 // The bubble holds the label's width, which counts the last glyph's trailing pixel.
 export const FIRED_LINE_FIT = {

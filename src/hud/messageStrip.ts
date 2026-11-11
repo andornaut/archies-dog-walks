@@ -6,6 +6,7 @@ import {
   inkRowsOfLines,
 } from "@andornaut/game-kit/text/bitmapFont";
 
+import { MESSAGE_STRIP, OWNER_LEAD } from "../data/layout.ts";
 import { SCREEN_LAYOUT } from "../data/screen.ts";
 import type { DogId, GameData } from "../data/types.ts";
 import { read } from "../rules/units.ts";
@@ -65,19 +66,7 @@ export function messageIconKey(icon: MessageIcon): string {
 // first row's capitals. Text starts textX in and ends padRight short of the right edge; the
 // panel ends padBottom under the last row's lowest ink. The capitals' and the ink's rows and
 // the line come from the body font's metrics.
-export const MESSAGE_STRIP = {
-  barGap: 2,
-  capsTop: 10,
-  gap: 6,
-  icon: { size: 16, x: 6 },
-  padBottom: 8,
-  padRight: 6,
-  rows: 2,
-  scale: 2,
-  textX: 26,
-  width: 344,
-  x: 8,
-} as const;
+export { MESSAGE_STRIP };
 
 interface MessageStripLayout {
   icon: Point;
@@ -152,7 +141,7 @@ export function linePlace(
 // capitals nameGap rows under the frame. The lead's column is as wide as the frame, or as the
 // name's ink where that is wider, the frame centred in it; the text starts as far right of the
 // column as it starts right of an icon, its room narrowed to match.
-export const OWNER_LEAD = { face: 20, nameGap: 2, rise: 4 } as const;
+export { OWNER_LEAD };
 
 // Where a line's lead and text go: the icon's column and the text's start and room, and the top
 // of the first row's capitals at 2x.

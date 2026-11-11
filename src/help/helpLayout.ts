@@ -1,5 +1,6 @@
 import { containsPoint, type Point, type Rect } from "@andornaut/game-kit/rect";
 
+import { HELP_SCREEN } from "../data/layout.ts";
 import { SCREEN_LAYOUT } from "../data/screen.ts";
 import { HOME_BAR_LAST_FACE, HOME_LAYOUT } from "../home/homeLayout.ts";
 import { TITLE_CAP_ROWS } from "../hud/walkHud.ts";
@@ -13,14 +14,15 @@ import type { HelpAction } from "./helpPaging.ts";
 
 const { screen: SCREEN } = SCREEN_LAYOUT;
 const { height, width } = SCREEN;
+const HELP = HELP_SCREEN;
 
 // The home pages' top bar: its height, and the row its buttons' faces and the heading's capitals
 // centre on, the upper half of each above it.
 const HOME_BAR = HOME_LAYOUT.topBar;
 const TOP_BAR = { height: HOME_BAR.height, width, x: 0, y: 0 } as const;
 // The picture starts under the bar, its top rule on the bar's last trim row.
-const ILLUSTRATION = { height: 236, width, x: 0, y: TOP_BAR.height } as const;
-const TITLE_Y = ILLUSTRATION.y + ILLUSTRATION.height + 26;
+const ILLUSTRATION = { height: HELP.illustrationHeight, width, x: 0, y: TOP_BAR.height } as const;
+const TITLE_Y = ILLUSTRATION.y + ILLUSTRATION.height + HELP.titleGap;
 
 // The help screen's geometry at the render resolution. A text position is its first line's
 // left edge and capitals' top.
@@ -33,27 +35,32 @@ const TITLE_Y = ILLUSTRATION.y + ILLUSTRATION.height + 26;
 // width, ruled off a row above and below.
 export const HELP_LAYOUT = {
   body: {
-    lineHeight: 18,
-    maxLines: 6,
-    scale: 2,
-    width: 336,
-    x: 12,
+    ...HELP.body,
     y: TITLE_Y + TITLE_CAP_ROWS * TEXT_SCALE + LABEL_HELP_GAP,
   },
   close: { ...pageCloseControl(SCREEN), ...HOME_BAR_LAST_FACE },
   // A tap target apart, so each dot's target is its own slot, ending above Previous's and
   // Next's.
-  dots: { centreX: width / 2, size: 8, spacing: MIN_TAP_SIZE, y: height - 84 },
-  heading: { x: 12, y: HOME_BAR.mid - (TITLE_CAP_ROWS * TEXT_SCALE) / 2 },
+  dots: {
+    centreX: width / 2,
+    size: HELP.dots.size,
+    spacing: MIN_TAP_SIZE,
+    y: height - HELP.dots.bottom,
+  },
+  heading: { x: HELP.headingX, y: HOME_BAR.mid - (TITLE_CAP_ROWS * TEXT_SCALE) / 2 },
   illustration: ILLUSTRATION,
-  next: { ...BUTTON_SIZE.compact, x: width / 2 + BUTTON_SIZE.pairGap / 2, y: height - 56 },
+  next: {
+    ...BUTTON_SIZE.compact,
+    x: width / 2 + BUTTON_SIZE.pairGap / 2,
+    y: height - HELP.buttonsBottom,
+  },
   previous: {
     ...BUTTON_SIZE.compact,
     x: width / 2 - BUTTON_SIZE.pairGap / 2 - BUTTON_SIZE.compact.width,
-    y: height - 56,
+    y: height - HELP.buttonsBottom,
   },
   screen: SCREEN,
-  title: { scale: 2, x: 12, y: TITLE_Y },
+  title: { ...HELP.title, y: TITLE_Y },
   topBar: TOP_BAR,
 } as const;
 

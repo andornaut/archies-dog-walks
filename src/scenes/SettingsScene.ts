@@ -6,6 +6,7 @@ import { type GameObjects, Scene, Scenes } from "phaser";
 
 import { BUILD_LABEL } from "../buildLabel.ts";
 import { gameData } from "../data/index.ts";
+import { SETTINGS_CARD } from "../data/layout.ts";
 import { SCREEN_CONFIG, SCREEN_LAYOUT } from "../data/screen.ts";
 import type { MenuText } from "../data/types.ts";
 import { FEEDBACK } from "../home/feedback.ts";
@@ -159,7 +160,7 @@ const STEPS_ICONS: Readonly<Partial<Record<InstallStepsKind, string>>> = {
 const { icon: ICON, label: LABEL, note: NOTE } = SETTINGS_ROW;
 const KNOB_HEIGHT = 16;
 // The ring stays inside the panel's 8px margin.
-const FOCUS_OUTSET = 3;
+const FOCUS_OUTSET = SETTINGS_CARD.focusOutset;
 
 function settingsRows(installable: boolean): readonly Row[] {
   return installable ? [...SETTING_ROWS, INSTALL_ROW] : SETTING_ROWS;

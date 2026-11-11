@@ -5,23 +5,30 @@ import {
   inkRowsOfLines,
 } from "@andornaut/game-kit/text/bitmapFont";
 
+import { END_SCREEN } from "../data/layout.ts";
 import { helpCapDy } from "../ui/labelHelpGap.ts";
 import { TEXT_SCALE } from "../ui/textFit.ts";
 import { badgeStripMinHeight, badgeStripRows } from "./badgesView.ts";
 import { HOME_LAYOUT } from "./homeLayout.ts";
 
 // The end screen's geometry, with every text at 2x.
-const PANEL = { height: 304, width: 312, x: 24, y: 112 };
-const RIBBON = { x: 144, y: 102 };
+const END = END_SCREEN;
+const PANEL: Rect = END.panel;
+const RIBBON = END.ribbon;
 
 export const END_LAYOUT = {
-  badges: { height: 92, width: 344, x: 8, y: 419 },
-  breakdown: { amountRight: 196, label: 40, pitch: 18, top: PANEL.y + 42 },
+  badges: END.badges,
+  breakdown: {
+    amountRight: END.breakdown.amountRight,
+    label: END.breakdown.label,
+    pitch: END.breakdown.pitch,
+    top: PANEL.y + END.breakdown.top,
+  },
   // The wide return button stays below the badge strip.
-  button: { ...HOME_LAYOUT.startButton, y: 514 },
+  button: { ...HOME_LAYOUT.startButton, y: END.buttonY },
   // And Start walk's label, at its size and on its caps.
   buttonLabel: HOME_LAYOUT.startLabel,
-  logo: { x: 107, y: 2 },
+  logo: END.logo,
   panel: PANEL,
   // An owner's row, mirroring the home screen's bubble: a speech bubble from x with its tail
   // at the right pointing at the face in its well, and the owner's name in rust at 1x under
@@ -37,40 +44,30 @@ export const END_LAYOUT = {
   // as tall as the name's lowest ink, and the next row starts gap under it. A 1px tan rule width
   // wide from x runs above over the first row.
   quips: {
-    bubble: { frame: { bottom: 3, top: 2 }, pad: 2, width: 244, x: 36 },
-    face: { x: 291, y: 1 },
-    gap: 2,
-    nameY: 37,
-    rule: { above: 8, width: 288, x: 36 },
-    tail: { x: 279, y: 15 },
-    textX: 42,
-    well: { size: 34, x: 290, y: 0 },
+    bubble: END.quips.bubble,
+    face: END.quips.face,
+    gap: END.quips.gap,
+    nameY: END.quips.nameY,
+    rule: END.quips.rule,
+    tail: END.quips.tail,
+    textX: END.quips.textX,
+    well: END.quips.well,
   },
-  results: { buttonGap: 3, heroGap: 16 },
+  results: END.results,
   // The return home, under the logo and above the panel: the walker and pack walk up the
   // front path from behind the panel's top edge to the house's step while the owners wave
   // either side. The house, lawn, path and step are part of screen-end; without it a tan path
   // and step cross a strip of lawn. Spots are where feet end up, in pack order, 34 apart so
   // every 40px dog and 40x60 person shows.
-  returnHome: {
-    dogs: [
-      { x: 146, y: 106 },
-      { x: 214, y: 105 },
-      { x: 248, y: 108 },
-    ],
-    lawn: { height: 16, width: 360, x: 0, y: 96 },
-    owners: [
-      { x: 112, y: 110 },
-      { x: 282, y: 110 },
-      { x: 78, y: 110 },
-    ],
-    path: { height: 12, width: 24, x: 168, y: 100 },
-    step: { height: 4, width: 32, x: 164, y: 96 },
-    walker: { x: 180, y: 110 },
-  },
+  returnHome: END.returnHome,
   ribbon: RIBBON,
-  // fx-new-best's 96x48 frame sits 12 left of and 14 above the ribbon.
-  ribbonBurst: { height: 48, width: 96, x: RIBBON.x - 12, y: RIBBON.y - 14 },
+  // fx-new-best's 96x48 frame sits ribbonBurst.dx and ribbonBurst.dy from the ribbon.
+  ribbonBurst: {
+    height: 48,
+    width: 96,
+    x: RIBBON.x + END.ribbonBurst.dx,
+    y: RIBBON.y + END.ribbonBurst.dy,
+  },
   // The side column: its labels from x, the zone pips, then TOTAL in the title font with its
   // capitals at totalY and the walk's total beside it in the body font, their capitals ending on
   // one row; the zone count and the total end at right. TOTAL's row ends totalHeight under
@@ -83,34 +80,37 @@ export const END_LAYOUT = {
       fill: "yellow",
       lip: "amber",
       outline: "ink",
-      padX: 4,
-      padY: 1,
+      padX: END.side.band.padX,
+      padY: END.side.band.padY,
       text: { amount: "forest", label: "plum" },
     },
-    pipPitch: 21,
-    pipsY: PANEL.y + 60,
-    right: 320,
-    totalHeight: 12,
-    totalY: PANEL.y + 81,
-    x: 208,
+    pipPitch: END.side.pipPitch,
+    pipsY: PANEL.y + END.side.pipsY,
+    right: END.side.right,
+    totalHeight: END.side.totalHeight,
+    totalY: PANEL.y + END.side.totalY,
+    x: END.side.x,
   },
-  titleY: PANEL.y + 18,
+  titleY: PANEL.y + END.titleY,
 } as const;
 
-// How wide a fired row's header and a closing line may be: from the text column to 6px inside
-// the bubble's right edge.
+// How wide a fired row's header and a closing line may be: from the text column to textRight
+// inside the bubble's right edge.
 export const QUIP_TEXT_ROOM =
-  END_LAYOUT.quips.bubble.x + END_LAYOUT.quips.bubble.width - 6 - END_LAYOUT.quips.textX;
+  END_LAYOUT.quips.bubble.x +
+  END_LAYOUT.quips.bubble.width -
+  END.quips.textRight -
+  END_LAYOUT.quips.textX;
 
 // The most lines a closing line wraps onto, while the panel has room for them.
-export const QUIP_LINES = 2;
+export const QUIP_LINES = END.quipLines;
 
 // How wide the side column's labels may be: from the column to the right edge its zone count
 // keeps to.
 export const SIDE_LABEL_ROOM = END_LAYOUT.side.right - END_LAYOUT.side.x;
 
 // A breakdown label keeps this far left of its amount.
-const AMOUNT_GAP = 8;
+const AMOUNT_GAP = END.amountGap;
 
 // How wide a breakdown label may be beside an amount whose ink is amountWidth wide.
 export function breakdownLabelRoom(amountWidth: number): number {
@@ -240,9 +240,9 @@ export function quipTextY(fonts: QuipFonts, row: QuipRow): number {
 // The breakdown ends a pitch under its last line's top; the side column ends under its total's
 // band.
 // The owners' rows start QUIPS_GAP under whichever ends lower, the tan rule 8px over them, and
-// the panel ends 8px under the last row.
-const QUIPS_GAP = 10;
-const PANEL_FOOT = 8;
+// the panel ends PANEL_FOOT under the last row.
+const QUIPS_GAP = END.quipsGap;
+const PANEL_FOOT = END.panelFoot;
 
 interface EndPanelLayout {
   panel: typeof PANEL;

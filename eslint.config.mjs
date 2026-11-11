@@ -67,7 +67,7 @@ const CONTEXTS = {
     "state/runState.ts",
     "tools/atlas/shared/png.ts",
   ],
-  ui: ["assets"],
+  ui: ["assets", "data"],
 };
 
 const SRC_FOLDERS = folders("src").filter((folder) => folder !== "testing");

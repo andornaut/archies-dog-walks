@@ -1,13 +1,15 @@
 import type { Rect } from "@andornaut/game-kit/rect";
 
+import { TOP_BAR_HEIGHT, TOP_BAR_SIZES } from "../data/layout.ts";
+
 // Every top bar (the start screen's, the walk bar, Help's) is flat fill with one trim: line's
 // colour across its row, and the bar's last rows in edge's colours, top to bottom. Its wells sit
 // clearance rows clear of the trim above and below (topBarWellRows).
 export const TOP_BAR_TRIM = {
-  clearance: 3,
+  clearance: TOP_BAR_SIZES.trim.clearance,
   edge: ["brown", "darkBrown", "ink"],
   fill: "plum",
-  line: { colour: "darkBrown", row: 1 },
+  line: { colour: "darkBrown", row: TOP_BAR_SIZES.trim.lineRow },
 } as const;
 
 type TrimColour =
@@ -46,18 +48,23 @@ function topBarWellRows(height: number): { height: number; y: number } {
 }
 
 // Every top bar's height: the start screen's, the walk bar and Help's.
-export const TOP_BAR_HEIGHT = 40;
+export { TOP_BAR_HEIGHT };
 
 // The top bar's content rows, between its trim's line and edge, and their middle row, which each
 // button's 20-row ui-icon-button face is centred on, the upper half of the face above it.
 const TOP_BAR_ROWS = topBarContentRows(TOP_BAR_HEIGHT);
 export const TOP_BAR_MID =
   TOP_BAR_ROWS.top + Math.floor((TOP_BAR_ROWS.bottom - TOP_BAR_ROWS.top) / 2);
-export const TOP_BAR_FACE = { size: 20, y: TOP_BAR_MID - 10 } as const;
+const FACE_SIZE = TOP_BAR_SIZES.faceSize;
+export const TOP_BAR_FACE = { size: FACE_SIZE, y: TOP_BAR_MID - FACE_SIZE / 2 } as const;
 
 // The well at a top bar's left that shows the money (the start screen's bank, the walk's cash):
 // clear of the trim, x columns in from the bar's left, ink on all but its lip's last row.
-export const TOP_BAR_WELL = { ...topBarWellRows(TOP_BAR_HEIGHT), lip: 1, x: 5 } as const;
+export const TOP_BAR_WELL = {
+  ...topBarWellRows(TOP_BAR_HEIGHT),
+  lip: TOP_BAR_SIZES.well.lip,
+  x: TOP_BAR_SIZES.well.x,
+} as const;
 
 // The top row of text capRows tall set in the well: centred on its ink rows (the well less its
 // lip's row), a half row lower where their parities differ.

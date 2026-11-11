@@ -1,6 +1,7 @@
 import type { Point, Rect } from "@andornaut/game-kit/rect";
 import type { FontMetrics } from "@andornaut/game-kit/text/bitmapFont";
 
+import { MONEY_LABEL_PLACE } from "../data/layout.ts";
 import { SCREEN_LAYOUT } from "../data/screen.ts";
 import { amountText } from "../rules/causes.ts";
 import { type Cents, cents } from "../units.ts";
@@ -21,10 +22,10 @@ const WALK_BAR_RECT = SCREEN_LAYOUT.topBar;
 // holds for holdMs, as long as a heart's pop plays, then flies into the cash total as a heart
 // flies into its card (FEEDBACK.heart). Its text fits the cash well's width.
 export const MONEY_LABEL = {
-  gap: 2,
-  gutter: 2,
+  gap: MONEY_LABEL_PLACE.gap,
+  gutter: MONEY_LABEL_PLACE.gutter,
   holdMs: 730,
-  lift: 4,
+  lift: MONEY_LABEL_PLACE.lift,
   room: changeLabelRoom(WALK_BAR.cash.well.width),
 } as const;
 

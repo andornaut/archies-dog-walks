@@ -1,12 +1,13 @@
 import type { Rect } from "@andornaut/game-kit/rect";
 
+import { PAGE_CLOSE_FACE } from "../data/layout.ts";
 import { BUTTON_SIZE } from "./buttonGeometry.ts";
 import { MODAL } from "./modalGeometry.ts";
 
 // Modal close faces sit 6px inside the top-right corner, within a 44px corner target.
 // Full pages keep their separate top-right control placement.
 const FACE_SIZE = BUTTON_SIZE.icon.face;
-const PAGE_FACE = { right: 7, top: 9 } as const;
+const PAGE_FACE = PAGE_CLOSE_FACE;
 const HIT_SIZE = BUTTON_SIZE.icon.target;
 
 export interface CloseControl {

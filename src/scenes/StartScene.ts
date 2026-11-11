@@ -12,6 +12,7 @@ import {
   walkerPortraitKey,
 } from "../assets/spriteKeys.ts";
 import { gameData } from "../data/index.ts";
+import { HOME_SCREEN } from "../data/layout.ts";
 import { SCREEN_LAYOUT } from "../data/screen.ts";
 import type { DogId, GearId, WalkerId } from "../data/types.ts";
 import { clearRunOverrides } from "../dev/pageRunSetup.ts";
@@ -282,7 +283,7 @@ const WAITING_ALPHA = 0.6;
 const START_LABEL = HOME_LAYOUT.startLabel;
 const GEAR_BADGE: Rect = HOME_LAYOUT.gearBadge;
 // The keyboard ring sits outside the ui-select frame.
-const FOCUS_OUTSET = 5;
+const FOCUS_OUTSET = HOME_SCREEN.focusOutset;
 
 // The walker's speech bubble: its place, padding and most lines.
 const SPEECH = HOME_LAYOUT.speech;

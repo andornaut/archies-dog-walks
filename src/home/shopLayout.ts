@@ -2,6 +2,7 @@ import type { Rect } from "@andornaut/game-kit/rect";
 import { type FontMetrics, inkRowsFromCapTop } from "@andornaut/game-kit/text/bitmapFont";
 
 import { DOG_SLOTS } from "../data/dogSlots.ts";
+import { SHOP_PAGE } from "../data/layout.ts";
 import { TITLE_CAP_ROWS } from "../hud/walkHud.ts";
 import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";
 import { pageCloseControl } from "../ui/closeControl.ts";
@@ -15,25 +16,31 @@ import { TEXT_SCALE, TEXT_STYLE } from "../ui/textFit.ts";
 // lists. Rows are hit areas at least 44 tall; tabs draw 28 tall in a 44-tall hit area. The
 // lists scroll in the list area under the tabs, laid out here as they sit scrolled to the top.
 // The Logbook wears the same page (src/home/statsLayout.ts).
-const PANEL = { height: 512, width: 352, x: 4, y: 44 };
+const SHOP = SHOP_PAGE;
+const PANEL = SHOP.panel;
 // The framed pages keep their header above the existing tab strip.
-const PAGE_TITLE = { height: 24, width: PANEL.width - 12, x: PANEL.x + 6, y: PANEL.y + 6 };
-const PAGE_CLOSE = {
-  ...pageCloseControl(PANEL, 8),
-  x: PANEL.x + PANEL.width - 8 - BUTTON_SIZE.icon.face,
-  y: PANEL.y + 8,
+const PAGE_TITLE = {
+  height: SHOP.title.height,
+  width: PANEL.width - 2 * SHOP.title.inset,
+  x: PANEL.x + SHOP.title.inset,
+  y: PANEL.y + SHOP.title.inset,
 };
-const ROW_X = PANEL.x + 12;
+const PAGE_CLOSE = {
+  ...pageCloseControl(PANEL, SHOP.closeInset),
+  x: PANEL.x + PANEL.width - SHOP.closeInset - BUTTON_SIZE.icon.face,
+  y: PANEL.y + SHOP.closeInset,
+};
+const ROW_X = PANEL.x + SHOP.row.inset;
 // Rows run to the tabs' right edge, or with a scrollbar stop 6px short of its track.
-const ROW_WIDTH = 328;
-const ROW_SCROLL_WIDTH = 314;
-// Both pages keep every tab target below the close target, with 4px clear between them.
-const TAB_Y = PAGE_CLOSE.hit.y + PAGE_CLOSE.hit.height + 4;
+const ROW_WIDTH = SHOP.row.width;
+const ROW_SCROLL_WIDTH = SHOP.row.scrollWidth;
+// Both pages keep every tab target below the close target, with tab.closeGap clear between them.
+const TAB_Y = PAGE_CLOSE.hit.y + PAGE_CLOSE.hit.height + SHOP.tab.closeGap;
 const TAB = {
-  drawHeight: 28,
-  drawY: TAB_Y + 8,
-  gap: 8,
-  height: 44,
+  drawHeight: SHOP.tab.drawHeight,
+  drawY: TAB_Y + SHOP.tab.drawDy,
+  gap: SHOP.tab.gap,
+  height: SHOP.tab.height,
   span: ROW_WIDTH,
   x: ROW_X,
   y: TAB_Y,
@@ -41,21 +48,21 @@ const TAB = {
 // A selected tab's frame and shadow end SELECT_OUTSET under its face. TAB_GAP clear rows
 // separate the selected tab from the list; the close target determines its header clearance.
 const TAB_BOTTOM = TAB.drawY + TAB.drawHeight + SELECT_OUTSET;
-const TAB_GAP = 6;
-// The list area: from TAB_GAP under the tabs to the card's inner edge, from the card's 8px frame
+const TAB_GAP = SHOP.tab.listGap;
+// The list area: from TAB_GAP under the tabs to the card's inner edge, from the card's frame
 // to 2px short of the scrollbar's track, or with no scrollbar to the card's frame.
 const LIST_Y = TAB_BOTTOM + TAB_GAP;
 const LIST = {
-  height: PANEL.y + PANEL.height - 8 - LIST_Y,
-  width: 322,
-  x: PANEL.x + 8,
+  height: PANEL.y + PANEL.height - SHOP.list.frame - LIST_Y,
+  width: SHOP.list.width,
+  x: PANEL.x + SHOP.list.frame,
   y: LIST_Y,
 };
-const LIST_UNSCROLLED = { ...LIST, width: PANEL.width - 16 };
+const LIST_UNSCROLLED = { ...LIST, width: PANEL.width - 2 * SHOP.list.frame };
 // The message's plate across the tabs' span at the list's top. Each tab's first heading takes
 // the plate's strip, its capitals centred on it as the message's are, and the first rows start
 // TAB_GAP under the plate, so a message never covers a row.
-const PLATE = { height: 28, width: TAB.span, x: TAB.x, y: LIST.y };
+const PLATE = { height: SHOP.plateHeight, width: TAB.span, x: TAB.x, y: LIST.y };
 const FIRST_HEADING_Y = PLATE.y + Math.floor((PLATE.height - TITLE_CAP_ROWS * TEXT_SCALE) / 2);
 const FIRST_ROWS_Y = PLATE.y + PLATE.height + TAB_GAP;
 // Every heading sits in a strip like the first's: HEADING_TO_ROWS above its rows, and
@@ -64,7 +71,7 @@ const FIRST_ROWS_Y = PLATE.y + PLATE.height + TAB_GAP;
 const HEADING_TO_ROWS = FIRST_ROWS_Y - FIRST_HEADING_Y;
 const ROWS_TO_HEADING = FIRST_HEADING_Y - TAB_BOTTOM;
 const SLOT_HEADING_Y = FIRST_HEADING_Y;
-const SLOT_ROWS = { height: 48, pitch: 54, y: FIRST_ROWS_Y };
+const SLOT_ROWS = { ...SHOP.slotRows, y: FIRST_ROWS_Y };
 const DOG_HEADING_Y =
   SLOT_ROWS.y + (DOG_SLOTS.length - 1) * SLOT_ROWS.pitch + SLOT_ROWS.height + ROWS_TO_HEADING;
 
@@ -80,7 +87,7 @@ export const SHOP_LAYOUT = {
   // The Gear tab: its heading and rows.
   gear: {
     headingY: FIRST_HEADING_Y,
-    rows: { height: 50, pitch: 60, y: FIRST_ROWS_Y },
+    rows: { ...SHOP.gearRows, y: FIRST_ROWS_Y },
   },
   // Headings sit on the card at the rows' left, a note right-aligned at their right.
   headingX: ROW_X,
@@ -90,8 +97,8 @@ export const SHOP_LAYOUT = {
   // firstHeadingY is where each tab's first heading puts its capitals.
   list: {
     firstHeadingY: FIRST_HEADING_Y,
-    padBottom: 8,
-    pageOverlap: 48,
+    padBottom: SHOP.list.padBottom,
+    pageOverlap: SHOP.list.pageOverlap,
     rect: LIST,
     unscrolledRect: LIST_UNSCROLLED,
   },
@@ -99,9 +106,9 @@ export const SHOP_LAYOUT = {
   // top, over the first heading, from textDx inside the plate's left and right edges, its
   // capitals centred on the plate. The plate's frame is frame pixels thick.
   message: {
-    frame: 3,
+    frame: SHOP.message.frame,
     plate: PLATE,
-    textDx: 10,
+    textDx: SHOP.message.textDx,
   },
   panel: PANEL,
   // In a row: the 36x36 art box and the art in it, the badge over the row's top-left
@@ -109,25 +116,25 @@ export const SHOP_LAYOUT = {
   // edge) plateInset inside the right edge, the name and line keeping textGap clear of it. A
   // row is width wide, or scrollWidth beside a scrollbar.
   row: {
-    art: 2,
-    badge: { dx: -2, dy: -3 },
-    box: { dx: 4, size: 36 },
-    ownedDx: 20,
-    plateInset: 6,
+    art: SHOP.row.art,
+    badge: SHOP.row.badge,
+    box: SHOP.row.box,
+    ownedDx: SHOP.row.ownedDx,
+    plateInset: SHOP.row.plateInset,
     scrollWidth: ROW_SCROLL_WIDTH,
-    textDx: 46,
-    textGap: 6,
+    textDx: SHOP.row.textDx,
+    textGap: SHOP.row.textGap,
     width: ROW_WIDTH,
     x: ROW_X,
   },
   // Beside a list longer than the view: a trackWidth-wide track at x, as tall as the list area,
   // and in it a thumbWidth-wide thumb thumbInset inside the track's edges, at least thumbMin
   // tall.
-  scrollbar: { thumbInset: 1, thumbMin: 16, thumbWidth: 6, trackWidth: 8, x: 336 },
+  scrollbar: SHOP.scrollbar,
   // The tabs split span, the rows' width from x, evenly with gap between them, each a hit
   // area height tall at y with its face drawHeight tall at drawY.
   tab: TAB,
-  title: { capTop: PAGE_TITLE.y + 7, row: PAGE_TITLE },
+  title: { capTop: PAGE_TITLE.y + SHOP.title.capDy, row: PAGE_TITLE },
 } as const;
 
 // The message at 2x on one line inside its plate.

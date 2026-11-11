@@ -1,5 +1,7 @@
 import type { FontMetrics } from "@andornaut/game-kit/text/bitmapFont";
 
+import { PILL, PILL_IMAGE_GAP } from "../data/layout.ts";
+
 // A name set in a pill inside a line of text: a pale rounded box behind the name, laid into the
 // line so that measuring, fitting and wrapping the text make room for it. The text carries the
 // pill as characters the fonts draw as blank advances: an opener, which says which pill, before
@@ -9,7 +11,7 @@ import type { FontMetrics } from "@andornaut/game-kit/text/bitmapFont";
 // height: the pill's rows, its top rise rows above its line's top. inset: the columns between
 // the pill's edge and the name's ink, each side. gap: the columns between the pill and the next
 // ink on its line.
-export const PILL = { gap: 3, height: 11, inset: 3, rise: 1 } as const;
+export { PILL };
 
 // Openers count up from here, one per kind of pill: the private use area, which no text uses.
 const OPENER_BASE = 0xe010;
@@ -114,7 +116,7 @@ export function pillRows(scale: number): { height: number; top: number } {
 }
 
 // The rows a pill keeps clear of an image over or under it, in screen pixels at any scale.
-export const PILL_IMAGE_GAP = 2;
+export { PILL_IMAGE_GAP };
 
 // The rows a line's pills reach over its capitals, which start capTop rows under the line's top,
 // at scale.

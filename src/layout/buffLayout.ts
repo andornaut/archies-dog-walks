@@ -1,5 +1,7 @@
 import type { Point, Rect } from "@andornaut/game-kit/rect";
 
+import { BUFF_POP_PLACE, CHARM } from "../data/layout.ts";
+
 // The buff charm: the walk bar's ui-effect-well, size square, holding the buff's 20x20 icon at
 // icon,icon, the same on the road and the bar. Lit, it wears a ring-wide amber ring around the
 // well. fx-sparkle plays centred at sparkle from its top-left. A second charm stacks gap left of
@@ -12,15 +14,7 @@ import type { Point, Rect } from "@andornaut/game-kit/rect";
 // columns past the wider line's ink. An option's charms, card.most at most (the walker's perk
 // and one money item), stack gap apart, each centred on the card, the first ring under rows
 // below it, at 1x under the enlarged card too, so every charm fits the card it is under.
-export const CHARM = {
-  card: { effectY: 13, most: 2, nameY: 3, padRight: 4, textX: 3 },
-  gap: 2,
-  icon: 1,
-  ring: 1,
-  size: 22,
-  sparkle: { x: 19, y: 3 },
-  under: 8,
-} as const;
+export { CHARM };
 
 // A pop over the road: the charm appears lit, centred on its dog's or item's column with its
 // bottom gap rows over its top; a forgiven bump's charm sits left of the walker's head, its
@@ -35,11 +29,11 @@ export const BUFF_POP = {
   blinks: 2,
   fadeAtMs: 450,
   fadeMs: 900,
-  gap: 2,
+  gap: BUFF_POP_PLACE.gap,
   reachMs: 200,
   rise: 10,
   switchMs: 120,
-  walker: { dx: -22, dy: -6 },
+  walker: BUFF_POP_PLACE.walker,
 } as const;
 
 // A lit charm's side at scale: the well and its ring each side.

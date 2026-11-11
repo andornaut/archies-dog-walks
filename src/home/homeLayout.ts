@@ -5,6 +5,7 @@ import {
   inkRowsOfLines,
 } from "@andornaut/game-kit/text/bitmapFont";
 
+import { HOME_SCREEN } from "../data/layout.ts";
 import { SCREEN_CONFIG, SCREEN_LAYOUT } from "../data/screen.ts";
 import type { DogId } from "../data/types.ts";
 import { ownerPhotoRect, WALK_BAR, WALK_BAR_BUTTONS } from "../hud/walkHud.ts";
@@ -31,8 +32,9 @@ import type { SectionId } from "./sections.ts";
 // Every tappable thing is at least 44 game pixels (48 CSS pixels on a 390px-wide phone) on
 // each side, except the top bar's buttons, 34 wide in the walk bar's columns; tiles side by
 // side are 8 apart.
-const GAP = 8;
-const HERO_SECTION_GAP = 6;
+const HOME = HOME_SCREEN;
+const GAP = HOME.gap;
+const HERO_SECTION_GAP = HOME.heroSectionGap;
 // The dismissible update notice uses the same card and compact control as other home modals.
 const UPDATE_PANEL = modalRect({ ...SCREEN_CONFIG, x: 0, y: 0 }, undefined, {
   height: MODAL.header + BUTTON_SIZE.compact.height + MODAL.pad,
@@ -45,20 +47,27 @@ const UPDATE_BUTTON = {
 };
 
 // Section padding is measured from card edges; badges keep a separate non-touch gutter.
-const SECTION_CONTENT_PADDING = 4;
-const SECTION_BADGE_GUTTER = 1;
-const SECTION_EDGE = 1;
-const SECTION_GAP = 0;
-const TILE_OFFSET = 24;
+const SECTION_CONTENT_PADDING = HOME.sectionContentPadding;
+const SECTION_BADGE_GUTTER = HOME.sectionBadgeGutter;
+const SECTION_EDGE = HOME.sectionEdge;
+const SECTION_GAP = HOME.sectionGap;
+const TILE_OFFSET = HOME.tileOffset;
 const TILE_TOP_REACH = FEEDBACK.liftPx + FEEDBACK.badgePopPx - MARK_OFFSET.y;
-const START_BUTTON: Rect = { ...BUTTON_SIZE.wide, x: 32, y: 514 };
-const START_GAP = 2;
-const WALKER_TILES = { cellHeight: 44, cellWidth: 77, columns: 4, gapX: GAP, gapY: 0 } as const;
-const DOG_TILES = { cellHeight: 44, cellWidth: 105, columns: 3, gapX: GAP, gapY: 0 } as const;
-const POCKET_TILES = { cellHeight: 44, cellWidth: 60, columns: 5, gapX: GAP, gapY: 0 } as const;
-const TILE_INSET = 1;
-const WALKER_BOX = { dx: 3, dy: 4, size: 34 } as const;
-const WALKER_TEXT_Y = 28;
+const START_BUTTON: Rect = { ...BUTTON_SIZE.wide, ...HOME.startButton };
+const START_GAP = HOME.startGap;
+// A tile grid's cells, gap apart side by side.
+function tiles<T extends { cellHeight: number; cellWidth: number; columns: number; gapY: number }>(
+  cells: T,
+) {
+  const { cellHeight, cellWidth, columns, gapY } = cells;
+  return { cellHeight, cellWidth, columns, gapX: GAP, gapY } as const;
+}
+const WALKER_TILES = tiles(HOME.walkerTiles);
+const DOG_TILES = tiles(HOME.dogTiles);
+const POCKET_TILES = tiles(HOME.pocketTiles);
+const TILE_INSET = HOME.tileInset;
+const WALKER_BOX = HOME.walkerBox;
+const WALKER_TEXT_Y = HOME.walkerTextY;
 const GRID_SPAN = WALKER_TILES.columns * WALKER_TILES.cellWidth + (WALKER_TILES.columns - 1) * GAP;
 const CARD_EDGE_INSET = Math.max(SECTION_CONTENT_PADDING, -MARK_OFFSET.x + SECTION_BADGE_GUTTER);
 const SECTION_WIDTH = GRID_SPAN + 2 * (CARD_EDGE_INSET + SECTION_EDGE);
@@ -105,26 +114,45 @@ const POCKET_SECTION: Rect = {
   y: DOGS_SECTION.y + DOGS_SECTION.height + SECTION_GAP,
 };
 // The compact hero keeps its three-row divider strip; the native backdrop draws at (0, 0).
-const GATE_BAR = { height: 3, y: WALKER_SECTION.y - HERO_SECTION_GAP - 3 };
-const GATE = { height: GATE_BAR.y - 40, y: 40 };
+const GATE_BAR = {
+  height: HOME.gateBar.height,
+  y: WALKER_SECTION.y - HERO_SECTION_GAP - HOME.gateBar.height,
+};
+const GATE = { height: GATE_BAR.y - HOME.gate.y, y: HOME.gate.y };
 // Anchors retain their offset from the full-height yard, independently of the backdrop origin.
-const HERO_OFFSET_Y = GATE_BAR.y - 196;
+const HERO_OFFSET_Y = GATE_BAR.y - HOME.heroBaseY;
+
+// A yard rect or point, its row moved from the full-height yard's to the hero's.
+function yard<T extends { readonly y: number }>(at: T): Omit<T, "y"> & { y: number } {
+  return { ...at, y: at.y + HERO_OFFSET_Y };
+}
 
 // The solid backing inside a section's one-pixel rim, below its header.
 export function sectionFill(section: Rect): Rect {
   const { height, width, x, y } = section;
-  return { height: height - TILE_OFFSET - 1, width: width - 2, x: x + 1, y: y + TILE_OFFSET };
+  return {
+    height: height - TILE_OFFSET - SECTION_EDGE,
+    width: width - 2 * SECTION_EDGE,
+    x: x + SECTION_EDGE,
+    y: y + TILE_OFFSET,
+  };
 }
 
 // The home screen's geometry, in screen pixels. Each icon button is drawn at its icon spot
 // and tapped anywhere in its hit area.
 export const HOME_LAYOUT = {
   // The band's text sits on section rows 8..17, 9px in from either side.
-  bandText: { inset: 9, y: 8 },
+  bandText: HOME.bandText,
   // The Dogs band's pack-size bonus, its ink ending countGap left of the pack count's left edge:
   // its line, gap, then ui-heart's full frame at scale, inked over its first heartInk columns,
   // with its top rise above the text's capitals.
-  bonus: { countGap: 14, gap: 4, heartInk: 7, rise: 1, scale: 2 },
+  bonus: {
+    countGap: HOME.bonus.countGap,
+    gap: HOME.bonus.gap,
+    heartInk: 7,
+    rise: HOME.bonus.rise,
+    scale: HOME.bonus.scale,
+  },
   // The detail card that opens over the screen, centred and as tall as what it shows, in card
   // pixels: the paper starts 2px in, the title row (no bar is drawn) runs across its top 6px in
   // with the title's caps 7px below the row's top, and the well sits under the row, on a dog's card with its bottom row
@@ -138,14 +166,18 @@ export const HOME_LAYOUT = {
   // where the walk card's name is tan, because this card's paper is cream and the walk card's is
   // navy; the role is in owner.roleColour.
   card: {
-    besideDy: 4,
-    besideX: 90,
-    owner: { face: 32, gap: 6, nameColour: "plum", roleColour: "darkBrown" },
+    besideDy: HOME.card.besideDy,
+    besideX: HOME.card.besideX,
+    owner: { ...HOME.card.owner, nameColour: "plum", roleColour: "darkBrown" },
     pad: MODAL.pad,
-    rowGap: 8,
-    titleRow: { height: 20, inset: MODAL.pad, titleY: 0 },
-    well: { picture: 2, size: 68, x: MODAL.pad, y: MODAL.header },
-    width: 300,
+    rowGap: HOME.card.rowGap,
+    titleRow: {
+      height: HOME.card.titleRow.height,
+      inset: MODAL.pad,
+      titleY: HOME.card.titleRow.titleY,
+    },
+    well: { ...HOME.card.well, x: MODAL.pad, y: MODAL.header },
+    width: HOME.card.width,
   },
   dogOrigin: { x: GRID_ORIGIN_X + 1, y: sectionTilesY(DOGS_SECTION, TILE_INSET) },
   // A dog tile's face sits face.dx and face.dy inside the drawn tile, on a box 1px wider each
@@ -154,14 +186,7 @@ export const HOME_LAYOUT = {
   // locked dog's name has its capitals lockedNameY down, and its plate's lowest ink sits
   // plateFoot above the tile's bottom (dogTilePlateY). A locked dog's badge sits over the
   // tile's top-left corner.
-  dogTile: {
-    badge: { dx: -2, dy: -3 },
-    face: { dx: 4, dy: 5, size: 32 },
-    lockedNameY: 4,
-    padRight: 3,
-    plateFoot: 1,
-    textX: 39,
-  },
+  dogTile: HOME.dogTile,
   // Each dog tile is drawn this far inside its hit area, leaving 2px between the rows.
   dogTileInset: TILE_INSET,
   // The dog rows are hit areas 44 tall with no gap.
@@ -170,12 +195,8 @@ export const HOME_LAYOUT = {
   gate: GATE,
   gateBar: GATE_BAR,
   // At the gate the pack spreads out around the walker, the first dog through the gate.
-  gateSpots: [
-    { dx: 0, footDy: -46 },
-    { dx: -26, footDy: -14 },
-    { dx: 26, footDy: -12 },
-  ],
-  gearBadge: { height: 18, width: 18, x: 194, y: 166 + HERO_OFFSET_Y },
+  gateSpots: HOME.gateSpots,
+  gearBadge: yard(HOME.gearBadge),
   heroOffsetY: HERO_OFFSET_Y,
   heroSectionGap: HERO_SECTION_GAP,
   // Pending progress fits in the clear band between the divider and picker.
@@ -186,41 +207,38 @@ export const HOME_LAYOUT = {
       GATE_BAR.height +
       Math.floor((HERO_SECTION_GAP - SCREEN_LAYOUT.zoneProgress.height) / 2),
   },
-  path: { width: 32, x: 164 },
+  path: HOME.path,
   // The Pet shop building on the yard's right lot, which opens the shop; its hit area is its
   // frame. board is its PET SHOP board, which the walker's bubble keeps clear of.
-  petShop: {
-    board: { height: 22, width: 114, x: 237, y: 86 + HERO_OFFSET_Y },
-    height: 108,
-    width: 120,
-    x: 234,
-    y: 86 + HERO_OFFSET_Y,
-  },
+  petShop: { ...yard(HOME.petShop), board: yard(HOME.petShop.board) },
   // The Pocket's row of gear cells under its section's band, across the walker row's span, each
   // drawing its tile 1px inside. In a tile: the icon box and the art in it, the badge over its
   // top-left corner, and the price plate's caps, centred.
   pocket: {
-    badge: { dx: -2, dy: -3 },
-    box: { dx: 12, dy: 3, size: 34 },
+    badge: HOME.pocket.badge,
+    box: HOME.pocket.box,
     cells: POCKET_TILES,
-    icon: { dx: 13, dy: 4 },
+    icon: HOME.pocket.icon,
     origin: { x: GRID_ORIGIN_X, y: sectionTilesY(POCKET_SECTION, TILE_INSET) },
-    priceY: 28,
+    priceY: HOME.pocket.priceY,
     tileInset: TILE_INSET,
   },
-  porchDogOffset: { dx: -12, footDy: 3 },
+  porchDogOffset: HOME.porchDogOffset,
   // Before the first walk the starter dog's owner waits in the yard left of the path, behind
   // the yard sign, with their dog at their feet. Feet positions, by dog; a starter dog with no
   // spot is not drawn.
   porchSpots: {
-    archie: { footY: 145 + HERO_OFFSET_Y, x: 120 },
+    archie: {
+      footY: HOME.porchSpots.archie.footY + HERO_OFFSET_Y,
+      x: HOME.porchSpots.archie.x,
+    },
   },
   sectionBadgeGutter: SECTION_BADGE_GUTTER,
   sectionContentPadding: SECTION_CONTENT_PADDING,
   // Solid backing images retained under their existing asset keys.
   sectionFillKeys: { dogs: "ui-plaid", pocket: "ui-denim", walker: "ui-cork" },
   // The image retains its nine-slice caps; the visible outer rim is one pixel.
-  sectionFrame: { band: 22, edge: SECTION_EDGE },
+  sectionFrame: { band: HOME.sectionFrameBand, edge: SECTION_EDGE },
   sectionGap: SECTION_GAP,
   sectionLooks: {
     dogs: {
@@ -261,16 +279,16 @@ export const HOME_LAYOUT = {
   // (slotSignText); pressed, the board drops pressDrop on longer cords and the text with it. The
   // hit area is the board widened to 44 tall.
   slotSign: {
-    art: { x: 255, y: 120 + HERO_OFFSET_Y },
-    board: { height: 24, width: 79, x: 256, y: 125 + HERO_OFFSET_Y },
-    boardEdge: { frame: 1, lit: 1, shade: 1 },
+    art: yard(HOME.slotSign.art),
+    board: yard(HOME.slotSign.board),
+    boardEdge: HOME.slotSign.boardEdge,
     headColour: "plum",
-    hit: { height: 44, width: 79, x: 256, y: 115 + HERO_OFFSET_Y },
+    hit: yard(HOME.slotSign.hit),
     key: "ui-slot-sign",
-    linePitch: 9,
-    pressDrop: 1,
+    linePitch: HOME.slotSign.linePitch,
+    pressDrop: HOME.slotSign.pressDrop,
     priceColour: "forest",
-    scale: 1,
+    scale: HOME.slotSign.scale,
   },
   // The walker's speech bubble, its top speech.top under the gate scene's, growing down to hold
   // every line it says of 2x body text a line of the font apart, padX in from its sides, the
@@ -284,31 +302,31 @@ export const HOME_LAYOUT = {
   // the face. The text then wraps roomCut narrower than the column, and the bubble is at least
   // foot taller than the face, with the text centred down it.
   speech: {
-    clearance: 2,
+    clearance: HOME.speech.clearance,
     margin: GAP / 2,
-    owner: { foot: 18, gap: 6, inset: 3, nameGap: 3, roomCut: 4, size: 32, top: 4 },
-    padBottom: 3,
-    padTop: 4,
-    padX: 5,
+    owner: HOME.speech.owner,
+    padBottom: HOME.speech.padBottom,
+    padTop: HOME.speech.padTop,
+    padX: HOME.speech.padX,
     // The rows the quip art inks at its top and bottom edges.
-    rim: { bottom: 3, top: 2 },
-    top: 6,
+    rim: HOME.speech.rim,
+    top: HOME.speech.top,
   },
   startButton: START_BUTTON,
   startFocusOutset: SCREEN_CONFIG.height - START_BUTTON.y - START_BUTTON.height,
   startGap: START_GAP,
   // Start walk's label caps on its raised face; the label sinks with the face.
-  startLabel: { readyY: 12, scale: 3 },
+  startLabel: HOME.startLabel,
   // The pressed face's label while the walk waits for its art: the ready label's, at its size
-  // on its caps, inside the face less 12px a side.
-  startLoading: { room: START_BUTTON.width - 24 },
+  // on its caps, inside the face less startLoadingInset a side.
+  startLoading: { room: START_BUTTON.width - 2 * HOME.startLoadingInset },
   // The street name's centre and caps top on screen-home's street sign, clear of the walker's
   // speech bubble.
-  streetSign: { x: 320, y: 75 + HERO_OFFSET_Y },
+  streetSign: yard(HOME.streetSign),
   // The backing begins this far below the section's top, after its header.
   tileOffset: TILE_OFFSET,
   // A selected tile's ui-select frame sits 1px outside it.
-  tileSelectOutset: 1,
+  tileSelectOutset: HOME.tileSelectOutset,
   // The top bar, plum with every top bar's trim (topBarRects): the bank in its well at the left,
   // then plain plum, then the buttons, the faces centred on row mid. The well is as wide as the
   // bank needs (bankWell), at most well.maxWidth, which ends 6 columns before the first face with
@@ -319,14 +337,14 @@ export const HOME_LAYOUT = {
   // separated (bankAmountText), its ink bank.pad columns in from the well's left, its capitals'
   // top at bank.capsY.
   topBar: {
-    bank: { capsY: WALK_BAR.cash.capsY, pad: 3, scale: WALK_BAR.cash.scale },
+    bank: { capsY: WALK_BAR.cash.capsY, pad: HOME.topBar.bankPad, scale: WALK_BAR.cash.scale },
     faceSize: TOP_BAR_FACE.size,
     height: TOP_BAR_HEIGHT,
     mid: TOP_BAR_MID,
     well: {
       height: TOP_BAR_WELL.height,
       lip: TOP_BAR_WELL.lip,
-      maxWidth: 186,
+      maxWidth: HOME.topBar.wellMaxWidth,
       x: TOP_BAR_WELL.x,
       y: TOP_BAR_WELL.y,
     },
@@ -341,25 +359,25 @@ export const HOME_LAYOUT = {
   updateModal: {
     button: UPDATE_BUTTON,
     hit: UPDATE_BUTTON,
-    labelPad: 8,
+    labelPad: HOME.updateModal.labelPad,
     panel: UPDATE_PANEL,
   },
-  walkerAtGate: { footY: GATE.y + GATE.height, x: 180 },
+  walkerAtGate: { footY: GATE.y + GATE.height, x: HOME.walkerAtGate.x },
   walkerOrigin: { x: GRID_ORIGIN_X, y: sectionTilesY(WALKER_SECTION, 0) },
   // A walker tile: the portrait's box and the portrait in it, the walker's perk icon right of
   // the box at icons.dy (a walker has one perk), a locked walker's badge over the tile's
   // top-left corner, and every walker's name plate, its caps at plateY, centred. The tiles sit
   // inside the shared card-edge padding; the selected mark overhangs into its own gutter.
   walkerTile: {
-    badge: { dx: -2, dy: -3 },
+    badge: HOME.walkerTile.badge,
     box: WALKER_BOX,
-    face: { dx: 4, dy: 5 },
-    icons: { dx: 46, dy: [5] },
+    face: HOME.walkerTile.face,
+    icons: HOME.walkerTile.icons,
     plateY: WALKER_TEXT_Y,
   },
   walkerTiles: WALKER_TILES,
   // The yard sign's board, baked into screen-home, which the dog slot sign keeps clear of.
-  yardSign: { height: 38, width: 128, x: 6, y: 138 + HERO_OFFSET_Y },
+  yardSign: yard(HOME.yardSign),
 } as const satisfies Readonly<Record<string, unknown>> & {
   dogTiles: GridSpec;
   gateSpots: readonly PackPlacement[];
@@ -392,7 +410,7 @@ function topBarButton(fromRight: number): HomeBarButtonPlace {
   const dx = (fromRight - 1) * last.hitWidth;
   return {
     face: { x: last.faceX - dx, y: TOP_BAR_FACE.y },
-    hit: { height: 44, width: last.hitWidth, x: last.hitX - dx, y: 0 },
+    hit: { height: HOME.topBar.hitHeight, width: last.hitWidth, x: last.hitX - dx, y: 0 },
   };
 }
 

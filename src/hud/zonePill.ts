@@ -1,5 +1,6 @@
 import type { Rect } from "@andornaut/game-kit/rect";
 
+import { ZONE_PILL_SIZES } from "../data/layout.ts";
 import { debuffBarRects } from "./walkHud.ts";
 
 // The neighbourhood pill (ui-zone-pill, a three-slice with 4px ends): the zone's name and its
@@ -8,13 +9,14 @@ import { debuffBarRects } from "./walkHud.ts";
 // in cream from pad columns in, the count in light grey ends its ink pad columns before the
 // pill's right edge, textGap columns between their inks, and both put their capitals on row
 // capsY. It takes no presses, and the message strip draws over it.
+const PILL = ZONE_PILL_SIZES;
 export const ZONE_PILL = {
-  capsY: 4,
-  gap: 4,
-  height: 13,
+  capsY: PILL.capsY,
+  gap: PILL.gap,
+  height: PILL.height,
   key: "ui-zone-pill",
-  pad: 6,
-  textGap: 8,
+  pad: PILL.pad,
+  textGap: PILL.textGap,
 } as const;
 
 // Where the pill and its texts go: the pill, the left edge of the name's ink, the column past

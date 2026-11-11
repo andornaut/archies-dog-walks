@@ -3,6 +3,7 @@ import type { Rect } from "@andornaut/game-kit/rect";
 import { type TextFitStyle } from "@andornaut/game-kit/text/textFit";
 
 import { badgeKey } from "../assets/spriteKeys.ts";
+import { BADGE_CELEBRATION, BADGE_NAME_PAD, BADGE_STRIP } from "../data/layout.ts";
 import type {
   Achievement,
   AchievementCondition,
@@ -210,20 +211,7 @@ export function wallRects(spec: WallSpec, heights: readonly number[]): Rect[] {
 // to a row and at most maxRows rows, and a badge's name's first capitals nameGap under the
 // badge, on up to nameLines lines namePitch apart. The slots share the panel's width less
 // inset each side, inside its frame, frame thick.
-export const BADGE_STRIP = {
-  badgeSize: 32,
-  badgeTop: 22,
-  frame: 2,
-  inset: 4,
-  maxNamed: 3,
-  maxRows: 2,
-  nameGap: 4,
-  nameLines: 2,
-  namePitch: 16,
-  perRow: 7,
-  rowPitch: 38,
-  titleY: 8,
-} as const;
+export { BADGE_STRIP };
 
 // The rows count badges take: one per perRow, at most maxRows.
 export function badgeStripRows(count: number): number {
@@ -348,9 +336,9 @@ export const CELEBRATION_PANEL = {
     BADGE_STRIP.badgeSize +
     (BADGE_STRIP.maxRows - 1) * BADGE_STRIP.rowPitch +
     MODAL.pad,
-  facesHeight: 44,
-  width: 344,
-  x: 8,
+  facesHeight: BADGE_CELEBRATION.facesHeight,
+  width: BADGE_CELEBRATION.width,
+  x: BADGE_CELEBRATION.x,
 } as const;
 
 // The capitals' top of each of a name's lines lines, under a strip whose panel's top is top:
@@ -371,13 +359,13 @@ export interface BadgeRowNames {
 }
 
 // A strip's names in BADGE_NAME_STYLE, each broken at spaces into lines in a slot slotWidth
-// wide less 2px each side, as inkWidth measures them.
+// wide less badgeNames.pad each side, as inkWidth measures them.
 export function badgeRowNames(
   inkWidth: (style: TextFitStyle, line: string) => number,
   slotWidth: number,
   names: readonly string[],
 ): BadgeRowNames {
-  const room = slotWidth - 4;
+  const room = slotWidth - 2 * BADGE_NAME_PAD;
   const style = BADGE_NAME_STYLE;
   return {
     lines: names.map((name) => wrapWords((line) => inkWidth(style, line), room, name)),

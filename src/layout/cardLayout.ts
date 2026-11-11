@@ -6,6 +6,7 @@ import {
 } from "@andornaut/game-kit/text/bitmapFont";
 import { type TextFitStyle } from "@andornaut/game-kit/text/textFit";
 
+import { CHOICE_CARDS } from "../data/layout.ts";
 import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";
 import { CARD_HEADER, cardRowRects, type CardRowSpec } from "../ui/cardRow.ts";
 import { PILL_IMAGE_GAP, pillRiseOverCaps } from "../ui/namePills.ts";
@@ -24,36 +25,27 @@ import { CARD_CHARMS_HEIGHT } from "./buffLayout.ts";
 // under them. Every pill keeps pillGap rows clear of the lowest ink of the image over it: the
 // art's outline, or the paws. A plaque's text keeps plaquePadX inside the plaque or its part
 // right of the marker.
+const CARDS = CHOICE_CARDS;
 export const CARD_LAYOUT = {
-  art: { height: 56, outline: 1, width: 75, x: 18, y: 16 },
-  badge: { height: 13, width: 71, x: 20, y: 136 },
-  band: { height: 11, room: 106, y: 2 },
-  effect: { plaqueGap: 1, width: 100, x: 6 },
-  fires: { inkTop: 1, size: 16, x: 18, y: 134 },
+  art: CARDS.art,
+  badge: CARDS.badge,
+  band: CARDS.band,
+  effect: CARDS.effect,
+  fires: CARDS.fires,
   // A fork card's End walk button, centred under the paths, gap rows below their charms.
-  forkHome: { ...BUTTON_SIZE.compact, gap: 6 },
-  height: 153,
+  forkHome: { ...BUTTON_SIZE.compact, gap: CARDS.forkHomeGap },
+  height: CARDS.height,
   // The enlarged card's body, the frame's rows that grow with it: a firing warning in the title
   // font at 1x, warningGap over the changes, which take the rest of the body and bodyGap rows
   // under their lowest ink; with no warning, the changes start under the art as a card's effect
   // does.
-  large: {
-    art: { outline: 2, x: 8, y: 32 },
-    badge: { height: 26, width: 142, x: 12, y: 242 },
-    band: { height: 18, room: 154, y: 4 },
-    body: { height: 82, width: 142, x: 12, y: 152 },
-    bodyGap: 4,
-    fires: { x: 8, y: 238 },
-    height: 280,
-    warningGap: 4,
-    width: 166,
-  },
-  paws: { height: 10, y: 76 },
+  large: CARDS.large,
+  paws: CARDS.paws,
   pillGap: PILL_IMAGE_GAP,
-  plaquePadX: 2,
-  row: { gap: 6 },
-  warningGap: 2,
-  width: 112,
+  plaquePadX: CARDS.plaquePadX,
+  row: CARDS.row,
+  warningGap: CARDS.warningGap,
+  width: CARDS.width,
 } as const;
 
 // How many lines of a font at scale fit height: the first line's ink, then a line each.

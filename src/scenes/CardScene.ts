@@ -11,6 +11,7 @@ import {
   encounterSpriteKey,
 } from "../assets/spriteKeys.ts";
 import { gameData } from "../data/index.ts";
+import { CHOICE_CARDS } from "../data/layout.ts";
 import { SCREEN_LAYOUT } from "../data/screen.ts";
 import type { CardSource } from "../data/types.ts";
 import { type OptionMarks, optionMarks } from "../hud/buffMarks.ts";
@@ -86,7 +87,7 @@ const BAND = CARD_LAYOUT.band;
 const ART: Rect = CARD_LAYOUT.art;
 const EFFECT = CARD_LAYOUT.effect;
 const BADGE: Rect = CARD_LAYOUT.badge;
-const SELECTED_OUTLINE = 2;
+const SELECTED_OUTLINE = CHOICE_CARDS.selectedOutline;
 const COST_KEY = "card-cost";
 // Holding a card enlarges it, with the changes behind its numbers, however far the finger moves.
 const CARD_SLOP_PX = Number.POSITIVE_INFINITY;

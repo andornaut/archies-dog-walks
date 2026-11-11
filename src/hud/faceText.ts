@@ -1,6 +1,7 @@
 import type { FontMetrics } from "@andornaut/game-kit/text/bitmapFont";
 import type { TextFitStyle } from "@andornaut/game-kit/text/textFit";
 
+import { INLINE_FACE } from "../data/layout.ts";
 import type { DogId, GameData } from "../data/types.ts";
 import type { FaceMood } from "../rules/treats.ts";
 
@@ -33,7 +34,7 @@ export interface FaceText {
 // and the name starts gap screen pixels past the frame, as the quip line's text starts past its
 // lead. Beside text at any other scale the name shows alone: the face draws only at whole-number
 // scales, and at 1x it is taller than a 1x row.
-export const INLINE_FACE = { face: 20, gap: 4, textScale: 2 } as const;
+export { INLINE_FACE };
 
 // An inline face: the frame's side, the gap to the name, and how far the frame's top rises
 // above the top of the row's capitals.

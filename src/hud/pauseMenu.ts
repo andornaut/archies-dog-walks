@@ -1,6 +1,7 @@
 import type { Rect } from "@andornaut/game-kit/rect";
 import { type FontMetrics, inkRowsOfLines } from "@andornaut/game-kit/text/bitmapFont";
 
+import { PAUSE_PANEL } from "../data/layout.ts";
 import { MODAL, modalPanelWidth, modalRect, modalTitleWidth } from "../home/modalLayout.ts";
 import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";
 
@@ -21,7 +22,7 @@ const BUTTON = { ...BUTTON_SIZE.wide, gap: MODAL.rowGap, x: MODAL.pad, y: MODAL.
 // The width a button's label has, its key number included, 4px in from each side. The panel's
 // title is placed beside its close control, as on every modal card (addCardTitle).
 export const PANEL_TEXT_ROOM = {
-  label: BUTTON.width - 8,
+  label: BUTTON.width - PAUSE_PANEL.labelPad,
 } as const;
 // The note plate is as wide as the buttons, gap under the last one. The note is body text at
 // scale, wrapped to the plate's width less padX each side, its first line's capitals padTop
@@ -33,11 +34,11 @@ export const NOTE_PLATE = {
   padBottom: MODAL.rowGap,
   padTop: MODAL.rowGap,
   padX: MODAL.rowGap,
-  scale: 2,
+  scale: PAUSE_PANEL.noteScale,
 } as const;
 
 // The pause menu's own note, a sentence a line, takes this many lines.
-export const PAUSE_NOTE_LINES = 2;
+export const PAUSE_NOTE_LINES = PAUSE_PANEL.noteLines;
 
 function notePlateHeight(body: FontMetrics, lines: number): number {
   const { padBottom, padTop, scale } = NOTE_PLATE;
@@ -45,7 +46,7 @@ function notePlateHeight(body: FontMetrics, lines: number): number {
 }
 const BOTTOM = MODAL.pad;
 // Each button's hit area reaches this far above and below its face.
-const HIT_REACH = 0;
+const HIT_REACH = PAUSE_PANEL.hitReach;
 
 interface QuestionParts {
   avoid?: Rect | undefined;

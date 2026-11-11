@@ -1,12 +1,13 @@
 import type { Rect } from "@andornaut/game-kit/rect";
 
+import { BAR_TITLE_INSET } from "../data/layout.ts";
 import type { CloseControl } from "./closeControl.ts";
 import { MODAL } from "./modalGeometry.ts";
 
 // Modal titles reserve the full close hit plus its gap symmetrically on both sides.
 // Pages retain their face-only clearance.
 // A title is centred within its available row, or begins at the inset when too wide.
-export const BAR_TITLE = { closeGap: MODAL.gap, inset: 0 } as const;
+export const BAR_TITLE = { closeGap: MODAL.gap, inset: BAR_TITLE_INSET } as const;
 
 function titleRange(bar: Rect, close: CloseControl | undefined): { left: number; right: number } {
   const right =

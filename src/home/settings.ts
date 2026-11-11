@@ -2,6 +2,7 @@ import { clamp01 } from "@andornaut/game-kit/numbers";
 import type { Rect } from "@andornaut/game-kit/rect";
 import { type FontMetrics, inkRowsOfLines } from "@andornaut/game-kit/text/bitmapFont";
 
+import { SETTINGS_CARD } from "../data/layout.ts";
 import { laneDirectionForKey } from "../input/keyBindings.ts";
 import type { Settings } from "../save/schema.ts";
 import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";
@@ -105,19 +106,20 @@ export interface SettingsFonts {
 // Its control sits pad in from the row's right, centred down from the label's capitals to the
 // note's lowest ink. A slider row is slider.height tall, with its percentage on the label's
 // line, ending pad in from the row's right, and its track under them, pad in from either side.
+const ROW = SETTINGS_CARD.row;
 export const SETTINGS_ROW = {
   button: BUTTON_SIZE.compact,
   // Between a note's room and the control beside it.
-  controlGap: 10,
-  icon: { dx: 6, dy: 9 },
-  inkFoot: 14,
-  label: { dx: 26, dy: 12 },
-  note: { dx: 6, lines: 3 },
-  pad: 8,
-  slider: { height: 56 },
-  switch: { height: 16, width: 32 },
-  track: { dy: 30, height: 10, knobWidth: 10 },
-  width: 296,
+  controlGap: ROW.controlGap,
+  icon: ROW.icon,
+  inkFoot: ROW.inkFoot,
+  label: ROW.label,
+  note: ROW.note,
+  pad: ROW.pad,
+  slider: ROW.slider,
+  switch: ROW.switch,
+  track: ROW.track,
+  width: ROW.width,
 } as const;
 
 // The room a switch or button row's note wraps in: from the icon's column to controlGap short
@@ -144,7 +146,7 @@ const PANEL = { width: SETTINGS_ROW.width + 2 * MODAL.pad };
 // The first row starts at the title row's bottom edge, as each later row starts at its separator,
 // so its icon and label are as far under the title row as a later row's are under its separator.
 const ROWS_TOP = MODAL.header;
-const SEPARATOR_INSET = 4;
+const SEPARATOR_INSET = SETTINGS_CARD.separatorInset;
 
 // The build label (BUILD_LABEL) closes the card in 1x dark brown body text, centred across the
 // panel with no separator over it: its capitals LABEL_HELP_GAP clear rows under the last row's
@@ -156,9 +158,9 @@ export const SETTINGS_BUILD_LABEL = {
   room: SETTINGS_ROW.width,
   style: { scale: 1 },
 } as const;
-const BUILD_LABEL_FOOT = MODAL.pad - 3;
 // ui-detail-card's frame along its bottom: a tan shade, a dark brown line and an ink line.
 const CARD_FRAME_BOTTOM = 3;
+const BUILD_LABEL_FOOT = MODAL.pad - CARD_FRAME_BOTTOM;
 
 // The note's lowest ink, from the row's top.
 function noteInkBottom(fonts: SettingsFonts, noteLines: number): number {
@@ -255,14 +257,15 @@ export function settingsLayout(
 // control, centred on the screen, with its title and close control, and under the title row the
 // 16x16 glyph of the button the steps start from, centred on the first line's capitals (icon.dy
 // from their top), then the steps in body text, wrapped to up to lines lines a linePitch apart.
+const STEPS = SETTINGS_CARD.installSteps;
 export const INSTALL_STEPS = {
   foot: MODAL.pad,
-  icon: { dy: -2, gap: 6, size: 16 },
+  icon: STEPS.icon,
   // The body's line pitch at 2x.
-  linePitch: 20,
-  lines: 3,
+  linePitch: STEPS.linePitch,
+  lines: STEPS.lines,
   pad: HOME_LAYOUT.card.pad,
-  stepsDy: 4,
+  stepsDy: STEPS.stepsDy,
   width: HOME_LAYOUT.card.width,
 } as const;
 

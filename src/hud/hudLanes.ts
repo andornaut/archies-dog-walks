@@ -1,6 +1,7 @@
 import type { Point, Rect } from "@andornaut/game-kit/rect";
 import { type FontMetrics, inkRowsOfLines } from "@andornaut/game-kit/text/bitmapFont";
 
+import { CHANGE_CHIP, HUD_LANES } from "../data/layout.ts";
 import type { ScreenLayout } from "../layout/screenLayout.ts";
 import { TEXT_STYLE } from "../ui/textFit.ts";
 import { OWNER_TAB } from "./walkHud.ts";
@@ -17,8 +18,9 @@ export interface HudLanes {
   ownerTabs: Rect;
 }
 
-const MARGIN = 4;
-const HEART_LABEL_HEIGHT = 24;
+const HEART_LABEL = HUD_LANES.heartLabel;
+const MARGIN = HEART_LABEL.margin;
+const HEART_LABEL_HEIGHT = HEART_LABEL.height;
 
 export function hudLanes(layout: Pick<ScreenLayout, "dogRow" | "dogSlots">): HudLanes {
   const { dogRow, dogSlots } = layout;
@@ -28,7 +30,7 @@ export function hudLanes(layout: Pick<ScreenLayout, "dogRow" | "dogSlots">): Hud
       height: HEART_LABEL_HEIGHT,
       width: slot.width - MARGIN,
       x: slot.x + MARGIN / 2,
-      y: slot.y + slot.height - HEART_LABEL_HEIGHT - 2,
+      y: slot.y + slot.height - HEART_LABEL_HEIGHT - HEART_LABEL.foot,
     })),
     ownerTabs: {
       height: -OWNER_TAB.y,
@@ -41,7 +43,7 @@ export function hudLanes(layout: Pick<ScreenLayout, "dogRow" | "dogSlots">): Hud
 
 // A change label: its text on a cream chip, padX either side, at least height tall and padY
 // over and under the text's ink, the ink centred in it. A heart label sits at its lane's middle.
-export const CHANGE_CHIP = { height: 20, padX: 2, padY: 3 } as const;
+export { CHANGE_CHIP };
 
 // At 2x on one line: a change label says its amount alone.
 export const CHANGE_LABEL_STYLE = TEXT_STYLE;
@@ -75,7 +77,7 @@ export interface ChipText {
 // A reached pickup's change label shows the reaching buff's icon, size square, inside its chip at
 // its left, vertically centred, gap columns left of its text; the chip widens by span to hold it.
 const REACH_ICON_SIZE = 16;
-const REACH_ICON_GAP = 2;
+const REACH_ICON_GAP = HUD_LANES.reachIconGap;
 export const REACH_ICON = {
   gap: REACH_ICON_GAP,
   size: REACH_ICON_SIZE,

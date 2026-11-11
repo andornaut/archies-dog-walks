@@ -1,5 +1,7 @@
 import type { Rect } from "@andornaut/game-kit/rect";
 
+import { CARD_HEADER } from "../data/layout.ts";
+
 export interface CardRowSpec {
   cardHeight: number;
   cardWidth: number;
@@ -12,14 +14,7 @@ export interface CardRowSpec {
 // has been pressed, each card's 1x key number centred over it, so the road's signs never show
 // through the title. The band's ink well runs from its fifth row to 6 rows above its bottom,
 // and the band ends a row above the cards while key numbers show.
-export const CARD_HEADER = {
-  bandRise: 46,
-  keyRise: 13,
-  keysHeight: 45,
-  plainHeight: 37,
-  subtitleRise: 22,
-  titleRise: 38,
-} as const;
+export { CARD_HEADER };
 
 interface CardHeader {
   band: Rect;

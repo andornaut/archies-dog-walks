@@ -1,5 +1,6 @@
 // How a tile, tab or row shows its interaction state, as ui-tile draws it: normal is cream,
 // selected gold, disabled flat grey. Colours are the scenes' PALETTE names.
+import { AFFORD_OUTSET, BUTTON_LIP_PX, SELECT_OUTSET } from "../data/layout.ts";
 import type { ButtonState, ItemLook, TileState } from "./interaction.ts";
 
 // Every colour a disabled, short or locked item draws in, the neutral greys among them:
@@ -55,7 +56,7 @@ export const BUTTON_COLOURS = {
 } as const satisfies Record<ButtonLook, { face: string; label: string; lip: string | null }>;
 
 // The rows of ui-button's lip under a raised face, the bottom of its rect.
-export const BUTTON_LIP_PX = 4;
+export { BUTTON_LIP_PX };
 
 // The plate a price or goal sits on: buy while the bank covers the price, short while it
 // does not, goal for an item a goal unlocks or one that needs another bought first.
@@ -86,10 +87,10 @@ export const PLATE_LOOKS = {
 
 // ui-select sits this far outside a selected item on each side by default; its inner ink
 // line then lies on the item's edge.
-export const SELECT_OUTSET = 3;
+export { SELECT_OUTSET };
 
 // ui-afford sits this far outside an affordable item on each side.
-export const AFFORD_OUTSET = 2;
+export { AFFORD_OUTSET };
 
 export function selectLook(state: TileState): SelectLook {
   return { ...LOOKS[state], state };

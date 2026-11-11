@@ -1,6 +1,7 @@
 import type { Rect } from "@andornaut/game-kit/rect";
 import { type FontMetrics, inkRowsOfLines } from "@andornaut/game-kit/text/bitmapFont";
 
+import { LOGBOOK_PAGE } from "../data/layout.ts";
 import { helpCapDy } from "../ui/labelHelpGap.ts";
 import { type ScrollbarRects, scrollbarRects } from "../ui/scrollbar.ts";
 import { BADGE_STRIP, type WallCellLines } from "./badgesView.ts";
@@ -25,9 +26,10 @@ const VIEW = SHOP_LAYOUT.list.rect;
 const SCROLLBAR = SHOP_LAYOUT.scrollbar;
 // Each tab's first heading, level with the shop's.
 const TOP = SHOP_LAYOUT.list.firstHeadingY;
-const PITCH = 17;
+const STATS = LOGBOOK_PAGE;
+const PITCH = STATS.pitch;
 // Between the Dogs tab's blocks and the Walks tab's sections, under the last row's pitch.
-const BLOCK_GAP = 12;
+const BLOCK_GAP = STATS.blockGap;
 // Label and value rows run across the shop's rows: from the headings' left edge to the rows'
 // right edge, beside the scrollbar at right (statsListFrame).
 const ROWS = {
@@ -42,7 +44,7 @@ export const STATS_LAYOUT = {
   close: SHOP_LAYOUT.close,
   // The badge tapped open, over the wall, at most height tall: detailPanel sizes it. The end
   // screen opens the same card.
-  detail: { height: 268, width: 312, x: 24, y: 140 },
+  detail: STATS.detail,
   // In the open badge, from its top: the badge's centre at badgeY, the name's capitals at nameY,
   // the status's LABEL_HELP_GAP clear rows under the title font's lowest ink (helpCapDy) and the
   // goal's goalDy under the status's, then the goal and the badge's line at 2x, centred and
@@ -50,27 +52,27 @@ export const STATS_LAYOUT = {
   // font apart and gap between them; foot rows of cream under the line's lowest ink, then the
   // ui-panel's frame, frame rows deep, end the panel.
   detailText: {
-    badgeY: 48,
-    foot: MODAL.pad - 3,
-    frame: 3,
-    gap: 8,
-    goalDy: 24,
-    nameY: 92,
-    textRight: 16,
-    x: 16,
+    badgeY: STATS.detailText.badgeY,
+    foot: MODAL.pad - STATS.detailText.frame,
+    frame: STATS.detailText.frame,
+    gap: STATS.detailText.gap,
+    goalDy: STATS.detailText.goalDy,
+    nameY: STATS.detailText.nameY,
+    textRight: STATS.detailText.textRight,
+    x: STATS.detailText.x,
   },
   // The Dogs tab: a block per dog from top, each its 32x32 face at the rows' left, the name in
   // the title font nameDx right of the face's left with its capitals nameY under the block's
   // top, then a row per DOG_STATS from rowsY, and gap under the last before the next block.
   // A 1px tan rule runs ruleAbove over each block after the first, ruleDx past the rows' ends.
   dogs: {
-    faceSize: 32,
+    faceSize: STATS.dogs.faceSize,
     gap: BLOCK_GAP,
-    nameDx: 40,
-    nameY: 12,
-    rowsY: 38,
-    ruleAbove: 6,
-    ruleDx: 2,
+    nameDx: STATS.dogs.nameDx,
+    nameY: STATS.dogs.nameY,
+    rowsY: STATS.dogs.rowsY,
+    ruleAbove: STATS.dogs.ruleAbove,
+    ruleDx: STATS.dogs.ruleDx,
     top: TOP,
   },
   panel: PANEL,
@@ -89,7 +91,7 @@ export const STATS_LAYOUT = {
   // The Walks tab: the first section's heading with its capitals at top, level with the Dogs
   // tab's first block, each section's rows rowsY under its heading, and the next heading
   // sectionGap under the last row's pitch, as far as the Dogs tab's blocks are apart.
-  walks: { rowsY: 20, sectionGap: BLOCK_GAP, top: TOP },
+  walks: { rowsY: STATS.walks.rowsY, sectionGap: BLOCK_GAP, top: TOP },
   // The badge wall: the earned count at the rows' right with its capitals at headingY, then one
   // badge per row from y, gap apart, each the badge badgeTop under the row's top then a text
   // column of up to lines lines at 2x from x (the name, the goal, then a locked badge's
@@ -100,25 +102,25 @@ export const STATS_LAYOUT = {
   // ui-check tick, checkSize square, sits over the badge's top-right corner, its top-left
   // checkDx right of the row's left and checkDy below its top.
   wall: {
-    badgeTop: 2,
+    badgeTop: STATS.wall.badgeTop,
     earned: {
       bandLeft: ROWS.left - VIEW.x,
       bandWidth: VIEW.width,
-      bandY: 2,
-      checkDx: 20,
-      checkDy: -1,
-      checkSize: 16,
+      bandY: STATS.wall.earned.bandY,
+      checkDx: STATS.wall.earned.checkDx,
+      checkDy: STATS.wall.earned.checkDy,
+      checkSize: STATS.wall.earned.checkSize,
       fill: "yellow",
       outline: "amber",
     },
-    foot: 16,
-    gap: 8,
+    foot: STATS.wall.foot,
+    gap: STATS.wall.gap,
     headingY: TOP,
     width: ROWS.right - ROWS.left,
     x: ROWS.left,
-    y: TOP + 20,
+    y: TOP + STATS.wall.rowsDy,
   },
-  wallText: { lineHeight: 16, lines: 3, pad: 4, width: 276, x: 38, y: 4 },
+  wallText: STATS.wallText,
 } as const;
 
 // How wide the open badge's goal and line may be.

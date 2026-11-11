@@ -4,6 +4,13 @@ import { progressBarLayout } from "@andornaut/game-kit/progress";
 import { containsPoint, type Point, type Rect } from "@andornaut/game-kit/rect";
 
 import { gameData } from "../data/index.ts";
+import {
+  DEBUFF_BAR,
+  DOG_CARD_PARTS,
+  OWNER_TAB,
+  SPARE_TREAT_PIP,
+  WALK_BAR_PARTS,
+} from "../data/layout.ts";
 import { SCREEN_CONFIG } from "../data/screen.ts";
 import type { DebuffId, DogId, GameData } from "../data/types.ts";
 import type { ScreenLayout } from "../layout/screenLayout.ts";
@@ -25,13 +32,13 @@ export const WALK_BAR_BUTTONS = ["help", "sound", "settings", "pause"] as const;
 export type WalkBarButtonId = (typeof WALK_BAR_BUTTONS)[number];
 
 // The cash well's ink columns, which the home top bar's bank well shares.
-const CASH_INK = { left: 5, right: 73 } as const;
+const CASH_INK = WALK_BAR_PARTS.cash.ink;
 
 // The title font's capitals are this many rows tall at 1x.
 export const TITLE_CAP_ROWS = 5;
 
 // The cash and the home top bar's bank are set at this scale.
-const CASH_SCALE = 3;
+const CASH_SCALE = WALK_BAR_PARTS.cash.scale;
 
 // The most effects a walk can have, one well each: the walker's perk, the Pocket's gear, the
 // found gear and an upgrade from each fork.
@@ -54,21 +61,17 @@ const CASH_WELL = {
   x: TOP_BAR_WELL.x,
   y: TOP_BAR_WELL.y,
 } as const;
-const BUTTONS = {
-  help: { faceX: 231, hitWidth: 34, hitX: 224 },
-  pause: { faceX: 333, hitWidth: 34, hitX: 326 },
-  settings: { faceX: 299, hitWidth: 34, hitX: 292 },
-  sound: { faceX: 265, hitWidth: 34, hitX: 258 },
-} as const satisfies Readonly<
+const BUTTONS = WALK_BAR_PARTS.buttons satisfies Readonly<
   Record<WalkBarButtonId, { faceX: number; hitWidth: number; hitX: number }>
 >;
-const EFFECT_SIZE = 22;
-const EFFECT_GAP = 2;
+const EFFECTS = WALK_BAR_PARTS.effects;
+const EFFECT_SIZE = EFFECTS.size;
+const EFFECT_GAP = EFFECTS.gap;
 const EFFECT_SPAN = EFFECT_WELLS * EFFECT_SIZE + (EFFECT_WELLS - 1) * EFFECT_GAP;
 const EFFECT_ROW = {
-  holdInset: 1,
-  icon: 1,
-  iconSize: 20,
+  holdInset: EFFECTS.holdInset,
+  icon: EFFECTS.icon,
+  iconSize: EFFECTS.iconSize,
   size: EFFECT_SIZE,
   y: TOP_BAR_FACE.y - (EFFECT_SIZE - TOP_BAR_FACE.size) / 2,
 } as const;
@@ -96,17 +99,17 @@ export const WALK_BAR = {
   cash: {
     capsY: wellCapsTop(TITLE_CAP_ROWS * CASH_SCALE),
     ink: CASH_INK,
-    room: 69,
+    room: WALK_BAR_PARTS.cash.room,
     scale: CASH_SCALE,
     well: CASH_WELL,
   },
   effects: { ...EFFECT_ROW, pitch: EFFECT_SIZE + EFFECT_GAP, x: EFFECTS_X },
-  minHitWidth: 34,
+  minHitWidth: WALK_BAR_PARTS.minHitWidth,
 } as const;
 
 // A spare treat held shows as the road's smallest treat, size square, in the bottom-right
 // corner of its gear's effect well, inset pixels in from the well's edges.
-export const SPARE_TREAT_PIP = { inset: 1, size: 12 } as const;
+export { SPARE_TREAT_PIP };
 
 // The top-left of the spare treat pip in well.
 export function spareTreatPipAt(well: Rect): Point {
@@ -172,12 +175,7 @@ export function cashLeft(inkWidth: number): number {
 
 // A debuff bar (ui-debuff-bar, 360x16): its icon, its name up to name.room wide, and the fill
 // draining from fill.width as its seconds run out.
-export const DEBUFF_BAR = {
-  fill: { height: 5, width: 286, x: 69, y: 5 },
-  height: 16,
-  icon: { x: 4, y: 0 },
-  name: { room: 40, x: 24, y: 5 },
-} as const;
+export { DEBUFF_BAR };
 
 // The bars of count debuffs, under the walk bar, in the order the debuffs began.
 export function debuffBarRects(bar: Rect, count: number): Rect[] {
@@ -245,20 +243,7 @@ export function zoneProgressLayout(strip: Rect, share: number): ZoneProgressLayo
 // and FIRED is centred on fired.x across a fired dog's empty photo. An owned slot with no dog
 // shows "Empty" centred on empty.x in its outline.
 export const DOG_CARD = {
-  dogFace: { x: 8, y: 25 },
-  empty: { x: 60, y: 33 },
-  fired: { x: 24, y: 38 },
-  hearts: { perRow: 6, pitch: 9, x: 45, y: 52 },
-  lead: { x: 10, y: 54 },
-  name: { room: 108, scale: 2, top: 4, x: 60 },
-  owner: {
-    face: { size: 20, x: 47, y: 25 },
-    photo: { frame: 1, mat: 1 },
-    room: 41,
-    scale: 1,
-    tops: { oneLine: 32, twoLines: [27, 37] },
-    x: 72,
-  },
+  ...DOG_CARD_PARTS,
   size: {
     height: SCREEN_CONFIG.dogCardHeight,
     width: SCREEN_CONFIG.width / SCREEN_CONFIG.dogSlotCount,
@@ -316,12 +301,7 @@ export function leadSlot(walking: readonly boolean[]): number | undefined {
 
 // The owner's photo tab (ui-owner-tab, 36x36) pops in centred on a card's top edge, the owner's
 // face face pixels inside it.
-export const OWNER_TAB = {
-  face: 2,
-  size: 36,
-  x: 42,
-  y: -34,
-} as const;
+export { OWNER_TAB };
 
 export function ownerTabRect(card: Pick<Rect, "x" | "y">): Rect {
   const { size, x, y } = OWNER_TAB;

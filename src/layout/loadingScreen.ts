@@ -1,19 +1,22 @@
 import { clamp01 } from "@andornaut/game-kit/numbers";
-import type { Point, Rect } from "@andornaut/game-kit/rect";
+import type { Point } from "@andornaut/game-kit/rect";
+
+import { LOADING_TRACK, LOADING_WALKER_START } from "../data/layout.ts";
 
 // The loading screen's art (LOADING_ART) is placed as art/tools/screens.ts draws it, in screen
 // pixels.
-export const LOADING_TRACK: Rect = { height: 8, width: 316, x: 16, y: 456 };
+export { LOADING_TRACK };
 
 // ui-loading's frame size, 98x84, with its feet on screen row 460.
 export const LOADING_WALKER_SIZE = { height: 84, width: 98 };
 
 // The walker's top-left at progress 0, and how far right it walks by 1: from the screen's
 // left margin until its right edge meets the track's end at the gate.
+const WALKER = LOADING_WALKER_START;
 export const LOADING_WALKER = {
-  travel: LOADING_TRACK.x + LOADING_TRACK.width - LOADING_WALKER_SIZE.width - 6,
-  x: 6,
-  y: 379,
+  travel: LOADING_TRACK.x + LOADING_TRACK.width - LOADING_WALKER_SIZE.width - WALKER.margin,
+  x: WALKER.x,
+  y: WALKER.y,
 };
 
 // Boot loads what the home screen needs over the network, then processes it: each sprite's
