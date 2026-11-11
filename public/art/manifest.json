@@ -13638,7 +13638,8 @@
     {
       "key": "font-display",
       "png": "fonts/font-display.png",
-      "fnt": "fonts/font-display.fnt"
+      "fnt": "fonts/font-display.fnt",
+      "woff": "fonts/font-display.woff"
     },
     {
       "key": "font-display-cream",

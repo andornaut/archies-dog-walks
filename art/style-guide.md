@@ -173,6 +173,12 @@ This is the authoritative canvas typography table: Tiny5, Silkscreen and the bes
 
 Keep full text and the full font size for each role. Wrap at word boundaries, grow the measured container, or request shorter wording in the text data instead of shrinking. Measure actual glyph ink, including display outlines/shadows, rather than assuming nominal size, font advance or line height equals visible ink. `addPixelText` defaults to 1×; ordinary callers must explicitly apply the 2× role. DOM surfaces use their own CSS typography.
 
+**Web fonts.** HTML text uses web fonts built from the bitmap fonts by the [font generator](tools/fonts.ts): `ADW Body` (`fonts/font-body.woff`), `ADW Title` (`fonts/font-title.woff`) and `ADW Display` (`fonts/font-display.woff`). Each has an em of 8 font pixels, so with k CSS px a font pixel set `font-size` 8k px, `line-height` normal (the bitmap font's line: 10k, 12k and 18k px), `letter-spacing` 0 and `font-kerning` normal; text is crisp where k times the device pixel ratio is a whole number. `ADW Display` holds the display letters' fill only, for both `font-display` and `font-display-cream`, and CSS draws the rest:
+
+- `color`: yellow `#fee761` for `font-display`, cream `#ead4aa` for `font-display-cream`, and red `#e43b44` for the heart (♥) in both.
+- `text-shadow`, no blur, each offset (dx, dy) times k px, in this order: the ink `#181425` ring at the 8 offsets with dx and dy each -1, 0 or 1, not both 0; then the dred `#a22633` shadow at (2,0), (0,2), (2,1), (1,2), (2,2), (3,1), (1,3), (3,2), (2,3) and (3,3). These are the generator's ring (the fill grown 1px, 8-neighbour) and shadow (the ring moved 1px and 2px down and right), less the offsets the fill and ring already cover. The first shadow listed paints on top, so the ring covers the shadow.
+- Each character is an inline element of its own (a span), so each glyph paints its shadow, ring and fill over the glyph before it, as the canvas draws glyphs in order; kerning still applies across them. A single text run paints every ring over every shadow, and differs from the canvas by one font pixel in each kerned pair where the second glyph's shadow falls on the first glyph's ring (such as `-3`, `I-` and `LV`).
+
 The [control guide](controls.md#labels-and-icons) owns title placement, wrapping clearances and label/help gaps. The [layout guide](layout.md) owns panel geometry. Compact metadata, compact top bars, in-art signs and full-scene hero lettering are explicit exceptions; they do not authorize smaller body text or touch targets.
 
 ### Interaction states

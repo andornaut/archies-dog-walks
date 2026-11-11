@@ -38,18 +38,22 @@
 // In-art signs (shop boards, the High Park gate, the Distillery and TTC signs) use the same letters and
 // outline at 1x, with a 1px shadow, through sign().
 //
-// The build also writes font-body and font-title as WOFF 1.0 web fonts (webfont.ts), from the same
-// glyphs, for HTML text that matches the BMFont pixel for pixel: public/art/fonts/font-body.woff
-// (family "ADW Body") and font-title.woff ("ADW Title"), each with its source font's OFL notice in
-// its name table. 1024 units per em, so one design pixel is 128 units and CSS font-size 8 x k px
-// draws k CSS pixels a design pixel; text stays crisp wherever font-size times the device pixel ratio
-// is a whole multiple of 8. line-height normal is the BMFont's line; the advances carry the letter
-// spacing (CSS letter-spacing 0) and the kerning pairs are a kern table (CSS font-kerning normal).
-// Rows are design pixels from the line's top:
+// The build also writes WOFF 1.0 web fonts (webfont.ts) from the same glyphs, for HTML text that
+// matches the BMFont pixel for pixel: public/art/fonts/font-body.woff (family "ADW Body") and
+// font-title.woff ("ADW Title"), each with its source font's OFL notice in its name table, and
+// font-display.woff ("ADW Display"), font-display's letters alone: CSS colours the letters and draws
+// the ring and shadow as text-shadows, so one web font serves both colourways (the recipe is under
+// Typography in art/style-guide.md). Every web font's em is 8 design pixels (WEB_EM), 1024 units, so
+// one design pixel is 128 units and CSS font-size 8 x k px draws k CSS pixels a design pixel; text
+// stays crisp wherever font-size times the device pixel ratio is a whole multiple of 8. line-height
+// normal is the BMFont's line; the advances carry the letter spacing (CSS letter-spacing 0) and the
+// kerning pairs are a kern table (CSS font-kerning normal). Rows are design pixels from the line's
+// top:
 //
-//   web font    em  line  base (ascent, descent)  capitals         crisp font-size at DPR 1
-//   font-body   8   10    8 (8, 2)                6 (rows 2 to 7)  8, 16, 24 px (lines 10, 20, 30)
-//   font-title  8   12    9 (9, 3)                5 (rows 4 to 8)  8, 16, 24 px (lines 12, 24, 36)
+//   web font      em  line  base (ascent, descent)  capitals           crisp font-size at DPR 1
+//   font-body     8   10    8 (8, 2)                6 (rows 2 to 7)    8, 16, 24 px (lines 10, 20, 30)
+//   font-display  8   18    13 (13, 5)              10 (rows 3 to 12)  8, 16, 24 px (lines 18, 36, 54)
+//   font-title    8   12    9 (9, 3)                5 (rows 4 to 8)    8, 16, 24 px (lines 12, 24, 36)
 //
 // Run from the repository root.
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
@@ -68,7 +72,8 @@ import { type PixelFont, pixelWoff } from "./webfont.ts";
 const USAGE = `Usage:
   node art/tools/fonts.ts preview OUT.png   a sample of every font but font-comic, scaled up
   node art/tools/fonts.ts build             write public/art/fonts/*.png and *.fnt, and
-                                            font-body.woff and font-title.woff`;
+                                            font-body.woff, font-display.woff and
+                                            font-title.woff`;
 
 // A glyph: its image (white on clear for a tinted font, baked colours otherwise; none for a space),
 // the offsets of its top-left from the pen and the line's top, and the pen's advance.
@@ -361,8 +366,9 @@ function opaqueRgba(col: string): Rgba {
   return [r, g, b, 255];
 }
 
-// font-display's glyphs in fillColour.
-function displayGlyphs(fillColour: string): Map<string, Glyph> {
+// font-display's glyphs in fillColour, or with lettersOnly their letters alone, without the ring and
+// shadow, at the same offsets and advances: the web font's glyphs.
+function displayGlyphs(fillColour: string, { lettersOnly = false } = {}): Map<string, Glyph> {
   const out = new Map<string, Glyph>([
     [
       " ",
@@ -375,8 +381,9 @@ function displayGlyphs(fillColour: string): Map<string, Glyph> {
     ],
   ]);
   for (const ch of SIGN.keys()) {
-    const [px, adv] = sign(ch, DISPLAY_SCALE, fillColour, { kern: false });
-    const points = [...px.keys()].map(xy);
+    const [all, adv] = sign(ch, DISPLAY_SCALE, fillColour, { kern: false });
+    const px = lettersOnly ? [...all].filter(([, c]) => c !== "ink" && c !== "dred") : [...all];
+    const points = px.map(([key]) => xy(key));
     const x0 = Math.min(...points.map(([x]) => x));
     const y0 = Math.min(...points.map(([, y]) => y));
     const w = Math.max(...points.map(([x]) => x)) + 1 - x0;
@@ -621,8 +628,11 @@ function writeFont(
 // The web font's family name, by key.
 const WEB_FAMILIES: ReadonlyMap<string, string> = new Map([
   ["font-body", "ADW Body"],
+  ["font-display", "ADW Display"],
   ["font-title", "ADW Title"],
 ]);
+// Every web font's em in design pixels, so one CSS font-size a design pixel serves them all.
+const WEB_EM = 8;
 
 // The SIL Open Font License notice beside the font file at path: its copyright line, licence line
 // and URL.
@@ -644,22 +654,28 @@ function build(): void {
     const family = WEB_FAMILIES.get(key)!;
     writeFileSync(
       `public/art/fonts/${key}.woff`,
-      pixelWoff({ ...metrics, ...oflNotice(path), family }, gl),
+      pixelWoff({ ...metrics, ...oflNotice(path), family, size: WEB_EM }, gl),
     );
   }
+  const display = {
+    base: CAP_TOP + 5 * DISPLAY_SCALE,
+    kerns: displayKernings(),
+    lineHeight: LINE_HEIGHT,
+  };
   for (const [key, fillColour] of DISPLAY) {
     writeFont(
-      {
-        base: CAP_TOP + 5 * DISPLAY_SCALE,
-        face: "Sign",
-        kerns: displayKernings(),
-        lineHeight: LINE_HEIGHT,
-        size: 5 * DISPLAY_SCALE,
-      },
+      { ...display, face: "Sign", size: 5 * DISPLAY_SCALE },
       key,
       displayGlyphs(fillColour),
     );
   }
+  writeFileSync(
+    "public/art/fonts/font-display.woff",
+    pixelWoff(
+      { ...display, family: WEB_FAMILIES.get("font-display")!, size: WEB_EM },
+      displayGlyphs(DISPLAY.get("font-display")!, { lettersOnly: true }),
+    ),
+  );
   writeFont(
     { base: COMIC_BASE, face: "Comic", lineHeight: COMIC_LINE, size: 7 },
     COMIC,

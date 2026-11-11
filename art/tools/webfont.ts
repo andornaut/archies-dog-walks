@@ -3,13 +3,13 @@
 //
 // Each glyph is its bitmap's lit pixels (alpha above 0) merged into closed outlines along pixel
 // edges, clockwise round ink and anticlockwise round counters, with no curves and no hinting
-// instructions. One design pixel is UNITS (128) font units and the em is the font's nominal size in
-// design pixels (8, so 1024 units per em), so CSS font-size N px draws one design pixel N / size CSS
-// pixels wide. The baseline is the BMFont's base, rows below the line's top: the ascent is base and
-// the descent lineHeight - base, in hhea, OS/2's typo and win metrics alike (USE_TYPO_METRICS set,
-// line gap 0), so CSS line-height normal is the BMFont's line. Advances and kerning pairs (a
-// version 0 kern table) are the BMFont's, in whole design pixels. Glyph 0 is an empty .notdef, which
-// TrueType requires; every other glyph is one of the BMFont's characters.
+// instructions. One design pixel is UNITS (128) font units and the em is the font's size in design
+// pixels (8 for every font fonts.ts writes, so 1024 units per em), so CSS font-size N px draws one
+// design pixel N / size CSS pixels wide. The baseline is the BMFont's base, rows below the line's
+// top: the ascent is base and the descent lineHeight - base, in hhea, OS/2's typo and win metrics
+// alike (USE_TYPO_METRICS set, line gap 0), so CSS line-height normal is the BMFont's line. Advances
+// and kerning pairs (a version 0 kern table) are the BMFont's, in whole design pixels. Glyph 0 is an
+// empty .notdef, which TrueType requires; every other glyph is one of the BMFont's characters.
 //
 // The WOFF compresses each table with node:zlib's deflate, so it needs no dependency. A build is
 // deterministic: the head table's dates are fixed and the deflate level is pinned.
@@ -42,7 +42,7 @@ export interface PixelFont {
   // Name IDs 13 and 14, the licence's description and URL.
   licence?: readonly [description: string, url: string];
   lineHeight: number;
-  // The em in design pixels: the BMFont's size.
+  // The em in design pixels.
   size: number;
 }
 
