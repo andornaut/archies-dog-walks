@@ -48,12 +48,16 @@ export interface PanelQuestion {
   readonly title: string;
 }
 
-// One line of text: its capitals' top, the middle of its ink across, and its look.
+// One line of text: its capitals' top, the middle across of its ink, or of its glyphs' advances
+// where the canvas centres a label on its width (a button's, the note's), its look, and its index
+// in its block of lines a font line apart (the title's, the note's).
 export interface PanelText {
   readonly capTop: number;
+  readonly centre: "advance" | "ink";
   readonly centreX: number;
   readonly colour: number;
   readonly font: PanelFont;
+  readonly line: number;
   readonly scale: number;
   readonly text: string;
 }
@@ -126,15 +130,20 @@ export function questionPanelView(
     const ink = measure.inkWidth("title", line);
     return {
       capTop: layout.titleY + i * titled.linePitch,
+      centre: "ink",
       centreX: barTitleLeft(row, close, ink) + ink / 2,
       colour: PALETTE.plum,
       font: "title",
+      line: i,
       scale: TEXT_SCALE,
       text: line,
     };
   });
 
-  const capHalf = (measure.title.capHeight * TEXT_SCALE) / 2;
+  // A label's line is centred on its face over the lip, as the canvas centres a one-line label
+  // on its height, a font line; its capitals sit capTop rows into the line.
+  const { capTop, lineHeight } = measure.title;
+  const lineToCaps = (capTop - lineHeight / 2) * TEXT_SCALE;
   const buttons = shown.map((text, i): PanelButton => {
     const rect = itemAt(layout.buttons, i);
     const primary = i === 0;
@@ -144,10 +153,12 @@ export function questionPanelView(
       primary,
       rect,
       text: {
-        capTop: Math.round(rect.y + (rect.height - BUTTON_LIP_PX) / 2 - capHalf),
+        capTop: Math.round(rect.y + (rect.height - BUTTON_LIP_PX) / 2 + lineToCaps),
+        centre: "advance",
         centreX: rect.x + rect.width / 2,
         colour: PALETTE[BUTTON_COLOURS[primary ? "primary" : "normal"].label],
         font: "title",
+        line: 0,
         scale: TEXT_SCALE,
         text,
       },
@@ -160,13 +171,19 @@ export function questionPanelView(
     layout.notePlate,
     noteParts.map((part) => part.lines.length),
   );
+  // The parts' lines run on as one block, a body line apart (notePartTops).
   const pitch = measure.body.lineHeight * NOTE_PLATE.scale;
+  const starts = noteParts.map((_, i) =>
+    noteParts.slice(0, i).reduce((sum, part) => sum + part.lines.length, 0),
+  );
   const note = noteParts.flatMap(({ colour, lines }, i) =>
     lines.map((text, j): PanelText => ({
       capTop: itemAt(tops, i) + j * pitch,
+      centre: "advance",
       centreX,
       colour,
       font: "body",
+      line: itemAt(starts, i) + j,
       scale: NOTE_PLATE.scale,
       text,
     })),

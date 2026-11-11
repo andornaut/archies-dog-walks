@@ -1,11 +1,25 @@
-import { insetRect, type Point, type Rect } from "@andornaut/game-kit/rect";
+import type { Point, Rect } from "@andornaut/game-kit/rect";
 import type { BitmapFont } from "@andornaut/game-kit/text/bitmapFont";
 
+import { SCREEN_CONFIG } from "../../data/screen.ts";
 import { cardNumberForKey, menuKeyActs } from "../../input/keyBindings.ts";
 import { closeFace } from "../../ui/closeControl.ts";
-import { createTextLine, type DomTextLine, placeBox, placeText } from "../../ui/dom/pixelLine.ts";
+import {
+  createTextLine,
+  type DomTextLine,
+  placeBox,
+  placeText,
+  setBox,
+} from "../../ui/dom/pixelLine.ts";
 import type { UiLayer } from "../../ui/dom/uiLayer.ts";
-import { type DomScale, snapLength, snapX, snapY } from "../../ui/domScale.ts";
+import {
+  artPixel,
+  deviceRect,
+  deviceX,
+  deviceY,
+  type DomScale,
+  gridTransform,
+} from "../../ui/domScale.ts";
 import type { PanelText, QuestionPanelView } from "../questionPanelView.ts";
 
 // The pause menu in HTML over the canvas: the panel questionPanelView lays out, drawn in the #ui
@@ -34,6 +48,13 @@ export interface DomPauseMenu {
 
 const ORIGIN = { x: 0, y: 0 } as const;
 
+// art: the close control's 16x16 glyph on its 20x20 ui-icon-button face, from the face's corner,
+// as the canvas draws it (addIconButton).
+const CLOSE_ART = { glyph: { size: 16, x: 2, y: 1 } } as const;
+
+// art: fx-tap's side.
+const BURST_SIDE = 16;
+
 // The pause menu in layer, shown and its first button focused.
 export function showPauseMenu(layer: UiLayer, input: DomPauseMenuInput): DomPauseMenu {
   const doc = layer.element.ownerDocument;
@@ -42,6 +63,8 @@ export function showPauseMenu(layer: UiLayer, input: DomPauseMenuInput): DomPaus
   dialog.className = "adw-dialog";
   dialog.setAttribute("role", "dialog");
   dialog.setAttribute("aria-modal", "true");
+  // Focus starts on the dialog itself, so no button shows the keyboard's ring until Tab.
+  dialog.tabIndex = -1;
 
   const rim = doc.createElement("div");
   rim.className = "adw-rim";
@@ -59,7 +82,21 @@ export function showPauseMenu(layer: UiLayer, input: DomPauseMenuInput): DomPaus
     placed.push((scale) => placeText(input.fonts[line.font], scale, origin, element, line));
     return element;
   };
-  box(rim, ORIGIN, insetRect(-1, view.panel));
+  // The screen's root in device pixels on the device grid, and the rim one art pixel round the
+  // panel.
+  placed.push((scale) => {
+    dialog.style.width = `${deviceX(scale, SCREEN_CONFIG.width)}px`;
+    dialog.style.height = `${deviceY(scale, SCREEN_CONFIG.height)}px`;
+    dialog.style.transform = gridTransform(scale);
+    const frame = deviceRect(scale, view.panel);
+    const pixel = artPixel(scale);
+    setBox(rim, {
+      height: frame.height + 2 * pixel,
+      left: frame.left - pixel,
+      top: frame.top - pixel,
+      width: frame.width + 2 * pixel,
+    });
+  });
   box(panel, ORIGIN, view.panel);
 
   // The title, its lines in capitals; a screen reader reads its words as written.
@@ -82,7 +119,8 @@ export function showPauseMenu(layer: UiLayer, input: DomPauseMenuInput): DomPaus
     note.id = "adw-pause-note";
     // Each line ends in a space, so a screen reader reads the lines as running text.
     for (const line of view.note) {
-      text(note, ORIGIN, { ...line, text: `${line.text} ` });
+      const element = text(note, ORIGIN, line);
+      element.textContent = `${element.textContent ?? ""} `;
     }
     dialog.setAttribute("aria-describedby", note.id);
     dialog.append(plate, note);
@@ -93,12 +131,12 @@ export function showPauseMenu(layer: UiLayer, input: DomPauseMenuInput): DomPaus
     const element = doc.createElement("span");
     element.className = "adw-burst";
     const scale = layer.scale();
-    const side = snapLength(scale, 16);
-    Object.assign(element.style, {
-      height: `${side}px`,
-      left: `${snapX(scale, at.x - 8)}px`,
-      top: `${snapY(scale, at.y - 8)}px`,
-      width: `${side}px`,
+    const side = BURST_SIDE * artPixel(scale);
+    setBox(element, {
+      height: side,
+      left: deviceX(scale, at.x) - side / 2,
+      top: deviceY(scale, at.y) - side / 2,
+      width: side,
     });
     element.style.setProperty("--adw-burst", `${side}px`);
     element.addEventListener("animationend", () => element.remove());
@@ -155,8 +193,21 @@ export function showPauseMenu(layer: UiLayer, input: DomPauseMenuInput): DomPaus
   glyph.className = "adw-close-glyph";
   close.append(face, glyph);
   box(close, ORIGIN, view.close.hit);
-  box(face, view.close.hit, closeArt);
-  box(glyph, view.close.hit, { height: 16, width: 16, x: closeArt.x + 2, y: closeArt.y + 1 });
+  // The face and its glyph in whole art pixels, from the face's corner on the device grid.
+  placed.push((scale) => {
+    const pixel = artPixel(scale);
+    const left = deviceX(scale, closeArt.x) - deviceX(scale, view.close.hit.x);
+    const top = deviceY(scale, closeArt.y) - deviceY(scale, view.close.hit.y);
+    const side = closeArt.width * pixel;
+    setBox(face, { height: side, left, top, width: side });
+    const { glyph: at } = CLOSE_ART;
+    setBox(glyph, {
+      height: at.size * pixel,
+      left: left + at.x * pixel,
+      top: top + at.y * pixel,
+      width: at.size * pixel,
+    });
+  });
   pressable(close, input.close);
   dialog.append(...buttons, close);
 
@@ -170,9 +221,12 @@ export function showPauseMenu(layer: UiLayer, input: DomPauseMenuInput): DomPaus
       return;
     }
     const at = focusables.indexOf(doc.activeElement as HTMLButtonElement);
-    const next = (at + (event.shiftKey ? focusables.length - 1 : 1)) % focusables.length;
+    const step = event.shiftKey ? focusables.length - 1 : 1;
+    // From the dialog itself, Tab enters at the first button and Shift+Tab at the close control.
+    const next =
+      at === -1 ? (event.shiftKey ? focusables.length - 1 : 0) : (at + step) % focusables.length;
     event.preventDefault();
-    focusables[at === -1 ? 0 : next]?.focus();
+    focusables[next]?.focus();
   });
   const onKey = (event: KeyboardEvent) => {
     const number = cardNumberForKey(input.presses.length, event.key);
@@ -190,7 +244,7 @@ export function showPauseMenu(layer: UiLayer, input: DomPauseMenuInput): DomPaus
   place(layer.scale());
   const stopScale = layer.onScale(place);
   layer.element.append(dialog);
-  const focusFirst = () => buttons[0]?.focus({ preventScroll: true });
+  const focusFirst = () => dialog.focus({ preventScroll: true });
   focusFirst();
 
   const blur = () => {

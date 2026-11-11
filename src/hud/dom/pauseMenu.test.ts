@@ -210,11 +210,13 @@ describe("the HTML pause menu", () => {
     expect(presses[0]).not.toHaveBeenCalled();
   });
 
-  it("focuses Resume, keeps Tab among its controls, and lets focus go as it hides", () => {
+  it("focuses itself, so no button shows a ring until Tab, then keeps Tab among its controls", () => {
     const { buttons, dialog, doc, shown } = menu();
-    expect(doc.activeElement).toBe(buttons[0]);
+    expect(doc.activeElement).toBe(dialog);
     const tab = (shiftKey: boolean) =>
       dialog.fire("keydown", { key: "Tab", preventDefault: () => undefined, shiftKey });
+    tab(false);
+    expect(doc.activeElement).toBe(buttons[0]);
     tab(true);
     expect(doc.activeElement).toBe(buttons.at(-1));
     tab(false);
@@ -222,7 +224,10 @@ describe("the HTML pause menu", () => {
     shown.setShown(false);
     expect(doc.activeElement).toBeUndefined();
     shown.setShown(true);
-    expect(doc.activeElement).toBe(buttons[0]);
+    expect(doc.activeElement).toBe(dialog);
+    dialog.blur();
+    tab(true);
+    expect(doc.activeElement).toBe(buttons.at(-1));
   });
 
   it("keeps a press that lands on it from Phaser, and shows a button pressed while held", () => {

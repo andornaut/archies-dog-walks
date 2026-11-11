@@ -1,7 +1,7 @@
 import type { Rect } from "@andornaut/game-kit/rect";
 
 import { artUrl } from "../../assets/artFiles.ts";
-import { type DomScale, domScale, snapLength } from "../domScale.ts";
+import { type DomScale, domScale, sliceLengths } from "../domScale.ts";
 import { PALETTE } from "../palette.ts";
 import { UI_STYLE } from "./uiStyle.ts";
 
@@ -17,10 +17,8 @@ export const WEB_FONTS = {
   title: { family: "ADW Title", path: "fonts/font-title.woff" },
 } as const;
 
-// The lengths the stylesheet reads as --adw-slice-<n>, in game pixels: a pixel (a rim, a focus
-// keyline), a press's sink and the focus band, and the nine-slice edges, ui-button's 3 and 5 and
-// ui-panel's 4.
-const SLICE_EDGES = [1, 2, 3, 4, 5] as const;
+// A browser lays a CSS length out in steps of 1/64 px.
+const LAYOUT_STEP = 64;
 
 export interface UiLayer {
   readonly element: HTMLElement;
@@ -35,9 +33,12 @@ export interface UiLayer {
 }
 
 // The canvas's box from its offsets up to body, which the layer is placed in: offsets ignore the
-// page frame's turn, which turns body and the layer with it. Phaser sets the canvas's CSS size.
+// page frame's turn, which turns body and the layer with it. Phaser sets the canvas's CSS size
+// and, centring it, its left margin, which offsetLeft would round to a whole pixel. The corner is
+// a step the browser lays out exactly, so the layer is where domScale takes it to be.
 function canvasBox(canvas: HTMLCanvasElement): Rect {
-  let x = 0;
+  const margin = parseFloat(canvas.style.marginLeft);
+  let x = Number.isFinite(margin) ? margin - canvas.offsetLeft : 0;
   let y = 0;
   for (
     let node: HTMLElement | null = canvas;
@@ -49,7 +50,8 @@ function canvasBox(canvas: HTMLCanvasElement): Rect {
   }
   const width = parseFloat(canvas.style.width) || canvas.offsetWidth;
   const height = parseFloat(canvas.style.height) || canvas.offsetHeight;
-  return { height, width, x, y };
+  const step = (value: number) => Math.round(value * LAYOUT_STEP) / LAYOUT_STEP;
+  return { height, width, x: step(x), y: step(y) };
 }
 
 const hex = (colour: number) => `#${colour.toString(16).padStart(6, "0")}`;
@@ -124,8 +126,8 @@ export function mountUiLayer(doc: Document, canvas: HTMLCanvasElement): UiLayer 
         top: `${box.y}px`,
         width: `${box.width}px`,
       });
-      for (const edge of SLICE_EDGES) {
-        element.style.setProperty(`--adw-slice-${edge}`, `${snapLength(current, edge)}px`);
+      for (const [name, value] of sliceLengths(current)) {
+        element.style.setProperty(name, value);
       }
       for (const listener of listeners) {
         listener(current);

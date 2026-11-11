@@ -2,39 +2,73 @@ import { fontMetrics, inkWidth, leftBearing } from "@andornaut/game-kit/text/bit
 import { describe, expect, it } from "vitest";
 
 import { gameFont } from "../../testing/fontInk.ts";
-import { domScale, snapX, snapY } from "../domScale.ts";
+import { deviceX, deviceY, domScale, fontPixel } from "../domScale.ts";
 import { shownText, textPlace } from "./pixelLine.ts";
 
-const onGrid = (dpr: number, css: number) => Math.abs(css * dpr - Math.round(css * dpr)) < 1e-6;
+const ORIGIN = { x: 0, y: 0 };
 
 describe("textPlace", () => {
   it.each([1, 2, 2.625, 3])(
-    "puts a line's pen, capitals and ink middle on the device grid at DPR %d",
+    "puts a line's pen, capitals and ink middle on device pixels at DPR %d",
     (dpr) => {
       const scale = domScale(dpr, { height: 611, width: 393, x: 0, y: 0 });
       const font = gameFont("font-title");
       const line = {
         capTop: 100,
+        centre: "ink",
         centreX: 180,
         colour: 0,
         font: "title",
         scale: 2,
         text: "Resume",
       } as const;
-      const place = textPlace(font, scale, { x: 0, y: 0 }, line);
-      const pixel = place.fontSize / 8;
-      expect(onGrid(dpr, pixel)).toBe(true);
-      expect(onGrid(dpr, place.left)).toBe(true);
-      expect(place.top + fontMetrics(font).capTop * pixel).toBeCloseTo(
-        snapY(scale, line.capTop),
-        9,
-      );
+      const place = textPlace(font, scale, ORIGIN, line);
+      const pixel = fontPixel(scale, 2);
+      expect(place.fontSize).toBe(8 * pixel);
+      expect(place.lineHeight).toBe(font.lineHeight * pixel);
+      expect(Number.isInteger(place.left) && Number.isInteger(place.top)).toBe(true);
+      expect(place.top + fontMetrics(font).capTop * pixel).toBe(deviceY(scale, line.capTop));
       const text = shownText("title", line.text);
       const first = leftBearing((char) => font.glyphs.get(char), text);
       const middle = place.left + (first + inkWidth(font, 1, text) / 2) * pixel;
-      expect(Math.abs(middle - snapX(scale, line.centreX))).toBeLessThanOrEqual(0.5 / dpr + 1e-9);
+      expect(Math.abs(middle - deviceX(scale, line.centreX))).toBeLessThanOrEqual(0.5);
     },
   );
+
+  it("sets a block's later lines whole font lines under its first", () => {
+    const scale = domScale(3, { height: 516, width: 331.703125, x: 14.140625, y: 0 });
+    const font = gameFont("font-body");
+    const pixel = fontPixel(scale, 2);
+    const at = (line: number) =>
+      textPlace(font, scale, ORIGIN, {
+        capTop: 348 + line * font.lineHeight * 2,
+        centre: "advance",
+        centreX: 180,
+        colour: 0,
+        font: "body",
+        line,
+        scale: 2,
+        text: "Ending now keeps all",
+      }).top;
+    expect(at(1) - at(0)).toBe(font.lineHeight * pixel);
+    expect(at(2) - at(0)).toBe(2 * font.lineHeight * pixel);
+  });
+
+  it("centres a line the canvas centres on its width by its advances", () => {
+    const scale = domScale(1, { height: 560, width: 360, x: 0, y: 0 });
+    const font = gameFont("font-body");
+    const line = {
+      capTop: 377,
+      centreX: 180,
+      colour: 0,
+      font: "body",
+      scale: 2,
+      text: "$45.",
+    } as const;
+    // The canvas puts this note line's pen at 180 less half its 30px of advances.
+    expect(textPlace(font, scale, ORIGIN, { ...line, centre: "advance" }).left).toBe(165);
+    expect(textPlace(font, scale, ORIGIN, { ...line, centre: "ink" }).left).toBe(166);
+  });
 
   it("writes the title font's text in capitals with plain marks", () => {
     expect(shownText("title", "Don’t stop")).toBe("DON'T STOP");
