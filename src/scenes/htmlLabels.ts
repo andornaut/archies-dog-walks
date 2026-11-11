@@ -125,7 +125,8 @@ export function addHtmlLabels(scene: Scene, title: string): HtmlLabels | undefin
     }
     const seen = new Set<GameObjects.BitmapText>();
     for (const label of labelsIn(scene.children.list)) {
-      const font = FONTS[label.font as keyof typeof FONTS] as DomLabel["font"] | undefined;
+      const font = FONTS[label.font as keyof typeof FONTS] as
+        (typeof FONTS)[keyof typeof FONTS] | undefined;
       const bitmap = font === undefined ? undefined : place.fonts[font];
       if (font === undefined || bitmap === undefined || !label.active) {
         continue;

@@ -44,6 +44,38 @@ const cutCorners = (cut: string) =>
     .map(([x, y]) => `${x} ${y}`)
     .join(",");
 
+// The display letters' ink ring (the fill grown a pixel, 8-neighbour), then their dred shadow (the
+// ring moved 1 and 2 pixels down and right, less what the fill and ring cover), each step
+// --adw-k, a font pixel; the first listed paints on top, so the ring covers the shadow.
+const DISPLAY_RING = [
+  [-1, -1],
+  [0, -1],
+  [1, -1],
+  [-1, 0],
+  [1, 0],
+  [-1, 1],
+  [0, 1],
+  [1, 1],
+] as const;
+const DISPLAY_DROP = [
+  [2, 0],
+  [0, 2],
+  [2, 1],
+  [1, 2],
+  [2, 2],
+  [3, 1],
+  [1, 3],
+  [3, 2],
+  [2, 3],
+  [3, 3],
+] as const;
+const DISPLAY_SHADOW = [
+  ...DISPLAY_RING.map(([x, y]) => [x, y, "var(--adw-ink)"] as const),
+  ...DISPLAY_DROP.map(([x, y]) => [x, y, "var(--adw-darkRed)"] as const),
+]
+  .map(([x, y, colour]) => `calc(${x} * var(--adw-k)) calc(${y} * var(--adw-k)) 0 ${colour}`)
+  .join(",");
+
 export const UI_STYLE = `
 .adw-dialog{position:absolute;left:0;top:0;transform-origin:0 0;pointer-events:none;outline:none}
 .adw-dialog[hidden]{display:none}
@@ -68,6 +100,7 @@ export const UI_STYLE = `
   -webkit-font-smoothing:none;pointer-events:none}
 .adw-font-body{font-family:"ADW Body"}
 .adw-font-title{font-family:"ADW Title"}
+.adw-font-display{font-family:"ADW Display";text-shadow:${DISPLAY_SHADOW}}
 .adw-button,.adw-close{margin:0;padding:0;border:0;background:none;color:inherit;font:inherit;
   cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;outline:none}
 .adw-face,.adw-close-face,.adw-close-glyph{position:absolute;box-sizing:border-box;pointer-events:none}

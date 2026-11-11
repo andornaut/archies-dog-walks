@@ -9,6 +9,7 @@ import {
 
 import { deviceRect, deviceX, deviceY, type DomScale, fontPixel, frameRect } from "../domScale.ts";
 import { laidPills, PILL_CLOSE, PILL_SPACE, pillIndex, pillRows } from "../namePills.ts";
+import { PALETTE } from "../palette.ts";
 import { plainMarks } from "../pixelFont.ts";
 import { WEB_FONTS } from "./uiLayer.ts";
 
@@ -35,8 +36,21 @@ type Origin = { readonly x: number; readonly y: number };
 // The text as the font draws it: capitals in the title font, typographic marks made plain.
 export function shownText(font: DomTextLine["font"], text: string): string {
   const plain = plainMarks(text);
-  return font === "title" ? plain.toUpperCase() : plain;
+  return font === "body" ? plain : plain.toUpperCase();
 }
+
+// The rows from a line's top to its capitals in font: the bitmap font's capital's top, or, in the
+// display font, whose glyphs hold the outline, the letters' fill a ring's pixel inside it, as the
+// canvas places display text (addDisplayText) and as the web font draws it.
+export function capRows(bitmap: BitmapFont, font: DomTextLine["font"]): number {
+  return fontMetrics(bitmap).capTop + (font === "display" ? DISPLAY_RING : 0);
+}
+
+// art: the display letters' ink ring round their fill, in font pixels.
+const DISPLAY_RING = 1;
+
+// The display letters' heart, red in both of the display font's colours.
+const DISPLAY_HEART = { char: "♥", colour: PALETTE.red } as const;
 
 // Where line's element goes and its font size, in whole device pixels from its container's
 // corner at origin game pixels: one font pixel is fontPixel device pixels, the ink's middle on the
@@ -71,7 +85,7 @@ export function textPlace(
   const blockTop = line.capTop - index * bitmap.lineHeight * line.scale;
   const top =
     deviceY(scale, blockTop) +
-    (index * bitmap.lineHeight - fontMetrics(bitmap).capTop) * pixel -
+    (index * bitmap.lineHeight - capRows(bitmap, line.font)) * pixel -
     deviceY(scale, origin.y);
   // The web fonts' em is 8 font pixels and their line the bitmap font's.
   return { fontSize: 8 * pixel, left, lineHeight: bitmap.lineHeight * pixel, top };
@@ -123,12 +137,28 @@ export function setBox(
 
 const hex = (colour: number) => `#${colour.toString(16).padStart(6, "0")}`;
 
-// A text line's element: its text, font and colour; placeText positions it.
+// A text line's element: its text, font and colour; placeText positions it. Display text is a
+// span a character, so each glyph's ring and shadow paint over the glyph before it, as the
+// canvas draws its glyphs in order; the font still kerns across them.
 export function createTextLine(doc: Document, line: DomTextLine): HTMLElement {
   const element = doc.createElement("span");
   element.className = `adw-text adw-font-${line.font}`;
-  element.textContent = shownText(line.font, line.text);
+  const text = shownText(line.font, line.text);
   element.style.color = hex(line.colour);
+  if (line.font !== "display") {
+    element.textContent = text;
+    return element;
+  }
+  element.setAttribute("aria-label", text);
+  for (const char of text) {
+    const glyph = doc.createElement("span");
+    glyph.setAttribute("aria-hidden", "true");
+    glyph.textContent = char;
+    if (char === DISPLAY_HEART.char) {
+      glyph.style.color = hex(DISPLAY_HEART.colour);
+    }
+    element.append(glyph);
+  }
   return element;
 }
 
@@ -147,6 +177,10 @@ export function placeText(
     lineHeight: `${place.lineHeight}px`,
     top: `${place.top}px`,
   });
+  // The display font's ring and shadow, a font pixel a step (uiStyle.ts).
+  if (line.font === "display") {
+    element.style.setProperty("--adw-k", `${place.fontSize / 8}px`);
+  }
 }
 
 // A run of a line the web font draws as one element: its text, where the pen starts it in font
@@ -264,7 +298,7 @@ export function blockPlace(
 } {
   const pixel = fontPixel(scale, block.scale);
   const left = deviceX(scale, block.x) + penOffset(bitmap, block) * pixel;
-  const { capTop } = fontMetrics(bitmap);
+  const capTop = capRows(bitmap, block.font);
   const rows = pillRows(1);
   const lines = block.lines.map((line, i) => ({
     shown: shownText(block.font, line),

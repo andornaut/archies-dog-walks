@@ -15,6 +15,7 @@ export const UI_LAYER_ID = "ui";
 // The web fonts the layer's text draws in, by role, as the art manifest lists them.
 export const WEB_FONTS = {
   body: { family: "ADW Body", path: "fonts/font-body.woff" },
+  display: { family: "ADW Display", path: "fonts/font-display.woff" },
   title: { family: "ADW Title", path: "fonts/font-title.woff" },
 } as const;
 

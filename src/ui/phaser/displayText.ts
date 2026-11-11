@@ -1,3 +1,8 @@
+import type { BitmapFont } from "@andornaut/game-kit/text/bitmapFont";
+import {
+  phaserBitmapFont,
+  type PhaserFontData,
+} from "@andornaut/game-kit/text/phaser/phaserBitmapFont";
 import type { GameObjects, Scene } from "phaser";
 
 import { plainMarks } from "../pixelFont.ts";
@@ -21,6 +26,20 @@ function displayFontKey(scene: Scene, variant: DisplayVariant, text: string): st
   return scene.cache.bitmapFont.exists(key) && bitmapFontHasChars(scene, key, text)
     ? key
     : undefined;
+}
+
+// The bitmap font the variant draws in as loaded, or undefined while it is missing: the HTML
+// interface lays its web font's text out by the same glyphs, which both variants share.
+export function displayBitmapFont(
+  scene: Scene,
+  variant: DisplayVariant = "yellow",
+): BitmapFont | undefined {
+  const key = DISPLAY_FONT_KEYS[variant];
+  if (!scene.cache.bitmapFont.exists(key)) {
+    return undefined;
+  }
+  const { data } = scene.cache.bitmapFont.get(key) as { data: PhaserFontData };
+  return phaserBitmapFont(data);
 }
 
 // Whether addDisplayText draws this text in the variant's font rather than falling back.

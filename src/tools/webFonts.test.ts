@@ -89,7 +89,7 @@ function kernPairs(kern: DataView | undefined): Map<string, number> {
   return pairs;
 }
 
-describe.each(["font-body", "font-title"])("%s.woff", (key) => {
+describe.each(["font-body", "font-display", "font-title"])("%s.woff", (key) => {
   const tables = woffTables(
     readFileSync(new URL(`../../public/art/fonts/${key}.woff`, import.meta.url)),
   );

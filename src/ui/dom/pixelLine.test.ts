@@ -7,12 +7,16 @@ import {
 } from "@andornaut/game-kit/text/bitmapFont";
 import { describe, expect, it } from "vitest";
 
+import { FakeDocument, type FakeElement } from "../../testing/fakeDom.ts";
 import { gameFont } from "../../testing/fontInk.ts";
 import { deviceX, deviceY, domScale, fontPixel } from "../domScale.ts";
 import { inPill, laidPills, PILL, pillRows } from "../namePills.ts";
+import { PALETTE } from "../palette.ts";
 import {
   blockPlace,
   boundsAdvance,
+  capRows,
+  createTextLine,
   penRuns,
   shownText,
   spokenText,
@@ -178,5 +182,30 @@ describe("a block's anchor", () => {
       x: 100,
     });
     expect(place.runs[0]?.left).toBe(deviceX(scale, 100) + offset * fontPixel(scale, 2));
+  });
+});
+
+describe("display text", () => {
+  it("draws a span a character, the heart red, its capitals a ring's pixel under the glyphs' top", () => {
+    const doc = new FakeDocument();
+    const line = {
+      capTop: 100,
+      centre: "advance",
+      centreX: 180,
+      colour: PALETTE.yellow,
+      font: "display",
+      scale: 3,
+      text: "Fired ♥",
+    } as const;
+    const element = createTextLine(doc as unknown as Document, line) as unknown as FakeElement;
+    expect(element.children.map(({ textContent }) => textContent).join("")).toBe("FIRED ♥");
+    expect(element.children.at(-1)?.style.color).toBe("#e43b44");
+    expect(element.getAttribute("aria-label")).toBe("FIRED ♥");
+    const font = gameFont("font-display");
+    const scale = domScale(2, { height: 560, width: 360, x: 0, y: 0 });
+    const place = textPlace(font, scale, ORIGIN, line);
+    const pixel = fontPixel(scale, 3);
+    expect(capRows(font, "display")).toBe(fontMetrics(font).capTop + 1);
+    expect(place.top + capRows(font, "display") * pixel).toBe(deviceY(scale, line.capTop));
   });
 });

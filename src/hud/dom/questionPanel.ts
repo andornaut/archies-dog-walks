@@ -170,7 +170,7 @@ export function showQuestionPanel(layer: UiLayer, input: DomQuestionPanelInput):
   // A nine-slice frame, whole art pixels wide and tall.
   const frame = (element: HTMLElement, origin: Point, rect: Rect) =>
     placed.push((scale) => placeFrame(scale, origin, element, rect));
-  const text = (parent: HTMLElement, origin: Point, line: DomTextLine) => {
+  const text = (parent: HTMLElement, origin: Point, line: DomTextLine & PanelText) => {
     const element = createTextLine(doc, line);
     parent.append(element);
     placed.push((scale) => placeText(input.fonts[line.font], scale, origin, element, line));
