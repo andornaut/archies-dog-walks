@@ -13627,7 +13627,8 @@
     {
       "key": "font-body",
       "png": "fonts/font-body.png",
-      "fnt": "fonts/font-body.fnt"
+      "fnt": "fonts/font-body.fnt",
+      "woff": "fonts/font-body.woff"
     },
     {
       "key": "font-comic",
@@ -13647,7 +13648,8 @@
     {
       "key": "font-title",
       "png": "fonts/font-title.png",
-      "fnt": "fonts/font-title.fnt"
+      "fnt": "fonts/font-title.fnt",
+      "woff": "fonts/font-title.woff"
     }
   ],
   "images": [
