@@ -72,6 +72,13 @@ import type { CelebrationSceneData } from "./CelebrationScene.ts";
 import { listenHomeBar } from "./homeBarPress.ts";
 import { detailView } from "./homePanels.ts";
 import {
+  addHtmlMirror,
+  type HtmlMirror,
+  MIRROR_CLIP_DATA,
+  MIRROR_SCROLL_DATA,
+  type MirrorScroll,
+} from "./htmlMirror.ts";
+import {
   addPlate,
   addTileBadge,
   drawDogSlotFallback,
@@ -206,6 +213,9 @@ export class ShopScene extends Scene {
   private hold: HoldPress | undefined;
   // The scrolled headings and rows, and the scrollbar beside them.
   private list: GameObjects.Container | undefined;
+  // The page drawn in HTML over the canvas (addHtmlMirror), and the container it follows.
+  private mirror: HtmlMirror | undefined;
+  private root: GameObjects.Container | undefined;
   // The last tap's message, on its plate over the list's top: a purchase in green, a refusal
   // in dark red.
   private message: { readonly refused: boolean; readonly text: string } | null = null;
@@ -239,6 +249,9 @@ export class ShopScene extends Scene {
     this.shakes = new Map();
     this.tab = shopOpenTab(data.focus);
     this.focusId = data.focus === undefined ? null : shopRowId(data.focus);
+    // In HTML where the page's switch is on and its fonts are ready, else on the canvas.
+    this.root = undefined;
+    this.mirror = addHtmlMirror(this, () => (this.root === undefined ? [] : [this.root]));
     this.render();
     this.showFocus();
 
@@ -248,7 +261,12 @@ export class ShopScene extends Scene {
     this.presses = listenTargetPress<Target>(this, {
       dipMs: (target) => (target.kind === "dismiss" ? 0 : FEEDBACK.pressDipMs),
       onDown: (pointer, target) => {
-        addTapBurst(this, pointer.x, pointer.y);
+        // Over the HTML page, so a burst shows over it.
+        if (this.mirror === undefined || !this.isListOpen()) {
+          addTapBurst(this, pointer.x, pointer.y);
+        } else {
+          this.mirror.burst({ x: pointer.x, y: pointer.y });
+        }
         if (this.detail !== undefined || this.confirm !== undefined) {
           return;
         }
@@ -665,7 +683,11 @@ export class ShopScene extends Scene {
     this.containers = new Map();
     this.placed = [];
     const save = this.save();
+    // CLEANUP (added 2026-11-11): the canvas draws the page under an open card or confirm, whose
+    // dim it blends, until the shared HTML shade dims the shop list.
+    this.mirror?.setSuspended(!this.isListOpen());
     const root = this.add.container(0, 0);
+    this.root = root;
     const words = gameData.homeText.shop;
     addShopPage(this, root, this.pressed?.kind === "close", words.title);
     addShopTabs(
@@ -685,6 +707,11 @@ export class ShopScene extends Scene {
     root.add(list);
     this.list = list;
     maskToRect(this, LIST_MASK_KEY, this.frame.rect, list);
+    // The HTML clips the list as the mask does, and moves it by whole art pixels once it settles.
+    list.setData(MIRROR_CLIP_DATA, this.frame.rect);
+    list.setData(MIRROR_SCROLL_DATA, {
+      settled: () => this.scroll.drag === null && this.scroll.velocity === 0,
+    } satisfies MirrorScroll);
     if (this.tab === "gear") {
       this.drawGear(list, save);
     } else {

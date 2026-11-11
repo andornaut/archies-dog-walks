@@ -107,6 +107,11 @@ function logbookArtKeys(data: Pick<GameData, "achievements" | "dogs">): string[]
 // bubble's tail, besides the ui-quip its greeting shares with the celebrations.
 const END_ART_KEYS = [ZONE_PIPS_KEY, "ui-quip-tail"];
 
+// The shop's page and rows (src/scenes/ShopScene.ts, drawn by the display mirror) beyond the
+// Logbook's and the detail cards': the tiles' faces, the close control's face sheet, the bill and
+// lock badges and the message plate.
+const SHOP_ART_KEYS = ["icon-bill", "icon-lock", "ui-hint", "ui-icon-button", "ui-tile"];
+
 export const DOM_ART_KEYS: ReadonlySet<string> = new Set([
   ...DOM_STYLE_ART.map(([, key]) => key),
   ...detailArtKeys(gameData),
@@ -114,6 +119,7 @@ export const DOM_ART_KEYS: ReadonlySet<string> = new Set([
   ...celebrationArtKeys(gameData),
   ...logbookArtKeys(gameData),
   ...END_ART_KEYS,
+  ...SHOP_ART_KEYS,
 ]);
 
 // A DOM art file's path under /art/: an image's PNG, or a sprite sheet's PNG or JSON.

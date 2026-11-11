@@ -30,7 +30,8 @@ import { htmlPanelPlace } from "./questionPanel.ts";
 // shake, a lift) in whole game pixels, but a container marked as a scrolled list
 // (MIRROR_SCROLL_DATA) moves its content by its scroll, and one marked with a clip rect
 // (MIRROR_CLIP_DATA) clips it there, as the canvas's mask does. It takes no presses: every press
-// goes through to the canvas.
+// goes through to the canvas. While the scene is paused or asleep under another page, or the
+// mirror is suspended, the canvas draws the containers again.
 
 // The data key of a container whose y is a list's scroll: whether the scroll has settled.
 export const MIRROR_SCROLL_DATA = "htmlScroll";
@@ -445,9 +446,14 @@ export function addHtmlMirror(
   const frameScale = { key: "" };
   const update = () => {
     const scale = layer.scale();
+    // Paused or asleep under another page, the scene's canvas draws it again, so a page's dim,
+    // which reads the canvas back, dims it as before.
     const hidden = suspended || !scene.sys.isActive() || !scene.sys.isVisible();
     dialog.hidden = hidden;
     if (hidden) {
+      if (entries.size > 0) {
+        forget();
+      }
       return;
     }
     const frame = [scale.dpr, scale.unit, scale.origin.x, scale.origin.y].join();
