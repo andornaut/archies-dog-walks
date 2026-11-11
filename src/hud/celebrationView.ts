@@ -2,6 +2,7 @@ import type { Rect } from "@andornaut/game-kit/rect";
 import type { FittedText } from "@andornaut/game-kit/text/textFit";
 
 import { ZONE_CELEBRATION_ART } from "../assets/spriteKeys.ts";
+import { SLICES } from "../data/layout.ts";
 import type {
   DetailArt,
   DetailArtSize,
@@ -213,6 +214,13 @@ function newWalkerView(
       ? []
       : [
           {
+            // Its middle on the walker's, as the canvas draws it at tail.x, within the bubble's
+            // straight top edge.
+            aim: {
+              centreX: LAYOUT.newWalker.tail.x + tailSize.width / 2,
+              edge: bubble,
+              inset: { left: SLICES["ui-quip"].left, right: SLICES["ui-quip"].right },
+            },
             holder: { x: bubble.x, y: bubble.y },
             key: TAIL_KEY,
             scale: 1,

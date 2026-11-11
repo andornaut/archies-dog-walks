@@ -27,7 +27,7 @@ export function pillColours(kind: EffectNameKind): { name: number; pill: number 
 
 // A disabled item's pills, such as on a card the player cannot afford: neutral, the name left in
 // the label's own grey.
-export const GREY_PILL: PaletteName = "neutralLightGrey";
+export const GREY_PILL: PaletteName = "neutralGrey";
 
 // The data key a label whose names addNamePills set in pills holds them under: the pills drawn
 // and whether they are grey, for the HTML interface to draw them in their place.

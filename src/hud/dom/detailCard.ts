@@ -5,7 +5,15 @@ import type { DetailArt, DetailCardView, DetailText } from "../../home/detailCar
 import { blockPlace, setBox, shownText, spokenText } from "../../ui/dom/pixelLine.ts";
 import { type SheetFrame, sheetFrame } from "../../ui/dom/sheetFrames.ts";
 import type { UiLayer } from "../../ui/dom/uiLayer.ts";
-import { artPixel, deviceX, deviceY, type DomScale } from "../../ui/domScale.ts";
+import {
+  artPixel,
+  deviceX,
+  deviceY,
+  type DomScale,
+  exactDeviceX,
+  frameRect,
+  wholeArtPixels,
+} from "../../ui/domScale.ts";
 import { TEXT_SCALE } from "../../ui/textFit.ts";
 import {
   type DomPart,
@@ -68,6 +76,24 @@ function framedPart(doc: Document, view: DetailCardView["framed"][number]): DomP
   };
 }
 
+// The device pixels from holder's snapped corner to art that aims at aim's column: its middle
+// there, rounded to whole art pixels, and kept within the edge's straight part, whose length is
+// the snapped frame's (frameRect).
+function aimed(
+  scale: DomScale,
+  holder: { readonly x: number },
+  aim: NonNullable<DetailArt["aim"]>,
+  width: number,
+): number {
+  const pixel = artPixel(scale);
+  const corner = deviceX(scale, holder.x);
+  const edge = frameRect(scale, aim.edge);
+  const from = edge.left - corner + aim.inset.left * pixel;
+  const to = edge.left - corner + edge.width - aim.inset.right * pixel - width;
+  const at = wholeArtPixels(scale, exactDeviceX(scale, aim.centreX) - width / 2 - corner);
+  return Math.min(Math.max(at, from), to);
+}
+
 // Art from its top-left, each art pixel art.scale times artPixel device pixels: an image's whole
 // file, or a sheet's frame, hidden until the sheet's JSON says where the frame is. Art in a box
 // sits whole art pixels into it, rounded down where it is centred on a half pixel.
@@ -89,11 +115,15 @@ export function artPart(
     const pixel = artPixel(at) * art.scale;
     const holder = art.holder ?? art;
     const into = (from: number, to: number) => Math.floor(to - from) * artPixel(at);
+    const width = art.size.width * pixel;
     setBox(element, {
       height: art.size.height * pixel,
-      left: deviceX(at, holder.x) + into(holder.x, art.x) + shift(at),
+      left:
+        deviceX(at, holder.x) +
+        (art.aim === undefined ? into(holder.x, art.x) : aimed(at, holder, art.aim, width)) +
+        shift(at),
       top: deviceY(at, holder.y) + into(holder.y, art.y),
-      width: art.size.width * pixel,
+      width,
     });
     if (frame !== undefined) {
       element.style.backgroundSize = `${frame.sheet.width * pixel}px ${frame.sheet.height * pixel}px`;

@@ -45,6 +45,14 @@ export interface DetailMeasure extends PanelMeasure {
 // of the box it sits in (the well, the owner's photo), which the HTML interface sets it whole art
 // pixels into, so it sits as centred in the box at every scale as at 1x.
 export interface DetailArt {
+  // Art that points at something (a bubble's tail at its walker) sits with its middle across on
+  // that column, whole art pixels into its holder, kept within the holder's straight edge: the
+  // holder's rect less inset art pixels at each side.
+  readonly aim?: {
+    readonly centreX: number;
+    readonly edge: Rect;
+    readonly inset: { readonly left: number; readonly right: number };
+  };
   readonly holder?: Point;
   readonly key: string;
   readonly scale: number;
