@@ -41,6 +41,8 @@ export const MENU_TEXT = {
     previous: "Previous",
   },
   pause: {
+    // The close control's accessible name: screen readers announce it; it resumes the walk.
+    close: "Close",
     headHome: "End walk",
     help: "Help",
     note: "Ending now keeps {kept} of {cash}.",
