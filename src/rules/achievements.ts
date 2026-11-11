@@ -31,7 +31,8 @@ export type AchievementData = Pick<
 >;
 
 // The counters a run keeps for its achievements, copied out of the run state for the save.
-// Zones before firstZone were skipped by a dev start: they are neither finished nor clean.
+// A dev start's zone is the run's first: zones before firstZone were never walked, so they are
+// neither finished nor clean.
 // startCents is the money the run began with, which a money goal leaves out. bumpsByKind,
 // optionPicks and tallies are this run's share of the lifetime ones.
 export interface RunCounters {
@@ -100,12 +101,7 @@ export function isMoneyCondition(condition: AchievementCondition): boolean {
   return condition.kind === "earnings" || condition.kind === "lifetimeEarnings";
 }
 
-// Whether a run walked every zone up to the ones it finished: a dev start did not skip any.
-export function walkedFromTheStart(counters: Pick<RunCounters, "firstZone">): boolean {
-  return counters.firstZone === 0;
-}
-
-// The zones a run finished that it walked, leaving out those a dev start skipped.
+// The zones a run finished that it walked, leaving out those before a dev start's first.
 function zonesWalked(facts: RunFacts): number {
   return Math.max(0, facts.zonesFinished - facts.firstZone);
 }
@@ -152,9 +148,9 @@ export function countOptionPick(encounter: EncounterId, option: string, state: R
   };
 }
 
-// Whether the walk was finished: every zone of it walked, none skipped by a dev start.
+// Whether the walk was finished: its last zone finished, from whichever zone it began in.
 function finishedWalk(facts: RunFacts, zones: number): boolean {
-  return walkedFromTheStart(facts) && facts.zonesFinished >= zones;
+  return facts.zonesFinished >= zones;
 }
 
 function cleanZones(facts: RunFacts): number {

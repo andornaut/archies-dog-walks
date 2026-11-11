@@ -315,7 +315,7 @@ export class ProfileSession {
     const achievements = this.earn("bank", { run: runEndFacts(result), save: banked });
     void this.update(() => banked);
     this.announce(achievements);
-    // Banking raised the best for the walk's pack size, which a dev start past zone 1 never does.
+    // Banking raised the best for the walk's pack size.
     const size = result.dogs.length;
     this.ended = {
       achievements,

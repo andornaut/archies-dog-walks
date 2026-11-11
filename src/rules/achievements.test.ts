@@ -78,7 +78,7 @@ const minorBump = [...countBump(testState({ kilo: 5 })).bumpsByZone];
 const spotlight3 = { count: 3, debuff: "spotlight", kind: "debuffsGot" } as const;
 
 describe("run conditions", () => {
-  // A dev start from zone 3 skipped zones 1 and 2: they count as neither finished nor clean.
+  // A dev start from zone 3 never walked zones 1 and 2: they count as neither finished nor clean.
   const cases: [string, AchievementCondition, Partial<RunFacts>, boolean][] = [
     ["zonesFinished below the count", zonesFinished(1), { zonesFinished: 0 }, false],
     ["zonesFinished at the count", zonesFinished(1), { zonesFinished: 1 }, true],
@@ -129,7 +129,7 @@ describe("run conditions", () => {
       { lastHeartOwners: 1, zonesFinished: 3 },
       false,
     ],
-    ["finishOnLastHeart, dev start", closeShave, { ...fromZone3, lastHeartOwners: 1 }, false],
+    ["finishOnLastHeart, dev start", closeShave, { ...fromZone3, lastHeartOwners: 1 }, true],
     [
       "fullPackBonus, every dog of 3 home",
       everybodyHome,

@@ -104,8 +104,8 @@ export interface RunState {
   readonly debuffs: readonly ActiveDebuff[];
   // The dodges effects such as the Whistle's gave, which last the walk.
   readonly dodges: readonly ActiveDodge[];
-  // The zone index the run began in. A dev start skips the zones before it, which count
-  // toward no achievement.
+  // The zone index the run began in: a dev start's zone is the run's first, and the zones before
+  // it, never walked, count toward no stat or achievement.
   readonly firstZone: number;
   // The gear drop grabbed last, in effect on top of the Pocket's gear until the walk ends or the
   // next grab replaces it; null before any.

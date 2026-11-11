@@ -28,8 +28,7 @@ export function walksPlayed(stats: Pick<SaveStats, "runs">): number {
   return stats.runs.finished + stats.runs.noDogs + stats.runs.wentHome;
 }
 
-// Every walk that finished its last zone, walked from the first: a dev start's counts as headed
-// home.
+// Every walk that finished its last zone, from whichever zone it began in.
 export function walksFinished(stats: Pick<SaveStats, "runs">): number {
   return stats.runs.finished;
 }

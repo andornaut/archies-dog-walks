@@ -163,10 +163,6 @@ describe("recordRunEnd", () => {
   it.each([
     ["headed home", { ...walkingOf(3), outcome: "wentHome", zone: 3 }],
     ["fired out", { ...walkingOf(0), outcome: "noDogs", zone: 2 }],
-    [
-      "begun past zone 1 by a dev start",
-      { ...walkingOf(3), counters: { ...quietCounters(), firstZone: 2 } },
-    ],
   ] satisfies [string, Partial<RunResult>][])("unlocks none for a walk %s", (_, changes) => {
     expect(walkersAfter(changes)).toEqual(unlockedBy(0));
   });
@@ -174,6 +170,11 @@ describe("recordRunEnd", () => {
   it("unlocks none for a walk banked from its checkpoint at a zone's end", () => {
     const save = recordCheckpoint(newPlayerSave, { ...checkpoint, ...walkingOf(3) });
     expect([...bankCheckpoint(testAwards, save).owned.walkers].sort()).toEqual(unlockedBy(0));
+  });
+
+  it("unlocks, for a walk a dev start began past zone 1 and finished, every walker its dogs reach", () => {
+    const changes = { ...walkingOf(3), counters: { ...quietCounters(), firstZone: 2 } };
+    expect(walkersAfter(changes)).toEqual(unlockedBy(3));
   });
 
   it("keeps every walker unlocked before, adding each only once", () => {
@@ -184,18 +185,17 @@ describe("recordRunEnd", () => {
     );
   });
 
-  it("banks no money, starting cash or best walk for a dev start past zone 1, and counts the zones it walked", () => {
-    const { bankCents, stats } = recordRunEnd(
-      testAwards,
-      newPlayerSave,
-      runResult({ counters: { ...quietCounters(), firstZone: 2, startCents: cents(1_500) } }),
-    );
-    expect(bankCents).toBe(0);
-    expect([stats.lifetimeCents, stats.lifetimeStartCents]).toEqual([0, 0]);
-    expect(stats.bestWalk).toBeNull();
-    expect(stats.bestCentsByPackSize).toEqual({});
+  it("banks a walk a dev start began past zone 1 as one begun there, counting only the zones it walked", () => {
+    const result = runResult({
+      counters: { ...quietCounters(), firstZone: 2, startCents: cents(1_500) },
+    });
+    const { bankCents, stats } = recordRunEnd(testAwards, newPlayerSave, result);
+    expect(bankCents).toBe(result.earnedCents);
+    expect([stats.lifetimeCents, stats.lifetimeStartCents]).toEqual([result.earnedCents, 1_500]);
+    expect(stats.bestWalk).toEqual({ dogs: ["kilo", "lady"], zonesFinished: 4 });
+    expect(stats.bestCentsByPackSize).toEqual({ 2: result.earnedCents });
     expect(stats.bestZoneFinished).toBe(2);
-    expect(stats.runs).toEqual({ finished: 0, noDogs: 0, wentHome: 1 });
+    expect(stats.runs).toEqual({ finished: 1, noDogs: 0, wentHome: 0 });
     expect(stats.dogs).toEqual({
       kilo: { timesFired: 0, walks: 1, zonesFinished: 2 },
       lady: { timesFired: 1, walks: 1, zonesFinished: 0 },
@@ -350,19 +350,16 @@ describe("achievements at banking", () => {
     });
   });
 
-  it("counts a walk a dev start began past zone 1 toward no total or zone badge", () => {
+  it("counts a finished walk a dev start began past zone 1 toward the totals, from its first zone", () => {
     const counters = { ...quietCounters(), firstZone: 2 };
     const clean = runResult({
       counters,
       dogs: [{ firedInZone: null, id: "penny" }],
     });
     const save = recordRunEnd(testAwards, newPlayerSave, clean);
-    expect(save.stats.noFiringStreak).toBe(0);
-    expect(save.stats.dogsFinishedWith).toEqual([]);
-    expect(save.stats.zonesEverFinished).toEqual([]);
-    const earned = earnedIfBanked(testAwards, [], newPlayerSave, clean);
-    expect(earned).not.toContain("notAScratch");
-    expect(earned).not.toContain("roundTrip");
+    expect(save.stats.noFiringStreak).toBe(1);
+    expect(save.stats.dogsFinishedWith).toEqual(["penny"]);
+    expect(save.stats.zonesEverFinished).toEqual(ROUTE.slice(2));
   });
 
   // Each row starts from a save that has finished the first zone of ROUTE.
@@ -374,9 +371,9 @@ describe("achievements at banking", () => {
       ROUTE.slice(0, 2),
     ],
     [
-      "counts none for a walk a dev start began past zone 1",
+      "counts only the zones walked by a walk a dev start began past zone 1",
       { counters: { ...quietCounters(), firstZone: 2 } },
-      ROUTE.slice(0, 1),
+      [ROUTE[0], ...ROUTE.slice(2)] as ZoneId[],
     ],
   ];
 
@@ -418,9 +415,9 @@ describe("achievements at banking", () => {
     ["adds a walker only once", {}, ["casey"]],
     ["not for a walk headed home", { outcome: "wentHome", walker: "mrB", zone: 3 }, ["casey"]],
     [
-      "not for a walk a dev start began past zone 1",
+      "adds the walker of a finished walk a dev start began past zone 1",
       { counters: { ...quietCounters(), firstZone: 2 }, walker: "mrB" },
-      ["casey"],
+      ["casey", "mrB"],
     ],
   ];
 
