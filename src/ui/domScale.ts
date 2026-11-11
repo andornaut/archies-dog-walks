@@ -66,9 +66,14 @@ export function deviceRect(scale: DomScale, rect: Rect): DeviceRect {
 // phase as its near edges'.
 export function frameRect(scale: DomScale, rect: Rect): DeviceRect {
   const box = deviceRect(scale, rect);
-  const pixel = artPixel(scale);
-  const snap = (length: number) => Math.max(1, Math.round(length / pixel)) * pixel;
+  const snap = (length: number) => Math.max(artPixel(scale), wholeArtPixels(scale, length));
   return { ...box, height: snap(box.height), width: snap(box.width) };
+}
+
+// A device length snapped to the nearest whole number of art pixels.
+export function wholeArtPixels(scale: DomScale, length: number): number {
+  const pixel = artPixel(scale);
+  return Math.round(length / pixel) * pixel;
 }
 
 // The device pixels one art pixel takes: the fit rounded down to whole device pixels, at least

@@ -78,13 +78,12 @@ export interface DomQuestionPanel {
   setShown(shown: boolean): void;
 }
 
-// How a refusal plays: refuseControl's REFUSE, and whether motion is reduced.
+// How a refusal's label flashes, as refuseControl's REFUSE says, and whether motion is reduced;
+// its shake is the stylesheet's (controlStateStyle.ts).
 export interface DomRefusal {
   readonly flashMs: number;
   readonly flashes: number;
   readonly reducedMotion: boolean;
-  readonly shake: number;
-  readonly shakeMs: number;
 }
 
 const ORIGIN = { x: 0, y: 0 } as const;
@@ -399,12 +398,8 @@ export function showQuestionPanel(layer: UiLayer, input: DomQuestionPanelInput):
       ) {
         return;
       }
-      const scale = layer.scale();
       const style = button.style;
       const total = refusal.flashMs * refusal.flashes;
-      style.setProperty("--adw-shake", `${refusal.shake * artPixel(scale)}px`);
-      style.setProperty("--adw-shake-ms", `${refusal.shakeMs}ms`);
-      style.setProperty("--adw-shakes", String(Math.round(total / refusal.shakeMs)));
       style.setProperty("--adw-flash-ms", `${2 * refusal.flashMs}ms`);
       style.setProperty("--adw-flashes", String(refusal.flashes / 2));
       style.setProperty("--adw-refuse-ms", `${total}ms`);

@@ -1,7 +1,9 @@
+import { itemAt } from "@andornaut/game-kit/arrays";
+
 import { HELP_DOTS, type HelpView } from "../../help/helpView.ts";
 import { createTextLine, type DomTextLine, placeText, setBox } from "../../ui/dom/pixelLine.ts";
 import type { UiLayer } from "../../ui/dom/uiLayer.ts";
-import { artPixel, deviceRect, type DomScale } from "../../ui/domScale.ts";
+import { artPixel, deviceRect, deviceX, deviceY, type DomScale } from "../../ui/domScale.ts";
 import { PALETTE } from "../../ui/palette.ts";
 import type { PanelText } from "../questionPanelView.ts";
 import {
@@ -37,11 +39,32 @@ function fillPart(
   return { element, place: (scale) => setBox(element, place(scale)) };
 }
 
+// Where the dots go, in whole device pixels: each its side in art pixels, the row laid out in
+// art pixels from the snapped column under its middle, so every dot and gap is the same size.
+function dotBoxes(scale: DomScale, dots: HelpView["dots"]): Parameters<typeof setBox>[1][] {
+  const first = dots[0]?.rect;
+  const last = dots.at(-1)?.rect;
+  if (first === undefined || last === undefined) {
+    return [];
+  }
+  const pixel = artPixel(scale);
+  const half = Math.floor((last.x + last.width - first.x) / 2);
+  const left = deviceX(scale, first.x + half) - half * pixel;
+  return dots.map(({ rect }) => ({
+    height: rect.height * pixel,
+    left: left + (rect.x - first.x) * pixel,
+    top: deviceY(scale, rect.y),
+    width: rect.width * pixel,
+  }));
+}
+
 // A dot: filled, or a ring an art pixel wide round the dark screen's colour.
-function dotPart(doc: Document, dot: HelpView["dots"][number]): DomPart {
-  const ring = fillPart(doc, dot.current ? HELP_DOTS.current : HELP_DOTS.ring, (scale) =>
-    deviceRect(scale, dot.rect),
-  );
+function dotPart(
+  doc: Document,
+  dot: HelpView["dots"][number],
+  box: (scale: DomScale) => Parameters<typeof setBox>[1],
+): DomPart {
+  const ring = fillPart(doc, dot.current ? HELP_DOTS.current : HELP_DOTS.ring, box);
   if (dot.current) {
     return ring;
   }
@@ -53,13 +76,13 @@ function dotPart(doc: Document, dot: HelpView["dots"][number]): DomPart {
     element: ring.element,
     place: (scale) => {
       ring.place(scale);
-      const box = deviceRect(scale, dot.rect);
+      const { height, width } = box(scale);
       const pixel = artPixel(scale);
       setBox(hole, {
-        height: box.height - 2 * pixel,
+        height: height - 2 * pixel,
         left: pixel,
         top: pixel,
-        width: box.width - 2 * pixel,
+        width: width - 2 * pixel,
       });
     },
   };
@@ -125,7 +148,9 @@ export function showHelpScreen(layer: UiLayer, input: DomHelpInput): DomQuestion
     ...view.rules.map(({ colour, rect }) =>
       fillPart(doc, colour, (scale) => ({ ...deviceRect(scale, rect), height: artPixel(scale) })),
     ),
-    ...view.dots.map((dot) => dotPart(doc, dot)),
+    ...view.dots.map((dot, i) =>
+      dotPart(doc, dot, (scale) => itemAt(dotBoxes(scale, view.dots), i)),
+    ),
     {
       element: page,
       place: (scale) => {

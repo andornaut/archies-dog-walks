@@ -15,9 +15,15 @@ import {
   sheetArt,
   sheetThreeSlice,
 } from "../../ui/dom/artElements.ts";
-import { blockPlace, createTextLine, placeBox, placeText } from "../../ui/dom/pixelLine.ts";
+import {
+  blockPlace,
+  createTextLine,
+  placeBox,
+  placeFrame,
+  placeText,
+} from "../../ui/dom/pixelLine.ts";
 import type { UiLayer } from "../../ui/dom/uiLayer.ts";
-import { artPixel, deviceX, deviceY, type DomScale } from "../../ui/domScale.ts";
+import { artPixel, deviceX, deviceY, type DomScale, wholeArtPixels } from "../../ui/domScale.ts";
 import { PALETTE } from "../../ui/palette.ts";
 import { REFUSE } from "../../ui/refuse.ts";
 import {
@@ -178,13 +184,27 @@ function rowPart(
       element.setAttribute("aria-checked", String(row.switch.on));
     }
     if (button !== undefined && buttonText !== undefined && row.button !== undefined) {
-      placeBox(scale, rect, button, row.button.rect);
+      placeFrame(scale, rect, button, row.button.rect);
       placeText(input.fonts.title, scale, rect, buttonText, row.button.text);
     }
     if (slider !== undefined && row.slider !== undefined) {
-      slider.empty.place(scale, rect, row.slider.empty);
-      slider.filled.place(scale, rect, row.slider.filled);
-      slider.knob.place(scale, rect, row.slider.knob);
+      // The track whole art pixels long from its snapped start, and the knob whole art pixels
+      // along it and over it, its travel the track less the knob's art, so it meets both ends.
+      const { empty, filled, knob, travel } = row.slider;
+      const pixel = artPixel(scale);
+      const start = deviceX(scale, empty.x) - deviceX(scale, rect.x);
+      const track = wholeArtPixels(
+        scale,
+        deviceX(scale, empty.x + empty.width) - deviceX(scale, empty.x),
+      );
+      const knobWidth = travel.knobWidth * pixel;
+      const along = wholeArtPixels(scale, travel.along * (track - knobWidth));
+      slider.empty.place(scale, rect, empty, track);
+      slider.filled.place(scale, rect, filled, along + knobWidth);
+      slider.knob.place(scale, rect, knob, {
+        left: start + along,
+        top: deviceY(scale, empty.y) - deviceY(scale, rect.y) + (knob.y - empty.y) * pixel,
+      });
       element.setAttribute("aria-valuemin", "0");
       element.setAttribute("aria-valuemax", "100");
       element.setAttribute("aria-valuenow", String(row.slider.percent));
@@ -242,17 +262,17 @@ function rowPart(
   return {
     element,
     place,
-    refuse: (scale: DomScale, reducedMotion: boolean) => {
+    refuse: (reducedMotion: boolean) => {
       const labels = texts.map(({ element: text }) => text);
-      refuseAnimation(labels, artPixel(scale), reducedMotion);
+      refuseAnimation(labels, reducedMotion);
     },
   };
 }
 
-// The canvas's refusal: the labels shake shake art pixels right and back four times, and flash
-// red, or, with reduced motion, hold red.
-function refuseAnimation(labels: readonly HTMLElement[], pixel: number, reducedMotion: boolean) {
-  const { flashMs, flashes, shake, shakeMs } = REFUSE;
+// The canvas's refusal: the labels shake right and back in whole art pixels (adw-shaking), and
+// flash red, or, with reduced motion, hold red.
+function refuseAnimation(labels: readonly HTMLElement[], reducedMotion: boolean) {
+  const { flashMs, flashes } = REFUSE;
   const red = hex(PALETTE.red);
   const runs = labels.flatMap((label) => [...label.children] as HTMLElement[]);
   const colours = runs.map((run) => run.style.color);
@@ -266,15 +286,13 @@ function refuseAnimation(labels: readonly HTMLElement[], pixel: number, reducedM
     return;
   }
   for (const label of labels) {
-    label.animate(
-      [{ transform: "translateX(0)" }, { transform: `translateX(${shake * pixel}px)` }],
-      {
-        direction: "alternate",
-        duration: shakeMs,
-        iterations: 8,
-      },
-    );
+    label.classList.add("adw-shaking");
   }
+  setTimeout(() => {
+    for (const label of labels) {
+      label.classList.remove("adw-shaking");
+    }
+  }, flashMs * flashes);
   for (let flash = 1; flash <= flashes; flash += 1) {
     setTimeout(() => tint(flash % 2 === 1), flash * flashMs);
   }
@@ -338,7 +356,7 @@ export function showSettings(layer: UiLayer, input: DomSettingsInput): DomSettin
       place: (scale: DomScale) => {
         const rect = current.separators[i];
         if (rect !== undefined) {
-          placeBox(scale, ORIGIN, element, rect);
+          placeFrame(scale, ORIGIN, element, rect);
         }
       },
     })),
@@ -368,7 +386,7 @@ export function showSettings(layer: UiLayer, input: DomSettingsInput): DomSettin
       panel.destroy();
     },
     refuse(index, reducedMotion) {
-      rows[index]?.refuse(layer.scale(), reducedMotion);
+      rows[index]?.refuse(reducedMotion);
     },
     setShown(show) {
       shown = show;

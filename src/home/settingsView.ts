@@ -29,6 +29,7 @@ import {
   SETTINGS_NOTE_STYLE,
   SETTINGS_ROW,
   type SettingsLayout,
+  VOLUME_STEPS,
   type VolumeKey,
   volumePercent,
   volumeSteps,
@@ -181,6 +182,8 @@ export interface SettingsRowView {
     readonly filled: SettingsArt & { readonly width: number };
     readonly knob: SettingsArt;
     readonly percent: number;
+    // How far along its travel the knob is, from 0 to 1, and its width.
+    readonly travel: { readonly along: number; readonly knobWidth: number };
   };
 }
 
@@ -338,6 +341,7 @@ function sliderRow(
       },
       knob: { key: "ui-slider-knob", tag: knobTag, x: kx, y: trackY - 3 },
       percent,
+      travel: { along: steps / VOLUME_STEPS, knobWidth: slider.knobWidth },
     },
     texts: [
       { ...title, anchor: "ink", lines: [words[row.label]], x: x + LABEL.dx },

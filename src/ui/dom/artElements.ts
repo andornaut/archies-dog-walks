@@ -53,14 +53,20 @@ function framePosition(frame: SheetFrame, pixel: number, column: number) {
   return `${-(frame.x + column) * pixel}px ${-frame.y * pixel}px`;
 }
 
-// A sheet's frame in an element of its own, placed in its container whose corner is at origin.
+// A sheet's frame in an element of its own, placed in its container whose corner is at origin,
+// or at, device pixels from that corner, where given.
 export function sheetArt(
   doc: Document,
   source: DomArtSource,
   key: string,
 ): {
   readonly element: HTMLElement;
-  readonly place: (scale: DomScale, origin: Point, art: SheetArtPlace) => void;
+  readonly place: (
+    scale: DomScale,
+    origin: Point,
+    art: SheetArtPlace,
+    at?: { readonly left: number; readonly top: number },
+  ) => void;
 } {
   const element = doc.createElement("span");
   element.className = "adw-art";
@@ -68,14 +74,14 @@ export function sheetArt(
   const loaded = sheetOf(source, key, element);
   return {
     element,
-    place: (scale, origin, art) =>
+    place: (scale, origin, art, at) =>
       loaded((json) => {
         const frame = sheetFrame(json, art.tag);
         const pixel = artPixel(scale);
         setBox(element, {
           height: frame.height * pixel,
-          left: deviceX(scale, art.x) - deviceX(scale, origin.x),
-          top: deviceY(scale, art.y) - deviceY(scale, origin.y),
+          left: at?.left ?? deviceX(scale, art.x) - deviceX(scale, origin.x),
+          top: at?.top ?? deviceY(scale, art.y) - deviceY(scale, origin.y),
           width: frame.width * pixel,
         });
         element.style.backgroundSize = `${frame.sheet.width * pixel}px ${frame.sheet.height * pixel}px`;
@@ -86,7 +92,8 @@ export function sheetArt(
 
 // A sheet's frame stretched across, as a nine-slice cut only at its sides draws it: its left
 // and right columns whole, the columns between them stretched, which holds for art whose
-// middle columns are alike, since the stretch then samples none but them.
+// middle columns are alike, since the stretch then samples none but them. width, where given,
+// is its width in device pixels.
 export function sheetThreeSlice(
   doc: Document,
   source: DomArtSource,
@@ -98,6 +105,7 @@ export function sheetThreeSlice(
     scale: DomScale,
     origin: Point,
     art: SheetArtPlace & { readonly width: number },
+    width?: number,
   ) => void;
 } {
   const element = doc.createElement("span");
@@ -113,12 +121,12 @@ export function sheetThreeSlice(
   const loaded = sheetOf(source, key, element);
   return {
     element,
-    place: (scale, origin, art) =>
+    place: (scale, origin, art, across) =>
       loaded((json) => {
         const frame = sheetFrame(json, art.tag);
         const pixel = artPixel(scale);
         const left = deviceX(scale, art.x);
-        const width = deviceX(scale, art.x + art.width) - left;
+        const width = across ?? deviceX(scale, art.x + art.width) - left;
         const height = frame.height * pixel;
         setBox(element, {
           height,
