@@ -271,6 +271,9 @@ export function addHtmlZoneCelebration(
   press: () => void,
 ): DomQuestionPanel | undefined {
   const place = htmlPanelPlace(scene);
+  // followScene hides it while the pause menu pauses the scene.
+  // CLEANUP (added 2026-11-11): remove once shades draw in HTML and the celebration can show
+  // dimmed and non-pressable under the pause menu.
   return place === undefined
     ? undefined
     : followScene(
