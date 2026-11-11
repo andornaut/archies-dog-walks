@@ -1,46 +1,31 @@
-import { insetRect, type Point, type Rect } from "@andornaut/game-kit/rect";
+import { insetRect, type Rect } from "@andornaut/game-kit/rect";
 import type { GameObjects, Scene } from "phaser";
 
-import { ownerFaceKey } from "../assets/spriteKeys.ts";
 import { gameData } from "../data/index.ts";
+import type { DetailCard, DetailPicture } from "../home/detail.ts";
 import {
-  type DetailCard,
-  type DetailPart,
-  detailParts,
-  type DetailPicture,
-} from "../home/detail.ts";
-import {
-  CARD_TEXT_ROOM,
-  cardTitleRow,
-  detailCardLayout,
-  detailOwner,
-  type DetailRow,
-  HOME_LAYOUT,
-} from "../home/homeLayout.ts";
-import { MODAL, modalPanelWidth, modalRect, modalTitleWidth } from "../home/modalLayout.ts";
-import { withNamePills } from "../hud/effectNames.ts";
+  DETAIL_WELL_KEY,
+  type DetailArt,
+  type DetailCardView,
+  detailCardView,
+} from "../home/detailCardView.ts";
+import { cardTitleRow, HOME_LAYOUT } from "../home/homeLayout.ts";
 import { barTitleLeft, barTitleRoom } from "../ui/barTitle.ts";
 import { type CloseControl, closeControl } from "../ui/closeControl.ts";
+import { hasPill } from "../ui/namePills.ts";
 import { PALETTE } from "../ui/palette.ts";
 import { addModalShade, drawFramedRect, drawRing } from "../ui/phaser/draw.ts";
-import {
-  addPixelText,
-  inkSpan,
-  pixelFontMetrics,
-  placePixelText,
-  wrapPixelText,
-} from "../ui/phaser/pixelText.ts";
+import { addPixelText, inkSpan, placePixelText } from "../ui/phaser/pixelText.ts";
 import { AFFORD_OUTSET } from "../ui/selection.ts";
 import { TEXT_SCALE } from "../ui/textFit.ts";
 import { addNamePills } from "./effectNameColours.ts";
-import { measureModalTitle, modalTextWidth } from "./modalMeasure.ts";
+import { canvasDetailMeasure, measureModalTitle } from "./modalMeasure.ts";
 import { playFirstTag } from "./sprites.ts";
 import {
   addBodyText,
   addCloseButton,
   addLoopingFrame,
   addNineSlice,
-  BODY_TEXT,
   type IconButton,
   selectOuter,
   type SliceKey,
@@ -67,22 +52,6 @@ export function addAffordFrame(
 }
 
 const CARD = HOME_LAYOUT.card;
-
-// A dim layer over dim, then the modal card; the content goes in a container placed at the card.
-function drawCardFrame(
-  scene: Scene,
-  parent: GameObjects.Container,
-  dim: Rect,
-  closePressed: boolean,
-  rect: Rect,
-  title: string,
-  content: GameObjects.Container,
-): void {
-  parent.add(addModalShade(scene, dim));
-  addModalCard(scene, parent, rect, title, { pressed: closePressed });
-  content.setPosition(rect.x, rect.y);
-  parent.add(content);
-}
 
 // Every modal card's frame, in one layout: the ui-detail-card with no title bar, its title in
 // plum on the card's title row (addCardTitle), and, for a card that closes, the close control in
@@ -193,7 +162,7 @@ function addDetailCard(scene: Scene, parent: GameObjects.Container, card: Rect):
 }
 
 // The detail card's well the picture sits in.
-export const DETAIL_WELL_KEY = "ui-detail-well";
+export { DETAIL_WELL_KEY };
 
 // The detail card's well at rect's top-left, or a framed grey box while its art is missing.
 export function addDetailWell(scene: Scene, parent: GameObjects.Container, rect: Rect): void {
@@ -206,47 +175,50 @@ export function addDetailWell(scene: Scene, parent: GameObjects.Container, rect:
   parent.add(g);
 }
 
-type Owner = NonNullable<DetailCard["owner"]>;
-
-// The role's 2x body text, in the card's role colour.
-const ROLE_STYLE = { colour: PALETTE[CARD.owner.roleColour], scale: TEXT_SCALE } as const;
-
-// The owner's role, wrapped within the name's room.
-function roleLines(scene: Scene, role: string): string[] {
-  return wrapPixelText(scene, ROLE_STYLE, CARD_TEXT_ROOM.ownerName, role);
+// A detail card's art: an image, or a sheet's tag's first frame, or its default frame.
+function addDetailArt(scene: Scene, art: DetailArt): GameObjects.Image {
+  const { key, scale, sheet, x, y } = art;
+  if (sheet?.tag === undefined) {
+    return scene.add.image(x, y, key).setOrigin(0).setScale(scale);
+  }
+  const sprite = scene.add.sprite(x, y, key).setOrigin(0).setScale(scale);
+  playFirstTag(sprite, key, [sheet.tag]);
+  return sprite;
 }
 
-// The owner's photo, name and role, the photo's top-left at at: their neutral face-owner-<art>
-// face in the walk card's white mat and ink frame, and beside it their name over their role.
-function addDetailOwner(
+// The detail card's view, measured on scene's fonts and art.
+export function detailView(
+  scene: Scene,
+  dim: Rect,
+  detail: Parameters<typeof detailCardView>[3],
+): DetailCardView {
+  return detailCardView(gameData, canvasDetailMeasure(scene), dim, detail);
+}
+
+// The detail card's framed boxes, art and text in parent, as its view lays them out.
+export function addDetailContent(
   scene: Scene,
   parent: GameObjects.Container,
-  at: Point,
-  owner: Owner,
+  view: DetailCardView,
 ): void {
-  const role = roleLines(scene, owner.role);
-  const spot = detailOwner(pixelFontMetrics(scene, "body"), at, role.length);
-  const g = scene.add.graphics();
-  drawFramedRect(g, { border: PALETTE.ink, fill: PALETTE.white }, spot.photo);
-  parent.add(g);
-  const key = ownerFaceKey(gameData, owner.dog);
-  if (scene.textures.exists(key)) {
-    const face = scene.add.sprite(spot.face.x, spot.face.y, key).setOrigin(0);
-    playFirstTag(face, key, ["neutral"]);
-    parent.add(face);
+  for (const box of view.framed) {
+    const g = scene.add.graphics();
+    drawFramedRect(g, { border: box.border, fill: box.fill }, box.rect);
+    parent.add(g);
   }
-  addBodyText(scene, parent, spot.name, owner.name, { colour: PALETTE[CARD.owner.nameColour] });
-  role.forEach((line, i) =>
-    parent.add(
-      addPixelText(scene, spot.role.x, spot.role.y + i * spot.role.pitch, line, ROLE_STYLE),
-    ),
-  );
+  parent.add(view.art.map((art) => addDetailArt(scene, art)));
+  for (const text of view.texts) {
+    const at = { x: text.x, y: text.capTop };
+    const label = addBodyText(scene, parent, at, text.lines.join("\n"), { colour: text.colour });
+    if (text.lines.some(hasPill)) {
+      addNamePills([label]);
+    }
+  }
 }
 
-// A held dog's, walker's or gear item's detail card over a dim layer, as tall as what it
-// shows, its rows beside the well and under it as detailParts places them. Returns the card's
-// rect, so a tap outside it or on its close control closes it. dim is the part of the screen
-// dimmed under it (overlayRegion on a home page).
+// A held dog's, walker's or gear item's detail card over a dim layer, laid out by its view
+// (detailCardView). Returns the card's rect, so a tap outside it or on its close control closes
+// it. dim is the part of the screen dimmed under it (overlayRegion on a home page).
 export function drawDetailCard(
   scene: Scene,
   parent: GameObjects.Container,
@@ -256,70 +228,20 @@ export function drawDetailCard(
   picture: DetailPicture,
   kind: "dog" | "gear" | "walker",
 ): Rect {
-  // The content is laid out first, so the card is as tall as it needs.
-  const content = scene.add.container(0, 0);
-  const parts = detailParts(kind, card);
-  // Each row of text's value: each effect's name a line leads with, as a perk's "Second
-  // chance: …", in its pill.
-  const valueOf = (part: Extract<DetailPart, { text: string }>) =>
-    part.tone === "line" ? withNamePills(gameData, part.text) : part.text;
-  const counts = (rows: readonly DetailPart[], room: number): DetailRow[] =>
-    rows.map((row) =>
-      "owner" in row
-        ? { roleLines: roleLines(scene, row.owner.role).length }
-        : wrapPixelText(scene, BODY_TEXT, room, valueOf(row)).length,
-    );
-  const layout = detailCardLayout(pixelFontMetrics(scene, "body"), {
-    below: counts(parts.below, CARD_TEXT_ROOM.full),
-    beside: counts(parts.beside, CARD_TEXT_ROOM.beside),
-  });
-  const { well } = CARD;
-  const wellRect = { height: well.size, width: well.size, x: well.x, y: layout.wellY };
-  addDetailWell(scene, content, wellRect);
-  if (scene.textures.exists(picture.key)) {
-    const inner = { x: wellRect.x + well.picture, y: wellRect.y + well.picture };
-    content.add(
-      scene.add.image(inner.x, inner.y, picture.key).setOrigin(0).setScale(picture.scale),
-    );
-  } else if (picture.fallback !== undefined && scene.textures.exists(picture.fallback)) {
-    const centre = { x: wellRect.x + well.size / 2, y: wellRect.y + well.size / 2 };
-    content.add(scene.add.image(centre.x, centre.y, picture.fallback));
-  }
-  const colours = {
-    line: PALETTE.plum,
-    status: card.locked ? PALETTE.darkRed : PALETTE.forest,
-    subtitle: PALETTE.darkBrown,
-  } as const;
-  // Each row at the top the card's layout gives it, its text wrapped on the font within its
-  // room at 2x.
-  const draw = (rows: readonly DetailPart[], x: number, room: number, tops: readonly number[]) =>
-    rows.forEach((row, i) => {
-      const y = tops[i] ?? 0;
-      if ("owner" in row) {
-        addDetailOwner(scene, content, { x, y }, row.owner);
-        return;
-      }
-      const lines = wrapPixelText(scene, BODY_TEXT, room, valueOf(row));
-      const label = addBodyText(scene, content, { x, y }, lines.join("\n"), {
-        colour: colours[row.tone],
-      });
-      addNamePills([label]);
-    });
-  draw(parts.beside, CARD.besideX, CARD_TEXT_ROOM.beside, layout.beside);
-  draw(parts.below, CARD.pad, CARD_TEXT_ROOM.full, layout.below);
-  const bounds = content.getBounds();
-  const titleWidth = modalTextWidth(scene, "title", [card.title]);
-  const width = modalPanelWidth(
-    dim.width - 2 * MODAL.margin,
-    Math.ceil(
-      Math.max(
-        wellRect.x + wellRect.width + MODAL.pad,
-        bounds.right + MODAL.pad,
-        modalTitleWidth(titleWidth),
-      ),
-    ),
-  );
-  const rect = modalRect(dim, undefined, { height: layout.height, width });
-  drawCardFrame(scene, parent, dim, closePressed, rect, card.title, content);
-  return rect;
+  const view = detailView(scene, dim, { card, kind, picture });
+  drawDetailCardView(scene, parent, dim, closePressed, view);
+  return view.card.panel;
+}
+
+// A detail card's view over a dim layer over dim, its close control shown pressed or not.
+export function drawDetailCardView(
+  scene: Scene,
+  parent: GameObjects.Container,
+  dim: Rect,
+  closePressed: boolean,
+  view: DetailCardView,
+): void {
+  parent.add(addModalShade(scene, dim));
+  addModalCard(scene, parent, view.card.panel, view.title, { pressed: closePressed });
+  addDetailContent(scene, parent, view);
 }

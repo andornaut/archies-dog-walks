@@ -19,24 +19,25 @@ function nineSlice(key: "ui-button" | "ui-detail-card" | "ui-panel", art: string
   background-clip:padding-box;image-rendering:pixelated`;
 }
 
-// A box's outline less the square pixel at each corner, its edges on whole pixels so none is
+// A box's outline less a square cut long at each corner, its edges on whole pixels so none is
 // blended.
-const CUT_CORNERS = [
-  [`${px(1)}`, "0"],
-  [`calc(100% - ${px(1)})`, "0"],
-  [`calc(100% - ${px(1)})`, `${px(1)}`],
-  ["100%", `${px(1)}`],
-  ["100%", `calc(100% - ${px(1)})`],
-  [`calc(100% - ${px(1)})`, `calc(100% - ${px(1)})`],
-  [`calc(100% - ${px(1)})`, "100%"],
-  [`${px(1)}`, "100%"],
-  [`${px(1)}`, `calc(100% - ${px(1)})`],
-  ["0", `calc(100% - ${px(1)})`],
-  ["0", `${px(1)}`],
-  [`${px(1)}`, `${px(1)}`],
-]
-  .map(([x, y]) => `${x} ${y}`)
-  .join(",");
+const cutCorners = (cut: string) =>
+  [
+    [cut, "0"],
+    [`calc(100% - ${cut})`, "0"],
+    [`calc(100% - ${cut})`, cut],
+    ["100%", cut],
+    ["100%", `calc(100% - ${cut})`],
+    [`calc(100% - ${cut})`, `calc(100% - ${cut})`],
+    [`calc(100% - ${cut})`, "100%"],
+    [cut, "100%"],
+    [cut, `calc(100% - ${cut})`],
+    ["0", `calc(100% - ${cut})`],
+    ["0", cut],
+    [cut, cut],
+  ]
+    .map(([x, y]) => `${x} ${y}`)
+    .join(",");
 
 export const UI_STYLE = `
 .adw-dialog{position:absolute;left:0;top:0;transform-origin:0 0;pointer-events:none;outline:none}
@@ -44,10 +45,18 @@ export const UI_STYLE = `
 .adw-rim,.adw-panel,.adw-card,.adw-plate,.adw-button,.adw-close{position:absolute;box-sizing:border-box;
   pointer-events:auto}
 /* The rim leaves out its corner pixels, following the panel's cut corners. */
-.adw-rim{background:var(--adw-tan);clip-path:polygon(${CUT_CORNERS})}
+.adw-rim{background:var(--adw-tan);clip-path:polygon(${cutCorners(px(1))})}
 .adw-panel{${nineSlice("ui-panel", "ui-panel")};background-color:var(--adw-cream)}
 .adw-card{${nineSlice("ui-detail-card", "ui-detail-card")};background-color:var(--adw-cream)}
 .adw-plate{background:var(--adw-tan)}
+/* A panel that takes no presses: every press goes through to the canvas. */
+.adw-dialog.adw-passive *{pointer-events:none}
+/* A detail card's framed boxes, art and name pills; --adw-cut is a pill's snapped corner. */
+.adw-framed,.adw-art,.adw-pill{position:absolute;box-sizing:border-box;pointer-events:none}
+.adw-art{background-repeat:no-repeat;background-size:100% 100%;image-rendering:pixelated}
+.adw-pill{clip-path:polygon(${cutCorners("var(--adw-cut)")})}
+/* Text only a screen reader reads. */
+.adw-spoken{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
 .adw-lines{position:absolute;left:0;top:0;margin:0;font:inherit}
 .adw-text{position:absolute;margin:0;white-space:pre;letter-spacing:0;
   font-kerning:normal;font-synthesis:none;font-variant-ligatures:none;font-weight:400;

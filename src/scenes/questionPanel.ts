@@ -1,38 +1,37 @@
-import { containsPoint, type Rect } from "@andornaut/game-kit/rect";
+import { containsPoint, type Point, type Rect } from "@andornaut/game-kit/rect";
 import { pageToGame } from "@andornaut/game-kit/view/pagePoint";
 import { type Scene, Scenes } from "phaser";
 
+import { artUrl } from "../assets/artFiles.ts";
 import { gameData } from "../data/index.ts";
 import { SCREEN_CONFIG } from "../data/screen.ts";
+import type { DetailCardView } from "../home/detailCardView.ts";
+import { showDetailCard } from "../hud/dom/detailCard.ts";
 import {
   type DomQuestionPanel,
   type DomQuestionPanelInput,
   showQuestionPanel,
 } from "../hud/dom/questionPanel.ts";
-import { NOTE_PLATE, type pauseMenuLayout } from "../hud/pauseMenu.ts";
+import { pillKind } from "../hud/effectNames.ts";
+import type { pauseMenuLayout } from "../hud/pauseMenu.ts";
 import {
   type CardAction,
   modalCardView,
-  type PanelMeasure,
   type PanelNotePart,
   type QuestionPanelView,
   questionPanelView,
 } from "../hud/questionPanelView.ts";
 import { cardNumberForKey, menuKeyActs } from "../input/keyBindings.ts";
 import { pageFrameTurn } from "../pwa/index.ts";
+import { loadSheet } from "../ui/dom/sheetFrames.ts";
 import { uiLayer } from "../ui/dom/uiLayer.ts";
 import { rectIndexAt } from "../ui/grid.ts";
 import { PALETTE } from "../ui/palette.ts";
 import { fillRect } from "../ui/phaser/draw.ts";
-import {
-  addPixelText,
-  pixelBitmapFont,
-  pixelFontMetrics,
-  wrapPixelText,
-} from "../ui/phaser/pixelText.ts";
+import { addPixelText, pixelBitmapFont } from "../ui/phaser/pixelText.ts";
+import { pillColours } from "./effectNameColours.ts";
 import { addCardClose, addCardTitle } from "./homePanels.ts";
-import { modalTextWidth } from "./modalMeasure.ts";
-import { onSceneEvent } from "./overlay.ts";
+import { canvasPanelMeasure } from "./modalMeasure.ts";
 import { listenTargetPress } from "./targetPress.ts";
 import { addMenuButton, addRimmedPanel, addTapBurst, type MenuButton } from "./uiKit.ts";
 
@@ -55,17 +54,6 @@ export interface QuestionPanel {
   // Whether each sentence of a part starts a line of its own.
   readonly sentenceLines: boolean;
   readonly title: string;
-}
-
-// The panel's text measured on the bitmap fonts scene draws it in.
-export function canvasPanelMeasure(scene: Scene): PanelMeasure {
-  return {
-    body: pixelFontMetrics(scene, "body"),
-    inkWidth: (font, line) => modalTextWidth(scene, font, [line]),
-    title: pixelFontMetrics(scene, "title"),
-    wrapNote: (width, text) =>
-      wrapPixelText(scene, { colour: PALETTE.plum, scale: NOTE_PLATE.scale }, width, text),
-  };
 }
 
 // The panel's view, centred in area and measured on scene's fonts.
@@ -145,32 +133,50 @@ function htmlPanelPlace(scene: Scene) {
     : { fonts: { body, title }, layer };
 }
 
-// A panel's view in the HTML layer, hidden while the scene is paused or asleep under a canvas
-// page (help, the settings) and gone with the scene, or by destroy.
+// What every HTML panel in place is given: the shared close label, the fonts and the page point
+// of a press as a game point, through the page frame's turn.
+function htmlPanelInput(place: NonNullable<ReturnType<typeof htmlPanelPlace>>) {
+  const { layer } = place;
+  return {
+    closeLabel: gameData.menuText.common.close,
+    fonts: place.fonts,
+    toGame: (client: Point) =>
+      pageToGame(pageFrameTurn(), layer.element.getBoundingClientRect(), SCREEN_CONFIG, client),
+  };
+}
+
+// panel, hidden while the scene is paused or asleep under a canvas page (help, the settings)
+// and gone with the scene, or by destroy, which stops it following the scene.
+function followScene(scene: Scene, panel: DomQuestionPanel): DomQuestionPanel {
+  const listeners = [
+    [Scenes.Events.PAUSE, () => panel.setShown(false)],
+    [Scenes.Events.RESUME, () => panel.setShown(true)],
+    [Scenes.Events.SLEEP, () => panel.setShown(false)],
+    [Scenes.Events.WAKE, () => panel.setShown(true)],
+  ] as const;
+  const destroy = () => {
+    for (const [type, listener] of listeners) {
+      scene.events.off(type, listener);
+    }
+    scene.events.off(Scenes.Events.SHUTDOWN, destroy);
+    panel.destroy();
+  };
+  for (const [type, listener] of listeners) {
+    scene.events.on(type, listener);
+  }
+  scene.events.once(Scenes.Events.SHUTDOWN, destroy);
+  return { destroy, setShown: (shown) => panel.setShown(shown) };
+}
+
+// A panel's view in the HTML layer, following its scene (followScene).
 function showHtmlPanel(
   scene: Scene,
   place: NonNullable<ReturnType<typeof htmlPanelPlace>>,
   controls: Pick<DomQuestionPanelInput, "close" | "numberKeys" | "presses">,
   view: QuestionPanelView,
 ): DomQuestionPanel {
-  const { layer } = place;
-  const panel = showQuestionPanel(layer, {
-    ...controls,
-    closeLabel: gameData.menuText.common.close,
-    fonts: place.fonts,
-    toGame: (client) =>
-      pageToGame(pageFrameTurn(), layer.element.getBoundingClientRect(), SCREEN_CONFIG, client),
-    view,
-  });
-  for (const [hide, show] of [
-    [Scenes.Events.PAUSE, Scenes.Events.RESUME],
-    [Scenes.Events.SLEEP, Scenes.Events.WAKE],
-  ] as const) {
-    onSceneEvent(scene, scene.events, hide, () => panel.setShown(false));
-    onSceneEvent(scene, scene.events, show, () => panel.setShown(true));
-  }
-  scene.events.once(Scenes.Events.SHUTDOWN, () => panel.destroy());
-  return panel;
+  const panel = showQuestionPanel(place.layer, { ...controls, ...htmlPanelInput(place), view });
+  return followScene(scene, panel);
 }
 
 // The question in the HTML layer, laid out as the canvas draws it (questionPanelView). Returns
@@ -212,4 +218,31 @@ export function addHtmlModalCard(
   const view = modalCardView(canvasPanelMeasure(scene), card, title, entries);
   const presses = entries.map(({ press }) => press);
   return showHtmlPanel(scene, place, { close, numberKeys: false, presses }, view);
+}
+
+// A detail card in the HTML layer, laid out as the canvas draws it (detailCardView), its close
+// control doing close, or a picture of one on a card that takes no presses, as the walk's
+// explanation, which a press anywhere closes. Returns it, for its scene to destroy as the card
+// closes, or undefined where the canvas must draw it (drawDetailCard).
+export function addHtmlDetailCard(
+  scene: Scene,
+  view: DetailCardView,
+  close: (() => void) | undefined,
+): DomQuestionPanel | undefined {
+  const place = htmlPanelPlace(scene);
+  if (place === undefined) {
+    return undefined;
+  }
+  const panel = showDetailCard(place.layer, {
+    ...htmlPanelInput(place),
+    artUrl,
+    close,
+    loadSheet,
+    pillColours: (index) => {
+      const kind = pillKind(index);
+      return kind === undefined ? undefined : pillColours(kind);
+    },
+    view,
+  });
+  return followScene(scene, panel);
 }

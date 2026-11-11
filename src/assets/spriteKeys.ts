@@ -44,6 +44,9 @@ export function dogPortraitKey(data: Pick<GameData, "dogs">, dog: DogId): string
   return `portrait-dog-${data.dogs[dog].art}`;
 }
 
+// The detail card's well its picture sits in.
+export const DETAIL_WELL_KEY = "ui-detail-well";
+
 // A walker's 64x64 portrait, for its detail card.
 export function walkerPortraitKey(walker: WalkerId): string {
   return `portrait-walker-${kebabCase(walker)}`;

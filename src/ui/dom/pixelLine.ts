@@ -7,6 +7,7 @@ import {
 } from "@andornaut/game-kit/text/bitmapFont";
 
 import { deviceRect, deviceX, deviceY, type DomScale, fontPixel } from "../domScale.ts";
+import { laidPills, PILL_CLOSE, PILL_SPACE, pillIndex, pillRows } from "../namePills.ts";
 import { plainMarks } from "../pixelFont.ts";
 import { WEB_FONTS } from "./uiLayer.ts";
 
@@ -123,4 +124,117 @@ export function placeText(
     lineHeight: `${place.lineHeight}px`,
     top: `${place.top}px`,
   });
+}
+
+// A run of a line the web font draws as one element: its text, where the pen starts it in font
+// pixels from the line's start, and the kind of pill whose name it is part of, if any.
+export interface PenRun {
+  readonly pen: number;
+  readonly pill: number | undefined;
+  readonly text: string;
+}
+
+// line split where the bitmap font's pill characters (ui/namePills.ts) sit, which the web fonts
+// lack: each run's pen start as the bitmap font lays the line out, kerning included. Phaser
+// kerns no pair across a pill character, so neither does a run.
+export function penRuns(bitmap: BitmapFont, line: string): PenRun[] {
+  const runs: { pen: number; pill: number | undefined; text: string }[] = [];
+  let pen = 0;
+  let previous: string | undefined;
+  let pill: number | undefined;
+  let run: (typeof runs)[number] | undefined;
+  for (const char of line) {
+    const glyph = bitmap.glyphs.get(char);
+    if (glyph === undefined) {
+      continue;
+    }
+    pen += previous === undefined ? 0 : (bitmap.kernings.get(previous + char) ?? 0);
+    const opens = pillIndex(char);
+    if (opens !== undefined || char === PILL_CLOSE || char === PILL_SPACE) {
+      pill = opens ?? (char === PILL_SPACE ? pill : undefined);
+      run = undefined;
+    } else {
+      if (run === undefined) {
+        run = { pen, pill, text: "" };
+        runs.push(run);
+      }
+      run.text += char;
+    }
+    pen += glyph.advance;
+    previous = char;
+  }
+  return runs;
+}
+
+// The text a screen reader reads for a line with pills: their characters left out, a pill's
+// spaces plain spaces.
+export function spokenText(line: string): string {
+  return [...line]
+    .flatMap((char) =>
+      char === PILL_SPACE
+        ? [" "]
+        : pillIndex(char) !== undefined || char === PILL_CLOSE
+          ? []
+          : [char],
+    )
+    .join("");
+}
+
+// A left-aligned block of text: its pen starting at x and its first line's capitals at capTop
+// (game pixels), its lines a font line apart, each effect's name set in a pill.
+export interface DomTextBlock {
+  readonly capTop: number;
+  readonly colour: number;
+  readonly font: keyof typeof WEB_FONTS;
+  readonly lines: readonly string[];
+  readonly scale: number;
+  readonly x: number;
+}
+
+// Where a block's parts go, in whole device pixels from the layer's corner: each run of text,
+// its font size and line height, and each pill behind a name, its corners cut a font pixel.
+export function blockPlace(
+  bitmap: BitmapFont,
+  scale: DomScale,
+  block: DomTextBlock,
+): {
+  readonly cut: number;
+  readonly fontSize: number;
+  readonly lineHeight: number;
+  readonly pills: readonly {
+    readonly box: { height: number; left: number; top: number; width: number };
+    readonly index: number;
+  }[];
+  readonly runs: readonly (PenRun & { readonly left: number; readonly top: number })[];
+} {
+  const pixel = fontPixel(scale, block.scale);
+  const left = deviceX(scale, block.x);
+  const { capTop } = fontMetrics(bitmap);
+  const rows = pillRows(1);
+  const lines = block.lines.map((line, i) => ({
+    shown: shownText(block.font, line),
+    top: deviceY(scale, block.capTop) + (i * bitmap.lineHeight - capTop) * pixel,
+  }));
+  return {
+    cut: pixel,
+    fontSize: 8 * pixel,
+    lineHeight: bitmap.lineHeight * pixel,
+    pills: lines.flatMap(({ shown, top }) =>
+      laidPills(
+        1,
+        laidGlyphs(bitmap, 1, shown).map((glyph) => ({ ...glyph, line: 0 })),
+      ).map((pill) => ({
+        box: {
+          height: rows.height * pixel,
+          left: left + pill.left * pixel,
+          top: top + rows.top * pixel,
+          width: (pill.right - pill.left) * pixel,
+        },
+        index: pill.index,
+      })),
+    ),
+    runs: lines.flatMap(({ shown, top }) =>
+      penRuns(bitmap, shown).map((run) => ({ ...run, left: left + run.pen * pixel, top })),
+    ),
+  };
 }

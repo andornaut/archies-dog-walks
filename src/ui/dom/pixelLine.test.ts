@@ -1,9 +1,16 @@
-import { fontMetrics, inkWidth, leftBearing } from "@andornaut/game-kit/text/bitmapFont";
+import {
+  advanceWidth,
+  fontMetrics,
+  inkWidth,
+  laidGlyphs,
+  leftBearing,
+} from "@andornaut/game-kit/text/bitmapFont";
 import { describe, expect, it } from "vitest";
 
 import { gameFont } from "../../testing/fontInk.ts";
 import { deviceX, deviceY, domScale, fontPixel } from "../domScale.ts";
-import { shownText, textPlace } from "./pixelLine.ts";
+import { inPill, laidPills, PILL, pillRows } from "../namePills.ts";
+import { blockPlace, penRuns, shownText, spokenText, textPlace } from "./pixelLine.ts";
 
 const ORIGIN = { x: 0, y: 0 };
 
@@ -73,5 +80,50 @@ describe("textPlace", () => {
   it("writes the title font's text in capitals with plain marks", () => {
     expect(shownText("title", "Don’t stop")).toBe("DON'T STOP");
     expect(shownText("body", "Don’t stop")).toBe("Don't stop");
+  });
+});
+
+describe("a block of text with name pills", () => {
+  const font = gameFont("font-body");
+  const line = `${inPill(1, "Second chance")} First lost`;
+
+  it("splits a line at its pill characters, each run's pen where the bitmap font puts it", () => {
+    const runs = penRuns(font, line);
+    expect(runs.map(({ pill, text }) => [text, pill])).toEqual([
+      ["Second", 1],
+      ["chance", 1],
+      [" First lost", undefined],
+    ]);
+    const penAt = (run: number) => {
+      const before = [...line].slice(0, line.indexOf(runs[run]?.text ?? ""));
+      return advanceWidth(font, 1, before.join(""));
+    };
+    expect(runs.map(({ pen }) => pen)).toEqual([0, 1, 2].map(penAt));
+    expect(spokenText(line)).toBe("Second chance First lost");
+  });
+
+  it.each([1, 2, 3])("sets each pill behind its name in whole font pixels at DPR %d", (dpr) => {
+    const scale = domScale(dpr, { height: 560, width: 360, x: 0, y: 0 });
+    const block = { capTop: 300, colour: 0, font: "body", lines: ["Ready", line], scale: 2, x: 47 };
+    const place = blockPlace(font, scale, { ...block, font: "body" });
+    const pixel = fontPixel(scale, 2);
+    const [pill] = laidPills(
+      1,
+      laidGlyphs(font, 1, line).map((glyph) => ({ ...glyph, line: 0 })),
+    );
+    const lineTop = deviceY(scale, 300) + (font.lineHeight - fontMetrics(font).capTop) * pixel;
+    expect(place.pills).toEqual([
+      {
+        box: {
+          height: PILL.height * pixel,
+          left: deviceX(scale, 47) + (pill?.left ?? 0) * pixel,
+          top: lineTop + pillRows(1).top * pixel,
+          width: ((pill?.right ?? 0) - (pill?.left ?? 0)) * pixel,
+        },
+        index: 1,
+      },
+    ]);
+    expect(place.cut).toBe(pixel);
+    expect(place.runs.at(-1)?.top).toBe(lineTop);
   });
 });

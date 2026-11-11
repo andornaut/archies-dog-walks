@@ -5,8 +5,10 @@ import { SCREEN_LAYOUT } from "../../data/screen.ts";
 import { gameFont } from "../../testing/fontInk.ts";
 import type { UiLayer } from "../../ui/dom/uiLayer.ts";
 import { domScale } from "../../ui/domScale.ts";
+import { inPill } from "../../ui/namePills.ts";
 import { PAUSE_MENU_ITEMS, pauseMenuLayout } from "../pauseMenu.ts";
 import { modalCardView, type PanelMeasure, questionPanelView } from "../questionPanelView.ts";
+import { showDetailCard } from "./detailCard.ts";
 import { showQuestionPanel } from "./questionPanel.ts";
 
 type Listener = (event: FakeEvent) => void;
@@ -281,5 +283,72 @@ describe("an HTML modal card", () => {
       .find((node) => node.getAttribute("aria-label") === words.button)
       ?.fire("click");
     expect(update).toHaveBeenCalledOnce();
+  });
+});
+
+describe("an HTML detail card that takes no presses", () => {
+  it("lets every press through, shows its close control as a picture and its art once loaded", async () => {
+    const doc = new FakeDocument();
+    const element = doc.createElement("div");
+    const layer = {
+      element,
+      onScale: () => () => undefined,
+      ready: () => true,
+      scale: () => domScale(2, { height: 560, width: 360, x: 0, y: 0 }),
+      update: () => undefined,
+    } as unknown as UiLayer;
+    const card = { height: 120, width: 280, x: 40, y: 200 };
+    const sheet = {
+      frames: {
+        a: { frame: { h: 32, w: 32, x: 0, y: 0 } },
+        b: { frame: { h: 32, w: 32, x: 32, y: 0 } },
+      },
+      meta: { frameTags: [{ from: 1, name: "neutral" }], size: { h: 32, w: 64 } },
+    };
+    const line = `${inPill(0, "Keen eye")} Spots more`;
+    showDetailCard(layer, {
+      artUrl: (path) => `/art/${path}`,
+      close: undefined,
+      closeLabel: gameData.menuText.common.close,
+      fonts: { body: gameFont("font-body"), title: gameFont("font-title") },
+      loadSheet: () => Promise.resolve(sheet),
+      pillColours: () => ({ name: 0x112233, pill: 0x445566 }),
+      toGame: (point) => point,
+      view: {
+        art: [
+          {
+            key: "face",
+            scale: 1,
+            sheet: { tag: "neutral" },
+            size: { height: 32, width: 32 },
+            x: 60,
+            y: 240,
+          },
+        ],
+        card: modalCardView(MEASURE, card, "Casey", []),
+        framed: [],
+        texts: [{ capTop: 280, colour: 0, lines: [line], x: 52 }],
+        title: "Casey",
+      },
+    });
+    const [dialog] = element.children;
+    const nodes = dialog?.all() ?? [];
+    expect(dialog?.className).toContain("adw-passive");
+    expect(dialog?.listeners.has("mousedown")).toBe(false);
+    expect(nodes.some((node) => node.tagName === "button")).toBe(false);
+    const close = nodes.find((node) => node.className === "adw-close");
+    expect([close?.tagName, close?.getAttribute("aria-hidden")]).toEqual(["span", "true"]);
+    dialog?.fire("keydown", { key: "Tab", preventDefault: () => undefined, shiftKey: false });
+    expect(doc.activeElement).toBe(dialog);
+    const described = nodes.find((node) => node.id === dialog?.getAttribute("aria-describedby"));
+    const spoken = described?.all().find((node) => node.className === "adw-spoken");
+    expect(spoken?.textContent).toBe("Keen eye Spots more ");
+    const art = nodes.find((node) => node.className === "adw-art");
+    expect(art?.style.visibility).toBe("hidden");
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(art?.style.visibility).toBe("");
+    // An art pixel is 2 device pixels at DPR 2, and the tag's frame starts 32 art pixels in.
+    expect(art?.style.backgroundPosition).toBe("-64px 0px");
   });
 });

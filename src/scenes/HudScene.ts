@@ -9,6 +9,7 @@ import { SCREEN_CONFIG, SCREEN_LAYOUT } from "../data/screen.ts";
 import type { AchievementId, DebuffId, DogId, HintTrigger } from "../data/types.ts";
 import { FEEDBACK as MENU_FEEDBACK } from "../home/feedback.ts";
 import { dollarAmountText } from "../home/home.ts";
+import type { DomQuestionPanel } from "../hud/dom/questionPanel.ts";
 import {
   effectIconKey,
   type EffectItem,
@@ -86,6 +87,7 @@ import type { PackSlot, RunState } from "../state/runState.ts";
 import { PALETTE } from "../ui/palette.ts";
 import {
   addFilledRect,
+  addModalShade,
   CREAM_PANEL_COLOURS,
   drawDashedRect,
   drawFramedRect,
@@ -112,7 +114,7 @@ import { changeLabelColour } from "./changeLabelColours.ts";
 import { DEBUFF_COLOURS } from "./debuffColours.ts";
 import { HudFeedback } from "./feedbackMoments.ts";
 import { HeartFeedback, heartPops } from "./heartFeedback.ts";
-import { drawDetailCard } from "./homePanels.ts";
+import { detailView, drawDetailCardView } from "./homePanels.ts";
 import { HUD_DEPTH } from "./hudDepth.ts";
 import type { HudRun, HudWalk, RunHudView } from "./hudWalk.ts";
 import { MESSAGE_EVENT, MessageStrip } from "./messageStripView.ts";
@@ -120,6 +122,7 @@ import { listenOnePress } from "./onePress.ts";
 import { BAR_MUTED_EVENT, onSceneEvent } from "./overlay.ts";
 import { OwnerTabs } from "./ownerTabs.ts";
 import { isMuted, markHintShown, profileSave, shownHints, toggleMuted } from "./profileStore.ts";
+import { addHtmlDetailCard } from "./questionPanel.ts";
 import { cancelRoadShake } from "./run/hitFx.ts";
 import {
   ACHIEVEMENTS_EVENT,
@@ -229,7 +232,11 @@ export class HudScene extends Scene {
   private dynamic: GameObjects.Graphics | undefined;
   private effectParts: GameObjects.GameObject[] = [];
   // What the open explanation explains, and its detail card as drawn, if any.
-  private explained: { key: string; layer: GameObjects.Container | undefined } = NOT_EXPLAINED;
+  private explained: {
+    html?: DomQuestionPanel | undefined;
+    key: string;
+    layer: GameObjects.Container | undefined;
+  } = NOT_EXPLAINED;
   private feedback: HudFeedback | undefined;
   private hearts: HeartFeedback | undefined;
   // The change labels, glints and owners' pop-ins on screen, which hold while the player has
@@ -754,6 +761,7 @@ export class HudScene extends Scene {
       return;
     }
     shown.layer?.destroy();
+    shown.html?.destroy();
     const detail =
       target === undefined
         ? undefined
@@ -763,8 +771,16 @@ export class HudScene extends Scene {
       return;
     }
     const layer = overlay.add.container(0, 0).setDepth(HUD_DEPTH.detail);
-    drawDetailCard(overlay, layer, LAYOUT.screen, false, detail.card, detail.picture, detail.kind);
-    this.explained = { key, layer };
+    const card = detailView(overlay, LAYOUT.screen, detail);
+    // In HTML where the page's switch is on and its fonts are ready, over the canvas's dim, else
+    // on the canvas. A press anywhere closes it, so the HTML card takes none.
+    const html = addHtmlDetailCard(overlay, card, undefined);
+    if (html === undefined) {
+      drawDetailCardView(overlay, layer, LAYOUT.screen, false, card);
+    } else {
+      layer.add(addModalShade(overlay, LAYOUT.screen));
+    }
+    this.explained = { html, key, layer };
   }
 
   private redraw(view: RunHudView): void {
