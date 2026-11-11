@@ -1,0 +1,221 @@
+import { insetRect, type Point, type Rect } from "@andornaut/game-kit/rect";
+import type { BitmapFont } from "@andornaut/game-kit/text/bitmapFont";
+
+import { cardNumberForKey, menuKeyActs } from "../../input/keyBindings.ts";
+import { closeFace } from "../../ui/closeControl.ts";
+import { createTextLine, type DomTextLine, placeBox, placeText } from "../../ui/dom/pixelLine.ts";
+import type { UiLayer } from "../../ui/dom/uiLayer.ts";
+import { type DomScale, snapLength, snapX, snapY } from "../../ui/domScale.ts";
+import type { PanelText, QuestionPanelView } from "../questionPanelView.ts";
+
+// The pause menu in HTML over the canvas: the panel questionPanelView lays out, drawn in the #ui
+// layer at the places the canvas would draw it, as a dialog. A press on its parts is its own
+// (Phaser never hears it); everywhere else presses go through to the canvas, where the walk bar's
+// buttons keep working and PauseScene's outside tap resumes. Keys 1 to 4 press its buttons, Tab
+// and Shift+Tab keep focus among its buttons and close control, and Enter or Space presses the
+// focused one.
+
+export interface DomPauseMenuInput {
+  // What the close control does, its accessible name, and what each button does, in order.
+  readonly close: () => void;
+  readonly closeLabel: string;
+  readonly fonts: Readonly<Record<PanelText["font"], BitmapFont>>;
+  readonly presses: readonly (() => void)[];
+  // The page point of a press as a game point, through the page frame's turn.
+  readonly toGame: (client: Point) => Point;
+  readonly view: QuestionPanelView;
+}
+
+export interface DomPauseMenu {
+  destroy(): void;
+  // Hides the menu while a canvas page covers it (help, the settings), and shows it again.
+  setShown(shown: boolean): void;
+}
+
+const ORIGIN = { x: 0, y: 0 } as const;
+
+// The pause menu in layer, shown and its first button focused.
+export function showPauseMenu(layer: UiLayer, input: DomPauseMenuInput): DomPauseMenu {
+  const doc = layer.element.ownerDocument;
+  const { view } = input;
+  const dialog = doc.createElement("div");
+  dialog.className = "adw-dialog";
+  dialog.setAttribute("role", "dialog");
+  dialog.setAttribute("aria-modal", "true");
+
+  const rim = doc.createElement("div");
+  rim.className = "adw-rim";
+  const panel = doc.createElement("div");
+  panel.className = "adw-panel";
+  dialog.append(rim, panel);
+
+  // The parts drawn at game pixels, placed again as the scale changes.
+  const placed: ((scale: DomScale) => void)[] = [];
+  const box = (element: HTMLElement, origin: Point, rect: Rect) =>
+    placed.push((scale) => placeBox(scale, origin, element, rect));
+  const text = (parent: HTMLElement, origin: Point, line: DomTextLine) => {
+    const element = createTextLine(doc, line);
+    parent.append(element);
+    placed.push((scale) => placeText(input.fonts[line.font], scale, origin, element, line));
+    return element;
+  };
+  box(rim, ORIGIN, insetRect(-1, view.panel));
+  box(panel, ORIGIN, view.panel);
+
+  // The title, its lines in capitals; a screen reader reads its words as written.
+  const title = doc.createElement("h2");
+  title.className = "adw-lines";
+  title.id = "adw-pause-title";
+  title.setAttribute("aria-label", view.title.map((line) => line.text).join(" "));
+  for (const line of view.title) {
+    text(title, ORIGIN, line).setAttribute("aria-hidden", "true");
+  }
+  dialog.setAttribute("aria-labelledby", title.id);
+  dialog.append(title);
+
+  if (view.notePlate !== undefined) {
+    const plate = doc.createElement("div");
+    plate.className = "adw-plate";
+    box(plate, ORIGIN, view.notePlate);
+    const note = doc.createElement("p");
+    note.className = "adw-lines";
+    note.id = "adw-pause-note";
+    // Each line ends in a space, so a screen reader reads the lines as running text.
+    for (const line of view.note) {
+      text(note, ORIGIN, { ...line, text: `${line.text} ` });
+    }
+    dialog.setAttribute("aria-describedby", note.id);
+    dialog.append(plate, note);
+  }
+
+  const burst = (event: PointerEvent) => {
+    const at = input.toGame({ x: event.clientX, y: event.clientY });
+    const element = doc.createElement("span");
+    element.className = "adw-burst";
+    const scale = layer.scale();
+    const side = snapLength(scale, 16);
+    Object.assign(element.style, {
+      height: `${side}px`,
+      left: `${snapX(scale, at.x - 8)}px`,
+      top: `${snapY(scale, at.y - 8)}px`,
+      width: `${side}px`,
+    });
+    element.style.setProperty("--adw-burst", `${side}px`);
+    element.addEventListener("animationend", () => element.remove());
+    dialog.append(element);
+  };
+  // Shows a control pressed while a press that began on it stays on it, as the canvas's do.
+  // Releasing the implicit capture a touch takes lets the press leave the control, so click,
+  // which fires only where the press began and ended, presses it.
+  const pressable = (control: HTMLButtonElement, press: () => void) => {
+    const lift = () => control.removeAttribute("data-pressed");
+    control.addEventListener("pointerdown", (event) => {
+      if (control.hasPointerCapture(event.pointerId)) {
+        control.releasePointerCapture(event.pointerId);
+      }
+      control.setAttribute("data-pressed", "");
+      burst(event);
+    });
+    control.addEventListener("pointerenter", (event) => {
+      if (event.buttons !== 0) {
+        control.setAttribute("data-pressed", "");
+      }
+    });
+    for (const type of ["pointerleave", "pointerup", "pointercancel"]) {
+      control.addEventListener(type, lift);
+    }
+    control.addEventListener("click", press);
+  };
+
+  const buttons = view.buttons.map((button, i) => {
+    const element = doc.createElement("button");
+    element.type = "button";
+    element.className = button.primary ? "adw-button adw-go" : "adw-button";
+    element.setAttribute("aria-label", button.label);
+    element.setAttribute("aria-keyshortcuts", String(i + 1));
+    const face = doc.createElement("span");
+    face.className = "adw-face";
+    element.append(face);
+    box(element, ORIGIN, button.hit);
+    box(face, button.hit, button.rect);
+    text(element, button.hit, button.text).setAttribute("aria-hidden", "true");
+    pressable(element, () => input.presses[i]?.());
+    return element;
+  });
+
+  // The close control after the buttons, so it is on top where their press areas meet.
+  const close = doc.createElement("button");
+  close.type = "button";
+  close.className = "adw-close";
+  close.setAttribute("aria-label", input.closeLabel);
+  const closeArt = closeFace(view.close);
+  const face = doc.createElement("span");
+  face.className = "adw-close-face";
+  const glyph = doc.createElement("span");
+  glyph.className = "adw-close-glyph";
+  close.append(face, glyph);
+  box(close, ORIGIN, view.close.hit);
+  box(face, view.close.hit, closeArt);
+  box(glyph, view.close.hit, { height: 16, width: 16, x: closeArt.x + 2, y: closeArt.y + 1 });
+  pressable(close, input.close);
+  dialog.append(...buttons, close);
+
+  // Phaser handles a press on the page outside its canvas as its own; a press here is the menu's.
+  for (const type of ["mousedown", "touchstart"]) {
+    dialog.addEventListener(type, (event) => event.stopPropagation());
+  }
+  const focusables = [...buttons, close];
+  dialog.addEventListener("keydown", (event) => {
+    if (event.key !== "Tab") {
+      return;
+    }
+    const at = focusables.indexOf(doc.activeElement as HTMLButtonElement);
+    const next = (at + (event.shiftKey ? focusables.length - 1 : 1)) % focusables.length;
+    event.preventDefault();
+    focusables[at === -1 ? 0 : next]?.focus();
+  });
+  const onKey = (event: KeyboardEvent) => {
+    const number = cardNumberForKey(input.presses.length, event.key);
+    if (!dialog.hidden && number !== undefined && menuKeyActs(event.repeat, event.key)) {
+      input.presses[number - 1]?.();
+    }
+  };
+  doc.defaultView?.addEventListener("keydown", onKey);
+
+  const place = (scale: DomScale) => {
+    for (const part of placed) {
+      part(scale);
+    }
+  };
+  place(layer.scale());
+  const stopScale = layer.onScale(place);
+  layer.element.append(dialog);
+  const focusFirst = () => buttons[0]?.focus({ preventScroll: true });
+  focusFirst();
+
+  const blur = () => {
+    if (dialog.contains(doc.activeElement)) {
+      (doc.activeElement as HTMLElement).blur();
+    }
+  };
+  return {
+    destroy() {
+      blur();
+      stopScale();
+      doc.defaultView?.removeEventListener("keydown", onKey);
+      dialog.remove();
+    },
+    setShown(shown) {
+      if (shown === !dialog.hidden) {
+        return;
+      }
+      if (!shown) {
+        blur();
+      }
+      dialog.hidden = !shown;
+      if (shown) {
+        focusFirst();
+      }
+    },
+  };
+}

@@ -1,8 +1,11 @@
+import { type Rect } from "@andornaut/game-kit/rect";
+import { pageToGame } from "@andornaut/game-kit/view/pagePoint";
 import { Core, Scene, Scenes } from "phaser";
 
 import { gameData } from "../data/index.ts";
-import { SCREEN_LAYOUT } from "../data/screen.ts";
+import { SCREEN_CONFIG, SCREEN_LAYOUT } from "../data/screen.ts";
 import { overlayRegion, regionOutside } from "../home/homeBar.ts";
+import { showPauseMenu } from "../hud/dom/pauseMenu.ts";
 import type { HomeNoteLine } from "../hud/homeQuestion.ts";
 import {
   HOME_QUESTION_ANSWERS,
@@ -13,13 +16,20 @@ import {
 } from "../hud/pauseMenu.ts";
 import { WALKER_SILHOUETTES } from "../layout/packFormation.ts";
 import { walkerFootY } from "../layout/screenLayout.ts";
-import { exitShown } from "../pwa/index.ts";
+import { exitShown, pageFrameTurn } from "../pwa/index.ts";
+import { type UiLayer, uiLayer } from "../ui/dom/uiLayer.ts";
 import { PALETTE } from "../ui/palette.ts";
+import { pixelBitmapFont } from "../ui/phaser/pixelText.ts";
 import { addRampDim } from "../ui/phaser/rampDim.ts";
 import { HELP_CLOSED_EVENT } from "./HelpScene.ts";
 import { openHelp } from "./helpScreen.ts";
-import { listenOutsideTap, onceSceneEvent, openOverlay } from "./overlay.ts";
-import { addQuestionPanel, type PanelEntry } from "./questionPanel.ts";
+import { listenOutsideTap, onceSceneEvent, onSceneEvent, openOverlay } from "./overlay.ts";
+import {
+  addQuestionPanel,
+  type PanelEntry,
+  type QuestionPanel,
+  questionView,
+} from "./questionPanel.ts";
 import type { RunScene } from "./RunScene.ts";
 import { SCENE_KEYS } from "./sceneKeys.ts";
 import { SETTINGS_CLOSED_EVENT, type SettingsData } from "./SettingsScene.ts";
@@ -97,9 +107,7 @@ export class PauseScene extends Scene {
           }))
         : PAUSE_MENU_ITEMS.map((item) => ({ label: menu[item], press: presses[item] }));
     // The menu's own note starts each sentence on a line of its own.
-    const covered = addQuestionPanel(
-      this,
-      walkView,
+    const panel: QuestionPanel =
       data.mode === "homeQuestion"
         ? {
             avoid,
@@ -118,8 +126,14 @@ export class PauseScene extends Scene {
             note: [{ colour: PALETTE.plum, text: data.note }],
             sentenceLines: true,
             title: menu.title,
-          },
-    );
+          };
+    // The pause menu draws in HTML where the page's switch is on and its layer and fonts are
+    // ready; the Home question stays on the canvas.
+    const layer = data.mode === "menu" ? uiLayer() : undefined;
+    const covered =
+      layer?.ready() === true
+        ? this.showHtmlMenu(layer, walkView, panel)
+        : addQuestionPanel(this, walkView, panel);
     // The close control and a tap anywhere around the panel resume, as Resume and Keep walking
     // do, the walk bar's empty area and the dog cards included, though they are not dimmed. The
     // walk bar's buttons keep their own taps.
@@ -136,6 +150,31 @@ export class PauseScene extends Scene {
       const open = () => presses[overlay.open]();
       onceSceneEvent(this, this.game.events, Core.Events.POST_RENDER, open);
     }
+  }
+
+  // The menu in the HTML layer, in the canvas panel's place, hidden while the scene is paused
+  // under help or the settings and gone with the scene. Returns what a tap outside must miss.
+  // Without the bitmap fonts, which lay out its web fonts' text, the canvas draws it.
+  private showHtmlMenu(layer: UiLayer, area: Rect, question: QuestionPanel): Rect[] {
+    const body = pixelBitmapFont(this, "body");
+    const title = pixelBitmapFont(this, "title");
+    if (body === undefined || title === undefined) {
+      return addQuestionPanel(this, area, question);
+    }
+    const view = questionView(this, area, question);
+    const menu = showPauseMenu(layer, {
+      close: question.close,
+      closeLabel: gameData.menuText.pause.close,
+      fonts: { body, title },
+      presses: question.entries.map(({ press }) => press),
+      toGame: (client) =>
+        pageToGame(pageFrameTurn(), layer.element.getBoundingClientRect(), SCREEN_CONFIG, client),
+      view,
+    });
+    onSceneEvent(this, this.events, Scenes.Events.PAUSE, () => menu.setShown(false));
+    onSceneEvent(this, this.events, Scenes.Events.RESUME, () => menu.setShown(true));
+    this.events.once(Scenes.Events.SHUTDOWN, () => menu.destroy());
+    return [...view.covered];
   }
 
   // The settings over the walk, dimmed as the menu dims it. The menu hides under them, dim and
