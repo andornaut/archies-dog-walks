@@ -1,4 +1,4 @@
-import type { Rect } from "@andornaut/game-kit/rect";
+import type { Point, Rect } from "@andornaut/game-kit/rect";
 
 import { DETAIL_WELL_KEY, ownerFaceKey } from "../assets/spriteKeys.ts";
 import type { GameData } from "../data/types.ts";
@@ -41,8 +41,11 @@ export interface DetailMeasure extends PanelMeasure {
 }
 
 // Art on the card, its top-left at x and y, each art pixel scale game pixels: an image, or one
-// frame of a sheet, its tag's first frame, or its first frame with no tag.
+// frame of a sheet, its tag's first frame, or its first frame with no tag. holder is the top-left
+// of the box it sits in (the well, the owner's photo), which the HTML interface sets it whole art
+// pixels into, so it sits as centred in the box at every scale as at 1x.
 export interface DetailArt {
+  readonly holder?: Point;
   readonly key: string;
   readonly scale: number;
   readonly sheet?: { readonly tag: string | undefined };
@@ -51,7 +54,8 @@ export interface DetailArt {
   readonly y: number;
 }
 
-// A box filled in fill inside a one-pixel border.
+// A box filled in fill inside a one-pixel border, its rect in game pixels, which are its art
+// pixels at 1x.
 export interface DetailFramed {
   readonly border: number;
   readonly fill: number;
@@ -112,7 +116,8 @@ function addOwner(
   const size = measure.art(key);
   if (size !== undefined) {
     const tag = measure.hasTag(key, OWNER_FACE_TAG) ? OWNER_FACE_TAG : undefined;
-    content.art.push({ key, scale: 1, sheet: { tag }, size, ...spot.face });
+    const holder = { x: spot.photo.x, y: spot.photo.y };
+    content.art.push({ holder, key, scale: 1, sheet: { tag }, size, ...spot.face });
   }
   addText(content, measure, {
     capTop: spot.name.y,
@@ -182,10 +187,17 @@ export function detailCardView(
   const fallback = picture.fallback === undefined ? undefined : measure.art(picture.fallback);
   if (shown !== undefined) {
     const at = { x: wellRect.x + well.picture, y: wellRect.y + well.picture };
-    addArt(content, { key: picture.key, scale: picture.scale, size: shown, ...at });
+    addArt(content, {
+      holder: wellRect,
+      key: picture.key,
+      scale: picture.scale,
+      size: shown,
+      ...at,
+    });
   } else if (picture.fallback !== undefined && fallback !== undefined) {
     // Centred in the well at 1x.
     addArt(content, {
+      holder: wellRect,
       key: picture.fallback,
       scale: 1,
       sheet: { tag: undefined },
@@ -228,13 +240,12 @@ export function detailCardView(
     ),
   );
   const rect = modalRect(dim, undefined, { height: layout.height, width });
-  const move = <T extends { x: number; y: number }>(at: T): T => ({
-    ...at,
-    x: at.x + rect.x,
-    y: at.y + rect.y,
-  });
+  const move = <T extends Point>(at: T): T => ({ ...at, x: at.x + rect.x, y: at.y + rect.y });
   return {
-    art: content.art.map(move),
+    art: content.art.map((art) => ({
+      ...move(art),
+      ...(art.holder === undefined ? {} : { holder: move({ x: art.holder.x, y: art.holder.y }) }),
+    })),
     card: modalCardView(measure, rect, card.title, []),
     framed: content.framed.map((box) => ({ ...box, rect: move(box.rect) })),
     texts: content.texts.map((text) => ({

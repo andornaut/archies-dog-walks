@@ -5,7 +5,7 @@ import type { DetailArt, DetailCardView, DetailText } from "../../home/detailCar
 import { blockPlace, setBox, shownText, spokenText } from "../../ui/dom/pixelLine.ts";
 import { type SheetFrame, sheetFrame } from "../../ui/dom/sheetFrames.ts";
 import type { UiLayer } from "../../ui/dom/uiLayer.ts";
-import { artPixel, deviceX, deviceY, type DomScale, frameRect } from "../../ui/domScale.ts";
+import { artPixel, deviceX, deviceY, type DomScale } from "../../ui/domScale.ts";
 import { TEXT_SCALE } from "../../ui/textFit.ts";
 import {
   type DomPart,
@@ -38,7 +38,7 @@ const hex = (colour: number) => `#${colour.toString(16).padStart(6, "0")}`;
 // Ids that tie each card's dialog to its text.
 let cards = 0;
 
-// The box a framed box's fill sits in, an art pixel inside its border.
+// A framed box, whole art pixels from its corner, its fill an art pixel inside its border.
 function framedPart(doc: Document, view: DetailCardView["framed"][number]): DomPart {
   const element = doc.createElement("div");
   element.className = "adw-framed";
@@ -50,21 +50,27 @@ function framedPart(doc: Document, view: DetailCardView["framed"][number]): DomP
   return {
     element,
     place: (scale) => {
-      const box = frameRect(scale, view.rect);
       const pixel = artPixel(scale);
-      setBox(element, box);
+      const { height, width, x, y } = view.rect;
+      setBox(element, {
+        height: height * pixel,
+        left: deviceX(scale, x),
+        top: deviceY(scale, y),
+        width: width * pixel,
+      });
       setBox(fill, {
-        height: box.height - 2 * pixel,
+        height: (height - 2) * pixel,
         left: pixel,
         top: pixel,
-        width: box.width - 2 * pixel,
+        width: (width - 2) * pixel,
       });
     },
   };
 }
 
 // Art from its top-left, each art pixel art.scale times artPixel device pixels: an image's whole
-// file, or a sheet's frame, hidden until the sheet's JSON says where the frame is.
+// file, or a sheet's frame, hidden until the sheet's JSON says where the frame is. Art in a box
+// sits whole art pixels into it, rounded down where it is centred on a half pixel.
 function artPart(doc: Document, input: DomDetailCardInput, art: DetailArt): DomPart {
   const element = doc.createElement("span");
   element.className = "adw-art";
@@ -75,10 +81,12 @@ function artPart(doc: Document, input: DomDetailCardInput, art: DetailArt): DomP
   const place = (at: DomScale) => {
     scale = at;
     const pixel = artPixel(at) * art.scale;
+    const holder = art.holder ?? art;
+    const into = (from: number, to: number) => Math.floor(to - from) * artPixel(at);
     setBox(element, {
       height: art.size.height * pixel,
-      left: deviceX(at, art.x),
-      top: deviceY(at, art.y),
+      left: deviceX(at, holder.x) + into(holder.x, art.x),
+      top: deviceY(at, holder.y) + into(holder.y, art.y),
       width: art.size.width * pixel,
     });
     if (frame !== undefined) {

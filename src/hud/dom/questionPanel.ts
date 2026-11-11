@@ -151,7 +151,7 @@ export function showQuestionPanel(layer: UiLayer, input: DomQuestionPanelInput):
   if (view.notePlate !== undefined) {
     const plate = doc.createElement("div");
     plate.className = "adw-plate";
-    box(plate, ORIGIN, view.notePlate);
+    frame(plate, ORIGIN, view.notePlate);
     const note = doc.createElement("p");
     note.className = "adw-lines";
     note.id = `${id}-note`;
