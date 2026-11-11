@@ -75,6 +75,10 @@ export function randomSeed(): number {
   return Math.floor(Math.random() * (MAX_SEED + 1));
 }
 
+// The page's parameters other modules read, which a run setup leaves alone: ui, the HTML
+// interface's switch (src/ui/htmlUi.ts).
+const PAGE_PARAMS: ReadonlySet<string> = new Set(["ui"]);
+
 function isParamName(name: string): name is ParamName {
   return (PARAM_NAMES as readonly string[]).includes(name);
 }
@@ -99,6 +103,9 @@ export function parseRunSetup<DogId extends string, GearId extends string, Walke
   const values = new Map<ParamName, string>();
   for (const name of new Set(params.keys())) {
     const all = params.getAll(name);
+    if (PAGE_PARAMS.has(name)) {
+      continue;
+    }
     if (!isParamName(name)) {
       warnings.push(`Unknown parameter "${name}"`);
     } else if (all.length > 1) {
