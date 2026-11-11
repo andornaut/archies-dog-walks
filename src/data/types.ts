@@ -1153,6 +1153,8 @@ export interface MenuText {
     readonly previous: string;
   };
   readonly pause: {
+    // The close control's accessible name.
+    readonly close: string;
     readonly headHome: string;
     readonly help: string;
     // What End walk keeps of the cash: note when it keeps less than all of it, else noteAll.
