@@ -38,8 +38,22 @@
 // In-art signs (shop boards, the High Park gate, the Distillery and TTC signs) use the same letters and
 // outline at 1x, with a 1px shadow, through sign().
 //
+// The build also writes font-body and font-title as WOFF 1.0 web fonts (webfont.ts), from the same
+// glyphs, for HTML text that matches the BMFont pixel for pixel: public/art/fonts/font-body.woff
+// (family "ADW Body") and font-title.woff ("ADW Title"), each with its source font's OFL notice in
+// its name table. 1024 units per em, so one design pixel is 128 units and CSS font-size 8 x k px
+// draws k CSS pixels a design pixel; text stays crisp wherever font-size times the device pixel ratio
+// is a whole multiple of 8. line-height normal is the BMFont's line; the advances carry the letter
+// spacing (CSS letter-spacing 0) and the kerning pairs are a kern table (CSS font-kerning normal).
+// Rows are design pixels from the line's top:
+//
+//   web font    em  line  base (ascent, descent)  capitals         crisp font-size at DPR 1
+//   font-body   8   10    8 (8, 2)                6 (rows 2 to 7)  8, 16, 24 px (lines 10, 20, 30)
+//   font-title  8   12    9 (9, 3)                5 (rows 4 to 8)  8, 16, 24 px (lines 12, 24, 36)
+//
 // Run from the repository root.
-import { mkdirSync, writeFileSync } from "node:fs";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { dirname } from "node:path";
 
 import { rgb } from "@andornaut/art-kit/colour";
 import { rasteriseGlyphs } from "@andornaut/art-kit/fonts";
@@ -49,10 +63,12 @@ import { blankImage, type RgbaImage } from "@andornaut/art-kit/rgbaImage";
 
 import { LETTERS, word, wordSize } from "./fx.ts";
 import { Grid, HEART, K, rgbPng, run, savePng, toImage } from "./pixel.ts";
+import { type PixelFont, pixelWoff } from "./webfont.ts";
 
 const USAGE = `Usage:
   node art/tools/fonts.ts preview OUT.png   a sample of every font but font-comic, scaled up
-  node art/tools/fonts.ts build             write public/art/fonts/*.png and *.fnt`;
+  node art/tools/fonts.ts build             write public/art/fonts/*.png and *.fnt, and
+                                            font-body.woff and font-title.woff`;
 
 // A glyph: its image (white on clear for a tinted font, baked colours otherwise; none for a space),
 // the offsets of its top-left from the pen and the line's top, and the pen's advance.
@@ -600,19 +616,35 @@ function writeFont(
   writeFileSync(`public/art/fonts/${key}.fnt`, font.xml);
 }
 
+// ---------- the web fonts ----------
+
+// The web font's family name, by key.
+const WEB_FAMILIES: ReadonlyMap<string, string> = new Map([
+  ["font-body", "ADW Body"],
+  ["font-title", "ADW Title"],
+]);
+
+// The SIL Open Font License notice beside the font file at path: its copyright line, licence line
+// and URL.
+function oflNotice(path: string): Pick<PixelFont, "copyright" | "licence"> {
+  const lines = readFileSync(`${dirname(path)}/OFL.txt`, "utf8").split("\n");
+  return { copyright: lines[0]!, licence: [lines[2]!, lines[4]!] };
+}
+
 function build(): void {
   for (const [key, [face, path, size]] of FONTS) {
     const { ascent, descent, glyphs: gl } = glyphs(path, size);
-    writeFont(
-      {
-        base: ascent + (BASE_DROP.get(path) ?? 0),
-        face,
-        kerns: KERNS.get(path) ?? [],
-        lineHeight: ascent + descent + 1,
-        size,
-      },
-      key,
-      gl,
+    const metrics = {
+      base: ascent + (BASE_DROP.get(path) ?? 0),
+      kerns: KERNS.get(path) ?? [],
+      lineHeight: ascent + descent + 1,
+      size,
+    };
+    writeFont({ ...metrics, face }, key, gl);
+    const family = WEB_FAMILIES.get(key)!;
+    writeFileSync(
+      `public/art/fonts/${key}.woff`,
+      pixelWoff({ ...metrics, ...oflNotice(path), family }, gl),
     );
   }
   for (const [key, fillColour] of DISPLAY) {

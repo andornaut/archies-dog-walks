@@ -8,7 +8,9 @@
 // sale the bank covers), icon-treat (the treat pickup, its bone and heart as road.ts's treat lays
 // them out at 16x16, for the message strip), icon-stinky; icon-dog-slot (32x32, a pack slot for
 // sale in the shop: a doghouse with a green plus badge, as the shop's item-<gear> art, outlined
-// with iconEdge); ui-panel (24x24 nine-slice, 4px corners), ui-hint (24x24 nine-slice, 8px corners),
+// with iconEdge); ui-panel (24x24 nine-slice, 4px corners); ui-button-<tag> (24x24, each ui-button
+// tag's frame as an image of its own for HTML's CSS border-image, sliced as ui-button is) and
+// ui-icon-button-<tag> (20x20, normal and pressed); ui-hint (24x24 nine-slice, 8px corners),
 // ui-hint-tail (8x6), ui-new-best
 // (72x20 ribbon, text baked in with font-title); the start screen's ui-detail-card (24x24 nine-slice,
 // 8px corners) and ui-detail-well (68x68); the shop list's ui-scroll-track (8x24) and ui-scroll-thumb
@@ -2109,6 +2111,21 @@ function edgedImage(g: Drawable): RgbaImage {
   return toImage(g.outlined());
 }
 
+// ui-button's and ui-icon-button's tags, in their sheets' order. Each is also an image of its own,
+// ui-button-<tag> and ui-icon-button-<tag>, the tag's frame pixel for pixel, for HTML's CSS
+// border-image and backgrounds.
+const BUTTON_TAGS = [
+  "normal",
+  "pressed",
+  "disabled",
+  "secondary",
+  "secondary-pressed",
+  "go",
+  "go-pressed",
+  "go-disabled",
+] as const;
+const ICON_BUTTON_TAGS = ["normal", "pressed"] as const;
+
 // Every image by key, in build order.
 const IMAGES: ReadonlyMap<string, () => RgbaImage> = new Map([
   ["icon-pause", () => flat(pause())],
@@ -2128,6 +2145,8 @@ const IMAGES: ReadonlyMap<string, () => RgbaImage> = new Map([
   ["icon-stinky", () => toImage(stinky())],
   ["icon-dog-slot", () => edgedImage(dogSlot())],
   ["ui-panel", () => flat(panel())],
+  ...BUTTON_TAGS.map((tag) => [`ui-button-${tag}`, () => flat(button(tag))] as const),
+  ...ICON_BUTTON_TAGS.map((tag) => [`ui-icon-button-${tag}`, () => flat(iconButton(tag))] as const),
   ["ui-hint", () => flat(hint())],
   ["ui-hint-tail", () => flat(hintTail())],
   ["ui-new-best", newBest],
@@ -2215,20 +2234,8 @@ function* sprites(): Generator<Sprite> {
       ["selected", [0, 1].map((p) => tile("selected", p).outlined(false)), 180],
     ],
   ];
-  yield [
-    "ui-button",
-    [
-      "normal",
-      "pressed",
-      "disabled",
-      "secondary",
-      "secondary-pressed",
-      "go",
-      "go-pressed",
-      "go-disabled",
-    ].map((s) => still(s, button(s))),
-  ];
-  yield ["ui-icon-button", ["normal", "pressed"].map((s) => still(s, iconButton(s)))];
+  yield ["ui-button", BUTTON_TAGS.map((s) => still(s, button(s)))];
+  yield ["ui-icon-button", ICON_BUTTON_TAGS.map((s) => still(s, iconButton(s)))];
   yield ["ui-switch", [still("on", toggle(true)), still("off", toggle(false))]];
   yield [
     "ui-slider",

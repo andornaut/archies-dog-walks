@@ -14228,6 +14228,38 @@
       "png": "images/screen-loading.png"
     },
     {
+      "key": "ui-button-disabled",
+      "png": "images/ui-button-disabled.png"
+    },
+    {
+      "key": "ui-button-go",
+      "png": "images/ui-button-go.png"
+    },
+    {
+      "key": "ui-button-go-disabled",
+      "png": "images/ui-button-go-disabled.png"
+    },
+    {
+      "key": "ui-button-go-pressed",
+      "png": "images/ui-button-go-pressed.png"
+    },
+    {
+      "key": "ui-button-normal",
+      "png": "images/ui-button-normal.png"
+    },
+    {
+      "key": "ui-button-pressed",
+      "png": "images/ui-button-pressed.png"
+    },
+    {
+      "key": "ui-button-secondary",
+      "png": "images/ui-button-secondary.png"
+    },
+    {
+      "key": "ui-button-secondary-pressed",
+      "png": "images/ui-button-secondary-pressed.png"
+    },
+    {
       "key": "ui-celebrate-burst",
       "png": "images/ui-celebrate-burst.png"
     },
@@ -14274,6 +14306,14 @@
     {
       "key": "ui-home-cash-well-right",
       "png": "images/ui-home-cash-well-right.png"
+    },
+    {
+      "key": "ui-icon-button-normal",
+      "png": "images/ui-icon-button-normal.png"
+    },
+    {
+      "key": "ui-icon-button-pressed",
+      "png": "images/ui-icon-button-pressed.png"
     },
     {
       "key": "ui-lead-tag",

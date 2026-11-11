@@ -91,8 +91,8 @@ const NEEDS: Readonly<Partial<Record<ArtSet, readonly ArtSet[]>>> = {
   share: ["backdrops", "dogs", "fonts", "road", "roads", "screens"],
 };
 
-// The modules in art/tools/ that are not sets: shared drawing code, previews, the home page's grabs
-// (taken from the built game), scores and this file.
+// The modules in art/tools/ that are not sets: shared drawing code, the web font writer, previews,
+// the home page's grabs (taken from the built game), scores and this file.
 const NOT_SETS = [
   "build",
   "contact_sheet",
@@ -105,6 +105,7 @@ const NOT_SETS = [
   "music_the_beaches",
   "music_yonge_street",
   "scene",
+  "webfont",
 ];
 
 // art/, which no build writes, and every path a build writes: shared/palette.json (pixel),
