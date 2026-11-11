@@ -55,7 +55,15 @@ function domLabel(
   const { characters, wrappedText } = label.getTextBounds(false);
   const text = label.maxWidth > 0 && wrappedText !== "" ? wrappedText : label.text;
   const pills = label.getData(NAME_PILLS_DATA) as LabelNamePills | undefined;
+  // Phaser's align: 1 centres a block's lines on its widest, 2 sets them to its right.
+  const align =
+    label.originX === 0.5 || label.align === 1
+      ? "centre"
+      : label.originX === 1 || label.align === 2
+        ? "end"
+        : "start";
   return {
+    align,
     colour: label.tintTopLeft,
     font,
     lines: text.split("\n").map((line, i) => {

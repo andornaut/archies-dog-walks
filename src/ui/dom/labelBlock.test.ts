@@ -1,8 +1,16 @@
-import { advanceWidth, laidGlyphs } from "@andornaut/game-kit/text/bitmapFont";
+import { advanceWidth, fontMetrics, laidGlyphs } from "@andornaut/game-kit/text/bitmapFont";
 import { describe, expect, it } from "vitest";
 
 import { gameFont } from "../../testing/fontInk.ts";
-import { deviceX, deviceY, domScale, fontPixel } from "../domScale.ts";
+import {
+  artPixel,
+  deviceX,
+  deviceY,
+  domScale,
+  exactDeviceX,
+  exactDeviceY,
+  fontPixel,
+} from "../domScale.ts";
 import { inPill, laidPills, PILL, pillRows } from "../namePills.ts";
 import { labelPlace } from "./labelBlock.ts";
 
@@ -16,6 +24,7 @@ describe("labelPlace", () => {
       const pixel = fontPixel(scale, 1);
       // A centred line half a font pixel in, on a label mid-shake.
       const label = {
+        align: "start",
         colour: 0,
         font: "body",
         lines: [
@@ -40,6 +49,7 @@ describe("labelPlace", () => {
     const pixel = fontPixel(scale, 2);
     const text = `${inPill(3, "Rush hour")} More of all`;
     const place = labelPlace(font, scale, {
+      align: "start",
       colour: 0,
       font: "body",
       lines: [{ pen: 0, text }],
@@ -72,5 +82,51 @@ describe("labelPlace", () => {
     expect(place.runs.at(-1)?.left).toBe(
       deviceX(scale, 40) + advanceWidth(font, 1, before) * pixel,
     );
+  });
+});
+
+describe("a centred or right-aligned label at a fractional fit", () => {
+  // 393 CSS px wide at DPR 3: a game pixel is 3.275 device pixels, a font pixel at 1x 3.
+  const scale = domScale(3, { height: 611, width: 393, x: 0, y: 0 });
+  const title = gameFont("font-title");
+  const text = "END WALK";
+  const width = advanceWidth(title, 1, text);
+
+  it.each([
+    ["centre", 0.5],
+    ["end", 1],
+  ] as const)("sets each line's %s where the canvas does, within an art pixel", (align, share) => {
+    const label = {
+      align,
+      colour: 0,
+      font: "title",
+      lines: [{ pen: 0, text }],
+      pills: "colour",
+      scale: 2,
+      x: 131,
+      y: 361,
+    } as const;
+    const place = labelPlace(title, scale, label);
+    const left = place.runs[0]?.left ?? 0;
+    const html = left + share * width * fontPixel(scale, 2);
+    const canvas = exactDeviceX(scale, 131 + share * width * 2);
+    expect(Math.abs(html - canvas)).toBeLessThan(artPixel(scale));
+    expect(left % artPixel(scale)).toBe(0);
+  });
+
+  it("puts the capitals' top where the canvas does, within an art pixel", () => {
+    const { capTop } = fontMetrics(title);
+    const place = labelPlace(title, scale, {
+      align: "centre",
+      colour: 0,
+      font: "title",
+      lines: [{ pen: 0, text }],
+      pills: "colour",
+      scale: 1,
+      x: 40,
+      y: 244,
+    });
+    const caps = (place.runs[0]?.top ?? 0) + capTop * fontPixel(scale, 1);
+    expect(Math.abs(caps - exactDeviceY(scale, 244 + capTop))).toBeLessThan(artPixel(scale));
   });
 });

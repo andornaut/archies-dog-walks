@@ -48,6 +48,15 @@ export function deviceY(scale: DomScale, y: number): number {
   return onGrid(scale, scale.origin.y + y * scale.unit) - onGrid(scale, scale.origin.y);
 }
 
+// The device pixels, unrounded, from the root's corner to game column x and to game row y.
+export function exactDeviceX(scale: DomScale, x: number): number {
+  return (scale.origin.x + x * scale.unit) * scale.dpr - onGrid(scale, scale.origin.x);
+}
+
+export function exactDeviceY(scale: DomScale, y: number): number {
+  return (scale.origin.y + y * scale.unit) * scale.dpr - onGrid(scale, scale.origin.y);
+}
+
 // A game rect in device pixels, each edge snapped on its own, so rects that share an edge in game
 // pixels share it on the device grid too.
 export function deviceRect(scale: DomScale, rect: Rect): DeviceRect {

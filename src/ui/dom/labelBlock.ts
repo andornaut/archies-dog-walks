@@ -1,6 +1,17 @@
-import { type BitmapFont, laidGlyphs } from "@andornaut/game-kit/text/bitmapFont";
+import {
+  advanceWidth,
+  type BitmapFont,
+  fontMetrics,
+  laidGlyphs,
+} from "@andornaut/game-kit/text/bitmapFont";
 
-import { deviceX, deviceY, type DomScale, fontPixel } from "../domScale.ts";
+import {
+  type DomScale,
+  exactDeviceX,
+  exactDeviceY,
+  fontPixel,
+  wholeArtPixels,
+} from "../domScale.ts";
 import { laidPills, pillRows } from "../namePills.ts";
 import { penRuns, setBox, spokenText } from "./pixelLine.ts";
 import type { WEB_FONTS } from "./uiLayer.ts";
@@ -8,7 +19,10 @@ import type { WEB_FONTS } from "./uiLayer.ts";
 // A canvas label as the HTML interface draws it in its web font: its text as the bitmap font
 // draws it, line by line, where the canvas lays each line out, and its colour. The canvas draws
 // each glyph at a whole game pixel, rounding its place, so a line starts on the game pixel
-// nearest its unrounded start, mid-tween too.
+// nearest its unrounded start, mid-tween too. HTML text is narrower than the canvas's wherever
+// the fit is fractional (fontPixel), so each line is laid out from the point the label is
+// anchored by, as the canvas draws it: its start, middle or end across, as the label aligns,
+// and its first line's capitals' top down, each snapped to whole art pixels.
 export interface DomLabelLine {
   // The font pixels from the label's left edge to the line's pen start: its alignment's offset,
   // a half where a centred line's spare width is odd.
@@ -17,6 +31,8 @@ export interface DomLabelLine {
 }
 
 export interface DomLabel {
+  // How its lines align on the canvas: from their start, about their middle or to their end.
+  readonly align: "centre" | "end" | "start";
   readonly colour: number;
   readonly font: keyof typeof WEB_FONTS;
   readonly lines: readonly DomLabelLine[];
@@ -51,12 +67,20 @@ export function labelPlace(
 } {
   const pixel = fontPixel(scale, label.scale);
   const rows = pillRows(1);
-  const top = deviceY(scale, Math.round(label.y));
-  const lines = label.lines.map((line, i) => ({
-    left: deviceX(scale, Math.round(label.x + line.pen * label.scale)),
-    text: line.text,
-    top: top + i * bitmap.lineHeight * pixel,
-  }));
+  const { capTop } = fontMetrics(bitmap);
+  const caps = Math.round(label.y) + capTop * label.scale;
+  const top = wholeArtPixels(scale, exactDeviceY(scale, caps) - capTop * pixel);
+  const share = { centre: 0.5, end: 1, start: 0 }[label.align];
+  const lines = label.lines.map((line, i) => {
+    const start = Math.round(label.x + line.pen * label.scale);
+    const width = advanceWidth(bitmap, 1, line.text);
+    const anchor = exactDeviceX(scale, start + share * width * label.scale);
+    return {
+      left: wholeArtPixels(scale, anchor - share * width * pixel),
+      text: line.text,
+      top: top + i * bitmap.lineHeight * pixel,
+    };
+  });
   return {
     cut: pixel,
     fontSize: 8 * pixel,
