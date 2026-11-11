@@ -118,7 +118,7 @@ export function setupPhoneApp(): void {
     installFlow.state() === "installed",
     "storage" in navigator ? navigator.storage : undefined,
   );
-  installNudge = createInstallNudge(localSaveStorage());
+  installNudge = createInstallNudge(installFlow.stepsKind, localSaveStorage());
   watchVisibility(window, document, (visible) =>
     dispatchPhoneEvent(window, visible ? PHONE_EVENTS.appVisible : PHONE_EVENTS.appHidden),
   );
