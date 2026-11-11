@@ -23,7 +23,7 @@ import { htmlPanelPlace } from "./questionPanel.ts";
 
 // The fonts the HTML draws, by the bitmap fonts' keys in Phaser's cache, and the colour a
 // display variant draws in, untinted on the canvas.
-const FONTS: Readonly<
+export const LABEL_FONTS: Readonly<
   Record<string, { readonly colour?: number; readonly font: DomLabel["font"] }>
 > = {
   "font-body": { font: "body" },
@@ -60,9 +60,9 @@ function placed(label: GameObjects.BitmapText): { shown: boolean; x: number; y: 
 }
 
 // The label as the HTML draws it: its lines, each from where Phaser starts its pen.
-function domLabel(
+export function domLabel(
   label: GameObjects.BitmapText,
-  face: NonNullable<(typeof FONTS)[string]>,
+  face: NonNullable<(typeof LABEL_FONTS)[string]>,
   at: { x: number; y: number },
 ): DomLabel {
   const { characters, wrappedText } = label.getTextBounds(false);
@@ -158,7 +158,7 @@ export function addHtmlLabels(scene: Scene, title: string | undefined): HtmlLabe
     }
     const seen = new Set<GameObjects.BitmapText>();
     for (const label of labelsIn(scene.children.list)) {
-      const face = FONTS[label.font];
+      const face = LABEL_FONTS[label.font];
       const bitmap = face === undefined ? undefined : fonts[face.font];
       if (face === undefined || bitmap === undefined || !label.active) {
         continue;

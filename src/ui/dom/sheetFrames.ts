@@ -53,6 +53,33 @@ export function sheetFrame(json: unknown, tag: string | undefined): SheetFrame {
   };
 }
 
+// The frame Phaser names name, by the name the sheet's JSON gives it (as the canvas's loader and
+// the atlas keep it), or by its index in frame order where name is a number or its index's
+// digits; the sheet's first frame where the sheet has no such frame. Throws on a file that is
+// not such a sheet.
+export function sheetFrameNamed(json: unknown, name: number | string): SheetFrame {
+  const sheet = json as {
+    frames?: Record<string, { frame?: unknown }>;
+    meta?: { size?: { h?: unknown; w?: unknown } };
+  };
+  const named = Object.entries(sheet.frames ?? {});
+  const index =
+    typeof name === "number" ? name : named.findIndex(([frameName]) => frameName === name);
+  const digits = typeof name === "string" && /^\d+$/.test(name) ? Number(name) : 0;
+  const frame = named[index === -1 ? digits : index]?.[1].frame;
+  const size = { h: sheet.meta?.size?.h, w: sheet.meta?.size?.w };
+  if (!isRect(frame) || !isNumber(size.h) || !isNumber(size.w)) {
+    throw new Error("Not an Aseprite sheet");
+  }
+  return {
+    height: frame.h,
+    sheet: { height: size.h, width: size.w },
+    width: frame.w,
+    x: frame.x,
+    y: frame.y,
+  };
+}
+
 const sheets = new Map<string, Promise<unknown>>();
 
 // The sheet's JSON at url, fetched once per page.
