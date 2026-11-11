@@ -8,6 +8,10 @@ export const MENU_TEXT = {
     titleMany: "{count} badges earned!",
     titleOne: "Badge earned!",
   },
+  common: {
+    // Every panel's close control's accessible name: screen readers announce it.
+    close: "Close",
+  },
   crash: {
     body: "Your saved progress is kept.",
     reload: "Reload",
@@ -41,8 +45,6 @@ export const MENU_TEXT = {
     previous: "Previous",
   },
   pause: {
-    // The close control's accessible name: screen readers announce it; it resumes the walk.
-    close: "Close",
     headHome: "End walk",
     help: "Help",
     note: "Ending now keeps {kept} of {cash}.",
