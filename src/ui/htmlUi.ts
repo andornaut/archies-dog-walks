@@ -1,9 +1,8 @@
-// CLEANUP (added 2026-11-11): the HTML pause menu stays behind this switch until Art's
-// before-and-after review of it passes; then HTML_UI_DEFAULT turns true, and once it has shipped,
-// the switch and the canvas pause menu's mode in src/scenes/PauseScene.ts go.
+// CLEANUP (added 2026-11-11): the switch keeps the canvas interface reachable while screens move
+// to HTML; it and the canvas modes it selects go once every screen draws in HTML.
 
 // Whether the walk's pause menu draws in HTML over the canvas when the page names neither.
-const HTML_UI_DEFAULT = false;
+const HTML_UI_DEFAULT = true;
 
 // The page's switch: ?ui=html draws the pause menu in HTML, ?ui=canvas on the canvas.
 export function htmlUiOn(search: string): boolean {
