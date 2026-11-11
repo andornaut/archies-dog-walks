@@ -4,22 +4,23 @@ import { Scene, Scenes } from "phaser";
 
 import { gameData } from "../data/index.ts";
 import type { HelpPictureId } from "../data/types.ts";
-import { helpBody } from "../help/helpBody.ts";
 import { helpActionForKey, helpActionForPointer } from "../help/helpInput.ts";
-import { dotRects, HELP_LAYOUT, helpActionAt } from "../help/helpLayout.ts";
-import { applyHelpAction, clampPage, type HelpAction, helpButtons } from "../help/helpPaging.ts";
+import { HELP_LAYOUT, helpActionAt } from "../help/helpLayout.ts";
+import { applyHelpAction, type HelpAction } from "../help/helpPaging.ts";
 import { closeHelp } from "../help/helpSeen.ts";
+import { HELP_DOTS, type HelpMeasure, type HelpPressed, helpView } from "../help/helpView.ts";
+import type { DomQuestionPanel } from "../hud/dom/questionPanel.ts";
 import { screenArea } from "../input/outsideTap.ts";
-import { LABEL_HELP_GAP } from "../ui/labelHelpGap.ts";
 import { PALETTE } from "../ui/palette.ts";
 import { addFilledRect } from "../ui/phaser/draw.ts";
-import { addPixelText, wrapPixelText } from "../ui/phaser/pixelText.ts";
-import { TEXT_SCALE } from "../ui/textFit.ts";
-import { topBarRects } from "../ui/topBarTrim.ts";
+import { addPixelText, setPixelText, withProbe, wrapPixelText } from "../ui/phaser/pixelText.ts";
 import type { HelpPictureData } from "./HelpPictureScene.ts";
+import { canvasPanelMeasure } from "./modalMeasure.ts";
 import { listenOnePress } from "./onePress.ts";
 import { closeOverlay, listenDismiss, type OverlayData } from "./overlay.ts";
-import { updateProfile } from "./profileStore.ts";
+import { currentSettings, updateProfile } from "./profileStore.ts";
+import { addHtmlHelpScreen } from "./questionPanel.ts";
+import { REFUSE } from "./refuseControl.ts";
 import { SCENE_KEYS, type SceneKey } from "./sceneKeys.ts";
 import {
   addCloseButton,
@@ -32,12 +33,30 @@ import {
 // Emitted on game.events when the help closes, by any route.
 export const HELP_CLOSED_EVENT = "help-closed";
 
-// The other pages' dots are hollow rings and the current one is filled, so they differ by
-// shape.
-const DOT_COLOUR = PALETTE.tan;
-const DOT_CURRENT_COLOUR = PALETTE.white;
+type Pressed = HelpPressed;
 
-type Pressed = "close" | "next" | "previous";
+// The help's text and art measured on the bitmap fonts scene draws it in: a title-font label's
+// lowest ink as Phaser lays it out, and the body wrapped as the help pages' fit test wraps it,
+// measured on the font, since Phaser's own wrap counts a line's trailing space and so would break
+// a line that fits exactly.
+function helpMeasure(scene: Scene): HelpMeasure {
+  return {
+    ...canvasPanelMeasure(scene),
+    titleInkBottom: (scale, text) =>
+      withProbe(scene, { colour: PALETTE.amber, font: "title", scale }, (probe) => {
+        setPixelText(probe, text);
+        return Math.max(
+          0,
+          ...probe
+            .getTextBounds(true)
+            .characters.filter(({ h, w }) => w > 0 && h > 0)
+            .map(({ h, y }) => y + h),
+        );
+      }),
+    wrapBody: (scale, width, text) =>
+      wrapPixelText(scene, { colour: PALETTE.cream, scale }, width, text),
+  };
+}
 
 // The control a press starts on shows pressed until it is released.
 function pressedBy(action: HelpAction | undefined): Pressed | undefined {
@@ -56,6 +75,8 @@ function pressedBy(action: HelpAction | undefined): Pressed | undefined {
 // menu over the walk, and before its picture's scenes, which draw over it. The caller pauses
 // itself and launches it (openHelp); on close, help resumes that scene.
 export class HelpScene extends Scene {
+  // The screen in HTML, while it is drawn there.
+  private html: DomQuestionPanel | undefined;
   private previousButton: MenuButton | undefined;
   private page = 0;
   // The page whose picture shows.
@@ -69,6 +90,7 @@ export class HelpScene extends Scene {
   }
 
   create(data?: OverlayData): void {
+    this.html = undefined;
     this.page = 0;
     this.picturePage = undefined;
     this.pressed = undefined;
@@ -86,7 +108,12 @@ export class HelpScene extends Scene {
     // Taps act on release, so a swipe that starts on a button turns the page instead.
     listenOnePress(this, {
       down: (pointer) => {
-        addTapBurst(this, pointer.x, pointer.y);
+        // Over the HTML screen, so a burst on a button shows over it.
+        if (this.html === undefined) {
+          addTapBurst(this, pointer.x, pointer.y);
+        } else {
+          this.html.burst({ x: pointer.x, y: pointer.y });
+        }
         this.pressStart = { x: pointer.x, y: pointer.y };
         this.showPressed(pressedBy(helpActionAt(gameData.help.length, this.pressStart)));
       },
@@ -117,6 +144,7 @@ export class HelpScene extends Scene {
   private act(action: HelpAction): void {
     if (action.kind === "previous" && this.page === 0) {
       this.previousButton?.refuse();
+      this.html?.refuse(0, { ...REFUSE, reducedMotion: currentSettings(this).reducedMotion });
       return;
     }
     const outcome = applyHelpAction(gameData.help.length, action, this.page);
@@ -136,63 +164,58 @@ export class HelpScene extends Scene {
     this.game.events.emit(HELP_CLOSED_EVENT);
   }
 
-  // Redrawn whole on every page turn, reading the pages then, so a live text edit shows up.
+  // Redrawn whole on every page turn, reading the pages then, so a live text edit shows up: the
+  // dark screen, the top bar and the page's picture on the canvas, and the rest in HTML where the
+  // page's switch is on and its fonts are ready, else on the canvas too.
   private draw(): void {
     clearScene(this);
-    const pages = gameData.help;
-    const words = gameData.menuText.help;
-    this.page = clampPage(pages.length, this.page);
-    const page = itemAt(pages, this.page);
-    const layout = HELP_LAYOUT;
-
-    addFilledRect(this, PALETTE.darkBrown, layout.screen);
-    topBarRects(layout.topBar).forEach(({ colour, rect }) =>
-      addFilledRect(this, PALETTE[colour], rect),
-    );
-    addPixelText(this, layout.heading.x, layout.heading.y, words.heading, {
-      colour: PALETTE.cream,
-      font: "title",
-      scale: TEXT_SCALE,
-    });
-    addCloseButton(this, this.add.container(0, 0), layout.close, this.pressed === "close");
-
-    const frame = layout.illustration;
-    for (const y of [frame.y - 1, frame.y + frame.height]) {
-      addFilledRect(this, PALETTE.plum, { height: 1, width: frame.width, x: frame.x, y });
+    const view = helpView(gameData, helpMeasure(this), this.page, this.pressed);
+    this.page = view.page;
+    view.backdrop.forEach(({ colour, rect }) => addFilledRect(this, colour, rect));
+    this.showPicture(itemAt(gameData.help, this.page).art, view.illustration);
+    this.html?.destroy();
+    this.html = addHtmlHelpScreen(this, view);
+    if (this.html !== undefined) {
+      this.previousButton = undefined;
+      return;
     }
-    this.showPicture(page.art, frame);
-
-    const title = addPixelText(this, layout.title.x, layout.title.y, page.title, {
-      colour: PALETTE.amber,
+    const { body, heading, title } = view;
+    addPixelText(this, heading.centreX, heading.capTop, heading.text, {
+      colour: heading.colour,
       font: "title",
-      scale: layout.title.scale,
+      scale: heading.scale,
     });
-    const inkBottom = Math.max(
-      0,
-      ...title
-        .getTextBounds(true)
-        .characters.filter(({ h, w }) => w > 0 && h > 0)
-        .map(({ h, y }) => y + h),
-    );
-    this.drawBody(title.y + inkBottom * title.scaleY, page.body);
-
-    dotRects(pages.length).forEach((dot, i) => {
-      if (i === this.page) {
-        addFilledRect(this, DOT_CURRENT_COLOUR, dot);
+    addCloseButton(this, this.add.container(0, 0), view.close, view.closePressed);
+    view.rules.forEach(({ colour, rect }) => addFilledRect(this, colour, rect));
+    addPixelText(this, title.centreX, title.capTop, title.text, {
+      colour: title.colour,
+      font: "title",
+      scale: title.scale,
+    });
+    // Its lines pitch rows apart: Phaser spaces lines by the font's line height and the spacing.
+    const text = addPixelText(this, body.x, body.capTop, body.lines.join("\n"), {
+      colour: body.colour,
+      scale: body.scale,
+    });
+    text.setLineSpacing(body.pitch / body.scale - text.fontData.lineHeight);
+    view.dots.forEach(({ current, rect }) => {
+      if (current) {
+        addFilledRect(this, HELP_DOTS.current, rect);
       } else {
-        addFilledRect(this, DOT_COLOUR, dot);
-        addFilledRect(this, PALETTE.darkBrown, insetRect(1, dot));
+        addFilledRect(this, HELP_DOTS.ring, rect);
+        addFilledRect(this, PALETTE.darkBrown, insetRect(1, rect));
       }
     });
-
     // Next is the call to action; Previous is disabled on the first page.
-    const { next, previousEnabled } = helpButtons(pages.length, this.page);
-    const previous = { available: previousEnabled, primary: false };
-    this.previousButton = addMenuButton(this, layout.previous, words.previous, previous);
-    this.previousButton.setPressed(this.pressed === "previous");
-    addMenuButton(this, layout.next, words[next], { available: true, primary: true }).setPressed(
-      this.pressed === "next",
-    );
+    const buttons = view.buttons.map((button) => {
+      const drawn = addMenuButton(this, button.rect, button.label, {
+        available: button.available,
+        primary: button.primary,
+      });
+      drawn.setPressed(button.pressed);
+      return drawn;
+    });
+    this.previousButton = buttons[0];
   }
 
   // The page's picture of the walk screen in frame, drawn over this scene by the picture
@@ -204,17 +227,5 @@ export class HelpScene extends Scene {
     this.picturePage = this.page;
     const data: HelpPictureData = { frame, page: art };
     this.scene.launch(SCENE_KEYS.helpPicture, data);
-  }
-
-  // Wrapped at the body's width as the help pages' fit test wraps it, measured on the font, with
-  // the line pitch set to the layout's, its names filled from the game data. Phaser's own wrap
-  // counts a line's trailing space, so it would break a line that fits exactly.
-  private drawBody(titleInkBottom: number, body: string): void {
-    const { lineHeight, scale, width, x } = HELP_LAYOUT.body;
-    const y = Math.ceil(titleInkBottom) + LABEL_HELP_GAP;
-    const style = { colour: PALETTE.cream, scale };
-    const lines = wrapPixelText(this, style, width, helpBody(gameData, { body }));
-    const text = addPixelText(this, x, y, lines.join("\n"), style);
-    text.setLineSpacing(lineHeight / scale - text.fontData.lineHeight);
   }
 }

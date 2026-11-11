@@ -523,6 +523,8 @@ export class SettingsScene extends Scene {
     clearScene(this, this.dimmed);
     // The HTML card, which the steps' card covers in a shade the canvas blends: the canvas draws
     // the card under it while it shows.
+    // CLEANUP (added 2026-11-11): the canvas card under the steps' shade goes once the shade
+    // draws in HTML (phase 5 at the latest), the HTML card then staying under it.
     this.html?.update(view, this.focus?.row ?? null);
     if (this.html !== undefined && view.steps === undefined) {
       return;

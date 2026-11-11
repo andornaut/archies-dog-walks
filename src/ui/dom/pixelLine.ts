@@ -19,7 +19,9 @@ import { WEB_FONTS } from "./uiLayer.ts";
 // lineHeight font pixels apart in device pixels too.
 export interface DomTextLine {
   readonly capTop: number;
-  readonly centre: "advance" | "ink";
+  // "left": centreX is where a left-aligned label starts, as addPixelText places one: its pen in
+  // the body font, its ink in the title font.
+  readonly centre: "advance" | "ink" | "left";
   readonly centreX: number;
   readonly colour: number;
   readonly font: keyof typeof WEB_FONTS;
@@ -60,7 +62,11 @@ export function textPlace(
   const first = ink ? Math.min(...inked.map(({ left }) => left)) : 0;
   const last = ink ? Math.max(...inked.map(({ right }) => right)) : advanceWidth(bitmap, 1, text);
   const half = Math.round(((last - first) * pixel) / 2);
-  const left = deviceX(scale, line.centreX) - half - first * pixel - deviceX(scale, origin.x);
+  const bearing = line.font === "title" ? leftBearing((char) => bitmap.glyphs.get(char), text) : 0;
+  const left =
+    line.centre === "left"
+      ? deviceX(scale, line.centreX) - bearing * pixel - deviceX(scale, origin.x)
+      : deviceX(scale, line.centreX) - half - first * pixel - deviceX(scale, origin.x);
   const index = line.line ?? 0;
   const blockTop = line.capTop - index * bitmap.lineHeight * line.scale;
   const top =

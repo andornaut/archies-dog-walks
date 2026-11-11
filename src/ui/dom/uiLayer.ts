@@ -60,7 +60,9 @@ const hex = (colour: number) => `#${colour.toString(16).padStart(6, "0")}`;
 const ART_PROPERTIES: readonly (readonly [string, string])[] = [
   ["--adw-fx-tap", "sprites/fx-tap.png"],
   ["--adw-icon-close", "images/icon-close.png"],
+  ["--adw-ui-button-disabled", "images/ui-button-disabled.png"],
   ["--adw-ui-button-go", "images/ui-button-go.png"],
+  ["--adw-ui-button-go-disabled", "images/ui-button-go-disabled.png"],
   ["--adw-ui-button-go-pressed", "images/ui-button-go-pressed.png"],
   ["--adw-ui-button-normal", "images/ui-button-normal.png"],
   ["--adw-ui-button-pressed", "images/ui-button-pressed.png"],

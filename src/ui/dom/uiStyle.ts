@@ -1,4 +1,5 @@
 import { SLICES } from "../../data/layout.ts";
+import { CONTROL_STATE_STYLE } from "./controlStateStyle.ts";
 import { SETTINGS_STYLE } from "./settingsStyle.ts";
 
 // The HTML interface's stylesheet. A screen's root is sized in device pixels and scaled onto the
@@ -84,4 +85,6 @@ export const UI_STYLE = `
 .adw-burst{position:absolute;pointer-events:none;background:var(--adw-fx-tap) 0 0/400% 100%;
   image-rendering:pixelated;animation:adw-burst 240ms steps(4) forwards}
 @keyframes adw-burst{to{background-position-x:calc(var(--adw-burst) * -4)}}
-${SETTINGS_STYLE}`;
+${SETTINGS_STYLE}
+
+${CONTROL_STATE_STYLE}`;

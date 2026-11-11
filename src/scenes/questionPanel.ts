@@ -5,8 +5,10 @@ import { type Scene, Scenes } from "phaser";
 import { artUrl } from "../assets/artFiles.ts";
 import { gameData } from "../data/index.ts";
 import { SCREEN_CONFIG } from "../data/screen.ts";
+import type { HelpView } from "../help/helpView.ts";
 import type { DetailCardView } from "../home/detailCardView.ts";
 import { showDetailCard } from "../hud/dom/detailCard.ts";
+import { showHelpScreen } from "../hud/dom/helpScreen.ts";
 import {
   type DomQuestionPanel,
   type DomQuestionPanelInput,
@@ -248,4 +250,16 @@ export function addHtmlDetailCard(
     view,
   });
   return followScene(scene, panel);
+}
+
+// The help screen in the HTML layer, laid out as the canvas draws it (helpView), over the dark
+// screen and the page's picture the canvas keeps; it takes no presses. Returns it, for its scene
+// to replace as the page or a pressed control changes, or undefined where the canvas must draw
+// it.
+export function addHtmlHelpScreen(scene: Scene, view: HelpView): DomQuestionPanel | undefined {
+  const place = htmlPanelPlace(scene);
+  if (place === undefined) {
+    return undefined;
+  }
+  return followScene(scene, showHelpScreen(place.layer, { ...htmlPanelInput(place), view }));
 }

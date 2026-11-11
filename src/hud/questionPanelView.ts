@@ -49,11 +49,12 @@ export interface PanelQuestion {
 }
 
 // One line of text: its capitals' top, the middle across of its ink, or of its glyphs' advances
-// where the canvas centres a label on its width (a button's, the note's), its look, and its index
-// in its block of lines a font line apart (the title's, the note's).
+// where the canvas centres a label on its width (a button's, the note's), or where a left-aligned
+// label starts, its look, and its index in its block of lines a font line apart (the title's, the
+// note's).
 export interface PanelText {
   readonly capTop: number;
-  readonly centre: "advance" | "ink";
+  readonly centre: "advance" | "ink" | "left";
   readonly centreX: number;
   readonly colour: number;
   readonly font: PanelFont;
@@ -63,10 +64,14 @@ export interface PanelText {
 }
 
 export interface PanelButton {
+  // false for a disabled button, which never shows pressed; available where undefined.
+  readonly available?: boolean;
   // Where a press counts.
   readonly hit: Rect;
   // The label alone, for a screen reader; text shows it with its key number once numbers show.
   readonly label: string;
+  // Whether a panel that takes no presses shows it pressed.
+  readonly pressed?: boolean;
   readonly primary: boolean;
   readonly rect: Rect;
   readonly text: PanelText;
@@ -77,8 +82,9 @@ export interface QuestionPanelView {
   readonly close: CloseControl;
   // What a tap outside the panel must miss: the panel's rim and the buttons' hit areas.
   readonly covered: readonly Rect[];
-  // A question's ui-panel in its tan rim, or a modal card's ui-detail-card.
-  readonly frame: "card" | "panel";
+  // A question's ui-panel in its tan rim, a modal card's ui-detail-card, or none over a screen
+  // the canvas draws, as help's.
+  readonly frame: "card" | "none" | "panel";
   readonly note: readonly PanelText[];
   // undefined with no note.
   readonly notePlate: Rect | undefined;

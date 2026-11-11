@@ -47,6 +47,8 @@ export interface DomQuestionPanelInput {
   // Then its accessible name, and what each button does, in order.
   readonly close: (() => void) | undefined;
   readonly closeLabel: string;
+  // Whether a panel that takes no presses shows its close control pressed.
+  readonly closePressed?: boolean;
   // The id of the part that describes the panel, if any.
   readonly describedBy?: string;
   // Told the index (focusControl's) of the control focus moves to, or undefined for the dialog.
@@ -63,12 +65,26 @@ export interface DomQuestionPanelInput {
 }
 
 export interface DomQuestionPanel {
+  // A tap burst at a game point, over the panel.
+  burst(at: Point): void;
   destroy(): void;
   // Focuses the parts' controls, then the buttons, then the close control, by index, or the
   // dialog itself for undefined, as the scene's own focus moves.
   focusControl(index: number | undefined): void;
+  // Shakes the index-th button and flashes its label, as the canvas refuses a disabled
+  // control (refuseControl): still, its label red, under reduced motion.
+  refuse(index: number, refusal: DomRefusal): void;
   // Hides the panel while a canvas page covers it (help, the settings), and shows it again.
   setShown(shown: boolean): void;
+}
+
+// How a refusal plays: refuseControl's REFUSE, and whether motion is reduced.
+export interface DomRefusal {
+  readonly flashMs: number;
+  readonly flashes: number;
+  readonly reducedMotion: boolean;
+  readonly shake: number;
+  readonly shakeMs: number;
 }
 
 const ORIGIN = { x: 0, y: 0 } as const;
@@ -80,15 +96,9 @@ const CLOSE_ART = { glyph: { size: 16, x: 2, y: 1 } } as const;
 // art: fx-tap's side.
 const BURST_SIDE = 16;
 
-// fx-tap's burst in parent, centred where a press landed.
-export function addTapBurst(
-  layer: UiLayer,
-  parent: HTMLElement,
-  toGame: (client: Point) => Point,
-  event: PointerEvent,
-): void {
-  const at = toGame({ x: event.clientX, y: event.clientY });
-  const element = parent.ownerDocument.createElement("span");
+// fx-tap's burst over every panel (burstHost), centred on a game point where a press landed.
+export function addTapBurst(layer: UiLayer, at: Point): void {
+  const element = layer.element.ownerDocument.createElement("span");
   element.className = "adw-burst";
   const scale = layer.scale();
   const side = BURST_SIDE * artPixel(scale);
@@ -100,11 +110,31 @@ export function addTapBurst(
   });
   element.style.setProperty("--adw-burst", `${side}px`);
   element.addEventListener("animationend", () => element.remove());
-  parent.append(element);
+  burstHost(layer, scale).append(element);
 }
 
 // Ids that tie each panel's dialog to its title and note.
 let panels = 0;
+
+// Each layer's root for tap bursts: over every panel, laid out in device pixels as a panel is,
+// so a burst plays on while a panel under it is drawn again, as the canvas's burst scene does.
+const burstHosts = new WeakMap<HTMLElement, HTMLElement>();
+
+function burstHost(layer: UiLayer, scale: DomScale): HTMLElement {
+  let host = burstHosts.get(layer.element);
+  if (host === undefined) {
+    host = layer.element.ownerDocument.createElement("div");
+    host.className = "adw-dialog adw-passive adw-bursts";
+    host.setAttribute("aria-hidden", "true");
+    burstHosts.set(layer.element, host);
+  }
+  host.style.width = `${deviceX(scale, SCREEN_CONFIG.width)}px`;
+  host.style.height = `${deviceY(scale, SCREEN_CONFIG.height)}px`;
+  host.style.transform = gridTransform(scale);
+  // Last, so over every panel.
+  layer.element.append(host);
+  return host;
+}
 
 // The panel in layer, shown and its dialog focused.
 export function showQuestionPanel(layer: UiLayer, input: DomQuestionPanelInput): DomQuestionPanel {
@@ -127,7 +157,7 @@ export function showQuestionPanel(layer: UiLayer, input: DomQuestionPanelInput):
   panel.className = view.frame === "card" ? "adw-card" : "adw-panel";
   if (view.frame === "card") {
     dialog.append(panel);
-  } else {
+  } else if (view.frame === "panel") {
     dialog.append(rim, panel);
   }
 
@@ -195,7 +225,8 @@ export function showQuestionPanel(layer: UiLayer, input: DomQuestionPanelInput):
     dialog.append(plate, note);
   }
 
-  const burst = (event: PointerEvent) => addTapBurst(layer, dialog, input.toGame, event);
+  const burst = (event: PointerEvent) =>
+    addTapBurst(layer, input.toGame({ x: event.clientX, y: event.clientY }));
   // Shows a control pressed while a press that began on it stays on it, as the canvas's do.
   // Releasing the implicit capture a touch takes lets the press leave the control, so click,
   // which fires only where the press began and ended, presses it.
@@ -219,19 +250,33 @@ export function showQuestionPanel(layer: UiLayer, input: DomQuestionPanelInput):
     control.addEventListener("click", press);
   };
 
+  // A panel that takes no presses shows its buttons as pictures.
   const buttons = view.buttons.map((button, i) => {
-    const element = doc.createElement("button");
-    element.type = "button";
-    element.className = button.primary ? "adw-button adw-go" : "adw-button";
-    element.setAttribute("aria-label", button.label);
-    element.setAttribute("aria-keyshortcuts", String(i + 1));
+    const element = doc.createElement(passive ? "span" : "button");
+    element.className = [
+      "adw-button",
+      ...(button.primary ? ["adw-go"] : []),
+      ...(button.available === false ? ["adw-disabled"] : []),
+    ].join(" ");
+    if (passive) {
+      element.setAttribute("aria-hidden", "true");
+    } else {
+      (element as HTMLButtonElement).type = "button";
+      element.setAttribute("aria-label", button.label);
+      element.setAttribute("aria-keyshortcuts", String(i + 1));
+    }
+    if (passive && button.pressed === true && button.available !== false) {
+      element.setAttribute("data-pressed", "");
+    }
     const face = doc.createElement("span");
     face.className = "adw-face";
     element.append(face);
     box(element, ORIGIN, button.hit);
     frame(face, button.hit, button.rect);
     text(element, button.hit, button.text).setAttribute("aria-hidden", "true");
-    pressable(element, () => input.presses[i]?.());
+    if (!passive) {
+      pressable(element as HTMLButtonElement, () => input.presses[i]?.());
+    }
     return element;
   });
 
@@ -244,6 +289,9 @@ export function showQuestionPanel(layer: UiLayer, input: DomQuestionPanelInput):
     close.setAttribute("aria-label", input.closeLabel);
   } else {
     close.setAttribute("aria-hidden", "true");
+    if (input.closePressed === true) {
+      close.setAttribute("data-pressed", "");
+    }
   }
   const closeArt = closeFace(view.close);
   const face = doc.createElement("span");
@@ -276,7 +324,7 @@ export function showQuestionPanel(layer: UiLayer, input: DomQuestionPanelInput):
   for (const type of passive ? [] : ["mousedown", "touchstart"]) {
     dialog.addEventListener(type, (event) => event.stopPropagation());
   }
-  const native: HTMLElement[] = passive ? buttons : [...buttons, close];
+  const native: HTMLElement[] = passive ? [] : [...buttons, close];
   const focusables = [...(input.parts ?? []).flatMap((part) => part.controls ?? []), ...native];
   dialog.addEventListener("focusin", (event) => {
     const at = focusables.indexOf(event.target as HTMLElement);
@@ -329,6 +377,7 @@ export function showQuestionPanel(layer: UiLayer, input: DomQuestionPanelInput):
     }
   };
   return {
+    burst: (at) => addTapBurst(layer, at),
     destroy() {
       blur();
       stopScale();
@@ -340,6 +389,28 @@ export function showQuestionPanel(layer: UiLayer, input: DomQuestionPanelInput):
       if (doc.activeElement !== (control ?? dialog)) {
         (control ?? dialog).focus({ preventScroll: true });
       }
+    },
+    refuse(index, refusal) {
+      const button = buttons[index];
+      // A refusal under way plays on.
+      if (
+        button === undefined ||
+        ["adw-refusing", "adw-refusing-still"].some((name) => button.classList.contains(name))
+      ) {
+        return;
+      }
+      const scale = layer.scale();
+      const style = button.style;
+      const total = refusal.flashMs * refusal.flashes;
+      style.setProperty("--adw-shake", `${refusal.shake * artPixel(scale)}px`);
+      style.setProperty("--adw-shake-ms", `${refusal.shakeMs}ms`);
+      style.setProperty("--adw-shakes", String(Math.round(total / refusal.shakeMs)));
+      style.setProperty("--adw-flash-ms", `${2 * refusal.flashMs}ms`);
+      style.setProperty("--adw-flashes", String(refusal.flashes / 2));
+      style.setProperty("--adw-refuse-ms", `${total}ms`);
+      const refusing = refusal.reducedMotion ? "adw-refusing-still" : "adw-refusing";
+      button.classList.add(refusing);
+      doc.defaultView?.setTimeout(() => button.classList.remove(refusing), total);
     },
     setShown(shown) {
       if (shown === !dialog.hidden) {

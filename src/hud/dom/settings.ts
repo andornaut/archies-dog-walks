@@ -322,12 +322,8 @@ function showSteps(
 export function showSettings(layer: UiLayer, input: DomSettingsInput): DomSettings {
   const doc = layer.element.ownerDocument;
   let current = input.view;
-  const burst = (event: PointerEvent) => {
-    const dialog = (event.currentTarget as HTMLElement | null)?.closest(".adw-dialog");
-    if (dialog instanceof HTMLElement) {
-      addTapBurst(layer, dialog, input.toGame, event);
-    }
-  };
+  const burst = (event: PointerEvent) =>
+    addTapBurst(layer, input.toGame({ x: event.clientX, y: event.clientY }));
   const rows = current.rows.map((_, i) => rowPart(doc, input, () => current, i, burst));
   const separators = current.separators.map(() => {
     const element = doc.createElement("span");

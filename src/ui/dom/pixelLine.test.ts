@@ -90,6 +90,30 @@ describe("textPlace", () => {
   });
 });
 
+describe("a left-aligned line", () => {
+  it.each([
+    ["title", "Switch lanes"],
+    ["body", "Drag anywhere"],
+  ] as const)("starts where the canvas starts one in the %s font", (font, text) => {
+    const scale = domScale(3, { height: 560, width: 360, x: 0, y: 0 });
+    const bitmap = gameFont(`font-${font}`);
+    const line = {
+      capTop: 300,
+      centre: "left",
+      centreX: 12,
+      colour: 0,
+      font,
+      scale: 2,
+      text,
+    } as const;
+    const place = textPlace(bitmap, scale, ORIGIN, line);
+    // A title label's ink starts at its x, a body label's pen.
+    const bearing =
+      font === "title" ? leftBearing((char) => bitmap.glyphs.get(char), shownText(font, text)) : 0;
+    expect(place.left + bearing * fontPixel(scale, 2)).toBe(deviceX(scale, 12));
+  });
+});
+
 describe("a block of text with name pills", () => {
   const font = gameFont("font-body");
   const line = `${inPill(1, "Second chance")} First lost`;
