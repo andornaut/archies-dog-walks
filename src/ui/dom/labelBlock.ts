@@ -1,0 +1,141 @@
+import { type BitmapFont, laidGlyphs } from "@andornaut/game-kit/text/bitmapFont";
+
+import { deviceX, deviceY, type DomScale, fontPixel } from "../domScale.ts";
+import { laidPills, pillRows } from "../namePills.ts";
+import { penRuns, setBox, spokenText } from "./pixelLine.ts";
+import type { WEB_FONTS } from "./uiLayer.ts";
+
+// A canvas label as the HTML interface draws it in its web font: its text as the bitmap font
+// draws it, line by line, where the canvas lays each line out, and its colour. The canvas draws
+// each glyph at a whole game pixel, rounding its place, so a line starts on the game pixel
+// nearest its unrounded start, mid-tween too.
+export interface DomLabelLine {
+  // The font pixels from the label's left edge to the line's pen start: its alignment's offset,
+  // a half where a centred line's spare width is odd.
+  readonly pen: number;
+  readonly text: string;
+}
+
+export interface DomLabel {
+  readonly colour: number;
+  readonly font: keyof typeof WEB_FONTS;
+  readonly lines: readonly DomLabelLine[];
+  // How the pills of the names it sets in pills are drawn: in each kind's colours, or grey for a
+  // disabled item, the name left in the label's colour.
+  readonly pills: "colour" | "grey";
+  readonly scale: number;
+  // The label's top-left corner, in game pixels.
+  readonly x: number;
+  readonly y: number;
+}
+
+type Box = { height: number; left: number; top: number; width: number };
+
+// Where a label's parts go, in whole device pixels from the layer's corner: each run of text,
+// its font size and line height, and each pill behind a name, its corners cut a font pixel.
+export function labelPlace(
+  bitmap: BitmapFont,
+  scale: DomScale,
+  label: DomLabel,
+): {
+  readonly cut: number;
+  readonly fontSize: number;
+  readonly lineHeight: number;
+  readonly pills: readonly { readonly box: Box; readonly index: number }[];
+  readonly runs: readonly {
+    readonly left: number;
+    readonly pill: number | undefined;
+    readonly text: string;
+    readonly top: number;
+  }[];
+} {
+  const pixel = fontPixel(scale, label.scale);
+  const rows = pillRows(1);
+  const top = deviceY(scale, Math.round(label.y));
+  const lines = label.lines.map((line, i) => ({
+    left: deviceX(scale, Math.round(label.x + line.pen * label.scale)),
+    text: line.text,
+    top: top + i * bitmap.lineHeight * pixel,
+  }));
+  return {
+    cut: pixel,
+    fontSize: 8 * pixel,
+    lineHeight: bitmap.lineHeight * pixel,
+    pills: lines.flatMap(({ left, text, top: lineTop }) =>
+      laidPills(
+        1,
+        laidGlyphs(bitmap, 1, text).map((glyph) => ({ ...glyph, line: 0 })),
+      ).map((pill) => ({
+        box: {
+          height: rows.height * pixel,
+          left: left + pill.left * pixel,
+          top: lineTop + rows.top * pixel,
+          width: (pill.right - pill.left) * pixel,
+        },
+        index: pill.index,
+      })),
+    ),
+    runs: lines.flatMap(({ left, text, top: lineTop }) =>
+      penRuns(bitmap, text).map((run) => ({
+        left: left + run.pen * pixel,
+        pill: run.pill,
+        text: run.text,
+        top: lineTop,
+      })),
+    ),
+  };
+}
+
+const hex = (colour: number) => `#${colour.toString(16).padStart(6, "0")}`;
+
+// The colours of a name's pill of a kind and of its name, or undefined for none.
+export type PillColours = (index: number) => { name: number; pill: number } | undefined;
+
+// A label's element: its runs over its pills, and its text for a screen reader. Built again by
+// drawLabel whenever the label changes.
+export function drawLabel(
+  doc: Document,
+  input: {
+    readonly bitmap: BitmapFont;
+    readonly grey: number;
+    readonly pillColours: PillColours;
+    readonly scale: DomScale;
+  },
+  element: HTMLElement,
+  label: DomLabel,
+): void {
+  const place = labelPlace(input.bitmap, input.scale, label);
+  const pills = place.pills.map(({ box, index }) => {
+    const pill = doc.createElement("span");
+    pill.className = "adw-pill";
+    pill.setAttribute("aria-hidden", "true");
+    setBox(pill, box);
+    pill.style.setProperty("--adw-cut", `${place.cut}px`);
+    const colours = input.pillColours(index);
+    const fill = label.pills === "grey" ? input.grey : colours?.pill;
+    if (fill !== undefined) {
+      pill.style.backgroundColor = hex(fill);
+    }
+    return pill;
+  });
+  const runs = place.runs.map((run) => {
+    const span = doc.createElement("span");
+    span.className = `adw-text adw-font-${label.font}`;
+    span.setAttribute("aria-hidden", "true");
+    span.textContent = run.text;
+    const named =
+      run.pill === undefined || label.pills === "grey" ? undefined : input.pillColours(run.pill);
+    Object.assign(span.style, {
+      color: hex(named?.name ?? label.colour),
+      fontSize: `${place.fontSize}px`,
+      left: `${run.left}px`,
+      lineHeight: `${place.lineHeight}px`,
+      top: `${run.top}px`,
+    });
+    return span;
+  });
+  const spoken = doc.createElement("span");
+  spoken.className = "adw-spoken";
+  spoken.textContent = `${label.lines.map(({ text }) => spokenText(text)).join(" ")} `;
+  element.replaceChildren(...pills, ...runs, spoken);
+}

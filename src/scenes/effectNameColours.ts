@@ -27,7 +27,16 @@ export function pillColours(kind: EffectNameKind): { name: number; pill: number 
 
 // A disabled item's pills, such as on a card the player cannot afford: neutral, the name left in
 // the label's own grey.
-const GREY_PILL: PaletteName = "neutralLightGrey";
+export const GREY_PILL: PaletteName = "neutralLightGrey";
+
+// The data key a label whose names addNamePills set in pills holds them under: the pills drawn
+// and whether they are grey, for the HTML interface to draw them in their place.
+export const NAME_PILLS_DATA = "namePills";
+
+export interface LabelNamePills {
+  readonly graphics: GameObjects.Graphics;
+  readonly grey: boolean;
+}
 
 // Draws the pill behind each effect's name the labels' text sets in one (hud/effectNames.ts),
 // under its label in the label's parent, and the name in its colour, or grey for a disabled
@@ -65,6 +74,7 @@ export function addNamePills(
       parent.addAt(g, parent.getIndex(label));
     }
     label.once("destroy", () => g.destroy());
+    label.setData(NAME_PILLS_DATA, { graphics: g, grey } satisfies LabelNamePills);
     return [g];
   });
 }

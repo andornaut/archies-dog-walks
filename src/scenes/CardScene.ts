@@ -61,6 +61,7 @@ import { addRampDim } from "../ui/phaser/rampDim.ts";
 import { GREYED } from "../ui/selection.ts";
 import { addCardCharm } from "./buffCharm.ts";
 import { addNamePills } from "./effectNameColours.ts";
+import { addHtmlLabels } from "./htmlLabels.ts";
 import { onSceneEvent } from "./overlay.ts";
 import { currentSettings } from "./profileStore.ts";
 import { refuseControl } from "./refuseControl.ts";
@@ -234,6 +235,9 @@ export class CardScene extends Scene {
     if (picture !== undefined) {
       return;
     }
+    // Its text in HTML where the page's switch is on and its fonts are ready, else on the canvas;
+    // the canvas keeps the cards' art and takes their presses.
+    addHtmlLabels(this, view.title);
 
     // A tap picks a card; holding one enlarges it until the finger lifts, and picks nothing.
     this.presses = listenTargetPress<number>(this, {
