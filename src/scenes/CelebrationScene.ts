@@ -21,6 +21,7 @@ import {
   modalRect,
   modalTitleWidth,
 } from "../home/modalLayout.ts";
+import { panelButton, panelTitle } from "../hud/questionPanelView.ts";
 import { isConfirmKey, isPauseKey, menuKeyActs } from "../input/keyBindings.ts";
 import { exitShown } from "../pwa/index.ts";
 import { achievementLabel } from "../rules/achievements.ts";
@@ -28,12 +29,13 @@ import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";
 import { closeControl } from "../ui/closeControl.ts";
 import { labelInkWidth, pixelFontMetrics, withProbe } from "../ui/phaser/pixelText.ts";
 import { addRampDim } from "../ui/phaser/rampDim.ts";
-import { addBadgeCelebration, addCheeringFace } from "./badges.ts";
+import { addBadgeCelebration, addCheeringFace, badgeCelebrationNames } from "./badges.ts";
 import { listenHomeBar } from "./homeBarPress.ts";
 import { addCardClose } from "./homePanels.ts";
-import { modalTextWidth } from "./modalMeasure.ts";
+import { canvasPanelMeasure, modalTextWidth } from "./modalMeasure.ts";
 import { closeOverlay, listenDismiss } from "./overlay.ts";
 import { currentSettings } from "./profileStore.ts";
+import { addHtmlBadgeCelebration } from "./questionPanel.ts";
 import { SCENE_KEYS, type SceneKey } from "./sceneKeys.ts";
 import { soundboardOf } from "./soundboard.ts";
 import { listenTargetPress } from "./targetPress.ts";
@@ -105,8 +107,31 @@ export class CelebrationScene extends Scene {
     const group = modalRect(dim, undefined, { height: height + BUTTON.gap + BUTTON.height, width });
     const top = group.y;
     const panel: Rect = { height, width, x: group.x, y: top };
-    addBadgeCelebration(this, reduced, panel, rows, achievements, true);
-    const closeButton = addCardClose(this, this.add.container(0, 0), panel, false);
+    const buttonRect: Rect = {
+      height: BUTTON.height,
+      width: buttonWidth,
+      x: (SCREEN.width - buttonWidth) / 2,
+      y: top + height + BUTTON.gap,
+    };
+    const close = () => closeOverlay(resume, this);
+    const measure = canvasPanelMeasure(this);
+    const titleY = panel.y + BADGE_STRIP.titleY;
+    // In HTML where the page's switch is on and its fonts are ready, over the panel, the badges
+    // and the faces the canvas draws; else all on the canvas.
+    const html = addHtmlBadgeCelebration(
+      this,
+      {
+        button: panelButton(measure, buttonRect, true, gameData.menuText.celebration.button),
+        names: badgeCelebrationNames(this, panel, rows, achievements, true),
+        panel,
+        title: panelTitle(measure, panel, titleY, celebrationTitle(gameData, achievements.length)),
+        titleY,
+      },
+      close,
+    );
+    addBadgeCelebration(this, reduced, panel, rows, achievements, true, html === undefined);
+    const closeButton =
+      html === undefined ? addCardClose(this, this.add.container(0, 0), panel, false) : undefined;
     soundboardOf(this).play("badge");
     const left = SCREEN.width / 2 - ((cheering.length - 1) * FACES.pitch + FACES.size) / 2;
     const facesY = top + badgesHeight + MODAL.gap;
@@ -114,24 +139,20 @@ export class CelebrationScene extends Scene {
       addCheeringFace(this, reduced, dog, Math.round(left + i * FACES.pitch), facesY);
     });
 
-    const buttonRect: Rect = {
-      height: BUTTON.height,
-      width: buttonWidth,
-      x: (SCREEN.width - buttonWidth) / 2,
-      y: top + height + BUTTON.gap,
-    };
-    const button = addMenuButton(this, buttonRect, gameData.menuText.celebration.button, {
-      available: true,
-      primary: true,
-    });
-    const close = () => closeOverlay(resume, this);
+    const button =
+      html === undefined
+        ? addMenuButton(this, buttonRect, gameData.menuText.celebration.button, {
+            available: true,
+            primary: true,
+          })
+        : undefined;
     // Nice! and the close control in the panel's corner each close it, shown pressed while held.
     const closeHit = closeControl(panel).hit;
     listenTargetPress<"button" | "close">(this, {
       onDown: (pointer) => addTapBurst(this, pointer.x, pointer.y),
       onPressed: (target) => {
-        button.setPressed(target === "button");
-        closeButton.setPressed(target === "close");
+        button?.setPressed(target === "button");
+        closeButton?.setPressed(target === "close");
       },
       onTap: close,
       targetAt: (x, y) => {

@@ -17,6 +17,7 @@ import {
   panelBadgeStrip,
   stripUnderClose,
 } from "../home/badgesView.ts";
+import type { DetailText } from "../home/detailCardView.ts";
 import { MENU_TEXT_FIELDS } from "../home/menuText.ts";
 import { MODAL, modalPanelWidth, modalRect } from "../home/modalLayout.ts";
 import {
@@ -39,7 +40,7 @@ import {
 } from "../ui/phaser/pixelText.ts";
 import { TEXT_SCALE } from "../ui/textFit.ts";
 import { addCardTitle } from "./homePanels.ts";
-import { modalTextWidth } from "./modalMeasure.ts";
+import { canvasDetailMeasure, modalTextWidth } from "./modalMeasure.ts";
 import { playTag, playTagOnce } from "./sprites.ts";
 import { addBodyText, addCloseButton, addPanel, BODY_TEXT, tagFrame } from "./uiKit.ts";
 
@@ -128,17 +129,23 @@ export function addBadgeCelebration(
   rows: number,
   ids: readonly AchievementId[],
   closes: boolean,
+  // Whether the canvas draws the title and the names, or the HTML interface does over it.
+  text = true,
 ): BadgeView[] {
   addPanel(scene, panel);
-  const title = celebrationTitle(gameData, ids.length);
-  addCardTitle(scene, panel, title, closes, panel.y + BADGE_STRIP.titleY);
+  if (text) {
+    const title = celebrationTitle(gameData, ids.length);
+    addCardTitle(scene, panel, title, closes, panel.y + BADGE_STRIP.titleY);
+    for (const name of badgeCelebrationNames(scene, panel, rows, ids, closes)) {
+      addPixelText(scene, name.x, name.capTop, name.lines.join("\n"), {
+        colour: name.colour,
+        scale: name.scale ?? TEXT_SCALE,
+      }).setDepth(1);
+    }
+  }
   const rect = closes ? stripUnderClose(panel) : panel;
   const badges = earnedBadges(gameData, ids);
   const strip = panelBadgeStrip(rect, rows, badges.length);
-  const style = { colour: PALETTE.plum, originX: 0.5, scale: TEXT_SCALE };
-  const slotWidth = strip.slots[0]?.width ?? 0;
-  const named = badges.map((badge) => (closes ? achievementLabel(gameData, badge) : badge.name));
-  const names = strip.named ? rowNames(scene, style, slotWidth, named) : undefined;
   badges.forEach((badge, i) => {
     const slot = strip.slots[i];
     if (slot === undefined) {
@@ -148,14 +155,6 @@ export function addBadgeCelebration(
     const badgeY = rect.y + slot.top + BADGE_SIZE / 2;
     const burst = () => addConfetti(scene, reduced, 1, slot.centreX, badgeY);
     const image = addBadge(scene, badge.art, true, slot.centreX, badgeY);
-    if (names !== undefined) {
-      const { scale } = names.style;
-      const lines = names.lines[i] ?? [];
-      const tops = badgeNameTops(lines.length, rect.y);
-      lines.forEach((line, n) => {
-        addPixelText(scene, slot.centreX, tops[n] ?? 0, line, { ...style, scale }).setDepth(1);
-      });
-    }
     if (reduced) {
       burst();
       image.setDepth(1);
@@ -172,6 +171,43 @@ export function addBadgeCelebration(
     });
   });
   return badges;
+}
+
+// Each badge's name under it, where the strip names them: its lines in one style for the row
+// (badgeRowNames), each line centred on its slot as a label with originX 0.5 there.
+export function badgeCelebrationNames(
+  scene: Scene,
+  panel: Rect,
+  rows: number,
+  ids: readonly AchievementId[],
+  closes: boolean,
+): DetailText[] {
+  const rect = closes ? stripUnderClose(panel) : panel;
+  const badges = earnedBadges(gameData, ids);
+  const strip = panelBadgeStrip(rect, rows, badges.length);
+  if (!strip.named) {
+    return [];
+  }
+  const style = { colour: PALETTE.plum, originX: 0.5, scale: TEXT_SCALE };
+  const slotWidth = strip.slots[0]?.width ?? 0;
+  const named = badges.map((badge) => (closes ? achievementLabel(gameData, badge) : badge.name));
+  const names = rowNames(scene, style, slotWidth, named);
+  const { scale } = names.style;
+  const { bodyWidth } = canvasDetailMeasure(scene);
+  return badges.flatMap((_, i) => {
+    const slot = strip.slots[i];
+    const lines = names.lines[i] ?? [];
+    const tops = badgeNameTops(lines.length, rect.y);
+    return slot === undefined
+      ? []
+      : lines.map((line, n) => ({
+          capTop: tops[n] ?? 0,
+          colour: style.colour,
+          lines: [line],
+          scale,
+          x: Math.round(slot.centreX) - ((bodyWidth([line]) / TEXT_SCALE) * scale) / 2,
+        }));
+  });
 }
 
 const DETAIL_TEXT = STATS_LAYOUT.detailText;

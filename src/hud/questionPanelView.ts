@@ -68,6 +68,8 @@ export interface PanelButton {
   readonly available?: boolean;
   // Where a press counts.
   readonly hit: Rect;
+  // The key number in the face's left end, its ink a gap from the label's, where it shows.
+  readonly key?: PanelText;
   // The label alone, for a screen reader; text shows it with its key number once numbers show.
   readonly label: string;
   // Whether a panel that takes no presses shows it pressed.
@@ -82,8 +84,8 @@ export interface QuestionPanelView {
   readonly close: CloseControl;
   // What a tap outside the panel must miss: the panel's rim and the buttons' hit areas.
   readonly covered: readonly Rect[];
-  // A question's ui-panel in its tan rim, a modal card's ui-detail-card, or none over a screen
-  // the canvas draws, as help's.
+  // A question's ui-panel in its tan rim, a modal card's ui-detail-card, or none where the
+  // canvas or the panel's parts draw it, as help's and the celebrations'.
   readonly frame: "card" | "none" | "panel";
   readonly note: readonly PanelText[];
   // undefined with no note.

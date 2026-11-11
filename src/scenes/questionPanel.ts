@@ -7,6 +7,12 @@ import { gameData } from "../data/index.ts";
 import { SCREEN_CONFIG } from "../data/screen.ts";
 import type { HelpView } from "../help/helpView.ts";
 import type { DetailCardView } from "../home/detailCardView.ts";
+import type { ZoneCelebrationView } from "../hud/celebrationView.ts";
+import {
+  type BadgeCelebrationView,
+  showBadgeCelebration,
+  showZoneCelebration,
+} from "../hud/dom/celebration.ts";
 import { showDetailCard } from "../hud/dom/detailCard.ts";
 import { showHelpScreen } from "../hud/dom/helpScreen.ts";
 import {
@@ -238,18 +244,56 @@ export function addHtmlDetailCard(
   if (place === undefined) {
     return undefined;
   }
-  const panel = showDetailCard(place.layer, {
+  const panel = showDetailCard(place.layer, { ...htmlArtInput(place), close, view });
+  return followScene(scene, panel);
+}
+
+// What a celebration's HTML draws with beyond a panel's: art files, sheets and pill colours.
+function htmlArtInput(place: NonNullable<ReturnType<typeof htmlPanelPlace>>) {
+  return {
     ...htmlPanelInput(place),
     artUrl,
-    close,
     loadSheet,
-    pillColours: (index) => {
+    pillColours: (index: number) => {
       const kind = pillKind(index);
       return kind === undefined ? undefined : pillColours(kind);
     },
-    view,
-  });
-  return followScene(scene, panel);
+  };
+}
+
+// A zone celebration's plate or bubble in the HTML layer, laid out as the canvas draws it
+// (zoneCelebrationView), its button doing press, the dialog named label. Returns it, or
+// undefined where the canvas must draw it.
+export function addHtmlZoneCelebration(
+  scene: Scene,
+  view: ZoneCelebrationView,
+  label: string,
+  press: () => void,
+): DomQuestionPanel | undefined {
+  const place = htmlPanelPlace(scene);
+  return place === undefined
+    ? undefined
+    : followScene(
+        scene,
+        showZoneCelebration(place.layer, { ...htmlArtInput(place), label, press, view }),
+      );
+}
+
+// A badge celebration's title, names, close control and button in the HTML layer over the panel
+// the canvas draws, each control doing close. Returns it, or undefined where the canvas must
+// draw them.
+export function addHtmlBadgeCelebration(
+  scene: Scene,
+  view: BadgeCelebrationView,
+  close: () => void,
+): DomQuestionPanel | undefined {
+  const place = htmlPanelPlace(scene);
+  return place === undefined
+    ? undefined
+    : followScene(
+        scene,
+        showBadgeCelebration(place.layer, { ...htmlArtInput(place), close, view }),
+      );
 }
 
 // The help screen in the HTML layer, laid out as the canvas draws it (helpView), over the dark

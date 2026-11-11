@@ -1,48 +1,33 @@
 import { animationKey } from "@andornaut/game-kit/art/aseprite";
 import { guardSceneInput } from "@andornaut/game-kit/input/phaser/guardSceneInput";
 import type { Rect } from "@andornaut/game-kit/rect";
-import { type GameObjects, Math as PhaserMath, Scene } from "phaser";
+import { Math as PhaserMath, Scene } from "phaser";
 
 import { ZONE_CELEBRATION_ART as ART } from "../assets/spriteKeys.ts";
 import { gameData } from "../data/index.ts";
-import {
-  CELEBRATION_LAYOUT as LAYOUT,
-  GREETING_FIT,
-  greetingLineTops,
-  infoItems,
-  laidInfoLine,
-  newWalkerRows,
-  zoneDoneRows,
-} from "../hud/celebrationLayout.ts";
-import {
-  type CelebrationText,
-  celebrationText,
-  type LinePart,
-  type ZoneCelebration,
-} from "../hud/zoneCelebration.ts";
+import { CELEBRATION_LAYOUT as LAYOUT } from "../hud/celebrationLayout.ts";
+import { type ZoneCelebrationView, zoneCelebrationView } from "../hud/celebrationView.ts";
+import { celebrationText, type ZoneCelebration } from "../hud/zoneCelebration.ts";
 import { cardNumberForKey, isConfirmKey, isPauseKey, menuKeyActs } from "../input/keyBindings.ts";
 import { keyNumbersShown } from "../input/keyNumbers.ts";
 import { PALETTE } from "../ui/palette.ts";
 import { fillRect } from "../ui/phaser/draw.ts";
-import {
-  addPixelText,
-  fitPixelText,
-  pixelFontMetrics,
-  setPixelText,
-  withProbe,
-} from "../ui/phaser/pixelText.ts";
+import { addPixelText } from "../ui/phaser/pixelText.ts";
 import { addRampDim } from "../ui/phaser/rampDim.ts";
 import { addConfetti } from "./badges.ts";
 import { addCelebrationHeadline } from "./celebrationHeadline.ts";
-import { modalTextWidth } from "./modalMeasure.ts";
+import { canvasCelebrationMeasure } from "./modalMeasure.ts";
 import { closeOverlay, type OverlayData } from "./overlay.ts";
 import { currentSettings, walkerSpriteKey } from "./profileStore.ts";
+import { addHtmlZoneCelebration } from "./questionPanel.ts";
 import { SCENE_KEYS } from "./sceneKeys.ts";
 import { soundboardOf } from "./soundboard.ts";
 import { playFirstTag } from "./sprites.ts";
+import { listenTargetPress } from "./targetPress.ts";
 import {
   addMenuButton,
   addPanel,
+  addTapBurst,
   BODY_TEXT,
   listenButtonTap,
   MENU_BUTTON_KEY_GAP,
@@ -55,14 +40,6 @@ export interface ZoneCelebrationSceneData extends OverlayData {
   // Opens the pause menu over the celebration, which pauses it, as P and Escape do; the run
   // scene opens it on the phone's back button.
   openPause: () => void;
-}
-
-type NewWalkerText = Extract<CelebrationText, { kind: "newWalker" }>;
-type ZoneDoneText = Extract<CelebrationText, { kind: "zoneDone" }>;
-
-// Places a label made with origin y 0 by the top of its font line.
-function atLineTop<T extends GameObjects.BitmapText>(label: T, top: number): T {
-  return label.setY(top);
 }
 
 // Over the paused walk: between zones, the walker cheers on a starburst under the zone's name
@@ -113,12 +90,22 @@ export class ZoneCelebrationScene extends Scene {
         finish();
       }
     });
-    if (text.kind === "zoneDone") {
-      const action = this.addPlate(text);
-      this.addButton(action, text.button, finish);
+    const keyed = keyNumbersShown() ? { gap: MENU_BUTTON_KEY_GAP } : undefined;
+    const view = zoneCelebrationView(canvasCelebrationMeasure(this), keyed, text);
+    // In HTML where the page's switch is on and its fonts are ready, else on the canvas; every
+    // press bursts where it lands, as over the canvas's button.
+    const html = addHtmlZoneCelebration(this, view, `${text.title} ${text.subtitle}`, finish);
+    if (html !== undefined) {
+      listenTargetPress<never>(this, {
+        onDown: (pointer) => addTapBurst(this, pointer.x, pointer.y),
+        onPressed: () => undefined,
+        onTap: () => undefined,
+        targetAt: () => undefined,
+      });
       return;
     }
-    this.addButton(this.addBubble(text), text.button, finish);
+    this.addPanel(view);
+    this.addButton(view.button.rect, view.button.label, keyed !== undefined, finish);
   }
 
   // The walker's celebration at 2x, its frame's bottom centre on the feet line. Mr. B's welcome
@@ -146,121 +133,37 @@ export class ZoneCelebrationScene extends Scene {
     });
   }
 
-  // The zone's earnings on a cream plate, the amounts in forest.
-  private addPlate(text: ZoneDoneText): Rect {
-    const { centreX } = LAYOUT;
-    const line = text.earnings.map((part) => part.text).join("");
-    const zoneDone = zoneDoneRows(pixelFontMetrics(this, "body"), {
-      action: this.actionInk(text.button),
-      earnings: modalTextWidth(this, "body", [line]),
-    });
-    addPanel(this, zoneDone.plate);
-    const whole = atLineTop(addPixelText(this, 0, 0, line, BODY_TEXT), zoneDone.earningsY);
-    const left = Math.round(centreX - whole.width / 2);
-    whole.setX(left);
-    // Each amount is drawn again in forest over its place in the line, measured from the
-    // line's start through the amount, since a trailing space has no width.
-    withProbe(this, BODY_TEXT, (probe) => {
-      const widthOf = (shown: string) => {
-        setPixelText(probe, shown);
-        return probe.width;
-      };
-      let before = "";
-      for (const part of text.earnings) {
-        if (part.kind === "money") {
-          const x = left + widthOf(before + part.text) - widthOf(part.text);
-          const amount = addPixelText(this, x, 0, part.text, {
-            ...BODY_TEXT,
-            colour: PALETTE.forest,
-          });
-          atLineTop(amount, zoneDone.earningsY);
-        }
-        before += part.text;
-      }
-    });
-    return zoneDone.button;
-  }
-
-  private actionInk(label: string): number {
-    return (
-      modalTextWidth(this, "title", [label]) +
-      (keyNumbersShown() ? modalTextWidth(this, "title", ["1"]) + MENU_BUTTON_KEY_GAP : 0)
-    );
-  }
-
-  // The walker's line in a speech bubble whose tail points up at them, a dotted rule, and
-  // their agility over their perk under it, the bubble sized to its lines. Returns the button's
-  // place under the bubble.
-  private addBubble(text: NewWalkerText): Rect {
-    const { centreX, newWalker } = LAYOUT;
-    const { greeting, tail } = newWalker;
-    const fitted = withProbe(this, BODY_TEXT, (probe) => {
-      setPixelText(probe, text.greeting);
-      return fitPixelText(probe, GREETING_FIT, 0, 0);
-    });
-    const { lines, style } = fitted;
-    const body = pixelFontMetrics(this, "body");
-    const infoWidths = text.info.map(
-      (parts) =>
-        laidInfoLine(
-          (item) => (item.kind === "text" ? modalTextWidth(this, "body", [item.text]) : 16),
-          infoItems(parts),
-        ).width,
-    );
-    const rows = newWalkerRows(body, text.info.length, fitted, {
-      action: this.actionInk(text.button),
-      content: Math.max(modalTextWidth(this, "body", fitted.lines), ...infoWidths),
-    });
-    addPanel(this, rows.bubble, "ui-quip");
-    if (this.textures.exists(ART.tailUp)) {
-      this.add.image(tail.x, tail.y, ART.tailUp).setOrigin(0);
+  // The zone's earnings on a cream plate, the amounts in forest; or the walker's line in a
+  // speech bubble whose tail points up at them, a dotted rule, and their agility over their perk
+  // under it: as the view lays them out.
+  private addPanel(view: ZoneCelebrationView): void {
+    addPanel(this, view.frame.rect, view.frame.key);
+    for (const art of view.art) {
+      this.add.image(art.x, art.y, art.key).setOrigin(0);
     }
-    const tops = greetingLineTops(body, style.scale, lines.length);
-    lines.forEach((line, i) => {
-      const label = addPixelText(this, centreX, 0, line, {
+    const { rule } = view;
+    if (rule !== undefined) {
+      const dots = this.add.graphics();
+      for (let x = rule.fromX; x <= rule.toX; x += rule.step) {
+        fillRect(dots, PALETTE.tan, { height: 1, width: 1, x, y: rule.y });
+      }
+    }
+    for (const text of view.texts) {
+      addPixelText(this, text.x, text.capTop, text.lines.join("\n"), {
         ...BODY_TEXT,
-        originX: 0.5,
-        scale: style.scale,
+        colour: text.colour,
+        scale: text.scale ?? BODY_TEXT.scale,
       });
-      atLineTop(label, tops[i] ?? greeting.top);
-    });
-    const { rule } = rows;
-    const dots = this.add.graphics();
-    for (let x = rule.fromX; x <= rule.toX; x += rule.step) {
-      fillRect(dots, PALETTE.tan, { height: 1, width: 1, x, y: rule.y });
     }
-    text.info.forEach((parts, i) => {
-      const row = rows.info[i];
-      if (row !== undefined) {
-        this.addInfoLine(row, parts);
-      }
-    });
-    return rows.button;
-  }
-
-  // An info line, centred: each word after its icon, if it has one; the gaps from the layout.
-  private addInfoLine(row: { iconY: number; y: number }, parts: readonly LinePart[]): void {
-    const items = infoItems(parts).filter(
-      (item) => item.kind === "text" || this.textures.exists(item.icon),
-    );
-    const objects: (GameObjects.BitmapText | GameObjects.Image)[] = items.map((item) =>
-      item.kind === "text"
-        ? atLineTop(addPixelText(this, 0, 0, item.text, BODY_TEXT), row.y)
-        : this.add.image(0, row.iconY, item.icon).setOrigin(0),
-    );
-    const widths = new Map(items.map((item, i) => [item, objects[i]?.displayWidth ?? 0]));
-    const laid = laidInfoLine((item) => widths.get(item) ?? 0, items);
-    const left = Math.round(LAYOUT.centreX - laid.width / 2);
-    objects.forEach((object, i) => object.setX(left + (laid.xs[i] ?? 0)));
   }
 
   // The version's button, with the key that presses it in its left end once a key has been
   // pressed.
-  private addButton(place: Rect, label: string, onTap: () => void): void {
+  private addButton(place: Rect, label: string, keyed: boolean, onTap: () => void): void {
     const button = addMenuButton(this, place, label, {
       available: true,
       primary: true,
-      ...(keyNumbersShown() ? { keyNumber: "1" } : {}),
+      ...(keyed ? { keyNumber: "1" } : {}),
     });
     listenButtonTap(this, button, onTap);
   }

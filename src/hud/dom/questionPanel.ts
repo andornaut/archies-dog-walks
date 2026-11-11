@@ -42,10 +42,10 @@ export interface DomPart {
 }
 
 export interface DomQuestionPanelInput {
-  // What the close control does, or undefined for a panel that takes no presses: its close
-  // control is a picture and every press goes through to the canvas, whose scene closes it.
-  // Then its accessible name, and what each button does, in order.
-  readonly close: (() => void) | undefined;
+  // What the close control does; undefined draws it as a picture, and a panel with no buttons
+  // then takes no presses: every press goes through to the canvas, whose scene closes it. null
+  // draws no close control. Then its accessible name, and what each button does, in order.
+  readonly close: (() => void) | null | undefined;
   readonly closeLabel: string;
   // Whether a panel that takes no presses shows its close control pressed.
   readonly closePressed?: boolean;
@@ -53,6 +53,9 @@ export interface DomQuestionPanelInput {
   readonly describedBy?: string;
   // Told the index (focusControl's) of the control focus moves to, or undefined for the dialog.
   readonly onFocus?: (index: number | undefined) => void;
+  // The dialog's name where the canvas draws its title (view.title empty), as over a
+  // celebration.
+  readonly label?: string;
   readonly fonts: Readonly<Record<PanelText["font"], BitmapFont>>;
   // Whether keys 1 to n press the buttons, as on the pause menu and the questions.
   readonly numberKeys: boolean;
@@ -142,7 +145,7 @@ export function showQuestionPanel(layer: UiLayer, input: DomQuestionPanelInput):
   const id = `adw-panel-${panels}`;
   const { view } = input;
   const dialog = doc.createElement("div");
-  const passive = input.close === undefined;
+  const passive = input.close === undefined && input.presses.length === 0;
   dialog.className = passive ? "adw-dialog adw-passive" : "adw-dialog";
   dialog.setAttribute("role", "dialog");
   dialog.setAttribute("aria-modal", "true");
@@ -201,7 +204,7 @@ export function showQuestionPanel(layer: UiLayer, input: DomQuestionPanelInput):
   const title = doc.createElement("h2");
   title.className = "adw-lines";
   title.id = `${id}-title`;
-  title.setAttribute("aria-label", view.title.map((line) => line.text).join(" "));
+  title.setAttribute("aria-label", input.label ?? view.title.map((line) => line.text).join(" "));
   for (const line of view.title) {
     text(title, ORIGIN, line).setAttribute("aria-hidden", "true");
   }
@@ -272,7 +275,9 @@ export function showQuestionPanel(layer: UiLayer, input: DomQuestionPanelInput):
     element.append(face);
     box(element, ORIGIN, button.hit);
     frame(face, button.hit, button.rect);
-    text(element, button.hit, button.text).setAttribute("aria-hidden", "true");
+    for (const line of button.key === undefined ? [button.text] : [button.key, button.text]) {
+      text(element, button.hit, line).setAttribute("aria-hidden", "true");
+    }
     if (!passive) {
       pressable(element as HTMLButtonElement, () => input.presses[i]?.());
     }
@@ -280,10 +285,11 @@ export function showQuestionPanel(layer: UiLayer, input: DomQuestionPanelInput):
   });
 
   // The close control after the buttons, so it is on top where their press areas meet; a
-  // picture of one on a panel that takes no presses.
-  const close = doc.createElement(passive ? "span" : "button");
+  // picture of one where nothing presses it.
+  const pressClose = input.close ?? undefined;
+  const close = doc.createElement(pressClose === undefined ? "span" : "button");
   close.className = "adw-close";
-  if (!passive) {
+  if (pressClose !== undefined) {
     (close as HTMLButtonElement).type = "button";
     close.setAttribute("aria-label", input.closeLabel);
   } else {
@@ -314,16 +320,21 @@ export function showQuestionPanel(layer: UiLayer, input: DomQuestionPanelInput):
       width: at.size * pixel,
     });
   });
-  if (input.close !== undefined) {
-    pressable(close as HTMLButtonElement, input.close);
+  if (pressClose !== undefined) {
+    pressable(close as HTMLButtonElement, pressClose);
   }
-  dialog.append(...buttons, close);
+  dialog.append(...buttons);
+  if (input.close !== null) {
+    dialog.append(close);
+  }
 
   // Phaser handles a press on the page outside its canvas as its own; a press here is the menu's.
   for (const type of passive ? [] : ["mousedown", "touchstart"]) {
     dialog.addEventListener(type, (event) => event.stopPropagation());
   }
-  const native: HTMLElement[] = passive ? [] : [...buttons, close];
+  const native: HTMLElement[] = passive
+    ? []
+    : [...buttons, ...(pressClose === undefined ? [] : [close])];
   const focusables = [...(input.parts ?? []).flatMap((part) => part.controls ?? []), ...native];
   dialog.addEventListener("focusin", (event) => {
     const at = focusables.indexOf(event.target as HTMLElement);

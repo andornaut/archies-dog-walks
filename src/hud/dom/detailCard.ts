@@ -71,7 +71,11 @@ function framedPart(doc: Document, view: DetailCardView["framed"][number]): DomP
 // Art from its top-left, each art pixel art.scale times artPixel device pixels: an image's whole
 // file, or a sheet's frame, hidden until the sheet's JSON says where the frame is. Art in a box
 // sits whole art pixels into it, rounded down where it is centred on a half pixel.
-function artPart(doc: Document, input: DomDetailCardInput, art: DetailArt): DomPart {
+export function artPart(
+  doc: Document,
+  input: Pick<DomDetailCardInput, "artUrl" | "loadSheet">,
+  art: DetailArt,
+): DomPart {
   const element = doc.createElement("span");
   element.className = "adw-art";
   const kind = art.sheet === undefined ? "image" : "sheet";
@@ -113,10 +117,14 @@ function artPart(doc: Document, input: DomDetailCardInput, art: DetailArt): DomP
 
 // A block of text: each run of a line the web font draws, each name's pill behind it, and the
 // whole for a screen reader.
-function textPart(doc: Document, input: DomDetailCardInput, text: DetailText): DomPart {
+export function textPart(
+  doc: Document,
+  input: Pick<DomDetailCardInput, "fonts" | "pillColours">,
+  text: DetailText,
+): DomPart {
   const element = doc.createElement("p");
   element.className = "adw-lines";
-  const block = { ...text, font: "body", scale: TEXT_SCALE } as const;
+  const block = { ...text, font: "body", scale: text.scale ?? TEXT_SCALE } as const;
   const bitmap: BitmapFont = input.fonts.body;
   // The runs and pills are the same at every scale.
   const first = blockPlace(bitmap, { dpr: 1, origin: { x: 0, y: 0 }, unit: 1 }, block);

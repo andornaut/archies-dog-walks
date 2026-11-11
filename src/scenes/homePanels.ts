@@ -209,7 +209,10 @@ export function addDetailContent(
   parent.add(view.art.map((art) => addDetailArt(scene, art)));
   for (const text of view.texts) {
     const at = { x: text.x, y: text.capTop };
-    const label = addBodyText(scene, parent, at, text.lines.join("\n"), { colour: text.colour });
+    const label = addBodyText(scene, parent, at, text.lines.join("\n"), {
+      colour: text.colour,
+      scale: text.scale ?? TEXT_SCALE,
+    });
     if (text.lines.some(hasPill)) {
       addNamePills([label]);
     }

@@ -62,12 +62,14 @@ export interface DetailFramed {
   readonly rect: Rect;
 }
 
-// Left-aligned 2x body text: its pen starting at x, its first line's capitals at capTop, its
-// lines a font line apart, each effect's name a line leads with in its pill.
+// Left-aligned body text at scale, 2x where undefined: its pen starting at x, its first line's
+// capitals at capTop, its lines a font line apart, each effect's name a line leads with in its
+// pill.
 export interface DetailText {
   readonly capTop: number;
   readonly colour: number;
   readonly lines: readonly string[];
+  readonly scale?: number;
   readonly x: number;
 }
 

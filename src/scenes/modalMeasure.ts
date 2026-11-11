@@ -2,10 +2,13 @@ import type { Scene } from "phaser";
 
 import type { DetailMeasure } from "../home/detailCardView.ts";
 import { modalTitleLayout } from "../home/modalLayout.ts";
+import { GREETING_FIT } from "../hud/celebrationLayout.ts";
+import type { CelebrationMeasure } from "../hud/celebrationView.ts";
 import { NOTE_PLATE } from "../hud/pauseMenu.ts";
 import type { PanelMeasure } from "../hud/questionPanelView.ts";
 import { PALETTE } from "../ui/palette.ts";
 import {
+  fitPixelText,
   type FontRole,
   labelInkWidth,
   pixelFontMetrics,
@@ -71,5 +74,18 @@ export function canvasDetailMeasure(scene: Scene): DetailMeasure {
       }),
     hasTag: (key, tag) => firstTag(scene, key, [tag]) !== undefined,
     wrapBody: (width, text) => wrapPixelText(scene, DETAIL_TEXT, width, text),
+  };
+}
+
+// A zone celebration's text and art measured as a detail card's are, and its greeting fitted
+// on the body font.
+export function canvasCelebrationMeasure(scene: Scene): CelebrationMeasure {
+  return {
+    ...canvasDetailMeasure(scene),
+    fitGreeting: (text) =>
+      withProbe(scene, DETAIL_TEXT, (probe) => {
+        setPixelText(probe, text);
+        return fitPixelText(probe, GREETING_FIT, 0, 0);
+      }),
   };
 }

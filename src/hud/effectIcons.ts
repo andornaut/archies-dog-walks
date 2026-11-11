@@ -1,4 +1,4 @@
-import { upgradeIconKey } from "../assets/iconKeys.ts";
+import { perkIconKey, upgradeIconKey } from "../assets/iconKeys.ts";
 import { kebabCase } from "../assets/spriteKeys.ts";
 import type { GameData, GearId, UpgradeId, WalkerId, WalkerPerkId } from "../data/types.ts";
 import { gearSourceName } from "../rules/causes.ts";
@@ -71,9 +71,7 @@ export function maxEffects(data: Pick<GameData, "tuning" | "world">): number {
 }
 
 // The 16x16 icon of a walker's perk.
-export function perkIconKey(perk: WalkerPerkId): string {
-  return `icon-perk-${kebabCase(perk)}`;
-}
+export { perkIconKey };
 
 // The 16x16 icon each item shows: icon-upgrade-<id>, icon-gear-<id>, icon-perk-<id>.
 export function effectIconKey(item: EffectItem): string {

@@ -8,7 +8,13 @@ import type { UiLayer } from "../../ui/dom/uiLayer.ts";
 import { domScale } from "../../ui/domScale.ts";
 import { inPill } from "../../ui/namePills.ts";
 import { PAUSE_MENU_ITEMS, pauseMenuLayout } from "../pauseMenu.ts";
-import { modalCardView, type PanelMeasure, questionPanelView } from "../questionPanelView.ts";
+import {
+  modalCardView,
+  panelButton,
+  type PanelMeasure,
+  questionPanelView,
+} from "../questionPanelView.ts";
+import { showZoneCelebration } from "./celebration.ts";
 import { showDetailCard } from "./detailCard.ts";
 import { showQuestionPanel } from "./questionPanel.ts";
 
@@ -283,5 +289,53 @@ describe("an HTML panel's part controls", () => {
     dialog?.fire("focusin", { target: rows[1] });
     dialog?.fire("focusin", { target: dialog });
     expect(focused).toEqual([1, undefined]);
+  });
+});
+
+describe("an HTML zone celebration", () => {
+  it("draws its plate and button with no close control, named by the canvas's headline", () => {
+    const doc = new FakeDocument();
+    const element = doc.createElement("div");
+    const layer = {
+      element,
+      onScale: () => () => undefined,
+      ready: () => true,
+      scale: () => domScale(2, { height: 560, width: 360, x: 0, y: 0 }),
+      update: () => undefined,
+    } as unknown as UiLayer;
+    const press = vi.fn();
+    const plate = { height: 26, width: 160, x: 100, y: 300 };
+    const rect = { height: 44, width: 120, x: 120, y: 334 };
+    const button = panelButton(MEASURE, rect, true, "Onward!");
+    showZoneCelebration(layer, {
+      artUrl: (path) => `/art/${path}`,
+      closeLabel: gameData.menuText.common.close,
+      fonts: { body: gameFont("font-body"), title: gameFont("font-title") },
+      label: "Well walked! High Park",
+      loadSheet: () => Promise.reject(new Error("no sheets")),
+      pillColours: () => undefined,
+      press,
+      toGame: (point) => point,
+      view: {
+        art: [],
+        button: { ...button, key: { ...button.text, text: "1" } },
+        frame: { key: "ui-panel", rect: plate },
+        rule: undefined,
+        texts: [{ capTop: 308, colour: 0, lines: ["+$12 pay"], x: 130 }],
+      },
+    });
+    const [dialog] = element.children;
+    const nodes = dialog?.all() ?? [];
+    expect(nodes.some((node) => node.className === "adw-close")).toBe(false);
+    expect(nodes.some((node) => node.className === "adw-plate-frame")).toBe(true);
+    const title = nodes.find((node) => node.id === dialog?.getAttribute("aria-labelledby"));
+    expect(title?.getAttribute("aria-label")).toBe("Well walked! High Park");
+    const control = nodes.find((node) => node.tagName === "button");
+    expect(control?.all().filter((node) => node.className.includes("adw-text"))).toHaveLength(2);
+    expect(dialog?.listeners.has("mousedown")).toBe(true);
+    control?.fire("click");
+    expect(press).toHaveBeenCalledOnce();
+    doc.defaultView.fire("keydown", { key: "1", repeat: false });
+    expect(press).toHaveBeenCalledOnce();
   });
 });

@@ -13,7 +13,10 @@ const px = (n: 1 | 2 | 3 | 4 | 5 | 8) => `var(--adw-slice-${n})`;
 
 // A nine-slice frame: the art cut by its SLICES, its edges drawn as wide as the layer's
 // whole-device-pixel lengths for them.
-function nineSlice(key: "ui-button" | "ui-detail-card" | "ui-panel", art: string): string {
+export function nineSlice(
+  key: "ui-button" | "ui-detail-card" | "ui-panel" | "ui-quip",
+  art: string,
+): string {
   const { bottom, left, right, top } = SLICES[key];
   const widths = [top, right, bottom, left].map((edge) => px(edge as 3 | 4 | 5 | 8)).join(" ");
   return `border-style:solid;border-color:transparent;border-width:${widths};

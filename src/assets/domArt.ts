@@ -2,13 +2,14 @@ import { keysOf } from "@andornaut/game-kit/records";
 
 import { gameData } from "../data/index.ts";
 import type { GameData } from "../data/types.ts";
-import { debuffIconKey, upgradeIconKey } from "./iconKeys.ts";
+import { debuffIconKey, perkIconKey, upgradeIconKey } from "./iconKeys.ts";
 import {
   DETAIL_WELL_KEY,
   dogPortraitKey,
   gearIconKey,
   ownerFaceKey,
   walkerPortraitKey,
+  ZONE_CELEBRATION_ART,
 } from "./spriteKeys.ts";
 
 // The art the HTML interface draws (src/ui/dom/, src/hud/dom/), by key. CSS loads whole files, so
@@ -50,6 +51,12 @@ const SETTINGS_ART_KEYS = [
   "ui-switch",
 ];
 
+// The zone celebration's frames and the icons on a new walker's info lines: the greeting's
+// ui-quip and its tail, and each perk's icon.
+function celebrationArtKeys(data: Pick<GameData, "walkerPerks">): string[] {
+  return ["ui-quip", ZONE_CELEBRATION_ART.tailUp, ...keysOf(data.walkerPerks).map(perkIconKey)];
+}
+
 export const DOM_ART_KEYS: ReadonlySet<string> = new Set([
   "fx-tap",
   "icon-close",
@@ -67,6 +74,7 @@ export const DOM_ART_KEYS: ReadonlySet<string> = new Set([
   "ui-panel",
   ...detailArtKeys(gameData),
   ...SETTINGS_ART_KEYS,
+  ...celebrationArtKeys(gameData),
 ]);
 
 // A DOM art file's path under /art/: an image's PNG, or a sprite sheet's PNG or JSON.

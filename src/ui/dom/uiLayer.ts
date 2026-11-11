@@ -3,6 +3,7 @@ import type { Rect } from "@andornaut/game-kit/rect";
 import { artUrl } from "../../assets/artFiles.ts";
 import { type DomScale, domScale, sliceLengths } from "../domScale.ts";
 import { PALETTE } from "../palette.ts";
+import { CELEBRATION_STYLE } from "./celebrationStyle.ts";
 import { UI_STYLE } from "./uiStyle.ts";
 
 // The HTML interface's layer: #ui in pages/play/index.html, over the canvas's box, its parts
@@ -71,6 +72,7 @@ const ART_PROPERTIES: readonly (readonly [string, string])[] = [
   ["--adw-ui-icon-button-normal", "images/ui-icon-button-normal.png"],
   ["--adw-ui-icon-button-pressed", "images/ui-icon-button-pressed.png"],
   ["--adw-ui-panel", "images/ui-panel.png"],
+  ["--adw-ui-quip", "images/ui-quip.png"],
 ];
 
 // The layer in doc over canvas, its stylesheet and web fonts loading, or undefined where the
@@ -81,7 +83,7 @@ export function mountUiLayer(doc: Document, canvas: HTMLCanvasElement): UiLayer 
     return undefined;
   }
   const style = doc.createElement("style");
-  style.textContent = UI_STYLE;
+  style.textContent = UI_STYLE + CELEBRATION_STYLE;
   doc.head.append(style);
   for (const [name, path] of ART_PROPERTIES) {
     element.style.setProperty(name, `url("${artUrl(path)}")`);

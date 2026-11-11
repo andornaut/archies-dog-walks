@@ -1,4 +1,4 @@
-import type { DebuffId, UpgradeId } from "../data/types.ts";
+import type { DebuffId, UpgradeId, WalkerPerkId } from "../data/types.ts";
 import { kebabCase } from "./spriteKeys.ts";
 
 // The 16x16 icon of a debuff, on its bar.
@@ -12,4 +12,9 @@ export const SQUIRREL_ICON_KEY = "icon-trait-chaser";
 // The 16x16 icon of an upgrade, in its effect well.
 export function upgradeIconKey(upgrade: UpgradeId): string {
   return `icon-upgrade-${kebabCase(upgrade)}`;
+}
+
+// The 16x16 icon of a walker's perk.
+export function perkIconKey(perk: WalkerPerkId): string {
+  return `icon-perk-${kebabCase(perk)}`;
 }
