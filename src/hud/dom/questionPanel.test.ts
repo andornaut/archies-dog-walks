@@ -6,7 +6,7 @@ import { gameFont } from "../../testing/fontInk.ts";
 import type { UiLayer } from "../../ui/dom/uiLayer.ts";
 import { domScale } from "../../ui/domScale.ts";
 import { PAUSE_MENU_ITEMS, pauseMenuLayout } from "../pauseMenu.ts";
-import { type PanelMeasure, questionPanelView } from "../questionPanelView.ts";
+import { modalCardView, type PanelMeasure, questionPanelView } from "../questionPanelView.ts";
 import { showQuestionPanel } from "./questionPanel.ts";
 
 type Listener = (event: FakeEvent) => void;
@@ -155,6 +155,7 @@ function menu() {
     close,
     closeLabel: gameData.menuText.common.close,
     fonts: { body: gameFont("font-body"), title: gameFont("font-title") },
+    numberKeys: true,
     presses,
     toGame: (point) => point,
     view,
@@ -242,5 +243,43 @@ describe("the HTML pause menu", () => {
     expect(button?.getAttribute("data-pressed")).toBe("");
     button?.fire("pointerleave");
     expect(button?.getAttribute("data-pressed")).toBeNull();
+  });
+});
+
+describe("an HTML modal card", () => {
+  it("wears the detail card's frame with no rim, and its number keys press nothing", () => {
+    const doc = new FakeDocument();
+    const element = doc.createElement("div");
+    const layer = {
+      element,
+      onScale: () => () => undefined,
+      ready: () => true,
+      scale: () => domScale(2, { height: 560, width: 360, x: 0, y: 0 }),
+      update: () => undefined,
+    } as unknown as UiLayer;
+    const card = { height: 104, width: 280, x: 40, y: 200 };
+    const update = vi.fn();
+    const words = gameData.homeText.update;
+    showQuestionPanel(layer, {
+      close: vi.fn(),
+      closeLabel: gameData.menuText.common.close,
+      fonts: { body: gameFont("font-body"), title: gameFont("font-title") },
+      numberKeys: false,
+      presses: [update],
+      toGame: (point) => point,
+      view: modalCardView(MEASURE, card, words.title, [
+        { label: words.button, primary: true, rect: { height: 44, width: 200, x: 80, y: 252 } },
+      ]),
+    });
+    const parts = element.all().map(({ className }) => className);
+    expect(parts).toContain("adw-card");
+    expect(parts).not.toContain("adw-rim");
+    doc.defaultView.fire("keydown", { key: "1", repeat: false });
+    expect(update).not.toHaveBeenCalled();
+    element
+      .all()
+      .find((node) => node.getAttribute("aria-label") === words.button)
+      ?.fire("click");
+    expect(update).toHaveBeenCalledOnce();
   });
 });

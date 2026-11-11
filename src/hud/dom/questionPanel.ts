@@ -2,7 +2,7 @@ import type { Point, Rect } from "@andornaut/game-kit/rect";
 import type { BitmapFont } from "@andornaut/game-kit/text/bitmapFont";
 
 import { SCREEN_CONFIG } from "../../data/screen.ts";
-import { cardNumberForKey, menuKeyActs } from "../../input/keyBindings.ts";
+import { cardNumberForKey, isConfirmKey, menuKeyActs } from "../../input/keyBindings.ts";
 import { closeFace } from "../../ui/closeControl.ts";
 import {
   createTextLine,
@@ -22,18 +22,21 @@ import {
 } from "../../ui/domScale.ts";
 import type { PanelText, QuestionPanelView } from "../questionPanelView.ts";
 
-// The pause menu and each question (the Home question, Quit?) in HTML over the canvas: the panel
-// questionPanelView lays out, drawn in the #ui layer at the places the canvas would draw it, as a
-// dialog. A press on its parts is its own (Phaser never hears it); everywhere else presses go
-// through to the canvas, where the top bar's buttons keep working and the scene's outside tap
-// closes it. Number keys press its buttons, Tab and Shift+Tab keep focus among its buttons and
-// close control, and Enter or Space presses the focused one.
+// The pause menu, each question (the Home question, Quit?) and each modal card (the update
+// notices) in HTML over the canvas: the panel questionPanelView or modalCardView lays out, drawn
+// in the #ui layer at the places the canvas would draw it, as a dialog. A press on its parts is
+// its own (Phaser never hears it); everywhere else presses go through to the canvas, where the
+// top bar's buttons keep working and the scene's outside tap closes it. Number keys press a
+// question's buttons, Tab and Shift+Tab keep focus among its buttons and close control, and Enter
+// or Space presses the focused one.
 
 export interface DomQuestionPanelInput {
   // What the close control does, its accessible name, and what each button does, in order.
   readonly close: () => void;
   readonly closeLabel: string;
   readonly fonts: Readonly<Record<PanelText["font"], BitmapFont>>;
+  // Whether keys 1 to n press the buttons, as on the pause menu and the questions.
+  readonly numberKeys: boolean;
   readonly presses: readonly (() => void)[];
   // The page point of a press as a game point, through the page frame's turn.
   readonly toGame: (client: Point) => Point;
@@ -71,11 +74,16 @@ export function showQuestionPanel(layer: UiLayer, input: DomQuestionPanelInput):
   // Focus starts on the dialog itself, so no button shows the keyboard's ring until Tab.
   dialog.tabIndex = -1;
 
+  // A question's ui-panel in its rim, or a modal card's ui-detail-card.
   const rim = doc.createElement("div");
   rim.className = "adw-rim";
   const panel = doc.createElement("div");
-  panel.className = "adw-panel";
-  dialog.append(rim, panel);
+  panel.className = view.frame === "card" ? "adw-card" : "adw-panel";
+  if (view.frame === "card") {
+    dialog.append(panel);
+  } else {
+    dialog.append(rim, panel);
+  }
 
   // The parts drawn at game pixels, placed again as the scale changes.
   const placed: ((scale: DomScale) => void)[] = [];
@@ -222,6 +230,11 @@ export function showQuestionPanel(layer: UiLayer, input: DomQuestionPanelInput):
   }
   const focusables = [...buttons, close];
   dialog.addEventListener("keydown", (event) => {
+    // Enter and Space press the focused control natively; the scene under never hears them.
+    if (isConfirmKey(event.key) && focusables.includes(event.target as HTMLButtonElement)) {
+      event.stopPropagation();
+      return;
+    }
     if (event.key !== "Tab") {
       return;
     }
@@ -235,7 +248,12 @@ export function showQuestionPanel(layer: UiLayer, input: DomQuestionPanelInput):
   });
   const onKey = (event: KeyboardEvent) => {
     const number = cardNumberForKey(input.presses.length, event.key);
-    if (!dialog.hidden && number !== undefined && menuKeyActs(event.repeat, event.key)) {
+    if (
+      input.numberKeys &&
+      !dialog.hidden &&
+      number !== undefined &&
+      menuKeyActs(event.repeat, event.key)
+    ) {
       input.presses[number - 1]?.();
     }
   };

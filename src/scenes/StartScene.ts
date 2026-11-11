@@ -2,7 +2,7 @@ import { clampIndex, itemAt } from "@andornaut/game-kit/arrays";
 import type { ProgressValue } from "@andornaut/game-kit/progress";
 import { drawProgressBar } from "@andornaut/game-kit/progress/phaser/drawProgressBar";
 import { containsPoint, insetRect, type Rect } from "@andornaut/game-kit/rect";
-import { Core, type GameObjects, Scene, type Time } from "phaser";
+import { Core, type GameObjects, Scene, Scenes, type Time } from "phaser";
 
 import {
   dogFaceKey,
@@ -98,6 +98,7 @@ import {
 import { shopAffordable } from "../home/shop.ts";
 import { slotSign, slotSignPurchase } from "../home/slotSign.ts";
 import { tapWalker, walkerTile } from "../home/walkers.ts";
+import type { DomQuestionPanel } from "../hud/dom/questionPanel.ts";
 import {
   EFFECT_ICON_SIZE,
   effectIconFallback,
@@ -212,6 +213,7 @@ import {
   updateProfile,
   walkerSpriteKey,
 } from "./profileStore.ts";
+import { addHtmlModalCard } from "./questionPanel.ts";
 import { emphasiseRefusedControl } from "./refuseControl.ts";
 import { nextRunStart } from "./run/runRecorder.ts";
 import { type RunPick, runSceneData } from "./run/runStart.ts";
@@ -452,6 +454,8 @@ export class StartScene extends Scene {
   private hold: HoldPress | undefined;
   private loadout: HomeLoadout = { dogs: [], gear: null };
   private overlay: Overlay | undefined;
+  // The update notice drawn in HTML, while one is open, and the notice it shows.
+  private htmlNotice: { readonly card: DomQuestionPanel; readonly mode: PlateMode } | undefined;
   private overlayLayer: GameObjects.Container | undefined;
   // A press that began while a panel was open: it never reaches the tiles under it.
   private overlayPress: { x: number; y: number } | undefined;
@@ -1500,6 +1504,10 @@ export class StartScene extends Scene {
     }
     layer.removeAll(true);
     const overlay = this.overlay;
+    if (overlay === undefined || !("mode" in overlay) || overlay.mode !== this.htmlNotice?.mode) {
+      this.htmlNotice?.card.destroy();
+      this.htmlNotice = undefined;
+    }
     if (overlay === undefined) {
       return;
     }
@@ -1841,6 +1849,32 @@ export class StartScene extends Scene {
     const { button, cancel, panel } = this.updateLayout(mode);
     const text = gameData.homeText[mode];
     root.add(addModalShade(this, HOME_REGION));
+    if (this.htmlNotice !== undefined) {
+      return;
+    }
+    // In HTML where the page's switch is on and its fonts are ready, else on the canvas.
+    const update = { label: text.button, press: acceptUpdate, primary: true, rect: button };
+    const close = () => this.closeOverlay();
+    const entries =
+      cancel === undefined
+        ? [update]
+        : [
+            {
+              label: gameData.homeText.shop.confirmCancel,
+              press: close,
+              primary: false,
+              rect: cancel,
+            },
+            update,
+          ];
+    const card = addHtmlModalCard(this, panel, text.title, entries, close);
+    if (card !== undefined) {
+      this.htmlNotice = { card, mode };
+      this.events.once(Scenes.Events.SHUTDOWN, () => {
+        this.htmlNotice = undefined;
+      });
+      return;
+    }
     addModalCard(this, root, panel, text.title, { pressed: this.closePressed() });
     const control = addMenuButton(
       this,

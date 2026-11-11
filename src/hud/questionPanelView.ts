@@ -3,7 +3,7 @@ import { sentences } from "@andornaut/game-kit/lines";
 import { insetRect, type Rect } from "@andornaut/game-kit/rect";
 import type { FontMetrics } from "@andornaut/game-kit/text/bitmapFont";
 
-import { cardTitleRow } from "../home/homeLayout.ts";
+import { cardTitleRow, HOME_LAYOUT } from "../home/homeLayout.ts";
 import { modalActionWidth, modalTitleLayout } from "../home/modalLayout.ts";
 import { withKeyNumber } from "../input/keyNumbers.ts";
 import { barTitleLeft, barTitleRoom } from "../ui/barTitle.ts";
@@ -77,6 +77,8 @@ export interface QuestionPanelView {
   readonly close: CloseControl;
   // What a tap outside the panel must miss: the panel's rim and the buttons' hit areas.
   readonly covered: readonly Rect[];
+  // A question's ui-panel in its tan rim, or a modal card's ui-detail-card.
+  readonly frame: "card" | "panel";
   readonly note: readonly PanelText[];
   // undefined with no note.
   readonly notePlate: Rect | undefined;
@@ -84,6 +86,66 @@ export interface QuestionPanelView {
   readonly title: readonly PanelText[];
   // The title's first line's capitals.
   readonly titleY: number;
+}
+
+// A modal card's or panel's title in plum on its title row beside the close control in its
+// top-right corner, each line's ink centred in the room the control leaves, its first line's
+// capitals at capTop, as the canvas draws it (addCardTitle).
+export function panelTitle(
+  measure: PanelMeasure,
+  panel: Rect,
+  capTop: number,
+  title: string,
+): PanelText[] {
+  const row = cardTitleRow(panel);
+  const close = closeControl(panel);
+  const titled = modalTitleLayout(
+    { font: measure.title, widthOf: (line) => measure.inkWidth("title", line) },
+    barTitleRoom(row, close),
+    title,
+  );
+  return titled.lines.map((line, i): PanelText => {
+    const ink = measure.inkWidth("title", line);
+    return {
+      capTop: capTop + i * titled.linePitch,
+      centre: "ink",
+      centreX: barTitleLeft(row, close, ink) + ink / 2,
+      colour: PALETTE.plum,
+      font: "title",
+      line: i,
+      scale: TEXT_SCALE,
+      text: line,
+    };
+  });
+}
+
+// A button with text as its label, primary or normal, its hit its face: the label's line
+// centred on the face over the lip, as the canvas centres a one-line label on its height, a font
+// line, its capitals capTop rows into the line (addMenuButton).
+export function panelButton(
+  measure: PanelMeasure,
+  rect: Rect,
+  primary: boolean,
+  text: string,
+): PanelButton {
+  const { capTop, lineHeight } = measure.title;
+  const lineToCaps = (capTop - lineHeight / 2) * TEXT_SCALE;
+  return {
+    hit: rect,
+    label: text,
+    primary,
+    rect,
+    text: {
+      capTop: Math.round(rect.y + (rect.height - BUTTON_LIP_PX) / 2 + lineToCaps),
+      centre: "advance",
+      centreX: rect.x + rect.width / 2,
+      colour: PALETTE[BUTTON_COLOURS[primary ? "primary" : "normal"].label],
+      font: "title",
+      line: 0,
+      scale: TEXT_SCALE,
+      text,
+    },
+  };
 }
 
 // The panel centred in area: its title beside the close control in its top-right corner, as on
@@ -120,50 +182,12 @@ export function questionPanelView(
   const close = closeControl(panel);
   const centreX = panel.x + panel.width / 2;
 
-  const row = cardTitleRow(panel);
-  const titled = modalTitleLayout(
-    { font: measure.title, widthOf: (line) => measure.inkWidth("title", line) },
-    barTitleRoom(row, close),
-    question.title,
-  );
-  const title = titled.lines.map((line, i): PanelText => {
-    const ink = measure.inkWidth("title", line);
-    return {
-      capTop: layout.titleY + i * titled.linePitch,
-      centre: "ink",
-      centreX: barTitleLeft(row, close, ink) + ink / 2,
-      colour: PALETTE.plum,
-      font: "title",
-      line: i,
-      scale: TEXT_SCALE,
-      text: line,
-    };
-  });
-
-  // A label's line is centred on its face over the lip, as the canvas centres a one-line label
-  // on its height, a font line; its capitals sit capTop rows into the line.
-  const { capTop, lineHeight } = measure.title;
-  const lineToCaps = (capTop - lineHeight / 2) * TEXT_SCALE;
-  const buttons = shown.map((text, i): PanelButton => {
-    const rect = itemAt(layout.buttons, i);
-    const primary = i === 0;
-    return {
-      hit: itemAt(layout.hits, i),
-      label: itemAt(question.labels, i),
-      primary,
-      rect,
-      text: {
-        capTop: Math.round(rect.y + (rect.height - BUTTON_LIP_PX) / 2 + lineToCaps),
-        centre: "advance",
-        centreX: rect.x + rect.width / 2,
-        colour: PALETTE[BUTTON_COLOURS[primary ? "primary" : "normal"].label],
-        font: "title",
-        line: 0,
-        scale: TEXT_SCALE,
-        text,
-      },
-    };
-  });
+  const title = panelTitle(measure, panel, layout.titleY, question.title);
+  const buttons = shown.map((text, i): PanelButton => ({
+    ...panelButton(measure, itemAt(layout.buttons, i), i === 0, text),
+    hit: itemAt(layout.hits, i),
+    label: itemAt(question.labels, i),
+  }));
 
   const noted = noteParts.length > 0;
   const tops = notePartTops(
@@ -193,10 +217,44 @@ export function questionPanelView(
     buttons,
     close,
     covered: [insetRect(-1, panel), ...layout.hits],
+    frame: "panel",
     note,
     notePlate: noted ? layout.notePlate : undefined,
     panel,
     title,
     titleY: layout.titleY,
+  };
+}
+
+// A modal card's button: its face and label and whether it is the primary.
+export interface CardAction {
+  readonly label: string;
+  readonly primary: boolean;
+  readonly rect: Rect;
+}
+
+// A modal card laid out by its caller (an update notice's, updateModalLayout): the ui-detail-card
+// over card, its title on its title row beside the close control, and its buttons, as the canvas
+// draws it (addModalCard, addMenuButton).
+export function modalCardView(
+  measure: PanelMeasure,
+  card: Rect,
+  title: string,
+  actions: readonly CardAction[],
+): QuestionPanelView {
+  const titleY = cardTitleRow(card).y + HOME_LAYOUT.card.titleRow.titleY;
+  const buttons = actions.map(({ label, primary, rect }) =>
+    panelButton(measure, rect, primary, label),
+  );
+  return {
+    buttons,
+    close: closeControl(card),
+    covered: [card, ...buttons.map(({ hit }) => hit)],
+    frame: "card",
+    note: [],
+    notePlate: undefined,
+    panel: card,
+    title: panelTitle(measure, card, titleY, title),
+    titleY,
   };
 }

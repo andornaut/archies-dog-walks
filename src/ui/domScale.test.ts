@@ -65,13 +65,16 @@ describe("domScale", () => {
       "--adw-slice-3": "6px",
       "--adw-slice-4": "8px",
       "--adw-slice-5": "10px",
+      "--adw-slice-8": "16px",
     });
     const slice = (n: number) => `var(--adw-slice-${n})`;
     const button = [3, 3, 5, 3].map(slice).join(" ");
     const panel = [4, 4, 4, 4].map(slice).join(" ");
     expect(UI_STYLE).toContain(`3 3 5 3 fill / ${button} stretch`);
     expect(UI_STYLE).toContain(`4 4 4 4 fill / ${panel} stretch`);
-    expect(UI_STYLE.match(/border-image:[^}]*image-rendering:pixelated/g)).toHaveLength(2);
+    const card = [8, 8, 8, 8].map(slice).join(" ");
+    expect(UI_STYLE).toContain(`8 8 8 8 fill / ${card} stretch`);
+    expect(UI_STYLE.match(/border-image:[^}]*image-rendering:pixelated/g)).toHaveLength(3);
   });
 
   it("keeps an exact fit's pixels exact", () => {

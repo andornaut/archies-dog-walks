@@ -7,13 +7,13 @@ import { SLICES } from "../../data/layout.ts";
 // URLs (--adw-<key>); parts are placed inline in device pixels. A frame's colour shows only while
 // its art has not loaded.
 
-const px = (n: 1 | 2 | 3 | 4 | 5) => `var(--adw-slice-${n})`;
+const px = (n: 1 | 2 | 3 | 4 | 5 | 8) => `var(--adw-slice-${n})`;
 
 // A nine-slice frame: the art cut by its SLICES, its edges drawn as wide as the layer's
 // whole-device-pixel lengths for them.
-function nineSlice(key: "ui-button" | "ui-panel", art: string): string {
+function nineSlice(key: "ui-button" | "ui-detail-card" | "ui-panel", art: string): string {
   const { bottom, left, right, top } = SLICES[key];
-  const widths = [top, right, bottom, left].map((edge) => px(edge as 3 | 4 | 5)).join(" ");
+  const widths = [top, right, bottom, left].map((edge) => px(edge as 3 | 4 | 5 | 8)).join(" ");
   return `border-style:solid;border-color:transparent;border-width:${widths};
   border-image:var(--adw-${art}) ${top} ${right} ${bottom} ${left} fill / ${widths} stretch;
   background-clip:padding-box;image-rendering:pixelated`;
@@ -41,10 +41,12 @@ const CUT_CORNERS = [
 export const UI_STYLE = `
 .adw-dialog{position:absolute;left:0;top:0;transform-origin:0 0;pointer-events:none;outline:none}
 .adw-dialog[hidden]{display:none}
-.adw-rim,.adw-panel,.adw-plate,.adw-button,.adw-close{position:absolute;box-sizing:border-box;pointer-events:auto}
+.adw-rim,.adw-panel,.adw-card,.adw-plate,.adw-button,.adw-close{position:absolute;box-sizing:border-box;
+  pointer-events:auto}
 /* The rim leaves out its corner pixels, following the panel's cut corners. */
 .adw-rim{background:var(--adw-tan);clip-path:polygon(${CUT_CORNERS})}
 .adw-panel{${nineSlice("ui-panel", "ui-panel")};background-color:var(--adw-cream)}
+.adw-card{${nineSlice("ui-detail-card", "ui-detail-card")};background-color:var(--adw-cream)}
 .adw-plate{background:var(--adw-tan)}
 .adw-lines{position:absolute;left:0;top:0;margin:0;font:inherit}
 .adw-text{position:absolute;margin:0;white-space:pre;letter-spacing:0;

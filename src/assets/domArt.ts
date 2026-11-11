@@ -12,6 +12,7 @@ export const DOM_ART_KEYS: ReadonlySet<string> = new Set([
   "ui-button-pressed",
   "ui-button-secondary",
   "ui-button-secondary-pressed",
+  "ui-detail-card",
   "ui-icon-button-normal",
   "ui-icon-button-pressed",
   "ui-panel",

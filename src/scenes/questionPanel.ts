@@ -4,9 +4,15 @@ import { type Scene, Scenes } from "phaser";
 
 import { gameData } from "../data/index.ts";
 import { SCREEN_CONFIG } from "../data/screen.ts";
-import { showQuestionPanel } from "../hud/dom/questionPanel.ts";
+import {
+  type DomQuestionPanel,
+  type DomQuestionPanelInput,
+  showQuestionPanel,
+} from "../hud/dom/questionPanel.ts";
 import { NOTE_PLATE, type pauseMenuLayout } from "../hud/pauseMenu.ts";
 import {
+  type CardAction,
+  modalCardView,
   type PanelMeasure,
   type PanelNotePart,
   type QuestionPanelView,
@@ -128,33 +134,82 @@ export function addQuestionPanel(scene: Scene, area: Rect, question: QuestionPan
   return [...view.covered];
 }
 
-// The panel in the HTML layer where the page's switch is on and its layer, web fonts and bitmap
-// fonts are ready, laid out as the canvas draws it (questionPanelView): hidden while the scene is
-// paused under a canvas page (help, the settings) and gone with the scene. Returns what a tap
-// outside must miss, or undefined where the canvas must draw it (addQuestionPanel).
+// The HTML layer and the bitmap fonts that lay out its web fonts' text, where the page's switch
+// is on and both are ready, else undefined: the canvas draws the panel.
+function htmlPanelPlace(scene: Scene) {
+  const layer = uiLayer();
+  const body = pixelBitmapFont(scene, "body");
+  const title = pixelBitmapFont(scene, "title");
+  return layer?.ready() !== true || body === undefined || title === undefined
+    ? undefined
+    : { fonts: { body, title }, layer };
+}
+
+// A panel's view in the HTML layer, hidden while the scene is paused or asleep under a canvas
+// page (help, the settings) and gone with the scene, or by destroy.
+function showHtmlPanel(
+  scene: Scene,
+  place: NonNullable<ReturnType<typeof htmlPanelPlace>>,
+  controls: Pick<DomQuestionPanelInput, "close" | "numberKeys" | "presses">,
+  view: QuestionPanelView,
+): DomQuestionPanel {
+  const { layer } = place;
+  const panel = showQuestionPanel(layer, {
+    ...controls,
+    closeLabel: gameData.menuText.common.close,
+    fonts: place.fonts,
+    toGame: (client) =>
+      pageToGame(pageFrameTurn(), layer.element.getBoundingClientRect(), SCREEN_CONFIG, client),
+    view,
+  });
+  for (const [hide, show] of [
+    [Scenes.Events.PAUSE, Scenes.Events.RESUME],
+    [Scenes.Events.SLEEP, Scenes.Events.WAKE],
+  ] as const) {
+    onSceneEvent(scene, scene.events, hide, () => panel.setShown(false));
+    onSceneEvent(scene, scene.events, show, () => panel.setShown(true));
+  }
+  scene.events.once(Scenes.Events.SHUTDOWN, () => panel.destroy());
+  return panel;
+}
+
+// The question in the HTML layer, laid out as the canvas draws it (questionPanelView). Returns
+// what a tap outside must miss, or undefined where the canvas must draw it (addQuestionPanel).
 export function addHtmlQuestionPanel(
   scene: Scene,
   area: Rect,
   question: QuestionPanel,
 ): Rect[] | undefined {
-  const layer = uiLayer();
-  const body = pixelBitmapFont(scene, "body");
-  const title = pixelBitmapFont(scene, "title");
-  if (layer?.ready() !== true || body === undefined || title === undefined) {
+  const place = htmlPanelPlace(scene);
+  if (place === undefined) {
     return undefined;
   }
   const view = questionView(scene, area, question);
-  const panel = showQuestionPanel(layer, {
-    close: question.close,
-    closeLabel: gameData.menuText.common.close,
-    fonts: { body, title },
-    presses: question.entries.map(({ press }) => press),
-    toGame: (client) =>
-      pageToGame(pageFrameTurn(), layer.element.getBoundingClientRect(), SCREEN_CONFIG, client),
-    view,
-  });
-  onSceneEvent(scene, scene.events, Scenes.Events.PAUSE, () => panel.setShown(false));
-  onSceneEvent(scene, scene.events, Scenes.Events.RESUME, () => panel.setShown(true));
-  scene.events.once(Scenes.Events.SHUTDOWN, () => panel.destroy());
+  const presses = question.entries.map(({ press }) => press);
+  showHtmlPanel(scene, place, { close: question.close, numberKeys: true, presses }, view);
   return [...view.covered];
+}
+
+// A modal card's button and what a press on it does.
+export interface CardEntry extends CardAction {
+  readonly press: () => void;
+}
+
+// A modal card in the HTML layer over card, laid out as the canvas draws it (modalCardView): its
+// title, its close control doing close, and its buttons, which number keys never press. Returns
+// it, for its scene to destroy as the card closes, or undefined where the canvas must draw it.
+export function addHtmlModalCard(
+  scene: Scene,
+  card: Rect,
+  title: string,
+  entries: readonly CardEntry[],
+  close: () => void,
+): DomQuestionPanel | undefined {
+  const place = htmlPanelPlace(scene);
+  if (place === undefined) {
+    return undefined;
+  }
+  const view = modalCardView(canvasPanelMeasure(scene), card, title, entries);
+  const presses = entries.map(({ press }) => press);
+  return showHtmlPanel(scene, place, { close, numberKeys: false, presses }, view);
 }
