@@ -15,7 +15,7 @@ import { NOTE_PLATE, notePartTops, type pauseMenuLayout } from "./pauseMenu.ts";
 
 // The pause menu's panel and each question laid out as it is (the Home question, Quit?), as one
 // view both renderers draw: the canvas's (src/scenes/questionPanel.ts) and the HTML interface's
-// (src/hud/dom/pauseMenu.ts). Every rect and text origin is in game pixels.
+// (src/hud/dom/questionPanel.ts). Every rect and text origin is in game pixels.
 
 export type PanelFont = "body" | "title";
 

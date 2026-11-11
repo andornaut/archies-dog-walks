@@ -1,6 +1,10 @@
 import { containsPoint, type Rect } from "@andornaut/game-kit/rect";
-import type { Scene } from "phaser";
+import { pageToGame } from "@andornaut/game-kit/view/pagePoint";
+import { type Scene, Scenes } from "phaser";
 
+import { gameData } from "../data/index.ts";
+import { SCREEN_CONFIG } from "../data/screen.ts";
+import { showQuestionPanel } from "../hud/dom/questionPanel.ts";
 import { NOTE_PLATE, type pauseMenuLayout } from "../hud/pauseMenu.ts";
 import {
   type PanelMeasure,
@@ -9,12 +13,20 @@ import {
   questionPanelView,
 } from "../hud/questionPanelView.ts";
 import { cardNumberForKey, menuKeyActs } from "../input/keyBindings.ts";
+import { pageFrameTurn } from "../pwa/index.ts";
+import { uiLayer } from "../ui/dom/uiLayer.ts";
 import { rectIndexAt } from "../ui/grid.ts";
 import { PALETTE } from "../ui/palette.ts";
 import { fillRect } from "../ui/phaser/draw.ts";
-import { addPixelText, pixelFontMetrics, wrapPixelText } from "../ui/phaser/pixelText.ts";
+import {
+  addPixelText,
+  pixelBitmapFont,
+  pixelFontMetrics,
+  wrapPixelText,
+} from "../ui/phaser/pixelText.ts";
 import { addCardClose, addCardTitle } from "./homePanels.ts";
 import { modalTextWidth } from "./modalMeasure.ts";
+import { onSceneEvent } from "./overlay.ts";
 import { listenTargetPress } from "./targetPress.ts";
 import { addMenuButton, addRimmedPanel, addTapBurst, type MenuButton } from "./uiKit.ts";
 
@@ -113,5 +125,36 @@ export function addQuestionPanel(scene: Scene, area: Rect, question: QuestionPan
       entries[number - 1]?.press();
     }
   });
+  return [...view.covered];
+}
+
+// The panel in the HTML layer where the page's switch is on and its layer, web fonts and bitmap
+// fonts are ready, laid out as the canvas draws it (questionPanelView): hidden while the scene is
+// paused under a canvas page (help, the settings) and gone with the scene. Returns what a tap
+// outside must miss, or undefined where the canvas must draw it (addQuestionPanel).
+export function addHtmlQuestionPanel(
+  scene: Scene,
+  area: Rect,
+  question: QuestionPanel,
+): Rect[] | undefined {
+  const layer = uiLayer();
+  const body = pixelBitmapFont(scene, "body");
+  const title = pixelBitmapFont(scene, "title");
+  if (layer?.ready() !== true || body === undefined || title === undefined) {
+    return undefined;
+  }
+  const view = questionView(scene, area, question);
+  const panel = showQuestionPanel(layer, {
+    close: question.close,
+    closeLabel: gameData.menuText.pause.close,
+    fonts: { body, title },
+    presses: question.entries.map(({ press }) => press),
+    toGame: (client) =>
+      pageToGame(pageFrameTurn(), layer.element.getBoundingClientRect(), SCREEN_CONFIG, client),
+    view,
+  });
+  onSceneEvent(scene, scene.events, Scenes.Events.PAUSE, () => panel.setShown(false));
+  onSceneEvent(scene, scene.events, Scenes.Events.RESUME, () => panel.setShown(true));
+  scene.events.once(Scenes.Events.SHUTDOWN, () => panel.destroy());
   return [...view.covered];
 }

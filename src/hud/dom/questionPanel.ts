@@ -22,14 +22,14 @@ import {
 } from "../../ui/domScale.ts";
 import type { PanelText, QuestionPanelView } from "../questionPanelView.ts";
 
-// The pause menu in HTML over the canvas: the panel questionPanelView lays out, drawn in the #ui
-// layer at the places the canvas would draw it, as a dialog. A press on its parts is its own
-// (Phaser never hears it); everywhere else presses go through to the canvas, where the walk bar's
-// buttons keep working and PauseScene's outside tap resumes. Keys 1 to 4 press its buttons, Tab
-// and Shift+Tab keep focus among its buttons and close control, and Enter or Space presses the
-// focused one.
+// The pause menu and each question (the Home question, Quit?) in HTML over the canvas: the panel
+// questionPanelView lays out, drawn in the #ui layer at the places the canvas would draw it, as a
+// dialog. A press on its parts is its own (Phaser never hears it); everywhere else presses go
+// through to the canvas, where the top bar's buttons keep working and the scene's outside tap
+// closes it. Number keys press its buttons, Tab and Shift+Tab keep focus among its buttons and
+// close control, and Enter or Space presses the focused one.
 
-export interface DomPauseMenuInput {
+export interface DomQuestionPanelInput {
   // What the close control does, its accessible name, and what each button does, in order.
   readonly close: () => void;
   readonly closeLabel: string;
@@ -40,9 +40,9 @@ export interface DomPauseMenuInput {
   readonly view: QuestionPanelView;
 }
 
-export interface DomPauseMenu {
+export interface DomQuestionPanel {
   destroy(): void;
-  // Hides the menu while a canvas page covers it (help, the settings), and shows it again.
+  // Hides the panel while a canvas page covers it (help, the settings), and shows it again.
   setShown(shown: boolean): void;
 }
 
@@ -55,9 +55,14 @@ const CLOSE_ART = { glyph: { size: 16, x: 2, y: 1 } } as const;
 // art: fx-tap's side.
 const BURST_SIDE = 16;
 
-// The pause menu in layer, shown and its first button focused.
-export function showPauseMenu(layer: UiLayer, input: DomPauseMenuInput): DomPauseMenu {
+// Ids that tie each panel's dialog to its title and note.
+let panels = 0;
+
+// The panel in layer, shown and its dialog focused.
+export function showQuestionPanel(layer: UiLayer, input: DomQuestionPanelInput): DomQuestionPanel {
   const doc = layer.element.ownerDocument;
+  panels += 1;
+  const id = `adw-panel-${panels}`;
   const { view } = input;
   const dialog = doc.createElement("div");
   dialog.className = "adw-dialog";
@@ -102,7 +107,7 @@ export function showPauseMenu(layer: UiLayer, input: DomPauseMenuInput): DomPaus
   // The title, its lines in capitals; a screen reader reads its words as written.
   const title = doc.createElement("h2");
   title.className = "adw-lines";
-  title.id = "adw-pause-title";
+  title.id = `${id}-title`;
   title.setAttribute("aria-label", view.title.map((line) => line.text).join(" "));
   for (const line of view.title) {
     text(title, ORIGIN, line).setAttribute("aria-hidden", "true");
@@ -116,7 +121,7 @@ export function showPauseMenu(layer: UiLayer, input: DomPauseMenuInput): DomPaus
     box(plate, ORIGIN, view.notePlate);
     const note = doc.createElement("p");
     note.className = "adw-lines";
-    note.id = "adw-pause-note";
+    note.id = `${id}-note`;
     // Each line ends in a space, so a screen reader reads the lines as running text.
     for (const line of view.note) {
       const element = text(note, ORIGIN, line);

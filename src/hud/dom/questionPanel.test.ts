@@ -7,7 +7,7 @@ import type { UiLayer } from "../../ui/dom/uiLayer.ts";
 import { domScale } from "../../ui/domScale.ts";
 import { PAUSE_MENU_ITEMS, pauseMenuLayout } from "../pauseMenu.ts";
 import { type PanelMeasure, questionPanelView } from "../questionPanelView.ts";
-import { showPauseMenu } from "./pauseMenu.ts";
+import { showQuestionPanel } from "./questionPanel.ts";
 
 type Listener = (event: FakeEvent) => void;
 
@@ -151,7 +151,7 @@ function menu() {
     sentenceLines: true,
     title: words.title,
   });
-  const shown = showPauseMenu(layer, {
+  const shown = showQuestionPanel(layer, {
     close,
     closeLabel: words.close,
     fonts: { body: gameFont("font-body"), title: gameFont("font-title") },
