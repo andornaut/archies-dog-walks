@@ -9,7 +9,7 @@ import { exitShown } from "../pwa/index.ts";
 import { addRampDim } from "../ui/phaser/rampDim.ts";
 import { exitGame, listenHomeBar } from "./homeBarPress.ts";
 import { closeOverlay, listenDismiss, type OverlayData } from "./overlay.ts";
-import { addQuestionPanel } from "./questionPanel.ts";
+import { addHtmlQuestionPanel, addQuestionPanel, type QuestionPanel } from "./questionPanel.ts";
 import { SCENE_KEYS } from "./sceneKeys.ts";
 
 // Quit? over the dimmed home screen, which back asks with nothing open, laid out as the Home
@@ -30,7 +30,7 @@ export class QuitScene extends Scene {
       keepPlaying();
       exitGame();
     };
-    const covered = addQuestionPanel(this, area, {
+    const question: QuestionPanel = {
       avoid: { ...HOME_LAYOUT.gate, width: area.width, x: area.x },
       close: keepPlaying,
       entries: QUIT_QUESTION_ANSWERS.map((answer) => ({
@@ -41,7 +41,10 @@ export class QuitScene extends Scene {
       note: [],
       sentenceLines: false,
       title: words.title,
-    });
+    };
+    // In HTML where the page's switch is on and its fonts are ready, else on the canvas.
+    const covered =
+      addHtmlQuestionPanel(this, area, question) ?? addQuestionPanel(this, area, question);
     this.input.keyboard?.on("keydown", (event: KeyboardEvent) => {
       if (menuKeyActs(event.repeat, event.key) && isPauseKey(event.key)) {
         keepPlaying();
