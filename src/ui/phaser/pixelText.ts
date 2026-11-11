@@ -1,7 +1,12 @@
 import { wrapWords } from "@andornaut/game-kit/lines";
 import { getOrInsertComputed } from "@andornaut/game-kit/maps";
 import type { Rect } from "@andornaut/game-kit/rect";
-import { type FontMetrics, fontMetrics, leftBearing } from "@andornaut/game-kit/text/bitmapFont";
+import {
+  type BitmapFont,
+  type FontMetrics,
+  fontMetrics,
+  leftBearing,
+} from "@andornaut/game-kit/text/bitmapFont";
 import {
   phaserBitmapFont,
   type PhaserFontData,
@@ -107,6 +112,17 @@ export function pixelFontMetrics(scene: Scene, role: FontRole): FontMetrics {
   }
   const { data } = scene.cache.bitmapFont.get(key) as { data: PhaserFontData };
   return getOrInsertComputed(data, () => fontMetrics(phaserBitmapFont(data)), METRICS);
+}
+
+// The bitmap font that draws role as loaded, or undefined while it is missing and the fallback
+// draws it: the HTML interface lays its web font's text out by the same glyphs.
+export function pixelBitmapFont(scene: Scene, role: FontRole): BitmapFont | undefined {
+  const key = fontKey(scene, role);
+  if (key === FALLBACK_FONT_KEY) {
+    return undefined;
+  }
+  const { data } = scene.cache.bitmapFont.get(key) as { data: PhaserFontData };
+  return phaserBitmapFont(data);
 }
 
 // Text placed by its origin, at a whole-pixel position. With originY 0, y is the top of

@@ -27,6 +27,41 @@ export const WIDE_BUTTON_X = 32;
 // art: a button's lip under its face.
 export const BUTTON_LIP_PX = 4;
 
+// art: the UI kit's nine-slice borders, in pixels from each edge, which the canvas's nine-slices
+// and the HTML interface's CSS border-image both cut the art by.
+export const SLICES = {
+  // The gold outline on the Pet shop while anything in it is affordable.
+  "ui-afford": { bottom: 8, left: 8, right: 8, top: 8 },
+  "ui-button": { bottom: 5, left: 3, right: 3, top: 3 },
+  // The detail card a held dog or gear tile opens, and the title band across it.
+  "ui-detail-card": { bottom: 8, left: 8, right: 8, top: 8 },
+  // A buff's well, widened into a card charm's plate: 1px cut corners and edges.
+  "ui-effect-well": { bottom: 1, left: 1, right: 1, top: 1 },
+  // The Pet shop's message plate across the list's top.
+  "ui-hint": { bottom: 8, left: 8, right: 8, top: 8 },
+  // The plate over a hit.
+  "ui-hit-label": { bottom: 8, left: 8, right: 8, top: 8 },
+  "ui-panel": { bottom: 4, left: 4, right: 4, top: 4 },
+  // The owners' speech bubble.
+  "ui-quip": { bottom: 8, left: 8, right: 8, top: 8 },
+  // The Pet shop list's scrollbar: vertical three-slices with 3px caps.
+  "ui-scroll-thumb": { bottom: 3, left: 0, right: 0, top: 3 },
+  "ui-scroll-track": { bottom: 3, left: 0, right: 0, top: 3 },
+  // The home screen's section frames: the top slice holds the frame and the heading band.
+  "ui-section": { bottom: 3, left: 3, right: 3, top: 24 },
+  "ui-select": { bottom: 8, left: 8, right: 8, top: 8 },
+  // The shop's focused row, independent of selected cards and tabs.
+  "ui-shop-focus": { bottom: 13, left: 13, right: 13, top: 13 },
+  // A three-slice: 4px caps and a middle that stretches.
+  "ui-slider": { bottom: 0, left: 4, right: 4, top: 0 },
+  // The band behind a choice card row's subtitle.
+  "ui-strip-well": { bottom: 8, left: 8, right: 8, top: 8 },
+  // A walker, dog or gear tile's face, tagged by its interaction state.
+  "ui-tile": { bottom: 4, left: 4, right: 4, top: 4 },
+  // The walk's neighbourhood pill: a three-slice with 4px ends.
+  "ui-zone-pill": { bottom: 0, left: 4, right: 4, top: 0 },
+} as const;
+
 // art: how far ui-select sits outside a selected item on each side by default.
 export const SELECT_OUTSET = 3;
 

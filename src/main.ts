@@ -45,6 +45,8 @@ import { StartScene } from "./scenes/StartScene.ts";
 import { StatsScene } from "./scenes/StatsScene.ts";
 import { TapBurstScene } from "./scenes/TapBurstScene.ts";
 import { ZoneCelebrationScene } from "./scenes/ZoneCelebrationScene.ts";
+import { mountUiLayer, setUiLayer } from "./ui/dom/uiLayer.ts";
+import { htmlUiOn } from "./ui/htmlUi.ts";
 import { startupLoad } from "./ui/startupProgress.ts";
 
 // The dev panel's view of the game: the cheats are a registry entry RunScene reads each frame.
@@ -129,6 +131,16 @@ function bootGame(): Game {
   const parent = document.getElementById(GAME_PARENT_ID);
   if (parent !== null) {
     followFrameTurn(pageFrameWatch(), SCREEN_CONFIG, parent, game);
+  }
+  // With the switch on, the HTML interface's layer follows the canvas's box before each frame.
+  if (htmlUiOn(location.search)) {
+    game.events.once(Core.Events.READY, () => {
+      const layer = mountUiLayer(document, game.canvas);
+      setUiLayer(layer);
+      if (layer !== undefined) {
+        game.events.on(Core.Events.PRE_RENDER, () => layer.update());
+      }
+    });
   }
   // Menus draw at most about 60 frames a second; a walk (RunScene) draws every frame.
   capFrameRate(MENU_FPS, () => game.scene.isActive(SCENE_KEYS.run), game);

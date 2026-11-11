@@ -27,6 +27,7 @@ body {
 }
 
 body {
+  position: relative;
   display: flex;
   flex-direction: column;
   /* The game clears the status bar and notch. */
@@ -50,6 +51,18 @@ body {
 html[data-frame-turn] #game > canvas {
   display: block;
   margin: 0 auto;
+}
+
+/* The HTML interface's layer over the canvas, placed on its box by src/ui/dom/uiLayer.ts. Only
+   its controls take presses; the rest of the game's area keeps the canvas's. */
+#ui {
+  position: absolute;
+  z-index: 1;
+  pointer-events: none;
+}
+
+#ui[hidden] {
+  display: none;
 }
 
 /* The dev panel, under the game: only its bar's height comes out of #game's, and it takes
