@@ -52,7 +52,7 @@ describe("the disabled tiles' grey copies the HTML interface draws", () => {
     const keys = new Set(["face-dog-kilo", "item-whistle"]);
     const files = await hashGameArt(
       readArt,
-      keys,
+      { art: new Set(), disabled: keys },
       { ...manifest, fonts: [], sounds: [] },
       {
         files: new Map(),
@@ -68,6 +68,8 @@ describe("the disabled tiles' grey copies the HTML interface draws", () => {
         new Uint8Array(grey.buffer),
       );
     }
+    // A sheet's copy reads its key's JSON frames, hashed with the rest.
+    expect(files.some(({ path }) => path === "sprites/face-dog-kilo.json")).toBe(true);
   });
 
   it.each([

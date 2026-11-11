@@ -48,10 +48,15 @@ const readArt = async (path: string) => new TextEncoder().encode(`source:${path}
 describe("hashed game art", () => {
   let files: HashedArtFile[];
   beforeAll(async () => {
-    files = await hashGameArt(readArt, new Set(), manifest, {
-      files: new Map([["atlas/ui-0.webp", page]]),
-      manifest: atlas,
-    });
+    files = await hashGameArt(
+      readArt,
+      { art: new Set(["ui-panel"]), disabled: new Set() },
+      manifest,
+      {
+        files: new Map([["atlas/ui-0.webp", page]]),
+        manifest: atlas,
+      },
+    );
   });
 
   it("emits every required path once in sorted order without packed canvas-only files", () => {
@@ -88,5 +93,17 @@ describe("hashed game art", () => {
       }),
     );
     expect(files.some(({ path }) => path === ART_MANIFEST)).toBe(true);
+  });
+
+  it.each([
+    ["a key with no image or sprite", { art: new Set(["missing"]), disabled: new Set<string>() }],
+    [
+      "a grey copy of a key with no image or sprite",
+      { art: new Set<string>(), disabled: new Set(["missing"]) },
+    ],
+  ])("fails the build for %s the HTML interface draws", async (_case, dom) => {
+    await expect(
+      hashGameArt(readArt, dom, manifest, { files: new Map(), manifest: atlas }),
+    ).rejects.toThrow(/missing/);
   });
 });

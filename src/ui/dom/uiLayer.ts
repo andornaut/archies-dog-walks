@@ -1,6 +1,7 @@
 import type { Rect } from "@andornaut/game-kit/rect";
 
 import { artUrl } from "../../assets/artFiles.ts";
+import { DOM_STYLE_ART, domArtPath } from "../../assets/domArt.ts";
 import { type DomScale, domScale, sliceLengths } from "../domScale.ts";
 import { PALETTE } from "../palette.ts";
 import { CELEBRATION_STYLE } from "./celebrationStyle.ts";
@@ -59,23 +60,9 @@ function canvasBox(canvas: HTMLCanvasElement): Rect {
 const hex = (colour: number) => `#${colour.toString(16).padStart(6, "0")}`;
 
 // The art the layer's stylesheet names, as custom properties on the layer.
-const ART_PROPERTIES: readonly (readonly [string, string])[] = [
-  ["--adw-fx-tap", "sprites/fx-tap.png"],
-  ["--adw-icon-close", "images/icon-close.png"],
-  ["--adw-ui-button-disabled", "images/ui-button-disabled.png"],
-  ["--adw-ui-button-go", "images/ui-button-go.png"],
-  ["--adw-ui-button-go-disabled", "images/ui-button-go-disabled.png"],
-  ["--adw-ui-button-go-pressed", "images/ui-button-go-pressed.png"],
-  ["--adw-ui-button-normal", "images/ui-button-normal.png"],
-  ["--adw-ui-button-pressed", "images/ui-button-pressed.png"],
-  ["--adw-ui-button-secondary", "images/ui-button-secondary.png"],
-  ["--adw-ui-button-secondary-pressed", "images/ui-button-secondary-pressed.png"],
-  ["--adw-ui-detail-card", "images/ui-detail-card.png"],
-  ["--adw-ui-icon-button-normal", "images/ui-icon-button-normal.png"],
-  ["--adw-ui-icon-button-pressed", "images/ui-icon-button-pressed.png"],
-  ["--adw-ui-panel", "images/ui-panel.png"],
-  ["--adw-ui-quip", "images/ui-quip.png"],
-];
+const ART_PROPERTIES: readonly (readonly [string, string])[] = DOM_STYLE_ART.map(
+  ([kind, key]) => [`--adw-${key}`, domArtPath(kind, key, "png")] as const,
+);
 
 // The layer in doc over canvas, its stylesheet and web fonts loading, or undefined where the
 // page has no #ui.

@@ -4,7 +4,7 @@ import type { RgbaImage } from "@andornaut/art-kit/rgbaImage";
 import type { Plugin, ViteDevServer } from "vite";
 
 import type { ArtFileMap } from "../../assets/artUrl.ts";
-import { DOM_DISABLED_ART_KEYS } from "../../assets/domArt.ts";
+import { DOM_ART_KEYS, DOM_DISABLED_ART_KEYS } from "../../assets/domArt.ts";
 import { parseManifest } from "../../assets/manifest.ts";
 import { disabledArtPath } from "../../ui/disabledArt.ts";
 import { ART_DIR, ART_MANIFEST, artManifestText, generateArtManifest } from "../artManifest.ts";
@@ -59,7 +59,12 @@ export function atlasPlugin(): Plugin & { api: AtlasPluginApi } {
           `atlas: ${file} ${width}x${height}, ${(bytes / 1024).toFixed(1)} kB (${group})`,
         );
       }
-      const hashed = await hashGameArt(readArt, DOM_DISABLED_ART_KEYS, art, atlas);
+      const hashed = await hashGameArt(
+        readArt,
+        { art: DOM_ART_KEYS, disabled: DOM_DISABLED_ART_KEYS },
+        art,
+        atlas,
+      );
       for (const { fileName, source } of hashed) {
         this.emitFile({ fileName, source, type: "asset" });
       }
