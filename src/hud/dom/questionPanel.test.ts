@@ -153,7 +153,7 @@ function menu() {
   });
   const shown = showQuestionPanel(layer, {
     close,
-    closeLabel: words.close,
+    closeLabel: gameData.menuText.common.close,
     fonts: { body: gameFont("font-body"), title: gameFont("font-title") },
     presses,
     toGame: (point) => point,
@@ -183,7 +183,7 @@ describe("the HTML pause menu", () => {
     const { buttons, words } = menu();
     expect(buttons.map((button) => button.getAttribute("aria-label"))).toEqual([
       ...PAUSE_MENU_ITEMS.map((item) => words[item]),
-      words.close,
+      gameData.menuText.common.close,
     ]);
     expect(buttons.slice(0, -1).map((button) => button.getAttribute("aria-keyshortcuts"))).toEqual([
       "1",

@@ -146,7 +146,7 @@ export function addHtmlQuestionPanel(
   const view = questionView(scene, area, question);
   const panel = showQuestionPanel(layer, {
     close: question.close,
-    closeLabel: gameData.menuText.pause.close,
+    closeLabel: gameData.menuText.common.close,
     fonts: { body, title },
     presses: question.entries.map(({ press }) => press),
     toGame: (client) =>

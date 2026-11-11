@@ -1115,6 +1115,10 @@ export interface MenuText {
     readonly titleMany: string;
     readonly titleOne: string;
   };
+  // Words every panel shares: its close control's accessible name.
+  readonly common: {
+    readonly close: string;
+  };
   // The crash screen, drawn in HTML over the page when the game stops on an error.
   readonly crash: {
     readonly body: string;
@@ -1153,8 +1157,6 @@ export interface MenuText {
     readonly previous: string;
   };
   readonly pause: {
-    // The close control's accessible name.
-    readonly close: string;
     readonly headHome: string;
     readonly help: string;
     // What End walk keeps of the cash: note when it keeps less than all of it, else noteAll.
