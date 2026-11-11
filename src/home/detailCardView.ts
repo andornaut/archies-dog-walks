@@ -62,14 +62,17 @@ export interface DetailFramed {
   readonly rect: Rect;
 }
 
-// Left-aligned body text at scale, 2x where undefined: its pen starting at x, its first line's
-// capitals at capTop, its lines a font line apart, each effect's name a line leads with in its
-// pill.
+// Body text at scale, 2x where undefined: left-aligned, its pen starting at x, or each line
+// centred on x (centre, as a label with originX 0.5 there), its first line's capitals at capTop,
+// its lines a font line apart, each effect's name a line leads with in its pill. A one-line text
+// may be runs in colours of their own (spans), their texts the line's, run together.
 export interface DetailText {
+  readonly align?: "centre" | "left";
   readonly capTop: number;
   readonly colour: number;
   readonly lines: readonly string[];
   readonly scale?: number;
+  readonly spans?: readonly { readonly colour: number; readonly text: string }[];
   readonly x: number;
 }
 

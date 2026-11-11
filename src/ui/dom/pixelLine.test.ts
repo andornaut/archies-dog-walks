@@ -9,7 +9,7 @@ import { describe, expect, it } from "vitest";
 
 import { FakeDocument, type FakeElement } from "../../testing/fakeDom.ts";
 import { gameFont } from "../../testing/fontInk.ts";
-import { deviceX, deviceY, domScale, fontPixel } from "../domScale.ts";
+import { artPixel, deviceX, deviceY, domScale, fontPixel } from "../domScale.ts";
 import { inPill, laidPills, PILL, pillRows } from "../namePills.ts";
 import { PALETTE } from "../palette.ts";
 import {
@@ -207,5 +207,39 @@ describe("display text", () => {
     const pixel = fontPixel(scale, 3);
     expect(capRows(font, "display")).toBe(fontMetrics(font).capTop + 1);
     expect(place.top + capRows(font, "display") * pixel).toBe(deviceY(scale, line.capTop));
+  });
+});
+
+describe("a centred line", () => {
+  const font = gameFont("font-body");
+
+  it.each([
+    [1, 360],
+    [3, 393],
+    [2.625, 411],
+  ])("sits on its centre in whole art pixels at DPR %d, width %d", (dpr, width) => {
+    const scale = domScale(dpr, { height: 611, width, x: 0, y: 0 });
+    const line = "Tidy lane work. May I walk with you?";
+    const block = {
+      anchor: "centre",
+      capTop: 300,
+      colour: 0,
+      font: "body",
+      lines: [line],
+      scale: 2,
+      x: 180,
+    } as const;
+    const [first] = blockPlace(font, scale, block).runs;
+    const advance = boundsAdvance(font, line) * fontPixel(scale, 2);
+    const art = artPixel(scale);
+    expect((deviceX(scale, 180) - (first?.left ?? 0)) % art).toBe(0);
+    expect(Math.abs((first?.left ?? 0) + advance / 2 - deviceX(scale, 180))).toBeLessThan(art);
+  });
+
+  it("breaks a line into runs where its colours change, each character in one run", () => {
+    const line = "+$12 pay · +$3 tips";
+    const runs = penRuns(font, line, new Set([4, 11, 14]));
+    expect(runs.map(({ text }) => text)).toEqual(["+$12", " pay · ", "+$3", " tips"]);
+    expect(runs.map(({ from }) => from)).toEqual([0, 4, 11, 14]);
   });
 });

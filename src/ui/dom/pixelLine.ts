@@ -7,7 +7,15 @@ import {
   leftBearing,
 } from "@andornaut/game-kit/text/bitmapFont";
 
-import { deviceRect, deviceX, deviceY, type DomScale, fontPixel, frameRect } from "../domScale.ts";
+import {
+  artPixel,
+  deviceRect,
+  deviceX,
+  deviceY,
+  type DomScale,
+  fontPixel,
+  frameRect,
+} from "../domScale.ts";
 import { laidPills, PILL_CLOSE, PILL_SPACE, pillIndex, pillRows } from "../namePills.ts";
 import { PALETTE } from "../palette.ts";
 import { plainMarks } from "../pixelFont.ts";
@@ -183,24 +191,34 @@ export function placeText(
   }
 }
 
-// A run of a line the web font draws as one element: its text, where the pen starts it in font
-// pixels from the line's start, and the kind of pill whose name it is part of, if any.
+// A run of a line the web font draws as one element: its text, the index of its first character
+// in the line, where the pen starts it in font pixels from the line's start, and the kind of pill
+// whose name it is part of, if any.
 export interface PenRun {
+  readonly from: number;
   readonly pen: number;
   readonly pill: number | undefined;
   readonly text: string;
 }
 
 // line split where the bitmap font's pill characters (ui/namePills.ts) sit, which the web fonts
-// lack: each run's pen start as the bitmap font lays the line out, kerning included. Phaser
-// kerns no pair across a pill character, so neither does a run.
-export function penRuns(bitmap: BitmapFont, line: string): PenRun[] {
-  const runs: { pen: number; pill: number | undefined; text: string }[] = [];
+// lack, and before each character index in breaks (where a run of another colour starts): each
+// run's pen start as the bitmap font lays the whole line out, kerning included. Phaser kerns no
+// pair across a pill character, so neither does a run.
+export function penRuns(
+  bitmap: BitmapFont,
+  line: string,
+  breaks: ReadonlySet<number> = new Set(),
+): PenRun[] {
+  const runs: { from: number; pen: number; pill: number | undefined; text: string }[] = [];
   let pen = 0;
   let previous: string | undefined;
   let pill: number | undefined;
   let run: (typeof runs)[number] | undefined;
-  for (const char of line) {
+  for (const [at, char] of [...line].entries()) {
+    if (breaks.has(at)) {
+      run = undefined;
+    }
     const glyph = bitmap.glyphs.get(char);
     if (glyph === undefined) {
       continue;
@@ -212,7 +230,7 @@ export function penRuns(bitmap: BitmapFont, line: string): PenRun[] {
       run = undefined;
     } else {
       if (run === undefined) {
-        run = { pen, pill, text: "" };
+        run = { from: at, pen, pill, text: "" };
         runs.push(run);
       }
       run.text += char;
@@ -239,10 +257,13 @@ export function spokenText(line: string): string {
 
 // A left-aligned block of text: its pen starting at x, or its first line's ink starting there
 // (ink, as a left-aligned title label's does), or its widest line's advance ending there (right,
-// as a right-aligned label's does), and its first line's capitals at capTop (game pixels), its
-// lines a font line apart, each effect's name set in a pill.
+// as a right-aligned label's does), or each line's advance centred on x (centre, as a label with
+// originX 0.5 there), and its first line's capitals at capTop (game pixels), its lines a font
+// line apart, each effect's name set in a pill.
 export interface DomTextBlock {
-  readonly anchor?: "ink" | "pen" | "right";
+  readonly anchor?: "centre" | "ink" | "pen" | "right";
+  // Each line's character indices where a run of another colour starts.
+  readonly breaks?: readonly ReadonlySet<number>[];
   readonly capTop: number;
   readonly colour: number;
   readonly font: keyof typeof WEB_FONTS;
@@ -270,7 +291,8 @@ export function boundsAdvance(bitmap: BitmapFont, line: string): number {
   return widest;
 }
 
-// Where a block's pen starts from x, in font pixels, by its anchor.
+// Where a block's pen starts from x, in font pixels, by its anchor; a centred block's lines each
+// start from their own (lineLeft).
 function penOffset(bitmap: BitmapFont, block: DomTextBlock): number {
   const lines = block.lines.map((line) => shownText(block.font, line));
   const anchor = block.anchor ?? "pen";
@@ -278,6 +300,15 @@ function penOffset(bitmap: BitmapFont, block: DomTextBlock): number {
     return -leftBearing((char) => bitmap.glyphs.get(char), lines[0] ?? "");
   }
   return anchor === "right" ? -Math.max(0, ...lines.map((line) => boundsAdvance(bitmap, line))) : 0;
+}
+
+// Where a centred line's pen starts, in device pixels: its advance at pixel device pixels a font
+// pixel centred on the device column at x, the half rounded down to whole art pixels, as the
+// canvas rounds a centred label's left edge up. HTML text is never wider than the canvas's, so it
+// stays centred where the canvas's would overhang.
+export function centredLeft(scale: DomScale, x: number, width: number): number {
+  const art = artPixel(scale);
+  return deviceX(scale, x) - Math.floor(width / 2 / art) * art;
 }
 
 // Where a block's parts go, in whole device pixels from the layer's corner: each run of text,
@@ -294,21 +325,33 @@ export function blockPlace(
     readonly box: { height: number; left: number; top: number; width: number };
     readonly index: number;
   }[];
-  readonly runs: readonly (PenRun & { readonly left: number; readonly top: number })[];
+  readonly runs: readonly (PenRun & {
+    readonly left: number;
+    readonly line: number;
+    readonly top: number;
+  })[];
 } {
   const pixel = fontPixel(scale, block.scale);
-  const left = deviceX(scale, block.x) + penOffset(bitmap, block) * pixel;
+  const start = deviceX(scale, block.x) + penOffset(bitmap, block) * pixel;
+  const lineLeft = (shown: string) =>
+    block.anchor === "centre"
+      ? centredLeft(scale, block.x, boundsAdvance(bitmap, shown) * pixel)
+      : start;
   const capTop = capRows(bitmap, block.font);
   const rows = pillRows(1);
-  const lines = block.lines.map((line, i) => ({
-    shown: shownText(block.font, line),
-    top: deviceY(scale, block.capTop) + (i * bitmap.lineHeight - capTop) * pixel,
-  }));
+  const lines = block.lines.map((line, i) => {
+    const shown = shownText(block.font, line);
+    return {
+      left: lineLeft(shown),
+      shown,
+      top: deviceY(scale, block.capTop) + (i * bitmap.lineHeight - capTop) * pixel,
+    };
+  });
   return {
     cut: pixel,
     fontSize: 8 * pixel,
     lineHeight: bitmap.lineHeight * pixel,
-    pills: lines.flatMap(({ shown, top }) =>
+    pills: lines.flatMap(({ left, shown, top }) =>
       laidPills(
         1,
         laidGlyphs(bitmap, 1, shown).map((glyph) => ({ ...glyph, line: 0 })),
@@ -322,8 +365,13 @@ export function blockPlace(
         index: pill.index,
       })),
     ),
-    runs: lines.flatMap(({ shown, top }) =>
-      penRuns(bitmap, shown).map((run) => ({ ...run, left: left + run.pen * pixel, top })),
+    runs: lines.flatMap(({ left, shown, top }, i) =>
+      penRuns(bitmap, shown, block.breaks?.[i]).map((run) => ({
+        ...run,
+        left: left + run.pen * pixel,
+        line: i,
+        top,
+      })),
     ),
   };
 }

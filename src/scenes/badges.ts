@@ -31,7 +31,6 @@ import { closeControl } from "../ui/closeControl.ts";
 import { PALETTE } from "../ui/palette.ts";
 import { addModalShade } from "../ui/phaser/draw.ts";
 import {
-  addPixelText,
   labelInkWidth,
   pixelFontMetrics,
   type PixelTextStyle,
@@ -39,8 +38,8 @@ import {
   wrapPixelText,
 } from "../ui/phaser/pixelText.ts";
 import { TEXT_SCALE } from "../ui/textFit.ts";
-import { addCardTitle } from "./homePanels.ts";
-import { canvasDetailMeasure, modalTextWidth } from "./modalMeasure.ts";
+import { addCardTitle, addDetailText } from "./homePanels.ts";
+import { modalTextWidth } from "./modalMeasure.ts";
 import { playTag, playTagOnce } from "./sprites.ts";
 import { addBodyText, addCloseButton, addPanel, BODY_TEXT, tagFrame } from "./uiKit.ts";
 
@@ -137,10 +136,9 @@ export function addBadgeCelebration(
     const title = celebrationTitle(gameData, ids.length);
     addCardTitle(scene, panel, title, closes, panel.y + BADGE_STRIP.titleY);
     for (const name of badgeCelebrationNames(scene, panel, rows, ids, closes)) {
-      addPixelText(scene, name.x, name.capTop, name.lines.join("\n"), {
-        colour: name.colour,
-        scale: name.scale ?? TEXT_SCALE,
-      }).setDepth(1);
+      for (const label of addDetailText(scene, undefined, name)) {
+        label.setDepth(1);
+      }
     }
   }
   const rect = closes ? stripUnderClose(panel) : panel;
@@ -193,19 +191,19 @@ export function badgeCelebrationNames(
   const named = badges.map((badge) => (closes ? achievementLabel(gameData, badge) : badge.name));
   const names = rowNames(scene, style, slotWidth, named);
   const { scale } = names.style;
-  const { bodyWidth } = canvasDetailMeasure(scene);
   return badges.flatMap((_, i) => {
     const slot = strip.slots[i];
     const lines = names.lines[i] ?? [];
     const tops = badgeNameTops(lines.length, rect.y);
     return slot === undefined
       ? []
-      : lines.map((line, n) => ({
+      : lines.map((line, n): DetailText => ({
+          align: "centre",
           capTop: tops[n] ?? 0,
           colour: style.colour,
           lines: [line],
           scale,
-          x: Math.round(slot.centreX) - ((bodyWidth([line]) / TEXT_SCALE) * scale) / 2,
+          x: Math.round(slot.centreX),
         }));
   });
 }

@@ -8,6 +8,7 @@ import {
   type DetailArt,
   type DetailCardView,
   detailCardView,
+  type DetailText,
 } from "../home/detailCardView.ts";
 import { cardTitleRow, HOME_LAYOUT } from "../home/homeLayout.ts";
 import { barTitleLeft, barTitleRoom } from "../ui/barTitle.ts";
@@ -15,14 +16,20 @@ import { type CloseControl, closeControl } from "../ui/closeControl.ts";
 import { hasPill } from "../ui/namePills.ts";
 import { PALETTE } from "../ui/palette.ts";
 import { addModalShade, drawFramedRect, drawRing } from "../ui/phaser/draw.ts";
-import { addPixelText, inkSpan, placePixelText } from "../ui/phaser/pixelText.ts";
+import {
+  addPixelText,
+  inkSpan,
+  pixelFontMetrics,
+  placePixelText,
+  setPixelText,
+  withProbe,
+} from "../ui/phaser/pixelText.ts";
 import { AFFORD_OUTSET } from "../ui/selection.ts";
 import { TEXT_SCALE } from "../ui/textFit.ts";
 import { addNamePills } from "./effectNameColours.ts";
 import { canvasDetailMeasure, measureModalTitle } from "./modalMeasure.ts";
 import { playFirstTag } from "./sprites.ts";
 import {
-  addBodyText,
   addCloseButton,
   addLoopingFrame,
   addNineSlice,
@@ -208,15 +215,54 @@ export function addDetailContent(
   }
   parent.add(view.art.map((art) => addDetailArt(scene, art)));
   for (const text of view.texts) {
-    const at = { x: text.x, y: text.capTop };
-    const label = addBodyText(scene, parent, at, text.lines.join("\n"), {
-      colour: text.colour,
-      scale: text.scale ?? TEXT_SCALE,
-    });
-    if (text.lines.some(hasPill)) {
-      addNamePills([label]);
-    }
+    addDetailText(scene, parent, text);
   }
+}
+
+// A view's text as labels, in parent when given: left-aligned with its pen at x, or each line
+// centred there as a label with originX 0.5, each effect's name in its pill, and each span in a
+// colour of its own drawn again over its place in the line, measured from the line's start
+// through the span, since a trailing space has no width.
+export function addDetailText(
+  scene: Scene,
+  parent: GameObjects.Container | undefined,
+  text: DetailText,
+): GameObjects.BitmapText[] {
+  const scale = text.scale ?? TEXT_SCALE;
+  const centred = text.align === "centre";
+  const style = { colour: text.colour, scale, ...(centred ? { originX: 0.5 } : {}) };
+  const pitch = pixelFontMetrics(scene, "body").lineHeight * scale;
+  const labels = centred
+    ? text.lines.map((line, i) => addPixelText(scene, text.x, text.capTop + i * pitch, line, style))
+    : [addPixelText(scene, text.x, text.capTop, text.lines.join("\n"), style)];
+  const spans = text.spans ?? [];
+  const line = text.lines[0] ?? "";
+  withProbe(scene, style, (probe) => {
+    const widthOf = (shown: string) => {
+      setPixelText(probe, shown);
+      return probe.width;
+    };
+    const left = Math.round(text.x) - (centred ? widthOf(line) / 2 : 0);
+    let before = "";
+    for (const span of spans) {
+      if (span.colour !== text.colour) {
+        const x = left + widthOf(before + span.text) - widthOf(span.text);
+        labels.push(
+          addPixelText(scene, x, text.capTop, span.text, {
+            ...style,
+            colour: span.colour,
+            originX: 0,
+          }),
+        );
+      }
+      before += span.text;
+    }
+  });
+  parent?.add(labels);
+  if (text.lines.some(hasPill)) {
+    addNamePills(labels);
+  }
+  return labels;
 }
 
 // A held dog's, walker's or gear item's detail card over a dim layer, laid out by its view

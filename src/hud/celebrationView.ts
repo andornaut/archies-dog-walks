@@ -38,22 +38,34 @@ export interface CelebrationFrame {
   readonly rect: Rect;
 }
 
-// Tan dots step pixels apart along row y, from column fromX up to toX.
+// Tan dots step pixels apart along row y, dots of them centred between the frame's sides inset
+// pixels in, the first at fromX.
 export interface DottedRule {
+  readonly dots: number;
   readonly fromX: number;
+  readonly inset: number;
   readonly step: number;
-  readonly toX: number;
   readonly y: number;
 }
 
+// A line of text and icons centred on centreX: each item at x on the canvas, and gap pixels
+// after the one before it.
+export interface CentredRow {
+  readonly centreX: number;
+  readonly items: readonly (
+    | { readonly art: DetailArt; readonly gap: number }
+    | { readonly gap: number; readonly text: DetailText }
+  )[];
+}
+
 export interface ZoneCelebrationView {
-  // Over the frame: the bubble's tail and each info line's icons.
+  // Over the frame: the bubble's tail, its top-left whole pixels from the bubble's.
   readonly art: readonly DetailArt[];
   readonly button: PanelButton;
   readonly frame: CelebrationFrame;
+  // The info lines.
+  readonly rows: readonly CentredRow[];
   readonly rule: DottedRule | undefined;
-  // Drawn in order, a later one over an earlier: an amount in forest over its place in the
-  // earnings line.
   readonly texts: readonly DetailText[];
 }
 
@@ -110,27 +122,25 @@ function zoneDoneView(
     action: actionInk(measure, keyed, text.button),
     earnings: measure.inkWidth("body", line),
   });
-  const capTop = capTopAt(measure, rows.earningsY, TEXT_SCALE);
-  const left = Math.round(LAYOUT.centreX - lineWidth(measure, line, TEXT_SCALE) / 2);
-  const whole: DetailText = { capTop, colour: PALETTE.plum, lines: [line], x: left };
-  // Each amount again in forest over its place in the line, measured from the line's start
-  // through the amount, since a trailing space has no width.
-  const amounts: DetailText[] = [];
-  let before = "";
-  for (const part of text.earnings) {
-    if (part.kind === "money") {
-      const width = (shown: string) => lineWidth(measure, shown, TEXT_SCALE);
-      const x = left + width(before + part.text) - width(part.text);
-      amounts.push({ capTop, colour: PALETTE.forest, lines: [part.text], x });
-    }
-    before += part.text;
-  }
+  // The amounts in forest, on one line centred on the screen.
+  const earnings: DetailText = {
+    align: "centre",
+    capTop: capTopAt(measure, rows.earningsY, TEXT_SCALE),
+    colour: PALETTE.plum,
+    lines: [line],
+    spans: text.earnings.map((part) => ({
+      colour: part.kind === "money" ? PALETTE.forest : PALETTE.plum,
+      text: part.text,
+    })),
+    x: LAYOUT.centreX,
+  };
   return {
     art: [],
     button: action(measure, keyed, rows.button, text.button),
     frame: { key: "ui-panel", rect: rows.plate },
+    rows: [],
     rule: undefined,
-    texts: [whole, ...amounts],
+    texts: [earnings],
   };
 }
 
@@ -140,7 +150,7 @@ function infoLine(
   measure: DetailMeasure,
   row: { iconY: number; y: number },
   parts: readonly LinePart[],
-): { art: DetailArt[]; texts: DetailText[] } {
+): CentredRow {
   // Each item and the screen pixels it takes across, its art's size for an icon.
   const items = infoItems(parts).flatMap(
     (item): { item: typeof item; size?: DetailArtSize; width: number }[] => {
@@ -156,18 +166,20 @@ function infoLine(
     items.map(({ item }) => item),
   );
   const left = Math.round(LAYOUT.centreX - laid.width / 2);
-  const art: DetailArt[] = [];
-  const texts: DetailText[] = [];
-  items.forEach(({ item, size }, i) => {
-    const x = left + (laid.xs[i] ?? 0);
-    if (item.kind === "text") {
-      const capTop = capTopAt(measure, row.y, TEXT_SCALE);
-      texts.push({ capTop, colour: PALETTE.plum, lines: [item.text], x });
-    } else if (size !== undefined) {
-      art.push({ key: item.icon, scale: 1, size, x, y: row.iconY });
-    }
-  });
-  return { art, texts };
+  return {
+    centreX: LAYOUT.centreX,
+    items: items.flatMap(({ item, size }, i): CentredRow["items"][number][] => {
+      const x = left + (laid.xs[i] ?? 0);
+      const gap = i === 0 ? 0 : x - left - ((laid.xs[i - 1] ?? 0) + (items[i - 1]?.width ?? 0));
+      if (item.kind === "text") {
+        const capTop = capTopAt(measure, row.y, TEXT_SCALE);
+        return [{ gap, text: { capTop, colour: PALETTE.plum, lines: [item.text], x } }];
+      }
+      return size === undefined
+        ? []
+        : [{ art: { key: item.icon, scale: 1, size, x, y: row.iconY }, gap }];
+    }),
+  };
 }
 
 // The walker's line in a speech bubble whose tail points up at them, a dotted rule, and their
@@ -193,33 +205,51 @@ function newWalkerView(
       ...infoWidths,
     ),
   });
-  const art: DetailArt[] = [];
+  const { bubble } = rows;
   const tailSize = measure.art(TAIL_KEY);
-  if (tailSize !== undefined) {
-    art.push({ key: TAIL_KEY, scale: 1, size: tailSize, ...LAYOUT.newWalker.tail });
-  }
+  // The tail's place counts from the bubble's corner, so it overlaps the bubble's rim as drawn.
+  const art: DetailArt[] =
+    tailSize === undefined
+      ? []
+      : [
+          {
+            holder: { x: bubble.x, y: bubble.y },
+            key: TAIL_KEY,
+            scale: 1,
+            size: tailSize,
+            ...LAYOUT.newWalker.tail,
+          },
+        ];
   const tops = greetingLineTops(measure.body, style.scale, lines.length);
   // Each line centred on the screen, as a label with originX 0.5 at centreX.
   const texts: DetailText[] = lines.map((line, i) => ({
+    align: "centre",
     capTop: capTopAt(measure, tops[i] ?? LAYOUT.newWalker.greeting.top, style.scale),
     colour: PALETTE.plum,
     lines: [line],
     scale: style.scale,
-    x: Math.round(LAYOUT.centreX) - lineWidth(measure, line, style.scale) / 2,
+    x: Math.round(LAYOUT.centreX),
   }));
-  text.info.forEach((parts, i) => {
+  const infoRows = text.info.flatMap((parts, i) => {
     const row = rows.info[i];
-    if (row !== undefined) {
-      const laid = infoLine(measure, row, parts);
-      art.push(...laid.art);
-      texts.push(...laid.texts);
-    }
+    return row === undefined ? [] : [infoLine(measure, row, parts)];
   });
+  // As many dots as fit from rule.fromX to rule.toX, centred there.
+  const { rule } = rows;
+  const dots = Math.floor((rule.toX - rule.fromX) / rule.step) + 1;
+  const spare = rule.toX - rule.fromX - (dots - 1) * rule.step;
   return {
     art,
     button: action(measure, keyed, rows.button, text.button),
-    frame: { key: "ui-quip", rect: rows.bubble },
-    rule: rows.rule,
+    frame: { key: "ui-quip", rect: bubble },
+    rows: infoRows,
+    rule: {
+      dots,
+      fromX: rule.fromX + Math.floor(spare / 2),
+      inset: rule.fromX - bubble.x,
+      step: rule.step,
+      y: rule.y,
+    },
     texts,
   };
 }

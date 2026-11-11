@@ -293,7 +293,7 @@ describe("an HTML panel's part controls", () => {
 });
 
 describe("an HTML zone celebration", () => {
-  it("draws its plate and button with no close control, named by the canvas's headline", () => {
+  it("draws its plate, its line's runs once each in their colours, and its button, with no close control", () => {
     const doc = new FakeDocument();
     const element = doc.createElement("div");
     const layer = {
@@ -320,8 +320,21 @@ describe("an HTML zone celebration", () => {
         art: [],
         button: { ...button, key: { ...button.text, text: "1" } },
         frame: { key: "ui-panel", rect: plate },
+        rows: [],
         rule: undefined,
-        texts: [{ capTop: 308, colour: 0, lines: ["+$12 pay"], x: 130 }],
+        texts: [
+          {
+            align: "centre",
+            capTop: 308,
+            colour: 0x3e2731,
+            lines: ["+$12 pay"],
+            spans: [
+              { colour: 0x265c42, text: "+$12" },
+              { colour: 0x3e2731, text: " pay" },
+            ],
+            x: 180,
+          },
+        ],
       },
     });
     const [dialog] = element.children;
@@ -332,6 +345,15 @@ describe("an HTML zone celebration", () => {
     expect(title?.getAttribute("aria-label")).toBe("Well walked! High Park");
     const control = nodes.find((node) => node.tagName === "button");
     expect(control?.all().filter((node) => node.className.includes("adw-text"))).toHaveLength(2);
+    const earnings = nodes.find((node) => node.tagName === "p");
+    expect(
+      earnings?.children
+        .filter((node) => node.className.includes("adw-text"))
+        .map((node) => [node.textContent, node.style.color]),
+    ).toEqual([
+      ["+$12", "#265c42"],
+      [" pay", "#3e2731"],
+    ]);
     expect(dialog?.listeners.has("mousedown")).toBe(true);
     control?.fire("click");
     expect(press).toHaveBeenCalledOnce();

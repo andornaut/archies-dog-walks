@@ -75,6 +75,8 @@ export function artPart(
   doc: Document,
   input: Pick<DomDetailCardInput, "artUrl" | "loadSheet">,
   art: DetailArt,
+  // Device pixels to move it right by at a scale, as an icon of a centred row (rowPart).
+  shift: (scale: DomScale) => number = () => 0,
 ): DomPart {
   const element = doc.createElement("span");
   element.className = "adw-art";
@@ -89,7 +91,7 @@ export function artPart(
     const into = (from: number, to: number) => Math.floor(to - from) * artPixel(at);
     setBox(element, {
       height: art.size.height * pixel,
-      left: deviceX(at, holder.x) + into(holder.x, art.x),
+      left: deviceX(at, holder.x) + into(holder.x, art.x) + shift(at),
       top: deviceY(at, holder.y) + into(holder.y, art.y),
       width: art.size.width * pixel,
     });
@@ -121,10 +123,25 @@ export function textPart(
   doc: Document,
   input: Pick<DomDetailCardInput, "fonts" | "pillColours">,
   text: DetailText,
+  // Device pixels to move it right by at a scale, as a run of a centred row (rowPart).
+  shift: (scale: DomScale) => number = () => 0,
 ): DomPart {
   const element = doc.createElement("p");
   element.className = "adw-lines";
-  const block = { ...text, font: "body", scale: text.scale ?? TEXT_SCALE } as const;
+  // Where each span starts in the line as the font draws it, and its colour.
+  let next = 0;
+  const spans = (text.spans ?? []).map((span) => {
+    const from = next;
+    next += [...shownText("body", span.text)].length;
+    return { colour: span.colour, from };
+  });
+  const block = {
+    ...text,
+    anchor: text.align === "centre" ? "centre" : "pen",
+    ...(text.spans === undefined ? {} : { breaks: [new Set(spans.map(({ from }) => from))] }),
+    font: "body",
+    scale: text.scale ?? TEXT_SCALE,
+  } as const;
   const bitmap: BitmapFont = input.fonts.body;
   // The runs and pills are the same at every scale.
   const first = blockPlace(bitmap, { dpr: 1, origin: { x: 0, y: 0 }, unit: 1 }, block);
@@ -145,7 +162,8 @@ export function textPart(
     span.setAttribute("aria-hidden", "true");
     span.textContent = run.text;
     const named = run.pill === undefined ? undefined : input.pillColours(run.pill);
-    span.style.color = hex(named?.name ?? text.colour);
+    const own = spans.filter(({ from }) => from <= run.from).at(-1)?.colour;
+    span.style.color = hex(named?.name ?? own ?? text.colour);
     return span;
   });
   const spoken = doc.createElement("span");
@@ -156,10 +174,11 @@ export function textPart(
     element,
     place: (scale) => {
       const place = blockPlace(bitmap, scale, block);
+      const by = shift(scale);
       place.pills.forEach(({ box }, i) => {
         const pill = pills[i]?.pill;
         if (pill !== undefined) {
-          setBox(pill, box);
+          setBox(pill, { ...box, left: box.left + by });
           pill.style.setProperty("--adw-cut", `${place.cut}px`);
         }
       });
@@ -168,7 +187,7 @@ export function textPart(
         if (span !== undefined) {
           Object.assign(span.style, {
             fontSize: `${place.fontSize}px`,
-            left: `${left}px`,
+            left: `${left + by}px`,
             lineHeight: `${place.lineHeight}px`,
             top: `${top}px`,
           });

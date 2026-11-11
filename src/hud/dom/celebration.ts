@@ -1,10 +1,17 @@
 import type { Rect } from "@andornaut/game-kit/rect";
 
 import { closeControl } from "../../ui/closeControl.ts";
-import { placeBox, setBox } from "../../ui/dom/pixelLine.ts";
+import {
+  boundsAdvance,
+  centredLeft,
+  placeFrame,
+  setBox,
+  shownText,
+} from "../../ui/dom/pixelLine.ts";
 import type { UiLayer } from "../../ui/dom/uiLayer.ts";
-import { artPixel, deviceX, deviceY } from "../../ui/domScale.ts";
-import type { DottedRule, ZoneCelebrationView } from "../celebrationView.ts";
+import { artPixel, deviceX, type DomScale, fontPixel, frameRect } from "../../ui/domScale.ts";
+import { TEXT_SCALE } from "../../ui/textFit.ts";
+import type { CentredRow, DottedRule, ZoneCelebrationView } from "../celebrationView.ts";
 import type { PanelText, QuestionPanelView } from "../questionPanelView.ts";
 import { artPart, type DomDetailCardInput, textPart } from "./detailCard.ts";
 import {
@@ -30,27 +37,62 @@ const FRAME_CLASSES = { "ui-panel": "adw-plate-frame", "ui-quip": "adw-quip-fram
 function framePart(doc: Document, frame: ZoneCelebrationView["frame"]): DomPart {
   const element = doc.createElement("div");
   element.className = FRAME_CLASSES[frame.key];
-  return { element, place: (scale) => placeBox(scale, ORIGIN, element, frame.rect) };
+  return { element, place: (scale) => placeFrame(scale, ORIGIN, element, frame.rect) };
 }
 
-// The rule's dots, an art pixel each, step game pixels apart in whole art pixels.
-function rulePart(doc: Document, rule: DottedRule): DomPart {
+// The rule's dots, an art pixel each, step art pixels apart, as many as fit between the snapped
+// frame's sides inset art pixels in, centred there, on the frame's art-pixel grid.
+function rulePart(doc: Document, frame: Rect, rule: DottedRule): DomPart {
   const element = doc.createElement("div");
   element.className = "adw-rule";
-  const dots = Math.floor((rule.toX - rule.fromX) / rule.step) + 1;
   return {
     element,
     place: (scale) => {
       const pixel = artPixel(scale);
+      const box = frameRect(scale, frame);
+      const room = box.width / pixel - 2 * rule.inset;
+      const dots = Math.max(1, Math.floor((room - 1) / rule.step) + 1);
+      const spare = room - 1 - (dots - 1) * rule.step;
       element.style.setProperty("--adw-step", `${rule.step * pixel}px`);
       setBox(element, {
         height: pixel,
-        left: deviceX(scale, rule.fromX),
-        top: deviceY(scale, rule.y),
-        width: (dots - 1) * rule.step * pixel + pixel,
+        left: box.left + (rule.inset + Math.floor(spare / 2)) * pixel,
+        top: box.top + (rule.y - frame.y) * pixel,
+        width: ((dots - 1) * rule.step + 1) * pixel,
       });
     },
   };
+}
+
+// An info line: its icons and runs of text side by side, each gap art pixels after the one
+// before, the whole centred on its centre x (centredLeft) in the widths the HTML draws them.
+function rowPart(doc: Document, input: Shared, row: CentredRow): DomPart[] {
+  const { body } = input.fonts;
+  // Each item's device left at a scale, from the row's.
+  const lefts = (scale: DomScale): number[] => {
+    const pixel = artPixel(scale);
+    const widths = row.items.map((item) =>
+      "art" in item
+        ? item.art.size.width * item.art.scale * pixel
+        : boundsAdvance(body, shownText("body", item.text.lines[0] ?? "")) *
+          fontPixel(scale, item.text.scale ?? TEXT_SCALE),
+    );
+    const total = row.items.reduce((sum, item, i) => sum + item.gap * pixel + (widths[i] ?? 0), 0);
+    let left = centredLeft(scale, row.centreX, total);
+    return row.items.map((item, i) => {
+      left += item.gap * pixel;
+      const at = left;
+      left += widths[i] ?? 0;
+      return at;
+    });
+  };
+  return row.items.map((item, i) => {
+    const shift = (scale: DomScale) =>
+      (lefts(scale)[i] ?? 0) - deviceX(scale, "art" in item ? item.art.x : item.text.x);
+    return "art" in item
+      ? artPart(doc, input, item.art, shift)
+      : textPart(doc, input, item.text, shift);
+  });
 }
 
 // A panel view with no frame of its own: its parts or the canvas draw it.
@@ -81,12 +123,12 @@ export function showZoneCelebration(
 ): DomQuestionPanel {
   const doc = layer.element.ownerDocument;
   const { view } = input;
-  const texts = view.texts.map((text) => textPart(doc, input, text));
   const parts = [
     framePart(doc, view.frame),
-    ...(view.rule === undefined ? [] : [rulePart(doc, view.rule)]),
+    ...(view.rule === undefined ? [] : [rulePart(doc, view.frame.rect, view.rule)]),
     ...view.art.map((art) => artPart(doc, input, art)),
-    ...texts,
+    ...view.texts.map((text) => textPart(doc, input, text)),
+    ...view.rows.flatMap((row) => rowPart(doc, input, row)),
   ];
   return showQuestionPanel(layer, {
     close: null,

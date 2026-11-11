@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { gameData } from "../data/index.ts";
+import { PALETTE } from "../ui/palette.ts";
 import { cents } from "../units.ts";
 import { CELEBRATION_LAYOUT } from "./celebrationLayout.ts";
 import { type CelebrationMeasure, zoneCelebrationView } from "./celebrationView.ts";
@@ -28,19 +29,16 @@ const ZONE_DONE = celebrationText(gameData, {
 });
 
 describe("zoneCelebrationView", () => {
-  it("draws each amount in forest over its place in the earnings line", () => {
+  it("sets the earnings on one centred line, each amount a forest run of it", () => {
     const view = zoneCelebrationView(MEASURE, undefined, ZONE_DONE);
-    const [whole, ...amounts] = view.texts;
-    const line = whole?.lines[0] ?? "";
+    expect(view.texts).toHaveLength(1);
+    const [line] = view.texts;
     const money = ZONE_DONE.kind === "zoneDone" ? ZONE_DONE.earnings : [];
-    expect(amounts.map(({ lines }) => lines[0])).toEqual(
-      money.filter(({ kind }) => kind === "money").map(({ text }) => text),
-    );
-    for (const amount of amounts) {
-      const at = line.indexOf(amount.lines[0] ?? "");
-      expect(amount.x).toBe((whole?.x ?? 0) + at * 12);
-      expect(amount.capTop).toBe(whole?.capTop);
-    }
+    expect(line?.spans?.map(({ text }) => text).join("")).toBe(line?.lines[0]);
+    expect(
+      line?.spans?.filter(({ colour }) => colour === PALETTE.forest).map(({ text }) => text),
+    ).toEqual(money.filter(({ kind }) => kind === "money").map(({ text }) => text));
+    expect([line?.align, line?.x]).toEqual(["centre", CELEBRATION_LAYOUT.centreX]);
     expect(view.frame.key).toBe("ui-panel");
   });
 
@@ -56,14 +54,27 @@ describe("zoneCelebrationView", () => {
     expect(zoneCelebrationView(MEASURE, undefined, ZONE_DONE).button.key).toBeUndefined();
   });
 
-  it("centres a new walker's greeting on the screen in its bubble, under its tail", () => {
+  it("centres a new walker's greeting, its info lines and its rule, the tail held by the bubble", () => {
     const text = celebrationText(gameData, { kind: "newWalker", walker: "ada" });
     const view = zoneCelebrationView(MEASURE, undefined, text);
-    const [greeting] = view.texts;
-    const width = (greeting?.lines[0]?.length ?? 0) * 12;
-    expect((greeting?.x ?? 0) + width / 2).toBe(CELEBRATION_LAYOUT.centreX);
+    const { rect } = view.frame;
+    expect(view.texts.map(({ align, x }) => [align, x])).toEqual(
+      view.texts.map(() => ["centre", CELEBRATION_LAYOUT.centreX]),
+    );
     expect(view.frame.key).toBe("ui-quip");
-    expect(view.art[0]).toMatchObject(CELEBRATION_LAYOUT.newWalker.tail);
-    expect(view.rule?.y).toBeGreaterThan(greeting?.capTop ?? Infinity);
+    expect(view.art[0]).toMatchObject({ holder: { x: rect.x, y: rect.y } });
+    expect(view.rows.map(({ centreX }) => centreX)).toEqual(
+      view.rows.map(() => CELEBRATION_LAYOUT.centreX),
+    );
+    const rule = view.rule;
+    const room = {
+      from: rect.x + (rule?.inset ?? 0),
+      to: rect.x + rect.width - (rule?.inset ?? 0) - 1,
+    };
+    const last = (rule?.fromX ?? 0) + ((rule?.dots ?? 1) - 1) * (rule?.step ?? 0);
+    const [before, after] = [(rule?.fromX ?? 0) - room.from, room.to - last];
+    expect(before >= 0 && after >= 0 && after - before <= 1 && after < (rule?.step ?? 0)).toBe(
+      true,
+    );
   });
 });

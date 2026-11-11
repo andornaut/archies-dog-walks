@@ -12,10 +12,10 @@ import { cardNumberForKey, isConfirmKey, isPauseKey, menuKeyActs } from "../inpu
 import { keyNumbersShown } from "../input/keyNumbers.ts";
 import { PALETTE } from "../ui/palette.ts";
 import { fillRect } from "../ui/phaser/draw.ts";
-import { addPixelText } from "../ui/phaser/pixelText.ts";
 import { addRampDim } from "../ui/phaser/rampDim.ts";
 import { addConfetti } from "./badges.ts";
 import { addCelebrationHeadline } from "./celebrationHeadline.ts";
+import { addDetailText } from "./homePanels.ts";
 import { canvasCelebrationMeasure } from "./modalMeasure.ts";
 import { closeOverlay, type OverlayData } from "./overlay.ts";
 import { currentSettings, walkerSpriteKey } from "./profileStore.ts";
@@ -28,7 +28,6 @@ import {
   addMenuButton,
   addPanel,
   addTapBurst,
-  BODY_TEXT,
   listenButtonTap,
   MENU_BUTTON_KEY_GAP,
 } from "./uiKit.ts";
@@ -144,16 +143,26 @@ export class ZoneCelebrationScene extends Scene {
     const { rule } = view;
     if (rule !== undefined) {
       const dots = this.add.graphics();
-      for (let x = rule.fromX; x <= rule.toX; x += rule.step) {
-        fillRect(dots, PALETTE.tan, { height: 1, width: 1, x, y: rule.y });
+      for (let i = 0; i < rule.dots; i++) {
+        fillRect(dots, PALETTE.tan, {
+          height: 1,
+          width: 1,
+          x: rule.fromX + i * rule.step,
+          y: rule.y,
+        });
       }
     }
     for (const text of view.texts) {
-      addPixelText(this, text.x, text.capTop, text.lines.join("\n"), {
-        ...BODY_TEXT,
-        colour: text.colour,
-        scale: text.scale ?? BODY_TEXT.scale,
-      });
+      addDetailText(this, undefined, text);
+    }
+    for (const { items } of view.rows) {
+      for (const item of items) {
+        if ("art" in item) {
+          this.add.image(item.art.x, item.art.y, item.art.key).setOrigin(0);
+        } else {
+          addDetailText(this, undefined, item.text);
+        }
+      }
     }
   }
 
