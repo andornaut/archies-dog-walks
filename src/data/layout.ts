@@ -810,7 +810,7 @@ export const LOGBOOK_PAGE = {
     // A badge's top under its row's top.
     badgeTop: 2,
     // An earned badge's band's rows over and under its row, and its tick's offset and side.
-    earned: { bandY: 2, checkDx: 20, checkDy: -1, checkSize: 16 },
+    earned: { bandY: 0, checkDx: 20, checkDy: -1, checkSize: 16 },
     // The rows under the last row.
     foot: 16,
     // The gap between rows, which open their badges as buttons do.

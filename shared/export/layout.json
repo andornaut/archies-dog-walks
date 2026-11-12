@@ -2687,7 +2687,7 @@
         "earned": {
           "bandLeft": 4,
           "bandWidth": 322,
-          "bandY": 2,
+          "bandY": 0,
           "checkDx": 20,
           "checkDy": -1,
           "checkSize": 16,
