@@ -12,35 +12,53 @@
     sans-serif;
   touch-action: pan-x;
 }
-/* Each link's press spans from the middle of the gap on its left to the middle of the gap on its
-   right, --half being half a gap, so the presses tile the row with no overlap or hole. The outer
-   presses reach --half into the 16px gutters, so the text keeps them, and the text spans the
-   1240px column less its gutters, as the pages' own content does. */
+/* Each link is a press that tiles the row with no overlap or hole: the full bar's height, at least
+   48px wide, its text centred with --side of padding a side and its separator on the edge it
+   shares with the press before it. The outer presses' sides reach into the 16px gutters, leaving
+   5.5px at the screen's edges, and the text spans the 1240px column less its gutters, as the
+   pages' own content does.
+   Where the row is narrower than the links at --side, they share it: each link's grid column
+   runs from its text plus --side-min a side (or 48px) up to its text plus --side a side (or
+   48px), and the grid gives the space over the minimums to the columns evenly, each stopping at
+   its maximum. So Play stays 48px, the other links' sides close up together, and the row scrolls
+   only once every side is down to --side-min. */
 .art-nav ul {
-  --half: 10.5px;
+  --side: 10.5px;
+  --side-min: 3px;
   box-sizing: border-box;
   list-style: none;
   margin: 0 auto;
   max-width: 1240px;
-  display: flex;
-  flex-wrap: nowrap;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(min-content, max-content);
+  justify-content: start;
   overflow-x: auto;
   scrollbar-width: none;
-  padding-left: calc(max(16px, env(safe-area-inset-left, 0px)) - var(--half));
-  padding-right: calc(max(16px, env(safe-area-inset-right, 0px)) - var(--half));
+  padding-left: calc(max(16px, env(safe-area-inset-left, 0px)) - var(--side));
+  padding-right: calc(max(16px, env(safe-area-inset-right, 0px)) - var(--side));
   white-space: nowrap;
 }
 .art-nav ul::-webkit-scrollbar {
   display: none;
 }
-/* The separator sits on the edge two presses share, its bottom 1px under the text's baseline,
-   and takes no taps, so a tap on it follows the link under it. Its negative margins take it out
-   of the row's width. */
+/* A column's minimum and maximum are its item's min-content and max-content widths. The link
+   fills the item's first line, and the empty ::after, which wraps to a second line of no height,
+   adds the difference between --side-min and --side a side to the max-content width alone. */
 .art-nav li {
   display: flex;
-  flex: none;
+  flex-wrap: wrap;
   align-items: baseline;
+  min-width: 48px;
 }
+.art-nav li::after {
+  content: "";
+  flex: 0 0 100%;
+  width: calc(2 * (var(--side) - var(--side-min)));
+  height: 0;
+}
+/* The separator's bottom is 1px under the text's baseline. It takes no taps, so a tap on it
+   follows the link under it, and its negative margins take it out of the row's width. */
 .art-nav li + li::before {
   content: "";
   flex: none;
@@ -52,20 +70,12 @@
   background: #3a4466;
   pointer-events: none;
 }
-/* Below 380px the gaps close up, to 13px at 340px, so less of the row scrolls out of view. */
-@media (max-width: 379.98px) {
-  .art-nav ul {
-    --half: calc(max(6px, (100vw - 280px) / 10) + 0.5px);
-  }
-}
-/* The press: the full bar's height and at least 48px wide, a narrower link's gaps widening to
-   make it up, with the text centred and its line 18px from the top. */
+/* The press, its text's line 18px from the top. */
 .art-nav a {
-  display: block;
+  flex: 1 0 auto;
   box-sizing: border-box;
-  min-width: 48px;
   height: 48px;
-  padding: 18px var(--half) 0;
+  padding: 18px var(--side-min) 0;
   color: #c0cbdc;
   text-align: center;
   text-decoration: none;

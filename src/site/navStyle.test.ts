@@ -36,8 +36,8 @@ describe("the site nav's current page", () => {
 
 describe("the site nav's links", () => {
   it("press at least 48px square", () => {
-    const body = RULES.find(({ selector }) => selector === ".art-nav a")?.body ?? "";
-    expect(body).toMatch(/(^|;)\s*min-width:\s*48px\s*(;|$)/);
-    expect(body).toMatch(/(^|;)\s*height:\s*48px\s*(;|$)/);
+    const body = (selector: string) => RULES.find((rule) => rule.selector === selector)?.body ?? "";
+    expect(body(".art-nav li")).toMatch(/(^|;)\s*min-width:\s*48px\s*(;|$)/);
+    expect(body(".art-nav a")).toMatch(/(^|;)\s*height:\s*48px\s*(;|$)/);
   });
 });
