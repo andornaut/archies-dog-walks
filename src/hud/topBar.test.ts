@@ -133,7 +133,12 @@ describe("walkBackAction", () => {
     ["under a detail card over the menu", false, { ...HOLD, menu: "open" }, "closeExplanation"],
     ["in the menu", false, { ...NOTHING_PAUSED, menu: "open" }, "resume"],
     ["in the menu over a card", false, { ...CARD, menu: "open" }, "resume"],
-    ["on the Home question", false, { ...CARD, menu: "confirmHome" }, "menu"],
+    [
+      "on the fork card's Home question, back to the card",
+      false,
+      { ...CARD, menu: "confirmHome" },
+      "resume",
+    ],
     ["under help, which closes itself", false, { ...NOTHING_PAUSED, menu: "help" }, "none"],
     ["under the settings, which close themselves", false, { ...CARD, menu: "settings" }, "none"],
     ["after the walk's end, before the end screen", true, NOTHING_PAUSED, "none"],

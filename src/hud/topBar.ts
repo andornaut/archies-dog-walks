@@ -145,8 +145,8 @@ export type WalkBackAction = "closeExplanation" | "menu" | "none" | "resume";
 
 // What back does during a walk, innermost first: nothing once the walk is over, before the end
 // screen; an explanation's detail card closes; help and the settings close themselves; the Home
-// question returns to the pause menu; the pause menu resumes; else, over the walk, a card or the
-// zone celebration, the pause menu opens.
+// question, which only the fork card's End walk asks, closes back to the fork card; the pause
+// menu resumes; else, over the walk, a card or the zone celebration, the pause menu opens.
 export function walkBackAction(over: boolean, pause: RunPause): WalkBackAction {
   if (over) {
     return "none";
@@ -156,11 +156,11 @@ export function walkBackAction(over: boolean, pause: RunPause): WalkBackAction {
   }
   switch (pause.menu) {
     case "closed":
-    case "confirmHome":
       return "menu";
     case "help":
     case "settings":
       return "none";
+    case "confirmHome":
     case "open":
       return "resume";
     default:
