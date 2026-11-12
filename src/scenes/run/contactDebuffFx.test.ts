@@ -21,7 +21,6 @@ class Display extends EventEmitter {
   depth = 0;
   displayHeight = 36;
   displayWidth = 60;
-  mask: unknown;
   origin: [number, number] = [0, 0];
   visible = true;
   x = 0;
@@ -44,10 +43,6 @@ class Display extends EventEmitter {
   setDisplaySize(width: number, height: number) {
     this.displayWidth = width;
     this.displayHeight = height;
-    return this;
-  }
-  setMask(mask: unknown) {
-    this.mask = mask;
     return this;
   }
   setOrigin(x: number, y = x) {
@@ -74,15 +69,6 @@ function fixture(duration = 1200) {
   const bursts: Display[] = [];
   const groups: Display[] = [];
   const remove = vi.fn();
-  const mask = { destroy: vi.fn() };
-  const graphics = {
-    createGeometryMask: vi.fn(() => mask),
-    destroy: vi.fn(),
-    fillRect: vi.fn(),
-    fillStyle: vi.fn(),
-    setScrollFactor: vi.fn().mockReturnThis(),
-  };
-  graphics.fillStyle.mockReturnValue(graphics);
   const timers: { callback: () => void; ms: number }[] = [];
   const burst = () => {
     const image = new Display();
@@ -101,7 +87,6 @@ function fixture(duration = 1200) {
       sprite: vi.fn(burst),
     },
     anims: { get: vi.fn(() => ({ duration })) },
-    make: { graphics: vi.fn(() => graphics) },
     textures: { exists: vi.fn(() => true) },
     time: {
       delayedCall: vi.fn((ms: number, callback: () => void) => {
@@ -111,7 +96,7 @@ function fixture(duration = 1200) {
     },
   });
   vi.mocked(tagFrame).mockReturnValue("peak");
-  return { bursts, events: scene.events, graphics, groups, mask, remove, scene, timers };
+  return { bursts, events: scene.events, groups, remove, scene, timers };
 }
 
 const view = SCREEN_LAYOUT.roadView;
@@ -124,7 +109,6 @@ const context = (
   depth: 9.5,
   dogs,
   feet,
-  view,
 });
 
 beforeEach(() => vi.resetAllMocks());
@@ -133,7 +117,7 @@ describe("contact debuff ground cues", () => {
   it.each(["muddy", "spotlight", "stinky", "zoomies"] as const)(
     "tracks only the selected formation lead for %s, under actors and without frame clamping",
     (debuff) => {
-      const { bursts, events, graphics, groups, mask, scene } = fixture();
+      const { bursts, events, groups, scene } = fixture();
       const dogs: DogId[] = ["ginger", "lady", "kilo"];
       const places = new Map<DogId, Point>([
         ["ginger", { x: 130, y: 420 }],
@@ -163,10 +147,6 @@ describe("contact debuff ground cues", () => {
         },
       ).toEqual({ x: 120, y: 379 });
       expect(groups.map(({ depth }) => depth)).toEqual([9.5]);
-      expect(groups.every((group) => group.mask === mask)).toBe(true);
-      expect(graphics.fillRect).toHaveBeenCalledWith(view.x, view.y, view.width, view.height);
-      // The road viewport mask stays fixed while its camera moves.
-      expect(graphics.setScrollFactor).toHaveBeenCalledWith(0);
       dogs.splice(0, dogs.length, "ginger", "lady");
       const moved = { x: view.x + view.width + 20, y: 450 };
       places.set("kilo", moved);
@@ -182,9 +162,9 @@ describe("contact debuff ground cues", () => {
   );
 
   it.each(["completion", "shutdown", "destroy"] as const)(
-    "cleans the lead ground cue, mask and listeners on %s",
+    "cleans the lead ground cue and its listeners on %s",
     (endedBy) => {
-      const { events, graphics, groups, mask, scene } = fixture();
+      const { events, groups, scene } = fixture();
       playContactDebuff(scene as unknown as Scene, context(), cue);
       if (endedBy === "completion") {
         vi.mocked(playTagOnce).mock.calls[0]?.[3]();
@@ -194,8 +174,6 @@ describe("contact debuff ground cues", () => {
         groups[0]?.destroy();
       }
       expect(groups.every(({ active }) => !active)).toBe(true);
-      expect(mask.destroy).toHaveBeenCalledTimes(1);
-      expect(graphics.destroy).toHaveBeenCalledTimes(1);
       expect(events.listenerCount("postupdate")).toBe(0);
       expect(events.listenerCount("shutdown")).toBe(0);
     },
@@ -251,12 +229,11 @@ describe("contact debuff ground cues", () => {
         playContactDebuff(scene as unknown as Scene, context(), cue);
       },
     ],
-  ])("creates no cue, graphics, listeners or timers %s", (_, play) => {
+  ])("creates no cue, listeners or timers %s", (_, play) => {
     const { events, scene } = fixture();
     play(scene);
     expect(scene.add.container).not.toHaveBeenCalled();
     expect(scene.add.sprite).not.toHaveBeenCalled();
-    expect(scene.make.graphics).not.toHaveBeenCalled();
     expect(scene.time.delayedCall).not.toHaveBeenCalled();
     expect(events.listenerCount("postupdate")).toBe(0);
   });

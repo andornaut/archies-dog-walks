@@ -436,7 +436,6 @@ export class RunMoments {
           depth: DEPTH.sprite - 0.5,
           dogs: packDogs(step.walk.run),
           feet: (dog) => this.deps.pack.dogFeet(dog),
-          view: LAYOUT.roadView,
         },
         cue,
       );
