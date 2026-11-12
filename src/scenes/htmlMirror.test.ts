@@ -39,7 +39,28 @@ function emitter() {
   };
 }
 
-function mirrored() {
+// A filled rectangle as the mirror reads one.
+function rectangle(x: number) {
+  return {
+    active: true,
+    alpha: 1,
+    cameraFilter: 0,
+    data: null,
+    displayOriginX: 0,
+    displayOriginY: 0,
+    fillAlpha: 1,
+    fillColor: 0x112233,
+    height: 4,
+    isFilled: true,
+    type: "Rectangle",
+    visible: true,
+    width: 4,
+    x,
+    y: 0,
+  };
+}
+
+function mirrored(roots: () => readonly unknown[] = () => []) {
   const doc = new FakeDocument();
   const { element, layer } = fakeLayer(doc, domScale(2, { height: 560, width: 360, x: 0, y: 0 }));
   place.value = { fonts: { body: gameFont("font-body"), title: gameFont("font-title") }, layer };
@@ -53,13 +74,9 @@ function mirrored() {
     game: { events: game },
     sys: { isActive: () => state.active, isVisible: () => true },
   };
-  const mirror = addHtmlMirror(
-    scene as never,
-    () => [],
-    () => state.pageOver,
-  );
+  const mirror = addHtmlMirror(scene as never, roots as never, () => state.pageOver);
   const dialogs = () => element.children.filter((child: FakeElement) => child.className !== "");
-  return { dialogs, events, game, mirror, state };
+  return { dialogs, doc, events, game, mirror, state };
 }
 
 describe("the HTML mirror", () => {
@@ -67,7 +84,7 @@ describe("the HTML mirror", () => {
     const { dialogs, game } = mirrored();
     game.emit(EVENTS.preRender);
     const [dialog] = dialogs();
-    expect(dialog?.className).toBe("adw-dialog adw-passive");
+    expect(dialog?.className).toBe("adw-dialog adw-passive adw-mirror");
     expect(dialog?.getAttribute("aria-hidden")).toBe("true");
     expect(dialog?.getAttribute("tabindex")).toBeNull();
     expect(dialog?.hidden).toBe(false);
@@ -81,6 +98,34 @@ describe("the HTML mirror", () => {
     Object.assign(state, over);
     game.emit(EVENTS.preRender);
     expect(dialogs()[0]?.hidden).toBe(true);
+  });
+
+  it("leaves a part's element alone while nothing it is drawn from changes", () => {
+    const part = rectangle(2);
+    const { dialogs, doc, game } = mirrored(() => [part]);
+    game.emit(EVENTS.preRender);
+    const element = dialogs()[0]?.children[0];
+    if (element === undefined) {
+      throw new Error("The part was not drawn");
+    }
+    element.style.left = "untouched";
+    doc.moves = 0;
+    game.emit(EVENTS.preRender);
+    expect([element.style.left, doc.moves]).toEqual(["untouched", 0]);
+    part.x = 3;
+    game.emit(EVENTS.preRender);
+    expect(element.style.left).toBe("6px");
+  });
+
+  it("moves only the parts out of place when the display order changes", () => {
+    const parts = [rectangle(0), rectangle(2), rectangle(4)];
+    const { dialogs, doc, game } = mirrored(() => parts);
+    game.emit(EVENTS.preRender);
+    const [first, second, third] = dialogs()[0]?.children ?? [];
+    parts.reverse();
+    doc.moves = 0;
+    game.emit(EVENTS.preRender);
+    expect([dialogs()[0]?.children, doc.moves]).toEqual([[third, second, first], 2]);
   });
 
   // Starting a walk shuts the start screen down.

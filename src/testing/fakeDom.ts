@@ -90,6 +90,24 @@ export class FakeElement extends FakeTarget {
     }
   }
 
+  get firstElementChild(): FakeElement | null {
+    return this.children[0] ?? null;
+  }
+
+  get nextElementSibling(): FakeElement | null {
+    const siblings = this.parent?.children ?? [];
+    return siblings[siblings.indexOf(this) + 1] ?? null;
+  }
+
+  // Moves node before ref, or to the end with none, counting the move on the document.
+  insertBefore(node: FakeElement, ref: FakeElement | null): void {
+    node.remove();
+    node.parent = this;
+    const at = ref === null ? -1 : this.children.indexOf(ref);
+    this.children.splice(at < 0 ? this.children.length : at, 0, node);
+    this.ownerDocument.moves += 1;
+  }
+
   blur(): void {
     if (this.ownerDocument.activeElement === this) {
       this.ownerDocument.activeElement = undefined;
@@ -115,6 +133,7 @@ export class FakeElement extends FakeTarget {
   remove(): void {
     if (this.parent !== undefined) {
       this.parent.children = this.parent.children.filter((child) => child !== this);
+      this.parent = undefined;
     }
   }
 
@@ -134,6 +153,8 @@ export class FakeElement extends FakeTarget {
 
 export class FakeDocument {
   activeElement: FakeElement | undefined;
+  // How many times an element was moved by insertBefore.
+  moves = 0;
   // Timers never fire: a test sees what a timer would undo still in place.
   readonly defaultView = Object.assign(new FakeTarget(), { setTimeout: () => 0 });
 

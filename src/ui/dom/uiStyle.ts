@@ -95,6 +95,9 @@ const DISPLAY_SHADOW = [
 export const UI_STYLE = `
 .adw-dialog{position:absolute;left:0;top:0;transform-origin:0 0;pointer-events:none;outline:none}
 .adw-dialog[hidden]{display:none}
+/* A display mirror's screen, sized to the canvas: what changes in it lays out, styles and paints
+   inside it alone. */
+.adw-mirror{contain:strict}
 .adw-rim,.adw-panel,.adw-card,.adw-plate,.adw-button,.adw-close{position:absolute;box-sizing:border-box;
   pointer-events:auto}
 /* The rim leaves out its corner pixels, following the panel's cut corners. */

@@ -8,7 +8,7 @@ import { SCREEN_CONFIG } from "../data/screen.ts";
 import { addTapBurst } from "../hud/dom/questionPanel.ts";
 import { pillKind } from "../hud/effectNames.ts";
 import { disabledArtKey, disabledArtPath } from "../ui/disabledArt.ts";
-import { drawLabel } from "../ui/dom/labelBlock.ts";
+import { drawLabel, LABEL_ALIGN_DATA } from "../ui/dom/labelBlock.ts";
 import {
   graphicsFills,
   motionShift,
@@ -100,6 +100,8 @@ interface Context {
 interface Entry {
   readonly element: HTMLElement;
   key: string;
+  // The fields the part was last drawn from (fillTuple), while they hold.
+  tuple?: unknown[] | undefined;
 }
 
 const hex = (colour: number) => `#${colour.toString(16).padStart(6, "0")}`;
@@ -166,17 +168,92 @@ function showArt(
   });
 }
 
-// Each element's id, so the mirror knows when its parts' order has changed.
-const ids = new WeakMap<HTMLElement, number>();
-let nextId = 0;
-function idOf(element: HTMLElement): number {
-  let id = ids.get(element);
-  if (id === undefined) {
-    nextId += 1;
-    id = nextId;
-    ids.set(element, id);
+// The fields of object its HTML is drawn from, written into out: a frame in which none of them
+// and none of its placing changed skips the part's key and its DOM. False for a part drawn from
+// data a tuple cannot hold (a scrollbar's), which is keyed every frame.
+function fillTuple(out: unknown[], object: GameObjects.GameObject): boolean {
+  out.length = 0;
+  switch (object.type) {
+    case "BitmapText": {
+      const label = object as GameObjects.BitmapText;
+      const pills = dataOf(label, NAME_PILLS_DATA) as LabelNamePills | undefined;
+      out.push(
+        label.text,
+        label.font,
+        label.fontSize,
+        label.maxWidth,
+        label.letterSpacing,
+        label.lineSpacing,
+        label.align,
+        label.originX,
+        label.tintTopLeft,
+        label.x,
+        label.y,
+        label.scaleX,
+        label.scaleY,
+        label.displayOriginX,
+        label.displayOriginY,
+        pills,
+        pills?.grey,
+        dataOf(label, LABEL_ALIGN_DATA),
+      );
+      return true;
+    }
+    case "Image":
+    case "Sprite": {
+      const image = object as GameObjects.Image;
+      out.push(image.texture.key, image.frame, image.x, image.y, image.scaleX, image.scaleY);
+      out.push(image.displayOriginX, image.displayOriginY, dataOf(image, MIRROR_SPAN_DATA));
+      return true;
+    }
+    case "NineSlice": {
+      const slice = object as GameObjects.NineSlice;
+      if (dataOf(slice, MIRROR_SCROLLBAR_DATA) !== undefined) {
+        return false;
+      }
+      out.push(slice.texture.key, slice.frame, slice.x, slice.y, slice.width, slice.height);
+      out.push(slice.displayOriginX, slice.displayOriginY, slice.leftWidth, slice.rightWidth);
+      out.push(slice.topHeight, slice.bottomHeight);
+      return true;
+    }
+    case "TileSprite": {
+      const tiled = object as GameObjects.TileSprite;
+      out.push(tiled.texture.key, tiled.frame, tiled.x, tiled.y, tiled.width, tiled.height);
+      out.push(tiled.scaleX, tiled.scaleY, tiled.displayOriginX, tiled.displayOriginY);
+      out.push(tiled.tilePositionX, tiled.tilePositionY, tiled.tileScaleX, tiled.tileScaleY);
+      return true;
+    }
+    case "Rectangle": {
+      const shape = object as GameObjects.Rectangle;
+      out.push(shape.isFilled, shape.fillColor, shape.fillAlpha, shape.x, shape.y);
+      out.push(shape.width, shape.height, shape.displayOriginX, shape.displayOriginY);
+      return true;
+    }
+    case "Graphics": {
+      const graphics = object as GameObjects.Graphics;
+      out.push(graphics.x, graphics.y, ...(graphics.commandBuffer as readonly number[]));
+      return true;
+    }
+    default:
+      return false;
   }
-  return id;
+}
+
+const sameTuple = (a: readonly unknown[], b: readonly unknown[]) =>
+  a.length === b.length && a.every((value, i) => value === b[i]);
+
+// Moves each element into its parent after the element placed before it there, in order, so
+// only elements out of place move.
+function placeInOrder(placed: readonly (readonly [HTMLElement, HTMLElement])[]): void {
+  const last = new Map<HTMLElement, Element>();
+  for (const [element, parent] of placed) {
+    const before = last.get(parent);
+    const next = before === undefined ? parent.firstElementChild : before.nextElementSibling;
+    if (next !== element) {
+      parent.insertBefore(element, next);
+    }
+    last.set(parent, element);
+  }
 }
 
 // scene's marked objects (roots, its containers or its whole display list in display order) in
@@ -197,7 +274,7 @@ export function addHtmlMirror(
   const { layer } = place;
   const doc = layer.element.ownerDocument;
   const dialog = doc.createElement("div");
-  dialog.className = "adw-dialog adw-passive";
+  dialog.className = "adw-dialog adw-passive adw-mirror";
   dialog.setAttribute("aria-hidden", "true");
   dialog.hidden = true;
   layer.element.append(dialog);
@@ -243,10 +320,16 @@ export function addHtmlMirror(
       loadSheet(artUrl(domArtPath("sheet", key, "json"))).catch(() => undefined);
     }
   }
-  let order = "";
+  // What each graphics' box and each of its fills' styles were last set to, so a redrawn graphics
+  // writes only what changed.
+  const fillKeys = new WeakMap<HTMLElement, string>();
+  const fillStyles = new WeakMap<HTMLElement, Readonly<Record<string, string>>>();
+  // The fields of the part being drawn (fillTuple), reused for every part.
+  const tuple: unknown[] = [];
   const invalidate = () => {
     for (const entry of [...entries.values(), ...clips.values()]) {
       entry.key = "";
+      entry.tuple = undefined;
     }
   };
   const forget = () => {
@@ -257,7 +340,6 @@ export function addHtmlMirror(
     pills.clear();
     clips.clear();
     dialog.replaceChildren();
-    order = "";
   };
 
   // The entry for object, made the first time, the camera drawing it no more.
@@ -287,6 +369,13 @@ export function addHtmlMirror(
         : scrollShift(scale, context.scroll.offset, context.scroll.settled);
     const shift = { x: moved.x, y: moved.y + scrolled };
     const { origin } = context;
+    const tupled = fillTuple(tuple, object);
+    tuple.push(context.shown, shift.x, shift.y, origin.x, origin.y, context.alpha);
+    const known = entries.get(object);
+    if (tupled && known?.tuple !== undefined && sameTuple(known.tuple, tuple)) {
+      visit(known.element);
+      return;
+    }
     // What places every part, for its key.
     const placing = [context.shown, shift, context.alpha];
     const transform = (element: HTMLElement, alpha = context.alpha) => {
@@ -339,7 +428,7 @@ export function addHtmlMirror(
           entry.key = key;
         }
         visit(entry.element);
-        return;
+        break;
       }
       case "Image":
       case "Sprite": {
@@ -372,7 +461,7 @@ export function addHtmlMirror(
           entry.key = frame === undefined ? "" : key;
         }
         visit(entry.element);
-        return;
+        break;
       }
       case "NineSlice": {
         const slice = object as GameObjects.NineSlice;
@@ -424,7 +513,7 @@ export function addHtmlMirror(
           entry.key = frame === undefined ? "" : key;
         }
         visit(entry.element);
-        return;
+        break;
       }
       case "TileSprite": {
         // A texture tiled at its own size; a sheet's frame, which CSS cannot repeat alone, stays
@@ -463,7 +552,7 @@ export function addHtmlMirror(
           entry.key = key;
         }
         visit(entry.element);
-        return;
+        break;
       }
       case "Rectangle": {
         const shape = object as GameObjects.Rectangle;
@@ -485,7 +574,7 @@ export function addHtmlMirror(
           entry.key = key;
         }
         visit(entry.element);
-        return;
+        break;
       }
       case "Graphics": {
         const graphics = object as GameObjects.Graphics;
@@ -500,23 +589,47 @@ export function addHtmlMirror(
         const key = JSON.stringify([fills, ...placing]);
         if (key !== entry.key) {
           // The graphics' own box is the layer's; each fill is placed on the grid.
-          setBox(entry.element, {
+          const screen = {
             height: deviceY(scale, SCREEN_CONFIG.height),
             left: 0,
             top: 0,
             width: deviceX(scale, SCREEN_CONFIG.width),
-          });
-          entry.element.replaceChildren(
-            ...fills.map(({ alpha, colour, rect }) => {
-              const fill = doc.createElement("div");
+          };
+          const screenKey = [screen.width, screen.height].join();
+          if (fillKeys.get(entry.element) !== screenKey) {
+            fillKeys.set(entry.element, screenKey);
+            setBox(entry.element, screen);
+          }
+          // Each fill is a child drawn again only where it changed.
+          const { children } = entry.element;
+          fills.forEach(({ alpha, colour, rect }, i) => {
+            let fill = children[i] as HTMLElement | undefined;
+            if (fill === undefined) {
+              fill = doc.createElement("div");
               fill.className = "adw-framed";
-              fill.style.backgroundColor = hex(colour);
-              // Each fill blends on its own, as the canvas blends it.
-              fill.style.opacity = opacity(context.alpha * alpha);
-              setBox(fill, gridRect(scale, rect));
-              return fill;
-            }),
-          );
+              entry.element.append(fill);
+            }
+            // Each fill blends on its own, as the canvas blends it.
+            const box = gridRect(scale, rect);
+            const style = {
+              backgroundColor: hex(colour),
+              height: `${box.height}px`,
+              left: `${box.left}px`,
+              opacity: opacity(context.alpha * alpha),
+              top: `${box.top}px`,
+              width: `${box.width}px`,
+            };
+            const was = fillStyles.get(fill);
+            for (const [name, value] of Object.entries(style) as [keyof typeof style, string][]) {
+              if (was?.[name] !== value) {
+                fill.style[name] = value;
+              }
+            }
+            fillStyles.set(fill, style);
+          });
+          while (children.length > fills.length) {
+            children[children.length - 1]?.remove();
+          }
           transform(entry.element, 1);
           entry.key = key;
         }
@@ -525,6 +638,10 @@ export function addHtmlMirror(
       }
       default:
         break;
+    }
+    const drawn = entries.get(object);
+    if (drawn !== undefined) {
+      drawn.tuple = tupled && drawn.key !== "" ? [...tuple] : undefined;
     }
   };
 
@@ -661,14 +778,8 @@ export function addHtmlMirror(
         clips.delete(container);
       }
     }
-    // The parts in display order, each in its clip; laid out again only when the order changes.
-    const signature = placed.map(([element, parent]) => `${idOf(element)}:${idOf(parent)}`).join();
-    if (signature !== order) {
-      order = signature;
-      for (const [element, parent] of placed) {
-        parent.append(element);
-      }
-    }
+    // The parts in display order, each in its clip, only those out of place moving.
+    placeInOrder(placed);
   };
   update();
   scene.game.events.on(Core.Events.PRE_RENDER, update);
