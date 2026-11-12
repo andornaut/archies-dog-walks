@@ -7,7 +7,7 @@ import "./main.css";
 import { createDomProgressBar } from "@andornaut/game-kit/web/progress/dom/progressBar";
 
 import { SCREEN_CONFIG, SCREEN_LAYOUT } from "./data/screen.ts";
-import { domLoadingTiming, GAME_PROGRESS_STYLE, LOADING_STEPS_PROPERTY } from "./ui/progressBar.ts";
+import { GAME_PROGRESS_STYLE, LOADING_TIMING } from "./ui/progressBar.ts";
 import { startupLoad, startupProgress } from "./ui/startupProgress.ts";
 
 const parent = document.getElementById("game");
@@ -21,9 +21,12 @@ if (parent !== null) {
     transformOrigin: "top left",
   });
   parent.append(view);
-  const { steps, timing } = domLoadingTiming(SCREEN_LAYOUT.zoneProgress);
-  const bar = createDomProgressBar(view, GAME_PROGRESS_STYLE, SCREEN_LAYOUT.zoneProgress, timing);
-  bar.element.style.setProperty(LOADING_STEPS_PROPERTY, String(steps));
+  const bar = createDomProgressBar(
+    view,
+    GAME_PROGRESS_STYLE,
+    SCREEN_LAYOUT.zoneProgress,
+    LOADING_TIMING,
+  );
   bar.element.setAttribute("aria-label", parent.getAttribute("aria-label") ?? document.title);
   const place = () => {
     const scale = Math.min(

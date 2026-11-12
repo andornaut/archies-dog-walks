@@ -1,9 +1,4 @@
-import {
-  indeterminateSegment,
-  type ProgressBarStyle,
-  type ProgressMotion,
-} from "@andornaut/game-kit/progress";
-import type { Rect } from "@andornaut/game-kit/rect";
+import type { ProgressBarStyle, ProgressMotion } from "@andornaut/game-kit/progress";
 import type { DomProgressTiming } from "@andornaut/game-kit/web/progress/dom/progressBar";
 
 import { PROGRESS_BORDER } from "../data/layout.ts";
@@ -28,16 +23,3 @@ export const LOADING_MOTION: ProgressMotion = {
   cycleMs: LOADING_TIMING.cycleMs,
   segment: LOADING_TIMING.segment,
 };
-
-// The custom property holding the DOM bar's step count, which main.css reads.
-export const LOADING_STEPS_PROPERTY = "--loading-bar-steps";
-
-// The DOM bar's timing on frame, and its travel's steps, so it moves as the canvas bar does: its
-// segment the whole pixels drawProgressDisplay draws, stepping one pixel at a time from just
-// outside the track's left edge to just outside its right.
-export function domLoadingTiming(frame: Rect): { steps: number; timing: DomProgressTiming } {
-  const track = frame.width - 2 * GAME_PROGRESS.border;
-  // Halfway through a cycle the segment lies wholly inside the track, at its full width.
-  const { width } = indeterminateSegment(LOADING_MOTION, track, LOADING_MOTION.cycleMs / 2);
-  return { steps: track + width, timing: { ...LOADING_TIMING, segment: width / track } };
-}
