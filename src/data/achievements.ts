@@ -59,7 +59,7 @@ export const ACHIEVEMENTS = [
     id: "everybodyHome",
     name: "Everybody Home",
     shortGoal: "Walk bonus, {count} dogs",
-    tier: "medium",
+    tier: "hard",
   },
   {
     badgeLine: "Not today, bench.",
@@ -68,7 +68,7 @@ export const ACHIEVEMENTS = [
     id: "dodgeBall",
     name: "Dodge Ball",
     shortGoal: "Dodge {count} bumps",
-    tier: "medium",
+    tier: "hard",
   },
   {
     badgeLine: "The reviews are in.",
@@ -229,7 +229,7 @@ export const ACHIEVEMENTS = [
     id: "paparazzi",
     name: "Paparazzi",
     shortGoal: "Get Spotlight {count} times",
-    tier: "medium",
+    tier: "easy",
   },
   {
     badgeLine: "So close. Every time.",
