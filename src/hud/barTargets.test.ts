@@ -45,7 +45,6 @@ const WALK_TARGETS = {
   pause: centre(BAR.buttons.pause.hit),
   perkIcon: centre(BAR.effectWells[0] ?? topBar),
   settings: centre(BAR.buttons.settings.hit),
-  sound: centre(BAR.buttons.sound.hit),
   upgradeIcon: centre(BAR.effectWells[1] ?? topBar),
 } as const;
 
@@ -55,7 +54,7 @@ type WalkTarget = keyof typeof WALK_TARGETS;
 // "explainOnTap" when a tap or a hold there opens an explanation, "explainOnHold" when only a
 // hold does, else nothing.
 function walkTargetAction(pause: RunPause, point: Point): string | undefined {
-  const button = topBarButtonAt(point.x, point.y);
+  const button = topBarButtonAt(SHOWN.debuffs.length, point.x, point.y);
   if (button !== undefined) {
     return topBarAction(pause, "tap", button);
   }
@@ -90,7 +89,6 @@ const WALK_BASE: Readonly<Record<WalkTarget, string | undefined>> = {
   pause: "openMenu",
   perkIcon: "explainOnTap",
   settings: "openSettings",
-  sound: "mute",
   upgradeIcon: "explainOnTap",
 };
 
@@ -111,7 +109,6 @@ const WALK_CHANGES: Readonly<Record<string, Partial<Record<WalkTarget, string | 
     pause: undefined,
     perkIcon: undefined,
     settings: undefined,
-    sound: undefined,
     upgradeIcon: undefined,
   },
   nothing: {},

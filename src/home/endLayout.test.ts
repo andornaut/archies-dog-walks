@@ -183,7 +183,7 @@ describe("endPanelLayout", () => {
 describe("results and badge placement", () => {
   it.each([
     ["short results", 3, 1, false, 1, 126],
-    ["tall normal results", 5, 3, true, 2, 122],
+    ["tall normal results", 5, 3, true, 2, 117],
     ["tall dev results", 6, 3, true, 1, 112],
     ["results without badges", 5, 3, true, 0, 126],
   ] as const)(

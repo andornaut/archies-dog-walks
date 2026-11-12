@@ -30,9 +30,9 @@ import { walkerSays } from "./homeLines.ts";
 import { tapWalker } from "./walkers.ts";
 
 const { board } = HOME_LAYOUT.petShop;
-const { gate, walkerAtGate } = HOME_LAYOUT;
+const { walkerAtGate } = HOME_LAYOUT;
 const sizes = { clearance: 2, margin: HOME_LAYOUT.speech.margin };
-const top = gate.y + HOME_LAYOUT.speech.top;
+const top = HOME_LAYOUT.speech.top;
 
 describe("bubbleRect", () => {
   it("keeps a bubble of any size clear of the Pet shop's board", () => {
@@ -56,10 +56,10 @@ describe("bubbleRect", () => {
   );
 });
 
-// Every speech the walker's bubble can say, with and without each storage or update warning
-// first, wraps at 2x in the body font onto the bubble's lines, and the bubble keeps clear of the
-// Pet shop's board inside the screen. A parting line wraps beside its owner's face and name,
-// which stay inside the bubble and clear of the text.
+// Every speech the walker's bubble can say, and each storage or update notice, which shows alone
+// in place of the speech, wraps at 2x in the body font onto the bubble's lines, and the bubble
+// keeps clear of the Pet shop's board inside the screen. A parting line wraps beside its owner's
+// face and name, which stay inside the bubble and clear of the text.
 describe("the walker's speech", () => {
   const text = gameData.homeText;
   const body = fontFileMetrics("font-body");
@@ -92,12 +92,17 @@ describe("the walker's speech", () => {
   const parting = dogs.flatMap((dog) =>
     gameData.quips[dog].parting.map((quip) => said([quip], dog)),
   );
-  const speeches = [...messages, ...parting].flatMap(({ owner, parts }) => [
-    said(parts, owner),
-    said([text.unsaved, ...parts], owner),
-    said([text.noticeUpdateNeeded, ...parts], owner),
-  ]);
+  const notices = [text.unsaved, text.noticeUpdateNeeded];
+  const speeches = [
+    ...[...messages, ...parting].map(({ owner, parts }) => said(parts, owner)),
+    ...notices.map((notice) => said([notice])),
+  ];
   const width = (line: string) => bodyTextWidth(2, plainMarks(line));
+
+  // A notice shows alone, so the bubble keeps clear of the walker under it.
+  it.each(notices)("says the notice %j on 2 lines at most", (notice) => {
+    expect(bubbleLines(width, null, [notice]).lines.length).toBeLessThanOrEqual(2);
+  });
   const nameInk = (dog: DogId) =>
     inkWidth("font-body", { scale: 1 }, plainMarks(gameData.dogs[dog].owner.name));
   const { padX } = HOME_LAYOUT.speech;

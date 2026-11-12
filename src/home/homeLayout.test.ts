@@ -9,7 +9,7 @@ import { describe, expect, it } from "vitest";
 
 import { ownerFaceKey } from "../assets/spriteKeys.ts";
 import { gameData } from "../data/index.ts";
-import { HOME_SCREEN } from "../data/layout.ts";
+import { HOME_SCREEN, MIN_PRESS } from "../data/layout.ts";
 import { SCREEN_CONFIG, SCREEN_LAYOUT } from "../data/screen.ts";
 import type { WalkerId } from "../data/types.ts";
 import { ownerPhotoRect, WALK_BAR } from "../hud/walkHud.ts";
@@ -54,6 +54,7 @@ import {
   homeBarButtons,
   sectionFill,
   slotSignText,
+  tileFace,
   updateModalText,
 } from "./homeLayout.ts";
 
@@ -62,16 +63,29 @@ const { dogOrigin, dogTiles, sectionFrame, sections, startButton, walkerOrigin, 
 const { pocket } = HOME_LAYOUT;
 const BODY = fontFileMetrics("font-body");
 
+// Each section's tiles as drawn, inside their press cells.
 const rows = [
-  ["walker", sections.walker, gridRects(walkerTiles, walkerTiles.columns, walkerOrigin)],
+  [
+    "walker",
+    sections.walker,
+    gridRects(walkerTiles, walkerTiles.columns, walkerOrigin).map((cell) =>
+      tileFace(HOME_LAYOUT.walkerTileInset, cell),
+    ),
+  ],
   [
     "pocket",
     sections.pocket,
     gridRects(pocket.cells, pocket.cells.columns, pocket.origin).map((cell) =>
-      insetRect(pocket.tileInset, cell),
+      tileFace(pocket.tileInset, cell),
     ),
   ],
-  ["dogs", sections.dogs, gridRects(dogTiles, Object.keys(gameData.dogs).length, dogOrigin)],
+  [
+    "dogs",
+    sections.dogs,
+    gridRects(dogTiles, Object.keys(gameData.dogs).length, dogOrigin).map((cell) =>
+      tileFace(HOME_LAYOUT.dogTileInset, cell),
+    ),
+  ],
 ] as const;
 
 describe("home layout", () => {
@@ -85,7 +99,9 @@ describe("home layout", () => {
       expect((below?.y ?? 0) - ((above?.y ?? 0) + (above?.height ?? 0))).toBe(sectionGap);
     }
     expect(startButton.y - sections.pocket.y - sections.pocket.height).toBe(startGap);
-    expect(SCREEN_CONFIG.height - startButton.y - startButton.height).toBe(2);
+    expect(SCREEN_CONFIG.height - startButton.y - startButton.height).toBe(
+      HOME_SCREEN.startButton.foot,
+    );
     expect(
       inside(insetRect(-HOME_LAYOUT.startFocusOutset, startButton), SCREEN_LAYOUT.screen),
     ).toBe(true);
@@ -142,14 +158,12 @@ describe("home layout", () => {
       const fill = sectionFill(section);
       const safe = insetRect(HOME_LAYOUT.sectionContentPadding, fill);
       const gutter = insetRect(HOME_LAYOUT.sectionBadgeGutter, fill);
-      const cards = hits.map((hit) =>
-        id === "dogs" ? { ...hit, height: hit.height - 2, y: hit.y + 1 } : hit,
-      );
+      const cards = hits;
       const left = Math.min(...cards.map((tile) => tile.x)) - fill.x;
       const right = fill.x + fill.width - Math.max(...cards.map((tile) => tile.x + tile.width));
       expect(Math.abs(left - right), id).toBeLessThanOrEqual(1);
       for (const hit of hits) {
-        const tile = id === "dogs" ? { ...hit, height: hit.height - 2, y: hit.y + 1 } : hit;
+        const tile = hit;
         const at = (offset: Rect, dx: number, dy: number) => ({
           ...offset,
           x: tile.x + offset.x + dx,
@@ -212,7 +226,7 @@ describe("home layout", () => {
 describe("the Pocket's tiles", () => {
   const { box, cells, icon, origin, tileInset } = pocket;
   const gear = Object.keys(gameData.shopGear).length;
-  const tiles = gridRects(cells, gear, origin).map((cell) => insetRect(tileInset, cell));
+  const tiles = gridRects(cells, gear, origin).map((cell) => tileFace(tileInset, cell));
 
   it("centre on the walker tiles' row", () => {
     const middle = (rects: readonly Rect[]) =>
@@ -240,7 +254,8 @@ describe("the Pocket's tiles", () => {
 });
 
 describe("Pet shop", () => {
-  const { board, ...shop } = HOME_LAYOUT.petShop;
+  const { board, hit, ...shop } = HOME_LAYOUT.petShop;
+  const { gate, topBar } = HOME_LAYOUT;
 
   it("holds its board at the top of its frame, under the street sign", () => {
     expect(board.y).toBe(shop.y);
@@ -248,6 +263,64 @@ describe("Pet shop", () => {
     expect(board.x + board.width).toBeLessThanOrEqual(shop.x + shop.width);
     const { streetSign } = HOME_LAYOUT;
     expect(streetSign.y).toBeLessThan(shop.y);
+  });
+
+  // The building's foot sits under the divider strip, cropped at the gate scene's foot with its
+  // press area, which keeps clear of the top bar's press areas.
+  it("presses on its frame inside the gate scene, under the top bar's presses", () => {
+    expect(shop.y + shop.height).toBeGreaterThan(gate.y + gate.height);
+    expect(hit).toEqual({
+      ...shop,
+      height: gate.y + gate.height - Math.max(shop.y, topBar.hitHeight),
+      y: Math.max(shop.y, topBar.hitHeight),
+    });
+    for (const [, button] of homeBarButtons(true)) {
+      expect(rectsOverlap(hit, button.hit)).toBe(false);
+    }
+  });
+});
+
+// Each tile grid presses on cells at least MIN_PRESS tall, side by side, the faces drawn inside
+// them the stacked button gap apart both ways.
+describe.each([
+  [
+    "walker",
+    walkerTiles,
+    walkerTiles.columns,
+    walkerOrigin,
+    HOME_LAYOUT.walkerTileInset,
+    BUTTON_SIZE.stackGap,
+  ],
+  [
+    "dog",
+    dogTiles,
+    Object.keys(gameData.dogs).length,
+    dogOrigin,
+    HOME_LAYOUT.dogTileInset,
+    HOME_SCREEN.dogTiles.faceGapX,
+  ],
+  [
+    "Pocket",
+    pocket.cells,
+    pocket.cells.columns,
+    pocket.origin,
+    pocket.tileInset,
+    BUTTON_SIZE.stackGap,
+  ],
+] as const)("the %s tiles' press cells", (_, grid, count, origin, inset, faceGapX) => {
+  const cells = gridRects(grid, count, origin);
+  it("press at least MIN_PRESS tall and meet without overlapping", () => {
+    expect(grid.cellHeight).toBeGreaterThanOrEqual(MIN_PRESS);
+    expect(cells.flatMap((a, i) => cells.slice(i + 1).filter((b) => rectsOverlap(a, b)))).toEqual(
+      [],
+    );
+  });
+  it("hold faces the stacked button gap apart down, and as far apart across as its face gap", () => {
+    expect(grid.gapY + 2 * inset.y).toBe(BUTTON_SIZE.stackGap);
+    expect(grid.gapX).toBe(grid.gapY);
+    const faces = cells.map((cell) => tileFace(inset, cell));
+    const across = (faces[1]?.x ?? 0) - ((faces[0]?.x ?? 0) + (faces[0]?.width ?? 0));
+    expect(across).toBe(faceGapX);
   });
 });
 
@@ -282,17 +355,19 @@ describe.each([
     expect(buttons.map(([id]) => id)).toEqual(order);
   });
 
-  // The last face on the walk bar's Pause face and each before it the small button gap left of
-  // the next, each centred in a hit area the pitch wide on the middle row, the last cut at the
-  // screen's edge.
-  const pitch = faceSize + BUTTON_SIZE.smallGap;
-  it.each(buttons)("spaces %s's face and hit at the small button gap", (_, button) => {
+  // The last face on the walk bar's Pause face and each before it a press column left of the
+  // next, each centred in a MIN_PRESS square hit area from the screen's top, faces on the middle
+  // row.
+  it.each(buttons)("spaces %s's face and hit a press column apart", (_, button) => {
     const fromRight = buttons.length - 1 - buttons.findIndex(([, b]) => b === button);
-    expect(button.face.x).toBe(WALK_BAR.buttons.pause.faceX - fromRight * pitch);
-    expect(button.hit.x).toBe(button.face.x - BUTTON_SIZE.smallGap / 2);
-    expect(button.hit.width).toBe(Math.min(pitch, SCREEN_CONFIG.width - button.hit.x));
-    expect(button.hit.y).toBe(0);
-    expect(button.hit.height).toBeGreaterThanOrEqual(height);
+    expect(button.face.x).toBe(WALK_BAR.buttons.pause.faceX - fromRight * MIN_PRESS);
+    expect(button.hit).toEqual({
+      height: MIN_PRESS,
+      width: MIN_PRESS,
+      x: button.face.x - (MIN_PRESS - faceSize) / 2,
+      y: 0,
+    });
+    expect(button.hit.height).toBeGreaterThan(height);
     expect(button.face.y + faceSize / 2).toBe(mid);
   });
 
@@ -369,8 +444,9 @@ describe("the top bar's bank", () => {
 
   // The well ends wellClear columns before the first button's face.
   it.each([
-    [999_999, "$999,999"],
-    [1_000_000, "$1M"],
+    [9_999, "$9,999"],
+    [10_000, "$10k"],
+    [99_999, "$99k"],
   ])("shows %i dollars as %s, its well clear of the buttons", (dollars, text) => {
     expect(shown(dollars)).toBe(text);
     const well = bankWell(width(text) * bank.scale);
@@ -460,7 +536,8 @@ describe("a dog tile's text", () => {
   const body = fontFileMetrics("font-body");
   const ink = inkRowsFromCapTop(body) * 2;
   const { dogTile, dogTileInset, dogTiles } = HOME_LAYOUT;
-  const tileHeight = dogTiles.cellHeight - 2 * dogTileInset;
+  const tileHeight = dogTiles.cellHeight - 2 * dogTileInset.y;
+  expect(tileHeight).toBe(HOME_SCREEN.dogTiles.face.height);
 
   it("centres an owned dog's capitals on the face's middle row, its ink inside the tile", () => {
     const nameY = dogTileNameY(body);
@@ -717,13 +794,13 @@ describe("the dog slot sign", () => {
     expect(rectsOverlap(hit, rect)).toBe(false);
   });
 
-  // Its cream inside its board, the board inside its art and a hit area at least 44 a side on
-  // the shop, and its outline inside the shop's, in the gate scene.
+  // Its cream inside its board, the board inside its art and a hit area at least MIN_PRESS a side
+  // on the shop, and its outline inside the shop's, in the gate scene.
   it("nests its cream, board, hit area and outline in the art, the shop and the gate", () => {
     expect(inside(cream, board)).toBe(true);
     expect(inside(board, { ...frameSize(key), ...art })).toBe(true);
     expect(inside(board, hit)).toBe(true);
-    expect(Math.min(hit.height, hit.width)).toBeGreaterThanOrEqual(44);
+    expect(Math.min(hit.height, hit.width)).toBeGreaterThanOrEqual(MIN_PRESS);
     expect(inside(hit, petShop)).toBe(true);
     expect(inside(outline, insetRect(-AFFORD_OUTSET, petShop))).toBe(true);
     expect(

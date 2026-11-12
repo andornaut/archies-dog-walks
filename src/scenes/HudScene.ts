@@ -51,7 +51,7 @@ import {
   TOP_BAR_BUTTONS,
   topBarAction,
   topBarButtonAt,
-  topBarButtonForKey,
+  topBarKey,
 } from "../hud/topBar.ts";
 import {
   type BarButton,
@@ -122,7 +122,7 @@ import { MESSAGE_EVENT, MessageStrip } from "./messageStripView.ts";
 import { listenOnePress } from "./onePress.ts";
 import { BAR_MUTED_EVENT, onSceneEvent } from "./overlay.ts";
 import { OwnerTabs } from "./ownerTabs.ts";
-import { isMuted, markHintShown, profileSave, shownHints, toggleMuted } from "./profileStore.ts";
+import { markHintShown, profileSave, shownHints, toggleMuted } from "./profileStore.ts";
 import { addHtmlDetailCard } from "./questionPanel.ts";
 import { cancelRoadShake } from "./run/hitFx.ts";
 import {
@@ -150,7 +150,6 @@ import {
   imageIcon,
   setDollarAmount,
   settingsIcon,
-  soundIcon,
 } from "./uiKit.ts";
 
 const LAYOUT = SCREEN_LAYOUT;
@@ -266,7 +265,6 @@ export class HudScene extends Scene {
   private owners: OwnerTabs | undefined;
   private pauseGlyph: GameObjects.Graphics | undefined;
   private pauseIcon: GameObjects.Image | undefined;
-  private soundHolder: GameObjects.Container | undefined;
   // The spare treat held, shown in its gear's effect well.
   private spareTreatPip: GameObjects.Sprite | undefined;
   private picture: HudWalk | undefined;
@@ -333,9 +331,7 @@ export class HudScene extends Scene {
     this.barGlyphs = new Map();
     this.barPressActive = undefined;
     WALK_BAR_BUTTONS.forEach((id) => this.addButton(id, TOP_BAR_BUTTONS[id]));
-    // Glyph containers retain their pressed offset when sound or pause artwork changes.
-    this.soundHolder = this.barGlyphs.get("sound");
-    this.showSoundIcon(isMuted(this));
+    // Glyph containers retain their pressed offset when the pause artwork changes.
     const help = buttonIcon(TOP_BAR_BUTTONS.help);
     const helpParts = imageIcon(this, "icon-help", help.x, help.y);
     this.barGlyphs.get("help")?.add(
@@ -408,10 +404,11 @@ export class HudScene extends Scene {
       () => this.pageOver(),
     );
 
-    // A button acts on the press, as the walk's gestures never see it.
+    // A button acts on the press, as the walk's gestures never see it. A showing debuff bar keeps
+    // its rows.
     listenOnePress(this, {
       down: (pointer) => {
-        const button = topBarButtonAt(pointer.x, pointer.y);
+        const button = topBarButtonAt(this.debuffBars.length, pointer.x, pointer.y);
         if (button !== undefined) {
           this.setBarPressed(button, () => pointer.isDown);
           this.press("tap", button);
@@ -420,11 +417,13 @@ export class HudScene extends Scene {
       up: () => this.setBarPressed(undefined),
     });
     this.input.keyboard?.on("keydown", (event: KeyboardEvent) => {
-      const button = topBarButtonForKey(event.repeat, event.code);
-      if (button !== undefined) {
+      const key = topBarKey(event.repeat, event.code);
+      if (key === "pause") {
         const until = this.time.now + MENU_FEEDBACK.pressDipMs;
-        this.setBarPressed(button, () => this.time.now < until);
-        this.press("key", button);
+        this.setBarPressed(key, () => this.time.now < until);
+      }
+      if (key !== undefined) {
+        this.press("key", key);
       }
     });
   }
@@ -460,7 +459,7 @@ export class HudScene extends Scene {
     return walk;
   }
 
-  private press(via: "key" | "tap", button: WalkBarButtonId): void {
+  private press(via: "key" | "tap", button: WalkBarButtonId | "mute"): void {
     const run = this.run;
     if (run === undefined) {
       return;
@@ -505,17 +504,6 @@ export class HudScene extends Scene {
   ): void {
     this.barPressActive = button === undefined ? undefined : active;
     this.barButtons.forEach((control, id) => control.setPressed(id === button));
-  }
-
-  // icon-sound's on or off frame on the sound button's face, for M and Settings too.
-  private showSoundIcon(muted: boolean): void {
-    const holder = this.soundHolder;
-    if (holder === undefined) {
-      return;
-    }
-    holder.removeAll(true);
-    const { x, y } = buttonIcon(TOP_BAR_BUTTONS.sound);
-    holder.add(soundIcon(this, !muted, x, y));
   }
 
   // The icon art when it is loaded, else cream pause bars or play triangle drawn on the face.
@@ -620,7 +608,6 @@ export class HudScene extends Scene {
       effects: effectItemsKey(effects),
       modifiers: view.run.modifiers,
       money: this.shownMoney(view.run),
-      muted: isMuted(this),
       pack: view.run.pack,
       pauseIcon: pauseButtonIcon(pause),
       route: view.run.route,
@@ -628,9 +615,6 @@ export class HudScene extends Scene {
       zone: view.run.zoneIndex,
     };
     if (Object.keys(state).some((key) => state[key] !== this.drawn[key])) {
-      if (state.muted !== this.drawn.muted) {
-        this.showSoundIcon(isMuted(this));
-      }
       if (state.effects !== this.drawn.effects) {
         this.showEffects(effects);
       }

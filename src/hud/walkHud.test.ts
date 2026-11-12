@@ -10,6 +10,7 @@ import { describe, expect, it } from "vitest";
 
 import { dogFaceKey, ownerCardFaceKey } from "../assets/spriteKeys.ts";
 import { gameData } from "../data/index.ts";
+import { MIN_PRESS } from "../data/layout.ts";
 import { SCREEN_CONFIG, SCREEN_LAYOUT } from "../data/screen.ts";
 import type { DebuffId, DogId } from "../data/types.ts";
 import { dollarAmountText } from "../home/home.ts";
@@ -87,10 +88,18 @@ function titleWidth(text: string): number {
 }
 
 describe("the walk bar", () => {
-  it("keeps its cash well, effect wells, holds and buttons inside the bar on screen, none over another", () => {
+  it("keeps its cash well, effect wells, holds and buttons' faces inside the bar on screen, none over another", () => {
     expect(inside(topBar, LAYOUT.screen)).toBe(true);
     const hits = WALK_BAR_BUTTONS.map((id) => BAR.buttons[id].hit);
-    const parts = [WALK_BAR.cash.well, ...BAR.effectWells, ...BAR.effectHolds, ...hits];
+    const faces = WALK_BAR_BUTTONS.map((id) => ({
+      ...BAR.buttons[id].face,
+      height: WALK_BAR.buttonFace.size,
+      width: WALK_BAR.buttonFace.size,
+    }));
+    const parts = [WALK_BAR.cash.well, ...BAR.effectWells, ...BAR.effectHolds, ...faces];
+    for (const hit of hits) {
+      expect(inside(hit, LAYOUT.screen)).toBe(true);
+    }
     for (const hold of BAR.effectHolds) {
       for (const hit of hits) {
         expect(rectsOverlap(hold, hit)).toBe(false);
@@ -162,24 +171,34 @@ describe("the walk bar", () => {
     expect(cash.capsY).toBe(home.bank.capsY);
   });
 
-  it("centres the effect wells down the faces, 2 columns apart, as far from the cash as the first face", () => {
+  it("centres the effect wells down the faces, 1 column apart, as far from the cash as the first press area", () => {
     const { buttonFace, effects } = WALK_BAR;
     expect(2 * effects.y + effects.size).toBe(2 * buttonFace.y + buttonFace.size);
-    expect(effects.pitch - effects.size).toBe(2);
+    expect(effects.pitch - effects.size).toBe(1);
     const cash = { ...WALK_BAR.cash.well, x: topBar.x + WALK_BAR.cash.well.x };
     const left = (BAR.effectWells[0]?.x ?? 0) - (cash.x + cash.width);
     const lastWell = BAR.effectWells.at(-1) ?? cash;
-    const right = BAR.buttons[WALK_BAR_BUTTONS[0]].face.x - (lastWell.x + lastWell.width);
+    const right = BAR.buttons[WALK_BAR_BUTTONS[0]].hit.x - (lastWell.x + lastWell.width);
     expect(left).toBeGreaterThan(0);
     expect(right - left).toBeGreaterThanOrEqual(0);
     expect(right - left).toBeLessThanOrEqual(1);
   });
 
-  it.each(WALK_BAR_BUTTONS)("gives %s a hit area the bar's full height", (id) => {
-    const { hit } = BAR.buttons[id];
-    expect(hit.height).toBe(topBar.height);
-    expect(hit.width).toBeGreaterThanOrEqual(WALK_BAR.minHitWidth);
-  });
+  // Side by side to the bar's right edge, each face centred in its column.
+  it.each(WALK_BAR_BUTTONS.map((id, i) => [id, i] as const))(
+    "gives %s a MIN_PRESS square press area from the bar's top, its face centred in it",
+    (id, i) => {
+      const { face, hit } = BAR.buttons[id];
+      const fromRight = WALK_BAR_BUTTONS.length - 1 - i;
+      expect(hit).toEqual({
+        height: MIN_PRESS,
+        width: MIN_PRESS,
+        x: SCREEN_CONFIG.width - (fromRight + 1) * MIN_PRESS,
+        y: topBar.y,
+      });
+      expect(2 * face.x + WALK_BAR.buttonFace.size).toBe(2 * hit.x + hit.width);
+    },
+  );
 });
 
 describe("evenGapLeft", () => {

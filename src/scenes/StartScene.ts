@@ -1,7 +1,7 @@
 import { clampIndex, itemAt } from "@andornaut/game-kit/arrays";
 import { drawProgressDisplay } from "@andornaut/game-kit/progress/phaser/drawProgressBar";
 import { createProgressDisplay, type ProgressHandle } from "@andornaut/game-kit/progressState";
-import { containsPoint, insetRect, type Rect } from "@andornaut/game-kit/rect";
+import { containsPoint, type Rect } from "@andornaut/game-kit/rect";
 import { Core, type GameObjects, Scene, Scenes, type Time } from "phaser";
 
 import { gearSmallIconKey } from "../assets/iconKeys.ts";
@@ -71,12 +71,14 @@ import {
   homeBarButtons,
   sectionFill,
   slotSignText,
+  tileFace,
   updateModalLayout,
 } from "../home/homeLayout.ts";
 import {
   bubbleSpeech,
   bubbleTurnLine,
   type HomeAction,
+  noticeOrSpeech,
   packBonusLine,
   requiredNotice,
   storageNotice,
@@ -183,7 +185,12 @@ import { HELP_CLOSED_EVENT } from "./HelpScene.ts";
 import { openHelp } from "./helpScreen.ts";
 import { exitGame, HOME_PAGE_OPENING_EVENT, openHomePage } from "./homeBarPress.ts";
 import { addAffordFrame, addModalCard, detailView } from "./homePanels.ts";
-import { addHtmlMirror, type HtmlMirror, MIRROR_CANVAS_DATA } from "./htmlMirror.ts";
+import {
+  addHtmlMirror,
+  type HtmlMirror,
+  MIRROR_CANVAS_DATA,
+  MIRROR_CLIP_DATA,
+} from "./htmlMirror.ts";
 import {
   addPlate,
   addTileBadge,
@@ -222,6 +229,7 @@ import { emphasiseRefusedControl } from "./refuseControl.ts";
 import { nextRunStart } from "./run/runRecorder.ts";
 import { type RunPick, runSceneData } from "./run/runStart.ts";
 import { SCENE_KEYS } from "./sceneKeys.ts";
+import { maskToRect } from "./scrollView.ts";
 import { SETTINGS_CLOSED_EVENT } from "./SettingsScene.ts";
 import { addShopBoard, addShopIdle, type ShopBoard, type ShopIdle } from "./shopIdle.ts";
 import {
@@ -294,6 +302,10 @@ const FOCUS_OUTSET = HOME_SCREEN.focusOutset;
 // The walker's speech bubble: its place, padding and most lines.
 const SPEECH = HOME_LAYOUT.speech;
 
+// The gate scene, which crops the Pet shop group: its foot sits under the divider strip.
+const HERO_CROP: Rect = { ...GATE, width: SCREEN.width, x: 0 };
+const HERO_MASK_KEY = "home-hero-mask";
+
 function walkerIds(): WalkerId[] {
   return walkerOrder(gameData);
 }
@@ -354,7 +366,7 @@ function dogTiles(): Rect[] {
 
 // A dog tile as drawn, inside its hit area.
 function dogFace(hit: Rect): Rect {
-  return { ...hit, height: hit.height - DOG_TILE_INSET * 2, y: hit.y + DOG_TILE_INSET };
+  return tileFace(DOG_TILE_INSET, hit);
 }
 
 // The Pocket section's cells, cheapest first (gearByPrice); each draws its tile inset inside.
@@ -363,11 +375,16 @@ function gearSlots(): Rect[] {
 }
 
 function pocketTile(cell: Rect): Rect {
-  return insetRect(POCKET.tileInset, cell);
+  return tileFace(POCKET.tileInset, cell);
 }
 
 function walkerTiles(): Rect[] {
   return gridRects(WALKER_TILES, walkerIds().length, WALKER_ORIGIN);
+}
+
+// A walker tile as drawn, inside its hit area.
+function walkerFace(hit: Rect): Rect {
+  return tileFace(HOME_LAYOUT.walkerTileInset, hit);
 }
 
 interface Focusable {
@@ -384,7 +401,7 @@ function focusRows(shown: { sign: boolean }): Focusable[][] {
   const rows: Focusable[][] = [
     [...(shown.sign ? [sign] : []), { rect: PET_SHOP, target: { kind: "petShop" } }],
     walkerIds().map((walker, i): Focusable => ({
-      rect: itemAt(walkers, i),
+      rect: walkerFace(itemAt(walkers, i)),
       target: { kind: "walker", walker },
     })),
   ];
@@ -909,11 +926,7 @@ export class StartScene extends Scene {
       return { kind: "walker", walker: itemAt(walkerIds(), walker) };
     }
     const bar = homeBarButtons(this.exit).map(([kind, { hit }]): [Rect, Target] => [hit, { kind }]);
-    const fixed: readonly [Rect, Target][] = [
-      [START_BUTTON, { kind: "start" }],
-      ...bar,
-      [PET_SHOP, { kind: "petShop" }],
-    ];
+    const fixed: readonly [Rect, Target][] = [[START_BUTTON, { kind: "start" }], ...bar];
     if (this.signShown() && containsPoint(SLOT_SIGN.hit, x, y)) {
       return { kind: "slotSign" };
     }
@@ -921,11 +934,13 @@ export class StartScene extends Scene {
     if (control !== undefined) {
       return control;
     }
-    // Under the controls, the bubble and the walker at the gate take taps only on a visit with
-    // walkers to name, with a walker picked to name them.
+    // Under the top bar, and over the Pet shop, the bubble and the walker at the gate take taps
+    // only on a visit with walkers to name, with a walker picked to name them.
     const naming = this.joined.length > 0 && this.save().walker !== null;
-    const onBubble = this.bubbleHits.some((hit) => containsPoint(hit, x, y));
-    return naming && onBubble ? { kind: "bubble" } : undefined;
+    if (naming && this.bubbleHits.some((hit) => containsPoint(hit, x, y))) {
+      return { kind: "bubble" };
+    }
+    return containsPoint(HOME_LAYOUT.petShop.hit, x, y) ? { kind: "petShop" } : undefined;
   }
 
   // The shop over everything below the top bar, framing the item tapped.
@@ -1842,11 +1857,11 @@ export class StartScene extends Scene {
   // The walker's speech bubble over the gate, its tail's tip over the walker.
   private drawBubble(root: GameObjects.Container, save: SaveDocument, reduced: boolean): void {
     const { x } = WALKER_AT_GATE;
-    const speech = this.speech(save);
-    const notice = [
+    const notices = [
       ...requiredNotice(gameData.homeText, requiredUpdate()),
       ...storageNotice(gameData.homeText, storageState(this)),
     ];
+    const speech = noticeOrSpeech(notices, this.speech(save));
     // The speaking owner's name, at 1x, sets their column's width.
     const ownerName = speech.owner === null ? undefined : gameData.dogs[speech.owner].owner.name;
     const nameLabel =
@@ -1856,9 +1871,7 @@ export class StartScene extends Scene {
     const nameInk = nameLabel === undefined ? undefined : inkSpan(nameLabel);
     const column = nameInk === undefined ? null : ownerColumn(nameInk.right - nameInk.left);
     // A gear's focus line, "Running shoes: …", sets the gear's name in its pill.
-    const paragraphs = [...notice, ...speech.paragraphs].map((paragraph) =>
-      withNamePills(gameData, paragraph),
-    );
+    const paragraphs = speech.paragraphs.map((paragraph) => withNamePills(gameData, paragraph));
     const { faced, lines } = withProbe(this, BODY_TEXT, (probe) => {
       const measure = (line: string) => {
         setPixelText(probe, line);
@@ -1866,7 +1879,7 @@ export class StartScene extends Scene {
       };
       return bubbleLines(measure, column, paragraphs);
     });
-    const top = GATE.y + SPEECH.top;
+    const top = SPEECH.top;
     // The bubble goes under the words, which set its size.
     const bubble = this.add.container(0, 0);
     root.add(bubble);
@@ -1955,6 +1968,7 @@ export class StartScene extends Scene {
   private drawPetShop(root: GameObjects.Container, save: SaveDocument): void {
     const view = this.tileView(root, "petShop");
     onCanvas(view.container);
+    maskToRect(this, HERO_MASK_KEY, HERO_CROP, view.container);
     const faces = this.addPressFaces(SHOP_ART.petShop, PET_SHOP);
     if (faces !== undefined) {
       const [normal, pressed] = faces;
@@ -1998,6 +2012,9 @@ export class StartScene extends Scene {
     }
     const { art, board, key, pressDrop, scale } = SLOT_SIGN;
     const view = this.tileView(root, "slotSign");
+    // Cropped with the Pet shop it hangs from, in the HTML as on the canvas.
+    maskToRect(this, HERO_MASK_KEY, HERO_CROP, view.container);
+    view.container.setData(MIRROR_CLIP_DATA, HERO_CROP);
     const faces = this.addPressFaces(key, art);
     if (faces === undefined) {
       const colours = { border: PALETTE.ink, fill: PALETTE.cream };
@@ -2218,7 +2235,7 @@ export class StartScene extends Scene {
     const reduced = currentSettings(this).reducedMotion;
     const tiles = walkerTiles();
     walkerIds().forEach((id, i) => {
-      const rect = itemAt(tiles, i);
+      const rect = walkerFace(itemAt(tiles, i));
       const { x, y } = rect;
       const tile = walkerTile(gameData, save, id);
       const { art, badge, state } = itemTileLook(tile);

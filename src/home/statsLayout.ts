@@ -1,7 +1,7 @@
 import type { Rect } from "@andornaut/game-kit/rect";
 import { type FontMetrics, inkRowsOfLines } from "@andornaut/game-kit/text/bitmapFont";
 
-import { LOGBOOK_PAGE } from "../data/layout.ts";
+import { LOGBOOK_PAGE, MIN_PRESS } from "../data/layout.ts";
 import { helpCapDy } from "../ui/labelHelpGap.ts";
 import { type ScrollbarRects, scrollbarRects } from "../ui/scrollbar.ts";
 import { BADGE_STRIP, type WallCellLines } from "./badgesView.ts";
@@ -240,13 +240,13 @@ export function wallLineTops(
 }
 
 // A wall row's height for a badge whose text lines' capitals' tops are tops (wallLineTops): as
-// tall as the badge with badgeTop over and under it, or as the text with its last line's pitch
-// and pad under it, whichever is taller.
+// tall as the badge with badgeTop over and under it, as the text with its last line's pitch and
+// pad under it, or as a press area (MIN_PRESS), whichever is tallest.
 export function wallRowHeight(tops: readonly number[]): number {
   const { badgeTop } = STATS_LAYOUT.wall;
   const { lineHeight, pad, y } = STATS_LAYOUT.wallText;
   const last = tops.at(-1) ?? y - lineHeight;
-  return Math.max(BADGE_STRIP.badgeSize + 2 * badgeTop, last + lineHeight + pad);
+  return Math.max(BADGE_STRIP.badgeSize + 2 * badgeTop, last + lineHeight + pad, MIN_PRESS);
 }
 
 // The scrollbar's track and thumb for content max pixels taller than the view, scrolled y, or

@@ -7,6 +7,7 @@ import { gameData } from "../data/index.ts";
 import {
   DEBUFF_BAR,
   DOG_CARD_PARTS,
+  MIN_PRESS,
   OWNER_TAB,
   SPARE_TREAT_PIP,
   WALK_BAR_PARTS,
@@ -27,8 +28,8 @@ import { heartRows } from "./hudView.ts";
 // under the cards. Every position is the art's, in screen pixels from the bar's top-left
 // corner, the debuff bar's or the card's; text y is the top of the capitals.
 
-// The walk bar's buttons, left to right.
-export const WALK_BAR_BUTTONS = ["help", "sound", "settings", "pause"] as const;
+// The walk bar's buttons, left to right. Mute is in the settings and on the M key.
+export const WALK_BAR_BUTTONS = ["help", "settings", "pause"] as const;
 export type WalkBarButtonId = (typeof WALK_BAR_BUTTONS)[number];
 
 // The cash well's ink columns, which the home top bar's bank well shares.
@@ -53,17 +54,23 @@ export function evenGapLeft(left: number, right: number, width: number): number 
 
 // The walk bar's three sections, left to right: the cash well, the effect wells and the
 // buttons. The cash well and the buttons keep their places at the bar's ends, and the effect
-// wells sit evenly between the cash well's right edge and the first button's face, gap apart,
-// centred down the button faces' rows.
+// wells sit evenly between the cash well's right edge and the first button's press area, gap
+// apart, centred down the button faces' rows.
 const CASH_WELL = {
   height: TOP_BAR_WELL.height,
   width: CASH_INK.right + 1 + TOP_BAR_WELL.lip - TOP_BAR_WELL.x,
   x: TOP_BAR_WELL.x,
   y: TOP_BAR_WELL.y,
 } as const;
-const BUTTONS = WALK_BAR_PARTS.buttons satisfies Readonly<
-  Record<WalkBarButtonId, { faceX: number; hitWidth: number; hitX: number }>
->;
+// A button fromRight columns in from the last (0 the last): its press area a MIN_PRESS column,
+// side by side to the bar's right edge, and its face centred across it.
+function walkBarButton(fromRight: number) {
+  const hitX = SCREEN_CONFIG.width - (fromRight + 1) * MIN_PRESS;
+  return { faceX: hitX + (MIN_PRESS - TOP_BAR_FACE.size) / 2, hitWidth: MIN_PRESS, hitX };
+}
+const BUTTONS = Object.fromEntries(
+  WALK_BAR_BUTTONS.map((id, i) => [id, walkBarButton(WALK_BAR_BUTTONS.length - 1 - i)]),
+) as Readonly<Record<WalkBarButtonId, ReturnType<typeof walkBarButton>>>;
 const EFFECTS = WALK_BAR_PARTS.effects;
 const EFFECT_SIZE = EFFECTS.size;
 const EFFECT_GAP = EFFECTS.gap;
@@ -77,22 +84,22 @@ const EFFECT_ROW = {
 } as const;
 const EFFECTS_X = evenGapLeft(
   CASH_WELL.x + CASH_WELL.width,
-  BUTTONS[WALK_BAR_BUTTONS[0]].faceX,
+  BUTTONS[WALK_BAR_BUTTONS[0]].hitX,
   EFFECT_SPAN,
 );
 
 // The walk bar as ui-walk-bar draws it, in bar pixels; every position the HUD uses comes from
-// this table. buttons: each button's face x and its hit area's x and width, the hit areas the
-// bar's full height and minHitWidth wide or more (narrower than a 44px square, so four fit beside
-// six effect wells), side by side to the bar's right edge, each face buttonFace.size square on
-// row buttonFace.y, as the start screen's top bar sets its faces, centred in its hit area. cash:
+// this table. buttons: each button's face x and its hit area's x and width, the hit areas
+// MIN_PRESS square from the bar's top, so they reach 8 rows under the bar, side by side to the
+// bar's right edge, each face buttonFace.size square on row buttonFace.y, as the start screen's
+// top bar sets its faces, centred in its hit area. cash:
 // the start screen's bank well, the "$" and the amount at scale, no wider than room (a walk's
 // cash stays under $1,000), centred across the well's ink columns (ink.left to ink.right), their
 // capitals' top on capsY, as the start screen sets its bank (wellCapsTop). effects: a well of
 // size at pitch from x along y for every effect a walk can have (EFFECT_WELLS), each icon
 // iconSize at icon,icon in its well; the holds run side by side from holdInset left of the first
-// well up to the first button, each from its well's left edge, the bar's full height, a gap
-// between wells going to the hold on its left.
+// well up to the first button's press area, each from its well's left edge, the bar's full
+// height, a gap between wells going to the hold on its left.
 export const WALK_BAR = {
   buttonFace: TOP_BAR_FACE,
   buttons: BUTTONS,
@@ -104,7 +111,6 @@ export const WALK_BAR = {
     well: CASH_WELL,
   },
   effects: { ...EFFECT_ROW, pitch: EFFECT_SIZE + EFFECT_GAP, x: EFFECTS_X },
-  minHitWidth: WALK_BAR_PARTS.minHitWidth,
 } as const;
 
 // A spare treat held shows as the road's smallest treat, size square, in the bottom-right
@@ -147,7 +153,7 @@ export function walkBarLayout(bar: Rect, wells = EFFECT_WELLS): WalkBarLayout {
   const buttons = Object.fromEntries(
     WALK_BAR_BUTTONS.map((id) => {
       const { faceX, hitWidth, hitX } = WALK_BAR.buttons[id];
-      const hit = { height: bar.height, width: hitWidth, x: bar.x + hitX, y: bar.y };
+      const hit = { height: MIN_PRESS, width: hitWidth, x: bar.x + hitX, y: bar.y };
       return [id, { face: at({ x: faceX, y: buttonFace.y }), hit }];
     }),
   ) as Record<WalkBarButtonId, BarButton>;

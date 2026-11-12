@@ -16,8 +16,12 @@ const END = END_SCREEN;
 const PANEL: Rect = END.panel;
 const RIBBON = END.ribbon;
 
+// The return button: Start walk's, in its place.
+const BUTTON = HOME_LAYOUT.startButton;
+
 export const END_LAYOUT = {
-  badges: END.badges,
+  // The badge strip, its bottom results.buttonGap over the return button.
+  badges: { ...END.badges, y: BUTTON.y - END.results.buttonGap - END.badges.height },
   breakdown: {
     amountRight: END.breakdown.amountRight,
     label: END.breakdown.label,
@@ -25,7 +29,7 @@ export const END_LAYOUT = {
     top: PANEL.y + END.breakdown.top,
   },
   // The wide return button stays below the badge strip.
-  button: { ...HOME_LAYOUT.startButton, y: END.buttonY },
+  button: BUTTON,
   // And Start walk's label, at its size and on its caps.
   buttonLabel: HOME_LAYOUT.startLabel,
   logo: END.logo,

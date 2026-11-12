@@ -95,10 +95,14 @@ describe("a walker tile's name plate", () => {
   const widest = WALKERS.reduce((a, b) => (nameWidth(b) > nameWidth(a) ? b : a));
   it.each([widest])("sets %s's name inside its tile", (walker) => {
     const { name } = gameData.walkers[walker];
-    const { walkerTile: tile, walkerTiles } = HOME_LAYOUT;
-    expect(bodyTextWidth(2, name) + 2 * PLATE_PAD).toBeLessThanOrEqual(walkerTiles.cellWidth);
+    const { walkerTile: tile, walkerTileInset: inset, walkerTiles } = HOME_LAYOUT;
+    const face = {
+      height: walkerTiles.cellHeight - 2 * inset.y,
+      width: walkerTiles.cellWidth - 2 * inset.x,
+    };
+    expect(bodyTextWidth(2, name) + 2 * PLATE_PAD).toBeLessThanOrEqual(face.width);
     const capHeight = fontFileMetrics("font-body").capHeight * 2;
-    expect(tile.plateY + capHeight + PLATE_PAD).toBeLessThanOrEqual(walkerTiles.cellHeight);
+    expect(tile.plateY + capHeight + PLATE_PAD).toBeLessThanOrEqual(face.height);
   });
 });
 
@@ -113,6 +117,6 @@ describe("the text of an item not owned fits", () => {
   it.each([dearest])("sets %s's price on its plate inside its Pocket tile", (gear) => {
     const { cells, tileInset } = HOME_LAYOUT.pocket;
     const plate = priceWidth(gear) + 2 * PLATE_PAD;
-    expect(plate).toBeLessThanOrEqual(cells.cellWidth - 2 * tileInset);
+    expect(plate).toBeLessThanOrEqual(cells.cellWidth - 2 * tileInset.x);
   });
 });

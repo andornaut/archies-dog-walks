@@ -5,6 +5,7 @@ import { inkRowsFromCapTop } from "@andornaut/game-kit/text/bitmapFont";
 import { describe, expect, it } from "vitest";
 
 import { gameData } from "../data/index.ts";
+import { SHOP_PAGE } from "../data/layout.ts";
 import type { DogId, LiveTuning } from "../data/types.ts";
 import { TITLE_CAP_ROWS } from "../hud/walkHud.ts";
 import { scrollMax } from "../input/listScroll.ts";
@@ -296,30 +297,30 @@ describe("the shop's message", () => {
     );
   });
 
-  // The plate sits at the top of the list area, under the tabs, across the tabs' span, and ends
-  // over every tab's first row as far under it as the selected tab's frame ends over it.
+  // The plate sits at the top of the list area, listClear rows under the tabs' press areas,
+  // across the tabs' span, and ends listGap rows over every tab's first row.
   it("lies across the list's top, under the tabs, over each tab's first row", () => {
     const { list, tab } = SHOP_LAYOUT;
-    const tabBottom = tab.drawY + tab.drawHeight + SELECT_OUTSET;
     expect(plate).toMatchObject({ width: tab.span, x: tab.x, y: list.rect.y });
+    expect(plate.y - (tab.y + tab.height)).toBe(SHOP_PAGE.tab.listClear);
     for (const rows of [SHOP_LAYOUT.dogs.slotRows, SHOP_LAYOUT.gear.rows]) {
-      expect(rows.y - (plate.y + plate.height)).toBe(plate.y - tabBottom);
+      expect(rows.y - (plate.y + plate.height)).toBe(SHOP_PAGE.tab.listGap);
     }
   });
 });
 
-// Every heading's capitals sit as far over its rows as under the selected tab or the rows
-// before it, and the first heading's are centred on the message's plate.
+// Every heading's capitals sit as far over its rows as under listGap rows over the plate's strip
+// or the rows before it, and the first heading's are centred on the message's plate.
 describe("the shop's headings", () => {
   const caps = TITLE_CAP_ROWS * TEXT_SCALE;
-  const { dogs, gear, message, tab } = SHOP_LAYOUT;
-  const tabBottom = tab.drawY + tab.drawHeight + SELECT_OUTSET;
+  const { dogs, gear, message } = SHOP_LAYOUT;
+  const stripTop = message.plate.y - SHOP_PAGE.tab.listGap;
   const lastSlotBottom = (count: number) =>
     dogs.slotRows.y + (count - 1) * dogs.slotRows.pitch + dogs.slotRows.height;
   it.each<[string, number, number, number]>([
-    ["dog slots", dogs.slotHeadingY, tabBottom, dogs.slotRows.y],
+    ["dog slots", dogs.slotHeadingY, stripTop, dogs.slotRows.y],
     ["dogs", dogs.dogHeadingY, lastSlotBottom(allSlots.length), dogs.dogRows.y],
-    ["gear", gear.headingY, tabBottom, gear.rows.y],
+    ["gear", gear.headingY, stripTop, gear.rows.y],
   ])("%s: as far over its rows as under what is above it", (_, y, above, rows) => {
     expect(rows - (y + caps)).toBe(y - above);
   });
@@ -341,7 +342,7 @@ describe("the shop's tabs", () => {
       SHOP_LAYOUT.panel.x + SHOP_LAYOUT.panel.width,
     );
     expect(above).toBeGreaterThanOrEqual(6);
-    expect(below).toBe(6);
+    expect(below).toBeGreaterThanOrEqual(6);
   });
 
   // The shop's tabs and the Logbook's split the same span, their faces the small button gap
@@ -369,9 +370,7 @@ describe("the shop's tabs", () => {
     for (const tab of tabs) {
       expect(Math.min(tab.width, tab.height)).toBeGreaterThanOrEqual(MIN_TAP_SIZE);
       expect(rectsOverlap(tab, SHOP_LAYOUT.close.hit)).toBe(false);
-      expect(
-        tab.y - (SHOP_LAYOUT.close.hit.y + SHOP_LAYOUT.close.hit.height),
-      ).toBeGreaterThanOrEqual(4);
+      expect(tab.y).toBe(SHOP_LAYOUT.close.hit.y + SHOP_LAYOUT.close.hit.height);
     }
   });
 });

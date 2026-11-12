@@ -6,6 +6,7 @@ import { buildLabel } from "@andornaut/game-kit/web/build/buildLabel";
 import { describe, expect, it } from "vitest";
 
 import { gameData } from "../data/index.ts";
+import { MIN_PRESS } from "../data/layout.ts";
 import { SCREEN_CONFIG } from "../data/screen.ts";
 import { DEFAULT_SETTINGS } from "../save/settings.ts";
 import { defined } from "../testing/defined.ts";
@@ -237,10 +238,10 @@ describe("the settings card", () => {
   // The row's parts in reading order: nothing overlaps, and the label's line and the note's
   // lines run left of the control or the percentage.
   it.each(SHIPPED_ROWS.map((row, i) => [row.label, i] as const))(
-    "makes the %s row a tap target at least 44 px each way, its parts apart",
+    "makes the %s row a tap target at least MIN_PRESS each way, its parts apart",
     (_, i) => {
       const rect = rows[i]?.rect;
-      expect(Math.min(rect?.height ?? 0, rect?.width ?? 0)).toBeGreaterThanOrEqual(44);
+      expect(Math.min(rect?.height ?? 0, rect?.width ?? 0)).toBeGreaterThanOrEqual(MIN_PRESS);
       const parts = new Map(rowParts(i));
       const control = parts.get("control") ?? parts.get("percentage");
       for (const [name, ink] of parts) {
@@ -309,11 +310,11 @@ describe.each([
   });
 
   // A tap on the label lands on the card outside every row, so it neither acts nor closes it.
-  it("lies under the last row, which stays a tap target at least 44 px tall", () => {
+  it("lies under the last row, which stays a tap target at least MIN_PRESS tall", () => {
     const labelTop =
       buildLabelY + Math.min(...labelGlyphs.map((glyph) => glyph.yOffset)) - bodyFont.capTop;
     expect(labelTop).toBeGreaterThanOrEqual(last.rect.y + last.rect.height);
-    expect(last.rect.height).toBeGreaterThanOrEqual(44);
+    expect(last.rect.height).toBeGreaterThanOrEqual(MIN_PRESS);
   });
 });
 

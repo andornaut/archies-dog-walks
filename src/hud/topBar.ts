@@ -5,14 +5,14 @@ import { isMuteKey, isPauseKey } from "../input/keyBindings.ts";
 import type { PressMode } from "../input/pointerTracking.ts";
 import {
   type BarButton,
+  debuffBarRects,
   WALK_BAR_BUTTONS,
   type WalkBarButtonId,
   walkBarLayout,
 } from "./walkHud.ts";
 
 // The walk bar's buttons (walkHud.ts), left to right. A press in a button's hit area is that
-// button's and never a road gesture. "sound" toggles mute, as the M key and the Settings switch
-// do.
+// button's and never a road gesture.
 export const TOP_BAR_BUTTONS: Readonly<Record<WalkBarButtonId, BarButton>> = walkBarLayout(
   SCREEN_LAYOUT.topBar,
 ).buttons;
@@ -22,18 +22,25 @@ export function buttonIcon(button: BarButton): Point {
   return { x: button.face.x + 2, y: button.face.y + 1 };
 }
 
-// The button a press at (x, y) lands on, if any.
-export function topBarButtonAt(x: number, y: number): WalkBarButtonId | undefined {
+// The button a press at (x, y) lands on, if any, with debuffs debuff bars showing: a showing
+// debuff bar keeps its rows from the buttons' press areas, which reach under the walk bar.
+export function topBarButtonAt(debuffs: number, x: number, y: number): WalkBarButtonId | undefined {
+  if (debuffBarRects(SCREEN_LAYOUT.topBar, debuffs).some((bar) => containsPoint(bar, x, y))) {
+    return undefined;
+  }
   return WALK_BAR_BUTTONS.find((press) => containsPoint(TOP_BAR_BUTTONS[press].hit, x, y));
 }
 
-// M mutes, and P and Escape are the pause button's. A held key's repeats press nothing.
-export function topBarButtonForKey(repeat: boolean, code: string): WalkBarButtonId | undefined {
+// A walk key: M mutes, and P and Escape are the pause button's. A held key's repeats press
+// nothing.
+export type TopBarKey = "mute" | "pause";
+
+export function topBarKey(repeat: boolean, code: string): TopBarKey | undefined {
   if (repeat) {
     return undefined;
   }
   if (isMuteKey(code)) {
-    return "sound";
+    return "mute";
   }
   return isPauseKey(code) ? "pause" : undefined;
 }
@@ -89,27 +96,28 @@ export function gameplayAllowed(pause: RunPause): boolean {
 export type TopBarAction =
   "closeSettings" | "mute" | "openHelp" | "openMenu" | "openSettings" | "resume";
 
-// What a walk-bar button does, pressed by a tap or by its key. Every button works whenever the
-// bar is in view, under every card and overlay that leaves it lit: sound and M mute or unmute,
-// Help and Settings open help and the settings, and pause opens the menu, or resumes while the
-// menu, the question or the settings are up. Over the settings, Help opens help in their place
-// and Settings closes them, as a home page's own top bar button does. Help covers the bar, so a
-// tap there is its, and so are P and Escape, which close it; M still mutes under it. The
-// settings take P, Escape and M themselves. Under an explanation's detail card a tap on a button
-// presses it as with nothing open, and its release closes the card, as any tap does.
+// What a walk-bar button does, pressed by a tap or by its key (the pause button's P and Escape,
+// and M, which mutes or unmutes). Every button works whenever the bar is in view, under every
+// card and overlay that leaves it lit: Help and Settings open help and the settings, and pause
+// opens the menu, or resumes while the menu, the question or the settings are up. Over the
+// settings, Help opens help in their place and Settings closes them, as a home page's own top
+// bar button does. Help covers the bar, so a tap there is its, and so are P and Escape, which
+// close it; M still mutes under it. The settings take P, Escape and M themselves. Under an
+// explanation's detail card a tap on a button presses it as with nothing open, and its release
+// closes the card, as any tap does.
 export function topBarAction(
   pause: RunPause,
   via: "key" | "tap",
-  button: WalkBarButtonId,
+  button: WalkBarButtonId | "mute",
 ): TopBarAction | undefined {
   if (pause.menu === "help") {
-    return via === "key" && button === "sound" ? "mute" : undefined;
+    return button === "mute" ? "mute" : undefined;
   }
   if (pause.menu === "settings" && via === "key") {
     return undefined;
   }
   switch (button) {
-    case "sound":
+    case "mute":
       return "mute";
     case "help":
       return "openHelp";

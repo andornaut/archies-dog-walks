@@ -10,10 +10,12 @@ import { helpCapDy } from "../ui/labelHelpGap.ts";
 import { type ScrollbarRects, scrollbarRects } from "../ui/scrollbar.ts";
 import { SELECT_OUTSET } from "../ui/selection.ts";
 import { TEXT_SCALE, TEXT_STYLE } from "../ui/textFit.ts";
+import { HOME_LAYOUT } from "./homeLayout.ts";
 
 // The Pet shop page under the home screen's top bar, which stays in view with the bank:
 // a card with its title and close control, the Dogs and Gear tabs, and each tab's
-// lists. Rows are hit areas at least 44 tall; tabs draw 28 tall in a 44-tall hit area. The
+// lists. Rows are hit areas at least MIN_PRESS tall; tabs draw 28 tall in a MIN_PRESS-tall hit
+// area. The
 // lists scroll in the list area under the tabs, laid out here as they sit scrolled to the top.
 // The Logbook wears the same page (src/home/statsLayout.ts).
 const SHOP = SHOP_PAGE;
@@ -25,8 +27,12 @@ const PAGE_TITLE = {
   x: PANEL.x + SHOP.title.inset,
   y: PANEL.y + SHOP.title.inset,
 };
+// The close control's press area starts under the top bar's, which reach over the card's top.
+const CLOSE = pageCloseControl(PANEL, SHOP.closeInset);
+const CLOSE_TOP = Math.max(CLOSE.hit.y, HOME_LAYOUT.topBar.hitHeight);
 const PAGE_CLOSE = {
-  ...pageCloseControl(PANEL, SHOP.closeInset),
+  ...CLOSE,
+  hit: { ...CLOSE.hit, y: CLOSE_TOP },
   x: PANEL.x + PANEL.width - SHOP.closeInset - BUTTON_SIZE.icon.face,
   y: PANEL.y + SHOP.closeInset,
 };
@@ -34,24 +40,24 @@ const ROW_X = PANEL.x + SHOP.row.inset;
 // Rows run to the tabs' right edge, or with a scrollbar stop 6px short of its track.
 const ROW_WIDTH = SHOP.row.width;
 const ROW_SCROLL_WIDTH = SHOP.row.scrollWidth;
-// Both pages keep every tab target below the close target, with tab.closeGap clear between them.
-const TAB_Y = PAGE_CLOSE.hit.y + PAGE_CLOSE.hit.height + SHOP.tab.closeGap;
+// Both pages keep every tab target directly below the close target, each face centred down its
+// target.
+const TAB_Y = PAGE_CLOSE.hit.y + PAGE_CLOSE.hit.height;
 const TAB = {
   drawHeight: SHOP.tab.drawHeight,
-  drawY: TAB_Y + SHOP.tab.drawDy,
+  drawY: TAB_Y + Math.floor((SHOP.tab.height - SHOP.tab.drawHeight) / 2),
   gap: SHOP.tab.gap,
   height: SHOP.tab.height,
   span: ROW_WIDTH,
   x: ROW_X,
   y: TAB_Y,
 };
-// A selected tab's frame and shadow end SELECT_OUTSET under its face. TAB_GAP clear rows
-// separate the selected tab from the list; the close target determines its header clearance.
+// A selected tab's frame and shadow end SELECT_OUTSET under its face, within its target.
 const TAB_BOTTOM = TAB.drawY + TAB.drawHeight + SELECT_OUTSET;
 const TAB_GAP = SHOP.tab.listGap;
-// The list area: from TAB_GAP under the tabs to the card's inner edge, from the card's frame
-// to 2px short of the scrollbar's track, or with no scrollbar to the card's frame.
-const LIST_Y = TAB_BOTTOM + TAB_GAP;
+// The list area: from listClear rows under the tabs' targets to the card's inner edge, from the
+// card's frame to 2px short of the scrollbar's track, or with no scrollbar to the card's frame.
+const LIST_Y = Math.max(TAB_BOTTOM, TAB.y + TAB.height) + SHOP.tab.listClear;
 const LIST = {
   height: PANEL.y + PANEL.height - SHOP.list.frame - LIST_Y,
   width: SHOP.list.width,
@@ -66,10 +72,11 @@ const PLATE = { height: SHOP.plateHeight, width: TAB.span, x: TAB.x, y: LIST.y }
 const FIRST_HEADING_Y = PLATE.y + Math.floor((PLATE.height - TITLE_CAP_ROWS * TEXT_SCALE) / 2);
 const FIRST_ROWS_Y = PLATE.y + PLATE.height + TAB_GAP;
 // Every heading sits in a strip like the first's: HEADING_TO_ROWS above its rows, and
-// ROWS_TO_HEADING under the rows before it, as far as the first heading is under the tabs. The
-// dogs follow however many slots there are.
+// ROWS_TO_HEADING under the rows before it, TAB_GAP over a strip the plate's height with the
+// heading's capitals centred on it as the first's are. The dogs follow however many slots there
+// are.
 const HEADING_TO_ROWS = FIRST_ROWS_Y - FIRST_HEADING_Y;
-const ROWS_TO_HEADING = FIRST_HEADING_Y - TAB_BOTTOM;
+const ROWS_TO_HEADING = TAB_GAP + FIRST_HEADING_Y - PLATE.y;
 const SLOT_HEADING_Y = FIRST_HEADING_Y;
 // A list's rows, height tall, the stacked button gap apart.
 const listRows = ({ height }: { height: number }) => ({

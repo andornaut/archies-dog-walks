@@ -15,6 +15,7 @@ import {
   type HomeAction,
   HOW_TO_WALKS,
   messageLine,
+  noticeOrSpeech,
   packBonusLine,
   requiredNotice,
   storageNotice,
@@ -267,6 +268,22 @@ describe("requiredNotice", () => {
     ["unavailable", [gameData.homeText.noticeUpdateNeeded]],
   ])("says for a required update %s %j", (state, expected) => {
     expect(requiredNotice(gameData.homeText, state)).toEqual(expected);
+  });
+});
+
+describe("noticeOrSpeech", () => {
+  const text = gameData.homeText;
+  const speech = { owner: "kilo" as DogId, paragraphs: ["Woof."] };
+  it.each<[string, string[], { owner: DogId | null; paragraphs: string[] }]>([
+    ["the speech with no notice", [], speech],
+    ["a notice alone, with no owner", [text.unsaved], { owner: null, paragraphs: [text.unsaved] }],
+    [
+      "the first of two notices alone",
+      [text.noticeUpdateNeeded, text.unsaved],
+      { owner: null, paragraphs: [text.noticeUpdateNeeded] },
+    ],
+  ])("shows %s", (_name, notices, expected) => {
+    expect(noticeOrSpeech(notices, speech)).toEqual(expected);
   });
 });
 

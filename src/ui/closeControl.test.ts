@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import { MIN_PRESS } from "../data/layout.ts";
 import { inside } from "../testing/rects.ts";
 import { closeControl, closeFace, pageCloseControl } from "./closeControl.ts";
 
@@ -15,7 +16,13 @@ describe("closeControl", () => {
       x: card.x + card.width - 6 - 20,
       y: card.y + 6,
     });
-    expect(control.hit).toEqual({ height: 44, width: 44, x: card.x + card.width - 44, y: card.y });
+    const side = MIN_PRESS;
+    expect(control.hit).toEqual({
+      height: side,
+      width: side,
+      x: card.x + card.width - side,
+      y: card.y,
+    });
     expect(inside(closeFace(control), control.hit)).toBe(true);
     expect(inside(control.hit, card)).toBe(true);
   });
@@ -23,10 +30,13 @@ describe("closeControl", () => {
   it.each([
     ["a page", screen, pageCloseControl(screen)],
     ["a page with its face 9 down", screen, pageCloseControl(screen, 9)],
-  ])("sits its face and its 44x44 target in %s's top-right corner", (_, frame, control) => {
-    expect(control.hit).toMatchObject({ height: 44, width: 44, y: frame.y });
-    expect(control.hit.x + control.hit.width).toBe(frame.x + frame.width);
-    expect(inside(closeFace(control), control.hit)).toBe(true);
-    expect(inside(control.hit, frame)).toBe(true);
-  });
+  ])(
+    "sits its face and its MIN_PRESS square target in %s's top-right corner",
+    (_, frame, control) => {
+      expect(control.hit).toMatchObject({ height: MIN_PRESS, width: MIN_PRESS, y: frame.y });
+      expect(control.hit.x + control.hit.width).toBe(frame.x + frame.width);
+      expect(inside(closeFace(control), control.hit)).toBe(true);
+      expect(inside(control.hit, frame)).toBe(true);
+    },
+  );
 });

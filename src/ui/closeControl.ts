@@ -4,7 +4,7 @@ import { PAGE_CLOSE_FACE } from "../data/layout.ts";
 import { BUTTON_SIZE } from "./buttonGeometry.ts";
 import { MODAL } from "./modalGeometry.ts";
 
-// Modal close faces sit 6px inside the top-right corner, within a 44px corner target.
+// Modal close faces sit 6px inside the top-right corner, within a MIN_PRESS square corner target.
 // Full pages keep their separate top-right control placement.
 const FACE_SIZE = BUTTON_SIZE.icon.face;
 const PAGE_FACE = PAGE_CLOSE_FACE;

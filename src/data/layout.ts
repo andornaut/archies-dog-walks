@@ -4,19 +4,24 @@
 // fixed by the art drawn at that size or place; change them only with the art.
 
 import type { Point, Rect } from "@andornaut/game-kit/rect";
+import { HIT_RULE } from "@andornaut/game-kit/ui/hitAreas";
 import { BUTTON_GAP, SMALL_BUTTON_GAP, STACK_BUTTON_GAP } from "@andornaut/game-kit/ui/spacing";
 
 // Shared controls
 
+// The least side of every press area, and the height of every text button's face: every game's.
+// Exempt: the walk bar's effect wells (tap to explain) and the debuff bars (hold only).
+export const MIN_PRESS = HIT_RULE.minTarget;
+
 // Standard button sizes.
 export const BUTTON_SIZE = {
   // A card's or modal's button.
-  compact: { height: 44, width: 128 },
+  compact: { height: MIN_PRESS, width: 128 },
   // The gap between neighbouring standard buttons' faces side by side, the compact and modal
   // buttons counting as standard: every game's.
   gap: BUTTON_GAP,
   // art: ui-icon-button's face side, the glyph drawn on it, and the square press target round it.
-  icon: { face: 20, glyph: 16, target: 44 },
+  icon: { face: 20, glyph: 16, target: MIN_PRESS },
   // How far a pressed face sinks.
   press: 2,
   // The gap between neighbouring faces, side by side or stacked, where either is smaller than a
@@ -26,7 +31,7 @@ export const BUTTON_SIZE = {
   // game's.
   stackGap: STACK_BUTTON_GAP,
   // An overlay's or a screen's full-width button.
-  wide: { height: 44, width: 296 },
+  wide: { height: MIN_PRESS, width: 296 },
 } as const;
 
 // The left edge of an overlay's full-width button.
@@ -158,32 +163,12 @@ export const HUD_REGIONS = {
   zoneProgressHeight: 4,
 } as const;
 
-// Exempt from the button gap rule: the walk bar's faces are 14 apart, so four fit beside six wells.
-const WALK_BAR_FACE_GAP = 14;
-
-// Exempt from the button gap rule: the walk bar's effect wells are 2 apart.
-const WALK_BAR_WELL_GAP = 2;
-
-// art: the walk bar's last button face's left edge, and every face's side.
-const WALK_BAR_FACE = { lastX: 333, size: 20 } as const;
-
-// A walk bar button fromRight faces in from the last (0 the last): its face's left edge, and its
-// press area the faces' pitch wide, centred on the face.
-function walkBarButton(fromRight: number) {
-  const pitch = WALK_BAR_FACE.size + WALK_BAR_FACE_GAP;
-  const faceX = WALK_BAR_FACE.lastX - fromRight * pitch;
-  return { faceX, hitWidth: pitch, hitX: faceX - WALK_BAR_FACE_GAP / 2 };
-}
+// Exempt from the button gap rule: the walk bar's effect wells are 1 apart, so six fit between
+// the cash well and the buttons' press areas.
+const WALK_BAR_WELL_GAP = 1;
 
 // The walk bar, in bar pixels.
 export const WALK_BAR_PARTS = {
-  // Each button's face's left edge and its press area's left edge and width.
-  buttons: {
-    help: walkBarButton(3),
-    pause: walkBarButton(0),
-    settings: walkBarButton(1),
-    sound: walkBarButton(2),
-  },
   cash: {
     // art: the cash well's first and last ink columns.
     ink: { left: 5, right: 73 },
@@ -204,8 +189,6 @@ export const WALK_BAR_PARTS = {
     // art: an effect well's side.
     size: 22,
   },
-  // The narrowest a button's press area may be.
-  minHitWidth: WALK_BAR_FACE.size + WALK_BAR_FACE_GAP,
 } as const;
 
 // A spare treat's pip in its gear's effect well: its inset from the well's bottom-right corner,
@@ -443,7 +426,7 @@ export const CELEBRATIONS = {
     // The button's top under the bubble's top.
     buttonDy: 105,
     // The walker's feet row.
-    feet: 112,
+    feet: 105,
     // The greeting's lines.
     greetingLines: 2,
     // The info lines: the icon's drop, the gaps after an icon and after a text, and each line's
@@ -585,8 +568,10 @@ export const HOME_SCREEN = {
     // The text's left edge.
     textX: 39,
   },
-  // The dog tiles' cells.
-  dogTiles: { cellHeight: 44, cellWidth: 105, columns: 3 },
+  // art: the dog tiles' faces, each drawn inside a press cell grown round it to MIN_PRESS tall.
+  // Exempt from the button gap rule across: the faces are 6 apart, so three fit at their names'
+  // width.
+  dogTiles: { columns: 3, face: { height: 42, width: 105 }, faceGapX: 6 },
   // art: the keyboard ring's outset, outside the ui-select frame.
   focusOutset: 5,
   // The gate scene's top.
@@ -617,6 +602,10 @@ export const HOME_SCREEN = {
     x: 234,
     y: 86,
   },
+  // The rows the Pet shop, its board, the dog slot sign hung from its awning and the street name
+  // sit under their yard rows, which move them together. art: screen-home draws the street-name
+  // plate this far down.
+  petShopDrop: 12,
   // A Pocket tile: its badge's offset, its icon box's offset and side, its icon's offset and its
   // price plate's capitals' top.
   pocket: {
@@ -625,8 +614,8 @@ export const HOME_SCREEN = {
     icon: { dx: 13, dy: 4 },
     priceY: 28,
   },
-  // The Pocket tiles' cells.
-  pocketTiles: { cellHeight: 44, cellWidth: 60, columns: 5 },
+  // art: the Pocket tiles' faces, each drawn inside a press cell grown round it to MIN_PRESS tall.
+  pocketTiles: { columns: 5, face: { height: 42, width: 58 } },
   // The porch dog's feet from its owner's.
   porchDogOffset: { dx: -12, footDy: 3 },
   // yard: the starter dog's owner's feet, by dog.
@@ -642,12 +631,11 @@ export const HOME_SCREEN = {
   // The rows between sections.
   sectionGap: 0,
   // yard, art: the dog slot sign: its art's top-left, its board, the board's frame, lit and shaded
-  // rows, its press area, its lines' pitch, how far it drops pressed, and its text's scale.
+  // rows, its lines' pitch, how far it drops pressed, and its text's scale.
   slotSign: {
-    art: { x: 255, y: 120 } satisfies Point,
-    board: { height: 24, width: 79, x: 256, y: 125 } satisfies Rect,
+    art: { x: 255, y: 114 } satisfies Point,
+    board: { height: 24, width: 79, x: 256, y: 119 } satisfies Rect,
     boardEdge: { frame: 1, lit: 1, shade: 1 },
-    hit: { height: 44, width: 79, x: 256, y: 115 } satisfies Rect,
     linePitch: 9,
     pressDrop: 1,
     scale: 1,
@@ -667,28 +655,24 @@ export const HOME_SCREEN = {
     padX: 5,
     // art: the rows the quip art inks at its bottom and top edges.
     rim: { bottom: 3, top: 2 },
-    // The bubble's top under the yard art's row at the gate scene's top.
-    top: 6,
   },
-  // Start walk's top-left.
-  startButton: { x: 32, y: 514 },
+  // Start walk's left edge, and the rows under it to the screen's bottom.
+  startButton: { foot: 4, x: 32 },
   // The rows between the pocket section and Start walk.
   startGap: 2,
-  // Start walk's label's capitals' top on its raised face, and its scale.
-  startLabel: { readyY: 12, scale: 3 },
+  // Start walk's label's scale.
+  startLabel: { scale: 3 },
   // The waiting label's inset on either side of Start walk's face.
   startLoadingInset: 12,
   // yard, art: the street name's centre and capitals' top on screen-home's street sign.
   streetSign: { x: 320, y: 75 } satisfies Point,
-  // How far a dog or Pocket tile is drawn inside its press area.
-  tileInset: 1,
   // A section's backing's top under the section's top.
   tileOffset: 24,
   // art: a selected tile's ui-select frame's outset.
   tileSelectOutset: 1,
-  // The top bar: the bank's ink inset in its well, a button's press area's height, and the
-  // columns the bank's well keeps clear of the first button's face.
-  topBar: { bankPad: 3, hitHeight: 44, wellClear: 16 },
+  // The top bar: the bank's ink inset in its well, and the columns the bank's well keeps clear of
+  // the first button's face.
+  topBar: { bankPad: 3, wellClear: 16 },
   // The update notice's button label's padding.
   updateModal: { labelPad: 8 },
   // The walker's column at the gate.
@@ -704,8 +688,8 @@ export const HOME_SCREEN = {
     face: { dx: 4, dy: 5 },
     icons: { dx: 46, dy: [5] },
   },
-  // The walker tiles' cells.
-  walkerTiles: { cellHeight: 44, cellWidth: 77, columns: 4 },
+  // art: the walker tiles' faces, each drawn inside a press cell grown round it to MIN_PRESS tall.
+  walkerTiles: { columns: 4, face: { height: 44, width: 77 } },
   // yard, art: the yard sign's board, baked into screen-home.
   yardSign: { height: 38, width: 128, x: 6, y: 138 } satisfies Rect,
 } as const;
@@ -792,10 +776,10 @@ export const SHOP_PAGE = {
   scrollbar: { thumbInset: 1, thumbMin: 16, thumbWidth: 6, trackWidth: 8, x: 336 },
   // The Dogs tab's slot and dog rows' height.
   slotRows: { height: 48 },
-  // The tabs: their rows under the close target, the face's top in the press area and its
-  // height, the gap between faces (small buttons), the press area's height, and the rows down to
-  // the list.
-  tab: { closeGap: 4, drawDy: 8, drawHeight: 28, gap: SMALL_BUTTON_GAP, height: 44, listGap: 6 },
+  // The tabs, directly under the close control's press area: the face's height, the gap between
+  // faces (small buttons), the press area's height, the rows between the press areas and the
+  // list, and the rows between the message plate and the first rows.
+  tab: { drawHeight: 28, gap: SMALL_BUTTON_GAP, height: MIN_PRESS, listClear: 1, listGap: 6 },
   // The title row: its capitals' top, its height and its inset from the card's edges.
   title: { capDy: 7, height: 24, inset: 6 },
 } as const;
@@ -890,8 +874,8 @@ export const SETTINGS_CARD = {
 export const HELP_SCREEN = {
   // The body: its line pitch, most lines, scale, width and left edge.
   body: { lineHeight: 18, maxLines: 6, scale: 2, width: 336, x: 12 },
-  // Previous's and Next's top, up from the bottom.
-  buttonsBottom: 56,
+  // The rows under Previous and Next to the screen's bottom.
+  buttonsFoot: 12,
   // The page dots' side.
   dots: { size: 8 },
   // The heading's left edge.
@@ -909,17 +893,15 @@ export const HELP_SCREEN = {
 export const END_SCREEN = {
   // The columns a label keeps left of its amount.
   amountGap: 8,
-  // The badge strip.
-  badges: { height: 92, width: 344, x: 8, y: 419 } satisfies Rect,
+  // The badge strip, its bottom results.buttonGap over the return button.
+  badges: { height: 92, width: 344, x: 8 },
   // The breakdown: the amounts' right edge, the labels' left edge, the line pitch, and the first
   // line's top under the panel's top.
-  breakdown: { amountRight: 196, label: 40, pitch: 18, top: 42 },
-  // The return button's top.
-  buttonY: 514,
+  breakdown: { amountRight: 196, label: 40, pitch: 17, top: 42 },
   // The logo's top-left.
   logo: { x: 107, y: 2 } satisfies Point,
-  // The panel.
-  panel: { height: 304, width: 312, x: 24, y: 112 } satisfies Rect,
+  // The panel, as tall as the tallest summary: six breakdown lines over three fired owners' rows.
+  panel: { height: 301, width: 312, x: 24, y: 112 } satisfies Rect,
   // The panel's rows under the last owner's row.
   panelFoot: 8,
   // The most lines a closing line wraps onto.

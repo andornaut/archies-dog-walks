@@ -194,6 +194,16 @@ export function requiredNotice(text: HomeText, state: RequiredUpdateState | unde
   return state === "unavailable" ? [text.noticeUpdateNeeded] : [];
 }
 
+// What the walker's bubble shows: the first of notices alone, in place of the speech it would
+// stack on, so the bubble keeps to a notice's 2 lines; else speech.
+export function noticeOrSpeech(
+  notices: readonly string[],
+  speech: { owner: DogId | null; paragraphs: string[] },
+): { owner: DogId | null; paragraphs: string[] } {
+  const notice = notices[0];
+  return notice === undefined ? speech : { owner: null, paragraphs: [notice] };
+}
+
 // What the walker's bubble says, as paragraphs that each start on a new line, in priority
 // order: a bought dog's owner's parting line; the last action's message; the parting line of
 // the most recently picked dog still in the pack; the walker's own line, walkerLine. A purchase

@@ -3,7 +3,7 @@ import type { Rect } from "@andornaut/game-kit/rect";
 import { WIDE_BUTTON_X } from "../data/layout.ts";
 import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";
 
-// The smallest tap target each way, in game pixels: 48 CSS pixels on a 390px-wide phone.
+// The smallest tap target each way, in game pixels (MIN_PRESS).
 export const MIN_TAP_SIZE = BUTTON_SIZE.icon.target;
 
 // An overlay's full-width button, centred on the screen.

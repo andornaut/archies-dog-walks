@@ -133,7 +133,8 @@ export class RunInput {
   private onPointer(phase: "down" | "move" | "up", pointer: Input.Pointer): void {
     const press = { downTime: pointer.downTime, id: pointer.id };
     const point = { x: pointer.x, y: pointer.y };
-    const onButton = phase === "down" && topBarButtonAt(point.x, point.y) !== undefined;
+    const debuffs = this.host.explainShown().debuffs.length;
+    const onButton = phase === "down" && topBarButtonAt(debuffs, point.x, point.y) !== undefined;
     this.onPress(phase === "up" && pointer.wasCanceled ? "cancel" : phase, press, point, onButton);
   }
 

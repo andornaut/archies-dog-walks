@@ -49,18 +49,19 @@ describe("help's top bar", () => {
 
 describe("tapRect", () => {
   it("grows small art about its centre to the minimum, keeps a larger side and stays on screen", () => {
+    const side = MIN_TAP_SIZE;
     expect(tapRect({ height: 8, width: 8, x: 44, y: 478 })).toEqual({
-      height: 44,
-      width: 44,
-      x: 26,
-      y: 460,
+      height: side,
+      width: side,
+      x: 48 - side / 2,
+      y: 482 - side / 2,
     });
-    expect(tapRect({ height: 44, width: 110, x: 8, y: 504 }).width).toBe(110);
+    expect(tapRect({ height: side, width: 110, x: 8, y: 504 }).width).toBe(110);
     expect(tapRect({ height: 4, width: 4, x: 358, y: 558 })).toEqual({
-      height: 44,
-      width: 44,
-      x: 316,
-      y: 516,
+      height: side,
+      width: side,
+      x: 360 - side,
+      y: 560 - side,
     });
   });
 });

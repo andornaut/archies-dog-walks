@@ -23,13 +23,15 @@ const TOP_BAR = { height: HOME_BAR.height, width, x: 0, y: 0 } as const;
 // The picture starts under the bar, its top rule on the bar's last trim row.
 const ILLUSTRATION = { height: HELP.illustrationHeight, width, x: 0, y: TOP_BAR.height } as const;
 const TITLE_Y = ILLUSTRATION.y + ILLUSTRATION.height + HELP.titleGap;
+// Previous's and Next's top, buttonsFoot rows over the screen's bottom.
+const BUTTONS_Y = height - HELP.buttonsFoot - BUTTON_SIZE.compact.height;
 
 // The help screen's geometry at the render resolution. A text position is its first line's
 // left edge and capitals' top.
 // The top bar is the home pages' (HOME_LAYOUT.topBar), its heading's capitals centred on the
 // bar's mid row as the home bar's button faces are, and the close control's face where the home
-// bar's last face is (Exit's, or Settings' where Exit is hidden), in its 44x44 target in the
-// screen's top-right corner.
+// bar's last face is (Exit's, or Settings' where Exit is hidden), in its MIN_TAP_SIZE square
+// target in the screen's top-right corner.
 // The body's lines, at most maxLines of them, are lineHeight apart, its capitals the label gap
 // under the title's actual ink. The picture is the walk screen's
 // width, ruled off a row above and below.
@@ -45,19 +47,19 @@ export const HELP_LAYOUT = {
     centreX: width / 2,
     size: HELP.dots.size,
     spacing: MIN_TAP_SIZE,
-    y: height - HELP.buttonsBottom - BUTTON_SIZE.smallGap - HELP.dots.size,
+    y: BUTTONS_Y - BUTTON_SIZE.smallGap - HELP.dots.size,
   },
   heading: { x: HELP.headingX, y: HOME_BAR.mid - (TITLE_CAP_ROWS * TEXT_SCALE) / 2 },
   illustration: ILLUSTRATION,
   next: {
     ...BUTTON_SIZE.compact,
     x: width / 2 + BUTTON_SIZE.gap / 2,
-    y: height - HELP.buttonsBottom,
+    y: BUTTONS_Y,
   },
   previous: {
     ...BUTTON_SIZE.compact,
     x: width / 2 - BUTTON_SIZE.gap / 2 - BUTTON_SIZE.compact.width,
-    y: height - HELP.buttonsBottom,
+    y: BUTTONS_Y,
   },
   screen: SCREEN,
   title: { ...HELP.title, y: TITLE_Y },

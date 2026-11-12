@@ -1,6 +1,8 @@
 import { containsPoint } from "@andornaut/game-kit/rect";
 import { describe, expect, it } from "vitest";
 
+import { MIN_PRESS } from "../data/layout.ts";
+import { SCREEN_LAYOUT } from "../data/screen.ts";
 import type { PressMode } from "../input/pointerTracking.ts";
 import {
   gameplayAllowed,
@@ -12,7 +14,8 @@ import {
   type TopBarAction,
   topBarAction,
   topBarButtonAt,
-  topBarButtonForKey,
+  type TopBarKey,
+  topBarKey,
   type WalkBackAction,
   walkBackAction,
   walkPaused,
@@ -35,13 +38,12 @@ describe("the walk bar in each pause state", () => {
     // Whether the walk is paused, and whether by the player, which ducks the music.
     paused: boolean;
     player: boolean;
-    // What a tap on pause, P, the M key, and a tap on sound, Help and Settings do.
+    // What a tap on pause, P, the M key, and a tap on Help and Settings do.
     pause: TopBarAction | undefined;
     pauseKey: TopBarAction | undefined;
     mute: TopBarAction | undefined;
     help: TopBarAction | undefined;
     settings: TopBarAction | undefined;
-    sound: TopBarAction | undefined;
   }
 
   const walking = {
@@ -55,7 +57,6 @@ describe("the walk bar in each pause state", () => {
     player: false,
     presses: "steer",
     settings: "openSettings",
-    sound: "mute",
   } as const;
   // Under a card or an overlay only the bar's buttons act: the walk takes no press.
   const card = { ...walking, paused: true, presses: "none" } as const;
@@ -74,7 +75,6 @@ describe("the walk bar in each pause state", () => {
     pause: undefined,
     pauseKey: undefined,
     settings: undefined,
-    sound: undefined,
   } as const;
   // Under an explanation's detail card the bar's buttons act as with nothing open.
   const detail = { ...walking, paused: true } as const;
@@ -109,14 +109,13 @@ describe("the walk bar in each pause state", () => {
           gameplay: gameplayAllowed(pause),
           help: topBarAction(pause, "tap", "help"),
           icon: pauseButtonIcon(pause),
-          mute: topBarAction(pause, "key", "sound"),
+          mute: topBarAction(pause, "key", "mute"),
           pause: topBarAction(pause, "tap", "pause"),
           pauseKey: topBarAction(pause, "key", "pause"),
           paused: walkPaused(pause),
           player: playerPaused(pause),
           presses: walkPresses(pause),
           settings: topBarAction(pause, "tap", "settings"),
-          sound: topBarAction(pause, "tap", "sound"),
         },
         name,
       ).toEqual(expected);
@@ -146,36 +145,52 @@ describe("walkBackAction", () => {
   );
 });
 
-describe("topBarButtonForKey", () => {
-  it("maps M to sound and P or Escape to pause, and ignores repeats", () => {
-    const codes: Record<string, WalkBarButtonId | undefined> = {
+describe("topBarKey", () => {
+  it("maps M to mute and P or Escape to pause, and ignores repeats", () => {
+    const codes: Record<string, TopBarKey | undefined> = {
       ArrowLeft: undefined,
       Digit1: undefined,
       Escape: "pause",
-      KeyM: "sound",
+      KeyM: "mute",
       KeyP: "pause",
     };
-    for (const [code, button] of Object.entries(codes)) {
-      expect(topBarButtonForKey(false, code), code).toBe(button);
-      expect(topBarButtonForKey(true, code), code).toBeUndefined();
+    for (const [code, key] of Object.entries(codes)) {
+      expect(topBarKey(false, code), code).toBe(key);
+      expect(topBarKey(true, code), code).toBeUndefined();
     }
   });
 });
 
 describe("topBarButtonAt", () => {
-  it("finds each button at its hit area's corners, and none just outside the row", () => {
+  it("finds each button at its hit area's corners, and none just outside them", () => {
     for (const id of WALK_BAR_BUTTONS) {
       const { hit } = TOP_BAR_BUTTONS[id];
       for (const [x, y] of [
         [hit.x, hit.y],
         [hit.x + hit.width - 1, hit.y + hit.height - 1],
       ] as const) {
-        expect(topBarButtonAt(x, y), id).toBe(id);
+        expect(topBarButtonAt(0, x, y), id).toBe(id);
         expect(containsPoint(hit, x, y)).toBe(true);
       }
     }
     const first = TOP_BAR_BUTTONS[WALK_BAR_BUTTONS[0]].hit;
-    expect(topBarButtonAt(first.x - 1, first.y)).toBeUndefined();
-    expect(topBarButtonAt(first.x, first.y + first.height)).toBeUndefined();
+    expect(topBarButtonAt(0, first.x - 1, first.y)).toBeUndefined();
+    expect(topBarButtonAt(0, first.x, first.y + first.height)).toBeUndefined();
+  });
+
+  // The presses reach MIN_PRESS rows down, under the walk bar: a showing debuff bar keeps the rows
+  // they share, and with none showing the button takes them.
+  const bar = SCREEN_LAYOUT.topBar;
+  const { hit } = TOP_BAR_BUTTONS.pause;
+  const x = hit.x + hit.width / 2;
+  it.each<[string, number, number, WalkBarButtonId | undefined]>([
+    ["on the bar", bar.height - 1, 1, "pause"],
+    ["under the bar with no debuff bar", bar.height, 0, "pause"],
+    ["on the last press row with no debuff bar", MIN_PRESS - 1, 0, "pause"],
+    ["under the bar on a debuff bar", bar.height, 1, undefined],
+    ["on the last press row on a debuff bar", MIN_PRESS - 1, 2, undefined],
+    ["past the press area", MIN_PRESS, 0, undefined],
+  ])("presses %s (row %i, %i debuff bars): %s", (_name, y, debuffs, expected) => {
+    expect(topBarButtonAt(debuffs, x, y)).toBe(expected);
   });
 });
