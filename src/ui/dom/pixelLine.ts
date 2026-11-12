@@ -13,8 +13,10 @@ import {
   deviceX,
   deviceY,
   type DomScale,
+  exactDeviceX,
   fontPixel,
   frameRect,
+  wholeArtPixels,
 } from "../domScale.ts";
 import { laidPills, PILL_CLOSE, PILL_SPACE, pillIndex, pillRows } from "../namePills.ts";
 import { PALETTE } from "../palette.ts";
@@ -263,11 +265,12 @@ export function spokenText(line: string): string {
 
 // A left-aligned block of text: its pen starting at x, or its first line's ink starting there
 // (ink, as a left-aligned title label's does), or its widest line's advance ending there (right,
-// as a right-aligned label's does), or each line's advance centred on x (centre, as a label with
-// originX 0.5 there), and its first line's capitals at capTop (game pixels), its lines a font
-// line apart, each effect's name set in a pill.
+// as a right-aligned label's does), or its widest line's ink ending there (inkRight, as a label
+// the canvas moves there, placeInkRight), or each line's advance centred on x (centre, as a label
+// with originX 0.5 there), and its first line's capitals at capTop (game pixels), its lines a
+// font line apart, each effect's name set in a pill.
 export interface DomTextBlock {
-  readonly anchor?: "centre" | "ink" | "pen" | "right";
+  readonly anchor?: "centre" | "ink" | "inkRight" | "pen" | "right";
   // Each line's character indices where a run of another colour starts.
   readonly breaks?: readonly ReadonlySet<number>[];
   readonly capTop: number;
@@ -297,15 +300,44 @@ export function boundsAdvance(bitmap: BitmapFont, line: string): number {
   return widest;
 }
 
+// The column after the last a line inks, in font pixels from its pen's start, or its advance
+// where it inks nothing.
+export function inkEnd(bitmap: BitmapFont, line: string): number {
+  const inked = laidGlyphs(bitmap, 1, line).flatMap(({ ink }) => (ink === null ? [] : [ink.right]));
+  return inked.length > 0 ? Math.max(...inked) : boundsAdvance(bitmap, line);
+}
+
+// Where a right-aligned block's pen starts, in device pixels: its widest line's ink ending where
+// the canvas's ends, on the art-pixel grid. HTML text is narrower than the canvas's wherever the
+// fit is fractional, so it is anchored at its right edge, as the canvas's right column.
+function rightPen(
+  bitmap: BitmapFont,
+  scale: DomScale,
+  block: DomTextBlock,
+  lines: readonly string[],
+): number {
+  const widest = lines.reduce(
+    (best, line) => (boundsAdvance(bitmap, line) > boundsAdvance(bitmap, best) ? line : best),
+    lines[0] ?? "",
+  );
+  const ink = inkEnd(bitmap, widest);
+  const right = Math.round(block.x);
+  // The canvas's ink end, in game pixels: x itself, or short of the advance's end by the last
+  // glyph's right side bearing.
+  const canvasEnd =
+    block.anchor === "right" ? right - (boundsAdvance(bitmap, widest) - ink) * block.scale : right;
+  return (
+    wholeArtPixels(scale, exactDeviceX(scale, canvasEnd)) - ink * fontPixel(scale, block.scale)
+  );
+}
+
 // Where a block's pen starts from x, in font pixels, by its anchor; a centred block's lines each
-// start from their own (lineLeft).
+// start from their own (lineLeft) and a right-aligned block's from rightPen.
 function penOffset(bitmap: BitmapFont, block: DomTextBlock): number {
   const lines = block.lines.map((line) => shownText(block.font, line));
-  const anchor = block.anchor ?? "pen";
-  if (anchor === "ink") {
-    return -leftBearing((char) => bitmap.glyphs.get(char), lines[0] ?? "");
-  }
-  return anchor === "right" ? -Math.max(0, ...lines.map((line) => boundsAdvance(bitmap, line))) : 0;
+  return (block.anchor ?? "pen") === "ink"
+    ? -leftBearing((char) => bitmap.glyphs.get(char), lines[0] ?? "")
+    : 0;
 }
 
 // Where a centred line's pen starts, in device pixels: its advance at pixel device pixels a font
@@ -338,7 +370,15 @@ export function blockPlace(
   })[];
 } {
   const pixel = fontPixel(scale, block.scale);
-  const start = deviceX(scale, block.x) + penOffset(bitmap, block) * pixel;
+  const start =
+    block.anchor === "right" || block.anchor === "inkRight"
+      ? rightPen(
+          bitmap,
+          scale,
+          block,
+          block.lines.map((line) => shownText(block.font, line)),
+        )
+      : deviceX(scale, block.x) + penOffset(bitmap, block) * pixel;
   const lineLeft = (shown: string) =>
     block.anchor === "centre"
       ? centredLeft(scale, block.x, boundsAdvance(bitmap, shown) * pixel)

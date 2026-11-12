@@ -85,14 +85,15 @@ interface Parts {
 }
 
 // Body text at 2x in plum unless told otherwise, left-aligned with its pen, or a title label's
-// ink, at x.
+// ink, at x, or its ink ending at x (inkRight).
 function text(
   parts: Parts,
   at: { x: number; y: number },
   value: string,
-  style: { colour?: number; font?: "body" | "title" } = {},
+  style: { align?: "inkRight"; colour?: number; font?: "body" | "title" } = {},
 ): void {
   parts.texts.push({
+    ...(style.align === undefined ? {} : { align: style.align }),
     capTop: at.y,
     colour: style.colour ?? PALETTE.plum,
     ...(style.font === undefined ? {} : { font: style.font }),
@@ -105,35 +106,25 @@ function text(
 // Body text whose ink ends at right, as a label the canvas moves there (placeInkRight).
 function textInkRight(
   parts: Parts,
-  measure: LogbookMeasure,
   at: { right: number; y: number },
   value: string,
   colour: number = PALETTE.plum,
 ): void {
-  text(parts, { x: Math.round(at.right - measure.inkWidth("body", value)), y: at.y }, value, {
-    colour,
-  });
+  text(parts, { x: at.right, y: at.y }, value, { align: "inkRight", colour });
 }
 
 // Each row's label from the left in dark brown and its value's ink up to right, from y.
-function rows(
-  parts: Parts,
-  measure: LogbookMeasure,
-  right: number,
-  y: number,
-  stats: readonly StatsRow[],
-): void {
+function rows(parts: Parts, right: number, y: number, stats: readonly StatsRow[]): void {
   stats.forEach(({ label, value }, i) => {
     const top = y + i * PITCH;
     text(parts, { x: LEFT, y: top }, label, { colour: PALETTE.darkBrown });
-    textInkRight(parts, measure, { right, y: top }, value);
+    textInkRight(parts, { right, y: top }, value);
   });
 }
 
 // Overall figures, then walks by outcome, each under its heading.
 function runsTab(
   parts: Parts,
-  measure: LogbookMeasure,
   data: Data,
   save: Pick<SaveDocument, "stats">,
   right: number,
@@ -149,7 +140,7 @@ function runsTab(
   sections.forEach(({ heading, rows: shown }, i) => {
     const y = tops[i] ?? 0;
     text(parts, { x: LEFT, y }, heading, { font: "title" });
-    rows(parts, measure, right, y + STATS_LAYOUT.walks.rowsY, shown);
+    rows(parts, right, y + STATS_LAYOUT.walks.rowsY, shown);
   });
   return walksBottom(counts);
 }
@@ -192,7 +183,6 @@ function dogsTab(
     };
     rows(
       parts,
-      measure,
       right,
       top + DOGS.rowsY,
       DOG_STATS.map((stat) => ({ label: labels[stat], value: String(values[stat]) })),
@@ -213,13 +203,7 @@ function badgesTab(
   badges: readonly BadgeView[],
   right: number,
 ): { bottom: number; wallRows: Rect[] } {
-  textInkRight(
-    parts,
-    measure,
-    { right, y: WALL.headingY },
-    earnedText(data, badges),
-    PALETTE.darkBrown,
-  );
+  textInkRight(parts, { right, y: WALL.headingY }, earnedText(data, badges), PALETTE.darkBrown);
   const inkWidth = (line: string) => measure.inkWidth("body", line);
   const cells = badges.map((badge) => {
     const cell = wallCell(WALL_TEXT, inkWidth, badge, badgeProgress(data, save, badge));
@@ -294,7 +278,7 @@ function tabContent(
   });
   switch (state.tab) {
     case "runs":
-      return done(runsTab(parts, measure, data, state.save, right));
+      return done(runsTab(parts, data, state.save, right));
     case "dogs":
       return done(dogsTab(parts, measure, data, state.save, right));
     case "badges": {

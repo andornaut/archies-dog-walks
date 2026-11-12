@@ -13,6 +13,7 @@ import {
 } from "../domScale.ts";
 import { inPill, laidPills, PILL, pillRows } from "../namePills.ts";
 import { labelPlace } from "./labelBlock.ts";
+import { inkEnd } from "./pixelLine.ts";
 
 const font = gameFont("font-body");
 
@@ -92,10 +93,11 @@ describe("a centred or right-aligned label at a fractional fit", () => {
   const text = "END WALK";
   const width = advanceWidth(title, 1, text);
 
+  // Where a line's anchor is, in font pixels from its pen: its advance's middle, or its ink's end.
   it.each([
-    ["centre", 0.5],
-    ["end", 1],
-  ] as const)("sets each line's %s where the canvas does, within an art pixel", (align, share) => {
+    ["centre", width / 2],
+    ["end", inkEnd(title, text)],
+  ] as const)("sets each line's %s where the canvas does, within an art pixel", (align, at) => {
     const label = {
       align,
       colour: 0,
@@ -108,10 +110,12 @@ describe("a centred or right-aligned label at a fractional fit", () => {
     } as const;
     const place = labelPlace(title, scale, label);
     const left = place.runs[0]?.left ?? 0;
-    const html = left + share * width * fontPixel(scale, 2);
-    const canvas = exactDeviceX(scale, 131 + share * width * 2);
+    const html = left + at * fontPixel(scale, 2);
+    const canvas = exactDeviceX(scale, 131 + at * 2);
     expect(Math.abs(html - canvas)).toBeLessThan(artPixel(scale));
     expect(left % artPixel(scale)).toBe(0);
+    // A right-aligned line's ink ends on the art-pixel grid, as the canvas's right column.
+    expect(align === "end" ? html % artPixel(scale) : 0).toBe(0);
   });
 
   it("puts the capitals' top where the canvas does, within an art pixel", () => {

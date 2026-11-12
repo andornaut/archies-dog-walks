@@ -4,8 +4,7 @@ import { SCREEN_CONFIG } from "../data/screen.ts";
 import { SHOP_LAYOUT, shopTabFace, shopTabRects } from "../home/shopLayout.ts";
 import { PALETTE } from "../ui/palette.ts";
 import { fillRect } from "../ui/phaser/draw.ts";
-import { inkSpan, placePixelText } from "../ui/phaser/pixelText.ts";
-import { addFramedPageCard } from "./homePanels.ts";
+import { addFramedPageCard, placeInkRight } from "./homePanels.ts";
 import { addBodyText, addGraphicsIn, addTab } from "./uiKit.ts";
 
 // The page the Pet shop and the Logbook share, under the home screen's top bar.
@@ -41,11 +40,6 @@ export function addShopPage(
     title,
     closePressed,
   );
-}
-
-// Moves a label so its ink ends at right, its capitals' top at y.
-export function placeInkRight(label: GameObjects.BitmapText, right: number, y: number): void {
-  placePixelText(label, right - inkSpan(label).right, y);
 }
 
 // A list's count, such as the shop's owned counts and the Logbook's earned count: body text in

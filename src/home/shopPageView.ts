@@ -41,7 +41,8 @@ export interface ShopPageView {
   readonly close: CloseControl;
   readonly closePressed: boolean;
   readonly tabs: readonly PageTab[];
-  // Its one line in plum, its ink starting where the header centres it beside the close control.
+  // Its one line in plum, its ink centred where the header centres it beside the close control,
+  // so the HTML's narrower text stays centred there.
   readonly title: PanelText;
   // The wood under the card, from the top bar down, so the home screen's bar shows above it.
   readonly wood: PageFill;
@@ -123,8 +124,8 @@ export function shopPageView(
     tabs,
     title: {
       capTop: title.capTop,
-      centre: "left",
-      centreX: left,
+      centre: "ink",
+      centreX: left + ink / 2,
       colour: PALETTE.plum,
       font: "title",
       line: 0,

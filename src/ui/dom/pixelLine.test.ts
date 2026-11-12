@@ -9,7 +9,7 @@ import { describe, expect, it } from "vitest";
 
 import { FakeDocument, type FakeElement } from "../../testing/fakeDom.ts";
 import { gameFont } from "../../testing/fontInk.ts";
-import { artPixel, deviceX, deviceY, domScale, fontPixel } from "../domScale.ts";
+import { artPixel, deviceX, deviceY, domScale, exactDeviceX, fontPixel } from "../domScale.ts";
 import { inPill, laidPills, PILL, pillRows } from "../namePills.ts";
 import { PALETTE } from "../palette.ts";
 import {
@@ -17,6 +17,7 @@ import {
   boundsAdvance,
   capRows,
   createTextLine,
+  inkEnd,
   penRuns,
   shownText,
   spokenText,
@@ -167,22 +168,48 @@ describe("a block's anchor", () => {
   it.each([
     ["pen", 0],
     ["ink", -leftBearing((char) => gameFont("font-title").glyphs.get(char), "MUSIC")],
-    ["right", -boundsAdvance(gameFont("font-title"), "45%")],
   ] as const)("starts the pen from x by the %s anchor", (anchor, offset) => {
     const font = gameFont("font-title");
     const scale = domScale(2, { height: 560, width: 360, x: 0, y: 0 });
-    const text = anchor === "right" ? "45%" : "MUSIC";
     const place = blockPlace(font, scale, {
       anchor,
       capTop: 200,
       colour: 0,
       font: "title",
-      lines: [text],
+      lines: ["MUSIC"],
       scale: 2,
       x: 100,
     });
     expect(place.runs[0]?.left).toBe(deviceX(scale, 100) + offset * fontPixel(scale, 2));
   });
+
+  // 393 CSS px wide: a game pixel is 1.09 art pixels, so HTML text is narrower than the canvas's.
+  it.each(
+    [1, 2, 3].flatMap((dpr) => [
+      ["right", dpr, "$11,345"],
+      ["inkRight", dpr, "9 (most: Eve)"],
+    ]) as ["inkRight" | "right", number, string][],
+  )(
+    "ends a %s block's ink at the canvas's right column on the art-pixel grid at DPR %d",
+    (anchor, dpr, text) => {
+      const font = gameFont("font-body");
+      const scale = domScale(dpr, { height: 611, width: 393, x: 0, y: 0 });
+      const place = blockPlace(font, scale, {
+        anchor,
+        capTop: 200,
+        colour: 0,
+        font: "body",
+        lines: [text],
+        scale: 2,
+        x: 300,
+      });
+      const ink = inkEnd(font, text);
+      const end = (place.runs[0]?.left ?? 0) + ink * fontPixel(scale, 2);
+      const canvas = anchor === "right" ? 300 - (boundsAdvance(font, text) - ink) * 2 : 300;
+      expect(end % artPixel(scale)).toBe(0);
+      expect(Math.abs(end - exactDeviceX(scale, canvas))).toBeLessThanOrEqual(artPixel(scale) / 2);
+    },
+  );
 });
 
 describe("display text", () => {

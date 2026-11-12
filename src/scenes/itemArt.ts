@@ -5,6 +5,7 @@ import { dogPortraitKey, gearIconKey } from "../assets/spriteKeys.ts";
 import { gameData } from "../data/index.ts";
 import type { DetailPicture } from "../home/detail.ts";
 import type { Purchase } from "../home/home.ts";
+import { LABEL_ALIGN_DATA } from "../ui/dom/labelBlock.ts";
 import type { Badge } from "../ui/interaction.ts";
 import { PALETTE } from "../ui/palette.ts";
 import { fillCutRect, fillRect } from "../ui/phaser/draw.ts";
@@ -95,6 +96,8 @@ export function addPlate(
   const left = Math.round(at.x - at.originX * width);
   const top = at.capY - PLATE_PAD;
   label.setX(left + PLATE_PAD);
+  // Centred on its plate, which hugs it, so the HTML centres its narrower text there too.
+  label.setData(LABEL_ALIGN_DATA, "centre");
   const g = scene.add.graphics();
   const face = { height: height - 2, width: width - 2, x: left + 1, y: top + 1 };
   // Square corners cut by a pixel.

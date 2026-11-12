@@ -13,6 +13,7 @@ import {
 import { cardTitleRow, HOME_LAYOUT } from "../home/homeLayout.ts";
 import { barTitleLeft, barTitleRoom } from "../ui/barTitle.ts";
 import { type CloseControl, closeControl } from "../ui/closeControl.ts";
+import { LABEL_ALIGN_DATA } from "../ui/dom/labelBlock.ts";
 import { hasPill } from "../ui/namePills.ts";
 import { PALETTE } from "../ui/palette.ts";
 import { addModalShade, drawFramedRect, drawRing } from "../ui/phaser/draw.ts";
@@ -114,7 +115,15 @@ function titleOnRow(
   const ink = inkSpan(label);
   const x = barTitleLeft(row, close, ink.right - ink.left);
   placePixelText(label, x, capTop);
-  return label;
+  // Centred in its row, so the HTML centres its narrower text there too.
+  return label.setData(LABEL_ALIGN_DATA, "centre");
+}
+
+// Moves a label so its ink ends at right, its capitals' top at y; the HTML anchors its narrower
+// text at that right edge too.
+export function placeInkRight(label: GameObjects.BitmapText, right: number, y: number): void {
+  placePixelText(label, right - inkSpan(label).right, y);
+  label.setData(LABEL_ALIGN_DATA, "end");
 }
 
 // A framed page keeps its existing header clear of its tabs and scrolling content.
@@ -221,9 +230,10 @@ export function addDetailContent(
 }
 
 // A view's text as labels in its font, in parent when given: left-aligned with its pen at x, or
-// each line centred there as a label with originX 0.5, each effect's name in its pill, and each
-// span in a colour of its own drawn again over its place in the line, measured from the line's
-// start through the span, since a trailing space has no width.
+// its ink ending there (placeInkRight), or each line centred there as a label with originX 0.5,
+// each effect's name in its pill, and each span in a colour of its own drawn again over its
+// place in the line, measured from the line's start through the span, since a trailing space
+// has no width.
 export function addDetailText(
   scene: Scene,
   parent: GameObjects.Container | undefined,
@@ -238,6 +248,9 @@ export function addDetailText(
   const labels = centred
     ? text.lines.map((line, i) => addPixelText(scene, text.x, text.capTop + i * pitch, line, style))
     : [addPixelText(scene, text.x, text.capTop, text.lines.join("\n"), style)];
+  if (text.align === "inkRight") {
+    labels.forEach((label) => placeInkRight(label, text.x, text.capTop));
+  }
   const spans = text.spans ?? [];
   const line = text.lines[0] ?? "";
   withProbe(scene, style, (probe) => {
@@ -245,7 +258,10 @@ export function addDetailText(
       setPixelText(probe, shown);
       return probe.width;
     };
-    const left = Math.round(text.x) - (centred ? widthOf(line) / 2 : 0);
+    const left =
+      text.align === "inkRight"
+        ? (labels[0]?.x ?? 0)
+        : Math.round(text.x) - (centred ? widthOf(line) / 2 : 0);
     let before = "";
     for (const span of spans) {
       if (span.colour !== text.colour) {

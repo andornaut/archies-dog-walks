@@ -81,11 +81,12 @@ export interface DetailFramed {
 // Text in font, body where undefined, at scale, 2x where undefined: left-aligned, its pen (in the
 // title font its ink) starting at x, as addPixelText places a label, or each line centred on x
 // (centre, as a label with originX 0.5 there), or one line's advance ending at x (right, as a
-// label with originX 1 there), its first line's capitals at capTop, its lines a font line apart,
+// label with originX 1 there), or one line's ink ending at x (inkRight, as placeInkRight moves a
+// label there), its first line's capitals at capTop, its lines a font line apart,
 // each effect's name a line leads with in its pill. A one-line text may be runs in colours of
 // their own (spans), their texts the line's, run together.
 export interface DetailText {
-  readonly align?: "centre" | "left" | "right";
+  readonly align?: "centre" | "inkRight" | "left" | "right";
   readonly capTop: number;
   readonly colour: number;
   readonly font?: "body" | "title";
