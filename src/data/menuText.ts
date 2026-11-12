@@ -13,7 +13,7 @@ export const MENU_TEXT = {
     close: "Close",
   },
   crash: {
-    body: "Your saved progress is kept.",
+    body: "The game stopped. Reload to play again.",
     reload: "Reload",
     title: "Something went wrong",
   },
