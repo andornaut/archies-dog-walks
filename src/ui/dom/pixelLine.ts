@@ -65,9 +65,9 @@ const DISPLAY_RING = 1;
 const DISPLAY_HEART = { char: "♥", colour: PALETTE.red } as const;
 
 // Where line's element goes and its font size, in whole device pixels from its container's
-// corner at origin game pixels: one font pixel is fontPixel device pixels, the ink's middle on the
-// device column nearest centreX, and the capitals' top on the row nearest capTop, or, for a later
-// line of a block, whole font lines under its first line's.
+// corner at origin game pixels: one font pixel is fontPixel device pixels, the ink's (or the
+// advance's) middle within half an art pixel of centreX, and the capitals' top on the row nearest
+// capTop, or, for a later line of a block, whole font lines under its first line's.
 export function textPlace(
   bitmap: BitmapFont,
   scale: DomScale,
@@ -87,12 +87,15 @@ export function textPlace(
   const ink = line.centre === "ink" && inked.length > 0;
   const first = ink ? Math.min(...inked.map(({ left }) => left)) : 0;
   const last = ink ? Math.max(...inked.map(({ right }) => right)) : advanceWidth(bitmap, 1, text);
-  const half = Math.round(((last - first) * pixel) / 2);
   const bearing = line.font === "title" ? leftBearing((char) => bitmap.glyphs.get(char), text) : 0;
+  // A centred line's ink or advance starts on the art pixel nearest where its middle on centreX
+  // puts it, a half rounded up, as the canvas rounds a centred label's start to whole pixels.
   const left =
     line.centre === "left"
       ? deviceX(scale, line.centreX) - bearing * pixel - gridX(scale, origin.x)
-      : deviceX(scale, line.centreX) - half - first * pixel - gridX(scale, origin.x);
+      : wholeArtPixels(scale, exactDeviceX(scale, line.centreX) - ((last - first) * pixel) / 2) -
+        first * pixel -
+        gridX(scale, origin.x);
   const index = line.line ?? 0;
   const blockTop = line.capTop - index * bitmap.lineHeight * line.scale;
   const top =

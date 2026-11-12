@@ -28,7 +28,7 @@ const ORIGIN = { x: 0, y: 0 };
 
 describe("textPlace", () => {
   it.each([1, 2, 2.625, 3])(
-    "puts a line's pen, capitals and ink middle on device pixels at DPR %d",
+    "puts a line's capitals on device pixels and its ink middle within half an art pixel of centreX at DPR %d",
     (dpr) => {
       const scale = domScale(dpr, { height: 611, width: 393, x: 0, y: 0 });
       const font = gameFont("font-title");
@@ -50,7 +50,9 @@ describe("textPlace", () => {
       const text = shownText("title", line.text);
       const first = leftBearing((char) => font.glyphs.get(char), text);
       const middle = place.left + (first + inkWidth(font, 1, text) / 2) * pixel;
-      expect(Math.abs(middle - deviceX(scale, line.centreX))).toBeLessThanOrEqual(0.5);
+      expect(Math.abs(middle - exactDeviceX(scale, line.centreX))).toBeLessThanOrEqual(
+        artPixel(scale) / 2,
+      );
     },
   );
 
