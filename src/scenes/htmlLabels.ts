@@ -1,3 +1,4 @@
+import { focusTarget } from "@andornaut/game-kit/web/ui/dom/focusModality";
 import { Core, type GameObjects, type Scene, Scenes } from "phaser";
 
 import { SCREEN_CONFIG } from "../data/screen.ts";
@@ -146,9 +147,10 @@ export function addHtmlLabels(scene: Scene, title: string | undefined): HtmlLabe
     const hidden = !scene.sys.isVisible() || (!scene.sys.isActive() && !shownPaused);
     if (hidden !== dialog.hidden) {
       dialog.hidden = hidden;
-      // Focus starts on the dialog itself as it shows, as on every HTML panel.
+      // Focus starts on the dialog itself as it shows, as on every HTML panel, with a ring only
+      // after keyboard input.
       if (!hidden && title !== undefined) {
-        dialog.focus({ preventScroll: true });
+        focusTarget(dialog);
       } else if (dialog.contains(doc.activeElement)) {
         (doc.activeElement as HTMLElement).blur();
       }

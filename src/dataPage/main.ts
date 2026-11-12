@@ -1,6 +1,7 @@
 import "./main.css";
 
 import { keysOf } from "@andornaut/game-kit/records";
+import { focusTarget, trackInputModality } from "@andornaut/game-kit/web/ui/dom/focusModality";
 
 import { badgeKey } from "../assets/spriteKeys.ts";
 import { gameData, onGameDataChange } from "../data/index.ts";
@@ -462,11 +463,12 @@ function keepingFocus(update: () => void): void {
   const { key, value } = focused instanceof HTMLElement ? focused.dataset : {};
   update();
   if (key !== undefined && value !== undefined) {
-    document
-      .querySelector<HTMLElement>(
-        `button.pill[data-key="${CSS.escape(key)}"][data-value="${CSS.escape(value)}"]`,
-      )
-      ?.focus();
+    const pill = document.querySelector<HTMLElement>(
+      `button.pill[data-key="${CSS.escape(key)}"][data-value="${CSS.escape(value)}"]`,
+    );
+    if (pill !== null) {
+      focusTarget(pill);
+    }
   }
 }
 
@@ -537,6 +539,8 @@ function render(): void {
   );
 }
 
+// Restored focus shows its ring only after keyboard input.
+trackInputModality(document);
 document.getElementById("data")?.addEventListener("click", onPillClick);
 render();
 onGameDataChange(render);

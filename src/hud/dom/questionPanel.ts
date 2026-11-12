@@ -1,5 +1,6 @@
 import type { Point, Rect } from "@andornaut/game-kit/rect";
 import type { BitmapFont } from "@andornaut/game-kit/text/bitmapFont";
+import { focusTarget } from "@andornaut/game-kit/web/ui/dom/focusModality";
 
 import { SCREEN_CONFIG } from "../../data/screen.ts";
 import { cardNumberForKey, isConfirmKey, menuKeyActs } from "../../input/keyBindings.ts";
@@ -404,7 +405,7 @@ export function showQuestionPanel(layer: UiLayer, input: DomQuestionPanelInput):
   place(layer.scale());
   const stopScale = layer.onScale(place);
   layer.element.append(dialog);
-  const focusFirst = () => dialog.focus({ preventScroll: true });
+  const focusFirst = () => focusTarget(dialog);
   focusFirst();
 
   const blur = () => {
@@ -423,7 +424,7 @@ export function showQuestionPanel(layer: UiLayer, input: DomQuestionPanelInput):
     focusControl(index) {
       const control = index === undefined ? undefined : focusables[index];
       if (doc.activeElement !== (control ?? dialog)) {
-        (control ?? dialog).focus({ preventScroll: true });
+        focusTarget(control ?? dialog);
       }
     },
     refuse(index, refusal) {

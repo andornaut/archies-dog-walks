@@ -151,7 +151,8 @@ export class FakeElement extends FakeTarget {
   }
 }
 
-export class FakeDocument {
+// Listens as a document does, for the kit's input-modality tracking.
+export class FakeDocument extends FakeTarget {
   activeElement: FakeElement | undefined;
   // How many times an element was moved by insertBefore.
   moves = 0;
