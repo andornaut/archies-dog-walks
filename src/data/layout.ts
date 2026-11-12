@@ -158,14 +158,31 @@ export const HUD_REGIONS = {
   zoneProgressHeight: 4,
 } as const;
 
+// Exempt from the button gap rule: the walk bar's faces are 14 apart, so four fit beside six wells.
+const WALK_BAR_FACE_GAP = 14;
+
+// Exempt from the button gap rule: the walk bar's effect wells are 2 apart.
+const WALK_BAR_WELL_GAP = 2;
+
+// art: the walk bar's last button face's left edge, and every face's side.
+const WALK_BAR_FACE = { lastX: 333, size: 20 } as const;
+
+// A walk bar button fromRight faces in from the last (0 the last): its face's left edge, and its
+// press area the faces' pitch wide, centred on the face.
+function walkBarButton(fromRight: number) {
+  const pitch = WALK_BAR_FACE.size + WALK_BAR_FACE_GAP;
+  const faceX = WALK_BAR_FACE.lastX - fromRight * pitch;
+  return { faceX, hitWidth: pitch, hitX: faceX - WALK_BAR_FACE_GAP / 2 };
+}
+
 // The walk bar, in bar pixels.
 export const WALK_BAR_PARTS = {
-  // art: each button's face's left edge and its press area's left edge and width.
+  // Each button's face's left edge and its press area's left edge and width.
   buttons: {
-    help: { faceX: 231, hitWidth: 34, hitX: 224 },
-    pause: { faceX: 333, hitWidth: 34, hitX: 326 },
-    settings: { faceX: 299, hitWidth: 34, hitX: 292 },
-    sound: { faceX: 265, hitWidth: 34, hitX: 258 },
+    help: walkBarButton(3),
+    pause: walkBarButton(0),
+    settings: walkBarButton(1),
+    sound: walkBarButton(2),
   },
   cash: {
     // art: the cash well's first and last ink columns.
@@ -177,7 +194,7 @@ export const WALK_BAR_PARTS = {
   },
   effects: {
     // The gap between effect wells.
-    gap: 2,
+    gap: WALK_BAR_WELL_GAP,
     // How far the first well's hold reaches left of the well.
     holdInset: 1,
     // An icon's inset in its well.
@@ -188,7 +205,7 @@ export const WALK_BAR_PARTS = {
     size: 22,
   },
   // The narrowest a button's press area may be.
-  minHitWidth: 34,
+  minHitWidth: WALK_BAR_FACE.size + WALK_BAR_FACE_GAP,
 } as const;
 
 // A spare treat's pip in its gear's effect well: its inset from the well's bottom-right corner,
@@ -465,6 +482,9 @@ export const CELEBRATIONS = {
 
 // Choice cards
 
+// Exempt from the button gap rule: three choice cards sit 6 apart in a row across the screen.
+const CHOICE_CARD_GAP = 6;
+
 // The choice cards, in card pixels.
 export const CHOICE_CARDS = {
   // art: card-frame's illustration window and its outline's rows.
@@ -498,7 +518,7 @@ export const CHOICE_CARDS = {
   // A plaque's text's inset from its sides.
   plaquePadX: 2,
   // The gap between cards in a row.
-  row: { gap: 6 },
+  row: { gap: CHOICE_CARD_GAP },
   // A picked card's outline, outside the card.
   selectedOutline: 2,
   // The rows between the effect and a firing warning.
@@ -690,6 +710,10 @@ export const HOME_SCREEN = {
   yardSign: { height: 38, width: 128, x: 6, y: 138 } satisfies Rect,
 } as const;
 
+// Exempt from the button gap rule: a full row of seven badges sits 16 apart in 48-wide press
+// columns, its slots this far in from the panel's sides.
+const BADGE_STRIP_INSET = 4;
+
 // A badge strip, from its panel's top.
 export const BADGE_STRIP = {
   // art: a badge's side.
@@ -699,7 +723,7 @@ export const BADGE_STRIP = {
   // art: the panel's frame.
   frame: 2,
   // The slots' inset from the panel's sides.
-  inset: 4,
+  inset: BADGE_STRIP_INSET,
   // The most badges that show their names.
   maxNamed: 3,
   // The most rows.
