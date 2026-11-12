@@ -92,7 +92,9 @@ function registerServiceWorker(): void {
     {
       activationPolicy: "manual",
       bootWaitMs: BOOT_WAIT_MS,
-      onOfflineActivity: reportOfflineActivity,
+      // Only a first visit's precache shows the loading line; a page a version already controls
+      // registers and updates in the background.
+      onOfflineActivity: page.container.controller === null ? reportOfflineActivity : undefined,
       onUpdateShown: (shown) => {
         updateShown = shown;
         dispatchPhoneEvent(window, PHONE_EVENTS.updatePlate);
