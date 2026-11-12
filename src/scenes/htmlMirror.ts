@@ -102,8 +102,9 @@ function dataOf(object: GameObjects.GameObject, key: string): unknown {
 // A game coordinate as the canvas draws it: a half pixel to the whole pixel below it.
 const halfDown = (value: number) => Math.ceil(value - 0.5);
 
-// An opacity as CSS sets it: none at full alpha.
-const opacity = (alpha: number) => (alpha < 1 ? String(alpha) : "");
+// An opacity as CSS sets it: none at full alpha, else in whole 255ths rounded down, as WebGL
+// takes a vertex's alpha, so a fade blends as the canvas blends it.
+const opacity = (alpha: number) => (alpha < 1 ? String(Math.floor(alpha * 255) / 255) : "");
 
 // The art the HTML has a file for at a texture key: its PNG's path, and its sheet's JSON path
 // for a sprite sheet, a grey copy's its key's.
