@@ -4,10 +4,8 @@
 // <link rel="stylesheet" href="/nav.css"> and <script src="/nav.js" defer></script> in its head
 // and adds nothing else. The page links the stylesheet, rather than this script injecting it, so
 // the bar's style blocks the first paint and the CSP's 'self' covers it. The bar is one row that
-// scrolls sideways where its links are wider than the screen. On /play/ in an installed app
-// (fullscreen, standalone or minimal-ui display mode, which Firefox for Android's app may report,
-// or iOS's navigator.standalone) there is no bar, so no link leaves the app and the game takes
-// the full height.
+// scrolls sideways where its links are wider than the screen. The game page, /play/, loads
+// neither file, so it has no bar.
 (() => {
   "use strict";
   const REPO = "https://github.com/andornaut/archies-dog-walks";
@@ -27,7 +25,10 @@
   const item = (text, href) => {
     const li = document.createElement("li");
     const a = document.createElement("a");
-    a.textContent = text;
+    // The text's span is the current page's face, so the face keeps its size in the 48px press.
+    const label = document.createElement("span");
+    label.textContent = text;
+    a.append(label);
     a.href = href;
     if (norm(href) === here) a.setAttribute("aria-current", "page");
     li.append(a);
@@ -43,23 +44,13 @@
     item("Tuning", "/tuning/"),
   );
 
-  const installed = matchMedia(
-    "(display-mode: fullscreen), (display-mode: standalone), (display-mode: minimal-ui)",
-  );
-  const hide = () => here === "/play" && (installed.matches || navigator.standalone === true);
-  const mount = () => {
-    if (hide()) nav.remove();
-    else if (!nav.isConnected) document.body.prepend(nav);
-  };
+  const mount = () => document.body.prepend(nav);
   if (document.body) mount();
   else document.addEventListener("DOMContentLoaded", mount);
-  installed.addEventListener("change", mount);
 
   // A "scroll to top" button at the bottom right of a long page (more than LONG viewports tall),
   // shown once the page is scrolled down more than one viewport. A spacer as tall as the button
-  // and its margin ends a long page, so its last controls can scroll clear of the button. The
-  // game page has none.
-  if (here === "/play") return;
+  // and its margin ends a long page, so its last controls can scroll clear of the button.
   const LONG = 2;
   const toTop = document.createElement("button");
   toTop.type = "button";

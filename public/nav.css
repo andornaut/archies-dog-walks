@@ -1,63 +1,82 @@
 @import url("/controls.css");
 
-/* The site navigation bar that public/nav.js builds: one row on every page, which scrolls
-   sideways when its links are wider than the screen. */
+/* The site navigation bar that public/nav.js builds: one 48px row on every page, which scrolls
+   sideways when its links are wider than the screen. The bottom rule is drawn inside the bar, so
+   the links' presses fill its height. */
 .art-nav {
   background: #181425;
-  border-bottom: 1px solid #3a4466;
+  box-shadow: inset 0 -1px #3a4466;
   font:
     13px/1 "Atkinson Hyperlegible",
     system-ui,
     sans-serif;
   touch-action: pan-x;
 }
-/* The extra top padding holds the current page's lift, frame and badge inside the scroller. */
+/* Each link's press spans from the middle of the gap on its left to the middle of the gap on its
+   right, --half being half a gap, so the presses tile the row with no overlap or hole. The outer
+   presses reach --half into the 16px gutters, so the text keeps them, and the text spans the
+   1240px column less its gutters, as the pages' own content does. */
 .art-nav ul {
+  --half: 10.5px;
+  box-sizing: border-box;
   list-style: none;
   margin: 0 auto;
   max-width: 1240px;
   display: flex;
   flex-wrap: nowrap;
-  align-items: center;
   overflow-x: auto;
   scrollbar-width: none;
-  padding-block: 11px 7px;
-  /* The game page's turned frame moves the safe-area insets onto its own edges as --inset-*
-     (the kit's frameTurnPortraitGame.css); other pages have no turn and no --inset-*. */
-  padding-left: max(16px, var(--inset-left, env(safe-area-inset-left, 0px)));
-  padding-right: max(16px, var(--inset-right, env(safe-area-inset-right, 0px)));
+  padding-left: calc(max(16px, env(safe-area-inset-left, 0px)) - var(--half));
+  padding-right: calc(max(16px, env(safe-area-inset-right, 0px)) - var(--half));
   white-space: nowrap;
 }
 .art-nav ul::-webkit-scrollbar {
   display: none;
 }
+/* The separator sits on the edge two presses share, its bottom 1px under the text's baseline,
+   and takes no taps, so a tap on it follows the link under it. Its negative margins take it out
+   of the row's width. */
+.art-nav li {
+  display: flex;
+  flex: none;
+  align-items: baseline;
+}
 .art-nav li + li::before {
   content: "";
-  display: inline-block;
+  flex: none;
+  position: relative;
+  top: 1px;
   width: 1px;
   height: 12px;
-  margin: 0 10px;
-  vertical-align: -1px;
+  margin: 0 -0.5px;
   background: #3a4466;
+  pointer-events: none;
 }
-/* Below 380px the separators close up, to 6px a side at 340px, so all six links fit inside the
-   16px gutters. */
+/* Below 380px the gaps close up, to 13px at 340px, so less of the row scrolls out of view. */
 @media (max-width: 379.98px) {
-  .art-nav li + li::before {
-    margin: 0 max(6px, (100vw - 280px) / 10);
+  .art-nav ul {
+    --half: calc(max(6px, (100vw - 280px) / 10) + 0.5px);
   }
 }
+/* The press: the full bar's height and at least 48px wide, a narrower link's gaps widening to
+   make it up, with the text centred and its line 18px from the top. */
 .art-nav a {
+  display: block;
+  box-sizing: border-box;
+  min-width: 48px;
+  height: 48px;
+  padding: 18px var(--half) 0;
   color: #c0cbdc;
+  text-align: center;
   text-decoration: none;
 }
 .art-nav a:hover {
   color: #feae34;
 }
-/* The current page in the game's selected state, held still: a yellow face with plum text, the
-   ui-select frame (ink, an amber band, ink) 3px outside its ink edge, lifted 2px onto a plum
-   shadow, and the ui-check tick at its top-left corner. */
-.art-nav a[aria-current="page"] {
+/* The current page's text in the game's selected state, held still: a yellow face with plum
+   text, the ui-select frame (ink, an amber band, ink) 3px outside its ink edge, lifted 2px onto a
+   plum shadow, and the ui-check tick at its top-left corner. */
+.art-nav a[aria-current="page"] > span {
   position: relative;
   top: -2px;
   padding: 1px 6px 1px 10px;
@@ -70,7 +89,7 @@
     0 0 0 3px #181425,
     0 2px 0 3px #3e2731;
 }
-.art-nav a[aria-current="page"]::before {
+.art-nav a[aria-current="page"] > span::before {
   content: "";
   position: absolute;
   left: -7px;
@@ -80,7 +99,7 @@
   background: url("/art/sprites/ui-check.png") -48px 0 / 64px 16px;
   image-rendering: pixelated;
 }
-/* Inside the link, so the scroller does not clip it. */
+/* Inside the press, so the scroller does not clip it. */
 .art-nav a:focus-visible {
   outline: 2px solid #feae34;
   outline-offset: -2px;
