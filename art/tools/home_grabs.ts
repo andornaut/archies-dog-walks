@@ -13,11 +13,13 @@
 //   picked, Lady owned, both dog slots bought, and Running shoes picked and the Whistle owned.
 //
 // Deterministic: Playwright's fake clock starts paused at CLOCK_START and steps the game one
-// FRAME_MS frame at a time, so animation and the walk depend only on the frame count, and each grab
-// is Phaser's own snapshot of the canvas, independent of the page's CSS scale. A grab that is not
-// WIDTH x HEIGHT or not opaque fails. The game's canvas is not held to the house palette (it blends
-// translucent layers and draws UI colours of its own), so the tool reports the colours outside
-// PALETTE64, the neutral greys and the picker colours rather than failing on them.
+// FRAME_MS frame at a time, so animation and the walk depend only on the frame count. Each grab is
+// a screenshot of the page over the canvas, at DPR 1 in a viewport WIDTH wide and HEIGHT plus
+// DEV_BAR_HEIGHT tall, so the game fits at 1x and the grab holds the HTML interface drawn over the
+// canvas as well as the canvas. A grab fails when the canvas is not at 0,0 at WIDTH x HEIGHT, or
+// when it is not WIDTH x HEIGHT or not opaque. The game's canvas is not held to the house palette
+// (it blends translucent layers and draws UI colours of its own), so the tool reports the colours
+// outside PALETTE64, the neutral greys and the picker colours rather than failing on them.
 //
 // Playwright is not a dependency of this repository: the module is imported from
 // PLAYWRIGHT_MODULE, which defaults to the copy in the Playwright MCP image
@@ -43,6 +45,9 @@ interface Page {
   evaluate<R, A>(fn: (arg: A) => R | Promise<R>, arg: A): Promise<R>;
   goto(url: string): Promise<unknown>;
   keyboard: { press(key: string): Promise<void> };
+  screenshot(options: {
+    clip: { height: number; width: number; x: number; y: number };
+  }): Promise<Uint8Array>;
 }
 interface Context {
   addInitScript<A>(fn: (arg: A) => void, arg: A): Promise<void>;
@@ -77,12 +82,10 @@ interface PageScene {
   };
 }
 interface PageGame {
-  renderer: { snapshot(callback: (image: unknown) => void): void };
   scene: { scenes: PageScene[] };
 }
 // The page's globals by name: the game sits under the export's devHarness.pageGlobal.
 type PageGames = Partial<Record<string, PageGame>>;
-type PageGlobal = typeof globalThis & { homeGrab?: string };
 
 const HARNESS = GAME.devHarness;
 // The global the game sets with dev=1. Page functions run in the browser, so it reaches them as
@@ -99,6 +102,9 @@ const CLOCK_START = Date.parse("2026-10-15T09:00:00-04:00");
 const FRAME_MS = 16;
 // The game canvas at 1x: the layout's screen.
 const HEIGHT = LAYOUT.screen.height;
+// The dev bar under the game in a browser tab (`--dev-bar-height` in src/main.css), which the
+// viewport leaves room for so the game fits at 1x.
+const DEV_BAR_HEIGHT = 48;
 // How long a loader's counts must hold, and how long at most a step waits for that, in real time.
 const LOAD_SETTLE_MS = 100;
 const LOAD_WAIT_MS = 60_000;
@@ -219,18 +225,31 @@ async function stepFor(page: Page, ms: number): Promise<void> {
   }
 }
 
-/** The canvas as the next frame draws it, from Phaser's renderer snapshot. */
+/** The canvas's rect on the page, in CSS px. */
+function canvasRect(): { height: number; width: number; x: number; y: number } | null {
+  const rect = document.querySelector("canvas")?.getBoundingClientRect();
+  return rect === undefined
+    ? null
+    : { height: rect.height, width: rect.width, x: rect.x, y: rect.y };
+}
+
+/**
+ * The next frame as the page shows it over the canvas, the HTML interface included: a screenshot
+ * of the canvas's rect, which must be WIDTH x HEIGHT at 0,0.
+ */
 async function snapshot(page: Page): Promise<RgbaImage> {
-  await page.evaluate((pageGlobal) => {
-    const page = globalThis as PageGlobal;
-    delete page.homeGrab;
-    (globalThis as unknown as PageGames)[pageGlobal]?.renderer.snapshot((image) => {
-      page.homeGrab = (image as HTMLImageElement).src;
-    });
-  }, PAGE_GLOBAL);
-  await stepUntil(page, () => (globalThis as PageGlobal).homeGrab !== undefined, null);
-  const url = await page.evaluate(() => (globalThis as PageGlobal).homeGrab ?? "", null);
-  return decodePng(Buffer.from(url.replace(/^data:image\/png;base64,/, ""), "base64"));
+  await step(page);
+  const rect = await page.evaluate(canvasRect, null);
+  if (
+    rect === null ||
+    rect.x !== 0 ||
+    rect.y !== 0 ||
+    rect.width !== WIDTH ||
+    rect.height !== HEIGHT
+  ) {
+    throw new Error(`the canvas is at ${JSON.stringify(rect)}, not 0,0 at ${WIDTH}x${HEIGHT}`);
+  }
+  return decodePng(await page.screenshot({ clip: { height: HEIGHT, width: WIDTH, x: 0, y: 0 } }));
 }
 
 /** A new page in its own context, its clock paused at CLOCK_START. */
@@ -240,7 +259,7 @@ async function freshPage(browser: Browser): Promise<[Context, Page]> {
     locale: "en-CA",
     reducedMotion: "no-preference",
     timezoneId: "America/Toronto",
-    viewport: { height: HEIGHT, width: WIDTH },
+    viewport: { height: HEIGHT + DEV_BAR_HEIGHT, width: WIDTH },
   });
   const page = await context.newPage();
   await page.clock.install({ time: CLOCK_START - 1000 });
