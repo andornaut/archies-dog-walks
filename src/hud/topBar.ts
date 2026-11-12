@@ -28,14 +28,14 @@ export function topBarButtonAt(x: number, y: number): WalkBarButtonId | undefine
 }
 
 // M mutes, and P and Escape are the pause button's. A held key's repeats press nothing.
-export function topBarButtonForKey(repeat: boolean, key: string): WalkBarButtonId | undefined {
+export function topBarButtonForKey(repeat: boolean, code: string): WalkBarButtonId | undefined {
   if (repeat) {
     return undefined;
   }
-  if (isMuteKey(key)) {
+  if (isMuteKey(code)) {
     return "sound";
   }
-  return isPauseKey(key) ? "pause" : undefined;
+  return isPauseKey(code) ? "pause" : undefined;
 }
 
 // What holds the walk still. card: a card or the zone celebration, which can sit under the pause

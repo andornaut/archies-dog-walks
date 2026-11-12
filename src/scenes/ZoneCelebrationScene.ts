@@ -81,12 +81,12 @@ export class ZoneCelebrationScene extends Scene {
       data.onDone();
     };
     this.input.keyboard?.on("keydown", (event: KeyboardEvent) => {
-      if (!menuKeyActs(event.repeat, event.key)) {
+      if (!menuKeyActs(event.repeat, event.code)) {
         return;
       }
-      if (isPauseKey(event.key)) {
+      if (isPauseKey(event.code)) {
         data.openPause();
-      } else if (isConfirmKey(event.key) || cardNumberForKey(1, event.key) !== undefined) {
+      } else if (isConfirmKey(event.code) || cardNumberForKey(1, event.code) !== undefined) {
         finish();
       }
     });

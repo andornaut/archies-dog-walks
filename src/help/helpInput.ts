@@ -13,14 +13,14 @@ const SWIPE_MIN_DISTANCE = 40;
 // The lane keys turn pages: arrows, A/D and H/L. Enter and Space press Next; Escape or P closes.
 // A key's auto-repeat turns pages but never presses Next or closes, so a held Enter cannot
 // run through the pages and out of the help.
-export function helpActionForKey(repeat: boolean, key: string): HelpAction | undefined {
-  if (isPauseKey(key)) {
+export function helpActionForKey(repeat: boolean, code: string): HelpAction | undefined {
+  if (isPauseKey(code)) {
     return repeat ? undefined : { kind: "close" };
   }
-  if (isConfirmKey(key)) {
+  if (isConfirmKey(code)) {
     return repeat ? undefined : { kind: "advance" };
   }
-  const direction = laneDirectionForKey(key);
+  const direction = laneDirectionForKey(code);
   if (direction === undefined) {
     return undefined;
   }

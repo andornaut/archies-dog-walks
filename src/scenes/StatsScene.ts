@@ -159,18 +159,18 @@ export class StatsScene extends Scene {
       view: VIEW,
     });
     this.input.keyboard?.on("keydown", (event: KeyboardEvent) => {
-      if (!menuKeyActs(event.repeat, event.key)) {
+      if (!menuKeyActs(event.repeat, event.code)) {
         return;
       }
-      if (isPauseKey(event.key) || isConfirmKey(event.key)) {
+      if (isPauseKey(event.code) || isConfirmKey(event.code)) {
         this.back();
         return;
       }
       if (this.detail !== undefined) {
         return;
       }
-      const direction = focusDirectionForKey(event.key);
-      const paged = pageKeyScroll(VIEW.height - SCROLL.pageOverlap, event.key, this.scroll);
+      const direction = focusDirectionForKey(event.code);
+      const paged = pageKeyScroll(VIEW.height - SCROLL.pageOverlap, event.code, this.scroll);
       if (paged !== undefined || direction === "up" || direction === "down") {
         const step = direction === "up" ? -SCROLL.keyStep : SCROLL.keyStep;
         this.scroll = paged ?? scrollBy(step, this.scroll);

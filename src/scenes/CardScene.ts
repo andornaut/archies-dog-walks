@@ -267,8 +267,8 @@ export class CardScene extends Scene {
       targetAt: (x, y) => rectIndexAt(this.cardRects, x, y),
     });
     this.input.keyboard?.on("keydown", (event: KeyboardEvent) => {
-      const number = cardNumberForKey(this.entries.length, event.key);
-      if (number !== undefined && menuKeyActs(event.repeat, event.key)) {
+      const number = cardNumberForKey(this.entries.length, event.code);
+      if (number !== undefined && menuKeyActs(event.repeat, event.code)) {
         this.choose(number - 1);
       }
     });

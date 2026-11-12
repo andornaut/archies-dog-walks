@@ -60,7 +60,7 @@ export class DevOverlayScene extends Scene {
     }
 
     this.input.keyboard?.on("keydown", (event: KeyboardEvent) => {
-      if (event.key.toLowerCase() === "c" && this.text?.visible === true) {
+      if (event.code === "KeyC" && this.text?.visible === true) {
         this.copyLink();
       }
     });

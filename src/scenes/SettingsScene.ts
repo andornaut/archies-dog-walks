@@ -273,15 +273,15 @@ export class SettingsScene extends Scene {
     // Sound on the top bar flips the sound switch here too.
     onSceneEvent(this, this.game.events, BAR_MUTED_EVENT, () => this.render());
     this.input.keyboard?.on("keydown", (event: KeyboardEvent) => {
-      if (menuKeyActs(event.repeat, event.key)) {
-        this.onKey(event.key);
+      if (menuKeyActs(event.repeat, event.code)) {
+        this.onKey(event.code);
       }
     });
   }
 
-  private onKey(key: string): void {
+  private onKey(code: string): void {
     if (this.steps !== undefined) {
-      if (isPauseKey(key) || isConfirmKey(key)) {
+      if (isPauseKey(code) || isConfirmKey(code)) {
         this.closeSteps();
       }
       return;
@@ -290,7 +290,7 @@ export class SettingsScene extends Scene {
     if (focusedRow?.kind === "slider") {
       const settings = currentSettings(this);
       const current = volumeSteps(settings[focusedRow.key]);
-      const steps = volumeStepForKey(key, current);
+      const steps = volumeStepForKey(code, current);
       if (steps !== undefined) {
         if (settings.muted) {
           this.refuseSlider(focusedRow.key);
@@ -305,16 +305,16 @@ export class SettingsScene extends Scene {
         return;
       }
     }
-    const direction = focusDirectionForKey(key);
+    const direction = focusDirectionForKey(code);
     if (direction !== undefined) {
       // The rows, then the close control, one per focus row.
       this.focus = moveFocus([...this.rows.map(() => 1), 1], direction, this.focus);
       this.render();
-    } else if (isPauseKey(key)) {
+    } else if (isPauseKey(code)) {
       this.close();
-    } else if (isConfirmKey(key)) {
+    } else if (isConfirmKey(code)) {
       this.confirm(focusedRow);
-    } else if (isMuteKey(key)) {
+    } else if (isMuteKey(code)) {
       this.flipAfterDip("muted");
     }
   }

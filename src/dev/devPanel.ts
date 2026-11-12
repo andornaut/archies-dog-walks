@@ -298,7 +298,7 @@ export function mountDevPanel(host: DevPanelHost, container: HTMLElement | null)
   }
   // Escape hides the sheet and returns keyboard focus to its toggle.
   sheet.addEventListener("keydown", (event) => {
-    if (event.key === "Escape") {
+    if (event.code === "Escape") {
       setOpen(false);
       bar.focus();
     }

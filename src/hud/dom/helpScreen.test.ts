@@ -36,7 +36,7 @@ describe("the HTML help screen", () => {
     const { dialog, doc, nodes } = helpScreen(0, undefined);
     expect(dialog?.className).toContain("adw-passive");
     expect(nodes.some((node) => node.tagName === "button")).toBe(false);
-    dialog?.fire("keydown", { key: "Tab", preventDefault: () => undefined, shiftKey: false });
+    dialog?.fire("keydown", { code: "Tab", preventDefault: () => undefined, shiftKey: false });
     expect(doc.activeElement).toBe(dialog);
     const page = nodes.find((node) => node.id === dialog?.getAttribute("aria-describedby"));
     const spoken = page?.all().filter((node) => node.className === "adw-spoken");

@@ -16,38 +16,38 @@ describe("helpActionForKey", () => {
         "turns pages with lane keys, presses Next with Enter or Space, closes with Escape or P, ignores the rest",
         false,
         {
-          " ": advance,
-          "1": undefined,
-          "?": undefined,
-          A: previous,
           ArrowLeft: previous,
           ArrowRight: next,
           ArrowUp: undefined,
-          D: next,
+          Digit1: undefined,
           Enter: advance,
           Escape: close,
-          P: close,
-          e: undefined,
-          h: previous,
-          l: next,
+          KeyA: previous,
+          KeyD: next,
+          KeyE: undefined,
+          KeyH: previous,
+          KeyL: next,
+          KeyP: close,
+          Slash: undefined,
+          Space: advance,
         },
       ],
       [
         "keeps turning pages on a held lane key, but ignores a held Enter, Space, Escape or P",
         true,
         {
-          " ": undefined,
           ArrowLeft: previous,
           ArrowRight: next,
           Enter: undefined,
           Escape: undefined,
-          p: undefined,
+          KeyP: undefined,
+          Space: undefined,
         },
       ],
     ];
     for (const [, repeat, expected] of cases) {
-      for (const [key, action] of Object.entries(expected)) {
-        expect(helpActionForKey(repeat, key), JSON.stringify(key)).toEqual(action);
+      for (const [code, action] of Object.entries(expected)) {
+        expect(helpActionForKey(repeat, code), code).toEqual(action);
       }
     }
   });

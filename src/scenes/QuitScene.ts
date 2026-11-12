@@ -46,7 +46,7 @@ export class QuitScene extends Scene {
     const covered =
       addHtmlQuestionPanel(this, area, question) ?? addQuestionPanel(this, area, question);
     this.input.keyboard?.on("keydown", (event: KeyboardEvent) => {
-      if (menuKeyActs(event.repeat, event.key) && isPauseKey(event.key)) {
+      if (menuKeyActs(event.repeat, event.code) && isPauseKey(event.code)) {
         keepPlaying();
       }
     });

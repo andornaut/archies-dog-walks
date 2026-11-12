@@ -94,14 +94,14 @@ describe("the HTML pause menu", () => {
     expect(presses[1]).toHaveBeenCalledOnce();
     buttons.at(-1)?.fire("click");
     expect(close).toHaveBeenCalledOnce();
-    doc.defaultView.fire("keydown", { key: "3", repeat: false });
+    doc.defaultView.fire("keydown", { code: "Digit3", repeat: false });
     expect(presses[2]).toHaveBeenCalledOnce();
-    doc.defaultView.fire("keydown", { key: "4", repeat: true });
+    doc.defaultView.fire("keydown", { code: "Digit4", repeat: true });
     shown.setShown(false);
-    doc.defaultView.fire("keydown", { key: "4", repeat: false });
+    doc.defaultView.fire("keydown", { code: "Digit4", repeat: false });
     expect(presses[3]).not.toHaveBeenCalled();
     shown.destroy();
-    doc.defaultView.fire("keydown", { key: "1", repeat: false });
+    doc.defaultView.fire("keydown", { code: "Digit1", repeat: false });
     expect(presses[0]).not.toHaveBeenCalled();
   });
 
@@ -112,10 +112,10 @@ describe("the HTML pause menu", () => {
     shown.setShown(true);
     expect(dialog.className).toContain("adw-inert");
     expect(doc.activeElement).toBeUndefined();
-    doc.defaultView.fire("keydown", { key: "1", repeat: false });
+    doc.defaultView.fire("keydown", { code: "Digit1", repeat: false });
     expect(presses[0]).not.toHaveBeenCalled();
     shown.setInert(false);
-    doc.defaultView.fire("keydown", { key: "1", repeat: false });
+    doc.defaultView.fire("keydown", { code: "Digit1", repeat: false });
     expect(presses[0]).toHaveBeenCalledOnce();
   });
 
@@ -123,7 +123,7 @@ describe("the HTML pause menu", () => {
     const { buttons, dialog, doc, shown } = menu();
     expect(doc.activeElement).toBe(dialog);
     const tab = (shiftKey: boolean) =>
-      dialog.fire("keydown", { key: "Tab", preventDefault: () => undefined, shiftKey });
+      dialog.fire("keydown", { code: "Tab", preventDefault: () => undefined, shiftKey });
     tab(false);
     expect(doc.activeElement).toBe(buttons[0]);
     tab(true);
@@ -182,7 +182,7 @@ describe("an HTML modal card", () => {
     const parts = element.all().map(({ className }) => className);
     expect(parts).toContain("adw-card");
     expect(parts).not.toContain("adw-rim");
-    doc.defaultView.fire("keydown", { key: "1", repeat: false });
+    doc.defaultView.fire("keydown", { code: "Digit1", repeat: false });
     expect(update).not.toHaveBeenCalled();
     element
       .all()
@@ -244,7 +244,7 @@ describe("an HTML detail card that takes no presses", () => {
     expect(nodes.some((node) => node.tagName === "button")).toBe(false);
     const close = nodes.find((node) => node.className === "adw-close");
     expect([close?.tagName, close?.getAttribute("aria-hidden")]).toEqual(["span", "true"]);
-    dialog?.fire("keydown", { key: "Tab", preventDefault: () => undefined, shiftKey: false });
+    dialog?.fire("keydown", { code: "Tab", preventDefault: () => undefined, shiftKey: false });
     expect(doc.activeElement).toBe(dialog);
     const described = nodes.find((node) => node.id === dialog?.getAttribute("aria-describedby"));
     const spoken = described?.all().find((node) => node.className === "adw-spoken");
@@ -291,12 +291,12 @@ describe("an HTML panel's part controls", () => {
     });
     const [dialog] = element.children;
     const tab = () =>
-      dialog?.fire("keydown", { key: "Tab", preventDefault: () => undefined, shiftKey: false });
+      dialog?.fire("keydown", { code: "Tab", preventDefault: () => undefined, shiftKey: false });
     tab();
     expect(doc.activeElement).toBe(rows[0]);
     // Enter on a part's control goes through to the scene, which presses what its focus is on.
     const stopPropagation = vi.fn();
-    dialog?.fire("keydown", { key: "Enter", stopPropagation, target: rows[0] });
+    dialog?.fire("keydown", { code: "Enter", stopPropagation, target: rows[0] });
     expect(stopPropagation).not.toHaveBeenCalled();
     shown.focusControl(1);
     expect(doc.activeElement).toBe(rows[1]);
@@ -371,7 +371,7 @@ describe("an HTML zone celebration", () => {
     expect(dialog?.listeners.has("mousedown")).toBe(true);
     control?.fire("click");
     expect(press).toHaveBeenCalledOnce();
-    doc.defaultView.fire("keydown", { key: "1", repeat: false });
+    doc.defaultView.fire("keydown", { code: "Digit1", repeat: false });
     expect(press).toHaveBeenCalledOnce();
   });
 

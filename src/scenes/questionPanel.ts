@@ -132,8 +132,8 @@ export function addQuestionPanel(scene: Scene, area: Rect, question: QuestionPan
           ),
   });
   scene.input.keyboard?.on("keydown", (event: KeyboardEvent) => {
-    const number = cardNumberForKey(entries.length, event.key);
-    if (number !== undefined && menuKeyActs(event.repeat, event.key)) {
+    const number = cardNumberForKey(entries.length, event.code);
+    if (number !== undefined && menuKeyActs(event.repeat, event.code)) {
       entries[number - 1]?.press();
     }
   });

@@ -9,7 +9,7 @@ export interface FakeEvent {
   buttons?: number;
   clientX?: number;
   clientY?: number;
-  key?: string;
+  code?: string;
   pointerId?: number;
   repeat?: boolean;
   shiftKey?: boolean;

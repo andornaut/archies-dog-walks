@@ -46,14 +46,14 @@ export function volumePercent(steps: number): number {
 
 // The step a key moves a focused slider to: the arrows, A/D and H/L one step down or up,
 // Home to 0 and End to the top. Undefined for any other key.
-export function volumeStepForKey(key: string, steps: number): number | undefined {
-  if (key === "Home") {
+export function volumeStepForKey(code: string, steps: number): number | undefined {
+  if (code === "Home") {
     return 0;
   }
-  if (key === "End") {
+  if (code === "End") {
     return VOLUME_STEPS;
   }
-  const direction = laneDirectionForKey(key);
+  const direction = laneDirectionForKey(code);
   return direction === undefined
     ? undefined
     : Math.min(VOLUME_STEPS, Math.max(0, steps + direction));

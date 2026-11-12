@@ -115,7 +115,7 @@ export class RunInput {
   // M, P and Escape are the walk bar's keys, which the HUD handles. Phaser hands a key down to
   // this listener as the browser fires it, auto-repeats included.
   private onKey(event: KeyboardEvent): void {
-    const action = walkKeyAction(event.key, event.repeat);
+    const action = walkKeyAction(event.code, event.repeat);
     if (action !== undefined) {
       this.act(action);
     }

@@ -69,11 +69,11 @@ export function answerPurchase(
 
 // The answer a key gives an open confirm: Enter or Space buys, Escape or P cancels. Other keys
 // give none.
-export function keyAnswer(key: string): ConfirmChoice | undefined {
-  if (isPauseKey(key)) {
+export function keyAnswer(code: string): ConfirmChoice | undefined {
+  if (isPauseKey(code)) {
     return "cancel";
   }
-  return isConfirmKey(key) ? "buy" : undefined;
+  return isConfirmKey(code) ? "buy" : undefined;
 }
 
 // The confirm's words: its title naming the item, the price, the bank it would leave, and its

@@ -91,9 +91,9 @@ describe("keyAnswer", () => {
   it.each([
     ["Enter", "buy"],
     ["Escape", "cancel"],
-    ["b", undefined],
-  ] as const)("answers %j with %j", (key, choice) => {
-    expect(keyAnswer(key)).toBe(choice);
+    ["KeyB", undefined],
+  ] as const)("answers %j with %j", (code, choice) => {
+    expect(keyAnswer(code)).toBe(choice);
   });
 });
 

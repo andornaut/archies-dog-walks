@@ -65,17 +65,17 @@ describe("the volume slider", () => {
 describe("volumeStepForKey", () => {
   it("steps the volume down and up by lane keys, stops at the ends, jumps with Home and End", () => {
     const cases: readonly [string, string[], number, number | undefined][] = [
-      ["steps down, in either case", ["ArrowLeft", "a", "A", "h", "H"], 12, 11],
-      ["steps up, in either case", ["ArrowRight", "d", "D", "l", "L"], 12, 13],
+      ["steps down", ["ArrowLeft", "KeyA", "KeyH"], 12, 11],
+      ["steps up", ["ArrowRight", "KeyD", "KeyL"], 12, 13],
       ["stops at 0", ["ArrowLeft"], 0, 0],
       ["stops at the top", ["ArrowRight"], 20, 20],
       ["goes to 0", ["Home"], 12, 0],
       ["goes to 100%", ["End"], 12, 20],
       ["ignores the key", ["ArrowUp", "Enter"], 12, undefined],
     ];
-    for (const [, keys, from, expected] of cases) {
-      for (const key of keys) {
-        expect(volumeStepForKey(key, from), key).toBe(expected);
+    for (const [, codes, from, expected] of cases) {
+      for (const code of codes) {
+        expect(volumeStepForKey(code, from), code).toBe(expected);
       }
     }
   });

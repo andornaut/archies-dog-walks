@@ -17,8 +17,9 @@ const KEY_DIRECTIONS: Readonly<Record<string, FocusDirection>> = {
   ArrowUp: "up",
 };
 
-export function focusDirectionForKey(key: string): FocusDirection | undefined {
-  return KEY_DIRECTIONS[key];
+// Read from KeyboardEvent.code, which names the arrows as KeyboardEvent.key does.
+export function focusDirectionForKey(code: string): FocusDirection | undefined {
+  return KEY_DIRECTIONS[code];
 }
 
 // The same share of the way along a row of another length.

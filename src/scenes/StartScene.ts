@@ -120,6 +120,7 @@ import {
 import {
   isConfirmKey,
   isExitKey,
+  isHelpKey,
   isMuteKey,
   isPauseKey,
   menuKeyActs,
@@ -663,8 +664,8 @@ export class StartScene extends Scene {
     });
     // A held key acts once, so an Enter held from the end screen cannot start a walk.
     this.input.keyboard?.on("keydown", (event: KeyboardEvent) => {
-      if (menuKeyActs(event.repeat, event.key)) {
-        this.onKey(event.key);
+      if (menuKeyActs(event.repeat, event.code)) {
+        this.onKey(event);
       }
     });
     // Badges earned on launch: a scene can pause itself only once it is running.
@@ -729,16 +730,16 @@ export class StartScene extends Scene {
     });
   }
 
-  private onKey(key: string): void {
+  private onKey({ code, shiftKey }: Pick<KeyboardEvent, "code" | "shiftKey">): void {
     if (this.overlay !== undefined) {
-      if (isConfirmKey(key) && "mode" in this.overlay) {
+      if (isConfirmKey(code) && "mode" in this.overlay) {
         acceptUpdate();
-      } else if (isPauseKey(key) || isConfirmKey(key)) {
+      } else if (isPauseKey(code) || isConfirmKey(code)) {
         this.closeOverlay();
       }
       return;
     }
-    const direction = focusDirectionForKey(key);
+    const direction = focusDirectionForKey(code);
     if (direction !== undefined) {
       const rows = focusRows(this.shownControls());
       this.focus = moveFocus(
@@ -750,21 +751,21 @@ export class StartScene extends Scene {
       this.render();
       return;
     }
-    if (isConfirmKey(key)) {
+    if (isConfirmKey(code)) {
       const target = this.focused()?.target ?? { kind: "start" };
       this.press = { held: false, id: targetId(target), startedMs: this.time.now };
       this.actAfterDip(target);
       return;
     }
-    if (key === "?") {
+    if (isHelpKey(shiftKey, code)) {
       this.act({ kind: "help" });
-    } else if (key === "s" || key === "S") {
+    } else if (code === "KeyS") {
       this.act({ kind: "settings" });
-    } else if (key === "l" || key === "L") {
+    } else if (code === "KeyL") {
       this.act({ kind: "logbook" });
-    } else if (isMuteKey(key)) {
+    } else if (isMuteKey(code)) {
       this.act({ kind: "mute" });
-    } else if (isExitKey(key) && this.exit) {
+    } else if (isExitKey(code) && this.exit) {
       this.act({ kind: "exit" });
     }
   }

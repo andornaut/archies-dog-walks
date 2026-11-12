@@ -40,6 +40,6 @@ describe("focusDirectionForKey", () => {
   it("reads the arrow keys only", () => {
     expect(focusDirectionForKey("ArrowUp")).toBe("up");
     expect(focusDirectionForKey("ArrowLeft")).toBe("left");
-    expect(focusDirectionForKey("a")).toBeUndefined();
+    expect(focusDirectionForKey("KeyA")).toBeUndefined();
   });
 });

@@ -316,8 +316,8 @@ export class ShopScene extends Scene {
     });
     this.listenScroll();
     this.input.keyboard?.on("keydown", (event: KeyboardEvent) => {
-      if (menuKeyActs(event.repeat, event.key)) {
-        this.onKey(event.key);
+      if (menuKeyActs(event.repeat, event.code)) {
+        this.onKey(event.code);
       }
     });
     // The top bar's empty area and the margins around the card close the shop, card and all, or
@@ -423,19 +423,19 @@ export class ShopScene extends Scene {
     this.render();
   }
 
-  private onKey(key: string): void {
+  private onKey(code: string): void {
     if (this.confirm !== undefined) {
-      this.onKeyAnswer(key);
+      this.onKeyAnswer(code);
       return;
     }
-    if (isPauseKey(key) || (this.detail !== undefined && isConfirmKey(key))) {
+    if (isPauseKey(code) || (this.detail !== undefined && isConfirmKey(code))) {
       this.back();
       return;
     }
     if (this.detail !== undefined) {
       return;
     }
-    const direction = focusDirectionForKey(key);
+    const direction = focusDirectionForKey(code);
     if (direction === "left" || direction === "right") {
       const index = SHOP_TABS.indexOf(this.tab) + (direction === "left" ? -1 : 1);
       const tab = SHOP_TABS[clampIndex(SHOP_TABS.length, index)];
@@ -454,19 +454,19 @@ export class ShopScene extends Scene {
       this.showFocus();
       return;
     }
-    const paged = pageKeyScroll(LIST.height - LAYOUT.list.pageOverlap, key, this.scroll);
+    const paged = pageKeyScroll(LIST.height - LAYOUT.list.pageOverlap, code, this.scroll);
     if (paged !== undefined) {
       this.moveList(paged);
       return;
     }
-    if (isConfirmKey(key) && this.focusId !== null) {
+    if (isConfirmKey(code) && this.focusId !== null) {
       this.actAfterDip({ id: this.focusId, kind: "row" });
     }
   }
 
   // Escape or P cancels at once; Enter or Space presses Buy, which dips, then buys.
-  private onKeyAnswer(key: string): void {
-    const choice = keyAnswer(key);
+  private onKeyAnswer(code: string): void {
+    const choice = keyAnswer(code);
     if (choice === "cancel") {
       this.answer(choice);
     } else if (choice === "buy") {

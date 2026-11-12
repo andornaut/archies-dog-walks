@@ -5,6 +5,7 @@ import {
   cardNumberForKey,
   isConfirmKey,
   isExitKey,
+  isHelpKey,
   isMuteKey,
   isPauseKey,
   laneDirectionForKey,
@@ -13,76 +14,85 @@ import {
 } from "./keyBindings.ts";
 
 describe("key bindings", () => {
-  // Each binding read over every key listed, by key; undefined or false for a key it ignores.
-  it("binds each key", () => {
+  // Each binding read over every KeyboardEvent.code listed; undefined or false for one it ignores.
+  it("binds each key by its physical position", () => {
     for (const { expected, read } of [
       {
         expected: {
-          " ": undefined,
-          "1": undefined,
-          A: -1,
           ArrowLeft: -1,
           ArrowRight: 1,
           ArrowUp: undefined,
-          L: 1,
-          a: -1,
-          d: 1,
-          e: undefined,
-          h: -1,
-          l: 1,
-          w: undefined,
+          Digit1: undefined,
+          KeyA: -1,
+          KeyD: 1,
+          KeyE: undefined,
+          KeyH: -1,
+          KeyL: 1,
+          KeyW: undefined,
+          Space: undefined,
         },
-        name: "laneDirectionForKey moves left on Left, A and H, right on Right, D and L, in either case",
+        name: "laneDirectionForKey moves left on Left, A and H, right on Right, D and L",
         read: laneDirectionForKey,
       },
       {
         expected: {
-          " ": undefined,
-          "0": undefined,
-          "1": 1,
-          "3": 3,
-          "4": undefined,
+          Digit0: undefined,
+          Digit1: 1,
+          Digit3: 3,
+          Digit4: undefined,
           Enter: undefined,
-          e: undefined,
+          KeyE: undefined,
+          Numpad2: 2,
+          Numpad4: undefined,
+          Space: undefined,
         },
         name: "cardNumberForKey picks the card numbered by a digit, up to the 3 on offer",
-        read: (key) => cardNumberForKey(3, key),
+        read: (code) => cardNumberForKey(3, code),
       },
       {
-        expected: { Escape: false, Q: true, m: false, q: true },
-        name: "isExitKey is Q in either case",
+        expected: { Escape: false, KeyM: false, KeyQ: true },
+        name: "isExitKey is Q",
         read: isExitKey,
       },
       {
-        expected: { M: true, m: true, n: false },
-        name: "isMuteKey is M in either case",
+        expected: { KeyM: true, KeyN: false },
+        name: "isMuteKey is M",
         read: isMuteKey,
       },
       {
         expected: {
-          "1": false,
           ArrowLeft: false,
+          Digit1: false,
           Enter: false,
           Escape: true,
-          P: true,
-          a: false,
-          p: true,
+          KeyA: false,
+          KeyP: true,
         },
-        name: "isPauseKey is Escape or P in either case",
+        name: "isPauseKey is Escape or P",
         read: isPauseKey,
       },
       {
-        expected: { " ": true, Enter: true, e: false },
+        expected: { Enter: true, KeyE: false, NumpadEnter: true, Space: true },
         name: "isConfirmKey is Enter or Space only",
         read: isConfirmKey,
+      },
+      {
+        expected: { Backslash: false, Period: false, Slash: true },
+        name: "isHelpKey is ? (Shift and /)",
+        read: (code) => isHelpKey(true, code),
+      },
+      {
+        expected: { Slash: false },
+        name: "isHelpKey ignores / without Shift",
+        read: (code) => isHelpKey(false, code),
       },
     ] satisfies readonly {
       expected: Record<string, boolean | number | undefined>;
       name: string;
-      read: (key: string) => unknown;
+      read: (code: string) => unknown;
     }[]) {
-      for (const [key, value] of Object.entries(expected)) {
-        expect(read(key), JSON.stringify(key)).toBe(value);
+      for (const [code, value] of Object.entries(expected)) {
+        expect(read(code), code).toBe(value);
       }
     }
   });
@@ -91,16 +101,16 @@ describe("key bindings", () => {
 describe("walkKeyAction", () => {
   // A key going down during a walk, first pressed or auto-repeated.
   it("acts on each key, repeat or not", () => {
-    for (const { action, key, repeat } of [
-      { action: { direction: -1, kind: "move" }, key: "ArrowLeft", repeat: false },
-      { action: { direction: 1, kind: "move" }, key: "d", repeat: false },
-      { action: undefined, key: "2", repeat: false },
-      { action: undefined, key: "w", repeat: false },
-      { action: undefined, key: "ArrowLeft", repeat: true },
-      { action: undefined, key: "d", repeat: true },
-      { action: undefined, key: "2", repeat: true },
-    ] satisfies readonly { action: GestureAction | undefined; key: string; repeat: boolean }[]) {
-      expect(walkKeyAction(key, repeat)).toEqual(action);
+    for (const { action, code, repeat } of [
+      { action: { direction: -1, kind: "move" }, code: "ArrowLeft", repeat: false },
+      { action: { direction: 1, kind: "move" }, code: "KeyD", repeat: false },
+      { action: undefined, code: "Digit2", repeat: false },
+      { action: undefined, code: "KeyW", repeat: false },
+      { action: undefined, code: "ArrowLeft", repeat: true },
+      { action: undefined, code: "KeyD", repeat: true },
+      { action: undefined, code: "Digit2", repeat: true },
+    ] satisfies readonly { action: GestureAction | undefined; code: string; repeat: boolean }[]) {
+      expect(walkKeyAction(code, repeat)).toEqual(action);
     }
   });
 });
@@ -108,14 +118,14 @@ describe("walkKeyAction", () => {
 describe("menuKeyActs", () => {
   // A key going down on a menu or page, first pressed or auto-repeated.
   it.each([
-    { acts: true, key: "Enter", repeat: false },
-    { acts: true, key: "1", repeat: false },
-    { acts: true, key: "ArrowDown", repeat: true },
-    { acts: true, key: "ArrowLeft", repeat: true },
-    { acts: false, key: "Enter", repeat: true },
-    { acts: false, key: "Escape", repeat: true },
-    { acts: false, key: "1", repeat: true },
-  ])("$key, repeat $repeat: acts $acts", ({ acts, key, repeat }) => {
-    expect(menuKeyActs(repeat, key)).toBe(acts);
+    { acts: true, code: "Enter", repeat: false },
+    { acts: true, code: "Digit1", repeat: false },
+    { acts: true, code: "ArrowDown", repeat: true },
+    { acts: true, code: "ArrowLeft", repeat: true },
+    { acts: false, code: "Enter", repeat: true },
+    { acts: false, code: "Escape", repeat: true },
+    { acts: false, code: "Digit1", repeat: true },
+  ])("$code, repeat $repeat: acts $acts", ({ acts, code, repeat }) => {
+    expect(menuKeyActs(repeat, code)).toBe(acts);
   });
 });

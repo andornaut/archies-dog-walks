@@ -164,8 +164,8 @@ export class CelebrationScene extends Scene {
     });
     this.input.keyboard?.on("keydown", (event: KeyboardEvent) => {
       if (
-        menuKeyActs(event.repeat, event.key) &&
-        (isConfirmKey(event.key) || isPauseKey(event.key))
+        menuKeyActs(event.repeat, event.code) &&
+        (isConfirmKey(event.code) || isPauseKey(event.code))
       ) {
         close();
       }

@@ -366,11 +366,11 @@ export function showQuestionPanel(layer: UiLayer, input: DomQuestionPanelInput):
   });
   dialog.addEventListener("keydown", (event) => {
     // Enter and Space press the focused control natively; the scene under never hears them.
-    if (isConfirmKey(event.key) && native.includes(event.target as HTMLElement)) {
+    if (isConfirmKey(event.code) && native.includes(event.target as HTMLElement)) {
       event.stopPropagation();
       return;
     }
-    if (event.key !== "Tab") {
+    if (event.code !== "Tab") {
       return;
     }
     const at = focusables.indexOf(doc.activeElement as HTMLElement);
@@ -382,13 +382,13 @@ export function showQuestionPanel(layer: UiLayer, input: DomQuestionPanelInput):
     focusables[next]?.focus();
   });
   const onKey = (event: KeyboardEvent) => {
-    const number = cardNumberForKey(input.presses.length, event.key);
+    const number = cardNumberForKey(input.presses.length, event.code);
     if (
       input.numberKeys &&
       !dialog.hidden &&
       !inert &&
       number !== undefined &&
-      menuKeyActs(event.repeat, event.key)
+      menuKeyActs(event.repeat, event.code)
     ) {
       input.presses[number - 1]?.();
     }

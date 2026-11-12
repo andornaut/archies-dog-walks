@@ -389,7 +389,7 @@ export class HudScene extends Scene {
       up: () => this.setBarPressed(undefined),
     });
     this.input.keyboard?.on("keydown", (event: KeyboardEvent) => {
-      const button = topBarButtonForKey(event.repeat, event.key);
+      const button = topBarButtonForKey(event.repeat, event.code);
       if (button !== undefined) {
         const until = this.time.now + MENU_FEEDBACK.pressDipMs;
         this.setBarPressed(button, () => this.time.now < until);

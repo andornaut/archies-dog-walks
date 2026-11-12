@@ -147,19 +147,17 @@ describe("walkBackAction", () => {
 });
 
 describe("topBarButtonForKey", () => {
-  it("maps M to sound and P or Escape to pause, in either case, and ignores repeats", () => {
-    const keys: Record<string, WalkBarButtonId | undefined> = {
-      "1": undefined,
+  it("maps M to sound and P or Escape to pause, and ignores repeats", () => {
+    const codes: Record<string, WalkBarButtonId | undefined> = {
       ArrowLeft: undefined,
+      Digit1: undefined,
       Escape: "pause",
-      M: "sound",
-      P: "pause",
-      m: "sound",
-      p: "pause",
+      KeyM: "sound",
+      KeyP: "pause",
     };
-    for (const [key, button] of Object.entries(keys)) {
-      expect(topBarButtonForKey(false, key), key).toBe(button);
-      expect(topBarButtonForKey(true, key), key).toBeUndefined();
+    for (const [code, button] of Object.entries(codes)) {
+      expect(topBarButtonForKey(false, code), code).toBe(button);
+      expect(topBarButtonForKey(true, code), code).toBeUndefined();
     }
   });
 });

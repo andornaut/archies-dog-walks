@@ -304,7 +304,7 @@ export class EndScene extends Scene {
     // auto-repeat does nothing.
     const back = () => (this.card === undefined ? goHome() : this.closeCard());
     this.input.keyboard?.on("keydown", (event: KeyboardEvent) => {
-      if (!event.repeat && (isConfirmKey(event.key) || event.key === "Escape")) {
+      if (!event.repeat && (isConfirmKey(event.code) || event.code === "Escape")) {
         back();
       }
     });
