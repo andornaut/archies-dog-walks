@@ -3,7 +3,7 @@
 CHECK_TASKS := lint test build
 BUILD_OUTPUTS := dist
 TEST_OUTPUTS :=
-CONTAINER_BUILD_ARGS :=
+CONTAINER_BUILD_ARGS := NODE_VERSION=$(patsubst v%,%,$(shell cat .nvmrc))
 CHECK_ADMISSION := tests/container/admit
 
 override COMMAND := $(value COMMAND)

@@ -1,7 +1,10 @@
-# The tools stage is the delivery gate image; the final stage adds the locked dependencies for Make.
-# SoX and ffmpeg come from a pinned Debian snapshot at exact versions because the sound builds must
-# reproduce byte-identical output.
-FROM node:24.21.0 AS tools
+# Make and the gate image build pass NODE_VERSION from .nvmrc. The tools stage is the delivery
+# gate image; the final stage adds the locked dependencies for Make. SoX and ffmpeg come from a
+# pinned Debian snapshot at exact versions because the sound builds must reproduce byte-identical
+# output.
+ARG NODE_VERSION=24.22.2
+FROM node:${NODE_VERSION} AS tools
+ARG NODE_VERSION
 
 COPY --from=koalaman/shellcheck:v0.11.0 /bin/shellcheck /usr/local/bin/shellcheck
 
@@ -23,7 +26,7 @@ RUN set -eu \
     && dpkg-query -W -f '${Version}\n' sox | grep -qx 14.4.2+git20190427-3.5 \
     && sox --version \
     && ffmpeg -version \
-    && node --eval "if (process.versions.node !== '24.21.0') process.exit(1)"
+    && node --eval "if (process.versions.node !== '${NODE_VERSION}') process.exit(1)"
 
 FROM tools
 
