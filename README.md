@@ -61,18 +61,22 @@ CI runs `make lint`, `make test` and `make build`, plus the AI attributions scan
 
 - [Cloudflare dashboard](https://dash.cloudflare.com/?to=/:account/workers/services/view/archies-dog-walks)
 
-Delivery runs on the [delivery-kit](https://github.com/andornaut/delivery-kit) release pinned in `package.json`, configured by [`delivery-kit.json`](delivery-kit.json). Its runner departs hourly at :10, Toronto time. While the one-minute host load is at or above `resources.loadLimit`, it re-checks the load every minute and departs once it falls below, for up to 15 minutes; after that it skips the slot and keeps `main` for the next one. A departure gates the local `main` HEAD in an isolated container of the gate image (`npm ci`, then type checking, lint, tests, the build and the art check, capped at four CPUs and four test workers), pushes that exact commit to `main` as a fast-forward with the regular account's Git authentication, and watches the commit's required GitHub CI checks. There is no queue or batch: a `main` with nothing new does not depart. The runner's state is kept by game-dev, outside this repository.
+Delivery runs on the [delivery-kit](https://github.com/andornaut/delivery-kit) release pinned in `package.json`, configured by [`delivery-kit.json`](delivery-kit.json). Its runner departs hourly at :10, Toronto time. While the one-minute host load is at or above `resources.loadLimit`, it re-checks the load every minute and departs once it falls below, for up to 15 minutes; after that it skips the slot and keeps `main` for the next one. A departure gates the local `main` HEAD in an isolated container of the gate image (`npm ci`, then the `lint`, `test` and `build` categories of `tests/container/check`, which Make also runs: type checking and lint, tests, and the build with the art check, capped at four CPUs and four test workers), pushes that exact commit to `main` as a fast-forward with the regular account's Git authentication, and watches the commit's required GitHub CI checks. There is no queue or batch: a `main` with nothing new does not depart. The runner's state is kept by game-dev, outside this repository.
 
 The gate image is the `toolchain` stage of `tests/container/Dockerfile`: the digest-pinned Node base at the version in `.nvmrc`, ShellCheck 0.11.0, SoX and ffmpeg at exact versions from a pinned Debian snapshot (so the sound builds reproduce byte for byte), and the non-root user 19001. It holds no project files, since the gate runs its own `npm ci`, so a dependency change never needs a new gate image. The `local-check` stage, which Make builds on demand, adds the locked dependencies at `/opt/check/node_modules`; `delivery-kit.json` never names it. A Node version change updates `.nvmrc` and the base digest together; the image build fails when they disagree. After a change to the `toolchain` stage, rebuild the gate image on the delivery host from the repository root:
 
 ```sh
 node_version=$(sed 's/^v//' .nvmrc)
+mkdir -p out
 tests/container/admit build-image
 docker build --resource cpu-period=100000 --resource cpu-quota=400000 --resource memory=4g \
   --build-arg NODE_VERSION="${node_version}" \
   --target toolchain --tag "archie-check:node${node_version}-sox-ffmpeg" \
-  --file tests/container/Dockerfile tests/container
+  --file tests/container/Dockerfile tests/container \
+  --iidfile out/gate-image.id
 ```
+
+`gate.image` in `delivery-kit.json` pins the gate image by its local image ID, so a retagged or pruned image cannot change what the gate runs. A rebuild from the same build cache reproduces the ID; a rebuild without it can produce a different one. When `out/gate-image.id` differs from the pin, check the new image and change the pin in a commit of its own. Keep the image tagged so a prune does not remove it. The runner loads `delivery-kit.json` once at startup, so a new pin takes effect only after an idle runner restart.
 
 When CI passes, the runner deploys the gated `dist/` through the Wrangler locked in that commit and existing account login, without rebuilding. The gate sets `WORKERS_CI_COMMIT_SHA` for the build label. A push whose every changed path matches `deploy.skipPattern` (Markdown, `art/` and `gameplay/`) skips deployment; exported assets under `public/art/` deploy. A red gate leaves `main` unpushed and that commit is never gated again; red CI is fixed forward with a new commit. A failed deployment keeps its gated build for a later departure. Cloudflare Workers Builds is disconnected, so the runner is the only deploy path, and nothing is pushed or deployed manually. The target account and Worker are pinned in `wrangler.jsonc`.
 
