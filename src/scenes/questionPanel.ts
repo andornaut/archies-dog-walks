@@ -189,25 +189,27 @@ export function followScene<P extends Pick<DomQuestionPanel, "destroy" | "setSho
   return { ...panel, destroy };
 }
 
-// A panel's view in the HTML layer, following its scene (followScene).
+// A panel's view in the HTML layer, following its scene (followScene), over the HTML it dims
+// where dimsUnder is set (dimOver).
 function showHtmlPanel(
   scene: Scene,
   place: NonNullable<ReturnType<typeof htmlPanelPlace>>,
-  controls: Pick<DomQuestionPanelInput, "close" | "numberKeys" | "presses" | "shade">,
+  controls: Pick<DomQuestionPanelInput, "close" | "numberKeys" | "presses">,
   view: QuestionPanelView,
+  dimsUnder = false,
 ): DomQuestionPanel {
   const panel = showQuestionPanel(place.layer, { ...controls, ...htmlPanelInput(place), view });
-  return followScene(scene, controls.shade === undefined ? panel : shadeOver(panel));
+  return followScene(scene, dimsUnder ? dimOver(panel) : panel);
 }
 
 // The question in the HTML layer, laid out as the canvas draws it (questionPanelView), over the
-// HTML shade over area where shade is set. Returns what a tap outside must miss, or undefined
-// where the canvas must draw it (addQuestionPanel).
+// HTML paused under it palette-dimmed where dimsUnder is set (pauseDimsHtml). Returns what a tap
+// outside must miss, or undefined where the canvas must draw it (addQuestionPanel).
 export function addHtmlQuestionPanel(
   scene: Scene,
   area: Rect,
   question: QuestionPanel,
-  shade = false,
+  dimsUnder = false,
 ): Rect[] | undefined {
   const place = htmlPanelPlace(scene);
   if (place === undefined) {
@@ -216,7 +218,7 @@ export function addHtmlQuestionPanel(
   const view = questionView(scene, area, question);
   const presses = question.entries.map(({ press }) => press);
   const controls = { close: question.close, numberKeys: true, presses };
-  showHtmlPanel(scene, place, shade ? { ...controls, shade: area } : controls, view);
+  showHtmlPanel(scene, place, controls, view, dimsUnder);
   return [...view.covered];
 }
 
@@ -416,24 +418,27 @@ export function addHtmlZoneCelebration(
   return dimUnderPause(scene, followScene(scene, panel));
 }
 
-// HTML a scene draws that the pause menu's shade dims while it pauses the scene: shown under the
-// menu, taking no presses or focus, and hidden while help or the settings cover the menu.
+// HTML a scene draws that the pause menu dims while it pauses the scene: shown under the menu,
+// palette-dimmed as the canvas dims the view under it, taking no presses or focus, and hidden
+// while help or the settings cover the menu.
 export interface Dimmable {
   focusControl?: (index: number | undefined) => void;
+  setDimmed(dimmed: boolean): void;
   setInert(inert: boolean): void;
   setShown(shown: boolean): void;
 }
 
-// HTML paused under the pause menu, which its shade dims while it shows.
+// HTML paused under the pause menu, which it dims while it shows.
 const dimmedUnder = new Set<Dimmable>();
 
-// html, which the pause menu's shade dims while it pauses scene, in place of hiding it, until it
-// is destroyed.
+// html, which the pause menu dims while it pauses scene, in place of hiding it, until it is
+// destroyed.
 export function dimUnderPause<P extends Dimmable & { destroy(): void }>(scene: Scene, html: P): P {
   const pause = () => dimmedUnder.add(html);
   // As the scene resumes it takes presses and focus again.
   const resume = () => {
     if (dimmedUnder.delete(html)) {
+      html.setDimmed(false);
       html.setInert(false);
       html.setShown(true);
       html.focusControl?.(undefined);
@@ -458,18 +463,19 @@ export function dimUnderPause<P extends Dimmable & { destroy(): void }>(scene: S
   };
 }
 
-// Whether HTML lies under the pause menu that its shade must dim: a paused celebration's, where
-// the menu draws in HTML.
-export function pauseShadesHtml(scene: Scene): boolean {
+// Whether HTML lies under the pause menu that it must dim: a paused celebration's, where the
+// menu draws in HTML. The canvas's dim cannot dim HTML.
+export function pauseDimsHtml(scene: Scene): boolean {
   return dimmedUnder.size > 0 && htmlPanelPlace(scene) !== undefined;
 }
 
-// The pause menu's HTML panel, over the HTML shade where it dims the panels paused under it
-// (pauseShadesHtml), which show under it while it shows and hide while it hides.
-function shadeOver(panel: DomQuestionPanel): DomQuestionPanel {
+// The pause menu's HTML panel over the panels paused under it (pauseDimsHtml), which show under
+// it palette-dimmed while it shows and hide while it hides.
+function dimOver(panel: DomQuestionPanel): DomQuestionPanel {
   const dim = (shown: boolean) => {
     for (const under of dimmedUnder) {
       under.setInert(true);
+      under.setDimmed(true);
       under.setShown(shown);
     }
   };

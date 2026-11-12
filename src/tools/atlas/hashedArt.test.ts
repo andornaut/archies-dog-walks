@@ -50,7 +50,7 @@ describe("hashed game art", () => {
   beforeAll(async () => {
     files = await hashGameArt(
       readArt,
-      { art: new Set(["ui-panel"]), disabled: new Set() },
+      { art: new Set(["ui-panel"]), dim: new Set(), disabled: new Set() },
       manifest,
       {
         files: new Map([["atlas/ui-0.webp", page]]),
@@ -95,11 +95,16 @@ describe("hashed game art", () => {
     expect(files.some(({ path }) => path === ART_MANIFEST)).toBe(true);
   });
 
+  const none = new Set<string>();
   it.each([
-    ["a key with no image or sprite", { art: new Set(["missing"]), disabled: new Set<string>() }],
+    ["a key with no image or sprite", { art: new Set(["missing"]), dim: none, disabled: none }],
     [
       "a grey copy of a key with no image or sprite",
-      { art: new Set<string>(), disabled: new Set(["missing"]) },
+      { art: none, dim: none, disabled: new Set(["missing"]) },
+    ],
+    [
+      "a dimmed copy of a key with no image or sprite",
+      { art: none, dim: new Set(["missing"]), disabled: none },
     ],
   ])("fails the build for %s the HTML interface draws", async (_case, dom) => {
     await expect(

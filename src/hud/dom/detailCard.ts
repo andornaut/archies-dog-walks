@@ -1,9 +1,11 @@
 import type { Rect } from "@andornaut/game-kit/rect";
 import type { BitmapFont } from "@andornaut/game-kit/text/bitmapFont";
 
-import { domArtPath } from "../../assets/domArt.ts";
+import { DOM_DIM_ART_KEYS, domArtPath } from "../../assets/domArt.ts";
 import type { DetailArt, DetailCardView, DetailText } from "../../home/detailCardView.ts";
+import { dimArtPath } from "../../ui/dimArt.ts";
 import { blockPlace, setBox, shownText, spokenText } from "../../ui/dom/pixelLine.ts";
+import { DIM_ART_ATTRIBUTE } from "../../ui/dom/rampDim.ts";
 import { type SheetFrame, sheetFrame } from "../../ui/dom/sheetFrames.ts";
 import type { UiLayer } from "../../ui/dom/uiLayer.ts";
 import {
@@ -120,6 +122,10 @@ export function artPart(
   }
   const kind = art.sheet === undefined ? "image" : "sheet";
   element.style.backgroundImage = `url("${input.artUrl(domArtPath(kind, art.key, "png"))}")`;
+  // Its dimmed copy, where it has one, drawn while its dialog is dimmed (setRampDimmed).
+  if (DOM_DIM_ART_KEYS.has(art.key)) {
+    element.setAttribute(DIM_ART_ATTRIBUTE, input.artUrl(dimArtPath(kind, art.key)));
+  }
   let frame: SheetFrame | undefined;
   let scale: DomScale | undefined;
   const place = (at: DomScale) => {

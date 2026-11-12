@@ -12,6 +12,7 @@ import {
   placeText,
   setBox,
 } from "../../ui/dom/pixelLine.ts";
+import { setRampDimmed } from "../../ui/dom/rampDim.ts";
 import { shadePart } from "../../ui/dom/shade.ts";
 import type { UiLayer } from "../../ui/dom/uiLayer.ts";
 import {
@@ -82,7 +83,10 @@ export interface DomQuestionPanel {
   // Shakes the index-th button and flashes its label, as the canvas refuses a disabled
   // control (refuseControl): still, its label red, under reduced motion.
   refuse(index: number, refusal: DomRefusal): void;
-  // Lets the panel take no presses and no focus while another's shade dims it (a celebration
+  // Draws the panel palette-dimmed under the pause menu, as the canvas dims the view under it
+  // (setRampDimmed), or as it was.
+  setDimmed(dimmed: boolean): void;
+  // Lets the panel take no presses and no focus while another's dim covers it (a celebration
   // under the pause menu), and take them again.
   setInert(inert: boolean): void;
   // Hides the panel while a canvas page covers it (help, the settings), and shows it again.
@@ -437,6 +441,9 @@ export function showQuestionPanel(layer: UiLayer, input: DomQuestionPanelInput):
       const refusing = refusal.reducedMotion ? "adw-refusing-still" : "adw-refusing";
       button.classList.add(refusing);
       doc.defaultView?.setTimeout(() => button.classList.remove(refusing), total);
+    },
+    setDimmed(dimmed) {
+      setRampDimmed(dialog, dimmed);
     },
     setInert(next) {
       inert = next;

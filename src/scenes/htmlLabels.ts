@@ -3,6 +3,7 @@ import { Core, type GameObjects, type Scene, Scenes } from "phaser";
 import { SCREEN_CONFIG } from "../data/screen.ts";
 import { pillKind } from "../hud/effectNames.ts";
 import { type DomLabel, drawLabel, LABEL_ALIGN_DATA } from "../ui/dom/labelBlock.ts";
+import { dimDrawn, setRampDimmed } from "../ui/dom/rampDim.ts";
 import { deviceX, deviceY, gridTransform } from "../ui/domScale.ts";
 import { PALETTE } from "../ui/palette.ts";
 import { displayBitmapFont } from "../ui/phaser/displayText.ts";
@@ -34,8 +35,11 @@ export const LABEL_FONTS: Readonly<
 
 export interface HtmlLabels {
   destroy(): void;
-  // While the scene is paused, whether the labels show anyway, dimmed under the pause menu's
-  // shade (dimUnderPause in src/scenes/questionPanel.ts); they take no presses either way.
+  // Draws the labels palette-dimmed under the pause menu (dimUnderPause in
+  // src/scenes/questionPanel.ts), as the canvas dims the view under it, or as they were.
+  setDimmed(dimmed: boolean): void;
+  // While the scene is paused, whether the labels show anyway, under the pause menu; they take
+  // no presses either way.
   setInert(inert: boolean): void;
   setShown(shown: boolean): void;
 }
@@ -132,8 +136,9 @@ export function addHtmlLabels(scene: Scene, title: string | undefined): HtmlLabe
   layer.element.append(dialog);
 
   const mirrored = new Map<GameObjects.BitmapText, Mirrored>();
-  // Shown while the scene is paused, under the pause menu's shade.
+  // Shown while the scene is paused, under the pause menu, and drawn dimmed there.
   let shownPaused = false;
+  let dimmed = false;
   const camera = scene.cameras.main;
   let placedAt = "";
   const sync = () => {
@@ -200,6 +205,7 @@ export function addHtmlLabels(scene: Scene, title: string | undefined): HtmlLabe
         entry.element,
         view,
       );
+      dimDrawn(entry.element, dimmed);
     }
     for (const [label, { element }] of mirrored) {
       if (!seen.has(label)) {
@@ -221,6 +227,10 @@ export function addHtmlLabels(scene: Scene, title: string | undefined): HtmlLabe
   scene.events.once(Scenes.Events.SHUTDOWN, destroy);
   return {
     destroy,
+    setDimmed: (next) => {
+      dimmed = next;
+      setRampDimmed(dialog, next);
+    },
     setInert: (inert) => {
       if (!inert) {
         shownPaused = false;

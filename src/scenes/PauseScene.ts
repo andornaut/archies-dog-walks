@@ -23,7 +23,7 @@ import {
   addHtmlQuestionPanel,
   addQuestionPanel,
   type PanelEntry,
-  pauseShadesHtml,
+  pauseDimsHtml,
   type QuestionPanel,
 } from "./questionPanel.ts";
 import type { RunScene } from "./RunScene.ts";
@@ -67,12 +67,10 @@ export class PauseScene extends Scene {
   create(data: PauseSceneData): void {
     const { onHeadHome, onResume } = data;
     const walkView = overlayRegion("walk");
-    // HTML under the menu, a paused celebration's, is dimmed by the HTML shade in place of the
-    // canvas's dim, which cannot dim it.
-    const shade = pauseShadesHtml(this);
-    if (!shade) {
-      addRampDim(this, walkView);
-    }
+    // HTML under the menu, a paused celebration's, is palette-dimmed in HTML as the canvas's dim
+    // dims the walk, which cannot dim it.
+    const dimsHtml = pauseDimsHtml(this);
+    addRampDim(this, walkView);
     const headHome = () => {
       soundboardOf(this).stopMusic();
       onHeadHome();
@@ -130,7 +128,8 @@ export class PauseScene extends Scene {
           };
     // In HTML where the page's switch is on and its fonts are ready, else on the canvas.
     const covered =
-      addHtmlQuestionPanel(this, walkView, panel, shade) ?? addQuestionPanel(this, walkView, panel);
+      addHtmlQuestionPanel(this, walkView, panel, dimsHtml) ??
+      addQuestionPanel(this, walkView, panel);
     // The close control and a tap anywhere around the panel resume, as Resume and Keep walking
     // do, the walk bar's empty area and the dog cards included, though they are not dimmed. The
     // walk bar's buttons keep their own taps.

@@ -4,14 +4,13 @@ import type { RgbaImage } from "@andornaut/art-kit/rgbaImage";
 import type { Plugin, ViteDevServer } from "vite";
 
 import type { ArtFileMap } from "../../assets/artUrl.ts";
-import { DOM_ART_KEYS, DOM_DISABLED_ART_KEYS } from "../../assets/domArt.ts";
+import { DOM_ART_KEYS, DOM_DIM_ART_KEYS, DOM_DISABLED_ART_KEYS } from "../../assets/domArt.ts";
 import { parseManifest } from "../../assets/manifest.ts";
-import { disabledArtPath } from "../../ui/disabledArt.ts";
 import { ART_DIR, ART_MANIFEST, artManifestText, generateArtManifest } from "../artManifest.ts";
 import { limitConcurrency } from "../concurrency.ts";
 import { nodeArtFiles, OPEN_FILE_LIMIT, writeIfChanged } from "../files.ts";
 import { buildAtlases, WEBP_PAGES } from "./atlasBuild.ts";
-import { disabledArtFile } from "./disabledFiles.ts";
+import { artCopyFile, DIM_COPY, DISABLED_COPY } from "./disabledFiles.ts";
 import { ART_FILES_MODULE, hashGameArt } from "./hashedArt.ts";
 
 // Vite's prefix for a module id that names no file.
@@ -28,7 +27,8 @@ interface AtlasPluginApi {
 // game loads (both manifests, the pages, the fonts, the sounds and any key the atlas leaves
 // out) goes to the build output under a content-hashed name (src/tools/atlas/hashedArt.ts),
 // and the game reads the names from the ART_FILES_MODULE map, as do the disabled tiles' grey
-// copies the HTML interface draws (disabledArtFiles). The dev server's map is empty.
+// copies and the celebration's dimmed copies the HTML interface draws (artCopyFiles). The dev
+// server's map is empty.
 // The files under public/art/ are also copied as they are, for the dev server, the art gallery
 // and the site's pages.
 export function atlasPlugin(): Plugin & { api: AtlasPluginApi } {
@@ -61,7 +61,7 @@ export function atlasPlugin(): Plugin & { api: AtlasPluginApi } {
       }
       const hashed = await hashGameArt(
         readArt,
-        { art: DOM_ART_KEYS, disabled: DOM_DISABLED_ART_KEYS },
+        { art: DOM_ART_KEYS, dim: DOM_DIM_ART_KEYS, disabled: DOM_DISABLED_ART_KEYS },
         art,
         atlas,
       );
@@ -70,27 +70,36 @@ export function atlasPlugin(): Plugin & { api: AtlasPluginApi } {
       }
       artFiles = new Map(hashed.map(({ fileName, path }) => [path, fileName]));
     },
-    // The dev server serves each disabled copy the HTML interface draws (DOM_DISABLED_ART_KEYS)
-    // at its path under /art/, made from the files on disk as a build makes it.
+    // The dev server serves each grey and dimmed copy the HTML interface draws
+    // (DOM_DISABLED_ART_KEYS, DOM_DIM_ART_KEYS) at its path under /art/, made from the files on
+    // disk as a build makes it.
     configureServer(server: ViteDevServer) {
       const artDir = `${server.config.publicDir}/${ART_DIR}`;
       const prefix = `${server.config.base}${ART_DIR}/`;
       const keys = new Map(
-        [...DOM_DISABLED_ART_KEYS].flatMap((key) =>
-          (["image", "sheet"] as const).map((kind) => [disabledArtPath(kind, key), key]),
+        (
+          [
+            [DISABLED_COPY, DOM_DISABLED_ART_KEYS],
+            [DIM_COPY, DOM_DIM_ART_KEYS],
+          ] as const
+        ).flatMap(([copy, copied]) =>
+          [...copied].flatMap((key) =>
+            (["image", "sheet"] as const).map((kind) => [copy.path(kind, key), { copy, key }]),
+          ),
         ),
       );
       const readArt = async (path: string) => new Uint8Array(await readFile(`${artDir}/${path}`));
       server.middlewares.use((request, response, next) => {
         const url = request.url?.split("?")[0] ?? "";
-        const key = url.startsWith(prefix) ? keys.get(url.slice(prefix.length)) : undefined;
-        if (key === undefined) {
+        const made = url.startsWith(prefix) ? keys.get(url.slice(prefix.length)) : undefined;
+        if (made === undefined) {
           next();
           return;
         }
         void (async () => {
           const text = new TextDecoder().decode(await readArt(ART_MANIFEST));
-          const { source } = await disabledArtFile(readArt, parseManifest(JSON.parse(text)), key);
+          const manifest = parseManifest(JSON.parse(text));
+          const { source } = await artCopyFile(readArt, manifest, made.copy, made.key);
           response.setHeader("Content-Type", "image/png");
           response.end(source);
         })().catch(next);

@@ -144,3 +144,14 @@ function disabledTileArtKeys(
 }
 
 export const DOM_DISABLED_ART_KEYS: ReadonlySet<string> = new Set(disabledTileArtKeys(gameData));
+
+// The art the zone celebration's HTML draws dimmed under the pause menu, as the canvas dims the
+// frozen view under it (dimArtPath in src/ui/dimArt.ts): its frames (the earnings plate's
+// ui-panel, the greeting's ui-quip and its tail), each perk's icon and its button's face. A build
+// writes each copy as a file of its own from the canvas's ramp remap, beside its key's files; a
+// sheet's copy keeps its key's JSON frames.
+export const DOM_DIM_ART_KEYS: ReadonlySet<string> = new Set([
+  "ui-button-go",
+  "ui-panel",
+  ...celebrationArtKeys(gameData),
+]);
