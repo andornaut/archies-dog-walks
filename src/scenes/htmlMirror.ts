@@ -427,7 +427,15 @@ export function addHtmlMirror(
               view,
             );
           }
-          transform(entry.element);
+          // Each glyph, run and pill blends on its own, as the canvas blends each glyph's quad and
+          // the pills' graphics, so a display glyph's ring over its neighbour fades as it does.
+          transform(entry.element, 1);
+          const leaves = entry.element.querySelectorAll<HTMLElement>(
+            view.font === "display" ? ".adw-pill, .adw-text > span" : ".adw-pill, .adw-text",
+          );
+          for (const leaf of leaves) {
+            leaf.style.opacity = opacity(context.alpha);
+          }
           entry.key = key;
         }
         visit(entry.element);
