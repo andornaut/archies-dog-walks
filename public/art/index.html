@@ -44,7 +44,7 @@ h1 { font-family: var(--f-display); font-weight: 400; font-size: clamp(26px, 5vw
 header p { margin: 0; color: var(--muted); max-width: 70ch; }
 .counts { display: flex; flex-wrap: wrap; gap: 8px; font-family: var(--f-mono); font-size: 12px; }
 button, .jump a {
-  min-width: 44px; min-height: 44px; max-width: 100%; padding: 8px 12px;
+  min-width: 48px; min-height: 48px; max-width: 100%; padding: 8px 12px;
   border: 1px solid #181425; border-radius: 0; background: #ead4aa; color: #3e2731;
   box-shadow: 0 4px 0 #e4a672, 0 5px 0 #181425;
   font: inherit; cursor: pointer; position: relative; top: 0;
@@ -64,12 +64,12 @@ button[aria-pressed="true"]::before { content: "✓ "; content: "✓ " / ""; }
   display: flex; flex-wrap: wrap; gap: 12px 20px; align-items: center; padding-block: 10px;
 }
 .toolbar label, .toolbar .lbl { font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; display: flex; gap: 8px; align-items: center; }
-.toolbar select, .toolbar input[type="search"] { font: inherit; font-size: 14px; text-transform: none; letter-spacing: 0; background: var(--raise); color: var(--fg); border: 1px solid var(--line); border-radius: 4px; padding: 4px 8px; }
+.toolbar select, .toolbar input[type="search"] { font: inherit; font-size: 14px; text-transform: none; letter-spacing: 0; background: var(--raise); color: var(--fg); border: 1px solid var(--line); border-radius: 4px; padding: 4px 8px; min-height: 48px; }
 .toolbar input[type="search"] { width: 12em; max-width: 100%; }
-/* Ground swatches: native radios, hidden behind their swatch so arrow keys and screen readers work as usual. */
-.grounds { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+/* Ground swatches: native radios, hidden behind their swatch so arrow keys and screen readers work as usual. Each 24px swatch sits centred in a 48px press. */
+.grounds { display: flex; flex-wrap: wrap; gap: 0; align-items: center; }
 .grounds .lbl { margin-right: 2px; }
-.toolbar .gr { display: block; position: relative; cursor: pointer; }
+.toolbar .gr { display: grid; place-items: center; width: 48px; height: 48px; position: relative; cursor: pointer; }
 .gr input { position: absolute; inset: 0; margin: 0; opacity: 0; cursor: pointer; }
 .gr i { display: block; width: 24px; height: 24px; border-radius: 4px; border: 1px solid var(--line); }
 .gr input:checked + i { box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--accent); }
