@@ -1,4 +1,7 @@
-FROM node:24.21.0
+# The tools stage is the delivery gate image; the final stage adds the locked dependencies for Make.
+# SoX and ffmpeg come from a pinned Debian snapshot at exact versions because the sound builds must
+# reproduce byte-identical output.
+FROM node:24.21.0 AS tools
 
 COPY --from=koalaman/shellcheck:v0.11.0 /bin/shellcheck /usr/local/bin/shellcheck
 
@@ -22,7 +25,10 @@ RUN set -eu \
     && ffmpeg -version \
     && node --eval "if (process.versions.node !== '24.21.0') process.exit(1)"
 
+FROM tools
+
 WORKDIR /opt/check
 COPY package.json package-lock.json ./
 RUN HUSKY=0 npm ci --no-audit --no-fund
 COPY tests/container/check /opt/check/run
+WORKDIR /work
