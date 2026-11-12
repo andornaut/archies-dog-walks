@@ -7,6 +7,7 @@ import "./main.css";
 
 import { MENU_FPS } from "@andornaut/game-kit/clock/frameCap";
 import { capFrameRate } from "@andornaut/game-kit/clock/phaser/capFrameRate";
+import { LOADER_CONFIG } from "@andornaut/game-kit/load/loaderConfig";
 import { followFrameTurn } from "@andornaut/game-kit/web/view/phaser/followFrameTurn";
 import { Core, Game, Scale, WEBGL } from "phaser";
 
@@ -28,7 +29,6 @@ import {
   setupPhoneApp,
   storagePersistence,
 } from "./pwa/index.ts";
-import { requiredUpdateProgress } from "./pwa/requiredUpdate.ts";
 import { BootScene } from "./scenes/BootScene.ts";
 import { CardScene } from "./scenes/CardScene.ts";
 import { CelebrationScene } from "./scenes/CelebrationScene.ts";
@@ -38,6 +38,7 @@ import { HelpPictureScene } from "./scenes/HelpPictureScene.ts";
 import { HelpScene } from "./scenes/HelpScene.ts";
 import { watchHomeScreen } from "./scenes/homeScreen.ts";
 import { HudScene } from "./scenes/HudScene.ts";
+import { backgroundLoad } from "./scenes/loadingProgress.ts";
 import { PauseScene } from "./scenes/PauseScene.ts";
 import { stopResuming } from "./scenes/profileStore.ts";
 import { QuitScene } from "./scenes/QuitScene.ts";
@@ -80,15 +81,25 @@ function watchFirstWalk(game: Game): void {
 // background install only once the page's main thread is idle. A change of the update's state
 // and the player's input wake it, so home redraws and stays usable, and it sleeps again once
 // still. The required update's loading line is in the DOM, animated in CSS, so it moves while
-// the loop sleeps. Returns the home screen watcher's callback.
+// the loop sleeps; it shows on the home screen while the update is required, over the canvas's
+// line, which shows the same. Returns the home screen watcher's callback.
 const UPDATE_IDLE_MS = 1000;
 const WAKE_EVENTS = [PHONE_EVENTS.requiredUpdate, "keydown", "pointerdown", "pointerup"] as const;
 
-function sleepWhileUpdateRequired(game: Game): (onHome: boolean) => void {
+function sleepWhileUpdateRequired(
+  game: Game,
+  parent: HTMLElement | null,
+): (onHome: boolean) => void {
   let onHome = false;
   let timer: ReturnType<typeof setTimeout> | undefined;
+  const bar =
+    parent === null
+      ? undefined
+      : mountDomLoadingBar(parent, HOME_LAYOUT.loadingProgress, backgroundLoad);
+  bar?.setShown(false);
   const idle = () => onHome && requiredUpdate() !== undefined;
   const settle = () => {
+    bar?.setShown(idle());
     game.loop.wake();
     clearTimeout(timer);
     if (idle()) {
@@ -122,6 +133,8 @@ function bootGame(): Game {
     height: SCREEN_CONFIG.height,
     // Two touch pointers, so the walk sees a finger that lands while another rests.
     input: { activePointers: 2 },
+    // The kit's request timeout and retries for every file the game loads.
+    loader: LOADER_CONFIG,
     parent: GAME_PARENT_ID,
     pixelArt: true,
     // Phaser's Scale Manager fits the canvas to #game at the largest zoom that fits, fractional
@@ -217,14 +230,11 @@ function bootGame(): Game {
 
   game.events.once(Core.Events.POST_RENDER, () => startupLoad.finish());
   // The update notice shows on the home screen only, where a required update stops the loop.
-  const settleRequired = sleepWhileUpdateRequired(game);
+  const settleRequired = sleepWhileUpdateRequired(game, parent);
   watchHomeScreen(game, (onHome) => {
     setOnHomeScreen(onHome);
     settleRequired(onHome);
   });
-  if (parent !== null) {
-    mountDomLoadingBar(parent, HOME_LAYOUT.loadingProgress, requiredUpdateProgress, false);
-  }
   watchFirstWalk(game);
   return game;
 }

@@ -8,11 +8,10 @@ import { SCREEN_LAYOUT } from "./data/screen.ts";
 import { mountDomLoadingBar } from "./ui/dom/domLoadingBar.ts";
 import { startupLoad, startupProgress } from "./ui/startupProgress.ts";
 
-// The bar shows until the first frame draws, then goes. startupLoad is under way as it
-// subscribes, so the first report never hides it.
+// The bar travels until the first frame draws, then stays hidden.
 const parent = document.getElementById("game");
 if (parent !== null) {
-  mountDomLoadingBar(parent, SCREEN_LAYOUT.zoneProgress, startupProgress, true);
+  mountDomLoadingBar(parent, SCREEN_LAYOUT.zoneProgress, startupProgress);
 }
 
 // Module download and renderer setup have no measurable denominator.

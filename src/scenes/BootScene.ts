@@ -1,13 +1,9 @@
 import { itemAt } from "@andornaut/game-kit/arrays";
-import type { ProgressValue } from "@andornaut/game-kit/progress";
+import { type LoaderWatch, watchLoader } from "@andornaut/game-kit/load/phaser/watchLoader";
 import { drawProgressDisplay } from "@andornaut/game-kit/progress/phaser/drawProgressBar";
-import {
-  createProgressDisplay,
-  createProgressState,
-  type ProgressHandle,
-} from "@andornaut/game-kit/progressState";
+import { createProgressDisplay } from "@andornaut/game-kit/progressState";
 import { keysOf } from "@andornaut/game-kit/records";
-import { GameObjects, type Loader, Scene, Scenes, Sound } from "phaser";
+import { GameObjects, Scene, Scenes, Sound } from "phaser";
 
 import { animationSpecs, type AsepriteSheet } from "../assets/asepriteAnimations.ts";
 import { loadsFirst } from "../assets/atlasGroups.ts";
@@ -16,7 +12,6 @@ import {
   addAtlasFonts,
   addAtlasTextures,
   artUrl,
-  atlasPageBytes,
   loadManifest,
   MANIFEST_CACHE_KEY,
   queueFonts,
@@ -41,12 +36,7 @@ import type { EncounterId } from "../data/types.ts";
 import { devRunLoadout, namesRunSetup } from "../dev/devStart.ts";
 import { pageSearch } from "../dev/devTools.ts";
 import { pageRunSetup } from "../dev/pageRunSetup.ts";
-import {
-  bootProgress,
-  LOADING_TRACK,
-  loadingWalkerAt,
-  stepFraction,
-} from "../layout/loadingScreen.ts";
+import { LOADING_TRACK, loadingWalkerAt } from "../layout/loadingScreen.ts";
 import {
   browserSoundFormat,
   noteSaveStorage,
@@ -58,8 +48,8 @@ import { PALETTE } from "../ui/palette.ts";
 import { addFilledRect } from "../ui/phaser/draw.ts";
 import { addPillGlyphs, registerFallbackPixelFont } from "../ui/phaser/pixelText.ts";
 import { GAME_PROGRESS_STYLE, LOADING_MOTION, LOADING_TIMING } from "../ui/progressBar.ts";
-import { markArtReady, walkArtProgress } from "./artReady.ts";
-import { onLoadProgress } from "./loadProgress.ts";
+import { markArtReady, setBootWatch, type WaitedLoad } from "./artReady.ts";
+import { loadingProgress, waitedLoad } from "./loadingProgress.ts";
 import {
   currentSettings,
   openProfile,
@@ -125,31 +115,42 @@ function placeholderSizes(): Map<string, Size> {
 // Loads the art manifest and the loading screen's art, shows the loading screen while what the
 // home screen and its menus need loads (the loadsFirst art, the fonts and the home cues'
 // sounds), then registers each of those sprites' animations and metrics in batches, a frame
-// apart, so the bar and the walker keep moving. A missing or broken asset is logged and
-// replaced by a placeholder box, never fatal. Then shows the home screen, and keeps running
-// behind it to load and register the rest the same way, then marks the art ready and stops. A
-// dev link that names a run loads everything before it starts the walk, and a walk the save
+// apart, so the bar and the walker keep moving. The kit's loader watch measures the boot by
+// settled files and logs and retries a file that fails, which is replaced by a placeholder box
+// meanwhile, never fatal. Then shows the home screen, and keeps running behind it to load and
+// register the rest the same way, silent unless Start walk waits for it, then marks the art
+// ready and stops. A dev link that names a run loads everything before it starts the walk, and a walk the save
 // resumes (ProfileSession.open) loads the rest behind the loading screen before it goes on.
 export class BootScene extends Scene {
   private bar: GameObjects.Graphics | undefined;
-  private artProgress: ProgressHandle | undefined;
-  // The loading screen's own load, which its bar draws each frame.
-  private bootLoad: ProgressHandle | undefined;
   private manifest: AssetManifest = { fonts: [], images: [], sounds: [], sprites: [] };
   private walker: GameObjects.Sprite | undefined;
+  private watch: LoaderWatch<WaitedLoad> | undefined;
 
   constructor() {
     super(SCENE_KEYS.boot);
   }
 
   preload(): void {
-    this.artProgress = undefined;
-    this.events.once("shutdown", () => this.artProgress?.finish());
+    this.watch = watchLoader<WaitedLoad>(
+      { console, progress: waitedLoad, timer: globalThis },
+      this,
+    );
+    setBootWatch(this.watch);
+    // The manifests load before the loading screen's art, so their wait has no denominator; the
+    // boot's measured load (create) takes it over.
+    const manifests = waitedLoad.begin();
+    manifests.progress(undefined);
     this.bar = this.add.graphics().setDepth(1);
-    const loading = createProgressState();
     const display = createProgressDisplay(LOADING_TIMING.fullMs, LOADING_TIMING.fadeMs);
-    const stop = loading.subscribe(display.report);
-    this.bootLoad = loading.begin();
+    const stop = loadingProgress.subscribe(display.report);
+    // The loading walker walks as far as the waited-for load has come.
+    const stopWalker = waitedLoad.subscribe(({ value }) => {
+      if (value !== undefined) {
+        const at = loadingWalkerAt(value);
+        this.walker?.setPosition(at.x, at.y);
+      }
+    });
     // The scene's update event runs while it loads too, unlike its update method.
     const draw = () => {
       const { bar } = this;
@@ -169,10 +170,10 @@ export class BootScene extends Scene {
     this.events.once(Scenes.Events.SHUTDOWN, () => {
       this.events.off(Scenes.Events.UPDATE, draw);
       stop();
-      this.bootLoad = undefined;
-    });
-    this.load.on("loaderror", (file: Loader.File) => {
-      console.warn(`Asset failed to load, using a placeholder: ${file.key} (${file.url})`);
+      stopWalker();
+      manifests.finish();
+      setBootWatch(undefined);
+      this.watch = undefined;
     });
     loadManifest(this, (manifest) => this.queueLoadingArt(manifest));
   }
@@ -191,10 +192,12 @@ export class BootScene extends Scene {
     const walkNow = namesRunSetup(pageSearch());
     // Open the profile while the art loads. A save from a newer version requires that version.
     // The loading walker then follows the saved reduced-motion setting.
+    let opened = false;
     const profileOpened = openProfile(this, !walkNow).then((load) => {
       if (load.status === "corrupt" || load.status === "newer" || load.status === "unavailable") {
         console.warn(`The save is ${load.status}, so play starts fresh: ${load.reason}`);
       }
+      opened = true;
       noteSaveStorage(storageState(this));
       this.setWalkerMotion(currentSettings(this).reducedMotion);
     });
@@ -208,16 +211,17 @@ export class BootScene extends Scene {
       console.warn("This browser plays neither Ogg nor AAC, so the game is silent.");
     }
     this.queueSounds(walkNow ? always : loadsSoundFirst);
-    onLoadProgress(this, atlasPageBytes(this), (fraction) =>
-      this.showProgress(bootProgress("network", fraction)),
-    );
+    this.watch?.waitFor("boot");
     this.load.once("complete", () =>
       this.processAssets(first, FRAME_BUDGET_MS, () => {
         registerFallbackPixelFont(this);
         addPillGlyphs(this);
-        this.showProgress(undefined);
+        // A profile still opening is waited for with no denominator.
+        const profile = opened ? undefined : waitedLoad.begin();
+        profile?.progress(undefined);
         // While a newer version is required, no walk starts: home says so.
         void profileOpened.then(() => {
+          profile?.finish();
           if (requiredUpdate() !== undefined) {
             this.showHome();
           } else if (walkNow) {
@@ -276,15 +280,6 @@ export class BootScene extends Scene {
     }
   }
 
-  private showProgress(progress: ProgressValue): void {
-    if (progress !== undefined) {
-      const at = loadingWalkerAt(progress);
-      this.walker?.setPosition(at.x, at.y);
-    }
-    this.artProgress?.progress(progress);
-    this.bootLoad?.progress(progress);
-  }
-
   // Registers the loaded sprites that include accepts and draws a placeholder for each such key
   // that is missing, one step at a time, yielding to the next frame once budgetMs is spent,
   // then calls done.
@@ -315,7 +310,6 @@ export class BootScene extends Scene {
         itemAt(steps, next)();
         next += 1;
       }
-      this.showProgress(bootProgress("processing", stepFraction(steps.length, next)));
       if (next < steps.length) {
         this.time.delayedCall(0, runBatch);
       } else {
@@ -354,19 +348,17 @@ export class BootScene extends Scene {
   }
 
   // Loads and registers what the home screen did not need, then marks the art ready and calls
-  // done.
-  private loadRest(budgetMs: number, done: () => void): void {
-    this.artProgress = walkArtProgress.begin();
-    this.showProgress(undefined);
+  // done. Behind the home screen the load is silent until Start walk waits for it
+  // (waitForWalkArt); behind the loading screen, for a resumed walk, it is waited for.
+  private loadRest(budgetMs: number, done: () => void, waited = false): void {
     const rest = (key: string) => !loadsFirst(key);
     queueManifestArt(this, this.manifest, rest);
     this.queueSounds((key) => !loadsSoundFirst(key));
-    onLoadProgress(this, atlasPageBytes(this), (fraction) =>
-      this.showProgress(bootProgress("network", fraction)),
-    );
+    if (waited) {
+      this.watch?.waitFor("boot");
+    }
     this.load.once("complete", () =>
       this.processAssets(rest, budgetMs, () => {
-        this.artProgress?.finish();
         markArtReady(this);
         done();
       }),
@@ -377,15 +369,19 @@ export class BootScene extends Scene {
   // Resumes the walk left unfinished, under the pause menu, once the rest has loaded behind the
   // loading screen.
   private resumeWalk(): void {
-    this.loadRest(FRAME_BUDGET_MS, () => {
-      const walk = takeResumedWalk(this);
-      if (walk === null) {
-        this.scene.start(SCENE_KEYS.start);
-        return;
-      }
-      startWakeLock();
-      this.scene.start(SCENE_KEYS.run, resumedRunSceneData(pageRunSetup().setup.dev, walk));
-    });
+    this.loadRest(
+      FRAME_BUDGET_MS,
+      () => {
+        const walk = takeResumedWalk(this);
+        if (walk === null) {
+          this.scene.start(SCENE_KEYS.start);
+          return;
+        }
+        startWakeLock();
+        this.scene.start(SCENE_KEYS.run, resumedRunSceneData(pageRunSetup().setup.dev, walk));
+      },
+      true,
+    );
   }
 
   // Starts the walk a dev link names, with everything loaded.

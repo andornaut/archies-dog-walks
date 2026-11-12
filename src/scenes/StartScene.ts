@@ -1,6 +1,6 @@
 import { clampIndex, itemAt } from "@andornaut/game-kit/arrays";
 import { drawProgressDisplay } from "@andornaut/game-kit/progress/phaser/drawProgressBar";
-import { createProgressDisplay } from "@andornaut/game-kit/progressState";
+import { createProgressDisplay, type ProgressHandle } from "@andornaut/game-kit/progressState";
 import { containsPoint, insetRect, type Rect } from "@andornaut/game-kit/rect";
 import { Core, type GameObjects, Scene, Scenes, type Time } from "phaser";
 
@@ -139,7 +139,6 @@ import {
   stopWakeLock,
   updatePlateShown,
 } from "../pwa/index.ts";
-import { offlineProgress } from "../pwa/offlineProgress.ts";
 import { walkerOrder } from "../rules/walkers.ts";
 import type { SaveDocument } from "../save/schema.ts";
 import { walksFinished, walksPlayed } from "../save/stats.ts";
@@ -177,7 +176,7 @@ import { BUTTON_COLOURS, GREYED, pictureBox, type SelectLook } from "../ui/selec
 import { TEXT_SCALE } from "../ui/textFit.ts";
 import { topBarRects } from "../ui/topBarTrim.ts";
 import type { Cents } from "../units.ts";
-import { artReady, walkArtProgress, whenArtReady } from "./artReady.ts";
+import { artReady, waitForWalkArt, whenArtReady } from "./artReady.ts";
 import type { CelebrationSceneData } from "./CelebrationScene.ts";
 import { addNamePills } from "./effectNameColours.ts";
 import { HELP_CLOSED_EVENT } from "./HelpScene.ts";
@@ -193,6 +192,7 @@ import {
   purchasePicture,
   SHOP_ART,
 } from "./itemArt.ts";
+import { loadingProgress, waitedLoad } from "./loadingProgress.ts";
 import { modalTextWidth } from "./modalMeasure.ts";
 import { listenOnePress } from "./onePress.ts";
 import {
@@ -461,8 +461,11 @@ export class StartScene extends Scene {
   // The loading line, drawn each frame: the walk's load while Start walk waits, else the
   // offline install's.
   private waitBar: GameObjects.Graphics | undefined;
-  private walkDisplay = createProgressDisplay(LOADING_TIMING.fullMs, LOADING_TIMING.fadeMs);
-  private offlineDisplay = createProgressDisplay(LOADING_TIMING.fullMs, LOADING_TIMING.fadeMs);
+  // The home loading line: a waited-for load (the walk's art, its planning) over the forced
+  // update or a first visit's precache (loadingProgress).
+  private loadDisplay = createProgressDisplay(LOADING_TIMING.fullMs, LOADING_TIMING.fadeMs);
+  // The walk's planning, which the line shows travelling from Start walk until the walk starts.
+  private planning: ProgressHandle | undefined;
   // Whether the top bar shows Exit (exitShown).
   private exit = true;
   private focus: Focus | null = null;
@@ -516,10 +519,10 @@ export class StartScene extends Scene {
     this.artWait = undefined;
     this.entry = undefined;
     this.waitBar = undefined;
-    this.walkDisplay = createProgressDisplay(LOADING_TIMING.fullMs, LOADING_TIMING.fadeMs);
-    this.events.once("shutdown", walkArtProgress.subscribe(this.walkDisplay.report));
-    this.offlineDisplay = createProgressDisplay(LOADING_TIMING.fullMs, LOADING_TIMING.fadeMs);
-    this.events.once("shutdown", offlineProgress.subscribe(this.offlineDisplay.report));
+    this.loadDisplay = createProgressDisplay(LOADING_TIMING.fullMs, LOADING_TIMING.fadeMs);
+    this.events.once("shutdown", loadingProgress.subscribe(this.loadDisplay.report));
+    this.planning = undefined;
+    this.events.once("shutdown", () => this.endPlanning());
     this.exit = exitShown();
     this.focus = null;
     this.hold = undefined;
@@ -706,9 +709,7 @@ export class StartScene extends Scene {
       this.pending.forEach((timer) => timer.remove());
       this.pending.clear();
       this.artWait = undefined;
-      if (this.entry !== undefined) {
-        this.walkDisplay.report({ active: false, value: undefined });
-      }
+      this.endPlanning();
       this.entry = undefined;
       this.waitBar?.setVisible(false);
       const lifted = this.closePressed();
@@ -1188,7 +1189,8 @@ export class StartScene extends Scene {
       startWakeLock();
       this.artWait = { action: () => undefined, kind: "start" };
       // Planning has no denominator, so its line travels; paint it before planning blocks.
-      this.walkDisplay.report({ active: true, value: undefined });
+      this.planning = waitedLoad.begin();
+      this.planning.progress(undefined);
       this.render();
       onceSceneEvent(this, this.game.events, Core.Events.POST_RENDER, () => {
         if (this.entry !== entry) {
@@ -1216,6 +1218,11 @@ export class StartScene extends Scene {
 
   // Runs action now if every asset has loaded, else once it has, in place of any press already
   // waiting.
+  private endPlanning(): void {
+    this.planning?.finish();
+    this.planning = undefined;
+  }
+
   private afterArt(kind: "help" | "start", action: () => void): void {
     if (artReady(this)) {
       action();
@@ -1223,6 +1230,9 @@ export class StartScene extends Scene {
     }
     const waiting = this.artWait !== undefined;
     this.artWait = { action, kind };
+    if (kind === "start") {
+      waitForWalkArt();
+    }
     this.render();
     if (!waiting) {
       whenArtReady(this, () => {
@@ -2274,7 +2284,7 @@ export class StartScene extends Scene {
     if (bar === undefined) {
       return;
     }
-    const display = this.artWait?.kind === "start" ? this.walkDisplay : this.offlineDisplay;
+    const display = this.loadDisplay;
     bar.clear();
     drawProgressDisplay(
       bar,

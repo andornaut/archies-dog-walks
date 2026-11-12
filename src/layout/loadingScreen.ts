@@ -19,46 +19,7 @@ export const LOADING_WALKER = {
   y: WALKER.y,
 };
 
-// Boot loads what the home screen needs over the network, then processes it: each sprite's
-// animations and metrics, the placeholders and the fallback font. The rest loads behind the home
-// screen, off the bar. Each phase fills its share of the bar in proportion to measured boots, where
-// processing takes under a tenth of the time.
-type BootPhase = "network" | "processing";
-
-const PHASES: Readonly<Record<BootPhase, { from: number; to: number }>> = {
-  network: { from: 0, to: 0.9 },
-  processing: { from: 0.9, to: 1 },
-};
-
-// The whole boot's progress, from 0 to 1, given how far through its phase boot is.
-export function bootProgress(phase: BootPhase, fraction: number): number {
-  const { from, to } = PHASES[phase];
-  return from + (to - from) * clamp01(fraction);
-}
-
-// A file's weight on the bar before its size is known: about a sound effect's size.
-export const UNKNOWN_FILE_BYTES = 16_000;
-
-// A loading file's size in bytes, and the fraction of it that has arrived.
-export interface FileProgress {
-  bytes: number;
-  fraction: number;
-}
-
-// How far through the network phase boot is, with each file weighed by its size, so a few
-// large atlas pages move the bar as steadily as many small files. No files is done.
-export function byteFraction(files: readonly FileProgress[]): number {
-  const total = files.reduce((sum, { bytes }) => sum + bytes, 0);
-  const arrived = files.reduce((sum, { bytes, fraction }) => sum + bytes * clamp01(fraction), 0);
-  return total <= 0 ? 1 : clamp01(arrived / total);
-}
-
-// How far through a phase of total steps boot is after done of them. A phase with no
-// steps is already done.
-export function stepFraction(total: number, done: number): number {
-  return total <= 0 ? 1 : clamp01(done / total);
-}
-
+// Where the loading walker stands at progress, from 0 at the start to 1 at the gate.
 export function loadingWalkerAt(progress: number): Point {
   return {
     x: LOADING_WALKER.x + Math.round(LOADING_WALKER.travel * clamp01(progress)),

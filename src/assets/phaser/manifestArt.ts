@@ -64,7 +64,7 @@ const parsedAtlases = new WeakMap<object, AtlasManifest>();
 
 // The build's atlas manifest, or undefined in dev or when it failed to load or parse, which
 // leaves every key to load from its own files.
-function atlasManifest(scene: Scene): AtlasManifest | undefined {
+export function atlasManifest(scene: Scene): AtlasManifest | undefined {
   const cache = scene.cache.json;
   if (!cache.exists(ATLAS_CACHE_KEY)) {
     return undefined;
@@ -80,12 +80,6 @@ function atlasManifest(scene: Scene): AtlasManifest | undefined {
     cache.remove(ATLAS_CACHE_KEY);
     return undefined;
   }
-}
-
-// Each atlas page's expected size in bytes, by its texture key, to weight it on the loading bar.
-export function atlasPageBytes(scene: Scene): Map<string, number> {
-  const pages = atlasManifest(scene)?.pages ?? [];
-  return new Map(pages.map(({ bytes }, page) => [atlasPageKey(page), bytes]));
 }
 
 // Queues an atlas page's file, unless its texture is loaded.
