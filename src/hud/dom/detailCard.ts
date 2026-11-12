@@ -32,7 +32,7 @@ import {
 
 export interface DomDetailCardInput extends Pick<
   DomQuestionPanelInput,
-  "close" | "closeLabel" | "closePressed" | "fonts" | "toGame"
+  "close" | "closeLabel" | "closePressed" | "fonts" | "shade" | "toGame"
 > {
   // An art file's URL by its path under /art/.
   readonly artUrl: (path: string) => string;
@@ -288,6 +288,7 @@ export function showDetailCard(layer: UiLayer, input: DomDetailCardInput): DomQu
     close: input.close,
     closeLabel: input.closeLabel,
     ...(input.closePressed === undefined ? {} : { closePressed: input.closePressed }),
+    ...(input.shade === undefined ? {} : { shade: input.shade }),
     describedBy: texts.id,
     fonts: input.fonts,
     numberKeys: false,

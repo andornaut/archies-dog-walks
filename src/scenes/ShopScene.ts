@@ -262,7 +262,7 @@ export class ShopScene extends Scene {
       dipMs: (target) => (target.kind === "dismiss" ? 0 : FEEDBACK.pressDipMs),
       onDown: (pointer, target) => {
         // Over the HTML page, so a burst shows over it.
-        if (this.mirror === undefined || !this.isListOpen()) {
+        if (this.mirror === undefined) {
           addTapBurst(this, pointer.x, pointer.y);
         } else {
           this.mirror.burst({ x: pointer.x, y: pointer.y });
@@ -683,9 +683,6 @@ export class ShopScene extends Scene {
     this.containers = new Map();
     this.placed = [];
     const save = this.save();
-    // CLEANUP (added 2026-11-11): the canvas draws the page under an open card or confirm, whose
-    // dim it blends, until the shared HTML shade dims the shop list.
-    this.mirror?.setSuspended(!this.isListOpen());
     const root = this.add.container(0, 0);
     this.root = root;
     const words = gameData.homeText.shop;
@@ -748,12 +745,14 @@ export class ShopScene extends Scene {
     });
     this.confirmHits = view.hits;
     const layer = this.add.container(0, 0);
+    // The HTML shade dims the HTML page under it.
+    const shade = this.mirror === undefined ? undefined : view.dim;
     this.htmlConfirm = keepPanel(this.htmlConfirm, JSON.stringify(view), () =>
-      addHtmlPurchaseConfirm(this, view, (choice) => this.answer(choice)),
+      addHtmlPurchaseConfirm(this, view, (choice) => this.answer(choice), shade),
     );
     if (this.htmlConfirm?.panel === undefined) {
       drawPurchaseConfirm(this, layer, view, this.pressed?.kind === "confirmClose");
-    } else {
+    } else if (shade === undefined) {
       layer.add(addModalShade(this, view.dim));
     }
   }
@@ -950,6 +949,8 @@ export class ShopScene extends Scene {
       kind: purchase.kind,
       picture: purchasePicture(purchase),
     });
-    this.htmlDetail = addDetailCardOver(this, layer, dim, false, view, this.htmlDetail);
+    // The HTML shade dims the HTML page under it.
+    const htmlUnder = this.mirror !== undefined;
+    this.htmlDetail = addDetailCardOver(this, layer, dim, false, view, this.htmlDetail, htmlUnder);
   }
 }

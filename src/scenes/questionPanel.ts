@@ -246,20 +246,27 @@ export function addHtmlModalCard(
 
 // A detail card in the HTML layer, laid out as the canvas draws it (detailCardView), its close
 // control doing close, or a picture of one on a card that takes no presses, as the walk's
-// explanation, which a press anywhere closes, shown pressed while closePressed. Returns it, for
-// its scene to destroy as the card closes, or undefined where the canvas must draw it
-// (drawDetailCard).
+// explanation, which a press anywhere closes, shown pressed while closePressed, over the HTML
+// shade over shade where it is given. Returns it, for its scene to destroy as the card closes, or
+// undefined where the canvas must draw it (drawDetailCard).
 export function addHtmlDetailCard(
   scene: Scene,
   view: DetailCardView,
   close: (() => void) | undefined,
   closePressed = false,
+  shade?: Rect,
 ): DomQuestionPanel | undefined {
   const place = htmlPanelPlace(scene);
   if (place === undefined) {
     return undefined;
   }
-  const panel = showDetailCard(place.layer, { ...htmlArtInput(place), close, closePressed, view });
+  const panel = showDetailCard(place.layer, {
+    ...htmlArtInput(place),
+    close,
+    closePressed,
+    ...(shade === undefined ? {} : { shade }),
+    view,
+  });
   return followScene(scene, panel);
 }
 
@@ -285,8 +292,9 @@ export function keepPanel(
 }
 
 // A held item's detail card over a dim layer over dim, its close control shown pressed or not,
-// which a press anywhere closes: in HTML over the canvas's dim, kept while it shows the same
-// (keepPanel), else on the canvas (drawDetailCardView). Returns the HTML kept.
+// which a press anywhere closes: in HTML, kept while it shows the same (keepPanel), over the HTML
+// shade where HTML lies under it (htmlUnder), else over the canvas's dim; else on the canvas
+// (drawDetailCardView). Returns the HTML kept.
 export function addDetailCardOver(
   scene: Scene,
   parent: GameObjects.Container,
@@ -294,26 +302,28 @@ export function addDetailCardOver(
   closePressed: boolean,
   view: DetailCardView,
   kept: KeptPanel | undefined,
+  htmlUnder = false,
 ): KeptPanel | undefined {
-  const html = keepPanel(kept, JSON.stringify([view, closePressed]), () =>
-    addHtmlDetailCard(scene, view, undefined, closePressed),
+  const html = keepPanel(kept, JSON.stringify([view, closePressed, htmlUnder]), () =>
+    addHtmlDetailCard(scene, view, undefined, closePressed, htmlUnder ? dim : undefined),
   );
   if (html?.panel === undefined) {
     drawDetailCardView(scene, parent, dim, closePressed, view);
-  } else {
+  } else if (!htmlUnder) {
     parent.add(addModalShade(scene, dim));
   }
   return html;
 }
 
 // The purchase confirm in the HTML layer, laid out as the canvas draws it
-// (purchaseConfirmCardView), each answer and the close control, which cancels, doing answer.
-// Returns it, for its scene to destroy as the confirm closes, or undefined where the canvas must
-// draw it (drawPurchaseConfirm).
+// (purchaseConfirmCardView), each answer and the close control, which cancels, doing answer, over
+// the HTML shade over shade where it is given. Returns it, for its scene to destroy as the confirm
+// closes, or undefined where the canvas must draw it (drawPurchaseConfirm).
 export function addHtmlPurchaseConfirm(
   scene: Scene,
   view: PurchaseConfirmCardView,
   answer: (choice: ConfirmChoice) => void,
+  shade?: Rect,
 ): DomQuestionPanel | undefined {
   const place = htmlPanelPlace(scene);
   if (place === undefined) {
@@ -323,6 +333,7 @@ export function addHtmlPurchaseConfirm(
     ...htmlArtInput(place),
     buy: () => answer("buy"),
     cancel: () => answer("cancel"),
+    ...(shade === undefined ? {} : { shade }),
     view,
   });
   return followScene(scene, panel);

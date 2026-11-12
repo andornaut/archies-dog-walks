@@ -45,6 +45,7 @@ export function showPurchaseConfirm(
   ];
   return showQuestionPanel(layer, {
     close: input.cancel,
+    ...(input.shade === undefined ? {} : { shade: input.shade }),
     closeLabel: input.closeLabel,
     describedBy: texts.id,
     fonts: input.fonts,
