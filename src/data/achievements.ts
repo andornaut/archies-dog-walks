@@ -123,7 +123,7 @@ export const ACHIEVEMENTS = [
   },
   {
     badgeLine: "They named a street after you.",
-    conditions: [{ count: 1000, kind: "walksFinished" }],
+    conditions: [{ count: 500, kind: "walksFinished" }],
     goal: "Finish {count} walks",
     id: "legendOfTheLeash",
     name: "Legend of the Leash",

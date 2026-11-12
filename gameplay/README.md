@@ -41,7 +41,7 @@ Some walks should fail: the road stays calm, so losing comes from bumps and choi
 
 ## Release and tuning
 
-**Walk target:** a walk lasts about 8 minutes, we want to play "one more", and it works by touch on a phone browser.
+**Walk target:** a walk lasts about 9 minutes, we want to play "one more", and it works by touch on a phone browser.
 
 Version 1 is complete; the user has not yet declared the first release. Until then, a save-format change or a renamed id resets older saves to a default save, with no migration. Tuning continues against the targets above. The game is called Archie's Dog Walks.
 
