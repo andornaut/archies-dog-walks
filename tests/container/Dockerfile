@@ -30,8 +30,11 @@ RUN set -eu \
 
 FROM tools
 
+RUN install -d -m 0755 -o 19001 -g 19001 /opt/check
+COPY --chown=19001:19001 package.json package-lock.json /opt/check/
+USER 19001:19001
+ENV HOME=/tmp
 WORKDIR /opt/check
-COPY package.json package-lock.json ./
-RUN HUSKY=0 npm ci --no-audit --no-fund
-COPY tests/container/check /opt/check/run
+RUN npm ci --ignore-scripts --no-audit --no-fund
+COPY --chown=19001:19001 tests/container/check /opt/check/run
 WORKDIR /work
