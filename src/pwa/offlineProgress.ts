@@ -4,12 +4,13 @@ import type { OfflineActivity } from "@andornaut/game-kit/web/pwa/dom/offlinePla
 export const offlineProgress = createProgressState();
 let pending: ProgressHandle | undefined;
 
-// Browser registration and cache installation report activity, without a percentage.
+// Only a first visit's precache, which the player waits on, shows the loading line, without a
+// percentage; updates install in the background and show nothing.
 export function reportOfflineActivity(activity: OfflineActivity): void {
-  if (activity === "idle") {
+  if (activity === "precaching") {
+    pending ??= offlineProgress.begin();
+  } else {
     pending?.finish();
     pending = undefined;
-  } else {
-    pending ??= offlineProgress.begin();
   }
 }
