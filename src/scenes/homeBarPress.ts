@@ -40,7 +40,7 @@ export function openHomePage(from: Scene, page: HomePage): void {
         openOverlay(under, SCENE_KEYS.stats, { resume });
         return;
       case "settings": {
-        const data: SettingsData = { region: "home", resume };
+        const data: SettingsData = { debuffs: 0, region: "home", resume };
         openOverlay(under, SCENE_KEYS.settings, data);
         return;
       }

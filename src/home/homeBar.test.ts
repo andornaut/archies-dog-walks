@@ -54,17 +54,21 @@ describe.each([true, false])("the top bar with Exit shown %s", (exit) => {
   const firstWell = walkBarLayout(topBar).effectWells[0] ?? topBar;
 
   // Anywhere on the screen but the panel and the top bar's buttons is outside.
+  // A walk bar button's press area under the bar, on the rows a showing debuff bar keeps.
+  const underPause = { x: centre(TOP_BAR_BUTTONS.pause.hit).x, y: topBar.y + topBar.height };
   it.each([
-    ["home: under the top bar, clear of its buttons", "home", underBank, true],
-    ["home: on a button's tap area under the top bar", "home", underSettings, false],
-    ["home: on a top bar button", "home", centres.help ?? underBank, false],
-    ["home: on the top bar's bank", "home", onBank, true],
-    ["walk: in the walk view", "walk", centre(SCREEN_LAYOUT.walkView), true],
-    ["walk: on a dog card", "walk", centre(dogSlots[0] ?? topBar), true],
-    ["walk: on a walk bar well", "walk", centre(firstWell), true],
-    ["walk: on a walk bar button", "walk", centre(TOP_BAR_BUTTONS.pause.hit), false],
-  ] as const)("regionOutside, %s", (_, region, point, outside) => {
-    expect(isOutside(regionOutside(exit, region, []), point)).toBe(outside);
+    ["home: under the top bar, clear of its buttons", "home", 0, underBank, true],
+    ["home: on a button's tap area under the top bar", "home", 0, underSettings, false],
+    ["home: on a top bar button", "home", 0, centres.help ?? underBank, false],
+    ["home: on the top bar's bank", "home", 0, onBank, true],
+    ["walk: in the walk view", "walk", 0, centre(SCREEN_LAYOUT.walkView), true],
+    ["walk: on a dog card", "walk", 0, centre(dogSlots[0] ?? topBar), true],
+    ["walk: on a walk bar well", "walk", 0, centre(firstWell), true],
+    ["walk: on a walk bar button", "walk", 0, centre(TOP_BAR_BUTTONS.pause.hit), false],
+    ["walk: on a button's press area under the bar", "walk", 0, underPause, false],
+    ["walk: on a debuff bar under a button", "walk", 1, underPause, true],
+  ] as const)("regionOutside, %s", (_, region, debuffs, point, outside) => {
+    expect(isOutside(regionOutside(exit, region, debuffs, []), point)).toBe(outside);
   });
 
   // What a press finds on each button (their order: homeLayout.test.ts).

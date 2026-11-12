@@ -297,7 +297,7 @@ describe.each([
     Object.keys(gameData.dogs).length,
     dogOrigin,
     HOME_LAYOUT.dogTileInset,
-    HOME_SCREEN.dogTiles.faceGapX,
+    HOME_SCREEN.dogTiles.frameGapX,
   ],
   [
     "Pocket",
@@ -307,7 +307,7 @@ describe.each([
     pocket.tileInset,
     BUTTON_SIZE.stackGap,
   ],
-] as const)("the %s tiles' press cells", (_, grid, count, origin, inset, faceGapX) => {
+] as const)("the %s tiles' press cells", (_, grid, count, origin, inset, frameGapX) => {
   const cells = gridRects(grid, count, origin);
   it("press at least MIN_PRESS tall and meet without overlapping", () => {
     expect(grid.cellHeight).toBeGreaterThanOrEqual(MIN_PRESS);
@@ -315,12 +315,12 @@ describe.each([
       [],
     );
   });
-  it("hold faces the stacked button gap apart down, and as far apart across as its face gap", () => {
+  it("hold faces the stacked button gap apart down, and its drawn frames frameGapX apart across", () => {
     expect(grid.gapY + 2 * inset.y).toBe(BUTTON_SIZE.stackGap);
     expect(grid.gapX).toBe(grid.gapY);
     const faces = cells.map((cell) => tileFace(inset, cell));
     const across = (faces[1]?.x ?? 0) - ((faces[0]?.x ?? 0) + (faces[0]?.width ?? 0));
-    expect(across).toBe(faceGapX);
+    expect(across).toBe(frameGapX);
   });
 });
 

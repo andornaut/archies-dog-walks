@@ -157,6 +157,8 @@ function settingsFonts(scene: Scene): SettingsFonts {
 // its lit top bar, whose buttons keep working (listenHomeBar), or the walk view the pause menu
 // dims.
 export interface SettingsData extends OverlayData {
+  // The debuff bars showing under the walk bar: none on a home page.
+  readonly debuffs: number;
   readonly region: OverlayRegion;
 }
 
@@ -262,8 +264,8 @@ export class SettingsScene extends Scene {
       this,
       () =>
         this.steps === undefined
-          ? regionOutside(exit, data.region, [this.layout.panel])
-          : regionOutside(exit, data.region, [this.steps.card]),
+          ? regionOutside(exit, data.region, data.debuffs, [this.layout.panel])
+          : regionOutside(exit, data.region, data.debuffs, [this.steps.card]),
       () => this.back(),
     );
     // Over the walk, the HUD takes the walk bar's presses (topBarAction).

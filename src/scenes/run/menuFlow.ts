@@ -12,6 +12,8 @@ import type { ZoneCelebrationSceneData } from "../ZoneCelebrationScene.ts";
 
 // What the menus need of the run.
 interface MenuFlowHost {
+  // How many debuff bars show under the walk bar.
+  debuffs: () => number;
   dropPress: () => void;
   // Heads home from the pause menu, once it has closed.
   headHome: () => void;
@@ -250,6 +252,7 @@ export class MenuFlow {
 
   private pauseData(): PauseSceneData {
     const answers = {
+      debuffs: this.host.debuffs(),
       onHeadHome: () => {
         this.closePause();
         this.host.headHome();

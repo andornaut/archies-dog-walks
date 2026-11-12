@@ -568,10 +568,10 @@ export const HOME_SCREEN = {
     // The text's left edge.
     textX: 39,
   },
-  // art: the dog tiles' faces, each drawn inside a press cell grown round it to MIN_PRESS tall.
-  // Exempt from the button gap rule across: the faces are 6 apart, so three fit at their names'
-  // width.
-  dogTiles: { columns: 3, face: { height: 42, width: 105 }, faceGapX: 6 },
+  // art: the dog tiles' faces, each drawn inside a press cell grown round it to MIN_PRESS tall,
+  // and the gap across between the drawn tiles' frames: 6, so the faces measured 1 px inside each
+  // tile's ink outline are the stacked button gap (8) apart.
+  dogTiles: { columns: 3, face: { height: 42, width: 105 }, frameGapX: 6 },
   // art: the keyboard ring's outset, outside the ui-select frame.
   focusOutset: 5,
   // The gate scene's top.

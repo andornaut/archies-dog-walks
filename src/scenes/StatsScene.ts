@@ -191,7 +191,7 @@ export class StatsScene extends Scene {
     const exit = exitShown();
     listenDismiss(
       this,
-      regionOutside(exit, "home", [PANEL]),
+      regionOutside(exit, "home", 0, [PANEL]),
       () => this.close(),
       () => this.back(),
     );

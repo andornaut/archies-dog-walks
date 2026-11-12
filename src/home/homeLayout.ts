@@ -60,18 +60,18 @@ const START_BUTTON: Rect = {
 };
 const START_GAP = HOME.startGap;
 // A tile grid's press cells: each its tile's face grown by inset.y above and below to MIN_PRESS
-// tall and by inset.x either side, the face drawn inset inside it, the faces the stacked button
-// gap apart down and faceGapX (the stacked button gap unless stated) across, the cells as far
-// apart across as down.
+// tall and by inset.x either side, the face drawn inset inside it, the drawn faces the stacked
+// button gap apart down and frameGapX (the stacked button gap unless stated) across, the cells as
+// far apart across as down.
 function tiles(spec: {
   columns: number;
   face: { height: number; width: number };
-  faceGapX?: number;
+  frameGapX?: number;
 }) {
-  const { columns, face, faceGapX = BUTTON_SIZE.stackGap } = spec;
+  const { columns, face, frameGapX = BUTTON_SIZE.stackGap } = spec;
   const y = Math.max(0, Math.ceil((MIN_PRESS - face.height) / 2));
   const gap = BUTTON_SIZE.stackGap - 2 * y;
-  const x = (faceGapX - gap) / 2;
+  const x = (frameGapX - gap) / 2;
   return {
     cellHeight: face.height + 2 * y,
     cellWidth: face.width + 2 * x,

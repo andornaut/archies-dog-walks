@@ -668,7 +668,7 @@ export class StartScene extends Scene {
       this,
       () => {
         const rect = this.overlay?.rect;
-        return rect === undefined ? undefined : regionOutside(this.exit, "home", [rect]);
+        return rect === undefined ? undefined : regionOutside(this.exit, "home", 0, [rect]);
       },
       () => this.closeOverlay(),
     );

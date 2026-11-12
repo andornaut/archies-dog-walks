@@ -2,7 +2,7 @@ import type { OutsideArea } from "@andornaut/game-kit/input/outsideTap";
 import { containsPoint, type Rect } from "@andornaut/game-kit/rect";
 
 import { SCREEN_LAYOUT } from "../data/screen.ts";
-import { walkBarLayout } from "../hud/walkHud.ts";
+import { topBarButtonHits } from "../hud/topBar.ts";
 import { screenArea } from "../input/outsideTap.ts";
 import { HOME_LAYOUT, type HomeBarButton, homeBarButtons } from "./homeLayout.ts";
 
@@ -31,16 +31,15 @@ function homeBarHits(exit: boolean): Rect[] {
 // Where a tap outside an overlay's panel and covered counts in region: anywhere on the screen,
 // the top bar's empty area and the dog cards included, but on the top bar's buttons, which keep
 // their own taps: the home top bar's as shown (exit: whether Exit is among them), whose tap areas
-// reach a little below the bar, or the walk bar's.
+// reach a little below the bar, or the walk bar's with debuffs debuff bars showing, a showing
+// debuff bar keeping its rows (topBarButtonHits). The home top bar has no debuff bars.
 export function regionOutside(
   exit: boolean,
   region: OverlayRegion,
+  debuffs: number,
   covered: readonly Rect[],
 ): OutsideArea {
-  const bar =
-    region === "home"
-      ? homeBarHits(exit)
-      : Object.values(walkBarLayout(SCREEN_LAYOUT.topBar).buttons).map(({ hit }) => hit);
+  const bar = region === "home" ? homeBarHits(exit) : Object.values(topBarButtonHits(debuffs));
   return screenArea([...covered, ...bar]);
 }
 

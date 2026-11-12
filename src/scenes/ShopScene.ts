@@ -326,7 +326,7 @@ export class ShopScene extends Scene {
     const exit = exitShown();
     listenDismiss(
       this,
-      regionOutside(exit, "home", [PANEL]),
+      regionOutside(exit, "home", 0, [PANEL]),
       () => (this.confirm === undefined ? this.close() : this.back()),
       () => this.back(),
     );

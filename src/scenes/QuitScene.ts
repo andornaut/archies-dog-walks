@@ -51,7 +51,7 @@ export class QuitScene extends Scene {
       }
     });
     const exit = exitShown();
-    listenDismiss(this, regionOutside(exit, "home", covered), keepPlaying);
+    listenDismiss(this, regionOutside(exit, "home", 0, covered), keepPlaying);
     listenHomeBar(this, exit, keepPlaying);
   }
 }

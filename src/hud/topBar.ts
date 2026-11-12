@@ -1,4 +1,4 @@
-import { containsPoint, type Point } from "@andornaut/game-kit/rect";
+import { containsPoint, type Point, type Rect } from "@andornaut/game-kit/rect";
 
 import { SCREEN_LAYOUT } from "../data/screen.ts";
 import { isMuteKey, isPauseKey } from "../input/keyBindings.ts";
@@ -22,13 +22,24 @@ export function buttonIcon(button: BarButton): Point {
   return { x: button.face.x + 2, y: button.face.y + 1 };
 }
 
-// The button a press at (x, y) lands on, if any, with debuffs debuff bars showing: a showing
-// debuff bar keeps its rows from the buttons' press areas, which reach under the walk bar.
+// Each button's press area with debuffs debuff bars showing: its hit area, which reaches under
+// the walk bar, less the rows a showing debuff bar keeps.
+export function topBarButtonHits(debuffs: number): Readonly<Record<WalkBarButtonId, Rect>> {
+  const [first] = debuffBarRects(SCREEN_LAYOUT.topBar, debuffs);
+  const pressed = (hit: Rect): Rect =>
+    first === undefined ? hit : { ...hit, height: Math.min(hit.height, first.y - hit.y) };
+  return {
+    help: pressed(TOP_BAR_BUTTONS.help.hit),
+    pause: pressed(TOP_BAR_BUTTONS.pause.hit),
+    settings: pressed(TOP_BAR_BUTTONS.settings.hit),
+  };
+}
+
+// The button a press at (x, y) lands on, if any, with debuffs debuff bars showing
+// (topBarButtonHits).
 export function topBarButtonAt(debuffs: number, x: number, y: number): WalkBarButtonId | undefined {
-  if (debuffBarRects(SCREEN_LAYOUT.topBar, debuffs).some((bar) => containsPoint(bar, x, y))) {
-    return undefined;
-  }
-  return WALK_BAR_BUTTONS.find((press) => containsPoint(TOP_BAR_BUTTONS[press].hit, x, y));
+  const hits = topBarButtonHits(debuffs);
+  return WALK_BAR_BUTTONS.find((press) => containsPoint(hits[press], x, y));
 }
 
 // A walk key: M mutes, and P and Escape are the pause button's. A held key's repeats press
