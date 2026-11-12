@@ -49,6 +49,7 @@ import { addFilledRect } from "../ui/phaser/draw.ts";
 import { addPillGlyphs, registerFallbackPixelFont } from "../ui/phaser/pixelText.ts";
 import { GAME_PROGRESS_STYLE, LOADING_MOTION, LOADING_TIMING } from "../ui/progressBar.ts";
 import { markArtReady, setBootWatch, type WaitedLoad } from "./artReady.ts";
+import { stopOnceRetried } from "./bootRetries.ts";
 import { loadingProgress, waitedLoad } from "./loadingProgress.ts";
 import {
   currentSettings,
@@ -119,7 +120,8 @@ function placeholderSizes(): Map<string, Size> {
 // settled files and logs and retries a file that fails, which is replaced by a placeholder box
 // meanwhile, never fatal. Then shows the home screen, and keeps running behind it to load and
 // register the rest the same way, silent unless Start walk waits for it, then marks the art
-// ready and stops. A dev link that names a run loads everything before it starts the walk, and a walk the save
+// ready. It stops once every file that failed has loaded on a retry or used up its retry rounds.
+// A dev link that names a run loads everything before it starts the walk, and a walk the save
 // resumes (ProfileSession.open) loads the rest behind the loading screen before it goes on.
 export class BootScene extends Scene {
   private bar: GameObjects.Graphics | undefined;
@@ -339,12 +341,33 @@ export class BootScene extends Scene {
   // Shows the home screen over this scene, clears the loading screen, then loads and registers
   // the rest behind it.
   private showHome(): void {
-    this.scene.launch(SCENE_KEYS.start);
+    this.leaveFor(SCENE_KEYS.start);
+    this.loadRest(BEHIND_FRAME_BUDGET_MS, () => this.stopOnceRetried());
+  }
+
+  // Launches key over this scene and clears the loading screen; this scene keeps running behind,
+  // drawing nothing and taking no input, while it loads or retries.
+  private leaveFor(key: string, data?: object): void {
+    this.scene.launch(key, data);
     for (const child of [...this.children.list]) {
       child.destroy();
     }
     [this.bar, this.walker] = [undefined, undefined];
-    this.loadRest(BEHIND_FRAME_BUDGET_MS, () => this.scene.stop());
+  }
+
+  // Stops once the watch has retried every file that failed (bootRetries.ts). A retried atlas page
+  // adds the textures it holds that are still missing; a placeholder already drawn for one stays
+  // for the session.
+  private stopOnceRetried(): void {
+    const { watch } = this;
+    if (watch === undefined) {
+      this.scene.stop();
+      return;
+    }
+    stopOnceRetried(this.load, watch, {
+      recovered: () => addAtlasTextures(this),
+      stop: () => this.scene.stop(),
+    });
   }
 
   // Loads and registers what the home screen did not need, then marks the art ready and calls
@@ -374,11 +397,13 @@ export class BootScene extends Scene {
       () => {
         const walk = takeResumedWalk(this);
         if (walk === null) {
-          this.scene.start(SCENE_KEYS.start);
+          this.leaveFor(SCENE_KEYS.start);
+          this.stopOnceRetried();
           return;
         }
         startWakeLock();
-        this.scene.start(SCENE_KEYS.run, resumedRunSceneData(pageRunSetup().setup.dev, walk));
+        this.leaveFor(SCENE_KEYS.run, resumedRunSceneData(pageRunSetup().setup.dev, walk));
+        this.stopOnceRetried();
       },
       true,
     );
@@ -392,6 +417,7 @@ export class BootScene extends Scene {
     const loadout = devRunLoadout(lastLoadout, walker, itemAt(owned.dogs, 0), pageRunSetup().setup);
     const pick = { dogSlots: owned.dogSlots.length, loadout };
     startWakeLock();
-    this.scene.start(SCENE_KEYS.run, runSceneData(nextRunStart(), pick));
+    this.leaveFor(SCENE_KEYS.run, runSceneData(nextRunStart(), pick));
+    this.stopOnceRetried();
   }
 }
