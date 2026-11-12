@@ -41,7 +41,7 @@ Choose one content rectangle for each page. Derive its outer margins, button edg
 | SHOP_LAYOUT.panel | 4,44,352,512                                          | x,y,w,h px     | Shop and Logbook page frame    | [shop layout](../src/home/shopLayout.ts)   |
 | SHOP_LAYOUT.row.x | 16                                                    | px             | Page heading and row left edge | [shop layout](../src/home/shopLayout.ts)   |
 | STATS_LAYOUT.rows | Shop heading left; shop row right, allowing scrollbar | derived bounds | Logbook label/value columns    | [stats layout](../src/home/statsLayout.ts) |
-| SHOP_LAYOUT.list  | Top 137; bottom 548                                   | y px           | Shared scrolling viewport      | [shop layout](../src/home/shopLayout.ts)   |
+| SHOP_LAYOUT.list  | Top 145; bottom 548                                   | y px           | Shared scrolling viewport      | [shop layout](../src/home/shopLayout.ts)   |
 
 Shop and Logbook share their page and list geometry. Use `shopListFrame` and `statsListFrame` for the actual scrolling/non-scrolling content room, rather than treating the page frame as the text rectangle. Other full-screen pages retain their own bounds.
 
@@ -51,30 +51,31 @@ Treat the home pickers and Start walk as one vertical group. The three sections 
 
 | Token           | Value                      | Unit       | Scope                                 | Source                                                                           |
 | --------------- | -------------------------- | ---------- | ------------------------------------- | -------------------------------------------------------------------------------- |
-| home.divider    | Strip rows 158–160         | y px       | Divider row 160, above picker group   | [home layout](../src/home/homeLayout.ts) and [style contract](style-guide.md#ui) |
-| home.outer.gaps | 0 above; 2 below           | px         | Entire picker/action group            | [home export](../shared/export/layout.json)                                      |
-| home.walker     | 6,161,348,85               | x,y,w,h px | Walker section                        | [home export](../shared/export/layout.json)                                      |
-| home.dogs       | 6,246,348,183              | x,y,w,h px | Dogs section                          | [home export](../shared/export/layout.json)                                      |
-| home.pocket     | 6,429,348,83               | x,y,w,h px | Pocket section                        | [home export](../shared/export/layout.json)                                      |
-| home.start      | 32,514,296,44              | x,y,w,h px | Start walk, 2px below Pocket          | [home layout](../src/home/homeLayout.ts)                                         |
+| home.divider    | Strip rows 152–154         | y px       | Divider row 154, above picker group   | [home layout](../src/home/homeLayout.ts) and [style contract](style-guide.md#ui) |
+| home.outer.gaps | 0 above; 4 below           | px         | Entire picker/action group            | [home export](../shared/export/layout.json)                                      |
+| home.walker     | 6,155,348,85               | x,y,w,h px | Walker section                        | [home export](../shared/export/layout.json)                                      |
+| home.dogs       | 6,240,348,183              | x,y,w,h px | Dogs section                          | [home export](../shared/export/layout.json)                                      |
+| home.pocket     | 6,423,348,83               | x,y,w,h px | Pocket section                        | [home export](../shared/export/layout.json)                                      |
+| home.start      | 32,508,296,48              | x,y,w,h px | Start walk, 2px below Pocket          | [home layout](../src/home/homeLayout.ts)                                         |
 | home.columns    | Walker 4; Dogs 3; Pocket 5 | columns    | Card grids, tiles 8px apart both ways | [home layout](../src/home/homeLayout.ts)                                         |
 
 Keep hero, shop, sign and actor anchors independent of picker padding. On results pages, [endResultsPlacement](../src/home/endLayout.ts) moves the summary and attached art together, clamps measured summary/badge heights above the button clearance and centres the whole unchanged badge strip in the remaining band.
 
 ## Controls/targets
 
-Visible faces, touch targets and focus outlines are separate rectangles. Keep the game's 44px action/target and 20px icon-face roles; shared document structure across games does not make their control sizes interchangeable. See [Controls](controls.md#sizing-and-spacing) for sizing and [interaction rules](controls.md#interaction-and-accessibility) for semantics.
+Visible faces, touch targets and focus outlines are separate rectangles. Keep the game's 48px action/target and 20px icon-face roles; shared document structure across games does not make their control sizes interchangeable. See [Controls](controls.md#sizing-and-spacing) for sizing and [interaction rules](controls.md#interaction-and-accessibility) for semantics.
 
 | Token                  | Value                                 | Unit | Scope                                                  | Source                                         |
 | ---------------------- | ------------------------------------- | ---- | ------------------------------------------------------ | ---------------------------------------------- |
-| BUTTON_SIZE.wide       | 296×44                                | px   | Non-modal main actions                                 | [button geometry](../src/ui/buttonGeometry.ts) |
-| BUTTON_SIZE.compact    | 128×44                                | px   | Non-modal secondary actions                            | [button geometry](../src/ui/buttonGeometry.ts) |
-| BUTTON_SIZE.icon       | Face 20×20; glyph 16×16; target 44×44 | px   | Non-bar icon controls                                  | [button geometry](../src/ui/buttonGeometry.ts) |
-| topbar.home.hit        | 44×44; Exit 39×44                     | px   | One pitch wide; Exit's cut at the screen edge          | [home placement](../src/home/homeLayout.ts)    |
-| topbar.home.pitch      | 44                                    | px   | Home bar faces from x = 157, 24px apart                | [home placement](../src/home/homeLayout.ts)    |
-| topbar.home.well       | At most 136 wide                      | px   | Home bank well                                         | [home placement](../src/home/homeLayout.ts)    |
-| topbar.walk.hit        | 34×40                                 | px   | Compact walk bar; debuff rows 40–43 remain interactive | [walk HUD](../src/hud/walkHud.ts)              |
-| home.start.focusOutset | 2                                     | px   | Focus outline limited by bottom clearance              | [home layout](../src/home/homeLayout.ts)       |
+| BUTTON_SIZE.wide       | 296×48                                | px   | Non-modal main actions                                 | [button geometry](../src/ui/buttonGeometry.ts) |
+| BUTTON_SIZE.compact    | 128×48                                | px   | Non-modal secondary actions                            | [button geometry](../src/ui/buttonGeometry.ts) |
+| BUTTON_SIZE.icon       | Face 20×20; glyph 16×16; target 48×48 | px   | Non-bar icon controls                                  | [button geometry](../src/ui/buttonGeometry.ts) |
+| topbar.home.hit        | 48×48, rows 0–47                      | px   | One pitch wide, from x = 120                           | [home placement](../src/home/homeLayout.ts)    |
+| topbar.home.pitch      | 48                                    | px   | Home bar faces from x = 134, 28px apart                | [home placement](../src/home/homeLayout.ts)    |
+| topbar.home.well       | At most 113 wide                      | px   | Home bank well                                         | [home placement](../src/home/homeLayout.ts)    |
+| topbar.walk.hit        | 48×48, rows 0–47                      | px   | Three columns from x = 216; debuff bars win rows 40–47 | [walk HUD](../src/hud/walkHud.ts)              |
+| home.start.focusOutset | 4                                     | px   | Full focus ring, to the canvas's last row              | [home layout](../src/home/homeLayout.ts)       |
+| press.min              | 48×48                                 | px   | Least press area; overlaps go to the nearest centre    | [Controls](controls.md#sizing-and-spacing)     |
 
 Modal actions use their full measured label/icon width plus padding, not the non-modal compact/wide width floors. Preserve prices, goals, reasons and full-size labels in every state.
 
@@ -87,10 +88,10 @@ Target the full logical viewport's vertical midpoint, then clamp the measured pa
 | modal.width         | min(available, max(content ink + 32, viewport width × 0.5)) | px   | Unpadded content; 180px floor on 360px viewport, safe-width clamp | [local width adapter](../src/home/modalLayout.ts)                                       |
 | modal.height        | Measured content; no fixed floor                            | px   | Full fonts, wrapped text and present groups                       | [Control contract](controls.md#sizing-and-spacing)                                      |
 | modal.close.face    | 20×20 at right/top inset 6                                  | px   | Ordinary modal X                                                  | [close geometry](../src/ui/closeControl.ts)                                             |
-| modal.close.hit     | 44×44, wholly inside top-right corner                       | px   | Ordinary modal X                                                  | [close geometry](../src/ui/closeControl.ts)                                             |
-| modal.title.reserve | 52 each side with X; 16 without                             | px   | Whole-panel-centred heading; 44px hit plus 8px gap                | [title sizing](../src/home/modalLayout.ts) and [title placement](../src/ui/barTitle.ts) |
+| modal.close.hit     | 48×48, wholly inside top-right corner                       | px   | Ordinary modal X                                                  | [close geometry](../src/ui/closeControl.ts)                                             |
+| modal.title.reserve | 56 each side with X; 16 without                             | px   | Whole-panel-centred heading; 48px hit plus 8px gap                | [title sizing](../src/home/modalLayout.ts) and [title placement](../src/ui/barTitle.ts) |
 
-Keep `font-title` at 2×. Measure wrapped lines and increase header/body/panel height by their line pitch; a single-line header stays 52px. Modal controls, dismissal guards and safe keyboard choices remain defined in [Controls](controls.md#sizing-and-spacing). Width measurements must include every present group and action, not only the title.
+Keep `font-title` at 2×. Measure wrapped lines and increase header/body/panel height by their line pitch; a single-line header stays 56px. Modal controls, dismissal guards and safe keyboard choices remain defined in [Controls](controls.md#sizing-and-spacing). Width measurements must include every present group and action, not only the title.
 
 ## HUD/overlays
 
@@ -102,13 +103,13 @@ Keep gameplay notices below overlay scenes and scrims. A high object depth insid
 | hud.walkView    | 0,40,360,442 | x,y,w,h px | Content between bar and dog row | [screen regions](../shared/export/layout.json)                                                                      |
 | hud.dogRow      | 0,482,360,74 | x,y,w,h px | Fixed three-slot card row       | [screen regions](../shared/export/layout.json)                                                                      |
 | progress.bottom | 0,556,360,4  | x,y,w,h px | DOM startup, Boot and run       | [startup](../src/startup.ts), [Boot](../src/scenes/BootScene.ts) and [screen regions](../shared/export/layout.json) |
-| progress.home   | 0,153,360,4  | x,y,w,h px | Home loading/walk-wait only     | [home layout](../src/home/homeLayout.ts)                                                                            |
+| progress.home   | 0,147,360,4  | x,y,w,h px | Home loading/walk-wait only     | [home layout](../src/home/homeLayout.ts)                                                                            |
 
-Hide home progress while idle. Active progress lies across the yard's foot, leaving row 157 clear (`HOME.loadingClear`) above the divider strip. Progress state and appearance follow the [style contract](style-guide.md#ui). Actor-following effects and stationary art notices keep their own anchors; do not apply panel-centering rules to them.
+Hide home progress while idle. Active progress lies across the yard's foot, leaving row 151 clear (`HOME.loadingClear`) above the divider strip. Progress state and appearance follow the [style contract](style-guide.md#ui). Actor-following effects and stationary art notices keep their own anchors; do not apply panel-centering rules to them.
 
 ## Exceptions and verification
 
-Keep intentional geometry explicit: compact top bars, steering gestures, hold-to-explain controls, illustrated choice cards, full-scene hero titles, scrolling pages and the measured result/badge group. These exceptions do not authorize shrinking text or targets. Their detailed contracts remain in [Controls](controls.md#scope-and-exceptions).
+Keep intentional geometry explicit: compact top bars, steering gestures, hold-to-explain controls, illustrated choice cards, edge-to-edge dog cards, full-scene hero titles, scrolling pages and the measured result/badge group. These exceptions do not authorize shrinking text or targets; only the debuff bars and effect wells keep press areas under 48px. Their detailed contracts remain in [Controls](controls.md#scope-and-exceptions).
 
 Before changing a layout, identify its coordinate space, page bounds, present groups, visible-ink extents, target rectangles and protected areas. Check smallest safe width, wrapped content, close-hit clearance, scrollbar reservation, focus outsets and empty groups. Compare neutral and selected card edges without counting badges as grid padding. Verify overlay ordering and unchanged dismissal behaviour.
 
