@@ -7,7 +7,7 @@ export const HOME_TEXT = {
   bubble: {
     afterFiring: "Rough walk. They'll come around.",
     afterWalk: "Nice walk! Who's next?",
-    firstVisit: "Morning! Who's walking today? Tap to pick. Hold for details.",
+    firstVisit: "Morning! Tap to pick. Hold for details.",
     howTo: "Tap to pick. Hold anything for details.",
     install: "Install the app: full screen, offline.",
     newAffordable: "Something new at the Pet shop!",
