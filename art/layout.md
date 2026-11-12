@@ -49,15 +49,15 @@ Shop and Logbook share their page and list geometry. Use `shopListFrame` and `st
 
 Treat the home pickers and Start walk as one vertical group. The three sections are contiguous; their individual cards keep their detailed chrome and hit geometry. Position the grid from the cards themselves, preserving the separate non-touch badge gutter.
 
-| Token           | Value                      | Unit       | Scope                               | Source                                                                           |
-| --------------- | -------------------------- | ---------- | ----------------------------------- | -------------------------------------------------------------------------------- |
-| home.divider    | Row 166                    | y px       | Last divider row above picker group | [home layout](../src/home/homeLayout.ts) and [style contract](style-guide.md#ui) |
-| home.outer.gaps | 0 above; 2 below           | px         | Entire picker/action group          | [home export](../shared/export/layout.json)                                      |
-| home.walker     | 6,173,348,85               | x,y,w,h px | Walker section                      | [home export](../shared/export/layout.json)                                      |
-| home.dogs       | 6,258,348,171              | x,y,w,h px | Dogs section                        | [home export](../shared/export/layout.json)                                      |
-| home.pocket     | 6,429,348,83               | x,y,w,h px | Pocket section                      | [home export](../shared/export/layout.json)                                      |
-| home.start      | 32,514,296,44              | x,y,w,h px | Start walk, 2px below Pocket        | [home layout](../src/home/homeLayout.ts)                                         |
-| home.columns    | Walker 4; Dogs 3; Pocket 5 | columns    | Card grids, 8px gaps both ways      | [home layout](../src/home/homeLayout.ts)                                         |
+| Token           | Value                      | Unit       | Scope                                 | Source                                                                           |
+| --------------- | -------------------------- | ---------- | ------------------------------------- | -------------------------------------------------------------------------------- |
+| home.divider    | Strip rows 158–160         | y px       | Divider row 160, above picker group   | [home layout](../src/home/homeLayout.ts) and [style contract](style-guide.md#ui) |
+| home.outer.gaps | 0 above; 2 below           | px         | Entire picker/action group            | [home export](../shared/export/layout.json)                                      |
+| home.walker     | 6,161,348,85               | x,y,w,h px | Walker section                        | [home export](../shared/export/layout.json)                                      |
+| home.dogs       | 6,246,348,183              | x,y,w,h px | Dogs section                          | [home export](../shared/export/layout.json)                                      |
+| home.pocket     | 6,429,348,83               | x,y,w,h px | Pocket section                        | [home export](../shared/export/layout.json)                                      |
+| home.start      | 32,514,296,44              | x,y,w,h px | Start walk, 2px below Pocket          | [home layout](../src/home/homeLayout.ts)                                         |
+| home.columns    | Walker 4; Dogs 3; Pocket 5 | columns    | Card grids, tiles 8px apart both ways | [home layout](../src/home/homeLayout.ts)                                         |
 
 Keep hero, shop, sign and actor anchors independent of picker padding. On results pages, [endResultsPlacement](../src/home/endLayout.ts) moves the summary and attached art together, clamps measured summary/badge heights above the button clearance and centres the whole unchanged badge strip in the remaining band.
 
@@ -70,8 +70,8 @@ Visible faces, touch targets and focus outlines are separate rectangles. Keep th
 | BUTTON_SIZE.wide       | 296×44                                | px   | Non-modal main actions                                 | [button geometry](../src/ui/buttonGeometry.ts) |
 | BUTTON_SIZE.compact    | 128×44                                | px   | Non-modal secondary actions                            | [button geometry](../src/ui/buttonGeometry.ts) |
 | BUTTON_SIZE.icon       | Face 20×20; glyph 16×16; target 44×44 | px   | Non-bar icon controls                                  | [button geometry](../src/ui/buttonGeometry.ts) |
-| topbar.home.hit        | 34×44                                 | px   | Compact home bar exception                             | [home placement](../src/home/homeLayout.ts)    |
-| topbar.home.pitch      | 44                                    | px   | Home bar faces, 24px apart                             | [home placement](../src/home/homeLayout.ts)    |
+| topbar.home.hit        | 44×44; Exit 39×44                     | px   | One pitch wide; Exit's cut at the screen edge          | [home placement](../src/home/homeLayout.ts)    |
+| topbar.home.pitch      | 44                                    | px   | Home bar faces from x = 157, 24px apart                | [home placement](../src/home/homeLayout.ts)    |
 | topbar.home.well       | At most 136 wide                      | px   | Home bank well                                         | [home placement](../src/home/homeLayout.ts)    |
 | topbar.walk.hit        | 34×40                                 | px   | Compact walk bar; debuff rows 40–43 remain interactive | [walk HUD](../src/hud/walkHud.ts)              |
 | home.start.focusOutset | 2                                     | px   | Focus outline limited by bottom clearance              | [home layout](../src/home/homeLayout.ts)       |
@@ -96,15 +96,15 @@ Keep `font-title` at 2×. Measure wrapped lines and increase header/body/panel h
 
 Keep gameplay notices below overlay scenes and scrims. A high object depth inside the run scene is not permission to draw above a modal. The message strip stays in the HUD with its paused lifetime and enlarged-card hiding; [messageStripView](../src/scenes/messageStripView.ts) owns its rendering.
 
-| Token           | Value                | Unit       | Scope                           | Source                                                                                                              |
-| --------------- | -------------------- | ---------- | ------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
-| hud.topBar      | 0,0,360,40           | x,y,w,h px | Walk bar                        | [screen regions](../shared/export/layout.json)                                                                      |
-| hud.walkView    | 0,40,360,442         | x,y,w,h px | Content between bar and dog row | [screen regions](../shared/export/layout.json)                                                                      |
-| hud.dogRow      | 0,482,360,74         | x,y,w,h px | Fixed three-slot card row       | [screen regions](../shared/export/layout.json)                                                                      |
-| progress.bottom | 0,556,360,4          | x,y,w,h px | DOM startup, Boot and run       | [startup](../src/startup.ts), [Boot](../src/scenes/BootScene.ts) and [screen regions](../shared/export/layout.json) |
-| progress.home   | 0,GATE_BAR.y-5,360,4 | x,y,w,h px | Home loading/walk-wait only     | [home layout](../src/home/homeLayout.ts)                                                                            |
+| Token           | Value        | Unit       | Scope                           | Source                                                                                                              |
+| --------------- | ------------ | ---------- | ------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| hud.topBar      | 0,0,360,40   | x,y,w,h px | Walk bar                        | [screen regions](../shared/export/layout.json)                                                                      |
+| hud.walkView    | 0,40,360,442 | x,y,w,h px | Content between bar and dog row | [screen regions](../shared/export/layout.json)                                                                      |
+| hud.dogRow      | 0,482,360,74 | x,y,w,h px | Fixed three-slot card row       | [screen regions](../shared/export/layout.json)                                                                      |
+| progress.bottom | 0,556,360,4  | x,y,w,h px | DOM startup, Boot and run       | [startup](../src/startup.ts), [Boot](../src/scenes/BootScene.ts) and [screen regions](../shared/export/layout.json) |
+| progress.home   | 0,153,360,4  | x,y,w,h px | Home loading/walk-wait only     | [home layout](../src/home/homeLayout.ts)                                                                            |
 
-Hide home progress while idle. Active progress lies across the yard's foot with one clear row (`HOME.loadingClear`) above the divider strip. Progress state and appearance follow the [style contract](style-guide.md#ui). Actor-following effects and stationary art notices keep their own anchors; do not apply panel-centering rules to them.
+Hide home progress while idle. Active progress lies across the yard's foot, leaving row 157 clear (`HOME.loadingClear`) above the divider strip. Progress state and appearance follow the [style contract](style-guide.md#ui). Actor-following effects and stationary art notices keep their own anchors; do not apply panel-centering rules to them.
 
 ## Exceptions and verification
 
