@@ -2,10 +2,10 @@ import { logbookScrollbar, type LogbookView } from "../../home/logbookView.ts";
 import { setBox } from "../../ui/dom/pixelLine.ts";
 import type { UiLayer } from "../../ui/dom/uiLayer.ts";
 import {
-  deviceRect,
-  deviceX,
-  deviceY,
   type DomScale,
+  gridRect,
+  gridX,
+  gridY,
   scrollbarBoxes,
   wholeArtPixels,
 } from "../../ui/domScale.ts";
@@ -51,7 +51,7 @@ export function scrollPlace(
   return { by: grid(scale.origin.y) - grid(origin.y), scale: { ...scale, origin } };
 }
 
-// The scrollbar's track and thumb (scrollbarBoxes) from the track's corner on the device grid.
+// The scrollbar's track and thumb (scrollbarBoxes) from the track's corner on the art-pixel grid.
 function scrollbarPart(doc: Document, input: DomLogbookInput): DomPart & { follow: () => void } {
   const element = doc.createElement("div");
   element.className = "adw-lines";
@@ -74,7 +74,7 @@ function scrollbarPart(doc: Document, input: DomLogbookInput): DomPart & { follo
       return;
     }
     shown = key;
-    const corner = { left: deviceX(at, bar.track.x), top: deviceY(at, bar.track.y) };
+    const corner = { left: gridX(at, bar.track.x), top: gridY(at, bar.track.y) };
     const boxes = scrollbarBoxes(at, corner, bar);
     setBox(track, boxes.track);
     setBox(thumb, boxes.thumb);
@@ -133,7 +133,7 @@ export function showLogbook(layer: UiLayer, input: DomLogbookInput): DomQuestion
     element: clip,
     place: (at) => {
       scale = at;
-      const box = deviceRect(at, view.frame.rect);
+      const box = gridRect(at, view.frame.rect);
       setBox(clip, box);
       setBox(scrolled, { height: 0, left: -box.left, top: -box.top, width: 0 });
       placedAt = "";

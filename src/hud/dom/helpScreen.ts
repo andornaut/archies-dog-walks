@@ -3,7 +3,7 @@ import { itemAt } from "@andornaut/game-kit/arrays";
 import { HELP_DOTS, type HelpView } from "../../help/helpView.ts";
 import { createTextLine, type DomTextLine, placeText, setBox } from "../../ui/dom/pixelLine.ts";
 import type { UiLayer } from "../../ui/dom/uiLayer.ts";
-import { artPixel, deviceRect, deviceX, deviceY, type DomScale } from "../../ui/domScale.ts";
+import { artPixel, type DomScale, gridRect, gridX, gridY } from "../../ui/domScale.ts";
 import { PALETTE } from "../../ui/palette.ts";
 import type { PanelText } from "../questionPanelView.ts";
 import {
@@ -27,7 +27,7 @@ const hex = (colour: number) => `#${colour.toString(16).padStart(6, "0")}`;
 // Ids that tie each screen's dialog to its page.
 let screens = 0;
 
-// A box of one colour, its edges on the device grid; height, where given, in art pixels.
+// A box of one colour, its edges on the art-pixel grid; height, where given, in art pixels.
 function fillPart(
   doc: Document,
   colour: number,
@@ -49,11 +49,11 @@ function dotBoxes(scale: DomScale, dots: HelpView["dots"]): Parameters<typeof se
   }
   const pixel = artPixel(scale);
   const half = Math.floor((last.x + last.width - first.x) / 2);
-  const left = deviceX(scale, first.x + half) - half * pixel;
+  const left = gridX(scale, first.x + half) - half * pixel;
   return dots.map(({ rect }) => ({
     height: rect.height * pixel,
     left: left + (rect.x - first.x) * pixel,
-    top: deviceY(scale, rect.y),
+    top: gridY(scale, rect.y),
     width: rect.width * pixel,
   }));
 }
@@ -146,7 +146,7 @@ export function showHelpScreen(layer: UiLayer, input: DomHelpInput): DomQuestion
   page.append(title, body);
   const parts: DomPart[] = [
     ...view.rules.map(({ colour, rect }) =>
-      fillPart(doc, colour, (scale) => ({ ...deviceRect(scale, rect), height: artPixel(scale) })),
+      fillPart(doc, colour, (scale) => ({ ...gridRect(scale, rect), height: artPixel(scale) })),
     ),
     ...view.dots.map((dot, i) =>
       dotPart(doc, dot, (scale) => itemAt(dotBoxes(scale, view.dots), i)),

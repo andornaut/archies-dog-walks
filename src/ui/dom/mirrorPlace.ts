@@ -1,44 +1,20 @@
-import type { Rect } from "@andornaut/game-kit/rect";
-
 import {
   artPixel,
   type DeviceRect,
   type DomScale,
-  exactDeviceX,
-  exactDeviceY,
+  gridX,
+  gridY,
   wholeArtPixels,
 } from "../domScale.ts";
 
 // Where the display mirror (src/scenes/htmlMirror.ts) puts what a scene draws, in whole device
-// pixels from the HTML screen's root. Every edge lies on the screen's art-pixel grid: a game
-// point's exact device place rounded to whole art pixels, so parts that share an edge in game
+// pixels from the HTML screen's root. Every edge lies on the screen's art-pixel grid (gridX, gridY
+// and gridRect in src/ui/domScale.ts, as every HTML screen's parts do): a game point's exact
+// device place rounded to whole art pixels, so parts that share an edge in game
 // pixels share it in HTML, and a part in a tile or a row sits whole art pixels from its snapped
 // corner. A container's motion (a dip, a shake, a lift) is whole game pixels, moved as that many
 // art pixels; a scrolled list moves by whole device pixels while it moves and whole art pixels
 // once it settles.
-
-// A game column and row on the art-pixel grid.
-export function gridX(scale: DomScale, x: number): number {
-  return wholeArtPixels(scale, exactDeviceX(scale, x));
-}
-
-export function gridY(scale: DomScale, y: number): number {
-  return wholeArtPixels(scale, exactDeviceY(scale, y));
-}
-
-// A filled or framed rect on the grid: each edge snapped on its own, at least an art pixel wide
-// and tall, so neighbouring boxes neither gap nor overlap.
-export function gridRect(scale: DomScale, rect: Rect): DeviceRect {
-  const left = gridX(scale, rect.x);
-  const top = gridY(scale, rect.y);
-  const pixel = artPixel(scale);
-  return {
-    height: Math.max(pixel, gridY(scale, rect.y + rect.height) - top),
-    left,
-    top,
-    width: Math.max(pixel, gridX(scale, rect.x + rect.width) - left),
-  };
-}
 
 // Art at its top-left corner, its size in art pixels, each artPixel device pixels.
 export function artBox(

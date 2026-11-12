@@ -31,7 +31,7 @@ export function boxPart(doc: Document, colour: number, place: (scale: DomScale) 
   return { element, place: (scale) => setBox(element, place(scale)) };
 }
 
-// A fill over its rect, its corner on the device grid and its size whole art pixels.
+// A fill over its rect, its corner on the art-pixel grid and its size whole art pixels.
 export function fillPart(doc: Document, fill: PageFill): DomPart {
   return boxPart(doc, fill.colour, (scale) => frameRect(scale, fill.rect));
 }

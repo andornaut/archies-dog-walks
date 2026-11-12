@@ -1,7 +1,7 @@
 import type { Point } from "@andornaut/game-kit/rect";
 
 import { domArtPath } from "../../assets/domArt.ts";
-import { artPixel, deviceX, deviceY, type DomScale } from "../domScale.ts";
+import { artPixel, type DomScale, gridX, gridY } from "../domScale.ts";
 import { setBox } from "./pixelLine.ts";
 import { type SheetFrame, sheetFrame } from "./sheetFrames.ts";
 
@@ -80,8 +80,8 @@ export function sheetArt(
         const pixel = artPixel(scale);
         setBox(element, {
           height: frame.height * pixel,
-          left: at?.left ?? deviceX(scale, art.x) - deviceX(scale, origin.x),
-          top: at?.top ?? deviceY(scale, art.y) - deviceY(scale, origin.y),
+          left: at?.left ?? gridX(scale, art.x) - gridX(scale, origin.x),
+          top: at?.top ?? gridY(scale, art.y) - gridY(scale, origin.y),
           width: frame.width * pixel,
         });
         element.style.backgroundSize = `${frame.sheet.width * pixel}px ${frame.sheet.height * pixel}px`;
@@ -125,13 +125,13 @@ export function sheetThreeSlice(
       loaded((json) => {
         const frame = sheetFrame(json, art.tag);
         const pixel = artPixel(scale);
-        const left = deviceX(scale, art.x);
-        const width = across ?? deviceX(scale, art.x + art.width) - left;
+        const left = gridX(scale, art.x);
+        const width = across ?? gridX(scale, art.x + art.width) - left;
         const height = frame.height * pixel;
         setBox(element, {
           height,
-          left: left - deviceX(scale, origin.x),
-          top: deviceY(scale, art.y) - deviceY(scale, origin.y),
+          left: left - gridX(scale, origin.x),
+          top: gridY(scale, art.y) - gridY(scale, origin.y),
           width,
         });
         const [start, middle, end] = parts;
@@ -178,8 +178,8 @@ export function imageArt(
       const pixel = artPixel(scale);
       setBox(element, {
         height: art.height * pixel,
-        left: deviceX(scale, art.x) - deviceX(scale, origin.x),
-        top: deviceY(scale, art.y) - deviceY(scale, origin.y),
+        left: gridX(scale, art.x) - gridX(scale, origin.x),
+        top: gridY(scale, art.y) - gridY(scale, origin.y),
         width: art.width * pixel,
       });
     },

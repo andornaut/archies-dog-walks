@@ -22,6 +22,8 @@ import {
   type DomScale,
   frameRect,
   gridTransform,
+  gridX,
+  gridY,
 } from "../../ui/domScale.ts";
 import type { PanelText, QuestionPanelView } from "../questionPanelView.ts";
 
@@ -327,11 +329,11 @@ export function showQuestionPanel(layer: UiLayer, input: DomQuestionPanelInput):
   glyph.className = "adw-close-glyph";
   close.append(face, glyph);
   box(close, ORIGIN, view.close.hit);
-  // The face and its glyph in whole art pixels, from the face's corner on the device grid.
+  // The face and its glyph in whole art pixels, from the face's corner on the art-pixel grid.
   placed.push((scale) => {
     const pixel = artPixel(scale);
-    const left = deviceX(scale, closeArt.x) - deviceX(scale, view.close.hit.x);
-    const top = deviceY(scale, closeArt.y) - deviceY(scale, view.close.hit.y);
+    const left = gridX(scale, closeArt.x) - gridX(scale, view.close.hit.x);
+    const top = gridY(scale, closeArt.y) - gridY(scale, view.close.hit.y);
     const side = closeArt.width * pixel;
     setBox(face, { height: side, left, top, width: side });
     const { glyph: at } = CLOSE_ART;

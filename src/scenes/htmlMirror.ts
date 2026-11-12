@@ -9,18 +9,19 @@ import { addTapBurst } from "../hud/dom/questionPanel.ts";
 import { pillKind } from "../hud/effectNames.ts";
 import { disabledArtKey, disabledArtPath } from "../ui/disabledArt.ts";
 import { drawLabel } from "../ui/dom/labelBlock.ts";
-import {
-  artBox,
-  gridRect,
-  gridX,
-  gridY,
-  motionShift,
-  scrollShift,
-  sliceParts,
-} from "../ui/dom/mirrorPlace.ts";
+import { artBox, motionShift, scrollShift, sliceParts } from "../ui/dom/mirrorPlace.ts";
 import { setBox } from "../ui/dom/pixelLine.ts";
 import { loadSheet, type SheetFrame, sheetFrameNamed } from "../ui/dom/sheetFrames.ts";
-import { deviceX, deviceY, type DomScale, gridTransform, scrollbarBoxes } from "../ui/domScale.ts";
+import {
+  deviceX,
+  deviceY,
+  type DomScale,
+  gridRect,
+  gridTransform,
+  gridX,
+  gridY,
+  scrollbarBoxes,
+} from "../ui/domScale.ts";
 import { PALETTE } from "../ui/palette.ts";
 import { displayBitmapFont } from "../ui/phaser/displayText.ts";
 import { GREY_PILL, pillColours } from "./effectNameColours.ts";

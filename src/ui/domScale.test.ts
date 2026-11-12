@@ -10,6 +10,8 @@ import {
   fontPixel,
   frameRect,
   gridTransform,
+  gridX,
+  gridY,
   scrollbarBoxes,
   sliceLengths,
 } from "./domScale.ts";
@@ -99,20 +101,24 @@ describe("domScale", () => {
 describe("frameRect", () => {
   const rect = { height: 285, width: 226, x: 67, y: 115 };
 
-  it.each(CASES)("makes a frame whole art pixels from deviceRect's corner at %o", (canvas) => {
-    const scale = domScale(canvas.dpr, { ...canvas, height: 1 });
-    const box = deviceRect(scale, rect);
-    const frame = frameRect(scale, rect);
-    const pixel = artPixel(scale);
-    expect([frame.left, frame.top]).toEqual([box.left, box.top]);
-    for (const [length, device] of [
-      [frame.width, box.width],
-      [frame.height, box.height],
-    ] as const) {
-      expect(length % pixel).toBe(0);
-      expect(Math.abs(length - device)).toBeLessThanOrEqual(pixel / 2);
-    }
-  });
+  it.each(CASES)(
+    "makes a frame whole art pixels from its corner on the art grid at %o",
+    (canvas) => {
+      const scale = domScale(canvas.dpr, { ...canvas, height: 1 });
+      const box = deviceRect(scale, rect);
+      const frame = frameRect(scale, rect);
+      const pixel = artPixel(scale);
+      expect([frame.left, frame.top]).toEqual([gridX(scale, rect.x), gridY(scale, rect.y)]);
+      expect([frame.left % pixel, frame.top % pixel]).toEqual([0, 0]);
+      for (const [length, device] of [
+        [frame.width, box.width],
+        [frame.height, box.height],
+      ] as const) {
+        expect(length % pixel).toBe(0);
+        expect(Math.abs(length - device)).toBeLessThanOrEqual(pixel / 2);
+      }
+    },
+  );
 
   it.each([1, 2, 3])("leaves a frame as deviceRect gives it at a fit of 1, DPR %d", (dpr) => {
     const scale = domScale(dpr, { height: 560, width: 360, x: 0, y: 0 });

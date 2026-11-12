@@ -9,7 +9,14 @@ import {
   shownText,
 } from "../../ui/dom/pixelLine.ts";
 import type { UiLayer } from "../../ui/dom/uiLayer.ts";
-import { artPixel, deviceX, type DomScale, fontPixel, frameRect } from "../../ui/domScale.ts";
+import {
+  artPixel,
+  deviceX,
+  type DomScale,
+  fontPixel,
+  frameRect,
+  gridX,
+} from "../../ui/domScale.ts";
 import { TEXT_SCALE } from "../../ui/textFit.ts";
 import type { CentredRow, DottedRule, ZoneCelebrationView } from "../celebrationView.ts";
 import type { PanelText, QuestionPanelView } from "../questionPanelView.ts";
@@ -87,8 +94,10 @@ function rowPart(doc: Document, input: Shared, row: CentredRow): DomPart[] {
     });
   };
   return row.items.map((item, i) => {
+    // From where each part places itself: art its corner on the grid, text its pen's column.
     const shift = (scale: DomScale) =>
-      (lefts(scale)[i] ?? 0) - deviceX(scale, "art" in item ? item.art.x : item.text.x);
+      (lefts(scale)[i] ?? 0) -
+      ("art" in item ? gridX(scale, item.art.x) : deviceX(scale, item.text.x));
     return "art" in item
       ? artPart(doc, input, item.art, shift)
       : textPart(doc, input, item.text, shift);

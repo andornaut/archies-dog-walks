@@ -71,13 +71,43 @@ export function deviceRect(scale: DomScale, rect: Rect): DeviceRect {
   };
 }
 
-// A frame's rect in device pixels: deviceRect's corner, its width and height the nearest whole
-// number of art pixels (at least one), so the bands of its far edges sit on the same art-pixel
-// phase as its near edges'.
+// A game column and row on the screen's art-pixel grid: its exact device place rounded to whole
+// art pixels from the root's corner. Every part's corner is placed on it, so parts that share an
+// edge in game pixels share it in HTML and a part sits whole art pixels from its holder's corner.
+export function gridX(scale: DomScale, x: number): number {
+  return wholeArtPixels(scale, exactDeviceX(scale, x));
+}
+
+export function gridY(scale: DomScale, y: number): number {
+  return wholeArtPixels(scale, exactDeviceY(scale, y));
+}
+
+// A filled or framed rect on the grid: each edge snapped on its own, at least an art pixel wide
+// and tall, so neighbouring boxes neither gap nor overlap.
+export function gridRect(scale: DomScale, rect: Rect): DeviceRect {
+  const left = gridX(scale, rect.x);
+  const top = gridY(scale, rect.y);
+  const pixel = artPixel(scale);
+  return {
+    height: Math.max(pixel, gridY(scale, rect.y + rect.height) - top),
+    left,
+    top,
+    width: Math.max(pixel, gridX(scale, rect.x + rect.width) - left),
+  };
+}
+
+// A frame's rect in device pixels: its corner on the grid, its width and height the nearest
+// whole number of art pixels (at least one), so the bands of its far edges sit on the same
+// art-pixel phase as its near edges'.
 export function frameRect(scale: DomScale, rect: Rect): DeviceRect {
   const box = deviceRect(scale, rect);
   const snap = (length: number) => Math.max(artPixel(scale), wholeArtPixels(scale, length));
-  return { ...box, height: snap(box.height), width: snap(box.width) };
+  return {
+    height: snap(box.height),
+    left: gridX(scale, rect.x),
+    top: gridY(scale, rect.y),
+    width: snap(box.width),
+  };
 }
 
 // A device length snapped to the nearest whole number of art pixels.

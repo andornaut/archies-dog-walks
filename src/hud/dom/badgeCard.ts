@@ -6,11 +6,11 @@ import { playingFrame, sheetTagFrames, type TagFrame } from "../../ui/dom/sheetF
 import type { UiLayer } from "../../ui/dom/uiLayer.ts";
 import {
   artPixel,
-  deviceX,
-  deviceY,
   type DomScale,
   exactDeviceX,
   exactDeviceY,
+  gridX,
+  gridY,
   wholeArtPixels,
 } from "../../ui/domScale.ts";
 import { artPart, type DomDetailCardInput, textPart } from "./detailCard.ts";
@@ -71,8 +71,8 @@ function confettiPart(
     const width = frame.width * pixel;
     const height = frame.height * pixel;
     // Centred on the badge, whole art pixels from the panel's snapped corner, as the badge is.
-    const left = deviceX(scale, panel.x);
-    const top = deviceY(scale, panel.y);
+    const left = gridX(scale, panel.x);
+    const top = gridY(scale, panel.y);
     setBox(element, {
       height,
       left: left + wholeArtPixels(scale, exactDeviceX(scale, confetti.at.x) - width / 2 - left),

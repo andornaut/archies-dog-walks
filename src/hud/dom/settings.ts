@@ -23,7 +23,7 @@ import {
   placeText,
 } from "../../ui/dom/pixelLine.ts";
 import type { UiLayer } from "../../ui/dom/uiLayer.ts";
-import { artPixel, deviceX, deviceY, type DomScale, wholeArtPixels } from "../../ui/domScale.ts";
+import { artPixel, type DomScale, gridX, gridY, wholeArtPixels } from "../../ui/domScale.ts";
 import { PALETTE } from "../../ui/palette.ts";
 import { REFUSE } from "../../ui/refuse.ts";
 import {
@@ -93,9 +93,9 @@ function textElement(doc: Document, fonts: Readonly<Record<SettingsText["font"],
           Object.assign(span.style, {
             color: hex(text.colour),
             fontSize: `${place.fontSize}px`,
-            left: `${run.left - deviceX(scale, origin.x)}px`,
+            left: `${run.left - gridX(scale, origin.x)}px`,
             lineHeight: `${place.lineHeight}px`,
-            top: `${run.top - deviceY(scale, origin.y)}px`,
+            top: `${run.top - gridY(scale, origin.y)}px`,
           });
           return span;
         }),
@@ -192,10 +192,10 @@ function rowPart(
       // along it and over it, its travel the track less the knob's art, so it meets both ends.
       const { empty, filled, knob, travel } = row.slider;
       const pixel = artPixel(scale);
-      const start = deviceX(scale, empty.x) - deviceX(scale, rect.x);
+      const start = gridX(scale, empty.x) - gridX(scale, rect.x);
       const track = wholeArtPixels(
         scale,
-        deviceX(scale, empty.x + empty.width) - deviceX(scale, empty.x),
+        gridX(scale, empty.x + empty.width) - gridX(scale, empty.x),
       );
       const knobWidth = travel.knobWidth * pixel;
       const along = wholeArtPixels(scale, travel.along * (track - knobWidth));
@@ -203,7 +203,7 @@ function rowPart(
       slider.filled.place(scale, rect, filled, along + knobWidth);
       slider.knob.place(scale, rect, knob, {
         left: start + along,
-        top: deviceY(scale, empty.y) - deviceY(scale, rect.y) + (knob.y - empty.y) * pixel,
+        top: gridY(scale, empty.y) - gridY(scale, rect.y) + (knob.y - empty.y) * pixel,
       });
       element.setAttribute("aria-valuemin", "0");
       element.setAttribute("aria-valuemax", "100");

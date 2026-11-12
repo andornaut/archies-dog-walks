@@ -10,12 +10,12 @@ import { type SheetFrame, sheetFrame } from "../../ui/dom/sheetFrames.ts";
 import type { UiLayer } from "../../ui/dom/uiLayer.ts";
 import {
   artPixel,
-  deviceX,
-  deviceY,
   type DomScale,
   exactDeviceX,
   exactDeviceY,
   frameRect,
+  gridX,
+  gridY,
   wholeArtPixels,
 } from "../../ui/domScale.ts";
 import { TEXT_SCALE } from "../../ui/textFit.ts";
@@ -66,8 +66,8 @@ export function framedPart(doc: Document, view: DetailCardView["framed"][number]
       const { height, width, x, y } = view.rect;
       setBox(element, {
         height: height * pixel,
-        left: deviceX(scale, x),
-        top: deviceY(scale, y),
+        left: gridX(scale, x),
+        top: gridY(scale, y),
         width: width * pixel,
       });
       setBox(fill, {
@@ -90,7 +90,7 @@ function aimed(
   width: number,
 ): number {
   const pixel = artPixel(scale);
-  const corner = deviceX(scale, holder.x);
+  const corner = gridX(scale, holder.x);
   const edge = frameRect(scale, aim.edge);
   const from = edge.left - corner + aim.inset.left * pixel;
   const to = edge.left - corner + edge.width - aim.inset.right * pixel - width;
@@ -135,8 +135,8 @@ export function artPart(
     const into = (from: number, to: number) => Math.floor(to - from) * artPixel(at);
     const width = art.size.width * pixel;
     const height = art.size.height * pixel;
-    const left = deviceX(at, holder.x);
-    const top = deviceY(at, holder.y);
+    const left = gridX(at, holder.x);
+    const top = gridY(at, holder.y);
     const { centre } = art;
     setBox(element, {
       height,

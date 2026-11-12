@@ -9,13 +9,15 @@ import {
 
 import {
   artPixel,
-  deviceRect,
   deviceX,
   deviceY,
   type DomScale,
   exactDeviceX,
   fontPixel,
   frameRect,
+  gridRect,
+  gridX,
+  gridY,
   wholeArtPixels,
 } from "../domScale.ts";
 import { laidPills, PILL_CLOSE, PILL_SPACE, pillIndex, pillRows } from "../namePills.ts";
@@ -89,25 +91,26 @@ export function textPlace(
   const bearing = line.font === "title" ? leftBearing((char) => bitmap.glyphs.get(char), text) : 0;
   const left =
     line.centre === "left"
-      ? deviceX(scale, line.centreX) - bearing * pixel - deviceX(scale, origin.x)
-      : deviceX(scale, line.centreX) - half - first * pixel - deviceX(scale, origin.x);
+      ? deviceX(scale, line.centreX) - bearing * pixel - gridX(scale, origin.x)
+      : deviceX(scale, line.centreX) - half - first * pixel - gridX(scale, origin.x);
   const index = line.line ?? 0;
   const blockTop = line.capTop - index * bitmap.lineHeight * line.scale;
   const top =
     deviceY(scale, blockTop) +
     (index * bitmap.lineHeight - capRows(bitmap, line.font)) * pixel -
-    deviceY(scale, origin.y);
+    gridY(scale, origin.y);
   // The web fonts' em is 8 font pixels and their line the bitmap font's.
   return { fontSize: 8 * pixel, left, lineHeight: bitmap.lineHeight * pixel, top };
 }
 
-// Places element over rect, in device pixels from its container's corner at origin.
+// Places element over rect, its edges on the grid (gridRect), in device pixels from its
+// container's corner at origin.
 export function placeBox(scale: DomScale, origin: Origin, element: HTMLElement, rect: Rect): void {
-  const box = deviceRect(scale, rect);
+  const box = gridRect(scale, rect);
   setBox(element, {
     ...box,
-    left: box.left - deviceX(scale, origin.x),
-    top: box.top - deviceY(scale, origin.y),
+    left: box.left - gridX(scale, origin.x),
+    top: box.top - gridY(scale, origin.y),
   });
 }
 
@@ -122,8 +125,8 @@ export function placeFrame(
   const box = frameRect(scale, rect);
   setBox(element, {
     ...box,
-    left: box.left - deviceX(scale, origin.x),
-    top: box.top - deviceY(scale, origin.y),
+    left: box.left - gridX(scale, origin.x),
+    top: box.top - gridY(scale, origin.y),
   });
 }
 

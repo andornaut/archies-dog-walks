@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import { artPixel, domScale } from "../domScale.ts";
-import { artBox, gridRect, motionShift, scrollShift, sliceParts } from "./mirrorPlace.ts";
+import { artPixel, domScale, gridRect } from "../domScale.ts";
+import { artBox, motionShift, scrollShift, sliceParts } from "./mirrorPlace.ts";
 import { sheetFrameNamed } from "./sheetFrames.ts";
 
 // The canvas at 1x and at 393 px across (a fractional fit), each at DPR 1, 2 and 3.
