@@ -18,7 +18,7 @@ import {
   tileBackground,
 } from "../ui/dom/mirrorPlace.ts";
 import { setBox } from "../ui/dom/pixelLine.ts";
-import { loadSheet, type SheetFrame, sheetFrameNamed } from "../ui/dom/sheetFrames.ts";
+import { loadedSheet, loadSheet, type SheetFrame, sheetFrameNamed } from "../ui/dom/sheetFrames.ts";
 import {
   deviceX,
   deviceY,
@@ -214,19 +214,21 @@ export function addHtmlMirror(
   // Each mirrored label's name pills, which the label's HTML draws, so the camera draws them no
   // more.
   const pills = new Map<GameObjects.BitmapText, GameObjects.Graphics>();
-  // Each sheet's JSON once it has loaded; a part waiting for one is drawn again when it has.
-  const sheets = new Map<string, unknown>();
+  // A part waiting for its sheet's JSON is drawn again once it has loaded. Every sheet the HTML
+  // has files for starts loading as the mirror starts, so a part rarely waits.
+  const waiting = new Set<string>();
   const frameOf: FrameOf = (file, name, size) => {
     if (file.json === undefined) {
       return { ...size, sheet: size, x: 0, y: 0 };
     }
-    const json = sheets.get(file.json);
+    const url = artUrl(file.json);
+    const json = loadedSheet(url);
     if (json === undefined) {
-      if (!sheets.has(file.json)) {
-        sheets.set(file.json, undefined);
-        loadSheet(artUrl(file.json)).then(
-          (loaded) => {
-            sheets.set(file.json ?? "", loaded);
+      if (!waiting.has(url)) {
+        waiting.add(url);
+        loadSheet(url).then(
+          () => {
+            waiting.delete(url);
             invalidate();
           },
           (error: unknown) => console.error(`The ${file.json} sheet did not load.`, error),
@@ -236,6 +238,11 @@ export function addHtmlMirror(
     }
     return sheetFrameNamed(json, name);
   };
+  for (const key of DOM_ART_KEYS) {
+    if (sprites.has(key)) {
+      loadSheet(artUrl(domArtPath("sheet", key, "json"))).catch(() => undefined);
+    }
+  }
   let order = "";
   const invalidate = () => {
     for (const entry of [...entries.values(), ...clips.values()]) {

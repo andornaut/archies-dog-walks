@@ -81,22 +81,30 @@ export function sheetFrameNamed(json: unknown, name: number | string): SheetFram
 }
 
 const sheets = new Map<string, Promise<unknown>>();
+const loaded = new Map<string, unknown>();
 
 // The sheet's JSON at url, fetched once per page.
 export function loadSheet(url: string): Promise<unknown> {
   let sheet = sheets.get(url);
   if (sheet === undefined) {
-    sheet = fetch(url).then((response) => {
+    sheet = fetch(url).then(async (response) => {
       if (!response.ok) {
         throw new Error(`${url}: ${response.status}`);
       }
-      return response.json() as Promise<unknown>;
+      const json = (await response.json()) as unknown;
+      loaded.set(url, json);
+      return json;
     });
     // A failed fetch is tried again next time.
     sheet.catch(() => sheets.delete(url));
     sheets.set(url, sheet);
   }
   return sheet;
+}
+
+// The sheet's JSON at url once loadSheet has loaded it, else undefined.
+export function loadedSheet(url: string): unknown {
+  return loaded.get(url);
 }
 
 // A frame of a tag as it plays: its rect in the sheet and how long it shows.
