@@ -2303,25 +2303,25 @@
           "height": 44,
           "width": 140,
           "x": 110,
-          "y": 161
+          "y": 173
         },
         {
           "height": 44,
           "width": 140,
           "x": 110,
-          "y": 221
+          "y": 225
         },
         {
           "height": 44,
           "width": 140,
           "x": 110,
-          "y": 281
+          "y": 277
         },
         {
           "height": 44,
           "width": 140,
           "x": 110,
-          "y": 341
+          "y": 329
         }
       ],
       "hits": [
@@ -2329,40 +2329,40 @@
           "height": 44,
           "width": 140,
           "x": 110,
-          "y": 161
+          "y": 173
         },
         {
           "height": 44,
           "width": 140,
           "x": 110,
-          "y": 221
+          "y": 225
         },
         {
           "height": 44,
           "width": 140,
           "x": 110,
-          "y": 281
+          "y": 277
         },
         {
           "height": 44,
           "width": 140,
           "x": 110,
-          "y": 341
+          "y": 329
         }
       ],
       "notePlate": {
         "height": 42,
         "width": 148,
         "x": 106,
-        "y": 393
+        "y": 381
       },
       "panel": {
-        "height": 342,
+        "height": 318,
         "width": 180,
         "x": 90,
-        "y": 109
+        "y": 121
       },
-      "titleY": 125
+      "titleY": 137
     },
     "settings": {
       "buildLabelY": 454,
@@ -2497,16 +2497,16 @@
         "y": 52
       },
       "dogs": {
-        "dogHeadingY": 362,
+        "dogHeadingY": 346,
         "dogRows": {
           "height": 48,
-          "pitch": 64,
-          "y": 387
+          "pitch": 56,
+          "y": 371
         },
         "slotHeadingY": 146,
         "slotRows": {
           "height": 48,
-          "pitch": 64,
+          "pitch": 56,
           "y": 171
         }
       },
@@ -2514,7 +2514,7 @@
         "headingY": 146,
         "rows": {
           "height": 50,
-          "pitch": 66,
+          "pitch": 58,
           "y": 171
         }
       },
@@ -2695,7 +2695,7 @@
           "outline": "amber"
         },
         "foot": 16,
-        "gap": 16,
+        "gap": 8,
         "headingY": 146,
         "width": 314,
         "x": 16,

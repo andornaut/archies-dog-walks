@@ -8,20 +8,26 @@ import { BUTTON_GAP, SMALL_BUTTON_GAP } from "@andornaut/game-kit/ui/spacing";
 
 // Shared controls
 
+// CLEANUP (added 2026-11-11): replace with game-kit's shared stack gap once released.
+// The gap between vertically stacked standard buttons' faces, in every game.
+const BUTTON_STACK_GAP = 8;
+
 // Standard button sizes.
 export const BUTTON_SIZE = {
   // A card's or modal's button.
   compact: { height: 44, width: 128 },
-  // The gap between neighbouring buttons' faces, side by side or stacked, the compact and modal
-  // buttons and full-width rows counting as standard: every game's.
+  // The gap between neighbouring standard buttons' faces side by side, the compact and modal
+  // buttons counting as standard: every game's.
   gap: BUTTON_GAP,
   // art: ui-icon-button's face side, the glyph drawn on it, and the square press target round it.
   icon: { face: 20, glyph: 16, target: 44 },
   // How far a pressed face sinks.
   press: 2,
-  // The gap between neighbouring faces where either is smaller than a standard button's: every
-  // game's.
+  // The gap between neighbouring faces, side by side or stacked, where either is smaller than a
+  // standard button's: every game's.
   smallGap: SMALL_BUTTON_GAP,
+  // The gap between stacked standard buttons' faces and between a list's pressable rows.
+  stackGap: BUTTON_STACK_GAP,
   // An overlay's or a screen's full-width button.
   wide: { height: 44, width: 296 },
 } as const;
@@ -808,7 +814,7 @@ export const LOGBOOK_PAGE = {
     // The rows under the last row.
     foot: 16,
     // The gap between rows, which open their badges as buttons do.
-    gap: BUTTON_GAP,
+    gap: BUTTON_STACK_GAP,
     // The first row's top under the earned count's capitals.
     rowsDy: 20,
   },

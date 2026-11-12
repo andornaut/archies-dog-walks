@@ -71,8 +71,11 @@ const FIRST_ROWS_Y = PLATE.y + PLATE.height + TAB_GAP;
 const HEADING_TO_ROWS = FIRST_ROWS_Y - FIRST_HEADING_Y;
 const ROWS_TO_HEADING = FIRST_HEADING_Y - TAB_BOTTOM;
 const SLOT_HEADING_Y = FIRST_HEADING_Y;
-// A list's rows, height tall, the button gap apart.
-const listRows = ({ height }: { height: number }) => ({ height, pitch: height + BUTTON_SIZE.gap });
+// A list's rows, height tall, the stacked button gap apart.
+const listRows = ({ height }: { height: number }) => ({
+  height,
+  pitch: height + BUTTON_SIZE.stackGap,
+});
 const SLOT_ROWS = { ...listRows(SHOP.slotRows), y: FIRST_ROWS_Y };
 const DOG_HEADING_Y =
   SLOT_ROWS.y + (DOG_SLOTS.length - 1) * SLOT_ROWS.pitch + SLOT_ROWS.height + ROWS_TO_HEADING;

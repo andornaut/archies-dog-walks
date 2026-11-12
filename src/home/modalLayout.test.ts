@@ -116,7 +116,7 @@ it("places update cancellation beside its primary action and stacks the whole gr
   const stacked = updateModalLayout(area, { action: 180, cancel: 120, title: 160 });
   expect(stacked.cancel!.x).toBe(stacked.button.x);
   expect(stacked.cancel!.width).toBe(stacked.button.width);
-  expect(stacked.cancel!.y + stacked.cancel!.height + BUTTON_SIZE.gap).toBe(stacked.button.y);
+  expect(stacked.cancel!.y + stacked.cancel!.height + BUTTON_SIZE.stackGap).toBe(stacked.button.y);
   expect(inside(stacked.button, stacked.panel)).toBe(true);
   expect(updateModalLayout(area, { action: 100, title: 160 }).cancel).toBeUndefined();
 });

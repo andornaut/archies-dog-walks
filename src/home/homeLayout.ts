@@ -688,7 +688,7 @@ export function updateModalLayout(
     area,
     { ...GATE, width: area.width, x: area.x },
     {
-      height: MODAL.header + height + (stacked ? height + BUTTON_SIZE.gap : 0) + MODAL.pad,
+      height: MODAL.header + height + (stacked ? height + BUTTON_SIZE.stackGap : 0) + MODAL.pad,
       width,
     },
   );
@@ -706,7 +706,7 @@ export function updateModalLayout(
     height,
     width: stacked ? groupWidth : actionWidth,
     x: left + (cancelWidth === undefined || stacked ? 0 : cancelWidth + BUTTON_SIZE.gap),
-    y: panel.y + MODAL.header + (stacked ? height + BUTTON_SIZE.gap : 0),
+    y: panel.y + MODAL.header + (stacked ? height + BUTTON_SIZE.stackGap : 0),
   };
   return { button, cancel, hit: button, panel };
 }
