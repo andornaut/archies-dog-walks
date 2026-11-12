@@ -1,5 +1,4 @@
-import { perkIconKey, upgradeIconKey } from "../assets/iconKeys.ts";
-import { kebabCase } from "../assets/spriteKeys.ts";
+import { gearSmallIconKey, perkIconKey, upgradeIconKey } from "../assets/iconKeys.ts";
 import type { GameData, GearId, UpgradeId, WalkerId, WalkerPerkId } from "../data/types.ts";
 import { gearSourceName } from "../rules/causes.ts";
 import { gearShort, perkEffect, upgradeLine } from "../rules/effectText.ts";
@@ -77,7 +76,7 @@ export { perkIconKey };
 export function effectIconKey(item: EffectItem): string {
   switch (item.kind) {
     case "gear":
-      return `icon-gear-${kebabCase(item.gear)}`;
+      return gearSmallIconKey(item.gear);
     case "perk":
       return perkIconKey(item.perk);
     case "upgrade":

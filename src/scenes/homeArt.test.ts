@@ -5,6 +5,7 @@ import { describe, expect, it } from "vitest";
 
 import shippedManifest from "../../public/art/manifest.json" with { type: "json" };
 import { loadsFirst } from "../assets/atlasGroups.ts";
+import { gearSmallIconKey } from "../assets/iconKeys.ts";
 import { parseManifest } from "../assets/manifest.ts";
 import * as spriteKeys from "../assets/spriteKeys.ts";
 import { type BaseCue, HOME_CUES, SOUND_KEYS } from "../audio/sound.ts";
@@ -93,6 +94,7 @@ const KEY_FUNCTIONS: Readonly<Record<string, () => readonly string[]>> = {
   effectItemsKey: none,
   focusDirectionForKey: none,
   gearIconKey: () => gear.map((id) => spriteKeys.gearIconKey(id)),
+  gearSmallIconKey: () => gear.map(gearSmallIconKey),
   isConfirmKey: none,
   isExitKey: none,
   isMuteKey: none,

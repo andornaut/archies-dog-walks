@@ -4,6 +4,7 @@ import { createProgressDisplay } from "@andornaut/game-kit/progressState";
 import { containsPoint, insetRect, type Rect } from "@andornaut/game-kit/rect";
 import { Core, type GameObjects, Scene, Scenes, type Time } from "phaser";
 
+import { gearSmallIconKey } from "../assets/iconKeys.ts";
 import {
   dogFaceKey,
   dogSpriteKey,
@@ -1758,8 +1759,14 @@ export class StartScene extends Scene {
       const badge = this.tileView(root, "gateBadge");
       badge.rise = targetId({ gear: this.loadout.gear, kind: "gear" });
       fillRect(addGraphicsIn(this, badge.container), PALETTE.plum, rect);
+      // The item's 16x16 icon, or its tile's icon at half size while that is missing.
       const at = { x: rect.x + 1, y: rect.y + 1 };
-      this.addGearIcon(badge.container, "colour", this.loadout.gear, at, 0.5);
+      const small = gearSmallIconKey(this.loadout.gear);
+      if (this.textures.exists(small)) {
+        badge.container.add(this.add.image(at.x, at.y, small).setOrigin(0));
+      } else {
+        this.addGearIcon(badge.container, "colour", this.loadout.gear, at, 0.5);
+      }
     }
   }
 
