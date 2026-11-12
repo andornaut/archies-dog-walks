@@ -116,13 +116,17 @@ export function tileBackground(
   };
 }
 
-// A move of whole game pixels as whole art pixels.
+// A move in game pixels as the whole art pixels nearest its device length, so every part a
+// container moves moves alike, and at a whole-number fit as many art pixels as game pixels.
 export function motionShift(
   scale: DomScale,
   motion: { readonly x: number; readonly y: number },
 ): { readonly x: number; readonly y: number } {
-  const pixel = artPixel(scale);
-  return { x: Math.round(motion.x) * pixel, y: Math.round(motion.y) * pixel };
+  const across = scale.unit * scale.dpr;
+  return {
+    x: wholeArtPixels(scale, motion.x * across),
+    y: wholeArtPixels(scale, motion.y * across),
+  };
 }
 
 // A list's scroll offset in game pixels as device pixels: whole device pixels while it moves,

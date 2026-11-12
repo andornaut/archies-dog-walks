@@ -52,8 +52,10 @@ import { MIRROR_SCROLLBAR_DATA, type MirrorScrollbar } from "./scrollView.ts";
 // frame it is on, so the HTML steps with the scene's clock through the tag's frames and
 // durations. A scaled image keeps whole art pixels where it is scaled evenly and spans its game
 // length on the grid along an axis stretched alone (scaledArtBox). Placement is the
-// art-pixel grid's (src/ui/dom/mirrorPlace.ts): each container's position is motion (a dip, a
-// shake, a lift) in whole game pixels, but a container marked as a scrolled list
+// art-pixel grid's (src/ui/dom/mirrorPlace.ts): a container places its parts from where it was
+// first drawn, each part's corner on the grid, and moves them alike by how far it has moved since
+// (a dip, a shake, a lift, a flight) in the whole art pixels nearest that move at the fit, but a
+// container marked as a scrolled list
 // (MIRROR_SCROLL_DATA) moves its content by its scroll, and one marked with a clip rect
 // (MIRROR_CLIP_DATA) clips it there, as the canvas's mask does. It takes no presses: every press
 // goes through to the canvas. While the scene is paused or asleep under another page, the canvas
@@ -82,6 +84,10 @@ export interface HtmlMirror {
 interface Context {
   readonly alpha: number;
   readonly clip: HTMLElement;
+  // The game point its containers put their parts at: each container where it was first drawn.
+  readonly origin: { x: number; y: number };
+  // How far its containers have moved since they were first drawn (a dip, a shake, a lift, a
+  // flight), in game pixels.
   readonly motion: { x: number; y: number };
   readonly scroll: { offset: number; settled: boolean } | undefined;
   readonly shown: boolean;
@@ -199,6 +205,8 @@ export function addHtmlMirror(
   const camera = scene.cameras.main;
   const entries = new Map<GameObjects.GameObject, Entry>();
   const clips = new Map<GameObjects.Container, Entry>();
+  // Where each container was first drawn, the game point its parts are placed from.
+  const homes = new WeakMap<GameObjects.Container, { x: number; y: number }>();
   // Each mirrored label's name pills, which the label's HTML draws, so the camera draws them no
   // more.
   const pills = new Map<GameObjects.BitmapText, GameObjects.Graphics>();
@@ -267,6 +275,7 @@ export function addHtmlMirror(
         ? 0
         : scrollShift(scale, context.scroll.offset, context.scroll.settled);
     const shift = { x: moved.x, y: moved.y + scrolled };
+    const { origin } = context;
     // What places every part, for its key.
     const placing = [context.shown, shift, context.alpha];
     const transform = (element: HTMLElement, alpha = context.alpha) => {
@@ -292,8 +301,8 @@ export function addHtmlMirror(
         // A label centred about a half pixel (an odd width at origin 0.5) starts on the canvas at
         // the whole game pixel below it.
         const at = {
-          x: halfDown(label.x - label.displayOriginX * label.scaleX),
-          y: halfDown(label.y - label.displayOriginY * label.scaleY),
+          x: halfDown(origin.x + label.x - label.displayOriginX * label.scaleX),
+          y: halfDown(origin.y + label.y - label.displayOriginY * label.scaleY),
         };
         const view = domLabel(label, face, at);
         const key = JSON.stringify([view, ...placing]);
@@ -331,8 +340,8 @@ export function addHtmlMirror(
         const entry = entryOf(object, "span");
         const size = { height: image.frame.realHeight, width: image.frame.realWidth };
         const at = {
-          x: image.x - image.displayOriginX * image.scaleX,
-          y: image.y - image.displayOriginY * image.scaleY,
+          x: origin.x + image.x - image.displayOriginX * image.scaleX,
+          y: origin.y + image.y - image.displayOriginY * image.scaleY,
         };
         const by = { x: image.scaleX, y: image.scaleY };
         const key = JSON.stringify([file, image.frame.name, size, at, by, ...placing]);
@@ -362,8 +371,8 @@ export function addHtmlMirror(
         const rect = {
           height: slice.height,
           width: slice.width,
-          x: slice.x - slice.displayOriginX,
-          y: slice.y - slice.displayOriginY,
+          x: origin.x + slice.x - slice.displayOriginX,
+          y: origin.y + slice.y - slice.displayOriginY,
         };
         const slices = {
           bottom: slice.bottomHeight,
@@ -421,8 +430,8 @@ export function addHtmlMirror(
         const rect = {
           height: tiled.height * tiled.scaleY,
           width: tiled.width * tiled.scaleX,
-          x: tiled.x - tiled.displayOriginX * tiled.scaleX,
-          y: tiled.y - tiled.displayOriginY * tiled.scaleY,
+          x: origin.x + tiled.x - tiled.displayOriginX * tiled.scaleX,
+          y: origin.y + tiled.y - tiled.displayOriginY * tiled.scaleY,
         };
         const tilePosition = { x: tiled.tilePositionX, y: tiled.tilePositionY };
         const key = JSON.stringify([file, size, rect, tilePosition, ...placing]);
@@ -451,8 +460,8 @@ export function addHtmlMirror(
         const rect = {
           height: shape.height,
           width: shape.width,
-          x: shape.x - shape.displayOriginX,
-          y: shape.y - shape.displayOriginY,
+          x: origin.x + shape.x - shape.displayOriginX,
+          y: origin.y + shape.y - shape.displayOriginY,
         };
         const key = JSON.stringify([shape.fillColor, shape.fillAlpha, rect, ...placing]);
         if (key !== entry.key) {
@@ -466,7 +475,10 @@ export function addHtmlMirror(
       }
       case "Graphics": {
         const graphics = object as GameObjects.Graphics;
-        const fills = graphicsFills(graphics.commandBuffer as readonly number[], graphics);
+        const fills = graphicsFills(graphics.commandBuffer as readonly number[], {
+          x: origin.x + graphics.x,
+          y: origin.y + graphics.y,
+        });
         if (fills === undefined) {
           return;
         }
@@ -574,13 +586,19 @@ export function addHtmlMirror(
             placed.push([entry.element, context.clip]);
             clip = entry.element;
           }
+          let home = homes.get(container);
+          if (home === undefined) {
+            home = { x: container.x, y: scroll === undefined ? container.y : 0 };
+            homes.set(container, home);
+          }
           walk(container.list, {
             alpha,
             clip,
-            motion:
-              scroll === undefined
-                ? { x: context.motion.x + container.x, y: context.motion.y + container.y }
-                : { x: context.motion.x + container.x, y: context.motion.y },
+            motion: {
+              x: context.motion.x + container.x - home.x,
+              y: context.motion.y + (scroll === undefined ? container.y - home.y : 0),
+            },
+            origin: { x: context.origin.x + home.x, y: context.origin.y + home.y },
             scroll:
               scroll === undefined
                 ? context.scroll
@@ -604,6 +622,7 @@ export function addHtmlMirror(
           alpha: 1,
           clip: dialog,
           motion: { x: 0, y: 0 },
+          origin: { x: 0, y: 0 },
           scroll: undefined,
           shown: true,
         });

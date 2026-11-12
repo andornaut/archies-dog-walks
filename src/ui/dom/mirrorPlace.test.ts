@@ -41,7 +41,17 @@ describe("the display mirror's placement", () => {
       height: 16 * pixel,
       width: 32 * pixel,
     });
-    expect(motionShift(scale, { x: -3, y: 2 })).toEqual({ x: -3 * pixel, y: 2 * pixel });
+    // A move lands within half an art pixel of where the canvas moves it, however far.
+    for (const motion of [
+      { x: -3, y: 2 },
+      { x: 140, y: -96 },
+    ]) {
+      const moved = motionShift(scale, motion);
+      expect([moved.x % pixel, moved.y % pixel].map(Math.abs)).toEqual([0, 0]);
+      const across = scale.unit * scale.dpr;
+      expect(Math.abs(moved.x - motion.x * across)).toBeLessThanOrEqual(pixel / 2);
+      expect(Math.abs(moved.y - motion.y * across)).toBeLessThanOrEqual(pixel / 2);
+    }
   });
 
   it.each(SCALES)("scrolls by whole device px, settling on whole art px (%s)", (_, scale) => {
