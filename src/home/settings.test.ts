@@ -13,6 +13,7 @@ import { fitInFont, fontFileMetrics, gameGlyphs, inkWidth, placedInk } from "../
 import { inside } from "../testing/rects.ts";
 import { SETTINGS_EXPORT_ROWS } from "../tools/layoutExport.ts";
 import { barTitleRoom } from "../ui/barTitle.ts";
+import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";
 import { closeFace } from "../ui/closeControl.ts";
 import { LABEL_HELP_GAP } from "../ui/labelHelpGap.ts";
 import { cardTitleRow } from "./homeLayout.ts";
@@ -221,11 +222,16 @@ describe("the settings card", () => {
   });
 
   // The first row clears the full close target; later rows begin at their separators.
-  it("starts rows below the close target or at the separator over them", () => {
-    expect(rows.map(({ rect }) => rect.y)).toEqual([
-      close.hit.y + close.hit.height + MODAL.gap,
-      ...layout.separators.map(({ y }) => y),
-    ]);
+  // Each later row the stacked button gap under the one before, its separator centred down the
+  // gap, an odd row under it.
+  it("starts rows below the close target or the stacked button gap under the row before", () => {
+    expect(rows[0]?.rect.y).toBe(close.hit.y + close.hit.height + MODAL.gap);
+    rows.slice(1).forEach(({ rect }, i) => {
+      const above = rows[i]?.rect;
+      const gap = BUTTON_SIZE.stackGap;
+      expect(rect.y - (above?.y ?? 0) - (above?.height ?? 0)).toBe(gap);
+      expect(layout.separators[i]?.y).toBe(rect.y - gap + Math.floor((gap - 1) / 2));
+    });
   });
 
   // The row's parts in reading order: nothing overlaps, and the label's line and the note's

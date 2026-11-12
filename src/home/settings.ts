@@ -88,7 +88,8 @@ export interface SettingsLayout {
   panel: Rect;
   // The rows, top to bottom.
   rows: SettingsRowLayout[];
-  // A tan rule along the top of every row after the first, SEPARATOR_INSET in from its sides.
+  // A tan rule in the gap over every row after the first, centred down it (an odd row under it),
+  // SEPARATOR_INSET in from the row's sides.
   separators: Rect[];
   track: SliderTrack & { dy: number; height: number };
 }
@@ -143,10 +144,12 @@ function noteDy(title: FontMetrics): number {
 }
 
 const PANEL = { width: SETTINGS_ROW.width + 2 * MODAL.pad };
-// The first row starts at the title row's bottom edge, as each later row starts at its separator,
-// so its icon and label are as far under the title row as a later row's are under its separator.
+// The first row starts at the title row's bottom edge, as each later row starts at its gap's end,
+// so its icon and label are as far under the title row as a later row's are under its gap.
 const ROWS_TOP = MODAL.header;
 const SEPARATOR_INSET = SETTINGS_CARD.separatorInset;
+// The rows press as a list's rows do, the stacked button gap apart.
+const ROW_GAP = BUTTON_SIZE.stackGap;
 
 // The build label (BUILD_LABEL) closes the card in 1x dark brown body text, centred across the
 // panel with no separator over it: its capitals LABEL_HELP_GAP clear rows under the last row's
@@ -218,7 +221,8 @@ export function settingsLayout(
   );
   // From the panel's top: the last row's lowest ink (the title row's bottom with no rows), and the
   // build label's capitals.
-  const rowsInk = ROWS_TOP + heights.slice(0, -1).reduce((sum, rows) => sum + rows, 0) + lastInk;
+  const rowsInk =
+    ROWS_TOP + heights.slice(0, -1).reduce((sum, rows) => sum + rows + ROW_GAP, 0) + lastInk;
   const labelDy = rowsInk + LABEL_HELP_GAP;
   // The label's digits, hex letters and "v" stand on the baseline, so its ink ends with its
   // capitals.
@@ -229,7 +233,7 @@ export function settingsLayout(
   let rowY = y + ROWS_TOP;
   const rows = shapes.map((shape, i) => {
     const rect = { height: heights[i] ?? 0, width: SETTINGS_ROW.width, x: rowX, y: rowY };
-    rowY += rect.height;
+    rowY += rect.height + ROW_GAP;
     return {
       control: rowControl(fonts, rect, shape),
       noteY: shape.kind === "slider" ? null : rect.y + noteDy(fonts.title),
@@ -247,7 +251,7 @@ export function settingsLayout(
       height: 1,
       width: rect.width - 2 * SEPARATOR_INSET,
       x: rect.x + SEPARATOR_INSET,
-      y: rect.y,
+      y: rect.y - ROW_GAP + Math.floor((ROW_GAP - 1) / 2),
     })),
     track: { ...track, width: SETTINGS_ROW.width - 2 * pad, x: rowX + pad },
   };
