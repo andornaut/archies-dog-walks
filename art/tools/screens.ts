@@ -15,12 +15,12 @@
 //   left, a low autumn planter, an open iron gate and quiet broad flagstones. No roofs, skyline or
 //   sky are cropped beneath the top bar. The centre stays quiet behind dialogue and the pack; the
 //   red-brick path at x 164 to 195 ends below the actor's last opaque foot row 163 (anchor 164).
-//   The street-name board is at 286,40, 68x12; the game prints its existing name in white title
-//   lettering at 320,43. The yard sign at 6,106, 128x38 carries ARCHIE'S over DOG WALKS in the
+//   The street-name board is at 286,52, 68x12; the game prints its existing name in white title
+//   lettering at 320,55. The yard sign at 6,106, 128x38 carries ARCHIE'S over DOG WALKS in the
 //   existing sign letters, on two short posts. The right lot is reserved for ui-pet-shop at
-//   234,54,120x108. Two quiet ground rows at 164 and 165 precede the plum divider on row 166; the
-//   backing below it is flat dbrown. No strong green competes with the existing shop board and
-//   Start walk.
+//   234,66,120x108, its last 10 rows under the divider strip and the sections. Two quiet ground
+//   rows at 164 and 165 precede the plum divider on row 166; the backing below it is flat dbrown.
+//   No strong green competes with the existing shop board and Start walk.
 // - screen-end: a Cabbagetown street at dusk, with plain lower sky bands and a repeating interior
 //   road footer from row 511, free of lane edges and dashes. Between the logo (END_LOGO_AT 107,2)
 //   and the summary panel (24,112 to 336,412), the front of the brick cottage the pack comes home
@@ -53,18 +53,18 @@
 //   the street, flat navy and plain from the curb to row 500, where a status line could sit (the
 //   game draws none), then two streetcar tracks.
 //
-// ui-pet-shop: a 120x108 sprite, tags normal, pressed and door-wave: the pet shop on the
-// yard's right lot, which opens the shop. The game draws it at PET_SHOP_AT (234,54), its base on
-// the yard's bottom row (161), and its hit area is the frame. Under the board's place (rows 0 to 21)
-// the frame is clear but for the parapet trim: an ink line on row 20 and cream from row 21, so the
-// board rising 1px shows a third cream row, never a gap. Under the trim a red and white awning, a
-// display window with a food bag and a puppy behind its bone, and a door with a paw on its glass;
-// rust brick with dbrown mortar, lit ochre on the left, dred on the right, ink outline all round,
-// on a grey step. pressed dips as ui-button does: the front sinks 2px onto the step, the step 1px
-// shallower. door-wave is frames 2 to 17 at 120ms each (1920ms): the right-hinged door opens, a
-// shopkeeper peeks out and waves inside its aperture, then withdraws as it closes. The building
-// stays fixed. Normal frame 0 is the static closed pose. An affordable item in the shop takes
-// ui-afford 2px outside the frame (232,52 124x112).
+// ui-pet-shop: a 120x108 sprite, tags normal, pressed and door-wave: the pet shop on the yard's
+// right lot, which opens the shop. The game draws it at PET_SHOP_AT, 234,66 on the yard, its bottom
+// rows (from the yard's row 164) cut by the divider strip, and its hit area is the frame above it.
+// Under the board's place (rows 0 to 21) the frame is clear but for the parapet trim: an ink line
+// on row 20 and cream from row 21, so the board rising 1px shows a third cream row, never a gap.
+// Under the trim a red and white awning, a display window with a food bag and a puppy behind its
+// bone, and a door with a paw on its glass; rust brick with dbrown mortar, lit ochre on the left,
+// dred on the right, ink outline all round, on a grey step. pressed dips as ui-button does: the
+// front sinks 2px onto the step, the step 1px shallower. door-wave is frames 2 to 17 at 120ms each
+// (1920ms): the right-hinged door opens, a shopkeeper peeks out and waves inside its aperture, then
+// withdraws as it closes. The building stays fixed. Normal frame 0 is the static closed pose. An
+// affordable item in the shop takes ui-afford 2px outside the frame (232,52 124x112 on screen).
 //
 // ui-pet-shop-board: a 114x24 sprite, tags normal and pressed: the PET SHOP board, drawn over
 // ui-pet-shop at BOARD's offset (3,0 in the shop's frame, 237,54 on screen) with the same origin
@@ -635,13 +635,13 @@ function home(): Canvas {
     cv.fill(x - 1, 89, 8, 2, "dstone");
     cv.fill(x - 1, 89, 8, 1, "driftwood");
   }
-  // The street-name plate keeps its existing text anchor without adding lettering to art.
-  cv.fill(319, 50, 2, 44, "dstone");
-  cv.fill(319, 50, 1, 44, "stone");
-  cv.fill(286, 40, 68, 12, "dslate");
-  cv.fill(287, 41, 66, 10, "navy");
-  // A shallow contact shadow seats the existing shop's step on the same paving.
-  cv.fill(233, 160, 122, 3, "dstone");
+  // The street-name plate, on its pole over the Pet shop and clear of the top bar, keeps the game's
+  // text anchor without adding lettering to art. The shop's step sits under the divider strip, so
+  // no contact shadow is drawn for it.
+  cv.fill(319, 62, 2, 44, "dstone");
+  cv.fill(319, 62, 1, 44, "stone");
+  cv.fill(286, 52, 68, 12, "dslate");
+  cv.fill(287, 53, 66, 10, "navy");
   // The logo board is the foreground focal point on the exposed left.
   for (const x of [16, 120]) {
     cv.fill(x, 140, 3, 23, "bark");
@@ -2005,8 +2005,8 @@ function pair(step: number): Frame {
 
 // ---------- ui-slot-sign ----------
 
-// The dog-slot sign hung from the Pet shop's awning across its front, which the game draws at 255,70,
-// its board (rows 75 to 98) clear of the shopkeeper's highest door-wave row (100): the frame's size,
+// The dog-slot sign hung from the Pet shop's awning across its front, which the game draws at 255,82,
+// its board (rows 87 to 110) clear of the shopkeeper's highest door-wave row (112): the frame's size,
 // and the cream board in the frame, where the game writes its two lines.
 const SLOT_SIGN_W = 81;
 const SLOT_SIGN_H = 30;
