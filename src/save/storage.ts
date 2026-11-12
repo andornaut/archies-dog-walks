@@ -20,8 +20,8 @@ export const SAVE_KEYS: SaveKeys = {
 
 // The earned badges, kept apart from the save: the ids earned and those not yet celebrated.
 export const EARNED_KEYS: SaveKeys = {
-  backup: "archies-dog-walks:achievements-backup",
-  save: "archies-dog-walks:achievements",
+  backup: "archies-dog-walks.achievements-backup",
+  save: "archies-dog-walks.achievements",
 };
 
 // The earned record's format version. Until the user declares the first release, a change to the
@@ -29,7 +29,7 @@ export const EARNED_KEYS: SaveKeys = {
 export const EARNED_VERSION = 1;
 
 // Where a checkpoint's resume point that could not be read is copied as the launch banks it.
-export const RESUME_BACKUP_KEY = "archies-dog-walks:resume-backup";
+export const RESUME_BACKUP_KEY = "archies-dog-walks.resume-backup";
 
 // The game's save in storage, in its format for context.
 export function gameSaveStore(context: SaveContext, storage: SaveStorage): SaveStore<SaveDocument> {

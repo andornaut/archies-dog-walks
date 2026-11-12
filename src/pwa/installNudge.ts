@@ -8,7 +8,7 @@ import {
   offersInstall,
 } from "@andornaut/game-kit/web/pwa/installState";
 
-export const INSTALL_NUDGE_KEY = "archies-dog-walks:install-nudged";
+export const INSTALL_NUDGE_KEY = "archies-dog-walks.install-nudged";
 const SHOWN = "1";
 
 export interface InstallNudge {

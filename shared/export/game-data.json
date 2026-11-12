@@ -577,8 +577,8 @@
     "pageGlobal": "archiesDogWalksGame",
     "previewHost": "adw-preview",
     "storageKeys": {
-      "devCheats": "archies-dog-walks:dev-cheats",
-      "devSaveEdits": "archies-dog-walks:dev-save-edits",
+      "devCheats": "archies-dog-walks.dev-cheats",
+      "devSaveEdits": "archies-dog-walks.dev-save-edits",
       "save": "archies-dog-walks.save"
     },
     "text": {
