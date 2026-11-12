@@ -9,9 +9,9 @@
   "assets": {
     "directory": "./dist",
   },
-  // workers.dev stays on as the fallback address. Wrangler turns it off for a Worker with routes
-  // unless this says otherwise.
-  "workers_dev": true,
+  // Served only at the custom domains: no workers.dev address. This is wrangler's default for a
+  // Worker with routes, stated explicitly.
+  "workers_dev": false,
   // No per-version preview addresses: delivery deploys only, and each deployed version would
   // otherwise stay public at its own workers.dev address.
   "preview_urls": false,
