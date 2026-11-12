@@ -22,7 +22,7 @@ import type {
 } from "./types.ts";
 import type { UPGRADE_DRAW_ORDER } from "./upgrades.ts";
 
-// Type-level checks: tsc (npm run check) fails if a @ts-expect-error line stops erroring.
+// Type-level checks: tsc (npm run typecheck) fails if a @ts-expect-error line stops erroring.
 const check = <T>(value: T): T => value;
 const option = { art: "card-option", effects: [], id: "option", name: "Option" };
 

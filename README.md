@@ -30,7 +30,7 @@ The project gate is `make check`. Make uses the shared launcher in `tests/contai
 
 The launcher admits each image build and check only below host load 20. It accounts for four CPUs and bounded memory, fingerprints the source snapshot, and rejects a result if source changes. `BUILD_OUTPUTS` and `TEST_OUTPUTS` declare ignored generated paths to export; aggregate `make check` exports none. `COMMAND` is an explicit command, not a source file or test selector.
 
-Native npm aliases call the project recipes directly in the current environment. This preserves use inside an existing delivery container and forwards `npm test -- <arguments>` unchanged. `npm run check` remains TypeScript-only, `npm run lint` runs ShellCheck 0.11.0 (on `PATH`; both check images supply it) and the three linters, and `npm run build` exports data before Vite. Make adds TypeScript to its lint category and deterministic art validation to its build category. The package has no host `prebuild` lifecycle hook.
+Native npm aliases call the project recipes directly in the current environment. This preserves use inside an existing delivery container and forwards `npm test -- <arguments>` unchanged. `npm run check` runs the whole chain (lint with TypeScript, the tests, and the build with the art check), `npm run typecheck` runs TypeScript alone, `npm run lint` runs ShellCheck 0.11.0 (on `PATH`; both check images supply it) and the three linters, and `npm run build` exports data before Vite. Make adds TypeScript to its lint category and deterministic art validation to its build category. The package has no host `prebuild` lifecycle hook.
 
 Development and art utilities retain their npm commands:
 
