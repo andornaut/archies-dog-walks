@@ -13,9 +13,9 @@
   gap: 4px;
   width: 128px;
   max-width: 100%;
-  height: 44px;
+  height: 48px;
   min-width: 0;
-  min-height: 44px;
+  min-height: 48px;
   margin: 0;
   padding: 0 8px 4px;
   border: 1px solid #181425;
@@ -78,7 +78,7 @@
 
 .app-button--icon {
   position: relative;
-  width: 44px;
+  width: 48px;
   padding: 0;
   border: 0;
   background: transparent;
@@ -152,6 +152,6 @@
 .steps .app-button,
 .crash .crash-panel .crash-button {
   width: max-content;
-  min-width: 44px;
+  min-width: 48px;
   padding-inline: 15px;
 }
