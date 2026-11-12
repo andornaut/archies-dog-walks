@@ -28,6 +28,8 @@ export default gameViteConfig<typeof ConfigModules>({
   // precachePlugin writes /sw.js, the service worker that precaches the game for offline play,
   // reading the map of hashed art atlasPlugin writes.
   // securityHeadersPlugin writes /_headers, the response headers with each page's CSP.
+  // uiStylePlugin serves the HTML interface's stylesheet as the CSS module virtual:adw-ui.css, so
+  // the build links it as a file the CSP's style-src 'self' allows.
   plugins: (modules, repoPath) => {
     const atlas = modules.atlasPlugin();
     return [
@@ -41,6 +43,7 @@ export default gameViteConfig<typeof ConfigModules>({
         serviceWorkerSource: repoPath("src/pwa/serviceWorker.ts"),
       }),
       modules.securityHeadersPlugin(),
+      modules.uiStylePlugin({ source: repoPath("src/ui/dom/uiStylesheet.ts") }),
     ];
   },
   previewHost: PREVIEW_HOST,

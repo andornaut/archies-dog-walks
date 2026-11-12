@@ -1,11 +1,13 @@
+// The layer's stylesheet, served by uiStylePlugin (src/tools/uiStylePlugin.ts) and linked as a
+// file, since the page's CSP blocks a <style> a script adds.
+import "virtual:adw-ui.css";
+
 import type { Rect } from "@andornaut/game-kit/rect";
 
 import { artUrl } from "../../assets/artFiles.ts";
 import { DOM_STYLE_ART, domArtPath } from "../../assets/domArt.ts";
 import { type DomScale, domScale, sliceLengths } from "../domScale.ts";
 import { PALETTE } from "../palette.ts";
-import { CELEBRATION_STYLE } from "./celebrationStyle.ts";
-import { UI_STYLE } from "./uiStyle.ts";
 
 // The HTML interface's layer: #ui in pages/play/index.html, over the canvas's box, its parts
 // placed in game pixels by domScale. Only its controls take presses; everywhere else a press
@@ -64,16 +66,12 @@ const ART_PROPERTIES: readonly (readonly [string, string])[] = DOM_STYLE_ART.map
   ([kind, key]) => [`--adw-${key}`, domArtPath(kind, key, "png")] as const,
 );
 
-// The layer in doc over canvas, its stylesheet and web fonts loading, or undefined where the
-// page has no #ui.
+// The layer in doc over canvas, its web fonts loading, or undefined where the page has no #ui.
 export function mountUiLayer(doc: Document, canvas: HTMLCanvasElement): UiLayer | undefined {
   const element = doc.getElementById(UI_LAYER_ID);
   if (element === null) {
     return undefined;
   }
-  const style = doc.createElement("style");
-  style.textContent = UI_STYLE + CELEBRATION_STYLE;
-  doc.head.append(style);
   for (const [name, path] of ART_PROPERTIES) {
     element.style.setProperty(name, `url("${artUrl(path)}")`);
   }

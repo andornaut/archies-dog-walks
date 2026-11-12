@@ -7,5 +7,6 @@ export { precachePlugin } from "../pwa/precachePlugin.ts";
 export { atlasPlugin } from "./atlas/atlasPlugin.ts";
 export { generatedFilesPlugin } from "./generatedFilesPlugin.ts";
 export { PHASER_BUILD } from "./phaserBuild.ts";
+export { uiStylePlugin } from "./uiStylePlugin.ts";
 export { phaserBuildPlugin } from "@andornaut/game-kit/web/build/vite/phaserBuildPlugin";
 export { hashedIconsPlugin } from "@andornaut/game-kit/web/pwa/vite/hashedIconsPlugin";
