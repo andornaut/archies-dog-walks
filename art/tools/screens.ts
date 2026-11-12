@@ -32,12 +32,12 @@
 //   behind orange curtains; the CN Tower rises lit over the right ones (END_CN). The moss lawn
 //   from y 96 stays quiet behind the returning pack and gives the waving owners room either side,
 //   feet on y 110. Cabbagetown's dusk bands (DUSK_SKY) fill the sky twice: behind the house down
-//   to its lawn, and behind the panel down to the far rooftops and towers in mauve (y 450). Then
-//   the street's bay-and-gables and canopy trees (from y 370), iron fences, the yards, the
-//   sidewalk (rows 491 to 505) with two heritage lamps, the curb, and from END_ROAD (511)
-//   Kensington Market's brick road under the button (32,514 296x44), which bobs 1px up, so at
-//   least 2 rows of road show above and below it. The houses, trees and fences stay within x 8 to
-//   352, so beside the badges panel (8,416 344x92) the margins show only sky, lawn and sidewalk.
+//   to its lawn, and behind the panel down to the far rooftops and towers in mauve (y 444). Then
+//   the street's bay-and-gables and canopy trees (from y 364), iron fences, the yards, the
+//   sidewalk (rows 485 to 499) with two heritage lamps, the curb, and from END_ROAD (505)
+//   Kensington Market's brick road under the button (32,508 296x48), which bobs 1px up, so at
+//   least 2 rows of road show above it and 4 below. The houses, trees and fences stay within x 8 to
+//   352, so beside the badges panel (8,413 344x92) the margins show only sky, lawn and sidewalk.
 // - screen-loading: a Toronto street at night, shown while the game loads, seen from the road.
 //   NIGHT_SKY's bands fill the sky down to SKY_FOOT (356), stars, a crescent moon at the top left
 //   and the logo drawn in at 2x (290x82 at 35,74) in the navy band. Far back, downtown's towers in
@@ -1027,9 +1027,9 @@ const NIGHT_SKY: readonly string[] = ["navy", "purple", "mauve"];
 
 // ---------- screen-end ----------
 
-const END_STREET = 370; // top of the street strip on screen-end
+const END_STREET = 364; // top of the street strip on screen-end
 // The street strip's front yards, the lawn from its row 104; the sidewalk, curb and gutter's 20 rows
-// follow, so the road starts on screen row END_ROAD, 3 rows over the button's top (514) and 2 over
+// follow, so the road starts on screen row END_ROAD, 3 rows over the button's top (508) and 2 over
 // its 1px bob
 const END_YARD = 17;
 const END_WALK = 104 + END_YARD; // the strip's first sidewalk row
@@ -2005,14 +2005,15 @@ function pair(step: number): Frame {
 
 // ---------- ui-slot-sign ----------
 
-// The dog-slot sign hung from the Pet shop's awning across its front, which the game draws at 255,88:
-// the frame's size, and the cream board in the frame, where the game writes its two lines.
+// The dog-slot sign hung from the Pet shop's awning across its front, which the game draws at 255,70,
+// its board (rows 75 to 98) clear of the shopkeeper's highest door-wave row (100): the frame's size,
+// and the cream board in the frame, where the game writes its two lines.
 const SLOT_SIGN_W = 81;
 const SLOT_SIGN_H = 30;
 const SLOT_BOARD: readonly [x: number, y: number, w: number, h: number] = [1, 5, 79, 24];
 
 // ui-slot-sign: a cream board in a 1px dbrown frame, lit white along its top and tan along its
-// bottom, hung by two dbrown cords from the awning's bottom edge. pressed lets the board drop 1px on
+// bottom, hung by two dbrown cords from the awning's top stripe. pressed lets the board drop 1px on
 // longer cords.
 function slotSign(pressed = false): Frame {
   const g = scope.Grid(SLOT_SIGN_W, SLOT_SIGN_H);
@@ -2115,9 +2116,9 @@ function ui(cv: Canvas, screen: string): void {
       figure(x, foot, 20, 16, "ochre");
     }
     panel(24, 112, 312, 300);
-    panel(8, 416, 344, 92);
-    cv.fill(48, 516, 264, 40, "orange");
-    cv.fill(48, 512, 264, 40, "amber");
+    panel(8, 413, 344, 92);
+    cv.fill(32, 512, 296, 44, "orange");
+    cv.fill(32, 508, 296, 44, "amber");
   } else if (screen === "screen-loading") {
     cv.paste(loadingTrack().img, TRACK_AT[0], TRACK_AT[1]);
     cv.paste(toImage(pair(0)), PAIR_AT[0] + Math.round(PAIR_TRAVEL * 0.4), PAIR_AT[1]);

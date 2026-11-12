@@ -1507,15 +1507,15 @@ const WALK_CASH_WELL: readonly [number, number, number, number] = [
   LAYOUT.walkBar.parts.cash.well.height,
 ];
 // The effect wells the game draws on the bar: six 22x22 wells (the perk, Pocket, found item and three
-// upgrades), 2 columns apart, set evenly between the cash well and Help's face at x 231, on rows 8 to
-// 29, centred on the buttons' faces (rows 9 to 28). The buttons' hits, 34 wide, fill x 224 to 359 at a
-// 34 pitch, each face centred in its hit (faces at 231 + 34i). The size is the layout's
-// walkBar.parts.effects.size.
+// upgrades), 1 column apart, set evenly between the cash well and Help's press at x 216 (x 77 to 213),
+// on rows 8 to 29, centred on the buttons' faces (rows 9 to 28). The three buttons' presses, 48 wide,
+// fill x 216 to 359 at a 48 pitch, rows 0 to 47, each face centred in its press (faces at 230 + 48i).
+// The size is the layout's walkBar.parts.effects.size.
 const EFFECT_WELL = LAYOUT.walkBar.parts.effects.size;
 
 // 360x40, ui-walk-bar: flat plum with the top bars' trim (dbrown on row 1; brown, dbrown and ink on
 // rows 37 to 39) and the ink cash well at 5,5 70x29, sized for "$888" at 3x with no coin. The game
-// draws the effect wells, the Help, Sound, Settings and Pause buttons and every text and icon on it.
+// draws the effect wells, the Help, Settings and Pause buttons and every text and icon on it.
 function walkBar(): Grid {
   const [w, h] = WALK_BAR;
   const g = new Grid(w, h);
