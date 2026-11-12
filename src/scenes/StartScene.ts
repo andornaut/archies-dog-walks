@@ -130,7 +130,6 @@ import type { PackPlacement } from "../layout/packFormation.ts";
 import { addFigure, PackFigures } from "../pack/phaser/packFigures.ts";
 import {
   acceptUpdate,
-  beginUpdateOfferVisit,
   dismissUpdateOffer,
   exitShown,
   installNudgeDue,
@@ -585,7 +584,6 @@ export class StartScene extends Scene {
     this.mirror = addHtmlMirror(this, () =>
       [this.gateSign, this.root].flatMap((root) => (root === undefined ? [] : [root])),
     );
-    beginUpdateOfferVisit();
     this.render();
 
     listenOnePress(this, {

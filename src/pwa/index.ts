@@ -202,12 +202,8 @@ export function setOnHomeScreen(onHome: boolean): void {
   offerHook(onHome);
 }
 
-// A new StartScene instance begins a new offer visit; resuming an overlay does not.
-export function beginUpdateOfferVisit(): void {
-  updateFlow?.beginOfferVisit();
-}
-
-// Dismiss the update offer while leaving the waiting version available for a later visit.
+// Dismiss the update offer for the page's life: it stays hidden on every return home and for any
+// version that waits later, until the game is closed and started again.
 export function dismissUpdateOffer(): void {
   updateFlow?.dismissOffer();
 }
