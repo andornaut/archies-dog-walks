@@ -115,6 +115,7 @@ import { DEBUFF_COLOURS } from "./debuffColours.ts";
 import { HudFeedback } from "./feedbackMoments.ts";
 import { HeartFeedback, heartPops } from "./heartFeedback.ts";
 import { detailView, drawDetailCardView } from "./homePanels.ts";
+import { addHtmlMirror } from "./htmlMirror.ts";
 import { HUD_DEPTH } from "./hudDepth.ts";
 import type { HudRun, HudWalk, RunHudView } from "./hudWalk.ts";
 import { MESSAGE_EVENT, MessageStrip } from "./messageStripView.ts";
@@ -173,6 +174,20 @@ interface ShowingTip {
 }
 
 const NOT_EXPLAINED = { key: "", layer: undefined };
+// The pages that ramp-dim or cover the walk on the canvas, each reading back or covering the HUD
+// the canvas draws: while one is up (running, or paused under another), the HUD's HTML stands
+// down and the canvas draws it.
+// CLEANUP (added 2026-11-12): remove in phase 5, when overlay dims move to HTML.
+const PAGES_OVER_HUD = [
+  SCENE_KEYS.card,
+  SCENE_KEYS.celebration,
+  SCENE_KEYS.end,
+  SCENE_KEYS.help,
+  SCENE_KEYS.pause,
+  SCENE_KEYS.quit,
+  SCENE_KEYS.settings,
+  SCENE_KEYS.zoneCelebration,
+] as const;
 const NO_PILL = { key: "", parts: [] };
 // An owner's tab shows this long on a heart change.
 const HEART_TAB_MS = 1200;
@@ -376,6 +391,16 @@ export class HudScene extends Scene {
     if (picture !== undefined) {
       return;
     }
+    // The HUD drawn in HTML over the canvas until it shuts down, its whole display list in display
+    // order, while no page is over it.
+    addHtmlMirror(
+      this,
+      () => {
+        this.children.depthSort();
+        return this.children.list;
+      },
+      () => this.pageOver(),
+    );
 
     // A button acts on the press, as the walk's gestures never see it.
     listenOnePress(this, {
@@ -411,6 +436,13 @@ export class HudScene extends Scene {
     ] as const;
     const key = overlays.find(shown);
     return key === undefined || this.picture !== undefined ? this : this.scene.get(key);
+  }
+
+  // Whether a page over the walk dims or covers the HUD (PAGES_OVER_HUD), or an explanation's
+  // detail card is open over its modal shade.
+  private pageOver(): boolean {
+    const shown = (key: SceneKey) => this.scene.isActive(key) || this.scene.isPaused(key);
+    return this.explained.layer !== undefined || PAGES_OVER_HUD.some(shown);
   }
 
   // The walk the HUD shows: a picture's, or the run's.
