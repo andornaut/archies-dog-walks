@@ -585,6 +585,8 @@ export const HOME_SCREEN = {
   heroBaseY: 196,
   // The rows between the divider and the walker section.
   heroSectionGap: 6,
+  // The clear rows between the home loading line and the divider under it.
+  loadingClear: 1,
   // art: the front path's width and left edge.
   path: { width: 32, x: 164 },
   // yard, art: the Pet shop building, and its board.

@@ -199,13 +199,10 @@ export const HOME_LAYOUT = {
   gearBadge: yard(HOME.gearBadge),
   heroOffsetY: HERO_OFFSET_Y,
   heroSectionGap: HERO_SECTION_GAP,
-  // Pending progress fits in the clear band between the divider and picker.
+  // Pending progress lies across the yard's foot, a clear row over the divider.
   loadingProgress: {
     ...SCREEN_LAYOUT.zoneProgress,
-    y:
-      GATE_BAR.y +
-      GATE_BAR.height +
-      Math.floor((HERO_SECTION_GAP - SCREEN_LAYOUT.zoneProgress.height) / 2),
+    y: GATE_BAR.y - HOME.loadingClear - SCREEN_LAYOUT.zoneProgress.height,
   },
   path: HOME.path,
   // The Pet shop building on the yard's right lot, which opens the shop; its hit area is its

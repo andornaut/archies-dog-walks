@@ -91,15 +91,13 @@ describe("home layout", () => {
     expect(HOME_LAYOUT.startLoading.room).toBeLessThan(startButton.width);
   });
 
-  it("keeps full-size home pending progress clear of the divider, picker and Start target", () => {
+  it("keeps full-size home pending progress in the yard, a clear row over the divider", () => {
     const { gateBar, loadingProgress } = HOME_LAYOUT;
     expect(loadingProgress.width).toBe(SCREEN_LAYOUT.zoneProgress.width);
     expect(loadingProgress.height).toBe(SCREEN_LAYOUT.zoneProgress.height);
     expect(loadingProgress.x).toBe(SCREEN_LAYOUT.zoneProgress.x);
-    const above = loadingProgress.y - gateBar.y - gateBar.height;
-    const below = sections.walker.y - loadingProgress.y - loadingProgress.height;
-    expect(above).toBe(1);
-    expect(below).toBe(above);
+    expect(gateBar.y - loadingProgress.y - loadingProgress.height).toBe(1);
+    expect(loadingProgress.y).toBeGreaterThanOrEqual(HOME_LAYOUT.gate.y);
     for (const rect of [
       { ...gateBar, width: SCREEN_CONFIG.width, x: 0 },
       ...Object.values(sections),
