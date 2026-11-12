@@ -70,7 +70,7 @@ export const HOME_TEXT = {
     gearLocked: "{gear}: {effect}. {price}",
     kind: "{size}, {hearts}♥",
     priceBuy: "{price}: tap to buy.",
-    priceShort: "{price}: need {amount} more.",
+    priceShort: "Need {amount} more.",
   },
   gateSign: "Toronto",
   gearBought: "Got the {gear}!",
