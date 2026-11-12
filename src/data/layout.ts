@@ -4,13 +4,9 @@
 // fixed by the art drawn at that size or place; change them only with the art.
 
 import type { Point, Rect } from "@andornaut/game-kit/rect";
-import { BUTTON_GAP, SMALL_BUTTON_GAP } from "@andornaut/game-kit/ui/spacing";
+import { BUTTON_GAP, SMALL_BUTTON_GAP, STACK_BUTTON_GAP } from "@andornaut/game-kit/ui/spacing";
 
 // Shared controls
-
-// CLEANUP (added 2026-11-11): replace with game-kit's shared stack gap once released.
-// The gap between vertically stacked standard buttons' faces, in every game.
-const BUTTON_STACK_GAP = 8;
 
 // Standard button sizes.
 export const BUTTON_SIZE = {
@@ -26,8 +22,9 @@ export const BUTTON_SIZE = {
   // The gap between neighbouring faces, side by side or stacked, where either is smaller than a
   // standard button's: every game's.
   smallGap: SMALL_BUTTON_GAP,
-  // The gap between stacked standard buttons' faces and between a list's pressable rows.
-  stackGap: BUTTON_STACK_GAP,
+  // The gap between stacked standard buttons' faces and between a list's pressable rows: every
+  // game's.
+  stackGap: STACK_BUTTON_GAP,
   // An overlay's or a screen's full-width button.
   wide: { height: 44, width: 296 },
 } as const;
@@ -814,7 +811,7 @@ export const LOGBOOK_PAGE = {
     // The rows under the last row.
     foot: 16,
     // The gap between rows, which open their badges as buttons do.
-    gap: BUTTON_STACK_GAP,
+    gap: STACK_BUTTON_GAP,
     // The first row's top under the earned count's capitals.
     rowsDy: 20,
   },
