@@ -308,7 +308,7 @@ Each walker has one **perk**:
 - **Keen eye** (Mr. B): 50% more tips and treats appear
 - **Long reach** (Trista): the lead dog grabs tips and treats one lane to either side
 - **Quick recovery** (Ada): debuffs last half as long
-- **Second chance** (Casey): the first ♥ lost in each neighbourhood is forgiven (one heart; never Spotlight's cash)
+- **Second chance** (Casey): the first ♥ lost in each neighbourhood is forgiven (one heart; never Spotlight's cash); when several owners lose one at once, it forgives the owner left with the fewest hearts, ties to the lead dog
 
 ### Home screen and progression
 
@@ -331,7 +331,7 @@ Everything bought at the Pet shop is permanent; upgrade cards are the walk-only 
 - **Walker's bubble:** every home screen message shows in the walker's speech bubble (lengths in Voice). It reacts to state: the first visit (how to pick and hold), after each of the first 3 walks (how to pick and hold), after later walks, after a firing, when something new in the shop is affordable, the one-time install suggestion (see Settings), with no walker picked, a picked walker's agility and perk, and a newly unlocked walker, which comes ahead of the firing line. It also shows buying a dog (with the owner's parting line), what more you need to save for something you can't afford, a full pack, sound on or off, and notices: unsaved progress and a pending update. A notice shows alone, in place of the message it would stack on, so the bubble keeps clear of the walker. After a walk that unlocks several walkers, the bubble names the first; each tap on the bubble or the walker at the gate names the next, in unlock order, then shows the walker's usual line, then starts again, and a tap while a message or an owner's line shows brings the walker's line back
 - **Owner parting line:** picking a dog shows a line from its owner in the walker's bubble, with the owner's face on the right and their name under it
 - **Gear and Pocket** (5 items, bought once at the Pet shop, priced by how much each helps: Fanny pack, then Hall pass, then Running shoes, then Lucky collar, then Whistle):
-  - **Fanny pack:** keeps one spare treat: a treat grabbed while every walking owner is at their max goes into the pack instead of paying its cash, and the moment any owner loses a heart, the spare treat gives it back, so an owner on their last heart doesn't fire you; when several lose one at once, it goes to the owner left with the fewest hearts, ties to the lead dog; Second chance's forgiveness comes first. Its walk bar well shows whether a treat is kept, and a spent treat flies from the well to the dog's doghouse card
+  - **Fanny pack:** keeps one spare treat: a treat grabbed while every walking owner is at their max goes into the pack instead of paying its cash, and the moment any owner loses a heart, the spare treat gives it back; when several lose one at once, it goes to the owner left with the fewest hearts, ties to the lead dog; Second chance's forgiveness comes first. Its walk bar well shows whether a treat is kept, and a spent treat flies from the well to the dog's doghouse card
   - **Hall pass:** once per neighbourhood, skip one encounter card for free; see Choice cards
   - **Lucky collar:** every owner has +1 max ♥
   - **Running shoes:** lane changes +100%
