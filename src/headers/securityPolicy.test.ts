@@ -8,7 +8,7 @@ import { describe, expect, it } from "vitest";
 
 import { CACHE_POLICY } from "../pwa/cachePolicy.ts";
 import { hashedArtFileName } from "../tools/atlas/hashedArt.ts";
-import { FILE_RULES, navWithoutStylesheet, PAGE_RULES } from "./securityPolicy.ts";
+import { BASE_DIRECTIVES, FILE_RULES, navWithoutStylesheet, PAGE_RULES } from "./securityPolicy.ts";
 
 describe("navWithoutStylesheet", () => {
   const pages: [string, string, boolean][] = [
@@ -83,4 +83,26 @@ describe("PAGE_RULES", () => {
     );
     expect(() => pageRules({}, PAGE_RULES, pages)).not.toThrow();
   });
+
+  // inlineStyleCheckPlugin's premise: on each built page, a style element or attribute that a
+  // script adds is blocked, so the build must ship none.
+  it.each(["/", "/play/", "/tuning/"])(
+    "lets %s load styles from files and hashes alone",
+    (path) => {
+      const pages = new Map([[path, { scriptHashes: [], styleHashes: ["'sha256-AAAA'"] }]]);
+      const rule = pageRules(BASE_DIRECTIVES, PAGE_RULES, pages).find((each) =>
+        pathMatches(each.path, path),
+      );
+      const policy = rule?.headers.find(([name]) => name === "Content-Security-Policy")?.[1] ?? "";
+      const style = policy
+        .split(";")
+        .map((directive) => directive.trim().split(" "))
+        .filter(([name]) => name?.startsWith("style-src"));
+      expect(style.map(([name]) => name)).toEqual(["style-src"]);
+      expect(style[0]?.slice(1).filter((source) => !source.startsWith("https://"))).toEqual([
+        "'self'",
+        "'sha256-AAAA'",
+      ]);
+    },
+  );
 });
