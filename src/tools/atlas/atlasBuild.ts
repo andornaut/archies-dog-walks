@@ -192,7 +192,7 @@ export async function buildAtlases(
   );
   const files = pages.map(({ bytes, metadata: { group, height, name, width } }) => ({
     bytes,
-    page: { bytes: bytes.length, file: `${name}.${extension}`, group, height, width },
+    page: { file: `${name}.${extension}`, group, height, width },
   }));
   return {
     files: new Map(files.map(({ bytes, page }) => [page.file, bytes])),

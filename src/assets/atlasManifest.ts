@@ -40,8 +40,6 @@ export interface AtlasTexture {
 }
 
 interface AtlasPage {
-  // The file's size in bytes, which weights it on the loading bar.
-  bytes: number;
   // The page's image, by its path under /art/: a lossless WebP in a build.
   file: string;
   group: string;
@@ -58,9 +56,7 @@ const count = v.pipe(v.number(), v.integer(), v.minValue(0));
 const size = v.pipe(v.number(), v.integer(), v.minValue(1));
 
 const atlasManifestSchema = record({
-  pages: v.array(
-    record({ bytes: count, file: v.string(), group: v.string(), height: size, width: size }),
-  ),
+  pages: v.array(record({ file: v.string(), group: v.string(), height: size, width: size })),
   textures: v.array(
     record({
       frames: v.pipe(

@@ -33,7 +33,7 @@ const manifest: AssetManifest = {
   ],
 };
 const atlas: AtlasManifest = {
-  pages: [{ bytes: 3, file: "atlas/ui-0.webp", group: "ui", height: 4, width: 4 }],
+  pages: [{ file: "atlas/ui-0.webp", group: "ui", height: 4, width: 4 }],
   textures: ["packed-font", "packed-image", "packed-sprite", "ui-panel"].map((key) => ({
     frames: [{ h: 1, name: "0", w: 1, x: 1, y: 1 }],
     key,

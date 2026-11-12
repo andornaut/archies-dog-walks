@@ -8,7 +8,7 @@ import { atlasManifest } from "./manifestArt.ts";
 vi.mock("virtual:art-files", () => ({ default: new Map() }));
 
 const manifest: AtlasManifest = {
-  pages: [{ bytes: 120, file: "atlas/page.webp", group: "nearest", height: 16, width: 16 }],
+  pages: [{ file: "atlas/page.webp", group: "nearest", height: 16, width: 16 }],
   textures: [],
 };
 

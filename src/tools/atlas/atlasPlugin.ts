@@ -54,10 +54,9 @@ export function atlasPlugin(): Plugin & { api: AtlasPluginApi } {
       for (const warning of atlas.warnings) {
         this.warn(`atlas: ${warning}, so it loads from its own files`);
       }
-      for (const { bytes, file, group, height, width } of atlas.manifest.pages) {
-        logger.info(
-          `atlas: ${file} ${width}x${height}, ${(bytes / 1024).toFixed(1)} kB (${group})`,
-        );
+      for (const { file, group, height, width } of atlas.manifest.pages) {
+        const kB = (atlas.files.get(file)?.length ?? 0) / 1024;
+        logger.info(`atlas: ${file} ${width}x${height}, ${kB.toFixed(1)} kB (${group})`);
       }
       const hashed = await hashGameArt(
         readArt,

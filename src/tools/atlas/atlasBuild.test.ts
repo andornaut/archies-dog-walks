@@ -76,7 +76,7 @@ it("maps Archie source policy, blits, output names and metadata through the shar
   ]);
   expect(build.files.get("atlas/ui-0.webp")).toEqual(new Uint8Array([7, 8, 9]));
   expect(build.manifest).toEqual({
-    pages: [{ bytes: 3, file: "atlas/ui-0.webp", group: "ui", height: 4, width: 256 }],
+    pages: [{ file: "atlas/ui-0.webp", group: "ui", height: 4, width: 256 }],
     textures: layout.textures,
   });
 });
