@@ -5,7 +5,7 @@ import { SCREEN_LAYOUT } from "../../data/screen.ts";
 import { FakeDocument } from "../../testing/fakeDom.ts";
 import { gameFont } from "../../testing/fontInk.ts";
 import type { UiLayer } from "../../ui/dom/uiLayer.ts";
-import { domScale } from "../../ui/domScale.ts";
+import { artPixel, domScale } from "../../ui/domScale.ts";
 import { inPill } from "../../ui/namePills.ts";
 import { PAUSE_MENU_ITEMS, pauseMenuLayout } from "../pauseMenu.ts";
 import {
@@ -374,4 +374,73 @@ describe("an HTML zone celebration", () => {
     doc.defaultView.fire("keydown", { key: "1", repeat: false });
     expect(press).toHaveBeenCalledOnce();
   });
+
+  // 393 CSS px wide over the 360-wide game: at DPR 3 a game pixel is 3.275 device pixels, an art
+  // pixel 3, and the screen's middle column 590 device pixels in, off the art-pixel grid.
+  it.each([1, 2, 3])(
+    "puts an info line's icons on the art-pixel grid at a fractional fit, DPR %d",
+    (dpr) => {
+      const doc = new FakeDocument();
+      const element = doc.createElement("div");
+      const scale = domScale(dpr, { height: 659, width: 393, x: 0, y: 0 });
+      const layer = {
+        element,
+        onScale: () => () => undefined,
+        ready: () => true,
+        scale: () => scale,
+        update: () => undefined,
+      } as unknown as UiLayer;
+      const plate = { height: 80, width: 300, x: 30, y: 300 };
+      const icon = (key: string, x: number) => ({
+        art: { key, scale: 1, size: { height: 16, width: 16 }, x, y: 340 },
+        gap: 4,
+      });
+      const text = (line: string, x: number) => ({
+        gap: 4,
+        text: { capTop: 344, colour: 0x3e2731, lines: [line], x },
+      });
+      showZoneCelebration(layer, {
+        artUrl: (path) => `/art/${path}`,
+        closeLabel: gameData.menuText.common.close,
+        fonts: { body: gameFont("font-body"), title: gameFont("font-title") },
+        label: "New walker!",
+        loadSheet: () => Promise.reject(new Error("no sheets")),
+        pillColours: () => undefined,
+        press: () => undefined,
+        toGame: (point) => point,
+        view: {
+          art: [],
+          button: panelButton(
+            MEASURE,
+            { height: 44, width: 120, x: 120, y: 390 },
+            true,
+            "Welcome!",
+          ),
+          frame: { key: "ui-quip", rect: plate },
+          rows: [
+            {
+              centreX: 180,
+              items: [
+                { ...icon("icon-perk-quick-recovery", 120), gap: 0 },
+                text("Quick recovery", 140),
+              ],
+            },
+            {
+              centreX: 180,
+              items: [{ ...text("+40% lane change", 110), gap: 0 }, icon("icon-agility", 230)],
+            },
+          ],
+          rule: undefined,
+          texts: [],
+        },
+      });
+      const [dialog] = element.children;
+      const icons = (dialog?.all() ?? []).filter((node) => node.className === "adw-art");
+      expect(icons).toHaveLength(2);
+      const pixel = artPixel(scale);
+      for (const node of icons) {
+        expect(Number.parseFloat(node.style.left ?? "") % pixel).toBe(0);
+      }
+    },
+  );
 });

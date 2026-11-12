@@ -9,7 +9,7 @@ import {
   type ShopPageView,
 } from "../../home/shopPageView.ts";
 import { createTextLine, placeFrame, placeText, setBox } from "../../ui/dom/pixelLine.ts";
-import { artPixel, type DomScale, frameRect } from "../../ui/domScale.ts";
+import { artPixel, type DomScale, frameRect, gridRect } from "../../ui/domScale.ts";
 import { PALETTE } from "../../ui/palette.ts";
 import { SELECT_OUTSET } from "../../ui/selection.ts";
 import type { DomPart } from "./questionPanel.ts";
@@ -79,7 +79,9 @@ function ringBoxes(
 }
 
 // A tab: its shadow under the group that lifts and dips, its face, the open tab's gold frame and
-// its label, laid out in art pixels from the snapped corner of the frame round it.
+// its label. The face's edges are on the art-pixel grid (gridRect), so its width is the same
+// whether it is open or not; the frame, the shadow and the label are laid out in art pixels from
+// the face's snapped corner.
 function tabPart(doc: Document, title: BitmapFont, tab: PageTab): DomPart {
   const outer: Rect = tab.framed
     ? {
@@ -102,7 +104,6 @@ function tabPart(doc: Document, title: BitmapFont, tab: PageTab): DomPart {
   group.className = "adw-framed";
   const face = box(tab.border);
   const fill = box(tab.fill);
-  face.append(fill);
   // The frame's ring, amber band and keyline, four bands each, then its four corner dots.
   const { amber, dots, keyline, ring } = SELECT_FRAME;
   const frameBands = tab.framed
@@ -112,7 +113,8 @@ function tabPart(doc: Document, title: BitmapFont, tab: PageTab): DomPart {
     : [];
   const label = createTextLine(doc, tab.label);
   label.setAttribute("aria-hidden", "true");
-  group.append(face, ...frameBands, label);
+  face.append(fill, label);
+  group.append(face, ...frameBands);
   if (shadow !== undefined) {
     element.append(shadow);
   }
@@ -121,15 +123,16 @@ function tabPart(doc: Document, title: BitmapFont, tab: PageTab): DomPart {
     element,
     place: (scale) => {
       const pixel = artPixel(scale);
-      const corner = frameRect(scale, outer);
-      setBox(group, { ...corner, top: corner.top + tab.dy * pixel });
+      const snapped = gridRect(scale, tab.face);
       const outset = tab.framed ? SELECT_OUTSET * pixel : 0;
-      const faceBox = {
-        height: corner.height - 2 * outset,
-        left: outset,
-        top: outset,
-        width: corner.width - 2 * outset,
+      const corner = {
+        height: snapped.height + 2 * outset,
+        left: snapped.left - outset,
+        top: snapped.top - outset,
+        width: snapped.width + 2 * outset,
       };
+      setBox(group, { ...corner, top: corner.top + tab.dy * pixel });
+      const faceBox = { height: snapped.height, left: outset, top: outset, width: snapped.width };
       setBox(face, faceBox);
       setBox(fill, {
         height: faceBox.height - 2 * pixel,
@@ -171,7 +174,7 @@ function tabPart(doc: Document, title: BitmapFont, tab: PageTab): DomPart {
           width: corner.width - (outer.width - rect.width) * pixel,
         });
       }
-      placeText(title, scale, { x: outer.x, y: outer.y }, label, tab.label);
+      placeText(title, scale, { x: tab.face.x, y: tab.face.y }, label, tab.label);
     },
   };
 }

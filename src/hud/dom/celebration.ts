@@ -1,21 +1,17 @@
 import type { Rect } from "@andornaut/game-kit/rect";
 
 import { closeControl } from "../../ui/closeControl.ts";
-import {
-  boundsAdvance,
-  centredLeft,
-  placeFrame,
-  setBox,
-  shownText,
-} from "../../ui/dom/pixelLine.ts";
+import { boundsAdvance, placeFrame, setBox, shownText } from "../../ui/dom/pixelLine.ts";
 import type { UiLayer } from "../../ui/dom/uiLayer.ts";
 import {
   artPixel,
   deviceX,
   type DomScale,
+  exactDeviceX,
   fontPixel,
   frameRect,
   gridX,
+  wholeArtPixels,
 } from "../../ui/domScale.ts";
 import { TEXT_SCALE } from "../../ui/textFit.ts";
 import type { CentredRow, DottedRule, ZoneCelebrationView } from "../celebrationView.ts";
@@ -72,7 +68,9 @@ function rulePart(doc: Document, frame: Rect, rule: DottedRule): DomPart {
 }
 
 // An info line: its icons and runs of text side by side, each gap art pixels after the one
-// before, the whole centred on its centre x (centredLeft) in the widths the HTML draws them.
+// before, the whole centred on its centre x in the widths the HTML draws them, its start on the
+// art pixel nearest where that puts it. Each icon's corner is on the art-pixel grid, rounded to
+// whole art pixels where the text before it is not.
 function rowPart(doc: Document, input: Shared, row: CentredRow): DomPart[] {
   const { body } = input.fonts;
   // Each item's device left at a scale, from the row's.
@@ -85,10 +83,10 @@ function rowPart(doc: Document, input: Shared, row: CentredRow): DomPart[] {
           fontPixel(scale, item.text.scale ?? TEXT_SCALE),
     );
     const total = row.items.reduce((sum, item, i) => sum + item.gap * pixel + (widths[i] ?? 0), 0);
-    let left = centredLeft(scale, row.centreX, total);
+    let left = wholeArtPixels(scale, exactDeviceX(scale, row.centreX) - total / 2);
     return row.items.map((item, i) => {
       left += item.gap * pixel;
-      const at = left;
+      const at = "art" in item ? wholeArtPixels(scale, left) : left;
       left += widths[i] ?? 0;
       return at;
     });
