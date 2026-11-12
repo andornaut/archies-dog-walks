@@ -38,7 +38,7 @@
     "@andornaut/delivery-kit": "https://github.com/andornaut/delivery-kit/releases/download/v3.0.1/delivery-kit-3.0.1.tgz",
     "@eslint/js": "^10.0.1",
     "@jsquash/webp": "1.5.0",
-    "@types/node": "^26.6.5",
+    "@types/node": "^26.6.6",
     "@types/pngjs": "^6.0.5",
     "eslint": "^10.14.0",
     "eslint-plugin-import-x": "4.17.1",
