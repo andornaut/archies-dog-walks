@@ -53,7 +53,7 @@ import {
   onInstallStateChange,
   stepsKind,
 } from "../pwa/index.ts";
-import type { Settings } from "../save/schema.ts";
+import type { Settings } from "../save/settings.ts";
 import { barTitleRoom } from "../ui/barTitle.ts";
 import { PALETTE } from "../ui/palette.ts";
 import { addModalShade, drawFramedRect, drawRing, fillRect } from "../ui/phaser/draw.ts";
@@ -477,7 +477,7 @@ export class SettingsScene extends Scene {
   }
 
   private change(settings: Settings): void {
-    void setSettings(this, settings);
+    setSettings(this, settings);
     this.render();
   }
 

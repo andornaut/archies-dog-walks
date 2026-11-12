@@ -1,4 +1,3 @@
-import { clamp01 } from "@andornaut/game-kit/numbers";
 import { keysOf } from "@andornaut/game-kit/records";
 import type { Checked, SaveFormat } from "@andornaut/game-kit/save/versionedSave";
 import * as v from "valibot";
@@ -177,7 +176,7 @@ function dropUnknownIds(context: SaveContext, save: StoredSave): SaveDocument {
     dogs: keepKnown(new Set(owned.dogs), save.lastLoadout.dogs).slice(0, owned.dogSlots.length),
     gear: gear !== null && isKnown(new Set(owned.gear), gear) ? gear : null,
   };
-  const { checkpoint, settings, stats } = save;
+  const { checkpoint, stats } = save;
   return {
     ...save,
     checkpoint:
@@ -199,11 +198,6 @@ function dropUnknownIds(context: SaveContext, save: StoredSave): SaveDocument {
           },
     lastLoadout,
     owned,
-    settings: {
-      ...settings,
-      musicVolume: clamp01(settings.musicVolume),
-      sfxVolume: clamp01(settings.sfxVolume),
-    },
     shownHints: keepKnown(known.hints, save.shownHints),
     stats: {
       ...stats,

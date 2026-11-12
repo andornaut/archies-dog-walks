@@ -4,7 +4,7 @@ import { type FontMetrics, inkRowsOfLines } from "@andornaut/game-kit/text/bitma
 
 import { SETTINGS_CARD } from "../data/layout.ts";
 import { laneDirectionForKey } from "../input/keyBindings.ts";
-import type { Settings } from "../save/schema.ts";
+import type { Settings } from "../save/settings.ts";
 import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";
 import { type CloseControl, closeControl } from "../ui/closeControl.ts";
 import { helpCapDy, LABEL_HELP_GAP } from "../ui/labelHelpGap.ts";

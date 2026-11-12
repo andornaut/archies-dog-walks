@@ -14,8 +14,8 @@ import { type SaveContext, saveFormat } from "./load.ts";
 import type { SaveDocument } from "./schema.ts";
 
 export const SAVE_KEYS: SaveKeys = {
-  backup: "archies-dog-walks:save-backup",
-  save: "archies-dog-walks:save",
+  backup: "archies-dog-walks.save-backup",
+  save: "archies-dog-walks.save",
 };
 
 // The earned badges, kept apart from the save: the ids earned and those not yet celebrated.

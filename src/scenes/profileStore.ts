@@ -8,19 +8,19 @@ import { soundVolumes } from "../home/settings.ts";
 import type { Change } from "../rules/causes.ts";
 import type { RunResult } from "../save/checkpoint.ts";
 import { saveContextFrom } from "../save/load.ts";
-import {
-  newPlayerOnDevice,
-  ProfileSession,
-  type RunEnd,
-  type StorageState,
-} from "../save/profile.ts";
+import { ProfileSession, type RunEnd, type StorageState } from "../save/profile.ts";
 import { encodeResume, launchWalk, type ResumeWalk } from "../save/resume.ts";
-import { type Checkpoint, type SaveDocument, type Settings } from "../save/schema.ts";
+import { type Checkpoint, type SaveDocument } from "../save/schema.ts";
+import type { Settings } from "../save/settings.ts";
 import { pageEarnedStore, pageSaveStore, RESUME_BACKUP_KEY } from "../save/storage.ts";
-import { currentSettings, PROFILE_SESSION_KEY as SESSION_KEY } from "./sceneSettings.ts";
+import {
+  currentSettings,
+  deviceSettingsOf,
+  PROFILE_SESSION_KEY as SESSION_KEY,
+} from "./sceneSettings.ts";
 import { soundboardOf } from "./soundboard.ts";
 
-export type { Settings } from "../save/schema.ts";
+export type { Settings } from "../save/settings.ts";
 export { currentSettings } from "./sceneSettings.ts";
 
 // The player's save, shared by every scene through the game's registry. BootScene opens it
@@ -45,10 +45,10 @@ export function applySound(scene: Scene, settings: Settings): void {
   soundboard.setMuted(settings.muted);
 }
 
-// Loads the save and the earned badges from localStorage and applies the saved volumes. A new player's reduced motion
-// follows the device's setting. A run left at a checkpoint resumes when resume allows it and its
-// resume point is good (launchWalk), and is banked as heading home otherwise; a resume point
-// that could not be read is kept under RESUME_BACKUP_KEY.
+// Loads the save and the earned badges from localStorage and applies the device settings'
+// volumes. A run left at a checkpoint resumes when resume allows it and its resume point is good
+// (launchWalk), and is banked as heading home otherwise; a resume point that could not be read
+// is kept under RESUME_BACKUP_KEY.
 export async function openProfile(
   scene: Scene,
   resume: boolean,
@@ -66,14 +66,9 @@ export async function openProfile(
     earned: pageEarnedStore(gameData),
     save: pageSaveStore(saveContextFrom(gameData)),
   };
-  const { load, session: opened } = await ProfileSession.open(
-    { data: gameData },
-    stores,
-    newPlayerOnDevice,
-    launch,
-  );
+  const { load, session: opened } = await ProfileSession.open({ data: gameData }, stores, launch);
   scene.registry.set(SESSION_KEY, opened);
-  applySound(scene, opened.save.settings);
+  applySound(scene, currentSettings(scene));
   return load;
 }
 
@@ -133,13 +128,13 @@ export function lastRunEnd(scene: Scene): RunEnd | null {
 
 // Calls listener with the new settings on every change, until the scene shuts down.
 export function onSettingsChanged(scene: Scene, listener: (settings: Settings) => void): void {
-  scene.events.once(Scenes.Events.SHUTDOWN, session(scene).onSettingsChanged(listener));
+  scene.events.once(Scenes.Events.SHUTDOWN, deviceSettingsOf(scene).onChange(listener));
 }
 
-// Saves the settings, applies the volumes and tells every listener.
-export function setSettings(scene: Scene, settings: Settings): Promise<void> {
+// Stores the settings, applies the volumes and tells every listener.
+export function setSettings(scene: Scene, settings: Settings): void {
   applySound(scene, settings);
-  return session(scene).setSettings(settings);
+  deviceSettingsOf(scene).set(settings);
 }
 
 export function isMuted(scene: Scene): boolean {
@@ -148,7 +143,7 @@ export function isMuted(scene: Scene): boolean {
 
 // Mutes or unmutes all sound: saved, applied and told to every settings listener.
 function setMuted(scene: Scene, muted: boolean): void {
-  void setSettings(scene, { ...currentSettings(scene), muted });
+  setSettings(scene, { ...currentSettings(scene), muted });
 }
 
 // Flips mute, as the M key, the run's sound button and the home screen's do, and returns

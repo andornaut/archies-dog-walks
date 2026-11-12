@@ -5,7 +5,7 @@ import { DOM_ART_KEYS } from "../assets/domArt.ts";
 import { gameData } from "../data/index.ts";
 import { SETTINGS_CARD } from "../data/layout.ts";
 import { SCREEN_CONFIG, SCREEN_LAYOUT } from "../data/screen.ts";
-import { DEFAULT_SETTINGS } from "../save/schema.ts";
+import { DEFAULT_SETTINGS } from "../save/settings.ts";
 import { fontFileMetrics } from "../testing/fontInk.ts";
 import { FEEDBACK } from "./feedback.ts";
 import { installStepsLayout, settingsLayout } from "./settings.ts";

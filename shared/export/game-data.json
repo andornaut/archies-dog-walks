@@ -579,7 +579,7 @@
     "storageKeys": {
       "devCheats": "archies-dog-walks:dev-cheats",
       "devSaveEdits": "archies-dog-walks:dev-save-edits",
-      "save": "archies-dog-walks:save"
+      "save": "archies-dog-walks.save"
     },
     "text": {
       "pull": "{dog} spotted a squirrel!"

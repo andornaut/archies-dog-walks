@@ -15,7 +15,6 @@ import {
 
 import { gameData } from "../data/index.ts";
 import { saveContextFrom } from "../save/load.ts";
-import { loadedSave, newPlayerOnDevice } from "../save/profile.ts";
 import { createDefaultSave } from "../save/schema.ts";
 import { EARNED_KEYS, earnedRecordFormat, pageSaveStore } from "../save/storage.ts";
 import {
@@ -118,7 +117,7 @@ export async function applyPendingSaveEdits(): Promise<void> {
   try {
     const context = saveContextFrom(gameData);
     const store = pageSaveStore(context);
-    const newPlayer = () => newPlayerOnDevice(createDefaultSave(context.defaults));
+    const newPlayer = () => createDefaultSave(context.defaults);
     const loaded = await store.load();
     if (loaded.status === "newer" || loaded.status === "unavailable") {
       console.warn(`Dev panel: save edits not applied: ${loaded.reason}`);
@@ -126,7 +125,7 @@ export async function applyPendingSaveEdits(): Promise<void> {
     }
     const edited = edits.reduce(
       (save, edit) => applySaveEdit(gameData, newPlayer, edit, save),
-      loadedSave(loaded, newPlayerOnDevice),
+      loaded.save,
     );
     if (!devToolsOn()) {
       return;

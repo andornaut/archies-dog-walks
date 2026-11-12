@@ -19,7 +19,7 @@ import { cents } from "../units.ts";
 import { earnedIfBanked } from "./achievementPreview.ts";
 import { ProfileSession, type ProfileStores } from "./profile.ts";
 import type { LaunchWalk, ResumeWalk } from "./resume.ts";
-import { type Checkpoint, DEFAULT_SETTINGS, SAVE_VERSION, type SaveDocument } from "./schema.ts";
+import { type Checkpoint, SAVE_VERSION, type SaveDocument } from "./schema.ts";
 import {
   EARNED_KEYS,
   EARNED_VERSION,
@@ -78,14 +78,31 @@ const settle = () =>
   });
 
 describe("ProfileSession.open", () => {
-  it("starts a new player from the defaults, through newPlayer", async () => {
-    const { session } = await ProfileSession.open(awards, storesOn(memoryStorage()), (save) => ({
-      ...save,
-      settings: { ...save.settings, reducedMotion: true },
-    }));
-    expect(session.save.settings.reducedMotion).toBe(true);
+  it("starts a new player from the defaults", async () => {
+    const { session } = await ProfileSession.open(awards, storesOn(memoryStorage()));
     expect(session.save.owned.dogSlots).toEqual(testContext.defaults.dogSlots);
     expect(session.save.lastLoadout.dogs).toEqual(testContext.defaults.freeDogs.slice(0, 1));
+  });
+
+  it("writes a new player's save under the dotted key, without the device settings", async () => {
+    const { entries, session } = await opened();
+    await session.markHintShown("tip");
+    expect([...entries.keys()].filter((key) => key.endsWith(".save"))).toEqual([
+      "archies-dog-walks.save",
+    ]);
+    expect(stored(entries)).toMatchObject({ shownHints: ["tip"], version: SAVE_VERSION });
+    expect(stored(entries)).not.toHaveProperty("settings");
+  });
+
+  it("leaves a save under the old colon key unread and in place", async () => {
+    const entries = entriesOf(veteranSave());
+    const old = JSON.stringify({ ...veteranSave(), version: SAVE_VERSION - 1 });
+    entries.delete(SAVE_KEYS.save);
+    entries.set("archies-dog-walks:save", old);
+    const { load, session } = await ProfileSession.open(awards, storesOn(memoryStorage(entries)));
+    expect(load.status).toBe("new");
+    expect(session.save.bankCents).toBe(0);
+    expect(entries.get("archies-dog-walks:save")).toBe(old);
   });
 
   it("keeps a loaded save and its earned badges as stored", async () => {
@@ -216,21 +233,6 @@ describe("ProfileSession.update", () => {
   });
 });
 
-describe("settings", () => {
-  it("saves new settings and tells every listener until it stops listening", async () => {
-    const { entries, session } = await opened();
-    const listener = vi.fn();
-    const off = session.onSettingsChanged(listener);
-    const quiet = { ...DEFAULT_SETTINGS, musicVolume: 0 };
-    await session.setSettings(quiet);
-    expect(listener).toHaveBeenCalledWith(quiet);
-    expect(stored(entries).settings).toEqual(quiet);
-    off();
-    await session.setSettings(DEFAULT_SETTINGS);
-    expect(listener).toHaveBeenCalledTimes(1);
-  });
-});
-
 describe("hints", () => {
   it("marks a hint shown once", async () => {
     const { entries, session } = await opened();
@@ -350,12 +352,7 @@ describe("a walk left unfinished", () => {
       { earned: VETERAN_EARNED, unannounced: [] },
     );
     const launch = vi.fn(() => decision);
-    const { session } = await ProfileSession.open(
-      awards,
-      storesOn(memoryStorage(entries)),
-      undefined,
-      launch,
-    );
+    const { session } = await ProfileSession.open(awards, storesOn(memoryStorage(entries)), launch);
     expect(launch).toHaveBeenCalledWith(leftAt);
     return { entries, session };
   }
@@ -452,7 +449,6 @@ describe("a save from a newer version", () => {
     ["finishRun", (session) => session.finishRun(result, [])],
     ["markHintShown", (session) => session.markHintShown("tip")],
     ["purchase", (session) => session.purchase((save) => ({ ...save, bankCents: cents(5) }))],
-    ["setSettings", (session) => session.setSettings({ ...DEFAULT_SETTINGS, muted: true })],
     ["update", (session) => session.update((save) => ({ ...save, bankCents: cents(5) }))],
   ])("keeps %s in memory and leaves the stored save untouched", async (_name, change) => {
     const { entries, session, write } = await openedNewer();

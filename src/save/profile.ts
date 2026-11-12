@@ -31,7 +31,7 @@ import {
   type RunResult,
 } from "./checkpoint.ts";
 import type { LaunchWalk, ResumeWalk } from "./resume.ts";
-import type { Checkpoint, SaveDocument, Settings } from "./schema.ts";
+import type { Checkpoint, SaveDocument } from "./schema.ts";
 
 // "unavailable" once storage could not be read, or while the last write failed: play goes on with
 // the save in memory, and the home screen says progress won't be saved. A later write that succeeds
@@ -49,29 +49,6 @@ export interface RunEnd {
   readonly changes: readonly Change[];
   readonly lostCents: Cents;
   readonly newBestWalk: boolean;
-}
-
-type SettingsListener = (settings: Settings) => void;
-
-// A player's first settings on this device: reduced motion follows the device's setting.
-export function deviceSettings(settings: Settings): Settings {
-  const reducedMotion =
-    globalThis.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
-  return { ...settings, reducedMotion };
-}
-
-// A new player's save on this device.
-export function newPlayerOnDevice(save: SaveDocument): SaveDocument {
-  return { ...save, settings: deviceSettings(save.settings) };
-}
-
-// The save a load gives: the stored one, or else (none stored, or one that could not be kept)
-// a new player's, through newPlayer.
-export function loadedSave(
-  load: StoreLoadResult<SaveDocument>,
-  newPlayer: (save: SaveDocument) => SaveDocument,
-): SaveDocument {
-  return load.status === "loaded" ? load.save : newPlayer(load.save);
 }
 
 interface OpenedProfile {
@@ -121,7 +98,6 @@ export class ProfileSession {
   private earnedIds: readonly AchievementId[];
   private readonly judge: AchievementJudge;
   private ended: RunEnd | null = null;
-  private readonly settingsListeners = new Set<SettingsListener>();
   private state: StorageState;
   private writes: Promise<void> = Promise.resolve();
   // The walk the launch resumes, until the walk takes it (takeResumedWalk).
@@ -144,8 +120,8 @@ export class ProfileSession {
     this.state = state;
   }
 
-  // Loads the save and the earned badges. A new player's save goes through newPlayer first (for
-  // settings read from the device). A run left unfinished at its last checkpoint resumes when
+  // Loads the save and the earned badges: the stored save, or else (none stored, or one that
+  // could not be kept) a new player's. A run left unfinished at its last checkpoint resumes when
   // launch says so, the checkpoint kept until the run ends (takeResumedWalk); otherwise it is
   // banked as if the player had headed home, and the banked save is written back. Achievements
   // the save already meets (such as one from before they existed) are awarded, and wait to be
@@ -153,11 +129,10 @@ export class ProfileSession {
   static async open(
     awards: AwardContext,
     stores: ProfileStores,
-    newPlayer: (save: SaveDocument) => SaveDocument = (save) => save,
     launch: LaunchDecision = bankEvery,
   ): Promise<OpenedProfile> {
     const [load, earned] = await Promise.all([stores.save.load(), stores.earned.load()]);
-    const loaded = loadedSave(load, newPlayer);
+    const loaded = load.save;
     const state = loadedState(load, earned);
     const session = new ProfileSession(awards, stores, loaded, earned.save.earned, state);
     session.celebrations.push(earned.save.unannounced);
@@ -244,20 +219,6 @@ export class ProfileSession {
     for (const id of ids) {
       void this.write("earned badges", () => this.stores.earned.announced(id));
     }
-  }
-
-  setSettings(settings: Settings): Promise<void> {
-    const written = this.update((save) => ({ ...save, settings }));
-    for (const listener of this.settingsListeners) {
-      listener(settings);
-    }
-    return written;
-  }
-
-  // Returns a function that stops listening.
-  onSettingsChanged(listener: SettingsListener): () => void {
-    this.settingsListeners.add(listener);
-    return () => this.settingsListeners.delete(listener);
   }
 
   shownHints(): ReadonlySet<HintId> {

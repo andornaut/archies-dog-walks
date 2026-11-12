@@ -87,7 +87,6 @@ export function veteranSave(): SaveDocument {
       gear: ["fannyPack", "runningShoes"],
       walkers: ["casey", "ada", "mrB", "trista"],
     },
-    settings: { musicVolume: 0.25, muted: true, reducedMotion: true, sfxVolume: 0.5 },
     shownHints: ["card", "tip"],
     stats: {
       bestCentsByPackSize: { 2: cents(9_000) },

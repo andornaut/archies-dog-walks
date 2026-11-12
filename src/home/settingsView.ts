@@ -13,7 +13,7 @@ import {
   type PanelMeasure,
   type QuestionPanelView,
 } from "../hud/questionPanelView.ts";
-import type { Settings } from "../save/schema.ts";
+import type { Settings } from "../save/settings.ts";
 import { closeFace } from "../ui/closeControl.ts";
 import { PALETTE } from "../ui/palette.ts";
 import { GREYED, selectLook } from "../ui/selection.ts";

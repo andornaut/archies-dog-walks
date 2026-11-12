@@ -91,20 +91,13 @@ describe("loadSave", () => {
       new Set<DogId>([...STARTER_DOGS, "ginger", "kilo", "penny"]),
     ],
     [
-      "with volumes clamped into range, known dog slots in order and no bests for no pack size",
+      "with known dog slots in order and no bests for no pack size",
       (document) => {
-        document.settings.musicVolume = -0.5;
-        document.settings.sfxVolume = 3;
         document.owned.dogSlots = [3, 2, 4, 1];
         document.stats.bestCentsByPackSize = { 0: 1, 2: 200, 4: 400, two: 2 };
       },
-      (save) => [
-        save.settings.musicVolume,
-        save.settings.sfxVolume,
-        save.owned.dogSlots,
-        save.stats.bestCentsByPackSize,
-      ],
-      [0, 1, [1, 2, 3], { 2: 200 }],
+      (save) => [save.owned.dogSlots, save.stats.bestCentsByPackSize],
+      [[1, 2, 3], { 2: 200 }],
     ],
     [
       "a checkpoint in the first zone, before any zone finished",
@@ -136,7 +129,7 @@ describe("loadSave", () => {
       "without fields the schema does not know",
       (document) => {
         untyped(document).extra = true;
-        untyped(document).settings = { ...document.settings, language: "fr" };
+        untyped(document).lastLoadout = { ...document.lastLoadout, leash: "red" };
       },
       (save) => save,
       veteranSave(),
@@ -403,18 +396,6 @@ describe("loadSave", () => {
         "dog slots as a count",
         withChanges((document) => {
           (document.owned as Record<string, unknown>).dogSlots = 2;
-        }),
-      ],
-      [
-        "a volume that is not a number",
-        withChanges((document) => {
-          (document.settings as Record<string, unknown>).musicVolume = "loud";
-        }),
-      ],
-      [
-        "reduced motion that is not a boolean",
-        withChanges((document) => {
-          (document.settings as Record<string, unknown>).reducedMotion = "yes";
         }),
       ],
     ];

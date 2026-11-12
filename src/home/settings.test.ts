@@ -7,7 +7,7 @@ import { describe, expect, it } from "vitest";
 
 import { gameData } from "../data/index.ts";
 import { SCREEN_CONFIG } from "../data/screen.ts";
-import { DEFAULT_SETTINGS } from "../save/schema.ts";
+import { DEFAULT_SETTINGS } from "../save/settings.ts";
 import { defined } from "../testing/defined.ts";
 import { fitInFont, fontFileMetrics, gameGlyphs, inkWidth, placedInk } from "../testing/fontInk.ts";
 import { inside } from "../testing/rects.ts";

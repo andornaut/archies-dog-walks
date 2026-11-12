@@ -15,7 +15,7 @@ import type { RunCounters } from "../rules/achievements.ts";
 import type { EndReason } from "../state/runState.ts";
 import { type Cents, cents as toCents } from "../units.ts";
 
-export const SAVE_VERSION = 26;
+export const SAVE_VERSION = 27;
 
 // Every tally the save keeps; a stored key outside it is dropped on load. A record, so a new
 // TallyId fails to compile until it is listed here.
@@ -40,8 +40,6 @@ const cents = v.pipe(count, v.transform(toCents));
 const zoneNumber = v.pipe(v.number(), v.safeInteger(), v.minValue(1));
 // Slot numbers, counting from 1. A number the game data has no slot for is dropped on load.
 const slotNumbers = v.array(v.pipe(v.number(), v.safeInteger()));
-// Clamped to 0 to 1 on load rather than rejected.
-const volume = v.pipe(v.number(), v.finite());
 // Stored ids stay strings: a saved id may be one the game data no longer has.
 const contentId = v.pipe(v.string(), v.minLength(1));
 const ids = v.array(contentId);
@@ -170,13 +168,6 @@ export const saveSchema = v.object({
     gear: ids,
     walkers: ids,
   }),
-  settings: v.object({
-    musicVolume: volume,
-    // Silences all sound without changing the volumes.
-    muted: v.boolean(),
-    reducedMotion: v.boolean(),
-    sfxVolume: volume,
-  }),
   // First-time hints already shown, each shown once.
   shownHints: ids,
   stats: statsSchema,
@@ -279,15 +270,6 @@ export interface SaveDefaults {
   walker: WalkerId;
 }
 
-export type Settings = SaveDocument["settings"];
-
-export const DEFAULT_SETTINGS: Settings = {
-  musicVolume: 0.45,
-  muted: false,
-  reducedMotion: false,
-  sfxVolume: 0.8,
-};
-
 // A new player starts with the free dogs picked, as many as their slots walk, so the first
 // walk is one tap on Start walk.
 export function createDefaultSave(defaults: SaveDefaults): SaveDocument {
@@ -303,7 +285,6 @@ export function createDefaultSave(defaults: SaveDefaults): SaveDocument {
       gear: [],
       walkers: [...defaults.freeWalkers],
     },
-    settings: { ...DEFAULT_SETTINGS },
     shownHints: [],
     stats: {
       bestCentsByPackSize: {},
