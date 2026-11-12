@@ -192,6 +192,11 @@ function applyAndGo(state: PanelState): void {
   }
 }
 
+// body's classes while the panel shows and while its sheet is open, which src/main.css lays the
+// page out by.
+const PANEL_SHOWN_CLASS = "dev-panel-shown";
+const SHEET_OPEN_CLASS = "dev-sheet-open";
+
 export function mountDevPanel(host: DevPanelHost, container: HTMLElement | null): () => void {
   if (container === null) {
     console.warn("Dev panel: the page has no #dev-panel element");
@@ -230,8 +235,10 @@ export function mountDevPanel(host: DevPanelHost, container: HTMLElement | null)
     render();
   };
   // Visibility does not change staged edits; only Cancel discards them.
+  const { body } = container.ownerDocument;
   const setOpen = (open: boolean) => {
     sheet.hidden = !(open && devToolsOn());
+    body.classList.toggle(SHEET_OPEN_CLASS, !sheet.hidden);
     bar.setAttribute("aria-expanded", String(!sheet.hidden));
     render();
   };
@@ -323,6 +330,7 @@ export function mountDevPanel(host: DevPanelHost, container: HTMLElement | null)
   setOpen(false);
   const stopWatching = watchDevTools((on) => {
     container.hidden = !on;
+    body.classList.toggle(PANEL_SHOWN_CLASS, on);
     host.setCheats(on ? state.applied : CHEATS_OFF);
     if (!on) {
       setOpen(false);
@@ -332,6 +340,7 @@ export function mountDevPanel(host: DevPanelHost, container: HTMLElement | null)
     stopWatching();
     host.setCheats(CHEATS_OFF);
     container.hidden = true;
+    body.classList.remove(PANEL_SHOWN_CLASS, SHEET_OPEN_CLASS);
     bar.remove();
     sheet.remove();
   };

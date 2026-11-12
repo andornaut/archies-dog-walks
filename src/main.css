@@ -80,17 +80,19 @@ html[data-frame-turn] #game > canvas {
   display: none;
 }
 
-body:has(#dev-panel[hidden]) #game {
+body:not(.dev-panel-shown) #game {
   margin-bottom: var(--inset-bottom);
 }
 
-/* With the sheet open, body scrolls down to it. Drags on the game still steer. */
-body:has(.dev-sheet:not([hidden])) {
+/* With the sheet open (body.dev-sheet-open, which the panel sets), body scrolls down to it.
+   Drags on the game still steer. The panel marks body with classes, as a :has() rule on body
+   would style the whole page again on every change inside it. */
+body.dev-sheet-open {
   overflow-y: auto;
   touch-action: pan-y;
 }
 
-body:has(.dev-sheet:not([hidden])) #game {
+body.dev-sheet-open #game {
   touch-action: none;
 }
 
