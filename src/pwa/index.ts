@@ -202,8 +202,14 @@ export function setOnHomeScreen(onHome: boolean): void {
   offerHook(onHome);
 }
 
-// Dismiss the update offer for the page's life: it stays hidden on every return home and for any
-// version that waits later, until the game is closed and started again.
+// An arrival at the home screen: the launch's first StartScene and each one after a walk, never a
+// menu or card closing over it. It clears a dismissed offer and checks for a newer version.
+export function arriveHome(): void {
+  updateFlow?.arriveHome();
+}
+
+// Dismiss the update offer until the next arrival home (arriveHome) or the page coming back into
+// view on the home screen.
 export function dismissUpdateOffer(): void {
   updateFlow?.dismissOffer();
 }
@@ -241,12 +247,6 @@ export function noteSaveStorage(storage: StorageState): void {
 // PHONE_EVENTS.requiredUpdate fires on each change.
 export function requiredUpdate(): RequiredUpdateState | undefined {
   return required;
-}
-
-// A walk started, which counts as the player interacting even with no input (a dev walk URL), so
-// each later arrival home checks for a newer version.
-export function noteWalkStarted(): void {
-  updateFlow?.noteInteraction();
 }
 
 // What the browser answered when asked to keep the game's storage, for the dev panel.

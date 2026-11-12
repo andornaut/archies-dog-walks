@@ -130,6 +130,7 @@ import type { PackPlacement } from "../layout/packFormation.ts";
 import { addFigure, PackFigures } from "../pack/phaser/packFigures.ts";
 import {
   acceptUpdate,
+  arriveHome,
   dismissUpdateOffer,
   exitShown,
   installNudgeDue,
@@ -584,6 +585,8 @@ export class StartScene extends Scene {
     this.mirror = addHtmlMirror(this, () =>
       [this.gateSign, this.root].flatMap((root) => (root === undefined ? [] : [root])),
     );
+    // Each StartScene is an arrival home: the launch's first, or the one after a walk.
+    arriveHome();
     this.render();
 
     listenOnePress(this, {

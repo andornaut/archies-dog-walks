@@ -4,18 +4,21 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vites
 import type { StorageState } from "../save/profile.ts";
 import { PHONE_EVENTS } from "./events.ts";
 
-const { offline, registrationReady, requireNewer, setOfferVisible } = vi.hoisted(() => ({
-  offline: { options: undefined as OfflinePlayOptions | undefined },
-  registrationReady: vi.fn(),
-  requireNewer: vi.fn(),
-  setOfferVisible: vi.fn(),
-}));
+const { arriveHome, offline, registrationReady, requireNewer, setOfferVisible } = vi.hoisted(
+  () => ({
+    arriveHome: vi.fn(),
+    offline: { options: undefined as OfflinePlayOptions | undefined },
+    registrationReady: vi.fn(),
+    requireNewer: vi.fn(),
+    setOfferVisible: vi.fn(),
+  }),
+);
 
 vi.mock("@andornaut/game-kit/web/pwa/dom/offlinePlay", () => ({
   browserOfflinePage: () => ({}),
   startOfflinePlay: (options: OfflinePlayOptions) => {
     offline.options = options;
-    return { flow: { requireNewer, setOfferVisible }, registrationReady };
+    return { flow: { arriveHome, requireNewer, setOfferVisible }, registrationReady };
   },
 }));
 vi.mock("@andornaut/game-kit/web/pwa/dom/installFlow", () => ({
@@ -63,6 +66,7 @@ beforeEach(() => {
   registrationReady.mockClear();
   requireNewer.mockClear();
   setOfferVisible.mockClear();
+  arriveHome.mockClear();
 });
 
 describe("setOnHomeScreen", () => {
@@ -78,6 +82,13 @@ describe("setOnHomeScreen", () => {
     setOnHomeScreen(false);
     expect(registrationReady).not.toHaveBeenCalled();
     expect(setOfferVisible).toHaveBeenCalledExactlyOnceWith(false);
+  });
+
+  it("leaves arrivals to arriveHome, so a menu closing over home is not one", () => {
+    setOnHomeScreen(true);
+    expect(arriveHome).not.toHaveBeenCalled();
+    phone.arriveHome();
+    expect(arriveHome).toHaveBeenCalledOnce();
   });
 });
 

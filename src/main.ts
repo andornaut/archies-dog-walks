@@ -21,7 +21,6 @@ import { HOME_LAYOUT } from "./home/homeLayout.ts";
 import { noteKeyPress } from "./input/keyNumbers.ts";
 import { lostTouches } from "./input/touches.ts";
 import {
-  noteWalkStarted,
   pageFrameWatch,
   PHONE_EVENTS,
   requiredUpdate,
@@ -63,17 +62,6 @@ function devPanelHost(game: Game): DevPanelHost {
       game.registry.set(DEV_CHEATS_KEY, cheats);
     },
   };
-}
-
-// Reports the first walk, which counts as the player interacting, then stops watching.
-function watchFirstWalk(game: Game): void {
-  const check = () => {
-    if (game.scene.isActive(SCENE_KEYS.run)) {
-      game.events.off(Core.Events.POST_STEP, check);
-      noteWalkStarted();
-    }
-  };
-  game.events.on(Core.Events.POST_STEP, check);
 }
 
 // While a newer save requires the newer version, the game loop sleeps on the home screen once
@@ -235,7 +223,6 @@ function bootGame(): Game {
     setOnHomeScreen(onHome);
     settleRequired(onHome);
   });
-  watchFirstWalk(game);
   return game;
 }
 
