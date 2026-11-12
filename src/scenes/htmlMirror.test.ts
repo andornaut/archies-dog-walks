@@ -43,7 +43,7 @@ function mirrored() {
   const doc = new FakeDocument();
   const { element, layer } = fakeLayer(doc, domScale(2, { height: 560, width: 360, x: 0, y: 0 }));
   place.value = { fonts: { body: gameFont("font-body"), title: gameFont("font-title") }, layer };
-  const state = { active: true };
+  const state = { active: true, pageOver: false };
   const events = emitter();
   const game = emitter();
   const scene = {
@@ -53,7 +53,11 @@ function mirrored() {
     game: { events: game },
     sys: { isActive: () => state.active, isVisible: () => true },
   };
-  const mirror = addHtmlMirror(scene as never, () => []);
+  const mirror = addHtmlMirror(
+    scene as never,
+    () => [],
+    () => state.pageOver,
+  );
   const dialogs = () => element.children.filter((child: FakeElement) => child.className !== "");
   return { dialogs, events, game, mirror, state };
 }
@@ -69,9 +73,12 @@ describe("the HTML mirror", () => {
     expect(dialog?.hidden).toBe(false);
   });
 
-  it("hides while its scene is paused under another page", () => {
+  it.each([
+    ["its scene is paused under another page", { active: false, pageOver: false }],
+    ["a page over its running scene needs the canvas", { active: true, pageOver: true }],
+  ])("hides while %s", (_, over) => {
     const { dialogs, game, state } = mirrored();
-    state.active = false;
+    Object.assign(state, over);
     game.emit(EVENTS.preRender);
     expect(dialogs()[0]?.hidden).toBe(true);
   });

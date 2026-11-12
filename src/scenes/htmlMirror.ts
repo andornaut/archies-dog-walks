@@ -168,12 +168,14 @@ function idOf(element: HTMLElement): number {
   return id;
 }
 
-// scene's marked containers (roots) in HTML until the scene shuts down: shown while the scene
-// runs and shows. Returns undefined where the canvas must draw them: the page's switch is off,
-// or its fonts are not ready.
+// scene's marked objects (roots, its containers or its whole display list in display order) in
+// HTML until the scene shuts down: shown while the scene runs and shows, and while standDown
+// says no page over it needs the canvas to draw them. Returns undefined where the canvas must
+// draw them: the page's switch is off, or its fonts are not ready.
 export function addHtmlMirror(
   scene: Scene,
-  roots: () => readonly GameObjects.Container[],
+  roots: () => readonly GameObjects.GameObject[],
+  standDown: () => boolean = () => false,
 ): HtmlMirror | undefined {
   const place = htmlPanelPlace(scene);
   if (place === undefined) {
@@ -506,7 +508,8 @@ export function addHtmlMirror(
     // which reads the canvas back, dims it as before: the shop under help or the settings, and
     // the start screen under the shop, the Logbook, help, the settings, Quit? and a celebration.
     // CLEANUP (added 2026-11-11): remove in phase 5, when overlay dims move to HTML.
-    const hidden = !scene.sys.isActive() || !scene.sys.isVisible();
+    // The walk's HUD stands down the same way while a page over the walk dims or covers it.
+    const hidden = !scene.sys.isActive() || !scene.sys.isVisible() || standDown();
     dialog.hidden = hidden;
     if (hidden) {
       if (entries.size > 0) {
