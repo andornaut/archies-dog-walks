@@ -63,14 +63,14 @@ CI runs `make lint`, `make test` and `make build`, plus the AI attributions scan
 
 Delivery runs on the [delivery-kit](https://github.com/andornaut/delivery-kit) release pinned in `package.json`, configured by [`delivery-kit.json`](delivery-kit.json). Its runner departs hourly at :10, Toronto time. While the one-minute host load is at or above `resources.loadLimit`, it re-checks the load every minute and departs once it falls below, for up to 15 minutes; after that it skips the slot and keeps `main` for the next one. A departure gates the local `main` HEAD in an isolated container of the gate image (`npm ci`, then type checking, lint, tests, the build and the art check, capped at four CPUs and four test workers), pushes that exact commit to `main` as a fast-forward with the regular account's Git authentication, and watches the commit's required GitHub CI checks. There is no queue or batch: a `main` with nothing new does not depart. The runner's state is kept by game-dev, outside this repository.
 
-The gate image is the `tools` stage of `tests/container/Dockerfile`: Node at the version in `.nvmrc`, ShellCheck 0.11.0, and SoX and ffmpeg at exact versions from a pinned Debian snapshot, so the sound builds reproduce byte for byte. Make's check image is the final stage, built on it with the locked dependencies. After a change to the `tools` stage, rebuild the gate image on the delivery host from the repository root:
+The gate image is the `toolchain` stage of `tests/container/Dockerfile`: the digest-pinned Node base at the version in `.nvmrc`, ShellCheck 0.11.0, SoX and ffmpeg at exact versions from a pinned Debian snapshot (so the sound builds reproduce byte for byte), and the non-root user 19001. It holds no project files, since the gate runs its own `npm ci`, so a dependency change never needs a new gate image. The `local-check` stage, which Make builds on demand, adds the locked dependencies at `/opt/check/node_modules`; `delivery-kit.json` never names it. A Node version change updates `.nvmrc` and the base digest together; the image build fails when they disagree. After a change to the `toolchain` stage, rebuild the gate image on the delivery host from the repository root:
 
 ```sh
 node_version=$(sed 's/^v//' .nvmrc)
 tests/container/admit build-image
 docker build --resource cpu-period=100000 --resource cpu-quota=400000 --resource memory=4g \
   --build-arg NODE_VERSION="${node_version}" \
-  --target tools --tag "archie-check:node${node_version}-sox-ffmpeg" \
+  --target toolchain --tag "archie-check:node${node_version}-sox-ffmpeg" \
   --file tests/container/Dockerfile tests/container
 ```
 
