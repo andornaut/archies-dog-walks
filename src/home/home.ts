@@ -247,7 +247,7 @@ function priceInfo(
   const price = dollarText(cost);
   return isAffordable(data, owned, bank, purchase)
     ? fillLine(FOCUS_FIELDS, text, "priceBuy", { price })
-    : fillLine(FOCUS_FIELDS, text, "priceShort", { amount: dollarText(cents(cost - bank)), price });
+    : fillLine(FOCUS_FIELDS, text, "priceShort", { amount: dollarText(cents(cost - bank)) });
 }
 
 // A dog's size and hearts in words ("large, 5♥"), as the info line and the shop's row say them.
@@ -262,7 +262,7 @@ export function dogKindText(
 }
 
 // A dog in words for the home screen's info line, so its tile's icons never stand alone: its
-// name and size, and its price while not owned.
+// name and size, and while not owned its price if the bank covers it, else the shortfall.
 export function dogInfo(data: InfoData, owned: Owned, bank: Cents, dog: DogId): string {
   const text = data.homeText.focus;
   const purchase: Purchase = { dog, kind: "dog" };
@@ -276,7 +276,8 @@ export function dogInfo(data: InfoData, owned: Owned, bank: Cents, dog: DogId): 
       });
 }
 
-// A gear item and what it does, with its price while locked.
+// A gear item and what it does, and while locked its price if the bank covers it, else the
+// shortfall.
 export function gearInfo(data: InfoData, owned: Owned, bank: Cents, gear: GearId): string {
   const text = data.homeText.focus;
   const item = data.shopGear[gear];

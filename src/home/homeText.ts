@@ -37,7 +37,7 @@ export const HOME_TEXT_FIELDS = {
     gearLocked: ["effect", "gear", "price"],
     kind: ["hearts", "size"],
     priceBuy: ["price"],
-    priceShort: ["amount", "price"],
+    priceShort: ["amount"],
   },
   gateSign: [],
   gearBought: ["gear"],

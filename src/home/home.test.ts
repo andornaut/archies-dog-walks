@@ -61,6 +61,11 @@ const owned: Owned = {
 };
 const dollars = (amount: number) => cents(amount * 100);
 const collarPrice = readTable(TEST_TUNING, "money", "prices", "luckyCollar");
+// The shortfall line for amount, from the data string, at the end of an info line.
+const shortfall = (amount: string) =>
+  new RegExp(
+    `${HOME_TEXT.focus.priceShort.replace("{amount}", amount).replace(/[$.*+?^{}()|[\]\\]/g, "\\$&")}$`,
+  );
 // A dog slot's price, by number counting from 1.
 const slotPrice = (slot: number) => unlockPrice(TEST_TUNING, DOG_SLOTS[slot - 1] ?? DOG_SLOTS[0]);
 
@@ -419,9 +424,9 @@ describe("dogInfo and gearInfo", () => {
         new RegExp(`^${DOGS.kilo.name}: ${DOGS.kilo.size}, \\d+♥\\.$`),
       ],
       [
-        "adds a locked dog's price and how much more the bank needs",
+        "adds how much more the bank needs for a locked dog",
         () => dogInfo(data, owned, dollars(100), "reggie"),
-        /\$600: need \$500 more\.$/,
+        shortfall(dollarText(dollars(500))),
       ],
       [
         "offers a locked dog the bank can cover",
@@ -434,9 +439,9 @@ describe("dogInfo and gearInfo", () => {
         /^Fanny pack: .+\.$/,
       ],
       [
-        "adds locked gear's price",
+        "adds how much more the bank needs for locked gear",
         () => gearInfo(data, owned, cents(0), "luckyCollar"),
-        new RegExp(`\\${dollarText(collarPrice)}: need \\${dollarText(collarPrice)} more\\.$`),
+        shortfall(dollarText(collarPrice)),
       ],
     ];
     for (const [, line, pattern] of cases) {
