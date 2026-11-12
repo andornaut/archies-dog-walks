@@ -32,15 +32,22 @@ export interface DomLogbookInput extends Omit<DomDetailCardInput, "close" | "vie
   readonly view: LogbookView;
 }
 
-// The device pixels the content moves up by at a scroll: while it moves, the whole game pixels
-// the canvas rounds its art to, on the device pixel nearest, so no art lands between device
-// pixels and the HTML keeps within a device pixel of the canvas; once it settles, whole art
-// pixels.
-export function scrolledBy(scale: DomScale, scroll: Pick<LogbookScroll, "settled" | "y">): number {
-  const perGamePixel = scale.unit * scale.dpr;
-  return scroll.settled
-    ? wholeArtPixels(scale, scroll.y * perGamePixel)
-    : Math.round(Math.round(scroll.y) * perGamePixel);
+// Where the list's content is laid out at a scroll: the scale its parts are placed at and the
+// device pixels the content then moves up by. Once it settles, the content moves up whole art
+// pixels. While it moves, each part lands on the device pixel nearest the whole game pixel the
+// canvas rounds it to: the parts are placed at a scale whose origin is moved up by the scroll's
+// whole game pixels, and the content moves up to that origin's device pixel, so no art lands
+// between device pixels and each part stays within half a device pixel of the canvas.
+export function scrollPlace(
+  scale: DomScale,
+  scroll: Pick<LogbookScroll, "settled" | "y">,
+): { by: number; scale: DomScale } {
+  if (scroll.settled) {
+    return { by: wholeArtPixels(scale, scroll.y * scale.unit * scale.dpr), scale };
+  }
+  const origin = { ...scale.origin, y: scale.origin.y - Math.round(scroll.y) * scale.unit };
+  const grid = (page: number) => Math.round(page * scale.dpr);
+  return { by: grid(scale.origin.y) - grid(origin.y), scale: { ...scale, origin } };
 }
 
 // The scrollbar's track and thumb, the thumb whole art pixels from the track's snapped top.
@@ -108,14 +115,23 @@ export function showLogbook(layer: UiLayer, input: DomLogbookInput): DomQuestion
   scrolled.append(...contentParts.map(({ element }) => element));
   let scale: DomScale | undefined;
   let movedBy = Number.NaN;
+  // The scale the content's parts were last placed at.
+  let placedAt = "";
   const follow = () => {
     if (scale === undefined) {
       return;
     }
-    const by = scrolledBy(scale, input.scroll());
-    if (by !== movedBy) {
-      movedBy = by;
-      scrolled.style.transform = `translateY(${-by}px)`;
+    const at = scrollPlace(scale, input.scroll());
+    const key = JSON.stringify(at.scale);
+    if (key !== placedAt) {
+      placedAt = key;
+      for (const part of contentParts) {
+        part.place(at.scale);
+      }
+    }
+    if (at.by !== movedBy) {
+      movedBy = at.by;
+      scrolled.style.transform = `translateY(${-at.by}px)`;
     }
   };
   const list: DomPart = {
@@ -125,9 +141,7 @@ export function showLogbook(layer: UiLayer, input: DomLogbookInput): DomQuestion
       const box = deviceRect(at, view.frame.rect);
       setBox(clip, box);
       setBox(scrolled, { height: 0, left: -box.left, top: -box.top, width: 0 });
-      for (const part of contentParts) {
-        part.place(at);
-      }
+      placedAt = "";
       movedBy = Number.NaN;
       follow();
     },
