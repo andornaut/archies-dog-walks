@@ -9,8 +9,10 @@ import {
   dogFaceKey,
   dogPortraitKey,
   gearIconKey,
+  ownerCardFaceKey,
   ownerFaceKey,
   walkerPortraitKey,
+  WARNING_KEY,
   ZONE_CELEBRATION_ART,
   ZONE_PIPS_KEY,
 } from "./spriteKeys.ts";
@@ -137,6 +139,59 @@ const START_ART_KEYS = [
   "ui-slot-sign",
 ];
 
+// The walk's HUD (src/scenes/HudScene.ts, drawn by the display mirror) beyond the other screens':
+// the walk bar, its pause and play icons and the card band; each dog's card and its warning, the
+// LEAD tag and each owner's card face; the effect wells and each effect's 20x20 icon (its icon
+// key's -20 copy); the neighbourhood pill and the debuff bars; the message strip's icons and the
+// fired lines' tail; the owners' tabs; and the moments' plates, pops, coins, sparkles, hearts,
+// treats and warning sign.
+function hudArtKeys(
+  data: Pick<GameData, "dogs" | "shopGear" | "upgrades" | "walkerPerks">,
+): string[] {
+  return [
+    ...[
+      ...keysOf(data.shopGear).map(gearSmallIconKey),
+      ...keysOf(data.walkerPerks).map(perkIconKey),
+      ...keysOf(data.upgrades).map(upgradeIconKey),
+    ].map((key) => `${key}-20`),
+    ...keysOf(data.dogs).map((dog) => ownerCardFaceKey(data, dog)),
+    WARNING_KEY,
+    "fx-coin-fly",
+    "fx-fired-pop",
+    "fx-heart-gain",
+    "fx-heart-loss",
+    "fx-sparkle",
+    "fx-treat-pop",
+    "icon-badge",
+    "icon-bump",
+    "icon-fired",
+    "icon-hint",
+    "icon-lucky",
+    "icon-muddy",
+    "icon-pause",
+    "icon-play",
+    "icon-spotlight",
+    "icon-stinky",
+    "icon-trait-chaser",
+    "icon-treat",
+    "icon-zoomies",
+    "treat@50",
+    "ui-debuff-bar",
+    "ui-dog-card",
+    "ui-dog-card-band",
+    "ui-dog-card-warn",
+    "ui-effect-well",
+    "ui-fired-plate",
+    "ui-hint-tail",
+    "ui-hit-label",
+    "ui-lead-tag",
+    "ui-owner-tab",
+    "ui-quip-tail-down",
+    "ui-walk-bar",
+    "ui-zone-pill",
+  ];
+}
+
 export const DOM_ART_KEYS: ReadonlySet<string> = new Set([
   ...DOM_STYLE_ART.map(([, key]) => key),
   ...detailArtKeys(gameData),
@@ -146,6 +201,7 @@ export const DOM_ART_KEYS: ReadonlySet<string> = new Set([
   ...END_ART_KEYS,
   ...SHOP_ART_KEYS,
   ...START_ART_KEYS,
+  ...hudArtKeys(gameData),
 ]);
 
 // A DOM art file's path under /art/: an image's PNG, or a sprite sheet's PNG or JSON.

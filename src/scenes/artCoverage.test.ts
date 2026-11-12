@@ -8,6 +8,7 @@ import { describe, expect, it, vi } from "vitest";
 import shippedManifest from "../../public/art/manifest.json" with { type: "json" };
 import { animationSpecs } from "../assets/asepriteAnimations.ts";
 import { splitDepthKey, stepSize } from "../assets/depthSteps.ts";
+import { DOM_ART_KEYS } from "../assets/domArt.ts";
 import { debuffIconKey, SQUIRREL_ICON_KEY } from "../assets/iconKeys.ts";
 import { parseManifest } from "../assets/manifest.ts";
 import {
@@ -45,7 +46,7 @@ import { HOME_LAYOUT } from "../home/homeLayout.ts";
 import { effectIconKey, type EffectItem, walkBarIconKey } from "../hud/effectIcons.ts";
 import { type PipState, pipTag } from "../hud/hudView.ts";
 import { MESSAGE_ICONS } from "../hud/messageStrip.ts";
-import { cardOwnerMood } from "../hud/moments.ts";
+import { cardOwnerMood, DOWN_TAILS } from "../hud/moments.ts";
 import { DOG_REACTIONS, HIT_ART } from "../layout/hitEffects.ts";
 import { SCALE_STEPS } from "../layout/projection.ts";
 import { cardFor } from "../rules/choices.ts";
@@ -262,6 +263,31 @@ describe("image art", () => {
       ["every section's solid fill", () => Object.values(HOME_LAYOUT.sectionFillKeys)],
     ];
     expect(lists.flatMap(([, keys]) => missingImages(keys()))).toEqual([]);
+  });
+});
+
+describe("the walk HUD's HTML art", () => {
+  // The HUD's mirror draws a key only where the HTML interface ships its file, else the canvas
+  // draws it under all of the HTML.
+  it("ships a file for every icon, face, tail and moment the HUD draws", () => {
+    const effects: EffectItem[] = [
+      ...keysOf(gameData.walkerPerks).map((perk): EffectItem => ({ kind: "perk", perk })),
+      ...keysOf(gameData.shopGear).map((gear): EffectItem => ({ gear, kind: "gear" })),
+      ...keysOf(gameData.upgrades).map((upgrade): EffectItem => ({ kind: "upgrade", upgrade })),
+    ];
+    const keys = [
+      ...Object.values(MESSAGE_ICONS),
+      ...DOWN_TAILS.map(({ key }) => key),
+      ...Object.values(FEEDBACK_ART).map(({ key }) => key),
+      ...effects.flatMap((item) => [effectIconKey(item), walkBarIconKey(item)]),
+      ...DOGS.flatMap((dog) => [
+        dogFaceKey(gameData, dog),
+        ownerCardFaceKey(gameData, dog),
+        ownerFaceKey(gameData, dog),
+      ]),
+      ...keysOf(gameData.debuffs).map(debuffIconKey),
+    ];
+    expect(keys.filter((key) => !DOM_ART_KEYS.has(key))).toEqual([]);
   });
 });
 
