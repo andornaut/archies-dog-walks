@@ -44,6 +44,7 @@ export const HOME_TEXT_FIELDS = {
   noticePackFull: [],
   noticeSoundOff: [],
   noticeSoundOn: [],
+  noticeUpdateNeeded: [],
   packBonus: ["hearts"],
   packCount: ["count", "max"],
   sectionDogs: [],

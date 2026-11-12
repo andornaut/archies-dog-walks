@@ -173,6 +173,7 @@ export function layoutExport(
     inkWidth(readBitmapFont("font-title"), 2, plainMarks(text).toUpperCase());
   const notice = updateModalLayout(overlayRegion("home"), {
     action: titleInk(data.homeText.update.button),
+    cancel: titleInk(data.homeText.shop.confirmCancel),
     title: titleInk(data.homeText.update.title),
   });
   // Reference rows use the maximum greeting/info budgets, with the actual fixed-size font.

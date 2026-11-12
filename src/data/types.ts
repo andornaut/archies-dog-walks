@@ -867,17 +867,14 @@ export interface HomeText {
   // The street sign on the gate art.
   readonly gateSign: string;
   readonly gearBought: string;
-  // The plate under the top bar while a later version of the game wrote the save on this device
-  // and no update waits: its title, and its button, which takes the newer version.
-  readonly newerSave: {
-    readonly button: string;
-    readonly title: string;
-  };
   // What the walker says after a tap that changes nothing: the pack is full, or sound
   // toggled.
   readonly noticePackFull: string;
   readonly noticeSoundOff: string;
   readonly noticeSoundOn: string;
+  // Said first in the walker's bubble while a later version of the game wrote the save on this
+  // device and that version cannot download yet (offline, or not on the server).
+  readonly noticeUpdateNeeded: string;
   // The Dogs section's band, before a heart: the most hearts the chosen pack's size raises a
   // picked dog's owner's max by.
   readonly packBonus: string;
@@ -932,7 +929,7 @@ export interface HomeText {
   // Said first in the walker's bubble while the browser keeps no save.
   readonly unsaved: string;
   // The plate under the top bar while a newer version of the game waits: its title, and its
-  // button, which reloads into that version. It shows in place of newerSave's.
+  // button, which reloads into that version.
   readonly update: {
     readonly button: string;
     readonly title: string;

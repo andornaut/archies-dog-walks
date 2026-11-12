@@ -16,15 +16,19 @@ import { applyPendingSaveEdits, type DevPanelHost, mountDevPanel } from "./dev/d
 import { DEV_CHEATS_KEY } from "./dev/devPanelModel.ts";
 import { DEV_GAME_GLOBAL, devToolsOn } from "./dev/devTools.ts";
 import { pageRunSetup } from "./dev/pageRunSetup.ts";
+import { HOME_LAYOUT } from "./home/homeLayout.ts";
 import { noteKeyPress } from "./input/keyNumbers.ts";
 import { lostTouches } from "./input/touches.ts";
 import {
   noteWalkStarted,
   pageFrameWatch,
+  PHONE_EVENTS,
+  requiredUpdate,
   setOnHomeScreen,
   setupPhoneApp,
   storagePersistence,
 } from "./pwa/index.ts";
+import { requiredUpdateProgress } from "./pwa/requiredUpdate.ts";
 import { BootScene } from "./scenes/BootScene.ts";
 import { CardScene } from "./scenes/CardScene.ts";
 import { CelebrationScene } from "./scenes/CelebrationScene.ts";
@@ -45,6 +49,7 @@ import { StartScene } from "./scenes/StartScene.ts";
 import { StatsScene } from "./scenes/StatsScene.ts";
 import { TapBurstScene } from "./scenes/TapBurstScene.ts";
 import { ZoneCelebrationScene } from "./scenes/ZoneCelebrationScene.ts";
+import { mountDomLoadingBar } from "./ui/dom/domLoadingBar.ts";
 import { mountUiLayer, setUiLayer } from "./ui/dom/uiLayer.ts";
 import { htmlUiOn } from "./ui/htmlUi.ts";
 import { startupLoad } from "./ui/startupProgress.ts";
@@ -68,6 +73,39 @@ function watchFirstWalk(game: Game): void {
     }
   };
   game.events.on(Core.Events.POST_STEP, check);
+}
+
+// While a newer save requires the newer version, the game loop sleeps on the home screen once
+// it has been still for UPDATE_IDLE_MS, the HTML mirror's frame work with it: Chromium starts a
+// background install only once the page's main thread is idle. A change of the update's state
+// and the player's input wake it, so home redraws and stays usable, and it sleeps again once
+// still. The required update's loading line is in the DOM, animated in CSS, so it moves while
+// the loop sleeps. Returns the home screen watcher's callback.
+const UPDATE_IDLE_MS = 1000;
+const WAKE_EVENTS = [PHONE_EVENTS.requiredUpdate, "keydown", "pointerdown", "pointerup"] as const;
+
+function sleepWhileUpdateRequired(game: Game): (onHome: boolean) => void {
+  let onHome = false;
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const idle = () => onHome && requiredUpdate() !== undefined;
+  const settle = () => {
+    game.loop.wake();
+    clearTimeout(timer);
+    if (idle()) {
+      timer = setTimeout(() => {
+        if (idle()) {
+          game.loop.sleep();
+        }
+      }, UPDATE_IDLE_MS);
+    }
+  };
+  for (const type of WAKE_EVENTS) {
+    window.addEventListener(type, settle, { capture: true, passive: true });
+  }
+  return (home) => {
+    onHome = home;
+    settle();
+  };
 }
 
 // The element in pages/play/index.html that holds the canvas.
@@ -178,8 +216,15 @@ function bootGame(): Game {
   }
 
   game.events.once(Core.Events.POST_RENDER, () => startupLoad.finish());
-  // The update notice shows on the home screen only.
-  watchHomeScreen(game, setOnHomeScreen);
+  // The update notice shows on the home screen only, where a required update stops the loop.
+  const settleRequired = sleepWhileUpdateRequired(game);
+  watchHomeScreen(game, (onHome) => {
+    setOnHomeScreen(onHome);
+    settleRequired(onHome);
+  });
+  if (parent !== null) {
+    mountDomLoadingBar(parent, HOME_LAYOUT.loadingProgress, requiredUpdateProgress, false);
+  }
   watchFirstWalk(game);
   return game;
 }

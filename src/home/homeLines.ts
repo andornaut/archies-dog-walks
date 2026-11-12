@@ -1,4 +1,5 @@
 import { fillLine } from "@andornaut/game-kit/lines";
+import type { RequiredUpdateState } from "@andornaut/game-kit/web/pwa/updateReady";
 
 import type { DogId, GameData, HomeText, WalkerId } from "../data/types.ts";
 import { packPlace, packSizeRaise } from "../rules/dogs.ts";
@@ -173,7 +174,7 @@ export function messageLine(text: HomeText, action: HomeAction): string | null {
 }
 
 // The line said first in the walker's bubble for each storage state, or null for none. A newer
-// version's save opens an update modal instead (gateTop).
+// version's save says nothing here: it requires that version (requiredNotice).
 const STORAGE_NOTICES: Readonly<Record<StorageState, "unsaved" | null>> = {
   available: null,
   newer: null,
@@ -184,6 +185,13 @@ const STORAGE_NOTICES: Readonly<Record<StorageState, "unsaved" | null>> = {
 export function storageNotice(text: HomeText, state: StorageState): string[] {
   const key = STORAGE_NOTICES[state];
   return key === null ? [] : [text[key]];
+}
+
+// What the walker's bubble says first about the update a newer save requires, as zero or one
+// paragraph: that it is needed while it cannot download. While it downloads, the loading line
+// says so instead.
+export function requiredNotice(text: HomeText, state: RequiredUpdateState | undefined): string[] {
+  return state === "unavailable" ? [text.noticeUpdateNeeded] : [];
 }
 
 // What the walker's bubble says, as paragraphs that each start on a new line, in priority
@@ -216,18 +224,4 @@ export function bubbleSpeech(
   return owner === undefined || quip === undefined
     ? { owner: null, paragraphs: [walkerLine] }
     : { owner, paragraphs: [quip] };
-}
-
-// The update notice, by what it offers: a newer version waiting, or a save on this
-// device from a newer version. Its title and button are homeText's entry of the same name.
-export const PLATE_MODES = ["newerSave", "update"] as const;
-export type PlateMode = (typeof PLATE_MODES)[number];
-
-// Which update notice is eligible: a newer version waiting or a save from a newer version.
-// A waiting update wins; bubble means no notice.
-export function gateTop(updateWaiting: boolean, storage: StorageState): "bubble" | PlateMode {
-  if (updateWaiting) {
-    return "update";
-  }
-  return storage === "newer" ? "newerSave" : "bubble";
 }

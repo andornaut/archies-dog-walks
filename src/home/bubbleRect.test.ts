@@ -56,10 +56,10 @@ describe("bubbleRect", () => {
   );
 });
 
-// Every speech the walker's bubble can say, with and without each storage warning first, wraps
-// at 2x in the body font onto the bubble's lines, and the bubble keeps clear of the Pet shop's
-// board inside the screen. A parting line wraps beside its owner's face and name, which stay
-// inside the bubble and clear of the text.
+// Every speech the walker's bubble can say, with and without each storage or update warning
+// first, wraps at 2x in the body font onto the bubble's lines, and the bubble keeps clear of the
+// Pet shop's board inside the screen. A parting line wraps beside its owner's face and name,
+// which stay inside the bubble and clear of the text.
 describe("the walker's speech", () => {
   const text = gameData.homeText;
   const body = fontFileMetrics("font-body");
@@ -95,6 +95,7 @@ describe("the walker's speech", () => {
   const speeches = [...messages, ...parting].flatMap(({ owner, parts }) => [
     said(parts, owner),
     said([text.unsaved, ...parts], owner),
+    said([text.noticeUpdateNeeded, ...parts], owner),
   ]);
   const width = (line: string) => bodyTextWidth(2, plainMarks(line));
   const nameInk = (dog: DogId) =>

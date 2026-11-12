@@ -1,16 +1,22 @@
+import type { OfflinePlayOptions } from "@andornaut/game-kit/web/pwa/dom/offlinePlay";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
-const { registrationReady, setOfferVisible } = vi.hoisted(() => ({
+import type { StorageState } from "../save/profile.ts";
+import { PHONE_EVENTS } from "./events.ts";
+
+const { offline, registrationReady, requireNewer, setOfferVisible } = vi.hoisted(() => ({
+  offline: { options: undefined as OfflinePlayOptions | undefined },
   registrationReady: vi.fn(),
+  requireNewer: vi.fn(),
   setOfferVisible: vi.fn(),
 }));
 
 vi.mock("@andornaut/game-kit/web/pwa/dom/offlinePlay", () => ({
   browserOfflinePage: () => ({}),
-  startOfflinePlay: () => ({
-    flow: { setOfferVisible },
-    registrationReady,
-  }),
+  startOfflinePlay: (options: OfflinePlayOptions) => {
+    offline.options = options;
+    return { flow: { requireNewer, setOfferVisible }, registrationReady };
+  },
 }));
 vi.mock("@andornaut/game-kit/web/pwa/dom/installFlow", () => ({
   watchInstall: () => ({ onChange: () => () => undefined, state: () => "steps" }),
@@ -35,28 +41,32 @@ vi.mock("@andornaut/game-kit/web/save/dom/localSaveStorage", () => ({
   }),
 }));
 
+let phone: typeof import("./index.ts");
+const dispatched: string[] = [];
+
+beforeAll(async () => {
+  vi.stubEnv("PROD", true);
+  vi.stubGlobal("document", { createElement: () => ({ canPlayType: () => "" }) });
+  vi.stubGlobal("screen", {});
+  vi.stubGlobal("window", { dispatchEvent: (event: Event) => dispatched.push(event.type) });
+  phone = await import("./index.ts");
+  phone.setupPhoneApp();
+});
+
+afterAll(() => {
+  vi.unstubAllEnvs();
+  vi.unstubAllGlobals();
+});
+
+beforeEach(() => {
+  dispatched.length = 0;
+  registrationReady.mockClear();
+  requireNewer.mockClear();
+  setOfferVisible.mockClear();
+});
+
 describe("setOnHomeScreen", () => {
-  let setOnHomeScreen: (onHome: boolean) => void;
-
-  beforeAll(async () => {
-    vi.stubEnv("PROD", true);
-    vi.stubGlobal("document", { createElement: () => ({ canPlayType: () => "" }) });
-    vi.stubGlobal("screen", {});
-    vi.stubGlobal("window", {});
-    const phone = await import("./index.ts");
-    phone.setupPhoneApp();
-    setOnHomeScreen = phone.setOnHomeScreen;
-  });
-
-  afterAll(() => {
-    vi.unstubAllEnvs();
-    vi.unstubAllGlobals();
-  });
-
-  beforeEach(() => {
-    registrationReady.mockClear();
-    setOfferVisible.mockClear();
-  });
+  const setOnHomeScreen = (onHome: boolean) => phone.setOnHomeScreen(onHome);
 
   it("marks registration ready and shows the offer on arrival home", () => {
     setOnHomeScreen(true);
@@ -69,4 +79,26 @@ describe("setOnHomeScreen", () => {
     expect(registrationReady).not.toHaveBeenCalled();
     expect(setOfferVisible).toHaveBeenCalledExactlyOnceWith(false);
   });
+});
+
+describe("noteSaveStorage", () => {
+  it.each<[StorageState, number]>([
+    ["available", 0],
+    ["newer", 1],
+    ["unavailable", 0],
+  ])("for %s storage requires the newer version %i times", (storage, calls) => {
+    phone.noteSaveStorage(storage);
+    expect(requireNewer).toHaveBeenCalledTimes(calls);
+  });
+});
+
+describe("requiredUpdate", () => {
+  it.each(["updating", "unavailable"] as const)(
+    "follows the kit's %s report and tells the scenes",
+    (state) => {
+      offline.options?.onRequireNewer(state);
+      expect(phone.requiredUpdate()).toBe(state);
+      expect(dispatched).toEqual([PHONE_EVENTS.requiredUpdate]);
+    },
+  );
 });

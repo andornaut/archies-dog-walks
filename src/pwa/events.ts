@@ -7,6 +7,8 @@ export const PHONE_EVENTS = {
   // The Android back gesture or button, or the browser's Back. The page stays on the game, so
   // the scenes decide what back means (pause, close a card, leave a menu).
   backPressed: "back-pressed",
+  // The update a newer save requires changed state: requiredUpdate says which.
+  requiredUpdate: "required-update",
   // The home screen's update plate shows or hides: updatePlateShown says which.
   updatePlate: "update-plate",
 } as const;

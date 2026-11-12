@@ -1,12 +1,14 @@
+import type { RequiredUpdateState } from "@andornaut/game-kit/web/pwa/updateReady";
 import { describe, expect, it, vi } from "vitest";
 
 import { overlayRegion } from "../home/homeBar.ts";
 import { updateModalLayout } from "../home/homeLayout.ts";
-import type { PlateMode } from "../home/homeLines.ts";
+import type { Sections } from "../home/sections.ts";
 import { StartScene } from "./StartScene.ts";
 
 const acceptUpdate = vi.fn();
 const dismissUpdateOffer = vi.fn();
+const required = { state: undefined as RequiredUpdateState | undefined };
 vi.mock("phaser", () => ({
   Core: { Events: {} },
   Scene: class {},
@@ -16,11 +18,12 @@ vi.mock("../pwa/index.ts", async (original) => ({
   ...(await original<typeof import("../pwa/index.ts")>()),
   acceptUpdate: () => acceptUpdate(),
   dismissUpdateOffer: () => dismissUpdateOffer(),
+  requiredUpdate: () => required.state,
 }));
 
 function notice() {
   let active = false;
-  let top: "bubble" | PlateMode = "update";
+  let offered = true;
   const layout = updateModalLayout(overlayRegion("home"), {
     action: 100,
     cancel: 60,
@@ -33,12 +36,12 @@ function notice() {
   };
   const state = {
     closeOverlay: () => methods.closeOverlay.call(state),
-    gateTop: () => top,
-    overlay: undefined as { mode: PlateMode; rect: typeof layout.panel } | undefined,
+    overlay: undefined as { rect: typeof layout.panel; update: true } | undefined,
     render: vi.fn(),
-    shownUpdate: undefined as PlateMode | undefined,
+    shownUpdate: false,
     sys: { isActive: () => active },
     updateLayout: () => layout,
+    updateOffered: () => offered,
   };
   return {
     activate: () => {
@@ -46,15 +49,12 @@ function notice() {
     },
     deactivate: () => {
       active = false;
-      top = "bubble";
+      offered = false;
     },
     layout,
-    newerSave: () => {
-      top = "newerSave";
-    },
     ready: () => {
       active = true;
-      top = "update";
+      offered = true;
     },
     release: (rect: typeof layout.panel) => {
       const point = { x: rect.x + rect.width / 2, y: rect.y + rect.height / 2 };
@@ -70,10 +70,10 @@ describe("home update notice", () => {
     const page = notice();
     page.sync();
     expect(page.state.overlay).toBeUndefined();
-    expect(page.state.shownUpdate).toBeUndefined();
+    expect(page.state.shownUpdate).toBe(false);
     page.activate();
     page.sync();
-    expect(page.state.overlay?.mode).toBe("update");
+    expect(page.state.overlay?.update).toBe(true);
   });
 
   it("dismisses Cancel without accepting the update or reopening on the next redraw", () => {
@@ -82,8 +82,7 @@ describe("home update notice", () => {
     const page = notice();
     page.activate();
     page.sync();
-    expect(page.layout.cancel).toBeDefined();
-    page.release(page.layout.cancel!);
+    page.release(page.layout.cancel);
     expect(page.state.overlay).toBeUndefined();
     expect(page.state.render).toHaveBeenCalledOnce();
     expect(acceptUpdate).not.toHaveBeenCalled();
@@ -98,7 +97,7 @@ describe("home update notice", () => {
     expect(acceptUpdate).not.toHaveBeenCalled();
   });
 
-  it("keeps Update now as the accepting action and leaves newer-save eligibility unchanged", () => {
+  it("keeps Update now as the accepting action", () => {
     acceptUpdate.mockClear();
     dismissUpdateOffer.mockClear();
     const page = notice();
@@ -107,18 +106,22 @@ describe("home update notice", () => {
     page.release(page.layout.button);
     expect(acceptUpdate).toHaveBeenCalledOnce();
     expect(dismissUpdateOffer).not.toHaveBeenCalled();
-    const newer = notice();
-    newer.newerSave();
-    newer.sync();
-    expect(newer.state.overlay?.mode).toBe("newerSave");
-    newer.state.closeOverlay();
-    expect(dismissUpdateOffer).not.toHaveBeenCalled();
-    const gate = (StartScene.prototype as unknown as { gateTop: () => "bubble" | PlateMode })
-      .gateTop;
-    const resumed = {
-      registry: { get: () => ({ storage: "newer" }) },
-      shownUpdate: "update",
-    };
-    expect(gate.call(resumed)).toBe("update");
+  });
+});
+
+describe("Start walk while a newer save requires the newer version", () => {
+  const complete = { heading: "", note: "", state: "complete" } as const;
+  const sections = { dogs: complete, pocket: complete, walker: complete } as unknown as Sections;
+  const startOpen = (StartScene.prototype as unknown as { startOpen: (s: Sections) => boolean })
+    .startOpen;
+
+  it.each<[RequiredUpdateState | undefined, boolean]>([
+    [undefined, true],
+    ["updating", false],
+    ["unavailable", false],
+  ])("with the update %s, with a walker and a dog picked, is open: %s", (state, open) => {
+    required.state = state;
+    expect(startOpen(sections)).toBe(open);
+    required.state = undefined;
   });
 });

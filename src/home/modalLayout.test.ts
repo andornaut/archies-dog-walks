@@ -66,15 +66,13 @@ it("clamps a tall full-size panel inside the protected walk region", () => {
   expect(placed.y + placed.height).toBe(bounds.y + bounds.height);
 });
 
-describe.each(["newerSave", "update"] as const)("%s notice", (mode) => {
-  it("sizes its title and action without an empty body or obscuring the gate character", () => {
-    const title = gameData.homeText[mode].title;
+describe("update notice", () => {
+  it("sizes its title and actions without an empty body or obscuring the gate character", () => {
+    const { button, title } = gameData.homeText.update;
     const ink = inkWidth("font-title", TEXT_STYLE, title.toUpperCase());
     const placed = updateModalLayout(area, {
-      action: inkWidth("font-title", TEXT_STYLE, gameData.homeText[mode].button),
-      ...(mode === "update"
-        ? { cancel: inkWidth("font-title", TEXT_STYLE, gameData.homeText.shop.confirmCancel) }
-        : {}),
+      action: inkWidth("font-title", TEXT_STYLE, button),
+      cancel: inkWidth("font-title", TEXT_STYLE, gameData.homeText.shop.confirmCancel),
       title: ink,
     });
     expect(inside(placed.panel, insetRect(MODAL.margin, area))).toBe(true);
@@ -110,13 +108,11 @@ describe.each(["newerSave", "update"] as const)("%s notice", (mode) => {
 
 it("places update cancellation beside its primary action and stacks the whole group when necessary", () => {
   const paired = updateModalLayout(area, { action: 100, cancel: 60, title: 160 });
-  expect(paired.cancel).toBeDefined();
-  expect(paired.cancel!.x + paired.cancel!.width + BUTTON_SIZE.gap).toBe(paired.button.x);
-  expect(paired.cancel!.y).toBe(paired.button.y);
+  expect(paired.cancel.x + paired.cancel.width + BUTTON_SIZE.gap).toBe(paired.button.x);
+  expect(paired.cancel.y).toBe(paired.button.y);
   const stacked = updateModalLayout(area, { action: 180, cancel: 120, title: 160 });
-  expect(stacked.cancel!.x).toBe(stacked.button.x);
-  expect(stacked.cancel!.width).toBe(stacked.button.width);
-  expect(stacked.cancel!.y + stacked.cancel!.height + BUTTON_SIZE.stackGap).toBe(stacked.button.y);
+  expect(stacked.cancel.x).toBe(stacked.button.x);
+  expect(stacked.cancel.width).toBe(stacked.button.width);
+  expect(stacked.cancel.y + stacked.cancel.height + BUTTON_SIZE.stackGap).toBe(stacked.button.y);
   expect(inside(stacked.button, stacked.panel)).toBe(true);
-  expect(updateModalLayout(area, { action: 100, title: 160 }).cancel).toBeUndefined();
 });

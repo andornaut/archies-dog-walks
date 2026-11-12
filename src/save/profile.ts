@@ -36,9 +36,9 @@ import type { Checkpoint, SaveDocument } from "./schema.ts";
 // "unavailable" once storage could not be read, or while the last write failed: play goes on with
 // the save in memory, and the home screen says progress won't be saved. A later write that succeeds
 // makes it "available" again; a failed read lasts the session, since the store then writes nothing.
-// "newer" when a later version of the game wrote the stored save or the earned record: play goes
-// on with both in memory, nothing is written for the session, and the home screen's plate offers
-// the newer version.
+// "newer" when a later version of the game wrote the stored save or the earned record: the game
+// requires that version (noteSaveStorage in src/pwa/index.ts), keeps both in memory and writes
+// nothing for the session.
 export type StorageState = "available" | "newer" | "unavailable";
 
 // What the end screen shows beyond the saved stats: the achievements the run earned, whether

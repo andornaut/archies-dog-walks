@@ -27,6 +27,7 @@ import {
   requestPersistentStorage,
   type StoragePersistence,
 } from "@andornaut/game-kit/web/pwa/storagePersistence";
+import type { RequiredUpdateState } from "@andornaut/game-kit/web/pwa/updateReady";
 import { localSaveStorage } from "@andornaut/game-kit/web/save/dom/localSaveStorage";
 import {
   type FrameTurnWatch,
@@ -35,9 +36,11 @@ import {
 } from "@andornaut/game-kit/web/view/dom/watchFrameTurn";
 
 import { chooseSoundFormat, type SoundFormat } from "../audio/soundFormat.ts";
+import type { StorageState } from "../save/profile.ts";
 import { dispatchPhoneEvent, PHONE_EVENTS } from "./events.ts";
 import { createInstallNudge, type InstallNudge } from "./installNudge.ts";
 import { reportOfflineActivity } from "./offlineProgress.ts";
+import { reportRequiredUpdate } from "./requiredUpdate.ts";
 
 export { AUDIO_UNLOCK_EVENTS, unlockAudioOnFirstGesture } from "./audioUnlock.ts";
 export { PHONE_EVENTS } from "./events.ts";
@@ -69,6 +72,9 @@ let registrationHook: () => void = () => undefined;
 let offerHook: (visible: boolean) => void = () => undefined;
 // Whether the home screen shows the update plate.
 let updateShown = false;
+// The update a save from a newer version requires, from the first report on; undefined while
+// none is required.
+let required: RequiredUpdateState | undefined;
 
 // The history state key of the entry that keeps back on the game (the kit's guardBackNavigation).
 const BACK_GUARD_STATE_KEY = "archiesDogWalksBackGuard";
@@ -88,6 +94,7 @@ function registerServiceWorker(): void {
   const play = startOfflinePlay(
     {
       onOfflineActivity: reportOfflineActivity,
+      onRequireNewer: reportRequired,
       onUpdateShown: (shown) => {
         updateShown = shown;
         dispatchPhoneEvent(window, PHONE_EVENTS.updatePlate);
@@ -99,6 +106,12 @@ function registerServiceWorker(): void {
   updateFlow = play.flow;
   registrationHook = () => play.registrationReady();
   offerHook = (visible) => play.flow.setOfferVisible(visible);
+}
+
+function reportRequired(state: RequiredUpdateState): void {
+  required = state;
+  reportRequiredUpdate(state);
+  dispatchPhoneEvent(window, PHONE_EVENTS.requiredUpdate);
 }
 
 // Sets up the service worker and the phone app's behaviour. Nothing here delays the game.
@@ -206,15 +219,32 @@ export function updatePlateShown(): boolean {
   return updateShown;
 }
 
-// The plate's Update now button: switch to the waiting version and reload into it, or with none
-// waiting reload. A page a version controls reloads that version from its cache and checks for a
-// newer one on load; without a service worker the browser fetches the newer version.
+// The update offer's Update now button: switch to the waiting version and reload into it. The
+// offer shows only while a version waits, so only with a service worker.
 export function acceptUpdate(): void {
-  if (updateFlow === undefined) {
-    location.reload();
+  updateFlow?.accept();
+}
+
+// A save or earned record from a newer version requires that version, whatever the player does:
+// the kit downloads it and switches to it once stored, never offering it ("updating"), or waits
+// to be online and tries again ("unavailable"). Without a service worker nothing can update, so
+// the update stays "unavailable". Repeated calls change nothing.
+export function noteSaveStorage(storage: StorageState): void {
+  if (storage !== "newer") {
     return;
   }
-  updateFlow.accept();
+  if (updateFlow !== undefined) {
+    updateFlow.requireNewer();
+  } else if (required === undefined) {
+    reportRequired("unavailable");
+  }
+}
+
+// The update a newer save requires, or undefined while none is. While one is, the save stays as
+// stored, Start and walks stay closed and the game loop sleeps between home screen changes.
+// PHONE_EVENTS.requiredUpdate fires on each change.
+export function requiredUpdate(): RequiredUpdateState | undefined {
+  return required;
 }
 
 // A walk started, which counts as the player interacting even with no input (a dev walk URL), so

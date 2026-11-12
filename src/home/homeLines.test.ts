@@ -1,4 +1,5 @@
 import { fillNames } from "@andornaut/game-kit/lines";
+import type { RequiredUpdateState } from "@andornaut/game-kit/web/pwa/updateReady";
 import { describe, expect, it } from "vitest";
 
 import { gameData } from "../data/index.ts";
@@ -11,11 +12,11 @@ import type { HomeLoadout } from "./home.ts";
 import {
   bubbleSpeech,
   bubbleTurnLine,
-  gateTop,
   type HomeAction,
   HOW_TO_WALKS,
   messageLine,
   packBonusLine,
+  requiredNotice,
   storageNotice,
   tappedBubbleTurn,
   type VisitNews,
@@ -259,6 +260,16 @@ describe("bubbleSpeech", () => {
   });
 });
 
+describe("requiredNotice", () => {
+  it.each<[RequiredUpdateState | undefined, string[]]>([
+    [undefined, []],
+    ["updating", []],
+    ["unavailable", [gameData.homeText.noticeUpdateNeeded]],
+  ])("says for a required update %s %j", (state, expected) => {
+    expect(requiredNotice(gameData.homeText, state)).toEqual(expected);
+  });
+});
+
 describe("storageNotice", () => {
   it.each<[StorageState, string[]]>([
     ["available", []],
@@ -288,20 +299,4 @@ describe("packBonusLine", () => {
   ])("shows how far the lead's owner's max rises for %s", (_name, tuning, dogs, expected) => {
     expect(packBonusLine({ ...data, tuning }, { dogs, gear: null })).toBe(expected);
   });
-});
-
-describe("gateTop", () => {
-  it.each<[boolean, StorageState, ReturnType<typeof gateTop>]>([
-    [false, "available", "bubble"],
-    [false, "newer", "newerSave"],
-    [false, "unavailable", "bubble"],
-    [true, "available", "update"],
-    [true, "newer", "update"],
-    [true, "unavailable", "update"],
-  ])(
-    "with a version waiting %s and %s storage shows the %s, one at a time",
-    (waiting, storage, expected) => {
-      expect(gateTop(waiting, storage)).toBe(expected);
-    },
-  );
 });

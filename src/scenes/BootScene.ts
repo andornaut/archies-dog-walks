@@ -47,7 +47,13 @@ import {
   loadingWalkerAt,
   stepFraction,
 } from "../layout/loadingScreen.ts";
-import { browserSoundFormat, startWakeLock, unlockAudioOnFirstGesture } from "../pwa/index.ts";
+import {
+  browserSoundFormat,
+  noteSaveStorage,
+  requiredUpdate,
+  startWakeLock,
+  unlockAudioOnFirstGesture,
+} from "../pwa/index.ts";
 import { PALETTE } from "../ui/palette.ts";
 import { addFilledRect } from "../ui/phaser/draw.ts";
 import { addPillGlyphs, registerFallbackPixelFont } from "../ui/phaser/pixelText.ts";
@@ -59,6 +65,7 @@ import {
   openProfile,
   profileSave,
   resumesWalk,
+  storageState,
   takeResumedWalk,
   walkerInUse,
 } from "./profileStore.ts";
@@ -182,12 +189,13 @@ export class BootScene extends Scene {
     // A dev link that names a run starts its walk, and banks a walk left unfinished rather than
     // resuming it.
     const walkNow = namesRunSetup(pageSearch());
-    // Open the profile while the art loads. The loading walker then follows the saved
-    // reduced-motion setting.
+    // Open the profile while the art loads. A save from a newer version requires that version.
+    // The loading walker then follows the saved reduced-motion setting.
     const profileOpened = openProfile(this, !walkNow).then((load) => {
       if (load.status === "corrupt" || load.status === "newer" || load.status === "unavailable") {
         console.warn(`The save is ${load.status}, so play starts fresh: ${load.reason}`);
       }
+      noteSaveStorage(storageState(this));
       this.setWalkerMotion(currentSettings(this).reducedMotion);
     });
     addAtlasTextures(this);
@@ -208,8 +216,11 @@ export class BootScene extends Scene {
         registerFallbackPixelFont(this);
         addPillGlyphs(this);
         this.showProgress(undefined);
+        // While a newer version is required, no walk starts: home says so.
         void profileOpened.then(() => {
-          if (walkNow) {
+          if (requiredUpdate() !== undefined) {
+            this.showHome();
+          } else if (walkNow) {
             this.startWalk();
           } else if (resumesWalk(this)) {
             this.resumeWalk();

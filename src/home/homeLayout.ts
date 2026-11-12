@@ -681,17 +681,16 @@ export function updateModalText(
   return { capY: button.y + Math.floor((button.height - BUTTON_LIP_PX - caps) / 2) };
 }
 
-// The notice contains its title and actions, without an empty body row.
+// The notice contains its title and actions, Cancel then Update now, without an empty body row.
 export function updateModalLayout(
   area: Rect,
-  ink: { action: number; cancel?: number; title: number },
+  ink: { action: number; cancel: number; title: number },
 ) {
   const actionWidth = modalActionWidth(ink.action);
-  const cancelWidth = ink.cancel === undefined ? undefined : modalActionWidth(ink.cancel);
-  const actionsWidth =
-    actionWidth + (cancelWidth === undefined ? 0 : cancelWidth + BUTTON_SIZE.gap);
+  const cancelWidth = modalActionWidth(ink.cancel);
+  const actionsWidth = actionWidth + cancelWidth + BUTTON_SIZE.gap;
   const stacked = actionsWidth > area.width - 2 * (MODAL.margin + MODAL.pad);
-  const groupWidth = stacked ? Math.max(actionWidth, cancelWidth ?? 0) : actionsWidth;
+  const groupWidth = stacked ? Math.max(actionWidth, cancelWidth) : actionsWidth;
   const width = modalPanelWidth(
     area.width - 2 * MODAL.margin,
     Math.max(groupWidth + 2 * MODAL.pad, modalTitleWidth(ink.title)),
@@ -706,19 +705,16 @@ export function updateModalLayout(
     },
   );
   const left = panel.x + (panel.width - groupWidth) / 2;
-  const cancel =
-    cancelWidth === undefined
-      ? undefined
-      : {
-          height,
-          width: stacked ? groupWidth : cancelWidth,
-          x: left,
-          y: panel.y + MODAL.header,
-        };
+  const cancel = {
+    height,
+    width: stacked ? groupWidth : cancelWidth,
+    x: left,
+    y: panel.y + MODAL.header,
+  };
   const button = {
     height,
     width: stacked ? groupWidth : actionWidth,
-    x: left + (cancelWidth === undefined || stacked ? 0 : cancelWidth + BUTTON_SIZE.gap),
+    x: left + (stacked ? 0 : cancelWidth + BUTTON_SIZE.gap),
     y: panel.y + MODAL.header + (stacked ? height + BUTTON_SIZE.stackGap : 0),
   };
   return { button, cancel, hit: button, panel };

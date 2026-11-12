@@ -1984,19 +1984,25 @@
         "button": {
           "height": 44,
           "width": 144,
-          "x": 108,
+          "x": 165,
+          "y": 276
+        },
+        "cancel": {
+          "height": 44,
+          "width": 98,
+          "x": 51,
           "y": 276
         },
         "hit": {
           "height": 44,
           "width": 144,
-          "x": 108,
+          "x": 165,
           "y": 276
         },
         "panel": {
           "height": 112,
-          "width": 274,
-          "x": 43,
+          "width": 290,
+          "x": 35,
           "y": 224
         },
         "capY": 291

@@ -38,7 +38,7 @@ import {
   HOME_LAYOUT,
   UPDATE_MODAL_ROOM,
 } from "../home/homeLayout.ts";
-import { messageLine, PLATE_MODES } from "../home/homeLines.ts";
+import { messageLine } from "../home/homeLines.ts";
 import { MENU_TEXT_FIELDS } from "../home/menuText.ts";
 import { modalTitleLayout } from "../home/modalLayout.ts";
 import { confirmLines } from "../home/purchaseConfirm.ts";
@@ -669,13 +669,13 @@ export function textRoleCases(): TextRoleCase[] {
       "update modal's title",
       "font-title",
       { room: UPDATE_MODAL_ROOM.title, style: TEXT_STYLE },
-      PLATE_MODES.map((mode) => gameData.homeText[mode].title),
+      [gameData.homeText.update.title],
     ),
     ...plainRole(
       "update modal's button",
       "font-title",
       { room: UPDATE_MODAL_ROOM.label, style: TEXT_STYLE },
-      PLATE_MODES.map((mode) => gameData.homeText[mode].button),
+      [gameData.homeText.update.button],
     ),
     ...endRoles(),
     ...shopRoles(),
