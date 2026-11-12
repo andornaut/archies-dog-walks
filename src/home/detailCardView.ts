@@ -54,7 +54,8 @@ export interface DetailArt {
     readonly inset: { readonly left: number; readonly right: number };
   };
   // Art centred on a point (a badge on its card) sits with its middle there, whole art pixels
-  // from its holder's corner.
+  // from its holder's corner; art that also hangs off a frame's right side (right) is centred
+  // down only.
   readonly centre?: Point;
   // Art drawn mirrored left to right, as a tail turned to point the other way.
   readonly flipX?: boolean;

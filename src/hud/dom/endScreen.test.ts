@@ -6,7 +6,7 @@ import { END_LAYOUT } from "../../home/endLayout.ts";
 import { endScreenView, QUIP_TAIL_KEY } from "../../home/endScreenView.ts";
 import { FakeDocument, fakeLayer } from "../../testing/fakeDom.ts";
 import { gameFont } from "../../testing/fontInk.ts";
-import { artPixel, domScale, frameRect } from "../../ui/domScale.ts";
+import { artPixel, domScale, exactDeviceY, frameRect } from "../../ui/domScale.ts";
 import { showEndScreen } from "./endScreen.ts";
 
 const fonts = { body: gameFont("font-body"), title: gameFont("font-title") };
@@ -86,6 +86,17 @@ describe("the HTML End screen", () => {
       expect(inFromRight).toBe(
         (bubble.x + bubble.width - END_LAYOUT.quips.tail.x) * artPixel(scale),
       );
+      // Its middle down within half an art pixel of the canvas's, whole art pixels below the
+      // bubble's snapped top.
+      const size = ART[QUIP_TAIL_KEY];
+      const top = Number.parseFloat(tail?.style.top ?? "");
+      const middle = top + ((size?.height ?? 0) * artPixel(scale)) / 2;
+      const canvas = exactDeviceY(
+        scale,
+        bubble.y + VIEW.offsetY + END_LAYOUT.quips.tail.y + (size?.height ?? 0) / 2,
+      );
+      expect(Math.abs(middle - canvas)).toBeLessThanOrEqual(artPixel(scale) / 2);
+      expect((top - frame.top) % artPixel(scale)).toBe(0);
     },
   );
 });

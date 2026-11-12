@@ -236,7 +236,11 @@ export function endScreenView(
     const bubble = { height: bubbleHeight, width: QUIPS.bubble.width, x: QUIPS.bubble.x, y: row };
     bubbles.push(bubble);
     if (tailSize !== undefined) {
+      // Its middle down where the canvas draws it, beside its face, whole art pixels from the
+      // bubble's snapped corner, so it stays level with the face at every scale.
+      const y = row + QUIPS.tail.y;
       art.push({
+        centre: { x: QUIPS.tail.x + tailSize.width / 2, y: y + tailSize.height / 2 },
         flipX: true,
         holder: { x: bubble.x, y: bubble.y },
         key: QUIP_TAIL_KEY,
@@ -244,7 +248,7 @@ export function endScreenView(
         scale: 1,
         size: tailSize,
         x: QUIPS.tail.x,
-        y: row + QUIPS.tail.y,
+        y,
       });
     }
     const owner = data.dogs[quip.dog].owner.name;

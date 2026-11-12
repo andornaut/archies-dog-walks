@@ -55,6 +55,7 @@ function moved(results: EndResults, dy: number) {
   const point = <T extends Point>(at: T): T => ({ ...at, y: at.y + dy });
   const art = (item: DetailArt): DetailArt => ({
     ...point(item),
+    ...(item.centre === undefined ? {} : { centre: point(item.centre) }),
     ...(item.holder === undefined ? {} : { holder: point(item.holder) }),
     ...(item.right === undefined ? {} : { right: point(item.right) }),
   });
