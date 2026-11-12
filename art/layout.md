@@ -52,7 +52,7 @@ Treat the home pickers and Start walk as one vertical group. The three sections 
 | Token           | Value                      | Unit       | Scope                               | Source                                                                           |
 | --------------- | -------------------------- | ---------- | ----------------------------------- | -------------------------------------------------------------------------------- |
 | home.divider    | Row 166                    | y px       | Last divider row above picker group | [home layout](../src/home/homeLayout.ts) and [style contract](style-guide.md#ui) |
-| home.outer.gaps | 6 above; 2 below           | px         | Entire picker/action group          | [home export](../shared/export/layout.json)                                      |
+| home.outer.gaps | 0 above; 2 below           | px         | Entire picker/action group          | [home export](../shared/export/layout.json)                                      |
 | home.walker     | 6,173,348,85               | x,y,w,h px | Walker section                      | [home export](../shared/export/layout.json)                                      |
 | home.dogs       | 6,258,348,171              | x,y,w,h px | Dogs section                        | [home export](../shared/export/layout.json)                                      |
 | home.pocket     | 6,429,348,83               | x,y,w,h px | Pocket section                      | [home export](../shared/export/layout.json)                                      |
@@ -96,15 +96,15 @@ Keep `font-title` at 2×. Measure wrapped lines and increase header/body/panel h
 
 Keep gameplay notices below overlay scenes and scrims. A high object depth inside the run scene is not permission to draw above a modal. The message strip stays in the HUD with its paused lifetime and enlarged-card hiding; [messageStripView](../src/scenes/messageStripView.ts) owns its rendering.
 
-| Token           | Value        | Unit       | Scope                           | Source                                                                                                              |
-| --------------- | ------------ | ---------- | ------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
-| hud.topBar      | 0,0,360,40   | x,y,w,h px | Walk bar                        | [screen regions](../shared/export/layout.json)                                                                      |
-| hud.walkView    | 0,40,360,442 | x,y,w,h px | Content between bar and dog row | [screen regions](../shared/export/layout.json)                                                                      |
-| hud.dogRow      | 0,482,360,74 | x,y,w,h px | Fixed three-slot card row       | [screen regions](../shared/export/layout.json)                                                                      |
-| progress.bottom | 0,556,360,4  | x,y,w,h px | DOM startup, Boot and run       | [startup](../src/startup.ts), [Boot](../src/scenes/BootScene.ts) and [screen regions](../shared/export/layout.json) |
-| progress.home   | 0,168,360,4  | x,y,w,h px | Home loading/walk-wait only     | [home layout](../src/home/homeLayout.ts)                                                                            |
+| Token           | Value                | Unit       | Scope                           | Source                                                                                                              |
+| --------------- | -------------------- | ---------- | ------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| hud.topBar      | 0,0,360,40           | x,y,w,h px | Walk bar                        | [screen regions](../shared/export/layout.json)                                                                      |
+| hud.walkView    | 0,40,360,442         | x,y,w,h px | Content between bar and dog row | [screen regions](../shared/export/layout.json)                                                                      |
+| hud.dogRow      | 0,482,360,74         | x,y,w,h px | Fixed three-slot card row       | [screen regions](../shared/export/layout.json)                                                                      |
+| progress.bottom | 0,556,360,4          | x,y,w,h px | DOM startup, Boot and run       | [startup](../src/startup.ts), [Boot](../src/scenes/BootScene.ts) and [screen regions](../shared/export/layout.json) |
+| progress.home   | 0,GATE_BAR.y-5,360,4 | x,y,w,h px | Home loading/walk-wait only     | [home layout](../src/home/homeLayout.ts)                                                                            |
 
-Hide home progress while idle: rows 167–172 are then clear. Active progress leaves rows 167 and 172 clear. Progress state and appearance follow the [style contract](style-guide.md#ui). Actor-following effects and stationary art notices keep their own anchors; do not apply panel-centering rules to them.
+Hide home progress while idle. Active progress lies across the yard's foot with one clear row (`HOME.loadingClear`) above the divider strip. Progress state and appearance follow the [style contract](style-guide.md#ui). Actor-following effects and stationary art notices keep their own anchors; do not apply panel-centering rules to them.
 
 ## Exceptions and verification
 
