@@ -16,9 +16,15 @@ export const GAME_PROGRESS_STYLE: ProgressBarStyle = {
   track: PALETTE[GAME_PROGRESS.colours.track],
 };
 
-// A loading bar's travelling segment, a share of the track crossing it once a cycle, and how
-// long a finished measured load shows full: the kit's defaults.
-export const LOADING_TIMING: DomProgressTiming = { cycleMs: 1500, fullMs: 250, segment: 0.25 };
+// Every loading bar's timing: its travelling segment, a share of the track crossing it once a
+// cycle, how long a finished measured load shows full, and how long it then fades out, reduced
+// motion included.
+export const LOADING_TIMING = {
+  cycleMs: 1500,
+  fadeMs: 150,
+  fullMs: 250,
+  segment: 0.25,
+} as const satisfies DomProgressTiming;
 export const LOADING_MOTION: ProgressMotion = {
   cycleMs: LOADING_TIMING.cycleMs,
   segment: LOADING_TIMING.segment,

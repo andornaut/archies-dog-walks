@@ -446,8 +446,8 @@ export class StartScene extends Scene {
   // The loading line, drawn each frame: the walk's load while Start walk waits, else the
   // offline install's.
   private waitBar: GameObjects.Graphics | undefined;
-  private walkDisplay = createProgressDisplay(LOADING_TIMING.fullMs);
-  private offlineDisplay = createProgressDisplay(LOADING_TIMING.fullMs);
+  private walkDisplay = createProgressDisplay(LOADING_TIMING.fullMs, LOADING_TIMING.fadeMs);
+  private offlineDisplay = createProgressDisplay(LOADING_TIMING.fullMs, LOADING_TIMING.fadeMs);
   // Whether the top bar shows Exit (exitShown).
   private exit = true;
   private focus: Focus | null = null;
@@ -501,9 +501,9 @@ export class StartScene extends Scene {
     this.artWait = undefined;
     this.entry = undefined;
     this.waitBar = undefined;
-    this.walkDisplay = createProgressDisplay(LOADING_TIMING.fullMs);
+    this.walkDisplay = createProgressDisplay(LOADING_TIMING.fullMs, LOADING_TIMING.fadeMs);
     this.events.once("shutdown", walkArtProgress.subscribe(this.walkDisplay.report));
-    this.offlineDisplay = createProgressDisplay(LOADING_TIMING.fullMs);
+    this.offlineDisplay = createProgressDisplay(LOADING_TIMING.fullMs, LOADING_TIMING.fadeMs);
     this.events.once("shutdown", offlineProgress.subscribe(this.offlineDisplay.report));
     this.exit = exitShown();
     this.focus = null;

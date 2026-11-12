@@ -145,7 +145,7 @@ export class BootScene extends Scene {
     this.events.once("shutdown", () => this.artProgress?.finish());
     this.bar = this.add.graphics().setDepth(1);
     const loading = createProgressState();
-    const display = createProgressDisplay(LOADING_TIMING.fullMs);
+    const display = createProgressDisplay(LOADING_TIMING.fullMs, LOADING_TIMING.fadeMs);
     const stop = loading.subscribe(display.report);
     this.bootLoad = loading.begin();
     // The scene's update event runs while it loads too, unlike its update method.
