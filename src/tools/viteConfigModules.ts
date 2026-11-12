@@ -5,6 +5,7 @@ export { inlineStyleCheckPlugin } from "../headers/inlineStyleCheckPlugin.ts";
 export { securityHeadersPlugin } from "../headers/securityHeadersPlugin.ts";
 export { HASHED_ICONS } from "../pwa/icons.ts";
 export { precachePlugin } from "../pwa/precachePlugin.ts";
+export { webManifestPlugin } from "../pwa/webManifestPlugin.ts";
 export { atlasPlugin } from "./atlas/atlasPlugin.ts";
 export { generatedFilesPlugin } from "./generatedFilesPlugin.ts";
 export { PHASER_BUILD } from "./phaserBuild.ts";

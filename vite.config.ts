@@ -25,6 +25,8 @@ export default gameViteConfig<typeof ConfigModules>({
   // game does not use and without the Canvas renderer (PHASER_BUILD in src/tools/phaserBuild.ts).
   // hashedIconsPlugin writes each icon under a content-hashed name in /assets/ and points the
   // built pages and /manifest.webmanifest there (HASHED_ICONS in src/pwa/icons.ts).
+  // webManifestPlugin fills the manifest's description from the data, in dev and in the manifest
+  // hashedIconsPlugin writes, before precachePlugin reads it.
   // precachePlugin writes /sw.js, the service worker that precaches the game for offline play,
   // reading the map of hashed art atlasPlugin writes.
   // securityHeadersPlugin writes /_headers, the response headers with each page's CSP.
@@ -39,6 +41,7 @@ export default gameViteConfig<typeof ConfigModules>({
       modules.generatedFilesPlugin({ repoRoot: repoPath(".") }),
       modules.phaserBuildPlugin(modules.PHASER_BUILD),
       modules.hashedIconsPlugin({ icons: modules.HASHED_ICONS }),
+      modules.webManifestPlugin(),
       modules.precachePlugin({
         getArtFiles: atlas.api.artFiles,
         pageHtmlFile: "play/index.html",

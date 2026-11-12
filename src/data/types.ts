@@ -1168,10 +1168,12 @@ export interface MenuText {
   };
   readonly settings: {
     readonly effects: string;
-    // The row that installs the game, shown until it is installed: its label, its note and its
-    // button's label.
+    // The row that installs the game, shown until it is installed: its label (install), its
+    // button's label (installButton) and its note (installNote).
     readonly install: string;
     readonly installButton: string;
+    // The web app manifest's description, which a browser's install prompt may show.
+    readonly installDescription: string;
     readonly installNote: string;
     // The card the row opens when the browser holds no install prompt: each InstallStepsKind's
     // title and steps.

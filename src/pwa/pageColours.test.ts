@@ -6,6 +6,7 @@ import palette from "../../shared/palette.json" with { type: "json" };
 
 const GAME_ENTRY = new URL("../main.ts", import.meta.url);
 const GAME_PAGE = new URL("../../pages/play/index.html", import.meta.url);
+const HOME_PAGE = new URL("../../pages/index.html", import.meta.url);
 const PAGE_CSS = new URL("../main.css", import.meta.url);
 const WEB_MANIFEST = new URL("../../public/manifest.webmanifest", import.meta.url);
 
@@ -41,5 +42,19 @@ const AROUND_THE_GAME: [string, () => Promise<unknown>][] = [
 describe("the space around the game", () => {
   it.each(AROUND_THE_GAME)("takes the palette's ink in %s", async (_place, colour) => {
     expect(await colour()).toBe(`#${palette.ink.hex}`);
+  });
+});
+
+// The home page's status bar takes the colour of the page behind it: its body background.
+describe("the home page's theme colour", () => {
+  it("is its body background, the palette's ink", async () => {
+    const html = await readFile(HOME_PAGE, "utf8");
+    const name = /body\s*\{[^}]*background:\s*var\(--([a-z]+)\)/u.exec(html)?.[1] ?? "";
+    const background = new RegExp(`--${name}:\\s*(#[0-9a-f]{6});`, "u").exec(html)?.[1];
+    const theme = /<meta name="theme-color" content="([^"]*)"/u.exec(html)?.[1];
+    expect({ background, theme }).toEqual({
+      background: `#${palette.ink.hex}`,
+      theme: `#${palette.ink.hex}`,
+    });
   });
 });
