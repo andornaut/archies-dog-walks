@@ -2325,11 +2325,22 @@ export class StartScene extends Scene {
       const top = START_LABEL.readyY + (disabled || down ? BUTTON_PRESS_PX : 0);
       const colour = PALETTE[BUTTON_COLOURS[state].label];
       const loading = down && this.artWait?.kind === "start";
-      this.text(group, x + width / 2, y + top, loading ? loadingLabel : label, colour, {
-        font: "title",
-        originX: 0.5,
-        scale: START_LABEL.scale,
-      });
+      const words = this.text(
+        group,
+        x + width / 2,
+        y + top,
+        loading ? loadingLabel : label,
+        colour,
+        {
+          font: "title",
+          originX: 0.5,
+          scale: START_LABEL.scale,
+        },
+      );
+      // Centred, its left edge on a whole pixel, so a label whose middle falls between two pixels
+      // draws the same in both renderers.
+      const half = words.displayWidth / 2;
+      words.setX(Math.round(words.x - half) + half);
       return group;
     };
     const up = variant(false);
