@@ -6,7 +6,7 @@ const { registrationReady, setOfferVisible } = vi.hoisted(() => ({
 }));
 
 vi.mock("@andornaut/game-kit/web/pwa/dom/offlinePlay", () => ({
-  browserOfflinePage: () => ({}),
+  browserOfflinePage: () => ({ container: { controller: null } }),
   startOfflinePlay: () => ({
     bootable: Promise.resolve(),
     flow: { setOfferVisible },

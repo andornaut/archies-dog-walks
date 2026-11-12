@@ -94,7 +94,7 @@ function registerServiceWorker(): void {
       bootWaitMs: BOOT_WAIT_MS,
       // Only a first visit's precache shows the loading line; a page a version already controls
       // registers and updates in the background.
-      onOfflineActivity: page.container.controller === null ? reportOfflineActivity : undefined,
+      ...(page.container.controller === null ? { onOfflineActivity: reportOfflineActivity } : {}),
       onUpdateShown: (shown) => {
         updateShown = shown;
         dispatchPhoneEvent(window, PHONE_EVENTS.updatePlate);
