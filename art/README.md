@@ -19,10 +19,10 @@ The game's pixel art, effects and sound, drawn by script.
 
 The sources are the generators in `art/tools/`, TypeScript modules that Node 24 runs directly; the exports are their outputs. They use the art-kit Node package and its `skia-canvas` peer, pinned in `package-lock.json` and installed by `npm ci`. Drawing, raster operations, sprite sheet export (`@andornaut/art-kit/spriteSheet`, which writes each sheet PNG and its JSON in Aseprite's json-hash format), preview composition and font mechanisms delegate to art-kit, and sox and ffmpeg render the sounds. House palettes, glyph policy, depth geometry and output paths remain local.
 
-Builds and previews run in the local image `archie-check:node24.21.0-sox-ffmpeg`: `node:24.21.0` with `sox` and `ffmpeg` from the Debian bookworm snapshot `20261103T000000Z`. Its recipe, with the build command, is [`docker/archie-check.Dockerfile`](../docker/archie-check.Dockerfile). Gates use upstream `node:24.21.0`.
+Builds and previews run in the check image, the delivery gate image `archie-check:node<version>-sox-ffmpeg`: the `toolchain` stage of [`tests/container/Dockerfile`](../tests/container/Dockerfile), with Node at the version in [`.nvmrc`](../.nvmrc) and `sox` and `ffmpeg` at exact versions from a pinned Debian snapshot. `delivery-kit.json` pins it by image ID, and [Deploying](../README.md#deploying) gives its rebuild command. The Dockerfile's `local-check` stage adds the locked dependencies for local checks. The commands below name the image from `.nvmrc`.
 
 - `art/tools/<set>.ts` draws every asset except the home page's canvas grabs (`public/art/site/home-road.png` and `home-start.png`). Run `node art/tools/<set>.ts build` (or `preview OUT.png`) from the repository root. Each tool with commands parses them with `pixel.ts`'s `run`: `--help` or `-h` prints the tool's usage to stdout, and an unknown command prints it to stderr and exits 1. Shared drawing tools are in `pixel.ts` (whose build writes `shared/palette.json`), for pictures composed from exported art in `scene.ts`, and for redrawing a sprite at a depth step in `mini.ts`. `sounds.ts` reads each walk loop's score from `music_<art id with underscores>.ts`. `home_grabs.ts` retakes the two grabs from the built game (its header comment names each grab's scene, seed, save and frame); retake them after any change they show:
-  1. Build `dist/` in `node:24.21.0` with `--network none`: copy `node_modules/` in from the dependency volume (see the `build.ts --check` command below), run `npm run build`, and `docker cp` the built checkout (with `node_modules/`) out.
+  1. Build `dist/` in the check image with `--network none`: copy `node_modules/` in from the dependency volume (see the `build.ts --check` command below), run `npm run build`, and `docker cp` the built checkout (with `node_modules/`) out.
   2. Serve it as `adw-preview` (the container name in the export's `devHarness.previewHost`, whose source is `src/tools/previewHost.ts`, and which the tool's default URL reads) on the `playwright-mcp` network, the built checkout mounted read-only: `node node_modules/vite/bin/vite.js preview --host 0.0.0.0 --port 4173 --strictPort --configLoader runner`.
   3. In `mcr.microsoft.com/playwright/mcp:v0.0.83` with `--entrypoint node`, on the same network and mount, run `node art/tools/home_grabs.ts /tmp/grabs` from the checkout, `docker cp` the two PNGs into `public/art/site/`, and stop both containers. The tool imports Playwright from the image (`PLAYWRIGHT_MODULE`), since the repository does not depend on it. It fails on a grab that is not 360×560 or not opaque, and lists the colours outside the house palette (see Consistency checks).
 
@@ -34,13 +34,14 @@ Builds and previews run in the local image `archie-check:node24.21.0-sox-ffmpeg`
 - Builds read earlier exports. `node art/tools/build.ts [--check] [SET...]` (also `npm run art:build -- [--check] [SET...]`, run inside the check image like the command below) holds the build order (`SETS`) and the exports each set reads (`NEEDS`), and runs every set's build in that order on art-kit's build runner (`@andornaut/art-kit/build`), stopping at the first failure. It first fails if a module in `art/tools/` is neither a set nor listed in `NOT_SETS`, a set has no module, or `SETS` declares a set before one it needs. Named sets rebuild those sets and every set that reads their exports; an unknown set exits 2. `--check` snapshots every file under `art/`, which no build writes, and the paths the builds write (`public/art/`, `public/icons/`, `public/og-image.png`, `shared/palette.json`, `shared/roadside.json` and `shared/verges.json`), then fails on any file the rebuild changed, removed or added and lists the paths. It needs no git, so on a clean clone or commit copy it proves the committed art reproduces. Run it offline in the check image from any checkout or worktree, in two steps. First, an online container installs the lockfile's dependencies into a named Docker volume of Art's own (never the gate's), mounted at `/tmp` so the container's user can write it; repeat this after `package-lock.json` changes:
 
   ```sh
+  image="archie-check:node$(sed 's/^v//' .nvmrc)-sox-ffmpeg"
   docker volume create art-npm-deps
   docker run --rm --cpus 4 --memory 16g \
     --user 19001:19001 --group-add "$(stat -c %g .)" -e HOME=/tmp \
     --mount type=bind,src="$PWD/package.json",dst=/src/package.json,readonly \
     --mount type=bind,src="$PWD/package-lock.json",dst=/src/package-lock.json,readonly \
     --mount type=volume,src=art-npm-deps,dst=/tmp \
-    node:24.21.0 \
+    "$image" \
     sh -c 'mkdir -p /tmp/deps && cp /src/package.json /src/package-lock.json /tmp/deps/ \
       && cd /tmp/deps && npm ci --ignore-scripts --cache /tmp/npm-cache \
       && rm -rf /tmp/npm-cache'
@@ -49,13 +50,14 @@ Builds and previews run in the local image `archie-check:node24.21.0-sox-ffmpeg`
   Then the check runs with `--network none`. It mounts the checkout and the repository's common git directory read-only at their own paths and the volume read-only, clones the checked-out commit inside the container and copies `node_modules/` in from the volume:
 
   ```sh
+  image="archie-check:node$(sed 's/^v//' .nvmrc)-sox-ffmpeg"
   common="$(git rev-parse --path-format=absolute --git-common-dir)"
   docker run --rm --network none --cpus 4 --memory 16g \
     --user 19001:19001 --group-add "$(stat -c %g .)" -e HOME=/tmp -e SRC="$PWD" \
     --mount type=bind,src="$PWD",dst="$PWD",readonly \
     --mount type=bind,src="$common",dst="$common",readonly \
     --mount type=volume,src=art-npm-deps,dst=/deps,readonly \
-    archie-check:node24.21.0-sox-ffmpeg \
+    "$image" \
     sh -c 'git config --global safe.directory "*" \
       && git clone -q "$SRC" /tmp/work \
       && cd /tmp/work && cp -a /deps/deps/node_modules node_modules \
