@@ -2580,7 +2580,7 @@
       "tab": {
         "drawHeight": 28,
         "drawY": 100,
-        "gap": 8,
+        "gap": 24,
         "height": 44,
         "span": 328,
         "x": 16,
@@ -2598,14 +2598,14 @@
       "tabRects": [
         {
           "height": 44,
-          "width": 160,
+          "width": 164,
           "x": 16,
           "y": 92
         },
         {
           "height": 44,
-          "width": 160,
-          "x": 184,
+          "width": 164,
+          "x": 180,
           "y": 92
         }
       ]
@@ -2712,20 +2712,20 @@
       "tabRects": [
         {
           "height": 44,
-          "width": 104,
+          "width": 105,
           "x": 16,
           "y": 92
         },
         {
           "height": 44,
-          "width": 104,
-          "x": 128,
+          "width": 118,
+          "x": 121,
           "y": 92
         },
         {
           "height": 44,
-          "width": 104,
-          "x": 240,
+          "width": 105,
+          "x": 239,
           "y": 92
         }
       ]

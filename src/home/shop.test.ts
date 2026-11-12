@@ -15,6 +15,7 @@ import { startingDogSlots, unlockPrice } from "../rules/shop.ts";
 import type { Owned } from "../save/schema.ts";
 import { fontFileMetrics, inkWidth, placedInk } from "../testing/fontInk.ts";
 import { TEST_TUNING } from "../testing/tuning.ts";
+import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";
 import { GREYED, pictureBox, SELECT_OUTSET } from "../ui/selection.ts";
 import { TEXT_SCALE } from "../ui/textFit.ts";
 import { cents } from "../units.ts";
@@ -43,6 +44,7 @@ import {
   shopListFrame,
   shopMessageCapTop,
   shopScrollbar,
+  shopTabFace,
   shopTabRects,
 } from "./shopLayout.ts";
 import { STATS_TABS } from "./statsLayout.ts";
@@ -342,21 +344,27 @@ describe("the shop's tabs", () => {
     expect(below).toBe(6);
   });
 
-  // The shop's tabs and the Logbook's split the same span, gap apart, each a full tap target.
+  // The shop's tabs and the Logbook's split the same span, their faces the small button gap
+  // apart and their hit areas meeting, each a full tap target.
   it.each([
-    ["Pet shop", SHOP_TABS.length],
-    ["Logbook", STATS_TABS.length],
-  ])("%s: split the tab span evenly", (_, count) => {
-    const { gap, span, x } = SHOP_LAYOUT.tab;
+    ["Pet shop", SHOP_TABS.length, [152, 152]],
+    ["Logbook", STATS_TABS.length, [93, 94, 93]],
+  ])("%s: split the tab span evenly", (_, count, widths) => {
+    const { span, x } = SHOP_LAYOUT.tab;
     const tabs = shopTabRects(count);
-    expect(tabs).toHaveLength(count);
+    const faces = tabs.map(shopTabFace);
+    expect(faces.map(({ width }) => width)).toEqual(widths);
     expect(tabs[0]?.x).toBe(x);
     const last = tabs.at(-1);
     expect((last?.x ?? 0) + (last?.width ?? 0)).toBe(x + span);
     tabs.slice(1).forEach((tab, i) => {
       const before = tabs[i];
-      expect(tab.x - (before?.x ?? 0) - (before?.width ?? 0)).toBe(gap);
-      expect(Math.abs(tab.width - (before?.width ?? 0))).toBeLessThan(count);
+      const face = faces[i + 1];
+      const faceBefore = faces[i];
+      expect(tab.x).toBe((before?.x ?? 0) + (before?.width ?? 0));
+      expect((face?.x ?? 0) - (faceBefore?.x ?? 0) - (faceBefore?.width ?? 0)).toBe(
+        BUTTON_SIZE.smallGap,
+      );
     });
     for (const tab of tabs) {
       expect(Math.min(tab.width, tab.height)).toBeGreaterThanOrEqual(MIN_TAP_SIZE);

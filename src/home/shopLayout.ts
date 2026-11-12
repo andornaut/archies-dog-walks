@@ -136,8 +136,8 @@ export const SHOP_LAYOUT = {
   // and in it a thumbWidth-wide thumb thumbInset inside the track's edges, at least thumbMin
   // tall.
   scrollbar: SHOP.scrollbar,
-  // The tabs split span, the rows' width from x, evenly with gap between them, each a hit
-  // area height tall at y with its face drawHeight tall at drawY.
+  // The tabs split span, the rows' width from x, their faces gap apart, each a hit area height
+  // tall at y with its face drawHeight tall at drawY (shopTabRects, shopTabFace).
   tab: TAB,
   title: { capTop: PAGE_TITLE.y + SHOP.title.capDy, row: PAGE_TITLE },
 } as const;
@@ -184,20 +184,43 @@ export function shopListFrame(scrolls: boolean): {
   };
 }
 
-// The hit areas of count tabs, left to right, splitting the tab span evenly; the last takes
-// any odd pixels. Each one's face is drawHeight tall at drawY inside it.
-export function shopTabRects(count: number): Rect[] {
-  const { gap, height, span, x, y } = SHOP_LAYOUT.tab;
-  const width = Math.floor((span - (count - 1) * gap) / count);
+// The faces of count tabs, left to right across the tab span, gap apart, splitting what is left
+// evenly; the middle tabs take any odd pixels.
+function shopTabFaces(count: number): Rect[] {
+  const { drawHeight, drawY, gap, span, x } = SHOP_LAYOUT.tab;
+  const room = span - (count - 1) * gap;
+  const width = Math.floor(room / count);
+  const odd = room - width * count;
+  const extra = (i: number) => {
+    const first = Math.floor((count - odd) / 2);
+    return i >= first && i < first + odd ? 1 : 0;
+  };
+  let left = x;
   return Array.from({ length: count }, (_, i) => {
-    const left = x + i * (width + gap);
-    return { height, width: i === count - 1 ? x + span - left : width, x: left, y };
+    const face = { height: drawHeight, width: width + extra(i), x: left, y: drawY };
+    left += face.width + gap;
+    return face;
   });
 }
 
+// The hit areas of count tabs, left to right: each its face's columns and half the gap to a
+// neighbour, so they meet, the span's ends ending the first and last, height tall at y.
+export function shopTabRects(count: number): Rect[] {
+  const { gap, height, span, x, y } = SHOP_LAYOUT.tab;
+  const faces = shopTabFaces(count);
+  return faces.map((face, i) => {
+    const left = i === 0 ? x : face.x - gap / 2;
+    const right = i === count - 1 ? x + span : face.x + face.width + gap / 2;
+    return { height, width: right - left, x: left, y };
+  });
+}
+
+// A tab's face inside its hit area: the hit less half the gap on a side with a neighbour.
 export function shopTabFace(hit: Rect): Rect {
-  const { drawHeight, drawY } = SHOP_LAYOUT.tab;
-  return { ...hit, height: drawHeight, y: drawY };
+  const { drawHeight, drawY, gap, span, x } = SHOP_LAYOUT.tab;
+  const left = hit.x === x ? hit.x : hit.x + gap / 2;
+  const right = hit.x + hit.width === x + span ? hit.x + hit.width : hit.x + hit.width - gap / 2;
+  return { height: drawHeight, width: right - left, x: left, y: drawY };
 }
 
 // Rows width wide from top, pitch apart.

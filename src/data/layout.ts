@@ -769,8 +769,9 @@ export const SHOP_PAGE = {
   // The Dogs tab's slot and dog rows' height.
   slotRows: { height: 48 },
   // The tabs: their rows under the close target, the face's top in the press area and its
-  // height, the gap between tabs, the press area's height, and the rows down to the list.
-  tab: { closeGap: 4, drawDy: 8, drawHeight: 28, gap: 8, height: 44, listGap: 6 },
+  // height, the gap between faces (small buttons), the press area's height, and the rows down to
+  // the list.
+  tab: { closeGap: 4, drawDy: 8, drawHeight: 28, gap: SMALL_BUTTON_GAP, height: 44, listGap: 6 },
   // The title row: its capitals' top, its height and its inset from the card's edges.
   title: { capDy: 7, height: 24, inset: 6 },
 } as const;
