@@ -28,6 +28,7 @@ globs:
 # while a working copy holds them and would report findings the gate cannot.
 ignores:
   - "**/node_modules/**"
+  - ".worktrees/**"
   - ".agents/**"
   - ".claude/**"
   - ".codex/**"

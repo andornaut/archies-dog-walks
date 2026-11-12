@@ -9,7 +9,10 @@ package-lock.json
 public/art/
 shared/export/
 out/
+.agents/
 .claude/
+.codex/
+.worktrees/
 shared/roadside.json
 shared/verges.json
 shared/palette.json
