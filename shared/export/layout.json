@@ -1678,6 +1678,7 @@
       }
     },
     "home": {
+      "backdropY": -6,
       "bandText": {
         "inset": 9,
         "y": 8
@@ -1714,8 +1715,8 @@
         "width": 300
       },
       "dogOrigin": {
-        "x": 15,
-        "y": 291
+        "x": 17,
+        "y": 279
       },
       "dogTile": {
         "badge": {
@@ -1737,17 +1738,16 @@
         "cellHeight": 44,
         "cellWidth": 105,
         "columns": 3,
-        "gapX": 8,
-        "gapY": 0
+        "gapX": 6,
+        "gapY": 6
       },
-      "gap": 8,
       "gate": {
-        "height": 124,
+        "height": 118,
         "y": 40
       },
       "gateBar": {
         "height": 3,
-        "y": 164
+        "y": 158
       },
       "gateSpots": [
         {
@@ -1767,15 +1767,15 @@
         "height": 18,
         "width": 18,
         "x": 194,
-        "y": 134
+        "y": 128
       },
-      "heroOffsetY": -32,
-      "heroSectionGap": 6,
+      "heroOffsetY": -38,
+      "heroSectionGap": 0,
       "loadingProgress": {
         "height": 4,
         "width": 360,
         "x": 0,
-        "y": 159
+        "y": 153
       },
       "path": {
         "width": 32,
@@ -1786,12 +1786,12 @@
           "height": 22,
           "width": 114,
           "x": 237,
-          "y": 54
+          "y": 48
         },
         "height": 108,
         "width": 120,
         "x": 234,
-        "y": 54
+        "y": 48
       },
       "pocket": {
         "badge": {
@@ -1807,15 +1807,15 @@
           "cellHeight": 44,
           "cellWidth": 60,
           "columns": 5,
-          "gapX": 8,
-          "gapY": 0
+          "gapX": 6,
+          "gapY": 6
         },
         "icon": {
           "dx": 13,
           "dy": 4
         },
         "origin": {
-          "x": 14,
+          "x": 18,
           "y": 462
         },
         "priceY": 28,
@@ -1827,7 +1827,7 @@
       },
       "porchSpots": {
         "archie": {
-          "footY": 113,
+          "footY": 107,
           "x": 120
         }
       },
@@ -1869,10 +1869,10 @@
       "sectionSelectedFill": "pickerSelectedBody",
       "sections": {
         "dogs": {
-          "height": 171,
+          "height": 183,
           "width": 348,
           "x": 6,
-          "y": 258
+          "y": 246
         },
         "pocket": {
           "height": 83,
@@ -1884,19 +1884,19 @@
           "height": 85,
           "width": 348,
           "x": 6,
-          "y": 173
+          "y": 161
         }
       },
       "slotSign": {
         "art": {
           "x": 255,
-          "y": 88
+          "y": 82
         },
         "board": {
           "height": 24,
           "width": 79,
           "x": 256,
-          "y": 93
+          "y": 87
         },
         "boardEdge": {
           "frame": 1,
@@ -1908,7 +1908,7 @@
           "height": 44,
           "width": 79,
           "x": 256,
-          "y": 83
+          "y": 77
         },
         "key": "ui-slot-sign",
         "linePitch": 9,
@@ -1935,7 +1935,7 @@
           "bottom": 3,
           "top": 2
         },
-        "top": 6
+        "top": 0
       },
       "startButton": {
         "height": 44,
@@ -1954,7 +1954,7 @@
       },
       "streetSign": {
         "x": 320,
-        "y": 43
+        "y": 37
       },
       "tileOffset": 24,
       "tileSelectOutset": 1,
@@ -1970,7 +1970,7 @@
         "well": {
           "height": 29,
           "lip": 1,
-          "maxWidth": 186,
+          "maxWidth": 136,
           "x": 5,
           "y": 5
         },
@@ -2002,12 +2002,12 @@
         "capY": 291
       },
       "walkerAtGate": {
-        "footY": 164,
+        "footY": 158,
         "x": 180
       },
       "walkerOrigin": {
         "x": 14,
-        "y": 207
+        "y": 195
       },
       "walkerTile": {
         "badge": {
@@ -2036,49 +2036,49 @@
         "cellWidth": 77,
         "columns": 4,
         "gapX": 8,
-        "gapY": 0
+        "gapY": 8
       },
       "yardSign": {
         "height": 38,
         "width": 128,
         "x": 6,
-        "y": 106
+        "y": 100
       },
       "barButtons": {
         "exitHidden": {
           "logbook": {
             "face": {
-              "x": 231,
+              "x": 201,
               "y": 9
             },
             "hit": {
               "height": 44,
-              "width": 34,
-              "x": 224,
+              "width": 44,
+              "x": 189,
               "y": 0
             }
           },
           "help": {
             "face": {
-              "x": 265,
+              "x": 245,
               "y": 9
             },
             "hit": {
               "height": 44,
-              "width": 34,
-              "x": 258,
+              "width": 44,
+              "x": 233,
               "y": 0
             }
           },
           "mute": {
             "face": {
-              "x": 299,
+              "x": 289,
               "y": 9
             },
             "hit": {
               "height": 44,
-              "width": 34,
-              "x": 292,
+              "width": 44,
+              "x": 277,
               "y": 0
             }
           },
@@ -2089,8 +2089,8 @@
             },
             "hit": {
               "height": 44,
-              "width": 34,
-              "x": 326,
+              "width": 39,
+              "x": 321,
               "y": 0
             }
           }
@@ -2098,49 +2098,49 @@
         "exitShown": {
           "logbook": {
             "face": {
-              "x": 197,
+              "x": 157,
               "y": 9
             },
             "hit": {
               "height": 44,
-              "width": 34,
-              "x": 190,
+              "width": 44,
+              "x": 145,
               "y": 0
             }
           },
           "help": {
             "face": {
-              "x": 231,
+              "x": 201,
               "y": 9
             },
             "hit": {
               "height": 44,
-              "width": 34,
-              "x": 224,
+              "width": 44,
+              "x": 189,
               "y": 0
             }
           },
           "mute": {
             "face": {
-              "x": 265,
+              "x": 245,
               "y": 9
             },
             "hit": {
               "height": 44,
-              "width": 34,
-              "x": 258,
+              "width": 44,
+              "x": 233,
               "y": 0
             }
           },
           "settings": {
             "face": {
-              "x": 299,
+              "x": 289,
               "y": 9
             },
             "hit": {
               "height": 44,
-              "width": 34,
-              "x": 292,
+              "width": 44,
+              "x": 277,
               "y": 0
             }
           },
@@ -2151,8 +2151,8 @@
             },
             "hit": {
               "height": 44,
-              "width": 34,
-              "x": 326,
+              "width": 39,
+              "x": 321,
               "y": 0
             }
           }
@@ -2162,43 +2162,43 @@
         {
           "height": 44,
           "width": 105,
-          "x": 15,
-          "y": 291
+          "x": 17,
+          "y": 279
         },
         {
           "height": 44,
           "width": 105,
           "x": 128,
-          "y": 291
+          "y": 279
         },
         {
           "height": 44,
           "width": 105,
-          "x": 241,
-          "y": 291
+          "x": 239,
+          "y": 279
         },
         {
           "height": 44,
           "width": 105,
-          "x": 15,
-          "y": 335
+          "x": 17,
+          "y": 329
         },
         {
           "height": 44,
           "width": 105,
           "x": 128,
-          "y": 335
+          "y": 329
         },
         {
           "height": 44,
           "width": 105,
-          "x": 241,
-          "y": 335
+          "x": 239,
+          "y": 329
         },
         {
           "height": 44,
           "width": 105,
-          "x": 15,
+          "x": 17,
           "y": 379
         },
         {
@@ -2210,7 +2210,7 @@
         {
           "height": 44,
           "width": 105,
-          "x": 241,
+          "x": 239,
           "y": 379
         }
       ],
@@ -2218,13 +2218,13 @@
         {
           "height": 44,
           "width": 60,
-          "x": 14,
+          "x": 18,
           "y": 462
         },
         {
           "height": 44,
           "width": 60,
-          "x": 82,
+          "x": 84,
           "y": 462
         },
         {
@@ -2236,13 +2236,13 @@
         {
           "height": 44,
           "width": 60,
-          "x": 218,
+          "x": 216,
           "y": 462
         },
         {
           "height": 44,
           "width": 60,
-          "x": 286,
+          "x": 282,
           "y": 462
         }
       ],
@@ -2251,25 +2251,25 @@
           "height": 44,
           "width": 77,
           "x": 14,
-          "y": 207
+          "y": 195
         },
         {
           "height": 44,
           "width": 77,
           "x": 99,
-          "y": 207
+          "y": 195
         },
         {
           "height": 44,
           "width": 77,
           "x": 184,
-          "y": 207
+          "y": 195
         },
         {
           "height": 44,
           "width": 77,
           "x": 269,
-          "y": 207
+          "y": 195
         }
       ]
     },

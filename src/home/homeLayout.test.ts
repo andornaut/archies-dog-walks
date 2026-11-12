@@ -9,6 +9,7 @@ import { describe, expect, it } from "vitest";
 
 import { ownerFaceKey } from "../assets/spriteKeys.ts";
 import { gameData } from "../data/index.ts";
+import { HOME_SCREEN } from "../data/layout.ts";
 import { SCREEN_CONFIG, SCREEN_LAYOUT } from "../data/screen.ts";
 import type { WalkerId } from "../data/types.ts";
 import { ownerPhotoRect, WALK_BAR } from "../hud/walkHud.ts";
@@ -18,6 +19,7 @@ import type { Owned } from "../save/schema.ts";
 import { bodyTextWidth } from "../testing/bodyFont.ts";
 import { fontFileMetrics, fontInk, fontInkRows, inkWidth } from "../testing/fontInk.ts";
 import { inside } from "../testing/rects.ts";
+import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";
 import { closeControl } from "../ui/closeControl.ts";
 import { gridRects } from "../ui/grid.ts";
 import { MARK_OFFSET } from "../ui/mark.ts";
@@ -212,13 +214,12 @@ describe("the Pocket's tiles", () => {
   const gear = Object.keys(gameData.shopGear).length;
   const tiles = gridRects(cells, gear, origin).map((cell) => insetRect(tileInset, cell));
 
-  it("span the walker tiles' row", () => {
-    const span = (rects: readonly Rect[]) => [
-      rects[0]?.x,
-      (rects.at(-1)?.x ?? 0) + (rects.at(-1)?.width ?? 0),
-    ];
+  it("centre on the walker tiles' row", () => {
+    const middle = (rects: readonly Rect[]) =>
+      ((rects[0]?.x ?? 0) + (rects.at(-1)?.x ?? 0) + (rects.at(-1)?.width ?? 0)) / 2;
     const walkers = gridRects(walkerTiles, walkerTiles.columns, walkerOrigin);
-    expect(span(gridRects(cells, cells.columns, origin))).toEqual(span(walkers));
+    const offCentre = middle(gridRects(cells, cells.columns, origin)) - middle(walkers);
+    expect(Math.abs(offCentre)).toBeLessThanOrEqual(0.5);
   });
 
   it("hold every gear on one row inside the flat backing", () => {
@@ -270,9 +271,9 @@ describe("section fills", () => {
 // The top bar's buttons with Exit shown and hidden: each walk bar column they share holds the
 // same button's place, Exit's in the last, and without it the four move a column right.
 describe.each([
-  [true, ["logbook", "help", "mute", "settings", "exit"], ["help", "sound", "settings", "pause"]],
-  [false, ["logbook", "help", "mute", "settings"], ["help", "sound", "settings", "pause"]],
-] as const)("top bar buttons with Exit shown %s", (exit, order, walkColumns) => {
+  [true, ["logbook", "help", "mute", "settings", "exit"]],
+  [false, ["logbook", "help", "mute", "settings"]],
+] as const)("top bar buttons with Exit shown %s", (exit, order) => {
   const { faceSize, height, mid } = HOME_LAYOUT.topBar;
   const buttons = homeBarButtons(exit);
   const hits = buttons.map(([, button]) => button.hit);
@@ -281,21 +282,19 @@ describe.each([
     expect(buttons.map(([id]) => id)).toEqual(order);
   });
 
-  // The last four buttons, right to left, each under the walk bar's button in the same column.
-  const under = buttons.slice(-walkColumns.length).map(([id, button], i) => {
-    const walkId = walkColumns[i] ?? "pause";
-    return [id, walkId, button] as const;
+  // The last face on the walk bar's Pause face and each before it the small button gap left of
+  // the next, each centred in a hit area the pitch wide on the middle row, the last cut at the
+  // screen's edge.
+  const pitch = faceSize + BUTTON_SIZE.smallGap;
+  it.each(buttons)("spaces %s's face and hit at the small button gap", (_, button) => {
+    const fromRight = buttons.length - 1 - buttons.findIndex(([, b]) => b === button);
+    expect(button.face.x).toBe(WALK_BAR.buttons.pause.faceX - fromRight * pitch);
+    expect(button.hit.x).toBe(button.face.x - BUTTON_SIZE.smallGap / 2);
+    expect(button.hit.width).toBe(Math.min(pitch, SCREEN_CONFIG.width - button.hit.x));
+    expect(button.hit.y).toBe(0);
+    expect(button.hit.height).toBeGreaterThanOrEqual(height);
+    expect(button.face.y + faceSize / 2).toBe(mid);
   });
-  it.each(under)(
-    "puts %s's hit in the walk bar's %s column from the bar's top, its face centred in it on the middle row",
-    (_, walkId, button) => {
-      const { hitWidth, hitX } = WALK_BAR.buttons[walkId];
-      expect(button.hit).toMatchObject({ width: hitWidth, x: hitX, y: 0 });
-      expect(button.hit.height).toBeGreaterThanOrEqual(height);
-      expect(2 * (button.face.x - button.hit.x) + faceSize).toBe(button.hit.width);
-      expect(button.face.y + faceSize / 2).toBe(mid);
-    },
-  );
 
   // After the bank's widest well, ending on the face Help's close control takes.
   it("runs the hit areas side by side to the screen's right edge", () => {
@@ -366,6 +365,17 @@ describe("the top bar's bank", () => {
   ])("sets the bank %s", (_case, fullWidth, expected) => {
     const measure = (text: string) => (text === "$full" ? fullWidth : 0);
     expect(bankAmountText(measure, { full: "full", short: "short" })).toBe(expected);
+  });
+
+  // The well ends wellClear columns before the first button's face.
+  it.each([
+    [999_999, "$999,999"],
+    [1_000_000, "$1M"],
+  ])("shows %i dollars as %s, its well clear of the buttons", (dollars, text) => {
+    expect(shown(dollars)).toBe(text);
+    const well = bankWell(width(text) * bank.scale);
+    const first = homeBarButtons(true)[0]?.[1].face.x ?? 0;
+    expect(first - well.x - well.width).toBeGreaterThanOrEqual(HOME_SCREEN.topBar.wellClear);
   });
 
   // The well is the ink, pad columns either side and the lip, no wider than its widest.
@@ -473,7 +483,7 @@ const cardLines = (room: number, text: string) => {
   return lines.length;
 };
 const fitsScreen = (height: number) =>
-  expect(height).toBeLessThanOrEqual(SCREEN_CONFIG.height - 2 * HOME_LAYOUT.gap);
+  expect(height).toBeLessThanOrEqual(SCREEN_CONFIG.height - 2 * BUTTON_SIZE.stackGap);
 
 // Every dog's, gear item's and walker's detail card, owned or not, wraps its rows on the body font
 // and stays on screen. A dog's card sets its owner's photo and name between its breed and status,

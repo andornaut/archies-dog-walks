@@ -30,8 +30,8 @@ import { walkerSays } from "./homeLines.ts";
 import { tapWalker } from "./walkers.ts";
 
 const { board } = HOME_LAYOUT.petShop;
-const { gap, gate, walkerAtGate } = HOME_LAYOUT;
-const sizes = { clearance: 2, margin: gap / 2 };
+const { gate, walkerAtGate } = HOME_LAYOUT;
+const sizes = { clearance: 2, margin: HOME_LAYOUT.speech.margin };
 const top = gate.y + HOME_LAYOUT.speech.top;
 
 describe("bubbleRect", () => {

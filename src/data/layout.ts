@@ -527,6 +527,8 @@ export const CARD_HEADER = {
 // The start screen. Rows marked "yard" count from the full-height yard's top; homeLayout.ts
 // moves them with the hero.
 export const HOME_SCREEN = {
+  // art: the divider's top row in screen-home as drawn at the screen's top.
+  backdropBarY: 164,
   // A section band's text: its inset from either side and its capitals' top.
   bandText: { inset: 9, y: 8 },
   // The Dogs band's pack-size bonus: its ink's gap from the count, the gap after its line, the
@@ -564,11 +566,9 @@ export const HOME_SCREEN = {
     textX: 39,
   },
   // The dog tiles' cells.
-  dogTiles: { cellHeight: 44, cellWidth: 105, columns: 3, gapY: 0 },
+  dogTiles: { cellHeight: 44, cellWidth: 105, columns: 3 },
   // art: the keyboard ring's outset, outside the ui-select frame.
   focusOutset: 5,
-  // The gap between tiles side by side.
-  gap: 8,
   // The gate scene's top.
   gate: { y: 40 },
   // The divider strip's height.
@@ -584,7 +584,7 @@ export const HOME_SCREEN = {
   // yard: the divider's row in the full-height yard.
   heroBaseY: 196,
   // The rows between the divider and the walker section.
-  heroSectionGap: 6,
+  heroSectionGap: 0,
   // The clear rows between the home loading line and the divider under it.
   loadingClear: 1,
   // art: the front path's width and left edge.
@@ -606,7 +606,7 @@ export const HOME_SCREEN = {
     priceY: 28,
   },
   // The Pocket tiles' cells.
-  pocketTiles: { cellHeight: 44, cellWidth: 60, columns: 5, gapY: 0 },
+  pocketTiles: { cellHeight: 44, cellWidth: 60, columns: 5 },
   // The porch dog's feet from its owner's.
   porchDogOffset: { dx: -12, footDy: 3 },
   // yard: the starter dog's owner's feet, by dog.
@@ -647,7 +647,7 @@ export const HOME_SCREEN = {
     padX: 5,
     // art: the rows the quip art inks at its bottom and top edges.
     rim: { bottom: 3, top: 2 },
-    // The bubble's top under the gate scene's.
+    // The bubble's top under the yard art's row at the gate scene's top.
     top: 6,
   },
   // Start walk's top-left.
@@ -666,9 +666,9 @@ export const HOME_SCREEN = {
   tileOffset: 24,
   // art: a selected tile's ui-select frame's outset.
   tileSelectOutset: 1,
-  // The top bar: the bank's ink inset in its well, a button's press area's height, and the bank
-  // well's widest.
-  topBar: { bankPad: 3, hitHeight: 44, wellMaxWidth: 186 },
+  // The top bar: the bank's ink inset in its well, a button's press area's height, and the
+  // columns the bank's well keeps clear of the first button's face.
+  topBar: { bankPad: 3, hitHeight: 44, wellClear: 16 },
   // The update notice's button label's padding.
   updateModal: { labelPad: 8 },
   // The walker's column at the gate.
@@ -685,7 +685,7 @@ export const HOME_SCREEN = {
     icons: { dx: 46, dy: [5] },
   },
   // The walker tiles' cells.
-  walkerTiles: { cellHeight: 44, cellWidth: 77, columns: 4, gapY: 0 },
+  walkerTiles: { cellHeight: 44, cellWidth: 77, columns: 4 },
   // yard, art: the yard sign's board, baked into screen-home.
   yardSign: { height: 38, width: 128, x: 6, y: 138 } satisfies Rect,
 } as const;

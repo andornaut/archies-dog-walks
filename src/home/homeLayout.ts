@@ -30,10 +30,9 @@ import {
 import type { SectionId } from "./sections.ts";
 
 // Every tappable thing is at least 44 game pixels (48 CSS pixels on a 390px-wide phone) on
-// each side, except the top bar's buttons, 34 wide in the walk bar's columns; tiles side by
-// side are 8 apart.
+// each side, except the top bar's buttons, 40 tall; the tiles are the stacked button gap apart
+// both ways.
 const HOME = HOME_SCREEN;
-const GAP = HOME.gap;
 const HERO_SECTION_GAP = HOME.heroSectionGap;
 // The dismissible update notice uses the same card and compact control as other home modals.
 const UPDATE_PANEL = modalRect({ ...SCREEN_CONFIG, x: 0, y: 0 }, undefined, {
@@ -55,32 +54,37 @@ const TILE_OFFSET = HOME.tileOffset;
 const TILE_TOP_REACH = FEEDBACK.liftPx + FEEDBACK.badgePopPx - MARK_OFFSET.y;
 const START_BUTTON: Rect = { ...BUTTON_SIZE.wide, ...HOME.startButton };
 const START_GAP = HOME.startGap;
-// A tile grid's cells, gap apart side by side.
-function tiles<T extends { cellHeight: number; cellWidth: number; columns: number; gapY: number }>(
-  cells: T,
-) {
-  const { cellHeight, cellWidth, columns, gapY } = cells;
-  return { cellHeight, cellWidth, columns, gapX: GAP, gapY } as const;
-}
-const WALKER_TILES = tiles(HOME.walkerTiles);
-const DOG_TILES = tiles(HOME.dogTiles);
-const POCKET_TILES = tiles(HOME.pocketTiles);
 const TILE_INSET = HOME.tileInset;
+// A tile grid's cells, each tile drawn inset inside its cell, the cells spaced so the tiles are
+// the stacked button gap apart both ways.
+function tiles(cells: { cellHeight: number; cellWidth: number; columns: number }, inset: number) {
+  const gap = BUTTON_SIZE.stackGap - 2 * inset;
+  return { ...cells, gapX: gap, gapY: gap } as const;
+}
+const WALKER_TILES = tiles(HOME.walkerTiles, 0);
+const DOG_TILES = tiles(HOME.dogTiles, TILE_INSET);
+const POCKET_TILES = tiles(HOME.pocketTiles, TILE_INSET);
 const WALKER_BOX = HOME.walkerBox;
 const WALKER_TEXT_Y = HOME.walkerTextY;
-const GRID_SPAN = WALKER_TILES.columns * WALKER_TILES.cellWidth + (WALKER_TILES.columns - 1) * GAP;
+// A grid's cells' span across.
+const gridSpan = ({ cellWidth, columns, gapX }: GridSpec) =>
+  columns * cellWidth + (columns - 1) * gapX;
+const GRID_SPAN = gridSpan(WALKER_TILES);
 const CARD_EDGE_INSET = Math.max(SECTION_CONTENT_PADDING, -MARK_OFFSET.x + SECTION_BADGE_GUTTER);
 const SECTION_WIDTH = GRID_SPAN + 2 * (CARD_EDGE_INSET + SECTION_EDGE);
 const SECTION_X = (SCREEN_CONFIG.width - SECTION_WIDTH) / 2;
-// Centre the cards themselves; their left-overhanging checks do not shift the grid.
-const GRID_ORIGIN_X = (SCREEN_CONFIG.width - GRID_SPAN) / 2;
+// Centre the cards themselves, a half pixel rounded right; their left-overhanging checks do not
+// shift the grid.
+const gridOriginX = (grid: GridSpec) => Math.round((SCREEN_CONFIG.width - gridSpan(grid)) / 2);
+const GRID_ORIGIN_X = gridOriginX(WALKER_TILES);
 
-function sectionHeight(rows: number, inset: number): number {
+function sectionHeight(rows: number, grid: GridSpec, inset: number): number {
   return (
     TILE_OFFSET +
     2 * SECTION_CONTENT_PADDING +
     TILE_TOP_REACH +
-    rows * WALKER_TILES.cellHeight -
+    rows * grid.cellHeight +
+    (rows - 1) * grid.gapY -
     2 * inset +
     FEEDBACK.pressDipPx +
     SECTION_EDGE
@@ -91,9 +95,9 @@ function sectionTilesY(section: Rect, inset: number): number {
   return section.y + TILE_OFFSET + SECTION_CONTENT_PADDING + TILE_TOP_REACH - inset;
 }
 
-const WALKER_HEIGHT = sectionHeight(1, 0);
-const DOGS_HEIGHT = sectionHeight(3, TILE_INSET);
-const POCKET_HEIGHT = sectionHeight(1, TILE_INSET);
+const WALKER_HEIGHT = sectionHeight(1, WALKER_TILES, 0);
+const DOGS_HEIGHT = sectionHeight(3, DOG_TILES, TILE_INSET);
+const POCKET_HEIGHT = sectionHeight(1, POCKET_TILES, TILE_INSET);
 // The stack grows upward from Start walk; all cards keep their existing sizes.
 const WALKER_SECTION: Rect = {
   height: WALKER_HEIGHT,
@@ -119,8 +123,10 @@ const GATE_BAR = {
   y: WALKER_SECTION.y - HERO_SECTION_GAP - HOME.gateBar.height,
 };
 const GATE = { height: GATE_BAR.y - HOME.gate.y, y: HOME.gate.y };
-// Anchors retain their offset from the full-height yard, independently of the backdrop origin.
+// Anchors retain their offset from the full-height yard, and the compact backdrop its divider on
+// the divider strip, so the yard art moves with the strip.
 const HERO_OFFSET_Y = GATE_BAR.y - HOME.heroBaseY;
+const BACKDROP_Y = GATE_BAR.y - HOME.backdropBarY;
 
 // A yard rect or point, its row moved from the full-height yard's to the hero's.
 function yard<T extends { readonly y: number }>(at: T): Omit<T, "y"> & { y: number } {
@@ -138,9 +144,41 @@ export function sectionFill(section: Rect): Rect {
   };
 }
 
+// The top bar's buttons, left to right. Exit, last, is left out in an installed app whose window a
+// script cannot close (exitShown in src/pwa).
+export const HOME_BAR_BUTTONS = ["logbook", "help", "mute", "settings", "exit"] as const;
+export type HomeBarButton = (typeof HOME_BAR_BUTTONS)[number];
+
+// A top bar button: its ui-icon-button face and its hit area from the bar's top.
+interface HomeBarButtonPlace {
+  face: Point;
+  hit: Rect;
+}
+
+// The top bar's button fromRight columns in from the screen's right edge (1 the last): the last
+// face where the walk bar's Pause face is, and each face before it the small button gap left of
+// the next, each in a hit area the bar's pitch wide centred on it, cut at the screen's edge.
+const TOP_BAR_PITCH = TOP_BAR_FACE.size + BUTTON_SIZE.smallGap;
+function topBarButton(fromRight: number): HomeBarButtonPlace {
+  const last = WALK_BAR.buttons[WALK_BAR_BUTTONS[WALK_BAR_BUTTONS.length - 1] ?? "pause"];
+  const faceX = last.faceX - (fromRight - 1) * TOP_BAR_PITCH;
+  const x = faceX - (TOP_BAR_PITCH - TOP_BAR_FACE.size) / 2;
+  return {
+    face: { x: faceX, y: TOP_BAR_FACE.y },
+    hit: {
+      height: HOME.topBar.hitHeight,
+      width: Math.min(TOP_BAR_PITCH, SCREEN_CONFIG.width - x),
+      x,
+      y: 0,
+    },
+  };
+}
+
 // The home screen's geometry, in screen pixels. Each icon button is drawn at its icon spot
 // and tapped anywhere in its hit area.
 export const HOME_LAYOUT = {
+  // The compact screen-home backdrop's top, from the screen's.
+  backdropY: BACKDROP_Y,
   // The band's text sits on section rows 8..17, 9px in from either side.
   bandText: HOME.bandText,
   // The Dogs band's pack-size bonus, its ink ending countGap left of the pack count's left edge:
@@ -179,7 +217,7 @@ export const HOME_LAYOUT = {
     well: { ...HOME.card.well, x: MODAL.pad, y: MODAL.header },
     width: HOME.card.width,
   },
-  dogOrigin: { x: GRID_ORIGIN_X + 1, y: sectionTilesY(DOGS_SECTION, TILE_INSET) },
+  dogOrigin: { x: gridOriginX(DOG_TILES), y: sectionTilesY(DOGS_SECTION, TILE_INSET) },
   // A dog tile's face sits face.dx and face.dy inside the drawn tile, on a box 1px wider each
   // side. Its name and a locked dog's price plate start textX in and keep padRight inside its
   // right edge. An owned dog's name has its capitals centred on the face (dogTileNameY); a
@@ -191,7 +229,6 @@ export const HOME_LAYOUT = {
   dogTileInset: TILE_INSET,
   // The dog rows are hit areas 44 tall with no gap.
   dogTiles: DOG_TILES,
-  gap: GAP,
   gate: GATE,
   gateBar: GATE_BAR,
   // At the gate the pack spreads out around the walker, the first dog through the gate.
@@ -216,7 +253,7 @@ export const HOME_LAYOUT = {
     box: HOME.pocket.box,
     cells: POCKET_TILES,
     icon: HOME.pocket.icon,
-    origin: { x: GRID_ORIGIN_X, y: sectionTilesY(POCKET_SECTION, TILE_INSET) },
+    origin: { x: gridOriginX(POCKET_TILES), y: sectionTilesY(POCKET_SECTION, TILE_INSET) },
     priceY: HOME.pocket.priceY,
     tileInset: TILE_INSET,
   },
@@ -300,14 +337,14 @@ export const HOME_LAYOUT = {
   // foot taller than the face, with the text centred down it.
   speech: {
     clearance: HOME.speech.clearance,
-    margin: GAP / 2,
+    margin: BUTTON_SIZE.stackGap / 2,
     owner: HOME.speech.owner,
     padBottom: HOME.speech.padBottom,
     padTop: HOME.speech.padTop,
     padX: HOME.speech.padX,
     // The rows the quip art inks at its top and bottom edges.
     rim: HOME.speech.rim,
-    top: HOME.speech.top,
+    top: HOME.speech.top + BACKDROP_Y,
   },
   startButton: START_BUTTON,
   startFocusOutset: SCREEN_CONFIG.height - START_BUTTON.y - START_BUTTON.height,
@@ -326,8 +363,8 @@ export const HOME_LAYOUT = {
   tileSelectOutset: HOME.tileSelectOutset,
   // The top bar, plum with every top bar's trim (topBarRects): the bank in its well at the left,
   // then plain plum, then the buttons, the faces centred on row mid. The well is as wide as the
-  // bank needs (bankWell), at most well.maxWidth, which ends 6 columns before the first face with
-  // Exit shown and is the same with it hidden. It is drawn from wellKeys: its left column, the
+  // bank needs (bankWell), at most well.maxWidth, which ends wellClear columns before the first
+  // face with Exit shown and is the same with it hidden. It is drawn from wellKeys: its left column, the
   // middle column repeated, and its right column. It is ink on its first
   // well.height - lip rows and well.width - lip columns, its lip on the rest. The bank, the title
   // font's "$" and amount one font advance apart, is set at bank.scale in full with thousands
@@ -341,7 +378,8 @@ export const HOME_LAYOUT = {
     well: {
       height: TOP_BAR_WELL.height,
       lip: TOP_BAR_WELL.lip,
-      maxWidth: HOME.topBar.wellMaxWidth,
+      maxWidth:
+        topBarButton(HOME_BAR_BUTTONS.length).face.x - HOME.topBar.wellClear - TOP_BAR_WELL.x,
       x: TOP_BAR_WELL.x,
       y: TOP_BAR_WELL.y,
     },
@@ -389,36 +427,13 @@ export const HOME_LAYOUT = {
   yardSign: Rect;
 };
 
-// The top bar's buttons, left to right. Exit, last, is left out in an installed app whose window a
-// script cannot close (exitShown in src/pwa).
-export const HOME_BAR_BUTTONS = ["logbook", "help", "mute", "settings", "exit"] as const;
-export type HomeBarButton = (typeof HOME_BAR_BUTTONS)[number];
-
-// A top bar button: its ui-icon-button face and its hit area from the bar's top.
-interface HomeBarButtonPlace {
-  face: Point;
-  hit: Rect;
-}
-
-// The top bar's button fromRight columns in from the screen's right edge (1 the last): the walk
-// bar's columns, its Pause column the last, continued leftward at the same pitch.
-function topBarButton(fromRight: number): HomeBarButtonPlace {
-  const last = WALK_BAR.buttons[WALK_BAR_BUTTONS[WALK_BAR_BUTTONS.length - 1] ?? "pause"];
-  const dx = (fromRight - 1) * last.hitWidth;
-  return {
-    face: { x: last.faceX - dx, y: TOP_BAR_FACE.y },
-    hit: { height: HOME.topBar.hitHeight, width: last.hitWidth, x: last.hitX - dx, y: 0 },
-  };
-}
-
 // The face of the button at the top bar's right end: Exit's, or Settings' where Exit is hidden.
 export const HOME_BAR_LAST_FACE: Point = topBarButton(1).face;
 
 // The top bar's buttons at its right end, left to right (HOME_BAR_BUTTONS), Exit among them
-// where exit is true: each its ui-icon-button face and its 34x44 hit area, in the walk bar's hit
-// columns, side by side to the screen's edge with each face centred in its hit. With Exit the
-// five are Logbook, then Help, Sound and Settings under the walk bar's Help, Sound and Settings,
-// and Exit under its Pause; without it the four move a column right, Settings under Pause.
+// where exit is true: each its ui-icon-button face and its hit area (topBarButton), side by side
+// to the screen's edge. With Exit the last is Exit's; without it the four move a column right,
+// Settings last.
 export function homeBarButtons(
   exit: boolean,
 ): readonly (readonly [HomeBarButton, HomeBarButtonPlace])[] {
@@ -426,7 +441,8 @@ export function homeBarButtons(
   return shown.map((id, i) => [id, topBarButton(shown.length - i)] as const);
 }
 
-// How wide the bank's ink may be: the widest well less its lip and padding.
+// How wide the bank's ink may be: the widest well less its lip and padding. A bank wider shows
+// its short form (bankAmountText).
 export const BANK_ROOM =
   HOME_LAYOUT.topBar.well.maxWidth - HOME_LAYOUT.topBar.well.lip - 2 * HOME_LAYOUT.topBar.bank.pad;
 
