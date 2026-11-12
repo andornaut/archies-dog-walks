@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { artPixel, domScale, gridRect, gridX } from "../domScale.ts";
+import { artPixel, domScale, gridRect, gridX, gridY } from "../domScale.ts";
 import {
   artBox,
   graphicsFills,
@@ -89,7 +89,7 @@ describe("the display mirror's placement", () => {
   });
 
   it.each(SCALES)(
-    "keeps an evenly scaled picture's art pixels whole and stretches a lone axis on the grid (%s)",
+    "scales a picture by whole art pixels, a fraction and a lone axis onto the grid (%s)",
     (_, scale) => {
       const pixel = artPixel(scale);
       const at = { x: 20, y: 30 };
@@ -97,10 +97,15 @@ describe("the display mirror's placement", () => {
         height: 18 * pixel,
         width: 20 * pixel,
       });
-      expect(scaledArtBox(scale, at, { height: 32, width: 32 }, { x: 0.5, y: 0.5 })).toMatchObject({
-        height: 16 * pixel,
-        width: 16 * pixel,
+      // A face scaling in, its edges each on the grid where the canvas puts them.
+      const scaling = scaledArtBox(scale, at, { height: 32, width: 32 }, { x: 0.37, y: 0.37 });
+      expect(scaling).toEqual({
+        height: gridY(scale, 30 + 32 * 0.37) - gridY(scale, 30),
+        left: gridX(scale, 20),
+        top: gridY(scale, 30),
+        width: gridX(scale, 20 + 32 * 0.37) - gridX(scale, 20),
       });
+      expect([scaling.width % pixel, scaling.height % pixel]).toEqual([0, 0]);
       // A well's middle column stretched 40 across meets its right column, 53 across.
       const middle = scaledArtBox(
         scale,

@@ -33,10 +33,11 @@ export function artBox(
   };
 }
 
-// Art scaled by (x, y) at its top-left corner. An axis scaled as the other is (a picture drawn
-// larger or smaller) keeps whole art pixels, scale times as many; an axis stretched alone (a
-// well's middle column across its width) spans its game length on the grid, so it meets the
-// parts beside it.
+// Art scaled by (x, y) at its top-left corner. A picture scaled evenly by a whole number keeps
+// whole art pixels, scale times as many. One scaled evenly by a fraction (a face scaling in)
+// spans its game rect on the grid, each edge snapped on its own, so each frame of its scaling is
+// whole art pixels and lands where the canvas draws it. An axis stretched alone (a well's middle
+// column across its width) spans its game length on the grid, so it meets the parts beside it.
 export function scaledArtBox(
   scale: DomScale,
   at: { readonly x: number; readonly y: number },
@@ -44,8 +45,16 @@ export function scaledArtBox(
   by: { readonly x: number; readonly y: number },
 ): DeviceRect {
   const box = artBox(scale, at, { height: size.height * by.y, width: size.width * by.x });
-  if (by.x === by.y) {
+  if (by.x === by.y && Number.isInteger(by.x)) {
     return box;
+  }
+  if (by.x === by.y) {
+    const pixel = artPixel(scale);
+    return {
+      ...box,
+      height: Math.max(pixel, gridY(scale, at.y + size.height * by.y) - box.top),
+      width: Math.max(pixel, gridX(scale, at.x + size.width * by.x) - box.left),
+    };
   }
   const pixel = artPixel(scale);
   return {

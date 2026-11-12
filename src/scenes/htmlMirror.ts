@@ -90,6 +90,8 @@ interface Context {
   readonly clip: HTMLElement;
   // The game point its containers put their parts at: each container where it was first drawn.
   readonly origin: { x: number; y: number };
+  // How much its containers scale their parts about that point (a face scaling in).
+  readonly zoom: { x: number; y: number };
   // How far its containers have moved since they were first drawn (a dip, a shake, a lift, a
   // flight), in game pixels.
   readonly motion: { x: number; y: number };
@@ -370,7 +372,8 @@ export function addHtmlMirror(
     const shift = { x: moved.x, y: moved.y + scrolled };
     const { origin } = context;
     const tupled = fillTuple(tuple, object);
-    tuple.push(context.shown, shift.x, shift.y, origin.x, origin.y, context.alpha);
+    const { zoom } = context;
+    tuple.push(context.shown, shift.x, shift.y, origin.x, origin.y, zoom.x, zoom.y, context.alpha);
     const known = entries.get(object);
     if (tupled && known?.tuple !== undefined && sameTuple(known.tuple, tuple)) {
       visit(known.element);
@@ -401,8 +404,8 @@ export function addHtmlMirror(
         // A label centred about a half pixel (an odd width at origin 0.5) starts on the canvas at
         // the whole game pixel below it.
         const at = {
-          x: halfDown(origin.x + label.x - label.displayOriginX * label.scaleX),
-          y: halfDown(origin.y + label.y - label.displayOriginY * label.scaleY),
+          x: halfDown(origin.x + zoom.x * (label.x - label.displayOriginX * label.scaleX)),
+          y: halfDown(origin.y + zoom.y * (label.y - label.displayOriginY * label.scaleY)),
         };
         const view = domLabel(label, face, at);
         const key = JSON.stringify([view, ...placing]);
@@ -440,10 +443,10 @@ export function addHtmlMirror(
         const entry = entryOf(object, "span");
         const size = { height: image.frame.realHeight, width: image.frame.realWidth };
         const at = {
-          x: origin.x + image.x - image.displayOriginX * image.scaleX,
-          y: origin.y + image.y - image.displayOriginY * image.scaleY,
+          x: origin.x + zoom.x * (image.x - image.displayOriginX * image.scaleX),
+          y: origin.y + zoom.y * (image.y - image.displayOriginY * image.scaleY),
         };
-        const by = { x: image.scaleX, y: image.scaleY };
+        const by = { x: zoom.x * image.scaleX, y: zoom.y * image.scaleY };
         const spans = dataOf(image, MIRROR_SPAN_DATA) === true;
         const key = JSON.stringify([file, image.frame.name, size, at, by, spans, ...placing]);
         if (key !== entry.key) {
@@ -472,10 +475,10 @@ export function addHtmlMirror(
         const entry = entryOf(object, "div");
         const size = { height: slice.frame.realHeight, width: slice.frame.realWidth };
         const rect = {
-          height: slice.height,
-          width: slice.width,
-          x: origin.x + slice.x - slice.displayOriginX,
-          y: origin.y + slice.y - slice.displayOriginY,
+          height: zoom.y * slice.height,
+          width: zoom.x * slice.width,
+          x: origin.x + zoom.x * (slice.x - slice.displayOriginX),
+          y: origin.y + zoom.y * (slice.y - slice.displayOriginY),
         };
         const slices = {
           bottom: slice.bottomHeight,
@@ -537,10 +540,10 @@ export function addHtmlMirror(
         const entry = entryOf(object, "span");
         const size = { height: tiled.frame.realHeight, width: tiled.frame.realWidth };
         const rect = {
-          height: tiled.height * tiled.scaleY,
-          width: tiled.width * tiled.scaleX,
-          x: origin.x + tiled.x - tiled.displayOriginX * tiled.scaleX,
-          y: origin.y + tiled.y - tiled.displayOriginY * tiled.scaleY,
+          height: zoom.y * tiled.height * tiled.scaleY,
+          width: zoom.x * tiled.width * tiled.scaleX,
+          x: origin.x + zoom.x * (tiled.x - tiled.displayOriginX * tiled.scaleX),
+          y: origin.y + zoom.y * (tiled.y - tiled.displayOriginY * tiled.scaleY),
         };
         const tilePosition = { x: tiled.tilePositionX, y: tiled.tilePositionY };
         const key = JSON.stringify([file, size, rect, tilePosition, ...placing]);
@@ -567,10 +570,10 @@ export function addHtmlMirror(
         }
         const entry = entryOf(object, "div");
         const rect = {
-          height: shape.height,
-          width: shape.width,
-          x: origin.x + shape.x - shape.displayOriginX,
-          y: origin.y + shape.y - shape.displayOriginY,
+          height: zoom.y * shape.height,
+          width: zoom.x * shape.width,
+          x: origin.x + zoom.x * (shape.x - shape.displayOriginX),
+          y: origin.y + zoom.y * (shape.y - shape.displayOriginY),
         };
         const key = JSON.stringify([shape.fillColor, shape.fillAlpha, rect, ...placing]);
         if (key !== entry.key) {
@@ -584,10 +587,17 @@ export function addHtmlMirror(
       }
       case "Graphics": {
         const graphics = object as GameObjects.Graphics;
-        const fills = graphicsFills(graphics.commandBuffer as readonly number[], {
-          x: origin.x + graphics.x,
-          y: origin.y + graphics.y,
-        });
+        const fills = graphicsFills(graphics.commandBuffer as readonly number[], graphics)?.map(
+          (fill) => ({
+            ...fill,
+            rect: {
+              height: zoom.y * fill.rect.height,
+              width: zoom.x * fill.rect.width,
+              x: origin.x + zoom.x * fill.rect.x,
+              y: origin.y + zoom.y * fill.rect.y,
+            },
+          }),
+        );
         if (fills === undefined) {
           return;
         }
@@ -732,10 +742,15 @@ export function addHtmlMirror(
             alpha,
             clip,
             motion: {
-              x: context.motion.x + container.x - home.x,
-              y: context.motion.y + (scroll === undefined ? container.y - home.y : 0),
+              x: context.motion.x + context.zoom.x * (container.x - home.x),
+              y:
+                context.motion.y +
+                (scroll === undefined ? context.zoom.y * (container.y - home.y) : 0),
             },
-            origin: { x: context.origin.x + home.x, y: context.origin.y + home.y },
+            origin: {
+              x: context.origin.x + context.zoom.x * home.x,
+              y: context.origin.y + context.zoom.y * home.y,
+            },
             scroll:
               scroll === undefined
                 ? context.scroll
@@ -744,6 +759,10 @@ export function addHtmlMirror(
                     settled: scroll.settled(),
                   },
             shown,
+            zoom: {
+              x: context.zoom.x * container.scaleX,
+              y: context.zoom.y * container.scaleY,
+            },
           });
           continue;
         }
@@ -762,6 +781,7 @@ export function addHtmlMirror(
           origin: { x: 0, y: 0 },
           scroll: undefined,
           shown: true,
+          zoom: { x: 1, y: 1 },
         });
       }
     }
