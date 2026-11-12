@@ -19,6 +19,7 @@ import {
   waveOffset,
 } from "../home/returnHome.ts";
 import type { DomEndScreen } from "../hud/dom/endScreen.ts";
+import type { DomQuestionPanel } from "../hud/dom/questionPanel.ts";
 import {
   type HoldPress,
   holdRule,
@@ -40,10 +41,11 @@ import { onceBeforeRender } from "../ui/phaser/rampDim.ts";
 import { TEXT_SCALE } from "../ui/textFit.ts";
 import {
   addBadgeCelebration,
-  addBadgeDetail,
   addBurst,
   addCheeringFace,
+  badgeCard,
   badgeCelebrationNames,
+  drawBadgeCard,
   NEW_BEST_BURST,
 } from "./badges.ts";
 import { addDetailContent } from "./homePanels.ts";
@@ -57,7 +59,7 @@ import {
   walkerInUse,
   walkerSpriteKey,
 } from "./profileStore.ts";
-import { addHtmlEndScreen } from "./questionPanel.ts";
+import { addHtmlBadgeCard, addHtmlEndScreen } from "./questionPanel.ts";
 import { SCENE_KEYS } from "./sceneKeys.ts";
 import { soundboardOf } from "./soundboard.ts";
 import { firstTag, playTag } from "./sprites.ts";
@@ -92,8 +94,10 @@ export class EndScene extends Scene {
   // Back to title, which bobs as Start walk does, and still while pressed.
   private button: { readonly container: GameObjects.Container; pressed: boolean } | undefined;
   private returnHomeStep: (() => void) | undefined;
-  // The screen's text, pips, bubbles and Back to title in HTML, where they draw there.
+  // The screen's text, pips, bubbles and Back to title in HTML, where they draw there, and the
+  // open badge's card.
   private html: DomEndScreen | undefined;
+  private htmlCard: DomQuestionPanel | undefined;
 
   constructor() {
     super(SCENE_KEYS.end);
@@ -108,6 +112,7 @@ export class EndScene extends Scene {
     this.returnHomeStep = undefined;
     this.button = undefined;
     this.html = undefined;
+    this.htmlCard = undefined;
     this.badges = [];
     this.card = undefined;
     this.hold = undefined;
@@ -306,24 +311,30 @@ export class EndScene extends Scene {
     onBackPressed(this, back);
   }
 
-  // The badge's card over the screen, bursting with confetti as it opens (addBadgeDetail).
+  // The badge's card over the screen, bursting with confetti as it opens (badgeCardView): in
+  // HTML over the shared shade where the page's switch is on and its fonts are ready, else on the
+  // canvas.
   private openCard(index: number): void {
     const badge = this.badges[index];
     if (badge === undefined) {
       return;
     }
     this.closeCard();
+    const view = badgeCard(this, SCREEN_LAYOUT.screen, {
+      badge,
+      burst: true,
+      reduced: this.reduced,
+    });
     this.card = this.add.container(0, 0).setDepth(CARD_DEPTH);
-    addBadgeDetail(this, this.card, SCREEN_LAYOUT.screen, this.reduced, true, badge);
-    // CLEANUP (added 2026-11-11): the screen's HTML hides under the canvas card; remove once the
-    // End screen's badge card draws in HTML.
-    this.html?.setShown(false);
+    this.htmlCard = addHtmlBadgeCard(this, view);
+    if (this.htmlCard === undefined) {
+      drawBadgeCard(this, this.card, view);
+    }
   }
 
   private closeCard(): void {
-    if (this.card !== undefined) {
-      this.html?.setShown(true);
-    }
+    this.htmlCard?.destroy();
+    this.htmlCard = undefined;
     this.card?.destroy();
     this.card = undefined;
   }
