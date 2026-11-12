@@ -141,7 +141,7 @@ export class MenuFlow {
   // scene: sprite animations loop on, while tweens and timers stop, keeping a hit moment in
   // step with its hit stop. The card under the menu pauses and hides, so no card shows beside
   // the menu's panel; a zone celebration under it pauses. The HUD keeps running, so the top
-  // bar's buttons work and redraw. Asked while the menu is up, the question replaces it.
+  // bar's buttons work and redraw. Opened in another mode while open, it restarts in that mode.
   openPause(mode: PauseSceneData["mode"]): void {
     if (this.host.over()) {
       return;

@@ -39,8 +39,8 @@ export interface PauseOverlay {
 }
 
 // menu is the pause menu, its note saying what End walk keeps; homeQuestion asks whether to
-// end the walk, for the pause menu's and a fork card's End walk, its note saying what
-// going home keeps and gives up.
+// end the walk, for a fork card's End walk, its note saying what going home keeps and gives
+// up.
 export type PauseSceneData = {
   // The debuff bars showing under the walk bar, which keep their rows from its buttons.
   debuffs: number;
