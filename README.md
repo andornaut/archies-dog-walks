@@ -80,6 +80,8 @@ docker build --resource cpu-period=100000 --resource cpu-quota=400000 --resource
 
 When CI passes, the runner deploys the gated `dist/` through the Wrangler locked in that commit and existing account login, without rebuilding. The gate sets `WORKERS_CI_COMMIT_SHA` for the build label. A push whose every changed path matches `deploy.skipPattern` (Markdown, `art/` and `gameplay/`) skips deployment; exported assets under `public/art/` deploy. A red gate leaves `main` unpushed and that commit is never gated again; red CI is fixed forward with a new commit. A failed deployment keeps its gated build for a later departure. Cloudflare Workers Builds is disconnected, so the runner is the only deploy path, and nothing is pushed or deployed manually. The target account and Worker are pinned in `wrangler.jsonc`.
 
+The Worker serves `dist/` byte for byte. A player's service worker installs each new version in the background, checks every unhashed precached file it downloads (the page, `/controls.css` and `/manifest.webmanifest`) against the content hash the build wrote into `/sw.js`, and offers the version only once every file is stored. Any host-side rewrite of those bytes (HTML injection, analytics beacons, email obfuscation, image recompression) fails every install, so keep such Cloudflare features off for the domain.
+
 ## Licence
 
 Everything here (code, art, sound, music and writing) is licensed [CC BY-NC-SA 4.0](./LICENSE): share and remix it with credit to andornaut and a link to this project, for non-commercial use, under the same licence. The game's names and logos are not licensed, so a remix must use its own name. The separately installed game-kit helpers are licensed [MIT](https://github.com/andornaut/game-kit/blob/main/LICENSE).

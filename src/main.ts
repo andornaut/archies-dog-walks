@@ -184,8 +184,8 @@ function bootGame(): Game {
   return game;
 }
 
-// The game boots at once, loading while the service worker checks for a newer version. BootScene
-// holds the first screen and save until launchReady; updates activate only after acceptance.
+// The game boots at once from the version that controls the page, while the service worker checks
+// for a newer one in the background; a newer version activates only after the player accepts it.
 // Queued dev-panel save edits finish before boot, so the game loads the edited save. The
 // installed app discards queued edits without changing its save.
 setupPhoneApp();

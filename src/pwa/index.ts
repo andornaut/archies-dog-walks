@@ -64,25 +64,22 @@ let installNudge: InstallNudge | undefined;
 let persistence: Promise<StoragePersistence> = Promise.resolve("unsupported");
 let screenWakeLock: ScreenWakeLock | undefined;
 let updateFlow: UpdateFlow | undefined;
-// Resolves once the game may show its first screen and write its save (UpdateFlow.bootable).
-let ready: Promise<void> = Promise.resolve();
 // Registration readiness and update-offer visibility follow the actual start screen.
 let registrationHook: () => void = () => undefined;
 let offerHook: (visible: boolean) => void = () => undefined;
 // Whether the home screen shows the update plate.
 let updateShown = false;
 
-// Bound the initial update check while the game loads. A waiting version is offered on the
-// start screen and activates only after the player chooses Update now.
-const BOOT_WAIT_MS = 4000;
 // The history state key of the entry that keeps back on the game (the kit's guardBackNavigation).
 const BACK_GUARD_STATE_KEY = "archiesDogWalksBackGuard";
 
 // The production build only: the dev server has no sw.js, and a worker would serve stale
-// modules over hot reloads. The kit's offline play: a page a version controls registers now, so
-// its update check runs while the game loads; a first visit registers once the home screen shows,
-// so the precache does not compete with the game's own downloads. The page coming back into view
-// on the home screen checks for a newer version (an installed app resumed without relaunching).
+// modules over hot reloads. The kit's offline play: a page a version controls runs the version
+// on disk and registers now, so a newer version downloads in the background while the game
+// plays, and is offered on the home screen only once it is stored; a first visit registers once
+// the home screen shows, so the precache does not compete with the game's own downloads. The page
+// coming back into view on the home screen checks for a newer version (an installed app resumed
+// without relaunching).
 function registerServiceWorker(): void {
   const page = import.meta.env.PROD ? browserOfflinePage() : undefined;
   if (page === undefined) {
@@ -90,8 +87,6 @@ function registerServiceWorker(): void {
   }
   const play = startOfflinePlay(
     {
-      activationPolicy: "manual",
-      bootWaitMs: BOOT_WAIT_MS,
       onOfflineActivity: reportOfflineActivity,
       onUpdateShown: (shown) => {
         updateShown = shown;
@@ -104,11 +99,9 @@ function registerServiceWorker(): void {
   updateFlow = play.flow;
   registrationHook = () => play.registrationReady();
   offerHook = (visible) => play.flow.setOfferVisible(visible);
-  ready = play.bootable;
 }
 
-// Sets up the service worker and the phone app's behaviour. The game is constructed at once and
-// waits on launchReady only for its first screen and its save.
+// Sets up the service worker and the phone app's behaviour. Nothing here delays the game.
 export function setupPhoneApp(): void {
   registerServiceWorker();
   installFlow = watchInstall(window);
@@ -149,13 +142,6 @@ export function setupPhoneApp(): void {
   // Held whenever the game is visible until the scenes take over with stopWakeLock and
   // startWakeLock (for example, letting the screen sleep on a menu).
   screenWakeLock.start();
-}
-
-// Resolves once the game may show its first screen and write its save: at once, or after a fresh
-// load has checked for a newer version, for at most BOOT_WAIT_MS (it never resolves for a page
-// that reloads into one first).
-export function launchReady(): Promise<void> {
-  return ready;
 }
 
 // Whether the game offers to leave (the home top bar's Exit, Q and back's Quit?), as read at load:
@@ -213,14 +199,16 @@ export function dismissUpdateOffer(): void {
   updateFlow?.dismissOffer();
 }
 
-// Whether the home screen shows the update plate: a newer version waits, after the player has
-// interacted, with the home screen in front. PHONE_EVENTS.updatePlate fires on each change.
+// Whether the home screen shows the update plate: a newer version waits, fully stored, behind the
+// version that controls the page, with the home screen in front and the offer not dismissed.
+// PHONE_EVENTS.updatePlate fires on each change.
 export function updatePlateShown(): boolean {
   return updateShown;
 }
 
 // The plate's Update now button: switch to the waiting version and reload into it, or with none
-// waiting (or no service worker) reload, so the browser fetches the newer version.
+// waiting reload. A page a version controls reloads that version from its cache and checks for a
+// newer one on load; without a service worker the browser fetches the newer version.
 export function acceptUpdate(): void {
   if (updateFlow === undefined) {
     location.reload();
@@ -229,7 +217,8 @@ export function acceptUpdate(): void {
   updateFlow.accept();
 }
 
-// A walk started, which counts as the player interacting even with no input (a dev walk URL).
+// A walk started, which counts as the player interacting even with no input (a dev walk URL), so
+// each later arrival home checks for a newer version.
 export function noteWalkStarted(): void {
   updateFlow?.noteInteraction();
 }

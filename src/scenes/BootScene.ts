@@ -47,12 +47,7 @@ import {
   loadingWalkerAt,
   stepFraction,
 } from "../layout/loadingScreen.ts";
-import {
-  browserSoundFormat,
-  launchReady,
-  startWakeLock,
-  unlockAudioOnFirstGesture,
-} from "../pwa/index.ts";
+import { browserSoundFormat, startWakeLock, unlockAudioOnFirstGesture } from "../pwa/index.ts";
 import { PALETTE } from "../ui/palette.ts";
 import { addFilledRect } from "../ui/phaser/draw.ts";
 import { addPillGlyphs, registerFallbackPixelFont } from "../ui/phaser/pixelText.ts";
@@ -187,10 +182,9 @@ export class BootScene extends Scene {
     // A dev link that names a run starts its walk, and banks a walk left unfinished rather than
     // resuming it.
     const walkNow = namesRunSetup(pageSearch());
-    // Open the profile after the bounded initial update check. The loading walker then follows
-    // the saved reduced-motion setting; a waiting update still requires explicit acceptance.
-    const profileOpened = launchReady().then(async () => {
-      const load = await openProfile(this, !walkNow);
+    // Open the profile while the art loads. The loading walker then follows the saved
+    // reduced-motion setting.
+    const profileOpened = openProfile(this, !walkNow).then((load) => {
       if (load.status === "corrupt" || load.status === "newer" || load.status === "unavailable") {
         console.warn(`The save is ${load.status}, so play starts fresh: ${load.reason}`);
       }
