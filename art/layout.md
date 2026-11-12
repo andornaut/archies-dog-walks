@@ -18,17 +18,19 @@ Browser safe-area handling belongs to the [page shell](../src/main.css). A CSS/d
 
 ## Spacing tokens
 
-Use 4/8/16 for the ordinary row/group/panel spacing roles. Named exceptions keep their own gaps; do not round every gap to this sequence.
+Use 4/8/16 for the ordinary row/group/panel spacing roles, and the button gaps for neighbouring button faces. Named exceptions keep their own gaps; do not round every gap to this sequence.
 
-| Token                             | Value | Unit       | Scope                                         | Source                                         |
-| --------------------------------- | ----- | ---------- | --------------------------------------------- | ---------------------------------------------- |
-| MODAL.rowGap                      | 4     | px         | Text rows and stacked actions                 | [modal tokens](../src/ui/modalGeometry.ts)     |
-| MODAL.gap                         | 8     | px         | Present groups and neighbouring modal actions | [modal tokens](../src/ui/modalGeometry.ts)     |
-| MODAL.pad / MODAL.margin          | 16    | px         | Panel content / caller's protected area       | [modal tokens](../src/ui/modalGeometry.ts)     |
-| BUTTON_SIZE.pairGap               | 12    | px         | Paired non-modal compact actions              | [button geometry](../src/ui/buttonGeometry.ts) |
-| HOME_LAYOUT.sectionContentPadding | 4     | px minimum | Measured home card-edge clearance             | [home layout](../src/home/homeLayout.ts)       |
+| Token                             | Value | Unit       | Scope                                                 | Source                                     |
+| --------------------------------- | ----- | ---------- | ----------------------------------------------------- | ------------------------------------------ |
+| BUTTON_SIZE.gap                   | 16    | px         | Side-by-side standard buttons, modal actions included | [layout data](../src/data/layout.ts)       |
+| BUTTON_SIZE.smallGap              | 24    | px         | Small buttons, in any direction                       | [layout data](../src/data/layout.ts)       |
+| BUTTON_SIZE.stackGap              | 8     | px         | Stacked standard buttons, list rows and tile grids    | [layout data](../src/data/layout.ts)       |
+| HOME_LAYOUT.sectionContentPadding | 4     | px minimum | Measured home card-edge clearance                     | [home layout](../src/home/homeLayout.ts)   |
+| MODAL.gap                         | 8     | px         | Present groups                                        | [modal tokens](../src/ui/modalGeometry.ts) |
+| MODAL.pad / MODAL.margin          | 16    | px         | Panel content / caller's protected area               | [modal tokens](../src/ui/modalGeometry.ts) |
+| MODAL.rowGap                      | 4     | px         | Text rows                                             | [modal tokens](../src/ui/modalGeometry.ts) |
 
-Omit absent groups and their gaps. Keep the full font role; wrap text or grow its measured container rather than reducing its scale. Detailed ink gaps remain in [Controls](controls.md#labels-and-icons).
+The [button gaps](controls.md#sizing-and-spacing) define which buttons are small and list the exemptions. Omit absent groups and their gaps. Keep the full font role; wrap text or grow its measured container rather than reducing its scale. Detailed ink gaps remain in [Controls](controls.md#labels-and-icons).
 
 ## Page bounds/alignment
 
@@ -55,7 +57,7 @@ Treat the home pickers and Start walk as one vertical group. The three sections 
 | home.dogs       | 6,258,348,171              | x,y,w,h px | Dogs section                        | [home export](../shared/export/layout.json)                                      |
 | home.pocket     | 6,429,348,83               | x,y,w,h px | Pocket section                      | [home export](../shared/export/layout.json)                                      |
 | home.start      | 32,514,296,44              | x,y,w,h px | Start walk, 2px below Pocket        | [home layout](../src/home/homeLayout.ts)                                         |
-| home.columns    | Walker 4; Dogs 3; Pocket 5 | columns    | Card grids, 8px horizontal gaps     | [home layout](../src/home/homeLayout.ts)                                         |
+| home.columns    | Walker 4; Dogs 3; Pocket 5 | columns    | Card grids, 8px gaps both ways      | [home layout](../src/home/homeLayout.ts)                                         |
 
 Keep hero, shop, sign and actor anchors independent of picker padding. On results pages, [endResultsPlacement](../src/home/endLayout.ts) moves the summary and attached art together, clamps measured summary/badge heights above the button clearance and centres the whole unchanged badge strip in the remaining band.
 
@@ -69,6 +71,8 @@ Visible faces, touch targets and focus outlines are separate rectangles. Keep th
 | BUTTON_SIZE.compact    | 128×44                                | px   | Non-modal secondary actions                            | [button geometry](../src/ui/buttonGeometry.ts) |
 | BUTTON_SIZE.icon       | Face 20×20; glyph 16×16; target 44×44 | px   | Non-bar icon controls                                  | [button geometry](../src/ui/buttonGeometry.ts) |
 | topbar.home.hit        | 34×44                                 | px   | Compact home bar exception                             | [home placement](../src/home/homeLayout.ts)    |
+| topbar.home.pitch      | 44                                    | px   | Home bar faces, 24px apart                             | [home placement](../src/home/homeLayout.ts)    |
+| topbar.home.well       | At most 136 wide                      | px   | Home bank well                                         | [home placement](../src/home/homeLayout.ts)    |
 | topbar.walk.hit        | 34×40                                 | px   | Compact walk bar; debuff rows 40–43 remain interactive | [walk HUD](../src/hud/walkHud.ts)              |
 | home.start.focusOutset | 2                                     | px   | Focus outline limited by bottom clearance              | [home layout](../src/home/homeLayout.ts)       |
 
@@ -98,7 +102,7 @@ Keep gameplay notices below overlay scenes and scrims. A high object depth insid
 | hud.walkView    | 0,40,360,442 | x,y,w,h px | Content between bar and dog row | [screen regions](../shared/export/layout.json)                                                                      |
 | hud.dogRow      | 0,482,360,74 | x,y,w,h px | Fixed three-slot card row       | [screen regions](../shared/export/layout.json)                                                                      |
 | progress.bottom | 0,556,360,4  | x,y,w,h px | DOM startup, Boot and run       | [startup](../src/startup.ts), [Boot](../src/scenes/BootScene.ts) and [screen regions](../shared/export/layout.json) |
-| progress.home   | 0,168,360,4  | x,y,w,h px | Home pending/walk-wait only     | [home layout](../src/home/homeLayout.ts)                                                                            |
+| progress.home   | 0,168,360,4  | x,y,w,h px | Home loading/walk-wait only     | [home layout](../src/home/homeLayout.ts)                                                                            |
 
 Hide home progress while idle: rows 167–172 are then clear. Active progress leaves rows 167 and 172 clear. Progress state and appearance follow the [style contract](style-guide.md#ui). Actor-following effects and stationary art notices keep their own anchors; do not apply panel-centering rules to them.
 
