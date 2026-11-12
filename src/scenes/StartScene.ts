@@ -144,6 +144,7 @@ import type { SaveDocument } from "../save/schema.ts";
 import { walksFinished, walksPlayed } from "../save/stats.ts";
 import { packDogsOf } from "../state/pack.ts";
 import { closeControl } from "../ui/closeControl.ts";
+import { LABEL_ALIGN_DATA } from "../ui/dom/labelBlock.ts";
 import { gridRects, rectIndexAt } from "../ui/grid.ts";
 import {
   type ArtLook,
@@ -182,6 +183,7 @@ import { HELP_CLOSED_EVENT } from "./HelpScene.ts";
 import { openHelp } from "./helpScreen.ts";
 import { exitGame, HOME_PAGE_OPENING_EVENT, openHomePage } from "./homeBarPress.ts";
 import { addAffordFrame, addModalCard, detailView } from "./homePanels.ts";
+import { addHtmlMirror, type HtmlMirror, MIRROR_CANVAS_DATA } from "./htmlMirror.ts";
 import {
   addPlate,
   addTileBadge,
@@ -296,6 +298,11 @@ function walkerIds(): WalkerId[] {
 }
 
 const SECTION_IDS: readonly SectionId[] = ["walker", "dogs", "pocket"];
+
+// object, left on the canvas under the HTML screen (MIRROR_CANVAS_DATA).
+function onCanvas<T extends GameObjects.GameObject>(object: T): T {
+  return object.setData(MIRROR_CANVAS_DATA, true);
+}
 
 function gearIds(): GearId[] {
   return gearByPrice(gameData);
@@ -436,7 +443,9 @@ const LAST_VISIT_WALKERS_KEY = "homeLastVisitWalkers";
 // The arrow keys move a focus ring, Enter or Space picks, Escape, P or back closes a card, ?
 // opens help, S settings, L the logbook, M mutes and Q leaves the game as Exit does, where the
 // top bar shows Exit. Start walk and help wait for boot to load the rest of the art, which it
-// does behind this screen.
+// does behind this screen. Where the page's switch is on, the screen draws in HTML by the display
+// mirror (addHtmlMirror), but for the backdrop, the porch, the pack at the gate and the Pet shop,
+// which stay on the canvas under it.
 export class StartScene extends Scene {
   // The last action, for the message line and the bubble.
   private action: HomeAction = { kind: "none" };
@@ -444,6 +453,10 @@ export class StartScene extends Scene {
   // runs once it has, and Start walk shows held down and dimmed while it waits.
   private artWait: { action: () => void; kind: "help" | "start" } | undefined;
   private entry: object | undefined;
+  // The street sign's words, over the backdrop.
+  private gateSign: GameObjects.Container | undefined;
+  // The screen drawn in HTML over the canvas (addHtmlMirror), and the containers it follows.
+  private mirror: HtmlMirror | undefined;
   // The loading line, drawn each frame: the walk's load while Start walk waits, else the
   // offline install's.
   private waitBar: GameObjects.Graphics | undefined;
@@ -547,12 +560,21 @@ export class StartScene extends Scene {
     this.drawGate();
     this.root = this.add.container(0, 0);
     this.overlayLayer = this.add.container(0, 0);
+    // In HTML where the page's switch is on and its fonts are ready, else on the canvas.
+    this.mirror = addHtmlMirror(this, () =>
+      [this.gateSign, this.root].flatMap((root) => (root === undefined ? [] : [root])),
+    );
     beginUpdateOfferVisit();
     this.render();
 
     listenOnePress(this, {
       down: (pointer) => {
-        addTapBurst(this, pointer.x, pointer.y);
+        // Over the HTML screen, so a burst shows over it.
+        if (this.mirror === undefined) {
+          addTapBurst(this, pointer.x, pointer.y);
+        } else {
+          this.mirror.burst({ x: pointer.x, y: pointer.y });
+        }
         // The top bar stays lit over an open card, and its buttons take their presses.
         if (
           this.overlay !== undefined &&
@@ -948,6 +970,8 @@ export class StartScene extends Scene {
     if (name !== undefined) {
       const ink = inkSpan(name);
       placePixelText(name, place.name.x - (ink.left + ink.right) / 2, place.name.capY);
+      // The HTML centres it as its ink is centred here.
+      name.setData(LABEL_ALIGN_DATA, "centre");
       root.bringToTop(name);
     }
   }
@@ -1317,11 +1341,14 @@ export class StartScene extends Scene {
       });
     }
     const sign = HOME_LAYOUT.streetSign;
-    addPixelText(this, sign.x, sign.y, gameData.homeText.gateSign, {
-      colour: PALETTE.white,
-      font: "title",
-      originX: 0.5,
-    });
+    this.gateSign = this.add.container(0, 0);
+    this.gateSign.add(
+      addPixelText(this, sign.x, sign.y, gameData.homeText.gateSign, {
+        colour: PALETTE.white,
+        font: "title",
+        originX: 0.5,
+      }),
+    );
   }
 
   private syncUpdateNotice(): void {
@@ -1356,11 +1383,13 @@ export class StartScene extends Scene {
     this.registry.set(LAST_VISIT_BANK_KEY, save.bankCents);
     this.registry.set(LAST_VISIT_WALKERS_KEY, [...save.owned.walkers]);
     const g = addGraphicsIn(this, root);
+    // The porch's shadows, under the figures on the canvas.
+    const yard = onCanvas(addGraphicsIn(this, root));
     this.drawTopBar(root, g, save);
     this.drawPetShop(root, save);
     this.drawSlotSign(root, save);
     this.syncUpdateNotice();
-    this.drawPackAtGate(root, g, save, true);
+    this.drawPackAtGate(root, yard, save, true);
     fillRect(addGraphicsIn(this, root), PALETTE.plum, {
       height: 1,
       width: SCREEN.width,
@@ -1528,6 +1557,7 @@ export class StartScene extends Scene {
     const card = this.detailCard(save, target);
     const picture = this.detailPicture(target);
     const view = detailView(this, HOME_REGION, { card, kind: target.kind, picture });
+    // The HTML shade dims the HTML screen under it.
     this.htmlDetail = addDetailCardOver(
       this,
       layer,
@@ -1535,6 +1565,7 @@ export class StartScene extends Scene {
       this.closePressed(),
       view,
       this.htmlDetail,
+      this.mirror !== undefined,
     );
     this.overlay = { ...overlay, rect: view.card.panel };
   }
@@ -1683,28 +1714,28 @@ export class StartScene extends Scene {
     // Owners first, then the dogs in front of them.
     for (const { at, dog } of waiting) {
       drawShadow(g, PALETTE.darkGreen, at.x, at.footY, 20);
-      root.add(addOwnerFigure(this, gameData, reduced, dog, at, ["idle"]));
+      root.add(onCanvas(addOwnerFigure(this, gameData, reduced, dog, at, ["idle"])));
     }
     for (const { at, dog } of waiting.filter(({ withDog }) => withDog)) {
       const key = dogSpriteKey(gameData, dog);
       const x = at.x + PORCH_DOG_OFFSET.dx;
       const footY = at.footY + PORCH_DOG_OFFSET.footDy;
       drawShadow(g, PALETTE.darkGreen, x, footY, spriteMetrics(key).opaqueWidth);
-      root.add(addFigure(this, reduced, "idle", key).sprite.setPosition(x, footY));
+      root.add(onCanvas(addFigure(this, reduced, "idle", key).sprite.setPosition(x, footY)));
     }
   }
 
-  // The walker and pack at the gate, the walker's bubble over them when bubble is true, and the
-  // gear badge.
+  // The walker and pack at the gate on the canvas, their shadows on yard, the walker's bubble over
+  // them when bubble is true, and the gear badge.
   private drawPackAtGate(
     root: GameObjects.Container,
-    g: GameObjects.Graphics,
+    yard: GameObjects.Graphics,
     save: SaveDocument,
     bubble: boolean,
   ): void {
     const { footY, x } = WALKER_AT_GATE;
     const reduced = currentSettings(this).reducedMotion;
-    this.drawPorch(root, g, save, reduced);
+    this.drawPorch(root, yard, save, reduced);
     const walkerKey = save.walker === null ? undefined : walkerSpriteKey(this, save.walker);
     const dogs = this.loadout.dogs.map((dog, rank) => {
       const placement = itemAt(GATE_SPOTS, rank);
@@ -1722,8 +1753,8 @@ export class StartScene extends Scene {
       walkerKey,
       this.loadout.dogs,
     );
-    figures.standInYard(g, { path: PATH, shadows: false }, { dogs, walker: { footY, x } });
-    root.add(figures.layers());
+    figures.standInYard(yard, { path: PATH, shadows: false }, { dogs, walker: { footY, x } });
+    root.add(figures.layers().map(onCanvas));
     const walkerSprite = figures.walker?.sprite;
     this.bubbleHits = bubble && walkerSprite !== undefined ? [walkerSprite.getBounds()] : [];
     const now = this.time.now;
@@ -1863,8 +1894,12 @@ export class StartScene extends Scene {
   private drawUpdateModal(root: GameObjects.Container, mode: PlateMode): void {
     const { button, cancel, panel } = this.updateLayout(mode);
     const text = gameData.homeText[mode];
-    root.add(addModalShade(this, HOME_REGION));
+    // The HTML shade dims the HTML screen under an HTML notice, else the canvas's dim.
+    const shade = this.mirror === undefined ? undefined : HOME_REGION;
     if (this.htmlNotice !== undefined) {
+      if (shade === undefined) {
+        root.add(addModalShade(this, HOME_REGION));
+      }
       return;
     }
     // In HTML where the page's switch is on and its fonts are ready, else on the canvas.
@@ -1882,14 +1917,18 @@ export class StartScene extends Scene {
             },
             update,
           ];
-    const card = addHtmlModalCard(this, panel, text.title, entries, close);
+    const card = addHtmlModalCard(this, panel, text.title, entries, close, shade);
     if (card !== undefined) {
       this.htmlNotice = { card, mode };
       this.events.once(Scenes.Events.SHUTDOWN, () => {
         this.htmlNotice = undefined;
       });
+      if (shade === undefined) {
+        root.add(addModalShade(this, HOME_REGION));
+      }
       return;
     }
+    root.add(addModalShade(this, HOME_REGION));
     addModalCard(this, root, panel, text.title, { pressed: this.closePressed() });
     const control = addMenuButton(
       this,
@@ -1916,6 +1955,7 @@ export class StartScene extends Scene {
   // affordable. Drawn in code while the art is missing, when the whole building dips instead.
   private drawPetShop(root: GameObjects.Container, save: SaveDocument): void {
     const view = this.tileView(root, "petShop");
+    onCanvas(view.container);
     const faces = this.addPressFaces(SHOP_ART.petShop, PET_SHOP);
     if (faces !== undefined) {
       const [normal, pressed] = faces;
@@ -1979,6 +2019,8 @@ export class StartScene extends Scene {
       const label = this.text(view.container, 0, 0, line, PALETTE[row.colour], { scale });
       const ink = inkSpan(label);
       placePixelText(label, x - (ink.left + ink.right) / 2, row.capY);
+      // The HTML centres it as its ink is centred here.
+      label.setData(LABEL_ALIGN_DATA, "centre");
       return { label, y: label.y };
     });
     if (faces !== undefined) {

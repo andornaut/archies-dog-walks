@@ -1,5 +1,5 @@
 import type { Point, Rect } from "@andornaut/game-kit/rect";
-import { Core, type GameObjects, type Scene, Scenes } from "phaser";
+import { Core, type Data, type GameObjects, type Scene, Scenes } from "phaser";
 
 import { artUrl } from "../assets/artFiles.ts";
 import { DOM_ART_KEYS, DOM_DISABLED_ART_KEYS, domArtPath } from "../assets/domArt.ts";
@@ -9,7 +9,14 @@ import { addTapBurst } from "../hud/dom/questionPanel.ts";
 import { pillKind } from "../hud/effectNames.ts";
 import { disabledArtKey, disabledArtPath } from "../ui/disabledArt.ts";
 import { drawLabel } from "../ui/dom/labelBlock.ts";
-import { artBox, motionShift, scrollShift, sliceParts } from "../ui/dom/mirrorPlace.ts";
+import {
+  graphicsFills,
+  motionShift,
+  scaledArtBox,
+  scrollShift,
+  sliceParts,
+  tileBackground,
+} from "../ui/dom/mirrorPlace.ts";
 import { setBox } from "../ui/dom/pixelLine.ts";
 import { loadSheet, type SheetFrame, sheetFrameNamed } from "../ui/dom/sheetFrames.ts";
 import {
@@ -24,18 +31,27 @@ import {
 } from "../ui/domScale.ts";
 import { PALETTE } from "../ui/palette.ts";
 import { displayBitmapFont } from "../ui/phaser/displayText.ts";
-import { GREY_PILL, pillColours } from "./effectNameColours.ts";
+import {
+  GREY_PILL,
+  type LabelNamePills,
+  NAME_PILLS_DATA,
+  pillColours,
+} from "./effectNameColours.ts";
 import { domLabel, LABEL_FONTS } from "./htmlLabels.ts";
 import { htmlPanelPlace } from "./questionPanel.ts";
 import { MIRROR_SCROLLBAR_DATA, type MirrorScrollbar } from "./scrollView.ts";
 
 // What a scene draws in its marked containers, drawn in HTML over the canvas where the canvas
-// draws it: every bitmap label, every image and sprite of art the HTML interface has files for
-// (DOM_ART_KEYS, and the disabled tiles' grey copies, DOM_DISABLED_ART_KEYS), every nine-slice,
-// filled rectangle and graphics of filled rects, in display order. The scene keeps its objects,
-// which it places, shows, hides, moves and redraws as ever; before each frame the HTML follows,
-// and the scene's camera draws them no more. A sprite playing a tag shows the frame it is on, so
-// the HTML steps with the scene's clock through the tag's frames and durations. Placement is the
+// draws it: every bitmap label with its name pills, every image, sprite and tiled sprite of art
+// the HTML interface has files for (DOM_ART_KEYS, and the disabled tiles' grey copies,
+// DOM_DISABLED_ART_KEYS), every nine-slice, filled rectangle and graphics of filled rects, in
+// display order, each at its alpha through its containers, as the canvas blends it. The scene
+// keeps its objects, which it places, shows, hides, moves and redraws as ever; before each frame
+// the HTML follows, and the scene's camera draws them no more. An object or container marked
+// MIRROR_CANVAS_DATA stays on the canvas, under all of the HTML. A sprite playing a tag shows the
+// frame it is on, so the HTML steps with the scene's clock through the tag's frames and
+// durations. A scaled image keeps whole art pixels where it is scaled evenly and spans its game
+// length on the grid along an axis stretched alone (scaledArtBox). Placement is the
 // art-pixel grid's (src/ui/dom/mirrorPlace.ts): each container's position is motion (a dip, a
 // shake, a lift) in whole game pixels, but a container marked as a scrolled list
 // (MIRROR_SCROLL_DATA) moves its content by its scroll, and one marked with a clip rect
@@ -52,15 +68,19 @@ export interface MirrorScroll {
 // The data key of a container clipped to a game rect, as a mask clips it on the canvas.
 export const MIRROR_CLIP_DATA = "htmlClip";
 
+// The data key of an object or container the canvas draws, under all of the HTML: true.
+export const MIRROR_CANVAS_DATA = "htmlCanvas";
+
 export interface HtmlMirror {
   // A tap burst at a game point, over the HTML.
   burst(at: Point): void;
   destroy(): void;
 }
 
-// Where a part is drawn from in the HTML: its motion and scroll in device pixels, and the clip
-// it is drawn in.
+// Where a part is drawn from in the HTML: its alpha through its containers, its motion and
+// scroll in device pixels, and the clip it is drawn in.
 interface Context {
+  readonly alpha: number;
   readonly clip: HTMLElement;
   readonly motion: { x: number; y: number };
   readonly scroll: { offset: number; settled: boolean } | undefined;
@@ -74,42 +94,16 @@ interface Entry {
 
 const hex = (colour: number) => `#${colour.toString(16).padStart(6, "0")}`;
 
-// Phaser's Graphics commands a fill of rects uses: a line style (every graphics starts with its
-// default, which no fill draws with), a fill style, then rects in it.
-const LINE_STYLE = 6;
-const FILL_STYLE = 7;
-const FILL_RECT = 3;
-
-// A graphics' fills, or undefined where it draws anything but rects filled at full alpha or
-// none.
-function graphicsFills(
-  graphics: GameObjects.Graphics,
-): { colour: number; rect: Rect }[] | undefined {
-  const commands = graphics.commandBuffer as readonly number[];
-  const fills: { colour: number; rect: Rect }[] = [];
-  // The fill style's colour, or undefined while it draws nothing (alpha 0); null for a partial
-  // alpha, which the HTML does not draw.
-  let colour: number | null | undefined;
-  for (let i = 0; i < commands.length;) {
-    const command = commands[i];
-    if (command === LINE_STYLE) {
-      i += 4;
-    } else if (command === FILL_STYLE) {
-      const alpha = commands[i + 2] ?? 1;
-      colour = alpha === 0 ? undefined : alpha < 1 ? null : commands[i + 1];
-      i += 3;
-    } else if (command === FILL_RECT && colour !== null) {
-      const [x = 0, y = 0, width = 0, height = 0] = commands.slice(i + 1, i + 5);
-      if (colour !== undefined) {
-        fills.push({ colour, rect: { height, width, x: x + graphics.x, y: y + graphics.y } });
-      }
-      i += 5;
-    } else {
-      return undefined;
-    }
-  }
-  return fills;
+// An object's data at key, without making a data store for an object that has none.
+function dataOf(object: GameObjects.GameObject, key: string): unknown {
+  return (object.data as Data.DataManager | null)?.get(key);
 }
+
+// A game coordinate as the canvas draws it: a half pixel to the whole pixel below it.
+const halfDown = (value: number) => Math.ceil(value - 0.5);
+
+// An opacity as CSS sets it: none at full alpha.
+const opacity = (alpha: number) => (alpha < 1 ? String(alpha) : "");
 
 // The art the HTML has a file for at a texture key: its PNG's path, and its sheet's JSON path
 // for a sprite sheet, a grey copy's its key's.
@@ -202,6 +196,9 @@ export function addHtmlMirror(
   const camera = scene.cameras.main;
   const entries = new Map<GameObjects.GameObject, Entry>();
   const clips = new Map<GameObjects.Container, Entry>();
+  // Each mirrored label's name pills, which the label's HTML draws, so the camera draws them no
+  // more.
+  const pills = new Map<GameObjects.BitmapText, GameObjects.Graphics>();
   // Each sheet's JSON once it has loaded; a part waiting for one is drawn again when it has.
   const sheets = new Map<string, unknown>();
   const frameOf: FrameOf = (file, name, size) => {
@@ -231,10 +228,11 @@ export function addHtmlMirror(
     }
   };
   const forget = () => {
-    for (const object of entries.keys()) {
+    for (const object of [...entries.keys(), ...pills.values()]) {
       object.cameraFilter &= ~camera.id;
     }
     entries.clear();
+    pills.clear();
     clips.clear();
     dialog.replaceChildren();
     order = "";
@@ -266,10 +264,13 @@ export function addHtmlMirror(
         ? 0
         : scrollShift(scale, context.scroll.offset, context.scroll.settled);
     const shift = { x: moved.x, y: moved.y + scrolled };
-    const transform = (element: HTMLElement) => {
+    // What places every part, for its key.
+    const placing = [context.shown, shift, context.alpha];
+    const transform = (element: HTMLElement, alpha = context.alpha) => {
       element.hidden = !context.shown;
       element.style.transform =
         shift.x === 0 && shift.y === 0 ? "" : `translate(${shift.x}px, ${shift.y}px)`;
+      element.style.opacity = opacity(alpha);
     };
     switch (object.type) {
       case "BitmapText": {
@@ -280,12 +281,19 @@ export function addHtmlMirror(
           return;
         }
         const entry = entryOf(object, "p");
+        const labelPills = label.getData(NAME_PILLS_DATA) as LabelNamePills | undefined;
+        if (labelPills !== undefined && pills.get(label) !== labelPills.graphics) {
+          camera.ignore(labelPills.graphics);
+          pills.set(label, labelPills.graphics);
+        }
+        // A label centred about a half pixel (an odd width at origin 0.5) starts on the canvas at
+        // the whole game pixel below it.
         const at = {
-          x: label.x - label.displayOriginX * label.scaleX,
-          y: label.y - label.displayOriginY * label.scaleY,
+          x: halfDown(label.x - label.displayOriginX * label.scaleX),
+          y: halfDown(label.y - label.displayOriginY * label.scaleY),
         };
         const view = domLabel(label, face, at);
-        const key = JSON.stringify([view, context.shown, shift]);
+        const key = JSON.stringify([view, ...placing]);
         if (key !== entry.key) {
           if (JSON.stringify(view) !== entry.element.dataset.view) {
             entry.element.dataset.view = JSON.stringify(view);
@@ -323,22 +331,12 @@ export function addHtmlMirror(
           x: image.x - image.displayOriginX * image.scaleX,
           y: image.y - image.displayOriginY * image.scaleY,
         };
-        const key = JSON.stringify([
-          file,
-          image.frame.name,
-          size,
-          at,
-          image.scaleX,
-          context.shown,
-          shift,
-        ]);
+        const by = { x: image.scaleX, y: image.scaleY };
+        const key = JSON.stringify([file, image.frame.name, size, at, by, ...placing]);
         if (key !== entry.key) {
           const frame = frameOf(file, image.frame.name, size);
           entry.element.className = "adw-art";
-          const box = artBox(scale, at, {
-            height: size.height * image.scaleY,
-            width: size.width * image.scaleX,
-          });
+          const box = scaledArtBox(scale, at, size, by);
           setBox(entry.element, box);
           entry.element.style.visibility = frame === undefined ? "hidden" : "";
           if (frame !== undefined) {
@@ -372,15 +370,7 @@ export function addHtmlMirror(
         };
         // A scrollbar's track and thumb are placed in art pixels from the track's corner.
         const bar = slice.getData(MIRROR_SCROLLBAR_DATA) as MirrorScrollbar | undefined;
-        const key = JSON.stringify([
-          file,
-          slice.frame.name,
-          rect,
-          slices,
-          context.shown,
-          shift,
-          bar,
-        ]);
+        const key = JSON.stringify([file, slice.frame.name, rect, slices, bar, ...placing]);
         if (key !== entry.key) {
           const frame = frameOf(file, slice.frame.name, size);
           const box =
@@ -410,9 +400,48 @@ export function addHtmlMirror(
         visit(entry.element);
         return;
       }
+      case "TileSprite": {
+        // A texture tiled at its own size; a sheet's frame, which CSS cannot repeat alone, stays
+        // on the canvas.
+        const tiled = object as GameObjects.TileSprite;
+        const file = artFile(sprites, tiled.texture.key);
+        if (
+          file === undefined ||
+          file.json !== undefined ||
+          tiled.tileScaleX !== 1 ||
+          tiled.tileScaleY !== 1
+        ) {
+          return;
+        }
+        const entry = entryOf(object, "span");
+        const size = { height: tiled.frame.realHeight, width: tiled.frame.realWidth };
+        const rect = {
+          height: tiled.height * tiled.scaleY,
+          width: tiled.width * tiled.scaleX,
+          x: tiled.x - tiled.displayOriginX * tiled.scaleX,
+          y: tiled.y - tiled.displayOriginY * tiled.scaleY,
+        };
+        const tilePosition = { x: tiled.tilePositionX, y: tiled.tilePositionY };
+        const key = JSON.stringify([file, size, rect, tilePosition, ...placing]);
+        if (key !== entry.key) {
+          entry.element.className = "adw-art";
+          setBox(entry.element, gridRect(scale, rect));
+          const background = tileBackground(scale, size, tilePosition);
+          Object.assign(entry.element.style, {
+            backgroundImage: `url("${artUrl(file.png)}")`,
+            backgroundPosition: background.position,
+            backgroundRepeat: "repeat",
+            backgroundSize: background.size,
+          });
+          transform(entry.element);
+          entry.key = key;
+        }
+        visit(entry.element);
+        return;
+      }
       case "Rectangle": {
         const shape = object as GameObjects.Rectangle;
-        if (!shape.isFilled || shape.fillAlpha < 1) {
+        if (!shape.isFilled || shape.fillAlpha === 0) {
           return;
         }
         const entry = entryOf(object, "div");
@@ -422,23 +451,24 @@ export function addHtmlMirror(
           x: shape.x - shape.displayOriginX,
           y: shape.y - shape.displayOriginY,
         };
-        const key = JSON.stringify([shape.fillColor, rect, context.shown, shift]);
+        const key = JSON.stringify([shape.fillColor, shape.fillAlpha, rect, ...placing]);
         if (key !== entry.key) {
           setBox(entry.element, gridRect(scale, rect));
           entry.element.style.backgroundColor = hex(shape.fillColor);
-          transform(entry.element);
+          transform(entry.element, context.alpha * shape.fillAlpha);
           entry.key = key;
         }
         visit(entry.element);
         return;
       }
       case "Graphics": {
-        const fills = graphicsFills(object as GameObjects.Graphics);
+        const graphics = object as GameObjects.Graphics;
+        const fills = graphicsFills(graphics.commandBuffer as readonly number[], graphics);
         if (fills === undefined) {
           return;
         }
         const entry = entryOf(object, "div");
-        const key = JSON.stringify([fills, context.shown, shift]);
+        const key = JSON.stringify([fills, ...placing]);
         if (key !== entry.key) {
           // The graphics' own box is the layer's; each fill is placed on the grid.
           setBox(entry.element, {
@@ -448,15 +478,17 @@ export function addHtmlMirror(
             width: deviceX(scale, SCREEN_CONFIG.width),
           });
           entry.element.replaceChildren(
-            ...fills.map(({ colour, rect }) => {
+            ...fills.map(({ alpha, colour, rect }) => {
               const fill = doc.createElement("div");
               fill.className = "adw-framed";
               fill.style.backgroundColor = hex(colour);
+              // Each fill blends on its own, as the canvas blends it.
+              fill.style.opacity = opacity(context.alpha * alpha);
               setBox(fill, gridRect(scale, rect));
               return fill;
             }),
           );
-          transform(entry.element);
+          transform(entry.element, 1);
           entry.key = key;
         }
         visit(entry.element);
@@ -471,7 +503,9 @@ export function addHtmlMirror(
   const update = () => {
     const scale = layer.scale();
     // Paused or asleep under another page, the scene's canvas draws it again, so a page's dim,
-    // which reads the canvas back, dims it as before.
+    // which reads the canvas back, dims it as before: the shop under help or the settings, and
+    // the start screen under the shop, the Logbook, help, the settings, Quit? and a celebration.
+    // CLEANUP (added 2026-11-11): remove in phase 5, when overlay dims move to HTML.
     const hidden = !scene.sys.isActive() || !scene.sys.isVisible();
     dialog.hidden = hidden;
     if (hidden) {
@@ -491,14 +525,27 @@ export function addHtmlMirror(
     const seen = new Set<GameObjects.GameObject>();
     const placed: [HTMLElement, HTMLElement][] = [];
     const walk = (list: readonly GameObjects.GameObject[], context: Context) => {
+      // The labels' name pills, which their labels' HTML draws.
+      const labelPills = new Set(
+        list.flatMap((object) => {
+          const graphics = (dataOf(object, NAME_PILLS_DATA) as LabelNamePills | undefined)
+            ?.graphics;
+          return graphics === undefined ? [] : [graphics];
+        }),
+      );
       for (const object of list) {
-        if (!object.active) {
+        if (
+          !object.active ||
+          labelPills.has(object as GameObjects.Graphics) ||
+          dataOf(object, MIRROR_CANVAS_DATA) === true
+        ) {
           continue;
         }
+        const alpha = context.alpha * ((object as unknown as { alpha?: number }).alpha ?? 1);
         const shown =
           context.shown &&
           (object as unknown as { visible: boolean }).visible !== false &&
-          (object as unknown as { alpha?: number }).alpha !== 0;
+          alpha > 0;
         if (object.type === "Container") {
           const container = object as GameObjects.Container;
           const scroll = container.getData(MIRROR_SCROLL_DATA) as MirrorScroll | undefined;
@@ -524,6 +571,7 @@ export function addHtmlMirror(
             clip = entry.element;
           }
           walk(container.list, {
+            alpha,
             clip,
             motion:
               scroll === undefined
@@ -540,7 +588,7 @@ export function addHtmlMirror(
           });
           continue;
         }
-        sync(scale, object, { ...context, shown }, (element) => {
+        sync(scale, object, { ...context, alpha, shown }, (element) => {
           seen.add(object);
           placed.push([element, context.clip]);
         });
@@ -548,13 +596,26 @@ export function addHtmlMirror(
     };
     for (const root of roots()) {
       if (root.active) {
-        walk([root], { clip: dialog, motion: { x: 0, y: 0 }, scroll: undefined, shown: true });
+        walk([root], {
+          alpha: 1,
+          clip: dialog,
+          motion: { x: 0, y: 0 },
+          scroll: undefined,
+          shown: true,
+        });
       }
     }
     for (const [object, { element }] of entries) {
       if (!seen.has(object)) {
+        object.cameraFilter &= ~camera.id;
         element.remove();
         entries.delete(object);
+      }
+    }
+    for (const [label, graphics] of pills) {
+      if (!entries.has(label)) {
+        graphics.cameraFilter &= ~camera.id;
+        pills.delete(label);
       }
     }
     for (const [container, { element }] of clips) {

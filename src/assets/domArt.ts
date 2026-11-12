@@ -2,7 +2,7 @@ import { keysOf } from "@andornaut/game-kit/records";
 
 import { gameData } from "../data/index.ts";
 import type { GameData } from "../data/types.ts";
-import { debuffIconKey, perkIconKey, upgradeIconKey } from "./iconKeys.ts";
+import { debuffIconKey, gearSmallIconKey, perkIconKey, upgradeIconKey } from "./iconKeys.ts";
 import {
   badgeKey,
   DETAIL_WELL_KEY,
@@ -112,6 +112,31 @@ const END_ART_KEYS = [ZONE_PIPS_KEY, "ui-quip-tail"];
 // lock badges and the message plate.
 const SHOP_ART_KEYS = ["icon-bill", "icon-lock", "ui-hint", "ui-icon-button", "ui-tile"];
 
+// The start screen's art (src/scenes/StartScene.ts, drawn by the display mirror) beyond the
+// shop's: the top bar's icons and the bank's well, the gear badge's icons, the sections' frames
+// and fills, the pack bonus's heart, the bubble's tail, the slot sign and its gold outline, and
+// Start walk's faces.
+const START_ART_KEYS = [
+  ...keysOf(gameData.shopGear).map(gearSmallIconKey),
+  "icon-exit",
+  "icon-help",
+  "icon-logbook",
+  "icon-settings",
+  "icon-sound",
+  "ui-afford",
+  "ui-button",
+  "ui-cork",
+  "ui-denim",
+  "ui-heart",
+  "ui-home-cash-well-left",
+  "ui-home-cash-well-mid",
+  "ui-home-cash-well-right",
+  "ui-plaid",
+  "ui-quip-tail-down",
+  "ui-section",
+  "ui-slot-sign",
+];
+
 export const DOM_ART_KEYS: ReadonlySet<string> = new Set([
   ...DOM_STYLE_ART.map(([, key]) => key),
   ...detailArtKeys(gameData),
@@ -120,6 +145,7 @@ export const DOM_ART_KEYS: ReadonlySet<string> = new Set([
   ...logbookArtKeys(gameData),
   ...END_ART_KEYS,
   ...SHOP_ART_KEYS,
+  ...START_ART_KEYS,
 ]);
 
 // A DOM art file's path under /art/: an image's PNG, or a sprite sheet's PNG or JSON.

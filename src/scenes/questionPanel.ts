@@ -228,14 +228,16 @@ export interface CardEntry extends CardAction {
 }
 
 // A modal card in the HTML layer over card, laid out as the canvas draws it (modalCardView): its
-// title, its close control doing close, and its buttons, which number keys never press. Returns
-// it, for its scene to destroy as the card closes, or undefined where the canvas must draw it.
+// title, its close control doing close, and its buttons, which number keys never press, over the
+// HTML shade over shade where it is given. Returns it, for its scene to destroy as the card
+// closes, or undefined where the canvas must draw it.
 export function addHtmlModalCard(
   scene: Scene,
   card: Rect,
   title: string,
   entries: readonly CardEntry[],
   close: () => void,
+  shade?: Rect,
 ): DomQuestionPanel | undefined {
   const place = htmlPanelPlace(scene);
   if (place === undefined) {
@@ -243,7 +245,15 @@ export function addHtmlModalCard(
   }
   const view = modalCardView(canvasPanelMeasure(scene), card, title, entries);
   const presses = entries.map(({ press }) => press);
-  return showHtmlPanel(scene, place, { close, numberKeys: false, presses }, view);
+  const panel = showQuestionPanel(place.layer, {
+    close,
+    numberKeys: false,
+    presses,
+    ...(shade === undefined ? {} : { shade }),
+    ...htmlPanelInput(place),
+    view,
+  });
+  return followScene(scene, panel);
 }
 
 // A detail card in the HTML layer, laid out as the canvas draws it (detailCardView), its close

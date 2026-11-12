@@ -1,3 +1,5 @@
+import type { Rect } from "@andornaut/game-kit/rect";
+
 import {
   artPixel,
   type DeviceRect,
@@ -28,6 +30,89 @@ export function artBox(
     left: gridX(scale, at.x),
     top: gridY(scale, at.y),
     width: size.width * pixel,
+  };
+}
+
+// Art scaled by (x, y) at its top-left corner. An axis scaled as the other is (a picture drawn
+// larger or smaller) keeps whole art pixels, scale times as many; an axis stretched alone (a
+// well's middle column across its width) spans its game length on the grid, so it meets the
+// parts beside it.
+export function scaledArtBox(
+  scale: DomScale,
+  at: { readonly x: number; readonly y: number },
+  size: { readonly height: number; readonly width: number },
+  by: { readonly x: number; readonly y: number },
+): DeviceRect {
+  const box = artBox(scale, at, { height: size.height * by.y, width: size.width * by.x });
+  if (by.x === by.y) {
+    return box;
+  }
+  const pixel = artPixel(scale);
+  return {
+    ...box,
+    ...(by.x === 1
+      ? {}
+      : { width: Math.max(pixel, gridX(scale, at.x + size.width * by.x) - box.left) }),
+    ...(by.y === 1
+      ? {}
+      : { height: Math.max(pixel, gridY(scale, at.y + size.height * by.y) - box.top) }),
+  };
+}
+
+// A fill a graphics draws: its colour, its alpha and its rect in game pixels.
+export interface GraphicsFill {
+  readonly alpha: number;
+  readonly colour: number;
+  readonly rect: Rect;
+}
+
+// Phaser's Graphics commands a fill of rects uses: a line style (every graphics starts with its
+// default, which no fill draws with), a fill style, then rects in it.
+const LINE_STYLE = 6;
+const FILL_STYLE = 7;
+const FILL_RECT = 3;
+
+// A graphics' command buffer as its fills of rects, each moved by offset (the graphics' own
+// position), or undefined where it draws anything else. A fill at alpha 0 draws nothing.
+export function graphicsFills(
+  commands: readonly number[],
+  offset: { readonly x: number; readonly y: number },
+): GraphicsFill[] | undefined {
+  const fills: GraphicsFill[] = [];
+  let style = { alpha: 1, colour: 0 };
+  for (let i = 0; i < commands.length;) {
+    const command = commands[i];
+    if (command === LINE_STYLE) {
+      i += 4;
+    } else if (command === FILL_STYLE) {
+      style = { alpha: commands[i + 2] ?? 1, colour: commands[i + 1] ?? 0 };
+      i += 3;
+    } else if (command === FILL_RECT) {
+      const [x = 0, y = 0, width = 0, height = 0] = commands.slice(i + 1, i + 5);
+      if (style.alpha > 0) {
+        fills.push({ ...style, rect: { height, width, x: x + offset.x, y: y + offset.y } });
+      }
+      i += 5;
+    } else {
+      return undefined;
+    }
+  }
+  return fills;
+}
+
+// A tiled sprite's texture over its box: each tile whole art pixels, the first tilePosition art
+// pixels left of and above the box's corner, as the canvas tiles it from the sprite's corner.
+export function tileBackground(
+  scale: DomScale,
+  tile: { readonly height: number; readonly width: number },
+  tilePosition: { readonly x: number; readonly y: number },
+): { readonly position: string; readonly size: string } {
+  const pixel = artPixel(scale);
+  const offset = (position: number, length: number) =>
+    -(((Math.round(position) % length) + length) % length) * pixel;
+  return {
+    position: `${offset(tilePosition.x, tile.width)}px ${offset(tilePosition.y, tile.height)}px`,
+    size: `${tile.width * pixel}px ${tile.height * pixel}px`,
   };
 }
 

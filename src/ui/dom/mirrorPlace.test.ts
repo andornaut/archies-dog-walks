@@ -1,7 +1,15 @@
 import { describe, expect, it } from "vitest";
 
-import { artPixel, domScale, gridRect } from "../domScale.ts";
-import { artBox, motionShift, scrollShift, sliceParts } from "./mirrorPlace.ts";
+import { artPixel, domScale, gridRect, gridX } from "../domScale.ts";
+import {
+  artBox,
+  graphicsFills,
+  motionShift,
+  scaledArtBox,
+  scrollShift,
+  sliceParts,
+  tileBackground,
+} from "./mirrorPlace.ts";
 import { sheetFrameNamed } from "./sheetFrames.ts";
 
 // The canvas at 1x and at 393 px across (a fractional fit), each at DPR 1, 2 and 3.
@@ -68,6 +76,63 @@ describe("the display mirror's placement", () => {
         { bottom: 3, left: 0, right: 0, top: 3 },
       ),
     ).toHaveLength(3);
+  });
+
+  it.each(SCALES)(
+    "keeps an evenly scaled picture's art pixels whole and stretches a lone axis on the grid (%s)",
+    (_, scale) => {
+      const pixel = artPixel(scale);
+      const at = { x: 20, y: 30 };
+      expect(scaledArtBox(scale, at, { height: 9, width: 10 }, { x: 2, y: 2 })).toMatchObject({
+        height: 18 * pixel,
+        width: 20 * pixel,
+      });
+      expect(scaledArtBox(scale, at, { height: 32, width: 32 }, { x: 0.5, y: 0.5 })).toMatchObject({
+        height: 16 * pixel,
+        width: 16 * pixel,
+      });
+      // A well's middle column stretched 40 across meets its right column, 53 across.
+      const middle = scaledArtBox(
+        scale,
+        { x: 13, y: 4 },
+        { height: 14, width: 1 },
+        { x: 40, y: 1 },
+      );
+      expect(middle.left + middle.width).toBe(gridX(scale, 53));
+      expect(middle.height).toBe(14 * pixel);
+    },
+  );
+
+  it.each(SCALES)("tiles a texture in whole art pixels from its corner (%s)", (_, scale) => {
+    const pixel = artPixel(scale);
+    expect(tileBackground(scale, { height: 16, width: 24 }, { x: 0, y: 0 })).toEqual({
+      position: "0px 0px",
+      size: `${24 * pixel}px ${16 * pixel}px`,
+    });
+    expect(tileBackground(scale, { height: 16, width: 24 }, { x: 26, y: -3 }).position).toBe(
+      `${-2 * pixel}px ${-13 * pixel}px`,
+    );
+  });
+
+  // Phaser's commands: 6 a line style, 7 a fill style (colour, alpha), 3 a rect, 10 a triangle.
+  it.each([
+    ["a fill at full alpha", [6, 1, 0, 1, 7, 0xff0000, 1, 3, 1, 2, 3, 4], [{ alpha: 1 }]],
+    ["a fill at partial alpha", [7, 0x00ff00, 0.6, 3, 1, 2, 3, 4], [{ alpha: 0.6 }]],
+    ["no fill at alpha 0", [7, 0x00ff00, 0, 3, 1, 2, 3, 4], []],
+    ["no fills for a triangle", [7, 0x00ff00, 1, 10, 0, 0, 1, 1, 0, 1], undefined],
+  ] as const)("reads a graphics' commands: %s", (_, commands, fills) => {
+    const read = graphicsFills(commands, { x: 10, y: 20 });
+    if (fills === undefined) {
+      expect(read).toBeUndefined();
+      return;
+    }
+    expect(read).toEqual(
+      fills.map(({ alpha }) => ({
+        alpha,
+        colour: commands[commands.indexOf(7) + 1],
+        rect: { height: 4, width: 3, x: 11, y: 22 },
+      })),
+    );
   });
 
   it.each([
