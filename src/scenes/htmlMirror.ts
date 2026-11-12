@@ -497,18 +497,24 @@ export function addHtmlMirror(
                   bar.bar,
                 )[bar.part];
           setBox(entry.element, box);
+          // Its pieces lie in its box, so they are cut again only as its art or size changes, not
+          // as it moves.
           const url = artUrl(file.png);
-          entry.element.replaceChildren(
-            ...(frame === undefined
-              ? []
-              : sliceParts(scale, box, frame, slices).map((part) => {
-                  const span = doc.createElement("span");
-                  span.className = "adw-art";
-                  setBox(span, part.box);
-                  showArt(span, url, frame, part.from, part.box);
-                  return span;
-                })),
-          );
+          const pieces = JSON.stringify([url, frame, box.width, box.height, slices]);
+          if (entry.element.dataset.pieces !== pieces) {
+            entry.element.dataset.pieces = pieces;
+            entry.element.replaceChildren(
+              ...(frame === undefined
+                ? []
+                : sliceParts(scale, box, frame, slices).map((part) => {
+                    const span = doc.createElement("span");
+                    span.className = "adw-art";
+                    setBox(span, part.box);
+                    showArt(span, url, frame, part.from, part.box);
+                    return span;
+                  })),
+            );
+          }
           transform(entry.element);
           entry.key = frame === undefined ? "" : key;
         }
