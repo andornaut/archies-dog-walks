@@ -216,23 +216,35 @@ interface HeartsShare {
   readonly hearts: number;
 }
 
-// Applies each share as a change from the effect's source, in order.
+// The order owners take their shares in: the losses first, the owner a loss leaves with the
+// fewest hearts first, ties to the dog nearer the front (the shares' order), then the rest. A
+// forgiving modifier, such as Second chance's, forgives the first loss taken, so when a loss
+// reaches several owners at once it forgives the one left with the fewest hearts.
+function takingOrder(shares: readonly HeartsShare[], state: RunState): HeartsShare[] {
+  const left = ({ dog, hearts }: HeartsShare) => Math.max(0, (heartsOf(state, dog) ?? 0) + hearts);
+  const losses = shares.filter(({ hearts }) => hearts < 0).toSorted((a, b) => left(a) - left(b));
+  return [...losses, ...shares.filter(({ hearts }) => hearts >= 0)];
+}
+
+// Applies each share as a change from the effect's source, taken in takingOrder and reported in
+// the shares' order.
 function applyShares(
   data: RulesData,
   context: EffectContext,
   shares: readonly HeartsShare[],
   state: RunState,
 ): Applied {
-  const changes: HeartChange[] = [];
+  const byDog = new Map<DogId, HeartChange>();
   let next = state;
-  for (const { dog, hearts } of shares) {
+  for (const { dog, hearts } of takingOrder(shares, state)) {
     const cause: Cause = { amount: hearts, kind: "effect", source: context.source };
     const result = changeHearts(data, [cause], dog, next);
     next = result.state;
     if (result.change !== null) {
-      changes.push(result.change);
+      byDog.set(dog, result.change);
     }
   }
+  const changes = shares.flatMap(({ dog }) => byDog.get(dog) ?? []);
   return { changes, modified: changesModified(changes), state: next };
 }
 
@@ -265,7 +277,49 @@ function applyHearts(
   return applyShares(data, context, shares, state);
 }
 
-// The total is shared by the dogs still walking, whichever the encounter caught.
+// Shares among dogs, in formation order, with each heart a share's owner cannot take passed to
+// the next owner below their max, front dog first. A heart no owner can take stays in its own
+// share, so that meter's limit reports it lost.
+function passHeartsOn(
+  data: Pick<GameData, "dogs" | "tuning">,
+  dogs: readonly DogId[],
+  shares: readonly HeartsShare[],
+  state: RunState,
+): HeartsShare[] {
+  const ordered = packOrder(data.dogs, dogs);
+  const room = new Map(
+    ordered.map((dog) => [
+      dog,
+      Math.max(0, ownerMaxHearts(data, state, dog) - (heartsOf(state, dog) ?? 0)),
+    ]),
+  );
+  const given = new Map<DogId, number>();
+  const give = (dog: DogId, hearts: number) => {
+    given.set(dog, (given.get(dog) ?? 0) + hearts);
+    room.set(dog, (room.get(dog) ?? 0) - hearts);
+  };
+  const spares = shares.map(({ dog, hearts }) => {
+    const spare = Math.max(0, hearts - (room.get(dog) ?? 0));
+    give(dog, hearts - spare);
+    return { dog, spare };
+  });
+  for (const { dog, spare } of spares) {
+    let left = spare;
+    for (const next of ordered) {
+      const passed = Math.min(left, room.get(next) ?? 0);
+      give(next, passed);
+      left -= passed;
+    }
+    given.set(dog, (given.get(dog) ?? 0) + left);
+  }
+  return ordered.flatMap((dog) => {
+    const hearts = given.get(dog) ?? 0;
+    return hearts === 0 ? [] : [{ dog, hearts }];
+  });
+}
+
+// The total is shared by the dogs still walking, whichever the encounter caught, each heart an
+// owner cannot take passed on (passHeartsOn).
 function applySharedHearts(
   data: RulesData,
   context: EffectContext,
@@ -273,7 +327,9 @@ function applySharedHearts(
   state: RunState,
 ): Applied {
   const total = read(data.tuning, "hearts", effect.amount);
-  return applyShares(data, context, shareHearts(data, packDogs(state), total), state);
+  const dogs = packDogs(state);
+  const shares = passHeartsOn(data, dogs, shareHearts(data, dogs, total), state);
+  return applyShares(data, context, shares, state);
 }
 
 // A card never offers a loss the player cannot afford, so money is not held at $0 here.

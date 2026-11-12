@@ -27,6 +27,7 @@ const context = (affected: readonly DogId[]): EffectContext => ({
   affected,
   source: SKUNK_IGNORE,
 });
+type Slots = Parameters<typeof testState>[0];
 const charmer = activeModifier(
   { kind: "upgrade", upgrade: "charmer" },
   { by: "charmerFreeCards", operation: "add", stat: "freeCards" },
@@ -39,7 +40,6 @@ describe("applyEffects: hearts", () => {
     { gear: "luckyCollar", kind: "gear" },
     { by: "luckyCollarMax", operation: "add", stat: "maxHearts" },
   );
-  type Slots = Parameters<typeof testState>[0];
 
   it("applies hearts within 0 and the max, the same to every owner", () => {
     for (const [, affected, effect, slots, expected, modifiers = []] of [
@@ -101,9 +101,14 @@ describe("shareHearts", () => {
 
 describe("applyEffects: hearts shared by the pack", () => {
   const shared: Effect = { amount: "neighbourHearts", kind: "sharedHearts" };
-  type Slots = Parameters<typeof testState>[0];
   const kiloPair = testState({ kilo: 1, reggie: 1 });
   const kiloMax = ownerMaxHearts(data, kiloPair, "kilo");
+  const reggieMax = ownerMaxHearts(data, kiloPair, "reggie");
+  // Kilo, Pepe and Reggie walk in that order, front dog first.
+  const trio = testState({ kilo: 1, pepe: 1, reggie: 1 });
+  const kiloTrioMax = ownerMaxHearts(data, trio, "kilo");
+  const pepeMax = ownerMaxHearts(data, trio, "pepe");
+  const reggieTrioMax = ownerMaxHearts(data, trio, "reggie");
 
   // The pinned tuning shares 3 hearts. The shareHearts table covers each pack size's shares.
   it.each<[string, Slots, Slots]>([
@@ -118,9 +123,29 @@ describe("applyEffects: hearts shared by the pack", () => {
       { ginger: 3, reggie: 2 },
     ],
     [
-      "within each owner's max, losing the hearts past it",
+      "a heart the front dog's owner cannot take to the other",
       { kilo: kiloMax - 1, reggie: 1 },
-      { kilo: kiloMax, reggie: 2 },
+      { kilo: kiloMax, reggie: 3 },
+    ],
+    [
+      "a full owner's heart to the next owner below their max",
+      { kilo: kiloTrioMax, pepe: 1, reggie: 1 },
+      { kilo: kiloTrioMax, pepe: 3, reggie: 2 },
+    ],
+    [
+      "full owners' hearts past every full owner",
+      { kilo: kiloTrioMax, pepe: pepeMax, reggie: 1 },
+      { kilo: kiloTrioMax, pepe: pepeMax, reggie: 4 },
+    ],
+    [
+      "a later owner's heart to the front dog's owner first",
+      { kilo: 1, pepe: 1, reggie: reggieTrioMax },
+      { kilo: 3, pepe: 2, reggie: reggieTrioMax },
+    ],
+    [
+      "nothing past the max when every owner is full",
+      { kilo: kiloTrioMax, pepe: pepeMax, reggie: reggieTrioMax },
+      { kilo: kiloTrioMax, pepe: pepeMax, reggie: reggieTrioMax },
     ],
   ])("gives %s", (_name, slots, expected) => {
     expect(heartsByDog(applyEffects(data, context([]), [shared], testState(slots)))).toEqual(
@@ -128,12 +153,12 @@ describe("applyEffects: hearts shared by the pack", () => {
     );
   });
 
-  it("reports each owner's share and the cap, summing to the change", () => {
+  it("reports a heart no owner can take at its own owner's cap", () => {
     const { changes } = resolveEffects(
       data,
       context([]),
       [shared],
-      testState({ kilo: kiloMax - 1, reggie: 1 }),
+      testState({ kilo: kiloMax - 1, reggie: reggieMax }),
     );
     expect(changes).toEqual([
       {
@@ -144,13 +169,6 @@ describe("applyEffects: hearts shared by the pack", () => {
           { amount: -1, bound: "max", kind: "limit" },
         ],
         dog: "kilo",
-        kind: "hearts",
-      },
-      {
-        after: 2,
-        before: 1,
-        causes: [{ amount: 1, kind: "effect", source: SKUNK_IGNORE }],
-        dog: "reggie",
         kind: "hearts",
       },
     ]);
@@ -230,6 +248,30 @@ describe("resolveEffects: changes and their causes", () => {
       );
       const { changes } = resolveEffects({ ...data, tuning }, context([]), [lose(1)], used);
       expect(changes.map((change) => change.causes.length)).toEqual([1]);
+    });
+
+    // Kilo, Pepe and Reggie walk in that order, front dog first, each within their max, and each
+    // owner loses a heart.
+    it.each<[string, Slots, DogId]>([
+      ["the owner left with the fewest hearts", { kilo: 2, pepe: 1, reggie: 2 }, "pepe"],
+      ["the front dog's owner, on a tie", { kilo: 1, pepe: 2, reggie: 1 }, "kilo"],
+      ["the dog nearer the front, on a tie behind", { kilo: 2, pepe: 1, reggie: 1 }, "pepe"],
+    ])("forgives %s when several lose one at once", (_name, slots, forgiven) => {
+      const state = testState(slots, { modifiers: [secondChance] });
+      for (const [dog, hearts] of Object.entries(slots)) {
+        expect(hearts).toBeLessThanOrEqual(
+          ownerMaxHearts({ ...data, tuning }, state, dog as DogId),
+        );
+      }
+      const applied = applyEffects({ ...data, tuning }, context([]), [lose(1)], state);
+      expect(heartsByDog(applied)).toEqual(
+        Object.fromEntries(
+          Object.entries(slots).map(([dog, hearts]) => [
+            dog,
+            Number(hearts) - 1 + (dog === forgiven ? Math.min(1, allowance) : 0),
+          ]),
+        ),
+      );
     });
   });
 

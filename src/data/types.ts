@@ -268,8 +268,8 @@ export interface HeartsEffect {
 
 // A total of hearts shared by the dogs still walking, in formation order: each owner gets an
 // even share, and the hearts left over go one each to the front dogs' owners first, so 3 is
-// 3 for a lone dog, 2 and 1 for a pair and 1 each for a trio. Each gain is held within its
-// owner's max, and hearts past it are lost.
+// 3 for a lone dog, 2 and 1 for a pair and 1 each for a trio. A heart an owner cannot take goes to
+// the next owner below their max, front dog first, and is lost only when every owner is full.
 export interface SharedHeartsEffect {
   readonly amount: HeartsKey;
   readonly kind: "sharedHearts";
@@ -297,7 +297,8 @@ export interface DodgeEffect {
   readonly sizes: readonly [Size, ...Size[]];
 }
 
-// A free Skip on every obstacle card until it is taken, once per walk.
+// A free Skip on every obstacle card until it is taken, once per zone: each zone's start clears
+// RunState.skipUsed.
 interface SkipOptionEffect {
   readonly kind: "skipOption";
 }
