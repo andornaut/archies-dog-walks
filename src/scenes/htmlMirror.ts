@@ -70,6 +70,10 @@ export interface MirrorScroll {
 // The data key of a container clipped to a game rect, as a mask clips it on the canvas.
 export const MIRROR_CLIP_DATA = "htmlClip";
 
+// The data key of an image the canvas scales across its game rect at the fit (a bar as wide as
+// the screen), drawn across that rect on the grid, as the canvas stretches it: true.
+export const MIRROR_SPAN_DATA = "htmlSpan";
+
 // The data key of an object or container the canvas draws, under all of the HTML: true.
 export const MIRROR_CANVAS_DATA = "htmlCanvas";
 
@@ -344,11 +348,14 @@ export function addHtmlMirror(
           y: origin.y + image.y - image.displayOriginY * image.scaleY,
         };
         const by = { x: image.scaleX, y: image.scaleY };
-        const key = JSON.stringify([file, image.frame.name, size, at, by, ...placing]);
+        const spans = dataOf(image, MIRROR_SPAN_DATA) === true;
+        const key = JSON.stringify([file, image.frame.name, size, at, by, spans, ...placing]);
         if (key !== entry.key) {
           const frame = frameOf(file, image.frame.name, size);
           entry.element.className = "adw-art";
-          const box = scaledArtBox(scale, at, size, by);
+          const box = spans
+            ? gridRect(scale, { ...at, height: size.height * by.y, width: size.width * by.x })
+            : scaledArtBox(scale, at, size, by);
           setBox(entry.element, box);
           entry.element.style.visibility = frame === undefined ? "hidden" : "";
           if (frame !== undefined) {

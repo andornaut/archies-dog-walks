@@ -115,7 +115,7 @@ import { DEBUFF_COLOURS } from "./debuffColours.ts";
 import { HudFeedback } from "./feedbackMoments.ts";
 import { HeartFeedback, heartPops } from "./heartFeedback.ts";
 import { detailView, drawDetailCardView } from "./homePanels.ts";
-import { addHtmlMirror } from "./htmlMirror.ts";
+import { addHtmlMirror, MIRROR_SPAN_DATA } from "./htmlMirror.ts";
 import { HUD_DEPTH } from "./hudDepth.ts";
 import type { HudRun, HudWalk, RunHudView } from "./hudWalk.ts";
 import { MESSAGE_EVENT, MessageStrip } from "./messageStripView.ts";
@@ -310,7 +310,10 @@ export class HudScene extends Scene {
     // over the road's last rows. The progress line's strip is under it, on the screen's last
     // rows.
     if (this.textures.exists("ui-dog-card-band")) {
-      this.add.image(dogRow.x, dogRow.y + dogRow.height, "ui-dog-card-band").setOrigin(0, 1);
+      this.add
+        .image(dogRow.x, dogRow.y + dogRow.height, "ui-dog-card-band")
+        .setOrigin(0, 1)
+        .setData(MIRROR_SPAN_DATA, true);
     } else {
       fillRect(g, PALETTE.darkBrown, dogRow);
     }
@@ -318,7 +321,10 @@ export class HudScene extends Scene {
     drawProgressBar(this.zoneFill, GAME_PROGRESS_STYLE, zoneProgress, 0);
     this.zoneFillWidth = undefined;
     if (this.textures.exists("ui-walk-bar")) {
-      this.add.image(topBar.x, topBar.y, "ui-walk-bar").setOrigin(0);
+      this.add
+        .image(topBar.x, topBar.y, "ui-walk-bar")
+        .setOrigin(0)
+        .setData(MIRROR_SPAN_DATA, true);
     } else {
       topBarRects(topBar).forEach(({ colour, rect }) => fillRect(g, PALETTE[colour], rect));
       fillRect(g, PALETTE.ink, WALK_BAR.cash.well);
