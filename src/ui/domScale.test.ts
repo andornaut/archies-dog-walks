@@ -10,8 +10,10 @@ import {
   fontPixel,
   frameRect,
   gridTransform,
+  scrollbarBoxes,
   sliceLengths,
 } from "./domScale.ts";
+import { scrollbarRects } from "./scrollbar.ts";
 
 // Canvas boxes as phones, desktop windows and a dev link's shrunk canvas fit the 360x560 game, at
 // their device pixel ratios: fractional fits and offsets, as Phaser's Scale.FIT gives them.
@@ -116,4 +118,41 @@ describe("frameRect", () => {
     const scale = domScale(dpr, { height: 560, width: 360, x: 0, y: 0 });
     expect(frameRect(scale, rect)).toEqual(deviceRect(scale, rect));
   });
+});
+
+describe("a scrollbar in HTML", () => {
+  // The Logbook's: an 8px track with a 6px thumb a pixel in, beside a 440px view.
+  const spec = { thumbInset: 1, thumbMin: 16, thumbWidth: 6, trackWidth: 8, x: 336 };
+  const view = { height: 440, y: 100 };
+  const max = 2890;
+  const boxesAt = (scale: ReturnType<typeof domScale>, y: number) => {
+    const bar = scrollbarRects(spec, view, max, y);
+    if (bar === null) {
+      throw new Error("the list fits");
+    }
+    return scrollbarBoxes(scale, { left: 0, top: 0 }, bar);
+  };
+
+  it.each([1, 2, 3].flatMap((dpr) => [360, 393].map((width) => [width, dpr])))(
+    "keeps its track and thumb whole art pixels, the thumb centred and one length, %d px wide at DPR %d",
+    (width, dpr) => {
+      const scale = domScale(dpr, { height: (width * 560) / 360, width, x: 0, y: 0 });
+      const pixel = artPixel(scale);
+      const ys = Array.from({ length: 41 }, (_, i) => (i * max) / 40 + (i % 3) * 0.37);
+      const all = ys.map((y) => boxesAt(scale, y));
+      const lengths = new Set(all.map(({ thumb }) => thumb.height));
+      expect(lengths.size).toBe(1);
+      for (const { thumb, track } of all) {
+        expect(track.width).toBe(spec.trackWidth * pixel);
+        expect(thumb.left - track.left).toBe(track.left + track.width - thumb.left - thumb.width);
+        expect([thumb.top, thumb.height, track.height].every((n) => n % pixel === 0)).toBe(true);
+      }
+      // At each end of its travel the thumb is as far in as from the sides.
+      const [first, last] = [all[0], all.at(-1)];
+      expect(first?.thumb.top).toBe(spec.thumbInset * pixel);
+      expect((last?.track.height ?? 0) - (last?.thumb.top ?? 0) - (last?.thumb.height ?? 0)).toBe(
+        spec.thumbInset * pixel,
+      );
+    },
+  );
 });

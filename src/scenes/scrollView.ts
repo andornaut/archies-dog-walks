@@ -28,6 +28,14 @@ export const LIST_SCROLL_RULE: ScrollRule = {
   dragSlopPx: read(gameData.tuning, "pixels", "tapMaxDistance"),
 };
 
+// The data key of a scrollbar's track or thumb, which the display mirror (src/scenes/htmlMirror.ts)
+// places from the scrollbar's rects in art pixels (scrollbarBoxes) where it mirrors them.
+export const MIRROR_SCROLLBAR_DATA = "htmlScrollbar";
+export interface MirrorScrollbar {
+  readonly bar: ScrollbarRects;
+  readonly part: "thumb" | "track";
+}
+
 // A scrollbar as drawn: the art's thumb, or the fallback's graphics.
 export type ScrollbarView =
   | { readonly kind: "art"; readonly thumb: GameObjects.NineSlice }
@@ -47,8 +55,11 @@ export function addScrollbar(
   const track = addNineSlice(scene, "ui-scroll-track", bar.track);
   const thumb = addNineSlice(scene, "ui-scroll-thumb", bar.thumb);
   if (track !== undefined && thumb !== undefined) {
+    track.setData(MIRROR_SCROLLBAR_DATA, { bar, part: "track" } satisfies MirrorScrollbar);
     root.add([track, thumb]);
-    return { kind: "art", thumb };
+    const view: ScrollbarView = { kind: "art", thumb };
+    placeScrollbar(bar, view);
+    return view;
   }
   track?.destroy();
   thumb?.destroy();
@@ -66,6 +77,7 @@ export function placeScrollbar(bar: ScrollbarRects | null, view: ScrollbarView |
   }
   if (view.kind === "art") {
     view.thumb.setPosition(bar.thumb.x, bar.thumb.y).setSize(bar.thumb.width, bar.thumb.height);
+    view.thumb.setData(MIRROR_SCROLLBAR_DATA, { bar, part: "thumb" } satisfies MirrorScrollbar);
     return;
   }
   view.graphics.clear();

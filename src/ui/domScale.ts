@@ -1,6 +1,7 @@
 import type { Rect } from "@andornaut/game-kit/rect";
 
 import { SCREEN_CONFIG } from "../data/screen.ts";
+import { scrollbarArt, type ScrollbarRects } from "./scrollbar.ts";
 
 // The HTML interface's scale: how the #ui layer over the canvas maps game pixels to device
 // pixels. The layer covers the canvas's box, so a game pixel is the canvas's own fractional fit
@@ -119,4 +120,22 @@ export function deviceSize(
   size: { readonly height: number; readonly width: number },
 ): { readonly height: number; readonly width: number } {
   return { height: Math.ceil(size.height * scale.dpr), width: Math.ceil(size.width * scale.dpr) };
+}
+
+// A scrollbar's track and thumb in device pixels (scrollbarArt), the track's corner at corner, so
+// each is whole art pixels from it.
+export function scrollbarBoxes(
+  scale: DomScale,
+  corner: { readonly left: number; readonly top: number },
+  bar: ScrollbarRects,
+): { readonly thumb: DeviceRect; readonly track: DeviceRect } {
+  const pixel = artPixel(scale);
+  const laid = scrollbarArt(bar, (scale.unit * scale.dpr) / pixel);
+  const box = (rect: Rect): DeviceRect => ({
+    height: rect.height * pixel,
+    left: corner.left + rect.x * pixel,
+    top: corner.top + rect.y * pixel,
+    width: rect.width * pixel,
+  });
+  return { thumb: box(laid.thumb), track: box(laid.track) };
 }

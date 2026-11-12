@@ -9,15 +9,24 @@ import { addTapBurst } from "../hud/dom/questionPanel.ts";
 import { pillKind } from "../hud/effectNames.ts";
 import { disabledArtKey, disabledArtPath } from "../ui/disabledArt.ts";
 import { drawLabel } from "../ui/dom/labelBlock.ts";
-import { artBox, gridRect, motionShift, scrollShift, sliceParts } from "../ui/dom/mirrorPlace.ts";
+import {
+  artBox,
+  gridRect,
+  gridX,
+  gridY,
+  motionShift,
+  scrollShift,
+  sliceParts,
+} from "../ui/dom/mirrorPlace.ts";
 import { setBox } from "../ui/dom/pixelLine.ts";
 import { loadSheet, type SheetFrame, sheetFrameNamed } from "../ui/dom/sheetFrames.ts";
-import { deviceX, deviceY, type DomScale, gridTransform } from "../ui/domScale.ts";
+import { deviceX, deviceY, type DomScale, gridTransform, scrollbarBoxes } from "../ui/domScale.ts";
 import { PALETTE } from "../ui/palette.ts";
 import { displayBitmapFont } from "../ui/phaser/displayText.ts";
 import { GREY_PILL, pillColours } from "./effectNameColours.ts";
 import { domLabel, LABEL_FONTS } from "./htmlLabels.ts";
 import { htmlPanelPlace } from "./questionPanel.ts";
+import { MIRROR_SCROLLBAR_DATA, type MirrorScrollbar } from "./scrollView.ts";
 
 // What a scene draws in its marked containers, drawn in HTML over the canvas where the canvas
 // draws it: every bitmap label, every image and sprite of art the HTML interface has files for
@@ -360,10 +369,27 @@ export function addHtmlMirror(
           right: slice.rightWidth,
           top: slice.topHeight,
         };
-        const key = JSON.stringify([file, slice.frame.name, rect, slices, context.shown, shift]);
+        // A scrollbar's track and thumb are placed in art pixels from the track's corner.
+        const bar = slice.getData(MIRROR_SCROLLBAR_DATA) as MirrorScrollbar | undefined;
+        const key = JSON.stringify([
+          file,
+          slice.frame.name,
+          rect,
+          slices,
+          context.shown,
+          shift,
+          bar,
+        ]);
         if (key !== entry.key) {
           const frame = frameOf(file, slice.frame.name, size);
-          const box = gridRect(scale, rect);
+          const box =
+            bar === undefined
+              ? gridRect(scale, rect)
+              : scrollbarBoxes(
+                  scale,
+                  { left: gridX(scale, bar.bar.track.x), top: gridY(scale, bar.bar.track.y) },
+                  bar.bar,
+                )[bar.part];
           setBox(entry.element, box);
           const url = artUrl(file.png);
           entry.element.replaceChildren(
