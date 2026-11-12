@@ -3,14 +3,19 @@
   "name": "archies-dog-walks",
   // Pinned so a deploy cannot land in another account wrangler is logged in to.
   "account_id": "90f23a78b62eb9571a3fd6c296d15f30",
-  "compatibility_date": "2026-10-01",
+  "compatibility_date": "2026-11-10",
   // Static assets only: there is no Worker script, so every request is served
   // from the Vite build output, which is free and unmetered.
   "assets": {
     "directory": "./dist",
   },
+  // workers.dev stays on as the fallback address. Wrangler turns it off for a Worker with routes
+  // unless this says otherwise.
+  "workers_dev": true,
+  // No per-version preview addresses: delivery deploys only, and each deployed version would
+  // otherwise stay public at its own workers.dev address.
+  "preview_urls": false,
   // Served at the custom domain; Cloudflare creates its DNS record and certificate.
-  // workers.dev stays on as the fallback address.
   "routes": [
     { "pattern": "archie.tristamittermayer.com", "custom_domain": true },
     { "pattern": "dogwalker.tristamittermayer.com", "custom_domain": true },
