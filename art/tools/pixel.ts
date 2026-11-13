@@ -3,7 +3,7 @@
 // Run the art scripts from the repository root.
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 
-import { contrast as colourContrast, rgb } from "@andornaut/art-kit/colour";
+import { contrast as colourContrast, oklabToSrgb, rgb } from "@andornaut/art-kit/colour";
 import {
   type Colour,
   type Edge,
@@ -224,18 +224,12 @@ function pickerEncode(channels: readonly number[]): string {
 
 // One picker hue at the shared perceptual lightness and chroma.
 function pickerHeader(lightness: number, chroma: number, hue: number): string {
-  // Oklab matrices: https://bottosson.github.io/posts/oklab/#converting-from-linear-srgb-to-oklab
   const angle = hue * (Math.PI / 180);
   const a = chroma * Math.cos(angle);
   const b = chroma * Math.sin(angle);
-  const lCone = (lightness + 0.3963377774 * a + 0.2158037573 * b) ** 3;
-  const mCone = (lightness - 0.1055613458 * a - 0.0638541728 * b) ** 3;
-  const sCone = (lightness - 0.0894841775 * a - 1.291485548 * b) ** 3;
-  return pickerEncode([
-    4.0767416621 * lCone - 3.3077115913 * mCone + 0.2309699292 * sCone,
-    -1.2684380046 * lCone + 2.6097574011 * mCone - 0.3413193965 * sCone,
-    -0.0041960863 * lCone - 0.7034186147 * mCone + 1.707614701 * sCone,
-  ]);
+  return oklabToSrgb({ gamut: "reject", rounding: "half-up" }, [lightness, a, b])
+    .map((channel) => channel.toString(16).padStart(2, "0"))
+    .join("");
 }
 
 // A picker header's linear sRGB scaled by factor, encoded with nearest-byte rounding.
