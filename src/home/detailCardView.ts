@@ -88,6 +88,8 @@ export interface DetailFramed {
 // their own (spans), their texts the line's, run together.
 export interface DetailText {
   readonly align?: "centre" | "inkRight" | "left" | "right";
+  // A standalone label's own backing, rather than a card containing several separate parts.
+  readonly backing?: Rect;
   readonly capTop: number;
   readonly colour: number;
   readonly font?: "body" | "title";

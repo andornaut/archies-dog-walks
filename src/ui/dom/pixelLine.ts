@@ -7,6 +7,7 @@ import {
   leftBearing,
 } from "@andornaut/game-kit/text/bitmapFont";
 
+import { centredInkOffsets } from "../centredInkBlock.ts";
 import {
   artPixel,
   deviceX,
@@ -193,6 +194,14 @@ export function placeText(
   line: DomTextLine,
 ): void {
   const place = textPlace(bitmap, scale, origin, line);
+  writeTextPlace(element, line, place);
+}
+
+function writeTextPlace(
+  element: HTMLElement,
+  line: DomTextLine,
+  place: ReturnType<typeof textPlace>,
+): void {
   Object.assign(element.style, {
     fontSize: `${place.fontSize}px`,
     left: `${place.left}px`,
@@ -203,6 +212,71 @@ export function placeText(
   if (line.font === "display") {
     element.style.setProperty("--adw-k", `${place.fontSize / 8}px`);
   }
+}
+
+// A label's or note's lines centred inside the backing actually drawn on this device. Text and
+// frames round their pixels independently, so centring only their logical coordinates drifts.
+export function backedTextPlaces(
+  bitmap: BitmapFont,
+  scale: DomScale,
+  origin: Origin,
+  backing: Rect,
+  lines: readonly DomTextLine[],
+): ReturnType<typeof textPlace>[] {
+  const placed = lines.map((line) => textPlace(bitmap, scale, origin, line));
+  const ink = lines.map((line, i): Rect => {
+    const text = shownText(line.font, line.text);
+    const glyphs = [...text].flatMap((char) => {
+      const glyph = bitmap.glyphs.get(char);
+      return glyph !== undefined && glyph.width > 0 && glyph.height > 0 ? [glyph] : [];
+    });
+    const columns = laidGlyphs(bitmap, 1, text).flatMap(({ ink }) => (ink === null ? [] : [ink]));
+    const place = placed[i]!;
+    if (glyphs.length === 0 || columns.length === 0) {
+      return { height: 0, width: 0, x: place.left, y: place.top };
+    }
+    const pixel = fontPixel(scale, line.scale);
+    const left = Math.min(...columns.map(({ left }) => left));
+    const top = Math.min(...glyphs.map(({ yOffset }) => yOffset));
+    return {
+      height: (Math.max(...glyphs.map((glyph) => glyph.yOffset + glyph.height)) - top) * pixel,
+      width: (Math.max(...columns.map(({ right }) => right)) - left) * pixel,
+      x: place.left + left * pixel,
+      y: place.top + top * pixel,
+    };
+  });
+  const frame = frameRect(scale, backing);
+  const offsets = centredInkOffsets(
+    {
+      height: frame.height,
+      width: frame.width,
+      x: frame.left - gridX(scale, origin.x),
+      y: frame.top - gridY(scale, origin.y),
+    },
+    ink,
+  );
+  return placed.map((place, i) => ({
+    ...place,
+    left: place.left + offsets[i]!.x,
+    top: place.top + offsets[i]!.y,
+  }));
+}
+
+export function placeBackedText(
+  bitmap: BitmapFont,
+  scale: DomScale,
+  origin: Origin,
+  backing: Rect,
+  lines: readonly { readonly element: HTMLElement; readonly line: DomTextLine }[],
+): void {
+  const placed = backedTextPlaces(
+    bitmap,
+    scale,
+    origin,
+    backing,
+    lines.map(({ line }) => line),
+  );
+  lines.forEach(({ element, line }, i) => writeTextPlace(element, line, placed[i]!));
 }
 
 // A run of a line the web font draws as one element: its text, the index of its first character
@@ -277,6 +351,7 @@ export function spokenText(line: string): string {
 // font line apart, each effect's name set in a pill.
 export interface DomTextBlock {
   readonly anchor?: "centre" | "ink" | "inkRight" | "pen" | "right";
+  readonly backing?: Rect;
   // Each line's character indices where a run of another colour starts.
   readonly breaks?: readonly ReadonlySet<number>[];
   readonly capTop: number;
@@ -376,6 +451,25 @@ export function blockPlace(
   })[];
 } {
   const pixel = fontPixel(scale, block.scale);
+  const backed =
+    block.backing === undefined
+      ? undefined
+      : backedTextPlaces(
+          bitmap,
+          scale,
+          { x: 0, y: 0 },
+          block.backing,
+          block.lines.map((text, i) => ({
+            capTop: block.capTop + i * bitmap.lineHeight * block.scale,
+            centre: "advance",
+            centreX: block.x,
+            colour: block.colour,
+            font: block.font,
+            line: i,
+            scale: block.scale,
+            text,
+          })),
+        );
   const start =
     block.anchor === "right" || block.anchor === "inkRight"
       ? rightPen(
@@ -394,9 +488,10 @@ export function blockPlace(
   const lines = block.lines.map((line, i) => {
     const shown = shownText(block.font, line);
     return {
-      left: lineLeft(shown),
+      left: backed?.[i]?.left ?? lineLeft(shown),
       shown,
-      top: deviceY(scale, block.capTop) + (i * bitmap.lineHeight - capTop) * pixel,
+      top:
+        backed?.[i]?.top ?? deviceY(scale, block.capTop) + (i * bitmap.lineHeight - capTop) * pixel,
     };
   });
   return {

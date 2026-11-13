@@ -40,6 +40,7 @@ describe("zoneCelebrationView", () => {
     ).toEqual(money.filter(({ kind }) => kind === "money").map(({ text }) => text));
     expect([line?.align, line?.x]).toEqual(["centre", CELEBRATION_LAYOUT.centreX]);
     expect(view.frame.key).toBe("ui-panel");
+    expect(line?.backing).toEqual(view.frame.rect);
   });
 
   it("sets key 1 and the label gap apart, centred together on the face, once numbers show", () => {

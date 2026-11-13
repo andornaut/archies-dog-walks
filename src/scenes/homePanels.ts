@@ -16,6 +16,7 @@ import { type CloseControl, closeControl } from "../ui/closeControl.ts";
 import { LABEL_ALIGN_DATA } from "../ui/dom/labelBlock.ts";
 import { hasPill } from "../ui/namePills.ts";
 import { PALETTE } from "../ui/palette.ts";
+import { centreBackedText } from "../ui/phaser/backedText.ts";
 import { addModalShade, drawFramedRect, drawRing } from "../ui/phaser/draw.ts";
 import {
   addPixelText,
@@ -277,6 +278,18 @@ export function addDetailText(
       before += span.text;
     }
   });
+  if (text.backing !== undefined) {
+    const first = labels[0];
+    const before = first === undefined ? undefined : { x: first.x, y: first.y };
+    const count = centred ? text.lines.length : 1;
+    centreBackedText(text.backing, labels.slice(0, count));
+    // Coloured runs overlay the first complete line and move with it, not to their own centre.
+    if (first !== undefined && before !== undefined) {
+      for (const label of labels.slice(count)) {
+        label.setPosition(label.x + first.x - before.x, label.y + first.y - before.y);
+      }
+    }
+  }
   parent?.add(labels);
   if (text.lines.some(hasPill)) {
     addNamePills(labels);

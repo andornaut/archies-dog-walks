@@ -126,6 +126,7 @@ function zoneDoneView(
   // The amounts in forest, on one line centred on the screen.
   const earnings: DetailText = {
     align: "centre",
+    backing: rows.plate,
     capTop: capTopAt(measure, rows.earningsY, TEXT_SCALE),
     colour: PALETTE.plum,
     lines: [line],

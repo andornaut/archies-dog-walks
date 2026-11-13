@@ -44,6 +44,7 @@ import { loadSheet } from "../ui/dom/sheetFrames.ts";
 import { uiLayer } from "../ui/dom/uiLayer.ts";
 import { rectIndexAt } from "../ui/grid.ts";
 import { PALETTE } from "../ui/palette.ts";
+import { centreBackedText } from "../ui/phaser/backedText.ts";
 import { displayBitmapFont } from "../ui/phaser/displayText.ts";
 import { addModalShade, fillRect } from "../ui/phaser/draw.ts";
 import { addPixelText, pixelBitmapFont } from "../ui/phaser/pixelText.ts";
@@ -104,13 +105,14 @@ export function addQuestionPanel(scene: Scene, area: Rect, question: QuestionPan
   );
   if (view.notePlate !== undefined) {
     fillRect(scene.add.graphics(), PALETTE.tan, view.notePlate);
-    for (const line of view.note) {
+    const labels = view.note.map((line) =>
       addPixelText(scene, line.centreX, line.capTop, line.text, {
         colour: line.colour,
         originX: 0.5,
         scale: line.scale,
-      });
-    }
+      }),
+    );
+    centreBackedText(view.notePlate, labels);
   }
 
   // A button by its index, or the close control.

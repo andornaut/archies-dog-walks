@@ -8,11 +8,20 @@ import {
 import { describe, expect, it } from "vitest";
 
 import { FakeDocument, type FakeElement } from "../../testing/fakeDom.ts";
-import { gameFont } from "../../testing/fontInk.ts";
-import { artPixel, deviceX, deviceY, domScale, exactDeviceX, fontPixel } from "../domScale.ts";
+import { fontInk, fontInkRows, gameFont } from "../../testing/fontInk.ts";
+import {
+  artPixel,
+  deviceX,
+  deviceY,
+  domScale,
+  exactDeviceX,
+  fontPixel,
+  frameRect,
+} from "../domScale.ts";
 import { inPill, laidPills, PILL, pillRows } from "../namePills.ts";
 import { PALETTE } from "../palette.ts";
 import {
+  backedTextPlaces,
   blockPlace,
   boundsAdvance,
   capRows,
@@ -25,6 +34,95 @@ import {
 } from "./pixelLine.ts";
 
 const ORIGIN = { x: 0, y: 0 };
+
+describe("backed text", () => {
+  it("moves coloured earnings runs together inside their shared plate", () => {
+    const font = gameFont("font-body");
+    const scale = domScale(1, { height: 894, width: 575, x: 0, y: 0 });
+    const backing = { height: 46, width: 260, x: 50, y: 350 };
+    const block = {
+      anchor: "centre",
+      breaks: [new Set([0, 8])],
+      capTop: 366,
+      colour: 0,
+      font: "body",
+      lines: ["Earned: $13"],
+      scale: 2,
+      x: 180,
+    } as const;
+    const before = blockPlace(font, scale, block);
+    const placed = blockPlace(font, scale, { ...block, backing });
+    expect(placed.runs.map(({ text }) => text)).toEqual(before.runs.map(({ text }) => text));
+    expect(placed.runs[1]!.left - placed.runs[0]!.left).toBe(
+      before.runs[1]!.left - before.runs[0]!.left,
+    );
+    const box = frameRect(scale, backing);
+    const pixel = fontPixel(scale, block.scale);
+    const ink = fontInk("font-body", { scale: pixel }, block.lines[0]);
+    const rows = fontInkRows("font-body", { scale: pixel }, block.lines[0]);
+    const left = placed.runs[0]!.left;
+    const top = placed.runs[0]!.top + fontMetrics(font).capTop * pixel;
+    expect(
+      Math.abs(left + (ink.left + ink.right) / 2 - (box.left + box.width / 2)),
+    ).toBeLessThanOrEqual(0.5);
+    expect(
+      Math.abs(top + (rows.top + rows.bottom) / 2 - (box.top + box.height / 2)),
+    ).toBeLessThanOrEqual(0.5);
+  });
+
+  it.each([
+    { dpr: 1, lines: ["Ending now keeps $0 of", "$1."], width: 575 },
+    { dpr: 2.625, lines: ["Ending now keeps all $15."], width: 393 },
+    { dpr: 3, lines: ["You give up $12.", "Three neighbourhoods left."], width: 360 },
+  ])(
+    "centres visible note ink on its snapped backing at $width CSS pixels",
+    ({ dpr, lines, width }) => {
+      const scale = domScale(dpr, { height: (560 * width) / 360, width, x: 7.25, y: 0 });
+      const backing = { height: 42, width: 220, x: 70, y: 360 };
+      const font = gameFont("font-body");
+      const placed = backedTextPlaces(
+        font,
+        scale,
+        ORIGIN,
+        backing,
+        lines.map((text, i) => ({
+          capTop: backing.y + 4 + i * font.lineHeight * 2,
+          centre: "advance",
+          centreX: 180,
+          colour: 0,
+          font: "body",
+          line: i,
+          scale: 2,
+          text,
+        })),
+      );
+      const box = frameRect(scale, backing);
+      const pixel = fontPixel(scale, 2);
+      const ink = lines.map((text, i) => {
+        const x = fontInk("font-body", { scale: pixel }, text);
+        const y = fontInkRows("font-body", { scale: pixel }, text);
+        return {
+          bottom: placed[i]!.top + fontMetrics(font).capTop * pixel + y.bottom,
+          left: placed[i]!.left + x.left,
+          right: placed[i]!.left + x.right,
+          top: placed[i]!.top + fontMetrics(font).capTop * pixel + y.top,
+        };
+      });
+      for (const span of ink) {
+        expect(
+          Math.abs((span.left + span.right) / 2 - (box.left + box.width / 2)),
+        ).toBeLessThanOrEqual(0.5);
+      }
+      const centreY =
+        (Math.min(...ink.map(({ top }) => top)) + Math.max(...ink.map(({ bottom }) => bottom))) / 2;
+      expect(Math.abs(centreY - (box.top + box.height / 2))).toBeLessThanOrEqual(0.5);
+      expect(placed.every(({ fontSize }) => fontSize === 8 * pixel)).toBe(true);
+      if (placed.length > 1) {
+        expect(placed[1]!.top - placed[0]!.top).toBe(font.lineHeight * pixel);
+      }
+    },
+  );
+});
 
 describe("textPlace", () => {
   it.each([1, 2, 2.625, 3])(

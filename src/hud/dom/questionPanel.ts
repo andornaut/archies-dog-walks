@@ -8,6 +8,7 @@ import { closeFace } from "../../ui/closeControl.ts";
 import {
   createTextLine,
   type DomTextLine,
+  placeBackedText,
   placeBox,
   placeFrame,
   placeText,
@@ -235,6 +236,7 @@ export function showQuestionPanel(layer: UiLayer, input: DomQuestionPanelInput):
   dialog.append(title);
 
   if (view.notePlate !== undefined) {
+    const backing = view.notePlate;
     const plate = doc.createElement("div");
     plate.className = "adw-plate";
     frame(plate, ORIGIN, view.notePlate);
@@ -242,10 +244,13 @@ export function showQuestionPanel(layer: UiLayer, input: DomQuestionPanelInput):
     note.className = "adw-lines";
     note.id = `${id}-note`;
     // Each line ends in a space, so a screen reader reads the lines as running text.
-    for (const line of view.note) {
-      const element = text(note, ORIGIN, line);
+    const lines = view.note.map((line) => {
+      const element = createTextLine(doc, line);
+      note.append(element);
       element.textContent = `${element.textContent ?? ""} `;
-    }
+      return { element, line };
+    });
+    placed.push((scale) => placeBackedText(input.fonts.body, scale, ORIGIN, backing, lines));
     dialog.setAttribute("aria-describedby", note.id);
     dialog.append(plate, note);
   }
