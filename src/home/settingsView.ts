@@ -284,7 +284,22 @@ function notedRow(
     return { ...view, button: panelButton(measure, face, false, words[row.button]) };
   }
   const art = { key: "ui-switch", tag: on ? "on" : "off", x: control.x, y: control.y + dip };
-  return { ...view, switch: { art, on } };
+  return {
+    ...view,
+    switch: { art, on },
+    texts: [
+      ...view.texts,
+      {
+        anchor: "right",
+        capTop: y + LABEL.dy + dip,
+        colour: PALETTE[look.text],
+        font: "title",
+        lines: [on ? words.on : words.off],
+        scale: TEXT_SCALE,
+        x: x + rect.width - SETTINGS_ROW.pad,
+      },
+    ],
+  };
 }
 
 // A volume slider: drag along the row to set it. Muted, it is disabled and reads "Muted".

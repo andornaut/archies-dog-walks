@@ -184,6 +184,7 @@ function rowParts(i: number): [string, Rect][] {
   const fitted = fittedNotes[notedRows.indexOf(row)];
   const noteY = placed.noteY ?? 0;
   const lines = fitted?.lines ?? [];
+  const state = labelInk("font-title", words.off, 0, rect.y + label.dy);
   // A note line's rows run from its capitals to the font's lowest ink, descenders included.
   const noteInk = (line: string, n: number): Rect => {
     const columns = placedInk("font-body", TWO_X, line);
@@ -196,6 +197,14 @@ function rowParts(i: number): [string, Rect][] {
   };
   return [
     ...parts,
+    ...(row.kind === "switch"
+      ? [
+          ["state", { ...state, x: rect.x + rect.width - SETTINGS_ROW.pad - state.width }] as [
+            string,
+            Rect,
+          ],
+        ]
+      : []),
     ...lines.map((line, n): [string, Rect] => [`note line ${n + 1}`, noteInk(line, n)]),
     ["control", placed.control ?? rect],
   ];
@@ -246,8 +255,13 @@ describe("the settings card", () => {
       const control = parts.get("control") ?? parts.get("percentage");
       for (const [name, ink] of parts) {
         if (name.startsWith("note") || name === "label") {
-          expect(ink.x + ink.width, name).toBeLessThan(control?.x ?? 0);
+          const right = name === "label" ? (parts.get("state") ?? control) : control;
+          expect(ink.x + ink.width + SETTINGS_ROW.controlGap, name).toBeLessThan(right?.x ?? 0);
         }
+      }
+      const state = parts.get("state");
+      if (state !== undefined) {
+        expect(state.y + state.height).toBeLessThan(control?.y ?? 0);
       }
       const label = parts.get("label");
       const below = parts.get("note line 1") ?? parts.get("knob");

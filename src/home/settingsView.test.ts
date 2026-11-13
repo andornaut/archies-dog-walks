@@ -56,6 +56,29 @@ const view = (state: Partial<SettingsState>) =>
   );
 
 describe("settingsView", () => {
+  it.each([false, true])("shows current switch states with mute %s and stable help", (muted) => {
+    for (const reducedMotion of [false, true]) {
+      const current = view({ settings: { ...DEFAULT_SETTINGS, muted, reducedMotion } });
+      for (const [index, on, label, description] of [
+        [0, !muted, gameData.menuText.settings.sound, gameData.menuText.settings.soundNote],
+        [
+          3,
+          reducedMotion,
+          gameData.menuText.settings.motion,
+          gameData.menuText.settings.motionNote,
+        ],
+      ] as const) {
+        const row = current.rows[index];
+        expect(row?.label).toBe(label);
+        expect(row?.description).toBe(description);
+        expect(row?.switch?.on).toBe(on);
+        expect(row?.texts.at(-1)?.lines).toEqual([
+          on ? gameData.menuText.settings.on : gameData.menuText.settings.off,
+        ]);
+      }
+    }
+  });
+
   it("dips a pressed row's face, icon, text and switch together", () => {
     const [up] = view({}).rows;
     const [down] = view({ pressed: { key: "muted", kind: "switch" } }).rows;

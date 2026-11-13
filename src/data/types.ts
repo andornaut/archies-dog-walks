@@ -1183,6 +1183,8 @@ export interface MenuText {
     readonly music: string;
     // A volume slider's value while sound is off; volume is its value while sound is on.
     readonly muted: string;
+    readonly off: string;
+    readonly on: string;
     readonly sound: string;
     readonly soundNote: string;
     readonly title: string;
