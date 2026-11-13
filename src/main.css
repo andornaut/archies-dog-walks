@@ -26,6 +26,22 @@ body {
   text-size-adjust: 100%;
 }
 
+/* Apply to the game page's HTML overlays and counters too, including mobile long presses. */
+body * {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+/* Text fields keep native editing and selection, including nested editable content. */
+input,
+textarea,
+:read-write {
+  -webkit-user-select: text;
+  user-select: text;
+  -webkit-touch-callout: default;
+}
+
 body {
   position: relative;
   display: flex;
