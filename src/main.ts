@@ -28,6 +28,7 @@ import {
   setupPhoneApp,
   storagePersistence,
 } from "./pwa/index.ts";
+import { launchGame } from "./pwa/launchGame.ts";
 import { BootScene } from "./scenes/BootScene.ts";
 import { CardScene } from "./scenes/CardScene.ts";
 import { CelebrationScene } from "./scenes/CelebrationScene.ts";
@@ -226,9 +227,8 @@ function bootGame(): Game {
   return game;
 }
 
-// The game boots at once from the version that controls the page, while the service worker checks
-// for a newer one in the background; a newer version activates only after the player accepts it.
+// A complete update already waiting at document launch may take control before saves or the game
+// open. Otherwise the current version boots while later updates stage in the background.
 // Queued dev-panel save edits finish before boot, so the game loads the edited save. The
 // installed app discards queued edits without changing its save.
-setupPhoneApp();
-void applyPendingSaveEdits().then(bootGame);
+void launchGame(applyPendingSaveEdits, bootGame, setupPhoneApp());

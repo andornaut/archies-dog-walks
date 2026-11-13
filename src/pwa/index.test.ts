@@ -4,21 +4,21 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vites
 import type { StorageState } from "../save/profile.ts";
 import { PHONE_EVENTS } from "./events.ts";
 
-const { arriveHome, offline, registrationReady, requireNewer, setOfferVisible } = vi.hoisted(
-  () => ({
+const { arriveHome, launchReady, offline, registrationReady, requireNewer, setOfferVisible } =
+  vi.hoisted(() => ({
     arriveHome: vi.fn(),
+    launchReady: vi.fn().mockResolvedValue("continue"),
     offline: { options: undefined as OfflinePlayOptions | undefined },
     registrationReady: vi.fn(),
     requireNewer: vi.fn(),
     setOfferVisible: vi.fn(),
-  }),
-);
+  }));
 
 vi.mock("@andornaut/game-kit/web/pwa/dom/offlinePlay", () => ({
   browserOfflinePage: () => ({}),
   startOfflinePlay: (options: OfflinePlayOptions) => {
     offline.options = options;
-    return { flow: { arriveHome, requireNewer, setOfferVisible }, registrationReady };
+    return { flow: { arriveHome, requireNewer, setOfferVisible }, launchReady, registrationReady };
   },
 }));
 vi.mock("@andornaut/game-kit/web/pwa/dom/installFlow", () => ({
@@ -53,7 +53,7 @@ beforeAll(async () => {
   vi.stubGlobal("screen", {});
   vi.stubGlobal("window", { dispatchEvent: (event: Event) => dispatched.push(event.type) });
   phone = await import("./index.ts");
-  phone.setupPhoneApp();
+  await phone.setupPhoneApp();
 });
 
 afterAll(() => {
@@ -90,6 +90,18 @@ describe("setOnHomeScreen", () => {
     phone.arriveHome();
     expect(arriveHome).toHaveBeenCalledOnce();
   });
+});
+
+describe("setupPhoneApp", () => {
+  it.each(["blocked", "continue", "reloading"] as const)(
+    "returns the kit's %s launch decision before game boot",
+    async (result) => {
+      launchReady.mockClear();
+      launchReady.mockResolvedValueOnce(result);
+      await expect(phone.setupPhoneApp()).resolves.toBe(result);
+      expect(launchReady).toHaveBeenCalledOnce();
+    },
+  );
 });
 
 describe("noteSaveStorage", () => {

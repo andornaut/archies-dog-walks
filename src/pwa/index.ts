@@ -14,7 +14,12 @@ import {
   type InstallOutcome,
   watchInstall,
 } from "@andornaut/game-kit/web/pwa/dom/installFlow";
-import { browserOfflinePage, startOfflinePlay } from "@andornaut/game-kit/web/pwa/dom/offlinePlay";
+import {
+  browserOfflinePage,
+  type LaunchResult,
+  type OfflinePlay,
+  startOfflinePlay,
+} from "@andornaut/game-kit/web/pwa/dom/offlinePlay";
 import type { UpdateFlow } from "@andornaut/game-kit/web/pwa/dom/updateReady";
 import { watchVisibility } from "@andornaut/game-kit/web/pwa/dom/visibility";
 import {
@@ -81,15 +86,15 @@ const BACK_GUARD_STATE_KEY = "archiesDogWalksBackGuard";
 
 // The production build only: the dev server has no sw.js, and a worker would serve stale
 // modules over hot reloads. The kit's offline play: a page a version controls runs the version
-// on disk and registers now, so a newer version downloads in the background while the game
+// on disk and registers after its launch check, so a newer version downloads while the game
 // plays, and is offered on the home screen only once it is stored; a first visit registers once
 // the home screen shows, so the precache does not compete with the game's own downloads. The page
 // coming back into view on the home screen checks for a newer version (an installed app resumed
 // without relaunching).
-function registerServiceWorker(): void {
+function registerServiceWorker(): OfflinePlay | undefined {
   const page = import.meta.env.PROD ? browserOfflinePage() : undefined;
   if (page === undefined) {
-    return;
+    return undefined;
   }
   const play = startOfflinePlay(
     {
@@ -106,6 +111,7 @@ function registerServiceWorker(): void {
   updateFlow = play.flow;
   registrationHook = () => play.registrationReady();
   offerHook = (visible) => play.flow.setOfferVisible(visible);
+  return play;
 }
 
 function reportRequired(state: RequiredUpdateState): void {
@@ -114,9 +120,9 @@ function reportRequired(state: RequiredUpdateState): void {
   dispatchPhoneEvent(window, PHONE_EVENTS.requiredUpdate);
 }
 
-// Sets up the service worker and the phone app's behaviour. Nothing here delays the game.
-export function setupPhoneApp(): void {
-  registerServiceWorker();
+// Sets up the phone app and checks for an already-staged launch before saves or the game open.
+export function setupPhoneApp(): Promise<LaunchResult> {
+  const launch = registerServiceWorker()?.launchReady() ?? Promise.resolve("continue" as const);
   installFlow = watchInstall(window);
   // Asked once per launch of the installed app, never in a browser tab. Not waited for: the game
   // boots whatever the browser answers, or if it never does.
@@ -155,6 +161,7 @@ export function setupPhoneApp(): void {
   // Held whenever the game is visible until the scenes take over with stopWakeLock and
   // startWakeLock (for example, letting the screen sleep on a menu).
   screenWakeLock.start();
+  return launch;
 }
 
 // Whether the game offers to leave (the home top bar's Exit, Q and back's Quit?), as read at load:
@@ -224,7 +231,7 @@ export function updatePlateShown(): boolean {
 // The update offer's Update now button: switch to the waiting version and reload into it. The
 // offer shows only while a version waits, so only with a service worker.
 export function acceptUpdate(): void {
-  updateFlow?.accept();
+  void updateFlow?.accept();
 }
 
 // A save or earned record from a newer version requires that version, whatever the player does:
