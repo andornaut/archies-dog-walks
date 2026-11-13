@@ -165,6 +165,7 @@ export function showHelpScreen(layer: UiLayer, input: DomHelpInput): DomQuestion
     closePressed: view.closePressed,
     describedBy: page.id,
     fonts: input.fonts,
+    label: view.heading.text,
     numberKeys: false,
     parts,
     presses: [],

@@ -35,6 +35,8 @@ describe("the HTML help screen", () => {
   it("takes no presses: its page buttons are pictures and Tab keeps focus on it", () => {
     const { dialog, doc, nodes } = helpScreen(0, undefined);
     expect(dialog?.className).toContain("adw-passive");
+    const title = nodes.find((node) => node.id === dialog?.getAttribute("aria-labelledby"));
+    expect(title?.getAttribute("aria-label")).toBe(gameData.menuText.help.heading);
     expect(nodes.some((node) => node.tagName === "button")).toBe(false);
     dialog?.fire("keydown", { code: "Tab", preventDefault: () => undefined, shiftKey: false });
     expect(doc.activeElement).toBe(dialog);
