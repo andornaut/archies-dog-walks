@@ -183,7 +183,7 @@ Named signature recipes live in `src/data/movementProfiles.ts`. `MOVEMENT_ASSIGN
 
 ## Dev tools
 
-In a browser tab, `/play/` reads a run setup from the URL; invalid values, unknown ids included, are warned about and ignored. A URL with any run parameter (all but `dev` and `route`) skips the home screen and starts the walk, its pack and gear replacing the saved loadout for that walk only. A walk started past zone 1 banks no money and sets no best walk, its zone counts leave out the zones it skipped, and a finished one counts as headed home. Reaching the home screen removes every parameter in the table but `dev` from the URL, leaving any other.
+In a browser tab, `/play/` reads a run setup from the URL; invalid values, unknown ids included, are warned about and ignored. A URL with any run parameter (all but `dev` and `route`) skips the home screen and starts the walk, its pack and gear replacing the saved loadout for that walk only. A walk started past zone 1 banks its earnings, can set best records and counts a finish as finished; its zone counts leave out the zones it skipped. Reaching the home screen removes every parameter in the table but `dev` from the URL, leaving any other.
 
 | Param    | Value                                                             | Default        |
 | -------- | ----------------------------------------------------------------- | -------------- |
