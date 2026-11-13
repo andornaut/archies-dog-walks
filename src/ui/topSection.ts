@@ -62,7 +62,9 @@ export function topSectionLayout<T extends TopSectionButton>(
             TOP_BAR_WELL.x,
           (first?.face.x ?? SCREEN_CONFIG.width) - HOME_SCREEN.topBar.wellClear - TOP_BAR_WELL.x,
         );
-  const currency = sections.currency ? { ...TOP_BAR_WELL, width: maxCurrencyWidth } : undefined;
+  const currency = sections.currency
+    ? { height: TOP_BAR_WELL.height, width: maxCurrencyWidth, x: TOP_BAR_WELL.x, y: TOP_BAR_WELL.y }
+    : undefined;
   const style = WALK_BAR_PARTS.effects;
   const span = effects * style.size + Math.max(0, effects - 1) * style.gap;
   const effectsX = topSectionGapLeft(
