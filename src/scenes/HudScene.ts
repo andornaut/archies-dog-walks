@@ -44,19 +44,15 @@ import {
 } from "../hud/moneyLabels.ts";
 import { achievementLine } from "../hud/stripLines.ts";
 import {
-  buttonIcon,
   pauseButtonIcon,
   playerPaused,
   type RunPause,
-  TOP_BAR_BUTTONS,
   topBarAction,
   topBarButtonAt,
   topBarKey,
 } from "../hud/topBar.ts";
 import {
-  type BarButton,
   cardHearts,
-  cashLeft,
   DEBUFF_BAR,
   debuffBarRects,
   debuffFillWidth,
@@ -66,7 +62,6 @@ import {
   ownerNameLines,
   slotShown,
   spareTreatPipAt,
-  WALK_BAR,
   WALK_BAR_BUTTONS,
   type WalkBarButtonId,
   walkBarLayout,
@@ -104,7 +99,6 @@ import {
   setPixelText,
 } from "../ui/phaser/pixelText.ts";
 import { GAME_PROGRESS_STYLE } from "../ui/progressBar.ts";
-import { topBarRects } from "../ui/topBarTrim.ts";
 import { type Cents, cents } from "../units.ts";
 import { arcFlight } from "./arcFlight.ts";
 import { addCharm, glintWell } from "./buffCharm.ts";
@@ -140,17 +134,8 @@ import { type ScenePicture, showAsPicture } from "./scenePicture.ts";
 import { soundboardOf } from "./soundboard.ts";
 import { playTag } from "./sprites.ts";
 import { TimedGroup } from "./timedGroup.ts";
-import {
-  addIconButton,
-  addNineSlice,
-  addTagImage,
-  artFits,
-  fadeAway,
-  type IconButton,
-  imageIcon,
-  setDollarAmount,
-  settingsIcon,
-} from "./uiKit.ts";
+import { addTopSection, mirrorTopSection, type TopSection } from "./topSection.ts";
+import { addNineSlice, addTagImage, artFits, fadeAway, type IconButton } from "./uiKit.ts";
 
 const LAYOUT = SCREEN_LAYOUT;
 const BAR = walkBarLayout(LAYOUT.topBar);
@@ -238,10 +223,9 @@ export class HudScene extends Scene {
   private cards: CardView[] = [];
   private debuffBars: DebuffBarView[] = [];
   private debuffFills: GameObjects.Graphics | undefined;
-  private dollar: GameObjects.BitmapText | undefined;
+  private topSection: TopSection | undefined;
   private drawn: Record<string, unknown> = {};
   private barButtons = new Map<WalkBarButtonId, IconButton>();
-  private barGlyphs = new Map<WalkBarButtonId, GameObjects.Container>();
   private barPressActive: (() => boolean) | undefined;
   private dynamic: GameObjects.Graphics | undefined;
   private effectParts: GameObjects.GameObject[] = [];
@@ -259,12 +243,9 @@ export class HudScene extends Scene {
   // The slots of the cash's column that money labels showing by the cash hold.
   private cashSlots = new Set<number>();
   private messages = new MessageStrip();
-  private money: GameObjects.BitmapText | undefined;
   // The money changes still flying to the cash, which the counter leaves out until they land.
   private moneyInFlight = 0;
   private owners: OwnerTabs | undefined;
-  private pauseGlyph: GameObjects.Graphics | undefined;
-  private pauseIcon: GameObjects.Image | undefined;
   // The spare treat held, shown in its gear's effect well.
   private spareTreatPip: GameObjects.Sprite | undefined;
   private picture: HudWalk | undefined;
@@ -285,7 +266,7 @@ export class HudScene extends Scene {
   }
 
   create(data: HudSceneData): void {
-    const { dogRow, dogSlots, topBar, zoneProgress } = LAYOUT;
+    const { dogRow, dogSlots, zoneProgress } = LAYOUT;
     const picture = "picture" in data ? data.picture : undefined;
     this.picture = picture?.source;
     this.run = "run" in data ? data.run : undefined;
@@ -318,42 +299,19 @@ export class HudScene extends Scene {
     this.zoneFill = this.add.graphics();
     drawProgressBar(this.zoneFill, GAME_PROGRESS_STYLE, zoneProgress, 0);
     this.zoneFillWidth = undefined;
-    if (this.textures.exists("ui-walk-bar")) {
-      this.add
-        .image(topBar.x, topBar.y, "ui-walk-bar")
-        .setOrigin(0)
-        .setData(MIRROR_SPAN_DATA, true);
-    } else {
-      topBarRects(topBar).forEach(({ colour, rect }) => fillRect(g, PALETTE[colour], rect));
-      fillRect(g, PALETTE.ink, WALK_BAR.cash.well);
-    }
     this.barButtons = new Map();
-    this.barGlyphs = new Map();
     this.barPressActive = undefined;
-    WALK_BAR_BUTTONS.forEach((id) => this.addButton(id, TOP_BAR_BUTTONS[id]));
-    // Glyph containers retain their pressed offset when the pause artwork changes.
-    const help = buttonIcon(TOP_BAR_BUTTONS.help);
-    const helpParts = imageIcon(this, "icon-help", help.x, help.y);
-    this.barGlyphs.get("help")?.add(
-      helpParts.length === 0
-        ? [
-            addPixelText(this, help.x + 8, help.y + 4, "?", {
-              colour: PALETTE.cream,
-              originX: 0.5,
-            }),
-          ]
-        : helpParts,
-    );
-    const settings = buttonIcon(TOP_BAR_BUTTONS.settings);
-    this.barGlyphs.get("settings")?.add(settingsIcon(this, settings.x, settings.y));
-    const pauseIcon = buttonIcon(TOP_BAR_BUTTONS.pause);
-    this.pauseIcon = this.add.image(pauseIcon.x, pauseIcon.y, "__DEFAULT").setOrigin(0);
-    this.pauseGlyph = this.add.graphics();
-    this.barGlyphs.get("pause")?.add([this.pauseIcon, this.pauseGlyph]);
-
-    const title = { font: "title" } as const;
-    this.dollar = addPixelText(this, 0, 0, "$", { colour: PALETTE.amber, ...title });
-    this.money = addPixelText(this, 0, 0, "", { colour: PALETTE.cream, ...title });
+    this.topSection = addTopSection(this, {
+      buttons: WALK_BAR_BUTTONS,
+      currency: true,
+      effects: BAR.effectWells.length,
+    });
+    for (const id of WALK_BAR_BUTTONS) {
+      const button = this.topSection.buttons.get(id);
+      if (button !== undefined) {
+        this.barButtons.set(id, button);
+      }
+    }
     this.dynamic = this.add.graphics();
     this.debuffFills = this.add.graphics().setDepth(HUD_DEPTH.overPart);
     this.cards = dogSlots.map((rect) => this.createCard(rect));
@@ -402,6 +360,12 @@ export class HudScene extends Scene {
         return this.children.list;
       },
       () => this.pageOver(),
+    );
+
+    mirrorTopSection(
+      this,
+      () => this.topSection?.root,
+      () => this.scene.isActive(SCENE_KEYS.help),
     );
 
     // A button acts on the press, as the walk's gestures never see it. A showing debuff bar keeps
@@ -487,17 +451,6 @@ export class HudScene extends Scene {
     }
   }
 
-  // The shared chrome moves its whole glyph container, including dynamically replaced icons.
-  private addButton(id: WalkBarButtonId, button: BarButton): void {
-    const glyph = this.add.container(0, 0);
-    this.barGlyphs.set(id, glyph);
-    const parent = this.add.container(0, 0);
-    this.barButtons.set(
-      id,
-      addIconButton(this, parent, button.face.x, button.face.y, () => [glyph]),
-    );
-  }
-
   private setBarPressed(
     button: WalkBarButtonId | undefined,
     active: () => boolean = () => false,
@@ -508,28 +461,7 @@ export class HudScene extends Scene {
 
   // The icon art when it is loaded, else cream pause bars or play triangle drawn on the face.
   private showPauseIcon(pause: RunPause): void {
-    const key = pauseButtonIcon(pause);
-    const art = this.textures.exists(key);
-    this.pauseIcon?.setTexture(art ? key : "__DEFAULT").setVisible(art);
-    const g = this.pauseGlyph;
-    if (g === undefined) {
-      return;
-    }
-    g.clear();
-    if (art) {
-      return;
-    }
-    const { x, y } = TOP_BAR_BUTTONS.pause.face;
-    if (key === "icon-play") {
-      // Columns narrowing to a point, over the same 8x10 the pause bars cover.
-      [10, 8, 8, 6, 6, 4, 2, 2].forEach((height, i) => {
-        fillRect(g, PALETTE.cream, { height, width: 1, x: x + 6 + i, y: y + 10 - height / 2 });
-      });
-      return;
-    }
-    for (const dx of [6, 11]) {
-      fillRect(g, PALETTE.cream, { height: 10, width: 3, x: x + dx, y: y + 5 });
-    }
+    this.topSection?.setPaused(pause.menu !== "closed");
   }
 
   private createCard({ x, y }: Rect): CardView {
@@ -638,16 +570,7 @@ export class HudScene extends Scene {
 
   // The "$" and the amount from the cash's x at the cash's scale, one font advance apart.
   private showMoney(amount: string): void {
-    const { dollar, money } = this;
-    if (dollar === undefined || money === undefined || money.text === amount) {
-      return;
-    }
-    const { topBar } = LAYOUT;
-    setDollarAmount(dollar, money, amount, (inkWidth) => {
-      const { scale } = WALK_BAR.cash;
-      const top = topBar.y + WALK_BAR.cash.capsY;
-      return { left: topBar.x + cashLeft(inkWidth * scale), scale, top };
-    });
+    this.topSection?.setAmount(amount);
   }
 
   // The effect wells: each effect's unlit charm in its well, in the walk's order.
@@ -655,7 +578,12 @@ export class HudScene extends Scene {
     this.effectParts.forEach((part) => part.destroy());
     this.effectParts = BAR.effectWells.flatMap((well, i) => {
       const item = effects[i];
-      return item === undefined ? [] : [addCharm(this, item, well, { lit: false })];
+      if (item === undefined) {
+        return [];
+      }
+      const charm = addCharm(this, item, well, { lit: false });
+      this.topSection?.root.add(charm);
+      return [charm];
     });
   }
 
@@ -670,6 +598,7 @@ export class HudScene extends Scene {
     }
     const at = spareTreatPipAt(well);
     this.spareTreatPip = this.add.sprite(at.x, at.y, SPARE_TREAT_PIP_KEY).setOrigin(0);
+    this.topSection?.root.add(this.spareTreatPip);
   }
 
   // The neighbourhood pill under the walk bar and any debuff bars, redrawn as the zone or the

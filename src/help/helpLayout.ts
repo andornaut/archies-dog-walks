@@ -2,7 +2,6 @@ import { containsPoint, type Point, type Rect } from "@andornaut/game-kit/rect";
 
 import { HELP_SCREEN } from "../data/layout.ts";
 import { SCREEN_LAYOUT } from "../data/screen.ts";
-import { HOME_BAR_LAST_FACE, HOME_LAYOUT } from "../home/homeLayout.ts";
 import { TITLE_CAP_ROWS } from "../hud/walkHud.ts";
 import { MIN_TAP_SIZE } from "../layout/screenLayout.ts";
 import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";
@@ -10,6 +9,7 @@ import { pageCloseControl } from "../ui/closeControl.ts";
 import { rectIndexAt } from "../ui/grid.ts";
 import { LABEL_HELP_GAP } from "../ui/labelHelpGap.ts";
 import { TEXT_SCALE } from "../ui/textFit.ts";
+import { topSectionLayout } from "../ui/topSection.ts";
 import type { HelpAction } from "./helpPaging.ts";
 
 const { screen: SCREEN } = SCREEN_LAYOUT;
@@ -18,8 +18,12 @@ const HELP = HELP_SCREEN;
 
 // The home pages' top bar: its height, and the row its buttons' faces and the heading's capitals
 // centre on, the upper half of each above it.
-const HOME_BAR = HOME_LAYOUT.topBar;
-const TOP_BAR = { height: HOME_BAR.height, width, x: 0, y: 0 } as const;
+const TOP_SECTION = topSectionLayout(["close"]);
+const TOP_BAR = TOP_SECTION.bar;
+const CLOSE = TOP_SECTION.controls[0]?.[1];
+if (CLOSE === undefined) {
+  throw new Error("Help requires its close control");
+}
 // The picture starts under the bar, its top rule on the bar's last trim row.
 const ILLUSTRATION = { height: HELP.illustrationHeight, width, x: 0, y: TOP_BAR.height } as const;
 const TITLE_Y = ILLUSTRATION.y + ILLUSTRATION.height + HELP.titleGap;
@@ -40,7 +44,7 @@ export const HELP_LAYOUT = {
     ...HELP.body,
     y: TITLE_Y + TITLE_CAP_ROWS * TEXT_SCALE + LABEL_HELP_GAP,
   },
-  close: { ...pageCloseControl(SCREEN), ...HOME_BAR_LAST_FACE },
+  close: { ...pageCloseControl(SCREEN), ...CLOSE.face, hit: CLOSE.hit },
   // A tap target apart, so each dot's target is its own slot, ending above Previous's and
   // Next's, the small button gap over their faces.
   dots: {
@@ -49,7 +53,7 @@ export const HELP_LAYOUT = {
     spacing: MIN_TAP_SIZE,
     y: BUTTONS_Y - BUTTON_SIZE.smallGap - HELP.dots.size,
   },
-  heading: { x: HELP.headingX, y: HOME_BAR.mid - (TITLE_CAP_ROWS * TEXT_SCALE) / 2 },
+  heading: { x: TOP_SECTION.heading.x, y: TOP_SECTION.heading.y },
   illustration: ILLUSTRATION,
   next: {
     ...BUTTON_SIZE.compact,

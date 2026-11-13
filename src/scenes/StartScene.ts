@@ -62,12 +62,9 @@ import {
 } from "../home/home.ts";
 import { homeBackAction, homeBarButtonAt, overlayRegion, regionOutside } from "../home/homeBar.ts";
 import {
-  bankAmountText,
-  bankWell,
   dogTileNameY,
   dogTilePlateY,
   HOME_LAYOUT,
-  type HomeBarButton,
   homeBarButtons,
   sectionFill,
   slotSignText,
@@ -176,7 +173,6 @@ import {
 import { GAME_PROGRESS_STYLE, LOADING_MOTION, LOADING_TIMING } from "../ui/progressBar.ts";
 import { BUTTON_COLOURS, GREYED, pictureBox, type SelectLook } from "../ui/selection.ts";
 import { TEXT_SCALE } from "../ui/textFit.ts";
-import { topBarRects } from "../ui/topBarTrim.ts";
 import type { Cents } from "../units.ts";
 import { artReady, waitForWalkArt, whenArtReady } from "./artReady.ts";
 import type { CelebrationSceneData } from "./CelebrationScene.ts";
@@ -239,10 +235,10 @@ import {
   type ShopSceneData,
 } from "./ShopScene.ts";
 import { playEffect, playTag, spriteMetrics } from "./sprites.ts";
+import { addTopSection, mirrorTopSection, type TopSection } from "./topSection.ts";
 import {
   addBodyText,
   addGraphicsIn,
-  addIconButton,
   addMenuButton,
   addNineSlice,
   addPanel,
@@ -253,15 +249,9 @@ import {
   BODY_TEXT,
   BUTTON_PRESS_PX,
   buttonFaces,
-  exitIcon,
   type IconButton,
-  imageIcon,
-  imageIconOr,
   type SelectTile,
   type SelectTileOptions,
-  setDollarAmount,
-  settingsIcon,
-  soundIcon,
   tileTextureKey,
 } from "./uiKit.ts";
 
@@ -274,7 +264,6 @@ const GATE_SPOTS: readonly PackPlacement[] = HOME_LAYOUT.gateSpots;
 const PORCH_SPOTS: Readonly<Partial<Record<DogId, { footY: number; x: number }>>> =
   HOME_LAYOUT.porchSpots;
 const PORCH_DOG_OFFSET = HOME_LAYOUT.porchDogOffset;
-const TOP_BAR = HOME_LAYOUT.topBar;
 const PET_SHOP: Rect = HOME_LAYOUT.petShop;
 const PET_SHOP_BOARD: Rect = HOME_LAYOUT.petShop.board;
 const SLOT_SIGN = HOME_LAYOUT.slotSign;
@@ -505,6 +494,7 @@ export class StartScene extends Scene {
   private pressedTarget: Target | undefined;
   // The parting lines drawn this visit, one per dog picked or bought.
   private quips = new Map<DogId, string>();
+  private topSection: TopSection | undefined;
   private root: GameObjects.Container | undefined;
   private shakes = new Map<string, number>();
   private shownUpdate = false;
@@ -585,6 +575,7 @@ export class StartScene extends Scene {
     this.mirror = addHtmlMirror(this, () =>
       [this.gateSign, this.root].flatMap((root) => (root === undefined ? [] : [root])),
     );
+    mirrorTopSection(this, () => this.topSection?.root);
     this.prepareArrival();
 
     listenOnePress(this, {
@@ -1408,10 +1399,9 @@ export class StartScene extends Scene {
     const save = this.save();
     this.registry.set(LAST_VISIT_BANK_KEY, save.bankCents);
     this.registry.set(LAST_VISIT_WALKERS_KEY, [...save.owned.walkers]);
-    const g = addGraphicsIn(this, root);
     // The porch's shadows, under the figures on the canvas.
     const yard = onCanvas(addGraphicsIn(this, root));
-    this.drawTopBar(root, g, save);
+    this.drawTopBar(root, save);
     this.drawPetShop(root, save);
     this.drawSlotSign(root, save);
     this.syncUpdateNotice();
@@ -1649,80 +1639,19 @@ export class StartScene extends Scene {
     return { content: tile.content, look: tile.look, view };
   }
 
-  // A ui-icon-button at the art's spot; its face sinks when pressed instead of the whole
-  // button dipping.
-  private iconButton(
-    root: GameObjects.Container,
-    id: string,
-    at: { x: number; y: number },
-    icon: (x: number, y: number) => ReturnType<typeof imageIcon>,
-  ): void {
-    const view = this.tileView(root, id);
-    view.iconButton = addIconButton(this, view.container, at.x, at.y, icon);
-  }
-
-  private drawTopBar(
-    root: GameObjects.Container,
-    g: GameObjects.Graphics,
-    save: SaveDocument,
-  ): void {
-    const bar = { height: TOP_BAR.height, width: SCREEN.width, x: 0, y: 0 };
-    topBarRects(bar).forEach(({ colour, rect }) => fillRect(g, PALETTE[colour], rect));
-    // The bank in its well: the "$" and the amount at the bank's scale, one font advance apart,
-    // in full where it fits and else in its short form, the well as wide as they need.
-    const { bank, well, wellKeys } = TOP_BAR;
-    const dollar = this.text(root, 0, 0, "$", PALETTE.amber, { font: "title", scale: 1 });
-    const amount = this.text(root, 0, 0, "", PALETTE.cream, { font: "title", scale: 1 });
-    const { capsY, pad, scale } = bank;
-    const inkAt1x = (text: string) => {
-      setPixelText(amount, text);
-      const ink = inkSpan(amount);
-      return ink.right - ink.left;
-    };
-    const shown = bankAmountText(inkAt1x, {
-      full: dollarAmountText(save.bankCents),
-      short: shortDollarAmountText(save.bankCents),
-    });
-    const rect = bankWell(inkAt1x(`$${shown}`) * scale);
-    const pieces = Object.values(wellKeys);
-    if (pieces.every((key) => this.textures.exists(key))) {
-      const middle = rect.width - 2;
-      root.add([
-        this.add.image(rect.x, rect.y, wellKeys.left).setOrigin(0),
-        this.add
-          .image(rect.x + 1, rect.y, wellKeys.mid)
-          .setOrigin(0)
-          .setScale(middle, 1),
-        this.add.image(rect.x + rect.width - 1, rect.y, wellKeys.right).setOrigin(0),
-      ]);
-    } else {
-      const { lip } = well;
-      fillRect(g, PALETTE.ink, { ...rect, height: rect.height - lip, width: rect.width - lip });
+  // The shared section owns chrome, currency and controls; this scene supplies its bank.
+  private drawTopBar(root: GameObjects.Container, save: SaveDocument): void {
+    const visible = homeBarButtons(this.exit).map(([id]) => id);
+    const bar = addTopSection(this, { buttons: visible, currency: true, muted: isMuted(this) });
+    this.topSection = bar;
+    root.add(bar.root);
+    for (const id of visible) {
+      const control = bar.buttons.get(id);
+      if (control !== undefined) {
+        this.tileView(root, id).iconButton = control;
+      }
     }
-    root.bringToTop(dollar);
-    root.bringToTop(amount);
-    setDollarAmount(dollar, amount, shown, () => ({ left: rect.x + pad, scale, top: capsY }));
-    for (const [id, { face }] of homeBarButtons(this.exit)) {
-      this.iconButton(root, id, face, (x, y) => this.barIcon(id, x, y));
-    }
-  }
-
-  // A top bar button's icon on its face at (x, y).
-  private barIcon(id: HomeBarButton, x: number, y: number): ReturnType<typeof imageIcon> {
-    switch (id) {
-      case "exit":
-        return exitIcon(this, x, y);
-      case "help":
-        return imageIconOr(this, "icon-help", x, y, "?");
-      case "logbook":
-        return imageIconOr(this, "icon-logbook", x, y, "L");
-      case "mute":
-        return soundIcon(this, !isMuted(this), x, y);
-      case "settings":
-        return settingsIcon(this, x, y);
-      default:
-        return id satisfies never;
-    }
+    bar.setAmount(dollarAmountText(save.bankCents), shortDollarAmountText(save.bankCents));
   }
 
   // The starter owners waiting at the gate until the first walk; a picked dog has gone to the

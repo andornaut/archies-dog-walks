@@ -60,7 +60,7 @@ function rectangle(x: number) {
   };
 }
 
-function mirrored(roots: () => readonly unknown[] = () => []) {
+function mirrored(roots: () => readonly unknown[] = () => [], whilePaused = false) {
   const doc = new FakeDocument();
   const { element, layer } = fakeLayer(doc, domScale(2, { height: 560, width: 360, x: 0, y: 0 }));
   place.value = { fonts: { body: gameFont("font-body"), title: gameFont("font-title") }, layer };
@@ -74,7 +74,9 @@ function mirrored(roots: () => readonly unknown[] = () => []) {
     game: { events: game },
     sys: { isActive: () => state.active, isVisible: () => true },
   };
-  const mirror = addHtmlMirror(scene as never, roots as never, () => state.pageOver);
+  const mirror = addHtmlMirror(scene as never, roots as never, () => state.pageOver, {
+    whilePaused,
+  });
   const dialogs = () => element.children.filter((child: FakeElement) => child.className !== "");
   return { dialogs, doc, events, game, mirror, state };
 }
@@ -98,6 +100,19 @@ describe("the HTML mirror", () => {
     Object.assign(state, over);
     game.emit(EVENTS.preRender);
     expect(dialogs()[0]?.hidden).toBe(true);
+  });
+
+  it("keeps the undimmed top section on the same renderer while its owner pauses", () => {
+    const part = rectangle(2);
+    const { dialogs, game, state } = mirrored(() => [part], true);
+    game.emit(EVENTS.preRender);
+    const element = dialogs()[0]?.children[0];
+    const width = element?.style.width;
+    state.active = false;
+    game.emit(EVENTS.preRender);
+    expect(dialogs()[0]?.hidden).toBe(false);
+    expect(dialogs()[0]?.children[0]).toBe(element);
+    expect(element?.style.width).toBe(width);
   });
 
   it("leaves a part's element alone while nothing it is drawn from changes", () => {

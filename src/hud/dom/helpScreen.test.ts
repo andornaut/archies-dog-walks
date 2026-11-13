@@ -32,7 +32,7 @@ function helpScreen(page: number, pressed: "close" | "next" | "previous" | undef
 }
 
 describe("the HTML help screen", () => {
-  it("takes no presses: its buttons and close control are pictures and Tab keeps focus on it", () => {
+  it("takes no presses: its page buttons are pictures and Tab keeps focus on it", () => {
     const { dialog, doc, nodes } = helpScreen(0, undefined);
     expect(dialog?.className).toContain("adw-passive");
     expect(nodes.some((node) => node.tagName === "button")).toBe(false);
@@ -47,12 +47,13 @@ describe("the HTML help screen", () => {
     ["previous", 0, []],
     ["previous", 1, ["adw-button"]],
     ["next", 0, ["adw-button adw-go"]],
-    ["close", 0, ["adw-close"]],
+    ["close", 0, []],
   ] as const)("shows %s pressed on page %d only where it is available", (pressed, page, shown) => {
     const { nodes } = helpScreen(page, pressed);
     expect(
       nodes.filter((node) => node.attributes.has("data-pressed")).map((node) => node.className),
     ).toEqual(shown);
+    expect(nodes.some((node) => node.className === "adw-close")).toBe(false);
     const previous = nodes.find((node) => node.className.startsWith("adw-button"));
     expect(previous?.className.includes("adw-disabled")).toBe(page === 0);
   });

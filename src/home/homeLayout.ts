@@ -9,7 +9,7 @@ import { HIT_RULE } from "@andornaut/game-kit/ui/hitAreas";
 import { HOME_SCREEN, MIN_PRESS } from "../data/layout.ts";
 import { SCREEN_CONFIG, SCREEN_LAYOUT } from "../data/screen.ts";
 import type { DogId } from "../data/types.ts";
-import { ownerPhotoRect, TITLE_CAP_ROWS, WALK_BAR, WALK_BAR_BUTTONS } from "../hud/walkHud.ts";
+import { ownerPhotoRect, TITLE_CAP_ROWS, WALK_BAR } from "../hud/walkHud.ts";
 import type { PackPlacement } from "../layout/packFormation.ts";
 import { barTitleRoom } from "../ui/barTitle.ts";
 import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";
@@ -20,6 +20,7 @@ import { MARK_OFFSET } from "../ui/mark.ts";
 import { hasPill, PILL_IMAGE_GAP, pillDropUnderInk, pillRiseOverCaps } from "../ui/namePills.ts";
 import { BUTTON_LIP_PX } from "../ui/selection.ts";
 import { TOP_BAR_FACE, TOP_BAR_HEIGHT, TOP_BAR_MID, TOP_BAR_WELL } from "../ui/topBarTrim.ts";
+import { topSectionCurrency, topSectionLayout } from "../ui/topSection.ts";
 import { FEEDBACK } from "./feedback.ts";
 import {
   MODAL,
@@ -212,20 +213,8 @@ interface HomeBarButtonPlace {
 // face where the walk bar's Pause face is, and each face before it a MIN_PRESS column left of the
 // next, each in a hit area the column wide and TOP_BAR_PRESS_HEIGHT tall centred across it, cut
 // at the screen's edge.
-const TOP_BAR_PITCH = MIN_PRESS;
 function topBarButton(fromRight: number): HomeBarButtonPlace {
-  const last = WALK_BAR.buttons[WALK_BAR_BUTTONS[WALK_BAR_BUTTONS.length - 1] ?? "pause"];
-  const faceX = last.faceX - (fromRight - 1) * TOP_BAR_PITCH;
-  const x = faceX - (TOP_BAR_PITCH - TOP_BAR_FACE.size) / 2;
-  return {
-    face: { x: faceX, y: TOP_BAR_FACE.y },
-    hit: {
-      height: TOP_BAR_PRESS_HEIGHT,
-      width: Math.min(TOP_BAR_PITCH, SCREEN_CONFIG.width - x),
-      x,
-      y: 0,
-    },
-  };
+  return topSectionLayout(HOME_BAR_BUTTONS).controls[HOME_BAR_BUTTONS.length - fromRight]![1];
 }
 
 // The home screen's geometry, in screen pixels. Each icon button is drawn at its icon spot
@@ -518,7 +507,7 @@ export function homeBarButtons(
   exit: boolean,
 ): readonly (readonly [HomeBarButton, HomeBarButtonPlace])[] {
   const shown = HOME_BAR_BUTTONS.filter((id) => exit || id !== "exit");
-  return shown.map((id, i) => [id, topBarButton(shown.length - i)] as const);
+  return topSectionLayout(shown).controls;
 }
 
 // How wide the bank's ink may be: the widest well less its lip and padding. A bank wider shows
@@ -529,9 +518,7 @@ export const BANK_ROOM =
 // The bank's well for its ink inkWidth wide on screen: bank.pad ink columns either side of the
 // bank's ink, then the lip, at most well.maxWidth wide.
 export function bankWell(inkWidth: number): Rect {
-  const { bank, well } = HOME_LAYOUT.topBar;
-  const width = Math.min(well.maxWidth, inkWidth + 2 * bank.pad + well.lip);
-  return { height: well.height, width, x: well.x, y: well.y };
+  return topSectionCurrency(topSectionLayout(HOME_BAR_BUTTONS, { currency: true }), inkWidth).well;
 }
 
 // Which of the bank's texts, without its "$", it shows: full, the amount with thousands

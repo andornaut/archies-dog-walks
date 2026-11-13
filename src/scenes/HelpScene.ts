@@ -22,13 +22,8 @@ import { currentSettings, updateProfile } from "./profileStore.ts";
 import { addHtmlHelpScreen } from "./questionPanel.ts";
 import { REFUSE } from "./refuseControl.ts";
 import { SCENE_KEYS, type SceneKey } from "./sceneKeys.ts";
-import {
-  addCloseButton,
-  addMenuButton,
-  addTapBurst,
-  clearScene,
-  type MenuButton,
-} from "./uiKit.ts";
+import { addTopSection, mirrorTopSection, type TopSection } from "./topSection.ts";
+import { addMenuButton, addTapBurst, clearScene, type MenuButton } from "./uiKit.ts";
 
 // Emitted on game.events when the help closes, by any route.
 export const HELP_CLOSED_EVENT = "help-closed";
@@ -75,6 +70,7 @@ function pressedBy(action: HelpAction | undefined): Pressed | undefined {
 // menu over the walk, and before its picture's scenes, which draw over it. The caller pauses
 // itself and launches it (openHelp); on close, help resumes that scene.
 export class HelpScene extends Scene {
+  private topSection: TopSection | undefined;
   // The screen in HTML, while it is drawn there.
   private html: DomQuestionPanel | undefined;
   private previousButton: MenuButton | undefined;
@@ -98,6 +94,7 @@ export class HelpScene extends Scene {
     this.resumeKey = data?.resume;
     this.events.once(Scenes.Events.SHUTDOWN, () => this.scene.stop(SCENE_KEYS.helpPicture));
     this.draw();
+    mirrorTopSection(this, () => this.topSection?.root);
 
     this.input.keyboard?.on("keydown", (event: KeyboardEvent) => {
       const action = helpActionForKey(event.repeat, event.code);
@@ -172,6 +169,11 @@ export class HelpScene extends Scene {
     const view = helpView(gameData, helpMeasure(this), this.page, this.pressed);
     this.page = view.page;
     view.backdrop.forEach(({ colour, rect }) => addFilledRect(this, colour, rect));
+    this.topSection = addTopSection(this, {
+      buttons: ["close"],
+      heading: view.heading.text,
+    });
+    this.topSection.buttons.get("close")?.setPressed(view.closePressed);
     this.showPicture(itemAt(gameData.help, this.page).art, view.illustration);
     this.html?.destroy();
     this.html = addHtmlHelpScreen(this, view);
@@ -179,13 +181,7 @@ export class HelpScene extends Scene {
       this.previousButton = undefined;
       return;
     }
-    const { body, heading, title } = view;
-    addPixelText(this, heading.centreX, heading.capTop, heading.text, {
-      colour: heading.colour,
-      font: "title",
-      scale: heading.scale,
-    });
-    addCloseButton(this, this.add.container(0, 0), view.close, view.closePressed);
+    const { body, title } = view;
     view.rules.forEach(({ colour, rect }) => addFilledRect(this, colour, rect));
     addPixelText(this, title.centreX, title.capTop, title.text, {
       colour: title.colour,

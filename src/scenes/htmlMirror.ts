@@ -266,6 +266,7 @@ export function addHtmlMirror(
   scene: Scene,
   roots: () => readonly GameObjects.GameObject[],
   standDown: () => boolean = () => false,
+  options: { whilePaused?: boolean } = {},
 ): HtmlMirror | undefined {
   const place = htmlPanelPlace(scene);
   if (place === undefined) {
@@ -677,7 +678,8 @@ export function addHtmlMirror(
     // the start screen under the shop, the Logbook, help, the settings, Quit? and a celebration.
     // CLEANUP (added 2026-11-11): remove in phase 5, when overlay dims move to HTML.
     // The walk's HUD stands down the same way while a page over the walk dims or covers it.
-    const hidden = !scene.sys.isActive() || !scene.sys.isVisible() || standDown();
+    const hidden =
+      (!options.whilePaused && !scene.sys.isActive()) || !scene.sys.isVisible() || standDown();
     dialog.hidden = hidden;
     if (hidden) {
       if (entries.size > 0) {
@@ -707,6 +709,7 @@ export function addHtmlMirror(
       for (const object of list) {
         if (
           !object.active ||
+          (dataOf(object, "topSection") === true && !options.whilePaused) ||
           labelPills.has(object as GameObjects.Graphics) ||
           dataOf(object, MIRROR_CANVAS_DATA) === true
         ) {

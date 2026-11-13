@@ -160,7 +160,7 @@ export function showHelpScreen(layer: UiLayer, input: DomHelpInput): DomQuestion
     },
   ];
   return showQuestionPanel(layer, {
-    close: undefined,
+    close: null,
     closeLabel: input.closeLabel,
     closePressed: view.closePressed,
     describedBy: page.id,
@@ -177,7 +177,7 @@ export function showHelpScreen(layer: UiLayer, input: DomHelpInput): DomQuestion
       note: [],
       notePlate: undefined,
       panel: view.illustration,
-      title: [view.heading],
+      title: [],
       titleY: view.heading.capTop,
     },
   });

@@ -14,7 +14,6 @@ import { LABEL_HELP_GAP } from "../ui/labelHelpGap.ts";
 import { PALETTE } from "../ui/palette.ts";
 import { BUTTON_COLOURS } from "../ui/selection.ts";
 import { TEXT_SCALE } from "../ui/textFit.ts";
-import { topBarRects } from "../ui/topBarTrim.ts";
 import { helpBody } from "./helpBody.ts";
 import { dotRects, HELP_LAYOUT } from "./helpLayout.ts";
 import { clampPage, helpButtons } from "./helpPaging.ts";
@@ -147,10 +146,7 @@ export function helpView(
     };
   };
   return {
-    backdrop: [
-      { colour: PALETTE.darkBrown, rect: layout.screen },
-      ...topBarRects(layout.topBar).map(({ colour, rect }) => ({ colour: PALETTE[colour], rect })),
-    ],
+    backdrop: [{ colour: PALETTE.darkBrown, rect: layout.screen }],
     body,
     buttons: [
       button(layout.previous, words.previous, {

@@ -7,7 +7,6 @@ import { gameData } from "../data/index.ts";
 import {
   DEBUFF_BAR,
   DOG_CARD_PARTS,
-  MIN_PRESS,
   OWNER_TAB,
   SPARE_TREAT_PIP,
   WALK_BAR_PARTS,
@@ -19,7 +18,8 @@ import { walkLength } from "../rules/route.ts";
 import { zoneLength } from "../runner/walk.ts";
 import type { RunState } from "../state/runState.ts";
 import { GAME_PROGRESS, GAME_PROGRESS_STYLE } from "../ui/progressBar.ts";
-import { TOP_BAR_FACE, TOP_BAR_WELL, wellCapsTop } from "../ui/topBarTrim.ts";
+import { TOP_BAR_FACE, wellCapsTop } from "../ui/topBarTrim.ts";
+import { topSectionGapLeft, topSectionLayout } from "../ui/topSection.ts";
 import { type EffectItem, maxEffects } from "./effectIcons.ts";
 import { heartRows } from "./hudView.ts";
 
@@ -49,44 +49,37 @@ export const EFFECT_WELLS = maxEffects(gameData);
 // section before it and the first of the section after it) with an equal gap on either side,
 // an odd leftover column going to the gap on its right.
 export function evenGapLeft(left: number, right: number, width: number): number {
-  return left + Math.floor((right - left - width) / 2);
+  return topSectionGapLeft(left, right, width);
 }
 
 // The walk bar's three sections, left to right: the cash well, the effect wells and the
 // buttons. The cash well and the buttons keep their places at the bar's ends, and the effect
 // wells sit evenly between the cash well's right edge and the first button's press area, gap
 // apart, centred down the button faces' rows.
-const CASH_WELL = {
-  height: TOP_BAR_WELL.height,
-  width: CASH_INK.right + 1 + TOP_BAR_WELL.lip - TOP_BAR_WELL.x,
-  x: TOP_BAR_WELL.x,
-  y: TOP_BAR_WELL.y,
-} as const;
-// A button fromRight columns in from the last (0 the last): its press area a MIN_PRESS column,
-// side by side to the bar's right edge, and its face centred across it.
-function walkBarButton(fromRight: number) {
-  const hitX = SCREEN_CONFIG.width - (fromRight + 1) * MIN_PRESS;
-  return { faceX: hitX + (MIN_PRESS - TOP_BAR_FACE.size) / 2, hitWidth: MIN_PRESS, hitX };
+const SHARED_BAR = topSectionLayout(WALK_BAR_BUTTONS, { currency: true, effects: EFFECT_WELLS });
+const CURRENCY = SHARED_BAR.currency;
+const FIRST_EFFECT = SHARED_BAR.effectWells[0];
+if (CURRENCY === undefined || FIRST_EFFECT === undefined) {
+  throw new Error("The walk requires currency and effect sections");
 }
+const CASH_WELL = { height: CURRENCY.height, width: CURRENCY.width, x: CURRENCY.x, y: CURRENCY.y };
 const BUTTONS = Object.fromEntries(
-  WALK_BAR_BUTTONS.map((id, i) => [id, walkBarButton(WALK_BAR_BUTTONS.length - 1 - i)]),
-) as Readonly<Record<WalkBarButtonId, ReturnType<typeof walkBarButton>>>;
+  SHARED_BAR.controls.map(([id, { face, hit }]) => [
+    id,
+    { faceX: face.x, hitWidth: hit.width, hitX: hit.x },
+  ]),
+) as Readonly<Record<WalkBarButtonId, { faceX: number; hitWidth: number; hitX: number }>>;
 const EFFECTS = WALK_BAR_PARTS.effects;
 const EFFECT_SIZE = EFFECTS.size;
 const EFFECT_GAP = EFFECTS.gap;
-const EFFECT_SPAN = EFFECT_WELLS * EFFECT_SIZE + (EFFECT_WELLS - 1) * EFFECT_GAP;
 const EFFECT_ROW = {
   holdInset: EFFECTS.holdInset,
   icon: EFFECTS.icon,
   iconSize: EFFECTS.iconSize,
   size: EFFECT_SIZE,
-  y: TOP_BAR_FACE.y - (EFFECT_SIZE - TOP_BAR_FACE.size) / 2,
-} as const;
-const EFFECTS_X = evenGapLeft(
-  CASH_WELL.x + CASH_WELL.width,
-  BUTTONS[WALK_BAR_BUTTONS[0]].hitX,
-  EFFECT_SPAN,
-);
+  y: FIRST_EFFECT.y,
+};
+const EFFECTS_X = FIRST_EFFECT.x;
 
 // The walk bar as ui-walk-bar draws it, in bar pixels; every position the HUD uses comes from
 // this table. buttons: each button's face x and its hit area's x and width, the hit areas
@@ -148,29 +141,18 @@ interface WalkBarLayout {
 
 // The walk bar's parts on screen, for the bar at bar with wells effect wells.
 export function walkBarLayout(bar: Rect, wells = EFFECT_WELLS): WalkBarLayout {
-  const { buttonFace, effects } = WALK_BAR;
-  const at = (point: Point): Point => ({ x: bar.x + point.x, y: bar.y + point.y });
-  const buttons = Object.fromEntries(
-    WALK_BAR_BUTTONS.map((id) => {
-      const { faceX, hitWidth, hitX } = WALK_BAR.buttons[id];
-      const hit = { height: MIN_PRESS, width: hitWidth, x: bar.x + hitX, y: bar.y };
-      return [id, { face: at({ x: faceX, y: buttonFace.y }), hit }];
-    }),
-  ) as Record<WalkBarButtonId, BarButton>;
-  const effectWells = Array.from({ length: wells }, (_, i) => ({
-    ...at({ x: effects.x + i * effects.pitch, y: effects.y }),
-    height: effects.size,
-    width: effects.size,
-  }));
-  const firstHit = buttons[WALK_BAR_BUTTONS[0]].hit;
-  const starts = effectWells.map((well, i) => (i === 0 ? well.x - effects.holdInset : well.x));
-  const effectHolds = starts.map((x, i) => ({
-    height: bar.height,
-    width: (starts[i + 1] ?? firstHit.x) - x,
-    x,
-    y: bar.y,
-  }));
-  return { buttons, effectHolds, effectWells };
+  const shared = topSectionLayout(WALK_BAR_BUTTONS, { currency: true, effects: wells });
+  const move = (rect: Rect): Rect => ({ ...rect, x: rect.x + bar.x, y: rect.y + bar.y });
+  return {
+    buttons: Object.fromEntries(
+      shared.controls.map(([id, control]) => [
+        id,
+        { face: { x: control.face.x + bar.x, y: control.face.y + bar.y }, hit: move(control.hit) },
+      ]),
+    ) as Record<WalkBarButtonId, BarButton>,
+    effectHolds: shared.effectHolds.map(move),
+    effectWells: shared.effectWells.map(move),
+  };
 }
 
 // The first ink column of the cash, or the home top bar's bank, for ink inkWidth wide on

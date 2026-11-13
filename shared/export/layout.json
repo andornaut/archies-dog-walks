@@ -2866,40 +2866,40 @@
     ],
     "effectWells": [
       {
+        "height": 22,
+        "width": 22,
         "x": 77,
-        "y": 8,
-        "height": 22,
-        "width": 22
+        "y": 8
       },
       {
+        "height": 22,
+        "width": 22,
         "x": 100,
-        "y": 8,
-        "height": 22,
-        "width": 22
+        "y": 8
       },
       {
+        "height": 22,
+        "width": 22,
         "x": 123,
-        "y": 8,
-        "height": 22,
-        "width": 22
+        "y": 8
       },
       {
+        "height": 22,
+        "width": 22,
         "x": 146,
-        "y": 8,
-        "height": 22,
-        "width": 22
+        "y": 8
       },
       {
+        "height": 22,
+        "width": 22,
         "x": 169,
-        "y": 8,
-        "height": 22,
-        "width": 22
+        "y": 8
       },
       {
-        "x": 192,
-        "y": 8,
         "height": 22,
-        "width": 22
+        "width": 22,
+        "x": 192,
+        "y": 8
       }
     ],
     "debuffBar": {
