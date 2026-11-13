@@ -1,6 +1,8 @@
+import type { Rect } from "@andornaut/game-kit/rect";
 import type { FontMetrics } from "@andornaut/game-kit/text/bitmapFont";
 
 import { PILL, PILL_IMAGE_GAP } from "../data/layout.ts";
+import { centredInkOffsets } from "./centredInkBlock.ts";
 
 // A name set in a pill inside a line of text: a pale rounded box behind the name, laid into the
 // line so that measuring, fitting and wrapping the text make room for it. The text carries the
@@ -113,6 +115,19 @@ export function inkWithPills(
 // A pill's top below its line's top (negative: above it) and its height, at scale.
 export function pillRows(scale: number): { height: number; top: number } {
   return { height: PILL.height * scale, top: -PILL.rise * scale };
+}
+
+// The line reserves envelope even when the name has no ascenders or descenders. Fit a symmetric
+// backing around its actual ink inside that envelope, without moving the inline text or its
+// neighbours. Horizontal padding and occupied width stay unchanged.
+export function centredPillBacking(envelope: Rect, ink: Rect): Rect {
+  const padding = Math.max(
+    0,
+    Math.min(ink.y - envelope.y, envelope.y + envelope.height - ink.y - ink.height),
+  );
+  const backing = { ...envelope, height: ink.height + 2 * padding };
+  const [offset] = centredInkOffsets(ink, [backing]);
+  return { ...backing, y: backing.y + (offset?.y ?? 0) };
 }
 
 // The rows a pill keeps clear of an image over or under it, in screen pixels at any scale.

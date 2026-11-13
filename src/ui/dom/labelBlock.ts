@@ -1,9 +1,4 @@
-import {
-  advanceWidth,
-  type BitmapFont,
-  fontMetrics,
-  laidGlyphs,
-} from "@andornaut/game-kit/text/bitmapFont";
+import { advanceWidth, type BitmapFont, fontMetrics } from "@andornaut/game-kit/text/bitmapFont";
 
 import {
   type DomScale,
@@ -12,8 +7,7 @@ import {
   fontPixel,
   wholeArtPixels,
 } from "../domScale.ts";
-import { laidPills, pillRows } from "../namePills.ts";
-import { displayGlyphs, inkEnd, penRuns, setBox, spokenText } from "./pixelLine.ts";
+import { displayGlyphs, inkEnd, namePillBoxes, penRuns, setBox, spokenText } from "./pixelLine.ts";
 import type { WEB_FONTS } from "./uiLayer.ts";
 
 // A canvas label as the HTML interface draws it in its web font: its text as the bitmap font
@@ -70,7 +64,6 @@ export function labelPlace(
   }[];
 } {
   const pixel = fontPixel(scale, label.scale);
-  const rows = pillRows(1);
   const { capTop } = fontMetrics(bitmap);
   const caps = Math.round(label.y) + capTop * label.scale;
   const top = wholeArtPixels(scale, exactDeviceY(scale, caps) - capTop * pixel);
@@ -95,18 +88,7 @@ export function labelPlace(
     fontSize: 8 * pixel,
     lineHeight: bitmap.lineHeight * pixel,
     pills: lines.flatMap(({ left, text, top: lineTop }) =>
-      laidPills(
-        1,
-        laidGlyphs(bitmap, 1, text).map((glyph) => ({ ...glyph, line: 0 })),
-      ).map((pill) => ({
-        box: {
-          height: rows.height * pixel,
-          left: left + pill.left * pixel,
-          top: lineTop + rows.top * pixel,
-          width: (pill.right - pill.left) * pixel,
-        },
-        index: pill.index,
-      })),
+      namePillBoxes(bitmap, pixel, { x: left, y: lineTop }, text),
     ),
     runs: lines.flatMap(({ left, text, top: lineTop }) =>
       penRuns(bitmap, text).map((run) => ({

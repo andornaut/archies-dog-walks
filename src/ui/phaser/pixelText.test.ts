@@ -5,8 +5,9 @@ import { describe, expect, it, vi } from "vitest";
 
 import shippedManifest from "../../../public/art/manifest.json" with { type: "json" };
 import { parseManifest } from "../../assets/manifest.ts";
-import { fontInk, laidChars, phaserFontData } from "../../testing/fontInk.ts";
-import { inPill, laidPills } from "../namePills.ts";
+import { gameData } from "../../data/index.ts";
+import { fontInk, gameGlyphs, laidChars, phaserFontData } from "../../testing/fontInk.ts";
+import { inPill, laidPills, pillRows } from "../namePills.ts";
 import { GLYPH_HEIGHT, glyphAdvance, LINE_HEIGHT, PIXEL_GLYPHS } from "../pixelFont.ts";
 import { addPixelText, type FontRole, labelPills, registerFallbackPixelFont } from "./pixelText.ts";
 
@@ -84,11 +85,13 @@ describe("labelPills", () => {
     // As Phaser lays the label out: line tops a line height apart, the line break not drawn.
     const characters = laid.map(({ char, ink, line }, i) => ({
       char,
+      h: gameGlyphs("font-body").get(char)?.height ?? 0,
       i,
       line,
       t: line * 10,
       w: ink === null ? 0 : ink.right - ink.left,
       x: ink?.left ?? 0,
+      y: line * 10 + (gameGlyphs("font-body").get(char)?.yOffset ?? 0),
     }));
     const label = {
       displayOriginX: 4,
@@ -112,6 +115,46 @@ describe("labelPills", () => {
         },
       },
     ]);
+  });
+
+  it("centres every debuff's visible ink without moving the label or enlarging its reserved rows", () => {
+    for (const { name } of Object.values(gameData.debuffs)) {
+      const text = inPill(1, name);
+      const laid = laidChars("font-body", { scale: 1 }, text);
+      const characters = laid.map(({ char, ink }, i) => ({
+        char,
+        h: gameGlyphs("font-body").get(char)?.height ?? 0,
+        i,
+        line: 0,
+        t: 0,
+        w: ink === null ? 0 : ink.right - ink.left,
+        x: ink?.left ?? 0,
+        y: gameGlyphs("font-body").get(char)?.yOffset ?? 0,
+      }));
+      const label = {
+        displayOriginX: 0,
+        displayOriginY: 0,
+        getTextBounds: () => ({ characters }),
+        scaleX: 2,
+        scaleY: 2,
+        x: 41,
+        y: 97,
+      } as unknown as GameObjects.BitmapText;
+      const [pill] = labelPills(label);
+      expect(pill, name).toBeDefined();
+      const ink = characters.filter(({ h, w }) => w > 0 && h > 0);
+      const left = 41 + Math.min(...ink.map(({ x }) => x)) * 2;
+      const right = 41 + Math.max(...ink.map(({ w, x }) => x + w)) * 2;
+      const top = 97 + Math.min(...ink.map(({ y }) => y)) * 2;
+      const bottom = 97 + Math.max(...ink.map(({ h, y }) => y + h)) * 2;
+      expect(pill!.rect.x + pill!.rect.width / 2, name).toBe((left + right) / 2);
+      expect(pill!.rect.y + pill!.rect.height / 2, name).toBe((top + bottom) / 2);
+      expect(pill!.rect.y).toBeGreaterThanOrEqual(97 + pillRows(2).top);
+      expect(pill!.rect.y + pill!.rect.height).toBeLessThanOrEqual(
+        97 + pillRows(2).top + pillRows(2).height,
+      );
+      expect([label.x, label.y, label.scaleX, label.scaleY]).toEqual([41, 97, 2, 2]);
+    }
   });
 });
 

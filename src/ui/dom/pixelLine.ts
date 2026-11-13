@@ -21,7 +21,15 @@ import {
   gridY,
   wholeArtPixels,
 } from "../domScale.ts";
-import { laidPills, PILL_CLOSE, PILL_SPACE, pillIndex, pillRows } from "../namePills.ts";
+import {
+  centredPillBacking,
+  laidPills,
+  PILL,
+  PILL_CLOSE,
+  PILL_SPACE,
+  pillIndex,
+  pillRows,
+} from "../namePills.ts";
 import { PALETTE } from "../palette.ts";
 import { plainMarks } from "../pixelFont.ts";
 import { WEB_FONTS } from "./uiLayer.ts";
@@ -329,6 +337,45 @@ export function penRuns(
   return runs;
 }
 
+// Inline names keep their original pen positions and the line's reserved pill clearance. Only
+// the painted backing follows each name's visible rows, shared by both DOM text adapters.
+export function namePillBoxes(
+  bitmap: BitmapFont,
+  pixel: number,
+  origin: Origin,
+  text: string,
+): { box: { height: number; left: number; top: number; width: number }; index: number }[] {
+  const chars = [...text];
+  const rows = pillRows(1);
+  return laidPills(
+    1,
+    laidGlyphs(bitmap, 1, text).map((glyph) => ({ ...glyph, line: 0 })),
+  ).map((pill) => {
+    const named = pill.name.flatMap((i) => {
+      const glyph = bitmap.glyphs.get(chars[i] ?? "");
+      return glyph !== undefined && glyph.height > 0 ? [glyph] : [];
+    });
+    const top = Math.min(...named.map((glyph) => glyph.yOffset));
+    const bottom = Math.max(...named.map((glyph) => glyph.yOffset + glyph.height));
+    const envelope = {
+      height: rows.height * pixel,
+      width: (pill.right - pill.left) * pixel,
+      x: origin.x + pill.left * pixel,
+      y: origin.y + rows.top * pixel,
+    };
+    const rect = centredPillBacking(envelope, {
+      height: (bottom - top) * pixel,
+      width: envelope.width - 2 * PILL.inset * pixel,
+      x: envelope.x + PILL.inset * pixel,
+      y: origin.y + top * pixel,
+    });
+    return {
+      box: { height: rect.height, left: rect.x, top: rect.y, width: rect.width },
+      index: pill.index,
+    };
+  });
+}
+
 // The text a screen reader reads for a line with pills: their characters left out, a pill's
 // spaces plain spaces.
 export function spokenText(line: string): string {
@@ -484,7 +531,6 @@ export function blockPlace(
       ? centredLeft(scale, block.x, boundsAdvance(bitmap, shown) * pixel)
       : start;
   const capTop = capRows(bitmap, block.font);
-  const rows = pillRows(1);
   const lines = block.lines.map((line, i) => {
     const shown = shownText(block.font, line);
     return {
@@ -499,18 +545,7 @@ export function blockPlace(
     fontSize: 8 * pixel,
     lineHeight: bitmap.lineHeight * pixel,
     pills: lines.flatMap(({ left, shown, top }) =>
-      laidPills(
-        1,
-        laidGlyphs(bitmap, 1, shown).map((glyph) => ({ ...glyph, line: 0 })),
-      ).map((pill) => ({
-        box: {
-          height: rows.height * pixel,
-          left: left + pill.left * pixel,
-          top: top + rows.top * pixel,
-          width: (pill.right - pill.left) * pixel,
-        },
-        index: pill.index,
-      })),
+      namePillBoxes(bitmap, pixel, { x: left, y: top }, shown),
     ),
     runs: lines.flatMap(({ left, shown, top }, i) =>
       penRuns(bitmap, shown, block.breaks?.[i]).map((run) => ({

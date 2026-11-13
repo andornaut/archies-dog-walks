@@ -16,6 +16,7 @@ import { type FittedText, fittingText, type TextFitStyle } from "@andornaut/game
 import type { GameObjects, Scene, Types } from "phaser";
 
 import {
+  centredPillBacking,
   inkWithPills,
   type LaidChar,
   laidPills,
@@ -318,16 +319,32 @@ export function labelPills(
   const top = label.y - label.displayOriginY * label.scaleY;
   return laidPills(1, characters.map(laidChar)).map((pill) => {
     const lineTop = characters[pill.name[0] ?? 0]?.t ?? 0;
+    const named = pill.name.flatMap((i) => {
+      const char = characters[i];
+      return char !== undefined && char.w > 0 && char.h > 0 ? [char] : [];
+    });
+    const inkLeft = Math.min(...named.map((char) => char.x));
+    const inkRight = Math.max(...named.map((char) => char.x + char.w));
+    const inkTop = Math.min(...named.map((char) => char.y));
+    const inkBottom = Math.max(...named.map((char) => char.y + char.h));
     return {
       index: pill.index,
       // Phaser tints a character by its index among the characters it draws (i).
       name: pill.name.map((at) => characters[at]?.i ?? 0),
-      rect: {
-        height: rows.height * label.scaleY,
-        width: (pill.right - pill.left) * label.scaleX,
-        x: left + pill.left * label.scaleX,
-        y: top + (lineTop + rows.top) * label.scaleY,
-      },
+      rect: centredPillBacking(
+        {
+          height: rows.height * label.scaleY,
+          width: (pill.right - pill.left) * label.scaleX,
+          x: left + pill.left * label.scaleX,
+          y: top + (lineTop + rows.top) * label.scaleY,
+        },
+        {
+          height: (inkBottom - inkTop) * label.scaleY,
+          width: (inkRight - inkLeft) * label.scaleX,
+          x: left + inkLeft * label.scaleX,
+          y: top + inkTop * label.scaleY,
+        },
+      ),
     };
   });
 }
