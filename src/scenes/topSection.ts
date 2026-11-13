@@ -1,4 +1,4 @@
-import type { GameObjects, Scene } from "phaser";
+import { type GameObjects, type Scene, Scenes } from "phaser";
 
 import { PALETTE } from "../ui/palette.ts";
 import { fillRect } from "../ui/phaser/draw.ts";
@@ -99,6 +99,10 @@ export function addTopSection(
       }),
     );
   }
+  // A paused owner no longer advances its press animation. Its lit controls release at once.
+  const releasePressed = () => buttons.forEach((button) => button.setPressed(false));
+  scene.events.on(Scenes.Events.PAUSE, releasePressed);
+  root.once("destroy", () => scene.events.off(Scenes.Events.PAUSE, releasePressed));
   if (config.heading !== undefined) {
     const { scale, x, y } = layout.heading;
     const text = config.heading;
