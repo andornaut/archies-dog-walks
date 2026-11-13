@@ -9,7 +9,7 @@ The design of the game, its targets, and how it is tuned and tested. A pixel-art
 | [`design.md`](design.md) | The rulebook: rules and content | A design decision lands |
 | [`ideas.md`](ideas.md)   | Undecided and cut ideas         | Every design session    |
 
-Docs state the current rule only; git keeps the history. An idea stays in `ideas.md` until agreed, then moves to the doc it belongs in.
+Docs state the current rule only; git keeps the history. [`ideas.md`](ideas.md) follows the shared [Ideas policy](https://github.com/andornaut/game-coordinator/blob/main/docs/game-policies.md#ideas).
 
 ## Scope
 
@@ -17,7 +17,7 @@ Gameplay owns the rulebook and the values and content in the data value files (e
 
 ## Method
 
-- **Design sessions:** start with "design session" and a topic. Claude keeps floated ideas apart from agreed ones, asks the question that unblocks a decision, and on "wrap up" proposes doc changes, writing them once confirmed.
+- **Design sessions:** start with "design session" and a topic. Keep floated ideas apart from agreed ones, ask the question that unblocks a decision, and on "wrap up" propose doc changes, writing them once confirmed.
 - **Playtesting:** the user playtests on devices. Run a bounded simulation batch only for a specific gameplay question that unit tests cannot answer.
 - **Card text:** effect text is generated from the effects, so a numeric value edit updates it with no text edit. Authored strings that state an amount in words (for example "a spare treat" or "First card") assume their tuning value, so changing that value needs a text edit too. Check the result in `shared/export/game-data.json` or on the data page.
 
@@ -43,6 +43,6 @@ Some walks should fail: the road stays calm, so losing comes from bumps and choi
 
 **Walk target:** a walk lasts about 9 minutes, we want to play "one more", and it works by touch on a phone browser.
 
-Version 1 is complete; the user has not yet declared the first release. Until then, a save-format change or a renamed id resets older saves to a default save, with no migration. Tuning continues against the targets above. The game is called Archie's Dog Walks.
+The version 1 design is complete. Save compatibility follows the game's runtime release version under the shared [Saves and cheats policy](https://github.com/andornaut/game-coordinator/blob/main/docs/game-policies.md#saves-and-cheats), not the save schema's age or a first-release declaration. Tuning continues against the targets above. The game is called Archie's Dog Walks.
 
 Runtime generation targets 100% delivery: planner acceptance requires every plan complete within 75% of the per-attempt search allowance. The [planner contract](../docs/planner-work.md#contract) holds the release floor and the omission rules.

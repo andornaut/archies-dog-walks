@@ -9,7 +9,7 @@ The deployment target is <https://archie.tristamittermayer.com/play/>, with Tuni
 
 ## Docs
 
-The folder READMEs describe the current design and implementation:
+[Cross-game policies](https://github.com/andornaut/game-coordinator/blob/main/docs/game-policies.md) define shared product, development and delivery rules. The folder READMEs describe Archie's design and implementation:
 
 - [art/](art/README.md): art rules, assets and pipeline
 - [gameplay/](gameplay/README.md): the game design, tuning and playtesting
