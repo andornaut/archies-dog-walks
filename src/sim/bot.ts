@@ -115,7 +115,7 @@ const SAME_MOMENT = 1e-9;
 // A mistimed lane change comes up to this late.
 const MISTIME_SECONDS = 0.25;
 // The soonest a mistake is noticed, so a bot with no reaction delay still takes a frame.
-const NOTICE_SECONDS = 1 / 60;
+const NOTICE_SECONDS = STEP_SECONDS;
 // Hazards, standing or moving, are widened a walk step at each end: a lane change starts on the
 // first step at or after it is due, up to a step late, so a planned miss never turns into a hit.
 const MARGIN_SECONDS = STEP_SECONDS;

@@ -117,7 +117,7 @@ export const TOP_BAR_HEIGHT = 40;
 
 export const TOP_BAR_SIZES = {
   // art: a button's ui-icon-button face side.
-  faceSize: 20,
+  faceSize: BUTTON_SIZE.icon.face,
   // The trim's line's row, and the rows a well keeps clear of the trim above and below.
   trim: { clearance: 3, lineRow: 1 },
   // The money well's lip rows, and its left edge in from the bar's left.
