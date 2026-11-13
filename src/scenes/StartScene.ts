@@ -585,9 +585,7 @@ export class StartScene extends Scene {
     this.mirror = addHtmlMirror(this, () =>
       [this.gateSign, this.root].flatMap((root) => (root === undefined ? [] : [root])),
     );
-    // Each StartScene is an arrival home: the launch's first, or the one after a walk.
-    arriveHome();
-    this.render();
+    this.prepareArrival();
 
     listenOnePress(this, {
       down: (pointer) => {
@@ -810,6 +808,12 @@ export class StartScene extends Scene {
   private signShown(): boolean {
     const { bankCents, owned } = this.save();
     return slotSign(gameData, owned, bankCents) !== null;
+  }
+
+  // CREATE fires after Phaser marks the scene active, so a waiting offer opens on this visit.
+  private prepareArrival(): void {
+    arriveHome();
+    this.events.once(Scenes.Events.CREATE, () => this.render());
   }
 
   // Whether the update notice is eligible: a newer version waits, or its notice opened this visit.

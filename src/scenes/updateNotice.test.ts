@@ -1,3 +1,5 @@
+import { EventEmitter } from "node:events";
+
 import type { RequiredUpdateState } from "@andornaut/game-kit/web/pwa/updateReady";
 import { describe, expect, it, vi } from "vitest";
 
@@ -7,16 +9,18 @@ import type { Sections } from "../home/sections.ts";
 import { StartScene } from "./StartScene.ts";
 
 const acceptUpdate = vi.fn();
+const arriveHome = vi.fn();
 const dismissUpdateOffer = vi.fn();
 const required = { state: undefined as RequiredUpdateState | undefined };
 vi.mock("phaser", () => ({
   Core: { Events: {} },
   Scene: class {},
-  Scenes: { Events: {} },
+  Scenes: { Events: { CREATE: "create" } },
 }));
 vi.mock("../pwa/index.ts", async (original) => ({
   ...(await original<typeof import("../pwa/index.ts")>()),
   acceptUpdate: () => acceptUpdate(),
+  arriveHome: () => arriveHome(),
   dismissUpdateOffer: () => dismissUpdateOffer(),
   requiredUpdate: () => required.state,
 }));
@@ -31,13 +35,15 @@ function notice() {
   });
   const methods = StartScene.prototype as unknown as {
     closeOverlay: () => void;
+    prepareArrival: () => void;
     releaseOnOverlay: (down: { x: number; y: number }, x: number, y: number) => void;
     syncUpdateNotice: () => void;
   };
   const state = {
     closeOverlay: () => methods.closeOverlay.call(state),
+    events: new EventEmitter(),
     overlay: undefined as { rect: typeof layout.panel; update: true } | undefined,
-    render: vi.fn(),
+    render: vi.fn(() => methods.syncUpdateNotice.call(state)),
     shownUpdate: false,
     sys: { isActive: () => active },
     updateLayout: () => layout,
@@ -46,6 +52,12 @@ function notice() {
   return {
     activate: () => {
       active = true;
+    },
+    beginVisit: () => {
+      active = false;
+      state.overlay = undefined;
+      state.shownUpdate = false;
+      methods.prepareArrival.call(state);
     },
     deactivate: () => {
       active = false;
@@ -66,6 +78,28 @@ function notice() {
 }
 
 describe("home update notice", () => {
+  it("reopens a cancelled offer on the next scene's first active render without another action", () => {
+    acceptUpdate.mockClear();
+    arriveHome.mockClear();
+    const page = notice();
+    page.activate();
+    page.sync();
+    page.release(page.layout.cancel);
+    expect(page.state.overlay).toBeUndefined();
+    page.state.render.mockClear();
+
+    page.beginVisit();
+    expect(arriveHome).toHaveBeenCalledOnce();
+    expect(page.state.render).not.toHaveBeenCalled();
+    page.activate();
+    page.state.events.emit("create");
+    expect(page.state.overlay?.update).toBe(true);
+    expect(page.state.render).toHaveBeenCalledOnce();
+    page.state.events.emit("create");
+    expect(page.state.render).toHaveBeenCalledOnce();
+    expect(acceptUpdate).not.toHaveBeenCalled();
+  });
+
   it("defers an update while home is inactive and opens when home becomes active", () => {
     const page = notice();
     page.sync();
