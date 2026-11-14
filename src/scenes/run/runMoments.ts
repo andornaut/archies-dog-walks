@@ -9,6 +9,7 @@ import type { Scene } from "phaser";
 
 import { debuffSoundCue } from "../../audio/sound.ts";
 import { choiceCues, contactCues, pullCues, stepCues } from "../../audio/stepCues.ts";
+import { minorLook, minorObstacleName } from "../../content/obstacleLooks.ts";
 import { gameData } from "../../data/index.ts";
 import type { AchievementId, DogId, EncounterId, HintId, HintTrigger } from "../../data/types.ts";
 import {
@@ -84,7 +85,6 @@ import { walkLength } from "../../rules/route.ts";
 import { walkEarnings } from "../../rules/run.ts";
 import { spareTreatGiver, spareTreatSource } from "../../rules/spareTreats.ts";
 import { read } from "../../rules/units.ts";
-import { minorLook, minorObstacleName } from "../../runner/obstacleLooks.ts";
 import type { PullStep } from "../../runner/pulls.ts";
 import type { EncounterCard, MinorBump, WalkStep } from "../../runner/walk.ts";
 import type { WalkItem } from "../../runner/walkItems.ts";

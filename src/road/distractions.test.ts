@@ -6,6 +6,7 @@ import { describe, expect, it } from "vitest";
 
 import shippedManifest from "../../public/art/manifest.json" with { type: "json" };
 import { minorObstacleSpriteKey } from "../assets/spriteKeys.ts";
+import { minorLook } from "../content/obstacleLooks.ts";
 import { gameData } from "../data/index.ts";
 import { LANE_COUNT, ROAD_CAMERA, SCREEN_LAYOUT } from "../data/screen.ts";
 import type { MinorObstacleId } from "../data/types.ts";
@@ -14,7 +15,6 @@ import { currentZone } from "../rules/route.ts";
 import { read } from "../rules/units.ts";
 import { DART_VERGE_LANES } from "../runner/dartOutcomes.ts";
 import { moverPlace } from "../runner/movers.ts";
-import { minorLook } from "../runner/obstacleLooks.ts";
 import { screenRoadGeometry } from "../runner/screenGeometry.ts";
 import {
   chooseCard,

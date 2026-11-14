@@ -17,6 +17,7 @@ import {
   roadTileKey,
   zoneIconKey,
 } from "../assets/spriteKeys.ts";
+import { minorLook, obstacleSkins } from "../content/obstacleLooks.ts";
 import type {
   CardOption,
   CardSource,
@@ -36,7 +37,6 @@ import { upgradeDuration } from "../rules/durations.ts";
 import { effectText, gearShort, upgradeLine } from "../rules/effectText.ts";
 import { faceMood } from "../rules/treats.ts";
 import { weightedZones } from "../rules/zones.ts";
-import { minorLook, obstacleSkins } from "../runner/obstacleLooks.ts";
 import { SAVE_KEYS } from "../save/storage.ts";
 import { PREVIEW_HOST } from "./previewHost.ts";
 

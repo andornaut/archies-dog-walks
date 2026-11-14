@@ -7,8 +7,8 @@ import {
   ROAD_SPRITE_SIZE,
   SKUNK_CLOUD_KEY,
 } from "../assets/spriteKeys.ts";
+import { minorLook } from "../content/obstacleLooks.ts";
 import type { EncounterId, GameData, MinorObstacleId, SkinId } from "../data/types.ts";
-import { minorLook } from "../runner/obstacleLooks.ts";
 import type { Silhouette } from "./packFormation.ts";
 
 // What an obstacle draws on the road, which is what it collides as: each of its sprites and that

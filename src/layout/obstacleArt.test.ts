@@ -4,9 +4,9 @@ import { decodePng } from "@andornaut/art-kit/png";
 import { describe, expect, it } from "vitest";
 
 import { minorObstacleSpriteKey } from "../assets/spriteKeys.ts";
+import { obstacleSkins } from "../content/obstacleLooks.ts";
 import { gameData } from "../data/index.ts";
 import type { EncounterId, MinorObstacleId, SkinId } from "../data/types.ts";
-import { obstacleSkins } from "../runner/obstacleLooks.ts";
 import { spriteSource } from "../tools/atlas/atlasLayout.ts";
 import { OBSTACLE_SILHOUETTES, obstacleParts, POSE_SILHOUETTES } from "./obstacleArt.ts";
 

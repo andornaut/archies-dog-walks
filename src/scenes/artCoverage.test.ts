@@ -38,6 +38,7 @@ import {
 } from "../assets/spriteKeys.ts";
 import { musicKey } from "../audio/music.ts";
 import { hitCue, SOUND_KEYS, soundKeyFor, soundKeysOf } from "../audio/sound.ts";
+import { minorLooks } from "../content/obstacleLooks.ts";
 import { gameData } from "../data/index.ts";
 import type { CardSource, EncounterId, ZoneId } from "../data/types.ts";
 import { TOUCH_DRAG } from "../help/helpPictures.ts";
@@ -52,7 +53,6 @@ import { SCALE_STEPS } from "../layout/projection.ts";
 import { cardFor } from "../rules/choices.ts";
 import { hitLabel } from "../rules/encounters.ts";
 import { faceMood } from "../rules/treats.ts";
-import { minorLooks } from "../runner/obstacleLooks.ts";
 import type { PullPose } from "../runner/pulls.ts";
 import { testState } from "../testing/runState.ts";
 import { clampHearts } from "../units.ts";

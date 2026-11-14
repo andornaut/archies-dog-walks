@@ -14,6 +14,7 @@ import {
   WARNING_KEY,
   WARNING_WANDER_KEY,
 } from "../../assets/spriteKeys.ts";
+import { minorLooks } from "../../content/obstacleLooks.ts";
 import { gameData } from "../../data/index.ts";
 import { LANE_COUNT } from "../../data/screen.ts";
 import type { EncounterId, GearId, HintTrigger, MinorObstacleId } from "../../data/types.ts";
@@ -23,7 +24,6 @@ import { herringNow } from "../../road/herrings.ts";
 import { type KeptScenery, struckBy, struckNow } from "../../road/struckScenery.ts";
 import { goesToVerge, vergeNow } from "../../road/vergeScenery.ts";
 import { type MoverOnRoad, moverTell } from "../../runner/movers.ts";
-import { minorLooks } from "../../runner/obstacleLooks.ts";
 import { screenRoadGeometry } from "../../runner/screenGeometry.ts";
 import { signaturePlace } from "../../runner/signaturePaths.ts";
 import type { SpawnEvent } from "../../runner/spawning.ts";

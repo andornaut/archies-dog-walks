@@ -7,6 +7,7 @@ import {
 } from "@andornaut/game-kit/achievements";
 import { assertNever } from "@andornaut/game-kit/assertNever";
 
+import { minorObstacleNames } from "../content/obstacleLooks.ts";
 import type {
   Achievement,
   AchievementCondition,
@@ -18,7 +19,6 @@ import type {
   TallyId,
   Threshold,
 } from "../data/types.ts";
-import { minorObstacleNames } from "../runner/obstacleLooks.ts";
 import type { SaveDocument, SaveStats } from "../save/schema.ts";
 import { lifetimeEarnedNet, timesFired, walksFinished, walksPlayed } from "../save/stats.ts";
 import type { RunState } from "../state/runState.ts";

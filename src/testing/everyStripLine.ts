@@ -1,6 +1,7 @@
 import { fillNames } from "@andornaut/game-kit/lines";
 import { keysOf } from "@andornaut/game-kit/records";
 
+import { minorObstacleNames } from "../content/obstacleLooks.ts";
 import { gameData } from "../data/index.ts";
 import { SIZE_STRIP_LINES } from "../hud/buffMarks.ts";
 import { effectLine } from "../hud/effectIcons.ts";
@@ -9,7 +10,6 @@ import type { MessageLine } from "../hud/messageStrip.ts";
 import { STRIP_LINE_FIELDS } from "../hud/runText.ts";
 import { debuffLines } from "../hud/stripLines.ts";
 import { hintText } from "../rules/hints.ts";
-import { minorObstacleNames } from "../runner/obstacleLooks.ts";
 import { inkWidth } from "./fontInk.ts";
 
 // Strip lines with two-digit counts and the largest amounts. Representative mode samples

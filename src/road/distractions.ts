@@ -3,12 +3,12 @@ import { type Random, weightedPick } from "@andornaut/game-kit/random";
 import { keysOf } from "@andornaut/game-kit/records";
 
 import { minorObstacleSpriteKey } from "../assets/spriteKeys.ts";
+import { minorLook } from "../content/obstacleLooks.ts";
 import type { DistractionPattern, GameData, MinorObstacleId, Zone } from "../data/types.ts";
 import { read, readTable } from "../rules/units.ts";
 import { type Box, overlaps } from "../runner/collision.ts";
 import { DART_VERGE_LANES, stopsOnVerge } from "../runner/dartOutcomes.ts";
 import { drawnLanes, hasLeftRoad, type MoverOnRoad, moverPlace, moverY } from "../runner/movers.ts";
-import { minorLook } from "../runner/obstacleLooks.ts";
 import { signaturePlace, signatureSweeps } from "../runner/signaturePaths.ts";
 import { itemHeight, type RoadGeometry, zoneLength } from "../runner/walk.ts";
 import { footprintOf, type WalkItem, type WalkSpawn } from "../runner/walkItems.ts";

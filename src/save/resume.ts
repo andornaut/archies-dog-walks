@@ -3,6 +3,7 @@ import { encodeSave, loadSave, type SaveFormat } from "@andornaut/game-kit/save/
 import { pixels } from "@andornaut/game-kit/units";
 import * as v from "valibot";
 
+import { obstacleSkins } from "../content/obstacleLooks.ts";
 import type {
   DebuffId,
   DogId,
@@ -23,7 +24,6 @@ import type {
 } from "../data/types.ts";
 import { walkLength } from "../rules/route.ts";
 import type { MoverPath } from "../runner/movers.ts";
-import { obstacleSkins } from "../runner/obstacleLooks.ts";
 import type { Session, StreamDraws } from "../runner/session.ts";
 import type { WalkItemKind } from "../runner/walkItems.ts";
 import type { ActiveModifier, Pack } from "../state/runState.ts";

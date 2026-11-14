@@ -53,8 +53,10 @@ const BOUNDARIES = [
 // src/testing/.
 const CONTEXTS = {
   assets: ["data"],
+  content: ["data"],
   road: [
     "assets",
+    "content",
     "data",
     "layout/crossStreet.ts",
     "layout/lanes.ts",

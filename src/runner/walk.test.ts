@@ -6,6 +6,7 @@ import { keysOf } from "@andornaut/game-kit/records";
 import { pixels } from "@andornaut/game-kit/units";
 import { describe, expect, it } from "vitest";
 
+import { zoneSkins } from "../content/obstacleLooks.ts";
 import { ACHIEVEMENTS } from "../data/achievements.ts";
 import { DEBUFFS } from "../data/debuffs.ts";
 import { DOGS } from "../data/dogs.ts";
@@ -92,7 +93,6 @@ import { cents, clampHearts } from "../units.ts";
 import { approachOutcomes } from "./approach.ts";
 import { stillInLane } from "./laneMotion.ts";
 import { laneAt, moverPlace } from "./movers.ts";
-import { zoneSkins } from "./obstacleLooks.ts";
 import { shyOutcomes } from "./shy.ts";
 import { auditSlotPartialPlan, auditSlotPlan } from "./slotAudit.ts";
 import { SLOT_ROLES } from "./slotConfig.ts";
