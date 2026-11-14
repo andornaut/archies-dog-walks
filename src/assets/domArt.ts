@@ -120,10 +120,8 @@ const SHOP_ART_KEYS = ["icon-bill", "icon-lock", "ui-hint", "ui-icon-button", "u
 // Start walk's faces.
 const START_ART_KEYS = [
   ...keysOf(gameData.shopGear).map(gearSmallIconKey),
-  "icon-exit",
   "icon-help",
-  "icon-logbook",
-  "icon-settings",
+  "icon-menu",
   "icon-sound",
   "ui-afford",
   "ui-button",
@@ -169,7 +167,6 @@ function hudArtKeys(
     "icon-lucky",
     "icon-muddy",
     "icon-pause",
-    "icon-play",
     "icon-spotlight",
     "icon-stinky",
     "icon-trait-chaser",

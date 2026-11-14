@@ -476,7 +476,7 @@ export class StartScene extends Scene {
   private loadDisplay = createProgressDisplay(LOADING_TIMING.fullMs, LOADING_TIMING.fadeMs);
   // The walk's planning, which the line shows travelling from Start walk until the walk starts.
   private planning: ProgressHandle | undefined;
-  // Whether the top bar shows Exit (exitShown).
+  // Whether keyboard Quit is offered by the current browser or installed window.
   private exit = true;
   private focus: Focus | null = null;
   private gateDogs: { dog: DogId; footY: number; sprite: GameObjects.Sprite }[] = [];

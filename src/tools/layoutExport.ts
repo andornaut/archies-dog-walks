@@ -312,12 +312,8 @@ export function layoutExport(
       },
       home: {
         ...HOME_LAYOUT,
-        // The top bar's buttons left to right, each its face and hit: with Exit, and where Exit
-        // is hidden (an installed app whose window a script cannot close).
-        barButtons: {
-          exitHidden: Object.fromEntries(homeBarButtons()),
-          exitShown: Object.fromEntries(homeBarButtons()),
-        },
+        // Visible controls use one shared layout regardless of Quit availability.
+        barButtons: Object.fromEntries(homeBarButtons()),
         dogRects: gridRects(
           HOME_LAYOUT.dogTiles,
           Object.keys(data.dogs).length,

@@ -21,7 +21,6 @@ import { PALETTE } from "../ui/palette.ts";
 import {
   CREAM_PANEL_COLOURS,
   drawFramedRect,
-  drawPixelRows,
   drawRing,
   fillCutRect,
   fillRect,
@@ -447,53 +446,6 @@ export function imageIconOr(
   return icon.length > 0
     ? icon
     : [addPixelText(scene, x + 8, y + 4, letter, { colour: PALETTE.plum, originX: 0.5 })];
-}
-
-// A cog for settings, drawn in code: the art has no settings icon yet.
-const COG_ROWS = [
-  "...##...",
-  ".##..##.",
-  ".#....#.",
-  "##.##.##",
-  "##.##.##",
-  ".#....#.",
-  ".##..##.",
-  "...##...",
-];
-
-function cogIcon(scene: Scene, x: number, y: number): Placed[] {
-  const g = scene.add.graphics({ x, y });
-  drawPixelRows(g, PALETTE.amber, COG_ROWS, { x: 0, y: 0 }, 2);
-  return [g];
-}
-
-// icon-settings, or the cog while the art is missing.
-export function settingsIcon(scene: Scene, x: number, y: number): Placed[] {
-  const icon = imageIcon(scene, "icon-settings", x, y);
-  return icon.length > 0 ? icon : cogIcon(scene, x, y);
-}
-
-// A door with an arrow out of it for Exit, drawn in code while icon-exit is missing.
-const EXIT_ROWS = [
-  "#####...",
-  "#...#...",
-  "#...#.#.",
-  "#..#####",
-  "#...#.#.",
-  "#...#...",
-  "#...#...",
-  "#####...",
-];
-
-// icon-exit, or the door while the art is missing.
-export function exitIcon(scene: Scene, x: number, y: number): Placed[] {
-  const icon = imageIcon(scene, "icon-exit", x, y);
-  if (icon.length > 0) {
-    return icon;
-  }
-  const g = scene.add.graphics({ x, y });
-  drawPixelRows(g, PALETTE.amber, EXIT_ROWS, { x: 0, y: 0 }, 2);
-  return [g];
 }
 
 export function selectOuter(rect: Rect, outset = SELECT_OUTSET): Rect {
