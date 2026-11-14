@@ -13,7 +13,7 @@ import { treat } from "../road.ts";
 import { rows, SIDES } from "./chrome.ts";
 
 // ---------- icons ----------
-// icon-pause, icon-play, icon-home, icon-help, icon-close, icon-logbook, icon-settings, icon-exit and
+// icon-pause, icon-play, icon-home, icon-help, icon-close, icon-menu, icon-logbook, icon-settings, icon-exit and
 // icon-sound sit on ui-icon-button's navy face, so they have no outline: cream holds 9.6:1 there, tan
 // 6.6:1, amber 7.5:1, orange 5.0:1 and pink 5.1:1. The -panel icons sit on the Settings panel's cream,
 // and icon-share and icon-browser-menu on the install steps card's: dbrown holds 5.85:1 there, plum
@@ -25,6 +25,16 @@ type Ink = readonly [face: string, shade: string, x: string];
 export const NAVY_FACE: Ink = ["cream", "tan", "pink"];
 
 export const CREAM_PANEL: Ink = ["dbrown", "plum", "dred"];
+
+// Three equally spaced flat bars, centred on the chrome face.
+export function menuIcon(): Grid {
+  const g = new Grid(16, 16);
+  for (const y of [3, 7, 11]) {
+    g.rect(3, y, 10, 1, "cream");
+    g.rect(3, y + 1, 10, 1, "tan");
+  }
+  return g;
+}
 
 // Amber bars, like the Home glyph, so the walk controls stand apart from the cream help and sound
 // glyphs.

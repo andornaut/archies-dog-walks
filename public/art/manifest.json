@@ -13947,6 +13947,10 @@
       "png": "images/icon-lucky.png"
     },
     {
+      "key": "icon-menu",
+      "png": "images/icon-menu.png"
+    },
+    {
       "key": "icon-muddy",
       "png": "images/icon-muddy.png"
     },

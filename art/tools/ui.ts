@@ -1,6 +1,6 @@
 // Draw the UI kit: icons, nine-slice panels and buttons, the hint bubble and badges.
 //
-// Images (16x16 icons unless noted): icon-pause, icon-play, icon-home, icon-help, icon-close,
+// Images (16x16 icons unless noted): icon-pause, icon-play, icon-home, icon-help, icon-close, icon-menu,
 // icon-logbook, icon-settings, icon-exit, icon-share (Safari's Share button, on the iOS install steps
 // card), icon-browser-menu (the browser menu button's three dots, on the Chrome for Android and
 // Firefox for Android install steps cards), icon-update (a green down arrow into a tray, on the home
@@ -95,6 +95,7 @@ import {
   install,
   lock,
   logbookIcon,
+  menuIcon,
   motion,
   NAVY_FACE,
   pause,
@@ -1557,6 +1558,7 @@ const IMAGES: ReadonlyMap<string, () => RgbaImage> = new Map([
   ["icon-home", () => flat(homeIcon())],
   ["icon-help", () => flat(helpIcon())],
   ["icon-close", () => flat(close())],
+  ["icon-menu", () => flat(menuIcon())],
   ["icon-logbook", () => flat(logbookIcon())],
   ["icon-settings", () => flat(settingsIcon())],
   ["icon-exit", () => flat(exitIcon())],
