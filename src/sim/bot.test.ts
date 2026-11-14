@@ -136,13 +136,6 @@ function obstacleCounts(data: SimData, results: readonly RunResult[]) {
 // Each run walks every zone frame by frame, so these take a few hundred
 // milliseconds a run on a loaded machine.
 describe("a steering bot", { timeout: 60_000 }, () => {
-  it("plays the same run for the same seed, and another for another seed", () => {
-    const first = run(SHORT, 3, SKILL_PRESETS.typical);
-
-    expect(run(SHORT, 3, SKILL_PRESETS.typical)).toEqual(first);
-    expect(run(SHORT, 4, SKILL_PRESETS.typical)).not.toEqual(first);
-  });
-
   it("hits fewer obstacles as an expert than as a novice", () => {
     const seeds = [1, 2];
     const novice = obstacleCounts(

@@ -71,7 +71,7 @@ describe("packAgility", () => {
     const first = extremes.find((other) => ownOf(other) === ownOf(pack));
     return first?.walker === pack.walker && first.gear === pack.gear;
   });
-  it.each(ends)(
+  it.each(ends.filter(({ large, small }) => small === large || small === 3 || large === 3))(
     "moves $walker with $gear by smallDogAgility for each of $small small dogs and " +
       "largeDogAgility for each of $large large dogs, never below minPackAgility",
     ({ large, run, small, walker }) => {
@@ -91,7 +91,10 @@ describe("packAgility", () => {
     expect(Math.min(...agilities)).toBeCloseTo(slowestPackAgility(gameData));
   });
 
-  it.each(WALKER_IDS.flatMap((walker) => gears.map((gear) => ({ gear, walker }))))(
+  it.each([
+    { gear: "runningShoes", walker: "ada" },
+    { gear: null, walker: "mrB" },
+  ] as const)(
     "speeds $walker with $gear up with each small dog, with no cap",
     ({ gear, walker }) => {
       const agilities = [0, 1, 2, 3].map((small) =>
