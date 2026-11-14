@@ -54,6 +54,20 @@ describe("loadSave", () => {
     expect([picked([1]), picked([1, 3])]).toEqual([["lady"], ["lady", "kilo"]]);
   });
 
+  it("stores a full authored pack but rejects an extra dog in either saved run", () => {
+    const document: StoredInput = veteranSave();
+    const dogs = Object.keys(gameData.dogs).slice(0, gameData.dogSlots.length);
+    document.lastLoadout.dogs = dogs;
+    document.checkpoint = checkpointWith({ dogs: dogs.map((id) => ({ firedInZone: null, id })) });
+    expect(v.safeParse(saveSchema, document).success).toBe(true);
+
+    document.lastLoadout.dogs = [...dogs, "extraDog"];
+    expect(v.safeParse(saveSchema, document).success).toBe(false);
+    document.lastLoadout.dogs = dogs;
+    present(document.checkpoint).dogs.push({ firedInZone: null, id: "extraDog" });
+    expect(v.safeParse(saveSchema, document).success).toBe(false);
+  });
+
   it("stores purchased unlocks while leaving starter unlocks implicit", () => {
     const encoded = saveFormat(testContext).encode(veteranSave());
     expect(encoded).toMatchObject({

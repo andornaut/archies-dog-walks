@@ -7,6 +7,8 @@ import type { Point, Rect } from "@andornaut/game-kit/rect";
 import { HIT_RULE } from "@andornaut/game-kit/ui/hitAreas";
 import { BUTTON_GAP, SMALL_BUTTON_GAP, STACK_BUTTON_GAP } from "@andornaut/game-kit/ui/spacing";
 
+import { MAX_PACK_DOGS } from "../packCapacity.ts";
+
 // Shared controls
 
 // The least side of every press area, and the height of every text button's face: every game's.
@@ -158,7 +160,7 @@ export const HUD_REGIONS = {
   // The dog card row's height.
   dogRowHeight: 74,
   // The dog card row's slots, side by side.
-  dogSlotCount: 3,
+  dogSlotCount: MAX_PACK_DOGS,
   // The neighbourhood's progress line, on the screen's last rows.
   zoneProgressHeight: 4,
 } as const;

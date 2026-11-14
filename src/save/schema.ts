@@ -11,6 +11,7 @@ import type {
   WalkerId,
   ZoneId,
 } from "../data/types.ts";
+import { MAX_PACK_DOGS } from "../packCapacity.ts";
 import type { RunCounters } from "../rules/achievements.ts";
 import type { EndReason } from "../state/runState.ts";
 import { type Cents, cents as toCents } from "../units.ts";
@@ -30,7 +31,7 @@ const TALLIES: Readonly<Record<TallyId, true>> = {
 export const TALLY_IDS = keysOf(TALLIES);
 
 // The most dogs a run can take.
-export const MAX_RUN_DOGS = 3;
+export const MAX_RUN_DOGS = MAX_PACK_DOGS;
 
 const END_REASONS = ["finished", "noDogs", "wentHome"] as const satisfies readonly EndReason[];
 

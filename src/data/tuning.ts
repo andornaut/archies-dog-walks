@@ -1,3 +1,4 @@
+import { MAX_PACK_DOGS } from "../packCapacity.ts";
 import type { Tuning } from "./types.ts";
 
 // Every number the game is tuned by, grouped by unit. Starting values, to be tuned by playing.
@@ -37,7 +38,7 @@ export const TUNING = {
     maxSlowVehicles: 4,
     // Every row of spawns leaves at least this many lanes free of obstacles.
     openLanesPerRowMin: 2,
-    packSizeMax: 3,
+    packSizeMax: MAX_PACK_DOGS,
     tipsFirstZone: 31,
     tipsGainPerZone: -3,
     treatsPerZone: 4,
