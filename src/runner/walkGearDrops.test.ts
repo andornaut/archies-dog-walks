@@ -11,8 +11,9 @@ import { GAME_ROAD, REAL, realRun } from "../testing/planner.ts";
 import { atPack, inLane, step, walkWith } from "../testing/walk.ts";
 import { captureZoneInput, planZoneForSeed } from "../testing/zonePlan.ts";
 import { spacedStretch } from "./stretches.ts";
-import { startRoad, type Walk, zoneLength } from "./walk.ts";
+import { startRoad, type Walk } from "./walk.ts";
 import { isGearDrop } from "./walkItems.ts";
+import { zoneLength } from "./walkMotion.ts";
 
 const GEAR = keysOf(SHOP_GEAR);
 const POSITIONS = Array.from({ length: WORLD.walkLength }, (_, position) => position);

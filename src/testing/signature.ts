@@ -1,7 +1,7 @@
 import type { SignatureProfile } from "../data/types.ts";
 import type { MoverPath } from "../runner/movers.ts";
+import { componentHitLength } from "../runner/obstacleGeometry.ts";
 import { compileSignature } from "../runner/signaturePaths.ts";
-import { componentHitLength } from "../runner/walk.ts";
 import type { WalkItem } from "../runner/walkItems.ts";
 import { geometry } from "./walk.ts";
 

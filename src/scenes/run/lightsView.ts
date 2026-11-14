@@ -24,7 +24,7 @@ import {
   LIGHTS,
   lightTextureKey,
 } from "../../road/lights.ts";
-import { zoneLength } from "../../runner/walk.ts";
+import { zoneLength } from "../../runner/walkMotion.ts";
 import { spriteMetrics } from "../sprites.ts";
 import { DEPTH, JUNCTURE_Y, LAYOUT, PROJECTION, sceneryFade, showOnRoad } from "./stage.ts";
 

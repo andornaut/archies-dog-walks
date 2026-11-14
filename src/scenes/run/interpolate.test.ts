@@ -13,8 +13,9 @@ import {
   startSession,
   stepSession,
 } from "../../runner/session.ts";
-import { laneMoveSeconds, startRoad, type Walk } from "../../runner/walk.ts";
+import { startRoad, type Walk } from "../../runner/walk.ts";
 import { type WalkItem } from "../../runner/walkItems.ts";
+import { laneMoveSeconds } from "../../runner/walkMotion.ts";
 import { newRun } from "../../state/runState.ts";
 import { blendWalk, leadWalk, stepAlpha } from "./interpolate.ts";
 

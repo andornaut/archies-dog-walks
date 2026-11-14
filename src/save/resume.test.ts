@@ -6,6 +6,7 @@ import { LANE_COUNT } from "../data/screen.ts";
 import type { ZoneId } from "../data/types.ts";
 import { firstZoneId } from "../rules/route.ts";
 import { moverPlace } from "../runner/movers.ts";
+import { componentHitLength, itemHeight } from "../runner/obstacleGeometry.ts";
 import { screenRoadGeometry } from "../runner/screenGeometry.ts";
 import {
   NO_DRAWS,
@@ -14,7 +15,7 @@ import {
   startSession,
   unplannedStart,
 } from "../runner/session.ts";
-import { componentHitLength, itemHeight, startRoad } from "../runner/walk.ts";
+import { startRoad } from "../runner/walk.ts";
 import { footprintOf, type WalkItem } from "../runner/walkItems.ts";
 import { newRun, type RunState } from "../state/runState.ts";
 import { newPlayerSave, testContext } from "../testing/saves.ts";

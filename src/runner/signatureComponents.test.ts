@@ -3,7 +3,9 @@ import { describe, expect, it } from "vitest";
 import { signatureTrail } from "../testing/signature.ts";
 import { data, geometry, walkWith } from "../testing/walk.ts";
 import { hitDog } from "./collision.ts";
-import { obstacleHitBoxes, packBoxes, roadScrollSpeed, stepWalk } from "./walk.ts";
+import { obstacleHitBoxes } from "./obstacleGeometry.ts";
+import { packBoxes, stepWalk } from "./walk.ts";
+import { roadScrollSpeed } from "./walkMotion.ts";
 
 describe("signature components", () => {
   it("keeps gaps between three separate bodies outside the collision geometry", () => {

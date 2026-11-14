@@ -93,6 +93,7 @@ import { cents, clampHearts } from "../units.ts";
 import { approachOutcomes } from "./approach.ts";
 import { stillInLane } from "./laneMotion.ts";
 import { laneAt, moverPlace } from "./movers.ts";
+import { itemHeight } from "./obstacleGeometry.ts";
 import { shyOutcomes } from "./shy.ts";
 import { auditSlotPartialPlan, auditSlotPlan } from "./slotAudit.ts";
 import { SLOT_ROLES } from "./slotConfig.ts";
@@ -102,16 +103,13 @@ import {
   collectTip,
   finishZone,
   headHome,
-  itemHeight,
-  laneMoveSeconds,
   startRoad,
   steerWalk,
   stepWalk,
   type Walk,
-  walkScrollSpeed,
-  zoneLength,
 } from "./walk.ts";
 import { blocksLane, footprintOf, itemCategory, opensACard, type WalkItem } from "./walkItems.ts";
+import { laneMoveSeconds, walkScrollSpeed, zoneLength } from "./walkMotion.ts";
 import {
   auxiliarySpawnQuotas,
   obstacleWeights,

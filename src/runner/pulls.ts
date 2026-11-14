@@ -13,15 +13,10 @@ import { pullLane } from "./laneControl.ts";
 import { destinationLane } from "./laneMotion.ts";
 import { isWaiting, laneAt, moverPlace, moverY } from "./movers.ts";
 import { moverOutcomes } from "./outcomes.ts";
-import {
-  laneMotionConfig,
-  laneMoveSeconds,
-  packBoxes,
-  type RoadGeometry,
-  roadScrollSpeed,
-  type Walk,
-} from "./walk.ts";
+import { packBoxes, type Walk } from "./walk.ts";
+import { type RoadGeometry } from "./walkGeometry.ts";
 import { blocksLane, isPullObstacle, type WalkItem } from "./walkItems.ts";
+import { laneMotionConfig, laneMoveSeconds, roadScrollSpeed } from "./walkMotion.ts";
 
 // Every dog pulls toward encounters whose resolution is pull. One dog strains at a time, the
 // one nearest the target: pullTell seconds with its bubble, an arrow and a line to the

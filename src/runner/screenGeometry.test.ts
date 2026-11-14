@@ -9,8 +9,9 @@ import { screenYAt } from "../layout/projection.ts";
 import { testState } from "../testing/runState.ts";
 import { hitDog, itemBox, pickupDog } from "./collision.ts";
 import { stillInLane } from "./laneMotion.ts";
+import { itemHeight, obstacleHitBox } from "./obstacleGeometry.ts";
 import { screenRoadGeometry } from "./screenGeometry.ts";
-import { itemHeight, obstacleHitBox, packBoxes } from "./walk.ts";
+import { packBoxes } from "./walk.ts";
 import { walkProjection } from "./walkGeometry.ts";
 import { isObstacle, type WalkItemKind } from "./walkItems.ts";
 

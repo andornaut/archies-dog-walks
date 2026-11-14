@@ -22,6 +22,7 @@ import type { RunState } from "../state/runState.ts";
 import { assignedMovement, type ProfiledMovement } from "./movementAssignments.ts";
 import type { PlannerStreams } from "./moverModel.ts";
 import { moverMovement, moverSpec } from "./moverSpecs.ts";
+import { componentHitLength, itemHeight, plannedCellInset } from "./obstacleGeometry.ts";
 import { pickSkin } from "./obstacleLooks.ts";
 import type { SlotAudit } from "./slotAudit.ts";
 import { apportionSlotCounts, slotCountTotal, type SlotGuarantee } from "./slotConfig.ts";
@@ -31,16 +32,8 @@ import { SLOT_LIMITS, type SlotDiagnostics } from "./slotPlanner.ts";
 import type { PlannedSpawns, SpawnPlan, SpawnQuota } from "./spawning.ts";
 import { type SpawnPlanSnapshot, type SpawnSearchContext } from "./spawnSearch.ts";
 import { spacedStretch } from "./stretches.ts";
-import {
-  componentHitLength,
-  itemHeight,
-  plannedCellInset,
-  type RoadGeometry,
-  type Walk,
-  type WalkData,
-  walkScrollSpeed,
-  zoneLength,
-} from "./walk.ts";
+import { type Walk, type WalkData } from "./walk.ts";
+import { type RoadGeometry } from "./walkGeometry.ts";
 import {
   blocksLane,
   footprintOf,
@@ -51,6 +44,7 @@ import {
   type WalkItemKind,
   type WalkSpawn,
 } from "./walkItems.ts";
+import { walkScrollSpeed, zoneLength } from "./walkMotion.ts";
 import {
   replayZoneSlots,
   type ZoneSlotInput,

@@ -25,7 +25,8 @@ import { pageRunSetup, runSetupLimitsFor } from "../../dev/pageRunSetup.ts";
 import type { RunSetup } from "../../dev/runSetup.ts";
 import { expectedRoadMs, type ZoneClocks } from "../../dev/zoneClock.ts";
 import type { SessionInput } from "../../runner/session.ts";
-import { roadScrollSpeed, type Walk, zoneLength } from "../../runner/walk.ts";
+import { type Walk } from "../../runner/walk.ts";
+import { roadScrollSpeed, zoneLength } from "../../runner/walkMotion.ts";
 
 // How a run starts: its setup, and the inputs that drive it when it replays a log.
 export interface RunStart {

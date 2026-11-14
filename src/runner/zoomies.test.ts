@@ -12,20 +12,14 @@ import { planZoneForSeed } from "../testing/zonePlan.ts";
 import { advanceLaneControl, laneControlIn, pullLane } from "./laneControl.ts";
 import { destinationLane, stillInLane } from "./laneMotion.ts";
 import { type MoverPath, moverPlace, moverY } from "./movers.ts";
+import { componentHitLength, obstacleHitBoxes } from "./obstacleGeometry.ts";
 import { pullHorizon } from "./pulls.ts";
 import { runStreams } from "./session.ts";
 import { compileSignature } from "./signaturePaths.ts";
-import {
-  componentHitLength,
-  obstacleHitBoxes,
-  roadScrollSpeed,
-  startRoad,
-  steerWalk,
-  stepWalk,
-  type Walk,
-} from "./walk.ts";
+import { startRoad, steerWalk, stepWalk, type Walk } from "./walk.ts";
 import { walkGeometry, walkProjection } from "./walkGeometry.ts";
 import { type WalkItem } from "./walkItems.ts";
+import { roadScrollSpeed } from "./walkMotion.ts";
 import {
   debuffDriftProfile,
   type DebuffMovementClock,

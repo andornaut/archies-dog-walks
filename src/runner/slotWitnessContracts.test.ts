@@ -4,6 +4,7 @@ import { gameData } from "../data/index.ts";
 import { GAME_ROAD } from "../testing/planner.ts";
 import { assignedMovement } from "./movementAssignments.ts";
 import { moverSpec } from "./moverSpecs.ts";
+import { itemHeight } from "./obstacleGeometry.ts";
 import { auditSlotPlan } from "./slotAudit.ts";
 import { createSlotCandidateDomains } from "./slotCandidateDomains.ts";
 import { prepareSlotKind } from "./slotCandidates.ts";
@@ -19,7 +20,6 @@ import {
 } from "./slotWitnessSearch.ts";
 import { rowSpacing, type SpawnPlan, zoneRows } from "./spawning.ts";
 import { auditSpawnPlan } from "./spawnValidation.ts";
-import { itemHeight } from "./walk.ts";
 import { footprintOf } from "./walkItems.ts";
 
 type Geometry = Omit<SpawnPlan<string>, "quotas">;

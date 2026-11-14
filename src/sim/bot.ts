@@ -8,25 +8,19 @@ import { type RoadProjection, screenXAt } from "../layout/projection.ts";
 import { type LanedBox, type ScaledBox, sweptOverlapAt } from "../runner/collision.ts";
 import { type LaneControl, steerLane } from "../runner/laneControl.ts";
 import { hasLeftRoad, laneAt, type MoverPath, moverPlace, moverY } from "../runner/movers.ts";
+import { obstacleHitBoxes } from "../runner/obstacleGeometry.ts";
 import { moverOutcomes } from "../runner/outcomes.ts";
 import { contactWindow, type PullEvent, type Pulls } from "../runner/pulls.ts";
 import { signatureAlive } from "../runner/signaturePaths.ts";
-import {
-  laneMotionConfig,
-  laneMoveSeconds,
-  obstacleHitBoxes,
-  pickupReach,
-  type RoadGeometry,
-  steerWalk,
-  type Walk,
-  type WalkData,
-} from "../runner/walk.ts";
+import { pickupReach, steerWalk, type Walk, type WalkData } from "../runner/walk.ts";
+import { type RoadGeometry } from "../runner/walkGeometry.ts";
 import {
   isObstacleCategory,
   isPullObstacle,
   itemCategory,
   type WalkItem,
 } from "../runner/walkItems.ts";
+import { laneMotionConfig, laneMoveSeconds } from "../runner/walkMotion.ts";
 import type { RunState } from "../state/runState.ts";
 import {
   type LaneHazard,

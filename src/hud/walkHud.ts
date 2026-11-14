@@ -15,7 +15,7 @@ import { SCREEN_CONFIG } from "../data/screen.ts";
 import type { DebuffId, DogId, GameData } from "../data/types.ts";
 import type { ScreenLayout } from "../layout/screenLayout.ts";
 import { walkLength } from "../rules/route.ts";
-import { zoneLength } from "../runner/walk.ts";
+import { zoneLength } from "../runner/walkMotion.ts";
 import type { RunState } from "../state/runState.ts";
 import { GAME_PROGRESS, GAME_PROGRESS_STYLE } from "../ui/progressBar.ts";
 import { TITLE_CAP_ROWS } from "../ui/textFit.ts";

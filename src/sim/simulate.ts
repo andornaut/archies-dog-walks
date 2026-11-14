@@ -37,17 +37,10 @@ import {
   stepSession,
 } from "../runner/session.ts";
 import { auditSpawnPlan } from "../runner/spawnValidation.ts";
-import {
-  laneMotionConfig,
-  laneMoveSeconds,
-  type RoadGeometry,
-  roadScrollSpeed,
-  startRoad,
-  type Walk,
-  type WalkData,
-  type WalkStep,
-} from "../runner/walk.ts";
+import { startRoad, type Walk, type WalkData, type WalkStep } from "../runner/walk.ts";
+import { type RoadGeometry } from "../runner/walkGeometry.ts";
 import { blocksLane, type WalkItemKind } from "../runner/walkItems.ts";
+import { laneMotionConfig, laneMoveSeconds, roadScrollSpeed } from "../runner/walkMotion.ts";
 import type { ZonePlanObservation } from "../runner/zonePlan.ts";
 import { packDogs } from "../state/pack.ts";
 import { newRun, type PackDogs, type RunState } from "../state/runState.ts";

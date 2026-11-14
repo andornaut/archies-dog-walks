@@ -1,5 +1,4 @@
-import type { RoadGeometry } from "../runner/walk.ts";
-import { walkGeometry } from "../runner/walkGeometry.ts";
+import { type RoadGeometry, walkGeometry } from "../runner/walkGeometry.ts";
 
 // A focal length long enough that the road's rows are flat: a row dy up the screen from the
 // walker's feet is dy road pixels ahead, to well within a hundredth of a pixel.

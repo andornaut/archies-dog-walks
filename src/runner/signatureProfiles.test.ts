@@ -15,10 +15,11 @@ import { type MoverDraws, type MoverGeometry } from "./moverModel.ts";
 import { moverPlacements } from "./moverPlanning.ts";
 import { moverTell } from "./movers.ts";
 import { moverSpec } from "./moverSpecs.ts";
+import { componentHitLength, itemHeight, plannedCellInset } from "./obstacleGeometry.ts";
 import { signaturePlace, validateSignature } from "./signaturePaths.ts";
 import { blockingLength } from "./spawning.ts";
-import { componentHitLength, itemHeight, plannedCellInset, walkScrollSpeed } from "./walk.ts";
 import { footprintOf } from "./walkItems.ts";
+import { walkScrollSpeed } from "./walkMotion.ts";
 
 const contexts = Object.entries(MOVEMENT_ASSIGNMENTS).flatMap(([kind, assignment]) => {
   if (assignment.kind !== "byZone") {

@@ -17,7 +17,7 @@ import { HOME_BAR_LAST_FACE, HOME_LAYOUT } from "../home/homeLayout.ts";
 import { dollarAmountText } from "../presentation/currency.ts";
 import { maxHearts } from "../rules/dogs.ts";
 import { modifiersOf } from "../rules/modifiers.ts";
-import { zoneLength } from "../runner/walk.ts";
+import { zoneLength } from "../runner/walkMotion.ts";
 import { fontFileMetrics, fontInk } from "../testing/fontInk.ts";
 import { LONE } from "../testing/packPlaces.ts";
 import { inside } from "../testing/rects.ts";

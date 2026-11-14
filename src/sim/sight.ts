@@ -15,7 +15,8 @@ import {
 import { STEP_SHAPES } from "../runner/moverSpecs.ts";
 import { shyOutcomes } from "../runner/shy.ts";
 import { signaturePlace } from "../runner/signaturePaths.ts";
-import { type RoadGeometry, type WalkData } from "../runner/walk.ts";
+import { type WalkData } from "../runner/walk.ts";
+import { type RoadGeometry } from "../runner/walkGeometry.ts";
 import { movementOf, type WalkItem } from "../runner/walkItems.ts";
 
 // How a bot reads a mover: by sight, only what a player sees of it, or by foresight, its whole

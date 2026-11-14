@@ -11,7 +11,32 @@ import {
 } from "../layout/packFormation.ts";
 import { type RoadCamera, type RoadProjection, roadProjection } from "../layout/projection.ts";
 import { walkerFootY } from "../layout/screenLayout.ts";
-import type { RoadGeometry } from "./walk.ts";
+import type { Box, ScaledBox } from "./collision.ts";
+import type { RoadLens } from "./obstacleBox.ts";
+import type { PickupKind } from "./walkItems.ts";
+
+// Flat road pixels, where y grows toward the walker and the pack stands at scale 1, before
+// the pseudo-3D projection draws them. packParts are the current pack's, across from its place
+// on the road: each dog's hit rectangle in pack order and the walker's, inside their drawn
+// sprites, which obstacles hit; and its outline, the bounding box of everything drawn for it,
+// which pickups touch. packBand is the outline's rows. tallestPackBand is the longest any pack's
+// outline runs, so spawns stay avoidable whoever walks. A footprint is cell.length per lane and
+// row; an obstacle hits as it is drawn (solidItemBox), anything else with its footprint less
+// cell.inset at each side, itemHeights long. lens is the projection that draws the road.
+// roadTop is the far edge of the road in view, where spawns come into view, and sightLength
+// the road in view above the tallest pack.
+export interface RoadGeometry {
+  cell: { inset: number; length: number };
+  itemHeights: Readonly<Record<"gear" | "lucky" | PickupKind, number>>;
+  laneCount: number;
+  lens: RoadLens;
+  packBand: { bottom: number; top: number };
+  packParts: { dogs: readonly ScaledBox[]; outline: Box; walker: ScaledBox };
+  roadBottom: number;
+  roadTop: number;
+  sightLength: number;
+  tallestPackBand: number;
+}
 
 // A pickup's, lucky find's or gear drop's hit box is its lanes less the inset at each side, a
 // cell's spare width beside ROAD_HIT_SIZE, so one lane hits 40px wide on 64px lanes, whatever size

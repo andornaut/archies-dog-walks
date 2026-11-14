@@ -36,18 +36,14 @@ import { assignedMovement } from "./movementAssignments.ts";
 import { sweptLanes } from "./moverExtents.ts";
 import { crossSpan, hasLeftRoad, type MoverPath, moverPlace } from "./movers.ts";
 import { onScreenOf } from "./moverScreen.ts";
+import { componentHitLength, itemHeight } from "./obstacleGeometry.ts";
 import { moverOutcomes } from "./outcomes.ts";
 import { signaturePlace } from "./signaturePaths.ts";
 import { apportionSlotCounts } from "./slotConfig.ts";
-import {
-  componentHitLength,
-  itemHeight,
-  type RoadGeometry,
-  startRoad,
-  type Walk,
-  walkScrollSpeed,
-} from "./walk.ts";
+import { startRoad, type Walk } from "./walk.ts";
+import { type RoadGeometry } from "./walkGeometry.ts";
 import { blocksLane, footprintOf, movementOf, type WalkItemKind } from "./walkItems.ts";
+import { walkScrollSpeed } from "./walkMotion.ts";
 
 // While set, weightedPick ignores its weights, so every weighted planner draw is even.
 const unbiased = vi.hoisted(() => ({ on: false }));

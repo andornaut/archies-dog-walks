@@ -16,24 +16,15 @@ import { type MoverDraws, type MoverFootprint } from "../runner/moverModel.ts";
 import { moverPlacements } from "../runner/moverPlanning.ts";
 import { hasLeftRoad, type MoverPath, moverPlace } from "../runner/movers.ts";
 import { moverSpec } from "../runner/moverSpecs.ts";
+import { itemHeight, obstacleHitBox, plannedCellInset } from "../runner/obstacleGeometry.ts";
 import { moverOutcomes } from "../runner/outcomes.ts";
 import { NO_PULLS } from "../runner/pulls.ts";
 import { screenRoadGeometry } from "../runner/screenGeometry.ts";
 import { apportionSlotCounts, SLOT_ROLES } from "../runner/slotConfig.ts";
 import { blockingLength } from "../runner/spawning.ts";
-import {
-  itemHeight,
-  laneMoveSeconds,
-  obstacleHitBox,
-  packBoxes,
-  plannedCellInset,
-  startRoad,
-  steerWalk,
-  sweptPackBoxes,
-  type Walk,
-  walkScrollSpeed,
-} from "../runner/walk.ts";
+import { packBoxes, startRoad, steerWalk, sweptPackBoxes, type Walk } from "../runner/walk.ts";
 import { blocksLane, type WalkItem, type WalkItemKind } from "../runner/walkItems.ts";
+import { laneMoveSeconds, walkScrollSpeed } from "../runner/walkMotion.ts";
 import { zoneSlotGuarantees } from "../runner/zonePlan.ts";
 import { ZoneSlotPlanningError } from "../runner/zoneSlotInput.ts";
 import type { PackDogs } from "../state/runState.ts";

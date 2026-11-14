@@ -24,9 +24,10 @@ import {
   startSession,
   stepSession,
 } from "../runner/session.ts";
-import { startRoad, zoneLength } from "../runner/walk.ts";
+import { startRoad } from "../runner/walk.ts";
 import { walkProjection } from "../runner/walkGeometry.ts";
 import { type WalkItem } from "../runner/walkItems.ts";
+import { zoneLength } from "../runner/walkMotion.ts";
 import { newRun } from "../state/runState.ts";
 import { defined } from "../testing/defined.ts";
 import {

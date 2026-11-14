@@ -19,9 +19,10 @@ import {
 } from "./collision.ts";
 import { stillInLane } from "./laneMotion.ts";
 import type { MoverPath } from "./movers.ts";
+import { itemHeight, obstacleHitBox } from "./obstacleGeometry.ts";
 import type { RoadItem } from "./roadItems.ts";
 import { screenRoadGeometry } from "./screenGeometry.ts";
-import { itemHeight, obstacleHitBox, packBoxes } from "./walk.ts";
+import { packBoxes } from "./walk.ts";
 import { footprintOf, type WalkItem } from "./walkItems.ts";
 
 type Kind = "obstacle" | "tip";

@@ -3,8 +3,10 @@ import { describe, expect, it } from "vitest";
 import { atPack, data, geometry, step, walkWith } from "../testing/walk.ts";
 import { hitDog } from "./collision.ts";
 import { type MoverPath, moverPlace, turnedBack } from "./movers.ts";
-import { obstacleHitBox, packBoxes, roadScrollSpeed } from "./walk.ts";
+import { obstacleHitBox } from "./obstacleGeometry.ts";
+import { packBoxes } from "./walk.ts";
 import type { WalkItem } from "./walkItems.ts";
+import { roadScrollSpeed } from "./walkMotion.ts";
 
 describe("a resolved bump", () => {
   it("retires a returning mover, collects during grace and allows a different spawn of its kind", () => {

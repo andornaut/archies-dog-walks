@@ -8,8 +8,9 @@ import { zoneStats } from "../rules/zones.ts";
 import { GAME_ROAD, inZone, LUCKY_IDS, REAL, type Real, realRun } from "../testing/planner.ts";
 import { mapZones } from "../testing/world.ts";
 import { captureZoneInput, planZoneForSeed } from "../testing/zonePlan.ts";
-import { startRoad, zoneLength } from "./walk.ts";
+import { startRoad } from "./walk.ts";
 import { itemCategory } from "./walkItems.ts";
+import { zoneLength } from "./walkMotion.ts";
 
 // The seeds the quota draws sample, and the one the planner's spaced placements do, each zone's
 // plan taking a second or more. planZone's pickup test checks the planner places every lucky find

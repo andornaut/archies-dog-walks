@@ -55,10 +55,12 @@ import {
   moverTell,
 } from "./movers.ts";
 import { moverMovement, moverSpec } from "./moverSpecs.ts";
+import { itemHeight } from "./obstacleGeometry.ts";
 import { makeSlotJobs } from "./slotJobs.ts";
 import { blockingLength, rowSpacing } from "./spawning.ts";
-import { itemHeight, startRoad, stepWalk, type Walk, walkScrollSpeed } from "./walk.ts";
+import { startRoad, stepWalk, type Walk } from "./walk.ts";
 import { blocksLane, footprintOf, isPullObstacle, type WalkItem } from "./walkItems.ts";
+import { walkScrollSpeed } from "./walkMotion.ts";
 import { compileZoneSlotInput } from "./zoneSlotInput.ts";
 
 // A crosser 2.5 lanes in from the left edge 32px of scroll after its cue's 50px, its hit

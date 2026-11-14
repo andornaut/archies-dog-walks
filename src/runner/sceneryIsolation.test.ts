@@ -19,8 +19,9 @@ import {
   startSession,
   stepSession,
 } from "./session.ts";
-import { startRoad, zoneLength } from "./walk.ts";
+import { startRoad } from "./walk.ts";
 import { walkProjection } from "./walkGeometry.ts";
+import { zoneLength } from "./walkMotion.ts";
 
 const STEPS = 60 * 90;
 const LAYOUT = SCREEN_LAYOUT;

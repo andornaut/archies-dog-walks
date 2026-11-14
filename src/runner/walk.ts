@@ -1,10 +1,8 @@
 import { itemAt } from "@andornaut/game-kit/arrays";
 import { assertNever } from "@andornaut/game-kit/assertNever";
-import { getOrInsertComputed } from "@andornaut/game-kit/maps";
 import { chance, type Random } from "@andornaut/game-kit/random";
-import { type Pixels, pixels } from "@andornaut/game-kit/units";
+import { pixels } from "@andornaut/game-kit/units";
 
-import { IDLE_TAG, MOVING_TAGS } from "../assets/spriteKeys.ts";
 import type {
   CardSource,
   DogId,
@@ -13,16 +11,9 @@ import type {
   GearId,
   MinorObstacleId,
   MovementKind,
-  SignatureProfile,
 } from "../data/types.ts";
 import type { LaneDirection } from "../layout/lanes.ts";
-import {
-  COMPONENT_SILHOUETTES,
-  hasObstacleArt,
-  obstacleParts,
-  obstacleSilhouette,
-} from "../layout/obstacleArt.ts";
-import { formationOrder, PART_INSET } from "../layout/packFormation.ts";
+import { formationOrder } from "../layout/packFormation.ts";
 import { countBump, countLandedBump, countTally } from "../rules/achievements.ts";
 import {
   type HeartChange,
@@ -43,7 +34,7 @@ import {
   modifierCausesOf,
 } from "../rules/modified.ts";
 import { modifiedStat } from "../rules/modifiers.ts";
-import { currentZone, walkLength } from "../rules/route.ts";
+import { walkLength } from "../rules/route.ts";
 import {
   bumpCash,
   bumpParts,
@@ -56,8 +47,6 @@ import { spendSpareTreat } from "../rules/spareTreats.ts";
 import { reachModified } from "../rules/standing.ts";
 import { grabTreat, type TreatGrabbed } from "../rules/treats.ts";
 import { read } from "../rules/units.ts";
-import { packAgility } from "../rules/walkers.ts";
-import { zoneScrollSpeed } from "../rules/zones.ts";
 import { packDogs } from "../state/pack.ts";
 import type { RunState } from "../state/runState.ts";
 import { addCents } from "../units.ts";
@@ -75,17 +64,14 @@ import {
   type CollisionRules,
   type DogBox,
   hitDog,
-  itemBox,
   type LanedBox,
   overlaps,
   type PackBoxes,
   pickupDog,
   type RoadPoint,
-  type ScaledBox,
   sweptHitDog,
   tickInvulnerability,
 } from "./collision.ts";
-import { componentHitBoxes } from "./componentHitBoxes.ts";
 import {
   type HeldStep,
   type HitStop,
@@ -94,42 +80,41 @@ import {
   tickHitStop,
 } from "./hitStop.ts";
 import { advanceLaneControl, type LaneControl, laneControlIn, steerLane } from "./laneControl.ts";
-import { type LaneMotion, type LaneMotionConfig, laneMotionX, stillInLane } from "./laneMotion.ts";
+import { type LaneMotion, laneMotionX, stillInLane } from "./laneMotion.ts";
 import {
-  drawnLanes,
   hasLeftRoad,
-  hasStopped,
-  isSliding,
   isWarning,
   laneAt,
   moveMovers,
   type MoverItem,
-  type MoverPath,
   moverPlace,
   moverY,
 } from "./movers.ts";
-import { drawnObstacleBox, exitLength, type PlacedPart, type RoadLens } from "./obstacleBox.ts";
+import {
+  componentHitLength,
+  itemHeight,
+  obstacleHitBox,
+  obstacleHitBoxes,
+  walkItemBox,
+} from "./obstacleGeometry.ts";
 import { awayHop, nextShyChoiceAt, shyChoices, type ShyPath, takeHop } from "./shy.ts";
 import { signatureAlive, signatureSweeps } from "./signaturePaths.ts";
 import type { AdmissionReport } from "./spawnAdmission.ts";
 import { type PathRow, type SpawnEvent, takeDueSpawns } from "./spawning.ts";
+import type { RoadGeometry } from "./walkGeometry.ts";
 import {
-  blocksLane,
   footprintOf,
   isGearDrop,
   isMinorObstacle,
   isObstacle,
   isPickup,
   isPullObstacle,
-  type ItemCategory,
-  itemCategory,
-  movementOf,
-  type ObstacleKind,
   type PickupKind,
   type WalkItem,
   type WalkItemKind,
   type WalkSpawn,
 } from "./walkItems.ts";
+import { laneMotionConfig, roadScrollSpeed, zoneLength } from "./walkMotion.ts";
 
 export type WalkData = Pick<
   GameData,
@@ -179,29 +164,6 @@ interface PlannedCount {
 export interface Walk {
   road: Road;
   run: RunState;
-}
-
-// Flat road pixels, where y grows toward the walker and the pack stands at scale 1, before
-// the pseudo-3D projection draws them. packParts are the current pack's, across from its place
-// on the road: each dog's hit rectangle in pack order and the walker's, inside their drawn
-// sprites, which obstacles hit; and its outline, the bounding box of everything drawn for it,
-// which pickups touch. packBand is the outline's rows. tallestPackBand is the longest any pack's
-// outline runs, so spawns stay avoidable whoever walks. A footprint is cell.length per lane and
-// row; an obstacle hits as it is drawn (solidItemBox), anything else with its footprint less
-// cell.inset at each side, itemHeights long. lens is the projection that draws the road.
-// roadTop is the far edge of the road in view, where spawns come into view, and sightLength
-// the road in view above the tallest pack.
-export interface RoadGeometry {
-  cell: { inset: number; length: number };
-  itemHeights: Readonly<Record<"gear" | "lucky" | PickupKind, number>>;
-  laneCount: number;
-  lens: RoadLens;
-  packBand: { bottom: number; top: number };
-  packParts: { dogs: readonly ScaledBox[]; outline: Box; walker: ScaledBox };
-  roadBottom: number;
-  roadTop: number;
-  sightLength: number;
-  tallestPackBand: number;
 }
 
 // A lucky encounter that applied on contact, with no card, and the item the pack grabbed.
@@ -302,111 +264,6 @@ interface ZoneEnd {
   run: RunState;
 }
 
-// The last lane move time, scroll speed and zone length worked out, with the data groups and run
-// fields they were worked out from. A walk asks for the same ones every step until its pack, zone,
-// modifiers or debuffs or the data change; data and run states are never changed in place.
-let lastLaneMove:
-  | (Pick<GameData, "debuffs" | "dogs" | "tuning" | "walkers"> &
-      Pick<RunState, "pack" | "walker"> & {
-        readonly runDebuffs: RunState["debuffs"];
-        readonly runModifiers: RunState["modifiers"];
-        readonly seconds: number;
-      })
-  | null = null;
-let lastScrollSpeed:
-  | (Pick<GameData, "tuning" | "world"> &
-      Pick<RunState, "route" | "zoneIndex"> & { readonly speed: Pixels })
-  | null = null;
-
-// How long one lane move takes: seconds.laneMove over the pack's agility, a Muddy pack's included.
-export function laneMoveSeconds(
-  data: Pick<GameData, "debuffs" | "dogs" | "tuning" | "walkers">,
-  run: Pick<RunState, "debuffs" | "modifiers" | "pack" | "walker">,
-): number {
-  const last = lastLaneMove;
-  if (
-    last !== null &&
-    last.tuning === data.tuning &&
-    last.debuffs === data.debuffs &&
-    last.dogs === data.dogs &&
-    last.walkers === data.walkers &&
-    last.pack === run.pack &&
-    last.walker === run.walker &&
-    last.runModifiers === run.modifiers &&
-    last.runDebuffs === run.debuffs
-  ) {
-    return last.seconds;
-  }
-  const seconds = read(data.tuning, "seconds", "laneMove") / packAgility(data, run);
-  lastLaneMove = {
-    debuffs: data.debuffs,
-    dogs: data.dogs,
-    pack: run.pack,
-    runDebuffs: run.debuffs,
-    runModifiers: run.modifiers,
-    seconds,
-    tuning: data.tuning,
-    walker: run.walker,
-    walkers: data.walkers,
-  };
-  return seconds;
-}
-
-export function laneMotionConfig(
-  data: Pick<GameData, "debuffs" | "dogs" | "tuning" | "walkers">,
-  laneCount: number,
-  run: Pick<RunState, "debuffs" | "modifiers" | "pack" | "walker">,
-): LaneMotionConfig {
-  return { laneCount, moveDuration: laneMoveSeconds(data, run) };
-}
-
-// Pixels per second in the run's current zone, read from the live data. Every walker walks the
-// same road at the same speed.
-export function walkScrollSpeed(
-  data: Pick<GameData, "tuning" | "world">,
-  run: Pick<RunState, "route" | "zoneIndex">,
-): Pixels {
-  const last = lastScrollSpeed;
-  if (
-    last !== null &&
-    last.tuning === data.tuning &&
-    last.world === data.world &&
-    last.route === run.route &&
-    last.zoneIndex === run.zoneIndex
-  ) {
-    return last.speed;
-  }
-  const speed = zoneScrollSpeed(data.tuning, currentZone(data, run), run.zoneIndex);
-  lastScrollSpeed = {
-    route: run.route,
-    speed,
-    tuning: data.tuning,
-    world: data.world,
-    zoneIndex: run.zoneIndex,
-  };
-  return speed;
-}
-
-// The road's scroll speed in pixels per second: the zone's (walkScrollSpeed) at the road's
-// speedFactor.
-export function roadScrollSpeed(
-  data: Pick<GameData, "tuning" | "world">,
-  walk: {
-    readonly road: Pick<Road, "speedFactor">;
-    readonly run: Pick<RunState, "route" | "zoneIndex">;
-  },
-): number {
-  return walkScrollSpeed(data, walk.run) * walk.road.speedFactor;
-}
-
-// Every zone is the distance the base speed covers in zoneAtBaseSpeed.
-export function zoneLength(data: Pick<GameData, "tuning">): Pixels {
-  return pixels(
-    read(data.tuning, "pixels", "roadScrollSpeed") *
-      read(data.tuning, "seconds", "zoneAtBaseSpeed"),
-  );
-}
-
 export function startRoad(laneCount: number, speedFactor = 1): Road {
   return {
     control: laneControlIn(stillInLane(Math.floor(laneCount / 2))),
@@ -435,129 +292,6 @@ export function steerWalk(
   const config = laneMotionConfig(data, laneCount, walk.run);
   const control = steerLane(config, direction, walk.road.control);
   return { ...walk, road: { ...walk.road, control } };
-}
-
-const PLACED_PARTS = new WeakMap<object, Map<string, readonly PlacedPart[]>>();
-
-// The sprites an obstacle draws, standing or moving, with their silhouettes: each over every
-// frame, or, with tags, the pose silhouette of the first of them its sprite has one for.
-export function obstacleOnRoad(
-  data: Pick<GameData, "encounters" | "minorObstacles">,
-  geometry: Pick<RoadGeometry, "cell">,
-  kind: ObstacleKind,
-  moving: boolean,
-  tags: readonly string[] = [],
-): readonly PlacedPart[] {
-  const byKind = getOrInsertComputed(data, () => new Map(), PLACED_PARTS);
-  const key = `${geometry.cell.length} ${kind} ${moving} ${tags.join(",")}`;
-  return getOrInsertComputed(
-    key,
-    () => {
-      const { lanes } = footprintOf(data, kind);
-      return obstacleParts(data, hasObstacleArt, kind, moving).map(({ behind, dx, key: art }) => ({
-        behind,
-        dx,
-        silhouette: obstacleSilhouette(geometry.cell.length, lanes, art, tags),
-      }));
-    },
-    byKind,
-  );
-}
-
-// By lens, then the pack band's bottom, then the parts.
-const EXIT_LENGTHS = new WeakMap<object, Map<number, Map<readonly PlacedPart[], number>>>();
-
-type HitGeometry = Pick<RoadGeometry, "cell" | "itemHeights" | "lens" | "packBand">;
-
-// How far an obstacle's drawn hit box runs up the road from its near edge as it leaves the pack's
-// band (exitLength).
-function drawnHitLength(
-  data: Pick<GameData, "encounters" | "minorObstacles">,
-  geometry: HitGeometry,
-  kind: ObstacleKind,
-  moving: boolean,
-): number {
-  const parts = obstacleOnRoad(data, geometry, kind, moving);
-  const { bottom } = geometry.packBand;
-  const byBottom = getOrInsertComputed(geometry.lens, () => new Map(), EXIT_LENGTHS);
-  const lengths = getOrInsertComputed(bottom, () => new Map(), byBottom);
-  return getOrInsertComputed(
-    parts,
-    () => exitLength(geometry.lens, PART_INSET, parts, bottom),
-    lengths,
-  );
-}
-
-// The spacing and runtime height of one independently placed component, using its own art.
-export function componentHitLength(
-  geometry: Pick<RoadGeometry, "lens" | "packBand">,
-  profile: Extract<SignatureProfile, { readonly kind: "delayedTrail" }>,
-): number {
-  const silhouette = COMPONENT_SILHOUETTES[profile.spriteKey];
-  if (silhouette === undefined) {
-    throw new Error(`Missing component silhouette ${profile.spriteKey}`);
-  }
-  return exitLength(
-    geometry.lens,
-    PART_INSET,
-    [{ behind: 0, dx: 0, silhouette }],
-    geometry.packBand.bottom,
-  );
-}
-
-// The planner's inset at each end of a footprint row: whatever lane-blocking obstacle stands in
-// a footprint, standing or moving, its hit length is no more than the footprint's rows less this
-// at each end, so every blocking span it plans covers the obstacle's. A standing obstacle hits
-// within its rows (hitReach), so only a mover drawn longer than its rows makes it negative.
-export function plannedCellInset(
-  data: Pick<GameData, "encounters" | "minorObstacles">,
-  geometry: HitGeometry,
-): number {
-  const kinds = [
-    ...Object.keys(data.minorObstacles),
-    ...Object.keys(data.encounters).filter((kind) => blocksLane(data, kind as EncounterId)),
-  ] as ObstacleKind[];
-  const { length } = geometry.cell;
-  const over = Math.max(
-    ...kinds.flatMap((kind) =>
-      (movementOf(data, kind) === null ? [false] : [false, true]).map(
-        (moving) =>
-          itemHeight(data, geometry, kind, moving) - (footprintOf(data, kind).rows - 1) * length,
-      ),
-    ),
-  );
-  return (length - over) / 2;
-}
-
-// How far up the road from its near edge an obstacle may hit: a moving one as far as it is
-// drawn, and a standing one no farther than its footprint's rows, so a standing sprite drawn
-// taller than its rows draws over the road behind it but hits only within them.
-export function hitReach(
-  data: Pick<GameData, "encounters" | "minorObstacles">,
-  geometry: Pick<RoadGeometry, "cell">,
-  kind: ObstacleKind,
-  moving: boolean,
-): number {
-  return moving ? Infinity : footprintOf(data, kind).rows * geometry.cell.length;
-}
-
-// An obstacle's hit length: how far its drawn hit box runs up the road from its near edge as it
-// leaves the pack's band (exitLength), so its rows overlap the band exactly while its drawn hit
-// box does, at most its hitReach. Anything else's is its item height.
-export function itemHeight(
-  data: Pick<GameData, "encounters" | "minorObstacles">,
-  geometry: HitGeometry,
-  kind: WalkItemKind,
-  moving: boolean,
-): number {
-  if (!isObstacle(data, kind)) {
-    const category = itemCategory(data, kind) as Exclude<ItemCategory, "minor" | "obstacle">;
-    return geometry.itemHeights[category];
-  }
-  return Math.min(
-    drawnHitLength(data, geometry, kind, moving),
-    hitReach(data, geometry, kind, moving),
-  );
 }
 
 // How many lanes beside the pack's a pickup is collected from: tipReach and treatReach
@@ -738,72 +472,6 @@ function shyHopped(
     }
     return path === mover.path ? item : { ...item, mover: { ...mover, path } };
   });
-}
-
-// The lane an item's footprint starts on: a mover's continuous place across the lanes, so one
-// between lanes touches what is beside it in both, and anything else's lane.
-function footprintLane(laneCount: number, item: WalkItem): number {
-  const { mover } = item;
-  return mover === undefined
-    ? item.lane
-    : moverPlace(laneCount, mover.path, mover.since).lanePosition;
-}
-
-// An item's footprint box on the road: its lanes less the inset at each side, along its height.
-export function walkItemBox(
-  geometry: Pick<RoadGeometry, "cell" | "laneCount">,
-  item: WalkItem,
-): Box {
-  return itemBox(geometry.cell, { ...item, lane: footprintLane(geometry.laneCount, item) });
-}
-
-// The tags a mover's pose may be drawn in, most likely first: its dive while it slides, its idle
-// once it has stopped, and otherwise its movement's.
-function poseTags(path: MoverPath, since: number): readonly string[] {
-  if (isSliding(path, since)) {
-    return ["dive"];
-  }
-  return hasStopped(path, since) ? [IDLE_TAG] : MOVING_TAGS[path.movement];
-}
-
-// The box an obstacle hits the pack's parts with, in the lanes of its footprint: as it is drawn
-// (drawnObstacleBox), from its sprites standing on its near edge across from the middle of the
-// lanes it is drawn over (drawnLanes for a mover), a mover in its pose (poseTags), and a standing
-// obstacle no farther up the road than its hitReach. Its spacing on the road is planned with its
-// silhouette over every frame, which holds every pose's.
-export function obstacleHitBox(
-  data: Pick<GameData, "encounters" | "minorObstacles">,
-  geometry: Pick<RoadGeometry, "cell" | "itemHeights" | "laneCount" | "lens" | "packBand">,
-  item: WalkItem,
-): LanedBox {
-  if (!isObstacle(data, item.kind)) {
-    throw new Error(`${item.kind} is not an obstacle`);
-  }
-  const component = componentHitBoxes(geometry, item)?.[0];
-  if (component !== undefined) {
-    return component;
-  }
-  const { cell, lens } = geometry;
-  const feetY = item.y + item.height;
-  const lane = footprintLane(geometry.laneCount, item);
-  const lanes = { left: lane * cell.length, right: (lane + item.laneSpan) * cell.length };
-  const { mover } = item;
-  const drawn = mover === undefined ? item.laneSpan : drawnLanes(item.laneSpan, mover.path);
-  const tags = mover === undefined ? [] : poseTags(mover.path, mover.since);
-  const moving = mover !== undefined;
-  const parts = obstacleOnRoad(data, geometry, item.kind, moving, tags);
-  const x = (lane + drawn / 2) * cell.length;
-  const reach = hitReach(data, geometry, item.kind, moving);
-  return { ...drawnObstacleBox(lens, PART_INSET, parts, { feetY, x }, reach), lanes };
-}
-
-// A logical obstacle may draw separate components. Their gaps stay outside its hit boxes.
-export function obstacleHitBoxes(
-  data: Pick<GameData, "encounters" | "minorObstacles">,
-  geometry: Pick<RoadGeometry, "cell" | "itemHeights" | "laneCount" | "lens" | "packBand">,
-  item: WalkItem,
-): readonly LanedBox[] {
-  return componentHitBoxes(geometry, item) ?? [obstacleHitBox(data, geometry, item)];
 }
 
 function blendPack(

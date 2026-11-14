@@ -29,6 +29,7 @@ import {
 import { laneControlIn } from "./laneControl.ts";
 import { stillInLane } from "./laneMotion.ts";
 import { type MoverPath, moverPlace, moverY } from "./movers.ts";
+import { obstacleHitBoxes } from "./obstacleGeometry.ts";
 import {
   laneBlockedWithin,
   NO_PULLS,
@@ -39,7 +40,7 @@ import {
   pullWalk,
   stepPulls,
 } from "./pulls.ts";
-import { obstacleHitBoxes, startRoad, steerWalk, stepWalk, type Walk } from "./walk.ts";
+import { startRoad, steerWalk, stepWalk, type Walk } from "./walk.ts";
 import { type WalkItem } from "./walkItems.ts";
 import { planZoneWithContext } from "./zonePlan.ts";
 

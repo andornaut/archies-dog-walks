@@ -20,14 +20,14 @@ import { NO_PULLS, type PullData, type Pulls, type PullStep, stepPulls } from ".
 import {
   finishZone,
   headHome,
-  type RoadGeometry,
   steerWalk,
   stepWalk,
   type Walk,
   type WalkData,
   type WalkStep,
-  zoneLength,
 } from "./walk.ts";
+import { type RoadGeometry } from "./walkGeometry.ts";
+import { zoneLength } from "./walkMotion.ts";
 import { planZoneWithContext, type ZonePlanObservation } from "./zonePlan.ts";
 import { type DebuffMovementClock, hasDebuffDrift, stepDebuffMovement } from "./zoomies.ts";
 

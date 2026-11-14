@@ -19,7 +19,7 @@ import {
   type RoadsidePlace,
   type RoadsideStage,
 } from "../../road/roadsideProps.ts";
-import { zoneLength } from "../../runner/walk.ts";
+import { zoneLength } from "../../runner/walkMotion.ts";
 import { showAtDepth, spriteMetrics } from "../sprites.ts";
 import { ShadowPool } from "./shadowPool.ts";
 import {

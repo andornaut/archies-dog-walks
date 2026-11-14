@@ -18,6 +18,7 @@ import { testState } from "../testing/runState.ts";
 import { clampHearts } from "../units.ts";
 import { laneControlIn } from "./laneControl.ts";
 import { stillInLane } from "./laneMotion.ts";
+import { itemHeight } from "./obstacleGeometry.ts";
 import { NO_PULLS, type Strain } from "./pulls.ts";
 import { screenRoadGeometry } from "./screenGeometry.ts";
 import {
@@ -35,8 +36,9 @@ import {
   stepSession,
   zoneStartPoint,
 } from "./session.ts";
-import { itemHeight, packBoxes, startRoad, zoneLength } from "./walk.ts";
+import { packBoxes, startRoad } from "./walk.ts";
 import { type WalkItem } from "./walkItems.ts";
+import { zoneLength } from "./walkMotion.ts";
 import type { ZonePlanObservation } from "./zonePlan.ts";
 import { replayZoneSlots } from "./zoneSlotInput.ts";
 

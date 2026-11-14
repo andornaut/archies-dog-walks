@@ -12,19 +12,13 @@ import { type PackSprites, PART_INSET } from "../layout/packFormation.ts";
 import { read } from "../rules/units.ts";
 import { slowestDebuffedAgility, slowestPackAgility } from "../rules/walkers.ts";
 import { drawnLanes, hasLeftRoad, type MoverPath, moverPlace } from "../runner/movers.ts";
+import { componentHitLength, itemHeight, plannedCellInset } from "../runner/obstacleGeometry.ts";
 import { moverOutcomes } from "../runner/outcomes.ts";
 import { signaturePlace } from "../runner/signaturePaths.ts";
-import {
-  componentHitLength,
-  itemHeight,
-  plannedCellInset,
-  type RoadGeometry,
-  type Walk,
-  walkScrollSpeed,
-  zoneLength,
-} from "../runner/walk.ts";
-import { walkGeometry, walkProjection } from "../runner/walkGeometry.ts";
+import { type Walk } from "../runner/walk.ts";
+import { type RoadGeometry, walkGeometry, walkProjection } from "../runner/walkGeometry.ts";
 import { blocksLane, footprintOf, type WalkItem } from "../runner/walkItems.ts";
+import { walkScrollSpeed, zoneLength } from "../runner/walkMotion.ts";
 import { newRun, type RunState } from "../state/runState.ts";
 import { type BlockingSpan } from "./avoidable.ts";
 import { data } from "./walk.ts";
