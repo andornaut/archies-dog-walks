@@ -15,17 +15,18 @@
 // Run from the repository root.
 import { readFileSync, writeFileSync } from "node:fs";
 
+import { drawBitmapText, measureBitmapText, readBitmapFont } from "@andornaut/art-kit/bitmapFont";
 import { decodePng } from "@andornaut/art-kit/png";
 import {
   channel,
   crop,
+  fill,
   filledImage,
   opaque,
   paste,
-  type Plane,
   resizeNearest,
 } from "@andornaut/art-kit/raster";
-import { opaqueRect, type RgbaImage } from "@andornaut/art-kit/rgbaImage";
+import { blankImage, opaqueRect, type RgbaImage } from "@andornaut/art-kit/rgbaImage";
 
 import * as bd from "./backdrops.ts";
 import { GAME, PALETTE64, rgbPng, run } from "./pixel.ts";
@@ -81,42 +82,13 @@ function formation(dogs: readonly string[]): [side: number, row: number][] {
 
 // ---------- font-title, read from its BMFont export ----------
 
-type BmGlyph = readonly [mask: Plane | null, xoffset: number, yoffset: number, xadvance: number];
-
-// {char: (mask, xoffset, yoffset, xadvance)} from public/art/fonts/<key>.fnt and its atlas.
-function bmfont(key: string): Map<string, BmGlyph> {
-  const src = readFileSync(`public/art/fonts/${key}.fnt`, "utf8");
-  const atlas = decodePng(readFileSync(`public/art/fonts/${key}.png`));
-  const out = new Map<string, BmGlyph>();
-  for (const line of src.split(/\r?\n/)) {
-    if (!line.includes("<char ")) {
-      continue;
-    }
-    const a: Record<string, number> = {};
-    for (const [, k, v] of line.matchAll(/(\w+)="(-?\d+)"/g)) {
-      a[k!] = Number.parseInt(v!, 10);
-    }
-    const mask = a.width
-      ? channel(3, crop({ height: a.height!, width: a.width, x: a.x!, y: a.y! }, atlas))
-      : null;
-    out.set(String.fromCodePoint(a.id!), [mask, a.xoffset!, a.yoffset!, a.xadvance!]);
-  }
-  return out;
-}
-
-const TITLE = bmfont("font-title");
-
-function glyph(ch: string): BmGlyph {
-  return TITLE.get(ch)!;
-}
-
-// The inked width of s at scale sc: the advances, less the trailing gap of the last glyph.
-function titleW(s: string, sc: number): number {
-  const chars = [...s];
-  const [mask, ox] = glyph(chars.at(-1)!);
-  const advances = chars.slice(0, -1).reduce((sum, ch) => sum + glyph(ch)[3], 0);
-  return sc * (advances + ox + (mask ? mask.width : 0));
-}
+const TITLE_ATLAS = decodePng(readFileSync("public/art/fonts/font-title.png"));
+// The share card uses unkerned lettering, with the final glyph's trailing gap removed.
+const TITLE = {
+  ...readBitmapFont(readFileSync("public/art/fonts/font-title.fnt", "utf8")),
+  kernings: [],
+};
+const TITLE_LAYOUT = { font: TITLE, lineSpacing: 0, missing: "reject" } as const;
 
 // s in font-title at sc, centred on mid with its cap tops on row y, in col with a 1px rim all round.
 function label(
@@ -128,45 +100,31 @@ function label(
   rim: string,
   sc = 2,
 ): void {
-  const chars = [...s];
-  const pts = new Map<string, [number, number]>();
-  let x = Math.round(mid - titleW(s, sc) / 2);
-  const top = Math.min(...chars.filter((ch) => glyph(ch)[0]).map((ch) => glyph(ch)[2]));
-  for (const ch of chars) {
-    const [mask, ox, oy, adv] = glyph(ch);
-    if (mask) {
-      for (let j = 0; j < mask.height; j++) {
-        for (let i = 0; i < mask.width; i++) {
-          if (mask.data[j * mask.width + i]) {
-            for (let dj = 0; dj < sc; dj++) {
-              for (let di = 0; di < sc; di++) {
-                const px = x + (ox + i) * sc + di;
-                const py = y + (oy - top + j) * sc + dj;
-                pts.set(`${px},${py}`, [px, py]);
-              }
-            }
-          }
-        }
-      }
-    }
-    x += adv * sc;
+  const bounds = measureBitmapText(TITLE_LAYOUT, s).glyphBounds!;
+  const ink = blankImage(bounds.width, bounds.height);
+  drawBitmapText(
+    {
+      ...TITLE_LAYOUT,
+      at: { x: -bounds.x, y: -bounds.y },
+      atlas: TITLE_ATLAS,
+      tint: [255, 255, 255],
+    },
+    s,
+    ink,
+  );
+  const mask = channel(3, resizeNearest(ink.width * sc, ink.height * sc, ink));
+  const x = Math.round(mid - ((bounds.x + bounds.width) * sc) / 2) + bounds.x * sc;
+  const rect = { height: mask.height, width: mask.width, x, y };
+  for (const [dx, dy] of [
+    [0, -1],
+    [0, 1],
+    [-1, 0],
+    [1, 0],
+    [1, 1],
+  ] as const) {
+    fill({ mask, rect: { ...rect, x: x + dx, y: y + dy } }, [...sn.rgb(rim), 255], cv.img);
   }
-  for (const [px, py] of pts.values()) {
-    for (const [dx, dy] of [
-      [0, -1],
-      [0, 1],
-      [-1, 0],
-      [1, 0],
-      [1, 1],
-    ] as const) {
-      if (!pts.has(`${px + dx},${py + dy}`)) {
-        cv.fill(px + dx, py + dy, 1, 1, rim);
-      }
-    }
-  }
-  for (const [px, py] of pts.values()) {
-    cv.fill(px, py, 1, 1, col);
-  }
+  fill({ mask, rect }, [...sn.rgb(col), 255], cv.img);
 }
 
 // ---------- the window onto Cabbagetown ----------
