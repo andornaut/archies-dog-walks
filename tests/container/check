@@ -28,7 +28,7 @@ case "${category}" in
         node_modules/.bin/markdownlint-cli2
         ;;
     test)
-        exec node node_modules/vitest/vitest.mjs run --maxWorkers=4 "$@"
+        exec node node_modules/vitest/vitest.mjs run --maxWorkers=2 "$@"
         ;;
     build)
         "$0" bundle "$@"
