@@ -150,6 +150,7 @@ describe("the home screen's first load", () => {
       [
         HOME,
         "scenes/CelebrationScene.ts",
+        "scenes/MenuScene.ts",
         "scenes/QuitScene.ts",
         "scenes/SettingsScene.ts",
         "scenes/ShopScene.ts",
