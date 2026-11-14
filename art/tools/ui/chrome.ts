@@ -1,4 +1,4 @@
-import { type Drawable, Grid } from "./pixel.ts";
+import { type Drawable, Grid } from "../pixel.ts";
 
 // ---------- the chrome: one frame for every panel, bubble, plate and card frame ----------
 

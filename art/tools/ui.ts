@@ -81,7 +81,7 @@ import {
   toImage,
   ZONE_ROAD_COLOURS,
 } from "./pixel.ts";
-import { chrome, chromeShape, plate, roundedInside, SIDES } from "./uiChrome.ts";
+import { chrome, chromeShape, plate, roundedInside, SIDES } from "./ui/chrome.ts";
 import {
   bill,
   browserMenuIcon,
@@ -105,9 +105,9 @@ import {
   stinky,
   treatIcon,
   updateIcon,
-} from "./uiIcons.ts";
+} from "./ui/icons.ts";
 
-export { chrome, plate } from "./uiChrome.ts";
+export { chrome, plate } from "./ui/chrome.ts";
 
 const USAGE = `Usage:
   node art/tools/ui.ts preview OUT.png   every piece, scaled up

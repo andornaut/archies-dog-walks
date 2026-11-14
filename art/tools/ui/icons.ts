@@ -8,9 +8,9 @@ import {
   iconEdge,
   K,
   raster,
-} from "./pixel.ts";
-import { treat } from "./road.ts";
-import { rows, SIDES } from "./uiChrome.ts";
+} from "../pixel.ts";
+import { treat } from "../road.ts";
+import { rows, SIDES } from "./chrome.ts";
 
 // ---------- icons ----------
 // icon-pause, icon-play, icon-home, icon-help, icon-close, icon-logbook, icon-settings, icon-exit and

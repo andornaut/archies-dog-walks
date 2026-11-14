@@ -141,7 +141,7 @@ import {
   SIGN_W,
   W,
   xy,
-} from "./screensDrawing.ts";
+} from "./screens/drawing.ts";
 import {
   BOARD,
   DOOR_WAVE,
@@ -153,7 +153,7 @@ import {
   petShop,
   petShopBoard,
   petShopFront,
-} from "./screensShop.ts";
+} from "./screens/shop.ts";
 
 // The usage text, naming every image in SCREENS.
 function usage(): string {

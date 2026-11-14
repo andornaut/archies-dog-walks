@@ -1,8 +1,8 @@
 import { crop, type Rgba } from "@andornaut/art-kit/raster";
 import { blankImage, type RgbaImage } from "@andornaut/art-kit/rgbaImage";
 
-import { type DrawingScope, Grid, LAYOUT } from "./pixel.ts";
-import { Canvas, rgb } from "./scene.ts";
+import { type DrawingScope, Grid, LAYOUT } from "../pixel.ts";
+import { Canvas, rgb } from "../scene.ts";
 
 // The screen's size, from the layout's screen.
 export const W = LAYOUT.screen.width;
