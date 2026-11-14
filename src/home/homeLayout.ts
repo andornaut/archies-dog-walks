@@ -752,7 +752,7 @@ export function updateModalText(
 // The notice contains its title and actions, Cancel then Update now, without an empty body row.
 export function updateModalLayout(
   area: Rect,
-  ink: { action: number; cancel: number; title: number },
+  ink: { action: number; cancel: number; title: number; titleExtraHeight?: number },
 ) {
   const actionWidth = modalActionWidth(ink.action);
   const cancelWidth = modalActionWidth(ink.cancel);
@@ -764,11 +764,12 @@ export function updateModalLayout(
     Math.max(groupWidth + 2 * MODAL.pad, modalTitleWidth(ink.title)),
   );
   const height = BUTTON_SIZE.compact.height;
+  const header = MODAL.header + (ink.titleExtraHeight ?? 0);
   const panel = modalRect(
     area,
     { ...GATE, width: area.width, x: area.x },
     {
-      height: MODAL.header + height + (stacked ? height + BUTTON_SIZE.stackGap : 0) + MODAL.pad,
+      height: header + height + (stacked ? height + BUTTON_SIZE.stackGap : 0) + MODAL.pad,
       width,
     },
   );
@@ -777,13 +778,13 @@ export function updateModalLayout(
     height,
     width: stacked ? groupWidth : cancelWidth,
     x: left,
-    y: panel.y + MODAL.header,
+    y: panel.y + header,
   };
   const button = {
     height,
     width: stacked ? groupWidth : actionWidth,
     x: left + (stacked ? 0 : cancelWidth + BUTTON_SIZE.gap),
-    y: panel.y + MODAL.header + (stacked ? height + BUTTON_SIZE.stackGap : 0),
+    y: panel.y + header + (stacked ? height + BUTTON_SIZE.stackGap : 0),
   };
   return { button, cancel, hit: button, panel };
 }

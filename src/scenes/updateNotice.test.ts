@@ -1,8 +1,9 @@
 import { EventEmitter } from "node:events";
 
 import type { RequiredUpdateState } from "@andornaut/game-kit/web/pwa/updateReady";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { gameData } from "../data/index.ts";
 import { overlayRegion } from "../home/homeBar.ts";
 import { updateModalLayout } from "../home/homeLayout.ts";
 import type { Sections } from "../home/sections.ts";
@@ -11,6 +12,8 @@ import { StartScene } from "./StartScene.ts";
 const acceptUpdate = vi.fn();
 const arriveHome = vi.fn();
 const dismissUpdateOffer = vi.fn();
+const acceptance = { failed: false, pending: false };
+const offer = { shown: false };
 const required = { state: undefined as RequiredUpdateState | undefined };
 vi.mock("phaser", () => ({
   Core: { Events: {} },
@@ -23,11 +26,14 @@ vi.mock("../pwa/index.ts", async (original) => ({
   arriveHome: () => arriveHome(),
   dismissUpdateOffer: () => dismissUpdateOffer(),
   requiredUpdate: () => required.state,
+  updateAcceptanceFailed: () => acceptance.failed,
+  updateAccepting: () => acceptance.pending,
+  updatePlateShown: () => offer.shown,
 }));
 
 function notice() {
   let active = false;
-  let offered = true;
+  offer.shown = true;
   const layout = updateModalLayout(overlayRegion("home"), {
     action: 100,
     cancel: 60,
@@ -38,6 +44,7 @@ function notice() {
     prepareArrival: () => void;
     releaseOnOverlay: (down: { x: number; y: number }, x: number, y: number) => void;
     syncUpdateNotice: () => void;
+    updateOffered: () => boolean;
   };
   const state = {
     closeOverlay: () => methods.closeOverlay.call(state),
@@ -47,7 +54,7 @@ function notice() {
     shownUpdate: false,
     sys: { isActive: () => active },
     updateLayout: () => layout,
-    updateOffered: () => offered,
+    updateOffered: () => methods.updateOffered.call(state),
   };
   return {
     activate: () => {
@@ -61,12 +68,12 @@ function notice() {
     },
     deactivate: () => {
       active = false;
-      offered = false;
+      offer.shown = false;
     },
     layout,
     ready: () => {
       active = true;
-      offered = true;
+      offer.shown = true;
     },
     release: (rect: typeof layout.panel) => {
       const point = { x: rect.x + rect.width / 2, y: rect.y + rect.height / 2 };
@@ -76,6 +83,12 @@ function notice() {
     sync: () => methods.syncUpdateNotice.call(state),
   };
 }
+
+beforeEach(() => {
+  acceptance.pending = false;
+  acceptance.failed = false;
+  required.state = undefined;
+});
 
 describe("home update notice", () => {
   it("reopens a cancelled offer on the next scene's first active render without another action", () => {
@@ -131,6 +144,24 @@ describe("home update notice", () => {
     expect(acceptUpdate).not.toHaveBeenCalled();
   });
 
+  it("closes the accepted offer while pending and reopens only for a failed retry", () => {
+    const page = notice();
+    page.activate();
+    page.sync();
+    acceptance.pending = true;
+    offer.shown = false;
+    page.sync();
+    expect(page.state.overlay).toBeUndefined();
+    expect(page.state.shownUpdate).toBe(false);
+    page.sync();
+    expect(page.state.overlay).toBeUndefined();
+    acceptance.pending = false;
+    acceptance.failed = true;
+    offer.shown = true;
+    page.sync();
+    expect(page.state.overlay?.update).toBe(true);
+  });
+
   it("keeps Update now as the accepting action", () => {
     acceptUpdate.mockClear();
     dismissUpdateOffer.mockClear();
@@ -158,4 +189,28 @@ describe("Start walk while a newer save requires the newer version", () => {
     expect(startOpen(sections)).toBe(open);
     required.state = undefined;
   });
+});
+
+it("keeps Start walk and home actions closed while the accepted update waits for navigation", () => {
+  acceptance.pending = true;
+  const prototype = StartScene.prototype as unknown as {
+    startOpen: (s: Sections) => boolean;
+    act: (target: { kind: string }) => void;
+  };
+  const complete = { heading: "", note: "", state: "complete" } as const;
+  expect(
+    prototype.startOpen({
+      dogs: complete,
+      pocket: complete,
+      walker: complete,
+    } as unknown as Sections),
+  ).toBe(false);
+  expect(() => prototype.act.call({}, { kind: "start" })).not.toThrow();
+});
+
+it("uses the authored failure copy only after an unsuccessful accepted update", () => {
+  const title = (StartScene.prototype as unknown as { updateTitle: () => string }).updateTitle;
+  expect(title()).toBe(gameData.homeText.update.title);
+  acceptance.failed = true;
+  expect(title()).toBe(gameData.homeText.update.failure);
 });

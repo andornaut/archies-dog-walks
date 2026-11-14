@@ -4,21 +4,35 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vites
 import type { StorageState } from "../save/profile.ts";
 import { PHONE_EVENTS } from "./events.ts";
 
-const { arriveHome, launchReady, offline, registrationReady, requireNewer, setOfferVisible } =
-  vi.hoisted(() => ({
-    arriveHome: vi.fn(),
-    launchReady: vi.fn().mockResolvedValue("continue"),
-    offline: { options: undefined as OfflinePlayOptions | undefined },
-    registrationReady: vi.fn(),
-    requireNewer: vi.fn(),
-    setOfferVisible: vi.fn(),
-  }));
+const {
+  accept,
+  arriveHome,
+  dismissOffer,
+  launchReady,
+  offline,
+  registrationReady,
+  requireNewer,
+  setOfferVisible,
+} = vi.hoisted(() => ({
+  accept: vi.fn().mockResolvedValue("blocked"),
+  arriveHome: vi.fn(),
+  dismissOffer: vi.fn(),
+  launchReady: vi.fn().mockResolvedValue("continue"),
+  offline: { options: undefined as OfflinePlayOptions | undefined },
+  registrationReady: vi.fn(),
+  requireNewer: vi.fn(),
+  setOfferVisible: vi.fn(),
+}));
 
 vi.mock("@andornaut/game-kit/web/pwa/dom/offlinePlay", () => ({
   browserOfflinePage: () => ({}),
   startOfflinePlay: (options: OfflinePlayOptions) => {
     offline.options = options;
-    return { flow: { arriveHome, requireNewer, setOfferVisible }, launchReady, registrationReady };
+    return {
+      flow: { accept, arriveHome, dismissOffer, requireNewer, setOfferVisible },
+      launchReady,
+      registrationReady,
+    };
   },
 }));
 vi.mock("@andornaut/game-kit/web/pwa/dom/installFlow", () => ({
@@ -52,8 +66,6 @@ beforeAll(async () => {
   vi.stubGlobal("document", { createElement: () => ({ canPlayType: () => "" }) });
   vi.stubGlobal("screen", {});
   vi.stubGlobal("window", { dispatchEvent: (event: Event) => dispatched.push(event.type) });
-  phone = await import("./index.ts");
-  await phone.setupPhoneApp();
 });
 
 afterAll(() => {
@@ -61,7 +73,12 @@ afterAll(() => {
   vi.unstubAllGlobals();
 });
 
-beforeEach(() => {
+beforeEach(async () => {
+  vi.resetModules();
+  accept.mockReset().mockResolvedValue("blocked");
+  dismissOffer.mockClear();
+  phone = await import("./index.ts");
+  await phone.setupPhoneApp();
   dispatched.length = 0;
   registrationReady.mockClear();
   requireNewer.mockClear();
@@ -124,4 +141,68 @@ describe("requiredUpdate", () => {
       expect(dispatched).toEqual([PHONE_EVENTS.requiredUpdate]);
     },
   );
+});
+
+describe("acceptUpdate", () => {
+  async function progress() {
+    const { loadingProgress } = await import("../scenes/loadingProgress.ts");
+    let snapshot = { active: false, value: undefined as number | undefined };
+    loadingProgress.subscribe((value) => {
+      snapshot = value;
+    })();
+    return snapshot;
+  }
+
+  it.each(["blocked", "rejected"] as const)(
+    "shows a wait immediately, then offers a retry when %s",
+    async (result) => {
+      let settle = () => undefined as void;
+      const pending = new Promise<"blocked" | "reloading">((resolve, reject) => {
+        settle =
+          result === "blocked" ? () => resolve("blocked") : () => reject(new Error("unavailable"));
+      });
+      accept.mockImplementationOnce(() => {
+        offline.options?.onUpdateShown(false);
+        return pending;
+      });
+      offline.options?.onUpdateShown(true);
+      phone.acceptUpdate();
+      expect(phone.updateAccepting()).toBe(true);
+      expect(phone.updatePlateShown()).toBe(false);
+      expect(await progress()).toEqual({ active: true, value: undefined });
+      phone.acceptUpdate();
+      expect(accept).toHaveBeenCalledOnce();
+      expect(dismissOffer).not.toHaveBeenCalled();
+      settle();
+      await Promise.resolve();
+      expect(phone.updateAccepting()).toBe(false);
+      expect(phone.updateAcceptanceFailed()).toBe(true);
+      expect(phone.updatePlateShown()).toBe(true);
+      expect((await progress()).active).toBe(false);
+      phone.acceptUpdate();
+      expect(accept).toHaveBeenCalledTimes(2);
+      await Promise.resolve();
+      phone.dismissUpdateOffer();
+      expect(phone.updateAcceptanceFailed()).toBe(false);
+      expect(dismissOffer).toHaveBeenCalledOnce();
+    },
+  );
+
+  it("retains the wait after a reload request, without claiming that the new document loaded", async () => {
+    accept.mockResolvedValueOnce("reloading");
+    phone.acceptUpdate();
+    await Promise.resolve();
+    expect(phone.updateAccepting()).toBe(true);
+    expect(phone.updateAcceptanceFailed()).toBe(false);
+    expect(await progress()).toEqual({ active: true, value: undefined });
+    phone.acceptUpdate();
+    expect(accept).toHaveBeenCalledOnce();
+  });
+
+  it("does not start an optional switch while a newer save requires an update", () => {
+    offline.options?.onRequireNewer("updating");
+    phone.acceptUpdate();
+    expect(accept).not.toHaveBeenCalled();
+    expect(phone.updateAccepting()).toBe(false);
+  });
 });

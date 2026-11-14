@@ -113,6 +113,7 @@ export const HOME_TEXT = {
   unsaved: "Progress won't be saved.",
   update: {
     button: "Update now",
+    failure: "The update could not finish. Try again.",
     title: "Update available",
   },
   walkerInfo: "{walker}: {perk}, {agility} lane change speed.",

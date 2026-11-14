@@ -2,6 +2,7 @@
 // lock, the back gesture, visibility events, the page frame's turn and the orientation lock,
 // audio unlock, the install offer and persistent storage. setupPhoneApp runs once from main.ts; the
 // scenes listen for PHONE_EVENTS on window and call the functions below.
+import type { ProgressHandle } from "@andornaut/game-kit/progressState";
 import type { FrameTurn } from "@andornaut/game-kit/view/pagePoint";
 import { appCannotClose } from "@andornaut/game-kit/web/pwa/appWindow";
 import { backCloseWatcher } from "@andornaut/game-kit/web/pwa/backNavigation";
@@ -46,6 +47,7 @@ import { dispatchPhoneEvent, PHONE_EVENTS } from "./events.ts";
 import { createInstallNudge, type InstallNudge } from "./installNudge.ts";
 import { reportOfflineActivity } from "./offlineProgress.ts";
 import { reportRequiredUpdate } from "./requiredUpdate.ts";
+import { acceptedUpdateProgress } from "./updateAcceptance.ts";
 
 export { AUDIO_UNLOCK_EVENTS, unlockAudioOnFirstGesture } from "./audioUnlock.ts";
 export { PHONE_EVENTS } from "./events.ts";
@@ -77,6 +79,8 @@ let registrationHook: () => void = () => undefined;
 let offerHook: (visible: boolean) => void = () => undefined;
 // Whether the home screen shows the update plate.
 let updateShown = false;
+let accepting: ProgressHandle | undefined;
+let updateFailed = false;
 // The update a save from a newer version requires, from the first report on; undefined while
 // none is required.
 let required: RequiredUpdateState | undefined;
@@ -218,6 +222,7 @@ export function arriveHome(): void {
 // Dismiss the update offer until the next arrival home (arriveHome) or the page coming back into
 // view on the home screen.
 export function dismissUpdateOffer(): void {
+  updateFailed = false;
   updateFlow?.dismissOffer();
 }
 
@@ -225,13 +230,44 @@ export function dismissUpdateOffer(): void {
 // version that controls the page, with the home screen in front and the offer not dismissed.
 // PHONE_EVENTS.updatePlate fires on each change.
 export function updatePlateShown(): boolean {
-  return updateShown;
+  return accepting === undefined && (updateShown || updateFailed);
+}
+
+export function updateAccepting(): boolean {
+  return accepting !== undefined;
+}
+
+export function updateAcceptanceFailed(): boolean {
+  return updateFailed;
 }
 
 // The update offer's Update now button: switch to the waiting version and reload into it. The
 // offer shows only while a version waits, so only with a service worker.
 export function acceptUpdate(): void {
-  void updateFlow?.accept();
+  const flow = updateFlow;
+  if (flow === undefined || accepting !== undefined || required !== undefined) {
+    return;
+  }
+  accepting = acceptedUpdateProgress.begin();
+  updateFailed = false;
+  dispatchPhoneEvent(window, PHONE_EVENTS.updatePlate);
+  const blocked = () => {
+    accepting?.finish();
+    accepting = undefined;
+    updateFailed = true;
+    dispatchPhoneEvent(window, PHONE_EVENTS.updatePlate);
+  };
+  // "reloading" only means navigation was requested. Keep the wait visible until the next
+  // document replaces this one, rather than claiming the new version has loaded.
+  try {
+    void flow.accept().then((result) => {
+      if (result === "blocked") {
+        blocked();
+      }
+    }, blocked);
+  } catch {
+    blocked();
+  }
 }
 
 // A save or earned record from a newer version requires that version, whatever the player does:

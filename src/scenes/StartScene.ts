@@ -62,6 +62,7 @@ import {
 } from "../home/home.ts";
 import { homeBackAction, homeBarButtonAt, overlayRegion, regionOutside } from "../home/homeBar.ts";
 import {
+  cardTitleRow,
   dogTileNameY,
   dogTilePlateY,
   HOME_LAYOUT,
@@ -136,12 +137,15 @@ import {
   requiredUpdate,
   startWakeLock,
   stopWakeLock,
+  updateAcceptanceFailed,
+  updateAccepting,
   updatePlateShown,
 } from "../pwa/index.ts";
 import { walkerOrder } from "../rules/walkers.ts";
 import type { SaveDocument } from "../save/schema.ts";
 import { walksFinished, walksPlayed } from "../save/stats.ts";
 import { packDogsOf } from "../state/pack.ts";
+import { barTitleRoom } from "../ui/barTitle.ts";
 import { closeControl } from "../ui/closeControl.ts";
 import { LABEL_ALIGN_DATA } from "../ui/dom/labelBlock.ts";
 import { gridRects, rectIndexAt } from "../ui/grid.ts";
@@ -196,7 +200,7 @@ import {
   SHOP_ART,
 } from "./itemArt.ts";
 import { loadingProgress, waitedLoad } from "./loadingProgress.ts";
-import { modalTextWidth } from "./modalMeasure.ts";
+import { measureModalTitle, modalTextWidth } from "./modalMeasure.ts";
 import { listenOnePress } from "./onePress.ts";
 import {
   BAR_MUTED_EVENT,
@@ -809,7 +813,11 @@ export class StartScene extends Scene {
 
   // Whether the update notice is eligible: a newer version waits, or its notice opened this visit.
   private updateOffered(): boolean {
-    return updatePlateShown() || this.shownUpdate;
+    return (
+      requiredUpdate() === undefined &&
+      !updateAccepting() &&
+      (updatePlateShown() || this.shownUpdate)
+    );
   }
 
   // The dog slot sign comes and goes while a slot is for sale.
@@ -864,13 +872,28 @@ export class StartScene extends Scene {
     );
   }
 
+  private updateTitle(): string {
+    const text = gameData.homeText.update;
+    return updateAcceptanceFailed() ? text.failure : text.title;
+  }
+
   private updateLayout() {
-    const { button, title } = gameData.homeText.update;
-    return updateModalLayout(HOME_REGION, {
+    const { button } = gameData.homeText.update;
+    const title = this.updateTitle();
+    const ink = {
       action: modalTextWidth(this, "title", [button]),
       cancel: modalTextWidth(this, "title", [gameData.homeText.shop.confirmCancel]),
       title: modalTextWidth(this, "title", [title]),
-    });
+    };
+    const layout = updateModalLayout(HOME_REGION, ink);
+    const { extraHeight } = measureModalTitle(
+      this,
+      barTitleRoom(cardTitleRow(layout.panel), closeControl(layout.panel)),
+      title,
+    );
+    return extraHeight === 0
+      ? layout
+      : updateModalLayout(HOME_REGION, { ...ink, titleExtraHeight: extraHeight });
   }
 
   private updatePressed(action?: "cancel" | "update"): boolean {
@@ -1045,6 +1068,9 @@ export class StartScene extends Scene {
   }
 
   private act(target: Target): void {
+    if (updateAccepting()) {
+      return;
+    }
     const id = targetId(target);
     const now = this.time.now;
     switch (target.kind) {
@@ -1375,6 +1401,9 @@ export class StartScene extends Scene {
     if (!this.updateOffered()) {
       if (this.overlay !== undefined && "update" in this.overlay) {
         this.overlay = undefined;
+        if (updateAccepting()) {
+          this.shownUpdate = false;
+        }
       }
     } else if (this.overlay === undefined && !this.shownUpdate && this.sys.isActive()) {
       this.overlay = { rect: this.updateLayout().panel, update: true };
@@ -1384,7 +1413,7 @@ export class StartScene extends Scene {
 
   // Whether Start walk takes a walk: the sections are ready and no newer version is required.
   private startOpen(sections: Sections): boolean {
-    return startReady(sections) && requiredUpdate() === undefined;
+    return startReady(sections) && requiredUpdate() === undefined && !updateAccepting();
   }
 
   private render(): void {
@@ -1865,7 +1894,7 @@ export class StartScene extends Scene {
       { label: gameData.homeText.shop.confirmCancel, press: close, primary: false, rect: cancel },
       update,
     ];
-    const card = addHtmlModalCard(this, panel, text.title, entries, close, shade);
+    const card = addHtmlModalCard(this, panel, this.updateTitle(), entries, close, shade);
     if (card !== undefined) {
       this.htmlNotice = card;
       this.events.once(Scenes.Events.SHUTDOWN, () => {
@@ -1877,7 +1906,7 @@ export class StartScene extends Scene {
       return;
     }
     root.add(addModalShade(this, HOME_REGION));
-    addModalCard(this, root, panel, text.title, { pressed: this.closePressed() });
+    addModalCard(this, root, panel, this.updateTitle(), { pressed: this.closePressed() });
     const control = addMenuButton(
       this,
       button,

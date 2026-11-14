@@ -933,6 +933,7 @@ export interface HomeText {
   // button, which reloads into that version.
   readonly update: {
     readonly button: string;
+    readonly failure: string;
     readonly title: string;
   };
   // What the bubble says for an owned walker picked or focused: its agility and perk, or its
