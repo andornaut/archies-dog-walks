@@ -39,10 +39,7 @@ export function mountMuteControl(settings: MuteControlSettings, parent: HTMLElem
   });
   button.style.setProperty("--mute-face-x", `${control.face.x - control.hit.x}px`);
   button.style.setProperty("--mute-face-y", `${control.face.y - control.hit.y}px`);
-  button.style.setProperty(
-    "--mute-chrome",
-    `url("${artUrl("sprites/ui-icon-button-normal.png")}")`,
-  );
+  button.style.setProperty("--mute-chrome", `url("${artUrl("images/ui-icon-button-normal.png")}")`);
   const image = doc.createElement("img");
   image.alt = "";
   image.onload = () => {

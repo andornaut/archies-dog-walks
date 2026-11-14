@@ -1,11 +1,14 @@
+import { existsSync } from "node:fs";
+
 import { afterEach, expect, it, vi } from "vitest";
 
+import { artUrl } from "../assets/artFiles.ts";
 import { MENU_TEXT } from "../data/menuText.ts";
 import { DeviceSettings, SETTINGS_KEYS } from "../save/settings.ts";
 import { FakeDocument } from "../testing/fakeDom.ts";
 import { mountMuteControl } from "../ui/dom/muteControl.ts";
 
-vi.mock("virtual:art-files", () => ({ default: new Map() }));
+vi.mock("../assets/artFiles.ts", () => ({ artUrl: vi.fn((path: string) => `/art/${path}`) }));
 
 afterEach(() => vi.unstubAllGlobals());
 
@@ -31,6 +34,11 @@ it("shares pre-profile mute with the device settings, follows external changes a
   const doc = new FakeDocument();
   const parent = Object.assign(doc.createElement("div"), { clientHeight: 560, clientWidth: 360 });
   const remove = mountMuteControl(settings, parent as unknown as HTMLElement);
+  const artPaths = vi.mocked(artUrl).mock.calls.map(([path]) => path);
+  expect(artPaths).toEqual(["images/ui-icon-button-normal.png", "sprites/icon-sound.png"]);
+  expect(
+    artPaths.every((path) => existsSync(new URL(`../../public/art/${path}`, import.meta.url))),
+  ).toBe(true);
   const button = parent.all().find((node) => node.tagName === "button")!;
   expect(button.getAttribute("aria-label")).toBe(MENU_TEXT.settings.sound);
   expect(button.getAttribute("aria-pressed")).toBe("false");
