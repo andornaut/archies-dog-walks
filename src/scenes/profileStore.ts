@@ -4,7 +4,6 @@ import { type Game, type Scene, Scenes } from "phaser";
 
 import { gameData } from "../data/index.ts";
 import type { AchievementId, HintId, WalkerId } from "../data/types.ts";
-import { soundVolumes } from "../home/settings.ts";
 import type { Change } from "../rules/causes.ts";
 import type { RunResult } from "../save/checkpoint.ts";
 import { saveContextFrom } from "../save/load.ts";
@@ -38,13 +37,6 @@ function session(scene: Scene): ProfileSession {
   return opened;
 }
 
-// The settings' volumes, or silence while muted.
-export function applySound(scene: Scene, settings: Settings): void {
-  const soundboard = soundboardOf(scene);
-  soundboard.setVolumes(soundVolumes(settings));
-  soundboard.setMuted(settings.muted);
-}
-
 // Loads the save and the earned badges from localStorage and applies the device settings'
 // volumes. A run left at a checkpoint resumes when resume allows it and its resume point is good
 // (launchWalk), and is banked as heading home otherwise; a resume point that could not be read
@@ -68,7 +60,7 @@ export async function openProfile(
   };
   const { load, session: opened } = await ProfileSession.open({ data: gameData }, stores, launch);
   scene.registry.set(SESSION_KEY, opened);
-  applySound(scene, currentSettings(scene));
+  soundboardOf(scene);
   return load;
 }
 
@@ -133,7 +125,6 @@ export function onSettingsChanged(scene: Scene, listener: (settings: Settings) =
 
 // Stores the settings, applies the volumes and tells every listener.
 export function setSettings(scene: Scene, settings: Settings): void {
-  applySound(scene, settings);
   deviceSettingsOf(scene).set(settings);
 }
 
@@ -143,7 +134,7 @@ export function isMuted(scene: Scene): boolean {
 
 // Mutes or unmutes all sound: saved, applied and told to every settings listener.
 function setMuted(scene: Scene, muted: boolean): void {
-  setSettings(scene, { ...currentSettings(scene), muted });
+  deviceSettingsOf(scene).setMuted(muted);
 }
 
 // Flips mute, as the M key, the run's sound button and the home screen's do, and returns

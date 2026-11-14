@@ -44,6 +44,8 @@ import {
   startWakeLock,
   unlockAudioOnFirstGesture,
 } from "../pwa/index.ts";
+import { pageDeviceSettings } from "../save/settings.ts";
+import { mountMuteControl } from "../ui/dom/muteControl.ts";
 import { PALETTE } from "../ui/palette.ts";
 import { addFilledRect } from "../ui/phaser/draw.ts";
 import { addPillGlyphs, registerFallbackPixelFont } from "../ui/phaser/pixelText.ts";
@@ -128,12 +130,22 @@ export class BootScene extends Scene {
   private manifest: AssetManifest = { fonts: [], images: [], sounds: [], sprites: [] };
   private walker: GameObjects.Sprite | undefined;
   private watch: LoaderWatch<WaitedLoad> | undefined;
+  private removeMute: (() => void) | undefined;
 
   constructor() {
     super(SCENE_KEYS.boot);
   }
 
   preload(): void {
+    const parent = this.game.canvas.parentElement;
+    if (parent !== null) {
+      try {
+        this.removeMute = mountMuteControl(pageDeviceSettings(), parent);
+      } catch (error) {
+        console.warn("The loading sound control could not open.", error);
+      }
+      this.events.once(Scenes.Events.SHUTDOWN, () => this.clearMute());
+    }
     this.watch = watchLoader<WaitedLoad>(
       { console, progress: waitedLoad, timer: globalThis },
       this,
@@ -348,11 +360,17 @@ export class BootScene extends Scene {
   // Launches key over this scene and clears the loading screen; this scene keeps running behind,
   // drawing nothing and taking no input, while it loads or retries.
   private leaveFor(key: string, data?: object): void {
+    this.clearMute();
     this.scene.launch(key, data);
     for (const child of [...this.children.list]) {
       child.destroy();
     }
     [this.bar, this.walker] = [undefined, undefined];
+  }
+
+  private clearMute(): void {
+    this.removeMute?.();
+    this.removeMute = undefined;
   }
 
   // Stops once the watch has retried every file that failed (bootRetries.ts). A retried atlas page

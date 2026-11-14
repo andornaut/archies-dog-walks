@@ -1,11 +1,6 @@
 import type { Scene } from "phaser";
 
-import {
-  devicePrefersReducedMotion,
-  DeviceSettings,
-  pageSettingsStorage,
-  type Settings,
-} from "../save/settings.ts";
+import { type DeviceSettings, pageDeviceSettings, type Settings } from "../save/settings.ts";
 
 export const PROFILE_SESSION_KEY = "profileSession";
 const DEVICE_SETTINGS_KEY = "deviceSettings";
@@ -17,7 +12,7 @@ export function deviceSettingsOf(scene: Scene): DeviceSettings {
   if (found !== undefined) {
     return found;
   }
-  const settings = new DeviceSettings(pageSettingsStorage(), devicePrefersReducedMotion());
+  const settings = pageDeviceSettings();
   scene.registry.set(DEVICE_SETTINGS_KEY, settings);
   return settings;
 }

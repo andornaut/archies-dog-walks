@@ -24,6 +24,8 @@ import {
   type Volumes,
 } from "../audio/sound.ts";
 import { AUDIO_UNLOCK_EVENTS, PHONE_EVENTS } from "../pwa/index.ts";
+import type { DeviceSettings, Settings } from "../save/settings.ts";
+import { deviceSettingsOf } from "./sceneSettings.ts";
 
 // Every concrete sound class (Web Audio, HTML5 audio, no audio) has setVolume; BaseSound does not.
 type AdjustableSound = Sound.BaseSound & { setVolume(value: number): unknown };
@@ -38,8 +40,14 @@ class Soundboard {
   private recentPlays: RecentPlays = {};
   private readonly reportedKeys = new Set<string>();
 
-  constructor(game: Game) {
+  constructor(settings: DeviceSettings, game: Game) {
     this.game = game;
+    const apply = ({ musicVolume, muted, sfxVolume }: Settings) => {
+      this.setVolumes({ music: musicVolume, sfx: sfxVolume });
+      this.setMuted(muted);
+    };
+    apply(settings.current);
+    game.events.once(Core.Events.DESTROY, settings.onChange(apply));
     game.events.on(Core.Events.STEP, (_time: number, delta: number) => this.step(delta));
     game.events.on(Core.Events.HIDDEN, () => this.setHidden(true));
     game.events.on(Core.Events.VISIBLE, () => this.setHidden(false));
@@ -199,5 +207,9 @@ const soundboards = new WeakMap<Game, Soundboard>();
 
 // The game's soundboard, made on first use.
 export function soundboardOf(scene: Scene): Soundboard {
-  return getOrInsertComputed(scene.game, () => new Soundboard(scene.game), soundboards);
+  return getOrInsertComputed(
+    scene.game,
+    () => new Soundboard(deviceSettingsOf(scene), scene.game),
+    soundboards,
+  );
 }

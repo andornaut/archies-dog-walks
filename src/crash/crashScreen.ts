@@ -16,6 +16,8 @@ import { BUILD_LABEL } from "../buildLabel.ts";
 import { MENU_TEXT } from "../data/menuText.ts";
 import { pageSearch } from "../dev/devTools.ts";
 import { devInSearch } from "../dev/runSetup.ts";
+import { pageDeviceSettings } from "../save/settings.ts";
+import { mountMuteControl } from "../ui/dom/muteControl.ts";
 
 const colour = (name: keyof typeof palette) => `#${palette[name].hex}`;
 
@@ -48,3 +50,30 @@ export const CRASH_SCREEN = installCrashScreen(window, {
   dev: devInSearch(pageSearch()),
   words: MENU_TEXT.crash,
 });
+
+// The crash dialog owns the control so the existing inert barrier still blocks the game.
+// Observe only its insertion; the renderer and profile do not participate in this endpoint.
+export function observeCrashMute(doc: Document): () => void {
+  if (!doc.body || typeof MutationObserver === "undefined") {
+    return () => undefined;
+  }
+  let remove: (() => void) | undefined;
+  const observer = new MutationObserver(() => {
+    const dialog = doc.body.querySelector<HTMLElement>(".crash");
+    if (dialog !== null) {
+      observer.disconnect();
+      try {
+        remove = mountMuteControl(pageDeviceSettings(), dialog);
+      } catch (error) {
+        console.warn("The crash sound control could not open.", error);
+      }
+    }
+  });
+  observer.observe(doc.body, { childList: true });
+  return () => {
+    observer.disconnect();
+    remove?.();
+  };
+}
+
+observeCrashMute(document);

@@ -1,0 +1,57 @@
+.adw-standalone-mute {
+  position: absolute;
+  inset: 0 auto auto 0;
+  z-index: 2;
+  pointer-events: none;
+  transform-origin: top left;
+}
+
+.adw-standalone-mute button {
+  position: absolute;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--mute-cream);
+  pointer-events: auto;
+  cursor: pointer;
+  font: 10px monospace;
+}
+
+.adw-standalone-mute button::before {
+  position: absolute;
+  left: var(--mute-face-x);
+  top: var(--mute-face-y);
+  width: 20px;
+  height: 20px;
+  border: 1px solid var(--mute-ink);
+  box-sizing: border-box;
+  background: var(--mute-brown) var(--mute-chrome) center / 20px 20px no-repeat;
+  content: "";
+  image-rendering: pixelated;
+}
+
+.adw-standalone-mute-icon {
+  position: absolute;
+  left: calc(var(--mute-face-x) + 2px);
+  top: calc(var(--mute-face-y) + 1px);
+  display: grid;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+}
+
+.adw-standalone-mute-native {
+  background: var(--mute-sprite) 0 0 / 32px 16px no-repeat;
+  color: transparent;
+  image-rendering: pixelated;
+}
+
+.adw-standalone-mute button[data-muted="true"] .adw-standalone-mute-native {
+  background-position-x: -16px;
+}
+
+.adw-standalone-mute button:focus-visible::before {
+  outline: 1px solid var(--mute-amber);
+  outline-offset: 2px;
+}

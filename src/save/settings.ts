@@ -138,9 +138,21 @@ export class DeviceSettings {
     }
   }
 
+  setMuted(muted: boolean): void {
+    this.set({ ...this.current, muted });
+  }
+
   // Returns a function that stops listening.
   onChange(listener: SettingsListener): () => void {
     this.listeners.add(listener);
     return () => this.listeners.delete(listener);
   }
+}
+
+let pageSettings: DeviceSettings | undefined;
+
+// Device preferences are available before a progress save or renderer has opened.
+export function pageDeviceSettings(): DeviceSettings {
+  pageSettings ??= new DeviceSettings(pageSettingsStorage(), devicePrefersReducedMotion());
+  return pageSettings;
 }

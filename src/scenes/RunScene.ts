@@ -64,7 +64,6 @@ import type { HudRun, RunHudView } from "./hudWalk.ts";
 import { onWindowEvent } from "./overlay.ts";
 import type { PauseSceneData } from "./PauseScene.ts";
 import {
-  applySound,
   checkpointRun,
   currentSettings,
   finishRun,
@@ -198,8 +197,7 @@ export class RunScene extends Scene implements HudRun {
 
     this.settings = currentSettings(this);
     const sound = soundboardOf(this);
-    applySound(this, this.settings);
-    // Kept for reduced motion: setSettings applies each change's volumes and mute itself.
+    // Device preferences update the soundboard directly; this copy supplies reduced motion.
     onSettingsChanged(this, (settings) => {
       this.settings = settings;
     });

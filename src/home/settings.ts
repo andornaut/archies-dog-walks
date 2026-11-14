@@ -63,11 +63,6 @@ export function setVolumeSteps(key: VolumeKey, steps: number, settings: Settings
   return { ...settings, [key]: Math.min(VOLUME_STEPS, Math.max(0, steps)) / VOLUME_STEPS };
 }
 
-// The soundboard's volumes from the saved settings.
-export function soundVolumes(settings: Settings): { music: number; sfx: number } {
-  return { music: settings.musicVolume, sfx: settings.sfxVolume };
-}
-
 // A row as the layout needs it: its kind and, for a switch or button row, how many lines its
 // note wraps onto.
 export type SettingsRowShape =

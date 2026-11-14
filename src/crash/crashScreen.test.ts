@@ -42,3 +42,33 @@ it("installs the kit crash screen with the game words, palette and portrait", as
     ["--crash-pose-image", 'url("/assets/art/face-dog-archie-test.png")'],
   ]);
 });
+
+it("keeps crash recovery independent when the optional sound endpoint cannot mount", async () => {
+  vi.stubGlobal("document", { documentElement: { style: { setProperty: vi.fn() } } });
+  vi.stubGlobal("window", { matchMedia: () => ({ matches: false }), navigator: {} });
+  vi.stubGlobal("location", { search: "" });
+  const { observeCrashMute } = await import("./crashScreen.ts");
+  const observe = vi.fn();
+  const disconnect = vi.fn();
+  let changed: (() => void) | undefined;
+  vi.stubGlobal(
+    "MutationObserver",
+    class {
+      constructor(callback: () => void) {
+        changed = callback;
+      }
+      observe = observe;
+      disconnect = disconnect;
+    },
+  );
+  const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+  const doc = { body: { querySelector: () => ({}) } } as unknown as Document;
+  const stop = observeCrashMute(doc);
+  expect(observe).toHaveBeenCalledWith(doc.body, { childList: true });
+  expect(() => changed?.()).not.toThrow();
+  expect(disconnect).toHaveBeenCalledOnce();
+  expect(warn).toHaveBeenCalledOnce();
+  stop();
+  expect(disconnect).toHaveBeenCalledTimes(2);
+  warn.mockRestore();
+});
