@@ -3,13 +3,12 @@ import { type FontMetrics, inkRowsFromCapTop } from "@andornaut/game-kit/text/bi
 
 import { DOG_SLOTS } from "../data/dogSlots.ts";
 import { SHOP_PAGE } from "../data/layout.ts";
-import { TITLE_CAP_ROWS } from "../hud/walkHud.ts";
 import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";
 import { pageCloseControl } from "../ui/closeControl.ts";
 import { helpCapDy } from "../ui/labelHelpGap.ts";
 import { type ScrollbarRects, scrollbarRects } from "../ui/scrollbar.ts";
 import { SELECT_OUTSET } from "../ui/selection.ts";
-import { TEXT_SCALE, TEXT_STYLE } from "../ui/textFit.ts";
+import { TEXT_SCALE, TEXT_STYLE, TITLE_CAP_ROWS } from "../ui/textFit.ts";
 import { HOME_LAYOUT } from "./homeLayout.ts";
 
 // The Pet shop page under the home screen's top bar, which stays in view with the bank:

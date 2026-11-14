@@ -5,7 +5,6 @@ import { describe, expect, it } from "vitest";
 
 import { gameData } from "../data/index.ts";
 import { HOME_BAR_LAST_FACE, HOME_LAYOUT } from "../home/homeLayout.ts";
-import { TITLE_CAP_ROWS } from "../hud/walkHud.ts";
 import { MIN_TAP_SIZE } from "../layout/screenLayout.ts";
 import { bodyTextWidth } from "../testing/bodyFont.ts";
 import { fontFileMetrics, gameFont, placedInk } from "../testing/fontInk.ts";
@@ -13,7 +12,7 @@ import { inside } from "../testing/rects.ts";
 import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";
 import { closeFace } from "../ui/closeControl.ts";
 import { LABEL_HELP_GAP } from "../ui/labelHelpGap.ts";
-import { TEXT_SCALE } from "../ui/textFit.ts";
+import { TEXT_SCALE, TITLE_CAP_ROWS } from "../ui/textFit.ts";
 import { topBarContentRows, topBarRects } from "../ui/topBarTrim.ts";
 import { helpBody } from "./helpBody.ts";
 import { CLOSE_HIT_RECT, dotRects, HELP_LAYOUT, helpActionAt, tapRect } from "./helpLayout.ts";

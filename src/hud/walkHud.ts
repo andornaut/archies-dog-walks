@@ -18,6 +18,7 @@ import { walkLength } from "../rules/route.ts";
 import { zoneLength } from "../runner/walk.ts";
 import type { RunState } from "../state/runState.ts";
 import { GAME_PROGRESS, GAME_PROGRESS_STYLE } from "../ui/progressBar.ts";
+import { TITLE_CAP_ROWS } from "../ui/textFit.ts";
 import { TOP_BAR_FACE, wellCapsTop } from "../ui/topBarTrim.ts";
 import { topSectionGapLeft, topSectionLayout } from "../ui/topSection.ts";
 import { type EffectItem, maxEffects } from "./effectIcons.ts";
@@ -34,9 +35,6 @@ export type WalkBarButtonId = (typeof WALK_BAR_BUTTONS)[number];
 
 // The cash well's ink columns, which the home top bar's bank well shares.
 const CASH_INK = WALK_BAR_PARTS.cash.ink;
-
-// The title font's capitals are this many rows tall at 1x.
-export const TITLE_CAP_ROWS = 5;
 
 // The cash and the home top bar's bank are set at this scale.
 const CASH_SCALE = WALK_BAR_PARTS.cash.scale;

@@ -22,6 +22,7 @@ import { fontFileMetrics, fontInk } from "../testing/fontInk.ts";
 import { LONE } from "../testing/packPlaces.ts";
 import { inside } from "../testing/rects.ts";
 import { plainMarks } from "../ui/pixelFont.ts";
+import { TITLE_CAP_ROWS } from "../ui/textFit.ts";
 import { cents } from "../units.ts";
 import { maxEffects } from "./effectIcons.ts";
 import {
@@ -42,7 +43,6 @@ import {
   ownerTabRect,
   SPARE_TREAT_PIP,
   spareTreatPipAt,
-  TITLE_CAP_ROWS,
   WALK_BAR,
   WALK_BAR_BUTTONS,
   walkBarLayout,

@@ -12,11 +12,11 @@ import type { DogId, GameData } from "../data/types.ts";
 import { type FaceMood, faceMood } from "../rules/treats.ts";
 import { slotIndexOf } from "../state/pack.ts";
 import type { Pack, PackSlot } from "../state/runState.ts";
-import { TEXT_STYLE } from "../ui/textFit.ts";
+import { TEXT_STYLE, TITLE_CAP_ROWS } from "../ui/textFit.ts";
 import type { Cents } from "../units.ts";
 import { type FaceBox, type FaceText, fillFaceText, ownerFaceText } from "./faceText.ts";
 import type { ChangeLabel } from "./hudView.ts";
-import { DOG_CARD, OWNER_TAB, TITLE_CAP_ROWS, WALK_BAR } from "./walkHud.ts";
+import { DOG_CARD, OWNER_TAB, WALK_BAR } from "./walkHud.ts";
 
 // The in-run feedback moments RunScene hands the HUD on its events: an owner firing you, a
 // heart forgiven, a zone's pay banked, and a treat grabbed.

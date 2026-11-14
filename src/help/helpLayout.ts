@@ -2,13 +2,12 @@ import { containsPoint, type Point, type Rect } from "@andornaut/game-kit/rect";
 
 import { HELP_SCREEN } from "../data/layout.ts";
 import { SCREEN_LAYOUT } from "../data/screen.ts";
-import { TITLE_CAP_ROWS } from "../hud/walkHud.ts";
 import { MIN_TAP_SIZE } from "../layout/screenLayout.ts";
 import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";
 import { pageCloseControl } from "../ui/closeControl.ts";
 import { rectIndexAt } from "../ui/grid.ts";
 import { LABEL_HELP_GAP } from "../ui/labelHelpGap.ts";
-import { TEXT_SCALE } from "../ui/textFit.ts";
+import { TEXT_SCALE, TITLE_CAP_ROWS } from "../ui/textFit.ts";
 import { topSectionLayout } from "../ui/topSection.ts";
 import type { HelpAction } from "./helpPaging.ts";
 

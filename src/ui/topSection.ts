@@ -2,7 +2,7 @@ import type { Point, Rect } from "@andornaut/game-kit/rect";
 
 import { HELP_SCREEN, HOME_SCREEN, MIN_PRESS, WALK_BAR_PARTS } from "../data/layout.ts";
 import { SCREEN_CONFIG } from "../data/screen.ts";
-import { TEXT_SCALE } from "./textFit.ts";
+import { TEXT_SCALE, TITLE_CAP_ROWS } from "./textFit.ts";
 import {
   TOP_BAR_FACE,
   TOP_BAR_HEIGHT,
@@ -91,7 +91,11 @@ export function topSectionLayout<T extends TopSectionButton>(
     currency,
     effectHolds,
     effectWells,
-    heading: { scale: TEXT_SCALE, x: HELP_SCREEN.headingX, y: TOP_BAR_MID - (5 * TEXT_SCALE) / 2 },
+    heading: {
+      scale: TEXT_SCALE,
+      x: HELP_SCREEN.headingX,
+      y: TOP_BAR_MID - (TITLE_CAP_ROWS * TEXT_SCALE) / 2,
+    },
   };
 }
 
@@ -118,7 +122,7 @@ export function topSectionCurrency(
       : well.x + HOME_SCREEN.topBar.bankPad,
     room: fixed ? cash.room : maximum.width - TOP_BAR_WELL.lip - 2 * HOME_SCREEN.topBar.bankPad,
     scale: cash.scale,
-    top: wellCapsTop(5 * cash.scale),
+    top: wellCapsTop(TITLE_CAP_ROWS * cash.scale),
     well,
   };
 }
