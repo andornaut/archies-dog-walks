@@ -5,13 +5,7 @@ import { containsPoint, type Rect } from "@andornaut/game-kit/rect";
 import { Core, type GameObjects, Scene, Scenes, type Time } from "phaser";
 
 import { gearSmallIconKey } from "../assets/iconKeys.ts";
-import {
-  dogFaceKey,
-  dogSpriteKey,
-  gearIconKey,
-  ownerFaceKey,
-  walkerPortraitKey,
-} from "../assets/spriteKeys.ts";
+import { dogSpriteKey, ownerFaceKey, walkerPortraitKey } from "../assets/spriteKeys.ts";
 import { gameData } from "../data/index.ts";
 import { HOME_SCREEN } from "../data/layout.ts";
 import { SCREEN_LAYOUT } from "../data/screen.ts";
@@ -48,22 +42,16 @@ import {
   gearByPrice,
   gearInfo,
   type HomeLoadout,
-  isAffordable,
-  packCapacity,
   partingSpeech,
   type Purchase,
-  purchasePrice,
   rosterRows,
   tapDog,
   tapGear,
 } from "../home/home.ts";
 import { homeBackAction, homeBarButtonAt, overlayRegion, regionOutside } from "../home/homeBar.ts";
 import {
-  dogTileNameY,
-  dogTilePlateY,
   HOME_LAYOUT,
   homeBarButtons,
-  sectionFill,
   slotSignText,
   tileFace,
   updateModalLayout,
@@ -82,25 +70,17 @@ import {
   walkerSays,
   walkersUnlockedSince,
 } from "../home/homeLines.ts";
+import { addGearPicture } from "../home/phaser/gearPicture.ts";
+import { renderHomeBackdrop } from "../home/phaser/homeBackdrop.ts";
+import { renderHomeSections } from "../home/phaser/homeSections.ts";
+import { renderHomeSelections } from "../home/phaser/homeSelections.ts";
+import type { TileView } from "../home/phaser/tileFeedbackView.ts";
 import { porchOwners } from "../home/porch.ts";
-import {
-  homeSections,
-  type Section,
-  type SectionId,
-  type Sections,
-  type SectionState,
-  startReady,
-} from "../home/sections.ts";
+import { homeSections, type Sections, startReady } from "../home/sections.ts";
 import { shopAffordable } from "../home/shop.ts";
 import { slotSign, slotSignPurchase } from "../home/slotSign.ts";
-import { tapWalker, walkerTile } from "../home/walkers.ts";
+import { tapWalker } from "../home/walkers.ts";
 import type { DomQuestionPanel } from "../hud/dom/questionPanel.ts";
-import {
-  EFFECT_ICON_SIZE,
-  effectIconFallback,
-  effectIconKey,
-  walkerEffectItems,
-} from "../hud/effectIcons.ts";
 import { withNamePills } from "../hud/effectNames.ts";
 import { downTail } from "../hud/moments.ts";
 import {
@@ -122,7 +102,7 @@ import {
 } from "../input/keyBindings.ts";
 import type { PackPlacement } from "../layout/packFormation.ts";
 import { addFigure, PackFigures } from "../pack/phaser/packFigures.ts";
-import { dollarAmountText, dollarText, shortDollarAmountText } from "../presentation/currency.ts";
+import { dollarAmountText, shortDollarAmountText } from "../presentation/currency.ts";
 import {
   acceptUpdate,
   arriveHome,
@@ -146,13 +126,7 @@ import { barTitleRoom } from "../ui/barTitle.ts";
 import { closeControl } from "../ui/closeControl.ts";
 import { LABEL_ALIGN_DATA } from "../ui/dom/labelBlock.ts";
 import { gridRects, rectIndexAt } from "../ui/grid.ts";
-import {
-  type ArtLook,
-  buttonState,
-  type ItemTile,
-  itemTile,
-  itemTileLook,
-} from "../ui/interaction.ts";
+import { buttonState } from "../ui/interaction.ts";
 import { cardTitleRow } from "../ui/modal/titleRow.ts";
 import { PALETTE } from "../ui/palette.ts";
 import {
@@ -164,7 +138,6 @@ import {
   fillRect,
 } from "../ui/phaser/draw.ts";
 import {
-  addPixelText,
   type FontRole,
   inkSpan,
   pixelFontMetrics,
@@ -173,7 +146,7 @@ import {
   withProbe,
 } from "../ui/phaser/pixelText.ts";
 import { GAME_PROGRESS_STYLE, LOADING_MOTION, LOADING_TIMING } from "../ui/progressBar.ts";
-import { BUTTON_COLOURS, GREYED, pictureBox, type SelectLook } from "../ui/selection.ts";
+import { BUTTON_COLOURS, GREYED } from "../ui/selection.ts";
 import { TEXT_SCALE } from "../ui/textFit.ts";
 import type { Cents } from "../units.ts";
 import { artReady, waitForWalkArt, whenArtReady } from "./artReady.ts";
@@ -189,14 +162,7 @@ import {
   MIRROR_CANVAS_DATA,
   MIRROR_CLIP_DATA,
 } from "./htmlMirror.ts";
-import {
-  addPlate,
-  addTileBadge,
-  drawPetShopFallback,
-  plateColours,
-  purchasePicture,
-  SHOP_ART,
-} from "./itemArt.ts";
+import { drawPetShopFallback, purchasePicture, SHOP_ART } from "./itemArt.ts";
 import { loadingProgress, waitedLoad } from "./loadingProgress.ts";
 import { measureModalTitle, modalTextWidth } from "./modalMeasure.ts";
 import { listenOnePress } from "./onePress.ts";
@@ -230,7 +196,7 @@ import { type RunPick, runSceneData } from "./run/runStart.ts";
 import { SCENE_KEYS } from "./sceneKeys.ts";
 import { maskToRect } from "./scrollView.ts";
 import { SETTINGS_CLOSED_EVENT } from "./SettingsScene.ts";
-import { addShopBoard, addShopIdle, type ShopBoard, type ShopIdle } from "./shopIdle.ts";
+import { addShopBoard, addShopIdle } from "./shopIdle.ts";
 import {
   SHOP_CHANGED_EVENT,
   SHOP_CLOSED_EVENT,
@@ -243,19 +209,13 @@ import {
   addBodyText,
   addGraphicsIn,
   addMenuButton,
-  addNineSlice,
   addPanel,
-  addSelectTile,
   addTagImage,
   addTapBurst,
-  addTileSprite,
   BODY_TEXT,
   BUTTON_PRESS_PX,
   buttonFaces,
   type IconButton,
-  type SelectTile,
-  type SelectTileOptions,
-  tileTextureKey,
 } from "./uiKit.ts";
 
 const SCREEN = SCREEN_LAYOUT.screen;
@@ -270,19 +230,12 @@ const PORCH_DOG_OFFSET = HOME_LAYOUT.porchDogOffset;
 const PET_SHOP: Rect = HOME_LAYOUT.petShop;
 const PET_SHOP_BOARD: Rect = HOME_LAYOUT.petShop.board;
 const SLOT_SIGN = HOME_LAYOUT.slotSign;
-const SECTION_FILL_KEYS = HOME_LAYOUT.sectionFillKeys;
 const POCKET = HOME_LAYOUT.pocket;
-const SECTION_RECTS: Readonly<Record<SectionId, Rect>> = HOME_LAYOUT.sections;
-const SECTION_FRAME = HOME_LAYOUT.sectionFrame;
-const BAND_TEXT = HOME_LAYOUT.bandText;
 const WALKER_TILES = HOME_LAYOUT.walkerTiles;
 const WALKER_ORIGIN = HOME_LAYOUT.walkerOrigin;
-const WALKER_TILE = HOME_LAYOUT.walkerTile;
 const DOG_TILES = HOME_LAYOUT.dogTiles;
-const DOG_ORIGIN = HOME_LAYOUT.dogOrigin;
-const DOG_TILE = HOME_LAYOUT.dogTile;
 const DOG_TILE_INSET = HOME_LAYOUT.dogTileInset;
-const TILE_SELECT_OUTSET = HOME_LAYOUT.tileSelectOutset;
+const DOG_ORIGIN = HOME_LAYOUT.dogOrigin;
 const START_BUTTON: Rect = HOME_LAYOUT.startButton;
 // Start walk's opacity while it waits for the rest of the art to load.
 const WAITING_ALPHA = 0.6;
@@ -301,8 +254,6 @@ const HERO_MASK_KEY = "home-hero-mask";
 function walkerIds(): WalkerId[] {
   return walkerOrder(gameData);
 }
-
-const SECTION_IDS: readonly SectionId[] = ["walker", "dogs", "pocket"];
 
 // object, left on the canvas under the HTML screen (MIRROR_CANVAS_DATA).
 function onCanvas<T extends GameObjects.GameObject>(object: T): T {
@@ -420,23 +371,7 @@ function focusRows(shown: { sign: boolean }): Focusable[][] {
 // A held item's detail card or the dismissible update notice, above the home screen.
 type Overlay = { rect: Rect | undefined } & ({ update: true } | { target: DetailTarget });
 
-// A tile that reacts to taps: its container moves for the dip, lift and shake, its face hops,
-// and its mark pops.
-interface TileView {
-  container: GameObjects.Container;
-  face?: { object: GameObjects.Image | GameObjects.Sprite; y: number };
-  // A button with a pressed face shows it rather than dipping.
-  iconButton?: IconButton;
-  lift: number;
-  mark?: { image: GameObjects.Image; y: number };
-  // The pop timer that raises the whole tile for a moment, for the gear badge at the gate.
-  rise?: string;
-  shopBoard?: ShopBoard;
-  shopIdle?: ShopIdle;
-}
-
 // The heart after the Dogs band's pack-size bonus.
-const HEART_KEY = "ui-heart";
 
 // The bank the last time the home screen was shown this session, so the walker can say
 // when something new became affordable.
@@ -572,7 +507,7 @@ export class StartScene extends Scene {
     stopWakeLock();
     clearRunOverrides();
 
-    this.drawGate();
+    this.gateSign = renderHomeBackdrop(this, gameData.homeText.gateSign);
     this.root = this.add.container(0, 0);
     this.overlayLayer = this.add.container(0, 0);
     // In HTML where the page's switch is on and its fonts are ready, else on the canvas.
@@ -1347,56 +1282,6 @@ export class StartScene extends Scene {
     return addBodyText(this, parent, { x, y }, value, { colour, ...options });
   }
 
-  // The street, yard and porch come from the screen-home art, drawn once; a plain yard
-  // stands in while the art is missing.
-  private drawGate(): void {
-    fillRect(this.add.graphics(), PALETTE.darkBrown, SCREEN);
-    if (this.textures.exists("screen-home")) {
-      this.add.image(0, HOME_LAYOUT.backdropY, "screen-home").setOrigin(0);
-    } else {
-      const g = this.add.graphics();
-      fillRect(g, PALETTE.darkSlate, {
-        height: 52,
-        width: SCREEN.width,
-        x: 0,
-        y: 40 + HOME_LAYOUT.heroOffsetY,
-      });
-      fillRect(g, PALETTE.lightGrey, {
-        height: 34,
-        width: SCREEN.width,
-        x: 0,
-        y: 92 + HOME_LAYOUT.heroOffsetY,
-      });
-      fillRect(g, PALETTE.green, {
-        height: 70,
-        width: SCREEN.width,
-        x: 0,
-        y: 126 + HOME_LAYOUT.heroOffsetY,
-      });
-      fillRect(g, PALETTE.tan, {
-        height: 70,
-        width: PATH.width,
-        x: PATH.x,
-        y: 126 + HOME_LAYOUT.heroOffsetY,
-      });
-      fillRect(g, PALETTE.brown, {
-        height: HOME_LAYOUT.gateBar.height - 1,
-        width: SCREEN.width,
-        x: 0,
-        y: HOME_LAYOUT.gateBar.y,
-      });
-    }
-    const sign = HOME_LAYOUT.streetSign;
-    this.gateSign = this.add.container(0, 0);
-    this.gateSign.add(
-      addPixelText(this, sign.x, sign.y, gameData.homeText.gateSign, {
-        colour: PALETTE.white,
-        font: "title",
-        originX: 0.5,
-      }),
-    );
-  }
-
   // The update notice opens once per home visit while a newer version waits and home is active,
   // and closes once none does.
   private syncUpdateNotice(): void {
@@ -1444,16 +1329,38 @@ export class StartScene extends Scene {
       y: HOME_LAYOUT.gateBar.y + HOME_LAYOUT.gateBar.height - 1,
     });
     const sections = this.sections(save);
-    for (const id of SECTION_IDS) {
-      const note = this.drawSection(root, id, SECTION_RECTS[id], sections[id]);
-      if (id === "dogs") {
-        this.drawPackBonus(root, SECTION_RECTS[id], note);
-      }
+    renderHomeSections(
+      { root, scene: this },
+      { bonus: packBonusLine(gameData, this.loadout), sections },
+    );
+    const dogRects = dogTiles();
+    const gearRects = gearSlots();
+    const walkerRects = walkerTiles();
+    const rendered = renderHomeSelections(
+      { data: gameData, reducedMotion: currentSettings(this).reducedMotion, root, scene: this },
+      {
+        dogs: rosterOrder().map((id, i) => ({
+          feedbackId: targetId({ dog: id, kind: "dog" }),
+          id,
+          rect: dogFace(itemAt(dogRects, i)),
+        })),
+        gear: gearIds().map((id, i) => ({
+          feedbackId: targetId({ gear: id, kind: "gear" }),
+          id,
+          rect: pocketTile(itemAt(gearRects, i)),
+        })),
+        loadout: this.loadout,
+        save,
+        walkers: walkerIds().map((id, i) => ({
+          feedbackId: targetId({ kind: "walker", walker: id }),
+          id,
+          rect: walkerFace(itemAt(walkerRects, i)),
+        })),
+      },
+    );
+    for (const [id, view] of rendered) {
+      this.views.set(id, view);
     }
-    this.drawSectionFills(root, sections);
-    this.drawWalkerPicker(root, save);
-    this.drawDogTiles(root, save);
-    this.drawPocket(root, save);
     this.drawStartButton(root, this.startOpen(sections));
     this.drawFocus(root);
     this.drawOverlay(save);
@@ -1463,118 +1370,6 @@ export class StartScene extends Scene {
   // needs only a dog.
   private sections(save: SaveDocument): Sections {
     return homeSections(gameData, save.owned, { loadout: this.loadout, walker: save.walker });
-  }
-
-  // The section state sets its solid backing below the header and under the cards.
-  private drawSectionFills(root: GameObjects.Container, sections: Sections): void {
-    for (const id of SECTION_IDS) {
-      const key = SECTION_FILL_KEYS[id];
-      const rect = sectionFill(SECTION_RECTS[id]);
-      if (sections[id].state === "complete") {
-        fillRect(addGraphicsIn(this, root), PALETTE[HOME_LAYOUT.sectionSelectedFill], rect);
-      } else if (this.textures.exists(key)) {
-        root.add(this.add.tileSprite(rect.x, rect.y, rect.width, rect.height, key).setOrigin(0));
-      } else {
-        fillRect(addGraphicsIn(this, root), PALETTE[HOME_LAYOUT.sectionLooks[id].fill], rect);
-      }
-    }
-  }
-
-  // The Dogs band's pack-size bonus (packBonusLine), when the pack's size raises its lead dog's
-  // owner's max: its line in ink and then a full heart, ending HOME_LAYOUT.bonus.countGap left of
-  // the pack count's left edge, or of the band's text inset with no count.
-  private drawPackBonus(
-    root: GameObjects.Container,
-    rect: Rect,
-    note: GameObjects.BitmapText | null,
-  ): void {
-    const line = packBonusLine(gameData, this.loadout);
-    if (line === null) {
-      return;
-    }
-    const { countGap, gap, heartInk, rise, scale } = HOME_LAYOUT.bonus;
-    const y = rect.y + BAND_TEXT.y;
-    const countLeft = note === null ? rect.x + rect.width - BAND_TEXT.inset : note.x - note.width;
-    const heartLeft = countLeft - countGap - heartInk * scale;
-    if (this.textures.exists(HEART_KEY)) {
-      const heart = this.add
-        .sprite(heartLeft, y - rise, HEART_KEY)
-        .setOrigin(0)
-        .setScale(scale);
-      playTag(heart, HEART_KEY, "full");
-      root.add(heart);
-    }
-    this.text(root, heartLeft - gap, y, line, PALETTE.ink, { font: "title", originX: 1 });
-  }
-
-  // A one-pixel section frame with its heading and note: amber when selected, or its
-  // lighter section colour while neutral. Returns the note label, or null with none.
-  private drawSection(
-    root: GameObjects.Container,
-    id: SectionId,
-    rect: Rect,
-    section: Section,
-  ): GameObjects.BitmapText | null {
-    const tag = section.state === "complete" ? "complete" : HOME_LAYOUT.sectionLooks[id].neutralTag;
-    const frame = addNineSlice(this, "ui-section", rect, tag);
-    if (frame === undefined) {
-      this.drawSectionFrame(root, id, rect, section.state);
-    } else {
-      root.add(frame);
-    }
-    const lit = section.state === "complete";
-    const y = rect.y + BAND_TEXT.y;
-    this.text(
-      root,
-      rect.x + BAND_TEXT.inset,
-      y,
-      section.heading,
-      lit ? PALETTE.ink : PALETTE[HOME_LAYOUT.sectionLooks[id].heading],
-      {
-        font: "title",
-      },
-    );
-    const right = rect.x + rect.width - BAND_TEXT.inset;
-    if (section.note === "") {
-      return null;
-    }
-    return this.text(
-      root,
-      right,
-      y,
-      section.note,
-      lit ? PALETTE.ink : PALETTE[HOME_LAYOUT.sectionLooks[id].note],
-      {
-        font: "title",
-        originX: 1,
-      },
-    );
-  }
-
-  // The same thin rim and section-specific header while ui-section is missing.
-  private drawSectionFrame(
-    root: GameObjects.Container,
-    id: SectionId,
-    rect: Rect,
-    state: SectionState,
-  ): void {
-    const g = addGraphicsIn(this, root);
-    const lit = state === "complete";
-    const { band, edge } = SECTION_FRAME;
-    drawRing(g, PALETTE.plum, rect, 1);
-    const width = rect.width - edge * 2;
-    fillRect(g, lit ? PALETTE.amber : PALETTE[HOME_LAYOUT.sectionLooks[id].neutral], {
-      height: band,
-      width,
-      x: rect.x + edge,
-      y: rect.y + edge,
-    });
-    fillRect(g, PALETTE.plum, {
-      height: 1,
-      width,
-      x: rect.x + edge,
-      y: rect.y + edge + band,
-    });
   }
 
   // The detail card over everything else, recording its rect for taps.
@@ -1647,27 +1442,6 @@ export class StartScene extends Scene {
     const view: TileView = { container, lift: 0 };
     this.views.set(id, view);
     return view;
-  }
-
-  // A tile in its interaction state, registered for its feedback.
-  private selectTile(
-    root: GameObjects.Container,
-    id: string,
-    rect: Rect,
-    options: Omit<SelectTileOptions, "outset" | "reducedMotion">,
-  ): { content: GameObjects.Container; look: SelectLook; view: TileView } {
-    const reducedMotion = currentSettings(this).reducedMotion;
-    const tile: SelectTile = addSelectTile(this, root, rect, {
-      ...options,
-      outset: TILE_SELECT_OUTSET,
-      reducedMotion,
-    });
-    const view: TileView = { container: tile.container, lift: tile.lift };
-    if (tile.mark !== undefined) {
-      view.mark = { image: tile.mark, y: tile.mark.y };
-    }
-    this.views.set(id, view);
-    return { content: tile.content, look: tile.look, view };
   }
 
   // The shared section owns chrome, currency and controls; this scene supplies its bank.
@@ -1782,7 +1556,14 @@ export class StartScene extends Scene {
       if (this.textures.exists(small)) {
         badge.container.add(this.add.image(at.x, at.y, small).setOrigin(0));
       } else {
-        this.addGearIcon(badge.container, "colour", this.loadout.gear, at, 0.5);
+        addGearPicture(
+          { data: gameData, scene: this },
+          badge.container,
+          "colour",
+          this.loadout.gear,
+          at,
+          0.5,
+        );
       }
     }
   }
@@ -2034,231 +1815,6 @@ export class StartScene extends Scene {
       return undefined;
     }
     return [normal, pressed];
-  }
-
-  // A locked item's price (or goal) on the plate its look sets. originX places it by its left
-  // (0) or centre (0.5).
-  private lockedPlate(
-    parent: GameObjects.Container,
-    tile: ItemTile,
-    at: { capY: number; originX: number; x: number },
-  ): void {
-    const { plate } = itemTileLook(tile);
-    const text =
-      tile.kind === "locked" ? dollarText(tile.price) : tile.kind === "goal" ? tile.goal : null;
-    if (text !== null && plate !== null) {
-      addPlate(this, parent, at, text, plateColours(plate));
-    }
-  }
-
-  private drawDogTiles(root: GameObjects.Container, save: SaveDocument): void {
-    const { owned } = save;
-    const reduced = currentSettings(this).reducedMotion;
-    const capacity = packCapacity(gameData, owned);
-    const tiles = dogTiles();
-    rosterOrder().forEach((id, i) => {
-      const rect = dogFace(itemAt(tiles, i));
-      const { x, y } = rect;
-      const dog = gameData.dogs[id];
-      const purchase: Purchase = { dog: id, kind: "dog" };
-      const tile = itemTile({
-        affordable: isAffordable(gameData, owned, save.bankCents, purchase),
-        capacity,
-        goal: null,
-        picked: this.loadout.dogs.includes(id),
-        pickedCount: this.loadout.dogs.length,
-        price: purchasePrice(gameData, owned, purchase),
-      });
-      const { art, badge, state } = itemTileLook(tile);
-      const { content, look, view } = this.selectTile(
-        root,
-        targetId({ dog: id, kind: "dog" }),
-        rect,
-        {
-          edge: true,
-          // A picked dog wears a tick: the game sets the pack's order by the dogs' sizes.
-          mark: "tick",
-          state,
-          tile: true,
-        },
-      );
-      const ink = PALETTE[look.text];
-      const { badge: badgeAt, face: faceBox, lockedNameY, textX } = DOG_TILE;
-      fillRect(addGraphicsIn(this, content), PALETTE[pictureBox({ art, state })], {
-        height: faceBox.size + 2,
-        width: faceBox.size + 2,
-        x: x + faceBox.dx - 1,
-        y: y + faceBox.dy - 1,
-      });
-      const faceKey = dogFaceKey(gameData, id);
-      const faceTag = badge === null ? "happy" : "neutral";
-      const faceAt = { x: x + faceBox.dx, y: y + faceBox.dy };
-      // A dog not owned holds its first frame, in colour while the player can buy it.
-      const still = reduced || badge !== null;
-      const face = addTileSprite(this, art, still, faceKey, faceTag, faceAt);
-      content.add(face);
-      view.face = { object: face, y: faceAt.y };
-
-      const body = pixelFontMetrics(this, "body");
-      const nameText = (value: string, top: number) => {
-        this.text(content, x + textX, top, value, ink);
-      };
-      if (badge === null) {
-        // Every dog earns the same pay, so an owned tile names the dog alone; its card says the
-        // pay.
-        nameText(dog.name, y + dogTileNameY(body));
-        return;
-      }
-      // A locked dog shows its name over its price plate, and its badge.
-      nameText(dog.name, y + lockedNameY);
-      addTileBadge(this, content, badge, { x: x + badgeAt.dx, y: y + badgeAt.dy });
-      const plateY = dogTilePlateY(body);
-      this.lockedPlate(content, tile, { capY: y + plateY - 1, originX: 0, x: x + textX });
-    });
-  }
-
-  // The Pocket section's tiles, one per gear item cheapest first; a hold shows an item's
-  // effect. Pocketing an item replaces any other, so the Pocket is never full.
-  private drawPocket(root: GameObjects.Container, save: SaveDocument): void {
-    const { owned } = save;
-    const pocketed = this.loadout.gear;
-    const slots = gearSlots();
-    gearIds().forEach((id, i) => {
-      const rect = pocketTile(itemAt(slots, i));
-      const { width, x, y } = rect;
-      const purchase: Purchase = { gear: id, kind: "gear" };
-      const tile = itemTile({
-        affordable: isAffordable(gameData, owned, save.bankCents, purchase),
-        capacity: 1,
-        goal: null,
-        picked: pocketed === id,
-        pickedCount: pocketed === null ? 0 : 1,
-        price: purchasePrice(gameData, owned, purchase),
-      });
-      const { art, badge, state } = itemTileLook(tile);
-      const { content, view } = this.selectTile(root, targetId({ gear: id, kind: "gear" }), rect, {
-        edge: true,
-        mark: "tick",
-        state,
-        tile: true,
-      });
-      const { badge: badgeAt, box, icon: iconAt } = POCKET;
-      fillRect(addGraphicsIn(this, content), PALETTE[pictureBox({ art, state })], {
-        height: box.size,
-        width: box.size,
-        x: x + box.dx,
-        y: y + box.dy,
-      });
-      const at = { x: x + iconAt.dx, y: y + iconAt.dy };
-      const icon = this.addGearIcon(content, art, id, at, 1);
-      if (icon !== undefined) {
-        view.face = { object: icon, y: at.y };
-      }
-      if (badge !== null) {
-        addTileBadge(this, content, badge, { x: x + badgeAt.dx, y: y + badgeAt.dy });
-        const plateAt = { capY: y + POCKET.priceY, originX: 0.5, x: x + width / 2 };
-        this.lockedPlate(content, tile, plateAt);
-      }
-    });
-  }
-
-  // The item's 32x32 icon in its art look, or its initials until the icon is in the manifest.
-  private addGearIcon(
-    parent: GameObjects.Container,
-    art: ArtLook,
-    gear: GearId,
-    at: { x: number; y: number },
-    scale: number,
-  ): GameObjects.Image | undefined {
-    const { x, y } = at;
-    const key = gearIconKey(gear);
-    if (this.textures.exists(key)) {
-      const icon = this.add
-        .image(x, y, tileTextureKey(this, art, key))
-        .setOrigin(0)
-        .setScale(scale);
-      parent.add(icon);
-      return icon;
-    }
-    const initials = gameData.shopGear[gear].name
-      .split(" ")
-      .map((word) => word.charAt(0))
-      .join("");
-    this.text(parent, x + 16 * scale, y + 11 * scale, initials, PALETTE.cream, {
-      font: "title",
-      originX: 0.5,
-      scale: 1,
-    });
-    return undefined;
-  }
-
-  // One tile per walker, in the shared tile states: the saved one is picked, and picking
-  // another replaces it, so the walker choice is never full. Each shows its portrait with its
-  // perk icon beside it and its name on the grey goal plate at the tile's foot; a locked one's
-  // portrait and icon are greyed, under the padlock.
-  private drawWalkerPicker(root: GameObjects.Container, save: SaveDocument): void {
-    const reduced = currentSettings(this).reducedMotion;
-    const tiles = walkerTiles();
-    walkerIds().forEach((id, i) => {
-      const rect = walkerFace(itemAt(tiles, i));
-      const { x, y } = rect;
-      const tile = walkerTile(gameData, save, id);
-      const { art, badge, state } = itemTileLook(tile);
-      const { content, look, view } = this.selectTile(
-        root,
-        targetId({ kind: "walker", walker: id }),
-        rect,
-        {
-          edge: true,
-          mark: "tick",
-          state,
-          tile: true,
-        },
-      );
-      const { badge: badgeAt, box, face: faceAt, icons, plateY } = WALKER_TILE;
-      fillRect(addGraphicsIn(this, content), PALETTE[pictureBox({ art, state })], {
-        height: box.size,
-        width: box.size,
-        x: x + box.dx,
-        y: y + box.dy,
-      });
-      const walker = gameData.walkers[id];
-      const at = { x: x + faceAt.dx, y: y + faceAt.dy };
-      if (this.textures.exists(walker.portraitKey)) {
-        const tag = tile.kind === "picked" ? "happy" : "neutral";
-        const face = addTileSprite(this, art, reduced, walker.portraitKey, tag, at);
-        content.add(face);
-        view.face = { object: face, y: at.y };
-      } else {
-        const centre = { x: x + box.dx + box.size / 2, y: y + box.dy + box.size / 2 };
-        this.text(content, centre.x, centre.y, walker.name.charAt(0), PALETTE[look.text], {
-          font: "title",
-          originX: 0.5,
-          originY: 0.5,
-        });
-      }
-      if (badge !== null) {
-        addTileBadge(this, content, badge, { x: x + badgeAt.dx, y: y + badgeAt.dy });
-      }
-      // Every walker's name on the goal plate, owned or locked.
-      const plateAt = { capY: y + plateY, originX: 0.5, x: x + rect.width / 2 };
-      addPlate(this, content, plateAt, walker.name, plateColours("goal"));
-      walkerEffectItems(gameData, id).forEach((item, n) => {
-        const iconAt = { x: x + icons.dx, y: y + itemAt(icons.dy, n) };
-        const key = effectIconKey(item);
-        if (this.textures.exists(key)) {
-          const shown = tileTextureKey(this, art, key);
-          content.add(this.add.image(iconAt.x, iconAt.y, shown).setOrigin(0));
-          return;
-        }
-        const half = EFFECT_ICON_SIZE / 2;
-        const letter = effectIconFallback(gameData, item);
-        this.text(content, iconAt.x + half, iconAt.y + half, letter, PALETTE[look.text], {
-          originX: 0.5,
-          originY: 0.5,
-        });
-      });
-    });
   }
 
   private drawLoadingProgress(now: number): void {
