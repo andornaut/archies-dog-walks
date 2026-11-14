@@ -5,10 +5,10 @@ import { fontFileMetrics, inkWidth } from "../testing/fontInk.ts";
 import { cardTitles } from "../testing/textRoles.ts";
 import { BAR_TITLE, barTitleLeft, barTitleRoom } from "../ui/barTitle.ts";
 import { type CloseControl, closeControl } from "../ui/closeControl.ts";
+import { modalTitleLayout } from "../ui/modal/layout.ts";
+import { cardTitleRow } from "../ui/modal/titleRow.ts";
 import { plainMarks } from "../ui/pixelFont.ts";
 import { TEXT_STYLE } from "../ui/textFit.ts";
-import { cardTitleRow } from "./homeLayout.ts";
-import { modalTitleLayout } from "./modalLayout.ts";
 
 // The clear space on either side of title ink, after the correct corner-control reservation.
 function clearSpace(bar: Rect, close: CloseControl, width: number) {

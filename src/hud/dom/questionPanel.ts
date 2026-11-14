@@ -27,7 +27,7 @@ import {
   gridX,
   gridY,
 } from "../../ui/domScale.ts";
-import type { PanelText, QuestionPanelView } from "../questionPanelView.ts";
+import { type PanelText, type QuestionPanelView } from "../../ui/modal/types.ts";
 
 // The pause menu, each question (the Home question, Quit?) and each modal card (the update
 // notices) in HTML over the canvas: the panel questionPanelView or modalCardView lays out, drawn

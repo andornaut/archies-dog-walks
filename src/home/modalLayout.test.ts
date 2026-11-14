@@ -9,16 +9,17 @@ import { inside } from "../testing/rects.ts";
 import { barTitleLeft } from "../ui/barTitle.ts";
 import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";
 import { closeControl } from "../ui/closeControl.ts";
-import { TEXT_STYLE } from "../ui/textFit.ts";
-import { overlayRegion } from "./homeBar.ts";
-import { cardTitleRow, HOME_LAYOUT, updateModalLayout } from "./homeLayout.ts";
 import {
   MODAL,
   modalPanelWidth,
   modalRect,
   modalTitleLayout,
   modalTitleWidth,
-} from "./modalLayout.ts";
+} from "../ui/modal/layout.ts";
+import { cardTitleRow } from "../ui/modal/titleRow.ts";
+import { TEXT_STYLE } from "../ui/textFit.ts";
+import { overlayRegion } from "./homeBar.ts";
+import { HOME_LAYOUT, updateModalLayout } from "./homeLayout.ts";
 
 it("uses the full logical viewport for narrow content and still respects a smaller safe area", () => {
   expect(modalPanelWidth(328, 80)).toBe(180);

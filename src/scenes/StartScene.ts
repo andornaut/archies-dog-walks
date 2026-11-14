@@ -59,7 +59,6 @@ import {
 } from "../home/home.ts";
 import { homeBackAction, homeBarButtonAt, overlayRegion, regionOutside } from "../home/homeBar.ts";
 import {
-  cardTitleRow,
   dogTileNameY,
   dogTilePlateY,
   HOME_LAYOUT,
@@ -154,6 +153,7 @@ import {
   itemTile,
   itemTileLook,
 } from "../ui/interaction.ts";
+import { cardTitleRow } from "../ui/modal/titleRow.ts";
 import { PALETTE } from "../ui/palette.ts";
 import {
   addModalShade,

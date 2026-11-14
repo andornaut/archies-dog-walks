@@ -1,10 +1,10 @@
 import { insetRect, type Rect } from "@andornaut/game-kit/rect";
 
 import { SCREEN_CONFIG } from "../data/screen.ts";
-import type { PanelMeasure, PanelText } from "../hud/questionPanelView.ts";
 import { barTitleLeft } from "../ui/barTitle.ts";
 import type { CloseControl } from "../ui/closeControl.ts";
 import { PLAIN_ITEM, tileState } from "../ui/interaction.ts";
+import { type PanelMeasure, type PanelText } from "../ui/modal/types.ts";
 import { PALETTE } from "../ui/palette.ts";
 import { GREYED, SELECT_OUTSET, selectLook } from "../ui/selection.ts";
 import { TEXT_SCALE } from "../ui/textFit.ts";

@@ -4,7 +4,7 @@ import { shopPageView } from "../../home/shopPageView.ts";
 import { FakeDocument, type FakeElement } from "../../testing/fakeDom.ts";
 import { gameFont } from "../../testing/fontInk.ts";
 import { domScale } from "../../ui/domScale.ts";
-import type { PanelMeasure } from "../questionPanelView.ts";
+import { type PanelMeasure } from "../../ui/modal/types.ts";
 import { shopPageParts } from "./shopPage.ts";
 
 const MEASURE: PanelMeasure = {

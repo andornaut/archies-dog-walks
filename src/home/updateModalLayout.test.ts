@@ -6,9 +6,10 @@ import { SCREEN_CONFIG } from "../data/screen.ts";
 import { fontFileMetrics, inkWidth } from "../testing/fontInk.ts";
 import { barTitleRoom } from "../ui/barTitle.ts";
 import { closeControl } from "../ui/closeControl.ts";
+import { MODAL, modalTitleLayout } from "../ui/modal/layout.ts";
+import { cardTitleRow } from "../ui/modal/titleRow.ts";
 import { TEXT_SCALE } from "../ui/textFit.ts";
-import { cardTitleRow, HOME_LAYOUT, updateModalLayout } from "./homeLayout.ts";
-import { MODAL, modalTitleLayout } from "./modalLayout.ts";
+import { HOME_LAYOUT, updateModalLayout } from "./homeLayout.ts";
 
 describe("update offer and failed retry titles", () => {
   it.each([gameData.homeText.update.title, gameData.homeText.update.failure])(

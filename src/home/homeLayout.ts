@@ -17,19 +17,20 @@ import { closeControl } from "../ui/closeControl.ts";
 import type { GridSpec } from "../ui/grid.ts";
 import { helpCapDy } from "../ui/labelHelpGap.ts";
 import { MARK_OFFSET } from "../ui/mark.ts";
-import { hasPill, PILL_IMAGE_GAP, pillDropUnderInk, pillRiseOverCaps } from "../ui/namePills.ts";
-import { BUTTON_LIP_PX } from "../ui/selection.ts";
-import { TITLE_CAP_ROWS } from "../ui/textFit.ts";
-import { TOP_BAR_FACE, TOP_BAR_HEIGHT, TOP_BAR_MID, TOP_BAR_WELL } from "../ui/topBarTrim.ts";
-import { topSectionCurrency, topSectionLayout } from "../ui/topSection.ts";
-import { FEEDBACK } from "./feedback.ts";
 import {
   MODAL,
   modalActionWidth,
   modalPanelWidth,
   modalRect,
   modalTitleWidth,
-} from "./modalLayout.ts";
+} from "../ui/modal/layout.ts";
+import { cardTitleRow } from "../ui/modal/titleRow.ts";
+import { hasPill, PILL_IMAGE_GAP, pillDropUnderInk, pillRiseOverCaps } from "../ui/namePills.ts";
+import { BUTTON_LIP_PX } from "../ui/selection.ts";
+import { TITLE_CAP_ROWS } from "../ui/textFit.ts";
+import { TOP_BAR_FACE, TOP_BAR_HEIGHT, TOP_BAR_MID, TOP_BAR_WELL } from "../ui/topBarTrim.ts";
+import { topSectionCurrency, topSectionLayout } from "../ui/topSection.ts";
+import { FEEDBACK } from "./feedback.ts";
 import type { SectionId } from "./sections.ts";
 
 // Every tappable thing presses at least MIN_PRESS game pixels on each side; the tiles' faces are
@@ -634,14 +635,6 @@ function cardRows(
     return at;
   });
   return { bottom, tops };
-}
-
-// The row a modal card's title sits on across the card's top, card.titleRow.inset inside its top
-// and sides; its close control occupies the separate top-right corner. The card has no title
-// bar.
-export function cardTitleRow(card: Rect): Rect {
-  const { height, inset } = HOME_LAYOUT.card.titleRow;
-  return { height, width: card.width - 2 * inset, x: card.x + inset, y: card.y + inset };
 }
 
 // A detail card height tall, centred on the screen.

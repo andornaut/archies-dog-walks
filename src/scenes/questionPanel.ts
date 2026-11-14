@@ -31,18 +31,14 @@ import {
 } from "../hud/dom/questionPanel.ts";
 import { pillKind } from "../hud/effectNames.ts";
 import type { pauseMenuLayout } from "../hud/pauseMenu.ts";
-import {
-  type CardAction,
-  modalCardView,
-  type PanelNotePart,
-  type QuestionPanelView,
-  questionPanelView,
-} from "../hud/questionPanelView.ts";
+import { questionPanelView } from "../hud/questionPanelView.ts";
 import { cardNumberForKey, menuKeyActs } from "../input/keyBindings.ts";
 import { pageFrameTurn } from "../pwa/index.ts";
 import { loadSheet } from "../ui/dom/sheetFrames.ts";
 import { uiLayer } from "../ui/dom/uiLayer.ts";
 import { rectIndexAt } from "../ui/grid.ts";
+import { type CardAction, type PanelNotePart, type QuestionPanelView } from "../ui/modal/types.ts";
+import { modalCardView } from "../ui/modal/view.ts";
 import { PALETTE } from "../ui/palette.ts";
 import { centreBackedText } from "../ui/phaser/backedText.ts";
 import { displayBitmapFont } from "../ui/phaser/displayText.ts";

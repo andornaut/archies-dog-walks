@@ -4,8 +4,8 @@ import { HELP_DOTS, type HelpView } from "../../help/helpView.ts";
 import { createTextLine, type DomTextLine, placeText, setBox } from "../../ui/dom/pixelLine.ts";
 import type { UiLayer } from "../../ui/dom/uiLayer.ts";
 import { artPixel, type DomScale, gridRect, gridX, gridY } from "../../ui/domScale.ts";
+import { type PanelText } from "../../ui/modal/types.ts";
 import { PALETTE } from "../../ui/palette.ts";
-import type { PanelText } from "../questionPanelView.ts";
 import {
   type DomPart,
   type DomQuestionPanel,

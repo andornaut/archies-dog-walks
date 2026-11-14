@@ -13,8 +13,8 @@ import {
 } from "../../ui/dom/pixelLine.ts";
 import type { UiLayer } from "../../ui/dom/uiLayer.ts";
 import { artPixel, type DomScale } from "../../ui/domScale.ts";
+import { type PanelText } from "../../ui/modal/types.ts";
 import { PALETTE } from "../../ui/palette.ts";
-import type { PanelText } from "../questionPanelView.ts";
 import { artPart, type DomDetailCardInput, framedPart, textPart } from "./detailCard.ts";
 import {
   type DomPart,

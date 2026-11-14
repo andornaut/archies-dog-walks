@@ -6,14 +6,11 @@ import { FakeDocument } from "../../testing/fakeDom.ts";
 import { gameFont } from "../../testing/fontInk.ts";
 import type { UiLayer } from "../../ui/dom/uiLayer.ts";
 import { artPixel, domScale } from "../../ui/domScale.ts";
+import { type PanelMeasure } from "../../ui/modal/types.ts";
+import { modalCardView, panelButton } from "../../ui/modal/view.ts";
 import { inPill } from "../../ui/namePills.ts";
 import { PAUSE_MENU_ITEMS, pauseMenuLayout } from "../pauseMenu.ts";
-import {
-  modalCardView,
-  panelButton,
-  type PanelMeasure,
-  questionPanelView,
-} from "../questionPanelView.ts";
+import { questionPanelView } from "../questionPanelView.ts";
 import { showZoneCelebration } from "./celebration.ts";
 import { showDetailCard } from "./detailCard.ts";
 import { showQuestionPanel } from "./questionPanel.ts";

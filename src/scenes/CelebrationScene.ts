@@ -14,19 +14,19 @@ import {
   stripUnderClose,
 } from "../home/badgesView.ts";
 import { overlayRegion, regionOutside } from "../home/homeBar.ts";
+import { isConfirmKey, isPauseKey, menuKeyActs } from "../input/keyBindings.ts";
+import { exitShown } from "../pwa/index.ts";
+import { achievementLabel } from "../rules/achievements.ts";
+import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";
+import { closeControl } from "../ui/closeControl.ts";
 import {
   MODAL,
   modalActionWidth,
   modalPanelWidth,
   modalRect,
   modalTitleWidth,
-} from "../home/modalLayout.ts";
-import { panelButton, panelTitle } from "../hud/questionPanelView.ts";
-import { isConfirmKey, isPauseKey, menuKeyActs } from "../input/keyBindings.ts";
-import { exitShown } from "../pwa/index.ts";
-import { achievementLabel } from "../rules/achievements.ts";
-import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";
-import { closeControl } from "../ui/closeControl.ts";
+} from "../ui/modal/layout.ts";
+import { panelButton, panelTitle } from "../ui/modal/view.ts";
 import { labelInkWidth, pixelFontMetrics, withProbe } from "../ui/phaser/pixelText.ts";
 import { addRampDim } from "../ui/phaser/rampDim.ts";
 import { addBadgeCelebration, addCheeringFace, badgeCelebrationNames } from "./badges.ts";

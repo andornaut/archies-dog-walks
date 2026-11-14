@@ -8,9 +8,9 @@ import { type FittedText } from "@andornaut/game-kit/text/textFit";
 import { ROAD_SPRITE_SIZE } from "../assets/spriteKeys.ts";
 import { CELEBRATIONS } from "../data/layout.ts";
 import { SCREEN_CONFIG, SCREEN_LAYOUT } from "../data/screen.ts";
-import { MODAL, modalActionWidth } from "../home/modalLayout.ts";
 import { WIDE_BUTTON } from "../layout/screenLayout.ts";
 import { LABEL_HELP_GAP } from "../ui/labelHelpGap.ts";
+import { MODAL, modalActionWidth } from "../ui/modal/layout.ts";
 import { TEXT_SCALE, TEXT_STYLE, textOnLines } from "../ui/textFit.ts";
 import type { LinePart } from "./zoneCelebration.ts";
 

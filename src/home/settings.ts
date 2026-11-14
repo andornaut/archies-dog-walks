@@ -8,9 +8,9 @@ import type { Settings } from "../save/settings.ts";
 import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";
 import { type CloseControl, closeControl } from "../ui/closeControl.ts";
 import { helpCapDy, LABEL_HELP_GAP } from "../ui/labelHelpGap.ts";
+import { MODAL, modalPanelWidth, modalRect, modalTitleWidth } from "../ui/modal/layout.ts";
 import { TEXT_SCALE, textOnLines } from "../ui/textFit.ts";
 import { HOME_LAYOUT } from "./homeLayout.ts";
-import { MODAL, modalPanelWidth, modalRect, modalTitleWidth } from "./modalLayout.ts";
 
 // The settings screen moves a volume in 5% steps, from 0 to 1.
 export const VOLUME_STEPS = 20;

@@ -17,9 +17,9 @@ import { barTitleRoom } from "../ui/barTitle.ts";
 import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";
 import { closeFace } from "../ui/closeControl.ts";
 import { LABEL_HELP_GAP } from "../ui/labelHelpGap.ts";
-import { cardTitleRow } from "./homeLayout.ts";
+import { MODAL, modalActionWidth, modalTitleLayout } from "../ui/modal/layout.ts";
+import { cardTitleRow } from "../ui/modal/titleRow.ts";
 import { MENU_TEXT_FIELDS } from "./menuText.ts";
-import { MODAL, modalActionWidth, modalTitleLayout } from "./modalLayout.ts";
 import {
   INSTALL_STEPS,
   INSTALL_STEPS_FIT,

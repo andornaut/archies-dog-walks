@@ -5,15 +5,16 @@ import { barTitleRoom } from "../ui/barTitle.ts";
 import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";
 import { closeControl } from "../ui/closeControl.ts";
 import { helpCapDy } from "../ui/labelHelpGap.ts";
-import { overlayRegion } from "./homeBar.ts";
-import { cardTitleRow, HOME_LAYOUT } from "./homeLayout.ts";
 import {
   MODAL,
   modalActionWidth,
   modalPanelWidth,
   modalRect,
   modalTitleWidth,
-} from "./modalLayout.ts";
+} from "../ui/modal/layout.ts";
+import { cardTitleRow } from "../ui/modal/titleRow.ts";
+import { overlayRegion } from "./homeBar.ts";
+import { HOME_LAYOUT } from "./homeLayout.ts";
 
 const CARD = HOME_LAYOUT.card;
 const BUTTON_HEIGHT = BUTTON_SIZE.compact.height;

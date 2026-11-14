@@ -28,7 +28,6 @@ import {
   updateModalLayout,
   updateModalText,
 } from "../home/homeLayout.ts";
-import { MODAL, modalActionWidth } from "../home/modalLayout.ts";
 import { noteRoomForControl, settingsLayout, type SettingsRowShape } from "../home/settings.ts";
 import { SHOP_TABS } from "../home/shop.ts";
 import { SHOP_LAYOUT, shopTabRects } from "../home/shopLayout.ts";
@@ -98,6 +97,7 @@ import { MAX_CARD_OPTIONS } from "../rules/choices.ts";
 import { read } from "../rules/units.ts";
 import { walkProjection } from "../runner/walkGeometry.ts";
 import { gridRects } from "../ui/grid.ts";
+import { MODAL, modalActionWidth } from "../ui/modal/layout.ts";
 import { plainMarks } from "../ui/pixelFont.ts";
 import { readBitmapFont } from "./fontFile.ts";
 

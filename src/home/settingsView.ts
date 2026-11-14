@@ -6,15 +6,10 @@ import type { InstallStepsKind } from "@andornaut/game-kit/web/pwa/installState"
 import { BUILD_LABEL } from "../buildLabel.ts";
 import { SETTINGS_CARD } from "../data/layout.ts";
 import type { MenuText } from "../data/types.ts";
-import {
-  modalCardView,
-  type PanelButton,
-  panelButton,
-  type PanelMeasure,
-  type QuestionPanelView,
-} from "../hud/questionPanelView.ts";
 import type { Settings } from "../save/settings.ts";
 import { closeFace } from "../ui/closeControl.ts";
+import { type PanelButton, type PanelMeasure, type QuestionPanelView } from "../ui/modal/types.ts";
+import { modalCardView, panelButton } from "../ui/modal/view.ts";
 import { PALETTE } from "../ui/palette.ts";
 import { GREYED, selectLook } from "../ui/selection.ts";
 import { TEXT_SCALE } from "../ui/textFit.ts";

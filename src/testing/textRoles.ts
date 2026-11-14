@@ -26,7 +26,6 @@ import {
 import {
   BANK_ROOM,
   bankAmountText,
-  cardTitleRow,
   detailCardRect,
   DOG_TILE_TEXT_ROOM,
   HOME_LAYOUT,
@@ -34,7 +33,6 @@ import {
 } from "../home/homeLayout.ts";
 import { messageLine } from "../home/homeLines.ts";
 import { MENU_TEXT_FIELDS } from "../home/menuText.ts";
-import { modalTitleLayout } from "../home/modalLayout.ts";
 import { confirmLines } from "../home/purchaseConfirm.ts";
 import { PURCHASE_CONFIRM_ROOMS } from "../home/purchaseConfirmLayout.ts";
 import {
@@ -91,6 +89,8 @@ import type { Owned } from "../save/schema.ts";
 import { readBitmapFont } from "../tools/fontFile.ts";
 import { barTitleRoom } from "../ui/barTitle.ts";
 import { type CloseControl, closeControl } from "../ui/closeControl.ts";
+import { modalTitleLayout } from "../ui/modal/layout.ts";
+import { cardTitleRow } from "../ui/modal/titleRow.ts";
 import { plainMarks } from "../ui/pixelFont.ts";
 import { TEXT_SCALE, TEXT_STYLE, textOnLines } from "../ui/textFit.ts";
 import { cents } from "../units.ts";

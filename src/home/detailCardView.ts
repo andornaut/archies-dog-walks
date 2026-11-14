@@ -3,11 +3,9 @@ import type { Point, Rect } from "@andornaut/game-kit/rect";
 import { DETAIL_WELL_KEY, ownerFaceKey } from "../assets/spriteKeys.ts";
 import type { GameData } from "../data/types.ts";
 import { withNamePills } from "../hud/effectNames.ts";
-import {
-  modalCardView,
-  type PanelMeasure,
-  type QuestionPanelView,
-} from "../hud/questionPanelView.ts";
+import { MODAL, modalPanelWidth, modalRect, modalTitleWidth } from "../ui/modal/layout.ts";
+import { type PanelMeasure, type QuestionPanelView } from "../ui/modal/types.ts";
+import { modalCardView } from "../ui/modal/view.ts";
 import { PALETTE } from "../ui/palette.ts";
 import { type DetailCard, type DetailPart, detailParts, type DetailPicture } from "./detail.ts";
 import {
@@ -17,7 +15,6 @@ import {
   type DetailRow,
   HOME_LAYOUT,
 } from "./homeLayout.ts";
-import { MODAL, modalPanelWidth, modalRect, modalTitleWidth } from "./modalLayout.ts";
 
 // A detail card (a held dog's, walker's or gear item's, or what the walk explains) laid out as
 // one view both renderers draw: the canvas's (drawDetailCard in src/scenes/homePanels.ts) and the

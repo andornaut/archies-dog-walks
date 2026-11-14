@@ -9,8 +9,6 @@ import { SCREEN_CONFIG, SCREEN_LAYOUT } from "../data/screen.ts";
 import { FEEDBACK } from "../home/feedback.ts";
 import { type Focus, focusDirectionForKey, moveFocus } from "../home/focus.ts";
 import { type OverlayRegion, overlayRegion, regionOutside } from "../home/homeBar.ts";
-import { cardTitleRow } from "../home/homeLayout.ts";
-import { modalActionWidth } from "../home/modalLayout.ts";
 import {
   INSTALL_STEPS_FIT,
   type InstallStepsLayout,
@@ -55,6 +53,8 @@ import {
 } from "../pwa/index.ts";
 import type { Settings } from "../save/settings.ts";
 import { barTitleRoom } from "../ui/barTitle.ts";
+import { modalActionWidth } from "../ui/modal/layout.ts";
+import { cardTitleRow } from "../ui/modal/titleRow.ts";
 import { PALETTE } from "../ui/palette.ts";
 import { addModalShade, drawFramedRect, drawRing, fillRect } from "../ui/phaser/draw.ts";
 import {

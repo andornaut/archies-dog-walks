@@ -3,12 +3,12 @@ import type { Point, Rect } from "@andornaut/game-kit/rect";
 
 import type { GameData } from "../data/types.ts";
 import { type CloseControl, closeControl } from "../ui/closeControl.ts";
+import { MODAL, modalPanelWidth, modalRect } from "../ui/modal/layout.ts";
 import { PALETTE } from "../ui/palette.ts";
 import { TEXT_SCALE } from "../ui/textFit.ts";
 import { BADGE_STRIP, BADGE_TEXT_COLOURS, type BadgeView } from "./badgesView.ts";
 import type { DetailArt, DetailMeasure, DetailText } from "./detailCardView.ts";
 import { MENU_TEXT_FIELDS } from "./menuText.ts";
-import { MODAL, modalPanelWidth, modalRect } from "./modalLayout.ts";
 import type { PageFill } from "./shopPageView.ts";
 import { DETAIL_TEXT_WIDTH, detailPanel, detailTextTops, STATS_LAYOUT } from "./statsLayout.ts";
 

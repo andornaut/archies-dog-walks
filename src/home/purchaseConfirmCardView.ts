@@ -1,7 +1,8 @@
 import type { Rect } from "@andornaut/game-kit/rect";
 
-import { modalCardView, type QuestionPanelView } from "../hud/questionPanelView.ts";
 import { closeControl } from "../ui/closeControl.ts";
+import { type QuestionPanelView } from "../ui/modal/types.ts";
+import { modalCardView } from "../ui/modal/view.ts";
 import { PALETTE } from "../ui/palette.ts";
 import { TEXT_SCALE } from "../ui/textFit.ts";
 import type { DetailPicture } from "./detail.ts";

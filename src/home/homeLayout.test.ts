@@ -24,6 +24,7 @@ import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";
 import { closeControl } from "../ui/closeControl.ts";
 import { gridRects } from "../ui/grid.ts";
 import { MARK_OFFSET } from "../ui/mark.ts";
+import { cardTitleRow } from "../ui/modal/titleRow.ts";
 import { plainMarks } from "../ui/pixelFont.ts";
 import { AFFORD_OUTSET } from "../ui/selection.ts";
 import { TEXT_SCALE } from "../ui/textFit.ts";
@@ -42,7 +43,6 @@ import {
   bankAmountText,
   bankWell,
   CARD_TEXT_ROOM,
-  cardTitleRow,
   detailCardLayout,
   detailOwner,
   detailOwnerHeight,

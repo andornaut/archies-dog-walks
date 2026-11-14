@@ -9,6 +9,8 @@ import type {
   DetailMeasure,
   DetailText,
 } from "../home/detailCardView.ts";
+import { type PanelButton } from "../ui/modal/types.ts";
+import { panelButton } from "../ui/modal/view.ts";
 import { PALETTE } from "../ui/palette.ts";
 import { TEXT_SCALE } from "../ui/textFit.ts";
 import {
@@ -19,7 +21,6 @@ import {
   newWalkerRows,
   zoneDoneRows,
 } from "./celebrationLayout.ts";
-import { type PanelButton, panelButton } from "./questionPanelView.ts";
 import type { CelebrationText, LinePart } from "./zoneCelebration.ts";
 
 // The zone celebration's plate or bubble, its text, art and button, laid out as one view both

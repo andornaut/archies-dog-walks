@@ -21,11 +21,11 @@ import {
 } from "../rules/achievements.ts";
 import type { SaveDocument } from "../save/schema.ts";
 import { closeControl } from "../ui/closeControl.ts";
+import { MODAL } from "../ui/modal/layout.ts";
 import { GREYED } from "../ui/selection.ts";
 import { TEXT_SCALE } from "../ui/textFit.ts";
 import { dollarsToCents } from "../units.ts";
 import { MENU_TEXT_FIELDS } from "./menuText.ts";
-import { MODAL } from "./modalLayout.ts";
 
 export interface BadgeView {
   readonly art: string;

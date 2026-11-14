@@ -13,9 +13,9 @@ import {
   gridX,
   wholeArtPixels,
 } from "../../ui/domScale.ts";
+import { type PanelText, type QuestionPanelView } from "../../ui/modal/types.ts";
 import { TEXT_SCALE } from "../../ui/textFit.ts";
 import type { CentredRow, DottedRule, ZoneCelebrationView } from "../celebrationView.ts";
-import type { PanelText, QuestionPanelView } from "../questionPanelView.ts";
 import { artPart, type DomDetailCardInput, textPart } from "./detailCard.ts";
 import {
   type DomPart,

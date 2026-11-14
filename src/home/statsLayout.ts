@@ -3,9 +3,9 @@ import { type FontMetrics, inkRowsOfLines } from "@andornaut/game-kit/text/bitma
 
 import { LOGBOOK_PAGE, MIN_PRESS } from "../data/layout.ts";
 import { helpCapDy } from "../ui/labelHelpGap.ts";
+import { MODAL } from "../ui/modal/layout.ts";
 import { type ScrollbarRects, scrollbarRects } from "../ui/scrollbar.ts";
 import { BADGE_STRIP, type WallCellLines } from "./badgesView.ts";
-import { MODAL } from "./modalLayout.ts";
 import { SHOP_LAYOUT, shopListFrame, shopTabRects } from "./shopLayout.ts";
 
 export type StatsTab = "badges" | "dogs" | "runs";

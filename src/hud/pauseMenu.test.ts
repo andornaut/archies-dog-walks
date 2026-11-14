@@ -6,11 +6,11 @@ import { describe, expect, it } from "vitest";
 import { gameData } from "../data/index.ts";
 import { SCREEN_LAYOUT } from "../data/screen.ts";
 import { overlayRegion } from "../home/homeBar.ts";
-import { modalActionWidth } from "../home/modalLayout.ts";
 import { dollarText } from "../presentation/currency.ts";
 import { walkLength } from "../rules/route.ts";
 import { bodyTextWidth } from "../testing/bodyFont.ts";
 import { fontFileMetrics, inkWidth } from "../testing/fontInk.ts";
+import { modalActionWidth } from "../ui/modal/layout.ts";
 import { cents } from "../units.ts";
 import {
   HOME_QUESTION_ANSWERS,

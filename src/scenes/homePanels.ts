@@ -10,10 +10,11 @@ import {
   detailCardView,
   type DetailText,
 } from "../home/detailCardView.ts";
-import { cardTitleRow, HOME_LAYOUT } from "../home/homeLayout.ts";
+import { HOME_LAYOUT } from "../home/homeLayout.ts";
 import { barTitleLeft, barTitleRoom } from "../ui/barTitle.ts";
 import { type CloseControl, closeControl } from "../ui/closeControl.ts";
 import { LABEL_ALIGN_DATA } from "../ui/dom/labelBlock.ts";
+import { cardTitleRow } from "../ui/modal/titleRow.ts";
 import { hasPill } from "../ui/namePills.ts";
 import { PALETTE } from "../ui/palette.ts";
 import { centreBackedText } from "../ui/phaser/backedText.ts";

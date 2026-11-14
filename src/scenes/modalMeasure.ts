@@ -3,11 +3,11 @@ import type { Scene } from "phaser";
 import type { DetailMeasure } from "../home/detailCardView.ts";
 import { QUIP_TEXT_ROOM } from "../home/endLayout.ts";
 import type { EndMeasure } from "../home/endScreenView.ts";
-import { modalTitleLayout } from "../home/modalLayout.ts";
 import { GREETING_FIT } from "../hud/celebrationLayout.ts";
 import type { CelebrationMeasure } from "../hud/celebrationView.ts";
 import { NOTE_PLATE } from "../hud/pauseMenu.ts";
-import type { PanelMeasure } from "../hud/questionPanelView.ts";
+import { modalTitleLayout } from "../ui/modal/layout.ts";
+import { type PanelMeasure } from "../ui/modal/types.ts";
 import { PALETTE } from "../ui/palette.ts";
 import {
   fitPixelText,

@@ -1,39 +1,20 @@
 import { itemAt } from "@andornaut/game-kit/arrays";
 import { sentences } from "@andornaut/game-kit/lines";
 import { insetRect, type Rect } from "@andornaut/game-kit/rect";
-import type { FontMetrics } from "@andornaut/game-kit/text/bitmapFont";
 
-import { cardTitleRow, HOME_LAYOUT } from "../home/homeLayout.ts";
-import { modalActionWidth, modalTitleLayout } from "../home/modalLayout.ts";
 import { withKeyNumber } from "../input/keyNumbers.ts";
-import { barTitleLeft, barTitleRoom } from "../ui/barTitle.ts";
-import { type CloseControl, closeControl } from "../ui/closeControl.ts";
-import { PALETTE } from "../ui/palette.ts";
-import { BUTTON_COLOURS, BUTTON_LIP_PX } from "../ui/selection.ts";
-import { TEXT_SCALE } from "../ui/textFit.ts";
+import { closeControl } from "../ui/closeControl.ts";
+import { modalActionWidth } from "../ui/modal/layout.ts";
+import type {
+  PanelButton,
+  PanelFont,
+  PanelMeasure,
+  PanelNotePart,
+  PanelText,
+  QuestionPanelView,
+} from "../ui/modal/types.ts";
+import { panelButton, panelTitle } from "../ui/modal/view.ts";
 import { NOTE_PLATE, notePartTops, type pauseMenuLayout } from "./pauseMenu.ts";
-
-// The pause menu's panel and each question laid out as it is (the Home question, Quit?), as one
-// view both renderers draw: the canvas's (src/scenes/questionPanel.ts) and the HTML interface's
-// (src/hud/dom/questionPanel.ts). Every rect and text origin is in game pixels.
-
-export type PanelFont = "body" | "title";
-
-// What the view measures text with: the fonts' rows, a line's ink width at TEXT_SCALE, and the
-// note's text wrapped at NOTE_PLATE.scale within a width. The canvas measures on its bitmap
-// fonts, and a test on the .fnt files they load.
-export interface PanelMeasure {
-  readonly body: FontMetrics;
-  readonly inkWidth: (font: PanelFont, line: string) => number;
-  readonly title: FontMetrics;
-  readonly wrapNote: (width: number, text: string) => string[];
-}
-
-// A part of the panel's note, in its own colour, starting a line of its own.
-export interface PanelNotePart {
-  readonly colour: number;
-  readonly text: string;
-}
 
 export interface PanelQuestion {
   readonly avoid?: Rect | undefined;
@@ -46,118 +27,6 @@ export interface PanelQuestion {
   // Whether each sentence of a part starts a line of its own.
   readonly sentenceLines: boolean;
   readonly title: string;
-}
-
-// One line of text: its capitals' top, the middle across of its ink, or of its glyphs' advances
-// where the canvas centres a label on its width (a button's, the note's), or where a left-aligned
-// label starts, its look, and its index in its block of lines a font line apart (the title's, the
-// note's).
-export interface PanelText {
-  readonly capTop: number;
-  readonly centre: "advance" | "ink" | "left";
-  readonly centreX: number;
-  readonly colour: number;
-  readonly font: PanelFont;
-  readonly line: number;
-  readonly scale: number;
-  readonly text: string;
-}
-
-export interface PanelButton {
-  // false for a disabled button, which never shows pressed; available where undefined.
-  readonly available?: boolean;
-  // Where a press counts.
-  readonly hit: Rect;
-  // The key number in the face's left end, its ink a gap from the label's, where it shows.
-  readonly key?: PanelText;
-  // The label alone, for a screen reader; text shows it with its key number once numbers show.
-  readonly label: string;
-  // Whether a panel that takes no presses shows it pressed.
-  readonly pressed?: boolean;
-  readonly primary: boolean;
-  readonly rect: Rect;
-  // Whether a button that is not primary wears the secondary look, as a card's own controls do.
-  readonly secondary?: boolean;
-  readonly text: PanelText;
-}
-
-export interface QuestionPanelView {
-  readonly buttons: readonly PanelButton[];
-  readonly close: CloseControl;
-  // What a tap outside the panel must miss: the panel's rim and the buttons' hit areas.
-  readonly covered: readonly Rect[];
-  // A question's ui-panel in its tan rim, a modal card's ui-detail-card, or none where the
-  // canvas or the panel's parts draw it, as help's and the celebrations'.
-  readonly frame: "card" | "none" | "panel";
-  readonly note: readonly PanelText[];
-  // undefined with no note.
-  readonly notePlate: Rect | undefined;
-  readonly panel: Rect;
-  readonly title: readonly PanelText[];
-  // The title's first line's capitals.
-  readonly titleY: number;
-}
-
-// A modal card's or panel's title in plum on its title row beside the close control in its
-// top-right corner, or with none where it does not close, each line's ink centred in the room
-// the control leaves, its first line's capitals at capTop, as the canvas draws it
-// (addCardTitle).
-export function panelTitle(
-  measure: PanelMeasure,
-  panel: Rect,
-  capTop: number,
-  title: string,
-  closes = true,
-): PanelText[] {
-  const row = cardTitleRow(panel);
-  const close = closes ? closeControl(panel) : undefined;
-  const titled = modalTitleLayout(
-    { font: measure.title, widthOf: (line) => measure.inkWidth("title", line) },
-    barTitleRoom(row, close),
-    title,
-  );
-  return titled.lines.map((line, i): PanelText => {
-    const ink = measure.inkWidth("title", line);
-    return {
-      capTop: capTop + i * titled.linePitch,
-      centre: "ink",
-      centreX: barTitleLeft(row, close, ink) + ink / 2,
-      colour: PALETTE.plum,
-      font: "title",
-      line: i,
-      scale: TEXT_SCALE,
-      text: line,
-    };
-  });
-}
-
-// A button with text as its label, primary or normal, its hit its face: the label's line
-// centred on the face over the lip, as the canvas centres a one-line label on its height, a font
-// line, its capitals capTop rows into the line (addMenuButton).
-export function panelButton(
-  measure: PanelMeasure,
-  rect: Rect,
-  primary: boolean,
-  text: string,
-): PanelButton {
-  const { capTop, lineHeight } = measure.title;
-  const lineToCaps = (capTop - lineHeight / 2) * TEXT_SCALE;
-  return {
-    hit: rect,
-    label: text,
-    primary,
-    rect,
-    text: {
-      capTop: Math.round(rect.y + (rect.height - BUTTON_LIP_PX) / 2 + lineToCaps),
-      centre: "advance",
-      centreX: rect.x + rect.width / 2,
-      colour: PALETTE[BUTTON_COLOURS[primary ? "primary" : "normal"].label],
-      font: "title",
-      line: 0,
-      scale: TEXT_SCALE,
-      text,
-    },
-  };
 }
 
 // The panel centred in area: its title beside the close control in its top-right corner, as on
@@ -235,41 +104,5 @@ export function questionPanelView(
     panel,
     title,
     titleY: layout.titleY,
-  };
-}
-
-// A modal card's button: its face and label and whether it is the primary.
-export interface CardAction {
-  readonly label: string;
-  readonly primary: boolean;
-  readonly rect: Rect;
-  // The secondary look, as the purchase confirm's Cancel wears.
-  readonly secondary?: boolean;
-}
-
-// A modal card laid out by its caller (an update notice's, updateModalLayout): the ui-detail-card
-// over card, its title on its title row beside the close control, and its buttons, as the canvas
-// draws it (addModalCard, addMenuButton).
-export function modalCardView(
-  measure: PanelMeasure,
-  card: Rect,
-  title: string,
-  actions: readonly CardAction[],
-): QuestionPanelView {
-  const titleY = cardTitleRow(card).y + HOME_LAYOUT.card.titleRow.titleY;
-  const buttons = actions.map(({ label, primary, rect, secondary }) => ({
-    ...panelButton(measure, rect, primary, label),
-    ...(secondary === true ? { secondary } : {}),
-  }));
-  return {
-    buttons,
-    close: closeControl(card),
-    covered: [card, ...buttons.map(({ hit }) => hit)],
-    frame: "card",
-    note: [],
-    notePlate: undefined,
-    panel: card,
-    title: panelTitle(measure, card, titleY, title),
-    titleY,
   };
 }

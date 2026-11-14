@@ -2,15 +2,11 @@ import { itemAt } from "@andornaut/game-kit/arrays";
 import type { Rect } from "@andornaut/game-kit/rect";
 
 import type { GameData } from "../data/types.ts";
-import {
-  type PanelButton,
-  panelButton,
-  type PanelMeasure,
-  type PanelText,
-} from "../hud/questionPanelView.ts";
 import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";
 import type { CloseControl } from "../ui/closeControl.ts";
 import { LABEL_HELP_GAP } from "../ui/labelHelpGap.ts";
+import { type PanelButton, type PanelMeasure, type PanelText } from "../ui/modal/types.ts";
+import { panelButton } from "../ui/modal/view.ts";
 import { PALETTE } from "../ui/palette.ts";
 import { BUTTON_COLOURS } from "../ui/selection.ts";
 import { TEXT_SCALE } from "../ui/textFit.ts";
