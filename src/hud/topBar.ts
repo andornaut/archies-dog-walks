@@ -30,8 +30,8 @@ export function topBarButtonHits(debuffs: number): Readonly<Record<WalkBarButton
     first === undefined ? hit : { ...hit, height: Math.min(hit.height, first.y - hit.y) };
   return {
     help: pressed(TOP_BAR_BUTTONS.help.hit),
+    mute: pressed(TOP_BAR_BUTTONS.mute.hit),
     pause: pressed(TOP_BAR_BUTTONS.pause.hit),
-    settings: pressed(TOP_BAR_BUTTONS.settings.hit),
   };
 }
 
@@ -104,25 +104,23 @@ export function gameplayAllowed(pause: RunPause): boolean {
   return !walkPaused(pause) && !pause.hitStop;
 }
 
-export type TopBarAction =
-  "closeSettings" | "mute" | "openHelp" | "openMenu" | "openSettings" | "resume";
+export type TopBarAction = "mute" | "openHelp" | "openMenu" | "resume";
 
 // What a walk-bar button does, pressed by a tap or by its key (the pause button's P and Escape,
 // and M, which mutes or unmutes). Every button works whenever the bar is in view, under every
-// card and overlay that leaves it lit: Help and Settings open help and the settings, and pause
-// opens the menu, or resumes while the menu, the question or the settings are up. Over the
-// settings, Help opens help in their place and Settings closes them, as a home page's own top
-// bar button does. Help covers the bar, so a tap there is its, and so are P and Escape, which
-// close it; M still mutes under it. The settings take P, Escape and M themselves. Under an
+// card and overlay that leaves it lit: Help opens help, Mute toggles sound, and Pause
+// opens the menu, or resumes while the menu, the question or the settings are up.
+// Help covers this bar and owns its mute control and keys. The settings take P, Escape and M
+// themselves. Under an
 // explanation's detail card a tap on a button presses it as with nothing open, and its release
 // closes the card, as any tap does.
 export function topBarAction(
   pause: RunPause,
   via: "key" | "tap",
-  button: WalkBarButtonId | "mute",
+  button: WalkBarButtonId,
 ): TopBarAction | undefined {
   if (pause.menu === "help") {
-    return button === "mute" ? "mute" : undefined;
+    return undefined;
   }
   if (pause.menu === "settings" && via === "key") {
     return undefined;
@@ -132,8 +130,6 @@ export function topBarAction(
       return "mute";
     case "help":
       return "openHelp";
-    case "settings":
-      return pause.menu === "settings" ? "closeSettings" : "openSettings";
     case "pause":
       return pause.menu === "closed" ? "openMenu" : "resume";
     default:
@@ -168,8 +164,7 @@ export function walkBackAction(over: boolean, pause: RunPause): WalkBackAction {
   }
 }
 
-// The pause button shows play while the walk is paused by the menu or the question, since a
-// press then resumes.
-export function pauseButtonIcon(pause: RunPause): "icon-pause" | "icon-play" {
-  return pause.menu === "closed" ? "icon-pause" : "icon-play";
+// The entry shows Pause only for active pausable play, otherwise Menu.
+export function pauseButtonIcon(pausable: boolean, pause: RunPause): "icon-pause" | "icon-menu" {
+  return pausable && !walkPaused(pause) ? "icon-pause" : "icon-menu";
 }

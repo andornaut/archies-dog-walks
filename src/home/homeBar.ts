@@ -21,57 +21,34 @@ export function overlayRegion(region: OverlayRegion): Rect {
   return { height: screen.y + screen.height - top, width: screen.width, x: screen.x, y: top };
 }
 
-export type HomeBarAction = "close" | "exit" | "mute" | "openHelp" | "openLogbook" | "openSettings";
+export type HomeBarAction = "close" | "mute" | "openMenu";
 
-// Every top bar button's tap area, Exit's among them where exit is true (homeBarButtons).
-function homeBarHits(exit: boolean): Rect[] {
-  return homeBarButtons(exit).map(([, { hit }]) => hit);
+// The shared home controls keep their full targets under every overlay.
+function homeBarHits(): Rect[] {
+  return homeBarButtons().map(([, { hit }]) => hit);
 }
 
-// Where a tap outside an overlay's panel and covered counts in region: anywhere on the screen,
-// the top bar's empty area and the dog cards included, but on the top bar's buttons, which keep
-// their own taps: the home top bar's as shown (exit: whether Exit is among them), whose tap areas
-// reach a little below the bar, or the walk bar's with debuffs debuff bars showing, a showing
-// debuff bar keeping its rows (topBarButtonHits). The home top bar has no debuff bars.
+// Outside dismissal excludes the visible controls and any debuff rows owned by the walk.
 export function regionOutside(
-  exit: boolean,
   region: OverlayRegion,
   debuffs: number,
   covered: readonly Rect[],
 ): OutsideArea {
-  const bar = region === "home" ? homeBarHits(exit) : Object.values(topBarButtonHits(debuffs));
+  const bar = region === "home" ? homeBarHits() : Object.values(topBarButtonHits(debuffs));
   return screenArea([...covered, ...bar]);
 }
 
-// The top bar button a press at (x, y) lands on, if any, with Exit among the buttons where exit
-// is true.
-export function homeBarButtonAt(exit: boolean, x: number, y: number): HomeBarButton | undefined {
-  return homeBarButtons(exit).find(([, { hit }]) => containsPoint(hit, x, y))?.[0];
+// Input reads the same control positions as the shared top section.
+export function homeBarButtonAt(x: number, y: number): HomeBarButton | undefined {
+  return homeBarButtons().find(([, { hit }]) => containsPoint(hit, x, y))?.[0];
 }
 
-// What a top bar button does over an overlay on a home page, given which of the Logbook and the
-// settings is open: Sound mutes or unmutes, Exit leaves the game, and help, the Logbook and the
-// settings open as on the bare start screen or the Pet shop, in place of any other overlay
-// (openHomePage). While the button's own page is open, the button closes it, as the walk bar's
-// pause button resumes from its menu.
+// Mute remains independent while the navigation entry toggles its menu.
 export function homeBarAction(
-  open: { readonly logbook: boolean; readonly settings: boolean },
+  open: { readonly menu: boolean },
   button: HomeBarButton,
 ): HomeBarAction {
-  switch (button) {
-    case "exit":
-      return "exit";
-    case "help":
-      return "openHelp";
-    case "logbook":
-      return open.logbook ? "close" : "openLogbook";
-    case "mute":
-      return "mute";
-    case "settings":
-      return open.settings ? "close" : "openSettings";
-    default:
-      return button satisfies never;
-  }
+  return button === "mute" ? "mute" : open.menu ? "close" : "openMenu";
 }
 
 // What back does on the bare start screen, which hears it only with no page or question over

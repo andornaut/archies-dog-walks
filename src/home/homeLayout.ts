@@ -200,9 +200,8 @@ export function sectionFill(section: Rect): Rect {
   };
 }
 
-// The top bar's buttons, left to right. Exit, last, is left out in an installed app whose window a
-// script cannot close (exitShown in src/pwa).
-export const HOME_BAR_BUTTONS = ["logbook", "help", "mute", "settings", "exit"] as const;
+// Non-play top sections expose sound and navigation in the shared order.
+export const HOME_BAR_BUTTONS = ["mute", "menu"] as const;
 export type HomeBarButton = (typeof HOME_BAR_BUTTONS)[number];
 
 // A top bar button: its ui-icon-button face and its hit area from the bar's top.
@@ -447,8 +446,7 @@ export const HOME_LAYOUT = {
     well: {
       height: TOP_BAR_WELL.height,
       lip: TOP_BAR_WELL.lip,
-      maxWidth:
-        topBarButton(HOME_BAR_BUTTONS.length).face.x - HOME.topBar.wellClear - TOP_BAR_WELL.x,
+      maxWidth: topSectionLayout(HOME_BAR_BUTTONS, { currency: true }).currency!.width,
       x: TOP_BAR_WELL.x,
       y: TOP_BAR_WELL.y,
     },
@@ -498,18 +496,12 @@ export const HOME_LAYOUT = {
   yardSign: Rect;
 };
 
-// The face of the button at the top bar's right end: Exit's, or Settings' where Exit is hidden.
+// The shared navigation entry is the rightmost face.
 export const HOME_BAR_LAST_FACE: Point = topBarButton(1).face;
 
-// The top bar's buttons at its right end, left to right (HOME_BAR_BUTTONS), Exit among them
-// where exit is true: each its ui-icon-button face and its hit area (topBarButton), side by side
-// to the screen's edge. With Exit the last is Exit's; without it the four move a column right,
-// Settings last.
-export function homeBarButtons(
-  exit: boolean,
-): readonly (readonly [HomeBarButton, HomeBarButtonPlace])[] {
-  const shown = HOME_BAR_BUTTONS.filter((id) => exit || id !== "exit");
-  return topSectionLayout(shown).controls;
+// Every home overlay uses the same visible controls and targets.
+export function homeBarButtons(): readonly (readonly [HomeBarButton, HomeBarButtonPlace])[] {
+  return topSectionLayout(HOME_BAR_BUTTONS).controls;
 }
 
 // How wide the bank's ink may be: the widest well less its lip and padding. A bank wider shows

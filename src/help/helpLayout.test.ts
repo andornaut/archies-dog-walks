@@ -34,6 +34,7 @@ describe("help's top bar", () => {
 
   it.each([
     ["the bar's rect", topBar, homeBar],
+    ["the heading's horizontal centre", heading.x, topBar.width / 2],
     ["the bar's trim", topBarRects(topBar), topBarRects(homeBar)],
     ["the close face", closeFace(close), homeFace],
     [

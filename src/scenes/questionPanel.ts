@@ -66,8 +66,12 @@ export interface QuestionPanel {
   readonly layout: typeof pauseMenuLayout;
   // No parts draws no note plate.
   readonly note: readonly PanelNotePart[];
+  readonly panelWidth?: number;
+  readonly primary?: "first" | "last";
+  readonly numberPresses?: readonly (() => void)[];
   // Whether each sentence of a part starts a line of its own.
   readonly sentenceLines: boolean;
+  readonly showKeyNumbers?: boolean;
   readonly title: string;
 }
 
@@ -78,7 +82,10 @@ export function questionView(scene: Scene, area: Rect, question: QuestionPanel):
     labels: question.entries.map(({ label }) => label),
     layout: question.layout,
     note: question.note,
+    ...(question.panelWidth === undefined ? {} : { panelWidth: question.panelWidth }),
+    ...(question.primary === undefined ? {} : { primary: question.primary }),
     sentenceLines: question.sentenceLines,
+    ...(question.showKeyNumbers === undefined ? {} : { showKeyNumbers: question.showKeyNumbers }),
     title: question.title,
   });
 }
@@ -130,9 +137,10 @@ export function addQuestionPanel(scene: Scene, area: Rect, question: QuestionPan
           ),
   });
   scene.input.keyboard?.on("keydown", (event: KeyboardEvent) => {
-    const number = cardNumberForKey(entries.length, event.code);
+    const presses = question.numberPresses ?? entries.map(({ press }) => press);
+    const number = cardNumberForKey(presses.length, event.code);
     if (number !== undefined && menuKeyActs(event.repeat, event.code)) {
-      entries[number - 1]?.press();
+      presses[number - 1]?.();
     }
   });
   return [...view.covered];
@@ -192,7 +200,7 @@ export function followScene<P extends Pick<DomQuestionPanel, "destroy" | "setSho
 function showHtmlPanel(
   scene: Scene,
   place: NonNullable<ReturnType<typeof htmlPanelPlace>>,
-  controls: Pick<DomQuestionPanelInput, "close" | "numberKeys" | "presses">,
+  controls: Pick<DomQuestionPanelInput, "close" | "numberKeys" | "numberPresses" | "presses">,
   view: QuestionPanelView,
   dimsUnder = false,
 ): DomQuestionPanel {
@@ -215,7 +223,12 @@ export function addHtmlQuestionPanel(
   }
   const view = questionView(scene, area, question);
   const presses = question.entries.map(({ press }) => press);
-  const controls = { close: question.close, numberKeys: true, presses };
+  const controls = {
+    close: question.close,
+    numberKeys: true,
+    presses,
+    ...(question.numberPresses === undefined ? {} : { numberPresses: question.numberPresses }),
+  };
   showHtmlPanel(scene, place, controls, view, dimsUnder);
   return [...view.covered];
 }

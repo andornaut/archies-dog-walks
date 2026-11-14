@@ -27,16 +27,11 @@ describe("the shared top section", () => {
     expect(all.controls.map(([id]) => id)).toEqual(TOP_SECTION_ORDER);
     const full = topSectionLayout(HOME_BAR_BUTTONS);
     const hidden = topSectionLayout(HOME_BAR_BUTTONS.filter((id) => id !== "mute"));
-    expect(hidden.controls.map(([id]) => id)).toEqual(["logbook", "help", "settings", "exit"]);
-    expect(hidden.controls.find(([id]) => id === "help")?.[1].face.x).toBe(
-      (full.controls.find(([id]) => id === "help")?.[1].face.x ?? 0) + 48,
-    );
-    expect(hidden.controls.find(([id]) => id === "settings")?.[1]).toEqual(
-      full.controls.find(([id]) => id === "settings")?.[1],
-    );
+    expect(hidden.controls.map(([id]) => id)).toEqual(["menu"]);
+    expect(hidden.controls[0]?.[1]).toEqual(full.controls.find(([id]) => id === "menu")?.[1]);
   });
   it("feeds home and walk input adapters from the same section geometry, including effect holds", () => {
-    expect(homeBarButtons(true)).toEqual(topSectionLayout(HOME_BAR_BUTTONS).controls);
+    expect(homeBarButtons()).toEqual(topSectionLayout(HOME_BAR_BUTTONS).controls);
     const layout = walkBarLayout(SCREEN_LAYOUT.topBar);
     const shared = topSectionLayout(WALK_BAR_BUTTONS, {
       currency: true,

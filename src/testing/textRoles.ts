@@ -57,7 +57,6 @@ import {
   HOME_QUESTION_ANSWERS,
   NOTE_PLATE,
   PANEL_TEXT_ROOM,
-  PAUSE_MENU_ITEMS,
   PAUSE_NOTE_LINES,
   PAUSE_NOTE_WIDTH,
   pauseMenuLayout,
@@ -91,6 +90,7 @@ import { barTitleRoom } from "../ui/barTitle.ts";
 import { type CloseControl, closeControl } from "../ui/closeControl.ts";
 import { modalTitleLayout } from "../ui/modal/layout.ts";
 import { cardTitleRow } from "../ui/modal/titleRow.ts";
+import { PAUSE_MENU_ITEMS } from "../ui/navigationMenu.ts";
 import { plainMarks } from "../ui/pixelFont.ts";
 import { TEXT_SCALE, TEXT_STYLE, textOnLines } from "../ui/textFit.ts";
 import { cents } from "../units.ts";

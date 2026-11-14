@@ -274,7 +274,7 @@ describe("Pet shop", () => {
       height: gate.y + gate.height - Math.max(shop.y, topBar.hitHeight),
       y: Math.max(shop.y, topBar.hitHeight),
     });
-    for (const [, button] of homeBarButtons(true)) {
+    for (const [, button] of homeBarButtons()) {
       expect(rectsOverlap(hit, button.hit)).toBe(false);
     }
   });
@@ -341,14 +341,11 @@ describe("section fills", () => {
   });
 });
 
-// The top bar's buttons with Exit shown and hidden: each walk bar column they share holds the
-// same button's place, Exit's in the last, and without it the four move a column right.
-describe.each([
-  [true, ["logbook", "help", "mute", "settings", "exit"]],
-  [false, ["logbook", "help", "mute", "settings"]],
-] as const)("top bar buttons with Exit shown %s", (exit, order) => {
+// Every home overlay retains the same two shared controls.
+describe("home top bar buttons", () => {
+  const order = ["mute", "menu"];
   const { faceSize, height, mid } = HOME_LAYOUT.topBar;
-  const buttons = homeBarButtons(exit);
+  const buttons = homeBarButtons();
   const hits = buttons.map(([, button]) => button.hit);
 
   it("runs left to right in order", () => {
@@ -450,7 +447,7 @@ describe("the top bar's bank", () => {
   ])("shows %i dollars as %s, its well clear of the buttons", (dollars, text) => {
     expect(shown(dollars)).toBe(text);
     const well = bankWell(width(text) * bank.scale);
-    const first = homeBarButtons(true)[0]?.[1].face.x ?? 0;
+    const first = homeBarButtons()[0]?.[1].face.x ?? 0;
     expect(first - well.x - well.width).toBeGreaterThanOrEqual(HOME_SCREEN.topBar.wellClear);
   });
 

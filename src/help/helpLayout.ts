@@ -17,9 +17,10 @@ const HELP = HELP_SCREEN;
 
 // The home pages' top bar: its height, and the row its buttons' faces and the heading's capitals
 // centre on, the upper half of each above it.
-const TOP_SECTION = topSectionLayout(["close"]);
+export const HELP_BAR_BUTTONS = ["mute", "menu"] as const;
+const TOP_SECTION = topSectionLayout(HELP_BAR_BUTTONS);
 const TOP_BAR = TOP_SECTION.bar;
-const CLOSE = TOP_SECTION.controls[0]?.[1];
+const CLOSE = TOP_SECTION.controls.find(([id]) => id === "menu")?.[1];
 if (CLOSE === undefined) {
   throw new Error("Help requires its close control");
 }

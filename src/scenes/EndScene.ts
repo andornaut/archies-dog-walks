@@ -28,7 +28,7 @@ import {
   tickHold,
   TILE_SLOP_PX,
 } from "../input/hold.ts";
-import { isConfirmKey } from "../input/keyBindings.ts";
+import { isConfirmKey, isMuteKey } from "../input/keyBindings.ts";
 import { screenArea } from "../input/outsideTap.ts";
 import { PackFigures } from "../pack/phaser/packFigures.ts";
 import { stopWakeLock } from "../pwa/index.ts";
@@ -39,6 +39,7 @@ import { fillRect } from "../ui/phaser/draw.ts";
 import { addPixelText, inkSpan } from "../ui/phaser/pixelText.ts";
 import { onceBeforeRender } from "../ui/phaser/rampDim.ts";
 import { TEXT_SCALE } from "../ui/textFit.ts";
+import { topSectionButtonAt } from "../ui/topSection.ts";
 import {
   addBadgeCelebration,
   addBurst,
@@ -49,13 +50,17 @@ import {
   NEW_BEST_BURST,
 } from "./badges.ts";
 import { addDetailContent } from "./homePanels.ts";
+import type { MenuSceneData } from "./MenuScene.ts";
 import { canvasEndMeasure } from "./modalMeasure.ts";
-import { listenOutsideTap, onBackPressed } from "./overlay.ts";
+import { BAR_MUTED_EVENT, listenOutsideTap, onBackPressed, openOverlay } from "./overlay.ts";
 import { addOwnerFigure, ownerSpriteKey } from "./ownerFigure.ts";
 import {
   currentSettings,
+  isMuted,
   lastRunEnd,
+  onSettingsChanged,
   profileSave,
+  toggleMuted,
   walkerInUse,
   walkerSpriteKey,
 } from "./profileStore.ts";
@@ -64,9 +69,11 @@ import { SCENE_KEYS } from "./sceneKeys.ts";
 import { soundboardOf } from "./soundboard.ts";
 import { firstTag, playTag } from "./sprites.ts";
 import { listenTargetPress, sameByValue, type TargetPressListener } from "./targetPress.ts";
+import { addTopSection, mirrorTopSection } from "./topSection.ts";
 import { addMenuButton, addPanel, addScreenBackdrop, addTapBurst } from "./uiKit.ts";
 
 const END_SCREEN_KEY = "screen-end";
+const END_BAR_BUTTONS = ["mute", "menu"] as const;
 const LOGO = { ...END_LAYOUT.logo, key: "logo" };
 const RIBBON = { ...END_LAYOUT.ribbon, dropMs: 360, key: "ui-new-best", riseFrom: 12 };
 const RIBBON_BURST = END_LAYOUT.ribbonBurst;
@@ -127,6 +134,25 @@ export class EndScene extends Scene {
     this.reduced = reduced;
     addScreenBackdrop(this, END_SCREEN_KEY);
     this.addReturnHome(reduced, walk);
+    const topSection = addTopSection(this, { buttons: END_BAR_BUTTONS, muted: isMuted(this) });
+    onSettingsChanged(this, ({ muted }) => topSection.setMuted(muted));
+    mirrorTopSection(this, () => topSection.root);
+    listenTargetPress(this, {
+      onPressed: (target) => {
+        for (const id of END_BAR_BUTTONS) {
+          topSection.buttons.get(id)?.setPressed(target === id);
+        }
+      },
+      onTap: (target) => {
+        if (target === "mute") {
+          this.game.events.emit(BAR_MUTED_EVENT, toggleMuted(this));
+        } else {
+          const data: MenuSceneData = { closePage: goHome, context: "end", resume: SCENE_KEYS.end };
+          openOverlay(this, SCENE_KEYS.menu, data);
+        }
+      },
+      targetAt: (x, y) => topSectionButtonAt(END_BAR_BUTTONS, x, y),
+    });
     // Over the house's roof, clear of the walker's head.
     if (this.textures.exists(LOGO.key)) {
       this.add.image(LOGO.x, LOGO.y, LOGO.key).setOrigin(0);
@@ -291,7 +317,9 @@ export class EndScene extends Scene {
       },
       same: sameByValue,
       targetAt: (x, y) =>
-        endTargetAt({ badgeHits, button: BUTTON, cardOpen: this.card !== undefined }, x, y),
+        topSectionButtonAt(END_BAR_BUTTONS, x, y) === undefined
+          ? endTargetAt({ badgeHits, button: BUTTON, cardOpen: this.card !== undefined }, x, y)
+          : undefined,
     });
     // A tap on the page beside the game closes an open card too.
     listenOutsideTap(
@@ -304,6 +332,10 @@ export class EndScene extends Scene {
     // auto-repeat does nothing.
     const back = () => (this.card === undefined ? goHome() : this.closeCard());
     this.input.keyboard?.on("keydown", (event: KeyboardEvent) => {
+      if (!event.repeat && isMuteKey(event.code)) {
+        this.game.events.emit(BAR_MUTED_EVENT, toggleMuted(this));
+        return;
+      }
       if (!event.repeat && (isConfirmKey(event.code) || event.code === "Escape")) {
         back();
       }

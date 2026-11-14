@@ -44,6 +44,7 @@ export const MENU_TEXT = {
     next: "Next",
     previous: "Previous",
   },
+  menu: { title: "Menu" },
   pause: {
     headHome: "End walk",
     help: "Help",

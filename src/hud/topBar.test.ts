@@ -31,19 +31,18 @@ const HOLD: RunPause = { ...NOTHING_PAUSED, hold: true };
 describe("the walk bar in each pause state", () => {
   interface Expected {
     // The pause button's icon, and whether lane moves act.
-    icon: "icon-pause" | "icon-play";
+    icon: "icon-pause" | "icon-menu";
     gameplay: boolean;
     // What the walk's presses do: steer, or nothing.
     presses: PressMode;
     // Whether the walk is paused, and whether by the player, which ducks the music.
     paused: boolean;
     player: boolean;
-    // What a tap on pause, P, the M key, and a tap on Help and Settings do.
+    // What a tap on Pause, its key, Mute and Help do.
     pause: TopBarAction | undefined;
     pauseKey: TopBarAction | undefined;
     mute: TopBarAction | undefined;
     help: TopBarAction | undefined;
-    settings: TopBarAction | undefined;
   }
 
   const walking = {
@@ -56,13 +55,12 @@ describe("the walk bar in each pause state", () => {
     paused: false,
     player: false,
     presses: "steer",
-    settings: "openSettings",
   } as const;
   // Under a card or an overlay only the bar's buttons act: the walk takes no press.
-  const card = { ...walking, paused: true, presses: "none" } as const;
+  const card = { ...walking, icon: "icon-menu", paused: true, presses: "none" } as const;
   const menu = {
     ...walking,
-    icon: "icon-play",
+    icon: "icon-menu",
     pause: "resume",
     pauseKey: "resume",
     paused: true,
@@ -72,12 +70,12 @@ describe("the walk bar in each pause state", () => {
   const cover = {
     ...menu,
     help: undefined,
+    mute: undefined,
     pause: undefined,
     pauseKey: undefined,
-    settings: undefined,
   } as const;
   // Under an explanation's detail card the bar's buttons act as with nothing open.
-  const detail = { ...walking, paused: true } as const;
+  const detail = { ...walking, icon: "icon-menu", paused: true } as const;
 
   it("pauses, covers and routes the bar's presses as each state calls for", () => {
     const cases: [string, RunPause, Expected][] = [
@@ -85,8 +83,16 @@ describe("the walk bar in each pause state", () => {
       ["under a card", CARD, card],
       ["through the hit stop", HIT_STOP, walking],
       ["under an explanation's detail card", HOLD, detail],
-      ["with the tab hidden", { ...NOTHING_PAUSED, page: "hidden" }, { ...walking, paused: true }],
-      ["out of focus", { ...NOTHING_PAUSED, page: "blurred" }, { ...walking, paused: true }],
+      [
+        "with the tab hidden",
+        { ...NOTHING_PAUSED, page: "hidden" },
+        { ...walking, icon: "icon-menu", paused: true },
+      ],
+      [
+        "out of focus",
+        { ...NOTHING_PAUSED, page: "blurred" },
+        { ...walking, icon: "icon-menu", paused: true },
+      ],
       [
         "in the menu with the tab hidden",
         { ...NOTHING_PAUSED, menu: "open", page: "hidden" },
@@ -100,7 +106,7 @@ describe("the walk bar in each pause state", () => {
       [
         "under settings, which leave the bar lit and take P and M themselves",
         { ...NOTHING_PAUSED, menu: "settings" },
-        { ...menu, mute: undefined, pauseKey: undefined, settings: "closeSettings" },
+        { ...menu, mute: undefined, pauseKey: undefined },
       ],
     ];
     for (const [name, pause, expected] of cases) {
@@ -108,14 +114,13 @@ describe("the walk bar in each pause state", () => {
         {
           gameplay: gameplayAllowed(pause),
           help: topBarAction(pause, "tap", "help"),
-          icon: pauseButtonIcon(pause),
+          icon: pauseButtonIcon(true, pause),
           mute: topBarAction(pause, "key", "mute"),
           pause: topBarAction(pause, "tap", "pause"),
           pauseKey: topBarAction(pause, "key", "pause"),
           paused: walkPaused(pause),
           player: playerPaused(pause),
           presses: walkPresses(pause),
-          settings: topBarAction(pause, "tap", "settings"),
         },
         name,
       ).toEqual(expected);
@@ -148,6 +153,10 @@ describe("walkBackAction", () => {
       expect(walkBackAction(over, pause)).toBe(action);
     },
   );
+});
+
+it("shows Menu when no active walk can accept a pause", () => {
+  expect(pauseButtonIcon(false, NOTHING_PAUSED)).toBe("icon-menu");
 });
 
 describe("topBarKey", () => {

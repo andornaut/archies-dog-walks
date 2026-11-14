@@ -66,6 +66,7 @@ export interface DomQuestionPanelInput {
   readonly fonts: Readonly<Record<PanelText["font"], BitmapFont>>;
   // Whether keys 1 to n press the buttons, as on the pause menu and the questions.
   readonly numberKeys: boolean;
+  readonly numberPresses?: readonly (() => void)[];
   // Drawn over the frame, under the title.
   readonly parts?: readonly DomPart[];
   readonly presses: readonly (() => void)[];
@@ -294,7 +295,11 @@ export function showQuestionPanel(layer: UiLayer, input: DomQuestionPanelInput):
     } else {
       (element as HTMLButtonElement).type = "button";
       element.setAttribute("aria-label", button.label);
-      element.setAttribute("aria-keyshortcuts", String(i + 1));
+      const number =
+        input.numberPresses === undefined ? i : input.numberPresses.indexOf(input.presses[i]!);
+      if (input.numberKeys && number >= 0) {
+        element.setAttribute("aria-keyshortcuts", String(number + 1));
+      }
     }
     // Shown pressed as the scene says too, as a key's dip before it acts.
     if (button.pressed === true && button.available !== false) {
@@ -388,7 +393,8 @@ export function showQuestionPanel(layer: UiLayer, input: DomQuestionPanelInput):
     focusables[next]?.focus();
   });
   const onKey = (event: KeyboardEvent) => {
-    const number = cardNumberForKey(input.presses.length, event.code);
+    const numberPresses = input.numberPresses ?? input.presses;
+    const number = cardNumberForKey(numberPresses.length, event.code);
     if (
       input.numberKeys &&
       !dialog.hidden &&
@@ -396,7 +402,7 @@ export function showQuestionPanel(layer: UiLayer, input: DomQuestionPanelInput):
       number !== undefined &&
       menuKeyActs(event.repeat, event.code)
     ) {
-      input.presses[number - 1]?.();
+      numberPresses[number - 1]?.();
     }
   };
   doc.defaultView?.addEventListener("keydown", onKey);

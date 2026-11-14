@@ -7,5 +7,5 @@ import { MODAL } from "../modalGeometry.ts";
 export function cardTitleRow(card: Rect): Rect {
   const { height } = HOME_SCREEN.card.titleRow;
   const inset = MODAL.pad;
-  return { height, width: card.width - 2 * inset, x: card.x + inset, y: card.y + inset };
+  return { height, width: card.width - 2 * inset, x: card.x + inset, y: card.y + MODAL.titleTop };
 }

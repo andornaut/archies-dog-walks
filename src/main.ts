@@ -39,6 +39,7 @@ import { HelpScene } from "./scenes/HelpScene.ts";
 import { watchHomeScreen } from "./scenes/homeScreen.ts";
 import { HudScene } from "./scenes/HudScene.ts";
 import { backgroundLoad } from "./scenes/loadingProgress.ts";
+import { MenuScene } from "./scenes/MenuScene.ts";
 import { PauseScene } from "./scenes/PauseScene.ts";
 import { stopResuming } from "./scenes/profileStore.ts";
 import { QuitScene } from "./scenes/QuitScene.ts";
@@ -152,6 +153,7 @@ function bootGame(): Game {
       HelpPictureScene,
       new HudScene(SCENE_KEYS.helpHud),
       new CardScene(SCENE_KEYS.helpCard),
+      MenuScene,
       TapBurstScene,
       DevOverlayScene,
     ],

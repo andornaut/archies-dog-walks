@@ -4,20 +4,21 @@ import { gameData } from "../data/index.ts";
 import { SCREEN_LAYOUT } from "../data/screen.ts";
 import { overlayRegion, regionOutside } from "../home/homeBar.ts";
 import type { HomeNoteLine } from "../hud/homeQuestion.ts";
-import {
-  HOME_QUESTION_ANSWERS,
-  homeQuestionLayout,
-  PAUSE_MENU_ITEMS,
-  type PauseMenuItem,
-  pauseMenuLayout,
-} from "../hud/pauseMenu.ts";
+import { HOME_QUESTION_ANSWERS, homeQuestionLayout, pauseMenuLayout } from "../hud/pauseMenu.ts";
 import { WALKER_SILHOUETTES } from "../layout/packFormation.ts";
 import { walkerFootY } from "../layout/screenLayout.ts";
-import { exitShown } from "../pwa/index.ts";
+import { MODAL } from "../ui/modal/layout.ts";
+import {
+  navigationMenuWidth,
+  PAUSE_MENU_ITEMS,
+  PAUSE_MENU_KEY_ORDER,
+  type PauseMenuItem,
+} from "../ui/navigationMenu.ts";
 import { PALETTE } from "../ui/palette.ts";
 import { addRampDim } from "../ui/phaser/rampDim.ts";
 import { HELP_CLOSED_EVENT } from "./HelpScene.ts";
 import { openHelp } from "./helpScreen.ts";
+import { canvasPanelMeasure } from "./modalMeasure.ts";
 import { listenOutsideTap, onceSceneEvent, openOverlay } from "./overlay.ts";
 import {
   addHtmlQuestionPanel,
@@ -125,7 +126,15 @@ export class PauseScene extends Scene {
             entries,
             layout: pauseMenuLayout,
             note: [{ colour: PALETTE.plum, text: data.note }],
+            numberPresses: PAUSE_MENU_KEY_ORDER.map((item) => presses[item]),
+            panelWidth: navigationMenuWidth(
+              gameData,
+              canvasPanelMeasure(this),
+              walkView.width - 2 * MODAL.margin,
+            ),
+            primary: "last",
             sentenceLines: true,
+            showKeyNumbers: false,
             title: menu.title,
           };
     // In HTML where the page's switch is on and its fonts are ready, else on the canvas.
@@ -135,7 +144,7 @@ export class PauseScene extends Scene {
     // The close control and a tap anywhere around the panel resume, as Resume and Keep walking
     // do, the walk bar's empty area and the dog cards included, though they are not dimmed. The
     // walk bar's buttons keep their own taps.
-    const outside = regionOutside(exitShown(), "walk", data.debuffs, covered);
+    const outside = regionOutside("walk", data.debuffs, covered);
     listenOutsideTap(this, () => outside, onResume);
     const overlay = data.mode === "menu" ? data.overlay : undefined;
     if (overlay !== undefined) {

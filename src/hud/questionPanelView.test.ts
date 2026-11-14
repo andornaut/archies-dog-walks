@@ -8,10 +8,11 @@ import { dollarText } from "../presentation/currency.ts";
 import { bodyTextWidth } from "../testing/bodyFont.ts";
 import { fontFileMetrics, inkWidth } from "../testing/fontInk.ts";
 import { type PanelMeasure, type PanelText } from "../ui/modal/types.ts";
+import { PAUSE_MENU_ITEMS } from "../ui/navigationMenu.ts";
 import { plainMarks } from "../ui/pixelFont.ts";
 import { TEXT_SCALE } from "../ui/textFit.ts";
 import { cents } from "../units.ts";
-import { homeQuestionLayout, NOTE_PLATE, PAUSE_MENU_ITEMS, pauseMenuLayout } from "./pauseMenu.ts";
+import { homeQuestionLayout, NOTE_PLATE, pauseMenuLayout } from "./pauseMenu.ts";
 import { questionPanelView } from "./questionPanelView.ts";
 
 // The view measured on the .fnt files the canvas loads, the title font in capitals as it draws.

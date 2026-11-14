@@ -116,7 +116,14 @@ import { MESSAGE_EVENT, MessageStrip } from "./messageStripView.ts";
 import { listenOnePress } from "./onePress.ts";
 import { BAR_MUTED_EVENT, onSceneEvent } from "./overlay.ts";
 import { OwnerTabs } from "./ownerTabs.ts";
-import { markHintShown, profileSave, shownHints, toggleMuted } from "./profileStore.ts";
+import {
+  isMuted,
+  markHintShown,
+  onSettingsChanged,
+  profileSave,
+  shownHints,
+  toggleMuted,
+} from "./profileStore.ts";
 import { addHtmlDetailCard } from "./questionPanel.ts";
 import { cancelRoadShake } from "./run/hitFx.ts";
 import {
@@ -305,7 +312,9 @@ export class HudScene extends Scene {
       buttons: WALK_BAR_BUTTONS,
       currency: true,
       effects: BAR.effectWells.length,
+      muted: isMuted(this),
     });
+    onSettingsChanged(this, ({ muted }) => this.topSection?.setMuted(muted));
     for (const id of WALK_BAR_BUTTONS) {
       const button = this.topSection.buttons.get(id);
       if (button !== undefined) {
@@ -423,15 +432,12 @@ export class HudScene extends Scene {
     return walk;
   }
 
-  private press(via: "key" | "tap", button: WalkBarButtonId | "mute"): void {
+  private press(via: "key" | "tap", button: WalkBarButtonId): void {
     const run = this.run;
     if (run === undefined) {
       return;
     }
     switch (topBarAction(run.runPause(), via, button)) {
-      case "closeSettings":
-        run.closeSettings();
-        break;
       case "mute":
         this.game.events.emit(BAR_MUTED_EVENT, toggleMuted(this));
         break;
@@ -440,9 +446,6 @@ export class HudScene extends Scene {
         break;
       case "openHelp":
         run.openFromBar("help");
-        break;
-      case "openSettings":
-        run.openFromBar("settings");
         break;
       case "resume":
         run.closePause();
@@ -460,8 +463,8 @@ export class HudScene extends Scene {
   }
 
   // The icon art when it is loaded, else cream pause bars or play triangle drawn on the face.
-  private showPauseIcon(pause: RunPause): void {
-    this.topSection?.setPaused(pause.menu !== "closed");
+  private showPauseIcon(pausable: boolean, pause: RunPause): void {
+    this.topSection?.setPaused(pauseButtonIcon(pausable, pause) === "icon-menu");
   }
 
   private createCard({ x, y }: Rect): CardView {
@@ -541,7 +544,7 @@ export class HudScene extends Scene {
       modifiers: view.run.modifiers,
       money: this.shownMoney(view.run),
       pack: view.run.pack,
-      pauseIcon: pauseButtonIcon(pause),
+      pauseIcon: pauseButtonIcon(view.run.phase.kind === "walking", pause),
       route: view.run.route,
       spareTreat: spareTreatWell(effects, view.run),
       zone: view.run.zoneIndex,
@@ -554,7 +557,7 @@ export class HudScene extends Scene {
         this.showSpareTreat(spareTreatWell(effects, view.run));
       }
       this.drawn = state;
-      this.showPauseIcon(pause);
+      this.showPauseIcon(view.run.phase.kind === "walking", pause);
       this.redraw(view);
     }
   }

@@ -9,6 +9,7 @@ export const SCENE_KEYS = {
   helpHud: "helpHud",
   helpPicture: "helpPicture",
   hud: "hud",
+  menu: "menu",
   pause: "pause",
   quit: "quit",
   run: "run",

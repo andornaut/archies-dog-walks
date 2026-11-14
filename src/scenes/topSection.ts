@@ -8,11 +8,9 @@ import { type TopSectionButton, topSectionCurrency, topSectionLayout } from "../
 import { addHtmlMirror, type HtmlMirror } from "./htmlMirror.ts";
 import {
   addIconButton,
-  exitIcon,
   type IconButton,
   imageIconOr,
   setDollarAmount,
-  settingsIcon,
   soundIcon,
 } from "./uiKit.ts";
 
@@ -20,6 +18,7 @@ export interface TopSection {
   readonly buttons: ReadonlyMap<TopSectionButton, IconButton>;
   readonly root: GameObjects.Container;
   setAmount(full: string, short?: string): void;
+  setMuted(muted: boolean): void;
   setPaused(paused: boolean): void;
 }
 
@@ -53,35 +52,34 @@ export function addTopSection(
   }
   const buttons = new Map<TopSectionButton, IconButton>();
   let paused = false;
+  let muted = config.muted === true;
   const glyphs = new Map<TopSectionButton, { root: GameObjects.Container; x: number; y: number }>();
   const drawIcon = (id: TopSectionButton, x: number, y: number): ReturnType<typeof imageIconOr> => {
     switch (id) {
-      case "close":
-        return imageIconOr(scene, "icon-close", x, y, "X");
-      case "exit":
-        return exitIcon(scene, x, y);
       case "help":
         return imageIconOr(scene, "icon-help", x, y, "?");
-      case "logbook":
-        return imageIconOr(scene, "icon-logbook", x, y, "L");
       case "mute":
-        return soundIcon(scene, config.muted !== true, x, y);
-      case "settings":
-        return settingsIcon(scene, x, y);
-      case "pause": {
-        const key = paused ? "icon-play" : "icon-pause";
-        if (scene.textures.exists(key)) {
-          return imageIconOr(scene, key, x, y, "");
+        return soundIcon(scene, !muted, x, y);
+      case "menu": {
+        if (scene.textures.exists("icon-menu")) {
+          return imageIconOr(scene, "icon-menu", x, y, "");
         }
         const g = scene.add.graphics();
+        for (const dy of [4, 8, 12]) {
+          fillRect(g, PALETTE.cream, { height: 2, width: 12, x: x + 2, y: y + dy });
+        }
+        return [g];
+      }
+      case "pause": {
         if (paused) {
-          [10, 8, 8, 6, 6, 4, 2, 2].forEach((height, i) =>
-            fillRect(g, PALETTE.cream, { height, width: 1, x: x + 4 + i, y: y + 9 - height / 2 }),
-          );
-        } else {
-          for (const dx of [4, 9]) {
-            fillRect(g, PALETTE.cream, { height: 10, width: 3, x: x + dx, y: y + 4 });
-          }
+          return drawIcon("menu", x, y);
+        }
+        if (scene.textures.exists("icon-pause")) {
+          return imageIconOr(scene, "icon-pause", x, y, "");
+        }
+        const g = scene.add.graphics();
+        for (const dx of [4, 9]) {
+          fillRect(g, PALETTE.cream, { height: 10, width: 3, x: x + dx, y: y + 4 });
         }
         return [g];
       }
@@ -106,7 +104,14 @@ export function addTopSection(
   if (config.heading !== undefined) {
     const { scale, x, y } = layout.heading;
     const text = config.heading;
-    root.add(addPixelText(scene, x, y, text, { colour: PALETTE.cream, font: "title", scale }));
+    root.add(
+      addPixelText(scene, x, y, text, {
+        colour: PALETTE.cream,
+        font: "title",
+        originX: 0.5,
+        scale,
+      }),
+    );
   }
   const currency = scene.add.container(0, 0);
   root.add(currency);
@@ -164,6 +169,17 @@ export function addTopSection(
         fillRect(g, PALETTE.ink, rect);
       }
       setDollarAmount(dollar, amount, text, () => placement);
+    },
+    setMuted(value) {
+      if (muted === value) {
+        return;
+      }
+      muted = value;
+      const glyph = glyphs.get("mute");
+      if (glyph !== undefined) {
+        glyph.root.removeAll(true);
+        glyph.root.add(drawIcon("mute", glyph.x, glyph.y));
+      }
     },
     setPaused(value) {
       if (paused === value) {

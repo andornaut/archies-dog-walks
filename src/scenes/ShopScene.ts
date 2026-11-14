@@ -61,7 +61,6 @@ import {
   stepScroll,
 } from "../input/listScroll.ts";
 import { dollarText } from "../presentation/currency.ts";
-import { exitShown } from "../pwa/index.ts";
 import type { SaveDocument } from "../save/schema.ts";
 import type { ArtLook } from "../ui/interaction.ts";
 import { PALETTE } from "../ui/palette.ts";
@@ -324,17 +323,15 @@ export class ShopScene extends Scene {
     // The top bar's empty area and the margins around the card close the shop, card and all, or
     // cancel an open confirm; back cancels the confirm or closes an open card first, as Escape
     // does. The top bar's buttons keep their own taps.
-    const exit = exitShown();
     listenDismiss(
       this,
-      regionOutside(exit, "home", 0, [PANEL]),
+      regionOutside("home", 0, [PANEL]),
       () => (this.confirm === undefined ? this.close() : this.back()),
       () => this.back(),
     );
     // A page the top bar opens over the shop closes an open card or confirm first.
     listenHomeBar(
       this,
-      exit,
       () => this.close(),
       () => {
         if (this.confirm !== undefined || this.detail !== undefined) {

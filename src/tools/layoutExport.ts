@@ -50,7 +50,7 @@ import {
   ownerLeadPanel,
   stripLeadSlot,
 } from "../hud/messageStrip.ts";
-import { PAUSE_MENU_ITEMS, PAUSE_NOTE_LINES, pauseMenuLayout } from "../hud/pauseMenu.ts";
+import { PAUSE_NOTE_LINES, pauseMenuLayout } from "../hud/pauseMenu.ts";
 import { buttonIcon, TOP_BAR_BUTTONS } from "../hud/topBar.ts";
 import {
   type BarButton,
@@ -98,6 +98,7 @@ import { read } from "../rules/units.ts";
 import { walkProjection } from "../runner/walkGeometry.ts";
 import { gridRects } from "../ui/grid.ts";
 import { MODAL, modalActionWidth } from "../ui/modal/layout.ts";
+import { navigationMenuWidth, PAUSE_MENU_ITEMS } from "../ui/navigationMenu.ts";
 import { plainMarks } from "../ui/pixelFont.ts";
 import { readBitmapFont } from "./fontFile.ts";
 
@@ -314,8 +315,8 @@ export function layoutExport(
         // The top bar's buttons left to right, each its face and hit: with Exit, and where Exit
         // is hidden (an installed app whose window a script cannot close).
         barButtons: {
-          exitHidden: Object.fromEntries(homeBarButtons(false)),
-          exitShown: Object.fromEntries(homeBarButtons(true)),
+          exitHidden: Object.fromEntries(homeBarButtons()),
+          exitShown: Object.fromEntries(homeBarButtons()),
         },
         dogRects: gridRects(
           HOME_LAYOUT.dogTiles,
@@ -344,16 +345,28 @@ export function layoutExport(
         // The note takes a line per sentence at 2x on the plate.
         ...pauseMenuLayout(body, walkView, {
           buttonCount: PAUSE_MENU_ITEMS.length,
-          buttonWidths: PAUSE_MENU_ITEMS.map((item, i) =>
+          buttonWidths: PAUSE_MENU_ITEMS.map((item) =>
             modalActionWidth(
               inkWidth(
                 readBitmapFont("font-title"),
                 2,
-                `${i + 1} ${plainMarks(data.menuText.pause[item])}`.toUpperCase(),
+                plainMarks(data.menuText.pause[item]).toUpperCase(),
               ),
             ),
           ),
           noteLines: PAUSE_NOTE_LINES,
+          panelWidth: navigationMenuWidth(
+            data,
+            {
+              inkWidth: (font, text) =>
+                inkWidth(
+                  readBitmapFont(font === "title" ? "font-title" : "font-body"),
+                  2,
+                  plainMarks(text).toUpperCase(),
+                ),
+            },
+            walkView.width - 2 * MODAL.margin,
+          ),
           titleWidth: inkWidth(
             readBitmapFont("font-title"),
             2,

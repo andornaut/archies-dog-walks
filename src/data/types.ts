@@ -1155,6 +1155,7 @@ export interface MenuText {
     readonly next: string;
     readonly previous: string;
   };
+  readonly menu: { readonly title: string };
   readonly pause: {
     readonly headHome: string;
     readonly help: string;

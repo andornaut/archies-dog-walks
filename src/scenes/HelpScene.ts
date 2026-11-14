@@ -5,20 +5,35 @@ import { Scene, Scenes } from "phaser";
 import { gameData } from "../data/index.ts";
 import type { HelpPictureId } from "../data/types.ts";
 import { helpActionForKey, helpActionForPointer } from "../help/helpInput.ts";
-import { HELP_LAYOUT, helpActionAt } from "../help/helpLayout.ts";
+import { HELP_BAR_BUTTONS, HELP_LAYOUT, helpActionAt } from "../help/helpLayout.ts";
 import { applyHelpAction, type HelpAction } from "../help/helpPaging.ts";
 import { closeHelp } from "../help/helpSeen.ts";
 import { HELP_DOTS, type HelpMeasure, type HelpPressed, helpView } from "../help/helpView.ts";
 import type { DomQuestionPanel } from "../hud/dom/questionPanel.ts";
+import { isMuteKey } from "../input/keyBindings.ts";
 import { screenArea } from "../input/outsideTap.ts";
 import { PALETTE } from "../ui/palette.ts";
 import { addFilledRect } from "../ui/phaser/draw.ts";
 import { addPixelText, setPixelText, withProbe, wrapPixelText } from "../ui/phaser/pixelText.ts";
+import { topSectionButtonAt } from "../ui/topSection.ts";
 import type { HelpPictureData } from "./HelpPictureScene.ts";
+import type { MenuSceneData } from "./MenuScene.ts";
 import { canvasPanelMeasure } from "./modalMeasure.ts";
 import { listenOnePress } from "./onePress.ts";
-import { closeOverlay, listenDismiss, type OverlayData } from "./overlay.ts";
-import { currentSettings, updateProfile } from "./profileStore.ts";
+import {
+  BAR_MUTED_EVENT,
+  closeOverlay,
+  listenDismiss,
+  openOverlay,
+  type OverlayData,
+} from "./overlay.ts";
+import {
+  currentSettings,
+  isMuted,
+  onSettingsChanged,
+  toggleMuted,
+  updateProfile,
+} from "./profileStore.ts";
 import { addHtmlHelpScreen } from "./questionPanel.ts";
 import { REFUSE } from "./refuseControl.ts";
 import { SCENE_KEYS, type SceneKey } from "./sceneKeys.ts";
@@ -75,6 +90,7 @@ export class HelpScene extends Scene {
   private html: DomQuestionPanel | undefined;
   private previousButton: MenuButton | undefined;
   private page = 0;
+  private barPressed: "menu" | "mute" | undefined;
   // The page whose picture shows.
   private picturePage: number | undefined;
   private pressed: Pressed | undefined;
@@ -94,9 +110,14 @@ export class HelpScene extends Scene {
     this.resumeKey = data?.resume;
     this.events.once(Scenes.Events.SHUTDOWN, () => this.scene.stop(SCENE_KEYS.helpPicture));
     this.draw();
+    onSettingsChanged(this, () => this.draw());
     mirrorTopSection(this, () => this.topSection?.root);
 
     this.input.keyboard?.on("keydown", (event: KeyboardEvent) => {
+      if (!event.repeat && isMuteKey(event.code)) {
+        this.game.events.emit(BAR_MUTED_EVENT, toggleMuted(this));
+        return;
+      }
       const action = helpActionForKey(event.repeat, event.code);
       if (action !== undefined) {
         this.act(action);
@@ -111,14 +132,34 @@ export class HelpScene extends Scene {
         } else {
           this.html.burst({ x: pointer.x, y: pointer.y });
         }
+        this.barPressed = topSectionButtonAt(HELP_BAR_BUTTONS, pointer.x, pointer.y);
+        this.showBarPressed();
         this.pressStart = { x: pointer.x, y: pointer.y };
         this.showPressed(pressedBy(helpActionAt(gameData.help.length, this.pressStart)));
       },
       up: (pointer, cancelled) => {
         const start = this.pressStart;
+        const bar = this.barPressed;
+        this.barPressed = undefined;
+        this.showBarPressed();
         this.pressStart = undefined;
         this.showPressed(undefined);
         if (start === undefined || cancelled) {
+          return;
+        }
+        if (bar !== undefined) {
+          if (topSectionButtonAt(HELP_BAR_BUTTONS, pointer.x, pointer.y) === bar) {
+            if (bar === "mute") {
+              this.game.events.emit(BAR_MUTED_EVENT, toggleMuted(this));
+            } else {
+              const data: MenuSceneData = {
+                closePage: () => this.close(),
+                context: "help",
+                resume: SCENE_KEYS.help,
+              };
+              openOverlay(this, SCENE_KEYS.menu, data);
+            }
+          }
           return;
         }
         const end = { x: pointer.x, y: pointer.y };
@@ -129,6 +170,12 @@ export class HelpScene extends Scene {
       },
     });
     listenDismiss(this, screenArea([HELP_LAYOUT.screen]), () => this.close());
+  }
+
+  private showBarPressed(): void {
+    for (const id of HELP_BAR_BUTTONS) {
+      this.topSection?.buttons.get(id)?.setPressed(this.barPressed === id);
+    }
   }
 
   private showPressed(pressed: Pressed | undefined): void {
@@ -170,10 +217,11 @@ export class HelpScene extends Scene {
     this.page = view.page;
     view.backdrop.forEach(({ colour, rect }) => addFilledRect(this, colour, rect));
     this.topSection = addTopSection(this, {
-      buttons: ["close"],
+      buttons: HELP_BAR_BUTTONS,
       heading: view.heading.text,
+      muted: isMuted(this),
     });
-    this.topSection.buttons.get("close")?.setPressed(view.closePressed);
+    this.showBarPressed();
     this.showPicture(itemAt(gameData.help, this.page).art, view.illustration);
     this.html?.destroy();
     this.html = addHtmlHelpScreen(this, view);

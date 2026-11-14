@@ -215,6 +215,7 @@ import { addOwnerFigure } from "./ownerFigure.ts";
 import {
   currentSettings,
   isMuted,
+  onSettingsChanged,
   profileSave,
   storageState,
   takeCelebrations,
@@ -324,6 +325,7 @@ type Target =
   | { kind: "exit" }
   | { kind: "help" }
   | { kind: "logbook" }
+  | { kind: "menu" }
   | { kind: "mute" }
   | { kind: "petShop" }
   | { kind: "settings" }
@@ -589,10 +591,7 @@ export class StartScene extends Scene {
           this.mirror.burst({ x: pointer.x, y: pointer.y });
         }
         // The top bar stays lit over an open card, and its buttons take their presses.
-        if (
-          this.overlay !== undefined &&
-          homeBarButtonAt(this.exit, pointer.x, pointer.y) === undefined
-        ) {
+        if (this.overlay !== undefined && homeBarButtonAt(pointer.x, pointer.y) === undefined) {
           this.overlayPress = { x: pointer.x, y: pointer.y };
           if (this.closePressed() || this.updatePressed()) {
             this.render();
@@ -660,7 +659,7 @@ export class StartScene extends Scene {
       this,
       () => {
         const rect = this.overlay?.rect;
-        return rect === undefined ? undefined : regionOutside(this.exit, "home", 0, [rect]);
+        return rect === undefined ? undefined : regionOutside("home", 0, [rect]);
       },
       () => this.closeOverlay(),
     );
@@ -682,6 +681,7 @@ export class StartScene extends Scene {
     });
     // Badges earned on launch: a scene can pause itself only once it is running.
     this.time.delayedCall(0, () => this.celebrate());
+    onSettingsChanged(this, ({ muted }) => this.topSection?.setMuted(muted));
     // Settings can change reduced motion or mute, so the screen is drawn again.
     onSceneEvent(this, this.game.events, SETTINGS_CLOSED_EVENT, () => this.render());
     // Sound on the top bar, tapped over an overlay, which takes the press.
@@ -942,7 +942,7 @@ export class StartScene extends Scene {
     if (walker !== undefined) {
       return { kind: "walker", walker: itemAt(walkerIds(), walker) };
     }
-    const bar = homeBarButtons(this.exit).map(([kind, { hit }]): [Rect, Target] => [hit, { kind }]);
+    const bar = homeBarButtons().map(([kind, { hit }]): [Rect, Target] => [hit, { kind }]);
     const fixed: readonly [Rect, Target][] = [[START_BUTTON, { kind: "start" }], ...bar];
     if (this.signShown() && containsPoint(SLOT_SIGN.hit, x, y)) {
       return { kind: "slotSign" };
@@ -1043,6 +1043,7 @@ export class StartScene extends Scene {
       case "exit":
       case "help":
       case "logbook":
+      case "menu":
       case "petShop":
       case "settings":
       case "slotSign":
@@ -1126,6 +1127,9 @@ export class StartScene extends Scene {
         this.render();
         return;
       }
+      case "menu":
+        openHomePage(this, "menu");
+        return;
       case "exit":
         exitGame();
         return;
@@ -1668,7 +1672,7 @@ export class StartScene extends Scene {
 
   // The shared section owns chrome, currency and controls; this scene supplies its bank.
   private drawTopBar(root: GameObjects.Container, save: SaveDocument): void {
-    const visible = homeBarButtons(this.exit).map(([id]) => id);
+    const visible = homeBarButtons().map(([id]) => id);
     const bar = addTopSection(this, { buttons: visible, currency: true, muted: isMuted(this) });
     this.topSection = bar;
     root.add(bar.root);

@@ -1,6 +1,6 @@
-import type { Point, Rect } from "@andornaut/game-kit/rect";
+import { containsPoint, type Point, type Rect } from "@andornaut/game-kit/rect";
 
-import { HELP_SCREEN, HOME_SCREEN, MIN_PRESS, WALK_BAR_PARTS } from "../data/layout.ts";
+import { HOME_SCREEN, MIN_PRESS, WALK_BAR_PARTS } from "../data/layout.ts";
 import { SCREEN_CONFIG } from "../data/screen.ts";
 import { TEXT_SCALE, TITLE_CAP_ROWS } from "./textFit.ts";
 import {
@@ -12,15 +12,7 @@ import {
 } from "./topBarTrim.ts";
 
 // Visibility removes a control from the flow; every section uses this order and pitch.
-export const TOP_SECTION_ORDER = [
-  "logbook",
-  "help",
-  "mute",
-  "settings",
-  "exit",
-  "pause",
-  "close",
-] as const;
+export const TOP_SECTION_ORDER = ["help", "mute", "menu", "pause"] as const;
 export type TopSectionButton = (typeof TOP_SECTION_ORDER)[number];
 export interface TopSectionControl {
   face: Point;
@@ -93,7 +85,7 @@ export function topSectionLayout<T extends TopSectionButton>(
     effectWells,
     heading: {
       scale: TEXT_SCALE,
-      x: HELP_SCREEN.headingX,
+      x: SCREEN_CONFIG.width / 2,
       y: TOP_BAR_MID - (TITLE_CAP_ROWS * TEXT_SCALE) / 2,
     },
   };
@@ -125,4 +117,13 @@ export function topSectionCurrency(
     top: wellCapsTop(TITLE_CAP_ROWS * cash.scale),
     well,
   };
+}
+
+// Rendering and input consume the same compacted control positions.
+export function topSectionButtonAt<T extends TopSectionButton>(
+  visible: readonly T[],
+  x: number,
+  y: number,
+): T | undefined {
+  return topSectionLayout(visible).controls.find(([, { hit }]) => containsPoint(hit, x, y))?.[0];
 }

@@ -6,6 +6,7 @@ import type { HomeBarButton } from "../home/homeLayout.ts";
 import { openGuard } from "../input/openGuard.ts";
 import { whenArtReady } from "./artReady.ts";
 import { openHelp } from "./helpScreen.ts";
+import type { MenuSceneData } from "./MenuScene.ts";
 import { BAR_MUTED_EVENT, onSceneEvent, openOverlay } from "./overlay.ts";
 import { toggleMuted } from "./profileStore.ts";
 import { SCENE_KEYS, type SceneKey } from "./sceneKeys.ts";
@@ -17,7 +18,7 @@ import { listenTargetPress } from "./targetPress.ts";
 // detail card or purchase confirm, so the page opens alone over the page beneath, dimmed once.
 export const HOME_PAGE_OPENING_EVENT = "home-page-opening";
 
-type HomePage = "help" | "logbook" | "settings";
+type HomePage = "help" | "logbook" | "menu" | "settings";
 
 const homePageGuard = openGuard();
 
@@ -32,6 +33,11 @@ export function openHomePage(from: Scene, page: HomePage): void {
     const resume = from.scene.isActive(shop) || from.scene.isPaused(shop) ? shop : start;
     const under = from.scene.get(resume);
     switch (page) {
+      case "menu": {
+        const data: MenuSceneData = { context: "home", resume };
+        openOverlay(under, SCENE_KEYS.menu, data);
+        return;
+      }
       case "help":
         // Help shows art boot may still be loading.
         whenArtReady(under, () => openHelp(under, resume));
@@ -57,47 +63,30 @@ export function exitGame(): void {
   exitApp(browserExitPage());
 }
 
-// The start screen's top bar, lit over an overlay on a home page, keeps its buttons, Exit among
-// them where exit is true (exitShown). The start screen is paused under the overlay, so the
-// overlay on top takes the tap and acts as homeBarAction says, on the press's release over the
-// same button; close is how it closes itself. clear is what it does as the bar opens a page
-// (HOME_PAGE_OPENING_EVENT): close, unless it is the page beneath, which closes its cards.
-export function listenHomeBar(
-  scene: Scene,
-  exit: boolean,
-  close: () => void,
-  clear: () => void = close,
-): void {
+// The topmost home overlay routes the shared controls while its underlying scene is paused.
+// Opening navigation clears replaceable overlays through HOME_PAGE_OPENING_EVENT.
+export function listenHomeBar(scene: Scene, close: () => void, clear: () => void = close): void {
   onSceneEvent(scene, scene.game.events, HOME_PAGE_OPENING_EVENT, clear);
   listenTargetPress<HomeBarButton>(scene, {
     onPressed: () => undefined,
     onTap: (button) => pressHomeBar(scene, close, button),
-    targetAt: (x, y) => homeBarButtonAt(exit, x, y),
+    targetAt: (x, y) => homeBarButtonAt(x, y),
   });
 }
 
 function pressHomeBar(scene: Scene, close: () => void, button: HomeBarButton): void {
   const shown = (key: SceneKey) => scene.scene.isActive(key) || scene.scene.isPaused(key);
-  const open = { logbook: shown(SCENE_KEYS.stats), settings: shown(SCENE_KEYS.settings) };
+  const open = { menu: shown(SCENE_KEYS.menu) };
   const action = homeBarAction(open, button);
   switch (action) {
     case "close":
       close();
       return;
-    case "exit":
-      exitGame();
-      return;
     case "mute":
       scene.game.events.emit(BAR_MUTED_EVENT, toggleMuted(scene));
       return;
-    case "openHelp":
-      openHomePage(scene, "help");
-      return;
-    case "openLogbook":
-      openHomePage(scene, "logbook");
-      return;
-    case "openSettings":
-      openHomePage(scene, "settings");
+    case "openMenu":
+      openHomePage(scene, "menu");
       return;
     default:
       action satisfies never;

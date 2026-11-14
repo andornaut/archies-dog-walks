@@ -52,5 +52,6 @@ describe("helpView", () => {
     const metrics = fontMetrics(title);
     const top = Math.round(y - metrics.capTop * scale);
     expect(view.body.capTop).toBe(top + metrics.inkBottom * scale + LABEL_HELP_GAP);
+    expect(view.heading).toMatchObject({ centre: "ink", centreX: HELP_LAYOUT.screen.width / 2 });
   });
 });

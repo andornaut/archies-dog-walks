@@ -27,7 +27,6 @@ import {
   scrollMax,
   stepScroll,
 } from "../input/listScroll.ts";
-import { exitShown } from "../pwa/index.ts";
 import { rectIndexAt } from "../ui/grid.ts";
 import { fillRect } from "../ui/phaser/draw.ts";
 import { badgeCard, drawBadgeCard } from "./badges.ts";
@@ -188,14 +187,13 @@ export class StatsScene extends Scene {
     // The top bar's empty area and the margins around the card close the page, as on the shop,
     // and the top bar's buttons keep their own taps. Back closes an open badge first, as Escape
     // does.
-    const exit = exitShown();
     listenDismiss(
       this,
-      regionOutside(exit, "home", 0, [PANEL]),
+      regionOutside("home", 0, [PANEL]),
       () => this.close(),
       () => this.back(),
     );
-    listenHomeBar(this, exit, () => this.close());
+    listenHomeBar(this, () => this.close());
   }
 
   // An open badge closes, else the page.

@@ -5,10 +5,6 @@ import { PAUSE_PANEL } from "../data/layout.ts";
 import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";
 import { MODAL, modalPanelWidth, modalRect, modalTitleWidth } from "../ui/modal/layout.ts";
 
-// The menu's buttons, top to bottom; each one's label is menuText.pause[item].
-export const PAUSE_MENU_ITEMS = ["resume", "help", "settings", "headHome"] as const;
-export type PauseMenuItem = (typeof PAUSE_MENU_ITEMS)[number];
-
 // The Home question's answers, top to bottom: the safe one first, as the primary and key 1.
 export const HOME_QUESTION_ANSWERS = ["keepWalking", "headHome"] as const;
 
@@ -16,7 +12,7 @@ export const HOME_QUESTION_ANSWERS = ["keepWalking", "headHome"] as const;
 export const QUIT_QUESTION_ANSWERS = ["keepPlaying", "quit"] as const;
 
 // Offsets from the panel's top-left corner, and the room under the last part.
-const TITLE_Y = MODAL.pad;
+const TITLE_Y = MODAL.titleTop;
 const BUTTON = { ...BUTTON_SIZE.wide, gap: BUTTON_SIZE.stackGap, x: MODAL.pad, y: MODAL.header };
 
 // The width a button's label has, its key number included, 4px in from each side. The panel's
@@ -54,7 +50,9 @@ interface QuestionParts {
   buttonWidths?: readonly number[];
   noteLines: number;
   noteWidth?: number;
+  panelWidth?: number;
   titleWidth?: number;
+  titleExtraHeight?: number;
 }
 
 interface PauseMenuLayout {
@@ -79,9 +77,10 @@ function panelLayout(
   const noteHeight = noted ? notePlateHeight(body, parts.noteLines) : 0;
   const buttonsHeight = buttonCount * (BUTTON.height + BUTTON.gap) - BUTTON.gap;
   // Offsets down the panel: a note first sits where the buttons would start, less its gap.
-  const noteFirstY = BUTTON.y;
-  const buttonsY = noteFirst && noted ? noteFirstY + noteHeight + MODAL.gap : BUTTON.y;
-  const noteY = noteFirst ? noteFirstY : BUTTON.y + buttonsHeight + NOTE_PLATE.gap;
+  const header = BUTTON.y + (parts.titleExtraHeight ?? 0);
+  const noteFirstY = header;
+  const buttonsY = noteFirst && noted ? noteFirstY + noteHeight + MODAL.gap : header;
+  const noteY = noteFirst ? noteFirstY : header + buttonsHeight + NOTE_PLATE.gap;
   const height = Math.max(buttonsY + buttonsHeight, noted ? noteY + noteHeight : 0) + BOTTOM;
   const widths = Array.from(
     { length: buttonCount },
@@ -90,11 +89,12 @@ function panelLayout(
   const actionWidth = Math.max(0, ...widths);
   const width = modalPanelWidth(
     area.width - 2 * MODAL.margin,
-    Math.max(
-      actionWidth + 2 * MODAL.pad,
-      modalTitleWidth(parts.titleWidth ?? 0),
-      (parts.noteWidth ?? 0) + 2 * NOTE_PLATE.padX + 2 * MODAL.pad,
-    ),
+    parts.panelWidth ??
+      Math.max(
+        actionWidth + 2 * MODAL.pad,
+        modalTitleWidth(parts.titleWidth ?? 0),
+        (parts.noteWidth ?? 0) + 2 * NOTE_PLATE.padX + 2 * MODAL.pad,
+      ),
   );
   const panel = modalRect(area, parts.avoid, { height, width });
   const buttons = widths.map((_, i) => ({

@@ -5,7 +5,6 @@ import { overlayRegion, regionOutside } from "../home/homeBar.ts";
 import { HOME_LAYOUT } from "../home/homeLayout.ts";
 import { homeQuestionLayout, QUIT_QUESTION_ANSWERS } from "../hud/pauseMenu.ts";
 import { isPauseKey, menuKeyActs } from "../input/keyBindings.ts";
-import { exitShown } from "../pwa/index.ts";
 import { addRampDim } from "../ui/phaser/rampDim.ts";
 import { exitGame, listenHomeBar } from "./homeBarPress.ts";
 import { closeOverlay, listenDismiss, type OverlayData } from "./overlay.ts";
@@ -50,8 +49,7 @@ export class QuitScene extends Scene {
         keepPlaying();
       }
     });
-    const exit = exitShown();
-    listenDismiss(this, regionOutside(exit, "home", 0, covered), keepPlaying);
-    listenHomeBar(this, exit, keepPlaying);
+    listenDismiss(this, regionOutside("home", 0, covered), keepPlaying);
+    listenHomeBar(this, keepPlaying);
   }
 }

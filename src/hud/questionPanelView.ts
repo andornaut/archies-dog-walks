@@ -3,8 +3,10 @@ import { sentences } from "@andornaut/game-kit/lines";
 import { insetRect, type Rect } from "@andornaut/game-kit/rect";
 
 import { withKeyNumber } from "../input/keyNumbers.ts";
+import { barTitleRoom } from "../ui/barTitle.ts";
 import { closeControl } from "../ui/closeControl.ts";
-import { modalActionWidth } from "../ui/modal/layout.ts";
+import { modalActionWidth, modalTitleLayout } from "../ui/modal/layout.ts";
+import { cardTitleRow } from "../ui/modal/titleRow.ts";
 import type {
   PanelButton,
   PanelFont,
@@ -24,8 +26,11 @@ export interface PanelQuestion {
   readonly layout: typeof pauseMenuLayout;
   // No parts draws no note plate.
   readonly note: readonly PanelNotePart[];
+  readonly panelWidth?: number;
+  readonly primary?: "first" | "last";
   // Whether each sentence of a part starts a line of its own.
   readonly sentenceLines: boolean;
+  readonly showKeyNumbers?: boolean;
   readonly title: string;
 }
 
@@ -36,13 +41,16 @@ export function questionPanelView(
   area: Rect,
   question: PanelQuestion,
 ): QuestionPanelView {
-  const shown = question.labels.map((label, i) => withKeyNumber(i + 1, label));
+  const shown = question.labels.map((label, i) =>
+    question.showKeyNumbers === false ? label : withKeyNumber(i + 1, label),
+  );
   const widest = (font: PanelFont, lines: readonly string[]) =>
     Math.max(0, ...lines.map((line) => measure.inkWidth(font, line)));
   const parts = {
     avoid: question.avoid,
     buttonCount: shown.length,
     buttonWidths: shown.map((label) => modalActionWidth(widest("title", [label]))),
+    ...(question.panelWidth === undefined ? {} : { panelWidth: question.panelWidth }),
     noteWidth: widest(
       "body",
       question.note.map(({ text }) => text),
@@ -50,6 +58,11 @@ export function questionPanelView(
     titleWidth: widest("title", [question.title]),
   };
   const preview = question.layout(measure.body, area, { ...parts, noteLines: 0 });
+  const titleLayout = modalTitleLayout(
+    { font: measure.title, widthOf: (text) => measure.inkWidth("title", text) },
+    barTitleRoom(cardTitleRow(preview.panel), closeControl(preview.panel)),
+    question.title,
+  );
   const noteRoom = preview.notePlate.width - 2 * NOTE_PLATE.padX;
   const noteParts = question.note.map(({ colour, text }) => ({
     colour,
@@ -58,14 +71,23 @@ export function questionPanelView(
     ),
   }));
   const noteLines = noteParts.reduce((sum, part) => sum + part.lines.length, 0);
-  const layout = question.layout(measure.body, area, { ...parts, noteLines });
+  const layout = question.layout(measure.body, area, {
+    ...parts,
+    noteLines,
+    titleExtraHeight: titleLayout.extraHeight,
+  });
   const { panel } = layout;
   const close = closeControl(panel);
   const centreX = panel.x + panel.width / 2;
 
   const title = panelTitle(measure, panel, layout.titleY, question.title);
   const buttons = shown.map((text, i): PanelButton => ({
-    ...panelButton(measure, itemAt(layout.buttons, i), i === 0, text),
+    ...panelButton(
+      measure,
+      itemAt(layout.buttons, i),
+      i === (question.primary === "last" ? shown.length - 1 : 0),
+      text,
+    ),
     hit: itemAt(layout.hits, i),
     label: itemAt(question.labels, i),
   }));

@@ -9,7 +9,8 @@ import { artPixel, domScale } from "../../ui/domScale.ts";
 import { type PanelMeasure } from "../../ui/modal/types.ts";
 import { modalCardView, panelButton } from "../../ui/modal/view.ts";
 import { inPill } from "../../ui/namePills.ts";
-import { PAUSE_MENU_ITEMS, pauseMenuLayout } from "../pauseMenu.ts";
+import { PAUSE_MENU_ITEMS } from "../../ui/navigationMenu.ts";
+import { pauseMenuLayout } from "../pauseMenu.ts";
 import { questionPanelView } from "../questionPanelView.ts";
 import { showZoneCelebration } from "./celebration.ts";
 import { showDetailCard } from "./detailCard.ts";
@@ -22,7 +23,7 @@ const MEASURE: PanelMeasure = {
   wrapNote: (_width, text) => [text],
 };
 
-function menu() {
+function menu(customNumbers = false) {
   const doc = new FakeDocument();
   const element = doc.createElement("div");
   const layer = {
@@ -47,6 +48,9 @@ function menu() {
     closeLabel: gameData.menuText.common.close,
     fonts: { body: gameFont("font-body"), title: gameFont("font-title") },
     numberKeys: true,
+    ...(customNumbers
+      ? { numberPresses: [presses[3]!, presses[0]!, presses[1]!, presses[2]!] }
+      : {}),
     presses,
     toGame: (point) => point,
     view,
@@ -99,6 +103,19 @@ describe("the HTML pause menu", () => {
     expect(presses[3]).not.toHaveBeenCalled();
     shown.destroy();
     doc.defaultView.fire("keydown", { code: "Digit1", repeat: false });
+    expect(presses[0]).not.toHaveBeenCalled();
+  });
+
+  it("keeps digit bindings independent of visual action order", () => {
+    const { buttons, doc, presses } = menu(true);
+    expect(buttons.slice(0, -1).map((button) => button.getAttribute("aria-keyshortcuts"))).toEqual([
+      "2",
+      "3",
+      "4",
+      "1",
+    ]);
+    doc.defaultView.fire("keydown", { code: "Digit1", repeat: false });
+    expect(presses[3]).toHaveBeenCalledOnce();
     expect(presses[0]).not.toHaveBeenCalled();
   });
 

@@ -42,9 +42,9 @@ const WALK_TARGETS = {
   dogCard: centre(dogSlots[0] ?? topBar),
   gearIcon: centre(BAR.effectWells[2] ?? topBar),
   help: centre(BAR.buttons.help.hit),
+  mute: centre(BAR.buttons.mute.hit),
   pause: centre(BAR.buttons.pause.hit),
   perkIcon: centre(BAR.effectWells[0] ?? topBar),
-  settings: centre(BAR.buttons.settings.hit),
   upgradeIcon: centre(BAR.effectWells[1] ?? topBar),
 } as const;
 
@@ -86,9 +86,9 @@ const WALK_BASE: Readonly<Record<WalkTarget, string | undefined>> = {
   dogCard: "explainOnHold",
   gearIcon: "explainOnTap",
   help: "openHelp",
+  mute: "mute",
   pause: "openMenu",
   perkIcon: "explainOnTap",
-  settings: "openSettings",
   upgradeIcon: "explainOnTap",
 };
 
@@ -106,17 +106,17 @@ const WALK_CHANGES: Readonly<Record<string, Partial<Record<WalkTarget, string | 
     dogCard: undefined,
     gearIcon: undefined,
     help: undefined,
+    mute: undefined,
     pause: undefined,
     perkIcon: undefined,
-    settings: undefined,
     upgradeIcon: undefined,
   },
   nothing: {},
   "the Home question over a card": { ...EXPLAINS_NOTHING, pause: "resume" },
   "the pause menu": { ...EXPLAINS_NOTHING, pause: "resume" },
   "the pause menu over a card": { ...EXPLAINS_NOTHING, pause: "resume" },
-  "the settings": { ...EXPLAINS_NOTHING, pause: "resume", settings: "closeSettings" },
-  "the settings over a card": { ...EXPLAINS_NOTHING, pause: "resume", settings: "closeSettings" },
+  "the settings": { ...EXPLAINS_NOTHING, pause: "resume" },
+  "the settings over a card": { ...EXPLAINS_NOTHING, pause: "resume" },
 };
 
 describe("the walk bar's and dog cards' targets under each overlay", () => {
@@ -132,52 +132,19 @@ describe("the walk bar's and dog cards' targets under each overlay", () => {
   });
 });
 
-// The home top bar on the start screen, the Pet shop and the Logbook, with Exit shown and
-// hidden: what is open over the page sets only whether the Logbook or the settings is the
-// button's own page.
+// All home overlays retain the same mute and menu targets.
 const bankWell = { x: HOME_LAYOUT.topBar.well.x + 1, y: HOME_LAYOUT.topBar.mid };
 
-function homeTargets(exit: boolean): Readonly<Record<string, Point>> {
-  return {
-    bankWell,
-    ...Object.fromEntries(homeBarButtons(exit).map(([id, { hit }]) => [id, centre(hit)])),
-  };
-}
-
-const NONE = { logbook: false, settings: false };
-
-// The bar reads only which page is open: a card, celebration or confirm over a page acts as the
-// page does.
-const HOME_MODALS: readonly (readonly [string, typeof NONE])[] = [
-  ["the start screen or the Pet shop, or a card over either", NONE],
-  ["the Logbook or a badge card in it", { logbook: true, settings: false }],
-  ["the settings or their install steps", { logbook: false, settings: true }],
-];
-
-const HOME_BASE: Readonly<Record<string, string | undefined>> = {
-  bankWell: undefined,
-  exit: "exit",
-  help: "openHelp",
-  logbook: "openLogbook",
-  mute: "mute",
-  settings: "openSettings",
-};
-
-function homeTargetAction(exit: boolean, open: typeof NONE, point: Point): string | undefined {
-  const button = homeBarButtonAt(exit, point.x, point.y);
-  return button === undefined ? undefined : homeBarAction(open, button);
-}
-
-describe.each([true, false])("the home top bar's targets with Exit shown %s", (exit) => {
-  const targets = homeTargets(exit);
-  const rows = HOME_MODALS.flatMap(([modal, open]) =>
-    Object.entries(targets).map(([target, point]) => {
-      const own =
-        (target === "logbook" && open.logbook) || (target === "settings" && open.settings);
-      return [modal, target, own ? "close" : HOME_BASE[target], open, point] as const;
-    }),
-  );
-  it.each(rows)("under %s, %s does %s", (_modal, _target, expected, open, point) => {
-    expect(homeTargetAction(exit, open, point)).toBe(expected);
-  });
+it("routes home controls consistently through ordinary overlays and an open menu", () => {
+  for (const menu of [false, true]) {
+    for (const [id, { hit }] of homeBarButtons()) {
+      const p = centre(hit);
+      const button = homeBarButtonAt(p.x, p.y);
+      expect(button).toBe(id);
+      expect(button === undefined ? undefined : homeBarAction({ menu }, button)).toBe(
+        id === "mute" ? "mute" : menu ? "close" : "openMenu",
+      );
+    }
+  }
+  expect(homeBarButtonAt(bankWell.x, bankWell.y)).toBeUndefined();
 });

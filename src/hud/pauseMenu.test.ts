@@ -11,13 +11,13 @@ import { walkLength } from "../rules/route.ts";
 import { bodyTextWidth } from "../testing/bodyFont.ts";
 import { fontFileMetrics, inkWidth } from "../testing/fontInk.ts";
 import { modalActionWidth } from "../ui/modal/layout.ts";
+import { PAUSE_MENU_ITEMS } from "../ui/navigationMenu.ts";
 import { cents } from "../units.ts";
 import {
   HOME_QUESTION_ANSWERS,
   homeQuestionLayout,
   NOTE_PLATE,
   notePartTops,
-  PAUSE_MENU_ITEMS,
   PAUSE_NOTE_LINES,
   PAUSE_NOTE_WIDTH,
   pauseMenuLayout,

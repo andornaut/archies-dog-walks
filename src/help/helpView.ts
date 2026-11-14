@@ -159,13 +159,10 @@ export function helpView(
     close: layout.close,
     closePressed: pressed === "close",
     dots: dotRects(pages.length).map((rect, i) => ({ current: i === current, rect })),
-    heading: leftLine(
-      "title",
-      PALETTE.cream,
-      TEXT_SCALE,
-      { x: layout.heading.x, y: layout.heading.y },
-      words.heading,
-    ),
+    heading: {
+      ...leftLine("title", PALETTE.cream, TEXT_SCALE, layout.heading, words.heading),
+      centre: "ink",
+    },
     illustration: frame,
     page: current,
     rules: [frame.y - 1, frame.y + frame.height].map((y) => ({

@@ -1638,7 +1638,7 @@
         ]
       },
       "heading": {
-        "x": 12,
+        "x": 180,
         "y": 14
       },
       "illustration": {
@@ -1991,7 +1991,7 @@
         "well": {
           "height": 29,
           "lip": 1,
-          "maxWidth": 113,
+          "maxWidth": 257,
           "x": 5,
           "y": 5
         },
@@ -2081,30 +2081,6 @@
       },
       "barButtons": {
         "exitHidden": {
-          "logbook": {
-            "face": {
-              "x": 182,
-              "y": 9
-            },
-            "hit": {
-              "height": 48,
-              "width": 48,
-              "x": 168,
-              "y": 0
-            }
-          },
-          "help": {
-            "face": {
-              "x": 230,
-              "y": 9
-            },
-            "hit": {
-              "height": 48,
-              "width": 48,
-              "x": 216,
-              "y": 0
-            }
-          },
           "mute": {
             "face": {
               "x": 278,
@@ -2117,7 +2093,7 @@
               "y": 0
             }
           },
-          "settings": {
+          "menu": {
             "face": {
               "x": 326,
               "y": 9
@@ -2131,43 +2107,7 @@
           }
         },
         "exitShown": {
-          "logbook": {
-            "face": {
-              "x": 134,
-              "y": 9
-            },
-            "hit": {
-              "height": 48,
-              "width": 48,
-              "x": 120,
-              "y": 0
-            }
-          },
-          "help": {
-            "face": {
-              "x": 182,
-              "y": 9
-            },
-            "hit": {
-              "height": 48,
-              "width": 48,
-              "x": 168,
-              "y": 0
-            }
-          },
           "mute": {
-            "face": {
-              "x": 230,
-              "y": 9
-            },
-            "hit": {
-              "height": 48,
-              "width": 48,
-              "x": 216,
-              "y": 0
-            }
-          },
-          "settings": {
             "face": {
               "x": 278,
               "y": 9
@@ -2179,7 +2119,7 @@
               "y": 0
             }
           },
-          "exit": {
+          "menu": {
             "face": {
               "x": 326,
               "y": 9
@@ -2792,7 +2732,7 @@
         }
       },
       {
-        "id": "settings",
+        "id": "mute",
         "face": {
           "x": 278,
           "y": 9
@@ -2945,7 +2885,7 @@
           "hitWidth": 48,
           "hitX": 216
         },
-        "settings": {
+        "mute": {
           "faceX": 278,
           "hitWidth": 48,
           "hitX": 264

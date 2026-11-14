@@ -29,8 +29,8 @@ import { heartRows } from "./hudView.ts";
 // under the cards. Every position is the art's, in screen pixels from the bar's top-left
 // corner, the debuff bar's or the card's; text y is the top of the capitals.
 
-// The walk bar's buttons, left to right. Mute is in the settings and on the M key.
-export const WALK_BAR_BUTTONS = ["help", "settings", "pause"] as const;
+// The walk bar uses the shared order; Settings is reached through Pause.
+export const WALK_BAR_BUTTONS = ["help", "mute", "pause"] as const;
 export type WalkBarButtonId = (typeof WALK_BAR_BUTTONS)[number];
 
 // The cash well's ink columns, which the home top bar's bank well shares.
