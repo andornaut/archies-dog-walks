@@ -69,12 +69,10 @@ import {
   edged,
   type Frame,
   Grid,
-  HEART,
   hexOf,
   iconEdge,
   K,
   LAYOUT,
-  raster,
   rgbPng,
   run,
   savePng,
@@ -83,640 +81,37 @@ import {
   toImage,
   ZONE_ROAD_COLOURS,
 } from "./pixel.ts";
-import { treat } from "./road.ts";
+import { chrome, chromeShape, plate, roundedInside, SIDES } from "./uiChrome.ts";
+import {
+  bill,
+  browserMenuIcon,
+  close,
+  CREAM_PANEL,
+  effects,
+  exitIcon,
+  heart,
+  helpIcon,
+  homeIcon,
+  install,
+  lock,
+  logbookIcon,
+  motion,
+  NAVY_FACE,
+  pause,
+  play,
+  settingsIcon,
+  shareIcon,
+  speaker,
+  stinky,
+  treatIcon,
+  updateIcon,
+} from "./uiIcons.ts";
+
+export { chrome, plate } from "./uiChrome.ts";
 
 const USAGE = `Usage:
   node art/tools/ui.ts preview OUT.png   every piece, scaled up
   node art/tools/ui.ts build             export to public/art/images/ and public/art/sprites/`;
-
-// ---------- the chrome: one frame for every panel, bubble, plate and card frame ----------
-
-interface ChromeColours {
-  // The face, under any text.
-  face?: string;
-  // The inner line, or null to leave it out, for shapes too small to hold it.
-  line?: string | null;
-  // The lip along the face's bottom row and right column.
-  lip?: string;
-}
-
-const SIDES: readonly (readonly [number, number])[] = [
-  [0, -1],
-  [0, 1],
-  [-1, 0],
-  [1, 0],
-];
-
-// Frame the shape inside(x, y) on g in the UI chrome: a 1px ink outer line, a 1px inner line (plum;
-// null leaves it out, for shapes too small to hold it), the face, and the lip (tan on cream) along the
-// face's bottom row and right column. openEdge(x, y) is true for points off the grid that continue
-// the shape, so a tail laid over a bubble's rim stays open on that side. Ink holds 3:1 on the light
-// roads, the cream face on navy, ink and dark wood; text sits on the face.
-function chromeShape<G extends Drawable>(
-  {
-    face = "cream",
-    line = "plum",
-    lip = "tan",
-    openEdge,
-  }: ChromeColours & { openEdge?: (x: number, y: number) => boolean },
-  g: G,
-  inside: (x: number, y: number) => boolean,
-): G {
-  const solid = (x: number, y: number): boolean =>
-    x >= 0 && x < g.w && y >= 0 && y < g.h ? inside(x, y) : Boolean(openEdge?.(x, y));
-  const key = (x: number, y: number): string => `${x},${y}`;
-  // Each inside pixel by position: 0 on the outer line, 1 on the inner line, null on the face.
-  const ring = new Map<string, [number, number, 0 | 1 | null]>();
-  for (let y = 0; y < g.h; y++) {
-    for (let x = 0; x < g.w; x++) {
-      if (inside(x, y)) {
-        ring.set(key(x, y), [x, y, SIDES.some(([dx, dy]) => !solid(x + dx, y + dy)) ? 0 : null]);
-      }
-    }
-  }
-  const depth = (x: number, y: number): 0 | 1 | null | -1 => {
-    const cell = ring.get(key(x, y));
-    return cell ? cell[2] : -1;
-  };
-  for (const cell of ring.values()) {
-    const [x, y, d] = cell;
-    if (line && d === null && SIDES.some(([dx, dy]) => depth(x + dx, y + dy) === 0)) {
-      cell[2] = 1;
-    }
-  }
-  for (const [x, y, d] of ring.values()) {
-    if (d === 0) {
-      g.p(x, y, "ink");
-    } else if (d === 1) {
-      g.p(x, y, line);
-    } else {
-      const framed = [depth(x, y + 1), depth(x + 1, y)];
-      g.p(x, y, framed.some((v) => v !== null && v >= 0) ? lip : face);
-    }
-  }
-  return g;
-}
-
-// A box with each corner cut on a diagonal r pixels long, as an inside(x, y) test.
-function roundedInside(
-  x0: number,
-  y0: number,
-  w: number,
-  h: number,
-  r: number,
-): (x: number, y: number) => boolean {
-  return (x, y) => {
-    const i = x - x0;
-    const j = y - y0;
-    if (!(i >= 0 && i < w && j >= 0 && j < h)) {
-      return false;
-    }
-    return Math.min(i, w - 1 - i) + Math.min(j, h - 1 - j) >= r;
-  };
-}
-
-// A chrome box (chromeShape) at x, y, w x h, its corners cut r pixels.
-export function chrome<G extends Drawable>(
-  g: G,
-  x: number,
-  y: number,
-  w: number,
-  h: number,
-  { r = 1, ...colours }: ChromeColours & { r?: number } = {},
-): G {
-  return chromeShape(colours, g, roundedInside(x, y, w, h, r));
-}
-
-// A coloured plate in the chrome: the frame and a cream band 2px wide (the lip on its bottom and
-// right), then the face from 4px in, lit along its top and left and shaded along its bottom and right.
-// Rows and columns 8 to w - 9 are uniform, so a nine-slice with 8px corners keeps them crisp. White
-// text on the face: 7.34:1 on dred, 8.48:1 on blue, 8.86:1 on purple.
-export function plate(face: string, lit: string, shade: string, w = 24, h = 24): Grid {
-  const g = new Grid(w, h);
-  chrome(g, 0, 0, w, h);
-  g.rect(4, 4, w - 8, h - 8, face);
-  g.rect(4, 4, w - 8, 1, lit);
-  g.rect(4, 4, 1, h - 8, lit);
-  g.rect(4, h - 5, w - 8, 1, shade);
-  g.rect(w - 5, 5, 1, h - 9, shade);
-  return g;
-}
-
-// Stamp rows of characters at (x0, y0), each character other than "." in the colour ink(ch).
-function rows(
-  g: Drawable,
-  x0: number,
-  y0: number,
-  lines: readonly string[],
-  ink: (ch: string) => string,
-): void {
-  lines.forEach((row, y) => {
-    [...row].forEach((ch, x) => {
-      if (ch !== ".") {
-        g.p(x0 + x, y0 + y, ink(ch));
-      }
-    });
-  });
-}
-
-// ---------- icons ----------
-// icon-pause, icon-play, icon-home, icon-help, icon-close, icon-logbook, icon-settings, icon-exit and
-// icon-sound sit on ui-icon-button's navy face, so they have no outline: cream holds 9.6:1 there, tan
-// 6.6:1, amber 7.5:1, orange 5.0:1 and pink 5.1:1. The -panel icons sit on the Settings panel's cream,
-// and icon-share and icon-browser-menu on the install steps card's: dbrown holds 5.85:1 there, plum
-// 9.42:1 and dred 5.07:1.
-
-// The speaker, note and effects inks: face, shade on the lower-right edges, and the mute X.
-type Ink = readonly [face: string, shade: string, x: string];
-const NAVY_FACE: Ink = ["cream", "tan", "pink"];
-const CREAM_PANEL: Ink = ["dbrown", "plum", "dred"];
-
-// Amber bars, like the Home glyph, so the walk controls stand apart from the cream help and sound
-// glyphs.
-function pause(): Grid {
-  const g = new Grid(16, 16);
-  g.rect(4, 3, 3, 10, "amber");
-  g.rect(9, 3, 3, 10, "amber");
-  g.rect(6, 3, 1, 10, "orange");
-  g.rect(11, 3, 1, 10, "orange");
-  return g;
-}
-
-// The pause button's face while paused: an amber triangle as tall as the pause bars, its lower edge
-// orange, 1px right of centre so it looks centred.
-function play(): Grid {
-  const g = new Grid(16, 16);
-  for (let j = 0; j < 10; j++) {
-    const w = Math.round(Math.min(j, 9 - j) * 1.6) + 2;
-    g.rect(5, 3 + j, w, 1, "amber");
-    if (j >= 5) {
-      g.p(4 + w, 3 + j, "orange");
-    }
-  }
-  return g;
-}
-
-// The Home button: a house as tall as the pause bars, amber with orange on its lower-right edges like
-// them, a chimney on the right slope and a doorway the navy face shows through.
-function homeIcon(): Grid {
-  const g = new Grid(16, 16);
-  rows(
-    g,
-    2,
-    3,
-    [
-      ".....aa.ao..",
-      "....aaaaao..",
-      "...aaaaaao..",
-      "..aaaaaaao..",
-      ".aaaaaaaaao.",
-      "aaaaaaaaaaao",
-      "..aaaaaaao..",
-      "..aaa..aao..",
-      "..aaa..aao..",
-      "..ooo..ooo..",
-    ],
-    (ch) => (ch === "a" ? "amber" : "orange"),
-  );
-  return g;
-}
-
-// A bold question mark, 2px strokes with a tan right edge like the pause bars.
-function helpIcon(): Grid {
-  const g = new Grid(16, 16);
-  rows(
-    g,
-    4,
-    2,
-    [
-      "..cccc..",
-      ".cccccct",
-      "cct..cct",
-      "tt...cct",
-      "....ccct",
-      "...ccct.",
-      "...cct..",
-      "...cct..",
-      "........",
-      "...cct..",
-      "...cct..",
-    ],
-    (ch) => (ch === "c" ? "cream" : "tan"),
-  );
-  return g;
-}
-
-function close(): Grid {
-  const g = new Grid(16, 16);
-  for (let i = 0; i < 9; i++) {
-    g.rect(3 + i, 3 + i, 2, 2, "cream");
-    g.rect(11 - i, 3 + i, 2, 2, "cream");
-  }
-  return g;
-}
-
-function lock(): Grid {
-  const g = new Grid(16, 16);
-  g.ell(8, 6, 4, 4.5, "grey", "slate", "lgrey");
-  g.ell(8, 6.5, 2, 3, null);
-  g.rect(3, 7, 10, 8, "amber");
-  g.rect(3, 7, 10, 1, "yellow");
-  g.rect(12, 7, 1, 8, "orange");
-  g.rect(7, 9, 2, 4, "dbrown");
-  return g;
-}
-
-// The $ on icon-bill, 5x7: a stroke down the middle through an S.
-const DOLLAR: readonly string[] = ["..a..", ".aaaa", "a.a..", ".aaa.", "..a.a", "aaaa.", "..a.."];
-
-// A green dollar bill, its border and its seal's ring in dgreen round a white $, on an item for sale
-// the bank covers, where icon-lock marks one it does not: the two differ by shape as well as colour.
-function bill(): Grid {
-  const g = new Grid(16, 16);
-  g.rect(1, 4, 14, 9, "green");
-  g.rect(1, 12, 14, 1, "dgreen");
-  g.rect(14, 4, 1, 9, "dgreen");
-  g.rect(2, 5, 12, 1, "dgreen");
-  g.rect(2, 11, 12, 1, "dgreen");
-  g.ell(8.5, 8.5, 3.6, 3.2, "dgreen");
-  bitmap(g, 6, 5, DOLLAR, { a: "white" });
-  return g;
-}
-
-// The treat pickup's bone and heart as road.ts's treat lays them out at 16x16 (idle frame 0), outlined
-// with iconEdge as the content icons are.
-function treatIcon(): Drawable {
-  const g = treat({ lift: 0 });
-  raster(g).edge = iconEdge;
-  return g;
-}
-
-// Three broad pink wisps above a mauve gas cloud, with a shared plum keyline.
-function stinky(): Frame {
-  const g = new Grid(16, 16);
-  g.edge = () => K.plum!;
-  for (const [x, y] of [
-    [2, 10],
-    [7, 9],
-    [12, 10],
-  ] as const) {
-    g.ell(x + 1, y + 2, 3, 2.5, "mauve", "purple", "pink");
-  }
-  g.rect(3, 12, 10, 2, "mauve");
-  for (const [x, top] of [
-    [2, 2],
-    [7, 1],
-    [12, 2],
-  ] as const) {
-    [1, 0, 0, 1, 2, 2, 1].forEach((dx, y) => g.rect(x + dx, top + y, 2, 1, "pink"));
-  }
-  g.rect(4, 12, 7, 1, "pink");
-  return g.outlined();
-}
-
-// The X that marks a muted icon, 5x5 in 2px strokes from (x, y).
-function muteX(g: Drawable, x: number, y: number, col: string): void {
-  for (let i = 0; i < 4; i++) {
-    g.rect(x + i, y + i, 2, 2, col);
-    g.rect(x + 3 - i, y + i, 2, 2, col);
-  }
-}
-
-// The states differ by shape: the speaker has two sound waves for on and an X in their place for off;
-// the music note (an eighth note, its flag curling right) is bare for on and has the same X below its
-// flag for off. Neither has an outline, which would fill the gaps between the waves. ink is NAVY_FACE
-// or CREAM_PANEL.
-function speaker(ink: Ink, on: boolean, note = false): Grid {
-  const [face, shade, xCol] = ink;
-  const g = new Grid(16, 16);
-  if (note) {
-    g.ell(4.5, 12, 3.5, 2.6, face, shade);
-    g.rect(7, 2, 1, 10, face);
-    g.rect(8, 2, 1, 9, shade);
-    for (const [x, y] of [
-      [9, 2],
-      [10, 2],
-      [9, 3],
-      [10, 3],
-      [11, 3],
-      [10, 4],
-      [11, 4],
-      [12, 4],
-      [11, 5],
-      [12, 5],
-      [12, 6],
-      [12, 7],
-      [11, 7],
-    ] as const) {
-      g.p(x, y, face);
-    }
-    if (!on) {
-      muteX(g, 10, 9, xCol);
-    }
-    return g;
-  }
-  g.rect(1, 5, 4, 6, face);
-  for (let i = 0; i < 4; i++) {
-    g.rect(5 + i, 4 - i, 1, 8 + 2 * i, face);
-  }
-  g.rect(1, 10, 4, 1, shade);
-  g.rect(8, 1, 1, 14, shade);
-  if (on) {
-    for (const [x, y] of [
-      [10, 5],
-      [10, 10],
-      [12, 3],
-      [13, 4],
-      [13, 11],
-      [12, 12],
-    ] as const) {
-      g.p(x, y, face);
-    }
-    g.rect(11, 6, 1, 4, face);
-    g.rect(14, 5, 1, 6, face);
-  } else {
-    muteX(g, 10, 5, xCol);
-  }
-  return g;
-}
-
-// The Settings Effects row: a four-point sparkle with two small ones in the waves' place for on, and
-// the speaker's X there instead for off.
-function effects(ink: Ink, on: boolean): Grid {
-  const [face, shade, xCol] = ink;
-  const g = new Grid(16, 16);
-  rows(
-    g,
-    0,
-    3,
-    [
-      "....f....",
-      "....f....",
-      "...ffs...",
-      "...ffs...",
-      "..fffss..",
-      "fffffffss",
-      "..fffss..",
-      "...fss...",
-      "...fss...",
-      "....s....",
-      "....s....",
-    ],
-    (ch) => (ch === "f" ? face : shade),
-  );
-  if (on) {
-    g.rect(12, 2, 1, 5, face);
-    g.rect(10, 4, 5, 1, face);
-    g.p(13, 4, shade);
-    g.rect(13, 9, 1, 3, face);
-    g.rect(12, 10, 3, 1, face);
-    g.p(10, 13, face);
-  } else {
-    muteX(g, 10, 5, xCol);
-  }
-  return g;
-}
-
-// Reduced motion: a large ball resting on a line when on, travelling past three trails when off.
-function motion(ink: Ink, on: boolean): Grid {
-  const [face, shade] = ink;
-  const g = new Grid(16, 16);
-  g.ell(11.5, on ? 10 : 7, 4.2, 4.2, face, shade);
-  if (on) {
-    g.rect(1, 14, 15, 1, face);
-    g.rect(1, 15, 15, 1, shade);
-  } else {
-    for (const [x, y, w] of [
-      [2, 2, 4],
-      [0, 6, 6],
-      [2, 10, 4],
-    ] as const) {
-      g.rect(x, y, w, 2, face);
-    }
-  }
-  return g;
-}
-
-// The Settings Install app row: a phone, its screen a gap the panel shows through, with a down arrow
-// into the screen for on and the speaker's X in the arrow's place for off.
-function install(ink: Ink, on: boolean): Grid {
-  const [face, shade, xCol] = ink;
-  const g = new Grid(16, 16);
-  rows(
-    g,
-    0,
-    0,
-    [
-      "...ffffffffff...",
-      "..fffffffffffs..",
-      "..ff........fs..",
-      "..ff........fs..",
-      "..ff...fs...fs..",
-      "..ff...fs...fs..",
-      "..ff...fs...fs..",
-      "..ff...fs...fs..",
-      "..ff.ffffss.fs..",
-      "..ff..ffss..fs..",
-      "..ff...fs...fs..",
-      "..ff........fs..",
-      "..ff........fs..",
-      "..fffffffffffs..",
-      "..fffffffffffs..",
-      "...ssssssssss...",
-    ],
-    (ch) => (ch === "f" ? face : shade),
-  );
-  if (!on) {
-    g.rect(4, 4, 8, 7, null);
-    muteX(g, 5, 5, xCol);
-  }
-  return g;
-}
-
-// Safari's Share button, for the iOS install steps card: a box open at the top with an arrow rising
-// out of it, its chevron head and box in 2px strokes, in the -panel icons' inks.
-function shareIcon(): Grid {
-  const [face, shade] = CREAM_PANEL;
-  const g = new Grid(16, 16);
-  rows(
-    g,
-    0,
-    0,
-    [
-      ".......fs.......",
-      "......ffss......",
-      ".....fffsss.....",
-      "....ff.fs.ss....",
-      ".......fs.......",
-      ".......fs.......",
-      "..fff..fs..ffs..",
-      "..ff...fs...fs..",
-      "..ff...fs...fs..",
-      "..ff...fs...fs..",
-      "..ff...fs...fs..",
-      "..ff........fs..",
-      "..ff........fs..",
-      "..ff........fs..",
-      "..fffffffffffs..",
-      "...ssssssssss...",
-    ],
-    (ch) => (ch === "f" ? face : shade),
-  );
-  return g;
-}
-
-// The browser menu button, for the Chrome for Android and Firefox for Android install steps cards:
-// three round 4x4 dots stacked on the centre line with 2px gaps, lit like icon-share.
-function browserMenuIcon(): Grid {
-  const [face, shade] = CREAM_PANEL;
-  const g = new Grid(16, 16);
-  for (const top of [0, 6, 12]) {
-    rows(g, 6, top, [".ff.", "fffs", "ffss", ".ss."], (ch) => (ch === "f" ? face : shade));
-  }
-  return g;
-}
-
-// icon-update, 16x16 fills: lime lights the top-left edges, dgreen shades the lower-right.
-const UPDATE_ROWS: readonly string[] = [
-  "................",
-  "................",
-  "......LLLL......",
-  "......LGGD......",
-  "......LGGD......",
-  "..LLLLLGGDLLLD..",
-  "...LGGGGGGGGD...",
-  "....LGGGGGGD....",
-  ".....LGGGGD.....",
-  "......LGGD......",
-  ".LL....GD....LL.",
-  ".LG..........GD.",
-  ".LG..........GD.",
-  ".LGGGGGGGGGGGGD.",
-  ".DDDDDDDDDDDDDD.",
-  "................",
-];
-
-// The home screen's update notice: a green down arrow, its head 12 wide over a 4-wide shaft, pointing
-// into a tray of 2px walls and floor, with 2px or more clear between the head and the walls. One
-// forest line round every fill, which holds 3:1 on cream and tan as iconEdge's outline on green does.
-function updateIcon(): Grid {
-  const g = edged(new Grid(16, 16), "forest");
-  bitmap(g, 0, 0, UPDATE_ROWS, { D: "dgreen", G: "green", L: "lime" });
-  return g;
-}
-
-// An open ledger, its two pages bowed up from the spine with three ruled lines each; the spine is a
-// navy gap, so the face shows through.
-function logbookIcon(): Grid {
-  const g = new Grid(16, 16);
-  rows(
-    g,
-    0,
-    2,
-    [
-      "cc..........cc..",
-      "cccc......cccc..",
-      "ccccccc.cccccct.",
-      "c-----c.c-----t.",
-      "ccccccc.cccccct.",
-      "c----cc.c----ct.",
-      "ccccccc.cccccct.",
-      "c-----c.c-----t.",
-      "ccccccc.cccccct.",
-      "cccccct.ccccctt.",
-      "tttccct.ccctttt.",
-      "...ttt.t.ttt....",
-    ],
-    (ch) => (ch === "c" ? "cream" : "tan"),
-  );
-  return g;
-}
-
-// A cog: eight teeth around a ring with an eight-sided hole, the shape the sibling duck-platformer
-// game's Settings button shares, cream with tan on the lower-right edges like the other navy-face
-// glyphs.
-function settingsIcon(): Grid {
-  const g = new Grid(16, 16);
-  rows(
-    g,
-    0,
-    0,
-    [
-      "......ccct......",
-      "......ccct......",
-      "..ct..ccct..ct..",
-      "..tcccccccccct..",
-      "...ccccttccct...",
-      "...ccct..tcct...",
-      "ccccct....tcccct",
-      "cccct......cccct",
-      "cccct......cccct",
-      "tttcct....cccttt",
-      "...ccct..ccct...",
-      "...ccccccccct...",
-      "..ccttccccttct..",
-      "..tt..ccct..tt..",
-      "......ccct......",
-      "......tttt......",
-    ],
-    (ch) => (ch === "c" ? "cream" : "tan"),
-  );
-  return g;
-}
-
-// The home top bar's Exit button: a doorway with an arrow leaving it to the right, the shape the
-// sibling duck-platformer game's shares, cream with tan on the lower-right edges like the other
-// navy-face glyphs.
-function exitIcon(): Grid {
-  const g = new Grid(16, 16);
-  rows(
-    g,
-    0,
-    2,
-    [
-      ".cccccccct......",
-      ".cctttttct......",
-      ".ct.....ct..t...",
-      ".ct.....tt..ct..",
-      ".ct.........cct.",
-      ".ct...ccccccccct",
-      ".ct...ttttttccct",
-      ".ct.........cct.",
-      ".ct.....ct..ct..",
-      ".ct.....ct..t...",
-      ".cccccccct......",
-      ".ttttttttt......",
-    ],
-    (ch) => (ch === "c" ? "cream" : "tan"),
-  );
-  return g;
-}
-
-// 8x7: a full heart is filled dark red; an empty one is a dark brown outline, so the two differ by fill
-// as well as colour (5:1 or more on cream). dark is for the navy dog card: the full heart red (3.31:1)
-// lit pink and white, the empty one a grey outline (4.93:1).
-function heart(full: boolean, dark = false): Grid {
-  const g = new Grid(8, 7);
-  const on = (x: number, y: number): boolean =>
-    y >= 0 && y < HEART.length && x >= 0 && x < HEART[y]!.length && HEART[y]![x] === "1";
-  HEART.forEach((row, y) => {
-    [...row].forEach((c, x) => {
-      if (c !== "1") {
-        return;
-      }
-      if (full) {
-        g.p(x, y, dark ? "red" : "dred");
-      } else if (!SIDES.every(([dx, dy]) => on(x + dx, y + dy))) {
-        g.p(x, y, dark ? "grey" : "dbrown");
-      }
-    });
-  });
-  if (full) {
-    g.p(1, 1, dark ? "pink" : "red");
-    g.p(2, 1, dark ? "white" : "pink");
-  }
-  return g;
-}
 
 // ---------- nine-slices and badges ----------
 
@@ -778,6 +173,7 @@ function button(state: string): Grid {
 }
 
 const TILE = 24;
+
 // A normal tile's lip: brown, not the chrome's tan, so it reads apart from the tan box behind an owned
 // item's picture, which sits on it.
 const TILE_LIP = "brown";
@@ -1087,9 +483,12 @@ export const DEBUFF_LOOKS: ReadonlyMap<string, DebuffLook> = new Map([
   ["zoomies", ["green", "forest", "yellow", "ink"]],
   ["spotlight", ["blue", "navy", "yellow", "white"]],
 ]);
+
 const DEBUFF_BAR: readonly [number, number] = [360, 16];
+
 // The bar's track, in bar pixels: its ink frame, and the run the game fills inside it.
 const DEBUFF_TRACK: readonly [number, number, number, number] = [68, 4, 288, 7];
+
 const DEBUFF_FILL: readonly [number, number, number, number] = [69, 5, 286, 5];
 
 // 360x16, ui-debuff-bar: one active debuff, drawn full width under the walk bar. The face in the
@@ -1404,7 +803,9 @@ function detailWell(): Grid {
 }
 
 const SECTION_W = 24;
+
 const SECTION_H = 32;
+
 // Each section state's heading face, in ui-section's tag order.
 const SECTION_FACES: ReadonlyMap<string, string> = new Map([
   ["complete", "amber"],
@@ -1493,11 +894,14 @@ const WALK_BAR: readonly [number, number] = [
   LAYOUT.regions.topBar.width,
   LAYOUT.regions.topBar.height,
 ];
+
 // Every top bar (the start screen's, the walk bar, Help's) is 40 rows of flat plum with this trim: a
 // dbrown line on row 1, and the bottom rows brown, dbrown and ink, so the bar ends on a lit edge over
 // the scene.
 const TOP_BAR_LINE = 1;
+
 const TOP_BAR_EDGE: readonly string[] = ["brown", "dbrown", "ink"];
+
 // The walk bar's cash well, in screen pixels: the start screen's bank well at its narrowest, 3 rows
 // clear of the trim above and below: x, y, width and height from the layout's walkBar.parts.cash.well.
 const WALK_CASH_WELL: readonly [number, number, number, number] = [
@@ -1506,6 +910,7 @@ const WALK_CASH_WELL: readonly [number, number, number, number] = [
   LAYOUT.walkBar.parts.cash.well.width,
   LAYOUT.walkBar.parts.cash.well.height,
 ];
+
 // The effect wells the game draws on the bar: six 22x22 wells (the perk, Pocket, found item and three
 // upgrades), 1 column apart, set evenly between the cash well and Help's press at x 216 (x 77 to 213),
 // on rows 8 to 29, centred on the buttons' faces (rows 9 to 28). The three buttons' presses, 48 wide,
@@ -1587,22 +992,29 @@ function zonePill(): Grid {
 // each side and the card's foot sits on the band's last row, over the neighbourhood progress line. The
 // cards are navy, so the eye stays on the road and the dogs' photos and hearts carry the row.
 const DOG_CARD: readonly [number, number] = [120, 70];
+
 const DOG_CARD_FRAME: readonly [number, number, number, number] = [1, 0, 118, 70];
+
 // The header's rows (2 to 15) and the ink rule under it.
 const DOG_CARD_RULE = 16;
+
 // The photo in the body (the navy on x 3 to 115 and rows 17 to 66): 3 columns of navy to its left, as
 // the owner's column keeps to its right, 6 rows above it and 8 below.
 const DOG_PHOTO: readonly [number, number] = [6, 23];
+
 // The owner's photo, x, y and side: 3 columns right of the dog's and level with its top, an ink frame
 // round a white mat round sky, as ui-owner-tab frames the owner, for the 20x20 face-owner-<dog>-20.
 const DOG_CARD_OWNER: readonly [number, number, number] = [45, 23, 24];
+
 // The hearts area the heart-loss flash fills, as x, y, w, h: one row of six hearts from (45,52), its
 // foot level with the dog's photo, with a pixel round them. The only part of the card it touches, so
 // the warn rim stays the card's only border.
 const DOG_CARD_HEARTS: readonly [number, number, number, number] = [44, 51, 55, 9];
+
 // The empty card's FIRED plate, x, y, w and h: a band across the empty photo, centred on it, the
 // plate's sides on the photo's frame.
 const DOG_CARD_FIRED: readonly [number, number, number, number] = [6, 32, 36, 17];
+
 // Each heart-loss frame: the flash's colour and how many of the area's pixels it fills (1 every pixel,
 // 2 a checkerboard, 4 one in four), so it bursts white and dithers away. White keeps the hearts drawn
 // over it readable (red 4.19:1, the grey outlines 2.82:1), where a red or pink flash would swallow the
@@ -1715,6 +1127,7 @@ function dogCardHeartLoss(step: number): Grid {
 }
 
 const CARD_BAND: readonly [number, number] = [360, 76];
+
 // The band's top rows, where the road ends: a dithered ink shadow cast onto the road (rows 0 and 1, a
 // quarter then three quarters of their pixels), then the trim: ink, a lit tan line and ink (rows 2 to
 // 4), then the wood.
@@ -1942,9 +1355,13 @@ function zoneBanner(): Grid {
 // frame. The fingertip's contact row is TOUCH_Y; a swipe right runs from column TOUCH_FROM to TOUCH_TO
 // and a swipe left back again, so the anchor (TOUCH_FROM, TOUCH_Y) stands on lane 1's centre.
 const TOUCH_SIZE: readonly [number, number] = [104, 40];
+
 const TOUCH_Y = 6;
+
 const TOUCH_FROM = 20;
+
 const TOUCH_TO = 84;
+
 // The glove, a right hand from the back pointing up, outlined in ink: the fingertip's contact pixel is
 // column TOUCH_TIP of row 0. W white, L lgrey shade, G grey creases and the line above the cuff, C and
 // D the cuff and its shade.
@@ -1973,7 +1390,9 @@ const TOUCH_GLOVE: readonly string[] = [
   "....CCCCCCCCCCD.",
   "....CCCCCCCCCCD.",
 ];
+
 const TOUCH_TIP = 5;
+
 const TOUCH_GLOVE_COLS: Readonly<Record<string, string>> = {
   C: "white",
   D: "lgrey",
@@ -1981,10 +1400,13 @@ const TOUCH_GLOVE_COLS: Readonly<Record<string, string>> = {
   L: "lgrey",
   W: "white",
 };
+
 // The drag's offsets from its start, eased in and out over 7 frames; the glove off the glass stands
 // TOUCH_HOVER down and right of the contact.
 const TOUCH_OFFSETS: readonly number[] = [4, 12, 24, 38, 51, 60, 64];
+
 const TOUCH_HOVER: readonly [number, number] = [2, 3];
+
 // Per-frame ms of one swipe: hover, press (2), drag (7), hold (2), lift (2) and the empty pause.
 const TOUCH_MS: readonly number[] = [
   300,
@@ -1997,6 +1419,7 @@ const TOUCH_MS: readonly number[] = [
   90,
   350,
 ];
+
 // The still for reduced motion: the swipe right's fifth drag frame, its whole trail kept.
 const TOUCH_STILL = 4;
 
@@ -2124,6 +1547,7 @@ const BUTTON_TAGS = [
   "go-pressed",
   "go-disabled",
 ] as const;
+
 const ICON_BUTTON_TAGS = ["normal", "pressed"] as const;
 
 // Every image by key, in build order.

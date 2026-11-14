@@ -97,7 +97,7 @@ import {
   resizeNearest,
   type Rgba,
 } from "@andornaut/art-kit/raster";
-import { blankImage, type RgbaImage } from "@andornaut/art-kit/rgbaImage";
+import { type RgbaImage } from "@andornaut/art-kit/rgbaImage";
 
 import * as bd from "./backdrops.ts";
 import { sign } from "./fonts.ts";
@@ -107,12 +107,10 @@ import {
   build as buildSprites,
   dk,
   type Drawable,
-  type DrawingScope,
   edged,
   type Frame,
   Grid,
   K,
-  LAYOUT,
   rgbPng,
   run,
   savePng,
@@ -122,8 +120,40 @@ import {
   UsageError,
 } from "./pixel.ts";
 import { LIT, rim, scope as roadScope } from "./road.ts";
-import { Canvas, image, rgb, text, textC, TILES, ZONES } from "./scene.ts";
-import { STATES } from "./ui.ts";
+import { Canvas, image, text, textC, TILES, ZONES } from "./scene.ts";
+import {
+  alphaAt,
+  Clear,
+  clear,
+  H,
+  hexAt,
+  key,
+  LOGO_H,
+  LOGO_W,
+  PAW,
+  rand,
+  rect,
+  rgba,
+  scope,
+  setPixel,
+  SIGN_AT,
+  SIGN_H,
+  SIGN_W,
+  W,
+  xy,
+} from "./screensDrawing.ts";
+import {
+  BOARD,
+  DOOR_WAVE,
+  DOOR_WAVE_MS,
+  imageRows,
+  PET_SHOP_AT,
+  PET_SHOP_H,
+  PET_SHOP_W,
+  petShop,
+  petShopBoard,
+  petShopFront,
+} from "./screensShop.ts";
 
 // The usage text, naming every image in SCREENS.
 function usage(): string {
@@ -139,118 +169,6 @@ function usage(): string {
   node art/tools/screens.ts build               write public/art/images/*.png and
                                                 public/art/sprites/ui-loading.*, ui-pet-shop.* and
                                                 ui-pet-shop-board.*`;
-}
-
-// The screen's size, from the layout's screen.
-const W = LAYOUT.screen.width;
-const H = LAYOUT.screen.height;
-const LOGO_W = 145;
-const LOGO_H = 41;
-const SIGN_W = 128;
-const SIGN_H = 38;
-const SIGN_AT: readonly [number, number] = [6, 106];
-const PET_SHOP_W = 120;
-const PET_SHOP_H = 108;
-// Where the game draws ui-pet-shop on the start screen, from the layout export's home Pet shop.
-const PET_SHOP = LAYOUT.scenes.home.petShop;
-const PET_SHOP_AT: readonly [number, number] = [PET_SHOP.x, PET_SHOP.y];
-// The PET SHOP board's place in ui-pet-shop: ui-button's go state 114x22, its bottom 2 rows over
-// the parapet. The building below it starts BOARD_RISE rows down. ui-pet-shop-board's frame adds
-// BOARD_DROP rows under it, where pressed sinks.
-const BOARD: readonly [x: number, y: number, w: number, h: number] = [3, 0, 114, 22];
-// The frame and board the game places must be the ones drawn here.
-if (
-  PET_SHOP.width !== PET_SHOP_W ||
-  PET_SHOP.height !== PET_SHOP_H ||
-  PET_SHOP.board.x !== PET_SHOP.x + BOARD[0] ||
-  PET_SHOP.board.y !== PET_SHOP.y + BOARD[1] ||
-  PET_SHOP.board.width !== BOARD[2] ||
-  PET_SHOP.board.height !== BOARD[3]
-) {
-  throw new Error(`Pet shop layout ${JSON.stringify(PET_SHOP)} differs from ui-pet-shop`);
-}
-const BOARD_RISE = 4;
-const BOARD_DROP = 2;
-// Projected door-leaf width, keeper reveal and hand pose. All coordinates stay inside the closed
-// door.
-type DoorStep = readonly [width: number, reveal: number | null, wave: number | null];
-const DOOR_WAVE: readonly DoorStep[] = [
-  [26, null, null],
-  [22, null, null],
-  [14, 0, null],
-  [6, 0.35, null],
-  [6, 0.7, -1],
-  [6, 1, 0],
-  [6, 1, 1],
-  [6, 1, 2],
-  [6, 1, 1],
-  [6, 1, 0],
-  [6, 1, -1],
-  [6, 1, null],
-  [6, 0.35, null],
-  [14, 0, null],
-  [22, null, null],
-  [26, null, null],
-];
-const DOOR_WAVE_MS = 120;
-
-// A pixel rectangle, as art-kit's raster ops take it.
-type Rect = Parameters<typeof crop>[0];
-
-// The grid every drawing here makes, which small() swaps for a Mini while it draws ui-loading.
-const scope: DrawingScope = {
-  Grid: (w = 32, h = 32) => new Grid(w, h),
-};
-
-// A small deterministic generator, so a rebuild draws the same specks.
-function rand(seed: number): () => number {
-  let s = seed >>> 0;
-  return () => {
-    s = (s * 1664525 + 1013904223) >>> 0;
-    return s / 4294967296;
-  };
-}
-
-// A canvas with a transparent background, for the logo and the pasted strips. A build saves it as
-// an RGBA PNG; a Canvas as an RGB one.
-class Clear extends Canvas {
-  constructor(w: number, h: number) {
-    super(w, h);
-    this.img = blankImage(w, h);
-  }
-}
-
-function clear(w: number, h: number): Clear {
-  return new Clear(w, h);
-}
-
-const key = (x: number, y: number): string => `${x},${y}`;
-
-function xy(k: string): [number, number] {
-  const [x = 0, y = 0] = k.split(",").map(Number);
-  return [x, y];
-}
-
-function rgba(c: string): Rgba {
-  return [...rgb(c), 255];
-}
-
-// The hex colour of image's pixel x, y, ignoring alpha.
-function hexAt(img: RgbaImage, x: number, y: number): string {
-  const i = (y * img.width + x) * 4;
-  return [0, 1, 2].map((k) => img.data[i + k]!.toString(16).padStart(2, "0")).join("");
-}
-
-function alphaAt(img: RgbaImage, x: number, y: number): number {
-  return img.data[(y * img.width + x) * 4 + 3]!;
-}
-
-function setPixel(img: RgbaImage, x: number, y: number, c: Rgba): void {
-  img.data.set(c, (y * img.width + x) * 4);
-}
-
-function rect(x0: number, y0: number, x1: number, y1: number): Rect {
-  return { height: y1 - y0, width: x1 - x0, x: x0, y: y0 };
 }
 
 // A fallen leaf lying askew, 3x3 on a diagonal with its stem a ramp step darker at the narrow end,
@@ -317,12 +235,12 @@ export function planks(
 
 // ---------- logo ----------
 
-const PAW: readonly string[] = [".#.#.", "#...#", ".###.", ".###."];
-
 // The comic letters' apostrophe, 2px wide like their stems, for ARCHIE'S.
 const APOSTROPHE: readonly string[] = ["##", "##", "#."];
+
 // The bandana's rows under the portrait's collar (row 41), and the column its point is centred on.
 const BANDANA_ROWS = 8;
+
 const BANDANA_MID = 30.5;
 
 // A lettering: {"x,y": colour name}.
@@ -667,378 +585,30 @@ function home(): Canvas {
   return cv;
 }
 
-// ---------- ui-pet-shop ----------
-
-const BONE: readonly string[] = [
-  "..cc.......cc..",
-  ".cccc.....cccc.",
-  "ccccccccccccccc",
-  "ccccccccccccccc",
-  ".cccc.....cccc.",
-  "..cc.......cc..",
-];
-
-// 17x21: a tan puppy sitting up in the shop window, front view, floppy brown ears, a white muzzle
-// and chest, a pink tongue out; cel shaded in an ink line, as the faces are.
-function windowPuppy(): Drawable {
-  const g = edged(scope.Grid(17, 21), "ink");
-  g.cel(8.5, 16, 5.5, 4.5, "tan", "brown");
-  g.cel(8.5, 16.5, 2.5, 3, "white", "lgrey");
-  g.cel(8.5, 8.2, 6, 5.3, "tan", "brown", "skin1", 2.6);
-  for (const x of [2.5, 14.5]) {
-    g.cel(x, 9, 1.8, 3.6, "brown", "dbrown");
-  }
-  g.cel(8.5, 11, 2.6, 1.9, "white", "lgrey");
-  for (const x of [5, 11]) {
-    g.rect(x, 7, 2, 2, "ink");
-    g.p(x, 7, "white");
-  }
-  g.rect(8, 9, 2, 1, "ink");
-  g.rect(8, 11, 2, 2, "pink");
-  g.p(4, 10, "pink");
-  g.p(13, 10, "pink");
-  return g;
-}
-
-interface PetShopOptions {
-  // A DOOR_WAVE frame index for door-wave, or null for the static closed door.
-  doorFrame?: number | null;
-  pressed?: boolean;
-}
-
-// ui-pet-shop's frame, PET_SHOP_W x PET_SHOP_H: the building from BOARD_RISE down, without its
-// board. Everything but the step is drawn t rows lower, so pressed sinks the front 2px onto a step
-// 1px shallower, as ui-button's face sinks into its lip.
-function petShop({ doorFrame = null, pressed = false }: PetShopOptions = {}): Clear {
-  const cv = clear(PET_SHOP_W, PET_SHOP_H);
-  building(cv, PET_SHOP_W, PET_SHOP_H - BOARD_RISE, pressed, doorFrame);
-  return cv;
-}
-
-// ui-pet-shop-board's frame, BOARD's width x its height plus BOARD_DROP.
-function petShopBoard(pressed = false): Clear {
-  const cv = clear(BOARD[2], BOARD[3] + BOARD_DROP);
-  shopBoard(cv, pressed);
-  return cv;
-}
-
-// The shop with its board at rest, as the yard shows them.
-function petShopFront({ doorFrame = null, pressed = false }: PetShopOptions = {}): Clear {
-  const cv = petShop({ doorFrame, pressed });
-  composite({ x: BOARD[0], y: BOARD[1] }, petShopBoard(pressed).img, cv.img);
-  return cv;
-}
-
-// The PET SHOP board from its frame's top left: ui-button's go state, a green face with a yellow
-// top highlight on a forest lip 4px deep, in an ink line with its corners cut, and PET SHOP in the
-// sign letters' shapes at 2x, filled ink (8.41:1 on green) with no outline or shadow, as the go
-// label. Raised, row 0 is ink, row 1 the highlight, the face runs to row 16, the lip fills rows 17
-// to 20 and ink row 21; the caps fill rows 4 to 13. Pressed, the lip and highlight give way to
-// face, as go-pressed, and the board rides down with the front: face and letters sink BOARD_DROP.
-function shopBoard(cv: Canvas, pressed: boolean): void {
-  const [, , bw, bh] = BOARD;
-  const t = pressed ? BOARD_DROP : 0;
-  const [face, lip, hi] = STATES.go!;
-  cv.fill(1, t, bw - 2, bh, "ink");
-  cv.fill(0, 1 + t, bw, bh - 2, "ink");
-  cv.fill(1, 1 + t, bw - 2, bh - 2, face);
-  if (!pressed) {
-    cv.fill(1, 1, bw - 2, 1, hi!);
-    cv.fill(1, bh - 5, bw - 2, 4, lip!);
-  }
-  const [letters] = sign("PET SHOP", 2);
-  const caps = [...letters].filter(([, c]) => c !== "ink" && c !== "dred").map(([k]) => xy(k));
-  const x0 = Math.min(...caps.map(([x]) => x));
-  const y0 = Math.min(...caps.map(([, y]) => y));
-  const lw = Math.max(...caps.map(([x]) => x)) + 1 - x0;
-  const lx = Math.floor((bw - lw) / 2);
-  for (const [x, y] of caps) {
-    cv.fill(lx + x - x0, 4 + t + y - y0, 1, 1, "ink");
-  }
-}
-
-// The shop below the board, w x h from BOARD_RISE down: walls, parapet, awning, window, door and
-// step.
-function building(
-  full: Canvas,
-  w: number,
-  h: number,
-  pressed: boolean,
-  doorFrame: number | null = null,
-): void {
-  const cv = clear(w, h);
-  const t = pressed ? 2 : 0;
-  // walls: rust brick in an ink line, lit ochre on the left, dred on the right, so the green board
-  // stands off them; dbrown mortar every 4 rows, the joints 8px apart and staggered a half brick
-  cv.fill(4, 18 + t, w - 8, h - 18 - t, "ink");
-  cv.fill(5, 19 + t, w - 10, h - 19 - t, "rust");
-  for (let n = 0, y = 22 + t; y < h; n++, y += 4) {
-    cv.fill(7, y, w - 14, 1, "dbrown");
-    for (let x = 7 + (n % 2) * 4; x < w - 7; x += 8) {
-      cv.fill(x, y + 1, 1, 3, "dbrown");
-    }
-  }
-  cv.fill(5, 19 + t, 2, h - 19 - t, "ochre");
-  cv.fill(w - 7, 19 + t, 2, h - 19 - t, "dred");
-  // the parapet trim
-  cv.fill(2, 16 + t, w - 4, 4, "ink");
-  cv.fill(3, 17 + t, w - 6, 2, "cream");
-  // the awning: red and white stripes 6px wide, shaded along the bottom, over a scalloped ink edge
-  const top = 24 + t;
-  const bot = 36 + t;
-  cv.fill(2, top - 1, w - 4, bot - top + 2, "ink");
-  for (let x = 3; x < w - 3; x++) {
-    const red = Math.floor((x - 3) / 6) % 2 === 0;
-    cv.fill(x, top, 1, bot - top - 3, red ? "red" : "white");
-    cv.fill(x, bot - 3, 1, 3, red ? "dred" : "lgrey");
-    if ([1, 2, 3, 4].includes((x - 3) % 6)) {
-      cv.fill(x, bot, 1, 1, red ? "dred" : "lgrey");
-      cv.fill(x, bot + 1, 1, 1, "ink");
-    } else {
-      cv.fill(x, bot, 1, 1, "ink");
-    }
-  }
-  // the display window: a cream frame, sky glass with two glints, a blue sill
-  const [wx, wy, ww, wh] = [10, 44 + t, 56, 46];
-  cv.fill(wx - 1, wy - 1, ww + 2, wh + 2, "ink");
-  cv.fill(wx, wy, ww, wh, "cream");
-  cv.fill(wx + 2, wy + 2, ww - 4, wh - 4, "sky");
-  cv.fill(wx + 2, wy + wh - 8, ww - 4, 6, "blue");
-  cv.fill(wx + 2, wy + wh - 3, ww - 4, 1, "plum");
-  for (let i = 0; i < 10; i++) {
-    cv.fill(wx + 6 + i, wy + 14 - i, 1, 1, "cyan");
-    cv.fill(wx + 10 + i, wy + 18 - i, 1, 1, "white");
-  }
-  // a food bag and a bone on the sill
-  cv.fill(wx + 8, wy + 20, 14, 18, "ink");
-  cv.fill(wx + 9, wy + 21, 12, 16, "amber");
-  cv.fill(wx + 9, wy + 21, 12, 2, "yellow");
-  cv.fill(wx + 19, wy + 23, 2, 14, "orange");
-  cv.fill(wx + 11, wy + 26, 7, 6, "red");
-  cv.fill(wx + 13, wy + 28, 3, 2, "white");
-  // a puppy sitting on the sill behind the bone, waiting to be taken home
-  windowPuppy()
-    .outlined()
-    .forEach((row, y) => {
-      row.forEach((c, x) => {
-        if (c) {
-          cv.fill(wx + 28 + x, wy + 15 + y, 1, 1, c);
-        }
-      });
-    });
-  const bone = new Set<string>();
-  BONE.forEach((row, y) => {
-    [...row].forEach((ch, x) => {
-      if (ch === "c") {
-        bone.add(key(x, y));
-      }
-    });
-  });
-  const rimSet = new Set<string>();
-  for (const k of bone) {
-    const [x, y] = xy(k);
-    for (const [dx, dy] of [
-      [0, 1],
-      [1, 0],
-      [0, -1],
-      [-1, 0],
-    ] as const) {
-      const q = key(x + dx, y + dy);
-      if (!bone.has(q)) {
-        rimSet.add(q);
-      }
-    }
-  }
-  for (const k of rimSet) {
-    const [x, y] = xy(k);
-    cv.fill(wx + 29 + x, wy + 31 + y, 1, 1, "blue");
-  }
-  for (const k of bone) {
-    const [x, y] = xy(k);
-    cv.fill(wx + 29 + x, wy + 31 + y, 1, 1, y < 2 ? "white" : y > 3 ? "lgrey" : "cream");
-  }
-  shopDoor(cv, h, pressed, doorFrame);
-  // the step: 4 rows, 3 when pressed
-  const sy = pressed ? h - 3 : h - 4;
-  cv.fill(2, sy, w - 4, h - sy, "ink");
-  cv.fill(3, sy + 1, w - 6, h - sy - 2, "lgrey");
-  if (!pressed) {
-    cv.fill(3, h - 2, w - 6, 1, "grey");
-  }
-  composite({ x: 0, y: BOARD_RISE }, cv.img, full.img);
-}
-
-// The keeper's raised near arm in each wave pose: [elbow, hand] offsets from the body's centre column
-// and rows on its clip. -1 lifts the forearm on the way up; 0, 1 and 2 hold the hand at head height,
-// then swing it out and in about the elbow. Upper arm and forearm keep the hanging arm's lengths, so
-// the arm reads as one limb.
-const KEEPER_WAVE: ReadonlyMap<
-  number,
-  readonly [readonly [number, number], readonly [number, number]]
-> = new Map([
-  [
-    -1,
-    [
-      [-9, 21],
-      [-9, 15],
-    ],
-  ],
-  [
-    0,
-    [
-      [-9, 12],
-      [-8, 6],
-    ],
-  ],
-  [
-    1,
-    [
-      [-9, 12],
-      [-10, 7],
-    ],
-  ],
-  [
-    2,
-    [
-      [-9, 12],
-      [-7, 6],
-    ],
-  ],
-]);
-
-// A friendly native keeper on a 20x48 clip, behind the door leaf, standing on the doorway's floor
-// with his head 5px under the lintel: a third of his height is head, the rest a short-sleeved shirt
-// and apron over trousers. Both arms hang from the shoulders' top row; the near one raises from there
-// to wave. The keeper draws lines, which only a full-size Grid has, so it is never drawn small.
-function shopKeeper(reveal: number, wave: number | null): RgbaImage {
-  const g = edged(new Grid(20, 48), "ink");
-  const cx = 11 + Math.round((1 - reveal) * 4);
-  // A short apron exposes two trouser legs, a dark gap and grounded shoes.
-  g.rect(cx - 4, 30, 3, 16, "navy");
-  g.rect(cx - 4, 32, 1, 12, "dslate");
-  g.rect(cx + 1, 30, 3, 16, "navy");
-  g.rect(cx + 1, 32, 1, 12, "dslate");
-  g.rect(cx - 5, 46, 4, 1, "brown");
-  g.rect(cx + 1, 46, 4, 1, "brown");
-  g.rect(cx - 6, 16, 12, 14, "cream");
-  g.rect(cx + 4, 17, 2, 13, "tan");
-  g.rect(cx - 2, 14, 4, 3, "skin2");
-  g.rect(cx - 4, 20, 8, 12, "blue");
-  g.rect(cx - 4, 17, 2, 7, "sky");
-  g.rect(cx + 2, 17, 2, 7, "sky");
-  g.rect(cx - 3, 31, 6, 1, "sky");
-  g.rect(cx - 1, 23, 2, 2, "yellow");
-  // A rounded short haircut, calm eyes and a small open smile.
-  g.cel(cx, 9, 5.5, 6, "skin1", "skin2");
-  g.cel(cx, 5, 5.5, 3, "dbrown", "plum", "brown");
-  g.rect(cx - 5, 7, 1, 4, "dbrown");
-  g.rect(cx + 4, 7, 1, 4, "plum");
-  g.p(cx - 2, 10, "ink");
-  g.p(cx + 2, 10, "ink");
-  g.p(cx - 1, 12, "dred");
-  g.p(cx, 13, "dred");
-  g.p(cx + 1, 12, "dred");
-  // Short sleeves from the shoulder's top row, then bare forearms, the hands at the hips.
-  g.rect(cx + 6, 16, 2, 5, "cream");
-  g.rect(cx + 6, 21, 2, 11, "skin1");
-  if (wave === null) {
-    g.rect(cx - 8, 16, 3, 5, "cream");
-    g.rect(cx - 8, 21, 2, 11, "skin1");
-  } else {
-    const [[ex, ey], [hx, hy]] = KEEPER_WAVE.get(wave)!;
-    const elbow = [cx + ex, ey] as const;
-    const hand = [cx + hx, hy] as const;
-    const sleeve = [
-      cx - 8 + Math.floor((elbow[0] - cx + 8) / 2),
-      18 + Math.floor((elbow[1] - 18) / 2),
-    ] as const;
-    for (const offset of [0, 1]) {
-      g.line(cx - 8 + offset, 18, elbow[0] + offset, elbow[1], "skin1");
-      g.line(cx - 8 + offset, 18, sleeve[0] + offset, sleeve[1], "cream");
-      g.line(elbow[0] + offset, elbow[1], hand[0] + offset, hand[1], "skin1");
-    }
-    g.rect(cx - 8, 16, 3, 3, "cream");
-    g.rect(hand[0] - 1, hand[1] - 2, 3, 3, "skin1");
-    g.p(hand[0], hand[1] - 3, "skin1");
-  }
-  return toImage(g.outlined());
-}
-
-// The static closed door or a projected right-hinged leaf over the keeper.
-function shopDoor(cv: Canvas, h: number, pressed: boolean, doorFrame: number | null): void {
-  const t = pressed ? 2 : 0;
-  const [dx, dy, dw] = [76, 44 + t, 30];
-  cv.fill(dx - 1, dy - 1, dw + 2, h - dy + 1, "ink");
-  cv.fill(dx, dy, dw, h - dy, "cream");
-  cv.fill(dx + 2, dy + 2, dw - 4, h - dy - 2, "navy");
-  cv.fill(dx + 2, dy + 2, 1, h - dy - 2, "dslate");
-  cv.fill(dx + 6, dy + 6, dw - 12, 14, "sky");
-  cv.fill(dx + 6, dy + 6, dw - 12, 1, "cyan");
-  PAW.forEach((row, j) => {
-    [...row].forEach((c, i) => {
-      if (c === "#") {
-        cv.fill(dx + 13 + i, dy + 11 + j, 1, 1, "cream");
-      }
-    });
-  });
-  cv.fill(dx + 5, dy + 30, 3, 3, "amber");
-  if (doorFrame === null) {
-    return;
-  }
-  const [width, reveal, wave] = DOOR_WAVE[doorFrame]!;
-  if (width === 26) {
-    return;
-  }
-  // The aperture ends above the unchanged doorstep. The hinge column stays at x=103.
-  const [left, top, height] = [104 - width, 46, 54];
-  cv.fill(78, top, 26, height, "ink");
-  cv.fill(79, top + 1, 24, 2, "navy");
-  cv.fill(78, 95, 26, 5, "dbrown");
-  if (reveal !== null) {
-    composite({ x: 79, y: 52 }, shopKeeper(reveal, wave), cv.img);
-  }
-  const ratio = width / 26;
-  cv.fill(left, top, width, height, "navy");
-  cv.fill(left, top, 1, height, "dslate");
-  const paneX = left + Math.max(1, Math.round(4 * ratio));
-  const paneW = Math.max(1, Math.round(18 * ratio));
-  cv.fill(paneX, dy + 6, paneW, 14, "sky");
-  cv.fill(paneX, dy + 6, paneW, 1, "cyan");
-  PAW.forEach((row, j) => {
-    [...row].forEach((c, i) => {
-      if (c === "#") {
-        cv.fill(left + Math.round((11 + i) * ratio), dy + 11 + j, 1, 1, "cream");
-      }
-    });
-  });
-  const knobX = left + Math.max(1, Math.round(3 * ratio));
-  cv.fill(knobX, dy + 30, Math.max(1, Math.round(3 * ratio)), 3, "amber");
-}
-
-// An RGBA image as sprite frame rows: hex colours, null where clear.
-function imageRows(img: RgbaImage): Frame {
-  return Array.from({ length: img.height }, (_, y) =>
-    Array.from({ length: img.width }, (_, x) => (alphaAt(img, x, y) ? hexAt(img, x, y) : null)),
-  );
-}
-
 // The sky after dark, top to horizon: night falling over a last mauve glow, on screen-loading.
 const NIGHT_SKY: readonly string[] = ["navy", "purple", "mauve"];
 
 // ---------- screen-end ----------
 
-const END_STREET = 364; // top of the street strip on screen-end
+const END_STREET = 364;
+// top of the street strip on screen-end
 // The street strip's front yards, the lawn from its row 104; the sidewalk, curb and gutter's 20 rows
 // follow, so the road starts on screen row END_ROAD, 3 rows over the button's top (508) and 2 over
 // its 1px bob
 const END_YARD = 17;
-const END_WALK = 104 + END_YARD; // the strip's first sidewalk row
+
+const END_WALK = 104 + END_YARD;
+// the strip's first sidewalk row
 const END_ROAD = END_STREET + END_WALK + 20;
+
 // Cabbagetown's dusk, top to horizon, as its backdrop: lilac over pink and peach to a gold glow.
 const DUSK_SKY: readonly string[] = ["lilac", "pink", "peach", "gold"];
+
 // The CN Tower's centre column, foot and mast tip on screen-end.
 const END_CN: readonly [number, number, number] = [306, 96, 4];
-const END_RIDGE = 43; // the house's roof ridge on screen-end, under the logo's foot
+
+const END_RIDGE = 43;
+// the house's roof ridge on screen-end, under the logo's foot
 // Where EndScene draws the logo, 107,2.
 const END_LOGO_AT: readonly [number, number] = [Math.floor((W - LOGO_W) / 2), END_RIDGE - LOGO_H];
 
@@ -1345,17 +915,24 @@ function end(): Canvas {
 
 // ---------- screen-loading, ui-loading-track, ui-loading ----------
 
-const SKY_FOOT = 356; // NIGHT_SKY's bands end here, behind the skyline's foot
+const SKY_FOOT = 356;
+// NIGHT_SKY's bands end here, behind the skyline's foot
 // The iron fences' and the Pet shop's bottom row: the sidewalk starts under it.
 const YARD_FOOT = 414;
-const CURB = 470; // the sidewalk's last row is CURB - 1; the curb, then the street
+
+const CURB = 470;
+// the sidewalk's last row is CURB - 1; the curb, then the street
 // The logo at 2x, 290x82, inside the navy band.
 const LOADING_LOGO_AT: readonly [number, number] = [Math.floor((W - 2 * LOGO_W) / 2), 74];
+
 // ui-pet-shop's building on the corner lot.
 const SHOP_AT: readonly [number, number] = [W - 4 - PET_SHOP_W, YARD_FOOT - PET_SHOP_H];
+
 // ui-pet-shop's display window and door pane in its frame, left lit on screen-loading.
 const SHOP_WINDOW = rect(9, 47, 67, 96);
+
 const SHOP_DOOR_PANE = rect(82, 54, 100, 68);
+
 // The display window's and door pane's day glass, lamplit at night; the door's cream paw turns clay
 // on it.
 const SHOP_GLOW: ReadonlyMap<string, string> = new Map([
@@ -1363,24 +940,38 @@ const SHOP_GLOW: ReadonlyMap<string, string> = new Map([
   [K.cyan!, "yellow"],
   [K.blue!, "ochre"],
 ]);
+
 // The track's end and Lady's last nose column, at the Pet shop's door pane (318 to 335).
 const TRACK_END = 332;
+
 const LAMP_X = 227;
+
 const MOON: readonly [number, number] = [40, 42];
+
 const PAIR_W = 98;
+
 const PAIR_H = 84;
-const PAIR_FEET = 81; // the pair's bottom opaque row (the shoes' and paws' outline) in its frame
-const WALK_FOOT = 460; // the screen row the pair's feet stand on
+
+const PAIR_FEET = 81;
+// the pair's bottom opaque row (the shoes' and paws' outline) in its frame
+const WALK_FOOT = 460;
+// the screen row the pair's feet stand on
 // Casey's rear heel on the contact frames and Lady's nose, opaque columns.
 const PAIR_HEEL = 10;
+
 const PAIR_NOSE = 97;
+
 const TRACK_AT: readonly [number, number] = [16, WALK_FOOT - 4];
+
 const TRACK_W = TRACK_END - TRACK_AT[0];
+
 const TRACK_H = 8;
+
 // Where the game draws ui-loading (origin top left) at progress 0, and how far right it walks by 1:
 // Casey's heel starts on the first paw print and Lady's nose ends at the Pet shop's door. Its feet
 // stand on WALK_FOOT.
 const PAIR_AT: readonly [number, number] = [TRACK_AT[0] - PAIR_HEEL, WALK_FOOT - PAIR_FEET];
+
 const PAIR_TRAVEL = TRACK_AT[0] + TRACK_W - PAIR_NOSE - 1 - PAIR_AT[0];
 
 // The skyline, far back: (left, width, top, wall) for each downtown tower, its foot hidden behind
@@ -1395,10 +986,14 @@ const TOWERS: readonly bd.Tower[] = [
   [318, 16, 284, "navy"],
   [338, 26, 272, "dslate"],
 ];
+
 // The CN Tower's centre column, its foot and its mast's tip.
 const CN_X = 258;
+
 const CN_FOOT = 372;
+
 const CN_TIP = 150;
+
 // The near row, Cabbagetown's bay-and-gables, the lit windows by their order in victorian.
 type Home = readonly [
   x: number,
@@ -1409,12 +1004,15 @@ type Home = readonly [
   bayLeft: boolean,
   lit: readonly number[],
 ];
+
 const HOMES: readonly Home[] = [
   [-10, 76, "brick", "stone", "forest", false, [0, 2, 3, 5]],
   [66, 76, "dbrick", "driftwood", "ttc", true, [0, 1, 2, 4, 6]],
   [142, 76, "brick", "stone", "navy", true, [1, 3, 4, 5]],
 ];
-const HOME_BASE = YARD_FOOT - 10; // the houses' ground row, over the front yards
+
+const HOME_BASE = YARD_FOOT - 10;
+// the houses' ground row, over the front yards
 
 // A transparent strip drawn in daylight, turned to night: every colour steps ramp steps darker, the
 // window glass lit yellow and the white mullions beside it amber.
@@ -1827,7 +1425,9 @@ const SCREENS: ReadonlyMap<string, () => Canvas> = new Map<string, () => Canvas>
 // ui-loading is drawn on a PAIR_DESIGN design grid at PAIR_SCALE on a Mini that keeps 1px lines and
 // single pixels 1px, so Casey stands 84 rows tall and Lady 56.
 const PAIR_DESIGN: readonly [number, number] = [56, 48];
+
 const PAIR_SCALE = 1.75;
+
 // The pair's stride, one pose per frame: Casey's near and far feet (forward of the hip, in design px)
 // and which is lifted, the body's bob, Lady's near front and hind paws, its bob and its tail's wag.
 // Contact frames (0, 2) plant both feet apart; on the passing frames (1, 3) the swinging foot lifts
@@ -1844,15 +1444,19 @@ interface PairPose {
   near: number;
   wag: number;
 }
+
 const PAIR_WALK: readonly PairPose[] = [
   { bob: 0, dbob: 0, far: -4, flop: 0, front: 2, hind: -2, lift: null, near: 4, wag: -1 },
   { bob: -1, dbob: -1, far: 0, flop: 1, front: 0, hind: 0, lift: "far", near: 0, wag: 0 },
   { bob: 0, dbob: 0, far: 4, flop: 0, front: -2, hind: 2, lift: null, near: -4, wag: 1 },
   { bob: -1, dbob: -1, far: 0, flop: 1, front: 0, hind: 0, lift: "near", near: 0, wag: 0 },
 ];
+
 const PAIR_WALK_MS = 160;
+
 // Casey's hand and Lady's collar on the design grid, before the bob: the leash's two ends.
 const HAND: readonly [number, number] = [21, 28];
+
 const COLLAR: readonly [number, number] = [44, 28];
 
 // One of Casey's legs, from the hip (x, row) to its shoe on row 43, the foot lift rows up: 3 wide, in
@@ -2009,7 +1613,9 @@ function pair(step: number): Frame {
 // its board (rows 87 to 110) clear of the shopkeeper's highest door-wave row (112): the frame's size,
 // and the cream board in the frame, where the game writes its two lines.
 const SLOT_SIGN_W = 81;
+
 const SLOT_SIGN_H = 30;
+
 const SLOT_BOARD: readonly [x: number, y: number, w: number, h: number] = [1, 5, 79, 24];
 
 // ui-slot-sign: a cream board in a 1px dbrown frame, lit white along its top and tan along its
