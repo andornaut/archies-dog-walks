@@ -3,7 +3,7 @@ import { Scene, Scenes } from "phaser";
 import { gameData } from "../data/index.ts";
 import { overlayRegion, regionOutside } from "../home/homeBar.ts";
 import { pauseMenuLayout } from "../hud/pauseMenu.ts";
-import { isPauseKey, menuKeyActs } from "../input/keyBindings.ts";
+import { isMuteKey, isPauseKey, menuKeyActs } from "../input/keyBindings.ts";
 import { exitShown } from "../pwa/index.ts";
 import { MODAL } from "../ui/modal/layout.ts";
 import {
@@ -16,7 +16,14 @@ import {
 import { addRampDim } from "../ui/phaser/rampDim.ts";
 import { exitGame, listenHomeBar, openHomePage } from "./homeBarPress.ts";
 import { canvasPanelMeasure } from "./modalMeasure.ts";
-import { closeOverlay, listenDismiss, openOverlay, type OverlayData } from "./overlay.ts";
+import {
+  BAR_MUTED_EVENT,
+  closeOverlay,
+  listenDismiss,
+  openOverlay,
+  type OverlayData,
+} from "./overlay.ts";
+import { toggleMuted } from "./profileStore.ts";
 import { addHtmlQuestionPanel, addQuestionPanel, type QuestionPanel } from "./questionPanel.ts";
 import { SCENE_KEYS, type SceneKey } from "./sceneKeys.ts";
 import type { SettingsData } from "./SettingsScene.ts";
@@ -79,7 +86,12 @@ export class MenuScene extends Scene {
     listenDismiss(this, regionOutside("home", 0, covered), close);
     listenHomeBar(this, close);
     this.input.keyboard?.on("keydown", (event: KeyboardEvent) => {
-      if (menuKeyActs(event.repeat, event.code) && isPauseKey(event.code)) {
+      if (!menuKeyActs(event.repeat, event.code)) {
+        return;
+      }
+      if (isMuteKey(event.code)) {
+        this.game.events.emit(BAR_MUTED_EVENT, toggleMuted(this));
+      } else if (isPauseKey(event.code)) {
         close();
       }
     });
