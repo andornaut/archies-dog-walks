@@ -60,3 +60,33 @@ it("shares pre-profile mute with the device settings, follows external changes a
   doc.defaultView.fire("keydown", key);
   expect(settings.current.muted).toBe(true);
 });
+
+it("ignores the inert loading endpoint when the crash endpoint owns the same window", () => {
+  const settings = new DeviceSettings(undefined, false);
+  const changed = vi.fn();
+  const stop = settings.onChange(changed);
+  vi.stubGlobal(
+    "ResizeObserver",
+    class {
+      observe() {}
+      disconnect() {}
+    },
+  );
+  const doc = new FakeDocument();
+  const boot = Object.assign(doc.createElement("div"), { clientHeight: 560, clientWidth: 360 });
+  const crash = Object.assign(doc.createElement("div"), { clientHeight: 560, clientWidth: 360 });
+  const removeBoot = mountMuteControl(settings, boot as unknown as HTMLElement);
+  boot.inert = true;
+  const removeCrash = mountMuteControl(settings, crash as unknown as HTMLElement);
+  doc.defaultView.fire("keydown", {
+    code: "KeyM",
+    preventDefault: vi.fn(),
+    repeat: false,
+    stopPropagation: vi.fn(),
+  });
+  expect(settings.current.muted).toBe(true);
+  expect(changed).toHaveBeenCalledOnce();
+  removeBoot();
+  removeCrash();
+  stop();
+});

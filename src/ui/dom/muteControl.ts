@@ -54,9 +54,14 @@ export function mountMuteControl(settings: MuteControlSettings, parent: HTMLElem
     button.setAttribute("data-muted", String(muted));
     icon.textContent = muted ? "X" : MENU_TEXT.settings.on;
   };
-  const toggle = () => settings.setMuted(!settings.current.muted);
+  const active = () => !parent.inert && !parent.hidden;
+  const toggle = () => {
+    if (active()) {
+      settings.setMuted(!settings.current.muted);
+    }
+  };
   const key = (event: KeyboardEvent) => {
-    if (event.code === "KeyM" && !event.repeat) {
+    if (active() && event.code === "KeyM" && !event.repeat) {
       event.preventDefault();
       event.stopPropagation();
       toggle();
