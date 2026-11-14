@@ -461,6 +461,24 @@ describe("a save from a newer version", () => {
   });
 });
 
+it.each([SAVE_VERSION + 0.5, Number.MAX_SAFE_INTEGER + 1])(
+  "keeps future numeric header %s read-only through profile changes",
+  async (version) => {
+    const raw = JSON.stringify({ ...veteranSave(), version });
+    const entries = new Map([[SAVE_KEYS.save, raw]]);
+    const storage = memoryStorage(entries);
+    const write = vi.spyOn(storage, "write");
+    const { load, session } = await ProfileSession.open(awards, storesOn(storage));
+    expect(load.status).toBe("newer");
+    expect(session.storage).toBe("newer");
+    await session.purchase((save) => ({ ...save, bankCents: cents(5) }));
+    await session.finishRun(result, []);
+    expect(session.storage).toBe("newer");
+    expect(write).not.toHaveBeenCalled();
+    expect(entries.get(SAVE_KEYS.save)).toBe(raw);
+  },
+);
+
 describe("an earned record from a newer version", () => {
   it("plays on in memory and writes nothing, the save included", async () => {
     const entries = entriesOf(veteranSave());
