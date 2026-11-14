@@ -2,6 +2,7 @@ import { fillLine } from "@andornaut/game-kit/lines";
 import type { RequiredUpdateState } from "@andornaut/game-kit/web/pwa/updateReady";
 
 import type { DogId, GameData, HomeText, WalkerId } from "../data/types.ts";
+import { dollarText } from "../presentation/currency.ts";
 import { packPlace, packSizeRaise } from "../rules/dogs.ts";
 import { modifiersOf } from "../rules/modifiers.ts";
 import { walkerOrder } from "../rules/walkers.ts";
@@ -9,7 +10,7 @@ import type { StorageState } from "../save/profile.ts";
 import { type LastWalk, MAX_RUN_DOGS, type Owned } from "../save/schema.ts";
 import { packOrder } from "../state/pack.ts";
 import type { Cents } from "../units.ts";
-import { dollarText, type HomeLoadout, packCapacity, type Purchase } from "./home.ts";
+import { type HomeLoadout, packCapacity, type Purchase } from "./home.ts";
 import { HOME_TEXT_FIELDS, homeLine } from "./homeText.ts";
 
 export type WalkerLine = keyof HomeText["bubble"];

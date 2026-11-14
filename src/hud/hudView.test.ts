@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { gameData } from "../data/index.ts";
 import type { Effect } from "../data/types.ts";
-import { dollarAmountText } from "../home/home.ts";
+import { dollarAmountText } from "../presentation/currency.ts";
 import type { Change } from "../rules/causes.ts";
 import { resolveEffects } from "../rules/effects.ts";
 import { formatDollars } from "../rules/effectText.ts";

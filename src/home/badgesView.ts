@@ -12,6 +12,7 @@ import type {
   GameData,
 } from "../data/types.ts";
 import { MIN_TAP_SIZE } from "../layout/screenLayout.ts";
+import { dollarText } from "../presentation/currency.ts";
 import {
   type AchievementData,
   achievementJudge,
@@ -23,7 +24,6 @@ import { closeControl } from "../ui/closeControl.ts";
 import { GREYED } from "../ui/selection.ts";
 import { TEXT_SCALE } from "../ui/textFit.ts";
 import { dollarsToCents } from "../units.ts";
-import { dollarText } from "./home.ts";
 import { MENU_TEXT_FIELDS } from "./menuText.ts";
 import { MODAL } from "./modalLayout.ts";
 

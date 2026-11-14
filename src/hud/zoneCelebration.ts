@@ -2,7 +2,7 @@ import { fillLine, fillNames } from "@andornaut/game-kit/lines";
 
 import type { GameData, WalkerId } from "../data/types.ts";
 import { earningsKind } from "../home/endView.ts";
-import { signedDollarText } from "../home/home.ts";
+import { signedDollarText } from "../presentation/currency.ts";
 import type { Change } from "../rules/causes.ts";
 import { agilityPercent } from "../rules/effectText.ts";
 import { newWalkers } from "../rules/walkers.ts";

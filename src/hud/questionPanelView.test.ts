@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 
 import { gameData } from "../data/index.ts";
 import { SCREEN_LAYOUT } from "../data/screen.ts";
-import { dollarText } from "../home/home.ts";
+import { dollarText } from "../presentation/currency.ts";
 import { bodyTextWidth } from "../testing/bodyFont.ts";
 import { fontFileMetrics, inkWidth } from "../testing/fontInk.ts";
 import { plainMarks } from "../ui/pixelFont.ts";

@@ -8,7 +8,6 @@ import { gameData } from "../data/index.ts";
 import { SCREEN_CONFIG, SCREEN_LAYOUT } from "../data/screen.ts";
 import type { AchievementId, DebuffId, DogId, HintTrigger } from "../data/types.ts";
 import { FEEDBACK as MENU_FEEDBACK } from "../home/feedback.ts";
-import { dollarAmountText } from "../home/home.ts";
 import type { DomQuestionPanel } from "../hud/dom/questionPanel.ts";
 import {
   effectIconKey,
@@ -70,6 +69,7 @@ import {
   zoneShare,
 } from "../hud/walkHud.ts";
 import { zonePillLayout } from "../hud/zonePill.ts";
+import { dollarAmountText } from "../presentation/currency.ts";
 import { ownerMaxHearts } from "../rules/dogs.ts";
 import { debuffLasting } from "../rules/durations.ts";
 import { hintFor, hintJumpsQueue } from "../rules/hints.ts";

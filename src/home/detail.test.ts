@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 
 import { gameData } from "../data/index.ts";
 import type { DogId, Size, WalkerId } from "../data/types.ts";
+import { dollarText } from "../presentation/currency.ts";
 import { sizeHearts } from "../rules/dogs.ts";
 import {
   capitalize,
@@ -18,7 +19,7 @@ import { STARTER_DOGS } from "../testing/saves.ts";
 import { TEST_TUNING } from "../testing/tuning.ts";
 import { cents } from "../units.ts";
 import { type DetailCard, detailParts, dogDetail, gearDetail, walkerDetail } from "./detail.ts";
-import { dollarText, purchasePrice } from "./home.ts";
+import { purchasePrice } from "./home.ts";
 import { homeLine } from "./homeText.ts";
 import { walkerDetailLines } from "./walkers.ts";
 

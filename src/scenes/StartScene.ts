@@ -45,8 +45,6 @@ import {
 import { type Focus, focusDirectionForKey, moveFocus } from "../home/focus.ts";
 import {
   dogInfo,
-  dollarAmountText,
-  dollarText,
   gearByPrice,
   gearInfo,
   type HomeLoadout,
@@ -56,7 +54,6 @@ import {
   type Purchase,
   purchasePrice,
   rosterRows,
-  shortDollarAmountText,
   tapDog,
   tapGear,
 } from "../home/home.ts";
@@ -126,6 +123,7 @@ import {
 } from "../input/keyBindings.ts";
 import type { PackPlacement } from "../layout/packFormation.ts";
 import { addFigure, PackFigures } from "../pack/phaser/packFigures.ts";
+import { dollarAmountText, dollarText, shortDollarAmountText } from "../presentation/currency.ts";
 import {
   acceptUpdate,
   arriveHome,

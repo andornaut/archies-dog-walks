@@ -9,6 +9,7 @@ import { SCREEN_CONFIG } from "../data/screen.ts";
 import type { AchievementId, DogId, GameData } from "../data/types.ts";
 import { pipTag } from "../hud/hudView.ts";
 import { type PanelButton, type PanelText, panelTitle } from "../hud/questionPanelView.ts";
+import { signedShortDollarText } from "../presentation/currency.ts";
 import { walkLength } from "../rules/route.ts";
 import type { LastWalk } from "../save/schema.ts";
 import { PALETTE } from "../ui/palette.ts";
@@ -30,7 +31,6 @@ import {
   sideTotalBand,
 } from "./endLayout.ts";
 import { type closingLines, type EarningsLine, zonePips } from "./endView.ts";
-import { signedShortDollarText } from "./home.ts";
 import { MENU_TEXT_FIELDS } from "./menuText.ts";
 
 // The End screen laid out as one view both renderers draw: the canvas's (src/scenes/EndScene.ts)

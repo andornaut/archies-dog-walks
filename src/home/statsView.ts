@@ -2,9 +2,9 @@ import { fillLine } from "@andornaut/game-kit/lines";
 import { keysOf } from "@andornaut/game-kit/records";
 
 import type { DogId, GameData } from "../data/types.ts";
+import { dollarText } from "../presentation/currency.ts";
 import type { DogStats, Owned, SaveStats } from "../save/schema.ts";
 import { statsPage, ZERO_DOG_STATS } from "../save/stats.ts";
-import { dollarText } from "./home.ts";
 import { MENU_TEXT_FIELDS } from "./menuText.ts";
 
 export interface StatsRow {

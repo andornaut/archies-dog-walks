@@ -24,12 +24,6 @@ import {
   sideTotalLabelRoom,
 } from "../home/endLayout.ts";
 import {
-  dollarAmountText,
-  dollarText,
-  shortDollarAmountText,
-  signedShortDollarText,
-} from "../home/home.ts";
-import {
   BANK_ROOM,
   bankAmountText,
   cardTitleRow,
@@ -82,6 +76,12 @@ import {
   largeBodyBox,
   largeBodyStyle,
 } from "../layout/cardLayout.ts";
+import {
+  dollarAmountText,
+  dollarText,
+  shortDollarAmountText,
+  signedShortDollarText,
+} from "../presentation/currency.ts";
 import { amountText } from "../rules/causes.ts";
 import { firesText } from "../rules/choices.ts";
 import { payFor } from "../rules/run.ts";

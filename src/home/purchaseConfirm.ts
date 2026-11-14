@@ -2,16 +2,10 @@ import { fillLine } from "@andornaut/game-kit/lines";
 
 import type { GameData } from "../data/types.ts";
 import { isConfirmKey, isPauseKey } from "../input/keyBindings.ts";
+import { dollarText } from "../presentation/currency.ts";
 import type { SaveDocument } from "../save/schema.ts";
 import { type Cents, cents } from "../units.ts";
-import {
-  buy,
-  type BuyResult,
-  dollarText,
-  isAffordable,
-  type Purchase,
-  purchasePrice,
-} from "./home.ts";
+import { buy, type BuyResult, isAffordable, type Purchase, purchasePrice } from "./home.ts";
 import { HOME_TEXT_FIELDS } from "./homeText.ts";
 
 type ShopData = Pick<GameData, "dogSlots" | "dogs" | "shopGear" | "tuning">;

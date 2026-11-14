@@ -10,6 +10,7 @@ import { describe, expect, it } from "vitest";
 import { gameData } from "../data/index.ts";
 import { SCREEN_CONFIG } from "../data/screen.ts";
 import { MIN_TAP_SIZE } from "../layout/screenLayout.ts";
+import { signedShortDollarText } from "../presentation/currency.ts";
 import { defined } from "../testing/defined.ts";
 import { fontFileMetrics, fontInkRows, inkWidth, placedInk } from "../testing/fontInk.ts";
 import { TEXT_SCALE, TEXT_STYLE, textOnLines } from "../ui/textFit.ts";
@@ -43,7 +44,6 @@ import {
   sideTotalBand,
 } from "./endLayout.ts";
 import { endTargetAt } from "./endView.ts";
-import { signedShortDollarText } from "./home.ts";
 import { MENU_TEXT_FIELDS } from "./menuText.ts";
 
 const { badges, breakdown, panel: most, quips, side } = END_LAYOUT;

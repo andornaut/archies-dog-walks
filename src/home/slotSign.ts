@@ -1,8 +1,9 @@
 import type { GameData } from "../data/types.ts";
+import { dollarText } from "../presentation/currency.ts";
 import { cheapestDogSlot } from "../rules/shop.ts";
 import type { Owned } from "../save/schema.ts";
 import type { Cents } from "../units.ts";
-import { dollarText, isAffordable, type Purchase, purchasePrice } from "./home.ts";
+import { isAffordable, type Purchase, purchasePrice } from "./home.ts";
 
 type SignData = Pick<GameData, "dogSlots" | "dogs" | "homeText" | "shopGear" | "tuning">;
 

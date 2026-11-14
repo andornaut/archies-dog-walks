@@ -14,6 +14,7 @@ import {
   newWalkerRows,
 } from "../hud/celebrationLayout.ts";
 import { celebrationText } from "../hud/zoneCelebration.ts";
+import { dollarText } from "../presentation/currency.ts";
 import type { Owned } from "../save/schema.ts";
 import { fontFileMetrics, gameGlyphs, inkWidth } from "../testing/fontInk.ts";
 import { VETERAN_EARNED, veteranSave } from "../testing/saves.ts";
@@ -30,7 +31,6 @@ import {
   walkerDetail,
 } from "./detail.ts";
 import { quipCapsTop, quipTextY } from "./endLayout.ts";
-import { dollarText } from "./home.ts";
 import { CARD_TEXT_ROOM, detailCardLayout, detailOwner, type DetailRow } from "./homeLayout.ts";
 import { MENU_TEXT_FIELDS } from "./menuText.ts";
 import { confirmLeftCapTop, purchaseConfirmLayout } from "./purchaseConfirmLayout.ts";

@@ -5,9 +5,10 @@ import { describe, expect, it } from "vitest";
 
 import { gameData } from "../data/index.ts";
 import type { DogId } from "../data/types.ts";
-import { dollarText, isAffordable, type Purchase, purchasePrice } from "../home/home.ts";
+import { isAffordable, type Purchase, purchasePrice } from "../home/home.ts";
 import { HOME_LAYOUT } from "../home/homeLayout.ts";
 import { walkerTile } from "../home/walkers.ts";
+import { dollarText } from "../presentation/currency.ts";
 import type { Owned } from "../save/schema.ts";
 import { bodyTextWidth } from "../testing/bodyFont.ts";
 import { fontFileMetrics } from "../testing/fontInk.ts";

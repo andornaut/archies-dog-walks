@@ -3,11 +3,11 @@ import { describe, expect, it } from "vitest";
 
 import { gameData } from "../data/index.ts";
 import type { LiveTuning } from "../data/types.ts";
+import { dollarText } from "../presentation/currency.ts";
 import { startingDogSlots } from "../rules/shop.ts";
 import type { Owned } from "../save/schema.ts";
 import { TEST_TUNING } from "../testing/tuning.ts";
 import { cents } from "../units.ts";
-import { dollarText } from "./home.ts";
 import { type ShopRow, shopRowId, slotRows } from "./shop.ts";
 import { slotSign, slotSignPurchase } from "./slotSign.ts";
 

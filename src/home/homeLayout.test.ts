@@ -14,6 +14,7 @@ import { SCREEN_CONFIG, SCREEN_LAYOUT } from "../data/screen.ts";
 import type { WalkerId } from "../data/types.ts";
 import { ownerPhotoRect, WALK_BAR } from "../hud/walkHud.ts";
 import { MIN_TAP_SIZE } from "../layout/screenLayout.ts";
+import { dollarAmountText, dollarText, shortDollarAmountText } from "../presentation/currency.ts";
 import { unlockPrice } from "../rules/shop.ts";
 import type { Owned } from "../save/schema.ts";
 import { bodyTextWidth } from "../testing/bodyFont.ts";
@@ -36,7 +37,6 @@ import {
   walkerDetail,
 } from "./detail.ts";
 import { FEEDBACK } from "./feedback.ts";
-import { dollarAmountText, dollarText, shortDollarAmountText } from "./home.ts";
 import {
   BANK_ROOM,
   bankAmountText,

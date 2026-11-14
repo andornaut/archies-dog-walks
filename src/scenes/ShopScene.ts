@@ -7,7 +7,7 @@ import { gameData } from "../data/index.ts";
 import { dogDetail, gearDetail } from "../home/detail.ts";
 import { FEEDBACK, shakeOffset } from "../home/feedback.ts";
 import { focusDirectionForKey } from "../home/focus.ts";
-import { dollarText, type Purchase } from "../home/home.ts";
+import { type Purchase } from "../home/home.ts";
 import { overlayRegion, regionOutside } from "../home/homeBar.ts";
 import { type HomeAction, messageLine } from "../home/homeLines.ts";
 import {
@@ -60,6 +60,7 @@ import {
   scrollToShow,
   stepScroll,
 } from "../input/listScroll.ts";
+import { dollarText } from "../presentation/currency.ts";
 import { exitShown } from "../pwa/index.ts";
 import type { SaveDocument } from "../save/schema.ts";
 import type { ArtLook } from "../ui/interaction.ts";

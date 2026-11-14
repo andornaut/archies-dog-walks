@@ -6,6 +6,7 @@ import { describe, expect, it } from "vitest";
 import { badgeKey } from "../assets/spriteKeys.ts";
 import { gameData } from "../data/index.ts";
 import type { AchievementCondition, ZoneId } from "../data/types.ts";
+import { dollarText } from "../presentation/currency.ts";
 import { walkLength } from "../rules/route.ts";
 import type { SaveDocument } from "../save/schema.ts";
 import { defined } from "../testing/defined.ts";
@@ -30,7 +31,6 @@ import {
   wallCellLines,
   wallRects,
 } from "./badgesView.ts";
-import { dollarText } from "./home.ts";
 import { STATS_LAYOUT } from "./statsLayout.ts";
 
 // The condition kinds a save counts across walks, and a save that has counted n of one.

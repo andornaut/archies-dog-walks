@@ -4,12 +4,13 @@ import { fillNames } from "@andornaut/game-kit/lines";
 import { describe, expect, it } from "vitest";
 
 import { gameData } from "../data/index.ts";
+import { dollarText } from "../presentation/currency.ts";
 import type { SaveDocument } from "../save/schema.ts";
 import { defined } from "../testing/defined.ts";
 import { newPlayerSave } from "../testing/saves.ts";
 import { TEST_TUNING } from "../testing/tuning.ts";
 import { cents } from "../units.ts";
-import { dollarText, type Purchase, purchasePrice } from "./home.ts";
+import { type Purchase, purchasePrice } from "./home.ts";
 import { answerPurchase, confirmLines, keyAnswer, requestPurchase } from "./purchaseConfirm.ts";
 import { dogRows, gearRows, slotRows } from "./shop.ts";
 

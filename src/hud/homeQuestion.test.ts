@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 
 import { gameData } from "../data/index.ts";
 import type { DogId } from "../data/types.ts";
-import { dollarText } from "../home/home.ts";
+import { dollarText } from "../presentation/currency.ts";
 import { currentZone, defaultRoute, walkLength } from "../rules/route.ts";
 import { read } from "../rules/units.ts";
 import type { RunState } from "../state/runState.ts";
