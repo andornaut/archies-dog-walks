@@ -492,6 +492,29 @@ it("keeps a base page with custom native controls interactive without a modal sc
   });
   expect(element.children[0]?.className).not.toContain("adw-passive");
   expect(layer.input.accepts()).toBe(true);
+  const key = {
+    code: "Enter",
+    preventDefault: vi.fn(),
+    repeat: false,
+    stopPropagation: vi.fn(),
+    target: button,
+  };
+  element.children[0]?.fire("keydown", key);
+  expect(key.stopPropagation).toHaveBeenCalledOnce();
+  expect(key.preventDefault).not.toHaveBeenCalled();
+  const repeat = { ...key, preventDefault: vi.fn(), repeat: true, stopPropagation: vi.fn() };
+  element.children[0]?.fire("keydown", repeat);
+  expect(repeat.preventDefault).toHaveBeenCalledOnce();
+  expect(repeat.stopPropagation).toHaveBeenCalledOnce();
+  const arrow = {
+    ...repeat,
+    code: "ArrowRight",
+    preventDefault: vi.fn(),
+    stopPropagation: vi.fn(),
+  };
+  element.children[0]?.fire("keydown", arrow);
+  expect(arrow.preventDefault).not.toHaveBeenCalled();
+  expect(arrow.stopPropagation).not.toHaveBeenCalled();
   shown.destroy();
 });
 

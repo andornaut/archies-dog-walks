@@ -402,7 +402,16 @@ export function showQuestionPanel(layer: UiLayer, input: DomQuestionPanelInput):
       return;
     }
     // Enter and Space press the focused control natively; the scene under never hears them.
-    if (isConfirmKey(event.code) && native.includes(event.target as HTMLElement)) {
+    if (
+      isConfirmKey(event.code) &&
+      focusables.some(
+        (control) =>
+          control.tagName.toLowerCase() === "button" && control.contains(event.target as Node),
+      )
+    ) {
+      if (event.repeat) {
+        event.preventDefault();
+      }
       event.stopPropagation();
       return;
     }
