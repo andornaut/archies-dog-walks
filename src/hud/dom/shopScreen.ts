@@ -334,7 +334,7 @@ export function showShopScreen(
           });
           ready.push(part.ready);
         } else {
-          const part = imageArt(doc, input.source, art.imageKey ?? art.key);
+          const part = imageArt(doc, input.source, art.key, art.imageKey ?? art.key);
           parts.push({ element: part.element, place: (at) => part.place(at, row.rect, art.rect) });
           ready.push(part.ready);
         }
@@ -378,12 +378,22 @@ export function showShopScreen(
       if (view.message !== undefined) {
         const messageView = view.message;
         const plate = sheetNineSlice(doc, input.source, "ui-hint", SLICES["ui-hint"]);
+        const content = doc.createElement("div");
+        content.className = "adw-lines";
+        const labels = messageView.lines.map((line) => ({
+          element: createTextLine(doc, line),
+          line,
+        }));
+        content.append(...labels.map(({ element }) => element));
         messageParts.push(
           {
             element: plate.element,
             place: (at) => plate.place(at, ORIGIN, { ...messageView.rect, tag: "still" }),
           },
-          ...messageView.lines.map((line) => textPart(line)),
+          {
+            element: content,
+            place: (at) => placeBackedText(input.fonts.body, at, ORIGIN, messageView.rect, labels),
+          },
         );
         ready.push(plate.ready);
       }

@@ -30,10 +30,15 @@ export interface SheetArtPlace {
   readonly y: number;
 }
 
-function artUrls(source: DomArtSource, kind: "image" | "sheet", key: string): string[] {
+function artUrls(
+  source: DomArtSource,
+  kind: "image" | "sheet",
+  key: string,
+  imageKey = key,
+): string[] {
   return [
-    source.artUrl(domArtPath(kind, key, "png")),
-    ...(DOM_DIM_ART_KEYS.has(key) ? [source.artUrl(dimArtPath(kind, key))] : []),
+    source.artUrl(domArtPath(kind, imageKey, "png")),
+    ...(DOM_DIM_ART_KEYS.has(key) ? [source.artUrl(dimArtPath(kind, imageKey))] : []),
   ];
 }
 
@@ -41,10 +46,11 @@ function markDimArt(
   source: DomArtSource,
   kind: "image" | "sheet",
   key: string,
+  imageKey: string,
   element: HTMLElement,
 ): void {
   if (DOM_DIM_ART_KEYS.has(key)) {
-    element.setAttribute(DIM_ART_ATTRIBUTE, source.artUrl(dimArtPath(kind, key)));
+    element.setAttribute(DIM_ART_ATTRIBUTE, source.artUrl(dimArtPath(kind, imageKey)));
   }
 }
 
@@ -72,7 +78,7 @@ function sheetOf(source: DomArtSource, key: string, element: HTMLElement, imageK
     },
     {
       ready: request.then(
-        () => artUrls(source, "sheet", imageKey),
+        () => artUrls(source, "sheet", key, imageKey),
         () => [],
       ),
     },
@@ -102,7 +108,7 @@ export function sheetArt(
   const element = doc.createElement("span");
   element.className = "adw-art";
   element.style.backgroundImage = backgroundOf(source, imageKey);
-  markDimArt(source, "sheet", imageKey, element);
+  markDimArt(source, "sheet", key, imageKey, element);
   const loaded = sheetOf(source, key, element, imageKey);
   return {
     element,
@@ -170,7 +176,7 @@ export function sheetThreeSlice(
     const part = doc.createElement("span");
     part.className = "adw-art";
     part.style.backgroundImage = backgroundOf(source, key);
-    markDimArt(source, "sheet", key, part);
+    markDimArt(source, "sheet", key, key, part);
     return part;
   });
   element.append(...parts);
@@ -230,6 +236,7 @@ export function imageArt(
   doc: Document,
   source: DomArtSource,
   key: string,
+  imageKey = key,
 ): {
   readonly element: HTMLElement;
   readonly ready: Promise<readonly string[]>;
@@ -241,8 +248,8 @@ export function imageArt(
 } {
   const element = doc.createElement("span");
   element.className = "adw-art";
-  element.style.backgroundImage = `url("${source.artUrl(domArtPath("image", key, "png"))}")`;
-  markDimArt(source, "image", key, element);
+  element.style.backgroundImage = `url("${source.artUrl(domArtPath("image", imageKey, "png"))}")`;
+  markDimArt(source, "image", key, imageKey, element);
   return {
     element,
     place: (scale, origin, art) => {
@@ -262,7 +269,7 @@ export function imageArt(
         top: box.top - gridY(scale, origin.y),
       });
     },
-    ready: Promise.resolve(artUrls(source, "image", key)),
+    ready: Promise.resolve(artUrls(source, "image", key, imageKey)),
   };
 }
 
@@ -321,7 +328,7 @@ function slicePainter(
             backgroundPosition: `${-(frame.x + from.x) * across}px ${-(frame.y + from.y) * down}px`,
             backgroundSize: `${frame.sheet.width * across}px ${frame.sheet.height * down}px`,
           });
-          markDimArt(source, kind, key, span);
+          markDimArt(source, kind, key, key, span);
           return span;
         },
       ),

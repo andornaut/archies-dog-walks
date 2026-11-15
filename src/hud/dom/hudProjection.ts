@@ -68,11 +68,18 @@ export function projectHudMoments(
     width: (scale, text) => first.width(scale, text),
   };
 }
-export function projectHudCards(views: readonly HudCards[]): HudCards {
+export function projectHudCards(
+  protectedRoots: readonly Pick<HudMomentPainter, "element">[],
+  views: readonly HudCards[],
+): HudCards {
   const first = views[0];
   if (first === undefined) {
     throw new Error("HUD cards require a native surface");
   }
+  if (protectedRoots.length !== views.length) {
+    throw new RangeError("HUD cards require one protected surface per projection");
+  }
+  views.forEach((view, index) => protectedRoots[index]!.element.append(view.element));
   return {
     anchor: (slot) => first.anchor(slot),
     dispose: () => views.forEach((view) => view.dispose()),

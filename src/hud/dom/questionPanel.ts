@@ -71,6 +71,8 @@ export interface DomQuestionPanelInput {
   readonly label?: string;
   readonly fonts: Readonly<Record<PanelText["font"], BitmapFont>>;
   readonly gesture?: NativeGesture;
+  // Page actions may use content swipes; corner and footer dismissal controls never do.
+  readonly gestureOnActions?: boolean;
   readonly onPaint?: () => void;
   // Whether keys 1 to n press the buttons, as on the pause menu and the questions.
   readonly numberKeys: boolean;
@@ -454,9 +456,10 @@ export function showQuestionPanel(layer: UiLayer, input: DomQuestionPanelInput):
             input.gesture?.cancel?.();
           },
           down: (event) => {
-            sceneGesture = ![...buttons, close].some((control) =>
-              control.contains(event.target as Node),
-            );
+            sceneGesture = ![
+              ...(input.gestureOnActions === true ? buttons.slice(view.buttons.length) : buttons),
+              close,
+            ].some((control) => control.contains(event.target as Node));
             if (sceneGesture) {
               input.gesture?.down?.(event);
             }

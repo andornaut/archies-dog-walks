@@ -52,6 +52,7 @@ export interface HelpView {
   // Each page's dot, in order: the current page's filled white, the others hollow tan rings a
   // pixel wide on the dark screen.
   readonly dots: readonly { readonly current: boolean; readonly rect: Rect }[];
+  readonly footer: PanelButton;
   readonly heading: PanelText;
   readonly illustration: Rect;
   // The page shown, clamped to the pages.
@@ -87,7 +88,7 @@ function leftLine(
 
 // The help screen at page, its pages read now, with what pressed shows pressed: the heading
 // and close control on the top bar, the picture's rules, the page's title and body, the dots,
-// and Previous, disabled on the first page, and Next, the call to action.
+// Previous (disabled on the first page), Next and the primary Close footer.
 export function helpView(
   data: GameData,
   measure: HelpMeasure,
@@ -132,6 +133,7 @@ export function helpView(
       ...base,
       available: look.available,
       pressed: look.available && look.pressed,
+      secondary: !look.primary,
       text: look.available
         ? base.text
         : {
@@ -153,12 +155,13 @@ export function helpView(
       button(layout.next, words[next], {
         available: true,
         pressed: pressed === "next",
-        primary: true,
+        primary: false,
       }),
     ],
     close: layout.close,
     closePressed: pressed === "close",
     dots: dotRects(pages.length).map((rect, i) => ({ current: i === current, rect })),
+    footer: panelButton(measure, layout.footer, true, data.menuText.common.close),
     heading: {
       ...leftLine("title", PALETTE.cream, TEXT_SCALE, layout.heading, words.heading),
       centre: "ink",

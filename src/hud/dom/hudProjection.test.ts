@@ -1,8 +1,15 @@
 import { animationKey } from "@andornaut/game-kit/runtime/art/aseprite";
 import { expect, it, vi } from "vitest";
 
+import { FakeDocument, fakeLayer } from "../../testing/fakeDom.ts";
+import { dimColour } from "../../ui/dimArt.ts";
+import { followModalUnderlay } from "../../ui/dom/rampDim.ts";
+import { domScale } from "../../ui/domScale.ts";
+import { PALETTE } from "../../ui/palette.ts";
+import { coverHelpUnderlay } from "./helpUnderlay.ts";
+import type { HudCards } from "./hudCards.ts";
 import type { HudMoment, HudMomentPainter, MomentArt } from "./hudMoments.ts";
-import { projectHudMoments } from "./hudProjection.ts";
+import { projectHudCards, projectHudMoments } from "./hudProjection.ts";
 it("projects one logical moment into two passive strips without duplicating its completion", () => {
   const makeSurface = () => {
     const art: MomentArt[] = [];
@@ -47,4 +54,57 @@ it("projects one logical moment into two passive strips without duplicating its 
   expect(second.node.dispose).toHaveBeenCalledTimes(1);
   expect(first.painter.dispose).toHaveBeenCalledTimes(1);
   expect(second.painter.dispose).toHaveBeenCalledTimes(1);
+});
+
+it("keeps projected dog cards in the lit bar surface while body moments dim and full Help covers both", () => {
+  const doc = new FakeDocument();
+  const { element, layer } = fakeLayer(doc, domScale(1, { height: 560, width: 360, x: 0, y: 0 }));
+  const body = doc.createElement("div"),
+    bar = doc.createElement("div"),
+    card = doc.createElement("div");
+  const hex = (value: number) => `#${value.toString(16).padStart(6, "0")}`;
+  for (const root of [body, bar]) {
+    const priorities = new Map<string, string>();
+    Object.assign(root, { isConnected: true });
+    Object.assign(root.style, {
+      getPropertyPriority: (key: string) => priorities.get(key) ?? "",
+      getPropertyValue: (key: string) => root.style[key] ?? "",
+      setProperty: (key: string, value: string, priority = "") => {
+        root.style[key] = value;
+        priorities.set(key, priority);
+      },
+    });
+  }
+  body.style.color = card.style.color = hex(PALETTE.cream);
+  element.append(body, bar);
+  const projection = projectHudCards(
+    [{ element: bar as unknown as HTMLElement }],
+    [
+      {
+        anchor: vi.fn(),
+        dispose: vi.fn(),
+        element: card as unknown as HTMLElement,
+        flashCard: vi.fn(),
+        revealed: Promise.resolve(true),
+        setInert: vi.fn(),
+        setShown: vi.fn(),
+        update: vi.fn(),
+      } satisfies HudCards,
+    ],
+  );
+  expect(bar.contains(card)).toBe(true);
+  expect(body.contains(card)).toBe(false);
+  const stop = followModalUnderlay(layer.input, body as unknown as HTMLElement);
+  const pause = layer.input.open();
+  expect(body.style.color).toBe(hex(dimColour(PALETTE.cream)));
+  expect(card.style.color).toBe(hex(PALETTE.cream));
+  const restore = coverHelpUnderlay(element as unknown as HTMLElement);
+  expect(body.style.display).toBe("none");
+  expect(bar.style.display).toBe("none");
+  restore();
+  expect(body.style.display).toBe("");
+  expect(bar.style.display).toBe("");
+  pause.close();
+  stop();
+  projection.dispose();
 });

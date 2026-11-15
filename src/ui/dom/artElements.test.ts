@@ -3,6 +3,7 @@ import { expect, it, vi } from "vitest";
 import { FakeDocument } from "../../testing/fakeDom.ts";
 import { domScale, gridRect, gridX } from "../domScale.ts";
 import { imageArt, imageNineSlice, sheetArt, sheetThreeSlice } from "./artElements.ts";
+import { DIM_ART_ATTRIBUTE, setRampDimmed } from "./rampDim.ts";
 
 it("uses original sheet metadata with a disabled image and the requested animated frame", async () => {
   const json = {
@@ -121,4 +122,42 @@ it("projects declared image layout edges without changing default authored-pixel
       width: `${box.width}px`,
     });
   }
+});
+
+it("dims disabled native image and sheet variants using their original semantic registration", async () => {
+  const doc = new FakeDocument();
+  const source = {
+    artUrl: (path: string) => `/art/${path}`,
+    loadSheet: vi.fn().mockResolvedValue({}),
+  };
+  const image = imageArt(
+    doc as unknown as Document,
+    source,
+    "item-whistle",
+    "item-whistle-disabled",
+  );
+  const sheet = sheetArt(
+    doc as unknown as Document,
+    source,
+    "face-dog-kilo",
+    "face-dog-kilo-disabled",
+  );
+  await Promise.all(
+    (
+      [
+        [image, "images", "item-whistle"],
+        [sheet, "sprites", "face-dog-kilo"],
+      ] as const
+    ).map(async ([part, kind, key]) => {
+      const normal = `/art/${kind}/${key}-disabled.png`;
+      const dim = `/art/${kind}/${key}-disabled-dim.png`;
+      await expect(part.ready).resolves.toEqual([normal, dim]);
+      expect(part.element.getAttribute(DIM_ART_ATTRIBUTE)).toBe(dim);
+      setRampDimmed(part.element, true);
+      expect(part.element.style.backgroundImage).toBe(`url("${dim}")`);
+      setRampDimmed(part.element, false);
+      expect(part.element.style.backgroundImage).toBe(`url("${normal}")`);
+    }),
+  );
+  expect(source.loadSheet).toHaveBeenCalledWith("/art/sprites/face-dog-kilo.json");
 });

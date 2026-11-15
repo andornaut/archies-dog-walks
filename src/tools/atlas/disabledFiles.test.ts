@@ -15,7 +15,13 @@ import { dimForModal } from "../../ui/dimArt.ts";
 import { greyForDisabledTile, greysOnTile } from "../../ui/disabledArt.ts";
 import { NEUTRAL_RAMP, PALETTE } from "../../ui/palette.ts";
 import { encodePng } from "./atlasBuild.ts";
-import { type ArtCopy, artCopyFiles, DIM_COPY, DISABLED_COPY } from "./disabledFiles.ts";
+import {
+  type ArtCopy,
+  artCopyFiles,
+  DIM_COPY,
+  DISABLED_COPY,
+  DISABLED_DIM_COPY,
+} from "./disabledFiles.ts";
 import { hashGameArt } from "./hashedArt.ts";
 
 // A 2x1 picture in two palette colours, and a one-frame sheet of it.
@@ -35,6 +41,7 @@ const manifest: Pick<AssetManifest, "images" | "sprites"> = {
   images: [
     { key: "item-whistle", png: "images/item-whistle.png" },
     { key: "icon-lock", png: "images/icon-lock.png" },
+    { key: "icon-exit", png: "images/icon-exit.png" },
     { key: "ui-panel", png: "images/ui-panel.png" },
   ],
   sprites: [
@@ -75,13 +82,25 @@ describe("the remapped copies of its art the HTML interface draws", () => {
   it.each([
     ["grey", DISABLED_COPY, greyForDisabledTile, ["face-dog-kilo", "item-whistle"]],
     ["dimmed", DIM_COPY, dimForModal, ["ui-quip-tail-up", "ui-panel"]],
+    [
+      "disabled and dimmed",
+      DISABLED_DIM_COPY,
+      (pixels: Uint8ClampedArray) => {
+        greyForDisabledTile(pixels);
+        dimForModal(pixels);
+      },
+      ["face-dog-kilo", "item-whistle"],
+    ],
   ] as const)(
     "write each key's %s copy from its PNG, beside its key's files",
     async (name, copy, remap, [sheetKey, imageKey]) => {
       const dom = {
         art: none,
-        dim: copy === DIM_COPY ? new Set([sheetKey, imageKey]) : none,
-        disabled: copy === DISABLED_COPY ? new Set([sheetKey, imageKey]) : none,
+        dim: copy === DIM_COPY || copy === DISABLED_DIM_COPY ? new Set([sheetKey, imageKey]) : none,
+        disabled:
+          copy === DISABLED_COPY || copy === DISABLED_DIM_COPY
+            ? new Set([sheetKey, imageKey])
+            : none,
         grey: none,
       };
       const files = await hashGameArt(
@@ -123,7 +142,7 @@ describe("the remapped copies of its art the HTML interface draws", () => {
     [DISABLED_COPY.name, "face-dog-ginger", "no image or sprite"],
     [DISABLED_COPY.name, "icon-lock", "no tile picture"],
     [DISABLED_COPY.name, "face-dog-pepe", "reaches outside"],
-    [DIM_COPY.name, "icon-lock", "no art the zone celebration draws dimmed"],
+    [DIM_COPY.name, "icon-exit", "no covered native art"],
   ])("fail the build for a %s of %s: %s", async (name, key, error) => {
     const copy = byName[name] ?? DISABLED_COPY;
     await expect(artCopyFiles(readArt, manifest, copy, new Set([key]))).rejects.toThrow(error);
@@ -171,4 +190,26 @@ it("exports native card colour variants with neutral-zero grey and original shee
     "sprites/card-frame.json",
   );
   expect(files.some(({ path }) => /-grey.*\.json$/.test(path))).toBe(false);
+});
+
+it("registers covered native picker chrome and content while leaving walk chrome excluded", () => {
+  for (const key of [
+    "ui-tile",
+    "ui-check",
+    "ui-slot-sign",
+    "ui-afford",
+    "portrait-dog-archie",
+    "face-dog-kilo",
+  ]) {
+    expect(DOM_DIM_ART_KEYS.has(key), key).toBe(true);
+  }
+  for (const key of [
+    "icon-menu",
+    "icon-sound",
+    "ui-home-cash-well-mid",
+    "ui-dog-card",
+    "ui-walk-bar",
+  ]) {
+    expect(DOM_DIM_ART_KEYS.has(key), key).toBe(false);
+  }
 });

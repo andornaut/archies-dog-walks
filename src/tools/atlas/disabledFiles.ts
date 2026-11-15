@@ -4,7 +4,12 @@ import { cardGreyPath, remapCardGrey } from "../../assets/cardArt.ts";
 import { DOM_CHOICE_CARD_ART, DOM_DIM_ART_KEYS, domArtPath } from "../../assets/domArt.ts";
 import type { AssetManifest } from "../../assets/manifest.ts";
 import { dimArtPath, dimForModal } from "../../ui/dimArt.ts";
-import { disabledArtPath, greyForDisabledTile, greysOnTile } from "../../ui/disabledArt.ts";
+import {
+  disabledArtKey,
+  disabledArtPath,
+  greyForDisabledTile,
+  greysOnTile,
+} from "../../ui/disabledArt.ts";
 import { NEUTRAL_RAMP } from "../../ui/palette.ts";
 import { encodePng } from "./atlasBuild.ts";
 import { spriteSource } from "./atlasLayout.ts";
@@ -36,8 +41,19 @@ export const DIM_COPY: ArtCopy = {
   accepts: (key) => DOM_DIM_ART_KEYS.has(key),
   name: "dimmed copy",
   path: dimArtPath,
-  refusal: "is no art the zone celebration draws dimmed",
+  refusal: "is no covered native art",
   remap: dimForModal,
+};
+
+export const DISABLED_DIM_COPY: ArtCopy = {
+  ...DISABLED_COPY,
+  accepts: (key) => greysOnTile(key) && DOM_DIM_ART_KEYS.has(key),
+  name: "dimmed disabled tile copy",
+  path: (kind, key) => dimArtPath(kind, disabledArtKey(key)),
+  remap(pixels) {
+    greyForDisabledTile(pixels);
+    dimForModal(pixels);
+  },
 };
 
 export const CARD_GREY_COPY: ArtCopy = {

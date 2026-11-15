@@ -1,5 +1,6 @@
 import { itemAt } from "@andornaut/game-kit/runtime/arrays";
 
+import { HELP_LAYOUT } from "../../help/helpLayout.ts";
 import { HELP_DOTS, type HelpView } from "../../help/helpView.ts";
 import { createTextLine, type DomTextLine, placeText, setBox } from "../../ui/dom/pixelLine.ts";
 import type { UiLayer } from "../../ui/dom/uiLayer.ts";
@@ -13,14 +14,12 @@ import {
   showQuestionPanel,
 } from "./questionPanel.ts";
 
-// The help screen's heading, close control, picture rules, page title, body, dots and buttons in
-// HTML over the canvas, at the places the canvas draws them (helpView). The canvas keeps the dark
-// screen, the top bar and the page's picture under it. It takes no presses: the scene under it
-// takes every tap, swipe and key, as on the canvas, and draws it again as they change it.
+// Native Help text, page controls, body scrolling and dismissal share the scene's callbacks.
+// The canvas keeps the full-screen backing and live illustration beneath this logical layout.
 
 export type DomHelpInput = Pick<
   DomQuestionPanelInput,
-  "closeLabel" | "fonts" | "gesture" | "presses" | "toGame"
+  "closeLabel" | "fonts" | "footerPress" | "gesture" | "presses" | "toGame"
 > & {
   readonly view: HelpView;
 };
@@ -92,7 +91,12 @@ function dotPart(
 }
 
 // Lines of text in parent, placed as the canvas places them.
-function textParts(input: DomHelpInput, parent: HTMLElement, lines: readonly PanelText[]): DomPart {
+function textParts(
+  input: DomHelpInput,
+  parent: HTMLElement,
+  lines: readonly PanelText[],
+  origin = { x: 0, y: 0 },
+): DomPart {
   const doc = parent.ownerDocument;
   const elements = lines.map((line) => {
     const element = createTextLine(doc, line as DomTextLine);
@@ -106,7 +110,7 @@ function textParts(input: DomHelpInput, parent: HTMLElement, lines: readonly Pan
       lines.forEach((line, i) => {
         const element = elements[i];
         if (element !== undefined) {
-          placeText(input.fonts[line.font], scale, { x: 0, y: 0 }, element, line);
+          placeText(input.fonts[line.font], scale, origin, element, line);
         }
       }),
   };
@@ -124,6 +128,38 @@ export function showHelpScreen(layer: UiLayer, input: DomHelpInput): DomQuestion
   title.className = "adw-lines";
   const body = doc.createElement("p");
   body.className = "adw-lines";
+  const clip = doc.createElement("div");
+  clip.className = "adw-help-body adw-framed";
+  clip.tabIndex = 0;
+  clip.setAttribute("role", "region");
+  clip.setAttribute("aria-label", view.title.text);
+  Object.assign(clip.style, {
+    overflowX: "hidden",
+    overflowY: "auto",
+    overscrollBehavior: "contain",
+    pointerEvents: "auto",
+    scrollbarWidth: "thin",
+    touchAction: "pan-y",
+  });
+  clip.addEventListener("keydown", (event) => {
+    if (
+      [
+        "ArrowDown",
+        "ArrowLeft",
+        "ArrowRight",
+        "ArrowUp",
+        "End",
+        "Enter",
+        "Home",
+        "PageDown",
+        "PageUp",
+        "Space",
+      ].includes(event.code)
+    ) {
+      event.stopPropagation();
+    }
+  });
+  clip.append(body);
   const bodyLines = view.body.lines.map((text, i): PanelText => ({
     capTop: view.body.capTop + i * view.body.pitch,
     centre: "left",
@@ -135,7 +171,7 @@ export function showHelpScreen(layer: UiLayer, input: DomHelpInput): DomQuestion
     text,
   }));
   const titleText = textParts(input, title, [view.title]);
-  const bodyText = textParts(input, body, bodyLines);
+  const bodyText = textParts(input, body, bodyLines, { x: 0, y: view.body.capTop });
   // A screen reader reads the page's title and body as written.
   for (const [element, text] of [
     [title, view.title.text],
@@ -146,7 +182,7 @@ export function showHelpScreen(layer: UiLayer, input: DomHelpInput): DomQuestion
     spoken.textContent = text;
     element.append(spoken);
   }
-  page.append(title, body);
+  page.append(title, clip);
   const parts: DomPart[] = [
     ...view.rules.map(({ colour, rect }) =>
       fillPart(doc, colour, (scale) => ({ ...gridRect(scale, rect), height: artPixel(scale) })),
@@ -155,29 +191,69 @@ export function showHelpScreen(layer: UiLayer, input: DomHelpInput): DomQuestion
       dotPart(doc, dot, (scale) => itemAt(dotBoxes(scale, view.dots), i)),
     ),
     {
+      controls: [clip],
       element: page,
       place: (scale) => {
+        setBox(clip, gridRect(scale, HELP_LAYOUT.body.viewport));
+        const content = gridRect(scale, {
+          height: view.body.lines.length * view.body.pitch,
+          width: HELP_LAYOUT.screen.width,
+          x: 0,
+          y: view.body.capTop,
+        });
+        setBox(body, { height: content.height, left: 0, top: 0, width: content.width });
         titleText.place(scale);
         bodyText.place(scale);
       },
     },
   ];
+  let scrollingBody = false;
+  const gesture =
+    input.gesture === undefined
+      ? undefined
+      : {
+          cancel: () => {
+            scrollingBody = false;
+            input.gesture?.cancel?.();
+          },
+          down: (event: PointerEvent) => {
+            scrollingBody = clip.contains(event.target as Node);
+            if (scrollingBody) {
+              input.gesture?.cancel?.();
+            } else {
+              input.gesture?.down?.(event);
+            }
+          },
+          move: (event: PointerEvent) => {
+            if (!scrollingBody) {
+              input.gesture?.move?.(event);
+            }
+          },
+          up: (event: PointerEvent, cancelled: boolean) => {
+            const scroll = scrollingBody;
+            scrollingBody = false;
+            return scroll ? false : input.gesture?.up?.(event, cancelled);
+          },
+        };
   return showQuestionPanel(layer, {
     close: null,
     closeLabel: input.closeLabel,
     closePressed: view.closePressed,
     describedBy: page.id,
     fonts: input.fonts,
+    gestureOnActions: true,
+    ...(input.footerPress === undefined ? {} : { footerPress: input.footerPress }),
     label: view.heading.text,
     numberKeys: false,
     parts,
     presses: input.presses,
-    ...(input.gesture === undefined ? {} : { gesture: input.gesture }),
+    ...(gesture === undefined ? {} : { gesture }),
     toGame: input.toGame,
     view: {
       buttons: view.buttons,
       close: view.close,
       covered: [],
+      footer: view.footer,
       frame: "none",
       note: [],
       notePlate: undefined,

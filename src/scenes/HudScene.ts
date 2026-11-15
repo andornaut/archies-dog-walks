@@ -234,7 +234,6 @@ export class HudScene extends Scene {
     );
     this.painter = projectHudMoments(painters, picture?.stillFrames);
     this.painter.update({ firingNow: this.time.now, momentNow: this.time.now, now: this.time.now });
-    this.cards = projectHudCards(cards);
     const stopUnderlays =
       picture === undefined
         ? painters.map((painter) => followModalUnderlay(layer.input, painter.element))
@@ -284,6 +283,7 @@ export class HudScene extends Scene {
       createHudMoments(target, source, fonts, hasArt, colours),
     );
     this.barPainter = projectHudMoments(barPainters, picture?.stillFrames);
+    this.cards = projectHudCards(barPainters, cards);
     this.barPainter.update({
       firingNow: this.time.now,
       momentNow: this.time.now,
@@ -296,12 +296,6 @@ export class HudScene extends Scene {
       this.barPainter?.update(time);
       if (picture === undefined) {
         painters.forEach((painter) => dimDrawn(painter.element, !layer.input.accepts()));
-      }
-    });
-    painters.forEach((painter, index) => {
-      const view = cards[index];
-      if (view !== undefined) {
-        painter.element.append(view.element);
       }
     });
     this.events.once("shutdown", () => {

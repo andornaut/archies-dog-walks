@@ -695,3 +695,79 @@ it("uses a detail card's existing any-tap dismissal for its native X and footer"
   ).toEqual([]);
   passive.destroy();
 });
+
+it("opts page actions into content gestures while corner and footer Close retain native clicks", async () => {
+  const { doc, element, layer } = menuContext();
+  const close = vi.fn(),
+    action = vi.fn(),
+    down = vi.fn(),
+    up = vi.fn(() => true);
+  const rect = { height: 320, width: 328, x: 16, y: 120 };
+  const view = modalCardView(MEASURE, rect, gameData.menuText.menu.title, [
+    {
+      label: gameData.menuText.help.next,
+      primary: false,
+      rect: { height: 48, width: 180, x: 90, y: 200 },
+    },
+  ]);
+  const shown = showQuestionPanel(layer, {
+    close,
+    closeLabel: gameData.menuText.common.close,
+    fonts: { body: gameFont("font-body"), title: gameFont("font-title") },
+    gesture: { down, up },
+    gestureOnActions: true,
+    numberKeys: false,
+    presses: [action],
+    toGame: (point) => point,
+    view: {
+      ...view,
+      footer: dismissFooter(
+        MEASURE,
+        { label: gameData.menuText.common.close, primary: true },
+        rect,
+      ),
+    },
+  });
+  await vi.waitFor(() => expect(shown.accepts()).toBe(true));
+  const root = element.children[0]!;
+  const controls = root.all().filter((node) => node.tagName === "button");
+  const page = controls.find(
+    (node) => node.getAttribute("aria-label") === gameData.menuText.help.next,
+  )!;
+  const base = {
+    pointerId: 1,
+    preventDefault: vi.fn(),
+    stopImmediatePropagation: vi.fn(),
+    stopPropagation: vi.fn(),
+    target: page,
+  };
+  root.fire("pointerdown", { ...base, type: "pointerdown" } as never);
+  doc.fire("pointerup", { ...base, type: "pointerup" } as never);
+  const swipeClick = { ...base, detail: 1, type: "click" };
+  root.fire("click", swipeClick);
+  expect(swipeClick.stopImmediatePropagation).toHaveBeenCalledOnce();
+  const dismissers = controls.filter(
+    (node) => node.getAttribute("aria-label") === gameData.menuText.common.close,
+  );
+  expect(dismissers).toHaveLength(2);
+  dismissers.forEach((target, index) => {
+    const pointer = {
+      pointerId: index + 2,
+      preventDefault: vi.fn(),
+      stopImmediatePropagation: vi.fn(),
+      stopPropagation: vi.fn(),
+      target,
+    };
+    root.fire("pointerdown", { ...pointer, type: "pointerdown" } as never);
+    doc.fire("pointerup", { ...pointer, type: "pointerup" } as never);
+    const click = { ...pointer, detail: 1, type: "click" };
+    root.fire("click", click);
+    expect(click.stopImmediatePropagation).not.toHaveBeenCalled();
+    target.fire("click", click);
+  });
+  expect(down).toHaveBeenCalledOnce();
+  expect(up).toHaveBeenCalledOnce();
+  expect(action).not.toHaveBeenCalled();
+  expect(close).toHaveBeenCalledTimes(2);
+  shown.destroy();
+});

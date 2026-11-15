@@ -234,6 +234,7 @@ export class HelpScene extends Scene {
     this.html = addHtmlHelpScreen(
       this,
       {
+        footerPress: () => this.close(),
         gesture: {
           cancel: () => {
             this.pressStart = undefined;

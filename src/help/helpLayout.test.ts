@@ -12,6 +12,7 @@ import { inside } from "../testing/rects.ts";
 import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";
 import { closeFace } from "../ui/closeControl.ts";
 import { LABEL_HELP_GAP } from "../ui/labelHelpGap.ts";
+import { MODAL } from "../ui/modalGeometry.ts";
 import { TEXT_SCALE, TITLE_CAP_ROWS } from "../ui/textFit.ts";
 import { topBarContentRows, topBarRects } from "../ui/topBarTrim.ts";
 import { helpBody } from "./helpBody.ts";
@@ -71,6 +72,7 @@ describe("help tap targets", () => {
     CLOSE_HIT_RECT,
     tapRect(HELP_LAYOUT.previous),
     tapRect(HELP_LAYOUT.next),
+    HELP_LAYOUT.footer,
     ...dotRects(7).map(tapRect),
   ];
 
@@ -95,6 +97,7 @@ describe("helpActionAt", () => {
       [330, 20, { kind: "close" }],
       [HELP_LAYOUT.previous.x, HELP_LAYOUT.previous.y, { kind: "previous" }],
       [HELP_LAYOUT.next.x, HELP_LAYOUT.next.y, { kind: "advance" }],
+      [HELP_LAYOUT.footer.x, HELP_LAYOUT.footer.y, { kind: "close" }],
       [26, dotTop, { kind: "goTo", page: 0 }],
       [333, dotTop + MIN_TAP_SIZE / 2, { kind: "goTo", page: 6 }],
       [180, 200, undefined],
@@ -141,10 +144,17 @@ describe("help pages", () => {
       expect(y - inkBottom, page.title).toBe(LABEL_HELP_GAP);
     }
   });
-  it("fits every page's body in its lines above the page dots, and its title across the screen", () => {
+  it("retains every page's full body in its scroll content above fixed controls, and its full-size title", () => {
     const { scale: titleScale, x } = HELP_LAYOUT.title;
     const inkBottom = y + (maxLines - 1) * lineHeight + inkRowsFromCapTop(BODY) * scale;
-    expect(inkBottom).toBeLessThanOrEqual(dotsTop);
+    const viewport = HELP_LAYOUT.body.viewport;
+    expect(viewport.y).toBe(y);
+    expect(viewport.height).toBeGreaterThanOrEqual(lineHeight);
+    expect(viewport.height % lineHeight).toBe(0);
+    expect(viewport.y + viewport.height + MODAL.gap).toBeLessThanOrEqual(
+      dotsTop - (MIN_TAP_SIZE - HELP_LAYOUT.dots.size) / 2,
+    );
+    expect(inkBottom).toBeLessThanOrEqual(viewport.y + maxLines * lineHeight);
     const offenders = gameData.help.filter((page) => {
       const lines = wrapWords(
         (line) => bodyTextWidth(scale, line),
@@ -160,4 +170,13 @@ describe("help pages", () => {
     });
     expect(offenders.map(({ title }) => title)).toEqual([]);
   });
+});
+
+it("keeps Close centred beneath fixed page navigation with full nonoverlapping targets", () => {
+  const { footer, next, previous, screen } = HELP_LAYOUT;
+  expect(footer.x + footer.width / 2).toBe(screen.width / 2);
+  expect(footer.height).toBeGreaterThanOrEqual(MIN_TAP_SIZE);
+  expect(footer.y - (next.y + next.height)).toBe(BUTTON_SIZE.stackGap);
+  expect(footer.y - (previous.y + previous.height)).toBe(BUTTON_SIZE.stackGap);
+  expect(footer.y + footer.height).toBeLessThanOrEqual(screen.height);
 });

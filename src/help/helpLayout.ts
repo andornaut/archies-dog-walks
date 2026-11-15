@@ -7,6 +7,7 @@ import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";
 import { pageCloseControl } from "../ui/closeControl.ts";
 import { rectIndexAt } from "../ui/grid.ts";
 import { LABEL_HELP_GAP } from "../ui/labelHelpGap.ts";
+import { MODAL } from "../ui/modalGeometry.ts";
 import { TEXT_SCALE, TITLE_CAP_ROWS } from "../ui/textFit.ts";
 import { topSectionLayout } from "../ui/topSection.ts";
 import type { HelpAction } from "./helpPaging.ts";
@@ -27,8 +28,13 @@ if (CLOSE === undefined) {
 // The picture starts under the bar, its top rule on the bar's last trim row.
 const ILLUSTRATION = { height: HELP.illustrationHeight, width, x: 0, y: TOP_BAR.height } as const;
 const TITLE_Y = ILLUSTRATION.y + ILLUSTRATION.height + HELP.titleGap;
-// Previous's and Next's top, buttonsFoot rows over the screen's bottom.
-const BUTTONS_Y = height - HELP.buttonsFoot - BUTTON_SIZE.compact.height;
+const FOOTER_Y = height - HELP.buttonsFoot - BUTTON_SIZE.compact.height;
+const BUTTONS_Y = FOOTER_Y - BUTTON_SIZE.stackGap - BUTTON_SIZE.compact.height;
+const DOTS_Y = BUTTONS_Y - BUTTON_SIZE.smallGap - HELP.dots.size;
+const BODY_Y = TITLE_Y + TITLE_CAP_ROWS * TEXT_SCALE + LABEL_HELP_GAP;
+const DOTS_HIT_TOP = DOTS_Y - (MIN_TAP_SIZE - HELP.dots.size) / 2;
+const BODY_HEIGHT =
+  Math.floor((DOTS_HIT_TOP - MODAL.gap - BODY_Y) / HELP.body.lineHeight) * HELP.body.lineHeight;
 
 // The help screen's geometry at the render resolution. A text position is its first line's
 // left edge and capitals' top.
@@ -42,7 +48,8 @@ const BUTTONS_Y = height - HELP.buttonsFoot - BUTTON_SIZE.compact.height;
 export const HELP_LAYOUT = {
   body: {
     ...HELP.body,
-    y: TITLE_Y + TITLE_CAP_ROWS * TEXT_SCALE + LABEL_HELP_GAP,
+    viewport: { height: BODY_HEIGHT, width, x: 0, y: BODY_Y },
+    y: BODY_Y,
   },
   close: { ...pageCloseControl(SCREEN), ...CLOSE.face, hit: CLOSE.hit },
   // A tap target apart, so each dot's target is its own slot, ending above Previous's and
@@ -51,8 +58,9 @@ export const HELP_LAYOUT = {
     centreX: width / 2,
     size: HELP.dots.size,
     spacing: MIN_TAP_SIZE,
-    y: BUTTONS_Y - BUTTON_SIZE.smallGap - HELP.dots.size,
+    y: DOTS_Y,
   },
+  footer: { ...BUTTON_SIZE.compact, x: (width - BUTTON_SIZE.compact.width) / 2, y: FOOTER_Y },
   heading: { x: TOP_SECTION.heading.x, y: TOP_SECTION.heading.y },
   illustration: ILLUSTRATION,
   next: {
@@ -101,6 +109,9 @@ export function dotRects(pageCount: number): Rect[] {
 // The button or dot under a tap, if any.
 export function helpActionAt(pageCount: number, { x, y }: Point): HelpAction | undefined {
   if (containsPoint(CLOSE_HIT_RECT, x, y)) {
+    return { kind: "close" };
+  }
+  if (containsPoint(HELP_LAYOUT.footer, x, y)) {
     return { kind: "close" };
   }
   if (containsPoint(tapRect(HELP_LAYOUT.previous), x, y)) {

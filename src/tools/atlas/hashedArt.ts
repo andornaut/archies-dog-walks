@@ -11,6 +11,7 @@ import {
   CARD_GREY_DIM_COPY,
   DIM_COPY,
   DISABLED_COPY,
+  DISABLED_DIM_COPY,
 } from "./disabledFiles.ts";
 
 // The module a build fills with the game's ArtFileMap (src/assets/artUrl.ts). The dev server's
@@ -36,6 +37,7 @@ export function artCopies(dom: DomArtKeys): readonly (readonly [ArtCopy, Readonl
   return [
     [DISABLED_COPY, dom.disabled],
     [DIM_COPY, dom.dim],
+    [DISABLED_DIM_COPY, new Set([...dom.disabled].filter((key) => dom.dim.has(key)))],
     [CARD_GREY_COPY, dom.grey],
     [CARD_GREY_DIM_COPY, dom.grey],
   ];

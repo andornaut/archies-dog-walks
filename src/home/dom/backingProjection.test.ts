@@ -94,7 +94,7 @@ it("projects the slot sign frame without changing hit or pressed-tag geometry", 
     },
     sign,
   );
-  await view.ready;
+  await expect(view.ready).resolves.toContain(dimArtPath("sheet", "ui-slot-sign"));
   const json = await source.loadSheet("sprites/ui-slot-sign.json");
   const frame = sheetFrame(json, "normal");
   const image = view.element.children[0]!.children[0] as unknown as FakeElement;

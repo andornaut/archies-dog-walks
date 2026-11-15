@@ -111,7 +111,7 @@ export function createHomeSelection(
         });
       });
     } else {
-      const art = imageArt(doc, source, key);
+      const art = imageArt(doc, source, picture.key, key);
       const size = source.imageSize(picture.key);
       paint.append(art.element);
       promises.push(art.ready);

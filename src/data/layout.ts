@@ -876,7 +876,7 @@ export const SETTINGS_CARD = {
 export const HELP_SCREEN = {
   // The body: its line pitch, most lines, scale, width and left edge.
   body: { lineHeight: 18, maxLines: 6, scale: 2, width: 336, x: 12 },
-  // The rows under Previous and Next to the screen's bottom.
+  // The rows under the Help Close footer to the screen's bottom.
   buttonsFoot: 12,
   // The page dots' side.
   dots: { size: 8 },
