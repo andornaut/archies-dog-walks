@@ -438,7 +438,6 @@ export class HudScene extends Scene {
     if (view === undefined) {
       return;
     }
-    this.topSection?.setShown(this.picture !== undefined || !this.scene.isActive(SCENE_KEYS.help));
     const pause = run.runPause();
     const held = playerPaused(pause);
     if (!held) {
