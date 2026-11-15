@@ -3,7 +3,7 @@
   "git": { "main": "main", "remote": "origin", "github": "andornaut/archies-dog-walks" },
   "schedule": { "departures": ["10"], "timezone": "America/Toronto" },
   "gate": {
-    "image": "sha256:f42d09d4b8aabd27ce3f8b82adf0534c4e0f37769d9f0e595869b911b7c2a9a8",
+    "image": "sha256:09d3a2faa5bb31ef482bb9e657c8eeed0d0a7a185c1e83c6c98a0b690574659c",
     "install": "npm ci",
     "steps": [
       { "name": "lint", "run": "tests/container/check lint" },
