@@ -41,7 +41,9 @@ export function createHomeSections(
       const frame = sheetNineSlice(doc, source, "ui-section", SLICES["ui-section"]);
       element.append(frame.element);
       ready.push(frame.ready);
-      parts.push((scale) => frame.place(scale, origin, { ...section.rect, tag: section.tag }));
+      parts.push((scale) =>
+        frame.place(scale, origin, { ...section.rect, projection: "layout", tag: section.tag }),
+      );
     } else {
       for (const { colour, rect } of section.fallback) {
         const part = fillPart(doc, { colour: PALETTE[colour], rect });

@@ -1,8 +1,8 @@
 import { expect, it, vi } from "vitest";
 
 import { FakeDocument } from "../../testing/fakeDom.ts";
-import { domScale } from "../domScale.ts";
-import { imageNineSlice, sheetArt } from "./artElements.ts";
+import { domScale, gridRect, gridX } from "../domScale.ts";
+import { imageNineSlice, sheetArt, sheetThreeSlice } from "./artElements.ts";
 
 it("uses original sheet metadata with a disabled image and the requested animated frame", async () => {
   const json = {
@@ -68,4 +68,37 @@ it("paints an image panel with the same nine-slice geometry and preloads its reg
       (child) => child.getAttribute("data-dim-art") === "/art/images/ui-panel-dim.png",
     ),
   ).toBe(true);
+});
+
+it("retains three-slice art scaling unless logical projection is explicit", async () => {
+  const doc = new FakeDocument();
+  const source = {
+    artUrl: (path: string) => `/art/${path}`,
+    loadSheet: vi.fn().mockResolvedValue({
+      frames: { first: { frame: { h: 9, w: 12, x: 2, y: 3 } } },
+      meta: { size: { h: 16, w: 32 } },
+    }),
+  };
+  const view = sheetThreeSlice(doc as unknown as Document, source, "ui-slider", {
+    left: 3,
+    right: 3,
+  });
+  const scale = domScale(2.625, { height: 844, width: 390, x: 0, y: 0 });
+  const art = { width: 96, x: 5, y: 7 };
+  await view.ready;
+  view.place(scale, { x: 0, y: 0 }, art);
+  expect(view.element.style.height).toBe("18px");
+  expect(
+    (view.element.children[0] as unknown as { style: CSSStyleDeclaration }).style,
+  ).toMatchObject({
+    backgroundPosition: "-4px -6px",
+    backgroundSize: "64px 32px",
+    width: "6px",
+  });
+  view.place(scale, { x: 0, y: 0 }, { ...art, projection: "layout" });
+  const expected = gridRect(scale, { ...art, height: 9 });
+  expect(view.element.style.height).toBe(`${expected.height}px`);
+  expect((view.element.children[0] as unknown as { style: CSSStyleDeclaration }).style.width).toBe(
+    `${gridX(scale, art.x + 3) - expected.left}px`,
+  );
 });

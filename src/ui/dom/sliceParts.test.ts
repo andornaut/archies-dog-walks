@@ -1,6 +1,6 @@
 import { expect, it } from "vitest";
 
-import { domScale } from "../domScale.ts";
+import { domScale, gridRect, gridY } from "../domScale.ts";
 import { sliceParts } from "./sliceParts.ts";
 
 it("cuts a nine-slice into whole-art-pixel corners and edges round a stretched middle", () => {
@@ -29,4 +29,18 @@ it("cuts a nine-slice into whole-art-pixel corners and edges round a stretched m
       { bottom: 3, left: 0, right: 0, top: 3 },
     ),
   ).toHaveLength(3);
+});
+
+it("projects an opted-in header cap to the same logical edge as the section body", () => {
+  const scale = domScale(2.625, { height: 844, width: 390, x: 0, y: 0 });
+  const rect = { height: 85, width: 348, x: 6, y: 155 };
+  const frame = { height: 32, width: 24 };
+  const slices = { bottom: 3, left: 3, right: 3, top: 24 };
+  const box = gridRect(scale, rect);
+  const layout = sliceParts(scale, box, frame, slices, rect);
+  const art = sliceParts(scale, box, frame, slices);
+  expect(layout[0]!.box.height).toBe(gridY(scale, rect.y + 24) - box.top);
+  expect(layout[0]!.from).toEqual(art[0]!.from);
+  expect(art[0]!.box.height).toBe(48);
+  expect(layout[4]!.box.top).toBe(layout[0]!.box.height);
 });

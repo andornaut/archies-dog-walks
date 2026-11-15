@@ -138,7 +138,11 @@ export function createSlotSign(
         part.place(scale);
         part.element.style.transform = `translate(${-gridX(scale, origin.x)}px,${-gridY(scale, origin.y)}px)`;
       }
-      art?.place(scale, origin, { ...layout.art, tag: motion.pressed ? "pressed" : "normal" });
+      art?.place(scale, origin, {
+        ...layout.art,
+        projection: "layout",
+        tag: motion.pressed ? "pressed" : "normal",
+      });
       labels.forEach((label, i) => {
         const line = lines[i];
         if (line !== undefined) {

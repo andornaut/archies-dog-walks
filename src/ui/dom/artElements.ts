@@ -9,8 +9,8 @@ import { type SheetFrame, sheetFrame, sheetFrameNamed } from "./sheetFrames.ts";
 import { sliceParts } from "./sliceParts.ts";
 
 // Art the HTML interface draws as backgrounds of each key's own file: an image whole, or one
-// frame of a sheet by its tag, every art pixel artPixel device pixels. A sheet's frame is read
-// from its JSON, and its element stays hidden until that loads.
+// frame of a sheet by its tag. Art projection keeps whole authored pixels; layout projection
+// follows logical rect edges. A sheet stays hidden until its JSON loads.
 
 export interface DomArtSource {
   // An art file's URL by its path under /art/.
@@ -22,6 +22,8 @@ export interface DomArtSource {
 // One frame of a sheet by its tag, from its top-left at a game point.
 export interface SheetArtPlace {
   readonly frame?: number | string | SheetFrame;
+  // Layout art follows logical rect edges; default art retains whole authored-pixel scaling.
+  readonly projection?: "art" | "layout";
   readonly scale?: number;
   readonly tag?: string;
   readonly x: number;
@@ -80,11 +82,6 @@ function sheetOf(source: DomArtSource, key: string, element: HTMLElement, imageK
 const backgroundOf = (source: DomArtSource, key: string) =>
   `url("${source.artUrl(domArtPath("sheet", key, "png"))}")`;
 
-// A frame's art pixel at (column, row) as a background position, each art pixel pixel wide.
-function framePosition(frame: SheetFrame, pixel: number, column: number) {
-  return `${-(frame.x + column) * pixel}px ${-frame.y * pixel}px`;
-}
-
 // A sheet's frame in an element of its own, placed in its container whose corner is at origin,
 // or at, device pixels from that corner, where given.
 export function sheetArt(
@@ -118,14 +115,30 @@ export function sheetArt(
               ? sheetFrame(json, art.tag)
               : sheetFrameNamed(json, art.frame);
         const pixel = artPixel(scale) * (art.scale ?? 1);
+        const box =
+          art.projection === "layout"
+            ? gridRect(scale, {
+                height: frame.height * (art.scale ?? 1),
+                width: frame.width * (art.scale ?? 1),
+                x: art.x,
+                y: art.y,
+              })
+            : {
+                height: frame.height * pixel,
+                left: gridX(scale, art.x),
+                top: gridY(scale, art.y),
+                width: frame.width * pixel,
+              };
         setBox(element, {
-          height: frame.height * pixel,
-          left: at?.left ?? gridX(scale, art.x) - gridX(scale, origin.x),
-          top: at?.top ?? gridY(scale, art.y) - gridY(scale, origin.y),
-          width: frame.width * pixel,
+          height: box.height,
+          left: at?.left ?? box.left - gridX(scale, origin.x),
+          top: at?.top ?? box.top - gridY(scale, origin.y),
+          width: box.width,
         });
-        element.style.backgroundSize = `${frame.sheet.width * pixel}px ${frame.sheet.height * pixel}px`;
-        element.style.backgroundPosition = framePosition(frame, pixel, 0);
+        const across = art.projection === "layout" ? box.width / frame.width : pixel;
+        const down = art.projection === "layout" ? box.height / frame.height : pixel;
+        element.style.backgroundSize = `${frame.sheet.width * across}px ${frame.sheet.height * down}px`;
+        element.style.backgroundPosition = `${-frame.x * across}px ${-frame.y * down}px`;
       }),
     ready: loaded.ready,
   };
@@ -170,7 +183,11 @@ export function sheetThreeSlice(
         const pixel = artPixel(scale);
         const left = gridX(scale, art.x);
         const width = across ?? gridX(scale, art.x + art.width) - left;
-        const height = frame.height * pixel;
+        const layout = art.projection === "layout";
+        const height = layout
+          ? gridY(scale, art.y + frame.height * (art.scale ?? 1)) - gridY(scale, art.y)
+          : frame.height * pixel;
+        const down = height / frame.height;
         setBox(element, {
           height,
           left: left - gridX(scale, origin.x),
@@ -179,21 +196,29 @@ export function sheetThreeSlice(
         });
         const [start, middle, end] = parts;
         const sheetSize = (across: number) =>
-          `${frame.sheet.width * across}px ${frame.sheet.height * pixel}px`;
-        const sides = { left: slices.left * pixel, right: slices.right * pixel };
+          `${frame.sheet.width * across}px ${frame.sheet.height * down}px`;
+        const sides = layout
+          ? {
+              left: gridX(scale, art.x + slices.left) - left,
+              right:
+                gridX(scale, art.x + art.width) - gridX(scale, art.x + art.width - slices.right),
+            }
+          : { left: slices.left * pixel, right: slices.right * pixel };
         if (start !== undefined && end !== undefined && middle !== undefined) {
           setBox(start, { height, left: 0, top: 0, width: sides.left });
-          start.style.backgroundSize = sheetSize(pixel);
-          start.style.backgroundPosition = framePosition(frame, pixel, 0);
+          const near = slices.left === 0 ? pixel : sides.left / slices.left;
+          start.style.backgroundSize = sheetSize(near);
+          start.style.backgroundPosition = `${-frame.x * near}px ${-frame.y * down}px`;
           setBox(end, { height, left: width - sides.right, top: 0, width: sides.right });
-          end.style.backgroundSize = sheetSize(pixel);
-          end.style.backgroundPosition = framePosition(frame, pixel, frame.width - slices.right);
+          const far = slices.right === 0 ? pixel : sides.right / slices.right;
+          end.style.backgroundSize = sheetSize(far);
+          end.style.backgroundPosition = `${-(frame.x + frame.width - slices.right) * far}px ${-frame.y * down}px`;
           // The middle columns at the stretch that spans them across the room the sides leave.
           const room = width - sides.left - sides.right;
           const across = room / (frame.width - slices.left - slices.right);
           setBox(middle, { height, left: sides.left, top: 0, width: room });
           middle.style.backgroundSize = sheetSize(across);
-          middle.style.backgroundPosition = `${-(frame.x + slices.left) * across}px ${-frame.y * pixel}px`;
+          middle.style.backgroundPosition = `${-(frame.x + slices.left) * across}px ${-frame.y * down}px`;
         }
       }),
     ready: loaded.ready,
@@ -251,33 +276,47 @@ function slicePainter(
 ) {
   const url = source.artUrl(domArtPath(kind, key, "png"));
   let previous = "";
-  return (scale: DomScale, origin: Point, art: Rect, frame: SheetFrame) => {
+  return (
+    scale: DomScale,
+    origin: Point,
+    art: Rect & Pick<SheetArtPlace, "projection">,
+    frame: SheetFrame,
+  ) => {
     const box = gridRect(scale, art);
     setBox(element, {
       ...box,
       left: box.left - gridX(scale, origin.x),
       top: box.top - gridY(scale, origin.y),
     });
-    const current = JSON.stringify([frame, box.width, box.height, slices, artPixel(scale)]);
+    const current = JSON.stringify([
+      frame,
+      box.width,
+      box.height,
+      slices,
+      artPixel(scale),
+      art.projection === "layout" ? [scale, art] : null,
+    ]);
     if (current === previous) {
       return;
     }
     previous = current;
     element.replaceChildren(
-      ...sliceParts(scale, box, frame, slices).map(({ box: part, from }) => {
-        const span = doc.createElement("span");
-        span.className = "adw-art";
-        setBox(span, part);
-        const across = part.width / from.width;
-        const down = part.height / from.height;
-        Object.assign(span.style, {
-          backgroundImage: `url("${url}")`,
-          backgroundPosition: `${-(frame.x + from.x) * across}px ${-(frame.y + from.y) * down}px`,
-          backgroundSize: `${frame.sheet.width * across}px ${frame.sheet.height * down}px`,
-        });
-        markDimArt(source, kind, key, span);
-        return span;
-      }),
+      ...sliceParts(scale, box, frame, slices, art.projection === "layout" ? art : undefined).map(
+        ({ box: part, from }) => {
+          const span = doc.createElement("span");
+          span.className = "adw-art";
+          setBox(span, part);
+          const across = part.width / from.width;
+          const down = part.height / from.height;
+          Object.assign(span.style, {
+            backgroundImage: `url("${url}")`,
+            backgroundPosition: `${-(frame.x + from.x) * across}px ${-(frame.y + from.y) * down}px`,
+            backgroundSize: `${frame.sheet.width * across}px ${frame.sheet.height * down}px`,
+          });
+          markDimArt(source, kind, key, span);
+          return span;
+        },
+      ),
     );
   };
 }
