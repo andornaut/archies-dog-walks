@@ -3,6 +3,7 @@ import type { Scene } from "phaser";
 
 import { ownerCardFaceKey } from "../assets/spriteKeys.ts";
 import { gameData } from "../data/index.ts";
+import { SLICES } from "../data/layout.ts";
 import type { HudMoment, HudMomentPainter } from "../hud/dom/hudMoments.ts";
 import { faceTextWithNamePills, type NameMark } from "../hud/effectNames.ts";
 import { type FaceText, inlineFaceBox, withoutFace } from "../hud/faceText.ts";
@@ -129,7 +130,12 @@ function draw(painter: HudMomentPainter, depth: number, bars: number, line: Stri
   );
   const place = linePlace(body, bars, rows.length);
   const view = painter.group(depth);
-  view.panel(lead === undefined ? place.panel : ownerLeadPanel(place.panel, lead), "ui-panel");
+  view.panel(lead === undefined ? place.panel : ownerLeadPanel(place.panel, lead), {
+    key: "ui-panel",
+    kind: "image",
+    native: { height: 24, width: 24 },
+    slices: SLICES["ui-panel"],
+  });
   view.faceRows({ capsTop: place.capsTop, x: textX }, box, MESSAGE_STRIP.scale, PALETTE.plum, rows);
   if (owner !== undefined && lead !== undefined) {
     view.panel(lead.frame, undefined, { border: PALETTE.ink, fill: PALETTE.tan });

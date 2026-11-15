@@ -106,6 +106,15 @@ it("does not paint disposed moment roots when a completion callback replaces the
       old.dispose();
       const next = painter.group(60);
       next.ring({ height: 32, width: 112, x: 4, y: 44 }, 0xff0000, 2);
+      next.panel(
+        { height: 13, width: 100, x: 0, y: 40 },
+        {
+          key: "ui-zone-pill",
+          kind: "image",
+          native: { height: 13, width: 13 },
+          slices: { bottom: 0, left: 4, right: 4, top: 0 },
+        },
+      );
     },
     tags: ["play"],
   }).ready;
@@ -119,6 +128,9 @@ it("does not paint disposed moment roots when a completion callback replaces the
     width: "112px",
   });
   expect(ring.style.backgroundColor).toBeUndefined();
+  const pill = element.children[0]!.children[1]!;
+  expect(pill.style).toMatchObject({ height: "13px", width: "100px" });
+  expect(pill.children).toHaveLength(3);
   expect((old.element as unknown as FakeElement).parent).toBeUndefined();
   painter.dispose();
 });

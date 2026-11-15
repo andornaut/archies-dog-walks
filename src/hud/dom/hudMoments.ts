@@ -4,7 +4,6 @@ import { type BitmapFont, fontMetrics, laidGlyphs } from "@andornaut/game-kit/te
 import { domArtPath } from "../../assets/domArt.ts";
 import { ownerCardFaceKey } from "../../assets/spriteKeys.ts";
 import { gameData } from "../../data/index.ts";
-import { SLICES } from "../../data/layout.ts";
 import {
   type DomArtSource,
   imageArt,
@@ -19,6 +18,7 @@ import type { UiLayer } from "../../ui/dom/uiLayer.ts";
 import { artPixel, type DomScale, gridTransform, gridX, gridY } from "../../ui/domScale.ts";
 import { PALETTE } from "../../ui/palette.ts";
 import type { FaceBox, FaceRow } from "../faceText.ts";
+import { type HudArtDescriptor, prepareHudArt } from "./prepareHudArt.ts";
 export interface HudMomentState {
   x: number;
   y: number;
@@ -55,18 +55,40 @@ export interface HudArtPlayback {
   readonly ready: Promise<readonly TagFrame[]>;
   dispose(): void;
 }
+export type HudPanelArt =
+  | {
+      readonly kind: "image";
+      readonly key: string;
+      readonly native: { readonly height: number; readonly width: number };
+      readonly slices: {
+        readonly bottom: number;
+        readonly left: number;
+        readonly right: number;
+        readonly top: number;
+      };
+    }
+  | {
+      readonly kind: "sheet";
+      readonly key: string;
+      readonly tag?: string;
+      readonly slices: {
+        readonly bottom: number;
+        readonly left: number;
+        readonly right: number;
+        readonly top: number;
+      };
+    };
 export interface HudMoment {
   readonly state: HudMomentState;
   readonly element: HTMLElement;
   art(art: MomentArt): HudArtPlayback;
   panel(
     rect: Rect,
-    key?: string,
+    art?: HudPanelArt,
     colours?: {
       border: number;
       fill: number;
     },
-    corner?: number,
   ): void;
   ring(rect: Rect, colour: number, width: number): void;
   text(text: DomTextBlock): void;
@@ -86,12 +108,7 @@ export interface HudMomentPainter {
   readonly element: HTMLElement;
   readonly fonts: Readonly<Record<"body" | "title" | "display", BitmapFont>>;
   hasArt(key: string): boolean;
-  prepare(
-    assets: readonly {
-      key: string;
-      kind: "image" | "sheet";
-    }[],
-  ): Promise<readonly string[]>;
+  prepare(assets: readonly HudArtDescriptor[]): Promise<readonly string[]>;
   width(scale: number, text: string): number;
   inkWidth(scale: number, text: string): number;
   group(depth: number, clock?: HudMomentClock): HudMoment;
@@ -291,23 +308,20 @@ export function createHudMoments(
           });
         });
       },
-      panel(rect, key, colours = { border: PALETTE.plum, fill: PALETTE.cream }, corner = 3) {
-        if (key === "ui-panel" || key === "ui-quip") {
-          if (hasArt(key)) {
-            const panel = imageNineSlice(doc, source, key, { height: 24, width: 24 }, SLICES[key]);
+      panel(rect, art, colours = { border: PALETTE.plum, fill: PALETTE.cream }) {
+        if (art !== undefined && hasArt(art.key)) {
+          if (art.kind === "image") {
+            const panel = imageNineSlice(doc, source, art.key, art.native, art.slices);
             mount(panel.element, panel.ready, (scale) => panel.place(scale, ORIGIN, rect));
-            return;
+          } else {
+            const panel = sheetNineSlice(doc, source, art.key, art.slices);
+            mount(panel.element, panel.ready, (scale) =>
+              panel.place(scale, ORIGIN, {
+                ...rect,
+                ...(art.tag === undefined ? {} : { tag: art.tag }),
+              }),
+            );
           }
-        } else if (key !== undefined && hasArt(key)) {
-          const panel = sheetNineSlice(doc, source, key, {
-            bottom: corner,
-            left: corner,
-            right: corner,
-            top: corner,
-          });
-          mount(panel.element, panel.ready, (scale) =>
-            panel.place(scale, ORIGIN, { ...rect, tag: "normal" }),
-          );
           return;
         }
         const fallback = doc.createElement("span");
@@ -379,20 +393,4 @@ export function createHudMoments(
     },
     width: (scale, text) => boundsAdvance(fonts.body, shownText("body", text)) * scale,
   };
-}
-export function prepareHudArt(
-  source: DomArtSource,
-  assets: readonly {
-    key: string;
-    kind: "image" | "sheet";
-  }[],
-): Promise<readonly string[]> {
-  return Promise.all(
-    assets.map(async ({ key, kind }) => {
-      if (kind === "sheet") {
-        await source.loadSheet(source.artUrl(domArtPath(kind, key, "json")));
-      }
-      return source.artUrl(domArtPath(kind, key, "png"));
-    }),
-  );
 }

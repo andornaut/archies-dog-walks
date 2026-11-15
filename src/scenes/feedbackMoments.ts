@@ -5,6 +5,7 @@ import type { GameObjects, Scene, Tweens, Types } from "phaser";
 
 import { ownerFaceKey, WARNING_KEY, WARNING_TAG } from "../assets/spriteKeys.ts";
 import { gameData } from "../data/index.ts";
+import { SLICES } from "../data/layout.ts";
 import { SCREEN_CONFIG, SCREEN_LAYOUT } from "../data/screen.ts";
 import type { DogId } from "../data/types.ts";
 import type { HudMoment, HudMomentPainter } from "../hud/dom/hudMoments.ts";
@@ -242,9 +243,13 @@ export class HudFeedback {
     const plate = painter.group(HUD_DEPTH.moment, "firingNow");
     plate.panel(
       layout.plate,
-      painter.hasArt("ui-fired-plate") ? "ui-fired-plate" : "ui-hit-label",
+      {
+        key: painter.hasArt("ui-fired-plate") ? "ui-fired-plate" : "ui-hit-label",
+        kind: "sheet",
+        slices: { bottom: 8, left: 8, right: 8, top: 8 },
+        tag: "normal",
+      },
       { border: PALETTE.plum, fill: PALETTE.darkRed },
-      8,
     );
     plate.text({
       anchor: "centre",
@@ -341,7 +346,12 @@ export class HudFeedback {
       depth += 2;
     }
     const view = painter.group(depth, "firingNow");
-    view.panel(rect, "ui-quip");
+    view.panel(rect, {
+      key: "ui-quip",
+      kind: "image",
+      native: { height: 24, width: 24 },
+      slices: SLICES["ui-quip"],
+    });
     if (tail !== undefined) {
       view.art({
         at: { x: tailX, y: line.tail.y },
