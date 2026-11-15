@@ -4,6 +4,8 @@ import { guardClicks, type PressGate } from "@andornaut/game-kit/web/ui/dom/domP
 import { focusTarget } from "@andornaut/game-kit/web/ui/dom/focusModality";
 import { PENDING_ATTRIBUTE, type Reveal } from "@andornaut/game-kit/web/ui/dom/imageReady";
 
+import type { UiLayer } from "./uiLayer.ts";
+
 export interface NativeInputGuard {
   readonly gate: PressGate;
   readonly subscribe: ModalInputGate["subscribe"];
@@ -194,7 +196,7 @@ export interface ModalLifecycle {
 
 // Modal ownership is explicit and independent of whether a view draws native controls.
 export function mountModalLifecycle(
-  layer: { readonly input: ModalInputGate },
+  layer: Pick<UiLayer, "input" | "press">,
   options: { readonly gesture?: NativeGesture; readonly modal: boolean; readonly reveal: Reveal },
   element: HTMLElement,
 ): ModalLifecycle {
@@ -257,6 +259,7 @@ export function mountModalLifecycle(
         };
         clear(element);
       },
+      claim: layer.press.claim,
       gate: input,
       subscribe: layer.input.subscribe,
     },

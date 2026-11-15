@@ -1,6 +1,7 @@
 import { createModalInputGate } from "@andornaut/game-kit/input/modalInput";
 import { expect, it, vi } from "vitest";
 
+import { createPressAdmission } from "../../pressAdmission.ts";
 import { FakeDocument, type FakeElement } from "../../testing/fakeDom.ts";
 import { guardNativeInput, mountModalLifecycle } from "./modalLifecycle.ts";
 
@@ -58,10 +59,11 @@ it("admits revealed and painted views, makes covered dialogs inert and restores 
     },
   });
   const gate = createModalInputGate();
+  const press = createPressAdmission(() => false);
   const root = doc.createElement("div");
   const reveal = { cancel: vi.fn(), revealed: Promise.resolve(true) };
   const view = mountModalLifecycle(
-    { input: gate },
+    { input: gate, press },
     { modal: true, reveal },
     root as unknown as HTMLElement,
   );
@@ -73,7 +75,9 @@ it("admits revealed and painted views, makes covered dialogs inert and restores 
   expect(view.accepts()).toBe(true);
   const held = pointer(1, root);
   root.fire("pointerdown", held);
+  expect(press.canvasAllowed()).toBe(false);
   const overlay = gate.open();
+  expect(press.canvasAllowed()).toBe(true);
   expect(root.inert).toBe(true);
   expect(root.getAttribute("aria-hidden")).toBe("true");
   overlay.close();
