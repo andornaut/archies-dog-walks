@@ -83,7 +83,6 @@ import { loadSheet } from "../ui/dom/sheetFrames.ts";
 import { uiLayer } from "../ui/dom/uiLayer.ts";
 import type { PanelText } from "../ui/modal/types.ts";
 import { PALETTE } from "../ui/palette.ts";
-import { addModalShade } from "../ui/phaser/draw.ts";
 import { GREYED, pictureBox, selectLook } from "../ui/selection.ts";
 import { TEXT_SCALE } from "../ui/textFit.ts";
 import { cents } from "../units.ts";
@@ -99,9 +98,9 @@ import {
   purchaseInProfile,
   takeCelebrations,
 } from "./profileStore.ts";
-import { drawPurchaseConfirm, purchaseConfirmView } from "./purchaseConfirmView.ts";
+import { purchaseConfirmView } from "./purchaseConfirmView.ts";
 import {
-  addDetailCardOver,
+  addHtmlDetailCard,
   addHtmlPurchaseConfirm,
   followScene,
   htmlPanelInput,
@@ -521,6 +520,7 @@ export class ShopScene extends Scene {
         rows.push({
           art,
           fills: [{ colour: PALETTE[pictureBox(look)], rect: box }],
+          frame: this.textures.exists("ui-tile") ? "art" : "fallback",
           id: row.id,
           label: row.name,
           rect,
@@ -591,7 +591,6 @@ export class ShopScene extends Scene {
               }
             },
             move: (point) => this.nativeMove(point),
-            painted: () => undefined,
             source: { artUrl, loadSheet },
             toGame: panelInput.toGame,
             up: (point, cancelled) => this.nativeUp(point, cancelled),
@@ -932,17 +931,9 @@ export class ShopScene extends Scene {
       picture: purchasePicture(pending.purchase),
       pressed,
     });
-    const layer = this.add.container(0, 0);
-    // The HTML shade dims the HTML page under it.
-    const shade = this.native === undefined ? undefined : view.dim;
     this.htmlConfirm = keepPanel(this.htmlConfirm, JSON.stringify(view), () =>
-      addHtmlPurchaseConfirm(this, view, (choice) => this.answer(choice), shade),
+      addHtmlPurchaseConfirm(this, view, (choice) => this.answer(choice)),
     );
-    if (this.htmlConfirm?.panel === undefined) {
-      drawPurchaseConfirm(this, layer, view, false);
-    } else if (shade === undefined) {
-      layer.add(addModalShade(this, view.dim));
-    }
   }
 
   // A held dog's or gear item's detail card over the shop; any tap closes it.
@@ -950,7 +941,6 @@ export class ShopScene extends Scene {
     if (purchase.kind === "dogSlot") {
       return;
     }
-    const layer = this.add.container(0, 0);
     const card =
       purchase.kind === "dog"
         ? dogDetail(gameData, save.owned, save.bankCents, purchase.dog)
@@ -961,8 +951,8 @@ export class ShopScene extends Scene {
       kind: purchase.kind,
       picture: purchasePicture(purchase),
     });
-    // The HTML shade dims the HTML page under it.
-    const htmlUnder = this.native !== undefined;
-    this.htmlDetail = addDetailCardOver(this, layer, dim, false, view, this.htmlDetail, htmlUnder);
+    this.htmlDetail = keepPanel(this.htmlDetail, JSON.stringify(view), () =>
+      addHtmlDetailCard(this, view, undefined, false, { area: PANEL, dismiss: () => this.back() }),
+    );
   }
 }

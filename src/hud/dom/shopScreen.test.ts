@@ -47,6 +47,7 @@ function fixture() {
       {
         art: [],
         fills: [],
+        frame: "art",
         id: "row",
         label: gameData.dogs.kilo.name,
         rect: RECT,
@@ -66,7 +67,6 @@ function fixture() {
       fonts: { body: gameFont("font-body"), title: gameFont("font-title") },
       key: vi.fn(),
       move: vi.fn(),
-      painted: vi.fn(),
       source: SOURCE,
       toGame: (point) => point,
       up,
@@ -101,9 +101,13 @@ const pointer = (target: FakeElement, id: number, type: string) => ({
 });
 
 it("keeps the row and first pointer alive across dip, focus and scroll painting", async () => {
-  const { doc, down, root, screen, up, view } = fixture();
+  const { doc, down, layer, root, screen, up, view } = fixture();
   await settle();
   const row = root.all().find((node) => node.getAttribute("aria-label") === view.rows[0]!.label)!;
+  const otherControl = layer.press.claim();
+  root.fire("pointerdown", pointer(row, 9, "pointerdown"));
+  expect(down).not.toHaveBeenCalled();
+  otherControl?.release();
   root.fire("pointerdown", pointer(row, 1, "pointerdown"));
   screen.update(view);
   screen.place({
@@ -140,5 +144,8 @@ it("cancels a carried row gesture when a nested modal opens and rejects its late
   expect(cancel).toHaveBeenCalledOnce();
   expect(up).not.toHaveBeenCalled();
   expect(wheel).not.toHaveBeenCalled();
+  const released = layer.press.claim();
+  expect(released).toBeDefined();
+  released?.release();
   screen.destroy();
 });

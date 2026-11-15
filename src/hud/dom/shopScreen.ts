@@ -11,7 +11,7 @@ import { FEEDBACK } from "../../home/feedback.ts";
 import { shopTabRects } from "../../home/shopLayout.ts";
 import type { ShopPageView } from "../../home/shopPageView.ts";
 import { type DomArtSource, imageArt, sheetArt, sheetNineSlice } from "../../ui/dom/artElements.ts";
-import { guardNativeInput, revealPaint } from "../../ui/dom/modalLifecycle.ts";
+import { type ModalLifecycle, mountModalLifecycle } from "../../ui/dom/modalLifecycle.ts";
 import {
   createTextLine,
   placeBackedText,
@@ -32,6 +32,7 @@ import {
 import type { TileState } from "../../ui/interaction.ts";
 import type { PanelText } from "../../ui/modal/types.ts";
 import type { ScrollbarRects } from "../../ui/scrollbar.ts";
+import { SELECT_OUTSET } from "../../ui/selection.ts";
 import { scrollPlace } from "./logbook.ts";
 import type { DomPart } from "./questionPanel.ts";
 import { fillPart, shopPageParts } from "./shopPage.ts";
@@ -45,6 +46,7 @@ export interface ShopScreenArt {
 }
 
 export interface ShopScreenRow {
+  readonly frame: "art" | "fallback";
   readonly id: string;
   readonly label: string;
   readonly rect: Rect;
@@ -84,7 +86,11 @@ export interface ShopScreenMotion {
 export interface NativeShopScreen {
   readonly element: HTMLElement;
   accepts(): boolean;
+  capture(): () => boolean;
   destroy(): void;
+  setDimmed(dimmed: boolean): void;
+  setEnabled(enabled: boolean): void;
+  setInert(inert: boolean): void;
   setShown(shown: boolean): void;
   update(view: ShopScreenView): void;
   place(motion: ShopScreenMotion): void;
@@ -96,7 +102,6 @@ export interface ShopScreenInput {
   readonly fonts: Readonly<Record<"body" | "title", BitmapFont>>;
   readonly toGame: (client: Point) => Point;
   readonly active: () => boolean;
-  readonly painted: () => void;
   readonly cancel: () => void;
   readonly down: (point: Point) => void;
   readonly move: (point: Point) => void;
@@ -118,6 +123,7 @@ export function showShopScreen(
   const root = doc.createElement("section");
   root.className = "adw-lines";
   root.style.transformOrigin = "0 0";
+  root.tabIndex = -1;
   root.setAttribute("aria-label", initial.page.title.text);
   const chrome = doc.createElement("div");
   chrome.className = "adw-lines";
@@ -143,11 +149,25 @@ export function showShopScreen(
   layer.element.append(root);
   let alive = true,
     shown = true,
-    revision = 0;
+    enabled = true,
+    inert = false,
+    dimmed = false;
   let view = initial;
   let scale = layer.scale();
   let motion: ShopScreenMotion | undefined;
-  let paint: ReturnType<typeof revealPaint> | undefined;
+  let lifecycle: ModalLifecycle | undefined;
+  const dimListeners = new Set<() => void>();
+  const coverage = {
+    accepts: () => !dimmed && layer.input.accepts(),
+    subscribe: (listener: () => void) => {
+      dimListeners.add(listener);
+      const stop = layer.input.subscribe(listener);
+      return () => {
+        dimListeners.delete(listener);
+        stop();
+      };
+    },
+  };
   let chromeParts: DomPart[] = [],
     headingParts: DomPart[] = [],
     messageParts: DomPart[] = [];
@@ -169,9 +189,13 @@ export function showShopScreen(
     controlPoints.set(element, { x: rect.x + rect.width / 2, y: rect.y + rect.height / 2 });
     return { element, place: (at: DomScale) => setBox(element, gridRect(at, rect)) };
   };
-  const accepts = () =>
-    alive && shown && input.active() && layer.input.accepts() && paint?.painted() === true;
-  const syncDim = () => dimDrawn(root, !layer.input.accepts());
+  const accepts = () => alive && input.active() && lifecycle?.accepts() === true;
+  const capture = () => {
+    const admitted = accepts();
+    const check = lifecycle?.capture() ?? (() => false);
+    return () => admitted && check() && accepts();
+  };
+  const syncDim = () => dimDrawn(root, !coverage.accepts());
   const redraw = () => {
     root.style.transform = gridTransform(scale);
     chromeParts.forEach((part) => part.place(scale));
@@ -231,7 +255,7 @@ export function showShopScreen(
           glyph.place(at, origin, { height: 16, width: 16, x: close.x + 2, y: close.y + 1 });
         },
       });
-      if (paint === undefined) {
+      if (lifecycle === undefined) {
         ready.push(face.ready, glyph.ready);
       }
       // Tabs retain their shared drawn geometry and expose their complete target as controls.
@@ -258,9 +282,12 @@ export function showShopScreen(
         continue;
       }
       rows.get(row.id)?.tile.element.remove();
-      const tile = createSelectionTile(doc, input.source, {
+      const tile = createSelectionTile(doc, input.source, input.fonts.title, {
+        frame: row.frame,
         hit: row.rect,
         label: row.label,
+        mark: "none",
+        outset: SELECT_OUTSET,
         rect: row.rect,
         state: row.state,
       });
@@ -342,45 +369,49 @@ export function showShopScreen(
     }
     redraw();
     syncDim();
-    if (ready.length > 0 || paint === undefined) {
-      revision += 1;
-      paint?.destroy();
-      paint = revealPaint(
-        layer.reveal(
-          Promise.all(ready).then((all) => all.flat()),
-          root,
-        ),
-        input.painted,
+    if (ready.length > 0 || lifecycle === undefined) {
+      lifecycle?.destroy();
+      lifecycle = mountModalLifecycle(
+        layer,
+        {
+          gesture: {
+            cancel: input.cancel,
+            down: (event) => {
+              if (accepts()) {
+                input.down(point(event));
+              }
+            },
+            move: (event) => {
+              if (accepts()) {
+                input.move(point(event));
+              }
+            },
+            up: (event, cancelled) => {
+              if (cancelled || accepts()) {
+                input.up(point(event), cancelled);
+              }
+            },
+          },
+          modal: false,
+          reveal: layer.reveal(
+            Promise.all(ready).then((all) => all.flat()),
+            root,
+          ),
+        },
         root,
       );
+      lifecycle.setInert(inert);
+      lifecycle.setShown(shown);
     }
+    lifecycle.setEnabled(enabled && input.active());
   };
   const stopScale = layer.onScale((next) => {
     scale = next;
     redraw();
   });
-  const stopUnderlay = followModalUnderlay(layer.input, root);
-  update(initial);
+  const stopUnderlay = followModalUnderlay(coverage, root);
   const point = (event: MouseEvent) => input.toGame({ x: event.clientX, y: event.clientY });
-  const stopInput = guardNativeInput(
-    {
-      cancel: input.cancel,
-      down: (event) => input.down(point(event)),
-      gate: {
-        accepts,
-        capture: () => {
-          const accepted = accepts(),
-            stamp = revision,
-            check = layer.input.capture();
-          return () => accepted && stamp === revision && check() && accepts();
-        },
-      },
-      move: (event) => input.move(point(event)),
-      subscribe: layer.input.subscribe,
-      up: (event, cancelled) => input.up(point(event), cancelled),
-    },
-    root,
-  );
+  update(initial);
   const controlPoint = (target: EventTarget | null): Point | undefined => {
     let node = target as HTMLElement | null;
     while (node !== null && node !== root) {
@@ -424,12 +455,12 @@ export function showShopScreen(
   });
   return {
     accepts,
+    capture,
     destroy: () => {
       alive = false;
-      stopInput();
       stopUnderlay();
       stopScale();
-      paint?.destroy();
+      lifecycle?.destroy();
       root.remove();
     },
     element: root,
@@ -437,12 +468,29 @@ export function showShopScreen(
       motion = next;
       redraw();
     },
-    setShown: (next) => {
-      if (shown !== next) {
-        revision += 1;
+    setDimmed: (next) => {
+      if (dimmed !== next) {
+        dimmed = next;
+        dimListeners.forEach((listener) => listener());
       }
+    },
+    setEnabled: (next) => {
+      enabled = next;
+      lifecycle?.setEnabled(next && input.active());
+      if (!next) {
+        input.cancel();
+      }
+    },
+    setInert: (next) => {
+      inert = next;
+      lifecycle?.setInert(next);
+      if (next) {
+        input.cancel();
+      }
+    },
+    setShown: (next) => {
       shown = next;
-      root.hidden = !next;
+      lifecycle?.setShown(next);
       if (!next) {
         input.cancel();
       }
