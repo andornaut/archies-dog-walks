@@ -1,4 +1,11 @@
-import { gearSmallIconKey, perkIconKey, upgradeIconKey } from "../assets/iconKeys.ts";
+import {
+  gearSmallIconKey,
+  hudGearIconKey,
+  hudPerkIconKey,
+  hudUpgradeIconKey,
+  perkIconKey,
+  upgradeIconKey,
+} from "../assets/iconKeys.ts";
 import type { GameData, GearId, UpgradeId, WalkerId, WalkerPerkId } from "../data/types.ts";
 import { gearSourceName } from "../rules/causes.ts";
 import { gearShort, perkEffect, upgradeLine } from "../rules/effectText.ts";
@@ -128,9 +135,23 @@ export function effectLine(
   }
 }
 
-// The 20x20 icon each item shows in the walk bar's effect wells: its 16x16 key and -20.
+// The 20x20 world-charm icon: its 16x16 key and -20, separate from native HUD art.
 export function walkBarIconKey(item: EffectItem): string {
   return `${effectIconKey(item)}-20`;
+}
+
+// Native walk HUD icons have their own authored 24px art, independent of world and card icons.
+export function hudEffectIconKey(item: EffectItem): string {
+  switch (item.kind) {
+    case "gear":
+      return hudGearIconKey(item.gear);
+    case "perk":
+      return hudPerkIconKey(item.perk);
+    case "upgrade":
+      return hudUpgradeIconKey(item.upgrade);
+    default:
+      return item satisfies never;
+  }
 }
 
 // The index among items, the walk's effectItems, of the gear source names, whose well shows it;

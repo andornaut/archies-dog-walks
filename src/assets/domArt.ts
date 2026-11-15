@@ -3,7 +3,15 @@ import { keysOf } from "@andornaut/game-kit/records";
 import { gameData } from "../data/index.ts";
 import type { GameData } from "../data/types.ts";
 import { choiceCardAssets } from "./cardArt.ts";
-import { debuffIconKey, gearSmallIconKey, perkIconKey, upgradeIconKey } from "./iconKeys.ts";
+import {
+  debuffIconKey,
+  gearSmallIconKey,
+  hudGearIconKey,
+  hudPerkIconKey,
+  hudUpgradeIconKey,
+  perkIconKey,
+  upgradeIconKey,
+} from "./iconKeys.ts";
 import {
   badgeKey,
   DETAIL_WELL_KEY,
@@ -163,6 +171,9 @@ function hudArtKeys(
   data: Pick<GameData, "dogs" | "shopGear" | "upgrades" | "walkerPerks">,
 ): string[] {
   return [
+    ...keysOf(data.shopGear).map(hudGearIconKey),
+    ...keysOf(data.walkerPerks).map(hudPerkIconKey),
+    ...keysOf(data.upgrades).map(hudUpgradeIconKey),
     ...[
       ...keysOf(data.shopGear).map(gearSmallIconKey),
       ...keysOf(data.walkerPerks).map(perkIconKey),
@@ -196,6 +207,7 @@ function hudArtKeys(
     "ui-effect-well",
     "ui-fired-plate",
     "ui-hint-tail",
+    "ui-hud-effect-well",
     "ui-hit-label",
     "ui-lead-tag",
     "ui-owner-tab",

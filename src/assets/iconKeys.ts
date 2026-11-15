@@ -23,3 +23,16 @@ export function gearSmallIconKey(gear: GearId): string {
 export function perkIconKey(perk: WalkerPerkId): string {
   return `icon-perk-${kebabCase(perk)}`;
 }
+
+// Native HUD art is authored separately from the 16px and 20px world and card roles.
+export function hudGearIconKey(gear: GearId): string {
+  return `icon-hud-effect-gear-${kebabCase(gear)}`;
+}
+
+export function hudPerkIconKey(perk: WalkerPerkId): string {
+  return `icon-hud-effect-perk-${kebabCase(perk)}`;
+}
+
+export function hudUpgradeIconKey(upgrade: UpgradeId): string {
+  return `icon-hud-effect-upgrade-${kebabCase(upgrade)}`;
+}

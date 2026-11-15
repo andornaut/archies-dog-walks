@@ -2,6 +2,7 @@ import { keysOf } from "@andornaut/game-kit/records";
 import { describe, expect, it } from "vitest";
 
 import manifest from "../../public/art/manifest.json" with { type: "json" };
+import { DOM_ART_KEYS } from "../assets/domArt.ts";
 import { gameData } from "../data/index.ts";
 import { modifiersOf } from "../rules/modifiers.ts";
 import { activeModifier, testState } from "../testing/runState.ts";
@@ -9,7 +10,9 @@ import {
   effectIconKey,
   type EffectItem,
   effectItems,
+  hudEffectIconKey,
   spareTreatWell,
+  walkBarIconKey,
   walkerEffectItems,
 } from "./effectIcons.ts";
 
@@ -91,4 +94,34 @@ describe("spareTreatWell", () => {
     const run = holding(found, held);
     expect(spareTreatWell(effectItems(gameData, run), run)).toBe(expected);
   });
+});
+
+it("registers the dedicated native HUD icon family without changing world icon identities", () => {
+  const items: EffectItem[] = [
+    ...keysOf(gameData.shopGear).map((gear): EffectItem => ({ gear, kind: "gear" })),
+    ...keysOf(gameData.walkerPerks).map((perk): EffectItem => ({ kind: "perk", perk })),
+    ...keysOf(gameData.upgrades).map((upgrade): EffectItem => ({ kind: "upgrade", upgrade })),
+  ];
+  const keys = items.map(hudEffectIconKey);
+  expect(keys.slice().sort()).toEqual([
+    "icon-hud-effect-gear-fanny-pack",
+    "icon-hud-effect-gear-hall-pass",
+    "icon-hud-effect-gear-lucky-collar",
+    "icon-hud-effect-gear-running-shoes",
+    "icon-hud-effect-gear-whistle",
+    "icon-hud-effect-perk-keen-eye",
+    "icon-hud-effect-perk-long-reach",
+    "icon-hud-effect-perk-quick-recovery",
+    "icon-hud-effect-perk-second-chance",
+    "icon-hud-effect-upgrade-belly-rubs",
+    "icon-hud-effect-upgrade-big-tipper",
+    "icon-hud-effect-upgrade-charmer",
+    "icon-hud-effect-upgrade-good-leash",
+    "icon-hud-effect-upgrade-raincoats",
+    "icon-hud-effect-upgrade-rush-hour",
+  ]);
+  expect([...keys, "ui-hud-effect-well"].filter((key) => !DOM_ART_KEYS.has(key))).toEqual([]);
+  const fanny = { gear: "fannyPack", kind: "gear" } as const;
+  expect(effectIconKey(fanny)).toBe("icon-gear-fanny-pack");
+  expect(walkBarIconKey(fanny)).toBe("icon-gear-fanny-pack-20");
 });

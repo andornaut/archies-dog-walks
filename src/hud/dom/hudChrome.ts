@@ -6,7 +6,6 @@ import { gameData } from "../../data/index.ts";
 import { SLICES } from "../../data/layout.ts";
 import { SCREEN_LAYOUT } from "../../data/screen.ts";
 import type { DebuffId } from "../../data/types.ts";
-import { CHARM } from "../../layout/buffLayout.ts";
 import { debuffLasting } from "../../rules/durations.ts";
 import { currentZone } from "../../rules/route.ts";
 import { read } from "../../rules/units.ts";
@@ -17,14 +16,15 @@ import {
   type EffectItem,
   effectItems,
   effectItemsKey,
+  hudEffectIconKey,
   spareTreatWell,
-  walkBarIconKey,
 } from "../effectIcons.ts";
 import {
   DEBUFF_BAR,
   debuffBarRects,
   debuffFillWidth,
   spareTreatPipAt,
+  WALK_BAR,
   walkBarLayout,
   zoneProgressLayout,
   zoneProgressText,
@@ -42,7 +42,6 @@ type DebuffColours = Readonly<
     }
   >
 >;
-const BAR = walkBarLayout(SCREEN_LAYOUT.topBar);
 // Persistent native chrome reads existing HUD layouts; scene clocks own animated feedback.
 export function createHudChrome(
   painter: HudMomentPainter,
@@ -209,31 +208,33 @@ export function createHudChrome(
           "effects",
           0,
           (group) => {
+            const { effectWells } = walkBarLayout(SCREEN_LAYOUT.topBar, effects.length);
             effects.forEach((item: EffectItem, index) => {
-              const well = BAR.effectWells[index];
+              const well = effectWells[index];
               if (well === undefined) {
                 return;
               }
-              const key = walkBarIconKey(item);
+              const key = hudEffectIconKey(item);
               if (barPainter.hasArt(key)) {
                 group.art({
-                  at: { x: well.x + CHARM.icon, y: well.y + CHARM.icon },
-                  image: { height: 20, width: 20 },
+                  at: { x: well.x + WALK_BAR.effects.icon, y: well.y + WALK_BAR.effects.icon },
+                  image: { height: WALK_BAR.effects.iconSize, width: WALK_BAR.effects.iconSize },
                   key,
                 });
               } else {
                 group.text({
                   anchor: "centre",
-                  capTop: well.y + CHARM.size / 2 - 2,
+                  backing: well,
+                  capTop: well.y,
                   colour: PALETTE.cream,
                   font: "body",
                   lines: [effectIconFallback(gameData, item)],
                   scale: 1,
-                  x: well.x + CHARM.size / 2,
+                  x: well.x + well.width / 2,
                 });
               }
             });
-            const well = BAR.effectWells[spare];
+            const well = effectWells[spare];
             if (well !== undefined) {
               group.art({
                 at: spareTreatPipAt(well),
