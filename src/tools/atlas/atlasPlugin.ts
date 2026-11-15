@@ -4,14 +4,19 @@ import type { RgbaImage } from "@andornaut/art-kit/rgbaImage";
 import type { Plugin, ViteDevServer } from "vite";
 
 import type { ArtFileMap } from "../../assets/artUrl.ts";
-import { DOM_ART_KEYS, DOM_DIM_ART_KEYS, DOM_DISABLED_ART_KEYS } from "../../assets/domArt.ts";
+import {
+  DOM_ART_KEYS,
+  DOM_CHOICE_CARD_ART,
+  DOM_DIM_ART_KEYS,
+  DOM_DISABLED_ART_KEYS,
+} from "../../assets/domArt.ts";
 import { parseManifest } from "../../assets/manifest.ts";
 import { ART_DIR, ART_MANIFEST, artManifestText, generateArtManifest } from "../artManifest.ts";
 import { limitConcurrency } from "../concurrency.ts";
 import { nodeArtFiles, OPEN_FILE_LIMIT, writeIfChanged } from "../files.ts";
 import { buildAtlases, WEBP_PAGES } from "./atlasBuild.ts";
-import { artCopyFile, DIM_COPY, DISABLED_COPY } from "./disabledFiles.ts";
-import { ART_FILES_MODULE, hashGameArt } from "./hashedArt.ts";
+import { artCopyFile } from "./disabledFiles.ts";
+import { ART_FILES_MODULE, artCopies, hashGameArt } from "./hashedArt.ts";
 
 // Vite's prefix for a module id that names no file.
 const RESOLVED_ART_FILES_MODULE = `\0${ART_FILES_MODULE}`;
@@ -60,7 +65,12 @@ export function atlasPlugin(): Plugin & { api: AtlasPluginApi } {
       }
       const hashed = await hashGameArt(
         readArt,
-        { art: DOM_ART_KEYS, dim: DOM_DIM_ART_KEYS, disabled: DOM_DISABLED_ART_KEYS },
+        {
+          art: DOM_ART_KEYS,
+          dim: DOM_DIM_ART_KEYS,
+          disabled: DOM_DISABLED_ART_KEYS,
+          grey: DOM_CHOICE_CARD_ART.grey,
+        },
         art,
         atlas,
       );
@@ -76,12 +86,12 @@ export function atlasPlugin(): Plugin & { api: AtlasPluginApi } {
       const artDir = `${server.config.publicDir}/${ART_DIR}`;
       const prefix = `${server.config.base}${ART_DIR}/`;
       const keys = new Map(
-        (
-          [
-            [DISABLED_COPY, DOM_DISABLED_ART_KEYS],
-            [DIM_COPY, DOM_DIM_ART_KEYS],
-          ] as const
-        ).flatMap(([copy, copied]) =>
+        artCopies({
+          art: DOM_ART_KEYS,
+          dim: DOM_DIM_ART_KEYS,
+          disabled: DOM_DISABLED_ART_KEYS,
+          grey: DOM_CHOICE_CARD_ART.grey,
+        }).flatMap(([copy, copied]) =>
           [...copied].flatMap((key) =>
             (["image", "sheet"] as const).map((kind) => [copy.path(kind, key), { copy, key }]),
           ),

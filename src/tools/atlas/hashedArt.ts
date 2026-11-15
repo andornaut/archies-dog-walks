@@ -4,7 +4,14 @@ import { ATLAS_MANIFEST_PATH, type AtlasManifest } from "../../assets/atlasManif
 import type { AssetManifest } from "../../assets/manifest.ts";
 import { ART_MANIFEST } from "../artManifest.ts";
 import type { AtlasBuild } from "./atlasBuild.ts";
-import { type ArtCopy, artCopyFiles, DIM_COPY, DISABLED_COPY } from "./disabledFiles.ts";
+import {
+  type ArtCopy,
+  artCopyFiles,
+  CARD_GREY_COPY,
+  CARD_GREY_DIM_COPY,
+  DIM_COPY,
+  DISABLED_COPY,
+} from "./disabledFiles.ts";
 
 // The module a build fills with the game's ArtFileMap (src/assets/artUrl.ts). The dev server's
 // map is empty, so every file loads from its own path there.
@@ -21,13 +28,16 @@ export interface DomArtKeys {
   readonly art: ReadonlySet<string>;
   readonly dim: ReadonlySet<string>;
   readonly disabled: ReadonlySet<string>;
+  readonly grey: ReadonlySet<string>;
 }
 
 // Each kind of copy and the keys it copies.
-function copies(dom: DomArtKeys): readonly (readonly [ArtCopy, ReadonlySet<string>])[] {
+export function artCopies(dom: DomArtKeys): readonly (readonly [ArtCopy, ReadonlySet<string>])[] {
   return [
     [DISABLED_COPY, dom.disabled],
     [DIM_COPY, dom.dim],
+    [CARD_GREY_COPY, dom.grey],
+    [CARD_GREY_DIM_COPY, dom.grey],
   ];
 }
 
@@ -49,7 +59,7 @@ function gameArtPaths(dom: DomArtKeys, manifest: AssetManifest, atlas: AtlasMani
     ...manifest.sounds.flatMap(({ m4a, ogg }) => [m4a, ogg]),
     ...manifest.sprites.filter(own).flatMap(({ json, png }) => [json, png]),
     ...manifest.sprites
-      .filter(({ key }) => dom.disabled.has(key) || dom.dim.has(key))
+      .filter(({ key }) => dom.disabled.has(key) || dom.dim.has(key) || dom.grey.has(key))
       .map(({ json }) => json),
   ];
   return [...new Set(paths)].sort();
@@ -69,7 +79,7 @@ function checkDomArt(dom: DomArtKeys, manifest: AssetManifest, paths: ReadonlySe
   };
   const missing = [
     ...[...dom.art].map((key) => [key, needed(key, false)] as const),
-    ...[...dom.disabled, ...dom.dim].map((key) => [key, needed(key, true)] as const),
+    ...[...dom.disabled, ...dom.dim, ...dom.grey].map((key) => [key, needed(key, true)] as const),
   ].flatMap(([key, files]) =>
     files === undefined
       ? [`${key} (no image or sprite)`]
@@ -109,7 +119,7 @@ export async function hashGameArt(
   { files, manifest: atlas }: Pick<AtlasBuild, "files" | "manifest">,
 ): Promise<HashedArtFile[]> {
   const copied = await Promise.all(
-    copies(dom).map(([copy, keys]) => artCopyFiles(readArt, manifest, copy, keys)),
+    artCopies(dom).map(([copy, keys]) => artCopyFiles(readArt, manifest, copy, keys)),
   );
   const made = copied.flatMap((each) => [...each]);
   const built = new Map([...files, ...made]).set(

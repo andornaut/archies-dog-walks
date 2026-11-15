@@ -1,9 +1,11 @@
 import { decodePng } from "@andornaut/art-kit/png";
 
-import { DOM_DIM_ART_KEYS, domArtPath } from "../../assets/domArt.ts";
+import { cardGreyPath, remapCardGrey } from "../../assets/cardArt.ts";
+import { DOM_CHOICE_CARD_ART, DOM_DIM_ART_KEYS, domArtPath } from "../../assets/domArt.ts";
 import type { AssetManifest } from "../../assets/manifest.ts";
 import { dimArtPath, dimForModal } from "../../ui/dimArt.ts";
 import { disabledArtPath, greyForDisabledTile, greysOnTile } from "../../ui/disabledArt.ts";
+import { NEUTRAL_RAMP } from "../../ui/palette.ts";
 import { encodePng } from "./atlasBuild.ts";
 import { spriteSource } from "./atlasLayout.ts";
 
@@ -36,6 +38,24 @@ export const DIM_COPY: ArtCopy = {
   path: dimArtPath,
   refusal: "is no art the zone celebration draws dimmed",
   remap: dimForModal,
+};
+
+export const CARD_GREY_COPY: ArtCopy = {
+  accepts: (key) => DOM_CHOICE_CARD_ART.grey.has(key),
+  name: "neutral card copy",
+  path: (kind, key) => cardGreyPath(domArtPath(kind, key, "png")),
+  refusal: "is no disabled choice card art",
+  remap: (pixels) => remapCardGrey(NEUTRAL_RAMP, pixels),
+};
+
+export const CARD_GREY_DIM_COPY: ArtCopy = {
+  ...CARD_GREY_COPY,
+  name: "dimmed neutral card copy",
+  path: (kind, key) => cardGreyPath(dimArtPath(kind, key)),
+  remap(pixels) {
+    remapCardGrey(NEUTRAL_RAMP, pixels);
+    dimForModal(pixels);
+  },
 };
 
 // Where a key's art is in manifest: an image's PNG, or a sprite sheet's PNG and JSON.

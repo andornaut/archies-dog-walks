@@ -2,6 +2,7 @@ import { keysOf } from "@andornaut/game-kit/records";
 
 import { gameData } from "../data/index.ts";
 import type { GameData } from "../data/types.ts";
+import { choiceCardAssets } from "./cardArt.ts";
 import { debuffIconKey, gearSmallIconKey, perkIconKey, upgradeIconKey } from "./iconKeys.ts";
 import {
   badgeKey,
@@ -205,7 +206,11 @@ function hudArtKeys(
   ];
 }
 
+export const DOM_CHOICE_CARD_ART = choiceCardAssets(gameData);
+
 export const DOM_ART_KEYS: ReadonlySet<string> = new Set([
+  ...DOM_CHOICE_CARD_ART.images,
+  ...DOM_CHOICE_CARD_ART.sheets,
   ...DOM_STYLE_ART.map(([, key]) => key),
   ...detailArtKeys(gameData),
   ...SETTINGS_ART_KEYS,
@@ -246,6 +251,8 @@ export const DOM_DISABLED_ART_KEYS: ReadonlySet<string> = new Set(disabledTileAr
 // writes each copy as a file of its own from the canvas's ramp remap, beside its key's files; a
 // sheet's copy keeps its key's JSON frames.
 export const DOM_DIM_ART_KEYS: ReadonlySet<string> = new Set([
+  ...DOM_CHOICE_CARD_ART.images,
+  ...DOM_CHOICE_CARD_ART.sheets,
   "ui-button-go",
   "ui-panel",
   "ui-zone-banner",
