@@ -9,7 +9,6 @@ import type { HelpView } from "../help/helpView.ts";
 import type { BadgeCardView } from "../home/badgeCardView.ts";
 import type { DetailCardView } from "../home/detailCardView.ts";
 import type { EndScreenView } from "../home/endScreenView.ts";
-import type { LogbookView } from "../home/logbookView.ts";
 import type { ConfirmChoice } from "../home/purchaseConfirm.ts";
 import type { PurchaseConfirmCardView } from "../home/purchaseConfirmCardView.ts";
 import type { ZoneCelebrationView } from "../hud/celebrationView.ts";
@@ -22,7 +21,6 @@ import {
 import { showDetailCard } from "../hud/dom/detailCard.ts";
 import { type DomEndScreen, type DomEndScreenInput, showEndScreen } from "../hud/dom/endScreen.ts";
 import { type DomHelpInput, showHelpScreen } from "../hud/dom/helpScreen.ts";
-import { type LogbookScroll, showLogbook } from "../hud/dom/logbook.ts";
 import { showPurchaseConfirm } from "../hud/dom/purchaseConfirm.ts";
 import {
   type DomQuestionPanel,
@@ -384,27 +382,6 @@ function everyFrame(scene: Scene): (step: () => void) => () => void {
     scene.game.events.on(Core.Events.PRE_RENDER, step);
     return () => scene.game.events.off(Core.Events.PRE_RENDER, step);
   };
-}
-
-// The Logbook in the HTML layer, laid out as the canvas draws it (logbookView), following the
-// scroll before every frame. It takes no presses. Returns it, for its scene to replace as what it
-// shows changes, or undefined where the canvas must draw it.
-export function addHtmlLogbook(
-  scene: Scene,
-  view: LogbookView,
-  scroll: () => LogbookScroll,
-): DomQuestionPanel | undefined {
-  const place = htmlPanelPlace(scene);
-  if (place === undefined) {
-    return undefined;
-  }
-  const panel = showLogbook(place.layer, {
-    ...htmlArtInput(place),
-    everyFrame: everyFrame(scene),
-    scroll,
-    view,
-  });
-  return followScene(scene, panel);
 }
 
 // A badge's card in the HTML layer, laid out as the canvas draws it (badgeCardView), over the
