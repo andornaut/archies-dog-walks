@@ -1,11 +1,13 @@
 import { clampIndex, itemAt } from "@andornaut/game-kit/arrays";
-import { drawProgressDisplay } from "@andornaut/game-kit/progress/phaser/drawProgressBar";
-import { createProgressDisplay, type ProgressHandle } from "@andornaut/game-kit/progressState";
-import { containsPoint, type Rect } from "@andornaut/game-kit/rect";
+import { type ProgressHandle } from "@andornaut/game-kit/progressState";
+import { containsPoint, insetRect, type Rect } from "@andornaut/game-kit/rect";
+import { fontMetrics } from "@andornaut/game-kit/text/bitmapFont";
 import { Core, type GameObjects, Scene, Scenes, type Time } from "phaser";
 
+import { artUrl } from "../assets/artFiles.ts";
 import { gearSmallIconKey } from "../assets/iconKeys.ts";
-import { dogSpriteKey, ownerFaceKey, walkerPortraitKey } from "../assets/spriteKeys.ts";
+import { MANIFEST_CACHE_KEY } from "../assets/phaser/manifestArt.ts";
+import { dogSpriteKey, gearIconKey, walkerPortraitKey } from "../assets/spriteKeys.ts";
 import { gameData } from "../data/index.ts";
 import { HOME_SCREEN } from "../data/layout.ts";
 import { SCREEN_LAYOUT } from "../data/screen.ts";
@@ -14,19 +16,14 @@ import { clearRunOverrides } from "../dev/pageRunSetup.ts";
 import { startWalkOpensHelp } from "../help/helpSeen.ts";
 import { bankAtLastVisit, newlyAffordable } from "../home/afford.ts";
 import {
-  bubbleLines,
-  bubbleRect,
-  bubbleSize,
-  ownerColumn,
-  ownerPlace,
-} from "../home/bubbleRect.ts";
-import {
   type DetailCard,
   type DetailPicture,
   dogDetail,
   gearDetail,
   walkerDetail,
 } from "../home/detail.ts";
+import { createNativeHomeView, type NativeHomeView } from "../home/dom/screen.ts";
+import { createNativeHomeSession } from "../home/dom/session.ts";
 import {
   badgePopOffset,
   bobOffset,
@@ -37,6 +34,7 @@ import {
   shakeOffset,
 } from "../home/feedback.ts";
 import { type Focus, focusDirectionForKey, moveFocus } from "../home/focus.ts";
+import { gearPictureFallback } from "../home/gearPictureView.ts";
 import {
   dogInfo,
   gearByPrice,
@@ -49,13 +47,7 @@ import {
   tapGear,
 } from "../home/home.ts";
 import { homeBackAction, homeBarButtonAt, overlayRegion, regionOutside } from "../home/homeBar.ts";
-import {
-  HOME_LAYOUT,
-  homeBarButtons,
-  slotSignText,
-  tileFace,
-  updateModalLayout,
-} from "../home/homeLayout.ts";
+import { HOME_LAYOUT, homeBarButtons, tileFace, updateModalLayout } from "../home/homeLayout.ts";
 import {
   bubbleSpeech,
   bubbleTurnLine,
@@ -70,18 +62,17 @@ import {
   walkerSays,
   walkersUnlockedSince,
 } from "../home/homeLines.ts";
-import { addGearPicture } from "../home/phaser/gearPicture.ts";
 import { renderHomeBackdrop } from "../home/phaser/homeBackdrop.ts";
-import { renderHomeSections } from "../home/phaser/homeSections.ts";
-import { renderHomeSelections } from "../home/phaser/homeSelections.ts";
-import type { TileView } from "../home/phaser/tileFeedbackView.ts";
+import { nativeFrames } from "../home/phaser/nativeFrames.ts";
 import { porchOwners } from "../home/porch.ts";
 import { homeSections, type Sections, startReady } from "../home/sections.ts";
+import { type HomeSelectionView, homeSelectionViews } from "../home/selectionView.ts";
 import { shopAffordable } from "../home/shop.ts";
 import { slotSign, slotSignPurchase } from "../home/slotSign.ts";
+import { homeSpeechView } from "../home/speechView.ts";
 import { tapWalker } from "../home/walkers.ts";
 import type { DomQuestionPanel } from "../hud/dom/questionPanel.ts";
-import { withNamePills } from "../hud/effectNames.ts";
+import { pillKind } from "../hud/effectNames.ts";
 import { downTail } from "../hud/moments.ts";
 import {
   type HoldPress,
@@ -124,47 +115,27 @@ import { walksFinished, walksPlayed } from "../save/stats.ts";
 import { packDogsOf } from "../state/pack.ts";
 import { barTitleRoom } from "../ui/barTitle.ts";
 import { closeControl } from "../ui/closeControl.ts";
-import { LABEL_ALIGN_DATA } from "../ui/dom/labelBlock.ts";
+import { disabledArtKey } from "../ui/disabledArt.ts";
+import type { NativeTopSection } from "../ui/dom/nativeTopSection.ts";
+import { loadSheet } from "../ui/dom/sheetFrames.ts";
+import { uiLayer } from "../ui/dom/uiLayer.ts";
 import { gridRects, rectIndexAt } from "../ui/grid.ts";
-import { buttonState } from "../ui/interaction.ts";
 import { cardTitleRow } from "../ui/modal/titleRow.ts";
 import { PALETTE } from "../ui/palette.ts";
-import {
-  addModalShade,
-  drawFocusRing,
-  drawFramedRect,
-  drawRing,
-  drawShadow,
-  fillRect,
-} from "../ui/phaser/draw.ts";
-import {
-  type FontRole,
-  inkSpan,
-  pixelFontMetrics,
-  placePixelText,
-  setPixelText,
-  withProbe,
-} from "../ui/phaser/pixelText.ts";
-import { GAME_PROGRESS_STYLE, LOADING_MOTION, LOADING_TIMING } from "../ui/progressBar.ts";
-import { BUTTON_COLOURS, GREYED } from "../ui/selection.ts";
-import { TEXT_SCALE } from "../ui/textFit.ts";
+import { addModalShade, drawShadow } from "../ui/phaser/draw.ts";
+import { REFUSE } from "../ui/refuse.ts";
 import type { Cents } from "../units.ts";
 import { artReady, waitForWalkArt, whenArtReady } from "./artReady.ts";
 import type { CelebrationSceneData } from "./CelebrationScene.ts";
-import { addNamePills } from "./effectNameColours.ts";
+import { pillColours } from "./effectNameColours.ts";
 import { HELP_CLOSED_EVENT } from "./HelpScene.ts";
 import { openHelp } from "./helpScreen.ts";
-import { exitGame, HOME_PAGE_OPENING_EVENT, openHomePage } from "./homeBarPress.ts";
-import { addAffordFrame, addModalCard, detailView } from "./homePanels.ts";
-import {
-  addHtmlMirror,
-  type HtmlMirror,
-  MIRROR_CANVAS_DATA,
-  MIRROR_CLIP_DATA,
-} from "./htmlMirror.ts";
-import { drawPetShopFallback, purchasePicture, SHOP_ART } from "./itemArt.ts";
+import { exitGame, HOME_PAGE_OPENING_EVENT, openHomePage, routeHomeBar } from "./homeBarPress.ts";
+import { addAffordFrame, detailView } from "./homePanels.ts";
+import { drawPetShopFallback, PLATE_PAD, purchasePicture, SHOP_ART } from "./itemArt.ts";
 import { loadingProgress, waitedLoad } from "./loadingProgress.ts";
 import { measureModalTitle, modalTextWidth } from "./modalMeasure.ts";
+import { NATIVE_HOME_READY } from "./nativeHomeReady.ts";
 import { listenOnePress } from "./onePress.ts";
 import {
   BAR_MUTED_EVENT,
@@ -189,43 +160,47 @@ import {
   updateProfile,
   walkerSpriteKey,
 } from "./profileStore.ts";
-import { addDetailCardOver, addHtmlModalCard, type KeptPanel } from "./questionPanel.ts";
-import { emphasiseRefusedControl } from "./refuseControl.ts";
+import {
+  addHtmlDetailCard,
+  addHtmlModalCard,
+  htmlPanelInput,
+  htmlPanelPlace,
+  keepPanel,
+  type KeptPanel,
+} from "./questionPanel.ts";
 import { nextRunStart } from "./run/runRecorder.ts";
 import { type RunPick, runSceneData } from "./run/runStart.ts";
 import { SCENE_KEYS } from "./sceneKeys.ts";
 import { maskToRect } from "./scrollView.ts";
+import { selectionOrbitSegments } from "./selectionOrbit.ts";
 import { SETTINGS_CLOSED_EVENT } from "./SettingsScene.ts";
-import { addShopBoard, addShopIdle } from "./shopIdle.ts";
+import { addShopBoard, addShopIdle, type ShopBoard, type ShopIdle } from "./shopIdle.ts";
 import {
   SHOP_CHANGED_EVENT,
   SHOP_CLOSED_EVENT,
   type ShopClosed,
   type ShopSceneData,
 } from "./ShopScene.ts";
-import { playEffect, playTag, spriteMetrics } from "./sprites.ts";
-import { addTopSection, mirrorTopSection, type TopSection } from "./topSection.ts";
-import {
-  addBodyText,
-  addGraphicsIn,
-  addMenuButton,
-  addPanel,
-  addTagImage,
-  addTapBurst,
-  BODY_TEXT,
-  BUTTON_PRESS_PX,
-  buttonFaces,
-  type IconButton,
-} from "./uiKit.ts";
-
+import { playEffect, spriteMetrics } from "./sprites.ts";
+import { addNativeTopSection } from "./topSection.ts";
+import { addGraphicsIn, addTagImage, addTapBurst, type IconButton } from "./uiKit.ts";
 const SCREEN = SCREEN_LAYOUT.screen;
 const HOME_REGION = overlayRegion("home");
 const GATE = HOME_LAYOUT.gate;
 const PATH = HOME_LAYOUT.path;
 const WALKER_AT_GATE = HOME_LAYOUT.walkerAtGate;
 const GATE_SPOTS: readonly PackPlacement[] = HOME_LAYOUT.gateSpots;
-const PORCH_SPOTS: Readonly<Partial<Record<DogId, { footY: number; x: number }>>> =
-  HOME_LAYOUT.porchSpots;
+const PORCH_SPOTS: Readonly<
+  Partial<
+    Record<
+      DogId,
+      {
+        footY: number;
+        x: number;
+      }
+    >
+  >
+> = HOME_LAYOUT.porchSpots;
 const PORCH_DOG_OFFSET = HOME_LAYOUT.porchDogOffset;
 const PET_SHOP: Rect = HOME_LAYOUT.petShop;
 const PET_SHOP_BOARD: Rect = HOME_LAYOUT.petShop.board;
@@ -239,51 +214,75 @@ const DOG_ORIGIN = HOME_LAYOUT.dogOrigin;
 const START_BUTTON: Rect = HOME_LAYOUT.startButton;
 // Start walk's opacity while it waits for the rest of the art to load.
 const WAITING_ALPHA = 0.6;
-const START_LABEL = HOME_LAYOUT.startLabel;
 const GEAR_BADGE: Rect = HOME_LAYOUT.gearBadge;
 // The keyboard ring sits outside the ui-select frame.
 const FOCUS_OUTSET = HOME_SCREEN.focusOutset;
-
 // The walker's speech bubble: its place, padding and most lines.
-const SPEECH = HOME_LAYOUT.speech;
-
 // The gate scene, which crops the Pet shop group: its foot sits under the divider strip.
 const HERO_CROP: Rect = { ...GATE, width: SCREEN.width, x: 0 };
 const HERO_MASK_KEY = "home-hero-mask";
-
 function walkerIds(): WalkerId[] {
   return walkerOrder(gameData);
 }
-
-// object, left on the canvas under the HTML screen (MIRROR_CANVAS_DATA).
-function onCanvas<T extends GameObjects.GameObject>(object: T): T {
-  return object.setData(MIRROR_CANVAS_DATA, true);
-}
-
 function gearIds(): GearId[] {
   return gearByPrice(gameData);
 }
-
 type DetailTarget =
-  | { dog: DogId; kind: "dog" }
-  | { gear: GearId; kind: "gear" }
-  | { kind: "walker"; walker: WalkerId };
-
+  | {
+      dog: DogId;
+      kind: "dog";
+    }
+  | {
+      gear: GearId;
+      kind: "gear";
+    }
+  | {
+      kind: "walker";
+      walker: WalkerId;
+    };
 type Target =
-  | { dog: DogId; kind: "dog" }
-  | { gear: GearId; kind: "gear" }
-  | { kind: "bubble" }
-  | { kind: "exit" }
-  | { kind: "help" }
-  | { kind: "logbook" }
-  | { kind: "menu" }
-  | { kind: "mute" }
-  | { kind: "petShop" }
-  | { kind: "settings" }
-  | { kind: "slotSign" }
-  | { kind: "start" }
-  | { kind: "walker"; walker: WalkerId };
-
+  | {
+      dog: DogId;
+      kind: "dog";
+    }
+  | {
+      gear: GearId;
+      kind: "gear";
+    }
+  | {
+      kind: "bubble";
+    }
+  | {
+      kind: "exit";
+    }
+  | {
+      kind: "help";
+    }
+  | {
+      kind: "logbook";
+    }
+  | {
+      kind: "menu";
+    }
+  | {
+      kind: "mute";
+    }
+  | {
+      kind: "petShop";
+    }
+  | {
+      kind: "settings";
+    }
+  | {
+      kind: "slotSign";
+    }
+  | {
+      kind: "start";
+    }
+  | {
+      kind: "walker";
+      walker: WalkerId;
+    };
 // One key per tappable thing, for its feedback timers.
 function targetId(target: Target): string {
   switch (target.kind) {
@@ -297,45 +296,36 @@ function targetId(target: Target): string {
       return target.kind;
   }
 }
-
 // The roster as the grid lays it out, row by row (rosterRows): tiles, taps and keyboard focus
 // all read this one order.
 function rosterOrder(): DogId[] {
   return rosterRows(gameData).flat();
 }
-
 function dogTiles(): Rect[] {
   return gridRects(DOG_TILES, rosterOrder().length, DOG_ORIGIN);
 }
-
 // A dog tile as drawn, inside its hit area.
 function dogFace(hit: Rect): Rect {
   return tileFace(DOG_TILE_INSET, hit);
 }
-
 // The Pocket section's cells, cheapest first (gearByPrice); each draws its tile inset inside.
 function gearSlots(): Rect[] {
   return gridRects(POCKET.cells, gearIds().length, POCKET.origin);
 }
-
 function pocketTile(cell: Rect): Rect {
   return tileFace(POCKET.tileInset, cell);
 }
-
 function walkerTiles(): Rect[] {
   return gridRects(WALKER_TILES, walkerIds().length, WALKER_ORIGIN);
 }
-
 // A walker tile as drawn, inside its hit area.
 function walkerFace(hit: Rect): Rect {
   return tileFace(HOME_LAYOUT.walkerTileInset, hit);
 }
-
 interface Focusable {
   rect: Rect;
   target: Target;
 }
-
 // The keyboard's rows, top to bottom as the screen shows them: the dog slot sign while it
 // shows and the Pet shop, the walkers, the dog rows,
 // the Pocket and Start walk.
@@ -367,19 +357,24 @@ function focusRows(shown: { sign: boolean }): Focusable[][] {
   rows.push([{ rect: START_BUTTON, target: { kind: "start" } }]);
   return rows;
 }
-
 // A held item's detail card or the dismissible update notice, above the home screen.
-type Overlay = { rect: Rect | undefined } & ({ update: true } | { target: DetailTarget });
-
+type Overlay = {
+  rect: Rect | undefined;
+} & (
+  | {
+      update: true;
+    }
+  | {
+      target: DetailTarget;
+    }
+);
 // The heart after the Dogs band's pack-size bonus.
-
 // The bank the last time the home screen was shown this session, so the walker can say
 // when something new became affordable.
 const LAST_VISIT_BANK_KEY = "homeLastVisitBank";
 // The walkers owned the last time the home screen was shown this session, so the walker can
 // say when one has just been unlocked. A session's first visit has none to compare with.
 const LAST_VISIT_WALKERS_KEY = "homeLastVisitWalkers";
-
 // The screen before a walk: the bank at the top bar's left and Logbook, Help, Sound, Settings
 // and Exit at its right (Exit where exitShown); the walker and pack at the gate beside the Pet
 // shop; the Walker, Dogs and Pocket sections and Start walk. A waiting game update opens a
@@ -389,32 +384,29 @@ const LAST_VISIT_WALKERS_KEY = "homeLastVisitWalkers";
 // The arrow keys move a focus ring, Enter or Space picks, Escape, P or back closes a card, ?
 // opens help, S settings, L the logbook, M mutes and Q leaves the game as Exit does, where the
 // top bar shows Exit. Start walk and help wait for boot to load the rest of the art, which it
-// does behind this screen. Where the page's switch is on, the screen draws in HTML by the display
-// mirror (addHtmlMirror), but for the backdrop, the porch, the pack at the gate and the Pet shop,
-// which stay on the canvas under it.
+// does behind this screen. Native controls sit above the canvas yard and its actors.
 export class StartScene extends Scene {
   // The last action, for the message line and the bubble.
   private action: HomeAction = { kind: "none" };
   // A press of Start walk or help made before boot has loaded the rest of the art: the latest
   // runs once it has, and Start walk shows held down and dimmed while it waits.
-  private artWait: { action: () => void; kind: "help" | "start" } | undefined;
+  private artWait:
+    | {
+        action: () => void;
+        kind: "help" | "start";
+      }
+    | undefined;
   private entry: object | undefined;
-  // The street sign's words, over the backdrop.
-  private gateSign: GameObjects.Container | undefined;
-  // The screen drawn in HTML over the canvas (addHtmlMirror), and the containers it follows.
-  private mirror: HtmlMirror | undefined;
-  // The loading line, drawn each frame: the walk's load while Start walk waits, else the
-  // offline install's.
-  private waitBar: GameObjects.Graphics | undefined;
-  // The home loading line: a waited-for load (the walk's art, its planning) over the forced
-  // update or a first visit's precache (loadingProgress).
-  private loadDisplay = createProgressDisplay(LOADING_TIMING.fullMs, LOADING_TIMING.fadeMs);
   // The walk's planning, which the line shows travelling from Start walk until the walk starts.
   private planning: ProgressHandle | undefined;
   // Whether keyboard Quit is offered by the current browser or installed window.
   private exit = true;
   private focus: Focus | null = null;
-  private gateDogs: { dog: DogId; footY: number; sprite: GameObjects.Sprite }[] = [];
+  private gateDogs: {
+    dog: DogId;
+    footY: number;
+    sprite: GameObjects.Sprite;
+  }[] = [];
   // A press on a dog or gear tile that may become a hold.
   private hold: HoldPress | undefined;
   private loadout: HomeLoadout = { dogs: [], gear: null };
@@ -425,27 +417,44 @@ export class StartScene extends Scene {
   private htmlDetail: KeptPanel | undefined;
   private overlayLayer: GameObjects.Container | undefined;
   // A press that began while a panel was open: it never reaches the tiles under it.
-  private overlayPress: { x: number; y: number } | undefined;
+  private overlayPress:
+    | {
+        x: number;
+        y: number;
+      }
+    | undefined;
   // Taps waiting for their dip to finish before they act.
   private pending = new Set<Time.TimerEvent>();
   private pops = new Map<string, number>();
-  private press: { held: boolean; id: string; startedMs: number } | undefined;
+  private press:
+    | {
+        held: boolean;
+        id: string;
+        startedMs: number;
+      }
+    | undefined;
   private pressedTarget: Target | undefined;
   // The parting lines drawn this visit, one per dog picked or bought.
   private quips = new Map<DogId, string>();
-  private topSection: TopSection | undefined;
+  private topSection: NativeTopSection | undefined;
+  private nativeHome: ReturnType<typeof createNativeHomeSession> | undefined;
+  private nativeView: NativeHomeView | undefined;
+  private nativeReady = false;
+  private nativeSelections: readonly HomeSelectionView[] = [];
+  private nativeSpeechOwner: string | undefined;
+  private nativeFrame = nativeFrames();
   private root: GameObjects.Container | undefined;
   private shakes = new Map<string, number>();
+  private refusals = new Map<string, number>();
   private shownUpdate = false;
-  private startButton:
+  private petShop:
     | {
         container: GameObjects.Container;
-        down: GameObjects.Container;
-        ready: boolean;
-        up: GameObjects.Container;
+        iconButton?: IconButton;
+        shopBoard?: ShopBoard;
+        shopIdle?: ShopIdle;
       }
     | undefined;
-  private views = new Map<string, TileView>();
   private walkerLine: WalkerLine = "firstVisit";
   // The walkers unlocked since the last visit, in unlock order, whom the walker's newWalker line
   // names one at a time; bubbleTurn counts the taps on the bubble or the walker at the gate
@@ -455,18 +464,13 @@ export class StartScene extends Scene {
   private usualLine: WalkerLine = "afterWalk";
   // Where a tap moves the bubble on: the bubble and the walker at the gate, as last drawn.
   private bubbleHits: Rect[] = [];
-
   constructor() {
     super(SCENE_KEYS.start);
   }
-
   create(): void {
     this.action = { kind: "none" };
     this.artWait = undefined;
     this.entry = undefined;
-    this.waitBar = undefined;
-    this.loadDisplay = createProgressDisplay(LOADING_TIMING.fullMs, LOADING_TIMING.fadeMs);
-    this.events.once("shutdown", loadingProgress.subscribe(this.loadDisplay.report));
     this.planning = undefined;
     this.events.once("shutdown", () => this.endPlanning());
     this.exit = exitShown();
@@ -483,7 +487,8 @@ export class StartScene extends Scene {
     this.pressedTarget = undefined;
     this.quips = new Map();
     this.shakes = new Map();
-    this.views = new Map();
+    this.refusals = new Map();
+    this.petShop = undefined;
     const { bankCents, lastLoadout, owned, stats } = profileSave(this);
     this.loadout = { dogs: [...lastLoadout.dogs], gear: lastLoadout.gear };
     const remembered = this.registry.get(LAST_VISIT_BANK_KEY) as Cents | undefined;
@@ -506,88 +511,42 @@ export class StartScene extends Scene {
     }
     stopWakeLock();
     clearRunOverrides();
-
-    this.gateSign = renderHomeBackdrop(this, gameData.homeText.gateSign);
+    this.nativeHome = undefined;
+    this.nativeView = undefined;
+    this.nativeReady = false;
+    this.nativeFrame = nativeFrames();
+    this.nativeSelections = [];
+    this.nativeSpeechOwner = undefined;
+    renderHomeBackdrop(this);
     this.root = this.add.container(0, 0);
+    this.root.setVisible(false);
     this.overlayLayer = this.add.container(0, 0);
-    // In HTML where the page's switch is on and its fonts are ready, else on the canvas.
-    this.mirror = addHtmlMirror(this, () =>
-      [this.gateSign, this.root].flatMap((root) => (root === undefined ? [] : [root])),
-    );
-    mirrorTopSection(this, () => this.topSection?.root);
+    this.cameras.main.setVisible(false);
+    const layer = uiLayer();
+    const stopReady = layer?.onReady(() => {
+      if (this.nativeHome === undefined && this.sys.isActive()) {
+        this.render();
+      }
+    });
+    this.events.once("shutdown", () => {
+      stopReady?.();
+      this.nativeHome?.dispose();
+      this.nativeHome = undefined;
+      this.nativeView = undefined;
+      this.topSection = undefined;
+    });
+    onSceneEvent(this, this.game.events, Core.Events.PRE_RENDER, () => {
+      this.nativeHome?.setShown(this.sys.isVisible());
+    });
     this.prepareArrival();
-
     listenOnePress(this, {
-      down: (pointer) => {
-        // Over the HTML screen, so a burst shows over it.
-        if (this.mirror === undefined) {
-          addTapBurst(this, pointer.x, pointer.y);
-        } else {
-          this.mirror.burst({ x: pointer.x, y: pointer.y });
-        }
-        // The top bar stays lit over an open card, and its buttons take their presses.
-        if (this.overlay !== undefined && homeBarButtonAt(pointer.x, pointer.y) === undefined) {
-          this.overlayPress = { x: pointer.x, y: pointer.y };
-          if (this.closePressed() || this.updatePressed()) {
-            this.render();
-          }
-          return;
-        }
-        this.pressedTarget = this.targetAt(pointer.x, pointer.y);
-        const kind = this.pressedTarget?.kind;
-        this.hold =
-          kind === "dog" || kind === "gear" || kind === "walker"
-            ? startHold(
-                holdRule(gameData.tuning, TILE_SLOP_PX),
-                { x: pointer.x, y: pointer.y },
-                this.time.now,
-              )
-            : undefined;
-        this.press =
-          this.pressedTarget === undefined
-            ? undefined
-            : { held: true, id: targetId(this.pressedTarget), startedMs: this.time.now };
-      },
-      move: (pointer) => {
-        if (this.hold !== undefined && pointer.isDown) {
-          this.hold = moveHold({ x: pointer.x, y: pointer.y }, this.hold);
+      down: (point) => {
+        if (this.nativeHome?.accepts()) {
+          this.homePressDown(point);
         }
       },
-      up: (pointer, cancelled) => {
-        const down = this.overlayPress;
-        const controlDown = this.closePressed() || this.updatePressed();
-        this.overlayPress = undefined;
-        if (down !== undefined) {
-          if (!cancelled) {
-            this.releaseOnOverlay(down, pointer.x, pointer.y);
-          }
-          // A press on a control that ended elsewhere lifts it again.
-          if (controlDown && this.overlay !== undefined) {
-            this.render();
-          }
-          return;
-        }
-        const target = cancelled ? undefined : this.targetAt(pointer.x, pointer.y);
-        const pressed = this.pressedTarget;
-        const release = this.hold === undefined ? "tap" : releaseHold(this.time.now, this.hold);
-        this.hold = undefined;
-        this.pressedTarget = undefined;
-        if (this.press !== undefined) {
-          this.press.held = false;
-        }
-        if (
-          target === undefined ||
-          pressed === undefined ||
-          targetId(target) !== targetId(pressed)
-        ) {
-          return;
-        }
-        if (release === "hold") {
-          this.openDetail(pressed);
-        } else if (release === "tap") {
-          this.actAfterDip(target);
-        }
-      },
+      move: (point) => this.homePressMove(point),
+      up: (point, cancelled) => this.homePressUp(point, cancelled),
     });
     // A tap outside an open panel, on the screen or the page beside the game, closes it.
     listenOutsideTap(
@@ -655,7 +614,6 @@ export class StartScene extends Scene {
       this.artWait = undefined;
       this.endPlanning();
       this.entry = undefined;
-      this.waitBar?.setVisible(false);
       const lifted = this.closePressed();
       const dipping = this.press?.held === false ? this.press : undefined;
       this.hold = undefined;
@@ -677,8 +635,77 @@ export class StartScene extends Scene {
       }
     });
   }
-
+  private homePressDown(pointer: { x: number; y: number }): void {
+    addTapBurst(this, pointer.x, pointer.y);
+    // The top bar stays lit over an open card, and its buttons take their presses.
+    if (this.overlay !== undefined && homeBarButtonAt(pointer.x, pointer.y) === undefined) {
+      this.overlayPress = { x: pointer.x, y: pointer.y };
+      if (this.closePressed() || this.updatePressed()) {
+        this.render();
+      }
+      return;
+    }
+    this.pressedTarget = this.targetAt(pointer.x, pointer.y);
+    const kind = this.pressedTarget?.kind;
+    this.hold =
+      kind === "dog" || kind === "gear" || kind === "walker"
+        ? startHold(
+            holdRule(gameData.tuning, TILE_SLOP_PX),
+            { x: pointer.x, y: pointer.y },
+            this.time.now,
+          )
+        : undefined;
+    this.press =
+      this.pressedTarget === undefined
+        ? undefined
+        : { held: true, id: targetId(this.pressedTarget), startedMs: this.time.now };
+  }
+  private homePressMove(pointer: { x: number; y: number; isDown: boolean }): void {
+    if (this.hold !== undefined && pointer.isDown) {
+      this.hold = moveHold({ x: pointer.x, y: pointer.y }, this.hold);
+    }
+  }
+  private homePressUp(
+    pointer: {
+      x: number;
+      y: number;
+    },
+    cancelled: boolean,
+  ): void {
+    const down = this.overlayPress;
+    const controlDown = this.closePressed() || this.updatePressed();
+    this.overlayPress = undefined;
+    if (down !== undefined) {
+      if (!cancelled) {
+        this.releaseOnOverlay(down, pointer.x, pointer.y);
+      }
+      // A press on a control that ended elsewhere lifts it again.
+      if (controlDown && this.overlay !== undefined) {
+        this.render();
+      }
+      return;
+    }
+    const target = cancelled ? undefined : this.targetAt(pointer.x, pointer.y);
+    const pressed = this.pressedTarget;
+    const release = this.hold === undefined ? "tap" : releaseHold(this.time.now, this.hold);
+    this.hold = undefined;
+    this.pressedTarget = undefined;
+    if (this.press !== undefined) {
+      this.press.held = false;
+    }
+    if (target === undefined || pressed === undefined || targetId(target) !== targetId(pressed)) {
+      return;
+    }
+    if (release === "hold") {
+      this.openDetail(pressed);
+    } else if (release === "tap") {
+      this.actAfterDip(target);
+    }
+  }
   private onKey({ code, shiftKey }: Pick<KeyboardEvent, "code" | "shiftKey">): void {
+    if (!this.nativeReady || (this.overlay === undefined && this.nativeHome?.accepts() !== true)) {
+      return;
+    }
     if (this.overlay !== undefined) {
       if (isConfirmKey(code) && "update" in this.overlay) {
         acceptUpdate();
@@ -717,11 +744,9 @@ export class StartScene extends Scene {
       this.act({ kind: "exit" });
     }
   }
-
   private save(): SaveDocument {
     return profileSave(this);
   }
-
   // The focused item, its column kept inside its row: the top row loses the dog slot sign once
   // the last slot is bought.
   private focused(): Focusable | undefined {
@@ -731,19 +756,16 @@ export class StartScene extends Scene {
     const row = focusRows(this.shownControls())[this.focus.row] ?? [];
     return row[clampIndex(row.length, this.focus.column)];
   }
-
   // Whether the dog slot sign shows: while a dog slot is for sale.
   private signShown(): boolean {
     const { bankCents, owned } = this.save();
     return slotSign(gameData, owned, bankCents) !== null;
   }
-
   // CREATE fires after Phaser marks the scene active, so a waiting offer opens on this visit.
   private prepareArrival(): void {
     arriveHome();
     this.events.once(Scenes.Events.CREATE, () => this.render());
   }
-
   // Whether the update notice is eligible: a newer version waits, or its notice opened this visit.
   private updateOffered(): boolean {
     return (
@@ -752,12 +774,12 @@ export class StartScene extends Scene {
       (updatePlateShown() || this.shownUpdate)
     );
   }
-
   // The dog slot sign comes and goes while a slot is for sale.
-  private shownControls(): { sign: boolean } {
+  private shownControls(): {
+    sign: boolean;
+  } {
     return { sign: this.signShown() };
   }
-
   // A focused dog or gear item in words, so a keyboard player has what a hold shows, and a
   // walker's agility and perk or goal, as a tap says them.
   private focusAction(target: Target | undefined): HomeAction {
@@ -775,7 +797,6 @@ export class StartScene extends Scene {
     }
     return { kind: "none" };
   }
-
   private openDetail(target: Target): void {
     if (target.kind !== "dog" && target.kind !== "gear" && target.kind !== "walker") {
       return;
@@ -784,7 +805,6 @@ export class StartScene extends Scene {
     this.overlay = { rect: undefined, target };
     this.render();
   }
-
   private closeOverlay(): void {
     const update = this.overlay !== undefined && "update" in this.overlay;
     this.overlay = undefined;
@@ -793,7 +813,6 @@ export class StartScene extends Scene {
     }
     this.render();
   }
-
   // Whether the press under way started on the open card's close control.
   private closePressed(): boolean {
     const rect = this.overlay?.rect;
@@ -804,12 +823,10 @@ export class StartScene extends Scene {
       containsPoint(closeControl(rect).hit, down.x, down.y)
     );
   }
-
   private updateTitle(): string {
     const text = gameData.homeText.update;
     return updateAcceptanceFailed() ? text.failure : text.title;
   }
-
   private updateLayout() {
     const { button } = gameData.homeText.update;
     const title = this.updateTitle();
@@ -828,7 +845,6 @@ export class StartScene extends Scene {
       ? layout
       : updateModalLayout(HOME_REGION, { ...ink, titleExtraHeight: extraHeight });
   }
-
   private updatePressed(action?: "cancel" | "update"): boolean {
     const down = this.overlayPress;
     const overlay = this.overlay;
@@ -841,9 +857,15 @@ export class StartScene extends Scene {
       (action !== "update" && containsPoint(cancel, down.x, down.y))
     );
   }
-
   // Detail cards close on their body. The update notice acts only on its own controls.
-  private releaseOnOverlay(down: { x: number; y: number }, x: number, y: number): void {
+  private releaseOnOverlay(
+    down: {
+      x: number;
+      y: number;
+    },
+    x: number,
+    y: number,
+  ): void {
     const overlay = this.overlay;
     const rect = overlay?.rect;
     if (overlay === undefined || rect === undefined) {
@@ -863,7 +885,6 @@ export class StartScene extends Scene {
       this.closeOverlay();
     }
   }
-
   private targetAt(x: number, y: number): Target | undefined {
     const tile = rectIndexAt(dogTiles(), x, y);
     if (tile !== undefined) {
@@ -894,13 +915,11 @@ export class StartScene extends Scene {
     }
     return containsPoint(HOME_LAYOUT.petShop.hit, x, y) ? { kind: "petShop" } : undefined;
   }
-
   // The shop over everything below the top bar, framing the item tapped.
   private openShop(open: { focus?: Purchase }): void {
     const data: ShopSceneData = { ...open, resume: SCENE_KEYS.start };
     openOverlay(this, SCENE_KEYS.shop, data);
   }
-
   // The shop's last purchase or refusal, which its plate has said: a bought dog hops in and its
   // owner says a parting line in the walker's bubble.
   private shopClosed(closed: ShopClosed): void {
@@ -912,40 +931,12 @@ export class StartScene extends Scene {
     this.action = action;
     this.render();
   }
-
   // The speaking owner beside their parting line in the walker's bubble: their happy face over
   // tan in a 1px ink frame, and their name, already set in name, centred under it.
-  private addSpeakingOwner(
-    root: GameObjects.Container,
-    reduced: boolean,
-    dog: DogId,
-    place: ReturnType<typeof ownerPlace>,
-    name: GameObjects.BitmapText | undefined,
-  ): void {
-    const { face } = place;
-    const g = addGraphicsIn(this, root);
-    fillRect(g, PALETTE.tan, face);
-    const key = ownerFaceKey(gameData, dog);
-    if (this.textures.exists(key)) {
-      const sprite = this.add.sprite(face.x, face.y, key).setOrigin(0);
-      playTag(sprite, key, "happy", reduced);
-      root.add(sprite);
-    }
-    drawRing(addGraphicsIn(this, root), PALETTE.ink, face, 1);
-    if (name !== undefined) {
-      const ink = inkSpan(name);
-      placePixelText(name, place.name.x - (ink.left + ink.right) / 2, place.name.capY);
-      // The HTML centres it as its ink is centred here.
-      name.setData(LABEL_ALIGN_DATA, "centre");
-      root.bringToTop(name);
-    }
-  }
-
   // A dog's owner says a parting line when it is picked or bought; it is drawn once a visit.
   private drawQuip(dog: DogId): void {
     this.quips.set(dog, partingSpeech(gameData, Math.random, dog));
   }
-
   // A tap's result, such as the selected state, shows once its press has dipped. A tap that
   // opens a page opens it at once, its dip playing on under the page.
   private actAfterDip(target: Target): void {
@@ -961,7 +952,6 @@ export class StartScene extends Scene {
     });
     this.pending.add(timer);
   }
-
   // Whether act opens a page for target, or leaves the game: help, the Logbook, the settings or
   // the Pet shop, which a dog or gear not yet bought opens too, and Exit.
   private opensPage(target: Target): boolean {
@@ -993,14 +983,12 @@ export class StartScene extends Scene {
         return false;
     }
   }
-
   private emphasiseRefusal(id: string): void {
-    const view = this.views.get(id);
-    if (view !== undefined) {
-      emphasiseRefusedControl(this, currentSettings(this).reducedMotion, view.container);
+    const started = this.refusals.get(id);
+    if (started === undefined || this.time.now - started >= REFUSE.flashMs * REFUSE.flashes) {
+      this.refusals.set(id, this.time.now);
     }
   }
-
   private act(target: Target): void {
     if (updateAccepting()) {
       return;
@@ -1088,14 +1076,12 @@ export class StartScene extends Scene {
         target satisfies never;
     }
   }
-
   // The walker says sound went off or on, and the top bar's Sound button follows.
   private showMuted(muted: boolean): void {
     const { noticeSoundOff, noticeSoundOn } = gameData.homeText;
     this.action = { kind: "notice", text: muted ? noticeSoundOff : noticeSoundOn };
     this.render();
   }
-
   // Picks or drops a dog or gear item, and keeps the result as the last loadout.
   private setLoadout(next: HomeLoadout): void {
     const now = this.time.now;
@@ -1112,7 +1098,6 @@ export class StartScene extends Scene {
     void updateProfile(this, (save) => ({ ...save, lastLoadout }));
     this.render();
   }
-
   // Badges earned on launch burst in over the home screen, with the owners of the dogs
   // picked cheering.
   private celebrate(): void {
@@ -1127,7 +1112,6 @@ export class StartScene extends Scene {
     };
     openOverlay(this, SCENE_KEYS.celebration, data);
   }
-
   // A new player's first walk opens help unless it was read from ?, then sets off when it
   // closes. Before then, a tap shakes the button: the neutral sections' bands say what is
   // missing.
@@ -1137,13 +1121,7 @@ export class StartScene extends Scene {
     const { walker } = save;
     if (dogs === undefined || walker === null || !this.startOpen(this.sections(save))) {
       this.shakes.set("start", this.time.now);
-      if (this.startButton !== undefined) {
-        emphasiseRefusedControl(
-          this,
-          currentSettings(this).reducedMotion,
-          this.startButton.container,
-        );
-      }
+      this.emphasiseRefusal("start");
       return;
     }
     if (!artReady(this)) {
@@ -1189,14 +1167,12 @@ export class StartScene extends Scene {
       onceSceneEvent(this, this.game.events, HELP_CLOSED_EVENT, go);
     }
   }
-
   // Runs action now if every asset has loaded, else once it has, in place of any press already
   // waiting.
   private endPlanning(): void {
     this.planning?.finish();
     this.planning = undefined;
   }
-
   private afterArt(kind: "help" | "start", action: () => void): void {
     if (artReady(this)) {
       action();
@@ -1217,7 +1193,6 @@ export class StartScene extends Scene {
       });
     }
   }
-
   override update(): void {
     const now = this.time.now;
     if (this.hold !== undefined) {
@@ -1228,60 +1203,109 @@ export class StartScene extends Scene {
       }
     }
     this.place(now);
-    this.drawLoadingProgress(now);
   }
-
   // Moves what dips, bobs, shakes, hops and pops to where it is at now.
   private place(now: number): void {
     const reduced = currentSettings(this).reducedMotion;
+    const refusing = (id: string) => {
+      const at = this.refusals.get(id);
+      const elapsed = at === undefined ? Infinity : now - at;
+      return (
+        elapsed >= 0 &&
+        elapsed < REFUSE.flashMs * REFUSE.flashes &&
+        (reduced || Math.floor(elapsed / REFUSE.flashMs) % 2 === 1)
+      );
+    };
     const pressed = this.press;
     const dip = (id: string) =>
       pressed?.id === id ? pressDip(pressed.held, now, pressed.startedMs) : 0;
-    for (const [id, view] of this.views) {
-      const rise =
-        view.rise === undefined ? 0 : badgePopOffset(reduced, now, this.pops.get(view.rise));
-      const down = dip(id) > 0;
-      view.iconButton?.setPressed(down);
-      view.shopBoard?.place(reduced, now);
-      view.shopIdle?.update(
+    const shop = this.petShop;
+    if (shop !== undefined) {
+      shop.iconButton?.setPressed(dip("petShop") > 0);
+      shop.shopBoard?.place(reduced, now);
+      shop.shopIdle?.update(
         !reduced && this.overlay === undefined && this.artWait === undefined && this.sys.isActive(),
       );
-      view.container.setPosition(
-        shakeOffset(reduced, now, this.shakes.get(id)),
-        view.lift + (view.iconButton === undefined ? dip(id) : 0) + rise,
+      shop.container.setPosition(
+        shakeOffset(reduced, now, this.shakes.get("petShop")),
+        shop.iconButton === undefined ? dip("petShop") : 0,
       );
-      view.face?.object.setY(view.face.y + hopOffset(reduced, now, this.pops.get(id)));
-      view.mark?.image.setY(view.mark.y + badgePopOffset(reduced, now, this.pops.get(id)));
     }
-    if (this.startButton !== undefined) {
-      const { container, ready } = this.startButton;
+    const scale = uiLayer()?.scale();
+    const view = this.nativeView;
+    if (scale !== undefined && view !== undefined) {
+      for (const model of this.nativeSelections) {
+        const item = view.selections.get(model.id);
+        model.pictures.forEach((picture, index) => {
+          if (picture.tag !== undefined) {
+            const frame = this.nativeFrame(picture.key, picture.tag, !picture.moving, now);
+            if (frame !== undefined) {
+              item?.setFrame(index, frame);
+            }
+          }
+        });
+        item?.setOrbit(
+          model.tile.kind !== "picked" || reduced
+            ? []
+            : selectionOrbitSegments(
+                this.textures.exists("ui-tile")
+                  ? model.rect
+                  : insetRect(-HOME_LAYOUT.tileSelectOutset, model.rect),
+                this.textures.exists("ui-tile") ? "tile" : "frame",
+                now,
+              ).map(({ colour, rect }) => ({
+                colour: PALETTE[colour],
+                rect,
+              })),
+        );
+      }
+      if (this.nativeSpeechOwner !== undefined) {
+        const frame = this.nativeFrame(this.nativeSpeechOwner, "happy", reduced, now);
+        if (frame !== undefined) {
+          view.speech.setOwnerFrame(frame);
+        }
+      }
+      const afford = this.nativeFrame("ui-afford", "glint", reduced, now);
+      if (afford !== undefined) {
+        view.slot?.setAffordFrame(afford);
+      }
+      view.place(scale, (id) => ({
+        faceY: hopOffset(reduced, now, this.pops.get(id)),
+        markY: badgePopOffset(reduced, now, this.pops.get(id)),
+        refusing: refusing(id),
+        x: shakeOffset(reduced, now, this.shakes.get(id)),
+        y:
+          dip(id) +
+          (this.nativeSelections.find((model) => model.id === id)?.tile.kind === "picked"
+            ? -FEEDBACK.liftPx
+            : 0),
+      }));
+      const ready = this.startOpen(this.sections(this.save()));
       const waiting = this.artWait?.kind === "start";
       const down = (dip("start") > 0 && ready) || waiting;
-      container.setAlpha(waiting ? WAITING_ALPHA : 1);
-      container.setPosition(
-        shakeOffset(reduced, now, this.shakes.get("start")),
-        down ? 0 : bobOffset(reduced, now, ready),
-      );
-      this.startButton.up.setVisible(!down);
-      this.startButton.down.setVisible(down);
+      view.start.place(scale, {
+        down,
+        refusing: refusing("start"),
+        waiting,
+        x: shakeOffset(reduced, now, this.shakes.get("start")),
+        y: down ? 0 : bobOffset(reduced, now, ready),
+      });
+      view.slot?.place(scale, { pressed: dip("slotSign") > 0, x: 0, y: 0 });
+      const gear = this.loadout.gear;
+      view.gearBadge?.place(scale, {
+        x: 0,
+        y:
+          gear === null
+            ? 0
+            : badgePopOffset(reduced, now, this.pops.get(targetId({ gear, kind: "gear" }))),
+      });
+      this.nativeHome?.setShown(this.sys.isVisible());
     }
     for (const { dog, footY, sprite } of this.gateDogs) {
       sprite.setY(footY + hopOffset(reduced, now, this.pops.get(targetId({ dog, kind: "dog" }))));
     }
   }
-
   // Text at the 2x body size unless told otherwise.
-  private text(
-    parent: GameObjects.Container,
-    x: number,
-    y: number,
-    value: string,
-    colour: number,
-    options: { font?: FontRole; originX?: number; originY?: number; scale?: number } = {},
-  ): GameObjects.BitmapText {
-    return addBodyText(this, parent, { x, y }, value, { colour, ...options });
-  }
-
   // The update notice opens once per home visit while a newer version waits and home is active,
   // and closes once none does.
   private syncUpdateNotice(): void {
@@ -1297,81 +1321,218 @@ export class StartScene extends Scene {
       this.shownUpdate = true;
     }
   }
-
   // Whether Start walk takes a walk: the sections are ready and no newer version is required.
   private startOpen(sections: Sections): boolean {
     return startReady(sections) && requiredUpdate() === undefined && !updateAccepting();
   }
-
   private render(): void {
     const root = this.root;
     if (root === undefined) {
       return;
     }
-    this.waitBar = undefined;
     root.removeAll(true);
-    this.views = new Map();
+    this.petShop = undefined;
     this.gateDogs = [];
     const save = this.save();
     this.registry.set(LAST_VISIT_BANK_KEY, save.bankCents);
     this.registry.set(LAST_VISIT_WALKERS_KEY, [...save.owned.walkers]);
     // The porch's shadows, under the figures on the canvas.
-    const yard = onCanvas(addGraphicsIn(this, root));
-    this.drawTopBar(root, save);
+    const yard = addGraphicsIn(this, root);
+    this.drawTopBar(save);
     this.drawPetShop(root, save);
-    this.drawSlotSign(root, save);
     this.syncUpdateNotice();
-    this.drawPackAtGate(root, yard, save, true);
-    fillRect(addGraphicsIn(this, root), PALETTE.plum, {
-      height: 1,
-      width: SCREEN.width,
-      x: 0,
-      y: HOME_LAYOUT.gateBar.y + HOME_LAYOUT.gateBar.height - 1,
-    });
-    const sections = this.sections(save);
-    renderHomeSections(
-      { root, scene: this },
-      { bonus: packBonusLine(gameData, this.loadout), sections },
-    );
-    const dogRects = dogTiles();
-    const gearRects = gearSlots();
-    const walkerRects = walkerTiles();
-    const rendered = renderHomeSelections(
-      { data: gameData, reducedMotion: currentSettings(this).reducedMotion, root, scene: this },
-      {
-        dogs: rosterOrder().map((id, i) => ({
-          feedbackId: targetId({ dog: id, kind: "dog" }),
-          id,
-          rect: dogFace(itemAt(dogRects, i)),
-        })),
-        gear: gearIds().map((id, i) => ({
-          feedbackId: targetId({ gear: id, kind: "gear" }),
-          id,
-          rect: pocketTile(itemAt(gearRects, i)),
-        })),
-        loadout: this.loadout,
-        save,
-        walkers: walkerIds().map((id, i) => ({
-          feedbackId: targetId({ kind: "walker", walker: id }),
-          id,
-          rect: walkerFace(itemAt(walkerRects, i)),
-        })),
-      },
-    );
-    for (const [id, view] of rendered) {
-      this.views.set(id, view);
-    }
-    this.drawStartButton(root, this.startOpen(sections));
-    this.drawFocus(root);
+    this.drawPackAtGate(root, yard, save);
+    this.renderNativeHome(save);
+    root.setVisible(this.nativeReady);
     this.drawOverlay(save);
   }
-
+  private renderNativeHome(save: SaveDocument): void {
+    const place = htmlPanelPlace(this);
+    if (place === undefined) {
+      return;
+    }
+    const { fonts, layer } = place;
+    const toGame = (event: PointerEvent) =>
+      htmlPanelInput(place).toGame({ x: event.clientX, y: event.clientY });
+    this.nativeHome ??= createNativeHomeSession(layer, {
+      accepts: () =>
+        this.nativeReady && this.sys.isActive() && this.input.enabled && this.overlay === undefined,
+      activate: (id) => {
+        const target = this.nativeTarget(id);
+        if (target !== undefined) {
+          this.actAfterDip(target);
+        }
+      },
+      cancel: () => {
+        this.hold = undefined;
+        this.pressedTarget = undefined;
+        if (this.press?.held) {
+          this.press = undefined;
+        }
+      },
+      down: (event) => this.homePressDown(toGame(event)),
+      move: (event) => this.homePressMove({ ...toGame(event), isDown: event.buttons !== 0 }),
+      painted: () => {
+        if (!this.nativeReady) {
+          this.nativeReady = true;
+          this.cameras.main.setVisible(true);
+          this.root?.setVisible(true);
+          this.topSection?.setShown(true);
+          this.game.events.emit(NATIVE_HOME_READY);
+        }
+      },
+      progress: loadingProgress,
+      scaled: () => this.place(this.time.now),
+      up: (event, cancelled) => this.homePressUp(toGame(event), cancelled),
+    });
+    const reduced = currentSettings(this).reducedMotion;
+    const selection = <Id>(
+      ids: readonly Id[],
+      rects: Rect[],
+      face: (rect: Rect) => Rect,
+      target: (id: Id) => Target,
+    ) =>
+      ids.map((id, index) => {
+        const hit = itemAt(rects, index);
+        return { feedbackId: targetId(target(id)), hit, id, rect: face(hit) };
+      });
+    const selections = homeSelectionViews(gameData, fontMetrics(fonts.body), reduced, {
+      dogs: selection(rosterOrder(), dogTiles(), dogFace, (dog) => ({ dog, kind: "dog" })),
+      gear: selection(gearIds(), gearSlots(), pocketTile, (gear) => ({ gear, kind: "gear" })),
+      loadout: this.loadout,
+      save,
+      walkers: selection(walkerIds(), walkerTiles(), walkerFace, (walker) => ({
+        kind: "walker",
+        walker,
+      })),
+    });
+    const notices = [
+      ...requiredNotice(gameData.homeText, requiredUpdate()),
+      ...storageNotice(gameData.homeText, storageState(this)),
+    ];
+    const speech = homeSpeechView(
+      gameData,
+      fonts.body,
+      downTail((key) => this.textures.exists(key)),
+      noticeOrSpeech(notices, this.speech(save)),
+    );
+    this.bubbleHits.push(speech.rect);
+    const sign = slotSign(gameData, save.owned, save.bankCents);
+    const focused = this.focused();
+    const gear = this.loadout.gear;
+    const smallGearKey = gear === null ? undefined : gearSmallIconKey(gear);
+    const smallGear = smallGearKey !== undefined && this.textures.exists(smallGearKey);
+    const gearKey = gear === null ? undefined : smallGear ? smallGearKey : gearIconKey(gear);
+    const gearRect = this.nativeGearRect();
+    const manifest = this.cache.json.get(MANIFEST_CACHE_KEY) as
+      | {
+          sprites?: {
+            key: string;
+          }[];
+        }
+      | undefined;
+    const sheetKeys = new Set((manifest?.sprites ?? []).map(({ key }) => key));
+    const source = {
+      artUrl,
+      disabledKey: disabledArtKey,
+      hasArt: (key: string) => this.textures.exists(key),
+      imageSize: (key: string) => {
+        const frame = this.textures.getFrame(key);
+        return { height: frame?.realHeight ?? 16, width: frame?.realWidth ?? 16 };
+      },
+      isSheet: (key: string) => sheetKeys.has(key),
+      loadSheet,
+    };
+    const view = createNativeHomeView(
+      layer.element.ownerDocument,
+      source,
+      fonts,
+      {
+        pillColours: (index) => {
+          const kind = pillKind(index);
+          return kind === undefined ? undefined : pillColours(kind);
+        },
+        platePadding: PLATE_PAD,
+      },
+      {
+        bonus: packBonusLine(gameData, this.loadout),
+        bubbleInteractive: this.joined.length > 0 && save.walker !== null,
+        focus:
+          focused === undefined
+            ? undefined
+            : {
+                outset:
+                  focused.target.kind === "start"
+                    ? Math.min(FOCUS_OUTSET, HOME_LAYOUT.startFocusOutset)
+                    : FOCUS_OUTSET,
+                rect: focused.rect,
+              },
+        gearBadge:
+          gearKey === undefined || gearRect === undefined || gear === null
+            ? undefined
+            : {
+                fallback: gearPictureFallback(gameData, {
+                  gear,
+                  scale: 0.5,
+                  x: gearRect.x + 1,
+                  y: gearRect.y + 1,
+                }),
+                key: gearKey,
+                rect: gearRect,
+                scale: smallGear ? 1 : 0.5,
+              },
+        sections: this.sections(save),
+        selections,
+        slot: sign === null ? undefined : { crop: HERO_CROP, sign },
+        speech,
+        start: {
+          label: gameData.homeText.startWalk,
+          loading: gameData.homeText.startLoading,
+          ready: this.startOpen(this.sections(save)),
+          waitingAlpha: WAITING_ALPHA,
+        },
+        streetSign: gameData.homeText.gateSign,
+      },
+    );
+    this.nativeSelections = selections;
+    this.nativeSpeechOwner = speech.owner?.key;
+    this.nativeView = view;
+    this.nativeHome.replace(view, this.topSection?.revealed);
+    this.place(this.time.now);
+  }
+  private nativeTarget(id: string): Target | undefined {
+    const targets: Target[] = [
+      ...rosterOrder().map((dog): Target => ({ dog, kind: "dog" })),
+      ...gearIds().map((gear): Target => ({ gear, kind: "gear" })),
+      ...walkerIds().map((walker): Target => ({ kind: "walker", walker })),
+      { kind: "bubble" },
+      { kind: "start" },
+      { kind: "slotSign" },
+    ];
+    return targets.find((target) => targetId(target) === id);
+  }
+  private nativeGearRect(): Rect | undefined {
+    if (this.loadout.gear === null) {
+      return undefined;
+    }
+    const clear = Math.max(
+      GEAR_BADGE.x,
+      ...this.loadout.dogs.flatMap((dog, rank) => {
+        const placement = itemAt(GATE_SPOTS, rank);
+        const footY = WALKER_AT_GATE.footY + placement.footDy;
+        const x = WALKER_AT_GATE.x + placement.dx;
+        return footY > GEAR_BADGE.y
+          ? [x + Math.ceil(spriteMetrics(dogSpriteKey(gameData, dog)).opaqueWidth / 2) + 1]
+          : [];
+      }),
+    );
+    return { ...GEAR_BADGE, x: Math.min(clear, PET_SHOP.x - GEAR_BADGE.width) };
+  }
   // Each section's state and band text. The saved walker counts as picked, so a first visit
   // needs only a dog.
   private sections(save: SaveDocument): Sections {
     return homeSections(gameData, save.owned, { loadout: this.loadout, walker: save.walker });
   }
-
   // The detail card over everything else, recording its rect for taps.
   private drawOverlay(save: SaveDocument): void {
     const layer = this.overlayLayer;
@@ -1388,7 +1549,7 @@ export class StartScene extends Scene {
       this.htmlDetail?.panel?.destroy();
       this.htmlDetail = undefined;
     }
-    if (overlay === undefined) {
+    if (overlay === undefined || this.nativeView === undefined) {
       return;
     }
     if ("update" in overlay) {
@@ -1399,19 +1560,16 @@ export class StartScene extends Scene {
     const card = this.detailCard(save, target);
     const picture = this.detailPicture(target);
     const view = detailView(this, HOME_REGION, { card, kind: target.kind, picture });
-    // The HTML shade dims the HTML screen under it.
-    this.htmlDetail = addDetailCardOver(
-      this,
-      layer,
-      HOME_REGION,
-      this.closePressed(),
-      view,
-      this.htmlDetail,
-      this.mirror !== undefined,
+    const close = () => this.closeOverlay();
+    this.htmlDetail = keepPanel(this.htmlDetail, JSON.stringify([view, this.closePressed()]), () =>
+      addHtmlDetailCard(this, view, close, this.closePressed(), {
+        area: HOME_REGION,
+        dismiss: close,
+      }),
     );
+    layer.add(addModalShade(this, HOME_REGION));
     this.overlay = { ...overlay, rect: view.card.panel };
   }
-
   // A dog, gear item or walker's full card, owned or not.
   private detailCard(save: SaveDocument, target: DetailTarget): DetailCard {
     const { bankCents, owned } = save;
@@ -1423,7 +1581,6 @@ export class StartScene extends Scene {
     }
     return walkerDetail(gameData, owned, target.walker);
   }
-
   private detailPicture(target: DetailTarget): DetailPicture {
     if (target.kind !== "walker") {
       return purchasePicture(target);
@@ -1434,31 +1591,46 @@ export class StartScene extends Scene {
       scale: 1,
     };
   }
-
-  // A container for one tappable tile, registered for its feedback.
-  private tileView(root: GameObjects.Container, id: string): TileView {
-    const container = this.add.container(0, 0);
-    root.add(container);
-    const view: TileView = { container, lift: 0 };
-    this.views.set(id, view);
-    return view;
-  }
-
   // The shared section owns chrome, currency and controls; this scene supplies its bank.
-  private drawTopBar(root: GameObjects.Container, save: SaveDocument): void {
-    const visible = homeBarButtons().map(([id]) => id);
-    const bar = addTopSection(this, { buttons: visible, currency: true, muted: isMuted(this) });
-    this.topSection = bar;
-    root.add(bar.root);
-    for (const id of visible) {
-      const control = bar.buttons.get(id);
-      if (control !== undefined) {
-        this.tileView(root, id).iconButton = control;
-      }
+  private drawTopBar(save: SaveDocument): void {
+    if (this.topSection === undefined) {
+      this.topSection = addNativeTopSection(this, {
+        accepts: () => this.nativeReady,
+        buttons: homeBarButtons().map(([id]) => id),
+        currency: true,
+        labels: {
+          help: gameData.menuText.pause.help,
+          menu: gameData.menuText.menu.title,
+          mute: gameData.menuText.settings.sound,
+          pause: gameData.menuText.pause.title,
+        },
+        muted: isMuted(this),
+        press: (id, metadata) => {
+          if (
+            ((id === "menu" || id === "mute") && routeHomeBar(this, id)) ||
+            !this.sys.isActive() ||
+            !this.input.enabled
+          ) {
+            return;
+          }
+          const elapsed =
+            metadata.startedAt === undefined
+              ? 0
+              : Math.max(0, metadata.completedAt - metadata.startedAt);
+          this.press = { held: false, id, startedMs: this.time.now - elapsed };
+          if (id !== "pause") {
+            this.actAfterDip({ kind: id });
+          }
+        },
+      });
+      this.topSection?.setShown(false);
     }
-    bar.setAmount(dollarAmountText(save.bankCents), shortDollarAmountText(save.bankCents));
+    this.topSection?.setAmount(
+      dollarAmountText(save.bankCents),
+      shortDollarAmountText(save.bankCents),
+    );
+    this.topSection?.setMuted(isMuted(this));
   }
-
   // The starter owners waiting at the gate until the first walk; a picked dog has gone to the
   // walker and leaves its owner standing alone.
   private drawPorch(
@@ -1474,24 +1646,22 @@ export class StartScene extends Scene {
     // Owners first, then the dogs in front of them.
     for (const { at, dog } of waiting) {
       drawShadow(g, PALETTE.darkGreen, at.x, at.footY, 20);
-      root.add(onCanvas(addOwnerFigure(this, gameData, reduced, dog, at, ["idle"])));
+      root.add(addOwnerFigure(this, gameData, reduced, dog, at, ["idle"]));
     }
     for (const { at, dog } of waiting.filter(({ withDog }) => withDog)) {
       const key = dogSpriteKey(gameData, dog);
       const x = at.x + PORCH_DOG_OFFSET.dx;
       const footY = at.footY + PORCH_DOG_OFFSET.footDy;
       drawShadow(g, PALETTE.darkGreen, x, footY, spriteMetrics(key).opaqueWidth);
-      root.add(onCanvas(addFigure(this, reduced, "idle", key).sprite.setPosition(x, footY)));
+      root.add(addFigure(this, reduced, "idle", key).sprite.setPosition(x, footY));
     }
   }
-
   // The walker and pack at the gate on the canvas, their shadows on yard, the walker's bubble over
   // them when bubble is true, and the gear badge.
   private drawPackAtGate(
     root: GameObjects.Container,
     yard: GameObjects.Graphics,
     save: SaveDocument,
-    bubble: boolean,
   ): void {
     const { footY, x } = WALKER_AT_GATE;
     const reduced = currentSettings(this).reducedMotion;
@@ -1514,9 +1684,9 @@ export class StartScene extends Scene {
       this.loadout.dogs,
     );
     figures.standInYard(yard, { path: PATH, shadows: false }, { dogs, walker: { footY, x } });
-    root.add(figures.layers().map(onCanvas));
+    root.add(figures.layers());
     const walkerSprite = figures.walker?.sprite;
-    this.bubbleHits = bubble && walkerSprite !== undefined ? [walkerSprite.getBounds()] : [];
+    this.bubbleHits = walkerSprite !== undefined ? [walkerSprite.getBounds()] : [];
     const now = this.time.now;
     for (const { dog, feet } of dogs) {
       const sprite = figures.dogs.get(dog);
@@ -1529,45 +1699,7 @@ export class StartScene extends Scene {
         playEffect(this, "fx-dust", "play", { x: feet.x, y: feet.footY - 6 }, 0);
       }
     }
-
-    if (bubble) {
-      this.drawBubble(root, save, reduced);
-    }
-
-    // Equipped gear shows as a badge beside the walker, moved right of any dog whose feet
-    // are below its top, and kept clear of the Pet shop.
-    if (this.loadout.gear !== null) {
-      const clear = Math.max(
-        GEAR_BADGE.x,
-        ...dogs
-          .filter(({ feet }) => feet.footY > GEAR_BADGE.y)
-          .map(
-            ({ dog, feet }) =>
-              feet.x + Math.ceil(spriteMetrics(dogSpriteKey(gameData, dog)).opaqueWidth / 2) + 1,
-          ),
-      );
-      const rect = { ...GEAR_BADGE, x: Math.min(clear, PET_SHOP.x - GEAR_BADGE.width) };
-      const badge = this.tileView(root, "gateBadge");
-      badge.rise = targetId({ gear: this.loadout.gear, kind: "gear" });
-      fillRect(addGraphicsIn(this, badge.container), PALETTE.plum, rect);
-      // The item's 16x16 icon, or its tile's icon at half size while that is missing.
-      const at = { x: rect.x + 1, y: rect.y + 1 };
-      const small = gearSmallIconKey(this.loadout.gear);
-      if (this.textures.exists(small)) {
-        badge.container.add(this.add.image(at.x, at.y, small).setOrigin(0));
-      } else {
-        addGearPicture(
-          { data: gameData, scene: this },
-          badge.container,
-          "colour",
-          this.loadout.gear,
-          at,
-          0.5,
-        );
-      }
-    }
   }
-
   // The walker's own line (walkerSays): with walkers unlocked since the last visit, the one
   // bubbleTurn has reached.
   private walkerSaid(save: SaveDocument): string {
@@ -1580,13 +1712,11 @@ export class StartScene extends Scene {
     const { joined, line } = bubbleTurnLine(this.joined, this.usualLine, this.bubbleTurn);
     return walkerSays(gameData, line, joined);
   }
-
   // What the walker's bubble says (bubbleSpeech).
   private speech(save: SaveDocument): ReturnType<typeof bubbleSpeech> {
     const state = { action: this.action, loadout: this.loadout };
     return bubbleSpeech(gameData.homeText, this.walkerSaid(save), state, this.quips);
   }
-
   // A tap on the bubble or the walker at the gate: while the walker's own line shows, the next
   // turn (tappedBubbleTurn); else the message or owner's line clears and the walker's line
   // comes back.
@@ -1599,121 +1729,39 @@ export class StartScene extends Scene {
     this.quips.clear();
     this.render();
   }
-
-  // The walker's speech bubble over the gate, its tail's tip over the walker.
-  private drawBubble(root: GameObjects.Container, save: SaveDocument, reduced: boolean): void {
-    const { x } = WALKER_AT_GATE;
-    const notices = [
-      ...requiredNotice(gameData.homeText, requiredUpdate()),
-      ...storageNotice(gameData.homeText, storageState(this)),
-    ];
-    const speech = noticeOrSpeech(notices, this.speech(save));
-    // The speaking owner's name, at 1x, sets their column's width.
-    const ownerName = speech.owner === null ? undefined : gameData.dogs[speech.owner].owner.name;
-    const nameLabel =
-      ownerName === undefined
-        ? undefined
-        : this.text(root, 0, 0, ownerName, PALETTE.rust, { scale: 1 });
-    const nameInk = nameLabel === undefined ? undefined : inkSpan(nameLabel);
-    const column = nameInk === undefined ? null : ownerColumn(nameInk.right - nameInk.left);
-    // A gear's focus line, "Running shoes: …", sets the gear's name in its pill.
-    const paragraphs = speech.paragraphs.map((paragraph) => withNamePills(gameData, paragraph));
-    const { faced, lines } = withProbe(this, BODY_TEXT, (probe) => {
-      const measure = (line: string) => {
-        setPixelText(probe, line);
-        return probe.width;
-      };
-      return bubbleLines(measure, column, paragraphs);
-    });
-    const top = SPEECH.top;
-    // The bubble goes under the words, which set its size.
-    const bubble = this.add.container(0, 0);
-    root.add(bubble);
-    const body = pixelFontMetrics(this, "body");
-    const pitch = body.lineHeight * TEXT_SCALE;
-    const labels = lines.map((line) => this.text(root, 0, 0, line, PALETTE.plum, { originX: 0.5 }));
-    const widest = Math.ceil(Math.max(...labels.map((label) => label.width)));
-    const size = bubbleSize(body, lines, widest, faced ? column : null);
-    // A bubble tall enough to reach the Pet shop's board moves left to keep clear of it.
-    const board = PET_SHOP_BOARD;
-    const rect = bubbleRect(board, SPEECH, { x, y: top }, size);
-    // Each line centred across the text's columns, its capitals textTop and a line apart down.
-    labels.forEach((label, i) => {
-      placePixelText(label, 0, rect.y + size.textTop + i * pitch);
-      label.setX(rect.x + SPEECH.padX + widest / 2);
-    });
-    addNamePills(labels);
-    bubble.add(addPanel(this, rect, "ui-quip"));
-    this.bubbleHits.push(rect);
-    if (!faced || speech.owner === null || column === null) {
-      nameLabel?.destroy();
-    } else {
-      this.addSpeakingOwner(root, reduced, speech.owner, ownerPlace(rect, column), nameLabel);
-    }
-    // The tail's top row lies over the bubble's bottom rim, its tip over the walker.
-    const tail = downTail((key) => this.textures.exists(key));
-    if (tail !== undefined) {
-      bubble.add(this.add.image(x - tail.tipX, top + size.height - 1, tail.key).setOrigin(0));
-    }
-  }
-
   // A waiting version opens once per home visit. Closing leaves the home screen usable; Update
   // now takes the waiting version (acceptUpdate).
   private drawUpdateModal(root: GameObjects.Container): void {
     const { button, cancel, panel } = this.updateLayout();
     const text = gameData.homeText.update;
-    // The HTML shade dims the HTML screen under an HTML notice, else the canvas's dim.
-    const shade = this.mirror === undefined ? undefined : HOME_REGION;
+    // Canvas actors and native controls each receive their existing palette treatment.
     if (this.htmlNotice !== undefined) {
-      if (shade === undefined) {
-        root.add(addModalShade(this, HOME_REGION));
-      }
+      root.add(addModalShade(this, HOME_REGION));
       return;
     }
-    // In HTML where the page's switch is on and its fonts are ready, else on the canvas.
     const update = { label: text.button, press: acceptUpdate, primary: true, rect: button };
     const close = () => this.closeOverlay();
     const entries = [
       { label: gameData.homeText.shop.confirmCancel, press: close, primary: false, rect: cancel },
       update,
     ];
-    const card = addHtmlModalCard(this, panel, this.updateTitle(), entries, close, shade);
+    const card = addHtmlModalCard(this, panel, this.updateTitle(), entries, close);
     if (card !== undefined) {
       this.htmlNotice = card;
       this.events.once(Scenes.Events.SHUTDOWN, () => {
         this.htmlNotice = undefined;
       });
-      if (shade === undefined) {
-        root.add(addModalShade(this, HOME_REGION));
-      }
-      return;
+      root.add(addModalShade(this, HOME_REGION));
     }
-    root.add(addModalShade(this, HOME_REGION));
-    addModalCard(this, root, panel, this.updateTitle(), { pressed: this.closePressed() });
-    const control = addMenuButton(
-      this,
-      button,
-      text.button,
-      { available: true, primary: true },
-      root,
-    );
-    control.setPressed(this.updatePressed("update"));
-    const cancelControl = addMenuButton(
-      this,
-      cancel,
-      gameData.homeText.shop.confirmCancel,
-      { available: true, primary: false },
-      root,
-    );
-    cancelControl.setPressed(this.updatePressed("cancel"));
   }
-
   // The Pet shop on the yard's right lot: ui-pet-shop, its front sinking while pressed, under
   // ui-pet-shop-board, which bobs while up, with the gold outline while anything inside is
   // affordable. Drawn in code while the art is missing, when the whole building dips instead.
   private drawPetShop(root: GameObjects.Container, save: SaveDocument): void {
-    const view = this.tileView(root, "petShop");
-    onCanvas(view.container);
+    const container = this.add.container(0, 0);
+    root.add(container);
+    const view: NonNullable<StartScene["petShop"]> = { container };
+    this.petShop = view;
     maskToRect(this, HERO_MASK_KEY, HERO_CROP, view.container);
     const faces = this.addPressFaces(SHOP_ART.petShop, PET_SHOP);
     if (faces !== undefined) {
@@ -1746,66 +1794,18 @@ export class StartScene extends Scene {
       addAffordFrame(this, view.container, PET_SHOP, currentSettings(this).reducedMotion);
     }
   }
-
   // The dog slot sign hung across the Pet shop's front while a dog slot is for sale: ui-slot-sign,
   // its board and text dropping while pressed, with its call to buy over the cheapest slot's price,
   // and the gold outline while the bank covers that slot. A cream board in
   // an ink frame stands in while the art is missing, when the whole sign dips instead.
-  private drawSlotSign(root: GameObjects.Container, save: SaveDocument): void {
-    const sign = slotSign(gameData, save.owned, save.bankCents);
-    if (sign === null) {
-      return;
-    }
-    const { art, board, key, pressDrop, scale } = SLOT_SIGN;
-    const view = this.tileView(root, "slotSign");
-    // Cropped with the Pet shop it hangs from, in the HTML as on the canvas.
-    maskToRect(this, HERO_MASK_KEY, HERO_CROP, view.container);
-    view.container.setData(MIRROR_CLIP_DATA, HERO_CROP);
-    const faces = this.addPressFaces(key, art);
-    if (faces === undefined) {
-      const colours = { border: PALETTE.ink, fill: PALETTE.cream };
-      drawFramedRect(addGraphicsIn(this, view.container), colours, board);
-    } else {
-      view.container.add(faces);
-    }
-    // Each line's ink centred on the cream; the price in red while the bank is short, as a
-    // tile's unaffordable price is.
-    const { headCapY, priceCapY, x } = slotSignText(pixelFontMetrics(this, "body"));
-    const priceColour = sign.affordable ? SLOT_SIGN.priceColour : GREYED.shortPrice;
-    const rows = [
-      { capY: headCapY, colour: SLOT_SIGN.headColour },
-      { capY: priceCapY, colour: priceColour },
-    ] as const;
-    const labels = sign.lines.map((line, i) => {
-      const row = rows[i] ?? rows[0];
-      const label = this.text(view.container, 0, 0, line, PALETTE[row.colour], { scale });
-      const ink = inkSpan(label);
-      placePixelText(label, x - (ink.left + ink.right) / 2, row.capY);
-      // The HTML centres it as its ink is centred here.
-      label.setData(LABEL_ALIGN_DATA, "centre");
-      return { label, y: label.y };
-    });
-    if (faces !== undefined) {
-      const [normal, pressed] = faces;
-      view.iconButton = {
-        setPressed: (down) => {
-          normal.setVisible(!down);
-          pressed.setVisible(down);
-          labels.forEach(({ label, y }) => label.setY(y + (down ? pressDrop : 0)));
-        },
-      };
-      view.iconButton.setPressed(false);
-    }
-    if (sign.affordable) {
-      addAffordFrame(this, view.container, board, currentSettings(this).reducedMotion);
-    }
-  }
-
   // key's normal and pressed faces with their top-left corner at at, or none, with nothing left
   // drawn, while either is missing.
   private addPressFaces(
     key: string,
-    at: { x: number; y: number },
+    at: {
+      x: number;
+      y: number;
+    },
   ): [GameObjects.Image, GameObjects.Image] | undefined {
     const normal = addTagImage(this, key, "normal", at.x, at.y);
     const pressed = addTagImage(this, key, "pressed", at.x, at.y);
@@ -1815,87 +1815,5 @@ export class StartScene extends Scene {
       return undefined;
     }
     return [normal, pressed];
-  }
-
-  private drawLoadingProgress(now: number): void {
-    const bar = this.waitBar;
-    if (bar === undefined) {
-      return;
-    }
-    const display = this.loadDisplay;
-    bar.clear();
-    drawProgressDisplay(
-      bar,
-      GAME_PROGRESS_STYLE,
-      LOADING_MOTION,
-      HOME_LAYOUT.loadingProgress,
-      display.at(now),
-    );
-  }
-
-  // Start walk keeps its words and place in every state but one. Ready, it is primary: the
-  // raised green go button, sinking into its lip when pressed, drawn twice, raised and pressed,
-  // and the frame shows one. Not ready, it is disabled: a flat sunk face that never moves, under
-  // both labels. The faces are the ui-button's, and the label sinks with the face.
-  // Pressed while the walk's art loads, its pressed face says so, in words that keep still.
-  private drawStartButton(root: GameObjects.Container, ready: boolean): void {
-    this.waitBar = this.add.graphics();
-    root.add(this.waitBar);
-    this.drawLoadingProgress(this.time.now);
-    const { width, x, y } = START_BUTTON;
-    const container = this.add.container(0, 0);
-    root.add(container);
-    const { startLoading: loadingLabel, startWalk: label } = gameData.homeText;
-    const state = buttonState({ available: ready, primary: true });
-    const disabled = state === "disabled";
-    const faces = buttonFaces(this, true, START_BUTTON, state);
-    if (faces.length === 1) {
-      container.add(faces);
-    }
-    const variant = (down: boolean) => {
-      const group = this.add.container(0, 0);
-      container.add(group);
-      const face = faces.length > 1 ? faces[down ? 1 : 0] : undefined;
-      if (face !== undefined) {
-        group.add(face);
-      }
-      const top = START_LABEL.readyY + (disabled || down ? BUTTON_PRESS_PX : 0);
-      const colour = PALETTE[BUTTON_COLOURS[state].label];
-      const loading = down && this.artWait?.kind === "start";
-      const words = this.text(
-        group,
-        x + width / 2,
-        y + top,
-        loading ? loadingLabel : label,
-        colour,
-        {
-          font: "title",
-          originX: 0.5,
-          scale: START_LABEL.scale,
-        },
-      );
-      // Centred, its left edge on a whole pixel, so a label whose middle falls between two pixels
-      // draws the same in both renderers.
-      const half = words.displayWidth / 2;
-      words.setX(Math.round(words.x - half) + half);
-      return group;
-    };
-    const up = variant(false);
-    const down = variant(true);
-    down.setVisible(false);
-    this.startButton = { container, down, ready, up };
-  }
-
-  // The keyboard's focus ring, outside any selection frame.
-  private drawFocus(root: GameObjects.Container): void {
-    const focused = this.focused();
-    if (focused === undefined) {
-      return;
-    }
-    const outset =
-      focused.target.kind === "start"
-        ? Math.min(FOCUS_OUTSET, HOME_LAYOUT.startFocusOutset)
-        : FOCUS_OUTSET;
-    drawFocusRing(addGraphicsIn(this, root), outset, focused.rect);
   }
 }

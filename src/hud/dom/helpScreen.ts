@@ -18,7 +18,10 @@ import {
 // screen, the top bar and the page's picture under it. It takes no presses: the scene under it
 // takes every tap, swipe and key, as on the canvas, and draws it again as they change it.
 
-export type DomHelpInput = Pick<DomQuestionPanelInput, "closeLabel" | "fonts" | "toGame"> & {
+export type DomHelpInput = Pick<
+  DomQuestionPanelInput,
+  "closeLabel" | "fonts" | "gesture" | "presses" | "toGame"
+> & {
   readonly view: HelpView;
 };
 
@@ -168,7 +171,8 @@ export function showHelpScreen(layer: UiLayer, input: DomHelpInput): DomQuestion
     label: view.heading.text,
     numberKeys: false,
     parts,
-    presses: [],
+    presses: input.presses,
+    ...(input.gesture === undefined ? {} : { gesture: input.gesture }),
     toGame: input.toGame,
     view: {
       buttons: view.buttons,

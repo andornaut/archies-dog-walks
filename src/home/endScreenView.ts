@@ -3,7 +3,7 @@ import { fillLine } from "@andornaut/game-kit/lines";
 import type { Rect } from "@andornaut/game-kit/rect";
 import type { TextFitStyle } from "@andornaut/game-kit/text/textFit";
 
-import { ZONE_PIPS_KEY } from "../assets/spriteKeys.ts";
+import { ownerFaceKey, ZONE_PIPS_KEY } from "../assets/spriteKeys.ts";
 import { BADGE_STRIP } from "../data/layout.ts";
 import { SCREEN_CONFIG } from "../data/screen.ts";
 import type { AchievementId, DogId, GameData } from "../data/types.ts";
@@ -34,10 +34,7 @@ import {
 import { type closingLines, type EarningsLine, zonePips } from "./endView.ts";
 import { MENU_TEXT_FIELDS } from "./menuText.ts";
 
-// The End screen laid out as one view both renderers draw: the canvas's (src/scenes/EndScene.ts)
-// and the HTML interface's (src/hud/dom/endScreen.ts). The canvas alone draws the results
-// panel, its wells, TOTAL's band and the rule, the faces, the ribbon and the badge strip's panel
-// and badges; the view says where. Every rect and text origin is in game pixels.
+// End results and controls in logical game pixels.
 
 // What the view measures with beyond a detail card's: a label's width as Phaser bounds it and its
 // ink's first and last columns from its left edge, in a font at a scale, and a closing line fitted
@@ -54,6 +51,7 @@ export interface EndMeasure extends DetailMeasure {
 // An owner's row's face in its well: the cheering face hops while badges burst in, unless the
 // owner fired the player.
 export interface EndFace {
+  readonly key: string;
   readonly cheering: boolean;
   readonly dog: DogId;
   readonly fired: boolean;
@@ -231,6 +229,7 @@ export function endScreenView(
       cheering: celebrating && !quip.fired,
       dog: quip.dog,
       fired: quip.fired,
+      key: ownerFaceKey(data, quip.dog),
       x: QUIPS.face.x,
       y: row + QUIPS.face.y,
     });

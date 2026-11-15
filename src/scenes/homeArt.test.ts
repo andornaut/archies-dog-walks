@@ -86,6 +86,7 @@ const KEY_FUNCTIONS: Readonly<Record<string, () => readonly string[]>> = {
   debuffIconKey: keysStarting("icon-"),
   // A depth step's variant, which falls back to the full-size key while it is not loaded.
   depthVariantKey: none,
+  disabledArtKey: none,
   disabledTextureKey: none,
   dogFaceKey: () => dogs.map((dog) => spriteKeys.dogFaceKey(gameData, dog)),
   dogPortraitKey: () => dogs.map((dog) => spriteKeys.dogPortraitKey(gameData, dog)),

@@ -20,8 +20,8 @@ import {
   showZoneCelebration,
 } from "../hud/dom/celebration.ts";
 import { showDetailCard } from "../hud/dom/detailCard.ts";
-import { type DomEndScreen, showEndScreen } from "../hud/dom/endScreen.ts";
-import { showHelpScreen } from "../hud/dom/helpScreen.ts";
+import { type DomEndScreen, type DomEndScreenInput, showEndScreen } from "../hud/dom/endScreen.ts";
+import { type DomHelpInput, showHelpScreen } from "../hud/dom/helpScreen.ts";
 import { type LogbookScroll, showLogbook } from "../hud/dom/logbook.ts";
 import { showPurchaseConfirm } from "../hud/dom/purchaseConfirm.ts";
 import {
@@ -41,7 +41,7 @@ import { type CardAction, type PanelNotePart, type QuestionPanelView } from "../
 import { modalCardView } from "../ui/modal/view.ts";
 import { PALETTE } from "../ui/palette.ts";
 import { centreBackedText } from "../ui/phaser/backedText.ts";
-import { displayBitmapFont } from "../ui/phaser/displayText.ts";
+import { displayBitmapFont, hasDisplayFont } from "../ui/phaser/displayText.ts";
 import { addModalShade, fillRect } from "../ui/phaser/draw.ts";
 import { addPixelText, pixelBitmapFont } from "../ui/phaser/pixelText.ts";
 import { pillColours } from "./effectNameColours.ts";
@@ -552,27 +552,47 @@ export function addHtmlBadgeCelebration(
       );
 }
 
-// The End screen's text, pips, bubbles and Back to title in the HTML layer, laid out as the
-// canvas draws them (endScreenView), over the parts the canvas keeps; it takes no presses.
-// Returns it, for its scene to show Back to title pressed or bobbing, or undefined where the
-// canvas must draw them, as while the display lettering's font is missing.
-export function addHtmlEndScreen(scene: Scene, view: EndScreenView): DomEndScreen | undefined {
+// Native End results use the scene's fonts, assets, clock and action ownership.
+export function addHtmlEndScreen(
+  scene: Scene,
+  actions: Pick<
+    DomEndScreenInput,
+    "badges" | "gesture" | "home" | "openBadge" | "reduced" | "ribbon"
+  >,
+  view: EndScreenView,
+): DomEndScreen | undefined {
   const place = htmlPanelPlace(scene);
-  const display = displayBitmapFont(scene);
-  if (place === undefined || display === undefined) {
+  const display = hasDisplayFont(scene, view.results.title.text)
+    ? displayBitmapFont(scene)
+    : undefined;
+  if (place === undefined) {
     return undefined;
   }
-  return followScene(scene, showEndScreen(place.layer, { ...htmlArtInput(place), display, view }));
+  return followScene(
+    scene,
+    showEndScreen(place.layer, {
+      ...htmlArtInput(place),
+      ...actions,
+      display,
+      everyFrame: everyFrame(scene),
+      now: () => scene.time.now,
+      view,
+    }),
+  );
 }
 
-// The help screen in the HTML layer, laid out as the canvas draws it (helpView), over the dark
-// screen and the page's picture the canvas keeps; it takes no presses. Returns it, for its scene
-// to replace as the page or a pressed control changes, or undefined where the canvas must draw
-// it.
-export function addHtmlHelpScreen(scene: Scene, view: HelpView): DomQuestionPanel | undefined {
+// Native Help controls retain the scene's paging and gesture rules.
+export function addHtmlHelpScreen(
+  scene: Scene,
+  actions: Pick<DomHelpInput, "presses" | "gesture">,
+  view: HelpView,
+): DomQuestionPanel | undefined {
   const place = htmlPanelPlace(scene);
   if (place === undefined) {
     return undefined;
   }
-  return followScene(scene, showHelpScreen(place.layer, { ...htmlPanelInput(place), view }));
+  return followScene(
+    scene,
+    showHelpScreen(place.layer, { ...htmlPanelInput(place), ...actions, view }),
+  );
 }

@@ -1,5 +1,5 @@
 import { fontMetrics } from "@andornaut/game-kit/text/bitmapFont";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { gameData } from "../../data/index.ts";
 import { helpView } from "../../help/helpView.ts";
@@ -21,25 +21,31 @@ const MEASURE = {
 function helpScreen(page: number, pressed: "close" | "next" | "previous" | undefined) {
   const doc = new FakeDocument();
   const { element, layer } = fakeLayer(doc, domScale(2, { height: 560, width: 360, x: 0, y: 0 }));
+  const presses = [vi.fn(), vi.fn()];
   const shown = showHelpScreen(layer, {
     closeLabel: gameData.menuText.common.close,
     fonts,
+    presses,
     toGame: (point) => point,
     view: helpView(gameData, MEASURE, page, pressed),
   });
   const [dialog] = element.children;
-  return { dialog, doc, nodes: dialog?.all() ?? [], shown };
+  return { dialog, doc, nodes: dialog?.all() ?? [], presses, shown };
 }
 
 describe("the HTML help screen", () => {
-  it("takes no presses: its page buttons are pictures and Tab keeps focus on it", () => {
-    const { dialog, doc, nodes } = helpScreen(0, undefined);
-    expect(dialog?.className).toContain("adw-passive");
+  it("exposes native page controls with the authored dialog name and keyboard focus", async () => {
+    const { dialog, doc, nodes, presses, shown } = helpScreen(0, undefined);
+    await vi.waitFor(() => expect(shown.accepts()).toBe(true));
+    expect(dialog?.className).not.toContain("adw-passive");
     const title = nodes.find((node) => node.id === dialog?.getAttribute("aria-labelledby"));
     expect(title?.getAttribute("aria-label")).toBe(gameData.menuText.help.heading);
-    expect(nodes.some((node) => node.tagName === "button")).toBe(false);
+    const controls = nodes.filter((node) => node.tagName === "button");
+    expect(controls).toHaveLength(2);
     dialog?.fire("keydown", { code: "Tab", preventDefault: () => undefined, shiftKey: false });
-    expect(doc.activeElement).toBe(dialog);
+    expect(doc.activeElement).toBe(controls[0]);
+    controls[1]?.fire("click", { detail: 0 });
+    expect(presses[1]).toHaveBeenCalledOnce();
     const page = nodes.find((node) => node.id === dialog?.getAttribute("aria-describedby"));
     const spoken = page?.all().filter((node) => node.className === "adw-spoken");
     expect(spoken?.map(({ textContent }) => textContent)[0]).toBe(gameData.help[0]?.title);

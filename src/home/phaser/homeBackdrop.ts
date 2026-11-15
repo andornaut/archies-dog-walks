@@ -1,15 +1,14 @@
-import type { GameObjects, Scene } from "phaser";
+import type { Scene } from "phaser";
 
 import { SCREEN_LAYOUT } from "../../data/screen.ts";
 import { PALETTE } from "../../ui/palette.ts";
 import { fillRect } from "../../ui/phaser/draw.ts";
-import { addPixelText } from "../../ui/phaser/pixelText.ts";
 import { HOME_LAYOUT } from "../homeLayout.ts";
 
 const SCREEN = SCREEN_LAYOUT.screen;
 const PATH = HOME_LAYOUT.path;
 
-export function renderHomeBackdrop(scene: Scene, signText: string): GameObjects.Container {
+export function renderHomeBackdrop(scene: Scene): void {
   fillRect(scene.add.graphics(), PALETTE.darkBrown, SCREEN);
   if (scene.textures.exists("screen-home")) {
     scene.add.image(0, HOME_LAYOUT.backdropY, "screen-home").setOrigin(0);
@@ -46,14 +45,4 @@ export function renderHomeBackdrop(scene: Scene, signText: string): GameObjects.
       y: HOME_LAYOUT.gateBar.y,
     });
   }
-  const sign = HOME_LAYOUT.streetSign;
-  const gateSign = scene.add.container(0, 0);
-  gateSign.add(
-    addPixelText(scene, sign.x, sign.y, signText, {
-      colour: PALETTE.white,
-      font: "title",
-      originX: 0.5,
-    }),
-  );
-  return gateSign;
 }

@@ -217,7 +217,7 @@ export class HelpPictureScene extends Scene {
       reducedMotion: () => true,
       runPause: () => NOTHING_PAUSED,
     };
-    const data: HudSceneData = { picture: { source, view } };
+    const data: HudSceneData = { picture: { source, stillFrames: STILL_FRAMES, view } };
     this.scene.launch(SCENE_KEYS.helpHud, data);
     this.whenCreated(SCENE_KEYS.helpHud, (hud) => {
       if (picture.changes.length > 0) {

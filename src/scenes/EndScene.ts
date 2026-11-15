@@ -3,14 +3,20 @@ import { guardSceneInput } from "@andornaut/game-kit/input/phaser/guardSceneInpu
 import type { Rect } from "@andornaut/game-kit/rect";
 import { type GameObjects, Scene } from "phaser";
 
-import { ownerFaceKey } from "../assets/spriteKeys.ts";
 import { gameData } from "../data/index.ts";
 import { SCREEN_CONFIG, SCREEN_LAYOUT } from "../data/screen.ts";
-import { badgeStripHits, type BadgeView } from "../home/badgesView.ts";
+import {
+  BADGE_CHEER,
+  BADGE_POP,
+  badgeStripHits,
+  type BadgeView,
+  earnedBadges,
+} from "../home/badgesView.ts";
 import { END_LAYOUT } from "../home/endLayout.ts";
 import { endScreenView } from "../home/endScreenView.ts";
 import { closingLines, earningsBreakdown, type EndTarget, endTargetAt } from "../home/endView.ts";
 import { bobOffset } from "../home/feedback.ts";
+import { nativeFrames } from "../home/phaser/nativeFrames.ts";
 import {
   homecomers,
   type ReturnPhase,
@@ -34,22 +40,13 @@ import { PackFigures } from "../pack/phaser/packFigures.ts";
 import { stopWakeLock } from "../pwa/index.ts";
 import type { LastWalk } from "../save/schema.ts";
 import { PALETTE } from "../ui/palette.ts";
-import { addDisplayText, hasDisplayFont } from "../ui/phaser/displayText.ts";
-import { fillRect } from "../ui/phaser/draw.ts";
-import { addPixelText, inkSpan } from "../ui/phaser/pixelText.ts";
+import { hasDisplayFont } from "../ui/phaser/displayText.ts";
+import { addModalShade, fillRect } from "../ui/phaser/draw.ts";
 import { onceBeforeRender } from "../ui/phaser/rampDim.ts";
 import { TEXT_SCALE } from "../ui/textFit.ts";
 import { topSectionButtonAt } from "../ui/topSection.ts";
-import {
-  addBadgeCelebration,
-  addBurst,
-  addCheeringFace,
-  badgeCard,
-  badgeCelebrationNames,
-  drawBadgeCard,
-  NEW_BEST_BURST,
-} from "./badges.ts";
-import { addDetailContent } from "./homePanels.ts";
+import { addBurst, badgeCard, badgeCelebrationNames, NEW_BEST_BURST } from "./badges.ts";
+import { routeHomeBar } from "./homeBarPress.ts";
 import type { MenuSceneData } from "./MenuScene.ts";
 import { canvasEndMeasure } from "./modalMeasure.ts";
 import { BAR_MUTED_EVENT, listenOutsideTap, onBackPressed, openOverlay } from "./overlay.ts";
@@ -64,20 +61,24 @@ import {
   walkerInUse,
   walkerSpriteKey,
 } from "./profileStore.ts";
-import { addHtmlBadgeCard, addHtmlEndScreen } from "./questionPanel.ts";
+import {
+  addHtmlBadgeCard,
+  addHtmlEndScreen,
+  htmlPanelInput,
+  htmlPanelPlace,
+} from "./questionPanel.ts";
 import { SCENE_KEYS } from "./sceneKeys.ts";
 import { soundboardOf } from "./soundboard.ts";
 import { firstTag, playTag } from "./sprites.ts";
 import { listenTargetPress, sameByValue, type TargetPressListener } from "./targetPress.ts";
-import { addTopSection, mirrorTopSection } from "./topSection.ts";
-import { addMenuButton, addPanel, addScreenBackdrop, addTapBurst } from "./uiKit.ts";
+import { addNativeTopSection } from "./topSection.ts";
+import { addScreenBackdrop } from "./uiKit.ts";
 
 const END_SCREEN_KEY = "screen-end";
 const END_BAR_BUTTONS = ["mute", "menu"] as const;
 const LOGO = { ...END_LAYOUT.logo, key: "logo" };
 const RIBBON = { ...END_LAYOUT.ribbon, dropMs: 360, key: "ui-new-best", riseFrom: 12 };
 const RIBBON_BURST = END_LAYOUT.ribbonBurst;
-const SIDE = END_LAYOUT.side;
 const BADGE_SOUND_AFTER_BEST_MS = 1200;
 const RETURN_HOME_SCENE = END_LAYOUT.returnHome;
 const BUTTON: Rect = END_LAYOUT.button;
@@ -99,10 +100,11 @@ export class EndScene extends Scene {
   private presses: TargetPressListener | undefined;
   private reduced = false;
   // Back to title, which bobs as Start walk does, and still while pressed.
-  private button: { readonly container: GameObjects.Container; pressed: boolean } | undefined;
+  private homePressed = false;
+  private nativeStep: (() => void) | undefined;
+  private beginNative: (() => void) | undefined;
   private returnHomeStep: (() => void) | undefined;
-  // The screen's text, pips, bubbles and Back to title in HTML, where they draw there, and the
-  // open badge's card.
+  // Native results and the open badge card.
   private html: DomEndScreen | undefined;
   private htmlCard: DomQuestionPanel | undefined;
 
@@ -117,7 +119,9 @@ export class EndScene extends Scene {
     const walk = save.stats.lastWalk;
     const goHome = () => this.scene.start(SCENE_KEYS.start);
     this.returnHomeStep = undefined;
-    this.button = undefined;
+    this.homePressed = false;
+    this.nativeStep = undefined;
+    this.beginNative = undefined;
     this.html = undefined;
     this.htmlCard = undefined;
     this.badges = [];
@@ -134,38 +138,37 @@ export class EndScene extends Scene {
     this.reduced = reduced;
     addScreenBackdrop(this, END_SCREEN_KEY);
     this.addReturnHome(reduced, walk);
-    const topSection = addTopSection(this, { buttons: END_BAR_BUTTONS, muted: isMuted(this) });
-    onSettingsChanged(this, ({ muted }) => topSection.setMuted(muted));
-    mirrorTopSection(this, () => topSection.root);
-    listenTargetPress(this, {
-      onPressed: (target) => {
-        for (const id of END_BAR_BUTTONS) {
-          topSection.buttons.get(id)?.setPressed(target === id);
-        }
+    const topSection = addNativeTopSection(this, {
+      accepts: () => true,
+      buttons: END_BAR_BUTTONS,
+      labels: {
+        help: gameData.menuText.pause.help,
+        menu: gameData.menuText.menu.title,
+        mute: gameData.menuText.settings.sound,
+        pause: gameData.menuText.pause.title,
       },
-      onTap: (target) => {
-        if (target === "mute") {
+      muted: isMuted(this),
+      press: (id) => {
+        if (id !== "mute" && id !== "menu") {
+          return;
+        }
+        if (routeHomeBar(this, id) || !this.sys.isActive() || !this.input.enabled) {
+          return;
+        }
+        if (id === "mute") {
           this.game.events.emit(BAR_MUTED_EVENT, toggleMuted(this));
         } else {
           const data: MenuSceneData = { closePage: goHome, context: "end", resume: SCENE_KEYS.end };
           openOverlay(this, SCENE_KEYS.menu, data);
         }
       },
-      targetAt: (x, y) => topSectionButtonAt(END_BAR_BUTTONS, x, y),
     });
+    onSettingsChanged(this, ({ muted }) => topSection?.setMuted(muted));
     // Over the house's roof, clear of the walker's head.
     if (this.textures.exists(LOGO.key)) {
       this.add.image(LOGO.x, LOGO.y, LOGO.key).setOrigin(0);
     }
-    const resultsStart = this.children.getChildren().length;
-    // A walk that earned nothing is no best, even the first.
     const newBest = ended?.newBestWalk === true && walk.earnedCents > 0;
-    if (newBest && this.textures.exists(RIBBON.key)) {
-      // Behind the panel, so the sparkles rise from behind the ribbon and never cover the title.
-      // With reduced motion the burst holds one still frame.
-      const { height, width, x, y } = RIBBON_BURST;
-      addBurst(this, reduced, NEW_BEST_BURST, 1, x + width / 2, y + height / 2);
-    }
     const view = endScreenView(gameData, canvasEndMeasure(this), {
       closing: closingLines(gameData, Math.random, walk),
       earned,
@@ -180,128 +183,183 @@ export class EndScene extends Scene {
       walk,
     });
     const { results, strip } = view;
-    // In HTML where the page's switch is on and its fonts are ready, over the parts the canvas
-    // keeps, else all on the canvas.
-    const html = hasDisplayFont(this, results.title.text)
-      ? addHtmlEndScreen(this, view)
-      : undefined;
-    this.html = html;
-    addPanel(this, results.panel);
-    const g = this.add.graphics();
-    const { band } = results;
-    fillRect(g, PALETTE[SIDE.band.outline], band.outline);
-    fillRect(g, PALETTE[SIDE.band.fill], band.fill);
-    fillRect(g, PALETTE[SIDE.band.lip], band.lip);
-    fillRect(g, PALETTE.tan, results.rule);
-    for (const well of results.wells) {
-      fillRect(g, PALETTE.tan, well);
-    }
-    for (const face of results.faces) {
-      if (face.cheering) {
-        addCheeringFace(this, reduced, face.dog, face.x, face.y);
-      } else {
-        const key = ownerFaceKey(gameData, face.dog);
-        const sprite = this.add.sprite(face.x, face.y, key).setOrigin(0);
-        playTag(sprite, key, face.fired ? "fired" : "happy", reduced);
-      }
-    }
-    if (html === undefined) {
-      const { title } = results;
-      addDisplayText(this, title.centreX, title.capTop, title.text, {
-        colour: PALETTE.plum,
-        font: "title",
-        originX: 0.5,
-        scale: TEXT_SCALE,
-      });
-    }
-    if (newBest) {
-      this.showRibbon(reduced);
-      soundboardOf(this).play("newBest");
-    }
-    if (html === undefined) {
-      for (const box of results.framed) {
-        fillRect(g, box.fill, box.rect);
-      }
-      for (const bubble of results.bubbles) {
-        addPanel(this, bubble, "ui-quip");
-      }
-      addDetailContent(this, this.add.container(0, 0), { ...results, framed: [] });
-      // Each owner's name under the well, at 1x, its ink centred there.
-      for (const name of results.names) {
-        const label = addPixelText(this, 0, name.capTop, name.text, {
-          colour: name.colour,
-          scale: name.scale,
-        });
-        const ink = inkSpan(label);
-        label.setX(name.centreX - (ink.right - ink.left) / 2 - ink.left);
-      }
-    }
-
-    // Move the complete results group together, including its ribbon, bursts and owner rows.
-    const resultObjects = this.children.getChildren().slice(resultsStart);
-    this.add.container(0, view.offsetY).add(resultObjects);
-
-    const celebrating = strip !== undefined;
-    if (celebrating) {
-      this.badges = addBadgeCelebration(
-        this,
-        reduced,
-        strip.panel,
-        strip.rows,
-        earned,
-        false,
-        html === undefined,
-      );
-      // After a new best's fanfare, so the two do not play over each other.
-      this.time.delayedCall(newBest ? BADGE_SOUND_AFTER_BEST_MS : 0, () =>
-        soundboardOf(this).play("badge"),
-      );
-    }
-
-    const words = gameData.menuText.end;
-    const container = this.add.container(0, 0);
-    const button =
-      html === undefined
-        ? addMenuButton(
-            this,
-            BUTTON,
-            words.headHome,
-            { available: true, labelAt: END_LAYOUT.buttonLabel, primary: true },
-            container,
-          )
-        : undefined;
-    this.button = { container, pressed: false };
+    this.badges = earnedBadges(gameData, earned);
     const badgeHits =
       strip === undefined ? [] : badgeStripHits(strip.panel, strip.rows, this.badges.length);
+    const targetAt = (x: number, y: number) =>
+      topSectionButtonAt(END_BAR_BUTTONS, x, y) === undefined
+        ? endTargetAt({ badgeHits, button: BUTTON, cardOpen: this.card !== undefined }, x, y)
+        : undefined;
+    const start = (at: { x: number; y: number }, target: EndTarget | undefined) => {
+      this.html?.burst(at);
+      this.hold =
+        typeof target === "object"
+          ? {
+              badge: target.badge,
+              press: startHold(holdRule(gameData.tuning, TILE_SLOP_PX), at, this.time.now),
+            }
+          : undefined;
+    };
+    const move = (at: { x: number; y: number }) => {
+      if (this.hold !== undefined) {
+        this.hold = { ...this.hold, press: moveHold(at, this.hold.press) };
+      }
+    };
+    const place = htmlPanelPlace(this);
+    const point = (event: PointerEvent) =>
+      place === undefined
+        ? undefined
+        : htmlPanelInput(place).toGame({ x: event.clientX, y: event.clientY });
+    const cancel = () => {
+      this.presses?.cancel();
+      this.hold = undefined;
+    };
+    const ribbon = !newBest
+      ? undefined
+      : {
+          art: this.textures.exists(RIBBON.key)
+            ? {
+                key: RIBBON.key,
+                ...END_LAYOUT.ribbon,
+                scale: 1,
+                size: this.textures.getFrame(RIBBON.key),
+              }
+            : undefined,
+          fallback: {
+            capTop: RIBBON.y + 4,
+            centre: "advance" as const,
+            centreX: SCREEN_CONFIG.width / 2,
+            colour: hasDisplayFont(this, gameData.menuText.end.newBest)
+              ? PALETTE.yellow
+              : PALETTE.darkRed,
+            font: hasDisplayFont(this, gameData.menuText.end.newBest)
+              ? ("display" as const)
+              : ("title" as const),
+            scale: hasDisplayFont(this, gameData.menuText.end.newBest) ? 1 : TEXT_SCALE,
+            text: gameData.menuText.end.newBest,
+          },
+        };
+    const html = addHtmlEndScreen(
+      this,
+      {
+        badges: this.badges,
+        gesture: {
+          cancel,
+          down: (event) => {
+            const at = point(event);
+            if (at !== undefined) {
+              const target = targetAt(at.x, at.y);
+              this.presses?.down(target);
+              start(at, target);
+            }
+          },
+          move: (event) => {
+            const at = point(event);
+            if (at !== undefined) {
+              move(at);
+            }
+          },
+          up: (event, cancelled) => {
+            const at = point(event);
+            this.presses?.up(at === undefined ? undefined : targetAt(at.x, at.y), cancelled);
+            return true;
+          },
+        },
+        home: goHome,
+        openBadge: (index) => this.openCard(index),
+        reduced,
+        ribbon,
+      },
+      view,
+    );
+    this.html = html;
+    const frame = nativeFrames();
+    let facesStarted = this.time.now;
+    const faces = results.faces.map(() => ({ y: 0 }));
+    const ribbonMotion = {
+      alpha: reduced || ribbon?.art === undefined ? 1 : 0,
+      y: reduced || ribbon?.art === undefined ? 0 : -RIBBON.riseFrom,
+    };
+    html?.setRibbon(ribbonMotion.alpha, ribbonMotion.y);
+    if (!reduced) {
+      this.badges.forEach((_badge, index) => html?.setBadgePop(index, 0));
+    }
+    this.nativeStep = () => {
+      results.faces.forEach((face, index) =>
+        html?.setFace(
+          index,
+          frame(face.key, face.fired ? "fired" : "happy", reduced, this.time.now - facesStarted),
+          faces[index]?.y ?? 0,
+        ),
+      );
+      html?.setRibbon(ribbonMotion.alpha, ribbonMotion.y);
+    };
+    this.beginNative = () => {
+      facesStarted = this.time.now;
+      results.faces.forEach((face, index) => {
+        if (face.cheering && !reduced) {
+          this.tweens.add({
+            duration: BADGE_CHEER.duration,
+            ease: BADGE_CHEER.ease,
+            hold: BADGE_CHEER.hold,
+            repeat: -1,
+            repeatDelay: BADGE_CHEER.repeatDelay,
+            targets: faces[index],
+            y: -BADGE_CHEER.rise,
+            yoyo: true,
+          });
+        }
+      });
+      if (newBest) {
+        if (ribbon?.art !== undefined) {
+          const { height, width, x, y } = RIBBON_BURST;
+          addBurst(this, reduced, NEW_BEST_BURST, 1, x + width / 2, y + height / 2 + view.offsetY);
+          if (!reduced) {
+            this.tweens.add({
+              alpha: 1,
+              duration: RIBBON.dropMs,
+              ease: "Back.easeOut",
+              targets: ribbonMotion,
+              y: 0,
+            });
+          }
+        }
+        soundboardOf(this).play("newBest");
+      }
+      if (strip !== undefined) {
+        this.badges.forEach((_badge, index) => {
+          if (reduced) {
+            html?.burstBadge(index);
+            return;
+          }
+          this.time.delayedCall(index * BADGE_POP.delayMs, () => {
+            html?.burstBadge(index);
+            const pop = { scale: 0 };
+            this.tweens.add({
+              duration: BADGE_POP.durationMs,
+              ease: BADGE_POP.ease,
+              onUpdate: () => html?.setBadgePop(index, pop.scale),
+              scale: 1,
+              targets: pop,
+            });
+          });
+        });
+        this.time.delayedCall(newBest ? BADGE_SOUND_AFTER_BEST_MS : 0, () =>
+          soundboardOf(this).play("badge"),
+        );
+      }
+    };
     // Badges have no tap action of their own, so a tap opens a badge's card as a hold does.
     // With a card open, a tap anywhere closes it.
     this.presses = listenTargetPress<EndTarget>(this, {
-      onDown: (pointer, target) => {
-        // Over the HTML, so a burst on Back to title shows over it.
-        if (html === undefined) {
-          addTapBurst(this, pointer.x, pointer.y);
-        } else {
-          html.burst({ x: pointer.x, y: pointer.y });
-        }
-        const at = { x: pointer.x, y: pointer.y };
-        const rule = holdRule(gameData.tuning, TILE_SLOP_PX);
-        this.hold =
-          typeof target === "object"
-            ? { badge: target.badge, press: startHold(rule, at, this.time.now) }
-            : undefined;
-      },
+      onDown: (pointer, target) => start(pointer, target),
       onMove: (pointer) => {
-        if (this.hold !== undefined && pointer.isDown) {
-          const press = moveHold({ x: pointer.x, y: pointer.y }, this.hold.press);
-          this.hold = { ...this.hold, press };
+        if (pointer.isDown) {
+          move(pointer);
         }
       },
       onPressed: (target) => {
-        const pressed = target === "home";
-        button?.setPressed(pressed);
-        if (this.button !== undefined) {
-          this.button.pressed = pressed;
-        }
+        this.homePressed = target === "home";
         if (target === undefined) {
           this.hold = undefined;
         }
@@ -316,10 +374,7 @@ export class EndScene extends Scene {
         }
       },
       same: sameByValue,
-      targetAt: (x, y) =>
-        topSectionButtonAt(END_BAR_BUTTONS, x, y) === undefined
-          ? endTargetAt({ badgeHits, button: BUTTON, cardOpen: this.card !== undefined }, x, y)
-          : undefined,
+      targetAt,
     });
     // A tap on the page beside the game closes an open card too.
     listenOutsideTap(
@@ -332,6 +387,9 @@ export class EndScene extends Scene {
     // auto-repeat does nothing.
     const back = () => (this.card === undefined ? goHome() : this.closeCard());
     this.input.keyboard?.on("keydown", (event: KeyboardEvent) => {
+      if ((this.htmlCard ?? this.html)?.accepts() !== true) {
+        return;
+      }
       if (!event.repeat && isMuteKey(event.code)) {
         this.game.events.emit(BAR_MUTED_EVENT, toggleMuted(this));
         return;
@@ -340,12 +398,14 @@ export class EndScene extends Scene {
         back();
       }
     });
-    onBackPressed(this, back);
+    onBackPressed(this, () => {
+      if ((this.htmlCard ?? this.html)?.accepts() === true) {
+        back();
+      }
+    });
   }
 
-  // The badge's card over the screen, bursting with confetti as it opens (badgeCardView): in
-  // HTML over the shared shade where the page's switch is on and its fonts are ready, else on the
-  // canvas.
+  // A native badge card over the dimmed result screen and world.
   private openCard(index: number): void {
     const badge = this.badges[index];
     if (badge === undefined) {
@@ -358,10 +418,8 @@ export class EndScene extends Scene {
       reduced: this.reduced,
     });
     this.card = this.add.container(0, 0).setDepth(CARD_DEPTH);
-    this.htmlCard = addHtmlBadgeCard(this, view);
-    if (this.htmlCard === undefined) {
-      drawBadgeCard(this, this.card, view);
-    }
+    this.card.add(addModalShade(this, SCREEN_LAYOUT.screen));
+    this.htmlCard = addHtmlBadgeCard(this, view, () => this.closeCard());
   }
 
   private closeCard(): void {
@@ -443,12 +501,16 @@ export class EndScene extends Scene {
 
   override update(): void {
     this.returnHomeStep?.();
-    if (this.button !== undefined) {
-      const { container, pressed } = this.button;
-      const bob = pressed ? 0 : bobOffset(this.reduced, this.time.now, true);
-      container.setY(bob);
-      this.html?.setButton(pressed, bob);
+    if (this.beginNative !== undefined && this.html?.accepts() === true) {
+      const begin = this.beginNative;
+      this.beginNative = undefined;
+      begin();
     }
+    this.nativeStep?.();
+    this.html?.setButton(
+      this.homePressed,
+      this.homePressed ? 0 : bobOffset(this.reduced, this.time.now, true),
+    );
     if (this.hold !== undefined) {
       const { fire, press } = tickHold(this.time.now, this.hold.press);
       this.hold = { ...this.hold, press };
@@ -458,30 +520,5 @@ export class EndScene extends Scene {
         this.openCard(this.hold.badge);
       }
     }
-  }
-
-  // The new-best ribbon drops into place; with reduced motion it is simply there.
-  private showRibbon(reduced: boolean): void {
-    if (!this.textures.exists(RIBBON.key)) {
-      addDisplayText(this, SCREEN_CONFIG.width / 2, RIBBON.y + 4, gameData.menuText.end.newBest, {
-        colour: PALETTE.darkRed,
-        font: "title",
-        originX: 0.5,
-        scale: TEXT_SCALE,
-      });
-      return;
-    }
-    const ribbon = this.add.image(RIBBON.x, RIBBON.y, RIBBON.key).setOrigin(0);
-    if (reduced) {
-      return;
-    }
-    ribbon.setY(RIBBON.y - RIBBON.riseFrom).setAlpha(0);
-    this.tweens.add({
-      alpha: 1,
-      duration: RIBBON.dropMs,
-      ease: "Back.easeOut",
-      targets: ribbon,
-      y: RIBBON.y,
-    });
   }
 }

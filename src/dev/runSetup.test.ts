@@ -102,11 +102,12 @@ describe("parseRunSetup", () => {
     }
   });
 
-  it("warns about unknown and repeated parameters and keeps the rest, the page's own aside", () => {
+  it("warns about unknown and repeated parameters and keeps the rest", () => {
     const { setup, warnings } = parse("seed=9&colour=red&ui=html&zone=2&zone=3");
     expect(setup).toEqual({ ...defaults, seed: 9 });
     expect(warnings).toEqual([
       'Unknown parameter "colour"',
+      'Unknown parameter "ui"',
       'Parameter "zone" appears 2 times; ignored',
     ]);
   });
