@@ -1602,7 +1602,6 @@ export class StartScene extends Scene {
         buttons: homeBarButtons().map(([id]) => id),
         currency: true,
         labels: {
-          help: gameData.menuText.pause.help,
           menu: gameData.menuText.menu.title,
           mute: gameData.menuText.settings.sound,
           pause: gameData.menuText.pause.title,

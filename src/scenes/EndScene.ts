@@ -142,7 +142,6 @@ export class EndScene extends Scene {
       accepts: () => true,
       buttons: END_BAR_BUTTONS,
       labels: {
-        help: gameData.menuText.pause.help,
         menu: gameData.menuText.menu.title,
         mute: gameData.menuText.settings.sound,
         pause: gameData.menuText.pause.title,
