@@ -1,8 +1,16 @@
+import { createButtonSkin } from "@andornaut/game-kit/web/ui/dom/buttonSkin";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { createPressAdmission } from "../../pressAdmission.ts";
 import { FakeDocument } from "../../testing/fakeDom.ts";
 import { mountUiLayer, UI_LAYER_ID, WEB_FONTS } from "./uiLayer.ts";
+
+vi.mock("@andornaut/game-kit/web/ui/dom/buttonSkin", () => ({
+  createButtonSkin: vi.fn(() => ({
+    apply: () => Promise.resolve([]),
+    frames: Promise.resolve(new Map()),
+  })),
+}));
 
 afterEach(() => {
   vi.unstubAllGlobals();
@@ -165,4 +173,91 @@ it("reports a failed required font and retries only that face without late dispo
   await Promise.resolve();
   expect(changed).toHaveBeenCalledTimes(calls);
   expect(layer.ready()).toBe(false);
+});
+
+it("notifies loading immediately and keeps a good skin when retrying unrelated HUD art", async () => {
+  vi.stubGlobal("devicePixelRatio", 1);
+  vi.stubGlobal("document", { body: null });
+  vi.stubGlobal(
+    "FontFace",
+    class {
+      load = () => Promise.resolve();
+    },
+  );
+  const doc = new FakeDocument();
+  const originalCreate = doc.createElement.bind(doc);
+  let hudAttempts = 0;
+  vi.spyOn(doc, "createElement").mockImplementation((tag) => {
+    const element = originalCreate(tag);
+    if (tag === "img") {
+      Object.assign(element, {
+        decode() {
+          if (
+            (this as unknown as { src: string }).src.includes("hud-required.png") &&
+            hudAttempts++ === 0
+          ) {
+            return Promise.reject(new Error("HUD unavailable"));
+          }
+          return Promise.resolve();
+        },
+      });
+    }
+    return element;
+  });
+  const root = doc.createElement("div");
+  const page = Object.assign(doc, {
+    baseURI: "https://example.test/",
+    fonts: { add: () => undefined },
+    getElementById: () => root,
+  });
+  const manifest = {
+    sprites: ["ui-button", "ui-icon-button"].map((key) => ({
+      json: `required-${key}.json`,
+      key,
+      png: `required-${key}.png`,
+    })),
+  };
+  const sheet = {
+    frames: { normal: { frame: { h: 20, w: 20, x: 0, y: 0 } } },
+    meta: { size: { h: 20, w: 20 } },
+  };
+  vi.stubGlobal(
+    "fetch",
+    vi.fn((url: string) =>
+      Promise.resolve({ json: () => (url.includes("manifest") ? manifest : sheet), ok: true }),
+    ),
+  );
+  const canvas = {
+    offsetHeight: 560,
+    offsetLeft: 0,
+    offsetParent: null,
+    offsetTop: 0,
+    offsetWidth: 360,
+    style: { height: "560px", marginLeft: "", width: "360px" },
+  };
+  const layer = mountUiLayer(page as unknown as Document, canvas as unknown as HTMLCanvasElement)!;
+  layer.requireAssets([]);
+  await new Promise<void>((resolve) => {
+    setTimeout(resolve, 0);
+  });
+  expect(layer.ready()).toBe(true);
+  const skin = layer.buttonSkin;
+  const states: string[] = [];
+  const off = layer.onReady(() => states.push(layer.assetStatus()));
+  layer.requireAssets([{ kind: "image", url: "/hud-required.png" }]);
+  expect(states).toEqual(["loading"]);
+  await new Promise<void>((resolve) => {
+    setTimeout(resolve, 0);
+  });
+  expect(layer.failedAssets()).toEqual(["/hud-required.png"]);
+  const created = vi.mocked(createButtonSkin).mock.calls.length;
+  layer.retryAssets();
+  expect(layer.buttonSkin).toBe(skin);
+  await new Promise<void>((resolve) => {
+    setTimeout(resolve, 0);
+  });
+  expect(layer.ready()).toBe(true);
+  expect(vi.mocked(createButtonSkin).mock.calls.length).toBe(created);
+  off();
+  layer.dispose();
 });

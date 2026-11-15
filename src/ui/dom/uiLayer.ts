@@ -220,7 +220,9 @@ export function mountUiLayer(
     },
     retryAssets() {
       if (required.failed().length > 0) {
-        skin = undefined;
+        if (required.failedSkin()) {
+          skin = undefined;
+        }
         required.retry();
       }
     },

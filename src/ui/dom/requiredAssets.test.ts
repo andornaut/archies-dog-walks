@@ -37,6 +37,7 @@ it("keeps required decode failures explicit and retries failed images only", asy
   await settle();
   expect(assets.status()).toBe("failed");
   expect(assets.failed()).toEqual(["/bad.png"]);
+  expect(assets.failedSkin()).toBe(false);
   assets.retry();
   await settle();
   expect(assets.status()).toBe("ready");
@@ -91,6 +92,7 @@ it("reports manifest failures and ignores a late completion after disposal", asy
   assets.add([{ kind: "button-manifest", url: "/buttons.json" }]);
   await settle();
   expect(assets.failed()).toEqual(["/buttons.json"]);
+  expect(assets.failedSkin()).toBe(true);
   assets.retry();
   const calls = changed.mock.calls.length;
   assets.dispose();
@@ -139,4 +141,22 @@ it("resolves the required skin manifest against its build URL and waits for its 
     "https://example.test/game/assets/art/ui-icon-button.png",
   ]);
   expect(fetch).toHaveBeenCalledTimes(3);
+});
+
+it("notifies new loading registrations once before requests and tolerates reentrant deduplication and disposal", () => {
+  const decode = vi.fn(() => Promise.resolve());
+  const doc = { createElement: () => ({ decode, src: "" }) } as unknown as Document;
+  const states: string[] = [];
+  const descriptor = { kind: "image" as const, url: "/new-required.png" };
+  const assets: ReturnType<typeof requiredAssets> = requiredAssets(doc, () => {
+    states.push(assets.status());
+    expect(decode).not.toHaveBeenCalled();
+    assets.add([descriptor]);
+    assets.dispose();
+  });
+  assets.add([descriptor]);
+  expect(states).toEqual(["loading"]);
+  expect(decode).not.toHaveBeenCalled();
+  assets.add([{ kind: "image", url: "/after-disposal.png" }]);
+  expect(states).toHaveLength(1);
 });

@@ -9,6 +9,7 @@ export interface RequiredAsset {
 
 interface Entry {
   readonly asset: RequiredAsset;
+  skin: boolean;
   status: RequiredAssetStatus;
   image?: HTMLImageElement;
 }
@@ -17,14 +18,28 @@ interface Entry {
 export function requiredAssets(doc: Document, changed: () => void) {
   const entries = new Map<string, Entry>();
   let disposed = false;
-  const add = (assets: readonly RequiredAsset[]) => {
+  const register = (skin: boolean, assets: readonly RequiredAsset[]) => {
     if (disposed) {
       return;
     }
+    const fresh: Entry[] = [];
     for (const asset of assets) {
-      if (!entries.has(asset.url)) {
-        const entry: Entry = { asset, status: "loading" };
-        entries.set(asset.url, entry);
+      const entry = entries.get(asset.url);
+      const belongsToSkin = skin || asset.kind === "button-manifest";
+      if (entry === undefined) {
+        const added: Entry = { asset, skin: belongsToSkin, status: "loading" };
+        entries.set(asset.url, added);
+        fresh.push(added);
+      } else {
+        entry.skin ||= belongsToSkin;
+      }
+    }
+    if (fresh.length > 0) {
+      changed();
+      for (const entry of fresh) {
+        if (disposed) {
+          break;
+        }
         start(entry);
       }
     }
@@ -60,7 +75,7 @@ export function requiredAssets(doc: Document, changed: () => void) {
           { kind: "image" as const, url: new URL(sprite.png, base).href },
         ];
       });
-      add(assets);
+      register(true, assets);
     }
   };
   const start = (entry: Entry) => {
@@ -81,7 +96,7 @@ export function requiredAssets(doc: Document, changed: () => void) {
     );
   };
   return {
-    add,
+    add: (assets: readonly RequiredAsset[]) => register(false, assets),
     dispose() {
       disposed = true;
       entries.clear();
@@ -90,6 +105,7 @@ export function requiredAssets(doc: Document, changed: () => void) {
       [...entries.values()]
         .filter(({ status }) => status === "failed")
         .map(({ asset }) => asset.url),
+    failedSkin: () => [...entries.values()].some(({ skin, status }) => skin && status === "failed"),
     retry() {
       if (disposed) {
         return;
