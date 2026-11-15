@@ -4,7 +4,7 @@ import type { Point, Rect } from "@andornaut/game-kit/runtime/rect";
 import type { GameData } from "../data/types.ts";
 import { type CloseControl, closeControl } from "../ui/closeControl.ts";
 import { DISMISS_FOOTER_SPACE, dismissFooter } from "../ui/modal/dismissFooter.ts";
-import { MODAL, modalPanelWidth, modalRect } from "../ui/modal/layout.ts";
+import { MODAL, modalFamilyWidth, modalRect } from "../ui/modal/layout.ts";
 import type { PanelButton } from "../ui/modal/types.ts";
 import { PALETTE } from "../ui/palette.ts";
 import { TEXT_SCALE } from "../ui/textFit.ts";
@@ -12,7 +12,7 @@ import { BADGE_STRIP, BADGE_TEXT_COLOURS, type BadgeView } from "./badgesView.ts
 import type { DetailArt, DetailMeasure, DetailText } from "./detailCardView.ts";
 import { MENU_TEXT_FIELDS } from "./menuText.ts";
 import type { PageFill } from "./shopPageView.ts";
-import { DETAIL_TEXT_WIDTH, detailPanel, detailTextTops, STATS_LAYOUT } from "./statsLayout.ts";
+import { detailPanel, detailTextTops, STATS_LAYOUT } from "./statsLayout.ts";
 
 // Every screen uses the same native badge card view and logical game-pixel geometry.
 
@@ -61,22 +61,16 @@ export function badgeCardView(
   card: { readonly badge: BadgeView; readonly burst: boolean; readonly reduced: boolean },
 ): BadgeCardView {
   const { badge, burst, reduced } = card;
+  const width = modalFamilyWidth(dim.width - 2 * MODAL.margin, "large");
   const words = data.menuText.stats;
-  const wrap = (text: string) => measure.wrapBody(DETAIL_TEXT_WIDTH, text);
+  const wrap = (text: string) =>
+    measure.wrapBody(width - STATS_LAYOUT.detailText.x - STATS_LAYOUT.detailText.textRight, text);
   const goal = wrap(badge.goal);
   const status = `${badge.earned ? words.badgeEarned : words.badgeLocked} (${words.badgeDifficulty[badge.tier]})`;
   const line = wrap(
     fillLine(MENU_TEXT_FIELDS.stats, words, "badgeLine", { line: badge.badgeLine }),
   );
   const fonts = { body: measure.body, title: measure.title };
-  const width = modalPanelWidth(
-    dim.width - 2 * MODAL.margin,
-    Math.max(
-      BADGE_SIZE * BADGE_SCALE + 2 * MODAL.pad,
-      measure.inkWidth("title", badge.name) + 2 * MODAL.pad,
-      ...[status, ...goal, ...line].map((shown) => measure.inkWidth("body", shown) + 2 * MODAL.pad),
-    ),
-  );
   const panel = modalRect(dim, undefined, {
     height: detailPanel(fonts, goal.length, line.length).height + DISMISS_FOOTER_SPACE,
     width,

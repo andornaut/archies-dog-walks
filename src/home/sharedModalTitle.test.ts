@@ -106,7 +106,7 @@ it.each([gameData.homeText.update.title, gameData.homeText.update.failure])(
     });
     const view = modalCardView(measure, layout.panel, title, []);
     expect(view.title.length).toBeGreaterThan(1);
-    balanced(layout.panel.y, view.title, layout.button.y);
+    balanced(layout.panel.y, view.title, Math.min(layout.cancel.y, layout.button.y));
     expect(MODAL.header).toBe(63);
   },
 );

@@ -18,13 +18,7 @@ import type { GridSpec } from "../ui/grid.ts";
 import { helpCapDy } from "../ui/labelHelpGap.ts";
 import { MARK_OFFSET } from "../ui/mark.ts";
 import { DISMISS_FOOTER_SPACE } from "../ui/modal/dismissFooter.ts";
-import {
-  MODAL,
-  modalActionWidth,
-  modalPanelWidth,
-  modalRect,
-  modalTitleWidth,
-} from "../ui/modal/layout.ts";
+import { MODAL, modalActionWidth, modalFamilyWidth, modalRect } from "../ui/modal/layout.ts";
 import { cardTitleRow } from "../ui/modal/titleRow.ts";
 import { hasPill, PILL_IMAGE_GAP, pillDropUnderInk, pillRiseOverCaps } from "../ui/namePills.ts";
 import { BUTTON_LIP_PX } from "../ui/selection.ts";
@@ -640,22 +634,25 @@ function cardRows(
 export function detailCardRect(screen: { height: number; width: number }, height: number): Rect {
   return modalRect({ ...screen, x: 0, y: 0 }, undefined, {
     height,
-    width: modalPanelWidth(screen.width - 2 * MODAL.margin, HOME_LAYOUT.card.width),
+    width: modalFamilyWidth(screen.width - 2 * MODAL.margin, "large"),
   });
 }
 
-const BESIDE_ROOM = HOME_LAYOUT.card.width - HOME_LAYOUT.card.besideX - HOME_LAYOUT.card.pad;
+export function cardTextRooms(width: number) {
+  const beside = width - HOME_LAYOUT.card.besideX - HOME_LAYOUT.card.pad;
+  return {
+    beside,
+    full: width - 2 * HOME_LAYOUT.card.pad,
+    ownerName:
+      beside -
+      ownerPhotoRect(HOME_LAYOUT.card.owner.face, { x: 0, y: 0 }).width -
+      HOME_LAYOUT.card.owner.gap,
+  };
+}
 
-// How wide the detail card's rows beside the well and under it may be, and the owner's name
-// right of their photo.
-export const CARD_TEXT_ROOM = {
-  beside: BESIDE_ROOM,
-  full: HOME_LAYOUT.card.width - 2 * HOME_LAYOUT.card.pad,
-  ownerName:
-    BESIDE_ROOM -
-    ownerPhotoRect(HOME_LAYOUT.card.owner.face, { x: 0, y: 0 }).width -
-    HOME_LAYOUT.card.owner.gap,
-} as const;
+export const CARD_TEXT_ROOM = cardTextRooms(
+  modalFamilyWidth(SCREEN_CONFIG.width - 2 * MODAL.margin, "large"),
+);
 
 // The well's top on a detail card whose rows beside it are beside, at tops: well.y, or on a
 // dog's card the row that puts the well's bottom row level with the owner's photo's.
@@ -749,12 +746,9 @@ export function updateModalLayout(
   const actionWidth = modalActionWidth(ink.action);
   const cancelWidth = modalActionWidth(ink.cancel);
   const actionsWidth = actionWidth + cancelWidth + BUTTON_SIZE.gap;
-  const stacked = actionsWidth > area.width - 2 * (MODAL.margin + MODAL.pad);
+  const width = modalFamilyWidth(area.width - 2 * MODAL.margin, "medium");
+  const stacked = actionsWidth > width - 2 * MODAL.pad;
   const groupWidth = stacked ? Math.max(actionWidth, cancelWidth) : actionsWidth;
-  const width = modalPanelWidth(
-    area.width - 2 * MODAL.margin,
-    Math.max(groupWidth + 2 * MODAL.pad, modalTitleWidth(ink.title)),
-  );
   const height = BUTTON_SIZE.compact.height;
   const header = MODAL.header + (ink.titleExtraHeight ?? 0);
   const panel = modalRect(

@@ -3,7 +3,7 @@ import { type FontMetrics, inkRowsOfLines } from "@andornaut/game-kit/runtime/te
 
 import { PAUSE_PANEL } from "../data/layout.ts";
 import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";
-import { MODAL, modalPanelWidth, modalRect, modalTitleWidth } from "../ui/modal/layout.ts";
+import { MODAL, modalFamilyWidth, modalRect } from "../ui/modal/layout.ts";
 
 // The Home question's answers, top to bottom: the safe one first, as the primary and key 1.
 export const HOME_QUESTION_ANSWERS = ["keepWalking", "headHome"] as const;
@@ -74,6 +74,8 @@ function panelLayout(
   noteFirst: boolean,
 ): PauseMenuLayout {
   const { buttonCount } = parts;
+  const width = modalFamilyWidth(area.width - 2 * MODAL.margin, "medium");
+
   const noted = parts.noteLines > 0;
   const noteHeight = noted ? notePlateHeight(body, parts.noteLines) : 0;
   const buttonsHeight = buttonCount * (BUTTON.height + BUTTON.gap) - BUTTON.gap;
@@ -88,18 +90,9 @@ function panelLayout(
     (parts.footerSpace ?? 0);
   const widths = Array.from(
     { length: buttonCount },
-    (_, i) => parts.buttonWidths?.[i] ?? BUTTON.width,
+    (_, i) => parts.buttonWidths?.[i] ?? Math.min(BUTTON.width, width - 2 * MODAL.pad),
   );
   const actionWidth = Math.max(0, ...widths);
-  const width = modalPanelWidth(
-    area.width - 2 * MODAL.margin,
-    parts.panelWidth ??
-      Math.max(
-        actionWidth + 2 * MODAL.pad,
-        modalTitleWidth(parts.titleWidth ?? 0),
-        (parts.noteWidth ?? 0) + 2 * NOTE_PLATE.padX + 2 * MODAL.pad,
-      ),
-  );
   const panel = modalRect(area, parts.avoid, { height, width });
   const buttons = widths.map((_, i) => ({
     height: BUTTON.height,

@@ -33,6 +33,7 @@ const BLOCK_GAP = STATS.blockGap;
 // Label and value rows run across the shop's rows: from the headings' left edge to the rows'
 // right edge, beside the scrollbar at right (statsListFrame).
 const ROWS = {
+  gap: 4,
   left: SHOP_LAYOUT.headingX,
   pitch: PITCH,
   right: SHOP_LAYOUT.row.x + SHOP_LAYOUT.row.scrollWidth,
@@ -120,7 +121,10 @@ export const STATS_LAYOUT = {
     x: ROWS.left,
     y: TOP + STATS.wall.rowsDy,
   },
-  wallText: STATS.wallText,
+  wallText: {
+    ...STATS.wallText,
+    width: ROWS.right - ROWS.left - STATS.wallText.x,
+  },
 } as const;
 
 // How wide the open badge's goal and line may be.

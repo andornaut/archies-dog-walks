@@ -173,7 +173,11 @@ describe("the Walks and Dogs tabs' rows", () => {
   it.each([...walksRows, ...dogStatRows].map((row) => [row.label, row.value] as const))(
     "keeps %s a gap clear of its value, %s",
     (label, value) => {
-      expect(bodyRight(rows.left, label) + GAP).toBeLessThanOrEqual(valueLeft(value));
+      const room = valueLeft(value) - rows.left - rows.gap;
+      const lines = wrapWords((line) => inkWidth("font-body", STYLE, line), room, label);
+      for (const line of lines) {
+        expect(bodyRight(rows.left, line) + GAP).toBeLessThanOrEqual(valueLeft(value));
+      }
     },
   );
 });

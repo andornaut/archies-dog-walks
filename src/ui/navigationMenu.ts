@@ -1,5 +1,5 @@
 import type { GameData } from "../data/types.ts";
-import { MODAL, modalActionWidth, modalPanelWidth, modalTitleWidth } from "./modal/layout.ts";
+import { MODAL, modalActionWidth, modalFamilyWidth } from "./modal/layout.ts";
 import type { PanelMeasure } from "./modal/types.ts";
 
 // Digit bindings stay fixed while the primary action occupies the bottom visual position.
@@ -57,25 +57,25 @@ export function menuItemLabel(
   }
 }
 
-// Navigation menus share the width required by either menu's full-size titles and actions.
-// Explanatory text wraps inside that width instead of changing the navigation chrome.
+// Navigation menus use Medium; full-size actions must fit and explanatory text wraps.
 export function navigationMenuWidth(
   data: Pick<GameData, "homeText" | "menuText">,
   measure: Pick<PanelMeasure, "inkWidth">,
   available: number,
 ): number {
-  const titles = [data.menuText.menu.title, data.menuText.pause.title];
+  const width = modalFamilyWidth(available, "medium");
   const labels = [
     ...menuItems("home", true).map((item) => menuItemLabel(data, item)),
     ...PAUSE_MENU_ITEMS.map((item) => pauseMenuItemLabel(data, item)),
   ];
-  return modalPanelWidth(
-    available,
-    Math.max(
-      ...titles.map((title) => modalTitleWidth(measure.inkWidth("title", title))),
-      ...labels.map((label) => modalActionWidth(measure.inkWidth("title", label)) + 2 * MODAL.pad),
-    ),
-  );
+  if (
+    labels.some(
+      (label) => modalActionWidth(measure.inkWidth("title", label)) > width - 2 * MODAL.pad,
+    )
+  ) {
+    throw new RangeError("Navigation action exceeds its selected fixed-font width");
+  }
+  return width;
 }
 
 export function pauseMenuItemLabel(data: Pick<GameData, "menuText">, item: PauseMenuItem): string {

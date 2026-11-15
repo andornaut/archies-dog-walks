@@ -125,7 +125,11 @@ describe("slotRows", () => {
 
   it("puts the dog heading under the last slot row", () => {
     const { dogHeadingY, slotRows: spec } = SHOP_LAYOUT.dogs;
-    const last = rowRects(SHOP_LAYOUT.row.width, spec, slotRows(data, owned).length).at(-1);
+    const last = rowRects(
+      SHOP_LAYOUT.row.width,
+      spec,
+      slotRows(data, owned).map(() => spec.height),
+    ).at(-1);
     expect(last && last.y + last.height).toBeLessThan(dogHeadingY);
   });
 });
@@ -349,8 +353,8 @@ describe("the shop's tabs", () => {
   // The shop's tabs and the Logbook's split the same span, their faces the small button gap
   // apart and their hit areas meeting, each a full tap target.
   it.each([
-    ["Pet shop", SHOP_TABS.length, [152, 152]],
-    ["Logbook", STATS_TABS.length, [93, 94, 93]],
+    ["Pet shop", SHOP_TABS.length, [140, 140]],
+    ["Logbook", STATS_TABS.length, [85, 86, 85]],
   ])(
     "%s: split the tab span evenly and clear the heading and close control",
     (title, count, widths) => {
@@ -431,7 +435,11 @@ describe("the shop's list", () => {
     const tabsRight = Math.max(...shopTabRects(SHOP_TABS.length).map(({ width, x }) => x + width));
     const track = shopScrollbar(scrolls ? 1 : 0, 0)?.track;
     const { panel } = SHOP_LAYOUT;
-    for (const row of rowRects(frame.rowWidth, spec, count)) {
+    for (const row of rowRects(
+      frame.rowWidth,
+      spec,
+      Array.from({ length: count }, () => spec.height),
+    )) {
       const right = row.x + row.width;
       expect(frame.headingRight).toBe(right);
       if (track === undefined) {

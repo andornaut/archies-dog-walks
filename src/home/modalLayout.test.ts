@@ -1,4 +1,3 @@
-import { MODAL_CONTENT } from "@andornaut/game-kit/runtime/modalLayout";
 import { insetRect, rectsOverlap } from "@andornaut/game-kit/runtime/rect";
 import { describe, expect, it } from "vitest";
 
@@ -6,9 +5,10 @@ import { gameData } from "../data/index.ts";
 import { SCREEN_CONFIG, SCREEN_LAYOUT } from "../data/screen.ts";
 import { fontFileMetrics, gameFont, inkWidth } from "../testing/fontInk.ts";
 import { inside } from "../testing/rects.ts";
-import { barTitleLeft } from "../ui/barTitle.ts";
+import { barTitleRoom } from "../ui/barTitle.ts";
 import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";
 import { closeControl } from "../ui/closeControl.ts";
+import { DISMISS_FOOTER_SPACE } from "../ui/modal/dismissFooter.ts";
 import {
   MODAL,
   modalPanelWidth,
@@ -18,9 +18,10 @@ import {
 } from "../ui/modal/layout.ts";
 import { modalTitleInk, modalTitleWidthAtScale } from "../ui/modal/titleRole.ts";
 import { cardTitleRow } from "../ui/modal/titleRow.ts";
+import { modalCardView } from "../ui/modal/view.ts";
 import { TEXT_STYLE } from "../ui/textFit.ts";
 import { overlayRegion } from "./homeBar.ts";
-import { HOME_LAYOUT, updateModalLayout } from "./homeLayout.ts";
+import { updateModalLayout } from "./homeLayout.ts";
 
 it("uses the full logical viewport for narrow content and still respects a smaller safe area", () => {
   expect(modalPanelWidth(328, 80)).toBe(180);
@@ -70,47 +71,62 @@ it("clamps a tall full-size panel inside the protected walk region", () => {
 });
 
 describe("update notice", () => {
-  it("sizes its title and actions without an empty body or obscuring the gate character", () => {
+  it("fits the wrapped heading, actions and reserved Close row within Medium", () => {
     const { button, title } = gameData.homeText.update;
-    const ink = inkWidth("font-title", TEXT_STYLE, title.toUpperCase());
-    const placed = updateModalLayout(area, {
-      action: inkWidth("font-title", TEXT_STYLE, button),
-      cancel: inkWidth("font-title", TEXT_STYLE, gameData.homeText.shop.confirmCancel),
-      title: ink,
-    });
-    expect(inside(placed.panel, insetRect(MODAL.margin, area))).toBe(true);
-    expect(placed.panel.width).toBeGreaterThanOrEqual(
-      MODAL_CONTENT.minWidthFraction * SCREEN_CONFIG.width,
-    );
-    const close = closeControl(placed.panel);
-    const row = cardTitleRow(placed.panel);
-    const titleInk = {
-      height: fontFileMetrics("font-title").capHeight * 2,
-      width: ink,
-      x: barTitleLeft(row, close, ink),
-      y: row.y,
+    const measure = {
+      body: fontFileMetrics("font-body"),
+      inkWidth: (font: "body" | "title", text: string) =>
+        inkWidth(`font-${font}`, TEXT_STYLE, font === "title" ? text.toUpperCase() : text),
+      title: fontFileMetrics("font-title"),
+      titleInk: (text: string) => modalTitleInk(gameFont("font-title"), text),
+      wrapNote: () => [],
     };
-    expect(rectsOverlap(titleInk, close.hit)).toBe(false);
+    const sizes = {
+      action: measure.inkWidth("title", button),
+      cancel: measure.inkWidth("title", gameData.homeText.shop.confirmCancel),
+      title: measure.inkWidth("title", title),
+    };
+    const preview = updateModalLayout(area, sizes);
+    const heading = modalTitleLayout(
+      {
+        font: measure.title,
+        inkOf: measure.titleInk,
+        widthOf: (text) => measure.inkWidth("title", text),
+      },
+      barTitleRoom(cardTitleRow(preview.panel), closeControl(preview.panel)),
+      title,
+    );
+    const placed = updateModalLayout(area, { ...sizes, titleExtraHeight: heading.extraHeight });
+    const view = modalCardView(measure, placed.panel, title, []);
+    expect(placed.panel.width).toBe(264);
+    expect(inside(placed.panel, insetRect(MODAL.margin, area))).toBe(true);
+    for (const line of view.title) {
+      const ink = measure.titleInk(line.text);
+      const width = inkWidth("font-title", { scale: line.scale }, line.text.toUpperCase());
+      const rect = {
+        height: ink.bottom - ink.top,
+        width,
+        x: line.centreX - width / 2,
+        y: line.capTop + ink.top,
+      };
+      expect(inside(rect, placed.panel)).toBe(true);
+      expect(rectsOverlap(rect, closeControl(placed.panel).hit)).toBe(false);
+    }
     expect(
-      Math.abs(2 * titleInk.x + titleInk.width - (2 * placed.panel.x + placed.panel.width)),
-    ).toBeLessThanOrEqual(1);
-    expect(inside(titleInk, placed.panel)).toBe(true);
-    expect(rectsOverlap(placed.panel, { ...HOME_LAYOUT.gate, width: area.width, x: area.x })).toBe(
-      false,
-    );
-    expect(inside(placed.button, placed.panel)).toBe(true);
-    expect(rectsOverlap(placed.button, closeControl(placed.panel).hit)).toBe(false);
+      Math.abs(placed.panel.y + placed.panel.height / 2 - SCREEN_CONFIG.height / 2),
+    ).toBeLessThanOrEqual(0.5);
+    for (const rect of [placed.cancel, placed.button]) {
+      expect(inside(rect, placed.panel)).toBe(true);
+      expect(rectsOverlap(rect, closeControl(placed.panel).hit)).toBe(false);
+    }
     expect(placed.panel.y + placed.panel.height - placed.button.y - placed.button.height).toBe(
-      MODAL.pad,
-    );
-    expect(placed.button.y).toBeGreaterThanOrEqual(
-      placed.panel.y + fontFileMetrics("font-title").capHeight * 2,
+      MODAL.pad + DISMISS_FOOTER_SPACE,
     );
   });
 });
 
 it("places update cancellation beside its primary action and stacks the whole group when necessary", () => {
-  const paired = updateModalLayout(area, { action: 100, cancel: 60, title: 160 });
+  const paired = updateModalLayout(area, { action: 80, cancel: 40, title: 160 });
   expect(paired.cancel.x + paired.cancel.width + BUTTON_SIZE.gap).toBe(paired.button.x);
   expect(paired.cancel.y).toBe(paired.button.y);
   const stacked = updateModalLayout(area, { action: 180, cancel: 120, title: 160 });

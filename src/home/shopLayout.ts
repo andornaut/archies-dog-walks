@@ -24,7 +24,12 @@ import { HOME_LAYOUT } from "./homeLayout.ts";
 // The Logbook wears the same page (src/home/statsLayout.ts).
 const SHOP = SHOP_PAGE;
 const PANEL_WIDTH = modalFamilyWidth(SCREEN_CONFIG.width - 2 * MODAL.margin, "large");
-const PANEL = { ...SHOP.panel, width: PANEL_WIDTH, x: (SCREEN_CONFIG.width - PANEL_WIDTH) / 2 };
+const PANEL = {
+  ...SHOP.panel,
+  height: Math.min(SHOP.panel.height, SCREEN_CONFIG.height - MODAL.margin - SHOP.panel.y),
+  width: PANEL_WIDTH,
+  x: (SCREEN_CONFIG.width - PANEL_WIDTH) / 2,
+};
 const PAGE_TITLE = cardTitleRow(PANEL);
 // The close control's press area starts under the top bar's, which reach over the card's top.
 const CLOSE = closeControl(PANEL);
@@ -254,11 +259,8 @@ export function shopRowsBottom(spec: { y: number }, rects: readonly Rect[]): num
   return last === undefined ? spec.y : last.y + last.height;
 }
 
-export function shopNextHeading(
-  spec: { height: number; pitch: number; y: number },
-  rects: readonly Rect[],
-): number {
-  return shopRowsBottom(spec, rects) + spec.pitch - spec.height + ROWS_TO_HEADING;
+export function shopNextHeading(spec: { y: number }, rects: readonly Rect[]): number {
+  return shopRowsBottom(spec, rects) + ROWS_TO_HEADING;
 }
 
 export function shopRowHeight(

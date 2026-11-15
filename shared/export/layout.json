@@ -2006,28 +2006,28 @@
         "button": {
           "height": 48,
           "width": 144,
-          "x": 165,
-          "y": 252
+          "x": 108,
+          "y": 280
         },
         "cancel": {
           "height": 48,
-          "width": 98,
-          "x": 51,
-          "y": 252
+          "width": 144,
+          "x": 108,
+          "y": 224
         },
         "hit": {
           "height": 48,
           "width": 144,
-          "x": 165,
-          "y": 252
+          "x": 108,
+          "y": 280
         },
         "panel": {
-          "height": 183,
-          "width": 328,
-          "x": 16,
-          "y": 189
+          "height": 239,
+          "width": 264,
+          "x": 48,
+          "y": 161
         },
-        "capY": 269
+        "capY": 297
       },
       "walkerAtGate": {
         "footY": 152,
@@ -2254,25 +2254,25 @@
         {
           "height": 48,
           "width": 160,
-          "x": 100.5,
+          "x": 100,
           "y": 221
         },
         {
           "height": 48,
           "width": 160,
-          "x": 100.5,
+          "x": 100,
           "y": 277
         },
         {
           "height": 48,
           "width": 160,
-          "x": 100.5,
+          "x": 100,
           "y": 333
         },
         {
           "height": 48,
           "width": 160,
-          "x": 100.5,
+          "x": 100,
           "y": 389
         }
       ],
@@ -2280,38 +2280,38 @@
         {
           "height": 48,
           "width": 160,
-          "x": 100.5,
+          "x": 100,
           "y": 221
         },
         {
           "height": 48,
           "width": 160,
-          "x": 100.5,
+          "x": 100,
           "y": 277
         },
         {
           "height": 48,
           "width": 160,
-          "x": 100.5,
+          "x": 100,
           "y": 333
         },
         {
           "height": 48,
           "width": 160,
-          "x": 100.5,
+          "x": 100,
           "y": 389
         }
       ],
       "notePlate": {
         "height": 42,
-        "width": 179,
-        "x": 91,
+        "width": 232,
+        "x": 64,
         "y": 171
       },
       "panel": {
         "height": 345,
-        "width": 211,
-        "x": 75,
+        "width": 264,
+        "x": 48,
         "y": 108
       },
       "titleY": 132
@@ -2441,11 +2441,11 @@
         "hit": {
           "height": 48,
           "width": 48,
-          "x": 308,
+          "x": 296,
           "y": 48
         },
         "titleExclusion": "hit",
-        "x": 330,
+        "x": 318,
         "y": 50
       },
       "dogs": {
@@ -2470,21 +2470,21 @@
           "y": 182
         }
       },
-      "headingX": 16,
+      "headingX": 28,
       "list": {
         "firstHeadingY": 157,
         "padBottom": 8,
         "pageOverlap": 48,
         "rect": {
-          "height": 336,
-          "width": 322,
-          "x": 12,
+          "height": 324,
+          "width": 298,
+          "x": 24,
           "y": 148
         },
         "unscrolledRect": {
-          "height": 336,
-          "width": 336,
-          "x": 12,
+          "height": 324,
+          "width": 312,
+          "x": 24,
           "y": 148
         }
       },
@@ -2492,16 +2492,16 @@
         "frame": 3,
         "plate": {
           "height": 28,
-          "width": 328,
-          "x": 16,
+          "width": 304,
+          "x": 28,
           "y": 148
         },
         "textDx": 10
       },
       "panel": {
-        "height": 512,
-        "width": 352,
-        "x": 4,
+        "height": 500,
+        "width": 328,
+        "x": 16,
         "y": 44
       },
       "row": {
@@ -2516,47 +2516,47 @@
         },
         "ownedDx": 20,
         "plateInset": 6,
-        "scrollWidth": 314,
+        "scrollWidth": 290,
         "textDx": 46,
         "textGap": 6,
-        "width": 328,
-        "x": 16
+        "width": 304,
+        "x": 28
       },
       "scrollbar": {
         "thumbInset": 1,
         "thumbMin": 16,
         "thumbWidth": 6,
         "trackWidth": 8,
-        "x": 336
+        "x": 324
       },
       "tab": {
         "drawHeight": 28,
         "drawY": 109,
         "gap": 24,
         "height": 48,
-        "span": 328,
-        "x": 16,
+        "span": 304,
+        "x": 28,
         "y": 99
       },
       "title": {
         "capTop": 68,
         "row": {
           "height": 15,
-          "width": 320,
-          "x": 20,
+          "width": 296,
+          "x": 32,
           "y": 68
         }
       },
       "tabRects": [
         {
           "height": 48,
-          "width": 164,
-          "x": 16,
+          "width": 152,
+          "x": 28,
           "y": 99
         },
         {
           "height": 48,
-          "width": 164,
+          "width": 152,
           "x": 180,
           "y": 99
         }
@@ -2567,11 +2567,11 @@
         "hit": {
           "height": 48,
           "width": 48,
-          "x": 308,
+          "x": 296,
           "y": 48
         },
         "titleExclusion": "hit",
-        "x": 330,
+        "x": 318,
         "y": 50
       },
       "detail": {
@@ -2601,15 +2601,16 @@
         "top": 157
       },
       "panel": {
-        "height": 512,
-        "width": 352,
-        "x": 4,
+        "height": 500,
+        "width": 328,
+        "x": 16,
         "y": 44
       },
       "rows": {
-        "left": 16,
+        "gap": 4,
+        "left": 28,
         "pitch": 17,
-        "right": 330
+        "right": 318
       },
       "scroll": {
         "keyStep": 34,
@@ -2621,12 +2622,12 @@
         "thumbMin": 16,
         "thumbWidth": 6,
         "trackWidth": 8,
-        "x": 336
+        "x": 324
       },
       "view": {
-        "height": 336,
-        "width": 322,
-        "x": 12,
+        "height": 324,
+        "width": 298,
+        "x": 24,
         "y": 148
       },
       "walks": {
@@ -2638,7 +2639,7 @@
         "badgeTop": 2,
         "earned": {
           "bandLeft": 4,
-          "bandWidth": 322,
+          "bandWidth": 298,
           "bandY": 0,
           "checkDx": 20,
           "checkDy": -1,
@@ -2649,35 +2650,35 @@
         "foot": 16,
         "gap": 8,
         "headingY": 157,
-        "width": 314,
-        "x": 16,
+        "width": 290,
+        "x": 28,
         "y": 177
       },
       "wallText": {
         "lineHeight": 16,
         "lines": 3,
         "pad": 4,
-        "width": 276,
+        "width": 252,
         "x": 38,
         "y": 4
       },
       "tabRects": [
         {
           "height": 48,
-          "width": 105,
-          "x": 16,
+          "width": 97,
+          "x": 28,
           "y": 99
         },
         {
           "height": 48,
-          "width": 118,
-          "x": 121,
+          "width": 110,
+          "x": 125,
           "y": 99
         },
         {
           "height": 48,
-          "width": 105,
-          "x": 239,
+          "width": 97,
+          "x": 235,
           "y": 99
         }
       ]

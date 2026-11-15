@@ -7,20 +7,14 @@ import { withNamePills } from "../hud/effectNames.ts";
 import { barTitleRoom } from "../ui/barTitle.ts";
 import { closeControl } from "../ui/closeControl.ts";
 import { DISMISS_FOOTER_SPACE, dismissFooter } from "../ui/modal/dismissFooter.ts";
-import {
-  MODAL,
-  modalPanelWidth,
-  modalRect,
-  modalTitleLayout,
-  modalTitleWidth,
-} from "../ui/modal/layout.ts";
+import { MODAL, modalFamilyWidth, modalRect, modalTitleLayout } from "../ui/modal/layout.ts";
 import { cardTitleRow } from "../ui/modal/titleRow.ts";
 import { type PanelMeasure, type QuestionPanelView } from "../ui/modal/types.ts";
 import { modalCardView } from "../ui/modal/view.ts";
 import { PALETTE } from "../ui/palette.ts";
 import { type DetailCard, type DetailPart, detailParts, type DetailPicture } from "./detail.ts";
 import {
-  CARD_TEXT_ROOM,
+  cardTextRooms,
   detailCardLayout,
   detailOwner,
   type DetailRow,
@@ -142,9 +136,10 @@ function addOwner(
   measure: DetailMeasure,
   data: Pick<GameData, "dogs">,
   at: { x: number; y: number },
+  ownerRoom: number,
   owner: Owner,
 ): void {
-  const role = measure.wrapBody(CARD_TEXT_ROOM.ownerName, owner.role);
+  const role = measure.wrapBody(ownerRoom, owner.role);
   const spot = detailOwner(measure.body, at, role.length);
   content.framed.push({ border: PALETTE.ink, fill: PALETTE.white, rect: spot.photo });
   const key = ownerFaceKey(data, owner.dog);
@@ -180,7 +175,7 @@ function addArt(content: Content, art: DetailArt): void {
 
 // A held dog's, walker's or gear item's detail card, as tall as what it shows, its rows beside
 // the well and under it as detailParts places them, centred in dim (the part of the screen
-// dimmed under it) and as wide as its content or title needs.
+// dimmed under it), using the selected family with full-size text reflow.
 export function detailCardView(
   data: Pick<GameData, "debuffs" | "dogs" | "shopGear" | "upgrades" | "walkerPerks">,
   measure: DetailMeasure,
@@ -193,16 +188,57 @@ export function detailCardView(
   // chance: …", in its pill.
   const valueOf = (part: Extract<DetailPart, { text: string }>) =>
     part.tone === "line" ? withNamePills(data, part.text) : part.text;
-  const counts = (rows: readonly DetailPart[], room: number): DetailRow[] =>
-    rows.map((row) =>
-      "owner" in row
-        ? { roleLines: measure.wrapBody(CARD_TEXT_ROOM.ownerName, row.owner.role).length }
-        : measure.wrapBody(room, valueOf(row)).length,
-    );
-  const layout = detailCardLayout(measure.body, {
-    below: counts(parts.below, CARD_TEXT_ROOM.full),
-    beside: counts(parts.beside, CARD_TEXT_ROOM.beside),
-  });
+  const measureFamily = (family: "large" | "medium") => {
+    const width = modalFamilyWidth(dim.width - 2 * MODAL.margin, family);
+    const rooms = cardTextRooms(width);
+    let bodyFits = true;
+    const linesIn = (room: number, text: string) => {
+      const lines = measure.wrapBody(room, text);
+      bodyFits &&= measure.bodyWidth(lines) <= room;
+      return lines.length;
+    };
+    const counts = (rows: readonly DetailPart[], room: number): DetailRow[] =>
+      rows.map((row) =>
+        "owner" in row
+          ? { roleLines: linesIn(rooms.ownerName, row.owner.role) }
+          : linesIn(room, valueOf(row)),
+      );
+    const layout = detailCardLayout(measure.body, {
+      below: counts(parts.below, rooms.full),
+      beside: counts(parts.beside, rooms.beside),
+    });
+    const titlePanel = { height: layout.height, width, x: 0, y: 0 };
+    let heading;
+    try {
+      heading = modalTitleLayout(
+        {
+          font: measure.title,
+          inkOf: measure.titleInk,
+          widthOf: (line) => measure.inkWidth("title", line),
+        },
+        barTitleRoom(cardTitleRow(titlePanel), closeControl(titlePanel)),
+        card.title,
+      );
+    } catch (error) {
+      if (family === "medium" && error instanceof RangeError) {
+        return undefined;
+      }
+      throw error;
+    }
+    const height = layout.height + heading.extraHeight + DISMISS_FOOTER_SPACE;
+    return {
+      fits: bodyFits && height <= dim.height - 2 * MODAL.margin,
+      heading,
+      layout,
+      rooms,
+      width,
+    };
+  };
+  // Portrait/owner cards are rich details. Icon/item/effect details use Medium only when all
+  // full-size body ink and the complete footer fit the available protected area.
+  const medium = kind === "gear" ? measureFamily("medium") : undefined;
+  const selected = medium?.fits ? medium : measureFamily("large")!;
+  const { heading, layout, rooms, width } = selected;
   const { well } = CARD;
   const wellRect = { height: well.size, width: well.size, x: well.x, y: layout.wellY };
   const content: Content = { art: [], framed: [], right: -Infinity, texts: [] };
@@ -252,7 +288,7 @@ export function detailCardView(
     parts.forEach((row, i) => {
       const y = tops[i] ?? 0;
       if ("owner" in row) {
-        addOwner(content, measure, data, { x, y }, row.owner);
+        addOwner(content, measure, data, { x, y }, rooms.ownerName, row.owner);
         return;
       }
       addText(content, measure, {
@@ -262,28 +298,8 @@ export function detailCardView(
         x,
       });
     });
-  rows(parts.beside, CARD.besideX, CARD_TEXT_ROOM.beside, layout.beside);
-  rows(parts.below, CARD.pad, CARD_TEXT_ROOM.full, layout.below);
-  const width = modalPanelWidth(
-    dim.width - 2 * MODAL.margin,
-    Math.ceil(
-      Math.max(
-        wellRect.x + wellRect.width + MODAL.pad,
-        content.right + MODAL.pad,
-        modalTitleWidth(measure.inkWidth("title", card.title)),
-      ),
-    ),
-  );
-  const titlePanel = { height: layout.height, width, x: 0, y: 0 };
-  const heading = modalTitleLayout(
-    {
-      font: measure.title,
-      inkOf: measure.titleInk,
-      widthOf: (line) => measure.inkWidth("title", line),
-    },
-    barTitleRoom(cardTitleRow(titlePanel), closeControl(titlePanel)),
-    card.title,
-  );
+  rows(parts.beside, CARD.besideX, rooms.beside, layout.beside);
+  rows(parts.below, CARD.pad, rooms.full, layout.below);
   const extra = heading.extraHeight;
   const rect = modalRect(dim, undefined, {
     height: layout.height + extra + DISMISS_FOOTER_SPACE,

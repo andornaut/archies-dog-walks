@@ -6,20 +6,14 @@ import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";
 import { closeControl } from "../ui/closeControl.ts";
 import { helpCapDy } from "../ui/labelHelpGap.ts";
 import { DISMISS_FOOTER_SPACE } from "../ui/modal/dismissFooter.ts";
-import {
-  MODAL,
-  modalActionWidth,
-  modalPanelWidth,
-  modalRect,
-  modalTitleWidth,
-} from "../ui/modal/layout.ts";
+import { MODAL, modalActionWidth, modalFamilyWidth, modalRect } from "../ui/modal/layout.ts";
 import { cardTitleRow } from "../ui/modal/titleRow.ts";
 import { overlayRegion } from "./homeBar.ts";
 import { HOME_LAYOUT } from "./homeLayout.ts";
 
 const CARD = HOME_LAYOUT.card;
 const BUTTON_HEIGHT = BUTTON_SIZE.compact.height;
-const MAX_WIDTH = SCREEN_CONFIG.width - 2 * MODAL.margin;
+const MAX_WIDTH = modalFamilyWidth(SCREEN_CONFIG.width - 2 * MODAL.margin, "medium");
 const LIMITS = { height: 0, width: MAX_WIDTH, x: 0, y: 0 };
 
 // Fixed-font text budgets at the viewport width limit; runtime uses each purchase's actual ink.
@@ -47,19 +41,19 @@ export function purchaseConfirmLayout(
 ) {
   const actions = { buy: modalActionWidth(ink.buy), cancel: modalActionWidth(ink.cancel) };
   const actionsWidth = actions.buy + actions.cancel + BUTTON_SIZE.gap;
-  const width = modalPanelWidth(
-    SCREEN_CONFIG.width - 2 * MODAL.margin,
-    Math.max(
-      actionsWidth + 2 * MODAL.pad,
-      modalTitleWidth(ink.title),
-      Math.max(ink.price, ink.left) + 2 * MODAL.pad,
-    ),
-  );
+  const width = modalFamilyWidth(SCREEN_CONFIG.width - 2 * MODAL.margin, "medium");
+  const stacked = actionsWidth > width - 2 * MODAL.pad;
+  const actionGroupWidth = stacked ? Math.max(actions.buy, actions.cancel) : actionsWidth;
   const header = MODAL.header + (ink.titleExtraHeight ?? 0);
   const priceTop = header + CARD.well.size + MODAL.gap;
   const leftTop = confirmLeftCapTop(fonts.title, priceTop);
   const buttonsTop = leftTop + inkRowsFromCapTop(fonts.body) * 2 + MODAL.gap;
-  const height = buttonsTop + BUTTON_HEIGHT + MODAL.pad + DISMISS_FOOTER_SPACE;
+  const height =
+    buttonsTop +
+    BUTTON_HEIGHT +
+    (stacked ? BUTTON_HEIGHT + BUTTON_SIZE.stackGap : 0) +
+    MODAL.pad +
+    DISMISS_FOOTER_SPACE;
   const placed = modalRect(overlayRegion("home"), undefined, { height, width });
   const middle = placed.x + width / 2;
   const row = cardTitleRow(placed);
@@ -71,9 +65,15 @@ export function purchaseConfirmLayout(
   };
   const action = (choice: "buy" | "cancel") => ({
     height: BUTTON_HEIGHT,
-    width: actions[choice],
-    x: middle - actionsWidth / 2 + (choice === "buy" ? actions.cancel + BUTTON_SIZE.gap : 0),
-    y: placed.y + buttonsTop,
+    width: stacked ? actionGroupWidth : actions[choice],
+    x:
+      middle -
+      actionGroupWidth / 2 +
+      (!stacked && choice === "buy" ? actions.cancel + BUTTON_SIZE.gap : 0),
+    y:
+      placed.y +
+      buttonsTop +
+      (stacked && choice === "buy" ? BUTTON_HEIGHT + BUTTON_SIZE.stackGap : 0),
   });
   return {
     buttons: { buy: action("buy"), cancel: action("cancel") },

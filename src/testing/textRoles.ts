@@ -1,5 +1,5 @@
 import { UNKNOWN_COMMIT } from "@andornaut/game-kit/build/buildVersion";
-import { fillLine, fillNames } from "@andornaut/game-kit/runtime/lines";
+import { fillLine, fillNames, wrapWords } from "@andornaut/game-kit/runtime/lines";
 import { keysOf } from "@andornaut/game-kit/runtime/records";
 import type { Rect } from "@andornaut/game-kit/runtime/rect";
 import { overflowOf } from "@andornaut/game-kit/runtime/text/overflow";
@@ -345,20 +345,24 @@ function shopRoles(): TextRoleCase[] {
     ...dogRows(data, have),
   ];
   const rows = [starting, everything].flatMap(rowsOf);
-  const rowRole = (role: string, text: (row: ShopRow) => string) =>
+  const wrappedRole = (role: string, font: Font, room: number, texts: readonly string[]) =>
+    texts.flatMap((text) => {
+      const lines = wrapWords(
+        (line) => inkWidth(font, TEXT_STYLE, shownIn(font, line)),
+        room,
+        text,
+      );
+      return plainRole(role, font, { room, style: { ...TEXT_STYLE, lines: lines.length } }, [text]);
+    });
+  const rowRole = (role: string, text: (row: ShopRow) => string, wraps = false) =>
     rows
       .filter((row) => text(row) !== "")
-      .flatMap((row) =>
-        plainRole(
-          role,
-          "font-body",
-          {
-            room: shopRowTextRoom(SHOP_LAYOUT.row.scrollWidth, rightWidth(row)),
-            style: TEXT_STYLE,
-          },
-          [text(row)],
-        ),
-      );
+      .flatMap((row) => {
+        const room = shopRowTextRoom(SHOP_LAYOUT.row.scrollWidth, rightWidth(row));
+        return wraps
+          ? wrappedRole(role, "font-body", room, [text(row)])
+          : plainRole(role, "font-body", { room, style: TEXT_STYLE }, [text(row)]);
+      });
   const forSale = rowsOf({ ...newPlayerSave.owned, dogs: [], gear: [] }).flatMap(
     ({ name, price, purchase }) => (price === null ? [] : [{ name, price, purchase }]),
   );
@@ -373,19 +377,30 @@ function shopRoles(): TextRoleCase[] {
   const { left, price, title } = PURCHASE_CONFIRM_ROOMS;
   return [
     ...rowRole("shop row's name", (row) => row.name),
-    ...rowRole("shop row's line", (row) => row.line),
-    ...plainRole(
+    ...rowRole("shop row's line", (row) => row.line, true),
+    ...wrappedRole(
       "shop message",
       "font-body",
-      SHOP_MESSAGE_FIT,
+      SHOP_MESSAGE_FIT.room,
       messages.flatMap((text) => (text === null ? [] : [text])),
     ),
-    ...plainRole(
-      "purchase confirm's title",
-      "font-title",
-      { room: title.room, style: { lines: 2, scale: MODAL_TITLE_SCALE } },
-      confirm.map((lines) => lines.title),
-    ),
+    ...confirm.flatMap(({ title: value }) => {
+      const heading = modalTitleLayout(
+        {
+          font: TITLE,
+          inkOf: (line) => modalTitleInk(gameFont("font-title"), line),
+          widthOf: (line) => inkWidth("font-title", TEXT_STYLE, shownIn("font-title", line)),
+        },
+        title.room,
+        value,
+      );
+      return plainRole(
+        "purchase confirm's title",
+        "font-title",
+        { room: title.room, style: { lines: heading.lines.length, scale: MODAL_TITLE_SCALE } },
+        [value],
+      );
+    }),
     ...plainRole(
       "purchase confirm's price",
       "font-title",

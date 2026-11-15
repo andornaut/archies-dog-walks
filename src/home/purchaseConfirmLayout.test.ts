@@ -4,11 +4,12 @@ import { describe, expect, it } from "vitest";
 
 import { gameData } from "../data/index.ts";
 import { MIN_TAP_SIZE } from "../layout/screenLayout.ts";
-import { fontFileMetrics, inkWidth } from "../testing/fontInk.ts";
+import { fontFileMetrics, gameFont, inkWidth } from "../testing/fontInk.ts";
 import { inside } from "../testing/rects.ts";
 import { newPlayerSave } from "../testing/saves.ts";
 import { closeControl } from "../ui/closeControl.ts";
-import { MODAL } from "../ui/modal/layout.ts";
+import { MODAL, modalTitleLayout } from "../ui/modal/layout.ts";
+import { modalTitleInk } from "../ui/modal/titleRole.ts";
 import { TEXT_STYLE } from "../ui/textFit.ts";
 import { cents } from "../units.ts";
 import { confirmLines } from "./purchaseConfirm.ts";
@@ -32,12 +33,31 @@ const cases = rows.map((row) => {
     price: inkWidth("font-title", TEXT_STYLE, lines.price),
     title: inkWidth("font-title", TEXT_STYLE, lines.title),
   };
-  return { ink, name: row.name, placed: purchaseConfirmLayout(fonts, ink) };
+  const preview = purchaseConfirmLayout(fonts, ink);
+  const heading = modalTitleLayout(
+    {
+      font: fonts.title,
+      inkOf: (line) => modalTitleInk(gameFont("font-title"), line),
+      widthOf: (line) => inkWidth("font-title", TEXT_STYLE, line.toUpperCase()),
+    },
+    preview.title.room,
+    lines.title,
+  );
+  return {
+    heading,
+    ink,
+    name: row.name,
+    placed: purchaseConfirmLayout(fonts, { ...ink, titleExtraHeight: heading.extraHeight }),
+  };
 });
 
-describe.each(cases)("purchase modal: $name", ({ ink, placed }) => {
+describe.each(cases)("purchase modal: $name", ({ heading, ink, placed }) => {
   it("keeps measured text and its illustration inside the content-sized card", () => {
-    expect(ink.title).toBeLessThanOrEqual(placed.title.room);
+    for (const line of heading.lines) {
+      expect(inkWidth("font-title", { scale: 3 }, line.toUpperCase())).toBeLessThanOrEqual(
+        placed.title.room,
+      );
+    }
     expect(Math.max(ink.price, ink.left)).toBeLessThanOrEqual(placed.card.width - 2 * MODAL.pad);
     expect(inside(placed.well, placed.card)).toBe(true);
     expect(inside(placed.card, insetRect(MODAL.margin, placed.dim))).toBe(true);

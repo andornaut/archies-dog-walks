@@ -3,13 +3,14 @@ import type { Rect } from "@andornaut/game-kit/runtime/rect";
 import { type FontMetrics, inkRowsOfLines } from "@andornaut/game-kit/runtime/text/bitmapFont";
 
 import { SETTINGS_CARD } from "../data/layout.ts";
+import { SCREEN_CONFIG } from "../data/screen.ts";
 import { laneDirectionForKey } from "../input/keyBindings.ts";
 import type { Settings } from "../save/settings.ts";
 import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";
 import { type CloseControl, closeControl } from "../ui/closeControl.ts";
 import { helpCapDy, LABEL_HELP_GAP } from "../ui/labelHelpGap.ts";
 import { DISMISS_FOOTER_SPACE } from "../ui/modal/dismissFooter.ts";
-import { MODAL, modalPanelWidth, modalRect, modalTitleWidth } from "../ui/modal/layout.ts";
+import { MODAL, modalFamilyWidth, modalRect } from "../ui/modal/layout.ts";
 import { TEXT_SCALE, textOnLines } from "../ui/textFit.ts";
 import { HOME_LAYOUT } from "./homeLayout.ts";
 
@@ -139,7 +140,7 @@ function noteDy(title: FontMetrics): number {
   return SETTINGS_ROW.label.dy + helpCapDy(title, TEXT_SCALE);
 }
 
-const PANEL = { width: SETTINGS_ROW.width + 2 * MODAL.pad };
+const PANEL = { width: modalFamilyWidth(SCREEN_CONFIG.width - 2 * MODAL.margin, "large") };
 // The leading icon begins at the shared body boundary; row-internal offsets remain fixed.
 const ROWS_TOP = MODAL.header - SETTINGS_ROW.icon.dy;
 const SEPARATOR_INSET = SETTINGS_CARD.separatorInset;
@@ -265,7 +266,7 @@ export const INSTALL_STEPS = {
   lines: STEPS.lines,
   pad: HOME_LAYOUT.card.pad,
   stepsDy: STEPS.stepsDy,
-  width: HOME_LAYOUT.card.width,
+  width: modalFamilyWidth(SCREEN_CONFIG.width - 2 * MODAL.margin, "large"),
 } as const;
 
 export const INSTALL_STEPS_FIT = {
@@ -296,15 +297,7 @@ export function installStepsLayout(
     lines * INSTALL_STEPS.linePitch +
     INSTALL_STEPS.foot +
     DISMISS_FOOTER_SPACE;
-  const width = modalPanelWidth(
-    screen.width - 2 * MODAL.margin,
-    ink === undefined
-      ? INSTALL_STEPS.width
-      : Math.max(
-          modalTitleWidth(ink.title),
-          ink.steps + 2 * MODAL.pad + INSTALL_STEPS.icon.size + INSTALL_STEPS.icon.gap,
-        ),
-  );
+  const width = modalFamilyWidth(screen.width - 2 * MODAL.margin, "large");
   const card = modalRect({ ...screen, x: 0, y: 0 }, undefined, { height, width });
   const { icon, pad } = INSTALL_STEPS;
   const stepsY = card.y + MODAL.header + titleExtraHeight - icon.dy;

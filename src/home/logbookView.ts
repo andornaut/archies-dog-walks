@@ -21,8 +21,6 @@ import { type PageFill, type ShopPageView, shopPageView } from "./shopPageView.t
 import {
   badgesBottom,
   DOG_STATS,
-  dogBlockTop,
-  dogsBottom,
   type DogStat,
   earnedBand,
   earnedCheck,
@@ -31,8 +29,6 @@ import {
   statsListFrame,
   statsScrollbar,
   type StatsTab,
-  walksBottom,
-  walksHeadingTops,
   wallLineTops,
   wallRowHeight,
 } from "./statsLayout.ts";
@@ -114,17 +110,30 @@ function textInkRight(
 }
 
 // Each row's label from the left in dark brown and its value's ink up to right, from y.
-function rows(parts: Parts, right: number, y: number, stats: readonly StatsRow[]): void {
-  stats.forEach(({ label, value }, i) => {
-    const top = y + i * PITCH;
-    text(parts, { x: LEFT, y: top }, label, { colour: PALETTE.darkBrown });
+function rows(
+  parts: Parts,
+  measure: LogbookMeasure,
+  right: number,
+  y: number,
+  stats: readonly StatsRow[],
+): number {
+  let top = y;
+  for (const { label, value } of stats) {
+    const room = right - LEFT - measure.inkWidth("body", value) - STATS_LAYOUT.rows.gap;
+    const lines = measure.wrapNote(room, label);
+    lines.forEach((line, i) =>
+      text(parts, { x: LEFT, y: top + i * PITCH }, line, { colour: PALETTE.darkBrown }),
+    );
     textInkRight(parts, { right, y: top }, value);
-  });
+    top += Math.max(1, lines.length) * PITCH;
+  }
+  return top;
 }
 
 // Overall figures, then walks by outcome, each under its heading.
 function runsTab(
   parts: Parts,
+  measure: LogbookMeasure,
   data: Data,
   save: Pick<SaveDocument, "stats">,
   right: number,
@@ -135,14 +144,14 @@ function runsTab(
     { heading: words.sections.overall, rows: overall },
     { heading: words.sections.runs, rows: outcomes },
   ];
-  const counts = sections.map((section) => section.rows.length);
-  const tops = walksHeadingTops(counts);
-  sections.forEach(({ heading, rows: shown }, i) => {
-    const y = tops[i] ?? 0;
-    text(parts, { x: LEFT, y }, heading, { font: "title" });
-    rows(parts, right, y + STATS_LAYOUT.walks.rowsY, shown);
-  });
-  return walksBottom(counts);
+  let top = STATS_LAYOUT.walks.top;
+  let bottom = top;
+  for (const section of sections) {
+    text(parts, { x: LEFT, y: top }, section.heading, { font: "title" });
+    bottom = rows(parts, measure, right, top + STATS_LAYOUT.walks.rowsY, section.rows);
+    top = bottom + STATS_LAYOUT.walks.sectionGap;
+  }
+  return bottom + STATS_LAYOUT.scroll.padBottom;
 }
 
 // A block per dog: its face and name, then its walks, neighbourhoods and firings, one per row,
@@ -156,8 +165,9 @@ function dogsTab(
 ): number {
   const labels = data.menuText.stats.dogColumns;
   const dogs = dogRows(data, save.owned, save.stats);
+  let top = DOGS.top;
+  let bottom = top;
   dogs.forEach((row, i) => {
-    const top = dogBlockTop(i);
     if (i > 0) {
       parts.fills.push({
         colour: PALETTE.tan,
@@ -181,14 +191,16 @@ function dogsTab(
       walks: row.walks,
       zones: row.zonesFinished,
     };
-    rows(
+    bottom = rows(
       parts,
+      measure,
       right,
       top + DOGS.rowsY,
       DOG_STATS.map((stat) => ({ label: labels[stat], value: String(values[stat]) })),
     );
+    top = bottom + DOGS.gap;
   });
-  return dogsBottom(dogs.length);
+  return bottom + STATS_LAYOUT.scroll.padBottom;
 }
 
 // The earned count at the rows' right, then a badge per row: earned ones in colour with a green
@@ -278,7 +290,7 @@ function tabContent(
   });
   switch (state.tab) {
     case "runs":
-      return done(runsTab(parts, data, state.save, right));
+      return done(runsTab(parts, measure, data, state.save, right));
     case "dogs":
       return done(dogsTab(parts, measure, data, state.save, right));
     case "badges": {
