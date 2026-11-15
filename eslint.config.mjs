@@ -115,7 +115,12 @@ function contextBoundary(context) {
   return {
     files: [`src/${context}/**/*.ts`],
     forbid: {
-      group,
+      // Context ownership governs relative source imports, not external package subpaths.
+      group: group.flatMap((pattern) => {
+        const negate = pattern.startsWith("!") ? "!" : "";
+        const path = pattern.replace(/^!?\*\*\//, "");
+        return [`${negate}./**/${path}`, `${negate}../**/${path}`];
+      }),
       message:
         allowed.length === 0
           ? `src/${context}/ may import nothing from src/.`
