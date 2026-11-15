@@ -21,7 +21,14 @@ import {
 } from "../../ui/dom/pixelLine.ts";
 import { dimDrawn, followModalUnderlay } from "../../ui/dom/rampDim.ts";
 import type { UiLayer } from "../../ui/dom/uiLayer.ts";
-import { type DomScale, gridRect, gridX, gridY, scrollbarBoxes } from "../../ui/domScale.ts";
+import {
+  type DomScale,
+  gridRect,
+  gridTransform,
+  gridX,
+  gridY,
+  scrollbarBoxes,
+} from "../../ui/domScale.ts";
 import type { TileState } from "../../ui/interaction.ts";
 import type { PanelText } from "../../ui/modal/types.ts";
 import type { ScrollbarRects } from "../../ui/scrollbar.ts";
@@ -110,6 +117,7 @@ export function showShopScreen(
   const doc = layer.element.ownerDocument;
   const root = doc.createElement("section");
   root.className = "adw-lines";
+  root.style.transformOrigin = "0 0";
   root.setAttribute("aria-label", initial.page.title.text);
   const chrome = doc.createElement("div");
   chrome.className = "adw-lines";
@@ -165,6 +173,7 @@ export function showShopScreen(
     alive && shown && input.active() && layer.input.accepts() && paint?.painted() === true;
   const syncDim = () => dimDrawn(root, !layer.input.accepts());
   const redraw = () => {
+    root.style.transform = gridTransform(scale);
     chromeParts.forEach((part) => part.place(scale));
     messageParts.forEach((part) => part.place(scale));
     setBox(clip, gridRect(scale, view.clip));
@@ -429,6 +438,9 @@ export function showShopScreen(
       redraw();
     },
     setShown: (next) => {
+      if (shown !== next) {
+        revision += 1;
+      }
       shown = next;
       root.hidden = !next;
       if (!next) {

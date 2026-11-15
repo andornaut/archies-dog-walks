@@ -137,7 +137,6 @@ export interface ShopClosed {
 type Target =
   | { choice: ConfirmChoice; kind: "confirm" }
   | { kind: "close" }
-  | { kind: "confirmClose" }
   | { kind: "dismiss" }
   | { id: string; kind: "row" }
   | { kind: "tab"; tab: ShopTab };
@@ -229,7 +228,16 @@ export class ShopScene extends Scene {
     // Mount only after fonts and the shared native layer are ready.
     this.native = undefined;
     const layer = uiLayer();
-    const stopReady = layer?.onReady(() => this.render());
+    if (layer === undefined || (layer.ready() && htmlPanelPlace(this) === undefined)) {
+      this.close();
+      return;
+    }
+    const stopReady = layer.onReady(() => {
+      if (this.native === undefined) {
+        this.render();
+        this.showFocus();
+      }
+    });
     this.events.once("shutdown", () => {
       stopReady?.();
       this.native?.destroy();
@@ -822,9 +830,6 @@ export class ShopScene extends Scene {
       case "confirm":
         this.answer(target.choice);
         return;
-      case "confirmClose":
-        this.answer("cancel");
-        return;
       case "dismiss":
         this.back();
         return;
@@ -934,7 +939,7 @@ export class ShopScene extends Scene {
       addHtmlPurchaseConfirm(this, view, (choice) => this.answer(choice), shade),
     );
     if (this.htmlConfirm?.panel === undefined) {
-      drawPurchaseConfirm(this, layer, view, this.pressed?.kind === "confirmClose");
+      drawPurchaseConfirm(this, layer, view, false);
     } else if (shade === undefined) {
       layer.add(addModalShade(this, view.dim));
     }
