@@ -153,6 +153,7 @@ export class BootScene extends Scene {
   private nativeUi: RequiredUiController | undefined;
   private fontMetricsSettled = false;
   private inPreload = false;
+  private deferredInitialArt: ((key: string) => boolean) | undefined;
   private manifestReady = false;
   private readonly queuedFontKeys = new Set<string>();
 
@@ -162,6 +163,7 @@ export class BootScene extends Scene {
 
   preload(): void {
     this.inPreload = true;
+    this.deferredInitialArt = undefined;
     this.manifestReady = false;
     this.queuedFontKeys.clear();
     const parent = this.game.canvas.parentElement;
@@ -203,6 +205,12 @@ export class BootScene extends Scene {
   }
 
   create(): void {
+    let current = true;
+    let stopEntry: () => void = () => undefined;
+    this.events.once(Scenes.Events.SHUTDOWN, () => {
+      current = false;
+      stopEntry();
+    });
     this.inPreload = false;
     if (this.sound instanceof Sound.WebAudioSoundManager) {
       unlockAudioOnFirstGesture(window, this.sound.context);
@@ -240,18 +248,28 @@ export class BootScene extends Scene {
     }
     this.queueSounds(walkNow ? always : loadsSoundFirst);
     this.watch?.waitFor("boot");
-    this.load.once("complete", () =>
-      this.processAssets(first, FRAME_BUDGET_MS, () => {
-        registerFallbackPixelFont(this);
-        addPillGlyphs(this);
-        this.fontMetricsSettled = true;
-        this.nativeUi?.invalidate();
-        // A profile still opening is waited for with no denominator.
-        const profile = opened ? undefined : waitedLoad.begin();
-        profile?.progress(undefined);
-        // While a newer version is required, no walk starts: home says so.
-        void profileOpened.then(() => {
-          profile?.finish();
+    const firstComplete = () => {
+      registerFallbackPixelFont(this);
+      addPillGlyphs(this);
+      this.fontMetricsSettled = true;
+      this.nativeUi?.invalidate();
+      // A profile still opening is waited for with no denominator.
+      const profile = opened ? undefined : waitedLoad.begin();
+      profile?.progress(undefined);
+      // While a newer version is required, no walk starts: home says so.
+      void profileOpened.then(() => {
+        profile?.finish();
+        if (!current) {
+          return;
+        }
+        const native = this.nativeUi;
+        if (native === undefined) {
+          return;
+        }
+        stopEntry = native.wait(() => {
+          if (!current) {
+            return;
+          }
           if (requiredUpdate() !== undefined) {
             this.showHome();
           } else if (walkNow) {
@@ -262,8 +280,19 @@ export class BootScene extends Scene {
             this.showHome();
           }
         });
-      }),
-    );
+        if (!current) {
+          stopEntry();
+        }
+      });
+    };
+    this.load.once("complete", () => {
+      if (!this.manifestReady) {
+        this.deferredInitialArt = first;
+        firstComplete();
+      } else {
+        this.processAssets(first, FRAME_BUDGET_MS, firstComplete);
+      }
+    });
     this.load.start();
   }
 
@@ -347,21 +376,35 @@ export class BootScene extends Scene {
 
   private queueRecoveredFonts(): Promise<void> {
     return new Promise((resolve, reject) => {
-      const done = () => {
+      const initial = this.deferredInitialArt;
+      const cancelled = () => {
         this.load.off("complete", done);
-        this.events.off(Scenes.Events.SHUTDOWN, done);
+        this.events.off(Scenes.Events.SHUTDOWN, cancelled);
         resolve();
       };
+      const done = () => {
+        this.load.off("complete", done);
+        if (initial === undefined) {
+          cancelled();
+        } else {
+          this.processAssets(initial, FRAME_BUDGET_MS, cancelled);
+        }
+      };
       this.load.once("complete", done);
-      this.events.once(Scenes.Events.SHUTDOWN, done);
+      this.events.once(Scenes.Events.SHUTDOWN, cancelled);
       try {
+        if (initial !== undefined) {
+          this.queueAvailableArt(initial);
+          this.queueSounds(initial === always ? always : loadsSoundFirst);
+          this.deferredInitialArt = undefined;
+        }
         const required: ReadonlySet<string> = new Set(REQUIRED_BITMAP_FONTS);
         const queued = this.queueFirstFonts({
           ...this.manifest,
           fonts: this.manifest.fonts.filter(({ key }) => required.has(key)),
         });
-        if (!queued) {
-          done();
+        if (!queued && initial === undefined) {
+          cancelled();
           return;
         }
         this.watch?.waitFor("boot");
@@ -370,7 +413,7 @@ export class BootScene extends Scene {
         }
       } catch (error) {
         this.load.off("complete", done);
-        this.events.off(Scenes.Events.SHUTDOWN, done);
+        this.events.off(Scenes.Events.SHUTDOWN, cancelled);
         reject(error);
       }
     });
@@ -487,15 +530,36 @@ export class BootScene extends Scene {
       }
     }
     let next = 0;
+    let active = true;
+    let frame: number | undefined;
+    const cancel = () => {
+      active = false;
+      if (frame !== undefined) {
+        cancelAnimationFrame(frame);
+      }
+    };
+    this.events.once(Scenes.Events.SHUTDOWN, cancel);
     const runBatch = () => {
+      if (!active) {
+        return;
+      }
       const started = performance.now();
       while (next < steps.length && performance.now() - started < budgetMs) {
         itemAt(steps, next)();
         next += 1;
       }
       if (next < steps.length) {
-        this.time.delayedCall(0, runBatch);
+        if (this.game.isPaused) {
+          frame = requestAnimationFrame(() => {
+            frame = undefined;
+            runBatch();
+          });
+        } else {
+          this.time.delayedCall(0, runBatch);
+        }
       } else {
+        active = false;
+        this.events.off(Scenes.Events.SHUTDOWN, cancel);
         done();
       }
     };
