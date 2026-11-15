@@ -111,6 +111,7 @@ export const UI_STYLE = `
 .adw-dialog.adw-passive *,.adw-dialog.adw-inert *{pointer-events:none}
 /* A detail card's framed boxes, art and name pills; --adw-cut is a pill's snapped corner. */
 .adw-framed,.adw-art,.adw-pill{position:absolute;box-sizing:border-box;pointer-events:none}
+.adw-framed{left:0;top:0}
 .adw-art{background-repeat:no-repeat;background-size:100% 100%;image-rendering:pixelated}
 /* A mirrored list's clip, over the whole screen, cut to the list's rect by clip-path. */
 .adw-clip{position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none}

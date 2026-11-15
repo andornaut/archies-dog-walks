@@ -1,9 +1,11 @@
-import type { Point } from "@andornaut/game-kit/rect";
+import type { Point, Rect } from "@andornaut/game-kit/rect";
 
-import { domArtPath } from "../../assets/domArt.ts";
+import { DOM_DIM_ART_KEYS, domArtPath } from "../../assets/domArt.ts";
+import { dimArtPath } from "../dimArt.ts";
 import { artPixel, type DomScale, gridRect, gridX, gridY } from "../domScale.ts";
 import { sliceParts } from "./mirrorPlace.ts";
 import { setBox } from "./pixelLine.ts";
+import { DIM_ART_ATTRIBUTE } from "./rampDim.ts";
 import { type SheetFrame, sheetFrame, sheetFrameNamed } from "./sheetFrames.ts";
 
 // Art the HTML interface draws as backgrounds of each key's own file: an image whole, or one
@@ -24,6 +26,24 @@ export interface SheetArtPlace {
   readonly tag?: string;
   readonly x: number;
   readonly y: number;
+}
+
+function artUrls(source: DomArtSource, kind: "image" | "sheet", key: string): string[] {
+  return [
+    source.artUrl(domArtPath(kind, key, "png")),
+    ...(DOM_DIM_ART_KEYS.has(key) ? [source.artUrl(dimArtPath(kind, key))] : []),
+  ];
+}
+
+function markDimArt(
+  source: DomArtSource,
+  kind: "image" | "sheet",
+  key: string,
+  element: HTMLElement,
+): void {
+  if (DOM_DIM_ART_KEYS.has(key)) {
+    element.setAttribute(DIM_ART_ATTRIBUTE, source.artUrl(dimArtPath(kind, key)));
+  }
 }
 
 // The sheet's JSON once loaded, calling shown with it then and on each later call.
@@ -50,7 +70,7 @@ function sheetOf(source: DomArtSource, key: string, element: HTMLElement, imageK
     },
     {
       ready: request.then(
-        () => [source.artUrl(domArtPath("sheet", imageKey, "png"))],
+        () => artUrls(source, "sheet", imageKey),
         () => [],
       ),
     },
@@ -85,6 +105,7 @@ export function sheetArt(
   const element = doc.createElement("span");
   element.className = "adw-art";
   element.style.backgroundImage = backgroundOf(source, imageKey);
+  markDimArt(source, "sheet", imageKey, element);
   const loaded = sheetOf(source, key, element, imageKey);
   return {
     element,
@@ -136,6 +157,7 @@ export function sheetThreeSlice(
     const part = doc.createElement("span");
     part.className = "adw-art";
     part.style.backgroundImage = backgroundOf(source, key);
+    markDimArt(source, "sheet", key, part);
     return part;
   });
   element.append(...parts);
@@ -195,6 +217,7 @@ export function imageArt(
   const element = doc.createElement("span");
   element.className = "adw-art";
   element.style.backgroundImage = `url("${source.artUrl(domArtPath("image", key, "png"))}")`;
+  markDimArt(source, "image", key, element);
   return {
     element,
     place: (scale, origin, art) => {
@@ -206,21 +229,65 @@ export function imageArt(
         width: art.width * pixel,
       });
     },
-    ready: Promise.resolve([source.artUrl(domArtPath("image", key, "png"))]),
+    ready: Promise.resolve(artUrls(source, "image", key)),
   };
 }
 
-// A native nine-slice using the same corner and stretched-centre geometry as the scene mirror.
+interface SliceInsets {
+  readonly bottom: number;
+  readonly left: number;
+  readonly right: number;
+  readonly top: number;
+}
+
+// Both image and sheet panels use one corner/stretch projection and dim-image policy.
+function slicePainter(
+  doc: Document,
+  source: DomArtSource,
+  kind: "image" | "sheet",
+  key: string,
+  slices: SliceInsets,
+  element: HTMLElement,
+) {
+  const url = source.artUrl(domArtPath(kind, key, "png"));
+  let previous = "";
+  return (scale: DomScale, origin: Point, art: Rect, frame: SheetFrame) => {
+    const box = gridRect(scale, art);
+    setBox(element, {
+      ...box,
+      left: box.left - gridX(scale, origin.x),
+      top: box.top - gridY(scale, origin.y),
+    });
+    const current = JSON.stringify([frame, box.width, box.height, slices, artPixel(scale)]);
+    if (current === previous) {
+      return;
+    }
+    previous = current;
+    element.replaceChildren(
+      ...sliceParts(scale, box, frame, slices).map(({ box: part, from }) => {
+        const span = doc.createElement("span");
+        span.className = "adw-art";
+        setBox(span, part);
+        const across = part.width / from.width;
+        const down = part.height / from.height;
+        Object.assign(span.style, {
+          backgroundImage: `url("${url}")`,
+          backgroundPosition: `${-(frame.x + from.x) * across}px ${-(frame.y + from.y) * down}px`,
+          backgroundSize: `${frame.sheet.width * across}px ${frame.sheet.height * down}px`,
+        });
+        markDimArt(source, kind, key, span);
+        return span;
+      }),
+    );
+  };
+}
+
+// Sheet tag selection remains client-owned; decoded image readiness is shared with image panels.
 export function sheetNineSlice(
   doc: Document,
   source: DomArtSource,
   key: string,
-  slices: {
-    readonly bottom: number;
-    readonly left: number;
-    readonly right: number;
-    readonly top: number;
-  },
+  slices: SliceInsets,
 ): {
   readonly element: HTMLElement;
   readonly ready: Promise<readonly string[]>;
@@ -233,8 +300,7 @@ export function sheetNineSlice(
   const element = doc.createElement("span");
   element.className = "adw-art";
   const loaded = sheetOf(source, key, element);
-  const url = source.artUrl(domArtPath("sheet", key, "png"));
-  let previous = "";
+  const paint = slicePainter(doc, source, "sheet", key, slices, element);
   return {
     element,
     place: (scale, origin, art) =>
@@ -245,33 +311,31 @@ export function sheetNineSlice(
             : art.frame === undefined
               ? sheetFrame(json, art.tag)
               : sheetFrameNamed(json, art.frame);
-        const box = gridRect(scale, art);
-        setBox(element, {
-          ...box,
-          left: box.left - gridX(scale, origin.x),
-          top: box.top - gridY(scale, origin.y),
-        });
-        const current = JSON.stringify([frame, box.width, box.height, slices, artPixel(scale)]);
-        if (current === previous) {
-          return;
-        }
-        previous = current;
-        element.replaceChildren(
-          ...sliceParts(scale, box, frame, slices).map(({ box: part, from }) => {
-            const span = doc.createElement("span");
-            span.className = "adw-art";
-            setBox(span, part);
-            const across = part.width / from.width;
-            const down = part.height / from.height;
-            Object.assign(span.style, {
-              backgroundImage: `url("${url}")`,
-              backgroundPosition: `${-(frame.x + from.x) * across}px ${-(frame.y + from.y) * down}px`,
-              backgroundSize: `${frame.sheet.width * across}px ${frame.sheet.height * down}px`,
-            });
-            return span;
-          }),
-        );
+        paint(scale, origin, art, frame);
       }),
     ready: loaded.ready,
+  };
+}
+
+// Native image dimensions come from the authored asset contract, without another size loader.
+export function imageNineSlice(
+  doc: Document,
+  source: DomArtSource,
+  key: string,
+  native: Readonly<Pick<Rect, "height" | "width">>,
+  slices: SliceInsets,
+): {
+  readonly element: HTMLElement;
+  readonly ready: Promise<readonly string[]>;
+  readonly place: (scale: DomScale, origin: Point, art: Rect) => void;
+} {
+  const element = doc.createElement("span");
+  element.className = "adw-art";
+  const frame: SheetFrame = { ...native, sheet: native, x: 0, y: 0 };
+  const paint = slicePainter(doc, source, "image", key, slices, element);
+  return {
+    element,
+    place: (scale, origin, art) => paint(scale, origin, art, frame),
+    ready: Promise.resolve(artUrls(source, "image", key)),
   };
 }
