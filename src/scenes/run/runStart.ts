@@ -1,4 +1,4 @@
-import { type Random, randomStream } from "@andornaut/game-kit/random";
+import { type Random, randomStream } from "@andornaut/game-kit/runtime/random";
 
 import type { DogId } from "../../data/types.ts";
 import type { RunSetup } from "../../dev/runSetup.ts";

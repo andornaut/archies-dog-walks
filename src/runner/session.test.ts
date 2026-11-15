@@ -1,7 +1,7 @@
-import { itemAt } from "@andornaut/game-kit/arrays";
-import { STEP_SECONDS } from "@andornaut/game-kit/clock/fixedStep";
-import { keysOf } from "@andornaut/game-kit/records";
-import { pixels } from "@andornaut/game-kit/units";
+import { itemAt } from "@andornaut/game-kit/runtime/arrays";
+import { STEP_SECONDS } from "@andornaut/game-kit/runtime/clock/fixedStep";
+import { keysOf } from "@andornaut/game-kit/runtime/records";
+import { pixels } from "@andornaut/game-kit/runtime/units";
 import { describe, expect, it } from "vitest";
 
 import { gameData } from "../data/index.ts";

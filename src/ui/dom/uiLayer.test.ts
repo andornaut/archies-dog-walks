@@ -1,11 +1,11 @@
-import { createButtonSkin } from "@andornaut/game-kit/web/ui/dom/buttonSkin";
+import { createButtonSkin } from "@andornaut/game-kit/runtime/web/ui/dom/buttonSkin";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { createPressAdmission } from "../../pressAdmission.ts";
 import { FakeDocument } from "../../testing/fakeDom.ts";
 import { mountUiLayer, UI_LAYER_ID, WEB_FONTS } from "./uiLayer.ts";
 
-vi.mock("@andornaut/game-kit/web/ui/dom/buttonSkin", () => ({
+vi.mock("@andornaut/game-kit/runtime/web/ui/dom/buttonSkin", () => ({
   createButtonSkin: vi.fn(() => ({
     apply: () => Promise.resolve([]),
     frames: Promise.resolve(new Map()),

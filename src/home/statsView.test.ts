@@ -1,4 +1,4 @@
-import { fillLine } from "@andornaut/game-kit/lines";
+import { fillLine } from "@andornaut/game-kit/runtime/lines";
 import { describe, expect, it } from "vitest";
 
 import { DOGS } from "../data/dogs.ts";

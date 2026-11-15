@@ -2,8 +2,8 @@ import {
   type FontMetrics,
   inkRowsFromCapTop,
   inkRowsOfLines,
-} from "@andornaut/game-kit/text/bitmapFont";
-import { type FittedText } from "@andornaut/game-kit/text/textFit";
+} from "@andornaut/game-kit/runtime/text/bitmapFont";
+import { type FittedText } from "@andornaut/game-kit/runtime/text/textFit";
 
 import { ROAD_SPRITE_SIZE } from "../assets/spriteKeys.ts";
 import { CELEBRATIONS } from "../data/layout.ts";

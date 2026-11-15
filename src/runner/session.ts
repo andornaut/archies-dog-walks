@@ -1,4 +1,4 @@
-import { type Random, randomStream } from "@andornaut/game-kit/random";
+import { type Random, randomStream } from "@andornaut/game-kit/runtime/random";
 
 import type { CardSource, DogId, GameData } from "../data/types.ts";
 import type { LaneDirection } from "../layout/lanes.ts";

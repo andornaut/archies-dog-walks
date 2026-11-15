@@ -1,5 +1,5 @@
-import { sceneStub } from "@andornaut/game-kit/testing/phaser/sceneStub";
-import { registerPixelFont } from "@andornaut/game-kit/text/phaser/registerPixelFont";
+import { sceneStub } from "@andornaut/game-kit/test/phaser/sceneStub";
+import { registerPixelFont } from "@andornaut/game-kit/runtime/text/phaser/registerPixelFont";
 import type { GameObjects, Scene } from "phaser";
 import { describe, expect, it, vi } from "vitest";
 
@@ -11,7 +11,7 @@ import { inPill, laidPills, pillRows } from "../namePills.ts";
 import { GLYPH_HEIGHT, glyphAdvance, LINE_HEIGHT, PIXEL_GLYPHS } from "../pixelFont.ts";
 import { addPixelText, type FontRole, labelPills, registerFallbackPixelFont } from "./pixelText.ts";
 
-vi.mock("@andornaut/game-kit/text/phaser/registerPixelFont", () => ({
+vi.mock("@andornaut/game-kit/runtime/text/phaser/registerPixelFont", () => ({
   registerPixelFont: vi.fn(),
 }));
 

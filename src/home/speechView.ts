@@ -1,10 +1,10 @@
-import type { Rect } from "@andornaut/game-kit/rect";
+import type { Rect } from "@andornaut/game-kit/runtime/rect";
 import {
   advanceWidth,
   type BitmapFont,
   fontMetrics,
   laidGlyphs,
-} from "@andornaut/game-kit/text/bitmapFont";
+} from "@andornaut/game-kit/runtime/text/bitmapFont";
 
 import { ownerFaceKey } from "../assets/spriteKeys.ts";
 import type { DogId, GameData } from "../data/types.ts";

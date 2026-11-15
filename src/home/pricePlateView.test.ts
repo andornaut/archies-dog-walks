@@ -1,4 +1,4 @@
-import { advanceWidth, fontMetrics } from "@andornaut/game-kit/text/bitmapFont";
+import { advanceWidth, fontMetrics } from "@andornaut/game-kit/runtime/text/bitmapFont";
 import { expect, it } from "vitest";
 
 import { gameData } from "../data/index.ts";

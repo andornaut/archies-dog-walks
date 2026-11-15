@@ -1,4 +1,4 @@
-import { fillLine } from "@andornaut/game-kit/lines";
+import { fillLine } from "@andornaut/game-kit/runtime/lines";
 
 import type { GameData, WalkerId } from "../data/types.ts";
 import { agilityPercent, perkEffect } from "../rules/effectText.ts";

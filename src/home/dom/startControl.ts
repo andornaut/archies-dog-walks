@@ -1,4 +1,4 @@
-import type { BitmapFont } from "@andornaut/game-kit/text/bitmapFont";
+import type { BitmapFont } from "@andornaut/game-kit/runtime/text/bitmapFont";
 
 import { BUTTON_SIZE } from "../../ui/buttonGeometry.ts";
 import { createTextLine, placeFrame, placeText, setBox } from "../../ui/dom/pixelLine.ts";

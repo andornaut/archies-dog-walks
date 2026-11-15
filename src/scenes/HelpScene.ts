@@ -1,5 +1,5 @@
-import { itemAt } from "@andornaut/game-kit/arrays";
-import { type Point, type Rect } from "@andornaut/game-kit/rect";
+import { itemAt } from "@andornaut/game-kit/runtime/arrays";
+import { type Point, type Rect } from "@andornaut/game-kit/runtime/rect";
 import { Scene, Scenes } from "phaser";
 
 import { gameData } from "../data/index.ts";

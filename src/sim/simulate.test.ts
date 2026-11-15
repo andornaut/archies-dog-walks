@@ -1,5 +1,5 @@
-import { itemAt } from "@andornaut/game-kit/arrays";
-import { keysOf } from "@andornaut/game-kit/records";
+import { itemAt } from "@andornaut/game-kit/runtime/arrays";
+import { keysOf } from "@andornaut/game-kit/runtime/records";
 import { beforeAll, describe, expect, it, vi } from "vitest";
 
 import { gameData } from "../data/index.ts";

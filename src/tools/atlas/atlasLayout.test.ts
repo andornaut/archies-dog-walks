@@ -1,4 +1,4 @@
-import { type AtlasItem, type AtlasPolicy, packAtlas } from "@andornaut/art-kit/atlasLayout";
+import { type AtlasItem, type AtlasPolicy, packAtlas } from "@andornaut/art-kit/build/atlasLayout";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { LOADING_ART } from "../../assets/spriteKeys.ts";
@@ -11,7 +11,7 @@ import {
   spriteSource,
 } from "./atlasLayout.ts";
 
-vi.mock("@andornaut/art-kit/atlasLayout", () => ({
+vi.mock("@andornaut/art-kit/build/atlasLayout", () => ({
   packAtlas: vi.fn((policy: AtlasPolicy<unknown>, items: readonly AtlasItem<unknown>[]) => ({
     pages:
       items.length === 0

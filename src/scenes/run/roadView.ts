@@ -1,5 +1,5 @@
-import { getOrInsertComputed } from "@andornaut/game-kit/maps";
-import type { Rect } from "@andornaut/game-kit/rect";
+import { getOrInsertComputed } from "@andornaut/game-kit/runtime/maps";
+import type { Rect } from "@andornaut/game-kit/runtime/rect";
 import { type Scene, type Textures, WEBGL } from "phaser";
 
 import { backdropKey, roadStartKey, roadTileKey } from "../../assets/spriteKeys.ts";

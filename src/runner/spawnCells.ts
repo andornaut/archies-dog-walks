@@ -1,4 +1,4 @@
-import { itemAt, partitionPoint, removeItem } from "@andornaut/game-kit/arrays";
+import { itemAt, partitionPoint, removeItem } from "@andornaut/game-kit/runtime/arrays";
 
 import { laneMask } from "../layout/lanes.ts";
 import { alternativeLanesOpen, type LaneAlternativeBlock } from "./laneAlternatives.ts";

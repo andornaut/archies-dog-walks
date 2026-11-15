@@ -1,4 +1,4 @@
-import type { TextFitStyle } from "@andornaut/game-kit/text/textFit";
+import type { TextFitStyle } from "@andornaut/game-kit/runtime/text/textFit";
 
 // Every text role has one fixed size: text never shrinks to fit its room. Text that would not
 // fit wraps onto more lines, its box grows, or its words are shortened in the data.

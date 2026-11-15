@@ -1,4 +1,4 @@
-import type { Rect } from "@andornaut/game-kit/rect";
+import type { Rect } from "@andornaut/game-kit/runtime/rect";
 import { describe, expect, it, vi } from "vitest";
 
 import type { ZoneId } from "../data/types.ts";

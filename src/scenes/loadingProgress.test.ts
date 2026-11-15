@@ -1,5 +1,5 @@
-import { watchLoader } from "@andornaut/game-kit/load/phaser/watchLoader";
-import type { ProgressSnapshot } from "@andornaut/game-kit/progressState";
+import { watchLoader } from "@andornaut/game-kit/runtime/load/phaser/watchLoader";
+import type { ProgressSnapshot } from "@andornaut/game-kit/runtime/progressState";
 import type { Scene } from "phaser";
 import { describe, expect, it, vi } from "vitest";
 

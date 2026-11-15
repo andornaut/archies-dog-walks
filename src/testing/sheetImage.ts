@@ -1,4 +1,4 @@
-import { blankImage, type RgbaImage } from "@andornaut/art-kit/rgbaImage";
+import { blankImage, type RgbaImage } from "@andornaut/art-kit/build/rgbaImage";
 
 import type { SourceTexture } from "../tools/atlas/atlasLayout.ts";
 

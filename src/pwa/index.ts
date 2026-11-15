@@ -2,44 +2,44 @@
 // lock, the back gesture, visibility events, the page frame's turn and the orientation lock,
 // audio unlock, the install offer and persistent storage. setupPhoneApp runs once from main.ts; the
 // scenes listen for PHONE_EVENTS on window and call the functions below.
-import type { ProgressHandle } from "@andornaut/game-kit/progressState";
-import type { FrameTurn } from "@andornaut/game-kit/view/pagePoint";
-import { appCannotClose } from "@andornaut/game-kit/web/pwa/appWindow";
-import { backCloseWatcher } from "@andornaut/game-kit/web/pwa/backNavigation";
+import type { ProgressHandle } from "@andornaut/game-kit/runtime/progressState";
+import type { FrameTurn } from "@andornaut/game-kit/runtime/view/pagePoint";
+import { appCannotClose } from "@andornaut/game-kit/runtime/web/pwa/appWindow";
+import { backCloseWatcher } from "@andornaut/game-kit/runtime/web/pwa/backNavigation";
 import {
   browserCloseWatcher,
   guardBackNavigation,
-} from "@andornaut/game-kit/web/pwa/dom/backNavigation";
+} from "@andornaut/game-kit/runtime/web/pwa/dom/backNavigation";
 import {
   type InstallFlow,
   type InstallOutcome,
   watchInstall,
-} from "@andornaut/game-kit/web/pwa/dom/installFlow";
+} from "@andornaut/game-kit/runtime/web/pwa/dom/installFlow";
 import {
   browserOfflinePage,
   type LaunchResult,
   type OfflinePlay,
   startOfflinePlay,
-} from "@andornaut/game-kit/web/pwa/dom/offlinePlay";
-import type { UpdateFlow } from "@andornaut/game-kit/web/pwa/dom/updateReady";
-import { watchVisibility } from "@andornaut/game-kit/web/pwa/dom/visibility";
+} from "@andornaut/game-kit/runtime/web/pwa/dom/offlinePlay";
+import type { UpdateFlow } from "@andornaut/game-kit/runtime/web/pwa/dom/updateReady";
+import { watchVisibility } from "@andornaut/game-kit/runtime/web/pwa/dom/visibility";
 import {
   createScreenWakeLock,
   type ScreenWakeLock,
-} from "@andornaut/game-kit/web/pwa/dom/wakeLock";
-import type { InstallState, InstallStepsKind } from "@andornaut/game-kit/web/pwa/installState";
-import { serviceWorkerUrl } from "@andornaut/game-kit/web/pwa/serviceWorkerUrl";
+} from "@andornaut/game-kit/runtime/web/pwa/dom/wakeLock";
+import type { InstallState, InstallStepsKind } from "@andornaut/game-kit/runtime/web/pwa/installState";
+import { serviceWorkerUrl } from "@andornaut/game-kit/runtime/web/pwa/serviceWorkerUrl";
 import {
   requestPersistentStorage,
   type StoragePersistence,
-} from "@andornaut/game-kit/web/pwa/storagePersistence";
-import type { RequiredUpdateState } from "@andornaut/game-kit/web/pwa/updateReady";
-import { localSaveStorage } from "@andornaut/game-kit/web/save/dom/localSaveStorage";
+} from "@andornaut/game-kit/runtime/web/pwa/storagePersistence";
+import type { RequiredUpdateState } from "@andornaut/game-kit/runtime/web/pwa/updateReady";
+import { localSaveStorage } from "@andornaut/game-kit/runtime/web/save/dom/localSaveStorage";
 import {
   type FrameTurnWatch,
   lockGameOrientation,
   watchFrameTurn,
-} from "@andornaut/game-kit/web/view/dom/watchFrameTurn";
+} from "@andornaut/game-kit/runtime/web/view/dom/watchFrameTurn";
 
 import { chooseSoundFormat, type SoundFormat } from "../audio/soundFormat.ts";
 import type { StorageState } from "../save/profile.ts";
@@ -51,13 +51,13 @@ import { acceptedUpdateProgress } from "./updateAcceptance.ts";
 
 export { AUDIO_UNLOCK_EVENTS, unlockAudioOnFirstGesture } from "./audioUnlock.ts";
 export { PHONE_EVENTS } from "./events.ts";
-export type { InstallOutcome } from "@andornaut/game-kit/web/pwa/dom/installFlow";
+export type { InstallOutcome } from "@andornaut/game-kit/runtime/web/pwa/dom/installFlow";
 export {
   type InstallState,
   type InstallStepsKind,
   offersInstall,
-} from "@andornaut/game-kit/web/pwa/installState";
-export type { StoragePersistence } from "@andornaut/game-kit/web/pwa/storagePersistence";
+} from "@andornaut/game-kit/runtime/web/pwa/installState";
+export type { StoragePersistence } from "@andornaut/game-kit/runtime/web/pwa/storagePersistence";
 
 const SERVICE_WORKER_URL = "/sw.js";
 

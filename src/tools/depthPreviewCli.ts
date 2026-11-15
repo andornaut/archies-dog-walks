@@ -7,9 +7,9 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 
-import { decodePng } from "@andornaut/art-kit/png";
-import { blankImage, type RgbaImage } from "@andornaut/art-kit/rgbaImage";
-import { itemAt } from "@andornaut/game-kit/arrays";
+import { decodePng } from "@andornaut/art-kit/build/png";
+import { blankImage, type RgbaImage } from "@andornaut/art-kit/build/rgbaImage";
+import { itemAt } from "@andornaut/game-kit/runtime/arrays";
 
 import type { AssetManifest } from "../assets/manifest.ts";
 import { backdropKey, depthVariantKey, roadTileKey } from "../assets/spriteKeys.ts";

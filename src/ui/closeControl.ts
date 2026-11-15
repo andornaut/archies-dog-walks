@@ -1,4 +1,4 @@
-import type { Rect } from "@andornaut/game-kit/rect";
+import type { Rect } from "@andornaut/game-kit/runtime/rect";
 
 import { PAGE_CLOSE_FACE } from "../data/layout.ts";
 import { BUTTON_SIZE } from "./buttonGeometry.ts";

@@ -1,4 +1,4 @@
-import { type Random, randomInt } from "@andornaut/game-kit/random";
+import { type Random, randomInt } from "@andornaut/game-kit/runtime/random";
 
 import { ROAD_SPRITE_SIZE } from "../assets/spriteKeys.ts";
 import type { AmbientGait, AmbientMover, ZoneId } from "../data/types.ts";

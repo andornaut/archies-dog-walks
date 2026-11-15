@@ -17,7 +17,7 @@ vi.mock("../save/storage.ts", async (original) => ({
   ...(await original<typeof import("../save/storage.ts")>()),
   pageSaveStore: () => ({ load: mocks.load, save: mocks.save }),
 }));
-vi.mock("@andornaut/game-kit/web/save/dom/pageSessionStore", () => ({
+vi.mock("@andornaut/game-kit/runtime/web/save/dom/pageSessionStore", () => ({
   sessionRead: mocks.read,
   sessionRemove: mocks.remove,
   sessionWrite: vi.fn(),

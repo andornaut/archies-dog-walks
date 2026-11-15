@@ -1,4 +1,4 @@
-import { itemAt } from "@andornaut/game-kit/arrays";
+import { itemAt } from "@andornaut/game-kit/runtime/arrays";
 import type { GameObjects, Scene, Tweens } from "phaser";
 
 import { SQUIRREL_ICON_KEY } from "../../assets/iconKeys.ts";

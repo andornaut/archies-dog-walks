@@ -1,9 +1,9 @@
 import { readFileSync } from "node:fs";
 
-import { decodePng } from "@andornaut/art-kit/png";
-import { itemAt } from "@andornaut/game-kit/arrays";
-import { getOrInsertComputed } from "@andornaut/game-kit/maps";
-import { keysOf } from "@andornaut/game-kit/records";
+import { decodePng } from "@andornaut/art-kit/build/png";
+import { itemAt } from "@andornaut/game-kit/runtime/arrays";
+import { getOrInsertComputed } from "@andornaut/game-kit/runtime/maps";
+import { keysOf } from "@andornaut/game-kit/runtime/records";
 import { describe, expect, it } from "vitest";
 
 import { depthVariantKey } from "../assets/spriteKeys.ts";

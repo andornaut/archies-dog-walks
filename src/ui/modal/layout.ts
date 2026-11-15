@@ -1,7 +1,7 @@
-import { wrapWords } from "@andornaut/game-kit/lines";
-import { modalWidth } from "@andornaut/game-kit/modalLayout";
-import { insetRect, type Rect, rectAboveIn, rectsOverlap } from "@andornaut/game-kit/rect";
-import type { FontMetrics } from "@andornaut/game-kit/text/bitmapFont";
+import { wrapWords } from "@andornaut/game-kit/runtime/lines";
+import { modalWidth } from "@andornaut/game-kit/runtime/modalLayout";
+import { insetRect, type Rect, rectAboveIn, rectsOverlap } from "@andornaut/game-kit/runtime/rect";
+import type { FontMetrics } from "@andornaut/game-kit/runtime/text/bitmapFont";
 
 import { SCREEN_CONFIG } from "../../data/screen.ts";
 import { BUTTON_SIZE } from "../buttonGeometry.ts";

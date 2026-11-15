@@ -1,4 +1,4 @@
-import type { Rect } from "@andornaut/game-kit/rect";
+import type { Rect } from "@andornaut/game-kit/runtime/rect";
 
 import { dogFaceKey } from "../assets/spriteKeys.ts";
 import type { GameData } from "../data/types.ts";

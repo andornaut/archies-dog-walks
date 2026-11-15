@@ -1,4 +1,4 @@
-import { keysOf } from "@andornaut/game-kit/records";
+import { keysOf } from "@andornaut/game-kit/runtime/records";
 
 import type { DebuffId, GameData } from "../data/types.ts";
 import { inPill } from "../ui/namePills.ts";

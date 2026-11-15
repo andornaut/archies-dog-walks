@@ -1,5 +1,5 @@
-import { animationKey } from "@andornaut/game-kit/art/aseprite";
-import { containsPoint, insetRect, type Point, type Rect } from "@andornaut/game-kit/rect";
+import { animationKey } from "@andornaut/game-kit/runtime/art/aseprite";
+import { containsPoint, insetRect, type Point, type Rect } from "@andornaut/game-kit/runtime/rect";
 import type { GameObjects, Scene, Tweens } from "phaser";
 
 import { SLICES } from "../data/layout.ts";

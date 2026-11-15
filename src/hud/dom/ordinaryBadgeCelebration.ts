@@ -1,4 +1,4 @@
-import type { Rect } from "@andornaut/game-kit/rect";
+import type { Rect } from "@andornaut/game-kit/runtime/rect";
 
 import { domArtPath } from "../../assets/domArt.ts";
 import { ownerFaceKey } from "../../assets/spriteKeys.ts";

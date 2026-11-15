@@ -1,6 +1,6 @@
-import { STEP_SECONDS } from "@andornaut/game-kit/clock/fixedStep";
-import { seededRandom } from "@andornaut/game-kit/random";
-import { keysOf } from "@andornaut/game-kit/records";
+import { STEP_SECONDS } from "@andornaut/game-kit/runtime/clock/fixedStep";
+import { seededRandom } from "@andornaut/game-kit/runtime/random";
+import { keysOf } from "@andornaut/game-kit/runtime/records";
 import { describe, expect, it } from "vitest";
 
 import { LANE_COUNT } from "../data/screen.ts";

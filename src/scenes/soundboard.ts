@@ -1,4 +1,4 @@
-import { getOrInsertComputed } from "@andornaut/game-kit/maps";
+import { getOrInsertComputed } from "@andornaut/game-kit/runtime/maps";
 import { Core, type Game, type Scene, Sound } from "phaser";
 
 import {

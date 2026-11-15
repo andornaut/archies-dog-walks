@@ -3,9 +3,9 @@
 // src/ui) derive every other position, size and room from these values. Values marked "art" are
 // fixed by the art drawn at that size or place; change them only with the art.
 
-import type { Point, Rect } from "@andornaut/game-kit/rect";
-import { HIT_RULE } from "@andornaut/game-kit/ui/hitAreas";
-import { BUTTON_GAP, SMALL_BUTTON_GAP, STACK_BUTTON_GAP } from "@andornaut/game-kit/ui/spacing";
+import type { Point, Rect } from "@andornaut/game-kit/runtime/rect";
+import { HIT_RULE } from "@andornaut/game-kit/runtime/ui/hitAreas";
+import { BUTTON_GAP, SMALL_BUTTON_GAP, STACK_BUTTON_GAP } from "@andornaut/game-kit/runtime/ui/spacing";
 
 import { MAX_PACK_DOGS } from "../packCapacity.ts";
 

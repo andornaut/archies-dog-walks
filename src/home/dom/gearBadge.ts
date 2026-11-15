@@ -1,5 +1,5 @@
-import type { Rect } from "@andornaut/game-kit/rect";
-import type { BitmapFont } from "@andornaut/game-kit/text/bitmapFont";
+import type { Rect } from "@andornaut/game-kit/runtime/rect";
+import type { BitmapFont } from "@andornaut/game-kit/runtime/text/bitmapFont";
 
 import { type DomArtSource, imageArt } from "../../ui/dom/artElements.ts";
 import { createTextLine, placeText, setBox } from "../../ui/dom/pixelLine.ts";

@@ -1,4 +1,4 @@
-import { type Rect, ringRects } from "@andornaut/game-kit/rect";
+import { type Rect, ringRects } from "@andornaut/game-kit/runtime/rect";
 
 import type { PALETTE } from "../ui/palette.ts";
 import { HOME_LAYOUT, sectionFill } from "./homeLayout.ts";

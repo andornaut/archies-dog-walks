@@ -1,5 +1,5 @@
-import type { ProgressSource } from "@andornaut/game-kit/progressState";
-import { createDomProgressBar } from "@andornaut/game-kit/web/progress/dom/progressBar";
+import type { ProgressSource } from "@andornaut/game-kit/runtime/progressState";
+import { createDomProgressBar } from "@andornaut/game-kit/runtime/web/progress/dom/progressBar";
 
 import { SCREEN_CONFIG } from "../../data/screen.ts";
 import { GAME_PROGRESS_STYLE, LOADING_TIMING } from "../progressBar.ts";

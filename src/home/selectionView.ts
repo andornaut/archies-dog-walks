@@ -1,6 +1,6 @@
-import { itemAt } from "@andornaut/game-kit/arrays";
-import type { Rect } from "@andornaut/game-kit/rect";
-import type { FontMetrics } from "@andornaut/game-kit/text/bitmapFont";
+import { itemAt } from "@andornaut/game-kit/runtime/arrays";
+import type { Rect } from "@andornaut/game-kit/runtime/rect";
+import type { FontMetrics } from "@andornaut/game-kit/runtime/text/bitmapFont";
 
 import { dogFaceKey, gearIconKey } from "../assets/spriteKeys.ts";
 import type { DogId, GameData, GearId, WalkerId } from "../data/types.ts";

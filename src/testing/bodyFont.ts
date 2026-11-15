@@ -1,4 +1,4 @@
-import type { TextFitStyle } from "@andornaut/game-kit/text/textFit";
+import type { TextFitStyle } from "@andornaut/game-kit/runtime/text/textFit";
 
 import { gameGlyphs } from "./fontInk.ts";
 

@@ -1,6 +1,6 @@
-import { getOrInsertComputed } from "@andornaut/game-kit/maps";
-import { insetRect, type Point, type Rect, ringRects } from "@andornaut/game-kit/rect";
-import { MODAL_DIM } from "@andornaut/game-kit/view/modalDim";
+import { getOrInsertComputed } from "@andornaut/game-kit/runtime/maps";
+import { insetRect, type Point, type Rect, ringRects } from "@andornaut/game-kit/runtime/rect";
+import { MODAL_DIM } from "@andornaut/game-kit/runtime/view/modalDim";
 import type { GameObjects, Scene, Textures } from "phaser";
 
 import { PALETTE } from "../palette.ts";

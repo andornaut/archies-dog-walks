@@ -1,4 +1,4 @@
-import { itemAt } from "@andornaut/game-kit/arrays";
+import { itemAt } from "@andornaut/game-kit/runtime/arrays";
 
 import { type LaneDirection, moveLane } from "../layout/lanes.ts";
 

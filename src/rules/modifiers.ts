@@ -1,4 +1,4 @@
-import { assertNever } from "@andornaut/game-kit/assertNever";
+import { assertNever } from "@andornaut/game-kit/runtime/assertNever";
 
 import type { Effect, LiveTuning, Modifier, ModifierEffect, Stat } from "../data/types.ts";
 import { read } from "./units.ts";

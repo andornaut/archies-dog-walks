@@ -1,5 +1,5 @@
-import { assertNever } from "@andornaut/game-kit/assertNever";
-import { fillNames, signedText } from "@andornaut/game-kit/lines";
+import { assertNever } from "@andornaut/game-kit/runtime/assertNever";
+import { fillNames, signedText } from "@andornaut/game-kit/runtime/lines";
 
 import { minorObstacleName } from "../content/obstacleLooks.ts";
 import type { DogId, GameData, GearId } from "../data/types.ts";

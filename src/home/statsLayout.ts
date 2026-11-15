@@ -1,5 +1,5 @@
-import type { Rect } from "@andornaut/game-kit/rect";
-import { type FontMetrics, inkRowsOfLines } from "@andornaut/game-kit/text/bitmapFont";
+import type { Rect } from "@andornaut/game-kit/runtime/rect";
+import { type FontMetrics, inkRowsOfLines } from "@andornaut/game-kit/runtime/text/bitmapFont";
 
 import { LOGBOOK_PAGE, MIN_PRESS } from "../data/layout.ts";
 import { helpCapDy } from "../ui/labelHelpGap.ts";

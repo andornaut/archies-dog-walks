@@ -1,4 +1,4 @@
-import { containsPoint } from "@andornaut/game-kit/rect";
+import { containsPoint } from "@andornaut/game-kit/runtime/rect";
 import { describe, expect, it } from "vitest";
 
 import { MIN_PRESS } from "../data/layout.ts";

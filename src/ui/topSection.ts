@@ -1,4 +1,4 @@
-import { containsPoint, type Point, type Rect } from "@andornaut/game-kit/rect";
+import { containsPoint, type Point, type Rect } from "@andornaut/game-kit/runtime/rect";
 
 import { MIN_PRESS, TOP_BAR_SIZES, WALK_BAR_PARTS } from "../data/layout.ts";
 import { SCREEN_CONFIG } from "../data/screen.ts";

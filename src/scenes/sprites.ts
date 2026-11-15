@@ -1,6 +1,6 @@
-import { animationKey } from "@andornaut/game-kit/art/aseprite";
-import { getOrInsertComputed } from "@andornaut/game-kit/maps";
-import { opaqueBoundsOfRgba, type PixelBounds } from "@andornaut/game-kit/opaqueBounds";
+import { animationKey } from "@andornaut/game-kit/runtime/art/aseprite";
+import { getOrInsertComputed } from "@andornaut/game-kit/runtime/maps";
+import { opaqueBoundsOfRgba, type PixelBounds } from "@andornaut/game-kit/runtime/opaqueBounds";
 import type { GameObjects, Scene } from "phaser";
 
 import type { SpriteAnchor } from "../assets/manifest.ts";

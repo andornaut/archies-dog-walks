@@ -1,9 +1,9 @@
-import type { Rect } from "@andornaut/game-kit/rect";
+import type { Rect } from "@andornaut/game-kit/runtime/rect";
 import {
   type FontMetrics,
   inkRowsFromCapTop,
   inkRowsOfLines,
-} from "@andornaut/game-kit/text/bitmapFont";
+} from "@andornaut/game-kit/runtime/text/bitmapFont";
 
 import { END_SCREEN } from "../data/layout.ts";
 import { helpCapDy } from "../ui/labelHelpGap.ts";

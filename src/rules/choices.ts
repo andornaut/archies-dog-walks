@@ -1,5 +1,5 @@
-import { fillNames } from "@andornaut/game-kit/lines";
-import { type Random, randomInt, randomPick } from "@andornaut/game-kit/random";
+import { fillNames } from "@andornaut/game-kit/runtime/lines";
+import { type Random, randomInt, randomPick } from "@andornaut/game-kit/runtime/random";
 
 import { cardZoneKey } from "../assets/spriteKeys.ts";
 import type {

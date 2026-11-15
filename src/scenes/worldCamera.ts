@@ -1,4 +1,4 @@
-import type { Rect } from "@andornaut/game-kit/rect";
+import type { Rect } from "@andornaut/game-kit/runtime/rect";
 import { type Cameras, Core, type Game, Scale, type Scene, Scenes } from "phaser";
 
 import { SCREEN_CONFIG } from "../data/screen.ts";

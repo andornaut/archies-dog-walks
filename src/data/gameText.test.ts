@@ -1,4 +1,4 @@
-import { type FieldTable, strayNames } from "@andornaut/game-kit/lines";
+import { type FieldTable, strayNames } from "@andornaut/game-kit/runtime/lines";
 import { describe, expect, it } from "vitest";
 
 import { HOME_TEXT_FIELDS } from "../home/homeText.ts";

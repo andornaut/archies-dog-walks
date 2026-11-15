@@ -1,4 +1,4 @@
-import type { Rect } from "@andornaut/game-kit/rect";
+import type { Rect } from "@andornaut/game-kit/runtime/rect";
 
 import type { ZoneId } from "../data/types.ts";
 import { project, type RoadProjection } from "../layout/projection.ts";

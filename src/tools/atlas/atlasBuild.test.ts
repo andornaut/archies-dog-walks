@@ -1,5 +1,5 @@
-import { buildAtlasPages } from "@andornaut/art-kit/atlasBuild";
-import { blankImage } from "@andornaut/art-kit/rgbaImage";
+import { buildAtlasPages } from "@andornaut/art-kit/build/atlasBuild";
+import { blankImage } from "@andornaut/art-kit/build/rgbaImage";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { AssetManifest } from "../../assets/manifest.ts";
@@ -7,7 +7,7 @@ import { sheetFromRows } from "../../testing/sheetImage.ts";
 import { buildAtlases, compactFrames } from "./atlasBuild.ts";
 import { layoutAtlases } from "./atlasLayout.ts";
 
-vi.mock("@andornaut/art-kit/atlasBuild", () => ({ buildAtlasPages: vi.fn() }));
+vi.mock("@andornaut/art-kit/build/atlasBuild", () => ({ buildAtlasPages: vi.fn() }));
 vi.mock("./atlasLayout.ts", async (original) => ({
   ...(await original<typeof import("./atlasLayout.ts")>()),
   layoutAtlases: vi.fn(),

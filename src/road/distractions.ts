@@ -1,6 +1,6 @@
-import { clamp01 } from "@andornaut/game-kit/numbers";
-import { type Random, weightedPick } from "@andornaut/game-kit/random";
-import { keysOf } from "@andornaut/game-kit/records";
+import { clamp01 } from "@andornaut/game-kit/runtime/numbers";
+import { type Random, weightedPick } from "@andornaut/game-kit/runtime/random";
+import { keysOf } from "@andornaut/game-kit/runtime/records";
 
 import { minorObstacleSpriteKey } from "../assets/spriteKeys.ts";
 import { minorLook } from "../content/obstacleLooks.ts";

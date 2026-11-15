@@ -1,11 +1,11 @@
-import { fillLine } from "@andornaut/game-kit/lines";
-import type { FontMetrics } from "@andornaut/game-kit/text/bitmapFont";
+import { fillLine } from "@andornaut/game-kit/runtime/lines";
+import type { FontMetrics } from "@andornaut/game-kit/runtime/text/bitmapFont";
 import {
   fitsRoom,
   type FittedText,
   fittingText,
   type TextFitStyle,
-} from "@andornaut/game-kit/text/textFit";
+} from "@andornaut/game-kit/runtime/text/textFit";
 
 import type { GameData } from "../data/types.ts";
 import { boxStyle, CARD_LAYOUT, cardEffectBox, FIRES_FIT } from "../layout/cardLayout.ts";

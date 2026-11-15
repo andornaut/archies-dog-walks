@@ -1,4 +1,4 @@
-import { seededRandom } from "@andornaut/game-kit/random";
+import { seededRandom } from "@andornaut/game-kit/runtime/random";
 import { describe, expect, it } from "vitest";
 
 import { minorLook, minorObstacleName, zoneSkins } from "../content/obstacleLooks.ts";

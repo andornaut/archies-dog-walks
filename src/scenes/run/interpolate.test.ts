@@ -1,5 +1,5 @@
-import { STEP_SECONDS } from "@andornaut/game-kit/clock/fixedStep";
-import { pixels } from "@andornaut/game-kit/units";
+import { STEP_SECONDS } from "@andornaut/game-kit/runtime/clock/fixedStep";
+import { pixels } from "@andornaut/game-kit/runtime/units";
 import { describe, expect, it } from "vitest";
 
 import { gameData } from "../../data/index.ts";

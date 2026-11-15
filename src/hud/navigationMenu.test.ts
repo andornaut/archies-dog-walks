@@ -1,4 +1,4 @@
-import { fillNames, wrapWords } from "@andornaut/game-kit/lines";
+import { fillNames, wrapWords } from "@andornaut/game-kit/runtime/lines";
 import { describe, expect, it } from "vitest";
 
 import { gameData } from "../data/index.ts";

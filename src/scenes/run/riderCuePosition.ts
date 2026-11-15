@@ -1,4 +1,4 @@
-import type { Point } from "@andornaut/game-kit/rect";
+import type { Point } from "@andornaut/game-kit/runtime/rect";
 
 // A pre-entry rider's cue stays visible in its lane until its body-following cue clears the road edge.
 export function riderCuePosition(junctureY: number, lane: Point, body: Point | undefined): Point {

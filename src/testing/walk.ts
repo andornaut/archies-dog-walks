@@ -1,5 +1,5 @@
 // The walk tests' data, road and helpers that build and step a walk.
-import { seededRandom } from "@andornaut/game-kit/random";
+import { seededRandom } from "@andornaut/game-kit/runtime/random";
 
 import { DEBUFFS } from "../data/debuffs.ts";
 import { DOGS } from "../data/dogs.ts";

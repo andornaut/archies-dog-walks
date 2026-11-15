@@ -1,5 +1,5 @@
-import { STEP_SECONDS } from "@andornaut/game-kit/clock/fixedStep";
-import { keysOf } from "@andornaut/game-kit/records";
+import { STEP_SECONDS } from "@andornaut/game-kit/runtime/clock/fixedStep";
+import { keysOf } from "@andornaut/game-kit/runtime/records";
 import { describe, expect, it, vi } from "vitest";
 
 import { LANE_COUNT } from "../data/screen.ts";
@@ -47,8 +47,8 @@ import { walkScrollSpeed } from "./walkMotion.ts";
 
 // While set, weightedPick ignores its weights, so every weighted planner draw is even.
 const unbiased = vi.hoisted(() => ({ on: false }));
-vi.mock("@andornaut/game-kit/random", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("@andornaut/game-kit/random")>();
+vi.mock("@andornaut/game-kit/runtime/random", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@andornaut/game-kit/runtime/random")>();
   const weightedPick: typeof actual.weightedPick = (random, items, weights) =>
     actual.weightedPick(random, items, unbiased.on ? weights.map(() => 1) : weights);
   return { ...actual, weightedPick };

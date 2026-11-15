@@ -1,4 +1,4 @@
-import { animationKey } from "@andornaut/game-kit/art/aseprite";
+import { animationKey } from "@andornaut/game-kit/runtime/art/aseprite";
 import { expect, it, vi } from "vitest";
 
 import type { HudMoment, HudMomentPainter, MomentArt } from "./hudMoments.ts";

@@ -1,4 +1,4 @@
-import type { Rect } from "@andornaut/game-kit/rect";
+import type { Rect } from "@andornaut/game-kit/runtime/rect";
 
 import type { PanelText } from "../ui/modal/types.ts";
 import { PALETTE } from "../ui/palette.ts";

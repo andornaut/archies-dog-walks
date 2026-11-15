@@ -1,6 +1,6 @@
-import { keysOf } from "@andornaut/game-kit/records";
-import { encodeSave, loadSave, type SaveFormat } from "@andornaut/game-kit/save/versionedSave";
-import { pixels } from "@andornaut/game-kit/units";
+import { keysOf } from "@andornaut/game-kit/runtime/records";
+import { encodeSave, loadSave, type SaveFormat } from "@andornaut/game-kit/runtime/save/versionedSave";
+import { pixels } from "@andornaut/game-kit/runtime/units";
 import * as v from "valibot";
 
 import { obstacleSkins } from "../content/obstacleLooks.ts";

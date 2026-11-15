@@ -1,4 +1,4 @@
-import type { HashedFiles } from "@andornaut/game-kit/web/pwa/vite/precachePlugin";
+import type { HashedFiles } from "@andornaut/game-kit/build/precachePlugin";
 
 import type { ArtFileMap } from "../assets/artUrl.ts";
 import { parseManifest } from "../assets/manifest.ts";

@@ -1,5 +1,5 @@
-import { keysOf } from "@andornaut/game-kit/records";
-import type { Checked, SaveFormat } from "@andornaut/game-kit/save/versionedSave";
+import { keysOf } from "@andornaut/game-kit/runtime/records";
+import type { Checked, SaveFormat } from "@andornaut/game-kit/runtime/save/versionedSave";
 import * as v from "valibot";
 
 import type {

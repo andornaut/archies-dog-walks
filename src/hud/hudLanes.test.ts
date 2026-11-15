@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 
-import { type Point, type Rect, rectsOverlap } from "@andornaut/game-kit/rect";
-import { inkRowsOfLines } from "@andornaut/game-kit/text/bitmapFont";
+import { type Point, type Rect, rectsOverlap } from "@andornaut/game-kit/runtime/rect";
+import { inkRowsOfLines } from "@andornaut/game-kit/runtime/text/bitmapFont";
 import { describe, expect, it } from "vitest";
 
 import { SCREEN_CONFIG, SCREEN_LAYOUT } from "../data/screen.ts";

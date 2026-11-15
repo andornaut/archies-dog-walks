@@ -1,7 +1,7 @@
-import { fillNames } from "@andornaut/game-kit/lines";
-import { keysOf } from "@andornaut/game-kit/records";
-import { rectsOverlap } from "@andornaut/game-kit/rect";
-import { inkRowsFromCapTop } from "@andornaut/game-kit/text/bitmapFont";
+import { fillNames } from "@andornaut/game-kit/runtime/lines";
+import { keysOf } from "@andornaut/game-kit/runtime/records";
+import { rectsOverlap } from "@andornaut/game-kit/runtime/rect";
+import { inkRowsFromCapTop } from "@andornaut/game-kit/runtime/text/bitmapFont";
 import { describe, expect, it } from "vitest";
 
 import { gameData } from "../data/index.ts";

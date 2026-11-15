@@ -1,4 +1,4 @@
-import { clampInto, containsPoint, type Point, type Rect } from "@andornaut/game-kit/rect";
+import { clampInto, containsPoint, type Point, type Rect } from "@andornaut/game-kit/runtime/rect";
 
 // Where a press that lands on the page beside the game's canvas (the margins the canvas leaves
 // below it or beside it, where #game's shape differs from the game's) acts in the walk: at the

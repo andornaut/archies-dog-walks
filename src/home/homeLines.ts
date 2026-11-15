@@ -1,5 +1,5 @@
-import { fillLine } from "@andornaut/game-kit/lines";
-import type { RequiredUpdateState } from "@andornaut/game-kit/web/pwa/updateReady";
+import { fillLine } from "@andornaut/game-kit/runtime/lines";
+import type { RequiredUpdateState } from "@andornaut/game-kit/runtime/web/pwa/updateReady";
 
 import type { DogId, GameData, HomeText, WalkerId } from "../data/types.ts";
 import { dollarText } from "../presentation/currency.ts";

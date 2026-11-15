@@ -1,7 +1,7 @@
-import { clampIndex, itemAt } from "@andornaut/game-kit/arrays";
-import { type ProgressHandle } from "@andornaut/game-kit/progressState";
-import { containsPoint, insetRect, type Rect } from "@andornaut/game-kit/rect";
-import { fontMetrics } from "@andornaut/game-kit/text/bitmapFont";
+import { clampIndex, itemAt } from "@andornaut/game-kit/runtime/arrays";
+import { type ProgressHandle } from "@andornaut/game-kit/runtime/progressState";
+import { containsPoint, insetRect, type Rect } from "@andornaut/game-kit/runtime/rect";
+import { fontMetrics } from "@andornaut/game-kit/runtime/text/bitmapFont";
 import { Core, type GameObjects, Scene, Scenes, type Time } from "phaser";
 
 import { artUrl } from "../assets/artFiles.ts";

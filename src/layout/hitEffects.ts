@@ -1,4 +1,4 @@
-import type { Point } from "@andornaut/game-kit/rect";
+import type { Point } from "@andornaut/game-kit/runtime/rect";
 
 import type { DebuffId, Effect, GameData, MinorObstacleId } from "../data/types.ts";
 import type { WalkStep } from "../runner/walk.ts";

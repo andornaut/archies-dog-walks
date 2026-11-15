@@ -1,4 +1,4 @@
-import { fillLine } from "@andornaut/game-kit/lines";
+import { fillLine } from "@andornaut/game-kit/runtime/lines";
 
 import type { GameData } from "../data/types.ts";
 import { MENU_TEXT_FIELDS } from "../home/menuText.ts";

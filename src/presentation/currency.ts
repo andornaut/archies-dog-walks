@@ -1,4 +1,4 @@
-import { signedText } from "@andornaut/game-kit/lines";
+import { signedText } from "@andornaut/game-kit/runtime/lines";
 
 import { type Cents, cents } from "../units.ts";
 

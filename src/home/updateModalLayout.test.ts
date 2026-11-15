@@ -1,4 +1,4 @@
-import { inkRowsFromCapTop } from "@andornaut/game-kit/text/bitmapFont";
+import { inkRowsFromCapTop } from "@andornaut/game-kit/runtime/text/bitmapFont";
 import { describe, expect, it } from "vitest";
 
 import { gameData } from "../data/index.ts";

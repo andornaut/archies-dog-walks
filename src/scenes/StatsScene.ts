@@ -1,5 +1,5 @@
-import { clampIndex } from "@andornaut/game-kit/arrays";
-import { containsPoint, type Point, type Rect } from "@andornaut/game-kit/rect";
+import { clampIndex } from "@andornaut/game-kit/runtime/arrays";
+import { containsPoint, type Point, type Rect } from "@andornaut/game-kit/runtime/rect";
 import { Core, Scene } from "phaser";
 
 import { artUrl } from "../assets/artFiles.ts";

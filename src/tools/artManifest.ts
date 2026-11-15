@@ -1,6 +1,6 @@
-import { decodePng } from "@andornaut/art-kit/png";
-import type { RgbaImage } from "@andornaut/art-kit/rgbaImage";
-import { opaqueBoundsOfRgba } from "@andornaut/game-kit/opaqueBounds";
+import { decodePng } from "@andornaut/art-kit/build/png";
+import type { RgbaImage } from "@andornaut/art-kit/build/rgbaImage";
+import { opaqueBoundsOfRgba } from "@andornaut/game-kit/runtime/opaqueBounds";
 import * as v from "valibot";
 
 import { isPlainObject, parseOrThrow } from "../assets/jsonSchema.ts";

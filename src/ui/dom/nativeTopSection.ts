@@ -1,4 +1,4 @@
-import { advanceWidth, type BitmapFont, inkWidth } from "@andornaut/game-kit/text/bitmapFont";
+import { advanceWidth, type BitmapFont, inkWidth } from "@andornaut/game-kit/runtime/text/bitmapFont";
 
 import { SCREEN_CONFIG } from "../../data/screen.ts";
 import { BUTTON_SIZE } from "../buttonGeometry.ts";

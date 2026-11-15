@@ -1,4 +1,4 @@
-import { createModalInputGate } from "@andornaut/game-kit/input/modalInput";
+import { createModalInputGate } from "@andornaut/game-kit/runtime/input/modalInput";
 
 import { createPressAdmission } from "../pressAdmission.ts";
 import type { UiLayer } from "../ui/dom/uiLayer.ts";

@@ -1,4 +1,4 @@
-import type { Point, Rect } from "@andornaut/game-kit/rect";
+import type { Point, Rect } from "@andornaut/game-kit/runtime/rect";
 import { describe, expect, it } from "vitest";
 
 import { SCREEN_LAYOUT } from "../data/screen.ts";

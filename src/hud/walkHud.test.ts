@@ -1,11 +1,11 @@
 import { readFileSync } from "node:fs";
 
-import { decodePng } from "@andornaut/art-kit/png";
-import { opaqueRect } from "@andornaut/art-kit/rgbaImage";
-import { keysOf } from "@andornaut/game-kit/records";
-import { type Point, type Rect, rectsOverlap } from "@andornaut/game-kit/rect";
-import { inkRowsFromCapTop } from "@andornaut/game-kit/text/bitmapFont";
-import { pixels } from "@andornaut/game-kit/units";
+import { decodePng } from "@andornaut/art-kit/build/png";
+import { opaqueRect } from "@andornaut/art-kit/build/rgbaImage";
+import { keysOf } from "@andornaut/game-kit/runtime/records";
+import { type Point, type Rect, rectsOverlap } from "@andornaut/game-kit/runtime/rect";
+import { inkRowsFromCapTop } from "@andornaut/game-kit/runtime/text/bitmapFont";
+import { pixels } from "@andornaut/game-kit/runtime/units";
 import { describe, expect, it } from "vitest";
 
 import { dogFaceKey, ownerCardFaceKey } from "../assets/spriteKeys.ts";

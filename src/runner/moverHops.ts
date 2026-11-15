@@ -1,5 +1,5 @@
-import { itemAt } from "@andornaut/game-kit/arrays";
-import { type Random, randomInt, seededRandom } from "@andornaut/game-kit/random";
+import { itemAt } from "@andornaut/game-kit/runtime/arrays";
+import { type Random, randomInt, seededRandom } from "@andornaut/game-kit/runtime/random";
 
 import type { StepShape } from "./movers.ts";
 

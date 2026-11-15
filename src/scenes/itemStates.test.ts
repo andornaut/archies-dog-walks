@@ -1,6 +1,6 @@
 import { isDeepStrictEqual } from "node:util";
 
-import { keysOf } from "@andornaut/game-kit/records";
+import { keysOf } from "@andornaut/game-kit/runtime/records";
 import { describe, expect, it } from "vitest";
 
 import { gameData } from "../data/index.ts";

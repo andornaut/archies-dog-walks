@@ -1,4 +1,4 @@
-import type { BitmapFont } from "@andornaut/game-kit/text/bitmapFont";
+import type { BitmapFont } from "@andornaut/game-kit/runtime/text/bitmapFont";
 
 import { SCREEN_CONFIG } from "../../data/screen.ts";
 import { deviceX, deviceY, frameRect, gridTransform } from "../domScale.ts";

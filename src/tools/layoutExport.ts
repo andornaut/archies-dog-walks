@@ -1,6 +1,6 @@
-import { wrapWords } from "@andornaut/game-kit/lines";
-import type { Rect } from "@andornaut/game-kit/rect";
-import { type FontMetrics, fontMetrics, inkWidth } from "@andornaut/game-kit/text/bitmapFont";
+import { wrapWords } from "@andornaut/game-kit/runtime/lines";
+import type { Rect } from "@andornaut/game-kit/runtime/rect";
+import { type FontMetrics, fontMetrics, inkWidth } from "@andornaut/game-kit/runtime/text/bitmapFont";
 
 import { DEPTH_STEPS } from "../assets/depthSteps.ts";
 import {

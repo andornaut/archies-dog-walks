@@ -1,6 +1,6 @@
 // Browser tabs offer development tools; installed app windows play as shipped.
-import { runsInAppWindow } from "@andornaut/game-kit/web/pwa/appWindow";
-import { INSTALLED_APP_DISPLAY_QUERY } from "@andornaut/game-kit/web/pwa/backNavigation";
+import { runsInAppWindow } from "@andornaut/game-kit/runtime/web/pwa/appWindow";
+import { INSTALLED_APP_DISPLAY_QUERY } from "@andornaut/game-kit/runtime/web/pwa/backNavigation";
 
 // The global that holds the game when dev=1, for the console and headless checks.
 export const DEV_GAME_GLOBAL = "archiesDogWalksGame";

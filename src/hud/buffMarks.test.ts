@@ -1,5 +1,5 @@
-import { fillNames } from "@andornaut/game-kit/lines";
-import { keysOf } from "@andornaut/game-kit/records";
+import { fillNames } from "@andornaut/game-kit/runtime/lines";
+import { keysOf } from "@andornaut/game-kit/runtime/records";
 import { describe, expect, it } from "vitest";
 
 import { gameData } from "../data/index.ts";

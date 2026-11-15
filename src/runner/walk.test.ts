@@ -1,9 +1,9 @@
-import { newlyEarned } from "@andornaut/game-kit/achievements";
-import { itemAt } from "@andornaut/game-kit/arrays";
-import { STEP_SECONDS } from "@andornaut/game-kit/clock/fixedStep";
-import { seededRandom } from "@andornaut/game-kit/random";
-import { keysOf } from "@andornaut/game-kit/records";
-import { pixels } from "@andornaut/game-kit/units";
+import { newlyEarned } from "@andornaut/game-kit/runtime/achievements";
+import { itemAt } from "@andornaut/game-kit/runtime/arrays";
+import { STEP_SECONDS } from "@andornaut/game-kit/runtime/clock/fixedStep";
+import { seededRandom } from "@andornaut/game-kit/runtime/random";
+import { keysOf } from "@andornaut/game-kit/runtime/records";
+import { pixels } from "@andornaut/game-kit/runtime/units";
 import { describe, expect, it } from "vitest";
 
 import { zoneSkins } from "../content/obstacleLooks.ts";

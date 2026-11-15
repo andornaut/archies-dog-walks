@@ -1,10 +1,10 @@
-import { clamp01 } from "@andornaut/game-kit/numbers";
-import type { Point, Rect } from "@andornaut/game-kit/rect";
+import { clamp01 } from "@andornaut/game-kit/runtime/numbers";
+import type { Point, Rect } from "@andornaut/game-kit/runtime/rect";
 import {
   type FontMetrics,
   inkRowsFromCapTop,
   inkRowsOfLines,
-} from "@andornaut/game-kit/text/bitmapFont";
+} from "@andornaut/game-kit/runtime/text/bitmapFont";
 
 import { MESSAGE_STRIP, OWNER_LEAD } from "../data/layout.ts";
 import { SCREEN_LAYOUT } from "../data/screen.ts";

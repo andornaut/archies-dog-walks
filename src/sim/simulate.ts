@@ -1,7 +1,7 @@
-import { newlyEarned } from "@andornaut/game-kit/achievements";
-import { STEP_SECONDS } from "@andornaut/game-kit/clock/fixedStep";
-import { type Random, randomStream } from "@andornaut/game-kit/random";
-import { keysOf } from "@andornaut/game-kit/records";
+import { newlyEarned } from "@andornaut/game-kit/runtime/achievements";
+import { STEP_SECONDS } from "@andornaut/game-kit/runtime/clock/fixedStep";
+import { type Random, randomStream } from "@andornaut/game-kit/runtime/random";
+import { keysOf } from "@andornaut/game-kit/runtime/records";
 
 import { LANE_COUNT } from "../data/screen.ts";
 import type {

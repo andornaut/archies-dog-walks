@@ -1,4 +1,4 @@
-import { insetRect, type Rect, ringRects } from "@andornaut/game-kit/rect";
+import { insetRect, type Rect, ringRects } from "@andornaut/game-kit/runtime/rect";
 
 import { fillPart } from "../../hud/dom/shopPage.ts";
 import type { DomScale } from "../../ui/domScale.ts";

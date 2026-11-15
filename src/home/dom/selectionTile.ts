@@ -1,5 +1,5 @@
-import { insetRect, type Rect, ringRects } from "@andornaut/game-kit/rect";
-import type { BitmapFont } from "@andornaut/game-kit/text/bitmapFont";
+import { insetRect, type Rect, ringRects } from "@andornaut/game-kit/runtime/rect";
+import type { BitmapFont } from "@andornaut/game-kit/runtime/text/bitmapFont";
 
 import { SLICES } from "../../data/layout.ts";
 import { type DomArtSource, sheetArt, sheetNineSlice } from "../../ui/dom/artElements.ts";

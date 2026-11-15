@@ -1,4 +1,4 @@
-import { blankImage } from "@andornaut/art-kit/rgbaImage";
+import { blankImage } from "@andornaut/art-kit/build/rgbaImage";
 import { describe, expect, it } from "vitest";
 
 import { ROAD_CAMERA, SCREEN_LAYOUT } from "../data/screen.ts";

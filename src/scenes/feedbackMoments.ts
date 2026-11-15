@@ -1,6 +1,6 @@
-import type { Point, Rect } from "@andornaut/game-kit/rect";
-import { fontMetrics } from "@andornaut/game-kit/text/bitmapFont";
-import { fittingText } from "@andornaut/game-kit/text/textFit";
+import type { Point, Rect } from "@andornaut/game-kit/runtime/rect";
+import { fontMetrics } from "@andornaut/game-kit/runtime/text/bitmapFont";
+import { fittingText } from "@andornaut/game-kit/runtime/text/textFit";
 import type { GameObjects, Scene, Tweens, Types } from "phaser";
 
 import { ownerFaceKey, WARNING_KEY, WARNING_TAG } from "../assets/spriteKeys.ts";

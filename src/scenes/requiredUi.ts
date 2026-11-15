@@ -2,8 +2,8 @@ import {
   createRequiredLoading,
   type RequiredLoading,
   type RequiredLoadingResource,
-} from "@andornaut/game-kit/load/loadingAttempts";
-import type { ProgressHandle } from "@andornaut/game-kit/progressState";
+} from "@andornaut/game-kit/runtime/load/loadingAttempts";
+import type { ProgressHandle } from "@andornaut/game-kit/runtime/progressState";
 
 import type { LoadingErrorView } from "../ui/dom/loadingError.ts";
 import type { UiLayer } from "../ui/dom/uiLayer.ts";

@@ -1,4 +1,4 @@
-import { type Random, randomPick } from "@andornaut/game-kit/random";
+import { type Random, randomPick } from "@andornaut/game-kit/runtime/random";
 
 import { zoneSkins } from "../content/obstacleLooks.ts";
 import type { GameData, MinorObstacleId, SkinId } from "../data/types.ts";

@@ -1,6 +1,6 @@
-import { itemAt } from "@andornaut/game-kit/arrays";
-import { sentences } from "@andornaut/game-kit/lines";
-import { insetRect, type Rect } from "@andornaut/game-kit/rect";
+import { itemAt } from "@andornaut/game-kit/runtime/arrays";
+import { sentences } from "@andornaut/game-kit/runtime/lines";
+import { insetRect, type Rect } from "@andornaut/game-kit/runtime/rect";
 
 import { withKeyNumber } from "../input/keyNumbers.ts";
 import { barTitleRoom } from "../ui/barTitle.ts";

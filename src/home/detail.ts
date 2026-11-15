@@ -1,4 +1,4 @@
-import { fillLine } from "@andornaut/game-kit/lines";
+import { fillLine } from "@andornaut/game-kit/runtime/lines";
 
 import type { DogId, GameData, GearId, WalkerId } from "../data/types.ts";
 import { dollarText } from "../presentation/currency.ts";

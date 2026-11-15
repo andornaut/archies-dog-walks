@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 
-import { getOrInsertComputed } from "@andornaut/game-kit/maps";
-import { type BitmapFont, parseBitmapFont } from "@andornaut/game-kit/text/bitmapFont";
+import { getOrInsertComputed } from "@andornaut/game-kit/runtime/maps";
+import { type BitmapFont, parseBitmapFont } from "@andornaut/game-kit/runtime/text/bitmapFont";
 
 const FONTS = new Map<string, BitmapFont>();
 

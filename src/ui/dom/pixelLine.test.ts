@@ -4,7 +4,7 @@ import {
   inkWidth,
   laidGlyphs,
   leftBearing,
-} from "@andornaut/game-kit/text/bitmapFont";
+} from "@andornaut/game-kit/runtime/text/bitmapFont";
 import { describe, expect, it } from "vitest";
 
 import { gameData } from "../../data/index.ts";

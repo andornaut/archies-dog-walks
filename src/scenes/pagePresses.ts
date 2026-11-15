@@ -1,12 +1,12 @@
-import type { Point } from "@andornaut/game-kit/rect";
-import { pageToGame } from "@andornaut/game-kit/view/pagePoint";
+import type { Point } from "@andornaut/game-kit/runtime/rect";
+import { pageToGame } from "@andornaut/game-kit/runtime/view/pagePoint";
 import {
   clientPoint,
   listenPagePresses as listenKitPagePresses,
   onBarePage,
   type PagePointerEvent,
   type PagePress,
-} from "@andornaut/game-kit/web/input/dom/pagePresses";
+} from "@andornaut/game-kit/runtime/web/input/dom/pagePresses";
 import type { Scene } from "phaser";
 
 import { logicalPoint } from "../input/phaser/logicalPointer.ts";

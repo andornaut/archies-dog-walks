@@ -1,6 +1,6 @@
-import { wrapWords } from "@andornaut/game-kit/lines";
-import type { Rect } from "@andornaut/game-kit/rect";
-import type { FontMetrics } from "@andornaut/game-kit/text/bitmapFont";
+import { wrapWords } from "@andornaut/game-kit/runtime/lines";
+import type { Rect } from "@andornaut/game-kit/runtime/rect";
+import type { FontMetrics } from "@andornaut/game-kit/runtime/text/bitmapFont";
 
 import { HOME_LAYOUT, SPEECH_ROOM, speechBubbleHeight, speechPads } from "./homeLayout.ts";
 

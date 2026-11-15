@@ -1,4 +1,4 @@
-import type { Point, Rect } from "@andornaut/game-kit/rect";
+import type { Point, Rect } from "@andornaut/game-kit/runtime/rect";
 
 import { DETAIL_WELL_KEY, ownerFaceKey } from "../assets/spriteKeys.ts";
 import type { GameData } from "../data/types.ts";

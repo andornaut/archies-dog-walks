@@ -1,5 +1,5 @@
-import { itemAt } from "@andornaut/game-kit/arrays";
-import type { Rect } from "@andornaut/game-kit/rect";
+import { itemAt } from "@andornaut/game-kit/runtime/arrays";
+import type { Rect } from "@andornaut/game-kit/runtime/rect";
 import { describe, expect, it } from "vitest";
 
 import { cardHeader, cardRowRects } from "./cardRow.ts";

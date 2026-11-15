@@ -1,8 +1,8 @@
 import { spawnSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 
-import { itemAt } from "@andornaut/game-kit/arrays";
-import type { Point } from "@andornaut/game-kit/rect";
+import { itemAt } from "@andornaut/game-kit/runtime/arrays";
+import type { Point } from "@andornaut/game-kit/runtime/rect";
 import { describe, expect, it } from "vitest";
 
 import shippedManifest from "../../public/art/manifest.json" with { type: "json" };

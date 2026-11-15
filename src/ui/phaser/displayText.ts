@@ -1,8 +1,8 @@
-import type { BitmapFont } from "@andornaut/game-kit/text/bitmapFont";
+import type { BitmapFont } from "@andornaut/game-kit/runtime/text/bitmapFont";
 import {
   phaserBitmapFont,
   type PhaserFontData,
-} from "@andornaut/game-kit/text/phaser/phaserBitmapFont";
+} from "@andornaut/game-kit/runtime/text/phaser/phaserBitmapFont";
 import type { GameObjects, Scene } from "phaser";
 
 import { plainMarks } from "../pixelFont.ts";

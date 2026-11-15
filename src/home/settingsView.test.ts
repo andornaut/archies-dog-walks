@@ -1,4 +1,4 @@
-import { insetRect } from "@andornaut/game-kit/rect";
+import { insetRect } from "@andornaut/game-kit/runtime/rect";
 import { describe, expect, it } from "vitest";
 
 import { DOM_ART_KEYS } from "../assets/domArt.ts";

@@ -1,7 +1,7 @@
 import { EventEmitter } from "node:events";
 
-import { guardSceneInput } from "@andornaut/game-kit/input/phaser/guardSceneInput";
-import { sceneStub } from "@andornaut/game-kit/testing/phaser/sceneStub";
+import { guardSceneInput } from "@andornaut/game-kit/runtime/input/phaser/guardSceneInput";
+import { sceneStub } from "@andornaut/game-kit/test/phaser/sceneStub";
 import type { Scene } from "phaser";
 import { describe, expect, it, vi } from "vitest";
 

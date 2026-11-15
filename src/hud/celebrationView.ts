@@ -1,5 +1,5 @@
-import type { Rect } from "@andornaut/game-kit/rect";
-import type { FittedText } from "@andornaut/game-kit/text/textFit";
+import type { Rect } from "@andornaut/game-kit/runtime/rect";
+import type { FittedText } from "@andornaut/game-kit/runtime/text/textFit";
 
 import { ZONE_CELEBRATION_ART } from "../assets/spriteKeys.ts";
 import { SLICES } from "../data/layout.ts";

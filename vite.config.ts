@@ -1,4 +1,4 @@
-import { gameViteConfig } from "@andornaut/game-kit/web/build/vite/gameConfig";
+import { gameViteConfig } from "@andornaut/game-kit/build/gameConfig";
 
 import { PREVIEW_HOST } from "./src/tools/previewHost.ts";
 import type * as ConfigModules from "./src/tools/viteConfigModules.ts";

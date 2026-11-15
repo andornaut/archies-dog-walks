@@ -1,6 +1,6 @@
-import { itemAt } from "@andornaut/game-kit/arrays";
-import { getOrInsertComputed } from "@andornaut/game-kit/maps";
-import { keysOf } from "@andornaut/game-kit/records";
+import { itemAt } from "@andornaut/game-kit/runtime/arrays";
+import { getOrInsertComputed } from "@andornaut/game-kit/runtime/maps";
+import { keysOf } from "@andornaut/game-kit/runtime/records";
 import type { GameObjects, Scene } from "phaser";
 
 import {

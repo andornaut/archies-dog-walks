@@ -1,5 +1,5 @@
-import { type Point, type Rect } from "@andornaut/game-kit/rect";
-import { pageToGame } from "@andornaut/game-kit/view/pagePoint";
+import { type Point, type Rect } from "@andornaut/game-kit/runtime/rect";
+import { pageToGame } from "@andornaut/game-kit/runtime/view/pagePoint";
 import { Core, type Scene, Scenes } from "phaser";
 
 import { artUrl } from "../assets/artFiles.ts";

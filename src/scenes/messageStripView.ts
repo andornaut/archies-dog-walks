@@ -1,4 +1,4 @@
-import { fontMetrics, laidGlyphs } from "@andornaut/game-kit/text/bitmapFont";
+import { fontMetrics, laidGlyphs } from "@andornaut/game-kit/runtime/text/bitmapFont";
 import type { Scene } from "phaser";
 
 import { ownerCardFaceKey } from "../assets/spriteKeys.ts";

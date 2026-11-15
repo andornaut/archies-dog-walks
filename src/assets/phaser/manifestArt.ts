@@ -1,5 +1,5 @@
-import { itemAt } from "@andornaut/game-kit/arrays";
-import { getOrInsertComputed } from "@andornaut/game-kit/maps";
+import { itemAt } from "@andornaut/game-kit/runtime/arrays";
+import { getOrInsertComputed } from "@andornaut/game-kit/runtime/maps";
 import type { Loader, Scene, Textures } from "phaser";
 
 import { artUrl } from "../artFiles.ts";

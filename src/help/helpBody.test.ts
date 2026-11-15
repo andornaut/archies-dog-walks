@@ -1,4 +1,4 @@
-import { placeholders } from "@andornaut/game-kit/lines";
+import { placeholders } from "@andornaut/game-kit/runtime/lines";
 import { describe, expect, it } from "vitest";
 
 import { gameData } from "../data/index.ts";

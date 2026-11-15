@@ -1,5 +1,5 @@
-import { clamp01 } from "@andornaut/game-kit/numbers";
-import { pixels } from "@andornaut/game-kit/units";
+import { clamp01 } from "@andornaut/game-kit/runtime/numbers";
+import { pixels } from "@andornaut/game-kit/runtime/units";
 
 import type { GameData } from "../../data/types.ts";
 import { advanceLaneControl } from "../../runner/laneControl.ts";

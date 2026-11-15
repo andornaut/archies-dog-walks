@@ -1,4 +1,4 @@
-import { fillLine, fillNames } from "@andornaut/game-kit/lines";
+import { fillLine, fillNames } from "@andornaut/game-kit/runtime/lines";
 
 import type { Achievement, DebuffId, DogId, EncounterId, GameData, GearId } from "../data/types.ts";
 import { achievementLabel } from "../rules/achievements.ts";

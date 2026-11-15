@@ -1,4 +1,4 @@
-import type { Point } from "@andornaut/game-kit/rect";
+import type { Point } from "@andornaut/game-kit/runtime/rect";
 import { describe, expect, it } from "vitest";
 
 import { helpActionForKey, helpActionForPointer } from "./helpInput.ts";

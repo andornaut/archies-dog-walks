@@ -1,6 +1,6 @@
-import { resolveThreshold } from "@andornaut/game-kit/achievements";
-import { assertNever } from "@andornaut/game-kit/assertNever";
-import { keysOf } from "@andornaut/game-kit/records";
+import { resolveThreshold } from "@andornaut/game-kit/runtime/achievements";
+import { assertNever } from "@andornaut/game-kit/runtime/assertNever";
+import { keysOf } from "@andornaut/game-kit/runtime/records";
 
 import { ACHIEVEMENTS } from "../data/achievements.ts";
 import type {

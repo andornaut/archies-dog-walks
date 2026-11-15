@@ -1,5 +1,5 @@
-import type { Rect } from "@andornaut/game-kit/rect";
-import { type FontMetrics, inkRowsFromCapTop } from "@andornaut/game-kit/text/bitmapFont";
+import type { Rect } from "@andornaut/game-kit/runtime/rect";
+import { type FontMetrics, inkRowsFromCapTop } from "@andornaut/game-kit/runtime/text/bitmapFont";
 
 import { DOG_SLOTS } from "../data/dogSlots.ts";
 import { SHOP_PAGE } from "../data/layout.ts";

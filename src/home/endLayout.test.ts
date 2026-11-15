@@ -1,10 +1,10 @@
 import { readFileSync } from "node:fs";
 
-import { decodePng } from "@andornaut/art-kit/png";
-import { fillLine } from "@andornaut/game-kit/lines";
-import { insetRect, type Rect, rectsOverlap } from "@andornaut/game-kit/rect";
-import { inkRowsFromCapTop, inkRowsOfLines } from "@andornaut/game-kit/text/bitmapFont";
-import { fittingText } from "@andornaut/game-kit/text/textFit";
+import { decodePng } from "@andornaut/art-kit/build/png";
+import { fillLine } from "@andornaut/game-kit/runtime/lines";
+import { insetRect, type Rect, rectsOverlap } from "@andornaut/game-kit/runtime/rect";
+import { inkRowsFromCapTop, inkRowsOfLines } from "@andornaut/game-kit/runtime/text/bitmapFont";
+import { fittingText } from "@andornaut/game-kit/runtime/text/textFit";
 import { describe, expect, it } from "vitest";
 
 import { gameData } from "../data/index.ts";

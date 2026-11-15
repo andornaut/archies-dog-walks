@@ -1,4 +1,4 @@
-import { containsPoint, type Point, type Rect } from "@andornaut/game-kit/rect";
+import { containsPoint, type Point, type Rect } from "@andornaut/game-kit/runtime/rect";
 
 export interface GridSpec {
   cellHeight: number;

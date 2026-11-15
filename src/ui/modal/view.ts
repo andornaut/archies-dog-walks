@@ -1,4 +1,4 @@
-import type { Rect } from "@andornaut/game-kit/rect";
+import type { Rect } from "@andornaut/game-kit/runtime/rect";
 
 import { HOME_SCREEN } from "../../data/layout.ts";
 import { barTitleLeft, barTitleRoom } from "../barTitle.ts";

@@ -1,4 +1,4 @@
-import { orderByTier } from "@andornaut/game-kit/achievements";
+import { orderByTier } from "@andornaut/game-kit/runtime/achievements";
 
 import { ACHIEVEMENTS } from "./achievements.ts";
 import { AMBIENT } from "./ambient.ts";

@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 
-import { STEP_SECONDS } from "@andornaut/game-kit/clock/fixedStep";
-import { randomStream } from "@andornaut/game-kit/random";
+import { STEP_SECONDS } from "@andornaut/game-kit/runtime/clock/fixedStep";
+import { randomStream } from "@andornaut/game-kit/runtime/random";
 import { describe, expect, it } from "vitest";
 
 import shippedManifest from "../../public/art/manifest.json" with { type: "json" };

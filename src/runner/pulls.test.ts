@@ -1,5 +1,5 @@
-import { seededRandom } from "@andornaut/game-kit/random";
-import { keysOf } from "@andornaut/game-kit/records";
+import { seededRandom } from "@andornaut/game-kit/runtime/random";
+import { keysOf } from "@andornaut/game-kit/runtime/records";
 import { describe, expect, it } from "vitest";
 
 import { DEBUFFS } from "../data/debuffs.ts";

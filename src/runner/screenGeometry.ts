@@ -1,4 +1,4 @@
-import { getOrInsertComputed } from "@andornaut/game-kit/maps";
+import { getOrInsertComputed } from "@andornaut/game-kit/runtime/maps";
 
 import { LANE_COUNT, ROAD_CAMERA, SCREEN_LAYOUT } from "../data/screen.ts";
 import { formationOrder } from "../layout/packFormation.ts";

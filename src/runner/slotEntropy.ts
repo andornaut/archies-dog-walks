@@ -1,4 +1,4 @@
-import { randomStream } from "@andornaut/game-kit/random";
+import { randomStream } from "@andornaut/game-kit/runtime/random";
 
 import type { PlannerStreams } from "./moverModel.ts";
 

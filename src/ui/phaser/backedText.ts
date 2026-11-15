@@ -1,4 +1,4 @@
-import type { Rect } from "@andornaut/game-kit/rect";
+import type { Rect } from "@andornaut/game-kit/runtime/rect";
 import type { GameObjects } from "phaser";
 
 import { centredInkOffsets } from "../centredInkBlock.ts";

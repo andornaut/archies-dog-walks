@@ -1,6 +1,6 @@
 import { relative } from "node:path/posix";
 
-import { contentHash } from "@andornaut/game-kit/web/build/vite/contentHash";
+import { contentHash } from "@andornaut/game-kit/build/contentHash";
 import { type Plugin, runnerImport } from "vite";
 
 import { DOM_BUTTON_SKIN, domArtPath } from "../assets/domArt.ts";

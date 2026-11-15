@@ -1,5 +1,5 @@
-import type { AchievementDef, Threshold } from "@andornaut/game-kit/achievements";
-import type { InstallStepsKind } from "@andornaut/game-kit/web/pwa/installState";
+import type { AchievementDef, Threshold } from "@andornaut/game-kit/runtime/achievements";
+import type { InstallStepsKind } from "@andornaut/game-kit/runtime/web/pwa/installState";
 
 import type { ACHIEVEMENTS } from "./achievements.ts";
 import type { DEBUFFS } from "./debuffs.ts";

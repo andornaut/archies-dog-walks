@@ -1,4 +1,4 @@
-import { containsPoint, type Point, type Rect } from "@andornaut/game-kit/rect";
+import { containsPoint, type Point, type Rect } from "@andornaut/game-kit/runtime/rect";
 
 import type { LaneDirection } from "../layout/lanes.ts";
 import type { ScreenLayout } from "../layout/screenLayout.ts";

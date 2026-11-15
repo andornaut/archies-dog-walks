@@ -1,4 +1,4 @@
-import { wrapWords } from "@andornaut/game-kit/lines";
+import { wrapWords } from "@andornaut/game-kit/runtime/lines";
 import { describe, expect, it } from "vitest";
 
 import { bodyTextWidth } from "../testing/bodyFont.ts";

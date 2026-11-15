@@ -1,18 +1,18 @@
-import { wrapWords } from "@andornaut/game-kit/lines";
-import { getOrInsertComputed } from "@andornaut/game-kit/maps";
-import type { Rect } from "@andornaut/game-kit/rect";
+import { wrapWords } from "@andornaut/game-kit/runtime/lines";
+import { getOrInsertComputed } from "@andornaut/game-kit/runtime/maps";
+import type { Rect } from "@andornaut/game-kit/runtime/rect";
 import {
   type BitmapFont,
   type FontMetrics,
   fontMetrics,
   leftBearing,
-} from "@andornaut/game-kit/text/bitmapFont";
+} from "@andornaut/game-kit/runtime/text/bitmapFont";
 import {
   phaserBitmapFont,
   type PhaserFontData,
-} from "@andornaut/game-kit/text/phaser/phaserBitmapFont";
-import { registerPixelFont } from "@andornaut/game-kit/text/phaser/registerPixelFont";
-import { type FittedText, fittingText, type TextFitStyle } from "@andornaut/game-kit/text/textFit";
+} from "@andornaut/game-kit/runtime/text/phaser/phaserBitmapFont";
+import { registerPixelFont } from "@andornaut/game-kit/runtime/text/phaser/registerPixelFont";
+import { type FittedText, fittingText, type TextFitStyle } from "@andornaut/game-kit/runtime/text/textFit";
 import type { GameObjects, Scene, Types } from "phaser";
 
 import {

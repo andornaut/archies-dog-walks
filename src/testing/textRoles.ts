@@ -1,10 +1,10 @@
-import { fillLine, fillNames } from "@andornaut/game-kit/lines";
-import { keysOf } from "@andornaut/game-kit/records";
-import type { Rect } from "@andornaut/game-kit/rect";
-import { overflowOf } from "@andornaut/game-kit/text/overflow";
-import { type TextFitStyle } from "@andornaut/game-kit/text/textFit";
-import { buildLabel } from "@andornaut/game-kit/web/build/buildLabel";
-import { UNKNOWN_COMMIT } from "@andornaut/game-kit/web/build/buildVersion";
+import { fillLine, fillNames } from "@andornaut/game-kit/runtime/lines";
+import { keysOf } from "@andornaut/game-kit/runtime/records";
+import type { Rect } from "@andornaut/game-kit/runtime/rect";
+import { overflowOf } from "@andornaut/game-kit/runtime/text/overflow";
+import { type TextFitStyle } from "@andornaut/game-kit/runtime/text/textFit";
+import { buildLabel } from "@andornaut/game-kit/runtime/web/buildLabel";
+import { UNKNOWN_COMMIT } from "@andornaut/game-kit/build/buildVersion";
 
 import { gameData } from "../data/index.ts";
 import { SCREEN_LAYOUT } from "../data/screen.ts";

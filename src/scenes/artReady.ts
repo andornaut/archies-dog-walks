@@ -1,4 +1,4 @@
-import type { LoaderWatch } from "@andornaut/game-kit/load/phaser/watchLoader";
+import type { LoaderWatch } from "@andornaut/game-kit/runtime/load/phaser/watchLoader";
 import { type Scene, Scenes } from "phaser";
 
 // Set in the game registry, and emitted on the game, once boot has loaded and registered the

@@ -1,10 +1,10 @@
-import { animationSpecs as sheetAnimations } from "@andornaut/game-kit/art/aseprite";
+import { animationSpecs as sheetAnimations } from "@andornaut/game-kit/runtime/art/aseprite";
 import { describe, expect, it, vi } from "vitest";
 
 import { animationSpecs } from "./asepriteAnimations.ts";
 
-vi.mock("@andornaut/game-kit/art/aseprite", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("@andornaut/game-kit/art/aseprite")>();
+vi.mock("@andornaut/game-kit/runtime/art/aseprite", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@andornaut/game-kit/runtime/art/aseprite")>();
   return { ...actual, animationSpecs: vi.fn(actual.animationSpecs) };
 });
 

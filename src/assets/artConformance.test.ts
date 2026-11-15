@@ -1,7 +1,7 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { basename, join } from "node:path";
 
-import { decodePng } from "@andornaut/art-kit/png";
+import { decodePng } from "@andornaut/art-kit/build/png";
 import { describe, expect, it } from "vitest";
 
 import palette from "../../shared/palette.json" with { type: "json" };

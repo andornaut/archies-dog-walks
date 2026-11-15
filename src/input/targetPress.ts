@@ -3,4 +3,4 @@ export {
   pressUp,
   type TargetPress,
   type TargetPressRule,
-} from "@andornaut/game-kit/input/targetPress";
+} from "@andornaut/game-kit/runtime/input/targetPress";

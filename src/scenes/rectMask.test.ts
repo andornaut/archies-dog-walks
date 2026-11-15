@@ -1,4 +1,4 @@
-import type { Rect } from "@andornaut/game-kit/rect";
+import type { Rect } from "@andornaut/game-kit/runtime/rect";
 import type { Textures } from "phaser";
 import { describe, expect, it } from "vitest";
 

@@ -1,4 +1,4 @@
-import { type FieldTable, fillNames } from "@andornaut/game-kit/lines";
+import { type FieldTable, fillNames } from "@andornaut/game-kit/runtime/lines";
 
 import type { HomeText } from "../data/types.ts";
 

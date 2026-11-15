@@ -1,4 +1,4 @@
-import { decodePng } from "@andornaut/art-kit/png";
+import { decodePng } from "@andornaut/art-kit/build/png";
 
 import { cardGreyPath, remapCardGrey } from "../../assets/cardArt.ts";
 import { DOM_CHOICE_CARD_ART, DOM_DIM_ART_KEYS, domArtPath } from "../../assets/domArt.ts";

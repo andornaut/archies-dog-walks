@@ -1,4 +1,4 @@
-import { keysOf } from "@andornaut/game-kit/records";
+import { keysOf } from "@andornaut/game-kit/runtime/records";
 
 import type { GameData } from "../data/types.ts";
 import type { LastWalk, Owned } from "../save/schema.ts";

@@ -1,5 +1,5 @@
-import { fillNames, wrapWords } from "@andornaut/game-kit/lines";
-import { containsPoint, rectsOverlap } from "@andornaut/game-kit/rect";
+import { fillNames, wrapWords } from "@andornaut/game-kit/runtime/lines";
+import { containsPoint, rectsOverlap } from "@andornaut/game-kit/runtime/rect";
 import { describe, expect, it } from "vitest";
 
 import { gameData } from "../data/index.ts";

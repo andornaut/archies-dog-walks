@@ -1,4 +1,4 @@
-import { SECONDS_EPSILON } from "@andornaut/game-kit/clock/fixedStep";
+import { SECONDS_EPSILON } from "@andornaut/game-kit/runtime/clock/fixedStep";
 
 import type { CardSource } from "../data/types.ts";
 

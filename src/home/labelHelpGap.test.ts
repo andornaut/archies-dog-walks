@@ -1,7 +1,7 @@
-import { fillLine, wrapWords } from "@andornaut/game-kit/lines";
-import { keysOf } from "@andornaut/game-kit/records";
-import { inkRowsFromCapTop } from "@andornaut/game-kit/text/bitmapFont";
-import { fittingText, type TextFitStyle } from "@andornaut/game-kit/text/textFit";
+import { fillLine, wrapWords } from "@andornaut/game-kit/runtime/lines";
+import { keysOf } from "@andornaut/game-kit/runtime/records";
+import { inkRowsFromCapTop } from "@andornaut/game-kit/runtime/text/bitmapFont";
+import { fittingText, type TextFitStyle } from "@andornaut/game-kit/runtime/text/textFit";
 import { describe, expect, it } from "vitest";
 
 import { gameData } from "../data/index.ts";

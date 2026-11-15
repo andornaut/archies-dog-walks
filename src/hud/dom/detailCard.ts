@@ -1,5 +1,5 @@
-import type { Rect } from "@andornaut/game-kit/rect";
-import type { BitmapFont } from "@andornaut/game-kit/text/bitmapFont";
+import type { Rect } from "@andornaut/game-kit/runtime/rect";
+import type { BitmapFont } from "@andornaut/game-kit/runtime/text/bitmapFont";
 
 import { DOM_DIM_ART_KEYS, domArtPath } from "../../assets/domArt.ts";
 import type { DetailArt, DetailCardView, DetailText } from "../../home/detailCardView.ts";

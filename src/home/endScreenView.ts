@@ -1,7 +1,7 @@
-import { itemAt } from "@andornaut/game-kit/arrays";
-import { fillLine } from "@andornaut/game-kit/lines";
-import type { Rect } from "@andornaut/game-kit/rect";
-import type { TextFitStyle } from "@andornaut/game-kit/text/textFit";
+import { itemAt } from "@andornaut/game-kit/runtime/arrays";
+import { fillLine } from "@andornaut/game-kit/runtime/lines";
+import type { Rect } from "@andornaut/game-kit/runtime/rect";
+import type { TextFitStyle } from "@andornaut/game-kit/runtime/text/textFit";
 
 import { ownerFaceKey, ZONE_PIPS_KEY } from "../assets/spriteKeys.ts";
 import { BADGE_STRIP } from "../data/layout.ts";

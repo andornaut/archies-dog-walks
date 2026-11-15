@@ -1,4 +1,4 @@
-import { fillLine, fillNames } from "@andornaut/game-kit/lines";
+import { fillLine, fillNames } from "@andornaut/game-kit/runtime/lines";
 
 import type { CharmEffect, DogId, Effect, GameData } from "../data/types.ts";
 import { amountText, changeAmount } from "../rules/causes.ts";

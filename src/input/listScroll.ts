@@ -1,4 +1,4 @@
-import type { ScrollRule } from "@andornaut/game-kit/input/listScroll";
+import type { ScrollRule } from "@andornaut/game-kit/runtime/input/listScroll";
 
 export {
   dragScroll,
@@ -16,7 +16,7 @@ export {
   scrollToShow,
   stepScroll,
   wheelScroll,
-} from "@andornaut/game-kit/input/listScroll";
+} from "@andornaut/game-kit/runtime/input/listScroll";
 
 // The fling and wheel; the slop is the game's tap distance.
 export const LIST_FLING: Omit<ScrollRule, "dragSlopPx"> = {

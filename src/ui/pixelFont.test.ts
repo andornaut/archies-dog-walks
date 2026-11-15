@@ -1,7 +1,7 @@
 import {
   glyphAdvance as fontGlyphAdvance,
   pixelFontAtlas as buildPixelFontAtlas,
-} from "@andornaut/game-kit/text/pixelFont";
+} from "@andornaut/game-kit/runtime/text/pixelFont";
 import { describe, expect, it, vi } from "vitest";
 
 import {
@@ -13,8 +13,8 @@ import {
   plainMarks,
 } from "./pixelFont.ts";
 
-vi.mock("@andornaut/game-kit/text/pixelFont", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("@andornaut/game-kit/text/pixelFont")>();
+vi.mock("@andornaut/game-kit/runtime/text/pixelFont", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@andornaut/game-kit/runtime/text/pixelFont")>();
   return {
     ...actual,
     glyphAdvance: vi.fn(actual.glyphAdvance),

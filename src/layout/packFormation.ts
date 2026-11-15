@@ -1,5 +1,5 @@
-import { itemAt } from "@andornaut/game-kit/arrays";
-import { keysOf } from "@andornaut/game-kit/records";
+import { itemAt } from "@andornaut/game-kit/runtime/arrays";
+import { keysOf } from "@andornaut/game-kit/runtime/records";
 
 import { DOGS } from "../data/dogs.ts";
 import { LANE_COUNT, SCREEN_CONFIG } from "../data/screen.ts";

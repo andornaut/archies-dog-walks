@@ -1,5 +1,5 @@
-import type { Point, Rect } from "@andornaut/game-kit/rect";
-import type { FontMetrics } from "@andornaut/game-kit/text/bitmapFont";
+import type { Point, Rect } from "@andornaut/game-kit/runtime/rect";
+import type { FontMetrics } from "@andornaut/game-kit/runtime/text/bitmapFont";
 
 import { MONEY_LABEL_PLACE } from "../data/layout.ts";
 import { SCREEN_LAYOUT } from "../data/screen.ts";

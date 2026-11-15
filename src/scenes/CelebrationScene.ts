@@ -1,5 +1,5 @@
-import { type Rect } from "@andornaut/game-kit/rect";
-import { inkRowsFromCapTop } from "@andornaut/game-kit/text/bitmapFont";
+import { type Rect } from "@andornaut/game-kit/runtime/rect";
+import { inkRowsFromCapTop } from "@andornaut/game-kit/runtime/text/bitmapFont";
 import { Scene } from "phaser";
 
 import { gameData } from "../data/index.ts";

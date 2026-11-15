@@ -1,5 +1,5 @@
-import type { Rect } from "@andornaut/game-kit/rect";
-import { type FontMetrics, inkRowsOfLines } from "@andornaut/game-kit/text/bitmapFont";
+import type { Rect } from "@andornaut/game-kit/runtime/rect";
+import { type FontMetrics, inkRowsOfLines } from "@andornaut/game-kit/runtime/text/bitmapFont";
 
 import { PAUSE_PANEL } from "../data/layout.ts";
 import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";

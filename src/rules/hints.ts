@@ -1,5 +1,5 @@
-import { fillNames } from "@andornaut/game-kit/lines";
-import { keysOf } from "@andornaut/game-kit/records";
+import { fillNames } from "@andornaut/game-kit/runtime/lines";
+import { keysOf } from "@andornaut/game-kit/runtime/records";
 
 import type { GameData, HintId, HintTrigger } from "../data/types.ts";
 import { read } from "./units.ts";

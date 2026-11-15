@@ -1,4 +1,4 @@
-import type { Point } from "@andornaut/game-kit/rect";
+import type { Point } from "@andornaut/game-kit/runtime/rect";
 import type { Events } from "phaser";
 
 import type { DogId } from "../data/types.ts";

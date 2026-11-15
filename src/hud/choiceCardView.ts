@@ -1,11 +1,11 @@
-import type { Rect } from "@andornaut/game-kit/rect";
+import type { Rect } from "@andornaut/game-kit/runtime/rect";
 import {
   type BitmapFont,
   fontMetrics,
   inkRowsOfLines,
   laidGlyphs,
-} from "@andornaut/game-kit/text/bitmapFont";
-import { fittingText, type TextFitStyle } from "@andornaut/game-kit/text/textFit";
+} from "@andornaut/game-kit/runtime/text/bitmapFont";
+import { fittingText, type TextFitStyle } from "@andornaut/game-kit/runtime/text/textFit";
 
 import { SKIP_CARD_ART } from "../assets/cardArt.ts";
 import { cardFrameTag } from "../assets/spriteKeys.ts";

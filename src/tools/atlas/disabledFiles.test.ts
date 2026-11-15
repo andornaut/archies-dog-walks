@@ -1,6 +1,6 @@
-import { decodePng } from "@andornaut/art-kit/png";
-import { blankImage } from "@andornaut/art-kit/rgbaImage";
-import { keysOf } from "@andornaut/game-kit/records";
+import { decodePng } from "@andornaut/art-kit/build/png";
+import { blankImage } from "@andornaut/art-kit/build/rgbaImage";
+import { keysOf } from "@andornaut/game-kit/runtime/records";
 import { describe, expect, it } from "vitest";
 
 import {

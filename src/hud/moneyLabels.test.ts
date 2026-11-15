@@ -1,4 +1,4 @@
-import { inkRowsOfLines } from "@andornaut/game-kit/text/bitmapFont";
+import { inkRowsOfLines } from "@andornaut/game-kit/runtime/text/bitmapFont";
 import { describe, expect, it } from "vitest";
 
 import { SCREEN_CONFIG, SCREEN_LAYOUT } from "../data/screen.ts";

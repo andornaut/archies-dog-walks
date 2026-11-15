@@ -1,4 +1,4 @@
-import type { Point } from "@andornaut/game-kit/rect";
+import type { Point } from "@andornaut/game-kit/runtime/rect";
 import type { Input, Scene } from "phaser";
 
 import { deviceFitOwned, logicalWorldPoint, worldFit } from "../../ui/worldFit.ts";

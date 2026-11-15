@@ -1,4 +1,4 @@
-import { loadSave } from "@andornaut/game-kit/save/versionedSave";
+import { loadSave } from "@andornaut/game-kit/runtime/save/versionedSave";
 import * as v from "valibot";
 import { describe, expect, it } from "vitest";
 

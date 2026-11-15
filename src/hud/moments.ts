@@ -1,10 +1,10 @@
-import type { Point, Rect } from "@andornaut/game-kit/rect";
+import type { Point, Rect } from "@andornaut/game-kit/runtime/rect";
 import {
   type FontMetrics,
   inkRowsFromCapTop,
   inkRowsOfLines,
-} from "@andornaut/game-kit/text/bitmapFont";
-import { type TextFitStyle } from "@andornaut/game-kit/text/textFit";
+} from "@andornaut/game-kit/runtime/text/bitmapFont";
+import { type TextFitStyle } from "@andornaut/game-kit/runtime/text/textFit";
 
 import { FIRED_LINE, LOW_CHIP, MOMENT_PARTS } from "../data/layout.ts";
 import { SCREEN_CONFIG } from "../data/screen.ts";

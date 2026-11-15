@@ -1,7 +1,7 @@
 // Game events, the manifest sound keys they play, and the mixing rules. No Phaser here: the
 // soundboard in src/scenes/ applies these to the sound manager.
 
-import { clamp01 } from "@andornaut/game-kit/numbers";
+import { clamp01 } from "@andornaut/game-kit/runtime/numbers";
 
 import { kebabCase } from "../assets/spriteKeys.ts";
 import type { DebuffId, Encounter, EncounterId } from "../data/types.ts";

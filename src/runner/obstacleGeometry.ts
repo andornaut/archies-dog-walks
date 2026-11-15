@@ -1,4 +1,4 @@
-import { getOrInsertComputed } from "@andornaut/game-kit/maps";
+import { getOrInsertComputed } from "@andornaut/game-kit/runtime/maps";
 
 import { IDLE_TAG, MOVING_TAGS } from "../assets/spriteKeys.ts";
 import type { EncounterId, GameData, SignatureProfile } from "../data/types.ts";

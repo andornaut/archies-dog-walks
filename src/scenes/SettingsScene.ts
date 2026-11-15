@@ -1,6 +1,6 @@
-import { itemAt } from "@andornaut/game-kit/arrays";
-import { containsPoint, type Rect } from "@andornaut/game-kit/rect";
-import { fittingText } from "@andornaut/game-kit/text/textFit";
+import { itemAt } from "@andornaut/game-kit/runtime/arrays";
+import { containsPoint, type Rect } from "@andornaut/game-kit/runtime/rect";
+import { fittingText } from "@andornaut/game-kit/runtime/text/textFit";
 import { Scene, Scenes } from "phaser";
 
 import { gameData } from "../data/index.ts";

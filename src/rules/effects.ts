@@ -1,4 +1,4 @@
-import { assertNever } from "@andornaut/game-kit/assertNever";
+import { assertNever } from "@andornaut/game-kit/runtime/assertNever";
 
 import type {
   DebuffId,

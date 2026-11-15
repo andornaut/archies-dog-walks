@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 
-import { decodePng } from "@andornaut/art-kit/png";
-import { itemAt } from "@andornaut/game-kit/arrays";
+import { decodePng } from "@andornaut/art-kit/build/png";
+import { itemAt } from "@andornaut/game-kit/runtime/arrays";
 import { describe, expect, it } from "vitest";
 
 import manifest from "../../public/art/manifest.json" with { type: "json" };

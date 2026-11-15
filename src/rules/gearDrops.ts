@@ -1,5 +1,5 @@
-import { chanceRound, type Random, weightedPick } from "@andornaut/game-kit/random";
-import { keysOf } from "@andornaut/game-kit/records";
+import { chanceRound, type Random, weightedPick } from "@andornaut/game-kit/runtime/random";
+import { keysOf } from "@andornaut/game-kit/runtime/records";
 
 import type { GameData, GearId, LiveTuning } from "../data/types.ts";
 import { mapPack } from "../state/pack.ts";

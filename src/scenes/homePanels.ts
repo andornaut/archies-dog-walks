@@ -1,4 +1,4 @@
-import { insetRect, type Rect } from "@andornaut/game-kit/rect";
+import { insetRect, type Rect } from "@andornaut/game-kit/runtime/rect";
 import type { GameObjects, Scene } from "phaser";
 
 import { gameData } from "../data/index.ts";

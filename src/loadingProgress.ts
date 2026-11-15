@@ -1,4 +1,4 @@
-import { createLayeredProgress, createProgressState } from "@andornaut/game-kit/progressState";
+import { createLayeredProgress, createProgressState } from "@andornaut/game-kit/runtime/progressState";
 
 import { offlineProgress } from "./pwa/offlineProgress.ts";
 import { requiredUpdateProgress } from "./pwa/requiredUpdate.ts";

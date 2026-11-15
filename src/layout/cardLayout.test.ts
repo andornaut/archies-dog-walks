@@ -1,11 +1,11 @@
 import { readFileSync } from "node:fs";
 
-import { decodePng } from "@andornaut/art-kit/png";
-import { itemAt } from "@andornaut/game-kit/arrays";
-import { keysOf } from "@andornaut/game-kit/records";
-import { insetRect, type Rect, rectsOverlap } from "@andornaut/game-kit/rect";
-import { inkRowsOfLines } from "@andornaut/game-kit/text/bitmapFont";
-import type { TextFitStyle } from "@andornaut/game-kit/text/textFit";
+import { decodePng } from "@andornaut/art-kit/build/png";
+import { itemAt } from "@andornaut/game-kit/runtime/arrays";
+import { keysOf } from "@andornaut/game-kit/runtime/records";
+import { insetRect, type Rect, rectsOverlap } from "@andornaut/game-kit/runtime/rect";
+import { inkRowsOfLines } from "@andornaut/game-kit/runtime/text/bitmapFont";
+import type { TextFitStyle } from "@andornaut/game-kit/runtime/text/textFit";
 import { describe, expect, it } from "vitest";
 
 import { SKIP_CARD_ART } from "../assets/cardArt.ts";

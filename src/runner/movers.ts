@@ -1,4 +1,4 @@
-import { progressAt, segmentAt } from "@andornaut/game-kit/motion";
+import { progressAt, segmentAt } from "@andornaut/game-kit/runtime/motion";
 
 import type { MovementKind } from "../data/types.ts";
 import type { LaneDirection } from "../layout/lanes.ts";

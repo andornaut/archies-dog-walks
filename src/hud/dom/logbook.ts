@@ -1,4 +1,4 @@
-import type { Rect } from "@andornaut/game-kit/rect";
+import type { Rect } from "@andornaut/game-kit/runtime/rect";
 
 import { logbookScrollbar, type LogbookView } from "../../home/logbookView.ts";
 import type { ShopPageView } from "../../home/shopPageView.ts";

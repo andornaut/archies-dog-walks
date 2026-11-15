@@ -1,6 +1,6 @@
-import { keysOf } from "@andornaut/game-kit/records";
-import { inkRowsOfLines } from "@andornaut/game-kit/text/bitmapFont";
-import { fitsRoom, type TextFitStyle } from "@andornaut/game-kit/text/textFit";
+import { keysOf } from "@andornaut/game-kit/runtime/records";
+import { inkRowsOfLines } from "@andornaut/game-kit/runtime/text/bitmapFont";
+import { fitsRoom, type TextFitStyle } from "@andornaut/game-kit/runtime/text/textFit";
 import { describe, expect, it } from "vitest";
 
 import { gameData } from "../data/index.ts";

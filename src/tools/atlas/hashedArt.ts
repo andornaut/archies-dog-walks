@@ -1,4 +1,4 @@
-import { contentHash } from "@andornaut/game-kit/web/build/vite/contentHash";
+import { contentHash } from "@andornaut/game-kit/build/contentHash";
 
 import { ATLAS_MANIFEST_PATH, type AtlasManifest } from "../../assets/atlasManifest.ts";
 import type { AssetManifest } from "../../assets/manifest.ts";

@@ -1,5 +1,5 @@
-import { fillLine } from "@andornaut/game-kit/lines";
-import type { Point, Rect } from "@andornaut/game-kit/rect";
+import { fillLine } from "@andornaut/game-kit/runtime/lines";
+import type { Point, Rect } from "@andornaut/game-kit/runtime/rect";
 
 import type { GameData } from "../data/types.ts";
 import { type CloseControl, closeControl } from "../ui/closeControl.ts";

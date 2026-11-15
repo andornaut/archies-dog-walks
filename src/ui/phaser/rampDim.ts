@@ -1,6 +1,6 @@
-import type { Rect } from "@andornaut/game-kit/rect";
-import { modalDimmer } from "@andornaut/game-kit/view/modalDim";
-import { snapshotRemapped } from "@andornaut/game-kit/view/phaser/snapshotRemap";
+import type { Rect } from "@andornaut/game-kit/runtime/rect";
+import { modalDimmer } from "@andornaut/game-kit/runtime/view/modalDim";
+import { snapshotRemapped } from "@andornaut/game-kit/runtime/view/phaser/snapshotRemap";
 import { Core, type GameObjects, type Scene, Scenes } from "phaser";
 
 import { ONE_STEP_DARKER } from "../../assets/housePalette.ts";

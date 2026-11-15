@@ -1,5 +1,5 @@
-import { itemAt } from "@andornaut/game-kit/arrays";
-import { getOrInsertComputed } from "@andornaut/game-kit/maps";
+import { itemAt } from "@andornaut/game-kit/runtime/arrays";
+import { getOrInsertComputed } from "@andornaut/game-kit/runtime/maps";
 
 import table from "../../shared/roadside.json" with { type: "json" };
 import { project, type RoadProjection } from "../layout/projection.ts";

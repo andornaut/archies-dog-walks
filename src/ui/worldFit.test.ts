@@ -1,4 +1,4 @@
-import { MAX_RENDER_SCALE, renderScale } from "@andornaut/game-kit/view/renderScale";
+import { MAX_RENDER_SCALE, renderScale } from "@andornaut/game-kit/runtime/view/renderScale";
 import { describe, expect, it } from "vitest";
 
 import { SCREEN_CONFIG } from "../data/screen.ts";

@@ -1,10 +1,10 @@
-import type { Rect } from "@andornaut/game-kit/rect";
+import type { Rect } from "@andornaut/game-kit/runtime/rect";
 import {
   type FontMetrics,
   inkRowsFromCapTop,
   inkRowsOfLines,
-} from "@andornaut/game-kit/text/bitmapFont";
-import { type TextFitStyle } from "@andornaut/game-kit/text/textFit";
+} from "@andornaut/game-kit/runtime/text/bitmapFont";
+import { type TextFitStyle } from "@andornaut/game-kit/runtime/text/textFit";
 
 import { CHOICE_CARDS } from "../data/layout.ts";
 import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";

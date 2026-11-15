@@ -1,4 +1,4 @@
-import type { PixelBounds } from "@andornaut/game-kit/opaqueBounds";
+import type { PixelBounds } from "@andornaut/game-kit/runtime/opaqueBounds";
 
 import type { SpriteAnchor } from "./manifest.ts";
 

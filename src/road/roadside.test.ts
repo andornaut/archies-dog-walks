@@ -1,7 +1,7 @@
 import { spawnSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 
-import { itemAt } from "@andornaut/game-kit/arrays";
+import { itemAt } from "@andornaut/game-kit/runtime/arrays";
 import { describe, expect, it } from "vitest";
 
 import { SCREEN_CONFIG } from "../data/screen.ts";

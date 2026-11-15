@@ -1,5 +1,5 @@
-import { ringRects } from "@andornaut/game-kit/rect";
-import type { BitmapFont } from "@andornaut/game-kit/text/bitmapFont";
+import { ringRects } from "@andornaut/game-kit/runtime/rect";
+import type { BitmapFont } from "@andornaut/game-kit/runtime/text/bitmapFont";
 
 import { SLICES } from "../../data/layout.ts";
 import { framedPart, textPart } from "../../hud/dom/detailCard.ts";

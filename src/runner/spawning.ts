@@ -1,4 +1,4 @@
-import { itemAt, partitionPoint } from "@andornaut/game-kit/arrays";
+import { itemAt, partitionPoint } from "@andornaut/game-kit/runtime/arrays";
 
 import { laneMask } from "../layout/lanes.ts";
 import { approachOutcomes } from "./approach.ts";

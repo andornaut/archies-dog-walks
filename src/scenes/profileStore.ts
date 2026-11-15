@@ -1,5 +1,5 @@
-import type { StoreLoadResult } from "@andornaut/game-kit/save/saveStore";
-import { localSaveStorage } from "@andornaut/game-kit/web/save/dom/localSaveStorage";
+import type { StoreLoadResult } from "@andornaut/game-kit/runtime/save/saveStore";
+import { localSaveStorage } from "@andornaut/game-kit/runtime/web/save/dom/localSaveStorage";
 import { type Game, type Scene, Scenes } from "phaser";
 
 import { gameData } from "../data/index.ts";

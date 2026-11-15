@@ -1,4 +1,4 @@
-import type { Reveal } from "@andornaut/game-kit/web/ui/dom/imageReady";
+import type { Reveal } from "@andornaut/game-kit/runtime/web/ui/dom/imageReady";
 
 import { SCREEN_CONFIG } from "../data/screen.ts";
 import { stripViewports } from "../help/helpPictures.ts";

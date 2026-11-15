@@ -1,6 +1,6 @@
-import { STEP_SECONDS } from "@andornaut/game-kit/clock/fixedStep";
-import { getOrInsertComputed } from "@andornaut/game-kit/maps";
-import { chance, type Random } from "@andornaut/game-kit/random";
+import { STEP_SECONDS } from "@andornaut/game-kit/runtime/clock/fixedStep";
+import { getOrInsertComputed } from "@andornaut/game-kit/runtime/maps";
+import { chance, type Random } from "@andornaut/game-kit/runtime/random";
 
 import type { DebuffId, DogId } from "../data/types.ts";
 import { type LaneDirection, laneMask } from "../layout/lanes.ts";

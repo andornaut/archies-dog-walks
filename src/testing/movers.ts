@@ -1,4 +1,4 @@
-import { randomStream, seededRandom } from "@andornaut/game-kit/random";
+import { randomStream, seededRandom } from "@andornaut/game-kit/runtime/random";
 
 import type { ConfiguredMovement, GameData, Movement, World } from "../data/types.ts";
 import type { PlannerStreams } from "../runner/moverModel.ts";

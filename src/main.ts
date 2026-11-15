@@ -2,15 +2,15 @@
 import "./crash/install.ts";
 // Turns the page frame on a touch screen in landscape before any script runs; main.css reads its
 // --inset-* safe-area insets.
-import "@andornaut/game-kit/web/view/frameTurnPortraitGame.css";
+import "@andornaut/game-kit/runtime/web/view/frameTurnPortraitGame.css";
 import "./main.css";
 
-import { MENU_FPS } from "@andornaut/game-kit/clock/frameCap";
-import { capFrameRate } from "@andornaut/game-kit/clock/phaser/capFrameRate";
-import { LOADER_CONFIG } from "@andornaut/game-kit/load/loaderConfig";
-import type { ProgressHandle } from "@andornaut/game-kit/progressState";
-import { MAX_RENDER_SCALE } from "@andornaut/game-kit/view/renderScale";
-import { followFrameTurn } from "@andornaut/game-kit/web/view/phaser/followFrameTurn";
+import { MENU_FPS } from "@andornaut/game-kit/runtime/clock/frameCap";
+import { capFrameRate } from "@andornaut/game-kit/runtime/clock/phaser/capFrameRate";
+import { LOADER_CONFIG } from "@andornaut/game-kit/runtime/load/loaderConfig";
+import type { ProgressHandle } from "@andornaut/game-kit/runtime/progressState";
+import { MAX_RENDER_SCALE } from "@andornaut/game-kit/runtime/view/renderScale";
+import { followFrameTurn } from "@andornaut/game-kit/runtime/web/view/phaser/followFrameTurn";
 import { Core, Game, Scale, WEBGL } from "phaser";
 
 import { CRASH_SCREEN } from "./crash/crashScreen.ts";

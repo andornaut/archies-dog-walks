@@ -1,4 +1,4 @@
-import { type Seconds } from "@andornaut/game-kit/units";
+import { type Seconds } from "@andornaut/game-kit/runtime/units";
 import { describe, expect, expectTypeOf, it } from "vitest";
 
 import { read } from "../rules/units.ts";

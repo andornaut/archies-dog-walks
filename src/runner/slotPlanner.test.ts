@@ -1,4 +1,4 @@
-import * as random from "@andornaut/game-kit/random";
+import * as random from "@andornaut/game-kit/runtime/random";
 import { describe, expect, it, vi } from "vitest";
 
 import { testState } from "../testing/runState.ts";

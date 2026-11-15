@@ -1,4 +1,4 @@
-import { encodeSave } from "@andornaut/game-kit/save/versionedSave";
+import { encodeSave } from "@andornaut/game-kit/runtime/save/versionedSave";
 import { describe, expect, it, vi } from "vitest";
 
 import { gameData } from "../data/index.ts";

@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 
-import { PENDING_ATTRIBUTE } from "@andornaut/game-kit/web/ui/dom/imageReady";
+import { PENDING_ATTRIBUTE } from "@andornaut/game-kit/runtime/web/ui/dom/imageReady";
 import { describe, expect, it, vi } from "vitest";
 
 import { gameData } from "../../data/index.ts";

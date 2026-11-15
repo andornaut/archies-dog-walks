@@ -1,4 +1,4 @@
-import { type Point, type Rect } from "@andornaut/game-kit/rect";
+import { type Point, type Rect } from "@andornaut/game-kit/runtime/rect";
 import { Core, Scene, Scenes } from "phaser";
 
 import { gameData } from "../data/index.ts";

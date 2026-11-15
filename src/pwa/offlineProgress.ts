@@ -1,6 +1,6 @@
-import { createProgressState, type ProgressHandle } from "@andornaut/game-kit/progressState";
-import type { OfflineActivity } from "@andornaut/game-kit/web/pwa/dom/offlinePlay";
-import type { DownloadProgress } from "@andornaut/game-kit/web/pwa/downloadProgress";
+import { createProgressState, type ProgressHandle } from "@andornaut/game-kit/runtime/progressState";
+import type { OfflineActivity } from "@andornaut/game-kit/runtime/web/pwa/dom/offlinePlay";
+import type { DownloadProgress } from "@andornaut/game-kit/runtime/web/pwa/downloadProgress";
 
 export const offlineProgress = createProgressState();
 let pending: ProgressHandle | undefined;

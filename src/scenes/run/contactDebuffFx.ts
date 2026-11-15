@@ -1,5 +1,5 @@
-import { animationKey } from "@andornaut/game-kit/art/aseprite";
-import type { Point } from "@andornaut/game-kit/rect";
+import { animationKey } from "@andornaut/game-kit/runtime/art/aseprite";
+import type { Point } from "@andornaut/game-kit/runtime/rect";
 import type { GameObjects, Scene, Time } from "phaser";
 
 import type { DogId } from "../../data/types.ts";

@@ -1,5 +1,5 @@
-import { itemAt } from "@andornaut/game-kit/arrays";
-import type { Rect } from "@andornaut/game-kit/rect";
+import { itemAt } from "@andornaut/game-kit/runtime/arrays";
+import type { Rect } from "@andornaut/game-kit/runtime/rect";
 
 import type { GameData } from "../data/types.ts";
 import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";

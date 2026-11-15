@@ -1,4 +1,4 @@
-import { getOrInsertComputed } from "@andornaut/game-kit/maps";
+import { getOrInsertComputed } from "@andornaut/game-kit/runtime/maps";
 import { BlendModes, GameObjects, type Scene } from "phaser";
 
 import { gameData } from "../../data/index.ts";

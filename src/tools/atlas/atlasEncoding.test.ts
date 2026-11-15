@@ -1,13 +1,13 @@
-import { encodeIndexedPng } from "@andornaut/art-kit/indexedPng";
-import { encodeRgbaPng } from "@andornaut/art-kit/png";
-import type { RgbaImage } from "@andornaut/art-kit/rgbaImage";
+import { encodeIndexedPng } from "@andornaut/art-kit/build/indexedPng";
+import { encodeRgbaPng } from "@andornaut/art-kit/build/png";
+import type { RgbaImage } from "@andornaut/art-kit/build/rgbaImage";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { encodePng } from "./atlasBuild.ts";
 
-vi.mock("@andornaut/art-kit/indexedPng", () => ({ encodeIndexedPng: vi.fn() }));
-vi.mock("@andornaut/art-kit/png", async (original) => ({
-  ...(await original<typeof import("@andornaut/art-kit/png")>()),
+vi.mock("@andornaut/art-kit/build/indexedPng", () => ({ encodeIndexedPng: vi.fn() }));
+vi.mock("@andornaut/art-kit/build/png", async (original) => ({
+  ...(await original<typeof import("@andornaut/art-kit/build/png")>()),
   encodeRgbaPng: vi.fn(),
 }));
 

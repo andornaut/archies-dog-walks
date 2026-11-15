@@ -1,6 +1,6 @@
 import { readdirSync, readFileSync } from "node:fs";
 
-import { fillNames } from "@andornaut/game-kit/lines";
+import { fillNames } from "@andornaut/game-kit/runtime/lines";
 import { describe, expect, it } from "vitest";
 
 import { gameData } from "../data/index.ts";

@@ -1,4 +1,4 @@
-import { createProgressState } from "@andornaut/game-kit/progressState";
+import { createProgressState } from "@andornaut/game-kit/runtime/progressState";
 import { expect, it, vi } from "vitest";
 
 import { pauseLoadingError } from "./loadingErrorPause.ts";

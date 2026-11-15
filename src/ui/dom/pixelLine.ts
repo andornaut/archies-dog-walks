@@ -1,11 +1,11 @@
-import type { Rect } from "@andornaut/game-kit/rect";
+import type { Rect } from "@andornaut/game-kit/runtime/rect";
 import {
   advanceWidth,
   type BitmapFont,
   fontMetrics,
   laidGlyphs,
   leftBearing,
-} from "@andornaut/game-kit/text/bitmapFont";
+} from "@andornaut/game-kit/runtime/text/bitmapFont";
 
 import { centredInkOffsets } from "../centredInkBlock.ts";
 import {

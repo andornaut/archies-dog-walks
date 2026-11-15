@@ -1,4 +1,4 @@
-import type { Rect } from "@andornaut/game-kit/rect";
+import type { Rect } from "@andornaut/game-kit/runtime/rect";
 
 import { WIDE_BUTTON_X } from "../data/layout.ts";
 import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";

@@ -1,5 +1,5 @@
-import type { Point } from "@andornaut/game-kit/rect";
-import type { BitmapFont } from "@andornaut/game-kit/text/bitmapFont";
+import type { Point } from "@andornaut/game-kit/runtime/rect";
+import type { BitmapFont } from "@andornaut/game-kit/runtime/text/bitmapFont";
 
 import { type DomScale, gridX, gridY } from "../domScale.ts";
 import type { PillColours } from "./labelBlock.ts";

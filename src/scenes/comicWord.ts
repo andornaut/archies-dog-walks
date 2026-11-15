@@ -1,4 +1,4 @@
-import type { Point } from "@andornaut/game-kit/rect";
+import type { Point } from "@andornaut/game-kit/runtime/rect";
 import type { GameObjects, Scene } from "phaser";
 
 import { COMIC_WORDS, type ComicGlyph, comicWordWidth } from "../layout/comicWords.ts";

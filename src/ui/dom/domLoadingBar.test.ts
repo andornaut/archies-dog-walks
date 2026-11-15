@@ -1,4 +1,4 @@
-import { createProgressState } from "@andornaut/game-kit/progressState";
+import { createProgressState } from "@andornaut/game-kit/runtime/progressState";
 import { afterEach, expect, it, vi } from "vitest";
 
 import { SCREEN_CONFIG } from "../../data/screen.ts";

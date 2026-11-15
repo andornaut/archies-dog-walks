@@ -1,9 +1,9 @@
-import { remapRgb } from "@andornaut/game-kit/rgba";
+import { remapRgb } from "@andornaut/game-kit/runtime/rgba";
 import { describe, expect, it, vi } from "vitest";
 
 import { greyFor, remapToGrey } from "./greyRamp.ts";
 
-vi.mock("@andornaut/game-kit/rgba", () => ({ remapRgb: vi.fn() }));
+vi.mock("@andornaut/game-kit/runtime/rgba", () => ({ remapRgb: vi.fn() }));
 
 const RAMP = [0xffffff, 0xd8d8d8, 0xa4a4a4, 0x727272, 0x4a4a4a, 0x181425];
 

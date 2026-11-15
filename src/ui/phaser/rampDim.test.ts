@@ -1,12 +1,12 @@
-import { sceneStub } from "@andornaut/game-kit/testing/phaser/sceneStub";
-import { snapshotRemapped } from "@andornaut/game-kit/view/phaser/snapshotRemap";
+import { sceneStub } from "@andornaut/game-kit/test/phaser/sceneStub";
+import { snapshotRemapped } from "@andornaut/game-kit/runtime/view/phaser/snapshotRemap";
 import type { Scene } from "phaser";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { addDim, addModalShade } from "./draw.ts";
 import { addRampDim } from "./rampDim.ts";
 
-vi.mock("@andornaut/game-kit/view/phaser/snapshotRemap", () => ({ snapshotRemapped: vi.fn() }));
+vi.mock("@andornaut/game-kit/runtime/view/phaser/snapshotRemap", () => ({ snapshotRemapped: vi.fn() }));
 vi.mock("phaser", () => ({
   Core: { Events: { POST_RENDER: "postrender", PRE_RENDER: "prerender" } },
   Scenes: { Events: { SHUTDOWN: "shutdown" } },

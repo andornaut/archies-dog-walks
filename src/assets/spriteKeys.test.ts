@@ -1,5 +1,5 @@
-import { animationKey } from "@andornaut/game-kit/art/aseprite";
-import { keysOf } from "@andornaut/game-kit/records";
+import { animationKey } from "@andornaut/game-kit/runtime/art/aseprite";
+import { keysOf } from "@andornaut/game-kit/runtime/records";
 import { describe, expect, it } from "vitest";
 
 import manifest from "../../public/art/manifest.json" with { type: "json" };

@@ -1,4 +1,4 @@
-import { fillLine, fillNames } from "@andornaut/game-kit/lines";
+import { fillLine, fillNames } from "@andornaut/game-kit/runtime/lines";
 
 import type { GameData, WalkerId } from "../data/types.ts";
 import { earningsKind } from "../home/endView.ts";

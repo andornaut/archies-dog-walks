@@ -1,6 +1,6 @@
-import { STEP_SECONDS } from "@andornaut/game-kit/clock/fixedStep";
-import { chanceRound, shuffled } from "@andornaut/game-kit/random";
-import { keysOf } from "@andornaut/game-kit/records";
+import { STEP_SECONDS } from "@andornaut/game-kit/runtime/clock/fixedStep";
+import { chanceRound, shuffled } from "@andornaut/game-kit/runtime/random";
+import { keysOf } from "@andornaut/game-kit/runtime/records";
 
 import type {
   EncounterId,

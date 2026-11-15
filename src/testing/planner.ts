@@ -1,6 +1,6 @@
 // The walk tests' view of the spawn planner on the game's road: the real data, the game's
 // road and pack, and each lane-blocking spawn's spans and contact with the pack.
-import { keysOf } from "@andornaut/game-kit/records";
+import { keysOf } from "@andornaut/game-kit/runtime/records";
 
 import { MINOR_OBSTACLES } from "../data/minorObstacles.ts";
 import { LANE_COUNT, ROAD_CAMERA, SCREEN_LAYOUT } from "../data/screen.ts";

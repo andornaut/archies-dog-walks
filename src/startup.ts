@@ -1,11 +1,11 @@
 // Install error handling before importing the game's renderer and other modules.
 import "./crash/install.ts";
-import "@andornaut/game-kit/web/view/frameTurnPortraitGame.css";
-import "@andornaut/game-kit/web/progress/dom/progressBar.css";
+import "@andornaut/game-kit/runtime/web/view/frameTurnPortraitGame.css";
+import "@andornaut/game-kit/runtime/web/progress/dom/progressBar.css";
 import "./main.css";
 
-import { createLayeredProgress, createProgressState } from "@andornaut/game-kit/progressState";
-import { trackInputModality } from "@andornaut/game-kit/web/ui/dom/focusModality";
+import { createLayeredProgress, createProgressState } from "@andornaut/game-kit/runtime/progressState";
+import { trackInputModality } from "@andornaut/game-kit/runtime/web/ui/dom/focusModality";
 
 import { loadingProgress } from "./loadingProgress.ts";
 import { mountDomLoadingBar } from "./ui/dom/domLoadingBar.ts";

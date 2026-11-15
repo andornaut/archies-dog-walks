@@ -1,5 +1,5 @@
-import type { Rect } from "@andornaut/game-kit/rect";
-import { browserExitPage, exitApp } from "@andornaut/game-kit/web/pwa/dom/exitApp";
+import type { Rect } from "@andornaut/game-kit/runtime/rect";
+import { browserExitPage, exitApp } from "@andornaut/game-kit/runtime/web/pwa/dom/exitApp";
 import type { Scene } from "phaser";
 
 import {

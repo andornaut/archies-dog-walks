@@ -1,4 +1,4 @@
-import { itemAt } from "@andornaut/game-kit/arrays";
+import { itemAt } from "@andornaut/game-kit/runtime/arrays";
 import { describe, expect, it, vi } from "vitest";
 
 import { DOGS } from "../data/dogs.ts";
@@ -51,7 +51,7 @@ vi.mock("./simulate.ts", async (importOriginal) => {
   const { cents } = await import("../units.ts");
   const { newRun } = await import("../state/runState.ts");
   const { runCountersOf } = await import("../rules/achievements.ts");
-  const { seededRandom } = await import("@andornaut/game-kit/random");
+  const { seededRandom } = await import("@andornaut/game-kit/runtime/random");
   const { SKILL_PRESETS } = await import("./skills.ts");
   const { zoneDelivery } = await import("./delivery.ts");
   const simulateRun: typeof actual.simulateRun = (data, seed, config) => {

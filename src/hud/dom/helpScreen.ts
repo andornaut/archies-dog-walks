@@ -1,4 +1,4 @@
-import { itemAt } from "@andornaut/game-kit/arrays";
+import { itemAt } from "@andornaut/game-kit/runtime/arrays";
 
 import { HELP_DOTS, type HelpView } from "../../help/helpView.ts";
 import { createTextLine, type DomTextLine, placeText, setBox } from "../../ui/dom/pixelLine.ts";

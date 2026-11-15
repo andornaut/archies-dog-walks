@@ -1,5 +1,5 @@
-import { wrapWords } from "@andornaut/game-kit/lines";
-import { type BitmapFont, inkWidth } from "@andornaut/game-kit/text/bitmapFont";
+import { wrapWords } from "@andornaut/game-kit/runtime/lines";
+import { type BitmapFont, inkWidth } from "@andornaut/game-kit/runtime/text/bitmapFont";
 
 import { PALETTE } from "../ui/palette.ts";
 import { plainMarks } from "../ui/pixelFont.ts";

@@ -1,4 +1,4 @@
-import { advanceWidth, type BitmapFont, fontMetrics } from "@andornaut/game-kit/text/bitmapFont";
+import { advanceWidth, type BitmapFont, fontMetrics } from "@andornaut/game-kit/runtime/text/bitmapFont";
 
 import {
   type DomScale,

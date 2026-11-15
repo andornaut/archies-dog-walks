@@ -1,4 +1,4 @@
-import { animationKey } from "@andornaut/game-kit/art/aseprite";
+import { animationKey } from "@andornaut/game-kit/runtime/art/aseprite";
 
 import type { NativeTopSection } from "../../ui/dom/nativeTopSection.ts";
 import type { HudCards } from "./hudCards.ts";

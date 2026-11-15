@@ -1,4 +1,4 @@
-import type { Point } from "@andornaut/game-kit/rect";
+import type { Point } from "@andornaut/game-kit/runtime/rect";
 
 import { zonePipTag } from "../assets/spriteKeys.ts";
 import type { DebuffId, DogId, GameData, ZoneId } from "../data/types.ts";

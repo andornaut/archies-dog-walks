@@ -1,6 +1,6 @@
-import { createProgressState, type ProgressHandle } from "@andornaut/game-kit/progressState";
-import type { DownloadProgress } from "@andornaut/game-kit/web/pwa/downloadProgress";
-import type { RequiredUpdateState } from "@andornaut/game-kit/web/pwa/updateReady";
+import { createProgressState, type ProgressHandle } from "@andornaut/game-kit/runtime/progressState";
+import type { DownloadProgress } from "@andornaut/game-kit/runtime/web/pwa/downloadProgress";
+import type { RequiredUpdateState } from "@andornaut/game-kit/runtime/web/pwa/updateReady";
 
 // A newer-save requirement shows the shared loading line: known download byte totals fill it,
 // and unmeasured phases travel. "unavailable" shows no line; home shows the required-update notice.

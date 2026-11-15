@@ -1,4 +1,4 @@
-import { buttonSkinProperty } from "@andornaut/game-kit/web/ui/dom/buttonSkin";
+import { buttonSkinProperty } from "@andornaut/game-kit/runtime/web/ui/dom/buttonSkin";
 
 import { artUrl } from "../../assets/artFiles.ts";
 import { DOM_BUTTON_SKIN, DOM_DIM_ART_KEYS, DOM_STYLE_ART } from "../../assets/domArt.ts";

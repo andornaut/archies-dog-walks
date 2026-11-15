@@ -1,4 +1,4 @@
-import { fontMetrics, inkWidth } from "@andornaut/game-kit/text/bitmapFont";
+import { fontMetrics, inkWidth } from "@andornaut/game-kit/runtime/text/bitmapFont";
 import { describe, expect, it } from "vitest";
 
 import { gameData } from "../data/index.ts";

@@ -1,5 +1,5 @@
-import { newlyEarned } from "@andornaut/game-kit/achievements";
-import { keysOf } from "@andornaut/game-kit/records";
+import { newlyEarned } from "@andornaut/game-kit/runtime/achievements";
+import { keysOf } from "@andornaut/game-kit/runtime/records";
 import { describe, expect, it } from "vitest";
 
 import { gameData } from "../data/index.ts";

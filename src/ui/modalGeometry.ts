@@ -1,4 +1,4 @@
-import { MODAL_CONTENT } from "@andornaut/game-kit/modalLayout";
+import { MODAL_CONTENT } from "@andornaut/game-kit/runtime/modalLayout";
 
 import { MODAL_SPACING } from "../data/layout.ts";
 import { BUTTON_SIZE } from "./buttonGeometry.ts";

@@ -6,8 +6,8 @@ import { expect, it } from "vitest";
 const lint = new ESLint({ cwd: fileURLToPath(new URL("../../", import.meta.url)) });
 
 it.each([
-  ["ui/dom/probe.ts", "@andornaut/game-kit/input/modalInput", false],
-  ["ui/dom/probe.ts", "@andornaut/game-kit/input/onePress", false],
+  ["ui/dom/probe.ts", "@andornaut/game-kit/runtime/input/modalInput", false],
+  ["ui/dom/probe.ts", "@andornaut/game-kit/runtime/input/onePress", false],
   ["ui/dom/probe.ts", "../../input/onePress.ts", true],
   ["ui/dom/probe.ts", "../../scenes/uiKit.ts", true],
   ["road/probe.ts", "../rules/route.ts", false],

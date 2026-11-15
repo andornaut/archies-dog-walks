@@ -1,4 +1,4 @@
-import { keysOf } from "@andornaut/game-kit/records";
+import { keysOf } from "@andornaut/game-kit/runtime/records";
 import * as v from "valibot";
 
 import type {

@@ -1,5 +1,5 @@
-import { remapRgb } from "@andornaut/game-kit/rgba";
-import { modalDimmer } from "@andornaut/game-kit/view/modalDim";
+import { remapRgb } from "@andornaut/game-kit/runtime/rgba";
+import { modalDimmer } from "@andornaut/game-kit/runtime/view/modalDim";
 
 import { domArtPath } from "../assets/domArt.ts";
 import { ONE_STEP_DARKER } from "../assets/housePalette.ts";

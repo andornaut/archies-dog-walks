@@ -1,4 +1,4 @@
-import { keysOf } from "@andornaut/game-kit/records";
+import { keysOf } from "@andornaut/game-kit/runtime/records";
 
 import type { Effect, GameData, Modifier, Walker, WalkerId } from "../data/types.ts";
 import { packDogs } from "../state/pack.ts";

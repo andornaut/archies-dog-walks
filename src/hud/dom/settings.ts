@@ -1,5 +1,5 @@
-import type { Point } from "@andornaut/game-kit/rect";
-import type { BitmapFont } from "@andornaut/game-kit/text/bitmapFont";
+import type { Point } from "@andornaut/game-kit/runtime/rect";
+import type { BitmapFont } from "@andornaut/game-kit/runtime/text/bitmapFont";
 
 import { SLICES } from "../../data/layout.ts";
 import type { VolumeKey } from "../../home/settings.ts";

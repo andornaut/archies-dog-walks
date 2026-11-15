@@ -1,5 +1,5 @@
-import { isOutside } from "@andornaut/game-kit/input/outsideTap";
-import { containsPoint, type Rect } from "@andornaut/game-kit/rect";
+import { isOutside } from "@andornaut/game-kit/runtime/input/outsideTap";
+import { containsPoint, type Rect } from "@andornaut/game-kit/runtime/rect";
 import { describe, expect, it } from "vitest";
 
 import { SCREEN_LAYOUT } from "../data/screen.ts";

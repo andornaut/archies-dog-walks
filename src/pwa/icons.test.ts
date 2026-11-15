@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 
-import { webManifestIconUrls } from "@andornaut/game-kit/web/pwa/precacheList";
+import { webManifestIconUrls } from "@andornaut/game-kit/build/precacheList";
 import { describe, expect, it } from "vitest";
 
 import { HASHED_ICONS } from "./icons.ts";

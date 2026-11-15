@@ -1,7 +1,7 @@
-import { itemAt } from "@andornaut/game-kit/arrays";
-import { fillLine } from "@andornaut/game-kit/lines";
-import { insetRect, type Rect } from "@andornaut/game-kit/rect";
-import type { InstallStepsKind } from "@andornaut/game-kit/web/pwa/installState";
+import { itemAt } from "@andornaut/game-kit/runtime/arrays";
+import { fillLine } from "@andornaut/game-kit/runtime/lines";
+import { insetRect, type Rect } from "@andornaut/game-kit/runtime/rect";
+import type { InstallStepsKind } from "@andornaut/game-kit/runtime/web/pwa/installState";
 
 import { BUILD_LABEL } from "../buildLabel.ts";
 import { SETTINGS_CARD } from "../data/layout.ts";

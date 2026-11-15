@@ -1,5 +1,5 @@
-import type { Point, Rect } from "@andornaut/game-kit/rect";
-import { fontMetrics } from "@andornaut/game-kit/text/bitmapFont";
+import type { Point, Rect } from "@andornaut/game-kit/runtime/rect";
+import { fontMetrics } from "@andornaut/game-kit/runtime/text/bitmapFont";
 
 import { cardGreyPath } from "../../assets/cardArt.ts";
 import { DOM_DIM_ART_KEYS, domArtPath } from "../../assets/domArt.ts";
@@ -36,7 +36,7 @@ const ORIGIN = { x: 0, y: 0 } as const;
 const colour = (value: number) => `#${value.toString(16).padStart(6, "0")}`;
 interface Source extends Pick<DomDetailCardInput, "artUrl" | "loadSheet" | "pillColours"> {
   readonly fonts: ChoiceCardFonts & {
-    readonly display?: import("@andornaut/game-kit/text/bitmapFont").BitmapFont;
+    readonly display?: import("@andornaut/game-kit/runtime/text/bitmapFont").BitmapFont;
   };
   readonly everyFrame: (step: () => void) => () => void;
   readonly now: () => number;

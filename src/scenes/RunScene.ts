@@ -5,7 +5,7 @@ import {
   startStepClock,
   STEP_SECONDS,
   type StepClock,
-} from "@andornaut/game-kit/clock/fixedStep";
+} from "@andornaut/game-kit/runtime/clock/fixedStep";
 import { Scene } from "phaser";
 
 import { musicKey } from "../audio/music.ts";

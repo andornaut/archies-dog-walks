@@ -1,5 +1,5 @@
-import { MODAL_CONTENT } from "@andornaut/game-kit/modalLayout";
-import { insetRect, rectsOverlap } from "@andornaut/game-kit/rect";
+import { MODAL_CONTENT } from "@andornaut/game-kit/runtime/modalLayout";
+import { insetRect, rectsOverlap } from "@andornaut/game-kit/runtime/rect";
 import { describe, expect, it } from "vitest";
 
 import { gameData } from "../data/index.ts";

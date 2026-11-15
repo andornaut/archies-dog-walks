@@ -1,9 +1,9 @@
 import { createRequire } from "node:module";
 import { dirname, join } from "node:path";
 
-import type { RgbaImage } from "@andornaut/art-kit/rgbaImage";
-import { keysOf } from "@andornaut/game-kit/records";
-import { sceneStub } from "@andornaut/game-kit/testing/phaser/sceneStub";
+import type { RgbaImage } from "@andornaut/art-kit/build/rgbaImage";
+import { keysOf } from "@andornaut/game-kit/runtime/records";
+import { sceneStub } from "@andornaut/game-kit/test/phaser/sceneStub";
 import type { Scene, Textures } from "phaser";
 import { describe, expect, it, vi } from "vitest";
 

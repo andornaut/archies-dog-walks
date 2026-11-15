@@ -1,6 +1,6 @@
-import { assertNever } from "@andornaut/game-kit/assertNever";
-import { fillNames, wrapWords } from "@andornaut/game-kit/lines";
-import { keysOf } from "@andornaut/game-kit/records";
+import { assertNever } from "@andornaut/game-kit/runtime/assertNever";
+import { fillNames, wrapWords } from "@andornaut/game-kit/runtime/lines";
+import { keysOf } from "@andornaut/game-kit/runtime/records";
 import { describe, expect, it } from "vitest";
 
 import { badgeKey } from "../assets/spriteKeys.ts";

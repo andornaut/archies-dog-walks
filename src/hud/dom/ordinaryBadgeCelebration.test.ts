@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
-import { keysOf } from "@andornaut/game-kit/records";
+import { keysOf } from "@andornaut/game-kit/runtime/records";
 import { expect, it, vi } from "vitest";
 
 import { ownerFaceKey } from "../../assets/spriteKeys.ts";

@@ -1,4 +1,4 @@
-import { type Pixels, pixels, type Seconds, seconds } from "@andornaut/game-kit/units";
+import { type Pixels, pixels, type Seconds, seconds } from "@andornaut/game-kit/runtime/units";
 
 import type {
   LiveTuning,

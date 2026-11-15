@@ -1,4 +1,4 @@
-import { clampIndex } from "@andornaut/game-kit/arrays";
+import { clampIndex } from "@andornaut/game-kit/runtime/arrays";
 
 import type { DogId, GameData, ObstacleEncounterId } from "../data/types.ts";
 import type { LaneDirection } from "../layout/lanes.ts";

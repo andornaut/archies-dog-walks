@@ -1,12 +1,12 @@
 // Remembers, per device, that the start screen has suggested installing the game, so it does so
 // once. Installing is per device, so the flag sits beside the save under its own key rather
 // than in it. Firefox on a desktop cannot install the game, so it is never suggested there.
-import type { SaveStorage } from "@andornaut/game-kit/save/storage";
+import type { SaveStorage } from "@andornaut/game-kit/runtime/save/storage";
 import {
   type InstallState,
   type InstallStepsKind,
   offersInstall,
-} from "@andornaut/game-kit/web/pwa/installState";
+} from "@andornaut/game-kit/runtime/web/pwa/installState";
 
 export const INSTALL_NUDGE_KEY = "archies-dog-walks.install-nudged";
 const SHOWN = "1";

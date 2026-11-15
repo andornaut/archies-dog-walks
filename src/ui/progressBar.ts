@@ -1,5 +1,5 @@
-import type { ProgressBarStyle, ProgressMotion } from "@andornaut/game-kit/progress";
-import type { DomProgressTiming } from "@andornaut/game-kit/web/progress/dom/progressBar";
+import type { ProgressBarStyle, ProgressMotion } from "@andornaut/game-kit/runtime/progress";
+import type { DomProgressTiming } from "@andornaut/game-kit/runtime/web/progress/dom/progressBar";
 
 import { PROGRESS_BORDER } from "../data/layout.ts";
 import { PALETTE } from "./palette.ts";

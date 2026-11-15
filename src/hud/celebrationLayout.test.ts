@@ -1,8 +1,8 @@
 import { readFileSync } from "node:fs";
 
-import { decodePng } from "@andornaut/art-kit/png";
-import { keysOf } from "@andornaut/game-kit/records";
-import { fitsRoom, fittingText, type TextFitStyle } from "@andornaut/game-kit/text/textFit";
+import { decodePng } from "@andornaut/art-kit/build/png";
+import { keysOf } from "@andornaut/game-kit/runtime/records";
+import { fitsRoom, fittingText, type TextFitStyle } from "@andornaut/game-kit/runtime/text/textFit";
 import { describe, expect, it } from "vitest";
 
 import { gameData } from "../data/index.ts";

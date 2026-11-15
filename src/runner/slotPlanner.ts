@@ -1,4 +1,4 @@
-import { weightedPick } from "@andornaut/game-kit/random";
+import { weightedPick } from "@andornaut/game-kit/runtime/random";
 
 import { deepFreeze } from "./deepFreeze.ts";
 import { auditSlotPartialPlan, auditSlotPlan, type SlotAudit } from "./slotAudit.ts";

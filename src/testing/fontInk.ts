@@ -1,17 +1,17 @@
-import { getOrInsertComputed } from "@andornaut/game-kit/maps";
+import { getOrInsertComputed } from "@andornaut/game-kit/runtime/maps";
 import {
   type BitmapFont,
   type FontMetrics,
   fontMetrics,
   laidGlyphs,
   leftBearing,
-} from "@andornaut/game-kit/text/bitmapFont";
+} from "@andornaut/game-kit/runtime/text/bitmapFont";
 import {
   type FittedText,
   fittingText,
   type TextFitStyle,
   widestLine,
-} from "@andornaut/game-kit/text/textFit";
+} from "@andornaut/game-kit/runtime/text/textFit";
 
 import { readBitmapFont } from "../tools/fontFile.ts";
 import { inkWithPills, type LaidChar, pillGlyphAdvances } from "../ui/namePills.ts";

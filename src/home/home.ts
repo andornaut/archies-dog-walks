@@ -1,5 +1,5 @@
-import { fillLine } from "@andornaut/game-kit/lines";
-import { keysOf } from "@andornaut/game-kit/records";
+import { fillLine } from "@andornaut/game-kit/runtime/lines";
+import { keysOf } from "@andornaut/game-kit/runtime/records";
 
 import type { DogId, GameData, GearId, Size } from "../data/types.ts";
 import { dollarText } from "../presentation/currency.ts";

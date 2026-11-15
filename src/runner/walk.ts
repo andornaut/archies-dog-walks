@@ -1,7 +1,7 @@
-import { itemAt } from "@andornaut/game-kit/arrays";
-import { assertNever } from "@andornaut/game-kit/assertNever";
-import { chance, type Random } from "@andornaut/game-kit/random";
-import { pixels } from "@andornaut/game-kit/units";
+import { itemAt } from "@andornaut/game-kit/runtime/arrays";
+import { assertNever } from "@andornaut/game-kit/runtime/assertNever";
+import { chance, type Random } from "@andornaut/game-kit/runtime/random";
+import { pixels } from "@andornaut/game-kit/runtime/units";
 
 import type {
   CardSource,

@@ -1,5 +1,5 @@
-import { keysOf } from "@andornaut/game-kit/records";
-import { containsPoint, type Rect, rectsOverlap } from "@andornaut/game-kit/rect";
+import { keysOf } from "@andornaut/game-kit/runtime/records";
+import { containsPoint, type Rect, rectsOverlap } from "@andornaut/game-kit/runtime/rect";
 import { describe, expect, it } from "vitest";
 
 import { minorLook } from "../content/obstacleLooks.ts";

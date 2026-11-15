@@ -1,17 +1,17 @@
 // The layer's stylesheet, served by uiStylePlugin (src/tools/uiStylePlugin.ts) and linked as a
 // file, since the page's CSP blocks a <style> a script adds.
-import "@andornaut/game-kit/web/ui/dom/ui.css";
+import "@andornaut/game-kit/runtime/web/ui/dom/ui.css";
 import "virtual:adw-ui.css";
 
-import { createModalInputGate, type ModalInputGate } from "@andornaut/game-kit/input/modalInput";
-import type { Rect } from "@andornaut/game-kit/rect";
-import { type ButtonSkin, createButtonSkin } from "@andornaut/game-kit/web/ui/dom/buttonSkin";
+import { createModalInputGate, type ModalInputGate } from "@andornaut/game-kit/runtime/input/modalInput";
+import type { Rect } from "@andornaut/game-kit/runtime/rect";
+import { type ButtonSkin, createButtonSkin } from "@andornaut/game-kit/runtime/web/ui/dom/buttonSkin";
 import {
   createImageCache,
   type ImageCache,
   type Reveal,
   revealWhenDecoded,
-} from "@andornaut/game-kit/web/ui/dom/imageReady";
+} from "@andornaut/game-kit/runtime/web/ui/dom/imageReady";
 import buttonSkinManifest from "virtual:adw-button-skin";
 
 import { artUrl } from "../../assets/artFiles.ts";

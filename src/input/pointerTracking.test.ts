@@ -1,11 +1,11 @@
-import { clampIndex } from "@andornaut/game-kit/arrays";
+import { clampIndex } from "@andornaut/game-kit/runtime/arrays";
 import {
   chance,
   type Random,
   randomInt,
   randomPick,
   seededRandom,
-} from "@andornaut/game-kit/random";
+} from "@andornaut/game-kit/runtime/random";
 import { describe, expect, it } from "vitest";
 
 import { walkPaused } from "../hud/topBar.ts";

@@ -4,8 +4,8 @@ import {
   judge,
   type Progress,
   resolveThreshold,
-} from "@andornaut/game-kit/achievements";
-import { assertNever } from "@andornaut/game-kit/assertNever";
+} from "@andornaut/game-kit/runtime/achievements";
+import { assertNever } from "@andornaut/game-kit/runtime/assertNever";
 
 import { minorObstacleNames } from "../content/obstacleLooks.ts";
 import type {

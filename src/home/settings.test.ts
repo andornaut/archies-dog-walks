@@ -1,8 +1,8 @@
-import { fillLine } from "@andornaut/game-kit/lines";
-import { keysOf } from "@andornaut/game-kit/records";
-import type { Rect } from "@andornaut/game-kit/rect";
-import { fittingText, type TextFitStyle } from "@andornaut/game-kit/text/textFit";
-import { buildLabel } from "@andornaut/game-kit/web/build/buildLabel";
+import { fillLine } from "@andornaut/game-kit/runtime/lines";
+import { keysOf } from "@andornaut/game-kit/runtime/records";
+import type { Rect } from "@andornaut/game-kit/runtime/rect";
+import { fittingText, type TextFitStyle } from "@andornaut/game-kit/runtime/text/textFit";
+import { buildLabel } from "@andornaut/game-kit/runtime/web/buildLabel";
 import { describe, expect, it } from "vitest";
 
 import { gameData } from "../data/index.ts";

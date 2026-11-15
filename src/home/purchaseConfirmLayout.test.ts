@@ -1,5 +1,5 @@
-import { insetRect, rectsOverlap } from "@andornaut/game-kit/rect";
-import { inkRowsFromCapTop } from "@andornaut/game-kit/text/bitmapFont";
+import { insetRect, rectsOverlap } from "@andornaut/game-kit/runtime/rect";
+import { inkRowsFromCapTop } from "@andornaut/game-kit/runtime/text/bitmapFont";
 import { describe, expect, it } from "vitest";
 
 import { gameData } from "../data/index.ts";

@@ -1,6 +1,6 @@
-import { fillNames, sentences, wrapWords } from "@andornaut/game-kit/lines";
-import { rectsOverlap } from "@andornaut/game-kit/rect";
-import { inkRowsOfLines } from "@andornaut/game-kit/text/bitmapFont";
+import { fillNames, sentences, wrapWords } from "@andornaut/game-kit/runtime/lines";
+import { rectsOverlap } from "@andornaut/game-kit/runtime/rect";
+import { inkRowsOfLines } from "@andornaut/game-kit/runtime/text/bitmapFont";
 import { describe, expect, it } from "vitest";
 
 import { gameData } from "../data/index.ts";

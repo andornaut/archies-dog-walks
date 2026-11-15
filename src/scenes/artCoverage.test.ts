@@ -1,6 +1,6 @@
-import { animationKey } from "@andornaut/game-kit/art/aseprite";
-import { keysOf } from "@andornaut/game-kit/records";
-import { sceneStub } from "@andornaut/game-kit/testing/phaser/sceneStub";
+import { animationKey } from "@andornaut/game-kit/runtime/art/aseprite";
+import { keysOf } from "@andornaut/game-kit/runtime/records";
+import { sceneStub } from "@andornaut/game-kit/test/phaser/sceneStub";
 import type { Scene } from "phaser";
 import * as v from "valibot";
 import { describe, expect, it, vi } from "vitest";

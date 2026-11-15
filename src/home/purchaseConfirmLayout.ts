@@ -1,4 +1,4 @@
-import { type FontMetrics, inkRowsFromCapTop } from "@andornaut/game-kit/text/bitmapFont";
+import { type FontMetrics, inkRowsFromCapTop } from "@andornaut/game-kit/runtime/text/bitmapFont";
 
 import { SCREEN_CONFIG } from "../data/screen.ts";
 import { barTitleRoom } from "../ui/barTitle.ts";

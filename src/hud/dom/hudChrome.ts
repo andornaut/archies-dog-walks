@@ -1,5 +1,5 @@
-import type { Rect } from "@andornaut/game-kit/rect";
-import { laidGlyphs } from "@andornaut/game-kit/text/bitmapFont";
+import type { Rect } from "@andornaut/game-kit/runtime/rect";
+import { laidGlyphs } from "@andornaut/game-kit/runtime/text/bitmapFont";
 
 import { debuffIconKey } from "../../assets/iconKeys.ts";
 import { gameData } from "../../data/index.ts";

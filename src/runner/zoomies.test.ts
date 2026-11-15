@@ -1,5 +1,5 @@
-import { STEP_SECONDS } from "@andornaut/game-kit/clock/fixedStep";
-import { seededRandom } from "@andornaut/game-kit/random";
+import { STEP_SECONDS } from "@andornaut/game-kit/runtime/clock/fixedStep";
+import { seededRandom } from "@andornaut/game-kit/runtime/random";
 import { describe, expect, it, vi } from "vitest";
 
 import { gameData } from "../data/index.ts";

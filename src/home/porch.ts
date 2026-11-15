@@ -1,4 +1,4 @@
-import { keysOf } from "@andornaut/game-kit/records";
+import { keysOf } from "@andornaut/game-kit/runtime/records";
 
 import type { DogId, GameData } from "../data/types.ts";
 import type { SaveStats } from "../save/schema.ts";

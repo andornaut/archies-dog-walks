@@ -1,4 +1,4 @@
-import { clamp01 } from "@andornaut/game-kit/numbers";
+import { clamp01 } from "@andornaut/game-kit/runtime/numbers";
 
 // The device settings: the two volumes, mute and reduced motion. Each is kept in localStorage
 // under its own key, apart from the versioned save, so a save reset leaves them as they are. A

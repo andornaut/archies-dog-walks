@@ -1,4 +1,4 @@
-import type { HoldRule } from "@andornaut/game-kit/input/hold";
+import type { HoldRule } from "@andornaut/game-kit/runtime/input/hold";
 
 import type { LiveTuning } from "../data/types.ts";
 import { read } from "../rules/units.ts";
@@ -10,7 +10,7 @@ export {
   releaseHold,
   startHold,
   tickHold,
-} from "@andornaut/game-kit/input/hold";
+} from "@andornaut/game-kit/runtime/input/hold";
 
 // Every hold lasts seconds.holdSeconds, read at the press; each rule sets only its slop.
 export function holdRule(tuning: LiveTuning, slopPx: number): HoldRule {

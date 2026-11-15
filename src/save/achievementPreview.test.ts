@@ -2,7 +2,7 @@ import {
   type AchievementPreview,
   NOTHING_PREVIEWED,
   previewAchievements,
-} from "@andornaut/game-kit/achievements/preview";
+} from "@andornaut/game-kit/runtime/achievements/preview";
 import { describe, expect, it } from "vitest";
 
 import { gameData } from "../data/index.ts";

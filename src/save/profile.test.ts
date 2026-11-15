@@ -1,8 +1,8 @@
-import type { EarnedRecord } from "@andornaut/game-kit/achievements";
-import { keysOf } from "@andornaut/game-kit/records";
-import { memoryStorage, type SaveStorage } from "@andornaut/game-kit/save/storage";
-import { encodeSave } from "@andornaut/game-kit/save/versionedSave";
-import { storageFixture } from "@andornaut/game-kit/testing/storageFixture";
+import type { EarnedRecord } from "@andornaut/game-kit/runtime/achievements";
+import { keysOf } from "@andornaut/game-kit/runtime/records";
+import { memoryStorage, type SaveStorage } from "@andornaut/game-kit/runtime/save/storage";
+import { encodeSave } from "@andornaut/game-kit/runtime/save/versionedSave";
+import { storageFixture } from "@andornaut/game-kit/test/storageFixture";
 import { describe, expect, it, vi } from "vitest";
 
 import { gameData } from "../data/index.ts";

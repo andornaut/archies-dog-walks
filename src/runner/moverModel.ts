@@ -1,4 +1,4 @@
-import type { Random } from "@andornaut/game-kit/random";
+import type { Random } from "@andornaut/game-kit/runtime/random";
 
 import type { MoveCount, MovementKind, SignatureProfile, StopLanes } from "../data/types.ts";
 import type { LaneSpan, MoverPath, StepShape } from "./movers.ts";

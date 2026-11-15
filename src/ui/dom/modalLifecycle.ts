@@ -1,8 +1,8 @@
-import { type ModalInputGate, type ModalInputScope } from "@andornaut/game-kit/input/modalInput";
-import { followOnePress } from "@andornaut/game-kit/input/onePress";
-import { guardClicks, type PressGate } from "@andornaut/game-kit/web/ui/dom/domPress";
-import { focusTarget } from "@andornaut/game-kit/web/ui/dom/focusModality";
-import { PENDING_ATTRIBUTE, type Reveal } from "@andornaut/game-kit/web/ui/dom/imageReady";
+import { type ModalInputGate, type ModalInputScope } from "@andornaut/game-kit/runtime/input/modalInput";
+import { followOnePress } from "@andornaut/game-kit/runtime/input/onePress";
+import { guardClicks, type PressGate } from "@andornaut/game-kit/runtime/web/ui/dom/domPress";
+import { focusTarget } from "@andornaut/game-kit/runtime/web/ui/dom/focusModality";
+import { PENDING_ATTRIBUTE, type Reveal } from "@andornaut/game-kit/runtime/web/ui/dom/imageReady";
 
 import type { UiLayer } from "./uiLayer.ts";
 

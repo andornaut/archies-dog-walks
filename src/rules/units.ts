@@ -7,7 +7,7 @@ import {
   probability,
   type Seconds,
   seconds,
-} from "@andornaut/game-kit/units";
+} from "@andornaut/game-kit/runtime/units";
 
 import type { LiveTuning, NumberKeys, UnitGroup } from "../data/types.ts";
 import { type Cents, dollarsToCents } from "../units.ts";

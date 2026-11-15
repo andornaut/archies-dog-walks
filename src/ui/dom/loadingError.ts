@@ -3,9 +3,9 @@ import "./loadingError.css";
 import {
   LOADING_FAILURE_TEXT,
   type LoadingAttemptState,
-} from "@andornaut/game-kit/load/loadingAttempts";
-import { mountLoadingFailure } from "@andornaut/game-kit/web/progress/dom/loadingFailure";
-import { createModalLayer } from "@andornaut/game-kit/web/ui/dom/modalLayer";
+} from "@andornaut/game-kit/runtime/load/loadingAttempts";
+import { mountLoadingFailure } from "@andornaut/game-kit/runtime/web/progress/dom/loadingFailure";
+import { createModalLayer } from "@andornaut/game-kit/runtime/web/ui/dom/modalLayer";
 
 import { PALETTE } from "../palette.ts";
 import { guardNativeInput } from "./modalLifecycle.ts";

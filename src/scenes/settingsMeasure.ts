@@ -1,4 +1,4 @@
-import { fittingText } from "@andornaut/game-kit/text/textFit";
+import { fittingText } from "@andornaut/game-kit/runtime/text/textFit";
 import type { Scene } from "phaser";
 
 import type { SettingsMeasure } from "../home/settingsView.ts";

@@ -1,7 +1,7 @@
-import { fillNames } from "@andornaut/game-kit/lines";
-import { clamp01 } from "@andornaut/game-kit/numbers";
-import { progressBarLayout } from "@andornaut/game-kit/progress";
-import { containsPoint, type Point, type Rect } from "@andornaut/game-kit/rect";
+import { fillNames } from "@andornaut/game-kit/runtime/lines";
+import { clamp01 } from "@andornaut/game-kit/runtime/numbers";
+import { progressBarLayout } from "@andornaut/game-kit/runtime/progress";
+import { containsPoint, type Point, type Rect } from "@andornaut/game-kit/runtime/rect";
 
 import { gameData } from "../data/index.ts";
 import {

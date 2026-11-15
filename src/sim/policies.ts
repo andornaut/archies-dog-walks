@@ -1,4 +1,4 @@
-import { chance, type Random, randomInt } from "@andornaut/game-kit/random";
+import { chance, type Random, randomInt } from "@andornaut/game-kit/runtime/random";
 
 import { heartsForgiven } from "../rules/causes.ts";
 import { type CardView, type Choice, type ChoiceData, chooseOption } from "../rules/choices.ts";

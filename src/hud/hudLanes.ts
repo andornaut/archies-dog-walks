@@ -1,5 +1,5 @@
-import type { Point, Rect } from "@andornaut/game-kit/rect";
-import { type FontMetrics, inkRowsOfLines } from "@andornaut/game-kit/text/bitmapFont";
+import type { Point, Rect } from "@andornaut/game-kit/runtime/rect";
+import { type FontMetrics, inkRowsOfLines } from "@andornaut/game-kit/runtime/text/bitmapFont";
 
 import { CHANGE_CHIP, HUD_LANES } from "../data/layout.ts";
 import type { ScreenLayout } from "../layout/screenLayout.ts";

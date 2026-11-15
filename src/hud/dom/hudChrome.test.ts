@@ -1,4 +1,4 @@
-import { pixels } from "@andornaut/game-kit/units";
+import { pixels } from "@andornaut/game-kit/runtime/units";
 import { expect, it, vi } from "vitest";
 
 import { gameData } from "../../data/index.ts";

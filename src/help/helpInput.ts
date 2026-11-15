@@ -1,4 +1,4 @@
-import type { Point } from "@andornaut/game-kit/rect";
+import type { Point } from "@andornaut/game-kit/runtime/rect";
 
 import { gameData } from "../data/index.ts";
 import { exceedsTapDistance, swipeDirection } from "../input/gestures.ts";

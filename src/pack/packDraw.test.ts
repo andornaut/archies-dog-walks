@@ -1,4 +1,4 @@
-import { itemAt } from "@andornaut/game-kit/arrays";
+import { itemAt } from "@andornaut/game-kit/runtime/arrays";
 import { describe, expect, it } from "vitest";
 
 import { ROAD_CAMERA, SCREEN_LAYOUT } from "../data/screen.ts";

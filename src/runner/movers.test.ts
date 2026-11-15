@@ -1,5 +1,5 @@
-import { itemAt } from "@andornaut/game-kit/arrays";
-import { type Random, seededRandom } from "@andornaut/game-kit/random";
+import { itemAt } from "@andornaut/game-kit/runtime/arrays";
+import { type Random, seededRandom } from "@andornaut/game-kit/runtime/random";
 import { describe, expect, it } from "vitest";
 
 import { MINOR_OBSTACLES } from "../data/minorObstacles.ts";

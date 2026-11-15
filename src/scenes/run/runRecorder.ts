@@ -2,7 +2,7 @@ import {
   sessionRead,
   sessionRemove,
   sessionWrite,
-} from "@andornaut/game-kit/web/save/dom/pageSessionStore";
+} from "@andornaut/game-kit/runtime/web/save/dom/pageSessionStore";
 import type { Game } from "phaser";
 
 import { gameData } from "../../data/index.ts";

@@ -1,6 +1,6 @@
-import { RETRY_ROUNDS_MS } from "@andornaut/game-kit/load/loaderConfig";
-import { watchLoader } from "@andornaut/game-kit/load/phaser/watchLoader";
-import { createProgressState } from "@andornaut/game-kit/progressState";
+import { RETRY_ROUNDS_MS } from "@andornaut/game-kit/runtime/load/loaderConfig";
+import { watchLoader } from "@andornaut/game-kit/runtime/load/phaser/watchLoader";
+import { createProgressState } from "@andornaut/game-kit/runtime/progressState";
 import { describe, expect, it, vi } from "vitest";
 
 import { stopOnceRetried } from "./bootRetries.ts";

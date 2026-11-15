@@ -2,9 +2,9 @@ import {
   type OutsideArea,
   type OutsidePress,
   outsidePressMove,
-} from "@andornaut/game-kit/input/outsideTap";
-import { catchOutsideTaps } from "@andornaut/game-kit/input/phaser/catchOutsideTaps";
-import type { PressGate } from "@andornaut/game-kit/web/ui/dom/domPress";
+} from "@andornaut/game-kit/runtime/input/outsideTap";
+import { catchOutsideTaps } from "@andornaut/game-kit/runtime/input/phaser/catchOutsideTaps";
+import type { PressGate } from "@andornaut/game-kit/runtime/web/ui/dom/domPress";
 import type { Events, Scene } from "phaser";
 
 import { gameData } from "../data/index.ts";

@@ -1,6 +1,6 @@
 import { existsSync, readFileSync } from "node:fs";
 
-import { keysOf } from "@andornaut/game-kit/records";
+import { keysOf } from "@andornaut/game-kit/runtime/records";
 import { describe, expect, it } from "vitest";
 
 import shippedManifest from "../../public/art/manifest.json" with { type: "json" };

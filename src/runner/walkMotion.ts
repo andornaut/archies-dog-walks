@@ -1,4 +1,4 @@
-import { type Pixels, pixels } from "@andornaut/game-kit/units";
+import { type Pixels, pixels } from "@andornaut/game-kit/runtime/units";
 
 import type { GameData } from "../data/types.ts";
 import { currentZone } from "../rules/route.ts";

@@ -1,5 +1,5 @@
-import type { Point, Rect } from "@andornaut/game-kit/rect";
-import { type RenderFit, renderFit } from "@andornaut/game-kit/view/renderScale";
+import type { Point, Rect } from "@andornaut/game-kit/runtime/rect";
+import { type RenderFit, renderFit } from "@andornaut/game-kit/runtime/view/renderScale";
 
 import { SCREEN_CONFIG } from "../data/screen.ts";
 

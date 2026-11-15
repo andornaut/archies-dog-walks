@@ -1,5 +1,5 @@
-import { blankImage, type RgbaImage } from "@andornaut/art-kit/rgbaImage";
-import type { Rect } from "@andornaut/game-kit/rect";
+import { blankImage, type RgbaImage } from "@andornaut/art-kit/build/rgbaImage";
+import type { Rect } from "@andornaut/game-kit/runtime/rect";
 
 import { type DepthArt, type DepthDraw, depthDraw } from "../layout/depthScale.ts";
 import { project, type RoadProjection } from "../layout/projection.ts";

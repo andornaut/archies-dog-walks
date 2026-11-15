@@ -1,4 +1,4 @@
-import type { LaunchResult } from "@andornaut/game-kit/web/pwa/dom/offlinePlay";
+import type { LaunchResult } from "@andornaut/game-kit/runtime/web/pwa/dom/offlinePlay";
 import { describe, expect, it, vi } from "vitest";
 
 import { launchGame } from "./launchGame.ts";

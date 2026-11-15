@@ -4,7 +4,7 @@ import {
   pixelFontAtlas as buildPixelFontAtlas,
   type PixelFontContext,
   type PixelGlyph,
-} from "@andornaut/game-kit/text/pixelFont";
+} from "@andornaut/game-kit/runtime/text/pixelFont";
 
 // The 3x5 pixel font, plus a 5-wide heart. Each glyph is its rows top to bottom, "1" for a lit
 // pixel. Text is drawn in capitals.

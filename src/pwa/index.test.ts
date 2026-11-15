@@ -1,4 +1,4 @@
-import type { OfflinePlayOptions } from "@andornaut/game-kit/web/pwa/dom/offlinePlay";
+import type { OfflinePlayOptions } from "@andornaut/game-kit/runtime/web/pwa/dom/offlinePlay";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { StorageState } from "../save/profile.ts";
@@ -24,7 +24,7 @@ const {
   setOfferVisible: vi.fn(),
 }));
 
-vi.mock("@andornaut/game-kit/web/pwa/dom/offlinePlay", () => ({
+vi.mock("@andornaut/game-kit/runtime/web/pwa/dom/offlinePlay", () => ({
   browserOfflinePage: () => ({}),
   startOfflinePlay: (options: OfflinePlayOptions) => {
     offline.options = options;
@@ -35,23 +35,23 @@ vi.mock("@andornaut/game-kit/web/pwa/dom/offlinePlay", () => ({
     };
   },
 }));
-vi.mock("@andornaut/game-kit/web/pwa/dom/installFlow", () => ({
+vi.mock("@andornaut/game-kit/runtime/web/pwa/dom/installFlow", () => ({
   watchInstall: () => ({ onChange: () => () => undefined, state: () => "steps" }),
 }));
-vi.mock("@andornaut/game-kit/web/pwa/dom/visibility", () => ({ watchVisibility: () => undefined }));
-vi.mock("@andornaut/game-kit/web/pwa/dom/wakeLock", () => ({
+vi.mock("@andornaut/game-kit/runtime/web/pwa/dom/visibility", () => ({ watchVisibility: () => undefined }));
+vi.mock("@andornaut/game-kit/runtime/web/pwa/dom/wakeLock", () => ({
   createScreenWakeLock: () => ({ start: () => undefined, stop: () => undefined }),
 }));
-vi.mock("@andornaut/game-kit/web/pwa/dom/backNavigation", () => ({
+vi.mock("@andornaut/game-kit/runtime/web/pwa/dom/backNavigation", () => ({
   browserCloseWatcher: () => undefined,
   guardBackNavigation: () => undefined,
 }));
-vi.mock("@andornaut/game-kit/web/pwa/appWindow", () => ({ appCannotClose: () => true }));
-vi.mock("@andornaut/game-kit/web/view/dom/watchFrameTurn", () => ({
+vi.mock("@andornaut/game-kit/runtime/web/pwa/appWindow", () => ({ appCannotClose: () => true }));
+vi.mock("@andornaut/game-kit/runtime/web/view/dom/watchFrameTurn", () => ({
   lockGameOrientation: () => undefined,
   watchFrameTurn: () => ({ onChange: () => () => undefined, turn: () => 0 }),
 }));
-vi.mock("@andornaut/game-kit/web/save/dom/localSaveStorage", () => ({
+vi.mock("@andornaut/game-kit/runtime/web/save/dom/localSaveStorage", () => ({
   localSaveStorage: () => ({
     read: () => Promise.resolve(undefined),
     write: () => Promise.resolve(),

@@ -1,4 +1,4 @@
-import type { Rect } from "@andornaut/game-kit/rect";
+import type { Rect } from "@andornaut/game-kit/runtime/rect";
 
 import { TOP_BAR_HEIGHT, TOP_BAR_SIZES } from "../data/layout.ts";
 

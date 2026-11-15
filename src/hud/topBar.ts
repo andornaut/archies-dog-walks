@@ -1,4 +1,4 @@
-import { containsPoint, type Point, type Rect } from "@andornaut/game-kit/rect";
+import { containsPoint, type Point, type Rect } from "@andornaut/game-kit/runtime/rect";
 
 import { SCREEN_LAYOUT } from "../data/screen.ts";
 import { isMuteKey, isPauseKey } from "../input/keyBindings.ts";

@@ -1,5 +1,5 @@
-import type { Point, Rect } from "@andornaut/game-kit/rect";
-import { type BitmapFont, laidGlyphs } from "@andornaut/game-kit/text/bitmapFont";
+import type { Point, Rect } from "@andornaut/game-kit/runtime/rect";
+import { type BitmapFont, laidGlyphs } from "@andornaut/game-kit/runtime/text/bitmapFont";
 
 import { domArtPath } from "../../assets/domArt.ts";
 import { dogCardTag, dogFaceKey, ownerCardFaceKey } from "../../assets/spriteKeys.ts";

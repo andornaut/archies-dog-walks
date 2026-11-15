@@ -1,4 +1,4 @@
-import { type FontMetrics, inkRowsFromCapTop } from "@andornaut/game-kit/text/bitmapFont";
+import { type FontMetrics, inkRowsFromCapTop } from "@andornaut/game-kit/runtime/text/bitmapFont";
 
 import { LABEL_HELP_GAP } from "../data/layout.ts";
 

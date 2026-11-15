@@ -4,12 +4,12 @@ import {
   type EarnedRecord,
   type EarnedStore,
   newlyEarned,
-} from "@andornaut/game-kit/achievements";
+} from "@andornaut/game-kit/runtime/achievements";
 import type {
   SaveStore,
   StoreLoadResult,
   StoreSaveResult,
-} from "@andornaut/game-kit/save/saveStore";
+} from "@andornaut/game-kit/runtime/save/saveStore";
 
 import type { AchievementId, HintId } from "../data/types.ts";
 import {

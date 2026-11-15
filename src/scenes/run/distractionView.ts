@@ -1,7 +1,7 @@
-import { itemAt } from "@andornaut/game-kit/arrays";
-import { animationKey } from "@andornaut/game-kit/art/aseprite";
-import { getOrInsertComputed } from "@andornaut/game-kit/maps";
-import type { Random } from "@andornaut/game-kit/random";
+import { itemAt } from "@andornaut/game-kit/runtime/arrays";
+import { animationKey } from "@andornaut/game-kit/runtime/art/aseprite";
+import { getOrInsertComputed } from "@andornaut/game-kit/runtime/maps";
+import type { Random } from "@andornaut/game-kit/runtime/random";
 import type { GameObjects, Scene } from "phaser";
 
 import { IDLE_TAG } from "../../assets/spriteKeys.ts";

@@ -1,6 +1,6 @@
 import { EventEmitter } from "node:events";
 
-import type { RequiredUpdateState } from "@andornaut/game-kit/web/pwa/updateReady";
+import type { RequiredUpdateState } from "@andornaut/game-kit/runtime/web/pwa/updateReady";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { gameData } from "../data/index.ts";

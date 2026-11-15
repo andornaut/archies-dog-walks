@@ -1,4 +1,4 @@
-import { insetRect, type Rect, ringRects } from "@andornaut/game-kit/rect";
+import { insetRect, type Rect, ringRects } from "@andornaut/game-kit/runtime/rect";
 
 import { PALETTE } from "../ui/palette.ts";
 import { SELECT_OUTSET } from "../ui/selection.ts";

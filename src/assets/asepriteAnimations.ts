@@ -2,7 +2,7 @@ import {
   type AnimationSpec,
   animationSpecs as sheetAnimations,
   ASEPRITE_DIRECTIONS,
-} from "@andornaut/game-kit/art/aseprite";
+} from "@andornaut/game-kit/runtime/art/aseprite";
 import * as v from "valibot";
 
 import { isPlainObject, objectMessage, parseOrThrow, record } from "./jsonSchema.ts";

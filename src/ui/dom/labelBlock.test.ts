@@ -1,4 +1,4 @@
-import { advanceWidth, fontMetrics, laidGlyphs } from "@andornaut/game-kit/text/bitmapFont";
+import { advanceWidth, fontMetrics, laidGlyphs } from "@andornaut/game-kit/runtime/text/bitmapFont";
 import { describe, expect, it } from "vitest";
 
 import { gameFont } from "../../testing/fontInk.ts";

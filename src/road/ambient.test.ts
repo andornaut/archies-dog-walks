@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 
-import { randomStream } from "@andornaut/game-kit/random";
-import { keysOf } from "@andornaut/game-kit/records";
+import { randomStream } from "@andornaut/game-kit/runtime/random";
+import { keysOf } from "@andornaut/game-kit/runtime/records";
 import { describe, expect, it } from "vitest";
 
 import shippedManifest from "../../public/art/manifest.json" with { type: "json" };

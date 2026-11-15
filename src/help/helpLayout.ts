@@ -1,4 +1,4 @@
-import { containsPoint, type Point, type Rect } from "@andornaut/game-kit/rect";
+import { containsPoint, type Point, type Rect } from "@andornaut/game-kit/runtime/rect";
 
 import { HELP_SCREEN } from "../data/layout.ts";
 import { SCREEN_LAYOUT } from "../data/screen.ts";

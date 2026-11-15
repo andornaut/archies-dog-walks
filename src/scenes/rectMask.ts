@@ -1,4 +1,4 @@
-import type { Rect } from "@andornaut/game-kit/rect";
+import type { Rect } from "@andornaut/game-kit/runtime/rect";
 import type { Textures } from "phaser";
 
 // The rect each mask texture was last painted with.

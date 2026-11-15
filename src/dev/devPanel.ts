@@ -4,14 +4,14 @@
 // module needs no Phaser.
 import "./devPanel.css";
 
-import { saveStore } from "@andornaut/game-kit/save/saveStore";
-import type { StoragePersistence } from "@andornaut/game-kit/web/pwa/storagePersistence";
-import { localSaveStorage } from "@andornaut/game-kit/web/save/dom/localSaveStorage";
+import { saveStore } from "@andornaut/game-kit/runtime/save/saveStore";
+import type { StoragePersistence } from "@andornaut/game-kit/runtime/web/pwa/storagePersistence";
+import { localSaveStorage } from "@andornaut/game-kit/runtime/web/save/dom/localSaveStorage";
 import {
   sessionRead,
   sessionRemove,
   sessionWrite,
-} from "@andornaut/game-kit/web/save/dom/pageSessionStore";
+} from "@andornaut/game-kit/runtime/web/save/dom/pageSessionStore";
 
 import { gameData } from "../data/index.ts";
 import { saveContextFrom } from "../save/load.ts";

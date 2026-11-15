@@ -1,4 +1,4 @@
-import { type Point, type Rect, rectsOverlap } from "@andornaut/game-kit/rect";
+import { type Point, type Rect, rectsOverlap } from "@andornaut/game-kit/runtime/rect";
 
 import { type Cents, cents } from "../units.ts";
 import { REACH_ICON } from "./hudLanes.ts";

@@ -5,8 +5,8 @@ import { availableParallelism, tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { isMainThread, parentPort, Worker, workerData } from "node:worker_threads";
 
-import { itemAt } from "@andornaut/game-kit/arrays";
-import { keysOf } from "@andornaut/game-kit/records";
+import { itemAt } from "@andornaut/game-kit/runtime/arrays";
+import { keysOf } from "@andornaut/game-kit/runtime/records";
 
 import { gameData } from "../data/index.ts";
 import type { GearId } from "../data/types.ts";

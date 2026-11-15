@@ -1,4 +1,4 @@
-import type { Point, Rect } from "@andornaut/game-kit/rect";
+import type { Point, Rect } from "@andornaut/game-kit/runtime/rect";
 
 // Move each line's visible ink to the backing's horizontal centre, and the complete block to
 // its vertical centre. Coordinates are in the renderer's pixel grid, not font advances.

@@ -1,4 +1,4 @@
-import { clampInto, containsPoint, type Point } from "@andornaut/game-kit/rect";
+import { clampInto, containsPoint, type Point } from "@andornaut/game-kit/runtime/rect";
 import type { Input, Scene } from "phaser";
 
 import { gameData } from "../../data/index.ts";

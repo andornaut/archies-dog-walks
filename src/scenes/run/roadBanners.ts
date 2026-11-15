@@ -1,4 +1,4 @@
-import { type Point, type Rect, rectAboveIn, rectsOverlap } from "@andornaut/game-kit/rect";
+import { type Point, type Rect, rectAboveIn, rectsOverlap } from "@andornaut/game-kit/runtime/rect";
 import { Core, type GameObjects, type Scene, Scenes } from "phaser";
 
 import { artUrl } from "../../assets/artFiles.ts";

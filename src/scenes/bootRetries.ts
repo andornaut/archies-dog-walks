@@ -1,4 +1,4 @@
-import type { LoaderWatch } from "@andornaut/game-kit/load/phaser/watchLoader";
+import type { LoaderWatch } from "@andornaut/game-kit/runtime/load/phaser/watchLoader";
 
 // The loader events stopOnceRetried follows: Phaser's complete event.
 interface CompletingLoader {

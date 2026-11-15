@@ -1,5 +1,5 @@
-import type { OutsideArea } from "@andornaut/game-kit/input/outsideTap";
-import type { Rect } from "@andornaut/game-kit/rect";
+import type { OutsideArea } from "@andornaut/game-kit/runtime/input/outsideTap";
+import type { Rect } from "@andornaut/game-kit/runtime/rect";
 
 import { SCREEN_LAYOUT } from "../data/screen.ts";
 

@@ -1,6 +1,6 @@
 import { readFile } from "node:fs/promises";
 
-import type { RgbaImage } from "@andornaut/art-kit/rgbaImage";
+import type { RgbaImage } from "@andornaut/art-kit/build/rgbaImage";
 import type { Plugin, ViteDevServer } from "vite";
 
 import type { ArtFileMap } from "../../assets/artUrl.ts";

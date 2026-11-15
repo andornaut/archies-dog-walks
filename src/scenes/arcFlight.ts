@@ -1,4 +1,4 @@
-import type { Point } from "@andornaut/game-kit/rect";
+import type { Point } from "@andornaut/game-kit/runtime/rect";
 import type { Types } from "phaser";
 
 import { curvePoint } from "../hud/moments.ts";

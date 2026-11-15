@@ -1,6 +1,6 @@
-import { insetRect, type Point, type Rect, ringRects } from "@andornaut/game-kit/rect";
-import { inkWidth } from "@andornaut/game-kit/text/bitmapFont";
-import { fittingText } from "@andornaut/game-kit/text/textFit";
+import { insetRect, type Point, type Rect, ringRects } from "@andornaut/game-kit/runtime/rect";
+import { inkWidth } from "@andornaut/game-kit/runtime/text/bitmapFont";
+import { fittingText } from "@andornaut/game-kit/runtime/text/textFit";
 import { Core, Scene } from "phaser";
 
 import { artUrl } from "../assets/artFiles.ts";

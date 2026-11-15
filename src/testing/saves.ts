@@ -1,5 +1,5 @@
 // Shared save fixtures, with real dog, gear, hint and walker ids.
-import { keysOf } from "@andornaut/game-kit/records";
+import { keysOf } from "@andornaut/game-kit/runtime/records";
 
 import { gameData } from "../data/index.ts";
 import type { AchievementId, DogId } from "../data/types.ts";

@@ -1,4 +1,4 @@
-import { animationKey } from "@andornaut/game-kit/art/aseprite";
+import { animationKey } from "@andornaut/game-kit/runtime/art/aseprite";
 
 import { moverBodyTag } from "../../assets/spriteKeys.ts";
 import { animationPhaseAt } from "../../layout/animationPhase.ts";

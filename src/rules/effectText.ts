@@ -1,5 +1,5 @@
-import { assertNever } from "@andornaut/game-kit/assertNever";
-import { fillLine, fillNames, signedText } from "@andornaut/game-kit/lines";
+import { assertNever } from "@andornaut/game-kit/runtime/assertNever";
+import { fillLine, fillNames, signedText } from "@andornaut/game-kit/runtime/lines";
 
 import type {
   Debuff,

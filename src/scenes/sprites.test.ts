@@ -1,7 +1,7 @@
 import { EventEmitter } from "node:events";
 
-import { animationKey } from "@andornaut/game-kit/art/aseprite";
-import { sceneStub } from "@andornaut/game-kit/testing/phaser/sceneStub";
+import { animationKey } from "@andornaut/game-kit/runtime/art/aseprite";
+import { sceneStub } from "@andornaut/game-kit/test/phaser/sceneStub";
 import type { GameObjects, Scene } from "phaser";
 import { describe, expect, it, vi } from "vitest";
 

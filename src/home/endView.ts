@@ -1,4 +1,4 @@
-import { containsPoint, type Rect } from "@andornaut/game-kit/rect";
+import { containsPoint, type Rect } from "@andornaut/game-kit/runtime/rect";
 
 import type { DogId, GameData } from "../data/types.ts";
 import type { Change, MoneyChange } from "../rules/causes.ts";

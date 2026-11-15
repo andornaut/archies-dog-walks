@@ -1,9 +1,9 @@
 import { EventEmitter } from "node:events";
 
-import { isOutside } from "@andornaut/game-kit/input/outsideTap";
-import type { Point, Rect } from "@andornaut/game-kit/rect";
-import { sceneStub } from "@andornaut/game-kit/testing/phaser/sceneStub";
-import { exitApp } from "@andornaut/game-kit/web/pwa/dom/exitApp";
+import { isOutside } from "@andornaut/game-kit/runtime/input/outsideTap";
+import type { Point, Rect } from "@andornaut/game-kit/runtime/rect";
+import { sceneStub } from "@andornaut/game-kit/test/phaser/sceneStub";
+import { exitApp } from "@andornaut/game-kit/runtime/web/pwa/dom/exitApp";
 import type { Scene } from "phaser";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -17,7 +17,7 @@ vi.mock("../pwa/index.ts", () => ({ exitShown: vi.fn(() => false) }));
 vi.mock("./topSection.ts", () => ({
   nativeTopSectionButtons: vi.fn(() => ["mute", "menu", "exit"]),
 }));
-vi.mock("@andornaut/game-kit/web/pwa/dom/exitApp", () => ({
+vi.mock("@andornaut/game-kit/runtime/web/pwa/dom/exitApp", () => ({
   browserExitPage: () => ({}),
   exitApp: vi.fn(),
 }));

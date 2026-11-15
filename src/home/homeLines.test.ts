@@ -1,5 +1,5 @@
-import { fillNames } from "@andornaut/game-kit/lines";
-import type { RequiredUpdateState } from "@andornaut/game-kit/web/pwa/updateReady";
+import { fillNames } from "@andornaut/game-kit/runtime/lines";
+import type { RequiredUpdateState } from "@andornaut/game-kit/runtime/web/pwa/updateReady";
 import { describe, expect, it } from "vitest";
 
 import { gameData } from "../data/index.ts";

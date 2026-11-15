@@ -1,6 +1,6 @@
-import type { Point, Rect } from "@andornaut/game-kit/rect";
-import type { BitmapFont } from "@andornaut/game-kit/text/bitmapFont";
-import { focusTarget } from "@andornaut/game-kit/web/ui/dom/focusModality";
+import type { Point, Rect } from "@andornaut/game-kit/runtime/rect";
+import type { BitmapFont } from "@andornaut/game-kit/runtime/text/bitmapFont";
+import { focusTarget } from "@andornaut/game-kit/runtime/web/ui/dom/focusModality";
 
 import { SCREEN_CONFIG } from "../../data/screen.ts";
 import { cardNumberForKey, isConfirmKey, menuKeyActs } from "../../input/keyBindings.ts";

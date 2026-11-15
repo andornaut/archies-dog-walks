@@ -1,7 +1,7 @@
-import { packAtlas } from "@andornaut/art-kit/atlasLayout";
-import { itemAt } from "@andornaut/game-kit/arrays";
-import { getOrInsertComputed } from "@andornaut/game-kit/maps";
-import type { Point, Rect } from "@andornaut/game-kit/rect";
+import { packAtlas } from "@andornaut/art-kit/build/atlasLayout";
+import { itemAt } from "@andornaut/game-kit/runtime/arrays";
+import { getOrInsertComputed } from "@andornaut/game-kit/runtime/maps";
+import type { Point, Rect } from "@andornaut/game-kit/runtime/rect";
 import * as v from "valibot";
 
 import {

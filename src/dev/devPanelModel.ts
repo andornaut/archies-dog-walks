@@ -1,7 +1,7 @@
 // The dev panel's logic, free of the DOM: the cheats, the save edits and the session keys it
 // shares with the game.
-import { assertNever } from "@andornaut/game-kit/assertNever";
-import { keysOf } from "@andornaut/game-kit/records";
+import { assertNever } from "@andornaut/game-kit/runtime/assertNever";
+import { keysOf } from "@andornaut/game-kit/runtime/records";
 
 import type { GameData, ZoneId } from "../data/types.ts";
 import { firstZoneId, type RouteData } from "../rules/route.ts";

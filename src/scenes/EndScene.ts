@@ -1,6 +1,6 @@
-import { itemAt } from "@andornaut/game-kit/arrays";
-import { guardSceneInput } from "@andornaut/game-kit/input/phaser/guardSceneInput";
-import type { Rect } from "@andornaut/game-kit/rect";
+import { itemAt } from "@andornaut/game-kit/runtime/arrays";
+import { guardSceneInput } from "@andornaut/game-kit/runtime/input/phaser/guardSceneInput";
+import type { Rect } from "@andornaut/game-kit/runtime/rect";
 import { type GameObjects, Scene } from "phaser";
 
 import { gameData } from "../data/index.ts";

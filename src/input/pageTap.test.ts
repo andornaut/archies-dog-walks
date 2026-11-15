@@ -1,5 +1,5 @@
-import { clampInto, containsPoint, type Point, type Rect } from "@andornaut/game-kit/rect";
-import { type FrameTurn, pageToGame } from "@andornaut/game-kit/view/pagePoint";
+import { clampInto, containsPoint, type Point, type Rect } from "@andornaut/game-kit/runtime/rect";
+import { type FrameTurn, pageToGame } from "@andornaut/game-kit/runtime/view/pagePoint";
 import { describe, expect, it } from "vitest";
 
 import { LANE_COUNT, SCREEN_CONFIG, SCREEN_LAYOUT } from "../data/screen.ts";

@@ -1,4 +1,4 @@
-import type { Rect } from "@andornaut/game-kit/rect";
+import type { Rect } from "@andornaut/game-kit/runtime/rect";
 
 import { SCREEN_CONFIG } from "../data/screen.ts";
 import { scrollbarArt, type ScrollbarRects } from "./scrollbar.ts";

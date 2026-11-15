@@ -1,10 +1,10 @@
-import type { Point, Rect } from "@andornaut/game-kit/rect";
+import type { Point, Rect } from "@andornaut/game-kit/runtime/rect";
 import {
   type FontMetrics,
   inkRowsFromCapTop,
   inkRowsOfLines,
-} from "@andornaut/game-kit/text/bitmapFont";
-import { HIT_RULE } from "@andornaut/game-kit/ui/hitAreas";
+} from "@andornaut/game-kit/runtime/text/bitmapFont";
+import { HIT_RULE } from "@andornaut/game-kit/runtime/ui/hitAreas";
 
 import { HOME_SCREEN, MIN_PRESS, TOP_BAR_SIZES } from "../data/layout.ts";
 import { SCREEN_CONFIG, SCREEN_LAYOUT } from "../data/screen.ts";

@@ -2,9 +2,9 @@ import {
   type AchievementPreview,
   NOTHING_PREVIEWED,
   previewAchievements,
-} from "@andornaut/game-kit/achievements/preview";
-import type { Random } from "@andornaut/game-kit/random";
-import type { Point, Rect } from "@andornaut/game-kit/rect";
+} from "@andornaut/game-kit/runtime/achievements/preview";
+import type { Random } from "@andornaut/game-kit/runtime/random";
+import type { Point, Rect } from "@andornaut/game-kit/runtime/rect";
 import type { Scene } from "phaser";
 
 import { debuffSoundCue } from "../../audio/sound.ts";

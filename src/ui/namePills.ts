@@ -1,5 +1,5 @@
-import type { Rect } from "@andornaut/game-kit/rect";
-import type { FontMetrics } from "@andornaut/game-kit/text/bitmapFont";
+import type { Rect } from "@andornaut/game-kit/runtime/rect";
+import type { FontMetrics } from "@andornaut/game-kit/runtime/text/bitmapFont";
 
 import { PILL, PILL_IMAGE_GAP } from "../data/layout.ts";
 import { centredInkOffsets } from "./centredInkBlock.ts";

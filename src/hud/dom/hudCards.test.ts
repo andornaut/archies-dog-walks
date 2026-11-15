@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 
-import { advanceWidth, laidGlyphs } from "@andornaut/game-kit/text/bitmapFont";
+import { advanceWidth, laidGlyphs } from "@andornaut/game-kit/runtime/text/bitmapFont";
 import { describe, expect, it } from "vitest";
 
 import { dogFaceKey } from "../../assets/spriteKeys.ts";

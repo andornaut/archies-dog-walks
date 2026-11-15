@@ -1,4 +1,4 @@
-import { guardSceneInput } from "@andornaut/game-kit/input/phaser/guardSceneInput";
+import { guardSceneInput } from "@andornaut/game-kit/runtime/input/phaser/guardSceneInput";
 import type { Scene } from "phaser";
 
 import { gameData } from "../data/index.ts";

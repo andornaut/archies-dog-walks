@@ -1,4 +1,4 @@
-import { type Random, seededRandom } from "@andornaut/game-kit/random";
+import { type Random, seededRandom } from "@andornaut/game-kit/runtime/random";
 import { describe, expect, it } from "vitest";
 
 import { gameData } from "../data/index.ts";

@@ -1,4 +1,4 @@
-import type { Point, Rect } from "@andornaut/game-kit/rect";
+import type { Point, Rect } from "@andornaut/game-kit/runtime/rect";
 
 import { BUFF_POP_PLACE, CHARM } from "../data/layout.ts";
 

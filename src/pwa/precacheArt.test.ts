@@ -1,5 +1,5 @@
-import { contentHash } from "@andornaut/game-kit/web/build/vite/contentHash";
-import { isHashedAssetUrl } from "@andornaut/game-kit/web/pwa/cachePolicy";
+import { contentHash } from "@andornaut/game-kit/build/contentHash";
+import { isHashedAssetUrl } from "@andornaut/game-kit/runtime/web/pwa/cachePolicy";
 import { describe, expect, it } from "vitest";
 
 import { hashedArtFileName } from "../tools/atlas/hashedArt.ts";

@@ -1,4 +1,4 @@
-import { inlineBlocks } from "@andornaut/game-kit/web/headers/securityHeaders";
+import { inlineBlocks } from "@andornaut/game-kit/build/securityHeaders";
 import ts from "typescript";
 
 // Finds the styles a page's CSP blocks: every built page's policy allows styles from the site's

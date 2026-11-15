@@ -1,6 +1,6 @@
-import { itemAt } from "@andornaut/game-kit/arrays";
-import type { Point, Rect } from "@andornaut/game-kit/rect";
-import { pixels } from "@andornaut/game-kit/units";
+import { itemAt } from "@andornaut/game-kit/runtime/arrays";
+import type { Point, Rect } from "@andornaut/game-kit/runtime/rect";
+import { pixels } from "@andornaut/game-kit/runtime/units";
 
 import { LANE_COUNT, ROAD_CAMERA, SCREEN_CONFIG, SCREEN_LAYOUT } from "../data/screen.ts";
 import type {

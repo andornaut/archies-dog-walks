@@ -1,4 +1,4 @@
-import { newlyEarned } from "@andornaut/game-kit/achievements";
+import { newlyEarned } from "@andornaut/game-kit/runtime/achievements";
 
 import type { AchievementId, GameData } from "../data/types.ts";
 import { achievementJudge, isMoneyGoal } from "../rules/achievements.ts";

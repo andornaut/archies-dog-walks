@@ -1,6 +1,6 @@
-import { clamp01 } from "@andornaut/game-kit/numbers";
-import type { Rect } from "@andornaut/game-kit/rect";
-import { type FontMetrics, inkRowsOfLines } from "@andornaut/game-kit/text/bitmapFont";
+import { clamp01 } from "@andornaut/game-kit/runtime/numbers";
+import type { Rect } from "@andornaut/game-kit/runtime/rect";
+import { type FontMetrics, inkRowsOfLines } from "@andornaut/game-kit/runtime/text/bitmapFont";
 
 import { SETTINGS_CARD } from "../data/layout.ts";
 import { laneDirectionForKey } from "../input/keyBindings.ts";

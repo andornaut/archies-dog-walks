@@ -1,5 +1,5 @@
-import { animationKey } from "@andornaut/game-kit/art/aseprite";
-import { guardSceneInput } from "@andornaut/game-kit/input/phaser/guardSceneInput";
+import { animationKey } from "@andornaut/game-kit/runtime/art/aseprite";
+import { guardSceneInput } from "@andornaut/game-kit/runtime/input/phaser/guardSceneInput";
 import { Math as PhaserMath, Scene } from "phaser";
 
 import { ZONE_CELEBRATION_ART as ART } from "../assets/spriteKeys.ts";

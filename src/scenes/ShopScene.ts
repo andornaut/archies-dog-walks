@@ -1,6 +1,6 @@
-import { clampIndex } from "@andornaut/game-kit/arrays";
-import { containsPoint, type Point, type Rect } from "@andornaut/game-kit/rect";
-import { advanceWidth } from "@andornaut/game-kit/text/bitmapFont";
+import { clampIndex } from "@andornaut/game-kit/runtime/arrays";
+import { containsPoint, type Point, type Rect } from "@andornaut/game-kit/runtime/rect";
+import { advanceWidth } from "@andornaut/game-kit/runtime/text/bitmapFont";
 import { Scene } from "phaser";
 
 import { artUrl } from "../assets/artFiles.ts";

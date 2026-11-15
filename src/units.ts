@@ -1,4 +1,4 @@
-import type { Unit } from "@andornaut/game-kit/units";
+import type { Unit } from "@andornaut/game-kit/runtime/units";
 
 // Money in integer cents.
 export type Cents = Unit<"Cents">;

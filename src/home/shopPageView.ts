@@ -1,4 +1,4 @@
-import { insetRect, type Rect } from "@andornaut/game-kit/rect";
+import { insetRect, type Rect } from "@andornaut/game-kit/runtime/rect";
 
 import { SCREEN_CONFIG } from "../data/screen.ts";
 import { barTitleLeft } from "../ui/barTitle.ts";

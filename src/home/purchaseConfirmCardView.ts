@@ -1,4 +1,4 @@
-import type { Rect } from "@andornaut/game-kit/rect";
+import type { Rect } from "@andornaut/game-kit/runtime/rect";
 
 import { closeControl } from "../ui/closeControl.ts";
 import { type QuestionPanelView } from "../ui/modal/types.ts";

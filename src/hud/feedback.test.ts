@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 
-import { decodePng } from "@andornaut/art-kit/png";
+import { decodePng } from "@andornaut/art-kit/build/png";
 import { describe, expect, it } from "vitest";
 
 import { gameData } from "../data/index.ts";

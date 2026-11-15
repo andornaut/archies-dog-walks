@@ -1,4 +1,4 @@
-import { insetRect, type Rect, ringRects } from "@andornaut/game-kit/rect";
+import { insetRect, type Rect, ringRects } from "@andornaut/game-kit/runtime/rect";
 
 import type { EncounterId, MinorLookId } from "../data/types.ts";
 

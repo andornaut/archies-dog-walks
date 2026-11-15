@@ -1,5 +1,5 @@
-import { insetRect, type Point, type Rect, ringRects } from "@andornaut/game-kit/rect";
-import { laidGlyphs } from "@andornaut/game-kit/text/bitmapFont";
+import { insetRect, type Point, type Rect, ringRects } from "@andornaut/game-kit/runtime/rect";
+import { laidGlyphs } from "@andornaut/game-kit/runtime/text/bitmapFont";
 import type { Scene, Tweens } from "phaser";
 
 import { SCREEN_CONFIG } from "../data/screen.ts";

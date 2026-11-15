@@ -1,4 +1,4 @@
-import { type Point, type Rect, rectAboveIn } from "@andornaut/game-kit/rect";
+import { type Point, type Rect, rectAboveIn } from "@andornaut/game-kit/runtime/rect";
 import type { GameObjects, Scene } from "phaser";
 
 import { kebabCase } from "../assets/spriteKeys.ts";

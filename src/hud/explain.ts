@@ -1,4 +1,4 @@
-import { fillLine, fillNames } from "@andornaut/game-kit/lines";
+import { fillLine, fillNames } from "@andornaut/game-kit/runtime/lines";
 
 import { debuffIconKey } from "../assets/iconKeys.ts";
 import { dogPortraitKey, gearIconKey, walkerPortraitKey } from "../assets/spriteKeys.ts";

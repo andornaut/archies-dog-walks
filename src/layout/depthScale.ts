@@ -1,4 +1,4 @@
-import { itemAt } from "@andornaut/game-kit/arrays";
+import { itemAt } from "@andornaut/game-kit/runtime/arrays";
 
 // How a road sprite is sized for its depth. Every road sprite, flat ones included, is a
 // billboard scaled uniformly with the projection, never stretched on one axis, so its drawn
