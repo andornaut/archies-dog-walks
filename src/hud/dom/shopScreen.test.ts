@@ -199,3 +199,20 @@ it("closes Shop through its native footer without activating a list gesture", as
   expect(close).toHaveBeenCalledTimes(2);
   screen.destroy();
 });
+
+it("paints every wrapped shop message line without changing its plate or native ownership", async () => {
+  const { root, screen, view } = fixture();
+  await settle();
+  const words = [gameData.menuText.common.close, gameData.homeText.shop.title];
+  const lines = words.map((text, line) => ({
+    ...view.page.title[0]!,
+    capTop: 170 + line * 18,
+    font: "body" as const,
+    scale: 2,
+    text,
+  }));
+  screen.update({ ...view, message: { lines, rect: { height: 50, width: 300, x: 24, y: 160 } } });
+  await settle();
+  expect(words.every((word) => root.all().some((node) => node.textContent === word))).toBe(true);
+  screen.destroy();
+});

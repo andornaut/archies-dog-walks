@@ -67,7 +67,7 @@ export interface ShopScreenView {
   readonly clip: Rect;
   readonly headings: readonly PanelText[];
   readonly rows: readonly ShopScreenRow[];
-  readonly message?: { readonly rect: Rect; readonly line: PanelText };
+  readonly message?: { readonly rect: Rect; readonly lines: readonly PanelText[] };
 }
 
 export interface ShopScreenMotion {
@@ -383,7 +383,7 @@ export function showShopScreen(
             element: plate.element,
             place: (at) => plate.place(at, ORIGIN, { ...messageView.rect, tag: "still" }),
           },
-          textPart(messageView.line),
+          ...messageView.lines.map((line) => textPart(line)),
         );
         ready.push(plate.ready);
       }
