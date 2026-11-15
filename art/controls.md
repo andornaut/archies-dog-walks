@@ -11,7 +11,7 @@ All surfaces share button roles, palette, borders, raised and pressed feedback, 
 | Choice cards                  | Tall illustrated choices carry art, prices and consequences     | Preserve card geometry, readable text and selection feedback; tap release chooses, a hold enlarges, and outside taps never choose                                        |
 | Debuff bars                   | A hold explains the debuff; a bar has no tap action             | Exempt from the 48px size rule: each `ui-debuff-bar` keeps its 360×16 hold target under the walk bar                                                                     |
 | Hold to explain               | A still hold requests details rather than activation            | Keep hold and tap-release distinct; pause the walk for its detail card and consume the dismissing tap                                                                    |
-| Effect wells                  | Six effects must fit beside the cash well and three buttons     | Exempt from the 48px size rule: tap to explain keeps each 22×22 well's press, its column of the bar, rows 0–39                                                           |
+| Effect wells                  | Six effects must fit beside the cash well and two buttons       | Exempt from the 48px size rule: tap to explain keeps each 26×26 HUD well's press, its column of the bar, rows 0–39                                                       |
 | Home and walk top bars        | Buttons and cash/effect wells share a 360px-wide, 40px-tall bar | 48×48 presses at a 48px pitch on rows 0–47, hanging 8 rows under the bar; a visible debuff bar wins rows 40–47; 20×20 navy faces, 16×16 glyphs, 2px press; no second row |
 | Joystick                      | Not applicable: this game uses lane gestures and keys           | No joystick asset, state or input contract is defined                                                                                                                    |
 | Lane steering                 | Road input is a movement gesture, not a button                  | Immediate road taps, release-classified doghouse-row taps, lane drags and the lane keys steer; top-bar taps never steer                                                  |
@@ -72,7 +72,7 @@ Palette names and ramps come from [`shared/palette.json`](../shared/palette.json
 | topbar.home.hit       | 48×48                   | px      | One pitch wide, rows 0–47                            |
 | topbar.home.pitch     | 48                      | px      | Start-screen top-bar face pitch, from x = 134        |
 | topbar.home.well      | ≤ 113                   | px      | Start-screen bank well width                         |
-| topbar.walk.hit       | 48×48                   | px      | Columns from x = 216, rows 0–47                      |
+| topbar.walk.hit       | 48×48                   | px      | Columns at x = 264 and 312, rows 0–47                |
 | wide.height           | 48                      | px      | Wide text-button height                              |
 | wide.width            | 296                     | px      | Non-modal wide text button                           |
 
@@ -97,7 +97,7 @@ Exemptions:
 - **Choice cards:** 6px apart; each card is a large press target, and three must stay in view.
 - **Dog cards:** 120×70, edge to edge in the card row; three must fill the 360px row.
 - **End-screen badge strip:** badges 16px apart in 48px-wide press columns; seven badges must stay in view.
-- **Walk bar:** effect wells 1px apart; six must fit between the cash well and the first button's press at x = 216.
+- **Walk bar:** native 24×24 HUD effect icons sit at +1,+1 in dedicated 26×26 wells, 2px apart. Keep existing 16px and 20px card, charm and world roles separate. For `n` visible wells use width `26n + 2(n - 1)` with no empty reserved wells; centre the group between the minimum cash well's right edge at x = 87 and the first button press at x = 264, rounding to whole pixels. Six wells start at x = 92,120,148,176,204,232 and y = 6; icon tops are y = 7 and their centre row is 19. Mute and Pause/Menu keep 48×48 hits at x = 264/312, with 20×20 faces at x = 278/326, y = 9. The minimum cash well is `(5,5,82,29)`; preserve 3× full-size cash text, with a 69px ink budget, 6px padding each side and its lip. This is the approved HUD geometry; runtime context verification belongs to its source pairing.
 
 **Press areas.** Every button face is at least 48px on its shorter side, except the small faces (icon faces, tabs, page dots), and every press area is at least 48×48 (`press.min`), the face grown about its centre, apart from the debuff bars and effect wells in the scope table. Where neighbouring press areas overlap, the press goes to the control whose drawn centre is nearest (game-kit's `pressedArea`); check non-overlap only against unrelated controls. In a stack the effective press area is the face plus half of each gap. The start-screen top-bar presses hang 8 rows under the 40px bar, over the yard: the bar wins rows 40–47 over the walker's bubble, and the Pet shop and its slot sign start below them. The slot sign's press wins over the Pet shop's where they overlap. The walk bar's presses take rows 0–47; while a debuff bar shows, the debuff bar wins rows 40–47, and with none showing the full 48 rows press the button.
 

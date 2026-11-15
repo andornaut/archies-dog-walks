@@ -13935,6 +13935,66 @@
       "png": "images/icon-home.png"
     },
     {
+      "key": "icon-hud-effect-gear-fanny-pack",
+      "png": "images/icon-hud-effect-gear-fanny-pack.png"
+    },
+    {
+      "key": "icon-hud-effect-gear-hall-pass",
+      "png": "images/icon-hud-effect-gear-hall-pass.png"
+    },
+    {
+      "key": "icon-hud-effect-gear-lucky-collar",
+      "png": "images/icon-hud-effect-gear-lucky-collar.png"
+    },
+    {
+      "key": "icon-hud-effect-gear-running-shoes",
+      "png": "images/icon-hud-effect-gear-running-shoes.png"
+    },
+    {
+      "key": "icon-hud-effect-gear-whistle",
+      "png": "images/icon-hud-effect-gear-whistle.png"
+    },
+    {
+      "key": "icon-hud-effect-perk-keen-eye",
+      "png": "images/icon-hud-effect-perk-keen-eye.png"
+    },
+    {
+      "key": "icon-hud-effect-perk-long-reach",
+      "png": "images/icon-hud-effect-perk-long-reach.png"
+    },
+    {
+      "key": "icon-hud-effect-perk-quick-recovery",
+      "png": "images/icon-hud-effect-perk-quick-recovery.png"
+    },
+    {
+      "key": "icon-hud-effect-perk-second-chance",
+      "png": "images/icon-hud-effect-perk-second-chance.png"
+    },
+    {
+      "key": "icon-hud-effect-upgrade-belly-rubs",
+      "png": "images/icon-hud-effect-upgrade-belly-rubs.png"
+    },
+    {
+      "key": "icon-hud-effect-upgrade-big-tipper",
+      "png": "images/icon-hud-effect-upgrade-big-tipper.png"
+    },
+    {
+      "key": "icon-hud-effect-upgrade-charmer",
+      "png": "images/icon-hud-effect-upgrade-charmer.png"
+    },
+    {
+      "key": "icon-hud-effect-upgrade-good-leash",
+      "png": "images/icon-hud-effect-upgrade-good-leash.png"
+    },
+    {
+      "key": "icon-hud-effect-upgrade-raincoats",
+      "png": "images/icon-hud-effect-upgrade-raincoats.png"
+    },
+    {
+      "key": "icon-hud-effect-upgrade-rush-hour",
+      "png": "images/icon-hud-effect-upgrade-rush-hour.png"
+    },
+    {
       "key": "icon-lock",
       "png": "images/icon-lock.png"
     },
@@ -14313,6 +14373,10 @@
     {
       "key": "ui-home-cash-well-right",
       "png": "images/ui-home-cash-well-right.png"
+    },
+    {
+      "key": "ui-hud-effect-well",
+      "png": "images/ui-hud-effect-well.png"
     },
     {
       "key": "ui-icon-button-normal",

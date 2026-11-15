@@ -22,8 +22,9 @@
 //                             with $ and a down arrow), good-leash (a calm dog sitting politely),
 //                             raincoats (a yellow raincoat), rush-hour (an alarm clock)
 // icon-gear-<gear>            the shop and the message strip: the shop's item art (icons.ts) at 16x16
+// icon-hud-effect-{perk,upgrade,gear}-<id>  native 24x24 HUD-only role, separate from card/charm art
 // <key>-20                    each icon-perk-*, icon-upgrade-* and icon-gear-* drawn again at 20x20
-//                             for the walk bar's 22x22 effect wells: the same subject and colours
+//                             for the separate 20px content role: the same subject and colours
 // icon-badge, icon-bump,      the walk's message strip, beside its lines, on cream: badge (a red
 // icon-fired, icon-hint,      ribbon rosette round a cream face with a gold centre, on two navy
 // icon-lucky                  tails), bump (an amber impact burst), fired (a pink slip under a dred
@@ -43,6 +44,7 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import { blankImage, type RgbaImage } from "@andornaut/art-kit/rgbaImage";
 
 import { burst, star4 } from "./fx.ts";
+import { HUD_EFFECT_IMAGES } from "./glyphs/hudEffects.ts";
 import {
   bitmap,
   build as buildSprites,
@@ -63,6 +65,7 @@ import { SQUIRREL_FUR } from "./road.ts";
 const USAGE = `Usage:
   node art/tools/glyphs.ts preview OUT.png   every icon on the UI's paper, panel, wood and ink
                                              colours, then ui-difficulty's tags, scaled up
+  node art/tools/glyphs.ts build-hud-effects export only native 24px HUD effect images
   node art/tools/glyphs.ts build             export to public/art/images/ and public/art/sprites/`;
 
 // ---------- traits ----------
@@ -1358,12 +1361,24 @@ async function build(): Promise<void> {
     writeFileSync(png, savePng(image(draw)));
   }
   await buildSprites({}, sprites());
+  buildHudEffects();
   console.log("built", [...IMAGES.keys()].join(", "));
+}
+
+function buildHudEffects(): void {
+  mkdirSync("public/art/images", { recursive: true });
+  for (const [key, draw] of HUD_EFFECT_IMAGES) {
+    writeFileSync(`public/art/images/${key}.png`, savePng(image(draw)));
+  }
 }
 
 if (import.meta.main) {
   await run({
-    commands: { build: () => build(), "preview OUT.png": (out) => preview(out) },
+    commands: {
+      build: () => build(),
+      "build-hud-effects": () => buildHudEffects(),
+      "preview OUT.png": (out) => preview(out),
+    },
     doc: USAGE,
   });
 }

@@ -73,11 +73,13 @@ Visible faces, touch targets and focus outlines are separate rectangles. Keep th
 | topbar.home.hit        | 48×48, rows 0–47                      | px   | One pitch wide, from x = 120                           | [home placement](../src/home/homeLayout.ts)    |
 | topbar.home.pitch      | 48                                    | px   | Home bar faces from x = 134, 28px apart                | [home placement](../src/home/homeLayout.ts)    |
 | topbar.home.well       | At most 113 wide                      | px   | Home bank well                                         | [home placement](../src/home/homeLayout.ts)    |
-| topbar.walk.hit        | 48×48, rows 0–47                      | px   | Three columns from x = 216; debuff bars win rows 40–47 | [walk HUD](../src/hud/walkHud.ts)              |
+| topbar.walk.hit        | 48×48, rows 0–47                      | px   | Two columns at x = 264/312; debuff bars win rows 40–47 | [walk HUD](../src/hud/walkHud.ts)              |
 | home.start.focusOutset | 4                                     | px   | Full focus ring, to the canvas's last row              | [home layout](../src/home/homeLayout.ts)       |
 | press.min              | 48×48                                 | px   | Least press area; overlaps go to the nearest centre    | [Controls](controls.md#sizing-and-spacing)     |
 
 Modal actions use their full measured label/icon width plus padding, not the non-modal compact/wide width floors. Preserve prices, goals, reasons and full-size labels in every state.
+
+HUD effect geometry follows the approved [walk-bar exception](controls.md#sizing-and-spacing): 24×24 native icons in 26×26 wells, 2px gaps, y = 6 wells and y = 7 icons. Size the group from the visible count, with no empty reservations; six wells span 166px. The minimum cash well is `(5,5,82,29)` and the mute/Pause-or-Menu faces are `(278,9,20,20)` and `(326,9,20,20)`, within unchanged 48px targets. Runtime contextual verification remains with the paired source change.
 
 ## Modals
 

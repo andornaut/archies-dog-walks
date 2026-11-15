@@ -112,6 +112,7 @@ export { chrome, plate } from "./ui/chrome.ts";
 
 const USAGE = `Usage:
   node art/tools/ui.ts preview OUT.png   every piece, scaled up
+  node art/tools/ui.ts build-hud-effect-well export only the native 26px HUD effect well
   node art/tools/ui.ts build             export to public/art/images/ and public/art/sprites/`;
 
 // ---------- nine-slices and badges ----------
@@ -903,21 +904,11 @@ const TOP_BAR_LINE = 1;
 
 const TOP_BAR_EDGE: readonly string[] = ["brown", "dbrown", "ink"];
 
-// The walk bar's cash well, in screen pixels: the start screen's bank well at its narrowest, 3 rows
-// clear of the trim above and below: x, y, width and height from the layout's walkBar.parts.cash.well.
-const WALK_CASH_WELL: readonly [number, number, number, number] = [
-  LAYOUT.walkBar.parts.cash.well.x,
-  LAYOUT.walkBar.parts.cash.well.y,
-  LAYOUT.walkBar.parts.cash.well.width,
-  LAYOUT.walkBar.parts.cash.well.height,
-];
+// Retained backing and cash-cap art use their native geometry. Runtime HUD cash sizing is separate.
+const WALK_CASH_WELL: readonly [number, number, number, number] = [5, 5, 70, 29];
 
-// The effect wells the game draws on the bar: six 22x22 wells (the perk, Pocket, found item and three
-// upgrades), 1 column apart, set evenly between the cash well and Help's press at x 216 (x 77 to 213),
-// on rows 8 to 29, centred on the buttons' faces (rows 9 to 28). The three buttons' presses, 48 wide,
-// fill x 216 to 359 at a 48 pitch, rows 0 to 47, each face centred in its press (faces at 230 + 48i).
-// The size is the layout's walkBar.parts.effects.size.
-const EFFECT_WELL = LAYOUT.walkBar.parts.effects.size;
+// The retained 20px content-role well, separate from the native 24px HUD role.
+const EFFECT_WELL = 22;
 
 // 360x40, ui-walk-bar: flat plum with the top bars' trim (dbrown on row 1; brown, dbrown and ink on
 // rows 37 to 39) and the ink cash well at 5,5 70x29, sized for "$888" at 3x with no coin. The game
@@ -958,6 +949,13 @@ function homeCashWellPiece(piece: string): Grid {
   for (let y = 0; y < h; y++) {
     g.px[y]![0] = whole.px[y]![x]!;
   }
+  return g;
+}
+
+// 26x26 HUD-only well; its native 24px icon is inset one pixel.
+function hudEffectWell(): Grid {
+  const g = new Grid(26, 26);
+  well(g, 0, 0, 26, 26);
   return g;
 }
 
@@ -1585,6 +1583,7 @@ const IMAGES: ReadonlyMap<string, () => RgbaImage> = new Map([
   ["ui-zone-banner", () => flat(zoneBanner())],
   ["ui-walk-bar", () => flat(walkBar())],
   ["ui-effect-well", () => flat(effectWell())],
+  ["ui-hud-effect-well", () => flat(hudEffectWell())],
   ["ui-zone-pill", () => flat(zonePill())],
   ...HOME_CASH_WELL_PIECES.map(
     (p) => [`ui-home-cash-well-${p}`, () => flat(homeCashWellPiece(p))] as const,
@@ -1739,7 +1738,14 @@ async function build(): Promise<void> {
 
 if (import.meta.main) {
   await run({
-    commands: { build: () => build(), "preview OUT.png": (out) => preview(out) },
+    commands: {
+      build: () => build(),
+      "build-hud-effect-well": () => {
+        mkdirSync("public/art/images", { recursive: true });
+        writeFileSync("public/art/images/ui-hud-effect-well.png", savePng(flat(hudEffectWell())));
+      },
+      "preview OUT.png": (out) => preview(out),
+    },
     doc: USAGE,
   });
 }
