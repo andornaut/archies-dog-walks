@@ -1,7 +1,15 @@
-import { describe, expect, it } from "vitest";
+import { setImmediate } from "node:timers/promises";
 
+import { describe, expect, it, vi } from "vitest";
+
+import { gameData } from "../../data/index.ts";
+import type { LogbookView } from "../../home/logbookView.ts";
+import { shopPageView } from "../../home/shopPageView.ts";
+import { STATS_TABS } from "../../home/statsLayout.ts";
+import { FakeDocument, type FakeElement, fakeLayer } from "../../testing/fakeDom.ts";
+import { fontFileMetrics, gameFont } from "../../testing/fontInk.ts";
 import { deviceY, domScale } from "../../ui/domScale.ts";
-import { scrollPlace } from "./logbook.ts";
+import { scrollPlace, showLogbook } from "./logbook.ts";
 
 // 393 CSS px wide over the 360-wide game at DPR 3: a game pixel is 3.275 device pixels and an
 // art pixel 3.
@@ -36,4 +44,134 @@ describe("the HTML Logbook's scroll", () => {
       expect(worst).toBeLessThanOrEqual(0.5 + 1e-9);
     },
   );
+});
+
+function nativeFixture() {
+  const doc = new FakeDocument();
+  const { element, layer } = fakeLayer(doc, SCALE);
+  const down = vi.fn(),
+    up = vi.fn(),
+    cancel = vi.fn(),
+    activate = vi.fn(),
+    focus = vi.fn(),
+    wheel = vi.fn();
+  let tick = () => {};
+  let scroll = { max: 100, settled: false, y: 0 };
+  const page = shopPageView(
+    {
+      body: fontFileMetrics("font-body"),
+      inkWidth: () => 60,
+      title: fontFileMetrics("font-title"),
+      wrapNote: () => [],
+    },
+    {
+      closePressed: false,
+      tabs: STATS_TABS.map((tab) => ({
+        label: gameData.menuText.stats.tabs[tab],
+        open: tab === "badges",
+        pressed: false,
+      })),
+      title: gameData.menuText.stats.title,
+    },
+  );
+  const view: LogbookView = {
+    content: { art: [], bottom: 700, fills: [], framed: [], texts: [] },
+    frame: { rect: { height: 300, width: 324, x: 18, y: 160 }, right: 342 },
+    page,
+    wallRows: [{ height: 40, width: 300, x: 24, y: 200 }],
+  };
+  const panel = showLogbook(layer, {
+    artUrl: (path) => `/art/${path}`,
+    closeLabel: gameData.menuText.common.close,
+    everyFrame: (step) => {
+      tick = step;
+      return () => {
+        tick = () => {};
+      };
+    },
+    fonts: { body: gameFont("font-body"), title: gameFont("font-title") },
+    loadSheet: () => Promise.resolve({}),
+    navigation: { activate, close: vi.fn(), focus, gesture: { cancel, down, up }, wheel },
+    pillColours: () => undefined,
+    scroll: () => scroll,
+    toGame: (point) => point,
+    view,
+  });
+  const root = element.children[0]!;
+  return {
+    activate,
+    cancel,
+    doc,
+    down,
+    focus,
+    layer,
+    page,
+    panel,
+    root,
+    scrollTo: (y: number) => {
+      scroll = { ...scroll, y };
+      tick();
+    },
+    up,
+    wheel,
+  };
+}
+const pointer = (target: FakeElement, pointerId: number, type: string) => ({
+  clientX: 40,
+  clientY: 200,
+  detail: 1,
+  pointerId,
+  preventDefault: vi.fn(),
+  stopImmediatePropagation: vi.fn(),
+  target,
+  timeStamp: 10,
+  type,
+});
+
+it("retains native tab targets and the owned pointer while their pressed paint and scroll update", async () => {
+  const { activate, doc, down, focus, page, panel, root, scrollTo, up } = nativeFixture();
+  await setImmediate();
+  const tab = root
+    .all()
+    .find((element) => element.getAttribute("aria-label") === page.tabs[0]!.label.text)!;
+  root.fire("pointerdown", pointer(tab, 1, "pointerdown"));
+  panel.setPage({ ...page, tabs: page.tabs.map((tab) => ({ ...tab, dy: tab.dy + 2 })) });
+  scrollTo(18.5);
+  root.fire("pointerdown", pointer(tab, 2, "pointerdown"));
+  doc.fire("pointerup", pointer(tab, 1, "pointerup"));
+  expect(
+    root.all().find((element) => element.getAttribute("aria-label") === page.tabs[0]!.label.text),
+  ).toBe(tab);
+  expect(down).toHaveBeenCalledOnce();
+  expect(up).toHaveBeenCalledOnce();
+  tab.fire("click", { detail: 1 });
+  expect(activate).not.toHaveBeenCalled();
+  tab.fire("click", { detail: 0 });
+  expect(activate).toHaveBeenCalledWith({ tab: 0 });
+  const badge = root
+    .all()
+    .find(
+      (element) =>
+        element.tagName === "button" && element.getAttribute("aria-label") === page.title.text,
+    )!;
+  root.fire("focusin", { target: badge });
+  expect(focus).toHaveBeenCalledWith({ height: 40, width: 300, x: 24, y: 200 });
+  panel.destroy();
+});
+
+it("rejects a carried Logbook contact and wheel across a nested badge modal", async () => {
+  const { cancel, doc, layer, panel, root, up, wheel } = nativeFixture();
+  await setImmediate();
+  const admitted = panel.capture();
+  root.fire("pointerdown", pointer(root, 1, "pointerdown"));
+  const badge = layer.input.open();
+  const clip = root.all().find((element) => element.className === "adw-clip")!;
+  clip.fire("wheel", { deltaY: 20, preventDefault: vi.fn() } as never);
+  badge.close();
+  doc.fire("pointerup", pointer(root, 1, "pointerup"));
+  expect(admitted()).toBe(false);
+  expect(cancel).toHaveBeenCalledOnce();
+  expect(up).not.toHaveBeenCalled();
+  expect(wheel).not.toHaveBeenCalled();
+  panel.destroy();
 });
