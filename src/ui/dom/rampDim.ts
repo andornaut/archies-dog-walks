@@ -87,3 +87,34 @@ export function dimDrawn(element: HTMLElement, dimmed: boolean): void {
     dimInline(element, true);
   }
 }
+
+// Native screen roots register separately from the undimmed top bar and world effects.
+export function followModalUnderlay(
+  coverage: { accepts(): boolean; subscribe(listener: () => void): () => void },
+  element: HTMLElement,
+): () => void {
+  const inert = element.inert;
+  const hidden = element.getAttribute("aria-hidden");
+  const restore = () => {
+    setRampDimmed(element, false);
+    element.inert = inert;
+    if (hidden === null) {
+      element.removeAttribute("aria-hidden");
+    } else {
+      element.setAttribute("aria-hidden", hidden);
+    }
+  };
+  const stop = coverage.subscribe(() => {
+    if (coverage.accepts()) {
+      restore();
+    } else {
+      setRampDimmed(element, true);
+      element.inert = true;
+      element.setAttribute("aria-hidden", "true");
+    }
+  });
+  return () => {
+    stop();
+    restore();
+  };
+}

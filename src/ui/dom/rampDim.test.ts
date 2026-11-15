@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { FakeDocument } from "../../testing/fakeDom.ts";
 import { dimColour } from "../dimArt.ts";
 import { PALETTE } from "../palette.ts";
-import { DIM_ART_ATTRIBUTE, dimCss, setRampDimmed } from "./rampDim.ts";
+import { DIM_ART_ATTRIBUTE, dimCss, followModalUnderlay, setRampDimmed } from "./rampDim.ts";
 
 const hex = (colour: number) => `#${colour.toString(16).padStart(6, "0")}`;
 
@@ -44,4 +44,41 @@ describe("HTML dimmed under the pause menu", () => {
       'url("/art/images/ui-quip-tail-up.png")',
     ]);
   });
+});
+
+it("dims and blocks a registered native underlay once, then restores its own accessibility state", () => {
+  const doc = new FakeDocument();
+  const root = doc.createElement("div");
+  root.style.color = hex(PALETTE.cream);
+  root.setAttribute("aria-hidden", "false");
+  let covered = false;
+  let sync: () => void = () => undefined;
+  let stopped = false;
+  const stop = followModalUnderlay(
+    {
+      accepts: () => !covered,
+      subscribe: (listener) => {
+        sync = listener;
+        sync();
+        return () => {
+          stopped = true;
+        };
+      },
+    },
+    root as unknown as HTMLElement,
+  );
+  covered = true;
+  sync();
+  expect(root.inert).toBe(true);
+  expect(root.getAttribute("aria-hidden")).toBe("true");
+  expect(root.style.color).toBe(hex(dimColour(PALETTE.cream)));
+  sync();
+  expect(root.style.color).toBe(hex(dimColour(PALETTE.cream)));
+  covered = false;
+  sync();
+  expect(root.inert).toBe(false);
+  expect(root.getAttribute("aria-hidden")).toBe("false");
+  expect(root.style.color).toBe(hex(PALETTE.cream));
+  stop();
+  expect(stopped).toBe(true);
 });

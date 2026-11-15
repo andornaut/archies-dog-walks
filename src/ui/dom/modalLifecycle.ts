@@ -107,8 +107,52 @@ export function guardNativeInput(guard: NativeInputGuard, root: HTMLElement): ()
   };
 }
 
+export interface RevealPaint {
+  destroy(): void;
+  painted(): boolean;
+}
+
+// Decoded art and the first browser paint share one admission boundary for every native view.
+export function revealPaint(
+  reveal: Reveal,
+  onPaint: () => void,
+  element: HTMLElement,
+): RevealPaint {
+  const page = element.ownerDocument.defaultView;
+  let alive = true;
+  let painted = typeof page?.requestAnimationFrame !== "function";
+  let frame: number | undefined;
+  void reveal.revealed.then((revealed) => {
+    if (!alive || !revealed) {
+      return;
+    }
+    if (typeof page?.requestAnimationFrame === "function") {
+      frame = page.requestAnimationFrame(() => {
+        if (alive) {
+          painted = true;
+          onPaint();
+        }
+      });
+    } else {
+      painted = true;
+      onPaint();
+    }
+  });
+  return {
+    destroy: () => {
+      alive = false;
+      if (frame !== undefined) {
+        page?.cancelAnimationFrame?.(frame);
+      }
+      reveal.cancel();
+    },
+    painted: () => alive && painted && element.getAttribute(PENDING_ATTRIBUTE) === null,
+  };
+}
+
 export interface ModalLifecycle {
   accepts(): boolean;
+  capture(): () => boolean;
   destroy(): void;
   setEnabled(enabled: boolean): void;
   setInert(inert: boolean): void;
@@ -123,22 +167,18 @@ export function mountModalLifecycle(
 ): ModalLifecycle {
   const { passive, reveal } = options;
   const doc = element.ownerDocument;
-  const page = doc.defaultView;
   const previous = doc.activeElement as HTMLElement | null;
   let alive = true;
   let enabled = true;
   let shown = true;
   let inert = false;
-  let painted = typeof page?.requestAnimationFrame !== "function";
-  let frame: number | undefined;
   let revision = 0;
   let scope: ModalInputScope | undefined = passive ? undefined : layer.input.open();
   const eligible = () => alive && shown && !inert;
   const accepts = () =>
     eligible() &&
     enabled &&
-    painted &&
-    element.getAttribute(PENDING_ATTRIBUTE) === null &&
+    paint.painted() &&
     (passive ? layer.input.accepts() : scope?.accepts() === true);
   const blur = () => {
     if (element.contains(doc.activeElement)) {
@@ -189,21 +229,8 @@ export function mountModalLifecycle(
         },
         element,
       );
+  const paint = revealPaint(reveal, sync, element);
   const stopChanges = layer.input.subscribe(sync);
-  void reveal.revealed.then((revealed) => {
-    if (!alive || !revealed) {
-      return;
-    }
-    if (typeof page?.requestAnimationFrame === "function") {
-      frame = page.requestAnimationFrame(() => {
-        painted = true;
-        sync();
-      });
-    } else {
-      painted = true;
-      sync();
-    }
-  });
   const closeScope = () => {
     const closing = scope;
     scope = undefined;
@@ -221,16 +248,14 @@ export function mountModalLifecycle(
   sync();
   return {
     accepts,
+    capture: input.capture,
     destroy: () => {
       const top = scope?.accepts() === true;
       alive = false;
       blur();
       stopInput();
       stopChanges();
-      if (frame !== undefined) {
-        page?.cancelAnimationFrame(frame);
-      }
-      reveal.cancel();
+      paint.destroy();
       closeScope();
       if (top && previous?.isConnected && !previous.closest("[inert]")) {
         focusTarget(previous);
