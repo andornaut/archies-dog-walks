@@ -9,6 +9,7 @@ import {
 } from "@andornaut/game-kit/web/input/dom/pagePresses";
 import type { Scene } from "phaser";
 
+import { logicalPoint } from "../input/phaser/logicalPointer.ts";
 import type { Press } from "../input/pointerTracking.ts";
 import { pageFrameTurn } from "../pwa/index.ts";
 
@@ -32,11 +33,14 @@ export function listenPagePresses(scene: Scene, handlers: PagePressHandlers): vo
   const bare = [document.documentElement, document.body, canvas.parentElement];
   // The game is drawn upright: its frame has no turn.
   const toGame = (event: PagePointerEvent) =>
-    pageToGame(
-      pageFrameTurn(),
-      canvas.getBoundingClientRect(),
-      scene.scale.gameSize,
-      clientPoint(event),
+    logicalPoint(
+      scene,
+      pageToGame(
+        pageFrameTurn(),
+        canvas.getBoundingClientRect(),
+        scene.scale.gameSize,
+        clientPoint(event),
+      ),
     );
   const press = ({ downTime, pointerId }: PagePress): Press => ({ downTime, id: -1 - pointerId });
   const remove = listenKitPagePresses(

@@ -17,6 +17,13 @@ class Display {
   alpha = 1;
   fillAlpha = 1;
   visible = true;
+  displayHeight = 0;
+  displayWidth = 0;
+  setDisplaySize(width: number, height: number) {
+    this.displayWidth = width;
+    this.displayHeight = height;
+    return this;
+  }
   setFillStyle(_colour: number, alpha: number) {
     this.fillAlpha = alpha;
     return this;
@@ -48,6 +55,7 @@ function fixture() {
     width: 360,
     x: 0,
     y: 0,
+    zoom: 1,
   };
   const stub = sceneStub(vi.fn, {
     add: {
@@ -93,6 +101,21 @@ describe("modal ramp dim adapter", () => {
     await Promise.resolve();
     expect(rectangles[0]?.visible).toBe(false);
     expect(images[0]).toMatchObject({ alpha: 1, visible: true });
+  });
+
+  it("reads the zoomed backing once and restores a logical-size snapshot", async () => {
+    vi.mocked(snapshotRemapped).mockResolvedValue(true);
+    const { camera, images, scene } = fixture();
+    Object.assign(camera, { height: 1120, width: 720, x: 600, zoom: 2 });
+    addRampDim(scene, area);
+    expect(vi.mocked(snapshotRemapped).mock.calls[0]?.[2]).toEqual({
+      height: 600,
+      width: 720,
+      x: 600,
+      y: 80,
+    });
+    await Promise.resolve();
+    expect(images[0]).toMatchObject({ displayHeight: 300, displayWidth: 360, visible: true });
   });
 
   it("uses the stronger modal ink fallback while retaining the nonmodal default", async () => {

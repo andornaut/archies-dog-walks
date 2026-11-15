@@ -200,6 +200,7 @@ function hudArtKeys(
     "ui-owner-tab",
     "ui-quip-tail-down",
     "ui-walk-bar",
+    "ui-zone-banner",
     "ui-zone-pill",
   ];
 }

@@ -4,24 +4,8 @@ import { snapshotRemapped } from "@andornaut/game-kit/view/phaser/snapshotRemap"
 import { Core, type GameObjects, type Scene, Scenes } from "phaser";
 
 import { ONE_STEP_DARKER } from "../../assets/housePalette.ts";
+import { shownWorldRect } from "../worldFit.ts";
 import { addModalShade } from "./draw.ts";
-
-// The part of a scene rect its main camera shows, in the scene's coordinates and on the game's
-// canvas, or undefined when the camera shows none of it.
-function shownPart(scene: Scene, rect: Rect): { canvas: Rect; world: Rect } | undefined {
-  const camera = scene.cameras.main;
-  const dx = camera.x - camera.scrollX;
-  const dy = camera.y - camera.scrollY;
-  const left = Math.max(rect.x + dx, camera.x);
-  const top = Math.max(rect.y + dy, camera.y);
-  const right = Math.min(rect.x + rect.width + dx, camera.x + camera.width);
-  const bottom = Math.min(rect.y + rect.height + dy, camera.y + camera.height);
-  if (right <= left || bottom <= top) {
-    return undefined;
-  }
-  const canvas = { height: bottom - top, width: right - left, x: left, y: top };
-  return { canvas, world: { ...canvas, x: left - dx, y: top - dy } };
-}
 
 // Dims rect under an overlay the style guide's way: the frozen view read back from the next
 // frame and redrawn through the kit's shared modal palette-ramp policy, never blended with
@@ -42,7 +26,7 @@ export function addRampDim(
       onceBeforeRender(scene, onDrawn);
     }
   };
-  const shown = shownPart(scene, rect);
+  const shown = shownWorldRect(scene.cameras.main, rect);
   if (shown === undefined) {
     drawn();
     return [];
@@ -67,7 +51,7 @@ export function addRampDim(
       return;
     }
     if (remapped) {
-      dim.setTexture(key).setVisible(true);
+      dim.setTexture(key).setDisplaySize(world.width, world.height).setVisible(true);
     } else {
       fallback();
     }

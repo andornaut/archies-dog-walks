@@ -1,0 +1,88 @@
+import { expect, it, vi } from "vitest";
+
+import { FakeDocument, fakeLayer } from "../../testing/fakeDom.ts";
+import { gameFont } from "../../testing/fontInk.ts";
+import { domScale } from "../domScale.ts";
+import { mountRoadBanner } from "./roadBanner.ts";
+
+it("keeps canvas fallback until decoding, follows the existing pose and announces a zone once", async () => {
+  const doc = new FakeDocument();
+  const { element, layer } = fakeLayer(doc, domScale(2, { height: 560, width: 360, x: 0, y: 0 }));
+  const modal = doc.createElement("section");
+  element.append(modal);
+  let settle!: (decoded: boolean) => void;
+  const cancel = vi.fn();
+  layer.reveal = () => ({
+    cancel,
+    revealed: new Promise((resolve) => {
+      settle = resolve;
+    }),
+  });
+  const pose = { active: true, alpha: 1, x: -240, y: 110 };
+  const shown = vi.fn();
+  const view = mountRoadBanner(layer, {
+    heading: "Toronto, neighbourhood 1",
+    image: "/banner.png",
+    name: "The Beach",
+    nameFont: { bitmap: gameFont("font-title"), font: "title", scale: 2 },
+    pose: () => pose,
+    shown,
+    title: gameFont("font-title"),
+  });
+  const root = element.children[0]!;
+  const status = root.children.at(-1)!;
+  expect(element.children[1]).toBe(modal);
+  expect(root.hidden).toBe(true);
+  expect(shown).toHaveBeenLastCalledWith(false);
+  const cover = layer.input.open();
+  settle(true);
+  await Promise.resolve();
+  expect(root.hidden).toBe(false);
+  expect(root.attributes.get("aria-hidden")).toBe("true");
+  expect(status.textContent).toBe("");
+  cover.close();
+  expect(status.textContent).toBe("Toronto, neighbourhood 1. The Beach");
+  pose.x = 50;
+  pose.alpha = 0.5;
+  view.update();
+  expect(root.children[0]!.style.left).toBe("100px");
+  expect(root.style.opacity).toBe("0.5");
+  const coverAgain = layer.input.open();
+  expect(status.attributes.get("aria-hidden")).toBe("true");
+  coverAgain.close();
+  expect(status.attributes.get("aria-hidden")).toBe("true");
+  expect(doc.activeElement).toBeUndefined();
+  view.destroy();
+  view.destroy();
+  expect(cancel).toHaveBeenCalledOnce();
+  expect(element.children).toEqual([modal]);
+});
+
+it("does not reveal or announce a destroyed banner when a late image settles", async () => {
+  const doc = new FakeDocument();
+  const { element, layer } = fakeLayer(doc, domScale(1, { height: 560, width: 360, x: 0, y: 0 }));
+  let settle!: (decoded: boolean) => void;
+  layer.reveal = () => ({
+    cancel: vi.fn(),
+    revealed: new Promise((resolve) => {
+      settle = resolve;
+    }),
+  });
+  const shown = vi.fn();
+  const view = mountRoadBanner(layer, {
+    heading: "Toronto",
+    image: "/banner.png",
+    name: "The Beach",
+    nameFont: { bitmap: gameFont("font-title"), font: "title", scale: 2 },
+    pose: () => ({ active: true, alpha: 1, x: 50, y: 110 }),
+    shown,
+    title: gameFont("font-title"),
+  });
+  view.destroy();
+  shown.mockClear();
+  settle(true);
+  await Promise.resolve();
+  view.update();
+  expect(element.children).toEqual([]);
+  expect(shown).not.toHaveBeenCalled();
+});

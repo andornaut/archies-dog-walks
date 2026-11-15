@@ -9,6 +9,7 @@ import type { Events, Scene } from "phaser";
 
 import { gameData } from "../data/index.ts";
 import { openGuard } from "../input/openGuard.ts";
+import { logicalInput } from "../input/phaser/logicalPointer.ts";
 import { PHONE_EVENTS } from "../pwa/index.ts";
 import { read } from "../rules/units.ts";
 import { listenPagePresses } from "./pagePresses.ts";
@@ -157,7 +158,7 @@ export function listenOutsideTap(
   scene.input.on("pointerupoutside", release);
   catchOutsideTaps(
     tapMaxDistance,
-    scene,
+    logicalInput(scene),
     () => (input.accepts() ? area() : undefined),
     () => {
       if (released?.()) {

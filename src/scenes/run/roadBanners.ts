@@ -1,6 +1,8 @@
 import { type Point, type Rect, rectAboveIn, rectsOverlap } from "@andornaut/game-kit/rect";
-import type { GameObjects, Scene } from "phaser";
+import { Core, type GameObjects, type Scene, Scenes } from "phaser";
 
+import { artUrl } from "../../assets/artFiles.ts";
+import { domArtPath } from "../../assets/domArt.ts";
 import { debuffIconKey } from "../../assets/iconKeys.ts";
 import { gearIconKey } from "../../assets/spriteKeys.ts";
 import { gameData } from "../../data/index.ts";
@@ -9,10 +11,12 @@ import type { DebuffId, EncounterId, GearId } from "../../data/types.ts";
 import { zoneBannerHeading } from "../../hud/zoneCelebration.ts";
 import { currentZone } from "../../rules/route.ts";
 import type { RunState } from "../../state/runState.ts";
+import { mountRoadBanner } from "../../ui/dom/roadBanner.ts";
+import { uiLayer } from "../../ui/dom/uiLayer.ts";
 import { PALETTE } from "../../ui/palette.ts";
-import { addDisplayText } from "../../ui/phaser/displayText.ts";
+import { addDisplayText, displayBitmapFont, hasDisplayFont } from "../../ui/phaser/displayText.ts";
 import { fillRect } from "../../ui/phaser/draw.ts";
-import { addPixelText } from "../../ui/phaser/pixelText.ts";
+import { addPixelText, pixelBitmapFont } from "../../ui/phaser/pixelText.ts";
 import { fadeAway } from "../uiKit.ts";
 import { DEPTH, LAYOUT } from "./stage.ts";
 
@@ -200,6 +204,7 @@ export class ZoneBanner {
     if (!still) {
       banner.x = x - road.width;
     }
+    this.mountDom(banner, heading, zone.name);
     scene.tweens.chain({
       onComplete: () => banner.destroy(),
       targets: banner,
@@ -211,6 +216,38 @@ export class ZoneBanner {
           ...(still ? { alpha: 0 } : { x: x + road.width }),
         },
       ],
+    });
+  }
+
+  private mountDom(banner: GameObjects.Container, heading: string, name: string): void {
+    const { scene } = this;
+    const layer = uiLayer();
+    const title = pixelBitmapFont(scene, "title");
+    if (layer === undefined || title === undefined) {
+      return;
+    }
+    const display = hasDisplayFont(scene, name) ? displayBitmapFont(scene) : undefined;
+    const view = mountRoadBanner(layer, {
+      heading,
+      image: artUrl(domArtPath("image", BANNER.key, "png")),
+      name,
+      nameFont: {
+        bitmap: display ?? title,
+        font: display === undefined ? "title" : "display",
+        scale: display === undefined ? 2 : 1,
+      },
+      pose: () => banner,
+      shown: (ready) => banner.setVisible(!ready),
+      title,
+    });
+    const update = () => view.update();
+    const destroy = () => banner.destroy();
+    scene.game.events.on(Core.Events.PRE_RENDER, update);
+    scene.events.once(Scenes.Events.SHUTDOWN, destroy);
+    banner.once("destroy", () => {
+      view.destroy();
+      scene.game.events.off(Core.Events.PRE_RENDER, update);
+      scene.events.off(Scenes.Events.SHUTDOWN, destroy);
     });
   }
 }

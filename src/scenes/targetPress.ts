@@ -1,5 +1,6 @@
-import type { Input, Scene } from "phaser";
+import type { Scene } from "phaser";
 
+import type { LogicalPointer } from "../input/phaser/logicalPointer.ts";
 import { pressDown, pressUp, type TargetPress } from "../input/targetPress.ts";
 import { listenOnePress } from "./onePress.ts";
 import { afterMsUnderOverlay } from "./overlayClock.ts";
@@ -8,9 +9,9 @@ interface TargetPressHandlers<T> {
   // How long a tapped target stays pressed before onTap, counted from the press. 0 by default.
   dipMs?: (target: T) => number;
   // After onPressed, on each press: for a tap burst, or a hold timer.
-  onDown?: (pointer: Input.Pointer, target: T | undefined) => void;
+  onDown?: (pointer: LogicalPointer, target: T | undefined) => void;
   // As the followed press moves: for a hold's slop.
-  onMove?: (pointer: Input.Pointer) => void;
+  onMove?: (pointer: LogicalPointer) => void;
   // The target a press shows pressed: the one under it as it lands, then undefined once it
   // ends, before any onTap but one that opens a page or card.
   onPressed: (target: T | undefined) => void;

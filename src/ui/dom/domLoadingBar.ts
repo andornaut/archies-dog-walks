@@ -14,7 +14,7 @@ export function mountDomLoadingBar(
   parent: HTMLElement,
   frame: Rect,
   progress: ProgressSource,
-): { setShown(shown: boolean): void } {
+): { destroy(): void; setShown(shown: boolean): void } {
   const view = document.createElement("div");
   Object.assign(view.style, {
     left: "0",
@@ -39,8 +39,19 @@ export function mountDomLoadingBar(
   place();
   // A finished measured load shows full until the stylesheet hides it; a finished load of
   // unknown size hides the bar at once.
-  progress.subscribe((snapshot) => bar.report(snapshot));
+  const unsubscribe = progress.subscribe((snapshot) => bar.report(snapshot));
+  let destroyed = false;
   return {
+    destroy() {
+      if (destroyed) {
+        return;
+      }
+      destroyed = true;
+      unsubscribe();
+      resize.disconnect();
+      bar.remove();
+      view.remove();
+    },
     setShown: (shown) => {
       view.hidden = !shown;
     },

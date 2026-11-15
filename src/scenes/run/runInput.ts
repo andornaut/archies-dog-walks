@@ -1,4 +1,4 @@
-import { clampInto, type Point } from "@andornaut/game-kit/rect";
+import { clampInto, containsPoint, type Point } from "@andornaut/game-kit/rect";
 import type { Input, Scene } from "phaser";
 
 import { gameData } from "../../data/index.ts";
@@ -15,6 +15,7 @@ import type { GestureAction } from "../../input/gestures.ts";
 import { holdRule } from "../../input/hold.ts";
 import { walkKeyAction } from "../../input/keyBindings.ts";
 import { walkPagePoint } from "../../input/pageTap.ts";
+import { logicalPoint } from "../../input/phaser/logicalPointer.ts";
 import {
   idleTrack,
   type PointerPhase,
@@ -30,6 +31,7 @@ import type { LaneDirection } from "../../layout/lanes.ts";
 import { read } from "../../rules/units.ts";
 import type { SessionInput } from "../../runner/session.ts";
 import { steerWalk, type Walk } from "../../runner/walk.ts";
+import { deviceFitOwned } from "../../ui/worldFit.ts";
 import { listenPagePresses } from "../pagePresses.ts";
 import { addTapBurst } from "../uiKit.ts";
 import { leadWalk } from "./interpolate.ts";
@@ -132,7 +134,19 @@ export class RunInput {
   // Phaser reports a cancelled touch as a release with wasCanceled set.
   private onPointer(phase: "down" | "move" | "up", pointer: Input.Pointer): void {
     const press = { downTime: pointer.downTime, id: pointer.id };
-    const point = { x: pointer.x, y: pointer.y };
+    const logical = logicalPoint(this.scene, pointer);
+    // The native backing includes the page margins. Keep their existing page-press policy
+    // rather than treating a new backing pixel as a new logical control area.
+    const outside =
+      deviceFitOwned(this.scene.scale) && !containsPoint(LAYOUT.screen, logical.x, logical.y);
+    const point = !outside
+      ? logical
+      : phase === "down"
+        ? walkPagePoint(LAYOUT, logical)
+        : clampInto(LAYOUT.screen, logical);
+    if (point === undefined) {
+      return;
+    }
     const debuffs = this.host.explainShown().debuffs.length;
     const onButton = phase === "down" && topBarButtonAt(debuffs, point.x, point.y) !== undefined;
     this.onPress(phase === "up" && pointer.wasCanceled ? "cancel" : phase, press, point, onButton);

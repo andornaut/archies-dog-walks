@@ -8,6 +8,7 @@ import "./main.css";
 import { MENU_FPS } from "@andornaut/game-kit/clock/frameCap";
 import { capFrameRate } from "@andornaut/game-kit/clock/phaser/capFrameRate";
 import { LOADER_CONFIG } from "@andornaut/game-kit/load/loaderConfig";
+import { MAX_RENDER_SCALE } from "@andornaut/game-kit/view/renderScale";
 import { followFrameTurn } from "@andornaut/game-kit/web/view/phaser/followFrameTurn";
 import { Core, Game, Scale, WEBGL } from "phaser";
 
@@ -22,13 +23,13 @@ import { noteKeyPress } from "./input/keyNumbers.ts";
 import { lostTouches } from "./input/touches.ts";
 import {
   pageFrameWatch,
-  PHONE_EVENTS,
   requiredUpdate,
   setOnHomeScreen,
   setupPhoneApp,
   storagePersistence,
 } from "./pwa/index.ts";
 import { launchGame } from "./pwa/launchGame.ts";
+import { createUpdateIdle } from "./pwa/updateIdle.ts";
 import { BootScene } from "./scenes/BootScene.ts";
 import { CardScene } from "./scenes/CardScene.ts";
 import { CelebrationScene } from "./scenes/CelebrationScene.ts";
@@ -50,11 +51,12 @@ import { ShopScene } from "./scenes/ShopScene.ts";
 import { StartScene } from "./scenes/StartScene.ts";
 import { StatsScene } from "./scenes/StatsScene.ts";
 import { TapBurstScene } from "./scenes/TapBurstScene.ts";
+import { followWorldCameras } from "./scenes/worldCamera.ts";
 import { ZoneCelebrationScene } from "./scenes/ZoneCelebrationScene.ts";
 import { mountDomLoadingBar } from "./ui/dom/domLoadingBar.ts";
 import { mountUiLayer, setUiLayer } from "./ui/dom/uiLayer.ts";
-import { htmlUiOn } from "./ui/htmlUi.ts";
 import { startupLoad } from "./ui/startupProgress.ts";
+import { worldViewBox } from "./ui/worldFit.ts";
 
 // The dev panel's view of the game: the cheats are a registry entry RunScene reads each frame.
 function devPanelHost(game: Game): DevPanelHost {
@@ -63,49 +65,6 @@ function devPanelHost(game: Game): DevPanelHost {
     setCheats: (cheats) => {
       game.registry.set(DEV_CHEATS_KEY, cheats);
     },
-  };
-}
-
-// While a newer save requires the newer version, the game loop sleeps on the home screen once
-// it has been still for UPDATE_IDLE_MS, the HTML mirror's frame work with it: Chromium starts a
-// background install only once the page's main thread is idle. A change of the update's state
-// and the player's input wake it, so home redraws and stays usable, and it sleeps again once
-// still. The required update's loading line is in the DOM, animated in CSS, so it moves while
-// the loop sleeps; it shows on the home screen while the update is required, over the canvas's
-// line, which shows the same. Returns the home screen watcher's callback.
-const UPDATE_IDLE_MS = 1000;
-const WAKE_EVENTS = [PHONE_EVENTS.requiredUpdate, "keydown", "pointerdown", "pointerup"] as const;
-
-function sleepWhileUpdateRequired(
-  game: Game,
-  parent: HTMLElement | null,
-): (onHome: boolean) => void {
-  let onHome = false;
-  let timer: ReturnType<typeof setTimeout> | undefined;
-  const bar =
-    parent === null
-      ? undefined
-      : mountDomLoadingBar(parent, HOME_LAYOUT.loadingProgress, backgroundLoad);
-  bar?.setShown(false);
-  const idle = () => onHome && requiredUpdate() !== undefined;
-  const settle = () => {
-    bar?.setShown(idle());
-    game.loop.wake();
-    clearTimeout(timer);
-    if (idle()) {
-      timer = setTimeout(() => {
-        if (idle()) {
-          game.loop.sleep();
-        }
-      }, UPDATE_IDLE_MS);
-    }
-  };
-  for (const type of WAKE_EVENTS) {
-    window.addEventListener(type, settle, { capture: true, passive: true });
-  }
-  return (home) => {
-    onHome = home;
-    settle();
   };
 }
 
@@ -127,11 +86,9 @@ function bootGame(): Game {
     loader: LOADER_CONFIG,
     parent: GAME_PARENT_ID,
     pixelArt: true,
-    // Phaser's Scale Manager fits the canvas to #game at the largest zoom that fits, fractional
-    // included, keeping SCREEN_CONFIG's resolution scaled by CSS and drawn nearest-neighbour
-    // (pixelArt), at #game's top and centred across, so the spare height sits under the dog
-    // cards, where the walk steers from the page too.
-    scale: { autoCenter: Scale.CENTER_HORIZONTALLY, mode: Scale.FIT },
+    // The kit owns the device-resolution backing. Scene cameras preserve the logical screen
+    // at the top, centred across; the HTML layer follows that same view rather than its bars.
+    scale: { autoCenter: Scale.CENTER_HORIZONTALLY, mode: Scale.NONE },
     // Scenes draw in this order. The Logbook, the settings and help, which the home top bar
     // opens over the Pet shop, come after it, help's pictures after help, and the tap bursts
     // over every scene but the dev overlay.
@@ -172,18 +129,48 @@ function bootGame(): Game {
   // the visible area or the turn changes, the dev bar showing under #game after boot included.
   const parent = document.getElementById(GAME_PARENT_ID);
   if (parent !== null) {
-    followFrameTurn(pageFrameWatch(), SCREEN_CONFIG, parent, game);
-  }
-  // With the switch on, the HTML interface's layer follows the canvas's box before each frame.
-  if (htmlUiOn(location.search)) {
-    game.events.once(Core.Events.READY, () => {
-      const layer = mountUiLayer(document, game.canvas);
-      setUiLayer(layer);
-      if (layer !== undefined) {
-        game.events.on(Core.Events.PRE_RENDER, () => layer.update());
-      }
+    followFrameTurn(pageFrameWatch(), game.scale.gameSize, parent, game, {
+      deviceResolution: { max: MAX_RENDER_SCALE },
     });
   }
+  followWorldCameras(game);
+  const updateIdle = createUpdateIdle(
+    {
+      bar:
+        parent === null
+          ? undefined
+          : mountDomLoadingBar(parent, HOME_LAYOUT.loadingProgress, backgroundLoad),
+      events: window,
+      required: () => requiredUpdate() !== undefined,
+      timer: globalThis,
+    },
+    game.loop,
+  );
+  const mountUi = () => {
+    const layer = mountUiLayer(document, game.canvas, (box) => worldViewBox(game.scale, box));
+    setUiLayer(layer);
+    if (layer === undefined) {
+      return;
+    }
+    const update = () => layer.update();
+    const ready = layer.onReady(() => {
+      update();
+      updateIdle.invalidate();
+    });
+    game.events.on(Core.Events.PRE_RENDER, update);
+    game.events.once(Core.Events.DESTROY, () => {
+      ready();
+      game.events.off(Core.Events.PRE_RENDER, update);
+      setUiLayer(undefined);
+    });
+  };
+  game.events.once(Core.Events.READY, mountUi);
+  game.scale.on(Scale.Events.RESIZE, updateIdle.invalidate);
+  game.events.once(Core.Events.DESTROY, () => {
+    game.events.off(Core.Events.READY, mountUi);
+    game.scale.off(Scale.Events.RESIZE, updateIdle.invalidate);
+    updateIdle.dispose();
+  });
   // Menus draw at most about 60 frames a second; a walk (RunScene) draws every frame.
   capFrameRate(MENU_FPS, () => game.scene.isActive(SCENE_KEYS.run), game);
   // The installed app has no dev panel, so its #dev-panel stays hidden and no cheat is set.
@@ -194,24 +181,27 @@ function bootGame(): Game {
 
   // Captured before the scenes see it, so the key that opens a menu already shows its numbers.
   window.addEventListener("keydown", noteKeyPress, { capture: true });
+  game.events.once(Core.Events.DESTROY, () =>
+    window.removeEventListener("keydown", noteKeyPress, { capture: true }),
+  );
 
   // Phaser gives a new touch only a free pointer, so a touch whose end the browser never
   // delivered would hold its pointer and every later touch would be dropped. A touchstart lists
   // every touch on the screen, so a pointer holding one no longer there is freed before Phaser
   // handles it; the scenes take the new press on the freed pointer as a fresh one.
-  window.addEventListener(
-    "touchstart",
-    (event) => {
-      const held = game.input.pointers.filter((pointer) => pointer.active && pointer.wasTouch);
-      const lost = lostTouches(
-        held.map((pointer) => pointer.identifier),
-        Array.from(event.touches, (touch) => touch.identifier),
-      );
-      held
-        .filter((pointer) => lost.includes(pointer.identifier))
-        .forEach((pointer) => pointer.reset());
-    },
-    { capture: true, passive: true },
+  const releaseLostTouches = (event: TouchEvent) => {
+    const held = game.input.pointers.filter((pointer) => pointer.active && pointer.wasTouch);
+    const lost = lostTouches(
+      held.map((pointer) => pointer.identifier),
+      Array.from(event.touches, (touch) => touch.identifier),
+    );
+    held
+      .filter((pointer) => lost.includes(pointer.identifier))
+      .forEach((pointer) => pointer.reset());
+  };
+  window.addEventListener("touchstart", releaseLostTouches, { capture: true, passive: true });
+  game.events.once(Core.Events.DESTROY, () =>
+    window.removeEventListener("touchstart", releaseLostTouches, { capture: true }),
   );
 
   // With dev=1, the game is reachable from the console and from headless checks.
@@ -221,10 +211,9 @@ function bootGame(): Game {
 
   game.events.once(Core.Events.POST_RENDER, () => startupLoad.finish());
   // The update notice shows on the home screen only, where a required update stops the loop.
-  const settleRequired = sleepWhileUpdateRequired(game, parent);
   watchHomeScreen(game, (onHome) => {
     setOnHomeScreen(onHome);
-    settleRequired(onHome);
+    updateIdle.home(onHome);
   });
   return game;
 }

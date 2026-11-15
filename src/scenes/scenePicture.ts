@@ -2,6 +2,7 @@ import type { Rect } from "@andornaut/game-kit/rect";
 import type { GameObjects, Scene } from "phaser";
 
 import { type PictureStrip, stripViewports } from "../help/helpPictures.ts";
+import { setWorldViewport } from "./worldCamera.ts";
 
 // A scene drawn as a still picture of the screen inside frame: a camera per strip shows its
 // screen rows, top to bottom. A scene shown this way takes no input.
@@ -19,9 +20,8 @@ export function showAsPicture(scene: Scene, picture: ScenePicture): void {
       return;
     }
     const camera = i === 0 ? scene.cameras.main : scene.cameras.add();
-    camera
-      .setViewport(viewport.x, viewport.y, viewport.width, viewport.height)
-      .setScroll(0, strip.screenY);
+    setWorldViewport(scene, camera, viewport);
+    camera.setScroll(0, strip.screenY);
   });
 }
 

@@ -1,14 +1,15 @@
 import type { Input, Scene } from "phaser";
 
 import { followOnePress } from "../input/onePress.ts";
+import { type LogicalPointer, logicalPointer } from "../input/phaser/logicalPointer.ts";
 import type { PointerPhase } from "../input/pointerTracking.ts";
 
 // cancelled: the browser called the press off (a system gesture, an incoming call), so its
 // release picks nothing. A release outside the canvas is an ordinary release.
 interface OnePressHandlers {
-  down: (pointer: Input.Pointer) => void;
-  move?: (pointer: Input.Pointer) => void;
-  up: (pointer: Input.Pointer, cancelled: boolean) => void;
+  down: (pointer: LogicalPointer) => void;
+  move?: (pointer: LogicalPointer) => void;
+  up: (pointer: LogicalPointer, cancelled: boolean) => void;
 }
 
 // Every scene but the walk follows one finger: the first one down, until it lifts.
@@ -24,12 +25,13 @@ export function listenOnePress(scene: Scene, handlers: OnePressHandlers): void {
     if (!step.handle) {
       return;
     }
+    const point = logicalPointer(scene, pointer);
     if (phase === "down") {
-      handlers.down(pointer);
+      handlers.down(point);
     } else if (phase === "move") {
-      handlers.move?.(pointer);
+      handlers.move?.(point);
     } else {
-      handlers.up(pointer, cancelled);
+      handlers.up(point, cancelled);
     }
   };
   scene.input.on("pointerdown", (pointer: Input.Pointer) => on("down", pointer));

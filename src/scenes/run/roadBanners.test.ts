@@ -10,6 +10,11 @@ import { fadeAway } from "../uiKit.ts";
 import { popUpArt, showDebuffPopup } from "./roadBanners.ts";
 import { DEPTH } from "./stage.ts";
 
+vi.mock("phaser", () => ({
+  Core: { Events: { PRE_RENDER: "prerender" } },
+  Scenes: { Events: { SHUTDOWN: "shutdown" } },
+}));
+
 vi.mock("../uiKit.ts", () => ({ fadeAway: vi.fn() }));
 
 class Image extends EventEmitter {
