@@ -253,20 +253,21 @@ export class HudScene extends Scene {
     const barConfig: NativeTopSectionConfig = {
       accepts: (id) =>
         this.picture === undefined &&
-        id !== "menu" &&
+        (id === "mute" || id === "pause") &&
         topBarAction(this.walk().runPause(), "tap", id) !== undefined,
       activation: "down",
       buttons: WALK_BAR_BUTTONS,
       currency: true,
       effects: BAR.effectWells.length,
       labels: {
+        exit: gameData.homeText.quit.quit,
         menu: gameData.menuText.menu.title,
         mute: gameData.menuText.settings.sound,
         pause: gameData.menuText.pause.action,
       },
       muted: isMuted(this),
       press: (id, event) => {
-        if (id !== "menu") {
+        if (id === "mute" || id === "pause") {
           this.press(event.via === "keyboard" ? "key" : "tap", id);
         }
       },

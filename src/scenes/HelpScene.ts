@@ -186,6 +186,7 @@ export class HelpScene extends Scene {
       buttons: HELP_BAR_BUTTONS,
       heading: view.heading.text,
       labels: {
+        exit: gameData.homeText.quit.quit,
         menu: gameData.menuText.menu.title,
         mute: gameData.menuText.settings.sound,
         pause: gameData.menuText.pause.title,

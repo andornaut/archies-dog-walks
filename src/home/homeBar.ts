@@ -21,26 +21,27 @@ export function overlayRegion(region: OverlayRegion): Rect {
   return { height: screen.y + screen.height - top, width: screen.width, x: screen.x, y: top };
 }
 
-export type HomeBarAction = "close" | "mute" | "openMenu";
+export type HomeBarAction = "close" | "exit" | "mute" | "openMenu";
 
 // The shared home controls keep their full targets under every overlay.
-function homeBarHits(): Rect[] {
-  return homeBarButtons().map(([, { hit }]) => hit);
+function homeBarHits(exit: boolean): Rect[] {
+  return homeBarButtons(exit).map(([, { hit }]) => hit);
 }
 
 // Outside dismissal excludes the visible controls and any debuff rows owned by the walk.
 export function regionOutside(
   region: OverlayRegion,
+  exit: boolean,
   debuffs: number,
   covered: readonly Rect[],
 ): OutsideArea {
-  const bar = region === "home" ? homeBarHits() : Object.values(topBarButtonHits(debuffs));
+  const bar = region === "home" ? homeBarHits(exit) : Object.values(topBarButtonHits(debuffs));
   return screenArea([...covered, ...bar]);
 }
 
 // Input reads the same control positions as the shared top section.
-export function homeBarButtonAt(x: number, y: number): HomeBarButton | undefined {
-  return homeBarButtons().find(([, { hit }]) => containsPoint(hit, x, y))?.[0];
+export function homeBarButtonAt(exit: boolean, x: number, y: number): HomeBarButton | undefined {
+  return homeBarButtons(exit).find(([, { hit }]) => containsPoint(hit, x, y))?.[0];
 }
 
 // Mute remains independent while the navigation entry toggles its menu.
@@ -48,7 +49,7 @@ export function homeBarAction(
   open: { readonly menu: boolean },
   button: HomeBarButton,
 ): HomeBarAction {
-  return button === "mute" ? "mute" : open.menu ? "close" : "openMenu";
+  return button === "mute" || button === "exit" ? button : open.menu ? "close" : "openMenu";
 }
 
 // What back does on the bare start screen, which hears it only with no page or question over

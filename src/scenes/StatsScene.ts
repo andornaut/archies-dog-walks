@@ -7,7 +7,7 @@ import { gameData } from "../data/index.ts";
 import { type BadgeView, badgeWall } from "../home/badgesView.ts";
 import { FEEDBACK } from "../home/feedback.ts";
 import { focusDirectionForKey } from "../home/focus.ts";
-import { overlayRegion, regionOutside } from "../home/homeBar.ts";
+import { overlayRegion } from "../home/homeBar.ts";
 import { logbookView } from "../home/logbookView.ts";
 import { STATS_LAYOUT, STATS_TABS, type StatsTab, statsTabRects } from "../home/statsLayout.ts";
 import {
@@ -37,7 +37,7 @@ import { loadSheet } from "../ui/dom/sheetFrames.ts";
 import { rectIndexAt } from "../ui/grid.ts";
 import { badgeCard } from "./badges.ts";
 import { pillColours } from "./effectNameColours.ts";
-import { listenHomeBar } from "./homeBarPress.ts";
+import { listenHomeBar, sceneRegionOutside } from "./homeBarPress.ts";
 import { canvasDetailMeasure } from "./modalMeasure.ts";
 import { mountNativeOverlay } from "./nativeOverlayReady.ts";
 import { closeOverlay, listenDismiss, nativeSceneAccepts, type OverlayData } from "./overlay.ts";
@@ -121,7 +121,7 @@ export class StatsScene extends Scene {
     this.events.once("shutdown", () => document.removeEventListener("keydown", onKey, true));
     listenDismiss(
       this,
-      regionOutside("home", 0, [PANEL]),
+      sceneRegionOutside(this, "home", 0, [PANEL]),
       () => this.close(),
       () => this.back(),
     );

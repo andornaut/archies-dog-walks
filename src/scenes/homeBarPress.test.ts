@@ -1,14 +1,26 @@
 import { EventEmitter } from "node:events";
 
+import { isOutside } from "@andornaut/game-kit/input/outsideTap";
 import type { Point, Rect } from "@andornaut/game-kit/rect";
 import { sceneStub } from "@andornaut/game-kit/testing/phaser/sceneStub";
+import { exitApp } from "@andornaut/game-kit/web/pwa/dom/exitApp";
 import type { Scene } from "phaser";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { HOME_LAYOUT, homeBarButtons } from "../home/homeLayout.ts";
-import { listenHomeBar, routeHomeBar } from "./homeBarPress.ts";
+import { exitShown } from "../pwa/index.ts";
+import { listenHomeBar, routeHomeBar, sceneRegionOutside } from "./homeBarPress.ts";
 import { openOverlay } from "./overlay.ts";
+import { nativeTopSectionButtons } from "./topSection.ts";
 
+vi.mock("../pwa/index.ts", () => ({ exitShown: vi.fn(() => false) }));
+vi.mock("./topSection.ts", () => ({
+  nativeTopSectionButtons: vi.fn(() => ["mute", "menu", "exit"]),
+}));
+vi.mock("@andornaut/game-kit/web/pwa/dom/exitApp", () => ({
+  browserExitPage: () => ({}),
+  exitApp: vi.fn(),
+}));
 vi.mock("phaser", () => ({ Scenes: { Events: {} } }));
 vi.mock("./overlay.ts", async (original) => ({
   ...(await original<typeof import("./overlay.ts")>()),
@@ -34,12 +46,14 @@ function fakeOverlay() {
   };
 }
 
-const MENU_HIT = homeBarButtons().find(([id]) => id === "menu")![1].hit;
+const MENU_HIT = homeBarButtons(true).find(([id]) => id === "menu")![1].hit;
 const MENU = centre(MENU_HIT);
 const BANK = { x: HOME_LAYOUT.topBar.well.x + 1, y: HOME_LAYOUT.topBar.mid };
 
 describe("the shared menu entry under a home overlay", () => {
-  beforeEach(() => vi.mocked(openOverlay).mockClear());
+  beforeEach(() => {
+    vi.mocked(openOverlay).mockClear();
+  });
 
   it.each([
     ["opens on a matching release", MENU, MENU, 1],
@@ -76,4 +90,34 @@ it("routes a paused screen's native bar through the active overlay and preserves
   expect(close).toHaveBeenCalledOnce();
   overlay.scene.events.emit("shutdown");
   expect(routeHomeBar(source, "menu")).toBe(false);
+});
+
+it("routes retained Home Exit only when both capability and the actual bar expose it", () => {
+  const overlay = fakeOverlay();
+  Object.assign(overlay.scene.sys, { isActive: () => true });
+  overlay.scene.input.enabled = true;
+  listenHomeBar(overlay.scene, vi.fn());
+  const exit = vi.mocked(exitApp);
+  exit.mockClear();
+  vi.mocked(nativeTopSectionButtons).mockReturnValue(["mute", "menu", "exit"]);
+  vi.mocked(exitShown).mockReturnValue(true);
+  const target = centre(homeBarButtons(true).find(([id]) => id === "exit")![1].hit);
+  overlay.down(target);
+  expect(exit).not.toHaveBeenCalled();
+  overlay.up(target);
+  expect(exit).toHaveBeenCalledOnce();
+  vi.mocked(exitShown).mockReturnValue(false);
+  routeHomeBar(overlay.scene, "exit");
+  expect(exit).toHaveBeenCalledOnce();
+  vi.mocked(nativeTopSectionButtons).mockReturnValue(["mute", "menu"]);
+  vi.mocked(exitShown).mockReturnValue(true);
+  routeHomeBar(overlay.scene, "exit");
+  expect(exit).toHaveBeenCalledOnce();
+  expect(isOutside(sceneRegionOutside(overlay.scene, "home", 0, []), { x: 240, y: 20 })).toBe(true);
+  vi.mocked(nativeTopSectionButtons).mockReturnValue(["mute", "menu", "exit"]);
+  expect(isOutside(sceneRegionOutside(overlay.scene, "home", 0, []), { x: 240, y: 20 })).toBe(
+    false,
+  );
+  overlay.scene.events.emit("shutdown");
+  vi.mocked(exitShown).mockReturnValue(false);
 });

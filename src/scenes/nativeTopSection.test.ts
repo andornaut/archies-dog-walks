@@ -8,7 +8,7 @@ import { gameData } from "../data/index.ts";
 import { FakeDocument, type FakeElement, fakeLayer } from "../testing/fakeDom.ts";
 import { gameFont } from "../testing/fontInk.ts";
 import { domScale } from "../ui/domScale.ts";
-import { addNativeTopSection } from "./topSection.ts";
+import { addNativeTopSection, nativeTopSectionButtons } from "./topSection.ts";
 
 const fake = vi.hoisted(() => ({ create: vi.fn(), font: vi.fn(), layer: vi.fn() }));
 vi.mock("phaser", () => ({
@@ -43,6 +43,7 @@ it("replaces a scene's native top section and releases its own scene listeners",
     accepts: () => true,
     buttons: ["mute"] as const,
     labels: {
+      exit: gameData.homeText.quit.quit,
       menu: gameData.menuText.menu.title,
       mute: gameData.menuText.settings.sound,
       pause: gameData.menuText.pause.title,
@@ -93,8 +94,9 @@ it("keeps one accessible bar across retained scenes, underlying redraws and scre
   const helpScene = { events: helpEvents } as unknown as Scene;
   const config = {
     accepts: () => true,
-    buttons: ["mute", "menu"] as const,
+    buttons: ["mute", "menu", "exit"] as const,
     labels: {
+      exit: gameData.homeText.quit.quit,
       menu: gameData.menuText.menu.title,
       mute: gameData.menuText.settings.sound,
       pause: gameData.menuText.pause.title,
@@ -104,13 +106,15 @@ it("keeps one accessible bar across retained scenes, underlying redraws and scre
   const first = addNativeTopSection(firstScene, config)!;
   await first.revealed;
   expect(first.element.hidden).toBe(false);
+  expect(nativeTopSectionButtons(firstScene)).toEqual(["mute", "menu", "exit"]);
   firstEvents.emit("pause");
   expect(first.element.hidden).toBe(false);
-  const help = addNativeTopSection(helpScene, config)!;
+  const help = addNativeTopSection(helpScene, { ...config, buttons: ["mute", "menu"] })!;
   expect([first.element.hidden, first.element.inert]).toEqual([true, true]);
   await help.revealed;
   expect([first.element.hidden, first.element.inert]).toEqual([true, true]);
   expect([help.element.hidden, help.element.inert]).toEqual([false, false]);
+  expect(nativeTopSectionButtons(helpScene)).toEqual(["mute", "menu"]);
   const controls = (view: typeof help) =>
     (view.element as unknown as FakeElement).all().filter((node) => node.tagName === "button");
   const visible = [first, help].flatMap((view) =>
@@ -130,6 +134,7 @@ it("keeps one accessible bar across retained scenes, underlying redraws and scre
   expect([replacement.element.hidden, replacement.element.inert]).toEqual([true, true]);
   expect(help.element.hidden).toBe(false);
   helpEvents.emit("shutdown");
+  expect(nativeTopSectionButtons(firstScene)).toEqual(["mute", "menu", "exit"]);
   expect([replacement.element.hidden, replacement.element.inert]).toEqual([false, false]);
   first?.dispose();
   expect(replacement.element.hidden).toBe(false);

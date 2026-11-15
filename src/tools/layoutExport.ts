@@ -313,7 +313,7 @@ export function layoutExport(
       home: {
         ...HOME_LAYOUT,
         // Visible controls use one shared layout regardless of Quit availability.
-        barButtons: Object.fromEntries(homeBarButtons()),
+        barButtons: Object.fromEntries(homeBarButtons(true)),
         dogRects: gridRects(
           HOME_LAYOUT.dogTiles,
           Object.keys(data.dogs).length,

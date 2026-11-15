@@ -10,7 +10,7 @@ import { dogDetail, gearDetail } from "../home/detail.ts";
 import { FEEDBACK, shakeOffset } from "../home/feedback.ts";
 import { focusDirectionForKey } from "../home/focus.ts";
 import { type Purchase } from "../home/home.ts";
-import { overlayRegion, regionOutside } from "../home/homeBar.ts";
+import { overlayRegion } from "../home/homeBar.ts";
 import { type HomeAction, messageLine } from "../home/homeLines.ts";
 import { pricePlateView } from "../home/pricePlateView.ts";
 import {
@@ -87,7 +87,7 @@ import { GREYED, pictureBox, selectLook } from "../ui/selection.ts";
 import { TEXT_SCALE } from "../ui/textFit.ts";
 import { cents } from "../units.ts";
 import type { CelebrationSceneData } from "./CelebrationScene.ts";
-import { listenHomeBar } from "./homeBarPress.ts";
+import { listenHomeBar, sceneRegionOutside } from "./homeBarPress.ts";
 import { detailView } from "./homePanels.ts";
 import { BADGE_KEYS, PLATE_PAD, purchasePicture, SHOP_ART } from "./itemArt.ts";
 import { canvasPanelMeasure } from "./modalMeasure.ts";
@@ -272,7 +272,7 @@ export class ShopScene extends Scene {
     // does. The top bar's buttons keep their own taps.
     listenDismiss(
       this,
-      regionOutside("home", 0, [PANEL]),
+      sceneRegionOutside(this, "home", 0, [PANEL]),
       () => (this.confirm === undefined ? this.close() : this.back()),
       () => this.back(),
     );

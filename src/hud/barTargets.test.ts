@@ -134,14 +134,14 @@ const bankWell = { x: HOME_LAYOUT.topBar.well.x + 1, y: HOME_LAYOUT.topBar.mid }
 
 it("routes home controls consistently through ordinary overlays and an open menu", () => {
   for (const menu of [false, true]) {
-    for (const [id, { hit }] of homeBarButtons()) {
+    for (const [id, { hit }] of homeBarButtons(true)) {
       const p = centre(hit);
-      const button = homeBarButtonAt(p.x, p.y);
+      const button = homeBarButtonAt(true, p.x, p.y);
       expect(button).toBe(id);
       expect(button === undefined ? undefined : homeBarAction({ menu }, button)).toBe(
-        id === "mute" ? "mute" : menu ? "close" : "openMenu",
+        id === "mute" || id === "exit" ? id : menu ? "close" : "openMenu",
       );
     }
   }
-  expect(homeBarButtonAt(bankWell.x, bankWell.y)).toBeUndefined();
+  expect(homeBarButtonAt(true, bankWell.x, bankWell.y)).toBeUndefined();
 });

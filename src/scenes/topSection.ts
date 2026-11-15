@@ -9,6 +9,7 @@ import {
 import { loadSheet } from "../ui/dom/sheetFrames.ts";
 import { type UiLayer, uiLayer } from "../ui/dom/uiLayer.ts";
 import { pixelBitmapFont } from "../ui/phaser/pixelText.ts";
+import type { TopSectionButton } from "../ui/topSection.ts";
 
 interface SectionOwner {
   asleep: boolean;
@@ -23,9 +24,20 @@ interface SectionOwner {
 const nativeSections = new WeakMap<Scene, SectionOwner>();
 const sectionStacks = new WeakMap<UiLayer, SectionOwner[]>();
 
+function selectedSection(stack: readonly SectionOwner[]): SectionOwner | undefined {
+  return stack.findLast((entry) => !entry.disposed && !entry.asleep && entry.shown);
+}
+
+// The selected bar remains the source of control visibility for retained overlays.
+export function nativeTopSectionButtons(scene: Scene): readonly TopSectionButton[] {
+  const layer = nativeSections.get(scene)?.layer ?? uiLayer();
+  const owner = layer === undefined ? undefined : selectedSection(sectionStacks.get(layer) ?? []);
+  return owner?.ready === true ? [...owner.view.buttons.keys()] : [];
+}
+
 // Barless overlays retain the current owner. A later screen bar displaces it until disposal.
 function syncSections(stack: readonly SectionOwner[]): void {
-  const owner = stack.findLast((entry) => !entry.disposed && !entry.asleep && entry.shown);
+  const owner = selectedSection(stack);
   for (const entry of stack) {
     const active = entry === owner && entry.ready;
     entry.view.setShown(active);

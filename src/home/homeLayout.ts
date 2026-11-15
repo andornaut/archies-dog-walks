@@ -201,7 +201,7 @@ export function sectionFill(section: Rect): Rect {
 }
 
 // Non-play top sections expose sound and navigation in the shared order.
-export const HOME_BAR_BUTTONS = ["mute", "menu"] as const;
+export const HOME_BAR_BUTTONS = ["mute", "menu", "exit"] as const;
 export type HomeBarButton = (typeof HOME_BAR_BUTTONS)[number];
 
 // A top bar button: its ui-icon-button face and its hit area from the bar's top.
@@ -500,12 +500,14 @@ export const HOME_LAYOUT = {
   yardSign: Rect;
 };
 
-// The shared navigation entry is the rightmost face.
+// The last visible control shares the rightmost face across capability states.
 export const HOME_BAR_LAST_FACE: Point = topBarButton(1).face;
 
 // Every home overlay uses the same visible controls and targets.
-export function homeBarButtons(): readonly (readonly [HomeBarButton, HomeBarButtonPlace])[] {
-  return topSectionLayout(HOME_BAR_BUTTONS).controls;
+export function homeBarButtons(
+  exit: boolean,
+): readonly (readonly [HomeBarButton, HomeBarButtonPlace])[] {
+  return topSectionLayout(HOME_BAR_BUTTONS.filter((id) => exit || id !== "exit")).controls;
 }
 
 // How wide the bank's ink may be: the widest well less its lip and padding. A bank wider shows

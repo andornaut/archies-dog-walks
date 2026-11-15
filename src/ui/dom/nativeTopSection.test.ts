@@ -10,11 +10,12 @@ import { domScale } from "../domScale.ts";
 import { topSectionLayout } from "../topSection.ts";
 import { createNativeTopSection } from "./nativeTopSection.ts";
 const labels = {
+  exit: gameData.homeText.quit.quit,
   menu: gameData.menuText.menu.title,
   mute: gameData.menuText.settings.sound,
   pause: gameData.menuText.pause.title,
 };
-function fixture(activation: "click" | "down" = "click", effects = 0) {
+function fixture(activation: "click" | "down" = "click", effects = 0, exit = false) {
   const doc = new FakeDocument();
   const { element, layer } = fakeLayer(doc, domScale(1, { height: 560, width: 360, x: 0, y: 0 }));
   let pendingRoot: HTMLElement | undefined;
@@ -48,7 +49,7 @@ function fixture(activation: "click" | "down" = "click", effects = 0) {
     {
       accepts: () => true,
       activation,
-      buttons: ["mute", "menu"],
+      buttons: exit ? ["mute", "menu", "exit"] : ["mute", "menu"],
       currency: true,
       effects,
       labels,
@@ -235,4 +236,29 @@ describe("native top section integration", () => {
     expect(buttons[0]?.getAttribute("aria-pressed")).toBe("false");
     expect(element.all().filter((node) => node.tagName === "button")).toEqual(buttons);
   });
+});
+
+it("renders the existing Exit glyph and label to the right of Menu through the shared control", async () => {
+  const { buttons, element, press, reveal, root, view } = fixture("click", 0, true);
+  expect(buttons.map((button) => button.getAttribute("aria-label"))).toEqual([
+    labels.mute,
+    labels.menu,
+    labels.exit,
+  ]);
+  expect(buttons.map((button) => button.style.left)).toEqual(["216px", "264px", "312px"]);
+  expect(
+    element.all().some((node) => node.style.backgroundImage?.includes("images/icon-exit.png")),
+  ).toBe(true);
+  reveal(true);
+  await Promise.resolve();
+  const event = { detail: 0, target: buttons[2] };
+  if (!dispatch(root, "click", event)) {
+    dispatch(buttons[2]!, "click", event);
+  }
+  expect(press).toHaveBeenCalledExactlyOnceWith("exit", {
+    completedAt: 0,
+    startedAt: undefined,
+    via: "keyboard",
+  });
+  view.dispose();
 });

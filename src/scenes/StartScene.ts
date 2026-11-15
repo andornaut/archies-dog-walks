@@ -553,7 +553,7 @@ export class StartScene extends Scene {
       this,
       () => {
         const rect = this.overlay?.rect;
-        return rect === undefined ? undefined : regionOutside("home", 0, [rect]);
+        return rect === undefined ? undefined : regionOutside("home", this.exit, 0, [rect]);
       },
       () => this.closeOverlay(),
     );
@@ -638,7 +638,10 @@ export class StartScene extends Scene {
   private homePressDown(pointer: { x: number; y: number }): void {
     addTapBurst(this, pointer.x, pointer.y);
     // The top bar stays lit over an open card, and its buttons take their presses.
-    if (this.overlay !== undefined && homeBarButtonAt(pointer.x, pointer.y) === undefined) {
+    if (
+      this.overlay !== undefined &&
+      homeBarButtonAt(this.exit, pointer.x, pointer.y) === undefined
+    ) {
       this.overlayPress = { x: pointer.x, y: pointer.y };
       if (this.closePressed() || this.updatePressed()) {
         this.render();
@@ -898,7 +901,7 @@ export class StartScene extends Scene {
     if (walker !== undefined) {
       return { kind: "walker", walker: itemAt(walkerIds(), walker) };
     }
-    const bar = homeBarButtons().map(([kind, { hit }]): [Rect, Target] => [hit, { kind }]);
+    const bar = homeBarButtons(this.exit).map(([kind, { hit }]): [Rect, Target] => [hit, { kind }]);
     const fixed: readonly [Rect, Target][] = [[START_BUTTON, { kind: "start" }], ...bar];
     if (this.signShown() && containsPoint(SLOT_SIGN.hit, x, y)) {
       return { kind: "slotSign" };
@@ -1598,9 +1601,10 @@ export class StartScene extends Scene {
     if (this.topSection === undefined) {
       this.topSection = addNativeTopSection(this, {
         accepts: () => this.nativeReady,
-        buttons: homeBarButtons().map(([id]) => id),
+        buttons: homeBarButtons(this.exit).map(([id]) => id),
         currency: true,
         labels: {
+          exit: gameData.homeText.quit.quit,
           menu: gameData.menuText.menu.title,
           mute: gameData.menuText.settings.sound,
           pause: gameData.menuText.pause.title,
@@ -1608,7 +1612,7 @@ export class StartScene extends Scene {
         muted: isMuted(this),
         press: (id, metadata) => {
           if (
-            ((id === "menu" || id === "mute") && routeHomeBar(this, id)) ||
+            ((id === "menu" || id === "mute" || id === "exit") && routeHomeBar(this, id)) ||
             !this.sys.isActive() ||
             !this.input.enabled
           ) {

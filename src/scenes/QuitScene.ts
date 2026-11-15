@@ -1,12 +1,12 @@
 import { Scene } from "phaser";
 
 import { gameData } from "../data/index.ts";
-import { overlayRegion, regionOutside } from "../home/homeBar.ts";
+import { overlayRegion } from "../home/homeBar.ts";
 import { HOME_LAYOUT } from "../home/homeLayout.ts";
 import { homeQuestionLayout, QUIT_QUESTION_ANSWERS } from "../hud/pauseMenu.ts";
 import { isPauseKey, menuKeyActs } from "../input/keyBindings.ts";
 import { addRampDim } from "../ui/phaser/rampDim.ts";
-import { exitGame, listenHomeBar } from "./homeBarPress.ts";
+import { exitGame, listenHomeBar, sceneRegionOutside } from "./homeBarPress.ts";
 import { mountNativeOverlay } from "./nativeOverlayReady.ts";
 import { closeOverlay, listenDismiss, nativeSceneAccepts, type OverlayData } from "./overlay.ts";
 import { addHtmlQuestionPanel, type QuestionPanel } from "./questionPanel.ts";
@@ -58,7 +58,7 @@ export class QuitScene extends Scene {
         keepPlaying();
       }
     });
-    listenDismiss(this, regionOutside("home", 0, covered), keepPlaying);
+    listenDismiss(this, sceneRegionOutside(this, "home", 0, covered), keepPlaying);
     listenHomeBar(this, keepPlaying);
     return true;
   }

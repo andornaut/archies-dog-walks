@@ -148,7 +148,7 @@ export class PauseScene extends Scene {
     // The close control and a tap anywhere around the panel resume, as Resume and Keep walking
     // do, the walk bar's empty area and the dog cards included, though they are not dimmed. The
     // walk bar's buttons keep their own taps.
-    const outside = regionOutside("walk", data.debuffs, covered);
+    const outside = regionOutside("walk", false, data.debuffs, covered);
     listenOutsideTap(this, () => outside, onResume);
     const overlay = data.mode === "menu" ? data.overlay : undefined;
     if (overlay !== undefined) {

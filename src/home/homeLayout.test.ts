@@ -274,7 +274,7 @@ describe("Pet shop", () => {
       height: gate.y + gate.height - Math.max(shop.y, topBar.hitHeight),
       y: Math.max(shop.y, topBar.hitHeight),
     });
-    for (const [, button] of homeBarButtons()) {
+    for (const [, button] of homeBarButtons(true)) {
       expect(rectsOverlap(hit, button.hit)).toBe(false);
     }
   });
@@ -341,11 +341,11 @@ describe("section fills", () => {
   });
 });
 
-// Every home overlay retains the same two shared controls.
+// Home controls retain their shared dimensions and capability-dependent flow.
 describe("home top bar buttons", () => {
-  const order = ["mute", "menu"];
+  const order = ["mute", "menu", "exit"];
   const { faceSize, height, mid } = HOME_LAYOUT.topBar;
-  const buttons = homeBarButtons();
+  const buttons = homeBarButtons(true);
   const hits = buttons.map(([, button]) => button.hit);
 
   it("runs left to right in order", () => {
@@ -447,7 +447,7 @@ describe("the top bar's bank", () => {
   ])("shows %i dollars as %s, its well clear of the buttons", (dollars, text) => {
     expect(shown(dollars)).toBe(text);
     const well = bankWell(width(text) * bank.scale);
-    const first = homeBarButtons()[0]?.[1].face.x ?? 0;
+    const first = homeBarButtons(true)[0]?.[1].face.x ?? 0;
     expect(first - well.x - well.width).toBeGreaterThanOrEqual(HOME_SCREEN.topBar.wellClear);
   });
 

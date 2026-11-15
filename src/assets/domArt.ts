@@ -144,6 +144,7 @@ const SHOP_ART_KEYS = ["icon-bill", "icon-lock", "ui-hint", "ui-icon-button", "u
 // Start walk's faces.
 const START_ART_KEYS = [
   ...keysOf(gameData.shopGear).map(gearSmallIconKey),
+  "icon-exit",
   "icon-help",
   "icon-menu",
   "icon-sound",

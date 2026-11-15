@@ -7,7 +7,7 @@ import { gameData } from "../data/index.ts";
 import { SCREEN_CONFIG, SCREEN_LAYOUT } from "../data/screen.ts";
 import { FEEDBACK } from "../home/feedback.ts";
 import { type Focus, focusDirectionForKey, moveFocus } from "../home/focus.ts";
-import { type OverlayRegion, overlayRegion, regionOutside } from "../home/homeBar.ts";
+import { type OverlayRegion, overlayRegion } from "../home/homeBar.ts";
 import {
   INSTALL_STEPS_FIT,
   type InstallStepsLayout,
@@ -57,7 +57,7 @@ import {
   withProbe,
 } from "../ui/phaser/pixelText.ts";
 import { addRampDim } from "../ui/phaser/rampDim.ts";
-import { listenHomeBar } from "./homeBarPress.ts";
+import { listenHomeBar, sceneRegionOutside } from "./homeBarPress.ts";
 import { measureModalTitle, modalTextWidth } from "./modalMeasure.ts";
 import { mountNativeOverlay } from "./nativeOverlayReady.ts";
 import {
@@ -235,8 +235,8 @@ export class SettingsScene extends Scene {
       this,
       () =>
         this.steps === undefined
-          ? regionOutside(data.region, data.debuffs, [this.layout.panel])
-          : regionOutside(data.region, data.debuffs, [this.steps.card]),
+          ? sceneRegionOutside(this, data.region, data.debuffs, [this.layout.panel])
+          : sceneRegionOutside(this, data.region, data.debuffs, [this.steps.card]),
       () => this.back(),
     );
     // Over the walk, the HUD takes the walk bar's presses (topBarAction).

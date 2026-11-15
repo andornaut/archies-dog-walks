@@ -13,7 +13,7 @@ import {
   earnedBadges,
   stripUnderClose,
 } from "../home/badgesView.ts";
-import { overlayRegion, regionOutside } from "../home/homeBar.ts";
+import { overlayRegion } from "../home/homeBar.ts";
 import { isConfirmKey, isPauseKey, menuKeyActs } from "../input/keyBindings.ts";
 import { achievementLabel } from "../rules/achievements.ts";
 import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";
@@ -28,7 +28,7 @@ import { panelButton, panelTitle } from "../ui/modal/view.ts";
 import { labelInkWidth, pixelFontMetrics, withProbe } from "../ui/phaser/pixelText.ts";
 import { addRampDim } from "../ui/phaser/rampDim.ts";
 import { badgeCelebrationNames } from "./badges.ts";
-import { listenHomeBar } from "./homeBarPress.ts";
+import { listenHomeBar, sceneRegionOutside } from "./homeBarPress.ts";
 import { canvasPanelMeasure, modalTextWidth } from "./modalMeasure.ts";
 import { addNativeBadgeCelebration } from "./nativeBadgeCelebration.ts";
 import { mountNativeOverlay } from "./nativeOverlayReady.ts";
@@ -161,7 +161,7 @@ export class CelebrationScene extends Scene {
     });
     // A tap anywhere around the panel and Nice!, the top bar's empty area included, closes, as
     // Nice! and the close control do; the top bar's buttons keep their own taps.
-    listenDismiss(this, regionOutside("home", 0, [panel, buttonRect]), close);
+    listenDismiss(this, sceneRegionOutside(this, "home", 0, [panel, buttonRect]), close);
     listenHomeBar(this, close);
     return true;
   }

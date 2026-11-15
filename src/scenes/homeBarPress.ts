@@ -1,9 +1,16 @@
+import type { Rect } from "@andornaut/game-kit/rect";
 import { browserExitPage, exitApp } from "@andornaut/game-kit/web/pwa/dom/exitApp";
 import type { Scene } from "phaser";
 
-import { homeBarAction, homeBarButtonAt } from "../home/homeBar.ts";
+import {
+  homeBarAction,
+  homeBarButtonAt,
+  type OverlayRegion,
+  regionOutside,
+} from "../home/homeBar.ts";
 import type { HomeBarButton } from "../home/homeLayout.ts";
 import { openGuard } from "../input/openGuard.ts";
+import { exitShown } from "../pwa/index.ts";
 import { whenArtReady } from "./artReady.ts";
 import { openHelp } from "./helpScreen.ts";
 import type { MenuSceneData } from "./MenuScene.ts";
@@ -12,6 +19,7 @@ import { toggleMuted } from "./profileStore.ts";
 import { SCENE_KEYS, type SceneKey } from "./sceneKeys.ts";
 import type { SettingsData } from "./SettingsScene.ts";
 import { listenTargetPress } from "./targetPress.ts";
+import { nativeTopSectionButtons } from "./topSection.ts";
 
 // Emitted on game.events as the top bar opens help, the Logbook or the settings: the Logbook,
 // the settings and the badge celebration close, and the start screen and the Pet shop close any
@@ -64,6 +72,16 @@ export function exitGame(): void {
   exitApp(browserExitPage());
 }
 
+// Dismissal excludes the actual retained bar, including capability-dependent Exit.
+export function sceneRegionOutside(
+  scene: Scene,
+  region: OverlayRegion,
+  debuffs: number,
+  covered: readonly Rect[],
+) {
+  return regionOutside(region, nativeTopSectionButtons(scene).includes("exit"), debuffs, covered);
+}
+
 // The topmost home overlay routes the shared controls while its underlying scene is paused.
 // Opening navigation clears replaceable overlays through HOME_PAGE_OPENING_EVENT.
 export function listenHomeBar(scene: Scene, close: () => void, clear: () => void = close): void {
@@ -80,7 +98,7 @@ export function listenHomeBar(scene: Scene, close: () => void, clear: () => void
   listenTargetPress<HomeBarButton>(scene, {
     onPressed: () => undefined,
     onTap: (button) => pressHomeBar(scene, close, button),
-    targetAt: (x, y) => homeBarButtonAt(x, y),
+    targetAt: (x, y) => homeBarButtonAt(nativeTopSectionButtons(scene).includes("exit"), x, y),
   });
 }
 
@@ -104,6 +122,11 @@ function pressHomeBar(scene: Scene, close: () => void, button: HomeBarButton): v
   const open = { menu: shown(SCENE_KEYS.menu) };
   const action = homeBarAction(open, button);
   switch (action) {
+    case "exit":
+      if (exitShown() && nativeTopSectionButtons(scene).includes("exit")) {
+        exitGame();
+      }
+      return;
     case "close":
       close();
       return;
