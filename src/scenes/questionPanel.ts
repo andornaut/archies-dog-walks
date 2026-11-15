@@ -47,6 +47,7 @@ import { addPixelText, pixelBitmapFont } from "../ui/phaser/pixelText.ts";
 import { pillColours } from "./effectNameColours.ts";
 import { addCardClose, addCardTitle, drawDetailCardView } from "./homePanels.ts";
 import { canvasPanelMeasure } from "./modalMeasure.ts";
+import { trackNativeSceneInput } from "./overlay.ts";
 import { listenTargetPress } from "./targetPress.ts";
 import { addMenuButton, addRimmedPanel, addTapBurst, type MenuButton } from "./uiKit.ts";
 
@@ -169,29 +170,46 @@ export function htmlPanelInput(place: NonNullable<ReturnType<typeof htmlPanelPla
   };
 }
 
-// panel, hidden while the scene is paused or asleep under a canvas page (help, the settings)
-// and gone with the scene, or by destroy, which stops it following the scene.
-export function followScene<P extends Pick<DomQuestionPanel, "destroy" | "setShown">>(
-  scene: Scene,
-  panel: P,
-): P {
-  const listeners = [
-    [Scenes.Events.PAUSE, () => panel.setShown(false)],
-    [Scenes.Events.RESUME, () => panel.setShown(true)],
-    [Scenes.Events.SLEEP, () => panel.setShown(false)],
-    [Scenes.Events.WAKE, () => panel.setShown(true)],
+// Native panels follow scene visibility while inactive scenes retain dimmed, inert content.
+export function followScene<
+  P extends Pick<
+    DomQuestionPanel,
+    "accepts" | "capture" | "destroy" | "setShown" | "setEnabled" | "setInert" | "setDimmed"
+  >,
+>(scene: Scene, panel: P): P {
+  const stopInput = trackNativeSceneInput(scene, panel);
+  let active: boolean | undefined;
+  const sync = () => {
+    const next = scene.sys.isActive();
+    if (next !== active) {
+      active = next;
+      panel.setDimmed(!next);
+      panel.setInert(!next);
+    }
+    panel.setEnabled(next && scene.input.enabled);
+    panel.setShown(scene.sys.isVisible());
+  };
+  const events = [
+    Scenes.Events.PAUSE,
+    Scenes.Events.RESUME,
+    Scenes.Events.SLEEP,
+    Scenes.Events.WAKE,
   ] as const;
   const destroy = () => {
-    for (const [type, listener] of listeners) {
-      scene.events.off(type, listener);
+    for (const event of events) {
+      scene.events.off(event, sync);
     }
     scene.events.off(Scenes.Events.SHUTDOWN, destroy);
+    scene.game.events.off(Core.Events.PRE_RENDER, sync);
+    stopInput();
     panel.destroy();
   };
-  for (const [type, listener] of listeners) {
-    scene.events.on(type, listener);
+  for (const event of events) {
+    scene.events.on(event, sync);
   }
   scene.events.once(Scenes.Events.SHUTDOWN, destroy);
+  scene.game.events.on(Core.Events.PRE_RENDER, sync);
+  sync();
   return { ...panel, destroy };
 }
 

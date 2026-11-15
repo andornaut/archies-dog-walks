@@ -2,9 +2,8 @@ import { describe, expect, it, vi } from "vitest";
 
 import { gameData } from "../../data/index.ts";
 import { SCREEN_LAYOUT } from "../../data/screen.ts";
-import { FakeDocument } from "../../testing/fakeDom.ts";
+import { FakeDocument, fakeLayer } from "../../testing/fakeDom.ts";
 import { gameFont } from "../../testing/fontInk.ts";
-import type { UiLayer } from "../../ui/dom/uiLayer.ts";
 import { artPixel, domScale } from "../../ui/domScale.ts";
 import { type PanelMeasure } from "../../ui/modal/types.ts";
 import { modalCardView, panelButton } from "../../ui/modal/view.ts";
@@ -23,16 +22,13 @@ const MEASURE: PanelMeasure = {
   wrapNote: (_width, text) => [text],
 };
 
-function menu(customNumbers = false) {
+function menuContext() {
   const doc = new FakeDocument();
-  const element = doc.createElement("div");
-  const layer = {
-    element,
-    onScale: () => () => undefined,
-    ready: () => true,
-    scale: () => domScale(2, { height: 560, width: 360, x: 0, y: 0 }),
-    update: () => undefined,
-  } as unknown as UiLayer;
+  return { doc, ...fakeLayer(doc, domScale(2, { height: 560, width: 360, x: 0, y: 0 })) };
+}
+
+function menu(context = menuContext(), customNumbers = false) {
+  const { doc, element, layer } = context;
   const words = gameData.menuText.pause;
   const presses = PAUSE_MENU_ITEMS.map(() => vi.fn());
   const close = vi.fn();
@@ -107,7 +103,7 @@ describe("the HTML pause menu", () => {
   });
 
   it("keeps digit bindings independent of visual action order", () => {
-    const { buttons, doc, presses } = menu(true);
+    const { buttons, doc, presses } = menu(undefined, true);
     expect(buttons.slice(0, -1).map((button) => button.getAttribute("aria-keyshortcuts"))).toEqual([
       "2",
       "3",
@@ -168,17 +164,27 @@ describe("the HTML pause menu", () => {
   });
 });
 
+it("only activates the top native dialog and restores the original one when it closes", () => {
+  const context = menuContext();
+  const lower = menu(context);
+  const upper = menu(context);
+  expect(lower.dialog.inert).toBe(true);
+  expect(lower.dialog.getAttribute("aria-hidden")).toBe("true");
+  lower.buttons[0]?.fire("click");
+  context.doc.defaultView.fire("keydown", { code: "Digit1", repeat: false });
+  expect(lower.presses[0]).not.toHaveBeenCalled();
+  expect(upper.presses[0]).toHaveBeenCalledOnce();
+  upper.shown.destroy();
+  expect(lower.dialog.inert).toBe(false);
+  lower.buttons[0]?.fire("click");
+  expect(lower.presses[0]).toHaveBeenCalledOnce();
+  lower.shown.destroy();
+});
+
 describe("an HTML modal card", () => {
   it("wears the detail card's frame with no rim, and its number keys press nothing", () => {
     const doc = new FakeDocument();
-    const element = doc.createElement("div");
-    const layer = {
-      element,
-      onScale: () => () => undefined,
-      ready: () => true,
-      scale: () => domScale(2, { height: 560, width: 360, x: 0, y: 0 }),
-      update: () => undefined,
-    } as unknown as UiLayer;
+    const { element, layer } = fakeLayer(doc, domScale(2, { height: 560, width: 360, x: 0, y: 0 }));
     const card = { height: 104, width: 280, x: 40, y: 200 };
     const update = vi.fn();
     const words = gameData.homeText.update;
@@ -209,14 +215,7 @@ describe("an HTML modal card", () => {
 describe("an HTML detail card that takes no presses", () => {
   it("lets every press through, shows its close control as a picture and its art once loaded", async () => {
     const doc = new FakeDocument();
-    const element = doc.createElement("div");
-    const layer = {
-      element,
-      onScale: () => () => undefined,
-      ready: () => true,
-      scale: () => domScale(2, { height: 560, width: 360, x: 0, y: 0 }),
-      update: () => undefined,
-    } as unknown as UiLayer;
+    const { element, layer } = fakeLayer(doc, domScale(2, { height: 560, width: 360, x: 0, y: 0 }));
     const card = { height: 120, width: 280, x: 40, y: 200 };
     const sheet = {
       frames: {
@@ -276,14 +275,7 @@ describe("an HTML detail card that takes no presses", () => {
 describe("an HTML panel's part controls", () => {
   it("come first in Tab's order and tell the scene where focus moves, which it can move", () => {
     const doc = new FakeDocument();
-    const element = doc.createElement("div");
-    const layer = {
-      element,
-      onScale: () => () => undefined,
-      ready: () => true,
-      scale: () => domScale(2, { height: 560, width: 360, x: 0, y: 0 }),
-      update: () => undefined,
-    } as unknown as UiLayer;
+    const { element, layer } = fakeLayer(doc, domScale(2, { height: 560, width: 360, x: 0, y: 0 }));
     const rows = [doc.createElement("div"), doc.createElement("div")];
     const focused: (number | undefined)[] = [];
     const shown = showQuestionPanel(layer, {
@@ -323,14 +315,7 @@ describe("an HTML panel's part controls", () => {
 describe("an HTML zone celebration", () => {
   it("draws its plate, its line's runs once each in their colours, and its button, with no close control", () => {
     const doc = new FakeDocument();
-    const element = doc.createElement("div");
-    const layer = {
-      element,
-      onScale: () => () => undefined,
-      ready: () => true,
-      scale: () => domScale(2, { height: 560, width: 360, x: 0, y: 0 }),
-      update: () => undefined,
-    } as unknown as UiLayer;
+    const { element, layer } = fakeLayer(doc, domScale(2, { height: 560, width: 360, x: 0, y: 0 }));
     const press = vi.fn();
     const plate = { height: 26, width: 160, x: 100, y: 300 };
     const rect = { height: 44, width: 120, x: 120, y: 334 };
@@ -395,15 +380,8 @@ describe("an HTML zone celebration", () => {
     "puts an info line's icons on the art-pixel grid at a fractional fit, DPR %d",
     (dpr) => {
       const doc = new FakeDocument();
-      const element = doc.createElement("div");
       const scale = domScale(dpr, { height: 659, width: 393, x: 0, y: 0 });
-      const layer = {
-        element,
-        onScale: () => () => undefined,
-        ready: () => true,
-        scale: () => scale,
-        update: () => undefined,
-      } as unknown as UiLayer;
+      const { element, layer } = fakeLayer(doc, scale);
       const plate = { height: 80, width: 300, x: 30, y: 300 };
       const icon = (key: string, x: number) => ({
         art: { key, scale: 1, size: { height: 16, width: 16 }, x, y: 340 },

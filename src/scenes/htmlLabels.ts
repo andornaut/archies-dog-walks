@@ -139,6 +139,7 @@ export function addHtmlLabels(scene: Scene, title: string | undefined): HtmlLabe
   const mirrored = new Map<GameObjects.BitmapText, Mirrored>();
   // Shown while the scene is paused, under the pause menu, and drawn dimmed there.
   let shownPaused = false;
+  let inert = false;
   let dimmed = false;
   const camera = scene.cameras.main;
   let placedAt = "";
@@ -149,7 +150,7 @@ export function addHtmlLabels(scene: Scene, title: string | undefined): HtmlLabe
       dialog.hidden = hidden;
       // Focus starts on the dialog itself as it shows, as on every HTML panel, with a ring only
       // after keyboard input.
-      if (!hidden && title !== undefined) {
+      if (!hidden && title !== undefined && !inert) {
         focusTarget(dialog);
       } else if (dialog.contains(doc.activeElement)) {
         (doc.activeElement as HTMLElement).blur();
@@ -216,6 +217,19 @@ export function addHtmlLabels(scene: Scene, title: string | undefined): HtmlLabe
       }
     }
   };
+  const syncInput = () => {
+    const blocked = inert || !layer.input.accepts();
+    dialog.inert = blocked;
+    if (blocked || title === undefined) {
+      dialog.setAttribute("aria-hidden", "true");
+    } else {
+      dialog.removeAttribute("aria-hidden");
+    }
+    if (blocked && dialog.contains(doc.activeElement)) {
+      (doc.activeElement as HTMLElement).blur();
+    }
+  };
+  const stopInput = layer.input.subscribe(syncInput);
   sync();
   scene.game.events.on(Core.Events.PRE_RENDER, sync);
   const destroy = () => {
@@ -224,6 +238,7 @@ export function addHtmlLabels(scene: Scene, title: string | undefined): HtmlLabe
     if (dialog.contains(doc.activeElement)) {
       (doc.activeElement as HTMLElement).blur();
     }
+    stopInput();
     dialog.remove();
   };
   scene.events.once(Scenes.Events.SHUTDOWN, destroy);
@@ -233,7 +248,9 @@ export function addHtmlLabels(scene: Scene, title: string | undefined): HtmlLabe
       dimmed = next;
       setRampDimmed(dialog, next);
     },
-    setInert: (inert) => {
+    setInert: (next) => {
+      inert = next;
+      syncInput();
       if (!inert) {
         shownPaused = false;
       }

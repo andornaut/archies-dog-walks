@@ -159,13 +159,13 @@ export interface ModalLifecycle {
   setShown(shown: boolean): void;
 }
 
-// One view owns a scope only while it is shown. Passive pictures never block the controls below.
+// Modal ownership is explicit and independent of whether a view draws native controls.
 export function mountModalLifecycle(
   layer: { readonly input: ModalInputGate },
-  options: { readonly passive: boolean; readonly reveal: Reveal },
+  options: { readonly modal: boolean; readonly reveal: Reveal },
   element: HTMLElement,
 ): ModalLifecycle {
-  const { passive, reveal } = options;
+  const { modal, reveal } = options;
   const doc = element.ownerDocument;
   const previous = doc.activeElement as HTMLElement | null;
   let alive = true;
@@ -173,13 +173,13 @@ export function mountModalLifecycle(
   let shown = true;
   let inert = false;
   let revision = 0;
-  let scope: ModalInputScope | undefined = passive ? undefined : layer.input.open();
+  let scope: ModalInputScope | undefined = modal ? layer.input.open() : undefined;
   const eligible = () => alive && shown && !inert;
   const accepts = () =>
     eligible() &&
     enabled &&
     paint.painted() &&
-    (passive ? layer.input.accepts() : scope?.accepts() === true);
+    (modal ? scope?.accepts() === true : layer.input.accepts());
   const blur = () => {
     if (element.contains(doc.activeElement)) {
       (doc.activeElement as HTMLElement).blur();
@@ -211,24 +211,22 @@ export function mountModalLifecycle(
       return () => accepted && started === revision && captured() && accepts();
     },
   };
-  const stopInput = passive
-    ? () => undefined
-    : guardNativeInput(
-        {
-          cancel: () => {
-            const clear = (node: HTMLElement) => {
-              node.removeAttribute("data-pressed");
-              for (const child of node.children) {
-                clear(child as HTMLElement);
-              }
-            };
-            clear(element);
-          },
-          gate: input,
-          subscribe: layer.input.subscribe,
-        },
-        element,
-      );
+  const stopInput = guardNativeInput(
+    {
+      cancel: () => {
+        const clear = (node: HTMLElement) => {
+          node.removeAttribute("data-pressed");
+          for (const child of node.children) {
+            clear(child as HTMLElement);
+          }
+        };
+        clear(element);
+      },
+      gate: input,
+      subscribe: layer.input.subscribe,
+    },
+    element,
+  );
   const paint = revealPaint(reveal, sync, element);
   const stopChanges = layer.input.subscribe(sync);
   const closeScope = () => {
@@ -240,7 +238,7 @@ export function mountModalLifecycle(
     revision += 1;
     if (!eligible()) {
       closeScope();
-    } else if (!passive && scope === undefined) {
+    } else if (modal && scope === undefined) {
       scope = layer.input.open();
     }
     sync();

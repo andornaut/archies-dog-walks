@@ -5,6 +5,7 @@ import { focusTarget } from "@andornaut/game-kit/web/ui/dom/focusModality";
 import { SCREEN_CONFIG } from "../../data/screen.ts";
 import { cardNumberForKey, isConfirmKey, menuKeyActs } from "../../input/keyBindings.ts";
 import { closeFace } from "../../ui/closeControl.ts";
+import { mountModalLifecycle } from "../../ui/dom/modalLifecycle.ts";
 import {
   createTextLine,
   type DomTextLine,
@@ -48,6 +49,8 @@ export interface DomPart {
 }
 
 export interface DomQuestionPanelInput {
+  // Base screens opt out of modal ownership; pictures can remain modal without native buttons.
+  readonly modal?: boolean;
   // What the close control does; undefined draws it as a picture, and a panel with no buttons
   // then takes no presses: every press goes through to the canvas, whose scene closes it. null
   // draws no close control, and a panel with no buttons then takes no presses either. Then its
@@ -79,6 +82,9 @@ export interface DomQuestionPanelInput {
 }
 
 export interface DomQuestionPanel {
+  accepts(): boolean;
+  capture(): () => boolean;
+  setEnabled(enabled: boolean): void;
   // A tap burst at a game point, over the panel.
   burst(at: Point): void;
   destroy(): void;
@@ -158,15 +164,17 @@ function burstHost(layer: UiLayer, scale: DomScale): HTMLElement {
 // The panel in layer, shown and its dialog focused.
 export function showQuestionPanel(layer: UiLayer, input: DomQuestionPanelInput): DomQuestionPanel {
   const doc = layer.element.ownerDocument;
+  const accepts = () => lifecycle.accepts();
   panels += 1;
   const id = `adw-panel-${panels}`;
   const { view } = input;
+  const modal = input.modal !== false;
   const dialog = doc.createElement("div");
   // A panel with no buttons and no close control to press takes no presses.
   const passive = (input.close ?? undefined) === undefined && input.presses.length === 0;
   dialog.className = passive ? "adw-dialog adw-passive" : "adw-dialog";
   dialog.setAttribute("role", "dialog");
-  dialog.setAttribute("aria-modal", "true");
+  dialog.setAttribute("aria-modal", String(modal));
   // Focus starts on the dialog itself, so no button shows the keyboard's ring until Tab.
   dialog.tabIndex = -1;
 
@@ -264,6 +272,9 @@ export function showQuestionPanel(layer: UiLayer, input: DomQuestionPanelInput):
   const pressable = (control: HTMLButtonElement, press: () => void) => {
     const lift = () => control.removeAttribute("data-pressed");
     control.addEventListener("pointerdown", (event) => {
+      if (!accepts()) {
+        return;
+      }
       if (control.hasPointerCapture(event.pointerId)) {
         control.releasePointerCapture(event.pointerId);
       }
@@ -278,7 +289,11 @@ export function showQuestionPanel(layer: UiLayer, input: DomQuestionPanelInput):
     for (const type of ["pointerleave", "pointerup", "pointercancel"]) {
       control.addEventListener(type, lift);
     }
-    control.addEventListener("click", press);
+    control.addEventListener("click", () => {
+      if (accepts()) {
+        press();
+      }
+    });
   };
 
   // A panel that takes no presses shows its buttons as pictures.
@@ -376,6 +391,9 @@ export function showQuestionPanel(layer: UiLayer, input: DomQuestionPanelInput):
     input.onFocus?.(at === -1 ? undefined : at);
   });
   dialog.addEventListener("keydown", (event) => {
+    if (!accepts()) {
+      return;
+    }
     // Enter and Space press the focused control natively; the scene under never hears them.
     if (isConfirmKey(event.code) && native.includes(event.target as HTMLElement)) {
       event.stopPropagation();
@@ -397,8 +415,7 @@ export function showQuestionPanel(layer: UiLayer, input: DomQuestionPanelInput):
     const number = cardNumberForKey(numberPresses.length, event.code);
     if (
       input.numberKeys &&
-      !dialog.hidden &&
-      !inert &&
+      accepts() &&
       number !== undefined &&
       menuKeyActs(event.repeat, event.code)
     ) {
@@ -406,7 +423,6 @@ export function showQuestionPanel(layer: UiLayer, input: DomQuestionPanelInput):
     }
   };
   doc.defaultView?.addEventListener("keydown", onKey);
-  let inert = false;
 
   const place = (scale: DomScale) => {
     for (const part of placed) {
@@ -416,23 +432,39 @@ export function showQuestionPanel(layer: UiLayer, input: DomQuestionPanelInput):
   place(layer.scale());
   const stopScale = layer.onScale(place);
   layer.element.append(dialog);
-  const focusFirst = () => focusTarget(dialog);
-  focusFirst();
-
-  const blur = () => {
-    if (dialog.contains(doc.activeElement)) {
-      (doc.activeElement as HTMLElement).blur();
+  const urls = new Set<string>();
+  const artUrls = (element: HTMLElement) => {
+    const background =
+      doc.defaultView?.getComputedStyle?.(element).backgroundImage ??
+      element.style.backgroundImage ??
+      "";
+    for (const match of background.matchAll(/url\(["']?([^"')]+)["']?\)/g)) {
+      urls.add(match[1]!);
+    }
+    for (const child of element.children) {
+      artUrls(child as HTMLElement);
     }
   };
+  artUrls(dialog);
+  const lifecycle = mountModalLifecycle(
+    layer,
+    { modal, reveal: layer.reveal([...urls], dialog) },
+    dialog,
+  );
   return {
+    accepts,
     burst: (at) => addTapBurst(layer, at),
+    capture: () => lifecycle.capture(),
     destroy() {
-      blur();
+      lifecycle.destroy();
       stopScale();
       doc.defaultView?.removeEventListener("keydown", onKey);
       dialog.remove();
     },
     focusControl(index) {
+      if (!accepts()) {
+        return;
+      }
       const control = index === undefined ? undefined : focusables[index];
       if (doc.activeElement !== (control ?? dialog)) {
         focusTarget(control ?? dialog);
@@ -459,25 +491,8 @@ export function showQuestionPanel(layer: UiLayer, input: DomQuestionPanelInput):
     setDimmed(dimmed) {
       setRampDimmed(dialog, dimmed);
     },
-    setInert(next) {
-      inert = next;
-      dialog.inert = next;
-      dialog.classList.toggle("adw-inert", next);
-      if (next) {
-        blur();
-      }
-    },
-    setShown(shown) {
-      if (shown === !dialog.hidden) {
-        return;
-      }
-      if (!shown) {
-        blur();
-      }
-      dialog.hidden = !shown;
-      if (shown && !inert) {
-        focusFirst();
-      }
-    },
+    setEnabled: (enabled) => lifecycle.setEnabled(enabled),
+    setInert: (inert) => lifecycle.setInert(inert),
+    setShown: (shown) => lifecycle.setShown(shown),
   };
 }

@@ -4,6 +4,7 @@ import {
   outsidePressMove,
 } from "@andornaut/game-kit/input/outsideTap";
 import { catchOutsideTaps } from "@andornaut/game-kit/input/phaser/catchOutsideTaps";
+import type { PressGate } from "@andornaut/game-kit/web/ui/dom/domPress";
 import type { Events, Scene } from "phaser";
 
 import { gameData } from "../data/index.ts";
@@ -12,6 +13,37 @@ import { PHONE_EVENTS } from "../pwa/index.ts";
 import { read } from "../rules/units.ts";
 import { listenPagePresses } from "./pagePresses.ts";
 import type { SceneKey } from "./sceneKeys.ts";
+
+const nativeInputs = new WeakMap<Scene, Set<PressGate>>();
+
+// Scene-owned page and back routes use the same captured admission as their native panel.
+export function trackNativeSceneInput(scene: Scene, input: PressGate): () => void {
+  const owners = nativeInputs.get(scene) ?? new Set<PressGate>();
+  owners.add(input);
+  nativeInputs.set(scene, owners);
+  return () => {
+    owners.delete(input);
+    if (owners.size === 0) {
+      nativeInputs.delete(scene);
+    }
+  };
+}
+
+function nativeSceneInput(scene: Scene): PressGate {
+  const current = () =>
+    [...(nativeInputs.get(scene) ?? [])].reverse().find((input) => input.accepts());
+  return {
+    accepts: () => !nativeInputs.has(scene) || current() !== undefined,
+    capture: () => {
+      const owner = current();
+      if (owner !== undefined) {
+        return owner.capture();
+      }
+      const empty = !nativeInputs.has(scene);
+      return () => empty && !nativeInputs.has(scene);
+    },
+  };
+}
 
 // Emitted on game.events, with whether sound is now muted, when a top bar's Sound button is
 // tapped over an overlay (the home top bar's, or the walk bar's), so the screen under it and the
@@ -77,7 +109,7 @@ export function onceSceneEvent<Args extends unknown[]>(
 // overlay leaves the press to the overlay.
 export function onBackPressed(scene: Scene, back: () => void): void {
   onWindowEvent(scene, PHONE_EVENTS.backPressed, () => {
-    if (scene.sys.isActive()) {
+    if (scene.sys.isActive() && scene.input.enabled && nativeSceneInput(scene).accepts()) {
       back();
     }
   });
@@ -111,7 +143,28 @@ export function listenOutsideTap(
 ): void {
   const tapMaxDistance = read(gameData.tuning, "pixels", "tapMaxDistance");
   listenPageTap(scene, tapMaxDistance, () => area() !== undefined, onTap);
-  catchOutsideTaps(tapMaxDistance, scene, area, onTap);
+  const input = nativeSceneInput(scene);
+  const captured = new Map<number, () => boolean>();
+  let released: (() => boolean) | undefined;
+  scene.input.on("pointerdown", (pointer: { id: number }) =>
+    captured.set(pointer.id, input.capture()),
+  );
+  const release = (pointer: { id: number }) => {
+    released = captured.get(pointer.id);
+    captured.delete(pointer.id);
+  };
+  scene.input.on("pointerup", release);
+  scene.input.on("pointerupoutside", release);
+  catchOutsideTaps(
+    tapMaxDistance,
+    scene,
+    () => (input.accepts() ? area() : undefined),
+    () => {
+      if (released?.()) {
+        onTap();
+      }
+    },
+  );
 }
 
 // Calls onTap on a tap on the bare page beside the game's canvas (listenPagePresses) while scene
@@ -123,24 +176,26 @@ function listenPageTap(
   open: () => boolean,
   onTap: () => void,
 ): void {
-  const counts = () => scene.sys.isActive() && scene.input.enabled && open();
-  let press: OutsidePress | undefined;
+  const input = nativeSceneInput(scene);
+  const counts = () => scene.sys.isActive() && scene.input.enabled && input.accepts() && open();
+  let press: (OutsidePress & { readonly accepted: () => boolean }) | undefined;
   listenPagePresses(scene, {
     cancel: () => {
       press = undefined;
     },
     down: (_press, point) => {
-      press = counts() ? { start: point, tapping: true } : undefined;
+      press = counts() ? { accepted: input.capture(), start: point, tapping: true } : undefined;
     },
     move: (_press, point) => {
       if (press !== undefined) {
-        press = outsidePressMove(tapMaxDistance, point, press);
+        press = { ...press, ...outsidePressMove(tapMaxDistance, point, press) };
       }
     },
     up: (_press, point, onBare) => {
       const tapped =
         press !== undefined &&
         onBare &&
+        press.accepted() &&
         counts() &&
         outsidePressMove(tapMaxDistance, point, press).tapping;
       press = undefined;

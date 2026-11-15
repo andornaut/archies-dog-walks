@@ -58,7 +58,7 @@ it("admits revealed and painted views, makes covered dialogs inert and restores 
   const reveal = { cancel: vi.fn(), revealed: Promise.resolve(true) };
   const view = mountModalLifecycle(
     { input: gate },
-    { passive: false, reveal },
+    { modal: true, reveal },
     root as unknown as HTMLElement,
   );
   expect(view.accepts()).toBe(false);
