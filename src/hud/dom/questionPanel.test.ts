@@ -535,11 +535,13 @@ it("keeps a native panel inert until its part JSON readiness and image barrier s
     });
     return { cancel: () => undefined, revealed };
   };
+  const onPaint = vi.fn();
   const shown = showQuestionPanel(layer, {
     close: vi.fn(),
     closeLabel: gameData.menuText.common.close,
     fonts: { body: gameFont("font-body"), title: gameFont("font-title") },
     numberKeys: false,
+    onPaint,
     parts: [
       {
         element: doc.createElement("span") as unknown as HTMLElement,
@@ -552,9 +554,11 @@ it("keeps a native panel inert until its part JSON readiness and image barrier s
     view: modalCardView(MEASURE, { height: 100, width: 200, x: 80, y: 100 }, "Detail", []),
   });
   expect(shown.accepts()).toBe(false);
+  expect(onPaint).not.toHaveBeenCalled();
   resolvePart(["/art/late-frame.png"]);
   await revealed;
   expect(requested).toContain("/art/late-frame.png");
   expect(shown.accepts()).toBe(true);
+  expect(onPaint).toHaveBeenCalledOnce();
   shown.destroy();
 });

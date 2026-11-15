@@ -68,6 +68,7 @@ export interface DomQuestionPanelInput {
   readonly label?: string;
   readonly fonts: Readonly<Record<PanelText["font"], BitmapFont>>;
   readonly gesture?: NativeGesture;
+  readonly onPaint?: () => void;
   // Whether keys 1 to n press the buttons, as on the pause menu and the questions.
   readonly numberKeys: boolean;
   readonly numberPresses?: readonly (() => void)[];
@@ -82,6 +83,8 @@ export interface DomQuestionPanelInput {
 }
 
 export interface DomQuestionPanel {
+  readonly element: HTMLElement;
+  setActionShown(index: number, shown: boolean): void;
   accepts(): boolean;
   capture(): () => boolean;
   setEnabled(enabled: boolean): void;
@@ -418,13 +421,16 @@ export function showQuestionPanel(layer: UiLayer, input: DomQuestionPanelInput):
     if (event.code !== "Tab") {
       return;
     }
-    const at = focusables.indexOf(doc.activeElement as HTMLElement);
-    const step = event.shiftKey ? focusables.length - 1 : 1;
+    const visible = focusables.filter(
+      (control) => !control.hidden && control.closest?.("[hidden]") == null,
+    );
+    const at = visible.indexOf(doc.activeElement as HTMLElement);
+    const step = event.shiftKey ? visible.length - 1 : 1;
     // From the dialog itself, Tab enters at the first button and Shift+Tab at the close control.
     const next =
-      at === -1 ? (event.shiftKey ? focusables.length - 1 : 0) : (at + step) % focusables.length;
+      at === -1 ? (event.shiftKey ? visible.length - 1 : 0) : (at + step) % visible.length;
     event.preventDefault();
-    focusables[next]?.focus();
+    (visible[next] ?? dialog).focus();
   });
   if (input.dismiss !== undefined) {
     const dismiss = input.dismiss.press;
@@ -475,6 +481,7 @@ export function showQuestionPanel(layer: UiLayer, input: DomQuestionPanelInput):
     layer,
     {
       ...(input.gesture === undefined ? {} : { gesture: input.gesture }),
+      ...(input.onPaint === undefined ? {} : { onPaint: input.onPaint }),
       modal,
       reveal: layer.reveal(
         Promise.all(
@@ -495,6 +502,7 @@ export function showQuestionPanel(layer: UiLayer, input: DomQuestionPanelInput):
       doc.defaultView?.removeEventListener("keydown", onKey);
       dialog.remove();
     },
+    element: dialog,
     focusControl(index) {
       if (!accepts()) {
         return;
@@ -521,6 +529,12 @@ export function showQuestionPanel(layer: UiLayer, input: DomQuestionPanelInput):
       const refusing = refusal.reducedMotion ? "adw-refusing-still" : "adw-refusing";
       button.classList.add(refusing);
       doc.defaultView?.setTimeout(() => button.classList.remove(refusing), total);
+    },
+    setActionShown(index, shown) {
+      const button = buttons[index];
+      if (button !== undefined) {
+        button.hidden = !shown;
+      }
     },
     setDimmed(dimmed) {
       setRampDimmed(dialog, dimmed);

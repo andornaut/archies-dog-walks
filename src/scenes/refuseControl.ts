@@ -2,6 +2,7 @@ import type { GameObjects, Scene } from "phaser";
 
 import { PALETTE } from "../ui/palette.ts";
 import { REFUSE } from "../ui/refuse.ts";
+import { refuseMotion } from "./refuseMotion.ts";
 
 // Rejected choices retain their grey chrome and briefly emphasise their labels.
 export { REFUSE };
@@ -23,28 +24,10 @@ export function refuseControl(
         label.setTint(...colours[i]!);
       }
     });
-  if (!reducedMotion && parts.length > 0) {
-    scene.tweens.add({
-      duration: REFUSE.shakeMs,
-      repeat: 3,
-      targets: [...parts],
-      x: `+=${REFUSE.shake}`,
-      yoyo: true,
-    });
-  }
-  if (reducedMotion) {
-    labels.forEach((label) => label.setTint(PALETTE.red));
-    scene.time.delayedCall(REFUSE.flashMs * REFUSE.flashes, () => {
-      restore();
-      complete();
-    });
-    return;
-  }
-  let flashes = 0;
-  scene.time.addEvent({
-    callback: () => {
-      flashes += 1;
-      if (flashes % 2 === 1) {
+  refuseMotion(scene, reducedMotion, {
+    complete,
+    emphasis: (red) => {
+      if (red) {
         labels.forEach((label) => {
           if (label.active) {
             label.setTint(PALETTE.red);
@@ -53,12 +36,8 @@ export function refuseControl(
       } else {
         restore();
       }
-      if (flashes >= REFUSE.flashes) {
-        complete();
-      }
     },
-    delay: REFUSE.flashMs,
-    repeat: REFUSE.flashes - 1,
+    ...(parts.length === 0 ? {} : { motion: { targets: [...parts], x: `+=${REFUSE.shake}` } }),
   });
 }
 

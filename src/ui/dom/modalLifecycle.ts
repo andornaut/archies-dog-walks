@@ -197,7 +197,12 @@ export interface ModalLifecycle {
 // Modal ownership is explicit and independent of whether a view draws native controls.
 export function mountModalLifecycle(
   layer: Pick<UiLayer, "input" | "press">,
-  options: { readonly gesture?: NativeGesture; readonly modal: boolean; readonly reveal: Reveal },
+  options: {
+    readonly gesture?: NativeGesture;
+    readonly modal: boolean;
+    readonly onPaint?: () => void;
+    readonly reveal: Reveal;
+  },
   element: HTMLElement,
 ): ModalLifecycle {
   const { modal, reveal } = options;
@@ -265,7 +270,14 @@ export function mountModalLifecycle(
     },
     element,
   );
-  const paint = revealPaint(reveal, sync, element);
+  const paint = revealPaint(
+    reveal,
+    () => {
+      options.onPaint?.();
+      sync();
+    },
+    element,
+  );
   const stopChanges = layer.input.subscribe(sync);
   const closeScope = () => {
     const closing = scope;

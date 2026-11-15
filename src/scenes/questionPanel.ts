@@ -11,13 +11,8 @@ import type { DetailCardView } from "../home/detailCardView.ts";
 import type { EndScreenView } from "../home/endScreenView.ts";
 import type { ConfirmChoice } from "../home/purchaseConfirm.ts";
 import type { PurchaseConfirmCardView } from "../home/purchaseConfirmCardView.ts";
-import type { ZoneCelebrationView } from "../hud/celebrationView.ts";
 import { showBadgeCard } from "../hud/dom/badgeCard.ts";
-import {
-  type BadgeCelebrationView,
-  showBadgeCelebration,
-  showZoneCelebration,
-} from "../hud/dom/celebration.ts";
+import { type BadgeCelebrationView, showBadgeCelebration } from "../hud/dom/celebration.ts";
 import { showDetailCard } from "../hud/dom/detailCard.ts";
 import { type DomEndScreen, type DomEndScreenInput, showEndScreen } from "../hud/dom/endScreen.ts";
 import { type DomHelpInput, showHelpScreen } from "../hud/dom/helpScreen.ts";
@@ -408,7 +403,7 @@ export function addHtmlBadgeCard(
 }
 
 // What a celebration's HTML draws with beyond a panel's: art files, sheets and pill colours.
-function htmlArtInput(place: NonNullable<ReturnType<typeof htmlPanelPlace>>) {
+export function htmlArtInput(place: NonNullable<ReturnType<typeof htmlPanelPlace>>) {
   return {
     ...htmlPanelInput(place),
     artUrl,
@@ -418,23 +413,6 @@ function htmlArtInput(place: NonNullable<ReturnType<typeof htmlPanelPlace>>) {
       return kind === undefined ? undefined : pillColours(kind);
     },
   };
-}
-
-// A zone celebration's plate or bubble in the HTML layer, laid out as the canvas draws it
-// (zoneCelebrationView), its button doing press, the dialog named label. Returns it, or
-// undefined where the canvas must draw it.
-export function addHtmlZoneCelebration(
-  scene: Scene,
-  view: ZoneCelebrationView,
-  label: string,
-  press: () => void,
-): DomQuestionPanel | undefined {
-  const place = htmlPanelPlace(scene);
-  if (place === undefined) {
-    return undefined;
-  }
-  const panel = showZoneCelebration(place.layer, { ...htmlArtInput(place), label, press, view });
-  return dimUnderPause(scene, followScene(scene, panel));
 }
 
 // HTML a scene draws that the pause menu dims while it pauses the scene: shown under the menu,
