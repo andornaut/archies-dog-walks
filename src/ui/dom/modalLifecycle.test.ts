@@ -104,6 +104,10 @@ it("rejects native pointer admission while the shared game press is already held
   root.fire("pointerdown", event);
   expect(event.stopImmediatePropagation).toHaveBeenCalledOnce();
   expect(down).not.toHaveBeenCalled();
+  doc.fire("pointerup", pointer(1, root, "pointerup"));
+  const click = { detail: 1, preventDefault: vi.fn(), stopImmediatePropagation: vi.fn() };
+  root.fire("click", click);
+  expect(click.stopImmediatePropagation).toHaveBeenCalledOnce();
   stop();
 });
 

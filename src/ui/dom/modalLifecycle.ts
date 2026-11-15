@@ -24,6 +24,7 @@ export function guardNativeInput(guard: NativeInputGuard, root: HTMLElement): ()
   let captured: (() => boolean) | undefined;
   const cancelled = new Set<number>();
   let handledClick = false;
+  let completed = false;
   const release = () => {
     const held = lease;
     lease = undefined;
@@ -34,6 +35,7 @@ export function guardNativeInput(guard: NativeInputGuard, root: HTMLElement): ()
       cancelled.add(owner);
       owner = undefined;
       captured = undefined;
+      completed = false;
       release();
       guard.cancel?.();
     }
@@ -44,6 +46,7 @@ export function guardNativeInput(guard: NativeInputGuard, root: HTMLElement): ()
   };
   const down = (event: PointerEvent) => {
     handledClick = false;
+    completed = false;
     cancelled.delete(event.pointerId);
     const next = followOnePress(owner !== undefined, "down", event.pointerId, owner);
     if (!next.handle) {
@@ -104,15 +107,19 @@ export function guardNativeInput(guard: NativeInputGuard, root: HTMLElement): ()
     if (!accepted) {
       reject(event);
     }
-    handledClick = guard.up?.(event, !accepted || event.type === "pointercancel") === true;
+    completed = accepted && event.type !== "pointercancel";
+    handledClick = guard.up?.(event, !completed) === true;
     if (!accepted) {
       guard.cancel?.();
     }
   };
   const stopClicks = guardClicks(guard, root);
   const click = (event: MouseEvent) => {
-    if (handledClick && event.detail !== 0) {
-      reject(event);
+    if (event.detail !== 0) {
+      if (!completed || handledClick) {
+        reject(event);
+      }
+      completed = false;
     }
   };
   root.addEventListener("click", click, true);
