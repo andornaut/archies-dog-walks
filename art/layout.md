@@ -70,16 +70,16 @@ Visible faces, touch targets and focus outlines are separate rectangles. Keep th
 | BUTTON_SIZE.wide       | 296×48                                | px   | Non-modal main actions                                 | [button geometry](../src/ui/buttonGeometry.ts) |
 | BUTTON_SIZE.compact    | 128×48                                | px   | Non-modal secondary actions                            | [button geometry](../src/ui/buttonGeometry.ts) |
 | BUTTON_SIZE.icon       | Face 20×20; glyph 16×16; target 48×48 | px   | Non-bar icon controls                                  | [button geometry](../src/ui/buttonGeometry.ts) |
-| topbar.home.hit        | 48×48, rows 0–47                      | px   | One pitch wide, from x = 120                           | [home placement](../src/home/homeLayout.ts)    |
-| topbar.home.pitch      | 48                                    | px   | Home bar faces from x = 134, 28px apart                | [home placement](../src/home/homeLayout.ts)    |
-| topbar.home.well       | At most 113 wide                      | px   | Home bank well                                         | [home placement](../src/home/homeLayout.ts)    |
+| topbar.home.hit        | 48×48, rows 0–47                      | px   | Two columns at x = 264/312                             | [home placement](../src/home/homeLayout.ts)    |
+| topbar.home.pitch      | 48                                    | px   | Faces at x = 278/326, y = 9                            | [home placement](../src/home/homeLayout.ts)    |
+| topbar.home.well       | 97 wide, at x = 5                     | px   | Home bank well                                         | [home placement](../src/home/homeLayout.ts)    |
 | topbar.walk.hit        | 48×48, rows 0–47                      | px   | Two columns at x = 264/312; debuff bars win rows 40–47 | [walk HUD](../src/hud/walkHud.ts)              |
 | home.start.focusOutset | 4                                     | px   | Full focus ring, to the canvas's last row              | [home layout](../src/home/homeLayout.ts)       |
 | press.min              | 48×48                                 | px   | Least press area; overlaps go to the nearest centre    | [Controls](controls.md#sizing-and-spacing)     |
 
 Modal actions use their full measured label/icon width plus padding, not the non-modal compact/wide width floors. Preserve prices, goals, reasons and full-size labels in every state.
 
-HUD effect geometry follows the approved [walk-bar exception](controls.md#sizing-and-spacing): 24×24 native icons in 26×26 wells, 2px gaps, y = 6 wells and y = 7 icons. Size the group from the visible count, with no empty reservations; six wells span 166px. The minimum cash well is `(5,5,82,29)` and the mute/Pause-or-Menu faces are `(278,9,20,20)` and `(326,9,20,20)`, within unchanged 48px targets. Runtime contextual verification remains with the paired source change.
+HUD effect geometry follows the [walk-bar exception](controls.md#sizing-and-spacing): 24×24 native icons in 26×26 wells, no extra gap or horizontal hold inset, y = 6 wells and y = 7 icons. Size the group from the visible count, with no empty reservations, and centre it within `[102,264)` on x = 183; six wells span 156px and start at x = 105,131,157,183,209,235, while two start at x = 157,183. The fixed cash well is `(5,5,97,29)`, with 84px of ink room at 3× scale. Sound and Pause/Menu faces remain `(278,9,20,20)` and `(326,9,20,20)`, within unchanged 48px targets and centred on 29×29 dark backings at y = 5.
 
 ## Modals
 
@@ -103,15 +103,14 @@ Keep `font-title` at 2×. Measure wrapped lines and increase header/body/panel h
 
 Keep gameplay notices below overlay scenes and scrims. A high object depth inside the run scene is not permission to draw above a modal. The message strip stays in the HUD with its paused lifetime and enlarged-card hiding; [messageStripView](../src/scenes/messageStripView.ts) owns its rendering.
 
-| Token           | Value        | Unit       | Scope                           | Source                                                                                                              |
-| --------------- | ------------ | ---------- | ------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
-| hud.topBar      | 0,0,360,40   | x,y,w,h px | Walk bar                        | [screen regions](../shared/export/layout.json)                                                                      |
-| hud.walkView    | 0,40,360,442 | x,y,w,h px | Content between bar and dog row | [screen regions](../shared/export/layout.json)                                                                      |
-| hud.dogRow      | 0,482,360,74 | x,y,w,h px | Fixed three-slot card row       | [screen regions](../shared/export/layout.json)                                                                      |
-| progress.bottom | 0,556,360,4  | x,y,w,h px | DOM startup, Boot and run       | [startup](../src/startup.ts), [Boot](../src/scenes/BootScene.ts) and [screen regions](../shared/export/layout.json) |
-| progress.home   | 0,147,360,4  | x,y,w,h px | Home loading/walk-wait only     | [home layout](../src/home/homeLayout.ts)                                                                            |
+| Token            | Value                                            | Unit       | Scope                                                                       | Source                                                                               |
+| ---------------- | ------------------------------------------------ | ---------- | --------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| hud.topBar       | 0,0,360,40                                       | x,y,w,h px | Walk bar                                                                    | [screen regions](../shared/export/layout.json)                                       |
+| hud.walkView     | 0,40,360,442                                     | x,y,w,h px | Content between bar and dog row                                             | [screen regions](../shared/export/layout.json)                                       |
+| hud.dogRow       | 0,482,360,74                                     | x,y,w,h px | Fixed three-slot card row                                                   | [screen regions](../shared/export/layout.json)                                       |
+| progress.loading | Physical viewport top, full width, 3 CSS px high | CSS px     | One page-lifetime loading strip, independent of DPR and page-frame rotation | [startup](../src/startup.ts) and [DOM loading strip](../src/ui/dom/domLoadingBar.ts) |
 
-Hide home progress while idle. Active progress lies across the yard's foot, leaving row 151 clear (`HOME.loadingClear`) above the divider strip. Progress state and appearance follow the [style contract](style-guide.md#ui). Actor-following effects and stationary art notices keep their own anchors; do not apply panel-centering rules to them.
+Hide the shared loading strip while idle. Startup, Boot, home, walk-loading, offline installation and required updates use the same physical-top strip; there is no Home-yard or Boot secondary gauge. The neighbourhood route-progress meter is separate. Progress state and appearance follow the [style contract](style-guide.md#ui). Actor-following effects and stationary art notices keep their own anchors; do not apply panel-centering rules to them.
 
 ## Exceptions and verification
 
