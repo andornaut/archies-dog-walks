@@ -70,8 +70,8 @@ Visible faces, touch targets and focus outlines are separate rectangles. Keep th
 | BUTTON_SIZE.wide       | 296×48                                | px   | Non-modal main actions                                 | [button geometry](../src/ui/buttonGeometry.ts) |
 | BUTTON_SIZE.compact    | 128×48                                | px   | Non-modal secondary actions                            | [button geometry](../src/ui/buttonGeometry.ts) |
 | BUTTON_SIZE.icon       | Face 20×20; glyph 16×16; target 48×48 | px   | Non-bar icon controls                                  | [button geometry](../src/ui/buttonGeometry.ts) |
-| topbar.home.hit        | 48×48, rows 0–47                      | px   | Two columns at x = 264/312                             | [home placement](../src/home/homeLayout.ts)    |
-| topbar.home.pitch      | 48                                    | px   | Faces at x = 278/326, y = 9                            | [home placement](../src/home/homeLayout.ts)    |
+| topbar.home.hit        | 48×48, rows 0–47                      | px   | Sound/Menu/Exit x = 216/264/312; else 264/312          | [home placement](../src/home/homeLayout.ts)    |
+| topbar.home.pitch      | 48                                    | px   | Faces x = 230/278/326, y = 9; else 278/326             | [home placement](../src/home/homeLayout.ts)    |
 | topbar.home.well       | 97 wide, at x = 5                     | px   | Home bank well                                         | [home placement](../src/home/homeLayout.ts)    |
 | topbar.walk.hit        | 48×48, rows 0–47                      | px   | Two columns at x = 264/312; debuff bars win rows 40–47 | [walk HUD](../src/hud/walkHud.ts)              |
 | home.start.focusOutset | 4                                     | px   | Full focus ring, to the canvas's last row              | [home layout](../src/home/homeLayout.ts)       |
