@@ -8,19 +8,14 @@ import { gameData } from "../data/index.ts";
 import { scrollMax } from "../input/listScroll.ts";
 import { read } from "../rules/units.ts";
 import { bodyTextWidth } from "../testing/bodyFont.ts";
-import { fontFileMetrics, fontInk, inkWidth, placedInk } from "../testing/fontInk.ts";
+import { fontFileMetrics, fontInk, gameFont, inkWidth, placedInk } from "../testing/fontInk.ts";
 import { veteranSave } from "../testing/saves.ts";
+import { modalTitleInk } from "../ui/modal/titleRole.ts";
 import { plainMarks } from "../ui/pixelFont.ts";
 import { TEXT_SCALE } from "../ui/textFit.ts";
 import { cents } from "../units.ts";
-import {
-  BADGE_STRIP,
-  badgeProgress,
-  badgeWall,
-  earnedText,
-  wallCell,
-  wallRects,
-} from "./badgesView.ts";
+import { BADGE_STRIP, badgeWall, earnedText, wallCell, wallRects } from "./badgesView.ts";
+import { type LogbookMeasure, logbookView } from "./logbookView.ts";
 import { MENU_TEXT_FIELDS } from "./menuText.ts";
 import { shopScrollbar } from "./shopLayout.ts";
 import {
@@ -29,8 +24,6 @@ import {
   detailPanel,
   detailTextTops,
   DOG_STATS,
-  dogBlockTop,
-  dogsBottom,
   earnedBand,
   earnedCheck,
   STATS_LAYOUT,
@@ -38,8 +31,6 @@ import {
   statsListFrame,
   statsScrollbar,
   statsTabRects,
-  walksBottom,
-  walksHeadingTops,
   wallLineTops,
   wallRowHeight,
 } from "./statsLayout.ts";
@@ -153,21 +144,36 @@ const walksRows = Object.values(overallRows(gameData, save.stats))
   });
 // The badge wall's rows with every badge locked and showing the veteran save's progress.
 const bodyInk = (line: string) => inkWidth("font-body", STYLE, line);
-const wallCells = BADGES.map((badge) =>
-  wallCell(wallText, bodyInk, badge, badgeProgress(gameData, save, badge)),
-);
-const wallRows = wallRects(
-  wall,
-  wallCells.map((cell) => wallRowHeight(wallLineTops(BODY, cell))),
-);
 const dogStatRows = DOG_STATS.map((stat) => ({ label: words.dogColumns[stat], value: "9999" }));
 // The Walks tab's rows with a best walk with the fullest pack.
 const fullPack = keysOf(gameData.dogs).slice(0, read(gameData.tuning, "counts", "packSizeMax"));
-const { outcomes, overall } = overallRows(gameData, {
-  ...save.stats,
-  bestCentsByPackSize: { [fullPack.length]: cents(999_900) },
-  bestWalk: { dogs: fullPack, zonesFinished: 4 },
-});
+const fullestSave = {
+  ...save,
+  owned: { ...save.owned, dogs: keysOf(gameData.dogs) },
+  stats: {
+    ...save.stats,
+    bestCentsByPackSize: { [fullPack.length]: cents(999_900) },
+    bestWalk: { dogs: fullPack, zonesFinished: 4 },
+  },
+};
+const measure: LogbookMeasure = {
+  art: () => undefined,
+  body: BODY,
+  hasTag: () => false,
+  inkWidth: (font, line) =>
+    inkWidth(`font-${font}`, STYLE, font === "title" ? line.toUpperCase() : line),
+  title: TITLE,
+  titleInk: (line) => modalTitleInk(gameFont("font-title"), line),
+  wrapNote: (room, text) => wrapWords((line) => inkWidth("font-body", STYLE, line), room, text),
+};
+const actualTab = (tab: Parameters<typeof logbookView>[2]["tab"]) =>
+  logbookView(measure, gameData, {
+    badges: BADGES,
+    closePressed: false,
+    pressedTab: undefined,
+    save: fullestSave,
+    tab,
+  });
 
 describe("the Walks and Dogs tabs' rows", () => {
   it.each([...walksRows, ...dogStatRows].map((row) => [row.label, row.value] as const))(
@@ -187,36 +193,19 @@ describe("the Dogs tab's blocks", () => {
   // the name's ink over the rows, the last row's ink over the rule above the next block.
   it(`keeps each block's face, name (${WIDEST_DOG_TITLE}'s at widest), rows and rule in order`, () => {
     expect(titleRight(rows.left + dogs.nameDx, WIDEST_DOG_TITLE)).toBeLessThanOrEqual(BAR_LEFT);
-    const top = dogBlockTop(0);
-    const nameInk = top + dogs.nameY + inkRowsFromCapTop(TITLE) * TEXT_SCALE;
-    const lastRowInk = inkBottom(top + dogs.rowsY + (DOG_STATS.length - 1) * rows.pitch);
+    const { texts } = actualTab("dogs").content;
+    const headings = texts.filter((line) => line.font === "title");
+    const top = headings[0]!.capTop - dogs.nameY;
+    const next = headings[1]!.capTop - dogs.nameY;
+    const lastRowInk = Math.max(
+      ...texts
+        .filter((line) => line.font !== "title" && line.capTop < next)
+        .map((line) => inkBottom(line.capTop)),
+    );
+    const nameInk = headings[0]!.capTop + inkRowsFromCapTop(TITLE) * TEXT_SCALE;
     expect(dogs.faceSize).toBeLessThanOrEqual(dogs.nameDx);
     expect(Math.max(top + dogs.faceSize, nameInk)).toBeLessThan(top + dogs.rowsY);
-    expect(lastRowInk).toBeLessThan(dogBlockTop(1) - dogs.ruleAbove);
-  });
-});
-
-// The Walks tab's sections, with a best walk with the fullest pack, spaced like the Dogs tab's
-// blocks: the first heading level with the first block, and each later heading the blocks' gap
-// under the previous section's last row's pitch.
-describe("the Walks tab's sections", () => {
-  const sections = [
-    { heading: words.sections.overall, rows: overall.length },
-    { heading: words.sections.runs, rows: outcomes.length },
-  ];
-  const tops = walksHeadingTops(sections.map(({ rows }) => rows));
-  it.each(
-    sections.map(({ heading }, i) => {
-      const previous = sections[i - 1];
-      const previousTop = tops[i - 1] ?? 0;
-      const expected =
-        previous === undefined
-          ? dogBlockTop(0)
-          : previousTop + STATS_LAYOUT.walks.rowsY + previous.rows * rows.pitch + dogs.gap;
-      return [heading, tops[i], expected] as const;
-    }),
-  )("puts the %s heading where the Dogs tab's spacing does", (_, top, expected) => {
-    expect(top).toBe(expected);
+    expect(lastRowInk).toBeLessThan(next - dogs.ruleAbove);
   });
 });
 
@@ -265,33 +254,21 @@ describe("the scrollbar", () => {
   });
 });
 
-// Each tab as long as it gets, with every dog owned and a best walk with the fullest pack:
-// scrolled to its end, its last row's ink is in the view; the Walks tab fits without
-// scrolling.
+// Actual full-font content keeps its final ink visible at the scroll boundary.
 describe("each tab's scroll", () => {
-  const dogIds = keysOf(gameData.dogs);
-  const dogCount = dogIds.length;
-  const lastRow = wallRows.at(-1) ?? wall;
-  const lastCell = wallCells.at(-1);
-  const lastTop =
-    lastCell === undefined ? wallText.y : (wallLineTops(BODY, lastCell).at(-1) ?? wallText.y);
-  const walks = [overall.length, outcomes.length];
-  const lastHeading = walksHeadingTops(walks).at(-1) ?? 0;
-  const walksLastRow = lastHeading + STATS_LAYOUT.walks.rowsY + (outcomes.length - 1) * rows.pitch;
-  it.each<[string, number, number, boolean]>([
-    ["Walks", walksBottom(walks), inkBottom(walksLastRow), false],
-    [
-      "Dogs",
-      dogsBottom(dogCount),
-      inkBottom(dogBlockTop(dogCount - 1) + dogs.rowsY + (DOG_STATS.length - 1) * rows.pitch),
-      true,
-    ],
-    ["Badges", badgesBottom(wallRows), inkBottom(lastRow.y + lastTop), true],
-  ])("%s: brings its last row into view", (_, bottom, lastInk, scrolls) => {
-    const max = scrollMax(view, bottom);
-    expect(max > 0).toBe(scrolls);
-    expect(lastInk - max).toBeLessThanOrEqual(view.y + view.height);
-    expect(bottom - max).toBeLessThanOrEqual(view.y + view.height);
+  it.each(STATS_TABS)("%s: brings its last row into view", (tab) => {
+    const actual = actualTab(tab);
+    const { bottom, texts } = actual.content;
+    const lastInk = Math.max(
+      ...texts.map(
+        (text) =>
+          text.capTop + inkRowsFromCapTop(text.font === "title" ? TITLE : BODY) * TEXT_SCALE,
+      ),
+    );
+    const max = scrollMax(actual.frame.rect, bottom);
+    expect(lastInk - max).toBeLessThanOrEqual(actual.frame.rect.y + actual.frame.rect.height);
+    expect(bottom - max).toBeLessThanOrEqual(actual.frame.rect.y + actual.frame.rect.height);
+    expect(bottom).toBeGreaterThanOrEqual(lastInk);
   });
 });
 

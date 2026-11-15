@@ -171,40 +171,6 @@ export function statsTabRects(): Rect[] {
   return shopTabRects(STATS_TABS.length);
 }
 
-// The top of the index'th dog's block.
-export function dogBlockTop(index: number): number {
-  const { gap, rowsY, top } = STATS_LAYOUT.dogs;
-  return top + index * (rowsY + DOG_STATS.length * PITCH + gap);
-}
-
-// The capitals' top of each Walks tab section's heading, scrolled to its top, for sections of
-// rows.
-export function walksHeadingTops(sections: readonly number[]): number[] {
-  const { rowsY, sectionGap, top } = STATS_LAYOUT.walks;
-  let y = top;
-  return sections.map((rows) => {
-    const heading = y;
-    y += rowsY + rows * PITCH + sectionGap;
-    return heading;
-  });
-}
-
-// The bottom of each tab's content as laid out, scrolled to its top: the Walks tab with
-// sections of rows, the Dogs tab with dogs blocks and the Badges tab with badges rows.
-export function walksBottom(sections: readonly number[]): number {
-  const { rowsY, top } = STATS_LAYOUT.walks;
-  const tops = walksHeadingTops(sections);
-  const last = tops.at(-1);
-  const rows = sections.at(-1) ?? 0;
-  const end = last === undefined ? top : last + rowsY + rows * PITCH;
-  return end + STATS_LAYOUT.scroll.padBottom;
-}
-
-export function dogsBottom(dogs: number): number {
-  const { gap } = STATS_LAYOUT.dogs;
-  return dogBlockTop(dogs) - gap + STATS_LAYOUT.scroll.padBottom;
-}
-
 export function badgesBottom(rows: readonly Rect[]): number {
   const { foot, y } = STATS_LAYOUT.wall;
   const last = rows.at(-1);
