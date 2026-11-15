@@ -74,15 +74,11 @@
 // to 23) and loses its lip and highlight to face, as go-pressed. The game bobs it 1px up as Start
 // walk bobs, and not while pressed.
 //
-// ui-loading-track: a 316x8 image, the sidewalk being walked: Lady's paw prints in dslate,
-// staggered on two rows from Casey's heel to the Pet shop's door. The game draws it at TRACK_AT
-// (16,456).
 // ui-loading: a 98x84 sprite, tag walk (4 frames, 160ms): Casey and Lady side on, walking right on
 // a plum leash, at 1.75x, larger than on the road (Casey 84 rows tall, Lady 56), cel shaded with
 // the road outline, Casey's face flat skin. Frames 0 and 2 plant the feet apart, 1 and 3 pass with
 // the body 1px higher, a foot lifted, and Lady's diagonal pairs swap. The game draws it at PAIR_AT
-// (6,379) plus round(228 * progress) to the right, its feet on row 460, so Casey's heel starts on
-// the first paw print and Lady's nose ends at the Pet shop's door pane.
+// (6,379), with its feet on row 460.
 //
 // Run from the repository root, after the fonts and the sprite builds. A build overwrites the
 // exports, so hand edits to them belong in this file instead.
@@ -130,7 +126,6 @@ import {
   key,
   LOGO_H,
   LOGO_W,
-  PAW,
   rand,
   rect,
   rgba,
@@ -913,7 +908,7 @@ function end(): Canvas {
   return cv;
 }
 
-// ---------- screen-loading, ui-loading-track, ui-loading ----------
+// ---------- screen-loading, ui-loading ----------
 
 const SKY_FOOT = 356;
 // NIGHT_SKY's bands end here, behind the skyline's foot
@@ -941,9 +936,6 @@ const SHOP_GLOW: ReadonlyMap<string, string> = new Map([
   [K.blue!, "ochre"],
 ]);
 
-// The track's end and Lady's last nose column, at the Pet shop's door pane (318 to 335).
-const TRACK_END = 332;
-
 const LAMP_X = 227;
 
 const MOON: readonly [number, number] = [40, 42];
@@ -952,27 +944,8 @@ const PAIR_W = 98;
 
 const PAIR_H = 84;
 
-const PAIR_FEET = 81;
-// the pair's bottom opaque row (the shoes' and paws' outline) in its frame
-const WALK_FOOT = 460;
-// the screen row the pair's feet stand on
-// Casey's rear heel on the contact frames and Lady's nose, opaque columns.
-const PAIR_HEEL = 10;
-
-const PAIR_NOSE = 97;
-
-const TRACK_AT: readonly [number, number] = [16, WALK_FOOT - 4];
-
-const TRACK_W = TRACK_END - TRACK_AT[0];
-
-const TRACK_H = 8;
-
-// Where the game draws ui-loading (origin top left) at progress 0, and how far right it walks by 1:
-// Casey's heel starts on the first paw print and Lady's nose ends at the Pet shop's door. Its feet
-// stand on WALK_FOOT.
-const PAIR_AT: readonly [number, number] = [TRACK_AT[0] - PAIR_HEEL, WALK_FOOT - PAIR_FEET];
-
-const PAIR_TRAVEL = TRACK_AT[0] + TRACK_W - PAIR_NOSE - 1 - PAIR_AT[0];
+// The fixed top-left anchor of ui-loading.
+const PAIR_AT: readonly [number, number] = [6, 379];
 
 // The skyline, far back: (left, width, top, wall) for each downtown tower, its foot hidden behind
 // the street.
@@ -1397,29 +1370,11 @@ function loading(): Canvas {
   return cv;
 }
 
-// The sidewalk being walked: Lady's paw prints in dslate (3.39:1 on the night sidewalk's grey), left
-// and right paws 8px apart, staggered on two rows, from Casey's heel to the Pet shop's door.
-function loadingTrack(): Clear {
-  const cv = clear(TRACK_W, TRACK_H);
-  for (let n = 0, x = 0; x < TRACK_W - 4; n++, x += 8) {
-    const y = n % 2 ? 0 : 4;
-    PAW.forEach((row, j) => {
-      [...row].forEach((c, i) => {
-        if (c === "#") {
-          cv.fill(x + i, y + j, 1, 1, "dslate");
-        }
-      });
-    });
-  }
-  return cv;
-}
-
 const SCREENS: ReadonlyMap<string, () => Canvas> = new Map<string, () => Canvas>([
   ["logo", logo],
   ["screen-home", home],
   ["screen-end", end],
   ["screen-loading", loading],
-  ["ui-loading-track", loadingTrack],
 ]);
 
 // ui-loading is drawn on a PAIR_DESIGN design grid at PAIR_SCALE on a Mini that keeps 1px lines and
@@ -1726,8 +1681,7 @@ function ui(cv: Canvas, screen: string): void {
     cv.fill(32, 512, 296, 44, "orange");
     cv.fill(32, 508, 296, 44, "amber");
   } else if (screen === "screen-loading") {
-    cv.paste(loadingTrack().img, TRACK_AT[0], TRACK_AT[1]);
-    cv.paste(toImage(pair(0)), PAIR_AT[0] + Math.round(PAIR_TRAVEL * 0.4), PAIR_AT[1]);
+    cv.paste(toImage(pair(0)), PAIR_AT[0], PAIR_AT[1]);
   }
 }
 
