@@ -6,7 +6,7 @@ import type { Scene } from "phaser";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { HOME_LAYOUT, homeBarButtons } from "../home/homeLayout.ts";
-import { listenHomeBar } from "./homeBarPress.ts";
+import { listenHomeBar, routeHomeBar } from "./homeBarPress.ts";
 import { openOverlay } from "./overlay.ts";
 
 vi.mock("phaser", () => ({ Scenes: { Events: {} } }));
@@ -59,4 +59,21 @@ describe("the shared menu entry under a home overlay", () => {
       });
     }
   });
+});
+
+it("routes a paused screen's native bar through the active overlay and preserves its input guard", () => {
+  const overlay = fakeOverlay();
+  const close = vi.fn();
+  Object.assign(overlay.scene.sys, { isActive: () => true });
+  overlay.scene.scene.isActive = () => true;
+  overlay.scene.input.enabled = true;
+  const source = { game: overlay.scene.game, sys: { isActive: () => false } } as Scene;
+  listenHomeBar(overlay.scene, close);
+  expect(routeHomeBar(source, "menu")).toBe(true);
+  expect(close).toHaveBeenCalledOnce();
+  overlay.scene.input.enabled = false;
+  expect(routeHomeBar(source, "menu")).toBe(true);
+  expect(close).toHaveBeenCalledOnce();
+  overlay.scene.events.emit("shutdown");
+  expect(routeHomeBar(source, "menu")).toBe(false);
 });

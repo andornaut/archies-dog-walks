@@ -15,6 +15,7 @@ import {
   sheetArt,
   sheetThreeSlice,
 } from "../../ui/dom/artElements.ts";
+import { guardNativeInput } from "../../ui/dom/modalLifecycle.ts";
 import {
   blockPlace,
   createTextLine,
@@ -63,8 +64,10 @@ export interface DomSettingsInput
   readonly view: SettingsView;
 }
 
-export interface DomSettings {
-  destroy(): void;
+export interface DomSettings extends Pick<
+  DomQuestionPanel,
+  "accepts" | "capture" | "destroy" | "setEnabled" | "setInert" | "setDimmed"
+> {
   // The row (by index) whose label and volume shake and flash, refused, as the canvas's do.
   refuse(index: number, reducedMotion: boolean): void;
   setShown(shown: boolean): void;
@@ -119,12 +122,14 @@ let described = 0;
 
 // A row's element and its parts, placed from the row's view as it stands.
 function rowPart(
-  doc: Document,
+  layer: UiLayer,
   input: DomSettingsInput,
   current: () => SettingsView,
+  panel: () => DomQuestionPanel,
   index: number,
   burst: (event: PointerEvent) => void,
 ) {
+  const doc = layer.element.ownerDocument;
   const view = () => current().rows[index] as SettingsRowView;
   const first = view();
   const element = doc.createElement("div");
@@ -218,48 +223,66 @@ function rowPart(
   // volume row.
   const at = (event: PointerEvent) => input.toGame({ x: event.clientX, y: event.clientY });
   element.addEventListener("mousedown", (event) => event.preventDefault());
-  element.addEventListener("pointerdown", (event) => {
-    burst(event);
-    if (element.hasPointerCapture(event.pointerId)) {
-      element.releasePointerCapture(event.pointerId);
+  let pressing: SettingsTarget | undefined;
+  let sliding = false;
+  const cancel = () => {
+    const wasPressing = pressing !== undefined;
+    const wasSliding = sliding;
+    pressing = undefined;
+    sliding = false;
+    if (wasPressing) {
+      input.press.up(undefined, true);
     }
-    const target = rowTarget(view());
-    const win = doc.defaultView;
-    if (target !== undefined) {
-      input.press.down(target);
-      const lift = (up: PointerEvent) => {
-        win?.removeEventListener("pointerup", lift);
-        win?.removeEventListener("pointercancel", lift);
-        const over = (up.target as Element | null)?.closest?.(".adw-row");
-        const released = over === element ? target : undefined;
-        input.press.up(
-          up.type === "pointercancel" ? undefined : released,
-          up.type === "pointercancel",
-        );
-      };
-      win?.addEventListener("pointerup", lift);
-      win?.addEventListener("pointercancel", lift);
-      return;
+    if (wasSliding) {
+      input.slide.end(true);
     }
-    if (view().kind === "slider") {
-      const { key } = view();
-      if (key === "musicVolume" || key === "sfxVolume") {
-        input.slide.start(key, at(event).x);
-      }
-      const move = (moved: PointerEvent) => input.slide.move(at(moved).x);
-      const end = (up: PointerEvent) => {
-        win?.removeEventListener("pointermove", move);
-        win?.removeEventListener("pointerup", end);
-        win?.removeEventListener("pointercancel", end);
-        input.slide.end(up.type === "pointercancel");
-      };
-      win?.addEventListener("pointermove", move);
-      win?.addEventListener("pointerup", end);
-      win?.addEventListener("pointercancel", end);
-    }
-  });
+  };
+  const stopInput = guardNativeInput(
+    {
+      cancel,
+      down: (event) => {
+        burst(event);
+        if (element.hasPointerCapture(event.pointerId)) {
+          element.releasePointerCapture(event.pointerId);
+        }
+        const target = rowTarget(view());
+        if (target !== undefined) {
+          pressing = target;
+          input.press.down(target);
+        } else if (view().kind === "slider") {
+          const { key } = view();
+          if (key === "musicVolume" || key === "sfxVolume") {
+            sliding = true;
+            input.slide.start(key, at(event).x);
+          }
+        }
+      },
+      gate: { accepts: () => panel().accepts(), capture: () => panel().capture() },
+      move: (event) => {
+        if (sliding) {
+          input.slide.move(at(event).x);
+        }
+      },
+      subscribe: layer.input.subscribe,
+      up: (event, cancelled) => {
+        const target = pressing;
+        const wasSliding = sliding;
+        pressing = undefined;
+        sliding = false;
+        if (target !== undefined) {
+          const over = (event.target as Element | null)?.closest?.(".adw-row");
+          input.press.up(!cancelled && over === element ? target : undefined, cancelled);
+        }
+        if (wasSliding) {
+          input.slide.end(cancelled);
+        }
+      },
+    },
+    element,
+  );
 
   return {
+    destroy: stopInput,
     element,
     place,
     refuse: (reducedMotion: boolean) => {
@@ -342,7 +365,16 @@ export function showSettings(layer: UiLayer, input: DomSettingsInput): DomSettin
   let current = input.view;
   const burst = (event: PointerEvent) =>
     addTapBurst(layer, input.toGame({ x: event.clientX, y: event.clientY }));
-  const rows = current.rows.map((_, i) => rowPart(doc, input, () => current, i, burst));
+  const rows = current.rows.map((_, i) =>
+    rowPart(
+      layer,
+      input,
+      () => current,
+      () => panel,
+      i,
+      burst,
+    ),
+  );
   const separators = current.separators.map(() => {
     const element = doc.createElement("span");
     element.className = "adw-framed adw-separator";
@@ -375,18 +407,41 @@ export function showSettings(layer: UiLayer, input: DomSettingsInput): DomSettin
   });
   let steps: DomQuestionPanel | undefined;
   let shown = true;
+  let enabled = true;
+  let inert = false;
+  let dimmed = false;
   const placeAll = (scale: DomScale) => {
     for (const part of parts) {
       part.place(scale);
     }
   };
   return {
+    accepts: () => (steps ?? panel).accepts(),
+    capture: () => (steps ?? panel).capture(),
     destroy() {
+      for (const row of rows) {
+        row.destroy();
+      }
       steps?.destroy();
       panel.destroy();
     },
     refuse(index, reducedMotion) {
       rows[index]?.refuse(reducedMotion);
+    },
+    setDimmed(value) {
+      dimmed = value;
+      panel.setDimmed(value);
+      steps?.setDimmed(value);
+    },
+    setEnabled(value) {
+      enabled = value;
+      panel.setEnabled(value);
+      steps?.setEnabled(value);
+    },
+    setInert(value) {
+      inert = value;
+      panel.setInert(value);
+      steps?.setInert(value);
     },
     setShown(show) {
       shown = show;
@@ -399,6 +454,10 @@ export function showSettings(layer: UiLayer, input: DomSettingsInput): DomSettin
       if (view.steps !== undefined && steps === undefined) {
         panel.setShown(false);
         steps = showSteps(layer, input, view.steps);
+        steps.setEnabled(enabled);
+        steps.setInert(inert);
+        steps.setDimmed(dimmed);
+        steps.setShown(shown);
       } else if (view.steps === undefined && steps !== undefined) {
         steps.destroy();
         steps = undefined;

@@ -21,6 +21,7 @@ export const HOME_PAGE_OPENING_EVENT = "home-page-opening";
 type HomePage = "help" | "logbook" | "menu" | "settings";
 
 const homePageGuard = openGuard();
+const barRoutes = new WeakMap<object, Map<Scene, () => void>>();
 
 // Opens page from the top bar, tapped on from, at once: over the Pet shop while it is open, else
 // over the start screen, in place of every other overlay and card. The overlays it closes and
@@ -66,12 +67,36 @@ export function exitGame(): void {
 // The topmost home overlay routes the shared controls while its underlying scene is paused.
 // Opening navigation clears replaceable overlays through HOME_PAGE_OPENING_EVENT.
 export function listenHomeBar(scene: Scene, close: () => void, clear: () => void = close): void {
+  const routes = barRoutes.get(scene.game) ?? new Map<Scene, () => void>();
+  routes.set(scene, close);
+  barRoutes.set(scene.game, routes);
+  scene.events.once("shutdown", () => {
+    routes.delete(scene);
+    if (routes.size === 0) {
+      barRoutes.delete(scene.game);
+    }
+  });
   onSceneEvent(scene, scene.game.events, HOME_PAGE_OPENING_EVENT, clear);
   listenTargetPress<HomeBarButton>(scene, {
     onPressed: () => undefined,
     onTap: (button) => pressHomeBar(scene, close, button),
     targetAt: (x, y) => homeBarButtonAt(x, y),
   });
+}
+
+// Native controls route through the active overlay, even when their originating screen is paused.
+export function routeHomeBar(source: Scene, button: HomeBarButton): boolean {
+  const route = [...(barRoutes.get(source.game) ?? [])]
+    .reverse()
+    .find(([scene]) => scene.sys.isActive());
+  if (route === undefined) {
+    return false;
+  }
+  const [scene, close] = route;
+  if (scene.input.enabled) {
+    pressHomeBar(scene, close, button);
+  }
+  return true;
 }
 
 function pressHomeBar(scene: Scene, close: () => void, button: HomeBarButton): void {
