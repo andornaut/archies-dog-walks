@@ -3,7 +3,13 @@ import { describe, expect, it } from "vitest";
 import { FakeDocument } from "../../testing/fakeDom.ts";
 import { dimColour } from "../dimArt.ts";
 import { PALETTE } from "../palette.ts";
-import { DIM_ART_ATTRIBUTE, dimCss, followModalUnderlay, setRampDimmed } from "./rampDim.ts";
+import {
+  DIM_ART_ATTRIBUTE,
+  dimCss,
+  dimDrawn,
+  followModalUnderlay,
+  setRampDimmed,
+} from "./rampDim.ts";
 
 const hex = (colour: number) => `#${colour.toString(16).padStart(6, "0")}`;
 
@@ -101,4 +107,43 @@ it("overrides registered native button skins while covered and restores the orig
   setRampDimmed(root as unknown as HTMLElement, true);
   setRampDimmed(root as unknown as HTMLElement, false);
   expect(properties.get("--ui-button-go")).toBe('url("blob:original")');
+});
+
+it("dims descendant-local skins and refreshed children once, then restores them on disposal", () => {
+  const doc = new FakeDocument();
+  const root = doc.createElement("div");
+  const child = doc.createElement("div");
+  const added = doc.createElement("div");
+  const skin = (element: typeof root, value: string) => {
+    const properties = new Map([["--ui-button-go", value]]);
+    const priorities = new Map([["--ui-button-go", "important"]]);
+    Object.assign(element.style, {
+      getPropertyPriority: (key: string) => priorities.get(key) ?? "",
+      getPropertyValue: (key: string) => properties.get(key) ?? "",
+      setProperty: (key: string, next: string, priority = "") => {
+        properties.set(key, next);
+        priorities.set(key, priority);
+      },
+    });
+    return { priorities, properties };
+  };
+  const original = skin(child, 'url("blob:home")');
+  const dynamic = skin(added, 'url("blob:refreshed")');
+  root.append(child);
+  const stop = followModalUnderlay(
+    { accepts: () => false, subscribe: () => () => undefined },
+    root as unknown as HTMLElement,
+  );
+  expect(original.properties.get("--ui-button-go")).toContain("ui-button-go-dim");
+  expect(original.priorities.get("--ui-button-go")).toBe("important");
+  root.append(added);
+  dimDrawn(added as unknown as HTMLElement, true);
+  expect(dynamic.properties.get("--ui-button-go")).toContain("ui-button-go-dim");
+  stop.refresh();
+  expect(original.properties.get("--ui-button-go")).toContain("ui-button-go-dim");
+  stop();
+  expect(original.properties.get("--ui-button-go")).toBe('url("blob:home")');
+  expect(dynamic.properties.get("--ui-button-go")).toBe('url("blob:refreshed")');
+  expect(original.priorities.get("--ui-button-go")).toBe("important");
+  expect(dynamic.priorities.get("--ui-button-go")).toBe("important");
 });

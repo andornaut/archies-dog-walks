@@ -268,6 +268,7 @@ export const DOM_DIM_ART_KEYS: ReadonlySet<string> = new Set([
   ...DOM_CHOICE_CARD_ART.sheets,
   "ui-button-go",
   "ui-panel",
+  "ui-section",
   "ui-zone-banner",
   ...celebrationArtKeys(gameData),
 ]);

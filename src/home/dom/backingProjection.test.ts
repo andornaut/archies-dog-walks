@@ -8,6 +8,8 @@ import { SLICES } from "../../data/layout.ts";
 import { FakeDocument, type FakeElement } from "../../testing/fakeDom.ts";
 import { gameFont } from "../../testing/fontInk.ts";
 import { newPlayerSave, testContext } from "../../testing/saves.ts";
+import { dimArtPath } from "../../ui/dimArt.ts";
+import { DIM_ART_ATTRIBUTE, setRampDimmed } from "../../ui/dom/rampDim.ts";
 import { sheetFrame } from "../../ui/dom/sheetFrames.ts";
 import { artPixel, domScale, fontPixel, gridRect, gridY } from "../../ui/domScale.ts";
 import { TEXT_SCALE } from "../../ui/textFit.ts";
@@ -40,7 +42,7 @@ it("keeps picker headings clear of fills within logical bands at fractional fits
     bonus: null,
     sections,
   });
-  await view.ready;
+  await expect(view.ready).resolves.toContain(dimArtPath("sheet", "ui-section"));
   const frames = [...view.element.children].filter((child) => child.className === "adw-art");
   const labels = [...view.element.children].filter((child) => child.className.includes("adw-text"));
   const specifications = homeSectionViews(sections);
@@ -63,6 +65,17 @@ it("keeps picker headings clear of fills within logical bands at fractional fits
         (metrics.capTop + metrics.capHeight) * fontPixel(scale, TEXT_SCALE);
       expect(inkBottom).toBeLessThan(gridY(scale, section.rect.y + 23));
     });
+    const slices = frames
+      .flatMap((frame) => [...frame.children])
+      .map((slice) => slice as HTMLElement);
+    const original = slices.map((slice) => slice.style.backgroundImage);
+    setRampDimmed(view.element, true);
+    for (const slice of slices) {
+      expect(slice.getAttribute(DIM_ART_ATTRIBUTE)).toBe(dimArtPath("sheet", "ui-section"));
+      expect(slice.style.backgroundImage).toBe(`url("${dimArtPath("sheet", "ui-section")}")`);
+    }
+    setRampDimmed(view.element, false);
+    expect(slices.map((slice) => slice.style.backgroundImage)).toEqual(original);
   }
 });
 

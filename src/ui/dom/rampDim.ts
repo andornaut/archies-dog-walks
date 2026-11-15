@@ -82,37 +82,58 @@ function dimInline(element: HTMLElement, dimmed: boolean): void {
   }
 }
 
-const originalProperties = new WeakMap<HTMLElement, Map<string, string>>();
+interface InlineProperty {
+  readonly priority: string;
+  readonly value: string;
+}
+const originalProperties = new WeakMap<HTMLElement, Map<string, InlineProperty>>();
+
+function dimVariables(
+  properties: readonly (readonly [string, string])[],
+  dimmed: boolean,
+  onlyLocal: boolean,
+  element: HTMLElement,
+): void {
+  let saved = originalProperties.get(element);
+  if (dimmed) {
+    for (const [name, value] of properties) {
+      const original = element.style.getPropertyValue?.(name) ?? "";
+      // Inherited properties need one root override; local skins must override their own value.
+      if (!onlyLocal || original !== "" || saved?.has(name)) {
+        saved ??= new Map();
+        if (!saved.has(name)) {
+          saved.set(name, {
+            priority: element.style.getPropertyPriority?.(name) ?? "",
+            value: original,
+          });
+        }
+        element.style.setProperty(name, value, saved.get(name)?.priority ?? "");
+      }
+    }
+    if (saved !== undefined) {
+      originalProperties.set(element, saved);
+    }
+  } else if (saved !== undefined) {
+    for (const [name, original] of saved) {
+      element.style.setProperty(name, original.value, original.priority);
+    }
+    originalProperties.delete(element);
+  }
+  for (const child of element.children) {
+    dimVariables(properties, dimmed, true, child as HTMLElement);
+  }
+}
 
 // root and everything under it drawn palette-dimmed, or as it was.
 export function setRampDimmed(root: HTMLElement, dimmed: boolean): void {
-  if (dimmed) {
-    let saved = originalProperties.get(root);
-    if (saved === undefined) {
-      saved = new Map();
-      originalProperties.set(root, saved);
-    }
-    for (const [name, value] of dimProperties()) {
-      if (!saved.has(name)) {
-        saved.set(name, root.style.getPropertyValue?.(name) ?? "");
-      }
-      root.style.setProperty(name, value);
-    }
-  } else {
-    const saved = originalProperties.get(root);
-    if (saved !== undefined) {
-      for (const [name, value] of saved) {
-        root.style.setProperty(name, value);
-      }
-      originalProperties.delete(root);
-    }
-  }
+  dimVariables(dimProperties(), dimmed, false, root);
   dimInline(root, dimmed);
 }
 
 // A part drawn again under root while it is dimmed, dimmed with it.
 export function dimDrawn(element: HTMLElement, dimmed: boolean): void {
   if (dimmed) {
+    dimVariables(dimProperties(), true, true, element);
     dimInline(element, true);
   }
 }
