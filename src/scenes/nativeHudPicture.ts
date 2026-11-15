@@ -91,6 +91,7 @@ export function createNativeHudPicture(layer: UiLayer, picture: ScenePicture): N
         }
         return () => scales.delete(listener);
       },
+      press: { canvasAllowed: () => false, claim: () => undefined },
       ready: () => alive && layer.ready(),
       reveal: (urls, element) => {
         if (!content.contains(element)) {

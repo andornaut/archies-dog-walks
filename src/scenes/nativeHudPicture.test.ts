@@ -57,6 +57,8 @@ it("projects each passive strip without scaling twice and follows its actual con
   expect(second!.scale()).toEqual({ dpr: 3, origin: { x: 37.2, y: 167.9 }, unit: 1.25 });
   expect(gridTransform(second!.scale())).toContain("scale(0.3333333333333333)");
   expect(first!.input).toBe(layer.input);
+  expect(first!.press.claim()).toBeUndefined();
+  expect(first!.press.canvasAllowed()).toBe(false);
   const changed = vi.fn(),
     ready = vi.fn();
   second!.onScale(changed);
