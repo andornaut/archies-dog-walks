@@ -127,7 +127,7 @@ export function pauseMenuLayout(
   area: Rect,
   parts: QuestionParts,
 ): PauseMenuLayout {
-  return panelLayout(body, area, parts, false);
+  return panelLayout(body, area, parts, true);
 }
 
 // The capitals' top of each part of a note drawn in parts down its plate, one under another,

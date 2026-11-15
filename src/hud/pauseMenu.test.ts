@@ -10,7 +10,7 @@ import { dollarText } from "../presentation/currency.ts";
 import { walkLength } from "../rules/route.ts";
 import { bodyTextWidth } from "../testing/bodyFont.ts";
 import { fontFileMetrics, inkWidth } from "../testing/fontInk.ts";
-import { modalActionWidth } from "../ui/modal/layout.ts";
+import { MODAL, modalActionWidth } from "../ui/modal/layout.ts";
 import { PAUSE_MENU_ITEMS } from "../ui/navigationMenu.ts";
 import { cents } from "../units.ts";
 import {
@@ -142,7 +142,12 @@ describe("the pause menu's note", () => {
     expect(lines.filter((line) => bodyWidth(line) > room)).toEqual([]);
     expect(lines.length).toBeLessThanOrEqual(PAUSE_NOTE_LINES);
     const parts = { buttonCount: PAUSE_MENU_ITEMS.length, noteLines: PAUSE_NOTE_LINES };
-    const { notePlate, panel } = pauseMenuLayout(BODY, walkView, parts);
+    const { buttons, notePlate, panel } = pauseMenuLayout(BODY, walkView, parts);
+    const first = buttons[0]!;
+    const resume = buttons.at(-1)!;
+    expect(notePlate.y + notePlate.height).toBeLessThan(first.y);
+    expect(resume.x + resume.width / 2).toBe(panel.x + panel.width / 2);
+    expect(panel.y + panel.height - resume.y - resume.height).toBe(MODAL.pad);
     expect(panel.y + panel.height).toBeLessThanOrEqual(walkView.y + walkView.height);
     const [top = 0] = notePartTops(BODY, notePlate, [PAUSE_NOTE_LINES]);
     const inkBottom = top + inkRowsOfLines(BODY, PAUSE_NOTE_LINES) * NOTE_PLATE.scale;
