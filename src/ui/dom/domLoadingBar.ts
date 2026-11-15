@@ -11,8 +11,8 @@ export interface LoadingBar {
   dispose(): void;
 }
 
-// One page-lifetime loading indicator. Only its width follows the game viewport; the vertical
-// CSS size is independent of logical fit, renderer backing resolution and device pixel ratio.
+// Mount outside the turned body so the one page-lifetime strip stays on the physical viewport
+// top. Only its width scales; height is independent of frame turn, renderer fit and DPR.
 export function mountDomLoadingBar(progress: ProgressSource, parent: HTMLElement): LoadingBar {
   const view = parent.ownerDocument.createElement("div");
   view.className = "adw-loading-bar";
@@ -20,7 +20,7 @@ export function mountDomLoadingBar(progress: ProgressSource, parent: HTMLElement
     height: `${LOADING_BAR_HEIGHT}px`,
     left: "0px",
     pointerEvents: "none",
-    position: "absolute",
+    position: "fixed",
     top: "0px",
     transformOrigin: "top left",
     width: `${SCREEN_CONFIG.width}px`,

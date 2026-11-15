@@ -29,10 +29,13 @@ it.each([1, 2])(
       }
     }
     const doc = new ProgressDocument();
-    const parent = Object.assign(doc.createElement("div"), { clientWidth: 575 });
+    const parent = Object.assign(doc.createElement("html"), { clientWidth: 575 });
+    const body = doc.createElement("body");
+    body.style.transform = "translateY(575px) rotate(-90deg)";
+    parent.append(body);
     const source = createProgressState();
     const widget = mountDomLoadingBar(source, parent as unknown as HTMLElement);
-    const view = parent.children[0]!;
+    const view = parent.children[1]!;
     const bar = view.children[0]!;
     const task = source.begin();
     task.progress(0.5);
@@ -43,10 +46,18 @@ it.each([1, 2])(
     expect(view.style).toMatchObject({
       height: `${LOADING_BAR_HEIGHT}px`,
       left: "0px",
+      position: "fixed",
       top: "0px",
       transform: `scaleX(${575 / SCREEN_CONFIG.width})`,
     });
     expect(bar.style.height).toBe(`${LOADING_BAR_HEIGHT}px`);
+    // Landscape frame turning affects only body, never the physical-top sibling.
+    parent.clientWidth = 1280;
+    resized();
+    expect(view.parent).toBe(parent);
+    expect(body.children).toEqual([]);
+    expect(view.style.transform).toBe(`scaleX(${1280 / SCREEN_CONFIG.width})`);
+    expect(view.style.top).toBe("0px");
     parent.clientWidth = 390;
     resized();
     expect(widget.element).toBe(view);
@@ -55,7 +66,7 @@ it.each([1, 2])(
     task.finish();
     widget.dispose();
     widget.dispose();
-    expect(parent.children).toEqual([]);
+    expect(parent.children).toEqual([body]);
     expect(disconnect).toHaveBeenCalledOnce();
   },
 );

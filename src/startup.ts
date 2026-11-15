@@ -17,7 +17,6 @@ import { startupLoad, startupProgress } from "./ui/startupProgress.ts";
 trackInputModality(document);
 
 // Module startup hands the same widget over to the game's real loading stream.
-const parent = document.getElementById("game");
 const nativeProgress = createProgressState();
 const gameProgress = createLayeredProgress(globalThis, LOADING_TIMING, {
   background: loadingProgress,
@@ -27,7 +26,7 @@ const progress = createLayeredProgress(globalThis, LOADING_TIMING, {
   background: gameProgress,
   foreground: startupProgress,
 });
-const loading = parent === null ? undefined : mountDomLoadingBar(progress, parent);
+const loading = mountDomLoadingBar(progress, document.documentElement);
 
 // Module download and renderer setup have no measurable denominator.
 void import("./main.ts")
