@@ -12,9 +12,7 @@ import { MENU_TEXT_FIELDS } from "./menuText.ts";
 import type { PageFill } from "./shopPageView.ts";
 import { DETAIL_TEXT_WIDTH, detailPanel, detailTextTops, STATS_LAYOUT } from "./statsLayout.ts";
 
-// A badge's card, the one every screen opens on a badge, laid out as one view both renderers
-// draw: the canvas's (addBadgeDetail in src/scenes/badges.ts) and the HTML interface's
-// (src/hud/dom/badgeCard.ts). Every rect and text origin is in game pixels.
+// Every screen uses the same native badge card view and logical game-pixel geometry.
 
 export interface BadgeCardView {
   // The badge at 2x, its earned or locked frame.

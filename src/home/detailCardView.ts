@@ -16,9 +16,8 @@ import {
   HOME_LAYOUT,
 } from "./homeLayout.ts";
 
-// A detail card (a held dog's, walker's or gear item's, or what the walk explains) laid out as
-// one view both renderers draw: the canvas's (drawDetailCard in src/scenes/homePanels.ts) and the
-// HTML interface's (src/hud/dom/detailCard.ts). Every rect and text origin is in game pixels.
+// A detail card view for native held-item and walk explanation panels.
+// Every rectangle and text origin is in logical game pixels.
 
 // Art as the canvas has it loaded: an image's or a sheet frame's size in art pixels, or
 // undefined while the key's art is missing.

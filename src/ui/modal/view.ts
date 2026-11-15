@@ -78,9 +78,7 @@ export function panelButton(
   };
 }
 
-// A modal card laid out by its caller (an update notice's, updateModalLayout): the ui-detail-card
-// over card, its title on its title row beside the close control, and its buttons, as the canvas
-// draws it (addModalCard, addMenuButton).
+// A native modal card keeps its caller-owned bounds, shared title row and action geometry.
 export function modalCardView(
   measure: PanelMeasure,
   card: Rect,

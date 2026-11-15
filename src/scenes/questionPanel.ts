@@ -1,6 +1,6 @@
-import { containsPoint, type Point, type Rect } from "@andornaut/game-kit/rect";
+import { type Point, type Rect } from "@andornaut/game-kit/rect";
 import { pageToGame } from "@andornaut/game-kit/view/pagePoint";
-import { Core, type GameObjects, type Scene, Scenes } from "phaser";
+import { Core, type Scene, Scenes } from "phaser";
 
 import { artUrl } from "../assets/artFiles.ts";
 import { gameData } from "../data/index.ts";
@@ -25,24 +25,16 @@ import {
 import { pillKind } from "../hud/effectNames.ts";
 import type { pauseMenuLayout } from "../hud/pauseMenu.ts";
 import { questionPanelView } from "../hud/questionPanelView.ts";
-import { cardNumberForKey, menuKeyActs } from "../input/keyBindings.ts";
 import { pageFrameTurn } from "../pwa/index.ts";
 import { loadSheet } from "../ui/dom/sheetFrames.ts";
 import { uiLayer } from "../ui/dom/uiLayer.ts";
-import { rectIndexAt } from "../ui/grid.ts";
 import { type CardAction, type PanelNotePart, type QuestionPanelView } from "../ui/modal/types.ts";
 import { modalCardView } from "../ui/modal/view.ts";
-import { PALETTE } from "../ui/palette.ts";
-import { centreBackedText } from "../ui/phaser/backedText.ts";
 import { displayBitmapFont, hasDisplayFont } from "../ui/phaser/displayText.ts";
-import { addModalShade, fillRect } from "../ui/phaser/draw.ts";
-import { addPixelText, pixelBitmapFont } from "../ui/phaser/pixelText.ts";
+import { pixelBitmapFont } from "../ui/phaser/pixelText.ts";
 import { pillColours } from "./effectNameColours.ts";
-import { addCardClose, addCardTitle, drawDetailCardView } from "./homePanels.ts";
 import { canvasPanelMeasure } from "./modalMeasure.ts";
 import { trackNativeSceneInput } from "./overlay.ts";
-import { listenTargetPress } from "./targetPress.ts";
-import { addMenuButton, addRimmedPanel, addTapBurst, type MenuButton } from "./uiKit.ts";
 
 // A button on the panel: its label and what a press, a tap or its number key, does.
 export interface PanelEntry {
@@ -84,64 +76,7 @@ export function questionView(scene: Scene, area: Rect, question: QuestionPanel):
   });
 }
 
-// The pause menu's panel, and each question laid out as it is (the Home question, Quit?), drawn
-// on the canvas from its view (questionPanelView). A press counts where it began and ended on
-// the same button or the close control, which wins where their tap areas meet, so the release
-// that closes the panel is never what is under it. Returns what a tap outside the panel must
-// miss: the panel and the buttons' hit areas.
-export function addQuestionPanel(scene: Scene, area: Rect, question: QuestionPanel): Rect[] {
-  const { entries } = question;
-  const view = questionView(scene, area, question);
-  const { panel } = view;
-
-  addRimmedPanel(scene, panel);
-  addCardTitle(scene, panel, question.title, true, view.titleY);
-  const closeButton = addCardClose(scene, scene.add.container(0, 0), panel, false);
-  const buttons: MenuButton[] = view.buttons.map(({ primary, rect, text }) =>
-    addMenuButton(scene, rect, text.text, { available: true, primary }),
-  );
-  if (view.notePlate !== undefined) {
-    fillRect(scene.add.graphics(), PALETTE.tan, view.notePlate);
-    const labels = view.note.map((line) =>
-      addPixelText(scene, line.centreX, line.capTop, line.text, {
-        colour: line.colour,
-        originX: 0.5,
-        scale: line.scale,
-      }),
-    );
-    centreBackedText(view.notePlate, labels);
-  }
-
-  // A button by its index, or the close control.
-  type Target = number | "close";
-  listenTargetPress<Target>(scene, {
-    onDown: (pointer) => addTapBurst(scene, pointer.x, pointer.y),
-    onPressed: (pressed) => {
-      buttons.forEach((button, i) => button.setPressed(i === pressed));
-      closeButton.setPressed(pressed === "close");
-    },
-    onTap: (target) => (target === "close" ? question.close() : entries[target]?.press()),
-    targetAt: (x, y) =>
-      containsPoint(view.close.hit, x, y)
-        ? "close"
-        : rectIndexAt(
-            view.buttons.map(({ hit }) => hit),
-            x,
-            y,
-          ),
-  });
-  scene.input.keyboard?.on("keydown", (event: KeyboardEvent) => {
-    const presses = question.numberPresses ?? entries.map(({ press }) => press);
-    const number = cardNumberForKey(presses.length, event.code);
-    if (number !== undefined && menuKeyActs(event.repeat, event.code)) {
-      presses[number - 1]?.();
-    }
-  });
-  return [...view.covered];
-}
-
-// The HTML layer and the bitmap fonts that lay out its web fonts' text, where the page's switch
-// is on and both are ready, else undefined: the canvas draws the panel.
+// Native views mount only when the shared layer and the scene's bitmap font metrics are ready.
 export function htmlPanelPlace(scene: Scene) {
   const layer = uiLayer();
   const body = pixelBitmapFont(scene, "body");
@@ -219,9 +154,7 @@ function showHtmlPanel(
   return followScene(scene, dimsUnder ? dimOver(panel) : panel);
 }
 
-// The question in the HTML layer, laid out as the canvas draws it (questionPanelView), over the
-// HTML paused under it palette-dimmed where dimsUnder is set (pauseDimsHtml). Returns what a tap
-// outside must miss, or undefined where the canvas must draw it (addQuestionPanel).
+// The native question panel retains its view, actions and caller-owned outside-tap regions.
 export function addHtmlQuestionPanel(
   scene: Scene,
   area: Rect,
@@ -249,10 +182,7 @@ export interface CardEntry extends CardAction {
   readonly press: () => void;
 }
 
-// A modal card in the HTML layer over card, laid out as the canvas draws it (modalCardView): its
-// title, its close control doing close, and its buttons, which number keys never press, over the
-// shared native palette underlay. Returns it, for its scene to destroy as the card
-// closes, or undefined where the canvas must draw it.
+// A native modal card with caller-owned actions; undefined while its resources are pending.
 export function addHtmlModalCard(
   scene: Scene,
   card: Rect,
@@ -277,11 +207,7 @@ export function addHtmlModalCard(
   return followScene(scene, panel);
 }
 
-// A detail card in the HTML layer, laid out as the canvas draws it (detailCardView), its close
-// control doing close, or a picture of one on a card that takes no presses, as the walk's
-// explanation, which a press anywhere closes, shown pressed while closePressed, over the HTML
-// shared native palette underlay. Returns it, for its scene to destroy as the card closes, or
-// undefined where the canvas must draw it (drawDetailCard).
+// Native detail content shares the modal palette, captured dismissal and close semantics.
 export function addHtmlDetailCard(
   scene: Scene,
   view: DetailCardView,
@@ -303,8 +229,7 @@ export function addHtmlDetailCard(
   return followScene(scene, panel);
 }
 
-// An HTML panel a scene that draws itself again on every change keeps while what it shows is
-// the same: the panel shown for key, or undefined where the canvas draws it.
+// A native panel is retained while its presentation key is unchanged.
 export interface KeptPanel {
   readonly key: string;
   readonly panel: DomQuestionPanel | undefined;
@@ -324,34 +249,7 @@ export function keepPanel(
   return key === undefined ? undefined : { key, panel: show() };
 }
 
-// A held item's detail card over a dim layer over dim, its close control shown pressed or not,
-// which a press anywhere closes: in HTML, kept while it shows the same (keepPanel), over the HTML
-// shade where HTML lies under it (htmlUnder), else over the canvas's dim; else on the canvas
-// (drawDetailCardView). Returns the HTML kept.
-export function addDetailCardOver(
-  scene: Scene,
-  parent: GameObjects.Container,
-  dim: Rect,
-  closePressed: boolean,
-  view: DetailCardView,
-  kept: KeptPanel | undefined,
-  htmlUnder = false,
-): KeptPanel | undefined {
-  const html = keepPanel(kept, JSON.stringify([view, closePressed, htmlUnder]), () =>
-    addHtmlDetailCard(scene, view, undefined, closePressed),
-  );
-  if (html?.panel === undefined) {
-    drawDetailCardView(scene, parent, dim, closePressed, view);
-  } else if (!htmlUnder) {
-    parent.add(addModalShade(scene, dim));
-  }
-  return html;
-}
-
-// The purchase confirm in the HTML layer, laid out as the canvas draws it
-// (purchaseConfirmCardView), each answer and the close control, which cancels, doing answer, over
-// the shared native palette underlay. Returns it, for its scene to destroy as the confirm
-// closes, or undefined where the canvas must draw it (drawPurchaseConfirm).
+// Native purchase confirmation forwards the original answer and close actions.
 export function addHtmlPurchaseConfirm(
   scene: Scene,
   view: PurchaseConfirmCardView,
@@ -379,10 +277,7 @@ function everyFrame(scene: Scene): (step: () => void) => () => void {
   };
 }
 
-// A badge's card in the HTML layer, laid out as the canvas draws it (badgeCardView), over the
-// shared native palette underlay, with confetti played by the scene clock.
-// Returns it, for its scene to destroy as the card closes, or undefined where the canvas must
-// draw it (drawBadgeCard).
+// Native badge detail retains its view and optional captured area dismissal.
 export function addHtmlBadgeCard(
   scene: Scene,
   view: BadgeCardView,
@@ -490,9 +385,7 @@ function dimOver(panel: DomQuestionPanel): DomQuestionPanel {
   };
 }
 
-// A badge celebration's title, names, close control and button in the HTML layer over the panel
-// the canvas draws, each control doing close. Returns it, or undefined where the canvas must
-// draw them.
+// Native badge celebration text and controls share the caller's close action.
 export function addHtmlBadgeCelebration(
   scene: Scene,
   view: BadgeCelebrationView,

@@ -16,9 +16,7 @@ import {
 import type { ConfirmChoice, ConfirmLines } from "./purchaseConfirm.ts";
 import { purchaseConfirmLayout } from "./purchaseConfirmLayout.ts";
 
-// The purchase confirm laid out as one view both renderers draw: the canvas's
-// (drawPurchaseConfirm in src/scenes/purchaseConfirmView.ts) and the HTML interface's
-// (src/hud/dom/purchaseConfirm.ts). Every rect and text origin is in game pixels.
+// Native purchase confirmation uses this shared view in logical game pixels.
 
 export interface PurchaseConfirmCardView {
   // The well, then the item's picture in it, as a detail card's.

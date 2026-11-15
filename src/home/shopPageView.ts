@@ -11,10 +11,8 @@ import { TEXT_SCALE } from "../ui/textFit.ts";
 import { FEEDBACK } from "./feedback.ts";
 import { SHOP_LAYOUT, shopTabFace, shopTabRects } from "./shopLayout.ts";
 
-// The page the Pet shop and the Logbook share, under the home screen's top bar, laid out as one
-// view both renderers draw: the canvas's (addShopPage and addShopTabs in src/scenes/shopPage.ts)
-// and the HTML interface's (src/hud/dom/shopPage.ts). Every rect and text origin is in game
-// pixels.
+// The native Pet shop and Logbook share this page view beneath the home top bar.
+// Every rectangle and text origin is in logical game pixels.
 
 // A rect filled in one colour.
 export interface PageFill {
