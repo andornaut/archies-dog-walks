@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 
-import { fontMetrics } from "@andornaut/game-kit/text/bitmapFont";
+import { fontMetrics } from "@andornaut/game-kit/runtime/text/bitmapFont";
 import { expect, it } from "vitest";
 
 import { gameData } from "../../data/index.ts";

@@ -1,4 +1,4 @@
-import type { LoaderWatch, LoadFailure } from "@andornaut/game-kit/load/phaser/watchLoader";
+import type { LoaderWatch, LoadFailure } from "@andornaut/game-kit/runtime/load/phaser/watchLoader";
 
 import { type AtlasManifest, atlasPageKey } from "../assets/atlasManifest.ts";
 import type { AssetManifest } from "../assets/manifest.ts";

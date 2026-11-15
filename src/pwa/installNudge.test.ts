@@ -1,5 +1,5 @@
-import { storageFixture } from "@andornaut/game-kit/test/storageFixture";
 import type { InstallState } from "@andornaut/game-kit/runtime/web/pwa/installState";
+import { storageFixture } from "@andornaut/game-kit/test/storageFixture";
 import { describe, expect, it } from "vitest";
 
 import { createInstallNudge, INSTALL_NUDGE_KEY } from "./installNudge.ts";

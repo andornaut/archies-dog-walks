@@ -1,9 +1,18 @@
 import { createHash } from "node:crypto";
 
-import { type AtlasBlit, buildAtlasPages, drawAtlasPage } from "@andornaut/art-kit/build/atlasBuild";
+import {
+  type AtlasBlit,
+  buildAtlasPages,
+  drawAtlasPage,
+} from "@andornaut/art-kit/build/atlasBuild";
 import { encodeIndexedPng } from "@andornaut/art-kit/build/indexedPng";
 import { decodePng, encodeRgbaPng } from "@andornaut/art-kit/build/png";
-import { blankImage, blitExtruded, opaqueRect, type RgbaImage } from "@andornaut/art-kit/build/rgbaImage";
+import {
+  blankImage,
+  blitExtruded,
+  opaqueRect,
+  type RgbaImage,
+} from "@andornaut/art-kit/build/rgbaImage";
 import { encodeLosslessWebp } from "@andornaut/art-kit/build/webp";
 import { getOrInsertComputed } from "@andornaut/game-kit/runtime/maps";
 

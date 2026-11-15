@@ -1,4 +1,4 @@
-import type { LoadFailure } from "@andornaut/game-kit/load/phaser/watchLoader";
+import type { LoadFailure } from "@andornaut/game-kit/runtime/load/phaser/watchLoader";
 import { expect, it, vi } from "vitest";
 
 import type { AtlasManifest } from "../assets/atlasManifest.ts";

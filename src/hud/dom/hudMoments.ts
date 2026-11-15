@@ -1,5 +1,9 @@
 import type { Point, Rect } from "@andornaut/game-kit/runtime/rect";
-import { type BitmapFont, fontMetrics, laidGlyphs } from "@andornaut/game-kit/runtime/text/bitmapFont";
+import {
+  type BitmapFont,
+  fontMetrics,
+  laidGlyphs,
+} from "@andornaut/game-kit/runtime/text/bitmapFont";
 
 import { domArtPath } from "../../assets/domArt.ts";
 import { ownerCardFaceKey } from "../../assets/spriteKeys.ts";

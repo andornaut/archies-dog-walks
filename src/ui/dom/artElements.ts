@@ -1,4 +1,4 @@
-import type { Point, Rect } from "@andornaut/game-kit/rect";
+import type { Point, Rect } from "@andornaut/game-kit/runtime/rect";
 
 import { DOM_DIM_ART_KEYS, domArtPath } from "../../assets/domArt.ts";
 import { dimArtPath } from "../dimArt.ts";

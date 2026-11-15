@@ -38,7 +38,9 @@ vi.mock("@andornaut/game-kit/runtime/web/pwa/dom/offlinePlay", () => ({
 vi.mock("@andornaut/game-kit/runtime/web/pwa/dom/installFlow", () => ({
   watchInstall: () => ({ onChange: () => () => undefined, state: () => "steps" }),
 }));
-vi.mock("@andornaut/game-kit/runtime/web/pwa/dom/visibility", () => ({ watchVisibility: () => undefined }));
+vi.mock("@andornaut/game-kit/runtime/web/pwa/dom/visibility", () => ({
+  watchVisibility: () => undefined,
+}));
 vi.mock("@andornaut/game-kit/runtime/web/pwa/dom/wakeLock", () => ({
   createScreenWakeLock: () => ({ start: () => undefined, stop: () => undefined }),
 }));

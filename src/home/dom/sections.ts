@@ -1,4 +1,4 @@
-import { advanceWidth, type BitmapFont } from "@andornaut/game-kit/text/bitmapFont";
+import { advanceWidth, type BitmapFont } from "@andornaut/game-kit/runtime/text/bitmapFont";
 
 import { domArtPath } from "../../assets/domArt.ts";
 import { SLICES } from "../../data/layout.ts";

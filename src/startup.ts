@@ -4,7 +4,10 @@ import "@andornaut/game-kit/runtime/web/view/frameTurnPortraitGame.css";
 import "@andornaut/game-kit/runtime/web/progress/dom/progressBar.css";
 import "./main.css";
 
-import { createLayeredProgress, createProgressState } from "@andornaut/game-kit/runtime/progressState";
+import {
+  createLayeredProgress,
+  createProgressState,
+} from "@andornaut/game-kit/runtime/progressState";
 import { trackInputModality } from "@andornaut/game-kit/runtime/web/ui/dom/focusModality";
 
 import { loadingProgress } from "./loadingProgress.ts";

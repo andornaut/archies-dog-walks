@@ -1,4 +1,7 @@
-import { createProgressState, type ProgressHandle } from "@andornaut/game-kit/runtime/progressState";
+import {
+  createProgressState,
+  type ProgressHandle,
+} from "@andornaut/game-kit/runtime/progressState";
 import type { DownloadProgress } from "@andornaut/game-kit/runtime/web/pwa/downloadProgress";
 import type { RequiredUpdateState } from "@andornaut/game-kit/runtime/web/pwa/updateReady";
 

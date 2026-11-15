@@ -14,7 +14,9 @@ vi.mock("./load.ts", async (importOriginal) => {
 vi.mock("@andornaut/game-kit/runtime/save/saveStore", () => ({ saveStore: vi.fn() }));
 vi.mock("@andornaut/game-kit/runtime/web/save/dom/localSaveStorage", async (importOriginal) => {
   const actual =
-    await importOriginal<typeof import("@andornaut/game-kit/runtime/web/save/dom/localSaveStorage")>();
+    await importOriginal<
+      typeof import("@andornaut/game-kit/runtime/web/save/dom/localSaveStorage")
+    >();
   return { ...actual, localSaveStorage: vi.fn() };
 });
 

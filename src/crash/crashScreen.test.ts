@@ -4,7 +4,9 @@ import { afterEach, expect, it, vi } from "vitest";
 import palette from "../../shared/palette.json" with { type: "json" };
 import { MENU_TEXT } from "../data/menuText.ts";
 
-vi.mock("@andornaut/game-kit/runtime/web/crash/dom/crashScreen", () => ({ installCrashScreen: vi.fn() }));
+vi.mock("@andornaut/game-kit/runtime/web/crash/dom/crashScreen", () => ({
+  installCrashScreen: vi.fn(),
+}));
 vi.mock("virtual:art-files", () => ({
   default: new Map([["sprites/face-dog-archie.png", "assets/art/face-dog-archie-test.png"]]),
 }));

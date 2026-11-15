@@ -14,7 +14,8 @@ import {
 } from "./pixelFont.ts";
 
 vi.mock("@andornaut/game-kit/runtime/text/pixelFont", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("@andornaut/game-kit/runtime/text/pixelFont")>();
+  const actual =
+    await importOriginal<typeof import("@andornaut/game-kit/runtime/text/pixelFont")>();
   return {
     ...actual,
     glyphAdvance: vi.fn(actual.glyphAdvance),

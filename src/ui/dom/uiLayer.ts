@@ -3,9 +3,15 @@
 import "@andornaut/game-kit/runtime/web/ui/dom/ui.css";
 import "virtual:adw-ui.css";
 
-import { createModalInputGate, type ModalInputGate } from "@andornaut/game-kit/runtime/input/modalInput";
+import {
+  createModalInputGate,
+  type ModalInputGate,
+} from "@andornaut/game-kit/runtime/input/modalInput";
 import type { Rect } from "@andornaut/game-kit/runtime/rect";
-import { type ButtonSkin, createButtonSkin } from "@andornaut/game-kit/runtime/web/ui/dom/buttonSkin";
+import {
+  type ButtonSkin,
+  createButtonSkin,
+} from "@andornaut/game-kit/runtime/web/ui/dom/buttonSkin";
 import {
   createImageCache,
   type ImageCache,

@@ -1,7 +1,7 @@
-import { itemAt } from "@andornaut/game-kit/arrays";
-import { type LoaderWatch, watchLoader } from "@andornaut/game-kit/load/phaser/watchLoader";
-import type { ProgressHandle } from "@andornaut/game-kit/progressState";
-import { keysOf } from "@andornaut/game-kit/records";
+import { itemAt } from "@andornaut/game-kit/runtime/arrays";
+import { type LoaderWatch, watchLoader } from "@andornaut/game-kit/runtime/load/phaser/watchLoader";
+import type { ProgressHandle } from "@andornaut/game-kit/runtime/progressState";
+import { keysOf } from "@andornaut/game-kit/runtime/records";
 import { GameObjects, Scene, Scenes, Sound } from "phaser";
 
 import { animationSpecs, type AsepriteSheet } from "../assets/asepriteAnimations.ts";

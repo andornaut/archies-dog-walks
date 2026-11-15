@@ -1,5 +1,5 @@
-import { sceneStub } from "@andornaut/game-kit/test/phaser/sceneStub";
 import { registerPixelFont } from "@andornaut/game-kit/runtime/text/phaser/registerPixelFont";
+import { sceneStub } from "@andornaut/game-kit/test/phaser/sceneStub";
 import type { GameObjects, Scene } from "phaser";
 import { describe, expect, it, vi } from "vitest";
 

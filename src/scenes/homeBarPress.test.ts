@@ -2,8 +2,8 @@ import { EventEmitter } from "node:events";
 
 import { isOutside } from "@andornaut/game-kit/runtime/input/outsideTap";
 import type { Point, Rect } from "@andornaut/game-kit/runtime/rect";
-import { sceneStub } from "@andornaut/game-kit/test/phaser/sceneStub";
 import { exitApp } from "@andornaut/game-kit/runtime/web/pwa/dom/exitApp";
+import { sceneStub } from "@andornaut/game-kit/test/phaser/sceneStub";
 import type { Scene } from "phaser";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 

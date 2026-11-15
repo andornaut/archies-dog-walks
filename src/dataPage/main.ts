@@ -1,7 +1,10 @@
 import "./main.css";
 
 import { keysOf } from "@andornaut/game-kit/runtime/records";
-import { focusTarget, trackInputModality } from "@andornaut/game-kit/runtime/web/ui/dom/focusModality";
+import {
+  focusTarget,
+  trackInputModality,
+} from "@andornaut/game-kit/runtime/web/ui/dom/focusModality";
 
 import { badgeKey } from "../assets/spriteKeys.ts";
 import { gameData, onGameDataChange } from "../data/index.ts";

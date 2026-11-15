@@ -27,7 +27,10 @@ import {
   createScreenWakeLock,
   type ScreenWakeLock,
 } from "@andornaut/game-kit/runtime/web/pwa/dom/wakeLock";
-import type { InstallState, InstallStepsKind } from "@andornaut/game-kit/runtime/web/pwa/installState";
+import type {
+  InstallState,
+  InstallStepsKind,
+} from "@andornaut/game-kit/runtime/web/pwa/installState";
 import { serviceWorkerUrl } from "@andornaut/game-kit/runtime/web/pwa/serviceWorkerUrl";
 import {
   requestPersistentStorage,

@@ -1,4 +1,9 @@
-import { easeProgress, type Easing, type Point, progressAt } from "@andornaut/game-kit/runtime/motion";
+import {
+  easeProgress,
+  type Easing,
+  type Point,
+  progressAt,
+} from "@andornaut/game-kit/runtime/motion";
 
 import type { MoveCount, SignatureProfile } from "../data/types.ts";
 

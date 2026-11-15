@@ -10,5 +10,5 @@ export { atlasPlugin } from "./atlas/atlasPlugin.ts";
 export { generatedFilesPlugin } from "./generatedFilesPlugin.ts";
 export { PHASER_BUILD } from "./phaserBuild.ts";
 export { uiStylePlugin } from "./uiStylePlugin.ts";
-export { phaserBuildPlugin } from "@andornaut/game-kit/build/phaserBuildPlugin";
 export { hashedIconsPlugin } from "@andornaut/game-kit/build/hashedIconsPlugin";
+export { phaserBuildPlugin } from "@andornaut/game-kit/build/phaserBuildPlugin";

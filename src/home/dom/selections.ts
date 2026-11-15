@@ -1,5 +1,9 @@
 import type { Rect } from "@andornaut/game-kit/runtime/rect";
-import { advanceWidth, type BitmapFont, fontMetrics } from "@andornaut/game-kit/runtime/text/bitmapFont";
+import {
+  advanceWidth,
+  type BitmapFont,
+  fontMetrics,
+} from "@andornaut/game-kit/runtime/text/bitmapFont";
 
 import { type DomArtSource, imageArt, sheetArt } from "../../ui/dom/artElements.ts";
 import { createTextLine, placeBackedText, placeText, setBox } from "../../ui/dom/pixelLine.ts";

@@ -1,8 +1,4 @@
-import {
-  pageRules,
-  pathMatches,
-  servedPath,
-} from "@andornaut/game-kit/build/securityHeaders";
+import { pageRules, pathMatches, servedPath } from "@andornaut/game-kit/build/securityHeaders";
 import { isHashedAssetUrl } from "@andornaut/game-kit/runtime/web/pwa/cachePolicy";
 import { describe, expect, it } from "vitest";
 

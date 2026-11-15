@@ -12,7 +12,11 @@ import {
   type PhaserFontData,
 } from "@andornaut/game-kit/runtime/text/phaser/phaserBitmapFont";
 import { registerPixelFont } from "@andornaut/game-kit/runtime/text/phaser/registerPixelFont";
-import { type FittedText, fittingText, type TextFitStyle } from "@andornaut/game-kit/runtime/text/textFit";
+import {
+  type FittedText,
+  fittingText,
+  type TextFitStyle,
+} from "@andornaut/game-kit/runtime/text/textFit";
 import type { GameObjects, Scene, Types } from "phaser";
 
 import {

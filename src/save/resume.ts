@@ -1,5 +1,9 @@
 import { keysOf } from "@andornaut/game-kit/runtime/records";
-import { encodeSave, loadSave, type SaveFormat } from "@andornaut/game-kit/runtime/save/versionedSave";
+import {
+  encodeSave,
+  loadSave,
+  type SaveFormat,
+} from "@andornaut/game-kit/runtime/save/versionedSave";
 import { pixels } from "@andornaut/game-kit/runtime/units";
 import * as v from "valibot";
 
