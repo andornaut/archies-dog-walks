@@ -8,17 +8,18 @@ import "./main.css";
 import { MENU_FPS } from "@andornaut/game-kit/clock/frameCap";
 import { capFrameRate } from "@andornaut/game-kit/clock/phaser/capFrameRate";
 import { LOADER_CONFIG } from "@andornaut/game-kit/load/loaderConfig";
+import type { ProgressHandle } from "@andornaut/game-kit/progressState";
 import { MAX_RENDER_SCALE } from "@andornaut/game-kit/view/renderScale";
 import { followFrameTurn } from "@andornaut/game-kit/web/view/phaser/followFrameTurn";
 import { Core, Game, Scale, WEBGL } from "phaser";
 
 import { CRASH_SCREEN } from "./crash/crashScreen.ts";
+import { gameData } from "./data/index.ts";
 import { SCREEN_CONFIG } from "./data/screen.ts";
 import { applyPendingSaveEdits, type DevPanelHost, mountDevPanel } from "./dev/devPanel.ts";
 import { DEV_CHEATS_KEY } from "./dev/devPanelModel.ts";
 import { DEV_GAME_GLOBAL, devToolsOn } from "./dev/devTools.ts";
 import { pageRunSetup } from "./dev/pageRunSetup.ts";
-import { HOME_LAYOUT } from "./home/homeLayout.ts";
 import { noteKeyPress } from "./input/keyNumbers.ts";
 import { bindPressAdmission } from "./input/phaser/pressAdmission.ts";
 import { lostTouches } from "./input/touches.ts";
@@ -32,6 +33,7 @@ import {
 } from "./pwa/index.ts";
 import { launchGame } from "./pwa/launchGame.ts";
 import { createUpdateIdle } from "./pwa/updateIdle.ts";
+import { pageDeviceSettings } from "./save/settings.ts";
 import { BootScene } from "./scenes/BootScene.ts";
 import { CardScene } from "./scenes/CardScene.ts";
 import { CelebrationScene } from "./scenes/CelebrationScene.ts";
@@ -41,11 +43,11 @@ import { HelpPictureScene } from "./scenes/HelpPictureScene.ts";
 import { HelpScene } from "./scenes/HelpScene.ts";
 import { watchHomeScreen } from "./scenes/homeScreen.ts";
 import { HudScene } from "./scenes/HudScene.ts";
-import { backgroundLoad } from "./scenes/loadingProgress.ts";
 import { MenuScene } from "./scenes/MenuScene.ts";
 import { PauseScene } from "./scenes/PauseScene.ts";
 import { stopResuming } from "./scenes/profileStore.ts";
 import { QuitScene } from "./scenes/QuitScene.ts";
+import { createRequiredUi, REQUIRED_UI } from "./scenes/requiredUi.ts";
 import { RunScene } from "./scenes/RunScene.ts";
 import { SCENE_KEYS } from "./scenes/sceneKeys.ts";
 import { SettingsScene } from "./scenes/SettingsScene.ts";
@@ -55,7 +57,9 @@ import { StatsScene } from "./scenes/StatsScene.ts";
 import { TapBurstScene } from "./scenes/TapBurstScene.ts";
 import { followWorldCameras } from "./scenes/worldCamera.ts";
 import { ZoneCelebrationScene } from "./scenes/ZoneCelebrationScene.ts";
-import { mountDomLoadingBar } from "./ui/dom/domLoadingBar.ts";
+import type { LoadingBar } from "./ui/dom/domLoadingBar.ts";
+import { mountLoadingError } from "./ui/dom/loadingError.ts";
+import { followModalUnderlay } from "./ui/dom/rampDim.ts";
 import { mountUiLayer, setUiLayer } from "./ui/dom/uiLayer.ts";
 import { startupLoad } from "./ui/startupProgress.ts";
 import { worldViewBox } from "./ui/worldFit.ts";
@@ -78,7 +82,13 @@ const GAME_PARENT_ID = "game";
 // settings and stats over those, and the dev overlay, which starts itself, over everything.
 // Boot runs first and starts the start screen. The canvas clears to the page's ink, so launch
 // shows no rectangle before the loading screen's art; the walk fills its own ink.
-function bootGame(): Game {
+export interface GameStartup {
+  readonly loading: LoadingBar | undefined;
+  readonly nativeProgress: { begin(): ProgressHandle };
+}
+
+function bootGame(context: GameStartup): Game {
+  const { loading } = context;
   const game = new Game({
     backgroundColor: "#181425",
     height: SCREEN_CONFIG.height,
@@ -137,13 +147,12 @@ function bootGame(): Game {
   }
   followWorldCameras(game);
   const press = createPressAdmission(() => game.input.pointers.some((pointer) => pointer.isDown));
-  game.events.once(Core.Events.DESTROY, bindPressAdmission(game, press));
+  game.events.once(
+    Core.Events.DESTROY,
+    bindPressAdmission(game, press, () => game.canvas.parentElement?.inert === true),
+  );
   const updateIdle = createUpdateIdle(
     {
-      bar:
-        parent === null
-          ? undefined
-          : mountDomLoadingBar(parent, HOME_LAYOUT.loadingProgress, backgroundLoad),
       events: window,
       required: () => requiredUpdate() !== undefined,
       timer: globalThis,
@@ -161,7 +170,16 @@ function bootGame(): Game {
     if (layer === undefined) {
       return;
     }
+    const required = createRequiredUi({ layer, progress: context.nativeProgress }, (retry) =>
+      mountLoadingError(
+        { layer, retry, settings: pageDeviceSettings(), words: gameData.menuText.loadingError },
+        document.body,
+      ),
+    );
+    game.registry.set(REQUIRED_UI, required);
     const update = () => layer.update();
+    const stopLoadingShade =
+      loading === undefined ? undefined : followModalUnderlay(layer.input, loading.element);
     const ready = layer.onReady(() => {
       update();
       updateIdle.invalidate();
@@ -169,6 +187,11 @@ function bootGame(): Game {
     game.events.on(Core.Events.PRE_RENDER, update);
     game.events.once(Core.Events.DESTROY, () => {
       ready();
+      stopLoadingShade?.();
+      required.dispose();
+      if (game.registry.get(REQUIRED_UI) === required) {
+        game.registry.remove(REQUIRED_UI);
+      }
       game.events.off(Core.Events.PRE_RENDER, update);
       setUiLayer(undefined);
     });
@@ -231,4 +254,6 @@ function bootGame(): Game {
 // open. Otherwise the current version boots while later updates stage in the background.
 // Queued dev-panel save edits finish before boot, so the game loads the edited save. The
 // installed app discards queued edits without changing its save.
-void launchGame(applyPendingSaveEdits, bootGame, setupPhoneApp());
+export async function startGame(context: GameStartup): Promise<void> {
+  await launchGame(applyPendingSaveEdits, () => bootGame(context), setupPhoneApp());
+}

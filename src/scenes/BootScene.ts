@@ -1,7 +1,6 @@
 import { itemAt } from "@andornaut/game-kit/arrays";
 import { type LoaderWatch, watchLoader } from "@andornaut/game-kit/load/phaser/watchLoader";
-import { drawProgressDisplay } from "@andornaut/game-kit/progress/phaser/drawProgressBar";
-import { createProgressDisplay } from "@andornaut/game-kit/progressState";
+import type { ProgressHandle } from "@andornaut/game-kit/progressState";
 import { keysOf } from "@andornaut/game-kit/records";
 import { GameObjects, Scene, Scenes, Sound } from "phaser";
 
@@ -31,12 +30,13 @@ import {
 } from "../assets/spriteKeys.ts";
 import { HOME_CUES, soundKeysOf } from "../audio/sound.ts";
 import { gameData } from "../data/index.ts";
-import { SCREEN_LAYOUT } from "../data/screen.ts";
 import type { EncounterId } from "../data/types.ts";
 import { devRunLoadout, namesRunSetup } from "../dev/devStart.ts";
 import { pageSearch } from "../dev/devTools.ts";
 import { pageRunSetup } from "../dev/pageRunSetup.ts";
+import { hudArtResources } from "../hud/dom/prepareHudArt.ts";
 import { LOADING_TRACK, loadingWalkerAt } from "../layout/loadingScreen.ts";
+import { waitedLoad } from "../loadingProgress.ts";
 import {
   browserSoundFormat,
   noteSaveStorage,
@@ -46,13 +46,12 @@ import {
 } from "../pwa/index.ts";
 import { pageDeviceSettings } from "../save/settings.ts";
 import { mountMuteControl } from "../ui/dom/muteControl.ts";
+import { uiLayer } from "../ui/dom/uiLayer.ts";
 import { PALETTE } from "../ui/palette.ts";
 import { addFilledRect } from "../ui/phaser/draw.ts";
 import { addPillGlyphs, registerFallbackPixelFont } from "../ui/phaser/pixelText.ts";
-import { GAME_PROGRESS_STYLE, LOADING_MOTION, LOADING_TIMING } from "../ui/progressBar.ts";
 import { markArtReady, setBootWatch, type WaitedLoad } from "./artReady.ts";
 import { stopOnceRetried } from "./bootRetries.ts";
-import { loadingProgress, waitedLoad } from "./loadingProgress.ts";
 import { waitForNativeHome } from "./nativeHomeReady.ts";
 import {
   currentSettings,
@@ -63,6 +62,7 @@ import {
   takeResumedWalk,
   walkerInUse,
 } from "./profileStore.ts";
+import { REQUIRED_UI, type RequiredUiController } from "./requiredUi.ts";
 import { nextRunStart } from "./run/runRecorder.ts";
 import { resumedRunSceneData, runSceneData } from "./run/runStart.ts";
 import { SCENE_KEYS } from "./sceneKeys.ts";
@@ -76,6 +76,29 @@ const BEHIND_FRAME_BUDGET_MS = 4;
 const HOME_SOUND_KEYS: ReadonlySet<string> = new Set(HOME_CUES.flatMap((cue) => soundKeysOf(cue)));
 const loadsSoundFirst = (key: string): boolean => HOME_SOUND_KEYS.has(key);
 const always = () => true;
+
+const HOME_UI_KEYS = new Set([
+  "icon-menu",
+  "icon-sound",
+  "ui-icon-button-normal",
+  "ui-icon-button-pressed",
+]);
+const HUD_UI_KEYS = new Set([
+  ...HOME_UI_KEYS,
+  "icon-pause",
+  "ui-debuff-bar",
+  "ui-dog-card",
+  "ui-heart",
+  "ui-home-cash-well-left",
+  "ui-home-cash-well-mid",
+  "ui-home-cash-well-right",
+]);
+const REQUIRED_BITMAP_FONTS = [
+  "font-body",
+  "font-display",
+  "font-display-cream",
+  "font-title",
+] as const;
 
 type Size = { colour: number; height: number; width: number };
 const box = (width: number, height: number, colour: number): Size => ({ colour, height, width });
@@ -127,11 +150,12 @@ function placeholderSizes(): Map<string, Size> {
 // A dev link that names a run loads everything before it starts the walk, and a walk the save
 // resumes (ProfileSession.open) loads the rest behind the loading screen before it goes on.
 export class BootScene extends Scene {
-  private bar: GameObjects.Graphics | undefined;
   private manifest: AssetManifest = { fonts: [], images: [], sounds: [], sprites: [] };
   private walker: GameObjects.Sprite | undefined;
   private watch: LoaderWatch<WaitedLoad> | undefined;
   private removeMute: (() => void) | undefined;
+  private nativeUi: RequiredUiController | undefined;
+  private fontMetricsSettled = false;
 
   constructor() {
     super(SCENE_KEYS.boot);
@@ -156,9 +180,6 @@ export class BootScene extends Scene {
     // boot's measured load (create) takes it over.
     const manifests = waitedLoad.begin();
     manifests.progress(undefined);
-    this.bar = this.add.graphics().setDepth(1);
-    const display = createProgressDisplay(LOADING_TIMING.fullMs, LOADING_TIMING.fadeMs);
-    const stop = loadingProgress.subscribe(display.report);
     // The loading walker walks as far as the waited-for load has come.
     const stopWalker = waitedLoad.subscribe(({ value }) => {
       if (value !== undefined) {
@@ -166,25 +187,7 @@ export class BootScene extends Scene {
         this.walker?.setPosition(at.x, at.y);
       }
     });
-    // The scene's update event runs while it loads too, unlike its update method.
-    const draw = () => {
-      const { bar } = this;
-      if (bar !== undefined) {
-        bar.clear();
-        const shown = display.at(this.time.now);
-        drawProgressDisplay(
-          bar,
-          GAME_PROGRESS_STYLE,
-          LOADING_MOTION,
-          SCREEN_LAYOUT.zoneProgress,
-          shown,
-        );
-      }
-    };
-    this.events.on(Scenes.Events.UPDATE, draw);
     this.events.once(Scenes.Events.SHUTDOWN, () => {
-      this.events.off(Scenes.Events.UPDATE, draw);
-      stop();
       stopWalker();
       manifests.finish();
       setBootWatch(undefined);
@@ -218,6 +221,7 @@ export class BootScene extends Scene {
     });
     addAtlasTextures(this);
     this.showLoadingScreen();
+    this.prepareNativeUi();
 
     const first = walkNow ? always : loadsFirst;
     queueManifestArt(this, this.manifest, first);
@@ -231,6 +235,8 @@ export class BootScene extends Scene {
       this.processAssets(first, FRAME_BUDGET_MS, () => {
         registerFallbackPixelFont(this);
         addPillGlyphs(this);
+        this.fontMetricsSettled = true;
+        this.nativeUi?.invalidate();
         // A profile still opening is waited for with no denominator.
         const profile = opened ? undefined : waitedLoad.begin();
         profile?.progress(undefined);
@@ -250,6 +256,79 @@ export class BootScene extends Scene {
       }),
     );
     this.load.start();
+  }
+
+  private prepareNativeUi(): void {
+    const layer = uiLayer();
+    if (layer === undefined) {
+      throw new Error("The native UI layer is unavailable");
+    }
+    this.fontMetricsSettled = false;
+    const metricsReady = () =>
+      REQUIRED_BITMAP_FONTS.every((key) => this.cache.bitmapFont.exists(key));
+    const native = this.registry.get(REQUIRED_UI) as RequiredUiController | undefined;
+    if (native === undefined) {
+      throw new Error("The native UI resource controller is unavailable");
+    }
+    this.nativeUi = native;
+    let retryingMetrics = false;
+    const removeMetrics = native.observe({
+      retry: () => {
+        if (this.fontMetricsSettled && !metricsReady()) {
+          retryingMetrics = true;
+          queueFonts(this, this.manifest);
+          this.watch?.waitFor("boot");
+          if (!this.load.isLoading()) {
+            this.load.start();
+          }
+        }
+      },
+      status: () =>
+        !this.fontMetricsSettled || retryingMetrics
+          ? "loading"
+          : metricsReady()
+            ? "ready"
+            : "failed",
+    });
+    const recovered = () => {
+      if (this.fontMetricsSettled) {
+        addAtlasTextures(this);
+        addAtlasFonts(this, GameObjects.BitmapText.ParseFromAtlas, this.manifest);
+        addPillGlyphs(this);
+        retryingMetrics = false;
+        native.invalidate();
+      }
+    };
+    this.load.on("complete", recovered);
+    this.events.once(Scenes.Events.SHUTDOWN, () => {
+      this.load.off("complete", recovered);
+      removeMetrics();
+      this.nativeUi = undefined;
+    });
+  }
+
+  private requireNativeUi(keys: ReadonlySet<string>, ready: () => void): void {
+    const layer = uiLayer();
+    const native = this.nativeUi;
+    if (layer === undefined || native === undefined) {
+      return;
+    }
+    const assets = [
+      ...this.manifest.images
+        .filter(({ key }) => keys.has(key))
+        .map(({ key }) => ({ key, kind: "image" as const })),
+      ...this.manifest.sprites
+        .filter(({ key }) => keys.has(key))
+        .map(({ key }) => ({ key, kind: "sheet" as const })),
+    ];
+    const present = new Set(assets.map(({ key }) => key));
+    const missing = [...keys].filter((key) => !present.has(key));
+    if (missing.length > 0) {
+      throw new Error(`Required native UI art is absent from the manifest: ${missing.join(", ")}`);
+    }
+    layer.requireAssets(hudArtResources({ artUrl }, assets));
+    const stop = native.wait(ready);
+    this.events.once(Scenes.Events.SHUTDOWN, stop);
   }
 
   // One file per sound that include accepts, in the format the service worker precaches.
@@ -354,20 +433,23 @@ export class BootScene extends Scene {
   // Launches native home while keeping the loading screen until its usable view is ready.
   // The rest loads concurrently, but cannot stop Boot before that handoff.
   private showHome(allLoaded = false): void {
-    const native = waitedLoad.begin();
-    native.progress(undefined);
+    let native: ProgressHandle | undefined;
     const waiting = waitForNativeHome(this.game.events, {
       loaded: () => this.scene.stop(),
       shown: () => {
-        native.finish();
+        native?.finish();
         this.clearLoading();
       },
     });
     this.events.once(Scenes.Events.SHUTDOWN, () => {
       waiting.dispose();
-      native.finish();
+      native?.finish();
     });
-    this.scene.launch(SCENE_KEYS.start);
+    this.requireNativeUi(HOME_UI_KEYS, () => {
+      native = waitedLoad.begin();
+      native.progress(undefined);
+      this.scene.launch(SCENE_KEYS.start);
+    });
     const loaded = () => this.stopOnceRetried(waiting.loaded);
     if (allLoaded) {
       loaded();
@@ -387,7 +469,7 @@ export class BootScene extends Scene {
     for (const child of [...this.children.list]) {
       child.destroy();
     }
-    [this.bar, this.walker] = [undefined, undefined];
+    this.walker = undefined;
   }
 
   private clearMute(): void {
@@ -426,8 +508,10 @@ export class BootScene extends Scene {
     }
     this.load.once("complete", () =>
       this.processAssets(rest, budgetMs, () => {
-        markArtReady(this);
-        done();
+        this.requireNativeUi(HUD_UI_KEYS, () => {
+          markArtReady(this);
+          done();
+        });
       }),
     );
     this.load.start();
@@ -454,13 +538,24 @@ export class BootScene extends Scene {
 
   // Starts the walk a dev link names, with everything loaded.
   private startWalk(): void {
-    markArtReady(this);
-    const { lastLoadout, owned } = profileSave(this);
-    const walker = walkerInUse(profileSave(this));
-    const loadout = devRunLoadout(lastLoadout, walker, itemAt(owned.dogs, 0), pageRunSetup().setup);
-    const pick = { dogSlots: owned.dogSlots.length, loadout };
-    startWakeLock();
-    this.leaveFor(SCENE_KEYS.run, runSceneData(nextRunStart(), pick));
-    this.stopOnceRetried();
+    this.requireNativeUi(HUD_UI_KEYS, () => {
+      if (requiredUpdate() !== undefined) {
+        this.showHome(true);
+        return;
+      }
+      markArtReady(this);
+      const { lastLoadout, owned } = profileSave(this);
+      const walker = walkerInUse(profileSave(this));
+      const loadout = devRunLoadout(
+        lastLoadout,
+        walker,
+        itemAt(owned.dogs, 0),
+        pageRunSetup().setup,
+      );
+      const pick = { dogSlots: owned.dogSlots.length, loadout };
+      startWakeLock();
+      this.leaveFor(SCENE_KEYS.run, runSceneData(nextRunStart(), pick));
+      this.stopOnceRetried();
+    });
   }
 }

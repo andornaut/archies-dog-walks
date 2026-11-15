@@ -92,6 +92,7 @@ import {
   menuKeyActs,
 } from "../input/keyBindings.ts";
 import type { PackPlacement } from "../layout/packFormation.ts";
+import { waitedLoad } from "../loadingProgress.ts";
 import { addFigure, PackFigures } from "../pack/phaser/packFigures.ts";
 import { dollarAmountText, shortDollarAmountText } from "../presentation/currency.ts";
 import {
@@ -133,7 +134,6 @@ import { openHelp } from "./helpScreen.ts";
 import { exitGame, HOME_PAGE_OPENING_EVENT, openHomePage, routeHomeBar } from "./homeBarPress.ts";
 import { addAffordFrame, detailView } from "./homePanels.ts";
 import { drawPetShopFallback, PLATE_PAD, purchasePicture, SHOP_ART } from "./itemArt.ts";
-import { waitedLoad } from "./loadingProgress.ts";
 import { measureModalTitle, modalTextWidth } from "./modalMeasure.ts";
 import { NATIVE_HOME_READY } from "./nativeHomeReady.ts";
 import { listenOnePress } from "./onePress.ts";

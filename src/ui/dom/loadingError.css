@@ -1,0 +1,13 @@
+/* Resource errors remain readable independently of the required native game fonts. */
+.adw-loading-error {
+  position: absolute;
+  z-index: 3;
+  display: grid;
+  place-items: center;
+  box-sizing: border-box;
+  padding: 16px;
+}
+
+.adw-loading-error[hidden] {
+  display: none;
+}

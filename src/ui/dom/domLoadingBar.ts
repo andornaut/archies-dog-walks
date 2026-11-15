@@ -1,59 +1,67 @@
 import type { ProgressSource } from "@andornaut/game-kit/progressState";
-import type { Rect } from "@andornaut/game-kit/rect";
 import { createDomProgressBar } from "@andornaut/game-kit/web/progress/dom/progressBar";
 
 import { SCREEN_CONFIG } from "../../data/screen.ts";
 import { GAME_PROGRESS_STYLE, LOADING_TIMING } from "../progressBar.ts";
 
-// The kit's DOM loading bar over the game's canvas, at frame in game pixels, following progress
-// for the page's life: hidden while idle. The kit's progressBar.css moves it, so it animates with
-// no script frames, before the game's renderer runs and while its loop sleeps. The canvas fits
-// parent's height at the top, centred across (main.ts's Phaser scale), so the bar's view does
-// too. setShown(false) hides it whatever progress says.
-export function mountDomLoadingBar(
-  parent: HTMLElement,
-  frame: Rect,
-  progress: ProgressSource,
-): { destroy(): void; setShown(shown: boolean): void } {
-  const view = document.createElement("div");
+export const LOADING_BAR_HEIGHT = 3;
+
+export interface LoadingBar {
+  readonly element: HTMLElement;
+  dispose(): void;
+}
+
+// One page-lifetime loading indicator. Only its width follows the game viewport; the vertical
+// CSS size is independent of logical fit, renderer backing resolution and device pixel ratio.
+export function mountDomLoadingBar(progress: ProgressSource, parent: HTMLElement): LoadingBar {
+  const view = parent.ownerDocument.createElement("div");
+  view.className = "adw-loading-bar";
   Object.assign(view.style, {
-    left: "0",
+    height: `${LOADING_BAR_HEIGHT}px`,
+    left: "0px",
     pointerEvents: "none",
     position: "absolute",
-    top: "0",
+    top: "0px",
     transformOrigin: "top left",
+    width: `${SCREEN_CONFIG.width}px`,
+    zIndex: "2",
   });
   parent.append(view);
-  const bar = createDomProgressBar(view, GAME_PROGRESS_STYLE, frame, LOADING_TIMING);
-  bar.element.setAttribute("aria-label", parent.getAttribute("aria-label") ?? document.title);
+  // Three CSS rows carry the existing fill colours without a border taking their rows.
+  const bar = createDomProgressBar(
+    view,
+    { ...GAME_PROGRESS_STYLE, border: 0 },
+    {
+      height: LOADING_BAR_HEIGHT,
+      width: SCREEN_CONFIG.width,
+      x: 0,
+      y: 0,
+    },
+    LOADING_TIMING,
+  );
+  bar.element.setAttribute(
+    "aria-label",
+    parent.getAttribute("aria-label") ?? parent.ownerDocument.title,
+  );
   const place = () => {
-    const scale = Math.min(
-      parent.clientWidth / SCREEN_CONFIG.width,
-      parent.clientHeight / SCREEN_CONFIG.height,
-    );
-    const x = (parent.clientWidth - SCREEN_CONFIG.width * scale) / 2;
-    view.style.transform = `translateX(${x}px) scale(${scale})`;
+    view.style.transform = `scaleX(${parent.clientWidth / SCREEN_CONFIG.width})`;
   };
-  const resize = new ResizeObserver(place);
-  resize.observe(parent);
+  const observer = new ResizeObserver(place);
+  observer.observe(parent);
   place();
-  // A finished measured load shows full until the stylesheet hides it; a finished load of
-  // unknown size hides the bar at once.
-  const unsubscribe = progress.subscribe((snapshot) => bar.report(snapshot));
-  let destroyed = false;
+  const stop = progress.subscribe((snapshot) => bar.report(snapshot));
+  let disposed = false;
   return {
-    destroy() {
-      if (destroyed) {
+    dispose() {
+      if (disposed) {
         return;
       }
-      destroyed = true;
-      unsubscribe();
-      resize.disconnect();
+      disposed = true;
+      stop();
+      observer.disconnect();
       bar.remove();
       view.remove();
     },
-    setShown: (shown) => {
-      view.hidden = !shown;
-    },
+    element: view,
   };
 }

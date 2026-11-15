@@ -3,8 +3,8 @@ import type { ProgressSnapshot } from "@andornaut/game-kit/progressState";
 import type { Scene } from "phaser";
 import { describe, expect, it, vi } from "vitest";
 
+import { loadingProgress, waitedLoad } from "../loadingProgress.ts";
 import { fakeLoaderScene } from "./fakeLoader.ts";
-import { loadingProgress, waitedLoad } from "./loadingProgress.ts";
 
 // The loader and scene events watchLoader listens for, as Phaser names them.
 vi.mock("phaser", () => ({

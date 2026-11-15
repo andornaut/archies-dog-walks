@@ -145,7 +145,7 @@ describe("requiredUpdate", () => {
 
 describe("acceptUpdate", () => {
   async function progress() {
-    const { loadingProgress } = await import("../scenes/loadingProgress.ts");
+    const { loadingProgress } = await import("../loadingProgress.ts");
     let snapshot = { active: false, value: undefined as number | undefined };
     loadingProgress.subscribe((value) => {
       snapshot = value;

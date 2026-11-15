@@ -1,4 +1,3 @@
-import type { mountDomLoadingBar } from "../ui/dom/domLoadingBar.ts";
 import { PHONE_EVENTS } from "./events.ts";
 
 const UPDATE_IDLE_MS = 1000;
@@ -8,7 +7,6 @@ const WAKE_EVENTS = [PHONE_EVENTS.requiredUpdate, "keydown", "pointerdown", "poi
 // current view through invalidate; it does not synthesize input or restart a scene.
 export function createUpdateIdle(
   context: {
-    readonly bar: ReturnType<typeof mountDomLoadingBar> | undefined;
     readonly events: Pick<EventTarget, "addEventListener" | "removeEventListener">;
     readonly required: () => boolean;
     readonly timer: Pick<typeof globalThis, "clearTimeout" | "setTimeout">;
@@ -19,12 +17,10 @@ export function createUpdateIdle(
   let disposed = false;
   let timer: ReturnType<typeof setTimeout> | undefined;
   const idle = () => onHome && context.required();
-  context.bar?.setShown(false);
   const settle = () => {
     if (disposed) {
       return;
     }
-    context.bar?.setShown(idle());
     loop.wake();
     context.timer.clearTimeout(timer);
     if (idle()) {
@@ -48,7 +44,6 @@ export function createUpdateIdle(
       for (const event of WAKE_EVENTS) {
         context.events.removeEventListener(event, settle, { capture: true });
       }
-      context.bar?.destroy();
     },
     home(home: boolean) {
       onHome = home;

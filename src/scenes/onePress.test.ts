@@ -20,7 +20,8 @@ it("shares native first-press ownership without delivering a second canvas gestu
   const input = Object.assign(new EventEmitter(), { manager: { pointers: [pointer] } });
   const scene = { game, input, scale: {} } as unknown as Scene;
   const admission = createPressAdmission(() => false);
-  const release = bindPressAdmission(game, admission);
+  let blocked = false;
+  const release = bindPressAdmission(game, admission, () => blocked);
   const handlers = { down: vi.fn(), up: vi.fn() };
   listenOnePress(scene, handlers);
   const native = admission.claim();
@@ -33,5 +34,9 @@ it("shares native first-press ownership without delivering a second canvas gestu
   input.emit("pointerup", { ...pointer, isDown: false });
   expect(handlers.down).toHaveBeenCalledOnce();
   expect(handlers.up).toHaveBeenCalledOnce();
+  blocked = true;
+  input.emit("pointerdown", pointer);
+  input.emit("pointerup", { ...pointer, isDown: false });
+  expect(handlers.down).toHaveBeenCalledOnce();
   release();
 });

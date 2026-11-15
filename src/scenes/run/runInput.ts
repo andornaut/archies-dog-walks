@@ -16,7 +16,7 @@ import { holdRule } from "../../input/hold.ts";
 import { walkKeyAction } from "../../input/keyBindings.ts";
 import { walkPagePoint } from "../../input/pageTap.ts";
 import { logicalPoint } from "../../input/phaser/logicalPointer.ts";
-import { canvasPressAllowed } from "../../input/phaser/pressAdmission.ts";
+import { canvasInputBlocked, canvasPressAllowed } from "../../input/phaser/pressAdmission.ts";
 import {
   idleTrack,
   type PointerPhase,
@@ -118,6 +118,9 @@ export class RunInput {
   // M, P and Escape are the walk bar's keys, which the HUD handles. Phaser hands a key down to
   // this listener as the browser fires it, auto-repeats included.
   private onKey(event: KeyboardEvent): void {
+    if (canvasInputBlocked(this.scene)) {
+      return;
+    }
     const action = walkKeyAction(event.code, event.repeat);
     if (action !== undefined) {
       this.act(action);
@@ -127,6 +130,9 @@ export class RunInput {
   // What the walk's presses do now: nothing once the walk is over or before it starts. A card
   // open is part of the walk.
   private presses(): PressMode {
+    if (canvasInputBlocked(this.scene)) {
+      return "none";
+    }
     const walk = this.host.walk();
     const going = walk !== undefined && walk.run.phase.kind !== "ended";
     return going ? walkPresses(this.host.runPause()) : "none";

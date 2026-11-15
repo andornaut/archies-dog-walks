@@ -1,6 +1,6 @@
 import { expect, it, vi } from "vitest";
 
-import { prepareHudArt } from "./prepareHudArt.ts";
+import { hudArtResources, prepareHudArt } from "./prepareHudArt.ts";
 
 it("prepares modal art without probing image metadata and propagates required sheet failures", async () => {
   const source = {
@@ -23,4 +23,19 @@ it("prepares modal art without probing image metadata and propagates required sh
   await expect(prepareHudArt(source, [{ key: "fx-heart-loss", kind: "sheet" }])).rejects.toThrow(
     "Required metadata unavailable",
   );
+});
+
+it("declares required base, dim and metadata resources without starting any load", () => {
+  expect(
+    hudArtResources({ artUrl: (path) => `/art/${path}` }, [
+      { key: "ui-panel", kind: "image" },
+      { key: "fx-heart-loss", kind: "sheet" },
+      { key: "ui-panel", kind: "image" },
+    ]),
+  ).toEqual([
+    { kind: "image", url: "/art/images/ui-panel.png" },
+    { kind: "image", url: "/art/images/ui-panel-dim.png" },
+    { kind: "sheet", url: "/art/sprites/fx-heart-loss.json" },
+    { kind: "image", url: "/art/sprites/fx-heart-loss.png" },
+  ]);
 });
