@@ -4,7 +4,7 @@ import type { Scene } from "phaser";
 import { expect, it, vi } from "vitest";
 
 import { PHONE_EVENTS } from "../pwa/index.ts";
-import { onBackPressed } from "./overlay.ts";
+import { nativeSceneAccepts, onBackPressed } from "./overlay.ts";
 import { followScene } from "./questionPanel.ts";
 
 vi.mock("phaser", () => ({
@@ -94,9 +94,11 @@ it("blocks page back until the scene's native panel admits input", () => {
     const back = vi.fn();
     followScene(scene, panel);
     onBackPressed(scene, back);
+    expect(nativeSceneAccepts(scene)).toBe(false);
     page.dispatchEvent(new Event(PHONE_EVENTS.backPressed));
     expect(back).not.toHaveBeenCalled();
     state.enabled = true;
+    expect(nativeSceneAccepts(scene)).toBe(true);
     page.dispatchEvent(new Event(PHONE_EVENTS.backPressed));
     expect(back).toHaveBeenCalledOnce();
     events.emit("shutdown");

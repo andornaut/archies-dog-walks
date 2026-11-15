@@ -46,6 +46,11 @@ function nativeSceneInput(scene: Scene): PressGate {
   };
 }
 
+// Scene keyboard routes share the native panel's current paint and modal admission.
+export function nativeSceneAccepts(scene: Scene): boolean {
+  return scene.sys.isActive() && scene.input.enabled && nativeSceneInput(scene).accepts();
+}
+
 // Emitted on game.events, with whether sound is now muted, when a top bar's Sound button is
 // tapped over an overlay (the home top bar's, or the walk bar's), so the screen under it and the
 // settings redraw and say so.
@@ -110,7 +115,7 @@ export function onceSceneEvent<Args extends unknown[]>(
 // overlay leaves the press to the overlay.
 export function onBackPressed(scene: Scene, back: () => void): void {
   onWindowEvent(scene, PHONE_EVENTS.backPressed, () => {
-    if (scene.sys.isActive() && scene.input.enabled && nativeSceneInput(scene).accepts()) {
+    if (nativeSceneAccepts(scene)) {
       back();
     }
   });

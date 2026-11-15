@@ -80,6 +80,8 @@ it("cancels a carried settings drag when install steps take ownership and restor
   row.fire("pointerdown", event);
   expect(slide.start).toHaveBeenCalledOnce();
   shown.update(view(true), null);
+  expect(element.children[0]?.hidden).toBe(false);
+  expect(element.children[0]?.inert).toBe(true);
   expect(slide.end).toHaveBeenCalledExactlyOnceWith(true);
   doc.fire("pointermove", { ...event, clientX: 30, type: "pointermove" } as typeof event);
   doc.fire("pointerup", { ...event, type: "pointerup" } as typeof event);

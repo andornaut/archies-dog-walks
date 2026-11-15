@@ -436,7 +436,7 @@ export function showSettings(layer: UiLayer, input: DomSettingsInput): DomSettin
     },
     setDimmed(value) {
       dimmed = value;
-      panel.setDimmed(value);
+      panel.setDimmed(value || steps !== undefined);
       steps?.setDimmed(value);
     },
     setEnabled(value) {
@@ -451,15 +451,14 @@ export function showSettings(layer: UiLayer, input: DomSettingsInput): DomSettin
     },
     setShown(show) {
       shown = show;
-      panel.setShown(show && steps === undefined);
+      panel.setShown(show);
       steps?.setShown(show);
     },
     update(view, focus) {
       current = view;
       placeAll(layer.scale());
-      panel.setDimmed(dimmed);
+      panel.setDimmed(dimmed || view.steps !== undefined);
       if (view.steps !== undefined && steps === undefined) {
-        panel.setShown(false);
         steps = showSteps(layer, input, view.steps);
         steps.setEnabled(enabled);
         steps.setInert(inert);
@@ -469,6 +468,7 @@ export function showSettings(layer: UiLayer, input: DomSettingsInput): DomSettin
         steps.destroy();
         steps = undefined;
         panel.setShown(shown);
+        panel.setDimmed(dimmed);
       }
       if (steps === undefined) {
         panel.focusControl(focus ?? undefined);
