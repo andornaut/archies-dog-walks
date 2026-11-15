@@ -19,6 +19,7 @@ import { toggleMuted } from "./profileStore.ts";
 import { SCENE_KEYS, type SceneKey } from "./sceneKeys.ts";
 import type { SettingsData } from "./SettingsScene.ts";
 import { listenTargetPress } from "./targetPress.ts";
+import { requestTitleReturn } from "./titleNavigation.ts";
 import { nativeTopSectionButtons } from "./topSection.ts";
 
 // Emitted on game.events as the top bar opens help, the Logbook or the settings: the Logbook,
@@ -37,13 +38,16 @@ const barRoutes = new WeakMap<object, Map<Scene, () => void>>();
 // dropped (openGuard).
 export function openHomePage(from: Scene, page: HomePage): void {
   homePageGuard(from.game.events, from, () => {
+    const title = from.sys.settings.key === SCENE_KEYS.start;
     from.game.events.emit(HOME_PAGE_OPENING_EVENT);
     const { shop, start } = SCENE_KEYS;
     const resume = from.scene.isActive(shop) || from.scene.isPaused(shop) ? shop : start;
     const under = from.scene.get(resume);
     switch (page) {
       case "menu": {
-        const data: MenuSceneData = { context: "home", resume };
+        const data: MenuSceneData = title
+          ? { context: "home", resume }
+          : { context: "page", onHeadHome: () => requestTitleReturn(under), resume };
         openOverlay(under, SCENE_KEYS.menu, data);
         return;
       }

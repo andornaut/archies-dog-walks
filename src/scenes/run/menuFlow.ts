@@ -9,6 +9,7 @@ import { SCENE_KEYS, type SceneKey } from "../sceneKeys.ts";
 import type { SettingsScene } from "../SettingsScene.ts";
 import { soundboardOf } from "../soundboard.ts";
 import type { ZoneCelebrationSceneData } from "../ZoneCelebrationScene.ts";
+import type { EndDestination } from "./endDestination.ts";
 
 // What the menus need of the run.
 interface MenuFlowHost {
@@ -16,7 +17,7 @@ interface MenuFlowHost {
   debuffs: () => number;
   dropPress: () => void;
   // Heads home from the pause menu, once it has closed.
-  headHome: () => void;
+  headHome: (destination: EndDestination) => void;
   // What the Home question says going home now keeps and gives up.
   homeNote: () => readonly HomeNoteLine[];
   // Whether the walk is over or not yet started, when the menu stays shut.
@@ -40,6 +41,7 @@ export class MenuFlow {
   private held = false;
   private hidden = false;
   private readonly host: MenuFlowHost;
+  private homeDestination: EndDestination = "end";
   private pauseMode: PauseSceneData["mode"] = "menu";
   private pauseOpen = false;
   // Help or the settings, which the walk bar's button opens with the menu, once.
@@ -142,13 +144,15 @@ export class MenuFlow {
   // step with its hit stop. The card under the menu pauses and hides, so no card shows beside
   // the menu's panel; a zone celebration under it pauses. The HUD keeps running, so the top
   // bar's buttons work and redraw. Opened in another mode while open, it restarts in that mode.
-  openPause(mode: PauseSceneData["mode"]): void {
+  openPause(mode: PauseSceneData["mode"], destination: EndDestination = "end"): void {
     if (this.host.over()) {
       return;
     }
     const { scene } = this;
+    const changed = mode !== this.pauseMode || destination !== this.homeDestination;
+    this.homeDestination = destination;
     if (this.pauseOpen) {
-      if (mode !== this.pauseMode) {
+      if (changed) {
         this.pauseMode = mode;
         this.restartPause();
       }
@@ -166,6 +170,11 @@ export class MenuFlow {
       scene.scene.pause(SCENE_KEYS.zoneCelebration);
     }
     scene.scene.launch(SCENE_KEYS.pause, this.pauseData());
+  }
+
+  // Navigation confirms the same settlement while returning directly to the title.
+  openTitleQuestion(): void {
+    this.openPause("homeQuestion", "title");
   }
 
   // The walk bar's Help and Settings buttons: help or the settings over the pause menu, the walk
@@ -206,6 +215,7 @@ export class MenuFlow {
     this.stopSettings();
     scene.scene.stop(SCENE_KEYS.pause);
     this.pauseOpen = false;
+    this.homeDestination = "end";
     this.hold();
     if (this.cardView !== undefined) {
       scene.scene.setVisible(true, SCENE_KEYS.card);
@@ -251,11 +261,12 @@ export class MenuFlow {
   }
 
   private pauseData(): PauseSceneData {
+    const destination = this.homeDestination;
     const answers = {
       debuffs: this.host.debuffs(),
       onHeadHome: () => {
         this.closePause();
-        this.host.headHome();
+        this.host.headHome(destination);
       },
       onResume: () => this.closePause(),
     };
@@ -266,8 +277,9 @@ export class MenuFlow {
       return { ...answers, mode: "homeQuestion", note: this.host.homeNote() };
     }
     const note = this.host.pauseNote();
+    const onTitle = () => this.openTitleQuestion();
     return overlay === undefined
-      ? { ...answers, mode: "menu", note }
-      : { ...answers, mode: "menu", note, overlay };
+      ? { ...answers, mode: "menu", note, onTitle }
+      : { ...answers, mode: "menu", note, onTitle, overlay };
   }
 }

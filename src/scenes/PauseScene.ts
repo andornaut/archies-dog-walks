@@ -13,6 +13,7 @@ import {
   PAUSE_MENU_ITEMS,
   PAUSE_MENU_KEY_ORDER,
   type PauseMenuItem,
+  pauseMenuItemLabel,
 } from "../ui/navigationMenu.ts";
 import { PALETTE } from "../ui/palette.ts";
 import { addRampDim } from "../ui/phaser/rampDim.ts";
@@ -49,7 +50,7 @@ export type PauseSceneData = {
   onResume: () => void;
 } & (
   | { mode: "homeQuestion"; note: readonly HomeNoteLine[] }
-  | { mode: "menu"; note: string; overlay?: PauseOverlay }
+  | { mode: "menu"; note: string; onTitle: () => void; overlay?: PauseOverlay }
 );
 
 // The Home question's note lines' colours, by what they say.
@@ -59,7 +60,7 @@ const NOTE_COLOURS: Readonly<Record<HomeNoteLine["kind"], number>> = {
   zonesLeft: PALETTE.plum,
 };
 
-// The pause menu over the dimmed band and road: resume, help, settings or end the walk; or the
+// The pause menu over the dimmed band and road: help, settings, Back to title or Resume; or the
 // Home button's question, keep walking or end the walk. The HUD keeps running under it, so the top
 // bar's buttons and their keys (P, Escape and M) stay with it.
 export class PauseScene extends Scene {
@@ -82,7 +83,7 @@ export class PauseScene extends Scene {
       onHeadHome();
     };
     const presses: Readonly<Record<PauseMenuItem, () => void>> = {
-      headHome,
+      headHome: data.mode === "menu" ? data.onTitle : headHome,
       help: () => openHelp(this, SCENE_KEYS.pause),
       resume: onResume,
       settings: () => this.openSettings(data.debuffs),
@@ -103,14 +104,17 @@ export class PauseScene extends Scene {
     };
     const question = gameData.runText.homeQuestion;
     const menu = gameData.menuText.pause;
-    // The first entry, Resume or Keep walking, is the call to action.
+    // Resume is the menu's bottom primary; Keep walking remains the question's safe answer.
     const entries: PanelEntry[] =
       data.mode === "homeQuestion"
         ? HOME_QUESTION_ANSWERS.map((answer) => ({
             label: question[answer],
             press: answer === "headHome" ? headHome : onResume,
           }))
-        : PAUSE_MENU_ITEMS.map((item) => ({ label: menu[item], press: presses[item] }));
+        : PAUSE_MENU_ITEMS.map((item) => ({
+            label: pauseMenuItemLabel(gameData, item),
+            press: presses[item],
+          }));
     // The menu's own note starts each sentence on a line of its own.
     const panel: QuestionPanel =
       data.mode === "homeQuestion"

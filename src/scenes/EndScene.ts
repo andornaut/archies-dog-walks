@@ -158,7 +158,12 @@ export class EndScene extends Scene {
         if (id === "mute") {
           this.game.events.emit(BAR_MUTED_EVENT, toggleMuted(this));
         } else {
-          const data: MenuSceneData = { closePage: goHome, context: "end", resume: SCENE_KEYS.end };
+          const data: MenuSceneData = {
+            closePage: goHome,
+            context: "end",
+            onHeadHome: goHome,
+            resume: SCENE_KEYS.end,
+          };
           openOverlay(this, SCENE_KEYS.menu, data);
         }
       },

@@ -91,7 +91,7 @@ import { type CloseControl, closeControl } from "../ui/closeControl.ts";
 import { modalTitleLayout } from "../ui/modal/layout.ts";
 import { modalTitleInk } from "../ui/modal/titleRole.ts";
 import { cardTitleRow } from "../ui/modal/titleRow.ts";
-import { PAUSE_MENU_ITEMS } from "../ui/navigationMenu.ts";
+import { PAUSE_MENU_ITEMS, pauseMenuItemLabel } from "../ui/navigationMenu.ts";
 import { plainMarks } from "../ui/pixelFont.ts";
 import { MODAL_TITLE_SCALE, TEXT_SCALE, TEXT_STYLE, textOnLines } from "../ui/textFit.ts";
 import { cents } from "../units.ts";
@@ -479,11 +479,10 @@ function pauseNoteRoles(): TextRoleCase[] {
 // The pause menu's, the Home question's and Quit?'s buttons' labels with the number key that
 // picks each; their titles are cardTitles'.
 function questionPanelRoles(): TextRoleCase[] {
-  const { pause } = gameData.menuText;
   const home = gameData.runText.homeQuestion;
   const { quit } = gameData.homeText;
   const menus = [
-    PAUSE_MENU_ITEMS.map((item) => pause[item]),
+    PAUSE_MENU_ITEMS.map((item) => pauseMenuItemLabel(gameData, item)),
     HOME_QUESTION_ANSWERS.map((answer) => home[answer]),
     QUIT_QUESTION_ANSWERS.map((answer) => quit[answer]),
   ];

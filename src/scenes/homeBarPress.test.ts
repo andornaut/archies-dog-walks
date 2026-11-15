@@ -9,7 +9,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { HOME_LAYOUT, homeBarButtons } from "../home/homeLayout.ts";
 import { exitShown } from "../pwa/index.ts";
-import { listenHomeBar, routeHomeBar, sceneRegionOutside } from "./homeBarPress.ts";
+import { listenHomeBar, openHomePage, routeHomeBar, sceneRegionOutside } from "./homeBarPress.ts";
 import { openOverlay } from "./overlay.ts";
 import { nativeTopSectionButtons } from "./topSection.ts";
 
@@ -29,7 +29,7 @@ vi.mock("./overlay.ts", async (original) => ({
 
 const centre = (rect: Rect): Point => ({ x: rect.x + rect.width / 2, y: rect.y + rect.height / 2 });
 
-function fakeOverlay() {
+function fakeOverlay(key = "settings") {
   const input = Object.assign(new EventEmitter(), { manager: { pointers: [] } });
   const game = { events: new EventEmitter() };
   const scene = sceneStub(vi.fn, {
@@ -38,6 +38,7 @@ function fakeOverlay() {
     scene: { get: () => scene, isActive: () => false, isPaused: () => false },
     time: { now: 0 },
   }) as unknown as Scene;
+  Object.assign(scene.sys, { settings: { key } });
   const pointer = (point: Point) => ({ ...point, id: 1, isDown: false, wasCanceled: false });
   return {
     down: (point: Point) => input.emit("pointerdown", pointer(point)),
@@ -68,7 +69,8 @@ describe("the shared menu entry under a home overlay", () => {
     expect(openOverlay).toHaveBeenCalledTimes(calls);
     if (calls > 0) {
       expect(openOverlay).toHaveBeenCalledWith(overlay.scene, "menu", {
-        context: "home",
+        context: "page",
+        onHeadHome: expect.any(Function),
         resume: "start",
       });
     }
@@ -120,4 +122,14 @@ it("routes retained Home Exit only when both capability and the actual bar expos
   );
   overlay.scene.events.emit("shutdown");
   vi.mocked(exitShown).mockReturnValue(false);
+});
+
+it("omits title navigation only when the originating screen is the actual title", () => {
+  vi.mocked(openOverlay).mockClear();
+  const { scene } = fakeOverlay("start");
+  openHomePage(scene, "menu");
+  expect(openOverlay).toHaveBeenCalledExactlyOnceWith(scene, "menu", {
+    context: "home",
+    resume: "start",
+  });
 });

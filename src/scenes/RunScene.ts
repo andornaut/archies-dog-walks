@@ -75,6 +75,7 @@ import {
 import { AmbientView } from "./run/ambientView.ts";
 import { BackdropView } from "./run/backdropView.ts";
 import { DistractionView } from "./run/distractionView.ts";
+import { type EndDestination, endSceneFor } from "./run/endDestination.ts";
 import { HitBoxView } from "./run/hitBoxView.ts";
 import { blendWalk, leadWalk, stepAlpha } from "./run/interpolate.ts";
 import { ensureRoadPlaceholders, ItemViews } from "./run/itemViews.ts";
@@ -149,6 +150,7 @@ export class RunScene extends Scene implements HudRun {
   // The ambient movers' clock: the walk's simulated time less its firings' holds, in which
   // they stand still.
   private ambientMs = 0;
+  private endDestination: EndDestination = "end";
   // Where the next launch resumes the walk, saved with each checkpoint: the walk's start, its
   // last fork, or the start of the zone it is in, whichever came last.
   private resumePoint: ResumeWalk | null = null;
@@ -167,6 +169,7 @@ export class RunScene extends Scene implements HudRun {
   }
 
   create(data: RunSceneData): void {
+    this.endDestination = "end";
     this.resetState();
     ensureRoadPlaceholders(this);
     // Ink backs unavailable world art; loaded road and backdrop textures pad camera movement.
@@ -320,7 +323,7 @@ export class RunScene extends Scene implements HudRun {
       menus: new MenuFlow(this, {
         debuffs: () => this.session?.walk.run.debuffs.length ?? 0,
         dropPress: () => this.world?.input.dropPress(),
-        headHome: () => this.headHome(),
+        headHome: (destination) => this.headHome(destination),
         homeNote: () =>
           this.session === undefined ? [] : homeQuestionNote(gameData, this.session.walk.run),
         over: () => this.session === undefined || this.session.walk.run.phase.kind === "ended",
@@ -505,7 +508,8 @@ export class RunScene extends Scene implements HudRun {
   }
 
   // Ends the walk with what the finished zones earned, as the Home answer or a replayed one does.
-  private headHome(): void {
+  private headHome(destination: EndDestination = "end"): void {
+    this.endDestination = destination;
     if (this.session !== undefined) {
       this.apply(headHomeSession(this.session));
     }
@@ -700,6 +704,10 @@ export class RunScene extends Scene implements HudRun {
     this.world?.menus.openFromBar(open);
   }
 
+  openTitleQuestion(): void {
+    this.world?.menus.openTitleQuestion();
+  }
+
   closeExplanation(): void {
     this.world?.input.dropPress();
   }
@@ -713,8 +721,7 @@ export class RunScene extends Scene implements HudRun {
     this.world?.menus.closeSettings();
   }
 
-  // Saves the walk and its input log, then shows the end screen, once a final firing or
-  // payout has played.
+  // Saves the walk and its input log before its chosen destination, after the final payout.
   private endWalk(): void {
     const walk = this.session?.walk;
     const world = this.world;
@@ -740,12 +747,13 @@ export class RunScene extends Scene implements HudRun {
       this.scene.start(SCENE_KEYS.start);
       return;
     }
-    const showEnd = () => this.scene.start(SCENE_KEYS.end);
+    const destination = endSceneFor(this.endDestination, walk.run.phase);
+    const showDestination = () => this.scene.start(destination);
     finishRun(this, runResultOf(gameData, walk.run), world.moments.banked()).then(
-      showEnd,
+      showDestination,
       (error: unknown) => {
         console.error("The run could not be saved.", error);
-        showEnd();
+        showDestination();
       },
     );
   }

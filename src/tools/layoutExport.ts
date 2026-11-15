@@ -102,7 +102,7 @@ import { read } from "../rules/units.ts";
 import { walkProjection } from "../runner/walkGeometry.ts";
 import { gridRects } from "../ui/grid.ts";
 import { MODAL, modalActionWidth } from "../ui/modal/layout.ts";
-import { navigationMenuWidth, PAUSE_MENU_ITEMS } from "../ui/navigationMenu.ts";
+import { navigationMenuWidth, PAUSE_MENU_ITEMS, pauseMenuItemLabel } from "../ui/navigationMenu.ts";
 import { plainMarks } from "../ui/pixelFont.ts";
 import { readBitmapFont } from "./fontFile.ts";
 
@@ -341,7 +341,7 @@ export function layoutExport(
       },
       loading: { art: LOADING_ART, walker: LOADING_WALKER_START },
       pause: {
-        labels: PAUSE_MENU_ITEMS.map((item) => data.menuText.pause[item]),
+        labels: PAUSE_MENU_ITEMS.map((item) => pauseMenuItemLabel(data, item)),
         // The note takes a line per sentence at 2x on the plate.
         ...pauseMenuLayout(body, walkView, {
           buttonCount: PAUSE_MENU_ITEMS.length,
@@ -350,7 +350,7 @@ export function layoutExport(
               inkWidth(
                 readBitmapFont("font-title"),
                 2,
-                plainMarks(data.menuText.pause[item]).toUpperCase(),
+                plainMarks(pauseMenuItemLabel(data, item)).toUpperCase(),
               ),
             ),
           ),

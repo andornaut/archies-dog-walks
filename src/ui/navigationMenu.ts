@@ -10,16 +10,24 @@ export const PAUSE_MENU_ITEMS = [
   "resume",
 ] as const;
 
-export type MenuContext = "end" | "help" | "home";
+export type MenuContext = "end" | "help" | "home" | "page";
 export type MenuItem = "close" | "headHome" | "help" | "logbook" | "quit" | "settings";
 
 // Only the navigation applicable to the screen joins its primary Close action.
 export function menuItems(context: MenuContext, exit: boolean): readonly MenuItem[] {
   switch (context) {
     case "home":
-      return ["help", "logbook", "settings", ...(exit ? ["quit" as const] : []), "close"];
+    case "page":
+      return [
+        "help",
+        "logbook",
+        "settings",
+        ...(exit ? ["quit" as const] : []),
+        ...(context === "page" ? ["headHome" as const] : []),
+        "close",
+      ];
     case "help":
-      return ["settings", "close"];
+      return ["settings", "headHome", "close"];
     case "end":
       return ["settings", "headHome", "close"];
     default:
@@ -59,7 +67,7 @@ export function navigationMenuWidth(
   const titles = [data.menuText.menu.title, data.menuText.pause.title];
   const labels = [
     ...menuItems("home", true).map((item) => menuItemLabel(data, item)),
-    ...PAUSE_MENU_ITEMS.map((item) => data.menuText.pause[item]),
+    ...PAUSE_MENU_ITEMS.map((item) => pauseMenuItemLabel(data, item)),
   ];
   return modalPanelWidth(
     available,
@@ -68,4 +76,8 @@ export function navigationMenuWidth(
       ...labels.map((label) => modalActionWidth(measure.inkWidth("title", label)) + 2 * MODAL.pad),
     ),
   );
+}
+
+export function pauseMenuItemLabel(data: Pick<GameData, "menuText">, item: PauseMenuItem): string {
+  return item === "headHome" ? data.menuText.end.headHome : data.menuText.pause[item];
 }

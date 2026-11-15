@@ -2247,58 +2247,58 @@
       "labels": [
         "Help",
         "Settings",
-        "End walk",
+        "Back to title",
         "Resume"
       ],
       "buttons": [
         {
           "height": 48,
-          "width": 120,
-          "x": 120.5,
+          "width": 160,
+          "x": 100.5,
           "y": 171
         },
         {
           "height": 48,
-          "width": 120,
-          "x": 120.5,
+          "width": 160,
+          "x": 100.5,
           "y": 227
         },
         {
           "height": 48,
-          "width": 120,
-          "x": 120.5,
+          "width": 160,
+          "x": 100.5,
           "y": 283
         },
         {
           "height": 48,
-          "width": 120,
-          "x": 120.5,
+          "width": 160,
+          "x": 100.5,
           "y": 339
         }
       ],
       "hits": [
         {
           "height": 48,
-          "width": 120,
-          "x": 120.5,
+          "width": 160,
+          "x": 100.5,
           "y": 171
         },
         {
           "height": 48,
-          "width": 120,
-          "x": 120.5,
+          "width": 160,
+          "x": 100.5,
           "y": 227
         },
         {
           "height": 48,
-          "width": 120,
-          "x": 120.5,
+          "width": 160,
+          "x": 100.5,
           "y": 283
         },
         {
           "height": 48,
-          "width": 120,
-          "x": 120.5,
+          "width": 160,
+          "x": 100.5,
           "y": 339
         }
       ],

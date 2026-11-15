@@ -31,8 +31,13 @@ import { SCENE_KEYS, type SceneKey } from "./sceneKeys.ts";
 import type { SettingsData } from "./SettingsScene.ts";
 
 export type MenuSceneData = OverlayData & { readonly resume: SceneKey } & (
-    | { readonly context: "home"; readonly closePage?: never }
-    | { readonly context: Exclude<MenuContext, "home">; readonly closePage: () => void }
+    | { readonly context: "home"; readonly closePage?: never; readonly onHeadHome?: never }
+    | {
+        readonly context: Exclude<MenuContext, "home" | "page">;
+        readonly closePage: () => void;
+        readonly onHeadHome: () => void;
+      }
+    | { readonly context: "page"; readonly closePage?: never; readonly onHeadHome: () => void }
   );
 
 // Non-play navigation uses the pause menu's layout, controls and dismissal lifecycle.
@@ -45,7 +50,7 @@ export class MenuScene extends Scene {
     mountNativeOverlay(this, () => this.mount(data));
   }
 
-  private mount({ closePage, context, resume }: MenuSceneData): boolean {
+  private mount({ closePage, context, onHeadHome, resume }: MenuSceneData): boolean {
     const area = overlayRegion("home");
     const close = () => closeOverlay(resume, this);
     const closeScreen = () => {
@@ -58,7 +63,10 @@ export class MenuScene extends Scene {
     };
     const actions: Readonly<Record<MenuItem, () => void>> = {
       close: context === "help" ? closeScreen : close,
-      headHome: closeScreen,
+      headHome: () => {
+        close();
+        onHeadHome?.();
+      },
       help: () => openHomePage(this, "help"),
       logbook: () => openHomePage(this, "logbook"),
       quit: () => {

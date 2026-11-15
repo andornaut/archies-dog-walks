@@ -14,6 +14,7 @@ import {
   navigationMenuWidth,
   PAUSE_MENU_ITEMS,
   PAUSE_MENU_KEY_ORDER,
+  pauseMenuItemLabel,
 } from "../ui/navigationMenu.ts";
 import { plainMarks } from "../ui/pixelFont.ts";
 import { TEXT_SCALE } from "../ui/textFit.ts";
@@ -37,7 +38,16 @@ const measure: PanelMeasure = {
 it("keeps applicable navigation in order with the primary action last and guarded Quit", () => {
   expect(menuItems("home", true)).toEqual(["help", "logbook", "settings", "quit", "close"]);
   expect(menuItems("home", false)).toEqual(["help", "logbook", "settings", "close"]);
-  expect(menuItems("help", true)).toEqual(["settings", "close"]);
+  expect(menuItems("help", true)).toEqual(["settings", "headHome", "close"]);
+  expect(menuItems("page", true)).toEqual([
+    "help",
+    "logbook",
+    "settings",
+    "quit",
+    "headHome",
+    "close",
+  ]);
+  expect(menuItems("page", false)).toEqual(["help", "logbook", "settings", "headHome", "close"]);
   expect(menuItems("end", true)).toEqual(["settings", "headHome", "close"]);
   expect(PAUSE_MENU_ITEMS).toEqual(["help", "settings", "headHome", "resume"]);
   expect(PAUSE_MENU_KEY_ORDER).toEqual(["resume", "help", "settings", "headHome"]);
@@ -47,7 +57,7 @@ describe.each(["home", "pause"] as const)("%s navigation geometry", (context) =>
   const labels =
     context === "home"
       ? menuItems("home", true).map((item) => menuItemLabel(gameData, item))
-      : PAUSE_MENU_ITEMS.map((item) => gameData.menuText.pause[item]);
+      : PAUSE_MENU_ITEMS.map((item) => pauseMenuItemLabel(gameData, item));
   const width = navigationMenuWidth(
     gameData,
     measure,

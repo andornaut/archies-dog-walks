@@ -39,6 +39,7 @@ import {
 import { addHtmlHelpScreen, htmlPanelInput, htmlPanelPlace } from "./questionPanel.ts";
 import { REFUSE } from "./refuseControl.ts";
 import { SCENE_KEYS, type SceneKey } from "./sceneKeys.ts";
+import { requestTitleReturn } from "./titleNavigation.ts";
 import { addNativeTopSection } from "./topSection.ts";
 import { clearScene } from "./uiKit.ts";
 
@@ -205,6 +206,10 @@ export class HelpScene extends Scene {
           const data: MenuSceneData = {
             closePage: () => this.close(),
             context: "help",
+            onHeadHome: () => {
+              this.close();
+              requestTitleReturn(this);
+            },
             resume: SCENE_KEYS.help,
           };
           openOverlay(this, SCENE_KEYS.menu, data);
