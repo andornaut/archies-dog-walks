@@ -345,7 +345,7 @@ export class RunScene extends Scene implements HudRun {
       const action = walkBackAction(over, this.runPause());
       switch (action) {
         case "closeExplanation":
-          this.world?.input.dropPress();
+          this.closeExplanation();
           return;
         case "menu":
           this.openPause();
@@ -698,6 +698,10 @@ export class RunScene extends Scene implements HudRun {
   // The walk bar's Help and Settings buttons.
   openFromBar(open: "help" | "settings"): void {
     this.world?.menus.openFromBar(open);
+  }
+
+  closeExplanation(): void {
+    this.world?.input.dropPress();
   }
 
   closePause(): void {

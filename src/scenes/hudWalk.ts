@@ -30,6 +30,7 @@ export interface HudWalk {
 // The run the walk bar's buttons act on: the walk the HUD shows, and the pause menu and pages
 // the bar opens over it.
 export interface HudRun extends HudWalk {
+  closeExplanation(): void;
   closePause(): void;
   closeSettings(): void;
   openFromBar(open: "help" | "settings"): void;
