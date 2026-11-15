@@ -1,6 +1,7 @@
 import { advanceWidth, type BitmapFont, inkWidth } from "@andornaut/game-kit/text/bitmapFont";
 
 import { SCREEN_CONFIG } from "../../data/screen.ts";
+import { BUTTON_SIZE } from "../buttonGeometry.ts";
 import {
   artPixel,
   deviceX,
@@ -14,7 +15,7 @@ import { PALETTE } from "../palette.ts";
 import { TOP_BAR_FACE, topBarRects } from "../topBarTrim.ts";
 import { type TopSectionButton, topSectionCurrency, topSectionLayout } from "../topSection.ts";
 import { type DomArtSource, imageArt, sheetArt } from "./artElements.ts";
-import { guardNativeInput } from "./modalLifecycle.ts";
+import { guardNativeInput, revealPaint } from "./modalLifecycle.ts";
 import { createTextLine, placeBox, placeText, setBox } from "./pixelLine.ts";
 import type { UiLayer } from "./uiLayer.ts";
 
@@ -43,6 +44,7 @@ export interface NativeTopSection {
   dispose(): void;
   setAmount(full: string, short?: string): void;
   setInert(inert: boolean): void;
+  setInputBottom(bottom: number | undefined): void;
   setMuted(muted: boolean): void;
   setPaused(menu: boolean): void;
   setShown(shown: boolean): void;
@@ -76,8 +78,7 @@ export function createNativeTopSection(
   let shown = true;
   let inert = false;
   let epoch = 0;
-  let painted = false;
-  let paintFrame: number | undefined;
+  let inputBottom: number | undefined;
   const box = (colour: number, rect: Parameters<typeof placeBox>[3]) => {
     const element = doc.createElement("span");
     element.className = "adw-framed";
@@ -127,7 +128,17 @@ export function createNativeTopSection(
       glyphRoot.append(sound.element);
     }
     const place = (scale: DomScale) => {
-      placeBox(scale, ORIGIN, button, hit);
+      placeBox(
+        scale,
+        ORIGIN,
+        button,
+        inputBottom === undefined
+          ? hit
+          : {
+              ...hit,
+              height: Math.max(0, Math.min(hit.height, inputBottom - hit.y)),
+            },
+      );
       const origin = { x: hit.x, y: hit.y };
       for (const [index, art] of faces.entries()) {
         art.element.hidden = index !== Number(pressed);
@@ -136,7 +147,10 @@ export function createNativeTopSection(
       setBox(glyphRoot, {
         height: 16 * artPixel(scale),
         left: gridX(scale, face.x) - gridX(scale, hit.x) + 2 * artPixel(scale),
-        top: gridY(scale, face.y) - gridY(scale, hit.y) + (1 + (pressed ? 2 : 0)) * artPixel(scale),
+        top:
+          gridY(scale, face.y) -
+          gridY(scale, hit.y) +
+          (1 + (pressed ? BUTTON_SIZE.press : 0)) * artPixel(scale),
         width: 16 * artPixel(scale),
       });
       for (const { art, key } of icons) {
@@ -152,7 +166,7 @@ export function createNativeTopSection(
     };
     controls.set(id, { setPressed });
     const active = () =>
-      painted && !disposed && shown && !inert && !root.hidden && config.accepts(id);
+      paint.painted() && !disposed && shown && !inert && !root.hidden && config.accepts(id);
     const press = (via: NativeTopSectionPress["via"], completedAt: number) =>
       config.press(id, {
         completedAt,
@@ -326,20 +340,7 @@ export function createNativeTopSection(
     groups.flat(),
   );
   const reveal = layer.reveal(ready, root);
-  void reveal.revealed.then((ready) => {
-    if (!ready || disposed) {
-      return;
-    }
-    const page = doc.defaultView;
-    if (page?.requestAnimationFrame === undefined) {
-      painted = true;
-    } else {
-      paintFrame = page.requestAnimationFrame(() => {
-        painted = !disposed;
-        paintFrame = undefined;
-      });
-    }
-  });
+  const paint = revealPaint(reveal, () => undefined, root);
   return {
     buttons: controls,
     dispose() {
@@ -348,10 +349,7 @@ export function createNativeTopSection(
       }
       disposed = true;
       epoch += 1;
-      reveal.cancel();
-      if (paintFrame !== undefined) {
-        doc.defaultView?.cancelAnimationFrame(paintFrame);
-      }
+      paint.destroy();
       cleanups.forEach((cleanup) => cleanup());
       offScale();
       root.remove();
@@ -359,6 +357,9 @@ export function createNativeTopSection(
     element: root,
     revealed: reveal.revealed,
     setAmount(full, abbreviated = full) {
+      if (amount === full && short === abbreviated) {
+        return;
+      }
       amount = full;
       short = abbreviated;
       placeMoney(layer.scale());
@@ -370,11 +371,25 @@ export function createNativeTopSection(
       inert = value;
       root.inert = value;
     },
+    setInputBottom(bottom) {
+      if (bottom === inputBottom) {
+        return;
+      }
+      epoch += 1;
+      inputBottom = bottom;
+      place(layer.scale());
+    },
     setMuted(value) {
+      if (muted === value) {
+        return;
+      }
       muted = value;
       updateIcons.forEach((update) => update());
     },
     setPaused(value) {
+      if (menu === value) {
+        return;
+      }
       menu = value;
       updateIcons.forEach((update) => update());
     },

@@ -1,5 +1,6 @@
 import { readFileSync } from "node:fs";
 
+import { PENDING_ATTRIBUTE } from "@andornaut/game-kit/web/ui/dom/imageReady";
 import { describe, expect, it, vi } from "vitest";
 
 import { gameData } from "../../data/index.ts";
@@ -19,12 +20,26 @@ const labels = {
 function fixture() {
   const doc = new FakeDocument();
   const { element, layer } = fakeLayer(doc, domScale(1, { height: 560, width: 360, x: 0, y: 0 }));
-  let reveal: (ready: boolean) => void = () => undefined;
+  let pendingRoot: HTMLElement | undefined;
+  let resolveReveal: (ready: boolean) => void = () => undefined;
   const revealed = new Promise<boolean>((resolve) => {
-    reveal = resolve;
+    resolveReveal = resolve;
   });
+  const reveal = (ready: boolean) => {
+    if (ready) {
+      pendingRoot?.removeAttribute(PENDING_ATTRIBUTE);
+    }
+    resolveReveal(ready);
+  };
   const cancel = vi.fn(() => reveal(false));
-  Object.assign(layer, { onReady: () => () => undefined, reveal: () => ({ cancel, revealed }) });
+  Object.assign(layer, {
+    onReady: () => () => undefined,
+    reveal: (_urls: unknown, root: HTMLElement) => {
+      pendingRoot = root;
+      root.setAttribute(PENDING_ATTRIBUTE, "");
+      return { cancel, revealed };
+    },
+  });
   const press = vi.fn();
   const view = createNativeTopSection(
     layer,
@@ -83,7 +98,7 @@ function dispatch(target: FakeTarget, type: string, fields: Record<string, unkno
 
 describe("native top section integration", () => {
   it("keeps the shared control order and art geometry while gating native actions on reveal", async () => {
-    const { buttons, click, press, reveal } = fixture();
+    const { buttons, click, press, reveal, view } = fixture();
     expect(buttons.map((button) => button.getAttribute("aria-label"))).toEqual([
       labels.mute,
       labels.menu,
@@ -92,6 +107,10 @@ describe("native top section integration", () => {
     expect(buttons.map((button) => button.style.width)).toEqual(
       shared.controls.map(([, control]) => `${control.hit.width}px`),
     );
+    view.setInputBottom(40);
+    expect(buttons.map((button) => button.style.height)).toEqual(["40px", "40px"]);
+    view.setInputBottom(undefined);
+    expect(buttons.map((button) => button.style.height)).toEqual(["48px", "48px"]);
     click();
     expect(press).not.toHaveBeenCalled();
     reveal(true);
