@@ -18,13 +18,11 @@ import { type DomArtSource, imageArt, sheetArt } from "./artElements.ts";
 import { guardNativeInput, revealPaint } from "./modalLifecycle.ts";
 import { createTextLine, placeBox, placeText, setBox } from "./pixelLine.ts";
 import type { UiLayer } from "./uiLayer.ts";
-
 export interface NativeTopSectionPress {
   readonly completedAt: number;
   readonly startedAt: number | undefined;
   readonly via: "keyboard" | "pointer";
 }
-
 export interface NativeTopSectionConfig {
   readonly accepts: (id: TopSectionButton) => boolean;
   readonly activation?: "click" | "down";
@@ -36,9 +34,13 @@ export interface NativeTopSectionConfig {
   readonly muted?: boolean;
   readonly press: (id: TopSectionButton, press: NativeTopSectionPress) => void;
 }
-
 export interface NativeTopSection {
-  readonly buttons: ReadonlyMap<TopSectionButton, { setPressed(pressed: boolean): void }>;
+  readonly buttons: ReadonlyMap<
+    TopSectionButton,
+    {
+      setPressed(pressed: boolean): void;
+    }
+  >;
   readonly element: HTMLElement;
   readonly revealed: Promise<boolean>;
   dispose(): void;
@@ -49,7 +51,6 @@ export interface NativeTopSection {
   setPaused(menu: boolean): void;
   setShown(shown: boolean): void;
 }
-
 interface BarControl {
   readonly active: () => boolean;
   readonly button: HTMLButtonElement;
@@ -57,10 +58,8 @@ interface BarControl {
   readonly down: (event: PointerEvent) => void;
   readonly setPressed: (pressed: boolean) => void;
 }
-
 const ORIGIN = { x: 0, y: 0 } as const;
 const hex = (colour: number) => `#${colour.toString(16).padStart(6, "0")}`;
-
 // Screen owners select actions and input guards; every native top section shares this layout.
 export function createNativeTopSection(
   layer: UiLayer,
@@ -100,7 +99,12 @@ export function createNativeTopSection(
     root.append(art.element);
     placed.push((scale) => art.place(scale, ORIGIN, rect));
   }
-  const controls = new Map<TopSectionButton, { setPressed(pressed: boolean): void }>();
+  const controls = new Map<
+    TopSectionButton,
+    {
+      setPressed(pressed: boolean): void;
+    }
+  >();
   const records: BarControl[] = [];
   let held: BarControl | undefined;
   let released: BarControl | undefined;
@@ -254,6 +258,7 @@ export function createNativeTopSection(
           held = undefined;
           released = undefined;
         },
+        claim: layer.press.claim,
         down: (event) => {
           released = undefined;
           const record = records.find(({ button }) => button.contains(event.target as Node));

@@ -9,14 +9,12 @@ import { gameFont } from "../../testing/fontInk.ts";
 import { domScale } from "../domScale.ts";
 import { topSectionLayout } from "../topSection.ts";
 import { createNativeTopSection } from "./nativeTopSection.ts";
-
 const labels = {
   help: gameData.menuText.pause.help,
   menu: gameData.menuText.menu.title,
   mute: gameData.menuText.settings.sound,
   pause: gameData.menuText.pause.title,
 };
-
 function fixture(activation: "click" | "down" = "click") {
   const doc = new FakeDocument();
   const { element, layer } = fakeLayer(doc, domScale(1, { height: 560, width: 360, x: 0, y: 0 }));
@@ -67,7 +65,6 @@ function fixture(activation: "click" | "down" = "click") {
   };
   return { buttons, cancel, click, doc, element, layer, press, reveal, root, view };
 }
-
 function dispatch(target: FakeTarget, type: string, fields: Record<string, unknown>) {
   let stopped = false;
   const event = Object.assign(
@@ -93,7 +90,6 @@ function dispatch(target: FakeTarget, type: string, fields: Record<string, unkno
   }
   return stopped;
 }
-
 describe("native top section integration", () => {
   it("keeps the shared control order and art geometry while gating native actions on reveal", async () => {
     const { buttons, click, press, reveal, view } = fixture();
@@ -120,7 +116,6 @@ describe("native top section integration", () => {
       via: "keyboard",
     });
   });
-
   it("keeps a hidden or covered section inactive and disposes its pending reveal", async () => {
     const { buttons, cancel, click, doc, element, layer, press, reveal, root, view } = fixture();
     reveal(true);
@@ -151,11 +146,14 @@ describe("native top section integration", () => {
     expect(cancel).toHaveBeenCalledTimes(1);
     expect(element.children).toEqual([]);
   });
-
   it("admits only one pointer across separate bar controls", async () => {
-    const { buttons, doc, press, reveal, root } = fixture("down");
+    const { buttons, doc, layer, press, reveal, root } = fixture("down");
     reveal(true);
     await Promise.resolve();
+    const elsewhere = layer.press.claim();
+    dispatch(root, "pointerdown", { buttons: 1, pointerId: 0, target: buttons[0] });
+    expect(press).not.toHaveBeenCalled();
+    elsewhere?.release();
     dispatch(root, "pointerdown", { buttons: 1, pointerId: 1, target: buttons[0] });
     dispatch(root, "pointerdown", { buttons: 1, pointerId: 2, target: buttons[1] });
     expect(press).toHaveBeenCalledTimes(1);
@@ -169,7 +167,6 @@ describe("native top section integration", () => {
     });
     expect(press).toHaveBeenCalledTimes(2);
   });
-
   it("updates currency and mute state without replacing controls", () => {
     const { buttons, element, view } = fixture();
     view.setAmount("999999999", "999K");
