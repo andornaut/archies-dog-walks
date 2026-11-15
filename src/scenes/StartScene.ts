@@ -133,7 +133,7 @@ import { openHelp } from "./helpScreen.ts";
 import { exitGame, HOME_PAGE_OPENING_EVENT, openHomePage, routeHomeBar } from "./homeBarPress.ts";
 import { addAffordFrame, detailView } from "./homePanels.ts";
 import { drawPetShopFallback, PLATE_PAD, purchasePicture, SHOP_ART } from "./itemArt.ts";
-import { loadingProgress, waitedLoad } from "./loadingProgress.ts";
+import { waitedLoad } from "./loadingProgress.ts";
 import { measureModalTitle, modalTextWidth } from "./modalMeasure.ts";
 import { NATIVE_HOME_READY } from "./nativeHomeReady.ts";
 import { listenOnePress } from "./onePress.ts";
@@ -1381,7 +1381,6 @@ export class StartScene extends Scene {
           this.game.events.emit(NATIVE_HOME_READY);
         }
       },
-      progress: loadingProgress,
       scaled: () => this.place(this.time.now),
       up: (event, cancelled) => this.homePressUp(toGame(event), cancelled),
     });

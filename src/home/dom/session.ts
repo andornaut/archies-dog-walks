@@ -1,16 +1,11 @@
-import type { ProgressSource } from "@andornaut/game-kit/progressState";
-
 import { guardNativeInput, revealPaint } from "../../ui/dom/modalLifecycle.ts";
 import { followModalUnderlay } from "../../ui/dom/rampDim.ts";
 import type { UiLayer } from "../../ui/dom/uiLayer.ts";
-import { gridTransform } from "../../ui/domScale.ts";
-import { createHomeProgress } from "./progress.ts";
 import type { NativeHomeView } from "./screen.ts";
-// A home visit keeps its loading display and input owner while immutable content is replaced.
+// A home visit keeps one input owner while immutable content is replaced.
 export function createNativeHomeSession(
   layer: UiLayer,
   context: {
-    readonly progress: ProgressSource;
     readonly accepts: () => boolean;
     readonly down: (event: PointerEvent) => void;
     readonly move: (event: PointerEvent) => void;
@@ -25,11 +20,7 @@ export function createNativeHomeSession(
   const element = doc.createElement("div");
   element.className = "adw-dialog";
   const content = doc.createElement("div");
-  const progressRoot = doc.createElement("div");
-  progressRoot.className = "adw-dialog";
-  const progress = createHomeProgress(doc, context.progress);
-  progressRoot.append(progress.element);
-  element.append(content, progressRoot);
+  element.append(content);
   layer.element.append(element);
   let alive = true;
   let revision = 0;
@@ -85,14 +76,9 @@ export function createNativeHomeSession(
   element.addEventListener("click", click);
   element.addEventListener("keydown", key);
   const stopUnderlay = followModalUnderlay(layer.input, element);
-  const placeProgress = () => {
-    const scale = layer.scale();
-    progressRoot.style.transform = gridTransform(scale);
-    progress.place(scale);
-    context.scaled?.();
-  };
-  const stopScale = layer.onScale(placeProgress);
-  placeProgress();
+  const scaled = () => context.scaled?.();
+  const stopScale = layer.onScale(scaled);
+  scaled();
   return {
     accepts,
     dispose: () => {
@@ -102,7 +88,6 @@ export function createNativeHomeSession(
       stopInput();
       stopUnderlay();
       stopScale();
-      progress.dispose();
       view?.dispose();
       element.removeEventListener("click", click);
       element.removeEventListener("keydown", key);

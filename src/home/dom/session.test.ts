@@ -4,13 +4,6 @@ import { FakeDocument, type FakeElement, fakeLayer } from "../../testing/fakeDom
 import { domScale } from "../../ui/domScale.ts";
 import type { NativeHomeView } from "./screen.ts";
 import { createNativeHomeSession } from "./session.ts";
-const progress = vi.hoisted(() => ({ dispose: vi.fn(), mounts: vi.fn() }));
-vi.mock("./progress.ts", () => ({
-  createHomeProgress: (doc: Document) => {
-    progress.mounts();
-    return { dispose: progress.dispose, element: doc.createElement("div"), place: () => undefined };
-  },
-}));
 vi.mock("../../ui/dom/rampDim.ts", () => ({
   followModalUnderlay: () => Object.assign(() => undefined, { refresh: () => undefined }),
 }));
@@ -47,7 +40,6 @@ function fixture() {
     down: vi.fn(),
     move: vi.fn(),
     painted: vi.fn(),
-    progress: { subscribe: () => () => undefined },
     up: vi.fn(),
   };
   const session = createNativeHomeSession(layer, context);
@@ -65,9 +57,7 @@ function fixture() {
   return { context, doc, frames, layer, reveals, session, view };
 }
 describe("native home visit", () => {
-  it("keeps one loading display across redraws and admits only the current decoded paint", async () => {
-    progress.mounts.mockClear();
-    progress.dispose.mockClear();
+  it("admits only the current decoded paint across view replacements", async () => {
     const f = fixture();
     const first = f.view();
     f.session.replace(first);
@@ -81,10 +71,7 @@ describe("native home visit", () => {
     f.frames.forEach((paint) => paint());
     expect(f.context.painted).toHaveBeenCalledOnce();
     expect(f.session.accepts()).toBe(true);
-    expect(progress.mounts).toHaveBeenCalledOnce();
-    expect(progress.dispose).not.toHaveBeenCalled();
     f.session.dispose();
-    expect(progress.dispose).toHaveBeenCalledOnce();
     expect(f.session.accepts()).toBe(false);
   });
   it("restores the same focused native control after its replacement is painted", async () => {
