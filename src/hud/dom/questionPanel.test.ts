@@ -1,3 +1,4 @@
+import { PENDING_ATTRIBUTE } from "@andornaut/game-kit/web/ui/dom/imageReady";
 import { describe, expect, it, vi } from "vitest";
 
 import { gameData } from "../../data/index.ts";
@@ -491,5 +492,46 @@ it("keeps a base page with custom native controls interactive without a modal sc
   });
   expect(element.children[0]?.className).not.toContain("adw-passive");
   expect(layer.input.accepts()).toBe(true);
+  shown.destroy();
+});
+
+it("keeps a native panel inert until its part JSON readiness and image barrier settle", async () => {
+  const { doc, layer } = menuContext();
+  let resolvePart: (urls: readonly string[]) => void = () => undefined;
+  const ready = new Promise<readonly string[]>((resolve) => {
+    resolvePart = resolve;
+  });
+  let revealed: Promise<boolean> = Promise.resolve(false);
+  let requested: readonly string[] = [];
+  layer.reveal = (urls, root) => {
+    root.setAttribute(PENDING_ATTRIBUTE, "");
+    revealed = Promise.resolve(urls).then((all) => {
+      requested = all;
+      root.removeAttribute(PENDING_ATTRIBUTE);
+      return true;
+    });
+    return { cancel: () => undefined, revealed };
+  };
+  const shown = showQuestionPanel(layer, {
+    close: vi.fn(),
+    closeLabel: gameData.menuText.common.close,
+    fonts: { body: gameFont("font-body"), title: gameFont("font-title") },
+    numberKeys: false,
+    parts: [
+      {
+        element: doc.createElement("span") as unknown as HTMLElement,
+        place: () => undefined,
+        ready,
+      },
+    ],
+    presses: [],
+    toGame: (point) => point,
+    view: modalCardView(MEASURE, { height: 100, width: 200, x: 80, y: 100 }, "Detail", []),
+  });
+  expect(shown.accepts()).toBe(false);
+  resolvePart(["/art/late-frame.png"]);
+  await revealed;
+  expect(requested).toContain("/art/late-frame.png");
+  expect(shown.accepts()).toBe(true);
   shown.destroy();
 });

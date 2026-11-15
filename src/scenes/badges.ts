@@ -11,6 +11,7 @@ import {
   CONFETTI,
 } from "../home/badgeCardView.ts";
 import {
+  BADGE_CHEER,
   BADGE_POP as POP,
   BADGE_STRIP,
   badgeNameTops,
@@ -148,7 +149,7 @@ export function addBadgeCelebration(
     scene.tweens.add({
       delay,
       duration: POP.durationMs,
-      ease: "Back.easeOut",
+      ease: POP.ease,
       scale: 1,
       targets: image,
     });
@@ -264,13 +265,13 @@ export function addCheeringFace(
   playTag(face, key, "happy", reduced);
   if (!reduced) {
     scene.tweens.add({
-      duration: 180,
-      ease: "Sine.easeOut",
-      hold: 60,
+      duration: BADGE_CHEER.duration,
+      ease: BADGE_CHEER.ease,
+      hold: BADGE_CHEER.hold,
       repeat: -1,
-      repeatDelay: 600,
+      repeatDelay: BADGE_CHEER.repeatDelay,
       targets: face,
-      y: y - 4,
+      y: y - BADGE_CHEER.rise,
       yoyo: true,
     });
   }

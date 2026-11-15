@@ -126,6 +126,11 @@ export function artPart(
   if (DOM_DIM_ART_KEYS.has(art.key)) {
     element.setAttribute(DIM_ART_ATTRIBUTE, input.artUrl(dimArtPath(kind, art.key)));
   }
+  const urls = [
+    input.artUrl(domArtPath(kind, art.key, "png")),
+    ...(DOM_DIM_ART_KEYS.has(art.key) ? [input.artUrl(dimArtPath(kind, art.key))] : []),
+  ];
+  let ready: Promise<readonly string[]> = Promise.resolve(urls);
   let frame: SheetFrame | undefined;
   let scale: DomScale | undefined;
   const place = (at: DomScale) => {
@@ -164,18 +169,21 @@ export function artPart(
   if (art.sheet !== undefined) {
     const { tag } = art.sheet;
     element.style.visibility = "hidden";
-    input.loadSheet(input.artUrl(domArtPath("sheet", art.key, "json"))).then(
-      (json) => {
-        frame = sheetFrame(json, tag);
-        element.style.visibility = "";
-        if (scale !== undefined) {
-          place(scale);
-        }
-      },
-      (error: unknown) => console.error(`The ${art.key} sheet did not load.`, error),
-    );
+    ready = input
+      .loadSheet(input.artUrl(domArtPath("sheet", art.key, "json")))
+      .then(
+        (json) => {
+          frame = sheetFrame(json, tag);
+          element.style.visibility = "";
+          if (scale !== undefined) {
+            place(scale);
+          }
+        },
+        (error: unknown) => console.error(`The ${art.key} sheet did not load.`, error),
+      )
+      .then(() => urls);
   }
-  return { element, place };
+  return { element, place, ready };
 }
 
 // A block of text: each run of a line the web font draws, each name's pill behind it, and the

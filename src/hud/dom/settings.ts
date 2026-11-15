@@ -285,6 +285,11 @@ function rowPart(
     destroy: stopInput,
     element,
     place,
+    ready: Promise.all([
+      icon.ready,
+      ...(control === undefined ? [] : [control.ready]),
+      ...(slider === undefined ? [] : [slider.empty.ready, slider.filled.ready, slider.knob.ready]),
+    ]).then((urls) => urls.flat()),
     refuse: (reducedMotion: boolean) => {
       const labels = texts.map(({ element: text }) => text);
       refuseAnimation(labels, reducedMotion);
@@ -343,6 +348,7 @@ function showSteps(
                 icon.place(scale, ORIGIN, steps.icon);
               }
             },
+            ready: icon.ready,
           },
         ]),
     { element: text.element, place: (scale) => text.place(scale, ORIGIN, steps.steps) },
@@ -382,7 +388,7 @@ export function showSettings(layer: UiLayer, input: DomSettingsInput): DomSettin
   });
   const build = textElement(doc, input.fonts);
   const parts: DomPart[] = [
-    ...rows.map(({ element, place }) => ({ controls: [element], element, place })),
+    ...rows.map(({ element, place, ready }) => ({ controls: [element], element, place, ready })),
     ...separators.map((element, i) => ({
       element,
       place: (scale: DomScale) => {
@@ -451,6 +457,7 @@ export function showSettings(layer: UiLayer, input: DomSettingsInput): DomSettin
     update(view, focus) {
       current = view;
       placeAll(layer.scale());
+      panel.setDimmed(dimmed);
       if (view.steps !== undefined && steps === undefined) {
         panel.setShown(false);
         steps = showSteps(layer, input, view.steps);

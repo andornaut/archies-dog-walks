@@ -84,13 +84,16 @@ export function confettiPart(
     element.style.backgroundPosition = `${-frame.x * pixel}px ${-frame.y * pixel}px`;
     element.style.visibility = "";
   };
-  input.loadSheet(input.artUrl(domArtPath("sheet", CONFETTI.key, "json"))).then(
-    (json) => {
-      frames = sheetTagFrames(json, CONFETTI.tag);
-      show();
-    },
-    (error: unknown) => console.error(`The ${CONFETTI.key} sheet did not load.`, error),
-  );
+  const ready = input
+    .loadSheet(input.artUrl(domArtPath("sheet", CONFETTI.key, "json")))
+    .then(
+      (json) => {
+        frames = sheetTagFrames(json, CONFETTI.tag);
+        show();
+      },
+      (error: unknown) => console.error(`The ${CONFETTI.key} sheet did not load.`, error),
+    )
+    .then(() => [input.artUrl(domArtPath("sheet", CONFETTI.key, "png"))]);
   const stop = input.everyFrame(show);
   return {
     element,
@@ -99,6 +102,7 @@ export function confettiPart(
       shown = -1;
       show();
     },
+    ready,
     start: (at = input.now()) => {
       start = at;
       shown = -1;

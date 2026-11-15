@@ -45,6 +45,7 @@ export interface DomPart {
   readonly controls?: readonly HTMLElement[];
   readonly element: HTMLElement;
   readonly place: (scale: DomScale) => void;
+  readonly ready?: Promise<readonly string[]>;
 }
 
 export interface DomQuestionPanelInput {
@@ -466,7 +467,12 @@ export function showQuestionPanel(layer: UiLayer, input: DomQuestionPanelInput):
     {
       ...(input.gesture === undefined ? {} : { gesture: input.gesture }),
       modal,
-      reveal: layer.reveal([...urls], dialog),
+      reveal: layer.reveal(
+        Promise.all(
+          (input.parts ?? []).flatMap((part) => (part.ready === undefined ? [] : [part.ready])),
+        ).then((parts) => [...urls, ...parts.flat()]),
+        dialog,
+      ),
     },
     dialog,
   );
