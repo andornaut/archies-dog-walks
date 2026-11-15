@@ -11,6 +11,7 @@ import {
   addAtlasFonts,
   addAtlasTextures,
   artUrl,
+  atlasManifest,
   loadManifest,
   MANIFEST_CACHE_KEY,
   queueFonts,
@@ -61,6 +62,13 @@ import {
   takeResumedWalk,
   walkerInUse,
 } from "./profileStore.ts";
+import {
+  blockedFontAtlas,
+  REQUIRED_BITMAP_FONTS,
+  requiredFontFailure,
+  retryRequiredFontLoads,
+  unqueuedFonts,
+} from "./requiredFontLoads.ts";
 import { REQUIRED_UI, type RequiredUiController } from "./requiredUi.ts";
 import { nextRunStart } from "./run/runRecorder.ts";
 import { resumedRunSceneData, runSceneData } from "./run/runStart.ts";
@@ -92,12 +100,6 @@ const HUD_UI_KEYS = new Set([
   "ui-home-cash-well-mid",
   "ui-home-cash-well-right",
 ]);
-const REQUIRED_BITMAP_FONTS = [
-  "font-body",
-  "font-display",
-  "font-display-cream",
-  "font-title",
-] as const;
 
 type Size = { colour: number; height: number; width: number };
 const box = (width: number, height: number, colour: number): Size => ({ colour, height, width });
@@ -138,16 +140,11 @@ function placeholderSizes(): Map<string, Size> {
   return sizes;
 }
 
-// Loads the art manifest and the loading screen's art, shows the loading screen while what the
-// home screen and its menus need loads (the loadsFirst art, the fonts and the home cues'
-// sounds), then registers each of those sprites' animations and metrics in batches, a frame
-// apart, so the bar and the walker keep moving. The kit's loader watch measures the boot by
-// settled files and logs and retries a file that fails, which is replaced by a placeholder box
-// meanwhile, never fatal. Then shows the home screen, and keeps running behind it to load and
-// register the rest the same way, silent unless Start walk waits for it, then marks the art
-// ready. It stops once every file that failed has loaded on a retry or used up its retry rounds.
-// A dev link that names a run loads everything before it starts the walk, and a walk the save
-// resumes (ProfileSession.open) loads the rest behind the loading screen before it goes on.
+// Loads the manifests and fixed loading artwork, then processes sprites and metrics in frame-sized
+// batches while the shared top strip reports progress. Required native UI and font failures keep
+// entry blocked behind the existing loading error and explicit Retry. Optional world assets keep
+// their placeholders and automatic retry rounds. After home opens, remaining art loads silently
+// until Start walk waits for it. Dev links and resumed walks wait before entering the walk.
 export class BootScene extends Scene {
   private manifest: AssetManifest = { fonts: [], images: [], sounds: [], sprites: [] };
   private walker: GameObjects.Sprite | undefined;
@@ -155,12 +152,18 @@ export class BootScene extends Scene {
   private removeMute: (() => void) | undefined;
   private nativeUi: RequiredUiController | undefined;
   private fontMetricsSettled = false;
+  private inPreload = false;
+  private manifestReady = false;
+  private readonly queuedFontKeys = new Set<string>();
 
   constructor() {
     super(SCENE_KEYS.boot);
   }
 
   preload(): void {
+    this.inPreload = true;
+    this.manifestReady = false;
+    this.queuedFontKeys.clear();
     const parent = this.game.canvas.parentElement;
     if (parent !== null) {
       try {
@@ -171,7 +174,13 @@ export class BootScene extends Scene {
       this.events.once(Scenes.Events.SHUTDOWN, () => this.clearMute());
     }
     this.watch = watchLoader<WaitedLoad>(
-      { console, progress: waitedLoad, timer: globalThis },
+      {
+        console,
+        progress: waitedLoad,
+        retryMode: (failure) =>
+          requiredFontFailure(this.manifest, atlasManifest(this), failure) ? "manual" : "automatic",
+        timer: globalThis,
+      },
       this,
     );
     setBootWatch(this.watch);
@@ -184,17 +193,26 @@ export class BootScene extends Scene {
       setBootWatch(undefined);
       this.watch = undefined;
     });
-    loadManifest(this, (manifest) => this.queueLoadingArt(manifest));
+    loadManifest(this, (manifest) => {
+      this.manifest = manifest;
+      this.manifestReady = true;
+      if (this.inPreload) {
+        this.queueLoadingArt(manifest);
+      }
+    });
   }
 
   create(): void {
+    this.inPreload = false;
     if (this.sound instanceof Sound.WebAudioSoundManager) {
       unlockAudioOnFirstGesture(window, this.sound.context);
     }
     try {
       this.manifest = parseManifest(this.cache.json.get(MANIFEST_CACHE_KEY));
+      this.manifestReady = true;
     } catch (error) {
-      console.error("The art manifest is invalid; drawing placeholders instead.", error);
+      this.manifestReady = false;
+      console.error("The art manifest is invalid; required UI is unavailable.", error);
     }
     // A dev link that names a run starts its walk, and banks a walk left unfinished rather than
     // resuming it.
@@ -215,8 +233,8 @@ export class BootScene extends Scene {
     this.prepareNativeUi();
 
     const first = walkNow ? always : loadsFirst;
-    queueManifestArt(this, this.manifest, first);
-    queueFonts(this, this.manifest);
+    this.queueAvailableArt(first);
+    this.queueFirstFonts(this.manifest);
     if (this.manifest.sounds.length > 0 && browserSoundFormat() === undefined) {
       console.warn("This browser plays neither Ogg nor AAC, so the game is silent.");
     }
@@ -255,27 +273,56 @@ export class BootScene extends Scene {
       throw new Error("The native UI layer is unavailable");
     }
     this.fontMetricsSettled = false;
+    const requiredLoad = (failure: { readonly key: string; readonly type: string }) =>
+      requiredFontFailure(this.manifest, atlasManifest(this), failure);
     const metricsReady = () =>
-      REQUIRED_BITMAP_FONTS.every((key) => this.cache.bitmapFont.exists(key));
+      this.manifestReady &&
+      REQUIRED_BITMAP_FONTS.every((key) => this.cache.bitmapFont.exists(key)) &&
+      !this.watch?.failures().some(requiredLoad);
     const native = this.registry.get(REQUIRED_UI) as RequiredUiController | undefined;
     if (native === undefined) {
       throw new Error("The native UI resource controller is unavailable");
     }
     this.nativeUi = native;
-    let retryingMetrics = false;
+    let active = true;
+    const metrics = { retrying: false };
     const removeMetrics = native.observe({
       retry: () => {
-        if (this.fontMetricsSettled && !metricsReady()) {
-          retryingMetrics = true;
-          queueFonts(this, this.manifest);
-          this.watch?.waitFor("boot");
-          if (!this.load.isLoading()) {
-            this.load.start();
-          }
+        const watch = this.watch;
+        if (!this.fontMetricsSettled || metricsReady() || metrics.retrying || watch === undefined) {
+          return Promise.resolve();
         }
+        metrics.retrying = true;
+        native.invalidate();
+        return retryRequiredFontLoads(
+          {
+            isCurrent: () => active,
+            recoverManifest: async () => {
+              this.manifestReady = false;
+              this.manifest = parseManifest(this.cache.json.get(MANIFEST_CACHE_KEY));
+              this.manifestReady = true;
+            },
+            required: requiredLoad,
+          },
+          watch,
+        )
+          .then(async () => {
+            if (active && this.manifestReady && !watch.failures().some(requiredLoad)) {
+              await this.queueRecoveredFonts();
+            }
+            if (active) {
+              recovered();
+            }
+          })
+          .finally(() => {
+            if (active) {
+              metrics.retrying = false;
+              native.invalidate();
+            }
+          });
       },
       status: () =>
-        !this.fontMetricsSettled || retryingMetrics
+        !this.fontMetricsSettled || metrics.retrying
           ? "loading"
           : metricsReady()
             ? "ready"
@@ -286,16 +333,78 @@ export class BootScene extends Scene {
         addAtlasTextures(this);
         addAtlasFonts(this, GameObjects.BitmapText.ParseFromAtlas, this.manifest);
         addPillGlyphs(this);
-        retryingMetrics = false;
         native.invalidate();
       }
     };
     this.load.on("complete", recovered);
     this.events.once(Scenes.Events.SHUTDOWN, () => {
+      active = false;
       this.load.off("complete", recovered);
       removeMetrics();
       this.nativeUi = undefined;
     });
+  }
+
+  private queueRecoveredFonts(): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const done = () => {
+        this.load.off("complete", done);
+        this.events.off(Scenes.Events.SHUTDOWN, done);
+        resolve();
+      };
+      this.load.once("complete", done);
+      this.events.once(Scenes.Events.SHUTDOWN, done);
+      try {
+        const required: ReadonlySet<string> = new Set(REQUIRED_BITMAP_FONTS);
+        const queued = this.queueFirstFonts({
+          ...this.manifest,
+          fonts: this.manifest.fonts.filter(({ key }) => required.has(key)),
+        });
+        if (!queued) {
+          done();
+          return;
+        }
+        this.watch?.waitFor("boot");
+        if (!this.load.isLoading()) {
+          this.load.start();
+        }
+      } catch (error) {
+        this.load.off("complete", done);
+        this.events.off(Scenes.Events.SHUTDOWN, done);
+        reject(error);
+      }
+    });
+  }
+
+  private queueFirstFonts(manifest: AssetManifest): boolean {
+    const fonts = unqueuedFonts(
+      {
+        atlas: atlasManifest(this),
+        failures: this.watch?.failures() ?? [],
+        queued: this.queuedFontKeys,
+      },
+      {
+        ...manifest,
+        fonts: manifest.fonts.filter(({ key }) => !this.cache.bitmapFont.exists(key)),
+      },
+    );
+    if (fonts.length === 0) {
+      return false;
+    }
+    queueFonts(this, { ...manifest, fonts });
+    for (const { key } of fonts) {
+      this.queuedFontKeys.add(key);
+    }
+    return true;
+  }
+
+  private queueAvailableArt(include: (key: string) => boolean): void {
+    const context = {
+      atlas: atlasManifest(this),
+      failures: this.watch?.failures() ?? [],
+      manifest: this.manifest,
+    };
+    queueManifestArt(this, this.manifest, (key) => include(key) && !blockedFontAtlas(context, key));
   }
 
   private requireNativeUi(keys: ReadonlySet<string>, ready: () => void): void {
@@ -481,7 +590,7 @@ export class BootScene extends Scene {
   // (waitForWalkArt); behind the loading screen, for a resumed walk, it is waited for.
   private loadRest(budgetMs: number, done: () => void, waited = false): void {
     const rest = (key: string) => !loadsFirst(key);
-    queueManifestArt(this, this.manifest, rest);
+    this.queueAvailableArt(rest);
     this.queueSounds((key) => !loadsSoundFirst(key));
     if (waited) {
       this.watch?.waitFor("boot");

@@ -125,7 +125,7 @@ export function queueManifestArt(
 }
 
 // The XML cache key an atlased font's .fnt loads under.
-const fontXmlKey = (key: string): string => `${key}:fnt`;
+export const fontXmlKey = (key: string): string => `${key}:fnt`;
 
 // Queues the manifest's fonts that are not loaded yet: an atlased font's .fnt and the atlas page
 // its PNG is on, which addAtlasFonts makes the font from, or else its own two files.
