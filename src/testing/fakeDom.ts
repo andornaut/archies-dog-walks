@@ -186,14 +186,20 @@ export function fakeLayer(
 ): { element: FakeElement; layer: UiLayer } {
   const element = doc.createElement("div");
   const layer = {
+    assetStatus: () => "ready",
     buttonSkin: { apply: () => Promise.resolve([]), frames: Promise.resolve(new Map()) },
     dispose: () => undefined,
     element,
+    failedAssets: () => [],
+    fontStatus: () => "ready",
     input: createModalInputGate(),
     onReady: () => () => undefined,
     onScale: () => () => undefined,
     press: createPressAdmission(() => false),
     ready: () => true,
+    requireAssets: () => undefined,
+    retryAssets: () => undefined,
+    retryFonts: () => undefined,
     reveal: () => ({ cancel: () => undefined, revealed: Promise.resolve(true) }),
     scale: () => scale,
     update: () => undefined,

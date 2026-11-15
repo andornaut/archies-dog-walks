@@ -19,6 +19,7 @@ import { DOM_BUTTON_SKIN, DOM_STYLE_ART, domArtPath } from "../../assets/domArt.
 import { createPressAdmission, type PressAdmission } from "../../pressAdmission.ts";
 import { type DomScale, domScale, sliceLengths } from "../domScale.ts";
 import { PALETTE } from "../palette.ts";
+import { type RequiredAsset, requiredAssets, type RequiredAssetStatus } from "./requiredAssets.ts";
 import { onSheetReady } from "./sheetFrames.ts";
 
 // The HTML interface's layer: #ui in pages/play/index.html, over the canvas's box, its parts
@@ -37,11 +38,19 @@ export const WEB_FONTS = {
 // A browser lays a CSS length out in steps of 1/64 px.
 const LAYOUT_STEP = 64;
 
+export type FontStatus = "failed" | "loading" | "ready";
+
 export interface UiLayer {
   readonly element: HTMLElement;
   readonly input: ModalInputGate;
   readonly press: PressAdmission;
   readonly buttonSkin: ButtonSkin;
+  fontStatus(): FontStatus;
+  retryFonts(): void;
+  assetStatus(): RequiredAssetStatus;
+  failedAssets(): readonly string[];
+  requireAssets(assets: readonly RequiredAsset[]): void;
+  retryAssets(): void;
   // Resource changes only: subscribe, then read ready(). Repeated cached reveals do not notify.
   onReady(listener: () => void): () => void;
   // Asset settlement does not validate asset success; each view keeps its authored fallback.
@@ -49,7 +58,7 @@ export interface UiLayer {
   dispose(): void;
   // Calls listener after each change of scale, until the returned function is called.
   onScale(listener: (scale: DomScale) => void): () => void;
-  // Whether both web fonts have loaded, so text draws in them and never in a fallback face.
+  // Whether every web font has loaded, so text never draws in a fallback face.
   ready(): boolean;
   scale(): DomScale;
   // Follows the canvas's box and the device pixel ratio: call before each frame draws. Writes
@@ -104,7 +113,7 @@ export function mountUiLayer(
     element.style.setProperty(`--adw-${name}`, hex(colour));
   }
   let disposed = false;
-  let loaded = 0;
+  const fontStates = new Map<string, FontStatus>();
   const readyListeners = new Set<() => void>();
   const notifyReady = () => {
     if (!disposed) {
@@ -113,6 +122,7 @@ export function mountUiLayer(
       }
     }
   };
+  const required = requiredAssets(doc, notifyReady);
   const unsubscribeSheets = onSheetReady(notifyReady);
   const decoded = createImageCache(doc);
   const requested = new Set<string>();
@@ -132,21 +142,35 @@ export function mountUiLayer(
   };
   let skin: ButtonSkin | undefined;
   const pending = new Set<Reveal>();
-  for (const { family, path } of Object.values(WEB_FONTS)) {
+  const fontStatus = (): FontStatus =>
+    [...fontStates.values()].includes("failed")
+      ? "failed"
+      : [...fontStates.values()].every((status) => status === "ready")
+        ? "ready"
+        : "loading";
+  const loadFont = ({ family, path }: (typeof WEB_FONTS)[keyof typeof WEB_FONTS]) => {
+    fontStates.set(family, "loading");
     const face = new FontFace(family, `url("${artUrl(path)}") format("woff")`, {
       display: "block",
     });
     doc.fonts.add(face);
     face.load().then(
       () => {
-        loaded += 1;
-        notifyReady();
+        if (!disposed) {
+          fontStates.set(family, "ready");
+          notifyReady();
+        }
       },
-      (error: unknown) => {
-        console.error(`The ${family} web font did not load.`, error);
-        notifyReady();
+      () => {
+        if (!disposed) {
+          fontStates.set(family, "failed");
+          notifyReady();
+        }
       },
     );
+  };
+  for (const font of Object.values(WEB_FONTS)) {
+    loadFont(font);
   }
   element.hidden = false;
 
@@ -158,6 +182,7 @@ export function mountUiLayer(
   let current = domScale(1, readBox());
   let applied = "";
   const layer: UiLayer = {
+    assetStatus: required.status,
     get buttonSkin() {
       skin ??= createButtonSkin(doc, { ...DOM_BUTTON_SKIN, manifestUrl: buttonSkinManifest });
       return skin;
@@ -167,6 +192,7 @@ export function mountUiLayer(
         return;
       }
       disposed = true;
+      required.dispose();
       unsubscribeSheets();
       readyListeners.clear();
       listeners.clear();
@@ -176,6 +202,8 @@ export function mountUiLayer(
       pending.clear();
     },
     element,
+    failedAssets: required.failed,
+    fontStatus,
     input: createModalInputGate(),
     onReady(listener) {
       readyListeners.add(listener);
@@ -186,7 +214,31 @@ export function mountUiLayer(
       return () => listeners.delete(listener);
     },
     press,
-    ready: () => !disposed && loaded === Object.keys(WEB_FONTS).length,
+    ready: () => !disposed && fontStatus() === "ready" && required.status() === "ready",
+    requireAssets(assets) {
+      required.add([{ kind: "button-manifest", url: buttonSkinManifest }, ...assets]);
+    },
+    retryAssets() {
+      if (required.failed().length > 0) {
+        skin = undefined;
+        required.retry();
+      }
+    },
+    retryFonts() {
+      if (disposed) {
+        return;
+      }
+      let retried = false;
+      for (const font of Object.values(WEB_FONTS)) {
+        if (fontStates.get(font.family) === "failed") {
+          loadFont(font);
+          retried = true;
+        }
+      }
+      if (retried) {
+        notifyReady();
+      }
+    },
     reveal(urls, target) {
       if (disposed) {
         return { cancel: () => undefined, revealed: Promise.resolve(false) };

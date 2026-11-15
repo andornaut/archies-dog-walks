@@ -99,6 +99,7 @@ export function loadSheet(url: string): Promise<unknown> {
         throw new Error(`${url}: ${response.status}`);
       }
       const json = (await response.json()) as unknown;
+      sheetFrame(json, undefined);
       loaded.set(url, json);
       return json;
     });
