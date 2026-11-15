@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+import { createPressAdmission } from "../../pressAdmission.ts";
 import { FakeDocument } from "../../testing/fakeDom.ts";
 import { mountUiLayer, UI_LAYER_ID, WEB_FONTS } from "./uiLayer.ts";
 
@@ -75,11 +76,14 @@ it("promotes fonts without changing the provided world view or notifying dispose
     offsetWidth: 600,
     style: { height: "800px", marginLeft: "", width: "600px" },
   };
+  const press = createPressAdmission(() => false);
   const layer = mountUiLayer(
     page as unknown as Document,
     canvas as unknown as HTMLCanvasElement,
     (box) => ({ height: 560, width: 360, x: box.x + 120, y: box.y }),
+    press,
   );
+  expect(layer?.press).toBe(press);
   const changed = vi.fn();
   const off = layer?.onReady(changed);
   expect(changed).not.toHaveBeenCalled();

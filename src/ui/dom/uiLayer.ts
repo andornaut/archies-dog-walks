@@ -16,6 +16,7 @@ import buttonSkinManifest from "virtual:adw-button-skin";
 
 import { artUrl } from "../../assets/artFiles.ts";
 import { DOM_BUTTON_SKIN, DOM_STYLE_ART, domArtPath } from "../../assets/domArt.ts";
+import { createPressAdmission, type PressAdmission } from "../../pressAdmission.ts";
 import { type DomScale, domScale, sliceLengths } from "../domScale.ts";
 import { PALETTE } from "../palette.ts";
 import { onSheetReady } from "./sheetFrames.ts";
@@ -39,6 +40,7 @@ const LAYOUT_STEP = 64;
 export interface UiLayer {
   readonly element: HTMLElement;
   readonly input: ModalInputGate;
+  readonly press: PressAdmission;
   readonly buttonSkin: ButtonSkin;
   // Resource changes only: subscribe, then read ready(). Repeated cached reveals do not notify.
   onReady(listener: () => void): () => void;
@@ -89,6 +91,7 @@ export function mountUiLayer(
   doc: Document,
   canvas: HTMLCanvasElement,
   viewBox?: (canvasBox: Rect) => Rect,
+  press: PressAdmission = createPressAdmission(() => false),
 ): UiLayer | undefined {
   const element = doc.getElementById(UI_LAYER_ID);
   if (element === null) {
@@ -182,6 +185,7 @@ export function mountUiLayer(
       listeners.add(listener);
       return () => listeners.delete(listener);
     },
+    press,
     ready: () => !disposed && loaded === Object.keys(WEB_FONTS).length,
     reveal(urls, target) {
       if (disposed) {
@@ -228,7 +232,7 @@ export function mountUiLayer(
 
 let mounted: UiLayer | undefined;
 
-// The page's layer, once main.ts has mounted it with the switch on (htmlUiOn).
+// The page's layer, once main.ts has mounted it.
 export function uiLayer(): UiLayer | undefined {
   return mounted;
 }

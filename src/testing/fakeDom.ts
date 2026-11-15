@@ -1,5 +1,6 @@
 import { createModalInputGate } from "@andornaut/game-kit/input/modalInput";
 
+import { createPressAdmission } from "../pressAdmission.ts";
 import type { UiLayer } from "../ui/dom/uiLayer.ts";
 import type { DomScale } from "../ui/domScale.ts";
 
@@ -191,6 +192,7 @@ export function fakeLayer(
     input: createModalInputGate(),
     onReady: () => () => undefined,
     onScale: () => () => undefined,
+    press: createPressAdmission(() => false),
     ready: () => true,
     reveal: () => ({ cancel: () => undefined, revealed: Promise.resolve(true) }),
     scale: () => scale,
