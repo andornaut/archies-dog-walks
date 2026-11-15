@@ -27,6 +27,8 @@ import { TEXT_SCALE } from "../ui/textFit.ts";
 import { dollarsToCents } from "../units.ts";
 import { MENU_TEXT_FIELDS } from "./menuText.ts";
 
+export const BADGE_POP = { delayMs: 140, durationMs: 320 } as const;
+
 export interface BadgeView {
   readonly art: string;
   readonly badgeLine: string;

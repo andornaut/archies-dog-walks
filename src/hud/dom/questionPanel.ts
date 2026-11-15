@@ -5,7 +5,7 @@ import { focusTarget } from "@andornaut/game-kit/web/ui/dom/focusModality";
 import { SCREEN_CONFIG } from "../../data/screen.ts";
 import { cardNumberForKey, isConfirmKey, menuKeyActs } from "../../input/keyBindings.ts";
 import { closeFace } from "../../ui/closeControl.ts";
-import { mountModalLifecycle } from "../../ui/dom/modalLifecycle.ts";
+import { mountModalLifecycle, type NativeGesture } from "../../ui/dom/modalLifecycle.ts";
 import {
   createTextLine,
   type DomTextLine,
@@ -16,7 +16,6 @@ import {
   setBox,
 } from "../../ui/dom/pixelLine.ts";
 import { setRampDimmed } from "../../ui/dom/rampDim.ts";
-import { shadePart } from "../../ui/dom/shade.ts";
 import type { UiLayer } from "../../ui/dom/uiLayer.ts";
 import {
   artPixel,
@@ -67,15 +66,15 @@ export interface DomQuestionPanelInput {
   // celebration.
   readonly label?: string;
   readonly fonts: Readonly<Record<PanelText["font"], BitmapFont>>;
+  readonly gesture?: NativeGesture;
   // Whether keys 1 to n press the buttons, as on the pause menu and the questions.
   readonly numberKeys: boolean;
   readonly numberPresses?: readonly (() => void)[];
   // Drawn over the frame, under the title.
   readonly parts?: readonly DomPart[];
   readonly presses: readonly (() => void)[];
-  // The HTML shade over this rect under the panel, in place of a dim on the canvas, where HTML
-  // under it must be dimmed too.
-  readonly shade?: Rect;
+  // A modal detail may use the same captured tap to dismiss anywhere inside its game region.
+  readonly dismiss?: { readonly area: Rect; readonly press: () => void };
   // The page point of a press as a game point, through the page frame's turn.
   readonly toGame: (client: Point) => Point;
   readonly view: QuestionPanelView;
@@ -172,6 +171,7 @@ export function showQuestionPanel(layer: UiLayer, input: DomQuestionPanelInput):
   const dialog = doc.createElement("div");
   // Parts with native controls participate independently of modal ownership.
   const passive =
+    input.dismiss === undefined &&
     (input.close ?? undefined) === undefined &&
     input.presses.length === 0 &&
     !(input.parts ?? []).some((part) => (part.controls?.length ?? 0) > 0);
@@ -181,9 +181,11 @@ export function showQuestionPanel(layer: UiLayer, input: DomQuestionPanelInput):
   // Focus starts on the dialog itself, so no button shows the keyboard's ring until Tab.
   dialog.tabIndex = -1;
 
-  const shade = input.shade === undefined ? undefined : shadePart(doc, input.shade);
-  if (shade !== undefined) {
-    dialog.append(shade.element);
+  const tapArea = input.dismiss === undefined ? undefined : doc.createElement("div");
+  if (tapArea !== undefined) {
+    tapArea.setAttribute("aria-hidden", "true");
+    Object.assign(tapArea.style, { pointerEvents: "auto", position: "absolute" });
+    dialog.append(tapArea);
   }
   // A question's ui-panel in its rim, or a modal card's ui-detail-card.
   const rim = doc.createElement("div");
@@ -224,8 +226,9 @@ export function showQuestionPanel(layer: UiLayer, input: DomQuestionPanelInput):
       width: outer.width + 2 * pixel,
     });
   });
-  if (shade !== undefined) {
-    placed.push(shade.place);
+  if (tapArea !== undefined && input.dismiss !== undefined) {
+    const area = input.dismiss.area;
+    placed.push((scale) => placeBox(scale, ORIGIN, tapArea, area));
   }
   frame(panel, ORIGIN, view.panel);
   for (const part of input.parts ?? []) {
@@ -413,6 +416,15 @@ export function showQuestionPanel(layer: UiLayer, input: DomQuestionPanelInput):
     event.preventDefault();
     focusables[next]?.focus();
   });
+  if (input.dismiss !== undefined) {
+    const dismiss = input.dismiss.press;
+    dialog.addEventListener("click", (event) => {
+      if (accepts() && !focusables.some((control) => control.contains(event.target as Node))) {
+        event.stopPropagation();
+        dismiss();
+      }
+    });
+  }
   const onKey = (event: KeyboardEvent) => {
     const numberPresses = input.numberPresses ?? input.presses;
     const number = cardNumberForKey(numberPresses.length, event.code);
@@ -451,7 +463,11 @@ export function showQuestionPanel(layer: UiLayer, input: DomQuestionPanelInput):
   artUrls(dialog);
   const lifecycle = mountModalLifecycle(
     layer,
-    { modal, reveal: layer.reveal([...urls], dialog) },
+    {
+      ...(input.gesture === undefined ? {} : { gesture: input.gesture }),
+      modal,
+      reveal: layer.reveal([...urls], dialog),
+    },
     dialog,
   );
   return {

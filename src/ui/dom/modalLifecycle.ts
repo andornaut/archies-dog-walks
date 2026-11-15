@@ -11,8 +11,10 @@ export interface NativeInputGuard {
   readonly claim?: (event: PointerEvent) => { release(): void } | undefined;
   readonly down?: (event: PointerEvent) => void;
   readonly move?: (event: PointerEvent) => void;
-  readonly up?: (event: PointerEvent, cancelled: boolean) => void;
+  readonly up?: (event: PointerEvent, cancelled: boolean) => boolean | void;
 }
+
+export type NativeGesture = Pick<NativeInputGuard, "cancel" | "down" | "move" | "up">;
 
 // Native drags and holds compose the kit's single-pointer and captured-modal click guards.
 export function guardNativeInput(guard: NativeInputGuard, root: HTMLElement): () => void {
@@ -21,6 +23,7 @@ export function guardNativeInput(guard: NativeInputGuard, root: HTMLElement): ()
   let lease: { release(): void } | undefined;
   let captured: (() => boolean) | undefined;
   const cancelled = new Set<number>();
+  let handledClick = false;
   const release = () => {
     const held = lease;
     lease = undefined;
@@ -40,6 +43,7 @@ export function guardNativeInput(guard: NativeInputGuard, root: HTMLElement): ()
     event.stopImmediatePropagation();
   };
   const down = (event: PointerEvent) => {
+    handledClick = false;
     cancelled.delete(event.pointerId);
     const next = followOnePress(owner !== undefined, "down", event.pointerId, owner);
     if (!next.handle) {
@@ -100,12 +104,18 @@ export function guardNativeInput(guard: NativeInputGuard, root: HTMLElement): ()
     if (!accepted) {
       reject(event);
     }
-    guard.up?.(event, !accepted || event.type === "pointercancel");
+    handledClick = guard.up?.(event, !accepted || event.type === "pointercancel") === true;
     if (!accepted) {
       guard.cancel?.();
     }
   };
   const stopClicks = guardClicks(guard, root);
+  const click = (event: MouseEvent) => {
+    if (handledClick && event.detail !== 0) {
+      reject(event);
+    }
+  };
+  root.addEventListener("click", click, true);
   root.addEventListener("pointerdown", down, true);
   doc.addEventListener("pointermove", move, true);
   doc.addEventListener("pointerup", end, true);
@@ -115,6 +125,7 @@ export function guardNativeInput(guard: NativeInputGuard, root: HTMLElement): ()
     stopClicks();
     stopChanges();
     cancel();
+    root.removeEventListener("click", click, true);
     root.removeEventListener("pointerdown", down, true);
     doc.removeEventListener("pointermove", move, true);
     doc.removeEventListener("pointerup", end, true);
@@ -177,7 +188,7 @@ export interface ModalLifecycle {
 // Modal ownership is explicit and independent of whether a view draws native controls.
 export function mountModalLifecycle(
   layer: { readonly input: ModalInputGate },
-  options: { readonly modal: boolean; readonly reveal: Reveal },
+  options: { readonly gesture?: NativeGesture; readonly modal: boolean; readonly reveal: Reveal },
   element: HTMLElement,
 ): ModalLifecycle {
   const { modal, reveal } = options;
@@ -228,7 +239,9 @@ export function mountModalLifecycle(
   };
   const stopInput = guardNativeInput(
     {
+      ...options.gesture,
       cancel: () => {
+        options.gesture?.cancel?.();
         const clear = (node: HTMLElement) => {
           node.removeAttribute("data-pressed");
           for (const child of node.children) {

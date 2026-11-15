@@ -76,10 +76,10 @@ async function card(still: boolean) {
 const position = (index: number) => `${-(FRAMES[index]?.frame.x ?? 0) * 2}px 0px`;
 
 describe("the HTML badge card", () => {
-  it("dims what is under it with the shade first, and takes no presses", async () => {
+  it("keeps dimming in the shared underlay and takes no independent presses", async () => {
     const { dialog } = await card(true);
     expect(dialog?.className).toContain("adw-passive");
-    expect(dialog?.children[0]?.className).toBe("adw-shade");
+    expect(dialog?.children.some((part) => part.className === "adw-shade")).toBe(false);
   });
 
   it("plays the confetti's frames for their JSON durations by the scene's clock, then hides it", async () => {
@@ -96,4 +96,54 @@ describe("the HTML badge card", () => {
     expect(at(0)).toBe(position(4));
     expect(at(60_000)).toBe(position(4));
   });
+});
+
+it("renders a badge strip from scene-owned pop and burst callbacks without its own timers", async () => {
+  if (EARNED === undefined) {
+    throw new Error("No badge");
+  }
+  const doc = new FakeDocument();
+  let now = 1000;
+  const callbacks = new Set<() => void>();
+  const { badgeStripParts } = await import("./celebration.ts");
+  const strip = badgeStripParts(
+    doc as unknown as Document,
+    {
+      artUrl: (path) => path,
+      closeLabel: gameData.menuText.common.close,
+      everyFrame: (callback) => {
+        callbacks.add(callback);
+        return () => {
+          callbacks.delete(callback);
+        };
+      },
+      fonts,
+      loadSheet: () => Promise.resolve(CONFETTI_JSON),
+      now: () => now,
+      pillColours: () => undefined,
+      toGame: (point) => point,
+    },
+    {
+      badges: [EARNED],
+      closes: false,
+      panel: { height: 100, width: 240, x: 60, y: 100 },
+      reduced: false,
+      rows: 1,
+    },
+  );
+  for (const part of strip.parts) {
+    part.place(domScale(1, { height: 560, width: 360, x: 0, y: 0 }));
+  }
+  await Promise.resolve();
+  const confetti = strip.parts[1]!.element;
+  expect(confetti.style.visibility).toBe("hidden");
+  strip.setPop(0, 0.4);
+  expect(strip.parts[2]?.element.style.transform).toBe("scale(0.4)");
+  strip.burst(0);
+  expect(confetti.style.visibility).toBe("");
+  now += FRAMES.reduce((sum, frame) => sum + frame.duration, 0) + 1;
+  callbacks.forEach((callback) => callback());
+  expect(confetti.style.visibility).toBe("hidden");
+  strip.destroy();
+  expect(callbacks.size).toBe(0);
 });

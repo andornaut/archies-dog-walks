@@ -106,3 +106,29 @@ it("rejects native pointer admission while the shared game press is already held
   expect(down).not.toHaveBeenCalled();
   stop();
 });
+
+it("consumes a handled native swipe click while preserving keyboard activation and a fresh press", () => {
+  const doc = new FakeDocument();
+  const root = doc.createElement("div");
+  const gate = createModalInputGate();
+  let handled = true;
+  const stop = guardNativeInput(
+    { gate, subscribe: gate.subscribe, up: () => handled },
+    root as unknown as HTMLElement,
+  );
+  root.fire("pointerdown", pointer(1, root));
+  doc.fire("pointerup", pointer(1, root, "pointerup"));
+  const click = { detail: 1, preventDefault: vi.fn(), stopImmediatePropagation: vi.fn() };
+  root.fire("click", click);
+  expect(click.stopImmediatePropagation).toHaveBeenCalledOnce();
+  const key = { detail: 0, preventDefault: vi.fn(), stopImmediatePropagation: vi.fn() };
+  root.fire("click", key);
+  expect(key.stopImmediatePropagation).not.toHaveBeenCalled();
+  handled = false;
+  root.fire("pointerdown", pointer(2, root));
+  doc.fire("pointerup", pointer(2, root, "pointerup"));
+  const next = { detail: 1, preventDefault: vi.fn(), stopImmediatePropagation: vi.fn() };
+  root.fire("click", next);
+  expect(next.stopImmediatePropagation).not.toHaveBeenCalled();
+  stop();
+});

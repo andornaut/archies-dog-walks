@@ -11,6 +11,7 @@ import {
   CONFETTI,
 } from "../home/badgeCardView.ts";
 import {
+  BADGE_POP as POP,
   BADGE_STRIP,
   badgeNameTops,
   type BadgeRowNames,
@@ -34,7 +35,6 @@ import { addCloseButton, addPanel, tagFrame } from "./uiKit.ts";
 
 export const BADGE_SIZE = BADGE_STRIP.badgeSize;
 const BURST_TAG = "play";
-const POP = { delayMs: 140, durationMs: 320 } as const;
 
 type Placed = GameObjects.Graphics | GameObjects.Image;
 

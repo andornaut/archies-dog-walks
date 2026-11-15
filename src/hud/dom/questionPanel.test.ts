@@ -436,3 +436,60 @@ describe("an HTML zone celebration", () => {
     },
   );
 });
+
+it("dismisses a native detail region only while its modal owns input", () => {
+  const { doc, element, layer } = menuContext();
+  const dismiss = vi.fn();
+  const shown = showQuestionPanel(layer, {
+    close: undefined,
+    closeLabel: gameData.menuText.common.close,
+    dismiss: { area: SCREEN_LAYOUT.walkView, press: dismiss },
+    fonts: { body: gameFont("font-body"), title: gameFont("font-title") },
+    numberKeys: false,
+    presses: [],
+    toGame: (point) => point,
+    view: modalCardView(MEASURE, { height: 100, width: 200, x: 80, y: 100 }, "Detail", []),
+  });
+  const dialog = element.children[0]!;
+  expect(dialog.className).not.toContain("adw-passive");
+  const tap = () => ({
+    detail: 0,
+    preventDefault: vi.fn(),
+    stopImmediatePropagation: vi.fn(),
+    stopPropagation: vi.fn(),
+    target: dialog,
+  });
+  dialog.fire("click", tap());
+  expect(dismiss).toHaveBeenCalledOnce();
+  const cover = layer.input.open();
+  dialog.fire("click", tap());
+  expect(dismiss).toHaveBeenCalledOnce();
+  cover.close();
+  shown.destroy();
+  expect(doc.activeElement).not.toBe(dialog);
+});
+
+it("keeps a base page with custom native controls interactive without a modal scope", () => {
+  const { doc, element, layer } = menuContext();
+  const button = doc.createElement("button");
+  const shown = showQuestionPanel(layer, {
+    close: null,
+    closeLabel: gameData.menuText.common.close,
+    fonts: { body: gameFont("font-body"), title: gameFont("font-title") },
+    modal: false,
+    numberKeys: false,
+    parts: [
+      {
+        controls: [button as unknown as HTMLElement],
+        element: button as unknown as HTMLElement,
+        place: () => undefined,
+      },
+    ],
+    presses: [],
+    toGame: (point) => point,
+    view: modalCardView(MEASURE, { height: 100, width: 200, x: 80, y: 100 }, "Results", []),
+  });
+  expect(element.children[0]?.className).not.toContain("adw-passive");
+  expect(layer.input.accepts()).toBe(true);
+  shown.destroy();
+});

@@ -1,5 +1,3 @@
-import { MODAL_DIM } from "@andornaut/game-kit/view/modalDim";
-
 import { SLICES } from "../../data/layout.ts";
 import { CONTROL_STATE_STYLE } from "./controlStateStyle.ts";
 import { SETTINGS_STYLE } from "./settingsStyle.ts";
@@ -27,10 +25,6 @@ export function nineSlice(
   border-image:${image} ${top} ${right} ${bottom} ${left} fill / ${widths} stretch;
   background-clip:padding-box;image-rendering:pixelated`;
 }
-
-// The modal shade's alpha as the canvas blends it: WebGL takes a fill's alpha in whole 255ths,
-// rounded down, so the HTML shade takes the same.
-export const SHADE_ALPHA = Math.floor(MODAL_DIM.fallbackAlpha * 255) / 255;
 
 // A scrollbar's part: the art's end caps (its SLICES top and bottom) drawn whole and its middle
 // stretched, with no side slices.
@@ -145,7 +139,6 @@ export const UI_STYLE = `
   content:"";position:absolute;inset:${px(1)};border:${px(2)} solid var(--adw-cyan);
   box-shadow:0 0 0 ${px(1)} var(--adw-ink),inset 0 0 0 ${px(1)} var(--adw-ink)}
 /* The shade under a modal panel: ink at the canvas's modal shade's alpha, blended as it blends. */
-.adw-shade{position:absolute;pointer-events:none;background:var(--adw-ink);opacity:${SHADE_ALPHA}}
 /* A list's view: its content clipped to it and moved up by its scroll. */
 .adw-clip,.adw-scrolled{position:absolute;pointer-events:none}
 .adw-clip{overflow:hidden}

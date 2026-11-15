@@ -1,7 +1,6 @@
 import { domArtPath } from "../../assets/domArt.ts";
 import { type BadgeCardView, CONFETTI } from "../../home/badgeCardView.ts";
 import { placeFrame, setBox } from "../../ui/dom/pixelLine.ts";
-import { shadePart } from "../../ui/dom/shade.ts";
 import { playingFrame, sheetTagFrames, type TagFrame } from "../../ui/dom/sheetFrames.ts";
 import type { UiLayer } from "../../ui/dom/uiLayer.ts";
 import {
@@ -17,13 +16,14 @@ import { artPart, type DomDetailCardInput, textPart } from "./detailCard.ts";
 import { type DomPart, type DomQuestionPanel, showQuestionPanel } from "./questionPanel.ts";
 import { fillPart } from "./shopPage.ts";
 
-// A badge's card in HTML over the canvas: the shade under it, the ui-panel, the close control,
+// A badge's card in HTML over the canvas: the ui-panel and close control,
 // any confetti behind the badge, the badge at 2x and its name, status, goal and line, at the
 // places the canvas draws them (badgeCardView). It takes no presses: a press anywhere goes
 // through to the canvas, whose scene closes it.
 
-export interface DomBadgeCardInput extends Omit<DomDetailCardInput, "close" | "view"> {
+export interface DomBadgeCardInput extends Omit<DomDetailCardInput, "close" | "dismiss" | "view"> {
   // Calls step before every frame the game draws, until the returned stop is called.
+  readonly dismiss?: () => void;
   readonly everyFrame: (step: () => void) => () => void;
   // The scene's clock, in ms, which plays the confetti.
   readonly now: () => number;
@@ -36,23 +36,24 @@ let cards = 0;
 // The confetti's frames from the sheet's JSON, its tag played once from when it is drawn, a frame
 // at a time as the scene's clock reaches it, or held on its still frame; each frame whole art
 // pixels from the panel's snapped corner, centred on the badge.
-function confettiPart(
+export function confettiPart(
   doc: Document,
-  input: DomBadgeCardInput,
+  input: Pick<DomBadgeCardInput, "artUrl" | "everyFrame" | "loadSheet" | "now">,
+  panel: BadgeCardView["panel"],
   confetti: NonNullable<BadgeCardView["confetti"]>,
-): DomPart & { readonly stop: () => void } {
+  startsAt = input.now(),
+): DomPart & { start(at?: number): void; readonly stop: () => void } {
   const element = doc.createElement("span");
   element.className = "adw-art";
   element.setAttribute("aria-hidden", "true");
   element.style.visibility = "hidden";
   element.style.backgroundImage = `url("${input.artUrl(domArtPath("sheet", CONFETTI.key, "png"))}")`;
-  const { panel } = input.view;
-  const start = input.now();
+  let start = startsAt;
   let frames: TagFrame[] = [];
   let scale: DomScale | undefined;
   let shown = -1;
   const show = () => {
-    if (scale === undefined || frames.length === 0) {
+    if (scale === undefined || frames.length === 0 || input.now() < start) {
       return;
     }
     const index = confetti.still
@@ -98,6 +99,11 @@ function confettiPart(
       shown = -1;
       show();
     },
+    start: (at = input.now()) => {
+      start = at;
+      shown = -1;
+      show();
+    },
     stop,
   };
 }
@@ -115,9 +121,8 @@ export function showBadgeCard(layer: UiLayer, input: DomBadgeCardInput): DomQues
   const textParts = view.texts.map((text) => textPart(doc, input, text));
   texts.append(...textParts.map(({ element }) => element));
   const confetti =
-    view.confetti === undefined ? undefined : confettiPart(doc, input, view.confetti);
+    view.confetti === undefined ? undefined : confettiPart(doc, input, view.panel, view.confetti);
   const parts: DomPart[] = [
-    shadePart(doc, view.dim),
     { element: frame, place: (scale) => placeFrame(scale, { x: 0, y: 0 }, frame, view.panel) },
     ...(confetti === undefined ? [] : [confetti]),
     ...view.fills.map((fill) => fillPart(doc, fill)),
@@ -133,6 +138,7 @@ export function showBadgeCard(layer: UiLayer, input: DomBadgeCardInput): DomQues
   ];
   const shown = showQuestionPanel(layer, {
     close: undefined,
+    ...(input.dismiss === undefined ? {} : { dismiss: { area: view.dim, press: input.dismiss } }),
     closeLabel: input.closeLabel,
     describedBy: texts.id,
     fonts: input.fonts,

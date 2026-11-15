@@ -258,7 +258,7 @@ export interface CardEntry extends CardAction {
 
 // A modal card in the HTML layer over card, laid out as the canvas draws it (modalCardView): its
 // title, its close control doing close, and its buttons, which number keys never press, over the
-// HTML shade over shade where it is given. Returns it, for its scene to destroy as the card
+// shared native palette underlay. Returns it, for its scene to destroy as the card
 // closes, or undefined where the canvas must draw it.
 export function addHtmlModalCard(
   scene: Scene,
@@ -266,7 +266,6 @@ export function addHtmlModalCard(
   title: string,
   entries: readonly CardEntry[],
   close: () => void,
-  shade?: Rect,
 ): DomQuestionPanel | undefined {
   const place = htmlPanelPlace(scene);
   if (place === undefined) {
@@ -278,7 +277,7 @@ export function addHtmlModalCard(
     close,
     numberKeys: false,
     presses,
-    ...(shade === undefined ? {} : { shade }),
+
     ...htmlPanelInput(place),
     view,
   });
@@ -288,14 +287,14 @@ export function addHtmlModalCard(
 // A detail card in the HTML layer, laid out as the canvas draws it (detailCardView), its close
 // control doing close, or a picture of one on a card that takes no presses, as the walk's
 // explanation, which a press anywhere closes, shown pressed while closePressed, over the HTML
-// shade over shade where it is given. Returns it, for its scene to destroy as the card closes, or
+// shared native palette underlay. Returns it, for its scene to destroy as the card closes, or
 // undefined where the canvas must draw it (drawDetailCard).
 export function addHtmlDetailCard(
   scene: Scene,
   view: DetailCardView,
   close: (() => void) | undefined,
   closePressed = false,
-  shade?: Rect,
+  dismiss?: { readonly area: Rect; readonly dismiss: () => void },
 ): DomQuestionPanel | undefined {
   const place = htmlPanelPlace(scene);
   if (place === undefined) {
@@ -305,7 +304,7 @@ export function addHtmlDetailCard(
     ...htmlArtInput(place),
     close,
     closePressed,
-    ...(shade === undefined ? {} : { shade }),
+    ...(dismiss === undefined ? {} : { dismiss: { area: dismiss.area, press: dismiss.dismiss } }),
     view,
   });
   return followScene(scene, panel);
@@ -346,7 +345,7 @@ export function addDetailCardOver(
   htmlUnder = false,
 ): KeptPanel | undefined {
   const html = keepPanel(kept, JSON.stringify([view, closePressed, htmlUnder]), () =>
-    addHtmlDetailCard(scene, view, undefined, closePressed, htmlUnder ? dim : undefined),
+    addHtmlDetailCard(scene, view, undefined, closePressed),
   );
   if (html?.panel === undefined) {
     drawDetailCardView(scene, parent, dim, closePressed, view);
@@ -358,13 +357,12 @@ export function addDetailCardOver(
 
 // The purchase confirm in the HTML layer, laid out as the canvas draws it
 // (purchaseConfirmCardView), each answer and the close control, which cancels, doing answer, over
-// the HTML shade over shade where it is given. Returns it, for its scene to destroy as the confirm
+// the shared native palette underlay. Returns it, for its scene to destroy as the confirm
 // closes, or undefined where the canvas must draw it (drawPurchaseConfirm).
 export function addHtmlPurchaseConfirm(
   scene: Scene,
   view: PurchaseConfirmCardView,
   answer: (choice: ConfirmChoice) => void,
-  shade?: Rect,
 ): DomQuestionPanel | undefined {
   const place = htmlPanelPlace(scene);
   if (place === undefined) {
@@ -374,7 +372,7 @@ export function addHtmlPurchaseConfirm(
     ...htmlArtInput(place),
     buy: () => answer("buy"),
     cancel: () => answer("cancel"),
-    ...(shade === undefined ? {} : { shade }),
+
     view,
   });
   return followScene(scene, panel);
@@ -410,16 +408,21 @@ export function addHtmlLogbook(
 }
 
 // A badge's card in the HTML layer, laid out as the canvas draws it (badgeCardView), over the
-// HTML shade, its confetti played by scene's clock. It takes no presses: its scene closes it.
+// shared native palette underlay, with confetti played by the scene clock.
 // Returns it, for its scene to destroy as the card closes, or undefined where the canvas must
 // draw it (drawBadgeCard).
-export function addHtmlBadgeCard(scene: Scene, view: BadgeCardView): DomQuestionPanel | undefined {
+export function addHtmlBadgeCard(
+  scene: Scene,
+  view: BadgeCardView,
+  dismiss?: () => void,
+): DomQuestionPanel | undefined {
   const place = htmlPanelPlace(scene);
   if (place === undefined) {
     return undefined;
   }
   const panel = showBadgeCard(place.layer, {
     ...htmlArtInput(place),
+    ...(dismiss === undefined ? {} : { dismiss }),
     everyFrame: everyFrame(scene),
     now: () => scene.time.now,
     view,

@@ -1,5 +1,11 @@
-import type { Rect } from "@andornaut/game-kit/rect";
+import type { Point, Rect } from "@andornaut/game-kit/rect";
 
+import {
+  BADGE_STRIP,
+  type BadgeView,
+  panelBadgeStrip,
+  stripUnderClose,
+} from "../../home/badgesView.ts";
 import { closeControl } from "../../ui/closeControl.ts";
 import { boundsAdvance, placeFrame, setBox, shownText } from "../../ui/dom/pixelLine.ts";
 import type { UiLayer } from "../../ui/dom/uiLayer.ts";
@@ -16,6 +22,7 @@ import {
 import { type PanelText, type QuestionPanelView } from "../../ui/modal/types.ts";
 import { TEXT_SCALE } from "../../ui/textFit.ts";
 import type { CentredRow, DottedRule, ZoneCelebrationView } from "../celebrationView.ts";
+import { confettiPart, type DomBadgeCardInput } from "./badgeCard.ts";
 import { artPart, type DomDetailCardInput, textPart } from "./detailCard.ts";
 import {
   type DomPart,
@@ -178,4 +185,71 @@ export function showBadgeCelebration(
     toGame: input.toGame,
     view: frameless(view.panel, [view.button], view.title, view.titleY),
   });
+}
+
+export interface BadgeStripParts {
+  readonly parts: readonly DomPart[];
+  burst(index: number): void;
+  destroy(): void;
+  setPop(index: number, scale: number): void;
+}
+
+// The scene owns its existing pop tweens and delayed burst callbacks; parts only render their values.
+export function badgeStripParts(
+  doc: Document,
+  input: Shared & Pick<DomBadgeCardInput, "everyFrame" | "now">,
+  view: {
+    readonly badges: readonly BadgeView[];
+    readonly closes: boolean;
+    readonly panel: Rect;
+    readonly reduced: boolean;
+    readonly rows: number;
+  },
+): BadgeStripParts {
+  const rect = view.closes ? stripUnderClose(view.panel) : view.panel;
+  const strip = panelBadgeStrip(rect, view.rows, view.badges.length);
+  const badges = view.badges.flatMap((badge, i) => {
+    const slot = strip.slots[i];
+    if (slot === undefined) {
+      return [];
+    }
+    const centre: Point = { x: slot.centreX, y: rect.y + slot.top + BADGE_STRIP.badgeSize / 2 };
+    const picture = artPart(doc, input, {
+      centre,
+      holder: rect,
+      key: badge.art,
+      scale: 1,
+      sheet: { tag: badge.earned ? "earned" : "locked" },
+      size: { height: BADGE_STRIP.badgeSize, width: BADGE_STRIP.badgeSize },
+      x: centre.x,
+      y: centre.y,
+    });
+    picture.element.style.transformOrigin = "center";
+    const confetti = confettiPart(
+      doc,
+      input,
+      rect,
+      { at: centre, scale: 1, still: view.reduced },
+      Number.POSITIVE_INFINITY,
+    );
+    return [{ confetti, picture }];
+  });
+  return {
+    burst: (index) => badges[index]?.confetti.start(),
+    destroy: () => {
+      for (const badge of badges) {
+        badge.confetti.stop();
+      }
+    },
+    parts: [
+      framePart(doc, { key: "ui-panel", rect: view.panel }),
+      ...badges.flatMap(({ confetti, picture }) => [confetti, picture]),
+    ],
+    setPop: (index, scale) => {
+      const badge = badges[index];
+      if (badge !== undefined) {
+        badge.picture.element.style.transform = `scale(${scale})`;
+      }
+    },
+  };
 }
