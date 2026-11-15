@@ -41,7 +41,10 @@ const atlas: AtlasManifest = {
   })),
 };
 const page = new Uint8Array([7, 8, 9]);
-const readArt = async (path: string) => new TextEncoder().encode(`source:${path}`);
+const readArt = async (path: string) =>
+  new TextEncoder().encode(
+    path.endsWith(".json") ? JSON.stringify({ source: path }, null, 2) : `source:${path}`,
+  );
 
 // Packed and unpacked entries exercise each asset category; the shared PNG must emit once, and
 // the HTML interface's packed art and the web fonts emit as files of their own.
@@ -77,7 +80,7 @@ describe("hashed game art", () => {
     ]);
   });
 
-  it("uses built atlas bytes and metadata, preserving each remaining source, named by its hash", async () => {
+  it("hashes compact metadata and preserves every non-JSON asset byte", async () => {
     await Promise.all(
       files.map(async (file) => {
         const expected =
@@ -85,7 +88,9 @@ describe("hashed game art", () => {
             ? new TextEncoder().encode(JSON.stringify(atlas))
             : file.path === "atlas/ui-0.webp"
               ? page
-              : await readArt(file.path);
+              : file.path.endsWith(".json")
+                ? new TextEncoder().encode(JSON.stringify({ source: file.path }))
+                : await readArt(file.path);
         expect(file.source, file.path).toEqual(expected);
         expect(file.fileName, file.path).toBe(
           hashedArtFileName(file.path, contentHash(file.source)),
@@ -93,6 +98,41 @@ describe("hashed game art", () => {
       }),
     );
     expect(files.some(({ path }) => path === ART_MANIFEST)).toBe(true);
+  });
+
+  it("preserves string escapes, negative zero and numeric spellings while compacting metadata", async () => {
+    const text = String.raw`{
+      "unknown": "  spaced \\ \t \"Quoted\"  ",
+      "negativeZero": -0,
+      "exponent": 1e+20
+    }`;
+    const expected = String.raw`{"unknown":"  spaced \\ \t \"Quoted\"  ","negativeZero":-0,"exponent":1e+20}`;
+    const compacted = await hashGameArt(
+      async (path) => (path === ART_MANIFEST ? new TextEncoder().encode(text) : readArt(path)),
+      { art: new Set(["ui-panel"]), dim: new Set(), disabled: new Set(), grey: new Set() },
+      manifest,
+      { files: new Map([["atlas/ui-0.webp", page]]), manifest: atlas },
+    );
+    const file = compacted.find(({ path }) => path === ART_MANIFEST)!;
+    expect(new TextDecoder().decode(file.source)).toBe(expected);
+    expect(JSON.parse(expected)).toEqual(JSON.parse(text));
+    expect(Object.is(JSON.parse(new TextDecoder().decode(file.source)).negativeZero, -0)).toBe(
+      true,
+    );
+    expect(file.fileName).toBe(hashedArtFileName(ART_MANIFEST, contentHash(file.source)));
+    expect(compacted.map(({ path }) => path)).toEqual(files.map(({ path }) => path));
+  });
+
+  it("rejects malformed emitted metadata before assigning it a content-hashed URL", async () => {
+    await expect(
+      hashGameArt(
+        async (path) =>
+          path === ART_MANIFEST ? new TextEncoder().encode("{ broken }") : readArt(path),
+        { art: new Set(), dim: new Set(), disabled: new Set(), grey: new Set() },
+        manifest,
+        { files: new Map([["atlas/ui-0.webp", page]]), manifest: atlas },
+      ),
+    ).rejects.toBeInstanceOf(SyntaxError);
   });
 
   const none = new Set<string>();

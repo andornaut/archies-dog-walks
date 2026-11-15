@@ -110,7 +110,8 @@ export interface HashedArtFile {
 // Each file gameArtPaths names, with its hashed name and its bytes, and the grey copy of each of
 // dom.disabled and the dimmed copy of each of dom.dim the HTML interface draws (artCopyFiles):
 // the atlas manifest and pages from the atlas build, the rest read by readArt, by path relative
-// to the art directory. Throws where a file the HTML interface loads would not be among them
+// to the art directory. Emitted JSON drops only whitespace outside strings before hashing;
+// source art and every token remain unchanged. Throws where a file the HTML interface loads would not be among them
 // (checkDomArt).
 export async function hashGameArt(
   readArt: (path: string) => Promise<Uint8Array>,
@@ -130,7 +131,16 @@ export async function hashGameArt(
   checkDomArt(dom, manifest, new Set(paths));
   return Promise.all(
     paths.map(async (path) => {
-      const source = built.get(path) ?? (await readArt(path));
+      let source = built.get(path) ?? (await readArt(path));
+      if (path.endsWith(".json")) {
+        const text = new TextDecoder().decode(source);
+        JSON.parse(text);
+        const compact = text.replace(
+          /("(?:[^"\\]|\\.)*")|[ \t\r\n]+/g,
+          (_token, quoted: string | undefined) => quoted ?? "",
+        );
+        source = new TextEncoder().encode(compact);
+      }
       return { fileName: hashedArtFileName(path, contentHash(source)), path, source };
     }),
   );
