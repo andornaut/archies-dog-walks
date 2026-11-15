@@ -248,5 +248,6 @@ export const DOM_DISABLED_ART_KEYS: ReadonlySet<string> = new Set(disabledTileAr
 export const DOM_DIM_ART_KEYS: ReadonlySet<string> = new Set([
   "ui-button-go",
   "ui-panel",
+  "ui-zone-banner",
   ...celebrationArtKeys(gameData),
 ]);

@@ -21,6 +21,7 @@ it("keeps canvas fallback until decoding, follows the existing pose and announce
   const pose = { active: true, alpha: 1, x: -240, y: 110 };
   const shown = vi.fn();
   const view = mountRoadBanner(layer, {
+    dimImage: "/banner-dim.png",
     heading: "Toronto, neighbourhood 1",
     image: "/banner.png",
     name: "The Beach",
@@ -40,7 +41,9 @@ it("keeps canvas fallback until decoding, follows the existing pose and announce
   expect(root.hidden).toBe(false);
   expect(root.attributes.get("aria-hidden")).toBe("true");
   expect(status.textContent).toBe("");
+  expect(root.children[0]!.style.backgroundImage).toBe('url("/banner-dim.png")');
   cover.close();
+  expect(root.children[0]!.style.backgroundImage).toBe('url("/banner.png")');
   expect(status.textContent).toBe("Toronto, neighbourhood 1. The Beach");
   pose.x = 50;
   pose.alpha = 0.5;
@@ -70,6 +73,7 @@ it("does not reveal or announce a destroyed banner when a late image settles", a
   });
   const shown = vi.fn();
   const view = mountRoadBanner(layer, {
+    dimImage: "/banner-dim.png",
     heading: "Toronto",
     image: "/banner.png",
     name: "The Beach",

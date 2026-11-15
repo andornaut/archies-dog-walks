@@ -11,6 +11,7 @@ import type { DebuffId, EncounterId, GearId } from "../../data/types.ts";
 import { zoneBannerHeading } from "../../hud/zoneCelebration.ts";
 import { currentZone } from "../../rules/route.ts";
 import type { RunState } from "../../state/runState.ts";
+import { dimArtPath } from "../../ui/dimArt.ts";
 import { mountRoadBanner } from "../../ui/dom/roadBanner.ts";
 import { uiLayer } from "../../ui/dom/uiLayer.ts";
 import { PALETTE } from "../../ui/palette.ts";
@@ -228,6 +229,7 @@ export class ZoneBanner {
     }
     const display = hasDisplayFont(scene, name) ? displayBitmapFont(scene) : undefined;
     const view = mountRoadBanner(layer, {
+      dimImage: artUrl(dimArtPath("image", BANNER.key)),
       heading,
       image: artUrl(domArtPath("image", BANNER.key, "png")),
       name,

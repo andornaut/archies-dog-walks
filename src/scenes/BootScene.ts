@@ -53,6 +53,7 @@ import { GAME_PROGRESS_STYLE, LOADING_MOTION, LOADING_TIMING } from "../ui/progr
 import { markArtReady, setBootWatch, type WaitedLoad } from "./artReady.ts";
 import { stopOnceRetried } from "./bootRetries.ts";
 import { loadingProgress, waitedLoad } from "./loadingProgress.ts";
+import { waitForNativeHome } from "./nativeHomeReady.ts";
 import {
   currentSettings,
   openProfile,
@@ -350,18 +351,39 @@ export class BootScene extends Scene {
     }
   }
 
-  // Shows the home screen over this scene, clears the loading screen, then loads and registers
-  // the rest behind it.
-  private showHome(): void {
-    this.leaveFor(SCENE_KEYS.start);
-    this.loadRest(BEHIND_FRAME_BUDGET_MS, () => this.stopOnceRetried());
+  // Launches native home while keeping the loading screen until its usable view is ready.
+  // The rest loads concurrently, but cannot stop Boot before that handoff.
+  private showHome(allLoaded = false): void {
+    const native = waitedLoad.begin();
+    native.progress(undefined);
+    const waiting = waitForNativeHome(this.game.events, {
+      loaded: () => this.scene.stop(),
+      shown: () => {
+        native.finish();
+        this.clearLoading();
+      },
+    });
+    this.events.once(Scenes.Events.SHUTDOWN, () => {
+      waiting.dispose();
+      native.finish();
+    });
+    this.scene.launch(SCENE_KEYS.start);
+    const loaded = () => this.stopOnceRetried(waiting.loaded);
+    if (allLoaded) {
+      loaded();
+    } else {
+      this.loadRest(BEHIND_FRAME_BUDGET_MS, loaded);
+    }
   }
 
-  // Launches key over this scene and clears the loading screen; this scene keeps running behind,
-  // drawing nothing and taking no input, while it loads or retries.
+  // A direct walk launch needs no native-home handoff. Boot still runs behind it for retries.
   private leaveFor(key: string, data?: object): void {
-    this.clearMute();
+    this.clearLoading();
     this.scene.launch(key, data);
+  }
+
+  private clearLoading(): void {
+    this.clearMute();
     for (const child of [...this.children.list]) {
       child.destroy();
     }
@@ -376,15 +398,19 @@ export class BootScene extends Scene {
   // Stops once the watch has retried every file that failed (bootRetries.ts). A retried atlas page
   // adds the textures it holds that are still missing; a placeholder already drawn for one stays
   // for the session.
-  private stopOnceRetried(): void {
+  private stopOnceRetried(
+    stop: () => void = () => {
+      this.scene.stop();
+    },
+  ): void {
     const { watch } = this;
     if (watch === undefined) {
-      this.scene.stop();
+      stop();
       return;
     }
     stopOnceRetried(this.load, watch, {
       recovered: () => addAtlasTextures(this),
-      stop: () => this.scene.stop(),
+      stop,
     });
   }
 
@@ -415,8 +441,7 @@ export class BootScene extends Scene {
       () => {
         const walk = takeResumedWalk(this);
         if (walk === null) {
-          this.leaveFor(SCENE_KEYS.start);
-          this.stopOnceRetried();
+          this.showHome(true);
           return;
         }
         startWakeLock();

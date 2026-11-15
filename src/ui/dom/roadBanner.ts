@@ -4,6 +4,7 @@ import { SCREEN_CONFIG } from "../../data/screen.ts";
 import { deviceX, deviceY, frameRect, gridTransform } from "../domScale.ts";
 import { PALETTE } from "../palette.ts";
 import { createTextLine, type DomTextLine, placeText, setBox } from "./pixelLine.ts";
+import { DIM_ART_ATTRIBUTE, followModalUnderlay } from "./rampDim.ts";
 import type { UiLayer } from "./uiLayer.ts";
 
 interface BannerPose {
@@ -17,6 +18,7 @@ interface BannerPose {
 export function mountRoadBanner(
   layer: UiLayer,
   view: {
+    readonly dimImage: string;
     readonly heading: string;
     readonly image: string;
     readonly name: string;
@@ -35,6 +37,7 @@ export function mountRoadBanner(
   root.className = "adw-dialog adw-passive";
   const plate = doc.createElement("span");
   plate.setAttribute("aria-hidden", "true");
+  plate.setAttribute(DIM_ART_ATTRIBUTE, view.dimImage);
   Object.assign(plate.style, {
     backgroundImage: `url("${view.image}")`,
     backgroundSize: "100% 100%",
@@ -85,7 +88,6 @@ export function mountRoadBanner(
     root.hidden = !ready;
     view.shown(ready);
     const accepts = layer.input.accepts();
-    root.setAttribute("aria-hidden", String(!accepts));
     if (announced && !accepts) {
       // A covered announcement stays silent when its unchanged visual is uncovered.
       status.setAttribute("aria-hidden", "true");
@@ -111,8 +113,9 @@ export function mountRoadBanner(
   };
   const offScale = layer.onScale(update);
   const offReady = layer.onReady(update);
+  const offUnderlay = followModalUnderlay(layer.input, root);
   const offInput = layer.input.subscribe(update);
-  const reveal = layer.reveal([view.image], root);
+  const reveal = layer.reveal([view.image, view.dimImage], root);
   void reveal.revealed.then((success) => {
     if (!disposed) {
       decoded = success;
@@ -128,6 +131,7 @@ export function mountRoadBanner(
       disposed = true;
       reveal.cancel();
       offInput();
+      offUnderlay();
       offReady();
       offScale();
       root.remove();
