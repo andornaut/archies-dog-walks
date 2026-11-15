@@ -1,4 +1,4 @@
-import { containsPoint, type Rect } from "@andornaut/game-kit/rect";
+import { type Rect } from "@andornaut/game-kit/rect";
 import { inkRowsFromCapTop } from "@andornaut/game-kit/text/bitmapFont";
 import { Scene } from "phaser";
 
@@ -17,7 +17,6 @@ import { overlayRegion, regionOutside } from "../home/homeBar.ts";
 import { isConfirmKey, isPauseKey, menuKeyActs } from "../input/keyBindings.ts";
 import { achievementLabel } from "../rules/achievements.ts";
 import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";
-import { closeControl } from "../ui/closeControl.ts";
 import {
   MODAL,
   modalActionWidth,
@@ -28,17 +27,16 @@ import {
 import { panelButton, panelTitle } from "../ui/modal/view.ts";
 import { labelInkWidth, pixelFontMetrics, withProbe } from "../ui/phaser/pixelText.ts";
 import { addRampDim } from "../ui/phaser/rampDim.ts";
-import { addBadgeCelebration, addCheeringFace, badgeCelebrationNames } from "./badges.ts";
+import { badgeCelebrationNames } from "./badges.ts";
 import { listenHomeBar } from "./homeBarPress.ts";
-import { addCardClose } from "./homePanels.ts";
 import { canvasPanelMeasure, modalTextWidth } from "./modalMeasure.ts";
-import { closeOverlay, listenDismiss } from "./overlay.ts";
+import { addNativeBadgeCelebration } from "./nativeBadgeCelebration.ts";
+import { mountNativeOverlay } from "./nativeOverlayReady.ts";
+import { closeOverlay, listenDismiss, nativeSceneAccepts } from "./overlay.ts";
 import { currentSettings } from "./profileStore.ts";
-import { addHtmlBadgeCelebration } from "./questionPanel.ts";
 import { SCENE_KEYS, type SceneKey } from "./sceneKeys.ts";
 import { soundboardOf } from "./soundboard.ts";
-import { listenTargetPress } from "./targetPress.ts";
-import { addMenuButton, addTapBurst, BODY_TEXT } from "./uiKit.ts";
+import { BODY_TEXT } from "./uiKit.ts";
 
 export interface CelebrationSceneData {
   achievements: readonly AchievementId[];
@@ -60,11 +58,14 @@ export class CelebrationScene extends Scene {
     super(SCENE_KEYS.celebration);
   }
 
-  create({ achievements, owners, resume }: CelebrationSceneData): void {
+  create(data: CelebrationSceneData): void {
+    mountNativeOverlay(this, () => this.mount(data));
+  }
+
+  private mount({ achievements, owners, resume }: CelebrationSceneData): boolean {
     const reduced = currentSettings(this).reducedMotion;
     // Dimmed down the colour ramps under the lit top bar, as under the pause menu and the cards.
     const dim = overlayRegion("home");
-    addRampDim(this, dim);
     const cheering = owners.slice(0, 3);
     const rows = badgeStripRows(achievements.length);
     const names = earnedBadges(gameData, achievements).map((badge) =>
@@ -115,9 +116,9 @@ export class CelebrationScene extends Scene {
     const close = () => closeOverlay(resume, this);
     const measure = canvasPanelMeasure(this);
     const titleY = panel.y + BADGE_STRIP.titleY;
-    // In HTML where the page's switch is on and its fonts are ready, over the panel, the badges
-    // and the faces the canvas draws; else all on the canvas.
-    const html = addHtmlBadgeCelebration(
+    const left = SCREEN.width / 2 - ((cheering.length - 1) * FACES.pitch + FACES.size) / 2;
+    const facesY = top + badgesHeight + MODAL.gap;
+    const html = addNativeBadgeCelebration(
       this,
       {
         button: panelButton(measure, buttonRect, true, gameData.menuText.celebration.button),
@@ -126,42 +127,31 @@ export class CelebrationScene extends Scene {
         title: panelTitle(measure, panel, titleY, celebrationTitle(gameData, achievements.length)),
         titleY,
       },
-      close,
+      {
+        badges: earnedBadges(gameData, achievements),
+        close,
+        faces: cheering.map((dog, i) => ({
+          dog,
+          rect: {
+            height: FACES.size,
+            width: FACES.size,
+            x: Math.round(left + i * FACES.pitch),
+            y: facesY,
+          },
+        })),
+        reduced,
+        rows,
+      },
     );
-    addBadgeCelebration(this, reduced, panel, rows, achievements, true, html === undefined);
-    const closeButton =
-      html === undefined ? addCardClose(this, this.add.container(0, 0), panel, false) : undefined;
+    if (html === undefined) {
+      return false;
+    }
+    addRampDim(this, dim);
     soundboardOf(this).play("badge");
-    const left = SCREEN.width / 2 - ((cheering.length - 1) * FACES.pitch + FACES.size) / 2;
-    const facesY = top + badgesHeight + MODAL.gap;
-    cheering.forEach((dog, i) => {
-      addCheeringFace(this, reduced, dog, Math.round(left + i * FACES.pitch), facesY);
-    });
-
-    const button =
-      html === undefined
-        ? addMenuButton(this, buttonRect, gameData.menuText.celebration.button, {
-            available: true,
-            primary: true,
-          })
-        : undefined;
-    // Nice! and the close control in the panel's corner each close it, shown pressed while held.
-    const closeHit = closeControl(panel).hit;
-    listenTargetPress<"button" | "close">(this, {
-      onDown: (pointer) => addTapBurst(this, pointer.x, pointer.y),
-      onPressed: (target) => {
-        button?.setPressed(target === "button");
-        closeButton?.setPressed(target === "close");
-      },
-      onTap: close,
-      targetAt: (x, y) => {
-        if (containsPoint(closeHit, x, y)) {
-          return "close";
-        }
-        return containsPoint(buttonRect, x, y) ? "button" : undefined;
-      },
-    });
     this.input.keyboard?.on("keydown", (event: KeyboardEvent) => {
+      if (!nativeSceneAccepts(this)) {
+        return;
+      }
       if (
         menuKeyActs(event.repeat, event.code) &&
         (isConfirmKey(event.code) || isPauseKey(event.code))
@@ -173,5 +163,6 @@ export class CelebrationScene extends Scene {
     // Nice! and the close control do; the top bar's buttons keep their own taps.
     listenDismiss(this, regionOutside("home", 0, [panel, buttonRect]), close);
     listenHomeBar(this, close);
+    return true;
   }
 }

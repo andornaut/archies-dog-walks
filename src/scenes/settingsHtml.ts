@@ -6,9 +6,7 @@ import { type DomSettings, type DomSettingsInput, showSettings } from "../hud/do
 import { loadSheet } from "../ui/dom/sheetFrames.ts";
 import { followScene, htmlPanelInput, htmlPanelPlace } from "./questionPanel.ts";
 
-// The settings card in the HTML layer, laid out as the canvas draws it (settingsView), following
-// its scene, or undefined where the canvas must draw it: the page's switch is off, the fonts
-// are not ready, or art the card draws is missing, which the canvas stands in for.
+// The native settings view uses the same model, gesture controller and scene lifecycle.
 export function addHtmlSettings(
   scene: Scene,
   input: Omit<DomSettingsInput, "artUrl" | "closeLabel" | "fonts" | "loadSheet" | "toGame">,

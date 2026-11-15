@@ -1,9 +1,8 @@
 import { itemAt } from "@andornaut/game-kit/arrays";
-import { containsPoint, insetRect, type Rect } from "@andornaut/game-kit/rect";
+import { containsPoint, type Rect } from "@andornaut/game-kit/rect";
 import { fittingText } from "@andornaut/game-kit/text/textFit";
-import { type GameObjects, Scene, Scenes } from "phaser";
+import { Scene, Scenes } from "phaser";
 
-import { BUILD_LABEL } from "../buildLabel.ts";
 import { gameData } from "../data/index.ts";
 import { SCREEN_CONFIG, SCREEN_LAYOUT } from "../data/screen.ts";
 import { FEEDBACK } from "../home/feedback.ts";
@@ -13,7 +12,6 @@ import {
   INSTALL_STEPS_FIT,
   type InstallStepsLayout,
   installStepsLayout,
-  knobX,
   noteRoomForControl,
   SETTINGS_NOTE_STYLE,
   SETTINGS_ROW,
@@ -22,7 +20,6 @@ import {
   settingsLayout,
   type SettingsRowShape,
   setVolumeSteps,
-  VOLUME_STEPS,
   type VolumeKey,
   volumeStepAt,
   volumeStepForKey,
@@ -31,10 +28,8 @@ import {
 import {
   hasNote,
   INSTALL_ROW,
-  type InstallStepsView,
   SETTING_ROWS,
   type SettingsRow,
-  type SettingsRowView,
   type SettingsTarget,
   type SettingsView,
   settingsView,
@@ -54,10 +49,7 @@ import type { Settings } from "../save/settings.ts";
 import { barTitleRoom } from "../ui/barTitle.ts";
 import { modalActionWidth } from "../ui/modal/layout.ts";
 import { cardTitleRow } from "../ui/modal/titleRow.ts";
-import { PALETTE } from "../ui/palette.ts";
-import { addModalShade, drawFramedRect, drawRing, fillRect } from "../ui/phaser/draw.ts";
 import {
-  addPixelText,
   fitPixelText,
   labelInkWidth,
   pixelFontMetrics,
@@ -66,33 +58,24 @@ import {
 } from "../ui/phaser/pixelText.ts";
 import { addRampDim } from "../ui/phaser/rampDim.ts";
 import { listenHomeBar } from "./homeBarPress.ts";
-import { addModalCard } from "./homePanels.ts";
 import { measureModalTitle, modalTextWidth } from "./modalMeasure.ts";
-import { listenOnePress } from "./onePress.ts";
+import { mountNativeOverlay } from "./nativeOverlayReady.ts";
 import {
   BAR_MUTED_EVENT,
   closeOverlay,
   listenOutsideTap,
+  nativeSceneAccepts,
   onBackPressed,
   onSceneEvent,
   type OverlayData,
 } from "./overlay.ts";
 import { currentSettings, setSettings } from "./profileStore.ts";
-import { refuseControl } from "./refuseControl.ts";
 import { SCENE_KEYS, type SceneKey } from "./sceneKeys.ts";
 import { addHtmlSettings } from "./settingsHtml.ts";
 import { canvasSettingsMeasure } from "./settingsMeasure.ts";
 import { soundboardOf } from "./soundboard.ts";
 import { listenTargetPress, sameByValue, type TargetPressListener } from "./targetPress.ts";
-import {
-  addBodyText,
-  addMenuButton,
-  addNineSlice,
-  addTagImage,
-  addTapBurst,
-  BODY_TEXT,
-  clearScene,
-} from "./uiKit.ts";
+import { BODY_TEXT } from "./uiKit.ts";
 
 // Emitted on game.events when settings close.
 export const SETTINGS_CLOSED_EVENT = "settings-closed";
@@ -101,8 +84,6 @@ export const SETTINGS_CLOSED_EVENT = "settings-closed";
 type OpenSteps = InstallStepsLayout & { readonly kind: InstallStepsKind };
 type Row = SettingsRow;
 type Target = SettingsTarget;
-
-const KNOB_HEIGHT = 16;
 
 function settingsRows(installable: boolean): readonly Row[] {
   return installable ? [...SETTING_ROWS, INSTALL_ROW] : SETTING_ROWS;
@@ -171,10 +152,7 @@ export interface SettingsData extends OverlayData {
 // focus through the rows and the close control; Enter or Space presses the focused row, and on a
 // slider the left and right keys, Home and End set the volume.
 export class SettingsScene extends Scene {
-  private sliderLabels = new Map<VolumeKey, GameObjects.BitmapText[]>();
   private dim: Rect = SCREEN_LAYOUT.screen;
-  // The ramp dim's objects, kept as the card redraws over them.
-  private dimmed: readonly GameObjects.GameObject[] = [];
   private dragging: VolumeKey | undefined;
   private focus: Focus | null = null;
   // No rows until create measures their notes, so no font is read.
@@ -184,7 +162,7 @@ export class SettingsScene extends Scene {
   private rows: readonly Row[] = SETTING_ROWS;
   // The install steps' card and the kind of steps it shows, while it is open.
   private steps: OpenSteps | undefined;
-  // The card in HTML, or undefined while the canvas draws it.
+  // The scene owns settings and gestures; the native view owns their rendering.
   private html: DomSettings | undefined;
   private presses: TargetPressListener<Target> | undefined;
 
@@ -193,9 +171,12 @@ export class SettingsScene extends Scene {
   }
 
   create(data: SettingsData): void {
+    mountNativeOverlay(this, () => this.mount(data));
+  }
+
+  private mount(data: SettingsData): boolean {
     this.resumeKey = data.resume;
     this.dim = overlayRegion(data.region);
-    this.dimmed = addRampDim(this, this.dim);
     this.rows = settingsRows(offersInstall(installState()));
     this.layout = settingsLayout(settingsFonts(this), SCREEN_CONFIG, rowShapes(this, this.rows));
     this.dragging = undefined;
@@ -219,6 +200,10 @@ export class SettingsScene extends Scene {
       },
       view: this.view(),
     });
+    if (this.html === undefined) {
+      return false;
+    }
+    addRampDim(this, this.dim);
     this.render();
 
     // The install row comes and goes as the game becomes installable or installed.
@@ -239,18 +224,6 @@ export class SettingsScene extends Scene {
       opens: (target) => target.kind === "install",
       same: sameByValue,
       targetAt: (x, y) => this.targetAt(x, y),
-    });
-    // The sliders, dragged from a press on their row; every press bursts where it lands.
-    listenOnePress(this, {
-      down: (pointer) => {
-        const row = this.rows.find((_, i) => containsPoint(this.rowRect(i), pointer.x, pointer.y));
-        if (row?.kind === "slider") {
-          this.slideFrom(row.key, pointer.x);
-        }
-        addTapBurst(this, pointer.x, pointer.y);
-      },
-      move: (pointer) => this.slideTo(pointer.x),
-      up: (_, cancelled) => this.slideEnd(cancelled),
     });
     // The back button and a tap anywhere around the card close it, as the close control in its
     // band does: the dim, the lit top bar's empty area and, over the walk, the dog cards; the top
@@ -273,10 +246,14 @@ export class SettingsScene extends Scene {
     // Sound on the top bar flips the sound switch here too.
     onSceneEvent(this, this.game.events, BAR_MUTED_EVENT, () => this.render());
     this.input.keyboard?.on("keydown", (event: KeyboardEvent) => {
+      if (!nativeSceneAccepts(this)) {
+        return;
+      }
       if (menuKeyActs(event.repeat, event.code)) {
         this.onKey(event.code);
       }
     });
+    return true;
   }
 
   private onKey(code: string): void {
@@ -411,6 +388,9 @@ export class SettingsScene extends Scene {
   }
 
   private targetAt(x: number, y: number): Target | undefined {
+    if (!nativeSceneAccepts(this)) {
+      return undefined;
+    }
     if (this.steps !== undefined) {
       return containsPoint(this.steps.close.hit, x, y) ? { kind: "stepsClose" } : undefined;
     }
@@ -515,191 +495,11 @@ export class SettingsScene extends Scene {
     );
   }
 
-  // In HTML where the page's switch is on, its fonts are ready and the card's art is loaded,
-  // else on the canvas.
   private render(): void {
-    const view = this.view();
-    this.sliderLabels.clear();
-    clearScene(this, this.dimmed);
-    // The HTML card, which the steps' card covers in a shade the canvas blends: the canvas draws
-    // the card under it while it shows.
-    // CLEANUP (added 2026-11-11): the canvas card under the steps' shade goes once the shade
-    // draws in HTML (phase 5 at the latest), the HTML card then staying under it.
-    this.html?.update(view, this.focus?.row ?? null);
-    if (this.html !== undefined && view.steps === undefined) {
-      return;
-    }
-    addModalCard(
-      this,
-      this.add.container(0, 0),
-      view.card.panel,
-      gameData.menuText.settings.title,
-      {
-        pressed: this.pressed?.kind === "close",
-      },
-    );
-    const rows = this.add.container(0, 0);
-    for (const row of view.rows) {
-      if (row.slider === undefined) {
-        this.drawNotedRow(rows, row);
-      } else {
-        this.drawSlider(row, row.slider);
-      }
-    }
-    addPixelText(this, view.build.x, view.build.capTop, BUILD_LABEL, {
-      colour: view.build.colour,
-      scale: view.build.scale,
-    });
-    // Over the rows, since a switch row's face covers its top row.
-    const separators = this.add.graphics();
-    view.separators.forEach((rect) => fillRect(separators, PALETTE.tan, rect));
-    if (view.ring !== undefined) {
-      drawRing(this.add.graphics(), PALETTE.cyan, view.ring, 2);
-    }
-    if (view.steps !== undefined) {
-      this.drawSteps(view.steps);
-    }
-  }
-
-  // The install steps' card over the dimmed settings: its title, its close control, and the
-  // glyph of the button the steps start from and the steps under the title.
-  private drawSteps(steps: InstallStepsView): void {
-    addModalShade(this, steps.dim);
-    if (this.html !== undefined) {
-      return;
-    }
-    addModalCard(this, this.add.container(0, 0), steps.card.panel, steps.title, {
-      pressed: this.pressed?.kind === "stepsClose",
-    });
-    if (steps.icon !== undefined) {
-      this.add.image(steps.icon.x, steps.icon.y, steps.icon.key).setOrigin(0);
-    }
-    addBodyText(
-      this,
-      undefined,
-      { x: steps.steps.x, y: steps.steps.capTop },
-      steps.steps.lines.join("\n"),
-    );
-  }
-
-  // A switch or install row: its face, which dips with its content while pressed, its icon,
-  // label and note, and its switch or button.
-  private drawNotedRow(parent: GameObjects.Container, row: SettingsRowView): void {
-    if (row.face !== undefined) {
-      const face = this.add.graphics();
-      drawFramedRect(face, { border: row.face.colour, fill: row.face.colour }, row.face.rect);
-      parent.add(face);
-    }
-    const icon = addTagImage(this, row.icon.key, row.icon.tag, row.icon.x, row.icon.y);
-    parent.add([...(icon === undefined ? [] : [icon]), ...this.addTexts(row)]);
-    if (row.button !== undefined) {
-      addMenuButton(
-        this,
-        row.button.rect,
-        row.button.text.text,
-        { available: true, primary: false, secondary: true },
-        parent,
-      );
-      return;
-    }
-    if (row.switch === undefined) {
-      return;
-    }
-    const { art, on } = row.switch;
-    const image = addTagImage(this, art.key, art.tag, art.x, art.y);
-    if (image !== undefined) {
-      parent.add(image);
-      return;
-    }
-    const g = this.add.graphics();
-    fillRect(g, on ? PALETTE.forest : PALETTE.slate, { ...SETTINGS_ROW.switch, ...art });
-    parent.add(g);
-  }
-
-  // A row's label and its note or volume.
-  private addTexts(row: SettingsRowView): GameObjects.BitmapText[] {
-    return row.texts.map((text) =>
-      addPixelText(this, text.x, text.capTop, text.lines.join("\n"), {
-        colour: text.colour,
-        font: text.font,
-        ...(text.anchor === "right" ? { originX: 1 } : {}),
-        scale: text.scale,
-      }),
-    );
+    this.html?.update(this.view(), this.focus?.row ?? null);
   }
 
   private refuseSlider(key: VolumeKey): void {
-    const index = this.rowIndex(key);
-    if (this.html !== undefined) {
-      this.html.refuse(index, currentSettings(this).reducedMotion);
-      return;
-    }
-    const labels = this.sliderLabels.get(key);
-    if (labels === undefined) {
-      return;
-    }
-    this.sliderLabels.delete(key);
-    refuseControl(this, currentSettings(this).reducedMotion, labels, labels, () => {
-      if (labels.every((label) => label.active)) {
-        this.sliderLabels.set(key, labels);
-      }
-    });
-  }
-
-  // A volume slider: drag along the row to set it. Muted, it is disabled and reads "Muted".
-  private drawSlider(row: SettingsRowView, slider: NonNullable<SettingsRowView["slider"]>): void {
-    addTagImage(this, row.icon.key, row.icon.tag, row.icon.x, row.icon.y);
-    const labels = this.addTexts(row);
-    if (row.key === "musicVolume" || row.key === "sfxVolume") {
-      this.sliderLabels.set(row.key, labels);
-    }
-    const { track } = this.layout;
-    const rect = { height: track.height, width: track.width, x: track.x, y: slider.empty.y };
-    const steps = volumeSteps(currentSettings(this)[row.key as VolumeKey]);
-    if (this.textures.exists("ui-slider") && this.textures.exists("ui-slider-knob")) {
-      addNineSlice(this, "ui-slider", rect, slider.empty.tag);
-      addNineSlice(this, "ui-slider", { ...rect, width: slider.filled.width }, slider.filled.tag);
-      addTagImage(this, slider.knob.key, slider.knob.tag, slider.knob.x, slider.knob.y);
-      return;
-    }
-    this.drawSliderFallback(rect, steps, !slider.disabled);
-  }
-
-  // The slider in code while ui-slider or ui-slider-knob is missing.
-  private drawSliderFallback(track: Rect, steps: number, active: boolean): void {
-    const g = this.add.graphics();
-    fillRect(g, active ? PALETTE.plum : PALETTE.neutralGrey, track);
-    const inner = insetRect(1, track);
-    fillRect(g, active ? PALETTE.tan : PALETTE.neutralLightGrey, inner);
-    fillRect(g, active ? PALETTE.forest : PALETTE.neutralGrey, {
-      ...inner,
-      width: Math.round((inner.width * steps) / VOLUME_STEPS),
-    });
-    const kx = knobX(this.layout.track, steps);
-    const top = track.y - 3;
-    fillRect(g, active ? PALETTE.plum : PALETTE.neutralGrey, {
-      height: KNOB_HEIGHT,
-      width: this.layout.track.knobWidth,
-      x: kx,
-      y: top,
-    });
-    fillRect(g, active ? PALETTE.cream : PALETTE.neutralLightGrey, {
-      height: KNOB_HEIGHT - 2,
-      width: this.layout.track.knobWidth - 2,
-      x: kx + 1,
-      y: top + 1,
-    });
-    fillRect(g, active ? PALETTE.tan : PALETTE.neutralGrey, {
-      height: 2,
-      width: this.layout.track.knobWidth - 2,
-      x: kx + 1,
-      y: top + 13,
-    });
-    fillRect(g, active ? PALETTE.tan : PALETTE.neutralGrey, {
-      height: 7,
-      width: 2,
-      x: kx + 4,
-      y: top + 4,
-    });
+    this.html?.refuse(this.rowIndex(key), currentSettings(this).reducedMotion);
   }
 }

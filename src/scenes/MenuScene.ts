@@ -16,15 +16,17 @@ import {
 import { addRampDim } from "../ui/phaser/rampDim.ts";
 import { exitGame, listenHomeBar, openHomePage } from "./homeBarPress.ts";
 import { canvasPanelMeasure } from "./modalMeasure.ts";
+import { mountNativeOverlay } from "./nativeOverlayReady.ts";
 import {
   BAR_MUTED_EVENT,
   closeOverlay,
   listenDismiss,
+  nativeSceneAccepts,
   openOverlay,
   type OverlayData,
 } from "./overlay.ts";
 import { toggleMuted } from "./profileStore.ts";
-import { addHtmlQuestionPanel, addQuestionPanel, type QuestionPanel } from "./questionPanel.ts";
+import { addHtmlQuestionPanel, type QuestionPanel } from "./questionPanel.ts";
 import { SCENE_KEYS, type SceneKey } from "./sceneKeys.ts";
 import type { SettingsData } from "./SettingsScene.ts";
 
@@ -39,10 +41,13 @@ export class MenuScene extends Scene {
     super(SCENE_KEYS.menu);
   }
 
-  create({ closePage, context, resume }: MenuSceneData): void {
+  create(data: MenuSceneData): void {
+    mountNativeOverlay(this, () => this.mount(data));
+  }
+
+  private mount({ closePage, context, resume }: MenuSceneData): boolean {
     const area = overlayRegion("home");
     const close = () => closeOverlay(resume, this);
-    addRampDim(this, area);
     const closeScreen = () => {
       close();
       closePage?.();
@@ -80,12 +85,19 @@ export class MenuScene extends Scene {
       showKeyNumbers: false,
       title: gameData.menuText.menu.title,
     };
-    const covered = addHtmlQuestionPanel(this, area, panel) ?? addQuestionPanel(this, area, panel);
+    const covered = addHtmlQuestionPanel(this, area, panel);
+    if (covered === undefined) {
+      return false;
+    }
+    addRampDim(this, area);
     this.events.on(Scenes.Events.PAUSE, () => this.scene.setVisible(false));
     this.events.on(Scenes.Events.RESUME, () => this.scene.setVisible(true));
     listenDismiss(this, regionOutside("home", 0, covered), close);
     listenHomeBar(this, close);
     this.input.keyboard?.on("keydown", (event: KeyboardEvent) => {
+      if (!nativeSceneAccepts(this)) {
+        return;
+      }
       if (!menuKeyActs(event.repeat, event.code)) {
         return;
       }
@@ -95,5 +107,6 @@ export class MenuScene extends Scene {
         close();
       }
     });
+    return true;
   }
 }

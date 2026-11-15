@@ -7,8 +7,9 @@ import { homeQuestionLayout, QUIT_QUESTION_ANSWERS } from "../hud/pauseMenu.ts";
 import { isPauseKey, menuKeyActs } from "../input/keyBindings.ts";
 import { addRampDim } from "../ui/phaser/rampDim.ts";
 import { exitGame, listenHomeBar } from "./homeBarPress.ts";
-import { closeOverlay, listenDismiss, type OverlayData } from "./overlay.ts";
-import { addHtmlQuestionPanel, addQuestionPanel, type QuestionPanel } from "./questionPanel.ts";
+import { mountNativeOverlay } from "./nativeOverlayReady.ts";
+import { closeOverlay, listenDismiss, nativeSceneAccepts, type OverlayData } from "./overlay.ts";
+import { addHtmlQuestionPanel, type QuestionPanel } from "./questionPanel.ts";
 import { SCENE_KEYS } from "./sceneKeys.ts";
 
 // Quit? over the dimmed home screen, which back asks with nothing open, laid out as the Home
@@ -19,9 +20,12 @@ export class QuitScene extends Scene {
     super(SCENE_KEYS.quit);
   }
 
-  create({ resume }: OverlayData): void {
+  create(data: OverlayData): void {
+    mountNativeOverlay(this, () => this.mount(data));
+  }
+
+  private mount({ resume }: OverlayData): boolean {
     const area = overlayRegion("home");
-    addRampDim(this, area);
     const words = gameData.homeText.quit;
     const keepPlaying = () => closeOverlay(resume, this);
     // Closed first, so a page kept for back-forward caching comes back to the bare home screen.
@@ -41,15 +45,21 @@ export class QuitScene extends Scene {
       sentenceLines: false,
       title: words.title,
     };
-    // In HTML where the page's switch is on and its fonts are ready, else on the canvas.
-    const covered =
-      addHtmlQuestionPanel(this, area, question) ?? addQuestionPanel(this, area, question);
+    const covered = addHtmlQuestionPanel(this, area, question);
+    if (covered === undefined) {
+      return false;
+    }
+    addRampDim(this, area);
     this.input.keyboard?.on("keydown", (event: KeyboardEvent) => {
+      if (!nativeSceneAccepts(this)) {
+        return;
+      }
       if (menuKeyActs(event.repeat, event.code) && isPauseKey(event.code)) {
         keepPlaying();
       }
     });
     listenDismiss(this, regionOutside("home", 0, covered), keepPlaying);
     listenHomeBar(this, keepPlaying);
+    return true;
   }
 }

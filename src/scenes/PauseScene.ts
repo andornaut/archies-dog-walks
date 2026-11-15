@@ -19,10 +19,10 @@ import { addRampDim } from "../ui/phaser/rampDim.ts";
 import { HELP_CLOSED_EVENT } from "./HelpScene.ts";
 import { openHelp } from "./helpScreen.ts";
 import { canvasPanelMeasure } from "./modalMeasure.ts";
+import { mountNativeOverlay } from "./nativeOverlayReady.ts";
 import { listenOutsideTap, onceSceneEvent, openOverlay } from "./overlay.ts";
 import {
   addHtmlQuestionPanel,
-  addQuestionPanel,
   type PanelEntry,
   pauseDimsHtml,
   type QuestionPanel,
@@ -68,12 +68,15 @@ export class PauseScene extends Scene {
   }
 
   create(data: PauseSceneData): void {
+    mountNativeOverlay(this, () => this.mount(data));
+  }
+
+  private mount(data: PauseSceneData): boolean {
     const { onHeadHome, onResume } = data;
     const walkView = overlayRegion("walk");
     // HTML under the menu, a paused celebration's, is palette-dimmed in HTML as the canvas's dim
     // dims the walk, which cannot dim it.
     const dimsHtml = pauseDimsHtml(this);
-    addRampDim(this, walkView);
     const headHome = () => {
       soundboardOf(this).stopMusic();
       onHeadHome();
@@ -137,10 +140,11 @@ export class PauseScene extends Scene {
             showKeyNumbers: false,
             title: menu.title,
           };
-    // In HTML where the page's switch is on and its fonts are ready, else on the canvas.
-    const covered =
-      addHtmlQuestionPanel(this, walkView, panel, dimsHtml) ??
-      addQuestionPanel(this, walkView, panel);
+    const covered = addHtmlQuestionPanel(this, walkView, panel, dimsHtml);
+    if (covered === undefined) {
+      return false;
+    }
+    addRampDim(this, walkView);
     // The close control and a tap anywhere around the panel resume, as Resume and Keep walking
     // do, the walk bar's empty area and the dog cards included, though they are not dimmed. The
     // walk bar's buttons keep their own taps.
@@ -157,6 +161,7 @@ export class PauseScene extends Scene {
       const open = () => presses[overlay.open]();
       onceSceneEvent(this, this.game.events, Core.Events.POST_RENDER, open);
     }
+    return true;
   }
 
   // The settings over the walk, dimmed as the menu dims it. The menu hides under them, dim and
