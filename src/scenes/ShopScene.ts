@@ -1,7 +1,9 @@
 import { clampIndex } from "@andornaut/game-kit/arrays";
-import { containsPoint, type Rect } from "@andornaut/game-kit/rect";
-import { type GameObjects, type Input, Scene } from "phaser";
+import { containsPoint, type Point, type Rect } from "@andornaut/game-kit/rect";
+import { advanceWidth } from "@andornaut/game-kit/text/bitmapFont";
+import { Scene } from "phaser";
 
+import { artUrl } from "../assets/artFiles.ts";
 import { dogFaceKey, gearIconKey } from "../assets/spriteKeys.ts";
 import { gameData } from "../data/index.ts";
 import { dogDetail, gearDetail } from "../home/detail.ts";
@@ -10,6 +12,7 @@ import { focusDirectionForKey } from "../home/focus.ts";
 import { type Purchase } from "../home/home.ts";
 import { overlayRegion, regionOutside } from "../home/homeBar.ts";
 import { type HomeAction, messageLine } from "../home/homeLines.ts";
+import { pricePlateView } from "../home/pricePlateView.ts";
 import {
   answerPurchase,
   type ConfirmChoice,
@@ -31,10 +34,10 @@ import {
   type ShopTab,
   slotRows,
 } from "../home/shop.ts";
+import { shopFocusView } from "../home/shopFocusView.ts";
 import {
   rowRects,
   SHOP_LAYOUT,
-  SHOP_MESSAGE_FIT,
   shopListBottom,
   shopListFrame,
   shopMessageCapTop,
@@ -42,6 +45,14 @@ import {
   shopScrollbar,
   shopTabRects,
 } from "../home/shopLayout.ts";
+import { shopPageView } from "../home/shopPageView.ts";
+import { addTapBurst as addNativeTapBurst } from "../hud/dom/questionPanel.ts";
+import {
+  type NativeShopScreen,
+  type ShopScreenRow,
+  type ShopScreenView,
+  showShopScreen,
+} from "../hud/dom/shopScreen.ts";
 import {
   type HoldPress,
   holdRule,
@@ -52,40 +63,35 @@ import {
 } from "../input/hold.ts";
 import { isConfirmKey, isPauseKey, menuKeyActs } from "../input/keyBindings.ts";
 import {
+  dragScroll,
+  isDragging,
   type ListScroll,
   listScroll,
   pageKeyScroll,
+  pressScroll,
+  releaseScroll,
   resizeScroll,
   scrollMax,
   scrollToShow,
   stepScroll,
+  wheelScroll,
 } from "../input/listScroll.ts";
 import { dollarText } from "../presentation/currency.ts";
 import type { SaveDocument } from "../save/schema.ts";
-import type { ArtLook } from "../ui/interaction.ts";
+import { disabledArtKey } from "../ui/disabledArt.ts";
+import { loadSheet } from "../ui/dom/sheetFrames.ts";
+import { uiLayer } from "../ui/dom/uiLayer.ts";
+import type { PanelText } from "../ui/modal/types.ts";
 import { PALETTE } from "../ui/palette.ts";
-import { addModalShade, fillRect } from "../ui/phaser/draw.ts";
-import { fitPixelText, pixelFontMetrics, placePixelText } from "../ui/phaser/pixelText.ts";
-import { GREYED, pictureBox, type PlateKind } from "../ui/selection.ts";
+import { addModalShade } from "../ui/phaser/draw.ts";
+import { GREYED, pictureBox, selectLook } from "../ui/selection.ts";
+import { TEXT_SCALE } from "../ui/textFit.ts";
 import { cents } from "../units.ts";
 import type { CelebrationSceneData } from "./CelebrationScene.ts";
 import { listenHomeBar } from "./homeBarPress.ts";
 import { detailView } from "./homePanels.ts";
-import {
-  addHtmlMirror,
-  type HtmlMirror,
-  MIRROR_CLIP_DATA,
-  MIRROR_SCROLL_DATA,
-  type MirrorScroll,
-} from "./htmlMirror.ts";
-import {
-  addPlate,
-  addTileBadge,
-  drawDogSlotFallback,
-  plateColours,
-  purchasePicture,
-  SHOP_ART,
-} from "./itemArt.ts";
+import { BADGE_KEYS, PLATE_PAD, purchasePicture, SHOP_ART } from "./itemArt.ts";
+import { canvasPanelMeasure } from "./modalMeasure.ts";
 import { closeOverlay, listenDismiss, openOverlay, type OverlayData } from "./overlay.ts";
 import {
   currentSettings,
@@ -93,41 +99,21 @@ import {
   purchaseInProfile,
   takeCelebrations,
 } from "./profileStore.ts";
-import {
-  drawPurchaseConfirm,
-  type PurchaseConfirmHits,
-  purchaseConfirmView,
-} from "./purchaseConfirmView.ts";
+import { drawPurchaseConfirm, purchaseConfirmView } from "./purchaseConfirmView.ts";
 import {
   addDetailCardOver,
   addHtmlPurchaseConfirm,
+  followScene,
+  htmlPanelInput,
+  htmlPanelPlace,
   keepPanel,
   type KeptPanel,
 } from "./questionPanel.ts";
 import { SCENE_KEYS, type SceneKey } from "./sceneKeys.ts";
-import {
-  addScrollbar,
-  LIST_SCROLL_RULE,
-  listenListScroll,
-  maskToRect,
-  placeScrollbar,
-  type ScrollbarView,
-} from "./scrollView.ts";
-import { addCountNote, addShopPage, addShopTabs } from "./shopPage.ts";
+import { LIST_SCROLL_RULE } from "./scrollView.ts";
+import { selectionOrbitSegments } from "./selectionOrbit.ts";
 import { listenTargetPress, sameByValue, type TargetPressListener } from "./targetPress.ts";
-import {
-  addBodyText,
-  addGraphicsIn,
-  addPanel,
-  addSelectTile,
-  addShopFocusFrame,
-  addTagImage,
-  addTapBurst,
-  clearScene,
-  selectOuter,
-  tagFrame,
-  tileTextureKey,
-} from "./uiKit.ts";
+import { selectOuter } from "./uiKit.ts";
 
 // The caller pauses itself and launches the shop, on the tab of focus and framing its row
 // when given, else on the Dogs tab; the shop resumes it on close.
@@ -163,9 +149,6 @@ const ROW = LAYOUT.row;
 const OWNED_DX = ROW.ownedDx;
 const LIST: Rect = LAYOUT.list.rect;
 const PLATE: Rect = LAYOUT.message.plate;
-// A press that travels past the tap distance drags the list.
-// A screen-sized texture, white over the list area: the mask that clips the list to it.
-const LIST_MASK_KEY = "shop-list-mask";
 
 // A purchase's art on its row: a dog's face, a gear item's icon, the slot's art.
 function purchaseArt(purchase: Purchase): string {
@@ -201,8 +184,6 @@ export class ShopScene extends Scene {
   private action: HomeAction = { kind: "none" };
   // The purchase asked for and not yet answered, and where its answers were drawn.
   private confirm: PendingPurchase | undefined;
-  private confirmHits: PurchaseConfirmHits | undefined;
-  private containers = new Map<string, GameObjects.Container>();
   private detail: Purchase | undefined;
   // The detail card and the purchase confirm drawn in HTML, while each is open.
   private htmlConfirm: KeptPanel | undefined;
@@ -211,11 +192,9 @@ export class ShopScene extends Scene {
   // The open list's area, rows' width and heading note's right edge, by whether it scrolls.
   private frame = shopListFrame(false);
   private hold: HoldPress | undefined;
-  // The scrolled headings and rows, and the scrollbar beside them.
-  private list: GameObjects.Container | undefined;
-  // The page drawn in HTML over the canvas (addHtmlMirror), and the container it follows.
-  private mirror: HtmlMirror | undefined;
-  private root: GameObjects.Container | undefined;
+  // The persistent native page, mounted after the shared UI readiness barrier.
+  private native: NativeShopScreen | undefined;
+  private nativeDragging = false;
   // The last tap's message, on its plate over the list's top: a purchase in green, a refusal
   // in dark red.
   private message: { readonly refused: boolean; readonly text: string } | null = null;
@@ -223,9 +202,8 @@ export class ShopScene extends Scene {
   private pressed: Target | undefined;
   private presses: TargetPressListener | undefined;
   private resumeKey: SceneKey | undefined;
-  // The open tab's row names and lines, fitted once every row is drawn.
+  // The open tab's scroll and fling state.
   private scroll: ListScroll = listScroll(0);
-  private scrollbar: ScrollbarView | undefined;
   private shakes = new Map<string, number>();
   private tab: ShopTab = shopOpenTab(undefined);
 
@@ -237,7 +215,6 @@ export class ShopScene extends Scene {
     this.resumeKey = data.resume;
     this.action = { kind: "none" };
     this.confirm = undefined;
-    this.confirmHits = undefined;
     this.detail = undefined;
     this.hold = undefined;
     // The scene's shutdown destroyed any HTML card.
@@ -249,9 +226,15 @@ export class ShopScene extends Scene {
     this.shakes = new Map();
     this.tab = shopOpenTab(data.focus);
     this.focusId = data.focus === undefined ? null : shopRowId(data.focus);
-    // In HTML where the page's switch is on and its fonts are ready, else on the canvas.
-    this.root = undefined;
-    this.mirror = addHtmlMirror(this, () => (this.root === undefined ? [] : [this.root]));
+    // Mount only after fonts and the shared native layer are ready.
+    this.native = undefined;
+    const layer = uiLayer();
+    const stopReady = layer?.onReady(() => this.render());
+    this.events.once("shutdown", () => {
+      stopReady?.();
+      this.native?.destroy();
+      this.native = undefined;
+    });
     this.render();
     this.showFocus();
 
@@ -260,26 +243,6 @@ export class ShopScene extends Scene {
     // open, a tap anywhere closes it, as on the Logbook.
     this.presses = listenTargetPress<Target>(this, {
       dipMs: (target) => (target.kind === "dismiss" ? 0 : FEEDBACK.pressDipMs),
-      onDown: (pointer, target) => {
-        // Over the HTML page, so a burst shows over it.
-        if (this.mirror === undefined) {
-          addTapBurst(this, pointer.x, pointer.y);
-        } else {
-          this.mirror.burst({ x: pointer.x, y: pointer.y });
-        }
-        if (this.detail !== undefined || this.confirm !== undefined) {
-          return;
-        }
-        const purchase = target?.kind === "row" ? this.rowById(target.id)?.purchase : undefined;
-        this.hold =
-          purchase !== undefined && purchase.kind !== "dogSlot"
-            ? startHold(
-                holdRule(gameData.tuning, TILE_SLOP_PX),
-                { x: pointer.x, y: pointer.y },
-                this.time.now,
-              )
-            : undefined;
-      },
       onPressed: (target) => {
         this.pressed = target?.kind === "dismiss" ? undefined : target;
         if (target === undefined) {
@@ -290,33 +253,10 @@ export class ShopScene extends Scene {
       onTap: (target) => this.act(target),
       opens: (target) => this.opensConfirm(target),
       same: sameByValue,
-      targetAt: (x, y) => {
-        const choice = this.confirmChoiceAt(x, y);
-        if (choice !== undefined) {
-          return { choice, kind: "confirm" };
-        }
-        if (this.detail === undefined && this.confirm === undefined) {
-          return this.targetAt(x, y);
-        }
-        const hits = this.confirm === undefined ? undefined : this.confirmHits;
-        if (hits !== undefined && containsPoint(hits.close, x, y)) {
-          return { kind: "confirmClose" };
-        }
-        const card = hits?.card;
-        if (card !== undefined && containsPoint(card, x, y)) {
-          return undefined;
-        }
-        return containsPoint(PANEL, x, y) ? { kind: "dismiss" } : undefined;
-      },
+      targetAt: () => undefined,
     });
-    this.input.on("pointermove", (pointer: Input.Pointer) => {
-      if (this.hold !== undefined && pointer.isDown) {
-        this.hold = moveHold({ x: pointer.x, y: pointer.y }, this.hold);
-      }
-    });
-    this.listenScroll();
     this.input.keyboard?.on("keydown", (event: KeyboardEvent) => {
-      if (menuKeyActs(event.repeat, event.code)) {
+      if (this.native?.accepts() === true && menuKeyActs(event.repeat, event.code)) {
         this.onKey(event.code);
       }
     });
@@ -341,38 +281,340 @@ export class ShopScene extends Scene {
     );
   }
 
-  // The confirm's answer at a point, or undefined off its answers or with no confirm open.
-  private confirmChoiceAt(x: number, y: number): ConfirmChoice | undefined {
-    const hits = this.confirm === undefined ? undefined : this.confirmHits;
-    if (hits === undefined) {
-      return undefined;
+  private startRowHold(point: Point, target: Target | undefined): void {
+    const layer = uiLayer();
+    if (layer !== undefined) {
+      // Native tap bursts share the panel renderer rather than drawing behind opaque UI.
+      addNativeTapBurst(layer, point);
     }
-    return (["buy", "cancel"] as const).find((choice) => containsPoint(hits.buttons[choice], x, y));
+    if (!this.isListOpen()) {
+      return;
+    }
+    const purchase = target?.kind === "row" ? this.rowById(target.id)?.purchase : undefined;
+    this.hold =
+      purchase !== undefined && purchase.kind !== "dogSlot"
+        ? startHold(holdRule(gameData.tuning, TILE_SLOP_PX), point, this.time.now)
+        : undefined;
+  }
+
+  private nativeDown(point: Point): void {
+    const target = containsPoint(PANEL, point.x, point.y)
+      ? this.targetAt(point.x, point.y)
+      : { kind: "dismiss" as const };
+    this.presses?.down(target);
+    this.startRowHold(point, target);
+    if (this.isListOpen() && containsPoint(LIST, point.x, point.y)) {
+      this.scroll = pressScroll(point.y, this.time.now, this.scroll);
+    }
+  }
+
+  private nativeMove(point: Point): void {
+    if (this.hold !== undefined) {
+      this.hold = moveHold(point, this.hold);
+    }
+    const was = isDragging(this.scroll);
+    this.scroll = dragScroll(LIST_SCROLL_RULE, point.y, this.time.now, this.scroll);
+    if (isDragging(this.scroll)) {
+      this.nativeDragging = true;
+      if (!was) {
+        this.presses?.cancel();
+        this.hold = undefined;
+        this.pressed = undefined;
+      }
+      this.placeList();
+    }
+  }
+
+  private nativeUp(point: Point, cancelled: boolean): void {
+    this.presses?.up(
+      containsPoint(PANEL, point.x, point.y)
+        ? this.targetAt(point.x, point.y)
+        : { kind: "dismiss" },
+      cancelled || this.nativeDragging,
+    );
+    this.nativeDragging = false;
+    this.scroll = releaseScroll(
+      LIST_SCROLL_RULE,
+      currentSettings(this).reducedMotion,
+      this.time.now,
+      this.scroll,
+    );
+  }
+
+  private cancelNativePress(): void {
+    this.presses?.cancel();
+    this.hold = undefined;
+    this.pressed = undefined;
+    this.nativeDragging = false;
+    this.scroll = releaseScroll(LIST_SCROLL_RULE, true, this.time.now, this.scroll);
+  }
+
+  private placeNative(): void {
+    const reduced = currentSettings(this).reducedMotion;
+    this.native?.place({
+      ...(this.pressed?.kind === "row" ? { pressed: this.pressed.id } : {}),
+      rows: new Map(
+        this.placed.map(({ rect, row }) => {
+          const focused = this.focusId === row.id ? shopFocusView(rect) : undefined;
+          return [
+            row.id,
+            {
+              frame: focused?.fills ?? [],
+              orbit:
+                focused === undefined || reduced
+                  ? []
+                  : selectionOrbitSegments(focused.outer, "shop", this.time.now).map(
+                      ({ colour, rect }) => ({ colour: PALETTE[colour], rect }),
+                    ),
+              x: shakeOffset(reduced, this.time.now, this.shakes.get(row.id)),
+            },
+          ];
+        }),
+      ),
+      scroll: {
+        max: this.scroll.max,
+        settled: this.scroll.drag === null && this.scroll.velocity === 0,
+        y: this.scroll.y,
+      },
+      scrollbar: shopScrollbar(this.scroll.max, this.scroll.y),
+    });
+  }
+
+  private renderNative(place: NonNullable<ReturnType<typeof htmlPanelPlace>>): void {
+    const save = this.save();
+    const measure = canvasPanelMeasure(this);
+    const { fonts, layer } = place;
+    this.scroll = resizeScroll(scrollMax(LIST, this.listBottom(save)), this.scroll);
+    this.frame = shopListFrame(this.scroll.max > 0);
+    const line = (
+      text: string,
+      x: number,
+      capTop: number,
+      colour: number,
+      font: "body" | "title" = "body",
+    ): PanelText => ({
+      capTop,
+      centre: "left",
+      centreX: x,
+      colour,
+      font,
+      line: 0,
+      scale: TEXT_SCALE,
+      text,
+    });
+    const headings: PanelText[] = [];
+    const rows: ShopScreenRow[] = [];
+    this.placed = [];
+    const heading = (y: number, text: string, note: string) => {
+      headings.push(
+        line(text, LAYOUT.headingX, y, PALETTE.darkBrown, "title"),
+        line(
+          note,
+          this.frame.headingRight - advanceWidth(fonts.body, TEXT_SCALE, note),
+          y,
+          PALETTE.darkBrown,
+        ),
+      );
+    };
+    const addRows = (spec: Parameters<typeof rowRects>[1], source: readonly ShopRow[]) => {
+      rowRects(this.frame.rowWidth, spec, source.length).forEach((rect, index) => {
+        const row = source[index];
+        if (row === undefined) {
+          return;
+        }
+        this.placed.push({ rect, row });
+        const look = SHOP_ROW_VIEWS[shopRowLook(gameData, save.owned, save.bankCents, row)];
+        const mid = rect.y + Math.floor(rect.height / 2);
+        const right = rect.x + rect.width - ROW.plateInset;
+        const box = {
+          height: ROW.box.size,
+          width: ROW.box.size,
+          x: rect.x + ROW.box.dx,
+          y: rect.y + Math.floor((rect.height - ROW.box.size) / 2),
+        };
+        const key = purchaseArt(row.purchase);
+        const frame = this.textures.getFrame(key);
+        const tops = shopRowTextTops(measure.body);
+        const texts = [
+          line(
+            row.name,
+            rect.x + ROW.textDx,
+            row.line === "" ? mid - 5 : mid + tops.name,
+            PALETTE[selectLook(look.state).text],
+          ),
+        ];
+        if (row.line !== "") {
+          texts.push(
+            line(
+              row.line,
+              rect.x + ROW.textDx,
+              mid + tops.line,
+              look.state === "disabled" ? PALETTE[GREYED.text] : PALETTE.darkBrown,
+            ),
+          );
+        }
+        const art: ShopScreenRow["art"][number][] = [
+          {
+            key,
+            rect: {
+              height: frame.height,
+              width: frame.width,
+              x: box.x + ROW.art,
+              y: box.y + ROW.art,
+            },
+            sheet: row.purchase.kind === "dog",
+            ...(look.art === "grey" ? { imageKey: disabledArtKey(key) } : {}),
+            tag: "happy",
+          },
+        ];
+        if (look.badge !== null) {
+          art.push({
+            key: BADGE_KEYS[look.badge],
+            rect: {
+              height: this.textures.getFrame(BADGE_KEYS[look.badge]).height,
+              width: this.textures.getFrame(BADGE_KEYS[look.badge]).width,
+              x: rect.x + ROW.badge.dx,
+              y: rect.y + ROW.badge.dy,
+            },
+            sheet: false,
+          });
+        }
+        let plate: ShopScreenRow["plate"];
+        if (row.price === null || look.plate === null) {
+          const owned = gameData.homeText.shop.owned;
+          texts.push(
+            line(
+              owned,
+              right - OWNED_DX - advanceWidth(fonts.title, TEXT_SCALE, owned.toUpperCase()),
+              mid - 4,
+              PALETTE.forest,
+              "title",
+            ),
+          );
+          art.push({
+            key: "ui-check",
+            rect: { height: 16, width: 16, x: right - 16, y: mid - 8 },
+            sheet: true,
+            tag: "tick",
+          });
+        } else {
+          plate = pricePlateView(
+            {
+              capHeight: measure.body.capHeight,
+              padding: PLATE_PAD,
+              scale: TEXT_SCALE,
+              width: (value) => advanceWidth(fonts.body, TEXT_SCALE, value),
+            },
+            { capTop: mid - 5, originX: 1, x: right },
+            look.plate,
+            dollarText(row.price),
+          );
+        }
+        rows.push({
+          art,
+          fills: [{ colour: PALETTE[pictureBox(look)], rect: box }],
+          id: row.id,
+          label: row.name,
+          rect,
+          state: look.state,
+          texts,
+          ...(plate === undefined ? {} : { plate }),
+        });
+      });
+    };
+    const words = gameData.homeText.shop;
+    if (this.tab === "gear") {
+      heading(LAYOUT.gear.headingY, words.tabs.gear, ownedCountNote(gameData, save.owned, "gear"));
+      addRows(LAYOUT.gear.rows, gearRows(gameData, save.owned));
+    } else {
+      heading(LAYOUT.dogs.slotHeadingY, words.slots, ownedCountNote(gameData, save.owned, "slots"));
+      addRows(LAYOUT.dogs.slotRows, slotRows(gameData, save.owned));
+      heading(LAYOUT.dogs.dogHeadingY, words.dogs, ownedCountNote(gameData, save.owned, "dogs"));
+      addRows(LAYOUT.dogs.dogRows, dogRows(gameData, save.owned));
+    }
+    const view: ShopScreenView = {
+      clip: this.frame.rect,
+      headings,
+      page: shopPageView(measure, {
+        closePressed: this.pressed?.kind === "close",
+        tabs: SHOP_TABS.map((tab) => ({
+          label: words.tabs[tab],
+          open: tab === this.tab,
+          pressed: sameByValue({ kind: "tab", tab }, this.pressed),
+        })),
+        title: words.title,
+      }),
+      rows,
+      ...(this.message === null
+        ? {}
+        : {
+            message: {
+              line: line(
+                this.message.text,
+                PLATE.x + LAYOUT.message.textDx,
+                shopMessageCapTop(measure.body, TEXT_SCALE),
+                this.message.refused ? PALETTE.darkRed : PALETTE.forest,
+              ),
+              rect: PLATE,
+            },
+          }),
+    };
+    if (this.native === undefined) {
+      const panelInput = htmlPanelInput(place);
+      this.native = followScene(
+        this,
+        showShopScreen(
+          layer,
+          {
+            active: () => this.sys.isActive() && this.isListOpen(),
+            cancel: () => this.cancelNativePress(),
+            click: (point) => {
+              const target = this.targetAt(point.x, point.y);
+              if (target !== undefined) {
+                this.actAfterDip(target);
+              }
+            },
+            closeLabel: panelInput.closeLabel,
+            down: (point) => this.nativeDown(point),
+            fonts,
+            key: (code, repeat) => {
+              if (menuKeyActs(repeat, code)) {
+                this.onKey(code);
+              }
+            },
+            move: (point) => this.nativeMove(point),
+            painted: () => undefined,
+            source: { artUrl, loadSheet },
+            toGame: panelInput.toGame,
+            up: (point, cancelled) => this.nativeUp(point, cancelled),
+            wheel: (delta) => {
+              this.scroll = wheelScroll(LIST_SCROLL_RULE, delta, this.scroll);
+              this.placeList();
+            },
+          },
+          view,
+        ),
+      );
+    } else {
+      this.native.update(view);
+    }
+    this.placeNative();
+    if (this.detail === undefined) {
+      this.htmlDetail?.panel?.destroy();
+      this.htmlDetail = undefined;
+    } else {
+      this.drawDetail(save, this.detail);
+    }
+    if (this.confirm === undefined) {
+      this.htmlConfirm?.panel?.destroy();
+      this.htmlConfirm = undefined;
+    } else {
+      this.drawConfirm(this.confirm);
+    }
   }
 
   private save(): SaveDocument {
     return profileSave(this);
-  }
-
-  // A finger or mouse that lands on the list drags it once it passes the tap distance: the
-  // press under way taps nothing and holds nothing. The wheel moves the list too.
-  private listenScroll(): void {
-    listenListScroll(this, {
-      active: () => this.isListOpen(),
-      onDragStart: () => {
-        this.presses?.cancel();
-        this.hold = undefined;
-        this.pressed = undefined;
-        this.render();
-      },
-      place: () => this.placeList(),
-      rule: LIST_SCROLL_RULE,
-      scroll: () => this.scroll,
-      setScroll: (scroll) => {
-        this.scroll = scroll;
-      },
-      view: LIST,
-    });
   }
 
   // Nothing covers the list: no detail card or confirm is open.
@@ -387,8 +629,7 @@ export class ShopScene extends Scene {
 
   // The list at its scroll, and the scrollbar's thumb beside it.
   private placeList(): void {
-    this.list?.setY(-this.scroll.y);
-    placeScrollbar(shopScrollbar(this.scroll.max, this.scroll.y), this.scrollbar);
+    this.placeNative();
   }
 
   // The framed row, with its frame, brought into view.
@@ -570,10 +811,7 @@ export class ShopScene extends Scene {
         this.openDetail();
       }
     }
-    const reduced = currentSettings(this).reducedMotion;
-    for (const [id, container] of this.containers) {
-      container.setX(shakeOffset(reduced, this.time.now, this.shakes.get(id)));
-    }
+    this.placeNative();
   }
 
   private act(target: Target): void {
@@ -644,7 +882,6 @@ export class ShopScene extends Scene {
       return;
     }
     this.confirm = undefined;
-    this.confirmHits = undefined;
     const result = answerPurchase(gameData, this.save(), confirm, choice);
     if (result.kind === "bought") {
       this.bought(confirm, result.save);
@@ -677,63 +914,12 @@ export class ShopScene extends Scene {
   }
 
   private render(): void {
-    clearScene(this);
-    this.containers = new Map();
-    this.placed = [];
-    const save = this.save();
-    const root = this.add.container(0, 0);
-    this.root = root;
-    const words = gameData.homeText.shop;
-    addShopPage(this, root, this.pressed?.kind === "close", words.title);
-    addShopTabs(
-      this,
-      root,
-      SHOP_TABS.map((tab) => ({
-        label: words.tabs[tab],
-        open: tab === this.tab,
-        pressed: sameByValue({ kind: "tab", tab }, this.pressed),
-      })),
-    );
-    // A bought dog leaves its list, so the list may now be shorter.
-    this.scroll = resizeScroll(scrollMax(LIST, this.listBottom(save)), this.scroll);
-    this.frame = shopListFrame(this.scroll.max > 0);
-    // The headings and rows, clipped to the list area and moved up by the scroll.
-    const list = this.add.container(0, 0);
-    root.add(list);
-    this.list = list;
-    maskToRect(this, LIST_MASK_KEY, this.frame.rect, list);
-    // The HTML clips the list as the mask does, and moves it by whole art pixels once it settles.
-    list.setData(MIRROR_CLIP_DATA, this.frame.rect);
-    list.setData(MIRROR_SCROLL_DATA, {
-      settled: () => this.scroll.drag === null && this.scroll.velocity === 0,
-    } satisfies MirrorScroll);
-    if (this.tab === "gear") {
-      this.drawGear(list, save);
-    } else {
-      this.drawDogs(list, save);
-    }
-    this.scrollbar = addScrollbar(this, root, shopScrollbar(this.scroll.max, this.scroll.y));
-    this.placeList();
-    if (this.message !== null) {
-      this.drawMessage(root, this.message);
-    }
-    if (this.detail === undefined) {
-      this.htmlDetail?.panel?.destroy();
-      this.htmlDetail = undefined;
-    } else {
-      this.drawDetail(save, this.detail);
-    }
-    if (this.confirm === undefined) {
-      this.htmlConfirm?.panel?.destroy();
-      this.htmlConfirm = undefined;
-    } else {
-      this.drawConfirm(this.confirm);
+    const place = htmlPanelPlace(this);
+    if (place !== undefined) {
+      this.renderNative(place);
     }
   }
 
-  // The purchase confirm over the shop: its card, and the dim around it that cancels. In HTML
-  // where the page's switch is on and its fonts are ready, kept while it shows the same, over the
-  // canvas's dim, else on the canvas.
   private drawConfirm(pending: PendingPurchase): void {
     const pressed = this.pressed?.kind === "confirm" ? this.pressed.choice : undefined;
     const view = purchaseConfirmView(this, {
@@ -741,10 +927,9 @@ export class ShopScene extends Scene {
       picture: purchasePicture(pending.purchase),
       pressed,
     });
-    this.confirmHits = view.hits;
     const layer = this.add.container(0, 0);
     // The HTML shade dims the HTML page under it.
-    const shade = this.mirror === undefined ? undefined : view.dim;
+    const shade = this.native === undefined ? undefined : view.dim;
     this.htmlConfirm = keepPanel(this.htmlConfirm, JSON.stringify(view), () =>
       addHtmlPurchaseConfirm(this, view, (choice) => this.answer(choice), shade),
     );
@@ -753,182 +938,6 @@ export class ShopScene extends Scene {
     } else if (shade === undefined) {
       layer.add(addModalShade(this, view.dim));
     }
-  }
-
-  // The message on the ui-hint plate across the list's top, on one line at 2x.
-  private drawMessage(
-    root: GameObjects.Container,
-    message: { readonly refused: boolean; readonly text: string },
-  ): void {
-    root.add(addPanel(this, PLATE, "ui-hint"));
-    const x = PLATE.x + LAYOUT.message.textDx;
-    const label = addBodyText(this, root, { x, y: PLATE.y }, message.text, {
-      colour: message.refused ? PALETTE.darkRed : PALETTE.forest,
-    });
-    const { style } = fitPixelText(label, SHOP_MESSAGE_FIT, x, PLATE.y);
-    placePixelText(label, x, shopMessageCapTop(pixelFontMetrics(this, "body"), style.scale));
-  }
-
-  private heading(root: GameObjects.Container, y: number, title: string, note?: string): void {
-    addBodyText(this, root, { x: LAYOUT.headingX, y }, title, { font: "title" });
-    if (note !== undefined) {
-      addCountNote(this, root, this.frame.headingRight, y, note);
-    }
-  }
-
-  // How many gear items are owned, then every gear item with its effect in a few words and its
-  // price or Owned.
-  private drawGear(root: GameObjects.Container, save: SaveDocument): void {
-    const text = gameData.homeText;
-    const { headingY, rows: spec } = LAYOUT.gear;
-    const note = ownedCountNote(gameData, save.owned, "gear");
-    this.heading(root, headingY, text.shop.tabs.gear, note);
-    this.drawRows(root, save, spec, gearRows(gameData, save.owned));
-  }
-
-  // How many dog slots are owned and every slot, then how many dogs are owned and every dog,
-  // owned ones marked as on the gear tab.
-  private drawDogs(root: GameObjects.Container, save: SaveDocument): void {
-    const text = gameData.homeText;
-    const { dogHeadingY, dogRows: dogSpec, slotHeadingY, slotRows: slotSpec } = LAYOUT.dogs;
-    this.heading(
-      root,
-      slotHeadingY,
-      text.shop.slots,
-      ownedCountNote(gameData, save.owned, "slots"),
-    );
-    this.drawRows(root, save, slotSpec, slotRows(gameData, save.owned));
-    this.heading(root, dogHeadingY, text.shop.dogs, ownedCountNote(gameData, save.owned, "dogs"));
-    this.drawRows(root, save, dogSpec, dogRows(gameData, save.owned));
-  }
-
-  // The rows laid out from spec across the list's width.
-  private drawRows(
-    root: GameObjects.Container,
-    save: SaveDocument,
-    spec: Parameters<typeof rowRects>[1],
-    rows: readonly ShopRow[],
-  ): void {
-    rowRects(this.frame.rowWidth, spec, rows.length).forEach((rect, i) => {
-      const row = rows[i];
-      if (row !== undefined) {
-        this.drawRow(root, save, { rect, row });
-      }
-    });
-  }
-
-  // A row: its art in a box, its name and line, and its price plate or Owned at the right,
-  // each as SHOP_ROW_VIEWS sets for its look. The focused row wears ui-shop-focus.
-  private drawRow(root: GameObjects.Container, save: SaveDocument, placed: PlacedRow): void {
-    const { rect, row } = placed;
-    this.placed.push(placed);
-    const look = shopRowLook(gameData, save.owned, save.bankCents, row);
-    const view = SHOP_ROW_VIEWS[look];
-    const { reducedMotion } = currentSettings(this);
-    const holder = this.add.container(0, 0);
-    root.add(holder);
-    this.containers.set(row.id, holder);
-    const tile = addSelectTile(this, holder, rect, {
-      edge: true,
-      reducedMotion,
-      state: view.state,
-      tile: true,
-    });
-    if (sameByValue({ id: row.id, kind: "row" }, this.pressed)) {
-      tile.container.y += FEEDBACK.pressDipPx;
-    }
-    const content = tile.content;
-    const { badge, box } = ROW;
-    const boxRect = {
-      height: box.size,
-      width: box.size,
-      x: rect.x + box.dx,
-      y: rect.y + Math.floor((rect.height - box.size) / 2),
-    };
-    fillRect(addGraphicsIn(this, content), PALETTE[pictureBox(view)], boxRect);
-    this.addArt(content, purchaseArt(row.purchase), view.art, {
-      x: boxRect.x + ROW.art,
-      y: boxRect.y + ROW.art,
-    });
-    if (view.badge !== null) {
-      addTileBadge(this, content, view.badge, { x: rect.x + badge.dx, y: rect.y + badge.dy });
-    }
-    const ink = PALETTE[tile.look.text];
-    const mid = rect.y + Math.floor(rect.height / 2);
-    const textX = rect.x + ROW.textDx;
-    const right = rect.x + rect.width - ROW.plateInset;
-    this.drawRowRight(content, view.plate, row, { mid, right });
-    // A row with no second line centres its name.
-    const tops = shopRowTextTops(pixelFontMetrics(this, "body"));
-    const nameY = row.line === "" ? mid - 5 : mid + tops.name;
-    addBodyText(this, content, { x: textX, y: nameY }, row.name, { colour: ink });
-    this.drawRowLine(content, row, {
-      greyed: view.state === "disabled",
-      x: textX,
-      y: mid + tops.line,
-    });
-    if (this.focusId === row.id) {
-      addShopFocusFrame(this, holder, rect, reducedMotion);
-    }
-  }
-
-  private addArt(
-    parent: GameObjects.Container,
-    key: string,
-    art: ArtLook,
-    at: { x: number; y: number },
-  ): void {
-    if (!this.textures.exists(key)) {
-      if (key === SHOP_ART.dogSlot) {
-        drawDogSlotFallback(this, parent, at);
-      }
-      return;
-    }
-    // A dog's face shows its happy frame; an icon has one frame.
-    const shown = tileTextureKey(this, art, key);
-    parent.add(this.add.image(at.x, at.y, shown, tagFrame(this, key, "happy")).setOrigin(0));
-  }
-
-  // A row's line in words under its name, its capitals' top at y: a dog's fee, a gear item's
-  // effect, a slot's note.
-  private drawRowLine(
-    parent: GameObjects.Container,
-    row: ShopRow,
-    at: { greyed: boolean; x: number; y: number },
-  ): void {
-    const colour = at.greyed ? PALETTE[GREYED.text] : PALETTE.darkBrown;
-    if (row.line !== "") {
-      addBodyText(this, parent, { x: at.x, y: at.y }, row.line, { colour });
-    }
-  }
-
-  // Owned with a tick, or the price on its plate. Returns the left edge of what it drew.
-  private drawRowRight(
-    parent: GameObjects.Container,
-    plate: PlateKind | null,
-    row: ShopRow,
-    at: { mid: number; right: number },
-  ): number {
-    if (row.price === null || plate === null) {
-      const tick = addTagImage(this, "ui-check", "tick", at.right - 16, at.mid - 8);
-      if (tick !== undefined) {
-        parent.add(tick);
-      }
-      const owned = gameData.homeText.shop.owned;
-      const label = addBodyText(this, parent, { x: at.right - OWNED_DX, y: at.mid - 4 }, owned, {
-        colour: PALETTE.forest,
-        font: "title",
-        originX: 1,
-      });
-      return at.right - OWNED_DX - Math.ceil(label.width);
-    }
-    return addPlate(
-      this,
-      parent,
-      { capY: at.mid - 5, originX: 1, x: at.right },
-      dollarText(row.price),
-      plateColours(plate),
-    ).x;
   }
 
   // A held dog's or gear item's detail card over the shop; any tap closes it.
@@ -948,7 +957,7 @@ export class ShopScene extends Scene {
       picture: purchasePicture(purchase),
     });
     // The HTML shade dims the HTML page under it.
-    const htmlUnder = this.mirror !== undefined;
+    const htmlUnder = this.native !== undefined;
     this.htmlDetail = addDetailCardOver(this, layer, dim, false, view, this.htmlDetail, htmlUnder);
   }
 }
