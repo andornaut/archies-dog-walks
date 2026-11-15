@@ -18,7 +18,7 @@ import { showOrdinaryBadgeCelebration } from "./ordinaryBadgeCelebration.ts";
 it("renders the complete award as one native modal with badge and cheering-owner art", async () => {
   const doc = new FakeDocument();
   const { element, layer } = fakeLayer(doc, domScale(1, SCREEN_LAYOUT.screen));
-  const panel = { height: 180, width: 280, x: 40, y: 160 };
+  const panel = { height: 244, width: 280, x: 40, y: 160 };
   const measure = {
     body: fontFileMetrics("font-body"),
     inkWidth: (_font: "body" | "title", text: string) => text.length * 10,
@@ -52,13 +52,13 @@ it("renders the complete award as one native modal with badge and cheering-owner
     view: {
       button: panelButton(
         measure,
-        { height: 48, width: 160, x: 100, y: 348 },
+        { height: 48, width: 160, x: 100, y: 340 },
         true,
-        gameData.menuText.celebration.button,
+        gameData.menuText.common.close,
       ),
       names: [],
       panel,
-      title: panelTitle(measure, panel, 190, gameData.menuText.celebration.button),
+      title: panelTitle(measure, panel, 190, gameData.menuText.common.close),
       titleY: 190,
     },
   });
@@ -74,7 +74,7 @@ it("renders the complete award as one native modal with badge and cheering-owner
   ).toBe(true);
   const buttons = element.all().filter((node) => node.tagName === "button");
   expect(buttons.map((node) => node.getAttribute("aria-label"))).toEqual([
-    gameData.menuText.celebration.button,
+    gameData.menuText.common.close,
     gameData.menuText.common.close,
   ]);
   buttons[0]?.fire("click");

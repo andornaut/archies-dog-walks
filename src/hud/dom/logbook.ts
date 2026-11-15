@@ -240,6 +240,7 @@ export function showLogbook(layer: UiLayer, input: DomLogbookInput): DomLogbook 
       close: page.close,
       covered: [],
       frame: "none",
+      ...(page.footer === undefined ? {} : { footer: page.footer }),
       note: [],
       notePlate: undefined,
       panel: page.card,

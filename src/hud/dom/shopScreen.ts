@@ -34,7 +34,8 @@ import type { PanelText } from "../../ui/modal/types.ts";
 import type { ScrollbarRects } from "../../ui/scrollbar.ts";
 import { SELECT_OUTSET } from "../../ui/selection.ts";
 import { scrollPlace } from "./logbook.ts";
-import type { DomPart } from "./questionPanel.ts";
+import { createPanelButton } from "./panelButton.ts";
+import { addTapBurst, type DomPart } from "./questionPanel.ts";
 import { fillPart, shopPageParts } from "./shopPage.ts";
 
 export interface ShopScreenArt {
@@ -97,6 +98,7 @@ export interface NativeShopScreen {
 }
 
 export interface ShopScreenInput {
+  readonly close: () => void;
   readonly closeLabel: string;
   readonly source: DomArtSource;
   readonly fonts: Readonly<Record<"body" | "title", BitmapFont>>;
@@ -153,6 +155,8 @@ export function showShopScreen(
     inert = false,
     dimmed = false;
   let view = initial;
+  let footer: HTMLElement | undefined;
+  let footerGesture = false;
   let scale = layer.scale();
   let motion: ShopScreenMotion | undefined;
   let lifecycle: ModalLifecycle | undefined;
@@ -265,6 +269,24 @@ export function showShopScreen(
           chromeParts.push(control(hit, tab.label.text));
         }
       });
+      footer = undefined;
+      if (view.page.footer !== undefined) {
+        const action = createPanelButton(
+          doc,
+          {
+            fonts: input.fonts,
+            press: {
+              accepts,
+              burst: (event) => addTapBurst(layer, point(event)),
+              press: input.close,
+            },
+          },
+          view.page.footer,
+        );
+        footer = action.element;
+        footer.classList.add("adw-footer");
+        chromeParts.push(action);
+      }
       chrome.replaceChildren(...chromeParts.map(({ element }) => element));
       chrome.style.pointerEvents = "auto";
     }
@@ -375,19 +397,25 @@ export function showShopScreen(
         layer,
         {
           gesture: {
-            cancel: input.cancel,
+            cancel: () => {
+              footerGesture = false;
+              input.cancel();
+            },
             down: (event) => {
-              if (accepts()) {
+              footerGesture = footer?.contains(event.target as Node) === true;
+              if (!footerGesture && accepts()) {
                 input.down(point(event));
               }
             },
             move: (event) => {
-              if (accepts()) {
+              if (!footerGesture && accepts()) {
                 input.move(point(event));
               }
             },
             up: (event, cancelled) => {
-              if (cancelled || accepts()) {
+              const native = footerGesture;
+              footerGesture = false;
+              if (!native && (cancelled || accepts())) {
                 input.up(point(event), cancelled);
               }
             },
@@ -424,6 +452,9 @@ export function showShopScreen(
     return undefined;
   };
   root.addEventListener("click", (event) => {
+    if (footer?.contains(event.target as Node)) {
+      return;
+    }
     const point = controlPoint(event.target);
     if (event.detail === 0 && accepts() && point !== undefined) {
       input.click(point);
@@ -441,8 +472,42 @@ export function showShopScreen(
   );
   root.addEventListener("keydown", (event) => {
     if (accepts()) {
+      if (
+        footer?.contains(event.target as Node) &&
+        (event.code === "Enter" || event.code === "Space")
+      ) {
+        if (event.repeat) {
+          event.preventDefault();
+        }
+        event.stopPropagation();
+        return;
+      }
       event.preventDefault();
       event.stopPropagation();
+      if (footer !== undefined && event.code === "Tab") {
+        const controls: HTMLElement[] = [];
+        const collect = (node: HTMLElement) => {
+          if (node.hidden) {
+            return;
+          }
+          if (node.tagName.toLowerCase() === "button") {
+            controls.push(node);
+          }
+          for (const child of node.children) {
+            collect(child as HTMLElement);
+          }
+        };
+        collect(root);
+        const at = controls.indexOf(doc.activeElement as HTMLElement);
+        const next =
+          at < 0
+            ? event.shiftKey
+              ? controls.length - 1
+              : 0
+            : (at + (event.shiftKey ? controls.length - 1 : 1)) % controls.length;
+        (controls[next] ?? root).focus();
+        return;
+      }
       const target = controlPoint(event.target);
       if ((event.code === "Enter" || event.code === "Space") && target !== undefined) {
         if (!event.repeat) {

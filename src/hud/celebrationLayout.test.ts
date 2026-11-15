@@ -11,6 +11,8 @@ import type { WalkerId } from "../data/types.ts";
 import { bodyRunWidth } from "../testing/bodyFont.ts";
 import { fontFileMetrics, inkWidth } from "../testing/fontInk.ts";
 import { inside } from "../testing/rects.ts";
+import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";
+import { MODAL } from "../ui/modal/layout.ts";
 import { plainMarks } from "../ui/pixelFont.ts";
 import { TEXT_SCALE } from "../ui/textFit.ts";
 import {
@@ -20,6 +22,7 @@ import {
   infoItems,
   laidInfoLine,
   newWalkerRows,
+  ordinaryBadgeModalLayout,
 } from "./celebrationLayout.ts";
 import { celebrationText } from "./zoneCelebration.ts";
 
@@ -91,4 +94,15 @@ describe("a new walker's bubble", () => {
       expect(rows.button.y + rows.button.height).toBeLessThanOrEqual(SCREEN_LAYOUT.dogRow.y);
     },
   );
+});
+
+it("keeps an ordinary badge modal's existing body origin and reserves an interior Close footer", () => {
+  const area = SCREEN_LAYOUT.screen;
+  const body = { buttonWidth: 120, height: 240, width: 280 };
+  const { button, panel } = ordinaryBadgeModalLayout(area, body);
+  expect(panel.height).toBe(body.height + MODAL.gap + BUTTON_SIZE.compact.height);
+  expect(button.x + button.width / 2).toBe(panel.x + panel.width / 2);
+  expect(panel.y + panel.height - button.y - button.height).toBe(MODAL.pad);
+  expect(button.y - (panel.y + body.height - MODAL.pad)).toBe(MODAL.gap);
+  expect(inside(button, panel)).toBe(true);
 });

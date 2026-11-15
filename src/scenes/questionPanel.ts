@@ -28,6 +28,7 @@ import { questionPanelView } from "../hud/questionPanelView.ts";
 import { pageFrameTurn } from "../pwa/index.ts";
 import { loadSheet } from "../ui/dom/sheetFrames.ts";
 import { uiLayer } from "../ui/dom/uiLayer.ts";
+import { dismissFooter } from "../ui/modal/dismissFooter.ts";
 import { type CardAction, type PanelNotePart, type QuestionPanelView } from "../ui/modal/types.ts";
 import { modalCardView } from "../ui/modal/view.ts";
 import { displayBitmapFont, hasDisplayFont } from "../ui/phaser/displayText.ts";
@@ -48,6 +49,7 @@ export interface QuestionPanel {
   readonly close: () => void;
   // Top to bottom, the first the call to action and key 1.
   readonly entries: readonly PanelEntry[];
+  readonly footer?: Parameters<typeof dismissFooter>[1];
   // pauseMenuLayout, the buttons then the note, or homeQuestionLayout, the note first.
   readonly layout: typeof pauseMenuLayout;
   // No parts draws no note plate.
@@ -65,6 +67,7 @@ export interface QuestionPanel {
 export function questionView(scene: Scene, area: Rect, question: QuestionPanel): QuestionPanelView {
   return questionPanelView(canvasPanelMeasure(scene), area, {
     avoid: question.avoid,
+    ...(question.footer === undefined ? {} : { footer: question.footer }),
     labels: question.entries.map(({ label }) => label),
     layout: question.layout,
     note: question.note,
@@ -189,12 +192,17 @@ export function addHtmlModalCard(
   title: string,
   entries: readonly CardEntry[],
   close: () => void,
+  footer?: Parameters<typeof dismissFooter>[1],
 ): DomQuestionPanel | undefined {
   const place = htmlPanelPlace(scene);
   if (place === undefined) {
     return undefined;
   }
-  const view = modalCardView(canvasPanelMeasure(scene), card, title, entries);
+  const measure = canvasPanelMeasure(scene);
+  const view = {
+    ...modalCardView(measure, card, title, entries),
+    ...(footer === undefined ? {} : { footer: dismissFooter(measure, footer, card) }),
+  };
   const presses = entries.map(({ press }) => press);
   const panel = showQuestionPanel(place.layer, {
     close,

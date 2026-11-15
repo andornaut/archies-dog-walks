@@ -1,4 +1,3 @@
-import { type Rect } from "@andornaut/game-kit/runtime/rect";
 import { inkRowsFromCapTop } from "@andornaut/game-kit/runtime/text/bitmapFont";
 import { Scene } from "phaser";
 
@@ -14,16 +13,15 @@ import {
   stripUnderClose,
 } from "../home/badgesView.ts";
 import { overlayRegion } from "../home/homeBar.ts";
+import { ordinaryBadgeModalLayout } from "../hud/celebrationLayout.ts";
 import { isConfirmKey, isPauseKey, menuKeyActs } from "../input/keyBindings.ts";
 import { achievementLabel } from "../rules/achievements.ts";
 import { barTitleRoom } from "../ui/barTitle.ts";
-import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";
 import { closeControl } from "../ui/closeControl.ts";
 import {
   MODAL,
   modalActionWidth,
   modalPanelWidth,
-  modalRect,
   modalTitleLayout,
   modalTitleWidth,
 } from "../ui/modal/layout.ts";
@@ -52,10 +50,9 @@ export interface CelebrationSceneData {
 const SCREEN = SCREEN_LAYOUT.screen;
 const FACES = { pitch: 44, size: 32 };
 // The action follows the panel at the section gap.
-const BUTTON = { gap: MODAL.gap, height: BUTTON_SIZE.compact.height };
 
 // Badges earned away from a run's end, on launch or by a purchase, over the dimmed home screen:
-// the badges burst in and the owners cheer. Nice! and the close control return to the screen
+// the badges burst in and the owners cheer. Close and the close control return to the screen
 // below.
 export class CelebrationScene extends Scene {
   constructor() {
@@ -76,7 +73,7 @@ export class CelebrationScene extends Scene {
       achievementLabel(gameData, badge),
     );
     const buttonWidth = modalActionWidth(
-      modalTextWidth(this, "title", [gameData.menuText.celebration.button]),
+      modalTextWidth(this, "title", [gameData.menuText.common.close]),
     );
     const width = modalPanelWidth(
       SCREEN.width - 2 * MODAL.margin,
@@ -120,15 +117,12 @@ export class CelebrationScene extends Scene {
           inkRowsFromCapTop(pixelFontMetrics(this, "body")) * 2;
     const badgesHeight = badgeBottom + nameHeight + MODAL.pad;
     const height = badgesHeight + (cheering.length > 0 ? MODAL.gap + FACES.size + MODAL.pad : 0);
-    const group = modalRect(dim, undefined, { height: height + BUTTON.gap + BUTTON.height, width });
-    const top = group.y;
-    const panel: Rect = { height, width, x: group.x, y: top };
-    const buttonRect: Rect = {
-      height: BUTTON.height,
-      width: buttonWidth,
-      x: (SCREEN.width - buttonWidth) / 2,
-      y: top + height + BUTTON.gap,
-    };
+    const { button: buttonRect, panel } = ordinaryBadgeModalLayout(dim, {
+      buttonWidth,
+      height,
+      width,
+    });
+    const top = panel.y;
     const close = () => closeOverlay(resume, this);
     const titleY = panel.y + MODAL.titleTop;
     const left = SCREEN.width / 2 - ((cheering.length - 1) * FACES.pitch + FACES.size) / 2;
@@ -136,7 +130,7 @@ export class CelebrationScene extends Scene {
     const html = addNativeBadgeCelebration(
       this,
       {
-        button: panelButton(measure, buttonRect, true, gameData.menuText.celebration.button),
+        button: panelButton(measure, buttonRect, true, gameData.menuText.common.close),
         names: badgeCelebrationNames(this, panel, rows, achievements, true, titleExtraHeight),
         panel,
         title: panelTitle(measure, panel, titleY, celebrationTitle(gameData, achievements.length)),

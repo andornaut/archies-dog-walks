@@ -141,7 +141,7 @@ export function showBadgeCard(layer: UiLayer, input: DomBadgeCardInput): DomQues
     },
   ];
   const shown = showQuestionPanel(layer, {
-    close: undefined,
+    close: input.dismiss,
     ...(input.dismiss === undefined ? {} : { dismiss: { area: view.dim, press: input.dismiss } }),
     closeLabel: input.closeLabel,
     describedBy: texts.id,
@@ -156,6 +156,7 @@ export function showBadgeCard(layer: UiLayer, input: DomBadgeCardInput): DomQues
       close: view.close,
       covered: [],
       frame: "none",
+      ...(view.footer === undefined ? {} : { footer: view.footer }),
       note: [],
       notePlate: undefined,
       panel: view.panel,

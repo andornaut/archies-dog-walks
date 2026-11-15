@@ -582,6 +582,7 @@ export class ShopScene extends Scene {
                 this.actAfterDip(target);
               }
             },
+            close: () => this.close(),
             closeLabel: panelInput.closeLabel,
             down: (point) => this.nativeDown(point),
             fonts,

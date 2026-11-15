@@ -6,6 +6,7 @@ import { SCREEN_LAYOUT } from "../../data/screen.ts";
 import { FakeDocument, fakeLayer } from "../../testing/fakeDom.ts";
 import { gameFont } from "../../testing/fontInk.ts";
 import { artPixel, domScale } from "../../ui/domScale.ts";
+import { dismissFooter } from "../../ui/modal/dismissFooter.ts";
 import { modalTitleInk } from "../../ui/modal/titleRole.ts";
 import { type PanelMeasure } from "../../ui/modal/types.ts";
 import { modalCardView, panelButton } from "../../ui/modal/view.ts";
@@ -562,5 +563,80 @@ it("keeps a native panel inert until its part JSON readiness and image barrier s
   expect(requested).toContain("/art/late-frame.png");
   expect(shown.accepts()).toBe(true);
   expect(onPaint).toHaveBeenCalledOnce();
+  shown.destroy();
+});
+
+it("routes an explicit footer to dismissal without changing semantic actions or number shortcuts", () => {
+  const { doc, element, layer } = menuContext();
+  const close = vi.fn();
+  const buy = vi.fn();
+  const rect = { height: 260, width: 280, x: 40, y: 120 };
+  const card = modalCardView(MEASURE, rect, gameData.homeText.shop.confirmTitle, [
+    {
+      label: gameData.homeText.shop.confirmBuy,
+      primary: true,
+      rect: { height: 48, width: 120, x: 120, y: 250 },
+    },
+  ]);
+  const shown = showQuestionPanel(layer, {
+    close,
+    closeLabel: gameData.menuText.common.close,
+    fonts: { body: gameFont("font-body"), title: gameFont("font-title") },
+    numberKeys: true,
+    presses: [buy],
+    toGame: (point) => point,
+    view: {
+      ...card,
+      footer: dismissFooter(
+        MEASURE,
+        { label: gameData.menuText.common.close, primary: false },
+        rect,
+      ),
+    },
+  });
+  const root = element.children[0]!;
+  const buttons = root.all().filter((node) => node.tagName === "button");
+  const footer = buttons.find((node) => node.className.includes("adw-secondary"))!;
+  expect(footer.getAttribute("aria-keyshortcuts")).toBeNull();
+  footer.fire("click", { detail: 0 });
+  expect(close).toHaveBeenCalledOnce();
+  expect(buy).not.toHaveBeenCalled();
+  doc.defaultView.fire("keydown", { code: "Digit1", repeat: false });
+  expect(buy).toHaveBeenCalledOnce();
+  doc.defaultView.fire("keydown", { code: "Digit2", repeat: false });
+  expect(close).toHaveBeenCalledOnce();
+  shown.setInert(true);
+  footer.fire("click", { detail: 0 });
+  expect(close).toHaveBeenCalledOnce();
+  shown.destroy();
+});
+
+it("keeps a footer-only overlay dismissible without introducing a corner close control", () => {
+  const { element, layer } = menuContext();
+  const close = vi.fn();
+  const rect = { height: 240, width: 280, x: 40, y: 120 };
+  const view = modalCardView(MEASURE, rect, gameData.menuText.menu.title, []);
+  const shown = showQuestionPanel(layer, {
+    close: null,
+    closeLabel: gameData.menuText.common.close,
+    fonts: { body: gameFont("font-body"), title: gameFont("font-title") },
+    footerPress: close,
+    numberKeys: false,
+    presses: [],
+    toGame: (point) => point,
+    view: {
+      ...view,
+      footer: dismissFooter(
+        MEASURE,
+        { label: gameData.menuText.common.close, primary: true },
+        rect,
+      ),
+    },
+  });
+  const buttons = element.children[0]!.all().filter((node) => node.tagName === "button");
+  expect(buttons).toHaveLength(1);
+  expect(buttons[0]!.className).toContain("adw-go");
+  buttons[0]!.fire("click", { detail: 0 });
+  expect(close).toHaveBeenCalledOnce();
   shown.destroy();
 });

@@ -1,3 +1,4 @@
+import type { Rect } from "@andornaut/game-kit/runtime/rect";
 import {
   type FontMetrics,
   inkRowsFromCapTop,
@@ -9,8 +10,9 @@ import { ROAD_SPRITE_SIZE } from "../assets/spriteKeys.ts";
 import { CELEBRATIONS } from "../data/layout.ts";
 import { SCREEN_CONFIG, SCREEN_LAYOUT } from "../data/screen.ts";
 import { WIDE_BUTTON } from "../layout/screenLayout.ts";
+import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";
 import { LABEL_HELP_GAP } from "../ui/labelHelpGap.ts";
-import { MODAL, modalActionWidth } from "../ui/modal/layout.ts";
+import { MODAL, modalActionWidth, modalRect } from "../ui/modal/layout.ts";
 import { TEXT_SCALE, TEXT_STYLE, textOnLines } from "../ui/textFit.ts";
 import type { LinePart } from "./zoneCelebration.ts";
 
@@ -269,4 +271,24 @@ export function laidInfoLine(
     x += widthOf(item) + (i === items.length - 1 ? 0 : gap);
   });
   return { width: x, xs };
+}
+
+// The body keeps its original rows; one reserved action row ends inside the modal frame.
+export function ordinaryBadgeModalLayout(
+  area: Rect,
+  body: { readonly height: number; readonly width: number; readonly buttonWidth: number },
+): { readonly button: Rect; readonly panel: Rect } {
+  const panel = modalRect(area, undefined, {
+    height: body.height + MODAL.gap + BUTTON_SIZE.compact.height,
+    width: body.width,
+  });
+  return {
+    button: {
+      height: BUTTON_SIZE.compact.height,
+      width: body.buttonWidth,
+      x: panel.x + (panel.width - body.buttonWidth) / 2,
+      y: panel.y + panel.height - MODAL.pad - BUTTON_SIZE.compact.height,
+    },
+    panel,
+  };
 }

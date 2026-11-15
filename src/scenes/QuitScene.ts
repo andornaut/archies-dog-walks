@@ -40,6 +40,7 @@ export class QuitScene extends Scene {
         label: words[answer],
         press: answer === "quit" ? quit : keepPlaying,
       })),
+      footer: { label: gameData.menuText.common.close, primary: false },
       layout: homeQuestionLayout,
       note: [],
       sentenceLines: false,

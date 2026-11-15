@@ -8,6 +8,7 @@ import { shopPageView } from "../../home/shopPageView.ts";
 import { FakeDocument, type FakeElement, fakeLayer } from "../../testing/fakeDom.ts";
 import { fontFileMetrics, gameFont } from "../../testing/fontInk.ts";
 import { domScale } from "../../ui/domScale.ts";
+import { dismissFooter } from "../../ui/modal/dismissFooter.ts";
 import { modalTitleInk } from "../../ui/modal/titleRole.ts";
 import { PALETTE } from "../../ui/palette.ts";
 import { type ShopScreenView, showShopScreen } from "./shopScreen.ts";
@@ -27,7 +28,8 @@ function fixture() {
   const down = vi.fn(),
     up = vi.fn(),
     cancel = vi.fn(),
-    wheel = vi.fn();
+    wheel = vi.fn(),
+    close = vi.fn();
   const view: ShopScreenView = {
     clip: { height: 300, width: 324, x: 18, y: 160 },
     headings: [],
@@ -64,6 +66,7 @@ function fixture() {
       active: () => true,
       cancel,
       click: vi.fn(),
+      close,
       closeLabel: gameData.menuText.common.close,
       down,
       fonts: { body: gameFont("font-body"), title: gameFont("font-title") },
@@ -78,6 +81,7 @@ function fixture() {
   );
   return {
     cancel,
+    close,
     doc,
     down,
     layer,
@@ -149,5 +153,49 @@ it("cancels a carried row gesture when a nested modal opens and rejects its late
   const released = layer.press.claim();
   expect(released).toBeDefined();
   released?.release();
+  screen.destroy();
+});
+
+it("closes Shop through its native footer without activating a list gesture", async () => {
+  const { close, doc, down, root, screen, up, view } = fixture();
+  const measure = { inkWidth: () => 60, title: fontFileMetrics("font-title") };
+  screen.update({
+    ...view,
+    page: {
+      ...view.page,
+      footer: dismissFooter(
+        measure,
+        { label: gameData.menuText.common.close, primary: true },
+        view.page.card,
+      ),
+    },
+  });
+  await settle();
+  const footer = root.all().find((node) => node.className.includes("adw-footer"))!;
+  expect(footer).toBeDefined();
+  const target = footer.children[0]!;
+  root.fire("pointerdown", pointer(target, 80, "pointerdown"));
+  doc.fire("pointerup", pointer(target, 80, "pointerup"));
+  const click = pointer(target, 80, "click");
+  root.fire("click", click);
+  expect(click.stopImmediatePropagation).not.toHaveBeenCalled();
+  footer.fire("click", click);
+  expect(close).toHaveBeenCalledOnce();
+  expect(down).not.toHaveBeenCalled();
+  expect(up).not.toHaveBeenCalled();
+  const key = {
+    code: "Enter",
+    preventDefault: vi.fn(),
+    repeat: false,
+    stopPropagation: vi.fn(),
+    target: footer,
+  };
+  root.fire("keydown", key);
+  expect(key.preventDefault).not.toHaveBeenCalled();
+  footer.fire("click", { detail: 0 });
+  expect(close).toHaveBeenCalledTimes(2);
+  screen.setInert(true);
+  footer.fire("click", { detail: 0 });
+  expect(close).toHaveBeenCalledTimes(2);
   screen.destroy();
 });

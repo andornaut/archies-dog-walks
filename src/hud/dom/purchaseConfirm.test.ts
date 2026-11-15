@@ -55,11 +55,12 @@ describe("the HTML purchase confirm", () => {
     expect(buttons.map(({ className }) => className)).toEqual([
       "adw-button adw-secondary",
       "adw-button adw-go",
+      "adw-button adw-secondary",
       "adw-close",
     ]);
     buttons.forEach((button) => button.fire("click", {}));
     expect(buy).toHaveBeenCalledTimes(1);
-    expect(cancel).toHaveBeenCalledTimes(2);
+    expect(cancel).toHaveBeenCalledTimes(3);
   });
 
   it.each([

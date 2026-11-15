@@ -28,6 +28,7 @@ import {
   gridY,
 } from "../../ui/domScale.ts";
 import { type PanelText, type QuestionPanelView } from "../../ui/modal/types.ts";
+import { bindPanelPress, createPanelButton } from "./panelButton.ts";
 
 // The pause menu, each question (the Home question, Quit?) and each modal card (the update
 // notices) in HTML over the canvas: the panel questionPanelView or modalCardView lays out, drawn
@@ -57,6 +58,8 @@ export interface DomQuestionPanelInput {
   // accessible name, and what each button does, in order.
   readonly close: (() => void) | null | undefined;
   readonly closeLabel: string;
+  // A footer can dismiss a native overlay that intentionally has no corner close control.
+  readonly footerPress?: () => void;
   // Whether a panel that takes no presses shows its close control pressed.
   readonly closePressed?: boolean;
   // The id of the part that describes the panel, if any.
@@ -176,6 +179,7 @@ export function showQuestionPanel(layer: UiLayer, input: DomQuestionPanelInput):
   // Parts with native controls participate independently of modal ownership.
   const passive =
     input.dismiss === undefined &&
+    input.footerPress === undefined &&
     (input.close ?? undefined) === undefined &&
     input.presses.length === 0 &&
     !(input.parts ?? []).some((part) => (part.controls?.length ?? 0) > 0);
@@ -276,72 +280,33 @@ export function showQuestionPanel(layer: UiLayer, input: DomQuestionPanelInput):
 
   const burst = (event: PointerEvent) =>
     addTapBurst(layer, input.toGame({ x: event.clientX, y: event.clientY }));
-  // Shows a control pressed while a press that began on it stays on it, as the canvas's do.
-  // Releasing the implicit capture a touch takes lets the press leave the control, so click,
-  // which fires only where the press began and ended, presses it.
-  const pressable = (control: HTMLButtonElement, press: () => void) => {
-    const lift = () => control.removeAttribute("data-pressed");
-    control.addEventListener("pointerdown", (event) => {
-      if (!accepts()) {
-        return;
-      }
-      if (control.hasPointerCapture(event.pointerId)) {
-        control.releasePointerCapture(event.pointerId);
-      }
-      control.setAttribute("data-pressed", "");
-      burst(event);
+  const actions = view.buttons.map((button, index) => ({
+    button,
+    index,
+    press: input.presses[index],
+  }));
+  if (view.footer !== undefined) {
+    actions.push({
+      button: view.footer,
+      index: -1,
+      press: input.footerPress ?? input.close ?? undefined,
     });
-    control.addEventListener("pointerenter", (event) => {
-      if (event.buttons !== 0) {
-        control.setAttribute("data-pressed", "");
-      }
-    });
-    for (const type of ["pointerleave", "pointerup", "pointercancel"]) {
-      control.addEventListener(type, lift);
+  }
+  const buttons = actions.map(({ button, index, press }) => {
+    const part = createPanelButton(
+      doc,
+      {
+        fonts: input.fonts,
+        ...(passive ? {} : { press: { accepts, burst, press: () => press?.() } }),
+      },
+      button,
+    );
+    const number = input.numberPresses === undefined ? index : input.numberPresses.indexOf(press!);
+    if (!passive && input.numberKeys && number >= 0) {
+      part.element.setAttribute("aria-keyshortcuts", String(number + 1));
     }
-    control.addEventListener("click", () => {
-      if (accepts()) {
-        press();
-      }
-    });
-  };
-
-  // A panel that takes no presses shows its buttons as pictures.
-  const buttons = view.buttons.map((button, i) => {
-    const element = doc.createElement(passive ? "span" : "button");
-    element.className = [
-      "adw-button",
-      ...(button.primary ? ["adw-go"] : []),
-      ...(button.secondary === true ? ["adw-secondary"] : []),
-      ...(button.available === false ? ["adw-disabled"] : []),
-    ].join(" ");
-    if (passive) {
-      element.setAttribute("aria-hidden", "true");
-    } else {
-      (element as HTMLButtonElement).type = "button";
-      element.setAttribute("aria-label", button.label);
-      const number =
-        input.numberPresses === undefined ? i : input.numberPresses.indexOf(input.presses[i]!);
-      if (input.numberKeys && number >= 0) {
-        element.setAttribute("aria-keyshortcuts", String(number + 1));
-      }
-    }
-    // Shown pressed as the scene says too, as a key's dip before it acts.
-    if (button.pressed === true && button.available !== false) {
-      element.setAttribute("data-pressed", "");
-    }
-    const face = doc.createElement("span");
-    face.className = "adw-face";
-    element.append(face);
-    box(element, ORIGIN, button.hit);
-    frame(face, button.hit, button.rect);
-    for (const line of button.key === undefined ? [button.text] : [button.key, button.text]) {
-      text(element, button.hit, line).setAttribute("aria-hidden", "true");
-    }
-    if (!passive) {
-      pressable(element as HTMLButtonElement, () => input.presses[i]?.());
-    }
-    return element;
+    placed.push(part.place);
+    return part.element;
   });
 
   // The close control after the buttons, so it is on top where their press areas meet; a
@@ -381,7 +346,7 @@ export function showQuestionPanel(layer: UiLayer, input: DomQuestionPanelInput):
     });
   });
   if (pressClose !== undefined) {
-    pressable(close as HTMLButtonElement, pressClose);
+    bindPanelPress(close as HTMLButtonElement, { accepts, burst, press: pressClose });
   }
   dialog.append(...buttons);
   if (input.close !== null) {

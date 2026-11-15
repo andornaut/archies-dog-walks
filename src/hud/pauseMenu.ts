@@ -47,6 +47,7 @@ const HIT_REACH = PAUSE_PANEL.hitReach;
 interface QuestionParts {
   avoid?: Rect | undefined;
   buttonCount: number;
+  footerSpace?: number;
   buttonWidths?: readonly number[];
   noteLines: number;
   noteWidth?: number;
@@ -81,7 +82,10 @@ function panelLayout(
   const noteFirstY = header;
   const buttonsY = noteFirst && noted ? noteFirstY + noteHeight + MODAL.gap : header;
   const noteY = noteFirst ? noteFirstY : header + buttonsHeight + NOTE_PLATE.gap;
-  const height = Math.max(buttonsY + buttonsHeight, noted ? noteY + noteHeight : 0) + BOTTOM;
+  const height =
+    Math.max(buttonsY + buttonsHeight, noted ? noteY + noteHeight : 0) +
+    BOTTOM +
+    (parts.footerSpace ?? 0);
   const widths = Array.from(
     { length: buttonCount },
     (_, i) => parts.buttonWidths?.[i] ?? BUTTON.width,
