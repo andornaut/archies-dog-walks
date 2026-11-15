@@ -4,6 +4,7 @@ import type { Point, Rect } from "@andornaut/game-kit/runtime/rect";
 import type { GameData } from "../data/types.ts";
 import { type CloseControl, closeControl } from "../ui/closeControl.ts";
 import { MODAL, modalPanelWidth, modalRect } from "../ui/modal/layout.ts";
+import type { PanelButton } from "../ui/modal/types.ts";
 import { PALETTE } from "../ui/palette.ts";
 import { TEXT_SCALE } from "../ui/textFit.ts";
 import { BADGE_STRIP, BADGE_TEXT_COLOURS, type BadgeView } from "./badgesView.ts";
@@ -15,6 +16,7 @@ import { DETAIL_TEXT_WIDTH, detailPanel, detailTextTops, STATS_LAYOUT } from "./
 // Every screen uses the same native badge card view and logical game-pixel geometry.
 
 export interface BadgeCardView {
+  readonly footer?: PanelButton;
   // The badge at 2x, its earned or locked frame.
   readonly art: readonly DetailArt[];
   readonly close: CloseControl;

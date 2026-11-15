@@ -3,7 +3,7 @@ import { insetRect, type Rect } from "@andornaut/game-kit/runtime/rect";
 import { SCREEN_CONFIG } from "../data/screen.ts";
 import type { CloseControl } from "../ui/closeControl.ts";
 import { PLAIN_ITEM, tileState } from "../ui/interaction.ts";
-import { type PanelMeasure, type PanelText } from "../ui/modal/types.ts";
+import { type PanelButton, type PanelMeasure, type PanelText } from "../ui/modal/types.ts";
 import { panelTitle } from "../ui/modal/view.ts";
 import { PALETTE } from "../ui/palette.ts";
 import { GREYED, SELECT_OUTSET, selectLook } from "../ui/selection.ts";
@@ -35,6 +35,7 @@ export interface PageTab {
 }
 
 export interface ShopPageView {
+  readonly footer?: PanelButton;
   readonly card: Rect;
   readonly close: CloseControl;
   readonly closePressed: boolean;

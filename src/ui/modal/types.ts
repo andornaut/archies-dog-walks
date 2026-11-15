@@ -58,6 +58,8 @@ export interface PanelButton {
 }
 
 export interface QuestionPanelView {
+  // Separate from semantic choices; invokes the existing close or cancel action.
+  readonly footer?: PanelButton;
   readonly buttons: readonly PanelButton[];
   readonly close: CloseControl;
   // What a tap outside the panel must miss: the panel's rim and the buttons' hit areas.
