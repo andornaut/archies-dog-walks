@@ -1,5 +1,7 @@
+import { buttonSkinProperty } from "@andornaut/game-kit/web/ui/dom/buttonSkin";
+
 import { artUrl } from "../../assets/artFiles.ts";
-import { DOM_DIM_ART_KEYS, DOM_STYLE_ART } from "../../assets/domArt.ts";
+import { DOM_BUTTON_SKIN, DOM_DIM_ART_KEYS, DOM_STYLE_ART } from "../../assets/domArt.ts";
 import { dimArtPath, dimColour } from "../dimArt.ts";
 import { PALETTE } from "../palette.ts";
 
@@ -21,11 +23,18 @@ function dimProperties(): (readonly [string, string])[] {
     `--adw-${name}`,
     hex(dimColour(colour)),
   ]);
-  const frames = DOM_STYLE_ART.filter(([, key]) => DOM_DIM_ART_KEYS.has(key)).map(
-    ([kind, key]): readonly [string, string] => [
-      `--adw-${key}`,
-      `url("${artUrl(dimArtPath(kind, key))}")`,
-    ],
+  const frames = DOM_STYLE_ART.filter(([, key]) => DOM_DIM_ART_KEYS.has(key)).flatMap(
+    ([kind, key]): (readonly [string, string])[] => {
+      const value = `url("${artUrl(dimArtPath(kind, key))}")`;
+      const sheet = DOM_BUTTON_SKIN.sheets.find((name) => key.startsWith(`${name}-`));
+      const tag = sheet === undefined ? undefined : key.slice(sheet.length + 1);
+      return [
+        [`--adw-${key}`, value],
+        ...(sheet === undefined || tag === undefined
+          ? []
+          : [[buttonSkinProperty(sheet, tag), value] as const]),
+      ];
+    },
   );
   return [...colours, ...frames];
 }
@@ -73,10 +82,30 @@ function dimInline(element: HTMLElement, dimmed: boolean): void {
   }
 }
 
+const originalProperties = new WeakMap<HTMLElement, Map<string, string>>();
+
 // root and everything under it drawn palette-dimmed, or as it was.
 export function setRampDimmed(root: HTMLElement, dimmed: boolean): void {
-  for (const [name, value] of dimProperties()) {
-    root.style.setProperty(name, dimmed ? value : "");
+  if (dimmed) {
+    let saved = originalProperties.get(root);
+    if (saved === undefined) {
+      saved = new Map();
+      originalProperties.set(root, saved);
+    }
+    for (const [name, value] of dimProperties()) {
+      if (!saved.has(name)) {
+        saved.set(name, root.style.getPropertyValue?.(name) ?? "");
+      }
+      root.style.setProperty(name, value);
+    }
+  } else {
+    const saved = originalProperties.get(root);
+    if (saved !== undefined) {
+      for (const [name, value] of saved) {
+        root.style.setProperty(name, value);
+      }
+      originalProperties.delete(root);
+    }
   }
   dimInline(root, dimmed);
 }
@@ -88,11 +117,17 @@ export function dimDrawn(element: HTMLElement, dimmed: boolean): void {
   }
 }
 
+export interface ModalUnderlay {
+  (): void;
+  refresh(): void;
+}
+
 // Native screen roots register separately from the undimmed top bar and world effects.
 export function followModalUnderlay(
   coverage: { accepts(): boolean; subscribe(listener: () => void): () => void },
   element: HTMLElement,
-): () => void {
+): ModalUnderlay {
+  let alive = true;
   const inert = element.inert;
   const hidden = element.getAttribute("aria-hidden");
   const restore = () => {
@@ -104,7 +139,10 @@ export function followModalUnderlay(
       element.setAttribute("aria-hidden", hidden);
     }
   };
-  const stop = coverage.subscribe(() => {
+  const refresh = () => {
+    if (!alive) {
+      return;
+    }
     if (coverage.accepts()) {
       restore();
     } else {
@@ -112,9 +150,15 @@ export function followModalUnderlay(
       element.inert = true;
       element.setAttribute("aria-hidden", "true");
     }
-  });
-  return () => {
-    stop();
-    restore();
   };
+  const stop = coverage.subscribe(refresh);
+  refresh();
+  return Object.assign(
+    () => {
+      alive = false;
+      stop();
+      restore();
+    },
+    { refresh },
+  );
 }

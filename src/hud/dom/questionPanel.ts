@@ -170,8 +170,11 @@ export function showQuestionPanel(layer: UiLayer, input: DomQuestionPanelInput):
   const { view } = input;
   const modal = input.modal !== false;
   const dialog = doc.createElement("div");
-  // A panel with no buttons and no close control to press takes no presses.
-  const passive = (input.close ?? undefined) === undefined && input.presses.length === 0;
+  // Parts with native controls participate independently of modal ownership.
+  const passive =
+    (input.close ?? undefined) === undefined &&
+    input.presses.length === 0 &&
+    !(input.parts ?? []).some((part) => (part.controls?.length ?? 0) > 0);
   dialog.className = passive ? "adw-dialog adw-passive" : "adw-dialog";
   dialog.setAttribute("role", "dialog");
   dialog.setAttribute("aria-modal", String(modal));

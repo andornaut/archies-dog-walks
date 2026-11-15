@@ -74,6 +74,11 @@ it("dims and blocks a registered native underlay once, then restores its own acc
   expect(root.style.color).toBe(hex(dimColour(PALETTE.cream)));
   sync();
   expect(root.style.color).toBe(hex(dimColour(PALETTE.cream)));
+  const added = doc.createElement("span");
+  added.style.color = hex(PALETTE.cream);
+  root.append(added);
+  stop.refresh();
+  expect(added.style.color).toBe(hex(dimColour(PALETTE.cream)));
   covered = false;
   sync();
   expect(root.inert).toBe(false);
@@ -81,4 +86,19 @@ it("dims and blocks a registered native underlay once, then restores its own acc
   expect(root.style.color).toBe(hex(PALETTE.cream));
   stop();
   expect(stopped).toBe(true);
+});
+
+it("overrides registered native button skins while covered and restores the original blob property", () => {
+  const doc = new FakeDocument();
+  const root = doc.createElement("div");
+  const properties = new Map([["--ui-button-go", 'url("blob:original")']]);
+  Object.assign(root.style, {
+    getPropertyValue: (key: string) => properties.get(key) ?? "",
+    setProperty: (key: string, value: string) => properties.set(key, value),
+  });
+  setRampDimmed(root as unknown as HTMLElement, true);
+  expect(properties.get("--ui-button-go")).toContain("ui-button-go-dim");
+  setRampDimmed(root as unknown as HTMLElement, true);
+  setRampDimmed(root as unknown as HTMLElement, false);
+  expect(properties.get("--ui-button-go")).toBe('url("blob:original")');
 });
