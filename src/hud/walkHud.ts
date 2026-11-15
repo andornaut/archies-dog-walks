@@ -9,6 +9,7 @@ import {
   DOG_CARD_PARTS,
   OWNER_TAB,
   SPARE_TREAT_PIP,
+  TOP_BAR_SIZES,
   WALK_BAR_PARTS,
 } from "../data/layout.ts";
 import { SCREEN_CONFIG } from "../data/screen.ts";
@@ -20,7 +21,7 @@ import type { RunState } from "../state/runState.ts";
 import { GAME_PROGRESS, GAME_PROGRESS_STYLE } from "../ui/progressBar.ts";
 import { TITLE_CAP_ROWS } from "../ui/textFit.ts";
 import { TOP_BAR_FACE, wellCapsTop } from "../ui/topBarTrim.ts";
-import { topSectionGapLeft, topSectionLayout } from "../ui/topSection.ts";
+import { topSectionCurrency, topSectionGapLeft, topSectionLayout } from "../ui/topSection.ts";
 import { type EffectItem, maxEffects } from "./effectIcons.ts";
 import { heartRows } from "./hudView.ts";
 
@@ -30,11 +31,8 @@ import { heartRows } from "./hudView.ts";
 // corner, the debuff bar's or the card's; text y is the top of the capitals.
 
 // The walk bar uses the shared order; Settings is reached through Pause.
-export const WALK_BAR_BUTTONS = ["help", "mute", "pause"] as const;
+export const WALK_BAR_BUTTONS = ["mute", "pause"] as const;
 export type WalkBarButtonId = (typeof WALK_BAR_BUTTONS)[number];
-
-// The cash well's ink columns, which the home top bar's bank well shares.
-const CASH_INK = WALK_BAR_PARTS.cash.ink;
 
 // The cash and the home top bar's bank are set at this scale.
 const CASH_SCALE = WALK_BAR_PARTS.cash.scale;
@@ -61,6 +59,10 @@ if (CURRENCY === undefined || FIRST_EFFECT === undefined) {
   throw new Error("The walk requires currency and effect sections");
 }
 const CASH_WELL = { height: CURRENCY.height, width: CURRENCY.width, x: CURRENCY.x, y: CURRENCY.y };
+const CASH_INK = {
+  left: CASH_WELL.x + TOP_BAR_SIZES.well.padding,
+  right: CASH_WELL.x + CASH_WELL.width - TOP_BAR_SIZES.well.padding - 2,
+};
 const BUTTONS = Object.fromEntries(
   SHARED_BAR.controls.map(([id, { face, hit }]) => [
     id,
@@ -79,18 +81,9 @@ const EFFECT_ROW = {
 };
 const EFFECTS_X = FIRST_EFFECT.x;
 
-// The walk bar as ui-walk-bar draws it, in bar pixels; every position the HUD uses comes from
-// this table. buttons: each button's face x and its hit area's x and width, the hit areas
-// MIN_PRESS square from the bar's top, so they reach 8 rows under the bar, side by side to the
-// bar's right edge, each face buttonFace.size square on row buttonFace.y, as the start screen's
-// top bar sets its faces, centred in its hit area. cash:
-// the start screen's bank well, the "$" and the amount at scale, no wider than room (a walk's
-// cash stays under $1,000), centred across the well's ink columns (ink.left to ink.right), their
-// capitals' top on capsY, as the start screen sets its bank (wellCapsTop). effects: a well of
-// size at pitch from x along y for every effect a walk can have (EFFECT_WELLS), each icon
-// iconSize at icon,icon in its well; the holds run side by side from holdInset left of the first
-// well up to the first button's press area, each from its well's left edge, the bar's full
-// height, a gap between wells going to the hold on its left.
+// Shared geometry for the maximum visible effect count. Runtime rendering and explanation
+// hits request the actual visible count through walkBarLayout. Currency uses full-size text
+// with symmetric padding; effects are centred between its fixed well and the control pair.
 export const WALK_BAR = {
   buttonFace: TOP_BAR_FACE,
   buttons: BUTTONS,
@@ -131,8 +124,7 @@ export interface BarButton {
 
 interface WalkBarLayout {
   buttons: Readonly<Record<WalkBarButtonId, BarButton>>;
-  // Each effect well, left to right, and the press area that holds it: the well's column of
-  // the bar, the bar's full height.
+  // Each visible effect well and its full-height hold, extended halfway into each gap.
   effectHolds: Rect[];
   effectWells: Rect[];
 }
@@ -156,7 +148,7 @@ export function walkBarLayout(bar: Rect, wells = EFFECT_WELLS): WalkBarLayout {
 // The first ink column of the cash, or the home top bar's bank, for ink inkWidth wide on
 // screen: centred across the well's ink, a half pixel rounded left.
 export function cashLeft(inkWidth: number): number {
-  return Math.floor((CASH_INK.left + CASH_INK.right) / 2 - (inkWidth - 1) / 2);
+  return topSectionCurrency(SHARED_BAR, inkWidth).left;
 }
 
 // A debuff bar (ui-debuff-bar, 360x16): its icon, its name up to name.room wide, and the fill
@@ -321,7 +313,7 @@ export function explainTargetAt(
   point: Point,
 ): ExplainTarget | undefined {
   const { x, y } = point;
-  const bar = walkBarLayout(layout.topBar);
+  const bar = walkBarLayout(layout.topBar, shown.effects.length);
   const well = bar.effectHolds.findIndex((rect) => containsPoint(rect, x, y));
   if (well >= 0 && well < shown.effects.length) {
     return { effect: well, kind: "effect" };

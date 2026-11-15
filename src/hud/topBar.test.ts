@@ -42,12 +42,10 @@ describe("the walk bar in each pause state", () => {
     pause: TopBarAction | undefined;
     pauseKey: TopBarAction | undefined;
     mute: TopBarAction | undefined;
-    help: TopBarAction | undefined;
   }
 
   const walking = {
     gameplay: false,
-    help: "openHelp",
     icon: "icon-pause",
     mute: "mute",
     pause: "openMenu",
@@ -69,7 +67,6 @@ describe("the walk bar in each pause state", () => {
   } as const;
   const cover = {
     ...menu,
-    help: undefined,
     mute: undefined,
     pause: undefined,
     pauseKey: undefined,
@@ -113,7 +110,6 @@ describe("the walk bar in each pause state", () => {
       expect(
         {
           gameplay: gameplayAllowed(pause),
-          help: topBarAction(pause, "tap", "help"),
           icon: pauseButtonIcon(true, pause),
           mute: topBarAction(pause, "key", "mute"),
           pause: topBarAction(pause, "tap", "pause"),

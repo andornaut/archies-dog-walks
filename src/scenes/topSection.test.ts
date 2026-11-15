@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { SCREEN_LAYOUT } from "../data/screen.ts";
 import { HOME_BAR_BUTTONS, homeBarButtons } from "../home/homeLayout.ts";
 import { WALK_BAR_BUTTONS, walkBarLayout } from "../hud/walkHud.ts";
-import { TOP_SECTION_ORDER, topSectionLayout } from "../ui/topSection.ts";
+import { topSectionCurrency, topSectionLayout } from "../ui/topSection.ts";
 
 // These are the same owners under their overlays, not separate overlay layouts.
 describe("the shared top section", () => {
@@ -23,8 +23,11 @@ describe("the shared top section", () => {
     expect(plain.bar).toEqual({ height: 40, width: 360, x: 0, y: 0 });
   });
   it("removes hidden controls from flow and preserves canonical order regardless of caller order", () => {
-    const all = topSectionLayout([...TOP_SECTION_ORDER].reverse());
-    expect(all.controls.map(([id]) => id)).toEqual(TOP_SECTION_ORDER);
+    expect(topSectionLayout(["pause", "mute"]).controls.map(([id]) => id)).toEqual([
+      "mute",
+      "pause",
+    ]);
+    expect(() => topSectionLayout(["menu", "pause"])).toThrow("share one");
     const full = topSectionLayout(HOME_BAR_BUTTONS);
     const hidden = topSectionLayout(HOME_BAR_BUTTONS.filter((id) => id !== "mute"));
     expect(hidden.controls.map(([id]) => id)).toEqual(["menu"]);
@@ -40,5 +43,29 @@ describe("the shared top section", () => {
     expect(layout.buttons).toEqual(Object.fromEntries(shared.controls));
     expect(layout.effectWells).toEqual(shared.effectWells);
     expect(layout.effectHolds).toEqual(shared.effectHolds);
+  });
+  it("centres visible 24-pixel effects between padded currency and the shared control pair", () => {
+    const max = topSectionLayout(WALK_BAR_BUTTONS, { currency: true, effects: 6 });
+    const few = topSectionLayout(WALK_BAR_BUTTONS, { currency: true, effects: 2 });
+    expect(max.controls.map(([, control]) => control)).toEqual([
+      { face: { x: 278, y: 9 }, hit: { height: 48, width: 48, x: 264, y: 0 } },
+      { face: { x: 326, y: 9 }, hit: { height: 48, width: 48, x: 312, y: 0 } },
+    ]);
+    expect(max.currency).toEqual({ height: 29, width: 82, x: 5, y: 5 });
+    expect(max.effectWells.map(({ x }) => x)).toEqual([92, 120, 148, 176, 204, 232]);
+    expect(few.effectWells).toEqual([
+      { height: 26, width: 26, x: 148, y: 6 },
+      { height: 26, width: 26, x: 176, y: 6 },
+    ]);
+    expect(few.effectHolds).toEqual([
+      { height: 40, width: 28, x: 147, y: 0 },
+      { height: 40, width: 28, x: 175, y: 0 },
+    ]);
+    const cash = topSectionCurrency(max, 66);
+    expect(cash).toMatchObject({ left: 12, room: 69, scale: 3 });
+    const bank = topSectionCurrency(topSectionLayout(HOME_BAR_BUTTONS, { currency: true }), 132);
+    expect(bank.well.width).toBe(145);
+    expect(bank.left).toBe(11);
+    expect(bank.room).toBe(230);
   });
 });

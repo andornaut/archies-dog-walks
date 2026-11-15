@@ -6,7 +6,7 @@ import {
 } from "@andornaut/game-kit/text/bitmapFont";
 import { HIT_RULE } from "@andornaut/game-kit/ui/hitAreas";
 
-import { HOME_SCREEN, MIN_PRESS } from "../data/layout.ts";
+import { HOME_SCREEN, MIN_PRESS, TOP_BAR_SIZES } from "../data/layout.ts";
 import { SCREEN_CONFIG, SCREEN_LAYOUT } from "../data/screen.ts";
 import type { DogId } from "../data/types.ts";
 import { ownerPhotoRect, WALK_BAR } from "../hud/walkHud.ts";
@@ -437,7 +437,11 @@ export const HOME_LAYOUT = {
   // separated (bankAmountText), its ink bank.pad columns in from the well's left, its capitals'
   // top at bank.capsY.
   topBar: {
-    bank: { capsY: WALK_BAR.cash.capsY, pad: HOME.topBar.bankPad, scale: WALK_BAR.cash.scale },
+    bank: {
+      capsY: WALK_BAR.cash.capsY,
+      pad: TOP_BAR_SIZES.well.padding,
+      scale: WALK_BAR.cash.scale,
+    },
     faceSize: TOP_BAR_FACE.size,
     height: TOP_BAR_HEIGHT,
     // How far down the screen the buttons' press areas reach, past the bar's bottom.

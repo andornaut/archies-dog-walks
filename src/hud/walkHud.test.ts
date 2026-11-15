@@ -123,7 +123,9 @@ describe("the walk bar", () => {
     }
     expect(BAR.effectHolds[0]?.x).toBe((BAR.effectWells[0]?.x ?? 0) - WALK_BAR.effects.holdInset);
     const last = BAR.effectHolds.at(-1);
-    expect((last?.x ?? 0) + (last?.width ?? 0)).toBe(first.x);
+    expect((last?.x ?? 0) + (last?.width ?? 0)).toBe(
+      (BAR.effectWells.at(-1)?.x ?? 0) + WALK_BAR.effects.size + WALK_BAR.effects.holdInset,
+    );
     for (const well of BAR.effectWells) {
       const { icon, iconSize } = WALK_BAR.effects;
       const art = { height: iconSize, width: iconSize, x: well.x + icon, y: well.y + icon };
@@ -171,10 +173,10 @@ describe("the walk bar", () => {
     expect(cash.capsY).toBe(home.bank.capsY);
   });
 
-  it("centres the effect wells down the faces, 1 column apart, as far from the cash as the first press area", () => {
+  it("centres the effect wells down the faces, 2 columns apart, as far from the cash as the first press area", () => {
     const { buttonFace, effects } = WALK_BAR;
     expect(2 * effects.y + effects.size).toBe(2 * buttonFace.y + buttonFace.size);
-    expect(effects.pitch - effects.size).toBe(1);
+    expect(effects.pitch - effects.size).toBe(2);
     const cash = { ...WALK_BAR.cash.well, x: topBar.x + WALK_BAR.cash.well.x };
     const left = (BAR.effectWells[0]?.x ?? 0) - (cash.x + cash.width);
     const lastWell = BAR.effectWells.at(-1) ?? cash;
@@ -556,7 +558,8 @@ describe("explainTargetAt", () => {
     dogs,
     effects: Array.from({ length: count }, () => "perk" as const),
   });
-  const holdAt = (i: number) => centre(BAR.effectHolds[i] ?? topBar);
+  const holdAt = (i: number, count = WELLS) =>
+    centre(walkBarLayout(topBar, count).effectHolds[i] ?? topBar);
   const bars = debuffBarRects(topBar, debuffs.length);
   const button = centre(BAR.buttons[WALK_BAR_BUTTONS[0]].hit);
   const first: ExplainTarget = { effect: 0, kind: "effect" };
@@ -567,13 +570,8 @@ describe("explainTargetAt", () => {
   const lady: ExplainTarget = { dog: "lady", kind: "dog" };
   // What a press explains on the walk.
   it.each<[string, number, Point, ExplainTarget | undefined]>([
-    ["the first effect", 1, holdAt(0), first],
-    [
-      "the bar's top row over the first effect",
-      1,
-      { x: centre(BAR.effectWells[0] ?? topBar).x, y: topBar.y },
-      first,
-    ],
+    ["the first effect", 1, holdAt(0, 1), first],
+    ["the bar's top row over the first effect", 1, { x: holdAt(0, 1).x, y: topBar.y }, first],
     ["an empty well", 1, holdAt(1), undefined],
     ["the last well with as many effects as wells", WELLS, holdAt(WELLS - 1), last],
     ["the cash well", 1, centre(WALK_BAR.cash.well), undefined],

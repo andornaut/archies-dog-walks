@@ -1982,7 +1982,7 @@
       "topBar": {
         "bank": {
           "capsY": 12,
-          "pad": 3,
+          "pad": 6,
           "scale": 3
         },
         "faceSize": 20,
@@ -1992,7 +1992,7 @@
         "well": {
           "height": 29,
           "lip": 1,
-          "maxWidth": 113,
+          "maxWidth": 243,
           "x": 5,
           "y": 5
         },
@@ -2688,23 +2688,6 @@
   "walkBar": {
     "buttons": [
       {
-        "id": "help",
-        "face": {
-          "x": 230,
-          "y": 9
-        },
-        "hit": {
-          "height": 48,
-          "width": 48,
-          "x": 216,
-          "y": 0
-        },
-        "icon": {
-          "x": 232,
-          "y": 10
-        }
-      },
-      {
         "id": "mute",
         "face": {
           "x": 278,
@@ -2742,77 +2725,77 @@
     "effectHolds": [
       {
         "height": 40,
-        "width": 24,
-        "x": 76,
+        "width": 28,
+        "x": 91,
         "y": 0
       },
       {
         "height": 40,
-        "width": 23,
-        "x": 100,
+        "width": 28,
+        "x": 119,
         "y": 0
       },
       {
         "height": 40,
-        "width": 23,
-        "x": 123,
+        "width": 28,
+        "x": 147,
         "y": 0
       },
       {
         "height": 40,
-        "width": 23,
-        "x": 146,
+        "width": 28,
+        "x": 175,
         "y": 0
       },
       {
         "height": 40,
-        "width": 23,
-        "x": 169,
+        "width": 28,
+        "x": 203,
         "y": 0
       },
       {
         "height": 40,
-        "width": 24,
-        "x": 192,
+        "width": 28,
+        "x": 231,
         "y": 0
       }
     ],
     "effectWells": [
       {
-        "height": 22,
-        "width": 22,
-        "x": 77,
-        "y": 8
+        "height": 26,
+        "width": 26,
+        "x": 92,
+        "y": 6
       },
       {
-        "height": 22,
-        "width": 22,
-        "x": 100,
-        "y": 8
+        "height": 26,
+        "width": 26,
+        "x": 120,
+        "y": 6
       },
       {
-        "height": 22,
-        "width": 22,
-        "x": 123,
-        "y": 8
+        "height": 26,
+        "width": 26,
+        "x": 148,
+        "y": 6
       },
       {
-        "height": 22,
-        "width": 22,
-        "x": 146,
-        "y": 8
+        "height": 26,
+        "width": 26,
+        "x": 176,
+        "y": 6
       },
       {
-        "height": 22,
-        "width": 22,
-        "x": 169,
-        "y": 8
+        "height": 26,
+        "width": 26,
+        "x": 204,
+        "y": 6
       },
       {
-        "height": 22,
-        "width": 22,
-        "x": 192,
-        "y": 8
+        "height": 26,
+        "width": 26,
+        "x": 232,
+        "y": 6
       }
     ],
     "debuffBar": {
@@ -2853,11 +2836,6 @@
         "y": 9
       },
       "buttons": {
-        "help": {
-          "faceX": 230,
-          "hitWidth": 48,
-          "hitX": 216
-        },
         "mute": {
           "faceX": 278,
           "hitWidth": 48,
@@ -2872,14 +2850,14 @@
       "cash": {
         "capsY": 12,
         "ink": {
-          "left": 5,
-          "right": 73
+          "left": 11,
+          "right": 79
         },
         "room": 69,
         "scale": 3,
         "well": {
           "height": 29,
-          "width": 70,
+          "width": 82,
           "x": 5,
           "y": 5
         }
@@ -2887,11 +2865,11 @@
       "effects": {
         "holdInset": 1,
         "icon": 1,
-        "iconSize": 20,
-        "size": 22,
-        "y": 8,
-        "pitch": 23,
-        "x": 77
+        "iconSize": 24,
+        "size": 26,
+        "y": 6,
+        "pitch": 28,
+        "x": 92
       }
     }
   },

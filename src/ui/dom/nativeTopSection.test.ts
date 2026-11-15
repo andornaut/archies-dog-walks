@@ -10,7 +10,6 @@ import { domScale } from "../domScale.ts";
 import { topSectionLayout } from "../topSection.ts";
 import { createNativeTopSection } from "./nativeTopSection.ts";
 const labels = {
-  help: gameData.menuText.pause.help,
   menu: gameData.menuText.menu.title,
   mute: gameData.menuText.settings.sound,
   pause: gameData.menuText.pause.title,
@@ -169,7 +168,7 @@ describe("native top section integration", () => {
   });
   it("updates currency and mute state without replacing controls", () => {
     const { buttons, element, view } = fixture();
-    view.setAmount("999999999", "999K");
+    view.setAmount("9".repeat(16), "999K");
     expect(
       element
         .all()

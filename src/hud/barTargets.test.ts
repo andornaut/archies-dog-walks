@@ -27,7 +27,7 @@ import {
 const centre = (rect: Rect): Point => ({ x: rect.x + rect.width / 2, y: rect.y + rect.height / 2 });
 
 const { dogSlots, topBar } = SCREEN_LAYOUT;
-const BAR = walkBarLayout(topBar);
+const BAR = walkBarLayout(topBar, 3);
 const at = (rect: Rect): Rect => ({ ...rect, x: topBar.x + rect.x, y: topBar.y + rect.y });
 
 // The walk shows the walker's perk, an upgrade and a gear item, and a dog in the first card.
@@ -41,7 +41,6 @@ const WALK_TARGETS = {
   cashWell: centre(at(WALK_BAR.cash.well)),
   dogCard: centre(dogSlots[0] ?? topBar),
   gearIcon: centre(BAR.effectWells[2] ?? topBar),
-  help: centre(BAR.buttons.help.hit),
   mute: centre(BAR.buttons.mute.hit),
   pause: centre(BAR.buttons.pause.hit),
   perkIcon: centre(BAR.effectWells[0] ?? topBar),
@@ -85,7 +84,6 @@ const WALK_BASE: Readonly<Record<WalkTarget, string | undefined>> = {
   cashWell: undefined,
   dogCard: "explainOnHold",
   gearIcon: "explainOnTap",
-  help: "openHelp",
   mute: "mute",
   pause: "openMenu",
   perkIcon: "explainOnTap",
@@ -105,7 +103,6 @@ const WALK_CHANGES: Readonly<Record<string, Partial<Record<WalkTarget, string | 
   help: {
     dogCard: undefined,
     gearIcon: undefined,
-    help: undefined,
     mute: undefined,
     pause: undefined,
     perkIcon: undefined,

@@ -43,7 +43,6 @@ it("replaces a scene's native top section and releases its own scene listeners",
     accepts: () => true,
     buttons: ["mute"] as const,
     labels: {
-      help: gameData.menuText.pause.help,
       menu: gameData.menuText.menu.title,
       mute: gameData.menuText.settings.sound,
       pause: gameData.menuText.pause.title,
@@ -96,7 +95,6 @@ it("keeps one accessible bar across retained scenes, underlying redraws and scre
     accepts: () => true,
     buttons: ["mute", "menu"] as const,
     labels: {
-      help: gameData.menuText.pause.help,
       menu: gameData.menuText.menu.title,
       mute: gameData.menuText.settings.sound,
       pause: gameData.menuText.pause.title,

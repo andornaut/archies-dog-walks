@@ -29,7 +29,6 @@ export function topBarButtonHits(debuffs: number): Readonly<Record<WalkBarButton
   const pressed = (hit: Rect): Rect =>
     first === undefined ? hit : { ...hit, height: Math.min(hit.height, first.y - hit.y) };
   return {
-    help: pressed(TOP_BAR_BUTTONS.help.hit),
     mute: pressed(TOP_BAR_BUTTONS.mute.hit),
     pause: pressed(TOP_BAR_BUTTONS.pause.hit),
   };
@@ -104,11 +103,11 @@ export function gameplayAllowed(pause: RunPause): boolean {
   return !walkPaused(pause) && !pause.hitStop;
 }
 
-export type TopBarAction = "mute" | "openHelp" | "openMenu" | "resume";
+export type TopBarAction = "mute" | "openMenu" | "resume";
 
 // What a walk-bar button does, pressed by a tap or by its key (the pause button's P and Escape,
 // and M, which mutes or unmutes). Every button works whenever the bar is in view, under every
-// card and overlay that leaves it lit: Help opens help, Mute toggles sound, and Pause
+// card and overlay that leaves it lit: Mute toggles sound, and Pause
 // opens the menu, or resumes while the menu, the question or the settings are up.
 // Help covers this bar and owns its mute control and keys. The settings take P, Escape and M
 // themselves. Under an
@@ -128,8 +127,6 @@ export function topBarAction(
   switch (button) {
     case "mute":
       return "mute";
-    case "help":
-      return "openHelp";
     case "pause":
       return pause.menu === "closed" ? "openMenu" : "resume";
     default:

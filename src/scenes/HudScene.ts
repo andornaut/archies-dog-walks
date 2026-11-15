@@ -260,7 +260,6 @@ export class HudScene extends Scene {
       currency: true,
       effects: BAR.effectWells.length,
       labels: {
-        help: gameData.menuText.pause.help,
         menu: gameData.menuText.menu.title,
         mute: gameData.menuText.settings.sound,
         pause: gameData.menuText.pause.title,
@@ -407,9 +406,6 @@ export class HudScene extends Scene {
         break;
       case "openMenu":
         run.openPause();
-        break;
-      case "openHelp":
-        run.openFromBar("help");
         break;
       case "resume":
         run.closePause();

@@ -1,6 +1,6 @@
 import { containsPoint, type Point, type Rect } from "@andornaut/game-kit/rect";
 
-import { HOME_SCREEN, MIN_PRESS, WALK_BAR_PARTS } from "../data/layout.ts";
+import { HOME_SCREEN, MIN_PRESS, TOP_BAR_SIZES, WALK_BAR_PARTS } from "../data/layout.ts";
 import { SCREEN_CONFIG } from "../data/screen.ts";
 import { TEXT_SCALE, TITLE_CAP_ROWS } from "./textFit.ts";
 import {
@@ -12,7 +12,7 @@ import {
 } from "./topBarTrim.ts";
 
 // Visibility removes a control from the flow; every section uses this order and pitch.
-export const TOP_SECTION_ORDER = ["help", "mute", "menu", "pause"] as const;
+export const TOP_SECTION_ORDER = ["mute", "menu", "pause"] as const;
 export type TopSectionButton = (typeof TOP_SECTION_ORDER)[number];
 export interface TopSectionControl {
   face: Point;
@@ -29,6 +29,9 @@ export function topSectionLayout<T extends TopSectionButton>(
   visible: readonly T[],
   sections: { currency?: boolean; effects?: number } = {},
 ) {
+  if (visible.includes("menu" as T) && visible.includes("pause" as T)) {
+    throw new Error("Menu and Pause share one top-section control");
+  }
   const shown = TOP_SECTION_ORDER.filter((id): id is T => visible.includes(id as T));
   const controls = shown.map((id, i) => {
     const x = SCREEN_CONFIG.width - (shown.length - i) * MIN_PRESS;
@@ -43,17 +46,11 @@ export function topSectionLayout<T extends TopSectionButton>(
   const first = controls[0]?.[1];
   const effects = sections.effects ?? 0;
   const cash = WALK_BAR_PARTS.cash;
+  const minimumCurrencyWidth = cash.room + 2 * TOP_BAR_SIZES.well.padding + TOP_BAR_WELL.lip;
   const maxCurrencyWidth =
     effects > 0
-      ? cash.ink.right + 1 + TOP_BAR_WELL.lip - TOP_BAR_WELL.x
-      : Math.min(
-          SCREEN_CONFIG.width -
-            5 * MIN_PRESS +
-            (MIN_PRESS - TOP_BAR_FACE.size) / 2 -
-            HOME_SCREEN.topBar.wellClear -
-            TOP_BAR_WELL.x,
-          (first?.face.x ?? SCREEN_CONFIG.width) - HOME_SCREEN.topBar.wellClear - TOP_BAR_WELL.x,
-        );
+      ? minimumCurrencyWidth
+      : (first?.hit.x ?? SCREEN_CONFIG.width) - HOME_SCREEN.topBar.wellClear - TOP_BAR_WELL.x;
   const currency = sections.currency
     ? { height: TOP_BAR_WELL.height, width: maxCurrencyWidth, x: TOP_BAR_WELL.x, y: TOP_BAR_WELL.y }
     : undefined;
@@ -70,11 +67,10 @@ export function topSectionLayout<T extends TopSectionButton>(
     x: effectsX + i * (style.size + style.gap),
     y: TOP_BAR_FACE.y - (style.size - TOP_BAR_FACE.size) / 2,
   }));
-  const starts = effectWells.map((well, i) => well.x - (i === 0 ? style.holdInset : 0));
-  const effectHolds = starts.map((x, i) => ({
+  const effectHolds = effectWells.map((well) => ({
     height: TOP_BAR_HEIGHT,
-    width: (starts[i + 1] ?? first?.hit.x ?? SCREEN_CONFIG.width) - x,
-    x,
+    width: well.width + 2 * style.holdInset,
+    x: well.x - style.holdInset,
     y: 0,
   }));
   return {
@@ -106,13 +102,17 @@ export function topSectionCurrency(
     ...maximum,
     width: fixed
       ? maximum.width
-      : Math.min(maximum.width, inkWidth + 2 * HOME_SCREEN.topBar.bankPad + TOP_BAR_WELL.lip),
+      : Math.min(
+          maximum.width,
+          Math.max(
+            cash.room + 2 * TOP_BAR_SIZES.well.padding + TOP_BAR_WELL.lip,
+            inkWidth + 2 * TOP_BAR_SIZES.well.padding + TOP_BAR_WELL.lip,
+          ),
+        ),
   };
   return {
-    left: fixed
-      ? Math.floor((cash.ink.left + cash.ink.right) / 2 - (inkWidth - 1) / 2)
-      : well.x + HOME_SCREEN.topBar.bankPad,
-    room: fixed ? cash.room : maximum.width - TOP_BAR_WELL.lip - 2 * HOME_SCREEN.topBar.bankPad,
+    left: well.x + Math.floor((well.width - TOP_BAR_WELL.lip - inkWidth) / 2),
+    room: maximum.width - TOP_BAR_WELL.lip - 2 * TOP_BAR_SIZES.well.padding,
     scale: cash.scale,
     top: wellCapsTop(TITLE_CAP_ROWS * cash.scale),
     well,

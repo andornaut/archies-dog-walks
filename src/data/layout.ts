@@ -123,7 +123,7 @@ export const TOP_BAR_SIZES = {
   // The trim's line's row, and the rows a well keeps clear of the trim above and below.
   trim: { clearance: 3, lineRow: 1 },
   // The money well's lip rows, and its left edge in from the bar's left.
-  well: { lip: 1, x: 5 },
+  well: { lip: 1, padding: 6, x: 5 },
 } as const;
 
 // Modal cards
@@ -165,15 +165,12 @@ export const HUD_REGIONS = {
   zoneProgressHeight: 4,
 } as const;
 
-// Exempt from the button gap rule: the walk bar's effect wells are 1 apart, so six fit between
-// the cash well and the buttons' press areas.
-const WALK_BAR_WELL_GAP = 1;
+// Effect wells leave a shared gap while keeping six visible effects clear of both controls.
+const WALK_BAR_WELL_GAP = 2;
 
 // The walk bar, in bar pixels.
 export const WALK_BAR_PARTS = {
   cash: {
-    // art: the cash well's first and last ink columns.
-    ink: { left: 5, right: 73 },
     // The widest the cash's ink may be.
     room: 69,
     // The cash's text scale, which the start screen's bank shares.
@@ -187,9 +184,9 @@ export const WALK_BAR_PARTS = {
     // An icon's inset in its well.
     icon: 1,
     // art: an effect icon's side.
-    iconSize: 20,
+    iconSize: 24,
     // art: an effect well's side.
-    size: 22,
+    size: 26,
   },
 } as const;
 
@@ -674,7 +671,7 @@ export const HOME_SCREEN = {
   tileSelectOutset: 1,
   // The top bar: the bank's ink inset in its well, and the columns the bank's well keeps clear of
   // the first button's face.
-  topBar: { bankPad: 3, wellClear: 16 },
+  topBar: { wellClear: 16 },
   // The update notice's button label's padding.
   updateModal: { labelPad: 8 },
   // The walker's column at the gate.
