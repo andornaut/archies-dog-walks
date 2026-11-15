@@ -1593,6 +1593,9 @@ export class StartScene extends Scene {
   }
   // The shared section owns chrome, currency and controls; this scene supplies its bank.
   private drawTopBar(save: SaveDocument): void {
+    if (uiLayer()?.ready() !== true) {
+      return;
+    }
     if (this.topSection === undefined) {
       this.topSection = addNativeTopSection(this, {
         accepts: () => this.nativeReady,

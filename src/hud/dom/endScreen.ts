@@ -330,7 +330,14 @@ export function showEndScreen(layer: UiLayer, input: DomEndScreenInput): DomEndS
   const element = doc.createElement("div");
   element.className = "adw-framed";
   element.append(...parts.map(({ element }) => element));
-  const underlay = followModalUnderlay(layer.input, element);
+  let dimmed = false;
+  const underlay = followModalUnderlay(
+    {
+      accepts: () => !dimmed && layer.input.accepts(),
+      subscribe: layer.input.subscribe,
+    },
+    element,
+  );
   const content: DomPart = {
     controls: parts.flatMap((part) => part.controls ?? []),
     element,
@@ -376,6 +383,10 @@ export function showEndScreen(layer: UiLayer, input: DomEndScreenInput): DomEndS
     },
     setBadgePop: (index, scale) => badges?.setPop(index, scale),
     setButton: (pressed, bob) => button.set(pressed, bob),
+    setDimmed: (value) => {
+      dimmed = value;
+      underlay.refresh();
+    },
     setFace: (index, frame, dy) => faces[index]?.set(frame, dy),
     setRibbon: (alpha, dy) => {
       if (ribbon !== undefined) {
