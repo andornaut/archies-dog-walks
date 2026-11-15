@@ -1,9 +1,10 @@
-import { animationKey } from "@andornaut/game-kit/art/aseprite";
-import { insetRect, type Point, type Rect } from "@andornaut/game-kit/rect";
-import type { GameObjects, Scene, Tweens } from "phaser";
+import { insetRect, type Point, type Rect, ringRects } from "@andornaut/game-kit/rect";
+import { laidGlyphs } from "@andornaut/game-kit/text/bitmapFont";
+import type { Scene, Tweens } from "phaser";
 
 import { SCREEN_CONFIG } from "../data/screen.ts";
 import type { DogId } from "../data/types.ts";
+import type { HudMoment, HudMomentPainter } from "../hud/dom/hudMoments.ts";
 import {
   FEEDBACK,
   heartNoticeLayout,
@@ -16,84 +17,50 @@ import type { ChangeLabel } from "../hud/hudView.ts";
 import { arcControl } from "../hud/moments.ts";
 import { slotIndexOf } from "../state/pack.ts";
 import { PALETTE } from "../ui/palette.ts";
-import { CREAM_PANEL_COLOURS, drawFramedRect, drawRing } from "../ui/phaser/draw.ts";
-import { addPixelText, inkSpan } from "../ui/phaser/pixelText.ts";
+import { plainMarks } from "../ui/pixelFont.ts";
 import { arcFlight } from "./arcFlight.ts";
 import { FEEDBACK_ART } from "./feedbackArt.ts";
 import { HUD_DEPTH } from "./hudDepth.ts";
 import type { HudWalk } from "./hudWalk.ts";
-import { playEffect, playTag, playTagOnce } from "./sprites.ts";
 import { TimedGroup } from "./timedGroup.ts";
-
-// Padding around the actual ink of the 2x signed number.
 const CHIP_PAD = 4;
-// A dog not on the road pops this far over its card.
 const OVER_CARD = 8;
-// A forgiven heart blinks this empty heart over itself, under the pickup's 16x16 sparkle.
-const FORGIVEN_HEART = { key: "ui-heart", tag: "empty-dark" } as const;
-const SPARKLE = { key: "fx-sparkle", tag: "play" } as const;
-// A heart cell on a card, and the forgiving perk's icon, size square, gap right of it.
 const HEART_CELL = { height: 7, width: 8 } as const;
 const FORGIVEN_PERK = { gap: 2, size: 16 } as const;
-
-// One heart change to show: its label, the top of its dog on the road, its card's sprite
-// and the parts that shake with it, and the band its label lands on.
 interface HeartPop {
-  card: GameObjects.Sprite;
   delayMs: number;
   dogTop: Point;
   label: ChangeLabel;
   lane: Rect;
-  parts: readonly GameObjects.Components.Transform[];
   slot: number;
 }
-
-// A pop on screen: what it covers on its way, its parts, its flight once under way, and its
-// landing.
 interface ActivePop {
   covers: Rect[];
   land: () => void;
-  parts: GameObjects.GameObject[];
+  parts: HudMoment[];
   tween: Tweens.Tween | undefined;
 }
-
-// clearOf is what pops keep clear of; landed shows a change's label on its band; tabTop is the
-// top of the owners' tab lane, which the pop's number keeps above.
 interface HeartHooks {
   clearOf: () => readonly Rect[];
+  flashCard: (slot: number) => void;
   landed: (label: ChangeLabel, lane: Rect) => void;
+  painter: HudMomentPainter;
   still: () => boolean;
   tabTop: number;
 }
-
-interface Shake {
-  base: number[];
-  parts: readonly GameObjects.Components.Transform[];
-}
-
-// Every heart change, whatever its cause: the heart pops over the dog on the road with its
-// number beside it, then flies down into its card's bottom rows, where the change's label
-// shows; a treat grabbed by reach flies its reach icon beside the small heart
-// (reachIconBeside). A lost heart flashes its card's hearts and shakes the card as it lands.
-// Reduced motion keeps the pop and the flash, and drops the flight, the icon's included, and
-// the shake. Everything it plays
-// holds while hold says so.
+// Scene timers own pause and flight; native card and moment renderers own their pixels.
 export class HeartFeedback {
   private readonly active = new Set<ActivePop>();
   private readonly group = new TimedGroup();
   private readonly hooks: HeartHooks;
   private readonly scene: Scene;
-  private readonly shakes = new Map<number, Shake>();
-
   constructor(scene: Scene, hooks: HeartHooks) {
     this.hooks = hooks;
     this.scene = scene;
   }
-
   hold(paused: boolean): void {
     this.group.hold(paused);
   }
-
   play(pop: HeartPop): void {
     if (pop.delayMs > 0) {
       this.group.after(this.scene, pop.delayMs, () => this.show(pop));
@@ -101,80 +68,70 @@ export class HeartFeedback {
       this.show(pop);
     }
   }
-
-  // A heart forgiven on its card, its 8x7 cell's top-left at: the heart blinks empty and back
-  // under a sparkle, reduced motion keeping both, in a 1px amber ring with the forgiving perk's
-  // 16x16 icon (perkKey) to its right. Without the heart's art, the sparkle, ring and icon.
   forgive(at: Point, perkKey: string): void {
     const { blinkMs, blinks } = FEEDBACK.forgiven;
     const markMs = blinkMs * (2 * blinks - 1);
-    const ring = this.scene.add.graphics().setDepth(HUD_DEPTH.heart);
-    drawRing(ring, PALETTE.amber, insetRect(-1, { ...HEART_CELL, ...at }), 1);
-    const marks: GameObjects.GameObject[] = [ring];
-    if (this.scene.textures.exists(perkKey)) {
-      const { gap, size } = FORGIVEN_PERK;
-      const y = at.y + Math.floor((HEART_CELL.height - size) / 2);
-      marks.push(
-        this.scene.add
-          .image(at.x + HEART_CELL.width + gap, y, perkKey)
-          .setOrigin(0)
-          .setDepth(HUD_DEPTH.heart),
-      );
+    const marks = this.hooks.painter.group(HUD_DEPTH.heart);
+    for (const rect of ringRects(1, insetRect(-1, { ...HEART_CELL, ...at }))) {
+      marks.panel(rect, undefined, { border: PALETTE.amber, fill: PALETTE.amber });
     }
-    this.group.after(this.scene, markMs, () => marks.forEach((mark) => mark.destroy()));
-    const sparkle = playEffect(
-      this.scene,
-      SPARKLE.key,
-      SPARKLE.tag,
-      { x: at.x + 4, y: at.y + 3 },
-      HUD_DEPTH.heart,
-    );
-    if (sparkle !== undefined) {
-      this.group.animate(sparkle);
-    }
-    if (!this.scene.anims.exists(animationKey(FORGIVEN_HEART.key, FORGIVEN_HEART.tag))) {
-      return;
-    }
-    const empty = this.scene.add.sprite(at.x, at.y, FORGIVEN_HEART.key).setOrigin(0);
-    playTag(empty.setDepth(HUD_DEPTH.heart), FORGIVEN_HEART.key, FORGIVEN_HEART.tag);
-    this.group.animate(empty);
-    this.group.every(this.scene, blinkMs, 2 * blinks - 2, () => empty.setVisible(!empty.visible));
-    this.group.after(this.scene, markMs, () => empty.destroy());
+    const { gap, size } = FORGIVEN_PERK;
+    marks.art({
+      at: {
+        x: at.x + HEART_CELL.width + gap,
+        y: at.y + Math.floor((HEART_CELL.height - size) / 2),
+      },
+      image: { height: size, width: size },
+      key: perkKey,
+    });
+    const sparkle = this.hooks.painter.group(HUD_DEPTH.heart);
+    sparkle.art({
+      at: { x: at.x + 4, y: at.y + 3 },
+      key: "fx-sparkle",
+      onComplete: () => sparkle.dispose(),
+      origin: { x: 0.5, y: 0.5 },
+      tags: ["play"],
+    });
+    const empty = this.hooks.painter.group(HUD_DEPTH.heart);
+    empty.art({ at, key: "ui-heart", tags: ["empty-dark"] });
+    this.group.every(this.scene, blinkMs, 2 * blinks - 2, () => {
+      empty.state.visible = !empty.state.visible;
+    });
+    this.group.after(this.scene, markMs, () => {
+      marks.dispose();
+      empty.dispose();
+    });
   }
-
-  // Lands at once every pop whose way crosses what must stay clear, such as a firing moment
-  // that has just opened.
   clearWay(): void {
     const clearOf = this.hooks.clearOf();
     for (const active of [...this.active]) {
       if (heartPopBlocked(clearOf, active.covers)) {
         active.tween?.remove();
-        active.parts.forEach((part) => part.destroy());
+        active.parts.forEach((part) => part.dispose());
         this.finish(active);
       }
     }
   }
-
-  // A pop whose way crosses what must stay clear lands at once, with no pop or flight.
   private show(pop: HeartPop): void {
     const loss = pop.label.amount < 0;
     const art = loss ? FEEDBACK_ART.heartLoss : FEEDBACK_ART.heartGain;
-    const preferredFrame = heartPopFrame(pop.dogTop);
-    if (!this.scene.anims.exists(animationKey(art.key, art.pop))) {
+    if (!this.hooks.painter.hasArt(art.key)) {
       this.land(loss, pop);
       return;
     }
     const to = { x: pop.lane.x + Math.round(pop.lane.width / 2), y: pop.lane.y };
-    const number = this.addNumber(pop.label, preferredFrame, art.popInk.right);
-    const frame = number.frame;
+    const number = this.addNumber(pop.label, heartPopFrame(pop.dogTop), art.popInk.right);
+    const { frame } = number;
     const centre = { x: frame.x + 16, y: frame.y + 16 };
     const covers = heartPopCovers({ chip: number.rect, frame, to }, FEEDBACK.heart.peak);
     if (heartPopBlocked(this.hooks.clearOf(), covers)) {
-      number.chip.destroy();
+      number.chip.dispose();
       this.land(loss, pop);
       return;
     }
-    const heart = this.scene.add.sprite(centre.x, centre.y, art.key).setDepth(HUD_DEPTH.heart);
+    const heart = this.hooks.painter.group(HUD_DEPTH.heart);
+    heart.state.x = centre.x;
+    heart.state.y = centre.y;
     const active: ActivePop = {
       covers,
       land: () => this.land(loss, pop),
@@ -182,172 +139,133 @@ export class HeartFeedback {
       tween: undefined,
     };
     this.active.add(active);
-    playTagOnce(heart, art.key, art.pop, () => {
-      number.chip.destroy();
-      if (this.hooks.still()) {
-        heart.destroy();
-        this.finish(active);
-        return;
-      }
-      const reachIcon = this.addReachIcon(pop.label, centre);
-      if (reachIcon !== undefined) {
-        active.parts.push(reachIcon);
-      }
-      const path = { from: centre, to };
-      active.tween = this.fly({ art, heart, reachIcon }, path, () => this.finish(active));
+    const playback = heart.art({
+      at: { x: 0, y: 0 },
+      key: art.key,
+      onComplete: () => {
+        number.chip.dispose();
+        heart.dispose();
+        if (this.hooks.still()) {
+          this.finish(active);
+          return;
+        }
+        const flying = this.hooks.painter.group(HUD_DEPTH.heart);
+        flying.state.x = centre.x;
+        flying.state.y = centre.y;
+        flying.art({
+          at: { x: 0, y: 0 },
+          key: art.key,
+          loop: true,
+          origin: { x: 0.5, y: 0.5 },
+          tags: [art.fly],
+        });
+        const reach = pop.label.reachIcon;
+        if (reach !== undefined) {
+          flying.art({
+            at: reachIconBeside({ x: 0, y: 0 }),
+            image: { height: 16, width: 16 },
+            key: reach,
+          });
+        }
+        active.parts.push(flying);
+        active.tween = this.group.tween(
+          this.scene,
+          arcFlight(
+            { control: arcControl(centre, to, FEEDBACK.heart.peak), from: centre, to },
+            {
+              duration: FEEDBACK.heart.flyMs,
+              ease: "Sine.easeIn",
+              onComplete: () => {
+                flying.dispose();
+                this.finish(active);
+              },
+            },
+            (point) => {
+              flying.state.x = point.x;
+              flying.state.y = point.y;
+            },
+          ),
+        );
+      },
+      origin: { x: 0.5, y: 0.5 },
+      tags: [art.pop],
     });
-    this.group.animate(heart);
+    const missing = () => {
+      if (this.active.has(active)) {
+        active.parts.forEach((part) => part.dispose());
+        this.finish(active);
+      }
+    };
+    void playback.ready.then((frames) => {
+      if (frames.length === 0) {
+        missing();
+      }
+    }, missing);
   }
-
   private finish(active: ActivePop): void {
-    this.active.delete(active);
+    if (!this.active.delete(active)) {
+      return;
+    }
     active.land();
   }
-
-  // Signed numeric ink on a cream chip beside the existing full-size heart art.
   private addNumber(
     label: ChangeLabel,
     frame: Point,
     inkRight: number,
-  ): { chip: GameObjects.Container; frame: Point; rect: Rect } {
-    const value = `${label.amount < 0 ? "−" : "+"}${Math.abs(label.amount)}`;
-    const text = addPixelText(this.scene, 0, 0, value, {
-      colour: label.amount < 0 ? PALETTE.darkRed : PALETTE.forest,
-      font: "title",
-      scale: 2,
+  ): {
+    chip: HudMoment;
+    frame: Point;
+    rect: Rect;
+  } {
+    const text = `${label.amount < 0 ? "−" : "+"}${Math.abs(label.amount)}`;
+    const glyphs = laidGlyphs(this.hooks.painter.fonts.title, 2, plainMarks(text)).flatMap(
+      ({ ink }) => (ink === null ? [] : [ink]),
+    );
+    const left = Math.min(...glyphs.map((ink) => ink.left));
+    const right = Math.max(...glyphs.map((ink) => ink.right));
+    const rows = [...plainMarks(text)].flatMap((char) => {
+      const glyph = this.hooks.painter.fonts.title.glyphs.get(char);
+      return glyph !== undefined && glyph.width > 0 && glyph.height > 0 ? [glyph] : [];
     });
-    const ink = inkSpan(text);
-    const chars = text.getTextBounds(true).characters.filter((char) => char.w > 0 && char.h > 0);
-    const top = chars.length === 0 ? 0 : Math.min(...chars.map((char) => char.y));
-    const bottom = Math.max(0, ...chars.map((char) => char.y + char.h));
+    const top = Math.min(...rows.map((glyph) => glyph.yOffset * 2));
+    const bottom = Math.max(...rows.map((glyph) => (glyph.yOffset + glyph.height) * 2));
     const size = {
-      height: Math.ceil((bottom - top) * text.scaleY) + 2 * CHIP_PAD,
-      width: Math.ceil(ink.right - ink.left) + 2 * CHIP_PAD,
+      height: Math.ceil(bottom - top) + 2 * CHIP_PAD,
+      width: Math.ceil(right - left) + 2 * CHIP_PAD,
     };
     const placed = heartNoticeLayout(
       { bottom: this.hooks.tabTop - 1, screenWidth: SCREEN_CONFIG.width },
       { chip: size, frame, inkRight },
     );
-    text.setPosition(CHIP_PAD - ink.left, CHIP_PAD - top * text.scaleY);
-    const box = this.scene.add.graphics();
-    const rect = placed.chip;
-    drawFramedRect(box, CREAM_PANEL_COLOURS, { ...rect, x: 0, y: 0 });
-    const chip = this.scene.add.container(rect.x, rect.y, [box, text]).setDepth(HUD_DEPTH.heart);
-    return { chip, frame: placed.frame, rect };
+    const chip = this.hooks.painter.group(HUD_DEPTH.heart);
+    chip.panel(placed.chip);
+    chip.text({
+      anchor: "ink",
+      backing: placed.chip,
+      capTop: placed.chip.y + CHIP_PAD,
+      colour: label.amount < 0 ? PALETTE.darkRed : PALETTE.forest,
+      font: "title",
+      lines: [text],
+      scale: 2,
+      x: placed.chip.x + CHIP_PAD,
+    });
+    return { chip, frame: placed.frame, rect: placed.chip };
   }
-
-  // A reached label's reach icon beside the small heart centred on centre, or undefined for a
-  // label with none or whose icon art is missing.
-  private addReachIcon(label: ChangeLabel, centre: Point): GameObjects.Image | undefined {
-    const icon = label.reachIcon;
-    if (icon === undefined || !this.scene.textures.exists(icon)) {
-      return undefined;
-    }
-    const at = reachIconBeside(centre);
-    return this.scene.add.image(at.x, at.y, icon).setOrigin(0).setDepth(HUD_DEPTH.heart);
-  }
-
-  // The fly tag's small heart, from the pop's centre down into the card's bottom rows, with its
-  // reach icon, if any, beside it.
-  private fly(
-    sprites: {
-      art: { fly: string; key: string };
-      heart: GameObjects.Sprite;
-      reachIcon: GameObjects.Image | undefined;
-    },
-    path: { from: Point; to: Point },
-    done: () => void,
-  ): Tweens.Tween {
-    const { art, heart, reachIcon } = sprites;
-    this.group.animate(heart.play(animationKey(art.key, art.fly)));
-    const { from, to } = path;
-    const control = arcControl(from, to, FEEDBACK.heart.peak);
-    const flight = {
-      duration: FEEDBACK.heart.flyMs,
-      ease: "Sine.easeIn",
-      onComplete: () => {
-        heart.destroy();
-        reachIcon?.destroy();
-        done();
-      },
-    };
-    return this.group.tween(
-      this.scene,
-      arcFlight({ control, from, to }, flight, (point) => {
-        heart.setPosition(point.x, point.y);
-        const at = reachIconBeside(point);
-        reachIcon?.setPosition(at.x, at.y);
-      }),
-    );
-  }
-
-  // The label shows on the card; a lost heart flashes the card's hearts, shaking it with motion.
   private land(loss: boolean, pop: HeartPop): void {
     this.hooks.landed(pop.label, pop.lane);
     if (loss) {
-      this.flash(pop);
-    }
-  }
-
-  // ui-dog-card's heart-loss tag on a second card sprite over the card, flashing its hearts
-  // area under its face, hearts and text; the slot shakes one step a frame.
-  private flash(pop: HeartPop): void {
-    const { key, tag } = FEEDBACK_ART.cardLoss;
-    if (!this.scene.anims.exists(animationKey(key, tag))) {
-      return;
-    }
-    const { card } = pop;
-    const flash = this.scene.add.sprite(card.x, card.y, key).setOrigin(0).setDepth(card.depth);
-    // Straight over the card in the draw order, under the labels and chips added since it.
-    const { children } = this.scene;
-    children.moveTo(flash, children.getIndex(card) + 1);
-    const parts = [...pop.parts, flash];
-    const still = this.hooks.still();
-    const shake = still ? undefined : this.startShake(pop.slot, parts);
-    if (shake !== undefined) {
-      flash.on("animationupdate", (_: unknown, frame: { index: number }) => {
-        this.shift(shake, FEEDBACK.heart.shakeDx[frame.index - 1] ?? 0);
-      });
-      this.shift(shake, FEEDBACK.heart.shakeDx[0]);
-    }
-    playTagOnce(flash, key, tag, () => {
-      if (shake !== undefined) {
-        this.endShake(pop.slot, shake);
-      }
-      flash.destroy();
-    });
-    this.group.animate(flash);
-  }
-
-  // A shake already under way on the slot keeps its resting places, so shakes never drift.
-  private startShake(slot: number, parts: readonly GameObjects.Components.Transform[]): Shake {
-    const running = this.shakes.get(slot);
-    const base = parts.map((part, i) => running?.base[i] ?? part.x);
-    const shake = { base, parts };
-    this.shakes.set(slot, shake);
-    return shake;
-  }
-
-  private shift(shake: Shake, dx: number): void {
-    shake.parts.forEach((part, i) => part.setX((shake.base[i] ?? part.x) + dx));
-  }
-
-  private endShake(slot: number, shake: Shake): void {
-    this.shift(shake, 0);
-    if (this.shakes.get(slot) === shake) {
-      this.shakes.delete(slot);
+      this.hooks.flashCard(pop.slot);
     }
   }
 }
-
-// A pop for each heart change among labels, over its dog on the road, else over its card;
-// a dog's later changes in one batch wait their turn.
+// One queued pop per actual heart change, anchored to the road dog or its native card.
 export function heartPops(
-  hud: { lanes: readonly Rect[]; run: Pick<HudWalk, "dogPoint" | "hudView"> },
+  hud: {
+    lanes: readonly Rect[];
+    run: Pick<HudWalk, "dogPoint" | "hudView">;
+  },
   labels: readonly ChangeLabel[],
-  slotOf: (
-    slot: number,
-  ) => { card: GameObjects.Sprite; parts: GameObjects.Components.Transform[] } | undefined,
+  slotOf: (slot: number) => Point | undefined,
 ): HeartPop[] {
   const pack = hud.run.hudView()?.run.pack ?? [];
   const shown = new Map<DogId, number>();
@@ -364,15 +282,13 @@ export function heartPops(
     }
     const before = shown.get(dog) ?? 0;
     shown.set(dog, before + 1);
-    const over = { x: lane.x + Math.round(lane.width / 2), y: view.card.y - OVER_CARD };
+    const over = { x: lane.x + Math.round(lane.width / 2), y: view.y - OVER_CARD };
     return [
       {
-        card: view.card,
         delayMs: before * FEEDBACK.heart.staggerMs,
         dogTop: hud.run.dogPoint(dog) ?? over,
         label,
         lane,
-        parts: view.parts,
         slot,
       },
     ];

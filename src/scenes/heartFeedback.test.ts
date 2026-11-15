@@ -1,77 +1,19 @@
-import { EventEmitter } from "node:events";
-
 import { sceneStub } from "@andornaut/game-kit/testing/phaser/sceneStub";
 import type { Scene } from "phaser";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
+import type { HudMoment, HudMomentPainter, MomentArt } from "../hud/dom/hudMoments.ts";
 import { heartPopFrame } from "../hud/feedback.ts";
 import type { ChangeLabel } from "../hud/hudView.ts";
-import { readBitmapFont } from "../tools/fontFile.ts";
-import { addPixelText } from "../ui/phaser/pixelText.ts";
-import { plainMarks } from "../ui/pixelFont.ts";
+import { gameFont } from "../testing/fontInk.ts";
+import type { DomTextBlock } from "../ui/dom/pixelLine.ts";
 import { HeartFeedback } from "./heartFeedback.ts";
-import { playTagOnce } from "./sprites.ts";
-
-vi.mock("../ui/phaser/pixelText.ts", async (original) => ({
-  ...(await original<typeof import("../ui/phaser/pixelText.ts")>()),
-  addPixelText: vi.fn(),
-}));
-vi.mock("./sprites.ts", () => ({ playEffect: vi.fn(), playTag: vi.fn(), playTagOnce: vi.fn() }));
-
-class Display extends EventEmitter {
-  active = true;
-  anims = { pause: vi.fn(), resume: vi.fn() };
-  children: Display[] = [];
-  depth = 0;
-  scaleX = 2;
-  scaleY = 2;
-  scene: unknown;
-  x = 0;
-  y = 0;
-  destroy() {
-    this.active = false;
-    this.children.forEach((child) => child.destroy());
-    this.emit("destroy");
-  }
-  fillRect() {
-    return this;
-  }
-  fillStyle() {
-    return this;
-  }
-  setDepth(value: number) {
-    this.depth = value;
-    return this;
-  }
-  setPosition(x: number, y: number) {
-    this.x = x;
-    this.y = y;
-    return this;
-  }
-}
-
-function fixture(still = false) {
-  const containers: Display[] = [],
-    sprites: Display[] = [],
-    labels: Display[] = [];
-  const timers: { callback: () => void; paused: boolean }[] = [];
+function fixture(still = false, hasFrames = true) {
+  const timers: {
+    callback: () => void;
+    paused: boolean;
+  }[] = [];
   const scene = sceneStub(vi.fn, {
-    add: {
-      container: (x: number, y: number, children: Display[]) => {
-        const group = new Display().setPosition(x, y);
-        group.children = children;
-        containers.push(group);
-        return group;
-      },
-      graphics: () => new Display(),
-      sprite: (x: number, y: number) => {
-        const sprite = new Display().setPosition(x, y);
-        sprite.scene = scene;
-        sprites.push(sprite);
-        return sprite;
-      },
-    },
-    anims: { exists: () => true },
     time: {
       delayedCall: (_ms: number, callback: () => void) => {
         const timer = { callback, paused: false };
@@ -80,32 +22,44 @@ function fixture(still = false) {
       },
     },
   });
-  vi.mocked(addPixelText).mockImplementation((_scene, _x, _y, value, style) => {
-    const label = new Display();
-    label.scaleX = label.scaleY = style.scale ?? 1;
-    const font = readBitmapFont("font-title");
-    let pen = 0;
-    const chars = [...plainMarks(value)].map((char) => {
-      const glyph = font.glyphs.get(char)!;
-      const placed = {
-        char,
-        h: glyph.height,
-        line: 0,
-        w: glyph.width,
-        x: pen + glyph.xOffset,
-        y: glyph.yOffset,
-      };
-      pen += glyph.advance;
-      return placed;
-    });
-    Object.assign(label, { getTextBounds: () => ({ characters: chars }) });
-    labels.push(label);
-    return label as unknown as ReturnType<typeof addPixelText>;
-  });
-  const landed = vi.fn();
+  const nodes: {
+    view: HudMoment;
+    art: MomentArt[];
+    labels: DomTextBlock[];
+    rects: unknown[];
+  }[] = [];
+  const painter = {
+    fonts: {
+      body: gameFont("font-body"),
+      display: gameFont("font-display"),
+      title: gameFont("font-title"),
+    },
+    group: () => {
+      const art: MomentArt[] = [],
+        labels: DomTextBlock[] = [],
+        rects: unknown[] = [];
+      const view = {
+        art: (value: MomentArt) => {
+          art.push(value);
+          return { dispose: vi.fn(), ready: Promise.resolve(hasFrames ? [{}] : []) };
+        },
+        dispose: vi.fn(),
+        panel: (value: unknown) => rects.push(value),
+        state: { alpha: 1, scale: 1, visible: true, x: 0, y: 0 },
+        text: (value: DomTextBlock) => labels.push(value),
+      } as unknown as HudMoment;
+      nodes.push({ art, labels, rects, view });
+      return view;
+    },
+    hasArt: () => true,
+  } as unknown as HudMomentPainter;
+  const landed = vi.fn(),
+    flashCard = vi.fn();
   const feedback = new HeartFeedback(scene as unknown as Scene, {
     clearOf: () => [],
+    flashCard,
     landed,
+    painter,
     still: () => still,
     tabTop: 500,
   });
@@ -117,21 +71,16 @@ function fixture(still = false) {
       text: "unused heart glyph ♥",
     };
     feedback.play({
-      card: {} as never,
       delayMs,
       dogTop: { x, y: 400 },
       label,
       lane: { height: 12, width: 100, x: 130, y: 510 },
-      parts: [],
       slot: 0,
     });
   };
-  return { containers, feedback, labels, landed, play, sprites, timers };
+  return { feedback, flashCard, landed, nodes, play, timers };
 }
-
-beforeEach(() => vi.clearAllMocks());
-
-describe("heart numeric notice", () => {
+describe("native heart numeric notice", () => {
   it.each([
     [1, "+1", 28],
     [-1, "−1", 24],
@@ -139,52 +88,49 @@ describe("heart numeric notice", () => {
   ] as const)(
     "measures %i as signed 2x ink with four-pixel chip padding",
     (amount, text, width) => {
-      const { containers, labels, play } = fixture();
+      const { nodes, play } = fixture();
       play(amount);
-      expect(vi.mocked(addPixelText).mock.calls[0]?.[3]).toBe(text);
-      expect(vi.mocked(addPixelText).mock.calls[0]?.[4]).toMatchObject({ font: "title", scale: 2 });
-      const label = labels[0]!;
-      const box = containers[0]!;
-      const chars = (
-        label as unknown as {
-          getTextBounds(): { characters: { h: number; w: number; x: number; y: number }[] };
-        }
-      ).getTextBounds().characters;
-      const left = Math.min(...chars.map((char) => char.x)) * 2 + label.x;
-      const right = Math.max(...chars.map((char) => char.x + char.w)) * 2 + label.x;
-      const top = Math.min(...chars.map((char) => char.y)) * 2 + label.y;
-      const bottom = Math.max(...chars.map((char) => char.y + char.h)) * 2 + label.y;
-      expect({ height: bottom + 4, width: right + 4 }).toEqual({ height: 18, width });
-      expect({ left, top }).toEqual({ left: 4, top: 4 });
-      expect(box.children).toContain(label);
+      expect(nodes[0]?.labels[0]).toMatchObject({
+        backing: { height: 18, width },
+        font: "title",
+        lines: [text],
+        scale: 2,
+      });
+      expect(nodes[0]?.rects[0]).toMatchObject({ height: 18, width });
     },
   );
-
   it("moves the complete pair left at the right edge without flipping its number", () => {
-    const { containers, play, sprites } = fixture();
+    const { nodes, play } = fixture();
     play(1, 360);
-    const heart = sprites[0]!,
-      chip = containers[0]!;
+    const chip = nodes[0]?.rects[0] as {
+      x: number;
+      width: number;
+    };
+    const heart = nodes[1]!.view.state;
     expect(chip.x - (heart.x - 16 + 31)).toBe(4);
-    expect(chip.x + 28).toBe(360);
+    expect(chip.x + chip.width).toBe(360);
     expect(heart.x - 16).toBeLessThan(heartPopFrame({ x: 360, y: 400 }).x);
   });
-
-  it("retains stagger, pause and reduced-motion landing cleanup", () => {
-    const { containers, feedback, landed, play, sprites, timers } = fixture(true);
+  it("retains stagger, pause and reduced-motion landing cleanup", async () => {
+    const { feedback, flashCard, landed, nodes, play, timers } = fixture(true);
     feedback.hold(true);
-    play(3, 180, 1200);
-    expect(sprites).toHaveLength(0);
+    play(-1, 180, 1200);
+    expect(nodes).toHaveLength(0);
     expect(timers[0]?.paused).toBe(true);
     feedback.hold(false);
+    expect(timers[0]?.paused).toBe(false);
     timers[0]?.callback();
-    feedback.hold(true);
-    expect(sprites[0]?.anims.pause).toHaveBeenCalled();
-    feedback.hold(false);
-    expect(sprites[0]?.anims.resume).toHaveBeenCalled();
-    vi.mocked(playTagOnce).mock.calls[0]?.[3]();
-    expect(containers[0]?.active).toBe(false);
-    expect(sprites[0]?.active).toBe(false);
+    nodes[1]?.art[0]?.onComplete?.();
+    expect(nodes[0]?.view.dispose).toHaveBeenCalledTimes(1);
+    expect(nodes[1]?.view.dispose).toHaveBeenCalledTimes(1);
     expect(landed).toHaveBeenCalledTimes(1);
+    expect(flashCard).toHaveBeenCalledExactlyOnceWith(0);
+    const unavailable = fixture(false, false);
+    unavailable.play(1);
+    await Promise.resolve();
+    expect(unavailable.landed).toHaveBeenCalledTimes(1);
+    expect(
+      unavailable.nodes.every(({ view }) => vi.mocked(view.dispose).mock.calls.length === 1),
+    ).toBe(true);
   });
 });

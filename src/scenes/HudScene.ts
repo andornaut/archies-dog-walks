@@ -1,22 +1,24 @@
-import { drawProgressBar } from "@andornaut/game-kit/progress/phaser/drawProgressBar";
-import type { Point, Rect } from "@andornaut/game-kit/rect";
-import { type GameObjects, Scene } from "phaser";
+import { insetRect, type Point, type Rect, ringRects } from "@andornaut/game-kit/rect";
+import { inkWidth } from "@andornaut/game-kit/text/bitmapFont";
+import { fittingText } from "@andornaut/game-kit/text/textFit";
+import { Core, Scene } from "phaser";
 
-import { debuffIconKey } from "../assets/iconKeys.ts";
-import { dogCardTag, dogFaceKey, ownerCardFaceKey } from "../assets/spriteKeys.ts";
+import { artUrl } from "../assets/artFiles.ts";
 import { gameData } from "../data/index.ts";
 import { SCREEN_CONFIG, SCREEN_LAYOUT } from "../data/screen.ts";
 import type { AchievementId, DebuffId, DogId, HintTrigger } from "../data/types.ts";
 import { FEEDBACK as MENU_FEEDBACK } from "../home/feedback.ts";
-import type { DomQuestionPanel } from "../hud/dom/questionPanel.ts";
+import { createHudCards, type HudCards } from "../hud/dom/hudCards.ts";
+import { createHudChrome } from "../hud/dom/hudChrome.ts";
+import { createHudMoments, type HudMoment, type HudMomentPainter } from "../hud/dom/hudMoments.ts";
 import {
-  effectIconKey,
-  type EffectItem,
-  effectItems,
-  effectItemsKey,
-  perkIconKey,
-  spareTreatWell,
-} from "../hud/effectIcons.ts";
+  projectHudCards,
+  projectHudMoments,
+  projectHudTopSections,
+} from "../hud/dom/hudProjection.ts";
+import type { DomQuestionPanel } from "../hud/dom/questionPanel.ts";
+import { effectIconKey, type EffectItem, effectItems, perkIconKey } from "../hud/effectIcons.ts";
+import { pillKind } from "../hud/effectNames.ts";
 import { explainDetail } from "../hud/explain.ts";
 import { FEEDBACK } from "../hud/feedback.ts";
 import { runHintTriggers } from "../hud/hintTriggers.ts";
@@ -26,11 +28,12 @@ import {
   changeLabelRoom,
   type HudLanes,
   hudLanes,
+  REACH_ICON,
   reachChipPlace,
 } from "../hud/hudLanes.ts";
 import type { ChangeLabel } from "../hud/hudView.ts";
 import type { MessageLine } from "../hud/messageStrip.ts";
-import { cardOwnerMood, FORGIVEN_EVENT, type ForgivenCue } from "../hud/moments.ts";
+import { FORGIVEN_EVENT, type ForgivenCue } from "../hud/moments.ts";
 import {
   cashChipPlace,
   freeCashSlot,
@@ -47,73 +50,49 @@ import {
   playerPaused,
   type RunPause,
   topBarAction,
-  topBarButtonAt,
   topBarKey,
+  walkPaused,
 } from "../hud/topBar.ts";
 import {
   cardHearts,
-  DEBUFF_BAR,
-  debuffBarRects,
-  debuffFillWidth,
-  DOG_CARD,
   type ExplainTarget,
-  leadSlot,
-  ownerNameLines,
-  slotShown,
-  spareTreatPipAt,
   WALK_BAR_BUTTONS,
   type WalkBarButtonId,
   walkBarLayout,
-  zoneProgressLayout,
-  zoneProgressText,
-  zoneShare,
 } from "../hud/walkHud.ts";
-import { zonePillLayout } from "../hud/zonePill.ts";
+import { BUFF_POP, CHARM, sparkleAt } from "../layout/buffLayout.ts";
 import { dollarAmountText } from "../presentation/currency.ts";
 import { ownerMaxHearts } from "../rules/dogs.ts";
-import { debuffLasting } from "../rules/durations.ts";
 import { hintFor, hintJumpsQueue } from "../rules/hints.ts";
-import { currentZone } from "../rules/route.ts";
 import { walkEarnings } from "../rules/run.ts";
 import { faceMood } from "../rules/treats.ts";
-import { read } from "../rules/units.ts";
 import { heartsOf, slotIndexOf } from "../state/pack.ts";
-import type { PackSlot, RunState } from "../state/runState.ts";
+import type { RunState } from "../state/runState.ts";
+import {
+  createNativeTopSection,
+  type NativeTopSection,
+  type NativeTopSectionConfig,
+} from "../ui/dom/nativeTopSection.ts";
+import { dimDrawn, followModalUnderlay } from "../ui/dom/rampDim.ts";
+import { loadSheet } from "../ui/dom/sheetFrames.ts";
+import { uiLayer } from "../ui/dom/uiLayer.ts";
 import { PALETTE } from "../ui/palette.ts";
-import {
-  addFilledRect,
-  addModalShade,
-  CREAM_PANEL_COLOURS,
-  drawDashedRect,
-  drawFramedRect,
-  drawHeart,
-  fillRect,
-} from "../ui/phaser/draw.ts";
-import {
-  addPixelText,
-  fitPixelText,
-  inkSpan,
-  pixelFontMetrics,
-  placePixelText,
-  scalePixelText,
-  setPixelText,
-} from "../ui/phaser/pixelText.ts";
-import { GAME_PROGRESS_STYLE } from "../ui/progressBar.ts";
+import { displayBitmapFont } from "../ui/phaser/displayText.ts";
+import { pixelBitmapFont, pixelFontMetrics } from "../ui/phaser/pixelText.ts";
 import { type Cents, cents } from "../units.ts";
 import { arcFlight } from "./arcFlight.ts";
-import { addCharm, glintWell } from "./buffCharm.ts";
 import { BumpBorder } from "./bumpBorder.ts";
 import { CardScene } from "./CardScene.ts";
 import { changeLabelColour } from "./changeLabelColours.ts";
 import { DEBUFF_COLOURS } from "./debuffColours.ts";
+import { pillColours } from "./effectNameColours.ts";
 import { HudFeedback } from "./feedbackMoments.ts";
 import { HeartFeedback, heartPops } from "./heartFeedback.ts";
-import { detailView, drawDetailCardView } from "./homePanels.ts";
-import { addHtmlMirror, MIRROR_SPAN_DATA } from "./htmlMirror.ts";
+import { detailView } from "./homePanels.ts";
 import { HUD_DEPTH } from "./hudDepth.ts";
 import type { HudRun, HudWalk, RunHudView } from "./hudWalk.ts";
 import { MESSAGE_EVENT, MessageStrip } from "./messageStripView.ts";
-import { listenOnePress } from "./onePress.ts";
+import { createNativeHudPicture } from "./nativeHudPicture.ts";
 import { BAR_MUTED_EVENT, onSceneEvent } from "./overlay.ts";
 import { OwnerTabs } from "./ownerTabs.ts";
 import {
@@ -137,24 +116,17 @@ import {
   type RaisedHint,
 } from "./run/runMoments.ts";
 import { SCENE_KEYS, type SceneKey } from "./sceneKeys.ts";
-import { type ScenePicture, showAsPicture } from "./scenePicture.ts";
+import { type ScenePicture } from "./scenePicture.ts";
 import { soundboardOf } from "./soundboard.ts";
-import { playTag } from "./sprites.ts";
 import { TimedGroup } from "./timedGroup.ts";
-import { addTopSection, mirrorTopSection, type TopSection } from "./topSection.ts";
-import { addNineSlice, addTagImage, artFits, fadeAway, type IconButton } from "./uiKit.ts";
-
+import { addNativeTopSection } from "./topSection.ts";
 const LAYOUT = SCREEN_LAYOUT;
 const BAR = walkBarLayout(LAYOUT.topBar);
-// The spare treat pip's art, which spareTreatPipAt places: the road's smallest treat.
-const SPARE_TREAT_PIP_KEY = "treat@50";
-
 // A change label's parts on screen, and its chip's rect.
 interface ChangeChip {
-  parts: (GameObjects.Graphics | GameObjects.BitmapText | GameObjects.Image)[];
+  parts: HudMoment[];
   rect: Rect;
 }
-
 // The tip label showing by the cash before it goes in: its label, its chip, its slot in the
 // cash's column, and the money it keeps off the counter until it lands.
 interface ShowingTip {
@@ -163,62 +135,25 @@ interface ShowingTip {
   label: ChangeLabel;
   slot: number;
 }
-
-const NOT_EXPLAINED = { key: "", layer: undefined };
-// The pages that ramp-dim or cover the walk on the canvas, each reading back or covering the HUD
-// the canvas draws: while one is up (running, or paused under another), the HUD's HTML stands
-// down and the canvas draws it.
-// CLEANUP (added 2026-11-12): remove in phase 5, when overlay dims move to HTML.
-const PAGES_OVER_HUD = [
-  SCENE_KEYS.card,
-  SCENE_KEYS.celebration,
-  SCENE_KEYS.end,
-  SCENE_KEYS.help,
-  SCENE_KEYS.pause,
-  SCENE_KEYS.quit,
-  SCENE_KEYS.settings,
-  SCENE_KEYS.zoneCelebration,
-] as const;
-const NO_PILL = { key: "", parts: [] };
-// An owner's tab shows this long on a heart change.
+const NOT_EXPLAINED = { key: "", scene: undefined };
 const HEART_TAB_MS = 1200;
-// A card holds one row of hearts, as many as the most an owner can have.
-const MAX_CARD_HEARTS = DOG_CARD.hearts.perRow;
-const HEART_KEY = "ui-heart";
-const CARD_KEY = "ui-dog-card";
-
-interface CardView {
-  card: GameObjects.Sprite;
-  dogFace: GameObjects.Sprite;
-  empty: GameObjects.BitmapText;
-  fired: GameObjects.BitmapText;
-  hearts: GameObjects.Sprite[];
-  lead: GameObjects.Image | GameObjects.BitmapText;
-  name: GameObjects.BitmapText;
-  // The owner's name, one label per line.
-  owner: GameObjects.BitmapText[];
-  ownerFace: GameObjects.Sprite;
-}
-
-// A card's parts that shake with it.
-function cardParts(view: CardView | undefined): GameObjects.Components.Transform[] {
-  if (view === undefined) {
-    return [];
-  }
-  const { card, dogFace, empty, fired, hearts, lead, name, owner, ownerFace } = view;
-  return [card, dogFace, ownerFace, name, ...owner, empty, fired, lead, ...hearts];
-}
-
 interface DebuffBarView {
   debuff: DebuffId;
-  parts: GameObjects.GameObject[];
   rect: Rect;
 }
-
 // The HUD shows run's walk and its buttons act on run; a picture of the HUD shows source's walk
 // in view's strips, and takes no input or hints.
-export type HudSceneData = { picture: { source: HudWalk; view: ScenePicture } } | { run: HudRun };
-
+export type HudSceneData =
+  | {
+      picture: {
+        source: HudWalk;
+        stillFrames?: Readonly<Record<string, number>>;
+        view: ScenePicture;
+      };
+    }
+  | {
+      run: HudRun;
+    };
 // The walk bar, the debuff bars, the dog cards and the neighbourhood's progress line, drawn over
 // the road for the whole walk and kept in view while cards are up. It reads the run every frame and
 // redraws what changed, and shows the run's change labels, first-time hints, owners' pop-ins and
@@ -227,20 +162,26 @@ export type HudSceneData = { picture: { source: HudWalk; view: ScenePicture } } 
 // except the walk's moments: while the player has paused, heart pops, change labels, owners'
 // pop-ins and the message strip's ageing hold.
 export class HudScene extends Scene {
-  private cards: CardView[] = [];
+  private cards: HudCards | undefined;
+  private chrome: ReturnType<typeof createHudChrome> | undefined;
+  private painter: HudMomentPainter | undefined;
+  private barPainter: HudMomentPainter | undefined;
   private debuffBars: DebuffBarView[] = [];
-  private debuffFills: GameObjects.Graphics | undefined;
-  private topSection: TopSection | undefined;
-  private drawn: Record<string, unknown> = {};
-  private barButtons = new Map<WalkBarButtonId, IconButton>();
+  private topSection: NativeTopSection | undefined;
+  private barButtons = new Map<
+    WalkBarButtonId,
+    {
+      setPressed(pressed: boolean): void;
+    }
+  >();
   private barPressActive: (() => boolean) | undefined;
-  private dynamic: GameObjects.Graphics | undefined;
-  private effectParts: GameObjects.GameObject[] = [];
+  private momentNow = 0;
+  private firingNow = 0;
   // What the open explanation explains, and its detail card as drawn, if any.
   private explained: {
     html?: DomQuestionPanel | undefined;
     key: string;
-    layer: GameObjects.Container | undefined;
+    scene: Scene | undefined;
   } = NOT_EXPLAINED;
   private feedback: HudFeedback | undefined;
   private hearts: HeartFeedback | undefined;
@@ -249,96 +190,158 @@ export class HudScene extends Scene {
   private labels = new TimedGroup();
   // The slots of the cash's column that money labels showing by the cash hold.
   private cashSlots = new Set<number>();
-  private messages = new MessageStrip();
+  private messages: MessageStrip | undefined;
   // The money changes still flying to the cash, which the counter leaves out until they land.
   private moneyInFlight = 0;
   private owners: OwnerTabs | undefined;
-  // The spare treat held, shown in its gear's effect well.
-  private spareTreatPip: GameObjects.Sprite | undefined;
   private picture: HudWalk | undefined;
   private run: HudRun | undefined;
   private tip: ShowingTip | undefined;
-  private zoneFill: GameObjects.Graphics | undefined;
-  // The neighbourhood pill's parts, and the zone and debuff bar count they show for.
-  private zonePill: { key: string; parts: GameObjects.GameObject[] } = NO_PILL;
-  private zoneFillWidth: number | undefined;
-
   // key names a second HUD, such as the help's picture of one.
   constructor(key: string = SCENE_KEYS.hud) {
     super(key);
   }
-
   private lanes(): HudLanes {
     return hudLanes(LAYOUT);
   }
-
   create(data: HudSceneData): void {
-    const { dogRow, dogSlots, zoneProgress } = LAYOUT;
     const picture = "picture" in data ? data.picture : undefined;
     this.picture = picture?.source;
     this.run = "run" in data ? data.run : undefined;
-    if (picture !== undefined) {
-      showAsPicture(this, picture.view);
+    const layer = uiLayer();
+    const body = pixelBitmapFont(this, "body"),
+      title = pixelBitmapFont(this, "title"),
+      display = displayBitmapFont(this);
+    if (layer === undefined || body === undefined || title === undefined || display === undefined) {
+      throw new Error("The native HUD requires its prepared UI context");
     }
-    this.drawn = {};
+    const source = { artUrl, loadSheet };
+    const fonts = { body, display, title };
+    const colours = (index: number) => {
+      const kind = pillKind(index);
+      return kind === undefined ? undefined : pillColours(kind);
+    };
+    const hasArt = (key: string) => this.textures.exists(key);
+    const projection =
+      picture === undefined
+        ? { dispose() {}, layers: [layer] }
+        : createNativeHudPicture(layer, picture.view);
+    const painters = projection.layers.map((target) =>
+      createHudMoments(target, source, fonts, hasArt, colours),
+    );
+    const cards = projection.layers.map((target) =>
+      createHudCards(target, source, fonts, gameData),
+    );
+    this.painter = projectHudMoments(painters, picture?.stillFrames);
+    this.painter.update({ firingNow: this.time.now, momentNow: this.time.now, now: this.time.now });
+    this.cards = projectHudCards(cards);
+    const stopUnderlays =
+      picture === undefined
+        ? painters.map((painter) => followModalUnderlay(layer.input, painter.element))
+        : [];
     this.debuffBars = [];
-    this.effectParts = [];
-    this.spareTreatPip = undefined;
     this.tip = undefined;
     this.cashSlots = new Set();
     this.explained = NOT_EXPLAINED;
-    this.zonePill = NO_PILL;
-    this.messages = new MessageStrip();
+    this.messages = new MessageStrip(this.painter);
     this.moneyInFlight = 0;
     this.labels = new TimedGroup();
-    const g = this.add.graphics();
-    // The card band ends on the dog row's bottom row, its top rows (the shadow and the trim)
-    // over the road's last rows. The progress line's strip is under it, on the screen's last
-    // rows.
-    if (this.textures.exists("ui-dog-card-band")) {
-      this.add
-        .image(dogRow.x, dogRow.y + dogRow.height, "ui-dog-card-band")
-        .setOrigin(0, 1)
-        .setData(MIRROR_SPAN_DATA, true);
-    } else {
-      fillRect(g, PALETTE.darkBrown, dogRow);
-    }
-    this.zoneFill = this.add.graphics();
-    drawProgressBar(this.zoneFill, GAME_PROGRESS_STYLE, zoneProgress, 0);
-    this.zoneFillWidth = undefined;
+    this.momentNow = this.time.now;
+    this.firingNow = this.time.now;
     this.barButtons = new Map();
     this.barPressActive = undefined;
-    this.topSection = addTopSection(this, {
+    const barConfig: NativeTopSectionConfig = {
+      accepts: (id) =>
+        this.picture === undefined &&
+        id !== "menu" &&
+        topBarAction(this.walk().runPause(), "tap", id) !== undefined,
+      activation: "down",
       buttons: WALK_BAR_BUTTONS,
       currency: true,
       effects: BAR.effectWells.length,
+      labels: {
+        help: gameData.menuText.pause.help,
+        menu: gameData.menuText.menu.title,
+        mute: gameData.menuText.settings.sound,
+        pause: gameData.menuText.pause.title,
+      },
       muted: isMuted(this),
+      press: (id, event) => {
+        if (id !== "menu") {
+          this.press(event.via === "keyboard" ? "key" : "tap", id);
+        }
+      },
+    };
+    this.topSection =
+      picture === undefined
+        ? addNativeTopSection(this, barConfig)
+        : projectHudTopSections(
+            projection.layers.map((target) =>
+              createNativeTopSection(target, source, title, barConfig),
+            ),
+          );
+    const barPainters = projection.layers.map((target) =>
+      createHudMoments(target, source, fonts, hasArt, colours),
+    );
+    this.barPainter = projectHudMoments(barPainters, picture?.stillFrames);
+    this.barPainter.update({
+      firingNow: this.time.now,
+      momentNow: this.time.now,
+      now: this.time.now,
+    });
+    this.chrome = createHudChrome(this.painter, this.barPainter, DEBUFF_COLOURS);
+    onSceneEvent(this, this.game.events, Core.Events.PRE_RENDER, () => {
+      const time = { firingNow: this.firingNow, momentNow: this.momentNow, now: this.time.now };
+      this.painter?.update(time);
+      this.barPainter?.update(time);
+      if (picture === undefined) {
+        painters.forEach((painter) => dimDrawn(painter.element, !layer.input.accepts()));
+      }
+    });
+    painters.forEach((painter, index) => {
+      const view = cards[index];
+      if (view !== undefined) {
+        painter.element.append(view.element);
+      }
+    });
+    this.events.once("shutdown", () => {
+      stopUnderlays.forEach((stop) => stop());
+      this.topSection?.dispose();
+      this.cards?.dispose();
+      this.chrome?.dispose();
+      this.painter?.dispose();
+      this.barPainter?.dispose();
+      projection.dispose();
     });
     onSettingsChanged(this, ({ muted }) => this.topSection?.setMuted(muted));
     for (const id of WALK_BAR_BUTTONS) {
-      const button = this.topSection.buttons.get(id);
+      const button = this.topSection?.buttons.get(id);
       if (button !== undefined) {
         this.barButtons.set(id, button);
       }
     }
-    this.dynamic = this.add.graphics();
-    this.debuffFills = this.add.graphics().setDepth(HUD_DEPTH.overPart);
-    this.cards = dogSlots.map((rect) => this.createCard(rect));
-    const border = new BumpBorder(this);
-
+    const border = new BumpBorder(this, { border: this.barPainter, tint: this.painter });
     const run = this.walk();
     const firingRects = () => this.feedback?.firingRects() ?? [];
-    this.owners = new OwnerTabs(this, { group: this.labels, still: () => run.reducedMotion() });
+    this.owners = new OwnerTabs(this, {
+      group: this.labels,
+      painter: this.painter,
+      still: () => run.reducedMotion(),
+    });
     this.feedback = new HudFeedback(this, run, {
       effectWell: (index) => BAR.effectWells[index],
       firingShown: () => this.hearts?.clearWay(),
       floatLabels: (ownerMs, labels) => this.floatLabels(ownerMs, labels),
+      painter: this.painter,
       payTotal: (label, timing) => this.showPayTotal(label, timing),
       popOwner: (dog, mood, ms) => this.popOwner(dog, mood, ms),
     });
     this.hearts = new HeartFeedback(this, {
       clearOf: firingRects,
+      flashCard: (slot) =>
+        this.cards?.flashCard({ now: this.momentNow, reducedMotion: run.reducedMotion() }, slot),
       landed: (label, lane) => this.showHeartLabel(label, lane),
+      painter: this.painter,
       still: () => run.reducedMotion(),
       tabTop: this.lanes().ownerTabs.y,
     });
@@ -355,40 +358,11 @@ export class HudScene extends Scene {
       border.flash(run.reducedMotion(), colour);
     });
     onSceneEvent(this, run.events, HINT_EVENT, (hint: RaisedHint) => this.sayHint(hint));
-    onSceneEvent(this, run.events, MESSAGE_EVENT, (line: MessageLine) => this.messages.say(line));
+    onSceneEvent(this, run.events, MESSAGE_EVENT, (line: MessageLine) => this.messages?.say(line));
     onSceneEvent(this, run.events, QUIPS_EVENT, (quips: OwnerQuip[]) => this.sayQuips(quips));
     if (picture !== undefined) {
       return;
     }
-    // The HUD drawn in HTML over the canvas until it shuts down, its whole display list in display
-    // order, while no page is over it.
-    addHtmlMirror(
-      this,
-      () => {
-        this.children.depthSort();
-        return this.children.list;
-      },
-      () => this.pageOver(),
-    );
-
-    mirrorTopSection(
-      this,
-      () => this.topSection?.root,
-      () => this.scene.isActive(SCENE_KEYS.help),
-    );
-
-    // A button acts on the press, as the walk's gestures never see it. A showing debuff bar keeps
-    // its rows.
-    listenOnePress(this, {
-      down: (pointer) => {
-        const button = topBarButtonAt(this.debuffBars.length, pointer.x, pointer.y);
-        if (button !== undefined) {
-          this.setBarPressed(button, () => pointer.isDown);
-          this.press("tap", button);
-        }
-      },
-      up: () => this.setBarPressed(undefined),
-    });
     this.input.keyboard?.on("keydown", (event: KeyboardEvent) => {
       const key = topBarKey(event.repeat, event.code);
       if (key === "pause") {
@@ -400,7 +374,6 @@ export class HudScene extends Scene {
       }
     });
   }
-
   // The topmost overlay over the walk that leaves the walk bar in view (the settings, the pause
   // menu, the card or the zone celebration), else the HUD itself. A picture of the HUD has none.
   // Each counts while paused, under an explanation or an overlay over it.
@@ -415,14 +388,6 @@ export class HudScene extends Scene {
     const key = overlays.find(shown);
     return key === undefined || this.picture !== undefined ? this : this.scene.get(key);
   }
-
-  // Whether a page over the walk dims or covers the HUD (PAGES_OVER_HUD), or an explanation's
-  // detail card is open over its modal shade.
-  private pageOver(): boolean {
-    const shown = (key: SceneKey) => this.scene.isActive(key) || this.scene.isPaused(key);
-    return this.explained.layer !== undefined || PAGES_OVER_HUD.some(shown);
-  }
-
   // The walk the HUD shows: a picture's, or the run's.
   private walk(): HudWalk {
     const walk = this.picture ?? this.run;
@@ -431,7 +396,6 @@ export class HudScene extends Scene {
     }
     return walk;
   }
-
   private press(via: "key" | "tap", button: WalkBarButtonId): void {
     const run = this.run;
     if (run === undefined) {
@@ -453,7 +417,6 @@ export class HudScene extends Scene {
       default:
     }
   }
-
   private setBarPressed(
     button: WalkBarButtonId | undefined,
     active: () => boolean = () => false,
@@ -461,54 +424,10 @@ export class HudScene extends Scene {
     this.barPressActive = button === undefined ? undefined : active;
     this.barButtons.forEach((control, id) => control.setPressed(id === button));
   }
-
   // The icon art when it is loaded, else cream pause bars or play triangle drawn on the face.
   private showPauseIcon(pausable: boolean, pause: RunPause): void {
     this.topSection?.setPaused(pauseButtonIcon(pausable, pause) === "icon-menu");
   }
-
-  private createCard({ x, y }: Rect): CardView {
-    const sprite = (key: string, point: { x: number; y: number }) =>
-      this.add
-        .sprite(x + point.x, y + point.y, key)
-        .setOrigin(0)
-        .setVisible(false);
-    // The card first, so the face, hearts and labels draw over it.
-    const card = sprite(CARD_KEY, { x: 0, y: 0 });
-    const { empty, fired, lead, name, owner } = DOG_CARD;
-    const leadTag = this.textures.exists("ui-lead-tag")
-      ? this.add.image(x + lead.x, y + lead.y, "ui-lead-tag").setOrigin(0)
-      : addPixelText(this, x + lead.x + 2, y + lead.y + 3, gameData.runText.lead, {
-          colour: PALETTE.amber,
-          font: "title",
-        });
-    return {
-      card,
-      dogFace: sprite("treat", DOG_CARD.dogFace),
-      empty: addPixelText(this, x + empty.x, y + empty.y, "", {
-        colour: PALETTE.cream,
-        font: "title",
-        originX: 0.5,
-      }),
-      fired: addPixelText(this, x + fired.x, y + fired.y, "", {
-        colour: PALETTE.white,
-        font: "title",
-        originX: 0.5,
-      }),
-      hearts: Array.from({ length: MAX_CARD_HEARTS }, () => sprite(HEART_KEY, { x: 0, y: 0 })),
-      lead: leadTag.setVisible(false),
-      name: addPixelText(this, x + name.x, y, "", {
-        colour: PALETTE.cream,
-        font: "title",
-        originX: 0.5,
-      }),
-      owner: owner.tops.twoLines.map((top) =>
-        addPixelText(this, x + owner.x, y + top, "", { colour: PALETTE.tan, scale: owner.scale }),
-      ),
-      ownerFace: sprite("treat", owner.face),
-    };
-  }
-
   override update(_time: number, delta: number): void {
     // An overlay can consume the release; the shared pointer still records that it lifted.
     if (this.barPressActive !== undefined && !this.barPressActive()) {
@@ -521,6 +440,12 @@ export class HudScene extends Scene {
     }
     const pause = run.runPause();
     const held = playerPaused(pause);
+    if (!held) {
+      this.momentNow += delta;
+    }
+    if (!walkPaused(pause)) {
+      this.firingNow += delta;
+    }
     this.feedback?.update(view.run, pause);
     this.hearts?.hold(held);
     this.labels.hold(held);
@@ -529,39 +454,28 @@ export class HudScene extends Scene {
     }
     const overlay = this.overlayScene();
     this.showExplanation(view, overlay);
-    this.showDebuffBars(view.run);
-    this.showZonePill(view.run);
-    this.showZoneProgress(view.run);
+    this.chrome?.update(view.run);
+    this.debuffBars = [...(this.chrome?.bars() ?? [])];
+    this.topSection?.setInputBottom(
+      this.debuffBars.length > 0 ? LAYOUT.topBar.y + LAYOUT.topBar.height : undefined,
+    );
+    this.cards?.update(
+      {
+        momentNow: this.momentNow,
+        now: this.time.now,
+        ownedSlots: profileSave(this).owned.dogSlots.length,
+        reducedMotion: run.reducedMotion(),
+      },
+      view.run,
+    );
     // The strip's lines wait under an explanation's detail card, and hide, waiting, while a card
     // is held enlarged.
     const aged = held || pause.hold ? 0 : delta;
     const hidden = overlay instanceof CardScene && overlay.holding();
-    this.messages.update(aged, this, HUD_DEPTH.message, this.debuffBars.length, hidden);
-    const effects = effectItems(gameData, view.run);
-    // The run state is immutable, so a changed pack or modifier list is a new array.
-    const state: Record<string, unknown> = {
-      effects: effectItemsKey(effects),
-      modifiers: view.run.modifiers,
-      money: this.shownMoney(view.run),
-      pack: view.run.pack,
-      pauseIcon: pauseButtonIcon(view.run.phase.kind === "walking", pause),
-      route: view.run.route,
-      spareTreat: spareTreatWell(effects, view.run),
-      zone: view.run.zoneIndex,
-    };
-    if (Object.keys(state).some((key) => state[key] !== this.drawn[key])) {
-      if (state.effects !== this.drawn.effects) {
-        this.showEffects(effects);
-      }
-      if (state.effects !== this.drawn.effects || state.spareTreat !== this.drawn.spareTreat) {
-        this.showSpareTreat(spareTreatWell(effects, view.run));
-      }
-      this.drawn = state;
-      this.showPauseIcon(view.run.phase.kind === "walking", pause);
-      this.redraw(view);
-    }
+    this.messages?.update(aged, HUD_DEPTH.message, this.debuffBars.length, hidden);
+    this.showPauseIcon(view.run.phase.kind === "walking", pause);
+    this.showMoney(dollarAmountText(this.shownMoney(view.run)));
   }
-
   // The cash the walk keeps, all of it until it ends (walkEarnings), less fees and money changes
   // still flying to it, so the cash an early end loses counts down once its label lands.
   private shownMoney(run: RunState): Cents {
@@ -570,139 +484,10 @@ export class HudScene extends Scene {
     const landed = cents(kept - this.moneyInFlight);
     return this.feedback?.shownMoney(landed) ?? landed;
   }
-
   // The "$" and the amount from the cash's x at the cash's scale, one font advance apart.
   private showMoney(amount: string): void {
     this.topSection?.setAmount(amount);
   }
-
-  // The effect wells: each effect's unlit charm in its well, in the walk's order.
-  private showEffects(effects: readonly EffectItem[]): void {
-    this.effectParts.forEach((part) => part.destroy());
-    this.effectParts = BAR.effectWells.flatMap((well, i) => {
-      const item = effects[i];
-      if (item === undefined) {
-        return [];
-      }
-      const charm = addCharm(this, item, well, { lit: false });
-      this.topSection?.root.add(charm);
-      return [charm];
-    });
-  }
-
-  // The spare treat held, as the road's smallest treat in the corner of the well at index
-  // (spareTreatWell), over its charm; none at -1, as when it is given back.
-  private showSpareTreat(index: number): void {
-    this.spareTreatPip?.destroy();
-    this.spareTreatPip = undefined;
-    const well = BAR.effectWells[index];
-    if (well === undefined || !this.textures.exists(SPARE_TREAT_PIP_KEY)) {
-      return;
-    }
-    const at = spareTreatPipAt(well);
-    this.spareTreatPip = this.add.sprite(at.x, at.y, SPARE_TREAT_PIP_KEY).setOrigin(0);
-    this.topSection?.root.add(this.spareTreatPip);
-  }
-
-  // The neighbourhood pill under the walk bar and any debuff bars, redrawn as the zone or the
-  // number of debuff bars changes.
-  private showZonePill(run: RunState): void {
-    const key = `${run.zoneIndex} ${run.debuffs.length}`;
-    if (this.zonePill.key === key) {
-      return;
-    }
-    this.zonePill.parts.forEach((part) => part.destroy());
-    const textDepth = HUD_DEPTH.zonePill + HUD_DEPTH.overPart;
-    const name = addPixelText(this, 0, 0, currentZone(gameData, run).name, {
-      colour: PALETTE.cream,
-    }).setDepth(textDepth);
-    const count = addPixelText(this, 0, 0, zoneProgressText(gameData, run.zoneIndex), {
-      colour: PALETTE.lightGrey,
-    }).setDepth(textDepth);
-    const nameInk = inkSpan(name);
-    const countInk = inkSpan(count);
-    const ink = { count: countInk.right - countInk.left, name: nameInk.right - nameInk.left };
-    const layout = zonePillLayout(LAYOUT.topBar, LAYOUT.screen, run.debuffs.length, ink);
-    placePixelText(name, layout.nameLeft - nameInk.left, layout.capsY);
-    placePixelText(count, layout.countRight - countInk.right, layout.capsY);
-    const pill = addNineSlice(this, "ui-zone-pill", layout.pill)?.setDepth(HUD_DEPTH.zonePill);
-    this.zonePill = { key, parts: [...(pill === undefined ? [] : [pill]), name, count] };
-  }
-
-  // A bar per debuff under the walk bar, in the order they began, rebuilt as they come and go;
-  // each fill drains every frame.
-  private showDebuffBars(run: RunState): void {
-    const debuffs = run.debuffs.map(({ debuff }) => debuff);
-    if (debuffs.join() !== this.debuffBars.map(({ debuff }) => debuff).join()) {
-      this.debuffBars.forEach((bar) => bar.parts.forEach((part) => part.destroy()));
-      const rects = debuffBarRects(LAYOUT.topBar, debuffs.length);
-      this.debuffBars = debuffs.flatMap((debuff, i) => {
-        const rect = rects[i];
-        return rect === undefined ? [] : [this.addDebuffBar(debuff, rect)];
-      });
-    }
-    const g = this.debuffFills;
-    if (g === undefined) {
-      return;
-    }
-    g.clear();
-    const { fill } = DEBUFF_BAR;
-    for (const bar of this.debuffBars) {
-      const active = run.debuffs.find(({ debuff }) => debuff === bar.debuff);
-      if (active === undefined) {
-        continue;
-      }
-      // A debuff a buff shortened, such as by Quick recovery, starts part way down its bar.
-      const { seconds } = gameData.debuffs[bar.debuff];
-      const full = Math.max(
-        read(gameData.tuning, "seconds", seconds),
-        debuffLasting(gameData.tuning, seconds, run).secondsLeft,
-      );
-      const width = debuffFillWidth(active.secondsLeft, full);
-      const colours = DEBUFF_COLOURS[bar.debuff];
-      if (width > 0) {
-        fillRect(g, colours.fill, {
-          ...fill,
-          width,
-          x: bar.rect.x + fill.x,
-          y: bar.rect.y + fill.y,
-        });
-      }
-    }
-  }
-
-  // The progress line's fill, redrawn as it grows by a pixel or starts again.
-  private showZoneProgress(run: RunState): void {
-    const g = this.zoneFill;
-    const { fills } = zoneProgressLayout(LAYOUT.zoneProgress, zoneShare(gameData, run));
-    const width = fills[0]?.width ?? 0;
-    if (g === undefined || width === this.zoneFillWidth) {
-      return;
-    }
-    this.zoneFillWidth = width;
-    g.clear();
-    drawProgressBar(g, GAME_PROGRESS_STYLE, LAYOUT.zoneProgress, zoneShare(gameData, run));
-  }
-
-  private addDebuffBar(debuff: DebuffId, rect: Rect): DebuffBarView {
-    const colours = DEBUFF_COLOURS[debuff];
-    const parts: GameObjects.GameObject[] = [];
-    const art = addTagImage(this, "ui-debuff-bar", debuff, rect.x, rect.y);
-    parts.push(art ?? addFilledRect(this, colours.face, rect));
-    const { icon, name } = DEBUFF_BAR;
-    const iconKey = debuffIconKey(debuff);
-    if (this.textures.exists(iconKey)) {
-      parts.push(this.add.image(rect.x + icon.x, rect.y + icon.y, iconKey).setOrigin(0));
-    }
-    parts.push(
-      addPixelText(this, rect.x + name.x, rect.y + name.y, gameData.debuffs[debuff].name, {
-        colour: colours.name,
-        font: "title",
-      }),
-    );
-    return { debuff, parts, rect };
-  }
-
   // The detail card of what a held press explains, the home screen's, while it is open, in the
   // topmost scene over the walk (overlayScene), which with nothing else open is the HUD: a press
   // explains nothing under a card or overlay (walkPresses). The walk is paused under it, so it is
@@ -711,157 +496,24 @@ export class HudScene extends Scene {
     const target: ExplainTarget | undefined = view.explaining;
     const key = target === undefined ? "" : JSON.stringify(target);
     const shown = this.explained;
-    if (shown.key === key && (shown.layer === undefined || shown.layer.scene === overlay)) {
+    if (shown.key === key && (shown.scene === undefined || shown.scene === overlay)) {
       return;
     }
-    shown.layer?.destroy();
     shown.html?.destroy();
     const detail =
       target === undefined
         ? undefined
         : explainDetail(gameData, profileSave(this), view.run, target);
     if (detail === undefined) {
-      this.explained = { key, layer: undefined };
+      this.explained = { key, scene: undefined };
       return;
     }
-    const layer = overlay.add.container(0, 0).setDepth(HUD_DEPTH.detail);
     const card = detailView(overlay, LAYOUT.screen, detail);
-    // In HTML where the page's switch is on and its fonts are ready, over the canvas's dim, else
-    // on the canvas. A press anywhere closes it, so the HTML card takes none.
-    const html = addHtmlDetailCard(overlay, card, undefined);
-    if (html === undefined) {
-      drawDetailCardView(overlay, layer, LAYOUT.screen, false, card);
-    } else {
-      layer.add(addModalShade(overlay, LAYOUT.screen));
-    }
-    this.explained = { html, key, layer };
-  }
-
-  private redraw(view: RunHudView): void {
-    const g = this.dynamic;
-    if (g === undefined) {
-      return;
-    }
-    const { run } = view;
-    g.clear();
-    this.showMoney(dollarAmountText(this.shownMoney(run)));
-    const ownedSlots = profileSave(this).owned.dogSlots.length;
-    const lead = leadSlot(run.pack.map((slot) => slot.status === "walking"));
-    LAYOUT.dogSlots.forEach((rect, i) => {
-      const card = this.cards[i];
-      if (card !== undefined) {
-        const packSlot = run.pack[i];
-        const shown = slotShown(ownedSlots, i, packSlot !== undefined);
-        const slot = shown === "hidden" ? null : packSlot;
-        this.drawCard(g, { rect, run, slot, view: card });
-        card.lead.setVisible(i === lead);
-      }
+    const html = addHtmlDetailCard(overlay, card, undefined, false, {
+      area: LAYOUT.walkView,
+      dismiss: () => this.run?.closeExplanation(),
     });
-  }
-
-  // A dog's card: its name and face, its owner's face, name and hearts, and the LEAD tag on the
-  // front dog's. A fired dog's card is the empty one with FIRED across the dog's photo, the
-  // owner's fired face, their name and all their hearts empty. An owned slot with no dog is a
-  // dashed "Empty" outline on the band, and a slot not bought (null) shows the band alone.
-  private drawCard(
-    g: GameObjects.Graphics,
-    card: {
-      rect: Rect;
-      run: RunState;
-      slot: PackSlot | null | undefined;
-      view: CardView;
-    },
-  ): void {
-    const { rect, run, slot, view } = card;
-    const parts = [view.card, view.dogFace, view.ownerFace, ...view.hearts];
-    if (slot === undefined || slot === null) {
-      parts.forEach((part) => part.setVisible(false));
-      setPixelText(view.name, "");
-      view.owner.forEach((label) => setPixelText(label, ""));
-      setPixelText(view.fired, "");
-      if (slot === null) {
-        setPixelText(view.empty, "");
-        return;
-      }
-      drawDashedRect(g, PALETTE.tan, { ...rect, width: rect.width - 2, x: rect.x + 1 });
-      setPixelText(view.empty, gameData.runText.empty);
-      return;
-    }
-    setPixelText(view.empty, "");
-    const dog = gameData.dogs[slot.dog];
-    const fired = slot.status === "fired";
-    const art = artFits(this, CARD_KEY, DOG_CARD.size);
-    view.card.setVisible(art);
-    if (art) {
-      playTag(view.card, CARD_KEY, dogCardTag(gameData, fired ? null : slot.dog));
-    } else {
-      fillRect(g, fired ? PALETTE.darkSlate : PALETTE.navy, {
-        ...rect,
-        width: rect.width - 2,
-        x: rect.x + 1,
-      });
-    }
-    setPixelText(view.name, dog.name);
-    scalePixelText(
-      view.name,
-      DOG_CARD.name.scale,
-      rect.x + DOG_CARD.name.x,
-      rect.y + DOG_CARD.name.top,
-    );
-    this.showOwnerName(view.owner, dog.owner.name, rect);
-    setPixelText(view.fired, fired ? gameData.runText.fired : "");
-    const max = ownerMaxHearts(gameData, run, slot.dog);
-    const ownerKey = ownerCardFaceKey(gameData, slot.dog);
-    playTag(
-      view.ownerFace.setTexture(ownerKey).setVisible(true),
-      ownerKey,
-      cardOwnerMood(gameData, max, slot),
-    );
-    if (fired) {
-      view.dogFace.setVisible(false);
-    } else {
-      const dogKey = dogFaceKey(gameData, slot.dog);
-      playTag(
-        view.dogFace.setTexture(dogKey).setVisible(true),
-        dogKey,
-        faceMood(gameData, max, slot.hearts),
-      );
-    }
-    const cells = cardHearts(fired ? 0 : slot.hearts, max);
-    const heartArt = this.textures.exists(HEART_KEY);
-    view.hearts.forEach((sprite, i) => {
-      const cell = cells[i];
-      sprite.setVisible(heartArt && cell !== undefined);
-      if (cell === undefined) {
-        return;
-      }
-      if (heartArt) {
-        sprite.setPosition(rect.x + cell.x, rect.y + cell.y);
-        playTag(sprite, HEART_KEY, cell.full ? "full-dark" : "empty-dark");
-      } else {
-        drawHeart(g, rect.x + cell.x, rect.y + cell.y, cell.full ? PALETTE.red : PALETTE.grey);
-      }
-    });
-  }
-
-  // The owner's name beside their photo, on one line or two, measured on the first label.
-  private showOwnerName(labels: readonly GameObjects.BitmapText[], name: string, rect: Rect): void {
-    const [probe] = labels;
-    if (probe === undefined) {
-      return;
-    }
-    const rightEdge = (line: string) => {
-      setPixelText(probe, line);
-      return inkSpan(probe).right;
-    };
-    const lines = ownerNameLines(rightEdge, name);
-    labels.forEach((label, i) => {
-      const line = lines[i];
-      setPixelText(label, line?.text ?? "");
-      if (line !== undefined) {
-        placePixelText(label, rect.x + DOG_CARD.owner.x, rect.y + line.top);
-      }
-    });
+    this.explained = html === undefined ? NOT_EXPLAINED : { html, key, scene: overlay };
   }
 
   // An owner's tab on their dog's card, in mood, for ms.
@@ -871,17 +523,14 @@ export class HudScene extends Scene {
       this.owners?.pop({ dog, mood, slot }, ms);
     }
   }
-
   // The run the HUD shows, while a walk is shown.
   private shownRun(): RunState | undefined {
     return this.walk().hudView()?.run;
   }
-
   private slotOf(dog: DogId): number | undefined {
     const index = slotIndexOf(this.shownRun()?.pack ?? [], dog);
     return index < 0 ? undefined : index;
   }
-
   // Each change shows where it happened: a money loss pops where it changed hands, a money gain
   // and the cash lost with the last firing by the cash, and each flies into the cash; a heart
   // change pops over its dog and flies into its card (heartFeedback.ts), its label then fading in
@@ -908,10 +557,9 @@ export class HudScene extends Scene {
         }
       }
     }
-    const pops = heartPops({ lanes: this.lanes().heartLabels, run }, labels, (slot) => {
-      const view = this.cards[slot];
-      return view === undefined ? undefined : { card: view.card, parts: cardParts(view) };
-    });
+    const pops = heartPops({ lanes: this.lanes().heartLabels, run }, labels, (slot) =>
+      this.cards?.anchor(slot),
+    );
     pops.forEach((pop) => this.hearts?.play(pop));
     for (const label of labels) {
       if (label.target.kind === "dog") {
@@ -919,7 +567,6 @@ export class HudScene extends Scene {
       }
     }
   }
-
   // The heart a forgiven loss left on its owner's card, the last of their hearts, flashes back.
   private forgive(cue: ForgivenCue): void {
     const slot = this.slotOf(cue.dog);
@@ -935,7 +582,6 @@ export class HudScene extends Scene {
       this.hearts?.forgive({ x: rect.x + cell.x, y: rect.y + cell.y }, perk);
     }
   }
-
   // The well of a buff that just changed the walk glints, as its charm pops.
   private glint(item: EffectItem): void {
     const run = this.shownRun();
@@ -948,16 +594,38 @@ export class HudScene extends Scene {
         effectItems(gameData, run).findIndex((shown) => effectIconKey(shown) === key)
       ];
     if (well !== undefined) {
-      glintWell(this, this.labels, well, 1);
+      const painter = this.barPainter;
+      if (painter === undefined) {
+        return;
+      }
+      const marks = painter.group(1);
+      ringRects(CHARM.ring, insetRect(-CHARM.ring, well)).forEach((rect) =>
+        marks.panel(rect, undefined, { border: PALETTE.amber, fill: PALETTE.amber }),
+      );
+      const { blinkMs, blinks } = BUFF_POP;
+      this.labels.every(this, blinkMs, 2 * blinks - 2, () => {
+        marks.state.visible = !marks.state.visible;
+      });
+      this.labels.after(this, blinkMs * (2 * blinks - 1), () => marks.dispose());
+      const sparkle = painter.group(2);
+      sparkle.art({
+        at: sparkleAt(well, 1),
+        key: "fx-sparkle",
+        onComplete: () => sparkle.dispose(),
+        origin: { x: 0.5, y: 0.5 },
+        tags: ["play"],
+      });
     }
   }
-
   // A money change pops on its chip where place puts it and holds as a heart's pop does; then it
   // goes into the cash (sendMoneyLabel), calling left once it has left its place. Reduced motion
   // keeps the pop and fades it at once. depth: the chip's, as addChangeChip draws it.
   private showMoneyLabel(
     label: ChangeLabel,
-    place: (shown: { lines: number; scale: number; width: number }) => { chip: Rect; text: Point },
+    place: (shown: { lines: number; scale: number; width: number }) => {
+      chip: Rect;
+      text: Point;
+    },
     left: () => void = () => undefined,
     depth = 0,
   ): void {
@@ -969,7 +637,6 @@ export class HudScene extends Scene {
     }
     this.labels.after(this, MONEY_LABEL.holdMs, () => this.sendMoneyLabel(chip, held, left));
   }
-
   // A money gain's label that is not a tip's, or the cash lost with the last firing
   // (cashLostLabel), pops by the cash in the cash column's first free slot, which it holds until
   // it leaves, and goes in as any money label does (showMoneyLabel). It never adds up with a
@@ -984,7 +651,6 @@ export class HudScene extends Scene {
       HUD_DEPTH.cashChip,
     );
   }
-
   // A tip's label pops by the cash, in the cash column's first free slot, and holds as a heart's
   // pop does, then goes into the cash (sendMoneyLabel); with reduced motion it fades after the
   // hold. A tip grabbed while one shows adds up with it on one chip in its slot and restarts the
@@ -997,7 +663,7 @@ export class HudScene extends Scene {
       if (merged === undefined) {
         this.sendMoneyLabel(showing.chip, showing.held, () => this.cashSlots.delete(showing.slot));
       } else {
-        showing.chip.parts.forEach((part) => part.destroy());
+        showing.chip.parts.forEach((part) => part.dispose());
       }
     }
     const tipLabel = merged ?? label;
@@ -1020,11 +686,16 @@ export class HudScene extends Scene {
       }
     });
   }
-
   // A zone's pay, its total, pops by the cash in the cash column's first free slot, which it holds
   // until it has faded: it shows while the fees' coins fly, timing's holdMs, then fades in place
   // over its fadeMs. The coins carry its money to the counter, so it never flies.
-  private showPayTotal(label: ChangeLabel, timing: { fadeMs: number; holdMs: number }): void {
+  private showPayTotal(
+    label: ChangeLabel,
+    timing: {
+      fadeMs: number;
+      holdMs: number;
+    },
+  ): void {
     const body = pixelFontMetrics(this, "body");
     const slot = this.takeCashSlot();
     const chip = this.addChangeChip(
@@ -1035,17 +706,15 @@ export class HudScene extends Scene {
     );
     this.labels.after(this, timing.holdMs, () => {
       const fade = { ms: timing.fadeMs, rise: 0 };
-      this.labels.join(fadeAway(this, chip.parts, fade, () => this.cashSlots.delete(slot)));
+      this.fadeChip(chip, fade.ms, () => this.cashSlots.delete(slot));
     });
   }
-
   // The cash column's first free slot, now held.
   private takeCashSlot(): number {
     const slot = freeCashSlot(this.cashSlots);
     this.cashSlots.add(slot);
     return slot;
   }
-
   // The money a label keeps off the counter until it lands, of amount: all of it, or none with
   // reduced motion, where the counter counts it at once.
   private holdOffCounter(amount: number): number {
@@ -1053,23 +722,22 @@ export class HudScene extends Scene {
     this.moneyInFlight += held;
     return held;
   }
-
   // A money label's chip flies along a heart's arc into the cash, which counts held as it lands,
   // calling left as it sets off. Reduced motion fades it in place, as a heart lands without
   // flying, and calls left once it has faded.
   private sendMoneyLabel(chip: ChangeChip, held: number, left: () => void): void {
     if (this.walk().reducedMotion()) {
       this.moneyInFlight -= held;
-      this.labels.join(fadeAway(this, chip.parts, { ms: LABEL_FADE_MS, rise: 0 }, left));
+      this.fadeChip(chip, LABEL_FADE_MS, left);
       return;
     }
     left();
     const land = () => {
       this.moneyInFlight -= held;
-      chip.parts.forEach((part) => part.destroy());
+      chip.parts.forEach((part) => part.dispose());
     };
     const path = moneyFlightPath(chip.rect);
-    const bases = chip.parts.map(({ x, y }) => ({ x, y }));
+    const bases = chip.parts.map(({ state }) => ({ x: state.x, y: state.y }));
     const flight = { duration: FEEDBACK.heart.flyMs, ease: "Sine.easeIn", onComplete: land };
     this.labels.tween(
       this,
@@ -1077,13 +745,13 @@ export class HudScene extends Scene {
         const dx = point.x - path.from.x;
         const dy = point.y - path.from.y;
         chip.parts.forEach((part, i) => {
-          const base = bases[i] ?? part;
-          part.setPosition(base.x + dx, base.y + dy);
+          const base = bases[i] ?? part.state;
+          part.state.x = base.x + dx;
+          part.state.y = base.y + dy;
         });
       }),
     );
   }
-
   // A heart change's label in the middle of its card's bottom rows, once its heart has landed,
   // fading in place.
   private showHeartLabel(label: ChangeLabel, lane: Rect): void {
@@ -1091,9 +759,8 @@ export class HudScene extends Scene {
     const chip = this.addChangeChip(label, changeLabelRoom(lane.width), (shown) =>
       changeChipPlace(body, lane, shown),
     );
-    this.labels.join(fadeAway(this, chip.parts, { ms: LABEL_FADE_MS, rise: 0 }));
+    this.fadeChip(chip, LABEL_FADE_MS);
   }
-
   // A change on a cream chip in its changeLabelColour, so it reads over anything; set within
   // room in CHANGE_LABEL_STYLE, placed by place, at depth (its text a depth over it). A label
   // with a reach icon shows it at the chip's left, over the chip as its text is, the chip widened
@@ -1101,32 +768,64 @@ export class HudScene extends Scene {
   private addChangeChip(
     label: ChangeLabel,
     room: number,
-    place: (shown: { lines: number; scale: number; width: number }) => { chip: Rect; text: Point },
+    place: (shown: { lines: number; scale: number; width: number }) => {
+      chip: Rect;
+      text: Point;
+    },
     depth = 0,
   ): ChangeChip {
-    const colour = changeLabelColour(label);
-    const text = addPixelText(this, 0, 0, label.text, { colour, scale: 2 });
-    const { lines, style } = fitPixelText(text, { room, style: CHANGE_LABEL_STYLE }, 0, 0);
-    const ink = inkSpan(text);
-    const icon = label.reachIcon;
-    const reached = icon !== undefined && this.textures.exists(icon);
-    const placed = reachChipPlace(place, reached, {
-      lines: lines.length,
-      scale: style.scale,
-      width: ink.right - ink.left,
-    });
-    placePixelText(text, placed.text.x - ink.left, placed.text.y);
-    const chip = this.add.graphics().setDepth(depth);
-    drawFramedRect(chip, CREAM_PANEL_COLOURS, placed.chip);
-    text.setDepth(depth + HUD_DEPTH.overPart);
-    const parts: ChangeChip["parts"] = [chip, text];
-    if (reached && placed.icon !== null) {
-      const image = this.add.image(placed.icon.x, placed.icon.y, icon).setOrigin(0);
-      parts.push(image.setDepth(depth + HUD_DEPTH.overPart));
+    const painter = this.painter;
+    if (painter === undefined) {
+      throw new Error("Native HUD moments are not ready");
     }
-    return { parts, rect: placed.chip };
+    const fitted = fittingText(
+      CHANGE_LABEL_STYLE,
+      (style, line) => inkWidth(painter.fonts.body, style.scale, line),
+      room,
+      label.text,
+    );
+    const scale = fitted.style.scale;
+    const width = Math.max(
+      ...fitted.lines.map((line) => inkWidth(painter.fonts.body, scale, line)),
+    );
+    const reached = label.reachIcon !== undefined && painter.hasArt(label.reachIcon);
+    const placed = reachChipPlace(place, reached, { lines: fitted.lines.length, scale, width });
+    const chip = painter.group(depth);
+    chip.panel(placed.chip);
+    chip.text({
+      anchor: "ink",
+      backing:
+        placed.icon === null
+          ? placed.chip
+          : {
+              ...placed.chip,
+              width: placed.chip.width - REACH_ICON.span,
+              x: placed.chip.x + REACH_ICON.span,
+            },
+      capTop: placed.text.y,
+      colour: changeLabelColour(label),
+      font: "body",
+      lines: fitted.lines,
+      scale,
+      x: placed.text.x,
+    });
+    if (reached && placed.icon !== null) {
+      chip.art({ at: placed.icon, image: { height: 16, width: 16 }, key: label.reachIcon! });
+    }
+    return { parts: [chip], rect: placed.chip };
   }
-
+  private fadeChip(chip: ChangeChip, ms: number, done: () => void = () => undefined): void {
+    const parts = chip.parts;
+    this.labels.tween(this, {
+      alpha: 0,
+      duration: ms,
+      onComplete: () => {
+        parts.forEach((part) => part.dispose());
+        done();
+      },
+      targets: parts.map(({ state }) => state),
+    });
+  }
   // The first-time hints the run's state raises, each said on the message strip once.
   private raiseHints(triggers: readonly HintTrigger[]): void {
     if (triggers.length === 0) {
@@ -1141,23 +840,20 @@ export class HudScene extends Scene {
       }
     }
   }
-
   // A first-time hint on the message strip, marked shown as it is said, which waits its turn
   // however long it takes. The low-hearts hint jumps the hints waiting their turn.
   private sayHint(hint: RaisedHint): void {
     markHintShown(this, hint.id);
     const line = { icon: "hint", keepsWaiting: true, text: hint.text } as const;
-    this.messages.say(line, hintJumpsQueue(gameData, hint.id));
+    this.messages?.say(line, hintJumpsQueue(gameData, hint.id));
   }
-
   // Each badge earned on the way, on the message strip.
   private sayAchievements(ids: readonly AchievementId[]): void {
     for (const achievement of gameData.achievements.filter(({ id }) => ids.includes(id))) {
       soundboardOf(this).play("badge");
-      this.messages.say(achievementLine(gameData, achievement));
+      this.messages?.say(achievementLine(gameData, achievement));
     }
   }
-
   // Each owner's quip on the message strip, led by their face, in the mood their hearts give,
   // and their name.
   private sayQuips(quips: readonly OwnerQuip[]): void {
@@ -1169,7 +865,7 @@ export class HudScene extends Scene {
       const hearts = heartsOf(run, dog) ?? 0;
       const max = ownerMaxHearts(gameData, run, dog);
       const icon = { dog, kind: "owner", mood: faceMood(gameData, max, hearts) } as const;
-      this.messages.say({ icon, text });
+      this.messages?.say({ icon, text });
     }
   }
 }

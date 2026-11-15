@@ -2,56 +2,62 @@ import { sceneStub } from "@andornaut/game-kit/testing/phaser/sceneStub";
 import type { Scene } from "phaser";
 import { describe, expect, it, vi } from "vitest";
 
+import type { HudMoment, HudMomentPainter } from "../hud/dom/hudMoments.ts";
 import { BumpBorder } from "./bumpBorder.ts";
 import { BumpOverscan } from "./run/bumpOverscan.ts";
 import { cancelRoadShake, shakeRoad } from "./run/hitFx.ts";
-
 vi.mock("phaser", () => ({ TintModes: { FILL: 1 } }));
-
-class Graphics {
-  active = true;
-  alpha = 1;
-  colour = 0;
-  rects: number[][] = [];
-  clear() {
-    this.rects = [];
-    return this;
-  }
-  fillRect(x: number, y: number, width: number, height: number) {
-    this.rects.push([this.colour, x, y, width, height]);
-    return this;
-  }
-  fillStyle(colour: number) {
-    this.colour = colour;
-    return this;
-  }
-  setAlpha(alpha: number) {
-    this.alpha = alpha;
-    return this;
-  }
-  setDepth() {
-    return this;
-  }
+interface NativePaint {
+  readonly alpha: number;
+  readonly rects: number[][];
+  view: HudMoment;
 }
-
 function fixture() {
   const loop = { time: 0 };
-  const graphics: Graphics[] = [];
+  const graphics: NativePaint[] = [];
   const road = sceneStub(vi.fn, { game: { loop } });
   const hud = sceneStub(vi.fn, {
-    add: {
-      graphics: () => {
-        const g = new Graphics();
-        graphics.push(g);
-        return g;
-      },
-    },
     game: { loop },
   });
   const camera = road.cameras.main;
   const roadEvents = road.events;
   const hudEvents = hud.events;
-  const border = new BumpBorder(hud as unknown as Scene);
+  const painter = {
+    group: () => {
+      let alive = true;
+      const rects: number[][] = [];
+      const state = { alpha: 1, scale: 1, visible: true, x: 0, y: 0 };
+      const view = {
+        dispose: () => {
+          alive = false;
+        },
+        panel: (
+          rect: {
+            x: number;
+            y: number;
+            width: number;
+            height: number;
+          },
+          _key: string | undefined,
+          colours: {
+            fill: number;
+          },
+        ) => rects.push([colours.fill, rect.x, rect.y, rect.width, rect.height]),
+        state,
+      } as unknown as HudMoment;
+      graphics.push({
+        get alpha() {
+          return state.alpha;
+        },
+        get rects() {
+          return alive && state.visible ? rects : [];
+        },
+        view,
+      });
+      return view;
+    },
+  } as unknown as HudMomentPainter;
+  const border = new BumpBorder(hud as unknown as Scene, { border: painter, tint: painter });
   const tick = (time: number) => {
     loop.time = time;
     roadEvents.emit("postupdate");
@@ -68,7 +74,6 @@ function fixture() {
     tick,
   };
 }
-
 describe("physical hit feedback", () => {
   it("synchronizes two border/tint flashes with opposite road offsets and pixel-rounded settling", () => {
     const { border, camera, graphics, road, tick } = fixture();
@@ -93,7 +98,6 @@ describe("physical hit feedback", () => {
     expect(graphics[0]?.alpha).toBe(1);
     expect(graphics[1]?.alpha).toBe(0.12);
   });
-
   it("resets before restarting, does not stack callbacks, and clears/restores on shutdown", () => {
     const { border, camera, graphics, hudEvents, loop, road, roadEvents, tick } = fixture();
     border.flash(false, 0xff0000);
@@ -110,7 +114,7 @@ describe("physical hit feedback", () => {
     tick(279);
     expect(graphics[0]?.rects).toEqual([]);
     tick(319);
-    expect(graphics[0]?.rects[0]?.[0]).toBe(0x00ffff);
+    expect(graphics.at(-2)?.rects[0]?.[0]).toBe(0x00ffff);
     tick(479);
     expect([camera.scrollX, camera.scrollY]).toEqual([0, 0]);
     expect(roadEvents.listenerCount("postupdate")).toBe(0);
@@ -125,21 +129,19 @@ describe("physical hit feedback", () => {
     expect(roadEvents.listenerCount("postupdate")).toBe(0);
     expect(hudEvents.listenerCount("postupdate")).toBe(0);
   });
-
   it("holds one static reduced-motion border and tint until 280ms, then cancels cleanly", () => {
     const { border, camera, graphics, hudEvents, tick } = fixture();
     border.flash(true, 0xffff00);
     for (const time of [0, 80, 120, 200, 279]) {
       tick(time);
-      expect(graphics[0]?.rects).toHaveLength(8);
-      expect(graphics[1]?.rects).toHaveLength(1);
+      expect(graphics.at(-2)?.rects).toHaveLength(8);
+      expect(graphics.at(-1)?.rects).toHaveLength(1);
     }
     expect(camera.setScroll).not.toHaveBeenCalled();
     tick(280);
     expect(graphics.every(({ rects }) => rects.length === 0)).toBe(true);
     expect(hudEvents.listenerCount("postupdate")).toBe(0);
   });
-
   it("restores an active road jolt before a new reduced-motion hit", () => {
     const { border, camera, graphics, road, roadEvents, tick } = fixture();
     border.flash(false, 0xff0000);
@@ -150,13 +152,12 @@ describe("physical hit feedback", () => {
     expect([camera.scrollX, camera.scrollY]).toEqual([0, 0]);
     expect(roadEvents.listenerCount("postupdate")).toBe(0);
     tick(350);
-    expect(graphics[0]?.rects).toHaveLength(8);
+    expect(graphics.at(-2)?.rects).toHaveLength(8);
     expect([camera.scrollX, camera.scrollY]).toEqual([0, 0]);
     tick(430);
     expect(graphics.every(({ rects }) => rects.length === 0)).toBe(true);
   });
 });
-
 it("copies atlas edge frames at background depth and reuses them without changing native pixels", () => {
   const added: unknown[][] = [];
   const frames = new Set<string>();
@@ -169,7 +170,13 @@ it("copies atlas edge frames at background depth and reuses them without changin
     firstFrame: "__BASE",
     has: (name: string) => frames.has(name),
   };
-  const images: { depth: number; height: number; width: number; x: number; y: number }[] = [];
+  const images: {
+    depth: number;
+    height: number;
+    width: number;
+    x: number;
+    y: number;
+  }[] = [];
   const scene = sceneStub(vi.fn, {
     add: {
       image: (x: number, y: number) => {
