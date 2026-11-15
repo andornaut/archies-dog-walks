@@ -10,6 +10,7 @@ import {
   ROAD_SPRITE_SIZE,
   UNMEASURED_PREFIXES,
 } from "../assets/spriteKeys.ts";
+import { LOADING_WALKER_START } from "../data/layout.ts";
 import { MENU_TEXT } from "../data/menuText.ts";
 import {
   LANE_COUNT,
@@ -74,7 +75,6 @@ import {
 } from "../layout/cardLayout.ts";
 import { COMIC_WORDS } from "../layout/comicWords.ts";
 import { laneCentreXs, laneDividerXs } from "../layout/lanes.ts";
-import { LOADING_TRACK, LOADING_WALKER } from "../layout/loadingScreen.ts";
 import {
   COLLAR_HEIGHTS,
   DOG_SILHOUETTES,
@@ -335,7 +335,7 @@ export function layoutExport(
           HOME_LAYOUT.walkerOrigin,
         ),
       },
-      loading: { art: LOADING_ART, track: LOADING_TRACK, walker: LOADING_WALKER },
+      loading: { art: LOADING_ART, walker: LOADING_WALKER_START },
       pause: {
         labels: PAUSE_MENU_ITEMS.map((item) => data.menuText.pause[item]),
         // The note takes a line per sentence at 2x on the plate.

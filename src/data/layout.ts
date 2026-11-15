@@ -974,9 +974,5 @@ export const END_SCREEN = {
 
 // Loading screen
 
-// The loading screen's track.
-export const LOADING_TRACK = { height: 8, width: 316, x: 16, y: 456 } satisfies Rect;
-
-// The loading walker: its right edge's margin from the track's end, and its top-left at the
-// start.
-export const LOADING_WALKER_START = { margin: 6, x: 6, y: 379 } as const;
+// The decorative loading walker's fixed top-left.
+export const LOADING_WALKER_START = { x: 6, y: 379 } as const;

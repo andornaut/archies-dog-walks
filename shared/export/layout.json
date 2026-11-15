@@ -2224,17 +2224,9 @@
     "loading": {
       "art": {
         "screen": "screen-loading",
-        "track": "ui-loading-track",
         "walker": "ui-loading"
       },
-      "track": {
-        "height": 8,
-        "width": 316,
-        "x": 16,
-        "y": 456
-      },
       "walker": {
-        "travel": 228,
         "x": 6,
         "y": 379
       }

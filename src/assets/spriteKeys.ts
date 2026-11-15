@@ -132,10 +132,9 @@ export const ZONE_CELEBRATION_ART = {
   walkerTags: ["cheer", "idle"],
 } as const;
 
-// The loading screen's art: its backdrop, the bar's track and the walker on it.
+// The loading screen's decorative backdrop and walker.
 export const LOADING_ART = {
   screen: "screen-loading",
-  track: "ui-loading-track",
   walker: "ui-loading",
 } as const;
 

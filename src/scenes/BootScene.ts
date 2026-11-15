@@ -35,7 +35,6 @@ import { devRunLoadout, namesRunSetup } from "../dev/devStart.ts";
 import { pageSearch } from "../dev/devTools.ts";
 import { pageRunSetup } from "../dev/pageRunSetup.ts";
 import { hudArtResources } from "../hud/dom/prepareHudArt.ts";
-import { LOADING_TRACK, loadingWalkerAt } from "../layout/loadingScreen.ts";
 import { waitedLoad } from "../loadingProgress.ts";
 import {
   browserSoundFormat,
@@ -48,9 +47,9 @@ import { pageDeviceSettings } from "../save/settings.ts";
 import { mountMuteControl } from "../ui/dom/muteControl.ts";
 import { uiLayer } from "../ui/dom/uiLayer.ts";
 import { PALETTE } from "../ui/palette.ts";
-import { addFilledRect } from "../ui/phaser/draw.ts";
 import { addPillGlyphs, registerFallbackPixelFont } from "../ui/phaser/pixelText.ts";
 import { markArtReady, setBootWatch, type WaitedLoad } from "./artReady.ts";
+import { addBootPicture } from "./bootPicture.ts";
 import { stopOnceRetried } from "./bootRetries.ts";
 import { waitForNativeHome } from "./nativeHomeReady.ts";
 import {
@@ -180,15 +179,7 @@ export class BootScene extends Scene {
     // boot's measured load (create) takes it over.
     const manifests = waitedLoad.begin();
     manifests.progress(undefined);
-    // The loading walker walks as far as the waited-for load has come.
-    const stopWalker = waitedLoad.subscribe(({ value }) => {
-      if (value !== undefined) {
-        const at = loadingWalkerAt(value);
-        this.walker?.setPosition(at.x, at.y);
-      }
-    });
     this.events.once(Scenes.Events.SHUTDOWN, () => {
-      stopWalker();
       manifests.finish();
       setBootWatch(undefined);
       this.watch = undefined;
@@ -348,24 +339,13 @@ export class BootScene extends Scene {
     queueManifestArt(this, manifest, (key) => loadingKeys.has(key));
   }
 
-  // Missing loading art keeps its plain track; the shared thin progress line always remains.
+  // The backdrop and fixed walker are decorative; only the shared top strip shows progress.
   private showLoadingScreen(): void {
-    if (this.textures.exists(LOADING_ART.screen)) {
-      this.add.image(0, 0, LOADING_ART.screen).setOrigin(0);
-    }
-    const { x, y } = LOADING_TRACK;
-    if (this.textures.exists(LOADING_ART.track)) {
-      this.add.image(x, y, LOADING_ART.track).setOrigin(0);
-    } else {
-      addFilledRect(this, PALETTE.plum, LOADING_TRACK);
-    }
-    const walker = this.manifest.sprites.find(({ key }) => key === LOADING_ART.walker);
-    if (walker !== undefined && this.textures.exists(walker.key)) {
-      this.registerSprite(walker);
-      const at = loadingWalkerAt(0);
-      this.walker = this.add.sprite(at.x, at.y, walker.key).setOrigin(0);
-      this.setWalkerMotion(currentSettings(this).reducedMotion);
-    }
+    this.walker = addBootPicture(
+      { registerSprite: (sprite) => this.registerSprite(sprite), scene: this },
+      this.manifest.sprites,
+    );
+    this.setWalkerMotion(currentSettings(this).reducedMotion);
   }
 
   private setWalkerMotion(reduced: boolean): void {
