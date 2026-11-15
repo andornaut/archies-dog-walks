@@ -21,9 +21,9 @@
 // this file instead. Shared tooling is in pixel.ts.
 import { mkdirSync, writeFileSync } from "node:fs";
 
-import { rgb } from "@andornaut/art-kit/colour";
-import { encodeRgbPng } from "@andornaut/art-kit/png";
-import { fill, filledImage } from "@andornaut/art-kit/raster";
+import { rgb } from "@andornaut/art-kit/build/colour";
+import { encodeRgbPng } from "@andornaut/art-kit/build/png";
+import { fill, filledImage } from "@andornaut/art-kit/build/raster";
 
 import * as hazards from "./hazards.ts";
 import { type Scale, SCALES, small, snap, STEPS } from "./mini.ts";

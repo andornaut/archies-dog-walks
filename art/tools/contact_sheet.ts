@@ -5,8 +5,8 @@
 // from shared/export/game-data.json.
 import { writeFileSync } from "node:fs";
 
-import { rgb } from "@andornaut/art-kit/colour";
-import { composeContactSheet, type Sprite, type Tag } from "@andornaut/art-kit/raster";
+import { rgb } from "@andornaut/art-kit/build/colour";
+import { composeContactSheet, type Sprite, type Tag } from "@andornaut/art-kit/build/raster";
 
 import {
   groundSheetPath,

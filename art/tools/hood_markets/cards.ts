@@ -1,7 +1,7 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 
-import { filledImage, paste, resizeNearest } from "@andornaut/art-kit/raster";
-import type { RgbaImage } from "@andornaut/art-kit/rgbaImage";
+import { filledImage, paste, resizeNearest } from "@andornaut/art-kit/build/raster";
+import type { RgbaImage } from "@andornaut/art-kit/build/rgbaImage";
 
 import { type Drawable, edged, HEART, type Point, rgbPng, toImage } from "../pixel.ts";
 import * as road from "../road.ts";

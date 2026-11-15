@@ -12,7 +12,7 @@
 //
 // Run from the repository root in the archie-check image (SoX and ffmpeg). It spawns only node and
 // reaches no network.
-import { buildCommand, type BuildSets, nodeBuild } from "@andornaut/art-kit/build";
+import { buildCommand, type BuildSets, nodeBuild } from "@andornaut/art-kit/build/build";
 
 const USAGE = `Usage:
   node art/tools/build.ts [--check] [SET...]   rebuild every set, or each SET and the sets that read

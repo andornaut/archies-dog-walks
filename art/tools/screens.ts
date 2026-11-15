@@ -92,8 +92,8 @@ import {
   paste,
   resizeNearest,
   type Rgba,
-} from "@andornaut/art-kit/raster";
-import { type RgbaImage } from "@andornaut/art-kit/rgbaImage";
+} from "@andornaut/art-kit/build/raster";
+import { type RgbaImage } from "@andornaut/art-kit/build/rgbaImage";
 
 import * as bd from "./backdrops.ts";
 import { sign } from "./fonts.ts";

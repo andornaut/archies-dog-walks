@@ -3,7 +3,7 @@
 // Run the art scripts from the repository root.
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 
-import { contrast as colourContrast, oklabToSrgb, rgb } from "@andornaut/art-kit/colour";
+import { contrast as colourContrast, oklabToSrgb, rgb } from "@andornaut/art-kit/build/colour";
 import {
   type Colour,
   type Edge,
@@ -11,16 +11,16 @@ import {
   Grid as DrawingGrid,
   opaqueCols as frameCols,
   opaqueRows as frameRows,
-} from "@andornaut/art-kit/grid";
+} from "@andornaut/art-kit/build/grid";
 import {
   decodePng,
   encodeRgbaPng,
   encodeRgbPng,
   type RgbaPngOptions,
-} from "@andornaut/art-kit/png";
-import { composeContactSheet } from "@andornaut/art-kit/raster";
-import type { RgbaImage } from "@andornaut/art-kit/rgbaImage";
-import { writeSpriteSheet } from "@andornaut/art-kit/spriteSheet";
+} from "@andornaut/art-kit/build/png";
+import { composeContactSheet } from "@andornaut/art-kit/build/raster";
+import type { RgbaImage } from "@andornaut/art-kit/build/rgbaImage";
+import { writeSpriteSheet } from "@andornaut/art-kit/build/spriteSheet";
 
 export type { Colour, Edge, Frame };
 // A tag's name, frames and duration in milliseconds (one for every frame, or one each).

@@ -34,10 +34,10 @@
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { basename } from "node:path";
 
-import { rgb as hexRgb } from "@andornaut/art-kit/colour";
-import { decodePng, encodeRgbaPng, encodeRgbPng } from "@andornaut/art-kit/png";
-import { filledImage, paste, resizeNearest, type Rgb } from "@andornaut/art-kit/raster";
-import type { RgbaImage } from "@andornaut/art-kit/rgbaImage";
+import { rgb as hexRgb } from "@andornaut/art-kit/build/colour";
+import { decodePng, encodeRgbaPng, encodeRgbPng } from "@andornaut/art-kit/build/png";
+import { filledImage, paste, resizeNearest, type Rgb } from "@andornaut/art-kit/build/raster";
+import type { RgbaImage } from "@andornaut/art-kit/build/rgbaImage";
 
 import * as dogs from "./dogs.ts";
 import { scaled, small } from "./mini.ts";

@@ -21,9 +21,9 @@
 // this file instead. Shared tooling is in pixel.ts.
 import { mkdirSync, writeFileSync } from "node:fs";
 
-import type { Frame } from "@andornaut/art-kit/grid";
-import { crop, fill, filledImage, paste, resizeNearest } from "@andornaut/art-kit/raster";
-import { blankImage, opaqueRect, type RgbaImage } from "@andornaut/art-kit/rgbaImage";
+import type { Frame } from "@andornaut/art-kit/build/grid";
+import { crop, fill, filledImage, paste, resizeNearest } from "@andornaut/art-kit/build/raster";
+import { blankImage, opaqueRect, type RgbaImage } from "@andornaut/art-kit/build/rgbaImage";
 
 import * as bd from "./backdrops.ts";
 import * as glyphs from "./glyphs.ts";

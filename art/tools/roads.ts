@@ -30,8 +30,13 @@
 // this file instead. Shared tooling is in pixel.ts.
 import { mkdirSync, writeFileSync } from "node:fs";
 
-import { rgb } from "@andornaut/art-kit/colour";
-import { type Random, randomInt, randomPick, randomStream } from "@andornaut/game-kit/random";
+import { rgb } from "@andornaut/art-kit/build/colour";
+import {
+  type Random,
+  randomInt,
+  randomPick,
+  randomStream,
+} from "@andornaut/game-kit/runtime/random";
 
 import { dk, Grid, PALETTE64, PREVIEW_BACKGROUND, rgbPng, run, toImage } from "./pixel.ts";
 

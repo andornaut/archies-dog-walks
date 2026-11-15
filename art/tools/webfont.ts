@@ -17,7 +17,7 @@
 // Run from the repository root; fonts.ts imports it.
 import { deflateSync } from "node:zlib";
 
-import type { RgbaImage } from "@andornaut/art-kit/rgbaImage";
+import type { RgbaImage } from "@andornaut/art-kit/build/rgbaImage";
 
 // Font units per design pixel.
 export const UNITS = 128;

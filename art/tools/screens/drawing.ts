@@ -1,5 +1,5 @@
-import { crop, type Rgba } from "@andornaut/art-kit/raster";
-import { blankImage, type RgbaImage } from "@andornaut/art-kit/rgbaImage";
+import { crop, type Rgba } from "@andornaut/art-kit/build/raster";
+import { blankImage, type RgbaImage } from "@andornaut/art-kit/build/rgbaImage";
 
 import { type DrawingScope, Grid, LAYOUT } from "../pixel.ts";
 import { Canvas, rgb } from "../scene.ts";

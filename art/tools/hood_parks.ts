@@ -103,9 +103,9 @@
 // Shared tooling is in pixel.ts.
 import { mkdirSync, writeFileSync } from "node:fs";
 
-import { arc, ellipse, line, polygon } from "@andornaut/art-kit/draw";
-import { filledImage, paste, resizeNearest, type Rgba } from "@andornaut/art-kit/raster";
-import type { RgbaImage } from "@andornaut/art-kit/rgbaImage";
+import { arc, ellipse, line, polygon } from "@andornaut/art-kit/build/draw";
+import { filledImage, paste, resizeNearest, type Rgba } from "@andornaut/art-kit/build/raster";
+import type { RgbaImage } from "@andornaut/art-kit/build/rgbaImage";
 
 import * as cards from "./cards.ts";
 import * as hits from "./hits.ts";

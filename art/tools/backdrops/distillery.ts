@@ -1,4 +1,4 @@
-import { randomPick } from "@andornaut/game-kit/random";
+import { randomPick } from "@andornaut/game-kit/runtime/random";
 
 import { signWidth } from "../fonts.ts";
 import { dk } from "../pixel.ts";

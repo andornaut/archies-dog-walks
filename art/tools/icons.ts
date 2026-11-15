@@ -8,8 +8,8 @@
 // this file instead. Shared tooling is in pixel.ts.
 import { mkdirSync, writeFileSync } from "node:fs";
 
-import { filledImage, paste, resizeNearest, type Rgb } from "@andornaut/art-kit/raster";
-import type { RgbaImage } from "@andornaut/art-kit/rgbaImage";
+import { filledImage, paste, resizeNearest, type Rgb } from "@andornaut/art-kit/build/raster";
+import type { RgbaImage } from "@andornaut/art-kit/build/rgbaImage";
 
 import { fannyPack as dropsFannyPack } from "./drops.ts";
 import { Mini } from "./mini.ts";

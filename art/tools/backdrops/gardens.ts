@@ -1,4 +1,4 @@
-import { randomPick } from "@andornaut/game-kit/random";
+import { randomPick } from "@andornaut/game-kit/runtime/random";
 
 import { dk } from "../pixel.ts";
 import { Canvas, rgb } from "../scene.ts";

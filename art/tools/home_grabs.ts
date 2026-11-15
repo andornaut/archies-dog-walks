@@ -27,8 +27,8 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import { setTimeout } from "node:timers/promises";
 
-import { decodePng, encodeRgbPng } from "@andornaut/art-kit/png";
-import type { RgbaImage } from "@andornaut/art-kit/rgbaImage";
+import { decodePng, encodeRgbPng } from "@andornaut/art-kit/build/png";
+import type { RgbaImage } from "@andornaut/art-kit/build/rgbaImage";
 
 import { GAME, LAYOUT, NEUTRAL_HEX, PALETTE64, PICKER_UI, PNG_OPTIONS, run } from "./pixel.ts";
 

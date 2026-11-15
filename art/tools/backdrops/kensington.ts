@@ -1,4 +1,4 @@
-import { randomInt } from "@andornaut/game-kit/random";
+import { randomInt } from "@andornaut/game-kit/runtime/random";
 
 import { dk, MURAL } from "../pixel.ts";
 import { LANE_PAINT } from "../roads.ts";

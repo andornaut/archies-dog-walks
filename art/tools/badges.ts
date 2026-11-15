@@ -17,7 +17,7 @@
 //
 // Run from the repository root. A build overwrites the exports, so hand edits to them belong in
 // this file instead. Shared tooling is in pixel.ts.
-import { type Random, randomInt, randomStream } from "@andornaut/game-kit/random";
+import { type Random, randomInt, randomStream } from "@andornaut/game-kit/runtime/random";
 
 import { fannyPack } from "./drops.ts";
 import { Mini } from "./mini.ts";

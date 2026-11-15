@@ -8,7 +8,7 @@ const USAGE = `Usage:
 
 import { mkdirSync, writeFileSync } from "node:fs";
 
-import { filledImage, paste, resizeNearest } from "@andornaut/art-kit/raster";
+import { filledImage, paste, resizeNearest } from "@andornaut/art-kit/build/raster";
 
 import { rgbPng, run } from "../pixel.ts";
 import { Canvas, rgb } from "../scene.ts";

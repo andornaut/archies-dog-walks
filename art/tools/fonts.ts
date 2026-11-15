@@ -59,11 +59,17 @@
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname } from "node:path";
 
-import { rgb } from "@andornaut/art-kit/colour";
-import { rasteriseGlyphs } from "@andornaut/art-kit/fonts";
-import { buildBitmapFontFromGlyphs, type GlyphKerning } from "@andornaut/art-kit/glyphAtlas";
-import { channel, fill, filledImage, resizeNearest, type Rgba } from "@andornaut/art-kit/raster";
-import { blankImage, type RgbaImage } from "@andornaut/art-kit/rgbaImage";
+import { rgb } from "@andornaut/art-kit/build/colour";
+import { rasteriseGlyphs } from "@andornaut/art-kit/build/fonts";
+import { buildBitmapFontFromGlyphs, type GlyphKerning } from "@andornaut/art-kit/build/glyphAtlas";
+import {
+  channel,
+  fill,
+  filledImage,
+  resizeNearest,
+  type Rgba,
+} from "@andornaut/art-kit/build/raster";
+import { blankImage, type RgbaImage } from "@andornaut/art-kit/build/rgbaImage";
 
 import { LETTERS, word, wordSize } from "./fx.ts";
 import { Grid, HEART, K, rgbPng, run, savePng, toImage } from "./pixel.ts";

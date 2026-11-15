@@ -115,7 +115,7 @@
 // this file instead. Shared tooling is in pixel.ts.
 import { mkdirSync, writeFileSync } from "node:fs";
 
-import { filledImage, paste, resizeNearest } from "@andornaut/art-kit/raster";
+import { filledImage, paste, resizeNearest } from "@andornaut/art-kit/build/raster";
 
 import { dressed } from "./depths.ts";
 import { burst } from "./fx.ts";

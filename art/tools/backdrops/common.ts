@@ -1,6 +1,6 @@
 import { writeFileSync } from "node:fs";
 
-import { type Random, randomPick, randomStream } from "@andornaut/game-kit/random";
+import { type Random, randomPick, randomStream } from "@andornaut/game-kit/runtime/random";
 
 import { sign, signWidth } from "../fonts.ts";
 import { dk, LAYOUT } from "../pixel.ts";

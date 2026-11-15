@@ -15,8 +15,12 @@
 // Run from the repository root.
 import { readFileSync, writeFileSync } from "node:fs";
 
-import { drawBitmapText, measureBitmapText, readBitmapFont } from "@andornaut/art-kit/bitmapFont";
-import { decodePng } from "@andornaut/art-kit/png";
+import {
+  drawBitmapText,
+  measureBitmapText,
+  readBitmapFont,
+} from "@andornaut/art-kit/build/bitmapFont";
+import { decodePng } from "@andornaut/art-kit/build/png";
 import {
   channel,
   crop,
@@ -25,8 +29,8 @@ import {
   opaque,
   paste,
   resizeNearest,
-} from "@andornaut/art-kit/raster";
-import { blankImage, opaqueRect, type RgbaImage } from "@andornaut/art-kit/rgbaImage";
+} from "@andornaut/art-kit/build/raster";
+import { blankImage, opaqueRect, type RgbaImage } from "@andornaut/art-kit/build/rgbaImage";
 
 import * as bd from "./backdrops.ts";
 import { GAME, PALETTE64, rgbPng, run } from "./pixel.ts";

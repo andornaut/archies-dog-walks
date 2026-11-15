@@ -7,9 +7,9 @@
 // 255 at every pixel.
 import { readFileSync } from "node:fs";
 
-import { decodePng } from "@andornaut/art-kit/png";
-import { crop, fill, filledImage, opaque } from "@andornaut/art-kit/raster";
-import { blankImage, type RgbaImage } from "@andornaut/art-kit/rgbaImage";
+import { decodePng } from "@andornaut/art-kit/build/png";
+import { crop, fill, filledImage, opaque } from "@andornaut/art-kit/build/raster";
+import { blankImage, type RgbaImage } from "@andornaut/art-kit/build/rgbaImage";
 
 import {
   GAME,

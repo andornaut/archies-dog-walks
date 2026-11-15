@@ -41,7 +41,7 @@
 // this file instead. Shared tooling is in pixel.ts.
 import { mkdirSync, writeFileSync } from "node:fs";
 
-import { blankImage, type RgbaImage } from "@andornaut/art-kit/rgbaImage";
+import { blankImage, type RgbaImage } from "@andornaut/art-kit/build/rgbaImage";
 
 import { burst, star4 } from "./fx.ts";
 import { HUD_EFFECT_IMAGES } from "./glyphs/hudEffects.ts";

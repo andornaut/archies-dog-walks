@@ -22,8 +22,8 @@
 // this file instead. Shared tooling is in pixel.ts.
 import { writeFileSync } from "node:fs";
 
-import { rgb } from "@andornaut/art-kit/colour";
-import { encodeRgbaPng } from "@andornaut/art-kit/png";
+import { rgb } from "@andornaut/art-kit/build/colour";
+import { encodeRgbaPng } from "@andornaut/art-kit/build/png";
 
 import * as dogs from "./dogs.ts";
 import { scaled, side, small, snap, STEPS } from "./mini.ts";

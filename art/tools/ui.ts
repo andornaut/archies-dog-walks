@@ -55,9 +55,9 @@
 // this file instead.
 import { mkdirSync, writeFileSync } from "node:fs";
 
-import { rgb } from "@andornaut/art-kit/colour";
-import { filledImage, paste, resizeNearest } from "@andornaut/art-kit/raster";
-import type { RgbaImage } from "@andornaut/art-kit/rgbaImage";
+import { rgb } from "@andornaut/art-kit/build/colour";
+import { filledImage, paste, resizeNearest } from "@andornaut/art-kit/build/raster";
+import type { RgbaImage } from "@andornaut/art-kit/build/rgbaImage";
 
 import { drawText, type Glyphs, textWidth, titleGlyphs as fontTitleGlyphs } from "./fonts.ts";
 import {

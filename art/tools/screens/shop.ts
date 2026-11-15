@@ -1,5 +1,5 @@
-import { composite } from "@andornaut/art-kit/raster";
-import { type RgbaImage } from "@andornaut/art-kit/rgbaImage";
+import { composite } from "@andornaut/art-kit/build/raster";
+import { type RgbaImage } from "@andornaut/art-kit/build/rgbaImage";
 
 import { sign } from "../fonts.ts";
 import { type Drawable, edged, type Frame, Grid, LAYOUT, toImage } from "../pixel.ts";
