@@ -39,6 +39,7 @@ import { hudArtResources } from "../hud/dom/prepareHudArt.ts";
 import { waitedLoad } from "../loadingProgress.ts";
 import {
   browserSoundFormat,
+  exitShown,
   noteSaveStorage,
   requiredUpdate,
   startWakeLock,
@@ -598,7 +599,8 @@ export class BootScene extends Scene {
       waiting.dispose();
       native?.finish();
     });
-    this.requireNativeUi(HOME_UI_KEYS, () => {
+    const keys = exitShown() ? new Set([...HOME_UI_KEYS, "icon-exit"]) : HOME_UI_KEYS;
+    this.requireNativeUi(keys, () => {
       native = waitedLoad.begin();
       native.progress(undefined);
       this.scene.launch(SCENE_KEYS.start);
