@@ -94,6 +94,16 @@ export class FakeElement extends FakeTarget {
     }
   }
 
+  replaceChildren(...nodes: FakeElement[]): void {
+    for (const child of [...this.children]) {
+      child.remove();
+    }
+    for (const node of nodes) {
+      node.remove();
+      this.append(node);
+    }
+  }
+
   get firstElementChild(): FakeElement | null {
     return this.children[0] ?? null;
   }
