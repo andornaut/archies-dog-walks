@@ -11,8 +11,6 @@ vi.mock("phaser", () => ({ Scenes: { Events: { PAUSE: "pause", SHUTDOWN: "shutdo
 vi.mock("../ui/dom/nativeTopSection.ts", () => ({ createNativeTopSection: fake.create }));
 vi.mock("../ui/dom/uiLayer.ts", () => ({ uiLayer: fake.layer }));
 vi.mock("../ui/phaser/pixelText.ts", () => ({ pixelBitmapFont: fake.font }));
-vi.mock("../ui/phaser/draw.ts", () => ({}));
-vi.mock("./uiKit.ts", () => ({}));
 
 it("replaces a scene's native top section and releases its own scene listeners", () => {
   const events = new EventEmitter();
