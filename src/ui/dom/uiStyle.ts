@@ -12,6 +12,7 @@ import { SETTINGS_STYLE } from "./settingsStyle.ts";
 // its art has not loaded.
 
 const px = (n: 1 | 2 | 3 | 4 | 5 | 8) => `var(--adw-slice-${n})`;
+const skinFrame = (art: string) => `var(--${art}, var(--adw-${art}))`;
 
 // A nine-slice frame: the art cut by its SLICES, its edges drawn as wide as the layer's
 // whole-device-pixel lengths for them.
@@ -21,7 +22,7 @@ export function nineSlice(
 ): string {
   const { bottom, left, right, top } = SLICES[key];
   const widths = [top, right, bottom, left].map((edge) => px(edge as 3 | 4 | 5 | 8)).join(" ");
-  const image = key === "ui-button" ? `var(--${art}, var(--adw-${art}))` : `var(--adw-${art})`;
+  const image = key === "ui-button" ? skinFrame(art) : `var(--adw-${art})`;
   return `border-style:solid;border-color:transparent;border-width:${widths};
   border-image:${image} ${top} ${right} ${bottom} ${left} fill / ${widths} stretch;
   background-clip:padding-box;image-rendering:pixelated`;
@@ -127,15 +128,15 @@ export const UI_STYLE = `
   cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;outline:none}
 .adw-face,.adw-close-face,.adw-close-glyph{position:absolute;box-sizing:border-box;pointer-events:none}
 .adw-face{${nineSlice("ui-button", "ui-button-normal")};background-color:var(--adw-cream)}
-.adw-button[data-pressed] .adw-face{border-image-source:var(--adw-ui-button-pressed)}
-.adw-button.adw-go .adw-face{border-image-source:var(--adw-ui-button-go);background-color:var(--adw-green)}
-.adw-button.adw-go[data-pressed] .adw-face{border-image-source:var(--adw-ui-button-go-pressed)}
-.adw-button.adw-secondary .adw-face{border-image-source:var(--adw-ui-button-secondary)}
+.adw-button[data-pressed] .adw-face{border-image-source:${skinFrame("ui-button-pressed")}}
+.adw-button.adw-go .adw-face{border-image-source:${skinFrame("ui-button-go")};background-color:var(--adw-green)}
+.adw-button.adw-go[data-pressed] .adw-face{border-image-source:${skinFrame("ui-button-go-pressed")}}
+.adw-button.adw-secondary .adw-face{border-image-source:${skinFrame("ui-button-secondary")}}
 .adw-button.adw-secondary[data-pressed] .adw-face{
-  border-image-source:var(--adw-ui-button-secondary-pressed)}
+  border-image-source:${skinFrame("ui-button-secondary-pressed")}}
 .adw-button[data-pressed] .adw-text,.adw-close[data-pressed] .adw-close-glyph{transform:translateY(${px(2)})}
-.adw-close-face{background:var(--adw-ui-icon-button-normal) 0 0/100% 100%;image-rendering:pixelated}
-.adw-close[data-pressed] .adw-close-face{background-image:var(--adw-ui-icon-button-pressed)}
+.adw-close-face{background:${skinFrame("ui-icon-button-normal")} 0 0/100% 100%;image-rendering:pixelated}
+.adw-close[data-pressed] .adw-close-face{background-image:${skinFrame("ui-icon-button-pressed")}}
 .adw-close-glyph{background:var(--adw-icon-close) 0 0/100% 100%;image-rendering:pixelated}
 /* A keyboard focus only: a cyan band in ink keylines inside the control's face, clear of the gap
    and the next control. */
