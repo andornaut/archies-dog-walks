@@ -10,6 +10,7 @@ import {
 import type { Scene } from "phaser";
 
 import { logicalPoint } from "../input/phaser/logicalPointer.ts";
+import { canvasPressAllowed } from "../input/phaser/pressAdmission.ts";
 import type { Press } from "../input/pointerTracking.ts";
 import { pageFrameTurn } from "../pwa/index.ts";
 
@@ -47,7 +48,11 @@ export function listenPagePresses(scene: Scene, handlers: PagePressHandlers): vo
     (event) => scene.sys.isActive() && scene.input.enabled && onBarePage(bare, event.target),
     {
       cancel: (pressed, event) => handlers.cancel?.(press(pressed), toGame(event)),
-      down: (pressed, event) => handlers.down(press(pressed), toGame(event)),
+      down: (pressed, event) => {
+        if (canvasPressAllowed(scene)) {
+          handlers.down(press(pressed), toGame(event));
+        }
+      },
       move: (pressed, event) => handlers.move?.(press(pressed), toGame(event)),
       up: (pressed, event) =>
         handlers.up(press(pressed), toGame(event), onBarePage(bare, event.target)),

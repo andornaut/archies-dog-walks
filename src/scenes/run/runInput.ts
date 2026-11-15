@@ -16,6 +16,7 @@ import { holdRule } from "../../input/hold.ts";
 import { walkKeyAction } from "../../input/keyBindings.ts";
 import { walkPagePoint } from "../../input/pageTap.ts";
 import { logicalPoint } from "../../input/phaser/logicalPointer.ts";
+import { canvasPressAllowed } from "../../input/phaser/pressAdmission.ts";
 import {
   idleTrack,
   type PointerPhase,
@@ -133,6 +134,9 @@ export class RunInput {
 
   // Phaser reports a cancelled touch as a release with wasCanceled set.
   private onPointer(phase: "down" | "move" | "up", pointer: Input.Pointer): void {
+    if (phase === "down" && !canvasPressAllowed(this.scene)) {
+      return;
+    }
     const press = { downTime: pointer.downTime, id: pointer.id };
     const logical = logicalPoint(this.scene, pointer);
     // The native backing includes the page margins. Keep their existing page-press policy

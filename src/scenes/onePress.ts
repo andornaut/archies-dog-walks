@@ -2,6 +2,7 @@ import type { Input, Scene } from "phaser";
 
 import { followOnePress } from "../input/onePress.ts";
 import { type LogicalPointer, logicalPointer } from "../input/phaser/logicalPointer.ts";
+import { canvasPressAllowed } from "../input/phaser/pressAdmission.ts";
 import type { PointerPhase } from "../input/pointerTracking.ts";
 
 // cancelled: the browser called the press off (a system gesture, an incoming call), so its
@@ -18,6 +19,9 @@ export function listenOnePress(scene: Scene, handlers: OnePressHandlers): void {
   const ownerDown = () =>
     scene.input.manager.pointers.some((pointer) => pointer.id === owner && pointer.isDown);
   const on = (phase: "down" | "move" | "up", pointer: Input.Pointer) => {
+    if (phase === "down" && !canvasPressAllowed(scene)) {
+      return;
+    }
     const cancelled = phase === "up" && pointer.wasCanceled;
     const followed: PointerPhase = cancelled ? "cancel" : phase;
     const step = followOnePress(ownerDown(), followed, pointer.id, owner);

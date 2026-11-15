@@ -20,7 +20,9 @@ import { DEV_GAME_GLOBAL, devToolsOn } from "./dev/devTools.ts";
 import { pageRunSetup } from "./dev/pageRunSetup.ts";
 import { HOME_LAYOUT } from "./home/homeLayout.ts";
 import { noteKeyPress } from "./input/keyNumbers.ts";
+import { bindPressAdmission } from "./input/phaser/pressAdmission.ts";
 import { lostTouches } from "./input/touches.ts";
+import { createPressAdmission } from "./pressAdmission.ts";
 import {
   pageFrameWatch,
   requiredUpdate,
@@ -134,6 +136,8 @@ function bootGame(): Game {
     });
   }
   followWorldCameras(game);
+  const press = createPressAdmission(() => game.input.pointers.some((pointer) => pointer.isDown));
+  game.events.once(Core.Events.DESTROY, bindPressAdmission(game, press));
   const updateIdle = createUpdateIdle(
     {
       bar:
@@ -147,7 +151,12 @@ function bootGame(): Game {
     game.loop,
   );
   const mountUi = () => {
-    const layer = mountUiLayer(document, game.canvas, (box) => worldViewBox(game.scale, box));
+    const layer = mountUiLayer(
+      document,
+      game.canvas,
+      (box) => worldViewBox(game.scale, box),
+      press,
+    );
     setUiLayer(layer);
     if (layer === undefined) {
       return;

@@ -2,6 +2,7 @@ import type { Point } from "@andornaut/game-kit/rect";
 import type { Input, Scene } from "phaser";
 
 import { deviceFitOwned, logicalWorldPoint, worldFit } from "../../ui/worldFit.ts";
+import { canvasPressAllowed } from "./pressAdmission.ts";
 
 export type LogicalPointer = Point &
   Readonly<Pick<Input.Pointer, "downTime" | "id" | "isDown" | "wasCanceled">>;
@@ -34,9 +35,12 @@ export function logicalInput(scene: Scene): Pick<Scene, "input"> {
     listener: (...args: unknown[]) => void,
     context?: unknown,
   ) => {
-    scene.input.on(event, (pointer: Input.Pointer, ...rest: unknown[]) =>
-      listener.call(context, logicalPointer(scene, pointer), ...rest),
-    );
+    scene.input.on(event, (pointer: Input.Pointer, ...rest: unknown[]) => {
+      if (event === "pointerdown" && !canvasPressAllowed(scene)) {
+        return;
+      }
+      listener.call(context, logicalPointer(scene, pointer), ...rest);
+    });
     return input;
   };
   input.stopPropagation = () => scene.input.stopPropagation();
