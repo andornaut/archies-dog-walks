@@ -1157,6 +1157,7 @@ export interface MenuText {
   };
   readonly menu: { readonly title: string };
   readonly pause: {
+    readonly action: string;
     readonly headHome: string;
     readonly help: string;
     // What End walk keeps of the cash: note when it keeps less than all of it, else noteAll.

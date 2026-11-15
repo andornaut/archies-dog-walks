@@ -46,6 +46,7 @@ export const MENU_TEXT = {
   },
   menu: { title: "Menu" },
   pause: {
+    action: "Pause",
     headHome: "End walk",
     help: "Help",
     note: "Ending now keeps {kept} of {cash}.",

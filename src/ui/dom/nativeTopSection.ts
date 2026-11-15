@@ -45,6 +45,7 @@ export interface NativeTopSection {
   readonly revealed: Promise<boolean>;
   dispose(): void;
   setAmount(full: string, short?: string): void;
+  setEffectCount(count: number): void;
   setInert(inert: boolean): void;
   setInputBottom(bottom: number | undefined): void;
   setMuted(muted: boolean): void;
@@ -94,11 +95,20 @@ export function createNativeTopSection(
     placed.push((scale) => placeBox(scale, ORIGIN, element, rect));
   };
   topBarRects(layout.bar).forEach(({ colour, rect }) => box(PALETTE[colour], rect));
-  for (const rect of layout.effectWells) {
-    const art = image("ui-effect-well");
-    root.append(art.element);
-    placed.push((scale) => art.place(scale, ORIGIN, rect));
-  }
+  let effectCount = 0;
+  const effectArt = layout.effectWells.map(() => image("ui-hud-effect-well"));
+  effectArt.forEach((art) => root.append(art.element));
+  const placeEffects = (scale: DomScale) => {
+    const wells = topSectionLayout(config.buttons, { ...config, effects: effectCount }).effectWells;
+    effectArt.forEach((art, index) => {
+      const rect = wells[index];
+      art.element.hidden = rect === undefined;
+      if (rect !== undefined) {
+        art.place(scale, ORIGIN, rect);
+      }
+    });
+  };
+  placed.push(placeEffects);
   const controls = new Map<
     TopSectionButton,
     {
@@ -420,6 +430,15 @@ export function createNativeTopSection(
       amount = full;
       short = abbreviated;
       placeMoney(layer.scale());
+    },
+    setEffectCount(count) {
+      if (!Number.isInteger(count) || count < 0 || count > effectArt.length) {
+        throw new Error("Visible effects must fit the configured top section");
+      }
+      if (effectCount !== count) {
+        effectCount = count;
+        placeEffects(layer.scale());
+      }
     },
     setInert(value) {
       if (value !== inert) {

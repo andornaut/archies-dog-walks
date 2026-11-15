@@ -262,7 +262,7 @@ export class HudScene extends Scene {
       labels: {
         menu: gameData.menuText.menu.title,
         mute: gameData.menuText.settings.sound,
-        pause: gameData.menuText.pause.title,
+        pause: gameData.menuText.pause.action,
       },
       muted: isMuted(this),
       press: (id, event) => {
@@ -328,7 +328,12 @@ export class HudScene extends Scene {
       still: () => run.reducedMotion(),
     });
     this.feedback = new HudFeedback(this, run, {
-      effectWell: (index) => BAR.effectWells[index],
+      effectWell: (index) => {
+        const run = this.shownRun();
+        return run === undefined
+          ? undefined
+          : walkBarLayout(LAYOUT.topBar, effectItems(gameData, run).length).effectWells[index];
+      },
       firingShown: () => this.hearts?.clearWay(),
       floatLabels: (ownerMs, labels) => this.floatLabels(ownerMs, labels),
       painter: this.painter,
@@ -451,6 +456,7 @@ export class HudScene extends Scene {
     const overlay = this.overlayScene();
     this.showExplanation(view, overlay);
     this.chrome?.update(view.run);
+    this.topSection?.setEffectCount(effectItems(gameData, view.run).length);
     this.debuffBars = [...(this.chrome?.bars() ?? [])];
     this.topSection?.setInputBottom(
       this.debuffBars.length > 0 ? LAYOUT.topBar.y + LAYOUT.topBar.height : undefined,
@@ -585,10 +591,10 @@ export class HudScene extends Scene {
       return;
     }
     const key = effectIconKey(item);
-    const well =
-      BAR.effectWells[
-        effectItems(gameData, run).findIndex((shown) => effectIconKey(shown) === key)
-      ];
+    const items = effectItems(gameData, run);
+    const well = walkBarLayout(LAYOUT.topBar, items.length).effectWells[
+      items.findIndex((shown) => effectIconKey(shown) === key)
+    ];
     if (well !== undefined) {
       const painter = this.barPainter;
       if (painter === undefined) {

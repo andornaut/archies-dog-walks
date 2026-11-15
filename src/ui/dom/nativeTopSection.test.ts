@@ -14,7 +14,7 @@ const labels = {
   mute: gameData.menuText.settings.sound,
   pause: gameData.menuText.pause.title,
 };
-function fixture(activation: "click" | "down" = "click") {
+function fixture(activation: "click" | "down" = "click", effects = 0) {
   const doc = new FakeDocument();
   const { element, layer } = fakeLayer(doc, domScale(1, { height: 560, width: 360, x: 0, y: 0 }));
   let pendingRoot: HTMLElement | undefined;
@@ -50,6 +50,7 @@ function fixture(activation: "click" | "down" = "click") {
       activation,
       buttons: ["mute", "menu"],
       currency: true,
+      effects,
       labels,
       press,
     },
@@ -165,6 +166,35 @@ describe("native top section integration", () => {
       via: "pointer",
     });
     expect(press).toHaveBeenCalledTimes(2);
+  });
+  it("centres only visible effect wells and reuses their native art nodes", () => {
+    const { element, view } = fixture("click", 6);
+    const wells = element
+      .all()
+      .filter((node) => node.style.backgroundImage?.includes("ui-hud-effect-well"));
+    expect(wells).toHaveLength(6);
+    expect(wells.every((node) => node.hidden)).toBe(true);
+    view.setEffectCount(2);
+    expect(
+      wells
+        .filter((node) => !node.hidden)
+        .map((node) => [node.style.left, node.style.top, node.style.width]),
+    ).toEqual([
+      ["148px", "6px", "26px"],
+      ["176px", "6px", "26px"],
+    ]);
+    view.setEffectCount(6);
+    expect(wells.filter((node) => !node.hidden).map((node) => node.style.left)).toEqual([
+      "92px",
+      "120px",
+      "148px",
+      "176px",
+      "204px",
+      "232px",
+    ]);
+    view.setEffectCount(0);
+    expect(wells.every((node) => node.hidden)).toBe(true);
+    expect(() => view.setEffectCount(7)).toThrow("configured top section");
   });
   it("updates currency and mute state without replacing controls", () => {
     const { buttons, element, view } = fixture();
