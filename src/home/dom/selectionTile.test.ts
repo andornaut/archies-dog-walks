@@ -1,9 +1,11 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { gameData } from "../../data/index.ts";
 import { FakeDocument, type FakeElement } from "../../testing/fakeDom.ts";
+import { gameFont } from "../../testing/fontInk.ts";
 import { domScale } from "../../ui/domScale.ts";
 import { PALETTE } from "../../ui/palette.ts";
+import { HOME_LAYOUT } from "../homeLayout.ts";
 import { createSelectionTile } from "./selectionTile.ts";
 const SOURCE = {
   artUrl: (path: string) => `/art/${path}`,
@@ -24,9 +26,12 @@ const descendants = (node: FakeElement): FakeElement[] => [
 describe("native selection tile", () => {
   it("keeps the full hit target fixed while selected paint lifts and shakes", async () => {
     const doc = new FakeDocument();
-    const tile = createSelectionTile(doc as unknown as Document, SOURCE, {
+    const tile = createSelectionTile(doc as unknown as Document, SOURCE, gameFont("font-title"), {
+      frame: "art",
       hit: HIT,
       label: gameData.dogs.kilo.name,
+      mark: "none",
+      outset: HOME_LAYOUT.tileSelectOutset,
       rect: FACE,
       state: "selected",
     });
@@ -46,9 +51,12 @@ describe("native selection tile", () => {
   });
   it("retains shop focus while its separate moving orbit settles", async () => {
     const doc = new FakeDocument();
-    const tile = createSelectionTile(doc as unknown as Document, SOURCE, {
+    const tile = createSelectionTile(doc as unknown as Document, SOURCE, gameFont("font-title"), {
+      frame: "art",
       hit: HIT,
       label: gameData.shopGear.runningShoes.name,
+      mark: "none",
+      outset: HOME_LAYOUT.tileSelectOutset,
       rect: FACE,
       state: "disabled",
     });
@@ -67,6 +75,26 @@ describe("native selection tile", () => {
       painted.some((node) => !node.hidden && node.style.backgroundColor === hex(PALETTE.white)),
     ).toBe(false);
     expect(tile.element.getAttribute("aria-pressed")).toBe("false");
+    expect(tile.element.style.width).toBe("96px");
+  });
+  it("retains the authored selected frame and plus marker without source textures", async () => {
+    const doc = new FakeDocument();
+    const source = { ...SOURCE, loadSheet: vi.fn(SOURCE.loadSheet) };
+    const tile = createSelectionTile(doc as unknown as Document, source, gameFont("font-title"), {
+      frame: "fallback",
+      hit: HIT,
+      label: gameData.dogs.archie.name,
+      mark: "fallback",
+      outset: HOME_LAYOUT.tileSelectOutset,
+      rect: FACE,
+      state: "selected",
+    });
+    expect(await tile.ready).toEqual([]);
+    tile.place(SCALE, { markY: 0, x: 0, y: -2 });
+    const painted = descendants(tile.element as unknown as FakeElement);
+    expect(source.loadSheet).not.toHaveBeenCalled();
+    expect(painted.some((node) => node.style.backgroundColor === hex(PALETTE.amber))).toBe(true);
+    expect(painted.some((node) => node.textContent === "+")).toBe(true);
     expect(tile.element.style.width).toBe("96px");
   });
 });
