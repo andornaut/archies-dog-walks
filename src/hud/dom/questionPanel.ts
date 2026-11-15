@@ -477,10 +477,40 @@ export function showQuestionPanel(layer: UiLayer, input: DomQuestionPanelInput):
     }
   };
   artUrls(dialog);
+  // Scene gestures own custom content, not the panel's own action and close buttons.
+  // Their accepted release must not consume the browser click of a native control.
+  let sceneGesture = false;
+  const gesture: NativeGesture | undefined =
+    input.gesture === undefined
+      ? undefined
+      : {
+          cancel: () => {
+            sceneGesture = false;
+            input.gesture?.cancel?.();
+          },
+          down: (event) => {
+            sceneGesture = ![...buttons, close].some((control) =>
+              control.contains(event.target as Node),
+            );
+            if (sceneGesture) {
+              input.gesture?.down?.(event);
+            }
+          },
+          move: (event) => {
+            if (sceneGesture) {
+              input.gesture?.move?.(event);
+            }
+          },
+          up: (event, cancelled) => {
+            const active = sceneGesture;
+            sceneGesture = false;
+            return active ? input.gesture?.up?.(event, cancelled) : false;
+          },
+        };
   const lifecycle = mountModalLifecycle(
     layer,
     {
-      ...(input.gesture === undefined ? {} : { gesture: input.gesture }),
+      ...(gesture === undefined ? {} : { gesture }),
       ...(input.onPaint === undefined ? {} : { onPaint: input.onPaint }),
       modal,
       reveal: layer.reveal(

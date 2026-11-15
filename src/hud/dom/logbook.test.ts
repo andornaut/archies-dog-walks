@@ -55,7 +55,8 @@ function nativeFixture() {
     cancel = vi.fn(),
     activate = vi.fn(),
     focus = vi.fn(),
-    wheel = vi.fn();
+    wheel = vi.fn(),
+    close = vi.fn();
   let tick = () => {};
   let scroll = { max: 100, settled: false, y: 0 };
   const page = shopPageView(
@@ -93,7 +94,7 @@ function nativeFixture() {
     },
     fonts: { body: gameFont("font-body"), title: gameFont("font-title") },
     loadSheet: () => Promise.resolve({}),
-    navigation: { activate, close: vi.fn(), focus, gesture: { cancel, down, up }, wheel },
+    navigation: { activate, close, focus, gesture: { cancel, down, up }, wheel },
     pillColours: () => undefined,
     scroll: () => scroll,
     toGame: (point) => point,
@@ -103,6 +104,7 @@ function nativeFixture() {
   return {
     activate,
     cancel,
+    close,
     doc,
     down,
     focus,
@@ -176,5 +178,32 @@ it("rejects a carried Logbook contact and wheel across a nested badge modal", as
   expect(cancel).toHaveBeenCalledOnce();
   expect(up).not.toHaveBeenCalled();
   expect(wheel).not.toHaveBeenCalled();
+  panel.destroy();
+});
+
+it("keeps the full native Logbook close control outside its list gesture handler", async () => {
+  const { close, doc, down, layer, panel, root, up } = nativeFixture();
+  up.mockReturnValue(true);
+  await setImmediate();
+  const button = root.all().find((node) => node.className === "adw-close")!;
+  const target = button.children[0]!;
+  root.fire("pointerdown", pointer(target, 11, "pointerdown"));
+  doc.fire("pointerup", pointer(target, 11, "pointerup"));
+  const click = pointer(target, 11, "click");
+  root.fire("click", click);
+  expect(click.stopImmediatePropagation).not.toHaveBeenCalled();
+  button.fire("click", click);
+  expect(close).toHaveBeenCalledOnce();
+  expect(down).not.toHaveBeenCalled();
+  expect(up).not.toHaveBeenCalled();
+
+  root.fire("pointerdown", pointer(target, 12, "pointerdown"));
+  const nested = layer.input.open();
+  nested.close();
+  doc.fire("pointerup", pointer(target, 12, "pointerup"));
+  const carried = pointer(target, 12, "click");
+  root.fire("click", carried);
+  expect(carried.stopImmediatePropagation).toHaveBeenCalled();
+  expect(close).toHaveBeenCalledOnce();
   panel.destroy();
 });
