@@ -7,7 +7,9 @@ import { rowRects, SHOP_LAYOUT } from "../home/shopLayout.ts";
 import { addShopFocusFrame } from "./uiKit.ts";
 
 it("keeps the native shop focus contour identical to the existing authored drawer", () => {
-  const rect = rowRects(SHOP_LAYOUT.row.width, SHOP_LAYOUT.gear.rows, 1)[0]!;
+  const rect = rowRects(SHOP_LAYOUT.row.width, SHOP_LAYOUT.gear.rows, [
+    SHOP_LAYOUT.gear.rows.height,
+  ])[0]!;
   const painted: {
     colour: number;
     rect: { x: number; y: number; width: number; height: number };

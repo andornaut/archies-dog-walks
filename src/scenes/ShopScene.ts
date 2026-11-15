@@ -1,6 +1,7 @@
 import { clampIndex } from "@andornaut/game-kit/runtime/arrays";
+import { wrapWords } from "@andornaut/game-kit/runtime/lines";
 import { containsPoint, type Point, type Rect } from "@andornaut/game-kit/runtime/rect";
-import { advanceWidth } from "@andornaut/game-kit/runtime/text/bitmapFont";
+import { advanceWidth, type BitmapFont } from "@andornaut/game-kit/runtime/text/bitmapFont";
 import { Scene } from "phaser";
 
 import { artUrl } from "../assets/artFiles.ts";
@@ -38,9 +39,13 @@ import { shopFocusView } from "../home/shopFocusView.ts";
 import {
   rowRects,
   SHOP_LAYOUT,
-  shopListBottom,
+  SHOP_MESSAGE_FIT,
   shopListFrame,
-  shopMessageCapTop,
+  shopMessageLayout,
+  shopNextHeading,
+  shopRowHeight,
+  shopRowsBottom,
+  shopRowTextRoom,
   shopRowTextTops,
   shopScrollbar,
   shopTabRects,
@@ -79,9 +84,10 @@ import {
 import { dollarText } from "../presentation/currency.ts";
 import type { SaveDocument } from "../save/schema.ts";
 import { disabledArtKey } from "../ui/disabledArt.ts";
+import { shownText } from "../ui/dom/pixelLine.ts";
 import { loadSheet } from "../ui/dom/sheetFrames.ts";
 import { uiLayer } from "../ui/dom/uiLayer.ts";
-import type { PanelText } from "../ui/modal/types.ts";
+import type { PanelMeasure, PanelText } from "../ui/modal/types.ts";
 import { PALETTE } from "../ui/palette.ts";
 import { GREYED, pictureBox, selectLook } from "../ui/selection.ts";
 import { TEXT_SCALE } from "../ui/textFit.ts";
@@ -168,6 +174,78 @@ interface PlacedRow {
   readonly row: ShopRow;
 }
 
+// Text is measured once into the same rows used by native painting, scrolling and contacts.
+function shopTextLayout(
+  fonts: Readonly<Record<"body" | "title", BitmapFont>>,
+  measure: Pick<PanelMeasure, "body">,
+  subject: { readonly message: string | null; readonly save: SaveDocument; readonly tab: ShopTab },
+) {
+  const widthOf = (text: string) => advanceWidth(fonts.body, TEXT_SCALE, shownText("body", text));
+  const lines =
+    subject.message === null ? [] : wrapWords(widthOf, SHOP_MESSAGE_FIT.room, subject.message);
+  const message = shopMessageLayout(measure.body, Math.max(1, lines.length));
+  const build = (frame: ReturnType<typeof shopListFrame>) => {
+    const headings: { readonly note: string; readonly text: string; readonly y: number }[] = [];
+    const placed: (PlacedRow & { readonly lines: readonly string[] })[] = [];
+    const add = (spec: Parameters<typeof rowRects>[1], rows: readonly ShopRow[]) => {
+      const described = rows.map((row) => {
+        const right =
+          row.price === null
+            ? OWNED_DX +
+              advanceWidth(fonts.title, TEXT_SCALE, gameData.homeText.shop.owned.toUpperCase())
+            : widthOf(dollarText(row.price)) + 2 * PLATE_PAD;
+        const room = shopRowTextRoom(frame.rowWidth, right);
+        return row.line === "" ? [] : wrapWords(widthOf, room, row.line);
+      });
+      const rects = rowRects(
+        frame.rowWidth,
+        spec,
+        described.map((lines) => shopRowHeight(measure.body, spec.height, lines.length)),
+      );
+      rows.forEach((row, index) =>
+        placed.push({ lines: described[index]!, rect: rects[index]!, row }),
+      );
+      return rects;
+    };
+    const words = gameData.homeText.shop;
+    const shift = message.extraHeight;
+    let bottom: number;
+    if (subject.tab === "gear") {
+      const spec = { ...LAYOUT.gear.rows, y: LAYOUT.gear.rows.y + shift };
+      headings.push({
+        note: ownedCountNote(gameData, subject.save.owned, "gear"),
+        text: words.tabs.gear,
+        y: LAYOUT.gear.headingY + shift,
+      });
+      bottom = shopRowsBottom(spec, add(spec, gearRows(gameData, subject.save.owned)));
+    } else {
+      const slots = { ...LAYOUT.dogs.slotRows, y: LAYOUT.dogs.slotRows.y + shift };
+      headings.push({
+        note: ownedCountNote(gameData, subject.save.owned, "slots"),
+        text: words.slots,
+        y: LAYOUT.dogs.slotHeadingY + shift,
+      });
+      const slotRects = add(slots, slotRows(gameData, subject.save.owned));
+      const heading = shopNextHeading(slots, slotRects);
+      headings.push({
+        note: ownedCountNote(gameData, subject.save.owned, "dogs"),
+        text: words.dogs,
+        y: heading,
+      });
+      const dogs = {
+        ...LAYOUT.dogs.dogRows,
+        y: heading + LAYOUT.dogs.dogRows.y - LAYOUT.dogs.dogHeadingY,
+      };
+      bottom = shopRowsBottom(dogs, add(dogs, dogRows(gameData, subject.save.owned)));
+    }
+    return { bottom: bottom + LAYOUT.list.padBottom, frame, headings, rows: placed };
+  };
+  const natural = build(shopListFrame(false));
+  const layout =
+    scrollMax(natural.frame.rect, natural.bottom) > 0 ? build(shopListFrame(true)) : natural;
+  return { ...layout, message: { ...message, lines } };
+}
+
 // The Pet shop under the home screen's top bar: a Dogs tab of dog slots and dogs, and a Gear
 // tab of gear for sale. Tapping a row the bank covers asks to confirm the purchase, and only
 // the confirm's Buy buys it; a row it cannot pays a shake and says why. The row the shop
@@ -197,6 +275,7 @@ export class ShopScene extends Scene {
   // in dark red.
   private message: { readonly refused: boolean; readonly text: string } | null = null;
   private placed: PlacedRow[] = [];
+  private messagePlate: Rect = PLATE;
   private pressed: Target | undefined;
   private presses: TargetPressListener | undefined;
   private resumeKey: SceneKey | undefined;
@@ -391,8 +470,14 @@ export class ShopScene extends Scene {
     const save = this.save();
     const measure = canvasPanelMeasure(this);
     const { fonts, layer } = place;
-    this.scroll = resizeScroll(scrollMax(LIST, this.listBottom(save)), this.scroll);
-    this.frame = shopListFrame(this.scroll.max > 0);
+    const layout = shopTextLayout(fonts, measure, {
+      message: this.message?.text ?? null,
+      save,
+      tab: this.tab,
+    });
+    this.scroll = resizeScroll(scrollMax(layout.frame.rect, layout.bottom), this.scroll);
+    this.frame = layout.frame;
+    this.messagePlate = layout.message.plate;
     const line = (
       text: string,
       x: number,
@@ -411,7 +496,7 @@ export class ShopScene extends Scene {
     });
     const headings: PanelText[] = [];
     const rows: ShopScreenRow[] = [];
-    this.placed = [];
+    this.placed = layout.rows;
     const heading = (y: number, text: string, note: string) => {
       headings.push(
         line(text, LAYOUT.headingX, y, PALETTE.darkBrown, "title"),
@@ -423,123 +508,108 @@ export class ShopScene extends Scene {
         ),
       );
     };
-    const addRows = (spec: Parameters<typeof rowRects>[1], source: readonly ShopRow[]) => {
-      rowRects(this.frame.rowWidth, spec, source.length).forEach((rect, index) => {
-        const row = source[index];
-        if (row === undefined) {
-          return;
-        }
-        this.placed.push({ rect, row });
-        const look = SHOP_ROW_VIEWS[shopRowLook(gameData, save.owned, save.bankCents, row)];
-        const mid = rect.y + Math.floor(rect.height / 2);
-        const right = rect.x + rect.width - ROW.plateInset;
-        const box = {
-          height: ROW.box.size,
-          width: ROW.box.size,
-          x: rect.x + ROW.box.dx,
-          y: rect.y + Math.floor((rect.height - ROW.box.size) / 2),
-        };
-        const key = purchaseArt(row.purchase);
-        const frame = this.textures.getFrame(key);
-        const tops = shopRowTextTops(measure.body);
-        const texts = [
+    layout.headings.forEach(({ note, text, y }) => heading(y, text, note));
+    for (const { lines: descriptions, rect, row } of layout.rows) {
+      const look = SHOP_ROW_VIEWS[shopRowLook(gameData, save.owned, save.bankCents, row)];
+      const mid = rect.y + Math.floor(rect.height / 2);
+      const right = rect.x + rect.width - ROW.plateInset;
+      const box = {
+        height: ROW.box.size,
+        width: ROW.box.size,
+        x: rect.x + ROW.box.dx,
+        y: rect.y + Math.floor((rect.height - ROW.box.size) / 2),
+      };
+      const key = purchaseArt(row.purchase);
+      const frame = this.textures.getFrame(key);
+      const tops = shopRowTextTops(measure.body, descriptions.length);
+      const texts = [
+        line(
+          row.name,
+          rect.x + ROW.textDx,
+          row.line === "" ? mid - 5 : mid + tops.name,
+          PALETTE[selectLook(look.state).text],
+        ),
+      ];
+      descriptions.forEach((description, index) => {
+        texts.push(
           line(
-            row.name,
+            description,
             rect.x + ROW.textDx,
-            row.line === "" ? mid - 5 : mid + tops.name,
-            PALETTE[selectLook(look.state).text],
+            mid + tops.line + index * measure.body.lineHeight * TEXT_SCALE,
+            look.state === "disabled" ? PALETTE[GREYED.text] : PALETTE.darkBrown,
           ),
-        ];
-        if (row.line !== "") {
-          texts.push(
-            line(
-              row.line,
-              rect.x + ROW.textDx,
-              mid + tops.line,
-              look.state === "disabled" ? PALETTE[GREYED.text] : PALETTE.darkBrown,
-            ),
-          );
-        }
-        const art: ShopScreenRow["art"][number][] = [
-          {
-            key,
-            rect: {
-              height: frame.height,
-              width: frame.width,
-              x: box.x + ROW.art,
-              y: box.y + ROW.art,
-            },
-            sheet: row.purchase.kind === "dog",
-            ...(look.art === "grey" ? { imageKey: disabledArtKey(key) } : {}),
-            tag: "happy",
-          },
-        ];
-        if (look.badge !== null) {
-          art.push({
-            key: BADGE_KEYS[look.badge],
-            rect: {
-              height: this.textures.getFrame(BADGE_KEYS[look.badge]).height,
-              width: this.textures.getFrame(BADGE_KEYS[look.badge]).width,
-              x: rect.x + ROW.badge.dx,
-              y: rect.y + ROW.badge.dy,
-            },
-            sheet: false,
-          });
-        }
-        let plate: ShopScreenRow["plate"];
-        if (row.price === null || look.plate === null) {
-          const owned = gameData.homeText.shop.owned;
-          texts.push(
-            line(
-              owned,
-              right - OWNED_DX - advanceWidth(fonts.title, TEXT_SCALE, owned.toUpperCase()),
-              mid - 4,
-              PALETTE.forest,
-              "title",
-            ),
-          );
-          art.push({
-            key: "ui-check",
-            rect: { height: 16, width: 16, x: right - 16, y: mid - 8 },
-            sheet: true,
-            tag: "tick",
-          });
-        } else {
-          plate = pricePlateView(
-            {
-              capHeight: measure.body.capHeight,
-              padding: PLATE_PAD,
-              scale: TEXT_SCALE,
-              width: (value) => advanceWidth(fonts.body, TEXT_SCALE, value),
-            },
-            { capTop: mid - 5, originX: 1, x: right },
-            look.plate,
-            dollarText(row.price),
-          );
-        }
-        rows.push({
-          art,
-          fills: [{ colour: PALETTE[pictureBox(look)], rect: box }],
-          frame: this.textures.exists("ui-tile") ? "art" : "fallback",
-          id: row.id,
-          label: row.name,
-          rect,
-          state: look.state,
-          texts,
-          ...(plate === undefined ? {} : { plate }),
-        });
+        );
       });
-    };
-    const words = gameData.homeText.shop;
-    if (this.tab === "gear") {
-      heading(LAYOUT.gear.headingY, words.tabs.gear, ownedCountNote(gameData, save.owned, "gear"));
-      addRows(LAYOUT.gear.rows, gearRows(gameData, save.owned));
-    } else {
-      heading(LAYOUT.dogs.slotHeadingY, words.slots, ownedCountNote(gameData, save.owned, "slots"));
-      addRows(LAYOUT.dogs.slotRows, slotRows(gameData, save.owned));
-      heading(LAYOUT.dogs.dogHeadingY, words.dogs, ownedCountNote(gameData, save.owned, "dogs"));
-      addRows(LAYOUT.dogs.dogRows, dogRows(gameData, save.owned));
+      const art: ShopScreenRow["art"][number][] = [
+        {
+          key,
+          rect: {
+            height: frame.height,
+            width: frame.width,
+            x: box.x + ROW.art,
+            y: box.y + ROW.art,
+          },
+          sheet: row.purchase.kind === "dog",
+          ...(look.art === "grey" ? { imageKey: disabledArtKey(key) } : {}),
+          tag: "happy",
+        },
+      ];
+      if (look.badge !== null) {
+        art.push({
+          key: BADGE_KEYS[look.badge],
+          rect: {
+            height: this.textures.getFrame(BADGE_KEYS[look.badge]).height,
+            width: this.textures.getFrame(BADGE_KEYS[look.badge]).width,
+            x: rect.x + ROW.badge.dx,
+            y: rect.y + ROW.badge.dy,
+          },
+          sheet: false,
+        });
+      }
+      let plate: ShopScreenRow["plate"];
+      if (row.price === null || look.plate === null) {
+        const owned = gameData.homeText.shop.owned;
+        texts.push(
+          line(
+            owned,
+            right - OWNED_DX - advanceWidth(fonts.title, TEXT_SCALE, owned.toUpperCase()),
+            mid - 4,
+            PALETTE.forest,
+            "title",
+          ),
+        );
+        art.push({
+          key: "ui-check",
+          rect: { height: 16, width: 16, x: right - 16, y: mid - 8 },
+          sheet: true,
+          tag: "tick",
+        });
+      } else {
+        plate = pricePlateView(
+          {
+            capHeight: measure.body.capHeight,
+            padding: PLATE_PAD,
+            scale: TEXT_SCALE,
+            width: (value) => advanceWidth(fonts.body, TEXT_SCALE, value),
+          },
+          { capTop: mid - 5, originX: 1, x: right },
+          look.plate,
+          dollarText(row.price),
+        );
+      }
+      rows.push({
+        art,
+        fills: [{ colour: PALETTE[pictureBox(look)], rect: box }],
+        frame: this.textures.exists("ui-tile") ? "art" : "fallback",
+        id: row.id,
+        label: row.name,
+        rect,
+        state: look.state,
+        texts,
+        ...(plate === undefined ? {} : { plate }),
+      });
     }
+    const words = gameData.homeText.shop;
     const view: ShopScreenView = {
       clip: this.frame.rect,
       headings,
@@ -557,13 +627,16 @@ export class ShopScene extends Scene {
         ? {}
         : {
             message: {
-              line: line(
-                this.message.text,
-                PLATE.x + LAYOUT.message.textDx,
-                shopMessageCapTop(measure.body, TEXT_SCALE),
-                this.message.refused ? PALETTE.darkRed : PALETTE.forest,
-              ),
-              rect: PLATE,
+              lines: layout.message.lines.map((text, index) => ({
+                ...line(
+                  text,
+                  layout.message.plate.x + layout.message.plate.width / 2,
+                  layout.message.capTops[index]!,
+                  this.message!.refused ? PALETTE.darkRed : PALETTE.forest,
+                ),
+                centre: "ink",
+              })),
+              rect: layout.message.plate,
             },
           }),
     };
@@ -646,14 +719,6 @@ export class ShopScene extends Scene {
     if (focused !== undefined) {
       this.moveList(scrollToShow(LIST, selectOuter(focused.rect), this.scroll));
     }
-  }
-
-  // The bottom of the open tab's list as laid out.
-  private listBottom(save: SaveDocument): number {
-    if (this.tab === "gear") {
-      return shopListBottom(LAYOUT.gear.rows, gearRows(gameData, save.owned).length);
-    }
-    return shopListBottom(LAYOUT.dogs.dogRows, dogRows(gameData, save.owned).length);
   }
 
   // An open confirm cancels, else an open card closes, else the shop.
@@ -777,7 +842,7 @@ export class ShopScene extends Scene {
       return { kind: "tab", tab: tabId };
     }
     // The message's plate lies over the rows; only the list area's part of a row is pressed.
-    if (this.message !== null && containsPoint(PLATE, x, y)) {
+    if (this.message !== null && containsPoint(this.messagePlate, x, y)) {
       return undefined;
     }
     if (!containsPoint(this.frame.rect, x, y)) {
