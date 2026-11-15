@@ -53,7 +53,7 @@ export function panelTitle(
 // centred on the face over the lip, as the canvas centres a one-line label on its height, a font
 // line, its capitals capTop rows into the line (addMenuButton).
 export function panelButton(
-  measure: PanelMeasure,
+  measure: Pick<PanelMeasure, "title">,
   rect: Rect,
   primary: boolean,
   text: string,

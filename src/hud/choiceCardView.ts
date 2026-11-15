@@ -1,0 +1,261 @@
+import type { Rect } from "@andornaut/game-kit/rect";
+import {
+  type BitmapFont,
+  fontMetrics,
+  inkRowsOfLines,
+  laidGlyphs,
+} from "@andornaut/game-kit/text/bitmapFont";
+import { fittingText, type TextFitStyle } from "@andornaut/game-kit/text/textFit";
+
+import { SKIP_CARD_ART } from "../assets/cardArt.ts";
+import { cardFrameTag } from "../assets/spriteKeys.ts";
+import type { GameData } from "../data/types.ts";
+import type { DetailText } from "../home/detailCardView.ts";
+import { cardCharmPlates, cardCharmWidth } from "../layout/buffLayout.ts";
+import {
+  CARD_LAYOUT as CARD,
+  FIRES_FIT,
+  largeBodyBox,
+  largeBodyStyle,
+  largeCardHeight,
+  largeCardRect,
+  plaqueRoom,
+} from "../layout/cardLayout.ts";
+import {
+  type CardView,
+  type Choice,
+  firesText,
+  hasPlaque,
+  type OptionView,
+} from "../rules/choices.ts";
+import { inkWithPills } from "../ui/namePills.ts";
+import { PALETTE } from "../ui/palette.ts";
+import { plainMarks } from "../ui/pixelFont.ts";
+import { GREYED } from "../ui/selection.ts";
+import { type CardCharm, optionMarks } from "./buffMarks.ts";
+import { largeBodyText, plaqueTexts, smallCardText } from "./cardText.ts";
+
+export interface ChoiceEntry {
+  readonly choice: Choice;
+  readonly enabled: boolean;
+  readonly option?: OptionView;
+}
+export interface ChoiceCardSurface {
+  readonly charms: readonly { readonly charm: CardCharm; readonly rect: Rect }[];
+  readonly frame: { readonly key: string; readonly tag: string; readonly large: boolean };
+  readonly grey: boolean;
+  readonly illustration: { readonly key: string; readonly rect: Rect; readonly scale: number };
+  readonly label: string;
+  readonly marker: { readonly x: number; readonly y: number; readonly scale: number } | undefined;
+  readonly paws:
+    { readonly difficulty: number; readonly x: number; readonly y: number } | undefined;
+  readonly plaque: Rect | undefined;
+  readonly plaqueText: number | undefined;
+  readonly rect: Rect;
+  readonly texts: readonly DetailText[];
+}
+export interface ChoiceCardFonts {
+  readonly body: BitmapFont;
+  readonly title: BitmapFont;
+}
+
+export function choiceCardInk(
+  fonts: ChoiceCardFonts,
+  role: "body" | "title",
+  style: TextFitStyle,
+  text: string,
+): number {
+  const shown = role === "body" ? plainMarks(text) : plainMarks(text).toUpperCase();
+  const ink = inkWithPills(
+    style.scale,
+    laidGlyphs(fonts[role], style.scale, shown).map((glyph) => ({ ...glyph, line: 0 })),
+  );
+  return ink === null ? 0 : ink.right - ink.left;
+}
+
+// Both card sizes use the existing fitted text, plaque and modifier layouts at their authored scales.
+export function choiceCardSurface(
+  data: GameData,
+  fonts: ChoiceCardFonts,
+  view: CardView,
+  entry: ChoiceEntry,
+  place: Rect,
+  large = false,
+): ChoiceCardSurface {
+  const metrics = { body: fontMetrics(fonts.body), title: fontMetrics(fonts.title) };
+  const ink = (role: "body" | "title") => (style: TextFitStyle, line: string) =>
+    choiceCardInk(fonts, role, style, line);
+  const marks = optionMarks(data, view, entry.option);
+  const texts: DetailText[] = [];
+  const label = entry.option?.label ?? data.runText.card.skip;
+  const grey = !large && !entry.enabled;
+  const bodyColour = grey ? PALETTE[GREYED.text] : PALETTE.plum;
+  const warning =
+    large && entry.option !== undefined && entry.option.fires.length > 0
+      ? fittingText(
+          FIRES_FIT.large.style,
+          ink("title"),
+          FIRES_FIT.large.room,
+          firesText(data, entry.option.fires),
+        )
+      : null;
+  const bodyBox = largeBodyBox(metrics, warning?.lines.length ?? 0);
+  const bodyStyle = largeBodyStyle(metrics.body, bodyBox.height, place);
+  const body = large
+    ? fittingText(bodyStyle, ink("body"), CARD.large.body.width, largeBodyText(data, entry.option))
+    : null;
+  const contentHeight =
+    (marks.forgiven === null ? bodyBox.top : 0) +
+    inkRowsOfLines(
+      metrics.body,
+      marks.forgiven === null ? (body?.lines.length ?? 0) : marks.forgiven.rows.length + 1,
+    ) *
+      bodyStyle.scale;
+  const rect = large ? largeCardRect(place, largeCardHeight(contentHeight)) : place;
+  const shift = rect.height - CARD.large.height;
+  const add = (
+    font: "body" | "title",
+    lines: readonly string[],
+    x: number,
+    capTop: number,
+    scale: number,
+    colour: number = bodyColour,
+    align: "centre" | "left" = "centre",
+  ) => texts.push({ align, capTop, colour, font, lines, scale, x });
+  add(
+    "body",
+    [label],
+    rect.x + rect.width / 2,
+    rect.y + (large ? CARD.large.band.y + 5 : CARD.band.y + 3),
+    1,
+  );
+  if (large) {
+    const x = rect.x + CARD.large.body.x;
+    const top = rect.y + CARD.large.body.y;
+    if (warning !== null) {
+      add("title", warning.lines, x, top, warning.style.scale, PALETTE.darkRed, "left");
+    }
+    if (marks.forgiven === null) {
+      add("body", body?.lines ?? [], x, top + bodyBox.top, bodyStyle.scale, PALETTE.plum, "left");
+    } else {
+      add("body", marks.forgiven.rows, x, top + bodyBox.top, 2, PALETTE.forest, "left");
+      add(
+        "body",
+        [marks.forgiven.name],
+        x,
+        top + bodyBox.top + marks.forgiven.rows.length * metrics.body.lineHeight * 2,
+        2,
+        PALETTE.plum,
+        "left",
+      );
+    }
+  } else {
+    const shown = smallCardText(data, metrics.body, ink("body"), entry.option);
+    const x = rect.x + CARD.effect.x + CARD.effect.width / 2;
+    if (shown.warning !== null) {
+      add(
+        "body",
+        shown.warning.lines,
+        x,
+        rect.y + shown.box.warningY,
+        shown.warning.style.scale,
+        grey ? bodyColour : PALETTE.darkRed,
+      );
+    }
+    if (marks.forgiven === null) {
+      add("body", shown.effect.lines, x, rect.y + shown.box.y, shown.effect.style.scale);
+    } else {
+      add("body", marks.forgiven.rows, x, rect.y + shown.box.y, 1, PALETTE.forest);
+      add(
+        "body",
+        [marks.forgiven.name],
+        x,
+        rect.y + shown.box.y + marks.forgiven.rows.length * metrics.body.lineHeight,
+        1,
+        PALETTE.plum,
+      );
+    }
+  }
+  const scale = large ? 2 : 1;
+  const marker =
+    (entry.option?.fires.length ?? 0) === 0
+      ? undefined
+      : {
+          scale,
+          x: rect.x + (large ? CARD.large.fires.x : CARD.fires.x),
+          y: rect.y + (large ? CARD.large.fires.y + shift : CARD.fires.y),
+        };
+  const basePlaque = large ? CARD.large.badge : CARD.badge;
+  const plaque =
+    hasPlaque(entry.option) || marks.plaque !== null
+      ? { ...basePlaque, x: rect.x + basePlaque.x, y: rect.y + basePlaque.y + (large ? shift : 0) }
+      : undefined;
+  let plaqueText: number | undefined;
+  if (plaque !== undefined) {
+    const edge = marker === undefined ? undefined : marker.x + CARD.fires.size * scale;
+    const centre =
+      edge === undefined ? plaque.x + plaque.width / 2 : (edge + plaque.x + plaque.width) / 2;
+    const options =
+      marks.plaque !== null
+        ? [marks.plaque]
+        : entry.option === undefined
+          ? []
+          : plaqueTexts(data, entry.option);
+    const room = plaqueRoom(plaque.x, plaque.width, edge);
+    const selected =
+      options.find((text) => choiceCardInk(fonts, "title", { scale: 1 }, text) <= room) ??
+      options.at(-1) ??
+      "";
+    plaqueText = marks.plaque === null ? texts.length : undefined;
+    add(
+      "title",
+      [selected],
+      centre,
+      plaque.y + (large ? 9 : 4),
+      1,
+      marks.plaque !== null ? PALETTE.forest : grey ? PALETTE[GREYED.plateText] : PALETTE.plum,
+    );
+  }
+  const widths = marks.charms.map((charm) =>
+    cardCharmWidth(
+      Math.max(
+        choiceCardInk(fonts, "body", { scale: 1 }, charm.name),
+        charm.effect === null ? 0 : choiceCardInk(fonts, "title", { scale: 1 }, charm.effect),
+      ),
+    ),
+  );
+  const plates = cardCharmPlates(rect, widths);
+  return {
+    charms: marks.charms.map((charm, i) => ({ charm, rect: plates[i]! })),
+    frame: {
+      key: large ? "card-frame-large" : "card-frame",
+      large,
+      tag: cardFrameTag(view.source),
+    },
+    grey,
+    illustration: {
+      key: entry.option?.art ?? SKIP_CARD_ART,
+      rect: {
+        height: CARD.art.height * scale,
+        width: CARD.art.width * scale,
+        x: rect.x + (large ? CARD.large.art.x : CARD.art.x),
+        y: rect.y + (large ? CARD.large.art.y : CARD.art.y),
+      },
+      scale,
+    },
+    label,
+    marker,
+    paws:
+      large || entry.option?.path === undefined
+        ? undefined
+        : {
+            difficulty: entry.option.path.difficulty,
+            x: rect.x + rect.width / 2,
+            y: rect.y + CARD.paws.y,
+          },
+    plaque,
+    plaqueText,
+    rect,
+    texts,
+  };
+}
