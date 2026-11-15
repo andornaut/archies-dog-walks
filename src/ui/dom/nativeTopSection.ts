@@ -50,6 +50,14 @@ export interface NativeTopSection {
   setShown(shown: boolean): void;
 }
 
+interface BarControl {
+  readonly active: () => boolean;
+  readonly button: HTMLButtonElement;
+  readonly cancel: () => void;
+  readonly down: (event: PointerEvent) => void;
+  readonly setPressed: (pressed: boolean) => void;
+}
+
 const ORIGIN = { x: 0, y: 0 } as const;
 const hex = (colour: number) => `#${colour.toString(16).padStart(6, "0")}`;
 
@@ -93,6 +101,9 @@ export function createNativeTopSection(
     placed.push((scale) => art.place(scale, ORIGIN, rect));
   }
   const controls = new Map<TopSectionButton, { setPressed(pressed: boolean): void }>();
+  const records: BarControl[] = [];
+  let held: BarControl | undefined;
+  let released: BarControl | undefined;
   const updateIcons: (() => void)[] = [];
   for (const [id, { face, hit }] of layout.controls) {
     const button = doc.createElement("button");
@@ -173,48 +184,38 @@ export function createNativeTopSection(
         startedAt: via === "keyboard" ? undefined : startedAt,
         via,
       });
-    cleanups.push(
-      guardNativeInput(
-        {
-          cancel: () => {
-            setPressed(false);
-            startedAt = undefined;
-          },
-          down: (event) => {
-            startedAt = event.timeStamp;
-            if (button.hasPointerCapture(event.pointerId)) {
-              button.releasePointerCapture(event.pointerId);
-            }
-            setPressed(true);
-            if (config.activation === "down") {
-              press("pointer", event.timeStamp);
-            }
-          },
-          gate: {
-            accepts: active,
-            capture: () => {
-              const accepted = active();
-              const captured = epoch;
-              return () => accepted && captured === epoch && active();
-            },
-          },
-          move: (event) => setPressed(button.contains(event.target as Node)),
-          subscribe: (listener) =>
-            layer.input.subscribe(() => {
-              epoch += 1;
-              listener();
-            }),
-          up: () => setPressed(false),
-        },
-        button,
-      ),
-    );
+    const record: BarControl = {
+      active,
+      button,
+      cancel: () => {
+        setPressed(false);
+        startedAt = undefined;
+      },
+      down: (event) => {
+        startedAt = event.timeStamp;
+        if (button.hasPointerCapture(event.pointerId)) {
+          button.releasePointerCapture(event.pointerId);
+        }
+        setPressed(true);
+        if (config.activation === "down") {
+          press("pointer", event.timeStamp);
+        }
+      },
+      setPressed,
+    };
+    records.push(record);
     button.addEventListener("blur", () => setPressed(false));
     button.addEventListener("click", (event) => {
       event.stopPropagation();
-      if (active() && (config.activation !== "down" || event.detail === 0)) {
-        press(event.detail === 0 ? "keyboard" : "pointer", event.timeStamp);
+      const keyboard = event.detail === 0;
+      if (
+        active() &&
+        (keyboard || released === record) &&
+        (config.activation !== "down" || keyboard)
+      ) {
+        press(keyboard ? "keyboard" : "pointer", event.timeStamp);
       }
+      released = undefined;
       startedAt = undefined;
     });
     for (const name of ["mousedown", "touchstart"]) {
@@ -223,6 +224,16 @@ export function createNativeTopSection(
     button.addEventListener("keydown", (event) => {
       if (event.code === "Enter" || event.code === "Space") {
         event.stopPropagation();
+        if (event.repeat) {
+          event.preventDefault();
+        } else if (active()) {
+          setPressed(true);
+        }
+      }
+    });
+    button.addEventListener("keyup", (event) => {
+      if (event.code === "Enter" || event.code === "Space") {
+        setPressed(false);
       }
     });
     updateIcons.push(() => {
@@ -234,6 +245,47 @@ export function createNativeTopSection(
     });
     root.append(button);
   }
+  const available = () => paint.painted() && !disposed && shown && !inert && !root.hidden;
+  cleanups.push(
+    guardNativeInput(
+      {
+        cancel: () => {
+          records.forEach((record) => record.cancel());
+          held = undefined;
+          released = undefined;
+        },
+        down: (event) => {
+          released = undefined;
+          const record = records.find(({ button }) => button.contains(event.target as Node));
+          if (record?.active() === true) {
+            held = record;
+            record.down(event);
+          }
+        },
+        gate: {
+          accepts: available,
+          capture: () => {
+            const accepted = available();
+            const captured = epoch;
+            return () => accepted && captured === epoch && available();
+          },
+        },
+        move: (event) => held?.setPressed(held.button.contains(event.target as Node)),
+        subscribe: (listener) =>
+          layer.input.subscribe(() => {
+            epoch += 1;
+            listener();
+          }),
+        up: (event, cancelled) => {
+          held?.setPressed(false);
+          released =
+            !cancelled && held?.button.contains(event.target as Node) === true ? held : undefined;
+          held = undefined;
+        },
+      },
+      root,
+    ),
+  );
   if (config.heading !== undefined) {
     const line = {
       capTop: layout.heading.y,

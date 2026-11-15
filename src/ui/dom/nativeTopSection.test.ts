@@ -17,7 +17,7 @@ const labels = {
   pause: gameData.menuText.pause.title,
 };
 
-function fixture() {
+function fixture(activation: "click" | "down" = "click") {
   const doc = new FakeDocument();
   const { element, layer } = fakeLayer(doc, domScale(1, { height: 560, width: 360, x: 0, y: 0 }));
   let pendingRoot: HTMLElement | undefined;
@@ -50,6 +50,7 @@ function fixture() {
     gameFont("font-title"),
     {
       accepts: () => true,
+      activation,
       buttons: ["mute", "menu"],
       currency: true,
       labels,
@@ -57,18 +58,14 @@ function fixture() {
     },
   );
   const buttons = element.all().filter((node) => node.tagName === "button");
-  const click = () =>
-    buttons[0]?.fire(
-      "click",
-      Object.assign(
-        {
-          preventDefault: () => undefined,
-          stopPropagation: () => undefined,
-        },
-        { detail: 0, stopImmediatePropagation: () => undefined },
-      ),
-    );
-  return { buttons, cancel, click, doc, element, layer, press, reveal, view };
+  const root = view.element as unknown as FakeTarget;
+  const click = () => {
+    const fields = { detail: 0, target: buttons[0] };
+    if (!dispatch(root, "click", fields)) {
+      dispatch(buttons[0]!, "click", fields);
+    }
+  };
+  return { buttons, cancel, click, doc, element, layer, press, reveal, root, view };
 }
 
 function dispatch(target: FakeTarget, type: string, fields: Record<string, unknown>) {
@@ -94,6 +91,7 @@ function dispatch(target: FakeTarget, type: string, fields: Record<string, unkno
       break;
     }
   }
+  return stopped;
 }
 
 describe("native top section integration", () => {
@@ -117,14 +115,14 @@ describe("native top section integration", () => {
     await Promise.resolve();
     click();
     expect(press).toHaveBeenCalledExactlyOnceWith("mute", {
-      completedAt: undefined,
+      completedAt: 0,
       startedAt: undefined,
       via: "keyboard",
     });
   });
 
   it("keeps a hidden or covered section inactive and disposes its pending reveal", async () => {
-    const { buttons, cancel, click, doc, element, layer, press, reveal, view } = fixture();
+    const { buttons, cancel, click, doc, element, layer, press, reveal, root, view } = fixture();
     reveal(true);
     await Promise.resolve();
     view.setInert(true);
@@ -137,11 +135,14 @@ describe("native top section integration", () => {
     click();
     expect(press).toHaveBeenCalledTimes(1);
     const button = buttons[0]!;
-    dispatch(button, "pointerdown", { buttons: 1, pointerId: 1, target: button });
+    dispatch(root, "pointerdown", { buttons: 1, pointerId: 1, target: button });
     const covered = layer.input.open();
     covered.close();
     dispatch(doc, "pointerup", { pointerId: 1, target: button });
-    dispatch(button, "click", { detail: 1, target: button });
+    const clickFields = { detail: 1, target: button };
+    if (!dispatch(root, "click", clickFields)) {
+      dispatch(button, "click", clickFields);
+    }
     expect(press).toHaveBeenCalledTimes(1);
     view.dispose();
     view.dispose();
@@ -149,6 +150,24 @@ describe("native top section integration", () => {
     expect(press).toHaveBeenCalledTimes(1);
     expect(cancel).toHaveBeenCalledTimes(1);
     expect(element.children).toEqual([]);
+  });
+
+  it("admits only one pointer across separate bar controls", async () => {
+    const { buttons, doc, press, reveal, root } = fixture("down");
+    reveal(true);
+    await Promise.resolve();
+    dispatch(root, "pointerdown", { buttons: 1, pointerId: 1, target: buttons[0] });
+    dispatch(root, "pointerdown", { buttons: 1, pointerId: 2, target: buttons[1] });
+    expect(press).toHaveBeenCalledTimes(1);
+    dispatch(doc, "pointerup", { pointerId: 1, target: buttons[0] });
+    dispatch(doc, "pointerup", { pointerId: 2, target: buttons[1] });
+    dispatch(root, "pointerdown", { buttons: 1, pointerId: 3, target: buttons[1] });
+    expect(press).toHaveBeenLastCalledWith("menu", {
+      completedAt: 0,
+      startedAt: 0,
+      via: "pointer",
+    });
+    expect(press).toHaveBeenCalledTimes(2);
   });
 
   it("updates currency and mute state without replacing controls", () => {
