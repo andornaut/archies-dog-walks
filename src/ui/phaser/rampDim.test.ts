@@ -3,6 +3,7 @@ import { sceneStub } from "@andornaut/game-kit/test/phaser/sceneStub";
 import type { Scene } from "phaser";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { ownDeviceFit } from "../worldFit.ts";
 import { addDim, addModalShade } from "./draw.ts";
 import { addRampDim } from "./rampDim.ts";
 
@@ -11,7 +12,8 @@ vi.mock("@andornaut/game-kit/runtime/view/phaser/snapshotRemap", () => ({
 }));
 vi.mock("phaser", () => ({
   Core: { Events: { POST_RENDER: "postrender", PRE_RENDER: "prerender" } },
-  Scenes: { Events: { SHUTDOWN: "shutdown" } },
+  Scale: { Events: { RESIZE: "resize" } },
+  Scenes: { Events: { CREATE: "create", SHUTDOWN: "shutdown" } },
 }));
 
 class Display {
@@ -47,10 +49,25 @@ function fixture() {
   const images: Display[] = [];
   const camera = {
     height: 560,
+    originX: 0.5,
+    originY: 0.5,
     scrollX: 0,
     scrollY: 0,
+    setOrigin(x: number, y: number) {
+      this.originX = x;
+      this.originY = y;
+      return this;
+    },
+    setViewport(x: number, y: number, width: number, height: number) {
+      Object.assign(this, { height, width, x, y });
+      return this;
+    },
     setVisible(visible: boolean) {
       this.visible = visible;
+      return this;
+    },
+    setZoom(zoom: number) {
+      this.zoom = zoom;
       return this;
     },
     visible: true,
@@ -118,6 +135,35 @@ describe("modal ramp dim adapter", () => {
     });
     await Promise.resolve();
     expect(images[0]).toMatchObject({ displayHeight: 300, displayWidth: 360, visible: true });
+  });
+
+  it("fits the capture before CREATE on both initial and repeated modal activation", async () => {
+    vi.mocked(snapshotRemapped).mockResolvedValue(true);
+    const { camera, gameEvents, images, scene } = fixture();
+    const scale = { gameSize: { height: 1120, width: 720 }, zoom: 0.5 };
+    Object.assign(scene, { scale });
+    const release = ownDeviceFit(scale);
+    try {
+      for (let activation = 0; activation < 2; activation++) {
+        // Scene startup resets the camera before create, and CREATE has not fired yet.
+        Object.assign(camera, { height: 1120, originX: 0.5, originY: 0.5, width: 720, zoom: 1 });
+        addRampDim(scene, area);
+        expect(vi.mocked(snapshotRemapped).mock.calls[activation]?.[2]).toEqual({
+          height: 600,
+          width: 720,
+          x: 0,
+          y: 80,
+        });
+        expect(camera).toMatchObject({ originX: 0, originY: 0, zoom: 2 });
+        gameEvents.emit("postrender");
+      }
+      await Promise.resolve();
+      for (const image of images) {
+        expect(image).toMatchObject({ displayHeight: 300, displayWidth: 360, visible: true });
+      }
+    } finally {
+      release();
+    }
   });
 
   it("uses the stronger modal ink fallback while retaining the nonmodal default", async () => {

@@ -2,7 +2,7 @@ import type { Rect } from "@andornaut/game-kit/runtime/rect";
 import type { GameObjects, Scene } from "phaser";
 
 import { type PictureStrip, stripViewports } from "../help/helpPictures.ts";
-import { setWorldViewport } from "./worldCamera.ts";
+import { setWorldViewport } from "../ui/phaser/worldCamera.ts";
 
 // A scene drawn as a still picture of the screen inside frame: a camera per strip shows its
 // screen rows, top to bottom. A scene shown this way takes no input.

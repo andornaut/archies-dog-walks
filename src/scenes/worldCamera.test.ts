@@ -3,8 +3,9 @@ import { EventEmitter } from "node:events";
 import type { Game, Scene } from "phaser";
 import { expect, it, vi } from "vitest";
 
+import { setWorldViewport } from "../ui/phaser/worldCamera.ts";
 import { deviceFitOwned } from "../ui/worldFit.ts";
-import { followWorldCameras, setWorldViewport } from "./worldCamera.ts";
+import { followWorldCameras } from "./worldCamera.ts";
 
 vi.mock("phaser", () => ({
   Core: { Events: { DESTROY: "destroy", READY: "ready" } },

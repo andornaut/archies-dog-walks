@@ -6,6 +6,7 @@ import { Core, type GameObjects, type Scene, Scenes } from "phaser";
 import { ONE_STEP_DARKER } from "../../assets/housePalette.ts";
 import { shownWorldRect } from "../worldFit.ts";
 import { addModalShade } from "./draw.ts";
+import { fitWorldCamera } from "./worldCamera.ts";
 
 // Dims rect under an overlay the style guide's way: the frozen view read back from the next
 // frame and redrawn through the kit's shared modal palette-ramp policy, never blended with
@@ -26,6 +27,7 @@ export function addRampDim(
       onceBeforeRender(scene, onDrawn);
     }
   };
+  fitWorldCamera(scene, scene.cameras.main);
   const shown = shownWorldRect(scene.cameras.main, rect);
   if (shown === undefined) {
     drawn();
