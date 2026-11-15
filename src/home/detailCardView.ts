@@ -1,10 +1,12 @@
 import type { Point, Rect } from "@andornaut/game-kit/runtime/rect";
 
 import { DETAIL_WELL_KEY, ownerFaceKey } from "../assets/spriteKeys.ts";
+import { MENU_TEXT } from "../data/menuText.ts";
 import type { GameData } from "../data/types.ts";
 import { withNamePills } from "../hud/effectNames.ts";
 import { barTitleRoom } from "../ui/barTitle.ts";
 import { closeControl } from "../ui/closeControl.ts";
+import { DISMISS_FOOTER_SPACE, dismissFooter } from "../ui/modal/dismissFooter.ts";
 import {
   MODAL,
   modalPanelWidth,
@@ -283,7 +285,10 @@ export function detailCardView(
     card.title,
   );
   const extra = heading.extraHeight;
-  const rect = modalRect(dim, undefined, { height: layout.height + extra, width });
+  const rect = modalRect(dim, undefined, {
+    height: layout.height + extra + DISMISS_FOOTER_SPACE,
+    width,
+  });
   const move = <T extends Point>(at: T): T => ({
     ...at,
     x: at.x + rect.x,
@@ -294,7 +299,10 @@ export function detailCardView(
       ...move(art),
       ...(art.holder === undefined ? {} : { holder: move({ x: art.holder.x, y: art.holder.y }) }),
     })),
-    card: modalCardView(measure, rect, card.title, []),
+    card: {
+      ...modalCardView(measure, rect, card.title, []),
+      footer: dismissFooter(measure, { label: MENU_TEXT.common.close, primary: true }, rect),
+    },
     framed: content.framed.map((box) => ({ ...box, rect: move(box.rect) })),
     texts: content.texts.map((text) => ({
       ...text,

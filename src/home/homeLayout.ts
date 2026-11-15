@@ -17,6 +17,7 @@ import { closeControl } from "../ui/closeControl.ts";
 import type { GridSpec } from "../ui/grid.ts";
 import { helpCapDy } from "../ui/labelHelpGap.ts";
 import { MARK_OFFSET } from "../ui/mark.ts";
+import { DISMISS_FOOTER_SPACE } from "../ui/modal/dismissFooter.ts";
 import {
   MODAL,
   modalActionWidth,
@@ -760,7 +761,12 @@ export function updateModalLayout(
     area,
     { ...GATE, width: area.width, x: area.x },
     {
-      height: header + height + (stacked ? height + BUTTON_SIZE.stackGap : 0) + MODAL.pad,
+      height:
+        header +
+        height +
+        (stacked ? height + BUTTON_SIZE.stackGap : 0) +
+        MODAL.pad +
+        DISMISS_FOOTER_SPACE,
       width,
     },
   );

@@ -24,6 +24,7 @@ import { barTitleRoom } from "../ui/barTitle.ts";
 import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";
 import { closeFace } from "../ui/closeControl.ts";
 import { LABEL_HELP_GAP } from "../ui/labelHelpGap.ts";
+import { DISMISS_FOOTER_SPACE } from "../ui/modal/dismissFooter.ts";
 import { MODAL, modalActionWidth, modalTitleLayout } from "../ui/modal/layout.ts";
 import { modalTitleInk } from "../ui/modal/titleRole.ts";
 import { cardTitleRow } from "../ui/modal/titleRow.ts";
@@ -327,9 +328,11 @@ describe.each([
     (last.control?.y ?? 0) + (last.control?.height ?? 0),
   );
 
-  it("sets its capitals the label-to-help gap under the last row, the modal inset over the card's edge", () => {
+  it("keeps the build label under the last row and clear of the dismiss footer", () => {
     expect(buildLabelY - lastInk).toBe(LABEL_HELP_GAP);
-    expect(panel.y + panel.height - (buildLabelY + labelInkBottom)).toBe(MODAL.pad);
+    expect(panel.y + panel.height - (buildLabelY + labelInkBottom)).toBe(
+      MODAL.pad + DISMISS_FOOTER_SPACE,
+    );
   });
 
   // A tap on the label lands on the card outside every row, so it neither acts nor closes it.

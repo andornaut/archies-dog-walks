@@ -5,9 +5,11 @@ import type { InstallStepsKind } from "@andornaut/game-kit/runtime/web/pwa/insta
 
 import { BUILD_LABEL } from "../buildLabel.ts";
 import { SETTINGS_CARD } from "../data/layout.ts";
+import { MENU_TEXT } from "../data/menuText.ts";
 import type { MenuText } from "../data/types.ts";
 import type { Settings } from "../save/settings.ts";
 import { closeFace } from "../ui/closeControl.ts";
+import { dismissFooter } from "../ui/modal/dismissFooter.ts";
 import { type PanelButton, type PanelMeasure, type QuestionPanelView } from "../ui/modal/types.ts";
 import { modalCardView, panelButton } from "../ui/modal/view.ts";
 import { PALETTE } from "../ui/palette.ts";
@@ -386,7 +388,10 @@ function stepsView(
   const text = words.installSteps[steps.kind];
   const icon = STEPS_ICONS[steps.kind];
   return {
-    card: modalCardView(measure, steps.card, text.title, []),
+    card: {
+      ...modalCardView(measure, steps.card, text.title, []),
+      footer: dismissFooter(measure, { label: MENU_TEXT.common.close, primary: true }, steps.card),
+    },
     dim: state.dim,
     icon: iconView(icon === undefined ? undefined : art(icon), icon, steps.icon),
     steps: {
@@ -439,7 +444,10 @@ export function settingsView(
       scale: SETTINGS_BUILD_LABEL.style.scale,
       x: left - ink.left,
     },
-    card: modalCardView(measure, panel, words.title, []),
+    card: {
+      ...modalCardView(measure, panel, words.title, []),
+      footer: dismissFooter(measure, { label: MENU_TEXT.common.close, primary: true }, panel),
+    },
     ring: focused === undefined ? undefined : insetRect(-FOCUS_OUTSET, focused),
     rows: rows.map((row, i) => {
       const at = itemAt(layout.rows, i);

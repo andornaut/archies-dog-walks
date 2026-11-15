@@ -5,6 +5,7 @@ import { barTitleRoom } from "../ui/barTitle.ts";
 import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";
 import { closeControl } from "../ui/closeControl.ts";
 import { helpCapDy } from "../ui/labelHelpGap.ts";
+import { DISMISS_FOOTER_SPACE } from "../ui/modal/dismissFooter.ts";
 import {
   MODAL,
   modalActionWidth,
@@ -58,7 +59,7 @@ export function purchaseConfirmLayout(
   const priceTop = header + CARD.well.size + MODAL.gap;
   const leftTop = confirmLeftCapTop(fonts.title, priceTop);
   const buttonsTop = leftTop + inkRowsFromCapTop(fonts.body) * 2 + MODAL.gap;
-  const height = buttonsTop + BUTTON_HEIGHT + MODAL.pad;
+  const height = buttonsTop + BUTTON_HEIGHT + MODAL.pad + DISMISS_FOOTER_SPACE;
   const placed = modalRect(overlayRegion("home"), undefined, { height, width });
   const middle = placed.x + width / 2;
   const row = cardTitleRow(placed);

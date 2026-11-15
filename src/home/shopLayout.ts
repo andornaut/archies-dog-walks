@@ -6,6 +6,7 @@ import { SHOP_PAGE } from "../data/layout.ts";
 import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";
 import { closeControl } from "../ui/closeControl.ts";
 import { helpCapDy } from "../ui/labelHelpGap.ts";
+import { DISMISS_FOOTER_SPACE } from "../ui/modal/dismissFooter.ts";
 import { cardTitleRow } from "../ui/modal/titleRow.ts";
 import { MODAL } from "../ui/modalGeometry.ts";
 import { type ScrollbarRects, scrollbarRects } from "../ui/scrollbar.ts";
@@ -56,7 +57,7 @@ const TAB_GAP = SHOP.tab.listGap;
 // card's frame to 2px short of the scrollbar's track, or with no scrollbar to the card's frame.
 const LIST_Y = Math.max(TAB_BOTTOM, TAB.y + TAB.height) + SHOP.tab.listClear;
 const LIST = {
-  height: PANEL.y + PANEL.height - SHOP.list.frame - LIST_Y,
+  height: PANEL.y + PANEL.height - MODAL.pad - DISMISS_FOOTER_SPACE - LIST_Y,
   width: SHOP.list.width,
   x: PANEL.x + SHOP.list.frame,
   y: LIST_Y,

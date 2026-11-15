@@ -2007,27 +2007,27 @@
           "height": 48,
           "width": 144,
           "x": 165,
-          "y": 280
+          "y": 252
         },
         "cancel": {
           "height": 48,
           "width": 98,
           "x": 51,
-          "y": 280
+          "y": 252
         },
         "hit": {
           "height": 48,
           "width": 144,
           "x": 165,
-          "y": 280
+          "y": 252
         },
         "panel": {
-          "height": 127,
+          "height": 183,
           "width": 328,
           "x": 16,
-          "y": 217
+          "y": 189
         },
-        "capY": 297
+        "capY": 269
       },
       "walkerAtGate": {
         "footY": 152,
@@ -2317,23 +2317,23 @@
       "titleY": 132
     },
     "settings": {
-      "buildLabelY": 482,
+      "buildLabelY": 454,
       "close": {
         "hit": {
           "height": 48,
           "width": 48,
           "x": 296,
-          "y": 56
+          "y": 28
         },
         "titleExclusion": "hit",
         "x": 318,
-        "y": 62
+        "y": 34
       },
       "panel": {
         "width": 328,
-        "height": 448,
+        "height": 504,
         "x": 16,
-        "y": 56
+        "y": 28
       },
       "rows": [
         {
@@ -2341,14 +2341,14 @@
             "height": 16,
             "width": 32,
             "x": 288,
-            "y": 142
+            "y": 114
           },
-          "noteY": 144,
+          "noteY": 116,
           "rect": {
             "height": 82,
             "width": 296,
             "x": 32,
-            "y": 110
+            "y": 82
           }
         },
         {
@@ -2358,7 +2358,7 @@
             "height": 56,
             "width": 296,
             "x": 32,
-            "y": 200
+            "y": 172
           }
         },
         {
@@ -2368,7 +2368,7 @@
             "height": 56,
             "width": 296,
             "x": 32,
-            "y": 264
+            "y": 236
           }
         },
         {
@@ -2376,14 +2376,14 @@
             "height": 16,
             "width": 32,
             "x": 288,
-            "y": 360
+            "y": 332
           },
-          "noteY": 362,
+          "noteY": 334,
           "rect": {
             "height": 82,
             "width": 296,
             "x": 32,
-            "y": 328
+            "y": 300
           }
         },
         {
@@ -2391,14 +2391,14 @@
             "height": 48,
             "width": 102,
             "x": 218,
-            "y": 424
+            "y": 396
           },
-          "noteY": 452,
+          "noteY": 424,
           "rect": {
             "height": 59,
             "width": 296,
             "x": 32,
-            "y": 418
+            "y": 390
           }
         }
       ],
@@ -2407,25 +2407,25 @@
           "height": 1,
           "width": 288,
           "x": 36,
-          "y": 195
+          "y": 167
         },
         {
           "height": 1,
           "width": 288,
           "x": 36,
-          "y": 259
+          "y": 231
         },
         {
           "height": 1,
           "width": 288,
           "x": 36,
-          "y": 323
+          "y": 295
         },
         {
           "height": 1,
           "width": 288,
           "x": 36,
-          "y": 413
+          "y": 385
         }
       ],
       "track": {
@@ -2476,13 +2476,13 @@
         "padBottom": 8,
         "pageOverlap": 48,
         "rect": {
-          "height": 400,
+          "height": 336,
           "width": 322,
           "x": 12,
           "y": 148
         },
         "unscrolledRect": {
-          "height": 400,
+          "height": 336,
           "width": 336,
           "x": 12,
           "y": 148
@@ -2624,7 +2624,7 @@
         "x": 336
       },
       "view": {
-        "height": 400,
+        "height": 336,
         "width": 322,
         "x": 12,
         "y": 148

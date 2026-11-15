@@ -1,7 +1,9 @@
 import type { Rect } from "@andornaut/game-kit/runtime/rect";
 
+import { MENU_TEXT } from "../data/menuText.ts";
 import { barTitleRoom } from "../ui/barTitle.ts";
 import { closeControl } from "../ui/closeControl.ts";
+import { dismissFooter } from "../ui/modal/dismissFooter.ts";
 import { modalTitleLayout } from "../ui/modal/layout.ts";
 import { cardTitleRow } from "../ui/modal/titleRow.ts";
 import { type QuestionPanelView } from "../ui/modal/types.ts";
@@ -125,6 +127,11 @@ export function purchaseConfirmCardView(
         ...button,
         pressed: CHOICES[i] === pressed,
       })),
+      footer: dismissFooter(
+        measure,
+        { label: MENU_TEXT.common.close, primary: false },
+        layout.card,
+      ),
     },
     dim: layout.dim,
     framed,

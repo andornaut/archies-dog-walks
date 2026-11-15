@@ -8,6 +8,7 @@ import type { Settings } from "../save/settings.ts";
 import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";
 import { type CloseControl, closeControl } from "../ui/closeControl.ts";
 import { helpCapDy, LABEL_HELP_GAP } from "../ui/labelHelpGap.ts";
+import { DISMISS_FOOTER_SPACE } from "../ui/modal/dismissFooter.ts";
 import { MODAL, modalPanelWidth, modalRect, modalTitleWidth } from "../ui/modal/layout.ts";
 import { TEXT_SCALE, textOnLines } from "../ui/textFit.ts";
 import { HOME_LAYOUT } from "./homeLayout.ts";
@@ -221,7 +222,7 @@ export function settingsLayout(
   // The label's digits, hex letters and "v" stand on the baseline, so its ink ends with its
   // capitals.
   const labelInk = fonts.body.capHeight * SETTINGS_BUILD_LABEL.style.scale;
-  const height = labelDy + labelInk + BUILD_LABEL_FOOT + CARD_FRAME_BOTTOM;
+  const height = labelDy + labelInk + BUILD_LABEL_FOOT + CARD_FRAME_BOTTOM + DISMISS_FOOTER_SPACE;
   const { x, y } = modalRect({ ...screen, x: 0, y: 0 }, undefined, { ...PANEL, height });
   const rowX = x + (PANEL.width - SETTINGS_ROW.width) / 2;
   let rowY = y + ROWS_TOP;
@@ -290,7 +291,11 @@ export function installStepsLayout(
 ): InstallStepsLayout {
   const titleExtraHeight = ink?.titleExtraHeight ?? 0;
   const height =
-    MODAL.header + titleExtraHeight + lines * INSTALL_STEPS.linePitch + INSTALL_STEPS.foot;
+    MODAL.header +
+    titleExtraHeight +
+    lines * INSTALL_STEPS.linePitch +
+    INSTALL_STEPS.foot +
+    DISMISS_FOOTER_SPACE;
   const width = modalPanelWidth(
     screen.width - 2 * MODAL.margin,
     ink === undefined

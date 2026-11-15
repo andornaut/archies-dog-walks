@@ -1,0 +1,167 @@
+import { wrapWords } from "@andornaut/game-kit/runtime/lines";
+import type { Rect } from "@andornaut/game-kit/runtime/rect";
+import { inkRowsOfLines } from "@andornaut/game-kit/runtime/text/bitmapFont";
+import { expect, it } from "vitest";
+
+import { gameData } from "../data/index.ts";
+import { SCREEN_CONFIG, SCREEN_LAYOUT } from "../data/screen.ts";
+import { DEFAULT_SETTINGS } from "../save/settings.ts";
+import { fontFileMetrics, gameFont, inkWidth } from "../testing/fontInk.ts";
+import { dismissFooter } from "../ui/modal/dismissFooter.ts";
+import { MODAL } from "../ui/modal/layout.ts";
+import { modalTitleInk } from "../ui/modal/titleRole.ts";
+import type { PanelButton } from "../ui/modal/types.ts";
+import { cents } from "../units.ts";
+import { badgeCardView } from "./badgeCardView.ts";
+import { badgeWall } from "./badgesView.ts";
+import { detailCardView, type DetailMeasure } from "./detailCardView.ts";
+import { updateModalLayout } from "./homeLayout.ts";
+import { confirmLines } from "./purchaseConfirm.ts";
+import { purchaseConfirmCardView } from "./purchaseConfirmCardView.ts";
+import { installStepsLayout, settingsLayout } from "./settings.ts";
+import { SETTING_ROWS, type SettingsMeasure, settingsView } from "./settingsView.ts";
+import { SHOP_LAYOUT } from "./shopLayout.ts";
+import { shopPageView } from "./shopPageView.ts";
+import { STATS_LAYOUT } from "./statsLayout.ts";
+
+const fonts = { body: fontFileMetrics("font-body"), title: fontFileMetrics("font-title") };
+const wrap = (room: number, text: string) =>
+  wrapWords((line) => inkWidth("font-body", { scale: 2 }, line), room, text);
+const measure: DetailMeasure & SettingsMeasure = {
+  ...fonts,
+  art: () => undefined,
+  bodyWidth: (lines) =>
+    Math.max(0, ...lines.map((line) => inkWidth("font-body", { scale: 2 }, line))),
+  fitBody: (_lines, room, text) => wrap(room, text),
+  hasTag: () => false,
+  ink: (font, scale, text) => ({ left: 0, right: inkWidth(`font-${font}`, { scale }, text) }),
+  inkWidth: (font, text) => inkWidth(`font-${font}`, { scale: 2 }, text),
+  titleInk: (text) => modalTitleInk(gameFont("font-title"), text),
+  wrapBody: wrap,
+  wrapNote: wrap,
+};
+
+function footer(panel: Rect, action: PanelButton | undefined, primary: boolean): PanelButton {
+  expect(action?.label).toBe(gameData.menuText.common.close);
+  expect(action?.primary).toBe(primary);
+  expect(action?.rect.height).toBe(48);
+  expect(action!.rect.x + action!.rect.width / 2).toBe(panel.x + panel.width / 2);
+  expect(action!.rect.y + action!.rect.height).toBe(panel.y + panel.height - MODAL.pad);
+  return action!;
+}
+
+it("keeps settings rows, build text and install steps above their centred dismiss controls", () => {
+  const layout = settingsLayout(
+    fonts,
+    SCREEN_CONFIG,
+    SETTING_ROWS.map((row) =>
+      row.kind === "slider" ? { kind: "slider" } : { kind: row.kind, noteLines: 1 },
+    ),
+  );
+  const steps = installStepsLayout(SCREEN_CONFIG, 3);
+  const view = settingsView(
+    measure,
+    {
+      art: () => undefined,
+      layout,
+      rows: SETTING_ROWS,
+      words: gameData.menuText.settings,
+    },
+    {
+      dim: SCREEN_LAYOUT.screen,
+      dragging: undefined,
+      focus: null,
+      pressed: undefined,
+      settings: DEFAULT_SETTINGS,
+      steps: { ...steps, kind: "ios" },
+    },
+  );
+  const action = footer(view.card.panel, view.card.footer, true);
+  expect(view.build.capTop + fonts.body.capHeight).toBeLessThanOrEqual(action.rect.y - MODAL.gap);
+  for (const row of view.rows) {
+    expect(row.rect.y + row.rect.height).toBeLessThanOrEqual(action.rect.y - MODAL.gap);
+  }
+  const step = view.steps!;
+  const close = footer(step.card.panel, step.card.footer, true);
+  expect(
+    step.steps.capTop + inkRowsOfLines(fonts.body, step.steps.lines.length) * 2,
+  ).toBeLessThanOrEqual(close.rect.y - MODAL.gap);
+});
+
+it("grows and recentres detail and badge cards rather than covering the final body lines", () => {
+  const card = detailCardView(gameData, measure, SCREEN_LAYOUT.screen, {
+    card: {
+      lines: [gameData.homeText.detail.gearSubtitle],
+      locked: false,
+      status: gameData.homeText.shop.owned,
+      subtitle: gameData.homeText.detail.gearSubtitle,
+      title: gameData.shopGear.runningShoes.name,
+    },
+    kind: "gear",
+    picture: { key: "missing-test-art", scale: 1 },
+  });
+  const action = footer(card.card.panel, card.card.footer, true);
+  for (const text of card.texts) {
+    expect(
+      text.capTop +
+        inkRowsOfLines(fonts[text.font ?? "body"], text.lines.length) * (text.scale ?? 2),
+    ).toBeLessThanOrEqual(action.rect.y - MODAL.gap);
+  }
+  const badge = badgeWall(gameData, [gameData.achievements[0]!.id])[0]!;
+  const view = badgeCardView(gameData, measure, SCREEN_LAYOUT.screen, {
+    badge,
+    burst: false,
+    reduced: true,
+  });
+  const close = footer(view.panel, view.footer, true);
+  for (const text of view.texts) {
+    expect(
+      text.capTop +
+        inkRowsOfLines(fonts[text.font ?? "body"], text.lines.length) * (text.scale ?? 2),
+    ).toBeLessThanOrEqual(close.rect.y - MODAL.gap);
+  }
+});
+
+it("keeps purchase and update choices above a separate nonprimary dismissal row", () => {
+  const lines = confirmLines(gameData, {
+    bankAfter: cents(0),
+    name: gameData.shopGear.runningShoes.name,
+    price: cents(100),
+    purchase: { gear: "runningShoes", kind: "gear" },
+  });
+  const purchase = purchaseConfirmCardView(measure, {
+    lines,
+    picture: { key: "missing-test-art", scale: 1 },
+    pressed: undefined,
+  });
+  const close = footer(purchase.card.panel, purchase.card.footer, false);
+  expect(purchase.card.buttons.map(({ label, primary }) => ({ label, primary }))).toEqual([
+    { label: lines.cancel, primary: false },
+    { label: lines.buy, primary: true },
+  ]);
+  for (const button of purchase.card.buttons) {
+    expect(button.rect.y + button.rect.height).toBeLessThanOrEqual(close.rect.y - MODAL.gap);
+  }
+  const update = updateModalLayout(SCREEN_LAYOUT.screen, { action: 60, cancel: 40, title: 60 });
+  const dismiss = dismissFooter(
+    measure,
+    { label: gameData.menuText.common.close, primary: false },
+    update.panel,
+  );
+  for (const button of [update.button, update.cancel]) {
+    expect(button.y + button.height).toBeLessThanOrEqual(dismiss.rect.y - MODAL.gap);
+  }
+});
+
+it("keeps the Shop and Logbook scroll viewport clear of their centred footer", () => {
+  const view = shopPageView(measure, {
+    closePressed: false,
+    tabs: [],
+    title: gameData.menuText.stats.title,
+  });
+  const close = footer(view.card, view.footer, true);
+  for (const rect of [SHOP_LAYOUT.list.rect, SHOP_LAYOUT.list.unscrolledRect, STATS_LAYOUT.view]) {
+    expect(rect.y + rect.height).toBeLessThanOrEqual(close.rect.y - MODAL.gap);
+    expect(rect.height).toBeGreaterThan(48);
+  }
+});

@@ -3,6 +3,7 @@ import type { Point, Rect } from "@andornaut/game-kit/runtime/rect";
 
 import type { GameData } from "../data/types.ts";
 import { type CloseControl, closeControl } from "../ui/closeControl.ts";
+import { DISMISS_FOOTER_SPACE, dismissFooter } from "../ui/modal/dismissFooter.ts";
 import { MODAL, modalPanelWidth, modalRect } from "../ui/modal/layout.ts";
 import type { PanelButton } from "../ui/modal/types.ts";
 import { PALETTE } from "../ui/palette.ts";
@@ -77,7 +78,7 @@ export function badgeCardView(
     ),
   );
   const panel = modalRect(dim, undefined, {
-    height: detailPanel(fonts, goal.length, line.length).height,
+    height: detailPanel(fonts, goal.length, line.length).height + DISMISS_FOOTER_SPACE,
     width,
   });
   const tops = detailTextTops(fonts, goal.length);
@@ -140,6 +141,7 @@ export function badgeCardView(
         : undefined,
     dim,
     fills,
+    footer: dismissFooter(measure, { label: data.menuText.common.close, primary: true }, panel),
     panel,
     texts: [
       centred(DETAIL_TEXT.nameY, [badge.name], colours.name, "title"),

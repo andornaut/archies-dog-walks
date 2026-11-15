@@ -1,8 +1,10 @@
 import { insetRect, type Rect } from "@andornaut/game-kit/runtime/rect";
 
+import { MENU_TEXT } from "../data/menuText.ts";
 import { SCREEN_CONFIG } from "../data/screen.ts";
 import type { CloseControl } from "../ui/closeControl.ts";
 import { PLAIN_ITEM, tileState } from "../ui/interaction.ts";
+import { dismissFooter } from "../ui/modal/dismissFooter.ts";
 import { type PanelButton, type PanelMeasure, type PanelText } from "../ui/modal/types.ts";
 import { panelTitle } from "../ui/modal/view.ts";
 import { PALETTE } from "../ui/palette.ts";
@@ -118,6 +120,7 @@ export function shopPageView(
     card: PANEL,
     close,
     closePressed: page.closePressed,
+    footer: dismissFooter(measure, { label: MENU_TEXT.common.close, primary: true }, PANEL),
     tabs,
     title: panelTitle(measure, PANEL, title.capTop, page.title),
     wood: {
