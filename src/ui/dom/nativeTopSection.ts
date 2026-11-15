@@ -44,7 +44,7 @@ export interface NativeTopSection {
   readonly element: HTMLElement;
   readonly revealed: Promise<boolean>;
   dispose(): void;
-  setAmount(full: string, short?: string): void;
+  setAmount(full: string, short: string): void;
   setEffectCount(count: number): void;
   setInert(inert: boolean): void;
   setInputBottom(bottom: number | undefined): void;
@@ -423,7 +423,7 @@ export function createNativeTopSection(
     },
     element: root,
     revealed: reveal.revealed,
-    setAmount(full, abbreviated = full) {
+    setAmount(full, abbreviated) {
       if (amount === full && short === abbreviated) {
         return;
       }

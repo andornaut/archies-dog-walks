@@ -196,6 +196,16 @@ describe("native top section integration", () => {
     expect(wells.every((node) => node.hidden)).toBe(true);
     expect(() => view.setEffectCount(7)).toThrow("configured top section");
   });
+  it("uses the existing short currency form inside the fixed walk well", () => {
+    const { element, view } = fixture("click", 6);
+    view.setAmount("1,234", "1.2k");
+    const texts = element
+      .all()
+      .filter((node) => node.className.includes("adw-text"))
+      .map((node) => node.textContent);
+    expect(texts).toContain("1.2k");
+    expect(texts).not.toContain("1,234");
+  });
   it("updates currency and mute state without replacing controls", () => {
     const { buttons, element, view } = fixture();
     view.setAmount("9".repeat(16), "999K");

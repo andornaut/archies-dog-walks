@@ -61,7 +61,7 @@ import {
   walkBarLayout,
 } from "../hud/walkHud.ts";
 import { BUFF_POP, CHARM, sparkleAt } from "../layout/buffLayout.ts";
-import { dollarAmountText } from "../presentation/currency.ts";
+import { dollarAmountText, shortDollarAmountText } from "../presentation/currency.ts";
 import { ownerMaxHearts } from "../rules/dogs.ts";
 import { hintFor, hintJumpsQueue } from "../rules/hints.ts";
 import { walkEarnings } from "../rules/run.ts";
@@ -476,7 +476,7 @@ export class HudScene extends Scene {
     const hidden = overlay instanceof CardScene && overlay.holding();
     this.messages?.update(aged, HUD_DEPTH.message, this.debuffBars.length, hidden);
     this.showPauseIcon(view.run.phase.kind === "walking", pause);
-    this.showMoney(dollarAmountText(this.shownMoney(view.run)));
+    this.showMoney(this.shownMoney(view.run));
   }
   // The cash the walk keeps, all of it until it ends (walkEarnings), less fees and money changes
   // still flying to it, so the cash an early end loses counts down once its label lands.
@@ -487,8 +487,8 @@ export class HudScene extends Scene {
     return this.feedback?.shownMoney(landed) ?? landed;
   }
   // The "$" and the amount from the cash's x at the cash's scale, one font advance apart.
-  private showMoney(amount: string): void {
-    this.topSection?.setAmount(amount);
+  private showMoney(amount: Cents): void {
+    this.topSection?.setAmount(dollarAmountText(amount), shortDollarAmountText(amount));
   }
   // The detail card of what a held press explains, the home screen's, while it is open, in the
   // topmost scene over the walk (overlayScene), which with nothing else open is the HUD: a press
