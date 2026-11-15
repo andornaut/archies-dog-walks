@@ -43,6 +43,7 @@ import { HelpPictureScene } from "./scenes/HelpPictureScene.ts";
 import { HelpScene } from "./scenes/HelpScene.ts";
 import { watchHomeScreen } from "./scenes/homeScreen.ts";
 import { HudScene } from "./scenes/HudScene.ts";
+import { pauseLoadingError } from "./scenes/loadingErrorPause.ts";
 import { MenuScene } from "./scenes/MenuScene.ts";
 import { PauseScene } from "./scenes/PauseScene.ts";
 import { stopResuming } from "./scenes/profileStore.ts";
@@ -171,9 +172,12 @@ function bootGame(context: GameStartup): Game {
       return;
     }
     const required = createRequiredUi({ layer, progress: context.nativeProgress }, (retry) =>
-      mountLoadingError(
-        { layer, retry, settings: pageDeviceSettings(), words: gameData.menuText.loadingError },
-        document.body,
+      pauseLoadingError(
+        game,
+        mountLoadingError(
+          { layer, retry, settings: pageDeviceSettings(), words: gameData.menuText.loadingError },
+          document.body,
+        ),
       ),
     );
     game.registry.set(REQUIRED_UI, required);

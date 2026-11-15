@@ -1,9 +1,14 @@
 import { createProgressState } from "@andornaut/game-kit/progressState";
 import { expect, it, vi } from "vitest";
 
+import { pauseLoadingError } from "./loadingErrorPause.ts";
 import { createRequiredUi } from "./requiredUi.ts";
 
-function fixture(font: "failed" | "loading" | "ready", asset: typeof font) {
+function fixture(
+  font: "failed" | "loading" | "ready",
+  asset: typeof font,
+  game?: Parameters<typeof pauseLoadingError>[0],
+) {
   const listeners = new Set<() => void>();
   const notify = () => listeners.forEach((listener) => listener());
   const state = { asset, font };
@@ -28,7 +33,7 @@ function fixture(font: "failed" | "loading" | "ready", asset: typeof font) {
   const progress = createProgressState();
   const waiting = createRequiredUi({ layer: resources, progress }, (run) => {
     retry = run;
-    return view;
+    return game === undefined ? view : pauseLoadingError(game, view);
   });
   return { listeners, notify, progress, resources, retry: () => retry(), state, view, waiting };
 }
@@ -136,3 +141,46 @@ it("holds bootstrap font metrics without retrying successful native fonts or ima
   stop();
   f.waiting.dispose();
 });
+
+it.each([false, true])(
+  "holds late failure and retry without advancing a previously paused=%s walk",
+  (paused) => {
+    const run = { elapsed: 100, money: 250 };
+    const game = {
+      isPaused: paused,
+      pause: vi.fn(() => {
+        game.isPaused = true;
+      }),
+      resume: vi.fn(() => {
+        game.isPaused = false;
+      }),
+    };
+    const tick = () => {
+      if (!game.isPaused) {
+        run.elapsed++;
+        run.money--;
+      }
+    };
+    const f = fixture("ready", "ready", game);
+    // Ordinary loading before any failure does not interrupt play.
+    f.state.asset = "loading";
+    f.notify();
+    expect(game.isPaused).toBe(paused);
+    f.state.asset = "failed";
+    f.notify();
+    expect(game.isPaused).toBe(true);
+    tick();
+    f.retry();
+    tick();
+    expect(run).toEqual({ elapsed: 100, money: 250 });
+    f.state.asset = "ready";
+    f.notify();
+    expect(game.isPaused).toBe(paused);
+    expect(game.resume).toHaveBeenCalledTimes(paused ? 0 : 1);
+    f.state.asset = "failed";
+    f.notify();
+    f.waiting.dispose();
+    expect(game.isPaused).toBe(true);
+    expect(game.resume).toHaveBeenCalledTimes(paused ? 0 : 1);
+  },
+);
