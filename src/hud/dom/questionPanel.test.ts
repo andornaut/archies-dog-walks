@@ -640,3 +640,58 @@ it("keeps a footer-only overlay dismissible without introducing a corner close c
   expect(close).toHaveBeenCalledOnce();
   shown.destroy();
 });
+
+it("uses a detail card's existing any-tap dismissal for its native X and footer", () => {
+  const { element, layer } = menuContext();
+  const dismiss = vi.fn();
+  const rect = { height: 240, width: 280, x: 40, y: 120 };
+  const card = modalCardView(MEASURE, rect, gameData.menuText.menu.title, []);
+  const shared = {
+    artUrl: (path: string) => path,
+    closeLabel: gameData.menuText.common.close,
+    fonts: { body: gameFont("font-body"), title: gameFont("font-title") },
+    loadSheet: () => Promise.resolve({}),
+    pillColours: () => undefined,
+    toGame: (point: { x: number; y: number }) => point,
+  };
+  const shown = showDetailCard(layer, {
+    ...shared,
+    close: undefined,
+    dismiss: { area: SCREEN_LAYOUT.walkView, press: dismiss },
+    view: {
+      art: [],
+      card: {
+        ...card,
+        footer: dismissFooter(
+          MEASURE,
+          { label: gameData.menuText.common.close, primary: true },
+          rect,
+        ),
+      },
+      framed: [],
+      texts: [],
+      title: gameData.menuText.menu.title,
+    },
+  });
+  const buttons = element.children[0]!.all().filter((node) => node.tagName === "button");
+  expect(buttons.map((node) => node.getAttribute("aria-label"))).toEqual([
+    gameData.menuText.common.close,
+    gameData.menuText.common.close,
+  ]);
+  for (const button of buttons) {
+    button.fire("click", { detail: 0 });
+  }
+  expect(dismiss).toHaveBeenCalledTimes(2);
+  shown.destroy();
+  const passive = showDetailCard(layer, {
+    ...shared,
+    close: null,
+    view: { art: [], card, framed: [], texts: [], title: gameData.menuText.menu.title },
+  });
+  expect(
+    (passive.element as unknown as { all(): { tagName: string; className: string }[] })
+      .all()
+      .filter((node) => node.tagName === "button" || node.className === "adw-close"),
+  ).toEqual([]);
+  passive.destroy();
+});

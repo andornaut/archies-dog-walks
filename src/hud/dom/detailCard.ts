@@ -297,7 +297,7 @@ export function showDetailCard(layer: UiLayer, input: DomDetailCardInput): DomQu
     },
   ];
   return showQuestionPanel(layer, {
-    close: input.close,
+    close: input.close === undefined ? input.dismiss?.press : input.close,
     closeLabel: input.closeLabel,
     ...(input.closePressed === undefined ? {} : { closePressed: input.closePressed }),
     ...(input.dismiss === undefined ? {} : { dismiss: input.dismiss }),
