@@ -25,5 +25,9 @@ export function maskToRect(
   if (paintRectMask(scene.textures, SCREEN_CONFIG, key, rect) === undefined) {
     return;
   }
-  list.enableFilters().filters?.internal.addMask(key);
+  list.enableFilters();
+  // Filter autofocus copies camera size and zoom but retains its independent origin.
+  const camera = scene.cameras.main;
+  list.filterCamera?.setOrigin(camera.originX, camera.originY);
+  list.filters?.internal.addMask(key);
 }
