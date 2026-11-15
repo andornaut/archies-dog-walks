@@ -9,6 +9,7 @@ import { HELP_BAR_BUTTONS, HELP_LAYOUT } from "../help/helpLayout.ts";
 import { applyHelpAction, type HelpAction } from "../help/helpPaging.ts";
 import { closeHelp } from "../help/helpSeen.ts";
 import { type HelpMeasure, helpView } from "../help/helpView.ts";
+import { coverHelpUnderlay } from "../hud/dom/helpUnderlay.ts";
 import type { DomQuestionPanel } from "../hud/dom/questionPanel.ts";
 import { isMuteKey } from "../input/keyBindings.ts";
 import { screenArea } from "../input/outsideTap.ts";
@@ -87,6 +88,11 @@ export class HelpScene extends Scene {
   }
 
   create(data?: OverlayData): void {
+    const place = htmlPanelPlace(this);
+    if (place !== undefined) {
+      // Restore covered roots before this scene disposes its modal and returns focus.
+      this.events.once(Scenes.Events.SHUTDOWN, coverHelpUnderlay(place.layer.element));
+    }
     this.html = undefined;
     this.topSection = undefined;
     this.page = 0;
