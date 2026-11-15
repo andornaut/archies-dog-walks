@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { SCREEN_LAYOUT } from "../data/screen.ts";
 import { HOME_BAR_BUTTONS, homeBarButtons } from "../home/homeLayout.ts";
 import { WALK_BAR_BUTTONS, walkBarLayout } from "../hud/walkHud.ts";
-import { topSectionCurrency, topSectionLayout } from "../ui/topSection.ts";
+import { topSectionButtonBacking, topSectionCurrency, topSectionLayout } from "../ui/topSection.ts";
 
 // These are the same owners under their overlays, not separate overlay layouts.
 describe("the shared top section", () => {
@@ -44,28 +44,32 @@ describe("the shared top section", () => {
     expect(layout.effectWells).toEqual(shared.effectWells);
     expect(layout.effectHolds).toEqual(shared.effectHolds);
   });
-  it("centres visible 24-pixel effects on the full screen beside padded currency and controls", () => {
+  it("keeps currency and control backings fixed while centring effects within their reserved region", () => {
     const max = topSectionLayout(WALK_BAR_BUTTONS, { currency: true, effects: 6 });
     const few = topSectionLayout(WALK_BAR_BUTTONS, { currency: true, effects: 2 });
     expect(max.controls.map(([, control]) => control)).toEqual([
       { face: { x: 278, y: 9 }, hit: { height: 48, width: 48, x: 264, y: 0 } },
       { face: { x: 326, y: 9 }, hit: { height: 48, width: 48, x: 312, y: 0 } },
     ]);
-    expect(max.currency).toEqual({ height: 29, width: 82, x: 5, y: 5 });
-    expect(max.effectWells.map(({ x }) => x)).toEqual([97, 125, 153, 181, 209, 237]);
+    expect(max.currency).toEqual({ height: 29, width: 97, x: 5, y: 5 });
+    expect(max.effectWells.map(({ x }) => x)).toEqual([105, 131, 157, 183, 209, 235]);
     expect(few.effectWells).toEqual([
-      { height: 26, width: 26, x: 153, y: 6 },
-      { height: 26, width: 26, x: 181, y: 6 },
+      { height: 26, width: 26, x: 157, y: 6 },
+      { height: 26, width: 26, x: 183, y: 6 },
     ]);
     expect(few.effectHolds).toEqual([
-      { height: 40, width: 28, x: 152, y: 0 },
-      { height: 40, width: 28, x: 180, y: 0 },
+      { height: 40, width: 26, x: 157, y: 0 },
+      { height: 40, width: 26, x: 183, y: 0 },
+    ]);
+    expect(max.controls.map(([, control]) => topSectionButtonBacking(control.face))).toEqual([
+      { height: 29, width: 29, x: 273.5, y: 5 },
+      { height: 29, width: 29, x: 321.5, y: 5 },
     ]);
     const cash = topSectionCurrency(max, 66);
-    expect(cash).toMatchObject({ left: 13, room: 69, scale: 3 });
-    const bank = topSectionCurrency(topSectionLayout(HOME_BAR_BUTTONS, { currency: true }), 132);
-    expect(bank.well.width).toBe(145);
+    expect(cash).toMatchObject({ left: 20, room: 84, scale: 3 });
+    const bank = topSectionCurrency(topSectionLayout(HOME_BAR_BUTTONS, { currency: true }), 84);
+    expect(bank.well.width).toBe(97);
     expect(bank.left).toBe(11);
-    expect(bank.room).toBe(230);
+    expect(bank.room).toBe(84);
   });
 });

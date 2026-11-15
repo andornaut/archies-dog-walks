@@ -83,7 +83,7 @@ const EFFECTS_X = FIRST_EFFECT.x;
 
 // Shared geometry for the maximum visible effect count. Runtime rendering and explanation
 // hits request the actual visible count through walkBarLayout. Currency uses full-size text
-// with symmetric padding; visible effects are centred on the full logical screen.
+// with symmetric padding; effects centre within the reserved region based only on visible count.
 export const WALK_BAR = {
   buttonFace: TOP_BAR_FACE,
   buttons: BUTTONS,

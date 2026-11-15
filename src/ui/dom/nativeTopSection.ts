@@ -13,7 +13,12 @@ import {
 } from "../domScale.ts";
 import { PALETTE } from "../palette.ts";
 import { TOP_BAR_FACE, topBarRects } from "../topBarTrim.ts";
-import { type TopSectionButton, topSectionCurrency, topSectionLayout } from "../topSection.ts";
+import {
+  type TopSectionButton,
+  topSectionButtonBacking,
+  topSectionCurrency,
+  topSectionLayout,
+} from "../topSection.ts";
 import { type DomArtSource, imageArt, sheetArt } from "./artElements.ts";
 import { guardNativeInput, revealPaint } from "./modalLifecycle.ts";
 import { createTextLine, placeBox, placeText, setBox } from "./pixelLine.ts";
@@ -120,6 +125,7 @@ export function createNativeTopSection(
   let released: BarControl | undefined;
   const updateIcons: (() => void)[] = [];
   for (const [id, { face, hit }] of layout.controls) {
+    box(PALETTE.ink, topSectionButtonBacking(face));
     const button = doc.createElement("button");
     button.className = "adw-close";
     button.type = "button";

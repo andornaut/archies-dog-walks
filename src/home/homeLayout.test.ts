@@ -12,7 +12,7 @@ import { gameData } from "../data/index.ts";
 import { HOME_SCREEN, MIN_PRESS } from "../data/layout.ts";
 import { SCREEN_CONFIG, SCREEN_LAYOUT } from "../data/screen.ts";
 import type { WalkerId } from "../data/types.ts";
-import { ownerPhotoRect, WALK_BAR } from "../hud/walkHud.ts";
+import { cashLeft, ownerPhotoRect, WALK_BAR } from "../hud/walkHud.ts";
 import { MIN_TAP_SIZE } from "../layout/screenLayout.ts";
 import { dollarAmountText, dollarText, shortDollarAmountText } from "../presentation/currency.ts";
 import { unlockPrice } from "../rules/shop.ts";
@@ -441,7 +441,7 @@ describe("the top bar's bank", () => {
 
   // The well ends wellClear columns before the first button's face.
   it.each([
-    [9_999, "$9,999"],
+    [9_999, "$9.9k"],
     [10_000, "$10k"],
     [99_999, "$99k"],
   ])("shows %i dollars as %s, its well clear of the buttons", (dollars, text) => {
@@ -451,12 +451,12 @@ describe("the top bar's bank", () => {
     expect(first - well.x - well.width).toBeGreaterThanOrEqual(HOME_SCREEN.topBar.wellClear);
   });
 
-  // The well is the ink, pad columns either side and the lip, no wider than its widest.
-  const { lip, maxWidth } = HOME_LAYOUT.topBar.well;
+  // The bank keeps the same backing width for every amount.
+  const { maxWidth } = HOME_LAYOUT.topBar.well;
   it.each<[number, number]>([
-    [0, 2 * bank.pad + lip],
-    [1, 1 + 2 * bank.pad + lip],
-    [BANK_ROOM - 1, maxWidth - 1],
+    [0, maxWidth],
+    [1, maxWidth],
+    [BANK_ROOM - 1, maxWidth],
     [BANK_ROOM, maxWidth],
     [BANK_ROOM + 1, maxWidth],
   ])("sets the well for %ipx of ink %ipx wide", (ink, wellWidth) => {
@@ -511,7 +511,7 @@ describe("the top bar's bank", () => {
         well.y,
         Array.from({ length: well.height }, (_, row) => pieces.mid(row)),
       );
-      const left = well.x + bank.pad;
+      const left = cashLeft(columns.right - columns.left);
       const rows = fontInkRows("font-title", style, text);
       const clear = {
         above: bank.capsY + rows.top - down.start,
@@ -520,7 +520,7 @@ describe("the top bar's bank", () => {
         right: across.end - (left + columns.right - columns.left),
       };
       expect(clear.left).toBeGreaterThan(0);
-      expect(clear.right).toBe(clear.left);
+      expect(Math.abs(clear.right - clear.left)).toBeLessThanOrEqual(1);
       expect(clear.above).toBeGreaterThan(0);
       expect(clear.above - clear.below).toBe((clear.above + clear.below) % 2);
     },

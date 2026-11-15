@@ -1992,7 +1992,7 @@
         "well": {
           "height": 29,
           "lip": 1,
-          "maxWidth": 243,
+          "maxWidth": 97,
           "x": 5,
           "y": 5
         },
@@ -2717,38 +2717,38 @@
     "effectHolds": [
       {
         "height": 40,
-        "width": 28,
-        "x": 96,
+        "width": 26,
+        "x": 105,
         "y": 0
       },
       {
         "height": 40,
-        "width": 28,
-        "x": 124,
+        "width": 26,
+        "x": 131,
         "y": 0
       },
       {
         "height": 40,
-        "width": 28,
-        "x": 152,
+        "width": 26,
+        "x": 157,
         "y": 0
       },
       {
         "height": 40,
-        "width": 28,
-        "x": 180,
+        "width": 26,
+        "x": 183,
         "y": 0
       },
       {
         "height": 40,
-        "width": 28,
-        "x": 208,
+        "width": 26,
+        "x": 209,
         "y": 0
       },
       {
         "height": 40,
-        "width": 28,
-        "x": 236,
+        "width": 26,
+        "x": 235,
         "y": 0
       }
     ],
@@ -2756,25 +2756,25 @@
       {
         "height": 26,
         "width": 26,
-        "x": 97,
+        "x": 105,
         "y": 6
       },
       {
         "height": 26,
         "width": 26,
-        "x": 125,
+        "x": 131,
         "y": 6
       },
       {
         "height": 26,
         "width": 26,
-        "x": 153,
+        "x": 157,
         "y": 6
       },
       {
         "height": 26,
         "width": 26,
-        "x": 181,
+        "x": 183,
         "y": 6
       },
       {
@@ -2786,7 +2786,7 @@
       {
         "height": 26,
         "width": 26,
-        "x": 237,
+        "x": 235,
         "y": 6
       }
     ],
@@ -2843,25 +2843,25 @@
         "capsY": 12,
         "ink": {
           "left": 11,
-          "right": 80
+          "right": 95
         },
-        "room": 69,
+        "room": 84,
         "scale": 3,
         "well": {
           "height": 29,
-          "width": 82,
+          "width": 97,
           "x": 5,
           "y": 5
         }
       },
       "effects": {
-        "holdInset": 1,
+        "holdInset": 0,
         "icon": 1,
         "iconSize": 24,
         "size": 26,
         "y": 6,
-        "pitch": 28,
-        "x": 97
+        "pitch": 26,
+        "x": 105
       }
     }
   },

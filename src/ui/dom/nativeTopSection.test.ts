@@ -167,7 +167,7 @@ describe("native top section integration", () => {
     });
     expect(press).toHaveBeenCalledTimes(2);
   });
-  it("centres only visible effect wells and reuses their native art nodes", () => {
+  it("centres visible effects inside their reserved region and reuses native art nodes", () => {
     const { element, view } = fixture("click", 6);
     const wells = element
       .all()
@@ -180,21 +180,37 @@ describe("native top section integration", () => {
         .filter((node) => !node.hidden)
         .map((node) => [node.style.left, node.style.top, node.style.width]),
     ).toEqual([
-      ["153px", "6px", "26px"],
-      ["181px", "6px", "26px"],
+      ["157px", "6px", "26px"],
+      ["183px", "6px", "26px"],
     ]);
     view.setEffectCount(6);
     expect(wells.filter((node) => !node.hidden).map((node) => node.style.left)).toEqual([
-      "97px",
-      "125px",
-      "153px",
-      "181px",
+      "105px",
+      "131px",
+      "157px",
+      "183px",
       "209px",
-      "237px",
+      "235px",
     ]);
     view.setEffectCount(0);
     expect(wells.every((node) => node.hidden)).toBe(true);
     expect(() => view.setEffectCount(7)).toThrow("configured top section");
+  });
+  it("fits approved five-character currency labels in one fixed well with unchanged controls", () => {
+    const { element, view } = fixture("click", 6);
+    const money = element.all().filter((node) => node.className.includes("adw-text"));
+    for (const text of ["999", "9.9k", "999m"]) {
+      view.setAmount(text, text);
+      expect(money.map((node) => node.textContent)).toEqual(["$", text]);
+      expect(money.map((node) => node.style.fontSize)).toEqual(["24px", "24px"]);
+    }
+    const backings = element
+      .all()
+      .filter((node) => node.style.width === "29px" && node.style.height === "29px");
+    expect(backings.map((node) => [node.style.left, node.style.top])).toEqual([
+      ["274px", "5px"],
+      ["322px", "5px"],
+    ]);
   });
   it("uses the existing short currency form inside the fixed walk well", () => {
     const { element, view } = fixture("click", 6);

@@ -173,15 +173,17 @@ describe("the walk bar", () => {
     expect(cash.capsY).toBe(home.bank.capsY);
   });
 
-  it("centres visible effect groups on the screen and clears currency and controls", () => {
+  it("centres visible effects within the fixed currency-to-controls region", () => {
     const { buttonFace, effects } = WALK_BAR;
     expect(2 * effects.y + effects.size).toBe(2 * buttonFace.y + buttonFace.size);
-    expect(effects.pitch - effects.size).toBe(2);
+    expect(effects.pitch - effects.size).toBe(0);
     for (const count of [2, EFFECT_WELLS]) {
       const bar = walkBarLayout(topBar, count);
       const first = bar.effectWells[0]!;
       const last = bar.effectWells.at(-1)!;
-      expect(first.x + last.x + last.width).toBe(2 * topBar.x + topBar.width);
+      expect(first.x + last.x + last.width).toBe(
+        topBar.x + WALK_BAR.cash.well.x + WALK_BAR.cash.well.width + bar.buttons.mute.hit.x,
+      );
       expect(first.x).toBeGreaterThan(WALK_BAR.cash.well.x + WALK_BAR.cash.well.width);
       expect(last.x + last.width).toBeLessThan(bar.buttons.mute.hit.x);
     }

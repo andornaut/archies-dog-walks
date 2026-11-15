@@ -1,6 +1,6 @@
 import { containsPoint, type Point, type Rect } from "@andornaut/game-kit/rect";
 
-import { HOME_SCREEN, MIN_PRESS, TOP_BAR_SIZES, WALK_BAR_PARTS } from "../data/layout.ts";
+import { MIN_PRESS, TOP_BAR_SIZES, WALK_BAR_PARTS } from "../data/layout.ts";
 import { SCREEN_CONFIG } from "../data/screen.ts";
 import { TEXT_SCALE, TITLE_CAP_ROWS } from "./textFit.ts";
 import {
@@ -23,8 +23,8 @@ export function topSectionGapLeft(left: number, right: number, width: number): n
   return left + Math.floor((right - left - width) / 2);
 }
 
-// Sections share one placement algorithm. Controls compact at the right; effects fill the
-// space between currency and controls. Hidden controls consume no columns.
+// Currency and controls keep fixed dimensions. Visible effects centre within their reserved
+// region, moving only with the effect count and never with the displayed amount.
 export function topSectionLayout<T extends TopSectionButton>(
   visible: readonly T[],
   sections: { currency?: boolean; effects?: number } = {},
@@ -43,20 +43,19 @@ export function topSectionLayout<T extends TopSectionButton>(
       },
     ] as const;
   });
-  const first = controls[0]?.[1];
   const effects = sections.effects ?? 0;
   const cash = WALK_BAR_PARTS.cash;
-  const minimumCurrencyWidth = cash.room + 2 * TOP_BAR_SIZES.well.padding + TOP_BAR_WELL.lip;
-  const maxCurrencyWidth =
-    effects > 0
-      ? minimumCurrencyWidth
-      : (first?.hit.x ?? SCREEN_CONFIG.width) - HOME_SCREEN.topBar.wellClear - TOP_BAR_WELL.x;
+  const currencyWidth = cash.room + 2 * TOP_BAR_SIZES.well.padding + TOP_BAR_WELL.lip;
   const currency = sections.currency
-    ? { height: TOP_BAR_WELL.height, width: maxCurrencyWidth, x: TOP_BAR_WELL.x, y: TOP_BAR_WELL.y }
+    ? { height: TOP_BAR_WELL.height, width: currencyWidth, x: TOP_BAR_WELL.x, y: TOP_BAR_WELL.y }
     : undefined;
   const style = WALK_BAR_PARTS.effects;
   const span = effects * style.size + Math.max(0, effects - 1) * style.gap;
-  const effectsX = topSectionGapLeft(0, SCREEN_CONFIG.width, span);
+  const effectsX = topSectionGapLeft(
+    TOP_BAR_WELL.x + currencyWidth,
+    controls[0]?.[1].hit.x ?? SCREEN_CONFIG.width,
+    span,
+  );
   const effectWells = Array.from({ length: effects }, (_, i) => ({
     height: style.size,
     width: style.size,
@@ -83,29 +82,24 @@ export function topSectionLayout<T extends TopSectionButton>(
   };
 }
 
+// Button backings share the currency well's vertical extent without changing faces or hits.
+export function topSectionButtonBacking(face: Point): Rect {
+  return {
+    height: TOP_BAR_WELL.height,
+    width: TOP_BAR_WELL.height,
+    x: face.x + (TOP_BAR_FACE.size - TOP_BAR_WELL.height) / 2,
+    y: TOP_BAR_WELL.y,
+  };
+}
+
 // Currency follows the same full-size metrics with or without an effects section.
-export function topSectionCurrency(
-  layout: { currency: Rect | undefined; effectWells: readonly Rect[] },
-  inkWidth: number,
-) {
+export function topSectionCurrency(layout: { currency: Rect | undefined }, inkWidth: number) {
   const cash = WALK_BAR_PARTS.cash;
   const maximum = layout.currency;
   if (maximum === undefined) {
     throw new Error("This top section has no currency");
   }
-  const fixed = layout.effectWells.length > 0;
-  const well = {
-    ...maximum,
-    width: fixed
-      ? maximum.width
-      : Math.min(
-          maximum.width,
-          Math.max(
-            cash.room + 2 * TOP_BAR_SIZES.well.padding + TOP_BAR_WELL.lip,
-            inkWidth + 2 * TOP_BAR_SIZES.well.padding + TOP_BAR_WELL.lip,
-          ),
-        ),
-  };
+  const well = maximum;
   return {
     left: well.x + Math.floor((well.width - inkWidth) / 2),
     room: maximum.width - TOP_BAR_WELL.lip - 2 * TOP_BAR_SIZES.well.padding,

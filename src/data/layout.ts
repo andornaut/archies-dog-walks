@@ -165,14 +165,14 @@ export const HUD_REGIONS = {
   zoneProgressHeight: 4,
 } as const;
 
-// Effect wells leave a shared gap while keeping six visible effects clear of both controls.
-const WALK_BAR_WELL_GAP = 2;
+// Native well borders separate adjacent icons without an extra gap.
+const WALK_BAR_WELL_GAP = 0;
 
 // The walk bar, in bar pixels.
 export const WALK_BAR_PARTS = {
   cash: {
     // The widest the cash's ink may be.
-    room: 69,
+    room: 84,
     // The cash's text scale, which the start screen's bank shares.
     scale: 3,
   },
@@ -180,7 +180,7 @@ export const WALK_BAR_PARTS = {
     // The gap between effect wells.
     gap: WALK_BAR_WELL_GAP,
     // How far the first well's hold reaches left of the well.
-    holdInset: 1,
+    holdInset: 0,
     // An icon's inset in its well.
     icon: 1,
     // art: an effect icon's side.
