@@ -173,17 +173,18 @@ describe("the walk bar", () => {
     expect(cash.capsY).toBe(home.bank.capsY);
   });
 
-  it("centres the effect wells down the faces, 2 columns apart, as far from the cash as the first press area", () => {
+  it("centres visible effect groups on the screen and clears currency and controls", () => {
     const { buttonFace, effects } = WALK_BAR;
     expect(2 * effects.y + effects.size).toBe(2 * buttonFace.y + buttonFace.size);
     expect(effects.pitch - effects.size).toBe(2);
-    const cash = { ...WALK_BAR.cash.well, x: topBar.x + WALK_BAR.cash.well.x };
-    const left = (BAR.effectWells[0]?.x ?? 0) - (cash.x + cash.width);
-    const lastWell = BAR.effectWells.at(-1) ?? cash;
-    const right = BAR.buttons[WALK_BAR_BUTTONS[0]].hit.x - (lastWell.x + lastWell.width);
-    expect(left).toBeGreaterThan(0);
-    expect(right - left).toBeGreaterThanOrEqual(0);
-    expect(right - left).toBeLessThanOrEqual(1);
+    for (const count of [2, EFFECT_WELLS]) {
+      const bar = walkBarLayout(topBar, count);
+      const first = bar.effectWells[0]!;
+      const last = bar.effectWells.at(-1)!;
+      expect(first.x + last.x + last.width).toBe(2 * topBar.x + topBar.width);
+      expect(first.x).toBeGreaterThan(WALK_BAR.cash.well.x + WALK_BAR.cash.well.width);
+      expect(last.x + last.width).toBeLessThan(bar.buttons.mute.hit.x);
+    }
   });
 
   // Side by side to the bar's right edge, each face centred in its column.

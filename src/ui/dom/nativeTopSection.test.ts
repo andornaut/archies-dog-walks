@@ -180,17 +180,17 @@ describe("native top section integration", () => {
         .filter((node) => !node.hidden)
         .map((node) => [node.style.left, node.style.top, node.style.width]),
     ).toEqual([
-      ["148px", "6px", "26px"],
-      ["176px", "6px", "26px"],
+      ["153px", "6px", "26px"],
+      ["181px", "6px", "26px"],
     ]);
     view.setEffectCount(6);
     expect(wells.filter((node) => !node.hidden).map((node) => node.style.left)).toEqual([
-      "92px",
-      "120px",
-      "148px",
-      "176px",
-      "204px",
-      "232px",
+      "97px",
+      "125px",
+      "153px",
+      "181px",
+      "209px",
+      "237px",
     ]);
     view.setEffectCount(0);
     expect(wells.every((node) => node.hidden)).toBe(true);

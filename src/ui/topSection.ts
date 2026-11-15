@@ -56,11 +56,7 @@ export function topSectionLayout<T extends TopSectionButton>(
     : undefined;
   const style = WALK_BAR_PARTS.effects;
   const span = effects * style.size + Math.max(0, effects - 1) * style.gap;
-  const effectsX = topSectionGapLeft(
-    currency === undefined ? TOP_BAR_WELL.x : currency.x + currency.width,
-    first?.hit.x ?? SCREEN_CONFIG.width,
-    span,
-  );
+  const effectsX = topSectionGapLeft(0, SCREEN_CONFIG.width, span);
   const effectWells = Array.from({ length: effects }, (_, i) => ({
     height: style.size,
     width: style.size,
@@ -111,7 +107,7 @@ export function topSectionCurrency(
         ),
   };
   return {
-    left: well.x + Math.floor((well.width - TOP_BAR_WELL.lip - inkWidth) / 2),
+    left: well.x + Math.floor((well.width - inkWidth) / 2),
     room: maximum.width - TOP_BAR_WELL.lip - 2 * TOP_BAR_SIZES.well.padding,
     scale: cash.scale,
     top: wellCapsTop(TITLE_CAP_ROWS * cash.scale),

@@ -61,7 +61,7 @@ if (CURRENCY === undefined || FIRST_EFFECT === undefined) {
 const CASH_WELL = { height: CURRENCY.height, width: CURRENCY.width, x: CURRENCY.x, y: CURRENCY.y };
 const CASH_INK = {
   left: CASH_WELL.x + TOP_BAR_SIZES.well.padding,
-  right: CASH_WELL.x + CASH_WELL.width - TOP_BAR_SIZES.well.padding - 2,
+  right: CASH_WELL.x + CASH_WELL.width - TOP_BAR_SIZES.well.padding - 1,
 };
 const BUTTONS = Object.fromEntries(
   SHARED_BAR.controls.map(([id, { face, hit }]) => [
@@ -83,7 +83,7 @@ const EFFECTS_X = FIRST_EFFECT.x;
 
 // Shared geometry for the maximum visible effect count. Runtime rendering and explanation
 // hits request the actual visible count through walkBarLayout. Currency uses full-size text
-// with symmetric padding; effects are centred between its fixed well and the control pair.
+// with symmetric padding; visible effects are centred on the full logical screen.
 export const WALK_BAR = {
   buttonFace: TOP_BAR_FACE,
   buttons: BUTTONS,

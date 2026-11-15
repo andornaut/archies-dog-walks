@@ -44,7 +44,7 @@ describe("the shared top section", () => {
     expect(layout.effectWells).toEqual(shared.effectWells);
     expect(layout.effectHolds).toEqual(shared.effectHolds);
   });
-  it("centres visible 24-pixel effects between padded currency and the shared control pair", () => {
+  it("centres visible 24-pixel effects on the full screen beside padded currency and controls", () => {
     const max = topSectionLayout(WALK_BAR_BUTTONS, { currency: true, effects: 6 });
     const few = topSectionLayout(WALK_BAR_BUTTONS, { currency: true, effects: 2 });
     expect(max.controls.map(([, control]) => control)).toEqual([
@@ -52,17 +52,17 @@ describe("the shared top section", () => {
       { face: { x: 326, y: 9 }, hit: { height: 48, width: 48, x: 312, y: 0 } },
     ]);
     expect(max.currency).toEqual({ height: 29, width: 82, x: 5, y: 5 });
-    expect(max.effectWells.map(({ x }) => x)).toEqual([92, 120, 148, 176, 204, 232]);
+    expect(max.effectWells.map(({ x }) => x)).toEqual([97, 125, 153, 181, 209, 237]);
     expect(few.effectWells).toEqual([
-      { height: 26, width: 26, x: 148, y: 6 },
-      { height: 26, width: 26, x: 176, y: 6 },
+      { height: 26, width: 26, x: 153, y: 6 },
+      { height: 26, width: 26, x: 181, y: 6 },
     ]);
     expect(few.effectHolds).toEqual([
-      { height: 40, width: 28, x: 147, y: 0 },
-      { height: 40, width: 28, x: 175, y: 0 },
+      { height: 40, width: 28, x: 152, y: 0 },
+      { height: 40, width: 28, x: 180, y: 0 },
     ]);
     const cash = topSectionCurrency(max, 66);
-    expect(cash).toMatchObject({ left: 12, room: 69, scale: 3 });
+    expect(cash).toMatchObject({ left: 13, room: 69, scale: 3 });
     const bank = topSectionCurrency(topSectionLayout(HOME_BAR_BUTTONS, { currency: true }), 132);
     expect(bank.well.width).toBe(145);
     expect(bank.left).toBe(11);
