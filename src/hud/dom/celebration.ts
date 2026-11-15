@@ -1,4 +1,5 @@
 import type { Point, Rect } from "@andornaut/game-kit/rect";
+import type { BitmapFont } from "@andornaut/game-kit/text/bitmapFont";
 
 import {
   BADGE_STRIP,
@@ -7,7 +8,15 @@ import {
   stripUnderClose,
 } from "../../home/badgesView.ts";
 import { closeControl } from "../../ui/closeControl.ts";
-import { boundsAdvance, placeFrame, setBox, shownText } from "../../ui/dom/pixelLine.ts";
+import {
+  boundsAdvance,
+  capRows,
+  createTextLine,
+  placeFrame,
+  placeText,
+  setBox,
+  shownText,
+} from "../../ui/dom/pixelLine.ts";
 import type { UiLayer } from "../../ui/dom/uiLayer.ts";
 import {
   artPixel,
@@ -21,6 +30,8 @@ import {
 } from "../../ui/domScale.ts";
 import { type PanelText, type QuestionPanelView } from "../../ui/modal/types.ts";
 import { TEXT_SCALE } from "../../ui/textFit.ts";
+import { celebrationHeadlineView } from "../celebrationHeadlineView.ts";
+import { CELEBRATION_LAYOUT } from "../celebrationLayout.ts";
 import type { CentredRow, DottedRule, ZoneCelebrationView } from "../celebrationView.ts";
 import { confettiPart, type DomBadgeCardInput } from "./badgeCard.ts";
 import { artPart, type DomDetailCardInput, textPart } from "./detailCard.ts";
@@ -31,14 +42,10 @@ import {
   showQuestionPanel,
 } from "./questionPanel.ts";
 
-// The celebrations in HTML over the canvas, which keeps the headline, the starburst, the walker,
-// the badges, the faces and the confetti: a zone celebration's plate or bubble, its text, icons
-// and button, and a badge celebration's title, close control, names and button over the panel
-// the canvas draws. Each is a dialog whose buttons press on a click or Enter or Space; their
-// scene keeps every other key and a press anywhere else, which goes through to the canvas.
+// Native celebration surfaces share the scene-owned animation clock and world actor layer.
 
 type Shared = Pick<DomDetailCardInput, "artUrl" | "fonts" | "loadSheet" | "pillColours"> &
-  Pick<DomQuestionPanelInput, "closeLabel" | "toGame">;
+  Pick<DomQuestionPanelInput, "closeLabel" | "onPaint" | "toGame">;
 
 const ORIGIN = { x: 0, y: 0 } as const;
 
@@ -129,15 +136,22 @@ function frameless(
   };
 }
 
-// A zone celebration's plate or bubble in layer, its button doing press, shown and its dialog
-// focused. label names the dialog, whose headline the canvas draws.
+// Native headline, plate or bubble and action; the scene retains the world celebration actors.
 export function showZoneCelebration(
   layer: UiLayer,
-  input: Shared & { label: string; press: () => void; view: ZoneCelebrationView },
+  input: Shared & {
+    headline?: { font: BitmapFont; text: { title: string; subtitle: string } };
+    label: string;
+    press: () => void;
+    view: ZoneCelebrationView;
+  },
 ): DomQuestionPanel {
   const doc = layer.element.ownerDocument;
   const { view } = input;
   const parts = [
+    ...(input.headline === undefined
+      ? []
+      : zoneHeadlineParts(doc, input.headline.font, input.headline.text)),
     framePart(doc, view.frame),
     ...(view.rule === undefined ? [] : [rulePart(doc, view.frame.rect, view.rule)]),
     ...view.art.map((art) => artPart(doc, input, art)),
@@ -149,6 +163,7 @@ export function showZoneCelebration(
     closeLabel: input.closeLabel,
     fonts: input.fonts,
     label: input.label,
+    ...(input.onPaint === undefined ? {} : { onPaint: input.onPaint }),
     numberKeys: false,
     parts,
     presses: [input.press],
@@ -252,4 +267,31 @@ export function badgeStripParts(
       }
     },
   };
+}
+
+export function zoneHeadlineParts(
+  doc: Document,
+  font: BitmapFont,
+  text: { readonly title: string; readonly subtitle: string },
+): DomPart[] {
+  return celebrationHeadlineView(font, text).map((line) => {
+    const top = Math.min(
+      ...[...line.text].flatMap((char) => {
+        const glyph = font.glyphs.get(char);
+        return glyph !== undefined && glyph.width > 0 ? [glyph.yOffset] : [];
+      }),
+    );
+    const placed = {
+      capTop: line.inkTop + (capRows(font, "display") - top) * line.scale,
+      centre: "ink",
+      centreX: CELEBRATION_LAYOUT.centreX,
+      colour: line.colour,
+      font: "display",
+      scale: line.scale,
+      text: line.text,
+    } as const;
+    const element = createTextLine(doc, placed);
+    element.setAttribute("aria-hidden", "true");
+    return { element, place: (scale) => placeText(font, scale, ORIGIN, element, placed) };
+  });
 }

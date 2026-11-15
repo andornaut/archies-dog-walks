@@ -179,3 +179,20 @@ export function celebrationText(
     title: words.title,
   };
 }
+
+// Celebration completion requires the current painted input owner and runs once per presentation.
+export function celebrationAdvance(context: {
+  readonly accepts: () => boolean;
+  readonly close: () => void;
+  readonly done: () => void;
+}): () => void {
+  let completed = false;
+  return () => {
+    if (completed || !context.accepts()) {
+      return;
+    }
+    completed = true;
+    context.close();
+    context.done();
+  };
+}

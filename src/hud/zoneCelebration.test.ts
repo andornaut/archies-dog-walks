@@ -226,3 +226,20 @@ describe("zoneBannerHeading", () => {
     }
   });
 });
+
+it("does not complete an unpainted celebration and completes a received advance only once", async () => {
+  const { celebrationAdvance } = await import("./zoneCelebration.ts");
+  let painted = false;
+  const calls: string[] = [];
+  const advance = celebrationAdvance({
+    accepts: () => painted,
+    close: () => calls.push("close"),
+    done: () => calls.push("done"),
+  });
+  advance();
+  expect(calls).toEqual([]);
+  painted = true;
+  advance();
+  advance();
+  expect(calls).toEqual(["close", "done"]);
+});
