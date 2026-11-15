@@ -11,7 +11,7 @@ import { gameFont } from "../../testing/fontInk.ts";
 import { testState } from "../../testing/runState.ts";
 import { shownText } from "../../ui/dom/pixelLine.ts";
 import { sheetFrame, sheetTagFrames } from "../../ui/dom/sheetFrames.ts";
-import { domScale, exactDeviceX, fontPixel, wholeArtPixels } from "../../ui/domScale.ts";
+import { domScale, exactDeviceX, fontPixel, gridRect, wholeArtPixels } from "../../ui/domScale.ts";
 import { FEEDBACK } from "../feedback.ts";
 import { DOG_CARD } from "../walkHud.ts";
 import { createHudCards, type HudCardsContext } from "./hudCards.ts";
@@ -214,4 +214,50 @@ describe("native HUD cards", () => {
     view.update(clock(end + durations[0]!, 5300), run);
     expect(cards()[0]?.style.transform).toBe("translateX(0px)");
   });
+});
+
+it("keeps each card frame, portrait, heart and lead tag aligned to its logical phone layout", async () => {
+  await Promise.all(
+    [1, 2.625].map(async (dpr) => {
+      const scale = domScale(dpr, { height: 844, width: 390, x: 0, y: 0 });
+      const { cards, unlock, view } = fixture(scale);
+      const run = testState({ archie: 3 });
+      view.update(clock(), run);
+      unlock();
+      await view.revealed;
+      const card = cards()[0]!;
+      const slot = SCREEN_LAYOUT.dogSlots[0]!;
+      for (const [key, at] of [
+        ["ui-dog-card", slot],
+        [
+          dogFaceKey(gameData, "archie"),
+          { x: slot.x + DOG_CARD.dogFace.x, y: slot.y + DOG_CARD.dogFace.y },
+        ],
+        ["ui-heart", { x: slot.x + DOG_CARD.hearts.x, y: slot.y + DOG_CARD.hearts.y }],
+      ] as const) {
+        const art = card.all().find((node) => node.style.backgroundImage?.includes(`${key}.png`));
+        expect(art, key).toBeDefined();
+        const frame = sheetFrame(json(`sprites/${key}.json`), undefined);
+        const expected = gridRect(scale, { ...at, height: frame.height, width: frame.width });
+        expect(art!.style.width, key).toBe(`${expected.width}px`);
+        expect(art!.style.height, key).toBe(`${expected.height}px`);
+      }
+      const lead = card
+        .all()
+        .find((node) => node.style.backgroundImage?.includes("ui-lead-tag.png"));
+      const expected = gridRect(scale, {
+        height: 11,
+        width: 27,
+        x: slot.x + DOG_CARD.lead.x,
+        y: slot.y + DOG_CARD.lead.y,
+      });
+      expect(lead?.style).toMatchObject({
+        height: `${expected.height}px`,
+        left: `${expected.left}px`,
+        top: `${expected.top}px`,
+        width: `${expected.width}px`,
+      });
+      view.dispose();
+    }),
+  );
 });

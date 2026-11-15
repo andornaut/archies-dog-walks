@@ -2,7 +2,7 @@ import { expect, it, vi } from "vitest";
 
 import { FakeDocument, type FakeElement, fakeLayer } from "../../testing/fakeDom.ts";
 import { gameFont } from "../../testing/fontInk.ts";
-import { domScale } from "../../ui/domScale.ts";
+import { domScale, gridRect } from "../../ui/domScale.ts";
 import { createHudMoments } from "./hudMoments.ts";
 function setup(scale = domScale(1, { height: 560, width: 360, x: 0, y: 0 })) {
   const doc = new FakeDocument();
@@ -133,4 +133,41 @@ it("does not paint disposed moment roots when a completion callback replaces the
   expect(pill.children).toHaveLength(3);
   expect((old.element as unknown as FakeElement).parent).toBeUndefined();
   painter.dispose();
+});
+
+it("keeps persistent HUD images and sheets on their logical rectangles at phone DPRs", async () => {
+  await Promise.all(
+    [1, 2.625].map(async (dpr) => {
+      const scale = domScale(dpr, { height: 844, width: 390, x: 0, y: 0 });
+      const { element, painter } = setup(scale);
+      const group = painter.group(0);
+      const rects = [
+        { height: 76, width: 360, x: 0, y: 484 },
+        { height: 24, width: 24, x: 158, y: 7 },
+      ];
+      for (const rect of rects) {
+        group.art({ at: rect, image: rect, key: "ui-dog-card-band", projection: "layout" });
+      }
+      const sheet = group.art({
+        at: { x: 123, y: 490 },
+        key: "ui-heart",
+        projection: "layout",
+        still: true,
+        tags: ["play"],
+      });
+      await sheet.ready;
+      painter.update({ firingNow: 0, momentNow: 0, now: 0 });
+      const children = element.children[0]!.children;
+      [...rects, { height: 16, width: 16, x: 123, y: 490 }].forEach((rect, index) => {
+        const expected = gridRect(scale, rect);
+        expect(children[index]!.style).toMatchObject({
+          height: `${expected.height}px`,
+          left: `${expected.left}px`,
+          top: `${expected.top}px`,
+          width: `${expected.width}px`,
+        });
+      });
+      painter.dispose();
+    }),
+  );
 });

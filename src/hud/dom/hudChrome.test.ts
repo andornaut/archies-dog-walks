@@ -82,6 +82,7 @@ it("uses actual visible wells for one or six HUD icons and the spare treat pip",
       at: { x: oneWell.x + WALK_BAR.effects.icon, y: oneWell.y + WALK_BAR.effects.icon },
       image: { height: 24, width: 24 },
       key: hudEffectIconKey(effectItems(gameData, few)[0]!),
+      projection: "layout",
     },
   ]);
   const full = testState(
@@ -118,6 +119,7 @@ it("uses actual visible wells for one or six HUD icons and the spare treat pip",
       },
       image: { height: 24, width: 24 },
       key: hudEffectIconKey(item),
+      projection: "layout",
     })),
   );
   expect(calls.at(-1)).toMatchObject({

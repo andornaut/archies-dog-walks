@@ -113,7 +113,7 @@ export function createNativeTopSection(
       const rect = wells[index];
       art.element.hidden = rect === undefined;
       if (rect !== undefined) {
-        art.place(scale, ORIGIN, rect);
+        art.place(scale, ORIGIN, { ...rect, projection: "layout" });
       }
     });
   };

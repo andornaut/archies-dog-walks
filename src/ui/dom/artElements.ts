@@ -236,7 +236,7 @@ export function imageArt(
   readonly place: (
     scale: DomScale,
     origin: Point,
-    art: Point & { readonly height: number; readonly width: number },
+    art: Rect & Pick<SheetArtPlace, "projection">,
   ) => void;
 } {
   const element = doc.createElement("span");
@@ -247,11 +247,19 @@ export function imageArt(
     element,
     place: (scale, origin, art) => {
       const pixel = artPixel(scale);
+      const box =
+        art.projection === "layout"
+          ? gridRect(scale, art)
+          : {
+              height: art.height * pixel,
+              left: gridX(scale, art.x),
+              top: gridY(scale, art.y),
+              width: art.width * pixel,
+            };
       setBox(element, {
-        height: art.height * pixel,
-        left: gridX(scale, art.x) - gridX(scale, origin.x),
-        top: gridY(scale, art.y) - gridY(scale, origin.y),
-        width: art.width * pixel,
+        ...box,
+        left: box.left - gridX(scale, origin.x),
+        top: box.top - gridY(scale, origin.y),
       });
     },
     ready: Promise.resolve(artUrls(source, "image", key)),

@@ -13,6 +13,7 @@ import {
   imageArt,
   imageNineSlice,
   sheetArt,
+  type SheetArtPlace,
   sheetNineSlice,
 } from "../../ui/dom/artElements.ts";
 import { boundsAdvance, type DomTextBlock, placeBox, shownText } from "../../ui/dom/pixelLine.ts";
@@ -37,6 +38,7 @@ export interface HudMomentTime {
   firingNow: number;
 }
 export interface MomentArt {
+  readonly projection?: NonNullable<SheetArtPlace["projection"]>;
   key: string;
   clock?: HudMomentClock;
   // A fixed frame within the selected tag, zero-based, used only with still.
@@ -200,7 +202,11 @@ export function createHudMoments(
         if (art.image !== undefined) {
           const image = imageArt(doc, source, art.key);
           const unmount = mount(image.element, image.ready, (scale) =>
-            image.place(scale, ORIGIN, { ...art.at, ...art.image! }),
+            image.place(scale, ORIGIN, {
+              ...art.at,
+              ...art.image!,
+              projection: art.projection ?? "art",
+            }),
           );
           return { dispose: unmount, ready: Promise.resolve([]) };
         }
@@ -244,6 +250,7 @@ export function createHudMoments(
             const origin = art.origin ?? ORIGIN;
             sheet.place(scale, ORIGIN, {
               frame,
+              projection: art.projection ?? "art",
               scale: size,
               x: art.at.x - frame.width * size * origin.x,
               y: art.at.y - frame.height * size * origin.y,

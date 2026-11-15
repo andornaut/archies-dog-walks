@@ -2,7 +2,7 @@ import { expect, it, vi } from "vitest";
 
 import { FakeDocument } from "../../testing/fakeDom.ts";
 import { domScale, gridRect, gridX } from "../domScale.ts";
-import { imageNineSlice, sheetArt, sheetThreeSlice } from "./artElements.ts";
+import { imageArt, imageNineSlice, sheetArt, sheetThreeSlice } from "./artElements.ts";
 
 it("uses original sheet metadata with a disabled image and the requested animated frame", async () => {
   const json = {
@@ -101,4 +101,24 @@ it("retains three-slice art scaling unless logical projection is explicit", asyn
   expect((view.element.children[0] as unknown as { style: CSSStyleDeclaration }).style.width).toBe(
     `${gridX(scale, art.x + 3) - expected.left}px`,
   );
+});
+
+it("projects declared image layout edges without changing default authored-pixel scaling", () => {
+  const doc = new FakeDocument();
+  const source = { artUrl: (path: string) => path, loadSheet: vi.fn() };
+  const image = imageArt(doc as unknown as Document, source, "ui-dog-card-band");
+  for (const dpr of [1, 2.625]) {
+    const scale = domScale(dpr, { height: 844, width: 390, x: 0, y: 0 });
+    const art = { height: 76, width: 360, x: 0, y: 484 };
+    image.place(scale, { x: 0, y: 0 }, art);
+    expect(image.element.style.width).toBe(`${360 * Math.max(1, Math.floor(scale.unit * dpr))}px`);
+    image.place(scale, { x: 0, y: 0 }, { ...art, projection: "layout" });
+    const box = gridRect(scale, art);
+    expect(image.element.style).toMatchObject({
+      height: `${box.height}px`,
+      left: `${box.left}px`,
+      top: `${box.top}px`,
+      width: `${box.width}px`,
+    });
+  }
 });

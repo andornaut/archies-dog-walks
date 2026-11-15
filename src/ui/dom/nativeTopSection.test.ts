@@ -6,7 +6,7 @@ import { describe, expect, it, vi } from "vitest";
 import { gameData } from "../../data/index.ts";
 import { FakeDocument, fakeLayer, type FakeTarget } from "../../testing/fakeDom.ts";
 import { gameFont } from "../../testing/fontInk.ts";
-import { domScale } from "../domScale.ts";
+import { domScale, gridRect } from "../domScale.ts";
 import { topSectionLayout } from "../topSection.ts";
 import { createNativeTopSection } from "./nativeTopSection.ts";
 const labels = {
@@ -15,9 +15,14 @@ const labels = {
   mute: gameData.menuText.settings.sound,
   pause: gameData.menuText.pause.title,
 };
-function fixture(activation: "click" | "down" = "click", effects = 0, exit = false) {
+function fixture(
+  activation: "click" | "down" = "click",
+  effects = 0,
+  exit = false,
+  scale = domScale(1, { height: 560, width: 360, x: 0, y: 0 }),
+) {
   const doc = new FakeDocument();
-  const { element, layer } = fakeLayer(doc, domScale(1, { height: 560, width: 360, x: 0, y: 0 }));
+  const { element, layer } = fakeLayer(doc, scale);
   let pendingRoot: HTMLElement | undefined;
   let resolveReveal: (ready: boolean) => void = () => undefined;
   const revealed = new Promise<boolean>((resolve) => {
@@ -261,4 +266,26 @@ it("renders the existing Exit glyph and label to the right of Menu through the s
     via: "keyboard",
   });
   view.dispose();
+});
+
+it("projects the six native wells onto the same logical grid as the HUD icons at phone DPRs", () => {
+  for (const dpr of [1, 2.625]) {
+    const scale = domScale(dpr, { height: 844, width: 390, x: 0, y: 0 });
+    const { element, view } = fixture("click", 6, false, scale);
+    view.setEffectCount(6);
+    const wells = element
+      .all()
+      .filter((node) => node.style.backgroundImage?.includes("ui-hud-effect-well"));
+    const rects = topSectionLayout(["mute", "menu"], { effects: 6 }).effectWells;
+    rects.forEach((rect, index) => {
+      const expected = gridRect(scale, rect);
+      expect(wells[index]!.style).toMatchObject({
+        height: `${expected.height}px`,
+        left: `${expected.left}px`,
+        top: `${expected.top}px`,
+        width: `${expected.width}px`,
+      });
+    });
+    view.dispose();
+  }
 });

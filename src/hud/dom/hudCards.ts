@@ -178,6 +178,7 @@ export function createHudCards(
           ];
         art.place(scale, ORIGIN, {
           ...at,
+          projection: "layout",
           ...(selected === undefined ? { tag } : { frame: selected }),
         });
       });
@@ -236,6 +237,7 @@ export function createHudCards(
         draws.push((scale) =>
           art.place(scale, ORIGIN, {
             ...LEAD_ART,
+            projection: "layout",
             x: rect.x + DOG_CARD.lead.x,
             y: rect.y + DOG_CARD.lead.y,
           }),
@@ -333,7 +335,12 @@ export function createHudCards(
           }
           const current = lossFrames[selected];
           if (current !== undefined) {
-            art.place(scale, ORIGIN, { frame: current, x: rect.x, y: rect.y });
+            art.place(scale, ORIGIN, {
+              frame: current,
+              projection: "layout",
+              x: rect.x,
+              y: rect.y,
+            });
           }
           if (!flash.still) {
             dx = FEEDBACK.heart.shakeDx[selected] ?? 0;

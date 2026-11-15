@@ -65,6 +65,7 @@ export function createHudChrome(
         at: { x: band.x, y: band.y + band.height - 76 },
         image: { height: 76, width: 360 },
         key: "ui-dog-card-band",
+        projection: "layout",
       });
     } else {
       solid(group, PALETTE.darkBrown, band);
@@ -104,7 +105,12 @@ export function createHudChrome(
         replace("bars", 0, (group) =>
           bars.forEach(({ debuff, rect }) => {
             if (painter.hasArt("ui-debuff-bar")) {
-              group.art({ at: rect, key: "ui-debuff-bar", tags: [debuff] });
+              group.art({
+                at: rect,
+                key: "ui-debuff-bar",
+                projection: "layout",
+                tags: [debuff],
+              });
             } else {
               solid(group, colours[debuff].face, rect);
             }
@@ -112,6 +118,7 @@ export function createHudChrome(
               at: { x: rect.x + DEBUFF_BAR.icon.x, y: rect.y + DEBUFF_BAR.icon.y },
               image: { height: 16, width: 16 },
               key: debuffIconKey(debuff),
+              projection: "layout",
             });
             group.text({
               anchor: "ink",
@@ -220,6 +227,7 @@ export function createHudChrome(
                   at: { x: well.x + WALK_BAR.effects.icon, y: well.y + WALK_BAR.effects.icon },
                   image: { height: WALK_BAR.effects.iconSize, width: WALK_BAR.effects.iconSize },
                   key,
+                  projection: "layout",
                 });
               } else {
                 group.text({
@@ -239,6 +247,7 @@ export function createHudChrome(
               group.art({
                 at: spareTreatPipAt(well),
                 key: "treat@50",
+                projection: "layout",
                 still: true,
                 tags: ["idle"],
               });
