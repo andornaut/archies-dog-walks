@@ -1,12 +1,13 @@
 import { fillNames, wrapWords } from "@andornaut/game-kit/runtime/lines";
 import { containsPoint, rectsOverlap } from "@andornaut/game-kit/runtime/rect";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { gameData } from "../data/index.ts";
 import { SCREEN_LAYOUT } from "../data/screen.ts";
 import { dollarText } from "../presentation/currency.ts";
 import { bodyTextWidth } from "../testing/bodyFont.ts";
 import { fontFileMetrics, gameFont, inkWidth } from "../testing/fontInk.ts";
+import { DISMISS_FOOTER_SPACE } from "../ui/modal/dismissFooter.ts";
 import { modalTitleInk } from "../ui/modal/titleRole.ts";
 import { type PanelMeasure, type PanelText } from "../ui/modal/types.ts";
 import { PAUSE_MENU_ITEMS } from "../ui/navigationMenu.ts";
@@ -103,4 +104,37 @@ describe.each(PANELS)("questionPanelView for $name", ({ note, ...question }) => 
     expect(rim && containsPoint(rim, view.close.hit.x, view.close.hit.y)).toBe(true);
     expect(view.covered.some((rect) => rectsOverlap(rect, SCREEN_LAYOUT.topBar))).toBe(false);
   });
+});
+
+it("passes the separate dismiss reservation without inserting a semantic choice", () => {
+  const layout = vi.fn(homeQuestionLayout);
+  const labels = [
+    gameData.runText.homeQuestion.keepWalking,
+    gameData.runText.homeQuestion.headHome,
+  ];
+  const input = {
+    labels,
+    layout,
+    note: [],
+    primary: "first" as const,
+    sentenceLines: false,
+    showKeyNumbers: false,
+    title: gameData.runText.homeQuestion.title,
+  };
+  const view = questionPanelView(MEASURE, walkView, {
+    ...input,
+    footer: { label: gameData.menuText.common.close, primary: false },
+  });
+  expect(
+    layout.mock.calls.every(
+      ([, , parts]) => "footerSpace" in parts && parts.footerSpace === DISMISS_FOOTER_SPACE,
+    ),
+  ).toBe(true);
+  expect(view.buttons.map(({ label }) => label)).toEqual(labels);
+  expect(view.buttons.map(({ primary }) => primary)).toEqual([true, false]);
+  expect(view.footer).toMatchObject({ label: gameData.menuText.common.close, primary: false });
+  expect(view.footer!.rect.x + view.footer!.rect.width / 2).toBe(
+    view.panel.x + view.panel.width / 2,
+  );
+  expect(questionPanelView(MEASURE, walkView, input).footer).toBeUndefined();
 });
