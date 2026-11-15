@@ -8,6 +8,7 @@ export interface NativeInputGuard {
   readonly gate: PressGate;
   readonly subscribe: ModalInputGate["subscribe"];
   readonly cancel?: () => void;
+  readonly claim?: (event: PointerEvent) => { release(): void } | undefined;
   readonly down?: (event: PointerEvent) => void;
   readonly move?: (event: PointerEvent) => void;
   readonly up?: (event: PointerEvent, cancelled: boolean) => void;
@@ -17,13 +18,20 @@ export interface NativeInputGuard {
 export function guardNativeInput(guard: NativeInputGuard, root: HTMLElement): () => void {
   const doc = root.ownerDocument;
   let owner: number | undefined;
+  let lease: { release(): void } | undefined;
   let captured: (() => boolean) | undefined;
   const cancelled = new Set<number>();
+  const release = () => {
+    const held = lease;
+    lease = undefined;
+    held?.release();
+  };
   const cancel = () => {
     if (owner !== undefined) {
       cancelled.add(owner);
       owner = undefined;
       captured = undefined;
+      release();
       guard.cancel?.();
     }
   };
@@ -43,6 +51,12 @@ export function guardNativeInput(guard: NativeInputGuard, root: HTMLElement): ()
       reject(event);
       return;
     }
+    const claimed = guard.claim?.(event);
+    if (guard.claim !== undefined && claimed === undefined) {
+      reject(event);
+      return;
+    }
+    lease = claimed;
     owner = next.owner;
     captured = check;
     guard.down?.(event);
@@ -82,6 +96,7 @@ export function guardNativeInput(guard: NativeInputGuard, root: HTMLElement): ()
     );
     owner = next.owner;
     captured = undefined;
+    release();
     if (!accepted) {
       reject(event);
     }

@@ -21,8 +21,9 @@ it("admits one native pointer and cancels its hold across a modal even after tha
   const down = vi.fn();
   const up = vi.fn();
   const cancel = vi.fn();
+  const leaseRelease = vi.fn();
   const stop = guardNativeInput(
-    { cancel, down, gate, subscribe: gate.subscribe, up },
+    { cancel, claim: () => ({ release: leaseRelease }), down, gate, subscribe: gate.subscribe, up },
     root as unknown as HTMLElement,
   );
   const first = pointer(1, root);
@@ -32,6 +33,7 @@ it("admits one native pointer and cancels its hold across a modal even after tha
   const modal = gate.open();
   modal.close();
   expect(cancel).toHaveBeenCalledOnce();
+  expect(leaseRelease).toHaveBeenCalledOnce();
   const release = pointer(1, root, "pointerup");
   doc.fire("pointerup", release);
   expect(release.stopImmediatePropagation).toHaveBeenCalledOnce();
@@ -40,7 +42,9 @@ it("admits one native pointer and cancels its hold across a modal even after tha
   doc.fire("pointerup", pointer(3, root, "pointerup"));
   expect(down).toHaveBeenCalledTimes(2);
   expect(up).toHaveBeenCalledOnce();
+  expect(leaseRelease).toHaveBeenCalledTimes(2);
   stop();
+  expect(leaseRelease).toHaveBeenCalledTimes(2);
 });
 
 it("admits revealed and painted views, makes covered dialogs inert and restores them", async () => {
@@ -85,4 +89,20 @@ it("admits revealed and painted views, makes covered dialogs inert and restores 
   expect(gate.accepts()).toBe(true);
   view.destroy();
   expect(reveal.cancel).toHaveBeenCalledOnce();
+});
+
+it("rejects native pointer admission while the shared game press is already held", () => {
+  const doc = new FakeDocument();
+  const root = doc.createElement("div");
+  const gate = createModalInputGate();
+  const down = vi.fn();
+  const stop = guardNativeInput(
+    { claim: () => undefined, down, gate, subscribe: gate.subscribe },
+    root as unknown as HTMLElement,
+  );
+  const event = pointer(1, root);
+  root.fire("pointerdown", event);
+  expect(event.stopImmediatePropagation).toHaveBeenCalledOnce();
+  expect(down).not.toHaveBeenCalled();
+  stop();
 });
