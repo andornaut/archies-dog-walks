@@ -47,6 +47,7 @@ import {
 import { chooseSoundFormat, type SoundFormat } from "../audio/soundFormat.ts";
 import type { StorageState } from "../save/profile.ts";
 import { dispatchPhoneEvent, PHONE_EVENTS } from "./events.ts";
+import { reportInstallation, setInstallationOwner } from "./installationState.ts";
 import { createInstallNudge, type InstallNudge } from "./installNudge.ts";
 import { reportOfflineActivity, reportOfflineDownload } from "./offlineProgress.ts";
 import { reportRequiredDownload, reportRequiredUpdate } from "./requiredUpdate.ts";
@@ -109,6 +110,7 @@ function registerServiceWorker(): OfflinePlay | undefined {
         reportOfflineDownload(snapshot);
         reportRequiredDownload(snapshot);
       },
+      onInstallationState: reportInstallation,
       onOfflineActivity: reportOfflineActivity,
       onRequireNewer: reportRequired,
       onUpdateShown: (shown) => {
@@ -119,6 +121,7 @@ function registerServiceWorker(): OfflinePlay | undefined {
     },
     page,
   );
+  setInstallationOwner(play);
   updateFlow = play.flow;
   registrationHook = () => play.registrationReady();
   offerHook = (visible) => play.flow.setOfferVisible(visible);

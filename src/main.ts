@@ -30,6 +30,7 @@ import {
   setupPhoneApp,
   storagePersistence,
 } from "./pwa/index.ts";
+import { offlineInstallation } from "./pwa/installationState.ts";
 import { launchGame } from "./pwa/launchGame.ts";
 import { createUpdateIdle } from "./pwa/updateIdle.ts";
 import { pageDeviceSettings } from "./save/settings.ts";
@@ -170,11 +171,13 @@ function bootGame(context: GameStartup): Game {
     if (layer === undefined) {
       return;
     }
-    const required = createRequiredUi({ layer, progress: context.nativeProgress }, (retry) =>
-      pauseLoadingError(
-        game,
-        mountLoadingError({ layer, retry, settings: pageDeviceSettings() }, document.body),
-      ),
+    const required = createRequiredUi(
+      { installation: offlineInstallation, layer, progress: context.nativeProgress },
+      (retry) =>
+        pauseLoadingError(
+          game,
+          mountLoadingError({ layer, retry, settings: pageDeviceSettings() }, document.body),
+        ),
     );
     game.registry.set(REQUIRED_UI, required);
     const update = () => layer.update();

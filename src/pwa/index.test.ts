@@ -12,6 +12,7 @@ const {
   offline,
   registrationReady,
   requireNewer,
+  retryInstallation,
   setOfferVisible,
 } = vi.hoisted(() => ({
   accept: vi.fn().mockResolvedValue("blocked"),
@@ -21,6 +22,13 @@ const {
   offline: { options: undefined as OfflinePlayOptions | undefined },
   registrationReady: vi.fn(),
   requireNewer: vi.fn(),
+  retryInstallation: vi.fn().mockResolvedValue({
+    attempt: 2,
+    kind: "ready",
+    operationId: "install-2",
+    stage: "installed",
+    version: "v1",
+  }),
   setOfferVisible: vi.fn(),
 }));
 
@@ -32,6 +40,7 @@ vi.mock("@andornaut/game-kit/runtime/web/pwa/dom/offlinePlay", () => ({
       flow: { accept, arriveHome, dismissOffer, requireNewer, setOfferVisible },
       launchReady,
       registrationReady,
+      retryInstallation,
     };
   },
 }));
@@ -247,4 +256,36 @@ it("reports worker bytes only through existing first-visit and required-update h
   expect(foreground?.active).toBe(false);
   stopBackground();
   stopForeground();
+});
+
+it("forwards installation failure identity and Retry to the existing offline owner", async () => {
+  const { offlineInstallation } = await import("./installationState.ts");
+  const changed = vi.fn();
+  const stop = offlineInstallation.subscribe(changed);
+  const failed = {
+    attempt: 1,
+    error: new Error("503"),
+    kind: "failed",
+    operationId: "first-install",
+    stage: "installation",
+    version: "v1",
+  } as const;
+  offline.options!.onInstallationState!(failed);
+  expect(offlineInstallation.state()).toBe(failed);
+  expect(changed).toHaveBeenLastCalledWith(failed);
+  retryInstallation.mockClear();
+  await offlineInstallation.retry();
+  expect(retryInstallation).toHaveBeenCalledOnce();
+  expect(registrationReady).not.toHaveBeenCalled();
+  expect(arriveHome).not.toHaveBeenCalled();
+  stop();
+  changed.mockClear();
+  offline.options!.onInstallationState!({
+    attempt: 2,
+    kind: "ready",
+    operationId: "next",
+    stage: "installed",
+    version: "v1",
+  });
+  expect(changed).not.toHaveBeenCalled();
 });

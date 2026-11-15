@@ -29,13 +29,41 @@ function fixture(
     }),
   };
   const view = { dispose: vi.fn(), hide: vi.fn(), show: vi.fn() };
-  let retry!: () => void;
+  let retry!: () => Promise<void>;
   const progress = createProgressState();
-  const waiting = createRequiredUi({ layer: resources, progress }, (run) => {
+  let installationState: import("@andornaut/game-kit/runtime/web/pwa/dom/offlinePlay").InstallationState =
+    { attempt: 0, kind: "idle", operationId: undefined, stage: "idle", version: undefined };
+  const installationListeners = new Set<(state: typeof installationState) => void>();
+  const installation = {
+    retry: vi.fn(async () => {}),
+    state: () => installationState,
+    subscribe(listener: (state: typeof installationState) => void) {
+      installationListeners.add(listener);
+      listener(installationState);
+      return () => installationListeners.delete(listener);
+    },
+  };
+  const reportInstallation = (next: typeof installationState) => {
+    installationState = next;
+    installationListeners.forEach((listener) => listener(next));
+  };
+  const waiting = createRequiredUi({ installation, layer: resources, progress }, (run) => {
     retry = run;
     return game === undefined ? view : pauseLoadingError(game, view);
   });
-  return { listeners, notify, progress, resources, retry: () => retry(), state, view, waiting };
+  return {
+    installation,
+    installationListeners,
+    listeners,
+    notify,
+    progress,
+    reportInstallation,
+    resources,
+    retry: () => retry(),
+    state,
+    view,
+    waiting,
+  };
 }
 
 it.each(["asset", "font"] as const)(
@@ -135,3 +163,47 @@ it.each([false, true])(
     expect(game.resume).toHaveBeenCalledTimes(paused ? 0 : 1);
   },
 );
+
+it("presents independent installation attempts without changing required readiness or retry ownership", async () => {
+  const f = fixture("ready", "ready");
+  const enter = vi.fn();
+  f.waiting.wait(enter);
+  expect(enter).toHaveBeenCalledOnce();
+  const identity = { attempt: 1, operationId: "offline-1", version: "version-1" };
+  f.reportInstallation({
+    ...identity,
+    error: new Error("offline file503"),
+    kind: "failed",
+    stage: "installation",
+  });
+  const firstRevision = f.view.show.mock.lastCall![0].attempt;
+  expect(f.view.show).toHaveBeenLastCalledWith(expect.objectContaining({ kind: "failed" }));
+  await f.retry();
+  expect(f.installation.retry).toHaveBeenCalledOnce();
+  expect(f.resources.retryAssets).not.toHaveBeenCalled();
+  f.state.font = "failed";
+  f.notify();
+  const requiredRevision = f.view.show.mock.lastCall![0].attempt;
+  expect(requiredRevision).toBeGreaterThan(firstRevision);
+  const requiredRetry = f.retry();
+  expect(f.resources.retryFonts).toHaveBeenCalledOnce();
+  expect(f.installation.retry).toHaveBeenCalledOnce();
+  f.state.font = "ready";
+  f.notify();
+  await requiredRetry;
+  expect(f.view.show.mock.lastCall![0].attempt).toBeGreaterThan(requiredRevision);
+  expect(f.view.show).toHaveBeenLastCalledWith(expect.objectContaining({ kind: "failed" }));
+  const shown = f.view.show.mock.calls.length;
+  f.reportInstallation({ ...identity, kind: "idle", stage: "not-observed" });
+  expect(f.view.show).toHaveBeenCalledTimes(shown);
+  f.reportInstallation({ ...identity, attempt: 2, kind: "loading", stage: "installing" });
+  expect(f.view.show).toHaveBeenLastCalledWith(expect.objectContaining({ kind: "loading" }));
+  f.reportInstallation({ ...identity, attempt: 2, kind: "ready", stage: "installed" });
+  expect(f.view.hide).toHaveBeenCalled();
+  expect(enter).toHaveBeenCalledOnce();
+  f.waiting.dispose();
+  expect(f.installationListeners.size).toBe(0);
+  const calls = f.view.show.mock.calls.length;
+  f.reportInstallation({ ...identity, error: "late", kind: "failed", stage: "installation" });
+  expect(f.view.show).toHaveBeenCalledTimes(calls);
+});
