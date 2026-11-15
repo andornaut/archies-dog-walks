@@ -3,10 +3,10 @@ import type { Point, Rect } from "@andornaut/game-kit/rect";
 import { DOM_DIM_ART_KEYS, domArtPath } from "../../assets/domArt.ts";
 import { dimArtPath } from "../dimArt.ts";
 import { artPixel, type DomScale, gridRect, gridX, gridY } from "../domScale.ts";
-import { sliceParts } from "./mirrorPlace.ts";
 import { setBox } from "./pixelLine.ts";
 import { DIM_ART_ATTRIBUTE } from "./rampDim.ts";
 import { type SheetFrame, sheetFrame, sheetFrameNamed } from "./sheetFrames.ts";
+import { sliceParts } from "./sliceParts.ts";
 
 // Art the HTML interface draws as backgrounds of each key's own file: an image whole, or one
 // frame of a sheet by its tag, every art pixel artPixel device pixels. A sheet's frame is read

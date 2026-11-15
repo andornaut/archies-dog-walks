@@ -7,6 +7,7 @@ import {
   onSheetReady,
   playingFrame,
   sheetFrame,
+  sheetFrameNamed,
   sheetTagFrames,
 } from "./sheetFrames.ts";
 
@@ -87,4 +88,19 @@ it("notifies a new sheet once after consumer placement and stops after unsubscri
   await loadSheet("/phase5-ready-other-sheet.json");
   await Promise.resolve();
   expect(events).toHaveLength(2);
+});
+
+it.each([
+  ["by its name", "tile 2.aseprite", 40],
+  ["by its index", 1, 20],
+  ["by its index's digits", "1", 20],
+  ["first, where the sheet has no such frame", "__BASE", 0],
+] as const)("finds a sheet's frame %s", (_, name, x) => {
+  const json = {
+    frames: Object.fromEntries(
+      [0, 1, 2].map((i) => [`tile ${i}.aseprite`, { frame: { h: 20, w: 20, x: i * 20, y: 0 } }]),
+    ),
+    meta: { size: { h: 20, w: 60 } },
+  };
+  expect(sheetFrameNamed(json, name)).toMatchObject({ sheet: { height: 20, width: 60 }, x });
 });
