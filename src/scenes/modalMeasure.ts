@@ -7,6 +7,7 @@ import { GREETING_FIT } from "../hud/celebrationLayout.ts";
 import type { CelebrationMeasure } from "../hud/celebrationView.ts";
 import { NOTE_PLATE } from "../hud/pauseMenu.ts";
 import { modalTitleLayout } from "../ui/modal/layout.ts";
+import { modalTitleInk } from "../ui/modal/titleRole.ts";
 import { type PanelMeasure } from "../ui/modal/types.ts";
 import { PALETTE } from "../ui/palette.ts";
 import {
@@ -14,6 +15,7 @@ import {
   type FontRole,
   inkSpan,
   labelInkWidth,
+  pixelBitmapFont,
   pixelFontMetrics,
   setPixelText,
   withProbe,
@@ -36,6 +38,7 @@ export function measureModalTitle(scene: Scene, room: number, title: string) {
     return modalTitleLayout(
       {
         font: pixelFontMetrics(scene, "title"),
+        inkOf: (line) => modalTitleInk(pixelBitmapFont(scene, "title")!, line),
         widthOf: (value) => measure({ scale: TEXT_SCALE }, value),
       },
       room,
@@ -50,6 +53,7 @@ export function canvasPanelMeasure(scene: Scene): PanelMeasure {
     body: pixelFontMetrics(scene, "body"),
     inkWidth: (font, line) => modalTextWidth(scene, font, [line]),
     title: pixelFontMetrics(scene, "title"),
+    titleInk: (line) => modalTitleInk(pixelBitmapFont(scene, "title")!, line),
     wrapNote: (width, text) =>
       wrapPixelText(scene, { colour: PALETTE.plum, scale: NOTE_PLATE.scale }, width, text),
   };

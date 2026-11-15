@@ -6,6 +6,7 @@ import { SCREEN_LAYOUT } from "../../data/screen.ts";
 import { FakeDocument, fakeLayer } from "../../testing/fakeDom.ts";
 import { gameFont } from "../../testing/fontInk.ts";
 import { artPixel, domScale } from "../../ui/domScale.ts";
+import { modalTitleInk } from "../../ui/modal/titleRole.ts";
 import { type PanelMeasure } from "../../ui/modal/types.ts";
 import { modalCardView, panelButton } from "../../ui/modal/view.ts";
 import { inPill } from "../../ui/namePills.ts";
@@ -20,6 +21,7 @@ const MEASURE: PanelMeasure = {
   body: { capHeight: 6, capTop: 2, inkBottom: 9, letterTop: 1, lineHeight: 10 },
   inkWidth: (_font, line) => line.length * 12,
   title: { capHeight: 5, capTop: 4, inkBottom: 10, letterTop: 2, lineHeight: 12 },
+  titleInk: (line: string) => modalTitleInk(gameFont("font-title"), line),
   wrapNote: (_width, text) => [text],
 };
 
@@ -449,7 +451,7 @@ it("dismisses a native detail region only while its modal owns input", () => {
     numberKeys: false,
     presses: [],
     toGame: (point) => point,
-    view: modalCardView(MEASURE, { height: 100, width: 200, x: 80, y: 100 }, "Detail", []),
+    view: modalCardView(MEASURE, { height: 100, width: 280, x: 40, y: 100 }, "Detail", []),
   });
   const dialog = element.children[0]!;
   expect(dialog.className).not.toContain("adw-passive");
@@ -488,7 +490,7 @@ it("keeps a base page with custom native controls interactive without a modal sc
     ],
     presses: [],
     toGame: (point) => point,
-    view: modalCardView(MEASURE, { height: 100, width: 200, x: 80, y: 100 }, "Results", []),
+    view: modalCardView(MEASURE, { height: 100, width: 280, x: 40, y: 100 }, "Results", []),
   });
   expect(element.children[0]?.className).not.toContain("adw-passive");
   expect(layer.input.accepts()).toBe(true);
@@ -551,7 +553,7 @@ it("keeps a native panel inert until its part JSON readiness and image barrier s
     ],
     presses: [],
     toGame: (point) => point,
-    view: modalCardView(MEASURE, { height: 100, width: 200, x: 80, y: 100 }, "Detail", []),
+    view: modalCardView(MEASURE, { height: 100, width: 280, x: 40, y: 100 }, "Detail", []),
   });
   expect(shown.accepts()).toBe(false);
   expect(onPaint).not.toHaveBeenCalled();

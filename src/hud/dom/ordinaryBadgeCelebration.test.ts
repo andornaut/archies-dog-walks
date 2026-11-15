@@ -11,6 +11,7 @@ import { earnedBadges } from "../../home/badgesView.ts";
 import { FakeDocument, fakeLayer } from "../../testing/fakeDom.ts";
 import { fontFileMetrics, gameFont } from "../../testing/fontInk.ts";
 import { domScale } from "../../ui/domScale.ts";
+import { modalTitleInk } from "../../ui/modal/titleRole.ts";
 import { panelButton, panelTitle } from "../../ui/modal/view.ts";
 import { showOrdinaryBadgeCelebration } from "./ordinaryBadgeCelebration.ts";
 
@@ -22,6 +23,7 @@ it("renders the complete award as one native modal with badge and cheering-owner
     body: fontFileMetrics("font-body"),
     inkWidth: (_font: "body" | "title", text: string) => text.length * 10,
     title: fontFileMetrics("font-title"),
+    titleInk: (line: string) => modalTitleInk(gameFont("font-title"), line),
     wrapNote: (_room: number, text: string) => [text],
   };
   const close = vi.fn();

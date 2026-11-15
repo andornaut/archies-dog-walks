@@ -1,11 +1,12 @@
 import type { Rect } from "@andornaut/game-kit/runtime/rect";
 import { describe, expect, it } from "vitest";
 
-import { fontFileMetrics, inkWidth } from "../testing/fontInk.ts";
+import { fontFileMetrics, gameFont, inkWidth } from "../testing/fontInk.ts";
 import { cardTitles } from "../testing/textRoles.ts";
 import { BAR_TITLE, barTitleLeft, barTitleRoom } from "../ui/barTitle.ts";
 import { type CloseControl, closeControl } from "../ui/closeControl.ts";
 import { modalTitleLayout } from "../ui/modal/layout.ts";
+import { modalTitleInk, modalTitleWidthAtScale } from "../ui/modal/titleRole.ts";
 import { cardTitleRow } from "../ui/modal/titleRow.ts";
 import { plainMarks } from "../ui/pixelFont.ts";
 import { TEXT_STYLE } from "../ui/textFit.ts";
@@ -55,12 +56,16 @@ describe.each(cardTitles())("the $role", ({ card, close = closeControl(card), ti
     const widthOf = (line: string) =>
       inkWidth("font-title", TEXT_STYLE, plainMarks(line).toUpperCase());
     const header = modalTitleLayout(
-      { font: fontFileMetrics("font-title"), widthOf },
+      {
+        font: fontFileMetrics("font-title"),
+        inkOf: (line: string) => modalTitleInk(gameFont("font-title"), line),
+        widthOf,
+      },
       barTitleRoom(bar, close),
       title,
     );
     header.lines.forEach((line) => {
-      const width = widthOf(line);
+      const width = modalTitleWidthAtScale(widthOf(line));
       expectPlaced(bar, close, width);
       if (close.titleExclusion === "hit") {
         expect(

@@ -63,7 +63,7 @@ export interface LogbookView {
 
 export type LogbookMeasure = Pick<
   DetailMeasure,
-  "art" | "body" | "hasTag" | "inkWidth" | "title" | "wrapNote"
+  "art" | "body" | "hasTag" | "inkWidth" | "title" | "titleInk" | "wrapNote"
 >;
 
 const LEFT = STATS_LAYOUT.rows.left;

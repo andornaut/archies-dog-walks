@@ -81,6 +81,7 @@ export function showOrdinaryBadgeCelebration(
     panel: view.panel,
     reduced: input.reduced,
     rows: input.rows,
+    ...(view.titleExtraHeight === undefined ? {} : { titleExtraHeight: view.titleExtraHeight }),
   });
   const faces = input.faces.map(({ dog, rect }) =>
     cheeringFace(layer, input, input.reduced, dog, rect),

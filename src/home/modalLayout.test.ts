@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 
 import { gameData } from "../data/index.ts";
 import { SCREEN_CONFIG, SCREEN_LAYOUT } from "../data/screen.ts";
-import { fontFileMetrics, inkWidth } from "../testing/fontInk.ts";
+import { fontFileMetrics, gameFont, inkWidth } from "../testing/fontInk.ts";
 import { inside } from "../testing/rects.ts";
 import { barTitleLeft } from "../ui/barTitle.ts";
 import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";
@@ -16,6 +16,7 @@ import {
   modalTitleLayout,
   modalTitleWidth,
 } from "../ui/modal/layout.ts";
+import { modalTitleInk, modalTitleWidthAtScale } from "../ui/modal/titleRole.ts";
 import { cardTitleRow } from "../ui/modal/titleRow.ts";
 import { TEXT_STYLE } from "../ui/textFit.ts";
 import { overlayRegion } from "./homeBar.ts";
@@ -28,11 +29,12 @@ it("uses the full logical viewport for narrow content and still respects a small
 
 it("omits absent title reserves and rejects a word wider than the fixed-font title room", () => {
   expect(modalTitleWidth(0)).toBe(0);
-  expect(modalTitleWidth(40, false)).toBe(40 + 2 * MODAL.pad);
+  expect(modalTitleWidth(40, false)).toBe(modalTitleWidthAtScale(40) + 2 * MODAL.pad);
   expect(() =>
     modalTitleLayout(
       {
         font: fontFileMetrics("font-title"),
+        inkOf: (line: string) => modalTitleInk(gameFont("font-title"), line),
         widthOf: (text) => inkWidth("font-title", TEXT_STYLE, text.toUpperCase()),
       },
       20,

@@ -1,5 +1,5 @@
 import { itemAt } from "@andornaut/game-kit/runtime/arrays";
-import { fillLine } from "@andornaut/game-kit/runtime/lines";
+import { fillLine, wrapWords } from "@andornaut/game-kit/runtime/lines";
 import type { Rect } from "@andornaut/game-kit/runtime/rect";
 import type { TextFitStyle } from "@andornaut/game-kit/runtime/text/textFit";
 
@@ -11,8 +11,8 @@ import { pipTag } from "../hud/hudView.ts";
 import { signedShortDollarText } from "../presentation/currency.ts";
 import { walkLength } from "../rules/route.ts";
 import type { LastWalk } from "../save/schema.ts";
+import { MODAL } from "../ui/modal/layout.ts";
 import { type PanelButton, type PanelText } from "../ui/modal/types.ts";
-import { panelTitle } from "../ui/modal/view.ts";
 import { PALETTE } from "../ui/palette.ts";
 import { BUTTON_COLOURS } from "../ui/selection.ts";
 import { TEXT_SCALE, textOnLines } from "../ui/textFit.ts";
@@ -290,13 +290,21 @@ export function endScreenView(
         names: input.stripNames(placement.strip, badgeRows),
         panel: placement.strip,
         rows: badgeRows,
-        title: panelTitle(
-          measure,
-          placement.strip,
-          placement.strip.y + BADGE_STRIP.titleY,
+        title: wrapWords(
+          (line) => measure.inkWidth("title", line),
+          placement.strip.width - 2 * MODAL.pad,
           celebrationTitle(data, earned.length),
-          false,
-        ),
+        ).map((text, line): PanelText => ({
+          capTop:
+            placement.strip.y + BADGE_STRIP.titleY + line * measure.title.lineHeight * TEXT_SCALE,
+          centre: "ink",
+          centreX: placement.strip.x + placement.strip.width / 2,
+          colour: PALETTE.plum,
+          font: "title",
+          line,
+          scale: TEXT_SCALE,
+          text,
+        })),
       }
     : undefined;
 

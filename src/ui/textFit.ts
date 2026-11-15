@@ -6,6 +6,9 @@ import type { TextFitStyle } from "@andornaut/game-kit/runtime/text/textFit";
 // The scale menu and HUD text draws at, so it reads on a phone; 1x is for incidental marks only.
 export const TEXT_SCALE = 2;
 
+// Ordinary modal and framed-page headings share one role, separate from action labels.
+export const MODAL_TITLE_SCALE = 3;
+
 // The title font's capitals are this many rows tall at 1x.
 export const TITLE_CAP_ROWS = 5;
 

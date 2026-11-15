@@ -5,8 +5,9 @@ import { barTitleLeft, barTitleRoom } from "../barTitle.ts";
 import { closeControl } from "../closeControl.ts";
 import { PALETTE } from "../palette.ts";
 import { BUTTON_COLOURS, BUTTON_LIP_PX } from "../selection.ts";
-import { TEXT_SCALE } from "../textFit.ts";
+import { MODAL_TITLE_SCALE, TEXT_SCALE } from "../textFit.ts";
 import { modalTitleLayout } from "./layout.ts";
+import { modalTitleWidthAtScale } from "./titleRole.ts";
 import { cardTitleRow } from "./titleRow.ts";
 import type {
   CardAction,
@@ -30,20 +31,24 @@ export function panelTitle(
   const row = cardTitleRow(panel);
   const close = closes ? closeControl(panel) : undefined;
   const titled = modalTitleLayout(
-    { font: measure.title, widthOf: (line) => measure.inkWidth("title", line) },
+    {
+      font: measure.title,
+      inkOf: measure.titleInk,
+      widthOf: (line) => measure.inkWidth("title", line),
+    },
     barTitleRoom(row, close),
     title,
   );
   return titled.lines.map((line, i): PanelText => {
-    const ink = measure.inkWidth("title", line);
+    const ink = modalTitleWidthAtScale(measure.inkWidth("title", line));
     return {
-      capTop: capTop + i * titled.linePitch,
+      capTop: capTop + titled.capOffset + i * titled.linePitch,
       centre: "ink",
       centreX: barTitleLeft(row, close, ink) + ink / 2,
       colour: PALETTE.plum,
       font: "title",
       line: i,
-      scale: TEXT_SCALE,
+      scale: MODAL_TITLE_SCALE,
       text: line,
     };
   });

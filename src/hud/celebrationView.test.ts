@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 
 import { gameData } from "../data/index.ts";
+import { gameFont } from "../testing/fontInk.ts";
+import { modalTitleInk } from "../ui/modal/titleRole.ts";
 import { PALETTE } from "../ui/palette.ts";
 import { cents } from "../units.ts";
 import { CELEBRATION_LAYOUT } from "./celebrationLayout.ts";
@@ -16,6 +18,7 @@ const MEASURE: CelebrationMeasure = {
   hasTag: () => false,
   inkWidth: (_font, line) => line.length * 12 - 2,
   title: { capHeight: 5, capTop: 4, inkBottom: 10, letterTop: 2, lineHeight: 12 },
+  titleInk: (line: string) => modalTitleInk(gameFont("font-title"), line),
   wrapBody: (_width, text) => [text],
   wrapNote: (_width, text) => [text],
 };

@@ -4,11 +4,14 @@ import { type FontMetrics, inkRowsFromCapTop } from "@andornaut/game-kit/runtime
 import { DOG_SLOTS } from "../data/dogSlots.ts";
 import { SHOP_PAGE } from "../data/layout.ts";
 import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";
-import { pageCloseControl } from "../ui/closeControl.ts";
+import { closeControl } from "../ui/closeControl.ts";
 import { helpCapDy } from "../ui/labelHelpGap.ts";
+import { cardTitleRow } from "../ui/modal/titleRow.ts";
+import { MODAL } from "../ui/modalGeometry.ts";
 import { type ScrollbarRects, scrollbarRects } from "../ui/scrollbar.ts";
 import { SELECT_OUTSET } from "../ui/selection.ts";
 import { TEXT_SCALE, TEXT_STYLE, TITLE_CAP_ROWS } from "../ui/textFit.ts";
+import { FEEDBACK } from "./feedback.ts";
 import { HOME_LAYOUT } from "./homeLayout.ts";
 
 // The Pet shop page under the home screen's top bar, which stays in view with the bank:
@@ -19,21 +22,13 @@ import { HOME_LAYOUT } from "./homeLayout.ts";
 // The Logbook wears the same page (src/home/statsLayout.ts).
 const SHOP = SHOP_PAGE;
 const PANEL = SHOP.panel;
-// The framed pages keep their header above the existing tab strip.
-const PAGE_TITLE = {
-  height: SHOP.title.height,
-  width: PANEL.width - 2 * SHOP.title.inset,
-  x: PANEL.x + SHOP.title.inset,
-  y: PANEL.y + SHOP.title.inset,
-};
+const PAGE_TITLE = cardTitleRow(PANEL);
 // The close control's press area starts under the top bar's, which reach over the card's top.
-const CLOSE = pageCloseControl(PANEL, SHOP.closeInset);
+const CLOSE = closeControl(PANEL);
 const CLOSE_TOP = Math.max(CLOSE.hit.y, HOME_LAYOUT.topBar.hitHeight);
 const PAGE_CLOSE = {
   ...CLOSE,
   hit: { ...CLOSE.hit, y: CLOSE_TOP },
-  x: PANEL.x + PANEL.width - SHOP.closeInset - BUTTON_SIZE.icon.face,
-  y: PANEL.y + SHOP.closeInset,
 };
 const ROW_X = PANEL.x + SHOP.row.inset;
 // Rows run to the tabs' right edge, or with a scrollbar stop 6px short of its track.
@@ -41,7 +36,10 @@ const ROW_WIDTH = SHOP.row.width;
 const ROW_SCROLL_WIDTH = SHOP.row.scrollWidth;
 // Both pages keep every tab target directly below the close target, each face centred down its
 // target.
-const TAB_Y = PAGE_CLOSE.hit.y + PAGE_CLOSE.hit.height;
+const TAB_Y = Math.max(
+  PAGE_CLOSE.hit.y + PAGE_CLOSE.hit.height,
+  PANEL.y + MODAL.header - (SHOP.tab.height - SHOP.tab.drawHeight) / 2 + FEEDBACK.liftPx,
+);
 const TAB = {
   drawHeight: SHOP.tab.drawHeight,
   drawY: TAB_Y + Math.floor((SHOP.tab.height - SHOP.tab.drawHeight) / 2),
@@ -145,7 +143,7 @@ export const SHOP_LAYOUT = {
   // The tabs split span, the rows' width from x, their faces gap apart, each a hit area height
   // tall at y with its face drawHeight tall at drawY (shopTabRects, shopTabFace).
   tab: TAB,
-  title: { capTop: PAGE_TITLE.y + SHOP.title.capDy, row: PAGE_TITLE },
+  title: { capTop: PAGE_TITLE.y, row: PAGE_TITLE },
 } as const;
 
 // The message at 2x on one line inside its plate.

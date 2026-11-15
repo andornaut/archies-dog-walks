@@ -333,10 +333,14 @@ export function badgeStripHits(rect: Rect, rows: number, count: number): Rect[] 
   });
 }
 
-// Place the badges below the close control's full touch target and section gap.
-export function stripUnderClose(panel: Rect): Rect {
+// Place modal badges below the shared heading ink and the close control's full target.
+export function stripUnderClose(panel: Rect, titleExtraHeight = 0): Rect {
   const { hit } = closeControl(panel);
-  const shift = Math.max(0, hit.y + hit.height + MODAL.gap - (panel.y + BADGE_STRIP.badgeTop));
+  const shift = Math.max(
+    0,
+    Math.max(hit.y + hit.height + MODAL.gap, panel.y + MODAL.header + titleExtraHeight) -
+      (panel.y + BADGE_STRIP.badgeTop),
+  );
   return { ...panel, height: panel.height - shift, y: panel.y + shift };
 }
 

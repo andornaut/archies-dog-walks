@@ -1,6 +1,9 @@
 import type { Rect } from "@andornaut/game-kit/runtime/rect";
 
+import { barTitleRoom } from "../ui/barTitle.ts";
 import { closeControl } from "../ui/closeControl.ts";
+import { modalTitleLayout } from "../ui/modal/layout.ts";
+import { cardTitleRow } from "../ui/modal/titleRow.ts";
 import { type QuestionPanelView } from "../ui/modal/types.ts";
 import { modalCardView } from "../ui/modal/view.ts";
 import { PALETTE } from "../ui/palette.ts";
@@ -52,16 +55,25 @@ export function purchaseConfirmCardView(
 ): PurchaseConfirmCardView {
   const { lines, picture, pressed } = input;
   const ink = (font: "body" | "title", text: string) => measure.inkWidth(font, text);
-  const layout = purchaseConfirmLayout(
-    { body: measure.body, title: measure.title },
+  const sizes = {
+    buy: ink("title", lines.buy),
+    cancel: ink("title", lines.cancel),
+    left: ink("body", lines.left),
+    price: ink("title", lines.price),
+    title: ink("title", lines.title),
+  };
+  const fonts = { body: measure.body, title: measure.title };
+  const preview = purchaseConfirmLayout(fonts, sizes);
+  const heading = modalTitleLayout(
     {
-      buy: ink("title", lines.buy),
-      cancel: ink("title", lines.cancel),
-      left: ink("body", lines.left),
-      price: ink("title", lines.price),
-      title: ink("title", lines.title),
+      font: measure.title,
+      inkOf: measure.titleInk,
+      widthOf: (line) => measure.inkWidth("title", line),
     },
+    barTitleRoom(cardTitleRow(preview.card), closeControl(preview.card)),
+    lines.title,
   );
+  const layout = purchaseConfirmLayout(fonts, { ...sizes, titleExtraHeight: heading.extraHeight });
   const labels: Readonly<Record<ConfirmChoice, string>> = { buy: lines.buy, cancel: lines.cancel };
   const card = modalCardView(
     measure,

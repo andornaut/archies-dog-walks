@@ -78,8 +78,9 @@ export function badgeCelebrationNames(
   rows: number,
   ids: readonly AchievementId[],
   closes: boolean,
+  titleExtraHeight = 0,
 ): DetailText[] {
-  const rect = closes ? stripUnderClose(panel) : panel;
+  const rect = closes ? stripUnderClose(panel, titleExtraHeight) : panel;
   const badges = earnedBadges(gameData, ids);
   const strip = panelBadgeStrip(rect, rows, badges.length);
   if (!strip.named) {

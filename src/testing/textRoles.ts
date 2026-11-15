@@ -89,16 +89,17 @@ import { readBitmapFont } from "../tools/fontFile.ts";
 import { barTitleRoom } from "../ui/barTitle.ts";
 import { type CloseControl, closeControl } from "../ui/closeControl.ts";
 import { modalTitleLayout } from "../ui/modal/layout.ts";
+import { modalTitleInk } from "../ui/modal/titleRole.ts";
 import { cardTitleRow } from "../ui/modal/titleRow.ts";
 import { PAUSE_MENU_ITEMS } from "../ui/navigationMenu.ts";
 import { plainMarks } from "../ui/pixelFont.ts";
-import { TEXT_SCALE, TEXT_STYLE, textOnLines } from "../ui/textFit.ts";
+import { MODAL_TITLE_SCALE, TEXT_SCALE, TEXT_STYLE, textOnLines } from "../ui/textFit.ts";
 import { cents } from "../units.ts";
 import { bodyRunWidth } from "./bodyFont.ts";
 import { defined } from "./defined.ts";
 import { everyCardOption } from "./everyCardOption.ts";
 import { everyStripLine } from "./everyStripLine.ts";
-import { fitInFont, fontFileMetrics, inkWidth } from "./fontInk.ts";
+import { fitInFont, fontFileMetrics, gameFont, inkWidth } from "./fontInk.ts";
 import { newPlayerSave } from "./saves.ts";
 import { TEST_TUNING } from "./tuning.ts";
 
@@ -382,7 +383,7 @@ function shopRoles(): TextRoleCase[] {
     ...plainRole(
       "purchase confirm's title",
       "font-title",
-      { room: title.room, style: TEXT_STYLE },
+      { room: title.room, style: { lines: 2, scale: MODAL_TITLE_SCALE } },
       confirm.map((lines) => lines.title),
     ),
     ...plainRole(
@@ -502,7 +503,6 @@ interface CardTitles {
   readonly close?: CloseControl;
   readonly role: string;
   readonly titles: readonly string[];
-  readonly titleLines?: number;
 }
 
 export function cardTitles(): CardTitles[] {
@@ -549,6 +549,7 @@ export function cardTitles(): CardTitles[] {
       const header = modalTitleLayout(
         {
           font: TITLE,
+          inkOf: (line: string) => modalTitleInk(gameFont("font-title"), line),
           widthOf: (line) => inkWidth("font-title", TEXT_STYLE, shownIn("font-title", line)),
         },
         barTitleRoom(cardTitleRow(preview.card), preview.close),
@@ -560,7 +561,6 @@ export function cardTitles(): CardTitles[] {
           titleExtraHeight: header.extraHeight,
         }).card,
         role: "install steps' title",
-        titleLines: header.lines.length,
         titles: [title],
       };
     }),
@@ -580,14 +580,25 @@ export function cardTitles(): CardTitles[] {
 
 // Each card's titles in the room its title row leaves them beside its close control.
 function cardTitleRoles(): TextRoleCase[] {
-  return cardTitles().flatMap(
-    ({ card, close = closeControl(card), role, titleLines = 1, titles }) =>
-      plainRole(
+  return cardTitles().flatMap(({ card, close = closeControl(card), role, titles }) =>
+    titles.flatMap((title) => {
+      const room = barTitleRoom(cardTitleRow(card), close);
+      const heading = modalTitleLayout(
+        {
+          font: TITLE,
+          inkOf: (line) => modalTitleInk(gameFont("font-title"), line),
+          widthOf: (line) => inkWidth("font-title", TEXT_STYLE, shownIn("font-title", line)),
+        },
+        room,
+        title,
+      );
+      return plainRole(
         role,
         "font-title",
-        { room: barTitleRoom(cardTitleRow(card), close), style: textOnLines(titleLines) },
-        titles,
-      ),
+        { room, style: { lines: heading.lines.length, scale: MODAL_TITLE_SCALE } },
+        [title],
+      );
+    }),
   );
 }
 

@@ -59,7 +59,11 @@ export function questionPanelView(
   };
   const preview = question.layout(measure.body, area, { ...parts, noteLines: 0 });
   const titleLayout = modalTitleLayout(
-    { font: measure.title, widthOf: (text) => measure.inkWidth("title", text) },
+    {
+      font: measure.title,
+      inkOf: measure.titleInk,
+      widthOf: (text) => measure.inkWidth("title", text),
+    },
     barTitleRoom(cardTitleRow(preview.panel), closeControl(preview.panel)),
     question.title,
   );

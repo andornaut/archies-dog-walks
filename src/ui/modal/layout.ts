@@ -6,7 +6,8 @@ import type { FontMetrics } from "@andornaut/game-kit/runtime/text/bitmapFont";
 import { SCREEN_CONFIG } from "../../data/screen.ts";
 import { BUTTON_SIZE } from "../buttonGeometry.ts";
 import { MODAL } from "../modalGeometry.ts";
-import { TEXT_SCALE } from "../textFit.ts";
+import { MODAL_TITLE_SCALE, TITLE_CAP_ROWS } from "../textFit.ts";
+import { modalTitleWidthAtScale, type TitleInk } from "./titleRole.ts";
 
 export { MODAL };
 
@@ -63,19 +64,35 @@ export function modalTitleWidth(ink: number, closes = true): number {
     return 0;
   }
   const inset = closes ? BUTTON_SIZE.icon.target + MODAL.gap : MODAL.pad;
-  return Math.ceil(ink + 2 * inset);
+  return Math.ceil(modalTitleWidthAtScale(ink) + 2 * inset);
 }
 
-// Wrap measured full-size title ink, retaining the single-line header's existing spacing.
+// Wrap full-size headings and grow the header from their actual visible ink block.
 export function modalTitleLayout(
-  context: { font: FontMetrics; widthOf: (value: string) => number },
+  context: {
+    font: FontMetrics;
+    widthOf: (value: string) => number;
+    inkOf: (value: string) => TitleInk;
+  },
   room: number,
   title: string,
 ) {
-  const lines = wrapWords(context.widthOf, room, title);
-  if (lines.some((line) => context.widthOf(line) > room)) {
+  const widthOf = (value: string) => modalTitleWidthAtScale(context.widthOf(value));
+  const lines = wrapWords(widthOf, room, title);
+  if (lines.some((line) => widthOf(line) > room)) {
     throw new RangeError("Modal title word exceeds its full-size ink room");
   }
-  const linePitch = context.font.lineHeight * TEXT_SCALE;
-  return { extraHeight: Math.max(0, lines.length - 1) * linePitch, linePitch, lines };
+  const linePitch = context.font.lineHeight * MODAL_TITLE_SCALE;
+  const bounds = lines.map((line, index) => {
+    const ink = context.inkOf(line);
+    return { bottom: ink.bottom + index * linePitch, top: ink.top + index * linePitch };
+  });
+  const top = Math.min(0, ...bounds.map((ink) => ink.top));
+  const bottom = Math.max(0, ...bounds.map((ink) => ink.bottom));
+  return {
+    capOffset: -top,
+    extraHeight: Math.max(0, bottom - top - TITLE_CAP_ROWS * MODAL_TITLE_SCALE),
+    linePitch,
+    lines,
+  };
 }

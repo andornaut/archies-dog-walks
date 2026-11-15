@@ -3,7 +3,16 @@ import type { Point, Rect } from "@andornaut/game-kit/runtime/rect";
 import { DETAIL_WELL_KEY, ownerFaceKey } from "../assets/spriteKeys.ts";
 import type { GameData } from "../data/types.ts";
 import { withNamePills } from "../hud/effectNames.ts";
-import { MODAL, modalPanelWidth, modalRect, modalTitleWidth } from "../ui/modal/layout.ts";
+import { barTitleRoom } from "../ui/barTitle.ts";
+import { closeControl } from "../ui/closeControl.ts";
+import {
+  MODAL,
+  modalPanelWidth,
+  modalRect,
+  modalTitleLayout,
+  modalTitleWidth,
+} from "../ui/modal/layout.ts";
+import { cardTitleRow } from "../ui/modal/titleRow.ts";
 import { type PanelMeasure, type QuestionPanelView } from "../ui/modal/types.ts";
 import { modalCardView } from "../ui/modal/view.ts";
 import { PALETTE } from "../ui/palette.ts";
@@ -263,8 +272,23 @@ export function detailCardView(
       ),
     ),
   );
-  const rect = modalRect(dim, undefined, { height: layout.height, width });
-  const move = <T extends Point>(at: T): T => ({ ...at, x: at.x + rect.x, y: at.y + rect.y });
+  const titlePanel = { height: layout.height, width, x: 0, y: 0 };
+  const heading = modalTitleLayout(
+    {
+      font: measure.title,
+      inkOf: measure.titleInk,
+      widthOf: (line) => measure.inkWidth("title", line),
+    },
+    barTitleRoom(cardTitleRow(titlePanel), closeControl(titlePanel)),
+    card.title,
+  );
+  const extra = heading.extraHeight;
+  const rect = modalRect(dim, undefined, { height: layout.height + extra, width });
+  const move = <T extends Point>(at: T): T => ({
+    ...at,
+    x: at.x + rect.x,
+    y: at.y + rect.y + extra,
+  });
   return {
     art: content.art.map((art) => ({
       ...move(art),
@@ -274,7 +298,7 @@ export function detailCardView(
     framed: content.framed.map((box) => ({ ...box, rect: move(box.rect) })),
     texts: content.texts.map((text) => ({
       ...text,
-      capTop: text.capTop + rect.y,
+      capTop: text.capTop + rect.y + extra,
       x: text.x + rect.x,
     })),
     title: card.title,

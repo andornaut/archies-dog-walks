@@ -3,10 +3,11 @@ import { describe, expect, it } from "vitest";
 
 import { gameData } from "../data/index.ts";
 import { SCREEN_CONFIG } from "../data/screen.ts";
-import { fontFileMetrics, inkWidth } from "../testing/fontInk.ts";
+import { fontFileMetrics, gameFont, inkWidth } from "../testing/fontInk.ts";
 import { barTitleRoom } from "../ui/barTitle.ts";
 import { closeControl } from "../ui/closeControl.ts";
 import { MODAL, modalTitleLayout } from "../ui/modal/layout.ts";
+import { modalTitleInk } from "../ui/modal/titleRole.ts";
 import { cardTitleRow } from "../ui/modal/titleRow.ts";
 import { TEXT_SCALE } from "../ui/textFit.ts";
 import { HOME_LAYOUT, updateModalLayout } from "./homeLayout.ts";
@@ -25,7 +26,7 @@ describe("update offer and failed retry titles", () => {
       const initial = updateModalLayout(area, ink);
       const font = fontFileMetrics("font-title");
       const wrapped = modalTitleLayout(
-        { font, widthOf },
+        { font, inkOf: (line: string) => modalTitleInk(gameFont("font-title"), line), widthOf },
         barTitleRoom(cardTitleRow(initial.panel), closeControl(initial.panel)),
         title,
       );

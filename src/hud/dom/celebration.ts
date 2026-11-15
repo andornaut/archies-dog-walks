@@ -180,6 +180,7 @@ export interface BadgeCelebrationView {
   readonly panel: Rect;
   readonly title: readonly PanelText[];
   readonly titleY: number;
+  readonly titleExtraHeight?: number;
 }
 
 // A badge celebration's text and controls in layer, its close control and button each doing
@@ -219,9 +220,10 @@ export function badgeStripParts(
     readonly panel: Rect;
     readonly reduced: boolean;
     readonly rows: number;
+    readonly titleExtraHeight?: number;
   },
 ): BadgeStripParts {
-  const rect = view.closes ? stripUnderClose(view.panel) : view.panel;
+  const rect = view.closes ? stripUnderClose(view.panel, view.titleExtraHeight) : view.panel;
   const strip = panelBadgeStrip(rect, view.rows, view.badges.length);
   const badges = view.badges.flatMap((badge, i) => {
     const slot = strip.slots[i];

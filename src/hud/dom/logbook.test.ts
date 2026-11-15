@@ -9,6 +9,7 @@ import { STATS_TABS } from "../../home/statsLayout.ts";
 import { FakeDocument, type FakeElement, fakeLayer } from "../../testing/fakeDom.ts";
 import { fontFileMetrics, gameFont } from "../../testing/fontInk.ts";
 import { deviceY, domScale } from "../../ui/domScale.ts";
+import { modalTitleInk } from "../../ui/modal/titleRole.ts";
 import { scrollPlace, showLogbook } from "./logbook.ts";
 
 // 393 CSS px wide over the 360-wide game at DPR 3: a game pixel is 3.275 device pixels and an
@@ -62,6 +63,7 @@ function nativeFixture() {
       body: fontFileMetrics("font-body"),
       inkWidth: () => 60,
       title: fontFileMetrics("font-title"),
+      titleInk: (line: string) => modalTitleInk(gameFont("font-title"), line),
       wrapNote: () => [],
     },
     {
@@ -152,7 +154,8 @@ it("retains native tab targets and the owned pointer while their pressed paint a
     .all()
     .find(
       (element) =>
-        element.tagName === "button" && element.getAttribute("aria-label") === page.title.text,
+        element.tagName === "button" &&
+        element.getAttribute("aria-label") === page.title.map((line) => line.text).join(" "),
     )!;
   root.fire("focusin", { target: badge });
   expect(focus).toHaveBeenCalledWith({ height: 40, width: 300, x: 24, y: 200 });

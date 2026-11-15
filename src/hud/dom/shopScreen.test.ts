@@ -8,6 +8,7 @@ import { shopPageView } from "../../home/shopPageView.ts";
 import { FakeDocument, type FakeElement, fakeLayer } from "../../testing/fakeDom.ts";
 import { fontFileMetrics, gameFont } from "../../testing/fontInk.ts";
 import { domScale } from "../../ui/domScale.ts";
+import { modalTitleInk } from "../../ui/modal/titleRole.ts";
 import { PALETTE } from "../../ui/palette.ts";
 import { type ShopScreenView, showShopScreen } from "./shopScreen.ts";
 
@@ -35,6 +36,7 @@ function fixture() {
         body: fontFileMetrics("font-body"),
         inkWidth: () => 60,
         title: fontFileMetrics("font-title"),
+        titleInk: (line: string) => modalTitleInk(gameFont("font-title"), line),
         wrapNote: () => [],
       },
       {

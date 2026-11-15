@@ -148,7 +148,7 @@ export function showLogbook(layer: UiLayer, input: DomLogbookInput): DomLogbook 
     const name =
       view.content.texts
         .find((line) => line.capTop >= rect.y && line.capTop < rect.y + rect.height)
-        ?.lines.join(" ") ?? input.view.page.title.text;
+        ?.lines.join(" ") ?? input.view.page.title.map((line) => line.text).join(" ");
     return control(rect, name, { badge: index });
   });
   const contentParts: DomPart[] = [
@@ -243,8 +243,8 @@ export function showLogbook(layer: UiLayer, input: DomLogbookInput): DomLogbook 
       note: [],
       notePlate: undefined,
       panel: page.card,
-      title: [page.title],
-      titleY: page.title.capTop,
+      title: page.title,
+      titleY: page.title[0]?.capTop ?? page.card.y,
     },
   });
   clip.addEventListener(

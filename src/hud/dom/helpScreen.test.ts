@@ -6,6 +6,7 @@ import { helpView } from "../../help/helpView.ts";
 import { FakeDocument, fakeLayer } from "../../testing/fakeDom.ts";
 import { gameFont } from "../../testing/fontInk.ts";
 import { domScale } from "../../ui/domScale.ts";
+import { modalTitleInk } from "../../ui/modal/titleRole.ts";
 import { showHelpScreen } from "./helpScreen.ts";
 
 const fonts = { body: gameFont("font-body"), title: gameFont("font-title") };
@@ -13,6 +14,7 @@ const MEASURE = {
   body: fontMetrics(fonts.body),
   inkWidth: () => 40,
   title: fontMetrics(fonts.title),
+  titleInk: (line: string) => modalTitleInk(gameFont("font-title"), line),
   titleInkBottom: () => fontMetrics(fonts.title).inkBottom,
   wrapBody: (_scale: number, _width: number, text: string) => [text],
   wrapNote: (_width: number, text: string) => [text],

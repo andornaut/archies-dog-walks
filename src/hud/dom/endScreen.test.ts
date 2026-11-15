@@ -11,6 +11,7 @@ import { gameFont } from "../../testing/fontInk.ts";
 import { dimColour } from "../../ui/dimArt.ts";
 import { shownText } from "../../ui/dom/pixelLine.ts";
 import { artPixel, domScale, exactDeviceY, frameRect } from "../../ui/domScale.ts";
+import { modalTitleInk } from "../../ui/modal/titleRole.ts";
 import { PALETTE } from "../../ui/palette.ts";
 import { showEndScreen } from "./endScreen.ts";
 
@@ -28,6 +29,7 @@ const MEASURE = {
   inkWidth: () => 40,
   span: () => ({ left: 0, right: 40, width: 41 }),
   title: fontMetrics(fonts.title),
+  titleInk: (line: string) => modalTitleInk(gameFont("font-title"), line),
   wrapBody: (_width: number, text: string) => [text],
   wrapNote: (_width: number, text: string) => [text],
 };

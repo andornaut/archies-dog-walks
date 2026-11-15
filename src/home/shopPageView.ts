@@ -1,10 +1,10 @@
 import { insetRect, type Rect } from "@andornaut/game-kit/runtime/rect";
 
 import { SCREEN_CONFIG } from "../data/screen.ts";
-import { barTitleLeft } from "../ui/barTitle.ts";
 import type { CloseControl } from "../ui/closeControl.ts";
 import { PLAIN_ITEM, tileState } from "../ui/interaction.ts";
 import { type PanelMeasure, type PanelText } from "../ui/modal/types.ts";
+import { panelTitle } from "../ui/modal/view.ts";
 import { PALETTE } from "../ui/palette.ts";
 import { GREYED, SELECT_OUTSET, selectLook } from "../ui/selection.ts";
 import { TEXT_SCALE } from "../ui/textFit.ts";
@@ -39,9 +39,8 @@ export interface ShopPageView {
   readonly close: CloseControl;
   readonly closePressed: boolean;
   readonly tabs: readonly PageTab[];
-  // Its one line in plum, its ink centred where the header centres it beside the close control,
-  // so the HTML's narrower text stays centred there.
-  readonly title: PanelText;
+  // Shared heading lines centred on the panel with full close-target clearance.
+  readonly title: readonly PanelText[];
   // The wood under the card, from the top bar down, so the home screen's bar shows above it.
   readonly wood: PageFill;
 }
@@ -109,8 +108,7 @@ export function shopPageView(
   page: { closePressed: boolean; tabs: readonly ShopPageTab[]; title: string },
 ): ShopPageView {
   const { close, title } = SHOP_LAYOUT;
-  const ink = measure.inkWidth("title", page.title);
-  const left = barTitleLeft(title.row, close, ink);
+
   const tabs = shopTabRects(page.tabs.length).flatMap((hit, i) => {
     const tab = page.tabs[i];
     return tab === undefined ? [] : [pageTab(measure, shopTabFace(hit), tab)];
@@ -120,16 +118,7 @@ export function shopPageView(
     close,
     closePressed: page.closePressed,
     tabs,
-    title: {
-      capTop: title.capTop,
-      centre: "ink",
-      centreX: left + ink / 2,
-      colour: PALETTE.plum,
-      font: "title",
-      line: 0,
-      scale: TEXT_SCALE,
-      text: page.title,
-    },
+    title: panelTitle(measure, PANEL, title.capTop, page.title),
     wood: {
       colour: PALETTE.darkBrown,
       rect: {

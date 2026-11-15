@@ -4,6 +4,7 @@ import { shopPageView } from "../../home/shopPageView.ts";
 import { FakeDocument, type FakeElement } from "../../testing/fakeDom.ts";
 import { gameFont } from "../../testing/fontInk.ts";
 import { domScale } from "../../ui/domScale.ts";
+import { modalTitleInk } from "../../ui/modal/titleRole.ts";
 import { type PanelMeasure } from "../../ui/modal/types.ts";
 import { shopPageParts } from "./shopPage.ts";
 
@@ -11,6 +12,7 @@ const MEASURE: PanelMeasure = {
   body: { capHeight: 6, capTop: 2, inkBottom: 9, letterTop: 1, lineHeight: 10 },
   inkWidth: (_font, line) => line.length * 12,
   title: { capHeight: 5, capTop: 4, inkBottom: 10, letterTop: 2, lineHeight: 12 },
+  titleInk: (line: string) => modalTitleInk(gameFont("font-title"), line),
   wrapNote: (_width, text) => [text],
 };
 

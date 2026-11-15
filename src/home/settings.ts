@@ -139,9 +139,8 @@ function noteDy(title: FontMetrics): number {
 }
 
 const PANEL = { width: SETTINGS_ROW.width + 2 * MODAL.pad };
-// The first row starts at the title row's bottom edge, as each later row starts at its gap's end,
-// so its icon and label are as far under the title row as a later row's are under its gap.
-const ROWS_TOP = MODAL.header;
+// The leading icon begins at the shared body boundary; row-internal offsets remain fixed.
+const ROWS_TOP = MODAL.header - SETTINGS_ROW.icon.dy;
 const SEPARATOR_INSET = SETTINGS_CARD.separatorInset;
 // The rows press as a list's rows do, the stacked button gap apart.
 const ROW_GAP = BUTTON_SIZE.stackGap;
@@ -290,7 +289,8 @@ export function installStepsLayout(
   ink?: { steps: number; title: number; titleExtraHeight?: number },
 ): InstallStepsLayout {
   const titleExtraHeight = ink?.titleExtraHeight ?? 0;
-  const height = ROWS_TOP + titleExtraHeight + lines * INSTALL_STEPS.linePitch + INSTALL_STEPS.foot;
+  const height =
+    MODAL.header + titleExtraHeight + lines * INSTALL_STEPS.linePitch + INSTALL_STEPS.foot;
   const width = modalPanelWidth(
     screen.width - 2 * MODAL.margin,
     ink === undefined
@@ -301,8 +301,8 @@ export function installStepsLayout(
         ),
   );
   const card = modalRect({ ...screen, x: 0, y: 0 }, undefined, { height, width });
-  const { icon, pad, stepsDy } = INSTALL_STEPS;
-  const stepsY = card.y + ROWS_TOP + titleExtraHeight + stepsDy;
+  const { icon, pad } = INSTALL_STEPS;
+  const stepsY = card.y + MODAL.header + titleExtraHeight - icon.dy;
   return {
     card,
     close: closeControl(card),

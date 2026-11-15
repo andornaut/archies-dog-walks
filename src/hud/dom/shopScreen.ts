@@ -124,7 +124,7 @@ export function showShopScreen(
   root.className = "adw-lines";
   root.style.transformOrigin = "0 0";
   root.tabIndex = -1;
-  root.setAttribute("aria-label", initial.page.title.text);
+  root.setAttribute("aria-label", initial.page.title.map((line) => line.text).join(" "));
   const chrome = doc.createElement("div");
   chrome.className = "adw-lines";
   const clip = doc.createElement("div");
@@ -236,7 +236,7 @@ export function showShopScreen(
     if (chromeKey !== nextChrome) {
       chromeKey = nextChrome;
       chromeParts = shopPageParts(doc, input.fonts.title, view.page);
-      chromeParts.push(textPart(view.page.title));
+      chromeParts.push(...view.page.title.map((line) => textPart(line)));
       const face = sheetArt(doc, input.source, "ui-icon-button");
       const glyph = imageArt(doc, input.source, "icon-close");
       const { close } = view.page;

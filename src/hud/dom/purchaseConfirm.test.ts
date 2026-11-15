@@ -7,6 +7,7 @@ import { purchaseConfirmCardView } from "../../home/purchaseConfirmCardView.ts";
 import { FakeDocument, fakeLayer } from "../../testing/fakeDom.ts";
 import { gameFont } from "../../testing/fontInk.ts";
 import { domScale } from "../../ui/domScale.ts";
+import { modalTitleInk } from "../../ui/modal/titleRole.ts";
 import { showPurchaseConfirm } from "./purchaseConfirm.ts";
 
 const fonts = { body: gameFont("font-body"), title: gameFont("font-title") };
@@ -17,6 +18,7 @@ const MEASURE = {
   hasTag: () => false,
   inkWidth: () => 40,
   title: fontMetrics(fonts.title),
+  titleInk: (line: string) => modalTitleInk(gameFont("font-title"), line),
   wrapBody: (_width: number, text: string) => [text],
   wrapNote: (_width: number, text: string) => [text],
 };

@@ -6,6 +6,7 @@ import { gameFont } from "../testing/fontInk.ts";
 import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";
 import { shownText } from "../ui/dom/pixelLine.ts";
 import { LABEL_HELP_GAP } from "../ui/labelHelpGap.ts";
+import { modalTitleInk } from "../ui/modal/titleRole.ts";
 import { PALETTE } from "../ui/palette.ts";
 import { BUTTON_COLOURS } from "../ui/selection.ts";
 import { HELP_LAYOUT } from "./helpLayout.ts";
@@ -19,6 +20,7 @@ const MEASURE: HelpMeasure = {
   body: fontMetrics(body),
   inkWidth: (font, line) => inkWidth(font === "title" ? title : body, 2, shownText(font, line)),
   title: fontMetrics(title),
+  titleInk: (line: string) => modalTitleInk(gameFont("font-title"), line),
   titleInkBottom: () => fontMetrics(title).inkBottom,
   wrapBody: (_scale, _width, text) => [text],
   wrapNote: (_width, text) => [text],

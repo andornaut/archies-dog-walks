@@ -6,7 +6,8 @@ import { gameData } from "../data/index.ts";
 import { SCREEN_LAYOUT } from "../data/screen.ts";
 import { dollarText } from "../presentation/currency.ts";
 import { bodyTextWidth } from "../testing/bodyFont.ts";
-import { fontFileMetrics, inkWidth } from "../testing/fontInk.ts";
+import { fontFileMetrics, gameFont, inkWidth } from "../testing/fontInk.ts";
+import { modalTitleInk } from "../ui/modal/titleRole.ts";
 import { type PanelMeasure, type PanelText } from "../ui/modal/types.ts";
 import { PAUSE_MENU_ITEMS } from "../ui/navigationMenu.ts";
 import { plainMarks } from "../ui/pixelFont.ts";
@@ -23,6 +24,7 @@ const MEASURE: PanelMeasure = {
       ? inkWidth("font-title", { scale: TEXT_SCALE }, plainMarks(line).toUpperCase())
       : inkWidth("font-body", { scale: TEXT_SCALE }, line),
   title: fontFileMetrics("font-title"),
+  titleInk: (line: string) => modalTitleInk(gameFont("font-title"), line),
   wrapNote: (width, text) =>
     wrapWords((line) => bodyTextWidth(NOTE_PLATE.scale, line), width, text),
 };

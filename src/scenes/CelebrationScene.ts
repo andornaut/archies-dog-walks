@@ -16,14 +16,18 @@ import {
 import { overlayRegion } from "../home/homeBar.ts";
 import { isConfirmKey, isPauseKey, menuKeyActs } from "../input/keyBindings.ts";
 import { achievementLabel } from "../rules/achievements.ts";
+import { barTitleRoom } from "../ui/barTitle.ts";
 import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";
+import { closeControl } from "../ui/closeControl.ts";
 import {
   MODAL,
   modalActionWidth,
   modalPanelWidth,
   modalRect,
+  modalTitleLayout,
   modalTitleWidth,
 } from "../ui/modal/layout.ts";
+import { cardTitleRow } from "../ui/modal/titleRow.ts";
 import { panelButton, panelTitle } from "../ui/modal/view.ts";
 import { labelInkWidth, pixelFontMetrics, withProbe } from "../ui/phaser/pixelText.ts";
 import { addRampDim } from "../ui/phaser/rampDim.ts";
@@ -93,7 +97,19 @@ export class CelebrationScene extends Scene {
       badgeRowNames(labelInkWidth(probe), slotWidth, names).lines.map((lines) => lines.length),
     );
     const namedLines = achievements.length <= BADGE_STRIP.maxNamed ? Math.max(0, ...lineCounts) : 0;
-    const shift = stripUnderClose({ height: 0, width, x: 0, y: 0 }).y;
+    const measure = canvasPanelMeasure(this);
+    const titlePanel = { height: 0, width, x: 0, y: 0 };
+    const heading = modalTitleLayout(
+      {
+        font: measure.title,
+        inkOf: measure.titleInk,
+        widthOf: (line) => measure.inkWidth("title", line),
+      },
+      barTitleRoom(cardTitleRow(titlePanel), closeControl(titlePanel)),
+      celebrationTitle(gameData, achievements.length),
+    );
+    const titleExtraHeight = heading.extraHeight;
+    const shift = stripUnderClose(titlePanel, titleExtraHeight).y;
     const badgeBottom =
       shift + BADGE_STRIP.badgeTop + (rows - 1) * BADGE_STRIP.rowPitch + BADGE_STRIP.badgeSize;
     const nameHeight =
@@ -114,17 +130,17 @@ export class CelebrationScene extends Scene {
       y: top + height + BUTTON.gap,
     };
     const close = () => closeOverlay(resume, this);
-    const measure = canvasPanelMeasure(this);
-    const titleY = panel.y + BADGE_STRIP.titleY;
+    const titleY = panel.y + MODAL.titleTop;
     const left = SCREEN.width / 2 - ((cheering.length - 1) * FACES.pitch + FACES.size) / 2;
     const facesY = top + badgesHeight + MODAL.gap;
     const html = addNativeBadgeCelebration(
       this,
       {
         button: panelButton(measure, buttonRect, true, gameData.menuText.celebration.button),
-        names: badgeCelebrationNames(this, panel, rows, achievements, true),
+        names: badgeCelebrationNames(this, panel, rows, achievements, true, titleExtraHeight),
         panel,
         title: panelTitle(measure, panel, titleY, celebrationTitle(gameData, achievements.length)),
+        titleExtraHeight,
         titleY,
       },
       {

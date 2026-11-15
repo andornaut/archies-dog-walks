@@ -738,8 +738,6 @@ export const BADGE_CELEBRATION = { facesHeight: 44, width: 344, x: 8 } as const;
 
 // The Pet shop page, which the Logbook wears too.
 export const SHOP_PAGE = {
-  // The close face's inset from the card's top-right corner.
-  closeInset: 8,
   // The Gear tab's rows' height.
   gearRows: { height: 50 },
   // The list area: the card's frame round it, the rows of card under the last row, the rows a
@@ -783,8 +781,6 @@ export const SHOP_PAGE = {
   // faces (small buttons), the press area's height, the rows between the press areas and the
   // list, and the rows between the message plate and the first rows.
   tab: { drawHeight: 28, gap: SMALL_BUTTON_GAP, height: MIN_PRESS, listClear: 1, listGap: 6 },
-  // The title row: its capitals' top, its height and its inset from the card's edges.
-  title: { capDy: 7, height: 24, inset: 6 },
 } as const;
 
 // The Logbook.

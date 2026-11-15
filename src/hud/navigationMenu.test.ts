@@ -4,8 +4,9 @@ import { describe, expect, it } from "vitest";
 import { gameData } from "../data/index.ts";
 import { SCREEN_LAYOUT } from "../data/screen.ts";
 import { bodyTextWidth } from "../testing/bodyFont.ts";
-import { fontFileMetrics, inkWidth } from "../testing/fontInk.ts";
+import { fontFileMetrics, gameFont, inkWidth } from "../testing/fontInk.ts";
 import { MODAL } from "../ui/modal/layout.ts";
+import { modalTitleInk } from "../ui/modal/titleRole.ts";
 import type { PanelMeasure } from "../ui/modal/types.ts";
 import {
   menuItemLabel,
@@ -15,7 +16,7 @@ import {
   PAUSE_MENU_KEY_ORDER,
 } from "../ui/navigationMenu.ts";
 import { plainMarks } from "../ui/pixelFont.ts";
-import { TEXT_SCALE, TITLE_CAP_ROWS } from "../ui/textFit.ts";
+import { TEXT_SCALE } from "../ui/textFit.ts";
 import { NOTE_PLATE, pauseMenuLayout } from "./pauseMenu.ts";
 import { questionPanelView } from "./questionPanelView.ts";
 
@@ -28,6 +29,7 @@ const measure: PanelMeasure = {
       font === "title" ? plainMarks(line).toUpperCase() : line,
     ),
   title: fontFileMetrics("font-title"),
+  titleInk: (line: string) => modalTitleInk(gameFont("font-title"), line),
   wrapNote: (width, line) =>
     wrapWords((part) => bodyTextWidth(NOTE_PLATE.scale, part), width, line),
 };
@@ -66,12 +68,14 @@ describe.each(["home", "pause"] as const)("%s navigation geometry", (context) =>
   });
 
   it("shares measured fixed-font width, balanced title/content padding and a bottom primary", () => {
-    expect(width).toBe(SCREEN_LAYOUT.screen.width / 2);
+    expect(width).toBeGreaterThanOrEqual(SCREEN_LAYOUT.screen.width / 2);
     expect(view.panel.width).toBe(width);
     expect(view.buttons.map((button) => button.text.text)).toEqual(labels);
     expect(view.buttons.filter(({ primary }) => primary)).toEqual([view.buttons.at(-1)]);
-    const titleBottom = view.title.at(-1)!.capTop + TITLE_CAP_ROWS * TEXT_SCALE;
-    expect(view.buttons[0]!.rect.y - titleBottom).toBe(MODAL.pad);
+    const titleBottom = Math.max(
+      ...view.title.map((line) => line.capTop + measure.titleInk(line.text).bottom),
+    );
+    expect(view.buttons[0]!.rect.y - titleBottom).toBe(MODAL.titleTop);
     const last = view.notePlate ?? view.buttons.at(-1)!.rect;
     expect(view.panel.y + view.panel.height - last.y - last.height).toBe(MODAL.pad);
     expect(view.buttons[0]!.rect.y).toBeGreaterThanOrEqual(

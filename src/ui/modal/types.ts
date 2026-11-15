@@ -2,6 +2,7 @@ import type { Rect } from "@andornaut/game-kit/runtime/rect";
 import type { FontMetrics } from "@andornaut/game-kit/runtime/text/bitmapFont";
 
 import type { CloseControl } from "../closeControl.ts";
+import type { TitleInk } from "./titleRole.ts";
 
 export type PanelFont = "body" | "title";
 
@@ -12,6 +13,8 @@ export interface PanelMeasure {
   readonly body: FontMetrics;
   readonly inkWidth: (font: PanelFont, line: string) => number;
   readonly title: FontMetrics;
+  // Heading ink at MODAL_TITLE_SCALE, relative to the capital top.
+  readonly titleInk: (line: string) => TitleInk;
   readonly wrapNote: (width: number, text: string) => string[];
 }
 

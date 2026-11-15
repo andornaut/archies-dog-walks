@@ -10,7 +10,14 @@ import { MIN_PRESS } from "../data/layout.ts";
 import { SCREEN_CONFIG } from "../data/screen.ts";
 import { DEFAULT_SETTINGS } from "../save/settings.ts";
 import { defined } from "../testing/defined.ts";
-import { fitInFont, fontFileMetrics, gameGlyphs, inkWidth, placedInk } from "../testing/fontInk.ts";
+import {
+  fitInFont,
+  fontFileMetrics,
+  gameFont,
+  gameGlyphs,
+  inkWidth,
+  placedInk,
+} from "../testing/fontInk.ts";
 import { inside } from "../testing/rects.ts";
 import { SETTINGS_EXPORT_ROWS } from "../tools/layoutExport.ts";
 import { barTitleRoom } from "../ui/barTitle.ts";
@@ -18,6 +25,7 @@ import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";
 import { closeFace } from "../ui/closeControl.ts";
 import { LABEL_HELP_GAP } from "../ui/labelHelpGap.ts";
 import { MODAL, modalActionWidth, modalTitleLayout } from "../ui/modal/layout.ts";
+import { modalTitleInk } from "../ui/modal/titleRole.ts";
 import { cardTitleRow } from "../ui/modal/titleRow.ts";
 import { MENU_TEXT_FIELDS } from "./menuText.ts";
 import {
@@ -235,7 +243,8 @@ describe("the settings card", () => {
   // Each later row the stacked button gap under the one before, its separator centred down the
   // gap, an odd row under it.
   it("starts rows below the close target or the stacked button gap under the row before", () => {
-    expect(rows[0]?.rect.y).toBe(close.hit.y + close.hit.height + MODAL.gap);
+    expect(rows[0]!.rect.y + SETTINGS_ROW.icon.dy).toBe(panel.y + MODAL.header);
+    expect(rows[0]!.rect.y).toBeGreaterThanOrEqual(close.hit.y + close.hit.height);
     rows.slice(1).forEach(({ rect }, i) => {
       const above = rows[i]?.rect;
       const gap = BUTTON_SIZE.stackGap;
@@ -347,6 +356,7 @@ describe.each(keysOf(gameData.menuText.settings.installSteps))(
     const header = modalTitleLayout(
       {
         font: fontFileMetrics("font-title"),
+        inkOf: (line: string) => modalTitleInk(gameFont("font-title"), line),
         widthOf: (line) => inkWidth("font-title", TWO_X, line.toUpperCase()),
       },
       barTitleRoom(cardTitleRow(preview.card), preview.close),

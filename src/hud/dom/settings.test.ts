@@ -8,6 +8,7 @@ import { DEFAULT_SETTINGS } from "../../save/settings.ts";
 import { FakeDocument, fakeLayer } from "../../testing/fakeDom.ts";
 import { fontFileMetrics, gameFont } from "../../testing/fontInk.ts";
 import { domScale } from "../../ui/domScale.ts";
+import { modalTitleInk } from "../../ui/modal/titleRole.ts";
 import { showSettings } from "./settings.ts";
 
 it("cancels a carried settings drag when install steps take ownership and restores guarded input", () => {
@@ -17,6 +18,7 @@ it("cancels a carried settings drag when install steps take ownership and restor
     fitBody: (_lines, _room, text) => [text],
     ink: (_font, scale, text) => ({ left: scale, right: text.length * 6 * scale }),
     inkWidth: (_font, text) => text.length * 12,
+    titleInk: (line: string) => modalTitleInk(gameFont("font-title"), line),
     wrapNote: (_width, text) => [text],
   };
   const layout = settingsLayout(

@@ -6,7 +6,8 @@ import { gameData } from "../data/index.ts";
 import { SETTINGS_CARD } from "../data/layout.ts";
 import { SCREEN_CONFIG, SCREEN_LAYOUT } from "../data/screen.ts";
 import { DEFAULT_SETTINGS } from "../save/settings.ts";
-import { fontFileMetrics } from "../testing/fontInk.ts";
+import { fontFileMetrics, gameFont } from "../testing/fontInk.ts";
+import { modalTitleInk } from "../ui/modal/titleRole.ts";
 import { FEEDBACK } from "./feedback.ts";
 import { installStepsLayout, settingsLayout } from "./settings.ts";
 import {
@@ -25,6 +26,7 @@ const MEASURE: SettingsMeasure = {
   ink: (_font, scale, text) => ({ left: scale, right: text.length * 6 * scale }),
   inkWidth: (_font, line) => line.length * 12,
   title: fonts.title,
+  titleInk: (line: string) => modalTitleInk(gameFont("font-title"), line),
   wrapNote: (_width, text) => [text],
 };
 const rows = [...SETTING_ROWS, INSTALL_ROW];

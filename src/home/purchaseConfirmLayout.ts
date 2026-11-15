@@ -35,7 +35,14 @@ export function confirmLeftCapTop(title: FontMetrics, priceTop: number): number 
 // Runtime geometry follows the actual fixed-size ink and the paired controls.
 export function purchaseConfirmLayout(
   fonts: { body: FontMetrics; title: FontMetrics },
-  ink: { buy: number; cancel: number; left: number; price: number; title: number },
+  ink: {
+    buy: number;
+    cancel: number;
+    left: number;
+    price: number;
+    title: number;
+    titleExtraHeight?: number;
+  },
 ) {
   const actions = { buy: modalActionWidth(ink.buy), cancel: modalActionWidth(ink.cancel) };
   const actionsWidth = actions.buy + actions.cancel + BUTTON_SIZE.gap;
@@ -47,7 +54,8 @@ export function purchaseConfirmLayout(
       Math.max(ink.price, ink.left) + 2 * MODAL.pad,
     ),
   );
-  const priceTop = MODAL.header + CARD.well.size + MODAL.gap;
+  const header = MODAL.header + (ink.titleExtraHeight ?? 0);
+  const priceTop = header + CARD.well.size + MODAL.gap;
   const leftTop = confirmLeftCapTop(fonts.title, priceTop);
   const buttonsTop = leftTop + inkRowsFromCapTop(fonts.body) * 2 + MODAL.gap;
   const height = buttonsTop + BUTTON_HEIGHT + MODAL.pad;
@@ -58,7 +66,7 @@ export function purchaseConfirmLayout(
     height: CARD.well.size,
     width: CARD.well.size,
     x: middle - CARD.well.size / 2,
-    y: placed.y + MODAL.header,
+    y: placed.y + header,
   };
   const action = (choice: "buy" | "cancel") => ({
     height: BUTTON_HEIGHT,
