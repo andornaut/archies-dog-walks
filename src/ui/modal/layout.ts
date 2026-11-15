@@ -3,6 +3,7 @@ import { modalWidth } from "@andornaut/game-kit/runtime/modalLayout";
 import { insetRect, type Rect, rectAboveIn, rectsOverlap } from "@andornaut/game-kit/runtime/rect";
 import type { FontMetrics } from "@andornaut/game-kit/runtime/text/bitmapFont";
 
+import { MODAL_WIDTHS } from "../../data/layout.ts";
 import { SCREEN_CONFIG } from "../../data/screen.ts";
 import { BUTTON_SIZE } from "../buttonGeometry.ts";
 import { MODAL } from "../modalGeometry.ts";
@@ -52,6 +53,13 @@ export function modalPanelWidth(availableWidth: number, outerWidth: number): num
     { availableWidth, viewportWidth: SCREEN_CONFIG.width },
     outerWidth - 2 * MODAL.pad,
   );
+}
+
+export type ModalFamily = keyof typeof MODAL_WIDTHS;
+
+// The client chooses the surface family; the generic clamp still protects narrow areas.
+export function modalFamilyWidth(availableWidth: number, family: ModalFamily): number {
+  return modalPanelWidth(availableWidth, MODAL_WIDTHS[family]);
 }
 
 // Modal actions follow full-size label ink; screen controls keep their separate size tokens.

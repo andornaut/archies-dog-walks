@@ -143,6 +143,9 @@ export const MODAL_SPACING = {
   rowGap: 4,
 } as const;
 
+// Ordinary modal families in this game's logical pixels.
+export const MODAL_WIDTHS = { large: 328, medium: 264 } as const;
+
 // The pause menu and the walk's questions.
 export const PAUSE_PANEL = {
   // How far a button's press area reaches past its face, above and below.

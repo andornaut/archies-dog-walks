@@ -3,12 +3,13 @@ import { type FontMetrics, inkRowsFromCapTop } from "@andornaut/game-kit/runtime
 
 import { DOG_SLOTS } from "../data/dogSlots.ts";
 import { SHOP_PAGE } from "../data/layout.ts";
+import { SCREEN_CONFIG } from "../data/screen.ts";
 import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";
 import { closeControl } from "../ui/closeControl.ts";
 import { helpCapDy } from "../ui/labelHelpGap.ts";
 import { DISMISS_FOOTER_SPACE } from "../ui/modal/dismissFooter.ts";
+import { MODAL, modalFamilyWidth } from "../ui/modal/layout.ts";
 import { cardTitleRow } from "../ui/modal/titleRow.ts";
-import { MODAL } from "../ui/modalGeometry.ts";
 import { type ScrollbarRects, scrollbarRects } from "../ui/scrollbar.ts";
 import { SELECT_OUTSET } from "../ui/selection.ts";
 import { TEXT_SCALE, TEXT_STYLE, TITLE_CAP_ROWS } from "../ui/textFit.ts";
@@ -22,7 +23,8 @@ import { HOME_LAYOUT } from "./homeLayout.ts";
 // lists scroll in the list area under the tabs, laid out here as they sit scrolled to the top.
 // The Logbook wears the same page (src/home/statsLayout.ts).
 const SHOP = SHOP_PAGE;
-const PANEL = SHOP.panel;
+const PANEL_WIDTH = modalFamilyWidth(SCREEN_CONFIG.width - 2 * MODAL.margin, "large");
+const PANEL = { ...SHOP.panel, width: PANEL_WIDTH, x: (SCREEN_CONFIG.width - PANEL_WIDTH) / 2 };
 const PAGE_TITLE = cardTitleRow(PANEL);
 // The close control's press area starts under the top bar's, which reach over the card's top.
 const CLOSE = closeControl(PANEL);
@@ -33,8 +35,8 @@ const PAGE_CLOSE = {
 };
 const ROW_X = PANEL.x + SHOP.row.inset;
 // Rows run to the tabs' right edge, or with a scrollbar stop 6px short of its track.
-const ROW_WIDTH = SHOP.row.width;
-const ROW_SCROLL_WIDTH = SHOP.row.scrollWidth;
+const ROW_WIDTH = PANEL.width - 2 * SHOP.row.inset;
+const ROW_SCROLL_WIDTH = ROW_WIDTH - (SHOP.row.width - SHOP.row.scrollWidth);
 // Both pages keep tab targets below the close target and selected faces below the heading.
 // Each face remains centred in its target.
 const TAB_Y = Math.max(
@@ -58,7 +60,7 @@ const TAB_GAP = SHOP.tab.listGap;
 const LIST_Y = Math.max(TAB_BOTTOM, TAB.y + TAB.height) + SHOP.tab.listClear;
 const LIST = {
   height: PANEL.y + PANEL.height - MODAL.pad - DISMISS_FOOTER_SPACE - LIST_Y,
-  width: SHOP.list.width,
+  width: SHOP.list.width + PANEL.width - SHOP.panel.width,
   x: PANEL.x + SHOP.list.frame,
   y: LIST_Y,
 };
@@ -140,7 +142,10 @@ export const SHOP_LAYOUT = {
   // Beside a list longer than the view: a trackWidth-wide track at x, as tall as the list area,
   // and in it a thumbWidth-wide thumb thumbInset inside the track's edges, at least thumbMin
   // tall.
-  scrollbar: SHOP.scrollbar,
+  scrollbar: {
+    ...SHOP.scrollbar,
+    x: SHOP.scrollbar.x + PANEL.x - SHOP.panel.x + PANEL.width - SHOP.panel.width,
+  },
   // The tabs split span, the rows' width from x, their faces gap apart, each a hit area height
   // tall at y with its face drawHeight tall at drawY (shopTabRects, shopTabFace).
   tab: TAB,
@@ -228,28 +233,72 @@ export function shopTabFace(hit: Rect): Rect {
   return { height: drawHeight, width: right - left, x: left, y: drawY };
 }
 
-// Rows width wide from top, pitch apart.
+// Rows retain the authored gap while their full-size content determines their heights.
 export function rowRects(
   width: number,
   spec: { height: number; pitch: number; y: number },
-  count: number,
+  heights: readonly number[],
 ): Rect[] {
   const { x } = SHOP_LAYOUT.row;
-  return Array.from({ length: count }, (_, i) => ({
-    height: spec.height,
-    width,
-    x,
-    y: spec.y + i * spec.pitch,
-  }));
+  let y = spec.y;
+  return heights.map((height) => {
+    const rect = { height, width, x, y };
+    y += height + spec.pitch - spec.height;
+    return rect;
+  });
 }
 
-// The capitals' tops of a row's name and line, from the row's middle row: the line
-// LABEL_HELP_GAP clear rows under the body font's lowest ink (helpCapDy), the pair from the
-// name's capitals to the line's lowest ink centred down the row.
-export function shopRowTextTops(body: FontMetrics): { line: number; name: number } {
-  const ink = inkRowsFromCapTop(body) * 2;
-  const name = -Math.floor((helpCapDy(body, 2) + ink) / 2);
-  return { line: name + helpCapDy(body, 2), name };
+// The end of the visible row content, excluding the authored gap to its next section.
+export function shopRowsBottom(spec: { y: number }, rects: readonly Rect[]): number {
+  const last = rects.at(-1);
+  return last === undefined ? spec.y : last.y + last.height;
+}
+
+export function shopNextHeading(
+  spec: { height: number; pitch: number; y: number },
+  rects: readonly Rect[],
+): number {
+  return shopRowsBottom(spec, rects) + spec.pitch - spec.height + ROWS_TO_HEADING;
+}
+
+export function shopRowHeight(
+  body: FontMetrics,
+  minimum: number,
+  descriptionLines: number,
+): number {
+  return minimum + Math.max(0, descriptionLines - 1) * body.lineHeight * TEXT_SCALE;
+}
+
+// Name and wrapped description ink form one vertically centred block within the row.
+export function shopRowTextTops(
+  body: FontMetrics,
+  descriptionLines = 1,
+): { line: number; name: number } {
+  const ink = inkRowsFromCapTop(body) * TEXT_SCALE;
+  const extra = Math.max(0, descriptionLines - 1) * body.lineHeight * TEXT_SCALE;
+  const name = -Math.floor((helpCapDy(body, TEXT_SCALE) + ink + extra) / 2);
+  return { line: name + helpCapDy(body, TEXT_SCALE), name };
+}
+
+// The message grows from the authored one-line plate; callers reserve its extra rows.
+export function shopMessageLayout(
+  body: FontMetrics,
+  lineCount: number,
+): {
+  capTops: number[];
+  extraHeight: number;
+  plate: Rect;
+} {
+  const pitch = body.lineHeight * TEXT_SCALE;
+  const extraHeight = Math.max(0, lineCount - 1) * pitch;
+  const plate = { ...PLATE, height: PLATE.height + extraHeight };
+  const blockHeight = inkRowsFromCapTop(body) * TEXT_SCALE + extraHeight;
+  const top = plate.y + Math.floor((plate.height - blockHeight) / 2);
+  return {
+    capTops: Array.from({ length: lineCount }, (_, i) => top + i * pitch),
+    extraHeight,
+    plate,
+  };
 }
 
 // How wide the name and line of a row rowWidth wide may be beside the price plate or OWNED,
