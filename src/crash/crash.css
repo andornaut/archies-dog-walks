@@ -11,13 +11,13 @@
 }
 
 /* Native palette and controls over a DOM-only fallback, independent of the game renderer. */
-:is(.crash, .adw-loading-error) {
+.crash {
   font-family: "Archie crash body", ui-monospace, monospace;
   font-size: 24px;
   line-height: 1.2;
 }
 
-:is(.crash, .adw-loading-error) .crash-panel {
+.crash .crash-panel {
   max-width: 360px;
   padding: 16px;
   border: 1px solid var(--crash-ink);
@@ -43,21 +43,21 @@
   content: "";
 }
 
-:is(.crash, .adw-loading-error) .crash-title,
-:is(.crash, .adw-loading-error) .crash-button {
+.crash .crash-title,
+.crash .crash-button {
   font-family: "Archie crash title", ui-monospace, monospace;
   font-size: 16px;
   font-weight: 400;
   line-height: 1.4;
 }
 
-:is(.crash, .adw-loading-error) .crash-title {
+.crash .crash-title {
   margin-bottom: 16px;
   overflow-wrap: anywhere;
   text-transform: uppercase;
 }
 
-:is(.crash, .adw-loading-error) .crash-body {
+.crash .crash-body {
   margin-bottom: 16px;
 }
 
