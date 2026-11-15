@@ -198,6 +198,7 @@ export function mountUiLayer(
         return;
       }
       disposed = true;
+      resize?.disconnect();
       required.dispose();
       unsubscribeSheets();
       readyListeners.clear();
@@ -286,6 +287,17 @@ export function mountUiLayer(
       }
     },
   };
+  // Canvas layout still changes while a required-loading error pauses Phaser rendering.
+  const resize =
+    typeof ResizeObserver === "undefined" ? undefined : new ResizeObserver(() => layer.update());
+  if (resize !== undefined) {
+    for (let frame: HTMLElement | null = canvas; frame !== null; frame = frame.parentElement) {
+      resize.observe(frame);
+      if (frame === doc.body) {
+        break;
+      }
+    }
+  }
   layer.update();
   return layer;
 }
