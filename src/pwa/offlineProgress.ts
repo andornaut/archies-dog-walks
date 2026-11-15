@@ -6,8 +6,8 @@ export const offlineProgress = createProgressState();
 let pending: ProgressHandle | undefined;
 let operation: Pick<DownloadProgress, "operationId" | "version"> | undefined;
 
-// Only a first visit's precache, which the player waits on, shows the loading line, without a
-// percentage; updates install in the background and show nothing.
+// Only a first visit's precache shows the shared loading line. Known download byte totals fill
+// it; unmeasured phases travel. Background updates show nothing.
 export function reportOfflineActivity(activity: OfflineActivity): void {
   if (activity === "precaching") {
     pending ??= offlineProgress.begin();
