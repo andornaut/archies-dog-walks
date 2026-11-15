@@ -45,8 +45,8 @@ import { chooseSoundFormat, type SoundFormat } from "../audio/soundFormat.ts";
 import type { StorageState } from "../save/profile.ts";
 import { dispatchPhoneEvent, PHONE_EVENTS } from "./events.ts";
 import { createInstallNudge, type InstallNudge } from "./installNudge.ts";
-import { reportOfflineActivity } from "./offlineProgress.ts";
-import { reportRequiredUpdate } from "./requiredUpdate.ts";
+import { reportOfflineActivity, reportOfflineDownload } from "./offlineProgress.ts";
+import { reportRequiredDownload, reportRequiredUpdate } from "./requiredUpdate.ts";
 import { acceptedUpdateProgress } from "./updateAcceptance.ts";
 
 export { AUDIO_UNLOCK_EVENTS, unlockAudioOnFirstGesture } from "./audioUnlock.ts";
@@ -102,6 +102,10 @@ function registerServiceWorker(): OfflinePlay | undefined {
   }
   const play = startOfflinePlay(
     {
+      onDownloadProgress: (snapshot) => {
+        reportOfflineDownload(snapshot);
+        reportRequiredDownload(snapshot);
+      },
       onOfflineActivity: reportOfflineActivity,
       onRequireNewer: reportRequired,
       onUpdateShown: (shown) => {

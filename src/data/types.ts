@@ -1155,11 +1155,6 @@ export interface MenuText {
     readonly next: string;
     readonly previous: string;
   };
-  readonly loadingError: {
-    readonly body: string;
-    readonly retry: string;
-    readonly title: string;
-  };
   readonly menu: { readonly title: string };
   readonly pause: {
     readonly action: string;

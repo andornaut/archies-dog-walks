@@ -44,11 +44,6 @@ export const MENU_TEXT = {
     next: "Next",
     previous: "Previous",
   },
-  loadingError: {
-    body: "Some game files could not load. Try again.",
-    retry: "Retry",
-    title: "Loading failed",
-  },
   menu: { title: "Menu" },
   pause: {
     action: "Pause",

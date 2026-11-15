@@ -1,5 +1,10 @@
 import "./loadingError.css";
 
+import {
+  LOADING_FAILURE_TEXT,
+  type LoadingAttemptState,
+} from "@andornaut/game-kit/load/loadingAttempts";
+import { mountLoadingFailure } from "@andornaut/game-kit/web/progress/dom/loadingFailure";
 import { createModalLayer } from "@andornaut/game-kit/web/ui/dom/modalLayer";
 
 import { PALETTE } from "../palette.ts";
@@ -10,7 +15,7 @@ import type { UiLayer } from "./uiLayer.ts";
 export interface LoadingErrorView {
   dispose(): void;
   hide(): void;
-  show(busy: boolean): void;
+  show(state: LoadingAttemptState): void;
 }
 
 // Recovery controls use the independent bootstrap fonts and chrome, never the failed game
@@ -18,20 +23,18 @@ export interface LoadingErrorView {
 export function mountLoadingError(
   context: {
     readonly layer: UiLayer;
-    readonly retry: () => void;
+    readonly retry: () => void | PromiseLike<void>;
     readonly settings: MuteControlSettings;
-    readonly words: { readonly body: string; readonly retry: string; readonly title: string };
   },
   parent: HTMLElement,
 ): LoadingErrorView {
-  const { layer, words } = context;
+  const { layer } = context;
   const doc = parent.ownerDocument;
   const root = doc.createElement("div");
   root.className = "adw-loading-error";
   root.hidden = true;
   root.setAttribute("role", "alertdialog");
-  root.setAttribute("aria-labelledby", "adw-loading-error-title");
-  root.setAttribute("aria-describedby", "adw-loading-error-body");
+  root.setAttribute("aria-label", LOADING_FAILURE_TEXT.title);
   const palette = {
     background: PALETTE.ink,
     "button-face": PALETTE.green,
@@ -47,26 +50,12 @@ export function mountLoadingError(
   }
   const panel = doc.createElement("section");
   panel.className = "crash-panel";
-  const title = doc.createElement("h1");
-  title.id = "adw-loading-error-title";
-  title.className = "crash-title";
-  title.textContent = words.title;
-  const body = doc.createElement("p");
-  body.id = "adw-loading-error-body";
-  body.className = "crash-body";
-  body.textContent = words.body;
-  const button = doc.createElement("button");
-  button.type = "button";
-  button.className = "crash-button";
-  button.textContent = words.retry;
-  panel.append(title, body, button);
   root.append(panel);
   parent.append(root);
   const modal = createModalLayer(parent);
   let close: (() => void) | undefined;
   let scope: ReturnType<UiLayer["input"]["open"]> | undefined;
   let removeMute: (() => void) | undefined;
-  let busy = false;
   let disposed = false;
   const place = () => {
     for (const key of ["height", "left", "top", "width"] as const) {
@@ -75,6 +64,13 @@ export function mountLoadingError(
   };
   const stopScale = layer.onScale(place);
   place();
+  const failure = mountLoadingFailure(
+    {
+      onRetry: () => (!disposed && scope?.accepts() ? context.retry() : undefined),
+    },
+    panel,
+  );
+  const button = failure.element.querySelector("button")!;
   const stopInput = guardNativeInput(
     {
       claim: layer.press.claim,
@@ -86,12 +82,6 @@ export function mountLoadingError(
     },
     root,
   );
-  const retry = () => {
-    if (!disposed && !busy && scope?.accepts()) {
-      context.retry();
-    }
-  };
-  button.addEventListener("click", retry);
   const hide = () => {
     scope?.close();
     scope = undefined;
@@ -110,18 +100,18 @@ export function mountLoadingError(
       hide();
       stopInput();
       stopScale();
-      button.removeEventListener("click", retry);
+      failure.dispose();
       modal.dispose();
       root.remove();
     },
     hide,
-    show(pending) {
+    show(state) {
       if (disposed) {
         return;
       }
-      busy = pending;
-      button.disabled = busy;
-      root.setAttribute("aria-busy", String(busy));
+      failure.update(state);
+      panel.hidden = state.kind !== "failed";
+      root.setAttribute("aria-busy", String(state.kind === "loading"));
       if (close === undefined) {
         root.hidden = false;
         place();

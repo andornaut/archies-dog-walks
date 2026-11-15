@@ -206,3 +206,43 @@ describe("acceptUpdate", () => {
     expect(phone.updateAccepting()).toBe(false);
   });
 });
+
+it("reports worker bytes only through existing first-visit and required-update handles", async () => {
+  const { offlineProgress } = await import("./offlineProgress.ts");
+  const { requiredUpdateProgress } = await import("./requiredUpdate.ts");
+  let background: { active: boolean; value: number | undefined } | undefined;
+  let foreground: typeof background;
+  const stopBackground = offlineProgress.subscribe((snapshot) => {
+    background = snapshot;
+  });
+  const stopForeground = requiredUpdateProgress.subscribe((snapshot) => {
+    foreground = snapshot;
+  });
+  const report = offline.options!.onDownloadProgress!;
+  const sample = {
+    operationId: "first",
+    phase: "downloading" as const,
+    value: 0.25,
+    version: "new",
+  };
+  report(sample);
+  expect(background?.active).toBe(false);
+  offline.options!.onOfflineActivity!("precaching");
+  report(sample);
+  expect(background).toMatchObject({ active: true, value: 0.25 });
+  report({ ...sample, operationId: "stale", value: 0.75 });
+  expect(background?.value).toBe(0.25);
+  report({ ...sample, phase: "verifying", value: undefined });
+  expect(background).toMatchObject({ active: true, value: undefined });
+  offline.options!.onOfflineActivity!("idle");
+  offline.options!.onRequireNewer!("updating");
+  report({ ...sample, operationId: "required", value: 0.5 });
+  expect(foreground).toMatchObject({ active: true, value: 0.5 });
+  expect(background?.active).toBe(false);
+  report({ ...sample, value: 0.9 });
+  expect(foreground?.value).toBe(0.5);
+  offline.options!.onRequireNewer!("unavailable");
+  expect(foreground?.active).toBe(false);
+  stopBackground();
+  stopForeground();
+});

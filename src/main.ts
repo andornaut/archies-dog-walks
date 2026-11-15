@@ -14,7 +14,6 @@ import { followFrameTurn } from "@andornaut/game-kit/web/view/phaser/followFrame
 import { Core, Game, Scale, WEBGL } from "phaser";
 
 import { CRASH_SCREEN } from "./crash/crashScreen.ts";
-import { gameData } from "./data/index.ts";
 import { SCREEN_CONFIG } from "./data/screen.ts";
 import { applyPendingSaveEdits, type DevPanelHost, mountDevPanel } from "./dev/devPanel.ts";
 import { DEV_CHEATS_KEY } from "./dev/devPanelModel.ts";
@@ -174,10 +173,7 @@ function bootGame(context: GameStartup): Game {
     const required = createRequiredUi({ layer, progress: context.nativeProgress }, (retry) =>
       pauseLoadingError(
         game,
-        mountLoadingError(
-          { layer, retry, settings: pageDeviceSettings(), words: gameData.menuText.loadingError },
-          document.body,
-        ),
+        mountLoadingError({ layer, retry, settings: pageDeviceSettings() }, document.body),
       ),
     );
     game.registry.set(REQUIRED_UI, required);

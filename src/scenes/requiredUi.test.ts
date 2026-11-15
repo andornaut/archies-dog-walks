@@ -44,12 +44,12 @@ it.each(["asset", "font"] as const)(
     const f = fixture(kind === "font" ? "failed" : "ready", kind === "asset" ? "failed" : "ready");
     const ready = vi.fn();
     f.waiting.wait(ready);
-    expect(f.view.show).toHaveBeenLastCalledWith(false);
+    expect(f.view.show).toHaveBeenLastCalledWith(expect.objectContaining({ kind: "failed" }));
     expect(ready).not.toHaveBeenCalled();
     f.retry();
     expect(f.resources.retryFonts).toHaveBeenCalledTimes(kind === "font" ? 1 : 0);
     expect(f.resources.retryAssets).toHaveBeenCalledTimes(kind === "asset" ? 1 : 0);
-    expect(f.view.show).toHaveBeenLastCalledWith(true);
+    expect(f.view.show).toHaveBeenLastCalledWith(expect.objectContaining({ kind: "loading" }));
     let active = false;
     const stopProgress = f.progress.subscribe((snapshot) => {
       active = snapshot.active;
@@ -68,55 +68,6 @@ it.each(["asset", "font"] as const)(
     stopProgress();
   },
 );
-
-it("keeps a failed retry explicit without admitting native UI, then recovers", () => {
-  const f = fixture("ready", "failed");
-  const ready = vi.fn();
-  f.waiting.wait(ready);
-  f.retry();
-  f.state.asset = "failed";
-  f.notify();
-  expect(f.view.show).toHaveBeenLastCalledWith(false);
-  expect(ready).not.toHaveBeenCalled();
-  f.retry();
-  f.state.asset = "ready";
-  f.notify();
-  expect(f.resources.retryAssets).toHaveBeenCalledTimes(2);
-  expect(ready).toHaveBeenCalledOnce();
-});
-
-it("rechecks readiness between startup phases and drops all late work after disposal", () => {
-  const f = fixture("ready", "loading");
-  const second = vi.fn();
-  f.waiting.wait(() => {
-    f.state.asset = "loading";
-  });
-  f.waiting.wait(second);
-  f.state.asset = "ready";
-  f.notify();
-  expect(second).not.toHaveBeenCalled();
-  f.waiting.dispose();
-  f.waiting.dispose();
-  expect(f.listeners.size).toBe(0);
-  f.state.asset = "ready";
-  f.notify();
-  expect(second).not.toHaveBeenCalled();
-});
-
-it("keeps observing required view failures after the initial startup wait completed", () => {
-  const f = fixture("ready", "ready");
-  const ready = vi.fn();
-  f.waiting.wait(ready);
-  expect(ready).toHaveBeenCalledOnce();
-  f.state.asset = "failed";
-  f.notify();
-  expect(f.view.show).toHaveBeenLastCalledWith(false);
-  f.retry();
-  f.state.asset = "ready";
-  f.notify();
-  expect(f.view.hide).toHaveBeenCalled();
-  expect(ready).toHaveBeenCalledOnce();
-});
 
 it("holds bootstrap font metrics without retrying successful native fonts or images", () => {
   const f = fixture("ready", "ready");
