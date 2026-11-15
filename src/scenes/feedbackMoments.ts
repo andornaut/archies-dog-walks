@@ -1,11 +1,14 @@
-import { animationKey } from "@andornaut/game-kit/art/aseprite";
 import type { Point, Rect } from "@andornaut/game-kit/rect";
-import type { Animations, GameObjects, Scene, Tweens, Types } from "phaser";
+import { fontMetrics } from "@andornaut/game-kit/text/bitmapFont";
+import { fittingText } from "@andornaut/game-kit/text/textFit";
+import type { GameObjects, Scene, Tweens, Types } from "phaser";
 
 import { ownerFaceKey, WARNING_KEY, WARNING_TAG } from "../assets/spriteKeys.ts";
 import { gameData } from "../data/index.ts";
 import { SCREEN_CONFIG, SCREEN_LAYOUT } from "../data/screen.ts";
 import type { DogId } from "../data/types.ts";
+import type { HudMoment, HudMomentPainter } from "../hud/dom/hudMoments.ts";
+import { inlineFaceBox, styledFaceRows } from "../hud/faceText.ts";
 import { type MoneyTick, retarget, tickShown } from "../hud/feedback.ts";
 import type { ChangeLabel } from "../hud/hudView.ts";
 import {
@@ -45,83 +48,54 @@ import { DOG_CARD } from "../hud/walkHud.ts";
 import { slotIndexOf } from "../state/pack.ts";
 import type { RunState } from "../state/runState.ts";
 import { PALETTE } from "../ui/palette.ts";
-import { addDisplayText } from "../ui/phaser/displayText.ts";
-import { CREAM_PANEL_COLOURS, drawFramedRect, drawRing } from "../ui/phaser/draw.ts";
-import {
-  addPixelText,
-  fitPixelText,
-  pixelFontMetrics,
-  placePixelText,
-} from "../ui/phaser/pixelText.ts";
 import { type Cents, cents } from "../units.ts";
 import { arcFlight } from "./arcFlight.ts";
-import { addFaceRows, fitFaceRows } from "./faceTextView.ts";
 import { HUD_DEPTH } from "./hudDepth.ts";
 import type { HudWalk } from "./hudWalk.ts";
 import { onSceneEvent } from "./overlay.ts";
-import { firstTag, playEffect, playTag } from "./sprites.ts";
+import { playTag } from "./sprites.ts";
 import { TimedGroup } from "./timedGroup.ts";
-import { addPanel, artFits, tagFrame } from "./uiKit.ts";
-
 const LAYOUT = SCREEN_LAYOUT;
-// The owner's 32x32 face is drawn at 2x. The pop shows no face on its first frame, the face
-// at 1x on its second and at 2x from its third.
 const FACE = { scale: 2, size: 32 };
-const POP = { key: "fx-fired-pop", scale: 2, tag: "play" };
-const PLATE = { corner: 8, dropIn: 8, key: "ui-fired-plate" };
-// A fired line's bubble's tail is 8px wide.
 const LINE_TAIL_WIDTH = 8;
-const COIN = { key: "fx-coin-fly", tag: "spin" };
-const TREAT_POP = { fallback: "fx-sparkle", key: "fx-treat-pop", tag: "play" };
-const SPARE_TREAT_ICON = "icon-treat";
-const RIM = { minAlpha: 0.35, pulseMs: 600, width: 2 };
-
 interface FiredLine {
   at: Point;
   tail: Point;
   text: string;
 }
-
-// The centre of the dog's face on the card in rect, its 32x32 face at 1x.
-function dogFaceCentre(rect: Rect): Point {
-  const half = FACE.size / 2;
-  const { dogFace } = DOG_CARD;
-  return { x: rect.x + dogFace.x + half, y: rect.y + dogFace.y + half };
-}
-
-// The callbacks the HUD gives the moments: effectWell is the walk bar's effect well at an index,
-// floatLabels shows change labels, popping a heart change's owner in for ownerMs, firingShown
-// runs once a firing moment is on screen, popOwner pops a dog's owner in on its card, in a mood,
-// for ms, and payTotal shows a zone's pay by the cash for holdMs, then fades it over fadeMs.
 interface HudFeedbackHooks {
+  painter: HudMomentPainter;
   effectWell: (index: number) => Rect | undefined;
   firingShown: () => void;
   floatLabels: (ownerMs: number, labels: ChangeLabel[]) => void;
-  payTotal: (label: ChangeLabel, timing: { fadeMs: number; holdMs: number }) => void;
+  payTotal: (
+    label: ChangeLabel,
+    timing: {
+      fadeMs: number;
+      holdMs: number;
+    },
+  ) => void;
   popOwner: (dog: DogId, mood: string, ms: number) => void;
 }
-
 interface SlotWarning {
-  parts: GameObjects.GameObject[];
-  pulse: Tweens.Tween | undefined;
+  view?: HudMoment | undefined;
+  pulse?: Tweens.Tween | undefined;
 }
-
-// The HUD's part of the in-run feedback moments: the firing moment over the card, the
-// low-hearts warning on a card, the zone's fees flying to the bank and a treat thrown to its
-// dog. Moments that play out over time stop with the pause menu, as the walk does, while
-// the HUD keeps running under it. The firing moment stops whenever the walk does, so it plays
-// out over its hold however the hold is paused.
+function dogFaceCentre(rect: Rect): Point {
+  return {
+    x: rect.x + DOG_CARD.dogFace.x + FACE.size / 2,
+    y: rect.y + DOG_CARD.dogFace.y + FACE.size / 2,
+  };
+}
+// Native UI moments retain their existing scene timers and the two independently held groups.
 export class HudFeedback {
   private inFlight = 0;
-  // The firing moments' faces and plates on screen.
   private readonly firingParts = new Set<Rect>();
-  // Fired lines' bubbles on screen, and lines waiting for room beside them.
-  // Each bubble's cover takes in its tail.
   private lines: {
     cover: Rect;
     depth: number;
     line: FiredLine;
-    parts: GameObjects.GameObject[];
+    view: HudMoment;
     rect: Rect;
   }[] = [];
   private linesWaiting: FiredLine[] = [];
@@ -129,23 +103,19 @@ export class HudFeedback {
   private lowShown = "";
   private moneyTick: MoneyTick | undefined;
   private readonly firing = new TimedGroup();
-  private readonly hooks: HudFeedbackHooks;
   private readonly moments = new TimedGroup();
-  private readonly run: Pick<HudWalk, "events" | "hudView" | "reducedMotion">;
+  private readonly warnings: SlotWarning[] = LAYOUT.dogSlots.map(() => ({}));
   private readonly scene: Scene;
-  private readonly warnings: SlotWarning[] = LAYOUT.dogSlots.map(() => ({
-    parts: [],
-    pulse: undefined,
-  }));
-
+  private readonly run: Pick<HudWalk, "events" | "hudView" | "reducedMotion">;
+  private readonly hooks: HudFeedbackHooks;
   constructor(
     scene: Scene,
     run: Pick<HudWalk, "events" | "hudView" | "reducedMotion">,
     hooks: HudFeedbackHooks,
   ) {
-    this.hooks = hooks;
-    this.run = run;
     this.scene = scene;
+    this.run = run;
+    this.hooks = hooks;
     onSceneEvent(scene, run.events, FIRING_EVENT, (cue: FiringCue) => this.playFiring(cue));
     onSceneEvent(scene, run.events, PAYOUT_EVENT, (payout: Payout) => this.playPayout(payout));
     onSceneEvent(scene, run.events, TREAT_EVENT, (cue: TreatCue) => this.playTreat(cue));
@@ -153,142 +123,170 @@ export class HudFeedback {
       this.playSpareTreat(cue),
     );
   }
-
   update(run: RunState, pause: RunPause): void {
     this.moments.hold(playerPaused(pause));
     this.firing.hold(walkPaused(pause));
     this.showLowHearts(run);
   }
-
-  // What heart pops keep clear of: the firing moments' faces, plates and fired lines on screen.
   firingRects(): Rect[] {
     return [...this.firingParts, ...this.lines.map(({ cover }) => cover)];
   }
-
-  // The money the counter shows: the run's, less the fees still flying to it, counted to
-  // rather than jumped to, except with reduced motion.
   shownMoney(money: Cents): Cents {
     const target = cents(Math.max(0, money - this.inFlight));
     const now = this.scene.time.now;
     this.moneyTick = retarget(!this.run.reducedMotion(), now, target, this.moneyTick);
     return tickShown(now, this.moneyTick);
   }
-
-  private tween(
-    config: Types.Tweens.TweenBuilderConfig,
-    group: TimedGroup = this.moments,
-  ): Tweens.Tween {
+  private tween(config: Types.Tweens.TweenBuilderConfig, group = this.moments): Tweens.Tween {
     return group.tween(this.scene, config);
   }
-
-  private after(ms: number, callback: () => void, group: TimedGroup = this.moments): void {
+  private after(ms: number, callback: () => void, group = this.moments): void {
     group.after(this.scene, ms, callback);
   }
-
-  // Fades parts out over ms after delay, then destroys them.
-  private fadeOut(
-    parts: GameObjects.GameObject[],
-    delay: number,
-    ms: number,
-    group: TimedGroup = this.moments,
-  ): void {
+  private fadeOut(views: HudMoment[], delay: number, ms: number, group = this.moments): void {
     this.tween(
       {
         alpha: 0,
         delay,
         duration: ms,
-        onComplete: () => parts.forEach((part) => part.destroy()),
-        targets: parts,
+        onComplete: () => views.forEach((view) => view.dispose()),
+        targets: views.map(({ state }) => state),
       },
       group,
     );
   }
-
-  // Moves target along a curve over ms, then calls done.
   private fly(
-    target: { setPosition: (x: number, y: number) => unknown },
-    path: { control: Point; from: Point; to: Point },
+    view: HudMoment,
+    path: {
+      control: Point;
+      from: Point;
+      to: Point;
+    },
     ms: number,
     done: () => void,
   ): void {
     this.tween(
-      arcFlight(path, { duration: ms, onComplete: done }, ({ x, y }) => target.setPosition(x, y)),
+      arcFlight(path, { duration: ms, onComplete: done }, (point) => {
+        view.state.x = point.x - path.from.x;
+        view.state.y = point.y - path.from.y;
+      }),
     );
   }
-
   private slotOf(dog: DogId): Rect | undefined {
-    const index = slotIndexOf(this.run.hudView()?.run.pack ?? [], dog);
-    return LAYOUT.dogSlots[index];
+    return LAYOUT.dogSlots[slotIndexOf(this.run.hudView()?.run.pack ?? [], dog)];
   }
-
-  // The owner's fired face pops up at 2x on their tab's place over the card in front of the
-  // pop, the plate drops in in their temperament's colour, and their fired line shows in a
-  // bubble pointing at the face. The face, pop, plate and line stay up for the hold and fade
-  // out as it ends (firingTimeline), and heart pops in their way land at once. Reduced motion
-  // keeps the pop and sets the rest in place.
   private playFiring(cue: FiringCue): void {
     const rect = this.slotOf(cue.dog);
     if (rect === undefined) {
       return;
     }
+    const painter = this.hooks.painter;
     const still = this.run.reducedMotion();
     const layout = firingLayout(LAYOUT.walkView, rect);
     const timeline = firingTimeline(cue.seconds, still);
-    const pop = this.addPop(layout.pop);
-    const face = this.addFace(cue.dog, layout.face);
-    const plate = this.addPlate(layout.plate);
-    if (still) {
-      pop?.anims.pause(pop.anims.currentAnim?.frames.at(-1));
-    } else if (pop === undefined) {
-      face.setScale(0);
-      this.tween(
-        { duration: timeline.popMs, ease: "Back.easeOut", scale: 1, targets: face },
-        this.firing,
-      );
+    const pop = painter.hasArt("fx-fired-pop")
+      ? painter.group(HUD_DEPTH.moment, "firingNow")
+      : undefined;
+    const face = painter.group(HUD_DEPTH.moment, "firingNow");
+    face.state.x = layout.face.x;
+    face.state.y = layout.face.y;
+    const key = ownerFaceKey(gameData, cue.dog);
+    const size = FACE.size * FACE.scale;
+    if (painter.hasArt(key)) {
+      face.art({
+        at: { x: 0, y: 0 },
+        clock: "now",
+        key,
+        loop: true,
+        origin: { x: 0.5, y: 0.5 },
+        scale: FACE.scale,
+        tags: ["fired", "upset"],
+      });
     } else {
-      this.firing.animate(pop);
-      face.setVisible(false);
-      pop.on("animationupdate", (_: Animations.Animation, frame: Animations.AnimationFrame) => {
-        face.setVisible(frame.index > 1).setScale(frame.index === 2 ? 1 / FACE.scale : 1);
+      face.panel({ height: size, width: size, x: -size / 2, y: -size / 2 });
+      face.text({
+        anchor: "centre",
+        capTop: 0,
+        colour: PALETTE.plum,
+        font: "body",
+        lines: [gameData.dogs[cue.dog].owner.name],
+        scale: 1,
+        x: 0,
       });
     }
-    if (!still) {
-      plate.setY(layout.plate.y - PLATE.dropIn).setAlpha(0);
-      this.tween(
-        {
-          alpha: 1,
-          duration: timeline.plateMs,
-          ease: "Back.easeOut",
-          targets: plate,
-          y: layout.plate.y,
+    if (pop !== undefined) {
+      pop.art({
+        at: layout.pop,
+        key: "fx-fired-pop",
+        last: still,
+        onFrame: (index) => {
+          if (!still) {
+            face.state.visible = index > 0;
+            face.state.scale = index === 1 ? 0.5 : 1;
+          }
         },
+        scale: 2,
+        still,
+        tags: ["play"],
+      });
+      if (!still) {
+        face.state.visible = false;
+      }
+    } else if (!still) {
+      face.state.scale = 0;
+      this.tween(
+        { duration: timeline.popMs, ease: "Back.easeOut", scale: 1, targets: face.state },
         this.firing,
       );
     }
-    const half = (FACE.size * FACE.scale) / 2;
+    const plate = painter.group(HUD_DEPTH.moment, "firingNow");
+    plate.panel(
+      layout.plate,
+      painter.hasArt("ui-fired-plate") ? "ui-fired-plate" : "ui-hit-label",
+      { border: PALETTE.plum, fill: PALETTE.darkRed },
+      8,
+    );
+    plate.text({
+      anchor: "centre",
+      capTop: layout.plate.y + FIRING_PARTS.plateText.y,
+      colour: PALETTE.yellow,
+      font: "display",
+      lines: [gameData.runText.fired],
+      scale: 1,
+      x: layout.plate.x + layout.plate.width / 2,
+    });
+    if (!still) {
+      plate.state.y = -8;
+      plate.state.alpha = 0;
+      this.tween(
+        { alpha: 1, duration: timeline.plateMs, ease: "Back.easeOut", targets: plate.state, y: 0 },
+        this.firing,
+      );
+    }
     const covered = [
-      { height: 2 * half, width: 2 * half, x: layout.face.x - half, y: layout.face.y - half },
+      { height: size, width: size, x: layout.face.x - size / 2, y: layout.face.y - size / 2 },
       layout.plate,
     ];
     covered.forEach((part) => this.firingParts.add(part));
-    const shown = pop === undefined ? [face, plate] : [pop, face, plate];
-    const { fadeAtMs, fadeMs } = timeline;
-    this.fadeOut(shown, fadeAtMs, fadeMs, this.firing);
+    this.fadeOut(
+      pop === undefined ? [face, plate] : [pop, face, plate],
+      timeline.fadeAtMs,
+      timeline.fadeMs,
+      this.firing,
+    );
     const line = { at: layout.line, tail: layout.tail, text: cue.line };
     this.linesWaiting.push(line);
     this.showWaitingLines();
     this.after(
-      fadeAtMs,
+      timeline.fadeAtMs,
       () => {
         covered.forEach((part) => this.firingParts.delete(part));
-        this.closeLine(line, fadeMs);
+        this.closeLine(line, timeline.fadeMs);
       },
       this.firing,
     );
     this.hooks.firingShown();
   }
-
-  // Fades a fired line out over ms if it is up, else drops it from the waiting lines.
   private closeLine(line: FiredLine, ms: number): void {
     this.linesWaiting = this.linesWaiting.filter((waiting) => waiting !== line);
     const entry = this.lines.find((shown) => shown.line === line);
@@ -300,137 +298,69 @@ export class HudFeedback {
         alpha: 0,
         duration: ms,
         onComplete: () => {
-          entry.parts.forEach((part) => part.destroy());
+          entry.view.dispose();
           this.lines = this.lines.filter((shown) => shown !== entry);
           this.showWaitingLines();
         },
-        targets: entry.parts,
+        targets: entry.view.state,
       },
       this.firing,
     );
   }
-
-  // Opens each waiting fired line that has room beside the bubbles up, in turn; the rest wait
-  // for one to close.
   private showWaitingLines(): void {
     this.linesWaiting = this.linesWaiting.filter((line) => !this.addLine(line));
   }
-
-  // fx-fired-pop at 2x, played once and held on its last frame behind the face.
-  private addPop(at: Point): GameObjects.Sprite | undefined {
-    if (!this.scene.anims.exists(animationKey(POP.key, POP.tag))) {
-      return undefined;
-    }
-    const pop = this.scene.add
-      .sprite(at.x, at.y, POP.key)
-      .setOrigin(0)
-      .setScale(POP.scale)
-      .setDepth(HUD_DEPTH.moment);
-    pop.play({ key: animationKey(POP.key, POP.tag), repeat: 0 });
-    return pop;
-  }
-
-  // The owner's fired face at 2x, else a framed box with their name.
-  private addFace(dog: DogId, centre: Point): GameObjects.Container {
-    const container = this.scene.add.container(centre.x, centre.y).setDepth(HUD_DEPTH.moment);
-    const key = ownerFaceKey(gameData, dog);
-    const size = FACE.size * FACE.scale;
-    if (this.scene.textures.exists(key)) {
-      const sprite = this.scene.add.sprite(0, 0, key).setScale(FACE.scale);
-      playTag(sprite, key, firstTag(this.scene, key, ["fired", "upset"]) ?? "upset");
-      container.add(sprite);
-    } else {
-      const frame = this.scene.add.graphics();
-      drawFramedRect(frame, CREAM_PANEL_COLOURS, {
-        height: size,
-        width: size,
-        x: -size / 2,
-        y: -size / 2,
-      });
-      const name = addPixelText(this.scene, 0, 0, gameData.dogs[dog].owner.name, {
-        colour: PALETTE.plum,
-        originX: 0.5,
-        originY: 0.5,
-      });
-      container.add([frame, name]);
-    }
-    return container;
-  }
-
-  // ui-fired-plate, else the hit label's plate, else a drawn one, with "FIRED!" across it.
-  private addPlate(rect: Rect): GameObjects.Container {
-    const container = this.scene.add.container(rect.x, rect.y).setDepth(HUD_DEPTH.moment);
-    const { corner } = PLATE;
-    const slice = (key: string, frame: number | string | undefined) =>
-      this.scene.add
-        .nineslice(0, 0, key, frame, rect.width, rect.height, corner, corner, corner, corner)
-        .setOrigin(0);
-    if (this.scene.textures.exists(PLATE.key)) {
-      container.add(slice(PLATE.key, undefined));
-    } else if (this.scene.textures.exists("ui-hit-label")) {
-      container.add(slice("ui-hit-label", tagFrame(this.scene, "ui-hit-label", "normal")));
-    } else {
-      const g = this.scene.add.graphics();
-      drawFramedRect(g, { border: PALETTE.plum, fill: PALETTE.darkRed }, { ...rect, x: 0, y: 0 });
-      container.add(g);
-    }
-    const { plateText } = FIRING_PARTS;
-    container.add(
-      addDisplayText(this.scene, rect.width / 2, plateText.y, gameData.runText.fired, {
-        colour: PALETTE.white,
-        font: "title",
-        originX: 0.5,
-        scale: 2,
-      }),
-    );
-    return container;
-  }
-
-  // The owner's fired line in a quip bubble over the face, kept on screen and clear of the
-  // other fired lines, its tail pointing down at the face, until its firing's hold ends.
-  // False, drawing nothing, while there is no room for it.
   private addLine(line: FiredLine): boolean {
-    const label = addPixelText(this.scene, 0, 0, line.text, {
-      colour: PALETTE.plum,
-      scale: FIRED_LINE.scale,
-    });
-    const { lines } = fitPixelText(label, FIRED_LINE_FIT, 0, 0);
-    const width = Math.ceil(label.width) + 2 * FIRED_LINE.padding;
-    const height = firedLineHeight(pixelFontMetrics(this.scene, "body"), lines.length);
-    const downArt = downTail((key) => this.scene.textures.exists(key));
-    const tailX = line.tail.x - (downArt?.tipX ?? LINE_TAIL_WIDTH / 2);
-    const open = this.lines.map(({ rect }) => rect);
-    const x = firedLineX(SCREEN_CONFIG.width, open, { width: LINE_TAIL_WIDTH, x: tailX }, width);
+    const painter = this.hooks.painter;
+    const fitted = fittingText(
+      FIRED_LINE_FIT.style,
+      (fit, text) => painter.inkWidth(fit.scale, text),
+      FIRED_LINE_FIT.room,
+      line.text,
+    );
+    const width =
+      Math.ceil(
+        Math.max(0, ...fitted.lines.map((text) => painter.width(fitted.style.scale, text))),
+      ) +
+      2 * FIRED_LINE.padding;
+    const height = firedLineHeight(fontMetrics(painter.fonts.body), fitted.lines.length);
+    const tail = downTail((key) => painter.hasArt(key));
+    const tailX = line.tail.x - (tail?.tipX ?? LINE_TAIL_WIDTH / 2);
+    const x = firedLineX(
+      SCREEN_CONFIG.width,
+      this.lines.map(({ rect }) => rect),
+      { width: LINE_TAIL_WIDTH, x: tailX },
+      width,
+    );
     if (x === undefined) {
-      label.destroy();
       return false;
     }
-    const y = line.at.y - height;
-    const rect = { height, width, x, y };
+    const rect = { height, width, x, y: line.at.y - height };
     let depth = HUD_DEPTH.firedLine;
     while (this.lines.some((shown) => shown.depth === depth)) {
       depth += 2;
     }
-    placePixelText(label, x + FIRED_LINE.padding, y + FIRED_LINE.padding);
-    const parts: GameObjects.GameObject[] = [addPanel(this.scene, rect, "ui-quip").setDepth(depth)];
-    if (downArt !== undefined) {
-      parts.push(
-        this.scene.add
-          .image(tailX, line.tail.y, downArt.key)
-          .setOrigin(0)
-          .setDepth(depth + 1),
-      );
+    const view = painter.group(depth, "firingNow");
+    view.panel(rect, "ui-quip");
+    if (tail !== undefined) {
+      view.art({
+        at: { x: tailX, y: line.tail.y },
+        image: { height: tail.height, width: LINE_TAIL_WIDTH },
+        key: tail.key,
+      });
     }
-    parts.push(label.setDepth(depth + 1));
-    const tailBottom = line.tail.y + (downArt?.height ?? 0);
-    const cover = { ...rect, height: Math.max(rect.height, tailBottom - y) };
-    this.lines.push({ cover, depth, line, parts, rect });
+    view.text({
+      capTop: rect.y + FIRED_LINE.padding,
+      colour: PALETTE.plum,
+      font: "body",
+      lines: fitted.lines,
+      scale: fitted.style.scale,
+      x: x + FIRED_LINE.padding,
+    });
+    const cover = { ...rect, height: Math.max(height, line.tail.y + (tail?.height ?? 0) - rect.y) };
+    this.lines.push({ cover, depth, line, rect, view });
     return true;
   }
-
-  // Each paid dog's coin flies from its card's header to the bank, and the counter counts each
-  // fee as it lands, while the pay's total shows by the cash until the last coin has landed, then
-  // fades. Reduced motion flies nothing: the counter shows the fees at once and the total fades.
   private playPayout(payout: Payout): void {
     const pack = this.run.hudView()?.run.pack;
     if (pack === undefined) {
@@ -444,46 +374,46 @@ export class HudFeedback {
       }
     }
     if (payout.total !== null) {
-      const timing = { fadeMs: MOMENTS.payout.chipMs, holdMs: lastLandMs(flights) };
-      this.hooks.payTotal(payout.total, timing);
+      this.hooks.payTotal(payout.total, {
+        fadeMs: MOMENTS.payout.chipMs,
+        holdMs: lastLandMs(flights),
+      });
     }
   }
-
-  // A fee's coin flies from the header of its card, at rect, to the bank, which counts the fee as
-  // it lands; one that lands as it starts, with reduced motion, flies nothing.
   private flyFee(flight: PayoutFlight, rect: Rect): void {
     if (flight.landMs === flight.startMs) {
       return;
     }
-    const { bow, roof } = MOMENTS.payout;
-    const from = { x: rect.x + roof.x, y: rect.y + roof.y };
+    const from = { x: rect.x + MOMENTS.payout.roof.x, y: rect.y + MOMENTS.payout.roof.y };
     this.inFlight += flight.amount;
     this.after(flight.startMs, () => {
-      const coin = this.addCoin(from);
+      const coin = this.hooks.painter.group(HUD_DEPTH.moment + 1);
+      if (this.hooks.painter.hasArt("fx-coin-fly")) {
+        coin.art({
+          at: from,
+          key: "fx-coin-fly",
+          loop: true,
+          origin: { x: 0.5, y: 0.5 },
+          tags: ["spin"],
+        });
+      } else {
+        coin.panel({ height: 10, width: 10, x: from.x - 5, y: from.y - 5 }, undefined, {
+          border: PALETTE.amber,
+          fill: PALETTE.amber,
+        });
+      }
       const bank = TOP_BAR_POINTS.bank;
-      const path = { control: bowRightControl(from, bank, bow), from, to: bank };
-      this.fly(coin, path, flight.landMs - flight.startMs, () => {
-        this.inFlight -= flight.amount;
-        coin.destroy();
-      });
+      this.fly(
+        coin,
+        { control: bowRightControl(from, bank, MOMENTS.payout.bow), from, to: bank },
+        flight.landMs - flight.startMs,
+        () => {
+          this.inFlight -= flight.amount;
+          coin.dispose();
+        },
+      );
     });
   }
-
-  // fx-coin-fly spinning, else a drawn coin.
-  private addCoin(at: Point): GameObjects.Sprite | GameObjects.Rectangle {
-    if (this.scene.anims.exists(animationKey(COIN.key, COIN.tag))) {
-      const sprite = this.scene.add.sprite(at.x, at.y, COIN.key).setDepth(HUD_DEPTH.moment + 1);
-      playTag(sprite, COIN.key, COIN.tag);
-      return this.moments.animate(sprite);
-    }
-    return this.scene.add
-      .rectangle(at.x, at.y, 10, 10, PALETTE.amber)
-      .setDepth(HUD_DEPTH.moment + 1);
-  }
-
-  // A spare treat given back flies, as icon-treat, from its gear's well to the dog's face on its
-  // card, then plays as a treat grabbed. With reduced motion, or no well or card to fly between,
-  // it plays as a treat grabbed at once.
   private playSpareTreat(cue: SpareTreatCue): void {
     const rect = this.slotOf(cue.dog);
     const well = this.hooks.effectWell(cue.well);
@@ -491,134 +421,150 @@ export class HudFeedback {
       rect === undefined ||
       well === undefined ||
       this.run.reducedMotion() ||
-      !this.scene.textures.exists(SPARE_TREAT_ICON)
+      !this.hooks.painter.hasArt("icon-treat")
     ) {
       this.playTreat(cue);
       return;
     }
     const from = { x: well.x + well.width / 2, y: well.y + well.height / 2 };
     const to = dogFaceCentre(rect);
-    const treat = this.scene.add.image(from.x, from.y, SPARE_TREAT_ICON);
-    treat.setDepth(HUD_DEPTH.moment + 1);
-    const { flyMs, peak } = MOMENTS.spareTreat;
-    this.fly(treat, { control: arcControl(from, to, peak), from, to }, flyMs, () => {
-      treat.destroy();
-      this.playTreat(cue);
+    const treat = this.hooks.painter.group(HUD_DEPTH.moment + 1);
+    treat.art({
+      at: { x: from.x - 8, y: from.y - 8 },
+      image: { height: 16, width: 16 },
+      key: "icon-treat",
     });
+    this.fly(
+      treat,
+      { control: arcControl(from, to, MOMENTS.spareTreat.peak), from, to },
+      MOMENTS.spareTreat.flyMs,
+      () => {
+        treat.dispose();
+        this.playTreat(cue);
+      },
+    );
   }
-
-  // A treat grabbed pops over the dog's face on its card, the owner pops in smiling and the
-  // heart label floats.
   private playTreat(cue: TreatCue): void {
-    const { smileMs } = MOMENTS.treat;
     const rect = this.slotOf(cue.dog);
     if (rect === undefined) {
-      this.hooks.floatLabels(smileMs, cue.labels);
+      this.hooks.floatLabels(MOMENTS.treat.smileMs, cue.labels);
       return;
     }
-    const at = dogFaceCentre(rect);
-    const key = this.scene.textures.exists(TREAT_POP.key) ? TREAT_POP.key : TREAT_POP.fallback;
-    playEffect(this.scene, key, TREAT_POP.tag, at, HUD_DEPTH.moment);
-    this.hooks.popOwner(cue.dog, "happy", smileMs);
-    this.hooks.floatLabels(smileMs, cue.labels);
+    const key = this.hooks.painter.hasArt("fx-treat-pop") ? "fx-treat-pop" : "fx-sparkle";
+    const view = this.hooks.painter.group(HUD_DEPTH.moment, "now");
+    view.art({
+      at: dogFaceCentre(rect),
+      key,
+      onComplete: () => view.dispose(),
+      origin: { x: 0.5, y: 0.5 },
+      tags: ["play"],
+    });
+    this.hooks.popOwner(cue.dog, "happy", MOMENTS.treat.smileMs);
+    this.hooks.floatLabels(MOMENTS.treat.smileMs, cue.labels);
   }
-
-  // A card whose owner is on their last heart wears the warning rim, pulsing (static with
-  // reduced motion); without the art, a drawn rim and the warning sign, so the warning never
-  // relies on colour alone. Dropping to the last heart also pops the owner in, worried, and
-  // floats a one-off "1 ♥ left!" over the card.
   private showLowHearts(run: RunState): void {
     const low = lowHeartDogs(run.pack);
     const still = this.run.reducedMotion();
-    newlyLow(this.low, low).forEach((dog) => this.cueLow(dog, still));
+    newlyLow(this.low, low).forEach((dog) => this.cueLow(dog));
     this.low = low;
     const shown = `${low.join()}|${still}`;
     if (shown === this.lowShown) {
       return;
     }
     this.lowShown = shown;
-    LAYOUT.dogSlots.forEach((rect, i) => {
-      const dog = run.pack[i]?.dog;
-      this.warn(i, rect, dog !== undefined && low.includes(dog) ? dog : undefined, still);
+    LAYOUT.dogSlots.forEach((rect, index) => {
+      const dog = run.pack[index]?.dog;
+      this.warn(index, rect, dog !== undefined && low.includes(dog) ? dog : undefined, still);
     });
   }
-
   private warn(slot: number, rect: Rect, dog: DogId | undefined, still: boolean): void {
     const warning = this.warnings[slot];
     if (warning === undefined) {
       return;
     }
     warning.pulse?.remove();
-    warning.parts.forEach((part) => part.destroy());
-    warning.parts = [];
+    warning.view?.dispose();
+    warning.view = undefined;
     warning.pulse = undefined;
     if (dog === undefined) {
       return;
     }
-    const key = "ui-dog-card-warn";
-    if (artFits(this.scene, key, DOG_CARD.size)) {
-      const rim = this.scene.add.sprite(rect.x, rect.y, key).setOrigin(0);
-      playTag(rim, key, still ? "static" : "pulse");
-      warning.parts.push(rim);
+    const view = this.hooks.painter.group(0, "now");
+    warning.view = view;
+    if (this.hooks.painter.hasArt("ui-dog-card-warn")) {
+      view.art({
+        at: rect,
+        key: "ui-dog-card-warn",
+        loop: true,
+        tags: [still ? "static" : "pulse"],
+      });
     } else {
-      const rim = this.scene.add.graphics();
-      drawRing(rim, PALETTE.red, rect, RIM.width);
-      warning.parts.push(rim);
-      if (this.scene.textures.exists(WARNING_KEY)) {
-        const sign = this.scene.add.sprite(rect.x + rect.width - 18, rect.y + 2, WARNING_KEY);
-        playTag(sign.setOrigin(0), WARNING_KEY, WARNING_TAG, still);
-        warning.parts.push(sign);
-      }
+      view.ring(rect, PALETTE.red, 2);
+      view.art({
+        at: { x: rect.x + rect.width - 18, y: rect.y + 2 },
+        key: WARNING_KEY,
+        loop: true,
+        still,
+        tags: [WARNING_TAG],
+      });
       if (!still) {
         warning.pulse = this.scene.tweens.add({
-          alpha: RIM.minAlpha,
-          duration: RIM.pulseMs,
+          alpha: 0.35,
+          duration: 600,
           ease: "Sine.easeInOut",
           repeat: -1,
-          targets: rim,
+          targets: view.state,
           yoyo: true,
         });
       }
     }
   }
-
-  private cueLow(dog: DogId, still: boolean): void {
+  private cueLow(dog: DogId): void {
     const rect = this.slotOf(dog);
     if (rect === undefined) {
       return;
     }
     this.hooks.popOwner(dog, "worried", MOMENTS.lowCueMs);
-    const style = { colour: PALETTE.darkRed, scale: 2 };
-    const set = fitFaceRows(this.scene, style, LOW_CHIP_FIT, lowHeartsText(gameData, dog));
-    const row = set.rows[0];
-    const shown = {
-      ...(set.box !== undefined && row !== undefined && row.faces.length > 0
-        ? { face: set.box }
-        : {}),
-      scale: set.style.scale,
+    const painter = this.hooks.painter;
+    const body = fontMetrics(painter.fonts.body);
+    const box = inlineFaceBox(body, LOW_CHIP_FIT.style.scale);
+    const rows = styledFaceRows(
+      LOW_CHIP_FIT.style,
+      (fit, text) => painter.width(fit.scale, text),
+      box,
+      LOW_CHIP_FIT.room,
+      lowHeartsText(gameData, dog),
+    );
+    const row = rows[0];
+    const place = lowChipPlace(body, SCREEN_CONFIG.width, rect, {
+      ...(box !== undefined && row !== undefined && row.faces.length > 0 ? { face: box } : {}),
+      scale: LOW_CHIP_FIT.style.scale,
       width: Math.ceil(row?.width ?? 0),
-    };
-    const body = pixelFontMetrics(this.scene, "body");
-    const place = lowChipPlace(body, SCREEN_CONFIG.width, rect, shown);
-    const box = this.scene.add.graphics();
-    drawFramedRect(box, CREAM_PANEL_COLOURS, { ...place.box, x: 0, y: 0 });
-    const at = { capsTop: place.text.y - place.box.y, x: place.text.x - place.box.x };
-    const text = addFaceRows(this.scene, at, { box: set.box, fit: set.style, style }, set.rows);
-    const chip = this.scene.add
-      .container(place.box.x, place.box.y, [box, ...text])
-      .setDepth(HUD_DEPTH.moment);
-    if (!still) {
-      this.tween({ duration: MOMENTS.lowCueMs, targets: chip, y: chip.y - LOW_CHIP.rise });
+    });
+    const view = painter.group(HUD_DEPTH.moment);
+    view.panel(place.box);
+    view.faceRows(
+      { capsTop: place.text.y, x: place.text.x },
+      box,
+      LOW_CHIP_FIT.style.scale,
+      PALETTE.darkRed,
+      rows,
+    );
+    if (!this.run.reducedMotion()) {
+      this.tween({ duration: MOMENTS.lowCueMs, targets: view.state, y: -LOW_CHIP.rise });
     }
-    this.fadeOut([chip], MOMENTS.lowCueMs / 2, MOMENTS.lowCueMs / 2);
+    this.fadeOut([view], MOMENTS.lowCueMs / 2, MOMENTS.lowCueMs / 2);
   }
 }
-
 // A fired dog trots off the road by its nearer edge over ms, off the side of the screen.
 // Reduced motion fades it out where it stands. Returns the tween, so the walk can hold it.
 export function trotOffRoad(
   scene: Scene,
-  trot: { ms: number; road: Rect; still: boolean },
+  trot: {
+    ms: number;
+    road: Rect;
+    still: boolean;
+  },
   sprite: GameObjects.Sprite,
   done: () => void,
 ): Tweens.Tween {
