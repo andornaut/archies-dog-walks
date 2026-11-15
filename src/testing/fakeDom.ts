@@ -1,3 +1,5 @@
+import { createModalInputGate } from "@andornaut/game-kit/input/modalInput";
+
 import type { UiLayer } from "../ui/dom/uiLayer.ts";
 import type { DomScale } from "../ui/domScale.ts";
 
@@ -9,6 +11,8 @@ export interface FakeEvent {
   buttons?: number;
   clientX?: number;
   clientY?: number;
+  detail?: number;
+  timeStamp?: number;
   code?: string;
   pointerId?: number;
   repeat?: boolean;
@@ -171,9 +175,14 @@ export function fakeLayer(
 ): { element: FakeElement; layer: UiLayer } {
   const element = doc.createElement("div");
   const layer = {
+    buttonSkin: { apply: () => Promise.resolve([]), frames: Promise.resolve(new Map()) },
+    dispose: () => undefined,
     element,
+    input: createModalInputGate(),
+    onReady: () => () => undefined,
     onScale: () => () => undefined,
     ready: () => true,
+    reveal: () => ({ cancel: () => undefined, revealed: Promise.resolve(true) }),
     scale: () => scale,
     update: () => undefined,
   } as unknown as UiLayer;

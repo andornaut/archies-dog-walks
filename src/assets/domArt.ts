@@ -92,6 +92,21 @@ export const DOM_STYLE_ART: readonly (readonly ["image" | "sheet", string])[] = 
   ].map((key) => ["image", key] as const),
 ];
 
+// The shared skin cuts these existing sheets; tags retain the game's native button states.
+export const DOM_BUTTON_SKIN = {
+  sheets: ["ui-button", "ui-icon-button"],
+  tags: [
+    "normal",
+    "pressed",
+    "disabled",
+    "secondary",
+    "secondary-pressed",
+    "go",
+    "go-pressed",
+    "go-disabled",
+  ],
+} as const;
+
 // The Logbook's art (src/home/logbookView.ts) and every badge's card (src/home/badgeCardView.ts):
 // each badge's sheet, each dog's face sheet, the earned tick, the scrollbar, and the confetti.
 function logbookArtKeys(data: Pick<GameData, "achievements" | "dogs">): string[] {

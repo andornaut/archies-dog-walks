@@ -82,6 +82,13 @@ export function sheetFrameNamed(json: unknown, name: number | string): SheetFram
 
 const sheets = new Map<string, Promise<unknown>>();
 const loaded = new Map<string, unknown>();
+const readyListeners = new Set<() => void>();
+
+// A newly available sheet can promote a view while its scene's loop is sleeping.
+export function onSheetReady(listener: () => void): () => void {
+  readyListeners.add(listener);
+  return () => readyListeners.delete(listener);
+}
 
 // The sheet's JSON at url, fetched once per page.
 export function loadSheet(url: string): Promise<unknown> {
@@ -98,6 +105,15 @@ export function loadSheet(url: string): Promise<unknown> {
     // A failed fetch is tried again next time.
     sheet.catch(() => sheets.delete(url));
     sheets.set(url, sheet);
+    void sheet.then(
+      () =>
+        queueMicrotask(() => {
+          for (const listener of [...readyListeners]) {
+            listener();
+          }
+        }),
+      () => undefined,
+    );
   }
   return sheet;
 }

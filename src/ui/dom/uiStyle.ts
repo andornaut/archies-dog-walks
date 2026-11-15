@@ -21,8 +21,9 @@ export function nineSlice(
 ): string {
   const { bottom, left, right, top } = SLICES[key];
   const widths = [top, right, bottom, left].map((edge) => px(edge as 3 | 4 | 5 | 8)).join(" ");
+  const image = key === "ui-button" ? `var(--${art}, var(--adw-${art}))` : `var(--adw-${art})`;
   return `border-style:solid;border-color:transparent;border-width:${widths};
-  border-image:var(--adw-${art}) ${top} ${right} ${bottom} ${left} fill / ${widths} stretch;
+  border-image:${image} ${top} ${right} ${bottom} ${left} fill / ${widths} stretch;
   background-clip:padding-box;image-rendering:pixelated`;
 }
 

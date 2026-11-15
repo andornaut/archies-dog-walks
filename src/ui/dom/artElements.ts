@@ -1,9 +1,10 @@
 import type { Point } from "@andornaut/game-kit/rect";
 
 import { domArtPath } from "../../assets/domArt.ts";
-import { artPixel, type DomScale, gridX, gridY } from "../domScale.ts";
+import { artPixel, type DomScale, gridRect, gridX, gridY } from "../domScale.ts";
+import { sliceParts } from "./mirrorPlace.ts";
 import { setBox } from "./pixelLine.ts";
-import { type SheetFrame, sheetFrame } from "./sheetFrames.ts";
+import { type SheetFrame, sheetFrame, sheetFrameNamed } from "./sheetFrames.ts";
 
 // Art the HTML interface draws as backgrounds of each key's own file: an image whole, or one
 // frame of a sheet by its tag, every art pixel artPixel device pixels. A sheet's frame is read
@@ -18,17 +19,20 @@ export interface DomArtSource {
 
 // One frame of a sheet by its tag, from its top-left at a game point.
 export interface SheetArtPlace {
-  readonly tag: string;
+  readonly frame?: number | string | SheetFrame;
+  readonly scale?: number;
+  readonly tag?: string;
   readonly x: number;
   readonly y: number;
 }
 
 // The sheet's JSON once loaded, calling shown with it then and on each later call.
-function sheetOf(source: DomArtSource, key: string, element: HTMLElement) {
+function sheetOf(source: DomArtSource, key: string, element: HTMLElement, imageKey = key) {
   let json: unknown;
   let waiting: (() => void) | undefined;
   element.style.visibility = "hidden";
-  source.loadSheet(source.artUrl(domArtPath("sheet", key, "json"))).then(
+  const request = source.loadSheet(source.artUrl(domArtPath("sheet", key, "json")));
+  request.then(
     (loaded) => {
       json = loaded;
       element.style.visibility = "";
@@ -36,13 +40,21 @@ function sheetOf(source: DomArtSource, key: string, element: HTMLElement) {
     },
     (error: unknown) => console.error(`The ${key} sheet did not load.`, error),
   );
-  return (shown: (json: unknown) => void) => {
-    if (json === undefined) {
-      waiting = () => shown(json);
-    } else {
-      shown(json);
-    }
-  };
+  return Object.assign(
+    (shown: (json: unknown) => void) => {
+      if (json === undefined) {
+        waiting = () => shown(json);
+      } else {
+        shown(json);
+      }
+    },
+    {
+      ready: request.then(
+        () => [source.artUrl(domArtPath("sheet", imageKey, "png"))],
+        () => [],
+      ),
+    },
+  );
 }
 
 const backgroundOf = (source: DomArtSource, key: string) =>
@@ -59,8 +71,10 @@ export function sheetArt(
   doc: Document,
   source: DomArtSource,
   key: string,
+  imageKey = key,
 ): {
   readonly element: HTMLElement;
+  readonly ready: Promise<readonly string[]>;
   readonly place: (
     scale: DomScale,
     origin: Point,
@@ -70,14 +84,19 @@ export function sheetArt(
 } {
   const element = doc.createElement("span");
   element.className = "adw-art";
-  element.style.backgroundImage = backgroundOf(source, key);
-  const loaded = sheetOf(source, key, element);
+  element.style.backgroundImage = backgroundOf(source, imageKey);
+  const loaded = sheetOf(source, key, element, imageKey);
   return {
     element,
     place: (scale, origin, art, at) =>
       loaded((json) => {
-        const frame = sheetFrame(json, art.tag);
-        const pixel = artPixel(scale);
+        const frame =
+          typeof art.frame === "object"
+            ? art.frame
+            : art.frame === undefined
+              ? sheetFrame(json, art.tag)
+              : sheetFrameNamed(json, art.frame);
+        const pixel = artPixel(scale) * (art.scale ?? 1);
         setBox(element, {
           height: frame.height * pixel,
           left: at?.left ?? gridX(scale, art.x) - gridX(scale, origin.x),
@@ -87,6 +106,7 @@ export function sheetArt(
         element.style.backgroundSize = `${frame.sheet.width * pixel}px ${frame.sheet.height * pixel}px`;
         element.style.backgroundPosition = framePosition(frame, pixel, 0);
       }),
+    ready: loaded.ready,
   };
 }
 
@@ -101,6 +121,7 @@ export function sheetThreeSlice(
   slices: { readonly left: number; readonly right: number },
 ): {
   readonly element: HTMLElement;
+  readonly ready: Promise<readonly string[]>;
   readonly place: (
     scale: DomScale,
     origin: Point,
@@ -153,6 +174,7 @@ export function sheetThreeSlice(
           middle.style.backgroundPosition = `${-(frame.x + slices.left) * across}px ${-frame.y * pixel}px`;
         }
       }),
+    ready: loaded.ready,
   };
 }
 
@@ -163,6 +185,7 @@ export function imageArt(
   key: string,
 ): {
   readonly element: HTMLElement;
+  readonly ready: Promise<readonly string[]>;
   readonly place: (
     scale: DomScale,
     origin: Point,
@@ -183,5 +206,72 @@ export function imageArt(
         width: art.width * pixel,
       });
     },
+    ready: Promise.resolve([source.artUrl(domArtPath("image", key, "png"))]),
+  };
+}
+
+// A native nine-slice using the same corner and stretched-centre geometry as the scene mirror.
+export function sheetNineSlice(
+  doc: Document,
+  source: DomArtSource,
+  key: string,
+  slices: {
+    readonly bottom: number;
+    readonly left: number;
+    readonly right: number;
+    readonly top: number;
+  },
+): {
+  readonly element: HTMLElement;
+  readonly ready: Promise<readonly string[]>;
+  readonly place: (
+    scale: DomScale,
+    origin: Point,
+    art: SheetArtPlace & { readonly height: number; readonly width: number },
+  ) => void;
+} {
+  const element = doc.createElement("span");
+  element.className = "adw-art";
+  const loaded = sheetOf(source, key, element);
+  const url = source.artUrl(domArtPath("sheet", key, "png"));
+  let previous = "";
+  return {
+    element,
+    place: (scale, origin, art) =>
+      loaded((json) => {
+        const frame =
+          typeof art.frame === "object"
+            ? art.frame
+            : art.frame === undefined
+              ? sheetFrame(json, art.tag)
+              : sheetFrameNamed(json, art.frame);
+        const box = gridRect(scale, art);
+        setBox(element, {
+          ...box,
+          left: box.left - gridX(scale, origin.x),
+          top: box.top - gridY(scale, origin.y),
+        });
+        const current = JSON.stringify([frame, box.width, box.height, slices, artPixel(scale)]);
+        if (current === previous) {
+          return;
+        }
+        previous = current;
+        element.replaceChildren(
+          ...sliceParts(scale, box, frame, slices).map(({ box: part, from }) => {
+            const span = doc.createElement("span");
+            span.className = "adw-art";
+            setBox(span, part);
+            const across = part.width / from.width;
+            const down = part.height / from.height;
+            Object.assign(span.style, {
+              backgroundImage: `url("${url}")`,
+              backgroundPosition: `${-(frame.x + from.x) * across}px ${-(frame.y + from.y) * down}px`,
+              backgroundSize: `${frame.sheet.width * across}px ${frame.sheet.height * down}px`,
+            });
+            return span;
+          }),
+        );
+      }),
+    ready: loaded.ready,
   };
 }

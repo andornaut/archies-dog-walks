@@ -49,7 +49,10 @@ export default gameViteConfig<typeof ConfigModules>({
       }),
       modules.securityHeadersPlugin(),
       modules.inlineStyleCheckPlugin(),
-      modules.uiStylePlugin({ source: repoPath("src/ui/dom/uiStylesheet.ts") }),
+      modules.uiStylePlugin({
+        getArtFiles: atlas.api.artFiles,
+        source: repoPath("src/ui/dom/uiStylesheet.ts"),
+      }),
     ];
   },
   previewHost: PREVIEW_HOST,

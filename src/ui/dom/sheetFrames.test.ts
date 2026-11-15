@@ -1,8 +1,14 @@
 import { readFileSync } from "node:fs";
 
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { playingFrame, sheetFrame, sheetTagFrames } from "./sheetFrames.ts";
+import {
+  loadSheet,
+  onSheetReady,
+  playingFrame,
+  sheetFrame,
+  sheetTagFrames,
+} from "./sheetFrames.ts";
 
 const SHEET = JSON.parse(
   readFileSync(
@@ -59,4 +65,26 @@ describe("sheetTagFrames", () => {
   ])("shows, %d ms into a play of two 80 ms frames, frame %s", (elapsedMs, frame) => {
     expect(playingFrame([{ durationMs: 80 }, { durationMs: 80 }], elapsedMs)).toBe(frame);
   });
+});
+
+afterEach(() => vi.unstubAllGlobals());
+
+it("notifies a new sheet once after consumer placement and stops after unsubscribe", async () => {
+  vi.stubGlobal(
+    "fetch",
+    vi.fn().mockResolvedValue({ json: () => Promise.resolve(SHEET), ok: true }),
+  );
+  const events: string[] = [];
+  const off = onSheetReady(() => events.push("ready"));
+  const request = loadSheet("/phase5-ready-sheet.json");
+  void request.then(() => events.push("placed"));
+  await request;
+  await Promise.resolve();
+  expect(events).toEqual(["placed", "ready"]);
+  await loadSheet("/phase5-ready-sheet.json");
+  expect(events).toHaveLength(2);
+  off();
+  await loadSheet("/phase5-ready-other-sheet.json");
+  await Promise.resolve();
+  expect(events).toHaveLength(2);
 });
