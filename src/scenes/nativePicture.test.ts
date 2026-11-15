@@ -3,7 +3,7 @@ import { expect, it, vi } from "vitest";
 import { FakeDocument, fakeLayer } from "../testing/fakeDom.ts";
 import type { UiLayer } from "../ui/dom/uiLayer.ts";
 import { type DomScale, domScale, gridTransform } from "../ui/domScale.ts";
-import { createNativeHudPicture } from "./nativeHudPicture.ts";
+import { createNativePicture } from "./nativePicture.ts";
 
 it("projects each passive strip without scaling twice and follows its actual content origin", () => {
   const doc = new FakeDocument();
@@ -26,7 +26,7 @@ it("projects each passive strip without scaling twice and follows its actual con
   };
   const unrelated = doc.createElement("div");
   element.append(unrelated);
-  const projected = createNativeHudPicture(source, {
+  const projected = createNativePicture(source, {
     frame: { height: 60, width: 300, x: 20, y: 150 },
     strips: [
       { height: 20, screenY: 0 },
@@ -87,7 +87,7 @@ it("forwards owned reveals and cancels only pending strip resources on disposal"
   });
   const reveal = vi.fn(() => ({ cancel, revealed: pending }));
   const parent = { ...layer, reveal };
-  const projected = createNativeHudPicture(parent, {
+  const projected = createNativePicture(parent, {
     frame: { height: 30, width: 300, x: 20, y: 150 },
     strips: [{ height: 30, screenY: 24 }],
   });

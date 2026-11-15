@@ -92,7 +92,7 @@ import { detailView } from "./homePanels.ts";
 import { HUD_DEPTH } from "./hudDepth.ts";
 import type { HudRun, HudWalk, RunHudView } from "./hudWalk.ts";
 import { MESSAGE_EVENT, MessageStrip } from "./messageStripView.ts";
-import { createNativeHudPicture } from "./nativeHudPicture.ts";
+import { createNativePicture } from "./nativePicture.ts";
 import { BAR_MUTED_EVENT, onSceneEvent } from "./overlay.ts";
 import { OwnerTabs } from "./ownerTabs.ts";
 import {
@@ -225,7 +225,7 @@ export class HudScene extends Scene {
     const projection =
       picture === undefined
         ? { dispose() {}, layers: [layer] }
-        : createNativeHudPicture(layer, picture.view);
+        : createNativePicture(layer, picture.view);
     const painters = projection.layers.map((target) =>
       createHudMoments(target, source, fonts, hasArt, colours),
     );

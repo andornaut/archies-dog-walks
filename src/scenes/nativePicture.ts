@@ -6,13 +6,13 @@ import type { UiLayer } from "../ui/dom/uiLayer.ts";
 import type { DomScale } from "../ui/domScale.ts";
 import type { ScenePicture } from "./scenePicture.ts";
 
-export interface NativeHudPicture {
+export interface NativePicture {
   readonly layers: readonly UiLayer[];
   dispose(): void;
 }
 
 // Each strip paints the same native HUD through a clipped, passive logical viewport.
-export function createNativeHudPicture(layer: UiLayer, picture: ScenePicture): NativeHudPicture {
+export function createNativePicture(layer: UiLayer, picture: ScenePicture): NativePicture {
   const doc = layer.element.ownerDocument;
   const clips = stripViewports(picture.frame, picture.strips).flatMap((viewport, index) => {
     const strip = picture.strips[index];
@@ -95,7 +95,7 @@ export function createNativeHudPicture(layer: UiLayer, picture: ScenePicture): N
       ready: () => alive && layer.ready(),
       reveal: (urls, element) => {
         if (!content.contains(element)) {
-          throw new Error("Native HUD picture art must be revealed inside its own strip.");
+          throw new Error("Native picture art must be revealed inside its own strip.");
         }
         if (!alive) {
           return { cancel: () => undefined, revealed: Promise.resolve(false) };
