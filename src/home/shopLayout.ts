@@ -34,8 +34,8 @@ const ROW_X = PANEL.x + SHOP.row.inset;
 // Rows run to the tabs' right edge, or with a scrollbar stop 6px short of its track.
 const ROW_WIDTH = SHOP.row.width;
 const ROW_SCROLL_WIDTH = SHOP.row.scrollWidth;
-// Both pages keep every tab target directly below the close target, each face centred down its
-// target.
+// Both pages keep tab targets below the close target and selected faces below the heading.
+// Each face remains centred in its target.
 const TAB_Y = Math.max(
   PAGE_CLOSE.hit.y + PAGE_CLOSE.hit.height,
   PANEL.y + MODAL.header - (SHOP.tab.height - SHOP.tab.drawHeight) / 2 + FEEDBACK.liftPx,

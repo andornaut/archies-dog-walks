@@ -13,9 +13,11 @@ import { sizeHearts } from "../rules/dogs.ts";
 import { capitalize, SIZE_NAMES } from "../rules/effectText.ts";
 import { startingDogSlots, unlockPrice } from "../rules/shop.ts";
 import type { Owned } from "../save/schema.ts";
-import { fontFileMetrics, inkWidth, placedInk } from "../testing/fontInk.ts";
+import { fontFileMetrics, gameFont, inkWidth, placedInk } from "../testing/fontInk.ts";
 import { TEST_TUNING } from "../testing/tuning.ts";
 import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";
+import { modalTitleInk } from "../ui/modal/titleRole.ts";
+import { MODAL } from "../ui/modalGeometry.ts";
 import { GREYED, pictureBox, SELECT_OUTSET } from "../ui/selection.ts";
 import { TEXT_SCALE, TITLE_CAP_ROWS } from "../ui/textFit.ts";
 import { cents } from "../units.ts";
@@ -349,29 +351,38 @@ describe("the shop's tabs", () => {
   it.each([
     ["Pet shop", SHOP_TABS.length, [152, 152]],
     ["Logbook", STATS_TABS.length, [93, 94, 93]],
-  ])("%s: split the tab span evenly", (_, count, widths) => {
-    const { span, x } = SHOP_LAYOUT.tab;
-    const tabs = shopTabRects(count);
-    const faces = tabs.map(shopTabFace);
-    expect(faces.map(({ width }) => width)).toEqual(widths);
-    expect(tabs[0]?.x).toBe(x);
-    const last = tabs.at(-1);
-    expect((last?.x ?? 0) + (last?.width ?? 0)).toBe(x + span);
-    tabs.slice(1).forEach((tab, i) => {
-      const before = tabs[i];
-      const face = faces[i + 1];
-      const faceBefore = faces[i];
-      expect(tab.x).toBe((before?.x ?? 0) + (before?.width ?? 0));
-      expect((face?.x ?? 0) - (faceBefore?.x ?? 0) - (faceBefore?.width ?? 0)).toBe(
-        BUTTON_SIZE.smallGap,
-      );
-    });
-    for (const tab of tabs) {
-      expect(Math.min(tab.width, tab.height)).toBeGreaterThanOrEqual(MIN_TAP_SIZE);
-      expect(rectsOverlap(tab, SHOP_LAYOUT.close.hit)).toBe(false);
-      expect(tab.y).toBe(SHOP_LAYOUT.close.hit.y + SHOP_LAYOUT.close.hit.height);
-    }
-  });
+  ])(
+    "%s: split the tab span evenly and clear the heading and close control",
+    (title, count, widths) => {
+      const { span, x } = SHOP_LAYOUT.tab;
+      const tabs = shopTabRects(count);
+      const faces = tabs.map(shopTabFace);
+      expect(faces.map(({ width }) => width)).toEqual(widths);
+      expect(tabs[0]?.x).toBe(x);
+      const last = tabs.at(-1);
+      expect((last?.x ?? 0) + (last?.width ?? 0)).toBe(x + span);
+      tabs.slice(1).forEach((tab, i) => {
+        const before = tabs[i];
+        const face = faces[i + 1];
+        const faceBefore = faces[i];
+        expect(tab.x).toBe((before?.x ?? 0) + (before?.width ?? 0));
+        expect((face?.x ?? 0) - (faceBefore?.x ?? 0) - (faceBefore?.width ?? 0)).toBe(
+          BUTTON_SIZE.smallGap,
+        );
+      });
+      for (const tab of tabs) {
+        expect(Math.min(tab.width, tab.height)).toBeGreaterThanOrEqual(MIN_TAP_SIZE);
+        expect(rectsOverlap(tab, SHOP_LAYOUT.close.hit)).toBe(false);
+        expect(tab.y).toBeGreaterThanOrEqual(
+          SHOP_LAYOUT.close.hit.y + SHOP_LAYOUT.close.hit.height,
+        );
+        const titleBottom =
+          SHOP_LAYOUT.title.capTop + modalTitleInk(gameFont("font-title"), title).bottom;
+        const selectedFaceTop = shopTabFace(tab).y - FEEDBACK.liftPx;
+        expect(selectedFaceTop - titleBottom).toBe(MODAL.titleTop);
+      }
+    },
+  );
 });
 
 // Each tab's list, with nothing bought and with everything bought, scrolls far enough to bring
