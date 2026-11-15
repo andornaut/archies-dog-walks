@@ -212,7 +212,7 @@ export function createHudCards(
       }
       text({
         capTop: rect.y + DOG_CARD.empty.y,
-        centre: "ink",
+        centre: "advance",
         centreX: rect.x + DOG_CARD.empty.x,
         colour: PALETTE.cream,
         font: "title",
@@ -253,7 +253,7 @@ export function createHudCards(
       });
       text({
         capTop: rect.y + DOG_CARD.name.top,
-        centre: "ink",
+        centre: "advance",
         centreX: rect.x + DOG_CARD.name.x,
         colour: PALETTE.cream,
         font: "title",
@@ -281,7 +281,7 @@ export function createHudCards(
       if (fired) {
         text({
           capTop: rect.y + DOG_CARD.fired.y,
-          centre: "ink",
+          centre: "advance",
           centreX: rect.x + DOG_CARD.fired.x,
           colour: PALETTE.white,
           font: "title",

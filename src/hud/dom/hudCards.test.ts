@@ -1,5 +1,6 @@
 import { readFileSync } from "node:fs";
 
+import { advanceWidth, laidGlyphs } from "@andornaut/game-kit/text/bitmapFont";
 import { describe, expect, it } from "vitest";
 
 import { dogFaceKey } from "../../assets/spriteKeys.ts";
@@ -10,7 +11,7 @@ import { gameFont } from "../../testing/fontInk.ts";
 import { testState } from "../../testing/runState.ts";
 import { shownText } from "../../ui/dom/pixelLine.ts";
 import { sheetFrame, sheetTagFrames } from "../../ui/dom/sheetFrames.ts";
-import { domScale } from "../../ui/domScale.ts";
+import { domScale, exactDeviceX, fontPixel, wholeArtPixels } from "../../ui/domScale.ts";
 import { FEEDBACK } from "../feedback.ts";
 import { DOG_CARD } from "../walkHud.ts";
 import { createHudCards, type HudCardsContext } from "./hudCards.ts";
@@ -28,9 +29,9 @@ const flush = () =>
     setTimeout(resolve, 0);
   });
 
-function fixture() {
+function fixture(scale = domScale(1, { height: 560, width: 360, x: 0, y: 0 })) {
   const doc = new FakeDocument();
-  const { element, layer } = fakeLayer(doc, domScale(1, { height: 560, width: 360, x: 0, y: 0 }));
+  const { element, layer } = fakeLayer(doc, scale);
   let unlock: () => void = () => undefined;
   const decode = new Promise<void>((resolve) => {
     unlock = resolve;
@@ -121,6 +122,49 @@ describe("native HUD cards", () => {
       .find((node) => node.style.backgroundImage?.includes("ui-dog-card"));
     const expected = sheetFrame(json("sprites/ui-dog-card.json"), "empty");
     expect(backing?.style.backgroundPosition).toBe(`${-expected.x}px ${-expected.y}px`);
+    // Card captions retain the half-origin advance centring used by their scene model.
+    for (const [index, label, at, scale] of [
+      [0, gameData.dogs.archie.name, DOG_CARD.name, DOG_CARD.name.scale],
+      [1, gameData.dogs.ginger.name, DOG_CARD.name, DOG_CARD.name.scale],
+      [0, gameData.runText.fired, DOG_CARD.fired, 1],
+      [2, gameData.runText.empty, DOG_CARD.empty, 1],
+    ] as const) {
+      const value = shownText("title", label);
+      const line = shown[index]?.all().find((node) => node.textContent === value);
+      const centre = SCREEN_LAYOUT.dogSlots[index]!.x + at.x;
+      expect(line?.style.left).toBe(
+        `${Math.round(centre - advanceWidth(fonts.title, scale, value) / 2)}px`,
+      );
+    }
+    const fractionalScale = domScale(3, { height: 560, width: 575, x: 0, y: 0 });
+    const fractional = fixture(fractionalScale);
+    fractional.view.update(clock(), run);
+    fractional.unlock();
+    await fractional.view.revealed;
+    const value = shownText("title", gameData.dogs.ginger.name);
+    const width = advanceWidth(fonts.title, 1, value);
+    const pixel = fontPixel(fractionalScale, DOG_CARD.name.scale);
+    const centre = SCREEN_LAYOUT.dogSlots[1]!.x + DOG_CARD.name.x;
+    const oldPen = Math.round(centre - (width * DOG_CARD.name.scale) / 2);
+    const anchor = exactDeviceX(fractionalScale, oldPen + (width * DOG_CARD.name.scale) / 2);
+    const expectedAdvance = wholeArtPixels(fractionalScale, anchor - (width * pixel) / 2);
+    const ink = laidGlyphs(fonts.title, 1, value).flatMap(({ ink }) => (ink === null ? [] : [ink]));
+    const first = Math.min(...ink.map(({ left }) => left));
+    const last = Math.max(...ink.map(({ right }) => right));
+    const alternateInk =
+      wholeArtPixels(
+        fractionalScale,
+        exactDeviceX(fractionalScale, centre) - ((last - first) * pixel) / 2,
+      ) -
+      first * pixel;
+    expect(expectedAdvance).not.toBe(alternateInk);
+    const caption = fractional
+      .cards()[1]
+      ?.all()
+      .find((node) => node.textContent === value);
+    expect(caption?.style.left).toBe(`${expectedAdvance}px`);
+    fractional.view.dispose();
+    view.dispose();
   });
 
   it("keeps a whole prior card until replacement art settles and ignores completion after disposal", async () => {
