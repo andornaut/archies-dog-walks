@@ -1,8 +1,22 @@
 import { type GameObjects, type Scene, Scenes } from "phaser";
 
+import { artUrl } from "../assets/artFiles.ts";
+import {
+  createNativeTopSection,
+  type NativeTopSection,
+  type NativeTopSectionConfig,
+} from "../ui/dom/nativeTopSection.ts";
+import { loadSheet } from "../ui/dom/sheetFrames.ts";
+import { uiLayer } from "../ui/dom/uiLayer.ts";
 import { PALETTE } from "../ui/palette.ts";
 import { fillRect } from "../ui/phaser/draw.ts";
-import { addPixelText, inkSpan, scalePixelText, setPixelText } from "../ui/phaser/pixelText.ts";
+import {
+  addPixelText,
+  inkSpan,
+  pixelBitmapFont,
+  scalePixelText,
+  setPixelText,
+} from "../ui/phaser/pixelText.ts";
 import { topBarRects } from "../ui/topBarTrim.ts";
 import { type TopSectionButton, topSectionCurrency, topSectionLayout } from "../ui/topSection.ts";
 import { addHtmlMirror, type HtmlMirror } from "./htmlMirror.ts";
@@ -211,4 +225,24 @@ export function mirrorTopSection(
     covered,
     { whilePaused: true },
   );
+}
+
+// The shared native section owns chrome and native presses; the scene owns action admission.
+export function addNativeTopSection(
+  scene: Scene,
+  config: NativeTopSectionConfig,
+): NativeTopSection | undefined {
+  const layer = uiLayer();
+  const title = pixelBitmapFont(scene, "title");
+  if (layer === undefined || title === undefined) {
+    return undefined;
+  }
+  const section = createNativeTopSection(layer, { artUrl, loadSheet }, title, config);
+  const release = () => section.buttons.forEach((button) => button.setPressed(false));
+  scene.events.on(Scenes.Events.PAUSE, release);
+  scene.events.once(Scenes.Events.SHUTDOWN, () => {
+    scene.events.off(Scenes.Events.PAUSE, release);
+    section.dispose();
+  });
+  return section;
 }
