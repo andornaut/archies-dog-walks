@@ -90,6 +90,7 @@ function moved(results: EndResults, dy: number) {
     faces: results.faces.map(point),
     framed: results.framed.map((box) => ({ ...box, rect: point(box.rect) })),
     names: results.names.map(line),
+    ownerNames: results.ownerNames,
     ownerRows: {
       ...results.ownerRows,
       art: results.ownerRows.art.map(art),
@@ -110,7 +111,7 @@ function linesPart(
   doc: Document,
   fonts: (line: DomTextLine) => BitmapFont,
   lines: readonly DomTextLine[],
-  spoken = true,
+  spoken: boolean | readonly string[] = true,
 ): DomPart {
   const parent = doc.createElement("p");
   parent.className = "adw-lines";
@@ -121,10 +122,12 @@ function linesPart(
     return element;
   });
   if (spoken) {
-    const words = doc.createElement("span");
-    words.className = "adw-spoken";
-    words.textContent = lines.map(({ text }) => text).join(" ");
-    parent.append(words);
+    for (const text of spoken === true ? [lines.map(({ text }) => text).join(" ")] : spoken) {
+      const words = doc.createElement("span");
+      words.className = "adw-spoken";
+      words.textContent = text;
+      parent.append(words);
+    }
   }
   return {
     element: parent,
@@ -314,7 +317,7 @@ export function showEndScreen(layer: UiLayer, input: DomEndScreenInput): DomEndS
     ...results.ownerRows.art.map((art) => artPart(doc, input, art)),
     ...faces.map(({ part }) => part),
     ...results.ownerRows.texts.map((text) => textPart(doc, input, text)),
-    linesPart(doc, fonts, results.names),
+    linesPart(doc, fonts, results.names, results.ownerNames),
   ];
   const viewport = doc.createElement("div");
   viewport.className = "adw-scroll-viewport adw-framed";

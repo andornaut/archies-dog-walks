@@ -74,6 +74,8 @@ export interface EndResults {
   readonly framed: readonly DetailFramed[];
   // Each owner's full-size name, wrapped in its measured column under the well.
   readonly names: readonly PanelText[];
+  // Original names preserve semantic spelling independently of visual wrapping.
+  readonly ownerNames: readonly string[];
   readonly ownerRows: {
     readonly art: readonly DetailArt[];
     readonly contentHeight: number;
@@ -356,6 +358,7 @@ export function endScreenView(
       faces,
       framed,
       names,
+      ownerNames: closing.map((quip) => data.dogs[quip.dog].owner.name),
       ownerRows: { ...placement.ownerRows, art: ownerArt, texts: ownerTexts },
       panel: { ...panel, height: placement.panel.height },
       rule: { height: 1, width: rule.width, x: rule.x, y: quipsTop - rule.above },

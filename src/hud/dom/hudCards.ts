@@ -149,8 +149,11 @@ export function createHudCards(
     const ready: Promise<readonly string[]>[] = [];
     const part = run.pack[index];
     const shown = slotShown(context.ownedSlots, index, part !== undefined);
-    const text = (line: CardText) => {
+    const text = (line: CardText, spoken = true) => {
       const element = createTextLine(doc, line);
+      if (!spoken) {
+        element.setAttribute("aria-hidden", "true");
+      }
       holder.append(element);
       draws.push((scale) => placeText(fonts[line.font], scale, ORIGIN, element, line));
     };
@@ -262,16 +265,23 @@ export function createHudCards(
         text: dog.name,
       });
       for (const line of ownerNameLines(fonts.body, dog.owner.name)) {
-        text({
-          capTop: rect.y + line.top,
-          centre: "left",
-          centreX: rect.x + DOG_CARD.owner.x - line.ink.left,
-          colour: PALETTE.tan,
-          font: "body",
-          scale: DOG_CARD.owner.scale,
-          text: line.text,
-        });
+        text(
+          {
+            capTop: rect.y + line.top,
+            centre: "left",
+            centreX: rect.x + DOG_CARD.owner.x - line.ink.left,
+            colour: PALETTE.tan,
+            font: "body",
+            scale: DOG_CARD.owner.scale,
+            text: line.text,
+          },
+          false,
+        );
       }
+      const ownerName = doc.createElement("span");
+      ownerName.className = "adw-spoken";
+      ownerName.textContent = dog.owner.name;
+      holder.append(ownerName);
       if (fired) {
         text({
           capTop: rect.y + DOG_CARD.fired.y,

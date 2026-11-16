@@ -260,6 +260,18 @@ it("scrolls all owner art, names and quotes together while results chrome and Ba
   frames.shift()?.();
   const viewport = nodes.find((node) => node.className.includes("adw-scroll-viewport"))!;
   const content = viewport.children[0]!;
+  const ownerNames = [gameData.dogs.kilo, gameData.dogs.penny, gameData.dogs.sequoia].map(
+    (dog) => dog.owner.name,
+  );
+  expect(view.results.ownerNames).toEqual(ownerNames);
+  expect(view.results.names).toHaveLength(6);
+  const spoken = nodes
+    .filter((node) => node.className === "adw-spoken")
+    .map((node) => node.textContent);
+  expect(spoken.filter((text) => ownerNames.includes(text as (typeof ownerNames)[number]))).toEqual(
+    ownerNames,
+  );
+  expect(spoken).not.toContain(view.results.names.map((line) => line.text).join(" "));
   expect((viewport as unknown as HTMLElement).tabIndex).toBe(0);
   expect(view.results.ownerRows.contentHeight - view.results.ownerRows.viewport.height).toBe(61);
   const button = nodes.find((node) => node.className === "adw-button adw-go")!;
@@ -269,6 +281,7 @@ it("scrolls all owner art, names and quotes together while results chrome and Ba
   for (const name of view.results.names) {
     const label = nodes.find((node) => node.textContent === shownText("body", name.text))!;
     expect(viewport.contains(label)).toBe(true);
+    expect(label.getAttribute("aria-hidden")).toBe("true");
   }
   const tail = nodes.find((node) => node.style.backgroundImage?.includes(QUIP_TAIL_KEY))!;
   expect(viewport.contains(tail)).toBe(true);
