@@ -11,12 +11,12 @@ import {
 } from "../../home/settingsView.ts";
 import { DEFAULT_SETTINGS } from "../../save/settings.ts";
 import { FakeDocument, fakeLayer } from "../../testing/fakeDom.ts";
-import { fontFileMetrics, gameFont } from "../../testing/fontInk.ts";
-import { domScale } from "../../ui/domScale.ts";
+import { fontFileMetrics, fontInk, gameFont } from "../../testing/fontInk.ts";
+import { artPixel, domScale, gridRect } from "../../ui/domScale.ts";
 import { modalTitleInk } from "../../ui/modal/titleRole.ts";
 import { type DomSettingsInput, showSettings } from "./settings.ts";
 
-function fixture(install = false) {
+function fixture(install = false, width = 360, dpr = 1) {
   const configuredRows = [...SETTING_ROWS, ...(install ? [INSTALL_ROW] : [])];
   const fonts = { body: fontFileMetrics("font-body"), title: fontFileMetrics("font-title") };
   const measure: SettingsMeasure = {
@@ -53,7 +53,8 @@ function fixture(install = false) {
       },
     );
   const doc = new FakeDocument();
-  const { element, layer } = fakeLayer(doc, domScale(1, SCREEN_LAYOUT.screen));
+  const scale = domScale(dpr, { ...SCREEN_LAYOUT.screen, height: (width * 560) / 360, width });
+  const { element, layer } = fakeLayer(doc, scale);
   const slide = { end: vi.fn(), move: vi.fn(), start: vi.fn() };
   const press = {
     down: vi.fn<DomSettingsInput["press"]["down"]>(),
@@ -80,7 +81,7 @@ function fixture(install = false) {
     toGame: (point) => point,
     view: view(),
   });
-  return { close, doc, element, layer, press, shown, slide, view };
+  return { close, doc, element, layer, press, scale, shown, slide, view };
 }
 
 it("cancels a carried settings drag when install steps take ownership and restores guarded input", () => {
@@ -242,3 +243,24 @@ it("keeps the card chrome fixed while revealing whole focused rows inside its na
   expect((viewport as unknown as HTMLElement).scrollTop).toBe(0);
   shown.destroy();
 });
+
+it.each([
+  [575, 1],
+  [390, 2.625],
+  [360, 1],
+])(
+  "centres the version's projected visible ink over Close at width %i and DPR %f",
+  (width, dpr) => {
+    const { element, scale, shown, view } = fixture(false, width, dpr);
+    const current = view();
+    const label = element.all().find((node) => node.textContent === current.build.text)!;
+    const ink = fontInk("font-body", { scale: 1 }, current.build.text);
+    const pixel = Number.parseFloat(label.style.fontSize!) / 8;
+    const centre = Number.parseFloat(label.style.left!) + ((ink.left + ink.right) * pixel) / 2;
+    const footer = gridRect(scale, current.card.footer!.rect);
+    expect(Math.abs(centre - footer.left - footer.width / 2)).toBeLessThanOrEqual(
+      artPixel(scale) / 2 + 0.5,
+    );
+    shown.destroy();
+  },
+);

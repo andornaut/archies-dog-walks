@@ -66,16 +66,9 @@ describe("settingsView", () => {
     expect(current.rowsContentHeight).toBe(layout.rowsContentHeight);
     expect(current.build.font).toBe("body");
     expect(current.build.scale).toBe(TEXT_SCALE);
-    const ink = MEASURE.ink(current.build.font, current.build.scale, current.build.lines[0]!);
-    const centre = current.build.x + (ink.left + ink.right) / 2;
-    expect(
-      Math.abs(centre - current.card.panel.x - current.card.panel.width / 2),
-    ).toBeLessThanOrEqual(0.5);
-    const visibleInk = fontInkRows(
-      "font-body",
-      { scale: current.build.scale },
-      current.build.lines[0]!,
-    );
+    expect(current.build.centre).toBe("ink");
+    expect(current.build.centreX).toBe(current.card.panel.x + current.card.panel.width / 2);
+    const visibleInk = fontInkRows("font-body", { scale: current.build.scale }, current.build.text);
     expect(current.card.footer!.rect.y - current.build.capTop - visibleInk.bottom).toBe(MODAL.gap);
   });
 

@@ -437,7 +437,7 @@ export function showSettings(layer: UiLayer, input: DomSettingsInput): DomSettin
     element.className = "adw-framed adw-separator";
     return element;
   });
-  const build = textElement(doc, input.fonts);
+  const build = createTextLine(doc, current.build);
   content.append(...rows.map((row) => row.element), ...separators);
   const revealRow = (index: number | undefined) => {
     const row = index === undefined ? undefined : current.rows[index];
@@ -477,7 +477,11 @@ export function showSettings(layer: UiLayer, input: DomSettingsInput): DomSettin
       },
       ready: Promise.all(rows.map((row) => row.ready)).then((urls) => urls.flat()),
     },
-    { element: build.element, place: (scale) => build.place(scale, ORIGIN, current.build) },
+    {
+      element: build,
+      place: (scale) =>
+        placeText(input.fonts[current.build.font], scale, ORIGIN, build, current.build),
+    },
   ];
   const panel = showQuestionPanel(layer, {
     close: input.close,

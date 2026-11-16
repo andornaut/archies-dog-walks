@@ -10,7 +10,12 @@ import type { MenuText } from "../data/types.ts";
 import type { Settings } from "../save/settings.ts";
 import { closeFace } from "../ui/closeControl.ts";
 import { dismissFooter } from "../ui/modal/dismissFooter.ts";
-import { type PanelButton, type PanelMeasure, type QuestionPanelView } from "../ui/modal/types.ts";
+import {
+  type PanelButton,
+  type PanelMeasure,
+  type PanelText,
+  type QuestionPanelView,
+} from "../ui/modal/types.ts";
 import { modalCardView, panelButton } from "../ui/modal/view.ts";
 import { PALETTE } from "../ui/palette.ts";
 import { GREYED, selectLook } from "../ui/selection.ts";
@@ -203,7 +208,7 @@ export interface InstallStepsView {
 }
 
 export interface SettingsView {
-  readonly build: SettingsText;
+  readonly build: PanelText;
   readonly card: QuestionPanelView;
   // The keyboard's ring, cyan round a focused row or the close control, while no steps show.
   readonly ring: Rect | undefined;
@@ -428,8 +433,6 @@ export function settingsView(
 ): SettingsView {
   const { layout, rows, words } = context;
   const { panel } = layout;
-  const ink = measure.ink("body", SETTINGS_BUILD_LABEL.style.scale, BUILD_LABEL);
-  const left = panel.x + Math.round((panel.width - (ink.right - ink.left)) / 2);
   const focused =
     state.focus === null || state.steps !== undefined
       ? undefined
@@ -438,13 +441,14 @@ export function settingsView(
         : closeFace(layout.close);
   return {
     build: {
-      anchor: "pen",
       capTop: layout.buildLabelY,
+      centre: "ink",
+      centreX: panel.x + panel.width / 2,
       colour: PALETTE[SETTINGS_BUILD_LABEL.colour],
       font: "body",
-      lines: [BUILD_LABEL],
+      line: 0,
       scale: SETTINGS_BUILD_LABEL.style.scale,
-      x: left - ink.left,
+      text: BUILD_LABEL,
     },
     card: {
       ...modalCardView(measure, panel, words.title, []),
