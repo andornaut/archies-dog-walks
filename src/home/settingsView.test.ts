@@ -62,6 +62,8 @@ const view = (state: Partial<SettingsState>) =>
 describe("settingsView", () => {
   it("uses readable body text for the centred build label and retains footer clearance", () => {
     const current = view({});
+    expect(current.rowsViewport).toEqual(layout.rowsViewport);
+    expect(current.rowsContentHeight).toBe(layout.rowsContentHeight);
     expect(current.build.font).toBe("body");
     expect(current.build.scale).toBe(TEXT_SCALE);
     const ink = MEASURE.ink(current.build.font, current.build.scale, current.build.lines[0]!);

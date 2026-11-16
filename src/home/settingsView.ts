@@ -208,6 +208,8 @@ export interface SettingsView {
   // The keyboard's ring, cyan round a focused row or the close control, while no steps show.
   readonly ring: Rect | undefined;
   readonly rows: readonly SettingsRowView[];
+  readonly rowsContentHeight: number;
+  readonly rowsViewport: Rect;
   readonly separators: readonly Rect[];
   readonly steps: InstallStepsView | undefined;
 }
@@ -455,6 +457,8 @@ export function settingsView(
         ? notedRow(measure, words, at, row, state)
         : sliderRow(words, layout, at.rect, row, state);
     }),
+    rowsContentHeight: layout.rowsContentHeight,
+    rowsViewport: layout.rowsViewport,
     separators: layout.separators,
     steps: stepsView(measure, words, state, context.art),
   };

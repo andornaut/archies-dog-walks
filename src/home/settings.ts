@@ -12,7 +12,8 @@ import { helpCapDy, LABEL_HELP_GAP } from "../ui/labelHelpGap.ts";
 import { DISMISS_FOOTER_SPACE } from "../ui/modal/dismissFooter.ts";
 import { MODAL, modalFamilyWidth, modalRect } from "../ui/modal/layout.ts";
 import { TEXT_SCALE, TEXT_STYLE, textOnLines } from "../ui/textFit.ts";
-import { HOME_LAYOUT } from "./homeLayout.ts";
+import { topSectionButtonBacking, topSectionLayout } from "../ui/topSection.ts";
+import { HOME_BAR_BUTTONS, HOME_LAYOUT } from "./homeLayout.ts";
 
 // The settings screen moves a volume in 5% steps, from 0 to 1.
 export const VOLUME_STEPS = 20;
@@ -85,6 +86,10 @@ export interface SettingsLayout {
   panel: Rect;
   // The rows, top to bottom.
   rows: SettingsRowLayout[];
+  // The unscrolled row content's logical height, starting at rowsViewport.y.
+  rowsContentHeight: number;
+  // Only rows and separators scroll inside this absolute logical rectangle.
+  rowsViewport: Rect;
   // A tan rule in the gap over every row after the first, centred down it (an odd row under it),
   // SEPARATOR_INSET in from the row's sides.
   separators: Rect[];
@@ -146,6 +151,15 @@ const ROWS_TOP = MODAL.header - SETTINGS_ROW.icon.dy;
 const SEPARATOR_INSET = SETTINGS_CARD.separatorInset;
 // The rows press as a list's rows do, the stacked button gap apart.
 const ROW_GAP = BUTTON_SIZE.stackGap;
+const TOP_SECTION = topSectionLayout(HOME_BAR_BUTTONS, { currency: true });
+const TOP_SECTION_BOTTOM = Math.max(
+  TOP_SECTION.bar.y + TOP_SECTION.bar.height,
+  ...TOP_SECTION.controls.flatMap(([, { face, hit }]) => {
+    const backing = topSectionButtonBacking(face);
+    return [hit.y + hit.height, backing.y + backing.height];
+  }),
+  TOP_SECTION.currency === undefined ? 0 : TOP_SECTION.currency.y + TOP_SECTION.currency.height,
+);
 
 // The build label (BUILD_LABEL) uses the standard body role, centred across the
 // panel with no separator over it: its capitals LABEL_HELP_GAP clear rows under the last row's
@@ -223,7 +237,19 @@ export function settingsLayout(
   // The label's digits, hex letters and "v" stand on the baseline, so its ink ends with its
   // capitals.
   const labelInk = fonts.body.capHeight * SETTINGS_BUILD_LABEL.style.scale;
-  const height = labelDy + labelInk + BUILD_LABEL_FOOT + CARD_FRAME_BOTTOM + DISMISS_FOOTER_SPACE;
+  const naturalHeight =
+    labelDy + labelInk + BUILD_LABEL_FOOT + CARD_FRAME_BOTTOM + DISMISS_FOOTER_SPACE;
+  const safeInset = Math.max(MODAL.margin, TOP_SECTION_BOTTOM);
+  const height = Math.min(
+    naturalHeight,
+    screen.height - 2 * MODAL.margin,
+    SCREEN_CONFIG.height - 2 * safeInset,
+  );
+  const clippedHeight = naturalHeight - height;
+  const rowsContentHeight = heights.reduce(
+    (sum, rowHeight, i) => sum + rowHeight + (i > 0 ? ROW_GAP : 0),
+    0,
+  );
   const { x, y } = modalRect({ ...screen, x: 0, y: 0 }, undefined, { ...PANEL, height });
   const rowX = x + (PANEL.width - SETTINGS_ROW.width) / 2;
   let rowY = y + ROWS_TOP;
@@ -239,10 +265,17 @@ export function settingsLayout(
   const panel = { ...PANEL, height, x, y };
   const { pad, track } = SETTINGS_ROW;
   return {
-    buildLabelY: y + labelDy,
+    buildLabelY: y + labelDy - clippedHeight,
     close: closeControl(panel),
     panel,
     rows,
+    rowsContentHeight,
+    rowsViewport: {
+      height: Math.max(0, rowsContentHeight - clippedHeight),
+      width: SETTINGS_ROW.width,
+      x: rowX,
+      y: y + ROWS_TOP,
+    },
     separators: rows.slice(1).map(({ rect }) => ({
       height: 1,
       width: rect.width - 2 * SEPARATOR_INSET,

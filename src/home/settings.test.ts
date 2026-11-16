@@ -28,6 +28,8 @@ import { DISMISS_FOOTER_SPACE } from "../ui/modal/dismissFooter.ts";
 import { MODAL, modalActionWidth, modalTitleLayout } from "../ui/modal/layout.ts";
 import { modalTitleInk } from "../ui/modal/titleRole.ts";
 import { cardTitleRow } from "../ui/modal/titleRow.ts";
+import { topSectionButtonBacking, topSectionLayout } from "../ui/topSection.ts";
+import { HOME_BAR_BUTTONS } from "./homeLayout.ts";
 import { MENU_TEXT_FIELDS } from "./menuText.ts";
 import {
   INSTALL_STEPS,
@@ -334,7 +336,8 @@ describe.each([
     expect(inkWidth("font-body", SETTINGS_BUILD_LABEL.style, WIDEST_LABEL)).toBeLessThanOrEqual(
       SETTINGS_BUILD_LABEL.room,
     );
-    expect(buildLabelY - lastInk).toBe(LABEL_HELP_GAP);
+    const scroll = placed.rowsContentHeight - placed.rowsViewport.height;
+    expect(buildLabelY - (lastInk - scroll)).toBe(LABEL_HELP_GAP);
     expect(panel.y + panel.height - (buildLabelY + labelInkBottom)).toBe(
       MODAL.pad + DISMISS_FOOTER_SPACE,
     );
@@ -346,7 +349,8 @@ describe.each([
       buildLabelY +
       (Math.min(...labelGlyphs.map((glyph) => glyph.yOffset)) - bodyFont.capTop) *
         SETTINGS_BUILD_LABEL.style.scale;
-    expect(labelTop).toBeGreaterThanOrEqual(last.rect.y + last.rect.height);
+    const scroll = placed.rowsContentHeight - placed.rowsViewport.height;
+    expect(labelTop).toBeGreaterThanOrEqual(last.rect.y + last.rect.height - scroll);
     expect(last.rect.height).toBeGreaterThanOrEqual(MIN_PRESS);
   });
 });
@@ -415,3 +419,47 @@ describe.each(keysOf(gameData.menuText.settings.installSteps))(
     });
   },
 );
+
+it("bounds centred Settings under the shared top bar and scrolls only its full-size rows", () => {
+  const placed = settingsLayout(
+    { body: bodyFont, title: titleFont },
+    SCREEN_CONFIG,
+    SETTINGS_EXPORT_ROWS,
+  );
+  const top = topSectionLayout(HOME_BAR_BUTTONS, { currency: true });
+  const protectedBottom = Math.max(
+    top.bar.y + top.bar.height,
+    top.currency!.y + top.currency!.height,
+    ...top.controls.flatMap(([, { face, hit }]) => {
+      const backing = topSectionButtonBacking(face);
+      return [hit.y + hit.height, backing.y + backing.height];
+    }),
+  );
+  expect(placed.panel.y).toBeGreaterThanOrEqual(protectedBottom);
+  expect(placed.panel.y + placed.panel.height / 2).toBe(SCREEN_CONFIG.height / 2);
+  expect(placed.panel.height).toBe(
+    SCREEN_CONFIG.height - 2 * Math.max(MODAL.margin, protectedBottom),
+  );
+  const first = placed.rows[0]!.rect;
+  const last = placed.rows.at(-1)!.rect;
+  expect(placed.rowsViewport).toMatchObject({ width: SETTINGS_ROW.width, x: first.x, y: first.y });
+  expect(inside(placed.rowsViewport, placed.panel)).toBe(true);
+  expect(placed.rowsContentHeight).toBe(last.y + last.height - first.y);
+  expect(placed.rows.every(({ rect }) => rect.height >= MIN_PRESS)).toBe(true);
+  const scroll = placed.rowsContentHeight - placed.rowsViewport.height;
+  expect(scroll).toBeGreaterThan(0);
+  expect(last.y + last.height - scroll).toBe(placed.rowsViewport.y + placed.rowsViewport.height);
+  expect(placed.buildLabelY - (placed.rowsViewport.y + placed.rowsViewport.height)).toBe(
+    LABEL_HELP_GAP - Math.floor(LABEL_HELP_GAP / 2),
+  );
+});
+
+it("keeps shorter Settings rows unscrolled and honours a tighter caller capacity", () => {
+  const fonts = { body: bodyFont, title: titleFont };
+  const shorter = settingsLayout(fonts, SCREEN_CONFIG, SETTINGS_EXPORT_ROWS.slice(0, -1));
+  expect(shorter.rowsViewport.height).toBe(shorter.rowsContentHeight);
+  const screen = { ...SCREEN_CONFIG, height: shorter.panel.height };
+  const bounded = settingsLayout(fonts, screen, SETTINGS_EXPORT_ROWS);
+  expect(bounded.panel.height).toBeLessThanOrEqual(screen.height - 2 * MODAL.margin);
+  expect(inside(bounded.panel, { x: 0, y: 0, ...screen })).toBe(true);
+});
