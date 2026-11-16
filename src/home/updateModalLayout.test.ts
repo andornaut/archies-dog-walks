@@ -7,7 +7,6 @@ import { fontFileMetrics, gameFont, inkWidth } from "../testing/fontInk.ts";
 import { barTitleRoom } from "../ui/barTitle.ts";
 import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";
 import { closeControl } from "../ui/closeControl.ts";
-import { dismissFooter } from "../ui/modal/dismissFooter.ts";
 import { MODAL, modalActionWidth, modalTitleLayout } from "../ui/modal/layout.ts";
 import { modalTitleInk } from "../ui/modal/titleRole.ts";
 import { cardTitleRow } from "../ui/modal/titleRow.ts";
@@ -36,11 +35,6 @@ describe("update offer and failed retry titles", () => {
         ...ink,
         titleExtraHeight: wrapped.extraHeight,
       });
-      const footer = dismissFooter(
-        { inkWidth: (_font, line) => widthOf(line), title: font },
-        { label: gameData.menuText.common.close, primary: false },
-        panel,
-      ).rect;
       const titleBottom = Math.max(
         ...wrapped.lines.map(
           (line, index) =>
@@ -67,13 +61,10 @@ describe("update offer and failed retry titles", () => {
         expect(cancel.y).toBe(button.y);
         expect(cancel.x + cancel.width + BUTTON_SIZE.gap).toBe(button.x);
       }
-      expect(button.y + button.height + MODAL.gap).toBe(footer.y);
-      expect(footer.x + footer.width / 2).toBe(panel.x + panel.width / 2);
-      expect([cancel, button].every((action) => !rectsOverlap(action, footer))).toBe(true);
+      expect(button.y + button.height + MODAL.pad).toBe(panel.y + panel.height);
       expect(rectsOverlap(cancel, button)).toBe(false);
       expect(panel.y).toBeGreaterThanOrEqual(MODAL.margin);
       expect(panel.y + panel.height).toBeLessThanOrEqual(area.height - MODAL.margin);
-      expect(footer.y + footer.height + MODAL.pad).toBe(panel.y + panel.height);
     },
   );
 });

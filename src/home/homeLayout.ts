@@ -17,7 +17,6 @@ import { closeControl } from "../ui/closeControl.ts";
 import type { GridSpec } from "../ui/grid.ts";
 import { helpCapDy } from "../ui/labelHelpGap.ts";
 import { MARK_OFFSET } from "../ui/mark.ts";
-import { DISMISS_FOOTER_SPACE } from "../ui/modal/dismissFooter.ts";
 import { MODAL, modalActionWidth, modalFamilyWidth, modalRect } from "../ui/modal/layout.ts";
 import { cardTitleRow } from "../ui/modal/titleRow.ts";
 import { hasPill, PILL_IMAGE_GAP, pillDropUnderInk, pillRiseOverCaps } from "../ui/namePills.ts";
@@ -755,12 +754,7 @@ export function updateModalLayout(
     area,
     { ...GATE, width: area.width, x: area.x },
     {
-      height:
-        header +
-        height +
-        (stacked ? height + BUTTON_SIZE.stackGap : 0) +
-        MODAL.pad +
-        DISMISS_FOOTER_SPACE,
+      height: header + height + (stacked ? height + BUTTON_SIZE.stackGap : 0) + MODAL.pad,
       width,
     },
   );

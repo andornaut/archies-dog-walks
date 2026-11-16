@@ -122,7 +122,6 @@ export class PauseScene extends Scene {
             avoid,
             close: onResume,
             entries,
-            footer: { label: gameData.menuText.common.close, primary: false },
             layout: homeQuestionLayout,
             note: data.note.map((line) => ({ colour: NOTE_COLOURS[line.kind], text: line.text })),
             sentenceLines: false,

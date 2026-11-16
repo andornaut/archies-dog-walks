@@ -7,7 +7,6 @@ import { gameData } from "../data/index.ts";
 import { SCREEN_CONFIG, SCREEN_LAYOUT } from "../data/screen.ts";
 import { DEFAULT_SETTINGS } from "../save/settings.ts";
 import { fontFileMetrics, gameFont, inkWidth } from "../testing/fontInk.ts";
-import { dismissFooter } from "../ui/modal/dismissFooter.ts";
 import { MODAL } from "../ui/modal/layout.ts";
 import { modalTitleInk } from "../ui/modal/titleRole.ts";
 import type { PanelButton } from "../ui/modal/types.ts";
@@ -15,7 +14,6 @@ import { cents } from "../units.ts";
 import { badgeCardView } from "./badgeCardView.ts";
 import { badgeWall } from "./badgesView.ts";
 import { detailCardView, type DetailMeasure } from "./detailCardView.ts";
-import { updateModalLayout } from "./homeLayout.ts";
 import { confirmLines } from "./purchaseConfirm.ts";
 import { purchaseConfirmCardView } from "./purchaseConfirmCardView.ts";
 import { installStepsLayout, settingsLayout } from "./settings.ts";
@@ -122,7 +120,7 @@ it("grows and recentres detail and badge cards rather than covering the final bo
   }
 });
 
-it("keeps purchase and update choices above a separate nonprimary dismissal row", () => {
+it("keeps purchase choices above a separate nonprimary dismissal row", () => {
   const lines = confirmLines(gameData, {
     bankAfter: cents(0),
     name: gameData.shopGear.runningShoes.name,
@@ -141,15 +139,6 @@ it("keeps purchase and update choices above a separate nonprimary dismissal row"
   ]);
   for (const button of purchase.card.buttons) {
     expect(button.rect.y + button.rect.height).toBeLessThanOrEqual(close.rect.y - MODAL.gap);
-  }
-  const update = updateModalLayout(SCREEN_LAYOUT.screen, { action: 60, cancel: 40, title: 60 });
-  const dismiss = dismissFooter(
-    measure,
-    { label: gameData.menuText.common.close, primary: false },
-    update.panel,
-  );
-  for (const button of [update.button, update.cancel]) {
-    expect(button.y + button.height).toBeLessThanOrEqual(dismiss.rect.y - MODAL.gap);
   }
 });
 

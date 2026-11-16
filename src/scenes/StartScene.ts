@@ -1751,10 +1751,7 @@ export class StartScene extends Scene {
       { label: gameData.homeText.shop.confirmCancel, press: close, primary: false, rect: cancel },
       update,
     ];
-    const card = addHtmlModalCard(this, panel, this.updateTitle(), entries, close, {
-      label: gameData.menuText.common.close,
-      primary: false,
-    });
+    const card = addHtmlModalCard(this, panel, this.updateTitle(), entries, close);
     if (card !== undefined) {
       this.htmlNotice = card;
       this.events.once(Scenes.Events.SHUTDOWN, () => {

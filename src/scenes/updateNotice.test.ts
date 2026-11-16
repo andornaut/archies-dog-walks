@@ -10,6 +10,9 @@ import type { Sections } from "../home/sections.ts";
 import { StartScene } from "./StartScene.ts";
 
 const acceptUpdate = vi.fn();
+const modalCard = vi.fn<(...args: unknown[]) => { destroy: () => void }>(() => ({
+  destroy: vi.fn(),
+}));
 const arriveHome = vi.fn();
 const dismissUpdateOffer = vi.fn();
 const acceptance = { failed: false, pending: false };
@@ -18,7 +21,7 @@ const required = { state: undefined as RequiredUpdateState | undefined };
 vi.mock("phaser", () => ({
   Core: { Events: {} },
   Scene: class {},
-  Scenes: { Events: { CREATE: "create" } },
+  Scenes: { Events: { CREATE: "create", SHUTDOWN: "shutdown" } },
 }));
 vi.mock("../pwa/index.ts", async (original) => ({
   ...(await original<typeof import("../pwa/index.ts")>()),
@@ -29,6 +32,15 @@ vi.mock("../pwa/index.ts", async (original) => ({
   updateAcceptanceFailed: () => acceptance.failed,
   updateAccepting: () => acceptance.pending,
   updatePlateShown: () => offer.shown,
+}));
+
+vi.mock("./questionPanel.ts", async (original) => ({
+  ...(await original<typeof import("./questionPanel.ts")>()),
+  addHtmlModalCard: (...args: unknown[]) => modalCard(...args),
+}));
+vi.mock("../ui/phaser/rampDim.ts", async (original) => ({
+  ...(await original<typeof import("../ui/phaser/rampDim.ts")>()),
+  addModalShade: () => ({}),
 }));
 
 function notice() {
@@ -213,4 +225,48 @@ it("uses the authored failure copy only after an unsuccessful accepted update", 
   expect(title()).toBe(gameData.homeText.update.title);
   acceptance.failed = true;
   expect(title()).toBe(gameData.homeText.update.failure);
+});
+
+it("offers only Cancel and Update now, with the corner close sharing Cancel", () => {
+  modalCard.mockClear();
+  acceptUpdate.mockClear();
+  const layout = updateModalLayout(overlayRegion("home"), {
+    action: 100,
+    cancel: 60,
+    title: 160,
+  });
+  const close = vi.fn();
+  const draw = (
+    StartScene.prototype as unknown as {
+      drawUpdateModal: (root: { add: () => void }) => void;
+    }
+  ).drawUpdateModal;
+  draw.call(
+    {
+      closeOverlay: close,
+      events: new EventEmitter(),
+      updateLayout: () => layout,
+      updateTitle: () => gameData.homeText.update.title,
+    },
+    { add: vi.fn() },
+  );
+  expect(modalCard).toHaveBeenCalledOnce();
+  const args = modalCard.mock.calls[0] as unknown as [
+    unknown,
+    unknown,
+    string,
+    { label: string; press: () => void; primary: boolean }[],
+    () => void,
+  ];
+  expect(args).toHaveLength(5);
+  const entries = args[3];
+  expect(entries.map(({ label, primary }) => ({ label, primary }))).toEqual([
+    { label: gameData.homeText.shop.confirmCancel, primary: false },
+    { label: gameData.homeText.update.button, primary: true },
+  ]);
+  entries[0]!.press();
+  args[4]();
+  expect(close).toHaveBeenCalledTimes(2);
+  entries[1]!.press();
+  expect(acceptUpdate).toHaveBeenCalledOnce();
 });

@@ -8,7 +8,6 @@ import { inside } from "../testing/rects.ts";
 import { barTitleRoom } from "../ui/barTitle.ts";
 import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";
 import { closeControl } from "../ui/closeControl.ts";
-import { DISMISS_FOOTER_SPACE } from "../ui/modal/dismissFooter.ts";
 import {
   MODAL,
   modalPanelWidth,
@@ -71,7 +70,7 @@ it("clamps a tall full-size panel inside the protected walk region", () => {
 });
 
 describe("update notice", () => {
-  it("fits the wrapped heading, actions and reserved Close row within Medium", () => {
+  it("fits the wrapped heading and two actions without a reserved Close row", () => {
     const { button, title } = gameData.homeText.update;
     const measure = {
       body: fontFileMetrics("font-body"),
@@ -120,7 +119,7 @@ describe("update notice", () => {
       expect(rectsOverlap(rect, closeControl(placed.panel).hit)).toBe(false);
     }
     expect(placed.panel.y + placed.panel.height - placed.button.y - placed.button.height).toBe(
-      MODAL.pad + DISMISS_FOOTER_SPACE,
+      MODAL.pad,
     );
   });
 });
