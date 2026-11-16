@@ -55,12 +55,24 @@ describe("the HTML purchase confirm", () => {
     expect(buttons.map(({ className }) => className)).toEqual([
       "adw-button adw-secondary",
       "adw-button adw-go",
-      "adw-button adw-secondary",
       "adw-close",
     ]);
-    buttons.forEach((button) => button.fire("click", {}));
+    const labelledActions = buttons
+      .filter((button) => button.className.includes("adw-button"))
+      .map((button) => button.getAttribute("aria-label"));
+    expect(labelledActions).toEqual([LINES.cancel, LINES.buy]);
+    expect(labelledActions).not.toContain(gameData.menuText.common.close);
+    expect(buttons[2]!.getAttribute("aria-label")).toBe(gameData.menuText.common.close);
+
+    buttons[0]!.fire("click", {});
+    expect(cancel).toHaveBeenCalledTimes(1);
+    expect(buy).not.toHaveBeenCalled();
+    buttons[1]!.fire("click", {});
     expect(buy).toHaveBeenCalledTimes(1);
-    expect(cancel).toHaveBeenCalledTimes(3);
+    expect(cancel).toHaveBeenCalledTimes(1);
+    buttons[2]!.fire("click", {});
+    expect(cancel).toHaveBeenCalledTimes(2);
+    expect(buy).toHaveBeenCalledTimes(1);
   });
 
   it.each([
