@@ -1,4 +1,4 @@
-import { fontMetrics, laidGlyphs } from "@andornaut/game-kit/runtime/text/bitmapFont";
+import { fontMetrics } from "@andornaut/game-kit/runtime/text/bitmapFont";
 import type { Scene } from "phaser";
 
 import { ownerCardFaceKey } from "../assets/spriteKeys.ts";
@@ -26,7 +26,9 @@ import {
   stepMessageStrip,
   stripLeadSlot,
 } from "../hud/messageStrip.ts";
+import { ownerNameInk } from "../presentation/ownerName.ts";
 import { PALETTE } from "../ui/palette.ts";
+import { TEXT_SCALE } from "../ui/textFit.ts";
 // A line said from the run scene, as a MessageLine: the HUD shows it on its message strip.
 export const MESSAGE_EVENT = "message";
 // Says a line on the walk's message strip from the run scene.
@@ -114,8 +116,8 @@ function draw(painter: HudMomentPainter, depth: number, bars: number, line: Stri
   const owner = typeof line.lead === "string" ? undefined : line.lead;
   const name = owner === undefined ? "" : gameData.dogs[owner.dog].owner.name;
   const slot = stripLeadSlot(body, bars);
-  const lead =
-    owner === undefined ? undefined : ownerLeadLayout(body, slot, painter.inkWidth(1, name));
+  const nameInk = owner === undefined ? undefined : ownerNameInk(painter.fonts.body, name);
+  const lead = nameInk === undefined ? undefined : ownerLeadLayout(slot, nameInk);
   const textX = lead?.textX ?? slot.textX;
   const said = faceTextWithNamePills(gameData, {
     ...withoutFace(owner?.dog, line),
@@ -126,6 +128,7 @@ function draw(painter: HudMomentPainter, depth: number, bars: number, line: Stri
     (run) => painter.width(MESSAGE_STRIP.scale, run),
     box,
     lead?.room ?? slot.room,
+    owner === undefined ? "icon" : "owner",
     said,
   );
   const place = linePlace(body, bars, rows.length);
@@ -146,16 +149,13 @@ function draw(painter: HudMomentPainter, depth: number, bars: number, line: Stri
       loop: true,
       tags: [owner.mood, "neutral"],
     });
-    const inks = laidGlyphs(painter.fonts.body, 1, name).flatMap(({ ink }) =>
-      ink === null ? [] : [ink.left],
-    );
     view.text({
       capTop: lead.name.y,
       colour: PALETTE.rust,
       font: "body",
       lines: [name],
-      scale: 1,
-      x: lead.name.x - (inks.length === 0 ? 0 : Math.min(...inks)),
+      scale: TEXT_SCALE,
+      x: lead.name.x - nameInk!.left,
     });
   } else if (typeof line.lead === "string") {
     view.art({

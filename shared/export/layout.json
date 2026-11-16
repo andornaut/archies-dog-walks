@@ -836,21 +836,21 @@
       "nameGap": 2,
       "rise": 4,
       "strip": {
-        "bottom": 83,
+        "bottom": 92,
         "frame": {
           "height": 22,
           "width": 22,
-          "x": 14,
+          "x": 42,
           "y": 52
         },
         "name": {
-          "x": 25,
-          "y": 76
+          "x": 14,
+          "y": 78
         },
-        "room": 306,
-        "textX": 40,
+        "room": 250,
+        "textX": 96,
         "panel": {
-          "height": 45,
+          "height": 54,
           "width": 344,
           "x": 8,
           "y": 46
@@ -858,42 +858,42 @@
       },
       "underBars": [
         {
-          "bottom": 103,
+          "bottom": 112,
           "frame": {
             "height": 22,
             "width": 22,
-            "x": 14,
+            "x": 42,
             "y": 72
           },
           "name": {
-            "x": 25,
-            "y": 96
+            "x": 14,
+            "y": 98
           },
-          "room": 306,
-          "textX": 40,
+          "room": 250,
+          "textX": 96,
           "panel": {
-            "height": 45,
+            "height": 54,
             "width": 344,
             "x": 8,
             "y": 66
           }
         },
         {
-          "bottom": 127,
+          "bottom": 136,
           "frame": {
             "height": 22,
             "width": 22,
-            "x": 14,
+            "x": 42,
             "y": 96
           },
           "name": {
-            "x": 25,
-            "y": 120
+            "x": 14,
+            "y": 122
           },
-          "room": 306,
-          "textX": 40,
+          "room": 250,
+          "textX": 96,
           "panel": {
-            "height": 45,
+            "height": 54,
             "width": 344,
             "x": 8,
             "y": 90

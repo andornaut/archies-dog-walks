@@ -1,10 +1,6 @@
 import { wrapWords } from "@andornaut/game-kit/runtime/lines";
 import type { Rect } from "@andornaut/game-kit/runtime/rect";
-import {
-  type FontMetrics,
-  fontMetrics,
-  inkWidth,
-} from "@andornaut/game-kit/runtime/text/bitmapFont";
+import { fontMetrics, inkWidth } from "@andornaut/game-kit/runtime/text/bitmapFont";
 
 import { DEPTH_STEPS } from "../assets/depthSteps.ts";
 import {
@@ -97,6 +93,7 @@ import {
   rowScale,
 } from "../layout/projection.ts";
 import { walkerFootY } from "../layout/screenLayout.ts";
+import { type OwnerNameInk, ownerNameInk } from "../presentation/ownerName.ts";
 import { MAX_CARD_OPTIONS } from "../rules/choices.ts";
 import { read } from "../rules/units.ts";
 import { walkProjection } from "../runner/walkGeometry.ts";
@@ -122,10 +119,10 @@ function roadRow(projection: RoadProjection, road: Rect, row: number) {
   };
 }
 
-// An owner's quip's lead in slot, for a name no wider than its frame, and the panel it grows
+// An owner's quip's lead in slot, for the tallest measured name, and the panel it grows
 // line's panel to.
-function ownerLead(body: FontMetrics, slot: LeadSlot, line: Rect) {
-  const lead = ownerLeadLayout(body, slot, 0);
+function ownerLead(ink: OwnerNameInk, slot: LeadSlot, line: Rect) {
+  const lead = ownerLeadLayout(slot, ink);
   return { ...lead, panel: ownerLeadPanel(line, lead) };
 }
 
@@ -172,7 +169,13 @@ export function layoutExport(
   const projection = walkProjection(ROAD_CAMERA, road);
   const scrollSpeed = read(data.tuning, "pixels", "roadScrollSpeed");
   const bandRows = Array.from({ length: road.y - rasterView.y }, (_, i) => rasterView.y + i);
-  const body = fontMetrics(readBitmapFont("font-body"));
+  const bodyFont = readBitmapFont("font-body");
+  const body = fontMetrics(bodyFont);
+  const leadInk = Object.values(data.dogs)
+    .map((dog) => ownerNameInk(bodyFont, dog.owner.name))
+    .sort(
+      (a, b) => b.bottom - b.top - (a.bottom - a.top) || b.right - b.left - (a.right - a.left),
+    )[0]!;
   const title = fontMetrics(readBitmapFont("font-title"));
   const titleInk = (text: string) =>
     inkWidth(readBitmapFont("font-title"), 2, plainMarks(text).toUpperCase());
@@ -243,8 +246,8 @@ export function layoutExport(
     },
     // The message strip under the walk bar: its panel at its tallest (two rows), the line's
     // icon, the text column and its room, and each row's capitals top; the same under one and
-    // two debuff bars; and an owner's quip's lead (OWNER_LEAD) for a name no wider than the
-    // frame, on the strip and under one and two bars, with the panels it grows a one-row line
+    // two debuff bars; and an owner's quip's lead (OWNER_LEAD) for the tallest measured name,
+    // on the strip and under one and two bars, with the panels it grows a one-row line
     // to. inlineFace: an owner's face inline before their name in walk text at
     // 2x (INLINE_FACE): the frame's side, the gap from the frame to the name, and how far the
     // frame rises above the row's capitals. At 1x the name shows alone.
@@ -253,9 +256,9 @@ export function layoutExport(
       inlineFace: { ...INLINE_FACE, ...inlineFaceBox(body, INLINE_FACE.textScale) },
       ownerLead: {
         ...OWNER_LEAD,
-        strip: ownerLead(body, stripLeadSlot(body), messagePanel(body, 1)),
+        strip: ownerLead(leadInk, stripLeadSlot(body), messagePanel(body, 1)),
         underBars: [1, 2].map((bars) =>
-          ownerLead(body, stripLeadSlot(body, bars), messagePanel(body, 1, bars)),
+          ownerLead(leadInk, stripLeadSlot(body, bars), messagePanel(body, 1, bars)),
         ),
       },
       underBars: [1, 2].map((bars) => messageStripLayout(body, bars)),

@@ -274,7 +274,7 @@ export const MESSAGE_STRIP = {
   padBottom: 8,
   // The text's right end short of the panel's right edge.
   padRight: 6,
-  // The most rows a line wraps onto.
+  // The icon-led row cap; owner-led notices retain every measured row.
   rows: 2,
   // The text's scale.
   scale: 2,
@@ -289,7 +289,7 @@ export const MESSAGE_STRIP = {
 export const OWNER_LEAD = {
   // The owner's face's side.
   face: 20,
-  // The name's capitals' rows under the face's frame.
+  // The name's actual ink gap under the face's frame.
   nameGap: 2,
   // The frame's top above the first row's capitals.
   rise: 4,

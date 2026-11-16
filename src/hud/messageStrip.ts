@@ -1,14 +1,11 @@
 import { clamp01 } from "@andornaut/game-kit/runtime/numbers";
 import type { Point, Rect } from "@andornaut/game-kit/runtime/rect";
-import {
-  type FontMetrics,
-  inkRowsFromCapTop,
-  inkRowsOfLines,
-} from "@andornaut/game-kit/runtime/text/bitmapFont";
+import { type FontMetrics, inkRowsOfLines } from "@andornaut/game-kit/runtime/text/bitmapFont";
 
 import { MESSAGE_STRIP, OWNER_LEAD } from "../data/layout.ts";
 import { SCREEN_LAYOUT } from "../data/screen.ts";
 import type { DogId, GameData } from "../data/types.ts";
+import type { OwnerNameInk } from "../presentation/ownerName.ts";
 import { read } from "../rules/units.ts";
 import { effectIconKey, type EffectItem } from "./effectIcons.ts";
 import type { NameMark } from "./effectNames.ts";
@@ -18,7 +15,8 @@ import { debuffBarRects } from "./walkHud.ts";
 // The message strip: what just happened, in a ui-panel across the top of the backdrop band's
 // flat sky, under the walk bar and clear of the cross street and the far road. It shows one
 // line, body text at 2x led by its 16x16 icon, or an owner's quip led by their face and name
-// (OWNER_LEAD), wrapped onto up to MESSAGE_STRIP.rows rows; an owner the text names has their
+// (OWNER_LEAD), with all measured owner rows retained; icon-led text keeps MESSAGE_STRIP.rows.
+// An owner the text names has their
 // face inline before their name (faceText.ts); the panel is as tall as the rows it
 // holds, and as the owner's lead. While debuff bars are up it moves under them, rows and all. A
 // line waits its turn, shows, and fades out at the end of its life; one that waits too long, or
@@ -135,8 +133,8 @@ export function linePlace(
 
 // An owner's quip line leads with the owner's face-owner-<art>-20 (face square) in a 1px ink
 // frame over tan, at the icon's column, the frame's top rise rows above the top of the first
-// row's capitals at 2x; and the owner's name in the body font at 1x centred under it, its
-// capitals nameGap rows under the frame. The lead's column is as wide as the frame, or as the
+// row's capitals at 2x; and the owner's name in the full-size body role centred under it, its
+// actual ink nameGap rows under the frame. The lead's column is as wide as the frame, or as the
 // name's ink where that is wider, the frame centred in it; the text starts as far right of the
 // column as it starts right of an icon, its room narrowed to match.
 export { OWNER_LEAD };
@@ -166,15 +164,12 @@ export function stripLeadSlot(body: FontMetrics, bars = 0, bar: Rect = WALK_BAR_
   return { capsTop: rowTops[0] ?? 0, iconX: icon.x, room, textX };
 }
 
-// An owner's lead in slot, for a name whose ink is nameInk wide.
-export function ownerLeadLayout(
-  body: FontMetrics,
-  slot: LeadSlot,
-  nameInk: number,
-): OwnerLeadLayout {
+// An owner's lead in slot, using the name's actual visible ink bounds.
+export function ownerLeadLayout(slot: LeadSlot, nameInk: OwnerNameInk): OwnerLeadLayout {
   const { face, nameGap, rise } = OWNER_LEAD;
   const framed = face + 2;
-  const column = Math.max(framed, nameInk);
+  const nameWidth = nameInk.right - nameInk.left;
+  const column = Math.max(framed, nameWidth);
   const shift = column - MESSAGE_STRIP.icon.size;
   const frame = {
     height: framed,
@@ -184,9 +179,9 @@ export function ownerLeadLayout(
   };
   const nameTop = frame.y + frame.height + nameGap;
   return {
-    bottom: nameTop + inkRowsFromCapTop(body),
+    bottom: nameTop + nameInk.bottom - nameInk.top,
     frame,
-    name: { x: slot.iconX + Math.floor((column - nameInk) / 2), y: nameTop },
+    name: { x: slot.iconX + (column - nameWidth) / 2, y: nameTop - nameInk.top },
     room: slot.room - shift,
     textX: slot.textX + shift,
   };
@@ -200,24 +195,36 @@ export function ownerLeadPanel(panel: Rect, lead: OwnerLeadLayout): Rect {
 
 // Every panel a line can take under bars debuff bars: the strip on each count of its rows, and
 // each grown to an owner's lead.
-export function linePanels(body: FontMetrics, bars: number, bar: Rect = WALK_BAR_RECT): Rect[] {
+export function linePanels(
+  body: FontMetrics,
+  owners: readonly { readonly ink: OwnerNameInk; readonly rows: number }[],
+  bars: number,
+  bar: Rect = WALK_BAR_RECT,
+): Rect[] {
   const plain = Array.from({ length: MESSAGE_STRIP.rows }, (_, row) =>
     messagePanel(body, row + 1, bars, bar),
   );
-  const lead = ownerLeadLayout(body, stripLeadSlot(body, bars, bar), 0);
-  return [...plain, ...plain.map((panel) => ownerLeadPanel(panel, lead))];
+  const slot = stripLeadSlot(body, bars, bar);
+  return [
+    ...plain,
+    ...owners.map((owner) =>
+      ownerLeadPanel(messagePanel(body, owner.rows, bars, bar), ownerLeadLayout(slot, owner.ink)),
+    ),
+  ];
 }
 
 // A line broken at spaces outside its owners' names into rows no wider than room, as width
-// measures a run of text, each name led by its face in box, at most MESSAGE_STRIP.rows of them:
-// text past the last row is left out.
+// measures a run of text, each name led by its face in box. Owner leads retain all rows;
+// icon-led notices retain the existing MESSAGE_STRIP.rows cap.
 export function messageRows(
   width: (text: string) => number,
   box: FaceBox | undefined,
   room: number,
+  lead: "icon" | "owner",
   line: FaceText,
 ): FaceRow[] {
-  return faceRows(width, box, room, line).slice(0, MESSAGE_STRIP.rows);
+  const rows = faceRows(width, box, room, line);
+  return lead === "owner" ? rows : rows.slice(0, MESSAGE_STRIP.rows);
 }
 
 // icon: what leads the line, an icon or an owner's face and name. Each owner its text names

@@ -50,7 +50,12 @@ import { CELEBRATION_LAYOUT, GREETING_FIT, ZONE_EARNINGS_FIT } from "../hud/cele
 import { faceTextWithNamePills } from "../hud/effectNames.ts";
 import { type FaceText, inlineFaceBox, styledFaceRows } from "../hud/faceText.ts";
 import { CHANGE_LABEL_STYLE, changeLabelRoom, hudLanes } from "../hud/hudLanes.ts";
-import { messageStripLayout, ownerLeadLayout, stripLeadSlot } from "../hud/messageStrip.ts";
+import {
+  messageRows,
+  messageStripLayout,
+  ownerLeadLayout,
+  stripLeadSlot,
+} from "../hud/messageStrip.ts";
 import { FIRED_LINE_FIT, LOW_CHIP_FIT, lowHeartsText } from "../hud/moments.ts";
 import { MONEY_LABEL } from "../hud/moneyLabels.ts";
 import {
@@ -79,6 +84,7 @@ import {
   shortDollarAmountText,
   signedShortDollarText,
 } from "../presentation/currency.ts";
+import { ownerNameInk } from "../presentation/ownerName.ts";
 import { amountText } from "../rules/causes.ts";
 import { firesText } from "../rules/choices.ts";
 import { payFor } from "../rules/run.ts";
@@ -164,15 +170,24 @@ function faceRole(
 function ownerQuipRoles(): TextRoleCase[] {
   return keysOf(gameData.dogs).flatMap((dog) => {
     const { name } = gameData.dogs[dog].owner;
-    const ink = inkWidth("font-body", { scale: 1 }, name);
+    const ink = ownerNameInk(gameFont("font-body"), name);
     const quips = [...gameData.quips[dog].happier, ...gameData.quips[dog].upset].map((text) => ({
       text,
     }));
-    const room = ownerLeadLayout(BODY, stripLeadSlot(BODY), ink).room;
-    return faceRole("owner's quip on the strip", 2, room, quips).map((one) => ({
-      ...one,
-      text: `${name}: ${one.text}`,
-    }));
+    const room = ownerLeadLayout(stripLeadSlot(BODY), ink).room;
+    return quips.flatMap((quip) => {
+      const rows = messageRows(
+        (text) => bodyRunWidth(TEXT_STYLE, text),
+        FACE_BOX,
+        room,
+        "owner",
+        quip,
+      );
+      return faceRole("owner's quip on the strip", rows.length, room, [quip]).map((one) => ({
+        ...one,
+        text: `${name}: ${one.text}`,
+      }));
+    });
   });
 }
 
