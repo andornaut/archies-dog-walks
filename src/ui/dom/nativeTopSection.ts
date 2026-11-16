@@ -7,16 +7,17 @@ import {
 import { SCREEN_CONFIG } from "../../data/screen.ts";
 import { BUTTON_SIZE } from "../buttonGeometry.ts";
 import {
-  artPixel,
   deviceX,
   deviceY,
   type DomScale,
+  fontPixel,
+  gridRect,
   gridTransform,
   gridX,
   gridY,
 } from "../domScale.ts";
 import { PALETTE } from "../palette.ts";
-import { TOP_BAR_FACE, topBarRects } from "../topBarTrim.ts";
+import { TOP_BAR_FACE, TOP_BAR_TRIM, TOP_BAR_WELL, topBarRects } from "../topBarTrim.ts";
 import {
   type TopSectionButton,
   topSectionButtonBacking,
@@ -25,7 +26,7 @@ import {
 } from "../topSection.ts";
 import { type DomArtSource, imageArt, sheetArt } from "./artElements.ts";
 import { guardNativeInput, revealPaint } from "./modalLifecycle.ts";
-import { createTextLine, placeBox, placeText, setBox } from "./pixelLine.ts";
+import { backedTextPlaces, createTextLine, placeBox, placeText, setBox } from "./pixelLine.ts";
 import type { UiLayer } from "./uiLayer.ts";
 export interface NativeTopSectionPress {
   readonly completedAt: number;
@@ -103,7 +104,9 @@ export function createNativeTopSection(
     root.append(element);
     placed.push((scale) => placeBox(scale, ORIGIN, element, rect));
   };
-  topBarRects(layout.bar).forEach(({ colour, rect }) => box(PALETTE[colour], rect));
+  topBarRects(layout.bar)
+    .filter(({ rect }) => rect.height !== 1 || rect.y !== TOP_BAR_TRIM.line.row)
+    .forEach(({ colour, rect }) => box(PALETTE[colour], rect));
   let effectCount = 0;
   const effectArt = layout.effectWells.map(() => image("ui-hud-effect-well"));
   effectArt.forEach((art) => root.append(art.element));
@@ -177,22 +180,35 @@ export function createNativeTopSection(
       const origin = { x: hit.x, y: hit.y };
       for (const [index, art] of faces.entries()) {
         art.element.hidden = index !== Number(pressed);
-        art.place(scale, origin, { ...face, height: TOP_BAR_FACE.size, width: TOP_BAR_FACE.size });
+        art.place(scale, origin, {
+          ...face,
+          height: TOP_BAR_FACE.size,
+          projection: "layout",
+          width: TOP_BAR_FACE.size,
+        });
       }
+      const glyphRect = {
+        height: 16,
+        width: 16,
+        x: face.x + 2,
+        y: face.y + 1 + (pressed ? BUTTON_SIZE.press : 0),
+      };
+      const glyphBox = gridRect(scale, glyphRect);
       setBox(glyphRoot, {
-        height: 16 * artPixel(scale),
-        left: gridX(scale, face.x) - gridX(scale, hit.x) + 2 * artPixel(scale),
-        top:
-          gridY(scale, face.y) -
-          gridY(scale, hit.y) +
-          (1 + (pressed ? BUTTON_SIZE.press : 0)) * artPixel(scale),
-        width: 16 * artPixel(scale),
+        ...glyphBox,
+        left: glyphBox.left - gridX(scale, hit.x),
+        top: glyphBox.top - gridY(scale, hit.y),
       });
       for (const { art, key } of icons) {
         art.element.hidden = key !== iconKey();
-        art.place(scale, ORIGIN, { height: 16, width: 16, x: 0, y: 0 });
+        art.place(scale, glyphRect, { ...glyphRect, projection: "layout" });
       }
-      sound?.place(scale, ORIGIN, { tag: muted ? "off" : "on", x: 0, y: 0 });
+      sound?.place(scale, glyphRect, {
+        projection: "layout",
+        tag: muted ? "off" : "on",
+        x: glyphRect.x,
+        y: glyphRect.y,
+      });
     };
     placed.push(place);
     const setPressed = (value: boolean) => {
@@ -365,7 +381,7 @@ export function createNativeTopSection(
     cashArt.forEach((art, index) => {
       const at = cashRects[index];
       if (at !== undefined) {
-        art.place(scale, ORIGIN, at);
+        art.place(scale, ORIGIN, { ...at, projection: "layout" });
       }
     });
     const dollar = {
@@ -386,6 +402,21 @@ export function createNativeTopSection(
     amountElement.textContent = text;
     placeText(title, scale, ORIGIN, dollarElement, dollar);
     placeText(title, scale, ORIGIN, amountElement, digits);
+    const whole = { ...dollar, text: `$${text}` };
+    const centred = backedTextPlaces(
+      title,
+      scale,
+      ORIGIN,
+      { ...rect, height: rect.height - TOP_BAR_WELL.lip },
+      [whole],
+      "layout",
+    )[0]!;
+    dollarElement.style.left = `${centred.left}px`;
+    const pen = advanceWidth(title, 1, whole.text) - advanceWidth(title, 1, text);
+    amountElement.style.left = `${centred.left + pen * fontPixel(scale, placement.scale)}px`;
+    for (const element of [dollarElement, amountElement]) {
+      element.style.top = `${centred.top}px`;
+    }
   };
   placed.push(placeMoney);
   const place = (scale: DomScale) => {

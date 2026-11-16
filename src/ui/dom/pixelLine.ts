@@ -230,6 +230,7 @@ export function backedTextPlaces(
   origin: Origin,
   backing: Rect,
   lines: readonly DomTextLine[],
+  projection: "art" | "layout" = "art",
 ): ReturnType<typeof textPlace>[] {
   const placed = lines.map((line) => textPlace(bitmap, scale, origin, line));
   const ink = lines.map((line, i): Rect => {
@@ -253,7 +254,7 @@ export function backedTextPlaces(
       y: place.top + top * pixel,
     };
   });
-  const frame = frameRect(scale, backing);
+  const frame = projection === "layout" ? gridRect(scale, backing) : frameRect(scale, backing);
   const offsets = centredInkOffsets(
     {
       height: frame.height,

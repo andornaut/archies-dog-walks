@@ -1,12 +1,15 @@
 import { readFileSync } from "node:fs";
 
+import { fontMetrics } from "@andornaut/game-kit/runtime/text/bitmapFont";
 import { PENDING_ATTRIBUTE } from "@andornaut/game-kit/runtime/web/ui/dom/imageReady";
 import { describe, expect, it, vi } from "vitest";
 
 import { gameData } from "../../data/index.ts";
 import { FakeDocument, fakeLayer, type FakeTarget } from "../../testing/fakeDom.ts";
-import { gameFont } from "../../testing/fontInk.ts";
-import { domScale, gridRect } from "../domScale.ts";
+import { fontInk, fontInkRows, gameFont } from "../../testing/fontInk.ts";
+import { BUTTON_SIZE } from "../buttonGeometry.ts";
+import { domScale, fontPixel, gridRect } from "../domScale.ts";
+import { TOP_BAR_FACE, TOP_BAR_TRIM, TOP_BAR_WELL } from "../topBarTrim.ts";
 import { topSectionLayout } from "../topSection.ts";
 import { createNativeTopSection } from "./nativeTopSection.ts";
 const labels = {
@@ -289,3 +292,120 @@ it("projects the six native wells onto the same logical grid as the HUD icons at
     view.dispose();
   }
 });
+
+it.each([
+  { dpr: 1, width: 575 },
+  { dpr: 2.625, width: 390 },
+])(
+  "fits native faces, glyphs and cash to their logical wells at $width CSS pixels and DPR $dpr",
+  async ({ dpr, width }) => {
+    const scale = domScale(dpr, { height: 844, width, x: 0, y: 0 });
+    const { buttons, element, view } = fixture("click", 0, true, scale);
+    await Promise.resolve();
+    const layout = topSectionLayout(["mute", "menu", "exit"], { currency: true });
+    layout.controls.forEach(([, { face, hit }], index) => {
+      const hitBox = gridRect(scale, hit);
+      const faceBox = gridRect(scale, {
+        ...face,
+        height: TOP_BAR_FACE.size,
+        width: TOP_BAR_FACE.size,
+      });
+      const button = buttons[index]!;
+      const normal = button.children.find((node) =>
+        node.style.backgroundImage?.includes("ui-icon-button-normal"),
+      )!;
+      expect(normal.style).toMatchObject({
+        height: `${faceBox.height}px`,
+        left: `${faceBox.left - hitBox.left}px`,
+        top: `${faceBox.top - hitBox.top}px`,
+        width: `${faceBox.width}px`,
+      });
+      const glyphBox = gridRect(scale, { height: 16, width: 16, x: face.x + 2, y: face.y + 1 });
+      const glyph = button.children.at(-1)!;
+      expect(glyph.style).toMatchObject({
+        height: `${glyphBox.height}px`,
+        left: `${glyphBox.left - hitBox.left}px`,
+        top: `${glyphBox.top - hitBox.top}px`,
+        width: `${glyphBox.width}px`,
+      });
+      expect(glyph.children[0]!.style).toMatchObject({
+        height: `${glyphBox.height}px`,
+        left: "0px",
+        top: "0px",
+        width: `${glyphBox.width}px`,
+      });
+      view.buttons.get(layout.controls[index]![0])!.setPressed(true);
+      const pressedBox = gridRect(scale, {
+        height: 16,
+        width: 16,
+        x: face.x + 2,
+        y: face.y + 1 + BUTTON_SIZE.press,
+      });
+      expect(glyph.style.top).toBe(`${pressedBox.top - hitBox.top}px`);
+    });
+    const well = layout.currency!;
+    const wellBox = gridRect(scale, well);
+    const font = gameFont("font-title");
+    const pixel = fontPixel(scale, 3);
+    for (const text of ["0", "9.9k", "999m"]) {
+      view.setAmount(text, text);
+      const segments = element
+        .all()
+        .filter((node) => node.style.backgroundImage?.includes("ui-home-cash-well"));
+      expect(segments[0]!.style.left).toBe(`${wellBox.left}px`);
+      expect(
+        Number.parseFloat(segments[2]!.style.left ?? "") +
+          Number.parseFloat(segments[2]!.style.width ?? ""),
+      ).toBe(wellBox.left + wellBox.width);
+      for (let i = 0; i < segments.length; i += 1) {
+        expect(segments[i]!.style.height).toBe(`${wellBox.height}px`);
+        if (i > 0) {
+          expect(
+            Number.parseFloat(segments[i - 1]!.style.left ?? "") +
+              Number.parseFloat(segments[i - 1]!.style.width ?? ""),
+          ).toBe(Number.parseFloat(segments[i]!.style.left ?? ""));
+        }
+      }
+      const texts = element.all().filter((node) => node.className.includes("adw-text"));
+      const bounds = texts.map((node) => {
+        const ink = fontInk("font-title", { scale: pixel }, node.textContent);
+        const rows = fontInkRows("font-title", { scale: pixel }, node.textContent);
+        return {
+          bottom:
+            Number.parseFloat(node.style.top ?? "") +
+            fontMetrics(font).capTop * pixel +
+            rows.bottom,
+          left: Number.parseFloat(node.style.left ?? "") + ink.left,
+          right: Number.parseFloat(node.style.left ?? "") + ink.right,
+          top:
+            Number.parseFloat(node.style.top ?? "") + fontMetrics(font).capTop * pixel + rows.top,
+        };
+      });
+      const interior = gridRect(scale, { ...well, height: well.height - TOP_BAR_WELL.lip });
+      expect(
+        Math.abs(
+          (Math.min(...bounds.map((b) => b.left)) + Math.max(...bounds.map((b) => b.right))) / 2 -
+            (interior.left + interior.width / 2),
+        ),
+      ).toBeLessThanOrEqual(0.5);
+      expect(
+        Math.abs(
+          (Math.min(...bounds.map((b) => b.top)) + Math.max(...bounds.map((b) => b.bottom))) / 2 -
+            (interior.top + interior.height / 2),
+        ),
+      ).toBeLessThanOrEqual(0.5);
+    }
+    const line = gridRect(scale, { ...layout.bar, height: 1, y: TOP_BAR_TRIM.line.row });
+    expect(
+      element
+        .all()
+        .filter(
+          (node) =>
+            node.className === "adw-framed" &&
+            node.style.width === `${line.width}px` &&
+            node.style.top === `${line.top}px`,
+        ),
+    ).toHaveLength(0);
+    view.dispose();
+  },
+);
