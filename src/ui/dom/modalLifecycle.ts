@@ -24,6 +24,7 @@ export type NativeGesture = Pick<NativeInputGuard, "cancel" | "down" | "move" | 
 // Native drags and holds compose the kit's single-pointer and captured-modal click guards.
 export function guardNativeInput(guard: NativeInputGuard, root: HTMLElement): () => void {
   const doc = root.ownerDocument;
+  let alive = true;
   let owner: number | undefined;
   let lease: { release(): void } | undefined;
   let captured: (() => boolean) | undefined;
@@ -50,6 +51,10 @@ export function guardNativeInput(guard: NativeInputGuard, root: HTMLElement): ()
     event.stopImmediatePropagation();
   };
   const down = (event: PointerEvent) => {
+    if (doc.hidden) {
+      reject(event);
+      return;
+    }
     handledClick = false;
     completed = false;
     cancelled.delete(event.pointerId);
@@ -118,8 +123,11 @@ export function guardNativeInput(guard: NativeInputGuard, root: HTMLElement): ()
       guard.cancel?.();
     }
   };
-  const stopClicks = guardClicks(guard, root);
   const click = (event: MouseEvent) => {
+    if (doc.hidden) {
+      reject(event);
+      return;
+    }
     if (event.detail !== 0) {
       if (!completed || handledClick) {
         reject(event);
@@ -127,21 +135,55 @@ export function guardNativeInput(guard: NativeInputGuard, root: HTMLElement): ()
       completed = false;
     }
   };
-  root.addEventListener("click", click, true);
-  root.addEventListener("pointerdown", down, true);
-  doc.addEventListener("pointermove", move, true);
-  doc.addEventListener("pointerup", end, true);
-  doc.addEventListener("pointercancel", end, true);
-  const stopChanges = guard.subscribe(cancel);
-  return () => {
+  let stopClicks: () => void;
+  const listen = () => {
+    stopClicks = guardClicks(guard, root);
+    root.addEventListener("click", click, true);
+    root.addEventListener("pointerdown", down, true);
+    doc.addEventListener("pointermove", move, true);
+    doc.addEventListener("pointerup", end, true);
+    doc.addEventListener("pointercancel", end, true);
+  };
+  const unlisten = () => {
     stopClicks();
-    stopChanges();
-    cancel();
     root.removeEventListener("click", click, true);
     root.removeEventListener("pointerdown", down, true);
     doc.removeEventListener("pointermove", move, true);
     doc.removeEventListener("pointerup", end, true);
     doc.removeEventListener("pointercancel", end, true);
+  };
+  // Retire the input session on page loss, including click capture whose pointer end was lost.
+  const suspend = () => {
+    if (!alive) {
+      return;
+    }
+    cancel();
+    completed = false;
+    handledClick = false;
+    if (alive) {
+      unlisten();
+      listen();
+    }
+  };
+  const visibility = () => {
+    if (doc.hidden) {
+      suspend();
+    }
+  };
+  listen();
+  const stopChanges = guard.subscribe(cancel);
+  doc.defaultView?.addEventListener("blur", suspend);
+  doc.addEventListener("visibilitychange", visibility);
+  return () => {
+    if (!alive) {
+      return;
+    }
+    alive = false;
+    stopChanges();
+    cancel();
+    unlisten();
+    doc.defaultView?.removeEventListener("blur", suspend);
+    doc.removeEventListener("visibilitychange", visibility);
   };
 }
 

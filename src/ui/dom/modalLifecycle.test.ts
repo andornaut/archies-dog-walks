@@ -140,3 +140,112 @@ it("consumes a handled native swipe click while preserving keyboard activation a
   expect(next.stopImmediatePropagation).not.toHaveBeenCalled();
   stop();
 });
+
+it("releases an unfinished modal contact on window blur and accepts one fresh action after return", async () => {
+  const doc = new FakeDocument();
+  const root = doc.createElement("div");
+  const button = doc.createElement("button");
+  root.append(button);
+  const gate = createModalInputGate();
+  const press = createPressAdmission(() => false);
+  const cancel = vi.fn();
+  const action = vi.fn();
+  button.addEventListener("click", action);
+  const reveal = { cancel: vi.fn(), revealed: Promise.resolve(true) };
+  const view = mountModalLifecycle(
+    { input: gate, press },
+    { gesture: { cancel }, modal: true, reveal },
+    root as unknown as HTMLElement,
+  );
+  await reveal.revealed;
+  root.fire("pointerdown", pointer(11, button));
+  button.setAttribute("data-pressed", "");
+  expect(press.canvasAllowed()).toBe(false);
+  doc.defaultView.fire("blur");
+  expect(press.canvasAllowed()).toBe(true);
+  expect(button.getAttribute("data-pressed")).toBeNull();
+  expect(cancel).toHaveBeenCalledOnce();
+  expect(view.accepts()).toBe(true);
+
+  doc.defaultView.fire("focus");
+  root.fire("pointerdown", pointer(12, button));
+  doc.fire("pointerup", pointer(11, button, "pointerup"));
+  const stale = pointer(11, button, "click");
+  root.fire("click", stale);
+  expect(stale.stopImmediatePropagation).toHaveBeenCalled();
+  expect(action).not.toHaveBeenCalled();
+
+  doc.fire("pointerup", pointer(12, button, "pointerup"));
+  const fresh = pointer(12, button, "click");
+  root.fire("click", fresh);
+  expect(fresh.stopImmediatePropagation).not.toHaveBeenCalled();
+  button.fire("click", fresh);
+  expect(action).toHaveBeenCalledOnce();
+  expect(press.canvasAllowed()).toBe(true);
+  const nested = gate.open();
+  expect(view.accepts()).toBe(false);
+  nested.close();
+  expect(view.accepts()).toBe(true);
+  view.destroy();
+  expect(doc.defaultView.listeners.get("blur") ?? []).toHaveLength(0);
+});
+
+it("drops a completed contact's delayed click on hiding and accepts fresh mouse and keyboard actions", () => {
+  const doc = new FakeDocument();
+  const root = doc.createElement("div");
+  const button = doc.createElement("button");
+  root.append(button);
+  const gate = createModalInputGate();
+  const up = vi.fn();
+  const action = vi.fn();
+  button.addEventListener("click", action);
+  let disposeOnCancel = false;
+  const stop = guardNativeInput(
+    {
+      cancel: () => {
+        if (disposeOnCancel) {
+          stop();
+        }
+      },
+      gate,
+      subscribe: gate.subscribe,
+      up,
+    },
+    root as unknown as HTMLElement,
+  );
+  root.fire("pointerdown", pointer(21, button));
+  doc.fire("pointerup", pointer(21, button, "pointerup"));
+  Object.assign(doc, { hidden: true });
+  doc.fire("visibilitychange");
+  const late = pointer(21, button, "click");
+  root.fire("click", late);
+  expect(late.stopImmediatePropagation).toHaveBeenCalled();
+  const hiddenKey = { ...pointer(21, button, "click"), detail: 0 };
+  root.fire("click", hiddenKey);
+  expect(hiddenKey.stopImmediatePropagation).toHaveBeenCalled();
+  expect(action).not.toHaveBeenCalled();
+
+  Object.assign(doc, { hidden: false });
+  doc.fire("visibilitychange");
+  doc.defaultView.fire("focus");
+  root.fire("pointerdown", pointer(22, button));
+  doc.fire("pointerup", pointer(22, button, "pointerup"));
+  const mouse = pointer(22, button, "click");
+  root.fire("click", mouse);
+  expect(mouse.stopImmediatePropagation).not.toHaveBeenCalled();
+  button.fire("click", mouse);
+  const key = { ...pointer(22, button, "click"), detail: 0 };
+  root.fire("click", key);
+  expect(key.stopImmediatePropagation).not.toHaveBeenCalled();
+  button.fire("click", key);
+  expect(action).toHaveBeenCalledTimes(2);
+  expect(up).toHaveBeenCalledTimes(2);
+  disposeOnCancel = true;
+  root.fire("pointerdown", pointer(23, button));
+  doc.defaultView.fire("blur");
+  expect(root.listeners.get("pointerdown") ?? []).toHaveLength(0);
+  expect(doc.listeners.get("pointerup") ?? []).toHaveLength(0);
+  stop();
+  expect(doc.listeners.get("visibilitychange") ?? []).toHaveLength(0);
+  expect(doc.defaultView.listeners.get("blur") ?? []).toHaveLength(0);
+});
