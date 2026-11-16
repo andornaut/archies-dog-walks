@@ -449,10 +449,10 @@ function zonePillRoles(): TextRoleCase[] {
   const counts = digits.flatMap((n) =>
     digits.map((total) => fillNames(gameData.runText.zoneProgress, { n, total })),
   );
-  const widest = Math.max(...counts.map((count) => inkWidth("font-body", { scale: 1 }, count)));
+  const widest = Math.max(...counts.map((count) => inkWidth("font-body", TEXT_STYLE, count)));
   const room = zonePillNameRoom(SCREEN_LAYOUT.screen, widest);
   const names = gameData.world.zones.map((zone) => zone.name);
-  return plainRole("neighbourhood pill's name", "font-body", { room, style: { scale: 1 } }, names);
+  return plainRole("neighbourhood pill's name", "font-body", { room, style: TEXT_STYLE }, names);
 }
 
 // The zone celebration's earnings line at its widest: the fullest pack's pay, alone and with

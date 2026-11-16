@@ -2,9 +2,10 @@ import { pixels } from "@andornaut/game-kit/runtime/units";
 import { expect, it, vi } from "vitest";
 
 import { gameData } from "../../data/index.ts";
-import { DEBUFF_BAR } from "../../data/layout.ts";
+import { DEBUFF_BAR, ZONE_PILL_SIZES } from "../../data/layout.ts";
 import { SCREEN_LAYOUT } from "../../data/screen.ts";
 import { modifiersOf } from "../../rules/modifiers.ts";
+import { currentZone } from "../../rules/route.ts";
 import { FakeDocument } from "../../testing/fakeDom.ts";
 import { fontInk, fontInkRows, gameFont } from "../../testing/fontInk.ts";
 import { activeModifier, testState } from "../../testing/runState.ts";
@@ -17,6 +18,7 @@ import {
   WALK_BAR,
   walkBarLayout,
   zoneProgressLayout,
+  zoneProgressText,
   zoneShare,
 } from "../walkHud.ts";
 import { createHudChrome } from "./hudChrome.ts";
@@ -207,4 +209,31 @@ it("reserves every current full-size effect name and centres actual body ink abo
   }
   const last = chrome.bars().at(-1)!.rect;
   expect(last.y + last.height).toBeLessThan(SCREEN_LAYOUT.road.y);
+});
+
+it("renders the neighbourhood pill at the shared body role with measured ink and padding", () => {
+  const { chrome, views } = fixture();
+  const run = testState({ archie: 3 });
+  chrome.update(run);
+  const zone = views.find((view) =>
+    vi.mocked(view.panel).mock.calls.some(([, art]) => art?.key === "ui-zone-pill"),
+  )!;
+  const [pill] = vi.mocked(zone.panel).mock.calls[0]!;
+  const texts = vi.mocked(zone.text).mock.calls.map(([text]) => text);
+  expect(texts.map((text) => text.lines[0])).toEqual([
+    currentZone(gameData, run).name,
+    zoneProgressText(gameData, run.zoneIndex),
+  ]);
+  for (const text of texts) {
+    expect(text.scale).toBe(TEXT_SCALE);
+    expect(text.backing).toMatchObject({ height: pill.height, y: pill.y });
+    const ink = fontInkRows("font-body", { scale: TEXT_SCALE }, text.lines[0]!);
+    expect(
+      Math.abs(text.capTop + (ink.top + ink.bottom) / 2 - pill.y - pill.height / 2),
+    ).toBeLessThanOrEqual(0.5);
+    expect(text.capTop + ink.top).toBeGreaterThanOrEqual(pill.y + ZONE_PILL_SIZES.padY);
+    expect(text.capTop + ink.bottom).toBeLessThanOrEqual(
+      pill.y + pill.height - ZONE_PILL_SIZES.padY,
+    );
+  }
 });

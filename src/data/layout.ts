@@ -307,14 +307,12 @@ export const INLINE_FACE = {
 
 // The neighbourhood pill under the walk bar or the last debuff bar.
 export const ZONE_PILL_SIZES = {
-  // The text's capitals' top in the pill.
-  capsY: 4,
   // The pill's top under the bar above it.
   gap: 4,
-  // The pill's height.
-  height: 13,
   // The text's inset from the pill's sides.
   pad: 6,
+  // The clear rows above and below the text's actual ink.
+  padY: 4,
   // The gap between the name and the count.
   textGap: 8,
 } as const;

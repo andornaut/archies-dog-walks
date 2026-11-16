@@ -4,25 +4,25 @@ import { ZONE_PILL_SIZES } from "../data/layout.ts";
 import { debuffBarRects } from "./walkHud.ts";
 
 // The neighbourhood pill (ui-zone-pill, a three-slice with 4px ends): the zone's name and its
-// place in the walk ("n of N"), in the body font at 1x, centred across the screen gap rows under
+// place in the walk ("n of N"), in the standard body role, centred across the screen gap rows under
 // the walk bar, or under the last debuff bar while any is up, height rows tall. The name inks
 // in cream from pad columns in, the count in light grey ends its ink pad columns before the
-// pill's right edge, textGap columns between their inks, and both put their capitals on row
-// capsY. It takes no presses, and the message strip draws over it.
+// pill's right edge, textGap columns between their inks, with both ink blocks centred vertically.
+// It takes no presses, and the message strip draws over it.
 const PILL = ZONE_PILL_SIZES;
 export const ZONE_PILL = {
-  capsY: PILL.capsY,
   gap: PILL.gap,
-  height: PILL.height,
   key: "ui-zone-pill",
   pad: PILL.pad,
+  padY: PILL.padY,
   textGap: PILL.textGap,
 } as const;
 
 // Where the pill and its texts go: the pill, the left edge of the name's ink, the column past
 // the count's ink, and the row their capitals start on.
 interface ZonePillLayout {
-  readonly capsY: number;
+  readonly countCapsY: number;
+  readonly nameCapsY: number;
   readonly countRight: number;
   readonly nameLeft: number;
   readonly pill: Rect;
@@ -34,11 +34,17 @@ export function zonePillLayout(
   bar: Rect,
   screen: Rect,
   debuffs: number,
-  ink: { readonly count: number; readonly name: number },
+  ink: {
+    readonly count: { readonly bottom: number; readonly top: number; readonly width: number };
+    readonly name: { readonly bottom: number; readonly top: number; readonly width: number };
+  },
 ): ZonePillLayout {
-  const { capsY, gap, height, pad, textGap } = ZONE_PILL;
+  const { gap, pad, padY, textGap } = ZONE_PILL;
+  const nameHeight = ink.name.bottom - ink.name.top;
+  const countHeight = ink.count.bottom - ink.count.top;
+  const height = Math.max(nameHeight, countHeight) + 2 * padY;
   const above = debuffBarRects(bar, debuffs).at(-1) ?? bar;
-  const width = pad + ink.name + textGap + ink.count + pad;
+  const width = pad + ink.name.width + textGap + ink.count.width + pad;
   const pill = {
     height,
     width,
@@ -46,8 +52,9 @@ export function zonePillLayout(
     y: above.y + above.height + gap,
   };
   return {
-    capsY: pill.y + capsY,
+    countCapsY: pill.y + Math.round((height - countHeight) / 2) - ink.count.top,
     countRight: pill.x + width - pad,
+    nameCapsY: pill.y + Math.round((height - nameHeight) / 2) - ink.name.top,
     nameLeft: pill.x + pad,
     pill,
   };

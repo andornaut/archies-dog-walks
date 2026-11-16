@@ -83,44 +83,38 @@ export function createHudChrome(
     debuff: DebuffId;
     rect: Rect;
   }[] = [];
-  const inkWidth = (text: string) => {
-    const ink = laidGlyphs(painter.fonts.body, 1, text).flatMap(({ ink }) =>
+  const body = painter.fonts.body;
+  const inkOf = (text: string) => {
+    const ink = laidGlyphs(body, TEXT_SCALE, text).flatMap(({ ink }) =>
       ink === null ? [] : [ink],
     );
-    return ink.length === 0
-      ? 0
-      : Math.max(...ink.map((rect) => rect.right)) - Math.min(...ink.map((rect) => rect.left));
+    const glyphs = [...text].flatMap((char) => {
+      const glyph = body.glyphs.get(char);
+      return glyph !== undefined && glyph.width > 0 && glyph.height > 0 ? [glyph] : [];
+    });
+    const cap = fontMetrics(body).capTop;
+    return {
+      bottom:
+        glyphs.length === 0
+          ? 0
+          : (Math.max(...glyphs.map(({ height, yOffset }) => yOffset + height)) - cap) * TEXT_SCALE,
+      top:
+        glyphs.length === 0
+          ? 0
+          : (Math.min(...glyphs.map(({ yOffset }) => yOffset)) - cap) * TEXT_SCALE,
+      width:
+        ink.length === 0
+          ? 0
+          : Math.max(...ink.map(({ right }) => right)) - Math.min(...ink.map(({ left }) => left)),
+    };
   };
-  const body = painter.fonts.body;
-  const names = Object.values(gameData.debuffs).map(({ name }) => name);
   const nameWidth = Math.max(
     0,
-    ...names.map((name) => {
-      const ink = laidGlyphs(body, TEXT_SCALE, name).flatMap(({ ink }) =>
-        ink === null ? [] : [ink],
-      );
-      return ink.length === 0
-        ? 0
-        : Math.max(...ink.map(({ right }) => right)) - Math.min(...ink.map(({ left }) => left));
-    }),
+    ...Object.values(gameData.debuffs).map(({ name }) => inkOf(name).width),
   );
   const capitalsTop = (name: string, bar: Rect) => {
-    const glyphs = [...name].flatMap((char) => {
-      const glyph = body.glyphs.get(char);
-      return glyph === undefined || glyph.height === 0 ? [] : [glyph];
-    });
-    const top =
-      glyphs.length === 0 ? 0 : Math.min(...glyphs.map(({ yOffset }) => yOffset)) * TEXT_SCALE;
-    const bottom =
-      glyphs.length === 0
-        ? 0
-        : Math.max(...glyphs.map(({ height, yOffset }) => yOffset + height)) * TEXT_SCALE;
-    return (
-      bar.y +
-      Math.round((DEBUFF_BAR.faceHeight - (bottom - top)) / 2) +
-      fontMetrics(body).capTop * TEXT_SCALE -
-      top
-    );
+    const ink = inkOf(name);
+    return bar.y + Math.round((DEBUFF_BAR.faceHeight - (ink.bottom - ink.top)) / 2) - ink.top;
   };
   return {
     bars: () => bars,
@@ -200,10 +194,13 @@ export function createHudChrome(
         zoneKey = currentZoneKey;
         const name = currentZone(gameData, run).name,
           count = zoneProgressText(gameData, run.zoneIndex);
-        const layout = zonePillLayout(SCREEN_LAYOUT.topBar, SCREEN_LAYOUT.screen, debuffs.length, {
-          count: inkWidth(count),
-          name: inkWidth(name),
-        });
+        const ink = { count: inkOf(count), name: inkOf(name) };
+        const layout = zonePillLayout(
+          SCREEN_LAYOUT.topBar,
+          SCREEN_LAYOUT.screen,
+          debuffs.length,
+          ink,
+        );
         replace("zone", -3, (group) => {
           group.panel(layout.pill, {
             key: "ui-zone-pill",
@@ -213,20 +210,32 @@ export function createHudChrome(
           });
           group.text({
             anchor: "ink",
-            capTop: layout.capsY,
+            backing: {
+              height: layout.pill.height,
+              width: ink.name.width,
+              x: layout.nameLeft,
+              y: layout.pill.y,
+            },
+            capTop: layout.nameCapsY,
             colour: PALETTE.cream,
             font: "body",
             lines: [name],
-            scale: 1,
+            scale: TEXT_SCALE,
             x: layout.nameLeft,
           });
           group.text({
             anchor: "inkRight",
-            capTop: layout.capsY,
+            backing: {
+              height: layout.pill.height,
+              width: ink.count.width,
+              x: layout.countRight - ink.count.width,
+              y: layout.pill.y,
+            },
+            capTop: layout.countCapsY,
             colour: PALETTE.lightGrey,
             font: "body",
             lines: [count],
-            scale: 1,
+            scale: TEXT_SCALE,
             x: layout.countRight,
           });
         });

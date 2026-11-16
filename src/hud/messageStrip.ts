@@ -13,7 +13,7 @@ import { read } from "../rules/units.ts";
 import { effectIconKey, type EffectItem } from "./effectIcons.ts";
 import type { NameMark } from "./effectNames.ts";
 import { type FaceBox, type FaceRow, faceRows, type FaceText } from "./faceText.ts";
-import { DEBUFF_BAR } from "./walkHud.ts";
+import { debuffBarRects } from "./walkHud.ts";
 
 // The message strip: what just happened, in a ui-panel across the top of the backdrop band's
 // flat sky, under the walk bar and clear of the cross street and the far road. It shows one
@@ -84,10 +84,8 @@ const WALK_BAR_RECT = SCREEN_LAYOUT.topBar;
 
 // The strip's top under bars debuff bars.
 function stripTop(bars: number, bar: Rect): number {
-  const under = bar.y + bar.height;
-  return bars === 0
-    ? under + MESSAGE_STRIP.gap
-    : under + bars * DEBUFF_BAR.height + MESSAGE_STRIP.barGap;
+  const above = debuffBarRects(bar, bars).at(-1) ?? bar;
+  return above.y + above.height + (bars === 0 ? MESSAGE_STRIP.gap : MESSAGE_STRIP.barGap);
 }
 
 // The strip under bars debuff bars.
