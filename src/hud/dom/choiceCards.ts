@@ -12,6 +12,7 @@ import { CARD_LAYOUT, cardRowIn, forkHomeRect } from "../../layout/cardLayout.ts
 import { type CardView, MAX_CARD_OPTIONS } from "../../rules/choices.ts";
 import { cardHeader } from "../../ui/cardRow.ts";
 import { closeControl } from "../../ui/closeControl.ts";
+import { bindGameAction } from "../../ui/dom/actionBinding.ts";
 import { type DomArtSource, imageArt, imageNineSlice } from "../../ui/dom/artElements.ts";
 import { type NativeGesture } from "../../ui/dom/modalLifecycle.ts";
 import { createTextLine, placeBox, placeText, setBox } from "../../ui/dom/pixelLine.ts";
@@ -369,11 +370,15 @@ export function showChoiceCards(
     );
     button.setAttribute("aria-disabled", String(!entry.enabled));
     if (!input.picture) {
-      button.addEventListener("click", (event) => {
-        if ((event as MouseEvent).detail === 0) {
-          input.choose(index);
-        }
-      });
+      bindGameAction(
+        {
+          activate: () => input.choose(index),
+          available: () => shown.accepts(),
+          hold: { external: "choice-preview" },
+          pointer: "release",
+        },
+        button,
+      );
     }
     const ring = doc.createElement("span");
     ring.className = "adw-art";

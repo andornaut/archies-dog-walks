@@ -5,6 +5,7 @@ import { MENU_TEXT } from "../../data/menuText.ts";
 import { SCREEN_CONFIG } from "../../data/screen.ts";
 import { PALETTE } from "../palette.ts";
 import { topSectionLayout } from "../topSection.ts";
+import { bindGameAction, bindGameActionHolds } from "./actionBinding.ts";
 
 // Boot and renderer-failure screens share the same device preference as Phaser's soundboard.
 // The control needs neither a compatible progress save nor loaded game fonts or textures.
@@ -67,7 +68,19 @@ export function mountMuteControl(settings: MuteControlSettings, parent: HTMLElem
       toggle();
     }
   };
-  button.addEventListener("click", toggle);
+  const unbind = bindGameAction({ activate: () => toggle(), available: active }, button);
+  const stopHold = bindGameActionHolds(
+    {
+      cancelPress: () => undefined,
+      guard: { gate: { accepts: active, capture: () => active } },
+      unit: () =>
+        Math.min(
+          parent.clientWidth / SCREEN_CONFIG.width,
+          parent.clientHeight / SCREEN_CONFIG.height,
+        ),
+    },
+    view,
+  );
   parent.addEventListener("keydown", key);
   doc.defaultView?.addEventListener("keydown", key);
   const stop = settings.onChange(show);
@@ -86,6 +99,8 @@ export function mountMuteControl(settings: MuteControlSettings, parent: HTMLElem
   place();
   return () => {
     stop();
+    stopHold();
+    unbind();
     resize?.disconnect();
     parent.removeEventListener("keydown", key);
     doc.defaultView?.removeEventListener("keydown", key);

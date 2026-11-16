@@ -10,6 +10,7 @@ import {
 import { FEEDBACK } from "../../home/feedback.ts";
 import { shopTabRects } from "../../home/shopLayout.ts";
 import type { ShopPageView } from "../../home/shopPageView.ts";
+import { bindGameAction } from "../../ui/dom/actionBinding.ts";
 import { type DomArtSource, imageArt, sheetArt, sheetNineSlice } from "../../ui/dom/artElements.ts";
 import { type ModalLifecycle, mountModalLifecycle } from "../../ui/dom/modalLifecycle.ts";
 import {
@@ -48,6 +49,7 @@ export interface ShopScreenArt {
 
 export interface ShopScreenRow {
   readonly frame: "art" | "fallback";
+  readonly holdDetail?: boolean;
   readonly id: string;
   readonly label: string;
   readonly rect: Rect;
@@ -175,7 +177,6 @@ export function showShopScreen(
   let chromeParts: DomPart[] = [],
     headingParts: DomPart[] = [],
     messageParts: DomPart[] = [];
-  const controlPoints = new WeakMap<HTMLElement, Point>();
   const rows = new Map<string, { key: string; tile: NativeSelectionTile; parts: DomPart[] }>();
   let chromeKey = "",
     headingsKey = "",
@@ -184,13 +185,23 @@ export function showShopScreen(
     const element = createTextLine(doc, line);
     return { element, place: (at) => placeText(input.fonts[line.font], at, origin, element, line) };
   };
+  const controlPoints = new WeakMap<HTMLElement, Point>();
   const control = (rect: Rect, label: string) => {
     const element = doc.createElement("button");
     element.type = "button";
     element.className = "adw-button";
     element.style.pointerEvents = "auto";
     element.setAttribute("aria-label", label);
-    controlPoints.set(element, { x: rect.x + rect.width / 2, y: rect.y + rect.height / 2 });
+    const point = { x: rect.x + rect.width / 2, y: rect.y + rect.height / 2 };
+    controlPoints.set(element, point);
+    bindGameAction(
+      {
+        activate: () => input.click(point),
+        available: accepts,
+        pointer: "release",
+      },
+      element,
+    );
     return { element, place: (at: DomScale) => setBox(element, gridRect(at, rect)) };
   };
   const accepts = () => alive && input.active() && lifecycle?.accepts() === true;
@@ -356,10 +367,17 @@ export function showShopScreen(
             ]),
         });
       }
-      controlPoints.set(tile.element, {
-        x: row.rect.x + row.rect.width / 2,
-        y: row.rect.y + row.rect.height / 2,
-      });
+      const point = { x: row.rect.x + row.rect.width / 2, y: row.rect.y + row.rect.height / 2 };
+      controlPoints.set(tile.element, point);
+      bindGameAction(
+        {
+          activate: () => input.click(point),
+          available: accepts,
+          ...(row.holdDetail === true ? { hold: { external: "shop-item-detail" as const } } : {}),
+          pointer: "release",
+        },
+        tile.element,
+      );
       tile.content.append(...parts.map(({ element }) => element));
       scrolled.append(tile.element);
       rows.set(row.id, { key, parts, tile });
@@ -461,15 +479,6 @@ export function showShopScreen(
     }
     return undefined;
   };
-  root.addEventListener("click", (event) => {
-    if (footer?.contains(event.target as Node)) {
-      return;
-    }
-    const point = controlPoint(event.target);
-    if (event.detail === 0 && accepts() && point !== undefined) {
-      input.click(point);
-    }
-  });
   root.addEventListener(
     "wheel",
     (event) => {

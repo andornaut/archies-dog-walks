@@ -5,6 +5,7 @@ import { focusTarget } from "@andornaut/game-kit/runtime/web/ui/dom/focusModalit
 import { SCREEN_CONFIG } from "../../data/screen.ts";
 import { cardNumberForKey, isConfirmKey, menuKeyActs } from "../../input/keyBindings.ts";
 import { closeFace } from "../../ui/closeControl.ts";
+import { bindGameAction } from "../../ui/dom/actionBinding.ts";
 import { mountModalLifecycle, type NativeGesture } from "../../ui/dom/modalLifecycle.ts";
 import {
   createTextLine,
@@ -402,12 +403,23 @@ export function showQuestionPanel(layer: UiLayer, input: DomQuestionPanelInput):
   });
   if (input.dismiss !== undefined) {
     const dismiss = input.dismiss.press;
-    dialog.addEventListener("click", (event) => {
-      if (accepts() && !focusables.some((control) => control.contains(event.target as Node))) {
-        event.stopPropagation();
-        dismiss();
-      }
-    });
+    bindGameAction(
+      {
+        activate: (origin) => {
+          if (
+            origin.kind === "hold" ||
+            !focusables.some((control) => control.contains(origin.event.target as Node))
+          ) {
+            if (origin.kind === "click") {
+              origin.event.stopPropagation();
+            }
+            dismiss();
+          }
+        },
+        available: accepts,
+      },
+      dialog,
+    );
   }
   const onKey = (event: KeyboardEvent) => {
     const numberPresses = input.numberPresses ?? input.presses;

@@ -11,6 +11,7 @@ import type {
   SettingsView,
 } from "../../home/settingsView.ts";
 import { read } from "../../rules/units.ts";
+import { bindGameAction } from "../../ui/dom/actionBinding.ts";
 import {
   type DomArtSource,
   imageArt,
@@ -54,6 +55,7 @@ export interface DomSettingsInput
   // A press on a switch or install row, followed until it lifts, as the scene follows one on
   // the canvas.
   readonly press: {
+    readonly activate: (target: SettingsTarget) => void;
     readonly down: (target: SettingsTarget) => void;
     readonly up: (released: SettingsTarget | undefined, cancelled: boolean) => void;
   };
@@ -243,6 +245,21 @@ function rowPart(
       input.slide.end(true);
     }
   };
+  if (view().kind !== "slider") {
+    bindGameAction(
+      {
+        activate: () => {
+          const target = rowTarget(view());
+          if (target !== undefined) {
+            input.press.activate(target);
+          }
+        },
+        available: () => panel().accepts() && rowTarget(view()) !== undefined,
+        pointer: "release",
+      },
+      element,
+    );
+  }
   const stopInput = guardNativeInput(
     {
       cancel,
@@ -269,6 +286,7 @@ function rowPart(
         }
       },
       gate: { accepts: () => panel().accepts(), capture: () => panel().capture() },
+      holdUnit: () => layer.scale().unit,
       move: (event) => {
         if (touch !== undefined && !sliding && !touch.vertical) {
           const point = at(event);

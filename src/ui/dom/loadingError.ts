@@ -12,6 +12,7 @@ import { createModalLayer } from "@andornaut/game-kit/runtime/web/ui/dom/modalLa
 
 import { BUTTON_SIZE } from "../../data/layout.ts";
 import { PALETTE } from "../palette.ts";
+import { bindGameAction } from "./actionBinding.ts";
 import { guardNativeInput } from "./modalLifecycle.ts";
 import { mountMuteControl, type MuteControlSettings } from "./muteControl.ts";
 import type { UiLayer } from "./uiLayer.ts";
@@ -106,6 +107,16 @@ export function mountLoadingError(
   };
   const stopScale = layer.onScale(place);
   place();
+  const unbindRetry = bindGameAction(
+    {
+      activate: () => {
+        void context.retry();
+      },
+      available: () => !disposed && scope?.accepts() === true,
+      nativeClick: true,
+    },
+    button,
+  );
   const stopInput = guardNativeInput(
     {
       claim: layer.press.claim,
@@ -113,6 +124,7 @@ export function mountLoadingError(
         accepts: () => !disposed && scope?.accepts() === true,
         capture: () => scope?.capture() ?? (() => false),
       },
+      holdUnit: () => layer.scale().unit,
       subscribe: layer.input.subscribe,
     },
     root,
@@ -134,6 +146,7 @@ export function mountLoadingError(
       disposed = true;
       hide();
       stopInput();
+      unbindRetry();
       stopScale();
       failure.dispose();
       modal.dispose();

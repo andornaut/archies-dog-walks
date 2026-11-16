@@ -6,6 +6,7 @@ import type { DetailArt, DetailText } from "../../home/detailCardView.ts";
 import { END_LAYOUT } from "../../home/endLayout.ts";
 import type { EndResults, EndScreenView } from "../../home/endScreenView.ts";
 import { closeControl } from "../../ui/closeControl.ts";
+import { bindGameAction } from "../../ui/dom/actionBinding.ts";
 import { sheetArt } from "../../ui/dom/artElements.ts";
 import {
   createTextLine,
@@ -165,11 +166,7 @@ function buttonPart(
   element.type = "button";
   element.className = "adw-button adw-go";
   element.setAttribute("aria-label", button.text.text);
-  element.addEventListener("click", (event) => {
-    if (event.detail === 0) {
-      home();
-    }
-  });
+  bindGameAction({ activate: () => home(), available: () => true, pointer: "release" }, element);
   const face = doc.createElement("span");
   face.className = "adw-face";
   const label = createTextLine(doc, button.text);
@@ -280,11 +277,15 @@ export function showEndScreen(layer: UiLayer, input: DomEndScreenInput): DomEndS
       pointerEvents: "auto",
       position: "absolute",
     });
-    element.addEventListener("click", (event) => {
-      if (event.detail === 0 && accepts()) {
-        input.openBadge(index);
-      }
-    });
+    bindGameAction(
+      {
+        activate: () => input.openBadge(index),
+        available: accepts,
+        hold: { external: "end-badge-detail" },
+        pointer: "release",
+      },
+      element,
+    );
     return {
       controls: [element],
       element,

@@ -10,6 +10,10 @@ type Listener = (event: FakeEvent) => void;
 
 export interface FakeEvent {
   buttons?: number;
+  button?: number;
+  isPrimary?: boolean;
+  relatedTarget?: unknown;
+  stopImmediatePropagation?: () => void;
   clientX?: number;
   clientY?: number;
   detail?: number;
@@ -70,6 +74,7 @@ export class FakeElement extends FakeTarget {
       }
     },
   };
+  disabled = false;
   inert = false;
   hidden = false;
   id = "";
@@ -148,6 +153,40 @@ export class FakeElement extends FakeTarget {
     }
   }
 
+  get isConnected(): boolean {
+    return this === this.ownerDocument.body || this.parent?.isConnected === true;
+  }
+
+  get parentElement(): FakeElement | null {
+    return this.parent ?? null;
+  }
+
+  matches(selector: string): boolean {
+    return selector.split(",").some((entry) => {
+      const part = entry.trim();
+      if (part === ":disabled") {
+        return this.disabled || this.attributes.has("disabled");
+      }
+      if (part === "[inert]") {
+        return this.inert || this.attributes.has("inert");
+      }
+      if (part === "[hidden]") {
+        return this.hidden || this.attributes.has("hidden");
+      }
+      if (part.startsWith(".")) {
+        return this.classList.contains(part.slice(1));
+      }
+      return part === this.tagName.toLowerCase();
+    });
+  }
+
+  closest(selector: string): FakeElement | null {
+    if (this.matches(selector)) {
+      return this;
+    }
+    return this.parentElement?.closest(selector) ?? null;
+  }
+
   contains(node: unknown): boolean {
     return node === this || this.children.some((child) => child.contains(node));
   }
@@ -191,7 +230,20 @@ export class FakeDocument extends FakeTarget {
   // How many times an element was moved by insertBefore.
   moves = 0;
   // Timers never fire: a test sees what a timer would undo still in place.
-  readonly defaultView = Object.assign(new FakeTarget(), { setTimeout: () => 0 });
+  readonly body = this.createElement("body");
+  hidden = false;
+  readonly defaultView = Object.assign(new FakeTarget(), {
+    Node: FakeElement,
+    clearTimeout: (timer?: number) => {
+      void timer;
+    },
+    performance: { now: () => 0 },
+    setTimeout: (callback: () => void, delay?: number) => {
+      void callback;
+      void delay;
+      return 0;
+    },
+  });
 
   createElement(tagName: string): FakeElement {
     return new FakeElement(this, tagName);
@@ -204,6 +256,7 @@ export function fakeLayer(
   scale: DomScale,
 ): { element: FakeElement; layer: UiLayer } {
   const element = doc.createElement("div");
+  doc.body.append(element);
   const layer = {
     assetStatus: () => "ready",
     buttonSkin: { apply: () => Promise.resolve([]), frames: Promise.resolve(new Map()) },

@@ -17,6 +17,7 @@ import { MENU_TEXT } from "../data/menuText.ts";
 import { pageSearch } from "../dev/devTools.ts";
 import { devInSearch } from "../dev/runSetup.ts";
 import { pageDeviceSettings } from "../save/settings.ts";
+import { bindGameAction, bindGameActionHolds } from "../ui/dom/actionBinding.ts";
 import { mountMuteControl } from "../ui/dom/muteControl.ts";
 
 const colour = (name: keyof typeof palette) => `#${palette[name].hex}`;
@@ -63,9 +64,46 @@ export function observeCrashMute(doc: Document): () => void {
     if (dialog !== null) {
       observer.disconnect();
       try {
-        remove = mountMuteControl(pageDeviceSettings(), dialog);
+        let removeMute: () => void = () => undefined;
+        const active = () => dialog.isConnected && !dialog.hidden && !dialog.inert;
+        const controls = [...dialog.querySelectorAll<HTMLElement>(".crash-button, summary")];
+        const unbind = controls.map((element) =>
+          bindGameAction(
+            {
+              activate: () => {
+                if (element.tagName.toLowerCase() === "summary") {
+                  const details = element.parentElement as HTMLDetailsElement;
+                  details.open = !details.open;
+                } else {
+                  doc.defaultView?.location.reload();
+                }
+              },
+              available: active,
+              nativeClick: true,
+            },
+            element,
+          ),
+        );
+        const stopHolds = bindGameActionHolds(
+          {
+            cancelPress: () => undefined,
+            guard: { gate: { accepts: active, capture: () => active } },
+            unit: () => 1,
+          },
+          dialog,
+        );
+        remove = () => {
+          stopHolds();
+          unbind.forEach((stop) => stop());
+          removeMute();
+        };
+        try {
+          removeMute = mountMuteControl(pageDeviceSettings(), dialog);
+        } catch (error) {
+          console.warn("The crash sound control could not open.", error);
+        }
       } catch (error) {
-        console.warn("The crash sound control could not open.", error);
+        console.warn("The crash action controls could not open.", error);
       }
     }
   });

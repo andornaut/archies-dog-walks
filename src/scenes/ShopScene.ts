@@ -601,6 +601,7 @@ export class ShopScene extends Scene {
         art,
         fills: [{ colour: PALETTE[pictureBox(look)], rect: box }],
         frame: this.textures.exists("ui-tile") ? "art" : "fallback",
+        holdDetail: row.purchase.kind !== "dogSlot",
         id: row.id,
         label: row.name,
         rect,

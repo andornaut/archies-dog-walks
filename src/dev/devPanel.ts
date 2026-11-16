@@ -17,6 +17,7 @@ import { gameData } from "../data/index.ts";
 import { saveContextFrom } from "../save/load.ts";
 import { createDefaultSave } from "../save/schema.ts";
 import { EARNED_KEYS, earnedRecordFormat, pageSaveStore } from "../save/storage.ts";
+import { bindGameAction, bindGameActionHolds } from "../ui/dom/actionBinding.ts";
 import {
   applyPanel,
   applySaveEdit,
@@ -83,7 +84,7 @@ function button(text: string, onClick: () => void, className = "dev-button"): HT
     textContent: text,
     type: "button",
   });
-  element.addEventListener("click", onClick);
+  bindGameAction({ activate: () => onClick(), available: devToolsOn }, element);
   return element;
 }
 
@@ -202,6 +203,7 @@ export function mountDevPanel(host: DevPanelHost, container: HTMLElement | null)
     console.warn("Dev panel: the page has no #dev-panel element");
     return () => {};
   }
+  let actionRevision = 0;
   let state = openPanel(decodeCheats(sessionRead(DEV_CHEATS_KEY)));
   host.setCheats(devToolsOn() ? state.applied : CHEATS_OFF);
 
@@ -237,6 +239,7 @@ export function mountDevPanel(host: DevPanelHost, container: HTMLElement | null)
   // Visibility does not change staged edits; only Cancel discards them.
   const { body } = container.ownerDocument;
   const setOpen = (open: boolean) => {
+    actionRevision++;
     sheet.hidden = !(open && devToolsOn());
     body.classList.toggle(SHEET_OPEN_CLASS, !sheet.hidden);
     bar.setAttribute("aria-expanded", String(!sheet.hidden));
@@ -249,17 +252,41 @@ export function mountDevPanel(host: DevPanelHost, container: HTMLElement | null)
   );
   const toggles = CHEAT_TOGGLES.map(({ id, label }) => {
     const box = el("input", { type: "checkbox" });
-    box.addEventListener("change", () => stage({ id, kind: "toggle", on: box.checked }));
+    const changed = () => stage({ id, kind: "toggle", on: box.checked });
+    box.addEventListener("change", changed);
+    bindGameAction(
+      {
+        activate: () => {
+          box.checked = !box.checked;
+          changed();
+        },
+        available: devToolsOn,
+        nativeClick: true,
+      },
+      box,
+    );
     return { box, id, label: el("label", { className: "dev-check" }, box, label) };
   });
   // A radio group: arrow keys move the choice, and a screen reader names the group.
   const speeds = SPEEDS.map(({ id, label }) => {
     const radio = el("input", { name: "dev-speed", type: "radio", value: id });
-    radio.addEventListener("change", () => {
+    const changed = () => {
       if (radio.checked) {
         stage({ kind: "speed", speed: id });
       }
-    });
+    };
+    radio.addEventListener("change", changed);
+    bindGameAction(
+      {
+        activate: () => {
+          radio.checked = true;
+          changed();
+        },
+        available: devToolsOn,
+        nativeClick: true,
+      },
+      radio,
+    );
     return { id, label: el("label", { className: "dev-check" }, radio, label), radio };
   });
   const controls = el(
@@ -291,12 +318,18 @@ export function mountDevPanel(host: DevPanelHost, container: HTMLElement | null)
     "dev-button dev-danger",
   );
 
-  bar.addEventListener("click", () => {
-    setOpen(sheet.hidden !== false);
-    if (sheet.hidden === false) {
-      sheet.scrollIntoView({ block: "nearest" });
-    }
-  });
+  bindGameAction(
+    {
+      activate: () => {
+        setOpen(sheet.hidden !== false);
+        if (sheet.hidden === false) {
+          sheet.scrollIntoView({ block: "nearest" });
+        }
+      },
+      available: devToolsOn,
+    },
+    bar,
+  );
   // Native Enter and Space still activate the toggle, but never reach Phaser.
   for (const event of ["keydown", "keyup"] as const) {
     bar.addEventListener(event, (key) => key.stopPropagation());
@@ -327,6 +360,23 @@ export function mountDevPanel(host: DevPanelHost, container: HTMLElement | null)
     persistence,
   );
   container.append(bar, sheet);
+  const active = () => devToolsOn() && !container.hidden && !container.inert;
+  const stopHolds = bindGameActionHolds(
+    {
+      cancelPress: () => undefined,
+      guard: {
+        gate: {
+          accepts: active,
+          capture: () => {
+            const revision = actionRevision;
+            return () => revision === actionRevision && active();
+          },
+        },
+      },
+      unit: () => 1,
+    },
+    container,
+  );
   setOpen(false);
   const stopWatching = watchDevTools((on) => {
     container.hidden = !on;
@@ -337,6 +387,7 @@ export function mountDevPanel(host: DevPanelHost, container: HTMLElement | null)
     }
   });
   return () => {
+    stopHolds();
     stopWatching();
     host.setCheats(CHEATS_OFF);
     container.hidden = true;

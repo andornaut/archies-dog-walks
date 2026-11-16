@@ -24,6 +24,7 @@ import {
   topSectionCurrency,
   topSectionLayout,
 } from "../topSection.ts";
+import { bindGameAction } from "./actionBinding.ts";
 import { type DomArtSource, imageArt, sheetArt } from "./artElements.ts";
 import { guardNativeInput, revealPaint } from "./modalLifecycle.ts";
 import { backedTextPlaces, createTextLine, placeBox, placeText, setBox } from "./pixelLine.ts";
@@ -245,19 +246,27 @@ export function createNativeTopSection(
     };
     records.push(record);
     button.addEventListener("blur", () => setPressed(false));
-    button.addEventListener("click", (event) => {
-      event.stopPropagation();
-      const keyboard = event.detail === 0;
-      if (
-        active() &&
-        (keyboard || released === record) &&
-        (config.activation !== "down" || keyboard)
-      ) {
-        press(keyboard ? "keyboard" : "pointer", event.timeStamp);
-      }
-      released = undefined;
-      startedAt = undefined;
-    });
+    bindGameAction(
+      {
+        activate: (origin) => {
+          const keyboard = origin.kind === "click" && origin.event.detail === 0;
+          if (origin.kind === "click") {
+            origin.event.stopPropagation();
+          }
+          if (origin.kind === "hold" || keyboard || released === record) {
+            press(
+              keyboard ? "keyboard" : "pointer",
+              origin.kind === "click" ? origin.event.timeStamp : origin.timeStamp,
+            );
+          }
+          released = undefined;
+          startedAt = undefined;
+        },
+        available: active,
+        pointer: config.activation === "down" ? "down" : "click",
+      },
+      button,
+    );
     for (const name of ["mousedown", "touchstart"]) {
       button.addEventListener(name, (event) => event.stopPropagation());
     }
@@ -311,6 +320,7 @@ export function createNativeTopSection(
             return () => accepted && captured === epoch && available();
           },
         },
+        holdUnit: () => layer.scale().unit,
         move: (event) => held?.setPressed(held.button.contains(event.target as Node)),
         subscribe: (listener) =>
           layer.input.subscribe(() => {

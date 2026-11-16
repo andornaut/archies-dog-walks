@@ -63,7 +63,7 @@ it("admits revealed and painted views, makes covered dialogs inert and restores 
   const root = doc.createElement("div");
   const reveal = { cancel: vi.fn(), revealed: Promise.resolve(true) };
   const view = mountModalLifecycle(
-    { input: gate, press },
+    { input: gate, press, scale: () => ({ dpr: 1, origin: { x: 0, y: 0 }, unit: 1 }) },
     { modal: true, reveal },
     root as unknown as HTMLElement,
   );
@@ -153,7 +153,7 @@ it("releases an unfinished modal contact on window blur and accepts one fresh ac
   button.addEventListener("click", action);
   const reveal = { cancel: vi.fn(), revealed: Promise.resolve(true) };
   const view = mountModalLifecycle(
-    { input: gate, press },
+    { input: gate, press, scale: () => ({ dpr: 1, origin: { x: 0, y: 0 }, unit: 1 }) },
     { gesture: { cancel }, modal: true, reveal },
     root as unknown as HTMLElement,
   );

@@ -7,10 +7,12 @@ import { guardClicks, type PressGate } from "@andornaut/game-kit/runtime/web/ui/
 import { focusTarget } from "@andornaut/game-kit/runtime/web/ui/dom/focusModality";
 import { PENDING_ATTRIBUTE, type Reveal } from "@andornaut/game-kit/runtime/web/ui/dom/imageReady";
 
+import { bindGameActionHolds } from "./actionBinding.ts";
 import type { UiLayer } from "./uiLayer.ts";
 
 export interface NativeInputGuard {
   readonly gate: PressGate;
+  readonly holdUnit?: () => number;
   readonly subscribe: ModalInputGate["subscribe"];
   readonly cancel?: () => void;
   readonly claim?: (event: PointerEvent) => { release(): void } | undefined;
@@ -28,9 +30,11 @@ export function guardNativeInput(guard: NativeInputGuard, root: HTMLElement): ()
   let owner: number | undefined;
   let lease: { release(): void } | undefined;
   let captured: (() => boolean) | undefined;
+  let contact: object | undefined;
   const cancelled = new Set<number>();
   let handledClick = false;
   let completed = false;
+  let heldAction = false;
   const release = () => {
     const held = lease;
     lease = undefined;
@@ -41,7 +45,9 @@ export function guardNativeInput(guard: NativeInputGuard, root: HTMLElement): ()
       cancelled.add(owner);
       owner = undefined;
       captured = undefined;
+      contact = undefined;
       completed = false;
+      heldAction = false;
       release();
       guard.cancel?.();
     }
@@ -75,6 +81,8 @@ export function guardNativeInput(guard: NativeInputGuard, root: HTMLElement): ()
     }
     lease = claimed;
     owner = next.owner;
+    contact = {};
+    heldAction = false;
     captured = check;
     guard.down?.(event);
   };
@@ -113,12 +121,15 @@ export function guardNativeInput(guard: NativeInputGuard, root: HTMLElement): ()
     );
     owner = next.owner;
     captured = undefined;
+    contact = undefined;
     release();
     if (!accepted) {
       reject(event);
     }
-    completed = accepted && event.type !== "pointercancel";
-    handledClick = guard.up?.(event, !completed) === true;
+    const held = heldAction;
+    heldAction = false;
+    completed = accepted && !held && event.type !== "pointercancel";
+    handledClick = held || guard.up?.(event, !completed) === true;
     if (!accepted) {
       guard.cancel?.();
     }
@@ -136,15 +147,42 @@ export function guardNativeInput(guard: NativeInputGuard, root: HTMLElement): ()
     }
   };
   let stopClicks: () => void;
+  let stopHolds: () => void;
+  const holdGate: PressGate = {
+    accepts: () => contact !== undefined && captured?.() === true && guard.gate.accepts(),
+    capture: () => {
+      const admitted = contact;
+      return () =>
+        admitted !== undefined &&
+        admitted === contact &&
+        captured?.() === true &&
+        guard.gate.accepts();
+    },
+  };
   const listen = () => {
+    // A hold may start only after this root has admitted and claimed the native contact.
+    root.addEventListener("pointerdown", down, true);
+    stopHolds = bindGameActionHolds(
+      {
+        cancelPress: () => {
+          heldAction = true;
+          completed = false;
+          handledClick = true;
+          guard.cancel?.();
+        },
+        guard: { gate: holdGate },
+        unit: guard.holdUnit ?? (() => 1),
+      },
+      root,
+    );
     stopClicks = guardClicks(guard, root);
     root.addEventListener("click", click, true);
-    root.addEventListener("pointerdown", down, true);
     doc.addEventListener("pointermove", move, true);
     doc.addEventListener("pointerup", end, true);
     doc.addEventListener("pointercancel", end, true);
   };
   const unlisten = () => {
+    stopHolds();
     stopClicks();
     root.removeEventListener("click", click, true);
     root.removeEventListener("pointerdown", down, true);
@@ -241,7 +279,7 @@ export interface ModalLifecycle {
 
 // Modal ownership is explicit and independent of whether a view draws native controls.
 export function mountModalLifecycle(
-  layer: Pick<UiLayer, "input" | "press">,
+  layer: Pick<UiLayer, "input" | "press" | "scale">,
   options: {
     readonly gesture?: NativeGesture;
     readonly modal: boolean;
@@ -311,6 +349,7 @@ export function mountModalLifecycle(
       },
       claim: layer.press.claim,
       gate: input,
+      holdUnit: () => layer.scale().unit,
       subscribe: layer.input.subscribe,
     },
     element,

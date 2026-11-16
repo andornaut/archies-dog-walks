@@ -55,6 +55,7 @@ function fixture() {
       dispose: vi.fn(() => element.remove()),
       element,
       ready: Promise.resolve([]),
+      selections: new Map(),
     } as unknown as NativeHomeView;
   };
   return { context, doc, frames, layer, reveals, session, view };

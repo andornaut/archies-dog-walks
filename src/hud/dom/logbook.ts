@@ -3,6 +3,7 @@ import type { Rect } from "@andornaut/game-kit/runtime/rect";
 import { logbookScrollbar, type LogbookView } from "../../home/logbookView.ts";
 import type { ShopPageView } from "../../home/shopPageView.ts";
 import { statsTabRects } from "../../home/statsLayout.ts";
+import { bindGameAction } from "../../ui/dom/actionBinding.ts";
 import type { NativeGesture } from "../../ui/dom/modalLifecycle.ts";
 import { setBox } from "../../ui/dom/pixelLine.ts";
 import { dimDrawn } from "../../ui/dom/rampDim.ts";
@@ -128,11 +129,14 @@ export function showLogbook(layer: UiLayer, input: DomLogbookInput): DomLogbook 
     element.className = "adw-button";
     element.style.pointerEvents = "auto";
     element.setAttribute("aria-label", label);
-    element.addEventListener("click", (event) => {
-      if (event.detail === 0 && shown.accepts()) {
-        input.navigation.activate(target);
-      }
-    });
+    bindGameAction(
+      {
+        activate: () => input.navigation.activate(target),
+        available: () => shown.accepts(),
+        pointer: "release",
+      },
+      element,
+    );
     return { control: element, element, place: (scale) => setBox(element, gridRect(scale, rect)) };
   };
   const tabs = statsTabRects().flatMap((rect, index) => {

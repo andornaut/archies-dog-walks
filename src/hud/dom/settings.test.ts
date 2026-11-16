@@ -57,6 +57,7 @@ function fixture(install = false, width = 360, dpr = 1) {
   const { element, layer } = fakeLayer(doc, scale);
   const slide = { end: vi.fn(), move: vi.fn(), start: vi.fn() };
   const press = {
+    activate: vi.fn<DomSettingsInput["press"]["activate"]>(),
     down: vi.fn<DomSettingsInput["press"]["down"]>(),
     up: vi.fn<DomSettingsInput["press"]["up"]>(),
   };

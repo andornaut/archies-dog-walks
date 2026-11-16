@@ -190,6 +190,7 @@ export class SettingsScene extends Scene {
         this.focus = index === null ? null : { column: 0, row: index };
       },
       press: {
+        activate: (target) => this.tap(target),
         down: (target) => this.presses?.down(target),
         up: (released, cancelled) => this.presses?.up(released, cancelled),
       },

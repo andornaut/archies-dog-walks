@@ -1,8 +1,4 @@
-import type { HoldRule } from "@andornaut/game-kit/runtime/input/hold";
-
-import type { LiveTuning } from "../data/types.ts";
-import { read } from "../rules/units.ts";
-
+export { holdRule, TILE_SLOP_PX } from "../holdRule.ts";
 export {
   type HoldPress,
   type HoldRule,
@@ -11,11 +7,3 @@ export {
   startHold,
   tickHold,
 } from "@andornaut/game-kit/runtime/input/hold";
-
-// Every hold lasts seconds.holdSeconds, read at the press; each rule sets only its slop.
-export function holdRule(tuning: LiveTuning, slopPx: number): HoldRule {
-  return { holdMs: read(tuning, "seconds", "holdSeconds") * 1000, slopPx };
-}
-
-// The home screen's and Pet shop's tiles: a hold opens the item's detail card.
-export const TILE_SLOP_PX = 10;

@@ -1,5 +1,6 @@
 import type { BitmapFont } from "@andornaut/game-kit/runtime/text/bitmapFont";
 
+import { bindGameAction } from "../../ui/dom/actionBinding.ts";
 import { createTextLine, placeBox, placeFrame, placeText } from "../../ui/dom/pixelLine.ts";
 import type { DomScale } from "../../ui/domScale.ts";
 import type { PanelButton } from "../../ui/modal/types.ts";
@@ -33,11 +34,7 @@ export function bindPanelPress(control: HTMLButtonElement, input: PanelPress): v
   for (const type of ["pointerleave", "pointerup", "pointercancel"]) {
     control.addEventListener(type, lift);
   }
-  control.addEventListener("click", () => {
-    if (input.accepts()) {
-      input.press();
-    }
-  });
+  bindGameAction({ activate: () => input.press(), available: input.accepts }, control);
 }
 
 export function createPanelButton(

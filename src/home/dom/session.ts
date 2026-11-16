@@ -1,3 +1,4 @@
+import { bindGameAction } from "../../ui/dom/actionBinding.ts";
 import { guardNativeInput, revealPaint } from "../../ui/dom/modalLifecycle.ts";
 import { followModalUnderlay } from "../../ui/dom/rampDim.ts";
 import type { UiLayer } from "../../ui/dom/uiLayer.ts";
@@ -26,6 +27,7 @@ export function createNativeHomeSession(
   let revision = 0;
   let shown = true;
   let view: NativeHomeView | undefined;
+  let removeActions: (() => void)[] = [];
   let paint: ReturnType<typeof revealPaint> | undefined;
   const accepts = () =>
     alive && shown && paint?.painted() === true && context.accepts() && layer.input.accepts();
@@ -44,24 +46,13 @@ export function createNativeHomeSession(
       claim: layer.press.claim,
       down: context.down,
       gate,
+      holdUnit: () => layer.scale().unit,
       move: context.move,
       subscribe: layer.input.subscribe,
       up: context.up,
     },
     element,
   );
-  const click = (event: MouseEvent) => {
-    if (event.detail !== 0 || !accepts()) {
-      return;
-    }
-    const target = event.target as Node;
-    for (const [id, control] of view?.controls ?? []) {
-      if (control.contains(target)) {
-        context.activate(id);
-        return;
-      }
-    }
-  };
   const key = (event: KeyboardEvent) => {
     if (
       (event.code === "Enter" || event.code === "Space") &&
@@ -73,7 +64,6 @@ export function createNativeHomeSession(
       }
     }
   };
-  element.addEventListener("click", click);
   element.addEventListener("keydown", key);
   const stopUnderlay = followModalUnderlay(layer.input, element);
   const scaled = () => context.scaled?.();
@@ -88,8 +78,9 @@ export function createNativeHomeSession(
       stopInput();
       stopUnderlay();
       stopScale();
+      removeActions.forEach((remove) => remove());
+      removeActions = [];
       view?.dispose();
-      element.removeEventListener("click", click);
       element.removeEventListener("keydown", key);
       element.remove();
     },
@@ -102,8 +93,25 @@ export function createNativeHomeSession(
       const focused = [...(view?.controls ?? [])].find(
         ([, control]) => control === previousFocus,
       )?.[0];
+      removeActions.forEach((remove) => remove());
+      removeActions = [];
       view?.dispose();
       view = next;
+      for (const [id, control] of next.controls) {
+        removeActions.push(
+          bindGameAction(
+            {
+              activate: () => context.activate(id),
+              available: accepts,
+              ...(next.selections.has(id)
+                ? { hold: { external: "home-selection-detail" as const } }
+                : {}),
+              pointer: "release",
+            },
+            control,
+          ),
+        );
+      }
       content.replaceChildren(next.element);
       stopUnderlay.refresh();
       const reveal = layer.reveal(
