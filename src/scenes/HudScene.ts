@@ -8,6 +8,7 @@ import { gameData } from "../data/index.ts";
 import { SCREEN_CONFIG, SCREEN_LAYOUT } from "../data/screen.ts";
 import type { AchievementId, DebuffId, DogId, HintTrigger } from "../data/types.ts";
 import { FEEDBACK as MENU_FEEDBACK } from "../home/feedback.ts";
+import { overlayRegion } from "../home/homeBar.ts";
 import { createHudCards, type HudCards } from "../hud/dom/hudCards.ts";
 import { createHudChrome } from "../hud/dom/hudChrome.ts";
 import { createHudMoments, type HudMoment, type HudMomentPainter } from "../hud/dom/hudMoments.ts";
@@ -284,6 +285,11 @@ export class HudScene extends Scene {
     );
     this.barPainter = projectHudMoments(barPainters, picture?.stillFrames);
     this.cards = projectHudCards(barPainters, cards);
+    if (picture === undefined) {
+      stopUnderlays.push(
+        ...barPainters.map((painter) => followModalUnderlay(layer.input, painter.element)),
+      );
+    }
     this.barPainter.update({
       firingNow: this.time.now,
       momentNow: this.time.now,
@@ -295,7 +301,9 @@ export class HudScene extends Scene {
       this.painter?.update(time);
       this.barPainter?.update(time);
       if (picture === undefined) {
-        painters.forEach((painter) => dimDrawn(painter.element, !layer.input.accepts()));
+        [...painters, ...barPainters].forEach((painter) =>
+          dimDrawn(painter.element, !layer.input.accepts()),
+        );
       }
     });
     this.events.once("shutdown", () => {
@@ -506,8 +514,8 @@ export class HudScene extends Scene {
       return;
     }
     const card = detailView(overlay, LAYOUT.screen, detail);
-    const html = addHtmlDetailCard(overlay, LAYOUT.walkView, card, undefined, false, {
-      area: LAYOUT.walkView,
+    const html = addHtmlDetailCard(overlay, LAYOUT.screen, card, undefined, false, {
+      area: overlayRegion("home"),
       dismiss: () => this.run?.closeExplanation(),
     });
     this.explained = html === undefined ? NOT_EXPLAINED : { html, key, scene: overlay };

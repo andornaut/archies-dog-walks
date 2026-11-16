@@ -69,17 +69,17 @@ export function projectHudMoments(
   };
 }
 export function projectHudCards(
-  protectedRoots: readonly Pick<HudMomentPainter, "element">[],
+  underlayRoots: readonly Pick<HudMomentPainter, "element">[],
   views: readonly HudCards[],
 ): HudCards {
   const first = views[0];
   if (first === undefined) {
     throw new Error("HUD cards require a native surface");
   }
-  if (protectedRoots.length !== views.length) {
-    throw new RangeError("HUD cards require one protected surface per projection");
+  if (underlayRoots.length !== views.length) {
+    throw new RangeError("HUD cards require one underlay surface per projection");
   }
-  views.forEach((view, index) => protectedRoots[index]!.element.append(view.element));
+  views.forEach((view, index) => underlayRoots[index]!.element.append(view.element));
   return {
     anchor: (slot) => first.anchor(slot),
     dispose: () => views.forEach((view) => view.dispose()),
@@ -108,5 +108,6 @@ export function projectHudTopSections(views: readonly NativeTopSection[]): Nativ
     setMuted: (muted) => views.forEach((view) => view.setMuted(muted)),
     setPaused: (menu) => views.forEach((view) => view.setPaused(menu)),
     setShown: (shown) => views.forEach((view) => view.setShown(shown)),
+    underlayElement: first.underlayElement,
   };
 }

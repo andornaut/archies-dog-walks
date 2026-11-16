@@ -55,27 +55,16 @@ it("projects one logical moment into two passive strips without duplicating its 
   expect(second.painter.dispose).toHaveBeenCalledTimes(1);
 });
 
-it("keeps projected dog cards in the lit bar surface while body moments dim and full Help covers both", () => {
+it("dims passive projected dog cards and effect paint once while keeping separate controls lit", () => {
   const doc = new FakeDocument();
   const { element, layer } = fakeLayer(doc, domScale(1, { height: 560, width: 360, x: 0, y: 0 }));
   const body = doc.createElement("div"),
     bar = doc.createElement("div"),
-    card = doc.createElement("div");
+    card = doc.createElement("div"),
+    controls = doc.createElement("div");
   const hex = (value: number) => `#${value.toString(16).padStart(6, "0")}`;
-  for (const root of [body, bar]) {
-    const priorities = new Map<string, string>();
-    Object.assign(root, { isConnected: true });
-    Object.assign(root.style, {
-      getPropertyPriority: (key: string) => priorities.get(key) ?? "",
-      getPropertyValue: (key: string) => root.style[key] ?? "",
-      setProperty: (key: string, value: string, priority = "") => {
-        root.style[key] = value;
-        priorities.set(key, priority);
-      },
-    });
-  }
   body.style.color = card.style.color = hex(PALETTE.cream);
-  element.append(body, bar);
+  element.append(body, bar, controls);
   const projection = projectHudCards(
     [{ element: bar as unknown as HTMLElement }],
     [
@@ -94,13 +83,20 @@ it("keeps projected dog cards in the lit bar surface while body moments dim and 
   expect(bar.contains(card)).toBe(true);
   expect(body.contains(card)).toBe(false);
   const originalFilter = body.style.filter;
-  const stop = followModalUnderlay(layer.input, body as unknown as HTMLElement);
+  const stops = [body, bar].map((root) =>
+    followModalUnderlay(layer.input, root as unknown as HTMLElement),
+  );
   const pause = layer.input.open();
   expect(body.style.color).toBe(hex(PALETTE.cream));
   expect(body.style.filter).toBe("brightness(0.28)");
-  expect(bar.style.filter ?? "").toBe("");
+  expect(bar.style.filter).toBe("brightness(0.28)");
+  expect(controls.style.filter ?? "").toBe("");
   expect(card.style.filter ?? "").toBe("");
   expect(card.style.color).toBe(hex(PALETTE.cream));
+  const nested = layer.input.open();
+  expect(bar.style.filter).toBe("brightness(0.28)");
+  nested.close();
+  expect(bar.style.filter).toBe("brightness(0.28)");
   const restore = coverHelpUnderlay(element as unknown as HTMLElement);
   expect(body.style.display).toBe("none");
   expect(bar.style.display).toBe("none");
@@ -109,7 +105,8 @@ it("keeps projected dog cards in the lit bar surface while body moments dim and 
   expect(bar.style.display).toBe("");
   pause.close();
   expect(body.style.filter).toBe(originalFilter);
+  expect(bar.style.filter ?? "").toBe("");
   expect(body.style.color).toBe(hex(PALETTE.cream));
-  stop();
+  stops.forEach((stop) => stop());
   projection.dispose();
 });

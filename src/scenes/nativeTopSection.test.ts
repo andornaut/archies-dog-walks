@@ -21,7 +21,8 @@ vi.mock("../ui/phaser/pixelText.ts", () => ({ pixelBitmapFont: fake.font }));
 it("replaces a scene's native top section and releases its own scene listeners", () => {
   const events = new EventEmitter();
   const scene = { events } as unknown as Scene;
-  const layer = {};
+  const doc = new FakeDocument();
+  const { layer } = fakeLayer(doc, domScale(1, { height: 560, width: 360, x: 0, y: 0 }));
   fake.layer.mockReturnValue(layer);
   fake.font.mockReturnValue({});
   const first = {
@@ -30,6 +31,7 @@ it("replaces a scene's native top section and releases its own scene listeners",
     revealed: Promise.resolve(true),
     setInert: vi.fn(),
     setShown: vi.fn(),
+    underlayElement: doc.createElement("div"),
   };
   const second = {
     buttons: new Map([["mute", { setPressed: vi.fn() }]]),
@@ -37,6 +39,7 @@ it("replaces a scene's native top section and releases its own scene listeners",
     revealed: Promise.resolve(true),
     setInert: vi.fn(),
     setShown: vi.fn(),
+    underlayElement: doc.createElement("div"),
   };
   fake.create.mockReturnValueOnce(first).mockReturnValueOnce(second);
   const config = {
@@ -51,8 +54,12 @@ it("replaces a scene's native top section and releases its own scene listeners",
     press: vi.fn(),
   };
   const old = addNativeTopSection(scene, config);
+  const modal = layer.input.open();
+  expect(first.underlayElement.style.filter).toBe("brightness(0.28)");
   const current = addNativeTopSection(scene, config);
   expect(first.dispose).toHaveBeenCalledTimes(1);
+  expect(first.underlayElement.style.filter ?? "").toBe("");
+  expect(second.underlayElement.style.filter).toBe("brightness(0.28)");
   expect(events.listenerCount("pause")).toBe(1);
   expect(events.listenerCount("shutdown")).toBe(1);
   first.buttons.get("mute")?.setPressed.mockClear();
@@ -65,6 +72,8 @@ it("replaces a scene's native top section and releases its own scene listeners",
   events.emit("shutdown");
   current?.dispose();
   expect(second.dispose).toHaveBeenCalledTimes(1);
+  expect(second.underlayElement.style.filter ?? "").toBe("");
+  modal.close();
   expect(events.listenerCount("pause")).toBe(0);
   expect(events.listenerCount("shutdown")).toBe(0);
 });

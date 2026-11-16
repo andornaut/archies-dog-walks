@@ -53,6 +53,7 @@ export interface NativeTopSection {
     }
   >;
   readonly element: HTMLElement;
+  readonly underlayElement: HTMLElement;
   readonly revealed: Promise<boolean>;
   dispose(): void;
   setAmount(full: string, short: string): void;
@@ -89,6 +90,10 @@ export function createNativeTopSection(
   };
   const root = doc.createElement("div");
   root.className = "adw-dialog";
+  const underlayElement = doc.createElement("div");
+  underlayElement.className = "adw-top-underlay";
+  Object.assign(underlayElement.style, { inset: "0", pointerEvents: "none", position: "absolute" });
+  root.append(underlayElement);
   const layout = topSectionLayout(config.buttons, config);
   const placed: ((scale: DomScale) => void)[] = [];
   let muted = config.muted === true;
@@ -98,19 +103,19 @@ export function createNativeTopSection(
   let inert = false;
   let epoch = 0;
   let inputBottom: number | undefined;
-  const box = (colour: number, rect: Parameters<typeof placeBox>[3]) => {
+  const box = (parent: HTMLElement, colour: number, rect: Parameters<typeof placeBox>[3]) => {
     const element = doc.createElement("span");
     element.className = "adw-framed";
     element.style.backgroundColor = hex(colour);
-    root.append(element);
+    parent.append(element);
     placed.push((scale) => placeBox(scale, ORIGIN, element, rect));
   };
   topBarRects(layout.bar)
     .filter(({ rect }) => rect.height !== 1 || rect.y !== TOP_BAR_TRIM.line.row)
-    .forEach(({ colour, rect }) => box(PALETTE[colour], rect));
+    .forEach(({ colour, rect }) => box(underlayElement, PALETTE[colour], rect));
   let effectCount = 0;
   const effectArt = layout.effectWells.map(() => image("ui-hud-effect-well"));
-  effectArt.forEach((art) => root.append(art.element));
+  effectArt.forEach((art) => underlayElement.append(art.element));
   const placeEffects = (scale: DomScale) => {
     const wells = topSectionLayout(config.buttons, { ...config, effects: effectCount }).effectWells;
     effectArt.forEach((art, index) => {
@@ -133,7 +138,7 @@ export function createNativeTopSection(
   let released: BarControl | undefined;
   const updateIcons: (() => void)[] = [];
   for (const [id, { face, hit }] of layout.controls) {
-    box(PALETTE.ink, topSectionButtonBacking(face));
+    box(root, PALETTE.ink, topSectionButtonBacking(face));
     const button = doc.createElement("button");
     button.className = "adw-close";
     button.type = "button";
@@ -348,12 +353,12 @@ export function createNativeTopSection(
       text: config.heading,
     } as const;
     const element = createTextLine(doc, line);
-    root.append(element);
+    underlayElement.append(element);
     placed.push((scale) => placeText(title, scale, ORIGIN, element, line));
   }
   const money = doc.createElement("div");
   money.className = "adw-lines";
-  root.append(money);
+  underlayElement.append(money);
   const cashArt =
     layout.currency === undefined
       ? []
@@ -527,5 +532,6 @@ export function createNativeTopSection(
       shown = value;
       root.hidden = !value;
     },
+    underlayElement,
   };
 }

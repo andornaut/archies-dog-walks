@@ -5,13 +5,19 @@ import { PENDING_ATTRIBUTE } from "@andornaut/game-kit/runtime/web/ui/dom/imageR
 import { describe, expect, it, vi } from "vitest";
 
 import { gameData } from "../../data/index.ts";
-import { FakeDocument, fakeLayer, type FakeTarget } from "../../testing/fakeDom.ts";
+import {
+  FakeDocument,
+  type FakeElement,
+  fakeLayer,
+  type FakeTarget,
+} from "../../testing/fakeDom.ts";
 import { fontInk, fontInkRows, gameFont } from "../../testing/fontInk.ts";
 import { BUTTON_SIZE } from "../buttonGeometry.ts";
 import { domScale, fontPixel, gridRect } from "../domScale.ts";
 import { TOP_BAR_FACE, TOP_BAR_TRIM, TOP_BAR_WELL } from "../topBarTrim.ts";
 import { topSectionLayout } from "../topSection.ts";
 import { createNativeTopSection } from "./nativeTopSection.ts";
+import { followModalUnderlay } from "./rampDim.ts";
 const labels = {
   exit: gameData.homeText.quit.quit,
   menu: gameData.menuText.menu.title,
@@ -124,6 +130,41 @@ describe("native top section integration", () => {
       startedAt: undefined,
       via: "keyboard",
     });
+  });
+  it("dims only passive bar paint while foreground actions retain their native admission", async () => {
+    const { buttons, click, layer, press, reveal, view } = fixture("click", 6);
+    const root = view.element as unknown as FakeElement;
+    view.setAmount("123", "123");
+    view.setEffectCount(2);
+    reveal(true);
+    await Promise.resolve();
+    const passive = view.underlayElement as unknown as FakeElement;
+    expect(root.contains(passive)).toBe(true);
+    expect(passive.all().some((node) => node.textContent === "123")).toBe(true);
+    expect(passive.children.length).toBeGreaterThan(6);
+    for (const button of buttons) {
+      expect(passive.contains(button)).toBe(false);
+    }
+    const foreground = root.children.filter((node) => node !== passive);
+    expect(foreground).toHaveLength(4);
+    expect(
+      foreground.every((node) => node.tagName === "button" || node.style.width === "29px"),
+    ).toBe(true);
+    const stop = followModalUnderlay(layer.input, view.underlayElement);
+    const modal = layer.input.open();
+    expect(passive.style.filter).toBe("brightness(0.28)");
+    expect(root.style.filter ?? "").toBe("");
+    expect(passive.inert).toBe(true);
+    click();
+    expect(press).toHaveBeenCalledTimes(1);
+    const nested = layer.input.open();
+    expect(passive.style.filter).toBe("brightness(0.28)");
+    nested.close();
+    expect(passive.style.filter).toBe("brightness(0.28)");
+    modal.close();
+    expect(passive.style.filter ?? "").toBe("");
+    stop();
+    view.dispose();
   });
   it("keeps a hidden or covered section inactive and disposes its pending reveal", async () => {
     const { buttons, cancel, click, doc, element, layer, press, reveal, root, view } = fixture();

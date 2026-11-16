@@ -6,6 +6,7 @@ import {
   type NativeTopSection,
   type NativeTopSectionConfig,
 } from "../ui/dom/nativeTopSection.ts";
+import { followModalUnderlay } from "../ui/dom/rampDim.ts";
 import { loadSheet } from "../ui/dom/sheetFrames.ts";
 import { type UiLayer, uiLayer } from "../ui/dom/uiLayer.ts";
 import { pixelBitmapFont } from "../ui/phaser/pixelText.ts";
@@ -67,6 +68,7 @@ export function addNativeTopSection(
   const asleep = previous?.asleep ?? false;
   previous?.section.dispose();
   const view = createNativeTopSection(layer, { artUrl, loadSheet }, title, config);
+  const stopUnderlay = followModalUnderlay(layer.input, view.underlayElement);
   const release = () => view.buttons.forEach((button) => button.setPressed(false));
   const sleep = () => {
     entry.asleep = true;
@@ -95,6 +97,7 @@ export function addNativeTopSection(
       scene.events.off(Scenes.Events.SLEEP, sleep);
       scene.events.off(Scenes.Events.WAKE, wake);
       scene.events.off(Scenes.Events.SHUTDOWN, section.dispose);
+      stopUnderlay();
       view.dispose();
       syncSections(stack);
     },
