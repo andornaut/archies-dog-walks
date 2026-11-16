@@ -10,7 +10,6 @@ import { dollarText } from "../presentation/currency.ts";
 import { walkLength } from "../rules/route.ts";
 import { bodyTextWidth } from "../testing/bodyFont.ts";
 import { fontFileMetrics, inkWidth } from "../testing/fontInk.ts";
-import { DISMISS_FOOTER_SPACE, dismissFooter } from "../ui/modal/dismissFooter.ts";
 import { MODAL, modalActionWidth } from "../ui/modal/layout.ts";
 import { PAUSE_MENU_ITEMS } from "../ui/navigationMenu.ts";
 import { cents } from "../units.ts";
@@ -156,22 +155,13 @@ describe("the pause menu's note", () => {
   });
 });
 
-it("reserves a separate Close footer below confirmation actions without changing their order", () => {
-  const parts = {
+it("fits confirmation choices without a separate dismissal reservation", () => {
+  const layout = homeQuestionLayout(BODY, walkView, {
     buttonCount: HOME_QUESTION_ANSWERS.length,
-    footerSpace: DISMISS_FOOTER_SPACE,
     noteLines: 2,
-  };
-  const layout = homeQuestionLayout(BODY, walkView, parts);
-  const title = fontFileMetrics("font-title");
-  const footer = dismissFooter(
-    { inkWidth: (_font, text) => inkWidth("font-title", { scale: 2 }, text), title },
-    { label: gameData.menuText.common.close, primary: false },
-    layout.panel,
-  );
+  });
   const last = layout.buttons.at(-1)!;
-  expect(footer.rect.y - last.y - last.height).toBe(MODAL.gap);
-  expect(footer.rect.x + footer.rect.width / 2).toBe(layout.panel.x + layout.panel.width / 2);
-  expect(layout.panel.y + layout.panel.height - footer.rect.y - footer.rect.height).toBe(MODAL.pad);
+  expect(last.y + last.height + MODAL.pad).toBe(layout.panel.y + layout.panel.height);
+  expect(layout.notePlate.y + layout.notePlate.height).toBeLessThan(layout.buttons[0]!.y);
   expect(layout.buttons).toHaveLength(HOME_QUESTION_ANSWERS.length);
 });

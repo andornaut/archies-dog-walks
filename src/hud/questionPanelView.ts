@@ -6,7 +6,6 @@ import { withKeyNumber } from "../input/keyNumbers.ts";
 import { barTitleRoom } from "../ui/barTitle.ts";
 import { closeControl } from "../ui/closeControl.ts";
 import { arrangePanelActions } from "../ui/modal/actionGroup.ts";
-import { DISMISS_FOOTER_SPACE, dismissFooter } from "../ui/modal/dismissFooter.ts";
 import { modalActionWidth, modalTitleLayout } from "../ui/modal/layout.ts";
 import { cardTitleRow } from "../ui/modal/titleRow.ts";
 import type {
@@ -22,8 +21,7 @@ import { NOTE_PLATE, notePartTops, type pauseMenuLayout } from "./pauseMenu.ts";
 
 export interface PanelQuestion {
   readonly avoid?: Rect | undefined;
-  readonly footer?: Parameters<typeof dismissFooter>[1];
-  // Each button's label, top to bottom: the first is the call to action and key 1.
+  // Source label and digit order; placement moves the existing primary last.
   readonly labels: readonly string[];
   // pauseMenuLayout, the buttons then the note, or homeQuestionLayout, the note first.
   readonly layout: typeof pauseMenuLayout;
@@ -53,7 +51,6 @@ export function questionPanelView(
     avoid: question.avoid,
     buttonCount: shown.length,
     buttonWidths: shown.map((label) => modalActionWidth(widest("title", [label]))),
-    ...(question.footer === undefined ? {} : { footerSpace: DISMISS_FOOTER_SPACE }),
     ...(question.panelWidth === undefined ? {} : { panelWidth: question.panelWidth }),
     noteWidth: widest(
       "body",
@@ -124,16 +121,11 @@ export function questionPanelView(
     })),
   );
 
-  const actions = arrangePanelActions(measure, panel, "column", {
-    buttons,
-    ...(question.footer === undefined
-      ? {}
-      : { footer: dismissFooter(measure, question.footer, panel) }),
-  });
+  const actions = arrangePanelActions(measure, panel, "column", buttons);
   return {
-    ...actions,
+    buttons: actions,
     close,
-    covered: [insetRect(-1, panel), ...actions.buttons.map(({ hit }) => hit)],
+    covered: [insetRect(-1, panel), ...actions.map(({ hit }) => hit)],
     frame: "panel",
     note,
     notePlate: noted ? layout.notePlate : undefined,

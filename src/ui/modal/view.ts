@@ -100,12 +100,12 @@ export function modalCardView(
     measure,
     card,
     actions.some(({ rect }) => rect.y !== actions[0]?.rect.y) ? "column" : "row",
-    { buttons },
+    buttons,
   );
   return {
-    buttons: placed.buttons,
+    buttons: placed,
     close: closeControl(card),
-    covered: [card, ...placed.buttons.map(({ hit }) => hit)],
+    covered: [card, ...placed.map(({ hit }) => hit)],
     frame: "card",
     note: [],
     notePlate: undefined,

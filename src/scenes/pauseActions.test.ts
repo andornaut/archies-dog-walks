@@ -3,6 +3,8 @@ import { expect, it, vi } from "vitest";
 import { gameData } from "../data/index.ts";
 import { PauseScene, type PauseSceneData } from "./PauseScene.ts";
 import type { QuestionPanel } from "./questionPanel.ts";
+import { QuitScene } from "./QuitScene.ts";
+import { SCENE_KEYS } from "./sceneKeys.ts";
 
 const questionPanel = vi.fn<(scene: unknown, area: unknown, question: QuestionPanel) => undefined>(
   () => undefined,
@@ -24,6 +26,7 @@ vi.mock("./soundboard.ts", async (original) => ({
 }));
 
 it("keeps only the existing safe Keep walking and End walk answers in the confirmation", () => {
+  questionPanel.mockClear();
   const onResume = vi.fn();
   const onHeadHome = vi.fn();
   const mount = (
@@ -42,7 +45,7 @@ it("keeps only the existing safe Keep walking and End walk answers in the confir
     },
   );
   const question = questionPanel.mock.calls[0]![2];
-  expect(question.footer).toBeUndefined();
+  expect("footer" in question).toBe(false);
   expect(question.entries.map(({ label }) => label)).toEqual([
     gameData.runText.homeQuestion.keepWalking,
     gameData.runText.homeQuestion.headHome,
@@ -53,4 +56,21 @@ it("keeps only the existing safe Keep walking and End walk answers in the confir
   question.entries[1]!.press();
   expect(onHeadHome).toHaveBeenCalledOnce();
   expect(stopMusic).toHaveBeenCalledOnce();
+});
+
+it("keeps Quit's safe answer and corner cancel without a duplicate labelled Close", () => {
+  questionPanel.mockClear();
+  const mount = (
+    QuitScene.prototype as unknown as {
+      mount: (data: { resume: string }) => boolean;
+    }
+  ).mount;
+  mount.call({}, { resume: SCENE_KEYS.start });
+  const question = questionPanel.mock.calls[0]![2];
+  expect("footer" in question).toBe(false);
+  expect(question.entries.map(({ label }) => label)).toEqual([
+    gameData.homeText.quit.keepPlaying,
+    gameData.homeText.quit.quit,
+  ]);
+  expect(question.close).toBe(question.entries[0]!.press);
 });

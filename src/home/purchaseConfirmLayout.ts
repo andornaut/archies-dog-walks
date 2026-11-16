@@ -5,7 +5,6 @@ import { barTitleRoom } from "../ui/barTitle.ts";
 import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";
 import { closeControl } from "../ui/closeControl.ts";
 import { helpCapDy } from "../ui/labelHelpGap.ts";
-import { DISMISS_FOOTER_SPACE } from "../ui/modal/dismissFooter.ts";
 import { MODAL, modalActionWidth, modalFamilyWidth, modalRect } from "../ui/modal/layout.ts";
 import { cardTitleRow } from "../ui/modal/titleRow.ts";
 import { overlayRegion } from "./homeBar.ts";
@@ -49,11 +48,7 @@ export function purchaseConfirmLayout(
   const leftTop = confirmLeftCapTop(fonts.title, priceTop);
   const buttonsTop = leftTop + inkRowsFromCapTop(fonts.body) * 2 + MODAL.gap;
   const height =
-    buttonsTop +
-    BUTTON_HEIGHT +
-    (stacked ? BUTTON_HEIGHT + BUTTON_SIZE.stackGap : 0) +
-    MODAL.pad +
-    DISMISS_FOOTER_SPACE;
+    buttonsTop + BUTTON_HEIGHT + (stacked ? BUTTON_HEIGHT + BUTTON_SIZE.stackGap : 0) + MODAL.pad;
   const placed = modalRect(overlayRegion("home"), undefined, { height, width });
   const middle = placed.x + width / 2;
   const row = cardTitleRow(placed);

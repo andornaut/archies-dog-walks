@@ -1,13 +1,13 @@
 import { fillNames, wrapWords } from "@andornaut/game-kit/runtime/lines";
 import { containsPoint, rectsOverlap } from "@andornaut/game-kit/runtime/rect";
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import { gameData } from "../data/index.ts";
 import { SCREEN_LAYOUT } from "../data/screen.ts";
 import { dollarText } from "../presentation/currency.ts";
 import { bodyTextWidth } from "../testing/bodyFont.ts";
 import { fontFileMetrics, gameFont, inkWidth } from "../testing/fontInk.ts";
-import { DISMISS_FOOTER_SPACE } from "../ui/modal/dismissFooter.ts";
+import { MODAL } from "../ui/modal/layout.ts";
 import { modalTitleInk } from "../ui/modal/titleRole.ts";
 import { type PanelMeasure, type PanelText } from "../ui/modal/types.ts";
 import { PAUSE_MENU_ITEMS } from "../ui/navigationMenu.ts";
@@ -113,38 +113,23 @@ describe.each(PANELS)("questionPanelView for $name", ({ note, ...question }) => 
   });
 });
 
-it("passes the separate dismiss reservation without inserting a semantic choice", () => {
-  const layout = vi.fn(homeQuestionLayout);
+it("keeps the existing safe End-walk answer last without a redundant dismissal row", () => {
   const labels = [
     gameData.runText.homeQuestion.keepWalking,
     gameData.runText.homeQuestion.headHome,
   ];
-  const input = {
+  const view = questionPanelView(MEASURE, walkView, {
     labels,
-    layout,
+    layout: homeQuestionLayout,
     note: [],
-    primary: "first" as const,
     sentenceLines: false,
     showKeyNumbers: false,
     title: gameData.runText.homeQuestion.title,
-  };
-  const view = questionPanelView(MEASURE, walkView, {
-    ...input,
-    footer: { label: gameData.menuText.common.close, primary: false },
   });
-  expect(
-    layout.mock.calls.every(
-      ([, , parts]) => "footerSpace" in parts && parts.footerSpace === DISMISS_FOOTER_SPACE,
-    ),
-  ).toBe(true);
   expect(view.buttons.map(({ label }) => label)).toEqual([labels[1], labels[0]]);
   expect(view.buttons.map(({ primary }) => primary)).toEqual([false, true]);
-  const ordered = [...view.buttons, view.footer!].sort((a, b) => a.rect.y - b.rect.y);
-  expect(ordered.map(({ primary }) => primary)).toEqual([false, false, true]);
-  expect(new Set(ordered.map(({ rect }) => rect.width)).size).toBe(1);
-  expect(view.footer).toMatchObject({ label: gameData.menuText.common.close, primary: false });
-  expect(view.footer!.rect.x + view.footer!.rect.width / 2).toBe(
-    view.panel.x + view.panel.width / 2,
+  expect(view.footer).toBeUndefined();
+  expect(view.buttons.at(-1)!.rect.y + view.buttons.at(-1)!.rect.height + MODAL.pad).toBe(
+    view.panel.y + view.panel.height,
   );
-  expect(questionPanelView(MEASURE, walkView, input).footer).toBeUndefined();
 });

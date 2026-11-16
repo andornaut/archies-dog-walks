@@ -636,7 +636,7 @@ export class StartScene extends Scene {
       }
     });
   }
-  private homePressDown(pointer: { x: number; y: number }): void {
+  private homePressDown(pointer: { x: number; y: number }, native = false): void {
     addTapBurst(this, pointer.x, pointer.y);
     // The top bar stays lit over an open card, and its buttons take their presses.
     if (
@@ -651,8 +651,9 @@ export class StartScene extends Scene {
     }
     this.pressedTarget = this.targetAt(pointer.x, pointer.y);
     const kind = this.pressedTarget?.kind;
+    const detail = kind === "dog" || kind === "gear" || kind === "walker";
     this.hold =
-      kind === "dog" || kind === "gear" || kind === "walker"
+      this.pressedTarget !== undefined && (!native || detail)
         ? startHold(
             holdRule(gameData.tuning, TILE_SLOP_PX),
             { x: pointer.x, y: pointer.y },
@@ -701,10 +702,22 @@ export class StartScene extends Scene {
       return;
     }
     if (release === "hold") {
-      this.openDetail(pressed);
+      this.dispatchHeld(pressed);
     } else if (release === "tap") {
       this.actAfterDip(target);
     }
+  }
+  private dispatchHeld(target: Target): void {
+    if (target.kind === "dog" || target.kind === "gear" || target.kind === "walker") {
+      this.openDetail(target);
+      return;
+    }
+    this.hold = undefined;
+    this.pressedTarget = undefined;
+    if (this.press !== undefined) {
+      this.press.held = false;
+    }
+    this.actAfterDip(target);
   }
   private onKey({ code, shiftKey }: Pick<KeyboardEvent, "code" | "shiftKey">): void {
     if (!this.nativeReady || (this.overlay === undefined && this.nativeHome?.accepts() !== true)) {
@@ -1200,10 +1213,25 @@ export class StartScene extends Scene {
   override update(): void {
     const now = this.time.now;
     if (this.hold !== undefined) {
-      const { fire, press } = tickHold(now, this.hold);
-      this.hold = press;
-      if (fire && this.pressedTarget !== undefined) {
-        this.openDetail(this.pressedTarget);
+      const target = this.pressedTarget;
+      const current = this.targetAt(this.hold.start.x, this.hold.start.y);
+      if (
+        this.nativeHome?.accepts() !== true ||
+        target === undefined ||
+        current === undefined ||
+        targetId(current) !== targetId(target)
+      ) {
+        this.hold = undefined;
+        this.pressedTarget = undefined;
+        if (this.press !== undefined) {
+          this.press.held = false;
+        }
+      } else {
+        const { fire, press } = tickHold(now, this.hold);
+        this.hold = press;
+        if (fire) {
+          this.dispatchHeld(target);
+        }
       }
     }
     this.place(now);
@@ -1374,7 +1402,7 @@ export class StartScene extends Scene {
           this.press = undefined;
         }
       },
-      down: (event) => this.homePressDown(toGame(event)),
+      down: (event) => this.homePressDown(toGame(event), true),
       move: (event) => this.homePressMove({ ...toGame(event), isDown: event.buttons !== 0 }),
       painted: () => {
         if (!this.nativeReady) {
@@ -1565,12 +1593,11 @@ export class StartScene extends Scene {
     const view = detailView(this, HOME_REGION, { card, kind: target.kind, picture });
     const close = () => this.closeOverlay();
     this.htmlDetail = keepPanel(this.htmlDetail, JSON.stringify([view, this.closePressed()]), () =>
-      addHtmlDetailCard(this, view, close, this.closePressed(), {
+      addHtmlDetailCard(this, HOME_REGION, view, close, this.closePressed(), {
         area: HOME_REGION,
         dismiss: close,
       }),
     );
-    layer.add(addModalShade(this, HOME_REGION));
     this.overlay = { ...overlay, rect: view.card.panel };
   }
   // A dog, gear item or walker's full card, owned or not.

@@ -28,7 +28,6 @@ import { questionPanelView } from "../hud/questionPanelView.ts";
 import { pageFrameTurn } from "../pwa/index.ts";
 import { loadSheet } from "../ui/dom/sheetFrames.ts";
 import { uiLayer } from "../ui/dom/uiLayer.ts";
-import { dismissFooter } from "../ui/modal/dismissFooter.ts";
 import { type CardAction, type PanelNotePart, type QuestionPanelView } from "../ui/modal/types.ts";
 import { modalCardView } from "../ui/modal/view.ts";
 import { displayBitmapFont, hasDisplayFont } from "../ui/phaser/displayText.ts";
@@ -48,9 +47,8 @@ export interface QuestionPanel {
   readonly avoid?: Rect;
   // What the close control in the panel's top-right corner does, as a tap outside the panel does.
   readonly close: () => void;
-  // Top to bottom, the first the call to action and key 1.
+  // Source callback and digit order; placement moves the existing primary last.
   readonly entries: readonly PanelEntry[];
-  readonly footer?: Parameters<typeof dismissFooter>[1];
   // pauseMenuLayout, the buttons then the note, or homeQuestionLayout, the note first.
   readonly layout: typeof pauseMenuLayout;
   // No parts draws no note plate.
@@ -68,7 +66,6 @@ export interface QuestionPanel {
 export function questionView(scene: Scene, area: Rect, question: QuestionPanel): QuestionPanelView {
   return questionPanelView(canvasPanelMeasure(scene), area, {
     avoid: question.avoid,
-    ...(question.footer === undefined ? {} : { footer: question.footer }),
     labels: question.entries.map(({ label }) => label),
     layout: question.layout,
     note: question.note,
@@ -193,17 +190,13 @@ export function addHtmlModalCard(
   title: string,
   entries: readonly CardEntry[],
   close: () => void,
-  footer?: Parameters<typeof dismissFooter>[1],
 ): DomQuestionPanel | undefined {
   const place = htmlPanelPlace(scene);
   if (place === undefined) {
     return undefined;
   }
   const measure = canvasPanelMeasure(scene);
-  const view = {
-    ...modalCardView(measure, card, title, entries),
-    ...(footer === undefined ? {} : { footer: dismissFooter(measure, footer, card) }),
-  };
+  const view = modalCardView(measure, card, title, entries);
   const presses = entries.map(({ press }) => press);
   const panel = showQuestionPanel(place.layer, {
     close,

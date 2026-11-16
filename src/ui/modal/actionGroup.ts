@@ -10,15 +10,11 @@ export function arrangePanelActions(
   measure: Pick<PanelMeasure, "inkWidth">,
   panel: Rect,
   direction: "column" | "row",
-  group: { readonly buttons: readonly PanelButton[]; readonly footer?: PanelButton },
-): { buttons: PanelButton[]; footer?: PanelButton } {
-  const actions = group.buttons.map((button, index) => ({
+  buttons: readonly PanelButton[],
+): PanelButton[] {
+  const actions = buttons.map((button, index) => ({
     button: { ...button, actionIndex: button.actionIndex ?? index },
-    footer: false,
   }));
-  if (group.footer !== undefined && direction === "column") {
-    actions.push({ button: { ...group.footer, actionIndex: -1 }, footer: true });
-  }
   const slots = actions.map(({ button }) => button.rect).sort((a, b) => a.y - b.y || a.x - b.x);
   actions.sort((a, b) => Number(a.button.primary) - Number(b.button.primary));
   const widths = actions.map(({ button }) =>
@@ -33,7 +29,7 @@ export function arrangePanelActions(
     throw new RangeError("Action group exceeds the panel's fixed-font room");
   }
   let rowX = panel.x + (panel.width - rowWidth) / 2;
-  const placed = actions.map(({ button, footer }, index) => {
+  return actions.map(({ button }, index) => {
     const width = direction === "column" ? commonWidth : widths[index]!;
     const rect = {
       ...button.rect,
@@ -45,33 +41,24 @@ export function arrangePanelActions(
     const dx = rect.x - button.rect.x;
     const dy = rect.y - button.rect.y;
     return {
-      button: {
-        ...button,
-        hit: {
-          ...button.hit,
-          width: button.hit.width + width - button.rect.width,
-          x: button.hit.x + dx,
-          y: button.hit.y + dy,
-        },
-        ...(button.key === undefined
-          ? {}
-          : {
-              key: {
-                ...button.key,
-                capTop: button.key.capTop + dy,
-                centreX: button.key.centreX + dx,
-              },
-            }),
-        rect,
-        text: { ...button.text, capTop: button.text.capTop + dy, centreX: rect.x + width / 2 },
+      ...button,
+      hit: {
+        ...button.hit,
+        width: button.hit.width + width - button.rect.width,
+        x: button.hit.x + dx,
+        y: button.hit.y + dy,
       },
-      footer,
+      ...(button.key === undefined
+        ? {}
+        : {
+            key: {
+              ...button.key,
+              capTop: button.key.capTop + dy,
+              centreX: button.key.centreX + dx,
+            },
+          }),
+      rect,
+      text: { ...button.text, capTop: button.text.capTop + dy, centreX: rect.x + width / 2 },
     };
   });
-  const footer =
-    direction === "column" ? placed.find((action) => action.footer)?.button : group.footer;
-  return {
-    buttons: placed.filter((action) => !action.footer).map(({ button }) => button),
-    ...(footer === undefined ? {} : { footer }),
-  };
 }

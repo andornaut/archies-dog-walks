@@ -5,10 +5,10 @@ import { PAUSE_PANEL } from "../data/layout.ts";
 import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";
 import { MODAL, modalFamilyWidth, modalRect } from "../ui/modal/layout.ts";
 
-// The Home question's answers, top to bottom: the safe one first, as the primary and key 1.
+// Source digit order: the safe primary keeps key 1 and is placed last visually.
 export const HOME_QUESTION_ANSWERS = ["keepWalking", "headHome"] as const;
 
-// The Quit question's answers, top to bottom, as the Home question's: the safe one first.
+// Source digit order, with the safe primary retaining key 1.
 export const QUIT_QUESTION_ANSWERS = ["keepPlaying", "quit"] as const;
 
 // Offsets from the panel's top-left corner, and the room under the last part.
@@ -47,7 +47,6 @@ const HIT_REACH = PAUSE_PANEL.hitReach;
 interface QuestionParts {
   avoid?: Rect | undefined;
   buttonCount: number;
-  footerSpace?: number;
   buttonWidths?: readonly number[];
   noteLines: number;
   noteWidth?: number;
@@ -84,10 +83,7 @@ function panelLayout(
   const noteFirstY = header;
   const buttonsY = noteFirst && noted ? noteFirstY + noteHeight + MODAL.gap : header;
   const noteY = noteFirst ? noteFirstY : header + buttonsHeight + NOTE_PLATE.gap;
-  const height =
-    Math.max(buttonsY + buttonsHeight, noted ? noteY + noteHeight : 0) +
-    BOTTOM +
-    (parts.footerSpace ?? 0);
+  const height = Math.max(buttonsY + buttonsHeight, noted ? noteY + noteHeight : 0) + BOTTOM;
   const widths = Array.from(
     { length: buttonCount },
     (_, i) => parts.buttonWidths?.[i] ?? Math.min(BUTTON.width, width - 2 * MODAL.pad),

@@ -120,7 +120,7 @@ it("grows and recentres detail and badge cards rather than covering the final bo
   }
 });
 
-it("keeps purchase choices above a separate nonprimary dismissal row", () => {
+it("keeps only the purchase choices and corner close control", () => {
   const lines = confirmLines(gameData, {
     bankAfter: cents(0),
     name: gameData.shopGear.runningShoes.name,
@@ -132,14 +132,13 @@ it("keeps purchase choices above a separate nonprimary dismissal row", () => {
     picture: { key: "missing-test-art", scale: 1 },
     pressed: undefined,
   });
-  const close = footer(purchase.card.panel, purchase.card.footer, false);
+  expect(purchase.card.footer).toBeUndefined();
   expect(purchase.card.buttons.map(({ label, primary }) => ({ label, primary }))).toEqual([
     { label: lines.cancel, primary: false },
     { label: lines.buy, primary: true },
   ]);
-  for (const button of purchase.card.buttons) {
-    expect(button.rect.y + button.rect.height).toBeLessThanOrEqual(close.rect.y - MODAL.gap);
-  }
+  const bottom = Math.max(...purchase.card.buttons.map(({ rect }) => rect.y + rect.height));
+  expect(bottom + MODAL.pad).toBe(purchase.card.panel.y + purchase.card.panel.height);
 });
 
 it("keeps the Shop and Logbook scroll viewport clear of their centred footer", () => {
