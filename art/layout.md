@@ -44,7 +44,7 @@ Choose one content rectangle for each page. Derive its outer margins, button edg
 | SHOP_LAYOUT.list   | Top 148; height 324; bottom 472                       | y px           | Shared scrolling viewport                                    | [shop layout](../src/home/shopLayout.ts)               |
 | page.dismissFooter | Top 480; height 48; bottom 528                        | y,h px         | Large list panel, 8px after list and 16px above panel bottom | [dismissal geometry](../src/ui/modal/dismissFooter.ts) |
 
-Shop and Logbook share their page and list geometry. Use `shopListFrame` and `statsListFrame` for the actual scrolling/non-scrolling content room, rather than treating the page frame as the text rectangle. Other full-screen pages retain their own bounds.
+Shop and Logbook share their page and list geometry. Use `shopListFrame` and `statsListFrame` for the actual scrolling/non-scrolling content room, rather than treating the page frame as the text rectangle. Settings uses Large width and a height capped by both its caller's safe capacity and `560 - 2 × 48 = 464px`; a full-height panel starts at y = 48 below the protected top bar. Its header/X, full-size version label above the centred Close footer and footer stay fixed while only rows and separators scroll. Focused Settings rows retain a complete inset 2-art-pixel cyan ring. Other full-screen pages retain their own bounds.
 
 ## Groups/columns
 
@@ -80,7 +80,7 @@ Visible faces, touch targets and focus outlines are separate rectangles. Keep th
 
 Modal actions use their full measured label/icon width plus padding, not the non-modal compact/wide width floors. Preserve prices, goals, reasons and full-size labels in every state.
 
-HUD effect geometry follows the [walk-bar exception](controls.md#sizing-and-spacing): 24×24 native icons in 26×26 wells, no extra gap or horizontal hold inset, y = 6 wells and y = 7 icons. Size the group from the visible count, with no empty reservations, and centre it within `[102,264)` on x = 183; six wells span 156px and start at x = 105,131,157,183,209,235, while two start at x = 157,183. The fixed cash well is `(5,5,97,29)`, with 84px of ink room at 3× scale. Sound and Pause/Menu faces remain `(278,9,20,20)` and `(326,9,20,20)`, within unchanged 48px targets and centred on 29×29 dark backings at y = 5.
+HUD effect geometry follows the [walk-bar exception](controls.md#sizing-and-spacing): 24×24 native icons in 26×26 wells, no extra gap or horizontal hold inset, y = 6 wells and y = 7 icons. Size the group from the visible count, with no empty reservations, and centre it within `[102,264)` on x = 183; six wells span 156px and start at x = 105,131,157,183,209,235, while two start at x = 157,183. The fixed cash well is `(5,5,97,29)`, with 84px of ink room at 3× scale. Centre the current dollar-sign/amount visible-ink union horizontally and vertically; the reserved maximum width is not an alignment box. Native faces, glyphs and wells share the same layout projection. Sound and Pause/Menu faces remain `(278,9,20,20)` and `(326,9,20,20)`, within unchanged 48px targets and centred on 29×29 dark backings at y = 5.
 
 ## Modals
 
