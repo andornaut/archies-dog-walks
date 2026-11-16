@@ -1,6 +1,7 @@
 import type { Point } from "@andornaut/game-kit/runtime/rect";
 import type { BitmapFont } from "@andornaut/game-kit/runtime/text/bitmapFont";
 
+import { gameData } from "../../data/index.ts";
 import { SLICES } from "../../data/layout.ts";
 import type { VolumeKey } from "../../home/settings.ts";
 import type {
@@ -9,6 +10,7 @@ import type {
   SettingsText,
   SettingsView,
 } from "../../home/settingsView.ts";
+import { read } from "../../rules/units.ts";
 import {
   type DomArtSource,
   imageArt,
@@ -127,6 +129,7 @@ function rowPart(
   current: () => SettingsView,
   panel: () => DomQuestionPanel,
   index: number,
+  origin: () => Point,
   burst: (event: PointerEvent) => void,
 ) {
   const doc = layer.element.ownerDocument;
@@ -177,7 +180,7 @@ function rowPart(
   const place = (scale: DomScale) => {
     const row = view();
     const { rect } = row;
-    placeBox(scale, ORIGIN, element, rect);
+    placeBox(scale, origin(), element, rect);
     if (row.face !== undefined) {
       face.style.backgroundColor = hex(row.face.colour);
       placeBox(scale, rect, face, row.face.rect);
@@ -225,11 +228,14 @@ function rowPart(
   element.addEventListener("mousedown", (event) => event.preventDefault());
   let pressing: SettingsTarget | undefined;
   let sliding = false;
+  let touch: { start: Point; key?: VolumeKey; vertical: boolean } | undefined;
+  const slop = read(gameData.tuning, "pixels", "tapMaxDistance");
   const cancel = () => {
     const wasPressing = pressing !== undefined;
     const wasSliding = sliding;
     pressing = undefined;
     sliding = false;
+    touch = undefined;
     if (wasPressing) {
       input.press.up(undefined, true);
     }
@@ -245,6 +251,7 @@ function rowPart(
         if (element.hasPointerCapture(event.pointerId)) {
           element.releasePointerCapture(event.pointerId);
         }
+        touch = event.pointerType === "touch" ? { start: at(event), vertical: false } : undefined;
         const target = rowTarget(view());
         if (target !== undefined) {
           pressing = target;
@@ -252,21 +259,59 @@ function rowPart(
         } else if (view().kind === "slider") {
           const { key } = view();
           if (key === "musicVolume" || key === "sfxVolume") {
-            sliding = true;
-            input.slide.start(key, at(event).x);
+            if (touch !== undefined) {
+              touch.key = key;
+            } else {
+              sliding = true;
+              input.slide.start(key, at(event).x);
+            }
           }
         }
       },
       gate: { accepts: () => panel().accepts(), capture: () => panel().capture() },
       move: (event) => {
+        if (touch !== undefined && !sliding && !touch.vertical) {
+          const point = at(event);
+          const dx = Math.abs(point.x - touch.start.x);
+          const dy = Math.abs(point.y - touch.start.y);
+          if (Math.max(dx, dy) > slop) {
+            if (dy >= dx) {
+              touch.vertical = true;
+              if (pressing !== undefined) {
+                pressing = undefined;
+                input.press.up(undefined, true);
+              }
+            } else if (touch.key !== undefined) {
+              sliding = true;
+              input.slide.start(touch.key, point.x);
+            }
+          }
+        }
         if (sliding) {
           input.slide.move(at(event).x);
         }
       },
       subscribe: layer.input.subscribe,
       up: (event, cancelled) => {
+        if (touch !== undefined && !sliding) {
+          const point = at(event);
+          const dx = Math.abs(point.x - touch.start.x);
+          const dy = Math.abs(point.y - touch.start.y);
+          if (dy > slop && dy >= dx) {
+            touch.vertical = true;
+          }
+          if (touch.vertical && pressing !== undefined) {
+            pressing = undefined;
+            input.press.up(undefined, true);
+          }
+        }
         const target = pressing;
+        if (!cancelled && touch?.key !== undefined && !touch.vertical && !sliding) {
+          sliding = true;
+          input.slide.start(touch.key, at(event).x);
+        }
         const wasSliding = sliding;
+        touch = undefined;
         pressing = undefined;
         sliding = false;
         if (target !== undefined) {
@@ -371,6 +416,11 @@ export function showSettings(layer: UiLayer, input: DomSettingsInput): DomSettin
   let current = input.view;
   const burst = (event: PointerEvent) =>
     addTapBurst(layer, input.toGame({ x: event.clientX, y: event.clientY }));
+  const viewport = doc.createElement("div");
+  viewport.className = "adw-settings-rows adw-framed";
+  const content = doc.createElement("div");
+  content.className = "adw-framed";
+  viewport.append(content);
   const rows = current.rows.map((_, i) =>
     rowPart(
       layer,
@@ -378,6 +428,7 @@ export function showSettings(layer: UiLayer, input: DomSettingsInput): DomSettin
       () => current,
       () => panel,
       i,
+      () => current.rowsViewport,
       burst,
     ),
   );
@@ -387,17 +438,45 @@ export function showSettings(layer: UiLayer, input: DomSettingsInput): DomSettin
     return element;
   });
   const build = textElement(doc, input.fonts);
+  content.append(...rows.map((row) => row.element), ...separators);
+  const revealRow = (index: number | undefined) => {
+    const row = index === undefined ? undefined : current.rows[index];
+    if (row === undefined) {
+      return;
+    }
+    const scale = layer.scale();
+    const top = gridY(scale, row.rect.y) - gridY(scale, current.rowsViewport.y);
+    const bottom =
+      gridY(scale, row.rect.y + row.rect.height) - gridY(scale, current.rowsViewport.y);
+    const height =
+      gridY(scale, current.rowsViewport.y + current.rowsViewport.height) -
+      gridY(scale, current.rowsViewport.y);
+    const scroll = viewport.scrollTop || 0;
+    viewport.scrollTop = top < scroll ? top : bottom > scroll + height ? bottom - height : scroll;
+  };
   const parts: DomPart[] = [
-    ...rows.map(({ element, place, ready }) => ({ controls: [element], element, place, ready })),
-    ...separators.map((element, i) => ({
-      element,
-      place: (scale: DomScale) => {
-        const rect = current.separators[i];
-        if (rect !== undefined) {
-          placeFrame(scale, ORIGIN, element, rect);
+    {
+      controls: rows.map((row) => row.element),
+      element: viewport,
+      place: (scale) => {
+        placeBox(scale, ORIGIN, viewport, current.rowsViewport);
+        content.style.height = `${
+          gridY(scale, current.rowsViewport.y + current.rowsContentHeight) -
+          gridY(scale, current.rowsViewport.y)
+        }px`;
+        content.style.width = "100%";
+        for (const row of rows) {
+          row.place(scale);
         }
+        separators.forEach((element, index) => {
+          const rect = current.separators[index];
+          if (rect !== undefined) {
+            placeFrame(scale, current.rowsViewport, element, rect);
+          }
+        });
       },
-    })),
+      ready: Promise.all(rows.map((row) => row.ready)).then((urls) => urls.flat()),
+    },
     { element: build.element, place: (scale) => build.place(scale, ORIGIN, current.build) },
   ];
   const panel = showQuestionPanel(layer, {
@@ -405,7 +484,10 @@ export function showSettings(layer: UiLayer, input: DomSettingsInput): DomSettin
     closeLabel: input.closeLabel,
     fonts: input.fonts,
     numberKeys: false,
-    onFocus: (index) => input.onFocus(index ?? null),
+    onFocus: (index) => {
+      revealRow(index);
+      input.onFocus(index ?? null);
+    },
     parts,
     presses: [],
     toGame: input.toGame,
@@ -471,6 +553,7 @@ export function showSettings(layer: UiLayer, input: DomSettingsInput): DomSettin
         panel.setDimmed(dimmed);
       }
       if (steps === undefined) {
+        revealRow(focus ?? undefined);
         panel.focusControl(focus ?? undefined);
       }
     },

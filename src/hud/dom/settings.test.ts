@@ -3,7 +3,12 @@ import { expect, it, vi } from "vitest";
 import { gameData } from "../../data/index.ts";
 import { SCREEN_CONFIG, SCREEN_LAYOUT } from "../../data/screen.ts";
 import { installStepsLayout, settingsLayout } from "../../home/settings.ts";
-import { SETTING_ROWS, type SettingsMeasure, settingsView } from "../../home/settingsView.ts";
+import {
+  INSTALL_ROW,
+  SETTING_ROWS,
+  type SettingsMeasure,
+  settingsView,
+} from "../../home/settingsView.ts";
 import { DEFAULT_SETTINGS } from "../../save/settings.ts";
 import { FakeDocument, fakeLayer } from "../../testing/fakeDom.ts";
 import { fontFileMetrics, gameFont } from "../../testing/fontInk.ts";
@@ -11,7 +16,8 @@ import { domScale } from "../../ui/domScale.ts";
 import { modalTitleInk } from "../../ui/modal/titleRole.ts";
 import { type DomSettingsInput, showSettings } from "./settings.ts";
 
-function fixture() {
+function fixture(install = false) {
+  const configuredRows = [...SETTING_ROWS, ...(install ? [INSTALL_ROW] : [])];
   const fonts = { body: fontFileMetrics("font-body"), title: fontFileMetrics("font-title") };
   const measure: SettingsMeasure = {
     ...fonts,
@@ -24,7 +30,7 @@ function fixture() {
   const layout = settingsLayout(
     fonts,
     SCREEN_CONFIG,
-    SETTING_ROWS.map((row) =>
+    configuredRows.map((row) =>
       row.kind === "slider" ? { kind: "slider" } : { kind: row.kind, noteLines: 1 },
     ),
   );
@@ -34,7 +40,7 @@ function fixture() {
       {
         art: () => ({ height: 16, width: 16 }),
         layout,
-        rows: SETTING_ROWS,
+        rows: configuredRows,
         words: gameData.menuText.settings,
       },
       {
@@ -172,4 +178,67 @@ it("cancels a Settings touch across hiding and restores its switch, X and Close 
   });
   shown.destroy();
   expect(layer.press.canvasAllowed()).toBe(true);
+});
+
+it("scrolls touch slider rows without changing volume until horizontal intent or a tap release", () => {
+  const { doc, element, shown, slide } = fixture();
+  const row = element.all().find((part) => part.getAttribute("role") === "slider")!;
+  const event = (pointerId: number, x: number, y: number) => ({
+    clientX: x,
+    clientY: y,
+    pointerId,
+    pointerType: "touch",
+    preventDefault: vi.fn(),
+    stopImmediatePropagation: vi.fn(),
+    target: row,
+    type: "pointerdown",
+  });
+  row.fire("pointerdown", event(41, 100, 150));
+  expect(slide.start).not.toHaveBeenCalled();
+  doc.fire("pointermove", event(41, 102, 180));
+  doc.fire("pointerup", event(41, 102, 180));
+  expect(slide.start).not.toHaveBeenCalled();
+  expect(slide.move).not.toHaveBeenCalled();
+  expect(slide.end).not.toHaveBeenCalled();
+  row.fire("pointerdown", event(42, 100, 150));
+  doc.fire("pointermove", event(42, 130, 152));
+  expect(slide.start).toHaveBeenCalledExactlyOnceWith("musicVolume", 130);
+  doc.fire("pointerup", event(42, 140, 152));
+  expect(slide.end).toHaveBeenCalledExactlyOnceWith(false);
+  slide.start.mockClear();
+  slide.end.mockClear();
+  row.fire("pointerdown", event(43, 100, 150));
+  doc.fire("pointerup", event(43, 103, 151));
+  expect(slide.start).toHaveBeenCalledExactlyOnceWith("musicVolume", 103);
+  expect(slide.end).toHaveBeenCalledExactlyOnceWith(false);
+  shown.destroy();
+});
+
+it("keeps the card chrome fixed while revealing whole focused rows inside its native viewport", () => {
+  const { element, shown, view } = fixture(true);
+  const current = view();
+  const viewport = element.all().find((part) => part.className.includes("adw-settings-rows"))!;
+  const rows = element.all().filter((part) => part.className === "adw-row");
+  const last = current.rows.length - 1;
+  const rect = { ...current.rowsViewport, height: current.rows[last]!.rect.height };
+  const small = { ...current, rowsViewport: rect };
+  const footer = element
+    .all()
+    .find(
+      (part) =>
+        part.className.includes("adw-button") &&
+        part.getAttribute("aria-label") === gameData.menuText.common.close,
+    )!;
+  const footerTop = footer.style.top;
+  shown.update(small, last);
+  const scroll = (viewport as unknown as HTMLElement).scrollTop;
+  expect(scroll).toBe(
+    current.rows[last]!.rect.y + current.rows[last]!.rect.height - rect.y - rect.height,
+  );
+  expect(viewport.style.height).toBe(`${rect.height}px`);
+  expect(rows[0]!.style.top).toBe("0px");
+  expect(footer.style.top).toBe(footerTop);
+  shown.update(small, 0);
+  expect((viewport as unknown as HTMLElement).scrollTop).toBe(0);
+  shown.destroy();
 });
