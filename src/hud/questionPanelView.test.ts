@@ -66,11 +66,18 @@ describe.each(PANELS)("questionPanelView for $name", ({ note, ...question }) => 
     note: [{ colour: 0, text: note }],
   });
 
-  it("labels each button in order, the first the call to action", () => {
-    expect(view.buttons.map(({ label }) => label)).toEqual(question.labels);
+  it("keeps the original safe primary last while preserving action and digit identities", () => {
+    expect(view.buttons.map(({ label }) => label)).toEqual([
+      ...question.labels.slice(1),
+      question.labels[0],
+    ]);
     expect(view.buttons.map(({ primary }) => primary)).toEqual(
-      question.labels.map((_, i) => i === 0),
+      question.labels.map((_, i) => i === question.labels.length - 1),
     );
+    expect(view.buttons.map(({ actionIndex }) => actionIndex)).toEqual([
+      ...question.labels.slice(1).map((_, i) => i + 1),
+      0,
+    ]);
   });
 
   it("keeps every line's ink inside its box and the title clear of the close control", () => {
@@ -130,8 +137,11 @@ it("passes the separate dismiss reservation without inserting a semantic choice"
       ([, , parts]) => "footerSpace" in parts && parts.footerSpace === DISMISS_FOOTER_SPACE,
     ),
   ).toBe(true);
-  expect(view.buttons.map(({ label }) => label)).toEqual(labels);
-  expect(view.buttons.map(({ primary }) => primary)).toEqual([true, false]);
+  expect(view.buttons.map(({ label }) => label)).toEqual([labels[1], labels[0]]);
+  expect(view.buttons.map(({ primary }) => primary)).toEqual([false, true]);
+  const ordered = [...view.buttons, view.footer!].sort((a, b) => a.rect.y - b.rect.y);
+  expect(ordered.map(({ primary }) => primary)).toEqual([false, false, true]);
+  expect(new Set(ordered.map(({ rect }) => rect.width)).size).toBe(1);
   expect(view.footer).toMatchObject({ label: gameData.menuText.common.close, primary: false });
   expect(view.footer!.rect.x + view.footer!.rect.width / 2).toBe(
     view.panel.x + view.panel.width / 2,

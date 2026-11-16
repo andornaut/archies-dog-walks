@@ -5,6 +5,7 @@ import { insetRect, type Rect } from "@andornaut/game-kit/runtime/rect";
 import { withKeyNumber } from "../input/keyNumbers.ts";
 import { barTitleRoom } from "../ui/barTitle.ts";
 import { closeControl } from "../ui/closeControl.ts";
+import { arrangePanelActions } from "../ui/modal/actionGroup.ts";
 import { DISMISS_FOOTER_SPACE, dismissFooter } from "../ui/modal/dismissFooter.ts";
 import { modalActionWidth, modalTitleLayout } from "../ui/modal/layout.ts";
 import { cardTitleRow } from "../ui/modal/titleRow.ts";
@@ -123,13 +124,16 @@ export function questionPanelView(
     })),
   );
 
-  return {
+  const actions = arrangePanelActions(measure, panel, "column", {
     buttons,
-    close,
-    covered: [insetRect(-1, panel), ...layout.hits],
     ...(question.footer === undefined
       ? {}
       : { footer: dismissFooter(measure, question.footer, panel) }),
+  });
+  return {
+    ...actions,
+    close,
+    covered: [insetRect(-1, panel), ...actions.buttons.map(({ hit }) => hit)],
     frame: "panel",
     note,
     notePlate: noted ? layout.notePlate : undefined,

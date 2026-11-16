@@ -6,6 +6,7 @@ import { closeControl } from "../closeControl.ts";
 import { PALETTE } from "../palette.ts";
 import { BUTTON_COLOURS, BUTTON_LIP_PX } from "../selection.ts";
 import { MODAL_TITLE_SCALE, TEXT_SCALE } from "../textFit.ts";
+import { arrangePanelActions } from "./actionGroup.ts";
 import { modalTitleLayout } from "./layout.ts";
 import { modalTitleWidthAtScale } from "./titleRole.ts";
 import { cardTitleRow } from "./titleRow.ts";
@@ -95,10 +96,16 @@ export function modalCardView(
     ...panelButton(measure, rect, primary, label),
     ...(secondary === true ? { secondary } : {}),
   }));
+  const placed = arrangePanelActions(
+    measure,
+    card,
+    actions.some(({ rect }) => rect.y !== actions[0]?.rect.y) ? "column" : "row",
+    { buttons },
+  );
   return {
-    buttons,
+    buttons: placed.buttons,
     close: closeControl(card),
-    covered: [card, ...buttons.map(({ hit }) => hit)],
+    covered: [card, ...placed.buttons.map(({ hit }) => hit)],
     frame: "card",
     note: [],
     notePlate: undefined,

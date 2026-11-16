@@ -40,6 +40,8 @@ export interface PanelText {
 }
 
 export interface PanelButton {
+  // Original callback and digit index, independent of visual placement.
+  readonly actionIndex?: number;
   // false for a disabled button, which never shows pressed; available where undefined.
   readonly available?: boolean;
   // Where a press counts.

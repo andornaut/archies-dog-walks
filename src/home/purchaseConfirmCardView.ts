@@ -3,6 +3,7 @@ import type { Rect } from "@andornaut/game-kit/runtime/rect";
 import { MENU_TEXT } from "../data/menuText.ts";
 import { barTitleRoom } from "../ui/barTitle.ts";
 import { closeControl } from "../ui/closeControl.ts";
+import { arrangePanelActions } from "../ui/modal/actionGroup.ts";
 import { dismissFooter } from "../ui/modal/dismissFooter.ts";
 import { modalTitleLayout } from "../ui/modal/layout.ts";
 import { cardTitleRow } from "../ui/modal/titleRow.ts";
@@ -88,6 +89,19 @@ export function purchaseConfirmCardView(
       secondary: choice === "cancel",
     })),
   );
+  const actions = arrangePanelActions(
+    measure,
+    layout.card,
+    layout.buttons.cancel.y === layout.buttons.buy.y ? "row" : "column",
+    {
+      buttons: card.buttons,
+      footer: dismissFooter(
+        measure,
+        { label: MENU_TEXT.common.close, primary: false },
+        layout.card,
+      ),
+    },
+  );
   const art: DetailArt[] = [];
   const framed: DetailFramed[] = [];
   const wellSize = measure.art(DETAIL_WELL_KEY);
@@ -123,19 +137,24 @@ export function purchaseConfirmCardView(
     art,
     card: {
       ...card,
-      buttons: card.buttons.map((button, i) => ({
+      ...actions,
+      buttons: actions.buttons.map((button, i) => ({
         ...button,
-        pressed: CHOICES[i] === pressed,
+        pressed: CHOICES[button.actionIndex ?? i] === pressed,
       })),
-      footer: dismissFooter(
-        measure,
-        { label: MENU_TEXT.common.close, primary: false },
-        layout.card,
-      ),
     },
     dim: layout.dim,
     framed,
-    hits: { buttons: layout.buttons, card: layout.card, close: closeControl(layout.card).hit },
+    hits: {
+      buttons: Object.fromEntries(
+        CHOICES.map((choice, index) => [
+          choice,
+          actions.buttons.find((button) => button.actionIndex === index)!.rect,
+        ]),
+      ) as Record<ConfirmChoice, Rect>,
+      card: layout.card,
+      close: closeControl(layout.card).hit,
+    },
     texts: [
       centred(layout.price, lines.price, PALETTE.plum),
       centred(layout.left, lines.left, PALETTE.darkBrown),
