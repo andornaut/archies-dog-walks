@@ -19,6 +19,7 @@ import { getOrInsertComputed } from "@andornaut/game-kit/runtime/maps";
 import { atlasGroupOf } from "../../assets/atlasGroups.ts";
 import type { AtlasManifest } from "../../assets/atlasManifest.ts";
 import { type AssetManifest, parseManifest } from "../../assets/manifest.ts";
+import { usesPhaserArt } from "../../assets/phaserArt.ts";
 import { disabledArtKey, greyForDisabledTile, greysOnTile } from "../../ui/disabledArt.ts";
 import {
   EXTRUDE,
@@ -133,7 +134,7 @@ function atlasBlits(blits: PageLayout["blits"]): AtlasBlit[] {
   return blits.map(({ png, ...blit }) => ({ ...blit, source: png }));
 }
 
-// Packs every image, font PNG and sprite frame of the art manifest into atlas pages, with a
+// Packs each Phaser image, font PNG and sprite frame of the art manifest into atlas pages, with a
 // disabled tile's grey copy of each picture one can grey, reading each file by its path
 // relative to the art directory. A key whose files cannot be read or parsed rejects the build;
 // a key with a frame too large for a page is left out with a warning.
@@ -162,26 +163,30 @@ export async function buildAtlases(
     }
   };
   const packed = await Promise.all([
-    ...[...manifest.images, ...manifest.fonts].map(({ key, png }) =>
-      sourceOf(key, async () => {
-        const { height, width } = await readPng(png);
-        return imageSource(png, width, height, key);
-      }),
-    ),
-    ...manifest.sprites.map(({ json, key, png }) =>
-      sourceOf(key, async () => {
-        const [sheet, image] = await Promise.all([readArt(json), readPng(png)]);
-        const { height, width } = image;
-        const source = spriteSource(key, png, JSON.parse(decoder.decode(sheet)));
-        const outside = source.frames.find(
-          ({ from }) => from.x + from.width > width || from.y + from.height > height,
-        );
-        if (outside !== undefined) {
-          throw new Error(`frame "${outside.name}" reaches outside its ${width}x${height} PNG`);
-        }
-        return compactFrames(image, trimsFrames(key), source);
-      }),
-    ),
+    ...[...manifest.images, ...manifest.fonts]
+      .filter(({ key }) => usesPhaserArt(key))
+      .map(({ key, png }) =>
+        sourceOf(key, async () => {
+          const { height, width } = await readPng(png);
+          return imageSource(png, width, height, key);
+        }),
+      ),
+    ...manifest.sprites
+      .filter(({ key }) => usesPhaserArt(key))
+      .map(({ json, key, png }) =>
+        sourceOf(key, async () => {
+          const [sheet, image] = await Promise.all([readArt(json), readPng(png)]);
+          const { height, width } = image;
+          const source = spriteSource(key, png, JSON.parse(decoder.decode(sheet)));
+          const outside = source.frames.find(
+            ({ from }) => from.x + from.width > width || from.y + from.height > height,
+          );
+          if (outside !== undefined) {
+            throw new Error(`frame "${outside.name}" reaches outside its ${width}x${height} PNG`);
+          }
+          return compactFrames(image, trimsFrames(key), source);
+        }),
+      ),
   ]);
 
   const disabled = packed

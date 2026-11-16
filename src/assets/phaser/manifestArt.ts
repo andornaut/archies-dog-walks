@@ -15,6 +15,7 @@ import {
   parseAtlasManifest,
 } from "../atlasManifest.ts";
 import { type AssetManifest, parseManifest } from "../manifest.ts";
+import { usesPhaserArt } from "../phaserArt.ts";
 
 export { artUrl };
 
@@ -105,7 +106,8 @@ export function queueManifestArt(
 ): void {
   const atlas = atlasManifest(scene);
   const atlased = atlasedTextures(atlas);
-  const wanted = ({ key }: { key: string }) => include(key) && !scene.textures.exists(key);
+  const wanted = ({ key }: { key: string }) =>
+    usesPhaserArt(key) && include(key) && !scene.textures.exists(key);
   for (const { key, png } of images.filter(wanted)) {
     const texture = atlased.get(key);
     if (atlas === undefined || texture === undefined) {
@@ -132,7 +134,7 @@ export const fontXmlKey = (key: string): string => `${key}:fnt`;
 export function queueFonts(scene: Scene, { fonts }: AssetManifest): void {
   const atlas = atlasManifest(scene);
   const atlased = atlasedTextures(atlas);
-  for (const { fnt, key, png } of fonts) {
+  for (const { fnt, key, png } of fonts.filter(({ key }) => usesPhaserArt(key))) {
     if (scene.cache.bitmapFont.exists(key)) {
       continue;
     }
@@ -163,7 +165,7 @@ export function addAtlasFonts(
   parseFromAtlas: ParseFromAtlas,
   { fonts }: AssetManifest,
 ): void {
-  for (const { key } of fonts) {
+  for (const { key } of fonts.filter(({ key }) => usesPhaserArt(key))) {
     const xml = fontXmlKey(key);
     if (
       !scene.cache.bitmapFont.exists(key) &&
@@ -222,7 +224,7 @@ const LINEAR_FILTER = 0 as Textures.FilterMode.LINEAR;
 // page and the rest find it done; the dev server's keys each have their own. Every other
 // texture keeps the nearest filtering pixelArt gives it.
 export function smoothDepthArt(scene: Scene, { images, sprites }: AssetManifest): void {
-  const keys = [...images, ...sprites].map(({ key }) => key);
+  const keys = [...images, ...sprites].map(({ key }) => key).filter(usesPhaserArt);
   const stepped = steppedBases(keys);
   for (const key of keys) {
     if (!filtersLinear(stepped, key) || !scene.textures.exists(key)) {
@@ -238,7 +240,11 @@ export function smoothDepthArt(scene: Scene, { images, sprites }: AssetManifest)
 // Adds a texture for each atlased key whose page has loaded and that has none yet.
 export function addAtlasTextures(scene: Scene): void {
   for (const texture of atlasManifest(scene)?.textures ?? []) {
-    if (!scene.textures.exists(texture.key) && scene.textures.exists(atlasPageKey(texture.page))) {
+    if (
+      usesPhaserArt(texture.key) &&
+      !scene.textures.exists(texture.key) &&
+      scene.textures.exists(atlasPageKey(texture.page))
+    ) {
       addAtlasTexture(scene, texture);
     }
   }

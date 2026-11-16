@@ -18,6 +18,7 @@ import {
   queueManifestArt,
   smoothDepthArt,
 } from "../assets/phaser/manifestArt.ts";
+import { usesPhaserArt } from "../assets/phaserArt.ts";
 import {
   DOG_FRAME_SIDES,
   dogFaceKey,
@@ -520,12 +521,12 @@ export class BootScene extends Scene {
       () => smoothDepthArt(this, this.manifest),
     ];
     for (const sprite of this.manifest.sprites) {
-      if (sprite.key !== LOADING_ART.walker && include(sprite.key)) {
+      if (usesPhaserArt(sprite.key) && sprite.key !== LOADING_ART.walker && include(sprite.key)) {
         steps.push(() => this.registerSprite(sprite));
       }
     }
     for (const [key, size] of placeholderSizes()) {
-      if (include(key)) {
+      if (usesPhaserArt(key) && include(key)) {
         steps.push(() => ensurePlaceholder(this, key, size));
       }
     }
@@ -567,7 +568,7 @@ export class BootScene extends Scene {
   }
 
   private registerSprite({ anchor, key }: SpriteAsset): void {
-    if (!this.textures.exists(key)) {
+    if (!usesPhaserArt(key) || !this.textures.exists(key)) {
       return;
     }
     try {

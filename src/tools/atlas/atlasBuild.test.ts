@@ -186,3 +186,28 @@ describe("compactFrames", () => {
     }
   });
 });
+
+it("keeps native chrome out of packed inputs without reading or rewriting its authored files", async () => {
+  const manifest: AssetManifest = {
+    fonts: [],
+    images: [
+      { key: "icon-close", png: "images/icon-close.png" },
+      { key: "screen-home", png: "images/screen-home.png" },
+    ],
+    sounds: [],
+    sprites: [{ json: "sprites/ui-button.json", key: "ui-button", png: "sprites/ui-button.png" }],
+  };
+  const original = structuredClone(manifest);
+  const read = vi.fn(async () => {
+    throw new Error("Omitted files must not be read by the packer");
+  });
+  vi.mocked(layoutAtlases).mockReturnValue({ pages: [], skipped: [], textures: [] });
+  vi.mocked(buildAtlasPages).mockResolvedValue([]);
+  await buildAtlases(read, {
+    decoded: new Map([["images/screen-home.png", blankImage(1, 1)]]),
+    manifest,
+  });
+  expect(read).not.toHaveBeenCalled();
+  expect(vi.mocked(layoutAtlases).mock.calls[0]![0].map(({ key }) => key)).toEqual(["screen-home"]);
+  expect(manifest).toEqual(original);
+});
