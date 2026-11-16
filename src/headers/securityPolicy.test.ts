@@ -45,7 +45,7 @@ describe("FILE_RULES", () => {
     ["/art/fonts/font-body.fnt", xml],
     ["/art/fonts/font-body.png", {}],
     ["/art/manifest.json", {}],
-    ["/play/", {}],
+    ["/play/", { "Cache-Control": "public, max-age=0, must-revalidate, no-transform" }],
     ["/sw.js", {}],
   ];
 
@@ -78,6 +78,30 @@ describe("PAGE_RULES", () => {
       ]),
     );
     expect(() => pageRules({}, PAGE_RULES, pages)).not.toThrow();
+  });
+
+  it("permits website analytics while keeping playable connections same-origin", () => {
+    const paths = ["/", "/play/", "/tuning/", "/art/"];
+    const pages = new Map(paths.map((path) => [path, { scriptHashes: [], styleHashes: [] }]));
+    const rules = pageRules(BASE_DIRECTIVES, PAGE_RULES, pages);
+    for (const path of paths) {
+      const rule = rules.find((each) => pathMatches(each.path, path));
+      const policy = rule?.headers.find(([name]) => name === "Content-Security-Policy")?.[1] ?? "";
+      const directives = new Map(
+        policy.split(";").map((text) => {
+          const [name, ...sources] = text.trim().split(" ");
+          return [name, sources];
+        }),
+      );
+      if (path === "/play/") {
+        expect(directives.get("script-src")).toEqual(["'self'"]);
+        expect(directives.get("connect-src")).toEqual(["'self'"]);
+        expect(policy).not.toContain("cloudflareinsights.com");
+      } else {
+        expect(directives.get("script-src")).toContain("https://static.cloudflareinsights.com");
+        expect(directives.get("connect-src")).toContain("https://cloudflareinsights.com");
+      }
+    }
   });
 
   // inlineStyleCheckPlugin's premise: on each built page, a style element or attribute that a

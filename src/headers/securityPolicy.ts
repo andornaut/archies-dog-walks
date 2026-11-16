@@ -33,6 +33,13 @@ export const COMMON_RULE = {
 // Headers for files rather than pages. Cloudflare sets a header a rule names, replacing its own.
 export const FILE_RULES = [
   {
+    comment: "Playable HTML revalidates and must not be transformed by an intermediary.",
+    headers: [
+      ["Cache-Control", "public, max-age=0, must-revalidate, no-transform"],
+    ] satisfies HeaderList,
+    path: "/play/*",
+  },
+  {
     comment:
       "Bitmap font descriptors, which are XML: the game's hashed copies and the art gallery's. " +
       "Cloudflare types files by extension and serves an unknown one untyped, which it does " +
@@ -50,11 +57,11 @@ export const FILE_RULES = [
 ] as const;
 
 // Every page's policy before its rule's sources and hashes are added. Phaser loads images
-// through blob: URLs and its default textures as data: URIs. Cloudflare Web Analytics injects
-// its beacon script into every page at the edge, and the beacon reports to cloudflareinsights.com.
+// through blob: URLs and its default textures as data: URIs. Analytics sources belong only to
+// website pages; the playable game allows no external scripts or reporting endpoints.
 export const BASE_DIRECTIVES: Directives = {
   "base-uri": ["'self'"],
-  "connect-src": ["'self'", "https://cloudflareinsights.com"],
+  "connect-src": ["'self'"],
   "default-src": ["'self'"],
   "font-src": ["'self'"],
   "form-action": ["'self'"],
@@ -63,9 +70,14 @@ export const BASE_DIRECTIVES: Directives = {
   "manifest-src": ["'self'"],
   "media-src": ["'self'", "blob:"],
   "object-src": ["'none'"],
-  "script-src": ["'self'", "https://static.cloudflareinsights.com"],
+  "script-src": ["'self'"],
   "style-src": ["'self'"],
   "worker-src": ["'self'"],
+};
+
+const WEBSITE_ANALYTICS: Directives = {
+  "connect-src": ["https://cloudflareinsights.com"],
+  "script-src": ["https://static.cloudflareinsights.com"],
 };
 
 const GOOGLE_FONTS: Directives = {
@@ -76,14 +88,14 @@ const GOOGLE_FONTS: Directives = {
 // Each built or public HTML page must match exactly one of these, or the build fails: two
 // matching policies would join into one header and the browser would enforce both.
 export const PAGE_RULES: readonly PageRule[] = [
-  { comment: "The home page.", directives: GOOGLE_FONTS, path: "/" },
+  { comment: "The home page.", directives: { ...GOOGLE_FONTS, ...WEBSITE_ANALYTICS }, path: "/" },
   { comment: "The game.", directives: {}, path: "/play/*" },
-  { comment: "Tuning.", directives: {}, path: "/tuning/*" },
+  { comment: "Tuning.", directives: WEBSITE_ANALYTICS, path: "/tuning/*" },
   {
     comment:
       "The art gallery. style-src-attr: the gallery's ground swatches and palette " +
       "chips carry style attributes.",
-    directives: { ...GOOGLE_FONTS, "style-src-attr": ["'unsafe-inline'"] },
+    directives: { ...GOOGLE_FONTS, ...WEBSITE_ANALYTICS, "style-src-attr": ["'unsafe-inline'"] },
     path: "/art/*",
   },
 ];
