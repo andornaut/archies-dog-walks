@@ -35,6 +35,7 @@ import { displayBitmapFont, hasDisplayFont } from "../ui/phaser/displayText.ts";
 import { pixelBitmapFont } from "../ui/phaser/pixelText.ts";
 import { pillColours } from "./effectNameColours.ts";
 import { canvasPanelMeasure } from "./modalMeasure.ts";
+import { nativeModalShade } from "./nativeModalShade.ts";
 import { trackNativeSceneInput } from "./overlay.ts";
 
 // A button on the panel: its label and what a press, a tap or its number key, does.
@@ -218,6 +219,7 @@ export function addHtmlModalCard(
 // Native detail content shares the modal palette, captured dismissal and close semantics.
 export function addHtmlDetailCard(
   scene: Scene,
+  dim: Rect,
   view: DetailCardView,
   close: (() => void) | undefined,
   closePressed = false,
@@ -234,7 +236,7 @@ export function addHtmlDetailCard(
     ...(dismiss === undefined ? {} : { dismiss: { area: dismiss.area, press: dismiss.dismiss } }),
     view,
   });
-  return followScene(scene, panel);
+  return followScene(scene, nativeModalShade(scene, dim, panel));
 }
 
 // A native panel is retained while its presentation key is unchanged.
@@ -260,6 +262,7 @@ export function keepPanel(
 // Native purchase confirmation forwards the original answer and close actions.
 export function addHtmlPurchaseConfirm(
   scene: Scene,
+  dim: Rect,
   view: PurchaseConfirmCardView,
   answer: (choice: ConfirmChoice) => void,
 ): DomQuestionPanel | undefined {
@@ -274,7 +277,7 @@ export function addHtmlPurchaseConfirm(
 
     view,
   });
-  return followScene(scene, panel);
+  return followScene(scene, nativeModalShade(scene, dim, panel));
 }
 
 // Calls step before every frame scene's game draws, until the returned stop is called.

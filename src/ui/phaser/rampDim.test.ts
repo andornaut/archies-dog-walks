@@ -14,6 +14,7 @@ vi.mock("phaser", () => ({
 
 class Graphic {
   active = true;
+  visible = true;
   colour = 0;
   alpha = 1;
   readonly fills: { x: number; y: number; width: number; height: number }[] = [];
@@ -154,6 +155,28 @@ describe("neutral canvas underlay", () => {
     f.scene.events.emit("shutdown");
     expect(lower.fills).toEqual([]);
     expect(f.scene.game.events.listenerCount("prerender")).toBe(0);
+  });
+
+  it("restores lower coverage while a front graphic is hidden and removes both on shutdown", () => {
+    const lower = fixture(),
+      upper = fixture();
+    Object.assign(upper.scene, { game: lower.scene.game });
+    lower.scene.game.scene.scenes.push(upper.scene);
+    addModalShade(lower.scene, area);
+    addModalShade(upper.scene, area);
+    expect(lower.graphics[0]!.fills).toEqual([]);
+    upper.graphics[0]!.visible = false;
+    lower.scene.game.events.emit("prerender");
+    expect(lower.graphics[0]!.fills).toEqual([area]);
+    expect(upper.graphics[0]!.fills).toEqual([]);
+    upper.graphics[0]!.visible = true;
+    lower.scene.game.events.emit("prerender");
+    expect(lower.graphics[0]!.fills).toEqual([]);
+    expect(upper.graphics[0]!.fills).toEqual([area]);
+    upper.scene.events.emit("shutdown");
+    expect(lower.graphics[0]!.fills).toEqual([area]);
+    lower.scene.events.emit("shutdown");
+    expect(lower.scene.game.events.listenerCount("prerender")).toBe(0);
   });
 
   it("keeps the front modal's shade priority when the retained scene redraws later", () => {

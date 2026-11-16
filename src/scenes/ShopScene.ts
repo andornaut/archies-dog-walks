@@ -998,7 +998,7 @@ export class ShopScene extends Scene {
       pressed,
     });
     this.htmlConfirm = keepPanel(this.htmlConfirm, JSON.stringify(view), () =>
-      addHtmlPurchaseConfirm(this, view, (choice) => this.answer(choice)),
+      addHtmlPurchaseConfirm(this, overlayRegion("home"), view, (choice) => this.answer(choice)),
     );
   }
 
@@ -1018,7 +1018,10 @@ export class ShopScene extends Scene {
       picture: purchasePicture(purchase),
     });
     this.htmlDetail = keepPanel(this.htmlDetail, JSON.stringify(view), () =>
-      addHtmlDetailCard(this, view, undefined, false, { area: PANEL, dismiss: () => this.back() }),
+      addHtmlDetailCard(this, dim, view, undefined, false, {
+        area: PANEL,
+        dismiss: () => this.back(),
+      }),
     );
   }
 }

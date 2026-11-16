@@ -42,7 +42,9 @@ export function addModalShade(scene: Scene, rect: Rect): GameObjects.Graphics {
   const refresh = () => {
     const order = scene.game.scene.scenes;
     const shown = [...requests]
-      .filter((entry) => entry.graphic.active && entry.scene.sys.isVisible())
+      .filter(
+        (entry) => entry.graphic.active && entry.graphic.visible && entry.scene.sys.isVisible(),
+      )
       .sort((left, right) => order.indexOf(left.scene) - order.indexOf(right.scene));
     [...requests].forEach((entry) => entry.graphic.clear());
     shown.forEach((entry, index) => {
@@ -73,7 +75,7 @@ export function addRampDim(
   scene: Scene,
   rect: Rect,
   onDrawn?: () => void,
-): readonly GameObjects.GameObject[] {
+): readonly GameObjects.Graphics[] {
   fitWorldCamera(scene, scene.cameras.main);
   const shown = shownWorldRect(scene.cameras.main, rect);
   if (onDrawn !== undefined) {

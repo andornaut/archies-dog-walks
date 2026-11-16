@@ -506,7 +506,7 @@ export class HudScene extends Scene {
       return;
     }
     const card = detailView(overlay, LAYOUT.screen, detail);
-    const html = addHtmlDetailCard(overlay, card, undefined, false, {
+    const html = addHtmlDetailCard(overlay, LAYOUT.walkView, card, undefined, false, {
       area: LAYOUT.walkView,
       dismiss: () => this.run?.closeExplanation(),
     });
