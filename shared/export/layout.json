@@ -858,16 +858,16 @@
       },
       "underBars": [
         {
-          "bottom": 95,
+          "bottom": 103,
           "frame": {
             "height": 22,
             "width": 22,
             "x": 14,
-            "y": 64
+            "y": 72
           },
           "name": {
             "x": 25,
-            "y": 88
+            "y": 96
           },
           "room": 306,
           "textX": 40,
@@ -875,20 +875,20 @@
             "height": 45,
             "width": 344,
             "x": 8,
-            "y": 58
+            "y": 66
           }
         },
         {
-          "bottom": 111,
+          "bottom": 127,
           "frame": {
             "height": 22,
             "width": 22,
             "x": 14,
-            "y": 80
+            "y": 96
           },
           "name": {
             "x": 25,
-            "y": 104
+            "y": 120
           },
           "room": 306,
           "textX": 40,
@@ -896,7 +896,7 @@
             "height": 45,
             "width": 344,
             "x": 8,
-            "y": 74
+            "y": 90
           }
         }
       ]
@@ -905,36 +905,36 @@
       {
         "icon": {
           "x": 14,
-          "y": 66
+          "y": 74
         },
         "panel": {
           "height": 52,
           "width": 344,
           "x": 8,
-          "y": 58
+          "y": 66
         },
         "room": 312,
         "rowTops": [
-          68,
-          88
+          76,
+          96
         ],
         "textX": 34
       },
       {
         "icon": {
           "x": 14,
-          "y": 82
+          "y": 98
         },
         "panel": {
           "height": 52,
           "width": 344,
           "x": 8,
-          "y": 74
+          "y": 90
         },
         "room": 312,
         "rowTops": [
-          84,
-          104
+          100,
+          120
         ],
         "textX": 34
       }
@@ -2816,35 +2816,35 @@
       }
     ],
     "debuffBar": {
+      "faceHeight": 22,
       "fill": {
         "height": 5,
-        "width": 286,
-        "x": 69,
-        "y": 5
+        "right": 5
       },
-      "height": 16,
+      "height": 24,
       "icon": {
+        "size": 16,
         "x": 4,
-        "y": 0
+        "y": 3
       },
       "name": {
-        "room": 40,
-        "x": 24,
-        "y": 5
-      }
+        "gap": 8,
+        "x": 24
+      },
+      "rim": 1
     },
     "debuffBars": [
       {
-        "height": 16,
+        "height": 24,
         "width": 360,
         "x": 0,
         "y": 40
       },
       {
-        "height": 16,
+        "height": 24,
         "width": 360,
         "x": 0,
-        "y": 56
+        "y": 64
       }
     ],
     "parts": {
