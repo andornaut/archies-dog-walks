@@ -3,8 +3,8 @@ import type { Scene } from "phaser";
 import { describe, expect, it, vi } from "vitest";
 
 import { ownDeviceFit } from "../worldFit.ts";
-import { addDim, addModalShade } from "./draw.ts";
-import { addRampDim } from "./rampDim.ts";
+import { addDim } from "./draw.ts";
+import { addModalShade, addRampDim } from "./rampDim.ts";
 
 vi.mock("phaser", () => ({
   Core: { Events: { PRE_RENDER: "prerender" } },

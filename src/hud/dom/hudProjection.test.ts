@@ -2,7 +2,6 @@ import { animationKey } from "@andornaut/game-kit/runtime/art/aseprite";
 import { expect, it, vi } from "vitest";
 
 import { FakeDocument, fakeLayer } from "../../testing/fakeDom.ts";
-import { dimColour } from "../../ui/dimArt.ts";
 import { followModalUnderlay } from "../../ui/dom/rampDim.ts";
 import { domScale } from "../../ui/domScale.ts";
 import { PALETTE } from "../../ui/palette.ts";
@@ -94,9 +93,13 @@ it("keeps projected dog cards in the lit bar surface while body moments dim and 
   );
   expect(bar.contains(card)).toBe(true);
   expect(body.contains(card)).toBe(false);
+  const originalFilter = body.style.filter;
   const stop = followModalUnderlay(layer.input, body as unknown as HTMLElement);
   const pause = layer.input.open();
-  expect(body.style.color).toBe(hex(dimColour(PALETTE.cream)));
+  expect(body.style.color).toBe(hex(PALETTE.cream));
+  expect(body.style.filter).toBe("brightness(0.28)");
+  expect(bar.style.filter ?? "").toBe("");
+  expect(card.style.filter ?? "").toBe("");
   expect(card.style.color).toBe(hex(PALETTE.cream));
   const restore = coverHelpUnderlay(element as unknown as HTMLElement);
   expect(body.style.display).toBe("none");
@@ -105,6 +108,8 @@ it("keeps projected dog cards in the lit bar surface while body moments dim and 
   expect(body.style.display).toBe("");
   expect(bar.style.display).toBe("");
   pause.close();
+  expect(body.style.filter).toBe(originalFilter);
+  expect(body.style.color).toBe(hex(PALETTE.cream));
   stop();
   projection.dispose();
 });
