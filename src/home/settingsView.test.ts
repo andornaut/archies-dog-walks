@@ -6,7 +6,7 @@ import { gameData } from "../data/index.ts";
 import { SETTINGS_CARD } from "../data/layout.ts";
 import { SCREEN_CONFIG, SCREEN_LAYOUT } from "../data/screen.ts";
 import { DEFAULT_SETTINGS } from "../save/settings.ts";
-import { fontFileMetrics, gameFont } from "../testing/fontInk.ts";
+import { fontFileMetrics, fontInkRows, gameFont } from "../testing/fontInk.ts";
 import { MODAL } from "../ui/modal/layout.ts";
 import { modalTitleInk } from "../ui/modal/titleRole.ts";
 import { TEXT_SCALE } from "../ui/textFit.ts";
@@ -69,11 +69,12 @@ describe("settingsView", () => {
     expect(
       Math.abs(centre - current.card.panel.x - current.card.panel.width / 2),
     ).toBeLessThanOrEqual(0.5);
-    expect(
-      current.card.footer!.rect.y -
-        current.build.capTop -
-        fonts.body.capHeight * current.build.scale,
-    ).toBe(MODAL.gap);
+    const visibleInk = fontInkRows(
+      "font-body",
+      { scale: current.build.scale },
+      current.build.lines[0]!,
+    );
+    expect(current.card.footer!.rect.y - current.build.capTop - visibleInk.bottom).toBe(MODAL.gap);
   });
 
   it.each([false, true])("shows current switch states with mute %s and stable help", (muted) => {
