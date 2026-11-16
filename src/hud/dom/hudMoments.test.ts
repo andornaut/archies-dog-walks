@@ -2,7 +2,7 @@ import { expect, it, vi } from "vitest";
 
 import { FakeDocument, type FakeElement, fakeLayer } from "../../testing/fakeDom.ts";
 import { gameFont } from "../../testing/fontInk.ts";
-import { domScale, gridRect } from "../../ui/domScale.ts";
+import { artPixel, domScale, gridRect } from "../../ui/domScale.ts";
 import { createHudMoments } from "./hudMoments.ts";
 function setup(scale = domScale(1, { height: 560, width: 360, x: 0, y: 0 })) {
   const doc = new FakeDocument();
@@ -170,4 +170,22 @@ it("keeps persistent HUD images and sheets on their logical rectangles at phone 
       painter.dispose();
     }),
   );
+});
+
+it("paints a single logical shade row without border inflation at fractional fit", () => {
+  const scale = domScale(2.625, { height: 844, width: 390, x: 0, y: 0 });
+  const { element, painter } = setup(scale);
+  const group = painter.group(0);
+  const row = { height: 1, width: 360, x: 0, y: 23 };
+  group.panel(row, undefined, { border: 0x733e39, fill: 0x733e39 });
+  group.panel({ height: 24, width: 100, x: 0, y: 24 }, undefined, {
+    border: 0x181425,
+    fill: 0xead4aa,
+  });
+  painter.update({ firingNow: 0, momentNow: 0, now: 0 });
+  const [solid, bordered] = element.children[0]!.children;
+  expect(solid!.style.borderWidth).toBe("0px");
+  expect(solid!.style.height).toBe(`${gridRect(scale, row).height}px`);
+  expect(bordered!.style.borderWidth).toBe(`${artPixel(scale)}px`);
+  painter.dispose();
 });

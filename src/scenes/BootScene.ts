@@ -94,7 +94,6 @@ const HOME_UI_KEYS = new Set([
 const HUD_UI_KEYS = new Set([
   ...HOME_UI_KEYS,
   "icon-pause",
-  "ui-debuff-bar",
   "ui-dog-card",
   "ui-heart",
   "ui-home-cash-well-left",

@@ -201,16 +201,22 @@ export const WALK_BAR_PARTS = {
 // and its side.
 export const SPARE_TREAT_PIP = { inset: 1, size: 12 } as const;
 
-// art: a debuff bar (ui-debuff-bar), from its top-left corner.
+// Runtime debuff chrome: native icons and the shared body role fit above the bottom rim.
+const DEBUFF_ICON_SIZE = 16;
+const DEBUFF_SPACING = 4;
+const DEBUFF_RIM = 1;
+const DEBUFF_HEIGHT = DEBUFF_ICON_SIZE + 2 * DEBUFF_SPACING;
 export const DEBUFF_BAR = {
-  // The fill that drains as the debuff's seconds run out.
-  fill: { height: 5, width: 286, x: 69, y: 5 },
-  // The bar's height.
-  height: 16,
-  // The debuff's icon's top-left.
-  icon: { x: 4, y: 0 },
-  // The name's left edge, capitals' top and widest ink.
-  name: { room: 40, x: 24, y: 5 },
+  faceHeight: DEBUFF_HEIGHT - 2 * DEBUFF_RIM,
+  fill: { height: 5, right: DEBUFF_SPACING + DEBUFF_RIM },
+  height: DEBUFF_HEIGHT,
+  icon: {
+    size: DEBUFF_ICON_SIZE,
+    x: DEBUFF_SPACING,
+    y: (DEBUFF_HEIGHT - 2 * DEBUFF_RIM - DEBUFF_ICON_SIZE) / 2,
+  },
+  name: { gap: 2 * DEBUFF_SPACING, x: DEBUFF_ICON_SIZE + 2 * DEBUFF_SPACING },
+  rim: DEBUFF_RIM,
 } as const;
 
 // art: a dog card (ui-dog-card), from its top-left corner.

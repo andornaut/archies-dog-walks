@@ -345,7 +345,8 @@ export function createHudMoments(
         });
         mount(fallback, Promise.resolve([]), (scale) => {
           placeBox(scale, ORIGIN, fallback, rect);
-          fallback.style.borderWidth = `${artPixel(scale)}px`;
+          fallback.style.borderWidth =
+            colours.border === colours.fill ? "0px" : `${artPixel(scale)}px`;
         });
       },
       ring(rect, colour, width) {

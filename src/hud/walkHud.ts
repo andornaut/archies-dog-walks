@@ -151,8 +151,7 @@ export function cashLeft(inkWidth: number): number {
   return topSectionCurrency(SHARED_BAR, inkWidth).left;
 }
 
-// A debuff bar (ui-debuff-bar, 360x16): its icon, its name up to name.room wide, and the fill
-// draining from fill.width as its seconds run out.
+// A native debuff bar: its icon and full-size name precede the draining duration track.
 export { DEBUFF_BAR };
 
 // The bars of count debuffs, under the walk bar, in the order the debuffs began.
@@ -165,10 +164,26 @@ export function debuffBarRects(bar: Rect, count: number): Rect[] {
   }));
 }
 
-// The fill's width with secondsLeft of seconds to go.
-export function debuffFillWidth(secondsLeft: number, seconds: number): number {
+// Every current name reserves its full ink width before the duration track, including inactive kinds.
+export function debuffBarFill(nameWidth: number, bar: Rect): Rect {
+  const x = DEBUFF_BAR.name.x + nameWidth + DEBUFF_BAR.name.gap;
+  const trackHeight = DEBUFF_BAR.fill.height + 2 * DEBUFF_BAR.rim;
+  return {
+    height: DEBUFF_BAR.fill.height,
+    width: Math.max(0, bar.width - x - DEBUFF_BAR.fill.right),
+    x: bar.x + x,
+    y: bar.y + Math.round((DEBUFF_BAR.faceHeight - trackHeight) / 2) + DEBUFF_BAR.rim,
+  };
+}
+
+// The fill's width with secondsLeft of seconds to go; geometry is owned by the measured track.
+export function debuffFillWidth(
+  fill: Pick<Rect, "width">,
+  secondsLeft: number,
+  seconds: number,
+): number {
   const share = seconds > 0 ? clamp01(secondsLeft / seconds) : 0;
-  return Math.round(DEBUFF_BAR.fill.width * share);
+  return Math.round(fill.width * share);
 }
 
 // The neighbourhood's progress line on the screen's last rows, under the dog cards (the

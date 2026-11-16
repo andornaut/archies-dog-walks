@@ -1,5 +1,5 @@
 import type { Rect } from "@andornaut/game-kit/runtime/rect";
-import { laidGlyphs } from "@andornaut/game-kit/runtime/text/bitmapFont";
+import { fontMetrics, laidGlyphs } from "@andornaut/game-kit/runtime/text/bitmapFont";
 
 import { debuffIconKey } from "../../assets/iconKeys.ts";
 import { gameData } from "../../data/index.ts";
@@ -11,6 +11,7 @@ import { currentZone } from "../../rules/route.ts";
 import { read } from "../../rules/units.ts";
 import type { RunState } from "../../state/runState.ts";
 import { PALETTE } from "../../ui/palette.ts";
+import { TEXT_SCALE } from "../../ui/textFit.ts";
 import {
   effectIconFallback,
   type EffectItem,
@@ -21,6 +22,7 @@ import {
 } from "../effectIcons.ts";
 import {
   DEBUFF_BAR,
+  debuffBarFill,
   debuffBarRects,
   debuffFillWidth,
   spareTreatPipAt,
@@ -39,6 +41,7 @@ type DebuffColours = Readonly<
       face: number;
       fill: number;
       name: number;
+      shade: number;
     }
   >
 >;
@@ -88,6 +91,37 @@ export function createHudChrome(
       ? 0
       : Math.max(...ink.map((rect) => rect.right)) - Math.min(...ink.map((rect) => rect.left));
   };
+  const body = painter.fonts.body;
+  const names = Object.values(gameData.debuffs).map(({ name }) => name);
+  const nameWidth = Math.max(
+    0,
+    ...names.map((name) => {
+      const ink = laidGlyphs(body, TEXT_SCALE, name).flatMap(({ ink }) =>
+        ink === null ? [] : [ink],
+      );
+      return ink.length === 0
+        ? 0
+        : Math.max(...ink.map(({ right }) => right)) - Math.min(...ink.map(({ left }) => left));
+    }),
+  );
+  const capitalsTop = (name: string, bar: Rect) => {
+    const glyphs = [...name].flatMap((char) => {
+      const glyph = body.glyphs.get(char);
+      return glyph === undefined || glyph.height === 0 ? [] : [glyph];
+    });
+    const top =
+      glyphs.length === 0 ? 0 : Math.min(...glyphs.map(({ yOffset }) => yOffset)) * TEXT_SCALE;
+    const bottom =
+      glyphs.length === 0
+        ? 0
+        : Math.max(...glyphs.map(({ height, yOffset }) => yOffset + height)) * TEXT_SCALE;
+    return (
+      bar.y +
+      Math.round((DEBUFF_BAR.faceHeight - (bottom - top)) / 2) +
+      fontMetrics(body).capTop * TEXT_SCALE -
+      top
+    );
+  };
   return {
     bars: () => bars,
     dispose: () => {
@@ -104,38 +138,41 @@ export function createHudChrome(
         );
         replace("bars", 0, (group) =>
           bars.forEach(({ debuff, rect }) => {
-            if (painter.hasArt("ui-debuff-bar")) {
-              group.art({
-                at: rect,
-                key: "ui-debuff-bar",
-                projection: "layout",
-                tags: [debuff],
-              });
-            } else {
-              solid(group, colours[debuff].face, rect);
-            }
+            const rim = DEBUFF_BAR.rim;
+            const fill = debuffBarFill(nameWidth, rect);
+            solid(group, colours[debuff].face, { ...rect, height: DEBUFF_BAR.faceHeight });
+            solid(group, colours[debuff].shade, {
+              ...rect,
+              height: rim,
+              y: rect.y + DEBUFF_BAR.faceHeight,
+            });
+            solid(group, PALETTE.ink, { ...rect, height: rim, y: rect.y + rect.height - rim });
+            solid(group, PALETTE.ink, { ...fill, height: fill.height + 2 * rim, y: fill.y - rim });
+            solid(group, PALETTE.ink, { ...fill, width: fill.width + 2 * rim, x: fill.x - rim });
+            solid(group, colours[debuff].shade, fill);
             group.art({
               at: { x: rect.x + DEBUFF_BAR.icon.x, y: rect.y + DEBUFF_BAR.icon.y },
-              image: { height: 16, width: 16 },
+              image: { height: DEBUFF_BAR.icon.size, width: DEBUFF_BAR.icon.size },
               key: debuffIconKey(debuff),
               projection: "layout",
             });
             group.text({
               anchor: "ink",
-              capTop: rect.y + DEBUFF_BAR.name.y,
+              capTop: capitalsTop(gameData.debuffs[debuff].name, rect),
               colour: colours[debuff].name,
-              font: "title",
+              font: "body",
               lines: [gameData.debuffs[debuff].name],
-              scale: 1,
+              scale: TEXT_SCALE,
               x: rect.x + DEBUFF_BAR.name.x,
             });
           }),
         );
       }
-      const widths = bars.map(({ debuff }) => {
+      const widths = bars.map(({ debuff, rect }) => {
         const active = run.debuffs.find((entry) => entry.debuff === debuff)!;
         const { seconds } = gameData.debuffs[debuff];
         return debuffFillWidth(
+          debuffBarFill(nameWidth, rect),
           active.secondsLeft,
           Math.max(
             read(gameData.tuning, "seconds", seconds),
@@ -151,10 +188,8 @@ export function createHudChrome(
             const width = widths[i] ?? 0;
             if (width > 0) {
               solid(group, colours[debuff].fill, {
-                ...DEBUFF_BAR.fill,
+                ...debuffBarFill(nameWidth, rect),
                 width,
-                x: rect.x + DEBUFF_BAR.fill.x,
-                y: rect.y + DEBUFF_BAR.fill.y,
               });
             }
           }),

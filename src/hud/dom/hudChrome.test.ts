@@ -2,14 +2,17 @@ import { pixels } from "@andornaut/game-kit/runtime/units";
 import { expect, it, vi } from "vitest";
 
 import { gameData } from "../../data/index.ts";
+import { DEBUFF_BAR } from "../../data/layout.ts";
 import { SCREEN_LAYOUT } from "../../data/screen.ts";
 import { modifiersOf } from "../../rules/modifiers.ts";
 import { FakeDocument } from "../../testing/fakeDom.ts";
-import { gameFont } from "../../testing/fontInk.ts";
+import { fontInk, fontInkRows, gameFont } from "../../testing/fontInk.ts";
 import { activeModifier, testState } from "../../testing/runState.ts";
 import { PALETTE } from "../../ui/palette.ts";
+import { TEXT_SCALE } from "../../ui/textFit.ts";
 import { effectItems, hudEffectIconKey, spareTreatWell } from "../effectIcons.ts";
 import {
+  debuffBarFill,
   spareTreatPipAt,
   WALK_BAR,
   walkBarLayout,
@@ -37,10 +40,20 @@ function fixture(hasArt: (key: string) => boolean = () => true) {
     hasArt,
   } as unknown as HudMomentPainter;
   const colours = {
-    muddy: { face: PALETTE.brown, fill: PALETTE.tan, name: PALETTE.ink },
-    spotlight: { face: PALETTE.blue, fill: PALETTE.yellow, name: PALETTE.white },
-    stinky: { face: PALETTE.mauve, fill: PALETTE.pink, name: PALETTE.white },
-    zoomies: { face: PALETTE.green, fill: PALETTE.yellow, name: PALETTE.ink },
+    muddy: { face: PALETTE.brown, fill: PALETTE.tan, name: PALETTE.ink, shade: PALETTE.darkBrown },
+    spotlight: {
+      face: PALETTE.blue,
+      fill: PALETTE.yellow,
+      name: PALETTE.white,
+      shade: PALETTE.navy,
+    },
+    stinky: { face: PALETTE.mauve, fill: PALETTE.pink, name: PALETTE.white, shade: PALETTE.purple },
+    zoomies: {
+      face: PALETTE.green,
+      fill: PALETTE.yellow,
+      name: PALETTE.ink,
+      shade: PALETTE.forest,
+    },
   };
   return { chrome: createHudChrome(painter, painter, colours), views };
 }
@@ -139,4 +152,59 @@ it("centres a missing optional HUD icon's glyph in the authored well without dra
     expect.objectContaining({ anchor: "centre", backing: well, x: well.x + well.width / 2 }),
   );
   chrome.dispose();
+});
+
+it("reserves every current full-size effect name and centres actual body ink above the bar rim", () => {
+  const { chrome, views } = fixture();
+  const run = testState({ archie: 3 });
+  const names = Object.values(gameData.debuffs).map(({ name }) => name);
+  const widest = Math.max(
+    ...names.map((name) => {
+      const ink = fontInk("font-body", { scale: TEXT_SCALE }, name);
+      return ink.right - ink.left;
+    }),
+  );
+  chrome.update({
+    ...run,
+    debuffs: [{ debuff: "muddy", secondsLeft: 1, untilZone: run.zoneIndex }],
+  });
+  const only = chrome.bars()[0]!;
+  const fill = debuffBarFill(widest, only.rect);
+  expect(views.flatMap((view) => vi.mocked(view.panel).mock.calls)).toContainEqual([
+    fill,
+    undefined,
+    { border: PALETTE.darkBrown, fill: PALETTE.darkBrown },
+  ]);
+  expect(
+    views
+      .flatMap((view) => vi.mocked(view.art).mock.calls)
+      .some(([art]) => art.key === "ui-debuff-bar"),
+  ).toBe(false);
+  const before = views.length;
+  const debuffs = (Object.keys(gameData.debuffs) as (keyof typeof gameData.debuffs)[]).map(
+    (debuff) => ({ debuff, secondsLeft: 1, untilZone: run.zoneIndex }),
+  );
+  chrome.update({ ...run, debuffs });
+  const texts = views
+    .slice(before)
+    .flatMap((view) => vi.mocked(view.text).mock.calls)
+    .map(([text]) => text)
+    .filter((text) => names.includes(text.lines[0]!));
+  expect(texts).toHaveLength(debuffs.length);
+  for (const { debuff, rect } of chrome.bars()) {
+    const text = texts.find((text) => text.lines[0] === gameData.debuffs[debuff].name)!;
+    const ink = fontInkRows("font-body", { scale: TEXT_SCALE }, text.lines[0]!);
+    const width = fontInk("font-body", { scale: TEXT_SCALE }, text.lines[0]!);
+    const top = text.capTop + ink.top;
+    const bottom = text.capTop + ink.bottom;
+    expect(text.font).toBe("body");
+    expect(text.scale).toBe(TEXT_SCALE);
+    expect(top - rect.y).toBe((DEBUFF_BAR.faceHeight - (bottom - top)) / 2);
+    expect(bottom).toBeLessThanOrEqual(rect.y + DEBUFF_BAR.faceHeight);
+    const track = debuffBarFill(widest, rect);
+    expect(text.x + width.right - width.left + DEBUFF_BAR.name.gap).toBeLessThanOrEqual(track.x);
+    expect(track.x + track.width).toBe(rect.x + rect.width - DEBUFF_BAR.fill.right);
+  }
+  const last = chrome.bars().at(-1)!.rect;
+  expect(last.y + last.height).toBeLessThan(SCREEN_LAYOUT.road.y);
 });

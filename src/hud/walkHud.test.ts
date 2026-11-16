@@ -22,13 +22,14 @@ import { fontFileMetrics, fontInk } from "../testing/fontInk.ts";
 import { LONE } from "../testing/packPlaces.ts";
 import { inside } from "../testing/rects.ts";
 import { plainMarks } from "../ui/pixelFont.ts";
-import { TITLE_CAP_ROWS } from "../ui/textFit.ts";
+import { TEXT_SCALE, TITLE_CAP_ROWS } from "../ui/textFit.ts";
 import { cents } from "../units.ts";
 import { maxEffects } from "./effectIcons.ts";
 import {
   cardHearts,
   cashLeft,
   DEBUFF_BAR,
+  debuffBarFill,
   debuffBarRects,
   debuffFillWidth,
   DOG_CARD,
@@ -286,7 +287,19 @@ describe("the debuff bars", () => {
     },
   );
 
-  const full = DEBUFF_BAR.fill.width;
+  const nameWidth = Math.max(
+    ...Object.values(gameData.debuffs).map(({ name }) => {
+      const ink = fontInk("font-body", { scale: TEXT_SCALE }, name);
+      return ink.right - ink.left;
+    }),
+  );
+  const fill = debuffBarFill(nameWidth, {
+    height: DEBUFF_BAR.height,
+    width: LAYOUT.topBar.width,
+    x: 0,
+    y: 0,
+  });
+  const full = fill.width;
   it.each<[string, number, number, number]>([
     ["full as it starts", 20, 20, full],
     ["half way through", 10, 20, Math.round(full / 2)],
@@ -295,7 +308,7 @@ describe("the debuff bars", () => {
     ["empty when a fraction rounds to nothing", 0.01, 20, 0],
     ["empty for a debuff of no seconds", 3, 0, 0],
   ])("draws the fill %s", (_name, left, seconds, expected) => {
-    expect(debuffFillWidth(left, seconds)).toBe(expected);
+    expect(debuffFillWidth(fill, left, seconds)).toBe(expected);
   });
 });
 

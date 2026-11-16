@@ -1,13 +1,13 @@
 import type { DebuffId } from "../data/types.ts";
 import { PALETTE } from "../ui/palette.ts";
 
-// Each debuff bar's colours the game draws with: the fill, the name, and the face drawn while
-// the bar art is missing. The name holds 4.5:1 on the face.
+// Each native debuff bar uses the authored face, shade, fill and name colours.
+// The name holds 4.5:1 on the face.
 export const DEBUFF_COLOURS: Readonly<
-  Record<DebuffId, { face: number; fill: number; name: number }>
+  Record<DebuffId, { face: number; fill: number; name: number; shade: number }>
 > = {
-  muddy: { face: PALETTE.brown, fill: PALETTE.tan, name: PALETTE.ink },
-  spotlight: { face: PALETTE.blue, fill: PALETTE.yellow, name: PALETTE.white },
-  stinky: { face: PALETTE.mauve, fill: PALETTE.pink, name: PALETTE.white },
-  zoomies: { face: PALETTE.green, fill: PALETTE.yellow, name: PALETTE.ink },
+  muddy: { face: PALETTE.brown, fill: PALETTE.tan, name: PALETTE.ink, shade: PALETTE.darkBrown },
+  spotlight: { face: PALETTE.blue, fill: PALETTE.yellow, name: PALETTE.white, shade: PALETTE.navy },
+  stinky: { face: PALETTE.mauve, fill: PALETTE.pink, name: PALETTE.white, shade: PALETTE.purple },
+  zoomies: { face: PALETTE.green, fill: PALETTE.yellow, name: PALETTE.ink, shade: PALETTE.forest },
 };
