@@ -149,7 +149,7 @@ export function bindGameActionHolds(
       return;
     }
     dispose();
-    dispose = doc.hidden ? () => undefined : install();
+    dispose = doc.hidden ? Object.assign(() => undefined, { cancel: () => undefined }) : install();
   };
   doc.addEventListener("visibilitychange", visibility);
   return () => {
