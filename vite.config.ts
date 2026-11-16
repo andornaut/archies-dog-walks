@@ -38,6 +38,7 @@ export default gameViteConfig<typeof ConfigModules>({
     const atlas = modules.atlasPlugin();
     return [
       atlas,
+      modules.crashFontPlugin(repoPath("art/fonts/tiny5/Tiny5.ttf")),
       modules.generatedFilesPlugin({ repoRoot: repoPath(".") }),
       modules.phaserBuildPlugin(modules.PHASER_BUILD),
       modules.hashedIconsPlugin({ icons: modules.HASHED_ICONS }),

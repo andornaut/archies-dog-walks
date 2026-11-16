@@ -1,6 +1,6 @@
 @font-face {
   font-family: "Archie crash body";
-  src: url("../../art/fonts/tiny5/Tiny5.ttf") format("truetype");
+  src: url("adw-crash-body.woff2") format("woff2");
   font-display: swap;
 }
 

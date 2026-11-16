@@ -7,6 +7,7 @@ export { HASHED_ICONS } from "../pwa/icons.ts";
 export { precachePlugin } from "../pwa/precachePlugin.ts";
 export { webManifestPlugin } from "../pwa/webManifestPlugin.ts";
 export { atlasPlugin } from "./atlas/atlasPlugin.ts";
+export { crashFontPlugin } from "./crashFontPlugin.ts";
 export { generatedFilesPlugin } from "./generatedFilesPlugin.ts";
 export { PHASER_BUILD } from "./phaserBuild.ts";
 export { uiStylePlugin } from "./uiStylePlugin.ts";
