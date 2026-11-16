@@ -44,7 +44,7 @@ it("refits the existing native error frame on canvas resize while required failu
   );
   const doc = new FakeDocument();
   const element = doc.createElement("div");
-  const body = doc.createElement("body");
+  const body = doc.body;
   const frame = Object.assign(doc.createElement("div"), {
     clientLeft: 0,
     clientTop: 0,
@@ -52,23 +52,22 @@ it("refits the existing native error frame on canvas resize while required failu
     offsetLeft: 0,
     offsetParent: body,
     offsetTop: 0,
-    parentElement: body,
   });
+  body.append(frame, element);
   vi.stubGlobal("document", { body });
   const page = Object.assign(doc, {
-    body,
     fonts: { add: () => undefined },
     getElementById: () => element,
   });
-  const canvas = {
+  const canvas = Object.assign(doc.createElement("canvas"), {
     offsetHeight: 1280,
     offsetLeft: 0,
     offsetParent: frame,
     offsetTop: 0,
     offsetWidth: 575,
-    parentElement: frame,
-    style: { height: "1280px", marginLeft: "", width: "575px" },
-  };
+  });
+  Object.assign(canvas.style, { height: "1280px", marginLeft: "", width: "575px" });
+  frame.append(canvas);
   const scale = { gameSize: { height: 1280, width: 575 }, zoom: 1 };
   const layer = mountUiLayer(
     page as unknown as Document,
