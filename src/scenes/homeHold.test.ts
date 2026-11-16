@@ -19,7 +19,7 @@ type Target = { kind: "petShop" } | { dog: DogId; kind: "dog" };
 const point = { x: 50, y: 300 };
 const methods = StartScene.prototype as unknown as {
   dispatchHeld: (target: Target) => void;
-  homePressDown: (point: { x: number; y: number }, native?: boolean) => void;
+  homePressDown: (native: boolean, point: { x: number; y: number }) => void;
   homePressMove: (point: { isDown: boolean; x: number; y: number }) => void;
   homePressUp: (point: { x: number; y: number }, cancelled: boolean) => void;
   update: () => void;
@@ -47,7 +47,7 @@ function home(target: Target) {
 it("holding the world Pet shop performs its existing tap action once and suppresses release", () => {
   const target = { kind: "petShop" } as const;
   const state = home(target);
-  methods.homePressDown.call(state, point);
+  methods.homePressDown.call(state, false, point);
   state.time.now = state.hold!.rule.holdMs;
   methods.update.call(state);
   methods.update.call(state);
@@ -61,7 +61,7 @@ it("holding the world Pet shop performs its existing tap action once and suppres
 it("release at the hold threshold uses the same world action without waiting for a frame", () => {
   const target = { kind: "petShop" } as const;
   const state = home(target);
-  methods.homePressDown.call(state, point);
+  methods.homePressDown.call(state, false, point);
   state.time.now = state.hold!.rule.holdMs;
   methods.homePressUp.call(state, point, false);
   expect(state.actAfterDip).toHaveBeenCalledExactlyOnceWith(target);
@@ -69,14 +69,14 @@ it("release at the hold threshold uses the same world action without waiting for
 
 it("leaves native default holds to the native registry while retaining dog detail overrides", () => {
   const native = home({ kind: "petShop" });
-  methods.homePressDown.call(native, point, true);
+  methods.homePressDown.call(native, true, point);
   expect(native.hold).toBeUndefined();
   methods.update.call(native);
   expect(native.actAfterDip).not.toHaveBeenCalled();
 
   const dog = { dog: newPlayerSave.lastLoadout.dogs[0]!, kind: "dog" } as const;
   const detail = home(dog);
-  methods.homePressDown.call(detail, point, true);
+  methods.homePressDown.call(detail, true, point);
   detail.time.now = detail.hold!.rule.holdMs;
   methods.update.call(detail);
   methods.homePressUp.call(detail, point, false);
@@ -86,7 +86,7 @@ it("leaves native default holds to the native registry while retaining dog detai
 
 it("does not activate after dragging outside or withdrawing a world target before its hold", () => {
   const moved = home({ kind: "petShop" });
-  methods.homePressDown.call(moved, point);
+  methods.homePressDown.call(moved, false, point);
   moved.time.now = moved.hold!.rule.holdMs;
   methods.homePressMove.call(moved, { ...point, isDown: true, x: point.x + TILE_SLOP_PX + 1 });
   methods.update.call(moved);
@@ -96,7 +96,7 @@ it("does not activate after dragging outside or withdrawing a world target befor
   expect(moved.actAfterDip).not.toHaveBeenCalled();
 
   const vanished = home({ kind: "petShop" });
-  methods.homePressDown.call(vanished, point);
+  methods.homePressDown.call(vanished, false, point);
   vanished.time.now = vanished.hold!.rule.holdMs;
   vanished.targetAt.mockReturnValue(undefined);
   methods.update.call(vanished);

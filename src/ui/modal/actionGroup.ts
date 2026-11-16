@@ -40,6 +40,7 @@ export function arrangePanelActions(
     rowX += width + BUTTON_SIZE.gap;
     const dx = rect.x - button.rect.x;
     const dy = rect.y - button.rect.y;
+    const textDx = dx + (width - button.rect.width) / 2;
     return {
       ...button,
       hit: {
@@ -54,11 +55,15 @@ export function arrangePanelActions(
             key: {
               ...button.key,
               capTop: button.key.capTop + dy,
-              centreX: button.key.centreX + dx,
+              centreX: button.key.centreX + textDx,
             },
           }),
       rect,
-      text: { ...button.text, capTop: button.text.capTop + dy, centreX: rect.x + width / 2 },
+      text: {
+        ...button.text,
+        capTop: button.text.capTop + dy,
+        centreX: button.text.centreX + textDx,
+      },
     };
   });
 }

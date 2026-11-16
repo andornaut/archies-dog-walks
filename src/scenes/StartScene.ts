@@ -543,7 +543,7 @@ export class StartScene extends Scene {
     listenOnePress(this, {
       down: (point) => {
         if (this.nativeHome?.accepts()) {
-          this.homePressDown(point);
+          this.homePressDown(false, point);
         }
       },
       move: (point) => this.homePressMove(point),
@@ -636,7 +636,7 @@ export class StartScene extends Scene {
       }
     });
   }
-  private homePressDown(pointer: { x: number; y: number }, native = false): void {
+  private homePressDown(native: boolean, pointer: { x: number; y: number }): void {
     addTapBurst(this, pointer.x, pointer.y);
     // The top bar stays lit over an open card, and its buttons take their presses.
     if (
@@ -1402,7 +1402,7 @@ export class StartScene extends Scene {
           this.press = undefined;
         }
       },
-      down: (event) => this.homePressDown(toGame(event), true),
+      down: (event) => this.homePressDown(true, toGame(event)),
       move: (event) => this.homePressMove({ ...toGame(event), isDown: event.buttons !== 0 }),
       painted: () => {
         if (!this.nativeReady) {
