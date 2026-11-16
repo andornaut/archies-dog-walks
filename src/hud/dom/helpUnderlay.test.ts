@@ -6,7 +6,6 @@ import { coverHelpUnderlay } from "./helpUnderlay.ts";
 function display(element: FakeElement, value = "", priority = "") {
   let current = value;
   let weight = priority;
-  Object.assign(element, { isConnected: true });
   Object.assign(element.style, {
     getPropertyPriority: () => weight,
     getPropertyValue: () => current,
@@ -26,6 +25,7 @@ function display(element: FakeElement, value = "", priority = "") {
 it("hides only prior native roots and restores their exact visual state before modal focus returns", () => {
   const doc = new FakeDocument();
   const layer = doc.createElement("div");
+  doc.body.append(layer);
   const home = doc.createElement("div");
   const hidden = doc.createElement("div");
   const bursts = doc.createElement("div");
@@ -68,6 +68,7 @@ it("hides only prior native roots and restores their exact visual state before m
 it("keeps persistent-root redraws covered and leaves removed or newly owned roots unchanged", () => {
   const doc = new FakeDocument();
   const layer = doc.createElement("div");
+  doc.body.append(layer);
   const home = doc.createElement("div");
   const removed = doc.createElement("div");
   const changed = doc.createElement("div");
