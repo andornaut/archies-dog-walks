@@ -2024,27 +2024,27 @@
           "height": 48,
           "width": 144,
           "x": 108,
-          "y": 280
+          "y": 308
         },
         "cancel": {
           "height": 48,
           "width": 144,
           "x": 108,
-          "y": 224
+          "y": 252
         },
         "hit": {
           "height": 48,
           "width": 144,
           "x": 108,
-          "y": 280
+          "y": 308
         },
         "panel": {
-          "height": 239,
+          "height": 183,
           "width": 264,
           "x": 48,
-          "y": 161
+          "y": 189
         },
-        "capY": 297
+        "capY": 325
       },
       "walkerAtGate": {
         "footY": 152,
