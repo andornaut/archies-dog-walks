@@ -60,7 +60,7 @@ Treat the home pickers and Start walk as one vertical group. The three sections 
 | home.start      | 32,508,296,48              | x,y,w,h px | Start walk, 2px below Pocket          | [home layout](../src/home/homeLayout.ts)                                         |
 | home.columns    | Walker 4; Dogs 3; Pocket 5 | columns    | Card grids, tiles 8px apart both ways | [home layout](../src/home/homeLayout.ts)                                         |
 
-Keep hero, shop, sign and actor anchors independent of picker padding. On results pages, [endResultsPlacement](../src/home/endLayout.ts) moves the summary and attached art together, clamps measured summary/badge heights above the button clearance and centres the whole unchanged badge strip in the remaining band.
+Keep hero, shop, sign and actor anchors independent of picker padding. On results pages, [endResultsPlacement](../src/home/endLayout.ts) moves the summary and attached art together, bounds the panel above the button and badge clearance and centres the unchanged badge strip in the remaining band. Full-size Body 2× owner names wrap in their measured column; when complete owner rows exceed the allocated viewport, scroll only those rows, moving each face, bubble, tail, name and quote together. Title, earnings, badges and Back to title remain fixed; no name or quote is omitted or shrunk.
 
 ## Controls/targets
 
