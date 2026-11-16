@@ -643,12 +643,12 @@ export const HOME_SCREEN = {
   // yard, art: the dog slot sign: its art's top-left, its board, the board's frame, lit and shaded
   // rows, its lines' pitch, how far it drops pressed, and its text's scale.
   slotSign: {
-    art: { x: 255, y: 114 } satisfies Point,
-    board: { height: 24, width: 79, x: 256, y: 119 } satisfies Rect,
+    art: { x: 245, y: 110 } satisfies Point,
+    board: { height: 27, width: 89, x: 246, y: 116 } satisfies Rect,
     boardEdge: { frame: 1, lit: 1, shade: 1 },
-    linePitch: 9,
+    linePitch: 10.08,
     pressDrop: 1,
-    scale: 1,
+    scale: 1.12,
   },
   // The walker's speech bubble.
   speech: {

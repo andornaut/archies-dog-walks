@@ -1922,14 +1922,14 @@
       },
       "slotSign": {
         "art": {
-          "x": 255,
-          "y": 82
+          "x": 245,
+          "y": 78
         },
         "board": {
-          "height": 24,
-          "width": 79,
-          "x": 256,
-          "y": 87
+          "height": 27,
+          "width": 89,
+          "x": 246,
+          "y": 84
         },
         "boardEdge": {
           "frame": 1,
@@ -1939,15 +1939,15 @@
         "headColour": "plum",
         "hit": {
           "height": 48,
-          "width": 91,
-          "x": 250,
-          "y": 75
+          "width": 101,
+          "x": 240,
+          "y": 74
         },
         "key": "ui-slot-sign",
-        "linePitch": 9,
+        "linePitch": 10.08,
         "pressDrop": 1,
         "priceColour": "forest",
-        "scale": 1
+        "scale": 1.12
       },
       "speech": {
         "clearance": 2,

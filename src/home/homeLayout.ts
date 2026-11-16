@@ -703,7 +703,7 @@ export function dogTilePlateY(body: FontMetrics): number {
 
 // The dog slot sign's cream inside its board's frame and lit and shaded rows, and where its two
 // lines go: each line's ink centred on the cream's middle column, the block from the call's
-// capitals to the price's lowest ink centred down the cream, any odd row left under it.
+// capitals to the price's lowest ink centred down the cream.
 export function slotSignText(body: FontMetrics): {
   cream: Rect;
   headCapY: number;
@@ -719,7 +719,7 @@ export function slotSignText(body: FontMetrics): {
     y: board.y + frame + lit,
   };
   const block = linePitch + inkRowsFromCapTop(body) * scale;
-  const headCapY = cream.y + Math.floor((cream.height - block) / 2);
+  const headCapY = cream.y + (cream.height - block) / 2;
   return { cream, headCapY, priceCapY: headCapY + linePitch, x: cream.x + cream.width / 2 };
 }
 

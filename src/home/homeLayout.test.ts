@@ -786,6 +786,15 @@ describe("the dog slot sign", () => {
     ]),
   ];
 
+  it("fits the compact art and readable text within the existing Pet Shop frontage", () => {
+    expect(frameSize(key)).toEqual({ height: 34, width: 91 });
+    expect(art).toEqual({ x: 245, y: 78 });
+    expect(board).toEqual({ height: 27, width: 89, x: 246, y: 84 });
+    expect(cream).toEqual({ height: 23, width: 87, x: 247, y: 86 });
+    expect(scale).toBe(1.12);
+    expect(priceCapY - headCapY).toBeCloseTo(10.08);
+  });
+
   it.each(clear)("keeps its outline and hit area clear of %s", (_, rect) => {
     expect(rectsOverlap(outline, rect)).toBe(false);
     expect(rectsOverlap(hit, rect)).toBe(false);
@@ -831,8 +840,7 @@ describe("the dog slot sign", () => {
   it("centres its two lines down the cream, the price under the call's lowest ink", () => {
     const above = headCapY - cream.y;
     const below = cream.y + cream.height - (priceCapY + inkRows);
-    expect(below - above).toBeGreaterThanOrEqual(0);
-    expect(below - above).toBeLessThanOrEqual(1);
+    expect(below).toBeCloseTo(above);
     expect(headCapY + inkRows).toBeLessThan(priceCapY);
   });
 });
