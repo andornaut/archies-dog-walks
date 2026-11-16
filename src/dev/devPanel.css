@@ -37,6 +37,7 @@
 
 /* Below the bar, past the bottom of the screen; src/main.css scrolls the page to it. */
 .dev-sheet {
+  container: dev-sheet / inline-size;
   box-sizing: border-box;
   padding: 0 max(16px, var(--inset-right)) calc(16px + var(--inset-bottom))
     max(16px, var(--inset-left));
@@ -154,6 +155,20 @@
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
+}
+
+/* Compact actions are 128px wide with 12px gaps; only single-action lines centre. */
+@container dev-sheet (width < calc(2 * 128px + 12px)) {
+  .dev-actions,
+  .dev-save {
+    justify-content: center;
+  }
+}
+
+@container dev-sheet (width >= calc(3 * 128px + 2 * 12px)) and (width < calc(4 * 128px + 3 * 12px)) {
+  .dev-save > :last-child {
+    margin-inline: auto;
+  }
 }
 
 /* The storage line under the save cheats. */
