@@ -35,6 +35,7 @@ import {
   installStepsLayout,
   knobX,
   noteRoomForControl,
+  SETTINGS_BUILD_LABEL,
   SETTINGS_NOTE_STYLE,
   SETTINGS_ROW,
   settingsLayout,
@@ -303,14 +304,15 @@ describe("the settings card", () => {
 });
 
 // The build label under the last row, with the Install row and without it: the widest label a
-// build shows, its glyphs' rows at 1x from its capitals' top.
+// build shows, its glyph rows at the standard body scale from the capitals' top.
 const WIDEST_LABEL = buildLabel("99.99.99", "89abcdef");
 const labelGlyphs = [...WIDEST_LABEL].flatMap((char) => {
   const glyph = gameGlyphs("font-body").get(char);
   return glyph === undefined || glyph.height === 0 ? [] : [glyph];
 });
 const labelInkBottom =
-  Math.max(...labelGlyphs.map((glyph) => glyph.yOffset + glyph.height)) - bodyFont.capTop;
+  (Math.max(...labelGlyphs.map((glyph) => glyph.yOffset + glyph.height)) - bodyFont.capTop) *
+  SETTINGS_BUILD_LABEL.style.scale;
 
 describe.each([
   ["with the Install row", shapes],
@@ -329,6 +331,9 @@ describe.each([
   );
 
   it("keeps the build label under the last row and clear of the dismiss footer", () => {
+    expect(inkWidth("font-body", SETTINGS_BUILD_LABEL.style, WIDEST_LABEL)).toBeLessThanOrEqual(
+      SETTINGS_BUILD_LABEL.room,
+    );
     expect(buildLabelY - lastInk).toBe(LABEL_HELP_GAP);
     expect(panel.y + panel.height - (buildLabelY + labelInkBottom)).toBe(
       MODAL.pad + DISMISS_FOOTER_SPACE,
@@ -338,7 +343,9 @@ describe.each([
   // A tap on the label lands on the card outside every row, so it neither acts nor closes it.
   it("lies under the last row, which stays a tap target at least MIN_PRESS tall", () => {
     const labelTop =
-      buildLabelY + Math.min(...labelGlyphs.map((glyph) => glyph.yOffset)) - bodyFont.capTop;
+      buildLabelY +
+      (Math.min(...labelGlyphs.map((glyph) => glyph.yOffset)) - bodyFont.capTop) *
+        SETTINGS_BUILD_LABEL.style.scale;
     expect(labelTop).toBeGreaterThanOrEqual(last.rect.y + last.rect.height);
     expect(last.rect.height).toBeGreaterThanOrEqual(MIN_PRESS);
   });

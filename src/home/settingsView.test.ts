@@ -7,7 +7,9 @@ import { SETTINGS_CARD } from "../data/layout.ts";
 import { SCREEN_CONFIG, SCREEN_LAYOUT } from "../data/screen.ts";
 import { DEFAULT_SETTINGS } from "../save/settings.ts";
 import { fontFileMetrics, gameFont } from "../testing/fontInk.ts";
+import { MODAL } from "../ui/modal/layout.ts";
 import { modalTitleInk } from "../ui/modal/titleRole.ts";
+import { TEXT_SCALE } from "../ui/textFit.ts";
 import { FEEDBACK } from "./feedback.ts";
 import { installStepsLayout, settingsLayout } from "./settings.ts";
 import {
@@ -58,6 +60,22 @@ const view = (state: Partial<SettingsState>) =>
   );
 
 describe("settingsView", () => {
+  it("uses readable body text for the centred build label and retains footer clearance", () => {
+    const current = view({});
+    expect(current.build.font).toBe("body");
+    expect(current.build.scale).toBe(TEXT_SCALE);
+    const ink = MEASURE.ink(current.build.font, current.build.scale, current.build.lines[0]!);
+    const centre = current.build.x + (ink.left + ink.right) / 2;
+    expect(
+      Math.abs(centre - current.card.panel.x - current.card.panel.width / 2),
+    ).toBeLessThanOrEqual(0.5);
+    expect(
+      current.card.footer!.rect.y -
+        current.build.capTop -
+        fonts.body.capHeight * current.build.scale,
+    ).toBe(MODAL.gap);
+  });
+
   it.each([false, true])("shows current switch states with mute %s and stable help", (muted) => {
     for (const reducedMotion of [false, true]) {
       const current = view({ settings: { ...DEFAULT_SETTINGS, muted, reducedMotion } });

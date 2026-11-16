@@ -11,7 +11,7 @@ import { type CloseControl, closeControl } from "../ui/closeControl.ts";
 import { helpCapDy, LABEL_HELP_GAP } from "../ui/labelHelpGap.ts";
 import { DISMISS_FOOTER_SPACE } from "../ui/modal/dismissFooter.ts";
 import { MODAL, modalFamilyWidth, modalRect } from "../ui/modal/layout.ts";
-import { TEXT_SCALE, textOnLines } from "../ui/textFit.ts";
+import { TEXT_SCALE, TEXT_STYLE, textOnLines } from "../ui/textFit.ts";
 import { HOME_LAYOUT } from "./homeLayout.ts";
 
 // The settings screen moves a volume in 5% steps, from 0 to 1.
@@ -147,7 +147,7 @@ const SEPARATOR_INSET = SETTINGS_CARD.separatorInset;
 // The rows press as a list's rows do, the stacked button gap apart.
 const ROW_GAP = BUTTON_SIZE.stackGap;
 
-// The build label (BUILD_LABEL) closes the card in 1x dark brown body text, centred across the
+// The build label (BUILD_LABEL) uses the standard body role, centred across the
 // panel with no separator over it: its capitals LABEL_HELP_GAP clear rows under the last row's
 // lowest ink, as a note sits under its label, and its lowest ink BUILD_LABEL_FOOT clear rows over
 // the card's inner bottom edge. The last row ends halfway down that gap, so a tap on the label
@@ -155,7 +155,7 @@ const ROW_GAP = BUTTON_SIZE.stackGap;
 export const SETTINGS_BUILD_LABEL = {
   colour: "darkBrown",
   room: SETTINGS_ROW.width,
-  style: { scale: 1 },
+  style: TEXT_STYLE,
 } as const;
 // ui-detail-card's frame along its bottom: a tan shade, a dark brown line and an ink line.
 const CARD_FRAME_BOTTOM = 3;
