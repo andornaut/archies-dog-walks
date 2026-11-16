@@ -40,6 +40,7 @@ function menu(context = menuContext(), customNumbers = false) {
     labels: PAUSE_MENU_ITEMS.map((item) => words[item]),
     layout: pauseMenuLayout,
     note: [{ colour: 0, text: "Ending now keeps $5 of $9." }],
+    primary: "last",
     sentenceLines: true,
     title: words.title,
   });
@@ -60,7 +61,7 @@ function menu(context = menuContext(), customNumbers = false) {
     throw new Error("The menu added no dialog");
   }
   const buttons = dialog.all().filter((node) => node.tagName === "button");
-  return { buttons, close, dialog, doc, presses, shown, words };
+  return { buttons, close, dialog, doc, presses, shown, view, words };
 }
 
 describe("the HTML pause menu", () => {
@@ -769,5 +770,63 @@ it("opts page actions into content gestures while corner and footer Close retain
   expect(up).toHaveBeenCalledOnce();
   expect(action).not.toHaveBeenCalled();
   expect(close).toHaveBeenCalledTimes(2);
+  shown.destroy();
+});
+
+it("keeps action identity while DOM order follows the button and footer positions", () => {
+  const { layer } = menuContext();
+  const original = questionPanelView(MEASURE, SCREEN_LAYOUT.walkView, {
+    labels: [gameData.menuText.pause.resume, gameData.menuText.pause.help],
+    layout: pauseMenuLayout,
+    note: [],
+    sentenceLines: true,
+    title: gameData.menuText.pause.title,
+  });
+  const [upper, lower] = original.buttons;
+  const first = vi.fn();
+  const second = vi.fn();
+  const close = vi.fn();
+  const footer = dismissFooter(
+    MEASURE,
+    { label: gameData.menuText.common.close, primary: false },
+    original.panel,
+  );
+  const middle = (upper!.rect.y + lower!.rect.y) / 2;
+  const shown = showQuestionPanel(layer, {
+    close: null,
+    closeLabel: gameData.menuText.common.close,
+    fonts: { body: gameFont("font-body"), title: gameFont("font-title") },
+    footerPress: close,
+    numberKeys: true,
+    presses: [first, second],
+    toGame: (point) => point,
+    view: {
+      ...original,
+      buttons: [
+        { ...upper!, actionIndex: 0, hit: lower!.hit, rect: lower!.rect },
+        { ...lower!, actionIndex: 1, hit: upper!.hit, rect: upper!.rect },
+      ],
+      footer: { ...footer, hit: { ...footer.hit, y: middle }, rect: { ...footer.rect, y: middle } },
+    },
+  });
+  const buttons = (shown.element as unknown as ReturnType<FakeDocument["createElement"]>)
+    .all()
+    .filter((node) => node.tagName === "button");
+  expect(buttons.map((button) => button.getAttribute("aria-keyshortcuts"))).toEqual([
+    "2",
+    null,
+    "1",
+  ]);
+  buttons[0]!.fire("click", { detail: 0 });
+  buttons[1]!.fire("click", { detail: 0 });
+  buttons[2]!.fire("click", { detail: 0 });
+  expect(first).toHaveBeenCalledOnce();
+  expect(second).toHaveBeenCalledOnce();
+  expect(close).toHaveBeenCalledOnce();
+  shown.setActionShown(0, false);
+  expect(buttons.map((button) => button.hidden)).toEqual([false, false, true]);
+  shown.refuse(1, { flashMs: 50, flashes: 4, reducedMotion: true });
+  expect(buttons[0]!.classList.contains("adw-refusing-still")).toBe(true);
+  expect(buttons[2]!.classList.contains("adw-refusing-still")).toBe(false);
   shown.destroy();
 });

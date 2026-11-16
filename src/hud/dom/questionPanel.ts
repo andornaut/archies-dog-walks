@@ -281,11 +281,10 @@ export function showQuestionPanel(layer: UiLayer, input: DomQuestionPanelInput):
 
   const burst = (event: PointerEvent) =>
     addTapBurst(layer, input.toGame({ x: event.clientX, y: event.clientY }));
-  const actions = view.buttons.map((button, index) => ({
-    button,
-    index,
-    press: input.presses[index],
-  }));
+  const actions = view.buttons.map((button, visualIndex) => {
+    const index = button.actionIndex ?? visualIndex;
+    return { button, index, press: input.presses[index] };
+  });
   if (view.footer !== undefined) {
     actions.push({
       button: view.footer,
@@ -293,6 +292,8 @@ export function showQuestionPanel(layer: UiLayer, input: DomQuestionPanelInput):
       press: input.footerPress ?? input.close ?? undefined,
     });
   }
+  actions.sort((a, b) => a.button.rect.y - b.button.rect.y || a.button.rect.x - b.button.rect.x);
+  const sourceButtons = new Map<number, HTMLElement>();
   const buttons = actions.map(({ button, index, press }) => {
     const part = createPanelButton(
       doc,
@@ -307,6 +308,7 @@ export function showQuestionPanel(layer: UiLayer, input: DomQuestionPanelInput):
       part.element.setAttribute("aria-keyshortcuts", String(number + 1));
     }
     placed.push(part.place);
+    sourceButtons.set(index, part.element);
     return part.element;
   });
 
@@ -456,7 +458,9 @@ export function showQuestionPanel(layer: UiLayer, input: DomQuestionPanelInput):
           },
           down: (event) => {
             sceneGesture = ![
-              ...(input.gestureOnActions === true ? buttons.slice(view.buttons.length) : buttons),
+              ...(input.gestureOnActions === true
+                ? actions.flatMap((action, i) => (action.index === -1 ? [buttons[i]!] : []))
+                : buttons),
               close,
             ].some((control) => control.contains(event.target as Node));
             if (sceneGesture) {
@@ -511,7 +515,7 @@ export function showQuestionPanel(layer: UiLayer, input: DomQuestionPanelInput):
       }
     },
     refuse(index, refusal) {
-      const button = buttons[index];
+      const button = sourceButtons.get(index);
       // A refusal under way plays on.
       if (
         button === undefined ||
@@ -529,7 +533,7 @@ export function showQuestionPanel(layer: UiLayer, input: DomQuestionPanelInput):
       doc.defaultView?.setTimeout(() => button.classList.remove(refusing), total);
     },
     setActionShown(index, shown) {
-      const button = buttons[index];
+      const button = sourceButtons.get(index);
       if (button !== undefined) {
         button.hidden = !shown;
       }
