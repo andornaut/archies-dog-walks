@@ -14,7 +14,6 @@ import { BUTTON_SIZE } from "../../data/layout.ts";
 import { PALETTE } from "../palette.ts";
 import { bindGameAction } from "./actionBinding.ts";
 import { guardNativeInput } from "./modalLifecycle.ts";
-import { mountMuteControl, type MuteControlSettings } from "./muteControl.ts";
 import type { UiLayer } from "./uiLayer.ts";
 
 export interface LoadingErrorView {
@@ -24,12 +23,11 @@ export interface LoadingErrorView {
 }
 
 // Recovery controls use the independent bootstrap fonts and chrome, never the failed game
-// resources. The same device mute preference remains usable while the game is blocked.
+// resources. Required loading exposes only its explicit retry action.
 export function mountLoadingError(
   context: {
     readonly layer: UiLayer;
     readonly retry: () => void | PromiseLike<void>;
-    readonly settings: MuteControlSettings;
   },
   parent: HTMLElement,
 ): LoadingErrorView {
@@ -44,7 +42,6 @@ export function mountLoadingError(
   const modal = createModalLayer(parent);
   let close: (() => void) | undefined;
   let scope: ReturnType<UiLayer["input"]["open"]> | undefined;
-  let removeMute: (() => void) | undefined;
   let disposed = false;
   // Typography and panel spacing stay in CSS pixels; only the normal action follows game fit.
   const presentation = (): LoadingFailurePresentation => {
@@ -134,8 +131,6 @@ export function mountLoadingError(
     scope = undefined;
     close?.();
     close = undefined;
-    removeMute?.();
-    removeMute = undefined;
     root.hidden = true;
   };
   return {
@@ -164,7 +159,6 @@ export function mountLoadingError(
         root.hidden = false;
         place();
         scope = layer.input.open();
-        removeMute = mountMuteControl(context.settings, root);
         close = modal.open({ focus: button }, root);
       }
     },

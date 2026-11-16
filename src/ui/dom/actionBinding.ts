@@ -24,6 +24,23 @@ export interface GameAction {
 const actions = new WeakMap<HTMLElement, GameAction>();
 const roots = new WeakMap<HTMLElement, object>();
 
+function actionAvailable(action: GameAction, element: HTMLElement): boolean {
+  if (element.ownerDocument.hidden || !action.available()) {
+    return false;
+  }
+  for (let node: HTMLElement | null = element; node !== null; node = node.parentElement) {
+    if (
+      node.hidden ||
+      node.inert ||
+      node.style.display === "none" ||
+      node.style.visibility === "hidden"
+    ) {
+      return false;
+    }
+  }
+  return true;
+}
+
 // Register the action once: a discrete hold inherits its callback unless explicitly overridden.
 export function bindGameAction(action: GameAction, element: HTMLElement): () => void {
   if (actions.has(element)) {
@@ -31,7 +48,10 @@ export function bindGameAction(action: GameAction, element: HTMLElement): () => 
   }
   actions.set(element, action);
   const click = (event: MouseEvent) => {
-    if (action.available() && (event.detail === 0 || (action.pointer ?? "click") === "click")) {
+    if (
+      actionAvailable(action, element) &&
+      (event.detail === 0 || (action.pointer ?? "click") === "click")
+    ) {
       action.activate({ event, kind: "click" });
     }
   };
@@ -93,7 +113,7 @@ export function bindGameActionHolds(
                   !root.isConnected ||
                   !control.isConnected ||
                   !context.guard.gate.accepts() ||
-                  !action.available()
+                  !actionAvailable(action, control)
                 ) {
                   return;
                 }
@@ -106,7 +126,7 @@ export function bindGameActionHolds(
               const override = typeof action.hold === "function" ? action.hold : undefined;
               return {
                 activate: () => dispatch(action.activate),
-                available: () => !doc.hidden && action.available(),
+                available: () => actionAvailable(action, control),
                 element,
                 ...(override === undefined ? {} : { hold: () => dispatch(override) }),
                 rule: holdRule(TUNING, TILE_SLOP_PX * context.unit()),

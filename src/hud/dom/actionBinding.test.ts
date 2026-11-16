@@ -183,3 +183,14 @@ it("does not arm a panel hold when another input already owns the contact lease"
   release.release();
   view.stop();
 });
+
+it("rechecks actual control visibility before a held action or its release can run", () => {
+  const view = fixture();
+  view.down();
+  vi.advanceTimersByTime(duration / 2);
+  view.button.hidden = true;
+  vi.advanceTimersByTime(duration);
+  view.release();
+  expect(view.activate).not.toHaveBeenCalled();
+  view.stop();
+});

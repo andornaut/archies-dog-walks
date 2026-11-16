@@ -7,7 +7,7 @@ import { PALETTE } from "../palette.ts";
 import { topSectionLayout } from "../topSection.ts";
 import { bindGameAction, bindGameActionHolds } from "./actionBinding.ts";
 
-// Boot and renderer-failure screens share the same device preference as Phaser's soundboard.
+// Renderer failure uses the same device preference as Phaser's soundboard.
 // The control needs neither a compatible progress save nor loaded game fonts or textures.
 export interface MuteControlSettings {
   readonly current: { readonly muted: boolean };

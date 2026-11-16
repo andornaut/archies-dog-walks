@@ -33,7 +33,6 @@ vi.mock("@andornaut/game-kit/runtime/web/ui/dom/modalLayer", () => ({
   createModalLayer: () => ({ dispose: vi.fn(), open: () => vi.fn() }),
 }));
 vi.mock("./modalLifecycle.ts", () => ({ guardNativeInput: () => vi.fn() }));
-vi.mock("./muteControl.ts", () => ({ mountMuteControl: () => vi.fn() }));
 
 it("keeps the shared panel and fixed CSS text while fitting only its normal action on resize", async () => {
   vi.clearAllMocks();
@@ -52,7 +51,6 @@ it("keeps the shared panel and fixed CSS text while fitting only its normal acti
     {
       layer,
       retry,
-      settings: { current: { muted: false }, onChange: () => vi.fn(), setMuted: vi.fn() },
     },
     parent as unknown as HTMLElement,
   );
@@ -74,6 +72,7 @@ it("keeps the shared panel and fixed CSS text while fitting only its normal acti
     title: { sizePx: 24 },
   });
   view.show({ attempt: 1, error: "503", kind: "failed" });
+  expect(parent.all().filter((node) => node.tagName === "button")).toHaveLength(1);
   await context.onRetry();
   expect(retry).toHaveBeenCalledOnce();
   // A small landscape fit retains the approved logical height, without a CSS-size floor.

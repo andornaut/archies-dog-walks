@@ -33,7 +33,6 @@ import {
 import { offlineInstallation } from "./pwa/installationState.ts";
 import { launchGame } from "./pwa/launchGame.ts";
 import { createUpdateIdle } from "./pwa/updateIdle.ts";
-import { pageDeviceSettings } from "./save/settings.ts";
 import { BootScene } from "./scenes/BootScene.ts";
 import { CardScene } from "./scenes/CardScene.ts";
 import { CelebrationScene } from "./scenes/CelebrationScene.ts";
@@ -173,11 +172,7 @@ function bootGame(context: GameStartup): Game {
     }
     const required = createRequiredUi(
       { installation: offlineInstallation, layer, progress: context.nativeProgress },
-      (retry) =>
-        pauseLoadingError(
-          game,
-          mountLoadingError({ layer, retry, settings: pageDeviceSettings() }, document.body),
-        ),
+      (retry) => pauseLoadingError(game, mountLoadingError({ layer, retry }, document.body)),
     );
     game.registry.set(REQUIRED_UI, required);
     const update = () => layer.update();
