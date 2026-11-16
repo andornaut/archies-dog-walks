@@ -1005,10 +1005,10 @@ const DOG_PHOTO: readonly [number, number] = [6, 23];
 // round a white mat round sky, as ui-owner-tab frames the owner, for the 20x20 face-owner-<dog>-20.
 const DOG_CARD_OWNER: readonly [number, number, number] = [45, 23, 24];
 
-// The hearts area the heart-loss flash fills, as x, y, w, h: one row of six hearts from (45,52), its
-// foot level with the dog's photo, with a pixel round them. The only part of the card it touches, so
-// the warn rim stays the card's only border.
-const DOG_CARD_HEARTS: readonly [number, number, number, number] = [44, 51, 55, 9];
+// The hearts area the heart-loss flash fills, as x, y, w, h: one row of six hearts from (45,60), with
+// a pixel round them. It is the only part of the card the flash touches, so the warn rim stays
+// the card's only border.
+const DOG_CARD_HEARTS: readonly [number, number, number, number] = [44, 59, 55, 9];
 
 // The empty card's FIRED plate, x, y, w and h: a band across the empty photo, centred on it, the
 // plate's sides on the photo's frame.
@@ -1100,7 +1100,7 @@ function dogCardWarn(step: number): Grid {
 }
 
 // 120x70, ui-dog-card's heart-loss frames, an overlay over the card and under the game's face, hearts
-// and text that fills only the hearts area (44,51 55x9, its corners cut 1px), never the card's edge or
+// and text that fills only the hearts area (44,59 55x9, its corners cut 1px), never the card's edge or
 // header: frames 0 and 1 white (13.89:1 on navy), then white on a checkerboard and on one pixel in
 // four, so the flash clears.
 function dogCardHeartLoss(step: number): Grid {
