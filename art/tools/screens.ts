@@ -1564,14 +1564,13 @@ function pair(step: number): Frame {
 
 // ---------- ui-slot-sign ----------
 
-// The dog-slot sign hung from the Pet shop's awning across its front, which the game draws at 255,82,
-// its board (rows 87 to 110) clear of the shopkeeper's highest door-wave row (112): the frame's size,
-// and the cream board in the frame, where the game writes its two lines.
-const SLOT_SIGN_W = 81;
+// The compact sign at 245,78 keeps its right edge at 336 and its board above the keeper's highest
+// wave row112. The cream holds two lines at the dedicated sign role's 1.12x body scale.
+const SLOT_SIGN_W = 91;
 
-const SLOT_SIGN_H = 30;
+const SLOT_SIGN_H = 34;
 
-const SLOT_BOARD: readonly [x: number, y: number, w: number, h: number] = [1, 5, 79, 24];
+const SLOT_BOARD: readonly [x: number, y: number, w: number, h: number] = [1, 6, 89, 27];
 
 // ui-slot-sign: a cream board in a 1px dbrown frame, lit white along its top and tan along its
 // bottom, hung by two dbrown cords from the awning's top stripe. pressed lets the board drop 1px on
@@ -1580,7 +1579,7 @@ function slotSign(pressed = false): Frame {
   const g = scope.Grid(SLOT_SIGN_W, SLOT_SIGN_H);
   const [x, y, w, h] = SLOT_BOARD;
   const d = pressed ? 1 : 0;
-  for (const cx of [8, SLOT_SIGN_W - 9]) {
+  for (const cx of [9, SLOT_SIGN_W - 10]) {
     g.rect(cx, 0, 1, y + d, "dbrown");
   }
   g.rect(x, y + d, w, h, "dbrown");
