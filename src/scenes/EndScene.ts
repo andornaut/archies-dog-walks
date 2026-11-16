@@ -42,7 +42,7 @@ import type { LastWalk } from "../save/schema.ts";
 import { PALETTE } from "../ui/palette.ts";
 import { hasDisplayFont } from "../ui/phaser/displayText.ts";
 import { fillRect } from "../ui/phaser/draw.ts";
-import { addModalShade, onceBeforeRender } from "../ui/phaser/rampDim.ts";
+import { onceBeforeRender } from "../ui/phaser/rampDim.ts";
 import { TEXT_SCALE } from "../ui/textFit.ts";
 import { topSectionButtonAt } from "../ui/topSection.ts";
 import { addBurst, badgeCard, badgeCelebrationNames, NEW_BEST_BURST } from "./badges.ts";
@@ -423,8 +423,7 @@ export class EndScene extends Scene {
       reduced: this.reduced,
     });
     this.card = this.add.container(0, 0).setDepth(CARD_DEPTH);
-    this.card.add(addModalShade(this, SCREEN_LAYOUT.screen));
-    this.htmlCard = addHtmlBadgeCard(this, view, () => this.closeCard());
+    this.htmlCard = addHtmlBadgeCard(this, SCREEN_LAYOUT.screen, view, () => this.closeCard());
   }
 
   private closeCard(): void {

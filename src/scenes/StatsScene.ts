@@ -343,7 +343,10 @@ export class StatsScene extends Scene {
     this.htmlCard = keepPanel(
       this.htmlCard,
       card === undefined ? undefined : JSON.stringify(card),
-      () => (card === undefined ? undefined : addHtmlBadgeCard(this, card, () => this.back())),
+      () =>
+        card === undefined
+          ? undefined
+          : addHtmlBadgeCard(this, overlayRegion("home"), card, () => this.back()),
     );
   }
 

@@ -291,6 +291,7 @@ function everyFrame(scene: Scene): (step: () => void) => () => void {
 // Native badge detail retains its view and optional captured area dismissal.
 export function addHtmlBadgeCard(
   scene: Scene,
+  dim: Rect,
   view: BadgeCardView,
   dismiss?: () => void,
 ): DomQuestionPanel | undefined {
@@ -305,7 +306,7 @@ export function addHtmlBadgeCard(
     now: () => scene.time.now,
     view,
   });
-  return followScene(scene, panel);
+  return followScene(scene, nativeModalShade(scene, dim, panel));
 }
 
 // What a celebration's HTML draws with beyond a panel's: art files, sheets and pill colours.
