@@ -48,6 +48,7 @@ export interface DomTextLine {
   readonly colour: number;
   readonly font: keyof typeof WEB_FONTS;
   readonly line?: number;
+  readonly projection?: "art" | "layout";
   readonly scale: number;
   readonly text: string;
 }
@@ -73,6 +74,13 @@ const DISPLAY_RING = 1;
 // The display letters' heart, red in both of the display font's colours.
 const DISPLAY_HEART = { char: "♥", colour: PALETTE.red } as const;
 
+// Authored logical text follows its layout; other pixel text retains whole device glyph pixels.
+function textPixel(scale: DomScale, line: DomTextLine): number {
+  return line.projection === "layout"
+    ? scale.unit * scale.dpr * line.scale
+    : fontPixel(scale, line.scale);
+}
+
 // Where line's element goes and its font size, in whole device pixels from its container's
 // corner at origin game pixels: one font pixel is fontPixel device pixels, the ink's (or the
 // advance's) middle within half an art pixel of centreX, and the capitals' top on the row nearest
@@ -88,7 +96,7 @@ export function textPlace(
   readonly lineHeight: number;
   readonly top: number;
 } {
-  const pixel = fontPixel(scale, line.scale);
+  const pixel = textPixel(scale, line);
   const text = shownText(line.font, line.text);
   const inked = laidGlyphs(bitmap, 1, text).flatMap(({ ink }) => (ink === null ? [] : [ink]));
   // The first and last columns the line inks, in font pixels from the pen's start, or the pen's
@@ -244,7 +252,7 @@ export function backedTextPlaces(
     if (glyphs.length === 0 || columns.length === 0) {
       return { height: 0, width: 0, x: place.left, y: place.top };
     }
-    const pixel = fontPixel(scale, line.scale);
+    const pixel = textPixel(scale, line);
     const left = Math.min(...columns.map(({ left }) => left));
     const top = Math.min(...glyphs.map(({ yOffset }) => yOffset));
     return {
@@ -277,6 +285,7 @@ export function placeBackedText(
   origin: Origin,
   backing: Rect,
   lines: readonly { readonly element: HTMLElement; readonly line: DomTextLine }[],
+  projection: "art" | "layout" = "art",
 ): void {
   const placed = backedTextPlaces(
     bitmap,
@@ -284,6 +293,7 @@ export function placeBackedText(
     origin,
     backing,
     lines.map(({ line }) => line),
+    projection,
   );
   lines.forEach(({ element, line }, i) => writeTextPlace(element, line, placed[i]!));
 }

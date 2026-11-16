@@ -156,6 +156,26 @@ describe("textPlace", () => {
     },
   );
 
+  it("fits logical text without changing the default art-pixel typography", () => {
+    const scale = domScale(1, { height: 1280, width: 575, x: 0, y: 0 });
+    const font = gameFont("font-body");
+    const line = {
+      capTop: 100,
+      centre: "ink",
+      centreX: 180,
+      colour: 0,
+      font: "body",
+      scale: 1,
+      text: gameData.homeText.slotSign,
+    } as const;
+    const logical = textPlace(font, scale, ORIGIN, { ...line, projection: "layout" });
+    const art = textPlace(font, scale, ORIGIN, line);
+    expect(logical.fontSize).toBe(8 * scale.unit * scale.dpr * line.scale);
+    expect(logical.lineHeight).toBe(font.lineHeight * scale.unit * scale.dpr * line.scale);
+    expect(art.fontSize).toBe(8 * fontPixel(scale, line.scale));
+    expect(logical.fontSize).toBeGreaterThan(art.fontSize);
+  });
+
   it("sets a block's later lines whole font lines under its first", () => {
     const scale = domScale(3, { height: 516, width: 331.703125, x: 14.140625, y: 0 });
     const font = gameFont("font-body");

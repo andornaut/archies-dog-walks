@@ -6,14 +6,14 @@ import { expect, it } from "vitest";
 import { gameData } from "../../data/index.ts";
 import { SLICES } from "../../data/layout.ts";
 import { FakeDocument, type FakeElement } from "../../testing/fakeDom.ts";
-import { gameFont } from "../../testing/fontInk.ts";
+import { fontInk, fontInkRows, gameFont } from "../../testing/fontInk.ts";
 import { newPlayerSave, testContext } from "../../testing/saves.ts";
 import { dimArtPath } from "../../ui/dimArt.ts";
 import { DIM_ART_ATTRIBUTE, setRampDimmed } from "../../ui/dom/rampDim.ts";
 import { sheetFrame } from "../../ui/dom/sheetFrames.ts";
 import { artPixel, domScale, fontPixel, gridRect, gridY } from "../../ui/domScale.ts";
 import { TEXT_SCALE } from "../../ui/textFit.ts";
-import { HOME_LAYOUT } from "../homeLayout.ts";
+import { HOME_LAYOUT, slotSignText } from "../homeLayout.ts";
 import { homeSections } from "../sections.ts";
 import { homeSectionViews } from "../sectionView.ts";
 import { slotSign } from "../slotSign.ts";
@@ -98,8 +98,15 @@ it("projects the slot sign frame without changing hit or pressed-tag geometry", 
   const json = await source.loadSheet("sprites/ui-slot-sign.json");
   const frame = sheetFrame(json, "normal");
   const image = view.element.children[0]!.children[0] as unknown as FakeElement;
-  for (const dpr of [1, 2.625]) {
-    const scale = domScale(dpr, viewport);
+  const labels = [...view.element.children[0]!.children]
+    .filter((child) => child.className.includes("adw-text"))
+    .map((child) => child as unknown as FakeElement);
+  for (const [dpr, box] of [
+    [1, viewport],
+    [2.625, viewport],
+    [1, { height: 1280, width: 575, x: 0, y: 0 }],
+  ] as const) {
+    const scale = domScale(dpr, box);
     const absolute = gridRect(scale, {
       ...HOME_LAYOUT.slotSign.art,
       height: frame.height,
@@ -114,6 +121,41 @@ it("projects the slot sign frame without changing hit or pressed-tag geometry", 
         top: `${absolute.top - hit.top}px`,
         width: `${absolute.width}px`,
       });
+      const font = gameFont("font-body");
+      const pixel = scale.unit * scale.dpr * HOME_LAYOUT.slotSign.scale;
+      const cream = slotSignText(fontMetrics(font)).cream;
+      const backing = gridRect(scale, {
+        ...cream,
+        y: cream.y + (pressed ? HOME_LAYOUT.slotSign.pressDrop : 0),
+      });
+      const bounds = labels.map((label, index) => {
+        expect(Number.parseFloat(label.style.fontSize!)).toBeCloseTo(8 * pixel);
+        const text = sign.lines[index]!;
+        const columns = fontInk("font-body", { scale: pixel }, text);
+        const rows = fontInkRows("font-body", { scale: pixel }, text);
+        const left = Number.parseFloat(label.style.left!) + hit.left;
+        const cap =
+          Number.parseFloat(label.style.top!) + hit.top + fontMetrics(font).capTop * pixel;
+        const ink = {
+          bottom: cap + rows.bottom,
+          left: left + columns.left,
+          right: left + columns.right,
+          top: cap + rows.top,
+        };
+        expect(
+          Math.abs((ink.left + ink.right) / 2 - backing.left - backing.width / 2),
+        ).toBeLessThanOrEqual(0.500001);
+        expect(ink.left).toBeGreaterThanOrEqual(backing.left);
+        expect(ink.right).toBeLessThanOrEqual(backing.left + backing.width);
+        return ink;
+      });
+      const top = Math.min(...bounds.map((ink) => ink.top));
+      const bottom = Math.max(...bounds.map((ink) => ink.bottom));
+      expect(Math.abs((top + bottom) / 2 - backing.top - backing.height / 2)).toBeLessThanOrEqual(
+        0.500001,
+      );
+      expect(top).toBeGreaterThanOrEqual(backing.top);
+      expect(bottom).toBeLessThanOrEqual(backing.top + backing.height);
       expect(view.element.style.width).toBe(`${hit.width}px`);
       expect(absolute.width).toBeGreaterThan(frame.width * artPixel(scale));
     }

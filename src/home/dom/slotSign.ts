@@ -5,7 +5,7 @@ import { SLICES } from "../../data/layout.ts";
 import { framedPart } from "../../hud/dom/detailCard.ts";
 import { fillPart } from "../../hud/dom/shopPage.ts";
 import { type DomArtSource, sheetArt, sheetNineSlice } from "../../ui/dom/artElements.ts";
-import { createTextLine, placeText, setBox } from "../../ui/dom/pixelLine.ts";
+import { createTextLine, placeBackedText, setBox } from "../../ui/dom/pixelLine.ts";
 import type { SheetFrame } from "../../ui/dom/sheetFrames.ts";
 import { artPixel, type DomScale, gridRect, gridX, gridY } from "../../ui/domScale.ts";
 import { PALETTE } from "../../ui/palette.ts";
@@ -69,6 +69,7 @@ export function createSlotSign(
             i === 0 ? layout.headColour : sign.affordable ? layout.priceColour : GREYED.shortPrice
           ],
         font: "body",
+        projection: "layout",
         scale: layout.scale,
         text,
       }) as const,
@@ -143,15 +144,18 @@ export function createSlotSign(
         projection: "layout",
         tag: motion.pressed ? "pressed" : "normal",
       });
-      labels.forEach((label, i) => {
-        const line = lines[i];
-        if (line !== undefined) {
-          placeText(body, scale, origin, label, {
-            ...line,
-            capTop: line.capTop + (art !== undefined && motion.pressed ? layout.pressDrop : 0),
-          });
-        }
-      });
+      const pressDrop = art !== undefined && motion.pressed ? layout.pressDrop : 0;
+      placeBackedText(
+        body,
+        scale,
+        origin,
+        { ...at.cream, y: at.cream.y + pressDrop },
+        lines.map((line, i) => ({
+          element: labels[i]!,
+          line: { ...line, capTop: line.capTop + pressDrop },
+        })),
+        "layout",
+      );
       afford?.place(scale, origin, {
         ...insetRect(-AFFORD_OUTSET, layout.board),
         tag: "glint",
