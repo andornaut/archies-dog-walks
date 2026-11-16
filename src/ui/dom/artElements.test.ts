@@ -3,7 +3,7 @@ import { expect, it, vi } from "vitest";
 import { FakeDocument } from "../../testing/fakeDom.ts";
 import { domScale, gridRect, gridX } from "../domScale.ts";
 import { imageArt, imageNineSlice, sheetArt, sheetThreeSlice } from "./artElements.ts";
-import { DIM_ART_ATTRIBUTE, setRampDimmed } from "./rampDim.ts";
+import { setRampDimmed } from "./rampDim.ts";
 
 it("uses original sheet metadata with a disabled image and the requested animated frame", async () => {
   const json = {
@@ -33,7 +33,7 @@ it("uses original sheet metadata with a disabled image and the requested animate
   });
 });
 
-it("paints an image panel with the same nine-slice geometry and preloads its registered dim copy", async () => {
+it("paints an image panel with unchanged nine-slice geometry and only its original image", async () => {
   const doc = new FakeDocument();
   const source = { artUrl: (path: string) => `/art/${path}`, loadSheet: vi.fn() };
   const part = imageNineSlice(
@@ -49,10 +49,7 @@ it("paints an image panel with the same nine-slice geometry and preloads its reg
     { height: 48, width: 96, x: 5, y: 7 },
   );
   expect(source.loadSheet).not.toHaveBeenCalled();
-  await expect(part.ready).resolves.toEqual([
-    "/art/images/ui-panel.png",
-    "/art/images/ui-panel-dim.png",
-  ]);
+  await expect(part.ready).resolves.toEqual(["/art/images/ui-panel.png"]);
   const children = [...part.element.children] as unknown as {
     style: CSSStyleDeclaration;
     getAttribute(name: string): string | null;
@@ -64,11 +61,12 @@ it("paints an image panel with the same nine-slice geometry and preloads its reg
     top: "4px",
     width: "88px",
   });
+  setRampDimmed(part.element, true);
+  expect(part.element.style.filter).toBe("brightness(0.28)");
   expect(
-    children.every(
-      (child) => child.getAttribute("data-dim-art") === "/art/images/ui-panel-dim.png",
-    ),
+    children.every((child) => child.style.backgroundImage === 'url("/art/images/ui-panel.png")'),
   ).toBe(true);
+  setRampDimmed(part.element, false);
 });
 
 it("retains three-slice art scaling unless logical projection is explicit", async () => {
@@ -124,7 +122,7 @@ it("projects declared image layout edges without changing default authored-pixel
   }
 });
 
-it("dims disabled native image and sheet variants using their original semantic registration", async () => {
+it("darkens disabled native variants without changing their image or metadata dependency", async () => {
   const doc = new FakeDocument();
   const source = {
     artUrl: (path: string) => `/art/${path}`,
@@ -150,11 +148,10 @@ it("dims disabled native image and sheet variants using their original semantic 
       ] as const
     ).map(async ([part, kind, key]) => {
       const normal = `/art/${kind}/${key}-disabled.png`;
-      const dim = `/art/${kind}/${key}-disabled-dim.png`;
-      await expect(part.ready).resolves.toEqual([normal, dim]);
-      expect(part.element.getAttribute(DIM_ART_ATTRIBUTE)).toBe(dim);
+      await expect(part.ready).resolves.toEqual([normal]);
       setRampDimmed(part.element, true);
-      expect(part.element.style.backgroundImage).toBe(`url("${dim}")`);
+      expect(part.element.style.filter).toBe("brightness(0.28)");
+      expect(part.element.style.backgroundImage).toBe(`url("${normal}")`);
       setRampDimmed(part.element, false);
       expect(part.element.style.backgroundImage).toBe(`url("${normal}")`);
     }),

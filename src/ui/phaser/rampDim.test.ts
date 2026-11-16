@@ -1,69 +1,64 @@
-import { snapshotRemapped } from "@andornaut/game-kit/runtime/view/phaser/snapshotRemap";
 import { sceneStub } from "@andornaut/game-kit/test/phaser/sceneStub";
 import type { Scene } from "phaser";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { ownDeviceFit } from "../worldFit.ts";
 import { addDim, addModalShade } from "./draw.ts";
 import { addRampDim } from "./rampDim.ts";
 
-vi.mock("@andornaut/game-kit/runtime/view/phaser/snapshotRemap", () => ({
-  snapshotRemapped: vi.fn(),
-}));
 vi.mock("phaser", () => ({
-  Core: { Events: { POST_RENDER: "postrender", PRE_RENDER: "prerender" } },
+  Core: { Events: { PRE_RENDER: "prerender" } },
   Scale: { Events: { RESIZE: "resize" } },
   Scenes: { Events: { CREATE: "create", SHUTDOWN: "shutdown" } },
 }));
 
-class Display {
+class Graphic {
   active = true;
+  colour = 0;
   alpha = 1;
-  fillAlpha = 1;
-  visible = true;
-  displayHeight = 0;
-  displayWidth = 0;
-  setDisplaySize(width: number, height: number) {
-    this.displayWidth = width;
-    this.displayHeight = height;
+  readonly fills: { x: number; y: number; width: number; height: number }[] = [];
+  readonly events = new Map<string, () => void>();
+  clear() {
+    this.fills.length = 0;
     return this;
   }
-  setFillStyle(_colour: number, alpha: number) {
-    this.fillAlpha = alpha;
+  fillStyle(colour: number, alpha: number) {
+    this.colour = colour;
+    this.alpha = alpha;
     return this;
   }
-  setOrigin() {
+  fillRect(x: number, y: number, width: number, height: number) {
+    this.fills.push({ height, width, x, y });
     return this;
   }
-  setTexture() {
+  once(event: string, listener: () => void) {
+    this.events.set(event, listener);
     return this;
   }
-  setVisible(visible: boolean) {
-    this.visible = visible;
+  off(event: string) {
+    this.events.delete(event);
     return this;
+  }
+  destroy() {
+    this.active = false;
+    this.events.get("destroy")?.();
   }
 }
-
 function fixture() {
-  const rectangles: Display[] = [];
-  const images: Display[] = [];
+  const graphics: Graphic[] = [],
+    rectangles: { colour: number; alpha: number }[] = [];
   const camera = {
     height: 560,
-    originX: 0.5,
-    originY: 0.5,
+    originX: 0,
+    originY: 0,
     scrollX: 0,
     scrollY: 0,
     setOrigin(x: number, y: number) {
-      this.originX = x;
-      this.originY = y;
+      Object.assign(this, { originX: x, originY: y });
       return this;
     },
     setViewport(x: number, y: number, width: number, height: number) {
       Object.assign(this, { height, width, x, y });
-      return this;
-    },
-    setVisible(visible: boolean) {
-      this.visible = visible;
       return this;
     },
     setZoom(zoom: number) {
@@ -76,111 +71,145 @@ function fixture() {
     y: 0,
     zoom: 1,
   };
+  let shown = true;
   const stub = sceneStub(vi.fn, {
     add: {
-      image: () => {
-        const image = new Display();
-        images.push(image);
-        return image;
+      graphics: () => {
+        const graphic = new Graphic();
+        graphics.push(graphic);
+        return graphic;
       },
       rectangle: (
         _x: number,
         _y: number,
-        _width: number,
-        _height: number,
-        _colour: number,
+        _w: number,
+        _h: number,
+        colour: number,
         alpha: number,
       ) => {
-        const rectangle = new Display();
-        rectangle.fillAlpha = alpha;
-        rectangles.push(rectangle);
-        return rectangle;
+        rectangles.push({ alpha, colour });
+        return {
+          setOrigin() {
+            return this;
+          },
+        };
       },
     },
     cameras: { cameras: [camera], main: camera },
     scene: { key: "settings" },
+    sys: { isVisible: () => shown },
   });
-  const scene = stub as unknown as Scene;
-  return { camera, gameEvents: stub.game.events, images, rectangles, scene };
+  Object.assign(stub.game, { scene: { scenes: [stub] } });
+  return {
+    camera,
+    graphics,
+    rectangles,
+    scene: stub as unknown as Scene,
+    shown: (value: boolean) => {
+      shown = value;
+    },
+  };
 }
+const area = { height: 442, width: 360, x: 0, y: 40 };
 
-const area = { height: 300, width: 360, x: 0, y: 40 };
-beforeEach(() => vi.resetAllMocks());
-
-describe("modal ramp dim adapter", () => {
-  it("maps the snapshot three palette steps without shading the remapped image", async () => {
-    vi.mocked(snapshotRemapped).mockResolvedValue(true);
-    const { camera, gameEvents, images, rectangles, scene } = fixture();
-    addRampDim(scene, area);
-    const remap = vi.mocked(snapshotRemapped).mock.calls[0]?.[0];
-    expect(remap?.(0xead4aa)).toBe(0x733e39);
-    expect(camera.visible).toBe(false);
-    gameEvents.emit("postrender");
-    expect(camera.visible).toBe(true);
-    await Promise.resolve();
-    expect(rectangles[0]?.visible).toBe(false);
-    expect(images[0]).toMatchObject({ alpha: 1, visible: true });
+describe("neutral canvas underlay", () => {
+  it("uses one black fill at existing strength without snapshots or camera hiding", () => {
+    const f = fixture(),
+      drawn = vi.fn();
+    const objects = addRampDim(f.scene, area, drawn);
+    expect(objects).toEqual(f.graphics);
+    expect(f.graphics[0]).toMatchObject({ alpha: 0.72, colour: 0, fills: [area] });
+    expect(f.camera.visible).toBe(true);
+    expect(f.scene.add.image).not.toHaveBeenCalled();
+    f.scene.game.events.emit("prerender");
+    expect(drawn).toHaveBeenCalledOnce();
+    f.scene.game.events.emit("prerender");
+    expect(drawn).toHaveBeenCalledOnce();
   });
 
-  it("reads the zoomed backing once and restores a logical-size snapshot", async () => {
-    vi.mocked(snapshotRemapped).mockResolvedValue(true);
-    const { camera, images, scene } = fixture();
-    Object.assign(camera, { height: 1120, width: 720, x: 600, zoom: 2 });
-    addRampDim(scene, area);
-    expect(vi.mocked(snapshotRemapped).mock.calls[0]?.[2]).toEqual({
-      height: 600,
-      width: 720,
-      x: 600,
-      y: 80,
-    });
-    await Promise.resolve();
-    expect(images[0]).toMatchObject({ displayHeight: 300, displayWidth: 360, visible: true });
+  it("shades overlap once while retaining nonoverlapping regions and restoring after disposal", () => {
+    const f = fixture();
+    addModalShade(f.scene, area);
+    const nested = { height: 100, width: 100, x: 30, y: 80 };
+    const overlay = fixture();
+    Object.assign(overlay.scene, { game: f.scene.game });
+    f.scene.game.scene.scenes.push(overlay.scene);
+    addModalShade(overlay.scene, nested);
+    const lower = f.graphics[0]!,
+      upper = overlay.graphics[0]!;
+    const pixels = (parts: Graphic["fills"]) =>
+      parts.reduce((sum, part) => sum + part.width * part.height, 0);
+    expect(pixels(lower.fills) + pixels(upper.fills)).toBe(area.width * area.height);
+    for (const part of lower.fills) {
+      expect(
+        part.x + part.width <= nested.x ||
+          nested.x + nested.width <= part.x ||
+          part.y + part.height <= nested.y ||
+          nested.y + nested.height <= part.y,
+      ).toBe(true);
+    }
+    expect(upper.fills).toEqual([nested]);
+    upper.destroy();
+    expect(lower.fills).toEqual([area]);
+    f.scene.events.emit("shutdown");
+    expect(lower.fills).toEqual([]);
+    expect(f.scene.game.events.listenerCount("prerender")).toBe(0);
   });
 
-  it("fits the capture before CREATE on both initial and repeated modal activation", async () => {
-    vi.mocked(snapshotRemapped).mockResolvedValue(true);
-    const { camera, gameEvents, images, scene } = fixture();
-    const scale = { gameSize: { height: 1120, width: 720 }, zoom: 0.5 };
-    Object.assign(scene, { scale });
-    const release = ownDeviceFit(scale);
+  it("keeps the front modal's shade priority when the retained scene redraws later", () => {
+    const base = fixture(),
+      modal = fixture();
+    Object.assign(modal.scene, { game: base.scene.game });
+    base.scene.game.scene.scenes.push(modal.scene);
+    const nested = { height: 100, width: 100, x: 30, y: 80 };
+    addModalShade(modal.scene, nested);
+    addModalShade(base.scene, area);
+    expect(modal.graphics[0]!.fills).toEqual([nested]);
+    expect(
+      base.graphics[0]!.fills.some(
+        (part) =>
+          part.x < nested.x + nested.width &&
+          nested.x < part.x + part.width &&
+          part.y < nested.y + nested.height &&
+          nested.y < part.y + part.height,
+      ),
+    ).toBe(false);
+  });
+
+  it("keeps the protected bar and Pause cards outside the shade and follows scene visibility", () => {
+    const f = fixture();
+    addModalShade(f.scene, area);
+    expect(f.graphics[0]!.fills).toEqual([{ height: 442, width: 360, x: 0, y: 40 }]);
+    f.shown(false);
+    f.scene.game.events.emit("prerender");
+    expect(f.graphics[0]!.fills).toEqual([]);
+    f.shown(true);
+    f.scene.game.events.emit("prerender");
+    expect(f.graphics[0]!.fills).toEqual([area]);
+  });
+
+  it("fits initial and repeated modal cameras before placing the logical shade", () => {
+    const f = fixture(),
+      scale = { gameSize: { height: 1120, width: 720 }, zoom: 0.5 };
+    Object.assign(f.scene, { scale });
+    const stop = ownDeviceFit(scale);
     try {
-      for (let activation = 0; activation < 2; activation++) {
-        // Scene startup resets the camera before create, and CREATE has not fired yet.
-        Object.assign(camera, { height: 1120, originX: 0.5, originY: 0.5, width: 720, zoom: 1 });
-        addRampDim(scene, area);
-        expect(vi.mocked(snapshotRemapped).mock.calls[activation]?.[2]).toEqual({
-          height: 600,
-          width: 720,
-          x: 0,
-          y: 80,
-        });
-        expect(camera).toMatchObject({ originX: 0, originY: 0, zoom: 2 });
-        gameEvents.emit("postrender");
-      }
-      await Promise.resolve();
-      for (const image of images) {
-        expect(image).toMatchObject({ displayHeight: 300, displayWidth: 360, visible: true });
+      for (let index = 0; index < 2; index++) {
+        Object.assign(f.camera, { height: 1120, originX: 0.5, originY: 0.5, width: 720, zoom: 1 });
+        addRampDim(f.scene, area);
+        expect(f.camera).toMatchObject({ originX: 0, originY: 0, zoom: 2 });
+        expect(f.graphics[index]!.fills).toEqual([area]);
       }
     } finally {
-      release();
+      stop();
     }
   });
 
-  it("uses the stronger modal ink fallback while retaining the nonmodal default", async () => {
-    vi.mocked(snapshotRemapped).mockResolvedValue(false);
-    const { images, rectangles, scene } = fixture();
-    addDim(scene, area);
-    addRampDim(scene, area);
-    await Promise.resolve();
-    expect(rectangles[0]?.fillAlpha).toBe(0.6);
-    expect(rectangles[1]).toMatchObject({ alpha: 1, fillAlpha: 0.72, visible: true });
-    expect(images[0]?.visible).toBe(false);
-  });
-
-  it("creates one direct modal scrim with fill opacity rather than compounded object alpha", () => {
-    const { rectangles, scene } = fixture();
-    addModalShade(scene, area);
-    expect(rectangles).toHaveLength(1);
-    expect(rectangles[0]).toMatchObject({ alpha: 1, fillAlpha: 0.72 });
+  it("keeps unrelated nonmodal dim styling separate", () => {
+    const f = fixture();
+    addDim(f.scene, area);
+    expect(f.rectangles[0]!.alpha).toBe(0.6);
+    addModalShade(f.scene, area);
+    expect(f.graphics[0]).toMatchObject({ alpha: 0.72, colour: 0 });
   });
 });

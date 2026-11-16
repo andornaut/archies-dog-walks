@@ -1,12 +1,15 @@
+import { readFileSync } from "node:fs";
+
 import { describe, expect, it, vi } from "vitest";
 
+import { gameData } from "../../data/index.ts";
 import { FakeDocument, type FakeElement, fakeLayer } from "../../testing/fakeDom.ts";
+import { gameFont } from "../../testing/fontInk.ts";
 import { domScale } from "../../ui/domScale.ts";
+import { homeSpeechView } from "../speechView.ts";
 import type { NativeHomeView } from "./screen.ts";
 import { createNativeHomeSession } from "./session.ts";
-vi.mock("../../ui/dom/rampDim.ts", () => ({
-  followModalUnderlay: () => Object.assign(() => undefined, { refresh: () => undefined }),
-}));
+import { createHomeSpeech } from "./speech.ts";
 function fixture() {
   const doc = new FakeDocument();
   const { layer } = fakeLayer(doc, domScale(1, { height: 560, width: 360, x: 0, y: 0 }));
@@ -125,6 +128,57 @@ describe("native home visit", () => {
     f.doc.fire("pointerup", release);
     expect(release.stopImmediatePropagation).toHaveBeenCalledOnce();
     expect(f.context.up).not.toHaveBeenCalled();
+    f.session.dispose();
+  });
+  it("keeps a replaced Sound off notice under the actual Home session dim while a modal scope is open", async () => {
+    const f = fixture();
+    const scale = domScale(1, { height: 560, width: 360, x: 0, y: 0 });
+    f.session.replace(f.view());
+    const bar = f.doc.createElement("div");
+    f.layer.element.append(bar as unknown as HTMLElement);
+    const settings = f.layer.input.open();
+    const fonts = { body: gameFont("font-body"), title: gameFont("font-title") };
+    const speech = createHomeSpeech(
+      f.doc as unknown as Document,
+      {
+        artUrl: (path) => path,
+        hasArt: () => true,
+        imageSize: (key) => {
+          const png = readFileSync(`public/art/images/${key}.png`);
+          return { height: png.readUInt32BE(20), width: png.readUInt32BE(16) };
+        },
+        loadSheet: vi.fn(),
+      },
+      fonts,
+      () => undefined,
+      homeSpeechView(gameData, fonts.body, undefined, {
+        owner: null,
+        paragraphs: [gameData.homeText.noticeSoundOff],
+      }),
+    );
+    const notice = f.view();
+    notice.element.append(speech.element);
+    f.session.replace(notice);
+    speech.place(scale);
+    expect(f.session.element.contains(speech.element)).toBe(true);
+    expect(f.session.element.style.filter).toBe("brightness(0.28)");
+    expect(speech.element.style.filter ?? "").toBe("");
+    expect(bar.style.filter ?? "").toBe("");
+    f.reveals.at(-1)!.settle(true);
+    await Promise.resolve();
+    await Promise.resolve();
+    f.frames.forEach((paint) => paint());
+    speech.place(scale);
+    expect(f.session.element.style.filter).toBe("brightness(0.28)");
+    const images = (speech.element as unknown as FakeElement)
+      .all()
+      .filter((node) => node.style.backgroundImage);
+    expect(images.length).toBeGreaterThan(0);
+    expect(images.every((node) => node.style.backgroundImage === 'url("images/ui-quip.png")')).toBe(
+      true,
+    );
+    settings.close();
+    expect(f.session.element.style.filter ?? "").toBe("");
     f.session.dispose();
   });
 });

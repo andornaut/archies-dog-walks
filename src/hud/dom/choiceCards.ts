@@ -2,7 +2,7 @@ import type { Point, Rect } from "@andornaut/game-kit/runtime/rect";
 import { fontMetrics } from "@andornaut/game-kit/runtime/text/bitmapFont";
 
 import { cardGreyPath } from "../../assets/cardArt.ts";
-import { DOM_DIM_ART_KEYS, domArtPath } from "../../assets/domArt.ts";
+import { domArtPath } from "../../assets/domArt.ts";
 import { DIFFICULTY_KEY } from "../../assets/spriteKeys.ts";
 import { CHOICE_CARDS, SLICES } from "../../data/layout.ts";
 import { SCREEN_CONFIG, SCREEN_LAYOUT } from "../../data/screen.ts";
@@ -12,11 +12,9 @@ import { CARD_LAYOUT, cardRowIn, forkHomeRect } from "../../layout/cardLayout.ts
 import { type CardView, MAX_CARD_OPTIONS } from "../../rules/choices.ts";
 import { cardHeader } from "../../ui/cardRow.ts";
 import { closeControl } from "../../ui/closeControl.ts";
-import { dimArtPath } from "../../ui/dimArt.ts";
 import { type DomArtSource, imageArt, imageNineSlice } from "../../ui/dom/artElements.ts";
 import { type NativeGesture } from "../../ui/dom/modalLifecycle.ts";
 import { createTextLine, placeBox, placeText, setBox } from "../../ui/dom/pixelLine.ts";
-import { DIM_ART_ATTRIBUTE } from "../../ui/dom/rampDim.ts";
 import { playingFrame, sheetTagFrames, type TagFrame } from "../../ui/dom/sheetFrames.ts";
 import type { UiLayer } from "../../ui/dom/uiLayer.ts";
 import { artPixel, type DomScale, gridRect } from "../../ui/domScale.ts";
@@ -74,11 +72,6 @@ function sheetPart(
   element.className = "adw-art";
   element.style.backgroundImage = `url("${source.artUrl(domArtPath("sheet", key, "png"))}")`;
   const urls = [source.artUrl(domArtPath("sheet", key, "png"))];
-  if (DOM_DIM_ART_KEYS.has(key)) {
-    const dim = source.artUrl(dimArtPath("sheet", key));
-    element.setAttribute(DIM_ART_ATTRIBUTE, dim);
-    urls.push(dim);
-  }
   let frames: TagFrame[] = [];
   let scale: DomScale | undefined;
   const started = source.now();

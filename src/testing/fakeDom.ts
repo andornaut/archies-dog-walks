@@ -74,9 +74,28 @@ export class FakeElement extends FakeTarget {
   hidden = false;
   id = "";
   parent: FakeElement | undefined;
-  readonly style = Object.assign(Object.create(null) as Record<string, string>, {
-    setProperty: () => undefined,
-  });
+  readonly style = (() => {
+    const priorities = new Map<string, string>();
+    const property = (name: string) =>
+      name.startsWith("--")
+        ? name
+        : name.replace(/-([a-z])/g, (_, letter: string) => letter.toUpperCase());
+    const values = Object.create(null) as Record<string, string>;
+    return Object.assign(values, {
+      getPropertyPriority: (name: string) => priorities.get(name) ?? "",
+      getPropertyValue: (name: string) => values[property(name)] ?? "",
+      removeProperty: (name: string) => {
+        const previous = values[property(name)] ?? "";
+        delete values[property(name)];
+        priorities.delete(name);
+        return previous;
+      },
+      setProperty: (name: string, value: string, priority = "") => {
+        values[property(name)] = value;
+        priorities.set(name, priority);
+      },
+    });
+  })();
   textContent = "";
   type = "";
   readonly ownerDocument: FakeDocument;

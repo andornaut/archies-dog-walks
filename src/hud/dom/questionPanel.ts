@@ -102,8 +102,7 @@ export interface DomQuestionPanel {
   // Shakes the index-th button and flashes its label, as the canvas refuses a disabled
   // control (refuseControl): still, its label red, under reduced motion.
   refuse(index: number, refusal: DomRefusal): void;
-  // Draws the panel palette-dimmed under the pause menu, as the canvas dims the view under it
-  // (setRampDimmed), or as it was.
+  // Darkens this covered panel once while preserving its original colours and assets.
   setDimmed(dimmed: boolean): void;
   // Lets the panel take no presses and no focus while another's dim covers it (a celebration
   // under the pause menu), and take them again.
@@ -495,6 +494,7 @@ export function showQuestionPanel(layer: UiLayer, input: DomQuestionPanelInput):
     burst: (at) => addTapBurst(layer, at),
     capture: () => lifecycle.capture(),
     destroy() {
+      setRampDimmed(dialog, false);
       lifecycle.destroy();
       stopScale();
       doc.defaultView?.removeEventListener("keydown", onKey);

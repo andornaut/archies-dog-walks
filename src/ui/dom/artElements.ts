@@ -1,10 +1,8 @@
 import type { Point, Rect } from "@andornaut/game-kit/runtime/rect";
 
-import { DOM_DIM_ART_KEYS, domArtPath } from "../../assets/domArt.ts";
-import { dimArtPath } from "../dimArt.ts";
+import { domArtPath } from "../../assets/domArt.ts";
 import { artPixel, type DomScale, gridRect, gridX, gridY } from "../domScale.ts";
 import { setBox } from "./pixelLine.ts";
-import { DIM_ART_ATTRIBUTE } from "./rampDim.ts";
 import { type SheetFrame, sheetFrame, sheetFrameNamed } from "./sheetFrames.ts";
 import { sliceParts } from "./sliceParts.ts";
 
@@ -36,22 +34,7 @@ function artUrls(
   key: string,
   imageKey = key,
 ): string[] {
-  return [
-    source.artUrl(domArtPath(kind, imageKey, "png")),
-    ...(DOM_DIM_ART_KEYS.has(key) ? [source.artUrl(dimArtPath(kind, imageKey))] : []),
-  ];
-}
-
-function markDimArt(
-  source: DomArtSource,
-  kind: "image" | "sheet",
-  key: string,
-  imageKey: string,
-  element: HTMLElement,
-): void {
-  if (DOM_DIM_ART_KEYS.has(key)) {
-    element.setAttribute(DIM_ART_ATTRIBUTE, source.artUrl(dimArtPath(kind, imageKey)));
-  }
+  return [source.artUrl(domArtPath(kind, imageKey, "png"))];
 }
 
 // The sheet's JSON once loaded, calling shown with it then and on each later call.
@@ -108,7 +91,7 @@ export function sheetArt(
   const element = doc.createElement("span");
   element.className = "adw-art";
   element.style.backgroundImage = backgroundOf(source, imageKey);
-  markDimArt(source, "sheet", key, imageKey, element);
+
   const loaded = sheetOf(source, key, element, imageKey);
   return {
     element,
@@ -176,7 +159,7 @@ export function sheetThreeSlice(
     const part = doc.createElement("span");
     part.className = "adw-art";
     part.style.backgroundImage = backgroundOf(source, key);
-    markDimArt(source, "sheet", key, key, part);
+
     return part;
   });
   element.append(...parts);
@@ -249,7 +232,7 @@ export function imageArt(
   const element = doc.createElement("span");
   element.className = "adw-art";
   element.style.backgroundImage = `url("${source.artUrl(domArtPath("image", imageKey, "png"))}")`;
-  markDimArt(source, "image", key, imageKey, element);
+
   return {
     element,
     place: (scale, origin, art) => {
@@ -280,7 +263,7 @@ interface SliceInsets {
   readonly top: number;
 }
 
-// Both image and sheet panels use one corner/stretch projection and dim-image policy.
+// Both image and sheet panels use one corner/stretch projection.
 function slicePainter(
   doc: Document,
   source: DomArtSource,
@@ -328,7 +311,7 @@ function slicePainter(
             backgroundPosition: `${-(frame.x + from.x) * across}px ${-(frame.y + from.y) * down}px`,
             backgroundSize: `${frame.sheet.width * across}px ${frame.sheet.height * down}px`,
           });
-          markDimArt(source, kind, key, key, span);
+
           return span;
         },
       ),

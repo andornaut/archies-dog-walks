@@ -1,149 +1,115 @@
 import { describe, expect, it } from "vitest";
 
 import { FakeDocument } from "../../testing/fakeDom.ts";
-import { dimColour } from "../dimArt.ts";
-import { PALETTE } from "../palette.ts";
-import {
-  DIM_ART_ATTRIBUTE,
-  dimCss,
-  dimDrawn,
-  followModalUnderlay,
-  setRampDimmed,
-} from "./rampDim.ts";
+import { dimDrawn, followModalUnderlay, setRampDimmed } from "./rampDim.ts";
 
-const hex = (colour: number) => `#${colour.toString(16).padStart(6, "0")}`;
+const native = (element: ReturnType<FakeDocument["createElement"]>) =>
+  element as unknown as HTMLElement;
+const cover = (element: HTMLElement) =>
+  followModalUnderlay({ accepts: () => false, subscribe: () => () => undefined }, element);
 
-describe("HTML dimmed under the pause menu", () => {
-  it.each([
-    [hex(PALETTE.yellow), hex(dimColour(PALETTE.yellow))],
-    ["rgb(255, 255, 255)", hex(dimColour(0xffffff))],
-    ["", ""],
-    ["inherit", "inherit"],
-  ])("dims the colour %s to %s", (css, dimmed) => {
-    expect(dimCss(css)).toBe(dimmed);
-  });
-
-  it("dims a subtree's colours and pictures down the ramp, and puts them back", () => {
+describe("uniform native underlay darkness", () => {
+  it("darkens original paint once, including late children and local skins, then restores filters exactly", () => {
     const doc = new FakeDocument();
     const root = doc.createElement("div");
-    const text = doc.createElement("span");
-    text.style.color = hex(PALETTE.forest);
-    const pill = doc.createElement("span");
-    pill.style.backgroundColor = hex(PALETTE.cream);
-    const art = doc.createElement("span");
-    art.style.backgroundImage = 'url("/art/images/ui-quip-tail-up.png")';
-    art.setAttribute(DIM_ART_ATTRIBUTE, "/art/images/ui-quip-tail-up-dim.png");
-    root.append(text, pill, art);
-    const element = root as unknown as HTMLElement;
-    setRampDimmed(element, true);
-    // A second call leaves what is dimmed as it is.
-    setRampDimmed(element, true);
-    expect([text.style.color, pill.style.backgroundColor, art.style.backgroundImage]).toEqual([
-      hex(dimColour(PALETTE.forest)),
-      hex(dimColour(PALETTE.cream)),
-      'url("/art/images/ui-quip-tail-up-dim.png")',
-    ]);
-    setRampDimmed(element, false);
-    expect([text.style.color, pill.style.backgroundColor, art.style.backgroundImage]).toEqual([
-      hex(PALETTE.forest),
-      hex(PALETTE.cream),
-      'url("/art/images/ui-quip-tail-up.png")',
-    ]);
+    root.style.setProperty("filter", "contrast(1.2)", "important");
+    const child = doc.createElement("span");
+    child.style.backgroundColor = "#ead4aa";
+    child.style.backgroundImage = 'url("original.png")';
+    child.style.setProperty("--ui-button-go", 'url("blob:own-skin")');
+    root.append(child);
+    const stop = cover(native(root));
+    stop.refresh();
+    expect(root.style.filter).toBe("contrast(1.2) brightness(0.28)");
+    expect(root.style.getPropertyPriority("filter")).toBe("important");
+    expect(child.style.backgroundColor).toBe("#ead4aa");
+    expect(child.style.backgroundImage).toBe('url("original.png")');
+    expect(child.style.getPropertyValue("--ui-button-go")).toBe('url("blob:own-skin")');
+    const late = doc.createElement("span");
+    late.style.backgroundImage = 'url("late.png")';
+    root.replaceChildren(late);
+    dimDrawn(native(late), true);
+    expect(root.style.filter).toBe("contrast(1.2) brightness(0.28)");
+    expect(late.style.filter ?? "").toBe("");
+    expect(late.style.backgroundImage).toBe('url("late.png")');
+    stop();
+    stop();
+    stop.refresh();
+    expect(root.style.filter).toBe("contrast(1.2)");
+    expect(root.style.getPropertyPriority("filter")).toBe("important");
   });
-});
 
-it("dims and blocks a registered native underlay once, then restores its own accessibility state", () => {
-  const doc = new FakeDocument();
-  const root = doc.createElement("div");
-  root.style.color = hex(PALETTE.cream);
-  root.setAttribute("aria-hidden", "false");
-  let covered = false;
-  let sync: () => void = () => undefined;
-  let stopped = false;
-  const stop = followModalUnderlay(
-    {
-      accepts: () => !covered,
-      subscribe: (listener) => {
-        sync = listener;
-        sync();
-        return () => {
-          stopped = true;
-        };
-      },
-    },
-    root as unknown as HTMLElement,
-  );
-  covered = true;
-  sync();
-  expect(root.inert).toBe(true);
-  expect(root.getAttribute("aria-hidden")).toBe("true");
-  expect(root.style.color).toBe(hex(dimColour(PALETTE.cream)));
-  sync();
-  expect(root.style.color).toBe(hex(dimColour(PALETTE.cream)));
-  const added = doc.createElement("span");
-  added.style.color = hex(PALETTE.cream);
-  root.append(added);
-  stop.refresh();
-  expect(added.style.color).toBe(hex(dimColour(PALETTE.cream)));
-  covered = false;
-  sync();
-  expect(root.inert).toBe(false);
-  expect(root.getAttribute("aria-hidden")).toBe("false");
-  expect(root.style.color).toBe(hex(PALETTE.cream));
-  stop();
-  expect(stopped).toBe(true);
-});
-
-it("overrides registered native button skins while covered and restores the original blob property", () => {
-  const doc = new FakeDocument();
-  const root = doc.createElement("div");
-  const properties = new Map([["--ui-button-go", 'url("blob:original")']]);
-  Object.assign(root.style, {
-    getPropertyValue: (key: string) => properties.get(key) ?? "",
-    setProperty: (key: string, value: string) => properties.set(key, value),
+  it("deduplicates nested roots in either acquisition order and transfers coverage when the ancestor closes", () => {
+    const doc = new FakeDocument();
+    const parent = doc.createElement("div"),
+      child = doc.createElement("div");
+    parent.style.filter = "none";
+    child.style.filter = "saturate(0.8)";
+    parent.append(child);
+    const stopChild = cover(native(child));
+    expect(child.style.filter).toBe("saturate(0.8) brightness(0.28)");
+    const stopParent = cover(native(parent));
+    expect(parent.style.filter).toBe("brightness(0.28)");
+    expect(child.style.filter).toBe("saturate(0.8)");
+    stopParent();
+    expect(parent.style.filter).toBe("none");
+    expect(child.style.filter).toBe("saturate(0.8) brightness(0.28)");
+    stopChild();
+    const outer = cover(native(parent)),
+      inner = cover(native(child));
+    expect(parent.style.filter).toBe("brightness(0.28)");
+    expect(child.style.filter).toBe("saturate(0.8)");
+    inner();
+    outer();
+    expect(child.style.filter).toBe("saturate(0.8)");
   });
-  setRampDimmed(root as unknown as HTMLElement, true);
-  expect(properties.get("--ui-button-go")).toContain("ui-button-go-dim");
-  setRampDimmed(root as unknown as HTMLElement, true);
-  setRampDimmed(root as unknown as HTMLElement, false);
-  expect(properties.get("--ui-button-go")).toBe('url("blob:original")');
-});
 
-it("dims descendant-local skins and refreshed children once, then restores them on disposal", () => {
-  const doc = new FakeDocument();
-  const root = doc.createElement("div");
-  const child = doc.createElement("div");
-  const added = doc.createElement("div");
-  const skin = (element: typeof root, value: string) => {
-    const properties = new Map([["--ui-button-go", value]]);
-    const priorities = new Map([["--ui-button-go", "important"]]);
-    Object.assign(element.style, {
-      getPropertyPriority: (key: string) => priorities.get(key) ?? "",
-      getPropertyValue: (key: string) => properties.get(key) ?? "",
-      setProperty: (key: string, next: string, priority = "") => {
-        properties.set(key, next);
-        priorities.set(key, priority);
+  it("retains independent requests and original accessibility until the final owner releases", () => {
+    const doc = new FakeDocument(),
+      root = doc.createElement("div");
+    root.style.filter = "";
+    root.setAttribute("aria-hidden", "false");
+    const first = cover(native(root)),
+      second = cover(native(root));
+    setRampDimmed(native(root), true);
+    first();
+    expect(root.style.filter).toBe("brightness(0.28)");
+    expect(root.inert).toBe(true);
+    second();
+    expect(root.style.filter).toBe("brightness(0.28)");
+    expect(root.inert).toBe(false);
+    expect(root.getAttribute("aria-hidden")).toBe("false");
+    setRampDimmed(native(root), false);
+    expect(root.style.filter).toBe("");
+  });
+
+  it("keeps protected sibling top bars and current modals unfiltered while coverage changes", () => {
+    const doc = new FakeDocument(),
+      layer = doc.createElement("div");
+    const under = doc.createElement("div"),
+      bar = doc.createElement("div"),
+      modal = doc.createElement("div");
+    layer.append(under, bar, modal);
+    let covered = false,
+      sync = () => undefined as void;
+    const stop = followModalUnderlay(
+      {
+        accepts: () => !covered,
+        subscribe: (listener) => {
+          sync = listener;
+          return () => undefined;
+        },
       },
-    });
-    return { priorities, properties };
-  };
-  const original = skin(child, 'url("blob:home")');
-  const dynamic = skin(added, 'url("blob:refreshed")');
-  root.append(child);
-  const stop = followModalUnderlay(
-    { accepts: () => false, subscribe: () => () => undefined },
-    root as unknown as HTMLElement,
-  );
-  expect(original.properties.get("--ui-button-go")).toContain("ui-button-go-dim");
-  expect(original.priorities.get("--ui-button-go")).toBe("important");
-  root.append(added);
-  dimDrawn(added as unknown as HTMLElement, true);
-  expect(dynamic.properties.get("--ui-button-go")).toContain("ui-button-go-dim");
-  stop.refresh();
-  expect(original.properties.get("--ui-button-go")).toContain("ui-button-go-dim");
-  stop();
-  expect(original.properties.get("--ui-button-go")).toBe('url("blob:home")');
-  expect(dynamic.properties.get("--ui-button-go")).toBe('url("blob:refreshed")');
-  expect(original.priorities.get("--ui-button-go")).toBe("important");
-  expect(dynamic.priorities.get("--ui-button-go")).toBe("important");
+      native(under),
+    );
+    covered = true;
+    sync();
+    expect(under.style.filter).toBe("brightness(0.28)");
+    expect(bar.style.filter ?? "").toBe("");
+    expect(modal.style.filter ?? "").toBe("");
+    covered = false;
+    sync();
+    expect(under.style.filter ?? "").toBe("");
+    stop();
+  });
 });

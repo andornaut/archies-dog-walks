@@ -8,8 +8,7 @@ import { SLICES } from "../../data/layout.ts";
 import { FakeDocument, type FakeElement } from "../../testing/fakeDom.ts";
 import { fontInk, fontInkRows, gameFont } from "../../testing/fontInk.ts";
 import { newPlayerSave, testContext } from "../../testing/saves.ts";
-import { dimArtPath } from "../../ui/dimArt.ts";
-import { DIM_ART_ATTRIBUTE, setRampDimmed } from "../../ui/dom/rampDim.ts";
+import { setRampDimmed } from "../../ui/dom/rampDim.ts";
 import { sheetFrame } from "../../ui/dom/sheetFrames.ts";
 import { artPixel, domScale, fontPixel, gridRect, gridY } from "../../ui/domScale.ts";
 import { TEXT_SCALE } from "../../ui/textFit.ts";
@@ -42,7 +41,7 @@ it("keeps picker headings clear of fills within logical bands at fractional fits
     bonus: null,
     sections,
   });
-  await expect(view.ready).resolves.toContain(dimArtPath("sheet", "ui-section"));
+  await expect(view.ready).resolves.toContain("sprites/ui-section.png");
   const frames = [...view.element.children].filter((child) => child.className === "adw-art");
   const labels = [...view.element.children].filter((child) => child.className.includes("adw-text"));
   const specifications = homeSectionViews(sections);
@@ -70,10 +69,8 @@ it("keeps picker headings clear of fills within logical bands at fractional fits
       .map((slice) => slice as HTMLElement);
     const original = slices.map((slice) => slice.style.backgroundImage);
     setRampDimmed(view.element, true);
-    for (const slice of slices) {
-      expect(slice.getAttribute(DIM_ART_ATTRIBUTE)).toBe(dimArtPath("sheet", "ui-section"));
-      expect(slice.style.backgroundImage).toBe(`url("${dimArtPath("sheet", "ui-section")}")`);
-    }
+    expect(view.element.style.filter).toBe("brightness(0.28)");
+    expect(slices.map((slice) => slice.style.backgroundImage)).toEqual(original);
     setRampDimmed(view.element, false);
     expect(slices.map((slice) => slice.style.backgroundImage)).toEqual(original);
   }
@@ -94,7 +91,7 @@ it("projects the slot sign frame without changing hit or pressed-tag geometry", 
     },
     sign,
   );
-  await expect(view.ready).resolves.toContain(dimArtPath("sheet", "ui-slot-sign"));
+  await expect(view.ready).resolves.toContain("sprites/ui-slot-sign.png");
   const json = await source.loadSheet("sprites/ui-slot-sign.json");
   const frame = sheetFrame(json, "normal");
   const image = view.element.children[0]!.children[0] as unknown as FakeElement;

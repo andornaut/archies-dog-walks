@@ -1,5 +1,4 @@
-import { DOM_DIM_ART_KEYS, domArtPath } from "../../assets/domArt.ts";
-import { dimArtPath } from "../../ui/dimArt.ts";
+import { domArtPath } from "../../assets/domArt.ts";
 import type { DomArtSource } from "../../ui/dom/artElements.ts";
 import type { RequiredAsset } from "../../ui/dom/requiredAssets.ts";
 
@@ -18,9 +17,6 @@ export function hudArtResources(
       ? [{ kind: "sheet" as const, url: source.artUrl(domArtPath(kind, key, "json")) }]
       : []),
     { kind: "image" as const, url: source.artUrl(domArtPath(kind, key, "png")) },
-    ...(DOM_DIM_ART_KEYS.has(key)
-      ? [{ kind: "image" as const, url: source.artUrl(dimArtPath(kind, key)) }]
-      : []),
   ]);
   return [...new Map(resources.map((resource) => [resource.url, resource])).values()];
 }

@@ -8,7 +8,6 @@ import { END_LAYOUT } from "../../home/endLayout.ts";
 import { endScreenView, QUIP_TAIL_KEY } from "../../home/endScreenView.ts";
 import { FakeDocument, fakeLayer } from "../../testing/fakeDom.ts";
 import { gameFont } from "../../testing/fontInk.ts";
-import { dimColour } from "../../ui/dimArt.ts";
 import { shownText } from "../../ui/dom/pixelLine.ts";
 import { artPixel, domScale, exactDeviceY, frameRect } from "../../ui/domScale.ts";
 import { modalTitleInk } from "../../ui/modal/titleRole.ts";
@@ -117,32 +116,24 @@ describe("the HTML End screen", () => {
     expect(home).toHaveBeenCalledTimes(2);
   });
 
-  it("combines scene and modal coverage into one palette pass", () => {
+  it("combines scene and modal coverage into one brightness filter without recolouring content", () => {
     const { layer, nodes, shown } = endScreen(393);
-    const painted = nodes.find((node) => {
-      const value = node.style.backgroundColor;
-      if (!/^#[0-9a-f]{6}$/i.test(value ?? "")) {
-        return false;
-      }
-      const colour = Number.parseInt(value!.slice(1), 16);
-      return dimColour(colour) !== dimColour(dimColour(colour));
-    });
+    const painted = nodes.find((node) => /^#[0-9a-f]{6}$/i.test(node.style.backgroundColor ?? ""));
     expect(painted).toBeDefined();
     const original = painted!.style.backgroundColor;
-    if (original === undefined) {
-      throw new Error("Expected a painted result fill");
-    }
-    const dimmed = `#${dimColour(Number.parseInt(original.slice(1), 16))
-      .toString(16)
-      .padStart(6, "0")}`;
     const modal = layer.input.open();
     shown.setDimmed(true);
-    expect(painted!.style.backgroundColor).toBe(dimmed);
-    modal.close();
-    expect(painted!.style.backgroundColor).toBe(dimmed);
-    shown.setDimmed(false);
+    const covered = nodes.filter((node) => node.style.filter === "brightness(0.28)");
+    expect(covered).toHaveLength(1);
+    expect(covered[0]!.contains(painted)).toBe(true);
     expect(painted!.style.backgroundColor).toBe(original);
+    modal.close();
+    expect(covered[0]!.style.filter).toBe("brightness(0.28)");
+    shown.setDimmed(false);
+    expect(covered[0]!.style.filter ?? "").toBe("");
+    shown.setDimmed(true);
     shown.destroy();
+    expect(covered[0]!.style.filter ?? "").toBe("");
   });
 
   it("preserves the title-font fallback when display lettering is unavailable", () => {

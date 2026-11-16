@@ -1,15 +1,19 @@
 import { remapRgb } from "@andornaut/game-kit/runtime/rgba";
-import { modalDimmer } from "@andornaut/game-kit/runtime/view/modalDim";
+import { MODAL_DIM } from "@andornaut/game-kit/runtime/view/modalDim";
 
 import { domArtPath } from "../assets/domArt.ts";
-import { ONE_STEP_DARKER } from "../assets/housePalette.ts";
 
-// The modal dim's palette remap, as the canvas dims the frozen view under an overlay
-// (addRampDim in src/ui/phaser/rampDim.ts): each colour down its ramp, never blended with black.
-export const dimColour: (colour: number) => number = modalDimmer(ONE_STEP_DARKER);
+export const MODAL_DARKNESS = MODAL_DIM.fallbackAlpha;
+export const MODAL_BRIGHTNESS = 1 - MODAL_DARKNESS;
 
-// The key of a key's dimmed copy, which the HTML interface draws under the pause menu
-// (DOM_DIM_ART_KEYS).
+// Retained build copies darken each original channel uniformly and keep alpha unchanged.
+export function dimColour(colour: number): number {
+  const channel = (shift: number) => Math.round(((colour >>> shift) & 0xff) * MODAL_BRIGHTNESS);
+  return (channel(16) << 16) | (channel(8) << 8) | channel(0);
+}
+
+// Retained generated copies keep their declared asset keys until their build contract retires.
+// CLEANUP (added 2026-11-15): Remove dim-copy transforms after Art retires their manifest/build keys.
 export function dimArtKey(key: string): string {
   return `${key}-dim`;
 }
@@ -20,7 +24,7 @@ export function dimArtPath(kind: "image" | "sheet", key: string): string {
   return domArtPath(kind, dimArtKey(key), "png");
 }
 
-// RGBA pixels remapped in place as the modal dim remaps the canvas, alpha kept.
+// Retained build-copy pixels use the same neutral-black darkness, with alpha kept.
 export function dimForModal(pixels: Uint8ClampedArray): void {
   remapRgb(dimColour, pixels);
 }

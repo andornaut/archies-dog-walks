@@ -1,184 +1,171 @@
-import { buttonSkinProperty } from "@andornaut/game-kit/runtime/web/ui/dom/buttonSkin";
+import { MODAL_BRIGHTNESS } from "../dimArt.ts";
 
-import { artUrl } from "../../assets/artFiles.ts";
-import { DOM_BUTTON_SKIN, DOM_DIM_ART_KEYS, DOM_STYLE_ART } from "../../assets/domArt.ts";
-import { dimArtPath, dimColour } from "../dimArt.ts";
-import { PALETTE } from "../palette.ts";
+interface DimState {
+  readonly owners: Set<object>;
+  filter: string;
+  priority: string;
+  applied?: string;
+}
+const states = new WeakMap<HTMLElement, DimState>();
+const roots = new Set<HTMLElement>();
 
-// HTML drawn palette-dimmed, as the canvas's modal dim draws the frozen view under the pause
-// menu (addRampDim in src/ui/phaser/rampDim.ts), never shaded: every colour moved down its ramp
-// (dimColour) and every picture drawn from its dimmed copy (DOM_DIM_ART_KEYS). A dimmed element
-// sets the layer's custom properties over its own subtree, the palette's colours and the frames
-// the stylesheet names, dimmed, and its subtree's own colours and pictures are dimmed in place,
-// each put back as it is undimmed.
-
-// The data attribute holding the URL of a picture's dimmed copy (artPart).
-export const DIM_ART_ATTRIBUTE = "data-dim-art";
-
-const hex = (colour: number) => `#${colour.toString(16).padStart(6, "0")}`;
-
-// The layer's custom properties a dimmed element sets over its subtree.
-function dimProperties(): (readonly [string, string])[] {
-  const colours = Object.entries(PALETTE).map(([name, colour]): readonly [string, string] => [
-    `--adw-${name}`,
-    hex(dimColour(colour)),
-  ]);
-  const frames = DOM_STYLE_ART.filter(([, key]) => DOM_DIM_ART_KEYS.has(key)).flatMap(
-    ([kind, key]): (readonly [string, string])[] => {
-      const value = `url("${artUrl(dimArtPath(kind, key))}")`;
-      const sheet = DOM_BUTTON_SKIN.sheets.find((name) => key.startsWith(`${name}-`));
-      const tag = sheet === undefined ? undefined : key.slice(sheet.length + 1);
-      return [
-        [`--adw-${key}`, value],
-        ...(sheet === undefined || tag === undefined
-          ? []
-          : [[buttonSkinProperty(sheet, tag), value] as const]),
-      ];
-    },
-  );
-  return [...colours, ...frames];
+function restore(root: HTMLElement, state: DimState): void {
+  if (state.applied === undefined) {
+    return;
+  }
+  if (root.style.filter === state.applied) {
+    root.style.setProperty("filter", state.filter, state.priority);
+  } else {
+    state.filter = root.style.filter;
+    state.priority = root.style.getPropertyPriority("filter");
+  }
+  delete state.applied;
 }
 
-// A CSS colour as an element's style gives it back (#rrggbb, or rgb(r, g, b) once the browser
-// has read it), dimmed; anything else, as an empty or inherited colour, as it is.
-export function dimCss(css: string): string {
-  const channels = /^#([0-9a-f]{6})$/i.exec(css)?.[1];
-  if (channels !== undefined) {
-    return hex(dimColour(Number.parseInt(channels, 16)));
+function refreshRoots(): void {
+  const current: { root: HTMLElement; state: DimState }[] = [];
+  for (const root of roots) {
+    const state = states.get(root)!;
+    restore(root, state);
+    current.push({ root, state });
   }
-  const rgb = /^rgb\((\d+), ?(\d+), ?(\d+)\)$/.exec(css);
-  if (rgb === null) {
-    return css;
-  }
-  const [red, green, blue] = rgb.slice(1).map(Number);
-  return hex(dimColour(((red ?? 0) << 16) | ((green ?? 0) << 8) | (blue ?? 0)));
-}
-
-type Inline = Pick<CSSStyleDeclaration, "backgroundColor" | "backgroundImage" | "color">;
-
-// Each dimmed element's own colours and picture as they were before it was dimmed.
-const undimmed = new WeakMap<HTMLElement, Inline>();
-
-// element and each element under it dimmed or put back: its own text and fill colours, and its
-// picture where it has a dimmed copy. An element already so is left as it is, so a part drawn
-// again while its dialog is dimmed is dimmed by calling this again.
-function dimInline(element: HTMLElement, dimmed: boolean): void {
-  const saved = undimmed.get(element);
-  if (dimmed && saved === undefined) {
-    const { backgroundColor, backgroundImage, color } = element.style;
-    undimmed.set(element, { backgroundColor, backgroundImage, color });
-    const art = element.getAttribute(DIM_ART_ATTRIBUTE);
-    Object.assign(element.style, {
-      backgroundColor: dimCss(backgroundColor),
-      ...(art === null ? {} : { backgroundImage: `url("${art}")` }),
-      color: dimCss(color),
-    });
-  } else if (!dimmed && saved !== undefined) {
-    undimmed.delete(element);
-    Object.assign(element.style, saved);
-  }
-  for (const child of element.children) {
-    dimInline(child as HTMLElement, dimmed);
+  for (const { root, state } of current) {
+    if (
+      state.owners.size === 0 ||
+      current.some(
+        (other) => other.root !== root && other.state.owners.size > 0 && other.root.contains(root),
+      )
+    ) {
+      continue;
+    }
+    state.filter = root.style.filter;
+    state.priority = root.style.getPropertyPriority("filter");
+    const original = state.filter && state.filter !== "none" ? `${state.filter} ` : "";
+    state.applied = `${original}brightness(${MODAL_BRIGHTNESS})`;
+    root.style.setProperty("filter", state.applied, state.priority);
   }
 }
 
-interface InlineProperty {
-  readonly priority: string;
-  readonly value: string;
-}
-const originalProperties = new WeakMap<HTMLElement, Map<string, InlineProperty>>();
-
-function dimVariables(
-  properties: readonly (readonly [string, string])[],
-  dimmed: boolean,
-  onlyLocal: boolean,
-  element: HTMLElement,
-): void {
-  let saved = originalProperties.get(element);
-  if (dimmed) {
-    for (const [name, value] of properties) {
-      const original = element.style.getPropertyValue?.(name) ?? "";
-      // Inherited properties need one root override; local skins must override their own value.
-      if (!onlyLocal || original !== "" || saved?.has(name)) {
-        saved ??= new Map();
-        if (!saved.has(name)) {
-          saved.set(name, {
-            priority: element.style.getPropertyPriority?.(name) ?? "",
-            value: original,
-          });
-        }
-        element.style.setProperty(name, value, saved.get(name)?.priority ?? "");
+function dimRequest(root: HTMLElement): (covered: boolean) => void {
+  let state = states.get(root);
+  if (state === undefined) {
+    state = { filter: "", owners: new Set(), priority: "" };
+    states.set(root, state);
+  }
+  const owner = {};
+  return (covered) => {
+    if (covered) {
+      state.owners.add(owner);
+      roots.add(root);
+    } else {
+      state.owners.delete(owner);
+      if (state.owners.size === 0) {
+        restore(root, state);
+        roots.delete(root);
       }
     }
-    if (saved !== undefined) {
-      originalProperties.set(element, saved);
-    }
-  } else if (saved !== undefined) {
-    for (const [name, original] of saved) {
-      element.style.setProperty(name, original.value, original.priority);
-    }
-    originalProperties.delete(element);
-  }
-  for (const child of element.children) {
-    dimVariables(properties, dimmed, true, child as HTMLElement);
-  }
+    refreshRoots();
+  };
 }
 
-// root and everything under it drawn palette-dimmed, or as it was.
+const explicit = new WeakMap<HTMLElement, (covered: boolean) => void>();
+
+// Each independently covered root darkens original paint once; nested roots never multiply it.
 export function setRampDimmed(root: HTMLElement, dimmed: boolean): void {
-  dimVariables(dimProperties(), dimmed, false, root);
-  dimInline(root, dimmed);
+  let request = explicit.get(root);
+  if (request === undefined) {
+    request = dimRequest(root);
+    explicit.set(root, request);
+  }
+  request(dimmed);
 }
 
-// A part drawn again under root while it is dimmed, dimmed with it.
+// Replaced children and late image paint inherit their covered root's existing filter.
 export function dimDrawn(element: HTMLElement, dimmed: boolean): void {
-  if (dimmed) {
-    dimVariables(dimProperties(), true, true, element);
-    dimInline(element, true);
+  if (dimmed && [...roots].some((root) => root.contains(element))) {
+    refreshRoots();
   }
 }
+
+interface UnderlayState {
+  leases: number;
+  readonly owners: Set<object>;
+  readonly inert: boolean;
+  readonly hidden: string | null;
+}
+const underlays = new WeakMap<HTMLElement, UnderlayState>();
 
 export interface ModalUnderlay {
   (): void;
   refresh(): void;
 }
 
-// Native screen roots register separately from the undimmed top bar and world effects.
+// Native roots exclude the protected top bar, current modal and world effects.
 export function followModalUnderlay(
   coverage: { accepts(): boolean; subscribe(listener: () => void): () => void },
   element: HTMLElement,
 ): ModalUnderlay {
+  const request = dimRequest(element);
+  const owner = {};
+  let state = underlays.get(element);
+  if (state === undefined) {
+    state = {
+      hidden: element.getAttribute("aria-hidden"),
+      inert: element.inert,
+      leases: 0,
+      owners: new Set(),
+    };
+    underlays.set(element, state);
+  }
+  state.leases++;
   let alive = true;
-  const inert = element.inert;
-  const hidden = element.getAttribute("aria-hidden");
-  const restore = () => {
-    setRampDimmed(element, false);
-    element.inert = inert;
-    if (hidden === null) {
-      element.removeAttribute("aria-hidden");
-    } else {
-      element.setAttribute("aria-hidden", hidden);
-    }
-  };
   const refresh = () => {
     if (!alive) {
       return;
     }
-    if (coverage.accepts()) {
-      restore();
+    const covered = !coverage.accepts();
+    request(covered);
+    if (covered) {
+      state.owners.add(owner);
     } else {
-      setRampDimmed(element, true);
+      state.owners.delete(owner);
+    }
+    if (state.owners.size > 0) {
       element.inert = true;
       element.setAttribute("aria-hidden", "true");
+    } else {
+      element.inert = state.inert;
+      if (state.hidden === null) {
+        element.removeAttribute("aria-hidden");
+      } else {
+        element.setAttribute("aria-hidden", state.hidden);
+      }
     }
   };
   const stop = coverage.subscribe(refresh);
   refresh();
   return Object.assign(
     () => {
+      if (!alive) {
+        return;
+      }
+      state.owners.delete(owner);
+      request(false);
+      // Restore through the same ownership rule without acquiring another request.
+      if (state.owners.size === 0) {
+        element.inert = state.inert;
+        if (state.hidden === null) {
+          element.removeAttribute("aria-hidden");
+        } else {
+          element.setAttribute("aria-hidden", state.hidden);
+        }
+      }
       alive = false;
+      state.leases--;
+      if (state.leases === 0) {
+        underlays.delete(element);
+      }
       stop();
-      restore();
     },
     { refresh },
   );

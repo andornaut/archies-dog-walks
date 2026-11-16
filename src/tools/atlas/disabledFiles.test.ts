@@ -124,14 +124,14 @@ describe("the remapped copies of its art the HTML interface draws", () => {
     },
   );
 
-  it("dim each colour down its ramp, never off the palette", () => {
+  it("darkens retained copies by the same ratio for every channel, keeping alpha", () => {
     const pixels = new Uint8ClampedArray(image.data);
     dimForModal(pixels);
-    const palette = new Set<number>(Object.values(PALETTE));
-    const colour = (i: number) =>
-      ((pixels[i] ?? 0) << 16) | ((pixels[i + 1] ?? 0) << 8) | (pixels[i + 2] ?? 0);
-    expect([colour(0), colour(4)].every((each) => palette.has(each))).toBe(true);
-    expect(colour(0)).not.toBe(PALETTE.yellow);
+    expect([...pixels]).toEqual(
+      [...image.data].map((channel, index) =>
+        index % 4 === 3 ? channel : Math.round(channel * 0.28),
+      ),
+    );
   });
 
   const byName: Readonly<Record<string, ArtCopy>> = {
