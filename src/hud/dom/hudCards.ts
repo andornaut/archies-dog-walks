@@ -1,5 +1,5 @@
 import type { Point, Rect } from "@andornaut/game-kit/runtime/rect";
-import { type BitmapFont, laidGlyphs } from "@andornaut/game-kit/runtime/text/bitmapFont";
+import { type BitmapFont } from "@andornaut/game-kit/runtime/text/bitmapFont";
 
 import { domArtPath } from "../../assets/domArt.ts";
 import { dogCardTag, dogFaceKey, ownerCardFaceKey } from "../../assets/spriteKeys.ts";
@@ -16,7 +16,6 @@ import {
   placeBox,
   placeText,
   setBox,
-  shownText,
 } from "../../ui/dom/pixelLine.ts";
 import { playingFrame, sheetTagFrames, type TagFrame } from "../../ui/dom/sheetFrames.ts";
 import type { UiLayer } from "../../ui/dom/uiLayer.ts";
@@ -262,18 +261,11 @@ export function createHudCards(
         scale: DOG_CARD.name.scale,
         text: dog.name,
       });
-      const right = (value: string) =>
-        Math.max(
-          0,
-          ...laidGlyphs(fonts.body, DOG_CARD.owner.scale, shownText("body", value)).flatMap(
-            ({ ink }) => (ink === null ? [] : [ink.right]),
-          ),
-        );
-      for (const line of ownerNameLines(right, dog.owner.name)) {
+      for (const line of ownerNameLines(fonts.body, dog.owner.name)) {
         text({
           capTop: rect.y + line.top,
           centre: "left",
-          centreX: rect.x + DOG_CARD.owner.x,
+          centreX: rect.x + DOG_CARD.owner.x - line.ink.left,
           colour: PALETTE.tan,
           font: "body",
           scale: DOG_CARD.owner.scale,

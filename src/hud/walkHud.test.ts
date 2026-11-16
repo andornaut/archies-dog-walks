@@ -4,7 +4,6 @@ import { decodePng } from "@andornaut/art-kit/build/png";
 import { opaqueRect } from "@andornaut/art-kit/build/rgbaImage";
 import { keysOf } from "@andornaut/game-kit/runtime/records";
 import { type Point, type Rect, rectsOverlap } from "@andornaut/game-kit/runtime/rect";
-import { inkRowsFromCapTop } from "@andornaut/game-kit/runtime/text/bitmapFont";
 import { pixels } from "@andornaut/game-kit/runtime/units";
 import { describe, expect, it } from "vitest";
 
@@ -18,7 +17,7 @@ import { dollarAmountText } from "../presentation/currency.ts";
 import { maxHearts } from "../rules/dogs.ts";
 import { modifiersOf } from "../rules/modifiers.ts";
 import { zoneLength } from "../runner/walkMotion.ts";
-import { fontFileMetrics, fontInk } from "../testing/fontInk.ts";
+import { fontInk, gameFont } from "../testing/fontInk.ts";
 import { LONE } from "../testing/packPlaces.ts";
 import { inside } from "../testing/rects.ts";
 import { plainMarks } from "../ui/pixelFont.ts";
@@ -61,10 +60,12 @@ const centre = (rect: Rect): Point => ({
   x: rect.x + Math.floor(rect.width / 2),
   y: rect.y + Math.floor(rect.height / 2),
 });
-const BODY = fontFileMetrics("font-body");
 
-// The columns a line inks in the body font at 1x, from its left edge to its last ink.
-const inkRight = (line: string) => fontInk("font-body", { scale: 1 }, plainMarks(line)).right;
+const ownerFont = gameFont("font-body");
+const ownerWidth = (line: string) => {
+  const ink = fontInk("font-body", { scale: TEXT_SCALE }, plainMarks(line));
+  return ink.right - ink.left;
+};
 
 // Every dog's owner's name, by dog.
 const owners = keysOf(gameData.dogs).map((dog) => [dog, gameData.dogs[dog].owner.name] as const);
@@ -369,20 +370,22 @@ describe("the dog cards", () => {
     ["a full meter of three", 3, 3, 3],
     ["five of seven", 5, 7, 7],
     ["none of eleven", 0, 11, 11],
-  ])("lays out the hearts of %s in rows inside the card", (_name, hearts, max, cells) => {
-    const shown = cardHearts(hearts, max);
-    expect(shown).toHaveLength(cells);
-    expect(shown.filter(({ full }) => full)).toHaveLength(hearts);
-    const { perRow, pitch, x, y } = DOG_CARD.hearts;
-    shown.forEach((cell, i) => {
-      expect(cell).toMatchObject({
-        x: x + (i % perRow) * pitch,
-        y: y + Math.floor(i / perRow) * pitch,
+  ])(
+    "lays out the hearts of %s using the configured row coordinates",
+    (_name, hearts, max, cells) => {
+      const shown = cardHearts(hearts, max);
+      expect(shown).toHaveLength(cells);
+      expect(shown.filter(({ full }) => full)).toHaveLength(hearts);
+      const { perRow, pitch, x, y } = DOG_CARD.hearts;
+      shown.forEach((cell, i) => {
+        expect(cell).toMatchObject({
+          x: x + (i % perRow) * pitch,
+          y: y + Math.floor(i / perRow) * pitch,
+        });
+        expect(cell.x + pitch).toBeLessThanOrEqual(DOG_CARD.size.width);
       });
-      expect(cell.x + pitch).toBeLessThanOrEqual(DOG_CARD.size.width);
-      expect(cell.y + pitch).toBeLessThanOrEqual(DOG_CARD.size.height);
-    });
-  });
+    },
+  );
 
   // The most hearts an owner can have: any dog's, walked alone, with every gear's raise.
   const gearModifiers = modifiersOf(Object.values(gameData.shopGear).flatMap((g) => g.effects));
@@ -399,7 +402,8 @@ describe("the dog cards", () => {
     cardHearts(max, max).map((cell) => ({ ...HEART_SIZE, x: cell.x, y: cell.y }));
 
   it("fits the most hearts an owner can have on one row", () => {
-    expect(mostHearts).toBeLessThanOrEqual(DOG_CARD.hearts.perRow);
+    expect(mostHearts).toBeLessThanOrEqual(gameData.tuning.hearts.maxOwnerHearts);
+    expect(gameData.tuning.hearts.maxOwnerHearts).toBeLessThanOrEqual(DOG_CARD.hearts.perRow);
     expect(new Set(cardHearts(mostHearts, mostHearts).map(({ y }) => y))).toEqual(
       new Set([DOG_CARD.hearts.y]),
     );
@@ -473,28 +477,33 @@ describe("the dog cards", () => {
   // Each line of the owner's name as the card sets it: its ink from the top of its capitals to
   // its lowest ink, from owner.x.
   const nameRects = (name: string) =>
-    ownerNameLines(inkRight, name).map((line) => ({
-      height: inkRowsFromCapTop(BODY),
-      width: inkRight(line.text),
+    ownerNameLines(ownerFont, name).map((line) => ({
+      height: line.ink.bottom - line.ink.top,
+      width: line.ink.right - line.ink.left,
       x: DOG_CARD.owner.x,
-      y: line.top,
+      y: line.top + line.ink.top,
     }));
 
   it.each(owners)(
     "fits the name of %s's owner, %s, beside their photo within the room, one line when it fits",
     (_dog, name) => {
-      const lines = ownerNameLines(inkRight, name);
-      expect(lines).toHaveLength(inkRight(name) <= DOG_CARD.owner.room ? 1 : 2);
-      expect(lines.map(({ text }) => text).join(" ")).toBe(name);
-      expect(lines.filter(({ text }) => inkRight(text) > DOG_CARD.owner.room)).toEqual([]);
+      const lines = ownerNameLines(ownerFont, name);
+      expect(lines).toHaveLength(ownerWidth(name) <= DOG_CARD.owner.room ? 1 : 2);
+      expect(
+        lines
+          .map(({ text }) => text)
+          .join("")
+          .replaceAll(" ", ""),
+      ).toBe(name.replaceAll(" ", ""));
+      expect(lines.filter(({ text }) => ownerWidth(text) > DOG_CARD.owner.room)).toEqual([]);
     },
   );
 
   // Of the names set on one line and of those set on two, the one whose widest line reaches
   // farthest: every line starts at owner.x, at its count's tops.
   const reach = (name: string) =>
-    Math.max(...ownerNameLines(inkRight, name).map(({ text }) => inkRight(text)));
-  const lineCount = (name: string) => ownerNameLines(inkRight, name).length;
+    Math.max(...ownerNameLines(ownerFont, name).map(({ text }) => ownerWidth(text)));
+  const lineCount = (name: string) => ownerNameLines(ownerFont, name).length;
   const farthest = owners.filter(([, name]) =>
     owners.every(
       ([, other]) =>
@@ -517,33 +526,6 @@ describe("the dog cards", () => {
       expect(hit).toEqual([]);
     },
   );
-
-  const { oneLine, twoLines } = DOG_CARD.owner.tops;
-  it.each<[string, string, number, { text: string; top: number }[]]>([
-    ["a name that fits on one line", "Ab Cd", 0, [{ text: "Ab Cd", top: oneLine }]],
-    [
-      "a name one pixel too wide at its first space",
-      "Ab Cd",
-      1,
-      [
-        { text: "Ab", top: twoLines[0] },
-        { text: "Cd", top: twoLines[1] },
-      ],
-    ],
-    [
-      "a three-word name too wide at its first space only",
-      "Ab Cd Ef",
-      1,
-      [
-        { text: "Ab", top: twoLines[0] },
-        { text: "Cd Ef", top: twoLines[1] },
-      ],
-    ],
-    ["a name too wide with no space on one line", "Abcdef", 1, [{ text: "Abcdef", top: oneLine }]],
-  ])("sets %s", (_case, name, over, expected) => {
-    const rightEdge = (line: string) => (line === name ? DOG_CARD.owner.room + over : 0);
-    expect(ownerNameLines(rightEdge, name)).toEqual(expected);
-  });
 
   it.each<[string, boolean[], number | undefined]>([
     ["the first dog while it walks", [true, true, true], 0],

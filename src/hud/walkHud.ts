@@ -2,6 +2,7 @@ import { fillNames } from "@andornaut/game-kit/runtime/lines";
 import { clamp01 } from "@andornaut/game-kit/runtime/numbers";
 import { progressBarLayout } from "@andornaut/game-kit/runtime/progress";
 import { containsPoint, type Point, type Rect } from "@andornaut/game-kit/runtime/rect";
+import type { BitmapFont } from "@andornaut/game-kit/runtime/text/bitmapFont";
 
 import { gameData } from "../data/index.ts";
 import {
@@ -15,6 +16,7 @@ import {
 import { SCREEN_CONFIG } from "../data/screen.ts";
 import type { DebuffId, DogId, GameData } from "../data/types.ts";
 import type { ScreenLayout } from "../layout/screenLayout.ts";
+import { ownerNameLayout, type OwnerNameLine } from "../presentation/ownerName.ts";
 import { walkLength } from "../rules/route.ts";
 import { zoneLength } from "../runner/walkMotion.ts";
 import type { RunState } from "../state/runState.ts";
@@ -243,8 +245,7 @@ export const DOG_CARD = {
   },
 } as const;
 
-interface CardLine {
-  text: string;
+interface CardLine extends OwnerNameLine {
   // The top of the line's capitals, from the card's top.
   top: number;
 }
@@ -258,20 +259,17 @@ export function ownerPhotoRect(size: number, face: Point): Rect {
   return { height: side, width: side, x: face.x - outset, y: face.y - outset };
 }
 
-// The owner's name in the body font at owner.scale: one line when its right edge, as rightEdge measures a
-// line from its left, fits owner.room, else broken at its first space onto two lines. A name too
-// wide with no space stays on one line.
-export function ownerNameLines(rightEdge: (line: string) => number, name: string): CardLine[] {
-  const { room, tops } = DOG_CARD.owner;
-  const space = name.indexOf(" ");
-  if (rightEdge(name) <= room || space < 0) {
-    return [{ text: name, top: tops.oneLine }];
-  }
-  const [first, second] = tops.twoLines;
-  return [
-    { text: name.slice(0, space), top: first },
-    { text: name.slice(space + 1), top: second },
-  ];
+// Full-size owner-name ink occupies the fixed portrait-side column without changing its art.
+export function ownerNameLines(font: BitmapFont, name: string): CardLine[] {
+  const { ink, room } = DOG_CARD.owner;
+  const lines = ownerNameLayout(font, room, name);
+  return lines.map((line, i) => ({
+    ...line,
+    top:
+      lines.length === 1
+        ? ink.centreY - (line.ink.top + line.ink.bottom) / 2
+        : ink.tops[i]! - line.ink.top,
+  }));
 }
 
 interface CardHeart extends Point {

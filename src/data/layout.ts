@@ -228,7 +228,7 @@ export const DOG_CARD_PARTS = {
   // FIRED's centre column and capitals' top.
   fired: { x: 24, y: 38 },
   // The hearts' rows: hearts to a row, their pitch, and the first heart's top-left.
-  hearts: { perRow: 6, pitch: 9, x: 45, y: 52 },
+  hearts: { perRow: 6, pitch: 9, x: 45, y: 60 },
   // The LEAD tag's top-left.
   lead: { x: 10, y: 54 },
   // The dog's name: its widest ink, text scale, capitals' top and centre column.
@@ -236,14 +236,14 @@ export const DOG_CARD_PARTS = {
   owner: {
     // The owner's face's side and top-left.
     face: { size: 20, x: 47, y: 25 },
+    // Actual ink positions for one centred line, or the two readable lines.
+    ink: { centreY: 35, tops: [20, 40] },
     // The photo's ink frame and white mat round the face.
     photo: { frame: 1, mat: 1 },
     // The owner's name's widest line.
     room: 41,
-    // The owner's name's text scale.
-    scale: 1,
-    // The owner's name's capitals' top on one line, and on two.
-    tops: { oneLine: 32, twoLines: [27, 37] },
+    // The owner's name uses the standard body scale.
+    scale: 2,
     // The owner's name's left edge.
     x: 72,
   },
@@ -906,7 +906,7 @@ export const END_SCREEN = {
   breakdown: { amountRight: 196, label: 40, pitch: 17, top: 42 },
   // The logo's top-left.
   logo: { x: 107, y: 2 } satisfies Point,
-  // The panel, as tall as the tallest summary: six breakdown lines over three fired owners' rows.
+  // The results panel's base frame; complete owner rows fit within a bounded viewport.
   panel: { height: 301, width: 312, x: 24, y: 112 } satisfies Rect,
   // The panel's rows under the last owner's row.
   panelFoot: 8,
@@ -920,7 +920,9 @@ export const END_SCREEN = {
     face: { x: 291, y: 1 },
     // The gap between rows.
     gap: 2,
-    // The name's capitals' top.
+    // The owner's measured column and readable line pitch.
+    name: { linePitch: 20, room: 42 },
+    // The name's first capitals' top.
     nameY: 37,
     // The rule over the first row: its rows above, width and left edge.
     rule: { above: 8, width: 288, x: 36 },

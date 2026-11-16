@@ -9,6 +9,7 @@ import { SCREEN_CONFIG } from "../data/screen.ts";
 import type { AchievementId, DogId, GameData } from "../data/types.ts";
 import { pipTag } from "../hud/hudView.ts";
 import { signedShortDollarText } from "../presentation/currency.ts";
+import type { OwnerNameLine } from "../presentation/ownerName.ts";
 import { walkLength } from "../rules/route.ts";
 import type { LastWalk } from "../save/schema.ts";
 import { MODAL } from "../ui/modal/layout.ts";
@@ -26,7 +27,6 @@ import {
   grantedQuipLines,
   QUIP_LINES,
   quipCapsTop,
-  quipNameX,
   quipTextY,
   sideTotalAmountY,
   sideTotalBand,
@@ -41,6 +41,7 @@ import { MENU_TEXT_FIELDS } from "./menuText.ts";
 // onto up to lines lines in the bubble's room.
 export interface EndMeasure extends DetailMeasure {
   readonly fitQuip: (style: TextFitStyle, text: string) => { lines: string[]; scale: number };
+  readonly ownerName: (room: number, name: string) => readonly OwnerNameLine[];
   readonly span: (
     font: "body" | "title",
     scale: number,
@@ -62,7 +63,7 @@ export interface EndFace {
 // The results, in the results group's own game pixels: the canvas draws them in a container
 // moved down offsetY, and the HTML at the same places moved down as far.
 export interface EndResults {
-  // The zone pips, and each bubble's tail pointing right at its face.
+  // The zone pips.
   readonly art: readonly DetailArt[];
   // TOTAL's band: its outline, fill and the lip under the fill.
   readonly band: ReturnType<typeof sideTotalBand>;
@@ -71,12 +72,18 @@ export interface EndResults {
   readonly faces: readonly EndFace[];
   // The pips' stand-ins while ui-zone-pips is missing.
   readonly framed: readonly DetailFramed[];
-  // Each owner's name under their well, at 1x, its ink centred there.
+  // Each owner's full-size name, wrapped in its measured column under the well.
   readonly names: readonly PanelText[];
+  readonly ownerRows: {
+    readonly art: readonly DetailArt[];
+    readonly contentHeight: number;
+    readonly texts: readonly DetailText[];
+    readonly viewport: Rect;
+  };
   readonly panel: Rect;
   // The tan rule over the first owner's row.
   readonly rule: Rect;
-  // The breakdown, the side column and each row's header and closing line.
+  // The fixed breakdown and side-column text.
   readonly texts: readonly DetailText[];
   // The outcome's title in the display lettering, centred across the screen.
   readonly title: { readonly capTop: number; readonly centreX: number; readonly text: string };
@@ -153,15 +160,26 @@ export function endScreenView(
   const words = data.menuText.end;
   // The badges wrap onto a second row while the panel, every closing line on one line, has room
   // above it; a closing line wraps onto a second line while the panel has room for it.
-  const badgeRows = endBadgeRows(fonts, lines.length, closing, earned.length);
-  const wanted = closing.map((quip) => ({
+  const ownerNames = closing.map((quip) =>
+    measure.ownerName(QUIPS.name.room, data.dogs[quip.dog].owner.name),
+  );
+  const owners = closing.map((quip, i) => ({
     fired: quip.fired,
+    nameBottom: Math.max(
+      0,
+      ...ownerNames[i]!.map((line, j) => QUIPS.nameY + j * QUIPS.name.linePitch + line.ink.bottom),
+    ),
+  }));
+  const badgeRows = endBadgeRows(fonts, lines.length, owners, earned.length);
+  const wanted = closing.map((quip, i) => ({
+    ...owners[i]!,
     lines: Math.min(QUIP_LINES, measure.fitQuip(textOnLines(QUIP_LINES), quip.text).lines.length),
   }));
   const quipLines = grantedQuipLines(fonts, badgeRows, lines.length, wanted);
-  const quipRows = closing.map(({ fired }, i) => ({ fired, lines: itemAt(quipLines, i) }));
-  const { panel, rows } = endPanelLayout(fonts, lines.length, quipRows);
-  const placement = endResultsPlacement(badgeRows, panel);
+  const quipRows = owners.map((owner, i) => ({ ...owner, lines: itemAt(quipLines, i) }));
+  const layout = endPanelLayout(fonts, lines.length, quipRows);
+  const { panel, rows } = layout;
+  const placement = endResultsPlacement(badgeRows, layout);
 
   const texts: DetailText[] = [];
   // Each amount in the short form from a thousand dollars, its label clear of it.
@@ -215,6 +233,8 @@ export function endScreenView(
 
   // Each owner's row: their face in its well, their bubble with its tail pointing at it, their
   // name under the well, and a fired row's header over its closing line.
+  const ownerArt: DetailArt[] = [];
+  const ownerTexts: DetailText[] = [];
   const celebrating = earned.length > 0;
   const bubbles: Rect[] = [];
   const faces: EndFace[] = [];
@@ -239,7 +259,7 @@ export function endScreenView(
       // Its middle down where the canvas draws it, beside its face, whole art pixels from the
       // bubble's snapped corner, so it stays level with the face at every scale.
       const y = row + QUIPS.tail.y;
-      art.push({
+      ownerArt.push({
         centre: { x: QUIPS.tail.x + tailSize.width / 2, y: y + tailSize.height / 2 },
         flipX: true,
         holder: { x: bubble.x, y: bubble.y },
@@ -252,29 +272,29 @@ export function endScreenView(
       });
     }
     const owner = data.dogs[quip.dog].owner.name;
-    const nameInk = measure.span("body", 1, owner);
-    const inkWidth = nameInk.right - nameInk.left;
-    names.push({
-      capTop: row + QUIPS.nameY,
-      centre: "ink",
-      centreX: quipNameX(inkWidth) + inkWidth / 2,
-      colour: PALETTE.rust,
-      font: "body",
-      line: 0,
-      scale: 1,
-      text: owner,
-    });
+    ownerNames[i]!.forEach((line, j) =>
+      names.push({
+        capTop: row + QUIPS.nameY + j * QUIPS.name.linePitch,
+        centre: "ink",
+        centreX: QUIPS.name.centreX,
+        colour: PALETTE.rust,
+        font: "body",
+        line: 0,
+        scale: TEXT_SCALE,
+        text: line.text,
+      }),
+    );
     const quipRow = itemAt(quipRows, i);
     if (quip.fired) {
       const header = fillLine(MENU_TEXT_FIELDS.end, words, "firedYou", { owner });
-      texts.push(
+      ownerTexts.push(
         line(QUIPS.textX, row + quipCapsTop(fonts, quipRow), header, PALETTE.darkRed, {
           font: "title",
         }),
       );
     }
     const fitted = measure.fitQuip(textOnLines(quipRow.lines), quip.text);
-    texts.push({
+    ownerTexts.push({
       capTop: row + quipTextY(fonts, quipRow),
       colour: PALETTE.plum,
       lines: fitted.lines,
@@ -336,7 +356,8 @@ export function endScreenView(
       faces,
       framed,
       names,
-      panel,
+      ownerRows: { ...placement.ownerRows, art: ownerArt, texts: ownerTexts },
+      panel: { ...panel, height: placement.panel.height },
       rule: { height: 1, width: rule.width, x: rule.x, y: quipsTop - rule.above },
       texts,
       title: {

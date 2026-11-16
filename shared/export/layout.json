@@ -134,7 +134,7 @@
         "perRow": 6,
         "pitch": 9,
         "x": 45,
-        "y": 52
+        "y": 60
       },
       "lead": {
         "x": 10,
@@ -152,19 +152,19 @@
           "x": 47,
           "y": 25
         },
+        "ink": {
+          "centreY": 35,
+          "tops": [
+            20,
+            40
+          ]
+        },
         "photo": {
           "frame": 1,
           "mat": 1
         },
         "room": 41,
-        "scale": 1,
-        "tops": {
-          "oneLine": 32,
-          "twoLines": [
-            27,
-            37
-          ]
-        },
+        "scale": 2,
         "x": 72
       },
       "size": {
@@ -1470,6 +1470,11 @@
           "y": 1
         },
         "gap": 2,
+        "name": {
+          "linePitch": 20,
+          "room": 42,
+          "centreX": 307
+        },
         "nameY": 37,
         "rule": {
           "above": 8,

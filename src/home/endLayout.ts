@@ -1,9 +1,5 @@
 import type { Rect } from "@andornaut/game-kit/runtime/rect";
-import {
-  type FontMetrics,
-  inkRowsFromCapTop,
-  inkRowsOfLines,
-} from "@andornaut/game-kit/runtime/text/bitmapFont";
+import { type FontMetrics, inkRowsOfLines } from "@andornaut/game-kit/runtime/text/bitmapFont";
 
 import { END_SCREEN } from "../data/layout.ts";
 import { helpCapDy } from "../ui/labelHelpGap.ts";
@@ -35,7 +31,7 @@ export const END_LAYOUT = {
   logo: END.logo,
   panel: PANEL,
   // An owner's row, mirroring the home screen's bubble: a speech bubble from x with its tail
-  // at the right pointing at the face in its well, and the owner's name in rust at 1x under
+  // at the right pointing at the face in its well, and the owner's full-size name under
   // the well, its capitals nameY under the row's top, centred on the well. The bubble's frame
   // takes frame.top rows over its cream and frame.bottom under it. Its text is a block: a fired
   // row's "{owner} fired you" in the title font over the closing line, whose first capitals sit
@@ -51,6 +47,10 @@ export const END_LAYOUT = {
     bubble: END.quips.bubble,
     face: END.quips.face,
     gap: END.quips.gap,
+    name: {
+      ...END.quips.name,
+      centreX: END.quips.well.x + END.quips.well.size / 2,
+    },
     nameY: END.quips.nameY,
     rule: END.quips.rule,
     tail: END.quips.tail,
@@ -176,9 +176,13 @@ function sideBottom(): number {
 }
 
 // An owner's row: whether the owner fired you, and how many lines its closing line takes.
-export interface QuipRow {
+export interface QuipText {
   readonly fired: boolean;
   readonly lines: number;
+}
+
+export interface QuipRow extends QuipText {
+  readonly nameBottom: number;
 }
 
 // The fonts an owner's row is set in: the header in title, the closing line in body.
@@ -189,27 +193,27 @@ interface QuipFonts {
 
 // How far a row's first line inks above its capitals at 2x: a body line's ascenders, or none
 // for a fired row's header, whose letters start on its capitals.
-function quipRise(fonts: QuipFonts, row: QuipRow): number {
+function quipRise(fonts: QuipFonts, row: QuipText): number {
   const first = row.fired ? fonts.title : fonts.body;
   return (first.capTop - first.letterTop) * TEXT_SCALE;
 }
 
 // From a row's first capitals (a fired row's header's, else its closing line's) to its closing
 // line's first capitals.
-function quipHeaderDy(fonts: QuipFonts, row: QuipRow): number {
+function quipHeaderDy(fonts: QuipFonts, row: QuipText): number {
   return row.fired ? helpCapDy(fonts.title, TEXT_SCALE) : 0;
 }
 
 // A row's text block: from its first line's highest letter ink to its closing line's lowest
 // ink, on lines lines of the body font at 2x.
-function quipBlockHeight(fonts: QuipFonts, row: QuipRow): number {
+function quipBlockHeight(fonts: QuipFonts, row: QuipText): number {
   const lines = inkRowsOfLines(fonts.body, row.lines) * TEXT_SCALE;
   return quipRise(fonts, row) + quipHeaderDy(fonts, row) + lines;
 }
 
 // An owner's bubble's height: its frame, pad clear rows either side of the text block, and at
 // least the well's height.
-export function quipBubbleHeight(fonts: QuipFonts, row: QuipRow): number {
+export function quipBubbleHeight(fonts: QuipFonts, row: QuipText): number {
   const { bubble, well } = END_LAYOUT.quips;
   const { bottom, top } = bubble.frame;
   return Math.max(well.size, top + bubble.pad + quipBlockHeight(fonts, row) + bubble.pad + bottom);
@@ -218,26 +222,25 @@ export function quipBubbleHeight(fonts: QuipFonts, row: QuipRow): number {
 // An owner's row's height: its bubble's, and at least down to the lowest ink of the name under
 // the well.
 export function quipRowHeight(fonts: QuipFonts, row: QuipRow): number {
-  const { nameY } = END_LAYOUT.quips;
-  return Math.max(quipBubbleHeight(fonts, row), nameY + inkRowsFromCapTop(fonts.body));
+  return Math.max(quipBubbleHeight(fonts, row), row.nameBottom);
 }
 
 // The text block's highest ink, from the row's top: the block centred down the bubble's cream,
 // any odd row left under it.
-export function quipInkTop(fonts: QuipFonts, row: QuipRow): number {
+export function quipInkTop(fonts: QuipFonts, row: QuipText): number {
   const { bottom, top } = END_LAYOUT.quips.bubble.frame;
   const cream = quipBubbleHeight(fonts, row) - top - bottom;
   return top + Math.floor((cream - quipBlockHeight(fonts, row)) / 2);
 }
 
 // The row's first capitals, from its top: a fired row's header's, else its closing line's.
-export function quipCapsTop(fonts: QuipFonts, row: QuipRow): number {
+export function quipCapsTop(fonts: QuipFonts, row: QuipText): number {
   return quipInkTop(fonts, row) + quipRise(fonts, row);
 }
 
 // The closing line's first capitals, from the row's top: under a fired row's header, or the
 // row's first capitals on a happy row.
-export function quipTextY(fonts: QuipFonts, row: QuipRow): number {
+export function quipTextY(fonts: QuipFonts, row: QuipText): number {
   return quipCapsTop(fonts, row) + quipHeaderDy(fonts, row);
 }
 
@@ -263,7 +266,7 @@ export function endPanelLayout(
   const { breakdown, quips } = END_LAYOUT;
   const listBottom = breakdown.top + breakdownLines * breakdown.pitch;
   let top = Math.max(listBottom, sideBottom()) + QUIPS_GAP;
-  const shown = quipRows.length === 0 ? [{ fired: false, lines: 1 }] : quipRows;
+  const shown = quipRows.length === 0 ? [{ fired: false, lines: 1, nameBottom: 0 }] : quipRows;
   const rows = shown.map((quip) => {
     const row = { bubble: quipBubbleHeight(fonts, quip), height: quipRowHeight(fonts, quip), top };
     top += row.height + quips.gap;
@@ -282,16 +285,20 @@ export function endBadgeStrip(rows: number): Rect {
   return { ...badges, height, y: badges.y + badges.height - height };
 }
 
-// Place the allocated results below the returning group where their unchanged content fits.
+// Bound owner rows between the fixed summary and badges, retaining their full scrollable content.
 // The badge panel centres in the remaining band, retaining the return button's 3px clearance.
-export function endResultsPlacement(badgeRows: number, panel: Rect) {
+export function endResultsPlacement(badgeRows: number, layout: EndPanelLayout) {
+  const { panel, rows } = layout;
   const strip = endBadgeStrip(badgeRows);
   const bottom = END_LAYOUT.button.y - END_LAYOUT.results.buttonGap;
   const badgeHeight = badgeRows > 0 ? strip.height : 0;
-  const latestTop = bottom - badgeHeight - panel.height;
-  if (latestTop < panel.y) {
-    throw new RangeError("Allocated end-screen content exceeds its placement band");
+  const height = Math.min(panel.height, bottom - badgeHeight - panel.y);
+  const ownerTop = (rows[0]?.top ?? panel.y) - END_LAYOUT.quips.rule.above;
+  const viewportHeight = panel.y + height - PANEL_FOOT - ownerTop;
+  if (viewportHeight <= 0) {
+    throw new RangeError("Allocated end-screen content has no owner-row viewport");
   }
+  const latestTop = bottom - badgeHeight - height;
   const home = END_LAYOUT.returnHome;
   const feetBottom = Math.max(
     home.walker.y,
@@ -299,9 +306,13 @@ export function endResultsPlacement(badgeRows: number, panel: Rect) {
     ...home.owners.map(({ y }) => y),
   );
   const y = Math.min(feetBottom + END_LAYOUT.results.heroGap, latestTop);
-  const placed = { ...panel, y };
+  const placed = { ...panel, height, y };
   return {
     offsetY: y - panel.y,
+    ownerRows: {
+      contentHeight: panel.y + panel.height - PANEL_FOOT - ownerTop,
+      viewport: { height: viewportHeight, width: panel.width, x: panel.x, y: ownerTop },
+    },
     panel: placed,
     strip: {
       ...strip,
@@ -323,11 +334,11 @@ export function endPanelFits(badgeRows: number, panel: typeof PANEL): boolean {
 export function endBadgeRows(
   fonts: QuipFonts,
   breakdownLines: number,
-  owners: readonly Pick<QuipRow, "fired">[],
+  owners: readonly Pick<QuipRow, "fired" | "nameBottom">[],
   count: number,
 ): number {
   const rows = badgeStripRows(count);
-  const oneLine = owners.map(({ fired }) => ({ fired, lines: 1 }));
+  const oneLine = owners.map((owner) => ({ ...owner, lines: 1 }));
   const { panel } = endPanelLayout(fonts, breakdownLines, oneLine);
   return rows <= 1 || endPanelFits(rows, panel) ? rows : 1;
 }
@@ -341,15 +352,9 @@ export function grantedQuipLines(
   wanted: readonly QuipRow[],
 ): number[] {
   return wanted.reduce<number[]>((granted, row, i) => {
-    const above = granted.map((lines, j) => ({ fired: wanted[j]?.fired ?? false, lines }));
-    const rest = wanted.slice(i + 1).map(({ fired }) => ({ fired, lines: 1 }));
+    const above = granted.map((lines, j) => ({ ...wanted[j]!, lines }));
+    const rest = wanted.slice(i + 1).map((owner) => ({ ...owner, lines: 1 }));
     const tried = endPanelLayout(fonts, breakdownLines, [...above, row, ...rest]);
     return [...granted, endPanelFits(badgeRows, tried.panel) ? row.lines : 1];
   }, []);
-}
-
-// Where the owner's name under the well starts, inkWidth wide at 1x: centred on the well.
-export function quipNameX(inkWidth: number): number {
-  const { well } = END_LAYOUT.quips;
-  return Math.round(well.x + well.size / 2 - inkWidth / 2);
 }

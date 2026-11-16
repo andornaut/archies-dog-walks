@@ -17,7 +17,7 @@ import {
 import { followModalUnderlay } from "../../ui/dom/rampDim.ts";
 import type { SheetFrame } from "../../ui/dom/sheetFrames.ts";
 import type { UiLayer } from "../../ui/dom/uiLayer.ts";
-import { artPixel, type DomScale } from "../../ui/domScale.ts";
+import { artPixel, type DomScale, gridX, gridY } from "../../ui/domScale.ts";
 import { type PanelText } from "../../ui/modal/types.ts";
 import { PALETTE } from "../../ui/palette.ts";
 import { TEXT_SCALE } from "../../ui/textFit.ts";
@@ -90,6 +90,12 @@ function moved(results: EndResults, dy: number) {
     faces: results.faces.map(point),
     framed: results.framed.map((box) => ({ ...box, rect: point(box.rect) })),
     names: results.names.map(line),
+    ownerRows: {
+      ...results.ownerRows,
+      art: results.ownerRows.art.map(art),
+      texts: results.ownerRows.texts.map(text),
+      viewport: point(results.ownerRows.viewport),
+    },
     panel: point(results.panel),
     rule: point(results.rule),
     texts: results.texts.map(text),
@@ -301,22 +307,62 @@ export function showEndScreen(layer: UiLayer, input: DomEndScreenInput): DomEndS
     },
     view.button,
   );
+  const ownerParts: DomPart[] = [
+    fillPart(doc, { colour: PALETTE.tan, rect: results.rule }),
+    ...results.wells.map((rect) => fillPart(doc, { colour: PALETTE.tan, rect })),
+    ...results.bubbles.map((rect) => bubblePart(doc, rect)),
+    ...results.ownerRows.art.map((art) => artPart(doc, input, art)),
+    ...faces.map(({ part }) => part),
+    ...results.ownerRows.texts.map((text) => textPart(doc, input, text)),
+    linesPart(doc, fonts, results.names),
+  ];
+  const viewport = doc.createElement("div");
+  viewport.className = "adw-scroll-viewport adw-framed";
+  const scrolls = results.ownerRows.contentHeight > results.ownerRows.viewport.height;
+  viewport.tabIndex = scrolls ? 0 : -1;
+  viewport.setAttribute("role", "region");
+  viewport.setAttribute("aria-label", results.title.text);
+  viewport.addEventListener("keydown", (event) => {
+    if (
+      ["ArrowDown", "ArrowUp", "PageDown", "PageUp", "Home", "End", "Space"].includes(event.code)
+    ) {
+      event.stopPropagation();
+    }
+  });
+  const ownerContent = doc.createElement("div");
+  ownerContent.className = "adw-framed";
+  ownerContent.append(...ownerParts.map(({ element }) => element));
+  viewport.append(ownerContent);
+  const ownerRows: DomPart = {
+    controls: scrolls ? [viewport] : [],
+    element: viewport,
+    place: (scale) => {
+      const { contentHeight, viewport: rect } = results.ownerRows;
+      placeBox(scale, ORIGIN, viewport, rect);
+      Object.assign(ownerContent.style, {
+        height: `${gridY(scale, rect.y + contentHeight)}px`,
+        left: `${-gridX(scale, rect.x)}px`,
+        top: `${-gridY(scale, rect.y)}px`,
+        width: `${gridX(scale, results.panel.x + results.panel.width)}px`,
+      });
+      ownerParts.forEach((part) => part.place(scale));
+    },
+    ready: Promise.all(ownerParts.map((part) => part.ready ?? Promise.resolve([]))).then((urls) =>
+      urls.flat(),
+    ),
+  };
   const colours = END_LAYOUT.side.band;
   const parts: DomPart[] = [
     panelPart(doc, results.panel),
     fillPart(doc, { colour: PALETTE[colours.outline], rect: results.band.outline }),
     fillPart(doc, { colour: PALETTE[colours.fill], rect: results.band.fill }),
     fillPart(doc, { colour: PALETTE[colours.lip], rect: results.band.lip }),
-    fillPart(doc, { colour: PALETTE.tan, rect: results.rule }),
-    ...results.wells.map((rect) => fillPart(doc, { colour: PALETTE.tan, rect })),
-    ...results.bubbles.map((rect) => bubblePart(doc, rect)),
     ...results.framed.map((box) => framedPart(doc, box)),
     ...results.art.map((art) => artPart(doc, input, art)),
-    ...faces.map(({ part }) => part),
+    ownerRows,
     ...(ribbon === undefined ? [] : [ribbon]),
     linesPart(doc, fonts, [title], false),
     ...results.texts.map((text) => textPart(doc, input, text)),
-    linesPart(doc, fonts, results.names),
     ...(badges?.parts ?? []),
     ...(strip === undefined
       ? []
@@ -348,11 +394,35 @@ export function showEndScreen(layer: UiLayer, input: DomEndScreenInput): DomEndS
     }),
   };
   const screen = { height: 0, width: 0, x: 0, y: 0 };
+  let scrolling = false;
   const panel = showQuestionPanel(layer, {
     close: null,
     closeLabel: input.closeLabel,
     fonts: input.fonts,
-    gesture: input.gesture,
+    gesture: {
+      cancel: () => {
+        scrolling = false;
+        input.gesture.cancel?.();
+      },
+      down: (event) => {
+        scrolling = viewport.contains(event.target as Node);
+        if (scrolling) {
+          input.gesture.cancel?.();
+        } else {
+          input.gesture.down?.(event);
+        }
+      },
+      move: (event) => {
+        if (!scrolling) {
+          input.gesture.move?.(event);
+        }
+      },
+      up: (event, cancelled) => {
+        const nativeScroll = scrolling;
+        scrolling = false;
+        return nativeScroll ? false : input.gesture.up?.(event, cancelled);
+      },
+    },
     label: results.title.text,
     modal: false,
     numberKeys: false,

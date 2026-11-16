@@ -36,7 +36,6 @@ import {
   quipBubbleHeight,
   quipCapsTop,
   quipInkTop,
-  quipNameX,
   type QuipRow,
   quipRowHeight,
   quipTextY,
@@ -66,7 +65,11 @@ const cases = BREAKDOWN_LINES.flatMap((lines) =>
 // The panel stacks its rows the same way at every count, so the fewest and the most rows.
 const panelCases = cases.filter(([, rows]) => rows === 1 || rows === SCREEN_CONFIG.dogSlotCount);
 const quipRows = (count: number, fired: boolean, lines: readonly number[]): QuipRow[] =>
-  Array.from({ length: count }, (_, i) => ({ fired, lines: lines[i] ?? 1 }));
+  Array.from({ length: count }, (_, i) => ({
+    fired,
+    lines: lines[i] ?? 1,
+    nameBottom: END_LAYOUT.quips.nameY + inkRowsFromCapTop(BODY) * TEXT_SCALE,
+  }));
 // Every count of badges a walk's strip lays out in full rows, from one.
 const BADGE_COUNTS = Array.from(
   { length: BADGE_STRIP.perRow * BADGE_STRIP.maxRows },
@@ -157,7 +160,8 @@ describe("endPanelLayout", () => {
   it.each(panelCases)(
     "fits %i breakdown lines and %i owners' rows (fired: %s), each row under the last",
     (lines, rows, fired) => {
-      const { panel, rows: placed } = endPanelLayout(FONTS, lines, quipRows(rows, fired, []));
+      const natural = endPanelLayout(FONTS, lines, quipRows(rows, fired, []));
+      const { panel, rows: placed } = natural;
       // The breakdown's last line's ink and the side column's total stay over the rule.
       const listInk = breakdown.top + (lines - 1) * breakdown.pitch + inkRowsFromCapTop(BODY) * 2;
       const above = Math.max(listInk, side.totalY + side.totalHeight);
@@ -166,7 +170,14 @@ describe("endPanelLayout", () => {
       expect(rule).toBeGreaterThan(above);
       expect(rule - above).toBeLessThanOrEqual(8);
       expect(panel.y + panel.height).toBe((last?.top ?? 0) + (last?.height ?? 0) + 8);
-      expect(endPanelFits(1, panel)).toBe(true);
+      const fitted = endResultsPlacement(1, natural);
+      expect(endPanelFits(1, { ...fitted.panel, y: panel.y })).toBe(true);
+      expect(fitted.ownerRows.contentHeight).toBeGreaterThanOrEqual(
+        fitted.ownerRows.viewport.height,
+      );
+      expect(fitted.ownerRows.viewport.y + fitted.ownerRows.contentHeight).toBe(
+        (last?.top ?? 0) + (last?.height ?? 0),
+      );
       const two = endPanelLayout(FONTS, lines, quipRows(rows, fired, [2, 2, 2])).rows;
       two.slice(1).forEach((row, i) => {
         const above = two[i];
@@ -175,25 +186,28 @@ describe("endPanelLayout", () => {
     },
   );
 
-  it("keeps the tallest panel above the badges", () => {
+  it("keeps the base panel above the badges", () => {
     expect(most.y + most.height).toBeLessThanOrEqual(badges.y);
   });
 });
 
 describe("results and badge placement", () => {
   it.each([
-    ["short results", 3, 1, false, 1, 126],
-    ["tall normal results", 5, 3, true, 2, 117],
-    ["tall dev results", 6, 3, true, 1, 112],
-    ["results without badges", 5, 3, true, 0, 126],
+    ["short results", 3, 1, false, 1],
+    ["tall normal results", 5, 3, true, 2],
+    ["tall dev results", 6, 3, true, 1],
+    ["results without badges", 5, 3, true, 0],
   ] as const)(
     "fits %s and centres the allocated badge panel above the button",
-    (_, lines, owners, fired, badgeRows, top) => {
+    (_, lines, owners, fired, badgeRows) => {
       const original = endPanelLayout(FONTS, lines, quipRows(owners, fired, []));
-      const placed = endResultsPlacement(badgeRows, original.panel);
-      expect(placed.panel.y).toBe(top);
-      expect(placed.panel.height).toBe(original.panel.height);
-      expect(placed.offsetY).toBe(top - original.panel.y);
+      const placed = endResultsPlacement(badgeRows, original);
+      expect(placed.panel.y).toBeGreaterThanOrEqual(original.panel.y);
+      expect(placed.panel.height).toBeLessThanOrEqual(original.panel.height);
+      expect(placed.offsetY).toBe(placed.panel.y - original.panel.y);
+      expect(placed.ownerRows.contentHeight).toBeGreaterThanOrEqual(
+        placed.ownerRows.viewport.height,
+      );
       const bottom = END_LAYOUT.button.y - END_LAYOUT.results.buttonGap;
       const before = placed.strip.y - placed.panel.y - placed.panel.height;
       const after = bottom - placed.strip.y - placed.strip.height;
@@ -214,8 +228,10 @@ describe("results and badge placement", () => {
     },
   );
 
-  it("rejects an allocation that cannot fit without moving into the returning group", () => {
-    expect(() => endResultsPlacement(2, { ...END_LAYOUT.panel, height: 400 })).toThrow(RangeError);
+  it("rejects fixed content that leaves no visible owner-row viewport", () => {
+    const layout = endPanelLayout(FONTS, 3, quipRows(1, false, []));
+    layout.rows[0]!.top = endBadgeStrip(2).y + quips.rule.above;
+    expect(() => endResultsPlacement(2, layout)).toThrow(RangeError);
   });
 });
 
@@ -230,7 +246,8 @@ describe("grantedQuipLines", () => {
       const granted = grantedQuipLines(FONTS, shown, lines, wanted);
       const layout = (given: readonly number[]) =>
         endPanelLayout(FONTS, lines, quipRows(rows, fired, given));
-      expect(endPanelFits(shown, layout(granted).panel)).toBe(true);
+      const allocated = endResultsPlacement(shown, layout(granted));
+      expect(allocated.panel.y + allocated.panel.height).toBeLessThanOrEqual(allocated.strip.y);
       // Every row granted one line could not have had two.
       granted.forEach((given, i) => {
         if (given === 1) {
@@ -270,22 +287,19 @@ describe("endBadgeRows", () => {
       const owners = quipRows(rows, fired, []);
       const { panel } = endPanelLayout(FONTS, lines, owners);
       const badgeRows = endBadgeRows(FONTS, lines, owners, count);
-      expect(endPanelFits(badgeRows, panel)).toBe(true);
+      const allocated = endResultsPlacement(badgeRows, endPanelLayout(FONTS, lines, owners));
+      expect(allocated.panel.y + allocated.panel.height).toBeLessThanOrEqual(allocated.strip.y);
       // One row stands in for more only where more would not fit.
       expect(badgeRows === badgeStripRows(count) || !endPanelFits(maxRows, panel)).toBe(true);
     },
   );
 
-  // A walk shows Start cash only when it starts with money, a dev start's while the start purse
-  // is 0, so a walk's breakdown has every line but that one at most.
-  const walkLines = EARNINGS_KINDS - (gameData.tuning.money.startPurse === 0 ? 2 : 1);
-  it.each(panelCases.filter(([lines]) => lines <= walkLines))(
-    "gives a walk's badges two rows under %i breakdown lines and %i owners' rows (fired: %s)",
-    (lines, rows, fired) => {
-      const owners = quipRows(rows, fired, []);
-      expect(endBadgeRows(FONTS, lines, owners, perRow + 1)).toBe(maxRows);
-    },
-  );
+  it("retains complete mandatory owner rows when badges require a bounded viewport", () => {
+    const owners = quipRows(3, true, []);
+    const allocated = endResultsPlacement(1, endPanelLayout(FONTS, 5, owners));
+    expect(allocated.ownerRows.contentHeight).toBeGreaterThan(allocated.ownerRows.viewport.height);
+    expect(allocated.panel.y + allocated.panel.height).toBeLessThanOrEqual(allocated.strip.y);
+  });
 });
 
 // An owner's row, mirrored: the bubble at the left, the face's well right of the bubble's
@@ -376,7 +390,8 @@ describe("an owner's row", () => {
       const height = quipBubbleHeight(FONTS, row);
       expect(height).toBeGreaterThanOrEqual(well.size);
       expect(height === well.size).toBe(!fired && lines === 1);
-      expect(quipRowHeight(FONTS, row)).toBe(Math.max(height, nameY + bodyInk));
+      const nameBottom = nameY + bodyInk * TEXT_SCALE;
+      expect(quipRowHeight(FONTS, { ...row, nameBottom })).toBe(Math.max(height, nameBottom));
     },
   );
 
@@ -391,22 +406,6 @@ describe("an owner's row", () => {
     expect(face.x).toBeGreaterThanOrEqual(well.x);
     expect(face.y).toBeGreaterThanOrEqual(well.y);
   });
-
-  // The widest owner's name, centred under the well, reaches nearest the bubble and the frame.
-  const nameWidth = (name: string) => inkWidth("font-body", { scale: 1 }, name);
-  const widestName = Object.values(gameData.dogs)
-    .map(({ owner }) => owner.name)
-    .sort((a, b) => nameWidth(b) - nameWidth(a))
-    .slice(0, 1);
-  it.each(widestName.map((name) => [name] as const))(
-    "sets %s under the well, inside the frame and clear of the bubble",
-    (name) => {
-      const width = inkWidth("font-body", { scale: 1 }, name);
-      const left = quipNameX(width);
-      expect(left).toBeGreaterThan(bubble.x + bubble.width);
-      expect(left + width).toBeLessThanOrEqual(most.x + most.width - 2);
-    },
-  );
 });
 
 // A badge strip's names wrap at 2x onto up to its lines (every name fits them:

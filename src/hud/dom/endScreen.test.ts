@@ -6,12 +6,16 @@ import { describe, expect, it, vi } from "vitest";
 import { gameData } from "../../data/index.ts";
 import { END_LAYOUT } from "../../home/endLayout.ts";
 import { endScreenView, QUIP_TAIL_KEY } from "../../home/endScreenView.ts";
+import { ownerNameLayout } from "../../presentation/ownerName.ts";
 import { FakeDocument, fakeLayer } from "../../testing/fakeDom.ts";
-import { gameFont } from "../../testing/fontInk.ts";
+import { fontInk, fontInkRows, gameFont } from "../../testing/fontInk.ts";
 import { shownText } from "../../ui/dom/pixelLine.ts";
+import { SETTINGS_STYLE } from "../../ui/dom/settingsStyle.ts";
 import { artPixel, domScale, exactDeviceY, frameRect } from "../../ui/domScale.ts";
 import { modalTitleInk } from "../../ui/modal/titleRole.ts";
 import { PALETTE } from "../../ui/palette.ts";
+import { TEXT_SCALE } from "../../ui/textFit.ts";
+import { cents } from "../../units.ts";
 import { showEndScreen } from "./endScreen.ts";
 
 const fonts = { body: gameFont("font-body"), title: gameFont("font-title") };
@@ -26,6 +30,7 @@ const MEASURE = {
   fitQuip: (_style: unknown, text: string) => ({ lines: [text], scale: 2 }),
   hasTag: () => false,
   inkWidth: () => 40,
+  ownerName: (room: number, name: string) => ownerNameLayout(fonts.body, room, name),
   span: () => ({ left: 0, right: 40, width: 41 }),
   title: fontMetrics(fonts.title),
   titleInk: (line: string) => modalTitleInk(gameFont("font-title"), line),
@@ -47,7 +52,7 @@ const VIEW = endScreenView(gameData, MEASURE, {
   } as never,
 });
 
-function endScreen(width: number, display: typeof fonts.title | null = fonts.title) {
+function endScreen(width: number, display: typeof fonts.title | null = fonts.title, view = VIEW) {
   const doc = new FakeDocument();
   const scale = domScale(3, { height: (width * 560) / 360, width, x: 0, y: 0 });
   const { element, layer } = fakeLayer(doc, scale);
@@ -77,7 +82,7 @@ function endScreen(width: number, display: typeof fonts.title | null = fonts.tit
     reduced: true,
     ribbon: undefined,
     toGame: (point) => point,
-    view: VIEW,
+    view,
   });
   const nodes = element.children[0]?.all() ?? [];
   return { frames, home, layer, nodes, scale, shown };
@@ -176,4 +181,114 @@ describe("the HTML End screen", () => {
       expect((top - frame.top) % artPixel(scale)).toBe(0);
     },
   );
+});
+
+it.each(Object.entries(gameData.dogs))(
+  "fits %s's full-size owner name in the results column",
+  (dog, data) => {
+    const view = endScreenView(gameData, MEASURE, {
+      closing: [
+        {
+          dog: dog as keyof typeof gameData.dogs,
+          fired: false,
+          text: gameData.menuText.end.titles.wentHome,
+        },
+      ],
+      earned: [],
+      lines: [],
+      stripNames: () => [],
+      walk: {
+        dogs: [dog],
+        earnedCents: 0,
+        firings: [],
+        outcome: "wentHome",
+        route: [],
+        zonesFinished: 1,
+      } as never,
+    });
+    const names = view.results.names;
+    const measured = ownerNameLayout(fonts.body, END_LAYOUT.quips.name.room, data.owner.name);
+    expect(names.map((line) => line.text)).toEqual(measured.map((line) => line.text));
+    expect(names).toHaveLength(measured.length);
+    names.forEach((line, index) => {
+      expect(line.scale).toBe(TEXT_SCALE);
+      expect(line.centre).toBe("ink");
+      expect(line.centreX).toBe(END_LAYOUT.quips.name.centreX);
+      const columns = fontInk("font-body", { scale: line.scale }, line.text);
+      const width = columns.right - columns.left;
+      expect(line.centreX - width / 2).toBeGreaterThanOrEqual(286);
+      expect(line.centreX + width / 2).toBeLessThanOrEqual(328);
+      const ink = fontInkRows("font-body", { scale: line.scale }, line.text);
+      expect(line.capTop + ink.top).toBeGreaterThanOrEqual(
+        view.results.wells[0]!.y + END_LAYOUT.quips.well.size,
+      );
+      expect(line.capTop + ink.bottom).toBeLessThanOrEqual(
+        view.results.panel.y + view.results.panel.height,
+      );
+      if (index > 0) {
+        expect(line.capTop - names[index - 1]!.capTop).toBe(END_LAYOUT.quips.name.linePitch);
+      }
+    });
+  },
+);
+
+it("scrolls all owner art, names and quotes together while results chrome and Back stay fixed", async () => {
+  const view = endScreenView(gameData, MEASURE, {
+    closing: (["kilo", "penny", "sequoia"] as const).map((dog) => ({
+      dog,
+      fired: true,
+      text: gameData.menuText.end.titles.wentHome,
+    })),
+    earned: [gameData.achievements[0].id],
+    lines: (["fees", "tips", "luckyFinds", "cardCosts", "cashLost"] as const).map((kind) => ({
+      amount: cents(0),
+      kind,
+      label: gameData.menuText.end.earnings[kind],
+    })),
+    stripNames: () => [],
+    walk: {
+      dogs: ["kilo", "penny", "sequoia"],
+      earnedCents: 0,
+      firings: [],
+      outcome: "wentHome",
+      route: [],
+      zonesFinished: 1,
+    } as never,
+  });
+  const { frames, nodes, scale, shown } = endScreen(360, fonts.title, view);
+  await vi.waitFor(() => expect(frames).toHaveLength(1));
+  frames.shift()?.();
+  const viewport = nodes.find((node) => node.className.includes("adw-scroll-viewport"))!;
+  const content = viewport.children[0]!;
+  expect((viewport as unknown as HTMLElement).tabIndex).toBe(0);
+  expect(view.results.ownerRows.contentHeight - view.results.ownerRows.viewport.height).toBe(61);
+  const button = nodes.find((node) => node.className === "adw-button adw-go")!;
+  expect(viewport.contains(button)).toBe(false);
+  const fixedTop = button.style.top;
+  (viewport as unknown as HTMLElement).scrollTop = 61 * scale.unit * scale.dpr;
+  for (const name of view.results.names) {
+    const label = nodes.find((node) => node.textContent === shownText("body", name.text))!;
+    expect(viewport.contains(label)).toBe(true);
+  }
+  const tail = nodes.find((node) => node.style.backgroundImage?.includes(QUIP_TAIL_KEY))!;
+  expect(viewport.contains(tail)).toBe(true);
+  const face = nodes.find((node) =>
+    node.style.backgroundImage?.includes(view.results.faces[0]!.key),
+  )!;
+  expect(viewport.contains(face)).toBe(true);
+  shown.setFace(0, undefined, -1);
+  expect(viewport.contains(face)).toBe(true);
+  expect(button.style.top).toBe(fixedTop);
+  expect(
+    Number.parseFloat(content.style.height!) + Number.parseFloat(content.style.top!),
+  ).toBeCloseTo(view.results.ownerRows.contentHeight * scale.unit * scale.dpr);
+  const stop = vi.fn();
+  const prevent = vi.fn();
+  viewport.fire("keydown", { code: "PageDown", preventDefault: prevent, stopPropagation: stop });
+  expect(stop).toHaveBeenCalledOnce();
+  expect(prevent).not.toHaveBeenCalled();
+  const policy = SETTINGS_STYLE.match(/\.adw-settings-rows,\.adw-scroll-viewport\{([^}]+)\}/)?.[1];
+  expect(policy).toContain("overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;");
+  expect(policy).toContain("pointer-events:auto;");
+  shown.destroy();
 });
