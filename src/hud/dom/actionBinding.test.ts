@@ -2,8 +2,9 @@ import { createModalInputGate } from "@andornaut/game-kit/runtime/input/modalInp
 import { fontMetrics } from "@andornaut/game-kit/runtime/text/bitmapFont";
 import { afterEach, expect, it, vi } from "vitest";
 
+import { gameData } from "../../data/index.ts";
 import { MENU_TEXT } from "../../data/menuText.ts";
-import { TUNING } from "../../data/tuning.ts";
+import { read } from "../../rules/units.ts";
 import { FakeDocument, type FakeElement, fakeLayer } from "../../testing/fakeDom.ts";
 import { gameFont } from "../../testing/fontInk.ts";
 import { bindGameAction, bindGameActionHolds } from "../../ui/dom/actionBinding.ts";
@@ -12,7 +13,7 @@ import { domScale } from "../../ui/domScale.ts";
 import { panelButton } from "../../ui/modal/view.ts";
 import { createPanelButton } from "./panelButton.ts";
 
-const duration = TUNING.seconds.holdSeconds * 1000;
+const duration = read(gameData.tuning, "seconds", "holdSeconds") * 1000;
 afterEach(() => vi.useRealTimers());
 
 function fixture() {
@@ -85,6 +86,38 @@ it("the actual panel button inherits its action for hold and cancels the tracked
   expect(view.layer.press.canvasAllowed()).toBe(true);
   expect(view.activate).toHaveBeenCalledOnce();
   view.stop();
+});
+
+// One millisecond short of the data's hold time is a tap; exactly the hold time is a hold.
+it.each([
+  ["taps", duration - 1, 0],
+  ["holds", duration, 1],
+] as const)("%s a panel button pressed for %i ms, acting once", (_, ms, held) => {
+  const view = fixture();
+  view.down();
+  vi.advanceTimersByTime(ms);
+  expect(view.activate).toHaveBeenCalledTimes(held);
+  view.release();
+  expect(view.activate).toHaveBeenCalledOnce();
+  view.stop();
+});
+
+it("reads the live hold time when a press begins", () => {
+  const { tuning } = gameData;
+  const seconds = { ...tuning.seconds, holdSeconds: 2 * tuning.seconds.holdSeconds };
+  Object.assign(gameData, { tuning: { ...tuning, seconds } });
+  try {
+    const view = fixture();
+    view.down();
+    vi.advanceTimersByTime(duration);
+    expect(view.activate).not.toHaveBeenCalled();
+    vi.advanceTimersByTime(duration);
+    expect(view.activate).toHaveBeenCalledOnce();
+    view.release();
+    view.stop();
+  } finally {
+    Object.assign(gameData, { tuning });
+  }
 });
 
 it("does not dispatch an old panel action after modal ownership or foreground is lost", () => {

@@ -8,8 +8,10 @@ import {
 } from "@andornaut/game-kit/runtime/random";
 import { describe, expect, it } from "vitest";
 
+import { gameData } from "../data/index.ts";
 import { walkPaused } from "../hud/topBar.ts";
 import { type ScreenConfig, screenLayout } from "../layout/screenLayout.ts";
+import { read } from "../rules/units.ts";
 import {
   advanceLaneControl,
   type LaneControl,
@@ -19,6 +21,7 @@ import {
 } from "../runner/laneControl.ts";
 import { destinationLane, stillInLane } from "../runner/laneMotion.ts";
 import type { GestureAction } from "./gestures.ts";
+import { holdRule } from "./hold.ts";
 import {
   idleTrack,
   type PointerPhase,
@@ -556,6 +559,28 @@ describe("hold to explain", () => {
   const road = 300;
   // A card held open, its finger lifted.
   const heldCard = [at("down", 0, 100, card), tick(holdMs), at("up", holdMs + 100, 100, card)];
+
+  // The walk's explain hold reads the data's hold time: one millisecond short of it is still a
+  // press, and exactly the hold time opens the explanation.
+  it.each([
+    ["leaves a card closed", -1, undefined],
+    ["opens a card", 0, "card"],
+  ] as const)("%s held still %i ms from the data's hold time", (_, offset, open) => {
+    const live = {
+      ...explainContext,
+      hold: holdRule(gameData.tuning, context.config.swipeStartDistance),
+    };
+    const sample = {
+      onButton: false,
+      phase: "down",
+      point: { x: 100, y: card },
+      press: finger(0),
+      timeMs: 0,
+    } as const;
+    const pressed = trackPointer(live, "steer", sample, idleTrack).track;
+    const ms = read(gameData.tuning, "seconds", "holdSeconds") * 1000 + offset;
+    expect(tickTrack(live, "steer", ms, pressed).open).toBe(open);
+  });
 
   it.each<[string, Step[], GestureAction[], string[]]>([
     [

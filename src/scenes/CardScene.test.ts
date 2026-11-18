@@ -9,6 +9,7 @@ import { type NativeChoiceCards, showChoiceCards } from "../hud/dom/choiceCards.
 import { holdRule } from "../input/hold.ts";
 import { cardRowIn } from "../layout/cardLayout.ts";
 import { MAX_CARD_OPTIONS } from "../rules/choices.ts";
+import { read } from "../rules/units.ts";
 import { gameFont } from "../testing/fontInk.ts";
 import { CardScene } from "./CardScene.ts";
 import { mountNativeOverlay } from "./nativeOverlayReady.ts";
@@ -117,6 +118,20 @@ it("enlarges a held card, consumes its release, and cancels a carried press when
   input.gesture?.down?.(point);
   input.gesture?.up?.(point, false);
   expect(choose).toHaveBeenCalledOnce();
+});
+
+// One millisecond short of the data's hold time taps the card; exactly the hold time enlarges it.
+it.each([
+  ["taps", -1, false],
+  ["holds", 0, true],
+] as const)("%s a card released %i ms from the data's hold time", (_, offset, held) => {
+  const { choose, input, point, scene, time } = fixture();
+  input.gesture?.down?.(point);
+  time.now = read(gameData.tuning, "seconds", "holdSeconds") * 1000 + offset;
+  scene.update();
+  expect(scene.holding()).toBe(held);
+  input.gesture?.up?.(point, false);
+  expect(choose).toHaveBeenCalledTimes(held ? 0 : 1);
 });
 
 it("keeps a disabled choice actionable for one refusal cue without choosing it", () => {

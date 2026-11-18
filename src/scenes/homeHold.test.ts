@@ -1,7 +1,9 @@
 import { expect, it, vi } from "vitest";
 
+import { gameData } from "../data/index.ts";
 import type { DogId } from "../data/types.ts";
 import { type HoldPress, TILE_SLOP_PX } from "../input/hold.ts";
+import { read } from "../rules/units.ts";
 import { newPlayerSave } from "../testing/saves.ts";
 import { StartScene } from "./StartScene.ts";
 
@@ -103,4 +105,19 @@ it("does not activate after dragging outside or withdrawing a world target befor
   vanished.targetAt.mockReturnValue({ kind: "petShop" });
   methods.homePressUp.call(vanished, point, false);
   expect(vanished.actAfterDip).not.toHaveBeenCalled();
+});
+
+// One millisecond short of the data's hold time is a tap; exactly the hold time opens the detail.
+it.each([
+  ["taps", -1, false],
+  ["holds", 0, true],
+] as const)("%s a world dog released %i ms from the data's hold time", (_, offset, held) => {
+  const dog = { dog: newPlayerSave.lastLoadout.dogs[0]!, kind: "dog" } as const;
+  const state = home(dog);
+  methods.homePressDown.call(state, false, point);
+  state.time.now = read(gameData.tuning, "seconds", "holdSeconds") * 1000 + offset;
+  methods.update.call(state);
+  methods.homePressUp.call(state, point, false);
+  expect(state.openDetail).toHaveBeenCalledTimes(held ? 1 : 0);
+  expect(state.actAfterDip).toHaveBeenCalledTimes(held ? 0 : 1);
 });

@@ -1,7 +1,7 @@
 import { bindHoldActions } from "@andornaut/game-kit/runtime/web/input/dom/holdActions";
 import type { PressGuard } from "@andornaut/game-kit/runtime/web/ui/dom/domPress";
 
-import { TUNING } from "../../data/tuning.ts";
+import { gameData } from "../../data/index.ts";
 import { holdRule, TILE_SLOP_PX } from "../../holdRule.ts";
 
 export type ActionOrigin =
@@ -129,7 +129,7 @@ export function bindGameActionHolds(
                 available: () => actionAvailable(action, control),
                 element,
                 ...(override === undefined ? {} : { hold: () => dispatch(override) }),
-                rule: holdRule(TUNING, TILE_SLOP_PX * context.unit()),
+                rule: holdRule(gameData.tuning, TILE_SLOP_PX * context.unit()),
               };
             }
             if (element.tagName?.toLowerCase() === "button" || element === root) {
