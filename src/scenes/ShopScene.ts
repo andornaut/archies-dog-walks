@@ -663,7 +663,14 @@ export class ShopScene extends Scene {
               }
             },
             move: (point) => this.nativeMove(point),
-            source: { artUrl, loadSheet },
+            source: {
+              artUrl,
+              imageSize: (key: string) => {
+                const frame = this.textures.getFrame(key);
+                return { height: frame?.realHeight ?? 16, width: frame?.realWidth ?? 16 };
+              },
+              loadSheet,
+            },
             toGame: panelInput.toGame,
             up: (point, cancelled) => this.nativeUp(point, cancelled),
             wheel: (delta) => {

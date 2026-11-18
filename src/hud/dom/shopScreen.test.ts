@@ -11,10 +11,11 @@ import { domScale } from "../../ui/domScale.ts";
 import { dismissFooter } from "../../ui/modal/dismissFooter.ts";
 import { modalTitleInk } from "../../ui/modal/titleRole.ts";
 import { PALETTE } from "../../ui/palette.ts";
-import { type ShopScreenView, showShopScreen } from "./shopScreen.ts";
+import { type ShopScreenInput, type ShopScreenView, showShopScreen } from "./shopScreen.ts";
 
-const SOURCE = {
+const SOURCE: ShopScreenInput["source"] = {
   artUrl: (path: string) => `/art/${path}`,
+  imageSize: () => ({ height: 24, width: 24 }),
   loadSheet: () =>
     Promise.resolve({
       frames: { first: { frame: { h: 24, w: 24, x: 0, y: 0 } } },
@@ -22,7 +23,7 @@ const SOURCE = {
     }),
 };
 const RECT = { height: 48, width: 300, x: 24, y: 180 };
-function fixture() {
+function fixture({ source = SOURCE }: { readonly source?: ShopScreenInput["source"] } = {}) {
   const doc = new FakeDocument();
   const { layer } = fakeLayer(doc, domScale(3, { height: 560, width: 360, x: 0, y: 0 }));
   const down = vi.fn(),
@@ -72,7 +73,7 @@ function fixture() {
       fonts: { body: gameFont("font-body"), title: gameFont("font-title") },
       key: vi.fn(),
       move: vi.fn(),
-      source: SOURCE,
+      source,
       toGame: (point) => point,
       up,
       wheel,
@@ -214,5 +215,23 @@ it("paints every wrapped shop message line without changing its plate or native 
   screen.update({ ...view, message: { lines, rect: { height: 50, width: 300, x: 24, y: 160 } } });
   await settle();
   expect(words.every((word) => root.all().some((node) => node.textContent === word))).toBe(true);
+  screen.destroy();
+});
+
+it("frames the shop message with the flat ui-hint image, loading no sheet for it", async () => {
+  const requested: string[] = [];
+  const loadSheet = (url: string) => {
+    requested.push(url);
+    return SOURCE.loadSheet(url);
+  };
+  const { screen, view } = fixture({ source: { ...SOURCE, loadSheet } });
+  await settle();
+  const before = requested.length;
+  screen.update({
+    ...view,
+    message: { lines: [], rect: { height: 50, width: 300, x: 24, y: 160 } },
+  });
+  await settle();
+  expect(requested.slice(before).some((url) => url.includes("ui-hint"))).toBe(false);
   screen.destroy();
 });

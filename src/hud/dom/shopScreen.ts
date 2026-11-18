@@ -11,7 +11,7 @@ import { FEEDBACK } from "../../home/feedback.ts";
 import { shopTabRects } from "../../home/shopLayout.ts";
 import type { ShopPageView } from "../../home/shopPageView.ts";
 import { bindGameAction } from "../../ui/dom/actionBinding.ts";
-import { type DomArtSource, imageArt, sheetArt, sheetNineSlice } from "../../ui/dom/artElements.ts";
+import { type DomArtSource, imageArt, imageNineSlice, sheetArt } from "../../ui/dom/artElements.ts";
 import { type ModalLifecycle, mountModalLifecycle } from "../../ui/dom/modalLifecycle.ts";
 import {
   createTextLine,
@@ -102,7 +102,10 @@ export interface NativeShopScreen {
 export interface ShopScreenInput {
   readonly close: () => void;
   readonly closeLabel: string;
-  readonly source: DomArtSource;
+  // imageSize is a flat image's native size, which the message plate's nine-slice needs.
+  readonly source: DomArtSource & {
+    readonly imageSize: (key: string) => { readonly height: number; readonly width: number };
+  };
   readonly fonts: Readonly<Record<"body" | "title", BitmapFont>>;
   readonly toGame: (client: Point) => Point;
   readonly active: () => boolean;
@@ -395,7 +398,14 @@ export function showShopScreen(
       messageParts = [];
       if (view.message !== undefined) {
         const messageView = view.message;
-        const plate = sheetNineSlice(doc, input.source, "ui-hint", SLICES["ui-hint"]);
+        // ui-hint is a flat image, so the plate reads no sheet.
+        const plate = imageNineSlice(
+          doc,
+          input.source,
+          "ui-hint",
+          input.source.imageSize("ui-hint"),
+          SLICES["ui-hint"],
+        );
         const content = doc.createElement("div");
         content.className = "adw-lines";
         const labels = messageView.lines.map((line) => ({
@@ -406,7 +416,7 @@ export function showShopScreen(
         messageParts.push(
           {
             element: plate.element,
-            place: (at) => plate.place(at, ORIGIN, { ...messageView.rect, tag: "still" }),
+            place: (at) => plate.place(at, ORIGIN, messageView.rect),
           },
           {
             element: content,

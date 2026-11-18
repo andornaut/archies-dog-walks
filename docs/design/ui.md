@@ -45,3 +45,4 @@ Reference: [Screens and UI](../../src/README.md#screens-and-ui), [Assets](../../
 | adw-0165 | Order the Pause and Menu modal and show Exit only where it works | [adw-0165.md](../work/adw-0165.md) |
 | adw-0167 | Make Help a page and frame its pictures                          | [adw-0167.md](../work/adw-0167.md) |
 | adw-0173 | Fix the Help page's dimming, body scroll and walk bar slot       | [adw-0173.md](../work/adw-0173.md) |
+| adw-0174 | Draw the Pet shop message plate from its image                   | [adw-0174.md](../work/adw-0174.md) |
