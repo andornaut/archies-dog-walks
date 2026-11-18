@@ -4,15 +4,15 @@ Each approved task is one file, `docs/work/<id>.md`. It records scope and milest
 progress (claims, blocks, receipts and acceptance) stays in the work protocol state root. The
 [design index](../design/README.md) lists the work items of each area.
 
-| Front matter | Content                                                                           |
-| ------------ | --------------------------------------------------------------------------------- |
-| `id`         | `adw-` and a zero-padded sequence (`adw-0001`), allocated in chronological order. |
-| `title`      | A short imperative title.                                                         |
-| `status`     | `approved`, `done`, `cancelled` or `superseded`.                                  |
-| `approved`   | A short approval reference, such as `user, 2026-11-18`.                           |
-| `design`     | The design area in `docs/design/`.                                                |
-| `related`    | A list of related work IDs.                                                       |
-| `supersedes` | The ID of the item this one replaces; omitted otherwise.                          |
+| Front matter | Content                                                                               |
+| ------------ | ------------------------------------------------------------------------------------- |
+| `id`         | `adw-` and a zero-padded sequence (`adw-0001`), allocated in chronological order.     |
+| `title`      | A short imperative title.                                                             |
+| `status`     | `approved`, `done`, `cancelled` or `superseded`.                                      |
+| `approved`   | A short approval reference, such as `user, 2026-11-18`; see the backfill forms below. |
+| `design`     | The design area in `docs/design/`.                                                    |
+| `related`    | A list of related work IDs.                                                           |
+| `supersedes` | The ID of the item this one replaces; omitted otherwise.                              |
 
 The sections are Scope, Criteria, Decisions and Outcome. Decisions and Outcome state what was
 decided or delivered, and why, in a line or two each.
@@ -23,6 +23,9 @@ decided or delivered, and why, in a line or two each.
   Integration sets `status: done` in the merge.
 - A changed or reverted decision is a new work item with `supersedes`. A finished item's outcome
   is never rewritten.
+- A backfilled item whose approval date comes only from handoff records reads
+  `approved: user, <date> (inferred from handoff history)`. One with no traceable approval reads
+  `approved: unrecorded (<role>-shipped, <date>)`, dated by its first shipping commit.
 - Work files are public: no session IDs, hostnames, local home-directory paths or quoted
   conversation, only short approval references.
 - Docs-only changes run only the attribution and lint checks.
