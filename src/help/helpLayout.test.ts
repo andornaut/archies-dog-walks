@@ -32,7 +32,9 @@ describe("help's page", () => {
     ["the body's capitals", body.y, 327],
     ["the body's viewport", body.viewport, { height: 54, width: 360, x: 0, y: 325 }],
     ["the body's width", body.width, 330],
-    ["the scrollbar's track", [scrollbar.x, scrollbar.trackWidth], [348, 8]],
+    ["the scrollbar's track", [scrollbar.x, scrollbar.trackWidth], [344, 8]],
+    ["the title's and body's left edge", [title.x, body.x], [frame.x, frame.x]],
+    ["the track's right edge", scrollbar.x + scrollbar.trackWidth, frame.x + frame.width],
     ["the page presses' top", presses.y, MIN_PRESS],
   ] as const)("places %s", (_, help, expected) => {
     expect(help).toEqual(expected);

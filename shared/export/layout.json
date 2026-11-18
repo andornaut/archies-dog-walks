@@ -1584,7 +1584,7 @@
         "maxLines": 6,
         "scale": 2,
         "scrollGap": 6,
-        "x": 12,
+        "x": 8,
         "viewport": {
           "height": 54,
           "width": 360,
@@ -1695,11 +1695,11 @@
         "thumbMin": 16,
         "thumbWidth": 6,
         "trackWidth": 8,
-        "x": 348
+        "x": 344
       },
       "title": {
         "scale": 2,
-        "x": 12,
+        "x": 8,
         "y": 307
       },
       "well": {
