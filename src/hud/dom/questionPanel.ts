@@ -56,7 +56,7 @@ export interface DomQuestionPanelInput {
   // What a tap on a modal panel's backdrop does: the existing outside dismissal of a closeable
   // panel. Undefined for a required choice, whose backdrop consumes the tap.
   readonly backgroundCancel?: () => void;
-  // The page's own controls drawn outside the panel, interactive with it (Help's top bar).
+  // The page's own controls drawn outside the panel, interactive with it.
   readonly companions?: readonly HTMLElement[];
   // What the close control does; undefined draws it as a picture, and a panel with no buttons
   // then takes no presses: every press goes through to the canvas, whose scene closes it. null

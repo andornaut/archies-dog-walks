@@ -90,7 +90,7 @@ const WALK_BASE: Readonly<Record<WalkTarget, string | undefined>> = {
   upgradeIcon: "explainOnTap",
 };
 
-// Under any card or overlay every walk target, the walk bar's buttons included, is inactive.
+// Under any card or modal overlay every walk target, the walk bar's buttons included, is inactive.
 const INACTIVE: Readonly<Record<WalkTarget, undefined>> = {
   cashWell: undefined,
   dogCard: undefined,
@@ -101,9 +101,15 @@ const INACTIVE: Readonly<Record<WalkTarget, undefined>> = {
   upgradeIcon: undefined,
 };
 
+// Help is a page: its live bar's Mute mutes and its Pause closes help; the rest stays inactive.
 const WALK_CHANGES: Readonly<Record<string, Partial<Record<WalkTarget, string | undefined>>>> =
   Object.fromEntries(
-    WALK_MODALS.map(([modal]) => [modal, modal === "nothing" ? {} : INACTIVE] as const),
+    WALK_MODALS.map(([modal]) => {
+      if (modal === "help") {
+        return [modal, { ...INACTIVE, mute: "mute", pause: "closeHelp" }] as const;
+      }
+      return [modal, modal === "nothing" ? {} : INACTIVE] as const;
+    }),
   );
 
 describe("the walk bar's and dog cards' targets under each overlay", () => {

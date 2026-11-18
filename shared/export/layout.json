@@ -1589,20 +1589,13 @@
           "height": 54,
           "width": 360,
           "x": 0,
-          "y": 322
+          "y": 327
         },
-        "y": 322
+        "y": 327
       },
-      "close": {
-        "hit": {
-          "height": 48,
-          "width": 48,
-          "x": 312,
-          "y": 0
-        },
-        "titleExclusion": "face",
-        "x": 326,
-        "y": 8
+      "caption": {
+        "centreX": 180,
+        "y": 260
       },
       "dots": {
         "centreX": 180,
@@ -1654,21 +1647,35 @@
         "x": 116,
         "y": 500
       },
-      "heading": {
-        "x": 180,
-        "y": 13
+      "frame": {
+        "height": 234,
+        "width": 344,
+        "x": 8,
+        "y": 48
       },
       "illustration": {
-        "height": 236,
-        "width": 360,
-        "x": 0,
-        "y": 40
+        "height": 196,
+        "width": 328,
+        "x": 16,
+        "y": 56
       },
       "next": {
         "height": 48,
         "width": 128,
         "x": 188,
         "y": 444
+      },
+      "page": {
+        "height": 520,
+        "width": 360,
+        "x": 0,
+        "y": 40
+      },
+      "presses": {
+        "height": 512,
+        "width": 360,
+        "x": 0,
+        "y": 48
       },
       "previous": {
         "height": 48,
@@ -1685,13 +1692,13 @@
       "title": {
         "scale": 2,
         "x": 12,
-        "y": 302
+        "y": 307
       },
-      "topBar": {
-        "height": 40,
-        "width": 360,
-        "x": 0,
-        "y": 0
+      "well": {
+        "height": 200,
+        "width": 332,
+        "x": 14,
+        "y": 54
       }
     },
     "home": {

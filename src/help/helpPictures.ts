@@ -30,7 +30,6 @@ import { type WalkItem, type WalkItemKind } from "../runner/walkItems.ts";
 import { zoneLength } from "../runner/walkMotion.ts";
 import { heartsOf, mapPack } from "../state/pack.ts";
 import { newRun, type PackDogs, type PackSlot, type RunState } from "../state/runState.ts";
-import { cardHeader } from "../ui/cardRow.ts";
 import { addCents, cents, clampHearts } from "../units.ts";
 import { HELP_LAYOUT } from "./helpLayout.ts";
 
@@ -44,7 +43,7 @@ const SCREEN = SCREEN_LAYOUT;
 const PROJECTION = walkProjection(ROAD_CAMERA, SCREEN.road);
 const LANES = laneCentreXs(LANE_COUNT, SCREEN.road);
 
-// The help screen's picture height: its strips fill it.
+// The help page's picture height: its strips fill it.
 const HELP_PICTURE_HEIGHT = HELP_LAYOUT.illustration.height;
 
 // A run of screen rows the picture shows.
@@ -101,9 +100,8 @@ export interface HelpPicture {
 // The pages' choices: who walks, in which lane (from 0, left to right), what is on the road
 // and how far ahead of the walker's feet in road pixels, and the moment shown.
 export const HELP_SCENES = {
-  // The card scene's header band starts this many rows into a card page's picture, clear of
-  // its top rule.
-  cardBandInset: 6,
+  // The card row's top this many rows into a card page's picture, its header band left out.
+  cardTopInset: 12,
   cards: { dogs: ["archie"], encounter: "skunk", lane: 2 },
   lanes: {
     dogs: ["archie", "lady", "ginger"],
@@ -158,11 +156,11 @@ function roadStrip(height: number): PictureStrip {
   return { height, screenY: SCREEN.roadView.y + SCREEN.roadView.height - height };
 }
 
-// The card scene's three-card row, its header band cardBandInset rows into the strip.
+// The card scene's three-card row, its top cardTopInset rows into the strip.
 function cardStrip(): PictureStrip {
-  const rows = cardRowIn(SCREEN.walkView, MAX_CARD_OPTIONS, MAX_CARD_OPTIONS);
-  const { band } = cardHeader(false, rows);
-  return { height: HELP_PICTURE_HEIGHT, screenY: band.y - HELP_SCENES.cardBandInset };
+  const [first] = cardRowIn(SCREEN.walkView, MAX_CARD_OPTIONS, MAX_CARD_OPTIONS);
+  const top = first?.y ?? SCREEN.walkView.y;
+  return { height: HELP_PICTURE_HEIGHT, screenY: top - HELP_SCENES.cardTopInset };
 }
 
 function startRun(data: GameData, dogs: readonly DogId[]): RunState {
@@ -321,11 +319,10 @@ function pickups(data: GameData): HelpPicture {
     zoneDistance: pixels(zoneLength(data) * zoneFraction),
     zoneIndex: 1,
   };
-  const bar = SCREEN.topBar;
   return {
     ...STILL,
     hud: true,
-    strips: [{ height: bar.height, screenY: bar.y }, roadStrip(HELP_PICTURE_HEIGHT - bar.height)],
+    strips: [roadStrip(HELP_PICTURE_HEIGHT)],
     walk: walkIn(
       run,
       lane,

@@ -5,9 +5,10 @@ import { type PictureStrip, stripViewports } from "../help/helpPictures.ts";
 import { setWorldViewport } from "../ui/phaser/worldCamera.ts";
 
 // A scene drawn as a still picture of the screen inside frame: a camera per strip shows its
-// screen rows, top to bottom. A scene shown this way takes no input.
+// screen rows, top to bottom, from screen column screenX. A scene shown this way takes no input.
 export interface ScenePicture {
   readonly frame: Rect;
+  readonly screenX: number;
   readonly strips: readonly PictureStrip[];
 }
 
@@ -21,7 +22,7 @@ export function showAsPicture(scene: Scene, picture: ScenePicture): void {
     }
     const camera = i === 0 ? scene.cameras.main : scene.cameras.add();
     setWorldViewport(scene, camera, viewport);
-    camera.setScroll(0, strip.screenY);
+    camera.setScroll(picture.screenX, strip.screenY);
   });
 }
 

@@ -1,47 +1,36 @@
 import { itemAt } from "@andornaut/game-kit/runtime/arrays";
-import { type Point, type Rect } from "@andornaut/game-kit/runtime/rect";
+import { containsPoint, type Point, type Rect } from "@andornaut/game-kit/runtime/rect";
 import { Scene, Scenes } from "phaser";
 
 import { gameData } from "../data/index.ts";
 import type { HelpPictureId } from "../data/types.ts";
 import { helpActionForKey, helpActionForPointer } from "../help/helpInput.ts";
-import { HELP_BAR_BUTTONS, HELP_LAYOUT } from "../help/helpLayout.ts";
+import { HELP_LAYOUT } from "../help/helpLayout.ts";
 import { applyHelpAction, type HelpAction } from "../help/helpPaging.ts";
 import { closeHelp } from "../help/helpSeen.ts";
 import { type HelpMeasure, helpView } from "../help/helpView.ts";
 import { coverHelpUnderlay } from "../hud/dom/helpUnderlay.ts";
 import type { DomQuestionPanel } from "../hud/dom/questionPanel.ts";
+import { WALK_BAR_BUTTONS } from "../hud/walkHud.ts";
 import { isMuteKey } from "../input/keyBindings.ts";
 import { screenArea } from "../input/outsideTap.ts";
-import type { NativeTopSection } from "../ui/dom/nativeTopSection.ts";
 import { PALETTE } from "../ui/palette.ts";
 import { addFilledRect } from "../ui/phaser/draw.ts";
 import { setPixelText, withProbe, wrapPixelText } from "../ui/phaser/pixelText.ts";
-import { topSectionButtonAt } from "../ui/topSection.ts";
+import { topSectionLayout } from "../ui/topSection.ts";
 import type { HelpPictureData } from "./HelpPictureScene.ts";
-import { routeHomeBar } from "./homeBarPress.ts";
+import type { HelpData } from "./helpScreen.ts";
+import { listenHomeBar, sceneRegionOutside } from "./homeBarPress.ts";
 import type { MenuSceneData } from "./MenuScene.ts";
 import { canvasPanelMeasure } from "./modalMeasure.ts";
 import { listenOnePress } from "./onePress.ts";
-import {
-  BAR_MUTED_EVENT,
-  closeOverlay,
-  listenDismiss,
-  openOverlay,
-  type OverlayData,
-} from "./overlay.ts";
-import {
-  currentSettings,
-  isMuted,
-  onSettingsChanged,
-  toggleMuted,
-  updateProfile,
-} from "./profileStore.ts";
+import { BAR_MUTED_EVENT, closeOverlay, listenDismiss } from "./overlay.ts";
+import { currentSettings, onSettingsChanged, toggleMuted, updateProfile } from "./profileStore.ts";
 import { addHtmlHelpScreen, htmlPanelInput, htmlPanelPlace } from "./questionPanel.ts";
 import { REFUSE } from "./refuseControl.ts";
 import { SCENE_KEYS, type SceneKey } from "./sceneKeys.ts";
 import { requestTitleReturn } from "./titleNavigation.ts";
-import { addNativeTopSection, sceneCoverage } from "./topSection.ts";
+import { shownTopSection } from "./topSection.ts";
 import { clearScene } from "./uiKit.ts";
 
 // Emitted on game.events when the help closes, by any route.
@@ -70,12 +59,18 @@ function helpMeasure(scene: Scene): HelpMeasure {
   };
 }
 
-// A full-screen overlay listed after the scenes it opens over, the home screen and the pause
-// menu over the walk, and before its picture's scenes, which draw over it. The caller pauses
-// itself and launches it (openHelp); on close, help resumes that scene.
+// The walk bar's buttons' press columns, which stay live over help on a walk.
+const WALK_BAR_HITS = topSectionLayout(WALK_BAR_BUTTONS).controls.map(([, { hit }]) => hit);
+
+// A page, not a modal, as the Logbook is, listed after the scenes it opens over, the home screen
+// and the pause menu over the walk, and before its picture's scenes, which draw over it. It covers
+// the screen under the top bar, which stays live and undimmed over it: the home bar on a home
+// page, routed through help (listenHomeBar), its Menu opening over help; on a walk the walk bar,
+// whose Pause closes help back to the pause menu (topBarAction). A modal over help dims and
+// stills it with the rest of the background. The caller pauses itself and launches it
+// (openHelp); on close, help resumes that scene.
 export class HelpScene extends Scene {
-  private topSection: NativeTopSection | undefined;
-  // The screen in HTML, while it is drawn there.
+  // The page in HTML, while it is drawn there.
   private html: DomQuestionPanel | undefined;
   private page = 0;
   // The page whose picture shows.
@@ -87,18 +82,21 @@ export class HelpScene extends Scene {
     super(SCENE_KEYS.help);
   }
 
-  create(data?: OverlayData): void {
+  create(data: HelpData): void {
     const place = htmlPanelPlace(this);
     if (place !== undefined) {
-      // Restore covered roots before this scene disposes its modal and returns focus.
-      this.events.once(Scenes.Events.SHUTDOWN, coverHelpUnderlay(place.layer.element));
+      // Restore covered roots before this scene disposes its page and returns focus.
+      const bar = shownTopSection(this);
+      this.events.once(
+        Scenes.Events.SHUTDOWN,
+        coverHelpUnderlay(bar === undefined ? [] : [bar], place.layer.element),
+      );
     }
     this.html = undefined;
-    this.topSection = undefined;
     this.page = 0;
     this.picturePage = undefined;
     this.pressStart = undefined;
-    this.resumeKey = data?.resume;
+    this.resumeKey = data.resume;
     this.events.once(Scenes.Events.SHUTDOWN, () => this.scene.stop(SCENE_KEYS.helpPicture));
     this.draw();
     onSettingsChanged(this, () => this.draw());
@@ -120,7 +118,7 @@ export class HelpScene extends Scene {
       down: (point) => {
         if (
           this.html?.accepts() !== true ||
-          topSectionButtonAt(HELP_BAR_BUTTONS, point.x, point.y) !== undefined
+          !containsPoint(HELP_LAYOUT.presses, point.x, point.y)
         ) {
           return;
         }
@@ -131,11 +129,34 @@ export class HelpScene extends Scene {
         this.endPagePress(point, cancelled);
       },
     });
-    listenDismiss(this, screenArea([HELP_LAYOUT.screen]), () => {
+    // A tap on the top bar's empty area or beside the game closes help, as the bar's buttons
+    // stay live; on a walk that includes the walk bar's effect wells.
+    const { page } = HELP_LAYOUT;
+    const outside =
+      data.region === "home"
+        ? sceneRegionOutside(this, [page])
+        : screenArea([page, ...WALK_BAR_HITS]);
+    listenDismiss(this, outside, () => {
       if (this.html?.accepts()) {
         this.close();
       }
     });
+    if (data.region === "home") {
+      // The bar's Menu opens help's own over it: its Close leaves help too.
+      listenHomeBar(
+        this,
+        () => undefined,
+        (): MenuSceneData => ({
+          closePage: () => this.close(),
+          context: "help",
+          onHeadHome: () => {
+            this.close();
+            requestTitleReturn(this);
+          },
+          resume: SCENE_KEYS.help,
+        }),
+      );
+    }
   }
 
   private beginPagePress(point: Point): void {
@@ -175,58 +196,21 @@ export class HelpScene extends Scene {
     }
   }
 
-  private close(): void {
+  // Closes help, resuming the scene under it.
+  close(): void {
     closeOverlay(this.resumeKey, this);
     void updateProfile(this, closeHelp);
     this.game.events.emit(HELP_CLOSED_EVENT);
   }
 
   // Redrawn whole on every page turn, reading the pages then, so a live text edit shows up: the
-  // dark backdrop and world picture stay on canvas beneath native controls and copy.
+  // dark page, the picture's frame and the world picture stay on canvas beneath native controls
+  // and copy.
   private draw(): void {
     clearScene(this);
     const view = helpView(gameData, helpMeasure(this), this.page, undefined);
     this.page = view.page;
     view.backdrop.forEach(({ colour, rect }) => addFilledRect(this, colour, rect));
-    this.topSection ??= addNativeTopSection(
-      this,
-      {
-        accepts: () => true,
-        buttons: HELP_BAR_BUTTONS,
-        heading: view.heading.text,
-        labels: {
-          exit: gameData.homeText.quit.quit,
-          menu: gameData.menuText.menu.title,
-          mute: gameData.menuText.settings.sound,
-          pause: gameData.menuText.pause.title,
-        },
-        muted: isMuted(this),
-        press: (id) => {
-          if (id !== "menu" && id !== "mute") {
-            return;
-          }
-          if (routeHomeBar(this, id) || !this.sys.isActive() || !this.input.enabled) {
-            return;
-          }
-          if (id === "mute") {
-            this.game.events.emit(BAR_MUTED_EVENT, toggleMuted(this));
-          } else {
-            const data: MenuSceneData = {
-              closePage: () => this.close(),
-              context: "help",
-              onHeadHome: () => {
-                this.close();
-                requestTitleReturn(this);
-              },
-              resume: SCENE_KEYS.help,
-            };
-            openOverlay(this, SCENE_KEYS.menu, data);
-          }
-        },
-      },
-      sceneCoverage(this),
-    );
-    this.topSection?.setMuted(isMuted(this));
     this.showPicture(itemAt(gameData.help, this.page).art, view.illustration);
     this.html?.destroy();
     const point = (event: PointerEvent) => {
@@ -238,7 +222,6 @@ export class HelpScene extends Scene {
     this.html = addHtmlHelpScreen(
       this,
       {
-        companions: this.topSection === undefined ? [] : [this.topSection.element],
         footerPress: () => this.close(),
         gesture: {
           cancel: () => {

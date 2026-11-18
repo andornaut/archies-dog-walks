@@ -444,7 +444,7 @@ export function addHtmlEndScreen(
 // Native Help controls retain the scene's paging and gesture rules.
 export function addHtmlHelpScreen(
   scene: Scene,
-  actions: Pick<DomHelpInput, "companions" | "footerPress" | "gesture" | "presses">,
+  actions: Pick<DomHelpInput, "footerPress" | "gesture" | "presses">,
   view: HelpView,
 ): DomQuestionPanel | undefined {
   const place = htmlPanelPlace(scene);

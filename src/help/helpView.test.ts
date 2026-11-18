@@ -1,3 +1,4 @@
+import { containsPoint } from "@andornaut/game-kit/runtime/rect";
 import { fontMetrics, inkWidth } from "@andornaut/game-kit/runtime/text/bitmapFont";
 import { describe, expect, it } from "vitest";
 
@@ -10,7 +11,7 @@ import { modalTitleInk } from "../ui/modal/titleRole.ts";
 import { PALETTE } from "../ui/palette.ts";
 import { BUTTON_COLOURS } from "../ui/selection.ts";
 import { HELP_LAYOUT } from "./helpLayout.ts";
-import { type HelpMeasure, helpView } from "./helpView.ts";
+import { chromeFills, type HelpFill, type HelpMeasure, helpView, wellFills } from "./helpView.ts";
 
 const title = gameFont("font-title");
 const body = gameFont("font-body");
@@ -54,7 +55,48 @@ describe("helpView", () => {
     const metrics = fontMetrics(title);
     const top = Math.round(y - metrics.capTop * scale);
     expect(view.body.capTop).toBe(top + metrics.inkBottom * scale + LABEL_HELP_GAP);
-    expect(view.heading).toMatchObject({ centre: "ink", centreX: HELP_LAYOUT.screen.width / 2 });
+  });
+
+  it.each(gameData.help.map((page, i) => [i, page.caption] as const))(
+    "captions page %d's picture %s, plum, centred on its ink across the well",
+    (page, caption) => {
+      const view = helpView(gameData, MEASURE, page, undefined);
+      expect(view.caption).toMatchObject({
+        capTop: HELP_LAYOUT.caption.y,
+        centre: "ink",
+        centreX: HELP_LAYOUT.well.x + HELP_LAYOUT.well.width / 2,
+        colour: PALETTE.plum,
+        font: "body",
+        text: caption,
+      });
+      expect(view.label).toBe(words.heading);
+    },
+  );
+});
+
+describe("the picture's frame", () => {
+  const filled = (fills: readonly HelpFill[], x: number, y: number) =>
+    fills.findLast(({ rect }) => containsPoint(rect, x, y))?.colour;
+
+  // Each corner's pixel shows the page through, and the lines, face and lip are where the house
+  // chrome's are; the well's rings are an ink ring with cut corners round a plum one.
+  it.each([
+    ["the corner", 0, 0, undefined],
+    ["the ink line", 1, 0, PALETTE.ink],
+    ["the plum line's corner", 1, 1, PALETTE.plum],
+    ["the face", 2, 2, PALETTE.cream],
+    ["the lip's bottom row", 2, 7, PALETTE.tan],
+    ["the lip's right column", 7, 2, PALETTE.tan],
+  ] as const)("paints %s of the chrome", (_, x, y, colour) => {
+    expect(filled(chromeFills({ height: 10, width: 10, x: 0, y: 0 }), x, y)).toBe(colour);
+  });
+
+  it.each([
+    ["the corner", 0, 0, undefined],
+    ["the ink ring", 1, 0, PALETTE.ink],
+    ["the plum ring", 1, 1, PALETTE.plum],
+  ] as const)("paints %s of the well", (_, x, y, colour) => {
+    expect(filled(wellFills({ height: 10, width: 10, x: 0, y: 0 }), x, y)).toBe(colour);
   });
 });
 

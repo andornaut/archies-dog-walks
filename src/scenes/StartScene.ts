@@ -1180,7 +1180,7 @@ export class StartScene extends Scene {
       return;
     }
     // The listener is added only if help opens, so a dropped open leaves none behind.
-    if (openHelp(this, SCENE_KEYS.start)) {
+    if (openHelp(this, { region: "home", resume: SCENE_KEYS.start })) {
       onceSceneEvent(this, this.game.events, HELP_CLOSED_EVENT, go);
     }
   }

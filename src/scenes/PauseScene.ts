@@ -59,9 +59,9 @@ const NOTE_COLOURS: Readonly<Record<HomeNoteLine["kind"], number>> = {
   zonesLeft: PALETTE.plum,
 };
 
-// The pause menu over the dimmed walk, HUD and walk bar: help, settings, Back to title or Resume;
-// or the Home button's question, keep walking or end the walk. The HUD keeps running under it,
-// dimmed and inactive; its pause keys (P and Escape) resume.
+// The pause menu over the dimmed walk, HUD and walk bar: help (a page over the walk), settings,
+// Back to title or Resume; or the Home button's question, keep walking or end the walk. The HUD
+// keeps running under it, dimmed and inactive; its pause keys (P and Escape) resume.
 export class PauseScene extends Scene {
   constructor() {
     super(SCENE_KEYS.pause);
@@ -83,7 +83,8 @@ export class PauseScene extends Scene {
     };
     const presses: Readonly<Record<PauseMenuItem, () => void>> = {
       headHome: data.mode === "menu" ? data.onTitle : headHome,
-      help: () => openHelp(this, SCENE_KEYS.pause),
+      help: () =>
+        this.hideUnder(() => openHelp(this, { region: "walk", resume: SCENE_KEYS.pause })),
       resume: onResume,
       settings: () => this.openSettings(),
     };
@@ -169,12 +170,19 @@ export class PauseScene extends Scene {
     return true;
   }
 
-  // The settings over the walk, dimmed as the menu dims it. The menu hides under them, dim and
-  // all, so they dim the walk alone, and shows again as they resume it.
+  // The settings over the walk, dimmed as the menu dims it.
   private openSettings(): void {
-    this.scene.setVisible(false);
-    onceSceneEvent(this, this.events, Scenes.Events.RESUME, () => this.scene.setVisible(true));
     const data: SettingsData = { region: "walk", resume: SCENE_KEYS.pause };
-    openOverlay(this, SCENE_KEYS.settings, data);
+    this.hideUnder(() => openOverlay(this, SCENE_KEYS.settings, data));
+  }
+
+  // Opens help or the settings over the menu, which hides under them, dim and all, and shows
+  // again as they resume it: the settings dim the walk alone, and help, a page, leaves the walk
+  // bar over it undimmed.
+  private hideUnder(open: () => boolean): void {
+    if (open()) {
+      this.scene.setVisible(false);
+      onceSceneEvent(this, this.events, Scenes.Events.RESUME, () => this.scene.setVisible(true));
+    }
   }
 }

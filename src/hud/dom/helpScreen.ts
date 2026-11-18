@@ -2,7 +2,9 @@ import { itemAt } from "@andornaut/game-kit/runtime/arrays";
 
 import { HELP_LAYOUT } from "../../help/helpLayout.ts";
 import { HELP_DOTS, type HelpView } from "../../help/helpView.ts";
+import { pageCloseControl } from "../../ui/closeControl.ts";
 import { createTextLine, type DomTextLine, placeText, setBox } from "../../ui/dom/pixelLine.ts";
+import { followModalUnderlay } from "../../ui/dom/rampDim.ts";
 import type { UiLayer } from "../../ui/dom/uiLayer.ts";
 import { artPixel, type DomScale, gridRect, gridX, gridY } from "../../ui/domScale.ts";
 import { type PanelText } from "../../ui/modal/types.ts";
@@ -15,11 +17,13 @@ import {
 } from "./questionPanel.ts";
 
 // Native Help text, page controls, body scrolling and dismissal share the scene's callbacks.
-// The canvas keeps the full-screen backing and live illustration beneath this logical layout.
+// The canvas keeps the page's backing, the picture's frame and the live illustration beneath
+// this logical layout. Help is a page, not a modal, as the Logbook is: the live top bar over it
+// keeps its buttons, and a modal over it (the Menu, the settings) dims and stills it.
 
 export type DomHelpInput = Pick<
   DomQuestionPanelInput,
-  "closeLabel" | "companions" | "fonts" | "footerPress" | "gesture" | "presses" | "toGame"
+  "closeLabel" | "fonts" | "footerPress" | "gesture" | "presses" | "toGame"
 > & {
   readonly view: HelpView;
 };
@@ -116,7 +120,10 @@ function textParts(
   };
 }
 
-// The help screen in layer, shown and its dialog focused.
+// Help draws no close control; the panel still places one, which close: null leaves out.
+const NO_CLOSE = pageCloseControl(HELP_LAYOUT.screen);
+
+// The help page in layer, shown and its dialog focused.
 export function showHelpScreen(layer: UiLayer, input: DomHelpInput): DomQuestionPanel {
   const doc = layer.element.ownerDocument;
   screens += 1;
@@ -171,6 +178,10 @@ export function showHelpScreen(layer: UiLayer, input: DomHelpInput): DomQuestion
     text,
   }));
   const titleText = textParts(input, title, [view.title]);
+  const caption = doc.createElement("p");
+  caption.className = "adw-lines";
+  const captionText = textParts(input, caption, [view.caption]);
+  caption.setAttribute("aria-hidden", "true");
   const bodyText = textParts(input, body, bodyLines, { x: 0, y: view.body.capTop });
   // A screen reader reads the page's title and body as written.
   for (const [element, text] of [
@@ -182,17 +193,14 @@ export function showHelpScreen(layer: UiLayer, input: DomHelpInput): DomQuestion
     spoken.textContent = text;
     element.append(spoken);
   }
-  page.append(title, clip);
-  // Help covers the whole game frame, so a press anywhere on it away from its controls is a page
-  // press (the scene's gesture), never one on the modal's backdrop.
+  page.append(caption, title, clip);
+  // A press anywhere on the page under the top bar's press columns, away from its controls, is a
+  // page press (the scene's gesture).
   const surface = doc.createElement("div");
   surface.setAttribute("aria-hidden", "true");
   Object.assign(surface.style, { pointerEvents: "auto", position: "absolute" });
   const parts: DomPart[] = [
-    { element: surface, place: (scale) => setBox(surface, gridRect(scale, HELP_LAYOUT.screen)) },
-    ...view.rules.map(({ colour, rect }) =>
-      fillPart(doc, colour, (scale) => ({ ...gridRect(scale, rect), height: artPixel(scale) })),
-    ),
+    { element: surface, place: (scale) => setBox(surface, gridRect(scale, HELP_LAYOUT.presses)) },
     ...view.dots.map((dot, i) =>
       dotPart(doc, dot, (scale) => itemAt(dotBoxes(scale, view.dots), i)),
     ),
@@ -208,6 +216,7 @@ export function showHelpScreen(layer: UiLayer, input: DomHelpInput): DomQuestion
           y: view.body.capTop,
         });
         setBox(body, { height: content.height, left: 0, top: 0, width: content.width });
+        captionText.place(scale);
         titleText.place(scale);
         bodyText.place(scale);
       },
@@ -241,16 +250,15 @@ export function showHelpScreen(layer: UiLayer, input: DomHelpInput): DomQuestion
             return scroll ? false : input.gesture?.up?.(event, cancelled);
           },
         };
-  return showQuestionPanel(layer, {
+  const shown = showQuestionPanel(layer, {
     close: null,
     closeLabel: input.closeLabel,
-    closePressed: view.closePressed,
     describedBy: page.id,
     fonts: input.fonts,
     gestureOnActions: true,
-    ...(input.companions === undefined ? {} : { companions: input.companions }),
     ...(input.footerPress === undefined ? {} : { footerPress: input.footerPress }),
-    label: view.heading.text,
+    label: view.label,
+    modal: false,
     numberKeys: false,
     parts,
     presses: input.presses,
@@ -258,7 +266,7 @@ export function showHelpScreen(layer: UiLayer, input: DomHelpInput): DomQuestion
     toGame: input.toGame,
     view: {
       buttons: view.buttons,
-      close: view.close,
+      close: NO_CLOSE,
       covered: [],
       footer: view.footer,
       frame: "none",
@@ -266,7 +274,15 @@ export function showHelpScreen(layer: UiLayer, input: DomHelpInput): DomQuestion
       notePlate: undefined,
       panel: view.illustration,
       title: [],
-      titleY: view.heading.capTop,
+      titleY: view.title.capTop,
     },
   });
+  const stopUnderlay = followModalUnderlay(layer.input, shown.element);
+  return {
+    ...shown,
+    destroy: () => {
+      stopUnderlay();
+      shown.destroy();
+    },
+  };
 }

@@ -22,21 +22,26 @@ function display(element: FakeElement, value = "", priority = "") {
   });
 }
 
-it("hides only prior native roots and restores their exact visual state before modal focus returns", () => {
+it("hides only prior native roots but the live bar, and restores their exact state before focus returns", () => {
   const doc = new FakeDocument();
   const layer = doc.createElement("div");
   doc.body.append(layer);
   const home = doc.createElement("div");
   const hidden = doc.createElement("div");
   const bursts = doc.createElement("div");
+  const bar = doc.createElement("div");
   bursts.className = "adw-bursts";
   home.inert = true;
   hidden.hidden = true;
   const homeDisplay = display(home, "grid");
   const hiddenDisplay = display(hidden, "none", "important");
   const burstDisplay = display(bursts);
-  layer.append(home, hidden, bursts);
-  const restore = coverHelpUnderlay(layer as unknown as HTMLElement);
+  const barDisplay = display(bar);
+  layer.append(bar, home, hidden, bursts);
+  const restore = coverHelpUnderlay(
+    [bar as unknown as HTMLElement],
+    layer as unknown as HTMLElement,
+  );
   const help = doc.createElement("div");
   const picture = doc.createElement("div");
   const menu = doc.createElement("div");
@@ -47,10 +52,11 @@ it("hides only prior native roots and restores their exact visual state before m
   expect(homeDisplay()).toEqual(["none", "important"]);
   expect(hiddenDisplay()).toEqual(["none", "important"]);
   expect(burstDisplay()).toEqual(["", ""]);
+  expect(barDisplay()).toEqual(["", ""]);
   expect(helpDisplay()).toEqual(["", ""]);
   expect(pictureDisplay()).toEqual(["", ""]);
   expect(menuDisplay()).toEqual(["", ""]);
-  // Dismissing Help's own Menu leaves the original page covered until Help closes.
+  // Dismissing a Menu over Help leaves the original page covered until Help closes.
   menu.remove();
   expect(homeDisplay()).toEqual(["none", "important"]);
   restore();
@@ -76,7 +82,7 @@ it("keeps persistent-root redraws covered and leaves removed or newly owned root
   const removedDisplay = display(removed);
   const changedDisplay = display(changed);
   layer.append(home, removed, changed);
-  const restore = coverHelpUnderlay(layer as unknown as HTMLElement);
+  const restore = coverHelpUnderlay([], layer as unknown as HTMLElement);
   home.replaceChildren(doc.createElement("button"));
   expect(homeDisplay()).toEqual(["none", "important"]);
   removed.remove();

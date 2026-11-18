@@ -28,6 +28,7 @@ it("projects each passive strip without scaling twice and follows its actual con
   element.append(unrelated);
   const projected = createNativePicture(source, {
     frame: { height: 60, width: 300, x: 20, y: 150 },
+    screenX: 0,
     strips: [
       { height: 20, screenY: 0 },
       { height: 40, screenY: 60 },
@@ -89,6 +90,7 @@ it("forwards owned reveals and cancels only pending strip resources on disposal"
   const parent = { ...layer, reveal };
   const projected = createNativePicture(parent, {
     frame: { height: 30, width: 300, x: 20, y: 150 },
+    screenX: 0,
     strips: [{ height: 30, screenY: 24 }],
   });
   const context = projected.layers[0]!;
@@ -102,4 +104,18 @@ it("forwards owned reveals and cancels only pending strip resources on disposal"
   settle?.(false);
   expect(context.ready()).toBe(false);
   await expect(context.reveal([], art).revealed).resolves.toBe(false);
+});
+
+it("shows the screen from its screenX column at the frame's left edge", () => {
+  const doc = new FakeDocument();
+  const { layer } = fakeLayer(doc, domScale(1, { height: 560, width: 360, x: 0, y: 0 }));
+  const projected = createNativePicture(layer, {
+    frame: { height: 196, width: 328, x: 16, y: 56 },
+    screenX: 16,
+    strips: [{ height: 196, screenY: 40 }],
+  });
+  const context = projected.layers[0]!;
+  expect(context.element.style.left).toBe("-16px");
+  expect(context.scale().origin).toEqual({ x: 0, y: 16 });
+  projected.dispose();
 });

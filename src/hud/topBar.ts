@@ -103,21 +103,25 @@ export function gameplayAllowed(pause: RunPause): boolean {
   return !walkPaused(pause) && !pause.hitStop;
 }
 
-export type TopBarAction = "mute" | "openMenu" | "resume";
+export type TopBarAction = "closeHelp" | "mute" | "openMenu" | "resume";
 
 // What a walk-bar button does, pressed by a tap or by its key (the pause button's P and Escape,
 // and M, which mutes or unmutes): Mute toggles sound, and Pause opens the menu. Under a card,
 // an overlay or an explanation's detail card the bar is dimmed and inactive, so neither a tap
 // nor M presses it; P and Escape stay the open menu's and question's back keys and resume.
-// Help covers this bar and owns its mute control and keys. The settings take P, Escape and M
-// themselves.
+// Help is a page under this bar, which stays live over it: a tap mutes, or on Pause closes help
+// back to the menu, as P and Escape do; help takes the keys itself. The settings take P, Escape
+// and M themselves.
 export function topBarAction(
   pause: RunPause,
   via: "key" | "tap",
   button: WalkBarButtonId,
 ): TopBarAction | undefined {
   if (pause.menu === "help") {
-    return undefined;
+    if (via === "key" || pause.hold) {
+      return undefined;
+    }
+    return button === "mute" ? "mute" : "closeHelp";
   }
   if (pause.menu === "settings" && via === "key") {
     return undefined;

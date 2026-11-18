@@ -158,4 +158,26 @@ describe("pages opened over the open Logbook, as over the Pet shop", () => {
     openHomePage(over(shown), "logbook");
     expect(openOverlay).toHaveBeenCalledTimes(times);
   });
+
+  it("opens Help's own Menu over open Help, and asked for Help there, opens none", () => {
+    vi.mocked(openOverlay).mockClear();
+    const scene = over("help");
+    const menu = {
+      closePage: vi.fn(),
+      context: "help",
+      onHeadHome: vi.fn(),
+      resume: "help",
+    } as const;
+    listenHomeBar(
+      scene,
+      () => undefined,
+      () => menu,
+    );
+    openHomePage(scene, "menu");
+    expect(openOverlay).toHaveBeenCalledExactlyOnceWith(scene, "menu", menu);
+    vi.mocked(openOverlay).mockClear();
+    openHomePage(over("help"), "help");
+    expect(openOverlay).not.toHaveBeenCalled();
+    scene.events.emit("shutdown");
+  });
 });

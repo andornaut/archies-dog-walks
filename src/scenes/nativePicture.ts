@@ -42,7 +42,7 @@ export function createNativePicture(layer: UiLayer, picture: ScenePicture): Nati
       current = {
         ...scale,
         origin: {
-          x: scale.origin.x + viewport.x * unit,
+          x: scale.origin.x + (viewport.x - picture.screenX) * unit,
           y: scale.origin.y + (viewport.y - strip.screenY) * unit,
         },
       };
@@ -54,7 +54,7 @@ export function createNativePicture(layer: UiLayer, picture: ScenePicture): Nati
       });
       Object.assign(content.style, {
         height: `${SCREEN_CONFIG.height * unit}px`,
-        left: "0px",
+        left: `${-picture.screenX * unit}px`,
         top: `${-strip.screenY * unit}px`,
         width: `${SCREEN_CONFIG.width * unit}px`,
       });

@@ -97,7 +97,7 @@ it("dims passive projected dog cards and effect paint once while keeping separat
   expect(bar.style.filter).toBe("brightness(0.28)");
   nested.close();
   expect(bar.style.filter).toBe("brightness(0.28)");
-  const restore = coverHelpUnderlay(element as unknown as HTMLElement);
+  const restore = coverHelpUnderlay([], element as unknown as HTMLElement);
   expect(body.style.display).toBe("none");
   expect(bar.style.display).toBe("none");
   restore();

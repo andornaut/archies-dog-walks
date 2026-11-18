@@ -29,7 +29,7 @@ const shows = (strips: readonly PictureStrip[], row: number) =>
 
 describe("helpPicture", () => {
   // Every picture fills its frame with strips of the screen that show the walker's feet, every
-  // road item's feet, and a card's title and cards whole.
+  // road item's feet, and a card's cards whole, under the walk bar and without the header band.
   it("frames every picture from strips of the screen showing what it is about", () => {
     for (const id of IDS) {
       const { strips } = helpPicture(gameData, id);
@@ -38,7 +38,7 @@ describe("helpPicture", () => {
         id,
       ).toBe(HELP_LAYOUT.illustration.height);
       for (const strip of strips) {
-        expect(strip.screenY).toBeGreaterThanOrEqual(0);
+        expect(strip.screenY).toBeGreaterThanOrEqual(SCREEN.topBar.y + SCREEN.topBar.height);
         expect(strip.screenY + strip.height).toBeLessThanOrEqual(SCREEN_CONFIG.height);
       }
     }
@@ -57,11 +57,14 @@ describe("helpPicture", () => {
       const { card, strips } = helpPicture(gameData, id);
       const count = card?.options.length ?? 0;
       const rects = cardRowIn(SCREEN.walkView, count, count);
-      const { titleTop } = cardHeader(false, rects);
-      const bottoms = rects.map((rect) => rect.y + rect.height - 1);
-      return [titleTop, ...bottoms]
-        .filter((row) => !shows(strips, row))
-        .map((row) => `${id} ${row}`);
+      const { subtitleTop, titleTop } = cardHeader(false, rects);
+      const rows = rects.flatMap((rect) => [rect.y, rect.y + rect.height - 1]);
+      return [
+        ...rows.filter((row) => !shows(strips, row)).map((row) => `${id} ${row}`),
+        ...[titleTop, subtitleTop]
+          .filter((row) => shows(strips, row))
+          .map((row) => `${id} header ${row}`),
+      ];
     });
     expect([...unseen, ...uncut]).toEqual([]);
   });

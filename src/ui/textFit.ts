@@ -12,6 +12,10 @@ export const MODAL_TITLE_SCALE = 3;
 // The title font's capitals are this many rows tall at 1x.
 export const TITLE_CAP_ROWS = 5;
 
+// The body font's ink, descenders included, reaches this many rows down from its capitals' top
+// at 1x.
+export const BODY_INK_ROWS = 7;
+
 // Text at TEXT_SCALE on one line.
 export const TEXT_STYLE: TextFitStyle = { scale: TEXT_SCALE };
 

@@ -3,7 +3,6 @@ import type { Rect } from "@andornaut/game-kit/runtime/rect";
 
 import type { GameData } from "../data/types.ts";
 import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";
-import type { CloseControl } from "../ui/closeControl.ts";
 import { LABEL_HELP_GAP } from "../ui/labelHelpGap.ts";
 import { type PanelButton, type PanelMeasure, type PanelText } from "../ui/modal/types.ts";
 import { panelButton } from "../ui/modal/view.ts";
@@ -11,12 +10,12 @@ import { PALETTE } from "../ui/palette.ts";
 import { BUTTON_COLOURS } from "../ui/selection.ts";
 import { TEXT_SCALE } from "../ui/textFit.ts";
 import { helpBody } from "./helpBody.ts";
-import { dotRects, HELP_LAYOUT } from "./helpLayout.ts";
+import { dotRects, FRAME_LINES, HELP_LAYOUT } from "./helpLayout.ts";
 import { clampPage, helpButtons } from "./helpPaging.ts";
 
-// The help screen laid out as one view both renderers draw: the canvas's (HelpScene) and the HTML
+// The help page laid out as one view both renderers draw: the canvas's (HelpScene) and the HTML
 // interface's (src/hud/dom/helpScreen.ts). Every rect and text origin is in game pixels. The page's
-// picture is the picture scenes', drawn in the illustration's rect.
+// picture is the picture scenes', drawn in the illustration's rect over the canvas's fills.
 
 // A rect filled in one colour.
 export interface HelpFill {
@@ -42,23 +41,23 @@ export interface HelpBody {
 }
 
 export interface HelpView {
-  // The dark screen and the top bar, under the page's picture.
+  // The dark page under the top bar and the picture's frame and well, in painting order, under
+  // the page's picture.
   readonly backdrop: readonly HelpFill[];
   readonly body: HelpBody;
   // Previous, then Next.
   readonly buttons: readonly HelpButton[];
-  readonly close: CloseControl;
-  readonly closePressed: boolean;
+  // The picture's caption, centred on its ink across the well.
+  readonly caption: PanelText;
   // Each page's dot, in order: the current page's filled white, the others hollow tan rings a
   // pixel wide on the dark screen.
   readonly dots: readonly { readonly current: boolean; readonly rect: Rect }[];
   readonly footer: PanelButton;
-  readonly heading: PanelText;
   readonly illustration: Rect;
+  // What a screen reader names the page by; no heading is drawn.
+  readonly label: string;
   // The page shown, clamped to the pages.
   readonly page: number;
-  // The rules a row above and below the picture.
-  readonly rules: readonly HelpFill[];
   readonly title: PanelText;
 }
 
@@ -75,6 +74,45 @@ export const HELP_DOTS = { current: PALETTE.white, ring: PALETTE.tan } as const;
 
 export type HelpPressed = "close" | "next" | "previous";
 
+// The house chrome round rect, as fills in painting order: an ink line with its corners cut a
+// pixel, a plum line inside it, and the cream face with a tan lip along its bottom row and right
+// column.
+export function chromeFills(rect: Rect): HelpFill[] {
+  const { height, width, x, y } = rect;
+  const inset = (by: number): Rect => ({
+    height: height - 2 * by,
+    width: width - 2 * by,
+    x: x + by,
+    y: y + by,
+  });
+  const face = inset(FRAME_LINES);
+  return [
+    ...cutRing(rect),
+    { colour: PALETTE.plum, rect: inset(1) },
+    { colour: PALETTE.cream, rect: face },
+    { colour: PALETTE.tan, rect: { ...face, height: 1, y: face.y + face.height - 1 } },
+    { colour: PALETTE.tan, rect: { ...face, width: 1, x: face.x + face.width - 1 } },
+  ];
+}
+
+// The well round a picture's rect grown by its rings: an ink ring with its corners cut a pixel,
+// filled plum, which the picture covers but for a plum ring round it.
+export function wellFills(rect: Rect): HelpFill[] {
+  const { height, width, x, y } = rect;
+  return [
+    ...cutRing(rect),
+    { colour: PALETTE.plum, rect: { height: height - 2, width: width - 2, x: x + 1, y: y + 1 } },
+  ];
+}
+
+// rect filled ink but for its corner pixels.
+function cutRing({ height, width, x, y }: Rect): HelpFill[] {
+  return [
+    { colour: PALETTE.ink, rect: { height, width: width - 2, x: x + 1, y } },
+    { colour: PALETTE.ink, rect: { height: height - 2, width, x, y: y + 1 } },
+  ];
+}
+
 // A left-aligned label's line: its look, and its capitals' top at y.
 function leftLine(
   font: PanelText["font"],
@@ -86,9 +124,9 @@ function leftLine(
   return { capTop: at.y, centre: "left", centreX: at.x, colour, font, line: 0, scale, text };
 }
 
-// The help screen at page, its pages read now, with what pressed shows pressed: the heading
-// and close control on the top bar, the picture's rules, the page's title and body, the dots,
-// Previous (disabled on the first page), Next and the primary Close footer.
+// The help page at page, its pages read now, with what pressed shows pressed: the framed picture
+// and its caption, the page's title and body, the dots, Previous (disabled on the first page),
+// Next and the primary Close footer.
 export function helpView(
   data: GameData,
   measure: HelpMeasure,
@@ -100,7 +138,6 @@ export function helpView(
   const words = data.menuText.help;
   const current = clampPage(pages.length, page);
   const shown = itemAt(pages, current);
-  const frame = layout.illustration;
   const title = leftLine(
     "title",
     PALETTE.amber,
@@ -144,7 +181,11 @@ export function helpView(
     };
   };
   return {
-    backdrop: [{ colour: PALETTE.darkBrown, rect: layout.screen }],
+    backdrop: [
+      { colour: PALETTE.darkBrown, rect: layout.page },
+      ...chromeFills(layout.frame),
+      ...wellFills(layout.well),
+    ],
     body,
     buttons: [
       button(layout.previous, words.previous, {
@@ -158,20 +199,21 @@ export function helpView(
         primary: false,
       }),
     ],
-    close: layout.close,
-    closePressed: pressed === "close",
+    caption: {
+      capTop: layout.caption.y,
+      centre: "ink",
+      centreX: layout.caption.centreX,
+      colour: PALETTE.plum,
+      font: "body",
+      line: 0,
+      scale: TEXT_SCALE,
+      text: shown.caption,
+    },
     dots: dotRects(pages.length).map((rect, i) => ({ current: i === current, rect })),
     footer: panelButton(measure, layout.footer, true, data.menuText.common.close),
-    heading: {
-      ...leftLine("title", PALETTE.cream, TEXT_SCALE, layout.heading, words.heading),
-      centre: "ink",
-    },
-    illustration: frame,
+    illustration: layout.illustration,
+    label: words.heading,
     page: current,
-    rules: [frame.y - 1, frame.y + frame.height].map((y) => ({
-      colour: PALETTE.plum,
-      rect: { height: 1, width: frame.width, x: frame.x, y },
-    })),
     title,
   };
 }

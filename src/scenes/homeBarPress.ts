@@ -20,36 +20,46 @@ import { nativeTopSectionButtons } from "./topSection.ts";
 // Emitted on game.events as the top bar opens help, the Logbook or the settings: the settings and
 // the badge celebration close, and the start screen, the Pet shop and the Logbook close any detail
 // card, badge card or purchase confirm, so the page opens alone over the page beneath, dimmed once.
+// Help over them stays open: what the bar opens over it opens over help.
 export const HOME_PAGE_OPENING_EVENT = "home-page-opening";
 
 type HomePage = "help" | "logbook" | "menu" | "settings";
 
 const homePageGuard = openGuard();
 const barRoutes = new WeakMap<object, Set<Scene>>();
+// The Menu a page opens over itself in place of the page Menu, by page (Help's).
+const pageMenus = new WeakMap<Scene, () => MenuSceneData>();
 
-// Opens page from the top bar, tapped on from, at once: over the topmost open page, the Logbook or
-// the Pet shop, else over the start screen, in place of every other overlay and card. The Logbook
-// asked of while it is the page under stays as it is. The overlays it closes and the one it opens
-// change at Phaser's next step, so a second page asked of from before then is dropped (openGuard).
+// Opens page from the top bar, tapped on from, at once: over the topmost open page, Help, the
+// Logbook or the Pet shop, else over the start screen, in place of every other overlay and card.
+// The Logbook or Help asked of while it is the page under stays as it is. The overlays it closes
+// and the one it opens change at Phaser's next step, so a second page asked of from before then
+// is dropped (openGuard).
 export function openHomePage(from: Scene, page: HomePage): void {
   homePageGuard(from.game.events, from, () => {
     const title = from.sys.settings.key === SCENE_KEYS.start;
     from.game.events.emit(HOME_PAGE_OPENING_EVENT);
-    const { shop, start, stats } = SCENE_KEYS;
+    const { help, shop, start, stats } = SCENE_KEYS;
     const resume =
-      [stats, shop].find((key) => from.scene.isActive(key) || from.scene.isPaused(key)) ?? start;
+      [help, stats, shop].find((key) => from.scene.isActive(key) || from.scene.isPaused(key)) ??
+      start;
     const under = from.scene.get(resume);
     switch (page) {
       case "menu": {
-        const data: MenuSceneData = title
-          ? { context: "home", resume }
-          : { context: "page", onHeadHome: () => requestTitleReturn(under), resume };
+        const own = pageMenus.get(under);
+        const data: MenuSceneData =
+          own?.() ??
+          (title
+            ? { context: "home", resume }
+            : { context: "page", onHeadHome: () => requestTitleReturn(under), resume });
         openOverlay(under, SCENE_KEYS.menu, data);
         return;
       }
       case "help":
-        // Help shows art boot may still be loading.
-        whenArtReady(under, () => openHelp(under, resume));
+        if (resume !== help) {
+          // Help shows art boot may still be loading.
+          whenArtReady(under, () => openHelp(under, { region: "home", resume }));
+        }
         return;
       case "logbook":
         if (resume !== stats) {
@@ -85,15 +95,19 @@ export function clearOnHomePageOpening(scene: Scene, clear: () => void): void {
   onSceneEvent(scene, scene.game.events, HOME_PAGE_OPENING_EVENT, clear);
 }
 
-// A nonmodal page over the start screen (the Pet shop, the Logbook) routes the shared controls
-// while the screen under it is paused. Under a modal the bar is dimmed and inactive, so no modal
-// routes it.
-export function listenHomeBar(scene: Scene, clear: () => void): void {
+// A nonmodal page over the start screen (the Pet shop, the Logbook, Help) routes the shared
+// controls while the screen under it is paused. Under a modal the bar is dimmed and inactive, so
+// no modal routes it. menu, where given, is the Menu the bar's Menu opens over the page.
+export function listenHomeBar(scene: Scene, clear: () => void, menu?: () => MenuSceneData): void {
   const routes = barRoutes.get(scene.game) ?? new Set<Scene>();
   routes.add(scene);
   barRoutes.set(scene.game, routes);
+  if (menu !== undefined) {
+    pageMenus.set(scene, menu);
+  }
   scene.events.once("shutdown", () => {
     routes.delete(scene);
+    pageMenus.delete(scene);
     if (routes.size === 0) {
       barRoutes.delete(scene.game);
     }

@@ -4,47 +4,47 @@ import { inkRowsFromCapTop } from "@andornaut/game-kit/runtime/text/bitmapFont";
 import { describe, expect, it } from "vitest";
 
 import { gameData } from "../data/index.ts";
-import { HOME_BAR_LAST_FACE, HOME_LAYOUT } from "../home/homeLayout.ts";
+import { MIN_PRESS, TOP_BAR_HEIGHT } from "../data/layout.ts";
 import { MIN_TAP_SIZE } from "../layout/screenLayout.ts";
 import { bodyTextWidth } from "../testing/bodyFont.ts";
 import { fontFileMetrics, gameFont, placedInk } from "../testing/fontInk.ts";
 import { inside } from "../testing/rects.ts";
 import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";
-import { closeFace } from "../ui/closeControl.ts";
 import { LABEL_HELP_GAP } from "../ui/labelHelpGap.ts";
 import { MODAL } from "../ui/modalGeometry.ts";
-import { TEXT_SCALE, TITLE_CAP_ROWS } from "../ui/textFit.ts";
-import { topBarContentRows, topBarRects } from "../ui/topBarTrim.ts";
+import { BODY_INK_ROWS, TEXT_SCALE } from "../ui/textFit.ts";
 import { helpBody } from "./helpBody.ts";
-import { CLOSE_HIT_RECT, dotRects, HELP_LAYOUT, helpActionAt, tapRect } from "./helpLayout.ts";
+import { dotRects, HELP_LAYOUT, helpActionAt, tapRect } from "./helpLayout.ts";
 import type { HelpAction } from "./helpPaging.ts";
 
-// Help's top bar is the home pages': as tall, trimmed alike, its heading's capitals and close
-// face centred down the rows between the trim's line and edge as the home bar's button faces
-// are, the close face where the home bar's last face is (Exit's, or Settings' where Exit is
-// hidden).
-describe("help's top bar", () => {
-  const { close, heading, topBar } = HELP_LAYOUT;
-  const home = HOME_LAYOUT.topBar;
-  const homeBar = { height: home.height, width: topBar.width, x: 0, y: 0 };
-  const rows = topBarContentRows(topBar.height);
-  const capRows = TITLE_CAP_ROWS * TEXT_SCALE;
-  const homeFace = { ...HOME_BAR_LAST_FACE, height: home.faceSize, width: home.faceSize };
-  // How many more rows a part leaves below it than above it, between the trim's line and edge.
-  const offCentre = (top: number, size: number) => rows.bottom - (top + size) - (top - rows.top);
+// Help is a page under the live top bar: the framed picture at full size with its caption, then
+// the title and body, at the rows Art's framed option sets.
+describe("help's page", () => {
+  const { body, caption, frame, illustration, page, presses, title, well } = HELP_LAYOUT;
 
   it.each([
-    ["the bar's rect", topBar, homeBar],
-    ["the heading's horizontal centre", heading.x, topBar.width / 2],
-    ["the bar's trim", topBarRects(topBar), topBarRects(homeBar)],
-    ["the close face", closeFace(close), homeFace],
-    [
-      "the heading's centring",
-      offCentre(heading.y, capRows),
-      offCentre(homeFace.y, homeFace.height),
-    ],
-  ] as const)("matches the home bar's in %s", (_, help, homeValue) => {
-    expect(help).toEqual(homeValue);
+    ["the page", page, { height: 520, width: 360, x: 0, y: TOP_BAR_HEIGHT }],
+    ["the frame", frame, { height: 234, width: 344, x: 8, y: 48 }],
+    ["the well", well, { height: 200, width: 332, x: 14, y: 54 }],
+    ["the picture", illustration, { height: 196, width: 328, x: 16, y: 56 }],
+    ["the caption's capitals and centre", caption, { centreX: 180, y: 260 }],
+    ["the title's capitals", title.y, 307],
+    ["the body's capitals and viewport", [body.y, body.viewport.height], [327, 54]],
+    ["the page presses' top", presses.y, MIN_PRESS],
+  ] as const)("places %s", (_, help, expected) => {
+    expect(help).toEqual(expected);
+  });
+
+  it("takes the body font's ink rows from the font", () => {
+    expect(BODY_INK_ROWS).toBe(inkRowsFromCapTop(BODY));
+  });
+
+  it("fits every page's caption on one line across the picture", () => {
+    const offenders = gameData.help.filter((shown) => {
+      const ink = placedInk("font-body", { scale: TEXT_SCALE }, shown.caption);
+      return ink.right - ink.left > illustration.width;
+    });
+    expect(offenders.map(({ caption: text }) => text)).toEqual([]);
   });
 });
 
@@ -69,7 +69,6 @@ describe("tapRect", () => {
 
 describe("help tap targets", () => {
   const targets = [
-    CLOSE_HIT_RECT,
     tapRect(HELP_LAYOUT.previous),
     tapRect(HELP_LAYOUT.next),
     HELP_LAYOUT.footer,
@@ -81,7 +80,6 @@ describe("help tap targets", () => {
       expect(target.width).toBeGreaterThanOrEqual(MIN_TAP_SIZE);
       expect(target.height).toBeGreaterThanOrEqual(MIN_TAP_SIZE);
     }
-    expect(inside(closeFace(HELP_LAYOUT.close), CLOSE_HIT_RECT)).toBe(true);
     dotRects(7).forEach((dot) => expect(inside(dot, tapRect(dot))).toBe(true));
     targets.forEach((a, i) => {
       targets.slice(i + 1).forEach((b) => expect(rectsOverlap(a, b)).toBe(false));
@@ -94,7 +92,7 @@ describe("helpActionAt", () => {
   it("maps a tap on each target to its action, and one outside them to none", () => {
     const dotTop = tapRect(dotRects(7)[0]!).y;
     const taps: [number, number, HelpAction | undefined][] = [
-      [330, 20, { kind: "close" }],
+      [330, 20, undefined],
       [HELP_LAYOUT.previous.x, HELP_LAYOUT.previous.y, { kind: "previous" }],
       [HELP_LAYOUT.next.x, HELP_LAYOUT.next.y, { kind: "advance" }],
       [HELP_LAYOUT.footer.x, HELP_LAYOUT.footer.y, { kind: "close" }],

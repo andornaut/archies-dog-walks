@@ -1,8 +1,9 @@
-// Help's full-screen canvas backing cannot cover native screen roots above the canvas.
-// Keep its newly mounted controls and picture strips visible while covered roots stay hidden.
-export function coverHelpUnderlay(layer: HTMLElement): () => void {
+// Help's canvas backing cannot cover native screen roots above the canvas. Keep its newly
+// mounted controls and picture strips, and the live top bar (shown), visible while covered roots
+// stay hidden.
+export function coverHelpUnderlay(shown: readonly Element[], layer: HTMLElement): () => void {
   const covered = [...layer.children]
-    .filter((element) => !element.classList.contains("adw-bursts"))
+    .filter((element) => !element.classList.contains("adw-bursts") && !shown.includes(element))
     .map((element) => {
       const root = element as HTMLElement;
       const display = root.style.getPropertyValue("display");

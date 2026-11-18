@@ -204,7 +204,8 @@ export class MenuFlow {
   }
 
   // Resumes the walk from the menu, the question or a page over them; the settings, over the walk
-  // bar that resumed, close with them. Help covers the bar, so nothing resumes from under it.
+  // bar that resumed, close with them. Over help the bar's Pause closes help back to the menu, so
+  // nothing resumes from under it.
   closePause(): void {
     if (!this.pauseOpen) {
       return;

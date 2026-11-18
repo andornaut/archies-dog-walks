@@ -88,6 +88,7 @@ import { DEBUFF_COLOURS } from "./debuffColours.ts";
 import { pillColours } from "./effectNameColours.ts";
 import { HudFeedback } from "./feedbackMoments.ts";
 import { HeartFeedback, heartPops } from "./heartFeedback.ts";
+import type { HelpScene } from "./HelpScene.ts";
 import { detailView } from "./homePanels.ts";
 import { HUD_DEPTH } from "./hudDepth.ts";
 import type { HudRun, HudWalk, RunHudView } from "./hudWalk.ts";
@@ -408,6 +409,11 @@ export class HudScene extends Scene {
       return;
     }
     switch (topBarAction(run.runPause(), via, button)) {
+      case "closeHelp":
+        if (this.scene.isActive(SCENE_KEYS.help)) {
+          (this.scene.get(SCENE_KEYS.help) as HelpScene).close();
+        }
+        break;
       case "mute":
         this.game.events.emit(BAR_MUTED_EVENT, toggleMuted(this));
         break;

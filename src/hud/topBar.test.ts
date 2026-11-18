@@ -74,10 +74,11 @@ describe("the walk bar in each pause state", () => {
     player: true,
     presses: "none",
   } as const;
-  const cover = {
+  // Help is a page under the live bar: a tap mutes or closes help; help takes the keys itself.
+  const help = {
     ...menu,
     mute: undefined,
-    pause: undefined,
+    pause: "closeHelp",
     pauseKey: undefined,
   } as const;
   // An explanation's detail card is modal too: its dismissal presses nothing on the bar.
@@ -114,7 +115,7 @@ describe("the walk bar in each pause state", () => {
       ["in the menu over the hit stop", { ...HIT_STOP, menu: "open" }, menu],
       ["asking the Home question over a card", { ...CARD, menu: "confirmHome" }, menu],
       ["under an explanation's detail card over the menu", { ...HOLD, menu: "open" }, menu],
-      ["under help, which mutes on M", { ...NOTHING_PAUSED, menu: "help" }, cover],
+      ["under help, which mutes on M", { ...NOTHING_PAUSED, menu: "help" }, help],
       [
         "under settings, which take P and M themselves",
         { ...NOTHING_PAUSED, menu: "settings" },

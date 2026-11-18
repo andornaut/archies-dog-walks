@@ -315,8 +315,8 @@ function forwardSceneKeys(root: HTMLElement): () => void {
 
 // Modal ownership is explicit and independent of whether a view draws native controls. A modal
 // view mounts in its own host over every earlier root: a full-layer backdrop under it, then the
-// view and its companions (controls of the same page drawn outside the view, such as Help's own
-// top bar), which the layer's ModalLayer keeps as the only interactive subtree while it is top.
+// view and its companions (controls of the same page drawn outside the view), which the layer's
+// ModalLayer keeps as the only interactive subtree while it is top.
 // A tap on the backdrop calls backgroundCancel where the modal is closeable; without it the
 // backdrop consumes the tap.
 export function mountModalLifecycle(
@@ -501,7 +501,7 @@ export function mountModalLifecycle(
       paint.destroy();
       closeScope();
       if (parts !== undefined) {
-        // Companions outlive the view, as Help's top bar does across its page turns.
+        // Companions outlive the view, which may be redrawn with the same ones.
         for (const companion of options.companions ?? []) {
           if (companion.parentElement === parts.scope) {
             layer.element.append(companion);

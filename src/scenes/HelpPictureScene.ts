@@ -64,7 +64,8 @@ const STILL_FRAMES: Readonly<Record<string, number>> = {
 };
 
 export interface HelpPictureData {
-  // Where the picture shows on the help screen.
+  // Where the picture shows on the help page: the walk screen at full size, its columns in place
+  // under the frame.
   frame: Rect;
   page: HelpPictureId;
 }
@@ -86,7 +87,7 @@ export class HelpPictureScene extends Scene {
 
   create({ frame, page }: HelpPictureData): void {
     const picture = helpPicture(gameData, page);
-    const view: ScenePicture = { frame, strips: picture.strips };
+    const view: ScenePicture = { frame, screenX: frame.x, strips: picture.strips };
     showAsPicture(this, view);
     this.drag = undefined;
     this.events.once(Scenes.Events.SHUTDOWN, () => {
