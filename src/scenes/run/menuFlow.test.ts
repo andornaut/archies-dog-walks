@@ -30,7 +30,6 @@ function fixture() {
     tweens: { pauseAll: vi.fn(), resumeAll: vi.fn() },
   } as unknown as Scene;
   const flow = new MenuFlow(scene, {
-    debuffs: () => 0,
     dropPress: vi.fn(),
     headHome,
     homeNote: () => [],

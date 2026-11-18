@@ -45,8 +45,6 @@ export interface PauseOverlay {
 // end the walk, for a fork card's End walk, its note saying what going home keeps and gives
 // up.
 export type PauseSceneData = {
-  // The debuff bars showing under the walk bar, which keep their rows from its buttons.
-  debuffs: number;
   onHeadHome: () => void;
   onResume: () => void;
 } & (
@@ -87,7 +85,7 @@ export class PauseScene extends Scene {
       headHome: data.mode === "menu" ? data.onTitle : headHome,
       help: () => openHelp(this, SCENE_KEYS.pause),
       resume: onResume,
-      settings: () => this.openSettings(data.debuffs),
+      settings: () => this.openSettings(),
     };
     const source = this.scene.get(SCENE_KEYS.run) as RunScene;
     const shown = source.hudView();
@@ -173,10 +171,10 @@ export class PauseScene extends Scene {
 
   // The settings over the walk, dimmed as the menu dims it. The menu hides under them, dim and
   // all, so they dim the walk alone, and shows again as they resume it.
-  private openSettings(debuffs: number): void {
+  private openSettings(): void {
     this.scene.setVisible(false);
     onceSceneEvent(this, this.events, Scenes.Events.RESUME, () => this.scene.setVisible(true));
-    const data: SettingsData = { debuffs, region: "walk", resume: SCENE_KEYS.pause };
+    const data: SettingsData = { region: "walk", resume: SCENE_KEYS.pause };
     openOverlay(this, SCENE_KEYS.settings, data);
   }
 }

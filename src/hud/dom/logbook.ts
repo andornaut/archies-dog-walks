@@ -6,7 +6,7 @@ import { statsTabRects } from "../../home/statsLayout.ts";
 import { bindGameAction } from "../../ui/dom/actionBinding.ts";
 import type { NativeGesture } from "../../ui/dom/modalLifecycle.ts";
 import { setBox } from "../../ui/dom/pixelLine.ts";
-import { dimDrawn } from "../../ui/dom/rampDim.ts";
+import { dimDrawn, followModalUnderlay } from "../../ui/dom/rampDim.ts";
 import type { UiLayer } from "../../ui/dom/uiLayer.ts";
 import {
   type DomScale,
@@ -23,6 +23,8 @@ import { fillPart, framedBoxPart, shopPageParts } from "./shopPage.ts";
 // The Logbook in HTML over the canvas: the page (shopPageParts), its title and close control
 // drawn as a panel's (showQuestionPanel), the open tab's content clipped to the list's frame and
 // moved up by the scroll, and the scrollbar, at the places the canvas draws them (logbookView).
+// It is a page like the Pet shop, not a modal: its top bar stays live, and a modal over it (a
+// badge card, the Menu) dims and stills it with the rest of the background.
 // Where the list is scrolled to, and whether it has settled: no drag or fling moving it.
 export interface LogbookScroll {
   readonly max: number;
@@ -223,12 +225,12 @@ export function showLogbook(layer: UiLayer, input: DomLogbookInput): DomLogbook 
     place: (scale) => tabs.forEach((tab) => tab.place(scale)),
   };
   const shown = showQuestionPanel(layer, {
-    backgroundCancel: input.navigation.close,
     close: input.navigation.close,
     closeLabel: input.closeLabel,
     closePressed: page.closePressed,
     fonts: input.fonts,
     gesture: input.navigation.gesture,
+    modal: false,
     numberKeys: false,
     onFocus: (index) => {
       clip.scrollTop = 0;
@@ -267,10 +269,12 @@ export function showLogbook(layer: UiLayer, input: DomLogbookInput): DomLogbook 
     follow();
     scrollbar.follow();
   });
+  const stopUnderlay = followModalUnderlay(layer.input, shown.element);
   return {
     ...shown,
     destroy: () => {
       stop();
+      stopUnderlay();
       shown.destroy();
     },
     setDimmed: (next) => {

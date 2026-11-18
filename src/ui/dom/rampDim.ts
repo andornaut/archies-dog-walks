@@ -90,10 +90,37 @@ export function dimDrawn(element: HTMLElement, dimmed: boolean): void {
 interface UnderlayState {
   leases: number;
   readonly owners: Set<object>;
-  readonly inert: boolean;
-  readonly hidden: string | null;
+  // What covering changed, so uncovering restores only that: another owner of the root, such as
+  // its own modal lifecycle, may change inertness or aria-hidden while it is covered.
+  covered?: { readonly hidden: string | null | undefined; readonly inert: boolean };
 }
 const underlays = new WeakMap<HTMLElement, UnderlayState>();
+
+function cover(element: HTMLElement, state: UnderlayState): void {
+  if (state.covered !== undefined) {
+    return;
+  }
+  const hidden = element.getAttribute("aria-hidden");
+  state.covered = { hidden: hidden === "true" ? undefined : hidden, inert: !element.inert };
+  element.inert = true;
+  element.setAttribute("aria-hidden", "true");
+}
+
+function uncover(element: HTMLElement, state: UnderlayState): void {
+  const changed = state.covered;
+  if (changed === undefined) {
+    return;
+  }
+  delete state.covered;
+  if (changed.inert) {
+    element.inert = false;
+  }
+  if (changed.hidden === null) {
+    element.removeAttribute("aria-hidden");
+  } else if (changed.hidden !== undefined) {
+    element.setAttribute("aria-hidden", changed.hidden);
+  }
+}
 
 export interface ModalUnderlay {
   (): void;
@@ -110,12 +137,7 @@ export function followModalUnderlay(
   const owner = {};
   let state = underlays.get(element);
   if (state === undefined) {
-    state = {
-      hidden: element.getAttribute("aria-hidden"),
-      inert: element.inert,
-      leases: 0,
-      owners: new Set(),
-    };
+    state = { leases: 0, owners: new Set() };
     underlays.set(element, state);
   }
   state.leases++;
@@ -132,15 +154,9 @@ export function followModalUnderlay(
       state.owners.delete(owner);
     }
     if (state.owners.size > 0) {
-      element.inert = true;
-      element.setAttribute("aria-hidden", "true");
+      cover(element, state);
     } else {
-      element.inert = state.inert;
-      if (state.hidden === null) {
-        element.removeAttribute("aria-hidden");
-      } else {
-        element.setAttribute("aria-hidden", state.hidden);
-      }
+      uncover(element, state);
     }
   };
   const stop = coverage.subscribe(refresh);
@@ -154,12 +170,7 @@ export function followModalUnderlay(
       request(false);
       // Restore through the same ownership rule without acquiring another request.
       if (state.owners.size === 0) {
-        element.inert = state.inert;
-        if (state.hidden === null) {
-          element.removeAttribute("aria-hidden");
-        } else {
-          element.setAttribute("aria-hidden", state.hidden);
-        }
+        uncover(element, state);
       }
       alive = false;
       state.leases--;

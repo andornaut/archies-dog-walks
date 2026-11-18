@@ -321,7 +321,6 @@ export class RunScene extends Scene implements HudRun {
       items,
       lights,
       menus: new MenuFlow(this, {
-        debuffs: () => this.session?.walk.run.debuffs.length ?? 0,
         dropPress: () => this.world?.input.dropPress(),
         headHome: (destination) => this.headHome(destination),
         homeNote: () =>

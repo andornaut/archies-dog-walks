@@ -131,3 +131,31 @@ it("omits title navigation only when the originating screen is the actual title"
     resume: "start",
   });
 });
+
+describe("pages opened over the open Logbook, as over the Pet shop", () => {
+  const over = (shown: string) => {
+    const { scene } = fakeOverlay(shown);
+    Object.assign(scene.scene, { isActive: (key: string) => key === shown });
+    return scene;
+  };
+
+  it.each(["shop", "stats"])("opens the Menu as a page menu over %s", (shown) => {
+    vi.mocked(openOverlay).mockClear();
+    const scene = over(shown);
+    openHomePage(scene, "menu");
+    expect(openOverlay).toHaveBeenCalledExactlyOnceWith(
+      scene,
+      "menu",
+      expect.objectContaining({ context: "page", resume: shown }),
+    );
+  });
+
+  it.each([
+    ["shop", 1],
+    ["stats", 0],
+  ] as const)("asked for the Logbook over %s, opens it %i times", (shown, times) => {
+    vi.mocked(openOverlay).mockClear();
+    openHomePage(over(shown), "logbook");
+    expect(openOverlay).toHaveBeenCalledTimes(times);
+  });
+});

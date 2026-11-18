@@ -137,8 +137,6 @@ function settingsFonts(scene: Scene): SettingsFonts {
 // where they open, which sets the safe region their card sits in (overlayRegion): a home page
 // under its top bar, or the walk view. The whole game frame dims under them, the top bar included.
 export interface SettingsData extends OverlayData {
-  // The debuff bars showing under the walk bar: none on a home page.
-  readonly debuffs: number;
   readonly region: OverlayRegion;
 }
 

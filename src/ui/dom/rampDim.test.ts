@@ -112,4 +112,43 @@ describe("uniform native underlay darkness", () => {
     expect(under.style.filter ?? "").toBe("");
     stop();
   });
+
+  it("restores only what covering changed while the root's own lifecycle also sets inertness", () => {
+    const doc = new FakeDocument();
+    const page = doc.createElement("div");
+    page.inert = true;
+    page.setAttribute("aria-hidden", "true");
+    let covered = false,
+      sync = () => undefined as void;
+    const stop = followModalUnderlay(
+      {
+        accepts: () => !covered,
+        subscribe: (listener) => {
+          sync = listener;
+          return () => undefined;
+        },
+      },
+      native(page),
+    );
+    // The page paints and accepts, then a card covers it: its lifecycle answers first.
+    page.inert = false;
+    page.removeAttribute("aria-hidden");
+    covered = true;
+    page.inert = true;
+    page.setAttribute("aria-hidden", "true");
+    sync();
+    expect([page.inert, page.getAttribute("aria-hidden")]).toEqual([true, "true"]);
+    covered = false;
+    page.inert = false;
+    page.removeAttribute("aria-hidden");
+    sync();
+    expect([page.inert, page.getAttribute("aria-hidden")]).toEqual([false, null]);
+    // Covered first, its own change after: uncovering clears what covering set.
+    covered = true;
+    sync();
+    covered = false;
+    sync();
+    expect([page.inert, page.getAttribute("aria-hidden")]).toEqual([false, null]);
+    stop();
+  });
 });

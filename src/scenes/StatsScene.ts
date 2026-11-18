@@ -33,12 +33,11 @@ import {
   stepScroll,
   wheelScroll,
 } from "../input/listScroll.ts";
-import { screenArea } from "../input/outsideTap.ts";
 import { loadSheet } from "../ui/dom/sheetFrames.ts";
 import { rectIndexAt } from "../ui/grid.ts";
 import { badgeCard } from "./badges.ts";
 import { pillColours } from "./effectNameColours.ts";
-import { clearOnHomePageOpening } from "./homeBarPress.ts";
+import { listenHomeBar, sceneRegionOutside } from "./homeBarPress.ts";
 import { canvasDetailMeasure } from "./modalMeasure.ts";
 import { mountNativeOverlay } from "./nativeOverlayReady.ts";
 import { closeOverlay, listenDismiss, nativeSceneAccepts, type OverlayData } from "./overlay.ts";
@@ -120,13 +119,21 @@ export class StatsScene extends Scene {
     };
     document.addEventListener("keydown", onKey, true);
     this.events.once("shutdown", () => document.removeEventListener("keydown", onKey, true));
+    // The Logbook is a page, not a modal, as the Pet shop is: its live top bar keeps its buttons,
+    // and the bar's empty area and the margins around the page close it. An open badge card is
+    // modal, and its own backdrop takes those taps instead. Back closes an open card first.
     listenDismiss(
       this,
-      screenArea([PANEL]),
+      sceneRegionOutside(this, [PANEL]),
       () => this.close(),
       () => this.back(),
     );
-    clearOnHomePageOpening(this, () => this.close());
+    // A page the top bar opens over the Logbook closes an open card first.
+    listenHomeBar(this, () => {
+      if (this.detail !== undefined) {
+        this.back();
+      }
+    });
     mountNativeOverlay(this, () => {
       this.render();
       return this.page !== undefined;
@@ -340,7 +347,6 @@ export class StatsScene extends Scene {
             reduced: currentSettings(this).reducedMotion,
           });
     this.burst = false;
-    this.page.setDimmed(card !== undefined);
     this.htmlCard = keepPanel(
       this.htmlCard,
       card === undefined ? undefined : JSON.stringify(card),

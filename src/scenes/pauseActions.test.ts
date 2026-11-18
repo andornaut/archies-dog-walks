@@ -37,7 +37,6 @@ it("keeps only the existing safe Keep walking and End walk answers in the confir
   mount.call(
     { scene: { get: () => ({ hudView: () => undefined }) } },
     {
-      debuffs: 0,
       mode: "homeQuestion",
       note: [],
       onHeadHome,

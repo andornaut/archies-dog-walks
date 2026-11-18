@@ -57,7 +57,7 @@ export class MenuScene extends Scene {
       closePage?.();
     };
     const settings = () => {
-      const data: SettingsData = { debuffs: 0, region: "home", resume: SCENE_KEYS.menu };
+      const data: SettingsData = { region: "home", resume: SCENE_KEYS.menu };
       openOverlay(this, SCENE_KEYS.settings, data);
     };
     const actions: Readonly<Record<MenuItem, () => void>> = {

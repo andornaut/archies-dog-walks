@@ -17,9 +17,9 @@ import { listenTargetPress } from "./targetPress.ts";
 import { requestTitleReturn } from "./titleNavigation.ts";
 import { nativeTopSectionButtons } from "./topSection.ts";
 
-// Emitted on game.events as the top bar opens help, the Logbook or the settings: the Logbook,
-// the settings and the badge celebration close, and the start screen and the Pet shop close any
-// detail card or purchase confirm, so the page opens alone over the page beneath, dimmed once.
+// Emitted on game.events as the top bar opens help, the Logbook or the settings: the settings and
+// the badge celebration close, and the start screen, the Pet shop and the Logbook close any detail
+// card, badge card or purchase confirm, so the page opens alone over the page beneath, dimmed once.
 export const HOME_PAGE_OPENING_EVENT = "home-page-opening";
 
 type HomePage = "help" | "logbook" | "menu" | "settings";
@@ -27,16 +27,17 @@ type HomePage = "help" | "logbook" | "menu" | "settings";
 const homePageGuard = openGuard();
 const barRoutes = new WeakMap<object, Set<Scene>>();
 
-// Opens page from the top bar, tapped on from, at once: over the Pet shop while it is open, else
-// over the start screen, in place of every other overlay and card. The overlays it closes and
-// the one it opens change at Phaser's next step, so a second page asked of from before then is
-// dropped (openGuard).
+// Opens page from the top bar, tapped on from, at once: over the topmost open page, the Logbook or
+// the Pet shop, else over the start screen, in place of every other overlay and card. The Logbook
+// asked of while it is the page under stays as it is. The overlays it closes and the one it opens
+// change at Phaser's next step, so a second page asked of from before then is dropped (openGuard).
 export function openHomePage(from: Scene, page: HomePage): void {
   homePageGuard(from.game.events, from, () => {
     const title = from.sys.settings.key === SCENE_KEYS.start;
     from.game.events.emit(HOME_PAGE_OPENING_EVENT);
-    const { shop, start } = SCENE_KEYS;
-    const resume = from.scene.isActive(shop) || from.scene.isPaused(shop) ? shop : start;
+    const { shop, start, stats } = SCENE_KEYS;
+    const resume =
+      [stats, shop].find((key) => from.scene.isActive(key) || from.scene.isPaused(key)) ?? start;
     const under = from.scene.get(resume);
     switch (page) {
       case "menu": {
@@ -51,10 +52,12 @@ export function openHomePage(from: Scene, page: HomePage): void {
         whenArtReady(under, () => openHelp(under, resume));
         return;
       case "logbook":
-        openOverlay(under, SCENE_KEYS.stats, { resume });
+        if (resume !== stats) {
+          openOverlay(under, SCENE_KEYS.stats, { resume });
+        }
         return;
       case "settings": {
-        const data: SettingsData = { debuffs: 0, region: "home", resume };
+        const data: SettingsData = { region: "home", resume };
         openOverlay(under, SCENE_KEYS.settings, data);
         return;
       }
@@ -82,8 +85,9 @@ export function clearOnHomePageOpening(scene: Scene, clear: () => void): void {
   onSceneEvent(scene, scene.game.events, HOME_PAGE_OPENING_EVENT, clear);
 }
 
-// A nonmodal page over the start screen (the Pet shop) routes the shared controls while the start
-// screen is paused under it. Under a modal the bar is dimmed and inactive, so no modal routes it.
+// A nonmodal page over the start screen (the Pet shop, the Logbook) routes the shared controls
+// while the screen under it is paused. Under a modal the bar is dimmed and inactive, so no modal
+// routes it.
 export function listenHomeBar(scene: Scene, clear: () => void): void {
   const routes = barRoutes.get(scene.game) ?? new Set<Scene>();
   routes.add(scene);
