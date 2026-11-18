@@ -19,6 +19,8 @@ interface SectionOwner {
   inert: boolean;
   layer: UiLayer;
   ready: boolean;
+  // Roots of the owner's own that draw its bar's marks over the bar (joinTopSection).
+  roots: readonly HTMLElement[];
   section: NativeTopSection;
   shown: boolean;
   view: NativeTopSection;
@@ -37,13 +39,21 @@ export function nativeTopSectionButtons(scene: Scene): readonly TopSectionButton
   return owner?.ready === true ? [...owner.view.buttons.keys()] : [];
 }
 
-// The bar on screen: the selected owner's root, which a page over its screen (Help) leaves in
-// view.
-export function shownTopSection(scene: Scene): HTMLElement | undefined {
+// The bar on screen: the selected owner's root and the roots joined to it, which a page over its
+// screen (help) leaves in view.
+export function shownTopSectionRoots(scene: Scene): readonly HTMLElement[] {
   const layer = nativeSections.get(scene)?.layer ?? uiLayer();
-  return layer === undefined
-    ? undefined
-    : selectedSection(sectionStacks.get(layer) ?? [])?.view.element;
+  const owner = layer === undefined ? undefined : selectedSection(sectionStacks.get(layer) ?? []);
+  return owner === undefined ? [] : [owner.view.element, ...owner.roots];
+}
+
+// Joins roots that draw scene's bar's own marks over the bar, such as the walk bar's effect
+// icons, to scene's top section, so they show wherever the bar shows (shownTopSectionRoots).
+export function joinTopSection(scene: Scene, roots: readonly HTMLElement[]): void {
+  const owner = nativeSections.get(scene);
+  if (owner !== undefined) {
+    owner.roots = [...owner.roots, ...roots];
+  }
 }
 
 // Barless overlays retain the current owner. A later screen bar displaces it until disposal.
@@ -132,6 +142,7 @@ export function addNativeTopSection(
     inert,
     layer,
     ready: false,
+    roots: previous?.roots ?? [],
     section,
     shown,
     view,

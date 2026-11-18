@@ -120,7 +120,7 @@ import { SCENE_KEYS, type SceneKey } from "./sceneKeys.ts";
 import { type ScenePicture } from "./scenePicture.ts";
 import { soundboardOf } from "./soundboard.ts";
 import { TimedGroup } from "./timedGroup.ts";
-import { addNativeTopSection } from "./topSection.ts";
+import { addNativeTopSection, joinTopSection } from "./topSection.ts";
 const LAYOUT = SCREEN_LAYOUT;
 const BAR = walkBarLayout(LAYOUT.topBar);
 // A change label's parts on screen, and its chip's rect.
@@ -167,6 +167,8 @@ export class HudScene extends Scene {
   private chrome: ReturnType<typeof createHudChrome> | undefined;
   private painter: HudMomentPainter | undefined;
   private barPainter: HudMomentPainter | undefined;
+  // The walk bar's own marks over it: its effect icons and their glints.
+  private iconPainter: HudMomentPainter | undefined;
   private debuffBars: DebuffBarView[] = [];
   private topSection: NativeTopSection | undefined;
   private barButtons = new Map<
@@ -280,6 +282,13 @@ export class HudScene extends Scene {
               createNativeTopSection(target, source, title, barConfig),
             ),
           );
+    // The bar's icons on roots of their own over the bar, joined to it, so a page over the walk
+    // (help) that keeps the bar in view keeps them too; the dog cards and the bump border over
+    // them.
+    const iconPainters = projection.layers.map((target) =>
+      createHudMoments(target, source, fonts, hasArt, colours),
+    );
+    this.iconPainter = projectHudMoments(iconPainters, picture?.stillFrames);
     const barPainters = projection.layers.map((target) =>
       createHudMoments(target, source, fonts, hasArt, colours),
     );
@@ -287,21 +296,26 @@ export class HudScene extends Scene {
     this.cards = projectHudCards(barPainters, cards);
     if (picture === undefined) {
       stopUnderlays.push(
-        ...barPainters.map((painter) => followModalUnderlay(layer.input, painter.element)),
+        ...[...iconPainters, ...barPainters].map((painter) =>
+          followModalUnderlay(layer.input, painter.element),
+        ),
+      );
+      joinTopSection(
+        this,
+        iconPainters.map((painter) => painter.element),
       );
     }
-    this.barPainter.update({
-      firingNow: this.time.now,
-      momentNow: this.time.now,
-      now: this.time.now,
-    });
-    this.chrome = createHudChrome(this.painter, this.barPainter, DEBUFF_COLOURS);
+    const now = { firingNow: this.time.now, momentNow: this.time.now, now: this.time.now };
+    this.iconPainter.update(now);
+    this.barPainter.update(now);
+    this.chrome = createHudChrome(this.painter, this.iconPainter, DEBUFF_COLOURS);
     onSceneEvent(this, this.game.events, Core.Events.PRE_RENDER, () => {
       const time = { firingNow: this.firingNow, momentNow: this.momentNow, now: this.time.now };
       this.painter?.update(time);
+      this.iconPainter?.update(time);
       this.barPainter?.update(time);
       if (picture === undefined) {
-        [...painters, ...barPainters].forEach((painter) =>
+        [...painters, ...iconPainters, ...barPainters].forEach((painter) =>
           dimDrawn(painter.element, !layer.input.accepts()),
         );
       }
@@ -312,6 +326,7 @@ export class HudScene extends Scene {
       this.cards?.dispose();
       this.chrome?.dispose();
       this.painter?.dispose();
+      this.iconPainter?.dispose();
       this.barPainter?.dispose();
       projection.dispose();
     });
@@ -603,7 +618,7 @@ export class HudScene extends Scene {
       items.findIndex((shown) => effectIconKey(shown) === key)
     ];
     if (well !== undefined) {
-      const painter = this.barPainter;
+      const painter = this.iconPainter;
       if (painter === undefined) {
         return;
       }

@@ -30,7 +30,7 @@ import { addHtmlHelpScreen, htmlPanelInput, htmlPanelPlace } from "./questionPan
 import { REFUSE } from "./refuseControl.ts";
 import { SCENE_KEYS, type SceneKey } from "./sceneKeys.ts";
 import { requestTitleReturn } from "./titleNavigation.ts";
-import { shownTopSection } from "./topSection.ts";
+import { shownTopSectionRoots } from "./topSection.ts";
 import { clearScene } from "./uiKit.ts";
 
 // Emitted on game.events when the help closes, by any route.
@@ -86,10 +86,9 @@ export class HelpScene extends Scene {
     const place = htmlPanelPlace(this);
     if (place !== undefined) {
       // Restore covered roots before this scene disposes its page and returns focus.
-      const bar = shownTopSection(this);
       this.events.once(
         Scenes.Events.SHUTDOWN,
-        coverHelpUnderlay(bar === undefined ? [] : [bar], place.layer.element),
+        coverHelpUnderlay(shownTopSectionRoots(this), place.layer.element),
       );
     }
     this.html = undefined;

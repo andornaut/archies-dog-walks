@@ -48,6 +48,7 @@ type DebuffColours = Readonly<
 // Persistent native chrome reads existing HUD layouts; scene clocks own animated feedback.
 export function createHudChrome(
   painter: HudMomentPainter,
+  // The walk bar's own marks: its effect icons.
   barPainter: HudMomentPainter,
   colours: DebuffColours,
 ) {

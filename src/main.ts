@@ -101,9 +101,10 @@ function bootGame(context: GameStartup): Game {
     // The kit owns the device-resolution backing. Scene cameras preserve the logical screen
     // at the top, centred across; the HTML layer follows that same view rather than its bars.
     scale: { autoCenter: Scale.CENTER_HORIZONTALLY, mode: Scale.NONE },
-    // Scenes draw in this order. The Logbook, the settings and help, which the home top bar
-    // opens over the Pet shop, come after it, help's pictures after help, and the tap bursts
-    // over every scene but the dev overlay.
+    // Scenes draw in this order. The Logbook and help, which the home top bar opens over the Pet
+    // shop, come after it, help's pictures after help, the Menu and the settings, modals that
+    // open over help, after its pictures so their dim covers them, and the tap bursts over every
+    // scene but the dev overlay.
     scene: [
       BootScene,
       StartScene,
@@ -117,12 +118,12 @@ function bootGame(context: GameStartup): Game {
       StatsScene,
       CelebrationScene,
       QuitScene,
-      SettingsScene,
       HelpScene,
       HelpPictureScene,
       new HudScene(SCENE_KEYS.helpHud),
       new CardScene(SCENE_KEYS.helpCard),
       MenuScene,
+      SettingsScene,
       TapBurstScene,
       DevOverlayScene,
     ],
