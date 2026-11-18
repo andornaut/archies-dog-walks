@@ -4,7 +4,7 @@
 // scenes listen for PHONE_EVENTS on window and call the functions below.
 import type { ProgressHandle } from "@andornaut/game-kit/runtime/progressState";
 import type { FrameTurn } from "@andornaut/game-kit/runtime/view/pagePoint";
-import { appCannotClose, runsInAppWindow } from "@andornaut/game-kit/runtime/web/pwa/appWindow";
+import { appCannotClose, canExitApp } from "@andornaut/game-kit/runtime/web/pwa/appWindow";
 import { backCloseWatcher } from "@andornaut/game-kit/runtime/web/pwa/backNavigation";
 import {
   browserCloseWatcher,
@@ -159,7 +159,7 @@ export function setupPhoneApp(): Promise<LaunchResult> {
   // its own back, so the game never asks Quit? there.
   const closeWatcher = backCloseWatcher(navigator.userAgent, browserCloseWatcher());
   leaveOffered = !appCannotClose(closeWatcher, window);
-  exitCloses = leaveOffered && runsInAppWindow(window);
+  exitCloses = canExitApp(closeWatcher, window);
   if (leaveOffered) {
     // Each back the guard keeps opens the pause menu or Quit?, as the scenes decide.
     guardBackNavigation(
@@ -182,9 +182,9 @@ export function setupPhoneApp(): Promise<LaunchResult> {
 }
 
 // Whether the game offers to leave (the home top bar's Exit, Q and back's Quit?), as read at load:
-// only in an installed app whose window a script can close, which leaving closes. A browser tab
-// never offers it, since leaving there would navigate away rather than close, and neither does an
-// installed app that cannot close (the kit's appCannotClose: an app whose platform never closes,
+// only in an installed app whose window a script can close, which leaving closes (the kit's
+// canExitApp). A browser tab never offers it, since leaving there would navigate away rather than
+// close, and neither does an installed app that cannot close (an app whose platform never closes,
 // by APP_WINDOW_CLOSES, or whose history holds more than the game's entry).
 export function exitShown(): boolean {
   return exitCloses;

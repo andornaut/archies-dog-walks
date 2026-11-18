@@ -63,7 +63,8 @@ vi.mock("@andornaut/game-kit/runtime/web/pwa/dom/backNavigation", () => ({
 }));
 vi.mock("@andornaut/game-kit/runtime/web/pwa/appWindow", () => ({
   appCannotClose,
-  runsInAppWindow,
+  // The kit's canExitApp: an installed app window that a script can close.
+  canExitApp: () => runsInAppWindow() && !appCannotClose(),
 }));
 vi.mock("@andornaut/game-kit/runtime/web/view/dom/watchFrameTurn", () => ({
   lockGameOrientation: () => undefined,
