@@ -1,0 +1,39 @@
+# Tooling
+
+`make check` is the project gate. Make runs the lint, test and build recipes in `tests/container/check` inside isolated non-root containers started by `tests/container/run`, admitted only below one-minute host load 20, capped at four CPUs and bounded memory, and rejected if the source snapshot changes. The npm scripts alias the same recipes. Node comes from `.nvmrc`, and every kit is pinned to its latest published release. CI runs Lint, Test and Build plus the AI attributions scan, and a docs-only push runs only Lint and the scan. The delivery-kit runner departs hourly at :10 Toronto time, holds a departure while the load is at or above its departure limit, gates local `main` in the gate image pinned by ID, pushes, waits for CI and deploys `dist/`. Players' service workers stage each version in a complete cache, offer it on every arrival home, and force it only for a newer save. The playable game carries no analytics, and `docs/` is never served.
+
+Reference: [Developing](../../README.md#developing), [Deploying](../../README.md#deploying), [Platform and delivery](../../src/README.md#platform-and-delivery), [Tests and simulator](../../src/README.md#tests-and-simulator), [Save data](../../src/README.md#save-data), [Dev tools](../../src/README.md#dev-tools).
+
+## Work items
+
+| ID       | Title                                                            | Link                               |
+| -------- | ---------------------------------------------------------------- | ---------------------------------- |
+| adw-0073 | Apply the improvements review fixes                              | [adw-0073.md](../work/adw-0073.md) |
+| adw-0074 | Run the TypeScript tools on plain Node                           | [adw-0074.md](../work/adw-0074.md) |
+| adw-0075 | Remove husky and lint-staged                                     | [adw-0075.md](../work/adw-0075.md) |
+| adw-0076 | Rename the Worker, package and storage keys to archies-dog-walks | [adw-0076.md](../work/adw-0076.md) |
+| adw-0078 | Check that no Aseprite files are committed                       | [adw-0078.md](../work/adw-0078.md) |
+| adw-0079 | Adopt game-kit achievements with a save reset                    | [adw-0079.md](../work/adw-0079.md) |
+| adw-0081 | Check for an update each time the start screen appears           | [adw-0081.md](../work/adw-0081.md) |
+| adw-0086 | Adopt the canonical pre-commit hook and CI lint                  | [adw-0086.md](../work/adw-0086.md) |
+| adw-0087 | Run the checks through project-owned Make container gates        | [adw-0087.md](../work/adw-0087.md) |
+| adw-0092 | Hold departures from a host load of 30                           | [adw-0092.md](../work/adw-0092.md) |
+| adw-0097 | Run on Node 24.22.2 everywhere                                   | [adw-0097.md](../work/adw-0097.md) |
+| adw-0098 | Store the save under dotted keys, one per device setting         | [adw-0098.md](../work/adw-0098.md) |
+| adw-0099 | Force the update a newer save requires                           | [adw-0099.md](../work/adw-0099.md) |
+| adw-0100 | Allow the Cloudflare analytics beacon in the page policy         | [adw-0100.md](../work/adw-0100.md) |
+| adw-0105 | Keep a dismissed update offer hidden until restart               | [adw-0105.md](../work/adw-0105.md) |
+| adw-0108 | Offer the update on every arrival home                           | [adw-0108.md](../work/adw-0108.md) |
+| adw-0110 | Stage each update in a complete cache before it activates        | [adw-0110.md](../work/adw-0110.md) |
+| adw-0111 | Build the check image with an explicit file limit                | [adw-0111.md](../work/adw-0111.md) |
+| adw-0112 | Adopt delivery-kit 4                                             | [adw-0112.md](../work/adw-0112.md) |
+| adw-0114 | Adopt art-kit 0.23                                               | [adw-0114.md](../work/adw-0114.md) |
+| adw-0119 | Give each tunable one source                                     | [adw-0119.md](../work/adw-0119.md) |
+| adw-0120 | Show loading after Update now                                    | [adw-0120.md](../work/adw-0120.md) |
+| adw-0121 | Split source along responsibility boundaries                     | [adw-0121.md](../work/adw-0121.md) |
+| adw-0132 | Adopt the latest kits and their namespaces                       | [adw-0132.md](../work/adw-0132.md) |
+| adw-0137 | Retry a failed offline install                                   | [adw-0137.md](../work/adw-0137.md) |
+| adw-0149 | Keep analytics out of the playable game                          | [adw-0149.md](../work/adw-0149.md) |
+| adw-0153 | Migrate to delivery-kit 4.6                                      | [adw-0153.md](../work/adw-0153.md) |
+| adw-0161 | Run only attribution and lint checks for docs-only changes       | [adw-0161.md](../work/adw-0161.md) |
+| adw-0162 | Adopt design and work files                                      | [adw-0162.md](../work/adw-0162.md) |
