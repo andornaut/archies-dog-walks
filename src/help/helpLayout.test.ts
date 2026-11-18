@@ -12,15 +12,15 @@ import { inside } from "../testing/rects.ts";
 import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";
 import { LABEL_HELP_GAP } from "../ui/labelHelpGap.ts";
 import { MODAL } from "../ui/modalGeometry.ts";
-import { BODY_INK_ROWS, TEXT_SCALE } from "../ui/textFit.ts";
+import { BODY_ASCENT_ROWS, BODY_INK_ROWS, TEXT_SCALE } from "../ui/textFit.ts";
 import { helpBody } from "./helpBody.ts";
-import { dotRects, HELP_LAYOUT, helpActionAt, tapRect } from "./helpLayout.ts";
+import { dotRects, HELP_LAYOUT, helpActionAt, helpScrollbar, tapRect } from "./helpLayout.ts";
 import type { HelpAction } from "./helpPaging.ts";
 
 // Help is a page under the live top bar: the framed picture at full size with its caption, then
 // the title and body, at the rows Art's framed option sets.
 describe("help's page", () => {
-  const { body, caption, frame, illustration, page, presses, title, well } = HELP_LAYOUT;
+  const { body, caption, frame, illustration, page, presses, scrollbar, title, well } = HELP_LAYOUT;
 
   it.each([
     ["the page", page, { height: 520, width: 360, x: 0, y: TOP_BAR_HEIGHT }],
@@ -29,14 +29,40 @@ describe("help's page", () => {
     ["the picture", illustration, { height: 196, width: 328, x: 16, y: 56 }],
     ["the caption's capitals and centre", caption, { centreX: 180, y: 260 }],
     ["the title's capitals", title.y, 307],
-    ["the body's capitals and viewport", [body.y, body.viewport.height], [327, 54]],
+    ["the body's capitals", body.y, 327],
+    ["the body's viewport", body.viewport, { height: 54, width: 360, x: 0, y: 325 }],
+    ["the body's width", body.width, 330],
+    ["the scrollbar's track", [scrollbar.x, scrollbar.trackWidth], [348, 8]],
     ["the page presses' top", presses.y, MIN_PRESS],
   ] as const)("places %s", (_, help, expected) => {
     expect(help).toEqual(expected);
   });
 
-  it("takes the body font's ink rows from the font", () => {
+  it("takes the body font's ink rows and ascent from the font", () => {
     expect(BODY_INK_ROWS).toBe(inkRowsFromCapTop(BODY));
+    expect(BODY_ASCENT_ROWS).toBe(BODY.capTop - BODY.letterTop);
+  });
+
+  // The viewport shows whole lines only: each line's slot, from its letters' top, holds all its
+  // ink, and the viewport is whole slots from the first line's.
+  it("shows whole body lines in its viewport, and the next line not at all", () => {
+    const { lineHeight, scale, viewport } = body;
+    const slotTop = body.y - BODY_ASCENT_ROWS * scale;
+    expect(viewport.y).toBe(slotTop);
+    expect(viewport.height % lineHeight).toBe(0);
+    expect((BODY_ASCENT_ROWS + BODY_INK_ROWS) * scale).toBeLessThanOrEqual(lineHeight);
+  });
+
+  // The Logbook's scrollbar rule: shown only for a body longer than its viewport, the lines
+  // stopping their gap short of its track.
+  it("draws the scrollbar only for a body that overflows, clear of the lines", () => {
+    expect(helpScrollbar(0, 0)).toBeNull();
+    const bar = helpScrollbar(body.lineHeight * 3, body.lineHeight * 3);
+    expect(bar?.track).toEqual({ ...body.viewport, width: scrollbar.trackWidth, x: scrollbar.x });
+    expect(bar?.thumb.y).toBe(
+      body.viewport.y + body.viewport.height - scrollbar.thumbInset - (bar?.thumb.height ?? 0),
+    );
+    expect(body.x + body.width + body.scrollGap).toBe(scrollbar.x);
   });
 
   it("fits every page's caption on one line across the picture", () => {
@@ -146,7 +172,7 @@ describe("help pages", () => {
     const { scale: titleScale, x } = HELP_LAYOUT.title;
     const inkBottom = y + (maxLines - 1) * lineHeight + inkRowsFromCapTop(BODY) * scale;
     const viewport = HELP_LAYOUT.body.viewport;
-    expect(viewport.y).toBe(y);
+    expect(viewport.y).toBe(y - BODY_ASCENT_ROWS * scale);
     expect(viewport.height).toBeGreaterThanOrEqual(lineHeight);
     expect(viewport.height % lineHeight).toBe(0);
     expect(viewport.y + viewport.height + MODAL.gap).toBeLessThanOrEqual(

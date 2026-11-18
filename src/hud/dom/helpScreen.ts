@@ -1,14 +1,22 @@
 import { itemAt } from "@andornaut/game-kit/runtime/arrays";
 
-import { HELP_LAYOUT } from "../../help/helpLayout.ts";
+import { HELP_LAYOUT, helpScrollbar } from "../../help/helpLayout.ts";
 import { HELP_DOTS, type HelpView } from "../../help/helpView.ts";
 import { pageCloseControl } from "../../ui/closeControl.ts";
 import { createTextLine, type DomTextLine, placeText, setBox } from "../../ui/dom/pixelLine.ts";
 import { followModalUnderlay } from "../../ui/dom/rampDim.ts";
 import type { UiLayer } from "../../ui/dom/uiLayer.ts";
-import { artPixel, type DomScale, gridRect, gridX, gridY } from "../../ui/domScale.ts";
+import {
+  artPixel,
+  type DomScale,
+  gridRect,
+  gridX,
+  gridY,
+  scrollbarBoxes,
+} from "../../ui/domScale.ts";
 import { type PanelText } from "../../ui/modal/types.ts";
 import { PALETTE } from "../../ui/palette.ts";
+import { BODY_ASCENT_ROWS } from "../../ui/textFit.ts";
 import {
   type DomPart,
   type DomQuestionPanel,
@@ -120,6 +128,43 @@ function textParts(
   };
 }
 
+// The body's scrollbar (helpScrollbar) beside clip, following its scroll, for a body height
+// rows tall; hidden while the body fits.
+function scrollbarPart(doc: Document, clip: HTMLElement, height: number): DomPart {
+  const element = doc.createElement("div");
+  element.className = "adw-lines";
+  const track = doc.createElement("div");
+  track.className = "adw-scroll-track";
+  const thumb = doc.createElement("div");
+  thumb.className = "adw-scroll-thumb";
+  element.append(track, thumb);
+  const { viewport } = HELP_LAYOUT.body;
+  const max = height - viewport.height;
+  let at: DomScale | undefined;
+  const follow = () => {
+    const shown = at;
+    const box = shown === undefined ? undefined : gridRect(shown, viewport);
+    const perGame = box === undefined || box.height === 0 ? 1 : box.height / viewport.height;
+    const bar = helpScrollbar(max, (clip.scrollTop || 0) / perGame);
+    element.hidden = bar === null;
+    if (shown === undefined || bar === null) {
+      return;
+    }
+    const corner = { left: gridX(shown, bar.track.x), top: gridY(shown, bar.track.y) };
+    const boxes = scrollbarBoxes(shown, corner, bar);
+    setBox(track, boxes.track);
+    setBox(thumb, boxes.thumb);
+  };
+  clip.addEventListener("scroll", follow, { passive: true });
+  return {
+    element,
+    place: (scale) => {
+      at = scale;
+      follow();
+    },
+  };
+}
+
 // Help draws no close control; the panel still places one, which close: null leaves out.
 const NO_CLOSE = pageCloseControl(HELP_LAYOUT.screen);
 
@@ -145,7 +190,8 @@ export function showHelpScreen(layer: UiLayer, input: DomHelpInput): DomQuestion
     overflowY: "auto",
     overscrollBehavior: "contain",
     pointerEvents: "auto",
-    scrollbarWidth: "thin",
+    scrollSnapType: "y mandatory",
+    scrollbarWidth: "none",
     touchAction: "pan-y",
   });
   clip.addEventListener("keydown", (event) => {
@@ -182,7 +228,18 @@ export function showHelpScreen(layer: UiLayer, input: DomHelpInput): DomQuestion
   caption.className = "adw-lines";
   const captionText = textParts(input, caption, [view.caption]);
   caption.setAttribute("aria-hidden", "true");
-  const bodyText = textParts(input, body, bodyLines, { x: 0, y: view.body.capTop });
+  // The lines from the first's slot, its letters' top: the viewport shows whole slots, and a
+  // scroll comes to rest on one.
+  const slotTop = view.body.capTop - BODY_ASCENT_ROWS * view.body.scale;
+  const bodyText = textParts(input, body, bodyLines, { x: 0, y: slotTop });
+  const slots = view.body.lines.map(() => {
+    const slot = doc.createElement("div");
+    slot.className = "adw-framed";
+    slot.style.scrollSnapAlign = "start";
+    body.append(slot);
+    return slot;
+  });
+  const scrollbar = scrollbarPart(doc, clip, view.body.lines.length * view.body.pitch);
   // A screen reader reads the page's title and body as written.
   for (const [element, text] of [
     [title, view.title.text],
@@ -204,6 +261,7 @@ export function showHelpScreen(layer: UiLayer, input: DomHelpInput): DomQuestion
     ...view.dots.map((dot, i) =>
       dotPart(doc, dot, (scale) => itemAt(dotBoxes(scale, view.dots), i)),
     ),
+    scrollbar,
     {
       controls: [clip],
       element: page,
@@ -213,9 +271,14 @@ export function showHelpScreen(layer: UiLayer, input: DomHelpInput): DomQuestion
           height: view.body.lines.length * view.body.pitch,
           width: HELP_LAYOUT.screen.width,
           x: 0,
-          y: view.body.capTop,
+          y: slotTop,
         });
         setBox(body, { height: content.height, left: 0, top: 0, width: content.width });
+        slots.forEach((slot, i) => {
+          const top = gridY(scale, slotTop + i * view.body.pitch) - content.top;
+          const bottom = gridY(scale, slotTop + (i + 1) * view.body.pitch) - content.top;
+          setBox(slot, { height: bottom - top, left: 0, top, width: content.width });
+        });
         captionText.place(scale);
         titleText.place(scale);
         bodyText.place(scale);

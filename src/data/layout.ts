@@ -879,8 +879,9 @@ export const SETTINGS_CARD = {
 
 // The help screen; rows up from the screen's bottom where stated.
 export const HELP_SCREEN = {
-  // The body: its line pitch, most lines, scale, width and left edge.
-  body: { lineHeight: 18, maxLines: 6, scale: 2, width: 336, x: 12 },
+  // The body: its line pitch, most lines, scale and left edge, and its lines' gap from the
+  // scrollbar's track.
+  body: { lineHeight: 18, maxLines: 6, scale: 2, scrollGap: 6, x: 12 },
   // The rows under the Help Close footer to the screen's bottom.
   buttonsFoot: 12,
   // The page dots' side.
@@ -890,6 +891,8 @@ export const HELP_SCREEN = {
   frame: { captionGap: 6, pad: 4, top: 8 },
   // art: the picture's size, the walk screen's rows under its walk bar less 16 columns a side.
   picture: { height: 196, width: 328 },
+  // The body's scrollbar's track's right edge in from the screen's.
+  scrollbarInset: 4,
   // The title's scale and left edge.
   title: { scale: 2, x: 12 },
   // The title's capitals under the frame's last row.

@@ -1583,14 +1583,15 @@
         "lineHeight": 18,
         "maxLines": 6,
         "scale": 2,
-        "width": 336,
+        "scrollGap": 6,
         "x": 12,
         "viewport": {
           "height": 54,
           "width": 360,
           "x": 0,
-          "y": 327
+          "y": 325
         },
+        "width": 330,
         "y": 327
       },
       "caption": {
@@ -1688,6 +1689,13 @@
         "width": 360,
         "x": 0,
         "y": 0
+      },
+      "scrollbar": {
+        "thumbInset": 1,
+        "thumbMin": 16,
+        "thumbWidth": 6,
+        "trackWidth": 8,
+        "x": 348
       },
       "title": {
         "scale": 2,

@@ -125,6 +125,16 @@ it("keeps all Help copy scrollable without page gestures and binds every page's 
         Number.parseFloat(body.style.height!),
       );
       expect(Number.parseFloat(body.style.height!)).toBe(HELP_LAYOUT.body.viewport.height * 2);
+      // Whole lines only: the native scrollbar gives way to the house one, and a scroll rests on
+      // a line's slot.
+      expect(body.style.scrollbarWidth).toBe("none");
+      expect(body.style.scrollSnapType).toBe("y mandatory");
+      const slots = body.children[0]!.children.filter(
+        (child) => child.style.scrollSnapAlign === "start",
+      );
+      expect(slots.length).toBeGreaterThan(HELP_LAYOUT.body.viewport.height / 18);
+      const track = nodes.find((node) => node.className === "adw-scroll-track");
+      expect(track?.parent?.hidden).toBe(false);
       const stop = vi.fn();
       for (const code of ["ArrowDown", "PageDown", "Space"]) {
         body.fire("keydown", { code, stopPropagation: stop });
@@ -175,5 +185,21 @@ it("retains page swipes beginning on Previous or Next without also pressing the 
   dialog?.fire("click", click);
   expect(click.stopImmediatePropagation).toHaveBeenCalledOnce();
   expect(presses[1]).not.toHaveBeenCalled();
+  shown.destroy();
+});
+
+it("hides the scrollbar while the body fits its viewport", () => {
+  const doc = new FakeDocument();
+  const { element, layer } = fakeLayer(doc, domScale(2, { height: 560, width: 360, x: 0, y: 0 }));
+  const shown = showHelpScreen(layer, {
+    closeLabel: gameData.menuText.common.close,
+    fonts,
+    presses: [vi.fn(), vi.fn()],
+    toGame: (point) => point,
+    view: helpView(gameData, MEASURE, 0, undefined),
+  });
+  const nodes = layerViews(element)[0]?.all() ?? [];
+  const track = nodes.find((node) => node.className === "adw-scroll-track");
+  expect(track?.parent?.hidden).toBe(true);
   shown.destroy();
 });
