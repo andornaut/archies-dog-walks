@@ -5,7 +5,6 @@ import { overlayRegion } from "../home/homeBar.ts";
 import { pauseMenuLayout } from "../hud/pauseMenu.ts";
 import { isPauseKey, menuKeyActs } from "../input/keyBindings.ts";
 import { screenArea } from "../input/outsideTap.ts";
-import { exitShown } from "../pwa/index.ts";
 import { MODAL } from "../ui/modal/layout.ts";
 import {
   type MenuContext,
@@ -15,7 +14,7 @@ import {
   navigationMenuWidth,
 } from "../ui/navigationMenu.ts";
 import { addRampDim } from "../ui/phaser/rampDim.ts";
-import { clearOnHomePageOpening, exitGame, openHomePage } from "./homeBarPress.ts";
+import { clearOnHomePageOpening, openHomePage } from "./homeBarPress.ts";
 import { canvasPanelMeasure } from "./modalMeasure.ts";
 import { mountNativeOverlay } from "./nativeOverlayReady.ts";
 import {
@@ -68,16 +67,12 @@ export class MenuScene extends Scene {
       },
       help: () => openHomePage(this, "help"),
       logbook: () => openHomePage(this, "logbook"),
-      quit: () => {
-        close();
-        exitGame();
-      },
       settings,
     };
     const panel: QuestionPanel = {
       backgroundCancel: close,
       close,
-      entries: menuItems(context, exitShown()).map((item) => ({
+      entries: menuItems(context).map((item) => ({
         label: menuItemLabel(gameData, item),
         press: actions[item],
       })),

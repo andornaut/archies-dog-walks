@@ -11,21 +11,17 @@ export const PAUSE_MENU_ITEMS = [
 ] as const;
 
 export type MenuContext = "end" | "help" | "home" | "page";
-export type MenuItem = "close" | "headHome" | "help" | "logbook" | "quit" | "settings";
+export type MenuItem = "close" | "headHome" | "help" | "logbook" | "settings";
 
-// Only the navigation applicable to the screen joins its primary Close action.
-export function menuItems(context: MenuContext, exit: boolean): readonly MenuItem[] {
+// Only the navigation applicable to the screen joins its primary Close action: the other entries
+// in label order, then Back to title where it applies, then Close. Leaving is the top bar's Exit,
+// never a Menu entry.
+export function menuItems(context: MenuContext): readonly MenuItem[] {
   switch (context) {
     case "home":
+      return ["help", "logbook", "settings", "close"];
     case "page":
-      return [
-        "help",
-        "logbook",
-        "settings",
-        ...(exit ? ["quit" as const] : []),
-        ...(context === "page" ? ["headHome" as const] : []),
-        "close",
-      ];
+      return ["help", "logbook", "settings", "headHome", "close"];
     case "help":
       return ["settings", "headHome", "close"];
     case "end":
@@ -48,8 +44,6 @@ export function menuItemLabel(
       return data.menuText.pause.help;
     case "logbook":
       return data.menuText.stats.title;
-    case "quit":
-      return data.homeText.quit.quit;
     case "settings":
       return data.menuText.pause.settings;
     default:
@@ -65,7 +59,7 @@ export function navigationMenuWidth(
 ): number {
   const width = modalFamilyWidth(available, "medium");
   const labels = [
-    ...menuItems("home", true).map((item) => menuItemLabel(data, item)),
+    ...menuItems("page").map((item) => menuItemLabel(data, item)),
     ...PAUSE_MENU_ITEMS.map((item) => pauseMenuItemLabel(data, item)),
   ];
   if (

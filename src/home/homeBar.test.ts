@@ -46,11 +46,16 @@ it.each([
 
 describe("homeBackAction", () => {
   it.each([
-    [true, "closeDetail"],
-    [false, "askQuit"],
-  ] as const)("with a detail card open %s, back does %s", (detailOpen, action) => {
-    expect(homeBackAction(detailOpen)).toBe(action);
-  });
+    [true, true, "closeDetail"],
+    [false, true, "closeDetail"],
+    [true, false, "askQuit"],
+    [false, false, "none"],
+  ] as const)(
+    "with Exit %s and a detail card open %s, back does %s",
+    (exit, detailOpen, action) => {
+      expect(homeBackAction(exit, detailOpen)).toBe(action);
+    },
+  );
 });
 
 it("compacts an unavailable Exit and keeps shown controls outside overlay dismissal", () => {

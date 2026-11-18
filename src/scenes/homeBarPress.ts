@@ -67,9 +67,9 @@ export function openHomePage(from: Scene, page: HomePage): void {
   });
 }
 
-// Leaves the game from the top bar's Exit or Quit?'s Quit (the kit's exitApp): an installed app's
-// window closes, and a browser tab goes to the site's home page. Neither is offered in an
-// installed app that cannot close (exitShown).
+// Leaves the game from the top bar's Exit or Quit?'s Quit (the kit's exitApp), which closes the
+// installed app's window. Both are offered only where that window can close (exitShown), so
+// leaving never navigates elsewhere.
 export function exitGame(): void {
   exitApp(browserExitPage());
 }

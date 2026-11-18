@@ -6,6 +6,7 @@ import { PHONE_EVENTS } from "./events.ts";
 
 const {
   accept,
+  appCannotClose,
   arriveHome,
   dismissOffer,
   launchReady,
@@ -13,9 +14,11 @@ const {
   registrationReady,
   requireNewer,
   retryInstallation,
+  runsInAppWindow,
   setOfferVisible,
 } = vi.hoisted(() => ({
   accept: vi.fn().mockResolvedValue("blocked"),
+  appCannotClose: vi.fn(() => true),
   arriveHome: vi.fn(),
   dismissOffer: vi.fn(),
   launchReady: vi.fn().mockResolvedValue("continue"),
@@ -29,6 +32,7 @@ const {
     stage: "installed",
     version: "v1",
   }),
+  runsInAppWindow: vi.fn(() => false),
   setOfferVisible: vi.fn(),
 }));
 
@@ -57,7 +61,10 @@ vi.mock("@andornaut/game-kit/runtime/web/pwa/dom/backNavigation", () => ({
   browserCloseWatcher: () => undefined,
   guardBackNavigation: () => undefined,
 }));
-vi.mock("@andornaut/game-kit/runtime/web/pwa/appWindow", () => ({ appCannotClose: () => true }));
+vi.mock("@andornaut/game-kit/runtime/web/pwa/appWindow", () => ({
+  appCannotClose,
+  runsInAppWindow,
+}));
 vi.mock("@andornaut/game-kit/runtime/web/view/dom/watchFrameTurn", () => ({
   lockGameOrientation: () => undefined,
   watchFrameTurn: () => ({ onChange: () => () => undefined, turn: () => 0 }),
@@ -86,6 +93,8 @@ afterAll(() => {
 
 beforeEach(async () => {
   vi.resetModules();
+  appCannotClose.mockReturnValue(true);
+  runsInAppWindow.mockReturnValue(false);
   accept.mockReset().mockResolvedValue("blocked");
   dismissOffer.mockClear();
   phone = await import("./index.ts");
@@ -121,6 +130,22 @@ describe("setOnHomeScreen", () => {
 });
 
 describe("setupPhoneApp", () => {
+  it.each([
+    ["a browser tab, where leaving would navigate away", false, false, false],
+    ["an installed app whose window closes", true, false, true],
+    ["an installed app that cannot close", true, true, false],
+  ] as const)(
+    "in %s, shows Exit only where leaving closes the app",
+    async (_, inApp, cannotClose, shown) => {
+      runsInAppWindow.mockReturnValue(inApp);
+      appCannotClose.mockReturnValue(cannotClose);
+      vi.resetModules();
+      phone = await import("./index.ts");
+      await phone.setupPhoneApp();
+      expect(phone.exitShown()).toBe(shown);
+    },
+  );
+
   it.each(["blocked", "continue", "reloading"] as const)(
     "returns the kit's %s launch decision before game boot",
     async (result) => {

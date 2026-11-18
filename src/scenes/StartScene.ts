@@ -560,12 +560,13 @@ export class StartScene extends Scene {
       },
       () => this.closeOverlay(),
     );
-    // Back closes an open detail card, as Escape does, and with none asks Quit?.
+    // Back closes an open detail card, as Escape does, and with none asks Quit? where Exit is
+    // offered.
     onBackPressed(this, () => {
-      const action = homeBackAction(this.overlay !== undefined);
+      const action = homeBackAction(this.exit, this.overlay !== undefined);
       if (action === "closeDetail") {
         this.closeOverlay();
-      } else {
+      } else if (action === "askQuit") {
         const data: OverlayData = { resume: SCENE_KEYS.start };
         openOverlay(this, SCENE_KEYS.quit, data);
       }

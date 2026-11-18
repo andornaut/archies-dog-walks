@@ -38,7 +38,14 @@ export function homeBarAction(button: HomeBarButton): HomeBarAction {
 }
 
 // What back does on the bare start screen, which hears it only with no page or question over
-// it: closes the open detail card, or with none, asks Quit?.
-export function homeBackAction(detailOpen: boolean): "askQuit" | "closeDetail" {
-  return detailOpen ? "closeDetail" : "askQuit";
+// it: closes the open detail card, or with none asks Quit? where Exit is offered and otherwise
+// does nothing.
+export function homeBackAction(
+  exit: boolean,
+  detailOpen: boolean,
+): "askQuit" | "closeDetail" | "none" {
+  if (detailOpen) {
+    return "closeDetail";
+  }
+  return exit ? "askQuit" : "none";
 }

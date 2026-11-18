@@ -36,28 +36,29 @@ const measure: PanelMeasure = {
     wrapWords((part) => bodyTextWidth(NOTE_PLATE.scale, part), width, line),
 };
 
-it("keeps applicable navigation in order with the primary action last and guarded Quit", () => {
-  expect(menuItems("home", true)).toEqual(["help", "logbook", "settings", "quit", "close"]);
-  expect(menuItems("home", false)).toEqual(["help", "logbook", "settings", "close"]);
-  expect(menuItems("help", true)).toEqual(["settings", "headHome", "close"]);
-  expect(menuItems("page", true)).toEqual([
-    "help",
-    "logbook",
-    "settings",
-    "quit",
-    "headHome",
-    "close",
-  ]);
-  expect(menuItems("page", false)).toEqual(["help", "logbook", "settings", "headHome", "close"]);
-  expect(menuItems("end", true)).toEqual(["settings", "headHome", "close"]);
+it("orders navigation by label with Back to title and the primary action last, and no Quit", () => {
+  expect(menuItems("home")).toEqual(["help", "logbook", "settings", "close"]);
+  expect(menuItems("page")).toEqual(["help", "logbook", "settings", "headHome", "close"]);
+  expect(menuItems("help")).toEqual(["settings", "headHome", "close"]);
+  expect(menuItems("end")).toEqual(["settings", "headHome", "close"]);
   expect(PAUSE_MENU_ITEMS).toEqual(["help", "settings", "headHome", "resume"]);
   expect(PAUSE_MENU_KEY_ORDER).toEqual(["resume", "help", "settings", "headHome"]);
 });
 
+it.each(["end", "help", "home", "page"] as const)(
+  "lists the %s Menu's other entries alphabetically by label",
+  (context) => {
+    const others = menuItems(context)
+      .filter((item) => item !== "close" && item !== "headHome")
+      .map((item) => menuItemLabel(gameData, item));
+    expect(others).toEqual([...others].sort((a, b) => a.localeCompare(b)));
+  },
+);
+
 describe.each(["home", "pause"] as const)("%s navigation geometry", (context) => {
   const labels =
     context === "home"
-      ? menuItems("home", true).map((item) => menuItemLabel(gameData, item))
+      ? menuItems("page").map((item) => menuItemLabel(gameData, item))
       : PAUSE_MENU_ITEMS.map((item) => pauseMenuItemLabel(gameData, item));
   const width = navigationMenuWidth(
     gameData,
