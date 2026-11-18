@@ -139,6 +139,8 @@ describe("setupPhoneApp", () => {
     async (_, inApp, cannotClose, shown) => {
       runsInAppWindow.mockReturnValue(inApp);
       appCannotClose.mockReturnValue(cannotClose);
+      // Offering to leave guards back, which reads the session history.
+      vi.stubGlobal("history", { length: 1, state: null });
       vi.resetModules();
       phone = await import("./index.ts");
       await phone.setupPhoneApp();
