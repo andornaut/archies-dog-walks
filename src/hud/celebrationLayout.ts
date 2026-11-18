@@ -12,17 +12,20 @@ import { SCREEN_CONFIG, SCREEN_LAYOUT } from "../data/screen.ts";
 import { WIDE_BUTTON } from "../layout/screenLayout.ts";
 import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";
 import { LABEL_HELP_GAP } from "../ui/labelHelpGap.ts";
-import { MODAL, modalActionWidth, modalRect } from "../ui/modal/layout.ts";
+import { MODAL, modalActionWidth, modalFamilyWidth, modalRect } from "../ui/modal/layout.ts";
 import { TEXT_SCALE, TEXT_STYLE, textOnLines } from "../ui/textFit.ts";
 import type { LinePart } from "./zoneCelebration.ts";
 
 const CELEBRATION = CELEBRATIONS;
 const SCREEN_WIDTH = SCREEN_CONFIG.width;
 const CENTRE_X = SCREEN_WIDTH / 2;
-// The bubble's and the title's inset from either screen edge.
+// The title's inset from either screen edge.
 const SIDE = MODAL.margin;
+// The new walker's bubble and the zone's earnings plate: the Medium family, centred.
+const PANEL_WIDTH = modalFamilyWidth(SCREEN_WIDTH - 2 * MODAL.margin, "medium");
+const PANEL_X = Math.round((SCREEN_WIDTH - PANEL_WIDTH) / 2);
 // The width the greeting and each info line keep to inside the bubble's rim.
-const BUBBLE_ROOM = SCREEN_WIDTH - 2 * SIDE - 2 * MODAL.pad;
+const BUBBLE_ROOM = PANEL_WIDTH - 2 * MODAL.pad;
 const TITLE_SCALE = CELEBRATION.titleScale;
 const WALKER_SCALE = CELEBRATION.walkerScale;
 // A walker's frame at 1x: ROAD_SPRITE_SIZE wide and half again as tall.
@@ -46,15 +49,13 @@ const ZONE_DONE_FEET = ROAD_TOP + CELEBRATION.zoneDone.feet;
 const PLATE_TOP = ZONE_DONE_FEET + CELEBRATION.zoneDone.plateDy;
 // Each version's button, 8 rows under its bubble or plate.
 const BUTTON = WIDE_BUTTON;
-// The earnings plate, as wide as the button under it; its line keeps EARNINGS_INSET inside the
-// plate's sides: the ui-panel's 4px frame and 4px of cream.
+// The earnings plate; its line keeps the modal padding inside the plate's sides.
 const EARNINGS_PLATE = {
   height: CELEBRATION.zoneDone.plateHeight,
-  width: BUTTON.width,
-  x: BUTTON.x,
+  width: PANEL_WIDTH,
+  x: PANEL_X,
   y: PLATE_TOP,
 };
-const EARNINGS_INSET = CELEBRATION.zoneDone.earningsInset;
 
 // The walker's frame stands on feetY with its celebration burst behind it.
 function headline(feetY: number) {
@@ -92,8 +93,8 @@ export const CELEBRATION_LAYOUT = {
     ...headline(NEW_WALKER_FEET),
     bubble: {
       height: CELEBRATION.newWalker.bubbleHeight,
-      width: SCREEN_WIDTH - SIDE * 2,
-      x: SIDE,
+      width: PANEL_WIDTH,
+      x: PANEL_X,
       y: BUBBLE_TOP,
     },
     button: { ...BUTTON, y: BUBBLE_TOP + CELEBRATION.newWalker.buttonDy },
@@ -137,20 +138,19 @@ export const CELEBRATION_LAYOUT = {
   titleRoom: SCREEN_WIDTH - SIDE * 2,
   titleScale: TITLE_SCALE,
   walkerScale: WALKER_SCALE,
-  // The zone's earnings on one line at 2x, centred on a plate exactly the button's x and width,
-  // keeping earningsInset inside its sides (ZONE_EARNINGS_FIT).
+  // The zone's earnings on one line at 2x, centred on the plate within its padding
+  // (ZONE_EARNINGS_FIT).
   zoneDone: {
     ...headline(ZONE_DONE_FEET),
     button: { ...BUTTON, y: PLATE_TOP + CELEBRATION.zoneDone.buttonDy },
-    earningsInset: EARNINGS_INSET,
     earningsY: PLATE_TOP + CELEBRATION.zoneDone.earningsY,
     plate: EARNINGS_PLATE,
   },
 } as const;
 
-// The zone's earnings: at 2x on one line, inside the plate's inset.
+// The zone's earnings: at 2x on one line, inside the plate's padding.
 export const ZONE_EARNINGS_FIT = {
-  room: EARNINGS_PLATE.width - 2 * EARNINGS_INSET,
+  room: EARNINGS_PLATE.width - 2 * MODAL.pad,
   style: TEXT_STYLE,
 } as const;
 
@@ -169,12 +169,12 @@ export function greetingLineTops(body: FontMetrics, scale: number, lines: number
 // The new walker's rows for a greeting set as fitted and infoLines info lines: the rule and the
 // info lines rise by the greeting rows fitted leaves unused, and the bubble's bottom and the
 // button rise by those and by a line of the body font at 2x for each info line left out, so the
-// bubble ends under its last line.
+// bubble ends under its last line. The button follows its label's ink when given.
 export function newWalkerRows(
   body: FontMetrics,
   infoLines: number,
   fitted: FittedText,
-  ink?: { action: number; content: number },
+  actionInk?: number,
 ) {
   const { bubble, button, greeting, info, rule } = CELEBRATION_LAYOUT.newWalker;
   const greetingBottom =
@@ -184,14 +184,10 @@ export function newWalkerRows(
   const rowInk = inkRowsFromCapTop(body) * TEXT_SCALE;
   const infoBottom =
     infoLines === 0 ? ruleY + 1 : firstInfo + (infoLines - 1) * (rowInk + MODAL.rowGap) + rowInk;
-  const width =
-    ink === undefined
-      ? bubble.width
-      : Math.min(SCREEN_WIDTH - 2 * MODAL.margin, ink.content + 2 * MODAL.pad);
   const height = infoBottom + MODAL.pad - bubble.y;
-  const actionWidth = ink === undefined ? button.width : modalActionWidth(ink.action);
+  const actionWidth = actionInk === undefined ? button.width : modalActionWidth(actionInk);
   return {
-    bubble: { ...bubble, height, width, x: Math.round((SCREEN_WIDTH - width) / 2) },
+    bubble: { ...bubble, height },
     button: {
       ...button,
       width: actionWidth,
@@ -204,20 +200,20 @@ export function newWalkerRows(
     })),
     rule: {
       ...rule,
-      fromX: Math.round((SCREEN_WIDTH - width) / 2) + MODAL.pad,
-      toX: Math.round((SCREEN_WIDTH + width) / 2) - MODAL.pad - 1,
+      fromX: bubble.x + MODAL.pad,
+      toX: bubble.x + bubble.width - MODAL.pad - 1,
       y: ruleY,
     },
   };
 }
 
-// The earnings and action follow their actual ink and keep the celebratory walker above them.
-export function zoneDoneRows(body: FontMetrics, ink: { action: number; earnings: number }) {
+// The plate's height follows the earnings' font, the action its label's ink, and the
+// celebratory walker stays above them.
+export function zoneDoneRows(body: FontMetrics, actionInk: number) {
   const { zoneDone } = CELEBRATION_LAYOUT;
-  const width = Math.min(SCREEN_WIDTH - 2 * MODAL.margin, ink.earnings + 2 * MODAL.pad);
   const height = inkRowsFromCapTop(body) * TEXT_SCALE + 2 * MODAL.pad;
-  const plate = { ...zoneDone.plate, height, width, x: Math.round((SCREEN_WIDTH - width) / 2) };
-  const actionWidth = modalActionWidth(ink.action);
+  const plate = { ...zoneDone.plate, height };
+  const actionWidth = modalActionWidth(actionInk);
   return {
     button: {
       ...zoneDone.button,

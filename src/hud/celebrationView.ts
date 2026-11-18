@@ -120,10 +120,7 @@ function zoneDoneView(
   text: Extract<CelebrationText, { kind: "zoneDone" }>,
 ): ZoneCelebrationView {
   const line = text.earnings.map((part) => part.text).join("");
-  const rows = zoneDoneRows(measure.body, {
-    action: actionInk(measure, keyed, text.button),
-    earnings: measure.inkWidth("body", line),
-  });
+  const rows = zoneDoneRows(measure.body, actionInk(measure, keyed, text.button));
   // The amounts in forest, on one line centred on the screen.
   const earnings: DetailText = {
     align: "centre",
@@ -194,20 +191,12 @@ function newWalkerView(
 ): ZoneCelebrationView {
   const fitted = measure.fitGreeting(text.greeting);
   const { lines, style } = fitted;
-  const infoWidths = text.info.map(
-    (parts) =>
-      laidInfoLine(
-        (item) => (item.kind === "text" ? measure.inkWidth("body", item.text) : 16),
-        infoItems(parts),
-      ).width,
+  const rows = newWalkerRows(
+    measure.body,
+    text.info.length,
+    fitted,
+    actionInk(measure, keyed, text.button),
   );
-  const rows = newWalkerRows(measure.body, text.info.length, fitted, {
-    action: actionInk(measure, keyed, text.button),
-    content: Math.max(
-      Math.max(0, ...lines.map((line) => measure.inkWidth("body", line))),
-      ...infoWidths,
-    ),
-  });
   const { bubble } = rows;
   const tailSize = measure.art(TAIL_KEY);
   // The tail's place counts from the bubble's corner, so it overlaps the bubble's rim as drawn.

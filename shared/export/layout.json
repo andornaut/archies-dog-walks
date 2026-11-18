@@ -1348,8 +1348,8 @@
         },
         "bubble": {
           "height": 111,
-          "width": 328,
-          "x": 16,
+          "width": 264,
+          "x": 48,
           "y": 311
         },
         "button": {
@@ -1360,23 +1360,23 @@
         },
         "greeting": {
           "lines": 2,
-          "maxWidth": 296,
+          "maxWidth": 232,
           "top": 327
         },
         "info": {
           "iconDrop": 1,
           "iconGap": 4,
           "itemGap": 10,
-          "maxWidth": 296,
+          "maxWidth": 232,
           "y": [
             374,
             392
           ]
         },
         "rule": {
-          "fromX": 32,
+          "fromX": 64,
           "step": 3,
-          "toX": 327,
+          "toX": 295,
           "y": 369
         },
         "tail": {
@@ -1412,12 +1412,11 @@
           "x": 125,
           "y": 410
         },
-        "earningsInset": 8,
         "earningsY": 372,
         "plate": {
           "height": 46,
-          "width": 312,
-          "x": 24,
+          "width": 264,
+          "x": 48,
           "y": 356
         }
       }
@@ -2597,12 +2596,6 @@
         "titleExclusion": "hit",
         "x": 318,
         "y": 50
-      },
-      "detail": {
-        "height": 268,
-        "width": 312,
-        "x": 24,
-        "y": 140
       },
       "detailText": {
         "badgeY": 48,

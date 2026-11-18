@@ -8,6 +8,7 @@ import {
   BADGE_STRIP,
   badgeRowNames,
   badgeStripRows,
+  CELEBRATION_PANEL,
   celebrationTitle,
   earnedBadges,
   stripUnderClose,
@@ -19,13 +20,7 @@ import { screenArea } from "../input/outsideTap.ts";
 import { achievementLabel } from "../rules/achievements.ts";
 import { barTitleRoom } from "../ui/barTitle.ts";
 import { closeControl } from "../ui/closeControl.ts";
-import {
-  MODAL,
-  modalActionWidth,
-  modalPanelWidth,
-  modalTitleLayout,
-  modalTitleWidth,
-} from "../ui/modal/layout.ts";
+import { MODAL, modalActionWidth, modalTitleLayout } from "../ui/modal/layout.ts";
 import { cardTitleRow } from "../ui/modal/titleRow.ts";
 import { panelButton, panelTitle } from "../ui/modal/view.ts";
 import { labelInkWidth, pixelFontMetrics, withProbe } from "../ui/phaser/pixelText.ts";
@@ -76,19 +71,7 @@ export class CelebrationScene extends Scene {
     const buttonWidth = modalActionWidth(
       modalTextWidth(this, "title", [gameData.menuText.common.close]),
     );
-    const width = modalPanelWidth(
-      SCREEN.width - 2 * MODAL.margin,
-      Math.max(
-        buttonWidth + 2 * MODAL.pad,
-        modalTitleWidth(
-          modalTextWidth(this, "title", [celebrationTitle(gameData, achievements.length)]),
-        ),
-        modalTextWidth(this, "body", names) * Math.min(names.length, BADGE_STRIP.maxNamed) +
-          2 * MODAL.pad,
-        BADGE_STRIP.badgeSize * Math.min(names.length, BADGE_STRIP.perRow) + 2 * MODAL.pad,
-        (cheering.length - 1) * FACES.pitch + FACES.size + 2 * MODAL.pad,
-      ),
-    );
+    const { width } = CELEBRATION_PANEL;
     const slotWidth =
       (width - 2 * BADGE_STRIP.inset) / Math.min(achievements.length, BADGE_STRIP.perRow);
     const lineCounts = withProbe(this, BODY_TEXT, (probe) =>

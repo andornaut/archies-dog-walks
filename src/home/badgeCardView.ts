@@ -12,7 +12,7 @@ import { BADGE_STRIP, BADGE_TEXT_COLOURS, type BadgeView } from "./badgesView.ts
 import type { DetailArt, DetailMeasure, DetailText } from "./detailCardView.ts";
 import { MENU_TEXT_FIELDS } from "./menuText.ts";
 import type { PageFill } from "./shopPageView.ts";
-import { detailPanel, detailTextTops, STATS_LAYOUT } from "./statsLayout.ts";
+import { detailPanelHeight, detailTextTops, STATS_LAYOUT } from "./statsLayout.ts";
 
 // Every screen uses the same native badge card view and logical game-pixel geometry.
 
@@ -72,7 +72,7 @@ export function badgeCardView(
   );
   const fonts = { body: measure.body, title: measure.title };
   const panel = modalRect(dim, undefined, {
-    height: detailPanel(fonts, goal.length, line.length).height + DISMISS_FOOTER_SPACE,
+    height: detailPanelHeight(fonts, goal.length, line.length) + DISMISS_FOOTER_SPACE,
     width,
   });
   const tops = detailTextTops(fonts, goal.length);

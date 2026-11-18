@@ -33,13 +33,7 @@ import { noteRoomForControl, settingsLayout, type SettingsRowShape } from "../ho
 import { SHOP_TABS } from "../home/shop.ts";
 import { SHOP_LAYOUT, shopTabRects } from "../home/shopLayout.ts";
 import { STATS_LAYOUT, statsTabRects } from "../home/statsLayout.ts";
-import {
-  CELEBRATION_LAYOUT,
-  GREETING_FIT,
-  newWalkerRows,
-  ZONE_EARNINGS_FIT,
-  zoneDoneRows,
-} from "../hud/celebrationLayout.ts";
+import { CELEBRATION_LAYOUT, newWalkerRows, zoneDoneRows } from "../hud/celebrationLayout.ts";
 import { INLINE_FACE, inlineFaceBox } from "../hud/faceText.ts";
 import { hudLanes } from "../hud/hudLanes.ts";
 import {
@@ -189,15 +183,9 @@ export function layoutExport(
     body,
     2,
     { lines: ["", ""], style: { scale: 2 } },
-    {
-      action: titleInk(data.runText.newWalker.button),
-      content: GREETING_FIT.room,
-    },
+    titleInk(data.runText.newWalker.button),
   );
-  const zoneRows = zoneDoneRows(body, {
-    action: titleInk(data.runText.zoneDone.button),
-    earnings: ZONE_EARNINGS_FIT.room,
-  });
+  const zoneRows = zoneDoneRows(body, titleInk(data.runText.zoneDone.button));
   return {
     camera: {
       ...ROAD_CAMERA,

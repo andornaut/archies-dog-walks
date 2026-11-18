@@ -5,11 +5,14 @@ import { inkRowsFromCapTop } from "@andornaut/game-kit/runtime/text/bitmapFont";
 import { describe, expect, it } from "vitest";
 
 import { gameData } from "../data/index.ts";
+import { SCREEN_CONFIG } from "../data/screen.ts";
 import { scrollMax } from "../input/listScroll.ts";
 import { read } from "../rules/units.ts";
 import { bodyTextWidth } from "../testing/bodyFont.ts";
 import { fontFileMetrics, fontInk, gameFont, inkWidth, placedInk } from "../testing/fontInk.ts";
 import { veteranSave } from "../testing/saves.ts";
+import { DISMISS_FOOTER_SPACE } from "../ui/modal/dismissFooter.ts";
+import { MODAL, modalFamilyWidth } from "../ui/modal/layout.ts";
 import { modalTitleInk } from "../ui/modal/titleRole.ts";
 import { plainMarks } from "../ui/pixelFont.ts";
 import { TEXT_SCALE } from "../ui/textFit.ts";
@@ -20,8 +23,7 @@ import { MENU_TEXT_FIELDS } from "./menuText.ts";
 import { shopScrollbar } from "./shopLayout.ts";
 import {
   badgesBottom,
-  DETAIL_TEXT_WIDTH,
-  detailPanel,
+  detailPanelHeight,
   detailTextTops,
   DOG_STATS,
   earnedBand,
@@ -71,28 +73,32 @@ describe("a wall row", () => {
   );
 });
 
-// The open badge holds its name in the title font, its goal and its line at 2x, the line's
-// lowest ink inside the panel.
+// The open badge, a Large card, holds its name in the title font, its goal and its line at 2x,
+// the line's lowest ink inside the panel and the panel inside the screen's margins.
 describe("the open badge", () => {
-  const { detail, detailText } = STATS_LAYOUT;
+  const { detailText } = STATS_LAYOUT;
+  const card = modalFamilyWidth(SCREEN_CONFIG.width - 2 * MODAL.margin, "large");
+  const textRoom = card - detailText.x - detailText.textRight;
   const width = (line: string) => bodyTextWidth(2, plainMarks(line));
 
   it("holds every badge", () => {
     for (const badge of BADGES) {
       const title = { scale: 2 };
-      const room = detail.width - 2 * detailText.x;
+      const room = card - 2 * detailText.x;
       expect(inkWidth("font-title", title, badge.name.toUpperCase())).toBeLessThanOrEqual(room);
-      const goal = wrapWords(width, DETAIL_TEXT_WIDTH, badge.goal);
+      const goal = wrapWords(width, textRoom, badge.goal);
       const text = fillLine(MENU_TEXT_FIELDS.stats, words, "badgeLine", { line: badge.badgeLine });
-      const line = wrapWords(width, DETAIL_TEXT_WIDTH, text);
-      expect(Math.max(...[...goal, ...line].map(width))).toBeLessThanOrEqual(DETAIL_TEXT_WIDTH);
+      const line = wrapWords(width, textRoom, text);
+      expect(Math.max(...[...goal, ...line].map(width))).toBeLessThanOrEqual(textRoom);
       const fonts = { body: BODY, title: TITLE };
       const lineTop = detailTextTops(fonts, goal.length).line;
       const lastTop = lineTop + (line.length - 1) * BODY.lineHeight * 2;
       const inkBottom = lastTop + inkRowsFromCapTop(BODY) * 2;
-      const panel = detailPanel(fonts, goal.length, line.length);
-      expect(panel.height).toBe(inkBottom + detailText.foot + detailText.frame);
-      expect(panel.height).toBeLessThanOrEqual(detail.height);
+      const height = detailPanelHeight(fonts, goal.length, line.length);
+      expect(height).toBe(inkBottom + detailText.foot + detailText.frame);
+      expect(height + DISMISS_FOOTER_SPACE).toBeLessThanOrEqual(
+        SCREEN_CONFIG.height - 2 * MODAL.margin,
+      );
     }
   });
 });

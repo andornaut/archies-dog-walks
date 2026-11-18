@@ -14,6 +14,7 @@ import {
   badgeStrip,
   CELEBRATION_PANEL,
   celebrationTitle,
+  panelBadgeStrip,
 } from "../home/badgesView.ts";
 import {
   breakdownLabelRoom,
@@ -640,7 +641,12 @@ export function textRoleCases(): TextRoleCase[] {
     width: END_LAYOUT.badges.width - 8,
     x: END_LAYOUT.badges.x + 4,
   };
-  const badgeSlot = defined(badgeStrip(badgeLayout, 1, BADGE_STRIP.maxNamed).slots[0]).width;
+  // The narrower of the end screen's and the celebration's named slots.
+  const celebration = { ...CELEBRATION_PANEL, height: CELEBRATION_PANEL.badgesHeight, y: 0 };
+  const badgeSlot = Math.min(
+    defined(badgeStrip(badgeLayout, 1, BADGE_STRIP.maxNamed).slots[0]).width,
+    defined(panelBadgeStrip(celebration, 1, BADGE_STRIP.maxNamed).slots[0]).width,
+  );
   const { newWalker, zoneDone } = gameData.runText;
   const { settings } = gameData.menuText;
   return [

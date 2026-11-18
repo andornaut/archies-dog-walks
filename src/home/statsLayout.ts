@@ -43,15 +43,12 @@ const ROWS = {
 export const STATS_LAYOUT = {
   // The close control, in the card's corner.
   close: SHOP_LAYOUT.close,
-  // The badge tapped open, over the wall, at most height tall: detailPanel sizes it. The end
-  // screen opens the same card.
-  detail: STATS.detail,
-  // In the open badge, from its top: the badge's centre at badgeY, the name's capitals at nameY,
-  // the status's LABEL_HELP_GAP clear rows under the title font's lowest ink (helpCapDy) and the
-  // goal's goalDy under the status's, then the goal and the badge's line at 2x, centred and
-  // wrapped between x in from its left edge and textRight in from its right, a line of the body
-  // font apart and gap between them; foot rows of cream under the line's lowest ink, then the
-  // ui-panel's frame, frame rows deep, end the panel.
+  // In the open badge, which the end screen opens too, from its top: the badge's centre at
+  // badgeY, the name's capitals at nameY, the status's LABEL_HELP_GAP clear rows under the title
+  // font's lowest ink (helpCapDy) and the goal's goalDy under the status's, then the goal and the
+  // badge's line at 2x, centred and wrapped between x in from its left edge and textRight in from
+  // its right, a line of the body font apart and gap between them; foot rows of cream under the
+  // line's lowest ink, then the ui-panel's frame, frame rows deep, end the panel.
   detailText: {
     badgeY: STATS.detailText.badgeY,
     foot: MODAL.pad - STATS.detailText.frame,
@@ -127,10 +124,6 @@ export const STATS_LAYOUT = {
   },
 } as const;
 
-// How wide the open badge's goal and line may be.
-export const DETAIL_TEXT_WIDTH =
-  STATS_LAYOUT.detail.width - STATS_LAYOUT.detailText.x - STATS_LAYOUT.detailText.textRight;
-
 // The fonts the open badge's text is set in: its name in title, the rest in body.
 interface BadgeDetailFonts {
   readonly body: FontMetrics;
@@ -149,13 +142,17 @@ export function detailTextTops(
   return { goal, line: goal + goalLines * fonts.body.lineHeight * 2 + gap, status };
 }
 
-// The open badge's panel, its frame detailText.foot under its line's lowest ink, under a goal
-// goalLines lines long and a line lineLines lines long, all at 2x.
-export function detailPanel(fonts: BadgeDetailFonts, goalLines: number, lineLines: number): Rect {
-  const { detail, detailText } = STATS_LAYOUT;
+// The open badge's content height, its frame detailText.foot under its line's lowest ink, under
+// a goal goalLines lines long and a line lineLines lines long, all at 2x.
+export function detailPanelHeight(
+  fonts: BadgeDetailFonts,
+  goalLines: number,
+  lineLines: number,
+): number {
+  const { detailText } = STATS_LAYOUT;
   const line = detailTextTops(fonts, goalLines).line;
   const inkBottom = line + inkRowsOfLines(fonts.body, lineLines) * 2;
-  return { ...detail, height: inkBottom + detailText.foot + detailText.frame };
+  return inkBottom + detailText.foot + detailText.frame;
 }
 
 // A tab's view, its mask, and where its values' ink ends, by whether it scrolls: as the shop's

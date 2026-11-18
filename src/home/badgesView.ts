@@ -3,7 +3,8 @@ import type { Rect } from "@andornaut/game-kit/runtime/rect";
 import { type TextFitStyle } from "@andornaut/game-kit/runtime/text/textFit";
 
 import { badgeKey } from "../assets/spriteKeys.ts";
-import { BADGE_CELEBRATION, BADGE_NAME_PAD, BADGE_STRIP } from "../data/layout.ts";
+import { BADGE_NAME_PAD, BADGE_STRIP } from "../data/layout.ts";
+import { SCREEN_CONFIG } from "../data/screen.ts";
 import type {
   Achievement,
   AchievementCondition,
@@ -21,7 +22,7 @@ import {
 } from "../rules/achievements.ts";
 import type { SaveDocument } from "../save/schema.ts";
 import { closeControl } from "../ui/closeControl.ts";
-import { MODAL } from "../ui/modal/layout.ts";
+import { MODAL, modalFamilyWidth } from "../ui/modal/layout.ts";
 import { GREYED } from "../ui/selection.ts";
 import { TEXT_SCALE } from "../ui/textFit.ts";
 import { dollarsToCents } from "../units.ts";
@@ -344,15 +345,18 @@ export function stripUnderClose(panel: Rect, titleExtraHeight = 0): Rect {
   return { ...panel, height: panel.height - shift, y: panel.y + shift };
 }
 
+const CELEBRATION_WIDTH = modalFamilyWidth(SCREEN_CONFIG.width - 2 * MODAL.margin, "large");
+
+// The new-badges celebration's panel: the Large family centred on the screen, its badges' rows
+// at most badgesHeight tall.
 export const CELEBRATION_PANEL = {
   badgesHeight:
     MODAL.header +
     BADGE_STRIP.badgeSize +
     (BADGE_STRIP.maxRows - 1) * BADGE_STRIP.rowPitch +
     MODAL.pad,
-  facesHeight: BADGE_CELEBRATION.facesHeight,
-  width: BADGE_CELEBRATION.width,
-  x: BADGE_CELEBRATION.x,
+  width: CELEBRATION_WIDTH,
+  x: Math.round((SCREEN_CONFIG.width - CELEBRATION_WIDTH) / 2),
 } as const;
 
 // The capitals' top of each of a name's lines lines, under a strip whose panel's top is top:

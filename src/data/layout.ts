@@ -461,8 +461,6 @@ export const CELEBRATIONS = {
   zoneDone: {
     // The button's top under the plate's top.
     buttonDy: 40,
-    // The earnings' inset from the plate's sides.
-    earningsInset: 8,
     // The earnings' capitals' top under the plate's top.
     earningsY: 7,
     // The walker's feet row.
@@ -738,9 +736,6 @@ export const BADGE_STRIP = {
 // A badge strip's name's inset from its slot's sides.
 export const BADGE_NAME_PAD = 2;
 
-// The new-badges celebration's panel: the faces row's height, the panel's width and left edge.
-export const BADGE_CELEBRATION = { facesHeight: 44, width: 344, x: 8 } as const;
-
 // Pages
 
 // The Pet shop page, which the Logbook wears too.
@@ -794,8 +789,6 @@ export const SHOP_PAGE = {
 export const LOGBOOK_PAGE = {
   // The rows between the Dogs tab's blocks and the Walks tab's sections.
   blockGap: 12,
-  // The open badge's card.
-  detail: { height: 268, width: 312, x: 24, y: 140 } satisfies Rect,
   // In the open badge, from its top.
   detailText: {
     // The badge's centre.

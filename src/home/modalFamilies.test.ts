@@ -3,6 +3,13 @@ import { expect, it } from "vitest";
 
 import { gameData } from "../data/index.ts";
 import { SCREEN_CONFIG, SCREEN_LAYOUT } from "../data/screen.ts";
+import {
+  GREETING_FIT,
+  newWalkerRows,
+  ordinaryBadgeModalLayout,
+  ZONE_EARNINGS_FIT,
+  zoneDoneRows,
+} from "../hud/celebrationLayout.ts";
 import { fontFileMetrics, gameFont, inkWidth } from "../testing/fontInk.ts";
 import { newPlayerSave, veteranSave } from "../testing/saves.ts";
 import { barTitleRoom } from "../ui/barTitle.ts";
@@ -12,6 +19,7 @@ import { modalTitleInk } from "../ui/modal/titleRole.ts";
 import { cardTitleRow } from "../ui/modal/titleRow.ts";
 import { navigationMenuWidth } from "../ui/navigationMenu.ts";
 import { cents } from "../units.ts";
+import { CELEBRATION_PANEL } from "./badgesView.ts";
 import { dogDetail, gearDetail } from "./detail.ts";
 import { detailCardView, type DetailMeasure } from "./detailCardView.ts";
 import { updateModalLayout } from "./homeLayout.ts";
@@ -222,4 +230,25 @@ it("reserves reflowed Shop descriptions and messages before following content", 
   expect(message.extraHeight).toBe(pitch);
   expect(message.capTops[1]! - message.capTops[0]!).toBe(pitch);
   expect(SHOP_MESSAGE_FIT.room).toBe(message.plate.width - 2 * SHOP_LAYOUT.message.textDx);
+});
+
+it("selects Large new badges and a Medium new walker's bubble and earnings plate", () => {
+  const badges = ordinaryBadgeModalLayout(SCREEN_LAYOUT.screen, {
+    buttonWidth: 116,
+    height: CELEBRATION_PANEL.badgesHeight,
+    width: CELEBRATION_PANEL.width,
+  }).panel;
+  expect(badges.width).toBe(328);
+  expect(badges.x).toBe(CELEBRATION_PANEL.x);
+  expect(badges.x).toBe(MODAL.margin);
+  const greeting = { lines: ["", ""], style: GREETING_FIT.style };
+  for (const panel of [
+    newWalkerRows(fonts.body, 2, greeting, 100).bubble,
+    zoneDoneRows(fonts.body, 100).plate,
+  ]) {
+    expect(panel.width).toBe(264);
+    expect(panel.x).toBe((SCREEN_CONFIG.width - 264) / 2);
+  }
+  expect(GREETING_FIT.room).toBe(264 - 2 * MODAL.pad);
+  expect(ZONE_EARNINGS_FIT.room).toBe(264 - 2 * MODAL.pad);
 });
