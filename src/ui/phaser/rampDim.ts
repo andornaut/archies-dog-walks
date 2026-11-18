@@ -1,6 +1,7 @@
 import type { Rect } from "@andornaut/game-kit/runtime/rect";
 import { Core, type Game, type GameObjects, type Scene, Scenes } from "phaser";
 
+import { SCREEN_LAYOUT } from "../../data/screen.ts";
 import { MODAL_DARKNESS } from "../dimArt.ts";
 import { shownWorldRect } from "../worldFit.ts";
 import { fitWorldCamera } from "./worldCamera.ts";
@@ -29,7 +30,7 @@ function without(rect: Rect, over: Rect): Rect[] {
   ].filter((part) => part.width > 0 && part.height > 0);
 }
 
-// Original world colours under modal regions receive one neutral-black layer at existing strength.
+// Original world colours under a modal receive one neutral-black layer at existing strength.
 export function addModalShade(scene: Scene, rect: Rect): GameObjects.Graphics {
   let requests = shades.get(scene.game);
   if (requests === undefined) {
@@ -70,14 +71,11 @@ export function addModalShade(scene: Scene, rect: Rect): GameObjects.Graphics {
   return graphic;
 }
 
-// Shade only the visible logical world region; native modal paint stays in its separate layer.
-export function addRampDim(
-  scene: Scene,
-  rect: Rect,
-  onDrawn?: () => void,
-): readonly GameObjects.Graphics[] {
+// A modal shades the whole visible logical game frame, the world under the top bar and HUD
+// included; native modal paint stays in its separate layer.
+export function addRampDim(scene: Scene, onDrawn?: () => void): readonly GameObjects.Graphics[] {
   fitWorldCamera(scene, scene.cameras.main);
-  const shown = shownWorldRect(scene.cameras.main, rect);
+  const shown = shownWorldRect(scene.cameras.main, SCREEN_LAYOUT.screen);
   if (onDrawn !== undefined) {
     onceBeforeRender(scene, onDrawn);
   }

@@ -21,7 +21,10 @@ import { fillPart } from "./shopPage.ts";
 // places the canvas draws them (badgeCardView). It takes no presses: a press anywhere goes
 // through to the canvas, whose scene closes it.
 
-export interface DomBadgeCardInput extends Omit<DomDetailCardInput, "close" | "dismiss" | "view"> {
+export interface DomBadgeCardInput extends Omit<
+  DomDetailCardInput,
+  "backgroundCancel" | "close" | "dismiss" | "view"
+> {
   // Calls step before every frame the game draws, until the returned stop is called.
   readonly dismiss?: () => void;
   readonly everyFrame: (step: () => void) => () => void;
@@ -142,7 +145,9 @@ export function showBadgeCard(layer: UiLayer, input: DomBadgeCardInput): DomQues
   ];
   const shown = showQuestionPanel(layer, {
     close: input.dismiss,
-    ...(input.dismiss === undefined ? {} : { dismiss: { area: view.dim, press: input.dismiss } }),
+    ...(input.dismiss === undefined
+      ? {}
+      : { backgroundCancel: input.dismiss, dismiss: input.dismiss }),
     closeLabel: input.closeLabel,
     describedBy: texts.id,
     fonts: input.fonts,

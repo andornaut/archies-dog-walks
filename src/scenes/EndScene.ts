@@ -395,8 +395,11 @@ export class EndScene extends Scene {
       if ((this.htmlCard ?? this.html)?.accepts() !== true) {
         return;
       }
+      // M is the top bar's Sound, which an open card leaves dimmed and inactive.
       if (!event.repeat && isMuteKey(event.code)) {
-        this.game.events.emit(BAR_MUTED_EVENT, toggleMuted(this));
+        if (this.card === undefined) {
+          this.game.events.emit(BAR_MUTED_EVENT, toggleMuted(this));
+        }
         return;
       }
       if (!event.repeat && (isConfirmKey(event.code) || event.code === "Escape")) {
@@ -423,7 +426,7 @@ export class EndScene extends Scene {
       reduced: this.reduced,
     });
     this.card = this.add.container(0, 0).setDepth(CARD_DEPTH);
-    this.htmlCard = addHtmlBadgeCard(this, SCREEN_LAYOUT.screen, view, () => this.closeCard());
+    this.htmlCard = addHtmlBadgeCard(this, view, () => this.closeCard());
   }
 
   private closeCard(): void {

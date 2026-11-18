@@ -33,11 +33,12 @@ import {
   stepScroll,
   wheelScroll,
 } from "../input/listScroll.ts";
+import { screenArea } from "../input/outsideTap.ts";
 import { loadSheet } from "../ui/dom/sheetFrames.ts";
 import { rectIndexAt } from "../ui/grid.ts";
 import { badgeCard } from "./badges.ts";
 import { pillColours } from "./effectNameColours.ts";
-import { listenHomeBar, sceneRegionOutside } from "./homeBarPress.ts";
+import { clearOnHomePageOpening } from "./homeBarPress.ts";
 import { canvasDetailMeasure } from "./modalMeasure.ts";
 import { mountNativeOverlay } from "./nativeOverlayReady.ts";
 import { closeOverlay, listenDismiss, nativeSceneAccepts, type OverlayData } from "./overlay.ts";
@@ -121,11 +122,11 @@ export class StatsScene extends Scene {
     this.events.once("shutdown", () => document.removeEventListener("keydown", onKey, true));
     listenDismiss(
       this,
-      sceneRegionOutside(this, "home", 0, [PANEL]),
+      screenArea([PANEL]),
       () => this.close(),
       () => this.back(),
     );
-    listenHomeBar(this, () => this.close());
+    clearOnHomePageOpening(this, () => this.close());
     mountNativeOverlay(this, () => {
       this.render();
       return this.page !== undefined;
@@ -343,10 +344,7 @@ export class StatsScene extends Scene {
     this.htmlCard = keepPanel(
       this.htmlCard,
       card === undefined ? undefined : JSON.stringify(card),
-      () =>
-        card === undefined
-          ? undefined
-          : addHtmlBadgeCard(this, overlayRegion("home"), card, () => this.back()),
+      () => (card === undefined ? undefined : addHtmlBadgeCard(this, card, () => this.back())),
     );
   }
 

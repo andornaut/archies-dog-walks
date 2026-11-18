@@ -90,31 +90,21 @@ const WALK_BASE: Readonly<Record<WalkTarget, string | undefined>> = {
   upgradeIcon: "explainOnTap",
 };
 
-// What explains itself with nothing open, and nothing under a card or overlay.
-const EXPLAINS_NOTHING = {
+// Under any card or overlay every walk target, the walk bar's buttons included, is inactive.
+const INACTIVE: Readonly<Record<WalkTarget, undefined>> = {
+  cashWell: undefined,
   dogCard: undefined,
   gearIcon: undefined,
+  mute: undefined,
+  pause: undefined,
   perkIcon: undefined,
   upgradeIcon: undefined,
-} as const;
-
-const WALK_CHANGES: Readonly<Record<string, Partial<Record<WalkTarget, string | undefined>>>> = {
-  "a card or the zone celebration": EXPLAINS_NOTHING,
-  help: {
-    dogCard: undefined,
-    gearIcon: undefined,
-    mute: undefined,
-    pause: undefined,
-    perkIcon: undefined,
-    upgradeIcon: undefined,
-  },
-  nothing: {},
-  "the Home question over a card": { ...EXPLAINS_NOTHING, pause: "resume" },
-  "the pause menu": { ...EXPLAINS_NOTHING, pause: "resume" },
-  "the pause menu over a card": { ...EXPLAINS_NOTHING, pause: "resume" },
-  "the settings": { ...EXPLAINS_NOTHING, pause: "resume" },
-  "the settings over a card": { ...EXPLAINS_NOTHING, pause: "resume" },
 };
+
+const WALK_CHANGES: Readonly<Record<string, Partial<Record<WalkTarget, string | undefined>>>> =
+  Object.fromEntries(
+    WALK_MODALS.map(([modal]) => [modal, modal === "nothing" ? {} : INACTIVE] as const),
+  );
 
 describe("the walk bar's and dog cards' targets under each overlay", () => {
   const rows = WALK_MODALS.flatMap(([modal, pause]) =>
@@ -129,19 +119,17 @@ describe("the walk bar's and dog cards' targets under each overlay", () => {
   });
 });
 
-// All home overlays retain the same mute and menu targets.
+// A live home bar keeps its mute, menu and exit targets.
 const bankWell = { x: HOME_LAYOUT.topBar.well.x + 1, y: HOME_LAYOUT.topBar.mid };
 
-it("routes home controls consistently through ordinary overlays and an open menu", () => {
-  for (const menu of [false, true]) {
-    for (const [id, { hit }] of homeBarButtons(true)) {
-      const p = centre(hit);
-      const button = homeBarButtonAt(true, p.x, p.y);
-      expect(button).toBe(id);
-      expect(button === undefined ? undefined : homeBarAction({ menu }, button)).toBe(
-        id === "mute" || id === "exit" ? id : menu ? "close" : "openMenu",
-      );
-    }
+it("routes each live home control to its own action", () => {
+  for (const [id, { hit }] of homeBarButtons(true)) {
+    const p = centre(hit);
+    const button = homeBarButtonAt(true, p.x, p.y);
+    expect(button).toBe(id);
+    expect(button === undefined ? undefined : homeBarAction(button)).toBe(
+      id === "mute" || id === "exit" ? id : "openMenu",
+    );
   }
   expect(homeBarButtonAt(true, bankWell.x, bankWell.y)).toBeUndefined();
 });

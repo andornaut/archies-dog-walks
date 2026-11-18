@@ -6,7 +6,7 @@ import { gameData } from "../../data/index.ts";
 import type { LogbookView } from "../../home/logbookView.ts";
 import { shopPageView } from "../../home/shopPageView.ts";
 import { STATS_TABS } from "../../home/statsLayout.ts";
-import { FakeDocument, type FakeElement, fakeLayer } from "../../testing/fakeDom.ts";
+import { FakeDocument, type FakeElement, fakeLayer, layerViews } from "../../testing/fakeDom.ts";
 import { fontFileMetrics, gameFont } from "../../testing/fontInk.ts";
 import { deviceY, domScale } from "../../ui/domScale.ts";
 import { modalTitleInk } from "../../ui/modal/titleRole.ts";
@@ -100,7 +100,7 @@ function nativeFixture() {
     toGame: (point) => point,
     view,
   });
-  const root = element.children[0]!;
+  const root = layerViews(element)[0]!;
   return {
     activate,
     cancel,

@@ -51,7 +51,7 @@ export class ZoneCelebrationScene extends Scene {
   create(data: ZoneCelebrationSceneData): void {
     const reduced = currentSettings(this).reducedMotion;
     const guard = guardSceneInput(0, this);
-    addRampDim(this, LAYOUT.dim);
+    addRampDim(this);
     if (!reduced) {
       this.dropConfetti();
     }

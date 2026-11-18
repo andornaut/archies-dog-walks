@@ -131,38 +131,30 @@ describe("native top section integration", () => {
       via: "keyboard",
     });
   });
-  it("dims only passive bar paint while foreground actions retain their native admission", async () => {
+  it("dims the whole bar under a modal, its buttons included, and takes no press there", async () => {
     const { buttons, click, layer, press, reveal, view } = fixture("click", 6);
     const root = view.element as unknown as FakeElement;
     view.setAmount("123", "123");
     view.setEffectCount(2);
     reveal(true);
     await Promise.resolve();
-    const passive = view.underlayElement as unknown as FakeElement;
-    expect(root.contains(passive)).toBe(true);
-    expect(passive.all().some((node) => node.textContent === "123")).toBe(true);
-    expect(passive.children.length).toBeGreaterThan(6);
-    for (const button of buttons) {
-      expect(passive.contains(button)).toBe(false);
-    }
-    const foreground = root.children.filter((node) => node !== passive);
-    expect(foreground).toHaveLength(4);
-    expect(
-      foreground.every((node) => node.tagName === "button" || node.style.width === "29px"),
-    ).toBe(true);
-    const stop = followModalUnderlay(layer.input, view.underlayElement);
+    expect(buttons.every((button) => root.contains(button))).toBe(true);
+    const stop = followModalUnderlay(layer.input, view.element);
     const modal = layer.input.open();
-    expect(passive.style.filter).toBe("brightness(0.28)");
+    expect(root.style.filter).toBe("brightness(0.28)");
+    expect(root.inert).toBe(true);
+    expect(root.getAttribute("aria-hidden")).toBe("true");
+    click();
+    expect(press).not.toHaveBeenCalled();
+    const nested = layer.input.open();
+    expect(root.style.filter).toBe("brightness(0.28)");
+    nested.close();
+    expect(root.style.filter).toBe("brightness(0.28)");
+    modal.close();
     expect(root.style.filter ?? "").toBe("");
-    expect(passive.inert).toBe(true);
+    expect(root.inert).toBe(false);
     click();
     expect(press).toHaveBeenCalledTimes(1);
-    const nested = layer.input.open();
-    expect(passive.style.filter).toBe("brightness(0.28)");
-    nested.close();
-    expect(passive.style.filter).toBe("brightness(0.28)");
-    modal.close();
-    expect(passive.style.filter ?? "").toBe("");
     stop();
     view.dispose();
   });

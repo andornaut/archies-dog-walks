@@ -159,7 +159,11 @@ export function mountLoadingError(
         root.hidden = false;
         place();
         scope = layer.input.open();
-        close = modal.open({ focus: button }, root);
+        // A strict dialog with no close: Retry is the only way on, and no key or tap dismisses it.
+        close = modal.open(
+          { ...(panel.hidden ? {} : { focus: button }), isolation: "dialog" },
+          root,
+        );
       }
     },
   };

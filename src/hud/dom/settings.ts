@@ -417,6 +417,7 @@ function showSteps(
     { element: text.element, place: (scale) => text.place(scale, ORIGIN, steps.steps) },
   ];
   return showQuestionPanel(layer, {
+    backgroundCancel: input.closeSteps,
     close: input.closeSteps,
     closeLabel: input.closeLabel,
     fonts: input.fonts,
@@ -502,6 +503,7 @@ export function showSettings(layer: UiLayer, input: DomSettingsInput): DomSettin
     },
   ];
   const panel = showQuestionPanel(layer, {
+    backgroundCancel: input.close,
     close: input.close,
     closeLabel: input.closeLabel,
     fonts: input.fonts,

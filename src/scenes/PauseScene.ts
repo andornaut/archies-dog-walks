@@ -2,9 +2,10 @@ import { Core, Scene, Scenes } from "phaser";
 
 import { gameData } from "../data/index.ts";
 import { SCREEN_LAYOUT } from "../data/screen.ts";
-import { overlayRegion, regionOutside } from "../home/homeBar.ts";
+import { overlayRegion } from "../home/homeBar.ts";
 import type { HomeNoteLine } from "../hud/homeQuestion.ts";
 import { HOME_QUESTION_ANSWERS, homeQuestionLayout, pauseMenuLayout } from "../hud/pauseMenu.ts";
+import { screenArea } from "../input/outsideTap.ts";
 import { WALKER_SILHOUETTES } from "../layout/packFormation.ts";
 import { walkerFootY } from "../layout/screenLayout.ts";
 import { MODAL } from "../ui/modal/layout.ts";
@@ -60,9 +61,9 @@ const NOTE_COLOURS: Readonly<Record<HomeNoteLine["kind"], number>> = {
   zonesLeft: PALETTE.plum,
 };
 
-// The pause menu over the dimmed band and road: help, settings, Back to title or Resume; or the
-// Home button's question, keep walking or end the walk. The HUD keeps running under it, so the top
-// bar's buttons and their keys (P, Escape and M) stay with it.
+// The pause menu over the dimmed walk, HUD and walk bar: help, settings, Back to title or Resume;
+// or the Home button's question, keep walking or end the walk. The HUD keeps running under it,
+// dimmed and inactive; its pause keys (P and Escape) resume.
 export class PauseScene extends Scene {
   constructor() {
     super(SCENE_KEYS.pause);
@@ -120,6 +121,7 @@ export class PauseScene extends Scene {
       data.mode === "homeQuestion"
         ? {
             avoid,
+            backgroundCancel: onResume,
             close: onResume,
             entries,
             layout: homeQuestionLayout,
@@ -129,6 +131,7 @@ export class PauseScene extends Scene {
           }
         : {
             avoid,
+            backgroundCancel: onResume,
             close: onResume,
             entries,
             layout: pauseMenuLayout,
@@ -148,11 +151,11 @@ export class PauseScene extends Scene {
     if (covered === undefined) {
       return false;
     }
-    addRampDim(this, walkView);
+    addRampDim(this);
     // The close control and a tap anywhere around the panel resume, as Resume and Keep walking
-    // do, the walk bar's empty area and the dog cards included, though they are not dimmed. The
-    // walk bar's buttons keep their own taps.
-    const outside = regionOutside("walk", false, data.debuffs, covered);
+    // do: the panel's backdrop takes the game frame, the walk bar and dog cards included, and
+    // this takes the page beside the game.
+    const outside = screenArea(covered);
     listenOutsideTap(this, () => outside, onResume);
     const overlay = data.mode === "menu" ? data.overlay : undefined;
     if (overlay !== undefined) {

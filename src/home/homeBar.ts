@@ -2,7 +2,6 @@ import type { OutsideArea } from "@andornaut/game-kit/runtime/input/outsideTap";
 import { containsPoint, type Rect } from "@andornaut/game-kit/runtime/rect";
 
 import { SCREEN_LAYOUT } from "../data/screen.ts";
-import { topBarButtonHits } from "../hud/topBar.ts";
 import { screenArea } from "../input/outsideTap.ts";
 import { HOME_LAYOUT, type HomeBarButton, homeBarButtons } from "./homeLayout.ts";
 
@@ -10,8 +9,8 @@ import { HOME_LAYOUT, type HomeBarButton, homeBarButtons } from "./homeLayout.ts
 // walk.
 export type OverlayRegion = "home" | "walk";
 
-// What an overlay dims: everything under the top bar, which stays lit with its buttons working,
-// as the walk's pause menu leaves the walk bar lit.
+// The safe region an overlay's panel sits in: everything under the top bar on a home page, or the
+// walk view. A modal dims the whole game frame, the top bar included.
 export function overlayRegion(region: OverlayRegion): Rect {
   if (region === "walk") {
     return SCREEN_LAYOUT.walkView;
@@ -21,22 +20,11 @@ export function overlayRegion(region: OverlayRegion): Rect {
   return { height: screen.y + screen.height - top, width: screen.width, x: screen.x, y: top };
 }
 
-export type HomeBarAction = "close" | "exit" | "mute" | "openMenu";
+export type HomeBarAction = "exit" | "mute" | "openMenu";
 
-// The shared home controls keep their full targets under every overlay.
-function homeBarHits(exit: boolean): Rect[] {
-  return homeBarButtons(exit).map(([, { hit }]) => hit);
-}
-
-// Outside dismissal excludes the visible controls and any debuff rows owned by the walk.
-export function regionOutside(
-  region: OverlayRegion,
-  exit: boolean,
-  debuffs: number,
-  covered: readonly Rect[],
-): OutsideArea {
-  const bar = region === "home" ? homeBarHits(exit) : Object.values(topBarButtonHits(debuffs));
-  return screenArea([...covered, ...bar]);
+// A nonmodal page's outside dismissal excludes the live home bar's controls.
+export function regionOutside(exit: boolean, covered: readonly Rect[]): OutsideArea {
+  return screenArea([...covered, ...homeBarButtons(exit).map(([, { hit }]) => hit)]);
 }
 
 // Input reads the same control positions as the shared top section.
@@ -44,12 +32,9 @@ export function homeBarButtonAt(exit: boolean, x: number, y: number): HomeBarBut
   return homeBarButtons(exit).find(([, { hit }]) => containsPoint(hit, x, y))?.[0];
 }
 
-// Mute remains independent while the navigation entry toggles its menu.
-export function homeBarAction(
-  open: { readonly menu: boolean },
-  button: HomeBarButton,
-): HomeBarAction {
-  return button === "mute" || button === "exit" ? button : open.menu ? "close" : "openMenu";
+// What a live home bar button does; under a modal the bar takes no presses.
+export function homeBarAction(button: HomeBarButton): HomeBarAction {
+  return button === "mute" || button === "exit" ? button : "openMenu";
 }
 
 // What back does on the bare start screen, which hears it only with no page or question over

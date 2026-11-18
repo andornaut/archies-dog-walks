@@ -8,21 +8,19 @@ import { nativeModalShade } from "./nativeModalShade.ts";
 
 vi.mock("../ui/phaser/rampDim.ts", () => ({ addRampDim: vi.fn() }));
 
-const area = { height: 442, width: 360, x: 0, y: 40 };
-
 function fixture() {
   const events = new EventEmitter();
   const scene = { events } as unknown as Scene;
   const graphic = { destroy: vi.fn(), setVisible: vi.fn() };
   vi.mocked(addRampDim).mockReturnValue([graphic] as unknown as ReturnType<typeof addRampDim>);
   const panel = { accepts: () => true, destroy: vi.fn(), setShown: vi.fn() };
-  return { events, graphic, panel, scene, view: nativeModalShade(scene, area, panel) };
+  return { events, graphic, panel, scene, view: nativeModalShade(scene, panel) };
 }
 
 describe("native modal world shade", () => {
-  it("uses the supplied world region and follows panel visibility without changing input", () => {
+  it("shades the game frame and follows panel visibility without changing input", () => {
     const f = fixture();
-    expect(addRampDim).toHaveBeenLastCalledWith(f.scene, area);
+    expect(addRampDim).toHaveBeenLastCalledWith(f.scene);
     expect(f.view.accepts).toBe(f.panel.accepts);
     f.view.setShown(false);
     expect(f.graphic.setVisible).toHaveBeenLastCalledWith(false);

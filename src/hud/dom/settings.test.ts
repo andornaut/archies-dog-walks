@@ -10,7 +10,7 @@ import {
   settingsView,
 } from "../../home/settingsView.ts";
 import { DEFAULT_SETTINGS } from "../../save/settings.ts";
-import { FakeDocument, fakeLayer } from "../../testing/fakeDom.ts";
+import { FakeDocument, fakeLayer, layerViews } from "../../testing/fakeDom.ts";
 import { fontFileMetrics, fontInk, gameFont } from "../../testing/fontInk.ts";
 import { artPixel, domScale, gridRect } from "../../ui/domScale.ts";
 import { modalTitleInk } from "../../ui/modal/titleRole.ts";
@@ -100,8 +100,8 @@ it("cancels a carried settings drag when install steps take ownership and restor
   row.fire("pointerdown", event);
   expect(slide.start).toHaveBeenCalledOnce();
   shown.update(view(true), null);
-  expect(element.children[0]?.hidden).toBe(false);
-  expect(element.children[0]?.inert).toBe(true);
+  expect(layerViews(element)[0]?.hidden).toBe(false);
+  expect(layerViews(element)[0]?.inert).toBe(true);
   expect(slide.end).toHaveBeenCalledExactlyOnceWith(true);
   doc.fire("pointermove", { ...event, clientX: 30, type: "pointermove" } as typeof event);
   doc.fire("pointerup", { ...event, type: "pointerup" } as typeof event);
@@ -119,7 +119,7 @@ it("cancels a carried settings drag when install steps take ownership and restor
 
 it("cancels a Settings touch across hiding and restores its switch, X and Close actions once", () => {
   const { close, doc, element, layer, press, shown } = fixture();
-  const root = element.children[0]!;
+  const root = layerViews(element)[0]!;
   const row = element.all().find((part) => part.getAttribute("role") === "switch")!;
   Object.assign(row, { closest: (selector: string) => (selector === ".adw-row" ? row : null) });
   const action = vi.fn();

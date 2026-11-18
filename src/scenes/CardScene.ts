@@ -77,7 +77,7 @@ export class CardScene extends Scene {
       showAsPicture(this, data.picture);
     }
     this.drawn = data.picture === undefined ? guardScreenInput(this).drawn : undefined;
-    addRampDim(this, SCREEN_LAYOUT.walkView);
+    addRampDim(this);
     mountNativeOverlay(this, () => this.mount(data));
     if (data.picture !== undefined) {
       return;

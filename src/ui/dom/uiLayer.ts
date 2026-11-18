@@ -18,7 +18,10 @@ import {
   type Reveal,
   revealWhenDecoded,
 } from "@andornaut/game-kit/runtime/web/ui/dom/imageReady";
-import { createModalLayer, type ModalLayer } from "@andornaut/game-kit/runtime/web/ui/dom/modalLayer";
+import {
+  createModalLayer,
+  type ModalLayer,
+} from "@andornaut/game-kit/runtime/web/ui/dom/modalLayer";
 import buttonSkinManifest from "virtual:adw-button-skin";
 
 import { artUrl } from "../../assets/artFiles.ts";

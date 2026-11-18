@@ -34,10 +34,10 @@ import { bindPanelPress, createPanelButton } from "./panelButton.ts";
 // The pause menu, each question (the Home question, Quit?) and each modal card (the update
 // notices) in HTML over the canvas: the panel questionPanelView or modalCardView lays out, drawn
 // in the #ui layer at the places the canvas would draw it, as a dialog. A press on its parts is
-// its own (Phaser never hears it); everywhere else presses go through to the canvas, where the
-// top bar's buttons keep working and the scene's outside tap closes it. Number keys press a
-// question's buttons, Tab and Shift+Tab keep focus among its buttons and close control, and Enter
-// or Space presses the focused one.
+// its own (Phaser never hears it). A modal panel's backdrop takes every other press in the game
+// frame, the top bar's included: it calls backgroundCancel where the panel is closeable and
+// otherwise does nothing. Number keys press a question's buttons, Tab and Shift+Tab keep focus
+// among its buttons and close control, and Enter or Space presses the focused one.
 
 // A part a panel draws beyond its frame, title, note and buttons (a detail card's well, art and
 // text), placed again as the scale changes.
@@ -53,7 +53,11 @@ export interface DomPart {
 export interface DomQuestionPanelInput {
   // Base screens opt out of modal ownership; pictures can remain modal without native buttons.
   readonly modal?: boolean;
+  // What a tap on a modal panel's backdrop does: the existing outside dismissal of a closeable
+  // panel. Undefined for a required choice, whose backdrop consumes the tap.
   readonly backgroundCancel?: () => void;
+  // The page's own controls drawn outside the panel, interactive with it (Help's top bar).
+  readonly companions?: readonly HTMLElement[];
   // What the close control does; undefined draws it as a picture, and a panel with no buttons
   // then takes no presses: every press goes through to the canvas, whose scene closes it. null
   // draws no close control, and a panel with no buttons then takes no presses either. Then its
@@ -82,8 +86,8 @@ export interface DomQuestionPanelInput {
   // Drawn over the frame, under the title.
   readonly parts?: readonly DomPart[];
   readonly presses: readonly (() => void)[];
-  // A modal detail may use the same captured tap to dismiss anywhere inside its game region.
-  readonly dismiss?: { readonly area: Rect; readonly press: () => void };
+  // A tap on the panel's own body, away from its controls, as a detail card's dismissal.
+  readonly dismiss?: () => void;
   // The page point of a press as a game point, through the page frame's turn.
   readonly toGame: (client: Point) => Point;
   readonly view: QuestionPanelView;
@@ -192,12 +196,6 @@ export function showQuestionPanel(layer: UiLayer, input: DomQuestionPanelInput):
   // Focus starts on the dialog itself, so no button shows the keyboard's ring until Tab.
   dialog.tabIndex = -1;
 
-  const tapArea = input.dismiss === undefined ? undefined : doc.createElement("div");
-  if (tapArea !== undefined) {
-    tapArea.setAttribute("aria-hidden", "true");
-    Object.assign(tapArea.style, { pointerEvents: "auto", position: "absolute" });
-    dialog.append(tapArea);
-  }
   // A question's ui-panel in its rim, or a modal card's ui-detail-card.
   const rim = doc.createElement("div");
   rim.className = "adw-rim";
@@ -237,10 +235,6 @@ export function showQuestionPanel(layer: UiLayer, input: DomQuestionPanelInput):
       width: outer.width + 2 * pixel,
     });
   });
-  if (tapArea !== undefined && input.dismiss !== undefined) {
-    const area = input.dismiss.area;
-    placed.push((scale) => placeBox(scale, ORIGIN, tapArea, area));
-  }
   frame(panel, ORIGIN, view.panel);
   for (const part of input.parts ?? []) {
     dialog.append(part.element);
@@ -388,7 +382,7 @@ export function showQuestionPanel(layer: UiLayer, input: DomQuestionPanelInput):
       event.stopPropagation();
       return;
     }
-    if (event.code !== "Tab" || modal) {
+    if (event.code !== "Tab") {
       return;
     }
     const visible = focusables.filter(
@@ -403,7 +397,7 @@ export function showQuestionPanel(layer: UiLayer, input: DomQuestionPanelInput):
     (visible[next] ?? dialog).focus();
   });
   if (input.dismiss !== undefined) {
-    const dismiss = input.dismiss.press;
+    const dismiss = input.dismiss;
     bindGameAction(
       {
         activate: (origin) => {
@@ -496,6 +490,7 @@ export function showQuestionPanel(layer: UiLayer, input: DomQuestionPanelInput):
     {
       ...(gesture === undefined ? {} : { gesture }),
       ...(input.backgroundCancel === undefined ? {} : { backgroundCancel: input.backgroundCancel }),
+      ...(input.companions === undefined ? {} : { companions: input.companions }),
       ...(input.onPaint === undefined ? {} : { onPaint: input.onPaint }),
       modal,
       reveal: layer.reveal(

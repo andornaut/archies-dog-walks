@@ -346,25 +346,22 @@ export class ShopScene extends Scene {
         this.onKey(event.code);
       }
     });
-    // The top bar's empty area and the margins around the card close the shop, card and all, or
-    // cancel an open confirm; back cancels the confirm or closes an open card first, as Escape
-    // does. The top bar's buttons keep their own taps.
+    // The shop is a page, not a modal: its live top bar keeps its buttons, and the bar's empty
+    // area and the margins around the card close the shop. An open card or confirm is modal, and
+    // its own backdrop takes those taps instead. Back cancels the confirm or closes an open card
+    // first, as Escape does.
     listenDismiss(
       this,
-      sceneRegionOutside(this, "home", 0, [PANEL]),
+      sceneRegionOutside(this, [PANEL]),
       () => (this.confirm === undefined ? this.close() : this.back()),
       () => this.back(),
     );
     // A page the top bar opens over the shop closes an open card or confirm first.
-    listenHomeBar(
-      this,
-      () => this.close(),
-      () => {
-        if (this.confirm !== undefined || this.detail !== undefined) {
-          this.back();
-        }
-      },
-    );
+    listenHomeBar(this, () => {
+      if (this.confirm !== undefined || this.detail !== undefined) {
+        this.back();
+      }
+    });
   }
 
   private startRowHold(point: Point, target: Target | undefined): void {
@@ -999,7 +996,7 @@ export class ShopScene extends Scene {
       pressed,
     });
     this.htmlConfirm = keepPanel(this.htmlConfirm, JSON.stringify(view), () =>
-      addHtmlPurchaseConfirm(this, overlayRegion("home"), view, (choice) => this.answer(choice)),
+      addHtmlPurchaseConfirm(this, view, (choice) => this.answer(choice)),
     );
   }
 
@@ -1019,10 +1016,7 @@ export class ShopScene extends Scene {
       picture: purchasePicture(purchase),
     });
     this.htmlDetail = keepPanel(this.htmlDetail, JSON.stringify(view), () =>
-      addHtmlDetailCard(this, dim, view, undefined, false, {
-        area: PANEL,
-        dismiss: () => this.back(),
-      }),
+      addHtmlDetailCard(this, view, undefined, false, () => this.back()),
     );
   }
 }

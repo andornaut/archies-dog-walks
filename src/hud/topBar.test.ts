@@ -54,12 +54,21 @@ describe("the walk bar in each pause state", () => {
     player: false,
     presses: "steer",
   } as const;
-  // Under a card or an overlay only the bar's buttons act: the walk takes no press.
-  const card = { ...walking, icon: "icon-menu", paused: true, presses: "none" } as const;
+  // Under a card or an overlay the walk and the dimmed bar take no press or M; P and Escape stay
+  // the back keys, which open the menu over a card and resume from the menu.
+  const card = {
+    ...walking,
+    icon: "icon-menu",
+    mute: undefined,
+    pause: undefined,
+    paused: true,
+    presses: "none",
+  } as const;
   const menu = {
     ...walking,
     icon: "icon-menu",
-    pause: "resume",
+    mute: undefined,
+    pause: undefined,
     pauseKey: "resume",
     paused: true,
     player: true,
@@ -71,8 +80,14 @@ describe("the walk bar in each pause state", () => {
     pause: undefined,
     pauseKey: undefined,
   } as const;
-  // Under an explanation's detail card the bar's buttons act as with nothing open.
-  const detail = { ...walking, icon: "icon-menu", paused: true } as const;
+  // An explanation's detail card is modal too: its dismissal presses nothing on the bar.
+  const detail = {
+    ...walking,
+    icon: "icon-menu",
+    mute: undefined,
+    pause: undefined,
+    paused: true,
+  } as const;
 
   it("pauses, covers and routes the bar's presses as each state calls for", () => {
     const cases: [string, RunPause, Expected][] = [
@@ -101,9 +116,9 @@ describe("the walk bar in each pause state", () => {
       ["under an explanation's detail card over the menu", { ...HOLD, menu: "open" }, menu],
       ["under help, which mutes on M", { ...NOTHING_PAUSED, menu: "help" }, cover],
       [
-        "under settings, which leave the bar lit and take P and M themselves",
+        "under settings, which take P and M themselves",
         { ...NOTHING_PAUSED, menu: "settings" },
-        { ...menu, mute: undefined, pauseKey: undefined },
+        { ...menu, pauseKey: undefined },
       ],
     ];
     for (const [name, pause, expected] of cases) {

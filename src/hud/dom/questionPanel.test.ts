@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 
 import { gameData } from "../../data/index.ts";
 import { SCREEN_LAYOUT } from "../../data/screen.ts";
-import { FakeDocument, fakeLayer } from "../../testing/fakeDom.ts";
+import { FakeDocument, fakeLayer, layerViews } from "../../testing/fakeDom.ts";
 import { gameFont } from "../../testing/fontInk.ts";
 import { artPixel, domScale } from "../../ui/domScale.ts";
 import { dismissFooter } from "../../ui/modal/dismissFooter.ts";
@@ -56,7 +56,7 @@ function menu(context = menuContext(), customNumbers = false) {
     toGame: (point) => point,
     view,
   });
-  const [dialog] = element.children;
+  const [dialog] = layerViews(element);
   if (dialog === undefined) {
     throw new Error("The menu added no dialog");
   }
@@ -126,7 +126,7 @@ describe("the HTML pause menu", () => {
     shown.setInert(true);
     shown.setShown(true);
     expect(dialog.className).toContain("adw-inert");
-    expect(doc.activeElement).toBeUndefined();
+    expect(doc.activeElement).toBeNull();
     doc.defaultView.fire("keydown", { code: "Digit1", repeat: false });
     expect(presses[0]).not.toHaveBeenCalled();
     shown.setInert(false);
@@ -146,7 +146,7 @@ describe("the HTML pause menu", () => {
     tab(false);
     expect(doc.activeElement).toBe(buttons[0]);
     shown.setShown(false);
-    expect(doc.activeElement).toBeUndefined();
+    expect(doc.activeElement).toBeNull();
     shown.setShown(true);
     expect(doc.activeElement).toBe(dialog);
     dialog.blur();
@@ -255,7 +255,7 @@ describe("an HTML detail card that takes no presses", () => {
         title: "Casey",
       },
     });
-    const [dialog] = element.children;
+    const [dialog] = layerViews(element);
     const nodes = dialog?.all() ?? [];
     expect(dialog?.className).toContain("adw-passive");
     expect(dialog?.listeners.has("mousedown")).toBe(false);
@@ -300,7 +300,7 @@ describe("an HTML panel's part controls", () => {
       toGame: (point) => point,
       view: modalCardView(MEASURE, { height: 120, width: 280, x: 40, y: 200 }, "Settings", []),
     });
-    const [dialog] = element.children;
+    const [dialog] = layerViews(element);
     const tab = () =>
       dialog?.fire("keydown", { code: "Tab", preventDefault: () => undefined, shiftKey: false });
     tab();
@@ -355,7 +355,7 @@ describe("an HTML zone celebration", () => {
         ],
       },
     });
-    const [dialog] = element.children;
+    const [dialog] = layerViews(element);
     const nodes = dialog?.all() ?? [];
     expect(nodes.some((node) => node.className === "adw-close")).toBe(false);
     expect(nodes.some((node) => node.className === "adw-plate-frame")).toBe(true);
@@ -431,7 +431,7 @@ describe("an HTML zone celebration", () => {
           texts: [],
         },
       });
-      const [dialog] = element.children;
+      const [dialog] = layerViews(element);
       const icons = (dialog?.all() ?? []).filter((node) => node.className === "adw-art");
       expect(icons).toHaveLength(2);
       const pixel = artPixel(scale);
@@ -448,14 +448,14 @@ it("dismisses a native detail region only while its modal owns input", () => {
   const shown = showQuestionPanel(layer, {
     close: undefined,
     closeLabel: gameData.menuText.common.close,
-    dismiss: { area: SCREEN_LAYOUT.walkView, press: dismiss },
+    dismiss,
     fonts: { body: gameFont("font-body"), title: gameFont("font-title") },
     numberKeys: false,
     presses: [],
     toGame: (point) => point,
     view: modalCardView(MEASURE, { height: 100, width: 280, x: 40, y: 100 }, "Detail", []),
   });
-  const dialog = element.children[0]!;
+  const dialog = layerViews(element)[0]!;
   expect(dialog.className).not.toContain("adw-passive");
   const tap = () => ({
     detail: 0,
@@ -494,7 +494,7 @@ it("keeps a base page with custom native controls interactive without a modal sc
     toGame: (point) => point,
     view: modalCardView(MEASURE, { height: 100, width: 280, x: 40, y: 100 }, "Results", []),
   });
-  expect(element.children[0]?.className).not.toContain("adw-passive");
+  expect(layerViews(element)[0]?.className).not.toContain("adw-passive");
   expect(layer.input.accepts()).toBe(true);
   const key = {
     code: "Enter",
@@ -503,11 +503,11 @@ it("keeps a base page with custom native controls interactive without a modal sc
     stopPropagation: vi.fn(),
     target: button,
   };
-  element.children[0]?.fire("keydown", key);
+  layerViews(element)[0]?.fire("keydown", key);
   expect(key.stopPropagation).toHaveBeenCalledOnce();
   expect(key.preventDefault).not.toHaveBeenCalled();
   const repeat = { ...key, preventDefault: vi.fn(), repeat: true, stopPropagation: vi.fn() };
-  element.children[0]?.fire("keydown", repeat);
+  layerViews(element)[0]?.fire("keydown", repeat);
   expect(repeat.preventDefault).toHaveBeenCalledOnce();
   expect(repeat.stopPropagation).toHaveBeenCalledOnce();
   const arrow = {
@@ -516,7 +516,7 @@ it("keeps a base page with custom native controls interactive without a modal sc
     preventDefault: vi.fn(),
     stopPropagation: vi.fn(),
   };
-  element.children[0]?.fire("keydown", arrow);
+  layerViews(element)[0]?.fire("keydown", arrow);
   expect(arrow.preventDefault).not.toHaveBeenCalled();
   expect(arrow.stopPropagation).not.toHaveBeenCalled();
   shown.destroy();
@@ -595,7 +595,7 @@ it("routes an explicit footer to dismissal without changing semantic actions or 
       ),
     },
   });
-  const root = element.children[0]!;
+  const root = layerViews(element)[0]!;
   const buttons = root.all().filter((node) => node.tagName === "button");
   const footer = buttons.find((node) => node.className.includes("adw-secondary"))!;
   expect(footer.getAttribute("aria-keyshortcuts")).toBeNull();
@@ -634,7 +634,9 @@ it("keeps a footer-only overlay dismissible without introducing a corner close c
       ),
     },
   });
-  const buttons = element.children[0]!.all().filter((node) => node.tagName === "button");
+  const buttons = layerViews(element)[0]!
+    .all()
+    .filter((node) => node.tagName === "button");
   expect(buttons).toHaveLength(1);
   expect(buttons[0]!.className).toContain("adw-go");
   buttons[0]!.fire("click", { detail: 0 });
@@ -658,7 +660,7 @@ it("uses a detail card's existing any-tap dismissal for its native X and footer"
   const shown = showDetailCard(layer, {
     ...shared,
     close: undefined,
-    dismiss: { area: SCREEN_LAYOUT.walkView, press: dismiss },
+    dismiss,
     view: {
       art: [],
       card: {
@@ -674,7 +676,9 @@ it("uses a detail card's existing any-tap dismissal for its native X and footer"
       title: gameData.menuText.menu.title,
     },
   });
-  const buttons = element.children[0]!.all().filter((node) => node.tagName === "button");
+  const buttons = layerViews(element)[0]!
+    .all()
+    .filter((node) => node.tagName === "button");
   expect(buttons.map((node) => node.getAttribute("aria-label"))).toEqual([
     gameData.menuText.common.close,
     gameData.menuText.common.close,
@@ -730,7 +734,7 @@ it("opts page actions into content gestures while corner and footer Close retain
     },
   });
   await vi.waitFor(() => expect(shown.accepts()).toBe(true));
-  const root = element.children[0]!;
+  const root = layerViews(element)[0]!;
   const controls = root.all().filter((node) => node.tagName === "button");
   const page = controls.find(
     (node) => node.getAttribute("aria-label") === gameData.menuText.help.next,

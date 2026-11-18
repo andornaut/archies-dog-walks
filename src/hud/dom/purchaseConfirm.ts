@@ -44,6 +44,7 @@ export function showPurchaseConfirm(
     },
   ];
   return showQuestionPanel(layer, {
+    backgroundCancel: input.cancel,
     close: input.cancel,
 
     closeLabel: input.closeLabel,

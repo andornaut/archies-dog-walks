@@ -1,7 +1,8 @@
 import type { LoadingErrorView } from "../ui/dom/loadingError.ts";
 
-// Game.pause leaves in-flight loader requests running. DOM Retry, mute and progress remain live,
-// while scene clocks and the walk stay fixed until the visible error has recovered.
+// Game.pause leaves in-flight loader requests running. The failure dialog's Retry and progress stay
+// live as the only interactive subtree, with the page under it inert and no mute control, while
+// scene clocks and the walk stay fixed until the visible error has recovered.
 export function pauseLoadingError(
   game: { readonly isPaused: boolean; pause(): void; resume(): void },
   view: LoadingErrorView,

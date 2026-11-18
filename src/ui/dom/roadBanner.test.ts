@@ -54,7 +54,7 @@ it("keeps canvas fallback until decoding, follows the existing pose and announce
   expect(status.attributes.get("aria-hidden")).toBe("true");
   coverAgain.close();
   expect(status.attributes.get("aria-hidden")).toBe("true");
-  expect(doc.activeElement).toBeUndefined();
+  expect(doc.activeElement).toBeNull();
   view.destroy();
   view.destroy();
   expect(cancel).toHaveBeenCalledOnce();

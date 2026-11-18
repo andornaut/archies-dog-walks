@@ -46,7 +46,7 @@ import {
   tapDog,
   tapGear,
 } from "../home/home.ts";
-import { homeBackAction, homeBarButtonAt, overlayRegion, regionOutside } from "../home/homeBar.ts";
+import { homeBackAction, overlayRegion } from "../home/homeBar.ts";
 import { HOME_LAYOUT, homeBarButtons, tileFace, updateModalLayout } from "../home/homeLayout.ts";
 import {
   bubbleSpeech,
@@ -91,6 +91,7 @@ import {
   isPauseKey,
   menuKeyActs,
 } from "../input/keyBindings.ts";
+import { screenArea } from "../input/outsideTap.ts";
 import type { PackPlacement } from "../layout/packFormation.ts";
 import { waitedLoad } from "../loadingProgress.ts";
 import { addFigure, PackFigures } from "../pack/phaser/packFigures.ts";
@@ -549,12 +550,13 @@ export class StartScene extends Scene {
       move: (point) => this.homePressMove(point),
       up: (point, cancelled) => this.homePressUp(point, cancelled),
     });
-    // A tap outside an open panel, on the screen or the page beside the game, closes it.
+    // A tap outside an open panel closes it: the panel's backdrop takes the game frame, the
+    // dimmed top bar included, and this takes the page beside the game.
     listenOutsideTap(
       this,
       () => {
         const rect = this.overlay?.rect;
-        return rect === undefined ? undefined : regionOutside("home", this.exit, 0, [rect]);
+        return rect === undefined ? undefined : screenArea([rect]);
       },
       () => this.closeOverlay(),
     );
@@ -638,11 +640,8 @@ export class StartScene extends Scene {
   }
   private homePressDown(native: boolean, pointer: { x: number; y: number }): void {
     addTapBurst(this, pointer.x, pointer.y);
-    // The top bar stays lit over an open card, and its buttons take their presses.
-    if (
-      this.overlay !== undefined &&
-      homeBarButtonAt(this.exit, pointer.x, pointer.y) === undefined
-    ) {
+    // Over an open card the top bar is dimmed and inactive with the rest of the home screen.
+    if (this.overlay !== undefined) {
       this.overlayPress = { x: pointer.x, y: pointer.y };
       if (this.closePressed() || this.updatePressed()) {
         this.render();
@@ -1593,10 +1592,7 @@ export class StartScene extends Scene {
     const view = detailView(this, HOME_REGION, { card, kind: target.kind, picture });
     const close = () => this.closeOverlay();
     this.htmlDetail = keepPanel(this.htmlDetail, JSON.stringify([view, this.closePressed()]), () =>
-      addHtmlDetailCard(this, HOME_REGION, view, close, this.closePressed(), {
-        area: HOME_REGION,
-        dismiss: close,
-      }),
+      addHtmlDetailCard(this, view, close, this.closePressed(), close),
     );
     this.overlay = { ...overlay, rect: view.card.panel };
   }
@@ -1769,7 +1765,7 @@ export class StartScene extends Scene {
     const text = gameData.homeText.update;
     // Canvas actors and native controls each receive their existing palette treatment.
     if (this.htmlNotice !== undefined) {
-      root.add(addModalShade(this, HOME_REGION));
+      root.add(addModalShade(this, SCREEN));
       return;
     }
     const update = { label: text.button, press: acceptUpdate, primary: true, rect: button };
@@ -1778,13 +1774,13 @@ export class StartScene extends Scene {
       { label: gameData.homeText.shop.confirmCancel, press: close, primary: false, rect: cancel },
       update,
     ];
-    const card = addHtmlModalCard(this, panel, this.updateTitle(), entries, close);
+    const card = addHtmlModalCard(this, panel, this.updateTitle(), entries, close, close);
     if (card !== undefined) {
       this.htmlNotice = card;
       this.events.once(Scenes.Events.SHUTDOWN, () => {
         this.htmlNotice = undefined;
       });
-      root.add(addModalShade(this, HOME_REGION));
+      root.add(addModalShade(this, SCREEN));
     }
   }
   // The Pet shop on the yard's right lot: ui-pet-shop, its front sinking while pressed, under

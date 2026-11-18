@@ -41,7 +41,7 @@ import { addHtmlHelpScreen, htmlPanelInput, htmlPanelPlace } from "./questionPan
 import { REFUSE } from "./refuseControl.ts";
 import { SCENE_KEYS, type SceneKey } from "./sceneKeys.ts";
 import { requestTitleReturn } from "./titleNavigation.ts";
-import { addNativeTopSection } from "./topSection.ts";
+import { addNativeTopSection, sceneCoverage } from "./topSection.ts";
 import { clearScene } from "./uiKit.ts";
 
 // Emitted on game.events when the help closes, by any route.
@@ -188,40 +188,44 @@ export class HelpScene extends Scene {
     const view = helpView(gameData, helpMeasure(this), this.page, undefined);
     this.page = view.page;
     view.backdrop.forEach(({ colour, rect }) => addFilledRect(this, colour, rect));
-    this.topSection ??= addNativeTopSection(this, {
-      accepts: () => true,
-      buttons: HELP_BAR_BUTTONS,
-      heading: view.heading.text,
-      labels: {
-        exit: gameData.homeText.quit.quit,
-        menu: gameData.menuText.menu.title,
-        mute: gameData.menuText.settings.sound,
-        pause: gameData.menuText.pause.title,
+    this.topSection ??= addNativeTopSection(
+      this,
+      {
+        accepts: () => true,
+        buttons: HELP_BAR_BUTTONS,
+        heading: view.heading.text,
+        labels: {
+          exit: gameData.homeText.quit.quit,
+          menu: gameData.menuText.menu.title,
+          mute: gameData.menuText.settings.sound,
+          pause: gameData.menuText.pause.title,
+        },
+        muted: isMuted(this),
+        press: (id) => {
+          if (id !== "menu" && id !== "mute") {
+            return;
+          }
+          if (routeHomeBar(this, id) || !this.sys.isActive() || !this.input.enabled) {
+            return;
+          }
+          if (id === "mute") {
+            this.game.events.emit(BAR_MUTED_EVENT, toggleMuted(this));
+          } else {
+            const data: MenuSceneData = {
+              closePage: () => this.close(),
+              context: "help",
+              onHeadHome: () => {
+                this.close();
+                requestTitleReturn(this);
+              },
+              resume: SCENE_KEYS.help,
+            };
+            openOverlay(this, SCENE_KEYS.menu, data);
+          }
+        },
       },
-      muted: isMuted(this),
-      press: (id) => {
-        if (id !== "menu" && id !== "mute") {
-          return;
-        }
-        if (routeHomeBar(this, id) || !this.sys.isActive() || !this.input.enabled) {
-          return;
-        }
-        if (id === "mute") {
-          this.game.events.emit(BAR_MUTED_EVENT, toggleMuted(this));
-        } else {
-          const data: MenuSceneData = {
-            closePage: () => this.close(),
-            context: "help",
-            onHeadHome: () => {
-              this.close();
-              requestTitleReturn(this);
-            },
-            resume: SCENE_KEYS.help,
-          };
-          openOverlay(this, SCENE_KEYS.menu, data);
-        }
-      },
-    });
+      sceneCoverage(this),
+    );
     this.topSection?.setMuted(isMuted(this));
     this.showPicture(itemAt(gameData.help, this.page).art, view.illustration);
     this.html?.destroy();
@@ -234,6 +238,7 @@ export class HelpScene extends Scene {
     this.html = addHtmlHelpScreen(
       this,
       {
+        companions: this.topSection === undefined ? [] : [this.topSection.element],
         footerPress: () => this.close(),
         gesture: {
           cancel: () => {
@@ -243,6 +248,7 @@ export class HelpScene extends Scene {
             const at = point(event);
             if (at !== undefined) {
               this.beginPagePress(at);
+              this.html?.burst(at);
             }
           },
           up: (event, cancelled) => {

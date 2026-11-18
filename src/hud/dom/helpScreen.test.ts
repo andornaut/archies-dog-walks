@@ -6,7 +6,7 @@ import { gameData } from "../../data/index.ts";
 import { HELP_LAYOUT } from "../../help/helpLayout.ts";
 import { helpView } from "../../help/helpView.ts";
 import { bodyTextWidth } from "../../testing/bodyFont.ts";
-import { FakeDocument, fakeLayer } from "../../testing/fakeDom.ts";
+import { FakeDocument, fakeLayer, layerViews } from "../../testing/fakeDom.ts";
 import { gameFont } from "../../testing/fontInk.ts";
 import type { NativeGesture } from "../../ui/dom/modalLifecycle.ts";
 import { domScale } from "../../ui/domScale.ts";
@@ -51,7 +51,7 @@ function helpScreen(
       pressed,
     ),
   });
-  const [dialog] = element.children;
+  const [dialog] = layerViews(element);
   return { close, dialog, doc, nodes: dialog?.all() ?? [], presses, shown };
 }
 

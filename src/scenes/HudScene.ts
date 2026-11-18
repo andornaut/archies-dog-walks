@@ -8,7 +8,6 @@ import { gameData } from "../data/index.ts";
 import { SCREEN_CONFIG, SCREEN_LAYOUT } from "../data/screen.ts";
 import type { AchievementId, DebuffId, DogId, HintTrigger } from "../data/types.ts";
 import { FEEDBACK as MENU_FEEDBACK } from "../home/feedback.ts";
-import { overlayRegion } from "../home/homeBar.ts";
 import { createHudCards, type HudCards } from "../hud/dom/hudCards.ts";
 import { createHudChrome } from "../hud/dom/hudChrome.ts";
 import { createHudMoments, type HudMoment, type HudMomentPainter } from "../hud/dom/hudMoments.ts";
@@ -514,10 +513,9 @@ export class HudScene extends Scene {
       return;
     }
     const card = detailView(overlay, LAYOUT.screen, detail);
-    const html = addHtmlDetailCard(overlay, LAYOUT.screen, card, undefined, false, {
-      area: overlayRegion("home"),
-      dismiss: () => this.run?.closeExplanation(),
-    });
+    const html = addHtmlDetailCard(overlay, card, undefined, false, () =>
+      this.run?.closeExplanation(),
+    );
     this.explained = html === undefined ? NOT_EXPLAINED : { html, key, scene: overlay };
   }
 

@@ -6,7 +6,7 @@ import { describe, expect, it } from "vitest";
 import { gameData } from "../../data/index.ts";
 import { badgeCardView } from "../../home/badgeCardView.ts";
 import { badgeWall } from "../../home/badgesView.ts";
-import { FakeDocument, fakeLayer } from "../../testing/fakeDom.ts";
+import { FakeDocument, fakeLayer, layerViews } from "../../testing/fakeDom.ts";
 import { gameFont } from "../../testing/fontInk.ts";
 import { domScale } from "../../ui/domScale.ts";
 import { showBadgeCard } from "./badgeCard.ts";
@@ -59,7 +59,7 @@ async function card(still: boolean) {
   });
   await Promise.resolve();
   await Promise.resolve();
-  const [dialog] = element.children;
+  const [dialog] = layerViews(element);
   const confetti = dialog?.children.find((node) =>
     node.style.backgroundImage?.includes("fx-confetti"),
   );

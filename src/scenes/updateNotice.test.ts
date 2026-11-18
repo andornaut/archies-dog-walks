@@ -227,7 +227,7 @@ it("uses the authored failure copy only after an unsuccessful accepted update", 
   expect(title()).toBe(gameData.homeText.update.failure);
 });
 
-it("offers only Cancel and Update now, with the corner close sharing Cancel", () => {
+it("offers only Cancel and Update now, with the corner close and an outside tap sharing Cancel", () => {
   modalCard.mockClear();
   acceptUpdate.mockClear();
   const layout = updateModalLayout(overlayRegion("home"), {
@@ -257,8 +257,9 @@ it("offers only Cancel and Update now, with the corner close sharing Cancel", ()
     string,
     { label: string; press: () => void; primary: boolean }[],
     () => void,
+    () => void,
   ];
-  expect(args).toHaveLength(5);
+  expect(args).toHaveLength(6);
   const entries = args[3];
   expect(entries.map(({ label, primary }) => ({ label, primary }))).toEqual([
     { label: gameData.homeText.shop.confirmCancel, primary: false },
@@ -266,7 +267,8 @@ it("offers only Cancel and Update now, with the corner close sharing Cancel", ()
   ]);
   entries[0]!.press();
   args[4]();
-  expect(close).toHaveBeenCalledTimes(2);
+  args[5]();
+  expect(close).toHaveBeenCalledTimes(3);
   entries[1]!.press();
   expect(acceptUpdate).toHaveBeenCalledOnce();
 });

@@ -87,6 +87,7 @@ export function showOrdinaryBadgeCelebration(
     cheeringFace(layer, input, input.reduced, dog, rect),
   );
   const panel = showQuestionPanel(layer, {
+    backgroundCancel: input.close,
     close: input.close,
     closeLabel: input.closeLabel,
     fonts: input.fonts,

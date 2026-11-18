@@ -192,6 +192,7 @@ export function showBadgeCelebration(
   const doc = layer.element.ownerDocument;
   const { view } = input;
   return showQuestionPanel(layer, {
+    backgroundCancel: input.close,
     close: input.close,
     closeLabel: input.closeLabel,
     fonts: input.fonts,

@@ -3,7 +3,8 @@ import { Scene, Scenes } from "phaser";
 import { gameData } from "../data/index.ts";
 import { overlayRegion } from "../home/homeBar.ts";
 import { pauseMenuLayout } from "../hud/pauseMenu.ts";
-import { isMuteKey, isPauseKey, menuKeyActs } from "../input/keyBindings.ts";
+import { isPauseKey, menuKeyActs } from "../input/keyBindings.ts";
+import { screenArea } from "../input/outsideTap.ts";
 import { exitShown } from "../pwa/index.ts";
 import { MODAL } from "../ui/modal/layout.ts";
 import {
@@ -14,18 +15,16 @@ import {
   navigationMenuWidth,
 } from "../ui/navigationMenu.ts";
 import { addRampDim } from "../ui/phaser/rampDim.ts";
-import { exitGame, listenHomeBar, openHomePage, sceneRegionOutside } from "./homeBarPress.ts";
+import { clearOnHomePageOpening, exitGame, openHomePage } from "./homeBarPress.ts";
 import { canvasPanelMeasure } from "./modalMeasure.ts";
 import { mountNativeOverlay } from "./nativeOverlayReady.ts";
 import {
-  BAR_MUTED_EVENT,
   closeOverlay,
   listenDismiss,
   nativeSceneAccepts,
   openOverlay,
   type OverlayData,
 } from "./overlay.ts";
-import { toggleMuted } from "./profileStore.ts";
 import { addHtmlQuestionPanel, type QuestionPanel } from "./questionPanel.ts";
 import { SCENE_KEYS, type SceneKey } from "./sceneKeys.ts";
 import type { SettingsData } from "./SettingsScene.ts";
@@ -76,6 +75,7 @@ export class MenuScene extends Scene {
       settings,
     };
     const panel: QuestionPanel = {
+      backgroundCancel: close,
       close,
       entries: menuItems(context, exitShown()).map((item) => ({
         label: menuItemLabel(gameData, item),
@@ -97,11 +97,11 @@ export class MenuScene extends Scene {
     if (covered === undefined) {
       return false;
     }
-    addRampDim(this, area);
+    addRampDim(this);
     this.events.on(Scenes.Events.PAUSE, () => this.scene.setVisible(false));
     this.events.on(Scenes.Events.RESUME, () => this.scene.setVisible(true));
-    listenDismiss(this, sceneRegionOutside(this, "home", 0, covered), close);
-    listenHomeBar(this, close);
+    listenDismiss(this, screenArea(covered), close);
+    clearOnHomePageOpening(this, close);
     this.input.keyboard?.on("keydown", (event: KeyboardEvent) => {
       if (!nativeSceneAccepts(this)) {
         return;
@@ -109,9 +109,7 @@ export class MenuScene extends Scene {
       if (!menuKeyActs(event.repeat, event.code)) {
         return;
       }
-      if (isMuteKey(event.code)) {
-        this.game.events.emit(BAR_MUTED_EVENT, toggleMuted(this));
-      } else if (isPauseKey(event.code)) {
+      if (isPauseKey(event.code)) {
         close();
       }
     });

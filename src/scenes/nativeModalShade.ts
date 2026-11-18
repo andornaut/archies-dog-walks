@@ -1,4 +1,3 @@
-import type { Rect } from "@andornaut/game-kit/runtime/rect";
 import type { Scene } from "phaser";
 
 import { addRampDim } from "../ui/phaser/rampDim.ts";
@@ -6,10 +5,9 @@ import { addRampDim } from "../ui/phaser/rampDim.ts";
 // Native modal paint and its world shade share visibility and disposal without another input scope.
 export function nativeModalShade<P extends { destroy(): void; setShown(shown: boolean): void }>(
   scene: Scene,
-  area: Rect,
   panel: P,
 ): P {
-  const graphics = addRampDim(scene, area);
+  const graphics = addRampDim(scene);
   let alive = true;
   const destroy = () => {
     if (!alive) {

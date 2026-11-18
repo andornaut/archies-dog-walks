@@ -3,7 +3,6 @@ import { containsPoint, type Rect } from "@andornaut/game-kit/runtime/rect";
 import { describe, expect, it } from "vitest";
 
 import { SCREEN_LAYOUT } from "../data/screen.ts";
-import { TOP_BAR_BUTTONS } from "../hud/topBar.ts";
 import {
   homeBackAction,
   homeBarAction,
@@ -15,7 +14,7 @@ import { HOME_LAYOUT, homeBarButtons } from "./homeLayout.ts";
 
 const centre = (r: Rect) => ({ x: r.x + r.width / 2, y: r.y + r.height / 2 });
 
-it("leaves only the shared top section outside the home overlay dim", () => {
+it("places home overlays in the safe region under the shared top section", () => {
   const dim = overlayRegion("home");
   expect(containsPoint(dim, 0, HOME_LAYOUT.topBar.height - 1)).toBe(false);
   expect(containsPoint(dim, 0, HOME_LAYOUT.topBar.height)).toBe(true);
@@ -25,27 +24,24 @@ it("leaves only the shared top section outside the home overlay dim", () => {
   expect(overlayRegion("walk")).toEqual(SCREEN_LAYOUT.walkView);
 });
 
-it("preserves each bar control's hit area while outside dismissal keeps the surrounding screen", () => {
+it("keeps a nonmodal page's live bar controls out of its outside dismissal", () => {
   for (const [id, { hit }] of homeBarButtons(true)) {
     const p = centre(hit);
     expect(homeBarButtonAt(true, p.x, p.y)).toBe(id);
-    expect(isOutside(regionOutside("home", true, 0, []), p)).toBe(false);
+    expect(isOutside(regionOutside(true, []), p)).toBe(false);
     expect(homeBarButtonAt(true, hit.x, hit.y + hit.height)).toBeUndefined();
   }
   const bank = { x: HOME_LAYOUT.topBar.well.x, y: HOME_LAYOUT.topBar.mid };
   expect(homeBarButtonAt(true, bank.x, bank.y)).toBeUndefined();
-  expect(isOutside(regionOutside("home", true, 0, []), bank)).toBe(true);
-  const belowPause = { x: centre(TOP_BAR_BUTTONS.pause.hit).x, y: SCREEN_LAYOUT.topBar.height };
-  expect(isOutside(regionOutside("walk", false, 0, []), belowPause)).toBe(false);
-  expect(isOutside(regionOutside("walk", false, 1, []), belowPause)).toBe(true);
+  expect(isOutside(regionOutside(true, []), bank)).toBe(true);
 });
 
-it("keeps mute independent while the menu entry opens or closes its existing menu", () => {
-  expect(homeBarAction({ menu: false }, "menu")).toBe("openMenu");
-  expect(homeBarAction({ menu: true }, "menu")).toBe("close");
-  for (const menu of [false, true]) {
-    expect(homeBarAction({ menu }, "mute")).toBe("mute");
-  }
+it.each([
+  ["exit", "exit"],
+  ["menu", "openMenu"],
+  ["mute", "mute"],
+] as const)("a live %s button does %s", (button, action) => {
+  expect(homeBarAction(button)).toBe(action);
 });
 
 describe("homeBackAction", () => {
@@ -76,9 +72,6 @@ it("compacts an unavailable Exit and keeps shown controls outside overlay dismis
   ]);
   const removedColumn = { x: 240, y: 20 };
   expect(homeBarButtonAt(false, removedColumn.x, removedColumn.y)).toBeUndefined();
-  expect(isOutside(regionOutside("home", false, 0, []), removedColumn)).toBe(true);
-  expect(isOutside(regionOutside("home", true, 0, []), removedColumn)).toBe(false);
-  for (const menu of [false, true]) {
-    expect(homeBarAction({ menu }, "exit")).toBe("exit");
-  }
+  expect(isOutside(regionOutside(false, []), removedColumn)).toBe(true);
+  expect(isOutside(regionOutside(true, []), removedColumn)).toBe(false);
 });

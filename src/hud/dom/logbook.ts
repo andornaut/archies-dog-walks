@@ -223,6 +223,7 @@ export function showLogbook(layer: UiLayer, input: DomLogbookInput): DomLogbook 
     place: (scale) => tabs.forEach((tab) => tab.place(scale)),
   };
   const shown = showQuestionPanel(layer, {
+    backgroundCancel: input.navigation.close,
     close: input.navigation.close,
     closeLabel: input.closeLabel,
     closePressed: page.closePressed,

@@ -5,8 +5,9 @@ import { overlayRegion } from "../home/homeBar.ts";
 import { HOME_LAYOUT } from "../home/homeLayout.ts";
 import { homeQuestionLayout, QUIT_QUESTION_ANSWERS } from "../hud/pauseMenu.ts";
 import { isPauseKey, menuKeyActs } from "../input/keyBindings.ts";
+import { screenArea } from "../input/outsideTap.ts";
 import { addRampDim } from "../ui/phaser/rampDim.ts";
-import { exitGame, listenHomeBar, sceneRegionOutside } from "./homeBarPress.ts";
+import { clearOnHomePageOpening, exitGame } from "./homeBarPress.ts";
 import { mountNativeOverlay } from "./nativeOverlayReady.ts";
 import { closeOverlay, listenDismiss, nativeSceneAccepts, type OverlayData } from "./overlay.ts";
 import { addHtmlQuestionPanel, type QuestionPanel } from "./questionPanel.ts";
@@ -14,7 +15,7 @@ import { SCENE_KEYS } from "./sceneKeys.ts";
 
 // Quit? over the dimmed home screen, which back asks with nothing open, laid out as the Home
 // question: Keep playing closes it, as back, Escape, P and a tap outside do; Quit leaves the game
-// as the top bar's Exit does (exitGame). The top bar keeps its buttons.
+// as the top bar's Exit does (exitGame). The top bar stays dimmed and inactive under it.
 export class QuitScene extends Scene {
   constructor() {
     super(SCENE_KEYS.quit);
@@ -35,6 +36,7 @@ export class QuitScene extends Scene {
     };
     const question: QuestionPanel = {
       avoid: { ...HOME_LAYOUT.gate, width: area.width, x: area.x },
+      backgroundCancel: keepPlaying,
       close: keepPlaying,
       entries: QUIT_QUESTION_ANSWERS.map((answer) => ({
         label: words[answer],
@@ -49,7 +51,7 @@ export class QuitScene extends Scene {
     if (covered === undefined) {
       return false;
     }
-    addRampDim(this, area);
+    addRampDim(this);
     this.input.keyboard?.on("keydown", (event: KeyboardEvent) => {
       if (!nativeSceneAccepts(this)) {
         return;
@@ -58,8 +60,8 @@ export class QuitScene extends Scene {
         keepPlaying();
       }
     });
-    listenDismiss(this, sceneRegionOutside(this, "home", 0, covered), keepPlaying);
-    listenHomeBar(this, keepPlaying);
+    listenDismiss(this, screenArea(covered), keepPlaying);
+    clearOnHomePageOpening(this, keepPlaying);
     return true;
   }
 }

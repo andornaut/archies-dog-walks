@@ -115,11 +115,9 @@ it("routes retained Home Exit only when both capability and the actual bar expos
   vi.mocked(exitShown).mockReturnValue(true);
   routeHomeBar(overlay.scene, "exit");
   expect(exit).toHaveBeenCalledOnce();
-  expect(isOutside(sceneRegionOutside(overlay.scene, "home", 0, []), { x: 240, y: 20 })).toBe(true);
+  expect(isOutside(sceneRegionOutside(overlay.scene, []), { x: 240, y: 20 })).toBe(true);
   vi.mocked(nativeTopSectionButtons).mockReturnValue(["mute", "menu", "exit"]);
-  expect(isOutside(sceneRegionOutside(overlay.scene, "home", 0, []), { x: 240, y: 20 })).toBe(
-    false,
-  );
+  expect(isOutside(sceneRegionOutside(overlay.scene, []), { x: 240, y: 20 })).toBe(false);
   overlay.scene.events.emit("shutdown");
   vi.mocked(exitShown).mockReturnValue(false);
 });

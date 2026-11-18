@@ -277,11 +277,53 @@ export interface ModalLifecycle {
   setShown(shown: boolean): void;
 }
 
-// Modal ownership is explicit and independent of whether a view draws native controls.
+// Keys the kit's strict dialog maps (focusKeyAction). Scene keyboard routes listen on the window,
+// so a key a dialog's own controls leave unhandled passes on to them instead.
+const SCENE_KEYS = new Set([
+  " ",
+  "ArrowDown",
+  "ArrowLeft",
+  "ArrowRight",
+  "ArrowUp",
+  "Enter",
+  "Escape",
+  "P",
+  "Tab",
+  "p",
+]);
+
+// Hands a mapped key that no control inside root handled to the window's scene listeners before
+// the strict dialog at the layer root contains it, carrying back a scene's preventDefault.
+function forwardSceneKeys(root: HTMLElement): () => void {
+  const page = root.ownerDocument.defaultView;
+  const forward = (event: KeyboardEvent) => {
+    const Keyboard = page?.KeyboardEvent;
+    if (event.cancelBubble || !SCENE_KEYS.has(event.key) || Keyboard === undefined) {
+      return;
+    }
+    event.stopPropagation();
+    const copy = new Keyboard(event.type, event);
+    page?.dispatchEvent(copy);
+    if (copy.defaultPrevented) {
+      event.preventDefault();
+    }
+  };
+  const types = ["keydown", "keypress", "keyup"] as const;
+  types.forEach((type) => root.addEventListener(type, forward));
+  return () => types.forEach((type) => root.removeEventListener(type, forward));
+}
+
+// Modal ownership is explicit and independent of whether a view draws native controls. A modal
+// view mounts in its own host over every earlier root: a full-layer backdrop under it, then the
+// view and its companions (controls of the same page drawn outside the view, such as Help's own
+// top bar), which the layer's ModalLayer keeps as the only interactive subtree while it is top.
+// A tap on the backdrop calls backgroundCancel where the modal is closeable; without it the
+// backdrop consumes the tap.
 export function mountModalLifecycle(
   layer: Pick<UiLayer, "element" | "input" | "modal" | "press" | "scale">,
   options: {
     readonly backgroundCancel?: () => void;
+    readonly companions?: readonly HTMLElement[];
     readonly gesture?: NativeGesture;
     readonly modal: boolean;
     readonly onPaint?: () => void;
@@ -292,14 +334,30 @@ export function mountModalLifecycle(
   const { modal, reveal } = options;
   const doc = element.ownerDocument;
   const previous = doc.activeElement as HTMLElement | null;
-  const host = modal ? doc.createElement("div") : undefined;
-  const backdrop = modal ? doc.createElement("div") : undefined;
-  if (host !== undefined && backdrop !== undefined) {
-    Object.assign(host.style, { position: "absolute", inset: "0", pointerEvents: "none" });
-    Object.assign(backdrop.style, { position: "absolute", inset: "0", pointerEvents: "auto" });
+  const parts = modal
+    ? {
+        backdrop: doc.createElement("div"),
+        host: doc.createElement("div"),
+        scope: doc.createElement("div"),
+      }
+    : undefined;
+  if (parts !== undefined) {
+    const { backdrop, host, scope } = parts;
+    const cover = { inset: "0", position: "absolute" };
+    Object.assign(host.style, { ...cover, pointerEvents: "none" });
+    Object.assign(scope.style, { ...cover, pointerEvents: "none" });
+    Object.assign(backdrop.style, { ...cover, pointerEvents: "auto" });
+    host.className = "adw-modal-host";
     backdrop.className = "adw-modal-backdrop";
     backdrop.setAttribute("aria-hidden", "true");
-    host.append(backdrop, element);
+    // Focus stays in the dialog, and Phaser never takes a backdrop press for one beside its canvas.
+    backdrop.addEventListener("mousedown", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+    });
+    backdrop.addEventListener("touchstart", (event) => event.stopPropagation(), { passive: true });
+    scope.append(element, ...(options.companions ?? []));
+    host.append(backdrop, scope);
     layer.element.append(host);
   }
   let closeModal: (() => void) | undefined;
@@ -323,25 +381,25 @@ export function mountModalLifecycle(
   let wasAccepted = false;
   const sync = () => {
     const accepted = accepts();
-    const present = eligible() && enabled && paint.painted();
-    if (!present) {
+    if (!(eligible() && enabled && paint.painted())) {
       closeModal?.();
       closeModal = undefined;
     }
     element.hidden = !shown;
-    if (host !== undefined) {
-      host.hidden = !shown;
+    if (parts !== undefined) {
+      parts.host.hidden = !shown;
     }
-    // The shared manager owns covered-dialog inertness and focus restoration.
     element.inert = !accepted;
-    if (modal && accepted && closeModal === undefined) {
+    // The layer's ModalLayer owns covered-dialog inertness, focus and its restoration.
+    if (parts !== undefined && accepted && closeModal === undefined) {
       closeModal = layer.modal.open(
         {
-          isolation: "dialog",
-          backdrop,
+          backdrop: parts.backdrop,
           ...(options.backgroundCancel === undefined ? {} : { close: options.backgroundCancel }),
+          focus: element,
+          isolation: "dialog",
         },
-        element,
+        parts.scope,
       );
     }
     element.classList.toggle("adw-inert", !accepted);
@@ -368,18 +426,6 @@ export function mountModalLifecycle(
   const stopInput = guardNativeInput(
     {
       ...options.gesture,
-      down: (event) => {
-        if (element.contains(event.target as Node)) {
-          options.gesture?.down?.(event);
-        }
-      },
-      move: (event) => {
-        if (element.contains(event.target as Node)) {
-          options.gesture?.move?.(event);
-        }
-      },
-      up: (event, cancelled) =>
-        element.contains(event.target as Node) ? options.gesture?.up?.(event, cancelled) : false,
       cancel: () => {
         options.gesture?.cancel?.();
         const clear = (node: HTMLElement) => {
@@ -397,19 +443,23 @@ export function mountModalLifecycle(
     },
     element,
   );
-  const stopBackdropInput = backdrop === undefined ? () => undefined : guardNativeInput(
-    {
-      claim: layer.press.claim,
-      gate: input,
-      holdUnit: () => layer.scale().unit,
-      subscribe: layer.input.subscribe,
-    },
-    backdrop,
-  );
-  const stopBackdrop =
-    backdrop === undefined || options.backgroundCancel === undefined
+  const stopBackdropInput =
+    parts === undefined
       ? () => undefined
-      : bindGameAction({ activate: options.backgroundCancel, available: accepts }, backdrop);
+      : guardNativeInput(
+          {
+            claim: layer.press.claim,
+            gate: input,
+            holdUnit: () => layer.scale().unit,
+            subscribe: layer.input.subscribe,
+          },
+          parts.backdrop,
+        );
+  const stopBackdrop =
+    parts === undefined || options.backgroundCancel === undefined
+      ? () => undefined
+      : bindGameAction({ activate: options.backgroundCancel, available: accepts }, parts.backdrop);
+  const stopKeys = parts === undefined ? () => undefined : forwardSceneKeys(parts.scope);
   const paint = revealPaint(
     reveal,
     () => {
@@ -445,11 +495,20 @@ export function mountModalLifecycle(
       closeModal = undefined;
       stopBackdrop();
       stopBackdropInput();
+      stopKeys();
       stopInput();
       stopChanges();
       paint.destroy();
       closeScope();
-      host?.remove();
+      if (parts !== undefined) {
+        // Companions outlive the view, as Help's top bar does across its page turns.
+        for (const companion of options.companions ?? []) {
+          if (companion.parentElement === parts.scope) {
+            layer.element.append(companion);
+          }
+        }
+        parts.host.remove();
+      }
       if (!modal && top && previous?.isConnected && !previous.closest("[inert]")) {
         focusTarget(previous);
       }

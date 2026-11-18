@@ -2,6 +2,7 @@ import { sceneStub } from "@andornaut/game-kit/test/phaser/sceneStub";
 import type { Scene } from "phaser";
 import { describe, expect, it, vi } from "vitest";
 
+import { SCREEN_LAYOUT } from "../../data/screen.ts";
 import { ownDeviceFit } from "../worldFit.ts";
 import { addDim } from "./draw.ts";
 import { addModalShade, addRampDim } from "./rampDim.ts";
@@ -114,12 +115,16 @@ function fixture() {
 const area = { height: 442, width: 360, x: 0, y: 40 };
 
 describe("neutral canvas underlay", () => {
-  it("uses one black fill at existing strength without snapshots or camera hiding", () => {
+  it("shades the whole game frame with one black fill at existing strength", () => {
     const f = fixture(),
       drawn = vi.fn();
-    const objects = addRampDim(f.scene, area, drawn);
+    const objects = addRampDim(f.scene, drawn);
     expect(objects).toEqual(f.graphics);
-    expect(f.graphics[0]).toMatchObject({ alpha: 0.72, colour: 0, fills: [area] });
+    expect(f.graphics[0]).toMatchObject({
+      alpha: 0.72,
+      colour: 0,
+      fills: [SCREEN_LAYOUT.screen],
+    });
     expect(f.camera.visible).toBe(true);
     expect(f.scene.add.image).not.toHaveBeenCalled();
     f.scene.game.events.emit("prerender");
@@ -199,7 +204,7 @@ describe("neutral canvas underlay", () => {
     ).toBe(false);
   });
 
-  it("keeps the protected bar and Pause cards outside the shade and follows scene visibility", () => {
+  it("follows scene visibility", () => {
     const f = fixture();
     addModalShade(f.scene, area);
     expect(f.graphics[0]!.fills).toEqual([{ height: 442, width: 360, x: 0, y: 40 }]);
@@ -219,9 +224,9 @@ describe("neutral canvas underlay", () => {
     try {
       for (let index = 0; index < 2; index++) {
         Object.assign(f.camera, { height: 1120, originX: 0.5, originY: 0.5, width: 720, zoom: 1 });
-        addRampDim(f.scene, area);
+        addRampDim(f.scene);
         expect(f.camera).toMatchObject({ originX: 0, originY: 0, zoom: 2 });
-        expect(f.graphics[index]!.fills).toEqual([area]);
+        expect(f.graphics[index]!.fills).toEqual([SCREEN_LAYOUT.screen]);
       }
     } finally {
       stop();

@@ -32,7 +32,7 @@ import {
 
 export interface DomDetailCardInput extends Pick<
   DomQuestionPanelInput,
-  "close" | "closeLabel" | "closePressed" | "fonts" | "dismiss" | "toGame"
+  "backgroundCancel" | "close" | "closeLabel" | "closePressed" | "fonts" | "dismiss" | "toGame"
 > {
   // An art file's URL by its path under /art/.
   readonly artUrl: (path: string) => string;
@@ -288,7 +288,8 @@ export function showDetailCard(layer: UiLayer, input: DomDetailCardInput): DomQu
     },
   ];
   return showQuestionPanel(layer, {
-    close: input.close === undefined ? input.dismiss?.press : input.close,
+    ...(input.backgroundCancel === undefined ? {} : { backgroundCancel: input.backgroundCancel }),
+    close: input.close === undefined ? input.dismiss : input.close,
     closeLabel: input.closeLabel,
     ...(input.closePressed === undefined ? {} : { closePressed: input.closePressed }),
     ...(input.dismiss === undefined ? {} : { dismiss: input.dismiss }),

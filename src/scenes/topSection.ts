@@ -14,6 +14,7 @@ import type { TopSectionButton } from "../ui/topSection.ts";
 
 interface SectionOwner {
   asleep: boolean;
+  covered: () => boolean;
   disposed: boolean;
   inert: boolean;
   layer: UiLayer;
@@ -42,17 +43,46 @@ function syncSections(stack: readonly SectionOwner[]): void {
   for (const entry of stack) {
     const active = entry === owner && entry.ready;
     entry.view.setShown(active);
-    entry.view.setInert(!active || entry.inert);
-    if (!active) {
+    const covered = entry.covered();
+    entry.view.setInert(!active || entry.inert || covered);
+    if (!active || covered) {
       entry.view.buttons.forEach((button) => button.setPressed(false));
     }
   }
 }
 
-// The scene owns actions; one shared stack owns visibility across retained scene roots.
+// What dims and stills a bar: by default any open modal; a modal page's own bar (Help's) only
+// what opens over that page.
+export interface TopSectionCoverage {
+  accepts(): boolean;
+  subscribe(listener: () => void): () => void;
+}
+
+// A modal page's bar is covered while its scene is paused or asleep under another overlay.
+export function sceneCoverage(scene: Scene): TopSectionCoverage {
+  const events = [
+    Scenes.Events.PAUSE,
+    Scenes.Events.RESUME,
+    Scenes.Events.SLEEP,
+    Scenes.Events.WAKE,
+  ] as const;
+  return {
+    accepts: () => scene.sys.isActive(),
+    subscribe: (listener) => {
+      events.forEach((event) => scene.events.on(event, listener));
+      listener();
+      return () => events.forEach((event) => scene.events.off(event, listener));
+    },
+  };
+}
+
+// The scene owns actions; one shared stack owns visibility across retained scene roots. The
+// whole bar, its Sound, Pause and Menu buttons included, stays painted and laid out under a
+// modal, uniformly dimmed and inert.
 export function addNativeTopSection(
   scene: Scene,
   config: NativeTopSectionConfig,
+  coverage?: TopSectionCoverage,
 ): NativeTopSection | undefined {
   const previous = nativeSections.get(scene);
   const layer = uiLayer();
@@ -68,7 +98,8 @@ export function addNativeTopSection(
   const asleep = previous?.asleep ?? false;
   previous?.section.dispose();
   const view = createNativeTopSection(layer, { artUrl, loadSheet }, title, config);
-  const stopUnderlay = followModalUnderlay(layer.input, view.underlayElement);
+  const covering = coverage ?? layer.input;
+  const stopUnderlay = followModalUnderlay(covering, view.element);
   const release = () => view.buttons.forEach((button) => button.setPressed(false));
   const sleep = () => {
     entry.asleep = true;
@@ -98,6 +129,7 @@ export function addNativeTopSection(
       scene.events.off(Scenes.Events.WAKE, wake);
       scene.events.off(Scenes.Events.SHUTDOWN, section.dispose);
       stopUnderlay();
+      stopCovering();
       view.dispose();
       syncSections(stack);
     },
@@ -112,6 +144,7 @@ export function addNativeTopSection(
   };
   const entry: SectionOwner = {
     asleep,
+    covered: () => !covering.accepts(),
     disposed: false,
     inert,
     layer,
@@ -121,6 +154,7 @@ export function addNativeTopSection(
     view,
   };
   stack.splice(index === -1 ? stack.length : index, 0, entry);
+  const stopCovering = covering.subscribe(() => syncSections(stack));
   nativeSections.set(scene, entry);
   scene.events.on(Scenes.Events.PAUSE, release);
   scene.events.on(Scenes.Events.SLEEP, sleep);

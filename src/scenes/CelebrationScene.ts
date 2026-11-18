@@ -15,6 +15,7 @@ import {
 import { overlayRegion } from "../home/homeBar.ts";
 import { ordinaryBadgeModalLayout } from "../hud/celebrationLayout.ts";
 import { isConfirmKey, isPauseKey, menuKeyActs } from "../input/keyBindings.ts";
+import { screenArea } from "../input/outsideTap.ts";
 import { achievementLabel } from "../rules/achievements.ts";
 import { barTitleRoom } from "../ui/barTitle.ts";
 import { closeControl } from "../ui/closeControl.ts";
@@ -30,7 +31,7 @@ import { panelButton, panelTitle } from "../ui/modal/view.ts";
 import { labelInkWidth, pixelFontMetrics, withProbe } from "../ui/phaser/pixelText.ts";
 import { addRampDim } from "../ui/phaser/rampDim.ts";
 import { badgeCelebrationNames } from "./badges.ts";
-import { listenHomeBar, sceneRegionOutside } from "./homeBarPress.ts";
+import { clearOnHomePageOpening } from "./homeBarPress.ts";
 import { canvasPanelMeasure, modalTextWidth } from "./modalMeasure.ts";
 import { addNativeBadgeCelebration } from "./nativeBadgeCelebration.ts";
 import { mountNativeOverlay } from "./nativeOverlayReady.ts";
@@ -65,7 +66,7 @@ export class CelebrationScene extends Scene {
 
   private mount({ achievements, owners, resume }: CelebrationSceneData): boolean {
     const reduced = currentSettings(this).reducedMotion;
-    // Dimmed down the colour ramps under the lit top bar, as under the pause menu and the cards.
+    // Placed in the safe region under the top bar; the whole game frame dims under it.
     const dim = overlayRegion("home");
     const cheering = owners.slice(0, 3);
     const rows = badgeStripRows(achievements.length);
@@ -156,7 +157,7 @@ export class CelebrationScene extends Scene {
     if (html === undefined) {
       return false;
     }
-    addRampDim(this, dim);
+    addRampDim(this);
     soundboardOf(this).play("badge");
     this.input.keyboard?.on("keydown", (event: KeyboardEvent) => {
       if (!nativeSceneAccepts(this)) {
@@ -169,10 +170,10 @@ export class CelebrationScene extends Scene {
         close();
       }
     });
-    // A tap anywhere around the panel and Nice!, the top bar's empty area included, closes, as
-    // Nice! and the close control do; the top bar's buttons keep their own taps.
-    listenDismiss(this, sceneRegionOutside(this, "home", 0, [panel, buttonRect]), close);
-    listenHomeBar(this, close);
+    // A tap anywhere around the panel and Nice!, the top bar included, closes, as Nice! and the
+    // close control do: the panel's backdrop takes the game frame, this the page beside it.
+    listenDismiss(this, screenArea([panel, buttonRect]), close);
+    clearOnHomePageOpening(this, close);
     return true;
   }
 }

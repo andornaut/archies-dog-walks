@@ -19,7 +19,7 @@ import {
 
 export type DomHelpInput = Pick<
   DomQuestionPanelInput,
-  "closeLabel" | "fonts" | "footerPress" | "gesture" | "presses" | "toGame"
+  "closeLabel" | "companions" | "fonts" | "footerPress" | "gesture" | "presses" | "toGame"
 > & {
   readonly view: HelpView;
 };
@@ -183,7 +183,13 @@ export function showHelpScreen(layer: UiLayer, input: DomHelpInput): DomQuestion
     element.append(spoken);
   }
   page.append(title, clip);
+  // Help covers the whole game frame, so a press anywhere on it away from its controls is a page
+  // press (the scene's gesture), never one on the modal's backdrop.
+  const surface = doc.createElement("div");
+  surface.setAttribute("aria-hidden", "true");
+  Object.assign(surface.style, { pointerEvents: "auto", position: "absolute" });
   const parts: DomPart[] = [
+    { element: surface, place: (scale) => setBox(surface, gridRect(scale, HELP_LAYOUT.screen)) },
     ...view.rules.map(({ colour, rect }) =>
       fillPart(doc, colour, (scale) => ({ ...gridRect(scale, rect), height: artPixel(scale) })),
     ),
@@ -242,6 +248,7 @@ export function showHelpScreen(layer: UiLayer, input: DomHelpInput): DomQuestion
     describedBy: page.id,
     fonts: input.fonts,
     gestureOnActions: true,
+    ...(input.companions === undefined ? {} : { companions: input.companions }),
     ...(input.footerPress === undefined ? {} : { footerPress: input.footerPress }),
     label: view.heading.text,
     numberKeys: false,

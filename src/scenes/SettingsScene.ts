@@ -37,6 +37,7 @@ import {
 } from "../home/settingsView.ts";
 import type { DomSettings } from "../hud/dom/settings.ts";
 import { isConfirmKey, isMuteKey, isPauseKey, menuKeyActs } from "../input/keyBindings.ts";
+import { screenArea } from "../input/outsideTap.ts";
 import {
   installApp,
   installState,
@@ -57,7 +58,7 @@ import {
   withProbe,
 } from "../ui/phaser/pixelText.ts";
 import { addRampDim } from "../ui/phaser/rampDim.ts";
-import { listenHomeBar, sceneRegionOutside } from "./homeBarPress.ts";
+import { clearOnHomePageOpening } from "./homeBarPress.ts";
 import { measureModalTitle, modalTextWidth } from "./modalMeasure.ts";
 import { mountNativeOverlay } from "./nativeOverlayReady.ts";
 import {
@@ -133,9 +134,8 @@ function settingsFonts(scene: Scene): SettingsFonts {
 }
 
 // What the settings are launched with: the scene under them, which they resume on close, and
-// where they open, which sets the part of the screen they dim (overlayRegion): a home page under
-// its lit top bar, whose buttons keep working (listenHomeBar), or the walk view the pause menu
-// dims.
+// where they open, which sets the safe region their card sits in (overlayRegion): a home page
+// under its top bar, or the walk view. The whole game frame dims under them, the top bar included.
 export interface SettingsData extends OverlayData {
   // The debuff bars showing under the walk bar: none on a home page.
   readonly debuffs: number;
@@ -204,7 +204,7 @@ export class SettingsScene extends Scene {
     if (this.html === undefined) {
       return false;
     }
-    addRampDim(this, this.dim);
+    addRampDim(this);
     this.render();
 
     // The install row comes and goes as the game becomes installable or installed.
@@ -227,22 +227,18 @@ export class SettingsScene extends Scene {
       targetAt: (x, y) => this.targetAt(x, y),
     });
     // The back button and a tap anywhere around the card close it, as the close control in its
-    // band does: the dim, the lit top bar's empty area and, over the walk, the dog cards; the top
-    // bar's buttons keep their own taps. While the steps' card is open, the back button and a
-    // tap around that card close it, the settings card included. As listenDismiss, with the area
-    // read as each press lands.
+    // band does: the card's backdrop takes the whole game frame, the dimmed top bar and, over the
+    // walk, the dog cards included, and this takes the page beside the game. While the steps'
+    // card is open, the back button and a tap around that card close it, the settings card
+    // included. As listenDismiss, with the area read as each press lands.
     onBackPressed(this, () => this.back());
     listenOutsideTap(
       this,
-      () =>
-        this.steps === undefined
-          ? sceneRegionOutside(this, data.region, data.debuffs, [this.layout.panel])
-          : sceneRegionOutside(this, data.region, data.debuffs, [this.steps.card]),
+      () => screenArea([this.steps === undefined ? this.layout.panel : this.steps.card]),
       () => this.back(),
     );
-    // Over the walk, the HUD takes the walk bar's presses (topBarAction).
     if (data.region === "home") {
-      listenHomeBar(this, () => this.close());
+      clearOnHomePageOpening(this, () => this.close());
     }
     // Sound on the top bar flips the sound switch here too.
     onSceneEvent(this, this.game.events, BAR_MUTED_EVENT, () => this.render());

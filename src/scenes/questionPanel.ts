@@ -148,7 +148,10 @@ export function followScene<
 function showHtmlPanel(
   scene: Scene,
   place: NonNullable<ReturnType<typeof htmlPanelPlace>>,
-  controls: Pick<DomQuestionPanelInput, "backgroundCancel" | "close" | "numberKeys" | "numberPresses" | "presses">,
+  controls: Pick<
+    DomQuestionPanelInput,
+    "backgroundCancel" | "close" | "numberKeys" | "numberPresses" | "presses"
+  >,
   view: QuestionPanelView,
   dimsUnder = false,
 ): DomQuestionPanel {
@@ -170,7 +173,9 @@ export function addHtmlQuestionPanel(
   const view = questionView(scene, area, question);
   const presses = question.entries.map(({ press }) => press);
   const controls = {
-    ...(question.backgroundCancel === undefined ? {} : { backgroundCancel: question.backgroundCancel }),
+    ...(question.backgroundCancel === undefined
+      ? {}
+      : { backgroundCancel: question.backgroundCancel }),
     close: question.close,
     numberKeys: true,
     presses,
@@ -213,14 +218,14 @@ export function addHtmlModalCard(
   return followScene(scene, panel);
 }
 
-// Native detail content shares the modal palette, captured dismissal and close semantics.
+// Native detail content shares the modal palette and close semantics. dismiss is what a tap on the
+// card's body or anywhere outside it does.
 export function addHtmlDetailCard(
   scene: Scene,
-  dim: Rect,
   view: DetailCardView,
   close: (() => void) | undefined,
   closePressed = false,
-  dismiss?: { readonly area: Rect; readonly dismiss: () => void },
+  dismiss?: () => void,
 ): DomQuestionPanel | undefined {
   const place = htmlPanelPlace(scene);
   if (place === undefined) {
@@ -230,10 +235,10 @@ export function addHtmlDetailCard(
     ...htmlArtInput(place),
     close,
     closePressed,
-    ...(dismiss === undefined ? {} : { dismiss: { area: dismiss.area, press: dismiss.dismiss } }),
+    ...(dismiss === undefined ? {} : { backgroundCancel: dismiss, dismiss }),
     view,
   });
-  return followScene(scene, nativeModalShade(scene, dim, panel));
+  return followScene(scene, nativeModalShade(scene, panel));
 }
 
 // A native panel is retained while its presentation key is unchanged.
@@ -259,7 +264,6 @@ export function keepPanel(
 // Native purchase confirmation forwards the original answer and close actions.
 export function addHtmlPurchaseConfirm(
   scene: Scene,
-  dim: Rect,
   view: PurchaseConfirmCardView,
   answer: (choice: ConfirmChoice) => void,
 ): DomQuestionPanel | undefined {
@@ -271,10 +275,9 @@ export function addHtmlPurchaseConfirm(
     ...htmlArtInput(place),
     buy: () => answer("buy"),
     cancel: () => answer("cancel"),
-
     view,
   });
-  return followScene(scene, nativeModalShade(scene, dim, panel));
+  return followScene(scene, nativeModalShade(scene, panel));
 }
 
 // Calls step before every frame scene's game draws, until the returned stop is called.
@@ -285,10 +288,10 @@ function everyFrame(scene: Scene): (step: () => void) => () => void {
   };
 }
 
-// Native badge detail retains its view and optional captured area dismissal.
+// Native badge detail retains its view; dismiss is what its close control, a tap on its body and a
+// tap anywhere outside it do.
 export function addHtmlBadgeCard(
   scene: Scene,
-  dim: Rect,
   view: BadgeCardView,
   dismiss?: () => void,
 ): DomQuestionPanel | undefined {
@@ -303,7 +306,7 @@ export function addHtmlBadgeCard(
     now: () => scene.time.now,
     view,
   });
-  return followScene(scene, nativeModalShade(scene, dim, panel));
+  return followScene(scene, nativeModalShade(scene, panel));
 }
 
 // What a celebration's HTML draws with beyond a panel's: art files, sheets and pill colours.
@@ -441,7 +444,7 @@ export function addHtmlEndScreen(
 // Native Help controls retain the scene's paging and gesture rules.
 export function addHtmlHelpScreen(
   scene: Scene,
-  actions: Pick<DomHelpInput, "backgroundCancel" | "presses" | "gesture" | "footerPress">,
+  actions: Pick<DomHelpInput, "companions" | "footerPress" | "gesture" | "presses">,
   view: HelpView,
 ): DomQuestionPanel | undefined {
   const place = htmlPanelPlace(scene);

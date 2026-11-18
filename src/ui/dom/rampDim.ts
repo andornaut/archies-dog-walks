@@ -100,7 +100,8 @@ export interface ModalUnderlay {
   refresh(): void;
 }
 
-// Native roots exclude the protected top bar, current modal and world effects.
+// Covered native roots, the top bar included, dim once and turn inert; the current modal and
+// world effects are not covered roots.
 export function followModalUnderlay(
   coverage: { accepts(): boolean; subscribe(listener: () => void): () => void },
   element: HTMLElement,

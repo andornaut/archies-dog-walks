@@ -1,5 +1,5 @@
 import { createModalInputGate } from "@andornaut/game-kit/runtime/input/modalInput";
-import { expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { createPressAdmission } from "../../pressAdmission.ts";
 import { FakeDocument, type FakeElement, fakeLayer } from "../../testing/fakeDom.ts";
@@ -64,7 +64,12 @@ it("admits revealed and painted views, makes covered dialogs inert and restores 
   const root = doc.createElement("div");
   const reveal = { cancel: vi.fn(), revealed: Promise.resolve(true) };
   const view = mountModalLifecycle(
-    { ...fakeLayer(doc, domScale(1, { height: 560, width: 360, x: 0, y: 0 })).layer, input: gate, press, scale: () => ({ dpr: 1, origin: { x: 0, y: 0 }, unit: 1 }) },
+    {
+      ...fakeLayer(doc, domScale(1, { height: 560, width: 360, x: 0, y: 0 })).layer,
+      input: gate,
+      press,
+      scale: () => ({ dpr: 1, origin: { x: 0, y: 0 }, unit: 1 }),
+    },
     { modal: true, reveal },
     root as unknown as HTMLElement,
   );
@@ -154,7 +159,12 @@ it("releases an unfinished modal contact on window blur and accepts one fresh ac
   button.addEventListener("click", action);
   const reveal = { cancel: vi.fn(), revealed: Promise.resolve(true) };
   const view = mountModalLifecycle(
-    { ...fakeLayer(doc, domScale(1, { height: 560, width: 360, x: 0, y: 0 })).layer, input: gate, press, scale: () => ({ dpr: 1, origin: { x: 0, y: 0 }, unit: 1 }) },
+    {
+      ...fakeLayer(doc, domScale(1, { height: 560, width: 360, x: 0, y: 0 })).layer,
+      input: gate,
+      press,
+      scale: () => ({ dpr: 1, origin: { x: 0, y: 0 }, unit: 1 }),
+    },
     { gesture: { cancel }, modal: true, reveal },
     root as unknown as HTMLElement,
   );
@@ -249,4 +259,92 @@ it("drops a completed contact's delayed click on hiding and accepts fresh mouse 
   stop();
   expect(doc.listeners.get("visibilitychange") ?? []).toHaveLength(0);
   expect(doc.defaultView.listeners.get("blur") ?? []).toHaveLength(0);
+});
+
+describe("a modal view's host", () => {
+  const mount = async (doc: FakeDocument, backgroundCancel?: () => void) => {
+    const { element, layer } = fakeLayer(doc, domScale(1, { height: 560, width: 360, x: 0, y: 0 }));
+    const view = doc.createElement("div");
+    const companion = doc.createElement("div");
+    const reveal = { cancel: vi.fn(), revealed: Promise.resolve(true) };
+    const lifecycle = mountModalLifecycle(
+      layer,
+      {
+        ...(backgroundCancel === undefined ? {} : { backgroundCancel }),
+        companions: [companion as unknown as HTMLElement],
+        modal: true,
+        reveal,
+      },
+      view as unknown as HTMLElement,
+    );
+    await reveal.revealed;
+    const [backdrop, scope] = element.children.at(-1)!.children;
+    return { backdrop: backdrop!, companion, element, lifecycle, scope: scope!, view };
+  };
+
+  it.each([
+    ["calls a closeable modal's background cancel once", true],
+    ["consumes the tap for a required choice", false],
+  ] as const)("on a backdrop tap, %s", async (_name, closeable) => {
+    const doc = new FakeDocument();
+    const backgroundCancel = vi.fn();
+    const { backdrop, companion, element, lifecycle, scope, view } = await mount(
+      doc,
+      closeable ? backgroundCancel : undefined,
+    );
+    expect(lifecycle.accepts()).toBe(true);
+    expect(scope.children).toEqual([view, companion]);
+    backdrop.fire("pointerdown", pointer(1, backdrop));
+    doc.fire("pointerup", pointer(1, backdrop, "pointerup"));
+    backdrop.fire("click", pointer(1, backdrop, "click"));
+    expect(backgroundCancel).toHaveBeenCalledTimes(closeable ? 1 : 0);
+    lifecycle.destroy();
+    expect(element.children).toEqual([companion]);
+  });
+
+  it("hands keys the dialog's controls leave unhandled to the window's scene listeners", async () => {
+    const doc = new FakeDocument();
+    Object.assign(doc.defaultView, {
+      KeyboardEvent: class {
+        defaultPrevented = false;
+        readonly key: string;
+        readonly type: string;
+        constructor(type: string, init: { key: string }) {
+          this.key = init.key;
+          this.type = type;
+        }
+        preventDefault() {
+          this.defaultPrevented = true;
+        }
+      },
+      dispatchEvent: (event: { type: string }) => {
+        doc.defaultView.fire(event.type, event);
+        return true;
+      },
+    });
+    const heard = vi.fn((event: { key?: string; preventDefault?: () => void }) =>
+      event.preventDefault?.(),
+    );
+    doc.defaultView.addEventListener("keydown", heard);
+    const { lifecycle, scope } = await mount(doc);
+    const key = (name: string, cancelBubble = false) => ({
+      cancelBubble,
+      key: name,
+      preventDefault: vi.fn(),
+      stopPropagation: vi.fn(),
+      type: "keydown",
+    });
+    const escape = key("Escape");
+    scope.fire("keydown", escape);
+    expect(heard).toHaveBeenCalledOnce();
+    expect(heard.mock.calls[0]![0].key).toBe("Escape");
+    expect(escape.stopPropagation).toHaveBeenCalledOnce();
+    expect(escape.preventDefault).toHaveBeenCalledOnce();
+    scope.fire("keydown", key("Enter", true));
+    scope.fire("keydown", key("1"));
+    expect(heard).toHaveBeenCalledOnce();
+    lifecycle.destroy();
+    scope.fire("keydown", key("Escape"));
+    expect(heard).toHaveBeenCalledOnce();
+  });
 });

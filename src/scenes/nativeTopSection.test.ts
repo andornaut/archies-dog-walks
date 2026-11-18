@@ -28,18 +28,18 @@ it("replaces a scene's native top section and releases its own scene listeners",
   const first = {
     buttons: new Map([["mute", { setPressed: vi.fn() }]]),
     dispose: vi.fn(),
+    element: doc.createElement("div"),
     revealed: Promise.resolve(true),
     setInert: vi.fn(),
     setShown: vi.fn(),
-    underlayElement: doc.createElement("div"),
   };
   const second = {
     buttons: new Map([["mute", { setPressed: vi.fn() }]]),
     dispose: vi.fn(),
+    element: doc.createElement("div"),
     revealed: Promise.resolve(true),
     setInert: vi.fn(),
     setShown: vi.fn(),
-    underlayElement: doc.createElement("div"),
   };
   fake.create.mockReturnValueOnce(first).mockReturnValueOnce(second);
   const config = {
@@ -55,11 +55,11 @@ it("replaces a scene's native top section and releases its own scene listeners",
   };
   const old = addNativeTopSection(scene, config);
   const modal = layer.input.open();
-  expect(first.underlayElement.style.filter).toBe("brightness(0.28)");
+  expect(first.element.style.filter).toBe("brightness(0.28)");
   const current = addNativeTopSection(scene, config);
   expect(first.dispose).toHaveBeenCalledTimes(1);
-  expect(first.underlayElement.style.filter ?? "").toBe("");
-  expect(second.underlayElement.style.filter).toBe("brightness(0.28)");
+  expect(first.element.style.filter ?? "").toBe("");
+  expect(second.element.style.filter).toBe("brightness(0.28)");
   expect(events.listenerCount("pause")).toBe(1);
   expect(events.listenerCount("shutdown")).toBe(1);
   first.buttons.get("mute")?.setPressed.mockClear();
@@ -72,7 +72,7 @@ it("replaces a scene's native top section and releases its own scene listeners",
   events.emit("shutdown");
   current?.dispose();
   expect(second.dispose).toHaveBeenCalledTimes(1);
-  expect(second.underlayElement.style.filter ?? "").toBe("");
+  expect(second.element.style.filter ?? "").toBe("");
   modal.close();
   expect(events.listenerCount("pause")).toBe(0);
   expect(events.listenerCount("shutdown")).toBe(0);

@@ -90,10 +90,10 @@ export function playerPaused(pause: Pick<RunPause, "menu">): boolean {
   return pause.menu !== "closed";
 }
 
-// What the walk's presses do. While any card or overlay is open, only the walk bar's buttons act
-// (topBarAction): nothing on the walk explains itself, and a tap elsewhere closes what can close
-// or does nothing. A hit stop covers nothing, and an explanation's detail card takes its presses
-// itself: the walk's input closes it on the next tap.
+// What the walk's presses do. While any card or overlay is open, nothing on the walk takes a press:
+// the walk, the HUD and the walk bar stay dimmed and inactive under the modal, whose backdrop
+// closes what can close and otherwise does nothing. A hit stop covers nothing, and an
+// explanation's detail card takes its presses itself.
 export function walkPresses(pause: RunPause): PressMode {
   return pause.card || pause.menu !== "closed" ? "none" : "steer";
 }
@@ -106,13 +106,11 @@ export function gameplayAllowed(pause: RunPause): boolean {
 export type TopBarAction = "mute" | "openMenu" | "resume";
 
 // What a walk-bar button does, pressed by a tap or by its key (the pause button's P and Escape,
-// and M, which mutes or unmutes). Every button works whenever the bar is in view, under every
-// card and overlay that leaves it lit: Mute toggles sound, and Pause
-// opens the menu, or resumes while the menu, the question or the settings are up.
+// and M, which mutes or unmutes): Mute toggles sound, and Pause opens the menu. Under a card,
+// an overlay or an explanation's detail card the bar is dimmed and inactive, so neither a tap
+// nor M presses it; P and Escape stay the open menu's and question's back keys and resume.
 // Help covers this bar and owns its mute control and keys. The settings take P, Escape and M
-// themselves. Under an
-// explanation's detail card a tap on a button presses it as with nothing open, and its release
-// closes the card, as any tap does.
+// themselves.
 export function topBarAction(
   pause: RunPause,
   via: "key" | "tap",
@@ -122,6 +120,10 @@ export function topBarAction(
     return undefined;
   }
   if (pause.menu === "settings" && via === "key") {
+    return undefined;
+  }
+  const covered = pause.card || pause.hold || pause.menu !== "closed";
+  if (covered && (via === "tap" || button === "mute")) {
     return undefined;
   }
   switch (button) {

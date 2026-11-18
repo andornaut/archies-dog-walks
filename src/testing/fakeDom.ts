@@ -1,6 +1,5 @@
-import { createModalLayer } from "@andornaut/game-kit/runtime/web/ui/dom/modalLayer";
-
 import { createModalInputGate } from "@andornaut/game-kit/runtime/input/modalInput";
+import { createModalLayer } from "@andornaut/game-kit/runtime/web/ui/dom/modalLayer";
 
 import { createPressAdmission } from "../pressAdmission.ts";
 import type { UiLayer } from "../ui/dom/uiLayer.ts";
@@ -12,6 +11,9 @@ type Listener = (event: FakeEvent) => void;
 
 export interface FakeEvent {
   buttons?: number;
+  cancelBubble?: boolean;
+  key?: string;
+  type?: string;
   button?: number;
   isPrimary?: boolean;
   relatedTarget?: unknown;
@@ -154,7 +156,7 @@ export class FakeElement extends FakeTarget {
 
   blur(): void {
     if (this.ownerDocument.activeElement === this) {
-      this.ownerDocument.activeElement = undefined;
+      this.ownerDocument.activeElement = null;
     }
   }
 
@@ -199,7 +201,11 @@ export class FakeElement extends FakeTarget {
   }
 
   hasAttribute(name: string): boolean {
-    return this.attributes.has(name) || (name === "inert" && this.inert) || (name === "hidden" && this.hidden);
+    return (
+      this.attributes.has(name) ||
+      (name === "inert" && this.inert) ||
+      (name === "hidden" && this.hidden)
+    );
   }
 
   querySelectorAll(selector: string): FakeElement[] {
@@ -231,12 +237,16 @@ export class FakeElement extends FakeTarget {
 
   removeAttribute(name: string): void {
     this.attributes.delete(name);
-    if (name === "inert") { this.inert = false; }
+    if (name === "inert") {
+      this.inert = false;
+    }
   }
 
   setAttribute(name: string, value: string): void {
     this.attributes.set(name, value);
-    if (name === "inert") { this.inert = true; }
+    if (name === "inert") {
+      this.inert = true;
+    }
   }
 
   // Every element under this one, depth first.
@@ -247,7 +257,8 @@ export class FakeElement extends FakeTarget {
 
 // Listens as a document does, for the kit's input-modality tracking.
 export class FakeDocument extends FakeTarget {
-  activeElement: FakeElement | undefined;
+  // As a document with nothing focused may report, null rather than undefined.
+  activeElement: FakeElement | null = null;
   // How many times an element was moved by insertBefore.
   moves = 0;
   // Timers never fire: a test sees what a timer would undo still in place.
@@ -274,6 +285,16 @@ export class FakeDocument extends FakeTarget {
   createElement(tagName: string): FakeElement {
     return new FakeElement(this, tagName);
   }
+}
+
+// The views mounted in a layer element, in order: a modal view in place of the host that holds
+// its backdrop and companions.
+export function layerViews(element: FakeElement): FakeElement[] {
+  return element.children.flatMap((child) =>
+    child.className === "adw-modal-host"
+      ? (child.children[1]?.children.slice(0, 1) ?? [])
+      : [child],
+  );
 }
 
 // A layer over doc's fake element at scale.

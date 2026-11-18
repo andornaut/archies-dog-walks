@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from "vitest";
 import { gameData } from "../../data/index.ts";
 import type { ConfirmChoice } from "../../home/purchaseConfirm.ts";
 import { purchaseConfirmCardView } from "../../home/purchaseConfirmCardView.ts";
-import { FakeDocument, fakeLayer } from "../../testing/fakeDom.ts";
+import { FakeDocument, fakeLayer, layerViews } from "../../testing/fakeDom.ts";
 import { gameFont } from "../../testing/fontInk.ts";
 import { domScale } from "../../ui/domScale.ts";
 import { modalTitleInk } from "../../ui/modal/titleRole.ts";
@@ -44,7 +44,7 @@ function confirm(pressed: ConfirmChoice | undefined) {
       pressed,
     }),
   });
-  const nodes = element.children[0]?.all() ?? [];
+  const nodes = layerViews(element)[0]?.all() ?? [];
   return { buy, cancel, nodes };
 }
 

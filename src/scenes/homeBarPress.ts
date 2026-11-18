@@ -2,12 +2,7 @@ import type { Rect } from "@andornaut/game-kit/runtime/rect";
 import { browserExitPage, exitApp } from "@andornaut/game-kit/runtime/web/pwa/dom/exitApp";
 import type { Scene } from "phaser";
 
-import {
-  homeBarAction,
-  homeBarButtonAt,
-  type OverlayRegion,
-  regionOutside,
-} from "../home/homeBar.ts";
+import { homeBarAction, homeBarButtonAt, regionOutside } from "../home/homeBar.ts";
 import type { HomeBarButton } from "../home/homeLayout.ts";
 import { openGuard } from "../input/openGuard.ts";
 import { exitShown } from "../pwa/index.ts";
@@ -16,7 +11,7 @@ import { openHelp } from "./helpScreen.ts";
 import type { MenuSceneData } from "./MenuScene.ts";
 import { BAR_MUTED_EVENT, onSceneEvent, openOverlay } from "./overlay.ts";
 import { toggleMuted } from "./profileStore.ts";
-import { SCENE_KEYS, type SceneKey } from "./sceneKeys.ts";
+import { SCENE_KEYS } from "./sceneKeys.ts";
 import type { SettingsData } from "./SettingsScene.ts";
 import { listenTargetPress } from "./targetPress.ts";
 import { requestTitleReturn } from "./titleNavigation.ts";
@@ -30,7 +25,7 @@ export const HOME_PAGE_OPENING_EVENT = "home-page-opening";
 type HomePage = "help" | "logbook" | "menu" | "settings";
 
 const homePageGuard = openGuard();
-const barRoutes = new WeakMap<object, Map<Scene, () => void>>();
+const barRoutes = new WeakMap<object, Set<Scene>>();
 
 // Opens page from the top bar, tapped on from, at once: over the Pet shop while it is open, else
 // over the start screen, in place of every other overlay and card. The overlays it closes and
@@ -76,21 +71,22 @@ export function exitGame(): void {
   exitApp(browserExitPage());
 }
 
-// Dismissal excludes the actual retained bar, including capability-dependent Exit.
-export function sceneRegionOutside(
-  scene: Scene,
-  region: OverlayRegion,
-  debuffs: number,
-  covered: readonly Rect[],
-) {
-  return regionOutside(region, nativeTopSectionButtons(scene).includes("exit"), debuffs, covered);
+// A nonmodal page's outside excludes the live retained bar, including capability-dependent Exit.
+export function sceneRegionOutside(scene: Scene, covered: readonly Rect[]) {
+  return regionOutside(nativeTopSectionButtons(scene).includes("exit"), covered);
 }
 
-// The topmost home overlay routes the shared controls while its underlying scene is paused.
-// Opening navigation clears replaceable overlays through HOME_PAGE_OPENING_EVENT.
-export function listenHomeBar(scene: Scene, close: () => void, clear: () => void = close): void {
-  const routes = barRoutes.get(scene.game) ?? new Map<Scene, () => void>();
-  routes.set(scene, close);
+// A page the top bar or the Menu opens (HOME_PAGE_OPENING_EVENT) clears scene first, so the page
+// opens alone over the page beneath.
+export function clearOnHomePageOpening(scene: Scene, clear: () => void): void {
+  onSceneEvent(scene, scene.game.events, HOME_PAGE_OPENING_EVENT, clear);
+}
+
+// A nonmodal page over the start screen (the Pet shop) routes the shared controls while the start
+// screen is paused under it. Under a modal the bar is dimmed and inactive, so no modal routes it.
+export function listenHomeBar(scene: Scene, clear: () => void): void {
+  const routes = barRoutes.get(scene.game) ?? new Set<Scene>();
+  routes.add(scene);
   barRoutes.set(scene.game, routes);
   scene.events.once("shutdown", () => {
     routes.delete(scene);
@@ -98,10 +94,10 @@ export function listenHomeBar(scene: Scene, close: () => void, clear: () => void
       barRoutes.delete(scene.game);
     }
   });
-  onSceneEvent(scene, scene.game.events, HOME_PAGE_OPENING_EVENT, clear);
+  clearOnHomePageOpening(scene, clear);
   listenTargetPress<HomeBarButton>(scene, {
     onPressed: () => undefined,
-    onTap: (button) => pressHomeBar(scene, close, button),
+    onTap: (button) => pressHomeBar(scene, button),
     targetAt: (x, y) => homeBarButtonAt(nativeTopSectionButtons(scene).includes("exit"), x, y),
   });
 }
@@ -110,29 +106,23 @@ export function listenHomeBar(scene: Scene, close: () => void, clear: () => void
 export function routeHomeBar(source: Scene, button: HomeBarButton): boolean {
   const route = [...(barRoutes.get(source.game) ?? [])]
     .reverse()
-    .find(([scene]) => scene.sys.isActive());
+    .find((scene) => scene.sys.isActive());
   if (route === undefined) {
     return false;
   }
-  const [scene, close] = route;
-  if (scene.input.enabled) {
-    pressHomeBar(scene, close, button);
+  if (route.input.enabled) {
+    pressHomeBar(route, button);
   }
   return true;
 }
 
-function pressHomeBar(scene: Scene, close: () => void, button: HomeBarButton): void {
-  const shown = (key: SceneKey) => scene.scene.isActive(key) || scene.scene.isPaused(key);
-  const open = { menu: shown(SCENE_KEYS.menu) };
-  const action = homeBarAction(open, button);
+function pressHomeBar(scene: Scene, button: HomeBarButton): void {
+  const action = homeBarAction(button);
   switch (action) {
     case "exit":
       if (exitShown() && nativeTopSectionButtons(scene).includes("exit")) {
         exitGame();
       }
-      return;
-    case "close":
-      close();
       return;
     case "mute":
       scene.game.events.emit(BAR_MUTED_EVENT, toggleMuted(scene));
