@@ -41,3 +41,4 @@ Reference: [Developing](../../README.md#developing), [Deploying](../../README.md
 | adw-0164 | Emit the crash font as WOFF2                                                 | [adw-0164.md](../work/adw-0164.md) |
 | adw-0168 | Install the complete build before play and prompt updates at the next launch | [adw-0168.md](../work/adw-0168.md) |
 | adw-0170 | Keep the art gallery's copies out of the build                               | [adw-0170.md](../work/adw-0170.md) |
+| adw-0171 | Subset the crash screen font                                                 | [adw-0171.md](../work/adw-0171.md) |
