@@ -10,19 +10,20 @@
 //
 // screen-<name>: 360x560 backgrounds in the house palette, one per screen. Where panels and text
 // sit, they are low-contrast dark wood, so the cream and tan UI text reads on them.
-// - screen-home: a compact, skyless Cabbagetown courtyard, drawn at native screen coordinates
-//   (0,0). Rows 40 to 163 hold a continuous masonry wall, a complete recessed window at the exposed
-//   left, a low autumn planter, an open iron gate and quiet broad flagstones. No roofs, skyline or
-//   sky are cropped beneath the top bar. The centre stays quiet behind dialogue and the pack; the
+// - screen-home: a compact, skyless Cabbagetown courtyard, which the start screen draws backdropY
+//   rows from its top, so its row HOME_TOP_ROW (66) is the first under the top bar. Rows 40 to 163
+//   hold a continuous masonry wall, a complete recessed window at the exposed left in the rows the
+//   start screen shows, a low autumn planter, an open iron gate and quiet broad flagstones. No
+//   roofs, skyline or sky are cropped beneath the top bar. The centre stays quiet behind dialogue and the pack; the
 //   red-brick path at x 164 to 195 ends below the actor's last opaque foot row 163 (anchor 164).
-//   The street-name board is at 270,52, 84x12, its navy edged in dslate at the sides, filling the
-//   rows between the top bar and the Pet shop's affordable outline; the game prints its existing
-//   name in white title lettering at 2x, its ink centred on the navy. The yard sign at 6,106,
-//   128x38 carries ARCHIE'S over DOG WALKS in the existing sign letters, on two short posts. The
-//   right lot is reserved for ui-pet-shop at 234,66,120x108, its last 10 rows under the divider
-//   strip and the sections. Two quiet ground rows at 164 and 165 precede the plum divider on row
-//   166; the backing below it is flat dbrown. No strong green competes with the existing shop board
-//   and Start walk.
+//   The street-name board is at 270,HOME_TOP_ROW, 84x12, its navy edged in dslate at the sides,
+//   filling the rows between the top bar and the Pet shop's affordable outline; the game prints
+//   its existing name in white title lettering at 2x, its ink centred on the navy. The yard sign at
+//   6,106, 128x38 carries ARCHIE'S over DOG WALKS in the existing sign letters, on two short posts.
+//   The right lot is reserved for ui-pet-shop at 234,80,120x108, its last 24 rows under the
+//   divider strip and the sections. Two quiet ground rows at 164 and 165 precede the plum divider
+//   on row 166; the backing below it is flat dbrown. No strong green competes with the existing
+//   shop board and Start walk.
 // - screen-end: a Cabbagetown street at dusk, with plain lower sky bands and a repeating interior
 //   road footer from row 511, free of lane edges and dashes. Between the logo (END_LOGO_AT 107,2)
 //   and the summary panel (24,112 to 336,412), the front of the brick cottage the pack comes home
@@ -56,8 +57,8 @@
 //   game draws none), then two streetcar tracks.
 //
 // ui-pet-shop: a 120x108 sprite, tags normal, pressed and door-wave: the pet shop on the yard's
-// right lot, which opens the shop. The game draws it at PET_SHOP_AT, 234,66 on the yard, its bottom
-// rows (from the yard's row 164) cut by the divider strip, and its hit area is the frame above it.
+// right lot, which opens the shop. The game draws it at PET_SHOP_AT on the screen, its bottom rows
+// cut by the divider strip under the gate scene, and its hit area is the frame above it.
 // Under the board's place (rows 0 to 21) the frame is clear but for the parapet trim: an ink line
 // on row 20 and cream from row 21, so the board rising 1px shows a third cream row, never a gap.
 // Under the trim a red and white awning, a display window with a food bag and a puppy behind its
@@ -109,6 +110,7 @@ import {
   type Frame,
   Grid,
   K,
+  LAYOUT,
   rgbPng,
   run,
   savePng,
@@ -401,6 +403,18 @@ function logo(): Clear {
 
 // ---------- screen-home ----------
 
+// The first screen-home row the start screen shows, under its top bar: the game draws the backdrop
+// backdropY rows from the screen's top (the layout export's home scene).
+const HOME_TOP_ROW = LAYOUT.scenes.home.topBar.height - LAYOUT.scenes.home.backdropY;
+// The window's height, and the row the wall's foot course starts on, which the window stays over.
+const HOME_WINDOW_H = 27;
+const HOME_WALL_FOOT = 94;
+if (HOME_TOP_ROW + 1 + HOME_WINDOW_H > HOME_WALL_FOOT) {
+  throw new Error(
+    `screen-home: the window no longer fits under the top bar at row ${HOME_TOP_ROW}`,
+  );
+}
+
 // crowns' leaf lobes: (cx, cy, radius), back to front.
 type Lobe = readonly [cx: number, cy: number, rad: number];
 
@@ -455,18 +469,20 @@ function courtyardWall(cv: Canvas): void {
       cv.fill(x, y - 16, 1, 16, "dstone");
     }
   }
-  cv.fill(0, 94, 234, 3, "dstone");
-  // The exposed left window has its whole lintel and sill inside the courtyard band.
-  cv.fill(7, 51, 27, 37, "dstone");
-  cv.fill(8, 52, 25, 2, "driftwood");
-  cv.fill(9, 54, 23, 31, "bark");
-  cv.fill(11, 56, 19, 27, "navy");
-  cv.fill(12, 57, 17, 24, "dlake");
-  cv.fill(12, 57, 17, 2, "lake");
-  cv.fill(20, 57, 2, 24, "stone");
-  cv.fill(12, 69, 17, 2, "stone");
-  cv.fill(10, 83, 23, 2, "driftwood");
-  cv.fill(7, 85, 28, 2, "dstone");
+  cv.fill(0, HOME_WALL_FOOT, 234, 3, "dstone");
+  // The exposed left window has its whole lintel and sill in the courtyard band's rows the start
+  // screen shows, from the row under HOME_TOP_ROW to over the wall's foot course.
+  const y = HOME_TOP_ROW + 1;
+  cv.fill(7, y, 27, HOME_WINDOW_H, "dstone");
+  cv.fill(8, y + 1, 25, 2, "driftwood");
+  cv.fill(9, y + 3, 23, HOME_WINDOW_H - 6, "bark");
+  cv.fill(11, y + 5, 19, HOME_WINDOW_H - 10, "navy");
+  cv.fill(12, y + 6, 17, HOME_WINDOW_H - 13, "dlake");
+  cv.fill(12, y + 6, 17, 2, "lake");
+  cv.fill(20, y + 6, 2, HOME_WINDOW_H - 13, "stone");
+  cv.fill(12, y + 12, 17, 2, "stone");
+  cv.fill(10, y + HOME_WINDOW_H - 5, 23, 2, "driftwood");
+  cv.fill(7, y + HOME_WINDOW_H - 3, 28, 2, "dstone");
 }
 
 // Broad flagstones and a quiet brick path, with sparse joints behind the pack.
@@ -553,10 +569,10 @@ function home(): Canvas {
   // The street-name plate, on its pole over the Pet shop and clear of the top bar, keeps the game's
   // text anchor without adding lettering to art. The shop's step sits under the divider strip, so
   // no contact shadow is drawn for it.
-  cv.fill(311, 62, 2, 44, "dstone");
-  cv.fill(311, 62, 1, 44, "stone");
-  cv.fill(270, 52, 84, 12, "dslate");
-  cv.fill(271, 52, 82, 12, "navy");
+  cv.fill(311, HOME_TOP_ROW + 12, 2, 44, "dstone");
+  cv.fill(311, HOME_TOP_ROW + 12, 1, 44, "stone");
+  cv.fill(270, HOME_TOP_ROW, 84, 12, "dslate");
+  cv.fill(271, HOME_TOP_ROW, 82, 12, "navy");
   // The logo board is the foreground focal point on the exposed left.
   for (const x of [16, 120]) {
     cv.fill(x, 140, 3, 23, "bark");

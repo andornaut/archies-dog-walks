@@ -52,11 +52,11 @@ Treat the home pickers and Start walk as one vertical group. The three sections 
 
 | Token           | Value                      | Unit       | Scope                                 | Source                                                                           |
 | --------------- | -------------------------- | ---------- | ------------------------------------- | -------------------------------------------------------------------------------- |
-| home.divider    | Strip rows 152–154         | y px       | Divider row 154, above picker group   | [home layout](../src/home/homeLayout.ts) and [style contract](style-guide.md#ui) |
+| home.divider    | Strip rows 138–140         | y px       | Divider row 140, above picker group   | [home layout](../src/home/homeLayout.ts) and [style contract](style-guide.md#ui) |
 | home.outer.gaps | 0 above; 4 below           | px         | Entire picker/action group            | [home export](../shared/export/layout.json)                                      |
-| home.walker     | 6,155,348,85               | x,y,w,h px | Walker section                        | [home export](../shared/export/layout.json)                                      |
-| home.dogs       | 6,240,348,183              | x,y,w,h px | Dogs section                          | [home export](../shared/export/layout.json)                                      |
-| home.pocket     | 6,423,348,83               | x,y,w,h px | Pocket section                        | [home export](../shared/export/layout.json)                                      |
+| home.walker     | 6,141,348,91               | x,y,w,h px | Walker section                        | [home export](../shared/export/layout.json)                                      |
+| home.dogs       | 6,232,348,183              | x,y,w,h px | Dogs section                          | [home export](../shared/export/layout.json)                                      |
+| home.pocket     | 6,415,348,91               | x,y,w,h px | Pocket section                        | [home export](../shared/export/layout.json)                                      |
 | home.start      | 32,508,296,48              | x,y,w,h px | Start walk, 2px below Pocket          | [home layout](../src/home/homeLayout.ts)                                         |
 | home.columns    | Walker 4; Dogs 3; Pocket 5 | columns    | Card grids, tiles 8px apart both ways | [home layout](../src/home/homeLayout.ts)                                         |
 

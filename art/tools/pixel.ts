@@ -329,7 +329,13 @@ interface Layout {
     road: ExportRect;
     topBar: ExportRect;
   };
-  scenes: { home: { petShop: ExportRect & { board: ExportRect } } };
+  scenes: {
+    home: {
+      backdropY: number;
+      petShop: ExportRect & { board: ExportRect };
+      topBar: { height: number };
+    };
+  };
   screen: ExportRect;
   walkBar: { parts: { cash: { well: ExportRect }; effects: { size: number } } };
 }
@@ -375,8 +381,10 @@ const LAYOUT_FIELDS: readonly string[] = [
   ...["approach", "backdrop", "junction", "road", "topBar"].flatMap((r) =>
     rectFields(`regions.${r}`),
   ),
+  "scenes.home.backdropY",
   ...rectFields("scenes.home.petShop"),
   ...rectFields("scenes.home.petShop.board"),
+  "scenes.home.topBar.height",
   ...rectFields("screen"),
   ...rectFields("walkBar.parts.cash.well"),
   "walkBar.parts.effects.size",
