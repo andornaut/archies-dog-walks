@@ -16,7 +16,13 @@ import { limitConcurrency } from "../concurrency.ts";
 import { nodeArtFiles, OPEN_FILE_LIMIT, writeIfChanged } from "../files.ts";
 import { buildAtlases, WEBP_PAGES } from "./atlasBuild.ts";
 import { artCopyFile } from "./disabledFiles.ts";
-import { ART_FILES_MODULE, artCopies, hashGameArt } from "./hashedArt.ts";
+import {
+  ART_FILES_JSON,
+  ART_FILES_MODULE,
+  artCopies,
+  artFilesJson,
+  hashGameArt,
+} from "./hashedArt.ts";
 
 // Vite's prefix for a module id that names no file.
 const RESOLVED_ART_FILES_MODULE = `\0${ART_FILES_MODULE}`;
@@ -26,16 +32,16 @@ interface AtlasPluginApi {
   artFiles(): ArtFileMap;
 }
 
-// Writes /art/manifest.json from the files under public/art/ first, so the build copies and
-// packs what is on disk. Then packs every image and sprite frame it lists into a few atlas
+// Writes /art/manifest.json from the files under public/art/ first, so the build packs and
+// hashes what is on disk. Then packs every image and sprite frame it lists into a few atlas
 // pages, lossless WebPs, with an atlas manifest mapping each key and frame to its page and rect. Every file the
 // game loads (both manifests, the pages, the fonts, the sounds and any key the atlas leaves
 // out) goes to the build output under a content-hashed name (src/tools/atlas/hashedArt.ts),
 // and the game reads the names from the ART_FILES_MODULE map, as do the disabled tiles' grey
 // copies and the celebration's dimmed copies the HTML interface draws (artCopyFiles). The dev
-// server's map is empty.
-// The files under public/art/ are also copied as they are, for the dev server, the art gallery
-// and the site's pages.
+// server's map is empty. The map is also written as /art/art-files.json (ART_FILES_JSON), where
+// the art gallery reads it; the dev server serves it empty. Of the files under public/art/, a
+// build copies only the pages and the files the site's pages name (publicFilesPlugin).
 export function atlasPlugin(): Plugin & { api: AtlasPluginApi } {
   let artFiles: ArtFileMap = new Map();
   return {
@@ -78,10 +84,15 @@ export function atlasPlugin(): Plugin & { api: AtlasPluginApi } {
         this.emitFile({ fileName, source, type: "asset" });
       }
       artFiles = new Map(hashed.map(({ fileName, path }) => [path, fileName]));
+      this.emitFile({
+        fileName: `${ART_DIR}/${ART_FILES_JSON}`,
+        source: artFilesJson(config.base, artFiles),
+        type: "asset",
+      });
     },
     // The dev server serves each grey and dimmed copy the HTML interface draws
     // (DOM_DISABLED_ART_KEYS, DOM_DIM_ART_KEYS) at its path under /art/, made from the files on
-    // disk as a build makes it.
+    // disk as a build makes it, and ART_FILES_JSON empty.
     configureServer(server: ViteDevServer) {
       const artDir = `${server.config.publicDir}/${ART_DIR}`;
       const prefix = `${server.config.base}${ART_DIR}/`;
@@ -100,6 +111,11 @@ export function atlasPlugin(): Plugin & { api: AtlasPluginApi } {
       const readArt = async (path: string) => new Uint8Array(await readFile(`${artDir}/${path}`));
       server.middlewares.use((request, response, next) => {
         const url = request.url?.split("?")[0] ?? "";
+        if (url === `${prefix}${ART_FILES_JSON}`) {
+          response.setHeader("Content-Type", "application/json");
+          response.end("{}");
+          return;
+        }
         const made = url.startsWith(prefix) ? keys.get(url.slice(prefix.length)) : undefined;
         if (made === undefined) {
           next();

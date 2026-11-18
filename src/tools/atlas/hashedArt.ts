@@ -1,5 +1,6 @@
 import { contentHash } from "@andornaut/game-kit/build/contentHash";
 
+import { type ArtFileMap, artFileUrl } from "../../assets/artUrl.ts";
 import { ATLAS_MANIFEST_PATH, type AtlasManifest } from "../../assets/atlasManifest.ts";
 import type { AssetManifest } from "../../assets/manifest.ts";
 import { ART_MANIFEST } from "../artManifest.ts";
@@ -17,6 +18,11 @@ import {
 // The module a build fills with the game's ArtFileMap (src/assets/artUrl.ts). The dev server's
 // map is empty, so every file loads from its own path there.
 export const ART_FILES_MODULE = "virtual:art-files";
+
+// The build's ArtFileMap as JSON, under /art/, for the art gallery (public/art/index.html), which
+// no build step compiles: each art file's path under /art/ to its hashed file's URL (artFilesJson).
+// The dev server serves it empty, since there every file loads at its own path.
+export const ART_FILES_JSON = "art-files.json";
 
 // Where a build writes the hashed art: /art/'s layout, under the path the headers and the service
 // worker treat as content-hashed build output.
@@ -145,5 +151,13 @@ export async function hashGameArt(
       }
       return { fileName: hashedArtFileName(path, contentHash(source)), path, source };
     }),
+  );
+}
+
+// ART_FILES_JSON's text: each path of artFiles, sorted, to its hashed file's URL under baseUrl.
+export function artFilesJson(baseUrl: string, artFiles: ArtFileMap): string {
+  const paths = [...artFiles.keys()].sort();
+  return JSON.stringify(
+    Object.fromEntries(paths.map((path) => [path, artFileUrl(baseUrl, artFiles, path)])),
   );
 }

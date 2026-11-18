@@ -4,7 +4,7 @@ import { beforeAll, describe, expect, it } from "vitest";
 import { ATLAS_MANIFEST_PATH, type AtlasManifest } from "../../assets/atlasManifest.ts";
 import type { AssetManifest } from "../../assets/manifest.ts";
 import { ART_MANIFEST } from "../artManifest.ts";
-import { type HashedArtFile, hashedArtFileName, hashGameArt } from "./hashedArt.ts";
+import { artFilesJson, type HashedArtFile, hashedArtFileName, hashGameArt } from "./hashedArt.ts";
 
 describe("hashedArtFileName", () => {
   it.each([
@@ -13,6 +13,17 @@ describe("hashedArtFileName", () => {
   ])("names %s %s", (path, fileName) => {
     expect(hashedArtFileName(path, "Bq3x_9-Z")).toBe(fileName);
   });
+});
+
+it("maps each art path, sorted, to its hashed file's URL for the art gallery", () => {
+  const artFiles = new Map([
+    ["sprites/dog.png", "assets/art/sprites/dog-Bq3x_9-Z.png"],
+    ["manifest.json", "assets/art/manifest-Cx2.json"],
+  ]);
+  expect(artFilesJson("/", artFiles)).toBe(
+    '{"manifest.json":"/assets/art/manifest-Cx2.json",' +
+      '"sprites/dog.png":"/assets/art/sprites/dog-Bq3x_9-Z.png"}',
+  );
 });
 
 const manifest: AssetManifest = {
