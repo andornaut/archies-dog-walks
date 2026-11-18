@@ -1,3 +1,5 @@
+import { createModalLayer } from "@andornaut/game-kit/runtime/web/ui/dom/modalLayer";
+
 import { createModalInputGate } from "@andornaut/game-kit/runtime/input/modalInput";
 
 import { createPressAdmission } from "../pressAdmission.ts";
@@ -105,15 +107,18 @@ export class FakeElement extends FakeTarget {
   type = "";
   readonly ownerDocument: FakeDocument;
   readonly tagName: string;
+  tabIndex: number;
 
   constructor(ownerDocument: FakeDocument, tagName: string) {
     super();
     this.ownerDocument = ownerDocument;
     this.tagName = tagName;
+    this.tabIndex = tagName.toLowerCase() === "button" ? 0 : -1;
   }
 
   append(...nodes: FakeElement[]): void {
     for (const node of nodes) {
+      node.remove();
       node.parent = this;
       this.children.push(node);
     }
@@ -164,6 +169,12 @@ export class FakeElement extends FakeTarget {
   matches(selector: string): boolean {
     return selector.split(",").some((entry) => {
       const part = entry.trim();
+      if (part === "button:not([disabled])") {
+        return this.tagName.toLowerCase() === "button" && !this.disabled;
+      }
+      if (part === "[tabindex]") {
+        return this.tabIndex >= 0;
+      }
       if (part === ":disabled") {
         return this.disabled || this.attributes.has("disabled");
       }
@@ -185,6 +196,14 @@ export class FakeElement extends FakeTarget {
       return this;
     }
     return this.parentElement?.closest(selector) ?? null;
+  }
+
+  hasAttribute(name: string): boolean {
+    return this.attributes.has(name) || (name === "inert" && this.inert) || (name === "hidden" && this.hidden);
+  }
+
+  querySelectorAll(selector: string): FakeElement[] {
+    return this.all().filter((element) => element.matches(selector));
   }
 
   contains(node: unknown): boolean {
@@ -212,10 +231,12 @@ export class FakeElement extends FakeTarget {
 
   removeAttribute(name: string): void {
     this.attributes.delete(name);
+    if (name === "inert") { this.inert = false; }
   }
 
   setAttribute(name: string, value: string): void {
     this.attributes.set(name, value);
+    if (name === "inert") { this.inert = true; }
   }
 
   // Every element under this one, depth first.
@@ -233,6 +254,11 @@ export class FakeDocument extends FakeTarget {
   readonly body = this.createElement("body");
   hidden = false;
   readonly defaultView = Object.assign(new FakeTarget(), {
+    HTMLElement: FakeElement,
+    MutationObserver: class {
+      observe(): void {}
+      disconnect(): void {}
+    },
     Node: FakeElement,
     clearTimeout: (timer?: number) => {
       void timer;
@@ -265,6 +291,7 @@ export function fakeLayer(
     failedAssets: () => [],
     fontStatus: () => "ready",
     input: createModalInputGate(),
+    modal: createModalLayer(element as unknown as HTMLElement),
     onReady: () => () => undefined,
     onScale: () => () => undefined,
     press: createPressAdmission(() => false),

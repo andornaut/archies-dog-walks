@@ -7,7 +7,7 @@ import { guardClicks, type PressGate } from "@andornaut/game-kit/runtime/web/ui/
 import { focusTarget } from "@andornaut/game-kit/runtime/web/ui/dom/focusModality";
 import { PENDING_ATTRIBUTE, type Reveal } from "@andornaut/game-kit/runtime/web/ui/dom/imageReady";
 
-import { bindGameActionHolds } from "./actionBinding.ts";
+import { bindGameAction, bindGameActionHolds } from "./actionBinding.ts";
 import type { UiLayer } from "./uiLayer.ts";
 
 export interface NativeInputGuard {
@@ -279,8 +279,9 @@ export interface ModalLifecycle {
 
 // Modal ownership is explicit and independent of whether a view draws native controls.
 export function mountModalLifecycle(
-  layer: Pick<UiLayer, "input" | "press" | "scale">,
+  layer: Pick<UiLayer, "element" | "input" | "modal" | "press" | "scale">,
   options: {
+    readonly backgroundCancel?: () => void;
     readonly gesture?: NativeGesture;
     readonly modal: boolean;
     readonly onPaint?: () => void;
@@ -291,6 +292,17 @@ export function mountModalLifecycle(
   const { modal, reveal } = options;
   const doc = element.ownerDocument;
   const previous = doc.activeElement as HTMLElement | null;
+  const host = modal ? doc.createElement("div") : undefined;
+  const backdrop = modal ? doc.createElement("div") : undefined;
+  if (host !== undefined && backdrop !== undefined) {
+    Object.assign(host.style, { position: "absolute", inset: "0", pointerEvents: "none" });
+    Object.assign(backdrop.style, { position: "absolute", inset: "0", pointerEvents: "auto" });
+    backdrop.className = "adw-modal-backdrop";
+    backdrop.setAttribute("aria-hidden", "true");
+    host.append(backdrop, element);
+    layer.element.append(host);
+  }
+  let closeModal: (() => void) | undefined;
   let alive = true;
   let enabled = true;
   let shown = true;
@@ -311,12 +323,31 @@ export function mountModalLifecycle(
   let wasAccepted = false;
   const sync = () => {
     const accepted = accepts();
+    const present = eligible() && enabled && paint.painted();
+    if (!present) {
+      closeModal?.();
+      closeModal = undefined;
+    }
     element.hidden = !shown;
+    if (host !== undefined) {
+      host.hidden = !shown;
+    }
+    // The shared manager owns covered-dialog inertness and focus restoration.
     element.inert = !accepted;
+    if (modal && accepted && closeModal === undefined) {
+      closeModal = layer.modal.open(
+        {
+          isolation: "dialog",
+          backdrop,
+          ...(options.backgroundCancel === undefined ? {} : { close: options.backgroundCancel }),
+        },
+        element,
+      );
+    }
     element.classList.toggle("adw-inert", !accepted);
     if (accepted) {
       element.removeAttribute("aria-hidden");
-      if (!wasAccepted) {
+      if (!modal && !wasAccepted) {
         focusTarget(element);
       }
     } else {
@@ -337,6 +368,18 @@ export function mountModalLifecycle(
   const stopInput = guardNativeInput(
     {
       ...options.gesture,
+      down: (event) => {
+        if (element.contains(event.target as Node)) {
+          options.gesture?.down?.(event);
+        }
+      },
+      move: (event) => {
+        if (element.contains(event.target as Node)) {
+          options.gesture?.move?.(event);
+        }
+      },
+      up: (event, cancelled) =>
+        element.contains(event.target as Node) ? options.gesture?.up?.(event, cancelled) : false,
       cancel: () => {
         options.gesture?.cancel?.();
         const clear = (node: HTMLElement) => {
@@ -354,6 +397,19 @@ export function mountModalLifecycle(
     },
     element,
   );
+  const stopBackdropInput = backdrop === undefined ? () => undefined : guardNativeInput(
+    {
+      claim: layer.press.claim,
+      gate: input,
+      holdUnit: () => layer.scale().unit,
+      subscribe: layer.input.subscribe,
+    },
+    backdrop,
+  );
+  const stopBackdrop =
+    backdrop === undefined || options.backgroundCancel === undefined
+      ? () => undefined
+      : bindGameAction({ activate: options.backgroundCancel, available: accepts }, backdrop);
   const paint = revealPaint(
     reveal,
     () => {
@@ -385,11 +441,16 @@ export function mountModalLifecycle(
       const top = scope?.accepts() === true;
       alive = false;
       blur();
+      closeModal?.();
+      closeModal = undefined;
+      stopBackdrop();
+      stopBackdropInput();
       stopInput();
       stopChanges();
       paint.destroy();
       closeScope();
-      if (top && previous?.isConnected && !previous.closest("[inert]")) {
+      host?.remove();
+      if (!modal && top && previous?.isConnected && !previous.closest("[inert]")) {
         focusTarget(previous);
       }
     },

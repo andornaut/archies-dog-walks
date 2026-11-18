@@ -2,7 +2,8 @@ import { createModalInputGate } from "@andornaut/game-kit/runtime/input/modalInp
 import { expect, it, vi } from "vitest";
 
 import { createPressAdmission } from "../../pressAdmission.ts";
-import { FakeDocument, type FakeElement } from "../../testing/fakeDom.ts";
+import { FakeDocument, type FakeElement, fakeLayer } from "../../testing/fakeDom.ts";
+import { domScale } from "../domScale.ts";
 import { guardNativeInput, mountModalLifecycle } from "./modalLifecycle.ts";
 
 const pointer = (pointerId: number, target: FakeElement, type = "pointerdown") => ({
@@ -63,7 +64,7 @@ it("admits revealed and painted views, makes covered dialogs inert and restores 
   const root = doc.createElement("div");
   const reveal = { cancel: vi.fn(), revealed: Promise.resolve(true) };
   const view = mountModalLifecycle(
-    { input: gate, press, scale: () => ({ dpr: 1, origin: { x: 0, y: 0 }, unit: 1 }) },
+    { ...fakeLayer(doc, domScale(1, { height: 560, width: 360, x: 0, y: 0 })).layer, input: gate, press, scale: () => ({ dpr: 1, origin: { x: 0, y: 0 }, unit: 1 }) },
     { modal: true, reveal },
     root as unknown as HTMLElement,
   );
@@ -153,7 +154,7 @@ it("releases an unfinished modal contact on window blur and accepts one fresh ac
   button.addEventListener("click", action);
   const reveal = { cancel: vi.fn(), revealed: Promise.resolve(true) };
   const view = mountModalLifecycle(
-    { input: gate, press, scale: () => ({ dpr: 1, origin: { x: 0, y: 0 }, unit: 1 }) },
+    { ...fakeLayer(doc, domScale(1, { height: 560, width: 360, x: 0, y: 0 })).layer, input: gate, press, scale: () => ({ dpr: 1, origin: { x: 0, y: 0 }, unit: 1 }) },
     { gesture: { cancel }, modal: true, reveal },
     root as unknown as HTMLElement,
   );

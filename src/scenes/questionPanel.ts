@@ -45,6 +45,7 @@ export interface PanelEntry {
 
 export interface QuestionPanel {
   readonly avoid?: Rect;
+  readonly backgroundCancel?: () => void;
   // What the close control in the panel's top-right corner does, as a tap outside the panel does.
   readonly close: () => void;
   // Source callback and digit order; placement moves the existing primary last.
@@ -147,7 +148,7 @@ export function followScene<
 function showHtmlPanel(
   scene: Scene,
   place: NonNullable<ReturnType<typeof htmlPanelPlace>>,
-  controls: Pick<DomQuestionPanelInput, "close" | "numberKeys" | "numberPresses" | "presses">,
+  controls: Pick<DomQuestionPanelInput, "backgroundCancel" | "close" | "numberKeys" | "numberPresses" | "presses">,
   view: QuestionPanelView,
   dimsUnder = false,
 ): DomQuestionPanel {
@@ -169,6 +170,7 @@ export function addHtmlQuestionPanel(
   const view = questionView(scene, area, question);
   const presses = question.entries.map(({ press }) => press);
   const controls = {
+    ...(question.backgroundCancel === undefined ? {} : { backgroundCancel: question.backgroundCancel }),
     close: question.close,
     numberKeys: true,
     presses,
@@ -190,6 +192,7 @@ export function addHtmlModalCard(
   title: string,
   entries: readonly CardEntry[],
   close: () => void,
+  backgroundCancel?: () => void,
 ): DomQuestionPanel | undefined {
   const place = htmlPanelPlace(scene);
   if (place === undefined) {
@@ -199,6 +202,7 @@ export function addHtmlModalCard(
   const view = modalCardView(measure, card, title, entries);
   const presses = entries.map(({ press }) => press);
   const panel = showQuestionPanel(place.layer, {
+    ...(backgroundCancel === undefined ? {} : { backgroundCancel }),
     close,
     numberKeys: false,
     presses,
@@ -437,7 +441,7 @@ export function addHtmlEndScreen(
 // Native Help controls retain the scene's paging and gesture rules.
 export function addHtmlHelpScreen(
   scene: Scene,
-  actions: Pick<DomHelpInput, "presses" | "gesture" | "footerPress">,
+  actions: Pick<DomHelpInput, "backgroundCancel" | "presses" | "gesture" | "footerPress">,
   view: HelpView,
 ): DomQuestionPanel | undefined {
   const place = htmlPanelPlace(scene);

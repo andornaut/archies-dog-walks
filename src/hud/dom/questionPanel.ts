@@ -53,6 +53,7 @@ export interface DomPart {
 export interface DomQuestionPanelInput {
   // Base screens opt out of modal ownership; pictures can remain modal without native buttons.
   readonly modal?: boolean;
+  readonly backgroundCancel?: () => void;
   // What the close control does; undefined draws it as a picture, and a panel with no buttons
   // then takes no presses: every press goes through to the canvas, whose scene closes it. null
   // draws no close control, and a panel with no buttons then takes no presses either. Then its
@@ -387,7 +388,7 @@ export function showQuestionPanel(layer: UiLayer, input: DomQuestionPanelInput):
       event.stopPropagation();
       return;
     }
-    if (event.code !== "Tab") {
+    if (event.code !== "Tab" || modal) {
       return;
     }
     const visible = focusables.filter(
@@ -494,6 +495,7 @@ export function showQuestionPanel(layer: UiLayer, input: DomQuestionPanelInput):
     layer,
     {
       ...(gesture === undefined ? {} : { gesture }),
+      ...(input.backgroundCancel === undefined ? {} : { backgroundCancel: input.backgroundCancel }),
       ...(input.onPaint === undefined ? {} : { onPaint: input.onPaint }),
       modal,
       reveal: layer.reveal(

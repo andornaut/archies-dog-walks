@@ -18,6 +18,7 @@ import {
   type Reveal,
   revealWhenDecoded,
 } from "@andornaut/game-kit/runtime/web/ui/dom/imageReady";
+import { createModalLayer, type ModalLayer } from "@andornaut/game-kit/runtime/web/ui/dom/modalLayer";
 import buttonSkinManifest from "virtual:adw-button-skin";
 
 import { artUrl } from "../../assets/artFiles.ts";
@@ -49,6 +50,7 @@ export type FontStatus = "failed" | "loading" | "ready";
 export interface UiLayer {
   readonly element: HTMLElement;
   readonly input: ModalInputGate;
+  readonly modal: ModalLayer;
   readonly press: PressAdmission;
   readonly buttonSkin: ButtonSkin;
   fontStatus(): FontStatus;
@@ -118,6 +120,7 @@ export function mountUiLayer(
   for (const [name, colour] of Object.entries(PALETTE)) {
     element.style.setProperty(`--adw-${name}`, hex(colour));
   }
+  const modal = createModalLayer(element);
   let disposed = false;
   const fontStates = new Map<string, FontStatus>();
   const readyListeners = new Set<() => void>();
@@ -198,6 +201,7 @@ export function mountUiLayer(
         return;
       }
       disposed = true;
+      modal.dispose();
       resize?.disconnect();
       required.dispose();
       unsubscribeSheets();
@@ -212,6 +216,7 @@ export function mountUiLayer(
     failedAssets: required.failed,
     fontStatus,
     input: createModalInputGate(),
+    modal,
     onReady(listener) {
       readyListeners.add(listener);
       return () => readyListeners.delete(listener);
