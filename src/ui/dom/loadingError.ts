@@ -10,7 +10,7 @@ import {
 } from "@andornaut/game-kit/runtime/web/progress/dom/loadingFailure";
 import { createModalLayer } from "@andornaut/game-kit/runtime/web/ui/dom/modalLayer";
 
-import { BUTTON_SIZE } from "../../data/layout.ts";
+import { BUTTON_SIZE, MODAL_SPACING, MODAL_WIDTHS } from "../../data/layout.ts";
 import { PALETTE } from "../palette.ts";
 import { bindGameAction } from "./actionBinding.ts";
 import { guardNativeInput } from "./modalLifecycle.ts";
@@ -43,7 +43,8 @@ export function mountLoadingError(
   let close: (() => void) | undefined;
   let scope: ReturnType<UiLayer["input"]["open"]> | undefined;
   let disposed = false;
-  // Typography and panel spacing stay in CSS pixels; only the normal action follows game fit.
+  // Typography and inner panel spacing stay in CSS pixels; the panel's Large width, its screen
+  // margin and the normal action follow game fit.
   const presentation = (): LoadingFailurePresentation => {
     const unit = layer.scale().unit;
     const colour = (value: number) => `#${value.toString(16).padStart(6, "0")}`;
@@ -72,11 +73,11 @@ export function mountLoadingError(
         bodyActionGapPx: 24,
         borderWidthPx: 1,
         lipHeightPx: 4,
-        maxWidthPx: 328,
+        maxWidthPx: MODAL_WIDTHS.large * unit,
         paddingBottomPx: 16,
         paddingTopPx: 24,
         paddingXPx: 16,
-        safeInsetPx: 16,
+        safeInsetPx: MODAL_SPACING.margin * unit,
         shadowOffsetPx: 4,
         titleBodyGapPx: 16,
       },
