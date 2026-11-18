@@ -14,7 +14,7 @@ import { PALETTE } from "../../ui/palette.ts";
 import { plainMarks } from "../../ui/pixelFont.ts";
 import { TEXT_SCALE } from "../../ui/textFit.ts";
 import { HOME_LAYOUT } from "../homeLayout.ts";
-import { pricePlateView } from "../pricePlateView.ts";
+import { plateStripView, pricePlateView } from "../pricePlateView.ts";
 import { homeSelectionColour, type HomeSelectionView } from "../selectionView.ts";
 import { createSelectionTile, type NativeTileFill } from "./selectionTile.ts";
 interface SelectionArtSource extends DomArtSource {
@@ -148,17 +148,16 @@ export function createHomeSelection(
     });
   }
   if (view.plate !== undefined) {
-    const plate = pricePlateView(
-      {
-        capHeight: fontMetrics(body).capHeight,
-        padding: platePadding,
-        scale: TEXT_SCALE,
-        width: (text) => advanceWidth(body, TEXT_SCALE, plainMarks(text)),
-      },
-      view.plate,
-      view.plate.kind,
-      view.plate.text,
-    );
+    const measure = {
+      capHeight: fontMetrics(body).capHeight,
+      padding: platePadding,
+      scale: TEXT_SCALE,
+      width: (text: string) => advanceWidth(body, TEXT_SCALE, plainMarks(text)),
+    };
+    const plate =
+      view.plate.strip === undefined
+        ? pricePlateView(measure, view.plate, view.plate.kind, view.plate.text)
+        : plateStripView(measure, view.plate.strip, view.plate.kind, view.plate.text);
     for (const part of plate.fills) {
       fill(part.rect, part.colour);
     }

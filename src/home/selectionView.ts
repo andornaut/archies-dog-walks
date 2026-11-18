@@ -25,7 +25,7 @@ import {
   type Purchase,
   purchasePrice,
 } from "./home.ts";
-import { dogTileNameY, dogTilePlateY, HOME_LAYOUT } from "./homeLayout.ts";
+import { dogTileNameY, dogTilePlateY, HOME_LAYOUT, tileStrip } from "./homeLayout.ts";
 import { walkerTile } from "./walkers.ts";
 export interface HomeSelectionCell<Id> {
   readonly id: Id;
@@ -74,6 +74,8 @@ export interface HomeSelectionView {
     readonly x: number;
     readonly capTop: number;
     readonly originX: number;
+    // The label strip across the tile's foot that carries the text, when it has one.
+    readonly strip?: Rect;
   };
   readonly badge?: {
     readonly kind: Badge;
@@ -132,15 +134,18 @@ export function homeSelectionViews(
         : { badge: { kind: look.badge, x: x + badgeAt.dx, y: y + badgeAt.dy } }),
     };
   };
-  const pricePlate = (tile: ItemTile, x: number, capTop: number, originX: number) => {
+  const pricePlate = (tile: ItemTile, x: number, capTop: number, originX: number, strip?: Rect) => {
     const kind = itemTileLook(tile).plate;
     const text =
       tile.kind === "locked" ? dollarText(tile.price) : tile.kind === "goal" ? tile.goal : null;
-    return text === null || kind === null ? {} : { plate: { capTop, kind, originX, text, x } };
+    return text === null || kind === null
+      ? {}
+      : { plate: { capTop, kind, originX, text, x, ...(strip === undefined ? {} : { strip }) } };
   };
   for (const cell of snapshot.walkers) {
     const { width, x, y } = cell.rect;
-    const { badge, box, face, icons, plateY } = HOME_LAYOUT.walkerTile;
+    const { badge, box, face, icons, strip } = HOME_LAYOUT.walkerTile;
+    const walkerStrip = tileStrip(cell.rect, strip);
     const tile = walkerTile(data, save, cell.id);
     const walker = data.walkers[cell.id];
     const portrait = {
@@ -166,9 +171,10 @@ export function homeSelectionViews(
       label: walker.name,
       pictures,
       plate: {
-        capTop: y + plateY,
+        capTop: walkerStrip.y + 1,
         kind: "goal",
         originX: 0.5,
+        strip: walkerStrip,
         text: walker.name,
         x: x + width / 2,
       },
@@ -235,7 +241,8 @@ export function homeSelectionViews(
       pickedCount: loadout.gear === null ? 0 : 1,
       price: purchasePrice(data, save.owned, purchase),
     });
-    const { badge, box, icon, priceY } = HOME_LAYOUT.pocket;
+    const { badge, box, icon, strip } = HOME_LAYOUT.pocket;
+    const gearStrip = tileStrip(cell.rect, strip);
     result.push({
       ...make(cell, tile, box, badge),
       label: data.shopGear[cell.id].name,
@@ -254,7 +261,7 @@ export function homeSelectionViews(
           y: y + icon.dy,
         },
       ],
-      ...pricePlate(tile, x + width / 2, y + priceY, 0.5),
+      ...pricePlate(tile, x + width / 2, gearStrip.y + 1, 0.5, gearStrip),
     });
   }
   return result;

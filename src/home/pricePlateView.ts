@@ -64,3 +64,32 @@ export function pricePlateView(
     rect,
   };
 }
+
+// A label strip across a tile's foot: a rule in the plate's edge colour along its top row, the
+// plate's face under it, and the label centred on its ink in the face (rect).
+export function plateStripView(
+  measure: Pick<PricePlateMeasure, "capHeight" | "scale">,
+  strip: Rect,
+  kind: PlateKind,
+  text: string,
+): PricePlateView {
+  const colours = PLATE_LOOKS[kind];
+  const rect = { ...strip, height: strip.height - 1, y: strip.y + 1 };
+  return {
+    fills: [
+      { colour: PALETTE[colours.edge], rect: { ...strip, height: 1 } },
+      { colour: PALETTE[colours.face], rect },
+    ],
+    label: {
+      capTop: rect.y + Math.floor((rect.height - measure.capHeight * measure.scale) / 2),
+      centre: "ink",
+      centreX: rect.x + rect.width / 2,
+      colour: PALETTE[colours.text],
+      font: "body",
+      line: 0,
+      scale: measure.scale,
+      text,
+    },
+    rect,
+  };
+}

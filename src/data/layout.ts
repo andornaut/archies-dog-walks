@@ -618,19 +618,20 @@ export const HOME_SCREEN = {
     y: 86,
   },
   // The rows the Pet shop, its board, the dog slot sign hung from its awning and the street name
-  // sit under their yard rows, which move them together. art: screen-home draws the street-name
-  // plate this far down.
-  petShopDrop: 12,
+  // sit under their yard rows, which move them together, keeping the street-name plate's rows
+  // between the top bar and the Pet shop. art: screen-home draws the street-name plate this far
+  // down.
+  petShopDrop: 26,
   // A Pocket tile: its badge's offset, its icon box's offset and side, its icon's offset and its
-  // price plate's capitals' top.
+  // price strip's rows at the tile's foot.
   pocket: {
     badge: { dx: -2, dy: -3 },
-    box: { dx: 12, dy: 3, size: 34 },
-    icon: { dx: 13, dy: 4 },
-    priceY: 28,
+    box: { dx: 12, dy: 2, size: 34 },
+    icon: { dx: 13, dy: 3 },
+    strip: 15,
   },
   // art: the Pocket tiles' faces, each drawn inside a press cell grown round it to MIN_PRESS tall.
-  pocketTiles: { columns: 5, face: { height: 42, width: 58 } },
+  pocketTiles: { columns: 5, face: { height: 50, width: 58 } },
   // The porch dog's feet from its owner's.
   porchDogOffset: { dx: -12, footDy: 3 },
   // yard: the starter dog's owner's feet, by dog.
@@ -694,18 +695,17 @@ export const HOME_SCREEN = {
   // The walker's column at the gate.
   walkerAtGate: { x: 180 },
   // A walker tile's portrait box: its offset and side.
-  walkerBox: { dx: 3, dy: 4, size: 34 },
-  // A walker tile's name plate's capitals' top.
-  walkerTextY: 28,
-  // A walker tile: a locked walker's badge's offset, the portrait's offset, and the perk icon's
-  // left edge and tops.
+  walkerBox: { dx: 3, dy: 2, size: 34 },
+  // A walker tile: a locked walker's badge's offset, the portrait's offset, the perk icon's left
+  // edge and tops, and its name strip's rows at the tile's foot.
   walkerTile: {
     badge: { dx: -2, dy: -3 },
-    face: { dx: 4, dy: 5 },
+    face: { dx: 4, dy: 3 },
     icons: { dx: 46, dy: [5] },
+    strip: 17,
   },
   // art: the walker tiles' faces, each drawn inside a press cell grown round it to MIN_PRESS tall.
-  walkerTiles: { columns: 4, face: { height: 44, width: 77 } },
+  walkerTiles: { columns: 4, face: { height: 50, width: 77 } },
   // yard, art: the yard sign's board, baked into screen-home.
   yardSign: { height: 38, width: 128, x: 6, y: 138 } satisfies Rect,
 } as const;

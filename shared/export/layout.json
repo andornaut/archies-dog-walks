@@ -1702,7 +1702,7 @@
       }
     },
     "home": {
-      "backdropY": -12,
+      "backdropY": -26,
       "bandText": {
         "inset": 9,
         "y": 7
@@ -1740,7 +1740,7 @@
       },
       "dogOrigin": {
         "x": 15,
-        "y": 271
+        "y": 263
       },
       "dogTile": {
         "badge": {
@@ -1773,12 +1773,12 @@
         }
       },
       "gate": {
-        "height": 112,
+        "height": 98,
         "y": 40
       },
       "gateBar": {
         "height": 3,
-        "y": 152
+        "y": 138
       },
       "gateSpots": [
         {
@@ -1798,15 +1798,15 @@
         "height": 18,
         "width": 18,
         "x": 194,
-        "y": 122
+        "y": 108
       },
-      "heroOffsetY": -44,
+      "heroOffsetY": -58,
       "heroSectionGap": 0,
       "loadingProgress": {
         "height": 4,
         "width": 360,
         "x": 0,
-        "y": 147
+        "y": 133
       },
       "path": {
         "width": 32,
@@ -1824,7 +1824,7 @@
           "y": 54
         },
         "hit": {
-          "height": 98,
+          "height": 84,
           "width": 120,
           "x": 234,
           "y": 54
@@ -1837,32 +1837,32 @@
         },
         "box": {
           "dx": 12,
-          "dy": 3,
+          "dy": 2,
           "size": 34
         },
         "cells": {
-          "cellHeight": 48,
-          "cellWidth": 64,
+          "cellHeight": 50,
+          "cellWidth": 58,
           "columns": 5,
-          "gapX": 2,
-          "gapY": 2,
+          "gapX": 8,
+          "gapY": 8,
           "inset": {
-            "x": 3,
-            "y": 3
+            "x": 0,
+            "y": 0
           }
         },
         "icon": {
           "dx": 13,
-          "dy": 4
+          "dy": 3
         },
         "origin": {
-          "x": 16,
-          "y": 454
+          "x": 19,
+          "y": 449
         },
-        "priceY": 28,
+        "strip": 15,
         "tileInset": {
-          "x": 3,
-          "y": 3
+          "x": 0,
+          "y": 0
         }
       },
       "porchDogOffset": {
@@ -1871,7 +1871,7 @@
       },
       "porchSpots": {
         "archie": {
-          "footY": 101,
+          "footY": 87,
           "x": 120
         }
       },
@@ -1916,19 +1916,19 @@
           "height": 183,
           "width": 348,
           "x": 6,
-          "y": 240
+          "y": 232
         },
         "pocket": {
-          "height": 83,
+          "height": 91,
           "width": 348,
           "x": 6,
-          "y": 423
+          "y": 415
         },
         "walker": {
-          "height": 85,
+          "height": 91,
           "width": 348,
           "x": 6,
-          "y": 155
+          "y": 141
         }
       },
       "slotSign": {
@@ -2054,12 +2054,12 @@
         "capY": 325
       },
       "walkerAtGate": {
-        "footY": 152,
+        "footY": 138,
         "x": 180
       },
       "walkerOrigin": {
-        "x": 12,
-        "y": 187
+        "x": 14,
+        "y": 175
       },
       "walkerTile": {
         "badge": {
@@ -2068,12 +2068,12 @@
         },
         "box": {
           "dx": 3,
-          "dy": 4,
+          "dy": 2,
           "size": 34
         },
         "face": {
           "dx": 4,
-          "dy": 5
+          "dy": 3
         },
         "icons": {
           "dx": 46,
@@ -2081,28 +2081,28 @@
             5
           ]
         },
-        "plateY": 28
+        "strip": 17
       },
       "walkerTileInset": {
-        "x": 2,
-        "y": 2
+        "x": 0,
+        "y": 0
       },
       "walkerTiles": {
-        "cellHeight": 48,
-        "cellWidth": 81,
+        "cellHeight": 50,
+        "cellWidth": 77,
         "columns": 4,
-        "gapX": 4,
-        "gapY": 4,
+        "gapX": 8,
+        "gapY": 8,
         "inset": {
-          "x": 2,
-          "y": 2
+          "x": 0,
+          "y": 0
         }
       },
       "yardSign": {
         "height": 38,
         "width": 128,
         "x": 6,
-        "y": 94
+        "y": 80
       },
       "barButtons": {
         "mute": {
@@ -2147,113 +2147,113 @@
           "height": 48,
           "width": 109,
           "x": 15,
-          "y": 271
+          "y": 263
         },
         {
           "height": 48,
           "width": 109,
           "x": 126,
-          "y": 271
+          "y": 263
         },
         {
           "height": 48,
           "width": 109,
           "x": 237,
-          "y": 271
+          "y": 263
         },
         {
           "height": 48,
           "width": 109,
           "x": 15,
-          "y": 321
+          "y": 313
         },
         {
           "height": 48,
           "width": 109,
           "x": 126,
-          "y": 321
+          "y": 313
         },
         {
           "height": 48,
           "width": 109,
           "x": 237,
-          "y": 321
+          "y": 313
         },
         {
           "height": 48,
           "width": 109,
           "x": 15,
-          "y": 371
+          "y": 363
         },
         {
           "height": 48,
           "width": 109,
           "x": 126,
-          "y": 371
+          "y": 363
         },
         {
           "height": 48,
           "width": 109,
           "x": 237,
-          "y": 371
+          "y": 363
         }
       ],
       "pocketRects": [
         {
-          "height": 48,
-          "width": 64,
-          "x": 16,
-          "y": 454
+          "height": 50,
+          "width": 58,
+          "x": 19,
+          "y": 449
         },
         {
-          "height": 48,
-          "width": 64,
-          "x": 82,
-          "y": 454
+          "height": 50,
+          "width": 58,
+          "x": 85,
+          "y": 449
         },
         {
-          "height": 48,
-          "width": 64,
-          "x": 148,
-          "y": 454
+          "height": 50,
+          "width": 58,
+          "x": 151,
+          "y": 449
         },
         {
-          "height": 48,
-          "width": 64,
-          "x": 214,
-          "y": 454
+          "height": 50,
+          "width": 58,
+          "x": 217,
+          "y": 449
         },
         {
-          "height": 48,
-          "width": 64,
-          "x": 280,
-          "y": 454
+          "height": 50,
+          "width": 58,
+          "x": 283,
+          "y": 449
         }
       ],
       "walkerRects": [
         {
-          "height": 48,
-          "width": 81,
-          "x": 12,
-          "y": 187
+          "height": 50,
+          "width": 77,
+          "x": 14,
+          "y": 175
         },
         {
-          "height": 48,
-          "width": 81,
-          "x": 97,
-          "y": 187
+          "height": 50,
+          "width": 77,
+          "x": 99,
+          "y": 175
         },
         {
-          "height": 48,
-          "width": 81,
-          "x": 182,
-          "y": 187
+          "height": 50,
+          "width": 77,
+          "x": 184,
+          "y": 175
         },
         {
-          "height": 48,
-          "width": 81,
-          "x": 267,
-          "y": 187
+          "height": 50,
+          "width": 77,
+          "x": 269,
+          "y": 175
         }
       ]
     },

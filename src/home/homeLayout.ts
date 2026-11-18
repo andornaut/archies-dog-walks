@@ -92,7 +92,6 @@ const WALKER_TILES = tiles(HOME.walkerTiles);
 const DOG_TILES = tiles(HOME.dogTiles);
 const POCKET_TILES = tiles(HOME.pocketTiles);
 const WALKER_BOX = HOME.walkerBox;
-const WALKER_TEXT_Y = HOME.walkerTextY;
 // A grid's cells' span across.
 const gridSpan = ({ cellWidth, columns, gapX }: GridSpec) =>
   columns * cellWidth + (columns - 1) * gapX;
@@ -302,7 +301,8 @@ export const HOME_LAYOUT = {
   },
   // The Pocket's row of gear cells under its section's band, across the walker row's span, each
   // drawing its tile tileInset inside. In a tile: the icon box and the art in it, the badge over
-  // its top-left corner, and the price plate's caps, centred.
+  // its top-left corner, and the price on a strip strip rows tall across the tile's foot
+  // (tileStrip).
   pocket: {
     badge: HOME.pocket.badge,
     box: HOME.pocket.box,
@@ -312,7 +312,7 @@ export const HOME_LAYOUT = {
       x: gridOriginX(POCKET_TILES),
       y: sectionTilesY(POCKET_SECTION, POCKET_TILES.inset.y),
     },
-    priceY: HOME.pocket.priceY,
+    strip: HOME.pocket.strip,
     tileInset: POCKET_TILES.inset,
   },
   porchDogOffset: HOME.porchDogOffset,
@@ -479,14 +479,15 @@ export const HOME_LAYOUT = {
   walkerOrigin: { x: GRID_ORIGIN_X, y: sectionTilesY(WALKER_SECTION, WALKER_TILES.inset.y) },
   // A walker tile: the portrait's box and the portrait in it, the walker's perk icon right of
   // the box at icons.dy (a walker has one perk), a locked walker's badge over the tile's
-  // top-left corner, and every walker's name plate, its caps at plateY, centred. The tiles sit
-  // inside the shared card-edge padding; the selected mark overhangs into its own gutter.
+  // top-left corner, and every walker's name on a strip strip rows tall across the tile's foot
+  // (tileStrip). The tiles sit inside the shared card-edge padding; the selected mark overhangs
+  // into its own gutter.
   walkerTile: {
     badge: HOME.walkerTile.badge,
     box: WALKER_BOX,
     face: HOME.walkerTile.face,
     icons: HOME.walkerTile.icons,
-    plateY: WALKER_TEXT_Y,
+    strip: HOME.walkerTile.strip,
   },
   // Each walker tile is drawn this far inside its hit area.
   walkerTileInset: WALKER_TILES.inset,
@@ -693,6 +694,18 @@ export function detailCardLayout(
   const below = cardRows(body, upper + pad, rows.below);
   const bottom = rows.below.length > 0 ? below.bottom : upper;
   return { below: below.tops, beside: beside.tops, height: bottom + pad, wellY };
+}
+
+// A walker or Pocket tile's label strip, rows tall, from the drawn tile at tile: across the tile
+// inside its one-column outline and on the row over its bottom outline, its first row a rule.
+export const TILE_STRIP_EDGE = 1;
+export function tileStrip(tile: Rect, rows: number): Rect {
+  return {
+    height: rows,
+    width: tile.width - 2 * TILE_STRIP_EDGE,
+    x: tile.x + TILE_STRIP_EDGE,
+    y: tile.y + tile.height - TILE_STRIP_EDGE - rows,
+  };
 }
 
 // How wide a dog tile's name may be: from its text column to padRight inside its face's edge.

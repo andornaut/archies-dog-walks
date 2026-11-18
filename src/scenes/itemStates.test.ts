@@ -103,7 +103,9 @@ describe("a walker tile's name plate", () => {
     };
     expect(bodyTextWidth(2, name) + 2 * PLATE_PAD).toBeLessThanOrEqual(face.width);
     const capHeight = fontFileMetrics("font-body").capHeight * 2;
-    expect(tile.plateY + capHeight + PLATE_PAD).toBeLessThanOrEqual(face.height);
+    // The name strip, a rule over the name's capitals and their padding, sits inside the tile.
+    expect(1 + capHeight + PLATE_PAD).toBeLessThanOrEqual(tile.strip);
+    expect(tile.strip).toBeLessThan(face.height);
   });
 });
 
