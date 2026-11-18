@@ -15,12 +15,14 @@
 //   left, a low autumn planter, an open iron gate and quiet broad flagstones. No roofs, skyline or
 //   sky are cropped beneath the top bar. The centre stays quiet behind dialogue and the pack; the
 //   red-brick path at x 164 to 195 ends below the actor's last opaque foot row 163 (anchor 164).
-//   The street-name board is at 286,52, 68x12; the game prints its existing name in white title
-//   lettering at 320,55. The yard sign at 6,106, 128x38 carries ARCHIE'S over DOG WALKS in the
-//   existing sign letters, on two short posts. The right lot is reserved for ui-pet-shop at
-//   234,66,120x108, its last 10 rows under the divider strip and the sections. Two quiet ground
-//   rows at 164 and 165 precede the plum divider on row 166; the backing below it is flat dbrown.
-//   No strong green competes with the existing shop board and Start walk.
+//   The street-name board is at 270,52, 84x12, its navy edged in dslate at the sides, filling the
+//   rows between the top bar and the Pet shop's affordable outline; the game prints its existing
+//   name in white title lettering at 2x, its ink centred on the navy. The yard sign at 6,106,
+//   128x38 carries ARCHIE'S over DOG WALKS in the existing sign letters, on two short posts. The
+//   right lot is reserved for ui-pet-shop at 234,66,120x108, its last 10 rows under the divider
+//   strip and the sections. Two quiet ground rows at 164 and 165 precede the plum divider on row
+//   166; the backing below it is flat dbrown. No strong green competes with the existing shop board
+//   and Start walk.
 // - screen-end: a Cabbagetown street at dusk, with plain lower sky bands and a repeating interior
 //   road footer from row 511, free of lane edges and dashes. Between the logo (END_LOGO_AT 107,2)
 //   and the summary panel (24,112 to 336,412), the front of the brick cottage the pack comes home
@@ -551,10 +553,10 @@ function home(): Canvas {
   // The street-name plate, on its pole over the Pet shop and clear of the top bar, keeps the game's
   // text anchor without adding lettering to art. The shop's step sits under the divider strip, so
   // no contact shadow is drawn for it.
-  cv.fill(319, 62, 2, 44, "dstone");
-  cv.fill(319, 62, 1, 44, "stone");
-  cv.fill(286, 52, 68, 12, "dslate");
-  cv.fill(287, 53, 66, 10, "navy");
+  cv.fill(311, 62, 2, 44, "dstone");
+  cv.fill(311, 62, 1, 44, "stone");
+  cv.fill(270, 52, 84, 12, "dslate");
+  cv.fill(271, 52, 82, 12, "navy");
   // The logo board is the foreground focal point on the exposed left.
   for (const x of [16, 120]) {
     cv.fill(x, 140, 3, 23, "bark");

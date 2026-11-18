@@ -16,8 +16,8 @@
 //   ear) and shake (4, 60ms, a quick shake-off after an encounter hit, throwing droplets and settling
 //   on its centre).
 // - face-dog-<name>: the dog's face on its card and in the picker, a 32x32 frame, the face drawn
-//   FACE_SIDE big and sat on the bottom edge, the size classes one even step apart and the large dogs
-//   zoomed to fill it. Tags: happy, neutral, upset.
+//   FACE_SIDE big and sat on the bottom edge: the largest side at which every mood fits the frame
+//   whole, so every face fills its frame. Tags: happy, neutral, upset.
 //
 // dogFrames draws a road sprite's tags, here rather than in minis.ts, which draws the dogs' depth
 // variants with it: minis.ts imports this module, so neither imports the other in a cycle.
@@ -1221,22 +1221,32 @@ export const DOG_ZOOM: Readonly<Record<string, Zoom>> = {
   sequoia: [0.82, 1],
 };
 
-// How big each dog's face is drawn in its 32px frame, sat on the bottom edge: the side that brings
-// its inked area nearest its size class's target, so the classes step evenly (the square root of the
-// area about 17, 21.3 and 25.5px) however much of its design a breed's ears or topknot fill. The
-// large dogs zoom past the frame as far as Kilo's ears fit under its top edge, so they fill their
-// tiles, and medium sits halfway.
-export const FACE_SIDE: Readonly<Record<string, number>> = {
-  archie: 30,
-  buddy: 27,
-  ginger: 23,
-  kilo: 35,
-  lady: 29,
-  penny: 37,
-  pepe: 27,
-  reggie: 26,
-  sequoia: 36,
-};
+// The face frame's side, and the largest side a face is tried at.
+const FACE_FRAME = 32;
+const FACE_SIDE_MAX = 48;
+
+// Whether rows, set in the face frame on its bottom edge, keep every inked pixel.
+function fitsFaceFrame(rows: Frame): boolean {
+  const inked = (f: Frame) => f.reduce((n, row) => n + row.filter(Boolean).length, 0);
+  return inked(framed(rows, FACE_FRAME)) === inked(rows);
+}
+
+// How big each dog's face is drawn in its 32px frame, sat on the bottom edge: the largest side at
+// which every mood's face fits the frame whole, ears and chest included, so every dog's face fills
+// its frame and its picker tile's box.
+export const FACE_SIDE: Readonly<Record<string, number>> = Object.fromEntries(
+  Object.entries(DOGS).map(([name, [, face]]) => {
+    for (let faceSide = FACE_SIDE_MAX; faceSide > 0; faceSide--) {
+      const fits = FACE_TAGS.every((mood) =>
+        fitsFaceFrame(small(roadScope, scope, faceSide / FACE_FRAME, face, mood).outlined()),
+      );
+      if (fits) {
+        return [name, faceSide];
+      }
+    }
+    throw new Error(`${name}: no face side fits the ${FACE_FRAME}px frame`);
+  }),
+);
 
 // Rows px set in a side x side frame, centred across and on its bottom edge, cropped where they
 // overflow it.
@@ -1264,7 +1274,7 @@ export function framed(rows: Frame, frameSide: number): Frame {
 // face(mood)'s outlined rows, drawn at faceSide over 32 of its 32-unit design and set on the bottom
 // edge of a 32x32 frame; a side over 32 zooms in past the frame, cropping the chest at the sides.
 export function faceFrame(face: FaceDraw, mood: Mood, faceSide: number): Frame {
-  return framed(small(roadScope, scope, faceSide / 32, face, mood).outlined(), 32);
+  return framed(small(roadScope, scope, faceSide / FACE_FRAME, face, mood).outlined(), FACE_FRAME);
 }
 
 // The scale dog-<name>'s 32-unit design is drawn at: its DOG_SIZE over 32.

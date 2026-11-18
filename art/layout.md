@@ -72,7 +72,7 @@ Visible faces, touch targets and focus outlines are separate rectangles. Keep th
 | BUTTON_SIZE.compact    | 128×48                                | px   | Non-modal secondary actions                            | [button geometry](../src/ui/buttonGeometry.ts) |
 | BUTTON_SIZE.icon       | Face 20×20; glyph 16×16; target 48×48 | px   | Non-bar icon controls                                  | [button geometry](../src/ui/buttonGeometry.ts) |
 | topbar.home.hit        | 48×48, rows 0–47                      | px   | Sound/Menu/Exit x = 216/264/312; else 264/312          | [home placement](../src/home/homeLayout.ts)    |
-| topbar.home.pitch      | 48                                    | px   | Faces x = 230/278/326, y = 9; else 278/326             | [home placement](../src/home/homeLayout.ts)    |
+| topbar.home.pitch      | 48                                    | px   | Faces x = 230/278/326, y = 8; else 278/326             | [home placement](../src/home/homeLayout.ts)    |
 | topbar.home.well       | 97 wide, at x = 5                     | px   | Home bank well                                         | [home placement](../src/home/homeLayout.ts)    |
 | topbar.walk.hit        | 48×48, rows 0–47                      | px   | Two columns at x = 264/312; debuff bars win rows 40–47 | [walk HUD](../src/hud/walkHud.ts)              |
 | home.start.focusOutset | 4                                     | px   | Full focus ring, to the canvas's last row              | [home layout](../src/home/homeLayout.ts)       |
@@ -80,7 +80,7 @@ Visible faces, touch targets and focus outlines are separate rectangles. Keep th
 
 Modal actions use their full measured label/icon width plus padding, not the non-modal compact/wide width floors. Preserve prices, goals, reasons and full-size labels in every state.
 
-HUD effect geometry follows the [walk-bar exception](controls.md#sizing-and-spacing): 24×24 native icons in 26×26 wells, no extra gap or horizontal hold inset, y = 6 wells and y = 7 icons. Size the group from the visible count, with no empty reservations, and centre it within `[102,264)` on x = 183; six wells span 156px and start at x = 105,131,157,183,209,235, while two start at x = 157,183. The fixed cash well is `(5,5,97,29)`, with 84px of ink room at 3× scale. Centre the current dollar-sign/amount visible-ink union horizontally and vertically; the reserved maximum width is not an alignment box. Native faces, glyphs and wells share the same layout projection. Sound and Pause/Menu faces remain `(278,9,20,20)` and `(326,9,20,20)`, within unchanged 48px targets and centred on 29×29 dark backings at y = 5.
+HUD effect geometry follows the [walk-bar exception](controls.md#sizing-and-spacing): 24×24 native icons in 26×26 wells, no extra gap or horizontal hold inset, y = 5 wells and y = 6 icons. Size the group from the visible count, with no empty reservations, and centre it within `[102,264)` on x = 183; six wells span 156px and start at x = 105,131,157,183,209,235, while two start at x = 157,183. The fixed cash well is `(5,4,97,29)`, with 84px of ink room at 3× scale. Centre the current dollar-sign/amount visible-ink union horizontally and vertically; the reserved maximum width is not an alignment box. Native faces, glyphs and wells share the same layout projection. Sound and Pause/Menu faces are `(278,8,20,20)` and `(326,8,20,20)`, within unchanged 48px targets, drawn on the plum with no backing.
 
 ## Modals
 
