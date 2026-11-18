@@ -55,7 +55,7 @@ Art build tools are TypeScript modules in `art/tools/`, which Node runs directly
 
 WORKAROUND: Parent-scoped development overrides pin Markdownlint `0.42.1` for [re2js security fixes](https://github.com/advisories/GHSA-gg6h-894w-4m9c), [KaTeX](https://github.com/advisories/GHSA-238p-pmpm-9mq7) `0.19.1` and [minimatch](https://github.com/advisories/GHSA-g3hv-75wg-m249) `11.0.3`. ESLint loads the cycle and extensions rules and the resolver through exported plugin subpaths because the full plugin imports an unused rule requiring the removed minimatch `makeRe` API ([eslint-plugin-import-x#569](https://github.com/un-ts/eslint-plugin-import-x/issues/569)). Keep cycle detection and required import extensions enabled. Remove each override when its parent range supports the patched version; restore the full plugin import when it supports minimatch 11.
 
-CI runs `make lint`, `make test` and `make build`, plus the AI attributions scan.
+CI runs `make lint`, `make test` and `make build`, plus the AI attributions scan. A Changes job classifies each push: when every changed path is under `docs/`, only Lint and the attributions scan run and Test reports as skipped. Anything it cannot classify runs every job. The build reads only `pages/` and `public/`, and deployment uploads only `dist/`, so `docs/` is never served.
 
 ## Deploying
 
