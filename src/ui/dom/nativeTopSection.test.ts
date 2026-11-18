@@ -222,8 +222,8 @@ describe("native top section integration", () => {
         .filter((node) => !node.hidden)
         .map((node) => [node.style.left, node.style.top, node.style.width]),
     ).toEqual([
-      ["157px", "6px", "26px"],
-      ["183px", "6px", "26px"],
+      ["157px", "5px", "26px"],
+      ["183px", "5px", "26px"],
     ]);
     view.setEffectCount(6);
     expect(wells.filter((node) => !node.hidden).map((node) => node.style.left)).toEqual([
@@ -249,10 +249,8 @@ describe("native top section integration", () => {
     const backings = element
       .all()
       .filter((node) => node.style.width === "29px" && node.style.height === "29px");
-    expect(backings.map((node) => [node.style.left, node.style.top])).toEqual([
-      ["274px", "5px"],
-      ["322px", "5px"],
-    ]);
+    // The bar's faces sit straight on its plum, with no square backing behind them.
+    expect(backings.map((node) => [node.style.left, node.style.top])).toEqual([]);
   });
   it("uses the existing short currency form inside the fixed walk well", () => {
     const { element, view } = fixture("click", 6);

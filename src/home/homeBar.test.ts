@@ -67,9 +67,9 @@ it("compacts an unavailable Exit and keeps shown controls outside overlay dismis
       control.face.y,
     ]),
   ).toEqual([
-    ["mute", 216, 230, 9],
-    ["menu", 264, 278, 9],
-    ["exit", 312, 326, 9],
+    ["mute", 216, 230, 8],
+    ["menu", 264, 278, 8],
+    ["exit", 312, 326, 8],
   ]);
   expect(homeBarButtons(false).map(([id, control]) => [id, control.hit.x])).toEqual([
     ["mute", 264],

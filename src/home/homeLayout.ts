@@ -6,7 +6,7 @@ import {
 } from "@andornaut/game-kit/runtime/text/bitmapFont";
 import { HIT_RULE } from "@andornaut/game-kit/runtime/ui/hitAreas";
 
-import { HOME_SCREEN, MIN_PRESS, TOP_BAR_SIZES } from "../data/layout.ts";
+import { BUTTON_FACE_EDGE, HOME_SCREEN, MIN_PRESS, TOP_BAR_SIZES } from "../data/layout.ts";
 import { SCREEN_CONFIG, SCREEN_LAYOUT } from "../data/screen.ts";
 import type { DogId } from "../data/types.ts";
 import { ownerPhotoRect, WALK_BAR } from "../hud/walkHud.ts";
@@ -21,7 +21,7 @@ import { MODAL, modalActionWidth, modalFamilyWidth, modalRect } from "../ui/moda
 import { cardTitleRow } from "../ui/modal/titleRow.ts";
 import { hasPill, PILL_IMAGE_GAP, pillDropUnderInk, pillRiseOverCaps } from "../ui/namePills.ts";
 import { BUTTON_LIP_PX } from "../ui/selection.ts";
-import { TITLE_CAP_ROWS } from "../ui/textFit.ts";
+import { TEXT_SCALE, TITLE_CAP_ROWS } from "../ui/textFit.ts";
 import { TOP_BAR_FACE, TOP_BAR_HEIGHT, TOP_BAR_MID, TOP_BAR_WELL } from "../ui/topBarTrim.ts";
 import { topSectionCurrency, topSectionLayout } from "../ui/topSection.ts";
 import { FEEDBACK } from "./feedback.ts";
@@ -217,8 +217,12 @@ function topBarButton(fromRight: number): HomeBarButtonPlace {
 export const HOME_LAYOUT = {
   // The compact screen-home backdrop's top, from the screen's.
   backdropY: BACKDROP_Y,
-  // The band's text sits on section rows 8..17, 9px in from either side.
-  bandText: HOME.bandText,
+  // The band's text is inset in from either side, its 2x title capitals' top at y, so the
+  // capitals are centred down the band under the section's rim, any odd row left under them.
+  bandText: {
+    inset: HOME.bandText.inset,
+    y: SECTION_EDGE + Math.floor((HOME.sectionFrameBand - TITLE_CAP_ROWS * TEXT_SCALE) / 2),
+  },
   // The Dogs band's pack-size bonus, its ink ending countGap left of the pack count's left edge:
   // its line, gap, then ui-heart's full frame at scale, inked over its first heartInk columns,
   // with its top rise above the text's capitals.
@@ -257,11 +261,12 @@ export const HOME_LAYOUT = {
   },
   dogOrigin: { x: gridOriginX(DOG_TILES), y: sectionTilesY(DOGS_SECTION, DOG_TILES.inset.y) },
   // A dog tile's face sits face.dx and face.dy inside the drawn tile, on a box 1px wider each
-  // side. Its name and a locked dog's price plate start textX in and keep padRight inside its
-  // right edge. An owned dog's name has its capitals centred on the face (dogTileNameY); a
-  // locked dog's name has its capitals lockedNameY down, and its plate's lowest ink sits
-  // plateFoot above the tile's bottom (dogTilePlateY). A locked dog's badge sits over the
-  // tile's top-left corner.
+  // side. A locked dog's name and price plate start textX in and keep padRight inside its right
+  // edge, the name's capitals lockedNameY down and the plate's lowest ink plateFoot above the
+  // tile's bottom (dogTilePlateY), so the pair keeps the box's padding above and below. An owned
+  // dog's name has its ink centred in the space right of the box, as tall as the box, keeping
+  // the box's left padding at the right. A locked dog's badge sits over the tile's top-left
+  // corner.
   dogTile: HOME.dogTile,
   // Each dog tile is drawn this far inside its hit area.
   dogTileInset: DOG_TILES.inset,
@@ -403,12 +408,20 @@ export const HOME_LAYOUT = {
   startButton: START_BUTTON,
   startFocusOutset: SCREEN_CONFIG.height - START_BUTTON.y - START_BUTTON.height,
   startGap: START_GAP,
-  // Start walk's label caps at readyY on its raised face, centred down it over its lip, any odd
-  // row left under them; the label sinks with the face.
+  // Start walk's label caps at readyY on its raised face, its ink centred down the flat face
+  // between the outline and lit row over it and the lip under it, any odd row left under them;
+  // the label sinks with the face.
   startLabel: {
-    readyY: Math.floor(
-      (START_BUTTON.height - BUTTON_LIP_PX - TITLE_CAP_ROWS * HOME.startLabel.scale) / 2,
-    ),
+    readyY:
+      BUTTON_FACE_EDGE.top +
+      Math.floor(
+        (START_BUTTON.height -
+          BUTTON_FACE_EDGE.top -
+          BUTTON_LIP_PX -
+          BUTTON_FACE_EDGE.bottom -
+          TITLE_CAP_ROWS * HOME.startLabel.scale) /
+          2,
+      ),
     scale: HOME.startLabel.scale,
   },
   // The pressed face's label while the walk waits for its art: the ready label's, at its size

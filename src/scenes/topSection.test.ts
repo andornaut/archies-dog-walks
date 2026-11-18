@@ -48,22 +48,22 @@ describe("the shared top section", () => {
     const max = topSectionLayout(WALK_BAR_BUTTONS, { currency: true, effects: 6 });
     const few = topSectionLayout(WALK_BAR_BUTTONS, { currency: true, effects: 2 });
     expect(max.controls.map(([, control]) => control)).toEqual([
-      { face: { x: 278, y: 9 }, hit: { height: 48, width: 48, x: 264, y: 0 } },
-      { face: { x: 326, y: 9 }, hit: { height: 48, width: 48, x: 312, y: 0 } },
+      { face: { x: 278, y: 8 }, hit: { height: 48, width: 48, x: 264, y: 0 } },
+      { face: { x: 326, y: 8 }, hit: { height: 48, width: 48, x: 312, y: 0 } },
     ]);
-    expect(max.currency).toEqual({ height: 29, width: 97, x: 5, y: 5 });
+    expect(max.currency).toEqual({ height: 29, width: 97, x: 5, y: 4 });
     expect(max.effectWells.map(({ x }) => x)).toEqual([105, 131, 157, 183, 209, 235]);
     expect(few.effectWells).toEqual([
-      { height: 26, width: 26, x: 157, y: 6 },
-      { height: 26, width: 26, x: 183, y: 6 },
+      { height: 26, width: 26, x: 157, y: 5 },
+      { height: 26, width: 26, x: 183, y: 5 },
     ]);
     expect(few.effectHolds).toEqual([
       { height: 40, width: 26, x: 157, y: 0 },
       { height: 40, width: 26, x: 183, y: 0 },
     ]);
     expect(max.controls.map(([, control]) => topSectionButtonBacking(control.face))).toEqual([
-      { height: 29, width: 29, x: 273.5, y: 5 },
-      { height: 29, width: 29, x: 321.5, y: 5 },
+      { height: 29, width: 29, x: 273.5, y: 4 },
+      { height: 29, width: 29, x: 321.5, y: 4 },
     ]);
     const cash = topSectionCurrency(max, 66);
     expect(cash).toMatchObject({ left: 20, room: 84, scale: 3 });

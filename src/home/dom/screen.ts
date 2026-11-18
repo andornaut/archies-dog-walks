@@ -163,11 +163,11 @@ export function createNativeHomeView(
   element.append(focus.element);
   const signLine = {
     capTop: HOME_LAYOUT.streetSign.y,
-    centre: "advance",
+    centre: "ink",
     centreX: HOME_LAYOUT.streetSign.x,
     colour: PALETTE.white,
     font: "title",
-    scale: 1,
+    scale: HOME_LAYOUT.streetSign.scale,
     text: snapshot.streetSign,
   } as const;
   const sign = createTextLine(doc, signLine);

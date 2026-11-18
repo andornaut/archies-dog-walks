@@ -4,7 +4,7 @@ import { TOP_BAR_HEIGHT, TOP_BAR_SIZES } from "../data/layout.ts";
 
 // Every top bar (the start screen's, the walk bar, Help's) is flat fill with one trim: line's
 // colour across its row, and the bar's last rows in edge's colours, top to bottom. Its wells sit
-// clearance rows clear of the trim above and below (topBarWellRows).
+// clearance rows clear of the plum's top and of the edge (topBarWellRows).
 export const TOP_BAR_TRIM = {
   clearance: TOP_BAR_SIZES.trim.clearance,
   edge: ["brown", "darkBrown", "ink"],
@@ -32,15 +32,14 @@ export function topBarRects(bar: Rect): TrimRect[] {
   ];
 }
 
-// The rows between the trim's line and its edge on a bar height tall, from the bar's top: top,
-// the first, and bottom, one past the last.
+// The plum rows a bar height tall shows, from its top row to its edge (the HTML bar draws no trim
+// line): top, the first, and bottom, one past the last.
 export function topBarContentRows(height: number): { bottom: number; top: number } {
-  const { edge, line } = TOP_BAR_TRIM;
-  return { bottom: height - edge.length, top: line.row + 1 };
+  return { bottom: height - TOP_BAR_TRIM.edge.length, top: 0 };
 }
 
-// A well's top row and height on a bar height tall: clearance rows clear of the trim above and
-// below.
+// A well's top row and height on a bar height tall: clearance rows clear of the plum's top and
+// of the edge, so it is centred down the plum.
 function topBarWellRows(height: number): { height: number; y: number } {
   const { bottom, top } = topBarContentRows(height);
   const { clearance } = TOP_BAR_TRIM;
@@ -50,8 +49,8 @@ function topBarWellRows(height: number): { height: number; y: number } {
 // Every top bar's height: the start screen's, the walk bar and Help's.
 export { TOP_BAR_HEIGHT };
 
-// The top bar's content rows, between its trim's line and edge, and their middle row, which each
-// button's 20-row ui-icon-button face is centred on, the upper half of the face above it.
+// The top bar's plum rows and their middle row, which each button's 20-row ui-icon-button face is
+// centred on, the upper half of the face above it, so any odd row is left under the face.
 const TOP_BAR_ROWS = topBarContentRows(TOP_BAR_HEIGHT);
 export const TOP_BAR_MID =
   TOP_BAR_ROWS.top + Math.floor((TOP_BAR_ROWS.bottom - TOP_BAR_ROWS.top) / 2);

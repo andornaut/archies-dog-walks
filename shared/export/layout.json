@@ -1441,7 +1441,7 @@
         "y": 508
       },
       "buttonLabel": {
-        "readyY": 14,
+        "readyY": 15,
         "scale": 3
       },
       "logo": {
@@ -1602,7 +1602,7 @@
         },
         "titleExclusion": "face",
         "x": 326,
-        "y": 9
+        "y": 8
       },
       "dots": {
         "centreX": 180,
@@ -1656,7 +1656,7 @@
       },
       "heading": {
         "x": 180,
-        "y": 14
+        "y": 13
       },
       "illustration": {
         "height": 236,
@@ -1698,7 +1698,7 @@
       "backdropY": -12,
       "bandText": {
         "inset": 9,
-        "y": 8
+        "y": 7
       },
       "bonus": {
         "countGap": 14,
@@ -1745,9 +1745,9 @@
           "dy": 5,
           "size": 32
         },
-        "lockedNameY": 4,
+        "lockedNameY": 6,
         "padRight": 3,
-        "plateFoot": 1,
+        "plateFoot": 4,
         "textX": 39
       },
       "dogTileInset": {
@@ -1983,34 +1983,35 @@
       "startFocusOutset": 4,
       "startGap": 2,
       "startLabel": {
-        "readyY": 14,
+        "readyY": 15,
         "scale": 3
       },
       "startLoading": {
         "room": 272
       },
       "streetSign": {
-        "x": 320,
-        "y": 43
+        "scale": 2,
+        "x": 312,
+        "y": 41
       },
       "tileOffset": 24,
       "tileSelectOutset": 1,
       "topBar": {
         "bank": {
-          "capsY": 12,
+          "capsY": 11,
           "pad": 6,
           "scale": 3
         },
         "faceSize": 20,
         "height": 40,
         "hitHeight": 48,
-        "mid": 19,
+        "mid": 18,
         "well": {
           "height": 29,
           "lip": 1,
           "maxWidth": 97,
           "x": 5,
-          "y": 5
+          "y": 4
         },
         "wellKeys": {
           "left": "ui-home-cash-well-left",
@@ -2100,7 +2101,7 @@
         "mute": {
           "face": {
             "x": 230,
-            "y": 9
+            "y": 8
           },
           "hit": {
             "height": 48,
@@ -2112,7 +2113,7 @@
         "menu": {
           "face": {
             "x": 278,
-            "y": 9
+            "y": 8
           },
           "hit": {
             "height": 48,
@@ -2124,7 +2125,7 @@
         "exit": {
           "face": {
             "x": 326,
-            "y": 9
+            "y": 8
           },
           "hit": {
             "height": 48,
@@ -2713,7 +2714,7 @@
         "id": "mute",
         "face": {
           "x": 278,
-          "y": 9
+          "y": 8
         },
         "hit": {
           "height": 48,
@@ -2723,14 +2724,14 @@
         },
         "icon": {
           "x": 280,
-          "y": 10
+          "y": 9
         }
       },
       {
         "id": "pause",
         "face": {
           "x": 326,
-          "y": 9
+          "y": 8
         },
         "hit": {
           "height": 48,
@@ -2740,7 +2741,7 @@
         },
         "icon": {
           "x": 328,
-          "y": 10
+          "y": 9
         }
       }
     ],
@@ -2787,37 +2788,37 @@
         "height": 26,
         "width": 26,
         "x": 105,
-        "y": 6
+        "y": 5
       },
       {
         "height": 26,
         "width": 26,
         "x": 131,
-        "y": 6
+        "y": 5
       },
       {
         "height": 26,
         "width": 26,
         "x": 157,
-        "y": 6
+        "y": 5
       },
       {
         "height": 26,
         "width": 26,
         "x": 183,
-        "y": 6
+        "y": 5
       },
       {
         "height": 26,
         "width": 26,
         "x": 209,
-        "y": 6
+        "y": 5
       },
       {
         "height": 26,
         "width": 26,
         "x": 235,
-        "y": 6
+        "y": 5
       }
     ],
     "debuffBar": {
@@ -2855,7 +2856,7 @@
     "parts": {
       "buttonFace": {
         "size": 20,
-        "y": 9
+        "y": 8
       },
       "buttons": {
         "mute": {
@@ -2870,7 +2871,7 @@
         }
       },
       "cash": {
-        "capsY": 12,
+        "capsY": 11,
         "ink": {
           "left": 11,
           "right": 95
@@ -2881,7 +2882,7 @@
           "height": 29,
           "width": 97,
           "x": 5,
-          "y": 5
+          "y": 4
         }
       },
       "effects": {
@@ -2889,7 +2890,7 @@
         "icon": 1,
         "iconSize": 24,
         "size": 26,
-        "y": 6,
+        "y": 5,
         "pitch": 26,
         "x": 105
       }

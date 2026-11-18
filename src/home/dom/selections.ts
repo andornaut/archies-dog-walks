@@ -138,12 +138,14 @@ export function createHomeSelection(
     } as const;
     const label = createTextLine(doc, line);
     paint.append(label);
-    parts.push((scale, motion) =>
-      placeText(body, scale, origin, label, {
-        ...line,
-        colour: motion.refusing ? PALETTE.red : line.colour,
-      }),
-    );
+    parts.push((scale, motion) => {
+      const shown = { ...line, colour: motion.refusing ? PALETTE.red : line.colour };
+      if (name.centreIn === undefined) {
+        placeText(body, scale, origin, label, shown);
+      } else {
+        placeBackedText(body, scale, origin, name.centreIn, [{ element: label, line: shown }]);
+      }
+    });
   }
   if (view.plate !== undefined) {
     const plate = pricePlateView(

@@ -46,6 +46,10 @@ export const WIDE_BUTTON_X = 32;
 // art: a button's lip under its face.
 export const BUTTON_LIP_PX = 4;
 
+// art: a raised button's rows outside its flat face and lip: its ink outline and lit row over the
+// face, and its ink outline under the lip.
+export const BUTTON_FACE_EDGE = { bottom: 1, top: 2 } as const;
+
 // art: the UI kit's nine-slice borders, in pixels from each edge, which the canvas's nine-slices
 // and the HTML interface's CSS border-image both cut the art by.
 export const SLICES = {
@@ -124,8 +128,9 @@ export const TOP_BAR_HEIGHT = 40;
 export const TOP_BAR_SIZES = {
   // art: a button's ui-icon-button face side.
   faceSize: BUTTON_SIZE.icon.face,
-  // The trim's line's row, and the rows a well keeps clear of the trim above and below.
-  trim: { clearance: 3, lineRow: 1 },
+  // The trim's line's row, and the rows a well keeps clear of the plum's top and of the edge,
+  // which centre the 29-row well down the bar's 37 plum rows.
+  trim: { clearance: 4, lineRow: 1 },
   // The money well's lip rows, and its left edge in from the bar's left.
   well: { lip: 1, padding: 6, x: 5 },
 } as const;
@@ -540,8 +545,8 @@ export const CARD_HEADER = {
 export const HOME_SCREEN = {
   // art: the divider's top row in screen-home as drawn at the screen's top.
   backdropBarY: 164,
-  // A section band's text: its inset from either side and its capitals' top.
-  bandText: { inset: 9, y: 8 },
+  // A section band's text: its inset from either side.
+  bandText: { inset: 9 },
   // The Dogs band's pack-size bonus: its ink's gap from the count, the gap after its line, the
   // heart's rise over the text's capitals and its scale.
   bonus: { countGap: 14, gap: 4, rise: 1, scale: 2 },
@@ -567,12 +572,14 @@ export const HOME_SCREEN = {
     badge: { dx: -2, dy: -3 },
     // The face's offset and side.
     face: { dx: 4, dy: 5, size: 32 },
-    // A locked dog's name's capitals' top.
-    lockedNameY: 4,
+    // A locked dog's name's capitals' top: its letters' top on the portrait box's top row, two
+    // rows over its 2x capitals.
+    lockedNameY: 6,
     // The text's right end in from the tile's right.
     padRight: 3,
-    // A locked dog's plate's lowest ink over the tile's bottom.
-    plateFoot: 1,
+    // A locked dog's plate's lowest ink over the tile's bottom: its foot on the portrait box's
+    // bottom row.
+    plateFoot: 4,
     // The text's left edge.
     textX: 39,
   },
@@ -672,8 +679,9 @@ export const HOME_SCREEN = {
   startLabel: { scale: 3 },
   // The waiting label's inset on either side of Start walk's face.
   startLoadingInset: 12,
-  // yard, art: the street name's centre and capitals' top on screen-home's street sign.
-  streetSign: { x: 320, y: 75 } satisfies Point,
+  // yard, art: the street name's ink centre and capitals' top on screen-home's street sign, and
+  // its scale.
+  streetSign: { scale: 2, x: 312, y: 73 },
   // A section's backing's top under the section's top.
   tileOffset: 24,
   // art: a selected tile's ui-select frame's outset.

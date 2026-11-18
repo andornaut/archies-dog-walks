@@ -65,6 +65,8 @@ export interface HomeSelectionView {
     readonly text: string;
     readonly x: number;
     readonly capTop: number;
+    // Where the name's ink is centred across and down, when it is.
+    readonly centreIn?: Rect;
   };
   readonly plate?: {
     readonly text: string;
@@ -185,8 +187,12 @@ export function homeSelectionViews(
       price: purchasePrice(data, save.owned, purchase),
     });
     const { badge, face, lockedNameY, textX } = HOME_LAYOUT.dogTile;
-    const view = make(cell, tile, { dx: face.dx - 1, dy: face.dy - 1, size: face.size + 2 }, badge);
+    const box = { dx: face.dx - 1, dy: face.dy - 1, size: face.size + 2 };
+    const view = make(cell, tile, box, badge);
     const locked = itemTileLook(tile).badge !== null;
+    // An owned dog's name is centred on its ink in the space right of the portrait's box, as tall
+    // as the box and keeping the box's left padding at the tile's right.
+    const beside = box.dx + box.size;
     result.push({
       ...view,
       label: dog.name,
@@ -194,6 +200,16 @@ export function homeSelectionViews(
         capTop: y + (locked ? lockedNameY : dogTileNameY(body)),
         text: dog.name,
         x: x + textX,
+        ...(locked
+          ? {}
+          : {
+              centreIn: {
+                height: box.size,
+                width: cell.rect.width - beside - box.dx,
+                x: x + beside,
+                y: y + box.dy,
+              },
+            }),
       },
       pictures: [
         {

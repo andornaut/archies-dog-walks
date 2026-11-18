@@ -1,4 +1,4 @@
-import { advanceWidth, type BitmapFont } from "@andornaut/game-kit/runtime/text/bitmapFont";
+import { type BitmapFont, inkWidth } from "@andornaut/game-kit/runtime/text/bitmapFont";
 
 import { domArtPath } from "../../assets/domArt.ts";
 import { SLICES } from "../../data/layout.ts";
@@ -52,6 +52,8 @@ export function createHomeSections(
       }
     }
     const colour = (key: keyof typeof PALETTE) => PALETTE[key];
+    // A band label's ink starts at x (left) or ends at x (right), so the note's ink keeps the
+    // heading's inset from the band's right edge.
     const label = (
       text: string,
       x: number,
@@ -60,7 +62,7 @@ export function createHomeSections(
       align: "left" | "right",
     ) => {
       const left =
-        align === "right" ? x - advanceWidth(title, TEXT_SCALE, plainMarks(text).toUpperCase()) : x;
+        align === "right" ? x - inkWidth(title, TEXT_SCALE, plainMarks(text).toUpperCase()) : x;
       const line = {
         capTop,
         centre: "left",
@@ -90,11 +92,7 @@ export function createHomeSections(
     );
     if (section.id === "dogs" && snapshot.bonus !== null) {
       const { countGap, gap, heartInk, rise, scale: heartScale } = HOME_LAYOUT.bonus;
-      const noteWidth = advanceWidth(
-        title,
-        TEXT_SCALE,
-        plainMarks(section.note.text).toUpperCase(),
-      );
+      const noteWidth = inkWidth(title, TEXT_SCALE, plainMarks(section.note.text).toUpperCase());
       const countLeft = section.note.x - noteWidth;
       const heartLeft = countLeft - countGap - heartInk * heartScale;
       if (source.hasArt("ui-heart")) {
