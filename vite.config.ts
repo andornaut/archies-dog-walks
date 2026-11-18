@@ -19,6 +19,8 @@ export default gameViteConfig<typeof ConfigModules>({
   // atlasPlugin writes public/art/manifest.json from the art files, packs the art's images and
   // sprites into atlas pages, and writes every art file the game loads under /assets/art/ with a
   // content hash in its name, mapped from its path under /art/ in the game's code.
+  // crashFontPlugin writes the crash screen's body font as a WOFF2 subset to CRASH_FONT_TEXT
+  // (src/crash/crashFontText.ts), and fails for a character of it the font lacks.
   // generatedFilesPlugin, on the dev server only, rewrites public/art/manifest.json and
   // shared/export/ as the art and src/ change. npm run build writes shared/export/ first.
   // phaserBuildPlugin, in a build only, bundles Phaser from its source without the namespaces the
@@ -38,7 +40,7 @@ export default gameViteConfig<typeof ConfigModules>({
     const atlas = modules.atlasPlugin();
     return [
       atlas,
-      modules.crashFontPlugin(repoPath("art/fonts/tiny5/Tiny5.ttf")),
+      modules.crashFontPlugin(modules.CRASH_FONT_TEXT, repoPath("art/fonts/tiny5/Tiny5.ttf")),
       modules.generatedFilesPlugin({ repoRoot: repoPath(".") }),
       modules.phaserBuildPlugin(modules.PHASER_BUILD),
       modules.hashedIconsPlugin({ icons: modules.HASHED_ICONS }),
