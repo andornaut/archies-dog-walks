@@ -37,3 +37,5 @@ Reference: [Developing](../../README.md#developing), [Deploying](../../README.md
 | adw-0153 | Migrate to delivery-kit 4.6                                      | [adw-0153.md](../work/adw-0153.md) |
 | adw-0161 | Run only attribution and lint checks for docs-only changes       | [adw-0161.md](../work/adw-0161.md) |
 | adw-0162 | Adopt design and work files                                      | [adw-0162.md](../work/adw-0162.md) |
+| adw-0163 | Prune the test suite toward a lower runtime                      | [adw-0163.md](../work/adw-0163.md) |
+| adw-0164 | Emit the crash font as WOFF2                                     | [adw-0164.md](../work/adw-0164.md) |
