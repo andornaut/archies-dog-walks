@@ -6,6 +6,7 @@ The design of the game, its targets, and how it is tuned and tested. A pixel-art
 
 | Doc                      | What it holds                   | Changes when            |
 | ------------------------ | ------------------------------- | ----------------------- |
+| [`cheats.md`](cheats.md) | Browser-tab cheats              | A cheat is approved     |
 | [`design.md`](design.md) | The rulebook: rules and content | A design decision lands |
 | [`ideas.md`](ideas.md)   | Undecided and cut ideas         | Every design session    |
 
