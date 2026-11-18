@@ -3360,7 +3360,7 @@
       "firingHoldSeconds": 3,
       "firstZoneContact": 2,
       "hitStopSeconds": 1,
-      "holdSeconds": 0.4,
+      "holdSeconds": 0.5,
       "laneMove": 0.1,
       "lookAheadSeconds": 3.6,
       "minorHitStopSeconds": 0.3,
