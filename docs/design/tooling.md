@@ -6,36 +6,38 @@ Reference: [Developing](../../README.md#developing), [Deploying](../../README.md
 
 ## Work items
 
-| ID       | Title                                                            | Link                               |
-| -------- | ---------------------------------------------------------------- | ---------------------------------- |
-| adw-0073 | Apply the improvements review fixes                              | [adw-0073.md](../work/adw-0073.md) |
-| adw-0074 | Run the TypeScript tools on plain Node                           | [adw-0074.md](../work/adw-0074.md) |
-| adw-0075 | Remove husky and lint-staged                                     | [adw-0075.md](../work/adw-0075.md) |
-| adw-0076 | Rename the Worker, package and storage keys to archies-dog-walks | [adw-0076.md](../work/adw-0076.md) |
-| adw-0078 | Check that no Aseprite files are committed                       | [adw-0078.md](../work/adw-0078.md) |
-| adw-0079 | Adopt game-kit achievements with a save reset                    | [adw-0079.md](../work/adw-0079.md) |
-| adw-0081 | Check for an update each time the start screen appears           | [adw-0081.md](../work/adw-0081.md) |
-| adw-0086 | Adopt the canonical pre-commit hook and CI lint                  | [adw-0086.md](../work/adw-0086.md) |
-| adw-0087 | Run the checks through project-owned Make container gates        | [adw-0087.md](../work/adw-0087.md) |
-| adw-0092 | Hold departures from a host load of 30                           | [adw-0092.md](../work/adw-0092.md) |
-| adw-0097 | Run on Node 24.22.2 everywhere                                   | [adw-0097.md](../work/adw-0097.md) |
-| adw-0098 | Store the save under dotted keys, one per device setting         | [adw-0098.md](../work/adw-0098.md) |
-| adw-0099 | Force the update a newer save requires                           | [adw-0099.md](../work/adw-0099.md) |
-| adw-0100 | Allow the Cloudflare analytics beacon in the page policy         | [adw-0100.md](../work/adw-0100.md) |
-| adw-0105 | Keep a dismissed update offer hidden until restart               | [adw-0105.md](../work/adw-0105.md) |
-| adw-0108 | Offer the update on every arrival home                           | [adw-0108.md](../work/adw-0108.md) |
-| adw-0110 | Stage each update in a complete cache before it activates        | [adw-0110.md](../work/adw-0110.md) |
-| adw-0111 | Build the check image with an explicit file limit                | [adw-0111.md](../work/adw-0111.md) |
-| adw-0112 | Adopt delivery-kit 4                                             | [adw-0112.md](../work/adw-0112.md) |
-| adw-0114 | Adopt art-kit 0.23                                               | [adw-0114.md](../work/adw-0114.md) |
-| adw-0119 | Give each tunable one source                                     | [adw-0119.md](../work/adw-0119.md) |
-| adw-0120 | Show loading after Update now                                    | [adw-0120.md](../work/adw-0120.md) |
-| adw-0121 | Split source along responsibility boundaries                     | [adw-0121.md](../work/adw-0121.md) |
-| adw-0132 | Adopt the latest kits and their namespaces                       | [adw-0132.md](../work/adw-0132.md) |
-| adw-0137 | Retry a failed offline install                                   | [adw-0137.md](../work/adw-0137.md) |
-| adw-0149 | Keep analytics out of the playable game                          | [adw-0149.md](../work/adw-0149.md) |
-| adw-0153 | Migrate to delivery-kit 4.6                                      | [adw-0153.md](../work/adw-0153.md) |
-| adw-0161 | Run only attribution and lint checks for docs-only changes       | [adw-0161.md](../work/adw-0161.md) |
-| adw-0162 | Adopt design and work files                                      | [adw-0162.md](../work/adw-0162.md) |
-| adw-0163 | Prune the test suite toward a lower runtime                      | [adw-0163.md](../work/adw-0163.md) |
-| adw-0164 | Emit the crash font as WOFF2                                     | [adw-0164.md](../work/adw-0164.md) |
+| ID       | Title                                                                        | Link                               |
+| -------- | ---------------------------------------------------------------------------- | ---------------------------------- |
+| adw-0073 | Apply the improvements review fixes                                          | [adw-0073.md](../work/adw-0073.md) |
+| adw-0074 | Run the TypeScript tools on plain Node                                       | [adw-0074.md](../work/adw-0074.md) |
+| adw-0075 | Remove husky and lint-staged                                                 | [adw-0075.md](../work/adw-0075.md) |
+| adw-0076 | Rename the Worker, package and storage keys to archies-dog-walks             | [adw-0076.md](../work/adw-0076.md) |
+| adw-0078 | Check that no Aseprite files are committed                                   | [adw-0078.md](../work/adw-0078.md) |
+| adw-0079 | Adopt game-kit achievements with a save reset                                | [adw-0079.md](../work/adw-0079.md) |
+| adw-0081 | Check for an update each time the start screen appears                       | [adw-0081.md](../work/adw-0081.md) |
+| adw-0086 | Adopt the canonical pre-commit hook and CI lint                              | [adw-0086.md](../work/adw-0086.md) |
+| adw-0087 | Run the checks through project-owned Make container gates                    | [adw-0087.md](../work/adw-0087.md) |
+| adw-0092 | Hold departures from a host load of 30                                       | [adw-0092.md](../work/adw-0092.md) |
+| adw-0097 | Run on Node 24.22.2 everywhere                                               | [adw-0097.md](../work/adw-0097.md) |
+| adw-0098 | Store the save under dotted keys, one per device setting                     | [adw-0098.md](../work/adw-0098.md) |
+| adw-0099 | Force the update a newer save requires                                       | [adw-0099.md](../work/adw-0099.md) |
+| adw-0100 | Allow the Cloudflare analytics beacon in the page policy                     | [adw-0100.md](../work/adw-0100.md) |
+| adw-0105 | Keep a dismissed update offer hidden until restart                           | [adw-0105.md](../work/adw-0105.md) |
+| adw-0108 | Offer the update on every arrival home                                       | [adw-0108.md](../work/adw-0108.md) |
+| adw-0110 | Stage each update in a complete cache before it activates                    | [adw-0110.md](../work/adw-0110.md) |
+| adw-0111 | Build the check image with an explicit file limit                            | [adw-0111.md](../work/adw-0111.md) |
+| adw-0112 | Adopt delivery-kit 4                                                         | [adw-0112.md](../work/adw-0112.md) |
+| adw-0114 | Adopt art-kit 0.23                                                           | [adw-0114.md](../work/adw-0114.md) |
+| adw-0119 | Give each tunable one source                                                 | [adw-0119.md](../work/adw-0119.md) |
+| adw-0120 | Show loading after Update now                                                | [adw-0120.md](../work/adw-0120.md) |
+| adw-0121 | Split source along responsibility boundaries                                 | [adw-0121.md](../work/adw-0121.md) |
+| adw-0132 | Adopt the latest kits and their namespaces                                   | [adw-0132.md](../work/adw-0132.md) |
+| adw-0137 | Retry a failed offline install                                               | [adw-0137.md](../work/adw-0137.md) |
+| adw-0149 | Keep analytics out of the playable game                                      | [adw-0149.md](../work/adw-0149.md) |
+| adw-0153 | Migrate to delivery-kit 4.6                                                  | [adw-0153.md](../work/adw-0153.md) |
+| adw-0161 | Run only attribution and lint checks for docs-only changes                   | [adw-0161.md](../work/adw-0161.md) |
+| adw-0162 | Adopt design and work files                                                  | [adw-0162.md](../work/adw-0162.md) |
+| adw-0163 | Prune the test suite toward a lower runtime                                  | [adw-0163.md](../work/adw-0163.md) |
+| adw-0164 | Emit the crash font as WOFF2                                                 | [adw-0164.md](../work/adw-0164.md) |
+| adw-0168 | Install the complete build before play and prompt updates at the next launch | [adw-0168.md](../work/adw-0168.md) |
+| adw-0170 | Keep the art gallery's copies out of the build                               | [adw-0170.md](../work/adw-0170.md) |

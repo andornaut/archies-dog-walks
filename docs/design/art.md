@@ -98,3 +98,4 @@ Reference: [art README](../../art/README.md), [style guide](../../art/style-guid
 | adw-0144 | Darken modal backgrounds uniformly                      | [adw-0144.md](../work/adw-0144.md) |
 | adw-0156 | Keep modal backgrounds painted and inactive             | [adw-0156.md](../work/adw-0156.md) |
 | adw-0166 | Fix the Start screen pickers, headers, sign and top bar | [adw-0166.md](../work/adw-0166.md) |
+| adw-0169 | Load the native interface art from per-set sheets       | [adw-0169.md](../work/adw-0169.md) |
