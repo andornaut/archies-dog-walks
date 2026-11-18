@@ -5,6 +5,7 @@ import type { HelpPage } from "./types.ts";
 // - body: wrapped to fit the screen in at most six lines. A long sentence can be split into
 //   quoted pieces joined with +, each ending in a space. The {name}s it may use are listed in
 //   src/help/helpBody.ts and filled from the game data.
+// - caption: one line under the framed picture, at full size; keep it to about 40 characters.
 // - title: shown in capitals above the body.
 export const HELP_PAGES = [
   {
@@ -13,6 +14,7 @@ export const HELP_PAGES = [
       "Drag anywhere: a short drag moves the pack one lane, and a longer drag moves more lanes. " +
       "A tap moves one lane toward the side you tap. Keys: arrows, A/D or H/L. " +
       "Some obstacles move: an arrow shows each one's first move.",
+    caption: "Drag to switch lanes",
     title: "Switch lanes",
   },
   {
@@ -22,6 +24,7 @@ export const HELP_PAGES = [
       "A treat gives its dog's owner +{treatHearts}♥, or {treatCash} when every owner is full. " +
       "Aim for a lost wallet or a friendly neighbour, and grab dropped gear: " +
       "it works for the rest of the walk.",
+    caption: "Tips, a wallet, shoes and a treat",
     title: "Tips, treats and finds",
   },
   {
@@ -31,6 +34,7 @@ export const HELP_PAGES = [
       "Each option costs cash, hearts or a debuff, and at least one is free of cash. " +
       "Puddles and a few others give a debuff, not a bump. Debuffs wear off in time. " +
       "Hold anything for details.",
+    caption: "A skunk's card",
     title: "Some obstacles bring cards",
   },
   {
@@ -41,6 +45,7 @@ export const HELP_PAGES = [
       "A lone dog's owner gets +{loneBonus}♥, a pair's lead +{pairBonus}♥. " +
       "A bump costs that dog's owner {bumpHearts}♥. " +
       "At 0♥ the owner fires you.",
+    caption: "A bump costs its owner a heart",
     title: "Keep owners happy",
   },
   {
@@ -49,6 +54,7 @@ export const HELP_PAGES = [
       "Touching a squirrel does nothing, but a bubble and a line to it mean a dog is straining. " +
       "Steer away and the pull is off; wait and the pack lurches one lane toward it. " +
       "A pull never drags you into a bump too close to dodge.",
+    caption: "A dog strains toward a squirrel",
     title: "Watch for pulls",
   },
   {
@@ -58,6 +64,7 @@ export const HELP_PAGES = [
       "Bring every dog home for the {walkBonus} Walk bonus. " +
       "Ending the walk, or losing every dog, keeps only " +
       "what each finished neighbourhood earned.",
+    caption: "One of the walk's neighbourhoods",
     title: "Neighbourhoods",
   },
 ] as const satisfies readonly [HelpPage, ...HelpPage[]];
