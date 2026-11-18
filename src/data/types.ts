@@ -780,6 +780,8 @@ export interface HelpPage {
   // The picture the page shows.
   readonly art: HelpPictureId;
   readonly body: string;
+  // One line under the framed picture.
+  readonly caption: string;
   readonly title: string;
 }
 
