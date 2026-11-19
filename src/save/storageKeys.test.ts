@@ -2,12 +2,7 @@ import { readdirSync, readFileSync } from "node:fs";
 
 import { describe, expect, it } from "vitest";
 
-import {
-  DEV_CHEATS_KEY,
-  DEV_LAST_LOG_KEY,
-  DEV_REPLAY_KEY,
-  DEV_SAVE_EDITS_KEY,
-} from "../dev/devPanelModel.ts";
+import { DEV_LAST_LOG_KEY, DEV_REPLAY_KEY } from "../dev/cheats.ts";
 import { INSTALL_NUDGE_KEY } from "../pwa/installNudge.ts";
 import { SETTINGS_KEYS } from "./settings.ts";
 import { EARNED_KEYS, RESUME_BACKUP_KEY, SAVE_KEYS } from "./storage.ts";
@@ -22,10 +17,8 @@ describe("storage keys", () => {
     ...Object.values(SAVE_KEYS),
     ...Object.values(EARNED_KEYS),
     ...Object.values(SETTINGS_KEYS),
-    DEV_CHEATS_KEY,
     DEV_LAST_LOG_KEY,
     DEV_REPLAY_KEY,
-    DEV_SAVE_EDITS_KEY,
     INSTALL_NUDGE_KEY,
     RESUME_BACKUP_KEY,
   ])("%s takes the dotted style", (key) => {

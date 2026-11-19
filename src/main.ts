@@ -15,28 +15,19 @@ import { Core, Game, Scale, WEBGL } from "phaser";
 
 import { CRASH_SCREEN } from "./crash/crashScreen.ts";
 import { SCREEN_CONFIG } from "./data/screen.ts";
-import { applyPendingSaveEdits, type DevPanelHost, mountDevPanel } from "./dev/devPanel.ts";
-import { DEV_CHEATS_KEY } from "./dev/devPanelModel.ts";
-import { DEV_GAME_GLOBAL, devToolsOn } from "./dev/devTools.ts";
+import { DEV_GAME_GLOBAL } from "./dev/devTools.ts";
 import { pageRunSetup } from "./dev/pageRunSetup.ts";
 import { noteKeyPress } from "./input/keyNumbers.ts";
 import { bindPressAdmission } from "./input/phaser/pressAdmission.ts";
 import { lostTouches } from "./input/touches.ts";
 import { createPressAdmission } from "./pressAdmission.ts";
-import {
-  pageFrameWatch,
-  requiredUpdate,
-  setOnHomeScreen,
-  setupPhoneApp,
-  storagePersistence,
-} from "./pwa/index.ts";
+import { pageFrameWatch, requiredUpdate, setOnHomeScreen, setupPhoneApp } from "./pwa/index.ts";
 import { offlineInstallation } from "./pwa/installationState.ts";
 import { launchGame } from "./pwa/launchGame.ts";
 import { createUpdateIdle } from "./pwa/updateIdle.ts";
 import { BootScene } from "./scenes/BootScene.ts";
 import { CardScene } from "./scenes/CardScene.ts";
 import { CelebrationScene } from "./scenes/CelebrationScene.ts";
-import { DevOverlayScene } from "./scenes/DevOverlayScene.ts";
 import { EndScene } from "./scenes/EndScene.ts";
 import { HelpPictureScene } from "./scenes/HelpPictureScene.ts";
 import { HelpScene } from "./scenes/HelpScene.ts";
@@ -64,22 +55,12 @@ import { mountUiLayer, setUiLayer } from "./ui/dom/uiLayer.ts";
 import { startupLoad } from "./ui/startupProgress.ts";
 import { worldViewBox } from "./ui/worldFit.ts";
 
-// The dev panel's view of the game: the cheats are a registry entry RunScene reads each frame.
-function devPanelHost(game: Game): DevPanelHost {
-  return {
-    persistence: storagePersistence(),
-    setCheats: (cheats) => {
-      game.registry.set(DEV_CHEATS_KEY, cheats);
-    },
-  };
-}
-
 // The element in pages/play/index.html that holds the canvas.
 const GAME_PARENT_ID = "game";
 
 // Scenes render in list order: the HUD over the road, cards, the zone celebration and the
 // pause menu over the HUD, help (its page's picture of the walk, HUD and card over it),
-// settings and stats over those, and the dev overlay, which starts itself, over everything.
+// settings and stats over those.
 // Boot runs first and starts the start screen. The canvas clears to the page's ink, so launch
 // shows no rectangle before the loading screen's art; the walk fills its own ink.
 export interface GameStartup {
@@ -104,7 +85,7 @@ function bootGame(context: GameStartup): Game {
     // Scenes draw in this order. The Logbook and help, which the home top bar opens over the Pet
     // shop, come after it, help's pictures after help, the Menu and the settings, modals that
     // open over help, after its pictures so their dim covers them, and the tap bursts over every
-    // scene but the dev overlay.
+    // scene.
     scene: [
       BootScene,
       StartScene,
@@ -125,7 +106,6 @@ function bootGame(context: GameStartup): Game {
       MenuScene,
       SettingsScene,
       TapBurstScene,
-      DevOverlayScene,
     ],
     // WebGL only: the build's Phaser has no Canvas renderer (src/tools/phaserBuild.ts).
     type: WEBGL,
@@ -139,7 +119,7 @@ function bootGame(context: GameStartup): Game {
     stopResuming(game);
   });
   // Phaser fits, places and reads pointers through the page frame's turn, and refits as #game,
-  // the visible area or the turn changes, the dev bar showing under #game after boot included.
+  // the visible area or the turn changes.
   const parent = document.getElementById(GAME_PARENT_ID);
   if (parent !== null) {
     followFrameTurn(pageFrameWatch(), game.scale.gameSize, parent, game, {
@@ -204,12 +184,6 @@ function bootGame(context: GameStartup): Game {
   });
   // Menus draw at most about 60 frames a second; a walk (RunScene) draws every frame.
   capFrameRate(MENU_FPS, () => game.scene.isActive(SCENE_KEYS.run), game);
-  // The installed app has no dev panel, so its #dev-panel stays hidden and no cheat is set.
-  if (devToolsOn()) {
-    const disposeDevPanel = mountDevPanel(devPanelHost(game), document.getElementById("dev-panel"));
-    game.events.once(Core.Events.DESTROY, disposeDevPanel);
-  }
-
   // Captured before the scenes see it, so the key that opens a menu already shows its numbers.
   window.addEventListener("keydown", noteKeyPress, { capture: true });
   game.events.once(Core.Events.DESTROY, () =>
@@ -251,8 +225,6 @@ function bootGame(context: GameStartup): Game {
 
 // A complete update already waiting at document launch may take control before saves or the game
 // open. Otherwise the current version boots while later updates stage in the background.
-// Queued dev-panel save edits finish before boot, so the game loads the edited save. The
-// installed app discards queued edits without changing its save.
 export async function startGame(context: GameStartup): Promise<void> {
-  await launchGame(applyPendingSaveEdits, () => bootGame(context), setupPhoneApp());
+  await launchGame(() => bootGame(context), setupPhoneApp());
 }

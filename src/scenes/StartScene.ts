@@ -130,6 +130,7 @@ import { REFUSE } from "../ui/refuse.ts";
 import type { Cents } from "../units.ts";
 import { artReady, waitForWalkArt, whenArtReady } from "./artReady.ts";
 import type { CelebrationSceneData } from "./CelebrationScene.ts";
+import { CHEATS_CHANGED_EVENT, endCheatsAfterWalk, nextWalk } from "./cheatSession.ts";
 import { pillColours } from "./effectNameColours.ts";
 import { HELP_CLOSED_EVENT } from "./HelpScene.ts";
 import { openHelp } from "./helpScreen.ts";
@@ -470,6 +471,8 @@ export class StartScene extends Scene {
     super(SCENE_KEYS.start);
   }
   create(): void {
+    // Back from a walk, a cheat session ends before the save is read.
+    endCheatsAfterWalk(this);
     this.action = { kind: "none" };
     this.artWait = undefined;
     this.entry = undefined;
@@ -582,6 +585,7 @@ export class StartScene extends Scene {
     onSettingsChanged(this, ({ muted }) => this.topSection?.setMuted(muted));
     // Settings can change reduced motion or mute, so the screen is drawn again.
     onSceneEvent(this, this.game.events, SETTINGS_CLOSED_EVENT, () => this.render());
+    onSceneEvent(this, this.game.events, CHEATS_CHANGED_EVENT, () => this.render());
     // Sound on the top bar, tapped over an overlay, which takes the press.
     onSceneEvent(this, this.game.events, BAR_MUTED_EVENT, (muted: boolean) =>
       this.showMuted(muted),
@@ -1170,7 +1174,7 @@ export class StartScene extends Scene {
           if (this.entry !== entry) {
             return;
           }
-          this.scene.start(SCENE_KEYS.run, runSceneData(nextRunStart(), pick));
+          this.scene.start(SCENE_KEYS.run, runSceneData(nextRunStart(nextWalk(this)), pick));
         });
         this.pending.add(timer);
       });

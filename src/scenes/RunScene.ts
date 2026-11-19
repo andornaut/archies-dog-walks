@@ -11,18 +11,21 @@ import { Scene } from "phaser";
 import { musicKey } from "../audio/music.ts";
 import { gameData } from "../data/index.ts";
 import { LANE_COUNT } from "../data/screen.ts";
-import type { DogId } from "../data/types.ts";
+import type { DogId, UpgradeId } from "../data/types.ts";
 import {
-  type Cheats,
-  cheatsFrom,
-  DEV_CHEATS_KEY,
+  canFinishZone,
+  finishZone,
   timeScaleOf,
+  upgradesLeft,
+  WALK_CHEATS_OFF,
+  type WalkCheat,
+  walkCheat,
+  type WalkCheats,
   withCheats,
-} from "../dev/devPanelModel.ts";
+} from "../dev/cheats.ts";
 import type { InputEvent } from "../dev/inputLog.ts";
 import type { RunSetup } from "../dev/runSetup.ts";
 import { withSetupStart } from "../dev/setupRun.ts";
-import { startZoneClocks, tickZoneClocks, type ZoneClocks } from "../dev/zoneClock.ts";
 import { effectItems } from "../hud/effectIcons.ts";
 import { cardHintTriggers, startHintTriggers } from "../hud/hintTriggers.ts";
 import { homeQuestionNote, pauseNote } from "../hud/homeQuestion.ts";
@@ -59,6 +62,7 @@ import type { ResumeWalk } from "../save/resume.ts";
 import { checkpointOf, runResultOf } from "../save/runSlices.ts";
 import { type Loadout, newRun, type RunState } from "../state/runState.ts";
 import { colourFromHex, PALETTE } from "../ui/palette.ts";
+import { noteWalkStarted, useCheat } from "./cheatSession.ts";
 import type { HudSceneData } from "./HudScene.ts";
 import type { HudRun, RunHudView } from "./hudWalk.ts";
 import { onWindowEvent } from "./overlay.ts";
@@ -76,7 +80,6 @@ import { AmbientView } from "./run/ambientView.ts";
 import { BackdropView } from "./run/backdropView.ts";
 import { DistractionView } from "./run/distractionView.ts";
 import { type EndDestination, endSceneFor } from "./run/endDestination.ts";
-import { HitBoxView } from "./run/hitBoxView.ts";
 import { blendWalk, leadWalk, stepAlpha } from "./run/interpolate.ts";
 import { ensureRoadPlaceholders, ItemViews } from "./run/itemViews.ts";
 import { LightsView } from "./run/lightsView.ts";
@@ -87,17 +90,18 @@ import { RoadsideView } from "./run/roadsideView.ts";
 import { RoadArt, RoadView } from "./run/roadView.ts";
 import { RunInput } from "./run/runInput.ts";
 import { RunMoments, showHint } from "./run/runMoments.ts";
-import { emitDevState, RunRecorder } from "./run/runRecorder.ts";
+import { RunRecorder } from "./run/runRecorder.ts";
 import { type RunRandom, runRandom } from "./run/runStart.ts";
 import { ShadowPool } from "./run/shadowPool.ts";
 import { LAYOUT, overPack, packPoint } from "./run/stage.ts";
 import { SCENE_KEYS } from "./sceneKeys.ts";
 import { soundboardOf } from "./soundboard.ts";
 
-// How the walk starts, from runSceneData: its setup, the loadout and dog slots it walks with, and
-// the inputs that drive it when it replays a log. A walk the launch resumes (resumedRunSceneData)
-// goes on from resume, where it was saved, under the pause menu.
+// How the walk starts, from runSceneData: the cheats it plays by, its setup, the loadout and dog
+// slots it walks with, and the inputs that drive it when it replays a log. A walk the launch
+// resumes (resumedRunSceneData) goes on from resume, where it was saved, under the pause menu.
 export interface RunSceneData {
+  cheats: WalkCheats;
   dogSlots: number;
   loadout: Loadout;
   replay: readonly InputEvent[] | undefined;
@@ -127,7 +131,6 @@ interface RunWorld {
   backdrop: BackdropView;
   banner: ZoneBanner;
   distractions: DistractionView;
-  hitBoxes: HitBoxView;
   input: RunInput;
   items: ItemViews;
   lights: LightsView;
@@ -150,6 +153,8 @@ export class RunScene extends Scene implements HudRun {
   // The ambient movers' clock: the walk's simulated time less its firings' holds, in which
   // they stand still.
   private ambientMs = 0;
+  // The cheats the walk plays by, from the Start screen's Next walk choices.
+  private cheats: WalkCheats = WALK_CHEATS_OFF;
   private endDestination: EndDestination = "end";
   // Where the next launch resumes the walk, saved with each checkpoint: the walk's start, its
   // last fork, or the start of the zone it is in, whichever came last.
@@ -162,7 +167,6 @@ export class RunScene extends Scene implements HudRun {
   // session's walk as it is.
   private stepBefore: Walk | undefined;
   private world: RunWorld | undefined;
-  private zoneClocks: ZoneClocks = startZoneClocks(0);
 
   constructor() {
     super(SCENE_KEYS.run);
@@ -176,10 +180,15 @@ export class RunScene extends Scene implements HudRun {
     this.cameras.main.setBackgroundColor(PALETTE.ink);
 
     const { resume, setup } = data;
+    this.cheats = data.cheats;
+    noteWalkStarted(this);
     const recorder = new RunRecorder(data.replay);
     const streams = runStreams(setup.seed, resume?.draws);
     if (resume === undefined) {
-      const run = withSetupStart(gameData, setup, newRun(gameData, data.dogSlots, data.loadout));
+      const run = withCheats(
+        data.cheats,
+        withSetupStart(gameData, setup, newRun(gameData, data.dogSlots, data.loadout)),
+      );
       // The log names the pack, gear and walker walked and a later start's route, so its replay
       // does not read the saved loadout. Each fork's path is a card choice in its events.
       recorder.start({
@@ -282,7 +291,6 @@ export class RunScene extends Scene implements HudRun {
     this.stepBefore = undefined;
     this.stepClock = startStepClock;
     this.world = undefined;
-    this.zoneClocks = startZoneClocks(0);
   }
 
   // The views are made in draw order: the backdrop and its ambient movers, the road and its
@@ -311,7 +319,6 @@ export class RunScene extends Scene implements HudRun {
       backdrop,
       banner: new ZoneBanner(this),
       distractions,
-      hitBoxes: new HitBoxView(this),
       input: new RunInput(this, {
         explainShown: () => this.explainShown(),
         replaying: () => recorder.replaying(),
@@ -434,52 +441,62 @@ export class RunScene extends Scene implements HudRun {
       return;
     }
     this.world?.input.tick(this.game.loop.time);
-    const timeScale = timeScaleOf(this.applyCheats());
+    const timeScale = timeScaleOf(this.cheats);
     this.time.timeScale = timeScale;
     this.tweens.timeScale = timeScale;
     const frame = frameSteps({ ...STEPPING, timeScale }, time, this.stepClock);
     this.stepClock = frame.clock;
-    const halted = !this.walking();
-    let roadMs = 0;
-    let stoppedMs = 0;
     for (let step = 0; step < frame.steps && this.walking(); step++) {
       this.stepBefore = this.session?.walk;
       const stop = this.session?.walk.road.hitStop;
-      if (stop == null) {
-        roadMs += STEP_MS;
-      } else {
-        stoppedMs += STEP_MS;
-      }
       if (stop?.firing !== true) {
         this.ambientMs += STEP_MS;
       }
       this.simulate();
     }
     this.world?.pack.holdTrots(walkPaused(this.runPause()));
-    const { frameMs } = frame;
-    const zoneIndex = session.walk.run.zoneIndex;
-    const clockFrame = { frameMs, halted, roadMs, stoppedMs, zoneIndex };
-    this.zoneClocks = tickZoneClocks(clockFrame, this.zoneClocks);
     if (!this.walking()) {
       this.stepClock = holdStepClock(this.stepClock);
       // A held walk draws as it stands, and goes on from there without a jump.
       this.stepBefore = this.session?.walk;
     }
     this.draw();
-    emitDevState(this.game, this.world?.setup, this.zoneClocks, this.session?.walk);
   }
 
-  // The dev panel's cheats, from the registry, with the run set to match them.
-  private applyCheats(): Cheats {
-    const cheats = cheatsFrom(this.registry.get(DEV_CHEATS_KEY));
+  // Whether the walk is on, for This walk's cheats: started and not ended.
+  cheatsApply(): boolean {
+    const run = this.session?.walk.run;
+    return run !== undefined && run.phase.kind !== "ended";
+  }
+
+  // The walk as This walk's cheat leaves it, in a cheat session: nothing of it is saved. The
+  // walk's checkpoints and end stay in the session.
+  cheat(cheat: WalkCheat): void {
     const session = this.session;
-    if (session !== undefined) {
-      const run = withCheats(cheats, session.walk.run);
-      if (run !== session.walk.run) {
-        this.session = { ...session, walk: { ...session.walk, run } };
-      }
+    if (session === undefined || !this.cheatsApply()) {
+      return;
     }
-    return cheats;
+    useCheat(this);
+    const { run } = session.walk;
+    const walk = { ...session.walk, run: walkCheat(gameData, cheat, run) };
+    this.session = {
+      ...session,
+      walk: cheat.kind === "finishZone" ? finishZone(gameData, session.walk) : walk,
+    };
+    this.stepBefore = this.session.walk;
+    this.draw();
+  }
+
+  // The upgrades This walk can still grant.
+  upgradesToGrant(): readonly UpgradeId[] {
+    const run = this.session?.walk.run;
+    return run === undefined ? [] : upgradesLeft(gameData, run);
+  }
+
+  // Whether This walk's Finish this neighbourhood applies: walking, with no card or hit stop.
+  canFinishZone(): boolean {
+    const session = this.session;
+    return session !== undefined && session.card === null && canFinishZone(session.walk);
   }
 
   private walking(): boolean {
@@ -804,8 +821,6 @@ export class RunScene extends Scene implements HudRun {
       shadow,
       still,
     });
-    const cheats = cheatsFrom(this.registry.get(DEV_CHEATS_KEY));
-    world.hitBoxes.draw(walk, cheats.hitBoxes);
     world.shadows.hideUnused();
     // Last, so the lights follow every sprite where this frame has drawn it.
     world.lights.draw(

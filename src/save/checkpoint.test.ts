@@ -350,7 +350,7 @@ describe("achievements at banking", () => {
     });
   });
 
-  it("counts a finished walk a dev start began past zone 1 toward the totals, from its first zone", () => {
+  it("counts a finished walk that began past zone 1 toward the totals from its first zone", () => {
     const counters = { ...quietCounters(), firstZone: 2 };
     const clean = runResult({
       counters,

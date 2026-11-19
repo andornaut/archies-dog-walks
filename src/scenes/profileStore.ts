@@ -1,4 +1,4 @@
-import type { StoreLoadResult } from "@andornaut/game-kit/runtime/save/saveStore";
+import { saveStore, type StoreLoadResult } from "@andornaut/game-kit/runtime/save/saveStore";
 import { localSaveStorage } from "@andornaut/game-kit/runtime/web/save/dom/localSaveStorage";
 import { type Game, type Scene, Scenes } from "phaser";
 
@@ -9,9 +9,15 @@ import type { RunResult } from "../save/checkpoint.ts";
 import { saveContextFrom } from "../save/load.ts";
 import { ProfileSession, type RunEnd, type StorageState } from "../save/profile.ts";
 import { encodeResume, launchWalk, type ResumeWalk } from "../save/resume.ts";
-import { type Checkpoint, type SaveDocument } from "../save/schema.ts";
+import { type Checkpoint, createDefaultSave, type SaveDocument } from "../save/schema.ts";
 import type { Settings } from "../save/settings.ts";
-import { pageEarnedStore, pageSaveStore, RESUME_BACKUP_KEY } from "../save/storage.ts";
+import {
+  EARNED_KEYS,
+  earnedRecordFormat,
+  pageEarnedStore,
+  pageSaveStore,
+  RESUME_BACKUP_KEY,
+} from "../save/storage.ts";
 import {
   currentSettings,
   deviceSettingsOf,
@@ -191,4 +197,38 @@ export function walkerInUse(save: Pick<SaveDocument, "walker">): WalkerId {
 export function walkerSpriteKey(scene: Scene, walker: WalkerId): string {
   const own = gameData.walkers[walker].spriteKey;
   return scene.textures.exists(own) ? own : gameData.walkers[gameData.defaultWalker].spriteKey;
+}
+
+// Whether a cheat session lasts (ProfileSession.cheating).
+export function inCheatSession(scene: Scene): boolean {
+  return openedSession(scene)?.cheating ?? false;
+}
+
+// The first cheat starts a cheat session, in which nothing is saved, earned or banked.
+export function startCheatSession(scene: Scene): void {
+  session(scene).startCheats();
+}
+
+// Ends any cheat session, the save back as it was before the first cheat.
+export function endCheatSession(scene: Scene): void {
+  openedSession(scene)?.endCheats();
+}
+
+// A change that is no cheat's, written to the save even during a cheat session.
+export function updateOutsideCheats(
+  scene: Scene,
+  change: (save: SaveDocument) => SaveDocument,
+): Promise<void> {
+  return session(scene).updateOutsideCheats(change);
+}
+
+// Reset save: the stored save a new player's and the earned badges none, written once every
+// earlier write has been; nothing is written after it.
+export function resetSave(scene: Scene): Promise<void> {
+  const format = earnedRecordFormat(gameData);
+  const earned = saveStore(localSaveStorage(), EARNED_KEYS, format);
+  return session(scene).resetSave(
+    () => earned.save(format.fresh()),
+    createDefaultSave(saveContextFrom(gameData).defaults),
+  );
 }

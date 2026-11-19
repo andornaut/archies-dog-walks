@@ -86,8 +86,7 @@ describe("a tap on a scene that opens an overlay", () => {
 });
 
 // Phaser draws scenes in their list's order, and launching a scene keeps its place, so the tap
-// burst layer draws over every overlay while only the dev overlay follows it and no scene is
-// moved or added at run time.
+// burst layer draws over every overlay and no scene is moved or added at run time.
 describe("the tap burst layer", () => {
   const main = readFileSync("src/main.ts", "utf8");
   const list = /scene: \[([^\]]*)\]/.exec(main)?.[1] ?? "";
@@ -96,8 +95,8 @@ describe("the tap burst layer", () => {
     .map((entry) => entry.trim())
     .filter((entry) => entry !== "");
 
-  it("is listed last but for the dev overlay", () => {
-    expect(entries.slice(-2)).toEqual(["TapBurstScene", "DevOverlayScene"]);
+  it("is listed last", () => {
+    expect(entries.at(-1)).toBe("TapBurstScene");
   });
 
   it("is never drawn under a scene moved or added at run time", () => {

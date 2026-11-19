@@ -3,11 +3,17 @@ import {
   sessionRemove,
   sessionWrite,
 } from "@andornaut/game-kit/runtime/web/save/dom/pageSessionStore";
-import type { Game } from "phaser";
 
 import { gameData } from "../../data/index.ts";
-import { DEV_STATE_EVENT, type DevState } from "../../dev/devOverlay.ts";
-import { DEV_LAST_LOG_KEY, DEV_REPLAY_KEY } from "../../dev/devPanelModel.ts";
+import {
+  DEV_LAST_LOG_KEY,
+  DEV_REPLAY_KEY,
+  NEXT_WALK_OFF,
+  type NextWalk,
+  nextWalkSetup,
+  WALK_CHEATS_OFF,
+  type WalkCheats,
+} from "../../dev/cheats.ts";
 import { devToolsOn } from "../../dev/devTools.ts";
 import {
   type CardChoice,
@@ -23,35 +29,42 @@ import {
 } from "../../dev/inputLog.ts";
 import { pageRunSetup, runSetupLimitsFor } from "../../dev/pageRunSetup.ts";
 import type { RunSetup } from "../../dev/runSetup.ts";
-import { expectedRoadMs, type ZoneClocks } from "../../dev/zoneClock.ts";
 import type { SessionInput } from "../../runner/session.ts";
-import { type Walk } from "../../runner/walk.ts";
-import { roadScrollSpeed, zoneLength } from "../../runner/walkMotion.ts";
 
-// How a run starts: its setup, and the inputs that drive it when it replays a log.
+// How a run starts: the cheats it plays by, its setup, and the inputs that drive it when it
+// replays a log.
 export interface RunStart {
+  cheats: WalkCheats;
   replay: readonly InputEvent[] | undefined;
   setup: RunSetup;
 }
 
-// A replay log waiting in the session starts the next run from its setup and drives its inputs;
-// otherwise the page's URL sets the run up. Reading the log clears it. The installed app reads
-// no log.
-export function nextRunStart(): RunStart {
+// A replay log waiting in the session starts the next run from its setup and drives its inputs,
+// with no cheats; otherwise the page's URL sets the run up, with the next walk's cheats over it.
+// Reading the log clears it. The installed app reads no log.
+export function nextRunStart(next: NextWalk = NEXT_WALK_OFF): RunStart {
   const raw = devToolsOn() ? sessionRead(DEV_REPLAY_KEY) : null;
   if (raw !== null) {
     sessionRemove(DEV_REPLAY_KEY);
     const decoded = decodeInputLog(runSetupLimitsFor(gameData), raw);
     if (decoded.ok) {
-      return { replay: [...replayInputs(decoded.log)], setup: decoded.log.setup };
+      return {
+        cheats: WALK_CHEATS_OFF,
+        replay: [...replayInputs(decoded.log)],
+        setup: decoded.log.setup,
+      };
     }
     console.warn("Replay log rejected:", decoded.errors.join("; "));
   }
-  return { replay: undefined, setup: pageRunSetup().setup };
+  const { invincible, speed } = next;
+  return {
+    cheats: { invincible, speed },
+    replay: undefined,
+    setup: nextWalkSetup(gameData, next, pageRunSetup().setup),
+  };
 }
 
-// The run's dev hooks: the input log it records, the replay that drives it, and the state the
-// dev overlay shows.
+// The run's dev hooks: the input log it records and the replay that drives it.
 export class RunRecorder {
   private inputLog: InputLog | undefined;
   private readonly replay: { events: readonly InputEvent[]; next: number } | undefined;
@@ -107,28 +120,4 @@ export class RunRecorder {
       sessionWrite(DEV_LAST_LOG_KEY, encodeInputLog(this.inputLog));
     }
   }
-}
-
-export function emitDevState(
-  game: Game,
-  setup: RunSetup | undefined,
-  clocks: ZoneClocks,
-  walk: Walk | undefined,
-): void {
-  if (walk === undefined || setup === undefined) {
-    return;
-  }
-  const scrollSpeed = roadScrollSpeed(gameData, walk);
-  const state: DevState = {
-    run: walk.run,
-    scrollSpeed,
-    setup,
-    time: {
-      clocks,
-      expectedRoadMs: expectedRoadMs(zoneLength(gameData), scrollSpeed),
-    },
-    zoneDistance: walk.run.zoneDistance,
-    zoneIndex: walk.run.zoneIndex,
-  };
-  game.events.emit(DEV_STATE_EVENT, state);
 }

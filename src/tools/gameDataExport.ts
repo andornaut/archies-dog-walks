@@ -30,7 +30,6 @@ import type {
   UpgradeId,
   WalkerId,
 } from "../data/types.ts";
-import { DEV_CHEATS_KEY, DEV_SAVE_EDITS_KEY } from "../dev/devPanelModel.ts";
 import { DEV_GAME_GLOBAL } from "../dev/devTools.ts";
 import { sizeHearts } from "../rules/dogs.ts";
 import { upgradeDuration } from "../rules/durations.ts";
@@ -151,14 +150,15 @@ export function gameDataExport(data: GameData) {
     cards: cardFaces(data),
     debuffs: entries(data.debuffs).map(([id, debuff]) => ({ id, ...debuff })),
     // What a browser harness that drives the game needs: the dev=1 game global, the preview
-    // server's container name, the storage keys the dev panel and the save use, and the text it
-    // waits for.
+    // server's container name, the save's storage key, and the text it waits for.
     devHarness: {
       pageGlobal: DEV_GAME_GLOBAL,
       previewHost: PREVIEW_HOST,
       storageKeys: {
-        devCheats: DEV_CHEATS_KEY,
-        devSaveEdits: DEV_SAVE_EDITS_KEY,
+        // CLEANUP (added 2026-11-18): the game reads neither key; they stay until
+        // art/tools/pixel.ts and art/tools/home_grabs.ts stop requiring them.
+        devCheats: "archies-dog-walks.dev-cheats",
+        devSaveEdits: "archies-dog-walks.dev-save-edits",
         save: SAVE_KEYS.save,
       },
       text: { pull: data.runText.strip.pull },

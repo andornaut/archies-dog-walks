@@ -32,10 +32,7 @@ import type {
   InstallStepsKind,
 } from "@andornaut/game-kit/runtime/web/pwa/installState";
 import { serviceWorkerUrl } from "@andornaut/game-kit/runtime/web/pwa/serviceWorkerUrl";
-import {
-  requestPersistentStorage,
-  type StoragePersistence,
-} from "@andornaut/game-kit/runtime/web/pwa/storagePersistence";
+import { requestPersistentStorage } from "@andornaut/game-kit/runtime/web/pwa/storagePersistence";
 import type { RequiredUpdateState } from "@andornaut/game-kit/runtime/web/pwa/updateReady";
 import { localSaveStorage } from "@andornaut/game-kit/runtime/web/save/dom/localSaveStorage";
 import {
@@ -61,7 +58,6 @@ export {
   type InstallStepsKind,
   offersInstall,
 } from "@andornaut/game-kit/runtime/web/pwa/installState";
-export type { StoragePersistence } from "@andornaut/game-kit/runtime/web/pwa/storagePersistence";
 
 const SERVICE_WORKER_URL = "/sw.js";
 
@@ -77,7 +73,6 @@ let leaveOffered = false;
 let exitCloses = false;
 let installFlow: InstallFlow | undefined;
 let installNudge: InstallNudge | undefined;
-let persistence: Promise<StoragePersistence> = Promise.resolve("unsupported");
 let screenWakeLock: ScreenWakeLock | undefined;
 let updateFlow: UpdateFlow | undefined;
 // Registration readiness and update-offer visibility follow the actual start screen.
@@ -142,7 +137,7 @@ export function setupPhoneApp(): Promise<LaunchResult> {
   installFlow = watchInstall(window);
   // Asked once per launch of the installed app, never in a browser tab. Not waited for: the game
   // boots whatever the browser answers, or if it never does.
-  persistence = requestPersistentStorage(
+  void requestPersistentStorage(
     installFlow.state() === "installed",
     "storage" in navigator ? navigator.storage : undefined,
   );
@@ -304,11 +299,6 @@ export function noteSaveStorage(storage: StorageState): void {
 // PHONE_EVENTS.requiredUpdate fires on each change.
 export function requiredUpdate(): RequiredUpdateState | undefined {
   return required;
-}
-
-// What the browser answered when asked to keep the game's storage, for the dev panel.
-export function storagePersistence(): Promise<StoragePersistence> {
-  return persistence;
 }
 
 // Before setupPhoneApp there is no install flow, and nothing offers to install.
