@@ -114,7 +114,7 @@ canvas, .view img { display: block; image-rendering: pixelated; image-rendering:
 <main class="wrap">
   <header>
     <h1>Archie's Dog Walks Art</h1>
-    <p>Every asset listed in <code>/art/manifest.json</code>, as the game loads it, grouped by key prefix. Sprites play their tagged animations.</p>
+    <p>Every asset in the art manifest, drawn from the files the game loads (in a build, its atlas pages), grouped by key prefix. Sprites play their tagged animations.</p>
     <div class="counts" id="counts" role="group" aria-label="Show only"></div>
     <p class="error" id="status" hidden></p>
   </header>
@@ -198,8 +198,28 @@ const showGroundName = () => { $("ground-name").textContent = groundInputs.find(
 showGroundName();
 
 const loadImage = src => new Promise((ok, fail) => { const i = new Image(); i.onload = () => ok(i); i.onerror = () => fail(new Error("Could not load " + src)); i.src = src; });
-const getJSON = async url => { const r = await fetch(url, { cache: "no-cache" }); if (!r.ok) throw new Error(`${url}: HTTP ${r.status}`); return r.json(); };
-const getText = async url => { const r = await fetch(url, { cache: "no-cache" }); if (!r.ok) throw new Error(`${url}: HTTP ${r.status}`); return r.text(); };
+const getJSON = async src => { const r = await fetch(src, { cache: "no-cache" }); if (!r.ok) throw new Error(`${src}: HTTP ${r.status}`); return r.json(); };
+const getText = async src => { const r = await fetch(src, { cache: "no-cache" }); if (!r.ok) throw new Error(`${src}: HTTP ${r.status}`); return r.text(); };
+
+// A build's map from each /art/ path to its content-hashed URL (art-files.json), else {}: the dev
+// server serves it empty, and every file then loads at its own path.
+let files = {};
+const url = path => files[path] ?? BASE + path;
+// A build's atlas (atlas-manifest.json): its pages, and each packed key's texture by key. A key the
+// atlas leaves out loads from its own files.
+const BASE_FRAME = "__BASE"; // the frame that covers a whole image, as Phaser names it
+let atlasPages = [];
+const textures = new Map();
+const pageImages = new Map();
+const pageImage = n => { if (!pageImages.has(n)) pageImages.set(n, loadImage(url(atlasPages[n].file))); return pageImages.get(n); };
+function baseFrame(t) { const f = t.frames.find(g => g.name === BASE_FRAME); if (!f) throw new Error(`no ${BASE_FRAME} frame in the atlas`); return f; }
+// An atlas frame as a canvas of its whole frame: a trimmed rect drawn at its place in the frame.
+function wholeFrame(page, f) {
+  const { w, h, x, y } = f.trim ?? { w: f.w, h: f.h, x: 0, y: 0 };
+  const c = el("canvas", { width: w, height: h });
+  c.getContext("2d").drawImage(page, f.x, f.y, f.w, f.h, x, y, f.w, f.h);
+  return c;
+}
 
 const views = [];      // every .view, so ground changes reach all of them
 const scaled = [];     // { canvas, w, h } redrawn on zoom change
@@ -212,6 +232,7 @@ function emptyCard(host, text) { host.replaceChildren(el("div", { className: "em
 function errorCard(host, kind, key, err) { host.append(el("div", { className: "empty error", textContent: `${key}: ${err.message}`, dataset: { key, kind } })); }
 
 // Sprite sheet JSON in json-hash form: frames keyed by name in export order, animations in meta.frameTags.
+// An atlased sprite keeps the same frames and tags in its texture.
 function sequence(tag) {
   const fwd = []; for (let i = tag.from; i <= tag.to; i++) fwd.push(i);
   if (tag.direction === "reverse") return fwd.reverse();
@@ -220,14 +241,24 @@ function sequence(tag) {
 }
 
 async function addSprite(host, s) {
-  const [img, data] = await Promise.all([loadImage(BASE + s.png), getJSON(BASE + s.json)]);
-  const frames = Object.values(data.frames).map(f => ({ ...f.frame, duration: f.duration || 100 }));
-  const tags = data.meta?.frameTags?.length ? data.meta.frameTags : [{ name: "all", from: 0, to: frames.length - 1, direction: "forward" }];
+  // Each frame as its source (sheet or whole-frame canvas) and its rect there.
+  let frames, tags;
+  const tex = textures.get(s.key);
+  if (tex) {
+    const page = await pageImage(tex.page);
+    frames = tex.frames.map(f => { const src = wholeFrame(page, f); return { src, x: 0, y: 0, w: src.width, h: src.height, duration: f.duration || 100 }; });
+    tags = tex.tags;
+  } else {
+    const [img, data] = await Promise.all([loadImage(url(s.png)), getJSON(url(s.json))]);
+    frames = Object.values(data.frames).map(f => ({ src: img, ...f.frame, duration: f.duration || 100 }));
+    tags = data.meta?.frameTags;
+  }
+  if (!tags?.length) tags = [{ name: "all", from: 0, to: frames.length - 1, direction: "forward" }];
   const fw = Math.max(...frames.map(f => f.w)), fh = Math.max(...frames.map(f => f.h));
   const canvas = el("canvas"); sizeCanvas(canvas, fw, fh); scaled.push({ canvas, w: fw, h: fh });
   const ctx = canvas.getContext("2d");
   const player = { tag: tags[0], seq: sequence(tags[0]), i: 0, t: 0, draw() {
-    const f = frames[this.seq[this.i]]; ctx.clearRect(0, 0, fw, fh); ctx.drawImage(img, f.x, f.y, f.w, f.h, 0, 0, f.w, f.h);
+    const f = frames[this.seq[this.i]]; ctx.clearRect(0, 0, fw, fh); ctx.drawImage(f.src, f.x, f.y, f.w, f.h, 0, 0, f.w, f.h);
   } };
   player.draw(); players.push({ player, frames });
 
@@ -245,7 +276,7 @@ async function addSprite(host, s) {
   const strip = el("div", { className: "strip", title: "Every frame in export order" });
   frames.forEach(f => {
     const c = el("canvas"); sizeCanvas(c, f.w, f.h); scaled.push({ canvas: c, w: f.w, h: f.h });
-    c.getContext("2d").drawImage(img, f.x, f.y, f.w, f.h, 0, 0, f.w, f.h);
+    c.getContext("2d").drawImage(f.src, f.x, f.y, f.w, f.h, 0, 0, f.w, f.h);
     strip.append(c);
   });
   const view = makeView(); view.append(canvas);
@@ -257,7 +288,8 @@ async function addSprite(host, s) {
 }
 
 async function addImage(host, s) {
-  const img = await loadImage(BASE + s.png);
+  const t = textures.get(s.key);
+  const img = t ? wholeFrame(await pageImage(t.page), baseFrame(t)) : await loadImage(url(s.png));
   const c = el("canvas"); sizeCanvas(c, img.width, img.height); scaled.push({ canvas: c, w: img.width, h: img.height });
   c.getContext("2d").drawImage(img, 0, 0);
   const view = makeView(); view.append(c);
@@ -267,13 +299,14 @@ async function addImage(host, s) {
   ])]));
 }
 
-// XML BMFont, the format Phaser's load.bitmapFont reads.
+// XML BMFont, the format Phaser's load.bitmapFont reads. An atlased font's glyphs sit at its frame's place on its page.
 async function addFont(host, s) {
-  const [img, xml] = await Promise.all([loadImage(BASE + s.png), getText(BASE + s.fnt)]);
+  const t = textures.get(s.key), at = t ? baseFrame(t) : { x: 0, y: 0 };
+  const [img, xml] = await Promise.all([t ? pageImage(t.page) : loadImage(url(s.png)), getText(url(s.fnt))]);
   const doc = new DOMParser().parseFromString(xml, "application/xml");
   const num = (n, a) => Number(n.getAttribute(a)) || 0;
   const common = doc.querySelector("common"), lineH = common ? num(common, "lineHeight") : 8;
-  const chars = new Map([...doc.querySelectorAll("char")].map(c => [num(c, "id"), { x: num(c, "x"), y: num(c, "y"), w: num(c, "width"), h: num(c, "height"), ox: num(c, "xoffset"), oy: num(c, "yoffset"), adv: num(c, "xadvance") }]));
+  const chars = new Map([...doc.querySelectorAll("char")].map(c => [num(c, "id"), { x: at.x + num(c, "x"), y: at.y + num(c, "y"), w: num(c, "width"), h: num(c, "height"), ox: num(c, "xoffset"), oy: num(c, "yoffset"), adv: num(c, "xadvance") }]));
   const lines = ["THE QUICK BROWN FOX", "JUMPS OVER THE LAZY DOG", "the quick brown fox", "0123456789 $42 +1 -2 ♥", "YOU'RE FIRED! TIPS HALVED."];
   const width = Math.max(...lines.map(l => [...l].reduce((w, ch) => w + (chars.get(ch.codePointAt(0))?.adv || 0), 0)));
   const c = el("canvas"); const W = Math.max(1, width), H = lineH * lines.length;
@@ -292,8 +325,8 @@ async function addFont(host, s) {
 // Ogg first, AAC for browsers without Vorbis, as the game loads them. Nothing downloads until play.
 async function addSound(host, s) {
   const audio = el("audio", { controls: true, preload: "none", loop: !!s.loop }, [
-    el("source", { src: BASE + s.ogg, type: "audio/ogg" }),
-    el("source", { src: BASE + s.m4a, type: "audio/mp4" }),
+    el("source", { src: url(s.ogg), type: "audio/ogg" }),
+    el("source", { src: url(s.m4a), type: "audio/mp4" }),
   ]);
   audio.setAttribute("aria-label", s.key);
   host.append(el("div", { className: "sound", dataset: { key: s.key, kind: "sounds" } }, [
@@ -325,8 +358,17 @@ async function fill(g, items) {
 }
 
 async function main() {
+  try { files = await getJSON(BASE + "art-files.json"); } catch (err) { files = {}; }
+  if (!files || typeof files !== "object") files = {};
+  if (Object.hasOwn(files, "atlas-manifest.json")) {
+    try {
+      const atlas = await getJSON(url("atlas-manifest.json"));
+      atlasPages = atlas.pages;
+      for (const t of atlas.textures) textures.set(t.key, t);
+    } catch (err) { Object.assign($("status"), { hidden: false, textContent: `Could not read the atlas manifest: ${err.message}` }); }
+  }
   let manifest;
-  try { manifest = await getJSON(BASE + "manifest.json"); } catch (err) { Object.assign($("status"), { hidden: false, textContent: `Could not read the manifest: ${err.message}` }); manifest = {}; }
+  try { manifest = await getJSON(url("manifest.json")); } catch (err) { Object.assign($("status"), { hidden: false, textContent: `Could not read the manifest: ${err.message}` }); manifest = {}; }
   const sprites = manifest.sprites || [], images = manifest.images || [], fonts = manifest.fonts || [], sounds = manifest.sounds || [];
   const counts = { sprites: sprites.length, images: images.length, fonts: fonts.length, sounds: sounds.length };
   for (const b of pills) if (b.dataset.kind in counts) b.textContent = `${counts[b.dataset.kind]} ${b.dataset.kind}`;
