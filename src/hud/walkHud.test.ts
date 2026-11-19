@@ -474,28 +474,25 @@ describe("the dog cards", () => {
     expect(rectsOverlap(text, ownerPhoto)).toBe(false);
   });
 
-  // Each line of the owner's name as the card sets it: its ink from the top of its capitals to
-  // its lowest ink, from owner.x.
+  // Each line of the owner's name as the card sets it: its ink from its highest to its lowest
+  // row, from the line's ink left edge.
   const nameRects = (name: string) =>
     ownerNameLines(ownerFont, name).map((line) => ({
       height: line.ink.bottom - line.ink.top,
       width: line.ink.right - line.ink.left,
-      x: DOG_CARD.owner.x,
+      x: line.x,
       y: line.top + line.ink.top,
     }));
 
   it.each(owners)(
-    "fits the name of %s's owner, %s, beside their photo within the room, one line when it fits",
+    "sets the name of %s's owner, %s, whole: under the photo when it fits, else on two lines beside it",
     (_dog, name) => {
       const lines = ownerNameLines(ownerFont, name);
-      expect(lines).toHaveLength(ownerWidth(name) <= DOG_CARD.owner.room ? 1 : 2);
-      expect(
-        lines
-          .map(({ text }) => text)
-          .join("")
-          .replaceAll(" ", ""),
-      ).toBe(name.replaceAll(" ", ""));
-      expect(lines.filter(({ text }) => ownerWidth(text) > DOG_CARD.owner.room)).toEqual([]);
+      const under = ownerWidth(name) <= DOG_CARD.owner.under.room;
+      expect(lines.map(({ text }) => text).join(" ")).toBe(name);
+      expect(lines).toHaveLength(under ? 1 : 2);
+      const room = under ? DOG_CARD.owner.under.room : DOG_CARD.owner.room;
+      expect(lines.filter(({ text }) => ownerWidth(text) > room)).toEqual([]);
     },
   );
 
@@ -516,10 +513,19 @@ describe("the dog cards", () => {
     "keeps the name of %s's owner, %s, inside the card, clear of the photos and over the hearts",
     (_dog, name) => {
       const hearts = heartRects(mostHearts);
+      const face = { ...frameSize(dogFaceKey(gameData, "kilo")), ...DOG_CARD.dogFace };
+      // The dog's photo: its ink frame and cream mat round the face.
+      const dogPhoto = {
+        height: face.height + 4,
+        width: face.width + 4,
+        x: face.x - 2,
+        y: face.y - 2,
+      };
       const hit = nameRects(name).filter(
         (rect) =>
           !inside(rect, card) ||
           rectsOverlap(rect, ownerPhoto) ||
+          rectsOverlap(rect, dogPhoto) ||
           rectsOverlap(rect, lead) ||
           hearts.some((heart) => rectsOverlap(rect, heart)),
       );

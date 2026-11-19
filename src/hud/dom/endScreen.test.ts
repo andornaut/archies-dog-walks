@@ -6,7 +6,7 @@ import { describe, expect, it, vi } from "vitest";
 import { gameData } from "../../data/index.ts";
 import { END_LAYOUT } from "../../home/endLayout.ts";
 import { endScreenView, QUIP_TAIL_KEY } from "../../home/endScreenView.ts";
-import { ownerNameLayout } from "../../presentation/ownerName.ts";
+import { ownerNameWrap } from "../../presentation/ownerName.ts";
 import { FakeDocument, fakeLayer } from "../../testing/fakeDom.ts";
 import { fontInk, fontInkRows, gameFont } from "../../testing/fontInk.ts";
 import { shownText } from "../../ui/dom/pixelLine.ts";
@@ -30,7 +30,7 @@ const MEASURE = {
   fitQuip: (_style: unknown, text: string) => ({ lines: [text], scale: 2 }),
   hasTag: () => false,
   inkWidth: () => 40,
-  ownerName: (room: number, name: string) => ownerNameLayout(fonts.body, room, name),
+  ownerName: (room: number, name: string) => ownerNameWrap(fonts.body, room, name),
   span: () => ({ left: 0, right: 40, width: 41 }),
   title: fontMetrics(fonts.title),
   titleInk: (line: string) => modalTitleInk(gameFont("font-title"), line),
@@ -207,21 +207,31 @@ it.each(Object.entries(gameData.dogs))(
       } as never,
     });
     const names = view.results.names;
-    const measured = ownerNameLayout(fonts.body, END_LAYOUT.quips.name.room, data.owner.name);
+    const measured = ownerNameWrap(fonts.body, END_LAYOUT.quips.name.room, data.owner.name);
+    expect(names.map((line) => line.text).join(" ")).toBe(data.owner.name);
     expect(names.map((line) => line.text)).toEqual(measured.map((line) => line.text));
-    expect(names).toHaveLength(measured.length);
+    const { name, well } = END_LAYOUT.quips;
+    const bubble = view.results.bubbles[0]!;
     names.forEach((line, index) => {
       expect(line.scale).toBe(TEXT_SCALE);
       expect(line.centre).toBe("ink");
-      expect(line.centreX).toBe(END_LAYOUT.quips.name.centreX);
       const columns = fontInk("font-body", { scale: line.scale }, line.text);
       const width = columns.right - columns.left;
-      expect(line.centreX - width / 2).toBeGreaterThanOrEqual(286);
-      expect(line.centreX + width / 2).toBeLessThanOrEqual(328);
       const ink = fontInkRows("font-body", { scale: line.scale }, line.text);
       expect(line.capTop + ink.top).toBeGreaterThanOrEqual(
         view.results.wells[0]!.y + END_LAYOUT.quips.well.size,
       );
+      if (width <= name.room) {
+        expect(line.centreX).toBe(name.centreX);
+        expect(line.centreX - width / 2).toBeGreaterThanOrEqual(286);
+        expect(line.centreX + width / 2).toBeLessThanOrEqual(328);
+      } else {
+        // A word wider than the column ends on the well's right edge, clear under the bubble.
+        expect(line.centreX + width / 2).toBe(well.x + well.size);
+        expect(line.capTop + ink.top).toBeGreaterThanOrEqual(
+          bubble.y + bubble.height + name.wideGap,
+        );
+      }
       expect(line.capTop + ink.bottom).toBeLessThanOrEqual(
         view.results.panel.y + view.results.panel.height,
       );
@@ -264,7 +274,11 @@ it("scrolls all owner art, names and quotes together while results chrome and Ba
     (dog) => dog.owner.name,
   );
   expect(view.results.ownerNames).toEqual(ownerNames);
-  expect(view.results.names).toHaveLength(6);
+  expect(view.results.names.map((line) => line.text)).toEqual(
+    ownerNames.flatMap((name) =>
+      ownerNameWrap(fonts.body, END_LAYOUT.quips.name.room, name).map((line) => line.text),
+    ),
+  );
   const spoken = nodes
     .filter((node) => node.className === "adw-spoken")
     .map((node) => node.textContent);
@@ -273,11 +287,11 @@ it("scrolls all owner art, names and quotes together while results chrome and Ba
   );
   expect(spoken).not.toContain(view.results.names.map((line) => line.text).join(" "));
   expect((viewport as unknown as HTMLElement).tabIndex).toBe(0);
-  expect(view.results.ownerRows.contentHeight - view.results.ownerRows.viewport.height).toBe(61);
+  expect(view.results.ownerRows.contentHeight - view.results.ownerRows.viewport.height).toBe(45);
   const button = nodes.find((node) => node.className === "adw-button adw-go")!;
   expect(viewport.contains(button)).toBe(false);
   const fixedTop = button.style.top;
-  (viewport as unknown as HTMLElement).scrollTop = 61 * scale.unit * scale.dpr;
+  (viewport as unknown as HTMLElement).scrollTop = 45 * scale.unit * scale.dpr;
   for (const name of view.results.names) {
     const label = nodes.find((node) => node.textContent === shownText("body", name.text))!;
     expect(viewport.contains(label)).toBe(true);

@@ -269,7 +269,7 @@ export function createHudCards(
           {
             capTop: rect.y + line.top,
             centre: "left",
-            centreX: rect.x + DOG_CARD.owner.x - line.ink.left,
+            centreX: rect.x + line.x - line.ink.left,
             colour: PALETTE.tan,
             font: "body",
             scale: DOG_CARD.owner.scale,

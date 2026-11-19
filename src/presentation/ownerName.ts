@@ -1,4 +1,4 @@
-import { splitBalancedGraphemes, wrapWords } from "@andornaut/game-kit/runtime/lines";
+import { wrapWords } from "@andornaut/game-kit/runtime/lines";
 import {
   type BitmapFont,
   fontMetrics,
@@ -20,19 +20,37 @@ export interface OwnerNameLine {
   readonly text: string;
 }
 
-// Owner captions share one full-size body role and a two-line space in both card layouts.
-export function ownerNameLayout(font: BitmapFont, room: number, name: string): OwnerNameLine[] {
+// The walk card's owner name at full size: one line under the photo when the whole name fits under,
+// else wrapped at spaces onto at most two lines beside it.
+export interface OwnerNameLayout {
+  readonly lines: readonly OwnerNameLine[];
+  readonly under: boolean;
+}
+
+// Never splits a word: a name that fits neither under the photo nor on two beside lines throws.
+export function ownerNameLayout(
+  font: BitmapFont,
+  rooms: { readonly beside: number; readonly under: number },
+  name: string,
+): OwnerNameLayout {
   const width = (text: string) => inkWidth(font, TEXT_SCALE, text);
-  const lines = wrapWords(width, room, name).flatMap((text) => {
-    if (width(text) <= room) {
-      return [text];
-    }
-    return splitBalancedGraphemes(width, text) ?? [text];
-  });
-  if (lines.length > 2 || lines.some((text) => width(text) > room)) {
-    throw new RangeError("Owner name exceeds its full-size two-line room");
+  const line = (text: string) => ({ ink: ownerNameInk(font, text), text });
+  if (width(name) <= rooms.under) {
+    return { lines: [line(name)], under: true };
   }
-  return lines.map((text) => ({ ink: ownerNameInk(font, text), text }));
+  const lines = wrapWords(width, rooms.beside, name);
+  if (lines.length > 2 || lines.some((text) => width(text) > rooms.beside)) {
+    throw new RangeError(
+      `Owner name "${name}" fits neither under the photo nor on two lines beside it`,
+    );
+  }
+  return { lines: lines.map(line), under: false };
+}
+
+// An owner name wrapped only at spaces into room; a word wider than room keeps a whole line.
+export function ownerNameWrap(font: BitmapFont, room: number, name: string): OwnerNameLine[] {
+  const width = (text: string) => inkWidth(font, TEXT_SCALE, text);
+  return wrapWords(width, room, name).map((text) => ({ ink: ownerNameInk(font, text), text }));
 }
 
 // Visible ink bounds relative to the first capital for the shared owner-name role.

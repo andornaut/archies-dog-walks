@@ -27,6 +27,8 @@ import {
   grantedQuipLines,
   QUIP_LINES,
   quipCapsTop,
+  quipNameBottom,
+  quipNamePlace,
   quipTextY,
   sideTotalAmountY,
   sideTotalBand,
@@ -167,10 +169,7 @@ export function endScreenView(
   );
   const owners = closing.map((quip, i) => ({
     fired: quip.fired,
-    nameBottom: Math.max(
-      0,
-      ...ownerNames[i]!.map((line, j) => QUIPS.nameY + j * QUIPS.name.linePitch + line.ink.bottom),
-    ),
+    nameBottom: quipNameBottom(fonts, { fired: quip.fired, lines: 1 }, ownerNames[i]!),
   }));
   const badgeRows = endBadgeRows(fonts, lines.length, owners, earned.length);
   const wanted = closing.map((quip, i) => ({
@@ -178,7 +177,10 @@ export function endScreenView(
     lines: Math.min(QUIP_LINES, measure.fitQuip(textOnLines(QUIP_LINES), quip.text).lines.length),
   }));
   const quipLines = grantedQuipLines(fonts, badgeRows, lines.length, wanted);
-  const quipRows = owners.map((owner, i) => ({ ...owner, lines: itemAt(quipLines, i) }));
+  const quipRows = owners.map((owner, i) => {
+    const text = { fired: owner.fired, lines: itemAt(quipLines, i) };
+    return { ...text, nameBottom: quipNameBottom(fonts, text, ownerNames[i]!) };
+  });
   const layout = endPanelLayout(fonts, lines.length, quipRows);
   const { panel, rows } = layout;
   const placement = endResultsPlacement(badgeRows, layout);
@@ -274,18 +276,19 @@ export function endScreenView(
       });
     }
     const owner = data.dogs[quip.dog].owner.name;
-    ownerNames[i]!.forEach((line, j) =>
+    ownerNames[i]!.forEach((line, j) => {
+      const place = quipNamePlace(fonts, itemAt(quipRows, i), line.ink, j);
       names.push({
-        capTop: row + QUIPS.nameY + j * QUIPS.name.linePitch,
+        capTop: row + place.capTop,
         centre: "ink",
-        centreX: QUIPS.name.centreX,
+        centreX: place.centreX,
         colour: PALETTE.rust,
         font: "body",
         line: 0,
         scale: TEXT_SCALE,
         text: line.text,
-      }),
-    );
+      });
+    });
     const quipRow = itemAt(quipRows, i);
     if (quip.fired) {
       const header = fillLine(MENU_TEXT_FIELDS.end, words, "firedYou", { owner });

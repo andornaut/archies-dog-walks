@@ -240,16 +240,18 @@ export const DOG_CARD_PARTS = {
   name: { room: 108, scale: 2, top: 4, x: 60 },
   owner: {
     // The owner's face's side and top-left.
-    face: { size: 20, x: 47, y: 25 },
-    // Actual ink positions for one centred line, or the two readable lines.
-    ink: { centreY: 35, tops: [20, 40] },
+    face: { size: 20, x: 47, y: 20 },
+    // The visible ink tops of a name's two lines beside the photo.
+    ink: { tops: [20, 40] },
     // The photo's ink frame and white mat round the face.
     photo: { frame: 1, mat: 1 },
-    // The owner's name's widest line.
-    room: 41,
+    // The widest line beside the photo.
+    room: 44,
     // The owner's name uses the standard body scale.
     scale: 2,
-    // The owner's name's left edge.
+    // The one line under the photo: its capitals' top, widest ink and ink left edge.
+    under: { capTop: 45, room: 71, x: 45 },
+    // The lines' ink left edge beside the photo.
     x: 72,
   },
 } as const;
@@ -926,8 +928,9 @@ export const END_SCREEN = {
     face: { x: 291, y: 1 },
     // The gap between rows.
     gap: 2,
-    // The owner's measured column and readable line pitch.
-    name: { linePitch: 20, room: 42 },
+    // The owner's measured column and readable line pitch, and the clear rows over a line too wide
+    // for the column, under the bubble.
+    name: { linePitch: 20, room: 42, wideGap: 2 },
     // The name's first capitals' top.
     nameY: 37,
     // The rule over the first row: its rows above, width and left edge.

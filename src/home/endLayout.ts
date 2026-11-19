@@ -219,6 +219,51 @@ export function quipBubbleHeight(fonts: QuipFonts, row: QuipText): number {
   return Math.max(well.size, top + bubble.pad + quipBlockHeight(fonts, row) + bubble.pad + bottom);
 }
 
+// Where a line of an owner's name goes, from the row's top: its capitals' top and ink centre. A line
+// that fits the column centres under the well, index line pitches down; a wider word ends its ink
+// on the well's right edge and drops wideGap rows clear under the bubble.
+export function quipNamePlace(
+  fonts: QuipFonts,
+  row: QuipText,
+  ink: {
+    readonly bottom: number;
+    readonly left: number;
+    readonly right: number;
+    readonly top: number;
+  },
+  index: number,
+): { capTop: number; centreX: number } {
+  const { name, nameY, well } = END_LAYOUT.quips;
+  const width = ink.right - ink.left;
+  const capTop = nameY + index * name.linePitch;
+  if (width <= name.room) {
+    return { capTop, centreX: name.centreX };
+  }
+  return {
+    capTop: Math.max(capTop, quipBubbleHeight(fonts, row) + name.wideGap - ink.top),
+    centreX: Math.min(name.centreX, well.x + well.size - width / 2),
+  };
+}
+
+// The lowest ink of an owner's name, from the row's top.
+export function quipNameBottom(
+  fonts: QuipFonts,
+  row: QuipText,
+  lines: readonly {
+    readonly ink: {
+      readonly bottom: number;
+      readonly left: number;
+      readonly right: number;
+      readonly top: number;
+    };
+  }[],
+): number {
+  return Math.max(
+    0,
+    ...lines.map((line, i) => quipNamePlace(fonts, row, line.ink, i).capTop + line.ink.bottom),
+  );
+}
+
 // An owner's row's height: its bubble's, and at least down to the lowest ink of the name under
 // the well.
 export function quipRowHeight(fonts: QuipFonts, row: QuipRow): number {

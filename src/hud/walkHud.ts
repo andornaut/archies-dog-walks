@@ -232,11 +232,12 @@ export function zoneProgressLayout(strip: Rect, share: number): ZoneProgressLayo
 // at name.scale, its capitals' top at name.top, no wider than name.room. The owner's photo heads
 // the column right of the dog's, their face (face.size square) at owner.face on every card with
 // a dog, a fired dog's included, inside the card art's photo: its white mat and ink frame, each
-// photo's pixels wide, round the face. Their name goes beside it in the body font at scale from
-// owner.x within owner.room, on one line or broken onto two (ownerNameLines). The hearts sit under the owner's photo in
-// rows of perRow, pitch apart. The LEAD tag is pinned across the foot of the front dog's photo,
-// and FIRED is centred on fired.x across a fired dog's empty photo. An owned slot with no dog
-// shows "Empty" centred on empty.x in its outline.
+// photo's pixels wide, round the face. Their name goes in the body font at scale on one line
+// under the photo from owner.under.x within owner.under.room, or, when the whole name is wider,
+// on two lines beside it from owner.x within owner.room, wrapped at a space (ownerNameLines).
+// The hearts sit under the name in rows of perRow, pitch apart. The LEAD tag is pinned across the
+// foot of the front dog's photo, and FIRED is centred on fired.x across a fired dog's empty photo.
+// An owned slot with no dog shows "Empty" centred on empty.x in its outline.
 export const DOG_CARD = {
   ...DOG_CARD_PARTS,
   size: {
@@ -248,6 +249,8 @@ export const DOG_CARD = {
 interface CardLine extends OwnerNameLine {
   // The top of the line's capitals, from the card's top.
   top: number;
+  // The line's ink left edge, from the card's left.
+  x: number;
 }
 
 // The owner's photo round their size-square face, its top-left at face: the face inside the
@@ -259,17 +262,15 @@ export function ownerPhotoRect(size: number, face: Point): Rect {
   return { height: side, width: side, x: face.x - outset, y: face.y - outset };
 }
 
-// Full-size owner-name ink occupies the fixed portrait-side column without changing its art.
+// The owner's name at full size: one line under the photo when the whole name fits there, else two
+// lines beside it, wrapped at a space.
 export function ownerNameLines(font: BitmapFont, name: string): CardLine[] {
-  const { ink, room } = DOG_CARD.owner;
-  const lines = ownerNameLayout(font, room, name);
-  return lines.map((line, i) => ({
-    ...line,
-    top:
-      lines.length === 1
-        ? ink.centreY - (line.ink.top + line.ink.bottom) / 2
-        : ink.tops[i]! - line.ink.top,
-  }));
+  const { ink, room, under, x } = DOG_CARD.owner;
+  const layout = ownerNameLayout(font, { beside: room, under: under.room }, name);
+  if (layout.under) {
+    return layout.lines.map((line) => ({ ...line, top: under.capTop, x: under.x }));
+  }
+  return layout.lines.map((line, i) => ({ ...line, top: ink.tops[i]! - line.ink.top, x }));
 }
 
 interface CardHeart extends Point {

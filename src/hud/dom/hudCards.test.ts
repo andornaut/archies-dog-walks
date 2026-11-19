@@ -262,7 +262,7 @@ it("keeps each card frame, portrait, heart and lead tag aligned to its logical p
   );
 });
 
-it("speaks intact owner names once while keeping their two visual lines hidden", async () => {
+it("speaks intact owner names once while keeping their visual lines hidden", async () => {
   const { cards, unlock, view } = fixture();
   const dogs = ["kilo", "penny", "sequoia"] as const;
   view.update(clock(), testState({ kilo: 3, penny: 3, sequoia: 3 }));
@@ -272,17 +272,13 @@ it("speaks intact owner names once while keeping their two visual lines hidden",
     const original = gameData.dogs[dogs[index]!].owner.name;
     const nodes = card.all();
     const fragments = nodes.filter((node) => node.className === "adw-text adw-font-body");
-    expect(fragments).toHaveLength(2);
+    // Ralph and Gadget fit one line under the photo; Aunt Judy takes two beside it.
+    expect(fragments).toHaveLength(original.includes(" ") ? 2 : 1);
     expect(fragments.every((node) => node.getAttribute("aria-hidden") === "true")).toBe(true);
     expect(
       nodes.filter((node) => node.className === "adw-spoken" && node.textContent === original),
     ).toHaveLength(1);
-    expect(
-      fragments
-        .map((node) => node.textContent)
-        .join("")
-        .replaceAll(" ", ""),
-    ).toBe(original.replaceAll(" ", ""));
+    expect(fragments.map((node) => node.textContent).join(" ")).toBe(original);
   });
   view.dispose();
 });

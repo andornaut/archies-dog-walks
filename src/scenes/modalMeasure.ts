@@ -6,7 +6,7 @@ import type { EndMeasure } from "../home/endScreenView.ts";
 import { GREETING_FIT } from "../hud/celebrationLayout.ts";
 import type { CelebrationMeasure } from "../hud/celebrationView.ts";
 import { NOTE_PLATE } from "../hud/pauseMenu.ts";
-import { ownerNameLayout } from "../presentation/ownerName.ts";
+import { ownerNameWrap } from "../presentation/ownerName.ts";
 import { modalTitleLayout } from "../ui/modal/layout.ts";
 import { modalTitleInk } from "../ui/modal/titleRole.ts";
 import { type PanelMeasure } from "../ui/modal/types.ts";
@@ -109,7 +109,7 @@ export function canvasEndMeasure(scene: Scene): EndMeasure {
         const fitted = fitPixelText(probe, { room: QUIP_TEXT_ROOM, style }, 0, 0);
         return { lines: fitted.lines, scale: fitted.style.scale };
       }),
-    ownerName: (room, name) => ownerNameLayout(pixelBitmapFont(scene, "body")!, room, name),
+    ownerName: (room, name) => ownerNameWrap(pixelBitmapFont(scene, "body")!, room, name),
     span: (font, scale, text) =>
       withProbe(scene, { colour: PALETTE.plum, font, scale }, (probe) => {
         setPixelText(probe, text);

@@ -150,10 +150,9 @@
         "face": {
           "size": 20,
           "x": 47,
-          "y": 25
+          "y": 20
         },
         "ink": {
-          "centreY": 35,
           "tops": [
             20,
             40
@@ -163,8 +162,13 @@
           "frame": 1,
           "mat": 1
         },
-        "room": 41,
+        "room": 44,
         "scale": 2,
+        "under": {
+          "capTop": 45,
+          "room": 71,
+          "x": 45
+        },
         "x": 72
       },
       "size": {
@@ -1472,6 +1476,7 @@
         "name": {
           "linePitch": 20,
           "room": 42,
+          "wideGap": 2,
           "centreX": 307
         },
         "nameY": 37,
