@@ -31,12 +31,12 @@ import {
   watchFrameTurn,
 } from "@andornaut/game-kit/runtime/web/view/dom/watchFrameTurn";
 
-import { chooseSoundFormat, type SoundFormat } from "../audio/soundFormat.ts";
 import type { StorageState } from "../save/profile.ts";
 import { dispatchPhoneEvent, PHONE_EVENTS } from "./events.ts";
 import { createInstallNudge, type InstallNudge } from "./installNudge.ts";
 import { requireNewer } from "./launch.ts";
 
+export { browserSoundFormat } from "../audio/soundFormat.ts";
 export { AUDIO_UNLOCK_EVENTS, unlockAudioOnFirstGesture } from "./audioUnlock.ts";
 export { PHONE_EVENTS } from "./events.ts";
 export {
@@ -55,12 +55,6 @@ export {
   type InstallStepsKind,
   offersInstall,
 } from "@andornaut/game-kit/runtime/web/pwa/installState";
-
-// The sound format BootScene loads.
-export function browserSoundFormat(): SoundFormat | undefined {
-  const audio = document.createElement("audio");
-  return chooseSoundFormat((mimeType) => audio.canPlayType(mimeType));
-}
 
 // Whether back is guarded (leaveOffered) and whether Exit closes the app (exitCloses), read once
 // at load.

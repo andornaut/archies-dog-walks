@@ -19,6 +19,7 @@ import {
   type RequiredUpdateState,
 } from "@andornaut/game-kit/runtime/web/pwa/dom/launch";
 
+import { browserSoundFormat } from "../audio/soundFormat.ts";
 import { CACHE_POLICY, SERVICE_WORKER_URL } from "./cachePolicy.ts";
 import { dispatchPhoneEvent, PHONE_EVENTS } from "./events.ts";
 import { reportLaunchProgress } from "./launchProgress.ts";
@@ -102,6 +103,9 @@ export function startLaunch(mountFailure: (retry: () => void) => LaunchFailureVi
     // staging fills the loading line.
     onUpdateState: reportRequiredStaging,
     serviceWorkerUrl: SERVICE_WORKER_URL,
+    // Only the alternative this page plays installs, counts and is checked; a browser that plays
+    // neither format installs no sounds and the game is silent.
+    soundFormat: browserSoundFormat(),
   });
   launch = started;
   return started.run().then((result) => {

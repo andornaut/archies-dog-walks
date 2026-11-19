@@ -44,6 +44,9 @@ beforeEach(async () => {
   vi.resetModules();
   vi.stubEnv("PROD", true);
   vi.stubGlobal("window", { dispatchEvent: (event: Event) => dispatched.push(event.type) });
+  vi.stubGlobal("document", {
+    createElement: () => ({ canPlayType: (type: string) => (type.includes("ogg") ? "" : "maybe") }),
+  });
   kit.options = undefined;
   kit.bootProgress.mockClear();
   kit.requireNewer.mockClear();
@@ -58,6 +61,11 @@ afterEach(() => {
 });
 
 describe("startLaunch", () => {
+  it("installs only the sound format this page plays", async () => {
+    await launch.startLaunch(() => ({ dispose() {}, update() {} }));
+    expect(options().soundFormat).toBe("m4a");
+  });
+
   it("shows a first install's Loading failed with Retry until the launch plays", async () => {
     let resolveRun!: (result: "play") => void;
     kit.run.mockReturnValue(

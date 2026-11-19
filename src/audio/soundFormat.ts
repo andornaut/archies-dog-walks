@@ -1,5 +1,6 @@
 // Which of a sound's two files this browser loads. No Phaser here: BootScene loads the chosen
-// file; the installed build holds both.
+// file, and the launch installs only it (createLaunch's soundFormat, matched against each
+// alternative's URL extension, which is the format's name).
 
 export const SOUND_FORMATS = ["ogg", "m4a"] as const;
 export type SoundFormat = (typeof SOUND_FORMATS)[number];
@@ -20,4 +21,10 @@ export function chooseSoundFormat(
     const answer = canPlayType(SOUND_FORMAT_MIME_TYPES[format]);
     return answer !== "" && answer !== "no";
   });
+}
+
+// The format this page plays, read from an audio element's canPlayType.
+export function browserSoundFormat(): SoundFormat | undefined {
+  const audio = document.createElement("audio");
+  return chooseSoundFormat((mimeType) => audio.canPlayType(mimeType));
 }
