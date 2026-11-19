@@ -75,7 +75,7 @@ export const HOME_TEXT = {
   gateSign: "Toronto",
   gearBought: "Got the {gear}!",
   noticeOnlineQuota: "Playing online. Not enough storage for offline play.",
-  noticeOnlineUnsupported: "Playing online. This browser can't store the game.",
+  noticeOnlineUnsupported: "Playing online. No offline play in this browser.",
   noticePackFull: "The pack is full. Tap a picked dog to take it out.",
   noticeSoundOff: "Sound off.",
   noticeSoundOn: "Sound on.",
