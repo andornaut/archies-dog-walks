@@ -260,36 +260,6 @@ function disabledTileArtKeys(
 
 export const DOM_DISABLED_ART_KEYS: ReadonlySet<string> = new Set(disabledTileArtKeys(gameData));
 
-// Art inside covered native Home, shop, detail, settings, results and celebration roots.
-// Top-bar and paused-walk dog-card roots stay outside dim registration. A build
-// writes each copy as a file of its own from the canvas's ramp remap, beside its key's files; a
-// sheet's copy keeps its key's JSON frames.
-export const DOM_DIM_ART_KEYS: ReadonlySet<string> = new Set([
-  ...DOM_CHOICE_CARD_ART.images,
-  ...DOM_CHOICE_CARD_ART.sheets,
-  ...DOM_STYLE_ART.filter(([, key]) => key !== "fx-tap").map(([, key]) => key),
-  ...DOM_DISABLED_ART_KEYS,
-  ...detailArtKeys(gameData),
-  ...SETTINGS_ART_KEYS,
-  ...logbookArtKeys(gameData),
-  ...END_ART_KEYS,
-  ...keysOf(gameData.shopGear).map(gearSmallIconKey),
-  "icon-bill",
-  "icon-lock",
-  "ui-afford",
-  "ui-cork",
-  "ui-denim",
-  "ui-heart",
-  "ui-hint",
-  "ui-plaid",
-  "ui-quip-tail-down",
-  "ui-section",
-  "ui-slot-sign",
-  "ui-tile",
-  "ui-zone-banner",
-  ...celebrationArtKeys(gameData),
-]);
-
 // The sheets the HTML interface loads its art from, one per set of screens that first shows it,
 // so a screen waits for few files and a first install downloads few. A build packs each sheet
 // from its keys' own files (src/tools/atlas/domSheets.ts), each key's PNG whole at a rect of
@@ -329,11 +299,10 @@ const CHROME_ART_KEYS = [
 ];
 
 // Each sheet's keys, by the first rule that takes a key, in this order: dom-chrome the art every
-// screen can show; dom-cards the choice cards' art and the zone banner, the walk's art with a
-// dimmed copy, so dom-walk needs none; dom-home the start screen's and the shop's, with every
-// tile picture; dom-detail the detail cards' and the purchase confirm's; dom-menus the
-// settings', the Logbook's, the badge cards' and the End screen's; and dom-walk the rest, the
-// walk's HUD and moments.
+// screen can show; dom-cards the choice cards' art and the zone banner; dom-home the start
+// screen's and the shop's, with every tile picture; dom-detail the detail cards' and the
+// purchase confirm's; dom-menus the settings', the Logbook's, the badge cards' and the End
+// screen's; and dom-walk the rest, the walk's HUD and moments.
 function domSheetKeys(): ReadonlyMap<string, DomSheet> {
   const rules: readonly (readonly [DomSheet, readonly string[]])[] = [
     ["dom-chrome", CHROME_ART_KEYS],
@@ -358,15 +327,8 @@ export const DOM_SHEET_KEYS: ReadonlyMap<string, DomSheet> = domSheetKeys();
 
 // The copies of a sheet's art the HTML interface can draw in place of its own, each a sheet of
 // its own with the same rects, by the suffix a copy's key adds to its key's: a disabled tile's
-// grey, a disabled choice card's neutral grey, and the retained dimmed copies of each. Longest
-// first, so a key's suffix is read whole.
-export const DOM_COPY_SUFFIXES = [
-  "-disabled-dim",
-  "-grey-dim",
-  "-disabled",
-  "-grey",
-  "-dim",
-] as const;
+// grey and a disabled choice card's neutral grey.
+export const DOM_COPY_SUFFIXES = ["-disabled", "-grey"] as const;
 export type DomCopySuffix = (typeof DOM_COPY_SUFFIXES)[number];
 
 // The sheet and copy a key's art is drawn from: its own key's sheet, or, for a copy's key, its

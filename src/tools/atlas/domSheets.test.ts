@@ -10,7 +10,6 @@ import { beforeAll, describe, expect, it, vi } from "vitest";
 
 import {
   DOM_CHOICE_CARD_ART,
-  DOM_DIM_ART_KEYS,
   DOM_DISABLED_ART_KEYS,
   DOM_SHEET_KEYS,
   DOM_SHEETS,
@@ -29,7 +28,6 @@ import { artCopies, type DomArtKeys } from "./hashedArt.ts";
 const ART_DIR = join(import.meta.dirname, "../../../public/art");
 const readOwn = (path: string) => new Uint8Array(readFileSync(join(ART_DIR, path)));
 const DOM_KEYS: DomArtKeys = {
-  dim: DOM_DIM_ART_KEYS,
   disabled: DOM_DISABLED_ART_KEYS,
   grey: DOM_CHOICE_CARD_ART.grey,
   sheets: DOM_SHEET_KEYS,
@@ -162,9 +160,7 @@ it("resolves each key's logical files to its sheet, and a copy's to its sheet's 
   expect(domArtFileUrl(artUrl, domArtPath("sheet", "face-dog-kilo-disabled", "png"))).toBe(
     "/art/dom/dom-home-disabled.webp",
   );
-  expect(domArtFileUrl(artUrl, "images/card-skip-grey-dim.png")).toBe(
-    "/art/dom/dom-cards-grey-dim.webp",
-  );
+  expect(domArtFileUrl(artUrl, "images/card-skip-grey.png")).toBe("/art/dom/dom-cards-grey.webp");
   expect(domArtFileUrl(artUrl, domArtPath("sheet", "treat@50", "json"))).toBe(
     "/art/dom/dom-walk.json#treat%4050",
   );

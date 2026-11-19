@@ -6,7 +6,6 @@ import type { Plugin, ViteDevServer } from "vite";
 import type { ArtFileMap } from "../../assets/artUrl.ts";
 import {
   DOM_CHOICE_CARD_ART,
-  DOM_DIM_ART_KEYS,
   DOM_DISABLED_ART_KEYS,
   DOM_SHEET_DIR,
   DOM_SHEET_KEYS,
@@ -33,7 +32,6 @@ const RESOLVED_ART_FILES_MODULE = `\0${ART_FILES_MODULE}`;
 
 // The HTML interface's art, by its DOM sheet, and the copies of it it draws.
 const DOM_KEYS: DomArtKeys = {
-  dim: DOM_DIM_ART_KEYS,
   disabled: DOM_DISABLED_ART_KEYS,
   grey: DOM_CHOICE_CARD_ART.grey,
   sheets: DOM_SHEET_KEYS,

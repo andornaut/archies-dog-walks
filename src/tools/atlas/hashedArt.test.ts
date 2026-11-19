@@ -69,7 +69,6 @@ const readArt = async (path: string) =>
       );
 const none = new Set<string>();
 const dom: DomArtKeys = {
-  dim: none,
   disabled: none,
   grey: none,
   sheets: new Map([["ui-panel", "dom-chrome"]]),
@@ -165,7 +164,7 @@ describe("hashed game art", () => {
   it.each([
     ["a key with no image or sprite", { sheets: new Map([["missing", "dom-chrome" as const]]) }],
     ["a grey copy of a key it does not draw", { disabled: new Set(["missing"]) }],
-    ["a dimmed copy of a key it does not draw", { dim: new Set(["missing"]) }],
+    ["a neutral card copy of a key it does not draw", { grey: new Set(["missing"]) }],
   ] as const)("fails the build for %s the HTML interface draws", async (_case, keys) => {
     await expect(
       hashGameArt(readArt, { ...dom, ...keys }, manifest, { files: new Map(), manifest: atlas }),

@@ -47,9 +47,7 @@ export function remapCardGrey(neutralRamp: readonly number[], pixels: Uint8Clamp
   remapToGrey(neutralRamp, 0, pixels);
 }
 
+// A disabled choice card's neutral grey copy's logical path, by its art's (domArtPath).
 export function cardGreyPath(path: string): string {
-  return path.replace(
-    /(-dim)?\.png$/,
-    (_match, dim: string | undefined) => `-grey${dim ?? ""}.png`,
-  );
+  return path.replace(/\.png$/, "-grey.png");
 }

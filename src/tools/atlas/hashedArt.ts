@@ -8,14 +8,7 @@ import type { AssetManifest } from "../../assets/manifest.ts";
 import { usesPhaserArt } from "../../assets/phaserArt.ts";
 import { ART_MANIFEST } from "../artManifest.ts";
 import type { AtlasBuild } from "./atlasBuild.ts";
-import {
-  type ArtCopy,
-  CARD_GREY_COPY,
-  CARD_GREY_DIM_COPY,
-  DIM_COPY,
-  DISABLED_COPY,
-  DISABLED_DIM_COPY,
-} from "./disabledFiles.ts";
+import { type ArtCopy, CARD_GREY_COPY, DISABLED_COPY } from "./disabledFiles.ts";
 import { buildDomSheets } from "./domSheets.ts";
 
 // The module a build fills with the game's ArtFileMap (src/assets/artUrl.ts). The dev server's
@@ -32,10 +25,9 @@ export const ART_FILES_JSON = "art-files.json";
 const HASHED_ART_DIR = "assets/art";
 
 // The art the HTML interface draws, by its DOM sheet (DOM_SHEET_KEYS), the keys whose disabled
-// tile's grey copy it draws (DOM_DISABLED_ART_KEYS), the keys whose neutral card copy it draws
-// (DOM_CHOICE_CARD_ART.grey), and the keys with a retained dimmed copy (DOM_DIM_ART_KEYS).
+// tile's grey copy it draws (DOM_DISABLED_ART_KEYS), and the keys whose neutral card copy it
+// draws (DOM_CHOICE_CARD_ART.grey).
 export interface DomArtKeys {
-  readonly dim: ReadonlySet<string>;
   readonly disabled: ReadonlySet<string>;
   readonly grey: ReadonlySet<string>;
   readonly sheets: ReadonlyMap<string, DomSheet>;
@@ -45,10 +37,7 @@ export interface DomArtKeys {
 export function artCopies(dom: DomArtKeys): readonly (readonly [ArtCopy, ReadonlySet<string>])[] {
   return [
     [DISABLED_COPY, dom.disabled],
-    [DIM_COPY, dom.dim],
-    [DISABLED_DIM_COPY, new Set([...dom.disabled].filter((key) => dom.dim.has(key)))],
     [CARD_GREY_COPY, dom.grey],
-    [CARD_GREY_DIM_COPY, dom.grey],
   ];
 }
 
