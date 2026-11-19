@@ -155,10 +155,6 @@ export function gameDataExport(data: GameData) {
       pageGlobal: DEV_GAME_GLOBAL,
       previewHost: PREVIEW_HOST,
       storageKeys: {
-        // CLEANUP (added 2026-11-18): the game reads neither key; they stay until
-        // art/tools/pixel.ts and art/tools/home_grabs.ts stop requiring them.
-        devCheats: "archies-dog-walks.dev-cheats",
-        devSaveEdits: "archies-dog-walks.dev-save-edits",
         save: SAVE_KEYS.save,
       },
       text: { pull: data.runText.strip.pull },
