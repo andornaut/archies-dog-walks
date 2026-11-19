@@ -86,7 +86,12 @@ export class UpdateScene extends Scene {
     this.awaitingPause = false;
     this.walking = this.scene.isActive(SCENE_KEYS.run);
     const hold = holdPlay(this.game);
-    this.release = () => hold.release();
+    this.release = () => {
+      if (this.scene.isPaused(SCENE_KEYS.pause)) {
+        this.scene.resume(SCENE_KEYS.pause);
+      }
+      hold.release();
+    };
     this.events.once(Scenes.Events.SHUTDOWN, () => {
       this.card?.destroy();
       this.card = undefined;
@@ -111,7 +116,7 @@ export class UpdateScene extends Scene {
     });
     addRampDim(this);
     // The card goes over a pause menu the hold opened, so it mounts once that menu's panel takes
-    // input (update).
+    // input (update), and the menu then dims and stills under it as other screens do.
     this.awaitingPause = hold.pauseOpening;
     if (!this.awaitingPause) {
       mountNativeOverlay(this, () => this.mountCard());
@@ -123,6 +128,7 @@ export class UpdateScene extends Scene {
     if (this.awaitingPause && pause.sys.isActive() && nativeSceneAccepts(pause)) {
       this.awaitingPause = false;
       mountNativeOverlay(this, () => this.mountCard());
+      this.scene.pause(SCENE_KEYS.pause);
     }
   }
 
