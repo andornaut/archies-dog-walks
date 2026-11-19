@@ -93,11 +93,11 @@ import { GREYED, pictureBox, selectLook } from "../ui/selection.ts";
 import { TEXT_SCALE } from "../ui/textFit.ts";
 import { cents } from "../units.ts";
 import type { CelebrationSceneData } from "./CelebrationScene.ts";
-import { listenHomeBar } from "./homeBarPress.ts";
+import { listenHomeBar, sceneRegionOutside } from "./homeBarPress.ts";
 import { detailView } from "./homePanels.ts";
 import { BADGE_KEYS, PLATE_PAD, purchasePicture, SHOP_ART } from "./itemArt.ts";
 import { canvasPanelMeasure } from "./modalMeasure.ts";
-import { closeOverlay, onBackPressed, openOverlay, type OverlayData } from "./overlay.ts";
+import { closeOverlay, listenDismiss, openOverlay, type OverlayData } from "./overlay.ts";
 import {
   currentSettings,
   profileSave,
@@ -345,11 +345,16 @@ export class ShopScene extends Scene {
         this.onKey(event.code);
       }
     });
-    // The shop is a page, not a modal: its live top bar keeps its buttons, and only Back, Escape
-    // and the system back leave it. An open card or confirm is modal, and its own backdrop takes
-    // taps instead. The system back cancels the confirm or closes an open card first, as Escape
-    // does.
-    onBackPressed(this, () => this.back());
+    // The shop is a page, not a modal: its live top bar keeps its buttons, and a tap on the bar's
+    // empty area or beside the game closes the shop, as Back does; the page itself has no outside.
+    // An open card or confirm is modal, and its own backdrop takes those taps instead. The system
+    // back cancels the confirm or closes an open card first, as Escape does.
+    listenDismiss(
+      this,
+      sceneRegionOutside(this, [PANEL]),
+      () => (this.confirm === undefined ? this.close() : this.back()),
+      () => this.back(),
+    );
     // A page the top bar opens over the shop closes an open card or confirm first.
     listenHomeBar(this, () => {
       if (this.confirm !== undefined || this.detail !== undefined) {

@@ -1,4 +1,5 @@
 import { itemAt } from "@andornaut/game-kit/runtime/arrays";
+import type { OutsideArea } from "@andornaut/game-kit/runtime/input/outsideTap";
 import { containsPoint, type Point, type Rect } from "@andornaut/game-kit/runtime/rect";
 import { Scene, Scenes } from "phaser";
 
@@ -9,19 +10,23 @@ import { HELP_LAYOUT } from "../help/helpLayout.ts";
 import { applyHelpAction, type HelpAction } from "../help/helpPaging.ts";
 import { closeHelp } from "../help/helpSeen.ts";
 import { type HelpMeasure, helpView } from "../help/helpView.ts";
+import type { OverlayRegion } from "../home/homeBar.ts";
 import { coverHelpUnderlay } from "../hud/dom/helpUnderlay.ts";
 import type { DomQuestionPanel } from "../hud/dom/questionPanel.ts";
+import { WALK_BAR_BUTTONS } from "../hud/walkHud.ts";
 import { isMuteKey } from "../input/keyBindings.ts";
+import { screenArea } from "../input/outsideTap.ts";
 import { PALETTE } from "../ui/palette.ts";
 import { addFilledRect } from "../ui/phaser/draw.ts";
 import { setPixelText, withProbe, wrapPixelText } from "../ui/phaser/pixelText.ts";
+import { topSectionLayout } from "../ui/topSection.ts";
 import type { HelpPictureData } from "./HelpPictureScene.ts";
 import type { HelpData } from "./helpScreen.ts";
-import { listenHomeBar } from "./homeBarPress.ts";
+import { listenHomeBar, sceneRegionOutside } from "./homeBarPress.ts";
 import type { MenuSceneData } from "./MenuScene.ts";
 import { canvasPanelMeasure } from "./modalMeasure.ts";
 import { listenOnePress } from "./onePress.ts";
-import { BAR_MUTED_EVENT, closeOverlay, onBackPressed } from "./overlay.ts";
+import { BAR_MUTED_EVENT, closeOverlay, listenDismiss } from "./overlay.ts";
 import { currentSettings, onSettingsChanged, toggleMuted, updateProfile } from "./profileStore.ts";
 import { addHtmlHelpScreen, htmlPanelInput, htmlPanelPlace } from "./questionPanel.ts";
 import { REFUSE } from "./refuseControl.ts";
@@ -54,6 +59,18 @@ function helpMeasure(scene: Scene): HelpMeasure {
     wrapBody: (scale, width, text) =>
       wrapPixelText(scene, { colour: PALETTE.cream, scale }, width, text),
   };
+}
+
+// The walk bar's buttons' press columns, which stay live over help on a walk.
+const WALK_BAR_HITS = topSectionLayout(WALK_BAR_BUTTONS).controls.map(([, { hit }]) => hit);
+
+// Where a tap closes help: anywhere in the game frame but the page and the live bar's buttons,
+// the home bar's or the walk bar's.
+export function helpOutside(scene: Scene, region: OverlayRegion): OutsideArea {
+  const { page } = HELP_LAYOUT;
+  return region === "home"
+    ? sceneRegionOutside(scene, [page])
+    : screenArea([page, ...WALK_BAR_HITS]);
 }
 
 // A page, not a modal, as the Logbook is, listed after the scenes it opens over, the home screen
@@ -122,8 +139,10 @@ export class HelpScene extends Scene {
         this.endPagePress(point, cancelled);
       },
     });
-    // Help is a page: only Back, Escape and the system back leave it.
-    onBackPressed(this, () => {
+    // A tap on the top bar's empty area or beside the game closes help, as Back does, while the
+    // bar's buttons stay live; on a walk that includes the walk bar's effect wells. The page
+    // itself has no outside.
+    listenDismiss(this, helpOutside(this, data.region), () => {
       if (this.html?.accepts()) {
         this.close();
       }
