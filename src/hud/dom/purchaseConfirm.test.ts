@@ -6,6 +6,7 @@ import type { ConfirmChoice } from "../../home/purchaseConfirm.ts";
 import { purchaseConfirmCardView } from "../../home/purchaseConfirmCardView.ts";
 import { FakeDocument, fakeLayer, layerViews } from "../../testing/fakeDom.ts";
 import { gameFont } from "../../testing/fontInk.ts";
+import { ownArtFrames } from "../../testing/ownArtFrames.ts";
 import { domScale } from "../../ui/domScale.ts";
 import { modalTitleInk } from "../../ui/modal/titleRole.ts";
 import { showPurchaseConfirm } from "./purchaseConfirm.ts";
@@ -35,7 +36,7 @@ function confirm(pressed: ConfirmChoice | undefined) {
     cancel,
     closeLabel: gameData.menuText.common.close,
     fonts,
-    loadSheet: () => Promise.resolve({}),
+    loadSheet: async (path) => ownArtFrames(path),
     pillColours: () => undefined,
     toGame: (point) => point,
     view: purchaseConfirmCardView(MEASURE, {

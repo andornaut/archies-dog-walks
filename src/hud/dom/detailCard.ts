@@ -162,16 +162,15 @@ export function artPart(
   element.style.visibility = "hidden";
   const ready = input
     .loadSheet(input.artUrl(domArtPath(kind, art.key, "json")))
-    .then(
-      (json) => {
-        frame = sheetFrame(json, art.sheet?.tag);
-        element.style.visibility = "";
-        if (scale !== undefined) {
-          place(scale);
-        }
-      },
-      (error: unknown) => console.error(`The ${art.key} sheet did not load.`, error),
-    )
+    .then((json) => {
+      frame = sheetFrame(json, art.sheet?.tag);
+      element.style.visibility = "";
+      if (scale !== undefined) {
+        place(scale);
+      }
+    })
+    // A request that fails, or frames that are not a sheet's, leave the art hidden.
+    .catch((error: unknown) => console.error(`The ${art.key} sheet did not load.`, error))
     .then(() => urls);
   return { element, place, ready };
 }

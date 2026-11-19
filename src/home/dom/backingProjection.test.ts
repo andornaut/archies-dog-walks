@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 
 import { fontMetrics } from "@andornaut/game-kit/runtime/text/bitmapFont";
-import { expect, it } from "vitest";
+import { expect, it, vi } from "vitest";
 
 import { gameData } from "../../data/index.ts";
 import { SLICES } from "../../data/layout.ts";
@@ -18,6 +18,11 @@ import { homeSections } from "../sections.ts";
 import { homeSectionViews } from "../sectionView.ts";
 import { slotSign } from "../slotSign.ts";
 import { createHomeSections } from "./sections.ts";
+
+// The fake document draws no canvas, so the fills' cuts from their sheet stand in.
+vi.mock("../../ui/dom/domCuts.ts", () => ({
+  cutDomArt: vi.fn(() => Promise.resolve("blob:fill")),
+}));
 import { createSlotSign } from "./slotSign.ts";
 
 const source = {
