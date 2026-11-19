@@ -86,6 +86,8 @@ export const MENU_TEXT = {
     previous: "Previous",
   },
   menu: { title: "Menu" },
+  // The leave button of the Help, Logbook and Pet shop pages.
+  pageBack: "Back",
   pause: {
     action: "Pause",
     headHome: "End walk",
