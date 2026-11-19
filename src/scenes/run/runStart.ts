@@ -56,6 +56,12 @@ export function resumedRunSceneData(dev: boolean, resume: ResumeWalk): RunSceneD
     loadout: { dogs, gear: run.gear, walker: run.walker },
     replay: undefined,
     resume,
-    setup: { dev, seed: resume.seed, speed: road.speedFactor, zone: run.zoneIndex + 1 },
+    setup: {
+      dev,
+      invincible: false,
+      seed: resume.seed,
+      speed: road.speedFactor,
+      zone: run.zoneIndex + 1,
+    },
   };
 }

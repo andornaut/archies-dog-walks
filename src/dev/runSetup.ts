@@ -25,6 +25,8 @@ export interface RunSetup<
 > {
   readonly dev: boolean;
   readonly gear?: GearId | null;
+  // Invincible owners: bumps and cards cost no hearts.
+  readonly invincible: boolean;
   readonly money?: number;
   readonly pack?: readonly DogId[];
   // The zones walked from the first up to the starting zone, by id; at least zone of them.
@@ -58,6 +60,7 @@ const NO_GEAR = "none";
 export const PARAM_NAMES = [
   "dev",
   "gear",
+  "invincible",
   "money",
   "pack",
   "route",
@@ -163,12 +166,15 @@ export function parseRunSetup<DogId extends string, GearId extends string, Walke
       ? number
       : invalid("speed", value, `a number from ${limits.speed.min} to ${limits.speed.max}`);
   });
-  const dev = read("dev", (value) => {
-    if (value === "1") {
-      return true;
-    }
-    return value === "0" ? false : invalid("dev", value, "1 or 0");
-  });
+  const flag = (name: ParamName) =>
+    read(name, (value) => {
+      if (value === "1") {
+        return true;
+      }
+      return value === "0" ? false : invalid(name, value, "1 or 0");
+    });
+  const dev = flag("dev");
+  const invincible = flag("invincible");
   const startZone = zone ?? 1;
   const route = read("route", (value) => {
     const ids = value === "" ? [] : value.split(",");
@@ -186,6 +192,7 @@ export function parseRunSetup<DogId extends string, GearId extends string, Walke
     setup: {
       dev: dev ?? false,
       ...(gear === undefined ? {} : { gear }),
+      invincible: invincible ?? false,
       ...(money === undefined ? {} : { money }),
       ...(pack === undefined ? {} : { pack }),
       ...(route === undefined ? {} : { route }),
@@ -239,6 +246,9 @@ export function runSetupToQuery(setup: RunSetup): string {
   }
   if (setup.speed !== 1) {
     parts.push(`speed=${setup.speed}`);
+  }
+  if (setup.invincible) {
+    parts.push("invincible=1");
   }
   if (setup.dev) {
     parts.push("dev=1");

@@ -15,7 +15,7 @@ import { MAX_RUN_DOGS, type SaveDocument } from "../save/schema.ts";
 import { mapPack } from "../state/pack.ts";
 import type { PackSlot, RunState } from "../state/runState.ts";
 import { addCents, type Cents, cents, clampHearts } from "../units.ts";
-import { MAX_SEED, type RunSetup } from "./runSetup.ts";
+import { MAX_SEED, type RunSetup, runSetupLink } from "./runSetup.ts";
 
 // sessionStorage: an input log, as encodeInputLog writes it, for the next run to play back.
 // The run that reads it should remove it, so a reload plays normally.
@@ -96,9 +96,9 @@ export function pocketChoices(data: Pick<GameData, "shopGear">): (GearId | null 
   return [undefined, null, ...keysOf(data.shopGear)];
 }
 
-// The setup the next walk starts from: base, with the next walk's seed, Pocket item and start.
-// The first neighbourhood is walked first; any other second, after the first, as if picked at
-// the first fork.
+// The setup the next walk starts from: base, with the next walk's seed, Pocket item and start,
+// and Invincible owners when either turns it on. The first neighbourhood is walked first; any
+// other second, after the first, as if picked at the first fork.
 export function nextWalkSetup(data: RouteData, next: NextWalk, base: RunSetup): RunSetup {
   const first = firstZoneId(data);
   const start =
@@ -107,10 +107,21 @@ export function nextWalkSetup(data: RouteData, next: NextWalk, base: RunSetup): 
       : { route: [first, next.start], zone: 2 as const };
   return {
     ...base,
+    invincible: base.invincible || next.invincible,
     ...(next.pocket === undefined ? {} : { gear: next.pocket }),
     ...(next.seed === null ? {} : { seed: next.seed }),
     ...start,
   };
+}
+
+// The link Copy run link copies: the next walk as set up over base, at pageUrl.
+export function nextWalkLink(
+  data: RouteData,
+  pageUrl: string,
+  next: NextWalk,
+  base: RunSetup,
+): string {
+  return runSetupLink(pageUrl, nextWalkSetup(data, next, base));
 }
 
 // What the Start screen's grants add: the bank's amounts, in the modal's order.

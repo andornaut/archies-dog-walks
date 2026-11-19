@@ -10,7 +10,7 @@ import {
   grantOwned,
   nextChoice,
   type NextWalk,
-  nextWalkSetup,
+  nextWalkLink,
   pocketChoices,
   seedFrom,
   showTipsAgain,
@@ -21,7 +21,7 @@ import { type CheatAction, type CheatsState, cheatsView } from "../dev/cheatsVie
 import { stripDevParams } from "../dev/devStart.ts";
 import { devToolsOn } from "../dev/devTools.ts";
 import { pageRunSetup } from "../dev/pageRunSetup.ts";
-import { randomSeed, runSetupLink } from "../dev/runSetup.ts";
+import { randomSeed } from "../dev/runSetup.ts";
 import { showCheats } from "../hud/dom/cheats.ts";
 import { type DomQuestionPanel, showQuestionPanel } from "../hud/dom/questionPanel.ts";
 import { homeQuestionLayout } from "../hud/pauseMenu.ts";
@@ -71,14 +71,15 @@ function runOf(scene: Scene, inWalk: boolean): RunScene | undefined {
   return run.cheatsApply() ? run : undefined;
 }
 
-// A link that starts the next walk as set up: its seed, start and Pocket item over the Start
-// screen's pack, Pocket item and walker.
+// A link that starts the next walk as set up: its seed, start, Pocket item and Invincible owners
+// over the Start screen's pack, Pocket item and walker.
 function runLink(scene: Scene, next: NextWalk & { readonly seed: number }): string {
   const save = profileSave(scene);
   const dogs = packDogsOf(save.lastLoadout.dogs);
   const base = {
     dev: pageRunSetup().setup.dev,
     gear: save.lastLoadout.gear,
+    invincible: false,
     ...(dogs === undefined ? {} : { pack: dogs }),
     seed: next.seed,
     speed: 1,
@@ -86,7 +87,7 @@ function runLink(scene: Scene, next: NextWalk & { readonly seed: number }): stri
     zone: 1,
   };
   const page = new URL("/play/", globalThis.location.href).href;
-  return runSetupLink(page, nextWalkSetup(gameData, next, base));
+  return nextWalkLink(gameData, page, next, base);
 }
 
 export function openCheatsModal(

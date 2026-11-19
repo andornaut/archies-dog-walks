@@ -116,6 +116,7 @@ function record(row: ReplayRow): Recorded {
     setup: {
       dev: false,
       gear,
+      invincible: false,
       pack: dogs,
       seed,
       speed: 1,

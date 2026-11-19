@@ -27,6 +27,7 @@ const limits: RunSetupLimits<"bo" | "kilo", "collar"> = {
 const setup: RunSetup<"bo" | "kilo", "collar"> = {
   dev: false,
   gear: "collar",
+  invincible: true,
   pack: ["kilo", "bo"],
   seed: 31337,
   speed: 1,
@@ -69,7 +70,13 @@ describe("encodeInputLog and decodeInputLog", () => {
   it("round-trip the setup and every event, including fractional times", () => {
     const log = logOf(events);
     expect(decodeOk(encodeInputLog(log))).toEqual(log);
-    const empty = startInputLog<string, string>({ dev: false, seed: 0, speed: 1, zone: 1 });
+    const empty = startInputLog<string, string>({
+      dev: false,
+      invincible: false,
+      seed: 0,
+      speed: 1,
+      zone: 1,
+    });
     expect(decodeOk(encodeInputLog(empty))).toEqual(empty);
   });
 
@@ -81,7 +88,7 @@ describe("encodeInputLog and decodeInputLog", () => {
         [9000, "c", "skip"],
         [10_000, "h"],
       ],
-      setup: "seed=31337&pack=kilo,bo&gear=collar&zone=2",
+      setup: "seed=31337&pack=kilo,bo&gear=collar&zone=2&invincible=1",
       version: INPUT_LOG_VERSION,
     });
   });

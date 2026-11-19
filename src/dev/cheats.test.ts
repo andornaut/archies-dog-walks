@@ -18,6 +18,7 @@ import {
   grantOwned,
   NEXT_WALK_OFF,
   nextChoice,
+  nextWalkLink,
   nextWalkSetup,
   type OwnGrant,
   pocketChoices,
@@ -33,7 +34,7 @@ import {
 } from "./cheats.ts";
 import { MAX_SEED, type RunSetup } from "./runSetup.ts";
 
-const BASE: RunSetup = { dev: false, seed: 7, speed: 1, zone: 1 };
+const BASE: RunSetup = { dev: false, invincible: false, seed: 7, speed: 1, zone: 1 };
 const FIRST = firstZoneId(gameData);
 const LATER = startZones(gameData)[1] as ZoneId;
 const GEAR = keysOf(gameData.shopGear)[0] as GearId;
@@ -54,8 +55,25 @@ describe("nextWalkSetup", () => {
     ["takes the seed", { seed: 42 }, { ...BASE, seed: 42 }],
     ["walks with no Pocket item", { pocket: null }, { ...BASE, gear: null }],
     ["walks with any Pocket item", { pocket: GEAR }, { ...BASE, gear: GEAR }],
+    ["makes owners invincible", { invincible: true }, { ...BASE, invincible: true }],
   ])("%s", (_, next, setup) => {
     expect(nextWalkSetup(gameData, { ...NEXT_WALK_OFF, ...next }, BASE)).toEqual(setup);
+  });
+
+  it("keeps a base's invincible owners with Invincible owners off", () => {
+    const base = { ...BASE, invincible: true };
+    expect(nextWalkSetup(gameData, NEXT_WALK_OFF, base)).toEqual(base);
+  });
+});
+
+describe("nextWalkLink", () => {
+  const PAGE = "https://example.com/play/";
+
+  it.each([
+    [false, `${PAGE}?seed=7`],
+    [true, `${PAGE}?seed=7&invincible=1`],
+  ])("writes Invincible owners %s as the link's invincible", (invincible, link) => {
+    expect(nextWalkLink(gameData, PAGE, { ...NEXT_WALK_OFF, invincible }, BASE)).toBe(link);
   });
 });
 

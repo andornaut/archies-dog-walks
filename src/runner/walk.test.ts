@@ -1637,7 +1637,7 @@ describe("hit stop", () => {
   });
 
   it("replays a run with hit stops exactly from its input log", () => {
-    const setup = { dev: true, seed: 5, speed: 1, zone: 1 };
+    const setup = { dev: true, invincible: false, seed: 5, speed: 1, zone: 1 };
     const start = planZoneForSeed(data, geometry, 5, walkWith(["kilo", "ginger"]));
     const steps = 60 * 30;
     // As RunScene steps: the moves due now, each logged at the run time it is applied, then the
@@ -1685,7 +1685,7 @@ describe("hit stop", () => {
   });
 
   it("replays lane moves, card choices and heading home to the same final state", () => {
-    const setup = { dev: true, seed: 1, speed: 1, zone: 1 };
+    const setup = { dev: true, invincible: false, seed: 1, speed: 1, zone: 1 };
     const start = planZoneForSeed(data, geometry, 1, walkWith(["kilo", "ginger"]));
     const homeFrame = 60 * 25;
     // As RunScene steps: the inputs due now, each logged at the run time it is applied, then

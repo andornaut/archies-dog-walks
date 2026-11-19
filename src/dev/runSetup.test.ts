@@ -21,12 +21,13 @@ const limits: RunSetupLimits<"bo" | "kilo" | "rex" | "zip", "collar" | "shoes"> 
 };
 const NEW_SEED = 777;
 const parse = (search: string) => parseRunSetup(limits, () => NEW_SEED, search);
-const defaults: RunSetup = { dev: false, seed: NEW_SEED, speed: 1, zone: 1 };
+const defaults: RunSetup = { dev: false, invincible: false, seed: NEW_SEED, speed: 1, zone: 1 };
 
 describe("parseRunSetup", () => {
   const every: RunSetup = {
     dev: true,
     gear: "shoes",
+    invincible: true,
     money: 1250,
     pack: ["kilo", "bo"],
     seed: 42,
@@ -34,7 +35,8 @@ describe("parseRunSetup", () => {
     walker: "ada",
     zone: 3,
   };
-  const query = "seed=42&pack=kilo,bo&gear=shoes&walker=ada&zone=3&money=1250&speed=1.5&dev=1";
+  const query =
+    "seed=42&pack=kilo,bo&gear=shoes&walker=ada&zone=3&money=1250&speed=1.5&invincible=1&dev=1";
 
   const valid: { name: string; search: string; setup: RunSetup }[] = [
     { name: "uses a new seed and the defaults for an empty query", search: "", setup: defaults },
@@ -52,6 +54,7 @@ describe("parseRunSetup", () => {
       setup: { ...defaults, gear: null },
     },
     { name: "reads dev=0 as off", search: "dev=0", setup: defaults },
+    { name: "reads invincible=0 as off", search: "invincible=0", setup: defaults },
   ];
 
   it("reads each valid query, with a new seed and the defaults for what it leaves out", () => {
@@ -92,6 +95,8 @@ describe("parseRunSetup", () => {
     ["speed", "fast"],
     ["speed", ""],
     ["dev", "yes"],
+    ["invincible", "yes"],
+    ["invincible", ""],
   ] as const;
 
   it("warns about and ignores each invalid value", () => {
@@ -158,7 +163,17 @@ describe("runSetupToQuery", () => {
     const setups: RunSetup[] = [
       defaults,
       { ...defaults, gear: null },
-      { dev: true, gear: "collar", money: 0, pack: ["zip"], seed: 0, speed: 0.1, zone: 4 },
+      {
+        dev: true,
+        gear: "collar",
+        invincible: true,
+        money: 0,
+        pack: ["zip"],
+        seed: 0,
+        speed: 0.1,
+        zone: 4,
+      },
+      { ...defaults, invincible: true },
       { ...defaults, route: ["distilleryDistrict", "theBeaches"], walker: "casey", zone: 2 },
       { ...defaults, speed: 0.1 + 0.2 },
     ];

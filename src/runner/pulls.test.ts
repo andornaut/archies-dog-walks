@@ -585,7 +585,7 @@ describe("replay with pulls", () => {
     const replayData = { ...data, movementAssignments: {} };
     // As RunScene steps: the moves due now, each logged, then the pulls, then the walk.
     const play = (seed: number, movesAt: (frame: number, timeMs: number) => LaneDirection[]) => {
-      const setup = { dev: true, seed, speed: 1, zone: 1 };
+      const setup = { dev: true, invincible: false, seed, speed: 1, zone: 1 };
       const initial = walkWith(["lady", "kilo"]);
       const start = planZoneWithContext(
         replayData,

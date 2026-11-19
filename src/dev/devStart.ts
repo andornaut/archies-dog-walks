@@ -46,5 +46,5 @@ export function homeRunSetup(
   setup: RunSetup<DogId, GearId, WalkerId>,
   seed: number,
 ): RunSetup<DogId, GearId, WalkerId> {
-  return { dev: setup.dev, seed, speed: 1, zone: 1 };
+  return { dev: setup.dev, invincible: false, seed, speed: 1, zone: 1 };
 }

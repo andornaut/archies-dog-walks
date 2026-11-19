@@ -189,11 +189,13 @@ export class RunScene extends Scene implements HudRun {
         data.cheats,
         withSetupStart(gameData, setup, newRun(gameData, data.dogSlots, data.loadout)),
       );
-      // The log names the pack, gear and walker walked and a later start's route, so its replay
-      // does not read the saved loadout. Each fork's path is a card choice in its events.
+      // The log names the pack, gear and walker walked, whether owners were invincible and a later
+      // start's route, so its replay reads neither the saved loadout nor the Next walk choices.
+      // Each fork's path is a card choice in its events.
       recorder.start({
         ...setup,
         gear: data.loadout.gear,
+        invincible: run.invincible ?? false,
         pack: data.loadout.dogs,
         walker: run.walker,
         ...(setup.zone === 1 ? {} : { route: run.route }),

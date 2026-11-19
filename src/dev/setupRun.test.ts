@@ -8,7 +8,13 @@ import type { RunSetup } from "./runSetup.ts";
 import { loadoutFor, withSetupStart } from "./setupRun.ts";
 
 const fallback: Loadout = { dogs: ["lady"], gear: "luckyCollar", walker: "casey" };
-const setup: RunSetup<DogId, GearId, WalkerId> = { dev: false, seed: 1, speed: 1, zone: 1 };
+const setup: RunSetup<DogId, GearId, WalkerId> = {
+  dev: false,
+  invincible: false,
+  seed: 1,
+  speed: 1,
+  zone: 1,
+};
 
 describe("loadoutFor", () => {
   it("sets up the run from the setup", () => {

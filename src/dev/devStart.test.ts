@@ -6,7 +6,13 @@ import type { Loadout } from "../state/runState.ts";
 import { devRunLoadout, homeRunSetup, namesRunSetup, stripDevParams } from "./devStart.ts";
 import type { RunSetup } from "./runSetup.ts";
 
-const setup: RunSetup<DogId, GearId, WalkerId> = { dev: false, seed: 1, speed: 1, zone: 1 };
+const setup: RunSetup<DogId, GearId, WalkerId> = {
+  dev: false,
+  invincible: false,
+  seed: 1,
+  speed: 1,
+  zone: 1,
+};
 
 describe("namesRunSetup", () => {
   it("reads which queries name a run setup", () => {
@@ -15,6 +21,7 @@ describe("namesRunSetup", () => {
       ["?speed=2", true],
       ["?gear=none", true],
       ["?walker=ada", true],
+      ["?invincible=1", true],
       ["", false],
       ["?dev=1", false],
     ] as const) {
@@ -83,6 +90,7 @@ describe("homeRunSetup", () => {
       const overridden: RunSetup<DogId, GearId, WalkerId> = {
         dev,
         gear: "luckyCollar",
+        invincible: true,
         money: 5,
         pack: ["kilo"],
         route: ["a"],
@@ -93,6 +101,7 @@ describe("homeRunSetup", () => {
       };
       expect(homeRunSetup(overridden, 9)).toEqual({
         dev,
+        invincible: false,
         seed: 9,
         speed: 1,
         zone: 1,

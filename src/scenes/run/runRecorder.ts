@@ -40,27 +40,28 @@ export interface RunStart {
 }
 
 // A replay log waiting in the session starts the next run from its setup and drives its inputs,
-// with no cheats; otherwise the page's URL sets the run up, with the next walk's cheats over it.
-// Reading the log clears it. The installed app reads no log.
+// with no cheats but the setup's Invincible owners; otherwise the page's URL sets the run up, with
+// the next walk's cheats over it. Reading the log clears it. The installed app reads no log.
 export function nextRunStart(next: NextWalk = NEXT_WALK_OFF): RunStart {
   const raw = devToolsOn() ? sessionRead(DEV_REPLAY_KEY) : null;
   if (raw !== null) {
     sessionRemove(DEV_REPLAY_KEY);
     const decoded = decodeInputLog(runSetupLimitsFor(gameData), raw);
     if (decoded.ok) {
+      const { setup } = decoded.log;
       return {
-        cheats: WALK_CHEATS_OFF,
+        cheats: { ...WALK_CHEATS_OFF, invincible: setup.invincible },
         replay: [...replayInputs(decoded.log)],
-        setup: decoded.log.setup,
+        setup,
       };
     }
     console.warn("Replay log rejected:", decoded.errors.join("; "));
   }
-  const { invincible, speed } = next;
+  const setup = nextWalkSetup(gameData, next, pageRunSetup().setup);
   return {
-    cheats: { invincible, speed },
+    cheats: { invincible: setup.invincible, speed: next.speed },
     replay: undefined,
-    setup: nextWalkSetup(gameData, next, pageRunSetup().setup),
+    setup,
   };
 }
 
