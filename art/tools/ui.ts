@@ -1001,9 +1001,11 @@ const DOG_CARD_RULE = 16;
 // the owner's column keeps to its right, 6 rows above it and 8 below.
 const DOG_PHOTO: readonly [number, number] = [6, 23];
 
-// The owner's photo, x, y and side: 3 columns right of the dog's and level with its top, an ink frame
-// round a white mat round sky, as ui-owner-tab frames the owner, for the 20x20 face-owner-<dog>-20.
-const DOG_CARD_OWNER: readonly [number, number, number] = [45, 23, 24];
+// The owner's photo, x, y and side: 3 columns right of the dog's and 5 rows above its top, one navy row
+// under the header's rule, so one full-size name line fits between the photo and the hearts. An ink
+// frame round a white mat round sky, as ui-owner-tab frames the owner, for the 20x20
+// face-owner-<dog>-20.
+const DOG_CARD_OWNER: readonly [number, number, number] = [45, 18, 24];
 
 // The hearts area the heart-loss flash fills, as x, y, w, h: one row of six hearts from (45,60), with
 // a pixel round them. It is the only part of the card the flash touches, so the warn rim stays
@@ -1029,9 +1031,10 @@ const DOG_CARD_HEART_LOSS: readonly (readonly [string, number])[] = [
 // ink frame (the chrome with an ink inner line and an ink lip) round a navy face, the header (rows 2 to
 // 15) split from the body by an ink rule on row 16. The game writes the name on the header in cream
 // (9.59:1), with no plate. The dog's photo is an ink frame (6,23 36x36) round a cream mat round its
-// colour (8,25 32x32), in the body's middle. The owner's photo is an ink frame (45,23 24x24) round a
-// white mat round sky (47,25 20x20) for the owner's small face; the game writes the owner's name (tan,
-// 6.61:1) beside it and the hearts (ui-heart full-dark and empty-dark) under it, and pins the LEAD tag
+// colour (8,25 32x32), in the body's middle. The owner's photo is an ink frame (45,18 24x24) round a
+// white mat round sky (47,20 20x20) for the owner's small face; the game writes the owner's name (tan,
+// 6.61:1) on one line under it, or on two lines beside it when the whole name is too wide, and the
+// hearts (ui-heart full-dark and empty-dark) under the name, and pins the LEAD tag
 // across the foot of the dog's photo. The empty card (a fired dog's) is dslate in the same frame, with
 // a dslate photo crossed by a dred plate built as ui-fired-plate (6,32 36x17, its face 10,36 28x9) for
 // FIRED, and the owner's photo.
