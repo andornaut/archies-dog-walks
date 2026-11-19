@@ -25,6 +25,7 @@ import { pageFrameWatch, requiredUpdate, setOnHomeScreen, setupPhoneApp } from "
 import { offlineInstallation } from "./pwa/installationState.ts";
 import { launchGame } from "./pwa/launchGame.ts";
 import { createUpdateIdle } from "./pwa/updateIdle.ts";
+import { pageDeviceSettings } from "./save/settings.ts";
 import { BootScene } from "./scenes/BootScene.ts";
 import { CardScene } from "./scenes/CardScene.ts";
 import { CelebrationScene } from "./scenes/CelebrationScene.ts";
@@ -49,6 +50,7 @@ import { TapBurstScene } from "./scenes/TapBurstScene.ts";
 import { followWorldCameras } from "./scenes/worldCamera.ts";
 import { ZoneCelebrationScene } from "./scenes/ZoneCelebrationScene.ts";
 import type { LoadingBar } from "./ui/dom/domLoadingBar.ts";
+import { mountFpsCounter } from "./ui/dom/fpsCounter.ts";
 import { mountLoadingError } from "./ui/dom/loadingError.ts";
 import { followModalUnderlay } from "./ui/dom/rampDim.ts";
 import { mountUiLayer, setUiLayer } from "./ui/dom/uiLayer.ts";
@@ -184,6 +186,15 @@ function bootGame(context: GameStartup): Game {
   });
   // Menus draw at most about 60 frames a second; a walk (RunScene) draws every frame.
   capFrameRate(MENU_FPS, () => game.scene.isActive(SCENE_KEYS.run), game);
+  // The FPS counter is a device setting, so it shows in an installed app too.
+  game.events.once(
+    Core.Events.DESTROY,
+    mountFpsCounter(
+      { rate: () => game.loop.actualFps, settings: pageDeviceSettings() },
+      document.body,
+    ),
+  );
+
   // Captured before the scenes see it, so the key that opens a menu already shows its numbers.
   window.addEventListener("keydown", noteKeyPress, { capture: true });
   game.events.once(Core.Events.DESTROY, () =>

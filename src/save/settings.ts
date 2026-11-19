@@ -1,10 +1,12 @@
 import { clamp01 } from "@andornaut/game-kit/runtime/numbers";
 
-// The device settings: the two volumes, mute and reduced motion. Each is kept in localStorage
+// The device settings: the FPS counter, the two volumes, mute and reduced motion. Each is kept in localStorage
 // under its own key, apart from the versioned save, so a save reset leaves them as they are. A
 // setting with no stored value, or one that cannot be read, takes its default; until the player
 // sets reduced motion, it follows the device's reduced-motion preference.
 export interface Settings {
+  // Shows the frames per second over the game, a dev readout.
+  fpsCounter: boolean;
   musicVolume: number;
   // Silences all sound without changing the volumes.
   muted: boolean;
@@ -13,6 +15,7 @@ export interface Settings {
 }
 
 export const DEFAULT_SETTINGS: Readonly<Settings> = {
+  fpsCounter: false,
   musicVolume: 0.45,
   muted: false,
   reducedMotion: false,
@@ -20,6 +23,7 @@ export const DEFAULT_SETTINGS: Readonly<Settings> = {
 };
 
 export const SETTINGS_KEYS: Readonly<Record<keyof Settings, string>> = {
+  fpsCounter: "archies-dog-walks.fps-counter",
   musicVolume: "archies-dog-walks.music-volume",
   muted: "archies-dog-walks.muted",
   reducedMotion: "archies-dog-walks.reduced-motion",
@@ -68,11 +72,12 @@ export function readSettings(
   storage: SettingsStorage | undefined,
   prefersReducedMotion: boolean,
 ): Settings {
-  const switchOf = (setting: "muted" | "reducedMotion", fallback: boolean) =>
+  const switchOf = (setting: "fpsCounter" | "muted" | "reducedMotion", fallback: boolean) =>
     decodeSwitch(readStored(storage, SETTINGS_KEYS[setting])) ?? fallback;
   const volumeOf = (setting: "musicVolume" | "sfxVolume") =>
     decodeVolume(readStored(storage, SETTINGS_KEYS[setting])) ?? DEFAULT_SETTINGS[setting];
   return {
+    fpsCounter: switchOf("fpsCounter", DEFAULT_SETTINGS.fpsCounter),
     musicVolume: volumeOf("musicVolume"),
     muted: switchOf("muted", DEFAULT_SETTINGS.muted),
     reducedMotion: switchOf("reducedMotion", prefersReducedMotion),

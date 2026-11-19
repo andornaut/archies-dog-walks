@@ -34,6 +34,7 @@ const blocked: SettingsStorage = {
 describe("SETTINGS_KEYS", () => {
   it("keeps each setting under its own dotted key, apart from the save", () => {
     expect(SETTINGS_KEYS).toEqual({
+      fpsCounter: "archies-dog-walks.fps-counter",
       musicVolume: "archies-dog-walks.music-volume",
       muted: "archies-dog-walks.muted",
       reducedMotion: "archies-dog-walks.reduced-motion",
@@ -72,12 +73,14 @@ describe("readSettings", () => {
 
   it("reads each setting from its own key, a stored reduced motion over the device's", () => {
     const entries = new Map([
+      [SETTINGS_KEYS.fpsCounter, "on"],
       [SETTINGS_KEYS.musicVolume, "0.25"],
       [SETTINGS_KEYS.muted, "on"],
       [SETTINGS_KEYS.reducedMotion, "off"],
       [SETTINGS_KEYS.sfxVolume, "0.5"],
     ]);
     expect(readSettings(storageOf(entries), true)).toEqual({
+      fpsCounter: true,
       musicVolume: 0.25,
       muted: true,
       reducedMotion: false,
