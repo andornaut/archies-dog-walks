@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import manifest from "../../public/art/manifest.json" with { type: "json" };
-import { DOM_ART_KEYS, domArtPath } from "./domArt.ts";
+import { DOM_ART_KEYS, DOM_SHEET_KEYS, domArtPath } from "./domArt.ts";
 
 describe("DOM_ART_KEYS", () => {
   it("names art the manifest has, at the paths the HTML interface loads it from", () => {
@@ -18,5 +18,9 @@ describe("DOM_ART_KEYS", () => {
             ];
       expect(paths[0], key).toEqual(paths[1]);
     }
+  });
+
+  it("puts the End screen's new-best ribbon, which its HTML draws, on the End screen's sheet", () => {
+    expect(DOM_SHEET_KEYS.get("ui-new-best")).toBe("dom-menus");
   });
 });

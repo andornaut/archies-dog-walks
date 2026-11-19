@@ -6,7 +6,7 @@ import { decodePng } from "@andornaut/art-kit/build/png";
 import type { RgbaImage } from "@andornaut/art-kit/build/rgbaImage";
 import decoderFactory from "@jsquash/webp/codec/dec/webp_dec.js";
 import { initEmscriptenModule } from "@jsquash/webp/utils.js";
-import { beforeAll, describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it, vi } from "vitest";
 
 import {
   DOM_CHOICE_CARD_ART,
@@ -168,9 +168,12 @@ it("resolves each key's logical files to its sheet, and a copy's to its sheet's 
   expect(domArtFileUrl(artUrl, domArtPath("sheet", "treat@50", "json"))).toBe(
     "/art/dom/dom-walk.json#treat%4050",
   );
-  expect(() => domArtFileUrl(artUrl, domArtPath("image", "ambient-airliner", "png"))).toThrow(
-    "no art the HTML interface draws",
+  const error = vi.spyOn(console, "error").mockImplementation(() => undefined);
+  expect(domArtFileUrl(artUrl, domArtPath("image", "ambient-airliner", "png"))).toBe(
+    "/art/images/ambient-airliner.png",
   );
+  expect(String(error.mock.calls[0]?.[0])).toContain("no art the HTML interface draws");
+  error.mockRestore();
 });
 
 it("fails a sheet that needs more than one page", () => {

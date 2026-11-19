@@ -129,9 +129,10 @@ function logbookArtKeys(data: Pick<GameData, "achievements" | "dogs">): string[]
   ];
 }
 
-// The End screen's art (src/home/endScreenView.ts): the zone pips' sheet and each owner's
-// bubble's tail, besides the ui-quip its greeting shares with the celebrations.
-const END_ART_KEYS = [ZONE_PIPS_KEY, "ui-quip-tail"];
+// The End screen's art (src/home/endScreenView.ts, src/scenes/EndScene.ts): the zone pips' sheet,
+// each owner's bubble's tail and the new-best ribbon, besides the ui-quip its greeting shares
+// with the celebrations.
+const END_ART_KEYS = [ZONE_PIPS_KEY, "ui-new-best", "ui-quip-tail"];
 
 // The shop's page and rows (src/scenes/ShopScene.ts, drawn by the display mirror) beyond the
 // Logbook's and the detail cards': the tiles' faces, the close control's face sheet, the bill and
@@ -401,14 +402,23 @@ export function domSheetJsonPath(sheet: DomSheet): string {
 
 // The URL a DOM art file's logical path (domArtPath) loads from, through artUrl: a key's PNG, or
 // its copy's, its sheet's image or that copy's; a key's frames its sheet's JSON with the key as
-// the fragment, which loadSheet (src/ui/dom/sheetFrames.ts) reads the key's frames by.
+// the fragment, which loadSheet (src/ui/dom/sheetFrames.ts) reads the key's frames by. A key on
+// no sheet is reported and keeps its own path, which a build does not ship, so its art stays
+// hidden rather than stopping the view that draws it.
 export function domArtFileUrl(artUrl: (path: string) => string, path: string): string {
   const match = /^(?:images|sprites)\/(.+)\.(json|png)$/.exec(path);
   if (match === null) {
     throw new Error(`${path} is no DOM art file`);
   }
   const [, name, ext] = match as unknown as [string, string, "json" | "png"];
-  const { copy, key, sheet } = domSheetOf(name);
+  let of: ReturnType<typeof domSheetOf>;
+  try {
+    of = domSheetOf(name);
+  } catch (error) {
+    console.error(error);
+    return artUrl(path);
+  }
+  const { copy, key, sheet } = of;
   if (ext === "png") {
     return artUrl(domSheetImagePath(sheet, copy));
   }
