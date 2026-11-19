@@ -47,3 +47,4 @@ Reference: [Screens and UI](../../src/README.md#screens-and-ui), [Assets](../../
 | adw-0173 | Fix the Help page's dimming, body scroll and walk bar slot       | [adw-0173.md](../work/adw-0173.md) |
 | adw-0174 | Draw the Pet shop message plate from its image                   | [adw-0174.md](../work/adw-0174.md) |
 | adw-0178 | Keep each walk dog card's owner name whole                       | [adw-0178.md](../work/adw-0178.md) |
+| adw-0179 | Show the Help and Logbook pages full screen                      | [adw-0179.md](../work/adw-0179.md) |
