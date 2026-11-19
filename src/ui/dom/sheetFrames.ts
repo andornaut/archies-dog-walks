@@ -1,6 +1,5 @@
-// A sprite sheet's frames as its Aseprite JSON lists them, for the HTML interface to show one
-// frame of the whole sheet as a background: CSS loads whole files, and the canvas's atlas packs
-// the frames elsewhere.
+// A key's frames as its Aseprite JSON lists them, in the DOM sheet a build packs it on, for the
+// HTML interface to show one frame of the sheet as a background.
 
 export interface SheetFrame {
   readonly height: number;
@@ -80,7 +79,77 @@ export function sheetFrameNamed(json: unknown, name: number | string): SheetFram
   };
 }
 
-const sheets = new Map<string, Promise<unknown>>();
+// A DOM sheet's JSON, as a build writes it (src/tools/atlas/domSheets.ts): the sheet's size and,
+// by key, the rect of its own file's image as [x, y, width, height]; for a sprite sheet each
+// frame's rect and duration in its own export's order, the frame names where its own export's
+// differ from "<key> <index>.aseprite", and its tags as [name, from, to, direction]. An image's
+// one frame is its rect.
+export interface DomSheetJson {
+  readonly keys: Readonly<Record<string, DomSheetEntry>>;
+  readonly size: { readonly h: number; readonly w: number };
+}
+
+export interface DomSheetEntry {
+  readonly frames?: readonly (readonly number[])[];
+  readonly names?: readonly string[];
+  readonly rect: readonly [number, number, number, number];
+  readonly tags?: readonly (readonly [string, number, number, string])[];
+}
+
+const isSize = (value: unknown): value is { h: number; w: number } =>
+  typeof value === "object" &&
+  value !== null &&
+  isNumber((value as { h?: unknown }).h) &&
+  isNumber((value as { w?: unknown }).w);
+
+// The JSON as a DOM sheet's. Throws on any other shape.
+function domSheetJson(json: unknown): DomSheetJson {
+  const sheet = json as { keys?: unknown; size?: unknown };
+  if (
+    typeof json !== "object" ||
+    json === null ||
+    !isSize(sheet.size) ||
+    typeof sheet.keys !== "object" ||
+    sheet.keys === null
+  ) {
+    throw new Error("Not a DOM sheet");
+  }
+  return json as DomSheetJson;
+}
+
+// The key's frames on a DOM sheet as its own Aseprite hash export lists them, moved to its rect
+// on the sheet, with the sheet's size. Throws where the sheet lacks the key or a frame's rect.
+export function domSheetSprite(json: DomSheetJson, key: string): unknown {
+  const entry = json.keys[key];
+  if (entry === undefined) {
+    throw new Error(`The DOM sheet has no ${key}`);
+  }
+  const frames = (entry.frames ?? [entry.rect]).map((frame, index) => {
+    const [x, y, w, h, duration = 0] = frame;
+    if (![x, y, w, h, duration].every(isNumber)) {
+      throw new Error(`${key} frame ${index} has no rect`);
+    }
+    return [
+      entry.names?.[index] ?? `${key} ${index}.aseprite`,
+      { duration, frame: { h, w, x, y } },
+    ] as const;
+  });
+  return {
+    frames: Object.fromEntries(frames),
+    meta: {
+      frameTags: (entry.tags ?? []).map(([name, from, to, direction]) => ({
+        direction,
+        from,
+        name,
+        to,
+      })),
+      size: { h: json.size.h, w: json.size.w },
+    },
+  };
+}
+
+const sheets = new Map<string, Promise<DomSheetJson>>();
+const sprites = new Map<string, Promise<unknown>>();
 const loaded = new Map<string, unknown>();
 const readyListeners = new Set<() => void>();
 
@@ -90,33 +159,52 @@ export function onSheetReady(listener: () => void): () => void {
   return () => readyListeners.delete(listener);
 }
 
-// The sheet's JSON at url, fetched once per page.
-export function loadSheet(url: string): Promise<unknown> {
+// The DOM sheet's JSON at url, fetched once per page.
+function fetchSheet(url: string): Promise<DomSheetJson> {
   let sheet = sheets.get(url);
   if (sheet === undefined) {
     sheet = fetch(url).then(async (response) => {
       if (!response.ok) {
         throw new Error(`${url}: ${response.status}`);
       }
-      const json = (await response.json()) as unknown;
-      sheetFrame(json, undefined);
-      loaded.set(url, json);
-      return json;
+      return domSheetJson(await response.json());
     });
     // A failed fetch is tried again next time.
     sheet.catch(() => sheets.delete(url));
     sheets.set(url, sheet);
-    void sheet.then(
-      () =>
+  }
+  return sheet;
+}
+
+// The JSON at url, fetched once per page: a DOM sheet's, or, where the URL's fragment names a key
+// (domArtFileUrl in src/assets/domArt.ts), that key's frames on it as an Aseprite hash export.
+export function loadSheet(url: string): Promise<unknown> {
+  let sprite = sprites.get(url);
+  if (sprite === undefined) {
+    const hash = url.indexOf("#");
+    const sheet = fetchSheet(hash === -1 ? url : url.slice(0, hash));
+    sprite =
+      hash === -1
+        ? sheet
+        : sheet.then((json) => {
+            const parsed = domSheetSprite(json, decodeURIComponent(url.slice(hash + 1)));
+            sheetFrame(parsed, undefined);
+            return parsed;
+          });
+    sprite.then(
+      (json) => {
+        loaded.set(url, json);
         queueMicrotask(() => {
           for (const listener of [...readyListeners]) {
             listener();
           }
-        }),
-      () => undefined,
+        });
+      },
+      () => sprites.delete(url),
     );
+    sprites.set(url, sprite);
   }
-  return sheet;
+  return sprite;
 }
 
 // The sheet's JSON at url once loadSheet has loaded it, else undefined.

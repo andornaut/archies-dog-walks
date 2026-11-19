@@ -5,6 +5,12 @@ import { gameFont } from "../../testing/fontInk.ts";
 import { domScale } from "../domScale.ts";
 import { mountRoadBanner } from "./roadBanner.ts";
 
+// The plate's one frame on its sheet.
+const FRAMES = Promise.resolve({
+  frames: { "ui-zone-banner 0.aseprite": { frame: { h: 48, w: 248, x: 4, y: 8 } } },
+  meta: { size: { h: 100, w: 300 } },
+});
+
 it("keeps canvas fallback until decoding, follows the existing pose and announces a zone once", async () => {
   const doc = new FakeDocument();
   const { element, layer } = fakeLayer(doc, domScale(2, { height: 560, width: 360, x: 0, y: 0 }));
@@ -21,6 +27,7 @@ it("keeps canvas fallback until decoding, follows the existing pose and announce
   const pose = { active: true, alpha: 1, x: -240, y: 110 };
   const shown = vi.fn();
   const view = mountRoadBanner(layer, {
+    frames: FRAMES,
     heading: "Toronto, neighbourhood 1",
     image: "/banner.png",
     name: "The Beach",
@@ -48,7 +55,11 @@ it("keeps canvas fallback until decoding, follows the existing pose and announce
   pose.x = 50;
   pose.alpha = 0.5;
   view.update();
-  expect(root.children[0]!.style.left).toBe("100px");
+  expect(root.children[0]!.style).toMatchObject({
+    backgroundPosition: "-8px -16px",
+    backgroundSize: "600px 200px",
+    left: "100px",
+  });
   expect(root.style.opacity).toBe("0.5");
   const coverAgain = layer.input.open();
   expect(status.attributes.get("aria-hidden")).toBe("true");
@@ -73,6 +84,7 @@ it("does not reveal or announce a destroyed banner when a late image settles", a
   });
   const shown = vi.fn();
   const view = mountRoadBanner(layer, {
+    frames: FRAMES,
     heading: "Toronto",
     image: "/banner.png",
     name: "The Beach",

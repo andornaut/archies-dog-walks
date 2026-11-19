@@ -1,19 +1,22 @@
+import type { RgbaImage } from "@andornaut/art-kit/build/rgbaImage";
 import { contentHash } from "@andornaut/game-kit/build/contentHash";
 
 import { type ArtFileMap, artFileUrl } from "../../assets/artUrl.ts";
 import { ATLAS_MANIFEST_PATH, type AtlasManifest } from "../../assets/atlasManifest.ts";
+import type { DomSheet } from "../../assets/domArt.ts";
 import type { AssetManifest } from "../../assets/manifest.ts";
+import { usesPhaserArt } from "../../assets/phaserArt.ts";
 import { ART_MANIFEST } from "../artManifest.ts";
 import type { AtlasBuild } from "./atlasBuild.ts";
 import {
   type ArtCopy,
-  artCopyFiles,
   CARD_GREY_COPY,
   CARD_GREY_DIM_COPY,
   DIM_COPY,
   DISABLED_COPY,
   DISABLED_DIM_COPY,
 } from "./disabledFiles.ts";
+import { buildDomSheets } from "./domSheets.ts";
 
 // The module a build fills with the game's ArtFileMap (src/assets/artUrl.ts). The dev server's
 // map is empty, so every file loads from its own path there.
@@ -28,14 +31,14 @@ export const ART_FILES_JSON = "art-files.json";
 // worker treat as content-hashed build output.
 const HASHED_ART_DIR = "assets/art";
 
-// The art the HTML interface draws by key (DOM_ART_KEYS), the keys whose disabled tile's grey
-// copy it draws (DOM_DISABLED_ART_KEYS), and the keys whose dimmed copy it draws
-// (DOM_DIM_ART_KEYS).
+// The art the HTML interface draws, by its DOM sheet (DOM_SHEET_KEYS), the keys whose disabled
+// tile's grey copy it draws (DOM_DISABLED_ART_KEYS), the keys whose neutral card copy it draws
+// (DOM_CHOICE_CARD_ART.grey), and the keys with a retained dimmed copy (DOM_DIM_ART_KEYS).
 export interface DomArtKeys {
-  readonly art: ReadonlySet<string>;
   readonly dim: ReadonlySet<string>;
   readonly disabled: ReadonlySet<string>;
   readonly grey: ReadonlySet<string>;
+  readonly sheets: ReadonlyMap<string, DomSheet>;
 }
 
 // Each kind of copy and the keys it copies.
@@ -49,14 +52,13 @@ export function artCopies(dom: DomArtKeys): readonly (readonly [ArtCopy, Readonl
   ];
 }
 
-// Every file under /art/ a build's game loads: the art manifest, the atlas manifest and its
-// pages, each font's .fnt and web font, both files of each sound (the page plays one format), the
-// files of the fonts, images and sprites the atlas leaves out or the HTML interface draws, since
-// CSS loads whole files, and the JSON frames of each sheet whose grey or dimmed copy it draws.
-// Sorted, each once.
-function gameArtPaths(dom: DomArtKeys, manifest: AssetManifest, atlas: AtlasManifest): string[] {
+// Every file under /art/ a build's game loads besides the DOM sheets: the art manifest, the atlas
+// manifest and its pages, each font's .fnt and web font, both files of each sound (the page plays
+// one format), and the files of the fonts, images and sprites the canvas loads that the atlas
+// leaves out. Sorted, each once.
+function gameArtPaths(manifest: AssetManifest, atlas: AtlasManifest): string[] {
   const atlased = new Set(atlas.textures.map(({ key }) => key));
-  const own = ({ key }: { key: string }) => !atlased.has(key) || dom.art.has(key);
+  const own = ({ key }: { key: string }) => !atlased.has(key) && usesPhaserArt(key);
   const paths = [
     ART_MANIFEST,
     ATLAS_MANIFEST_PATH,
@@ -66,36 +68,8 @@ function gameArtPaths(dom: DomArtKeys, manifest: AssetManifest, atlas: AtlasMani
     ...manifest.images.filter(own).map(({ png }) => png),
     ...manifest.sounds.flatMap(({ m4a, ogg }) => [m4a, ogg]),
     ...manifest.sprites.filter(own).flatMap(({ json, png }) => [json, png]),
-    ...manifest.sprites
-      .filter(({ key }) => dom.disabled.has(key) || dom.dim.has(key) || dom.grey.has(key))
-      .map(({ json }) => json),
   ];
   return [...new Set(paths)].sort();
-}
-
-// Throws unless every file the HTML interface loads resolves through the build's hashed files:
-// each key it draws an image's PNG or a sheet's PNG and JSON, and each grey or dimmed copy's
-// sheet its key's JSON frames.
-function checkDomArt(dom: DomArtKeys, manifest: AssetManifest, paths: ReadonlySet<string>): void {
-  const needed = (key: string, copy: boolean): string[] | undefined => {
-    const image = manifest.images.find((entry) => entry.key === key);
-    const sprite = manifest.sprites.find((entry) => entry.key === key);
-    if (image !== undefined) {
-      return copy ? [] : [image.png];
-    }
-    return sprite === undefined ? undefined : copy ? [sprite.json] : [sprite.json, sprite.png];
-  };
-  const missing = [
-    ...[...dom.art].map((key) => [key, needed(key, false)] as const),
-    ...[...dom.disabled, ...dom.dim, ...dom.grey].map((key) => [key, needed(key, true)] as const),
-  ].flatMap(([key, files]) =>
-    files === undefined
-      ? [`${key} (no image or sprite)`]
-      : files.filter((path) => !paths.has(path)).map((path) => `${key} (${path})`),
-  );
-  if (missing.length > 0) {
-    throw new Error(`the HTML interface's art has no hashed file: ${missing.join(", ")}`);
-  }
 }
 
 // A file's name in the build output: its path under /art/, in HASHED_ART_DIR, with a dash and
@@ -115,28 +89,29 @@ export interface HashedArtFile {
   source: Uint8Array;
 }
 
-// Each file gameArtPaths names, with its hashed name and its bytes, and the grey copy of each of
-// dom.disabled and the dimmed copy of each of dom.dim the HTML interface draws (artCopyFiles):
-// the atlas manifest and pages from the atlas build, the rest read by readArt, by path relative
-// to the art directory. Emitted JSON drops only whitespace outside strings before hashing;
-// source art and every token remain unchanged. Throws where a file the HTML interface loads would not be among them
-// (checkDomArt).
+// Each file gameArtPaths names, with its hashed name and its bytes, and the DOM sheets' files
+// (buildDomSheets): the atlas manifest and pages from the atlas build, the rest read by readArt,
+// by path relative to the art directory, each PNG decoded once where decoded has it. Emitted
+// JSON drops only whitespace outside strings before hashing; source art and every token remain
+// unchanged. Throws where the HTML interface's art cannot be packed into its sheets.
 export async function hashGameArt(
   readArt: (path: string) => Promise<Uint8Array>,
   dom: DomArtKeys,
   manifest: AssetManifest,
   { files, manifest: atlas }: Pick<AtlasBuild, "files" | "manifest">,
+  decoded?: ReadonlyMap<string, RgbaImage>,
 ): Promise<HashedArtFile[]> {
-  const copied = await Promise.all(
-    artCopies(dom).map(([copy, keys]) => artCopyFiles(readArt, manifest, copy, keys)),
+  const sheets = await buildDomSheets(
+    readArt,
+    manifest,
+    { copies: artCopies(dom), sheets: dom.sheets },
+    decoded,
   );
-  const made = copied.flatMap((each) => [...each]);
-  const built = new Map([...files, ...made]).set(
+  const built = new Map([...files, ...sheets]).set(
     ATLAS_MANIFEST_PATH,
     new TextEncoder().encode(JSON.stringify(atlas)),
   );
-  const paths = [...gameArtPaths(dom, manifest, atlas), ...made.map(([path]) => path)].sort();
-  checkDomArt(dom, manifest, new Set(paths));
+  const paths = [...gameArtPaths(manifest, atlas), ...sheets.keys()].sort();
   return Promise.all(
     paths.map(async (path) => {
       let source = built.get(path) ?? (await readArt(path));

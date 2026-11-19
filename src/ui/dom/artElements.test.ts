@@ -33,9 +33,15 @@ it("uses original sheet metadata with a disabled image and the requested animate
   });
 });
 
-it("paints an image panel with unchanged nine-slice geometry and only its original image", async () => {
+it("paints an image panel with unchanged nine-slice geometry from its frame on its sheet", async () => {
   const doc = new FakeDocument();
-  const source = { artUrl: (path: string) => `/art/${path}`, loadSheet: vi.fn() };
+  const source = {
+    artUrl: (path: string) => `/art/${path}`,
+    loadSheet: vi.fn().mockResolvedValue({
+      frames: { "ui-panel 0.aseprite": { frame: { h: 24, w: 24, x: 10, y: 20 } } },
+      meta: { size: { h: 64, w: 64 } },
+    }),
+  };
   const part = imageNineSlice(
     doc as unknown as Document,
     source,
@@ -48,7 +54,7 @@ it("paints an image panel with unchanged nine-slice geometry and only its origin
     { x: 0, y: 0 },
     { height: 48, width: 96, x: 5, y: 7 },
   );
-  expect(source.loadSheet).not.toHaveBeenCalled();
+  expect(source.loadSheet).toHaveBeenCalledExactlyOnceWith("/art/images/ui-panel.json");
   await expect(part.ready).resolves.toEqual(["/art/images/ui-panel.png"]);
   const children = [...part.element.children] as unknown as {
     style: CSSStyleDeclaration;
@@ -61,6 +67,7 @@ it("paints an image panel with unchanged nine-slice geometry and only its origin
     top: "4px",
     width: "88px",
   });
+  expect(children[0]?.style.backgroundPosition).toBe("-10px -20px");
   setRampDimmed(part.element, true);
   expect(part.element.style.filter).toBe("brightness(0.28)");
   expect(
@@ -104,7 +111,13 @@ it("retains three-slice art scaling unless logical projection is explicit", asyn
 
 it("projects declared image layout edges without changing default authored-pixel scaling", () => {
   const doc = new FakeDocument();
-  const source = { artUrl: (path: string) => path, loadSheet: vi.fn() };
+  const source = {
+    artUrl: (path: string) => path,
+    loadSheet: vi.fn().mockResolvedValue({
+      frames: { "ui-dog-card-band 0.aseprite": { frame: { h: 76, w: 360, x: 0, y: 0 } } },
+      meta: { size: { h: 76, w: 360 } },
+    }),
+  };
   const image = imageArt(doc as unknown as Document, source, "ui-dog-card-band");
   for (const dpr of [1, 2.625]) {
     const scale = domScale(dpr, { height: 844, width: 390, x: 0, y: 0 });

@@ -1,9 +1,9 @@
 import { type BitmapFont, inkWidth } from "@andornaut/game-kit/runtime/text/bitmapFont";
 
-import { domArtPath } from "../../assets/domArt.ts";
 import { SLICES } from "../../data/layout.ts";
 import { fillPart } from "../../hud/dom/shopPage.ts";
 import { type DomArtSource, sheetArt, sheetNineSlice } from "../../ui/dom/artElements.ts";
+import { cutDomArt } from "../../ui/dom/domCuts.ts";
 import { createTextLine, placeText, setBox } from "../../ui/dom/pixelLine.ts";
 import { artPixel, type DomScale, frameRect } from "../../ui/domScale.ts";
 import { PALETTE } from "../../ui/palette.ts";
@@ -121,10 +121,21 @@ export function createHomeSections(
     } else if (!source.hasArt(section.fill.key)) {
       fill.style.backgroundColor = `#${PALETTE[section.fill.fallback].toString(16).padStart(6, "0")}`;
     } else {
-      const url = source.artUrl(domArtPath("image", section.fill.key, "png"));
-      fill.style.backgroundImage = `url("${url}")`;
+      // CSS repeats a whole file, so the fill is cut from its sheet.
+      const { key } = section.fill;
       fill.style.backgroundRepeat = "repeat";
-      ready.push(Promise.resolve([url]));
+      ready.push(
+        cutDomArt(doc, source, "image", key).then(
+          (url) => {
+            fill.style.backgroundImage = `url("${url}")`;
+            return [url];
+          },
+          (error: unknown) => {
+            console.error(`The ${key} fill was not cut from its sheet.`, error);
+            return [];
+          },
+        ),
+      );
     }
     parts.push((scale) => {
       setBox(fill, frameRect(scale, section.fill.rect));

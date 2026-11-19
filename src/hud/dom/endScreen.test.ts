@@ -1,5 +1,3 @@
-import { readFileSync } from "node:fs";
-
 import { fontMetrics } from "@andornaut/game-kit/runtime/text/bitmapFont";
 import { describe, expect, it, vi } from "vitest";
 
@@ -9,6 +7,7 @@ import { endScreenView, QUIP_TAIL_KEY } from "../../home/endScreenView.ts";
 import { ownerNameWrap } from "../../presentation/ownerName.ts";
 import { FakeDocument, fakeLayer } from "../../testing/fakeDom.ts";
 import { fontInk, fontInkRows, gameFont } from "../../testing/fontInk.ts";
+import { ownArtFrames } from "../../testing/ownArtFrames.ts";
 import { shownText } from "../../ui/dom/pixelLine.ts";
 import { SETTINGS_STYLE } from "../../ui/dom/settingsStyle.ts";
 import { artPixel, domScale, exactDeviceY, frameRect } from "../../ui/domScale.ts";
@@ -74,8 +73,7 @@ function endScreen(width: number, display: typeof fonts.title | null = fonts.tit
     fonts,
     gesture: {},
     home,
-    loadSheet: (path) =>
-      Promise.resolve(JSON.parse(readFileSync(`public/art/${path}`, "utf8")) as unknown),
+    loadSheet: (path) => Promise.resolve(ownArtFrames(path)),
     now: () => 0,
     openBadge: vi.fn(),
     pillColours: () => undefined,

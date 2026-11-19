@@ -1,6 +1,6 @@
 import { type Scene, Scenes } from "phaser";
 
-import { artUrl } from "../assets/artFiles.ts";
+import { domArtUrl } from "../assets/domArtFiles.ts";
 import {
   createNativeTopSection,
   type NativeTopSection,
@@ -90,7 +90,7 @@ export function addNativeTopSection(
   const inert = previous?.inert ?? false;
   const asleep = previous?.asleep ?? false;
   previous?.section.dispose();
-  const view = createNativeTopSection(layer, { artUrl, loadSheet }, title, config);
+  const view = createNativeTopSection(layer, { artUrl: domArtUrl, loadSheet }, title, config);
   const covering = layer.input;
   const stopUnderlay = followModalUnderlay(covering, view.element);
   const release = () => view.buttons.forEach((button) => button.setPressed(false));

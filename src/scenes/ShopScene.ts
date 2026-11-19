@@ -4,7 +4,7 @@ import { containsPoint, type Point, type Rect } from "@andornaut/game-kit/runtim
 import { advanceWidth, type BitmapFont } from "@andornaut/game-kit/runtime/text/bitmapFont";
 import { Scene } from "phaser";
 
-import { artUrl } from "../assets/artFiles.ts";
+import { domArtUrl } from "../assets/domArtFiles.ts";
 import { dogFaceKey, gearIconKey } from "../assets/spriteKeys.ts";
 import { gameData } from "../data/index.ts";
 import { dogDetail, gearDetail } from "../home/detail.ts";
@@ -661,7 +661,7 @@ export class ShopScene extends Scene {
             },
             move: (point) => this.nativeMove(point),
             source: {
-              artUrl,
+              artUrl: domArtUrl,
               imageSize: (key: string) => {
                 const frame = this.textures.getFrame(key);
                 return { height: frame?.realHeight ?? 16, width: frame?.realWidth ?? 16 };

@@ -1,6 +1,6 @@
 import { Core, type Scene, Scenes } from "phaser";
 
-import { artUrl } from "../assets/artFiles.ts";
+import { domArtUrl } from "../assets/domArtFiles.ts";
 import type { DogId } from "../data/types.ts";
 import { BADGE_CHEER, BADGE_POP, type BadgeView } from "../home/badgesView.ts";
 import type { BadgeCelebrationView } from "../hud/dom/celebration.ts";
@@ -30,7 +30,7 @@ export function addNativeBadgeCelebration(
   const shown = showOrdinaryBadgeCelebration(place.layer, {
     ...htmlPanelInput(place),
     ...input,
-    artUrl,
+    artUrl: domArtUrl,
     everyFrame: (step) => {
       scene.game.events.on(Core.Events.PRE_RENDER, step);
       return () => scene.game.events.off(Core.Events.PRE_RENDER, step);

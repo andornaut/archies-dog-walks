@@ -70,24 +70,65 @@ describe("sheetTagFrames", () => {
 
 afterEach(() => vi.unstubAllGlobals());
 
+// A DOM sheet with a two-frame sprite and an image.
+const DOM_SHEET = {
+  keys: {
+    "ui-dog": {
+      frames: [
+        [10, 0, 4, 6, 100],
+        [14, 0, 4, 6, 200],
+      ],
+      rect: [10, 0, 8, 6],
+      tags: [["run", 0, 1, "forward"]],
+    },
+    "ui-well": { rect: [0, 2, 5, 3] },
+  },
+  size: { h: 8, w: 20 },
+};
+
 it("notifies a new sheet once after consumer placement and stops after unsubscribe", async () => {
   vi.stubGlobal(
     "fetch",
-    vi.fn().mockResolvedValue({ json: () => Promise.resolve(SHEET), ok: true }),
+    vi.fn().mockResolvedValue({ json: () => Promise.resolve(DOM_SHEET), ok: true }),
   );
   const events: string[] = [];
   const off = onSheetReady(() => events.push("ready"));
-  const request = loadSheet("/phase5-ready-sheet.json");
+  const request = loadSheet("/phase5-ready-sheet.json#ui-dog");
   void request.then(() => events.push("placed"));
   await request;
   await Promise.resolve();
   expect(events).toEqual(["placed", "ready"]);
-  await loadSheet("/phase5-ready-sheet.json");
+  await loadSheet("/phase5-ready-sheet.json#ui-dog");
   expect(events).toHaveLength(2);
   off();
-  await loadSheet("/phase5-ready-other-sheet.json");
+  await loadSheet("/phase5-ready-other-sheet.json#ui-dog");
   await Promise.resolve();
   expect(events).toHaveLength(2);
+});
+
+it("reads each key's frames from its DOM sheet's JSON, fetched once for every key", async () => {
+  const fetch = vi.fn().mockResolvedValue({ json: () => Promise.resolve(DOM_SHEET), ok: true });
+  vi.stubGlobal("fetch", fetch);
+  const [dog, well, sheet] = await Promise.all([
+    loadSheet("/frames-once.json#ui-dog"),
+    loadSheet("/frames-once.json#ui-well"),
+    loadSheet("/frames-once.json"),
+  ]);
+  expect(fetch).toHaveBeenCalledExactlyOnceWith("/frames-once.json");
+  expect(sheet).toBe(DOM_SHEET);
+  expect(sheetTagFrames(dog, "run")).toEqual([
+    { durationMs: 100, height: 6, sheet: { height: 8, width: 20 }, width: 4, x: 10, y: 0 },
+    { durationMs: 200, height: 6, sheet: { height: 8, width: 20 }, width: 4, x: 14, y: 0 },
+  ]);
+  expect(sheetFrameNamed(dog, "ui-dog 1.aseprite")).toMatchObject({ x: 14 });
+  expect(sheetFrame(well, undefined)).toEqual({
+    height: 3,
+    sheet: { height: 8, width: 20 },
+    width: 5,
+    x: 0,
+    y: 2,
+  });
+  await expect(loadSheet("/frames-once.json#ui-missing")).rejects.toThrow("has no ui-missing");
 });
 
 it.each([

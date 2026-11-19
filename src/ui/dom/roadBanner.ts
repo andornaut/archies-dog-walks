@@ -5,6 +5,7 @@ import { deviceX, deviceY, frameRect, gridTransform } from "../domScale.ts";
 import { PALETTE } from "../palette.ts";
 import { createTextLine, type DomTextLine, placeText, setBox } from "./pixelLine.ts";
 import { followModalUnderlay } from "./rampDim.ts";
+import { type SheetFrame, sheetFrame } from "./sheetFrames.ts";
 import type { UiLayer } from "./uiLayer.ts";
 
 interface BannerPose {
@@ -18,6 +19,8 @@ interface BannerPose {
 export function mountRoadBanner(
   layer: UiLayer,
   view: {
+    // The plate's frames on its sheet (loadSheet), and the sheet's image.
+    readonly frames: Promise<unknown>;
     readonly heading: string;
     readonly image: string;
     readonly name: string;
@@ -38,7 +41,7 @@ export function mountRoadBanner(
   plate.setAttribute("aria-hidden", "true");
   Object.assign(plate.style, {
     backgroundImage: `url("${view.image}")`,
-    backgroundSize: "100% 100%",
+    backgroundRepeat: "no-repeat",
     imageRendering: "pixelated",
     position: "absolute",
   });
@@ -76,6 +79,7 @@ export function mountRoadBanner(
   layer.element.insertBefore(root, layer.element.firstElementChild);
   let disposed = false;
   let decoded = false;
+  let frame: SheetFrame | undefined;
   let announced = false;
   const update = () => {
     if (disposed) {
@@ -100,7 +104,14 @@ export function mountRoadBanner(
       transform: gridTransform(scale),
       width: `${deviceX(scale, SCREEN_CONFIG.width)}px`,
     });
-    setBox(plate, frameRect(scale, { height: 48, width: 248, x: pose.x, y: pose.y }));
+    const box = frameRect(scale, { height: 48, width: 248, x: pose.x, y: pose.y });
+    setBox(plate, box);
+    if (frame !== undefined) {
+      const across = box.width / frame.width;
+      const down = box.height / frame.height;
+      plate.style.backgroundSize = `${frame.sheet.width * across}px ${frame.sheet.height * down}px`;
+      plate.style.backgroundPosition = `${-frame.x * across}px ${-frame.y * down}px`;
+    }
     for (const { bitmap, element, line } of lines) {
       placeText(bitmap, scale, { x: 0, y: 0 }, element, {
         ...line,
@@ -113,7 +124,13 @@ export function mountRoadBanner(
   const offReady = layer.onReady(update);
   const offUnderlay = followModalUnderlay(layer.input, root);
   const offInput = layer.input.subscribe(update);
-  const reveal = layer.reveal([view.image], root);
+  const reveal = layer.reveal(
+    view.frames.then((json) => {
+      frame = sheetFrame(json, undefined);
+      return [view.image];
+    }),
+    root,
+  );
   void reveal.revealed.then((success) => {
     if (!disposed) {
       decoded = success;

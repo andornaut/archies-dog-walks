@@ -20,6 +20,7 @@ export default gameViteConfig<typeof ConfigModules>({
   // sprites into atlas pages, and writes every art file the game loads under /assets/art/ with a
   // content hash in its name, mapped from its path under /art/ in the game's code and in
   // /art/art-files.json for the art gallery.
+  // crashArtPlugin inlines the crash screen's art as data: URLs (src/tools/crashArtPlugin.ts).
   // crashFontPlugin writes the crash screen's body font as a WOFF2 subset to CRASH_FONT_TEXT
   // (src/crash/crashFontText.ts), and fails for a character of it the font lacks.
   // generatedFilesPlugin, on the dev server only, rewrites public/art/manifest.json and
@@ -43,6 +44,7 @@ export default gameViteConfig<typeof ConfigModules>({
     const atlas = modules.atlasPlugin();
     return [
       atlas,
+      modules.crashArtPlugin(),
       modules.crashFontPlugin(modules.CRASH_FONT_TEXT, repoPath("art/fonts/tiny5/Tiny5.ttf")),
       modules.generatedFilesPlugin({ repoRoot: repoPath(".") }),
       modules.publicFilesPlugin(),
@@ -56,10 +58,7 @@ export default gameViteConfig<typeof ConfigModules>({
       }),
       modules.securityHeadersPlugin(),
       modules.inlineStyleCheckPlugin(),
-      modules.uiStylePlugin({
-        getArtFiles: atlas.api.artFiles,
-        source: repoPath("src/ui/dom/uiStylesheet.ts"),
-      }),
+      modules.uiStylePlugin({ source: repoPath("src/ui/dom/uiStylesheet.ts") }),
     ];
   },
   previewHost: PREVIEW_HOST,

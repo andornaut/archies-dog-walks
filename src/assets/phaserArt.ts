@@ -1,4 +1,4 @@
-// Native chrome keeps its authored files and metadata without a second Phaser texture.
+// Native chrome draws from its DOM sheet alone, without a Phaser texture.
 const NATIVE_ONLY_KEYS: ReadonlySet<string> = new Set([
   "icon-close",
   "icon-exit",

@@ -1,37 +1,39 @@
-import { DOM_BUTTON_SKIN } from "../../assets/domArt.ts";
 import { loadSheet } from "./sheetFrames.ts";
 
 export type RequiredAssetStatus = "failed" | "loading" | "ready";
+// An image to decode, a DOM sheet's JSON to load, or the art cut from the sheets for CSS (cut, in
+// requiredAssets), which url names.
 export interface RequiredAsset {
-  readonly kind: "button-manifest" | "image" | "sheet";
+  readonly kind: "cuts" | "image" | "sheet";
   readonly url: string;
 }
 
 interface Entry {
   readonly asset: RequiredAsset;
-  skin: boolean;
   status: RequiredAssetStatus;
   image?: HTMLImageElement;
 }
 
-// Startup resources are strict; optional view art keeps its settlement-based reveal policy.
-export function requiredAssets(doc: Document, changed: () => void) {
+// Startup resources are strict; optional view art keeps its settlement-based reveal policy. cut
+// cuts the art CSS draws whole from its sheets, rejecting where any cut failed; a retry calls it
+// again.
+export function requiredAssets(
+  doc: Document,
+  changed: () => void,
+  cut: () => Promise<void> = () => Promise.resolve(),
+) {
   const entries = new Map<string, Entry>();
   let disposed = false;
-  const register = (skin: boolean, assets: readonly RequiredAsset[]) => {
+  const register = (assets: readonly RequiredAsset[]) => {
     if (disposed) {
       return;
     }
     const fresh: Entry[] = [];
     for (const asset of assets) {
-      const entry = entries.get(asset.url);
-      const belongsToSkin = skin || asset.kind === "button-manifest";
-      if (entry === undefined) {
-        const added: Entry = { asset, skin: belongsToSkin, status: "loading" };
+      if (!entries.has(asset.url)) {
+        const added: Entry = { asset, status: "loading" };
         entries.set(asset.url, added);
         fresh.push(added);
-      } else {
-        entry.skin ||= belongsToSkin;
       }
     }
     if (fresh.length > 0) {
@@ -54,28 +56,7 @@ export function requiredAssets(doc: Document, changed: () => void) {
     } else if (kind === "sheet") {
       await loadSheet(url);
     } else {
-      const response = await fetch(url);
-      if (!response.ok) {
-        throw new Error("Required button manifest unavailable");
-      }
-      const value = (await response.json()) as {
-        sprites?: { key?: unknown; json?: unknown; png?: unknown }[];
-      };
-      if (!Array.isArray(value.sprites)) {
-        throw new Error("Invalid required button manifest");
-      }
-      const assets = DOM_BUTTON_SKIN.sheets.flatMap((key) => {
-        const sprite = value.sprites!.find((candidate) => candidate.key === key);
-        if (typeof sprite?.json !== "string" || typeof sprite.png !== "string") {
-          throw new Error("Missing required button sheet");
-        }
-        const base = new URL(url, doc.baseURI);
-        return [
-          { kind: "sheet" as const, url: new URL(sprite.json, base).href },
-          { kind: "image" as const, url: new URL(sprite.png, base).href },
-        ];
-      });
-      register(true, assets);
+      await cut();
     }
   };
   const start = (entry: Entry) => {
@@ -96,7 +77,7 @@ export function requiredAssets(doc: Document, changed: () => void) {
     );
   };
   return {
-    add: (assets: readonly RequiredAsset[]) => register(false, assets),
+    add: register,
     dispose() {
       disposed = true;
       entries.clear();
@@ -105,7 +86,10 @@ export function requiredAssets(doc: Document, changed: () => void) {
       [...entries.values()]
         .filter(({ status }) => status === "failed")
         .map(({ asset }) => asset.url),
-    failedSkin: () => [...entries.values()].some(({ skin, status }) => skin && status === "failed"),
+    failedCuts: () =>
+      [...entries.values()].some(
+        ({ asset, status }) => asset.kind === "cuts" && status === "failed",
+      ),
     retry() {
       if (disposed) {
         return;

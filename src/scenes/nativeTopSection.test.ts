@@ -1,5 +1,4 @@
 import { EventEmitter } from "node:events";
-import { readFileSync } from "node:fs";
 
 import type { Scene } from "phaser";
 import { expect, it, vi } from "vitest";
@@ -8,6 +7,7 @@ import { gameData } from "../data/index.ts";
 import { coverHelpUnderlay } from "../hud/dom/helpUnderlay.ts";
 import { FakeDocument, type FakeElement, fakeLayer } from "../testing/fakeDom.ts";
 import { gameFont } from "../testing/fontInk.ts";
+import { ownArtFrames } from "../testing/ownArtFrames.ts";
 import { domScale } from "../ui/domScale.ts";
 import {
   addNativeTopSection,
@@ -97,7 +97,7 @@ it("keeps one accessible bar across retained scenes, underlying redraws and scre
       target,
       {
         artUrl: (path) => path,
-        loadSheet: async (path) => JSON.parse(readFileSync(`public/art/${path}`, "utf8")),
+        loadSheet: async (path) => ownArtFrames(path),
       },
       font,
       config,

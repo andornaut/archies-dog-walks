@@ -1,4 +1,3 @@
-import { decodePng } from "@andornaut/art-kit/build/png";
 import { blankImage } from "@andornaut/art-kit/build/rgbaImage";
 import { keysOf } from "@andornaut/game-kit/runtime/records";
 import { describe, expect, it } from "vitest";
@@ -8,21 +7,14 @@ import {
   DOM_DIM_ART_KEYS,
   DOM_DISABLED_ART_KEYS,
 } from "../../assets/domArt.ts";
-import { remapToGrey } from "../../assets/greyRamp.ts";
 import type { AssetManifest } from "../../assets/manifest.ts";
 import { gameData } from "../../data/index.ts";
 import { dimForModal } from "../../ui/dimArt.ts";
-import { greyForDisabledTile, greysOnTile } from "../../ui/disabledArt.ts";
-import { NEUTRAL_RAMP, PALETTE } from "../../ui/palette.ts";
+import { greysOnTile } from "../../ui/disabledArt.ts";
+import { PALETTE } from "../../ui/palette.ts";
 import { encodePng } from "./atlasBuild.ts";
-import {
-  type ArtCopy,
-  artCopyFiles,
-  DIM_COPY,
-  DISABLED_COPY,
-  DISABLED_DIM_COPY,
-} from "./disabledFiles.ts";
-import { hashGameArt } from "./hashedArt.ts";
+import { type ArtCopy, DIM_COPY, DISABLED_COPY } from "./disabledFiles.ts";
+import { buildDomSheet, checkDomCopies } from "./domSheets.ts";
 
 // A 2x1 picture in two palette colours, and a one-frame sheet of it.
 const image = blankImage(2, 1);
@@ -56,7 +48,6 @@ const manifest: Pick<AssetManifest, "images" | "sprites"> = {
 };
 const readArt = async (path: string) =>
   path.endsWith(".png") ? png : sheet(path.includes("pepe") ? 3 : 2);
-const none = new Set<string>();
 
 describe("the remapped copies of its art the HTML interface draws", () => {
   it("grey every tile picture a disabled tile greys: each dog's and walker's face, perk, gear and the dog slot", () => {
@@ -79,51 +70,6 @@ describe("the remapped copies of its art the HTML interface draws", () => {
     }
   });
 
-  it.each([
-    ["grey", DISABLED_COPY, greyForDisabledTile, ["face-dog-kilo", "item-whistle"]],
-    ["dimmed", DIM_COPY, dimForModal, ["ui-quip-tail-up", "ui-panel"]],
-    [
-      "disabled and dimmed",
-      DISABLED_DIM_COPY,
-      (pixels: Uint8ClampedArray) => {
-        greyForDisabledTile(pixels);
-        dimForModal(pixels);
-      },
-      ["face-dog-kilo", "item-whistle"],
-    ],
-  ] as const)(
-    "write each key's %s copy from its PNG, beside its key's files",
-    async (name, copy, remap, [sheetKey, imageKey]) => {
-      const dom = {
-        art: none,
-        dim: copy === DIM_COPY || copy === DISABLED_DIM_COPY ? new Set([sheetKey, imageKey]) : none,
-        disabled:
-          copy === DISABLED_COPY || copy === DISABLED_DIM_COPY
-            ? new Set([sheetKey, imageKey])
-            : none,
-        grey: none,
-      };
-      const files = await hashGameArt(
-        readArt,
-        dom,
-        { ...manifest, fonts: [], sounds: [] },
-        { files: new Map(), manifest: { pages: [], textures: [] } },
-      );
-      const pixels = new Uint8ClampedArray(image.data);
-      remap(pixels);
-      const paths = [copy.path("sheet", sheetKey), copy.path("image", imageKey)];
-      for (const path of paths) {
-        const file = files.find((entry) => entry.path === path);
-        expect(file, `${name} ${path}`).toBeDefined();
-        expect(decodePng(file?.source ?? new Uint8Array()).data, path).toEqual(
-          new Uint8Array(pixels.buffer),
-        );
-      }
-      // A sheet's copy reads its key's JSON frames, hashed with the rest.
-      expect(files.some(({ path }) => path === `sprites/${sheetKey}.json`)).toBe(true);
-    },
-  );
-
   it("darkens retained copies by the same ratio for every channel, keeping alpha", () => {
     const pixels = new Uint8ClampedArray(image.data);
     dimForModal(pixels);
@@ -145,51 +91,17 @@ describe("the remapped copies of its art the HTML interface draws", () => {
     [DIM_COPY.name, "icon-exit", "no covered native art"],
   ])("fail the build for a %s of %s: %s", async (name, key, error) => {
     const copy = byName[name] ?? DISABLED_COPY;
-    await expect(artCopyFiles(readArt, manifest, copy, new Set([key]))).rejects.toThrow(error);
+    const keys = {
+      copies: [[copy, new Set([key])] as const],
+      sheets: new Map([[key, "dom-home" as const]]),
+    };
+    await expect(
+      Promise.resolve().then(() => {
+        checkDomCopies(keys);
+        return buildDomSheet(readArt, manifest, keys, "dom-home");
+      }),
+    ).rejects.toThrow(error);
   });
-});
-
-it("exports native card colour variants with neutral-zero grey and original sheet metadata", async () => {
-  const cardManifest = {
-    fonts: [],
-    images: [{ key: "card-skip", png: "images/card-skip.png" }],
-    sounds: [],
-    sprites: [
-      { json: "sprites/card-frame.json", key: "card-frame", png: "sprites/card-frame.png" },
-    ],
-  };
-  const keys = new Set(["card-skip", "card-frame"]);
-  const files = await hashGameArt(
-    readArt,
-    { art: keys, dim: keys, disabled: none, grey: keys },
-    cardManifest,
-    { files: new Map(), manifest: { pages: [], textures: [] } },
-  );
-  const grey = new Uint8ClampedArray(image.data);
-  remapToGrey(NEUTRAL_RAMP, 0, grey);
-  const greyDim = new Uint8ClampedArray(grey);
-  dimForModal(greyDim);
-  for (const [kind, key] of [
-    ["images", "card-skip"],
-    ["sprites", "card-frame"],
-  ]) {
-    for (const [suffix, expected] of [
-      ["-grey", grey],
-      ["-grey-dim", greyDim],
-    ] as const) {
-      const file = files.find(({ path }) => path === `${kind}/${key}${suffix}.png`)!;
-      expect(file.fileName).toMatch(/^assets\/art\/.+-[A-Za-z0-9_-]+\.png$/);
-      const decoded = decodePng(file.source);
-      expect([decoded.width, decoded.height]).toEqual([2, 1]);
-      expect(decoded.data).toEqual(new Uint8Array(expected.buffer));
-    }
-    expect(files.some(({ path }) => path === `${kind}/${key}.png`)).toBe(true);
-    expect(files.some(({ path }) => path === `${kind}/${key}-dim.png`)).toBe(true);
-  }
-  expect(files.filter(({ path }) => path.endsWith(".json")).map(({ path }) => path)).toContain(
-    "sprites/card-frame.json",
-  );
-  expect(files.some(({ path }) => /-grey.*\.json$/.test(path))).toBe(false);
 });
 
 it("registers covered native picker chrome and content while leaving walk chrome excluded", () => {

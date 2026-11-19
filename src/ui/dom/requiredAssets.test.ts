@@ -37,7 +37,7 @@ it("keeps required decode failures explicit and retries failed images only", asy
   await settle();
   expect(assets.status()).toBe("failed");
   expect(assets.failed()).toEqual(["/bad.png"]);
-  expect(assets.failedSkin()).toBe(false);
+  expect(assets.failedCuts()).toBe(false);
   assets.retry();
   await settle();
   expect(assets.status()).toBe("ready");
@@ -55,10 +55,7 @@ it("rejects malformed required metadata and reuses the successful sheet cache on
     .fn()
     .mockResolvedValueOnce({ json: () => ({ frames: {} }), ok: true })
     .mockResolvedValue({
-      json: () => ({
-        frames: { a: { frame: { h: 2, w: 2, x: 0, y: 0 } } },
-        meta: { size: { h: 2, w: 2 } },
-      }),
+      json: () => ({ keys: { a: { rect: [0, 0, 2, 2] } }, size: { h: 2, w: 2 } }),
       ok: true,
     });
   vi.stubGlobal("fetch", fetch);
@@ -73,74 +70,32 @@ it("rejects malformed required metadata and reuses the successful sheet cache on
   expect(fetch).toHaveBeenCalledTimes(2);
 });
 
-it("reports manifest failures and ignores a late completion after disposal", async () => {
-  let finish: (value: unknown) => void = () => undefined;
-  vi.stubGlobal(
-    "fetch",
-    vi
-      .fn()
-      .mockResolvedValueOnce({ json: () => ({ sprites: [] }), ok: true })
-      .mockImplementation(
-        () =>
-          new Promise((resolve) => {
-            finish = resolve;
-          }),
-      ),
-  );
+it("reports failed cuts, cuts again on retry and ignores a late completion after disposal", async () => {
+  let finish: () => void = () => undefined;
+  const cut = vi
+    .fn<() => Promise<void>>()
+    .mockRejectedValueOnce(new Error("no canvas"))
+    .mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          finish = resolve;
+        }),
+    );
   const changed = vi.fn();
-  const assets = requiredAssets({ baseURI: "https://example.test/" } as Document, changed);
-  assets.add([{ kind: "button-manifest", url: "/buttons.json" }]);
+  const assets = requiredAssets({} as Document, changed, cut);
+  assets.add([{ kind: "cuts", url: "dom-cuts" }]);
   await settle();
-  expect(assets.failed()).toEqual(["/buttons.json"]);
-  expect(assets.failedSkin()).toBe(true);
+  expect(assets.failed()).toEqual(["dom-cuts"]);
+  expect(assets.failedCuts()).toBe(true);
   assets.retry();
+  expect(cut).toHaveBeenCalledTimes(2);
   const calls = changed.mock.calls.length;
   assets.dispose();
-  finish({ ok: false });
+  finish();
   await settle();
   expect(changed).toHaveBeenCalledTimes(calls);
   assets.retry();
   expect(assets.failed()).toEqual([]);
-});
-
-it("resolves the required skin manifest against its build URL and waits for its sheets and images", async () => {
-  const pngs: string[] = [];
-  const doc = {
-    baseURI: "https://example.test/game/",
-    createElement() {
-      return {
-        decode() {
-          pngs.push(this.src);
-          return Promise.resolve();
-        },
-        src: "",
-      };
-    },
-  } as unknown as Document;
-  const manifest = {
-    sprites: ["ui-button", "ui-icon-button"].map((key) => ({
-      json: `art/${key}.json`,
-      key,
-      png: `art/${key}.png`,
-    })),
-  };
-  const sheet = {
-    frames: { normal: { frame: { h: 20, w: 20, x: 0, y: 0 } } },
-    meta: { size: { h: 20, w: 20 } },
-  };
-  const fetch = vi.fn((url: string) =>
-    Promise.resolve({ json: () => (url.endsWith("skin.json") ? manifest : sheet), ok: true }),
-  );
-  vi.stubGlobal("fetch", fetch);
-  const assets = requiredAssets(doc, () => undefined);
-  assets.add([{ kind: "button-manifest", url: "assets/skin.json" }]);
-  await settle();
-  expect(assets.status()).toBe("ready");
-  expect(pngs).toEqual([
-    "https://example.test/game/assets/art/ui-button.png",
-    "https://example.test/game/assets/art/ui-icon-button.png",
-  ]);
-  expect(fetch).toHaveBeenCalledTimes(3);
 });
 
 it("notifies new loading registrations once before requests and tolerates reentrant deduplication and disposal", () => {

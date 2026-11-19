@@ -46,8 +46,10 @@ it("keeps a heart flight on the held feedback clock and completes its native pla
       { key: "icon-treat", kind: "image" },
     ]),
   ).resolves.toEqual(["/art/sprites/fx-heart-loss.png", "/art/images/icon-treat.png"]);
-  expect(source.loadSheet).toHaveBeenCalledTimes(1);
-  expect(source.loadSheet).toHaveBeenCalledWith("/art/sprites/fx-heart-loss.json");
+  expect(source.loadSheet.mock.calls).toEqual([
+    ["/art/sprites/fx-heart-loss.json"],
+    ["/art/images/icon-treat.json"],
+  ]);
   const view = painter.group(60);
   const complete = vi.fn();
   const playback = view.art({
@@ -119,6 +121,10 @@ it("does not paint disposed moment roots when a completion callback replaces the
     tags: ["play"],
   }).ready;
   painter.update({ firingNow: 0, momentNow: 140, now: 140 });
+  // The panel paints once its frames load.
+  await new Promise<void>((resolve) => {
+    setTimeout(resolve, 0);
+  });
   expect(element.children).toHaveLength(1);
   const ring = element.children[0]!.children[0]!;
   expect(ring.style).toMatchObject({

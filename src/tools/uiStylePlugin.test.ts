@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 
 import { CELEBRATION_STYLE } from "../ui/dom/celebrationStyle.ts";
 import { UI_STYLE } from "../ui/dom/uiStyle.ts";
-import { buttonSkinManifest, UI_STYLESHEET_ID, uiStylePlugin } from "./uiStylePlugin.ts";
+import { UI_STYLESHEET_ID, uiStylePlugin } from "./uiStylePlugin.ts";
 
 const DOM_DIR = join(import.meta.dirname, "../ui/dom");
 
@@ -43,33 +43,4 @@ describe("the HTML interface's stylesheet module", () => {
       ]),
     );
   });
-});
-
-it("resolves this build's button manifest to hashed resources under a non-root base", () => {
-  const files = new Map([
-    ["sprites/ui-button.json", "assets/art/sprites/ui-button-abc123.json"],
-    ["sprites/ui-button.png", "assets/art/sprites/ui-button-def456.png"],
-    ["sprites/ui-icon-button.json", "assets/art/sprites/ui-icon-button-ghi789.json"],
-    ["sprites/ui-icon-button.png", "assets/art/sprites/ui-icon-button-jkl012.png"],
-  ]);
-  const skin = JSON.parse(buttonSkinManifest(files)) as {
-    sprites: { json: string; key: string; png: string }[];
-  };
-  const manifest = new URL("https://example.test/game/assets/button-skin-hashed.json");
-  expect(
-    skin.sprites.map(({ json, png }) => [
-      new URL(json, manifest).pathname,
-      new URL(png, manifest).pathname,
-    ]),
-  ).toEqual([
-    [
-      "/game/assets/art/sprites/ui-button-abc123.json",
-      "/game/assets/art/sprites/ui-button-def456.png",
-    ],
-    [
-      "/game/assets/art/sprites/ui-icon-button-ghi789.json",
-      "/game/assets/art/sprites/ui-icon-button-jkl012.png",
-    ],
-  ]);
-  expect(() => buttonSkinManifest(new Map())).toThrow("Button skin art was not emitted");
 });

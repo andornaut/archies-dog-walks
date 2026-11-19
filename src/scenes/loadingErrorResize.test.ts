@@ -5,11 +5,13 @@ import { mountUiLayer } from "../ui/dom/uiLayer.ts";
 import { worldViewBox } from "../ui/worldFit.ts";
 import { pauseLoadingError } from "./loadingErrorPause.ts";
 
-vi.mock("@andornaut/game-kit/runtime/web/ui/dom/buttonSkin", () => ({
-  createButtonSkin: vi.fn(() => ({
+vi.mock("../ui/dom/domCuts.ts", () => ({
+  createSheetButtonSkin: vi.fn(() => ({
     apply: () => Promise.resolve([]),
     frames: Promise.resolve(new Map()),
+    ready: Promise.resolve(),
   })),
+  cutDomArt: vi.fn(() => Promise.resolve("blob:cut")),
 }));
 
 afterEach(() => {

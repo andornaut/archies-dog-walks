@@ -1,8 +1,8 @@
 import { type Point, type Rect, rectAboveIn, rectsOverlap } from "@andornaut/game-kit/runtime/rect";
 import { Core, type GameObjects, type Scene, Scenes } from "phaser";
 
-import { artUrl } from "../../assets/artFiles.ts";
 import { domArtPath } from "../../assets/domArt.ts";
+import { domArtUrl } from "../../assets/domArtFiles.ts";
 import { debuffIconKey } from "../../assets/iconKeys.ts";
 import { gearIconKey } from "../../assets/spriteKeys.ts";
 import { gameData } from "../../data/index.ts";
@@ -12,6 +12,7 @@ import { zoneBannerHeading } from "../../hud/zoneCelebration.ts";
 import { currentZone } from "../../rules/route.ts";
 import type { RunState } from "../../state/runState.ts";
 import { mountRoadBanner } from "../../ui/dom/roadBanner.ts";
+import { loadSheet } from "../../ui/dom/sheetFrames.ts";
 import { uiLayer } from "../../ui/dom/uiLayer.ts";
 import { PALETTE } from "../../ui/palette.ts";
 import { addDisplayText, displayBitmapFont, hasDisplayFont } from "../../ui/phaser/displayText.ts";
@@ -228,8 +229,9 @@ export class ZoneBanner {
     }
     const display = hasDisplayFont(scene, name) ? displayBitmapFont(scene) : undefined;
     const view = mountRoadBanner(layer, {
+      frames: loadSheet(domArtUrl(domArtPath("image", BANNER.key, "json"))),
       heading,
-      image: artUrl(domArtPath("image", BANNER.key, "png")),
+      image: domArtUrl(domArtPath("image", BANNER.key, "png")),
       name,
       nameFont: {
         bitmap: display ?? title,

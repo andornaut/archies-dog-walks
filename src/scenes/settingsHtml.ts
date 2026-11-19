@@ -1,6 +1,6 @@
 import type { Scene } from "phaser";
 
-import { artUrl } from "../assets/artFiles.ts";
+import { domArtUrl } from "../assets/domArtFiles.ts";
 import { SETTINGS_ART_KEYS } from "../home/settingsView.ts";
 import { type DomSettings, type DomSettingsInput, showSettings } from "../hud/dom/settings.ts";
 import { loadSheet } from "../ui/dom/sheetFrames.ts";
@@ -18,7 +18,7 @@ export function addHtmlSettings(
   const settings = showSettings(place.layer, {
     ...htmlPanelInput(place),
     ...input,
-    artUrl,
+    artUrl: domArtUrl,
     loadSheet,
   });
   return followScene(scene, settings);

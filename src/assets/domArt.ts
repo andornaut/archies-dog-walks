@@ -235,7 +235,8 @@ export const DOM_ART_KEYS: ReadonlySet<string> = new Set([
   ...hudArtKeys(gameData),
 ]);
 
-// A DOM art file's path under /art/: an image's PNG, or a sprite sheet's PNG or JSON.
+// A DOM art file's logical path: an image's or a sprite sheet's PNG or frames, as its own files
+// under /art/ name them. domArtUrl (src/assets/artFiles.ts) resolves it to the key's DOM sheet.
 export function domArtPath(kind: "image" | "sheet", key: string, ext: "json" | "png"): string {
   return `${kind === "image" ? "images" : "sprites"}/${key}.${ext}`;
 }
@@ -287,3 +288,132 @@ export const DOM_DIM_ART_KEYS: ReadonlySet<string> = new Set([
   "ui-zone-banner",
   ...celebrationArtKeys(gameData),
 ]);
+
+// The sheets the HTML interface loads its art from, one per set of screens that first shows it,
+// so a screen waits for few files and a first install downloads few. A build packs each sheet
+// from its keys' own files (src/tools/atlas/domSheets.ts), each key's PNG whole at a rect of
+// its own, and lists each key's frames in the sheet's JSON.
+export const DOM_SHEETS = [
+  "dom-cards",
+  "dom-chrome",
+  "dom-detail",
+  "dom-home",
+  "dom-menus",
+  "dom-walk",
+] as const;
+export type DomSheet = (typeof DOM_SHEETS)[number];
+
+// The folder under /art/ the sheets are in.
+export const DOM_SHEET_DIR = "dom";
+
+// Art every screen can show: the stylesheet's, the button skin's, the top bar's controls and
+// bank well, the speech tails and the earned tick.
+const CHROME_ART_KEYS = [
+  ...DOM_STYLE_ART.map(([, key]) => key),
+  ...DOM_BUTTON_SKIN.sheets,
+  "icon-exit",
+  "icon-help",
+  "icon-menu",
+  "icon-pause",
+  "icon-sound",
+  "ui-check",
+  "ui-heart",
+  "ui-hint-tail",
+  "ui-home-cash-well-left",
+  "ui-home-cash-well-mid",
+  "ui-home-cash-well-right",
+  "ui-quip-tail",
+  "ui-quip-tail-down",
+  ZONE_CELEBRATION_ART.tailUp,
+];
+
+// Each sheet's keys, by the first rule that takes a key, in this order: dom-chrome the art every
+// screen can show; dom-cards the choice cards' art and the zone banner, the walk's art with a
+// dimmed copy, so dom-walk needs none; dom-home the start screen's and the shop's, with every
+// tile picture; dom-detail the detail cards' and the purchase confirm's; dom-menus the
+// settings', the Logbook's, the badge cards' and the End screen's; and dom-walk the rest, the
+// walk's HUD and moments.
+function domSheetKeys(): ReadonlyMap<string, DomSheet> {
+  const rules: readonly (readonly [DomSheet, readonly string[]])[] = [
+    ["dom-chrome", CHROME_ART_KEYS],
+    ["dom-cards", [...DOM_CHOICE_CARD_ART.images, ...DOM_CHOICE_CARD_ART.sheets, "ui-zone-banner"]],
+    ["dom-home", [...DOM_DISABLED_ART_KEYS, ...SHOP_ART_KEYS, ...START_ART_KEYS]],
+    ["dom-detail", detailArtKeys(gameData)],
+    ["dom-menus", [...SETTINGS_ART_KEYS, ...logbookArtKeys(gameData), ...END_ART_KEYS]],
+    ["dom-walk", [...DOM_ART_KEYS]],
+  ];
+  const sheets = new Map<string, DomSheet>();
+  for (const [sheet, keys] of rules) {
+    for (const key of keys) {
+      if (DOM_ART_KEYS.has(key) && !sheets.has(key)) {
+        sheets.set(key, sheet);
+      }
+    }
+  }
+  return sheets;
+}
+
+export const DOM_SHEET_KEYS: ReadonlyMap<string, DomSheet> = domSheetKeys();
+
+// The copies of a sheet's art the HTML interface can draw in place of its own, each a sheet of
+// its own with the same rects, by the suffix a copy's key adds to its key's: a disabled tile's
+// grey, a disabled choice card's neutral grey, and the retained dimmed copies of each. Longest
+// first, so a key's suffix is read whole.
+export const DOM_COPY_SUFFIXES = [
+  "-disabled-dim",
+  "-grey-dim",
+  "-disabled",
+  "-grey",
+  "-dim",
+] as const;
+export type DomCopySuffix = (typeof DOM_COPY_SUFFIXES)[number];
+
+// The sheet and copy a key's art is drawn from: its own key's sheet, or, for a copy's key, its
+// key's sheet's copy. Throws on a key the HTML interface does not draw.
+export function domSheetOf(key: string): {
+  copy: DomCopySuffix | "";
+  key: string;
+  sheet: DomSheet;
+} {
+  const own = DOM_SHEET_KEYS.get(key);
+  if (own !== undefined) {
+    return { copy: "", key, sheet: own };
+  }
+  for (const copy of DOM_COPY_SUFFIXES) {
+    const base = key.endsWith(copy) ? key.slice(0, -copy.length) : undefined;
+    const sheet = base === undefined ? undefined : DOM_SHEET_KEYS.get(base);
+    if (base !== undefined && sheet !== undefined) {
+      return { copy, key: base, sheet };
+    }
+  }
+  throw new Error(`${key} is no art the HTML interface draws`);
+}
+
+// A sheet's image under /art/, or a copy's, as a lossless WebP.
+export function domSheetImagePath(sheet: DomSheet, copy: DomCopySuffix | "" = ""): string {
+  return `${DOM_SHEET_DIR}/${sheet}${copy}.webp`;
+}
+
+// A sheet's frames under /art/.
+export function domSheetJsonPath(sheet: DomSheet): string {
+  return `${DOM_SHEET_DIR}/${sheet}.json`;
+}
+
+// The URL a DOM art file's logical path (domArtPath) loads from, through artUrl: a key's PNG, or
+// its copy's, its sheet's image or that copy's; a key's frames its sheet's JSON with the key as
+// the fragment, which loadSheet (src/ui/dom/sheetFrames.ts) reads the key's frames by.
+export function domArtFileUrl(artUrl: (path: string) => string, path: string): string {
+  const match = /^(?:images|sprites)\/(.+)\.(json|png)$/.exec(path);
+  if (match === null) {
+    throw new Error(`${path} is no DOM art file`);
+  }
+  const [, name, ext] = match as unknown as [string, string, "json" | "png"];
+  const { copy, key, sheet } = domSheetOf(name);
+  if (ext === "png") {
+    return artUrl(domSheetImagePath(sheet, copy));
+  }
+  if (copy !== "") {
+    throw new Error(`${path}: a copy keeps its key's frames`);
+  }
+  return `${artUrl(domSheetJsonPath(sheet))}#${encodeURIComponent(key)}`;
+}

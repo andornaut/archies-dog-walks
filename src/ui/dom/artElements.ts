@@ -6,14 +6,14 @@ import { setBox } from "./pixelLine.ts";
 import { type SheetFrame, sheetFrame, sheetFrameNamed } from "./sheetFrames.ts";
 import { sliceParts } from "./sliceParts.ts";
 
-// Art the HTML interface draws as backgrounds of each key's own file: an image whole, or one
-// frame of a sheet by its tag. Art projection keeps whole authored pixels; layout projection
-// follows logical rect edges. A sheet stays hidden until its JSON loads.
+// Art the HTML interface draws as backgrounds of its key's DOM sheet: an image's one frame, or
+// one frame of a sprite sheet by its tag. Art projection keeps whole authored pixels; layout
+// projection follows logical rect edges. Art stays hidden until its frames load.
 
 export interface DomArtSource {
-  // An art file's URL by its path under /art/.
+  // A DOM art file's URL by its logical path (domArtPath): its sheet's image, or its frames.
   readonly artUrl: (path: string) => string;
-  // A sheet's JSON by its URL, once it has loaded.
+  // A key's frames by their URL, once they have loaded.
   readonly loadSheet: (url: string) => Promise<unknown>;
 }
 
@@ -37,12 +37,18 @@ function artUrls(
   return [source.artUrl(domArtPath(kind, imageKey, "png"))];
 }
 
-// The sheet's JSON once loaded, calling shown with it then and on each later call.
-function sheetOf(source: DomArtSource, key: string, element: HTMLElement, imageKey = key) {
+// The key's frames once loaded, calling shown with them then and on each later call.
+function sheetOf(
+  source: DomArtSource,
+  key: string,
+  element: HTMLElement,
+  imageKey = key,
+  kind: "image" | "sheet" = "sheet",
+) {
   let json: unknown;
   let waiting: (() => void) | undefined;
   element.style.visibility = "hidden";
-  const request = source.loadSheet(source.artUrl(domArtPath("sheet", key, "json")));
+  const request = source.loadSheet(source.artUrl(domArtPath(kind, key, "json")));
   request.then(
     (loaded) => {
       json = loaded;
@@ -61,7 +67,7 @@ function sheetOf(source: DomArtSource, key: string, element: HTMLElement, imageK
     },
     {
       ready: request.then(
-        () => artUrls(source, "sheet", key, imageKey),
+        () => artUrls(source, kind, key, imageKey),
         () => [],
       ),
     },
@@ -232,7 +238,7 @@ export function imageArt(
   const element = doc.createElement("span");
   element.className = "adw-art";
   element.style.backgroundImage = `url("${source.artUrl(domArtPath("image", imageKey, "png"))}")`;
-
+  const loaded = sheetOf(source, key, element, imageKey, "image");
   return {
     element,
     place: (scale, origin, art) => {
@@ -251,8 +257,15 @@ export function imageArt(
         left: box.left - gridX(scale, origin.x),
         top: box.top - gridY(scale, origin.y),
       });
+      loaded((json) => {
+        const frame = sheetFrame(json, undefined);
+        const across = box.width / frame.width;
+        const down = box.height / frame.height;
+        element.style.backgroundSize = `${frame.sheet.width * across}px ${frame.sheet.height * down}px`;
+        element.style.backgroundPosition = `${-frame.x * across}px ${-frame.y * down}px`;
+      });
     },
-    ready: Promise.resolve(artUrls(source, "image", key, imageKey)),
+    ready: loaded.ready,
   };
 }
 
@@ -354,7 +367,8 @@ export function sheetNineSlice(
   };
 }
 
-// Native image dimensions come from the authored asset contract, without another size loader.
+// Native image dimensions come from the authored asset contract; its rect on its sheet from its
+// frames, until which it stays hidden.
 export function imageNineSlice(
   doc: Document,
   source: DomArtSource,
@@ -368,11 +382,15 @@ export function imageNineSlice(
 } {
   const element = doc.createElement("span");
   element.className = "adw-art";
-  const frame: SheetFrame = { ...native, sheet: native, x: 0, y: 0 };
+  const loaded = sheetOf(source, key, element, key, "image");
   const paint = slicePainter(doc, source, "image", key, slices, element);
   return {
     element,
-    place: (scale, origin, art) => paint(scale, origin, art, frame),
-    ready: Promise.resolve(artUrls(source, "image", key)),
+    place: (scale, origin, art) =>
+      loaded((json) => {
+        const { sheet, x, y } = sheetFrame(json, undefined);
+        paint(scale, origin, art, { ...native, sheet, x, y });
+      }),
+    ready: loaded.ready,
   };
 }

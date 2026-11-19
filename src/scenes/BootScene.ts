@@ -4,6 +4,7 @@ import { keysOf } from "@andornaut/game-kit/runtime/records";
 import { GameObjects, Scene, Scenes, Sound } from "phaser";
 
 import { animationSpecs, type AsepriteSheet } from "../assets/asepriteAnimations.ts";
+import { domArtUrl } from "../assets/domArtFiles.ts";
 import { type AssetManifest, parseManifest, type SpriteAsset } from "../assets/manifest.ts";
 import {
   addAtlasFonts,
@@ -442,7 +443,7 @@ export class BootScene extends Scene {
     if (missing.length > 0) {
       throw new Error(`Required native UI art is absent from the manifest: ${missing.join(", ")}`);
     }
-    layer.requireAssets(hudArtResources({ artUrl }, assets));
+    layer.requireAssets(hudArtResources({ artUrl: domArtUrl }, assets));
     const stop = native.wait(ready);
     this.events.once(Scenes.Events.SHUTDOWN, stop);
   }

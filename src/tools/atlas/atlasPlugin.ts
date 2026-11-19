@@ -5,27 +5,44 @@ import type { Plugin, ViteDevServer } from "vite";
 
 import type { ArtFileMap } from "../../assets/artUrl.ts";
 import {
-  DOM_ART_KEYS,
   DOM_CHOICE_CARD_ART,
   DOM_DIM_ART_KEYS,
   DOM_DISABLED_ART_KEYS,
+  DOM_SHEET_DIR,
+  DOM_SHEET_KEYS,
+  DOM_SHEETS,
+  type DomSheet,
 } from "../../assets/domArt.ts";
 import { parseManifest } from "../../assets/manifest.ts";
 import { ART_DIR, ART_MANIFEST, artManifestText, generateArtManifest } from "../artManifest.ts";
 import { limitConcurrency } from "../concurrency.ts";
 import { nodeArtFiles, OPEN_FILE_LIMIT, writeIfChanged } from "../files.ts";
 import { buildAtlases, WEBP_PAGES } from "./atlasBuild.ts";
-import { artCopyFile } from "./disabledFiles.ts";
+import { buildDomSheet, checkDomCopies } from "./domSheets.ts";
 import {
   ART_FILES_JSON,
   ART_FILES_MODULE,
   artCopies,
   artFilesJson,
+  type DomArtKeys,
   hashGameArt,
 } from "./hashedArt.ts";
 
 // Vite's prefix for a module id that names no file.
 const RESOLVED_ART_FILES_MODULE = `\0${ART_FILES_MODULE}`;
+
+// The HTML interface's art, by its DOM sheet, and the copies of it it draws.
+const DOM_KEYS: DomArtKeys = {
+  dim: DOM_DIM_ART_KEYS,
+  disabled: DOM_DISABLED_ART_KEYS,
+  grey: DOM_CHOICE_CARD_ART.grey,
+  sheets: DOM_SHEET_KEYS,
+};
+
+const CONTENT_TYPES: Readonly<Record<string, string>> = {
+  json: "application/json",
+  webp: "image/webp",
+};
 
 interface AtlasPluginApi {
   // The build's ArtFileMap, once buildStart has run.
@@ -34,14 +51,15 @@ interface AtlasPluginApi {
 
 // Writes /art/manifest.json from the files under public/art/ first, so the build packs and
 // hashes what is on disk. Then packs every image and sprite frame it lists into a few atlas
-// pages, lossless WebPs, with an atlas manifest mapping each key and frame to its page and rect. Every file the
-// game loads (both manifests, the pages, the fonts, the sounds and any key the atlas leaves
-// out) goes to the build output under a content-hashed name (src/tools/atlas/hashedArt.ts),
-// and the game reads the names from the ART_FILES_MODULE map, as do the disabled tiles' grey
-// copies and the celebration's dimmed copies the HTML interface draws (artCopyFiles). The dev
-// server's map is empty. The map is also written as /art/art-files.json (ART_FILES_JSON), where
-// the art gallery reads it; the dev server serves it empty. Of the files under public/art/, a
-// build copies only the pages and the files the site's pages name (publicFilesPlugin).
+// pages, lossless WebPs, with an atlas manifest mapping each key and frame to its page and rect,
+// and the HTML interface's art into its DOM sheets with their copies (src/tools/atlas/
+// domSheets.ts). Every file the game loads (both manifests, the pages, the DOM sheets, the
+// fonts, the sounds and any key the atlas leaves out) goes to the build output under a
+// content-hashed name (src/tools/atlas/hashedArt.ts), and the game reads the names from the
+// ART_FILES_MODULE map. The dev server's map is empty. The map is also written as
+// /art/art-files.json (ART_FILES_JSON), where the art gallery reads it; the dev server serves
+// it empty. Of the files under public/art/, a build copies only the pages and the files the
+// site's pages name (publicFilesPlugin).
 export function atlasPlugin(): Plugin & { api: AtlasPluginApi } {
   let artFiles: ArtFileMap = new Map();
   return {
@@ -69,17 +87,12 @@ export function atlasPlugin(): Plugin & { api: AtlasPluginApi } {
         const kB = (atlas.files.get(file)?.length ?? 0) / 1024;
         logger.info(`atlas: ${file} ${width}x${height}, ${kB.toFixed(1)} kB (${group})`);
       }
-      const hashed = await hashGameArt(
-        readArt,
-        {
-          art: DOM_ART_KEYS,
-          dim: DOM_DIM_ART_KEYS,
-          disabled: DOM_DISABLED_ART_KEYS,
-          grey: DOM_CHOICE_CARD_ART.grey,
-        },
-        art,
-        atlas,
-      );
+      const hashed = await hashGameArt(readArt, DOM_KEYS, art, atlas, decoded);
+      for (const { path, source } of hashed.filter(({ path }) =>
+        path.startsWith(`${DOM_SHEET_DIR}/`),
+      )) {
+        logger.info(`dom sheet: ${path}, ${(source.length / 1024).toFixed(1)} kB`);
+      }
       for (const { fileName, source } of hashed) {
         this.emitFile({ fileName, source, type: "asset" });
       }
@@ -90,25 +103,43 @@ export function atlasPlugin(): Plugin & { api: AtlasPluginApi } {
         type: "asset",
       });
     },
-    // The dev server serves each grey and dimmed copy the HTML interface draws
-    // (DOM_DISABLED_ART_KEYS, DOM_DIM_ART_KEYS) at its path under /art/, made from the files on
-    // disk as a build makes it, and ART_FILES_JSON empty.
+    // The dev server serves each DOM sheet's files at their paths under /art/, packed from the
+    // files on disk as a build packs them, each sheet once until a file under public/art/
+    // changes, and ART_FILES_JSON empty.
     configureServer(server: ViteDevServer) {
       const artDir = `${server.config.publicDir}/${ART_DIR}`;
       const prefix = `${server.config.base}${ART_DIR}/`;
-      const keys = new Map(
-        artCopies({
-          art: DOM_ART_KEYS,
-          dim: DOM_DIM_ART_KEYS,
-          disabled: DOM_DISABLED_ART_KEYS,
-          grey: DOM_CHOICE_CARD_ART.grey,
-        }).flatMap(([copy, copied]) =>
-          [...copied].flatMap((key) =>
-            (["image", "sheet"] as const).map((kind) => [copy.path(kind, key), { copy, key }]),
-          ),
-        ),
-      );
+      const sheetPrefix = `${prefix}${DOM_SHEET_DIR}/`;
+      const keys = { copies: artCopies(DOM_KEYS), sheets: DOM_SHEET_KEYS };
+      checkDomCopies(keys);
       const readArt = async (path: string) => new Uint8Array(await readFile(`${artDir}/${path}`));
+      const built = new Map<DomSheet, Promise<Map<string, Uint8Array>>>();
+      server.watcher.on("all", (_event, file) => {
+        if (file.startsWith(`${artDir}/`)) {
+          built.clear();
+        }
+      });
+      // A file's sheet: the longest sheet name its name is or starts a copy's name with.
+      const sheetOf = (name: string) =>
+        [...DOM_SHEETS]
+          .sort((a, b) => b.length - a.length)
+          .find((sheet) => name === sheet || name.startsWith(`${sheet}-`));
+      const filesOf = (sheet: DomSheet) => {
+        let files = built.get(sheet);
+        if (files === undefined) {
+          files = readArt(ART_MANIFEST).then((bytes) =>
+            buildDomSheet(
+              readArt,
+              parseManifest(JSON.parse(new TextDecoder().decode(bytes))),
+              keys,
+              sheet,
+            ),
+          );
+          files.catch(() => built.delete(sheet));
+          built.set(sheet, files);
+        }
+        return files;
+      };
       server.middlewares.use((request, response, next) => {
         const url = request.url?.split("?")[0] ?? "";
         if (url === `${prefix}${ART_FILES_JSON}`) {
@@ -116,18 +147,25 @@ export function atlasPlugin(): Plugin & { api: AtlasPluginApi } {
           response.end("{}");
           return;
         }
-        const made = url.startsWith(prefix) ? keys.get(url.slice(prefix.length)) : undefined;
-        if (made === undefined) {
+        const name = url.startsWith(sheetPrefix) ? url.slice(sheetPrefix.length) : "";
+        const match = /^([a-z-]+)\.(json|webp)$/.exec(name);
+        const sheet = match === null ? undefined : sheetOf(match[1]!);
+        if (match === null || sheet === undefined) {
           next();
           return;
         }
-        void (async () => {
-          const text = new TextDecoder().decode(await readArt(ART_MANIFEST));
-          const manifest = parseManifest(JSON.parse(text));
-          const { source } = await artCopyFile(readArt, manifest, made.copy, made.key);
-          response.setHeader("Content-Type", "image/png");
-          response.end(source);
-        })().catch(next);
+        void filesOf(sheet)
+          .then((files) => {
+            const source = files.get(`${DOM_SHEET_DIR}/${name}`);
+            if (source === undefined) {
+              next();
+              return;
+            }
+            response.setHeader("Content-Type", CONTENT_TYPES[match[2]!]!);
+            response.setHeader("Cache-Control", "no-store");
+            response.end(source);
+          })
+          .catch(next);
       });
     },
     load(id) {

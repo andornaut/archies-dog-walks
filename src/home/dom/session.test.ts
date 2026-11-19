@@ -5,6 +5,7 @@ import { describe, expect, it, vi } from "vitest";
 import { gameData } from "../../data/index.ts";
 import { FakeDocument, type FakeElement, fakeLayer } from "../../testing/fakeDom.ts";
 import { gameFont } from "../../testing/fontInk.ts";
+import { ownArtFrames } from "../../testing/ownArtFrames.ts";
 import { domScale } from "../../ui/domScale.ts";
 import { homeSpeechView } from "../speechView.ts";
 import type { NativeHomeView } from "./screen.ts";
@@ -148,7 +149,7 @@ describe("native home visit", () => {
           const png = readFileSync(`public/art/images/${key}.png`);
           return { height: png.readUInt32BE(20), width: png.readUInt32BE(16) };
         },
-        loadSheet: vi.fn(),
+        loadSheet: vi.fn(async (path: string) => ownArtFrames(path)),
       },
       fonts,
       () => undefined,

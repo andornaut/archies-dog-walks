@@ -7,6 +7,7 @@ import { gameData } from "../../data/index.ts";
 import { SLICES } from "../../data/layout.ts";
 import { FakeDocument, type FakeElement } from "../../testing/fakeDom.ts";
 import { fontInk, fontInkRows, gameFont } from "../../testing/fontInk.ts";
+import { ownArtFrames } from "../../testing/ownArtFrames.ts";
 import { newPlayerSave, testContext } from "../../testing/saves.ts";
 import { setRampDimmed } from "../../ui/dom/rampDim.ts";
 import { sheetFrame } from "../../ui/dom/sheetFrames.ts";
@@ -26,7 +27,7 @@ const source = {
     const png = readFileSync(`public/art/images/${key}.png`);
     return { height: png.readUInt32BE(20), width: png.readUInt32BE(16) };
   },
-  loadSheet: async (path: string) => JSON.parse(readFileSync(`public/art/${path}`, "utf8")),
+  loadSheet: async (path: string) => ownArtFrames(path),
 };
 const viewport = { height: 844, width: 390, x: 0, y: 0 };
 

@@ -7,8 +7,8 @@ import { MENU_TEXT } from "../data/menuText.ts";
 vi.mock("@andornaut/game-kit/runtime/web/crash/dom/crashScreen", () => ({
   installCrashScreen: vi.fn(),
 }));
-vi.mock("virtual:art-files", () => ({
-  default: new Map([["sprites/face-dog-archie.png", "assets/art/face-dog-archie-test.png"]]),
+vi.mock("virtual:adw-crash-art", () => ({
+  default: { chrome: "data:chrome", pose: "data:pose", sound: "data:sound" },
 }));
 
 afterEach(() => {
@@ -41,7 +41,7 @@ it("installs the kit crash screen with the game words, palette and portrait", as
     ["--crash-paper", `#${palette.cream.hex}`],
     ["--crash-paper-lip", `#${palette.tan.hex}`],
     ["--crash-paper-text", `#${palette.plum.hex}`],
-    ["--crash-pose-image", 'url("/assets/art/face-dog-archie-test.png")'],
+    ["--crash-pose-image", 'url("data:pose")'],
   ]);
 });
 

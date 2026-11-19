@@ -207,7 +207,7 @@ it("paints every wrapped shop message line without changing its plate or native 
   screen.destroy();
 });
 
-it("frames the shop message with the flat ui-hint image, loading no sheet for it", async () => {
+it("frames the shop message with the flat ui-hint image's one frame, loaded once", async () => {
   const requested: string[] = [];
   const loadSheet = (url: string) => {
     requested.push(url);
@@ -221,6 +221,8 @@ it("frames the shop message with the flat ui-hint image, loading no sheet for it
     message: { lines: [], rect: { height: 50, width: 300, x: 24, y: 160 } },
   });
   await settle();
-  expect(requested.slice(before).some((url) => url.includes("ui-hint"))).toBe(false);
+  expect(requested.slice(before).filter((url) => url.includes("ui-hint"))).toEqual([
+    "/art/images/ui-hint.json",
+  ]);
   screen.destroy();
 });

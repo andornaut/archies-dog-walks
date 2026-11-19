@@ -1,5 +1,3 @@
-import { readFileSync } from "node:fs";
-
 import { fontMetrics } from "@andornaut/game-kit/runtime/text/bitmapFont";
 import { PENDING_ATTRIBUTE } from "@andornaut/game-kit/runtime/web/ui/dom/imageReady";
 import { describe, expect, it, vi } from "vitest";
@@ -12,6 +10,7 @@ import {
   type FakeTarget,
 } from "../../testing/fakeDom.ts";
 import { fontInk, fontInkRows, gameFont } from "../../testing/fontInk.ts";
+import { ownArtFrames } from "../../testing/ownArtFrames.ts";
 import { BUTTON_SIZE } from "../buttonGeometry.ts";
 import { domScale, fontPixel, gridRect } from "../domScale.ts";
 import { TOP_BAR_FACE, TOP_BAR_TRIM, TOP_BAR_WELL } from "../topBarTrim.ts";
@@ -57,7 +56,7 @@ function fixture(
     layer,
     {
       artUrl: (path) => path,
-      loadSheet: async (path) => JSON.parse(readFileSync(`public/art/${path}`, "utf8")),
+      loadSheet: async (path) => ownArtFrames(path),
     },
     gameFont("font-title"),
     {

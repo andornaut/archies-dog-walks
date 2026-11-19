@@ -8,10 +8,9 @@ import "@andornaut/game-kit/runtime/web/crash/dom/crash.css";
 import "./crash.css";
 
 import { installCrashScreen } from "@andornaut/game-kit/runtime/web/crash/dom/crashScreen";
-import artFiles from "virtual:art-files";
+import crashArt from "virtual:adw-crash-art";
 
 import palette from "../../shared/palette.json" with { type: "json" };
-import { artFileUrl } from "../assets/artUrl.ts";
 import { BUILD_LABEL } from "../buildLabel.ts";
 import { MENU_TEXT } from "../data/menuText.ts";
 import { pageSearch } from "../dev/devTools.ts";
@@ -31,11 +30,11 @@ for (const [name, value] of [
   document.documentElement.style.setProperty(`--crash-${name}`, value);
 }
 
-// Archie's upset portrait is a static decorative CSS crop, loaded without Phaser or the canvas.
-const sadDogUrl = artFileUrl(import.meta.env.BASE_URL, artFiles, "sprites/face-dog-archie.png");
+// Archie's upset portrait is a static decorative CSS crop, inlined, so it shows without Phaser,
+// the canvas or a sheet.
 document.documentElement.style.setProperty(
   "--crash-pose-image",
-  `url(${JSON.stringify(sadDogUrl)})`,
+  `url(${JSON.stringify(crashArt.pose)})`,
 );
 
 // Reload uses the same green primary face and forest lip as canvas actions.

@@ -1,15 +1,17 @@
-import { createButtonSkin } from "@andornaut/game-kit/runtime/web/ui/dom/buttonSkin";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { createPressAdmission } from "../../pressAdmission.ts";
 import { FakeDocument } from "../../testing/fakeDom.ts";
+import { createSheetButtonSkin } from "./domCuts.ts";
 import { mountUiLayer, UI_LAYER_ID, WEB_FONTS } from "./uiLayer.ts";
 
-vi.mock("@andornaut/game-kit/runtime/web/ui/dom/buttonSkin", () => ({
-  createButtonSkin: vi.fn(() => ({
+vi.mock("./domCuts.ts", () => ({
+  createSheetButtonSkin: vi.fn(() => ({
     apply: () => Promise.resolve([]),
     frames: Promise.resolve(new Map()),
+    ready: Promise.resolve(),
   })),
+  cutDomArt: vi.fn(() => Promise.resolve("blob:cut")),
 }));
 
 afterEach(() => {
@@ -250,14 +252,14 @@ it("notifies loading immediately and keeps a good skin when retrying unrelated H
     setTimeout(resolve, 0);
   });
   expect(layer.failedAssets()).toEqual(["/hud-required.png"]);
-  const created = vi.mocked(createButtonSkin).mock.calls.length;
+  const created = vi.mocked(createSheetButtonSkin).mock.calls.length;
   layer.retryAssets();
   expect(layer.buttonSkin).toBe(skin);
   await new Promise<void>((resolve) => {
     setTimeout(resolve, 0);
   });
   expect(layer.ready()).toBe(true);
-  expect(vi.mocked(createButtonSkin).mock.calls.length).toBe(created);
+  expect(vi.mocked(createSheetButtonSkin).mock.calls.length).toBe(created);
   off();
   layer.dispose();
 });

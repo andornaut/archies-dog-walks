@@ -3,7 +3,7 @@ import { inkWidth } from "@andornaut/game-kit/runtime/text/bitmapFont";
 import { fittingText } from "@andornaut/game-kit/runtime/text/textFit";
 import { Core, Scene } from "phaser";
 
-import { artUrl } from "../assets/artFiles.ts";
+import { domArtUrl } from "../assets/domArtFiles.ts";
 import { gameData } from "../data/index.ts";
 import { SCREEN_CONFIG, SCREEN_LAYOUT } from "../data/screen.ts";
 import type { AchievementId, DebuffId, DogId, HintTrigger } from "../data/types.ts";
@@ -218,7 +218,7 @@ export class HudScene extends Scene {
     if (layer === undefined || body === undefined || title === undefined || display === undefined) {
       throw new Error("The native HUD requires its prepared UI context");
     }
-    const source = { artUrl, loadSheet };
+    const source = { artUrl: domArtUrl, loadSheet };
     const fonts = { body, display, title };
     const colours = (index: number) => {
       const kind = pillKind(index);

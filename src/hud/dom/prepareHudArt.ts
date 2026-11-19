@@ -7,15 +7,15 @@ export interface HudArtDescriptor {
   readonly kind: "image" | "sheet";
 }
 
-// The same URL declaration serves optional prewarming and the strict startup resource barrier.
+// The same URL declaration serves optional prewarming and the strict startup resource barrier:
+// each key's frames and its sheet's image. The barrier waits for each sheet's JSON and image
+// once, however many of its keys are asked for.
 export function hudArtResources(
   source: Pick<DomArtSource, "artUrl">,
   assets: readonly HudArtDescriptor[],
 ): readonly RequiredAsset[] {
   const resources = assets.flatMap(({ key, kind }) => [
-    ...(kind === "sheet"
-      ? [{ kind: "sheet" as const, url: source.artUrl(domArtPath(kind, key, "json")) }]
-      : []),
+    { kind: "sheet" as const, url: source.artUrl(domArtPath(kind, key, "json")) },
     { kind: "image" as const, url: source.artUrl(domArtPath(kind, key, "png")) },
   ]);
   return [...new Map(resources.map((resource) => [resource.url, resource])).values()];

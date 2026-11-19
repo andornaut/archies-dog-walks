@@ -1,5 +1,3 @@
-import { readFileSync } from "node:fs";
-
 import { advanceWidth, laidGlyphs } from "@andornaut/game-kit/runtime/text/bitmapFont";
 import { describe, expect, it } from "vitest";
 
@@ -8,6 +6,7 @@ import { gameData } from "../../data/index.ts";
 import { SCREEN_LAYOUT } from "../../data/screen.ts";
 import { FakeDocument, type FakeElement, fakeLayer } from "../../testing/fakeDom.ts";
 import { gameFont } from "../../testing/fontInk.ts";
+import { ownArtFrames } from "../../testing/ownArtFrames.ts";
 import { testState } from "../../testing/runState.ts";
 import { shownText } from "../../ui/dom/pixelLine.ts";
 import { sheetFrame, sheetTagFrames } from "../../ui/dom/sheetFrames.ts";
@@ -23,7 +22,7 @@ const clock = (momentNow = 0, now = momentNow): HudCardsContext => ({
   ownedSlots: 3,
   reducedMotion: false,
 });
-const json = (path: string): unknown => JSON.parse(readFileSync(`public/art/${path}`, "utf8"));
+const json = (path: string): unknown => ownArtFrames(path);
 const flush = () =>
   new Promise<void>((resolve) => {
     setTimeout(resolve, 0);

@@ -1,5 +1,5 @@
-import { artUrl } from "../../assets/artFiles.ts";
 import { domArtPath } from "../../assets/domArt.ts";
+import { domArtUrl } from "../../assets/domArtFiles.ts";
 import {
   loadedSheet,
   type SheetFrame,
@@ -12,7 +12,7 @@ import { loopFrame } from "../feedback.ts";
 export function nativeFrames() {
   const tags = new Map<string, { json: unknown; frames: TagFrame[] }>();
   return (key: string, tag: string, reduced: boolean, now: number): SheetFrame | undefined => {
-    const url = artUrl(domArtPath("sheet", key, "json"));
+    const url = domArtUrl(domArtPath("sheet", key, "json"));
     const json = loadedSheet(url);
     if (json === undefined) {
       return undefined;

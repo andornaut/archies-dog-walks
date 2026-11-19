@@ -2,7 +2,7 @@ import { type Point, type Rect } from "@andornaut/game-kit/runtime/rect";
 import { pageToGame } from "@andornaut/game-kit/runtime/view/pagePoint";
 import { Core, type Scene, Scenes } from "phaser";
 
-import { artUrl } from "../assets/artFiles.ts";
+import { domArtUrl } from "../assets/domArtFiles.ts";
 import { gameData } from "../data/index.ts";
 import { SCREEN_CONFIG } from "../data/screen.ts";
 import type { HelpView } from "../help/helpView.ts";
@@ -313,7 +313,7 @@ export function addHtmlBadgeCard(
 export function htmlArtInput(place: NonNullable<ReturnType<typeof htmlPanelPlace>>) {
   return {
     ...htmlPanelInput(place),
-    artUrl,
+    artUrl: domArtUrl,
     loadSheet,
     pillColours: (index: number) => {
       const kind = pillKind(index);

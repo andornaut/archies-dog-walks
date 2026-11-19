@@ -1,6 +1,7 @@
 import "./muteControl.css";
 
-import { artUrl } from "../../assets/artFiles.ts";
+import crashArt from "virtual:adw-crash-art";
+
 import { MENU_TEXT } from "../../data/menuText.ts";
 import { SCREEN_CONFIG } from "../../data/screen.ts";
 import { PALETTE } from "../palette.ts";
@@ -8,7 +9,8 @@ import { topSectionLayout } from "../topSection.ts";
 import { bindGameAction, bindGameActionHolds } from "./actionBinding.ts";
 
 // Renderer failure uses the same device preference as Phaser's soundboard.
-// The control needs neither a compatible progress save nor loaded game fonts or textures.
+// The control needs neither a compatible progress save nor loaded game fonts or textures, and
+// draws its art inlined (virtual:adw-crash-art) rather than from a sheet.
 export interface MuteControlSettings {
   readonly current: { readonly muted: boolean };
   setMuted(muted: boolean): void;
@@ -40,14 +42,14 @@ export function mountMuteControl(settings: MuteControlSettings, parent: HTMLElem
   });
   button.style.setProperty("--mute-face-x", `${control.face.x - control.hit.x}px`);
   button.style.setProperty("--mute-face-y", `${control.face.y - control.hit.y}px`);
-  button.style.setProperty("--mute-chrome", `url("${artUrl("images/ui-icon-button-normal.png")}")`);
+  button.style.setProperty("--mute-chrome", `url("${crashArt.chrome}")`);
   const image = doc.createElement("img");
   image.alt = "";
   image.onload = () => {
     icon.classList.add("adw-standalone-mute-native");
     icon.style.setProperty("--mute-sprite", `url("${image.src}")`);
   };
-  image.src = artUrl("sprites/icon-sound.png");
+  image.src = crashArt.sound;
   const show = () => {
     const { muted } = settings.current;
     button.setAttribute("aria-pressed", String(muted));

@@ -103,8 +103,8 @@ function fromRight(scale: DomScale, frame: Rect, x: number): number {
   return box.left + box.width - (frame.x + frame.width - x) * artPixel(scale);
 }
 
-// Art from its top-left, each art pixel art.scale times artPixel device pixels: an image's whole
-// file, or a sheet's frame, hidden until the sheet's JSON says where the frame is. Art in a box
+// Art from its top-left, each art pixel art.scale times artPixel device pixels: an image's one
+// frame, or a sheet's frame, hidden until its frames say where on its sheet it is. Art in a box
 // sits whole art pixels into it, rounded down where it is centred on a half pixel.
 export function artPart(
   doc: Document,
@@ -121,7 +121,6 @@ export function artPart(
   const kind = art.sheet === undefined ? "image" : "sheet";
   element.style.backgroundImage = `url("${input.artUrl(domArtPath(kind, art.key, "png"))}")`;
   const urls = [input.artUrl(domArtPath(kind, art.key, "png"))];
-  let ready: Promise<readonly string[]> = Promise.resolve(urls);
   let frame: SheetFrame | undefined;
   let scale: DomScale | undefined;
   const place = (at: DomScale) => {
@@ -153,27 +152,27 @@ export function artPart(
       width,
     });
     if (frame !== undefined) {
-      element.style.backgroundSize = `${frame.sheet.width * pixel}px ${frame.sheet.height * pixel}px`;
-      element.style.backgroundPosition = `${-frame.x * pixel}px ${-frame.y * pixel}px`;
+      // An image fills its box; a sheet's frame shows at its own size.
+      const across = kind === "image" ? width / frame.width : pixel;
+      const down = kind === "image" ? height / frame.height : pixel;
+      element.style.backgroundSize = `${frame.sheet.width * across}px ${frame.sheet.height * down}px`;
+      element.style.backgroundPosition = `${-frame.x * across}px ${-frame.y * down}px`;
     }
   };
-  if (art.sheet !== undefined) {
-    const { tag } = art.sheet;
-    element.style.visibility = "hidden";
-    ready = input
-      .loadSheet(input.artUrl(domArtPath("sheet", art.key, "json")))
-      .then(
-        (json) => {
-          frame = sheetFrame(json, tag);
-          element.style.visibility = "";
-          if (scale !== undefined) {
-            place(scale);
-          }
-        },
-        (error: unknown) => console.error(`The ${art.key} sheet did not load.`, error),
-      )
-      .then(() => urls);
-  }
+  element.style.visibility = "hidden";
+  const ready = input
+    .loadSheet(input.artUrl(domArtPath(kind, art.key, "json")))
+    .then(
+      (json) => {
+        frame = sheetFrame(json, art.sheet?.tag);
+        element.style.visibility = "";
+        if (scale !== undefined) {
+          place(scale);
+        }
+      },
+      (error: unknown) => console.error(`The ${art.key} sheet did not load.`, error),
+    )
+    .then(() => urls);
   return { element, place, ready };
 }
 

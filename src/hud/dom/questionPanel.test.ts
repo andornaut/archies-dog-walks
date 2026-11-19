@@ -401,7 +401,12 @@ describe("an HTML zone celebration", () => {
         closeLabel: gameData.menuText.common.close,
         fonts: { body: gameFont("font-body"), title: gameFont("font-title") },
         label: "New walker!",
-        loadSheet: () => Promise.reject(new Error("no sheets")),
+        // Each icon's one frame on its sheet.
+        loadSheet: () =>
+          Promise.resolve({
+            frames: { "0": { frame: { h: 16, w: 16, x: 0, y: 0 } } },
+            meta: { size: { h: 16, w: 16 } },
+          }),
         pillColours: () => undefined,
         press: () => undefined,
         toGame: (point) => point,

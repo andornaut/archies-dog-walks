@@ -4,7 +4,7 @@ import { containsPoint, insetRect, type Rect } from "@andornaut/game-kit/runtime
 import { fontMetrics } from "@andornaut/game-kit/runtime/text/bitmapFont";
 import { Core, type GameObjects, Scene, Scenes, type Time } from "phaser";
 
-import { artUrl } from "../assets/artFiles.ts";
+import { domArtUrl } from "../assets/domArtFiles.ts";
 import { gearSmallIconKey } from "../assets/iconKeys.ts";
 import { MANIFEST_CACHE_KEY } from "../assets/phaser/manifestArt.ts";
 import { dogSpriteKey, gearIconKey, walkerPortraitKey } from "../assets/spriteKeys.ts";
@@ -1374,7 +1374,7 @@ export class StartScene extends Scene {
       | undefined;
     const sheetKeys = new Set((manifest?.sprites ?? []).map(({ key }) => key));
     const source = {
-      artUrl,
+      artUrl: domArtUrl,
       disabledKey: disabledArtKey,
       hasArt: (key: string) => this.textures.exists(key),
       imageSize: (key: string) => {

@@ -7,6 +7,7 @@ import { SCREEN_LAYOUT } from "../../data/screen.ts";
 import { helpPicture } from "../../help/helpPictures.ts";
 import { FakeDocument, fakeLayer } from "../../testing/fakeDom.ts";
 import { gameFont } from "../../testing/fontInk.ts";
+import { ownArtFrames } from "../../testing/ownArtFrames.ts";
 import { domScale } from "../../ui/domScale.ts";
 import { showChoiceCards } from "./choiceCards.ts";
 
@@ -46,11 +47,7 @@ it.each(["cards", "zones"] as const)(
       loadSheet: (path) => {
         let request = requests.get(path);
         if (request === undefined) {
-          request = Promise.resolve(
-            JSON.parse(
-              readFileSync(new URL(`../../../public/art/${path}`, import.meta.url), "utf8"),
-            ) as unknown,
-          );
+          request = Promise.resolve(ownArtFrames(path));
           requests.set(path, request);
         }
         return request;

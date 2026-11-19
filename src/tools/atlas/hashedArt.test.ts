@@ -1,10 +1,18 @@
+import { blankImage } from "@andornaut/art-kit/build/rgbaImage";
 import { contentHash } from "@andornaut/game-kit/build/contentHash";
 import { beforeAll, describe, expect, it } from "vitest";
 
 import { ATLAS_MANIFEST_PATH, type AtlasManifest } from "../../assets/atlasManifest.ts";
 import type { AssetManifest } from "../../assets/manifest.ts";
 import { ART_MANIFEST } from "../artManifest.ts";
-import { artFilesJson, type HashedArtFile, hashedArtFileName, hashGameArt } from "./hashedArt.ts";
+import { encodePng } from "./atlasBuild.ts";
+import {
+  artFilesJson,
+  type DomArtKeys,
+  type HashedArtFile,
+  hashedArtFileName,
+  hashGameArt,
+} from "./hashedArt.ts";
 
 describe("hashedArtFileName", () => {
   it.each([
@@ -52,37 +60,43 @@ const atlas: AtlasManifest = {
   })),
 };
 const page = new Uint8Array([7, 8, 9]);
+const panel = encodePng(blankImage(2, 2));
 const readArt = async (path: string) =>
-  new TextEncoder().encode(
-    path.endsWith(".json") ? JSON.stringify({ source: path }, null, 2) : `source:${path}`,
-  );
+  path === "images/ui-panel.png"
+    ? panel
+    : new TextEncoder().encode(
+        path.endsWith(".json") ? JSON.stringify({ source: path }, null, 2) : `source:${path}`,
+      );
+const none = new Set<string>();
+const dom: DomArtKeys = {
+  dim: none,
+  disabled: none,
+  grey: none,
+  sheets: new Map([["ui-panel", "dom-chrome"]]),
+};
 
-// Packed and unpacked entries exercise each asset category; the shared PNG must emit once, and
-// the HTML interface's packed art and the web fonts emit as files of their own.
+// Packed and unpacked entries exercise each asset category; the shared PNG must emit once, the
+// HTML interface's art emits as its DOM sheet, and the web fonts emit as files of their own.
 describe("hashed game art", () => {
   let files: HashedArtFile[];
   beforeAll(async () => {
-    files = await hashGameArt(
-      readArt,
-      { art: new Set(["ui-panel"]), dim: new Set(), disabled: new Set(), grey: new Set() },
-      manifest,
-      {
-        files: new Map([["atlas/ui-0.webp", page]]),
-        manifest: atlas,
-      },
-    );
+    files = await hashGameArt(readArt, dom, manifest, {
+      files: new Map([["atlas/ui-0.webp", page]]),
+      manifest: atlas,
+    });
   });
 
-  it("emits every required path once in sorted order without packed canvas-only files", () => {
+  it("emits every required path once in sorted order without packed own files", () => {
     expect(files.map(({ path }) => path)).toEqual([
       "atlas-manifest.json",
       "atlas/ui-0.webp",
+      "dom/dom-chrome.json",
+      "dom/dom-chrome.webp",
       "fonts/own.fnt",
       "fonts/own.png",
       "fonts/own.woff",
       "fonts/packed.fnt",
       "images/own.png",
-      "images/ui-panel.png",
       "manifest.json",
       "sounds/sound.m4a",
       "sounds/sound.ogg",
@@ -93,20 +107,22 @@ describe("hashed game art", () => {
 
   it("hashes compact metadata and preserves every non-JSON asset byte", async () => {
     await Promise.all(
-      files.map(async (file) => {
-        const expected =
-          file.path === ATLAS_MANIFEST_PATH
-            ? new TextEncoder().encode(JSON.stringify(atlas))
-            : file.path === "atlas/ui-0.webp"
-              ? page
-              : file.path.endsWith(".json")
-                ? new TextEncoder().encode(JSON.stringify({ source: file.path }))
-                : await readArt(file.path);
-        expect(file.source, file.path).toEqual(expected);
-        expect(file.fileName, file.path).toBe(
-          hashedArtFileName(file.path, contentHash(file.source)),
-        );
-      }),
+      files
+        .filter(({ path }) => !path.startsWith("dom/"))
+        .map(async (file) => {
+          const expected =
+            file.path === ATLAS_MANIFEST_PATH
+              ? new TextEncoder().encode(JSON.stringify(atlas))
+              : file.path === "atlas/ui-0.webp"
+                ? page
+                : file.path.endsWith(".json")
+                  ? new TextEncoder().encode(JSON.stringify({ source: file.path }))
+                  : await readArt(file.path);
+          expect(file.source, file.path).toEqual(expected);
+          expect(file.fileName, file.path).toBe(
+            hashedArtFileName(file.path, contentHash(file.source)),
+          );
+        }),
     );
     expect(files.some(({ path }) => path === ART_MANIFEST)).toBe(true);
   });
@@ -120,7 +136,7 @@ describe("hashed game art", () => {
     const expected = String.raw`{"unknown":"  spaced \\ \t \"Quoted\"  ","negativeZero":-0,"exponent":1e+20}`;
     const compacted = await hashGameArt(
       async (path) => (path === ART_MANIFEST ? new TextEncoder().encode(text) : readArt(path)),
-      { art: new Set(["ui-panel"]), dim: new Set(), disabled: new Set(), grey: new Set() },
+      dom,
       manifest,
       { files: new Map([["atlas/ui-0.webp", page]]), manifest: atlas },
     );
@@ -139,30 +155,20 @@ describe("hashed game art", () => {
       hashGameArt(
         async (path) =>
           path === ART_MANIFEST ? new TextEncoder().encode("{ broken }") : readArt(path),
-        { art: new Set(), dim: new Set(), disabled: new Set(), grey: new Set() },
+        { ...dom, sheets: new Map() },
         manifest,
         { files: new Map([["atlas/ui-0.webp", page]]), manifest: atlas },
       ),
     ).rejects.toBeInstanceOf(SyntaxError);
   });
 
-  const none = new Set<string>();
   it.each([
-    [
-      "a key with no image or sprite",
-      { art: new Set(["missing"]), dim: none, disabled: none, grey: none },
-    ],
-    [
-      "a grey copy of a key with no image or sprite",
-      { art: none, dim: none, disabled: new Set(["missing"]), grey: none },
-    ],
-    [
-      "a dimmed copy of a key with no image or sprite",
-      { art: none, dim: new Set(["missing"]), disabled: none, grey: none },
-    ],
-  ])("fails the build for %s the HTML interface draws", async (_case, dom) => {
+    ["a key with no image or sprite", { sheets: new Map([["missing", "dom-chrome" as const]]) }],
+    ["a grey copy of a key it does not draw", { disabled: new Set(["missing"]) }],
+    ["a dimmed copy of a key it does not draw", { dim: new Set(["missing"]) }],
+  ] as const)("fails the build for %s the HTML interface draws", async (_case, keys) => {
     await expect(
-      hashGameArt(readArt, dom, manifest, { files: new Map(), manifest: atlas }),
+      hashGameArt(readArt, { ...dom, ...keys }, manifest, { files: new Map(), manifest: atlas }),
     ).rejects.toThrow(/missing/);
   });
 });

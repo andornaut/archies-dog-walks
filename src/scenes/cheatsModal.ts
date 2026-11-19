@@ -2,7 +2,7 @@ import { assertNever } from "@andornaut/game-kit/runtime/assertNever";
 import type { Rect } from "@andornaut/game-kit/runtime/rect";
 import type { Scene } from "phaser";
 
-import { artUrl } from "../assets/artFiles.ts";
+import { domArtUrl } from "../assets/domArtFiles.ts";
 import { gameData } from "../data/index.ts";
 import { SCREEN_CONFIG, SCREEN_LAYOUT } from "../data/screen.ts";
 import {
@@ -257,7 +257,7 @@ export function openCheatsModal(
     showCheats(place.layer, {
       ...htmlPanelInput(place),
       act,
-      artUrl,
+      artUrl: domArtUrl,
       close,
       loadSheet,
       reducedMotion: () => currentSettings(scene).reducedMotion,

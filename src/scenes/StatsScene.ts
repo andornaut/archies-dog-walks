@@ -2,7 +2,7 @@ import { clampIndex } from "@andornaut/game-kit/runtime/arrays";
 import { containsPoint, type Point, type Rect } from "@andornaut/game-kit/runtime/rect";
 import { Core, Scene } from "phaser";
 
-import { artUrl } from "../assets/artFiles.ts";
+import { domArtUrl } from "../assets/domArtFiles.ts";
 import { gameData } from "../data/index.ts";
 import { type BadgeView, badgeWall } from "../home/badgesView.ts";
 import { FEEDBACK } from "../home/feedback.ts";
@@ -300,7 +300,7 @@ export class StatsScene extends Scene {
         this,
         showLogbook(place.layer, {
           ...panelInput,
-          artUrl,
+          artUrl: domArtUrl,
           everyFrame: (step) => {
             this.game.events.on(Core.Events.PRE_RENDER, step);
             return () => this.game.events.off(Core.Events.PRE_RENDER, step);
