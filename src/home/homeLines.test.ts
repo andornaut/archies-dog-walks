@@ -1,5 +1,6 @@
 import { fillNames } from "@andornaut/game-kit/runtime/lines";
-import type { RequiredUpdateState } from "@andornaut/game-kit/runtime/web/pwa/updateReady";
+import type { NetworkPlayNotice } from "@andornaut/game-kit/runtime/web/pwa/buildContract";
+import type { RequiredUpdateState } from "@andornaut/game-kit/runtime/web/pwa/dom/launch";
 import { describe, expect, it } from "vitest";
 
 import { gameData } from "../data/index.ts";
@@ -15,6 +16,7 @@ import {
   type HomeAction,
   HOW_TO_WALKS,
   messageLine,
+  networkPlayNotice,
   noticeOrSpeech,
   packBonusLine,
   requiredNotice,
@@ -268,6 +270,16 @@ describe("requiredNotice", () => {
     ["unavailable", [gameData.homeText.noticeUpdateNeeded]],
   ])("says for a required update %s %j", (state, expected) => {
     expect(requiredNotice(gameData.homeText, state)).toEqual(expected);
+  });
+});
+
+describe("networkPlayNotice", () => {
+  it.each<[NetworkPlayNotice["reason"] | undefined, string[]]>([
+    [undefined, []],
+    ["quota", [gameData.homeText.noticeOnlineQuota]],
+    ["unsupported", [gameData.homeText.noticeOnlineUnsupported]],
+  ])("says for network play because of %s %j", (reason, expected) => {
+    expect(networkPlayNotice(gameData.homeText, reason)).toEqual(expected);
   });
 });
 

@@ -17,6 +17,7 @@ export const SCENE_KEYS = {
   shop: "shop",
   start: "start",
   stats: "stats",
+  update: "update",
   zoneCelebration: "zoneCelebration",
 } as const;
 

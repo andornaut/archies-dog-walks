@@ -193,6 +193,11 @@ export class ProfileSession {
     return this.write("save", () => this.stores.save.save(document));
   }
 
+  // Resolves once every change and checkpoint made so far has been written or has failed.
+  settled(): Promise<void> {
+    return this.writes;
+  }
+
   // Runs write after every write before it, and resolves once it has been made or has failed;
   // write resolves to undefined when it had nothing to write. With a newer version's save or
   // earned record stored, after a reset, or during a cheat session unless outside says the write

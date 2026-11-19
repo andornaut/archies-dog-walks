@@ -11,7 +11,11 @@ import {
 import { trackInputModality } from "@andornaut/game-kit/runtime/web/ui/dom/focusModality";
 
 import { loadingProgress } from "./loadingProgress.ts";
+import { startLaunch } from "./pwa/launch.ts";
+import { launchGame } from "./pwa/launchGame.ts";
+import { launchProgress } from "./pwa/launchProgress.ts";
 import { mountDomLoadingBar } from "./ui/dom/domLoadingBar.ts";
+import { mountLaunchFailure } from "./ui/dom/launchFailure.ts";
 import { LOADING_TIMING } from "./ui/progressBar.ts";
 import { startupLoad, startupProgress } from "./ui/startupProgress.ts";
 
@@ -25,16 +29,28 @@ const gameProgress = createLayeredProgress(globalThis, LOADING_TIMING, {
   background: loadingProgress,
   foreground: nativeProgress,
 });
-const progress = createLayeredProgress(globalThis, LOADING_TIMING, {
+const startup = createLayeredProgress(globalThis, LOADING_TIMING, {
   background: gameProgress,
   foreground: startupProgress,
 });
+// The launch's one determinate run, a first install's download through boot's reads, shows over
+// everything else until boot hands over.
+const progress = createLayeredProgress(globalThis, LOADING_TIMING, {
+  background: startup,
+  foreground: launchProgress,
+});
 const loading = mountDomLoadingBar(progress, document.documentElement);
 
-// Module download and renderer setup have no measurable denominator.
-void import("./main.ts")
-  .then(({ startGame }) => startGame({ loading, nativeProgress }))
-  .catch((error: unknown) => {
-    startupLoad.finish();
-    throw error;
-  });
+// The launch decides first: a first visit installs the complete build, so the game's modules,
+// art and sounds then load from the installed build. Module download and renderer setup before
+// the launch reports have no measurable denominator.
+void launchGame(
+  startLaunch((retry) => mountLaunchFailure(retry, document.body)),
+  async () => {
+    const { startGame } = await import("./main.ts");
+    startGame({ loading, nativeProgress });
+  },
+).catch((error: unknown) => {
+  startupLoad.finish();
+  throw error;
+});

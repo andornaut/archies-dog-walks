@@ -4,15 +4,11 @@ import {
   LOADING_FAILURE_TEXT,
   type LoadingAttemptState,
 } from "@andornaut/game-kit/runtime/load/loadingAttempts";
-import {
-  type LoadingFailurePresentation,
-  mountLoadingFailure,
-} from "@andornaut/game-kit/runtime/web/progress/dom/loadingFailure";
+import { mountLoadingFailure } from "@andornaut/game-kit/runtime/web/progress/dom/loadingFailure";
 import { createModalLayer } from "@andornaut/game-kit/runtime/web/ui/dom/modalLayer";
 
-import { BUTTON_SIZE, MODAL_SPACING, MODAL_WIDTHS } from "../../data/layout.ts";
-import { PALETTE } from "../palette.ts";
 import { bindGameAction } from "./actionBinding.ts";
+import { loadingFailurePresentation } from "./loadingFailureStyle.ts";
 import { guardNativeInput } from "./modalLifecycle.ts";
 import type { UiLayer } from "./uiLayer.ts";
 
@@ -43,51 +39,7 @@ export function mountLoadingError(
   let close: (() => void) | undefined;
   let scope: ReturnType<UiLayer["input"]["open"]> | undefined;
   let disposed = false;
-  // Typography and inner panel spacing stay in CSS pixels; the panel's Large width, its screen
-  // margin and the normal action follow game fit.
-  const presentation = (): LoadingFailurePresentation => {
-    const unit = layer.scale().unit;
-    const colour = (value: number) => `#${value.toString(16).padStart(6, "0")}`;
-    return {
-      action: {
-        borderWidthPx: Math.max(1, unit),
-        heightPx: BUTTON_SIZE.compact.height * unit,
-        highlightHeightPx: Math.max(1, unit),
-        paddingBottomPx: 4 * unit,
-        paddingXPx: 12,
-        shadeHeightPx: 4 * unit,
-        widthPx: BUTTON_SIZE.compact.width * unit,
-      },
-      palette: {
-        action: colour(PALETTE.green),
-        actionText: colour(PALETTE.ink),
-        border: colour(PALETTE.ink),
-        highlight: colour(PALETTE.yellow),
-        lip: colour(PALETTE.tan),
-        panel: colour(PALETTE.cream),
-        shade: colour(PALETTE.forest),
-        shadow: colour(PALETTE.ink),
-        text: colour(PALETTE.plum),
-      },
-      panel: {
-        bodyActionGapPx: 24,
-        borderWidthPx: 1,
-        lipHeightPx: 4,
-        maxWidthPx: MODAL_WIDTHS.large * unit,
-        paddingBottomPx: 16,
-        paddingTopPx: 24,
-        paddingXPx: 16,
-        safeInsetPx: MODAL_SPACING.margin * unit,
-        shadowOffsetPx: 4,
-        titleBodyGapPx: 16,
-      },
-      text: {
-        action: { lineHeight: 1.2, sizePx: 18, weight: 700 },
-        body: { lineHeight: 1.45, sizePx: 18, weight: 400 },
-        title: { lineHeight: 1.2, sizePx: 24, weight: 700 },
-      },
-    };
-  };
+  const presentation = () => loadingFailurePresentation(layer.scale().unit);
   const failure = mountLoadingFailure(
     {
       onRetry: () => (!disposed && scope?.accepts() ? context.retry() : undefined),

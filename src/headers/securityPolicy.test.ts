@@ -1,4 +1,5 @@
 import { pageRules, pathMatches, servedPath } from "@andornaut/game-kit/build/securityHeaders";
+import { buildManifestUrl } from "@andornaut/game-kit/runtime/web/pwa/buildContract";
 import { isHashedAssetUrl } from "@andornaut/game-kit/runtime/web/pwa/cachePolicy";
 import { describe, expect, it } from "vitest";
 
@@ -47,9 +48,11 @@ describe("FILE_RULES", () => {
     ["/art/manifest.json", {}],
     ["/play/", { "Cache-Control": "public, max-age=0, must-revalidate, no-transform" }],
     ["/sw.js", {}],
+    ["/.game-kit/build.json", { "Cache-Control": "no-store" }],
+    [buildManifestUrl("0123456789abcdef"), immutable],
   ];
 
-  it("caches hashed build output for a year and serves font descriptors as XML", () => {
+  it("caches hashed output and manifests for a year, never the build pointer, and types fonts", () => {
     for (const [path, headers] of expected) {
       expect(headersAt(path), path).toEqual(headers);
     }

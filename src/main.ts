@@ -21,10 +21,7 @@ import { noteKeyPress } from "./input/keyNumbers.ts";
 import { bindPressAdmission } from "./input/phaser/pressAdmission.ts";
 import { lostTouches } from "./input/touches.ts";
 import { createPressAdmission } from "./pressAdmission.ts";
-import { pageFrameWatch, requiredUpdate, setOnHomeScreen, setupPhoneApp } from "./pwa/index.ts";
-import { offlineInstallation } from "./pwa/installationState.ts";
-import { launchGame } from "./pwa/launchGame.ts";
-import { createUpdateIdle } from "./pwa/updateIdle.ts";
+import { pageFrameWatch, setupPhoneApp } from "./pwa/index.ts";
 import { pageDeviceSettings } from "./save/settings.ts";
 import { BootScene } from "./scenes/BootScene.ts";
 import { CardScene } from "./scenes/CardScene.ts";
@@ -32,7 +29,6 @@ import { CelebrationScene } from "./scenes/CelebrationScene.ts";
 import { EndScene } from "./scenes/EndScene.ts";
 import { HelpPictureScene } from "./scenes/HelpPictureScene.ts";
 import { HelpScene } from "./scenes/HelpScene.ts";
-import { watchHomeScreen } from "./scenes/homeScreen.ts";
 import { HudScene } from "./scenes/HudScene.ts";
 import { pauseLoadingError } from "./scenes/loadingErrorPause.ts";
 import { MenuScene } from "./scenes/MenuScene.ts";
@@ -47,6 +43,7 @@ import { ShopScene } from "./scenes/ShopScene.ts";
 import { StartScene } from "./scenes/StartScene.ts";
 import { StatsScene } from "./scenes/StatsScene.ts";
 import { TapBurstScene } from "./scenes/TapBurstScene.ts";
+import { UpdateScene, watchUpdateOffer } from "./scenes/UpdateScene.ts";
 import { followWorldCameras } from "./scenes/worldCamera.ts";
 import { ZoneCelebrationScene } from "./scenes/ZoneCelebrationScene.ts";
 import type { LoadingBar } from "./ui/dom/domLoadingBar.ts";
@@ -62,7 +59,7 @@ const GAME_PARENT_ID = "game";
 
 // Scenes render in list order: the HUD over the road, cards, the zone celebration and the
 // pause menu over the HUD, help (its page's picture of the walk, HUD and card over it),
-// settings and stats over those.
+// settings and stats over those, and the Update now prompt over every screen.
 // Boot runs first and starts the start screen. The canvas clears to the page's ink, so launch
 // shows no rectangle before the loading screen's art; the walk fills its own ink.
 export interface GameStartup {
@@ -86,8 +83,8 @@ function bootGame(context: GameStartup): Game {
     scale: { autoCenter: Scale.CENTER_HORIZONTALLY, mode: Scale.NONE },
     // Scenes draw in this order. The Logbook and help, which the home top bar opens over the Pet
     // shop, come after it, help's pictures after help, the Menu and the settings, modals that
-    // open over help, after its pictures so their dim covers them, and the tap bursts over every
-    // scene.
+    // open over help, after its pictures so their dim covers them, the Update now prompt over
+    // every screen, and the tap bursts over every scene.
     scene: [
       BootScene,
       StartScene,
@@ -107,6 +104,7 @@ function bootGame(context: GameStartup): Game {
       new CardScene(SCENE_KEYS.helpCard),
       MenuScene,
       SettingsScene,
+      UpdateScene,
       TapBurstScene,
     ],
     // WebGL only: the build's Phaser has no Canvas renderer (src/tools/phaserBuild.ts).
@@ -134,14 +132,6 @@ function bootGame(context: GameStartup): Game {
     Core.Events.DESTROY,
     bindPressAdmission(game, press, () => game.canvas.parentElement?.inert === true),
   );
-  const updateIdle = createUpdateIdle(
-    {
-      events: window,
-      required: () => requiredUpdate() !== undefined,
-      timer: globalThis,
-    },
-    game.loop,
-  );
   const mountUi = () => {
     const layer = mountUiLayer(
       document,
@@ -153,18 +143,14 @@ function bootGame(context: GameStartup): Game {
     if (layer === undefined) {
       return;
     }
-    const required = createRequiredUi(
-      { installation: offlineInstallation, layer, progress: context.nativeProgress },
-      (retry) => pauseLoadingError(game, mountLoadingError({ layer, retry }, document.body)),
+    const required = createRequiredUi({ layer, progress: context.nativeProgress }, (retry) =>
+      pauseLoadingError(game, mountLoadingError({ layer, retry }, document.body)),
     );
     game.registry.set(REQUIRED_UI, required);
     const update = () => layer.update();
     const stopLoadingShade =
       loading === undefined ? undefined : followModalUnderlay(layer.input, loading.element);
-    const ready = layer.onReady(() => {
-      update();
-      updateIdle.invalidate();
-    });
+    const ready = layer.onReady(update);
     game.events.on(Core.Events.PRE_RENDER, update);
     game.events.once(Core.Events.DESTROY, () => {
       ready();
@@ -178,12 +164,7 @@ function bootGame(context: GameStartup): Game {
     });
   };
   game.events.once(Core.Events.READY, mountUi);
-  game.scale.on(Scale.Events.RESIZE, updateIdle.invalidate);
-  game.events.once(Core.Events.DESTROY, () => {
-    game.events.off(Core.Events.READY, mountUi);
-    game.scale.off(Scale.Events.RESIZE, updateIdle.invalidate);
-    updateIdle.dispose();
-  });
+  game.events.once(Core.Events.DESTROY, () => game.events.off(Core.Events.READY, mountUi));
   // Menus draw at most about 60 frames a second; a walk (RunScene) draws every frame.
   capFrameRate(MENU_FPS, () => game.scene.isActive(SCENE_KEYS.run), game);
   // The FPS counter is a device setting, so it shows in an installed app too.
@@ -226,16 +207,14 @@ function bootGame(context: GameStartup): Game {
   }
 
   game.events.once(Core.Events.POST_RENDER, () => startupLoad.finish());
-  // The update notice shows on the home screen only, where a required update stops the loop.
-  watchHomeScreen(game, (onHome) => {
-    setOnHomeScreen(onHome);
-    updateIdle.home(onHome);
-  });
+  // A staged update's Update now prompt opens over whatever screen shows once boot has handed over.
+  watchUpdateOffer(game);
   return game;
 }
 
-// A complete update already waiting at document launch may take control before saves or the game
-// open. Otherwise the current version boots while later updates stage in the background.
-export async function startGame(context: GameStartup): Promise<void> {
-  await launchGame(() => bootGame(context), setupPhoneApp());
+// Runs once the launch has decided to play this build (src/startup.ts), so a staged update has
+// already activated.
+export function startGame(context: GameStartup): void {
+  setupPhoneApp();
+  bootGame(context);
 }

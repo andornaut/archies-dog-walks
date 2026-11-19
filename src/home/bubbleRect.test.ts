@@ -92,7 +92,12 @@ describe("the walker's speech", () => {
   const parting = dogs.flatMap((dog) =>
     gameData.quips[dog].parting.map((quip) => said([quip], dog)),
   );
-  const notices = [text.unsaved, text.noticeUpdateNeeded];
+  const notices = [
+    text.unsaved,
+    text.noticeUpdateNeeded,
+    text.noticeOnlineQuota,
+    text.noticeOnlineUnsupported,
+  ];
   const speeches = [
     ...[...messages, ...parting].map(({ owner, parts }) => said(parts, owner)),
     ...notices.map((notice) => said([notice])),

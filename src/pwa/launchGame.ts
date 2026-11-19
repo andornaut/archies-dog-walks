@@ -1,11 +1,12 @@
-import type { LaunchResult } from "@andornaut/game-kit/runtime/web/pwa/dom/offlinePlay";
+import type { LaunchResult } from "./launch.ts";
 
-// A staged launch takes control before this bundle reads or writes saves or constructs Phaser.
+// The launch decides before the game's modules load: "reloading" means another document takes
+// over, so this one never reads or writes a save or constructs Phaser.
 export async function launchGame(
-  boot: () => unknown,
   launch: Promise<LaunchResult>,
+  start: () => Promise<void>,
 ): Promise<void> {
   if ((await launch) !== "reloading") {
-    boot();
+    await start();
   }
 }

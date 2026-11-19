@@ -7,10 +7,6 @@ export type AtlasGroup = (typeof ATLAS_GROUPS)[number];
 // The groups a key belongs to by its name alone. road is split out of run by pageGroupOf.
 type KeyGroup = Exclude<AtlasGroup, "road">;
 
-// The groups boot loads before the home screen shows. The rest load behind it, and a walk or
-// help waits for them.
-const FIRST_ATLAS_GROUPS: readonly AtlasGroup[] = ["boot", "ui", "home"];
-
 // The groups whose pages draw with linear filtering. A page's filter covers every frame on it,
 // so the road art drawn between its depth steps packs on pages of its own.
 const LINEAR_GROUPS: ReadonlySet<AtlasGroup> = new Set(["road"]);
@@ -49,9 +45,6 @@ export function atlasGroupOf(key: string): KeyGroup {
   );
   return match?.[0] ?? "run";
 }
-
-// Whether boot loads key before the home screen shows.
-export const loadsFirst = (key: string): boolean => FIRST_ATLAS_GROUPS.includes(atlasGroupOf(key));
 
 // The sprites among keys that have a depth step variant: the road sprites drawn through their
 // depth steps.

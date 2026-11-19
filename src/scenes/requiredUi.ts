@@ -6,7 +6,6 @@ import {
 } from "@andornaut/game-kit/runtime/load/loadingAttempts";
 import type { ProgressHandle } from "@andornaut/game-kit/runtime/progressState";
 
-import type { OfflineInstallation } from "../pwa/installationState.ts";
 import type { LoadingErrorView } from "../ui/dom/loadingError.ts";
 import type { UiLayer } from "../ui/dom/uiLayer.ts";
 
@@ -22,10 +21,11 @@ type Resources = Pick<
   "assetStatus" | "fontStatus" | "onReady" | "retryAssets" | "retryFonts"
 >;
 
-// Game resource ports and the existing top strip adapt the shared required-loading lifecycle.
+// Game resource ports and the existing top strip adapt the shared required-loading lifecycle. The
+// game exists only once the launch has installed its build, so a first install's failure shows
+// before it (src/ui/dom/launchFailure.ts) and a background update's never shows.
 export function createRequiredUi(
   context: {
-    readonly installation: OfflineInstallation;
     readonly layer: Resources;
     readonly progress: { begin(): ProgressHandle };
   },
@@ -43,35 +43,19 @@ export function createRequiredUi(
     progress = undefined;
   };
   let disposed = false;
-  let requiredState: LoadingAttemptState = { attempt: 0, kind: "idle" };
-  let installationState = context.installation.state();
-  let visible: "required" | "installation" | undefined;
+  let shown = false;
   let revision = 0;
   const retry = async () => {
-    if (disposed) {
-      return;
-    }
-    if (visible === "required") {
+    if (!disposed && shown) {
       await required.retry();
-    } else if (visible === "installation") {
-      await context.installation.retry();
     }
   };
-  const render = () => {
+  const render = (state: LoadingAttemptState) => {
     if (disposed) {
       return;
     }
-    const source =
-      requiredState.kind === "failed" || requiredState.kind === "loading"
-        ? "required"
-        : "installation";
-    const state = source === "required" ? requiredState : installationState;
-    // Idle is not proof that a failed full offline installation is usable.
-    if (source === "installation" && state.kind === "idle" && visible === source) {
-      return;
-    }
-    if (state.kind === "failed" || (state.kind === "loading" && visible !== undefined)) {
-      visible = source;
+    if (state.kind === "failed" || (state.kind === "loading" && shown)) {
+      shown = true;
       view ??= errorView(retry);
       const attempt = ++revision;
       view.show(
@@ -80,29 +64,23 @@ export function createRequiredUi(
           : { attempt, kind: "loading" },
       );
     } else {
-      visible = undefined;
+      shown = false;
       view?.hide();
     }
   };
   const stopResources = layer.onReady(required.invalidate);
   const stopState = required.subscribe((state) => {
-    requiredState = state;
     if (state.kind === "loading") {
       progress ??= context.progress.begin();
       progress.progress(undefined);
     } else {
       finishProgress();
     }
-    render();
-  });
-  const stopInstallation = context.installation.subscribe((state) => {
-    installationState = state;
-    render();
+    render(state);
   });
   return {
     dispose() {
       disposed = true;
-      stopInstallation();
       stopResources();
       stopState();
       required.dispose();

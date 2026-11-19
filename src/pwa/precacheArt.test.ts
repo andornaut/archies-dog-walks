@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 
 import { hashedArtFileName } from "../tools/atlas/hashedArt.ts";
 import { CACHE_POLICY } from "./cachePolicy.ts";
-import { hashedArtUrls } from "./precacheArt.ts";
+import { bootFiles, hashedArtUrls } from "./precacheArt.ts";
 
 describe("hashedArtUrls", () => {
   const manifest = {
@@ -19,9 +19,9 @@ describe("hashedArtUrls", () => {
     "fonts/font-body.fnt",
     "fonts/font-body.png",
   ];
-  const sounds = { m4a: ["sounds/sfx-tip.m4a"], ogg: ["sounds/sfx-tip.ogg"] };
+  const soundPaths = ["sounds/sfx-tip.ogg", "sounds/sfx-tip.m4a"];
   const artFiles = new Map(
-    [...others, ...sounds.m4a, ...sounds.ogg].map((path) => [
+    [...others, ...soundPaths].map((path) => [
       path,
       hashedArtFileName(path, contentHash(new TextEncoder().encode(path))),
     ]),
@@ -29,14 +29,22 @@ describe("hashedArtUrls", () => {
   const urlOf = (path: string) => `/${artFiles.get(path) ?? ""}`;
   const listed = hashedArtUrls(artFiles, manifest);
 
-  it("lists each format's sound files apart, and every other file in the map, by hashed name", () => {
-    expect(listed.sounds).toEqual({ m4a: sounds.m4a.map(urlOf), ogg: sounds.ogg.map(urlOf) });
+  it("names each sound's alternatives under its logical URL, and every other file by hashed name", () => {
+    expect(listed.sounds).toEqual({ "/art/sounds/sfx-tip": soundPaths.map(urlOf) });
     expect(listed.urls).toEqual(others.map(urlOf));
   });
 
-  it("lists only URLs the worker serves as hashed", () => {
-    const all = [...listed.urls, ...listed.sounds.m4a, ...listed.sounds.ogg];
+  it("lists only URLs the router serves as hashed", () => {
+    const all = [...listed.urls, ...Object.values(listed.sounds).flat()];
     expect(all.filter((url) => !isHashedAssetUrl(CACHE_POLICY, url))).toEqual([]);
+  });
+
+  it("counts the art and one alternative per sound as boot's reads", () => {
+    const page = ["/play/", "/assets/play-abc.js"];
+    expect(bootFiles({ sounds: listed.sounds, urls: [...page, ...listed.urls] })).toEqual([
+      ...listed.urls,
+      urlOf("sounds/sfx-tip.ogg"),
+    ]);
   });
 
   it("rejects a malformed manifest, as the game does", () => {

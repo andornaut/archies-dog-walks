@@ -1,8 +1,7 @@
-// The game as an installed phone app: the service worker and its update plate, the screen wake
-// lock, the back gesture, visibility events, the page frame's turn and the orientation lock,
-// audio unlock, the install offer and persistent storage. setupPhoneApp runs once from main.ts; the
-// scenes listen for PHONE_EVENTS on window and call the functions below.
-import type { ProgressHandle } from "@andornaut/game-kit/runtime/progressState";
+// The game as an installed phone app: the screen wake lock, the back gesture, visibility events,
+// the page frame's turn and the orientation lock, audio unlock, the install offer, persistent
+// storage and the launch's update state (src/pwa/launch.ts). setupPhoneApp runs once from
+// main.ts; the scenes listen for PHONE_EVENTS on window and call the functions below.
 import type { FrameTurn } from "@andornaut/game-kit/runtime/view/pagePoint";
 import { appCannotClose, canExitApp } from "@andornaut/game-kit/runtime/web/pwa/appWindow";
 import { backCloseWatcher } from "@andornaut/game-kit/runtime/web/pwa/backNavigation";
@@ -15,13 +14,6 @@ import {
   type InstallOutcome,
   watchInstall,
 } from "@andornaut/game-kit/runtime/web/pwa/dom/installFlow";
-import {
-  browserOfflinePage,
-  type LaunchResult,
-  type OfflinePlay,
-  startOfflinePlay,
-} from "@andornaut/game-kit/runtime/web/pwa/dom/offlinePlay";
-import type { UpdateFlow } from "@andornaut/game-kit/runtime/web/pwa/dom/updateReady";
 import { watchVisibility } from "@andornaut/game-kit/runtime/web/pwa/dom/visibility";
 import {
   createScreenWakeLock,
@@ -31,9 +23,7 @@ import type {
   InstallState,
   InstallStepsKind,
 } from "@andornaut/game-kit/runtime/web/pwa/installState";
-import { serviceWorkerUrl } from "@andornaut/game-kit/runtime/web/pwa/serviceWorkerUrl";
 import { requestPersistentStorage } from "@andornaut/game-kit/runtime/web/pwa/storagePersistence";
-import type { RequiredUpdateState } from "@andornaut/game-kit/runtime/web/pwa/updateReady";
 import { localSaveStorage } from "@andornaut/game-kit/runtime/web/save/dom/localSaveStorage";
 import {
   type FrameTurnWatch,
@@ -44,14 +34,21 @@ import {
 import { chooseSoundFormat, type SoundFormat } from "../audio/soundFormat.ts";
 import type { StorageState } from "../save/profile.ts";
 import { dispatchPhoneEvent, PHONE_EVENTS } from "./events.ts";
-import { reportInstallation, setInstallationOwner } from "./installationState.ts";
 import { createInstallNudge, type InstallNudge } from "./installNudge.ts";
-import { reportOfflineActivity, reportOfflineDownload } from "./offlineProgress.ts";
-import { reportRequiredDownload, reportRequiredUpdate } from "./requiredUpdate.ts";
-import { acceptedUpdateProgress } from "./updateAcceptance.ts";
+import { requireNewer } from "./launch.ts";
 
 export { AUDIO_UNLOCK_EVENTS, unlockAudioOnFirstGesture } from "./audioUnlock.ts";
 export { PHONE_EVENTS } from "./events.ts";
+export {
+  acceptUpdate,
+  dismissUpdate,
+  networkPlayReason,
+  requiredUpdate,
+  type RequiredUpdateState,
+  updateAcceptanceFailed,
+  updateAccepting,
+  updateOffered,
+} from "./launch.ts";
 export type { InstallOutcome } from "@andornaut/game-kit/runtime/web/pwa/dom/installFlow";
 export {
   type InstallState,
@@ -59,9 +56,7 @@ export {
   offersInstall,
 } from "@andornaut/game-kit/runtime/web/pwa/installState";
 
-const SERVICE_WORKER_URL = "/sw.js";
-
-// The sound format BootScene loads and the service worker precaches.
+// The sound format BootScene loads.
 export function browserSoundFormat(): SoundFormat | undefined {
   const audio = document.createElement("audio");
   return chooseSoundFormat((mimeType) => audio.canPlayType(mimeType));
@@ -74,66 +69,12 @@ let exitCloses = false;
 let installFlow: InstallFlow | undefined;
 let installNudge: InstallNudge | undefined;
 let screenWakeLock: ScreenWakeLock | undefined;
-let updateFlow: UpdateFlow | undefined;
-// Registration readiness and update-offer visibility follow the actual start screen.
-let registrationHook: () => void = () => undefined;
-let offerHook: (visible: boolean) => void = () => undefined;
-// Whether the home screen shows the update plate.
-let updateShown = false;
-let accepting: ProgressHandle | undefined;
-let updateFailed = false;
-// The update a save from a newer version requires, from the first report on; undefined while
-// none is required.
-let required: RequiredUpdateState | undefined;
 
 // The history state key of the entry that keeps back on the game (the kit's guardBackNavigation).
 const BACK_GUARD_STATE_KEY = "archiesDogWalksBackGuard";
 
-// The production build only: the dev server has no sw.js, and a worker would serve stale
-// modules over hot reloads. The kit's offline play: a page a version controls runs the version
-// on disk and registers after its launch check, so a newer version downloads while the game
-// plays, and is offered on the home screen only once it is stored; a first visit registers once
-// the home screen shows, so the precache does not compete with the game's own downloads. The page
-// coming back into view on the home screen checks for a newer version (an installed app resumed
-// without relaunching).
-function registerServiceWorker(): OfflinePlay | undefined {
-  const page = import.meta.env.PROD ? browserOfflinePage() : undefined;
-  if (page === undefined) {
-    return undefined;
-  }
-  const play = startOfflinePlay(
-    {
-      onDownloadProgress: (snapshot) => {
-        reportOfflineDownload(snapshot);
-        reportRequiredDownload(snapshot);
-      },
-      onInstallationState: reportInstallation,
-      onOfflineActivity: reportOfflineActivity,
-      onRequireNewer: reportRequired,
-      onUpdateShown: (shown) => {
-        updateShown = shown;
-        dispatchPhoneEvent(window, PHONE_EVENTS.updatePlate);
-      },
-      serviceWorkerUrl: serviceWorkerUrl(SERVICE_WORKER_URL, browserSoundFormat()),
-    },
-    page,
-  );
-  setInstallationOwner(play);
-  updateFlow = play.flow;
-  registrationHook = () => play.registrationReady();
-  offerHook = (visible) => play.flow.setOfferVisible(visible);
-  return play;
-}
-
-function reportRequired(state: RequiredUpdateState): void {
-  required = state;
-  reportRequiredUpdate(state);
-  dispatchPhoneEvent(window, PHONE_EVENTS.requiredUpdate);
-}
-
-// Sets up the phone app and checks for an already-staged launch before saves or the game open.
-export function setupPhoneApp(): Promise<LaunchResult> {
-  const launch = registerServiceWorker()?.launchReady() ?? Promise.resolve("continue" as const);
+// Sets up the phone app, once the launch has decided to play this build.
+export function setupPhoneApp(): void {
   installFlow = watchInstall(window);
   // Asked once per launch of the installed app, never in a browser tab. Not waited for: the game
   // boots whatever the browser answers, or if it never does.
@@ -173,7 +114,6 @@ export function setupPhoneApp(): Promise<LaunchResult> {
   // Held whenever the game is visible until the scenes take over with stopWakeLock and
   // startWakeLock (for example, letting the screen sleep on a menu).
   screenWakeLock.start();
-  return launch;
 }
 
 // Whether the game offers to leave (the home top bar's Exit, Q and back's Quit?), as read at load:
@@ -213,92 +153,12 @@ export function stopWakeLock(): void {
   screenWakeLock?.stop();
 }
 
-// Whether the home screen is in front, the only place the update plate shows. A first visit
-// registers the service worker on its first arrival home.
-export function setOnHomeScreen(onHome: boolean): void {
-  if (onHome) {
-    registrationHook();
-  }
-  offerHook(onHome);
-}
-
-// An arrival at the home screen: the launch's first StartScene and each one after a walk, never a
-// menu or card closing over it. It clears a dismissed offer and checks for a newer version.
-export function arriveHome(): void {
-  updateFlow?.arriveHome();
-}
-
-// Dismiss the update offer until the next arrival home (arriveHome) or the page coming back into
-// view on the home screen.
-export function dismissUpdateOffer(): void {
-  updateFailed = false;
-  updateFlow?.dismissOffer();
-}
-
-// Whether the home screen shows the update plate: a newer version waits, fully stored, behind the
-// version that controls the page, with the home screen in front and the offer not dismissed.
-// PHONE_EVENTS.updatePlate fires on each change.
-export function updatePlateShown(): boolean {
-  return accepting === undefined && (updateShown || updateFailed);
-}
-
-export function updateAccepting(): boolean {
-  return accepting !== undefined;
-}
-
-export function updateAcceptanceFailed(): boolean {
-  return updateFailed;
-}
-
-// The update offer's Update now button: switch to the waiting version and reload into it. The
-// offer shows only while a version waits, so only with a service worker.
-export function acceptUpdate(): void {
-  const flow = updateFlow;
-  if (flow === undefined || accepting !== undefined || required !== undefined) {
-    return;
-  }
-  accepting = acceptedUpdateProgress.begin();
-  updateFailed = false;
-  dispatchPhoneEvent(window, PHONE_EVENTS.updatePlate);
-  const blocked = () => {
-    accepting?.finish();
-    accepting = undefined;
-    updateFailed = true;
-    dispatchPhoneEvent(window, PHONE_EVENTS.updatePlate);
-  };
-  // "reloading" only means navigation was requested. Keep the wait visible until the next
-  // document replaces this one, rather than claiming the new version has loaded.
-  try {
-    void flow.accept().then((result) => {
-      if (result === "blocked") {
-        blocked();
-      }
-    }, blocked);
-  } catch {
-    blocked();
-  }
-}
-
-// A save or earned record from a newer version requires that version, whatever the player does:
-// the kit downloads it and switches to it once stored, never offering it ("updating"), or waits
-// to be online and tries again ("unavailable"). Without a service worker nothing can update, so
-// the update stays "unavailable". Repeated calls change nothing.
+// A save or earned record from a newer version requires that version (the launch's
+// requireNewer). Repeated calls change nothing.
 export function noteSaveStorage(storage: StorageState): void {
-  if (storage !== "newer") {
-    return;
+  if (storage === "newer") {
+    requireNewer();
   }
-  if (updateFlow !== undefined) {
-    updateFlow.requireNewer();
-  } else if (required === undefined) {
-    reportRequired("unavailable");
-  }
-}
-
-// The update a newer save requires, or undefined while none is. While one is, the save stays as
-// stored, Start and walks stay closed and the game loop sleeps between home screen changes.
-// PHONE_EVENTS.requiredUpdate fires on each change.
-export function requiredUpdate(): RequiredUpdateState | undefined {
-  return required;
 }
 
 // Before setupPhoneApp there is no install flow, and nothing offers to install.

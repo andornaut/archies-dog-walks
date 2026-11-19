@@ -878,6 +878,11 @@ export interface HomeText {
   // Said first in the walker's bubble while a later version of the game wrote the save on this
   // device and that version cannot download yet (offline, or not on the server).
   readonly noticeUpdateNeeded: string;
+  // Said in the walker's bubble, after the other notices, for the session the game plays from the
+  // network because this device could not install it: storage was full (noticeOnlineQuota), or
+  // the browser would not register the game's service worker (noticeOnlineUnsupported).
+  readonly noticeOnlineQuota: string;
+  readonly noticeOnlineUnsupported: string;
   // The Dogs section's band, before a heart: the most hearts the chosen pack's size raises a
   // picked dog's owner's max by.
   readonly packBonus: string;

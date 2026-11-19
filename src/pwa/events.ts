@@ -9,8 +9,9 @@ export const PHONE_EVENTS = {
   backPressed: "back-pressed",
   // The update a newer save requires changed state: requiredUpdate says which.
   requiredUpdate: "required-update",
-  // The home screen's update plate shows or hides: updatePlateShown says which.
-  updatePlate: "update-plate",
+  // A staged update's Update now prompt opened, changed state or closed: updateOffered,
+  // updateAccepting and updateAcceptanceFailed say which.
+  updateReady: "update-ready",
 } as const;
 
 type PhoneEventName = (typeof PHONE_EVENTS)[keyof typeof PHONE_EVENTS];

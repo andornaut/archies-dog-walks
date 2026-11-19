@@ -2,23 +2,31 @@ import type { HashedFiles } from "@andornaut/game-kit/build/precachePlugin";
 
 import type { ArtFileMap } from "../assets/artUrl.ts";
 import { parseManifest } from "../assets/manifest.ts";
-import type { SoundFormat } from "../audio/soundFormat.ts";
+import { SOUND_FORMATS } from "../audio/soundFormat.ts";
 import { ART_MANIFEST } from "../tools/artManifest.ts";
 
-// The art the game loads, as the URLs of its hashed files: the sound files by format, for the
-// worker to store the one the page plays, and every other file. Only the map's files are listed,
-// so no unhashed art is precached.
-export function hashedArtUrls(
-  artFiles: ArtFileMap,
-  manifestJson: unknown,
-): { sounds: Record<SoundFormat, string[]>; urls: string[] } {
+// A sound's logical URL in the build manifest: its art path under /art/ without the format's
+// extension. The page requests a hashed alternative directly; this only names the sound.
+export function logicalSoundUrl(path: string): string {
+  return `/art/${path.replace(/\.[^./]+$/, "")}`;
+}
+
+// The art the game loads, as the URLs of its hashed files: each sound's alternatives under its
+// logical URL, in SOUND_FORMATS order, and every other file. Only the map's files are listed, so
+// no unhashed art is installed.
+export function hashedArtUrls(artFiles: ArtFileMap, manifestJson: unknown): HashedFiles {
   const { sounds } = parseManifest(manifestJson);
   const url = (fileName: string) => `/${fileName}`;
-  const soundUrls = (format: SoundFormat) =>
-    sounds.flatMap((sound) => artFiles.get(sound[format]) ?? []).map(url);
-  const soundPaths = new Set(sounds.flatMap(({ m4a, ogg }) => [m4a, ogg]));
+  const soundPaths = new Set(
+    sounds.flatMap((sound) => SOUND_FORMATS.map((format) => sound[format])),
+  );
   return {
-    sounds: { m4a: soundUrls("m4a"), ogg: soundUrls("ogg") },
+    sounds: Object.fromEntries(
+      sounds.map((sound) => [
+        logicalSoundUrl(sound[SOUND_FORMATS[0]]),
+        SOUND_FORMATS.flatMap((format) => artFiles.get(sound[format]) ?? []).map(url),
+      ]),
+    ),
     urls: [...artFiles]
       .filter(([path]) => !soundPaths.has(path))
       .map(([, fileName]) => url(fileName)),
@@ -39,4 +47,11 @@ export function artHashedFiles(
     }
     return hashedArtUrls(artFiles, JSON.parse(new TextDecoder().decode(manifest)));
   };
+}
+
+// The files boot reads after install, for the launch's one progress total: the hashed art, with
+// one alternative per sound, since the page loads the one format the browser plays.
+export function bootFiles({ sounds, urls }: HashedFiles): string[] {
+  const art = urls.filter((url) => url.startsWith("/assets/art/"));
+  return [...art, ...Object.values(sounds).flatMap((alternatives) => alternatives.slice(0, 1))];
 }

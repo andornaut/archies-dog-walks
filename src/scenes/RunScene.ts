@@ -163,6 +163,8 @@ export class RunScene extends Scene implements HudRun {
   private session: Session | undefined;
   private settings: Settings | undefined;
   private stepClock: StepClock = startStepClock;
+  // While Update now's prompt holds the walk (holdForUpdate), back is the prompt's.
+  private updateHeld = false;
   // The walk one step before the session's, which a frame blends from; undefined draws the
   // session's walk as it is.
   private stepBefore: Walk | undefined;
@@ -288,6 +290,7 @@ export class RunScene extends Scene implements HudRun {
 
   private resetState(): void {
     this.ambientMs = 0;
+    this.updateHeld = false;
     this.resumePoint = null;
     this.session = undefined;
     this.stepBefore = undefined;
@@ -352,6 +355,9 @@ export class RunScene extends Scene implements HudRun {
     // The run scene hears back before any overlay launched over it, so it reads the overlays as
     // they were when back was pressed; help and the settings close themselves.
     const onBack = () => {
+      if (this.updateHeld) {
+        return;
+      }
       const over = this.session === undefined || this.session.walk.run.phase.kind === "ended";
       const action = walkBackAction(over, this.runPause());
       switch (action) {
@@ -715,6 +721,37 @@ export class RunScene extends Scene implements HudRun {
 
   openPause(mode: PauseSceneData["mode"] = "menu"): void {
     this.world?.menus.openPause(mode);
+  }
+
+  // Update now's prompt holds the walk under the pause menu, as a hidden page does, and takes back
+  // while it shows. opened says whether the prompt opened the menu, which then launches at
+  // Phaser's next step; the release closes it again.
+  holdForUpdate(): { readonly opened: boolean; release(): void } {
+    const closed = this.runPause().menu === "closed";
+    this.updateHeld = true;
+    if (closed) {
+      this.openPause();
+    }
+    const opened = closed && this.runPause().menu !== "closed";
+    return {
+      opened,
+      release: () => {
+        this.updateHeld = false;
+        if (opened) {
+          this.closePause();
+        }
+      },
+    };
+  }
+
+  // Update now's save: the walk so far with where the next launch resumes it, as a hidden page
+  // writes it. A finished or replayed walk writes nothing here.
+  checkpointForUpdate(): Promise<void> {
+    const walk = this.session?.walk;
+    if (walk === undefined || walk.run.phase.kind === "ended" || this.world?.recorder.replaying()) {
+      return Promise.resolve();
+    }
+    return checkpointRun(this, checkpointOf(gameData, walk.run), this.resumePoint);
   }
 
   // The walk bar's Help and Settings buttons.

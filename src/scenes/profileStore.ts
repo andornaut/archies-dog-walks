@@ -115,6 +115,12 @@ export function takeCelebrations(scene: Scene): AchievementId[] {
   return session(scene).takeCelebrations();
 }
 
+// Resolves once every write made so far has been made or has failed; at once before BootScene
+// opens the profile.
+export function profileWritesSettled(scene: Scene): Promise<void> {
+  return openedSession(scene)?.settled() ?? Promise.resolve();
+}
+
 export function storageState(scene: Scene): StorageState {
   return session(scene).storage;
 }

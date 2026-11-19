@@ -3,7 +3,7 @@ import type { Plugin } from "vite";
 
 import type { ArtFileMap } from "../assets/artUrl.ts";
 import { CACHE_POLICY } from "./cachePolicy.ts";
-import { artHashedFiles } from "./precacheArt.ts";
+import { artHashedFiles, bootFiles } from "./precacheArt.ts";
 
 interface PrecachePluginOptions {
   // The game's art files, as atlasPlugin hashed them for this build.
@@ -15,14 +15,16 @@ interface PrecachePluginOptions {
   serviceWorkerSource: string;
 }
 
-// The kit's precache plugin with the game's cache policy and its hashed art: builds /sw.js with
-// the game page's precache list written into it.
+// The kit's precache plugin with the game's cache policy and its hashed art: builds the router
+// /sw.js and writes the build's manifest (/.game-kit/manifest-<version>.json, every file the
+// complete build needs offline) and its pointer (/.game-kit/build.json).
 export function precachePlugin({
   getArtFiles,
   pageHtmlFile,
   serviceWorkerSource,
 }: PrecachePluginOptions): Plugin {
   return kitPrecachePlugin({
+    boot: bootFiles,
     hashedFiles: artHashedFiles(getArtFiles),
     pageHtmlFile,
     policy: CACHE_POLICY,

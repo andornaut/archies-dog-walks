@@ -1,11 +1,9 @@
 import { itemAt } from "@andornaut/game-kit/runtime/arrays";
 import { type LoaderWatch, watchLoader } from "@andornaut/game-kit/runtime/load/phaser/watchLoader";
-import type { ProgressHandle } from "@andornaut/game-kit/runtime/progressState";
 import { keysOf } from "@andornaut/game-kit/runtime/records";
 import { GameObjects, Scene, Scenes, Sound } from "phaser";
 
 import { animationSpecs, type AsepriteSheet } from "../assets/asepriteAnimations.ts";
-import { loadsFirst } from "../assets/atlasGroups.ts";
 import { type AssetManifest, parseManifest, type SpriteAsset } from "../assets/manifest.ts";
 import {
   addAtlasFonts,
@@ -30,7 +28,6 @@ import {
   ownerFaceKey,
   ROAD_SPRITE_SIZE,
 } from "../assets/spriteKeys.ts";
-import { HOME_CUES, soundKeysOf } from "../audio/sound.ts";
 import { gameData } from "../data/index.ts";
 import type { EncounterId } from "../data/types.ts";
 import { devRunLoadout, namesRunSetup } from "../dev/devStart.ts";
@@ -46,6 +43,7 @@ import {
   startWakeLock,
   unlockAudioOnFirstGesture,
 } from "../pwa/index.ts";
+import { bootHandedOver, bootLoad } from "../pwa/launch.ts";
 import { uiLayer } from "../ui/dom/uiLayer.ts";
 import { PALETTE } from "../ui/palette.ts";
 import { addPillGlyphs, registerFallbackPixelFont } from "../ui/phaser/pixelText.ts";
@@ -76,13 +74,9 @@ import { resumedRunSceneData, runSceneData } from "./run/runStart.ts";
 import { SCENE_KEYS } from "./sceneKeys.ts";
 import { ensurePlaceholder, measureSprite, playTag } from "./sprites.ts";
 
-// Processing yields to the next frame once a batch has run this long: less once the home
-// screen shows, which then shares the frame.
+// Processing yields to the next frame once a batch has run this long.
 const FRAME_BUDGET_MS = 8;
-const BEHIND_FRAME_BUDGET_MS = 4;
 
-const HOME_SOUND_KEYS: ReadonlySet<string> = new Set(HOME_CUES.flatMap((cue) => soundKeysOf(cue)));
-const loadsSoundFirst = (key: string): boolean => HOME_SOUND_KEYS.has(key);
 const always = () => true;
 
 const HOME_UI_KEYS = new Set([
@@ -140,11 +134,12 @@ function placeholderSizes(): Map<string, Size> {
   return sizes;
 }
 
-// Loads the manifests and fixed loading artwork, then processes sprites and metrics in frame-sized
-// batches while the shared top strip reports progress. Required native UI and font failures keep
-// entry blocked behind the existing loading error and explicit Retry. Optional world assets keep
-// their placeholders and automatic retry rounds. After home opens, remaining art loads silently
-// until Start walk waits for it. Dev links and resumed walks wait before entering the walk.
+// Loads the manifests and fixed loading artwork, then every art file and sound behind the loading
+// screen, and processes sprites and metrics in frame-sized batches. Its reads count into the
+// launch's one progress value (bootLoad), which fills when the first screen shows
+// (bootHandedOver). Required native UI and font failures keep entry blocked behind the existing
+// loading error and explicit Retry. Optional world assets keep their placeholders and automatic
+// retry rounds.
 export class BootScene extends Scene {
   private manifest: AssetManifest = { fonts: [], images: [], sounds: [], sprites: [] };
   private walker: GameObjects.Sprite | undefined;
@@ -168,7 +163,7 @@ export class BootScene extends Scene {
     this.watch = watchLoader<WaitedLoad>(
       {
         console,
-        progress: waitedLoad,
+        progress: bootLoad(waitedLoad),
         retryMode: (failure) =>
           requiredFontFailure(this.manifest, atlasManifest(this), failure) ? "manual" : "automatic",
         timer: globalThis,
@@ -176,12 +171,7 @@ export class BootScene extends Scene {
       this,
     );
     setBootWatch(this.watch);
-    // The manifests load before the loading screen's art, so their wait has no denominator; the
-    // boot's measured load (create) takes it over.
-    const manifests = waitedLoad.begin();
-    manifests.progress(undefined);
     this.events.once(Scenes.Events.SHUTDOWN, () => {
-      manifests.finish();
       setBootWatch(undefined);
       this.watch = undefined;
     });
@@ -217,12 +207,10 @@ export class BootScene extends Scene {
     const walkNow = namesRunSetup(pageSearch());
     // Open the profile while the art loads. A save from a newer version requires that version.
     // The loading walker then follows the saved reduced-motion setting.
-    let opened = false;
     const profileOpened = openProfile(this, !walkNow).then((load) => {
       if (load.status === "corrupt" || load.status === "newer" || load.status === "unavailable") {
         console.warn(`The save is ${load.status}, so play starts fresh: ${load.reason}`);
       }
-      opened = true;
       noteSaveStorage(storageState(this));
       this.setWalkerMotion(currentSettings(this).reducedMotion);
     });
@@ -230,25 +218,20 @@ export class BootScene extends Scene {
     this.showLoadingScreen();
     this.prepareNativeUi();
 
-    const first = walkNow ? always : loadsFirst;
-    this.queueAvailableArt(first);
+    this.queueAvailableArt(always);
     this.queueFirstFonts(this.manifest);
     if (this.manifest.sounds.length > 0 && browserSoundFormat() === undefined) {
       console.warn("This browser plays neither Ogg nor AAC, so the game is silent.");
     }
-    this.queueSounds(walkNow ? always : loadsSoundFirst);
+    this.queueSounds(always);
     this.watch?.waitFor("boot");
     const firstComplete = () => {
       registerFallbackPixelFont(this);
       addPillGlyphs(this);
       this.fontMetricsSettled = true;
       this.nativeUi?.invalidate();
-      // A profile still opening is waited for with no denominator.
-      const profile = opened ? undefined : waitedLoad.begin();
-      profile?.progress(undefined);
       // While a newer version is required, no walk starts: home says so.
       void profileOpened.then(() => {
-        profile?.finish();
         if (!current) {
           return;
         }
@@ -277,10 +260,10 @@ export class BootScene extends Scene {
     };
     this.load.once("complete", () => {
       if (!this.manifestReady) {
-        this.deferredInitialArt = first;
+        this.deferredInitialArt = always;
         firstComplete();
       } else {
-        this.processAssets(first, FRAME_BUDGET_MS, firstComplete);
+        this.processAssets(always, FRAME_BUDGET_MS, firstComplete);
       }
     });
     this.load.start();
@@ -385,7 +368,7 @@ export class BootScene extends Scene {
       try {
         if (initial !== undefined) {
           this.queueAvailableArt(initial);
-          this.queueSounds(initial === always ? always : loadsSoundFirst);
+          this.queueSounds(initial);
           this.deferredInitialArt = undefined;
         }
         const required: ReadonlySet<string> = new Set(REQUIRED_BITMAP_FONTS);
@@ -573,33 +556,21 @@ export class BootScene extends Scene {
     }
   }
 
-  // Launches native home while keeping the loading screen until its usable view is ready.
-  // The rest loads concurrently, but cannot stop Boot before that handoff.
-  private showHome(allLoaded = false): void {
-    let native: ProgressHandle | undefined;
+  // Launches native home while keeping the loading screen until its usable view is ready, then
+  // hands over. Everything has loaded; Boot stops once the walk's native UI is ready and every
+  // failed file has been retried.
+  private showHome(): void {
     const waiting = waitForNativeHome(this.game.events, {
       loaded: () => this.scene.stop(),
-      shown: () => {
-        native?.finish();
-        this.clearLoading();
-      },
+      shown: () => this.clearLoading(),
     });
-    this.events.once(Scenes.Events.SHUTDOWN, () => {
-      waiting.dispose();
-      native?.finish();
-    });
+    this.events.once(Scenes.Events.SHUTDOWN, () => waiting.dispose());
     const keys = exitShown() ? new Set([...HOME_UI_KEYS, "icon-exit"]) : HOME_UI_KEYS;
-    this.requireNativeUi(keys, () => {
-      native = waitedLoad.begin();
-      native.progress(undefined);
-      this.scene.launch(SCENE_KEYS.start);
+    this.requireNativeUi(keys, () => this.scene.launch(SCENE_KEYS.start));
+    this.requireNativeUi(HUD_UI_KEYS, () => {
+      markArtReady(this);
+      this.stopOnceRetried(waiting.loaded);
     });
-    const loaded = () => this.stopOnceRetried(waiting.loaded);
-    if (allLoaded) {
-      loaded();
-    } else {
-      this.loadRest(BEHIND_FRAME_BUDGET_MS, loaded);
-    }
   }
 
   // A direct walk launch needs no native-home handoff. Boot still runs behind it for retries.
@@ -609,6 +580,7 @@ export class BootScene extends Scene {
   }
 
   private clearLoading(): void {
+    bootHandedOver();
     for (const child of [...this.children.list]) {
       child.destroy();
     }
@@ -634,44 +606,19 @@ export class BootScene extends Scene {
     });
   }
 
-  // Loads and registers what the home screen did not need, then marks the art ready and calls
-  // done. Behind the home screen the load is silent until Start walk waits for it
-  // (waitForWalkArt); behind the loading screen, for a resumed walk, it is waited for.
-  private loadRest(budgetMs: number, done: () => void, waited = false): void {
-    const rest = (key: string) => !loadsFirst(key);
-    this.queueAvailableArt(rest);
-    this.queueSounds((key) => !loadsSoundFirst(key));
-    if (waited) {
-      this.watch?.waitFor("boot");
-    }
-    this.load.once("complete", () =>
-      this.processAssets(rest, budgetMs, () => {
-        this.requireNativeUi(HUD_UI_KEYS, () => {
-          markArtReady(this);
-          done();
-        });
-      }),
-    );
-    this.load.start();
-  }
-
-  // Resumes the walk left unfinished, under the pause menu, once the rest has loaded behind the
-  // loading screen.
+  // Resumes the walk left unfinished, under the pause menu, once the walk's native UI is ready.
   private resumeWalk(): void {
-    this.loadRest(
-      FRAME_BUDGET_MS,
-      () => {
-        const walk = takeResumedWalk(this);
-        if (walk === null) {
-          this.showHome(true);
-          return;
-        }
-        startWakeLock();
-        this.leaveFor(SCENE_KEYS.run, resumedRunSceneData(pageRunSetup().setup.dev, walk));
-        this.stopOnceRetried();
-      },
-      true,
-    );
+    this.requireNativeUi(HUD_UI_KEYS, () => {
+      markArtReady(this);
+      const walk = takeResumedWalk(this);
+      if (walk === null) {
+        this.showHome();
+        return;
+      }
+      startWakeLock();
+      this.leaveFor(SCENE_KEYS.run, resumedRunSceneData(pageRunSetup().setup.dev, walk));
+      this.stopOnceRetried();
+    });
   }
 
   // Starts the walk a dev link names, with everything loaded. The link's setup is a cheat, so
@@ -679,7 +626,7 @@ export class BootScene extends Scene {
   private startWalk(): void {
     this.requireNativeUi(HUD_UI_KEYS, () => {
       if (requiredUpdate() !== undefined) {
-        this.showHome(true);
+        this.showHome();
         return;
       }
       markArtReady(this);

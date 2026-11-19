@@ -41,6 +41,8 @@ export const HOME_TEXT_FIELDS = {
   },
   gateSign: [],
   gearBought: ["gear"],
+  noticeOnlineQuota: [],
+  noticeOnlineUnsupported: [],
   noticePackFull: [],
   noticeSoundOff: [],
   noticeSoundOn: [],

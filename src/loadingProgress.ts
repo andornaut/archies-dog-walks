@@ -3,7 +3,6 @@ import {
   createProgressState,
 } from "@andornaut/game-kit/runtime/progressState";
 
-import { offlineProgress } from "./pwa/offlineProgress.ts";
 import { requiredUpdateProgress } from "./pwa/requiredUpdate.ts";
 import { acceptedUpdateProgress } from "./pwa/updateAcceptance.ts";
 import { LOADING_TIMING } from "./ui/progressBar.ts";
@@ -14,16 +13,11 @@ import { LOADING_TIMING } from "./ui/progressBar.ts";
 // other load, such as the art behind the home screen, is silent.
 export const waitedLoad = createProgressState();
 
-// Required-save updates retain priority over an optional update the player accepted.
-const updateProgress = createLayeredProgress(globalThis, LOADING_TIMING, {
+// The update work a bar shows: a required-save update over one the player accepted with Update
+// now. Background staging shows nothing.
+export const backgroundLoad = createLayeredProgress(globalThis, LOADING_TIMING, {
   background: acceptedUpdateProgress,
   foreground: requiredUpdateProgress,
-});
-
-// The background work a bar shows: a required or accepted update over a first visit's precache.
-export const backgroundLoad = createLayeredProgress(globalThis, LOADING_TIMING, {
-  background: offlineProgress,
-  foreground: updateProgress,
 });
 
 // What every loading bar follows: a waited-for load over the background work.

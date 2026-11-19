@@ -1,5 +1,6 @@
 import { fillLine } from "@andornaut/game-kit/runtime/lines";
-import type { RequiredUpdateState } from "@andornaut/game-kit/runtime/web/pwa/updateReady";
+import type { NetworkPlayNotice } from "@andornaut/game-kit/runtime/web/pwa/buildContract";
+import type { RequiredUpdateState } from "@andornaut/game-kit/runtime/web/pwa/dom/launch";
 
 import type { DogId, GameData, HomeText, WalkerId } from "../data/types.ts";
 import { dollarText } from "../presentation/currency.ts";
@@ -193,6 +194,23 @@ export function storageNotice(text: HomeText, state: StorageState): string[] {
 // says so instead.
 export function requiredNotice(text: HomeText, state: RequiredUpdateState | undefined): string[] {
   return state === "unavailable" ? [text.noticeUpdateNeeded] : [];
+}
+
+// The bubble's line for each reason the game plays from the network.
+const NETWORK_PLAY_NOTICES: Readonly<
+  Record<NetworkPlayNotice["reason"], "noticeOnlineQuota" | "noticeOnlineUnsupported">
+> = {
+  quota: "noticeOnlineQuota",
+  unsupported: "noticeOnlineUnsupported",
+};
+
+// What the walker's bubble says about playing from the network, as zero or one paragraph: why
+// this device could not install the game, for the session it plays online.
+export function networkPlayNotice(
+  text: HomeText,
+  reason: NetworkPlayNotice["reason"] | undefined,
+): string[] {
+  return reason === undefined ? [] : [text[NETWORK_PLAY_NOTICES[reason]]];
 }
 
 // What the walker's bubble shows: the first of notices alone, in place of the speech it would
