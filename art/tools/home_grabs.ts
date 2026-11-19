@@ -1,25 +1,29 @@
 // Retake the home page's canvas grabs, home-road.png and home-start.png (360x560, the game canvas
 // at 1x), from a built game served at BASE_URL (default http://<previewHost>:4173, the preview
 // container the export's devHarness.previewHost names), and write them to OUT_DIR. The game's
-// dev=1 global (PAGE_GLOBAL), the storage keys and the pull message (PULL_TEXT) come from
+// dev=1 global (PAGE_GLOBAL), the save's storage key and the pull message (PULL_TEXT) come from
 // devHarness too. Copy them to public/art/site/ to update the home page. Run from the repository
 // root.
 //
 // - home-road: High Park on ROAD_QUERY's seed, Trista walking Archie, Lady and Ginger with Running
 //   shoes and $50, ROAD_HOLD_MS after the message strip first reads PULL_TEXT (on seed 1, Ginger
-//   straining toward a squirrel). Nothing steers; each card that opens takes its first option.
+//   straining toward a squirrel), with Invincible owners. Nothing steers; each card that opens
+//   takes its first option. The run URL sets the walk up, and the grab fails on any of its
+//   parameters the game ignores.
 // - home-start: the start screen on a first visit, from a new player's save with $600 in the bank
 //   and START_SAVE's fields over it: Trista picked from four walkers, Archie, Ginger and Kilo
-//   picked, Lady owned, both dog slots bought, and Running shoes picked and the Whistle owned.
+//   picked, Lady owned, both dog slots bought, and Running shoes picked and the Whistle owned. The
+//   new player's save is the one the game stores when a first visit opens Help (?) and closes it
+//   (Escape), so its shape always follows the game's.
 //
 // Deterministic: Playwright's fake clock starts paused at CLOCK_START and steps the game one
 // FRAME_MS frame at a time, so animation and the walk depend only on the frame count. Each grab is
-// a screenshot of the page over the canvas, at DPR 1 in a viewport WIDTH wide and HEIGHT plus
-// DEV_BAR_HEIGHT tall, so the game fits at 1x and the grab holds the HTML interface drawn over the
-// canvas as well as the canvas. A grab fails when the canvas is not at 0,0 at WIDTH x HEIGHT, or
-// when it is not WIDTH x HEIGHT or not opaque. The game's canvas is not held to the house palette
-// (it blends translucent layers and draws UI colours of its own), so the tool reports the colours
-// outside PALETTE64, the neutral greys and the picker colours rather than failing on them.
+// a screenshot of the page over the canvas, at DPR 1 in a WIDTH x HEIGHT viewport, so the game
+// fills it at 1x and the grab holds the HTML interface drawn over the canvas as well as the canvas.
+// A grab fails when the canvas is not at 0,0 at WIDTH x HEIGHT, or when it is not WIDTH x HEIGHT
+// or not opaque. The game's canvas is not held to the house palette (it blends translucent layers
+// and draws UI colours of its own), so the tool reports the colours outside PALETTE64, the neutral
+// greys and the picker colours rather than failing on them.
 //
 // Playwright is not a dependency of this repository: the module is imported from
 // PLAYWRIGHT_MODULE, which defaults to the copy in the Playwright MCP image
@@ -40,11 +44,16 @@ interface Clock {
   pauseAt(time: number): Promise<void>;
   runFor(ms: number): Promise<void>;
 }
+interface ConsoleMessage {
+  text(): string;
+  type(): string;
+}
 interface Page {
   clock: Clock;
   evaluate<R, A>(fn: (arg: A) => R | Promise<R>, arg: A): Promise<R>;
   goto(url: string): Promise<unknown>;
   keyboard: { press(key: string): Promise<void> };
+  on(event: "console", listener: (message: ConsoleMessage) => void): void;
   screenshot(options: {
     clip: { height: number; width: number; x: number; y: number };
   }): Promise<Uint8Array>;
@@ -96,15 +105,13 @@ const PAGE_GLOBAL = HARNESS.pageGlobal;
 const BASE_URL = `http://${HARNESS.previewHost}:4173`;
 // How long a card that opens on the walk shows before its first option is picked (key 1).
 const CARD_READ_MS = 640;
-const CHEATS_KEY = HARNESS.storageKeys.devCheats;
 // 2026-10-15 09:00 in Toronto: a weekday autumn morning.
 const CLOCK_START = Date.parse("2026-10-15T09:00:00-04:00");
 const FRAME_MS = 16;
 // The game canvas at 1x: the layout's screen.
 const HEIGHT = LAYOUT.screen.height;
-// The dev bar under the game in a browser tab (`--dev-bar-height` in src/main.css), which the
-// viewport leaves room for so the game fits at 1x.
-const DEV_BAR_HEIGHT = 48;
+// How long a key press waits for the screen to act on it before the key is pressed again.
+const KEY_RETRY_MS = 160;
 // How long a loader's counts must hold, and how long at most a step waits for that, in real time.
 const LOAD_SETTLE_MS = 100;
 const LOAD_WAIT_MS = 60_000;
@@ -116,20 +123,20 @@ const PULL_TEXT = HARNESS.text.pull.replace(/^\{dog\} /, "");
 if (PULL_TEXT === HARNESS.text.pull) {
   throw new Error(`devHarness.text.pull "${HARNESS.text.pull}" does not start with "{dog} "`);
 }
-// The dev panel's Invincible owners cheat: the unsteered walk's bumps cost no hearts, so no owner
-// fires you before the grab.
-const ROAD_CHEATS = { devStats: false, hitBoxes: false, invincible: true, speed: "normal" };
 const ROAD_HOLD_MS = 400;
+// invincible=1 is Invincible owners: the unsteered walk's bumps cost no hearts, so no owner fires
+// you before the grab.
 const ROAD_QUERY =
-  "dev=1&gear=runningShoes&money=5000&pack=archie,lady,ginger&seed=1&walker=trista";
-const SAVE_EDITS_KEY = HARNESS.storageKeys.devSaveEdits;
+  "dev=1&gear=runningShoes&invincible=1&money=5000&pack=archie,lady,ginger&seed=1&walker=trista";
+// The game's console warning for a run parameter it ignores.
+const RUN_SETUP_WARNING = /^Run setup: /;
 const SAVE_KEY = HARNESS.storageKeys.save;
-// The start screen's bank, added to a new player's $0 by the dev panel's save edit, which also
-// makes the game write its save.
+// The start screen's bank, in place of a new player's $0.
 const START_BANK_CENTS = 60_000;
 // The frames the start screen settles for before its grab.
 const START_SETTLE_MS = 2000;
 const START_SAVE = {
+  bankCents: START_BANK_CENTS,
   helpSeen: true,
   lastLoadout: { dogs: ["archie", "ginger", "kilo"], gear: "runningShoes" },
   owned: {
@@ -149,6 +156,11 @@ const ALLOWED = new Set(
   [...PALETTE64, ...NEUTRAL_HEX, ...Object.values(PICKER_UI)].map((hex) => hex.toLowerCase()),
 );
 
+/** Whether localStorage holds an entry under `key`. */
+function stored(key: string): boolean {
+  return localStorage.getItem(key) !== null;
+}
+
 /** Whether the scene keyed `key` is running, in the game at global `pageGlobal`. */
 function sceneActive([pageGlobal, key]: readonly [string, string]): boolean {
   const game = (globalThis as unknown as PageGames)[pageGlobal];
@@ -156,10 +168,13 @@ function sceneActive([pageGlobal, key]: readonly [string, string]): boolean {
 }
 
 /**
- * Whether any running scene, in the game at global `pageGlobal`, shows a text object whose text
- * includes `text`.
+ * Whether the page shows `text`: in the HTML interface over the canvas, or in a text object of a
+ * running scene of the game at global `pageGlobal`.
  */
 function showsText([pageGlobal, text]: readonly [string, string]): boolean {
+  if (document.body.innerText.includes(text)) {
+    return true;
+  }
   const game = (globalThis as unknown as PageGames)[pageGlobal];
   const has = (objects: readonly PageObject[]): boolean =>
     objects.some((o) => (typeof o.text === "string" && o.text.includes(text)) || has(o.list ?? []));
@@ -218,6 +233,26 @@ async function stepUntil<A>(page: Page, ready: (arg: A) => boolean, arg: A): Pro
   throw new Error(`gave up waiting for ${ready.name}(${JSON.stringify(arg)})`);
 }
 
+/**
+ * Presses `key` and steps KEY_RETRY_MS, again until `ready` holds in the page: a screen takes no
+ * keys until it is ready for them.
+ */
+async function pressUntil<A>(
+  page: Page,
+  key: string,
+  ready: (arg: A) => boolean,
+  arg: A,
+): Promise<void> {
+  for (let elapsed = 0; elapsed < MAX_FRAMES * FRAME_MS; elapsed += KEY_RETRY_MS) {
+    if (await page.evaluate(ready, arg)) {
+      return;
+    }
+    await page.keyboard.press(key);
+    await stepFor(page, KEY_RETRY_MS);
+  }
+  throw new Error(`gave up pressing ${key} for ${ready.name}(${JSON.stringify(arg)})`);
+}
+
 /** Steps `ms`, a frame at a time. */
 async function stepFor(page: Page, ms: number): Promise<void> {
   for (let elapsed = 0; elapsed < ms; elapsed += FRAME_MS) {
@@ -259,7 +294,7 @@ async function freshPage(browser: Browser): Promise<[Context, Page]> {
     locale: "en-CA",
     reducedMotion: "no-preference",
     timezoneId: "America/Toronto",
-    viewport: { height: HEIGHT + DEV_BAR_HEIGHT, width: WIDTH },
+    viewport: { height: HEIGHT, width: WIDTH },
   });
   const page = await context.newPage();
   await page.clock.install({ time: CLOCK_START - 1000 });
@@ -270,14 +305,17 @@ async function freshPage(browser: Browser): Promise<[Context, Page]> {
 /** The walk grab. */
 async function roadGrab(baseUrl: string, browser: Browser): Promise<RgbaImage> {
   const [context, page] = await freshPage(browser);
-  await context.addInitScript(
-    ([key, text]) => {
-      sessionStorage.setItem(key, text);
-    },
-    [CHEATS_KEY, JSON.stringify(ROAD_CHEATS)] as const,
-  );
+  const ignored: string[] = [];
+  page.on("console", (message) => {
+    if (message.type() === "warning" && RUN_SETUP_WARNING.test(message.text())) {
+      ignored.push(message.text());
+    }
+  });
   await page.goto(`${baseUrl}/play/?${ROAD_QUERY}`);
   await stepUntil(page, sceneActive, [PAGE_GLOBAL, "run"] as const);
+  if (ignored.length) {
+    throw new Error(`the game ignored part of ROAD_QUERY:\n${ignored.join("\n")}`);
+  }
   const pull = [PAGE_GLOBAL, PULL_TEXT] as const;
   for (let frame = 0; !(await page.evaluate(showsText, pull)); frame += 1) {
     if (frame === MAX_FRAMES) {
@@ -295,31 +333,27 @@ async function roadGrab(baseUrl: string, browser: Browser): Promise<RgbaImage> {
   return image;
 }
 
-/** A new player's save with START_BANK_CENTS in the bank, as stored. */
+/**
+ * A new player's save as stored: a first visit stores nothing until something changes the save,
+ * and closing Help marks it seen.
+ */
 async function newSave(baseUrl: string, browser: Browser): Promise<Record<string, unknown>> {
   const [context, page] = await freshPage(browser);
-  await context.addInitScript(
-    ([key, text]) => {
-      sessionStorage.setItem(key, text);
-    },
-    [SAVE_EDITS_KEY, JSON.stringify([{ amount: START_BANK_CENTS, kind: "addMoney" }])] as const,
-  );
   await page.goto(`${baseUrl}/play/?dev=1`);
   await stepUntil(page, sceneActive, [PAGE_GLOBAL, "start"] as const);
+  await pressUntil(page, "Shift+Slash", sceneActive, [PAGE_GLOBAL, "help"] as const);
+  await pressUntil(page, "Escape", stored, SAVE_KEY);
   const text = await page.evaluate((key) => localStorage.getItem(key), SAVE_KEY);
   await context.close();
   if (text === null) {
-    throw new Error(`no ${SAVE_KEY} after the start screen opened`);
+    throw new Error(`no ${SAVE_KEY} after Help closed`);
   }
   return JSON.parse(text) as Record<string, unknown>;
 }
 
 /** The start screen grab. */
 async function startGrab(baseUrl: string, browser: Browser): Promise<RgbaImage> {
-  const stored = await newSave(baseUrl, browser);
-  // Reduced motion stills the selection borders' travelling segment.
-  const settings = { ...(stored.settings as object), reducedMotion: true };
-  const save = { ...stored, ...START_SAVE, settings };
+  const save = { ...(await newSave(baseUrl, browser)), ...START_SAVE };
   const [context, page] = await freshPage(browser);
   await context.addInitScript(
     ([key, text]) => {

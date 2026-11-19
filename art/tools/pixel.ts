@@ -285,12 +285,12 @@ interface ExportRect {
 interface GameData {
   // Each card face's illustration key and the card-frame tag it shows in.
   cards: readonly { art: string; frame: string }[];
-  // The browser harness's dev=1 game global, preview container, storage keys and the walk's pull
+  // The browser harness's dev=1 game global, preview container, save key and the walk's pull
   // message, which home_grabs.ts drives the built game with.
   devHarness: {
     pageGlobal: string;
     previewHost: string;
-    storageKeys: { devCheats: string; devSaveEdits: string; save: string };
+    storageKeys: { save: string };
     text: { pull: string };
   };
   dogs: readonly { id: string; size: string }[];
@@ -346,8 +346,6 @@ const GAME_FIELDS: readonly string[] = [
   "cards[].frame",
   "devHarness.pageGlobal",
   "devHarness.previewHost",
-  "devHarness.storageKeys.devCheats",
-  "devHarness.storageKeys.devSaveEdits",
   "devHarness.storageKeys.save",
   "devHarness.text.pull",
   "dogs[].id",
