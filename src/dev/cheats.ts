@@ -15,7 +15,7 @@ import { MAX_RUN_DOGS, type SaveDocument } from "../save/schema.ts";
 import { mapPack } from "../state/pack.ts";
 import type { PackSlot, RunState } from "../state/runState.ts";
 import { addCents, type Cents, cents, clampHearts } from "../units.ts";
-import type { RunSetup } from "./runSetup.ts";
+import { MAX_SEED, type RunSetup } from "./runSetup.ts";
 
 // sessionStorage: an input log, as encodeInputLog writes it, for the next run to play back.
 // The run that reads it should remove it, so a reload plays normally.
@@ -78,6 +78,17 @@ export function startZones(data: RouteData): ZoneId[] {
 // The choice after current in choices, round to the first.
 export function nextChoice<T>(choices: readonly T[], current: T): T {
   return choices[(choices.indexOf(current) + 1) % choices.length] as T;
+}
+
+// A seed typed in its field: a whole number in range, or empty for a random one; undefined for
+// anything else, which leaves the seed as it was.
+export function seedFrom(text: string): number | null | undefined {
+  const trimmed = text.trim();
+  if (trimmed === "") {
+    return null;
+  }
+  const seed = /^\d+$/.test(trimmed) ? Number(trimmed) : Number.NaN;
+  return seed <= MAX_SEED ? seed : undefined;
 }
 
 // The Pocket choices: the one picked on the Start screen, none, then every gear item.

@@ -21,6 +21,7 @@ import {
   nextWalkSetup,
   type OwnGrant,
   pocketChoices,
+  seedFrom,
   showTipsAgain,
   startZones,
   timeScaleOf,
@@ -30,7 +31,7 @@ import {
   walkCheat,
   withCheats,
 } from "./cheats.ts";
-import type { RunSetup } from "./runSetup.ts";
+import { MAX_SEED, type RunSetup } from "./runSetup.ts";
 
 const BASE: RunSetup = { dev: false, seed: 7, speed: 1, zone: 1 };
 const FIRST = firstZoneId(gameData);
@@ -155,5 +156,21 @@ describe("This walk's cheats", () => {
     } as const;
     expect(canFinishZone(ended)).toBe(false);
     expect(finishZone(data, ended)).toBe(ended);
+  });
+});
+
+describe("seedFrom", () => {
+  it.each<[string, number | null | undefined]>([
+    ["", null],
+    ["  ", null],
+    ["42", 42],
+    [" 7 ", 7],
+    [String(MAX_SEED), MAX_SEED],
+    [String(MAX_SEED + 1), undefined],
+    ["-1", undefined],
+    ["1.5", undefined],
+    ["seed", undefined],
+  ])("reads %j as %s", (text, seed) => {
+    expect(seedFrom(text)).toBe(seed);
   });
 });

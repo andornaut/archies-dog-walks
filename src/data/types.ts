@@ -1116,6 +1116,53 @@ export interface MenuText {
     readonly titleMany: string;
     readonly titleOne: string;
   };
+  // The Cheats modal, opened from Settings in a browser tab (gameplay/cheats.md). A {cash},
+  // {debuff} or {upgrade} is filled in by the game.
+  readonly cheats: {
+    readonly add: string;
+    readonly applyDebuff: string;
+    readonly copyRunLink: string;
+    readonly finishZone: string;
+    readonly fpsCounter: string;
+    readonly grantAllUpgrades: string;
+    readonly grantUpgrade: string;
+    // The groups' headings, in the modal's order.
+    readonly groups: {
+      readonly nextWalk: string;
+      readonly other: string;
+      readonly startScreen: string;
+      readonly thisWalk: string;
+    };
+    readonly invincible: string;
+    // Copy run link's label once its link is copied.
+    readonly linkCopied: string;
+    // Settings' button that opens the modal.
+    readonly open: string;
+    readonly ownDogSlots: string;
+    readonly ownDogs: string;
+    readonly ownGear: string;
+    readonly pocket: string;
+    readonly pocketNone: string;
+    readonly pocketPicked: string;
+    readonly refillHearts: string;
+    // Reset save's confirmation.
+    readonly reset: {
+      readonly cancel: string;
+      readonly confirm: string;
+      readonly note: string;
+      readonly title: string;
+    };
+    readonly resetSave: string;
+    readonly seed: string;
+    readonly seedRandom: string;
+    readonly showTips: string;
+    readonly speed: string;
+    readonly speeds: { readonly fast: string; readonly normal: string; readonly slow: string };
+    readonly startAt: string;
+    readonly title: string;
+    readonly unlockAll: string;
+    readonly unlockWalkers: string;
+  };
   // Words every panel shares: its close control's accessible name.
   readonly common: {
     readonly close: string;
