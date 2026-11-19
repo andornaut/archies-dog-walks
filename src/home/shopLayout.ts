@@ -3,51 +3,34 @@ import { type FontMetrics, inkRowsFromCapTop } from "@andornaut/game-kit/runtime
 
 import { DOG_SLOTS } from "../data/dogSlots.ts";
 import { SHOP_PAGE } from "../data/layout.ts";
-import { SCREEN_CONFIG } from "../data/screen.ts";
 import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";
-import { closeControl } from "../ui/closeControl.ts";
 import { helpCapDy } from "../ui/labelHelpGap.ts";
-import { DISMISS_FOOTER_SPACE } from "../ui/modal/dismissFooter.ts";
-import { MODAL, modalFamilyWidth } from "../ui/modal/layout.ts";
+import { MODAL } from "../ui/modal/layout.ts";
 import { cardTitleRow } from "../ui/modal/titleRow.ts";
+import { PAGE_LAYOUT } from "../ui/pageLayout.ts";
 import { type ScrollbarRects, scrollbarRects } from "../ui/scrollbar.ts";
 import { SELECT_OUTSET } from "../ui/selection.ts";
 import { TEXT_SCALE, TEXT_STYLE, TITLE_CAP_ROWS } from "../ui/textFit.ts";
 import { FEEDBACK } from "./feedback.ts";
-import { HOME_LAYOUT } from "./homeLayout.ts";
 
-// The Pet shop page under the home screen's top bar, which stays in view with the bank:
-// a card with its title and close control, the Dogs and Gear tabs, and each tab's
-// lists. Rows are hit areas at least MIN_PRESS tall; tabs draw 28 tall in a MIN_PRESS-tall hit
-// area. The
-// lists scroll in the list area under the tabs, laid out here as they sit scrolled to the top.
-// The Logbook wears the same page (src/home/statsLayout.ts).
+// The Pet shop page under the home screen's top bar, which stays in view with the bank: a
+// frameless page (PAGE_LAYOUT) with its heading, the Dogs and Gear tabs, each tab's lists and
+// Back. Rows are hit areas at least MIN_PRESS tall; tabs draw 28 tall in a MIN_PRESS-tall hit
+// area. The lists scroll in the list area under the tabs, laid out here as they sit scrolled to
+// the top. The Logbook wears the same page (src/home/statsLayout.ts).
 const SHOP = SHOP_PAGE;
-const PANEL_WIDTH = modalFamilyWidth(SCREEN_CONFIG.width - 2 * MODAL.margin, "large");
-const PANEL = {
-  ...SHOP.panel,
-  height: Math.min(SHOP.panel.height, SCREEN_CONFIG.height - MODAL.margin - SHOP.panel.y),
-  width: PANEL_WIDTH,
-  x: (SCREEN_CONFIG.width - PANEL_WIDTH) / 2,
-};
+const PANEL = PAGE_LAYOUT.rect;
 const PAGE_TITLE = cardTitleRow(PANEL);
-// The close control's press area starts under the top bar's, which reach over the card's top.
-const CLOSE = closeControl(PANEL);
-const CLOSE_TOP = Math.max(CLOSE.hit.y, HOME_LAYOUT.topBar.hitHeight);
-const PAGE_CLOSE = {
-  ...CLOSE,
-  hit: { ...CLOSE.hit, y: CLOSE_TOP },
-};
-const ROW_X = PANEL.x + SHOP.row.inset;
-// Rows run to the tabs' right edge, or with a scrollbar stop 6px short of its track.
-const ROW_WIDTH = PANEL.width - 2 * SHOP.row.inset;
-const ROW_SCROLL_WIDTH = ROW_WIDTH - (SHOP.row.width - SHOP.row.scrollWidth);
-// Both pages keep tab targets below the close target and selected faces below the heading.
-// Each face remains centred in its target.
-const TAB_Y = Math.max(
-  PAGE_CLOSE.hit.y + PAGE_CLOSE.hit.height,
-  PANEL.y + MODAL.header - (SHOP.tab.height - SHOP.tab.drawHeight) / 2 + FEEDBACK.liftPx,
-);
+const BACK = PAGE_LAYOUT.back;
+const TRACK_X = PAGE_LAYOUT.trackX;
+// Rows run across the page's inset, or with a scrollbar stop scrollGap short of its track.
+const ROW_X = PANEL.x + PAGE_LAYOUT.inset;
+const ROW_WIDTH = PANEL.width - 2 * PAGE_LAYOUT.inset;
+const ROW_SCROLL_WIDTH = TRACK_X - SHOP.row.scrollGap - ROW_X;
+// The tabs' targets sit under the heading, each selected face lifted below it and centred in its
+// target.
+const TAB_Y =
+  PANEL.y + MODAL.header - (SHOP.tab.height - SHOP.tab.drawHeight) / 2 + FEEDBACK.liftPx;
 const TAB = {
   drawHeight: SHOP.tab.drawHeight,
   drawY: TAB_Y + Math.floor((SHOP.tab.height - SHOP.tab.drawHeight) / 2),
@@ -60,16 +43,17 @@ const TAB = {
 // A selected tab's frame and shadow end SELECT_OUTSET under its face, within its target.
 const TAB_BOTTOM = TAB.drawY + TAB.drawHeight + SELECT_OUTSET;
 const TAB_GAP = SHOP.tab.listGap;
-// The list area: from listClear rows under the tabs' targets to the card's inner edge, from the
-// card's frame to 2px short of the scrollbar's track, or with no scrollbar to the card's frame.
+// The list area: from listClear rows under the tabs' targets to the group gap over Back, from the
+// page's left edge to trackGap short of the scrollbar's track, or with no scrollbar across the
+// page.
 const LIST_Y = Math.max(TAB_BOTTOM, TAB.y + TAB.height) + SHOP.tab.listClear;
 const LIST = {
-  height: PANEL.y + PANEL.height - MODAL.pad - DISMISS_FOOTER_SPACE - LIST_Y,
-  width: SHOP.list.width + PANEL.width - SHOP.panel.width,
-  x: PANEL.x + SHOP.list.frame,
+  height: BACK.y - MODAL.gap - LIST_Y,
+  width: TRACK_X - SHOP.list.trackGap - PANEL.x,
+  x: PANEL.x,
   y: LIST_Y,
 };
-const LIST_UNSCROLLED = { ...LIST, width: PANEL.width - 2 * SHOP.list.frame };
+const LIST_UNSCROLLED = { ...LIST, width: PANEL.width };
 // The message's plate across the tabs' span at the list's top. Each tab's first heading takes
 // the plate's strip, its capitals centred on it as the message's are, and the first rows start
 // TAB_GAP under the plate, so a message never covers a row.
@@ -93,7 +77,8 @@ const DOG_HEADING_Y =
   SLOT_ROWS.y + (DOG_SLOTS.length - 1) * SLOT_ROWS.pitch + SLOT_ROWS.height + ROWS_TO_HEADING;
 
 export const SHOP_LAYOUT = {
-  close: PAGE_CLOSE,
+  // Back, the page's only leave, fixed under the list.
+  back: BACK,
   // The Dogs tab: the slot heading and a row for every slot, then the dog heading and rows.
   dogs: {
     dogHeadingY: DOG_HEADING_Y,
@@ -106,9 +91,9 @@ export const SHOP_LAYOUT = {
     headingY: FIRST_HEADING_Y,
     rows: { ...listRows(SHOP.gearRows), y: FIRST_ROWS_Y },
   },
-  // Headings sit on the card at the rows' left, a note right-aligned at their right.
+  // Headings sit on the page at the rows' left, a note right-aligned at their right.
   headingX: ROW_X,
-  // The headings and rows scroll in rect, masked to it, with padBottom of card under the last
+  // The headings and rows scroll in rect, masked to it, with padBottom of page under the last
   // row when scrolled to the bottom; a list with no scrollbar is masked to unscrolledRect. A
   // page key moves the list its height less pageOverlap, keeping the row at the edge in view.
   // firstHeadingY is where each tab's first heading puts its capitals.
@@ -127,6 +112,7 @@ export const SHOP_LAYOUT = {
     plate: PLATE,
     textDx: SHOP.message.textDx,
   },
+  // The page under the top bar, one cream fill to the screen's edges.
   panel: PANEL,
   // In a row: the 36x36 art box and the art in it, the badge over the row's top-left
   // corner, the name and line, and the price plate or OWNED (ownedDx left of the tick's right
@@ -147,10 +133,7 @@ export const SHOP_LAYOUT = {
   // Beside a list longer than the view: a trackWidth-wide track at x, as tall as the list area,
   // and in it a thumbWidth-wide thumb thumbInset inside the track's edges, at least thumbMin
   // tall.
-  scrollbar: {
-    ...SHOP.scrollbar,
-    x: SHOP.scrollbar.x + PANEL.x - SHOP.panel.x + PANEL.width - SHOP.panel.width,
-  },
+  scrollbar: { ...SHOP.scrollbar, x: TRACK_X },
   // The tabs split span, the rows' width from x, their faces gap apart, each a hit area height
   // tall at y with its face drawHeight tall at drawY (shopTabRects, shopTabFace).
   tab: TAB,

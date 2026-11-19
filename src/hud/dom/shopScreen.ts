@@ -100,8 +100,8 @@ export interface NativeShopScreen {
 }
 
 export interface ShopScreenInput {
+  // What Back does.
   readonly close: () => void;
-  readonly closeLabel: string;
   // imageSize is a flat image's native size, which the message plate's nine-slice needs.
   readonly source: DomArtSource & {
     readonly imageSize: (key: string) => { readonly height: number; readonly width: number };
@@ -250,32 +250,11 @@ export function showShopScreen(
   const update = (next: ShopScreenView) => {
     view = next;
     const ready: Promise<readonly string[]>[] = [];
-    const nextChrome = JSON.stringify({ ...view.page, closePressed: false });
+    const nextChrome = JSON.stringify(view.page);
     if (chromeKey !== nextChrome) {
       chromeKey = nextChrome;
       chromeParts = shopPageParts(doc, input.fonts.title, view.page);
       chromeParts.push(...view.page.title.map((line) => textPart(line)));
-      const face = sheetArt(doc, input.source, "ui-icon-button");
-      const glyph = imageArt(doc, input.source, "icon-close");
-      const { close } = view.page;
-      const button = control(close.hit, input.closeLabel);
-      button.element.append(face.element, glyph.element);
-      chromeParts.push({
-        element: button.element,
-        place: (at) => {
-          button.place(at);
-          const origin = close.hit;
-          face.place(at, origin, {
-            tag: view.page.closePressed ? "pressed" : "normal",
-            x: close.x,
-            y: close.y,
-          });
-          glyph.place(at, origin, { height: 16, width: 16, x: close.x + 2, y: close.y + 1 });
-        },
-      });
-      if (lifecycle === undefined) {
-        ready.push(face.ready, glyph.ready);
-      }
       // Tabs retain their shared drawn geometry and expose their complete target as controls.
       view.page.tabs.forEach((tab, i) => {
         const hit = inputTabs(view)[i];
@@ -283,24 +262,21 @@ export function showShopScreen(
           chromeParts.push(control(hit, tab.label.text));
         }
       });
-      footer = undefined;
-      if (view.page.footer !== undefined) {
-        const action = createPanelButton(
-          doc,
-          {
-            fonts: input.fonts,
-            press: {
-              accepts,
-              burst: (event) => addTapBurst(layer, point(event)),
-              press: input.close,
-            },
+      const action = createPanelButton(
+        doc,
+        {
+          fonts: input.fonts,
+          press: {
+            accepts,
+            burst: (event) => addTapBurst(layer, point(event)),
+            press: input.close,
           },
-          view.page.footer,
-        );
-        footer = action.element;
-        footer.classList.add("adw-footer");
-        chromeParts.push(action);
-      }
+        },
+        view.page.back,
+      );
+      footer = action.element;
+      footer.classList.add("adw-footer");
+      chromeParts.push(action);
       chrome.replaceChildren(...chromeParts.map(({ element }) => element));
       chrome.style.pointerEvents = "auto";
     }

@@ -63,18 +63,13 @@ it.each([gameData.homeText.shop.title, gameData.menuText.stats.title])(
   "uses the same role and visible selected-tab clearance for %s",
   (title) => {
     const page = shopPageView(measure, {
-      closePressed: false,
       tabs: [
         { label: gameData.homeText.shop.tabs.dogs, open: true, pressed: false },
         { label: gameData.homeText.shop.tabs.gear, open: false, pressed: false },
       ],
       title,
     });
-    balanced(page.card.y, page.title, Math.min(...page.tabs.map((tab) => tab.face.y + tab.dy)));
-    expect(page.close.titleExclusion).toBe("hit");
-    expect(page.close.x + 20).toBe(page.card.x + page.card.width - 6);
-    expect(page.close.y - page.card.y).toBe(6);
-    expect(page.close.hit.y + page.close.hit.height).toBeLessThanOrEqual(page.tabs[0]!.face.y - 10);
+    balanced(page.panel.y, page.title, Math.min(...page.tabs.map((tab) => tab.face.y + tab.dy)));
   },
 );
 it("compensates the Settings first visible icon inset without changing row contents", () => {

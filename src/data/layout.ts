@@ -748,17 +748,19 @@ export const BADGE_NAME_PAD = 2;
 
 // Pages
 
+// The Help, Logbook and Pet shop pages under the top bar: Back's rows over the screen's foot, and
+// the content's side inset, which the scrollbar's track keeps from the screen's right edge too.
+export const PAGE = { backFoot: 12, inset: 8 } as const;
+
 // The Pet shop page, which the Logbook wears too.
 export const SHOP_PAGE = {
   // The Gear tab's rows' height.
   gearRows: { height: 50 },
-  // The list area: the card's frame round it, the rows of card under the last row, the rows a
-  // page key keeps in view, and its width beside a scrollbar.
-  list: { frame: 8, padBottom: 8, pageOverlap: 48, width: 322 },
+  // The list area: the rows of page under the last row, the rows a page key keeps in view, and
+  // its gap from the scrollbar's track.
+  list: { padBottom: 8, pageOverlap: 48, trackGap: 2 },
   // art: the message plate's frame; and the message's inset from the plate's sides.
   message: { frame: 3, textDx: 10 },
-  // The card.
-  panel: { height: 512, width: 352, x: 4, y: 44 } satisfies Rect,
   // The message plate's height.
   plateHeight: 28,
   // A row.
@@ -769,29 +771,24 @@ export const SHOP_PAGE = {
     badge: { dx: -2, dy: -3 },
     // The art box's left edge and side.
     box: { dx: 4, size: 36 },
-    // The rows' left edge in from the card's.
-    inset: 12,
     // OWNED's right edge left of the tick's.
     ownedDx: 20,
     // The price plate's inset from the row's right.
     plateInset: 6,
-    // The row's width beside a scrollbar.
-    scrollWidth: 314,
+    // The row's gap from the scrollbar's track.
+    scrollGap: 6,
     // The text's left edge.
     textDx: 46,
     // The text's gap from the price plate.
     textGap: 6,
-    // The row's width.
-    width: 328,
   },
-  // The scrollbar: the thumb's inset and least height, the thumb's and track's widths, and the
-  // track's left edge.
-  scrollbar: { thumbInset: 1, thumbMin: 16, thumbWidth: 6, trackWidth: 8, x: 336 },
+  // The scrollbar: the thumb's inset and least height, and the thumb's and track's widths.
+  scrollbar: { thumbInset: 1, thumbMin: 16, thumbWidth: 6, trackWidth: 8 },
   // The Dogs tab's slot and dog rows' height.
   slotRows: { height: 48 },
-  // The tabs, directly under the close control's press area: the face's height, the gap between
-  // faces (small buttons), the press area's height, the rows between the press areas and the
-  // list, and the rows between the message plate and the first rows.
+  // The tabs under the heading: the face's height, the gap between faces (small buttons), the
+  // press area's height, the rows between the press areas and the list, and the rows between the
+  // message plate and the first rows.
   tab: { drawHeight: 28, gap: SMALL_BUTTON_GAP, height: MIN_PRESS, listClear: 1, listGap: 6 },
 } as const;
 
@@ -884,8 +881,6 @@ export const HELP_SCREEN = {
   // The body: its line pitch, most lines, scale and left edge, and its lines' gap from the
   // scrollbar's track.
   body: { lineHeight: 18, maxLines: 6, scale: 2, scrollGap: 6, x: 8 },
-  // The rows under the Help Close footer to the screen's bottom.
-  buttonsFoot: 12,
   // The page dots' side.
   dots: { size: 8 },
   // The picture's frame: its top under the top bar, the cream pad round the picture's well, and
@@ -893,9 +888,6 @@ export const HELP_SCREEN = {
   frame: { captionGap: 6, pad: 4, top: 8 },
   // art: the picture's size, the walk screen's rows under its walk bar less 16 columns a side.
   picture: { height: 196, width: 328 },
-  // The body's scrollbar's track's right edge in from the screen's, as far as the body's left
-  // edge and the frame's sides are.
-  scrollbarInset: 8,
   // The title's scale and left edge.
   title: { scale: 2, x: 8 },
   // The title's capitals under the frame's last row.

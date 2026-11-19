@@ -1,15 +1,8 @@
-import { isOutside } from "@andornaut/game-kit/runtime/input/outsideTap";
 import { containsPoint, type Rect } from "@andornaut/game-kit/runtime/rect";
 import { describe, expect, it } from "vitest";
 
 import { SCREEN_LAYOUT } from "../data/screen.ts";
-import {
-  homeBackAction,
-  homeBarAction,
-  homeBarButtonAt,
-  overlayRegion,
-  regionOutside,
-} from "./homeBar.ts";
+import { homeBackAction, homeBarAction, homeBarButtonAt, overlayRegion } from "./homeBar.ts";
 import { HOME_LAYOUT, homeBarButtons } from "./homeLayout.ts";
 
 const centre = (r: Rect) => ({ x: r.x + r.width / 2, y: r.y + r.height / 2 });
@@ -24,16 +17,14 @@ it("places home overlays in the safe region under the shared top section", () =>
   expect(overlayRegion("walk")).toEqual(SCREEN_LAYOUT.walkView);
 });
 
-it("keeps a nonmodal page's live bar controls out of its outside dismissal", () => {
+it("finds each live bar control at its own press area only", () => {
   for (const [id, { hit }] of homeBarButtons(true)) {
     const p = centre(hit);
     expect(homeBarButtonAt(true, p.x, p.y)).toBe(id);
-    expect(isOutside(regionOutside(true, []), p)).toBe(false);
     expect(homeBarButtonAt(true, hit.x, hit.y + hit.height)).toBeUndefined();
   }
   const bank = { x: HOME_LAYOUT.topBar.well.x, y: HOME_LAYOUT.topBar.mid };
   expect(homeBarButtonAt(true, bank.x, bank.y)).toBeUndefined();
-  expect(isOutside(regionOutside(true, []), bank)).toBe(true);
 });
 
 it.each([
@@ -58,7 +49,7 @@ describe("homeBackAction", () => {
   );
 });
 
-it("compacts an unavailable Exit and keeps shown controls outside overlay dismissal", () => {
+it("compacts an unavailable Exit", () => {
   expect(
     homeBarButtons(true).map(([id, control]) => [
       id,
@@ -77,6 +68,5 @@ it("compacts an unavailable Exit and keeps shown controls outside overlay dismis
   ]);
   const removedColumn = { x: 240, y: 20 };
   expect(homeBarButtonAt(false, removedColumn.x, removedColumn.y)).toBeUndefined();
-  expect(isOutside(regionOutside(false, []), removedColumn)).toBe(true);
-  expect(isOutside(regionOutside(true, []), removedColumn)).toBe(false);
+  expect(homeBarButtonAt(true, removedColumn.x, removedColumn.y)).toBe("mute");
 });

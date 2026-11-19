@@ -72,15 +72,10 @@ it("uses the selected client family without changing title exclusion or safe are
   expect(modalFamilyWidth(240, "large")).toBe(240);
 });
 
-it("selects Medium navigation and confirmations, Large settings, steps and shared lists", () => {
+it("selects Medium navigation and confirmations, Large settings and steps", () => {
   expect(navigationMenuWidth(gameData, measure, 328)).toBe(264);
   expect(settingsLayout(fonts, SCREEN_CONFIG, []).panel.width).toBe(328);
   expect(installStepsLayout(SCREEN_CONFIG, 3).card.width).toBe(328);
-  expect(SHOP_LAYOUT.panel.width).toBe(328);
-  expect(STATS_LAYOUT.panel.width).toBe(328);
-  expect(SHOP_LAYOUT.panel.x).toBe(MODAL.margin);
-  expect(SHOP_LAYOUT.panel.y + SHOP_LAYOUT.panel.height).toBe(SCREEN_CONFIG.height - MODAL.margin);
-  expect(SHOP_LAYOUT.row.x + SHOP_LAYOUT.row.width).toBeLessThan(SHOP_LAYOUT.panel.x + 328);
 });
 
 it("stacks full-size paired actions against the selected Medium inner width", () => {
@@ -157,14 +152,13 @@ it("reflows narrow Logbook stat labels and grows content before the following se
   const save = veteranSave();
   const view = logbookView(measure, gameData, {
     badges: [],
-    closePressed: false,
     pressedTab: undefined,
     save: {
       ...save,
       stats: {
         ...save.stats,
         bestWalk: { dogs: [...save.owned.dogs, ...save.owned.dogs], zonesFinished: 4 },
-        bestZoneFinished: 9999,
+        bestZoneFinished: 99999999,
       },
     },
     tab: "runs",
@@ -185,7 +179,7 @@ it("reflows narrow Logbook stat labels and grows content before the following se
   const lines = measure.wrapNote(
     view.frame.right -
       STATS_LAYOUT.rows.left -
-      measure.inkWidth("body", "9999") -
+      measure.inkWidth("body", "99999999") -
       STATS_LAYOUT.rows.gap,
     labelWords,
   );

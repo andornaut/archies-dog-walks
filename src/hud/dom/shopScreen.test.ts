@@ -8,7 +8,6 @@ import { shopPageView } from "../../home/shopPageView.ts";
 import { FakeDocument, type FakeElement, fakeLayer } from "../../testing/fakeDom.ts";
 import { fontFileMetrics, gameFont } from "../../testing/fontInk.ts";
 import { domScale } from "../../ui/domScale.ts";
-import { dismissFooter } from "../../ui/modal/dismissFooter.ts";
 import { modalTitleInk } from "../../ui/modal/titleRole.ts";
 import { PALETTE } from "../../ui/palette.ts";
 import { type ShopScreenInput, type ShopScreenView, showShopScreen } from "./shopScreen.ts";
@@ -43,7 +42,6 @@ function fixture({ source = SOURCE }: { readonly source?: ShopScreenInput["sourc
         wrapNote: () => [],
       },
       {
-        closePressed: false,
         tabs: [],
         title: gameData.homeText.shop.title,
       },
@@ -68,7 +66,6 @@ function fixture({ source = SOURCE }: { readonly source?: ShopScreenInput["sourc
       cancel,
       click: vi.fn(),
       close,
-      closeLabel: gameData.menuText.common.close,
       down,
       fonts: { body: gameFont("font-body"), title: gameFont("font-title") },
       key: vi.fn(),
@@ -157,23 +154,15 @@ it("cancels a carried row gesture when a nested modal opens and rejects its late
   screen.destroy();
 });
 
-it("closes Shop through its native footer without activating a list gesture", async () => {
-  const { close, doc, down, root, screen, up, view } = fixture();
-  const measure = { inkWidth: () => 60, title: fontFileMetrics("font-title") };
-  screen.update({
-    ...view,
-    page: {
-      ...view.page,
-      footer: dismissFooter(
-        measure,
-        { label: gameData.menuText.common.close, primary: true },
-        view.page.card,
-      ),
-    },
-  });
+it("leaves Shop by its native Back alone, without activating a list gesture", async () => {
+  const { close, doc, down, root, screen, up } = fixture();
   await settle();
+  const labels = root.all().map((node) => node.getAttribute("aria-label"));
+  expect(labels).toContain(gameData.menuText.pageBack);
+  expect(labels).not.toContain(gameData.menuText.common.close);
+  expect(root.all().some((node) => node.className.includes("adw-card"))).toBe(false);
   const footer = root.all().find((node) => node.className.includes("adw-footer"))!;
-  expect(footer).toBeDefined();
+  expect(footer.getAttribute("aria-label")).toBe(gameData.menuText.pageBack);
   const target = footer.children[0]!;
   root.fire("pointerdown", pointer(target, 80, "pointerdown"));
   doc.fire("pointerup", pointer(target, 80, "pointerup"));

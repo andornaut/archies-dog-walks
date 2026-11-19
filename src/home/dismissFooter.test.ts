@@ -10,6 +10,7 @@ import { fontFileMetrics, gameFont, inkWidth } from "../testing/fontInk.ts";
 import { MODAL } from "../ui/modal/layout.ts";
 import { modalTitleInk } from "../ui/modal/titleRole.ts";
 import type { PanelButton } from "../ui/modal/types.ts";
+import { PAGE_LAYOUT } from "../ui/pageLayout.ts";
 import { cents } from "../units.ts";
 import { badgeCardView } from "./badgeCardView.ts";
 import { badgeWall } from "./badgesView.ts";
@@ -141,15 +142,11 @@ it("keeps only the purchase choices and corner close control", () => {
   expect(bottom + MODAL.pad).toBe(purchase.card.panel.y + purchase.card.panel.height);
 });
 
-it("keeps the Shop and Logbook scroll viewport clear of their centred footer", () => {
-  const view = shopPageView(measure, {
-    closePressed: false,
-    tabs: [],
-    title: gameData.menuText.stats.title,
-  });
-  const close = footer(view.card, view.footer, true);
+it("keeps the Shop and Logbook scroll viewport clear of their fixed Back", () => {
+  const { back } = shopPageView(measure, { tabs: [], title: gameData.menuText.stats.title });
+  expect(back).toMatchObject({ label: gameData.menuText.pageBack, primary: true });
+  expect(back.rect).toEqual(PAGE_LAYOUT.back);
   for (const rect of [SHOP_LAYOUT.list.rect, SHOP_LAYOUT.list.unscrolledRect, STATS_LAYOUT.view]) {
-    expect(rect.y + rect.height).toBeLessThanOrEqual(close.rect.y - MODAL.gap);
-    expect(rect.height).toBeGreaterThan(48);
+    expect(rect.y + rect.height).toBe(back.rect.y - MODAL.gap);
   }
 });

@@ -1,8 +1,7 @@
-import type { Rect } from "@andornaut/game-kit/runtime/rect";
 import { browserExitPage, exitApp } from "@andornaut/game-kit/runtime/web/pwa/dom/exitApp";
 import type { Scene } from "phaser";
 
-import { homeBarAction, homeBarButtonAt, regionOutside } from "../home/homeBar.ts";
+import { homeBarAction, homeBarButtonAt } from "../home/homeBar.ts";
 import type { HomeBarButton } from "../home/homeLayout.ts";
 import { openGuard } from "../input/openGuard.ts";
 import { exitShown } from "../pwa/index.ts";
@@ -82,11 +81,6 @@ export function openHomePage(from: Scene, page: HomePage): void {
 // leaving never navigates elsewhere.
 export function exitGame(): void {
   exitApp(browserExitPage());
-}
-
-// A nonmodal page's outside excludes the live retained bar, including capability-dependent Exit.
-export function sceneRegionOutside(scene: Scene, covered: readonly Rect[]) {
-  return regionOutside(nativeTopSectionButtons(scene).includes("exit"), covered);
 }
 
 // A page the top bar or the Menu opens (HOME_PAGE_OPENING_EVENT) clears scene first, so the page

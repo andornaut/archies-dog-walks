@@ -37,10 +37,10 @@ import { loadSheet } from "../ui/dom/sheetFrames.ts";
 import { rectIndexAt } from "../ui/grid.ts";
 import { badgeCard } from "./badges.ts";
 import { pillColours } from "./effectNameColours.ts";
-import { listenHomeBar, sceneRegionOutside } from "./homeBarPress.ts";
+import { listenHomeBar } from "./homeBarPress.ts";
 import { canvasDetailMeasure } from "./modalMeasure.ts";
 import { mountNativeOverlay } from "./nativeOverlayReady.ts";
-import { closeOverlay, listenDismiss, nativeSceneAccepts, type OverlayData } from "./overlay.ts";
+import { closeOverlay, nativeSceneAccepts, onBackPressed, type OverlayData } from "./overlay.ts";
 import { currentSettings, earnedAchievements, profileSave } from "./profileStore.ts";
 import {
   addHtmlBadgeCard,
@@ -57,7 +57,6 @@ import { listenTargetPress, sameByValue, type TargetPressListener } from "./targ
 type Target = LogbookTarget;
 const TABS = STATS_TABS;
 const TAB_RECTS: readonly Rect[] = statsTabRects();
-const PANEL = STATS_LAYOUT.panel;
 const VIEW = STATS_LAYOUT.view;
 const SCROLL = STATS_LAYOUT.scroll;
 const OPEN_TAB: StatsTab = "badges";
@@ -120,14 +119,9 @@ export class StatsScene extends Scene {
     document.addEventListener("keydown", onKey, true);
     this.events.once("shutdown", () => document.removeEventListener("keydown", onKey, true));
     // The Logbook is a page, not a modal, as the Pet shop is: its live top bar keeps its buttons,
-    // and the bar's empty area and the margins around the page close it. An open badge card is
-    // modal, and its own backdrop takes those taps instead. Back closes an open card first.
-    listenDismiss(
-      this,
-      sceneRegionOutside(this, [PANEL]),
-      () => this.close(),
-      () => this.back(),
-    );
+    // and only Back, Escape and the system back leave it. An open badge card is modal, and its own
+    // backdrop takes taps instead. Back closes an open card first.
+    onBackPressed(this, () => this.back());
     // A page the top bar opens over the Logbook closes an open card first.
     listenHomeBar(this, () => {
       if (this.detail !== undefined) {
@@ -276,7 +270,6 @@ export class StatsScene extends Scene {
     const save = profileSave(this);
     const view = logbookView(canvasDetailMeasure(this), gameData, {
       badges,
-      closePressed: false,
       pressedTab:
         typeof this.pressed === "object" && "tab" in this.pressed ? this.pressed.tab : undefined,
       save,

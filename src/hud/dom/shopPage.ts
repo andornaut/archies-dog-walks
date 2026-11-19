@@ -8,16 +8,15 @@ import {
   SELECT_FRAME,
   type ShopPageView,
 } from "../../home/shopPageView.ts";
-import { createTextLine, placeFrame, placeText, setBox } from "../../ui/dom/pixelLine.ts";
+import { createTextLine, placeText, setBox } from "../../ui/dom/pixelLine.ts";
 import { artPixel, type DomScale, frameRect, gridRect } from "../../ui/domScale.ts";
 import { PALETTE } from "../../ui/palette.ts";
 import { SELECT_OUTSET } from "../../ui/selection.ts";
 import type { DomPart } from "./questionPanel.ts";
 
-// The page the Pet shop and the Logbook share in HTML over the canvas: the wood under the card,
-// the ui-detail-card and the tabs, at the places the canvas draws them (shopPageView). The
-// page's title and close control are a panel's (showQuestionPanel). Boxes, bands and keylines are
-// whole art pixels from their frame's snapped corner.
+// The page the Pet shop and the Logbook share in HTML over the canvas: the cream fill and the
+// tabs, at the places the canvas draws them (shopPageView). Boxes, bands and keylines are whole
+// art pixels from their frame's snapped corner.
 
 type Box = Parameters<typeof setBox>[1];
 
@@ -179,13 +178,7 @@ function tabPart(doc: Document, title: BitmapFont, tab: PageTab): DomPart {
   };
 }
 
-// The wood, the card and the tabs, in order.
+// The fill and the tabs, in order.
 export function shopPageParts(doc: Document, title: BitmapFont, page: ShopPageView): DomPart[] {
-  const card = doc.createElement("div");
-  card.className = "adw-card";
-  return [
-    fillPart(doc, page.wood),
-    { element: card, place: (scale) => placeFrame(scale, { x: 0, y: 0 }, card, page.card) },
-    ...page.tabs.map((tab) => tabPart(doc, title, tab)),
-  ];
+  return [fillPart(doc, page.fill), ...page.tabs.map((tab) => tabPart(doc, title, tab))];
 }

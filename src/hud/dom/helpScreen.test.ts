@@ -105,7 +105,7 @@ describe("the HTML help screen", () => {
   });
 });
 
-it("keeps all Help copy scrollable without page gestures and binds every page's Close independently", async () => {
+it("keeps all Help copy scrollable without page gestures and binds every page's Back independently", async () => {
   await Promise.all(
     [0, gameData.help.length - 1].map(async (page) => {
       const down = vi.fn(),
@@ -155,7 +155,7 @@ it("keeps all Help copy scrollable without page gestures and binds every page's 
       expect(up).not.toHaveBeenCalled();
       expect(presses.every((press) => press.mock.calls.length === 0)).toBe(true);
       const buttons = nodes.filter((node) => node.tagName === "button");
-      expect(buttons.at(-1)?.getAttribute("aria-label")).toBe(gameData.menuText.common.close);
+      expect(buttons.at(-1)?.getAttribute("aria-label")).toBe(gameData.menuText.pageBack);
       buttons.at(-1)?.fire("click", { detail: 0 });
       expect(close).toHaveBeenCalledOnce();
       expect(presses.every((press) => press.mock.calls.length === 0)).toBe(true);

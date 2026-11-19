@@ -175,7 +175,6 @@ const measure: LogbookMeasure = {
 const actualTab = (tab: Parameters<typeof logbookView>[2]["tab"]) =>
   logbookView(measure, gameData, {
     badges: BADGES,
-    closePressed: false,
     pressedTab: undefined,
     save: fullestSave,
     tab,

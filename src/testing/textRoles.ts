@@ -599,20 +599,26 @@ export function cardTitles(): CardTitles[] {
       role: "settings title",
       titles: [title],
     },
-    {
-      card: SHOP_LAYOUT.panel,
-      close: SHOP_LAYOUT.close,
-      role: "shop title",
-      titles: [gameData.homeText.shop.title],
-    },
   ];
 }
 
-// Each card's titles in the room its title row leaves them beside its close control.
+// Each card's titles in the room its title row leaves them beside its close control, and the
+// Pet shop's and the Logbook's page titles across their title row, which has none.
 function cardTitleRoles(): TextRoleCase[] {
-  return cardTitles().flatMap(({ card, close = closeControl(card), role, titles }) =>
+  const rooms = [
+    ...cardTitles().map(({ card, close = closeControl(card), role, titles }) => ({
+      role,
+      room: barTitleRoom(cardTitleRow(card), close),
+      titles,
+    })),
+    {
+      role: "shop and Logbook page title",
+      room: barTitleRoom(SHOP_LAYOUT.title.row, undefined),
+      titles: [gameData.homeText.shop.title, gameData.menuText.stats.title],
+    },
+  ];
+  return rooms.flatMap(({ role, room, titles }) =>
     titles.flatMap((title) => {
-      const room = barTitleRoom(cardTitleRow(card), close);
       const heading = modalTitleLayout(
         {
           font: TITLE,

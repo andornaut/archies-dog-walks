@@ -23,7 +23,6 @@ const LABELS = ["Badges", "Dogs", "Walks"];
 function faceWidths(dpr: number, open: number): number[] {
   const doc = new FakeDocument();
   const view = shopPageView(MEASURE, {
-    closePressed: false,
     tabs: LABELS.map((label, i) => ({ label, open: i === open, pressed: false })),
     title: "Logbook",
   });

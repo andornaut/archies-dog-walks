@@ -3,6 +3,7 @@ import type { Rect } from "@andornaut/game-kit/runtime/rect";
 import { logbookScrollbar, type LogbookView } from "../../home/logbookView.ts";
 import type { ShopPageView } from "../../home/shopPageView.ts";
 import { statsTabRects } from "../../home/statsLayout.ts";
+import { pageCloseControl } from "../../ui/closeControl.ts";
 import { bindGameAction } from "../../ui/dom/actionBinding.ts";
 import type { NativeGesture } from "../../ui/dom/modalLifecycle.ts";
 import { setBox } from "../../ui/dom/pixelLine.ts";
@@ -20,9 +21,9 @@ import { artPart, type DomDetailCardInput, textPart } from "./detailCard.ts";
 import { type DomPart, type DomQuestionPanel, showQuestionPanel } from "./questionPanel.ts";
 import { fillPart, framedBoxPart, shopPageParts } from "./shopPage.ts";
 
-// The Logbook in HTML over the canvas: the page (shopPageParts), its title and close control
-// drawn as a panel's (showQuestionPanel), the open tab's content clipped to the list's frame and
-// moved up by the scroll, and the scrollbar, at the places the canvas draws them (logbookView).
+// The Logbook in HTML over the canvas: the page (shopPageParts), its title and Back drawn as a
+// panel's (showQuestionPanel), the open tab's content clipped to the list's frame and moved up by
+// the scroll, and the scrollbar, at the places the canvas draws them (logbookView).
 // It is a page like the Pet shop, not a modal: its top bar stays live, and a modal over it (a
 // badge card, the Menu) dims and stills it with the rest of the background.
 // Where the list is scrolled to, and whether it has settled: no drag or fling moving it.
@@ -45,6 +46,7 @@ export interface DomLogbookInput extends Omit<DomDetailCardInput, "close" | "vie
   readonly view: LogbookView;
   readonly navigation: {
     readonly activate: (target: LogbookTarget) => void;
+    // What Back does.
     readonly close: () => void;
     readonly focus: (rect: Rect) => void;
     readonly gesture: NativeGesture;
@@ -225,10 +227,10 @@ export function showLogbook(layer: UiLayer, input: DomLogbookInput): DomLogbook 
     place: (scale) => tabs.forEach((tab) => tab.place(scale)),
   };
   const shown = showQuestionPanel(layer, {
-    close: input.navigation.close,
+    close: null,
     closeLabel: input.closeLabel,
-    closePressed: page.closePressed,
     fonts: input.fonts,
+    footerPress: input.navigation.close,
     gesture: input.navigation.gesture,
     modal: false,
     numberKeys: false,
@@ -244,15 +246,17 @@ export function showLogbook(layer: UiLayer, input: DomLogbookInput): DomLogbook 
     toGame: input.toGame,
     view: {
       buttons: [],
-      close: page.close,
+      // The page draws no close control; the panel still places one, which close: null leaves
+      // out.
+      close: pageCloseControl(page.panel),
       covered: [],
+      footer: page.back,
       frame: "none",
-      ...(page.footer === undefined ? {} : { footer: page.footer }),
       note: [],
       notePlate: undefined,
-      panel: page.card,
+      panel: page.panel,
       title: page.title,
-      titleY: page.title[0]?.capTop ?? page.card.y,
+      titleY: page.title[0]?.capTop ?? page.panel.y,
     },
   });
   clip.addEventListener(

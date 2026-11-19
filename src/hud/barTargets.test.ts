@@ -21,8 +21,8 @@ import {
 
 // Every button on a top bar acts as it does with nothing open, under every card and overlay
 // that leaves the bar lit, and nothing else on the walk acts under them: a well or a dog card
-// explains nothing, and a tap there closes what can close (regionOutside) or does nothing. Help
-// alone covers the walk bar.
+// explains nothing, and a tap there closes what can close or does nothing. Help alone covers the
+// walk bar.
 
 const centre = (rect: Rect): Point => ({ x: rect.x + rect.width / 2, y: rect.y + rect.height / 2 });
 

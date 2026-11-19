@@ -68,7 +68,6 @@ function nativeFixture() {
       wrapNote: () => [],
     },
     {
-      closePressed: false,
       tabs: STATS_TABS.map((tab) => ({
         label: gameData.menuText.stats.tabs[tab],
         open: tab === "badges",
@@ -181,11 +180,15 @@ it("rejects a carried Logbook contact and wheel across a nested badge modal", as
   panel.destroy();
 });
 
-it("keeps the full native Logbook close control outside its list gesture handler", async () => {
+it("leaves the Logbook by its native Back alone, outside its list gesture handler", async () => {
   const { close, doc, down, layer, panel, root, up } = nativeFixture();
   up.mockReturnValue(true);
   await setImmediate();
-  const button = root.all().find((node) => node.className === "adw-close")!;
+  expect(root.all().some((node) => node.className === "adw-close")).toBe(false);
+  expect(root.all().some((node) => node.className.includes("adw-card"))).toBe(false);
+  const button = root
+    .all()
+    .find((node) => node.getAttribute("aria-label") === gameData.menuText.pageBack)!;
   const target = button.children[0]!;
   root.fire("pointerdown", pointer(target, 11, "pointerdown"));
   doc.fire("pointerup", pointer(target, 11, "pointerup"));

@@ -11,20 +11,17 @@ import { closeHelp } from "../help/helpSeen.ts";
 import { type HelpMeasure, helpView } from "../help/helpView.ts";
 import { coverHelpUnderlay } from "../hud/dom/helpUnderlay.ts";
 import type { DomQuestionPanel } from "../hud/dom/questionPanel.ts";
-import { WALK_BAR_BUTTONS } from "../hud/walkHud.ts";
 import { isMuteKey } from "../input/keyBindings.ts";
-import { screenArea } from "../input/outsideTap.ts";
 import { PALETTE } from "../ui/palette.ts";
 import { addFilledRect } from "../ui/phaser/draw.ts";
 import { setPixelText, withProbe, wrapPixelText } from "../ui/phaser/pixelText.ts";
-import { topSectionLayout } from "../ui/topSection.ts";
 import type { HelpPictureData } from "./HelpPictureScene.ts";
 import type { HelpData } from "./helpScreen.ts";
-import { listenHomeBar, sceneRegionOutside } from "./homeBarPress.ts";
+import { listenHomeBar } from "./homeBarPress.ts";
 import type { MenuSceneData } from "./MenuScene.ts";
 import { canvasPanelMeasure } from "./modalMeasure.ts";
 import { listenOnePress } from "./onePress.ts";
-import { BAR_MUTED_EVENT, closeOverlay, listenDismiss } from "./overlay.ts";
+import { BAR_MUTED_EVENT, closeOverlay, onBackPressed } from "./overlay.ts";
 import { currentSettings, onSettingsChanged, toggleMuted, updateProfile } from "./profileStore.ts";
 import { addHtmlHelpScreen, htmlPanelInput, htmlPanelPlace } from "./questionPanel.ts";
 import { REFUSE } from "./refuseControl.ts";
@@ -58,9 +55,6 @@ function helpMeasure(scene: Scene): HelpMeasure {
       wrapPixelText(scene, { colour: PALETTE.cream, scale }, width, text),
   };
 }
-
-// The walk bar's buttons' press columns, which stay live over help on a walk.
-const WALK_BAR_HITS = topSectionLayout(WALK_BAR_BUTTONS).controls.map(([, { hit }]) => hit);
 
 // A page, not a modal, as the Logbook is, listed after the scenes it opens over, the home screen
 // and the pause menu over the walk, and before its picture's scenes, which draw over it. It covers
@@ -128,14 +122,8 @@ export class HelpScene extends Scene {
         this.endPagePress(point, cancelled);
       },
     });
-    // A tap on the top bar's empty area or beside the game closes help, as the bar's buttons
-    // stay live; on a walk that includes the walk bar's effect wells.
-    const { page } = HELP_LAYOUT;
-    const outside =
-      data.region === "home"
-        ? sceneRegionOutside(this, [page])
-        : screenArea([page, ...WALK_BAR_HITS]);
-    listenDismiss(this, outside, () => {
+    // Help is a page: only Back, Escape and the system back leave it.
+    onBackPressed(this, () => {
       if (this.html?.accepts()) {
         this.close();
       }

@@ -1,12 +1,13 @@
 import { containsPoint, type Point, type Rect } from "@andornaut/game-kit/runtime/rect";
 
-import { HELP_SCREEN, MIN_PRESS, SHOP_PAGE, TOP_BAR_HEIGHT } from "../data/layout.ts";
+import { HELP_SCREEN, MIN_PRESS, SHOP_PAGE } from "../data/layout.ts";
 import { SCREEN_LAYOUT } from "../data/screen.ts";
 import { MIN_TAP_SIZE } from "../layout/screenLayout.ts";
 import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";
 import { rectIndexAt } from "../ui/grid.ts";
 import { LABEL_HELP_GAP } from "../ui/labelHelpGap.ts";
 import { MODAL } from "../ui/modalGeometry.ts";
+import { PAGE_LAYOUT } from "../ui/pageLayout.ts";
 import { type ScrollbarRects, scrollbarRects } from "../ui/scrollbar.ts";
 import { BODY_ASCENT_ROWS, BODY_INK_ROWS, TEXT_SCALE, TITLE_CAP_ROWS } from "../ui/textFit.ts";
 import type { HelpAction } from "./helpPaging.ts";
@@ -21,7 +22,7 @@ export const FRAME_LINES = 2;
 export const WELL_RINGS = 2;
 
 // Help is a page under the live top bar: it covers the screen from the bar's foot down.
-const PAGE = { height: height - TOP_BAR_HEIGHT, width, x: 0, y: TOP_BAR_HEIGHT } as const;
+const PAGE = PAGE_LAYOUT.rect;
 // The picture at full size, centred across the screen, its columns those of the walk screen
 // under it; its well's rings round it, the cream pad round them and the frame's lines round that.
 const PICTURE = {
@@ -43,8 +44,7 @@ const FACE_BOTTOM = CAPTION_Y + BODY_INK_ROWS * TEXT_SCALE + HELP.frame.captionG
 const FRAME_TOP = grow(WELL, HELP.frame.pad + FRAME_LINES);
 const FRAME: Rect = { ...FRAME_TOP, height: FACE_BOTTOM + FRAME_LINES - FRAME_TOP.y };
 const TITLE_Y = FRAME.y + FRAME.height - 1 + HELP.titleGap;
-const FOOTER_Y = height - HELP.buttonsFoot - BUTTON_SIZE.compact.height;
-const BUTTONS_Y = FOOTER_Y - BUTTON_SIZE.stackGap - BUTTON_SIZE.compact.height;
+const BUTTONS_Y = PAGE_LAYOUT.back.y - BUTTON_SIZE.stackGap - BUTTON_SIZE.compact.height;
 const DOTS_Y = BUTTONS_Y - BUTTON_SIZE.smallGap - HELP.dots.size;
 const BODY_Y = TITLE_Y + TITLE_CAP_ROWS * TEXT_SCALE + LABEL_HELP_GAP;
 // Each body line's slot, lineHeight rows from its letters' top, holds the line's whole ink; the
@@ -54,12 +54,8 @@ const DOTS_HIT_TOP = DOTS_Y - (MIN_TAP_SIZE - HELP.dots.size) / 2;
 const BODY_HEIGHT =
   Math.floor((DOTS_HIT_TOP - MODAL.gap - BODY_TOP) / HELP.body.lineHeight) * HELP.body.lineHeight;
 const BODY_VIEWPORT = { height: BODY_HEIGHT, width, x: 0, y: BODY_TOP } as const;
-// The Logbook's and the Pet shop's scrollbar, its track's right edge scrollbarInset in from the
-// screen's.
-const SCROLLBAR = {
-  ...SHOP_PAGE.scrollbar,
-  x: width - HELP.scrollbarInset - SHOP_PAGE.scrollbar.trackWidth,
-} as const;
+// The Logbook's and the Pet shop's scrollbar, at the pages' track.
+const SCROLLBAR = { ...SHOP_PAGE.scrollbar, x: PAGE_LAYOUT.trackX } as const;
 
 // The help page's geometry at the render resolution. A text position is its first line's
 // left edge and capitals' top.
@@ -86,7 +82,8 @@ export const HELP_LAYOUT = {
     spacing: MIN_TAP_SIZE,
     y: DOTS_Y,
   },
-  footer: { ...BUTTON_SIZE.compact, x: (width - BUTTON_SIZE.compact.width) / 2, y: FOOTER_Y },
+  // Back, the pages' own.
+  footer: PAGE_LAYOUT.back,
   frame: FRAME,
   illustration: PICTURE,
   next: {

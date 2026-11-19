@@ -1,19 +1,16 @@
 import { insetRect, type Rect } from "@andornaut/game-kit/runtime/rect";
 
 import { MENU_TEXT } from "../data/menuText.ts";
-import { SCREEN_CONFIG } from "../data/screen.ts";
-import type { CloseControl } from "../ui/closeControl.ts";
 import { PLAIN_ITEM, tileState } from "../ui/interaction.ts";
-import { dismissFooter } from "../ui/modal/dismissFooter.ts";
 import { type PanelButton, type PanelMeasure, type PanelText } from "../ui/modal/types.ts";
-import { panelTitle } from "../ui/modal/view.ts";
+import { panelButton, panelTitle } from "../ui/modal/view.ts";
 import { PALETTE } from "../ui/palette.ts";
 import { GREYED, SELECT_OUTSET, selectLook } from "../ui/selection.ts";
 import { TEXT_SCALE } from "../ui/textFit.ts";
 import { FEEDBACK } from "./feedback.ts";
 import { SHOP_LAYOUT, shopTabFace, shopTabRects } from "./shopLayout.ts";
 
-// The native Pet shop and Logbook share this page view beneath the home top bar.
+// The native Pet shop and Logbook share this frameless page view beneath the home top bar.
 // Every rectangle and text origin is in logical game pixels.
 
 // A rect filled in one colour.
@@ -37,15 +34,14 @@ export interface PageTab {
 }
 
 export interface ShopPageView {
-  readonly footer?: PanelButton;
-  readonly card: Rect;
-  readonly close: CloseControl;
-  readonly closePressed: boolean;
+  // The primary Back button, the page's only leave.
+  readonly back: PanelButton;
+  // The cream page from the top bar down to the screen's edges, so the bar shows above it.
+  readonly fill: PageFill;
+  readonly panel: Rect;
   readonly tabs: readonly PageTab[];
-  // Shared heading lines centred on the panel with full close-target clearance.
+  // Shared heading lines centred across the page.
   readonly title: readonly PanelText[];
-  // The wood under the card, from the top bar down, so the home screen's bar shows above it.
-  readonly wood: PageFill;
 }
 
 // A tab on the page: its label, and whether it is the open one or pressed.
@@ -104,33 +100,22 @@ function pageTab(measure: PanelMeasure, face: Rect, tab: ShopPageTab): PageTab {
   };
 }
 
-// The page titled title, its close control shown pressed while closePressed, and its tabs left
-// to right across the tab span (shopTabRects).
+// The page titled title, its tabs left to right across the tab span (shopTabRects), and Back.
 export function shopPageView(
   measure: PanelMeasure,
-  page: { closePressed: boolean; tabs: readonly ShopPageTab[]; title: string },
+  page: { tabs: readonly ShopPageTab[]; title: string },
 ): ShopPageView {
-  const { close, title } = SHOP_LAYOUT;
+  const { back, title } = SHOP_LAYOUT;
 
   const tabs = shopTabRects(page.tabs.length).flatMap((hit, i) => {
     const tab = page.tabs[i];
     return tab === undefined ? [] : [pageTab(measure, shopTabFace(hit), tab)];
   });
   return {
-    card: PANEL,
-    close,
-    closePressed: page.closePressed,
-    footer: dismissFooter(measure, { label: MENU_TEXT.common.close, primary: true }, PANEL),
+    back: panelButton(measure, back, true, MENU_TEXT.pageBack),
+    fill: { colour: PALETTE.cream, rect: PANEL },
+    panel: PANEL,
     tabs,
-    title: panelTitle(measure, PANEL, title.capTop, page.title),
-    wood: {
-      colour: PALETTE.darkBrown,
-      rect: {
-        height: SCREEN_CONFIG.height - PANEL.y + 4,
-        width: SCREEN_CONFIG.width,
-        x: 0,
-        y: PANEL.y - 4,
-      },
-    },
+    title: panelTitle(measure, PANEL, title.capTop, page.title, false),
   };
 }

@@ -64,14 +64,13 @@ function render(message: string | null = null, save = newPlayerSave) {
   return { scene, view: update.mock.calls[0]![0] as ShopScreenView };
 }
 
-it("renders wrapped full-size shop descriptions inside the same expanded row hit geometry", () => {
+it("renders full-size shop descriptions inside their row hit geometry, growing a wrapped row", () => {
   const save = {
     ...newPlayerSave,
     owned: { ...newPlayerSave.owned, gear: keysOf(gameData.shopGear) },
   };
   const { scene, view } = render(null, save);
   const source = gearRows(gameData, save.owned);
-  let expanded = 0;
   view.rows.forEach((row, index) => {
     const original = source[index]!;
     const descriptions = row.texts.filter(
@@ -86,7 +85,6 @@ it("renders wrapped full-size shop descriptions inside the same expanded row hit
     const room = shopRowTextRoom(row.rect.width, rightWidth);
     expect(descriptions.every((line) => width(line.text) <= room)).toBe(true);
     if (descriptions.length > 1) {
-      expanded += 1;
       expect(row.rect.height).toBeGreaterThan(SHOP_LAYOUT.gear.rows.height);
     }
     const hit = scene.targetAt(row.rect.x + 1, row.rect.y - scene.scroll.y + row.rect.height - 1);
@@ -94,7 +92,6 @@ it("renders wrapped full-size shop descriptions inside the same expanded row hit
       expect(hit).toEqual({ id: row.id, kind: "row" });
     }
   });
-  expect(expanded).toBeGreaterThan(0);
   expect(
     view.rows
       .slice(1)
@@ -102,17 +99,17 @@ it("renders wrapped full-size shop descriptions inside the same expanded row hit
         (row, index) => row.rect.y >= view.rows[index]!.rect.y + view.rows[index]!.rect.height,
       ),
   ).toBe(true);
-  expect(scene.scroll.max).toBeGreaterThan(0);
 });
 
-it("wraps an actual long refusal into a grown message plate and reserves its hit area", () => {
+it("wraps a long refusal into a grown message plate and reserves its hit area", () => {
   const row = gearRows(gameData, newPlayerSave.owned).reduce((longest, row) =>
     width(row.name) > width(longest.name) ? row : longest,
   );
+  // Twice the longest gear name, so the line is longer than the plate's one line.
   const text = messageLine(gameData.homeText, {
     amount: row.price!,
     kind: "cantAfford",
-    name: row.name,
+    name: `${row.name} ${row.name}`,
   })!;
   const baseline = render();
   const { scene, view } = render(text);

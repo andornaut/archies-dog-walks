@@ -19,8 +19,8 @@ export const DOG_STATS: readonly DogStat[] = ["walks", "zones", "fired"];
 // the first.
 export const STATS_TABS: readonly StatsTab[] = ["badges", "dogs", "runs"];
 
-// The Logbook wears the Pet shop's page: its card, title, close control and tab span,
-// and every tab's content scrolling in the shop's list area beside the shop's scrollbar.
+// The Logbook wears the Pet shop's page: its fill, heading, tab span and Back, and every tab's
+// content scrolling in the shop's list area beside the shop's scrollbar.
 const PANEL = SHOP_LAYOUT.panel;
 const VIEW = SHOP_LAYOUT.list.rect;
 const SCROLLBAR = SHOP_LAYOUT.scrollbar;
@@ -41,8 +41,6 @@ const ROWS = {
 
 // The Logbook's geometry.
 export const STATS_LAYOUT = {
-  // The close control, in the card's corner.
-  close: SHOP_LAYOUT.close,
   // In the open badge, which the end screen opens too, from its top: the badge's centre at
   // badgeY, the name's capitals at nameY, the status's LABEL_HELP_GAP clear rows under the title
   // font's lowest ink (helpCapDy) and the goal's goalDy under the status's, then the goal and the
@@ -156,7 +154,7 @@ export function detailPanelHeight(
 }
 
 // A tab's view, its mask, and where its values' ink ends, by whether it scrolls: as the shop's
-// list runs, a tab with no scrollbar to the tabs' right edge, as far in from the card's right
+// list runs, a tab with no scrollbar to the tabs' right edge, as far in from the page's right
 // edge as its labels' ink is from its left, and one with a scrollbar to rows.right.
 export function statsListFrame(scrolls: boolean): { rect: Rect; right: number } {
   const { headingRight, rect } = shopListFrame(scrolls);

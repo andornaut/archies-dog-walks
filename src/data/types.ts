@@ -1210,6 +1210,8 @@ export interface MenuText {
     readonly previous: string;
   };
   readonly menu: { readonly title: string };
+  // The leave button of the Help, Logbook and Pet shop pages.
+  readonly pageBack: string;
   readonly pause: {
     readonly action: string;
     readonly headHome: string;

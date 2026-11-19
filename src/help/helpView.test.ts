@@ -100,10 +100,10 @@ describe("the picture's frame", () => {
   });
 });
 
-it("provides Close as the sole primary on every full-size Help page", () => {
+it("provides Back as the sole primary on every full-size Help page", () => {
   for (let page = 0; page < gameData.help.length; page++) {
     const view = helpView(gameData, MEASURE, page, undefined);
-    expect(view.footer.label).toBe(gameData.menuText.common.close);
+    expect(view.footer.label).toBe(gameData.menuText.pageBack);
     expect(view.footer.primary).toBe(true);
     expect(view.buttons.every((button) => !button.primary && button.secondary)).toBe(true);
     expect(view.footer.rect).toEqual(HELP_LAYOUT.footer);

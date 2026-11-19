@@ -305,7 +305,6 @@ function tabContent(
 // What the Logbook shows: the open tab, the save it reads, the badge wall, and what is pressed.
 export interface LogbookState {
   readonly badges: readonly BadgeView[];
-  readonly closePressed: boolean;
   // The tab pressed, by index, or undefined.
   readonly pressedTab: number | undefined;
   readonly save: Pick<SaveDocument, "owned" | "stats">;
@@ -317,7 +316,6 @@ export interface LogbookState {
 export function logbookView(measure: LogbookMeasure, data: Data, state: LogbookState): LogbookView {
   const words = data.menuText.stats;
   const page = shopPageView(measure, {
-    closePressed: state.closePressed,
     tabs: STATS_TABS.map((tab, i) => ({
       label: words.tabs[tab],
       open: tab === state.tab,

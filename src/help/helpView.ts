@@ -126,7 +126,7 @@ function leftLine(
 
 // The help page at page, its pages read now, with what pressed shows pressed: the framed picture
 // and its caption, the page's title and body, the dots, Previous (disabled on the first page),
-// Next and the primary Close footer.
+// Next and the primary Back footer.
 export function helpView(
   data: GameData,
   measure: HelpMeasure,
@@ -210,7 +210,7 @@ export function helpView(
       text: shown.caption,
     },
     dots: dotRects(pages.length).map((rect, i) => ({ current: i === current, rect })),
-    footer: panelButton(measure, layout.footer, true, data.menuText.common.close),
+    footer: panelButton(measure, layout.footer, true, data.menuText.pageBack),
     illustration: layout.illustration,
     label: words.heading,
     page: current,

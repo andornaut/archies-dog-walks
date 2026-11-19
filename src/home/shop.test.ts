@@ -1,6 +1,5 @@
 import { fillNames } from "@andornaut/game-kit/runtime/lines";
 import { keysOf } from "@andornaut/game-kit/runtime/records";
-import { rectsOverlap } from "@andornaut/game-kit/runtime/rect";
 import { inkRowsFromCapTop } from "@andornaut/game-kit/runtime/text/bitmapFont";
 import { describe, expect, it } from "vitest";
 
@@ -343,9 +342,6 @@ describe("the shop's tabs", () => {
     const row = SHOP_LAYOUT.title.row;
     const above = tab.drawY - FEEDBACK.liftPx - SELECT_OUTSET - (row.y + row.height);
     const below = list.rect.y - (tab.drawY + tab.drawHeight + SELECT_OUTSET);
-    expect(SHOP_LAYOUT.close.hit.x + SHOP_LAYOUT.close.hit.width).toBe(
-      SHOP_LAYOUT.panel.x + SHOP_LAYOUT.panel.width,
-    );
     expect(above).toBeGreaterThanOrEqual(6);
     expect(below).toBeGreaterThanOrEqual(6);
   });
@@ -353,40 +349,33 @@ describe("the shop's tabs", () => {
   // The shop's tabs and the Logbook's split the same span, their faces the small button gap
   // apart and their hit areas meeting, each a full tap target.
   it.each([
-    ["Pet shop", SHOP_TABS.length, [140, 140]],
-    ["Logbook", STATS_TABS.length, [85, 86, 85]],
-  ])(
-    "%s: split the tab span evenly and clear the heading and close control",
-    (title, count, widths) => {
-      const { span, x } = SHOP_LAYOUT.tab;
-      const tabs = shopTabRects(count);
-      const faces = tabs.map(shopTabFace);
-      expect(faces.map(({ width }) => width)).toEqual(widths);
-      expect(tabs[0]?.x).toBe(x);
-      const last = tabs.at(-1);
-      expect((last?.x ?? 0) + (last?.width ?? 0)).toBe(x + span);
-      tabs.slice(1).forEach((tab, i) => {
-        const before = tabs[i];
-        const face = faces[i + 1];
-        const faceBefore = faces[i];
-        expect(tab.x).toBe((before?.x ?? 0) + (before?.width ?? 0));
-        expect((face?.x ?? 0) - (faceBefore?.x ?? 0) - (faceBefore?.width ?? 0)).toBe(
-          BUTTON_SIZE.smallGap,
-        );
-      });
-      for (const tab of tabs) {
-        expect(Math.min(tab.width, tab.height)).toBeGreaterThanOrEqual(MIN_TAP_SIZE);
-        expect(rectsOverlap(tab, SHOP_LAYOUT.close.hit)).toBe(false);
-        expect(tab.y).toBeGreaterThanOrEqual(
-          SHOP_LAYOUT.close.hit.y + SHOP_LAYOUT.close.hit.height,
-        );
-        const titleBottom =
-          SHOP_LAYOUT.title.capTop + modalTitleInk(gameFont("font-title"), title).bottom;
-        const selectedFaceTop = shopTabFace(tab).y - FEEDBACK.liftPx;
-        expect(selectedFaceTop - titleBottom).toBe(MODAL.titleTop);
-      }
-    },
-  );
+    ["Pet shop", SHOP_TABS.length, [160, 160]],
+    ["Logbook", STATS_TABS.length, [99, 99, 98]],
+  ])("%s: split the tab span evenly and clear the heading", (title, count, widths) => {
+    const { span, x } = SHOP_LAYOUT.tab;
+    const tabs = shopTabRects(count);
+    const faces = tabs.map(shopTabFace);
+    expect(faces.map(({ width }) => width)).toEqual(widths);
+    expect(tabs[0]?.x).toBe(x);
+    const last = tabs.at(-1);
+    expect((last?.x ?? 0) + (last?.width ?? 0)).toBe(x + span);
+    tabs.slice(1).forEach((tab, i) => {
+      const before = tabs[i];
+      const face = faces[i + 1];
+      const faceBefore = faces[i];
+      expect(tab.x).toBe((before?.x ?? 0) + (before?.width ?? 0));
+      expect((face?.x ?? 0) - (faceBefore?.x ?? 0) - (faceBefore?.width ?? 0)).toBe(
+        BUTTON_SIZE.smallGap,
+      );
+    });
+    for (const tab of tabs) {
+      expect(Math.min(tab.width, tab.height)).toBeGreaterThanOrEqual(MIN_TAP_SIZE);
+      const titleBottom =
+        SHOP_LAYOUT.title.capTop + modalTitleInk(gameFont("font-title"), title).bottom;
+      const selectedFaceTop = shopTabFace(tab).y - FEEDBACK.liftPx;
+      expect(selectedFaceTop - titleBottom).toBe(MODAL.titleTop);
+    }
+  });
 });
 
 // Each tab's list, with nothing bought and with everything bought, scrolls far enough to bring
@@ -423,7 +412,7 @@ describe("the shop's list", () => {
 
   // Each list scrolls its last row into view. Its rows and heading note end where its scrollbar
   // allows: at the tabs' right edge with no scrollbar, else short of the track. A selected row's
-  // frame stays inside the list area, which stays inside the card's 8px frame.
+  // frame stays inside the list area.
   it.each(lists)("%s: scrolls to its last row, rows to their edge", (_, spec, count) => {
     const bottom = shopListBottom(spec, count);
     const max = scrollMax(rect, bottom);
@@ -434,7 +423,6 @@ describe("the shop's list", () => {
     const frame = shopListFrame(scrolls);
     const tabsRight = Math.max(...shopTabRects(SHOP_TABS.length).map(({ width, x }) => x + width));
     const track = shopScrollbar(scrolls ? 1 : 0, 0)?.track;
-    const { panel } = SHOP_LAYOUT;
     for (const row of rowRects(
       frame.rowWidth,
       spec,
@@ -450,14 +438,13 @@ describe("the shop's list", () => {
       const outer = { left: row.x - SELECT_OUTSET, right: right + SELECT_OUTSET };
       expect(outer.left).toBeGreaterThanOrEqual(frame.rect.x);
       expect(outer.right).toBeLessThanOrEqual(frame.rect.x + frame.rect.width);
-      expect(frame.rect.x + frame.rect.width).toBeLessThanOrEqual(panel.x + panel.width - 8);
     }
   });
 
   // The scrollbar stays clear of the list area, where the rows and their frames are clipped,
-  // inside the card's 8px frame, with the thumb thumbInset inside the track; a list that fits
-  // has none.
-  it("puts the scrollbar between the list area and the card's frame", () => {
+  // the page's inset in from the screen's edge, with the thumb thumbInset inside the track; a list
+  // that fits has none.
+  it("puts the scrollbar between the list area and the page's inset", () => {
     expect(shopScrollbar(0, 0)).toBeNull();
     const bar = shopScrollbar(100, 0);
     const { panel, scrollbar } = SHOP_LAYOUT;

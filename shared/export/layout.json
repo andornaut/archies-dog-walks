@@ -2481,72 +2481,67 @@
       }
     },
     "shop": {
-      "close": {
-        "hit": {
-          "height": 48,
-          "width": 48,
-          "x": 296,
-          "y": 48
-        },
-        "titleExclusion": "hit",
-        "x": 318,
-        "y": 50
+      "back": {
+        "height": 48,
+        "width": 128,
+        "x": 116,
+        "y": 500
       },
       "dogs": {
-        "dogHeadingY": 357,
+        "dogHeadingY": 353,
         "dogRows": {
           "height": 48,
           "pitch": 56,
-          "y": 382
+          "y": 378
         },
-        "slotHeadingY": 157,
+        "slotHeadingY": 153,
         "slotRows": {
           "height": 48,
           "pitch": 56,
-          "y": 182
+          "y": 178
         }
       },
       "gear": {
-        "headingY": 157,
+        "headingY": 153,
         "rows": {
           "height": 50,
           "pitch": 58,
-          "y": 182
+          "y": 178
         }
       },
-      "headingX": 28,
+      "headingX": 8,
       "list": {
-        "firstHeadingY": 157,
+        "firstHeadingY": 153,
         "padBottom": 8,
         "pageOverlap": 48,
         "rect": {
-          "height": 324,
-          "width": 298,
-          "x": 24,
-          "y": 148
+          "height": 348,
+          "width": 342,
+          "x": 0,
+          "y": 144
         },
         "unscrolledRect": {
-          "height": 324,
-          "width": 312,
-          "x": 24,
-          "y": 148
+          "height": 348,
+          "width": 360,
+          "x": 0,
+          "y": 144
         }
       },
       "message": {
         "frame": 3,
         "plate": {
           "height": 28,
-          "width": 304,
-          "x": 28,
-          "y": 148
+          "width": 344,
+          "x": 8,
+          "y": 144
         },
         "textDx": 10
       },
       "panel": {
-        "height": 500,
-        "width": 328,
-        "x": 16,
-        "y": 44
+        "height": 520,
+        "width": 360,
+        "x": 0,
+        "y": 40
       },
       "row": {
         "art": 2,
@@ -2560,64 +2555,53 @@
         },
         "ownedDx": 20,
         "plateInset": 6,
-        "scrollWidth": 290,
+        "scrollWidth": 330,
         "textDx": 46,
         "textGap": 6,
-        "width": 304,
-        "x": 28
+        "width": 344,
+        "x": 8
       },
       "scrollbar": {
         "thumbInset": 1,
         "thumbMin": 16,
         "thumbWidth": 6,
         "trackWidth": 8,
-        "x": 324
+        "x": 344
       },
       "tab": {
         "drawHeight": 28,
-        "drawY": 109,
+        "drawY": 105,
         "gap": 24,
         "height": 48,
-        "span": 304,
-        "x": 28,
-        "y": 99
+        "span": 344,
+        "x": 8,
+        "y": 95
       },
       "title": {
-        "capTop": 68,
+        "capTop": 64,
         "row": {
           "height": 15,
-          "width": 296,
-          "x": 32,
-          "y": 68
+          "width": 328,
+          "x": 16,
+          "y": 64
         }
       },
       "tabRects": [
         {
           "height": 48,
-          "width": 152,
-          "x": 28,
-          "y": 99
+          "width": 172,
+          "x": 8,
+          "y": 95
         },
         {
           "height": 48,
-          "width": 152,
+          "width": 172,
           "x": 180,
-          "y": 99
+          "y": 95
         }
       ]
     },
     "stats": {
-      "close": {
-        "hit": {
-          "height": 48,
-          "width": 48,
-          "x": 296,
-          "y": 48
-        },
-        "titleExclusion": "hit",
-        "x": 318,
-        "y": 50
-      },
       "detailText": {
         "badgeY": 48,
         "foot": 13,
@@ -2636,19 +2620,19 @@
         "rowsY": 38,
         "ruleAbove": 6,
         "ruleDx": 2,
-        "top": 157
+        "top": 153
       },
       "panel": {
-        "height": 500,
-        "width": 328,
-        "x": 16,
-        "y": 44
+        "height": 520,
+        "width": 360,
+        "x": 0,
+        "y": 40
       },
       "rows": {
         "gap": 4,
-        "left": 28,
+        "left": 8,
         "pitch": 17,
-        "right": 318
+        "right": 338
       },
       "scroll": {
         "keyStep": 34,
@@ -2660,24 +2644,24 @@
         "thumbMin": 16,
         "thumbWidth": 6,
         "trackWidth": 8,
-        "x": 324
+        "x": 344
       },
       "view": {
-        "height": 324,
-        "width": 298,
-        "x": 24,
-        "y": 148
+        "height": 348,
+        "width": 342,
+        "x": 0,
+        "y": 144
       },
       "walks": {
         "rowsY": 20,
         "sectionGap": 12,
-        "top": 157
+        "top": 153
       },
       "wall": {
         "badgeTop": 2,
         "earned": {
-          "bandLeft": 4,
-          "bandWidth": 298,
+          "bandLeft": 8,
+          "bandWidth": 342,
           "bandY": 0,
           "checkDx": 20,
           "checkDy": -1,
@@ -2687,37 +2671,37 @@
         },
         "foot": 16,
         "gap": 8,
-        "headingY": 157,
-        "width": 290,
-        "x": 28,
-        "y": 177
+        "headingY": 153,
+        "width": 330,
+        "x": 8,
+        "y": 173
       },
       "wallText": {
         "lineHeight": 16,
         "lines": 3,
         "pad": 4,
-        "width": 252,
+        "width": 292,
         "x": 38,
         "y": 4
       },
       "tabRects": [
         {
           "height": 48,
-          "width": 97,
-          "x": 28,
-          "y": 99
+          "width": 111,
+          "x": 8,
+          "y": 95
+        },
+        {
+          "height": 48,
+          "width": 123,
+          "x": 119,
+          "y": 95
         },
         {
           "height": 48,
           "width": 110,
-          "x": 125,
-          "y": 99
-        },
-        {
-          "height": 48,
-          "width": 97,
-          "x": 235,
-          "y": 99
+          "x": 242,
+          "y": 95
         }
       ]
     }
