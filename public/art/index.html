@@ -114,7 +114,7 @@ canvas, .view img { display: block; image-rendering: pixelated; image-rendering:
 <main class="wrap">
   <header>
     <h1>Archie's Dog Walks Art</h1>
-    <p>Every asset in the art manifest, drawn from the files the game loads (in a build, its atlas pages), grouped by key prefix. Sprites play their tagged animations.</p>
+    <p>Every asset in the art manifest, drawn from the files the game loads (in a build, its atlas pages and the HTML interface's sheets), grouped by key prefix. Sprites play their tagged animations.</p>
     <div class="counts" id="counts" role="group" aria-label="Show only"></div>
     <p class="error" id="status" hidden></p>
   </header>
@@ -205,8 +205,8 @@ const getText = async src => { const r = await fetch(src, { cache: "no-cache" })
 // server serves it empty, and every file then loads at its own path.
 let files = {};
 const url = path => files[path] ?? BASE + path;
-// A build's atlas (atlas-manifest.json): its pages, and each packed key's texture by key. A key the
-// atlas leaves out loads from its own files.
+// A build's atlas (atlas-manifest.json): its pages, and each packed key's texture by key. A key on
+// no DOM sheet that the atlas leaves out loads from its own files.
 const BASE_FRAME = "__BASE"; // the frame that covers a whole image, as Phaser names it
 let atlasPages = [];
 const textures = new Map();
@@ -220,6 +220,14 @@ function wholeFrame(page, f) {
   c.getContext("2d").drawImage(page, f.x, f.y, f.w, f.h, x, y, f.w, f.h);
   return c;
 }
+// A build's DOM sheets, the HTML interface's art (each dom/<sheet>.json in art-files.json, beside
+// its dom/<sheet>.webp): by key, its sheet and its entry, with its rect as [x, y, w, h] and, for a
+// sprite, its frames as [x, y, w, h, duration] in export order and its tags as [name, from, to,
+// direction]. Only the base sheets load; the copies (-grey, -disabled and the rest) hold no other key.
+const domKeys = new Map();
+const sheetImages = new Map();
+const sheetImage = sheet => { if (!sheetImages.has(sheet)) sheetImages.set(sheet, loadImage(url(`dom/${sheet}.webp`))); return sheetImages.get(sheet); };
+const sheetRect = ([x, y, w, h]) => ({ x, y, w, h });
 
 const views = [];      // every .view, so ground changes reach all of them
 const scaled = [];     // { canvas, w, h } redrawn on zoom change
@@ -232,7 +240,7 @@ function emptyCard(host, text) { host.replaceChildren(el("div", { className: "em
 function errorCard(host, kind, key, err) { host.append(el("div", { className: "empty error", textContent: `${key}: ${err.message}`, dataset: { key, kind } })); }
 
 // Sprite sheet JSON in json-hash form: frames keyed by name in export order, animations in meta.frameTags.
-// An atlased sprite keeps the same frames and tags in its texture.
+// An atlased sprite keeps the same frames and tags in its texture, and a DOM sheet's in its entry.
 function sequence(tag) {
   const fwd = []; for (let i = tag.from; i <= tag.to; i++) fwd.push(i);
   if (tag.direction === "reverse") return fwd.reverse();
@@ -243,8 +251,12 @@ function sequence(tag) {
 async function addSprite(host, s) {
   // Each frame as its source (sheet or whole-frame canvas) and its rect there.
   let frames, tags;
-  const tex = textures.get(s.key);
-  if (tex) {
+  const dom = domKeys.get(s.key), tex = textures.get(s.key);
+  if (dom) {
+    const sheet = await sheetImage(dom.sheet);
+    frames = (dom.entry.frames ?? [dom.entry.rect]).map(([x, y, w, h, duration]) => ({ src: wholeFrame(sheet, { x, y, w, h }), x: 0, y: 0, w, h, duration: duration || 100 }));
+    tags = dom.entry.tags?.map(([name, from, to, direction]) => ({ name, from, to, direction }));
+  } else if (tex) {
     const page = await pageImage(tex.page);
     frames = tex.frames.map(f => { const src = wholeFrame(page, f); return { src, x: 0, y: 0, w: src.width, h: src.height, duration: f.duration || 100 }; });
     tags = tex.tags;
@@ -288,8 +300,9 @@ async function addSprite(host, s) {
 }
 
 async function addImage(host, s) {
-  const t = textures.get(s.key);
-  const img = t ? wholeFrame(await pageImage(t.page), baseFrame(t)) : await loadImage(url(s.png));
+  const dom = domKeys.get(s.key), t = textures.get(s.key);
+  const img = dom ? wholeFrame(await sheetImage(dom.sheet), sheetRect(dom.entry.rect))
+    : t ? wholeFrame(await pageImage(t.page), baseFrame(t)) : await loadImage(url(s.png));
   const c = el("canvas"); sizeCanvas(c, img.width, img.height); scaled.push({ canvas: c, w: img.width, h: img.height });
   c.getContext("2d").drawImage(img, 0, 0);
   const view = makeView(); view.append(c);
@@ -367,6 +380,13 @@ async function main() {
       for (const t of atlas.textures) textures.set(t.key, t);
     } catch (err) { Object.assign($("status"), { hidden: false, textContent: `Could not read the atlas manifest: ${err.message}` }); }
   }
+  const sheets = Object.keys(files).flatMap(p => /^dom\/([^/]+)\.json$/.exec(p)?.[1] ?? []);
+  await Promise.all(sheets.map(async sheet => {
+    try {
+      const json = await getJSON(url(`dom/${sheet}.json`));
+      for (const [key, entry] of Object.entries(json.keys)) domKeys.set(key, { entry, sheet });
+    } catch (err) { Object.assign($("status"), { hidden: false, textContent: `Could not read the ${sheet} sheet: ${err.message}` }); }
+  }));
   let manifest;
   try { manifest = await getJSON(url("manifest.json")); } catch (err) { Object.assign($("status"), { hidden: false, textContent: `Could not read the manifest: ${err.message}` }); manifest = {}; }
   const sprites = manifest.sprites || [], images = manifest.images || [], fonts = manifest.fonts || [], sounds = manifest.sounds || [];
