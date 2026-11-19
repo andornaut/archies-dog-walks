@@ -547,6 +547,17 @@ describe("a cheat session", () => {
     expect(session.lastRunEnd).toBeNull();
   });
 
+  it("writes nothing for Update now's save, so the reload shows the save before the first cheat", async () => {
+    const { entries, session } = await openedVeteran();
+    await session.checkpointRun(checkpoint);
+    const before = new Map(entries);
+    session.startCheats();
+    await session.update((save) => ({ ...save, bankCents: cents(999_999) }));
+    void session.checkpointRun({ ...checkpoint, zonesFinished: 2 });
+    await session.settled();
+    expect(entries).toEqual(before);
+  });
+
   it("writes again once it ends", async () => {
     const { entries, session } = await openedVeteran();
     session.startCheats();
