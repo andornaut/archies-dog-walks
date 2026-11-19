@@ -139,3 +139,15 @@ describe("cheatsView", () => {
     expect(reset?.buttons[0]?.rect.width).toBe(reset?.rect.width);
   });
 });
+
+describe("the Grant rows", () => {
+  it("are one per upgrade, in draw order, every upgrade included", () => {
+    const grants = cheatRows(gameData, words, WALK).flatMap((row) =>
+      row.kind === "buttons"
+        ? row.buttons.flatMap(({ action }) => (action.kind === "upgrade" ? [action.upgrade] : []))
+        : [],
+    );
+    expect(grants).toEqual(gameData.upgradeDrawOrder);
+    expect([...grants].sort()).toEqual(Object.keys(gameData.upgrades).sort());
+  });
+});

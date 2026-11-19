@@ -63,7 +63,8 @@ interface PauseMenuLayout {
   titleY: number;
 }
 
-// The panel centred on the logical viewport and clamped to area, sized to its parts: the title, then the
+// The panel centred on the logical viewport and clamped to area, as wide as parts.panelWidth or
+// the Medium family, sized to its parts: the title, then the
 // buttons stacked down it with the note plate under them, or the note plate first when it is
 // the question. With no note lines there is no plate, and the buttons follow the title.
 function panelLayout(
@@ -73,7 +74,12 @@ function panelLayout(
   noteFirst: boolean,
 ): PauseMenuLayout {
   const { buttonCount } = parts;
-  const width = modalFamilyWidth(area.width - 2 * MODAL.margin, "medium");
+  // The Medium family's width, or the caller's, each held to the area within its margins.
+  const available = area.width - 2 * MODAL.margin;
+  const width =
+    parts.panelWidth === undefined
+      ? modalFamilyWidth(available, "medium")
+      : Math.min(parts.panelWidth, available);
 
   const noted = parts.noteLines > 0;
   const noteHeight = noted ? notePlateHeight(body, parts.noteLines) : 0;

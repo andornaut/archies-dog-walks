@@ -10,7 +10,7 @@ import { dollarText } from "../presentation/currency.ts";
 import { walkLength } from "../rules/route.ts";
 import { bodyTextWidth } from "../testing/bodyFont.ts";
 import { fontFileMetrics, inkWidth } from "../testing/fontInk.ts";
-import { MODAL, modalActionWidth } from "../ui/modal/layout.ts";
+import { MODAL, modalActionWidth, modalFamilyWidth } from "../ui/modal/layout.ts";
 import { PAUSE_MENU_ITEMS } from "../ui/navigationMenu.ts";
 import { cents } from "../units.ts";
 import {
@@ -109,6 +109,36 @@ describe("the Home question's panel", () => {
     });
     expect(panel.y).toBeGreaterThanOrEqual(walkView.y);
     expect(panel.y + panel.height).toBeLessThanOrEqual(walkView.y + walkView.height);
+  });
+});
+
+describe("a question's panel width", () => {
+  const parts = { buttonCount: 2, noteLines: 1 };
+  const medium = modalFamilyWidth(walkView.width - 2 * MODAL.margin, "medium");
+  const large = modalFamilyWidth(walkView.width - 2 * MODAL.margin, "large");
+
+  it.each([homeQuestionLayout, pauseMenuLayout])(
+    "is the Medium family's without one given",
+    (layout) => {
+      expect(layout(BODY, walkView, parts).panel.width).toBe(medium);
+      expect(layout(BODY, walkView, { ...parts, panelWidth: medium })).toEqual(
+        layout(BODY, walkView, parts),
+      );
+    },
+  );
+
+  it("is the one given, held to the area within its margins, the buttons centred in it", () => {
+    const { buttons, notePlate, panel } = homeQuestionLayout(BODY, walkView, {
+      ...parts,
+      panelWidth: large,
+    });
+    expect(panel.width).toBe(large);
+    expect(notePlate.width).toBe(large - 2 * MODAL.pad);
+    for (const button of buttons) {
+      expect(button.x - panel.x).toBe(panel.x + panel.width - (button.x + button.width));
+    }
+    const wide = homeQuestionLayout(BODY, walkView, { ...parts, panelWidth: 1000 });
+    expect(wide.panel.width).toBe(walkView.width - 2 * MODAL.margin);
   });
 });
 

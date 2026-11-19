@@ -27,6 +27,7 @@ import { type DomQuestionPanel, showQuestionPanel } from "../hud/dom/questionPan
 import { homeQuestionLayout } from "../hud/pauseMenu.ts";
 import { packDogsOf } from "../state/pack.ts";
 import { loadSheet } from "../ui/dom/sheetFrames.ts";
+import { MODAL, modalFamilyWidth } from "../ui/modal/layout.ts";
 import { PALETTE } from "../ui/palette.ts";
 import { CHEATS_CHANGED_EVENT, nextWalk, setNextWalk, useCheat } from "./cheatSession.ts";
 import { canvasPanelMeasure } from "./modalMeasure.ts";
@@ -53,6 +54,9 @@ export interface CheatsModal {
   // The card's rect, which a tap outside closes.
   panel(): Rect;
 }
+
+// Reset save's question is as wide as the Cheats modal under it.
+const RESET_WIDTH = modalFamilyWidth(SCREEN_CONFIG.width - 2 * MODAL.margin, "large");
 
 // How long Copy run link reads as copied.
 const COPIED_MS = 1500;
@@ -169,6 +173,7 @@ export function openCheatsModal(
       ],
       layout: homeQuestionLayout,
       note: [{ colour: PALETTE.plum, text: words.note }],
+      panelWidth: RESET_WIDTH,
       primary: "last",
       sentenceLines: false,
       title: words.title,
