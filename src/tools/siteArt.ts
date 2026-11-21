@@ -23,7 +23,7 @@ function background(art: SiteArt, key: string, height: number, frameIndex?: numb
 }
 
 // Build-only substitution keeps the source pages usable without a generated sheet.
-export function siteHtml(art: SiteArt, html: string): string {
+export function siteHtml(art: SiteArt, stylesheet: (css: string) => string, html: string): string {
   const rules: string[] = [];
   const result = prepareSiteHtml(html).replace(
     /<img\s+src="\/art\/images\/(portrait-dog-[a-z-]+)\.png"\s+width="64"\s+height="64"\s+alt=""\s*\/?>/gu,
@@ -49,7 +49,10 @@ export function siteHtml(art: SiteArt, html: string): string {
   }
   return rules.length === 0
     ? result
-    : result.replace("</head>", `<style>${rules.join("\n")}</style></head>`);
+    : result.replace(
+        "</head>",
+        `<link rel="stylesheet" href="${stylesheet(rules.join("\n"))}"></head>`,
+      );
 }
 
 export function siteNavigation(art: SiteArt, css: string): string {

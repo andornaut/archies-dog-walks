@@ -1,4 +1,4 @@
-import { expect, it } from "vitest";
+import { beforeEach, expect, it } from "vitest";
 
 import { type SiteArt, siteHtml, siteNavigation } from "./siteArt.ts";
 
@@ -20,17 +20,33 @@ const art: SiteArt = (key) => ({
   url: "/assets/art/dom/sheet-123.webp",
 });
 
+let stylesheet = "";
+const project = (html: string) =>
+  siteHtml(
+    art,
+    (css) => {
+      stylesheet = css;
+      return "/assets/site-art-123.css";
+    },
+    html,
+  );
+beforeEach(() => {
+  stylesheet = "";
+});
+
 it("retains decorative portrait dimensions and the labelled group's accessibility", () => {
   const html =
     '<head></head><div role="img" aria-label="Dogs">' +
     '<img src="/art/images/portrait-dog-archie.png" width="64" height="64" alt="" /></div>';
-  const built = siteHtml(art, html);
+  const built = project(html);
   expect(built).toContain('role="img" aria-label="Dogs"');
   expect(built).toContain('<span class="portrait-dog-archie" aria-hidden="true"></span>');
-  expect(built).toContain(
+  expect(stylesheet).toContain(
     'width:64px;height:64px;background:url("/assets/art/dom/sheet-123.webp") no-repeat -10px -20px / 512px 256px',
   );
   expect(built).not.toContain("/art/images/");
+  expect(built).toContain('<link rel="stylesheet" href="/assets/site-art-123.css"></head>');
+  expect(built).not.toContain("<style");
 });
 
 it("projects owner moods and the selected navigation tick from the same packed pixels", () => {
@@ -38,9 +54,9 @@ it("projects owner moods and the selected navigation tick from the same packed p
     '<head><style>.mood span {background: url("/art/sprites/face-owner-kilo.png")' +
     " no-repeat 0 0 / 320px 64px;} .m-neutral span {background-position:-64px 0;}" +
     " .m-upset span {background-position:-128px 0;} .m-fired span {background-position:-192px 0;}</style></head>";
-  const built = siteHtml(art, html);
+  const built = project(html);
   for (const position of ["-20px -40px", "-84px -40px", "-20px -104px", "-84px -104px"]) {
-    expect(built).toContain(`no-repeat ${position}`);
+    expect(stylesheet).toContain(`no-repeat ${position}`);
   }
   expect(built).not.toContain("/art/sprites/");
   expect(
@@ -53,8 +69,8 @@ it("projects the minified HTML styles Vite passes to post transforms", () => {
     "<head><style>.mood span{background:url(/art/sprites/face-owner-kilo.png) no-repeat 0 0/320px 64px}" +
     ".m-neutral span{background-position:-64px 0}.m-upset span{background-position:-128px 0}" +
     ".m-fired span{background-position:-192px 0}</style></head>";
-  const built = siteHtml(art, html);
+  const built = project(html);
   expect(built).not.toContain("/art/sprites/");
   expect(built).not.toContain("background-position:");
-  expect(built).toContain("no-repeat -84px -104px / 1024px 512px}");
+  expect(stylesheet).toContain("no-repeat -84px -104px / 1024px 512px}");
 });

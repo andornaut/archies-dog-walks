@@ -1,6 +1,7 @@
 import { readFile } from "node:fs/promises";
 
 import type { RgbaImage } from "@andornaut/art-kit/build/rgbaImage";
+import { contentHash } from "@andornaut/game-kit/build/contentHash";
 import type { Plugin, ViteDevServer } from "vite";
 
 import { type ArtFileMap, artFileUrl } from "../../assets/artUrl.ts";
@@ -65,6 +66,7 @@ interface AtlasPluginApi {
 export function atlasPlugin(): Plugin & { api: AtlasPluginApi } {
   let artFiles: ArtFileMap = new Map();
   let siteArt: SiteArt | undefined;
+  let siteStylesheet: ((css: string) => string) | undefined;
   return {
     api: { artFiles: () => artFiles },
     async buildStart() {
@@ -100,6 +102,11 @@ export function atlasPlugin(): Plugin & { api: AtlasPluginApi } {
         this.emitFile({ fileName, source, type: "asset" });
       }
       artFiles = new Map(hashed.map(({ fileName, path }) => [path, fileName]));
+      siteStylesheet = (source) => {
+        const fileName = `assets/site-art-${contentHash(new TextEncoder().encode(source))}.css`;
+        this.emitFile({ fileName, source, type: "asset" });
+        return `${config.base}${fileName}`;
+      };
       const sources = new Map(hashed.map(({ path, source }) => [path, source]));
       siteArt = (key) => {
         const sheet = DOM_SHEET_KEYS.get(key);
@@ -210,7 +217,9 @@ export function atlasPlugin(): Plugin & { api: AtlasPluginApi } {
     },
     transformIndexHtml: {
       handler(html) {
-        return siteArt === undefined ? html : siteHtml(siteArt, html);
+        return siteArt === undefined || siteStylesheet === undefined
+          ? html
+          : siteHtml(siteArt, siteStylesheet, html);
       },
       order: "post",
     },
