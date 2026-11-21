@@ -84,7 +84,9 @@ export function publicFilesPlugin(): Plugin {
           ? [typeof file.source === "string" ? file.source : decoder.decode(file.source)]
           : [],
       );
-      const own = await Promise.all(files.filter((path) => LINKING_FILE.test(path)).map(read));
+      const own = await Promise.all(
+        files.filter((path) => LINKING_FILE.test(path) && !(path in bundle)).map(read),
+      );
       let copies: string[] = [];
       try {
         copies = publicCopies(

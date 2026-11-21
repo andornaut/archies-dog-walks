@@ -3,7 +3,7 @@ import { readFile } from "node:fs/promises";
 import type { RgbaImage } from "@andornaut/art-kit/build/rgbaImage";
 import type { Plugin, ViteDevServer } from "vite";
 
-import type { ArtFileMap } from "../../assets/artUrl.ts";
+import { type ArtFileMap, artFileUrl } from "../../assets/artUrl.ts";
 import {
   DOM_CHOICE_CARD_ART,
   DOM_DISABLED_ART_KEYS,
@@ -11,11 +11,15 @@ import {
   DOM_SHEET_KEYS,
   DOM_SHEETS,
   type DomSheet,
+  domSheetImagePath,
+  domSheetJsonPath,
 } from "../../assets/domArt.ts";
 import { parseManifest } from "../../assets/manifest.ts";
+import type { DomSheetJson } from "../../ui/dom/sheetFrames.ts";
 import { ART_DIR, ART_MANIFEST, artManifestText, generateArtManifest } from "../artManifest.ts";
 import { limitConcurrency } from "../concurrency.ts";
 import { nodeArtFiles, OPEN_FILE_LIMIT, writeIfChanged } from "../files.ts";
+import { type SiteArt, siteHtml, siteNavigation } from "../siteArt.ts";
 import { buildAtlases, WEBP_PAGES } from "./atlasBuild.ts";
 import { buildDomSheet, checkDomCopies } from "./domSheets.ts";
 import {
@@ -60,6 +64,7 @@ interface AtlasPluginApi {
 // site's pages name (publicFilesPlugin).
 export function atlasPlugin(): Plugin & { api: AtlasPluginApi } {
   let artFiles: ArtFileMap = new Map();
+  let siteArt: SiteArt | undefined;
   return {
     api: { artFiles: () => artFiles },
     async buildStart() {
@@ -95,6 +100,21 @@ export function atlasPlugin(): Plugin & { api: AtlasPluginApi } {
         this.emitFile({ fileName, source, type: "asset" });
       }
       artFiles = new Map(hashed.map(({ fileName, path }) => [path, fileName]));
+      const sources = new Map(hashed.map(({ path, source }) => [path, source]));
+      siteArt = (key) => {
+        const sheet = DOM_SHEET_KEYS.get(key);
+        if (sheet === undefined) {
+          throw new Error(`site art: no DOM sheet for ${key}`);
+        }
+        const source = sources.get(domSheetJsonPath(sheet));
+        if (source === undefined) {
+          throw new Error(`site art: no metadata for ${key}`);
+        }
+        return {
+          json: JSON.parse(new TextDecoder().decode(source)) as DomSheetJson,
+          url: artFileUrl(config.base, artFiles, domSheetImagePath(sheet)),
+        };
+      };
       this.emitFile({
         fileName: `${ART_DIR}/${ART_FILES_JSON}`,
         source: artFilesJson(config.base, artFiles),
@@ -166,6 +186,19 @@ export function atlasPlugin(): Plugin & { api: AtlasPluginApi } {
           .catch(next);
       });
     },
+    async generateBundle() {
+      if (siteArt === undefined) {
+        return;
+      }
+      this.emitFile({
+        fileName: "nav.css",
+        source: siteNavigation(
+          siteArt,
+          await readFile(`${this.environment.config.publicDir}/nav.css`, "utf8"),
+        ),
+        type: "asset",
+      });
+    },
     load(id) {
       return id === RESOLVED_ART_FILES_MODULE
         ? `export default new Map(${JSON.stringify([...artFiles])});`
@@ -174,6 +207,12 @@ export function atlasPlugin(): Plugin & { api: AtlasPluginApi } {
     name: "archies-dog-walks-atlas",
     resolveId(id) {
       return id === ART_FILES_MODULE ? RESOLVED_ART_FILES_MODULE : undefined;
+    },
+    transformIndexHtml: {
+      handler(html) {
+        return siteArt === undefined ? html : siteHtml(siteArt, html);
+      },
+      order: "post",
     },
   };
 }

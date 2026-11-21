@@ -13,6 +13,7 @@ export { crashFontPlugin } from "./crashFontPlugin.ts";
 export { generatedFilesPlugin } from "./generatedFilesPlugin.ts";
 export { PHASER_BUILD } from "./phaserBuild.ts";
 export { publicFilesPlugin } from "./publicFilesPlugin.ts";
+export { siteArtSourcePlugin } from "./siteArt.ts";
 export { uiStylePlugin } from "./uiStylePlugin.ts";
 export { hashedIconsPlugin } from "@andornaut/game-kit/build/hashedIconsPlugin";
 export { phaserBuildPlugin } from "@andornaut/game-kit/build/phaserBuildPlugin";
