@@ -286,15 +286,15 @@ export function effects(ink: Ink, on: boolean): Grid {
 export function motion(ink: Ink, on: boolean): Grid {
   const [face, shade] = ink;
   const g = new Grid(16, 16);
-  g.ell(11.5, on ? 10 : 7, 4.2, 4.2, face, shade);
+  g.ell(11.5, on ? 7 : 8, 4.2, 4.2, face, shade);
   if (on) {
-    g.rect(1, 14, 15, 1, face);
-    g.rect(1, 15, 15, 1, shade);
+    g.rect(1, 11, 15, 1, face);
+    g.rect(1, 12, 15, 1, shade);
   } else {
     for (const [x, y, w] of [
-      [2, 2, 4],
-      [0, 6, 6],
-      [2, 10, 4],
+      [2, 3, 4],
+      [0, 7, 6],
+      [2, 11, 4],
     ] as const) {
       g.rect(x, y, w, 2, face);
     }
