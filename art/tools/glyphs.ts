@@ -812,10 +812,10 @@ function keenEye20(): Grid {
 // A hand, palm up, rubbing below a heart.
 function bellyRubs20(): Grid {
   const g = new Grid(20, 20);
-  heart20(g, 6, 1);
+  heart20(g, 7, 1);
   bitmap(
     g,
-    1,
+    2,
     11,
     [
       "......sssss.....",

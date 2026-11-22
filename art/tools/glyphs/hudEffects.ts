@@ -107,10 +107,10 @@ function secondChance(): Grid {
 
 function bellyRubs(): Grid {
   const g = new Grid(SIZE, SIZE);
-  heart(8, 1, g);
+  heart(9, 1, g);
   bitmap(
     g,
-    2,
+    3,
     13,
     [
       ".......sssss.......",
