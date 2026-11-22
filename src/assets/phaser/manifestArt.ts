@@ -1,18 +1,16 @@
 import { itemAt } from "@andornaut/game-kit/runtime/arrays";
-import { getOrInsertComputed } from "@andornaut/game-kit/runtime/maps";
-import type { Loader, Scene, Textures } from "phaser";
+import type { Scene, Textures } from "phaser";
 
 import { artUrl } from "../artFiles.ts";
 import { filtersLinear, steppedBases } from "../atlasGroups.ts";
 import {
   asepriteSheetOf,
-  ATLAS_MANIFEST_PATH,
   type AtlasFrame,
   type AtlasManifest,
   atlasPageKey,
   type AtlasTexture,
   BASE_FRAME,
-  parseAtlasManifest,
+  unpackAtlasManifest,
 } from "../atlasManifest.ts";
 import { type AssetManifest, parseManifest } from "../manifest.ts";
 import { usesPhaserArt } from "../phaserArt.ts";
@@ -20,67 +18,44 @@ import { usesPhaserArt } from "../phaserArt.ts";
 export { artUrl };
 
 export const MANIFEST_CACHE_KEY = "art-manifest";
-const ATLAS_CACHE_KEY = "art-atlas-manifest";
 
-// Call from preload. The manifests load first and queue adds their files to the same load, so
-// create runs once they are in. An invalid manifest queues nothing: create reports it. A build
-// also loads the atlas manifest, in parallel; the dev server has none, so art loads from its
-// own files there and every edit shows on reload.
+// Call from preload. Production includes the packed atlas in the same manifest; dev keeps
+// its raw manifest and own-file loading. Invalid required metadata is reported by create.
 export function loadManifest(scene: Scene, queue: (manifest: AssetManifest) => void): void {
-  const paths = new Map([[MANIFEST_CACHE_KEY, "manifest.json"]]);
-  if (import.meta.env.PROD) {
-    paths.set(ATLAS_CACHE_KEY, ATLAS_MANIFEST_PATH);
-  }
-  const pending = new Set([...paths.keys()].filter((key) => !scene.cache.json.exists(key)));
-  const settle = (key: string) => {
-    pending.delete(key);
-    if (pending.size > 0) {
-      return;
-    }
+  const settle = () => {
     try {
       queue(parseManifest(scene.cache.json.get(MANIFEST_CACHE_KEY)));
     } catch {
       // Reported by create, which parses the manifest again.
     }
   };
-  if (pending.size === 0) {
-    settle(MANIFEST_CACHE_KEY);
+  if (scene.cache.json.exists(MANIFEST_CACHE_KEY)) {
+    settle();
     return;
   }
-  scene.load.on("loaderror", (file: Loader.File) => {
-    if (pending.has(file.key)) {
-      settle(file.key);
-    }
-  });
-  for (const [key, path] of paths) {
-    if (pending.has(key)) {
-      scene.load.once(`filecomplete-json-${key}`, () => settle(key));
-      scene.load.json(key, artUrl(path));
-    }
-  }
+  scene.load.once(`filecomplete-json-${MANIFEST_CACHE_KEY}`, settle);
+  scene.load.json(MANIFEST_CACHE_KEY, artUrl("manifest.json"));
 }
 
-// Parsed once per game, keyed by its JSON cache.
-const parsedAtlases = new WeakMap<object, AtlasManifest>();
+// A replacement cache value, including after Retry, must be parsed independently.
+const parsedAtlases = new WeakMap<object, AtlasManifest | undefined>();
 
-// The build's atlas manifest, or undefined in dev or when it failed to load or parse, which
-// leaves every key to load from its own files.
+// Optional malformed atlas metadata leaves the valid asset manifest available for fallback.
 export function atlasManifest(scene: Scene): AtlasManifest | undefined {
-  const cache = scene.cache.json;
-  if (!cache.exists(ATLAS_CACHE_KEY)) {
+  const manifest: unknown = scene.cache.json.get(MANIFEST_CACHE_KEY);
+  if (typeof manifest !== "object" || manifest === null || !("atlas" in manifest)) {
     return undefined;
   }
-  try {
-    return getOrInsertComputed(
-      cache,
-      () => parseAtlasManifest(cache.get(ATLAS_CACHE_KEY)),
-      parsedAtlases,
-    );
-  } catch (error) {
-    console.error("The atlas manifest is invalid; loading each image on its own.", error);
-    cache.remove(ATLAS_CACHE_KEY);
-    return undefined;
+  if (!parsedAtlases.has(manifest)) {
+    let atlas: AtlasManifest | undefined;
+    try {
+      atlas = unpackAtlasManifest(manifest.atlas);
+    } catch (error) {
+      console.error("The atlas manifest is invalid; loading each image on its own.", error);
+    }
+    parsedAtlases.set(manifest, atlas);
   }
+  return parsedAtlases.get(manifest);
 }
 
 // Queues an atlas page's file, unless its texture is loaded.

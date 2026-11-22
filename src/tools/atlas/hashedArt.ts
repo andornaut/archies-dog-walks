@@ -2,7 +2,7 @@ import type { RgbaImage } from "@andornaut/art-kit/build/rgbaImage";
 import { contentHash } from "@andornaut/game-kit/build/contentHash";
 
 import { type ArtFileMap, artFileUrl } from "../../assets/artUrl.ts";
-import { ATLAS_MANIFEST_PATH, type AtlasManifest } from "../../assets/atlasManifest.ts";
+import { type AtlasManifest, packAtlasManifest } from "../../assets/atlasManifest.ts";
 import type { DomSheet } from "../../assets/domArt.ts";
 import type { AssetManifest } from "../../assets/manifest.ts";
 import { usesPhaserArt } from "../../assets/phaserArt.ts";
@@ -50,7 +50,6 @@ function gameArtPaths(manifest: AssetManifest, atlas: AtlasManifest): string[] {
   const own = ({ key }: { key: string }) => !atlased.has(key) && usesPhaserArt(key);
   const paths = [
     ART_MANIFEST,
-    ATLAS_MANIFEST_PATH,
     ...atlas.pages.map(({ file }) => file),
     ...manifest.fonts.flatMap((font) => (own(font) ? [font.fnt, font.png] : [font.fnt])),
     ...manifest.fonts.flatMap(({ woff }) => (woff === undefined ? [] : [woff])),
@@ -96,9 +95,15 @@ export async function hashGameArt(
     { copies: artCopies(dom), sheets: dom.sheets },
     decoded,
   );
-  const built = new Map([...files, ...sheets]).set(
-    ATLAS_MANIFEST_PATH,
-    new TextEncoder().encode(JSON.stringify(atlas)),
+  const built = new Map([...files, ...sheets]);
+  built.set(
+    ART_MANIFEST,
+    new TextEncoder().encode(
+      JSON.stringify({
+        ...manifest,
+        atlas: packAtlasManifest(atlas),
+      }),
+    ),
   );
   const paths = [...gameArtPaths(manifest, atlas), ...sheets.keys()].sort();
   return Promise.all(

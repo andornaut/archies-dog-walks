@@ -2,7 +2,7 @@ import { blankImage } from "@andornaut/art-kit/build/rgbaImage";
 import { contentHash } from "@andornaut/game-kit/build/contentHash";
 import { beforeAll, describe, expect, it } from "vitest";
 
-import { ATLAS_MANIFEST_PATH, type AtlasManifest } from "../../assets/atlasManifest.ts";
+import { type AtlasManifest, packAtlasManifest } from "../../assets/atlasManifest.ts";
 import type { AssetManifest } from "../../assets/manifest.ts";
 import { ART_MANIFEST } from "../artManifest.ts";
 import { encodePng } from "./atlasBuild.ts";
@@ -87,7 +87,6 @@ describe("hashed game art", () => {
 
   it("emits every required path once in sorted order without packed own files", () => {
     expect(files.map(({ path }) => path)).toEqual([
-      "atlas-manifest.json",
       "atlas/ui-0.webp",
       "dom/dom-chrome.json",
       "dom/dom-chrome.webp",
@@ -110,8 +109,10 @@ describe("hashed game art", () => {
         .filter(({ path }) => !path.startsWith("dom/"))
         .map(async (file) => {
           const expected =
-            file.path === ATLAS_MANIFEST_PATH
-              ? new TextEncoder().encode(JSON.stringify(atlas))
+            file.path === ART_MANIFEST
+              ? new TextEncoder().encode(
+                  JSON.stringify({ ...manifest, atlas: packAtlasManifest(atlas) }),
+                )
               : file.path === "atlas/ui-0.webp"
                 ? page
                 : file.path.endsWith(".json")
@@ -134,18 +135,19 @@ describe("hashed game art", () => {
     }`;
     const expected = String.raw`{"unknown":"  spaced \\ \t \"Quoted\"  ","negativeZero":-0,"exponent":1e+20}`;
     const compacted = await hashGameArt(
-      async (path) => (path === ART_MANIFEST ? new TextEncoder().encode(text) : readArt(path)),
+      async (path) =>
+        path === "sprites/own.json" ? new TextEncoder().encode(text) : readArt(path),
       dom,
       manifest,
       { files: new Map([["atlas/ui-0.webp", page]]), manifest: atlas },
     );
-    const file = compacted.find(({ path }) => path === ART_MANIFEST)!;
+    const file = compacted.find(({ path }) => path === "sprites/own.json")!;
     expect(new TextDecoder().decode(file.source)).toBe(expected);
     expect(JSON.parse(expected)).toEqual(JSON.parse(text));
     expect(Object.is(JSON.parse(new TextDecoder().decode(file.source)).negativeZero, -0)).toBe(
       true,
     );
-    expect(file.fileName).toBe(hashedArtFileName(ART_MANIFEST, contentHash(file.source)));
+    expect(file.fileName).toBe(hashedArtFileName("sprites/own.json", contentHash(file.source)));
     expect(compacted.map(({ path }) => path)).toEqual(files.map(({ path }) => path));
   });
 
@@ -153,7 +155,7 @@ describe("hashed game art", () => {
     await expect(
       hashGameArt(
         async (path) =>
-          path === ART_MANIFEST ? new TextEncoder().encode("{ broken }") : readArt(path),
+          path === "sprites/own.json" ? new TextEncoder().encode("{ broken }") : readArt(path),
         { ...dom, sheets: new Map() },
         manifest,
         { files: new Map([["atlas/ui-0.webp", page]]), manifest: atlas },

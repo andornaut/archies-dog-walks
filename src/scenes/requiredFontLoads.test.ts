@@ -29,7 +29,6 @@ it("classifies only the game manifest and actual required font load dependencies
     expect(requiredFontFailure(manifest, atlas, { key: key!, type: type! })).toBe(true);
   }
   for (const [type, key] of [
-    ["json", "art-atlas-manifest"],
     ["bitmapFont", "font-world-label"],
     ["xml", "font-world-label:fnt"],
     ["image", "atlas:1"],

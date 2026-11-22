@@ -2,9 +2,15 @@ import { sceneStub } from "@andornaut/game-kit/test/phaser/sceneStub";
 import type { Scene } from "phaser";
 import { describe, expect, it, vi } from "vitest";
 
-import { type AtlasManifest, atlasPageKey } from "../atlasManifest.ts";
+import { type AtlasManifest, atlasPageKey, packAtlasManifest } from "../atlasManifest.ts";
 import type { AssetManifest } from "../manifest.ts";
-import { addAtlasTextures, atlasManifest, queueManifestArt } from "./manifestArt.ts";
+import {
+  addAtlasTextures,
+  atlasManifest,
+  loadManifest,
+  MANIFEST_CACHE_KEY,
+  queueManifestArt,
+} from "./manifestArt.ts";
 
 vi.mock("virtual:art-files", () => ({ default: new Map() }));
 
@@ -13,39 +19,39 @@ const manifest: AtlasManifest = {
   textures: [],
 };
 
-const KEY = "art-atlas-manifest";
+const KEY = "art-manifest";
 
 function sceneWithManifest(value: unknown) {
   const stub = sceneStub(vi.fn);
-  stub.cache.json.add(KEY, value);
+  stub.cache.json.add(KEY, { atlas: value, fonts: [], images: [], sounds: [], sprites: [] });
   return { cache: stub.cache.json, scene: stub as unknown as Scene };
 }
 
 describe("runtime atlas manifest cache", () => {
   it("parses a loaded manifest once for its cache owner", () => {
-    const { cache, scene } = sceneWithManifest(manifest);
+    const { cache, scene } = sceneWithManifest(packAtlasManifest(manifest));
     expect(atlasManifest(scene)).toEqual(manifest);
     expect(atlasManifest(scene)).toBe(atlasManifest(scene));
-    expect(cache.get).toHaveBeenCalledOnce();
+    expect(cache.get).toHaveBeenCalledTimes(3);
   });
 
   it("leaves a missing manifest available for a later load", () => {
-    const { cache, scene } = sceneWithManifest(manifest);
+    const { cache, scene } = sceneWithManifest(packAtlasManifest(manifest));
     cache.remove(KEY);
     expect(atlasManifest(scene)).toBeUndefined();
-    expect(cache.get).not.toHaveBeenCalled();
-    cache.add(KEY, manifest);
+    expect(cache.get).toHaveBeenCalledOnce();
+    cache.add(KEY, { atlas: packAtlasManifest(manifest) });
     expect(atlasManifest(scene)).toEqual(manifest);
   });
 
-  it("rejects and removes invalid JSON without caching the failed parse", () => {
+  it("retains valid asset metadata and refreshes a replaced invalid atlas", () => {
     const { cache, scene } = sceneWithManifest({ pages: "invalid", textures: [] });
     const report = vi.spyOn(console, "error").mockImplementation(() => undefined);
     try {
       expect(atlasManifest(scene)).toBeUndefined();
-      expect(cache.remove).toHaveBeenCalledWith(KEY);
+      expect(cache.remove).not.toHaveBeenCalled();
       expect(report).toHaveBeenCalledOnce();
-      cache.add(KEY, manifest);
+      cache.add(KEY, { atlas: packAtlasManifest(manifest) });
       expect(atlasManifest(scene)).toEqual(manifest);
       expect(cache.get).toHaveBeenCalledTimes(2);
     } finally {
@@ -93,13 +99,32 @@ it("does not register native textures from an old or externally supplied atlas p
   });
   const keys = ["icon-close", "ui-button", "screen-home"];
   stub.cache.json.add(KEY, {
-    pages: manifest.pages,
-    textures: keys.map((key) => ({
-      frames: [{ h: 1, name: "0", w: 1, x: 0, y: 0 }],
-      key,
-      page: 0,
-    })),
+    atlas: packAtlasManifest({
+      pages: manifest.pages,
+      textures: keys.map((key) => ({
+        frames: [{ h: 1, name: "0", w: 1, x: 0, y: 0 }],
+        key,
+        page: 0,
+      })),
+    }),
   });
   addAtlasTextures(stub as unknown as Scene);
   expect(create).toHaveBeenCalledExactlyOnceWith("screen-home", []);
+});
+
+it("queues one required manifest and admits its assets after it completes", () => {
+  const once = vi.fn();
+  const json = vi.fn();
+  const stub = sceneStub(vi.fn, { load: { json, once } });
+  const queue = vi.fn();
+  loadManifest(stub as unknown as Scene, queue);
+  expect(json).toHaveBeenCalledExactlyOnceWith(
+    MANIFEST_CACHE_KEY,
+    expect.stringContaining("manifest.json"),
+  );
+  const assets = { fonts: [], images: [], sounds: [], sprites: [] };
+  stub.cache.json.add(MANIFEST_CACHE_KEY, { ...assets, atlas: packAtlasManifest(manifest) });
+  once.mock.calls[0]![1]();
+  expect(queue).toHaveBeenCalledExactlyOnceWith(assets);
+  expect(atlasManifest(stub as unknown as Scene)).toEqual(manifest);
 });

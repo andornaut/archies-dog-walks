@@ -205,7 +205,7 @@ const getText = async src => { const r = await fetch(src, { cache: "no-cache" })
 // server serves it empty, and every file then loads at its own path.
 let files = {};
 const url = path => files[path] ?? BASE + path;
-// A build's atlas (atlas-manifest.json): its pages, and each packed key's texture by key. A key on
+// The production manifest's atlas: its pages and each packed key's texture. A key on
 // no DOM sheet that the atlas leaves out loads from its own files.
 const BASE_FRAME = "__BASE"; // the frame that covers a whole image, as Phaser names it
 let atlasPages = [];
@@ -373,11 +373,19 @@ async function fill(g, items) {
 async function main() {
   try { files = await getJSON(BASE + "art-files.json"); } catch (err) { files = {}; }
   if (!files || typeof files !== "object") files = {};
-  if (Object.hasOwn(files, "atlas-manifest.json")) {
+  let manifest;
+  try { manifest = await getJSON(url("manifest.json")); } catch (err) { Object.assign($("status"), { hidden: false, textContent: `Could not read the manifest: ${err.message}` }); manifest = {}; }
+  if (manifest.atlas) {
+    // Production tuple contract: src/assets/atlasManifest.ts. The gallery only projects drawing fields.
     try {
-      const atlas = await getJSON(url("atlas-manifest.json"));
-      atlasPages = atlas.pages;
-      for (const t of atlas.textures) textures.set(t.key, t);
+      atlasPages = manifest.atlas.pages;
+      for (const [key, page, frames, tags] of manifest.atlas.textures) {
+        textures.set(key, { key, page, tags, frames: frames.map(([x, y, w, h, duration, trim, name], index) => ({
+          x, y, w, h, name: name ?? `${key} ${index}.aseprite`,
+          ...(duration == null ? {} : { duration }),
+          ...(trim == null ? {} : { trim: { w: trim[0], h: trim[1], x: trim[2], y: trim[3] } })
+        })) });
+      }
     } catch (err) { Object.assign($("status"), { hidden: false, textContent: `Could not read the atlas manifest: ${err.message}` }); }
   }
   const sheets = Object.keys(files).flatMap(p => /^dom\/([^/]+)\.json$/.exec(p)?.[1] ?? []);
@@ -387,8 +395,6 @@ async function main() {
       for (const [key, entry] of Object.entries(json.keys)) domKeys.set(key, { entry, sheet });
     } catch (err) { Object.assign($("status"), { hidden: false, textContent: `Could not read the ${sheet} sheet: ${err.message}` }); }
   }));
-  let manifest;
-  try { manifest = await getJSON(url("manifest.json")); } catch (err) { Object.assign($("status"), { hidden: false, textContent: `Could not read the manifest: ${err.message}` }); manifest = {}; }
   const sprites = manifest.sprites || [], images = manifest.images || [], fonts = manifest.fonts || [], sounds = manifest.sounds || [];
   const counts = { sprites: sprites.length, images: images.length, fonts: fonts.length, sounds: sounds.length };
   for (const b of pills) if (b.dataset.kind in counts) b.textContent = `${counts[b.dataset.kind]} ${b.dataset.kind}`;
