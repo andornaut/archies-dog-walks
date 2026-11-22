@@ -67,3 +67,4 @@ Reference: [Screens and UI](../../src/README.md#screens-and-ui), [Assets](../../
 | adw-0197 | Align principal art and content in comparable UI rows            | [adw-0197.md](../work/adw-0197.md) |
 | adw-0200 | Align Start section headings and notes to matching insets        | [adw-0200.md](../work/adw-0200.md) |
 | adw-0201 | Show Cancel and Buy only when an item can be purchased           | [adw-0201.md](../work/adw-0201.md) |
+| adw-0203 | Balance Pet Shop section heading and count spacing               | [adw-0203.md](../work/adw-0203.md) |
