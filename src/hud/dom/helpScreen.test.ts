@@ -77,24 +77,36 @@ describe("the HTML help screen", () => {
 
   it.each([
     ["previous", 0, []],
-    ["previous", 1, ["adw-button adw-secondary"]],
-    ["next", 0, ["adw-button adw-secondary"]],
+    ["previous", 1, [gameData.menuText.help.previous]],
+    ["next", 0, [gameData.menuText.help.next]],
     ["close", 0, []],
   ] as const)("shows %s pressed on page %d only where it is available", (pressed, page, shown) => {
     const { nodes } = helpScreen(page, pressed);
     expect(
-      nodes.filter((node) => node.attributes.has("data-pressed")).map((node) => node.className),
+      nodes
+        .filter((node) => node.tagName === "button" && node.attributes.has("data-ui-pressed"))
+        .map((node) => node.getAttribute("aria-label")),
     ).toEqual(shown);
     expect(nodes.some((node) => node.className === "adw-close")).toBe(false);
-    const previous = nodes.find((node) => node.className.startsWith("adw-button"));
-    expect(previous?.className.includes("adw-disabled")).toBe(page === 0);
+    const previous = nodes.find(
+      (node) =>
+        node.tagName === "button" &&
+        node.getAttribute("aria-label") === gameData.menuText.help.previous,
+    )!;
+    expect(previous).toBeDefined();
+    expect(previous.classList.contains("adw-disabled")).toBe(page === 0);
+    expect(previous.getAttribute("aria-disabled") === "true").toBe(page === 0);
   });
 
   it("refuses a button once at a time: a shake, or a still red label under reduced motion", () => {
     const refusal = { flashMs: 80, flashes: 4, shake: 3, shakeMs: 40 };
     for (const reducedMotion of [false, true]) {
       const { nodes, shown } = helpScreen(0, undefined);
-      const previous = nodes.find((node) => node.className.startsWith("adw-button"));
+      const previous = nodes.find(
+        (node) =>
+          node.tagName === "button" &&
+          node.getAttribute("aria-label") === gameData.menuText.help.previous,
+      )!;
       shown.refuse(0, { ...refusal, reducedMotion });
       shown.refuse(0, { ...refusal, reducedMotion: !reducedMotion });
       expect(previous?.className).toContain(reducedMotion ? "adw-refusing-still" : "adw-refusing");
