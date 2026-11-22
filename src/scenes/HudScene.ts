@@ -532,9 +532,12 @@ export class HudScene extends Scene {
       this.explained = { key, scene: undefined };
       return;
     }
-    const card = detailView(overlay, LAYOUT.screen, detail);
-    const html = addHtmlDetailCard(overlay, card, undefined, false, () =>
-      this.run?.closeExplanation(),
+    const html = addHtmlDetailCard(
+      overlay,
+      () => detailView(overlay, LAYOUT.screen, detail),
+      undefined,
+      false,
+      () => this.run?.closeExplanation(),
     );
     this.explained = html === undefined ? NOT_EXPLAINED : { html, key, scene: overlay };
   }

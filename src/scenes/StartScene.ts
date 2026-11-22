@@ -1542,17 +1542,18 @@ export class StartScene extends Scene {
     const card =
       target.kind === "walker" ? walkerDetail(gameData, save.owned, target.walker) : item!.card;
     const picture = this.detailPicture(target);
-    const view = detailView(this, HOME_REGION, {
+    const layout = () => detailView(this, HOME_REGION, {
       card,
       kind: target.kind,
       picture,
       ...(item === undefined ? {} : { statusLines: item.statusLines }),
       ...(item?.purchase === undefined ? {} : { purchase: item.purchase }),
     });
+    const view = layout();
     const close = () => this.closeOverlay();
     const presses = item?.pending === undefined ? [] : [close, () => this.buyDetail(item.pending!)];
     this.htmlDetail = keepPanel(this.htmlDetail, JSON.stringify([view, this.closePressed()]), () =>
-      addHtmlDetailCard(this, view, close, this.closePressed(), close, presses),
+      addHtmlDetailCard(this, layout, close, this.closePressed(), close, presses),
     );
     this.overlay = { ...overlay, rect: view.card.panel };
   }

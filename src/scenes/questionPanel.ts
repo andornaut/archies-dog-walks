@@ -222,7 +222,7 @@ export function addHtmlModalCard(
 // card's body or anywhere outside it does.
 export function addHtmlDetailCard(
   scene: Scene,
-  view: DetailCardView,
+  layout: () => DetailCardView,
   close: (() => void) | undefined,
   closePressed = false,
   dismiss?: () => void,
@@ -232,15 +232,62 @@ export function addHtmlDetailCard(
   if (place === undefined) {
     return undefined;
   }
-  const panel = showDetailCard(place.layer, {
-    ...htmlArtInput(place),
-    close,
-    closePressed,
-    ...(dismiss === undefined ? {} : { backgroundCancel: dismiss, dismiss }),
-    ...(presses === undefined ? {} : { presses }),
-    view,
+  const mount = (view: DetailCardView) =>
+    showDetailCard(place.layer, {
+      ...htmlArtInput(place),
+      close,
+      closePressed,
+      ...(dismiss === undefined ? {} : { backgroundCancel: dismiss, dismiss }),
+      ...(presses === undefined ? {} : { presses }),
+      view,
+    });
+  let view = layout();
+  let panel = mount(view);
+  let needsLayout = false;
+  let pendingFocus: number | undefined;
+  const stopScale = place.layer.onScale(() => {
+    needsLayout = true;
   });
-  return followScene(scene, nativeModalShade(scene, panel));
+  const handle: DomQuestionPanel = {
+    get element() {
+      return panel.element;
+    },
+    accepts: () => panel.accepts(),
+    burst: (at) => panel.burst(at),
+    capture: () => panel.capture(),
+    destroy() {
+      stopScale();
+      panel.destroy();
+    },
+    focusControl: (index) => panel.focusControl(index),
+    refuse: (index, refusal) => panel.refuse(index, refusal),
+    setActionShown: (index, shown) => panel.setActionShown(index, shown),
+    setDimmed: (dimmed) => panel.setDimmed(dimmed),
+    setInert: (inert) => panel.setInert(inert),
+    setShown: (shown) => panel.setShown(shown),
+    setEnabled(enabled) {
+      panel.setEnabled(enabled);
+      if (!enabled || !panel.accepts()) {
+        return;
+      }
+      if (needsLayout) {
+        needsLayout = false;
+        const next = layout();
+        if (JSON.stringify(view) !== JSON.stringify(next)) {
+          const buttons = [...panel.element.querySelectorAll("button")];
+          pendingFocus = buttons.indexOf(panel.element.ownerDocument.activeElement as HTMLButtonElement);
+          panel.destroy();
+          view = next;
+          panel = mount(next);
+        }
+      }
+      if (pendingFocus !== undefined && panel.accepts()) {
+        panel.focusControl(pendingFocus < 0 ? undefined : pendingFocus);
+        pendingFocus = undefined;
+      }
+    },
+  };
+  return followScene(scene, nativeModalShade(scene, handle));
 }
 
 // A native panel is retained while its presentation key is unchanged.
