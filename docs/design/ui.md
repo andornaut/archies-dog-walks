@@ -2,7 +2,7 @@
 
 Ordinary screens, overlays, choice cards and the walk HUD render as native DOM views on game-kit's shared UI modules; Phaser draws the road, backdrops, actors, world effects, Boot's art and Help's illustrations, and art only the native interface draws ships outside the Phaser atlas. The [Art layout guide](../../art/layout.md) owns exact UI measurements, including target sizes, compact HUD exceptions, spacing, modal families, close controls and the physical-top loading strip. Text on a backing centres on its visible ink. Required file failures show the shared error with Retry.
 
-Under a modal the whole background, top controls included, is dimmed and inactive. Ordinary dismissible details keep their Close footer and corner X; a sole visible footer action is centred. Settings uses Back when opened from Menu or Pause and Close when opened standalone. Confirmations use their existing semantic actions without a redundant labelled Close; required choices stay mandatory. Primary actions sit bottommost or rightmost.
+Under a modal the whole background, top controls included, is dimmed and inactive. Ordinary dismissible details keep their Close footer and corner X. A sole visible footer action is centred. Settings uses Back when opened from Menu or Pause and Close when opened standalone. Confirmations keep their existing action labels, such as Cancel and Buy. Primary actions sit bottommost or rightmost.
 
 Back restores the immediate invoking view. Help and Logbook opened from Menu return to that
 same Menu; pages opened from Pause leave the walk paused until Resume. Close, X, Escape and
