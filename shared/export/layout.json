@@ -2284,6 +2284,7 @@
     },
     "pause": {
       "labels": [
+        "Cheats",
         "Help",
         "Settings",
         "Back to title",
@@ -2294,25 +2295,31 @@
           "height": 48,
           "width": 160,
           "x": 100,
-          "y": 221
+          "y": 178
         },
         {
           "height": 48,
           "width": 160,
           "x": 100,
-          "y": 277
+          "y": 234
         },
         {
           "height": 48,
           "width": 160,
           "x": 100,
-          "y": 333
+          "y": 290
         },
         {
           "height": 48,
           "width": 160,
           "x": 100,
-          "y": 389
+          "y": 346
+        },
+        {
+          "height": 48,
+          "width": 160,
+          "x": 100,
+          "y": 402
         }
       ],
       "hits": [
@@ -2320,40 +2327,46 @@
           "height": 48,
           "width": 160,
           "x": 100,
-          "y": 221
+          "y": 178
         },
         {
           "height": 48,
           "width": 160,
           "x": 100,
-          "y": 277
+          "y": 234
         },
         {
           "height": 48,
           "width": 160,
           "x": 100,
-          "y": 333
+          "y": 290
         },
         {
           "height": 48,
           "width": 160,
           "x": 100,
-          "y": 389
+          "y": 346
+        },
+        {
+          "height": 48,
+          "width": 160,
+          "x": 100,
+          "y": 402
         }
       ],
       "notePlate": {
         "height": 42,
         "width": 232,
         "x": 64,
-        "y": 171
+        "y": 128
       },
       "panel": {
-        "height": 345,
+        "height": 401,
         "width": 264,
         "x": 48,
-        "y": 108
+        "y": 65
       },
-      "titleY": 132
+      "titleY": 89
     },
     "settings": {
       "buildLabelY": 428,
