@@ -1,3 +1,5 @@
+import "./nativeTopSection.css";
+
 import { containsPoint } from "@andornaut/game-kit/runtime/rect";
 import {
   advanceWidth,
@@ -92,20 +94,6 @@ export function createNativeTopSection(
   underlayElement.className = "adw-top-underlay";
   Object.assign(underlayElement.style, { inset: "0", pointerEvents: "none", position: "absolute" });
   root.append(underlayElement);
-  const focusStyle = doc.createElement("style");
-  focusStyle.textContent = `
-.adw-top-section-button{
-  position:absolute;box-sizing:border-box;pointer-events:auto;margin:0;padding:0;border:0;
-  background:none;color:inherit;font:inherit;cursor:pointer;touch-action:manipulation;
-  -webkit-tap-highlight-color:transparent;outline:none
-}
-.adw-top-section-button>.ui-button-face{position:absolute;pointer-events:none}
-.adw-top-section-button:focus-visible{
-  --ui-button-focus-fill:${hex(PALETTE.cyan)};--ui-button-focus-text:${hex(PALETTE.ink)}
-}
-.adw-top-section-button:focus-visible>.ui-button-face>[aria-hidden="true"]{opacity:0.65}
-`;
-  root.append(focusStyle);
   const layout = topSectionLayout(config.buttons, config);
   const placed: ((scale: DomScale) => void)[] = [];
   let muted = config.muted === true;

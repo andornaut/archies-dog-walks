@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+
 import { fontMetrics } from "@andornaut/game-kit/runtime/text/bitmapFont";
 import { PENDING_ATTRIBUTE } from "@andornaut/game-kit/runtime/web/ui/dom/imageReady";
 import { describe, expect, it, vi } from "vitest";
@@ -13,7 +15,6 @@ import { fontInk, fontInkRows, gameFont } from "../../testing/fontInk.ts";
 import { ownArtFrames } from "../../testing/ownArtFrames.ts";
 import { BUTTON_SIZE } from "../buttonGeometry.ts";
 import { domScale, fontPixel, gridRect } from "../domScale.ts";
-import { PALETTE } from "../palette.ts";
 import { TOP_BAR_FACE, TOP_BAR_TRIM, TOP_BAR_WELL } from "../topBarTrim.ts";
 import { topSectionLayout } from "../topSection.ts";
 import { createNativeTopSection } from "./nativeTopSection.ts";
@@ -594,17 +595,17 @@ it("uses a local cyan face and translucent raster focus cue without the legacy c
   const { buttons, element, view } = fixture();
   expect(buttons.every((button) => button.classList.contains("adw-top-section-button"))).toBe(true);
   expect(buttons.some((button) => button.classList.contains("adw-close"))).toBe(false);
-  const style = element
-    .all()
-    .find((node) => node.tagName === "style")!
-    .textContent.replace(/\s+/g, "");
-  const hex = (colour: number) => `#${colour.toString(16).padStart(6, "0")}`;
-  expect(style).toContain(
-    `.adw-top-section-button:focus-visible{` +
-      `--ui-button-focus-fill:${hex(PALETTE.cyan)};--ui-button-focus-text:${hex(PALETTE.ink)}}`,
+  expect(element.all().some((node) => node.tagName === "style")).toBe(false);
+  const style = readFileSync(new URL("./nativeTopSection.css", import.meta.url), "utf8").replace(
+    /\s+/g,
+    "",
   );
   expect(style).toContain(
-    '.adw-top-section-button:focus-visible>.ui-button-face>[aria-hidden="true"]{opacity:0.65}',
+    ".adw-top-section-button:focus-visible{" +
+      "--ui-button-focus-fill:var(--adw-cyan);--ui-button-focus-text:var(--adw-ink);}",
+  );
+  expect(style).toContain(
+    '.adw-top-section-button:focus-visible>.ui-button-face>[aria-hidden="true"]{opacity:0.65;}',
   );
   view.dispose();
 });
