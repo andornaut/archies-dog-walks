@@ -125,7 +125,7 @@ export function nextWalkLink(
 }
 
 // What the Start screen's grants add: the bank's amounts, in the modal's order.
-export const BANK_GRANTS: readonly Cents[] = [cents(50_000), cents(500_000), cents(5_000_000)];
+export const BANK_GRANTS: readonly Cents[] = [cents(10_000), cents(100_000), cents(1_000_000)];
 
 // What this walk's Add adds to its earnings.
 export const WALK_GRANT: Cents = cents(10_000);

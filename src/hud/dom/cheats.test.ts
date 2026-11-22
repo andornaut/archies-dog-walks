@@ -5,10 +5,11 @@ import { SCREEN_CONFIG } from "../../data/screen.ts";
 import { NEXT_WALK_OFF } from "../../dev/cheats.ts";
 import { cheatsView } from "../../dev/cheatsView.ts";
 import { FakeDocument, type FakeElement, fakeLayer, layerViews } from "../../testing/fakeDom.ts";
-import { fontFileMetrics, gameFont } from "../../testing/fontInk.ts";
+import { fontFileMetrics, gameFont, inkWidth } from "../../testing/fontInk.ts";
 import { ownArtFrames } from "../../testing/ownArtFrames.ts";
 import { domScale } from "../../ui/domScale.ts";
 import { modalTitleInk } from "../../ui/modal/titleRole.ts";
+import { TEXT_SCALE } from "../../ui/textFit.ts";
 import { showCheats } from "./cheats.ts";
 
 async function cheatsScreen(inWalk = false) {
@@ -17,7 +18,12 @@ async function cheatsScreen(inWalk = false) {
   const view = cheatsView(
     {
       body: fontFileMetrics("font-body"),
-      inkWidth: (_font, line) => line.length * 12,
+      inkWidth: (font, line) =>
+        inkWidth(
+          `font-${font}`,
+          { scale: TEXT_SCALE },
+          font === "title" ? line.toUpperCase() : line,
+        ),
       title: fontFileMetrics("font-title"),
       titleInk: (line) => modalTitleInk(gameFont("font-title"), line),
       wrapNote: (_width, text) => [text],
@@ -68,13 +74,14 @@ async function cheatsScreen(inWalk = false) {
   return { act, element, pointerClick, seed, shown, view };
 }
 
-it("keeps Cheats actions guarded and disposable while the seed remains an editable control", async () => {
+it("keeps Cheats actions guarded and disposable and renders only the approved controls", async () => {
   const { act, element, pointerClick, seed, shown, view } = await cheatsScreen();
   const action = view.rows
     .flatMap((row) => row.buttons)
     .find((button) => button.available !== false)!;
   const button = element.all().find((node) => node.getAttribute("aria-label") === action.label)!;
   expect(button.classList.contains("adw-standard-button")).toBe(true);
+  expect(button.getAttribute("data-ui-selected")).toBe("");
   shown.setInert(true);
   button.fire("click");
   expect(act).not.toHaveBeenCalled();
@@ -86,7 +93,11 @@ it("keeps Cheats actions guarded and disposable while the seed remains an editab
     .find((button) => button.available === false)!;
   const refused = element
     .all()
-    .find((node) => node.getAttribute("aria-label") === unavailable.label)!;
+    .find(
+      (node) =>
+        node.getAttribute("aria-label") === unavailable.label &&
+        node.getAttribute("aria-disabled") === "true",
+    )!;
   expect(refused.tabIndex).toBe(-1);
   expect(refused.getAttribute("aria-description")).toBeNull();
   refused.fire("click", { detail: 0 });
@@ -99,16 +110,14 @@ it("keeps Cheats actions guarded and disposable while the seed remains an editab
   expect(act).toHaveBeenCalledTimes(1);
   expect(refused.getAttribute("aria-disabled")).toBe("true");
   expect(refused.classList.contains("adw-refusing-still")).toBe(true);
-  const field = element.all().find((node) => node.tagName === "input")!;
-  Object.assign(field, { value: "314" });
-  field.fire("change");
-  expect(seed).toHaveBeenCalledExactlyOnceWith("314");
+  expect(element.all().some((node) => node.tagName === "input")).toBe(false);
+  expect(seed).not.toHaveBeenCalled();
   shown.destroy();
   button.fire("click");
   expect(act).toHaveBeenCalledTimes(1);
 });
 
-it("keeps disabled Cheats picker rows pointer-only while the native seed remains disabled", async () => {
+it("keeps the disabled Invincible switch pointer-only during a walk", async () => {
   const { act, element, pointerClick, shown, view } = await cheatsScreen(true);
   const row = view.rows.find((row) => row.action !== undefined && !row.enabled)!;
   const control = element
@@ -129,7 +138,6 @@ it("keeps disabled Cheats picker rows pointer-only while the native seed remains
   pointerClick(control);
   expect(refusing()).toBe(true);
   expect(act).not.toHaveBeenCalled();
-  expect(element.all().find((node) => node.tagName === "input")?.disabled).toBe(true);
   shown.destroy();
   for (const node of control.all()) {
     node.classList.remove("adw-refusing-still");

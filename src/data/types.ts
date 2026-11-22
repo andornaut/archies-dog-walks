@@ -1133,15 +1133,17 @@ export interface MenuText {
     readonly grantUpgrade: string;
     // The groups' headings, in the modal's order.
     readonly groups: {
+      readonly money: string;
       readonly nextWalk: string;
       readonly other: string;
       readonly startScreen: string;
       readonly thisWalk: string;
+      readonly unlocks: string;
     };
     readonly invincible: string;
     // Copy run link's label once its link is copied.
     readonly linkCopied: string;
-    // Settings' button that opens the modal.
+    // The Menu and Pause action that opens the modal.
     readonly open: string;
     readonly ownDogSlots: string;
     readonly ownDogs: string;

@@ -1,23 +1,23 @@
 // The Cheats modal laid out as it stands, free of Phaser and the DOM: its rows in the spec's order
 // (gameplay/cheats.md), each row's place in the scrolling body, and what a press on it does. The
 // HTML interface (src/hud/dom/cheats.ts) draws it. Every rect and text origin is in game pixels.
-import { fillLine } from "@andornaut/game-kit/runtime/lines";
+import { fillLine, wrapWords } from "@andornaut/game-kit/runtime/lines";
 import type { Rect } from "@andornaut/game-kit/runtime/rect";
 
 import { SETTINGS_CARD, SHOP_PAGE } from "../data/layout.ts";
-import type { DebuffId, GameData, GearId, MenuText, UpgradeId, ZoneId } from "../data/types.ts";
+import type { DebuffId, GameData, MenuText, UpgradeId, ZoneId } from "../data/types.ts";
 import { MENU_TEXT_FIELDS } from "../home/menuText.ts";
 import { dollarText } from "../presentation/currency.ts";
 import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";
 import { dismissFooter } from "../ui/modal/dismissFooter.ts";
-import { MODAL, modalActionWidth, modalFamilyWidth, modalRect } from "../ui/modal/layout.ts";
+import { MODAL, modalActionWidth } from "../ui/modal/layout.ts";
 import type { PanelButton, PanelMeasure, PanelText, QuestionPanelView } from "../ui/modal/types.ts";
 import { modalCardView, panelButton } from "../ui/modal/view.ts";
 import { PALETTE } from "../ui/palette.ts";
-import { GREYED, selectLook } from "../ui/selection.ts";
-import { TEXT_SCALE } from "../ui/textFit.ts";
+import { BUTTON_LIP_PX, GREYED, selectLook } from "../ui/selection.ts";
+import { MODAL_TITLE_SCALE, TEXT_SCALE } from "../ui/textFit.ts";
 import type { Cents } from "../units.ts";
-import { BANK_GRANTS, type NextWalk, type OwnGrant, type Speed, WALK_GRANT } from "./cheats.ts";
+import { BANK_GRANTS, type NextWalk, type OwnGrant, startZones, WALK_GRANT } from "./cheats.ts";
 
 // What a press on a row or button does.
 export type CheatAction =
@@ -34,41 +34,43 @@ export type CheatAction =
   | { readonly kind: "resetSave" }
   | { readonly kind: "showTips" }
   | { readonly kind: "speed" }
-  | { readonly kind: "startAt" }
+  | { readonly kind: "startAt"; readonly zone: ZoneId }
   | { readonly kind: "upgrade"; readonly upgrade: UpgradeId }
   | { readonly kind: "upgrades" };
 
-// One full-width row: a group's heading, the divider before the actions that are no cheats, an
-// On/Off switch, a picker that a press moves to its next choice, the seed's field, an action
-// button, or measured horizontal Add buttons that wrap within their row.
-export type CheatRow =
-  | { readonly kind: "divider" }
+interface CheatButton {
+  readonly action: CheatAction;
+  readonly enabled: boolean;
+  readonly label: string;
+  readonly selected?: boolean;
+}
+
+type CheatLine =
+  | { readonly kind: "divider"; readonly section?: boolean }
   | { readonly kind: "heading"; readonly text: string }
   | {
       readonly action: CheatAction;
       readonly enabled: boolean;
-      readonly kind: "picker" | "switch";
+      readonly kind: "switch";
       readonly label: string;
-      readonly on?: boolean;
+      readonly on: boolean;
+      readonly shift: number;
       readonly value: string;
     }
   | {
-      readonly enabled: boolean;
-      readonly kind: "seed";
-      readonly label: string;
-      // What the empty field shows: a random seed.
-      readonly placeholder: string;
-      readonly value: string;
-    }
-  | {
-      readonly buttons: readonly {
-        readonly action: CheatAction;
-        readonly enabled: boolean;
-        readonly label: string;
-      }[];
-      // Horizontal Add actions, or a full-width member of the vertical action stack.
-      readonly compact: boolean;
+      readonly buttons: readonly CheatButton[];
       readonly kind: "buttons";
+      readonly layout: "compact" | "full" | "pair";
+    };
+
+export type CheatRow =
+  | CheatLine
+  | {
+      readonly kind: "columns";
+      readonly groups: readonly {
+        readonly label: string;
+        readonly buttons: readonly CheatButton[];
+      }[];
     };
 
 // Where the modal opened and what it shows: the walk's state there, or undefined on the Start
@@ -81,29 +83,9 @@ export interface CheatsState {
     { readonly canFinish: boolean; readonly upgradesLeft: readonly UpgradeId[] } | undefined;
 }
 
-type CheatsData = Pick<
-  GameData,
-  "debuffs" | "shopGear" | "upgradeDrawOrder" | "upgrades" | "world"
->;
+type CheatsData = Pick<GameData, "debuffs" | "upgradeDrawOrder" | "upgrades" | "world">;
 
-function zoneName(data: Pick<GameData, "world">, zone: ZoneId | null): string {
-  const zones = data.world.zones;
-  return (zone === null ? zones[0] : zones.find(({ id }) => id === zone))?.name ?? "";
-}
-
-function pocketName(
-  data: Pick<GameData, "shopGear">,
-  words: MenuText["cheats"],
-  pocket: GearId | null | undefined,
-): string {
-  if (pocket === undefined) {
-    return words.pocketPicked;
-  }
-  return pocket === null ? words.pocketNone : data.shopGear[pocket].name;
-}
-
-// The rows, in the spec's order: This walk, Next walk and Start screen, the divider, then the
-// actions that are no cheats. Rows that do not apply where the modal opened stay, disabled.
+// The rows in display order; actions unavailable in the current context remain visible.
 export function cheatRows(
   data: CheatsData,
   words: Pick<MenuText, "cheats" | "settings">,
@@ -117,8 +99,8 @@ export function cheatRows(
   const addLabel = (amount: Cents) => fillLine(fields, text, "add", { cash: dollarText(amount) });
   const action = (label: string, enabled: boolean, act: CheatAction): CheatRow => ({
     buttons: [{ action: act, enabled, label }],
-    compact: false,
     kind: "buttons",
+    layout: "full",
   });
   const adds = BANK_GRANTS.map((amount) => ({
     action: { amount, kind: "addBank" } as const,
@@ -138,20 +120,20 @@ export function cheatRows(
       kind: "debuff",
     }),
   );
-  const switchRow = (label: string, on: boolean, enabled: boolean, act: CheatAction): CheatRow => ({
+  const switchRow = (
+    label: string,
+    on: boolean,
+    enabled: boolean,
+    act: CheatAction,
+    shift: number,
+  ): CheatRow => ({
     action: act,
     enabled,
     kind: "switch",
     label,
     on,
+    shift,
     value: on ? words.settings.on : words.settings.off,
-  });
-  const picker = (label: string, value: string, act: CheatAction): CheatRow => ({
-    action: act,
-    enabled: home,
-    kind: "picker",
-    label,
-    value,
   });
   const owns: readonly [string, OwnGrant][] = [
     [text.unlockWalkers, "walkers"],
@@ -160,7 +142,41 @@ export function cheatRows(
     [text.ownGear, "gear"],
     [text.unlockAll, "all"],
   ];
+  const zones = startZones(data);
+  const selected = next.start ?? zones[0];
+  const choices = zones.map((zone): CheatButton => ({
+    action: { kind: "startAt", zone },
+    enabled: home,
+    label: data.world.zones.find(({ id }) => id === zone)!.name,
+    selected: selected === zone,
+  }));
+  const zoneRows = Array.from({ length: Math.ceil(choices.length / 2) }, (_, i): CheatRow => ({
+    buttons: choices.slice(2 * i, 2 * i + 2),
+    kind: "buttons",
+    layout: "pair",
+  }));
   return [
+    { kind: "heading", text: text.groups.nextWalk },
+    switchRow(text.fpsCounter, state.fpsCounter, true, { kind: "fpsCounter" }, 6),
+    switchRow(text.invincible, next.invincible, home, { kind: "invincible" }, -6),
+    { kind: "heading", text: text.startAt },
+    ...zoneRows,
+    { kind: "divider", section: true },
+    { kind: "heading", text: text.groups.startScreen },
+    {
+      groups: [
+        {
+          buttons: owns.map(([label, grant]) => ({
+            action: { grant, kind: "own" },
+            enabled: home,
+            label,
+          })),
+          label: text.groups.unlocks,
+        },
+        { buttons: adds, label: text.groups.money },
+      ],
+      kind: "columns",
+    },
     { kind: "heading", text: text.groups.thisWalk },
     {
       buttons: [
@@ -170,163 +186,213 @@ export function cheatRows(
           label: addLabel(WALK_GRANT),
         },
       ],
-      compact: true,
       kind: "buttons",
+      layout: "compact",
     },
     action(text.refillHearts, inWalk, { kind: "refillHearts" }),
     ...upgrades,
     action(text.grantAllUpgrades, (walk?.upgradesLeft.length ?? 0) > 0, { kind: "upgrades" }),
     ...debuffs,
     action(text.finishZone, walk?.canFinish ?? false, { kind: "finishZone" }),
-    { kind: "heading", text: text.groups.nextWalk },
-    picker(text.startAt, zoneName(data, next.start), { kind: "startAt" }),
-    {
-      enabled: home,
-      kind: "seed",
-      label: text.seed,
-      placeholder: text.seedRandom,
-      value: next.seed === null ? "" : String(next.seed),
-    },
-    action(state.linkCopied ? text.linkCopied : text.copyRunLink, home, { kind: "copyRunLink" }),
-    picker(text.pocket, pocketName(data, text, next.pocket), { kind: "pocket" }),
-    switchRow(text.invincible, next.invincible, home, { kind: "invincible" }),
-    picker(text.speed, text.speeds[next.speed satisfies Speed], { kind: "speed" }),
-    { kind: "heading", text: text.groups.startScreen },
-    { buttons: adds.slice(0, 2), compact: true, kind: "buttons" },
-    { buttons: adds.slice(2), compact: true, kind: "buttons" },
-    ...owns.map(([label, grant]) => action(label, home, { grant, kind: "own" })),
     { kind: "divider" },
     { kind: "heading", text: text.groups.other },
-    switchRow(text.fpsCounter, state.fpsCounter, true, { kind: "fpsCounter" }),
     action(text.showTips, true, { kind: "showTips" }),
     action(text.resetSave, true, { kind: "resetSave" }),
   ];
 }
 
-const { compact, gap, stackGap } = BUTTON_SIZE;
+const { compact, stackGap } = BUTTON_SIZE;
 const ROW = SETTINGS_CARD.row;
-// A heading's and the divider's heights.
+const PANEL_WIDTH = 344;
+const SIDE_INSET = 8;
 const HEADING_HEIGHT = 24;
+const TOGGLE_HEIGHT = 48;
+const COLUMN_GAP = 16;
+const SECTION_GAP = 16;
 const DIVIDER_HEIGHT = 8;
-// The body's scrollbar: the Pet shop's, its track's right edge the frame's 8 px margin in from
-// the panel's.
 const SCROLLBAR = SHOP_PAGE.scrollbar;
-const SCROLLBAR_INSET = 8;
-// Between the rows' right edge and the scrollbar's track.
 const SCROLL_GAP = 4;
-
-function horizontalActions(
-  measure: Pick<PanelMeasure, "inkWidth">,
-  area: Rect,
-  buttons: Extract<CheatRow, { kind: "buttons" }>["buttons"],
-): Rect[] {
-  const widths = buttons.map(({ label }) => modalActionWidth(measure.inkWidth("title", label)));
-  const lines: number[][] = [];
-  let used = 0;
-  widths.forEach((width, index) => {
-    if (width > area.width) {
-      throw new RangeError("Cheat action label exceeds its fixed-font row");
-    }
-    if (lines.length === 0 || used + gap + width > area.width) {
-      lines.push([]);
-      used = 0;
-    }
-    lines.at(-1)!.push(index);
-    used += (used === 0 ? 0 : gap) + width;
-  });
-  return lines.flatMap((line, row) => {
-    const width = line.reduce((sum, index) => sum + widths[index]!, 0) + (line.length - 1) * gap;
-    let x = area.x + (area.width - width) / 2;
-    return line.map((index) => {
-      const rect = {
-        height: compact.height,
-        width: widths[index]!,
-        x,
-        y: area.y + row * (compact.height + stackGap),
-      };
-      x += rect.width + gap;
-      return rect;
-    });
-  });
-}
-
-function rowHeight(measure: Pick<PanelMeasure, "inkWidth">, width: number, row: CheatRow): number {
-  switch (row.kind) {
-    case "divider":
-      return DIVIDER_HEIGHT;
-    case "heading":
-      return HEADING_HEIGHT;
-    case "buttons": {
-      const last = row.compact
-        ? horizontalActions(measure, { height: 0, width, x: 0, y: 0 }, row.buttons).at(-1)
-        : undefined;
-      return last === undefined ? compact.height : last.y + last.height;
-    }
-    default:
-      return compact.height;
-  }
-}
 
 export interface CheatsLayout {
   readonly panel: Rect;
-  // Each row's rect, top to bottom, as unscrolled.
-  readonly rows: readonly Rect[];
   readonly contentHeight: number;
-  // The scrollbar's track's left edge and the spec scrollbarRects reads.
   readonly scrollbar: Omit<typeof SCROLLBAR, "x"> & { readonly x: number };
-  // Only the rows scroll, inside this rect.
   readonly viewport: Rect;
 }
 
-// The Large card, as tall as the screen less its margins, its title row at the top, its Close
-// at the bottom, and the rows stacked in the body between, a list's gap apart.
-export function cheatsLayout(
-  measure: Pick<PanelMeasure, "inkWidth">,
+function columnsOf(rect: Rect): readonly [Rect, Rect] {
+  const width = Math.floor((rect.width - COLUMN_GAP) / 2);
+  return [
+    { ...rect, width },
+    { ...rect, width: rect.width - COLUMN_GAP - width, x: rect.x + width + COLUMN_GAP },
+  ];
+}
+
+function rowButtons(
+  measure: PanelMeasure,
+  row: Extract<CheatLine, { kind: "buttons" }>,
+  rect: Rect,
+): CheatButtonView[] {
+  const cols = row.layout === "pair" ? columnsOf(rect) : [rect];
+  const available = row.buttons.map((item, i) => {
+    const column = cols[i]!;
+    const preferred = modalActionWidth(measure.inkWidth("title", item.label));
+    const width = row.layout === "compact" ? Math.min(column.width, preferred) : column.width;
+    const x = column.x + (column.width - width) / 2;
+    const measureLine = (text: string) => measure.inkWidth("title", text);
+    const longest = Math.max(...item.label.split(/\s+/u).map(measureLine));
+    if (longest > width - 2 * MODAL.rowGap) {
+      throw new RangeError("Cheats label word exceeds its full-size button room");
+    }
+    const room = Math.max(width - 2 * MODAL.gap, longest);
+    const lines = wrapWords(measureLine, room, item.label);
+    const pitch = measure.title.lineHeight * TEXT_SCALE;
+    const inks = lines.map((line, i) => {
+      const ink = measure.titleInk(line);
+      return {
+        bottom: i * pitch + (ink.bottom * TEXT_SCALE) / MODAL_TITLE_SCALE,
+        top: i * pitch + (ink.top * TEXT_SCALE) / MODAL_TITLE_SCALE,
+      };
+    });
+    const top = Math.min(...inks.map((ink) => ink.top));
+    const bottom = Math.max(...inks.map((ink) => ink.bottom));
+    return { block: bottom - top, item, lines, pitch, top, width, x };
+  });
+  const height = Math.max(
+    compact.height,
+    rect.height,
+    ...available.map(({ block }) => block + BUTTON_LIP_PX + 2 * MODAL.rowGap),
+  );
+  return available.map(({ block, item, lines, pitch, top, width, x }) => {
+    const face = { height, width, x, y: rect.y };
+    const button = panelButton(measure, face, false, item.label);
+    const capTop = rect.y + Math.floor((height - BUTTON_LIP_PX - block) / 2) - top;
+    return {
+      ...button,
+      action: item.action,
+      available: item.enabled,
+      lines: lines.map((text, i) => ({
+        ...button.text,
+        capTop: capTop + i * pitch,
+        centre: "ink",
+        text,
+      })),
+      ...(item.selected === undefined ? {} : { selected: item.selected }),
+    };
+  });
+}
+
+function placeRows(
+  measure: PanelMeasure,
+  area: Pick<Rect, "width" | "x" | "y">,
+  rows: readonly CheatRow[],
+): { contentHeight: number; rows: CheatRowView[] } {
+  let y = area.y;
+  const placed: CheatRowView[] = [];
+  for (const [i, row] of rows.entries()) {
+    const rect = { height: 0, width: area.width, x: area.x, y };
+    if (row.kind === "columns") {
+      const columns = columnsOf(rect);
+      const stackTop = y + HEADING_HEIGHT + stackGap;
+      const columnRows = row.groups.map(({ buttons, label }, index) => {
+        const width = columns[index]!.width;
+        return {
+          buttons: buttons.map(
+            (button) => ({ buttons: [button], kind: "buttons", layout: "full" }) as const,
+          ),
+          label,
+          width,
+        };
+      });
+      const height = Math.max(
+        compact.height,
+        ...columnRows.flatMap(({ buttons, width }) =>
+          buttons.map((button) => rowButtons(measure, button, { ...rect, width })[0]!.rect.height),
+        ),
+      );
+      columnRows.forEach(({ buttons, label }, index) => {
+        const column = columns[index]!;
+        placed.push(
+          rowView(measure, { kind: "heading", text: label }, { ...column, height: HEADING_HEIGHT }),
+        );
+        buttons.forEach((button, rowIndex) => {
+          placed.push(
+            rowView(measure, button, {
+              ...column,
+              height,
+              y: stackTop + rowIndex * (height + stackGap),
+            }),
+          );
+        });
+      });
+      y =
+        stackTop +
+        Math.max(...columnRows.map(({ buttons }) => buttons.length)) * (height + stackGap);
+    } else {
+      const view = rowView(measure, row, rect);
+      placed.push(view);
+      const adjacentToggle = row.kind === "switch" && rows[i + 1]?.kind === "switch";
+      y += view.rect.height + (adjacentToggle ? 0 : stackGap);
+    }
+  }
+  return { contentHeight: Math.max(0, y - stackGap - area.y), rows: placed };
+}
+
+function layoutCheats(
+  measure: PanelMeasure,
   screen: { readonly height: number; readonly width: number },
   rows: readonly CheatRow[],
-): CheatsLayout {
-  const width = modalFamilyWidth(screen.width - 2 * MODAL.margin, "large");
-  const height = screen.height - 2 * MODAL.margin;
-  const panel = modalRect({ ...screen, x: 0, y: 0 }, undefined, { height, width });
-  const trackX = panel.x + panel.width - SCROLLBAR_INSET - SCROLLBAR.trackWidth;
-  const x = panel.x + MODAL.pad;
-  const top = panel.y + MODAL.header;
-  const bottom = panel.y + panel.height - MODAL.pad - compact.height - MODAL.gap;
-  const rowWidth = trackX - SCROLL_GAP - x;
-  let y = top;
-  const rects = rows.map((row) => {
-    const rect = { height: rowHeight(measure, rowWidth, row), width: rowWidth, x, y };
-    y += rect.height + stackGap;
-    return rect;
-  });
+): { layout: CheatsLayout; rows: readonly CheatRowView[] } {
+  const width = Math.min(PANEL_WIDTH, screen.width - 2 * SIDE_INSET);
+  const x = Math.round((screen.width - width) / 2);
+  const edge = x + width - SIDE_INSET;
+  const trackX = edge - SCROLLBAR.trackWidth;
+  const left = x + MODAL.pad;
+  const maxHeight = screen.height - 2 * MODAL.margin;
+  const chrome = MODAL.header + MODAL.gap + compact.height + MODAL.pad;
+  const available = maxHeight - chrome;
+  const natural = placeRows(measure, { width: width - 2 * MODAL.pad, x: left, y: 0 }, rows);
+  const scrolls = natural.contentHeight > available;
+  const height = Math.min(maxHeight, chrome + natural.contentHeight);
+  const y = Math.round((screen.height - height) / 2);
+  const top = y + MODAL.header;
+  const rowWidth = scrolls ? trackX - SCROLL_GAP - left : width - 2 * MODAL.pad;
+  const placed = placeRows(measure, { width: rowWidth, x: left, y: top }, rows);
   return {
-    contentHeight: Math.max(0, y - stackGap - top),
-    panel,
-    rows: rects,
-    scrollbar: { ...SCROLLBAR, x: trackX },
-    viewport: { height: bottom - top, width: trackX + SCROLLBAR.trackWidth - x, x, y: top },
+    layout: {
+      contentHeight: placed.contentHeight,
+      panel: { height, width, x, y },
+      scrollbar: { ...SCROLLBAR, x: trackX },
+      viewport: {
+        height: height - chrome,
+        width: scrolls ? edge - left : rowWidth,
+        x: left,
+        y: top,
+      },
+    },
+    rows: placed.rows,
   };
 }
 
 // art: the Settings switch, right-aligned in its row.
 const SWITCH = ROW.switch;
 
+interface CheatButtonView extends PanelButton {
+  readonly action: CheatAction;
+  readonly lines: readonly PanelText[];
+  readonly selected?: boolean;
+}
+
 export interface CheatRowView {
   readonly action?: CheatAction;
-  readonly buttons: readonly (PanelButton & { readonly action: CheatAction })[];
+  readonly buttons: readonly CheatButtonView[];
   readonly enabled: boolean;
-  // A switch or picker row's face, in its colour.
-  readonly face: number | undefined;
-  readonly kind: CheatRow["kind"];
+  readonly kind: CheatLine["kind"];
   // What a screen reader reads it by.
   readonly label: string;
-  // The seed's field's text while empty.
-  readonly placeholder: string;
   readonly rect: Rect;
   // The switch's place and whether it is on.
   readonly switch?: { readonly on: boolean; readonly x: number; readonly y: number };
-  // The seed's field, right of its label.
-  readonly field?: Rect;
   readonly texts: readonly PanelText[];
   readonly value: string;
 }
@@ -360,110 +426,86 @@ function rowText(
   };
 }
 
-function rowView(measure: PanelMeasure, row: CheatRow, rect: Rect): CheatRowView {
+function rowView(measure: PanelMeasure, row: CheatLine, rect: Rect): CheatRowView {
   const plain = {
     buttons: [],
     enabled: true,
-    face: undefined,
     kind: row.kind,
-    placeholder: "",
     rect,
     value: "",
   };
   switch (row.kind) {
-    case "divider":
-      return { ...plain, label: "", texts: [] };
-    case "heading":
+    case "divider": {
+      const height = row.section ? 2 * (SECTION_GAP - stackGap) + 1 : DIVIDER_HEIGHT;
+      return { ...plain, label: "", rect: { ...rect, height }, texts: [] };
+    }
+    case "heading": {
+      const heading = { ...rect, height: HEADING_HEIGHT };
       return {
         ...plain,
         label: row.text,
-        texts: [rowText(measure, PALETTE.plum, rect, row.text, { left: rect.x })],
+        rect: heading,
+        texts: [rowText(measure, PALETTE.plum, heading, row.text, { left: rect.x })],
       };
+    }
     case "buttons": {
-      const faces = row.compact ? horizontalActions(measure, rect, row.buttons) : undefined;
-      const buttons = row.buttons.map((button, i) => {
-        const face = faces?.[i] ?? rect;
-        return {
-          ...panelButton(measure, face, false, button.label),
-          action: button.action,
-          available: button.enabled,
-        };
-      });
+      const buttons = rowButtons(measure, row, rect);
       return {
         ...plain,
         buttons,
         label: row.buttons.map(({ label }) => label).join(", "),
+        rect: { ...rect, height: buttons[0]?.rect.height ?? compact.height },
         texts: [],
       };
     }
-    default: {
+    case "switch": {
+      const hit = { ...rect, height: TOGGLE_HEIGHT };
+      const display = { ...hit, y: hit.y + row.shift };
       const look = row.enabled ? selectLook("normal") : { ...selectLook("normal"), ...GREYED };
       const colour = PALETTE[look.text];
-      const right = rect.x + rect.width - ROW.pad;
-      const label = rowText(measure, colour, rect, row.label, { left: rect.x + ROW.pad });
-      const base = {
+      const switchX = rect.x + rect.width - ROW.pad - SWITCH.width;
+      return {
         ...plain,
+        action: row.action,
         enabled: row.enabled,
-        face: PALETTE[look.face],
         label: row.label,
+        rect: hit,
+        switch: {
+          on: row.on,
+          x: switchX,
+          y: display.y + Math.round((display.height - SWITCH.height) / 2),
+        },
+        texts: [
+          rowText(measure, colour, display, row.label, { left: rect.x + ROW.pad }),
+          rowText(measure, colour, display, row.value, { right: switchX - ROW.pad }),
+        ],
         value: row.value,
       };
-      if (row.kind === "seed") {
-        const width = Math.round(rect.width / 2);
-        return {
-          ...base,
-          field: {
-            height: compact.height - 2 * ROW.pad,
-            width,
-            x: right - width,
-            y: rect.y + ROW.pad,
-          },
-          placeholder: row.placeholder,
-          texts: [label],
-        };
-      }
-      if (row.kind === "picker") {
-        return {
-          ...base,
-          action: row.action,
-          texts: [label, rowText(measure, colour, rect, row.value, { right })],
-        };
-      }
-      const switchX = right - SWITCH.width;
-      return {
-        ...base,
-        action: row.action,
-        switch: {
-          on: row.on ?? false,
-          x: switchX,
-          y: rect.y + Math.round((rect.height - SWITCH.height) / 2),
-        },
-        texts: [label, rowText(measure, colour, rect, row.value, { right: switchX - ROW.pad })],
-      };
     }
+    default:
+      return row satisfies never;
   }
 }
 
-// The modal as it stands: the card with its title, close control and primary Close, and each
+// The modal as it stands: the card with its title, X and centred Back, and each
 // row's view as unscrolled.
 export function cheatsView(
   measure: PanelMeasure,
   context: {
     readonly data: CheatsData;
     readonly screen: { readonly height: number; readonly width: number };
-    readonly words: Pick<MenuText, "cheats" | "common" | "settings">;
+    readonly words: Pick<MenuText, "cheats" | "pageBack" | "settings">;
   },
   state: CheatsState,
 ): CheatsView {
   const { data, screen, words } = context;
-  const rows = cheatRows(data, words, state);
-  const layout = cheatsLayout(measure, screen, rows);
+  const { layout, rows } = layoutCheats(measure, screen, cheatRows(data, words, state));
   return {
     card: {
       ...modalCardView(measure, layout.panel, words.cheats.title, []),
-      footer: dismissFooter(measure, { label: words.common.close, primary: true }, layout.panel),
+      footer: dismissFooter(measure, { label: words.pageBack, primary: true }, layout.panel),
     },
     layout,
-    rows: rows.map((row, i) => rowView(measure, row, layout.rows[i] ?? layout.viewport)),
+    rows,
   };
 }

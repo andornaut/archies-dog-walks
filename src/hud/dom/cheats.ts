@@ -4,20 +4,11 @@ import type { CheatAction, CheatRowView, CheatsView } from "../../dev/cheatsView
 import { type DomArtSource, sheetArt } from "../../ui/dom/artElements.ts";
 import { createContentSeparator, placeContentSeparator } from "../../ui/dom/contentSeparator.ts";
 import { createGameButton } from "../../ui/dom/gameButton.ts";
-import {
-  blockPlace,
-  createTextLine,
-  placeBox,
-  placeFrame,
-  placeText,
-  setBox,
-} from "../../ui/dom/pixelLine.ts";
+import { createTextLine, placeBox, placeFrame, placeText, setBox } from "../../ui/dom/pixelLine.ts";
 import type { UiLayer } from "../../ui/dom/uiLayer.ts";
 import { type DomScale, gridRect, gridX, gridY, scrollbarBoxes } from "../../ui/domScale.ts";
-import { PALETTE } from "../../ui/palette.ts";
 import { REFUSE } from "../../ui/refuse.ts";
 import { scrollbarRects } from "../../ui/scrollbar.ts";
-import { TEXT_SCALE } from "../../ui/textFit.ts";
 import { bindPanelFeedback } from "./panelButton.ts";
 import {
   type DomPart,
@@ -27,9 +18,8 @@ import {
 } from "./questionPanel.ts";
 
 // The Cheats modal in HTML over the canvas: a Large card drawn as a modal card is
-// (showQuestionPanel), its title, close control and primary Close fixed, and between them a body
-// that scrolls with the house scrollbar beside it. Each row is a native control: a switch or
-// picker row like Settings' rows, the seed's text field, or one or two buttons. A press goes to
+// (showQuestionPanel), its title, X and Back fixed, and between them a body
+// that scrolls with the house scrollbar beside it. Switches and action buttons send intent to
 // the scene, which keeps the cheats; a disabled control refuses it.
 
 export interface DomCheatsInput
@@ -37,7 +27,7 @@ export interface DomCheatsInput
   readonly act: (action: CheatAction) => void;
   readonly close: () => void;
   readonly reducedMotion: () => boolean;
-  // The seed's field's text once the player changes it.
+  // The scene retains the seed callback for its separate developer tools.
   readonly seed: (text: string) => void;
   readonly view: CheatsView;
 }
@@ -49,8 +39,6 @@ export interface DomCheats extends Pick<
   // Shows view as it now stands, every row in its place, the scroll kept.
   update(view: CheatsView): void;
 }
-
-const hex = (colour: number) => `#${colour.toString(16).padStart(6, "0")}`;
 
 const ORIGIN = { x: 0, y: 0 } as const;
 
@@ -117,7 +105,12 @@ function dividerPart(doc: Document, origin: Point): RowPart {
     element,
     place: (scale, row) => {
       const { rect } = row;
-      const line = { height: 1, width: rect.width, x: rect.x, y: rect.y + rect.height / 2 };
+      const line = {
+        height: 1,
+        width: rect.width,
+        x: rect.x,
+        y: rect.y + Math.floor(rect.height / 2),
+      };
       placeContentSeparator(scale, { origin, projection: "art" }, element, line);
     },
     ready: Promise.resolve([]),
@@ -152,6 +145,7 @@ function buttonsPart(
           current().buttons[i]?.available === false
             ? { kind: "pointer-refusal" }
             : { kind: "available" },
+        selected: current().buttons[i]?.selected === true,
       }),
       onPointerRefusal: () => {
         if (press.accepts()) {
@@ -187,18 +181,20 @@ function buttonsPart(
         control.refresh();
         placeBox(scale, origin, button, view.hit);
         placeFrame(scale, view.hit, face, view.rect);
-        const text = createTextLine(doc, view.text);
-        text.setAttribute("aria-hidden", "true");
-        placeText(input.fonts[view.text.font], scale, view.rect, text, view.text);
-        label.replaceChildren(text);
+        const lines = view.lines.map((line) => {
+          const text = createTextLine(doc, line);
+          text.setAttribute("aria-hidden", "true");
+          placeText(input.fonts[line.font], scale, view.rect, text, line);
+          return text;
+        });
+        label.replaceChildren(...lines);
       });
     },
     ready: Promise.resolve([]),
   };
 }
 
-// A switch or picker row like Settings' rows: its face, its label and its value, and a switch's
-// switch, as one native button that a press acts on.
+// A switch and its label and value, as one native button that a press acts on.
 function settingRowPart(
   doc: Document,
   input: DomCheatsInput,
@@ -217,7 +213,6 @@ function settingRowPart(
     appearance: {
       className: "adw-button adw-row",
       face: { className: "adw-framed" },
-      role: "secondary",
     },
     content: { icon: content, kind: "icon", name: `${first.label}: ${first.value}` },
     getAction: () => {
@@ -237,12 +232,12 @@ function settingRowPart(
         refuse(texts, input.reducedMotion());
       }
     },
+    skin: "authored",
   });
   const element = view.element;
   const face = view.face;
-  if (first.switch !== undefined) {
-    element.setAttribute("role", "switch");
-  }
+  element.setAttribute("role", "switch");
+  element.style.setProperty("--ui-button-focus-fill", "var(--adw-cyan)");
   const stopFeedback = bindPanelFeedback(view, press);
   return {
     controls: [element],
@@ -265,79 +260,6 @@ function settingRowPart(
       }
     },
     ready: art?.ready ?? Promise.resolve([]),
-  };
-}
-
-// The seed's row: its face and label, and a native text field for a whole number, empty for a
-// random seed. Its keys never reach the game.
-function seedPart(doc: Document, input: DomCheatsInput, origin: Point, first: CheatRowView) {
-  const element = doc.createElement("div");
-  element.className = "adw-row";
-  const face = doc.createElement("span");
-  face.className = "adw-framed";
-  const texts = doc.createElement("span");
-  texts.className = "adw-lines";
-  const field = doc.createElement("input");
-  field.type = "text";
-  field.inputMode = "numeric";
-  field.autocomplete = "off";
-  field.className = "adw-font-title";
-  field.setAttribute("aria-label", first.label);
-  Object.assign(field.style, {
-    background: hex(PALETTE.cream),
-    border: `0 solid ${hex(PALETTE.darkBrown)}`,
-    boxSizing: "border-box",
-    color: hex(PALETTE.plum),
-    margin: "0",
-    outline: "none",
-    pointerEvents: "auto",
-    position: "absolute",
-    textAlign: "right",
-  });
-  for (const type of ["keydown", "keyup"] as const) {
-    field.addEventListener(type, (event) => event.stopPropagation());
-  }
-  field.addEventListener("keydown", (event) => {
-    if (event.key === "Enter") {
-      field.blur();
-    }
-  });
-  field.addEventListener("change", () => input.seed(field.value));
-  element.append(face, texts, field);
-  return {
-    controls: [field],
-    element,
-    place: (scale: DomScale, row: CheatRowView) => {
-      const { rect } = row;
-      placeBox(scale, origin, element, rect);
-      face.style.backgroundColor = hex(row.face ?? PALETTE.cream);
-      placeBox(scale, rect, face, rect);
-      textLines(doc, input, texts, rect, scale, row);
-      field.disabled = !row.enabled;
-      field.placeholder = row.placeholder;
-      if (doc.activeElement !== field) {
-        field.value = row.value;
-      }
-      if (row.field !== undefined) {
-        placeBox(scale, rect, field, row.field);
-        const { fontSize } = blockPlace(input.fonts.title, scale, {
-          anchor: "pen",
-          capTop: 0,
-          colour: PALETTE.plum,
-          font: "title",
-          lines: [""],
-          scale: TEXT_SCALE,
-          x: 0,
-        });
-        const box = gridRect(scale, { ...row.field, height: 1, width: 2 });
-        Object.assign(field.style, {
-          borderWidth: `${box.height}px`,
-          fontSize: `${fontSize}px`,
-          padding: `0 ${box.width}px`,
-        });
-      }
-    },
-    ready: Promise.resolve([] as readonly string[]),
   };
 }
 
@@ -406,8 +328,6 @@ export function showCheats(layer: UiLayer, input: DomCheatsInput): DomCheats {
         return dividerPart(doc, origin);
       case "heading":
         return headingPart(doc, input, origin);
-      case "seed":
-        return seedPart(doc, input, origin, first);
       default:
         return settingRowPart(doc, input, origin, first, press, view);
     }
