@@ -1,4 +1,4 @@
-import type { Point, Rect } from "@andornaut/game-kit/runtime/rect";
+import { containsPoint, type Point, type Rect } from "@andornaut/game-kit/runtime/rect";
 import { type BitmapFont, inkWidth } from "@andornaut/game-kit/runtime/text/bitmapFont";
 
 import { SLICES } from "../../data/layout.ts";
@@ -26,7 +26,6 @@ import {
 import { dimDrawn, followModalUnderlay } from "../../ui/dom/rampDim.ts";
 import type { UiLayer } from "../../ui/dom/uiLayer.ts";
 import {
-  type DomScale,
   fontPixel,
   gridRect,
   gridTransform,
@@ -43,7 +42,7 @@ import { TEXT_SCALE } from "../../ui/textFit.ts";
 import { scrollPlace } from "./logbook.ts";
 import { createPanelButton } from "./panelButton.ts";
 import { addTapBurst, type DomPart } from "./questionPanel.ts";
-import { fillPart, shopPageParts } from "./shopPage.ts";
+import { createPageTab, fillPart, shopPageParts } from "./shopPage.ts";
 
 export interface ShopScreenArt {
   readonly key: string;
@@ -174,6 +173,8 @@ export function showShopScreen(
   let view = initial;
   let footer: HTMLElement | undefined;
   let footerGesture = false;
+  let tabGesture: Rect | undefined;
+  let tabs: ReturnType<typeof createPageTab>[] = [];
   let scale = layer.scale();
   let motion: ShopScreenMotion | undefined;
   let lifecycle: ModalLifecycle | undefined;
@@ -242,24 +243,6 @@ export function showShopScreen(
     };
   };
   const controlPoints = new WeakMap<HTMLElement, Point>();
-  const control = (rect: Rect, label: string) => {
-    const element = doc.createElement("button");
-    element.type = "button";
-    element.className = "adw-button";
-    element.style.pointerEvents = "auto";
-    element.setAttribute("aria-label", label);
-    const point = { x: rect.x + rect.width / 2, y: rect.y + rect.height / 2 };
-    controlPoints.set(element, point);
-    bindGameAction(
-      {
-        activate: () => input.click(point),
-        available: accepts,
-        pointer: "release",
-      },
-      element,
-    );
-    return { element, place: (at: DomScale) => setBox(element, gridRect(at, rect)) };
-  };
   const accepts = () => alive && input.active() && lifecycle?.accepts() === true;
   const capture = () => {
     const admitted = accepts();
@@ -306,14 +289,32 @@ export function showShopScreen(
     const nextChrome = JSON.stringify(view.page);
     if (chromeKey !== nextChrome) {
       disposeFooter?.();
+      tabs.forEach((tab) => tab.dispose());
+      tabs = [];
       chromeKey = nextChrome;
-      chromeParts = shopPageParts(doc, input.fonts.title, view.page);
+      chromeParts = shopPageParts(doc, input.fonts.title, { ...view.page, tabs: [] });
       chromeParts.push(...view.page.title.map((line) => textPart(line)));
       // Tabs retain their shared drawn geometry and expose their complete target as controls.
       view.page.tabs.forEach((tab, i) => {
         const hit = inputTabs(view)[i];
         if (hit !== undefined) {
-          chromeParts.push(control(hit, tab.label.text));
+          const point = { x: hit.x + hit.width / 2, y: hit.y + hit.height / 2 };
+          const control = createPageTab(
+            doc,
+            {
+              font: input.fonts.title,
+              press: {
+                accepts,
+                burst: (event) =>
+                  addTapBurst(layer, input.toGame({ x: event.clientX, y: event.clientY })),
+                press: () => input.click(point),
+              },
+            },
+            hit,
+            tab,
+          );
+          tabs.push(control);
+          chromeParts.push(control);
         }
       });
       const action = createPanelButton(
@@ -472,10 +473,15 @@ export function showShopScreen(
           gesture: {
             cancel: () => {
               footerGesture = false;
+              tabGesture = undefined;
               input.cancel();
             },
             down: (event) => {
-              footerGesture = footer?.contains(event.target as Node) === true;
+              const index = tabs.findIndex((tab) => tab.element.contains(event.target as Node));
+              tabGesture = inputTabs(view)[index];
+              footerGesture =
+                footer?.contains(event.target as Node) === true ||
+                tabs.some((tab) => tab.element.contains(event.target as Node));
               if (!footerGesture && accepts()) {
                 input.down(point(event));
               }
@@ -487,10 +493,15 @@ export function showShopScreen(
             },
             up: (event, cancelled) => {
               const native = footerGesture;
+              const position = point(event);
+              const leftTab =
+                tabGesture !== undefined && !containsPoint(tabGesture, position.x, position.y);
               footerGesture = false;
+              tabGesture = undefined;
               if (!native && (cancelled || accepts())) {
                 input.up(point(event), cancelled);
               }
+              return leftTab;
             },
           },
           modal: false,
@@ -537,7 +548,8 @@ export function showShopScreen(
   root.addEventListener("keydown", (event) => {
     if (accepts()) {
       if (
-        footer?.contains(event.target as Node) &&
+        (footer?.contains(event.target as Node) ||
+          tabs.some((tab) => tab.element.contains(event.target as Node))) &&
         (event.code === "Enter" || event.code === "Space")
       ) {
         if (event.repeat) {
@@ -587,6 +599,8 @@ export function showShopScreen(
     capture,
     destroy: () => {
       alive = false;
+      tabs.forEach((tab) => tab.dispose());
+      tabs = [];
       disposeFooter?.();
       disposeFooter = undefined;
       stopUnderlay();

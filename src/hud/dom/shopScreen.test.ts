@@ -5,7 +5,12 @@ import { expect, it, vi } from "vitest";
 import { gameData } from "../../data/index.ts";
 import { ownedCountNote } from "../../home/shop.ts";
 import { shopFocusView } from "../../home/shopFocusView.ts";
-import { SHOP_LAYOUT, shopHeadingBand, shopListFrame } from "../../home/shopLayout.ts";
+import {
+  SHOP_LAYOUT,
+  shopHeadingBand,
+  shopListFrame,
+  shopTabRects,
+} from "../../home/shopLayout.ts";
 import { shopPageView } from "../../home/shopPageView.ts";
 import { FakeDocument, type FakeElement, fakeLayer } from "../../testing/fakeDom.ts";
 import { fontFileMetrics, fontInk, fontInkRows, gameFont } from "../../testing/fontInk.ts";
@@ -29,14 +34,21 @@ const RECT = { height: 48, width: 300, x: 24, y: 180 };
 function fixture({
   scale = domScale(3, { height: 560, width: 360, x: 0, y: 0 }),
   source = SOURCE,
-}: { readonly scale?: DomScale; readonly source?: ShopScreenInput["source"] } = {}) {
+  tabs = false,
+}: {
+  readonly tabs?: boolean;
+  readonly scale?: DomScale;
+  readonly source?: ShopScreenInput["source"];
+} = {}) {
   const doc = new FakeDocument();
   const { layer } = fakeLayer(doc, scale);
   const down = vi.fn(),
     up = vi.fn(),
     cancel = vi.fn(),
     wheel = vi.fn(),
-    close = vi.fn();
+    close = vi.fn(),
+    click = vi.fn(),
+    key = vi.fn();
   const view: ShopScreenView = {
     clip: { height: 300, width: 324, x: 18, y: 160 },
     headings: [],
@@ -49,7 +61,12 @@ function fixture({
         wrapNote: () => [],
       },
       {
-        tabs: [],
+        tabs: tabs
+          ? [
+              { label: gameData.homeText.shop.tabs.gear, open: true, pressed: false },
+              { label: gameData.homeText.shop.tabs.dogs, open: false, pressed: false },
+            ]
+          : [],
         title: gameData.homeText.shop.title,
       },
     ),
@@ -71,11 +88,11 @@ function fixture({
     {
       active: () => true,
       cancel,
-      click: vi.fn(),
+      click,
       close,
       down,
       fonts: { body: gameFont("font-body"), title: gameFont("font-title") },
-      key: vi.fn(),
+      key,
       move: vi.fn(),
       source,
       toGame: (point) => point,
@@ -86,9 +103,11 @@ function fixture({
   );
   return {
     cancel,
+    click,
     close,
     doc,
     down,
+    key,
     layer,
     root: screen.element as unknown as FakeElement,
     screen,
@@ -125,6 +144,90 @@ const pointer = (target: FakeElement, id: number, type: string) => ({
   target,
   timeStamp: 10,
   type,
+});
+
+it("lets Kit own native tab activation while preserving selected identity and target geometry", async () => {
+  const { click, down, key, root, screen, up, view } = fixture({ tabs: true });
+  await settle();
+  const tab = root
+    .all()
+    .find((node) => node.getAttribute("aria-label") === gameData.homeText.shop.tabs.gear)!;
+  expect(tab.getAttribute("data-ui-selected")).toBe("");
+  const hit = gridRect(domScale(3, { height: 560, width: 360, x: 0, y: 0 }), shopTabRects(2)[0]!);
+  expect(tab.style).toMatchObject({
+    height: `${hit.height}px`,
+    left: `${hit.left}px`,
+    top: `${hit.top}px`,
+    width: `${hit.width}px`,
+  });
+  const event = {
+    code: "Enter",
+    preventDefault: vi.fn(),
+    repeat: false,
+    stopPropagation: vi.fn(),
+    target: tab,
+  };
+  root.fire("keydown", event);
+  expect(event.preventDefault).not.toHaveBeenCalled();
+  expect(key).not.toHaveBeenCalled();
+  tab.fire("click", { detail: 0 });
+  expect(click).toHaveBeenCalledOnce();
+  expect(down).not.toHaveBeenCalled();
+  expect(up).not.toHaveBeenCalled();
+  screen.update({ ...view, page: { ...view.page, tabs: [] } });
+  tab.fire("click", { detail: 0 });
+  expect(click).toHaveBeenCalledOnce();
+  screen.destroy();
+});
+
+it("dispatches a tab hold once and suppresses its release without starting a row gesture", async () => {
+  const f = fixture({ tabs: true });
+  await settle();
+  vi.useFakeTimers();
+  Object.assign(f.doc.defaultView, {
+    clearTimeout,
+    performance: { now: () => Date.now() },
+    setTimeout,
+  });
+  try {
+    const tab = f.root
+      .all()
+      .find((node) => node.getAttribute("aria-label") === gameData.homeText.shop.tabs.gear)!;
+    const event = (type: string) => ({
+      ...pointer(tab, 1, type),
+      button: 0,
+      buttons: type === "pointerdown" ? 1 : 0,
+      clientX: shopTabRects(2)[0]!.x + shopTabRects(2)[0]!.width / 2,
+      clientY: shopTabRects(2)[0]!.y + shopTabRects(2)[0]!.height / 2,
+      isPrimary: true,
+      stopPropagation: vi.fn(),
+      timeStamp: Date.now(),
+    });
+    f.root.fire("pointerdown", event("pointerdown"));
+    vi.advanceTimersByTime(gameData.tuning.seconds.holdSeconds * 1000);
+    expect(f.click).toHaveBeenCalledOnce();
+    f.doc.fire("pointerup", event("pointerup"));
+    const click = event("click");
+    f.root.fire("click", click);
+    if (click.stopImmediatePropagation.mock.calls.length === 0) {
+      tab.fire("click", click);
+    }
+    expect(f.click).toHaveBeenCalledOnce();
+    expect(f.down).not.toHaveBeenCalled();
+    expect(f.up).not.toHaveBeenCalled();
+    f.root.fire("pointerdown", event("pointerdown"));
+    f.doc.fire("pointermove", { ...event("pointermove"), buttons: 1, clientX: 240 });
+    f.doc.fire("pointerup", { ...event("pointerup"), clientX: 240 });
+    const dragged = { ...event("click"), clientX: 240 };
+    f.root.fire("click", dragged);
+    if (dragged.stopImmediatePropagation.mock.calls.length === 0) {
+      tab.fire("click", dragged);
+    }
+    expect(f.click).toHaveBeenCalledOnce();
+  } finally {
+    f.screen.destroy();
+    vi.useRealTimers();
+  }
 });
 
 it("centres Shop heading ink in each strip and mirrors the scrollbar clearance", () => {
