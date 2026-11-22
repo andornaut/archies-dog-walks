@@ -4,9 +4,8 @@ import { gameData } from "../../data/index.ts";
 import { FakeDocument, type FakeElement } from "../../testing/fakeDom.ts";
 import { gameFont } from "../../testing/fontInk.ts";
 import { createGameButton } from "../../ui/dom/gameButton.ts";
-import { domScale } from "../../ui/domScale.ts";
+import { domScale, gridRect } from "../../ui/domScale.ts";
 import { PALETTE } from "../../ui/palette.ts";
-import { HOME_LAYOUT } from "../homeLayout.ts";
 import { createSelectionTile } from "./selectionTile.ts";
 const SOURCE = {
   artUrl: (path: string) => `/art/${path}`,
@@ -36,10 +35,9 @@ describe("native selection tile", () => {
     });
     const tile = createSelectionTile(doc as unknown as Document, SOURCE, gameFont("font-title"), {
       control: host,
-      frame: "art",
+      focus: "content",
       hit: HIT,
       mark: "none",
-      outset: HOME_LAYOUT.tileSelectOutset,
       rect: FACE,
       state: "selected",
     });
@@ -64,9 +62,22 @@ describe("native selection tile", () => {
     expect(paint?.style.transform).toBe("translate(6px,-4px)");
     tile.place(SCALE, { markY: 0, x: 0, y: 0 });
     expect(tile.element.style).toMatchObject({ left: "24px", top: "480px" });
+    const fractional = domScale(1, { height: 844, width: 390, x: 0, y: 0 });
+    tile.place(fractional, { markY: 0, x: 0, y: 0 });
+    const face = descendants(tile.element as unknown as FakeElement).find((node) =>
+      node.className.includes("adw-selection-face"),
+    )!;
+    const box = gridRect(fractional, FACE);
+    const hit = gridRect(fractional, HIT);
+    expect(face.style).toMatchObject({
+      height: `${box.height}px`,
+      left: `${box.left - hit.left}px`,
+      top: `${box.top - hit.top}px`,
+      width: `${box.width}px`,
+    });
     host.dispose();
   });
-  it("retains shop focus while its separate moving orbit settles", async () => {
+  it("changes shop focus paint state without changing its target or adding perimeter layers", async () => {
     const doc = new FakeDocument();
     const host = createGameButton(doc as unknown as Document, {
       content: { kind: "icon", name: gameData.shopGear.runningShoes.name },
@@ -76,32 +87,27 @@ describe("native selection tile", () => {
     });
     const tile = createSelectionTile(doc as unknown as Document, SOURCE, gameFont("font-title"), {
       control: host,
-      frame: "art",
+      focus: "face",
       hit: HIT,
       mark: "none",
-      outset: HOME_LAYOUT.tileSelectOutset,
       rect: FACE,
       state: "disabled",
     });
     await tile.ready;
-    const ring = { height: 1, width: 44, x: 14, y: 242 };
-    tile.setFrameFills([{ colour: PALETTE.cyan, rect: ring }]);
-    tile.setOrbit([{ colour: PALETTE.white, rect: { ...ring, width: 4 } }]);
-    tile.place(SCALE, { markY: 0, x: 0, y: 0 });
-    tile.setOrbit([]);
-    tile.place(SCALE, { markY: 0, x: 0, y: 0 });
+    tile.place(SCALE, { focused: true, markY: 0, x: 0, y: 0 });
+    expect(tile.element.hasAttribute("data-picker-focused")).toBe(true);
     const painted = descendants(tile.element as unknown as FakeElement);
-    expect(
-      painted.some((node) => !node.hidden && node.style.backgroundColor === hex(PALETTE.cyan)),
-    ).toBe(true);
-    expect(
-      painted.some((node) => !node.hidden && node.style.backgroundColor === hex(PALETTE.white)),
-    ).toBe(false);
+    expect(painted.filter((node) => node.className.includes("adw-selection-face"))).toHaveLength(1);
+    expect(tile.element.style.getPropertyValue("--adw-selection-fill")).toBe(
+      hex(PALETTE.neutralGrey),
+    );
+    tile.place(SCALE, { focused: false, markY: 0, x: 0, y: 0 });
+    expect(tile.element.hasAttribute("data-picker-focused")).toBe(false);
     expect(tile.element.getAttribute("aria-pressed")).toBe("false");
     expect(tile.element.style.width).toBe("96px");
     host.dispose();
   });
-  it("retains the authored selected frame and plus marker without source textures", async () => {
+  it("retains the selected fill, persistent edge and plus marker without source textures", async () => {
     const doc = new FakeDocument();
     const source = { ...SOURCE, loadSheet: vi.fn(SOURCE.loadSheet) };
     const host = createGameButton(doc as unknown as Document, {
@@ -111,10 +117,9 @@ describe("native selection tile", () => {
     });
     const tile = createSelectionTile(doc as unknown as Document, source, gameFont("font-title"), {
       control: host,
-      frame: "fallback",
+      focus: "content",
       hit: HIT,
       mark: "fallback",
-      outset: HOME_LAYOUT.tileSelectOutset,
       rect: FACE,
       state: "selected",
     });
@@ -122,7 +127,9 @@ describe("native selection tile", () => {
     tile.place(SCALE, { markY: 0, x: 0, y: -2 });
     const painted = descendants(tile.element as unknown as FakeElement);
     expect(source.loadSheet).not.toHaveBeenCalled();
-    expect(painted.some((node) => node.style.backgroundColor === hex(PALETTE.amber))).toBe(true);
+    expect(tile.element.style.getPropertyValue("--adw-selection-fill")).toBe(hex(PALETTE.yellow));
+    expect(tile.element.style.getPropertyValue("--adw-selection-edge")).toBe(hex(PALETTE.ink));
+    expect(painted.some((node) => node.style.backgroundColor === hex(PALETTE.green))).toBe(true);
     expect(painted.some((node) => node.textContent === "+")).toBe(true);
     expect(tile.element.style.width).toBe("96px");
     host.dispose();

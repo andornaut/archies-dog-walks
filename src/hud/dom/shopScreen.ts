@@ -37,7 +37,6 @@ import type { TileState } from "../../ui/interaction.ts";
 import type { PanelText } from "../../ui/modal/types.ts";
 import { PALETTE } from "../../ui/palette.ts";
 import type { ScrollbarRects } from "../../ui/scrollbar.ts";
-import { SELECT_OUTSET } from "../../ui/selection.ts";
 import { TEXT_SCALE } from "../../ui/textFit.ts";
 import { scrollPlace } from "./logbook.ts";
 import { bindPanelFeedback, createPanelButton } from "./panelButton.ts";
@@ -90,8 +89,7 @@ export interface ShopScreenMotion {
     string,
     {
       readonly x: number;
-      readonly frame: readonly NativeTileFill[];
-      readonly orbit: readonly NativeTileFill[];
+      readonly focused: boolean;
     }
   >;
 }
@@ -141,7 +139,7 @@ export function showShopScreen(
 ): NativeShopScreen {
   const doc = layer.element.ownerDocument;
   const root = doc.createElement("section");
-  root.className = "adw-lines";
+  root.className = "adw-lines adw-picker-surface";
   root.style.transformOrigin = "0 0";
   root.tabIndex = -1;
   root.setAttribute("aria-label", initial.page.title.map((line) => line.text).join(" "));
@@ -267,9 +265,8 @@ export function showShopScreen(
     headingParts.forEach((part) => part.place(scrolling.scale));
     for (const [id, row] of rows) {
       const state = motion?.rows.get(id);
-      row.tile.setFrameFills(state?.frame ?? []);
-      row.tile.setOrbit(state?.orbit ?? []);
       row.tile.place(scrolling.scale, {
+        focused: state?.focused ?? false,
         markY: 0,
         x: state?.x ?? 0,
         y: motion?.pressed === id ? FEEDBACK.pressDipPx : 0,
@@ -371,10 +368,9 @@ export function showShopScreen(
       const stopFeedback = bindPanelFeedback(control, { accepts, burst: () => undefined });
       const tile = createSelectionTile(doc, input.source, input.fonts.title, {
         control,
-        frame: row.frame,
+        focus: "face",
         hit: row.rect,
         mark: "none",
-        outset: SELECT_OUTSET,
         rect: row.rect,
         state: row.state,
       });
@@ -385,7 +381,13 @@ export function showShopScreen(
           place: (at) => placeBox(at, row.rect, part.element, fill.rect),
         };
       });
-      parts.push(...row.texts.map((line) => textPart(line, row.rect)));
+      parts.push(
+        ...row.texts.map((line) => {
+          const part = textPart(line, row.rect);
+          part.element.classList.add("adw-selection-focus-ink");
+          return part;
+        }),
+      );
       for (const art of row.art) {
         const place = {
           ...art.rect,

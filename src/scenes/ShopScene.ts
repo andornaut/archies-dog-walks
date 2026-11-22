@@ -32,7 +32,6 @@ import {
   type ShopTab,
   slotRows,
 } from "../home/shop.ts";
-import { shopFocusView } from "../home/shopFocusView.ts";
 import {
   rowRects,
   SHOP_LAYOUT,
@@ -103,7 +102,6 @@ import {
 } from "./questionPanel.ts";
 import { SCENE_KEYS, type SceneKey } from "./sceneKeys.ts";
 import { LIST_SCROLL_RULE } from "./scrollView.ts";
-import { selectionOrbitSegments } from "./selectionOrbit.ts";
 import { selectOuter } from "./uiKit.ts";
 
 // The caller pauses itself and launches the shop, on the tab of focus and framing its row
@@ -371,18 +369,11 @@ export class ShopScene extends Scene {
     this.native?.place({
       ...(this.pressed?.kind === "row" ? { pressed: this.pressed.id } : {}),
       rows: new Map(
-        this.placed.map(({ rect, row }) => {
-          const focused = this.focusId === row.id ? shopFocusView(rect) : undefined;
+        this.placed.map(({ row }) => {
           return [
             row.id,
             {
-              frame: focused?.fills ?? [],
-              orbit:
-                focused === undefined || reduced
-                  ? []
-                  : selectionOrbitSegments(focused.outer, "shop", this.time.now).map(
-                      ({ colour, rect }) => ({ colour: PALETTE[colour], rect }),
-                    ),
+              focused: this.focusId === row.id,
               x: shakeOffset(reduced, this.time.now, this.shakes.get(row.id)),
             },
           ];

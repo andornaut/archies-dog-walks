@@ -5,7 +5,6 @@ import { expect, it, vi } from "vitest";
 
 import { gameData } from "../../data/index.ts";
 import { ownedCountNote } from "../../home/shop.ts";
-import { shopFocusView } from "../../home/shopFocusView.ts";
 import {
   SHOP_LAYOUT,
   shopHeadingBand,
@@ -19,7 +18,6 @@ import { newPlayerSave } from "../../testing/saves.ts";
 import { guardNativeInput } from "../../ui/dom/modalLifecycle.ts";
 import { type DomScale, domScale, fontPixel, gridRect, gridX } from "../../ui/domScale.ts";
 import { modalTitleInk } from "../../ui/modal/titleRole.ts";
-import { PALETTE } from "../../ui/palette.ts";
 import { TEXT_SCALE } from "../../ui/textFit.ts";
 import { type ShopScreenInput, type ShopScreenView, showShopScreen } from "./shopScreen.ts";
 
@@ -406,7 +404,7 @@ it("keeps the row and first pointer alive across dip, focus and scroll painting"
   screen.update(view);
   screen.place({
     pressed: "row",
-    rows: new Map([["row", { frame: shopFocusView(RECT).fills, orbit: [], x: 2 }]]),
+    rows: new Map([["row", { focused: true, x: 2 }]]),
     scroll: { max: 120, settled: false, y: 8 },
     scrollbar: null,
   });
@@ -420,9 +418,8 @@ it("keeps the row and first pointer alive across dip, focus and scroll painting"
   expect(down).toHaveBeenCalledOnce();
   expect(up).toHaveBeenCalledOnce();
   expect(up).toHaveBeenCalledWith({ x: 40, y: 190 }, false);
-  expect(
-    root.all().some((node) => node.style.backgroundColor === `#${PALETTE.cyan.toString(16)}`),
-  ).toBe(true);
+  expect(row.hasAttribute("data-picker-focused")).toBe(true);
+  expect(row.getAttribute("data-picker-focus")).toBe("face");
   screen.destroy();
 });
 

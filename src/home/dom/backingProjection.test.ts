@@ -87,8 +87,13 @@ it("projects picker art into the available space with selected and locked treatm
           isSheet: (key) => key.startsWith("face-"),
         },
         fonts,
-        { activate: () => undefined, hold: () => undefined, platePadding: 2 },
+        { activate: () => undefined, focused: true, hold: () => undefined, platePadding: 2 },
         model,
+      );
+      expect(tile.element.hasAttribute("data-picker-focused")).toBe(true);
+      expect(tile.element.querySelectorAll(".adw-selection-focus-fill")).toHaveLength(1);
+      expect(tile.element.querySelectorAll(".adw-selection-focus-ink")).toHaveLength(
+        index < 3 ? 1 : 0,
       );
       const primary = model.pictures[0]!;
       const key = model.art === "grey" ? `${primary.key}-disabled` : primary.key;

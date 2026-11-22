@@ -108,7 +108,7 @@ export function createNativeHomeView(
   },
 ): NativeHomeView {
   const element = doc.createElement("div");
-  element.className = "adw-dialog";
+  element.className = "adw-dialog adw-picker-surface";
   const divider = fillPart(doc, {
     colour: PALETTE.plum,
     rect: {
@@ -121,6 +121,16 @@ export function createNativeHomeView(
   element.append(divider.element);
   const sections = createHomeSections(doc, source, fonts.title, snapshot);
   element.append(sections.element);
+  const pickerFocus = snapshot.selections.find(({ rect }) => {
+    const focused = snapshot.focus?.rect;
+    return (
+      focused !== undefined &&
+      rect.x === focused.x &&
+      rect.y === focused.y &&
+      rect.width === focused.width &&
+      rect.height === focused.height
+    );
+  })?.id;
   const selections = new Map(
     snapshot.selections.map((tile) => [
       tile.id,
@@ -130,6 +140,7 @@ export function createNativeHomeView(
         fonts,
         {
           activate: () => context.activate(tile.id),
+          focused: tile.id === pickerFocus,
           hold: () => context.hold(tile.id),
           platePadding: context.platePadding,
         },
@@ -181,7 +192,7 @@ export function createNativeHomeView(
   if (gearBadge !== undefined) {
     element.append(gearBadge.element);
   }
-  const focus = createHomeFocus(doc, snapshot.focus);
+  const focus = createHomeFocus(doc, pickerFocus === undefined ? snapshot.focus : undefined);
   element.append(focus.element);
   const signLine = {
     capTop: HOME_LAYOUT.streetSign.y,

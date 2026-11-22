@@ -14,10 +14,9 @@ import { itemTileLook } from "../../ui/interaction.ts";
 import { PALETTE } from "../../ui/palette.ts";
 import { plainMarks } from "../../ui/pixelFont.ts";
 import { TEXT_SCALE } from "../../ui/textFit.ts";
-import { HOME_LAYOUT } from "../homeLayout.ts";
 import { plateStripView, pricePlateView } from "../pricePlateView.ts";
 import { homeSelectionColour, type HomeSelectionView } from "../selectionView.ts";
-import { createSelectionTile, type NativeTileFill } from "./selectionTile.ts";
+import { createSelectionTile } from "./selectionTile.ts";
 interface SelectionArtSource extends DomArtSource {
   readonly hasArt: (key: string) => boolean;
   readonly imageSize: (key: string) => {
@@ -31,6 +30,7 @@ export interface SelectionMotion {
   readonly x: number;
   readonly y: number;
   readonly faceY: number;
+  readonly pressed?: boolean;
   readonly refusing: boolean;
   readonly markY: number;
 }
@@ -40,7 +40,6 @@ export interface NativeHomeSelection {
   dispose(): void;
   place(scale: DomScale, motion: SelectionMotion): void;
   setFrame(index: number, frame: string | number | SheetFrame): void;
-  setOrbit(fills: readonly NativeTileFill[]): void;
 }
 const hex = (colour: number) => `#${colour.toString(16).padStart(6, "0")}`;
 // Home-specific art and copy compose the shared native tile.
@@ -54,6 +53,7 @@ export function createHomeSelection(
   context: {
     readonly activate: () => void;
     readonly hold: () => void;
+    readonly focused?: boolean;
     readonly platePadding: number;
   },
   view: HomeSelectionView,
@@ -66,12 +66,12 @@ export function createHomeSelection(
     getState: () => ({ toggled: view.tile.kind === "picked" }),
     skin: "authored",
   });
+  control.element.toggleAttribute("data-picker-focused", context.focused === true);
   const tile = createSelectionTile(doc, source, fonts.title, {
     control,
-    frame: source.hasArt("ui-tile") ? "art" : "fallback",
+    focus: "content",
     hit: view.hit,
     mark: view.tile.kind === "picked" ? (source.hasArt("ui-check") ? "art" : "fallback") : "none",
-    outset: HOME_LAYOUT.tileSelectOutset,
     rect: view.rect,
     state: itemTileLook(view.tile).state,
   });
@@ -89,14 +89,21 @@ export function createHomeSelection(
       top: box.top - gridY(scale, origin.y),
     };
   };
-  const fill = (rect: Rect, colour: number) => {
+  const fill = (rect: Rect, colour?: number) => {
     const box = doc.createElement("span");
     box.className = "adw-framed";
-    box.style.backgroundColor = hex(colour);
+    if (colour !== undefined) {
+      box.style.backgroundColor = hex(colour);
+    }
     paint.append(box);
     parts.push((scale) => setBox(box, local(scale, rect)));
+    return box;
   };
-  fill(view.fill.rect, view.fill.colour);
+  const nameStrip = view.plate?.strip !== undefined && view.plate.text === view.label;
+  const pictureWell = fill(view.fill.rect, view.fill.colour);
+  if (view.name === undefined && !nameStrip) {
+    pictureWell.classList.add("adw-selection-focus-fill");
+  }
   view.pictures.forEach((picture, index) => {
     const key = view.art === "grey" ? source.disabledKey(picture.key) : picture.key;
     if (!source.hasArt(picture.key) && picture.fallback !== undefined) {
@@ -152,6 +159,14 @@ export function createHomeSelection(
       text: name.text,
     } as const;
     const label = createTextLine(doc, line);
+    label.classList.add("adw-selection-focus-ink");
+    const nameArea = name.centreIn ?? {
+      height: fontMetrics(body).capHeight * TEXT_SCALE + 2,
+      width: view.rect.x + view.rect.width - 2 - name.x,
+      x: name.x,
+      y: name.capTop - 1,
+    };
+    fill(nameArea).classList.add("adw-selection-focus-fill", "adw-selection-name-cue");
     paint.append(label);
     parts.push((scale, motion) => {
       const shown = { ...line, colour: motion.refusing ? PALETTE.red : line.colour };
@@ -179,9 +194,15 @@ export function createHomeSelection(
             view.plate.text,
           );
     for (const part of plate.fills) {
-      fill(part.rect, part.colour);
+      const backing = fill(part.rect, part.colour);
+      if (nameStrip && part.rect === plate.rect) {
+        backing.classList.add("adw-selection-focus-fill");
+      }
     }
     const label = createTextLine(doc, plate.label);
+    if (nameStrip) {
+      label.classList.add("adw-selection-focus-ink");
+    }
     paint.append(label);
     parts.push((scale, motion) =>
       placeBackedText(body, scale, origin, plate.rect, [
@@ -209,6 +230,8 @@ export function createHomeSelection(
     dispose: control.dispose,
     element: tile.element,
     place: (scale, motion) => {
+      control.element.toggleAttribute("data-picker-refusing", motion.refusing);
+      control.setPressed(motion.pressed === true);
       tile.place(scale, motion);
       const key = [
         scale.unit,
@@ -233,6 +256,5 @@ export function createHomeSelection(
         lastPlacement = "";
       }
     },
-    setOrbit: (fills) => tile.setOrbit(fills),
   };
 }

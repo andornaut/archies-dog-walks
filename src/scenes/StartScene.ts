@@ -1,6 +1,6 @@
 import { clampIndex, itemAt } from "@andornaut/game-kit/runtime/arrays";
 import { type ProgressHandle } from "@andornaut/game-kit/runtime/progressState";
-import { containsPoint, insetRect, type Rect } from "@andornaut/game-kit/runtime/rect";
+import { containsPoint, type Rect } from "@andornaut/game-kit/runtime/rect";
 import { fontMetrics } from "@andornaut/game-kit/runtime/text/bitmapFont";
 import { Core, type GameObjects, Scene, Scenes, type Time } from "phaser";
 
@@ -164,7 +164,6 @@ import { nextRunStart } from "./run/runRecorder.ts";
 import { type RunPick, runSceneData } from "./run/runStart.ts";
 import { SCENE_KEYS } from "./sceneKeys.ts";
 import { maskToRect } from "./scrollView.ts";
-import { selectionOrbitSegments } from "./selectionOrbit.ts";
 import { SETTINGS_CLOSED_EVENT } from "./SettingsScene.ts";
 import { addShopBoard, addShopIdle, type ShopBoard, type ShopIdle } from "./shopIdle.ts";
 import {
@@ -1233,20 +1232,6 @@ export class StartScene extends Scene {
             }
           }
         });
-        item?.setOrbit(
-          model.tile.kind !== "picked" || reduced
-            ? []
-            : selectionOrbitSegments(
-                this.textures.exists("ui-tile")
-                  ? model.rect
-                  : insetRect(-HOME_LAYOUT.tileSelectOutset, model.rect),
-                this.textures.exists("ui-tile") ? "tile" : "frame",
-                now,
-              ).map(({ colour, rect }) => ({
-                colour: PALETTE[colour],
-                rect,
-              })),
-        );
       }
       if (this.nativeSpeechOwner !== undefined) {
         const frame = this.nativeFrame(this.nativeSpeechOwner, "happy", reduced, now);
@@ -1261,6 +1246,7 @@ export class StartScene extends Scene {
       view.place(scale, (id) => ({
         faceY: hopOffset(reduced, now, this.pops.get(id)),
         markY: badgePopOffset(reduced, now, this.pops.get(id)),
+        pressed: dip(id) > 0,
         refusing: refusing(id),
         x: shakeOffset(reduced, now, this.shakes.get(id)),
         y:
