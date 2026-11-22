@@ -48,7 +48,8 @@ const SECTION_BADGE_GUTTER = HOME.sectionBadgeGutter;
 const SECTION_EDGE = HOME.sectionEdge;
 const SECTION_GAP = HOME.sectionGap;
 const TILE_OFFSET = HOME.tileOffset;
-const TILE_TOP_REACH = FEEDBACK.liftPx + FEEDBACK.badgePopPx - MARK_OFFSET.y;
+const TILE_MOTION_RESERVE =
+  FEEDBACK.liftPx + FEEDBACK.badgePopPx - MARK_OFFSET.y + FEEDBACK.pressDipPx;
 // Start walk, foot rows over the screen's bottom.
 const START_BUTTON: Rect = {
   ...BUTTON_SIZE.wide,
@@ -109,17 +110,18 @@ function sectionHeight(rows: number, grid: GridSpec, inset: number): number {
   return (
     TILE_OFFSET +
     2 * SECTION_CONTENT_PADDING +
-    TILE_TOP_REACH +
+    TILE_MOTION_RESERVE +
     rows * grid.cellHeight +
     (rows - 1) * grid.gapY -
     2 * inset +
-    FEEDBACK.pressDipPx +
     SECTION_EDGE
   );
 }
 
 function sectionTilesY(section: Rect, inset: number): number {
-  return section.y + TILE_OFFSET + SECTION_CONTENT_PADDING + TILE_TOP_REACH - inset;
+  return (
+    section.y + TILE_OFFSET + SECTION_CONTENT_PADDING + Math.ceil(TILE_MOTION_RESERVE / 2) - inset
+  );
 }
 
 const WALKER_HEIGHT = sectionHeight(1, WALKER_TILES, WALKER_TILES.inset.y);

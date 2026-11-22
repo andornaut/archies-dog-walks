@@ -114,7 +114,7 @@ it("fills each primary picker picture's logical well at fractional fits", async 
   );
 });
 
-it("keeps picker headings clear of fills within logical bands at fractional fits", async () => {
+it("centres the picker heading and note ink within each drawn band at fractional fits", async () => {
   const doc = new FakeDocument();
   const title = gameFont("font-title");
   const sections = homeSections(gameData, newPlayerSave.owned, {
@@ -127,10 +127,11 @@ it("keeps picker headings clear of fills within logical bands at fractional fits
   });
   await expect(view.ready).resolves.toContain("sprites/ui-section.png");
   const frames = [...view.element.children].filter((child) => child.className === "adw-art");
-  const labels = [...view.element.children].filter((child) => child.className.includes("adw-text"));
+  const labels = [...view.element.children]
+    .filter((child) => child.className.includes("adw-text"))
+    .map((child) => child as unknown as FakeElement);
   const specifications = homeSectionViews(sections);
-  for (const dpr of [1, 2.625]) {
-    const scale = domScale(dpr, viewport);
+  for (const scale of [domScale(1, { ...viewport, width: 575 }), domScale(2.625, viewport)]) {
     view.place(scale);
     specifications.forEach((section, index) => {
       const frame = frames[index] as unknown as FakeElement;
@@ -141,12 +142,14 @@ it("keeps picker headings clear of fills within logical bands at fractional fits
       expect(Number.parseFloat(cap.style.height!)).toBeGreaterThan(
         SLICES["ui-section"].top * artPixel(scale),
       );
-      const heading = labels[index * 2] as unknown as FakeElement;
-      const metrics = fontMetrics(title);
-      const inkBottom =
-        Number.parseFloat(heading.style.top!) +
-        (metrics.capTop + metrics.capHeight) * fontPixel(scale, TEXT_SCALE);
-      expect(inkBottom).toBeLessThan(gridY(scale, section.rect.y + 23));
+      const pixel = fontPixel(scale, TEXT_SCALE);
+      for (const label of labels.slice(index * 2, index * 2 + 2)) {
+        const rows = fontInkRows("font-title", { scale: pixel }, label.textContent);
+        const capTop = Number.parseFloat(label.style.top!) + fontMetrics(title).capTop * pixel;
+        expect(
+          Math.abs(capTop + (rows.top + rows.bottom) / 2 - (top + boundary) / 2),
+        ).toBeLessThanOrEqual(0.5);
+      }
     });
     const slices = frames
       .flatMap((frame) => [...frame.children])

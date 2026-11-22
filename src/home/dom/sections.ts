@@ -4,8 +4,8 @@ import { SLICES } from "../../data/layout.ts";
 import { fillPart } from "../../hud/dom/shopPage.ts";
 import { type DomArtSource, sheetArt, sheetNineSlice } from "../../ui/dom/artElements.ts";
 import { cutDomArt } from "../../ui/dom/domCuts.ts";
-import { createTextLine, placeText, setBox } from "../../ui/dom/pixelLine.ts";
-import { artPixel, type DomScale, frameRect } from "../../ui/domScale.ts";
+import { backedTextPlaces, createTextLine, placeText, setBox } from "../../ui/dom/pixelLine.ts";
+import { artPixel, type DomScale, frameRect, gridX, gridY } from "../../ui/domScale.ts";
 import { PALETTE } from "../../ui/palette.ts";
 import { plainMarks } from "../../ui/pixelFont.ts";
 import { TEXT_SCALE } from "../../ui/textFit.ts";
@@ -37,6 +37,8 @@ export function createHomeSections(
   const ready: Promise<readonly string[]>[] = [];
   const origin = { x: 0, y: 0 };
   for (const section of homeSectionViews(snapshot.sections)) {
+    // The heading slice has equal rim rows on either side of the coloured band.
+    const band = { ...section.rect, height: SLICES["ui-section"].top };
     if (source.hasArt("ui-section")) {
       const frame = sheetNineSlice(doc, source, "ui-section", SLICES["ui-section"]);
       element.append(frame.element);
@@ -74,16 +76,24 @@ export function createHomeSections(
       } as const;
       const span = createTextLine(doc, line);
       element.append(span);
-      parts.push((scale) => placeText(title, scale, origin, span, line));
+      return (scale: DomScale) => {
+        placeText(title, scale, origin, span, line);
+        const centred = backedTextPlaces(title, scale, origin, band, [line], "layout")[0]!;
+        const shiftY = centred.top - Number.parseFloat(span.style.top);
+        span.style.top = `${centred.top}px`;
+        return shiftY;
+      };
     };
-    label(
-      section.heading.text,
-      section.heading.x,
-      section.heading.capTop,
-      colour(section.heading.colour),
-      "left",
+    parts.push(
+      label(
+        section.heading.text,
+        section.heading.x,
+        section.heading.capTop,
+        colour(section.heading.colour),
+        "left",
+      ),
     );
-    label(
+    const placeNote = label(
       section.note.text,
       section.note.x,
       section.note.capTop,
@@ -95,20 +105,31 @@ export function createHomeSections(
       const noteWidth = inkWidth(title, TEXT_SCALE, plainMarks(section.note.text).toUpperCase());
       const countLeft = section.note.x - noteWidth;
       const heartLeft = countLeft - countGap - heartInk * heartScale;
-      if (source.hasArt("ui-heart")) {
-        const heart = sheetArt(doc, source, "ui-heart");
+      const heart = source.hasArt("ui-heart") ? sheetArt(doc, source, "ui-heart") : undefined;
+      if (heart !== undefined) {
         element.append(heart.element);
         ready.push(heart.ready);
-        parts.push((scale) =>
-          heart.place(scale, origin, {
-            scale: heartScale,
-            tag: "full",
-            x: heartLeft,
-            y: section.note.capTop - rise,
-          }),
-        );
       }
-      label(snapshot.bonus, heartLeft - gap, section.note.capTop, PALETTE.ink, "right");
+      const placeBonus = label(
+        snapshot.bonus,
+        heartLeft - gap,
+        section.note.capTop,
+        PALETTE.ink,
+        "right",
+      );
+      parts.push((scale) => {
+        const shiftY = placeNote(scale);
+        const y = section.note.capTop - rise;
+        heart?.place(
+          scale,
+          origin,
+          { scale: heartScale, tag: "full", x: heartLeft, y },
+          { left: gridX(scale, heartLeft), top: gridY(scale, y) + shiftY },
+        );
+        placeBonus(scale);
+      });
+    } else {
+      parts.push(placeNote);
     }
   }
   for (const section of homeSectionViews(snapshot.sections)) {

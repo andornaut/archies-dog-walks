@@ -162,7 +162,10 @@ describe("home layout", () => {
       const cards = hits;
       const left = Math.min(...cards.map((tile) => tile.x)) - fill.x;
       const right = fill.x + fill.width - Math.max(...cards.map((tile) => tile.x + tile.width));
+      const above = Math.min(...cards.map((tile) => tile.y)) - fill.y;
+      const below = fill.y + fill.height - Math.max(...cards.map((tile) => tile.y + tile.height));
       expect(Math.abs(left - right), id).toBeLessThanOrEqual(1);
+      expect(above, id).toBe(below);
       for (const hit of hits) {
         const tile = hit;
         const at = (offset: Rect, dx: number, dy: number) => ({
