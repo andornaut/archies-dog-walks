@@ -19,7 +19,6 @@
   },
   "deploy": { "mode": "wrangler", "skipPattern": "(\\.md$|^art/|^gameplay/)" },
   "reports": {
-    "project": "Archie",
     "scheduledTicks": true,
     "recipient": "game-coordinator",
     "workerParents": ["game-coordinator"]
