@@ -103,8 +103,22 @@ describe("the HTML pause menu", () => {
     doc.defaultView.fire("keydown", { code: "Digit4", repeat: false });
     expect(presses[3]).not.toHaveBeenCalled();
     shown.destroy();
+    buttons[0]?.fire("click");
     doc.defaultView.fire("keydown", { code: "Digit1", repeat: false });
     expect(presses[0]).not.toHaveBeenCalled();
+  });
+
+  it("keeps a hidden native action omitted until it is explicitly shown again", () => {
+    const { buttons, presses, shown } = menu();
+    shown.setActionShown(0, false);
+    buttons[0]?.fire("click");
+    expect(buttons[0]?.hidden).toBe(true);
+    expect(presses[0]).not.toHaveBeenCalled();
+    shown.setActionShown(0, true);
+    buttons[0]?.fire("click");
+    expect(buttons[0]?.hidden).toBe(false);
+    expect(presses[0]).toHaveBeenCalledOnce();
+    shown.destroy();
   });
 
   it("keeps digit bindings independent of visual action order", () => {
@@ -163,9 +177,9 @@ describe("the HTML pause menu", () => {
     }
     const button = buttons[0];
     button?.fire("pointerdown", { clientX: 100, clientY: 300, pointerId: 1 });
-    expect(button?.getAttribute("data-pressed")).toBe("");
+    expect(button?.getAttribute("data-ui-pressed")).toBe("");
     button?.fire("pointerleave");
-    expect(button?.getAttribute("data-pressed")).toBeNull();
+    expect(button?.getAttribute("data-ui-pressed")).toBeNull();
   });
 });
 

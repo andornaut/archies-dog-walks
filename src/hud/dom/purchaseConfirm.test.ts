@@ -53,10 +53,10 @@ describe("the HTML purchase confirm", () => {
   it("draws Cancel in the secondary look and Buy as the go button, each pressing its answer", () => {
     const { buy, cancel, nodes } = confirm(undefined);
     const buttons = nodes.filter((node) => node.tagName === "button");
-    expect(buttons.map(({ className }) => className)).toEqual([
-      "adw-button adw-secondary",
-      "adw-button adw-go",
-      "adw-close",
+    expect(buttons.map((button) => button.getAttribute("data-ui-button-role"))).toEqual([
+      "secondary",
+      "primary",
+      "navigation",
     ]);
     const labelledActions = buttons
       .filter((button) => button.className.includes("adw-button"))
@@ -77,13 +77,15 @@ describe("the HTML purchase confirm", () => {
   });
 
   it.each([
-    ["cancel", ["adw-button adw-secondary"]],
-    ["buy", ["adw-button adw-go"]],
+    ["cancel", ["secondary"]],
+    ["buy", ["primary"]],
     [undefined, []],
   ] as const)("shows %s pressed as a key's dip says", (pressed, shown) => {
     const { nodes } = confirm(pressed);
     expect(
-      nodes.filter((node) => node.attributes.has("data-pressed")).map((node) => node.className),
+      nodes
+        .filter((node) => node.attributes.has("data-ui-pressed"))
+        .map((node) => node.getAttribute("data-ui-button-role")),
     ).toEqual(shown);
   });
 });

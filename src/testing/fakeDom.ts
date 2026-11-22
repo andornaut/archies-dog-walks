@@ -46,6 +46,9 @@ export class FakeTarget {
   }
 
   fire(type: string, event: FakeEvent = {}): void {
+    event.preventDefault ??= () => undefined;
+    event.stopImmediatePropagation ??= () => undefined;
+    event.stopPropagation ??= () => undefined;
     for (const listener of this.listeners.get(type) ?? []) {
       listener(event);
     }

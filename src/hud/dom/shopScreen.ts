@@ -181,6 +181,7 @@ export function showShopScreen(
   let chromeParts: DomPart[] = [],
     headingParts: DomPart[] = [],
     messageParts: DomPart[] = [];
+  let disposeFooter: (() => void) | undefined;
   const rows = new Map<string, { key: string; tile: NativeSelectionTile; parts: DomPart[] }>();
   let chromeKey = "",
     headingsKey = "",
@@ -253,6 +254,7 @@ export function showShopScreen(
     const ready: Promise<readonly string[]>[] = [];
     const nextChrome = JSON.stringify(view.page);
     if (chromeKey !== nextChrome) {
+      disposeFooter?.();
       chromeKey = nextChrome;
       chromeParts = shopPageParts(doc, input.fonts.title, view.page);
       chromeParts.push(...view.page.title.map((line) => textPart(line)));
@@ -276,6 +278,7 @@ export function showShopScreen(
         view.page.back,
       );
       footer = action.element;
+      disposeFooter = action.dispose;
       footer.classList.add("adw-footer");
       chromeParts.push(action);
       chrome.replaceChildren(...chromeParts.map(({ element }) => element));
@@ -533,6 +536,8 @@ export function showShopScreen(
     capture,
     destroy: () => {
       alive = false;
+      disposeFooter?.();
+      disposeFooter = undefined;
       stopUnderlay();
       stopScale();
       lifecycle?.destroy();

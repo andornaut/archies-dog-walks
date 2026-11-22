@@ -2,6 +2,7 @@ import type { Point, Rect } from "@andornaut/game-kit/runtime/rect";
 
 import type { CheatAction, CheatRowView, CheatsView } from "../../dev/cheatsView.ts";
 import { type DomArtSource, sheetArt } from "../../ui/dom/artElements.ts";
+import { createGameButton } from "../../ui/dom/gameButton.ts";
 import {
   blockPlace,
   createTextLine,
@@ -16,7 +17,7 @@ import { PALETTE } from "../../ui/palette.ts";
 import { REFUSE } from "../../ui/refuse.ts";
 import { scrollbarRects } from "../../ui/scrollbar.ts";
 import { TEXT_SCALE } from "../../ui/textFit.ts";
-import { bindPanelPress } from "./panelButton.ts";
+import { bindPanelFeedback } from "./panelButton.ts";
 import {
   type DomPart,
   type DomQuestionPanel,
@@ -70,6 +71,7 @@ function refuse(element: HTMLElement, reducedMotion: boolean): void {
 
 // A row's element and its parts, drawn again from the row's view as it changes.
 interface RowPart {
+  readonly dispose?: () => void;
   readonly controls: readonly HTMLElement[];
   readonly element: HTMLElement;
   readonly place: (scale: DomScale, row: CheatRowView) => void;
@@ -134,47 +136,60 @@ function buttonsPart(
   const element = doc.createElement("div");
   element.className = "adw-lines";
   const buttons = first.buttons.map((_, i) => {
-    const button = doc.createElement("button");
-    button.type = "button";
-    const face = doc.createElement("span");
-    face.className = "adw-face";
     const label = doc.createElement("span");
     label.className = "adw-lines";
-    button.append(face, label);
-    bindPanelPress(button, {
-      ...press,
-      press: () => {
-        const view = current().buttons[i];
-        if (view === undefined) {
-          return;
+    const view = createGameButton(doc, {
+      appearance: { className: "adw-button", face: { className: "adw-face" }, role: "secondary" },
+      content: { icon: label, kind: "icon", name: first.buttons[i]!.label },
+      getAction: () => {
+        const currentButton = current().buttons[i];
+        return press.accepts() && currentButton !== undefined
+          ? { activate: () => input.act(currentButton.action) }
+          : null;
+      },
+      getState: () => ({
+        availability:
+          current().buttons[i]?.available === false
+            ? { kind: "unavailable", reason: current().buttons[i]!.label }
+            : { kind: "available" },
+      }),
+      onUnavailable: () => {
+        if (press.accepts()) {
+          refuse(view.element, input.reducedMotion());
         }
-        if (view.available === false) {
-          refuse(button, input.reducedMotion());
-          return;
-        }
-        input.act(view.action);
       },
     });
-    return { button, face, label };
+    const stopFeedback = bindPanelFeedback(view, press);
+    return {
+      button: view.element,
+      dispose: () => {
+        stopFeedback();
+        view.dispose();
+      },
+      face: view.face,
+      label,
+      view,
+    };
   });
   element.append(...buttons.map(({ button }) => button));
   return {
     controls: buttons.map(({ button }) => button),
+    dispose: () => buttons.forEach(({ dispose }) => dispose()),
     element,
     place: (scale, row) => {
-      buttons.forEach(({ button, face, label }, i) => {
+      buttons.forEach(({ button, face, label, view: control }, i) => {
         const view = row.buttons[i];
         if (view === undefined) {
           return;
         }
-        button.className = view.available === false ? "adw-button adw-disabled" : "adw-button";
-        button.setAttribute("aria-label", view.label);
-        button.setAttribute("aria-disabled", String(view.available === false));
+        button.classList.toggle("adw-disabled", view.available === false);
+        control.setContent({ icon: label, kind: "icon", name: view.label });
+        control.refresh();
         placeBox(scale, origin, button, view.hit);
         placeFrame(scale, view.hit, face, view.rect);
         const text = createTextLine(doc, view.text);
         text.setAttribute("aria-hidden", "true");
-        placeText(input.fonts[view.text.font], scale, view.hit, text, view.text);
+        placeText(input.fonts[view.text.font], scale, view.rect, text, view.text);
         label.replaceChildren(text);
       });
     },
@@ -192,40 +207,57 @@ function settingRowPart(
   press: { readonly accepts: () => boolean; readonly burst: (event: PointerEvent) => void },
   current: () => CheatRowView,
 ): RowPart {
-  const element = doc.createElement("button");
-  element.type = "button";
-  element.className = "adw-button adw-row";
-  const face = doc.createElement("span");
-  face.className = "adw-framed";
+  const content = doc.createElement("span");
+  content.className = "adw-lines";
   const texts = doc.createElement("span");
   texts.className = "adw-lines";
   const art = first.switch === undefined ? undefined : sheetArt(doc, input, "ui-switch");
-  element.append(face, texts, ...(art === undefined ? [] : [art.element]));
+  content.append(texts, ...(art === undefined ? [] : [art.element]));
+  const view = createGameButton(doc, {
+    appearance: {
+      className: "adw-button adw-row",
+      face: { className: "adw-framed" },
+      role: "secondary",
+    },
+    content: { icon: content, kind: "icon", name: `${first.label}: ${first.value}` },
+    getAction: () => {
+      const row = current();
+      return press.accepts() && row.action !== undefined
+        ? { activate: () => input.act(row.action!) }
+        : null;
+    },
+    getState: () => ({
+      availability:
+        current().enabled && current().action !== undefined
+          ? { kind: "available" }
+          : { kind: "unavailable", reason: current().label },
+    }),
+    onUnavailable: () => {
+      if (press.accepts()) {
+        refuse(texts, input.reducedMotion());
+      }
+    },
+  });
+  const element = view.element;
+  const face = view.face;
   if (first.switch !== undefined) {
     element.setAttribute("role", "switch");
   }
-  bindPanelPress(element, {
-    ...press,
-    press: () => {
-      const row = current();
-      if (!row.enabled || row.action === undefined) {
-        refuse(texts, input.reducedMotion());
-        return;
-      }
-      input.act(row.action);
-    },
-  });
+  const stopFeedback = bindPanelFeedback(view, press);
   return {
     controls: [element],
+    dispose: () => {
+      stopFeedback();
+      view.dispose();
+    },
     element,
     place: (scale, row) => {
       const { rect } = row;
       placeBox(scale, origin, element, rect);
-      face.style.backgroundColor = hex(row.face ?? PALETTE.cream);
       placeBox(scale, rect, face, rect);
       textLines(doc, input, texts, rect, scale, row);
-      element.setAttribute("aria-label", `${row.label}: ${row.value}`);
-      element.setAttribute("aria-disabled", String(!row.enabled));
+      view.setContent({ icon: content, kind: "icon", name: `${row.label}: ${row.value}` });
+      view.refresh();
       if (art !== undefined && row.switch !== undefined) {
         const tag = row.switch.on ? "on" : "off";
         art.place(scale, rect, { tag, x: row.switch.x, y: row.switch.y });
@@ -419,7 +451,10 @@ export function showCheats(layer: UiLayer, input: DomCheatsInput): DomCheats {
   return {
     accepts: () => panel.accepts(),
     capture: () => panel.capture(),
-    destroy: () => panel.destroy(),
+    destroy() {
+      rows.forEach((row) => row.dispose?.());
+      panel.destroy();
+    },
     setDimmed: (dimmed) => panel.setDimmed(dimmed),
     setEnabled: (enabled) => panel.setEnabled(enabled),
     setInert: (inert) => panel.setInert(inert),

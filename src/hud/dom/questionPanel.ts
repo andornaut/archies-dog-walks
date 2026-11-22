@@ -6,6 +6,8 @@ import { SCREEN_CONFIG } from "../../data/screen.ts";
 import { cardNumberForKey, isConfirmKey, menuKeyActs } from "../../input/keyBindings.ts";
 import { closeFace } from "../../ui/closeControl.ts";
 import { bindGameAction } from "../../ui/dom/actionBinding.ts";
+import { createControlGlyph } from "../../ui/dom/controlGlyph.ts";
+import { createGameButton } from "../../ui/dom/gameButton.ts";
 import { mountModalLifecycle, type NativeGesture } from "../../ui/dom/modalLifecycle.ts";
 import {
   createTextLine,
@@ -29,7 +31,7 @@ import {
   gridY,
 } from "../../ui/domScale.ts";
 import { type PanelText, type QuestionPanelView } from "../../ui/modal/types.ts";
-import { bindPanelPress, createPanelButton } from "./panelButton.ts";
+import { bindPanelFeedback, createPanelButton } from "./panelButton.ts";
 
 // The pause menu, each question (the Home question, Quit?) and each modal card (the update
 // notices) in HTML over the canvas: the panel questionPanelView or modalCardView lays out, drawn
@@ -290,6 +292,7 @@ export function showQuestionPanel(layer: UiLayer, input: DomQuestionPanelInput):
   }
   actions.sort((a, b) => a.button.rect.y - b.button.rect.y || a.button.rect.x - b.button.rect.x);
   const sourceButtons = new Map<number, HTMLElement>();
+  const disposeButtons: (() => void)[] = [];
   const buttons = actions.map(({ button, index, press }) => {
     const part = createPanelButton(
       doc,
@@ -304,6 +307,7 @@ export function showQuestionPanel(layer: UiLayer, input: DomQuestionPanelInput):
       part.element.setAttribute("aria-keyshortcuts", String(number + 1));
     }
     placed.push(part.place);
+    disposeButtons.push(part.dispose);
     sourceButtons.set(index, part.element);
     return part.element;
   });
@@ -311,23 +315,39 @@ export function showQuestionPanel(layer: UiLayer, input: DomQuestionPanelInput):
   // The close control after the buttons, so it is on top where their press areas meet; a
   // picture of one where nothing presses it.
   const pressClose = input.close ?? undefined;
-  const close = doc.createElement(pressClose === undefined ? "span" : "button");
-  close.className = "adw-close";
+  const glyph = doc.createElement("span");
+  glyph.className = "adw-close-glyph";
   if (pressClose !== undefined) {
-    (close as HTMLButtonElement).type = "button";
-    close.setAttribute("aria-label", input.closeLabel);
-  } else {
+    const icon = createControlGlyph(doc, "close");
+    Object.assign(icon.style, { height: "100%", width: "100%" });
+    glyph.append(icon);
+  }
+  const closeView =
+    pressClose === undefined
+      ? undefined
+      : createGameButton(doc, {
+          appearance: {
+            className: "adw-close",
+            face: { className: "adw-close-face" },
+            role: "navigation",
+          },
+          content: { icon: glyph, kind: "icon", name: input.closeLabel },
+          getAction: () => (accepts() ? { activate: pressClose } : null),
+        });
+  const close = closeView?.element ?? doc.createElement("span");
+  if (closeView === undefined) {
+    close.className = "adw-close";
     close.setAttribute("aria-hidden", "true");
     if (input.closePressed === true) {
       close.setAttribute("data-pressed", "");
     }
   }
   const closeArt = closeFace(view.close);
-  const face = doc.createElement("span");
-  face.className = "adw-close-face";
-  const glyph = doc.createElement("span");
-  glyph.className = "adw-close-glyph";
-  close.append(face, glyph);
+  const face = closeView?.face ?? doc.createElement("span");
+  if (closeView === undefined) {
+    face.className = "adw-close-face";
+    close.append(face, glyph);
+  }
   box(close, ORIGIN, view.close.hit);
   // The face and its glyph in whole art pixels, from the face's corner on the art-pixel grid.
   placed.push((scale) => {
@@ -339,13 +359,17 @@ export function showQuestionPanel(layer: UiLayer, input: DomQuestionPanelInput):
     const { glyph: at } = CLOSE_ART;
     setBox(glyph, {
       height: at.size * pixel,
-      left: left + at.x * pixel,
-      top: top + at.y * pixel,
+      left: (closeView === undefined ? left : 0) + at.x * pixel,
+      top: (closeView === undefined ? top : 0) + at.y * pixel,
       width: at.size * pixel,
     });
   });
-  if (pressClose !== undefined) {
-    bindPanelPress(close as HTMLButtonElement, { accepts, burst, press: pressClose });
+  if (closeView !== undefined) {
+    const stopFeedback = bindPanelFeedback(closeView, { accepts, burst });
+    disposeButtons.push(() => {
+      stopFeedback();
+      closeView.dispose();
+    });
   }
   dialog.append(...buttons);
   if (input.close !== null) {
@@ -507,6 +531,7 @@ export function showQuestionPanel(layer: UiLayer, input: DomQuestionPanelInput):
     burst: (at) => addTapBurst(layer, at),
     capture: () => lifecycle.capture(),
     destroy() {
+      disposeButtons.forEach((dispose) => dispose());
       setRampDimmed(dialog, false);
       lifecycle.destroy();
       stopScale();
