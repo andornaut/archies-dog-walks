@@ -37,6 +37,18 @@ memory_limit=${CHECK_MEMORY:-4g}
 for size in "${scratch_size}" "${work_size}" "${tmp_size}" "${memory_limit}"; do
     if [[ ! ${size} =~ ^[1-9][0-9]*[kKmMgG]?$ ]]; then printf 'Invalid container scratch size: %s\n' "${size}" >&2; exit 2; fi
 done
+memory_amount=${memory_limit%[kKmMgG]}
+case "${memory_limit}" in
+    *[gG]) memory_maximum=4 ;;
+    *[mM]) memory_maximum=4096 ;;
+    *[kK]) memory_maximum=4194304 ;;
+    *) memory_maximum=4294967296 ;;
+esac
+# Bound decimal width before arithmetic so oversized input cannot wrap.
+if (( ${#memory_amount} > ${#memory_maximum} )) || (( 10#${memory_amount} > memory_maximum )); then
+    printf 'CHECK_MEMORY must not exceed 4 GiB: %s\n' "${memory_limit}" >&2
+    exit 2
+fi
 container_user=19001:19001
 if [[ ${action} == exec ]]; then
     if [[ $(id -u) == 0 ]]; then printf '%s\n' 'Writable exec requires a non-root host user.' >&2; exit 2; fi
