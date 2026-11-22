@@ -57,3 +57,5 @@ Reference: [Screens and UI](../../src/README.md#screens-and-ui), [Assets](../../
 | adw-0183 | Restore the invoking Menu or Pause on Back                       | [adw-0183.md](../work/adw-0183.md) |
 | adw-0184 | Use game-styled keyboard focus indicators                        | [adw-0184.md](../work/adw-0184.md) |
 | adw-0186 | Use shared game button construction                              | [adw-0186.md](../work/adw-0186.md) |
+| adw-0190 | Balance vertical padding in the Start picker                     | [adw-0190.md](../work/adw-0190.md) |
+| adw-0191 | Tighten the gear details modal                                   | [adw-0191.md](../work/adw-0191.md) |
