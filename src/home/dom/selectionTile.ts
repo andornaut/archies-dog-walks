@@ -1,5 +1,6 @@
 import { insetRect, type Rect, ringRects } from "@andornaut/game-kit/runtime/rect";
 import type { BitmapFont } from "@andornaut/game-kit/runtime/text/bitmapFont";
+import type { ButtonView } from "@andornaut/game-kit/runtime/web/ui/dom/button";
 
 import { SLICES } from "../../data/layout.ts";
 import { type DomArtSource, sheetArt, sheetNineSlice } from "../../ui/dom/artElements.ts";
@@ -35,6 +36,7 @@ export function createSelectionTile(
   source: DomArtSource,
   title: BitmapFont,
   view: {
+    readonly control?: ButtonView;
     readonly frame: "art" | "fallback";
     readonly mark: "art" | "fallback" | "none";
     readonly outset: number;
@@ -44,16 +46,25 @@ export function createSelectionTile(
     readonly state: TileState;
   },
 ): NativeSelectionTile {
-  const element = doc.createElement("button");
-  element.type = "button";
-  element.className = "adw-button";
+  const control = view.control;
+  const element = control?.element ?? doc.createElement("button");
+  element.classList.add("adw-button");
   element.style.position = "absolute";
   element.style.pointerEvents = "auto";
   element.style.overflow = "visible";
-  element.setAttribute("aria-label", view.label);
-  element.setAttribute("aria-pressed", String(view.state === "selected"));
+  if (control === undefined) {
+    element.type = "button";
+    element.setAttribute("aria-label", view.label);
+    element.setAttribute("aria-pressed", String(view.state === "selected"));
+  } else {
+    control.face.style.pointerEvents = "none";
+    control.face.style.position = "absolute";
+    element.style.setProperty("--ui-button-focus-fill", "var(--adw-cyan)");
+  }
+  const host = control?.face ?? element;
   const paint = doc.createElement("span");
   paint.className = "adw-framed";
+  paint.setAttribute("aria-hidden", "true");
   const content = doc.createElement("span");
   content.className = "adw-framed";
   const origin = view.hit;
@@ -69,9 +80,9 @@ export function createSelectionTile(
   if (shadow !== undefined) {
     shadow.className = "adw-framed";
     shadow.style.backgroundColor = hex(PALETTE.plum);
-    element.append(shadow);
+    host.append(shadow);
   }
-  element.append(paint);
+  host.append(paint);
   const tile =
     view.frame === "art" ? sheetNineSlice(doc, source, "ui-tile", SLICES["ui-tile"]) : undefined;
   const rectangleLayer = () => {
@@ -215,7 +226,11 @@ export function createSelectionTile(
         return;
       }
       placement = key;
-      setBox(element, gridRect(scale, origin));
+      const hit = gridRect(scale, origin);
+      setBox(element, hit);
+      if (control !== undefined) {
+        setBox(control.face, { ...hit, left: 0, top: 0 });
+      }
       if (shadow !== undefined) {
         setBox(
           shadow,

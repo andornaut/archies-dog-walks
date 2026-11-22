@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 import { gameData } from "../../data/index.ts";
 import { FakeDocument, type FakeElement } from "../../testing/fakeDom.ts";
 import { gameFont } from "../../testing/fontInk.ts";
+import { createGameButton } from "../../ui/dom/gameButton.ts";
 import { domScale } from "../../ui/domScale.ts";
 import { PALETTE } from "../../ui/palette.ts";
 import { HOME_LAYOUT } from "../homeLayout.ts";
@@ -26,10 +27,18 @@ const descendants = (node: FakeElement): FakeElement[] => [
 describe("native selection tile", () => {
   it("keeps the full hit target fixed while selected paint lifts and shakes", async () => {
     const doc = new FakeDocument();
+    const name = gameData.dogs.kilo.name;
+    const host = createGameButton(doc as unknown as Document, {
+      content: { kind: "icon", name },
+      getAction: () => ({ activate: vi.fn() }),
+      getState: () => ({ toggled: true }),
+      skin: "authored",
+    });
     const tile = createSelectionTile(doc as unknown as Document, SOURCE, gameFont("font-title"), {
+      control: host,
       frame: "art",
       hit: HIT,
-      label: gameData.dogs.kilo.name,
+      label: name,
       mark: "none",
       outset: HOME_LAYOUT.tileSelectOutset,
       rect: FACE,
@@ -37,6 +46,7 @@ describe("native selection tile", () => {
     });
     await tile.ready;
     tile.place(SCALE, { markY: 0, x: 3, y: -2 });
+    expect(tile.element).toBe(host.element);
     expect(tile.element.getAttribute("aria-pressed")).toBe("true");
     expect(tile.element.style).toMatchObject({
       height: "96px",
@@ -45,9 +55,17 @@ describe("native selection tile", () => {
       width: "96px",
     });
     const paint = (tile.content as unknown as FakeElement).parent;
+    expect(paint?.parent).toBe(host.face);
+    expect(host.face.style).toMatchObject({
+      height: "96px",
+      left: "0px",
+      top: "0px",
+      width: "96px",
+    });
     expect(paint?.style.transform).toBe("translate(6px,-4px)");
     tile.place(SCALE, { markY: 0, x: 0, y: 0 });
     expect(tile.element.style).toMatchObject({ left: "24px", top: "480px" });
+    host.dispose();
   });
   it("retains shop focus while its separate moving orbit settles", async () => {
     const doc = new FakeDocument();
