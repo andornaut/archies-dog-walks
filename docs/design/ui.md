@@ -62,3 +62,4 @@ Reference: [Screens and UI](../../src/README.md#screens-and-ui), [Assets](../../
 | adw-0192 | Use Back for Settings navigation                                 | [adw-0192.md](../work/adw-0192.md) |
 | adw-0193 | Unify walker dog and gear details                                | [adw-0193.md](../work/adw-0193.md) |
 | adw-0194 | Refine selected items in the Start picker                        | [adw-0194.md](../work/adw-0194.md) |
+| adw-0195 | Close details on the first press after opening by hold           | [adw-0195.md](../work/adw-0195.md) |
