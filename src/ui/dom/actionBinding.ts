@@ -107,6 +107,8 @@ export function bindGameAction(action: GameAction, element: HTMLElement): () => 
 // The existing root admission owns captures and leases; the kit owns hold timing and suppression.
 export function bindGameActionHolds(
   context: {
+    // Native activation may follow the end of an admitted pointer contact.
+    readonly acceptsClick?: () => boolean;
     readonly cancelPress: () => void;
     readonly guard: PressGuard;
     readonly unit: () => number;
@@ -117,7 +119,7 @@ export function bindGameActionHolds(
   if (roots.has(root)) {
     throw new Error("An input root must have one action dispatcher");
   }
-  const owner = { accepts: () => context.guard.gate.accepts() };
+  const owner = { accepts: () => context.acceptsClick?.() ?? context.guard.gate.accepts() };
   roots.set(root, owner);
   const install = () =>
     bindHoldActions(

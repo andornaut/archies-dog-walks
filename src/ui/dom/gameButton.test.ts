@@ -5,6 +5,7 @@ import { gameData } from "../../data/index.ts";
 import { FakeDocument } from "../../testing/fakeDom.ts";
 import { bindGameAction, bindGameActionHolds } from "./actionBinding.ts";
 import { createGameButton } from "./gameButton.ts";
+import { guardNativeInput } from "./modalLifecycle.ts";
 
 const duration = gameData.tuning.seconds.holdSeconds * 1000;
 afterEach(() => vi.useRealTimers());
@@ -36,11 +37,16 @@ function fixture(override = false, unavailable = false) {
   });
   const button = view.element as unknown as ReturnType<FakeDocument["createElement"]>;
   root.append(button);
-  const bind = () =>
-    bindGameActionHolds(
-      { cancelPress, guard: { gate }, unit: () => 2 },
-      root as unknown as HTMLElement,
-    );
+  const bind = (contactGuard = false) =>
+    contactGuard
+      ? guardNativeInput(
+          { cancel: cancelPress, gate, subscribe: gate.subscribe },
+          root as unknown as HTMLElement,
+        )
+      : bindGameActionHolds(
+          { cancelPress, guard: { gate }, unit: () => 2 },
+          root as unknown as HTMLElement,
+        );
   const pointer = (type: string) => ({
     button: 0,
     buttons: type === "pointerdown" ? 1 : 0,
@@ -53,6 +59,7 @@ function fixture(override = false, unavailable = false) {
     stopImmediatePropagation: vi.fn(),
     stopPropagation: vi.fn(),
     target: button,
+    timeStamp: Date.now(),
     type,
   });
   const click = (detail = 0) => {
@@ -96,18 +103,21 @@ it("fails closed without its input root and rechecks readiness for native activa
   expect(current.activate).toHaveBeenCalledTimes(2);
 });
 
-it("uses the existing hold dispatcher once and suppresses the matching release click", () => {
-  const current = fixture();
-  const stop = current.bind();
-  current.root.fire("pointerdown", current.pointer("pointerdown"));
-  vi.advanceTimersByTime(duration);
-  expect(current.activate).toHaveBeenCalledOnce();
-  expect(current.cancelPress).toHaveBeenCalledOnce();
-  current.doc.fire("pointerup", current.pointer("pointerup"));
-  current.click(1);
-  expect(current.activate).toHaveBeenCalledOnce();
-  stop();
-});
+it.each([false, true])(
+  "uses one hold dispatcher and suppresses release (contact guard: %s)",
+  (contactGuard) => {
+    const current = fixture();
+    const stop = current.bind(contactGuard);
+    current.root.fire("pointerdown", current.pointer("pointerdown"));
+    vi.advanceTimersByTime(duration);
+    expect(current.activate).toHaveBeenCalledOnce();
+    expect(current.cancelPress).toHaveBeenCalledOnce();
+    current.doc.fire("pointerup", current.pointer("pointerup"));
+    current.click(1);
+    expect(current.activate).toHaveBeenCalledOnce();
+    stop();
+  },
+);
 
 it("keeps an explicit hold override and unregisters it when disposed", () => {
   const current = fixture(true);
@@ -142,5 +152,32 @@ it("keeps refusal feedback behind the same readiness guard as successful actions
   expect(current.refuse).toHaveBeenCalledOnce();
   expect(current.activate).not.toHaveBeenCalled();
   modal.close();
+  stop();
+});
+
+it("accepts a completed short tap and keyboard click outside the hold contact", () => {
+  const current = fixture();
+  const stop = current.bind(true);
+  current.root.fire("pointerdown", current.pointer("pointerdown"));
+  vi.advanceTimersByTime(duration - 1);
+  current.doc.fire("pointerup", current.pointer("pointerup"));
+  current.click(1);
+  expect(current.activate).toHaveBeenCalledOnce();
+  current.click();
+  expect(current.activate).toHaveBeenCalledTimes(2);
+  stop();
+});
+
+it("rejects a release invalidated by modal coverage before accepting a fresh keyboard action", () => {
+  const current = fixture();
+  const stop = current.bind(true);
+  current.root.fire("pointerdown", current.pointer("pointerdown"));
+  const covering = current.gate.open();
+  covering.close();
+  current.doc.fire("pointerup", current.pointer("pointerup"));
+  current.click(1);
+  expect(current.activate).not.toHaveBeenCalled();
+  current.click();
+  expect(current.activate).toHaveBeenCalledOnce();
   stop();
 });

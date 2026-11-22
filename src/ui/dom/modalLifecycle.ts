@@ -164,6 +164,7 @@ export function guardNativeInput(guard: NativeInputGuard, root: HTMLElement): ()
     root.addEventListener("pointerdown", down, true);
     stopHolds = bindGameActionHolds(
       {
+        acceptsClick: () => guard.gate.accepts(),
         cancelPress: () => {
           heldAction = true;
           completed = false;
