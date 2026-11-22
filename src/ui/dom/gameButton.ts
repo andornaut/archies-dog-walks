@@ -13,20 +13,29 @@ import { gameButtonAccepts, registerGameButton } from "./actionBinding.ts";
 
 export type GameButtonOptions = Omit<ButtonOptions, "appearance" | "rule"> & {
   readonly appearance?: Omit<NonNullable<ButtonOptions["appearance"]>, "layout">;
+  // A caller with authored art supplies the complete face and content; Kit focus still applies.
+  readonly skin?: "authored";
 };
 
 // The game supplies its skin and placement; the kit owns construction and native activation.
 export function createGameButton(document: Document, options: GameButtonOptions): ButtonView {
+  const { skin, ...button } = options;
+  const standard = skin !== "authored";
   const view: ButtonView = createButton(document, {
-    ...options,
+    ...button,
     appearance: {
       ...options.appearance,
-      className: ["adw-standard-button", options.appearance?.className].filter(Boolean).join(" "),
-      contentClassName: ["adw-standard-button-content", options.appearance?.contentClassName]
+      className: [standard && "adw-standard-button", options.appearance?.className]
+        .filter(Boolean)
+        .join(" "),
+      contentClassName: [
+        standard && "adw-standard-button-content",
+        options.appearance?.contentClassName,
+      ]
         .filter(Boolean)
         .join(" "),
       face: {
-        className: ["adw-standard-button-face", options.appearance?.face?.className]
+        className: [standard && "adw-standard-button-face", options.appearance?.face?.className]
           .filter(Boolean)
           .join(" "),
       },

@@ -147,6 +147,23 @@ it("rejects a parallel legacy click binding on a standard button", () => {
   current.view.dispose();
 });
 
+it("keeps the Kit action host and caller classes on an authored face", () => {
+  const doc = new FakeDocument();
+  const view = createGameButton(doc as unknown as Document, {
+    appearance: { className: "board", face: { className: "paint" } },
+    content: { kind: "icon", name: gameData.homeText.slotSign },
+    getAction: () => ({ activate: vi.fn() }),
+    skin: "authored",
+  });
+  expect(view.element.classList.contains("board")).toBe(true);
+  expect(view.element.classList.contains("ui-standard-button")).toBe(true);
+  expect(view.element.classList.contains("adw-standard-button")).toBe(false);
+  expect(view.face.classList.contains("paint")).toBe(true);
+  expect(view.face.classList.contains("ui-button-face")).toBe(true);
+  expect(view.face.classList.contains("adw-standard-button-face")).toBe(false);
+  view.dispose();
+});
+
 it("keeps refusal feedback behind the same readiness guard as successful actions", () => {
   const current = fixture(false, true);
   current.click();
