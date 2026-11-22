@@ -4,10 +4,23 @@ import { SLICES } from "../../data/layout.ts";
 import { fillPart } from "../../hud/dom/shopPage.ts";
 import { type DomArtSource, sheetArt, sheetNineSlice } from "../../ui/dom/artElements.ts";
 import { cutDomArt } from "../../ui/dom/domCuts.ts";
-import { backedTextPlaces, createTextLine, placeText, setBox } from "../../ui/dom/pixelLine.ts";
-import { artPixel, type DomScale, frameRect, gridX, gridY } from "../../ui/domScale.ts";
+import {
+  backedTextPlaces,
+  createTextLine,
+  inkEnd,
+  placeText,
+  setBox,
+  shownText,
+} from "../../ui/dom/pixelLine.ts";
+import {
+  artPixel,
+  type DomScale,
+  fontPixel,
+  frameRect,
+  gridRect,
+  gridY,
+} from "../../ui/domScale.ts";
 import { PALETTE } from "../../ui/palette.ts";
-import { plainMarks } from "../../ui/pixelFont.ts";
 import { TEXT_SCALE } from "../../ui/textFit.ts";
 import { HOME_LAYOUT } from "../homeLayout.ts";
 import type { Sections } from "../sections.ts";
@@ -54,8 +67,8 @@ export function createHomeSections(
       }
     }
     const colour = (key: keyof typeof PALETTE) => PALETTE[key];
-    // A band label's ink starts at x (left) or ends at x (right), so the note's ink keeps the
-    // heading's inset from the band's right edge.
+    // Match the measured ink to the drawn band edges. A logical width projects differently
+    // from the text's whole device glyph pixels at a fractional fit.
     const label = (
       text: string,
       x: number,
@@ -63,12 +76,13 @@ export function createHomeSections(
       ink: number,
       align: "left" | "right",
     ) => {
-      const left =
-        align === "right" ? x - inkWidth(title, TEXT_SCALE, plainMarks(text).toUpperCase()) : x;
+      const shown = shownText("title", text);
+      const last = inkEnd(title, shown);
+      const width = inkWidth(title, 1, shown);
       const line = {
         capTop,
         centre: "left",
-        centreX: left,
+        centreX: x,
         colour: ink,
         font: "title",
         scale: TEXT_SCALE,
@@ -76,22 +90,23 @@ export function createHomeSections(
       } as const;
       const span = createTextLine(doc, line);
       element.append(span);
-      return (scale: DomScale) => {
+      return (scale: DomScale, edge: number) => {
         placeText(title, scale, origin, span, line);
         const centred = backedTextPlaces(title, scale, origin, band, [line], "layout")[0]!;
         const shiftY = centred.top - Number.parseFloat(span.style.top);
+        const pixel = fontPixel(scale, TEXT_SCALE);
+        const left = align === "left" ? edge : edge - width * pixel;
+        span.style.left = `${left - (last - width) * pixel}px`;
         span.style.top = `${centred.top}px`;
-        return shiftY;
+        return { left, shiftY };
       };
     };
-    parts.push(
-      label(
-        section.heading.text,
-        section.heading.x,
-        section.heading.capTop,
-        colour(section.heading.colour),
-        "left",
-      ),
+    const placeHeading = label(
+      section.heading.text,
+      section.heading.x,
+      section.heading.capTop,
+      colour(section.heading.colour),
+      "left",
     );
     const placeNote = label(
       section.note.text,
@@ -100,37 +115,40 @@ export function createHomeSections(
       colour(section.note.colour),
       "right",
     );
-    if (section.id === "dogs" && snapshot.bonus !== null) {
-      const { countGap, gap, heartInk, rise, scale: heartScale } = HOME_LAYOUT.bonus;
-      const noteWidth = inkWidth(title, TEXT_SCALE, plainMarks(section.note.text).toUpperCase());
-      const countLeft = section.note.x - noteWidth;
-      const heartLeft = countLeft - countGap - heartInk * heartScale;
-      const heart = source.hasArt("ui-heart") ? sheetArt(doc, source, "ui-heart") : undefined;
-      if (heart !== undefined) {
-        element.append(heart.element);
-        ready.push(heart.ready);
-      }
-      const placeBonus = label(
-        snapshot.bonus,
-        heartLeft - gap,
-        section.note.capTop,
-        PALETTE.ink,
-        "right",
-      );
-      parts.push((scale) => {
-        const shiftY = placeNote(scale);
-        const y = section.note.capTop - rise;
-        heart?.place(
-          scale,
-          origin,
-          { scale: heartScale, tag: "full", x: heartLeft, y },
-          { left: gridX(scale, heartLeft), top: gridY(scale, y) + shiftY },
-        );
-        placeBonus(scale);
-      });
-    } else {
-      parts.push(placeNote);
+    const bonus = section.id === "dogs" ? snapshot.bonus : null;
+    const placeBonus =
+      bonus === null
+        ? undefined
+        : label(bonus, section.note.x, section.note.capTop, PALETTE.ink, "right");
+    const heart =
+      placeBonus !== undefined && source.hasArt("ui-heart")
+        ? sheetArt(doc, source, "ui-heart")
+        : undefined;
+    if (heart !== undefined) {
+      element.append(heart.element);
+      ready.push(heart.ready);
     }
+    parts.push((scale) => {
+      const { left, width } = gridRect(scale, band);
+      const deviceLength = (length: number) => Math.round(length * scale.unit * scale.dpr);
+      const inset = deviceLength(HOME_LAYOUT.bandText.inset);
+      placeHeading(scale, left + inset);
+      const note = placeNote(scale, left + width - inset);
+      if (placeBonus === undefined) {
+        return;
+      }
+      const { countGap, gap, heartInk, rise, scale: heartScale } = HOME_LAYOUT.bonus;
+      const heartLeft =
+        note.left - deviceLength(countGap) - heartInk * heartScale * artPixel(scale);
+      const y = section.note.capTop - rise;
+      heart?.place(
+        scale,
+        origin,
+        { scale: heartScale, tag: "full", x: 0, y },
+        { left: heartLeft, top: gridY(scale, y) + note.shiftY },
+      );
+      placeBonus(scale, heartLeft - deviceLength(gap));
+    });
   }
   for (const section of homeSectionViews(snapshot.sections)) {
     const fill = doc.createElement("div");

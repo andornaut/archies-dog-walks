@@ -18,6 +18,7 @@ import { PALETTE } from "../../ui/palette.ts";
 import { TEXT_SCALE } from "../../ui/textFit.ts";
 import { FEEDBACK } from "../feedback.ts";
 import { HOME_LAYOUT, slotSignText, tileFace } from "../homeLayout.ts";
+import { packBonusLine } from "../homeLines.ts";
 import { homeSections } from "../sections.ts";
 import { homeSectionViews } from "../sectionView.ts";
 import { homeSelectionViews } from "../selectionView.ts";
@@ -166,28 +167,34 @@ it("projects picker art into the available space with selected and locked treatm
   );
 });
 
-it("centres the picker heading and note ink within each drawn band at fractional fits", async () => {
+it("aligns picker band labels by visible ink at fractional fits", async () => {
   const doc = new FakeDocument();
   const title = gameFont("font-title");
   const sections = homeSections(gameData, newPlayerSave.owned, {
     loadout: newPlayerSave.lastLoadout,
     walker: testContext.defaults.walker,
   });
-  const view = createHomeSections(doc as unknown as Document, source, title, {
-    bonus: null,
-    sections,
-  });
+  const bonus = packBonusLine(gameData, newPlayerSave.lastLoadout);
+  expect(bonus).not.toBeNull();
+  const view = createHomeSections(doc as unknown as Document, source, title, { bonus, sections });
   await expect(view.ready).resolves.toContain("sprites/ui-section.png");
-  const frames = [...view.element.children].filter((child) => child.className === "adw-art");
+  const pictures = [...view.element.children]
+    .filter((child) => child.className === "adw-art")
+    .map((child) => child as unknown as FakeElement);
+  const heart = pictures.find(({ style }) => style.backgroundImage?.includes("ui-heart"))!;
+  const frames = pictures.filter((picture) => picture !== heart);
   const labels = [...view.element.children]
     .filter((child) => child.className.includes("adw-text"))
     .map((child) => child as unknown as FakeElement);
   const specifications = homeSectionViews(sections);
   for (const scale of [domScale(1, { ...viewport, width: 575 }), domScale(2.625, viewport)]) {
     view.place(scale);
+    let start = 0;
     specifications.forEach((section, index) => {
-      const frame = frames[index] as unknown as FakeElement;
+      const frame = frames[index]!;
       const top = Number.parseFloat(frame.style.top!);
+      const left = Number.parseFloat(frame.style.left!);
+      const right = left + Number.parseFloat(frame.style.width!);
       const cap = frame.children[0]!;
       const boundary = top + Number.parseFloat(cap.style.height!);
       expect(boundary).toBe(gridY(scale, section.fill.rect.y));
@@ -195,17 +202,35 @@ it("centres the picker heading and note ink within each drawn band at fractional
         SLICES["ui-section"].top * artPixel(scale),
       );
       const pixel = fontPixel(scale, TEXT_SCALE);
-      for (const label of labels.slice(index * 2, index * 2 + 2)) {
+      const count = section.id === "dogs" ? 3 : 2;
+      const bandLabels = labels.slice(start, start + count);
+      const [heading, note, bonusLabel] = bandLabels;
+      start += count;
+      const visible = (label: FakeElement) => {
+        const columns = fontInk("font-title", { scale: pixel }, label.textContent);
+        const pen = Number.parseFloat(label.style.left!);
+        return { left: pen + columns.left, right: pen + columns.right };
+      };
+      const length = (value: number) => Math.round(value * scale.unit * scale.dpr);
+      const inset = length(HOME_LAYOUT.bandText.inset);
+      expect(visible(heading!).left - left).toBe(inset);
+      expect(right - visible(note!).right).toBe(inset);
+      for (const label of bandLabels) {
         const rows = fontInkRows("font-title", { scale: pixel }, label.textContent);
         const capTop = Number.parseFloat(label.style.top!) + fontMetrics(title).capTop * pixel;
         expect(
           Math.abs(capTop + (rows.top + rows.bottom) / 2 - (top + boundary) / 2),
         ).toBeLessThanOrEqual(0.5);
       }
+      if (section.id === "dogs") {
+        const heartLeft = Number.parseFloat(heart.style.left!);
+        const { countGap, gap, heartInk, scale: heartScale } = HOME_LAYOUT.bonus;
+        const heartRight = heartLeft + heartInk * heartScale * artPixel(scale);
+        expect(visible(note!).left - heartRight).toBe(length(countGap));
+        expect(heartLeft - visible(bonusLabel!).right).toBe(length(gap));
+      }
     });
-    const slices = frames
-      .flatMap((frame) => [...frame.children])
-      .map((slice) => slice as HTMLElement);
+    const slices = frames.flatMap((frame) => [...frame.children]);
     const original = slices.map((slice) => slice.style.backgroundImage);
     setRampDimmed(view.element, true);
     expect(view.element.style.filter).toBe("brightness(0.28)");
