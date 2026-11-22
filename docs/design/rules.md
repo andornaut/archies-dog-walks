@@ -20,3 +20,4 @@ Reference: [design](../../gameplay/design.md).
 | adw-0148 | Audit and correct the documentation                                         | [adw-0148.md](../work/adw-0148.md) |
 | adw-0154 | Document the shipped native contract in the rules and guides                | [adw-0154.md](../work/adw-0154.md) |
 | adw-0158 | Treat the Pet shop and Logbook as pages in the rules                        | [adw-0158.md](../work/adw-0158.md) |
+| adw-0199 | Label the Pet Shop slots section Slots                                      | [adw-0199.md](../work/adw-0199.md) |
