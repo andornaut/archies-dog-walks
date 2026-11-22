@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { gameData } from "../../data/index.ts";
 import type { AchievementId } from "../../data/types.ts";
-import { type BadgeView, earnedBadges } from "../../home/badgesView.ts";
+import { badgeStripHits, type BadgeView, earnedBadges } from "../../home/badgesView.ts";
 import { END_LAYOUT } from "../../home/endLayout.ts";
 import { endScreenView, QUIP_TAIL_KEY } from "../../home/endScreenView.ts";
 import { ownerNameWrap } from "../../presentation/ownerName.ts";
@@ -356,7 +356,7 @@ it("fills End owner wells at a fractional viewport and keeps live frames in the 
   );
 });
 
-it.each(["tap", "hold"] as const)(
+it.each(["tap", "hold", "outside"] as const)(
   "uses one Kit Back action on %s without the legacy release route",
   async (mode) => {
     vi.useFakeTimers();
@@ -387,34 +387,33 @@ it.each(["tap", "hold"] as const)(
     button.fire("pointerdown", pointer("pointerdown"));
     current.shown.setButton(false, -1);
     expect(button.style.transform).toBe("");
-    vi.advanceTimersByTime(mode === "tap" ? 499 : 500);
-    expect(current.home).toHaveBeenCalledTimes(mode === "tap" ? 0 : 1);
-    current.doc.fire("pointerup", pointer("pointerup"));
+    vi.advanceTimersByTime(mode === "hold" ? 500 : 499);
+    expect(current.home).toHaveBeenCalledTimes(mode === "hold" ? 1 : 0);
+    current.doc.fire("pointerup", {
+      ...pointer("pointerup"),
+      ...(mode === "outside" ? { clientX: 0, clientY: 0 } : {}),
+    });
     const click = pointer("click");
     root.fire("click", click);
     if (click.stopImmediatePropagation.mock.calls.length === 0) {
       button.fire("click", click);
     }
-    expect(current.home).toHaveBeenCalledOnce();
+    expect(current.home).toHaveBeenCalledTimes(mode === "outside" ? 0 : 1);
     expect(gesture.down).not.toHaveBeenCalled();
     expect(gesture.up).not.toHaveBeenCalled();
     current.shown.destroy();
   },
 );
 
-it.each(["tap", "hold"] as const)(
+it.each(["tap", "hold", "outside"] as const)(
   "uses one Kit authored badge action on %s without the legacy release route",
   async (mode) => {
     vi.useFakeTimers();
     const gesture = { down: vi.fn(), up: vi.fn(() => true) };
     const earned = [gameData.achievements[0]!.id];
-    const current = endScreen(
-      393,
-      fonts.title,
-      endView(earned),
-      gesture,
-      earnedBadges(gameData, earned),
-    );
+    const badgeView = endView(earned);
+    const rect = badgeStripHits(badgeView.strip!.panel, badgeView.strip!.rows, earned.length)[0]!;
+    const current = endScreen(393, fonts.title, badgeView, gesture, earnedBadges(gameData, earned));
     await vi.waitFor(() => expect(current.frames).toHaveLength(1));
     current.frames.shift()?.();
     const root = current.shown.element as unknown as FakeElement;
@@ -432,8 +431,8 @@ it.each(["tap", "hold"] as const)(
     const pointer = (type: string) => ({
       button: 0,
       buttons: type === "pointerdown" ? 1 : 0,
-      clientX: 180,
-      clientY: 520,
+      clientX: rect.x + rect.width / 2,
+      clientY: rect.y + rect.height / 2,
       detail: 1,
       isPrimary: true,
       pointerId: 7,
@@ -446,15 +445,21 @@ it.each(["tap", "hold"] as const)(
     });
     root.fire("pointerdown", pointer("pointerdown"));
     button.fire("pointerdown", pointer("pointerdown"));
-    vi.advanceTimersByTime(mode === "tap" ? 499 : 500);
-    expect(current.openBadge).toHaveBeenCalledTimes(mode === "tap" ? 0 : 1);
-    current.doc.fire("pointerup", pointer("pointerup"));
+    vi.advanceTimersByTime(mode === "hold" ? 500 : 499);
+    expect(current.openBadge).toHaveBeenCalledTimes(mode === "hold" ? 1 : 0);
+    current.doc.fire("pointerup", {
+      ...pointer("pointerup"),
+      ...(mode === "outside" ? { clientX: 0, clientY: 0 } : {}),
+    });
     const click = pointer("click");
     root.fire("click", click);
     if (click.stopImmediatePropagation.mock.calls.length === 0) {
       button.fire("click", click);
     }
-    expect(current.openBadge).toHaveBeenCalledExactlyOnceWith(0);
+    expect(current.openBadge).toHaveBeenCalledTimes(mode === "outside" ? 0 : 1);
+    if (mode !== "outside") {
+      expect(current.openBadge).toHaveBeenCalledWith(0);
+    }
     expect(gesture.down).not.toHaveBeenCalled();
     expect(gesture.up).not.toHaveBeenCalled();
     current.shown.destroy();

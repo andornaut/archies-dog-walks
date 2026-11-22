@@ -1,4 +1,4 @@
-import type { Point, Rect } from "@andornaut/game-kit/runtime/rect";
+import { containsPoint, type Point, type Rect } from "@andornaut/game-kit/runtime/rect";
 import type { BitmapFont } from "@andornaut/game-kit/runtime/text/bitmapFont";
 
 import { badgeStripHits, type BadgeView } from "../../home/badgesView.ts";
@@ -268,7 +268,7 @@ export function showEndScreen(layer: UiLayer, input: DomEndScreenInput): DomEndS
         });
   const badgeControls = (
     strip === undefined ? [] : badgeStripHits(strip.panel, strip.rows, input.badges.length)
-  ).map((rect, index): DomPart & { dispose(): void } => {
+  ).map((rect, index): DomPart & { readonly hit: Rect; dispose(): void } => {
     const control = createGameButton(doc, {
       appearance: { className: "adw-end-badge-control" },
       content: {
@@ -299,6 +299,7 @@ export function showEndScreen(layer: UiLayer, input: DomEndScreenInput): DomEndS
         control.dispose();
       },
       element,
+      hit: rect,
       place: (scale) => {
         placeBox(scale, ORIGIN, element, rect);
         placeBox(scale, rect, face, rect);
@@ -412,7 +413,7 @@ export function showEndScreen(layer: UiLayer, input: DomEndScreenInput): DomEndS
   };
   const screen = { height: 0, width: 0, x: 0, y: 0 };
   let scrolling = false;
-  let nativeButtonPress = false;
+  let nativeButtonPress: Rect | undefined;
   const panel = showQuestionPanel(layer, {
     close: null,
     closeLabel: input.closeLabel,
@@ -420,12 +421,13 @@ export function showEndScreen(layer: UiLayer, input: DomEndScreenInput): DomEndS
     gesture: {
       cancel: () => {
         scrolling = false;
+        nativeButtonPress = undefined;
         input.gesture.cancel?.();
       },
       down: (event) => {
-        nativeButtonPress = [button, ...badgeControls].some(({ element }) =>
-          element.contains(event.target as Node),
-        );
+        nativeButtonPress = [{ ...button, hit: view.button.hit }, ...badgeControls].find(
+          ({ element }) => element.contains(event.target as Node),
+        )?.hit;
         if (nativeButtonPress) {
           return;
         }
@@ -443,8 +445,10 @@ export function showEndScreen(layer: UiLayer, input: DomEndScreenInput): DomEndS
       },
       up: (event, cancelled) => {
         if (nativeButtonPress) {
-          nativeButtonPress = false;
-          return false;
+          const hit = nativeButtonPress;
+          nativeButtonPress = undefined;
+          const at = input.toGame({ x: event.clientX, y: event.clientY });
+          return cancelled || !containsPoint(hit, at.x, at.y);
         }
         const nativeScroll = scrolling;
         scrolling = false;
