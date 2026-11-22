@@ -20,4 +20,4 @@ Gameplay owns the rules, screens, controls and player voice in [design](../../ga
 | adw-0158 | Treat the Pet shop and Logbook as pages in the rules                        | [adw-0158.md](../work/adw-0158.md) |
 | adw-0199 | Label the Pet Shop slots section Slots                                      | [adw-0199.md](../work/adw-0199.md) |
 | adw-0202 | Review and consolidate the Archie design guides                             | [adw-0202.md](../work/adw-0202.md) |
-| adw-0204 | Organize Archie gameplay rules by topic                                    | [adw-0204.md](../work/adw-0204.md) |
+| adw-0204 | Organize Archie gameplay rules by topic                                     | [adw-0204.md](../work/adw-0204.md) |
