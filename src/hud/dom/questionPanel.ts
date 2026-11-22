@@ -29,7 +29,9 @@ import {
   gridTransform,
   gridX,
   gridY,
+  wholeArtPixels,
 } from "../../ui/domScale.ts";
+import { MODAL } from "../../ui/modal/layout.ts";
 import { type PanelText, type QuestionPanelView } from "../../ui/modal/types.ts";
 import { bindPanelFeedback, createPanelButton } from "./panelButton.ts";
 
@@ -222,20 +224,23 @@ export function showQuestionPanel(layer: UiLayer, input: DomQuestionPanelInput):
     placed.push((scale) => placeText(input.fonts[line.font], scale, origin, element, line));
     return element;
   };
+  const paintedPanel = (scale: DomScale) => {
+    const box = frameRect(scale, view.panel);
+    const rim = view.frame === "panel" ? artPixel(scale) : 0;
+    return {
+      height: box.height + 2 * rim,
+      left: box.left - rim,
+      top: box.top - rim,
+      width: box.width + 2 * rim,
+    };
+  };
   // The screen's root in device pixels on the device grid, and the rim one art pixel round the
   // panel.
   placed.push((scale) => {
     dialog.style.width = `${deviceX(scale, SCREEN_CONFIG.width)}px`;
     dialog.style.height = `${deviceY(scale, SCREEN_CONFIG.height)}px`;
     dialog.style.transform = gridTransform(scale);
-    const outer = frameRect(scale, view.panel);
-    const pixel = artPixel(scale);
-    setBox(rim, {
-      height: outer.height + 2 * pixel,
-      left: outer.left - pixel,
-      top: outer.top - pixel,
-      width: outer.width + 2 * pixel,
-    });
+    setBox(rim, paintedPanel(scale));
   });
   frame(panel, ORIGIN, view.panel);
   for (const part of input.parts ?? []) {
@@ -352,15 +357,21 @@ export function showQuestionPanel(layer: UiLayer, input: DomQuestionPanelInput):
   // The face and its glyph in whole art pixels, from the face's corner on the art-pixel grid.
   placed.push((scale) => {
     const pixel = artPixel(scale);
-    const left = gridX(scale, closeArt.x) - gridX(scale, view.close.hit.x);
-    const top = gridY(scale, closeArt.y) - gridY(scale, view.close.hit.y);
+    const panelBounds = paintedPanel(scale);
+    const inset = wholeArtPixels(scale, MODAL.closeInset * scale.unit * scale.dpr);
     const side = closeArt.width * pixel;
+    const modal = view.close.titleExclusion === "hit";
+    const left =
+      (modal ? panelBounds.left + panelBounds.width - inset - side : gridX(scale, closeArt.x)) -
+      gridX(scale, view.close.hit.x);
+    const top =
+      (modal ? panelBounds.top + inset : gridY(scale, closeArt.y)) - gridY(scale, view.close.hit.y);
     setBox(face, { height: side, left, top, width: side });
     const { glyph: at } = CLOSE_ART;
     setBox(glyph, {
       height: at.size * pixel,
-      left: (closeView === undefined ? left : 0) + at.x * pixel,
-      top: (closeView === undefined ? top : 0) + at.y * pixel,
+      left: closeView === undefined ? left + at.x * pixel : (side - at.size * pixel) / 2,
+      top: closeView === undefined ? top + at.y * pixel : (side - at.size * pixel) / 2,
       width: at.size * pixel,
     });
   });

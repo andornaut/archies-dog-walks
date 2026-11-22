@@ -265,3 +265,25 @@ it.each([
     shown.destroy();
   },
 );
+
+it.each([
+  { dpr: 1, inset: 6, width: 360 },
+  { dpr: 2.625, inset: 24, width: 575 },
+])(
+  "keeps Settings X equally inset from its painted card at $width DPR $dpr",
+  ({ dpr, inset, width }) => {
+    const current = fixture(false, width, dpr);
+    const dialog = layerViews(current.element)[0]!;
+    const card = dialog.all().find((part) => part.classList.contains("adw-card"))!;
+    const close = dialog
+      .all()
+      .find((part) => part.tagName === "button" && part.classList.contains("adw-close"))!;
+    const face = close.all().find((part) => part.classList.contains("adw-close-face"))!;
+    const n = (part: typeof card, key: string) => Number.parseFloat(part.style[key]!);
+    expect(n(close, "top") + n(face, "top") - n(card, "top")).toBe(inset);
+    expect(
+      n(card, "left") + n(card, "width") - n(close, "left") - n(face, "left") - n(face, "width"),
+    ).toBe(inset);
+    current.shown.destroy();
+  },
+);

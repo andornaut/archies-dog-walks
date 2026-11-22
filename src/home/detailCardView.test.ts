@@ -214,3 +214,37 @@ it.each([
     );
   }
 });
+
+it.each(["gear", "dogSlot"] as const)(
+  "separates a %s price group from its item details",
+  (kind) => {
+    const slot = slotRows(gameData, newPlayerSave.owned)[1]!;
+    const view = detailCardView(gameData, measure, SCREEN_LAYOUT.screen, {
+      card: {
+        lines: [slot.line],
+        locked: true,
+        status: card.status,
+        subtitle: "",
+        title: slot.name,
+      },
+      kind,
+      picture,
+      statusLines: [
+        { kind: "price", text: card.status },
+        { kind: "status", text: gameData.homeText.detail.saveUp },
+      ],
+    });
+    expect(view.separators).toHaveLength(1);
+    const divider = view.separators![0]!;
+    const well = view.framed[0]!.rect;
+    const details = view.texts.filter((text) => text.lines.join(" ") === slot.line);
+    const price = view.texts.find((text) => text.font === "title")!;
+    expect(divider.y - Math.max(well.y + well.height, ...details.map(bottom))).toBe(
+      MODAL.gap + MODAL.rowGap,
+    );
+    expect(price.capTop - divider.y - divider.height).toBe(MODAL.gap + MODAL.rowGap);
+    expect(view.card.panel.height).toBeLessThanOrEqual(
+      SCREEN_LAYOUT.screen.height - 2 * MODAL.margin,
+    );
+  },
+);

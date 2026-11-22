@@ -267,12 +267,10 @@ export function detailCardView(
       separators.push({ height: 1, width: rooms.full, x: CARD.pad, y: bottom + dividerGap });
       owner = { room, x, y: bottom + 2 * dividerGap + 1 };
       bottom = owner.y + detailOwnerHeight(measure.body, roleLines, nameLines);
-      if (statusLines.some((row) => row.kind === "price")) {
-        separators.push({ height: 1, width: rooms.full, x: CARD.pad, y: bottom + dividerGap });
-        bottom += 2 * dividerGap + 1;
-      } else {
-        bottom += MODAL.pad;
-      }
+    }
+    if (statusLines.some((row) => row.kind === "price")) {
+      separators.push({ height: 1, width: rooms.full, x: CARD.pad, y: bottom + dividerGap });
+      bottom += 2 * dividerGap + 1;
     } else {
       bottom += MODAL.pad;
     }

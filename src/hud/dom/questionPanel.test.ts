@@ -853,3 +853,48 @@ it("keeps action identity while DOM order follows the button and footer position
   expect(buttons[2]!.classList.contains("adw-refusing-still")).toBe(false);
   shown.destroy();
 });
+
+it.each([
+  { dpr: 1, inset: 6, width: 360 },
+  { dpr: 2.625, inset: 24, width: 575 },
+])("projects equal painted X gaps at width $width DPR $dpr", ({ dpr, inset, width }) => {
+  for (const frame of ["card", "panel"] as const) {
+    const doc = new FakeDocument();
+    const scale = domScale(dpr, { height: 894, width, x: 0.25, y: 0.375 });
+    const { element, layer } = fakeLayer(doc, scale);
+    const panel = {
+      height: 333,
+      width: frame === "card" ? 328 : 264,
+      x: frame === "card" ? 16 : 48,
+      y: 73,
+    };
+    const view = { ...modalCardView(MEASURE, panel, gameData.menuText.settings.title, []), frame };
+    const shown = showQuestionPanel(layer, {
+      close: vi.fn(),
+      closeLabel: gameData.menuText.common.close,
+      fonts: { body: gameFont("font-body"), title: gameFont("font-title") },
+      numberKeys: false,
+      presses: [],
+      toGame: (point) => point,
+      view,
+    });
+    const dialog = layerViews(element)[0]!;
+    const painted = dialog
+      .all()
+      .find((node) => node.classList.contains(frame === "card" ? "adw-card" : "adw-rim"))!;
+    const close = dialog
+      .all()
+      .find((node) => node.tagName === "button" && node.classList.contains("adw-close"))!;
+    const face = close.all().find((node) => node.classList.contains("adw-close-face"))!;
+    const glyph = close.all().find((node) => node.classList.contains("adw-close-glyph"))!;
+    const n = (node: typeof painted, key: string) => Number.parseFloat(node.style[key]!);
+    const faceX = n(close, "left") + n(face, "left");
+    const faceY = n(close, "top") + n(face, "top");
+    expect(faceY - n(painted, "top")).toBe(inset);
+    expect(n(painted, "left") + n(painted, "width") - faceX - n(face, "width")).toBe(inset);
+    expect(n(glyph, "left") + n(glyph, "width") / 2).toBe(n(face, "width") / 2);
+    expect(n(glyph, "top") + n(glyph, "height") / 2).toBe(n(face, "height") / 2);
+    expect(view.close.hit).toMatchObject({ height: 48, width: 48 });
+    shown.destroy();
+  }
+});
