@@ -1,6 +1,6 @@
 # Cheats
 
-The shared [Saves and cheats policy](https://github.com/andornaut/game-coordinator/blob/main/docs/game-policies.md#saves-and-cheats) applies: cheats exist only in browser tabs, never in an installed app, detected at runtime when the modal opens and again when an action runs. Settings is the only entry point. Open Cheats sits beside Back when Settings was opened from Menu or Pause, and beside Close otherwise. The Dev panel below the game is gone.
+Browser tabs and installed apps offer one **Cheats** entry in the applicable Menu or Pause. The shared [Saves and cheats policy](https://github.com/andornaut/game-coordinator/blob/main/docs/game-policies.md#saves-and-cheats) governs cheat sessions and save guards.
 
 ## Cheat session
 
@@ -13,16 +13,31 @@ Cheats never touch the save. The first cheat used starts a cheat session; openin
 
 ## Modal
 
-- **Size:** the Large width (328 px logical), clamped to the safe viewport, as tall as the viewport less its 16 px margins. The body scrolls and never pages; text stays full size.
-- **Frame:** a fixed "Cheats" title with the X close control at the top, and a fixed primary Close at the bottom.
-- **Order:** the cheats (This walk, Next walk, then Start screen), a divider, then the non-cheat actions, with Reset save last.
-- **Controls:** toggles are On/Off rows like Settings; pickers are full-width rows; repeatable Add buttons are 128×48 px compact buttons, two to a row. Rows that do not apply where the modal opened (This walk outside a walk; Next walk and Start screen during one) are disabled, not hidden, so the list never shifts.
+- **Size** follows measured content within the safe viewport. The body scrolls when needed and text stays full size. See the [Layout guide](../art/layout.md#modals) for interface measurements.
+- **Frame** has a Cheats title, a top-right X and a centred primary Back at the bottom. Back and X return one layer to the invoking Menu or Pause and restore focus to Cheats.
+- **Order** starts with Next walk, then Start screen with Unlocks and Money in two columns. Reset save is last.
+- **Controls** use On/Off rows for toggles and repeatable buttons for Add actions. This walk applies during a walk. Next-walk setup and Start screen grants apply from Start.
 
 ## Cheats
 
+### Next walk
+
+- **FPS counter** is first. It toggles a device setting immediately, independent of the save and cheat session. It is Off by default. The counter sits at the device viewport's bottom-right, inset from the safe area, above all content including letterbox bars.
+- **Invincible owners:** bumps and cards cost no hearts on the next walk.
+- **Start at** shows one button per neighbourhood in game order. The chosen button sets the starting neighbourhood and route for the next walk.
+
+Pocket item, Seed, Copy run link and Movement speed have no visible controls in the panel. Existing browser-tab run links and test setup still support run overrides.
+
+### Start screen
+
+Enabled only on the Start screen.
+
+- **Unlocks:** Unlock Walkers, Unlock Dogs, Unlock Dog Slots and Unlock Gear grant the corresponding group. Unlock All grants all four.
+- **Money:** Add $100, Add $1,000 and Add $10,000 each add their stated amount to the cheat session's bank on every press.
+
 ### This walk
 
-Enabled only during a walk (through Pause, then Settings); none of them starts one.
+Available only during a walk, through Pause. Each acts on the walk already under way.
 
 - **Add $100:** adds $100 to this walk's earnings on every press.
 - **Refill hearts:** sets every owner to their maximum hearts.
@@ -30,31 +45,9 @@ Enabled only during a walk (through Pause, then Settings); none of them starts o
 - **Apply debuff:** one row per debuff, applying it to the pack as contact would.
 - **Finish this neighbourhood:** ends the current neighbourhood as if walked, at its fork or the walk's end.
 
-### Next walk
-
-Set on the Start screen for the walk the next Start walk begins.
-
-- **Start at:** the neighbourhood and route to start from.
-- **Seed:** a seed or Random. Copy run link copies a link that reproduces the next walk, first picking its seed when Random is set.
-- **Pocket item:** any Pocket item for the walk, owned or not.
-- **Invincible owners:** bumps and cards cost no hearts.
-- **Movement speed:** slow, normal or fast.
-
-### Start screen
-
-Enabled only on the Start screen.
-
-- **Add $500, Add $5,000 and Add $50,000:** add that amount to the bank on every press.
-- **Unlock all walkers.**
-- **Own all dogs.**
-- **Own all dog slots.**
-- **Own all gear.**
-- **Unlock all:** all four of the above at once.
-
 ## Other actions
 
 These are not cheats and start no session.
 
-- **FPS counter:** On or Off, Off by default, a device setting kept apart from the save. It shows frames per second in the bottom-right corner of the device viewport, inset from the safe area and drawn above everything, the letterbox bars included.
 - **Show tips again:** clears the shown hints and whether Help has been seen, in the save.
 - **Reset save:** last, after a confirmation, resets the save entirely, earned badges included. Device settings stay.
