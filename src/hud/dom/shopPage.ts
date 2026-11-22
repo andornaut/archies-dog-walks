@@ -8,10 +8,12 @@ import {
   SELECT_FRAME,
   type ShopPageView,
 } from "../../home/shopPageView.ts";
-import { createTextLine, placeText, setBox } from "../../ui/dom/pixelLine.ts";
+import { createGameButton } from "../../ui/dom/gameButton.ts";
+import { createTextLine, placeBox, placeFrame, placeText, setBox } from "../../ui/dom/pixelLine.ts";
 import { artPixel, type DomScale, frameRect, gridRect } from "../../ui/domScale.ts";
 import { PALETTE } from "../../ui/palette.ts";
 import { SELECT_OUTSET } from "../../ui/selection.ts";
+import { bindPanelFeedback, type PanelPress } from "./panelButton.ts";
 import type { DomPart } from "./questionPanel.ts";
 
 // The page the Pet shop and the Logbook share in HTML over the canvas: the cream fill and the
@@ -19,6 +21,40 @@ import type { DomPart } from "./questionPanel.ts";
 // art pixels from their frame's snapped corner.
 
 type Box = Parameters<typeof setBox>[1];
+
+// Native tabs share the button face and dispatcher while retaining their authored target.
+export function createPageTab(
+  doc: Document,
+  input: { readonly font: BitmapFont; readonly press: PanelPress },
+  hit: Rect,
+  tab: PageTab,
+): DomPart & { dispose(): void } {
+  const content = doc.createElement("span");
+  content.className = "adw-lines";
+  const label = createTextLine(doc, tab.label);
+  label.setAttribute("aria-hidden", "true");
+  content.append(label);
+  const view = createGameButton(doc, {
+    appearance: { className: "adw-button", role: "secondary" },
+    content: { icon: content, kind: "icon", name: tab.label.text },
+    getAction: () => (input.press.accepts() ? { activate: input.press.press } : null),
+    getState: () => ({ selected: tab.framed }),
+  });
+  const stopFeedback = bindPanelFeedback(view, input.press);
+  return {
+    controls: [view.element],
+    dispose() {
+      stopFeedback();
+      view.dispose();
+    },
+    element: view.element,
+    place(scale) {
+      placeBox(scale, { x: 0, y: 0 }, view.element, hit);
+      placeFrame(scale, hit, view.face, tab.face);
+      placeText(input.font, scale, tab.face, label, tab.label);
+    },
+  };
+}
 
 const hex = (colour: number) => `#${colour.toString(16).padStart(6, "0")}`;
 
