@@ -104,7 +104,7 @@ export const HOME_TEXT = {
     owned: "Owned",
     ownedCount: "{owned} of {max} owned",
     slotLine: "Holds 1 dog",
-    slots: "Dog slots",
+    slots: "Slots",
     tabs: { dogs: "Dogs", gear: "Gear" },
     title: "Pet shop",
   },
