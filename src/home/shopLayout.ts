@@ -1,13 +1,18 @@
 import type { Rect } from "@andornaut/game-kit/runtime/rect";
-import { type FontMetrics, inkRowsFromCapTop } from "@andornaut/game-kit/runtime/text/bitmapFont";
+import {
+  type BitmapFont,
+  type FontMetrics,
+  fontMetrics,
+  inkRowsFromCapTop,
+} from "@andornaut/game-kit/runtime/text/bitmapFont";
 
 import { DOG_SLOTS } from "../data/dogSlots.ts";
 import { SHOP_PAGE } from "../data/layout.ts";
 import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";
-import { helpCapDy } from "../ui/labelHelpGap.ts";
 import { MODAL } from "../ui/modal/layout.ts";
 import { cardTitleRow } from "../ui/modal/titleRow.ts";
 import { PAGE_LAYOUT } from "../ui/pageLayout.ts";
+import { plainMarks } from "../ui/pixelFont.ts";
 import { type ScrollbarRects, scrollbarRects } from "../ui/scrollbar.ts";
 import { SELECT_OUTSET } from "../ui/selection.ts";
 import { TEXT_SCALE, TEXT_STYLE, TITLE_CAP_ROWS } from "../ui/textFit.ts";
@@ -246,23 +251,53 @@ export function shopNextHeading(spec: { y: number }, rects: readonly Rect[]): nu
   return shopRowsBottom(spec, rects) + ROWS_TO_HEADING;
 }
 
-export function shopRowHeight(
-  body: FontMetrics,
-  minimum: number,
-  descriptionLines: number,
-): number {
-  return minimum + Math.max(0, descriptionLines - 1) * body.lineHeight * TEXT_SCALE;
+const SHOP_ROW_TEXT_GAP = 4;
+const SHOP_ROW_TEXT_PAD = 4;
+
+function shopInkRows(font: BitmapFont, text: string): { bottom: number; top: number } {
+  const glyphs = [...plainMarks(text)].flatMap((char) => {
+    const glyph = font.glyphs.get(char);
+    return glyph !== undefined && glyph.width > 0 && glyph.height > 0 ? [glyph] : [];
+  });
+  const { capTop } = fontMetrics(font);
+  return glyphs.length === 0
+    ? { bottom: 0, top: 0 }
+    : {
+        bottom:
+          (Math.max(...glyphs.map(({ height, yOffset }) => yOffset + height)) - capTop) *
+          TEXT_SCALE,
+        top: (Math.min(...glyphs.map(({ yOffset }) => yOffset)) - capTop) * TEXT_SCALE,
+      };
 }
 
-// Name and wrapped description ink form one vertically centred block within the row.
-export function shopRowTextTops(
-  body: FontMetrics,
-  descriptionLines = 1,
-): { line: number; name: number } {
-  const ink = inkRowsFromCapTop(body) * TEXT_SCALE;
-  const extra = Math.max(0, descriptionLines - 1) * body.lineHeight * TEXT_SCALE;
-  const name = -Math.floor((helpCapDy(body, TEXT_SCALE) + ink + extra) / 2);
-  return { line: name + helpCapDy(body, TEXT_SCALE), name };
+// Centre the name and wrapped description's visible ink, growing only for the measured block.
+export function shopRowTextLayout(
+  font: BitmapFont,
+  minimum: number,
+  { descriptions, name }: { readonly descriptions: readonly string[]; readonly name: string },
+): { descriptions: readonly number[]; height: number; name: number } {
+  const label = shopInkRows(font, name);
+  const pitch = font.lineHeight * TEXT_SCALE;
+  const lines = descriptions.map((text, index) => {
+    const ink = shopInkRows(font, text);
+    return { bottom: ink.bottom + index * pitch, top: ink.top + index * pitch };
+  });
+  const descriptionY =
+    lines.length === 0
+      ? 0
+      : label.bottom + SHOP_ROW_TEXT_GAP - Math.min(...lines.map(({ top }) => top));
+  const bottom =
+    lines.length === 0
+      ? label.bottom
+      : descriptionY + Math.max(...lines.map(({ bottom }) => bottom));
+  const block = bottom - label.top;
+  const height = Math.max(minimum, block + 2 * SHOP_ROW_TEXT_PAD);
+  const nameY = Math.floor((height - block) / 2) - label.top;
+  return {
+    descriptions: descriptions.map((_, i) => nameY + descriptionY + i * pitch),
+    height,
+    name: nameY,
+  };
 }
 
 // The message grows from the authored one-line plate; callers reserve its extra rows.

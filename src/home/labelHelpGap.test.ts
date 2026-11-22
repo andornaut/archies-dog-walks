@@ -37,7 +37,6 @@ import { MENU_TEXT_FIELDS } from "./menuText.ts";
 import { confirmLeftCapTop, purchaseConfirmLayout } from "./purchaseConfirmLayout.ts";
 import { SETTINGS_ROW, settingsLayout } from "./settings.ts";
 import { dogRows, gearRows, slotRows } from "./shop.ts";
-import { shopRowTextTops } from "./shopLayout.ts";
 import { detailTextTops, STATS_LAYOUT, wallLineTops } from "./statsLayout.ts";
 
 type Font = "font-body" | "font-title";
@@ -162,23 +161,11 @@ const detailCardPairs: Pair[] = [
   ),
 ];
 
-// A shop row's name over its line.
 const SHOP_ROWS = [
   ...slotRows(gameData, NONE),
   ...dogRows(gameData, NONE),
   ...gearRows(gameData, NONE),
 ];
-const shopPairs: Pair[] = SHOP_ROWS.filter(({ line }) => line !== "").map(({ name }) => {
-  const tops = shopRowTextTops(BODY);
-  return {
-    font: "font-body",
-    held: "exactly",
-    help: tops.line,
-    label: name,
-    labelTop: tops.name,
-    where: "shop row",
-  };
-});
 
 // The purchase confirm's price over the bank it would leave.
 const confirmPairs: Pair[] = SHOP_ROWS.flatMap(({ price }) => {
@@ -283,7 +270,6 @@ const PAIRS: readonly Pair[] = [
   ...detailCardPairs,
   ...endPairs,
   ...settingsPairs,
-  ...shopPairs,
   ...wallPairs,
   ...walkerPairs,
 ];

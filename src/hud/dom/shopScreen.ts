@@ -42,6 +42,7 @@ import { fillPart, shopPageParts } from "./shopPage.ts";
 export interface ShopScreenArt {
   readonly key: string;
   readonly imageKey?: string;
+  readonly projection?: "layout";
   readonly rect: Rect;
   readonly sheet: boolean;
   readonly tag?: string;
@@ -312,20 +313,24 @@ export function showShopScreen(
       });
       parts.push(...row.texts.map((line) => textPart(line, row.rect)));
       for (const art of row.art) {
+        const place = {
+          ...art.rect,
+          ...(art.projection === undefined ? {} : { projection: art.projection }),
+        };
         if (art.sheet) {
           const part = sheetArt(doc, input.source, art.key, art.imageKey);
           parts.push({
             element: part.element,
             place: (at) =>
               part.place(at, row.rect, {
-                ...art.rect,
+                ...place,
                 ...(art.tag === undefined ? {} : { tag: art.tag }),
               }),
           });
           ready.push(part.ready);
         } else {
           const part = imageArt(doc, input.source, art.key, art.imageKey ?? art.key);
-          parts.push({ element: part.element, place: (at) => part.place(at, row.rect, art.rect) });
+          parts.push({ element: part.element, place: (at) => part.place(at, row.rect, place) });
           ready.push(part.ready);
         }
       }

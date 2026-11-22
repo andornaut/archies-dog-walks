@@ -1,16 +1,17 @@
 import { keysOf } from "@andornaut/game-kit/runtime/records";
+import { insetRect } from "@andornaut/game-kit/runtime/rect";
 import { advanceWidth, fontMetrics } from "@andornaut/game-kit/runtime/text/bitmapFont";
 import { expect, it, vi } from "vitest";
 
 import { gameData } from "../data/index.ts";
 import { SCREEN_LAYOUT } from "../data/screen.ts";
 import { messageLine } from "../home/homeLines.ts";
-import { gearRows } from "../home/shop.ts";
+import { gearRows, type ShopTab } from "../home/shop.ts";
 import { SHOP_LAYOUT, SHOP_MESSAGE_FIT, shopRowTextRoom } from "../home/shopLayout.ts";
 import type { ShopScreenView } from "../hud/dom/shopScreen.ts";
 import { type ListScroll, listScroll } from "../input/listScroll.ts";
 import { FakeDocument, fakeLayer } from "../testing/fakeDom.ts";
-import { gameFont } from "../testing/fontInk.ts";
+import { fontInkRows, gameFont } from "../testing/fontInk.ts";
 import { newPlayerSave } from "../testing/saves.ts";
 import { shownText } from "../ui/dom/pixelLine.ts";
 import type { UiLayer } from "../ui/dom/uiLayer.ts";
@@ -41,7 +42,7 @@ const measure = {
   wrapNote: (_room: number, text: string) => [text],
 };
 
-function render(message: string | null = null, save = newPlayerSave) {
+function render(message: string | null = null, save = newPlayerSave, tab: ShopTab = "gear") {
   const update = vi.fn();
   const scene = Object.create(ShopScene.prototype) as {
     renderNative(place: { fonts: typeof fonts; layer: UiLayer }): void;
@@ -55,7 +56,7 @@ function render(message: string | null = null, save = newPlayerSave) {
     placeNative: vi.fn(),
     save: () => save,
     scroll: listScroll(0),
-    tab: "gear",
+    tab,
     textures: { exists: () => false, getFrame: () => ({ height: 24, width: 24 }) },
   });
   vi.mocked(canvasPanelMeasure).mockReturnValue(measure);
@@ -64,7 +65,7 @@ function render(message: string | null = null, save = newPlayerSave) {
   return { scene, view: update.mock.calls[0]![0] as ShopScreenView };
 }
 
-it("renders full-size shop descriptions inside their row hit geometry, growing a wrapped row", () => {
+it("fits and centres each Shop group inside the row hit geometry", () => {
   const save = {
     ...newPlayerSave,
     owned: { ...newPlayerSave.owned, gear: keysOf(gameData.shopGear) },
@@ -76,6 +77,7 @@ it("renders full-size shop descriptions inside their row hit geometry, growing a
     const descriptions = row.texts.filter(
       (line) => line.font === "body" && line.text !== original.name,
     );
+    const name = row.texts[0]!;
     expect(descriptions.map((line) => line.text).join(" ")).toBe(original.line);
     expect(descriptions.every((line) => line.scale === TEXT_SCALE)).toBe(true);
     const rightWidth =
@@ -84,9 +86,37 @@ it("renders full-size shop descriptions inside their row hit geometry, growing a
         advanceWidth(fonts.title, TEXT_SCALE, gameData.homeText.shop.owned.toUpperCase());
     const room = shopRowTextRoom(row.rect.width, rightWidth);
     expect(descriptions.every((line) => width(line.text) <= room)).toBe(true);
-    if (descriptions.length > 1) {
-      expect(row.rect.height).toBeGreaterThan(SHOP_LAYOUT.gear.rows.height);
-    }
+    const bodyInk = (line: typeof name) => {
+      const rows = fontInkRows("font-body", { scale: line.scale }, shownText("body", line.text));
+      return { bottom: line.capTop + rows.bottom, top: line.capTop + rows.top };
+    };
+    const nameInk = bodyInk(name);
+    const descriptionInk = descriptions.map(bodyInk);
+    const top = nameInk.top - row.rect.y;
+    const bottom =
+      row.rect.y + row.rect.height - Math.max(...descriptionInk.map((ink) => ink.bottom));
+    expect(Math.min(...descriptionInk.map((ink) => ink.top)) - nameInk.bottom).toBe(4);
+    expect(Math.abs(top - bottom)).toBeLessThanOrEqual(1);
+    expect(row.rect.height).toBe(
+      Math.max(SHOP_LAYOUT.gear.rows.height, row.rect.height - top - bottom + 8),
+    );
+    const well = row.fills[0]!.rect;
+    expect(row.art[0]).toMatchObject({
+      projection: "layout",
+      rect: insetRect(SHOP_LAYOUT.row.art, well),
+    });
+    expect(row.art[1]?.projection).toBeUndefined();
+    expect(well.y + well.height / 2).toBeCloseTo(row.rect.y + row.rect.height / 2, 0);
+    const owned = row.texts.find((line) => line.font === "title")!;
+    const ownedInk = fontInkRows(
+      "font-title",
+      { scale: owned.scale },
+      shownText("title", owned.text),
+    );
+    expect(owned.capTop + (ownedInk.top + ownedInk.bottom) / 2).toBeCloseTo(
+      row.rect.y + row.rect.height / 2,
+      0,
+    );
     const hit = scene.targetAt(row.rect.x + 1, row.rect.y - scene.scroll.y + row.rect.height - 1);
     if (row.rect.y + row.rect.height <= view.clip.y + view.clip.height) {
       expect(hit).toEqual({ id: row.id, kind: "row" });
@@ -99,6 +129,27 @@ it("renders full-size shop descriptions inside their row hit geometry, growing a
         (row, index) => row.rect.y >= view.rows[index]!.rect.y + view.rows[index]!.rect.height,
       ),
   ).toBe(true);
+});
+
+it("sets dog and slot row pictures in their centred wells with independent price and badge", () => {
+  const { view } = render(null, newPlayerSave, "dogs");
+  for (const id of ["slot:2", "dog:kilo"]) {
+    const row = view.rows.find((row) => row.id === id)!;
+    const well = row.fills[0]!.rect;
+    const mid = row.rect.y + row.rect.height / 2;
+    expect(row.art[0]).toMatchObject({
+      projection: "layout",
+      rect: insetRect(SHOP_LAYOUT.row.art, well),
+      sheet: id.startsWith("dog:"),
+    });
+    expect(row.art[1]).toMatchObject({
+      key: "icon-lock",
+      rect: { x: row.rect.x + SHOP_LAYOUT.row.badge.dx, y: row.rect.y + SHOP_LAYOUT.row.badge.dy },
+    });
+    expect(row.art[1]?.projection).toBeUndefined();
+    expect(well.y + well.height / 2).toBe(mid);
+    expect(row.plate!.rect.y + row.plate!.rect.height / 2).toBe(mid);
+  }
 });
 
 it("wraps a long refusal into a grown message plate and reserves its hit area", () => {

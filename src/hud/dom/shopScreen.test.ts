@@ -7,7 +7,7 @@ import { shopFocusView } from "../../home/shopFocusView.ts";
 import { shopPageView } from "../../home/shopPageView.ts";
 import { FakeDocument, type FakeElement, fakeLayer } from "../../testing/fakeDom.ts";
 import { fontFileMetrics, gameFont } from "../../testing/fontInk.ts";
-import { domScale } from "../../ui/domScale.ts";
+import { type DomScale, domScale, gridRect } from "../../ui/domScale.ts";
 import { modalTitleInk } from "../../ui/modal/titleRole.ts";
 import { PALETTE } from "../../ui/palette.ts";
 import { type ShopScreenInput, type ShopScreenView, showShopScreen } from "./shopScreen.ts";
@@ -22,9 +22,12 @@ const SOURCE: ShopScreenInput["source"] = {
     }),
 };
 const RECT = { height: 48, width: 300, x: 24, y: 180 };
-function fixture({ source = SOURCE }: { readonly source?: ShopScreenInput["source"] } = {}) {
+function fixture({
+  scale = domScale(3, { height: 560, width: 360, x: 0, y: 0 }),
+  source = SOURCE,
+}: { readonly scale?: DomScale; readonly source?: ShopScreenInput["source"] } = {}) {
   const doc = new FakeDocument();
-  const { layer } = fakeLayer(doc, domScale(3, { height: 560, width: 360, x: 0, y: 0 }));
+  const { layer } = fakeLayer(doc, scale);
   const down = vi.fn(),
     up = vi.fn(),
     cancel = vi.fn(),
@@ -102,6 +105,32 @@ const pointer = (target: FakeElement, id: number, type: string) => ({
   target,
   timeStamp: 10,
   type,
+});
+
+it("projects only Shop principal art to the well at fractional fit", async () => {
+  const scale = domScale(1, { height: 900, width: 575, x: 0, y: 0 });
+  const { root, screen, view } = fixture({ scale });
+  const rect = { height: 24, width: 24, x: 30, y: 192 };
+  screen.update({
+    ...view,
+    rows: [
+      {
+        ...view.rows[0]!,
+        art: [
+          { key: "face-dog-kilo", projection: "layout", rect, sheet: true },
+          { key: "icon-dog-slot", projection: "layout", rect, sheet: false },
+          { key: "icon-lock", rect, sheet: false },
+        ],
+      },
+    ],
+  });
+  await settle();
+  const width = (key: string) =>
+    root.all().find((node) => node.style.backgroundImage?.includes(key))?.style.width;
+  expect(width("face-dog-kilo")).toBe(`${gridRect(scale, rect).width}px`);
+  expect(width("icon-dog-slot")).toBe(`${gridRect(scale, rect).width}px`);
+  expect(width("icon-lock")).toBe("24px");
+  screen.destroy();
 });
 
 it("keeps the row and first pointer alive across dip, focus and scroll painting", async () => {

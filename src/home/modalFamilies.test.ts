@@ -35,9 +35,8 @@ import {
   SHOP_MESSAGE_FIT,
   shopMessageLayout,
   shopNextHeading,
-  shopRowHeight,
   shopRowsBottom,
-  shopRowTextTops,
+  shopRowTextLayout,
 } from "./shopLayout.ts";
 import { STATS_LAYOUT } from "./statsLayout.ts";
 
@@ -264,10 +263,17 @@ it("reflows narrow Logbook stat labels and grows content before the following se
 
 it("reserves reflowed Shop descriptions and messages before following content", () => {
   const spec = SHOP_LAYOUT.gear.rows;
-  const heights = [1, 2, 1].map((count) => shopRowHeight(fonts.body, spec.height, count));
+  const body = gameFont("font-body");
+  const layout = (count: number) =>
+    shopRowTextLayout(body, spec.height, {
+      descriptions: Array.from({ length: count }, () => gameData.homeText.shop.slotLine),
+      name: gameData.shopGear.fannyPack.name,
+    });
+  const heights = [1, 3, 1].map((count) => layout(count).height);
   const rows = rowRects(SHOP_LAYOUT.row.scrollWidth, spec, heights);
   const pitch = fonts.body.lineHeight * 2;
-  expect(rows[1]!.height).toBe(spec.height + pitch);
+  expect(rows[0]!.height).toBe(spec.height);
+  expect(rows[1]!.height).toBeGreaterThan(spec.height);
   expect(rows[2]!.y).toBe(rows[1]!.y + rows[1]!.height + spec.pitch - spec.height);
   expect(shopRowsBottom(spec, rows)).toBe(rows[2]!.y + rows[2]!.height);
   expect(shopNextHeading(spec, rows)).toBeGreaterThan(shopRowsBottom(spec, rows));
@@ -278,8 +284,9 @@ it("reserves reflowed Shop descriptions and messages before following content", 
     gameData.dogSlots.map(() => slots.height),
   );
   expect(shopNextHeading(slots, slotRects)).toBe(SHOP_LAYOUT.dogs.dogHeadingY);
-  const tops = shopRowTextTops(fonts.body, 2);
-  expect(tops.name).toBe(shopRowTextTops(fonts.body).name - pitch / 2);
+  const descriptions = layout(3).descriptions;
+  expect(descriptions[1]! - descriptions[0]!).toBe(pitch);
+  expect(descriptions[2]! - descriptions[1]!).toBe(pitch);
   const message = shopMessageLayout(fonts.body, 2);
   expect(message.plate.height).toBe(SHOP_LAYOUT.message.plate.height + pitch);
   expect(message.extraHeight).toBe(pitch);

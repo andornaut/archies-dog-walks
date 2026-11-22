@@ -1,6 +1,6 @@
 import { clampIndex } from "@andornaut/game-kit/runtime/arrays";
 import { wrapWords } from "@andornaut/game-kit/runtime/lines";
-import { containsPoint, type Point, type Rect } from "@andornaut/game-kit/runtime/rect";
+import { containsPoint, insetRect, type Point, type Rect } from "@andornaut/game-kit/runtime/rect";
 import { advanceWidth, type BitmapFont } from "@andornaut/game-kit/runtime/text/bitmapFont";
 import { Scene } from "phaser";
 
@@ -43,10 +43,9 @@ import {
   shopListFrame,
   shopMessageLayout,
   shopNextHeading,
-  shopRowHeight,
   shopRowsBottom,
+  shopRowTextLayout,
   shopRowTextRoom,
-  shopRowTextTops,
   shopScrollbar,
   shopTabRects,
 } from "../home/shopLayout.ts";
@@ -185,7 +184,10 @@ function shopTextLayout(
   const message = shopMessageLayout(measure.body, Math.max(1, lines.length));
   const build = (frame: ReturnType<typeof shopListFrame>) => {
     const headings: { readonly note: string; readonly text: string; readonly y: number }[] = [];
-    const placed: (PlacedRow & { readonly lines: readonly string[] })[] = [];
+    const placed: (PlacedRow & {
+      readonly lines: readonly string[];
+      readonly text: ReturnType<typeof shopRowTextLayout>;
+    })[] = [];
     const add = (spec: Parameters<typeof rowRects>[1], rows: readonly ShopRow[]) => {
       const described = rows.map((row) => {
         const right =
@@ -194,16 +196,18 @@ function shopTextLayout(
               advanceWidth(fonts.title, TEXT_SCALE, gameData.homeText.shop.owned.toUpperCase())
             : widthOf(dollarText(row.price)) + 2 * PLATE_PAD;
         const room = shopRowTextRoom(frame.rowWidth, right);
-        return row.line === "" ? [] : wrapWords(widthOf, room, row.line);
+        const lines = row.line === "" ? [] : wrapWords(widthOf, room, row.line);
+        return {
+          lines,
+          text: shopRowTextLayout(fonts.body, spec.height, { descriptions: lines, name: row.name }),
+        };
       });
       const rects = rowRects(
         frame.rowWidth,
         spec,
-        described.map((lines) => shopRowHeight(measure.body, spec.height, lines.length)),
+        described.map(({ text }) => text.height),
       );
-      rows.forEach((row, index) =>
-        placed.push({ lines: described[index]!, rect: rects[index]!, row }),
-      );
+      rows.forEach((row, index) => placed.push({ ...described[index]!, rect: rects[index]!, row }));
       return rects;
     };
     const words = gameData.homeText.shop;
@@ -505,7 +509,7 @@ export class ShopScene extends Scene {
       );
     };
     layout.headings.forEach(({ note, text, y }) => heading(y, text, note));
-    for (const { lines: descriptions, rect, row } of layout.rows) {
+    for (const { lines: descriptions, rect, row, text } of layout.rows) {
       const look = SHOP_ROW_VIEWS[shopRowLook(gameData, save.owned, save.bankCents, row)];
       const mid = rect.y + Math.floor(rect.height / 2);
       const right = rect.x + rect.width - ROW.plateInset;
@@ -516,13 +520,11 @@ export class ShopScene extends Scene {
         y: rect.y + Math.floor((rect.height - ROW.box.size) / 2),
       };
       const key = purchaseArt(row.purchase);
-      const frame = this.textures.getFrame(key);
-      const tops = shopRowTextTops(measure.body, descriptions.length);
       const texts = [
         line(
           row.name,
           rect.x + ROW.textDx,
-          row.line === "" ? mid - 5 : mid + tops.name,
+          rect.y + text.name,
           PALETTE[selectLook(look.state).text],
         ),
       ];
@@ -531,7 +533,7 @@ export class ShopScene extends Scene {
           line(
             description,
             rect.x + ROW.textDx,
-            mid + tops.line + index * measure.body.lineHeight * TEXT_SCALE,
+            rect.y + text.descriptions[index]!,
             look.state === "disabled" ? PALETTE[GREYED.text] : PALETTE.darkBrown,
           ),
         );
@@ -539,12 +541,8 @@ export class ShopScene extends Scene {
       const art: ShopScreenRow["art"][number][] = [
         {
           key,
-          rect: {
-            height: frame.height,
-            width: frame.width,
-            x: box.x + ROW.art,
-            y: box.y + ROW.art,
-          },
+          projection: "layout",
+          rect: insetRect(ROW.art, box),
           sheet: row.purchase.kind === "dog",
           ...(look.art === "grey" ? { imageKey: disabledArtKey(key) } : {}),
           tag: "happy",
@@ -565,11 +563,15 @@ export class ShopScene extends Scene {
       let plate: ShopScreenRow["plate"];
       if (row.price === null || look.plate === null) {
         const owned = gameData.homeText.shop.owned;
+        const ownedTop = shopRowTextLayout(fonts.title, rect.height, {
+          descriptions: [],
+          name: shownText("title", owned),
+        }).name;
         texts.push(
           line(
             owned,
             right - OWNED_DX - advanceWidth(fonts.title, TEXT_SCALE, owned.toUpperCase()),
-            mid - 4,
+            rect.y + ownedTop,
             PALETTE.forest,
             "title",
           ),
@@ -588,7 +590,7 @@ export class ShopScene extends Scene {
             scale: TEXT_SCALE,
             width: (value) => advanceWidth(fonts.body, TEXT_SCALE, value),
           },
-          { capTop: mid - 5, originX: 1, x: right },
+          { capTop: mid - (measure.body.capHeight * TEXT_SCALE) / 2, originX: 1, x: right },
           look.plate,
           dollarText(row.price),
         );
