@@ -257,7 +257,6 @@ export class HudScene extends Scene {
         this.picture === undefined &&
         (id === "mute" || id === "pause") &&
         topBarAction(this.walk().runPause(), "tap", id) !== undefined,
-      activation: "down",
       buttons: WALK_BAR_BUTTONS,
       currency: true,
       effects: BAR.effectWells.length,

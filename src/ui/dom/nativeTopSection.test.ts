@@ -24,12 +24,19 @@ const labels = {
   pause: gameData.menuText.pause.title,
 };
 function fixture(
-  activation: "click" | "down" = "click",
   effects = 0,
   exit = false,
   scale = domScale(1, { height: 560, width: 360, x: 0, y: 0 }),
+  clock = false,
 ) {
   const doc = new FakeDocument();
+  if (clock) {
+    Object.assign(doc.defaultView, {
+      clearTimeout: globalThis.clearTimeout,
+      performance: globalThis.performance,
+      setTimeout: globalThis.setTimeout,
+    });
+  }
   const { element, layer } = fakeLayer(doc, scale);
   let pendingRoot: HTMLElement | undefined;
   let resolveReveal: (ready: boolean) => void = () => undefined;
@@ -61,7 +68,6 @@ function fixture(
     gameFont("font-title"),
     {
       accepts: () => true,
-      activation,
       buttons: exit ? ["mute", "menu", "exit"] : ["mute", "menu"],
       currency: true,
       effects,
@@ -83,8 +89,12 @@ function dispatch(target: FakeTarget, type: string, fields: Record<string, unkno
   let stopped = false;
   const event = Object.assign(
     {
+      button: 0,
       buttons: 0,
+      clientX: 10,
+      clientY: 10,
       detail: 0,
+      isPrimary: true,
       pointerId: 1,
       preventDefault: () => undefined,
       stopImmediatePropagation: () => {
@@ -131,7 +141,7 @@ describe("native top section integration", () => {
     });
   });
   it("dims the whole bar under a modal, its buttons included, and takes no press there", async () => {
-    const { buttons, click, layer, press, reveal, view } = fixture("click", 6);
+    const { buttons, click, layer, press, reveal, view } = fixture(6);
     const root = view.element as unknown as FakeElement;
     view.setAmount("123", "123");
     view.setEffectCount(2);
@@ -188,7 +198,7 @@ describe("native top section integration", () => {
     expect(element.children).toEqual([]);
   });
   it("admits only one pointer across separate bar controls", async () => {
-    const { buttons, doc, layer, press, reveal, root } = fixture("down");
+    const { buttons, doc, layer, press, reveal, root } = fixture();
     reveal(true);
     await Promise.resolve();
     const elsewhere = layer.press.claim();
@@ -197,10 +207,21 @@ describe("native top section integration", () => {
     elsewhere?.release();
     dispatch(root, "pointerdown", { buttons: 1, pointerId: 1, target: buttons[0] });
     dispatch(root, "pointerdown", { buttons: 1, pointerId: 2, target: buttons[1] });
-    expect(press).toHaveBeenCalledTimes(1);
+    expect(press).not.toHaveBeenCalled();
     dispatch(doc, "pointerup", { pointerId: 1, target: buttons[0] });
+    const click = { detail: 1, target: buttons[0] };
+    if (!dispatch(root, "click", click)) {
+      dispatch(buttons[0]!, "click", click);
+    }
+    expect(press).toHaveBeenCalledTimes(1);
     dispatch(doc, "pointerup", { pointerId: 2, target: buttons[1] });
     dispatch(root, "pointerdown", { buttons: 1, pointerId: 3, target: buttons[1] });
+    expect(press).toHaveBeenCalledTimes(1);
+    dispatch(doc, "pointerup", { pointerId: 3, target: buttons[1] });
+    const second = { detail: 1, target: buttons[1] };
+    if (!dispatch(root, "click", second)) {
+      dispatch(buttons[1]!, "click", second);
+    }
     expect(press).toHaveBeenLastCalledWith("menu", {
       completedAt: 0,
       startedAt: 0,
@@ -209,7 +230,7 @@ describe("native top section integration", () => {
     expect(press).toHaveBeenCalledTimes(2);
   });
   it("centres visible effects inside their reserved region and reuses native art nodes", () => {
-    const { element, view } = fixture("click", 6);
+    const { element, view } = fixture(6);
     const wells = element
       .all()
       .filter((node) => node.style.backgroundImage?.includes("ui-hud-effect-well"));
@@ -238,7 +259,7 @@ describe("native top section integration", () => {
     expect(() => view.setEffectCount(7)).toThrow("configured top section");
   });
   it("fits approved five-character currency labels in one fixed well with unchanged controls", () => {
-    const { element, view } = fixture("click", 6);
+    const { element, view } = fixture(6);
     const money = element.all().filter((node) => node.className.includes("adw-text"));
     for (const text of ["999", "9.9k", "999m"]) {
       view.setAmount(text, text);
@@ -252,7 +273,7 @@ describe("native top section integration", () => {
     expect(backings.map((node) => [node.style.left, node.style.top])).toEqual([]);
   });
   it("uses the existing short currency form inside the fixed walk well", () => {
-    const { element, view } = fixture("click", 6);
+    const { element, view } = fixture(6);
     view.setAmount("1,234", "1.2k");
     const texts = element
       .all()
@@ -277,7 +298,7 @@ describe("native top section integration", () => {
 });
 
 it("renders the existing Exit glyph and label to the right of Menu through the shared control", async () => {
-  const { buttons, element, press, reveal, root, view } = fixture("click", 0, true);
+  const { buttons, element, press, reveal, root, view } = fixture(0, true);
   expect(buttons.map((button) => button.getAttribute("aria-label"))).toEqual([
     labels.mute,
     labels.menu,
@@ -304,7 +325,7 @@ it("renders the existing Exit glyph and label to the right of Menu through the s
 it("projects the six native wells onto the same logical grid as the HUD icons at phone DPRs", () => {
   for (const dpr of [1, 2.625]) {
     const scale = domScale(dpr, { height: 844, width: 390, x: 0, y: 0 });
-    const { element, view } = fixture("click", 6, false, scale);
+    const { element, view } = fixture(6, false, scale);
     view.setEffectCount(6);
     const wells = element
       .all()
@@ -330,7 +351,7 @@ it.each([
   "fits native faces, glyphs and cash to their logical wells at $width CSS pixels and DPR $dpr",
   async ({ dpr, width }) => {
     const scale = domScale(dpr, { height: 844, width, x: 0, y: 0 });
-    const { buttons, element, view } = fixture("click", 0, true, scale);
+    const { buttons, element, view } = fixture(0, true, scale);
     await Promise.resolve();
     const layout = topSectionLayout(["mute", "menu", "exit"], { currency: true });
     layout.controls.forEach(([, { face, hit }], index) => {
@@ -341,9 +362,9 @@ it.each([
         width: TOP_BAR_FACE.size,
       });
       const button = buttons[index]!;
-      const normal = button.children.find((node) =>
-        node.style.backgroundImage?.includes("ui-icon-button-normal"),
-      )!;
+      const normal = button
+        .all()
+        .find((node) => node.style.backgroundImage?.includes("ui-icon-button-normal"))!;
       expect(normal.style).toMatchObject({
         height: `${faceBox.height}px`,
         left: `${faceBox.left - hitBox.left}px`,
@@ -351,7 +372,9 @@ it.each([
         width: `${faceBox.width}px`,
       });
       const glyphBox = gridRect(scale, { height: 16, width: 16, x: face.x + 2, y: face.y + 1 });
-      const glyph = button.children.at(-1)!;
+      const glyph = button
+        .all()
+        .find((node) => node.className === "adw-art" && node.children.length > 0)!;
       expect(glyph.style).toMatchObject({
         height: `${glyphBox.height}px`,
         left: `${glyphBox.left - hitBox.left}px`,
@@ -439,3 +462,70 @@ it.each([
     view.dispose();
   },
 );
+
+it("lets the Kit dispatch taps and holds once while preserving pointer timing and keyboard origin", async () => {
+  vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout", "performance"] });
+  try {
+    const { buttons, doc, press, reveal, root, view } = fixture(0, false, undefined, true);
+    reveal(true);
+    await Promise.resolve();
+    const button = buttons[0]!;
+    expect(button.classList.contains("ui-standard-button")).toBe(true);
+    expect(button.tabIndex).toBe(0);
+    const down = (id: number) =>
+      dispatch(root, "pointerdown", {
+        buttons: 1,
+        pointerId: id,
+        target: button,
+        timeStamp: performance.now(),
+      });
+    const up = (id: number) =>
+      dispatch(doc, "pointerup", {
+        pointerId: id,
+        target: button,
+        timeStamp: performance.now(),
+      });
+    const click = (detail: number) => {
+      const event = { detail, target: button, timeStamp: performance.now() };
+      if (!dispatch(root, "click", event)) {
+        dispatch(button, "click", event);
+      }
+    };
+    down(1);
+    expect(press).not.toHaveBeenCalled();
+    vi.advanceTimersByTime(25);
+    up(1);
+    click(1);
+    expect(press).toHaveBeenCalledExactlyOnceWith("mute", {
+      completedAt: 25,
+      startedAt: 0,
+      via: "pointer",
+    });
+    down(2);
+    const startedAt = performance.now();
+    vi.advanceTimersByTime(gameData.tuning.seconds.holdSeconds * 1000);
+    expect(press).toHaveBeenCalledTimes(2);
+    expect(press).toHaveBeenLastCalledWith("mute", {
+      completedAt: performance.now(),
+      startedAt,
+      via: "pointer",
+    });
+    up(2);
+    click(1);
+    expect(press).toHaveBeenCalledTimes(2);
+    down(3);
+    dispatch(doc, "pointercancel", { pointerId: 3, target: button });
+    click(1);
+    expect(press).toHaveBeenCalledTimes(2);
+    click(0);
+    expect(press).toHaveBeenCalledTimes(3);
+    expect(press).toHaveBeenLastCalledWith("mute", {
+      completedAt: performance.now(),
+      startedAt: undefined,
+      via: "keyboard",
+    });
+    view.dispose();
+  } finally {
+    vi.useRealTimers();
+  }
+});

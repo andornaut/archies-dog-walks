@@ -19,10 +19,17 @@ import {
 import { PALETTE } from "../palette.ts";
 import { TOP_BAR_FACE, TOP_BAR_TRIM, TOP_BAR_WELL, topBarRects } from "../topBarTrim.ts";
 import { type TopSectionButton, topSectionCurrency, topSectionLayout } from "../topSection.ts";
-import { bindGameAction } from "./actionBinding.ts";
 import { type DomArtSource, imageArt, sheetArt } from "./artElements.ts";
+import { createGameButton } from "./gameButton.ts";
 import { guardNativeInput, revealPaint } from "./modalLifecycle.ts";
-import { backedTextPlaces, createTextLine, placeBox, placeText, setBox } from "./pixelLine.ts";
+import {
+  backedTextPlaces,
+  createTextLine,
+  placeBox,
+  placeFrame,
+  placeText,
+  setBox,
+} from "./pixelLine.ts";
 import type { UiLayer } from "./uiLayer.ts";
 export interface NativeTopSectionPress {
   readonly completedAt: number;
@@ -31,7 +38,6 @@ export interface NativeTopSectionPress {
 }
 export interface NativeTopSectionConfig {
   readonly accepts: (id: TopSectionButton) => boolean;
-  readonly activation?: "click" | "down";
   readonly buttons: readonly TopSectionButton[];
   readonly currency?: boolean;
   readonly effects?: number;
@@ -64,6 +70,8 @@ interface BarControl {
   readonly button: HTMLButtonElement;
   readonly cancel: () => void;
   readonly down: (event: PointerEvent) => void;
+  readonly observeClick: (event: MouseEvent) => void;
+  readonly clearMetadata: () => void;
   readonly setPressed: (pressed: boolean) => void;
 }
 const ORIGIN = { x: 0, y: 0 } as const;
@@ -130,23 +138,48 @@ export function createNativeTopSection(
   >();
   const records: BarControl[] = [];
   let held: BarControl | undefined;
-  let released: BarControl | undefined;
   const updateIcons: (() => void)[] = [];
   for (const [id, { face, hit }] of layout.controls) {
-    const button = doc.createElement("button");
-    button.className = "adw-close";
-    button.type = "button";
-    button.setAttribute("aria-label", config.labels[id]);
+    const content = doc.createElement("span");
+    content.style.display = "contents";
+    let pressed = false;
+    let startedAt: number | undefined;
+    let clickAt: number | undefined;
+    let via: NativeTopSectionPress["via"] = "keyboard";
+    const active = () =>
+      paint.painted() && !disposed && shown && !inert && !root.hidden && config.accepts(id);
+    const view = createGameButton(doc, {
+      appearance: { className: "adw-close", role: "navigation" },
+      content: { icon: content, kind: "icon", name: config.labels[id] },
+      getAction: () =>
+        active()
+          ? {
+              activate: () => {
+                const metadata = {
+                  completedAt: clickAt ?? doc.defaultView!.performance.now(),
+                  startedAt: via === "keyboard" ? undefined : startedAt,
+                  via,
+                };
+                clickAt = undefined;
+                startedAt = undefined;
+                config.press(id, metadata);
+              },
+              identity: id === "pause" ? menu : id,
+            }
+          : null,
+      getState: () => ({ ...(id === "mute" ? { toggled: !muted } : {}) }),
+      skin: "authored",
+    });
+    cleanups.push(view.dispose);
+    const button = view.element;
     const faces = ["normal", "pressed"].map((tag) => {
       const art = image(`ui-icon-button-${tag}`);
-      button.append(art.element);
+      content.append(art.element);
       return art;
     });
     const glyphRoot = doc.createElement("span");
     glyphRoot.className = "adw-art";
-    button.append(glyphRoot);
-    let pressed = false;
-    let startedAt: number | undefined;
+    content.append(glyphRoot);
     const iconKey = () => (id === "pause" && menu ? "icon-menu" : `icon-${id}`);
     const icons =
       id === "mute"
@@ -177,6 +210,11 @@ export function createNativeTopSection(
               height: Math.max(0, Math.min(hit.height, inputBottom - hit.y)),
             },
       );
+      placeFrame(scale, hit, view.face, {
+        ...face,
+        height: TOP_BAR_FACE.size,
+        width: TOP_BAR_FACE.size,
+      });
       const origin = { x: hit.x, y: hit.y };
       for (const [index, art] of faces.entries()) {
         art.element.hidden = index !== Number(pressed);
@@ -213,59 +251,40 @@ export function createNativeTopSection(
     placed.push(place);
     const setPressed = (value: boolean) => {
       pressed = value;
+      view.setPressed(value);
       place(layer.scale());
     };
     controls.set(id, { setPressed });
-    const active = () =>
-      paint.painted() && !disposed && shown && !inert && !root.hidden && config.accepts(id);
-    const press = (via: NativeTopSectionPress["via"], completedAt: number) =>
-      config.press(id, {
-        completedAt,
-        startedAt: via === "keyboard" ? undefined : startedAt,
-        via,
-      });
     const record: BarControl = {
       active,
       button,
-      cancel: () => {
-        setPressed(false);
+      cancel: () => setPressed(false),
+      clearMetadata: () => {
         startedAt = undefined;
+        clickAt = undefined;
+        via = "keyboard";
       },
       down: (event) => {
         startedAt = event.timeStamp;
+        clickAt = undefined;
+        via = "pointer";
         if (button.hasPointerCapture(event.pointerId)) {
           button.releasePointerCapture(event.pointerId);
         }
         setPressed(true);
-        if (config.activation === "down") {
-          press("pointer", event.timeStamp);
+      },
+      observeClick: (event) => {
+        via = event.detail === 0 ? "keyboard" : "pointer";
+        clickAt = event.timeStamp;
+        if (via === "keyboard") {
+          startedAt = undefined;
         }
       },
       setPressed,
     };
     records.push(record);
     button.addEventListener("blur", () => setPressed(false));
-    bindGameAction(
-      {
-        activate: (origin) => {
-          const keyboard = origin.kind === "click" && origin.event.detail === 0;
-          if (origin.kind === "click") {
-            origin.event.stopPropagation();
-          }
-          if (origin.kind === "hold" || keyboard || released === record) {
-            press(
-              keyboard ? "keyboard" : "pointer",
-              origin.kind === "click" ? origin.event.timeStamp : origin.timeStamp,
-            );
-          }
-          released = undefined;
-          startedAt = undefined;
-        },
-        available: active,
-        pointer: config.activation === "down" ? "down" : "click",
-      },
-      button,
-    );
+    button.addEventListener("click", (event) => event.stopPropagation());
     for (const name of ["mousedown", "touchstart"]) {
       button.addEventListener(name, (event) => event.stopPropagation());
     }
@@ -285,7 +304,12 @@ export function createNativeTopSection(
       }
     });
     updateIcons.push(() => {
-      button.setAttribute("aria-label", config.labels[id === "pause" && menu ? "menu" : id]);
+      view.setContent({
+        icon: content,
+        kind: "icon",
+        name: config.labels[id === "pause" && menu ? "menu" : id],
+      });
+      view.refresh();
       if (id === "mute") {
         button.setAttribute("aria-pressed", String(!muted));
       }
@@ -300,11 +324,9 @@ export function createNativeTopSection(
         cancel: () => {
           records.forEach((record) => record.cancel());
           held = undefined;
-          released = undefined;
         },
         claim: layer.press.claim,
         down: (event) => {
-          released = undefined;
           const record = records.find(({ button }) => button.contains(event.target as Node));
           if (record?.active() === true) {
             held = record;
@@ -324,18 +346,30 @@ export function createNativeTopSection(
         subscribe: (listener) =>
           layer.input.subscribe(() => {
             epoch += 1;
+            records.forEach((record) => record.clearMetadata());
             listener();
           }),
-        up: (event, cancelled) => {
+        up: () => {
           held?.setPressed(false);
-          released =
-            !cancelled && held?.button.contains(event.target as Node) === true ? held : undefined;
           held = undefined;
         },
       },
       root,
     ),
   );
+  // Observe origin after the shared root has admitted a click; the Kit alone dispatches it.
+  const observeClick = (event: MouseEvent) => {
+    records.find(({ button }) => button.contains(event.target as Node))?.observeClick(event);
+  };
+  const clearMetadata = () => records.forEach((record) => record.clearMetadata());
+  root.addEventListener("click", observeClick, true);
+  doc.addEventListener("pointercancel", clearMetadata);
+  doc.addEventListener("visibilitychange", clearMetadata);
+  cleanups.push(() => {
+    root.removeEventListener("click", observeClick, true);
+    doc.removeEventListener("pointercancel", clearMetadata);
+    doc.removeEventListener("visibilitychange", clearMetadata);
+  });
   if (config.heading !== undefined) {
     const line = {
       capTop: layout.heading.y,
@@ -495,6 +529,9 @@ export function createNativeTopSection(
         epoch += 1;
       }
       inert = value;
+      if (value) {
+        records.forEach((record) => record.clearMetadata());
+      }
       root.inert = value;
     },
     setInputBottom(bottom) {
@@ -517,6 +554,8 @@ export function createNativeTopSection(
         return;
       }
       menu = value;
+      epoch += 1;
+      records.forEach((record) => record.clearMetadata());
       updateIcons.forEach((update) => update());
     },
     setShown(value) {
@@ -524,6 +563,9 @@ export function createNativeTopSection(
         epoch += 1;
       }
       shown = value;
+      if (!value) {
+        records.forEach((record) => record.clearMetadata());
+      }
       root.hidden = !value;
     },
     underlayElement,
