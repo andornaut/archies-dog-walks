@@ -82,6 +82,7 @@ export class FakeElement extends FakeTarget {
   inert = false;
   hidden = false;
   id = "";
+  namespaceURI: string | null = null;
   parent: FakeElement | undefined;
   readonly style = (() => {
     const priorities = new Map<string, string>();
@@ -294,6 +295,12 @@ export class FakeDocument extends FakeTarget {
 
   createElement(tagName: string): FakeElement {
     return new FakeElement(this, tagName);
+  }
+
+  createElementNS(namespace: string | null, tagName: string): FakeElement {
+    const element = this.createElement(tagName);
+    element.namespaceURI = namespace;
+    return element;
   }
 }
 
