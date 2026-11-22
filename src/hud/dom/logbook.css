@@ -3,6 +3,7 @@
   --ui-button-focus-fill: color-mix(in srgb, var(--adw-cyan) 35%, transparent);
   position: absolute;
   box-sizing: border-box;
+  pointer-events: auto;
   margin: 0;
   padding: 0;
   border: 0;
