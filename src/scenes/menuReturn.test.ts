@@ -107,7 +107,10 @@ it("opens Cheats directly and returns one layer before closing Menu", () => {
     closeCheats = close;
     return modal;
   });
-  const { keyboard, press, scene } = menu({ context: "home", resume: SCENE_KEYS.start });
+  const { keyboard, panel, press, scene } = menu({ context: "home", resume: SCENE_KEYS.start });
+  expect(panel.entries.filter((entry) => entry.focusBeforePress)).toEqual([
+    expect.objectContaining({ focusBeforePress: true, label: gameData.menuText.cheats.open }),
+  ]);
   press(gameData.menuText.cheats.open);
   expect(fake.openCheats).toHaveBeenCalledWith(scene, false, expect.any(Function));
   expect(openOverlay).not.toHaveBeenCalled();

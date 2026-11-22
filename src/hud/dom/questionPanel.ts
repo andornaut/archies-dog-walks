@@ -70,6 +70,8 @@ export interface DomQuestionPanelInput {
   readonly closeLabel: string;
   // A footer can dismiss a native overlay that intentionally has no corner close control.
   readonly footerPress?: () => void;
+  // Source action indices whose live native controls become the invokers before opening.
+  readonly focusBeforePress?: readonly number[];
   // Whether a panel that takes no presses shows its close control pressed.
   readonly closePressed?: boolean;
   // The id of the part that describes the panel, if any.
@@ -303,7 +305,28 @@ export function showQuestionPanel(layer: UiLayer, input: DomQuestionPanelInput):
       doc,
       {
         fonts: input.fonts,
-        ...(passive ? {} : { press: { accepts, burst, press: () => press?.() } }),
+        ...(passive
+          ? {}
+          : {
+              press: {
+                accepts,
+                burst,
+                press: () => {
+                  if (!accepts()) {
+                    return;
+                  }
+                  if (
+                    input.focusBeforePress?.includes(index) === true &&
+                    part.element.isConnected &&
+                    !part.element.hidden &&
+                    doc.activeElement !== part.element
+                  ) {
+                    focusTarget(part.element);
+                  }
+                  press?.();
+                },
+              },
+            }),
       },
       button,
     );

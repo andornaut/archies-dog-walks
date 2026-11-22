@@ -910,3 +910,118 @@ it.each([
     shown.destroy();
   }
 });
+
+it.each([
+  ["corner", false],
+  ["footer", false],
+  ["corner", true],
+  ["footer", true],
+] as const)(
+  "restores the exact Cheats invoker after %s return (already focused: %s)",
+  (dismissal, alreadyFocused) => {
+    const { doc, element, layer } = menuContext();
+    let upper: ReturnType<typeof showQuestionPanel> | undefined;
+    let openingFocus: unknown;
+    const closeUpper = () => upper?.destroy();
+    const view = questionPanelView(MEASURE, SCREEN_LAYOUT.walkView, {
+      labels: [
+        gameData.menuText.cheats.open,
+        gameData.menuText.pause.help,
+        gameData.menuText.pause.settings,
+      ],
+      layout: pauseMenuLayout,
+      note: [],
+      primary: "last",
+      sentenceLines: false,
+      title: gameData.menuText.menu.title,
+    });
+    const sourceOrder = [2, 0, 1];
+    const lower = showQuestionPanel(layer, {
+      close: vi.fn(),
+      closeLabel: gameData.menuText.common.close,
+      focusBeforePress: [2],
+      fonts: { body: gameFont("font-body"), title: gameFont("font-title") },
+      numberKeys: false,
+      presses: [
+        vi.fn(),
+        vi.fn(),
+        () => {
+          openingFocus = doc.activeElement;
+          const card = modalCardView(MEASURE, view.panel, gameData.menuText.cheats.title, []);
+          upper = showQuestionPanel(layer, {
+            close: closeUpper,
+            closeLabel: gameData.menuText.common.close,
+            fonts: { body: gameFont("font-body"), title: gameFont("font-title") },
+            numberKeys: false,
+            presses: [],
+            toGame: (point) => point,
+            view: {
+              ...card,
+              footer: dismissFooter(
+                MEASURE,
+                { label: gameData.menuText.pageBack, primary: true },
+                view.panel,
+              ),
+            },
+          });
+        },
+      ],
+      toGame: (point) => point,
+      view: {
+        ...view,
+        buttons: view.buttons.map((button, index) => ({
+          ...button,
+          actionIndex: sourceOrder[index]!,
+        })),
+      },
+    });
+    lower.setActionShown(0, false);
+    const dialog = layerViews(element)[0]!;
+    const invoker = dialog
+      .all()
+      .find((node) => node.getAttribute("aria-label") === gameData.menuText.cheats.open)!;
+    (alreadyFocused ? invoker : doc.body).focus();
+    const focus = vi.spyOn(invoker, "focus");
+    const pointer = (type: string) => ({
+      button: 0,
+      buttons: type === "pointerdown" ? 1 : 0,
+      clientX: 180,
+      clientY: 200,
+      detail: 1,
+      isPrimary: true,
+      pointerId: 9,
+      preventDefault: vi.fn(),
+      stopImmediatePropagation: vi.fn(),
+      stopPropagation: vi.fn(),
+      target: invoker,
+      type,
+    });
+    dialog.fire("pointerdown", pointer("pointerdown"));
+    invoker.fire("pointerdown", pointer("pointerdown"));
+    doc.fire("pointerup", pointer("pointerup"));
+    const click = pointer("click");
+    dialog.fire("click", click);
+    expect(click.stopImmediatePropagation).not.toHaveBeenCalled();
+    invoker.fire("click", click);
+    expect(openingFocus).toBe(invoker);
+    expect(focus).toHaveBeenCalledTimes(alreadyFocused ? 0 : 1);
+    expect(lower.accepts()).toBe(false);
+    const reset = menu({ doc, element, layer });
+    reset.shown.destroy();
+    expect(upper!.accepts()).toBe(true);
+    const upperDialog = layerViews(element).at(-1)!;
+    const close = upperDialog
+      .all()
+      .find(
+        (node) =>
+          node.tagName === "button" &&
+          node.getAttribute("aria-label") ===
+            (dismissal === "corner" ? gameData.menuText.common.close : gameData.menuText.pageBack),
+      )!;
+    close.fire("click");
+    expect(lower.accepts()).toBe(true);
+    expect(invoker.isConnected).toBe(true);
+    expect(doc.activeElement).toBe(invoker);
+    lower.destroy();
+  },
+);

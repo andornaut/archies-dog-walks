@@ -132,6 +132,7 @@ export class PauseScene extends Scene {
             press: answer === "headHome" ? headHome : onResume,
           }))
         : PAUSE_MENU_ITEMS.map((item) => ({
+            ...(item === "cheats" ? { focusBeforePress: true } : {}),
             label: pauseMenuItemLabel(gameData, item),
             press: presses[item],
           }));

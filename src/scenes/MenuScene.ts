@@ -104,6 +104,7 @@ export class MenuScene extends Scene {
       backgroundCancel: close,
       close,
       entries: menuItems(context).map((item) => ({
+        ...(item === "cheats" ? { focusBeforePress: true } : {}),
         label: menuItemLabel(gameData, item),
         press: actions[item],
       })),
