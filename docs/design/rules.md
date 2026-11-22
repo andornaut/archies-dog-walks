@@ -2,8 +2,6 @@
 
 Gameplay owns the rules, screens, controls and player voice in [design](../../gameplay/design.md).
 
-Reference: [design](../../gameplay/design.md).
-
 ## Work items
 
 | ID       | Title                                                                       | Link                               |

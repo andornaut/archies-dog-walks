@@ -4,8 +4,6 @@ Gameplay owns the targets, tuning values and playtesting in the
 [gameplay README](../../gameplay/README.md), and undecided ideas in
 [ideas](../../gameplay/ideas.md).
 
-Reference: [gameplay README](../../gameplay/README.md), [ideas](../../gameplay/ideas.md).
-
 ## Work items
 
 | ID       | Title                           | Link                               |

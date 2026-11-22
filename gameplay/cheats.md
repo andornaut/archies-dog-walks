@@ -1,6 +1,6 @@
 # Cheats
 
-The shared [Saves and cheats policy](https://github.com/andornaut/game-coordinator/blob/main/docs/game-policies.md#saves-and-cheats) applies: cheats exist only in browser tabs, never in an installed app, detected at runtime when the modal opens and again when an action runs. Settings is the only entry point; Archie's Settings ends in Close, so Open Cheats sits next to Close. The Dev panel below the game is gone.
+The shared [Saves and cheats policy](https://github.com/andornaut/game-coordinator/blob/main/docs/game-policies.md#saves-and-cheats) applies: cheats exist only in browser tabs, never in an installed app, detected at runtime when the modal opens and again when an action runs. Settings is the only entry point. Open Cheats sits beside Back when Settings was opened from Menu or Pause, and beside Close otherwise. The Dev panel below the game is gone.
 
 ## Cheat session
 

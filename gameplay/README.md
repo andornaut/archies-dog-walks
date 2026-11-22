@@ -1,6 +1,6 @@
 # Gameplay
 
-The design of the game, its targets, and how it is tuned and tested. A pixel-art game (simple, retro, cute) about being a dog walker. Web first, then iOS and Android.
+Design and tuning for Archie's Dog Walks, a phone-first pixel-art game playable in a web browser and installable where supported.
 
 ## Docs
 
@@ -42,7 +42,7 @@ Some walks should fail: the road stays calm, so losing comes from bumps and choi
 
 ## Release and tuning
 
-**Walk target:** a walk lasts about 9 minutes, we want to play "one more", and it works by touch on a phone browser.
+**Walk target** is about nine minutes for the full walk, including about eight minutes of active walking plus cards, hit stops and celebrations. A finished walk should make players want to play again.
 
 The version 1 design is complete. Save compatibility follows the game's runtime release version under the shared [Saves and cheats policy](https://github.com/andornaut/game-coordinator/blob/main/docs/game-policies.md#saves-and-cheats), not the save schema's age or a first-release declaration. Tuning continues against the targets above. The game is called Archie's Dog Walks.
 
