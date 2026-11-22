@@ -636,10 +636,8 @@ export class StartScene extends Scene {
       return;
     }
     this.pressedTarget = this.targetAt(pointer.x, pointer.y);
-    const kind = this.pressedTarget?.kind;
-    const detail = kind === "dog" || kind === "gear" || kind === "walker";
     this.hold =
-      this.pressedTarget !== undefined && (!native || detail)
+      this.pressedTarget !== undefined && !native
         ? startHold(
             holdRule(gameData.tuning, TILE_SLOP_PX),
             { x: pointer.x, y: pointer.y },
@@ -689,7 +687,14 @@ export class StartScene extends Scene {
       return true;
     }
     // The native button owns the click, after this matching release clears the game press.
-    if (native && (pressed.kind === "start" || pressed.kind === "slotSign")) {
+    if (
+      native &&
+      (pressed.kind === "start" ||
+        pressed.kind === "slotSign" ||
+        pressed.kind === "walker" ||
+        pressed.kind === "dog" ||
+        pressed.kind === "gear")
+    ) {
       return false;
     }
     if (release === "hold") {
@@ -1327,15 +1332,16 @@ export class StartScene extends Scene {
     const { fonts, layer } = place;
     const toGame = (event: PointerEvent) =>
       htmlPanelInput(place).toGame({ x: event.clientX, y: event.clientY });
+    const activate = (id: string) => {
+      const target = this.nativeTarget(id);
+      if (target !== undefined) {
+        this.actAfterDip(target);
+      }
+    };
     this.nativeHome ??= createNativeHomeSession(layer, {
       accepts: () =>
         this.nativeReady && this.sys.isActive() && this.input.enabled && this.overlay === undefined,
-      activate: (id) => {
-        const target = this.nativeTarget(id);
-        if (target !== undefined) {
-          this.actAfterDip(target);
-        }
-      },
+      activate,
       cancel: () => {
         this.hold = undefined;
         this.pressedTarget = undefined;
@@ -1422,7 +1428,13 @@ export class StartScene extends Scene {
       source,
       fonts,
       {
-        activate: (kind) => this.actAfterDip({ kind }),
+        activate,
+        hold: (id) => {
+          const target = this.nativeTarget(id);
+          if (target !== undefined) {
+            this.dispatchHeld(target);
+          }
+        },
         pillColours: (index) => {
           const kind = pillKind(index);
           return kind === undefined ? undefined : pillColours(kind);

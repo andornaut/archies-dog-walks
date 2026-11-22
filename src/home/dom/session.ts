@@ -102,7 +102,11 @@ export function createNativeHomeSession(
       view?.dispose();
       view = next;
       for (const [id, control] of next.controls) {
-        if (control === next.start?.element || control === next.slot?.element) {
+        if (
+          control === next.start?.element ||
+          control === next.slot?.element ||
+          next.selections.has(id)
+        ) {
           continue;
         }
         removeActions.push(
@@ -110,9 +114,6 @@ export function createNativeHomeSession(
             {
               activate: () => context.activate(id),
               available: accepts,
-              ...(next.selections.has(id)
-                ? { hold: { external: "home-selection-detail" as const } }
-                : {}),
               pointer: "release",
             },
             control,

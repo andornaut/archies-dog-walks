@@ -6,6 +6,7 @@ import {
 } from "@andornaut/game-kit/runtime/text/bitmapFont";
 
 import { type DomArtSource, imageArt, sheetArt } from "../../ui/dom/artElements.ts";
+import { createGameButton } from "../../ui/dom/gameButton.ts";
 import { createTextLine, placeBackedText, placeText, setBox } from "../../ui/dom/pixelLine.ts";
 import type { SheetFrame } from "../../ui/dom/sheetFrames.ts";
 import { type DomScale, frameRect, gridX, gridY } from "../../ui/domScale.ts";
@@ -36,6 +37,7 @@ export interface SelectionMotion {
 export interface NativeHomeSelection {
   readonly element: HTMLButtonElement;
   readonly ready: Promise<readonly string[]>;
+  dispose(): void;
   place(scale: DomScale, motion: SelectionMotion): void;
   setFrame(index: number, frame: string | number | SheetFrame): void;
   setOrbit(fills: readonly NativeTileFill[]): void;
@@ -49,11 +51,23 @@ export function createHomeSelection(
     readonly body: BitmapFont;
     readonly title: BitmapFont;
   },
-  platePadding: number,
+  context: {
+    readonly activate: () => void;
+    readonly hold: () => void;
+    readonly platePadding: number;
+  },
   view: HomeSelectionView,
 ): NativeHomeSelection {
   const { body } = fonts;
+  const { activate, hold, platePadding } = context;
+  const control = createGameButton(doc, {
+    content: { kind: "icon", name: view.label },
+    getAction: () => ({ activate, hold }),
+    getState: () => ({ toggled: view.tile.kind === "picked" }),
+    skin: "authored",
+  });
   const tile = createSelectionTile(doc, source, fonts.title, {
+    control,
     frame: source.hasArt("ui-tile") ? "art" : "fallback",
     hit: view.hit,
     label: view.label,
@@ -193,6 +207,7 @@ export function createHomeSelection(
     );
   }
   return {
+    dispose: control.dispose,
     element: tile.element,
     place: (scale, motion) => {
       tile.place(scale, motion);

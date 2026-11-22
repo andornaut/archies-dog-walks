@@ -62,7 +62,8 @@ export function createNativeHomeView(
     readonly title: BitmapFont;
   },
   context: {
-    readonly activate: (id: "start" | "slotSign") => void;
+    readonly activate: (id: string) => void;
+    readonly hold: (id: string) => void;
     readonly platePadding: number;
     readonly pillColours: (index: number) =>
       | {
@@ -123,7 +124,17 @@ export function createNativeHomeView(
   const selections = new Map(
     snapshot.selections.map((tile) => [
       tile.id,
-      createHomeSelection(doc, source, fonts, context.platePadding, tile),
+      createHomeSelection(
+        doc,
+        source,
+        fonts,
+        {
+          activate: () => context.activate(tile.id),
+          hold: () => context.hold(tile.id),
+          platePadding: context.platePadding,
+        },
+        tile,
+      ),
     ]),
   );
   element.append(...[...selections.values()].map(({ element }) => element));
@@ -189,6 +200,7 @@ export function createNativeHomeView(
     dispose: () => {
       start.dispose();
       slot?.dispose();
+      selections.forEach((selection) => selection.dispose());
       element.remove();
     },
     element,

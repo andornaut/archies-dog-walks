@@ -87,7 +87,7 @@ it("projects picker art into the available space with selected and locked treatm
           isSheet: (key) => key.startsWith("face-"),
         },
         fonts,
-        2,
+        { activate: () => undefined, hold: () => undefined, platePadding: 2 },
         model,
       );
       const primary = model.pictures[0]!;

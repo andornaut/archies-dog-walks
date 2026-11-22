@@ -6,6 +6,7 @@ import { gameData } from "../../data/index.ts";
 import { FakeDocument, type FakeElement, fakeLayer } from "../../testing/fakeDom.ts";
 import { gameFont } from "../../testing/fontInk.ts";
 import { ownArtFrames } from "../../testing/ownArtFrames.ts";
+import { createGameButton } from "../../ui/dom/gameButton.ts";
 import { domScale } from "../../ui/domScale.ts";
 import { homeSpeechView } from "../speechView.ts";
 import type { NativeHomeView } from "./screen.ts";
@@ -205,6 +206,75 @@ describe("native home visit", () => {
     expect(refuse).toHaveBeenCalledTimes(2);
     expect(f.context.activate).not.toHaveBeenCalled();
     f.session.dispose();
+  });
+
+  it("opens a pick's detail on hold and suppresses the matching tap", async () => {
+    vi.useFakeTimers();
+    try {
+      const f = fixture();
+      Object.assign(f.doc.defaultView, {
+        clearTimeout,
+        performance: { now: () => Date.now() },
+        setTimeout,
+      });
+      const activate = vi.fn();
+      const detail = vi.fn();
+      const selected = "dog:archie";
+      const control = createGameButton(f.doc as unknown as Document, {
+        content: { kind: "icon", name: gameData.dogs.archie.name },
+        getAction: () => ({ activate, hold: detail }),
+        skin: "authored",
+      });
+      const view = f.view();
+      view.element.replaceChildren(control.element);
+      f.session.replace({
+        ...view,
+        controls: new Map([[selected, control.element]]),
+        dispose: control.dispose,
+        selections: new Map([
+          [
+            selected,
+            {
+              ...control,
+              place: vi.fn(),
+              ready: Promise.resolve([]),
+              setFrame: vi.fn(),
+              setOrbit: vi.fn(),
+            },
+          ],
+        ]),
+      });
+      f.reveals[0]!.settle(true);
+      await Promise.resolve();
+      f.frames.shift()?.();
+      const target = control.element as unknown as FakeElement;
+      const root = f.session.element as unknown as FakeElement;
+      const event = (type: string) => ({
+        button: 0,
+        clientX: 24,
+        clientY: 24,
+        detail: 1,
+        isPrimary: true,
+        pointerId: 1,
+        preventDefault: vi.fn(),
+        stopImmediatePropagation: vi.fn(),
+        target,
+        type,
+      });
+      root.fire("pointerdown", event("pointerdown"));
+      vi.advanceTimersByTime(gameData.tuning.seconds.holdSeconds * 1000);
+      expect(detail).toHaveBeenCalledOnce();
+      f.doc.fire("pointerup", event("pointerup"));
+      const synthetic = event("click");
+      root.fire("click", synthetic);
+      expect(synthetic.stopImmediatePropagation).toHaveBeenCalled();
+      expect(f.context.up).not.toHaveBeenCalled();
+      expect(activate).not.toHaveBeenCalled();
+      expect(f.context.activate).not.toHaveBeenCalled();
+      f.session.dispose();
+    } finally {
+      vi.useRealTimers();
+    }
   });
   it("keeps a replaced Sound off notice under the actual Home session dim while a modal scope is open", async () => {
     const f = fixture();
