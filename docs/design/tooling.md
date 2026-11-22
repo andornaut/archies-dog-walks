@@ -51,3 +51,4 @@ Reference: [Developing](../../README.md#developing), [Deploying](../../README.md
 | adw-0188 | Restore the delivery gate image                                              | [adw-0188.md](../work/adw-0188.md) |
 | adw-0189 | Fix the art gallery font specimens and console error                         | [adw-0189.md](../work/adw-0189.md) |
 | adw-0198 | Request an ordinary update check on returning to Start                       | [adw-0198.md](../work/adw-0198.md) |
+| adw-0206 | Adopt the Game Kit update and startup retry fixes | [adw-0206.md](../work/adw-0206.md) |
