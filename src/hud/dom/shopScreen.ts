@@ -1,5 +1,5 @@
 import type { Point, Rect } from "@andornaut/game-kit/runtime/rect";
-import type { BitmapFont } from "@andornaut/game-kit/runtime/text/bitmapFont";
+import { type BitmapFont, inkWidth } from "@andornaut/game-kit/runtime/text/bitmapFont";
 
 import { SLICES } from "../../data/layout.ts";
 import {
@@ -8,22 +8,26 @@ import {
   type NativeTileFill,
 } from "../../home/dom/selectionTile.ts";
 import { FEEDBACK } from "../../home/feedback.ts";
-import { shopTabRects } from "../../home/shopLayout.ts";
+import { SHOP_LAYOUT, shopTabRects } from "../../home/shopLayout.ts";
 import type { ShopPageView } from "../../home/shopPageView.ts";
 import { bindGameAction } from "../../ui/dom/actionBinding.ts";
 import { type DomArtSource, imageArt, imageNineSlice, sheetArt } from "../../ui/dom/artElements.ts";
 import { type ModalLifecycle, mountModalLifecycle } from "../../ui/dom/modalLifecycle.ts";
 import {
+  backedTextPlaces,
   createTextLine,
+  inkEnd,
   placeBackedText,
   placeBox,
   placeText,
   setBox,
+  shownText,
 } from "../../ui/dom/pixelLine.ts";
 import { dimDrawn, followModalUnderlay } from "../../ui/dom/rampDim.ts";
 import type { UiLayer } from "../../ui/dom/uiLayer.ts";
 import {
   type DomScale,
+  fontPixel,
   gridRect,
   gridTransform,
   gridX,
@@ -32,8 +36,10 @@ import {
 } from "../../ui/domScale.ts";
 import type { TileState } from "../../ui/interaction.ts";
 import type { PanelText } from "../../ui/modal/types.ts";
+import { PALETTE } from "../../ui/palette.ts";
 import type { ScrollbarRects } from "../../ui/scrollbar.ts";
 import { SELECT_OUTSET } from "../../ui/selection.ts";
+import { TEXT_SCALE } from "../../ui/textFit.ts";
 import { scrollPlace } from "./logbook.ts";
 import { createPanelButton } from "./panelButton.ts";
 import { addTapBurst, type DomPart } from "./questionPanel.ts";
@@ -68,7 +74,11 @@ export interface ShopScreenRow {
 export interface ShopScreenView {
   readonly page: ShopPageView;
   readonly clip: Rect;
-  readonly headings: readonly PanelText[];
+  readonly headings: readonly {
+    readonly band: Rect;
+    readonly note: string;
+    readonly title: string;
+  }[];
   readonly rows: readonly ShopScreenRow[];
   readonly message?: { readonly rect: Rect; readonly lines: readonly PanelText[] };
 }
@@ -190,6 +200,46 @@ export function showShopScreen(
     const element = createTextLine(doc, line);
     return { element, place: (at) => placeText(input.fonts[line.font], at, origin, element, line) };
   };
+  const headingPart = ({ band, note, title }: ShopScreenView["headings"][number]): DomPart => {
+    const element = doc.createElement("div");
+    element.className = "adw-lines";
+    const labels = (["title", "body"] as const).map((font) => {
+      const bitmap = input.fonts[font];
+      const text = font === "title" ? title : note;
+      const line = {
+        capTop: band.y,
+        centre: "left",
+        centreX: band.x,
+        colour: PALETTE.darkBrown,
+        font,
+        scale: TEXT_SCALE,
+        text,
+      } as const;
+      const span = createTextLine(doc, line);
+      element.append(span);
+      const shown = shownText(font, text);
+      const end = inkEnd(bitmap, shown);
+      return { bitmap, end, line, span, start: end - inkWidth(bitmap, 1, shown) };
+    });
+    return {
+      element,
+      place: (at) => {
+        const panel = gridRect(at, SHOP_LAYOUT.panel);
+        const right = gridX(at, band.x + band.width);
+        const left = 2 * panel.left + panel.width - right;
+        const pixel = fontPixel(at, TEXT_SCALE);
+        for (const { bitmap, end, line, span, start } of labels) {
+          const place = backedTextPlaces(bitmap, at, ORIGIN, band, [line], "layout")[0]!;
+          Object.assign(span.style, {
+            fontSize: `${place.fontSize}px`,
+            left: `${line.font === "title" ? left - start * pixel : right - end * pixel}px`,
+            lineHeight: `${place.lineHeight}px`,
+            top: `${place.top}px`,
+          });
+        }
+      },
+    };
+  };
   const controlPoints = new WeakMap<HTMLElement, Point>();
   const control = (rect: Rect, label: string) => {
     const element = doc.createElement("button");
@@ -287,7 +337,7 @@ export function showShopScreen(
     const nextHeadings = JSON.stringify(view.headings);
     if (headingsKey !== nextHeadings) {
       headingsKey = nextHeadings;
-      headingParts = view.headings.map((line) => textPart(line));
+      headingParts = view.headings.map(headingPart);
       headings.replaceChildren(...headingParts.map(({ element }) => element));
     }
     const retained = new Set<string>();

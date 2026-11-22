@@ -3,13 +3,17 @@ import { setImmediate } from "node:timers/promises";
 import { expect, it, vi } from "vitest";
 
 import { gameData } from "../../data/index.ts";
+import { ownedCountNote } from "../../home/shop.ts";
 import { shopFocusView } from "../../home/shopFocusView.ts";
+import { SHOP_LAYOUT, shopHeadingBand, shopListFrame } from "../../home/shopLayout.ts";
 import { shopPageView } from "../../home/shopPageView.ts";
 import { FakeDocument, type FakeElement, fakeLayer } from "../../testing/fakeDom.ts";
-import { fontFileMetrics, gameFont } from "../../testing/fontInk.ts";
-import { type DomScale, domScale, gridRect } from "../../ui/domScale.ts";
+import { fontFileMetrics, fontInk, fontInkRows, gameFont } from "../../testing/fontInk.ts";
+import { newPlayerSave } from "../../testing/saves.ts";
+import { type DomScale, domScale, fontPixel, gridRect, gridX } from "../../ui/domScale.ts";
 import { modalTitleInk } from "../../ui/modal/titleRole.ts";
 import { PALETTE } from "../../ui/palette.ts";
+import { TEXT_SCALE } from "../../ui/textFit.ts";
 import { type ShopScreenInput, type ShopScreenView, showShopScreen } from "./shopScreen.ts";
 
 const SOURCE: ShopScreenInput["source"] = {
@@ -105,6 +109,49 @@ const pointer = (target: FakeElement, id: number, type: string) => ({
   target,
   timeStamp: 10,
   type,
+});
+
+it("centres Shop heading ink in each strip and mirrors the scrollbar clearance", () => {
+  const words = gameData.homeText.shop;
+  for (const scale of [
+    domScale(1, { height: 1280, width: 575, x: 0, y: 0 }),
+    domScale(2.625, { height: 844, width: 390, x: 0, y: 0 }),
+  ]) {
+    const { root, screen, view } = fixture({ scale });
+    for (const [list, title, capTop, scrolls] of [
+      ["slots", words.slots, SHOP_LAYOUT.dogs.slotHeadingY, true],
+      ["dogs", words.dogs, SHOP_LAYOUT.dogs.dogHeadingY, true],
+      ["gear", words.tabs.gear, SHOP_LAYOUT.gear.headingY, false],
+    ] as const) {
+      const frame = shopListFrame(scrolls);
+      const band = shopHeadingBand(frame, capTop);
+      const note = ownedCountNote(gameData, newPlayerSave.owned, list);
+      screen.update({ ...view, clip: frame.rect, headings: [{ band, note, title }] });
+      const pixel = fontPixel(scale, TEXT_SCALE);
+      const strip = gridRect(scale, band);
+      const page = gridRect(scale, SHOP_LAYOUT.panel);
+      const headingRight = gridX(scale, frame.headingRight);
+      for (const [font, text] of [
+        ["font-title", title.toUpperCase()],
+        ["font-body", note],
+      ] as const) {
+        const label = root.all().find((node) => node.textContent === text)!;
+        const pen = Number.parseFloat(label.style.left!);
+        const columns = fontInk(font, { scale: pixel }, text);
+        if (font === "font-title") {
+          expect(pen + columns.left - page.left).toBe(page.left + page.width - headingRight);
+        } else {
+          expect(pen + columns.right).toBe(headingRight);
+        }
+        const cap = Number.parseFloat(label.style.top!) + fontFileMetrics(font).capTop * pixel;
+        const rows = fontInkRows(font, { scale: pixel }, text);
+        expect(
+          Math.abs(cap + (rows.top + rows.bottom) / 2 - strip.top - strip.height / 2),
+        ).toBeLessThanOrEqual(0.5);
+      }
+    }
+    screen.destroy();
+  }
 });
 
 it("projects only Shop principal art to the well at fractional fit", async () => {

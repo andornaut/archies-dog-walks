@@ -63,7 +63,8 @@ const LIST_UNSCROLLED = { ...LIST, width: PANEL.width };
 // the plate's strip, its capitals centred on it as the message's are, and the first rows start
 // TAB_GAP under the plate, so a message never covers a row.
 const PLATE = { height: SHOP.plateHeight, width: TAB.span, x: TAB.x, y: LIST.y };
-const FIRST_HEADING_Y = PLATE.y + Math.floor((PLATE.height - TITLE_CAP_ROWS * TEXT_SCALE) / 2);
+const HEADING_CAP_OFFSET = Math.floor((PLATE.height - TITLE_CAP_ROWS * TEXT_SCALE) / 2);
+const FIRST_HEADING_Y = PLATE.y + HEADING_CAP_OFFSET;
 const FIRST_ROWS_Y = PLATE.y + PLATE.height + TAB_GAP;
 // Every heading sits in a strip like the first's: HEADING_TO_ROWS above its rows, and
 // ROWS_TO_HEADING under the rows before it, TAB_GAP over a strip the plate's height with the
@@ -184,6 +185,18 @@ export function shopListFrame(scrolls: boolean): {
     headingRight: row.x + rowWidth,
     rect: scrolls ? list.rect : list.unscrolledRect,
     rowWidth,
+  };
+}
+
+// Shop headings share the plate's strip height. Mirror the right clearance needed by the
+// scrollbar from the page's left edge, without narrowing the rows themselves.
+export function shopHeadingBand(frame: { readonly headingRight: number }, capTop: number): Rect {
+  const x = 2 * PANEL.x + PANEL.width - frame.headingRight;
+  return {
+    height: PLATE.height,
+    width: frame.headingRight - x,
+    x,
+    y: capTop - HEADING_CAP_OFFSET,
   };
 }
 

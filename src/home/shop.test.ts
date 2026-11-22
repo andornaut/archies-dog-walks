@@ -12,13 +12,12 @@ import { sizeHearts } from "../rules/dogs.ts";
 import { capitalize, SIZE_NAMES } from "../rules/effectText.ts";
 import { startingDogSlots, unlockPrice } from "../rules/shop.ts";
 import type { Owned } from "../save/schema.ts";
-import { fontFileMetrics, gameFont, inkWidth, placedInk } from "../testing/fontInk.ts";
+import { fontFileMetrics, gameFont, inkWidth } from "../testing/fontInk.ts";
 import { TEST_TUNING } from "../testing/tuning.ts";
 import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";
 import { modalTitleInk } from "../ui/modal/titleRole.ts";
 import { MODAL } from "../ui/modalGeometry.ts";
 import { GREYED, pictureBox, SELECT_OUTSET } from "../ui/selection.ts";
-import { TEXT_SCALE, TITLE_CAP_ROWS } from "../ui/textFit.ts";
 import { cents } from "../units.ts";
 import { FEEDBACK } from "./feedback.ts";
 import { gearByPrice, type Purchase } from "./home.ts";
@@ -41,6 +40,7 @@ import {
   rowRects,
   SHOP_LAYOUT,
   SHOP_MESSAGE_FIT,
+  shopHeadingBand,
   shopListBottom,
   shopListFrame,
   shopMessageCapTop,
@@ -249,9 +249,9 @@ describe("ownedCountNote", () => {
   it.each(cases)("%s: counts owned of all, clear of heading", (list, have, count, max) => {
     const text = ownedCountNote(data, have, list);
     expect(text).toBe(note(count, max));
-    const titleRight =
-      SHOP_LAYOUT.headingX + placedInk("font-title", style, titles[list].toUpperCase()).right;
-    const noteLeft = shopListFrame(true).headingRight - inkWidth("font-body", style, text);
+    const band = shopHeadingBand(shopListFrame(true), SHOP_LAYOUT.list.firstHeadingY);
+    const titleRight = band.x + inkWidth("font-title", style, titles[list].toUpperCase());
+    const noteLeft = band.x + band.width - inkWidth("font-body", style, text);
     expect(titleRight + 8).toBeLessThanOrEqual(noteLeft);
   });
 });
@@ -313,10 +313,8 @@ describe("the shop's message", () => {
   });
 });
 
-// Every heading's capitals sit as far over its rows as under listGap rows over the plate's strip
-// or the rows before it, and the first heading's are centred on the message's plate.
+// Headings share the notice strip's height with equal clearance to the neighbouring rows.
 describe("the shop's headings", () => {
-  const caps = TITLE_CAP_ROWS * TEXT_SCALE;
   const { dogs, gear, message } = SHOP_LAYOUT;
   const stripTop = message.plate.y - SHOP_PAGE.tab.listGap;
   const lastSlotBottom = (count: number) =>
@@ -326,12 +324,16 @@ describe("the shop's headings", () => {
     ["dogs", dogs.dogHeadingY, lastSlotBottom(allSlots.length), dogs.dogRows.y],
     ["gear", gear.headingY, stripTop, gear.rows.y],
   ])("%s: as far over its rows as under what is above it", (_, y, above, rows) => {
-    expect(rows - (y + caps)).toBe(y - above);
+    const band = shopHeadingBand(shopListFrame(true), y);
+    const inset = SHOP_LAYOUT.panel.x + SHOP_LAYOUT.panel.width - (band.x + band.width);
+    expect(band.x - SHOP_LAYOUT.panel.x).toBe(inset);
+    expect(rows - (band.y + band.height)).toBe(band.y - above);
+    expect(rows - (band.y + band.height)).toBe(SHOP_PAGE.tab.listGap);
   });
 
-  it("centres the first heading's capitals on the message's plate", () => {
+  it("shares the message's vertical strip without a scrollbar", () => {
     const { plate } = message;
-    expect(dogs.slotHeadingY - plate.y).toBe(Math.floor((plate.height - caps) / 2));
+    expect(shopHeadingBand(shopListFrame(false), dogs.slotHeadingY)).toEqual(plate);
   });
 });
 

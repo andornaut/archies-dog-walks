@@ -37,6 +37,7 @@ import {
   rowRects,
   SHOP_LAYOUT,
   SHOP_MESSAGE_FIT,
+  shopHeadingBand,
   shopListFrame,
   shopMessageLayout,
   shopNextHeading,
@@ -478,21 +479,8 @@ export class ShopScene extends Scene {
       scale: TEXT_SCALE,
       text,
     });
-    const headings: PanelText[] = [];
     const rows: ShopScreenRow[] = [];
     this.placed = layout.rows;
-    const heading = (y: number, text: string, note: string) => {
-      headings.push(
-        line(text, LAYOUT.headingX, y, PALETTE.darkBrown, "title"),
-        line(
-          note,
-          this.frame.headingRight - advanceWidth(fonts.body, TEXT_SCALE, note),
-          y,
-          PALETTE.darkBrown,
-        ),
-      );
-    };
-    layout.headings.forEach(({ note, text, y }) => heading(y, text, note));
     for (const { lines: descriptions, rect, row, text } of layout.rows) {
       const look = SHOP_ROW_VIEWS[shopRowLook(gameData, save.owned, save.bankCents, row)];
       const mid = rect.y + Math.floor(rect.height / 2);
@@ -595,7 +583,11 @@ export class ShopScene extends Scene {
     const words = gameData.homeText.shop;
     const view: ShopScreenView = {
       clip: this.frame.rect,
-      headings,
+      headings: layout.headings.map(({ note, text, y }) => ({
+        band: shopHeadingBand(this.frame, y),
+        note,
+        title: text,
+      })),
       page: shopPageView(measure, {
         tabs: SHOP_TABS.map((tab) => ({
           label: words.tabs[tab],
