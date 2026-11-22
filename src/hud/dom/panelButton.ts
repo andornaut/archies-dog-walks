@@ -83,10 +83,10 @@ export function createPanelButton(
             control.element?.hidden === true
               ? { kind: "omitted" }
               : button.available === false
-                ? { kind: "unavailable", reason: button.label }
+                ? { kind: "pointer-refusal" }
                 : { kind: "available" },
         }),
-        onUnavailable: () => {
+        onPointerRefusal: () => {
           if (input.press!.accepts()) {
             input.press!.press();
           }

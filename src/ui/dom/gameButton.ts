@@ -33,6 +33,15 @@ export function createGameButton(document: Document, options: GameButtonOptions)
       layout: "caller",
     },
     getAction: () => (gameButtonAccepts(view.element) ? options.getAction() : null),
+    ...(options.onPointerRefusal === undefined
+      ? {}
+      : {
+          onPointerRefusal: () => {
+            if (gameButtonAccepts(view.element)) {
+              options.onPointerRefusal!();
+            }
+          },
+        }),
     ...(options.onUnavailable === undefined
       ? {}
       : {

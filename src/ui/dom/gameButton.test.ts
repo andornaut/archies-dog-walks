@@ -10,7 +10,7 @@ import { guardNativeInput } from "./modalLifecycle.ts";
 const duration = gameData.tuning.seconds.holdSeconds * 1000;
 afterEach(() => vi.useRealTimers());
 
-function fixture(override = false, unavailable = false) {
+function fixture(override = false, unavailable: boolean | "pointer" = false) {
   vi.useFakeTimers();
   const doc = new FakeDocument();
   Object.assign(doc.defaultView, {
@@ -28,12 +28,19 @@ function fixture(override = false, unavailable = false) {
   const view = createGameButton(doc as unknown as Document, {
     content: { kind: "text", label: gameData.menuText.pause.resume },
     getAction: () => ({ activate, ...(override ? { hold } : {}) }),
-    ...(unavailable
+    ...(unavailable === "pointer"
       ? {
-          getState: () => ({ availability: { kind: "unavailable" as const, reason: "Not ready" } }),
-          onUnavailable: refuse,
+          getState: () => ({ availability: { kind: "pointer-refusal" as const } }),
+          onPointerRefusal: refuse,
         }
-      : {}),
+      : unavailable
+        ? {
+            getState: () => ({
+              availability: { kind: "unavailable" as const, reason: "Not ready" },
+            }),
+            onUnavailable: refuse,
+          }
+        : {}),
   });
   const button = view.element as unknown as ReturnType<FakeDocument["createElement"]>;
   root.append(button);
@@ -149,6 +156,29 @@ it("keeps refusal feedback behind the same readiness guard as successful actions
   expect(current.refuse).toHaveBeenCalledOnce();
   const modal = current.gate.open();
   current.click();
+  expect(current.refuse).toHaveBeenCalledOnce();
+  expect(current.activate).not.toHaveBeenCalled();
+  modal.close();
+  stop();
+});
+
+it("keeps pointer-only refusal out of keyboard activation and covered input", () => {
+  const current = fixture(false, "pointer");
+  current.click(1);
+  expect(current.refuse).not.toHaveBeenCalled();
+  const stop = current.bind(true);
+  expect(current.button.tabIndex).toBe(-1);
+  expect(current.button.getAttribute("aria-describedby")).toBeNull();
+  expect(current.button.getAttribute("aria-description")).toBeNull();
+  current.click();
+  expect(current.refuse).not.toHaveBeenCalled();
+  current.root.fire("pointerdown", current.pointer("pointerdown"));
+  vi.advanceTimersByTime(duration - 1);
+  current.doc.fire("pointerup", current.pointer("pointerup"));
+  current.click(1);
+  expect(current.refuse).toHaveBeenCalledOnce();
+  const modal = current.gate.open();
+  current.click(1);
   expect(current.refuse).toHaveBeenCalledOnce();
   expect(current.activate).not.toHaveBeenCalled();
   modal.close();

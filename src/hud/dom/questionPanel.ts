@@ -421,7 +421,10 @@ export function showQuestionPanel(layer: UiLayer, input: DomQuestionPanelInput):
       return;
     }
     const visible = focusables.filter(
-      (control) => !control.hidden && control.closest?.("[hidden]") == null,
+      (control) =>
+        (control.tagName.toLowerCase() !== "button" || control.tabIndex >= 0) &&
+        !control.hidden &&
+        control.closest?.("[hidden]") == null,
     );
     const at = visible.indexOf(doc.activeElement as HTMLElement);
     const step = event.shiftKey ? visible.length - 1 : 1;
@@ -554,7 +557,9 @@ export function showQuestionPanel(layer: UiLayer, input: DomQuestionPanelInput):
       if (!accepts()) {
         return;
       }
-      const control = index === undefined ? undefined : focusables[index];
+      const target = index === undefined ? undefined : focusables[index];
+      const control =
+        target?.tagName.toLowerCase() === "button" && target.tabIndex < 0 ? undefined : target;
       if (doc.activeElement !== (control ?? dialog)) {
         focusTarget(control ?? dialog);
       }

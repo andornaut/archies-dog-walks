@@ -67,7 +67,14 @@ describe("the HTML help screen", () => {
     dialog?.fire("keydown", { code: "Tab", preventDefault: () => undefined, shiftKey: false });
     expect(doc.activeElement?.className).toContain("adw-help-body");
     dialog?.fire("keydown", { code: "Tab", preventDefault: () => undefined, shiftKey: false });
-    expect(doc.activeElement).toBe(controls[0]);
+    expect(doc.activeElement).toBe(controls[1]);
+    expect(controls[0]!.tabIndex).toBe(-1);
+    expect(controls[0]!.getAttribute("aria-describedby")).toBeNull();
+    expect(controls[0]!.getAttribute("aria-description")).toBeNull();
+    controls[0]?.fire("click", { detail: 0 });
+    expect(presses[0]).not.toHaveBeenCalled();
+    controls[0]?.fire("click", { detail: 1 });
+    expect(presses[0]).toHaveBeenCalledOnce();
     controls[1]?.fire("click", { detail: 0 });
     expect(presses[1]).toHaveBeenCalledOnce();
     const page = nodes.find((node) => node.id === dialog?.getAttribute("aria-describedby"));
