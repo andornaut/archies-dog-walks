@@ -1,6 +1,6 @@
 import { wrapWords } from "@andornaut/game-kit/runtime/lines";
-import { laidGlyphs } from "@andornaut/game-kit/runtime/text/bitmapFont";
 import { insetRect, type Rect } from "@andornaut/game-kit/runtime/rect";
+import { laidGlyphs } from "@andornaut/game-kit/runtime/text/bitmapFont";
 import type { GameObjects, Scene } from "phaser";
 
 import { gameData } from "../data/index.ts";
@@ -9,11 +9,11 @@ import { shownText } from "../ui/dom/pixelLine.ts";
 import { uiLayer } from "../ui/dom/uiLayer.ts";
 import { fontPixel } from "../ui/domScale.ts";
 import { inkWithPills } from "../ui/namePills.ts";
-import { pixelBitmapFont } from "../ui/phaser/pixelText.ts";
-import { TEXT_SCALE } from "../ui/textFit.ts";
 import { PALETTE } from "../ui/palette.ts";
 import { drawRing } from "../ui/phaser/draw.ts";
+import { pixelBitmapFont } from "../ui/phaser/pixelText.ts";
 import { AFFORD_OUTSET } from "../ui/selection.ts";
+import { TEXT_SCALE } from "../ui/textFit.ts";
 import { canvasDetailMeasure } from "./modalMeasure.ts";
 import { addLoopingFrame, selectOuter } from "./uiKit.ts";
 

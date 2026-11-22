@@ -249,9 +249,6 @@ export function addHtmlDetailCard(
     needsLayout = true;
   });
   const handle: DomQuestionPanel = {
-    get element() {
-      return panel.element;
-    },
     accepts: () => panel.accepts(),
     burst: (at) => panel.burst(at),
     capture: () => panel.capture(),
@@ -259,12 +256,13 @@ export function addHtmlDetailCard(
       stopScale();
       panel.destroy();
     },
+    get element() {
+      return panel.element;
+    },
     focusControl: (index) => panel.focusControl(index),
     refuse: (index, refusal) => panel.refuse(index, refusal),
     setActionShown: (index, shown) => panel.setActionShown(index, shown),
     setDimmed: (dimmed) => panel.setDimmed(dimmed),
-    setInert: (inert) => panel.setInert(inert),
-    setShown: (shown) => panel.setShown(shown),
     setEnabled(enabled) {
       panel.setEnabled(enabled);
       if (!enabled || !panel.accepts()) {
@@ -275,7 +273,9 @@ export function addHtmlDetailCard(
         const next = layout();
         if (JSON.stringify(view) !== JSON.stringify(next)) {
           const buttons = [...panel.element.querySelectorAll("button")];
-          pendingFocus = buttons.indexOf(panel.element.ownerDocument.activeElement as HTMLButtonElement);
+          pendingFocus = buttons.indexOf(
+            panel.element.ownerDocument.activeElement as HTMLButtonElement,
+          );
           panel.destroy();
           view = next;
           panel = mount(next);
@@ -286,6 +286,8 @@ export function addHtmlDetailCard(
         pendingFocus = undefined;
       }
     },
+    setInert: (inert) => panel.setInert(inert),
+    setShown: (shown) => panel.setShown(shown),
   };
   return followScene(scene, nativeModalShade(scene, handle));
 }

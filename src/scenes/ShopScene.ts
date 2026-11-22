@@ -879,13 +879,14 @@ export class ShopScene extends Scene {
   private drawDetail(save: SaveDocument, purchase: Purchase): void {
     const item = itemModal(gameData, save, save.lastLoadout, purchase);
     const dim = overlayRegion("home");
-    const layout = () => detailView(this, dim, {
-      card: item.card,
-      kind: purchase.kind,
-      picture: purchasePicture(purchase),
-      ...(item.purchase === undefined ? {} : { purchase: item.purchase }),
-      statusLines: item.statusLines,
-    });
+    const layout = () =>
+      detailView(this, dim, {
+        card: item.card,
+        kind: purchase.kind,
+        picture: purchasePicture(purchase),
+        ...(item.purchase === undefined ? {} : { purchase: item.purchase }),
+        statusLines: item.statusLines,
+      });
     const close = () => this.back();
     const presses = item.pending === undefined ? [] : [close, () => this.answer("buy")];
     this.htmlDetail = keepPanel(this.htmlDetail, JSON.stringify(layout()), () =>
