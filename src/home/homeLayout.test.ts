@@ -598,14 +598,14 @@ describe("a detail card", () => {
   // on a dog's card.
   const rowsOf = (kind: "dog" | "gear" | "walker", card: DetailCard) => {
     const counts = (parts: readonly DetailPart[], room: number): DetailRow[] =>
-      parts.map((part) =>
-        "owner" in part
-          ? { roleLines: roleLines(part.owner.role).length }
-          : cardLines(room, part.text),
-      );
+      parts.map((part) => cardLines(room, part.text));
     const parts = detailParts(kind, card);
     return {
-      below: counts(parts.below, CARD_TEXT_ROOM.full),
+      below: [
+        ...counts(parts.below, CARD_TEXT_ROOM.full),
+        ...(card.owner === undefined ? [] : [{ roleLines: roleLines(card.owner.role).length }]),
+        cardLines(CARD_TEXT_ROOM.full, card.status),
+      ],
       beside: counts(parts.beside, CARD_TEXT_ROOM.beside),
     };
   };
@@ -618,7 +618,7 @@ describe("a detail card", () => {
   );
 
   it.each(cards)(
-    "sets %s card status below the taller column with the shared gap",
+    "starts %s card descriptions or status below the taller column with the shared gap",
     (kind, card) => {
       const rows = rowsOf(kind, card);
       const layout = detailCardLayout(BODY, rows);
@@ -674,9 +674,9 @@ describe("a detail card", () => {
     (_title, name, role, card) => {
       const rows = rowsOf("dog", card);
       const layout = detailCardLayout(BODY, rows);
-      const ownerIndex = rows.beside.findIndex((row) => typeof row !== "number");
+      const ownerIndex = rows.below.findIndex((row) => typeof row !== "number");
       const lines = roleLines(role);
-      const at = { x: besideX, y: layout.beside[ownerIndex] ?? 0 };
+      const at = { x: pad, y: layout.below[ownerIndex] ?? 0 };
       const spot = detailOwner(BODY, at, lines.length);
       const nameRect = {
         height: inkRowsFromCapTop(BODY) * 2,

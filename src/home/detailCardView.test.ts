@@ -5,17 +5,21 @@ import { expect, it } from "vitest";
 import { gameData } from "../data/index.ts";
 import { SCREEN_LAYOUT } from "../data/screen.ts";
 import { textPart } from "../hud/dom/detailCard.ts";
+import { withNamePills } from "../hud/effectNames.ts";
+import { explainDetail } from "../hud/explain.ts";
 import { FakeDocument, type FakeElement } from "../testing/fakeDom.ts";
 import { fontFileMetrics, fontInk, gameFont, inkWidth } from "../testing/fontInk.ts";
+import { testState } from "../testing/runState.ts";
 import { newPlayerSave } from "../testing/saves.ts";
 import { artPixel, domScale, fontPixel, gridRect } from "../ui/domScale.ts";
-import { MODAL } from "../ui/modal/layout.ts";
+import { MODAL, modalFamilyWidth } from "../ui/modal/layout.ts";
 import { modalTitleInk } from "../ui/modal/titleRole.ts";
 import { PALETTE } from "../ui/palette.ts";
 import { plainMarks } from "../ui/pixelFont.ts";
 import { cents } from "../units.ts";
-import { dogDetail } from "./detail.ts";
+import { dogDetail, gearDetail, walkerDetail } from "./detail.ts";
 import { detailCardView, type DetailMeasure, type DetailText } from "./detailCardView.ts";
+import { cardTextRooms, HOME_LAYOUT } from "./homeLayout.ts";
 import { slotRows } from "./shop.ts";
 
 const fonts = { body: fontFileMetrics("font-body"), title: fontFileMetrics("font-title") };
@@ -251,3 +255,92 @@ it.each(["gear", "dogSlot"] as const)(
     );
   },
 );
+
+const mrB = walkerDetail(gameData, newPlayerSave.owned, "mrB");
+const shoes = gearDetail(
+  gameData,
+  newPlayerSave.owned,
+  cents(0),
+  newPlayerSave.lastLoadout,
+  "runningShoes",
+);
+const slot = slotRows(gameData, newPlayerSave.owned)[0]!;
+it.each([
+  { card: mrB, description: mrB.lines, kind: "walker" },
+  { card: shoes, description: shoes.lines, kind: "gear" },
+  { card, description: card.lines.slice(1), kind: "dog" },
+  {
+    card: {
+      lines: [slot.line],
+      locked: false,
+      status: gameData.homeText.shop.owned,
+      subtitle: "",
+      title: slot.name,
+    },
+    description: [slot.line],
+    kind: "dogSlot",
+  },
+] as const)(
+  "wraps $kind $card.title prose across the padded width below its portrait",
+  ({ card: info, description, kind }) => {
+    const view = detailCardView(gameData, measure, SCREEN_LAYOUT.screen, {
+      card: info,
+      kind,
+      picture,
+    });
+    const full = view.card.panel.width - 2 * HOME_LAYOUT.card.pad;
+    const well = view.framed[0]!.rect;
+    for (const line of description) {
+      const text = withNamePills(gameData, line);
+      const row = view.texts.find((row) => row.lines.join(" ") === text)!;
+      expect(row, line).toBeDefined();
+      expect(row.x).toBe(view.card.panel.x + HOME_LAYOUT.card.pad);
+      expect(row.lines).toEqual(wrap(full, text));
+      expect(row.capTop).toBeGreaterThanOrEqual(well.y + well.height + MODAL.gap);
+    }
+  },
+);
+
+it("uses Large when it removes wrapping from Mr. B's full-width description", () => {
+  const info = walkerDetail(gameData, newPlayerSave.owned, "mrB");
+  const prose = info.lines.map((line) => withNamePills(gameData, line));
+  const rowsAt = (family: "medium" | "large") => {
+    const width = modalFamilyWidth(SCREEN_LAYOUT.screen.width - 2 * MODAL.margin, family);
+    return prose.reduce((count, text) => count + wrap(cardTextRooms(width).full, text).length, 0);
+  };
+  expect(rowsAt("medium")).toBeGreaterThan(rowsAt("large"));
+  const view = detailCardView(gameData, measure, SCREEN_LAYOUT.screen, {
+    card: info,
+    kind: "walker",
+    picture,
+  });
+  expect(view.card.panel.width).toBe(
+    modalFamilyWidth(SCREEN_LAYOUT.screen.width - 2 * MODAL.margin, "large"),
+  );
+});
+
+it("keeps real narrow description wrapping and applies the same layout to a debuff explanation", () => {
+  const info = explainDetail(
+    gameData,
+    newPlayerSave,
+    testState({ archie: 3 }, { debuffs: [{ debuff: "muddy", secondsLeft: 9.2 }] }),
+    { debuff: "muddy", kind: "debuff" },
+  )!;
+  const area = { ...SCREEN_LAYOUT.screen, width: 240 };
+  const view = detailCardView(gameData, measure, area, info);
+  const full = view.card.panel.width - 2 * HOME_LAYOUT.card.pad;
+  const prose = withNamePills(gameData, info.card.lines[0]!);
+  const row = view.texts.find((row) => row.lines.join(" ") === prose)!;
+  expect(row.x).toBe(view.card.panel.x + HOME_LAYOUT.card.pad);
+  expect(row.lines).toEqual(wrap(full, prose));
+  expect(row.lines.every((line) => widthOf("body", line) <= full)).toBe(true);
+  const walker = detailCardView(gameData, measure, area, { card: mrB, kind: "walker", picture });
+  const room = walker.card.panel.width - 2 * HOME_LAYOUT.card.pad;
+  const proseLines = mrB.lines.map((line) => withNamePills(gameData, line));
+  expect(proseLines.some((text) => wrap(room, text).length > 1)).toBe(true);
+  for (const text of proseLines) {
+    const shown = walker.texts.find((row) => row.lines.join(" ") === text)!;
+    expect(shown.lines).toEqual(wrap(room, text));
+    expect(shown.lines.every((line) => widthOf("body", line) <= room)).toBe(true);
+  }
+});

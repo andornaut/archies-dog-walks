@@ -137,12 +137,14 @@ function cardRows(rows: readonly CardRow[], tops: readonly number[], where: stri
 }
 function detailPairs(kind: "dog" | "gear" | "walker", card: DetailCard): Pair[] {
   const rowsIn = (parts: readonly DetailPart[], room: number): CardRow[] =>
-    parts.map((part) =>
-      "owner" in part ? { owner: part.owner } : { lines: cardLinesOf(room, part.text) },
-    );
+    parts.map((part) => ({ lines: cardLinesOf(room, part.text) }));
   const parts = detailParts(kind, card);
   const beside = rowsIn(parts.beside, CARD_TEXT_ROOM.beside);
-  const below = rowsIn(parts.below, CARD_TEXT_ROOM.full);
+  const below: CardRow[] = [
+    ...rowsIn(parts.below, CARD_TEXT_ROOM.full),
+    ...(card.owner === undefined ? [] : [{ owner: card.owner }]),
+    { lines: cardLinesOf(CARD_TEXT_ROOM.full, card.status) },
+  ];
   const counts = (rows: readonly CardRow[]): DetailRow[] =>
     rows.map((row) => ("owner" in row ? ownerOf(row) : row.lines.length));
   const layout = detailCardLayout(BODY, { below: counts(below), beside: counts(beside) });

@@ -58,8 +58,7 @@ interface ExplainSave {
   readonly stats: Pick<SaveStats, "dogs">;
 }
 
-// The detail card a held element opens, laid out as the home screen's dog or walker card (its
-// rows under the picture) or gear card (its rows beside it).
+// Held elements share item details: compact identity beside art, full-width description below.
 interface ExplainDetail {
   readonly card: DetailCard;
   readonly kind: "dog" | "gear" | "walker";

@@ -25,7 +25,7 @@ import { cents } from "../units.ts";
 import { CELEBRATION_PANEL } from "./badgesView.ts";
 import { dogDetail, gearDetail, walkerDetail } from "./detail.ts";
 import { detailCardView, type DetailMeasure } from "./detailCardView.ts";
-import { updateModalLayout } from "./homeLayout.ts";
+import { HOME_LAYOUT, updateModalLayout } from "./homeLayout.ts";
 import { logbookView } from "./logbookView.ts";
 import { purchaseConfirmLayout } from "./purchaseConfirmLayout.ts";
 import { installStepsLayout, settingsLayout } from "./settings.ts";
@@ -161,7 +161,13 @@ it("keeps full dog details and the separate owner row, and omits walker type tex
   for (const text of [dog.subtitle, ...dog.lines, name, role]) {
     const row = dogView.texts.find((row) => row.lines.join(" ") === text);
     expect(row, text).toBeDefined();
-    expect(row!.x).toBeGreaterThan(dogView.framed[0]!.rect.x + dogView.framed[0]!.rect.width);
+    const well = dogView.framed[0]!.rect;
+    if (dog.lines.slice(1).includes(text)) {
+      expect(row!.x).toBe(dogView.card.panel.x + HOME_LAYOUT.card.pad);
+      expect(row!.capTop).toBeGreaterThanOrEqual(well.y + well.height + MODAL.gap);
+    } else {
+      expect(row!.x).toBeGreaterThan(well.x + well.width);
+    }
   }
   expect(dogView.framed).toHaveLength(2);
   for (const row of dogView.texts) {

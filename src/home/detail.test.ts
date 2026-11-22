@@ -18,7 +18,7 @@ import type { Owned } from "../save/schema.ts";
 import { STARTER_DOGS } from "../testing/saves.ts";
 import { TEST_TUNING } from "../testing/tuning.ts";
 import { cents } from "../units.ts";
-import { type DetailCard, detailParts, dogDetail, gearDetail, walkerDetail } from "./detail.ts";
+import { detailParts, dogDetail, gearDetail, walkerDetail } from "./detail.ts";
 import { purchasePrice } from "./home.ts";
 import { homeLine } from "./homeText.ts";
 import { walkerDetailLines } from "./walkers.ts";
@@ -140,7 +140,6 @@ describe("walkerDetail", () => {
 
 describe("detailParts", () => {
   const none: Owned = { dogSlots: [], dogs: [], gear: [], walkers: [] };
-  const status = (card: DetailCard) => ({ text: card.status, tone: "status" });
   it.each([
     { card: dogDetail(data, none, dollars(0), "lady"), kind: "dog", owned: "for sale" },
     { card: dogDetail(data, owned, dollars(0), "ginger"), kind: "dog", owned: "owned" },
@@ -157,11 +156,13 @@ describe("detailParts", () => {
     { card: walkerDetail(data, none, "casey"), kind: "walker", owned: "locked" },
     { card: walkerDetail(data, owned, "casey"), kind: "walker", owned: "owned" },
   ] as const)(
-    "puts the $owned $card.title's $kind card's status, $card.status, last under the well",
+    "splits the $owned $card.title's $kind identity from its full-width description",
     ({ card, kind }) => {
       const parts = detailParts(kind, card);
-      expect(parts.below.at(-1)).toEqual(status(card));
-      expect(parts.beside).not.toContainEqual(status(card));
+      const identity = kind === "dog" ? [card.subtitle, ...card.lines.slice(0, 1)] : [];
+      const description = kind === "dog" ? card.lines.slice(1) : card.lines;
+      expect(parts.beside.map((part) => part.text)).toEqual(identity);
+      expect(parts.below.map((part) => part.text)).toEqual(description);
     },
   );
 });

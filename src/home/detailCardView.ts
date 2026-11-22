@@ -27,7 +27,6 @@ import {
   detailCardLayout,
   detailOwner,
   detailOwnerHeight,
-  type DetailRow,
   HOME_LAYOUT,
 } from "./homeLayout.ts";
 
@@ -218,8 +217,7 @@ export function detailCardView(
   detail: DetailViewInput,
 ): DetailCardView {
   const { card, kind, picture } = detail;
-  const parts = detailParts(kind === "dogSlot" ? "gear" : kind, card);
-  const besideParts = parts.beside.filter((part) => !("owner" in part));
+  const { below: descriptionParts, beside: besideParts } = detailParts(kind, card);
   const status = detail.statusLines ?? [{ kind: "status" as const, text: card.status }];
   const statusLines = [
     ...status,
@@ -231,7 +229,7 @@ export function detailCardView(
   const footerGap = MODAL.pad;
   // Each row of text's value: each effect's name a line leads with, as a perk's "Second
   // chance: …", in its pill.
-  const valueOf = (part: Extract<DetailPart, { text: string }>) =>
+  const valueOf = (part: DetailPart) =>
     part.tone === "line" ? withNamePills(data, part.text) : part.text;
   const measureFamily = (family: "large" | "medium") => {
     const width = modalFamilyWidth(dim.width - 2 * MODAL.margin, family);
@@ -242,17 +240,12 @@ export function detailCardView(
       bodyFits &&= measure.bodyWidth(lines) <= room;
       return lines.length;
     };
-    const counts = (rows: readonly DetailPart[], room: number): DetailRow[] =>
-      rows.map((row) =>
-        "owner" in row
-          ? {
-              nameLines: linesIn(rooms.ownerName, row.owner.name),
-              roleLines: linesIn(rooms.ownerName, row.owner.role),
-            }
-          : linesIn(room, valueOf(row)),
-      );
+    const counts = (rows: readonly DetailPart[], room: number) =>
+      rows.map((row) => linesIn(room, valueOf(row)));
+    const descriptionRows = counts(descriptionParts, rooms.full);
+    const descriptionLines = descriptionRows.reduce((sum, lines) => sum + lines, 0);
     const upper = detailCardLayout(measure.body, {
-      below: [],
+      below: descriptionRows,
       beside: counts(besideParts, rooms.beside),
     });
     let bottom = upper.height - CARD.pad;
@@ -326,6 +319,7 @@ export function detailCardView(
     }
     const height = layout.height + heading.extraHeight + footerGap + layout.footerHeight;
     return {
+      descriptionLines,
       fits: bodyFits && height <= dim.height - 2 * MODAL.margin,
       heading,
       layout,
@@ -334,11 +328,15 @@ export function detailCardView(
     };
   };
   // All detail types use the narrow family only while the complete full-size content fits and
-  // widening would not remove a title line.
+  // widening would not remove a title or description line.
   const medium = measureFamily("medium");
   const large = measureFamily("large")!;
   const selected =
-    medium?.fits && medium.heading.lines.length <= large.heading.lines.length ? medium : large;
+    medium?.fits &&
+    medium.heading.lines.length <= large.heading.lines.length &&
+    medium.descriptionLines <= large.descriptionLines
+      ? medium
+      : large;
   const { heading, layout, rooms, width } = selected;
   const { well } = CARD;
   const wellRect = { height: well.size, width: well.size, x: well.x, y: layout.wellY };
@@ -396,10 +394,6 @@ export function detailCardView(
   const rows = (parts: readonly DetailPart[], x: number, room: number, tops: readonly number[]) =>
     parts.forEach((row, i) => {
       const y = tops[i] ?? 0;
-      if ("owner" in row) {
-        addOwner(content, measure, data, { x, y }, rooms.ownerName, row.owner);
-        return;
-      }
       addText(content, measure, {
         capTop: y,
         colour: colours[row.tone],
@@ -408,6 +402,7 @@ export function detailCardView(
       });
     });
   rows(besideParts, CARD.besideX, rooms.beside, layout.beside);
+  rows(descriptionParts, CARD.pad, rooms.full, layout.below);
   if (card.owner !== undefined && layout.owner !== undefined) {
     addOwner(content, measure, data, layout.owner, layout.owner.room, card.owner);
   }

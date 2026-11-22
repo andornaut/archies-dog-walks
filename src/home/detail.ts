@@ -166,22 +166,24 @@ export function walkerDetail(
   };
 }
 
-// A detail card's row: text in its tone, or a dog's owner.
-export type DetailPart =
-  | { readonly owner: NonNullable<DetailCard["owner"]> }
-  | { readonly text: string; readonly tone: "line" | "status" | "subtitle" };
+// Flowing description or compact identity text. Owner and status retain their own blocks.
+export interface DetailPart {
+  readonly text: string;
+  readonly tone: "line" | "subtitle";
+}
 
-// Every detail card puts meaningful information beside its primary art and status below both
-// columns. Only dogs have a breed subtitle and an owner photo/name/role block.
+// Compact dog identity sits beside the portrait. Descriptions use the full width below it,
+// followed by an optional owner and status.
 export function detailParts(
   kind: "dog" | "dogSlot" | "gear" | "walker",
   card: DetailCard,
 ): { below: DetailPart[]; beside: DetailPart[] } {
   const lines = card.lines.map((text) => ({ text, tone: "line" }) as const);
   const breed = kind === "dog" ? [{ text: card.subtitle, tone: "subtitle" } as const] : [];
-  const owner = card.owner === undefined ? [] : [{ owner: card.owner }];
+  const identity = kind === "dog" ? lines.slice(0, 1) : [];
+  const description = kind === "dog" ? lines.slice(1) : lines;
   return {
-    below: [{ text: card.status, tone: "status" }],
-    beside: [...breed, ...lines, ...owner],
+    below: description,
+    beside: [...breed, ...identity],
   };
 }
