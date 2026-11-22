@@ -6,36 +6,21 @@
   transform-origin: top left;
 }
 
-.adw-standalone-mute button {
-  position: absolute;
-  margin: 0;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  color: var(--mute-cream);
+/* The common skin owns frame, bevel, focus and interaction fills. Keep the existing hit box. */
+.adw-standalone-mute .adw-standard-button.ui-standard-button {
   pointer-events: auto;
-  cursor: pointer;
   font: 10px monospace;
-  outline: none;
 }
 
-.adw-standalone-mute button::before {
-  position: absolute;
+.adw-standalone-mute .adw-standard-button .adw-standard-button-face {
+  inset: auto;
   left: var(--mute-face-x);
   top: var(--mute-face-y);
   width: 20px;
   height: 20px;
-  border: 1px solid var(--mute-ink);
-  box-sizing: border-box;
-  background: var(--mute-brown) var(--mute-chrome) center / 20px 20px no-repeat;
-  content: "";
-  image-rendering: pixelated;
 }
 
 .adw-standalone-mute-icon {
-  position: absolute;
-  left: calc(var(--mute-face-x) + 2px);
-  top: calc(var(--mute-face-y) + 1px);
   display: grid;
   place-items: center;
   width: 16px;
@@ -50,29 +35,4 @@
 
 .adw-standalone-mute button[data-muted="true"] .adw-standalone-mute-native {
   background-position-x: -16px;
-}
-
-.adw-standalone-mute button:focus-visible::after {
-  position: absolute;
-  left: calc(var(--mute-face-x) + 1px);
-  top: calc(var(--mute-face-y) + 1px);
-  box-sizing: border-box;
-  width: 18px;
-  height: 18px;
-  border: 2px solid var(--mute-cyan);
-  content: "";
-  pointer-events: none;
-  box-shadow:
-    0 0 0 1px var(--mute-ink),
-    inset 0 0 0 1px var(--mute-ink);
-}
-
-@media (forced-colors: active) {
-  .adw-standalone-mute button:focus-visible::after {
-    border-color: Highlight;
-    box-shadow:
-      0 0 0 1px Canvas,
-      inset 0 0 0 1px Canvas;
-    forced-color-adjust: none;
-  }
 }

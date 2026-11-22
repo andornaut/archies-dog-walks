@@ -7,11 +7,13 @@ import { MENU_TEXT } from "../../data/menuText.ts";
 import { SCREEN_CONFIG } from "../../data/screen.ts";
 import { PALETTE } from "../palette.ts";
 import { topSectionLayout } from "../topSection.ts";
-import { bindGameAction, bindGameActionHolds } from "./actionBinding.ts";
+import { bindGameActionHolds } from "./actionBinding.ts";
+import { createControlGlyph } from "./controlGlyph.ts";
+import { createGameButton } from "./gameButton.ts";
 
 // Renderer failure uses the same device preference as Phaser's soundboard.
 // The control needs neither a compatible progress save nor loaded game fonts or textures, and
-// draws its art inlined (virtual:adw-crash-art) rather than from a sheet.
+// uses a vector glyph with inlined raster and text fallbacks rather than a loaded sheet.
 export interface MuteControlSettings {
   readonly current: { readonly muted: boolean };
   setMuted(muted: boolean): void;
@@ -22,17 +24,40 @@ export function mountMuteControl(settings: MuteControlSettings, parent: HTMLElem
   const doc = parent.ownerDocument;
   const view = doc.createElement("div");
   view.className = "adw-standalone-mute";
-  for (const name of ["brown", "cream", "cyan", "ink"] as const) {
-    view.style.setProperty(`--mute-${name}`, `#${PALETTE[name].toString(16).padStart(6, "0")}`);
+  for (const name of [
+    "cream",
+    "cyan",
+    "darkGreen",
+    "forest",
+    "green",
+    "ink",
+    "navy",
+    "neutralGrey",
+    "neutralLightGrey",
+    "neutralSlate",
+    "plum",
+    "tan",
+    "white",
+    "yellow",
+  ] as const) {
+    view.style.setProperty(`--adw-${name}`, `#${PALETTE[name].toString(16).padStart(6, "0")}`);
   }
-  const button = doc.createElement("button");
-  button.type = "button";
-  button.setAttribute("aria-label", MENU_TEXT.settings.sound);
-  button.setAttribute("aria-keyshortcuts", "M");
+  const active = () => !parent.inert && !parent.hidden;
+  const toggle = () => {
+    if (active()) {
+      settings.setMuted(!settings.current.muted);
+    }
+  };
   const icon = doc.createElement("span");
   icon.className = "adw-standalone-mute-icon";
   icon.setAttribute("aria-hidden", "true");
-  button.append(icon);
+  const controlView = createGameButton(doc, {
+    content: { icon, kind: "icon", name: MENU_TEXT.settings.sound },
+    getAction: () => ({ activate: toggle }),
+    getState: () => ({ toggled: settings.current.muted }),
+  });
+  const button = controlView.element;
+  button.setAttribute("aria-keyshortcuts", "M");
   view.append(button);
   const [, control] = topSectionLayout(["mute", "menu"]).controls[0]!;
   Object.assign(button.style, {
@@ -43,25 +68,33 @@ export function mountMuteControl(settings: MuteControlSettings, parent: HTMLElem
   });
   button.style.setProperty("--mute-face-x", `${control.face.x - control.hit.x}px`);
   button.style.setProperty("--mute-face-y", `${control.face.y - control.hit.y}px`);
-  button.style.setProperty("--mute-chrome", `url("${crashArt.chrome}")`);
   const image = doc.createElement("img");
+  let rasterReady = false;
+  let vector = false;
   image.alt = "";
   image.onload = () => {
-    icon.classList.add("adw-standalone-mute-native");
+    rasterReady = true;
+    if (!vector) {
+      icon.classList.add("adw-standalone-mute-native");
+    }
     icon.style.setProperty("--mute-sprite", `url("${image.src}")`);
   };
   image.src = crashArt.sound;
   const show = () => {
     const { muted } = settings.current;
-    button.setAttribute("aria-pressed", String(muted));
+    controlView.refresh();
     button.title = `${MENU_TEXT.settings.sound}: ${muted ? MENU_TEXT.settings.off : MENU_TEXT.settings.on}`;
     button.setAttribute("data-muted", String(muted));
-    icon.textContent = muted ? "X" : MENU_TEXT.settings.on;
-  };
-  const active = () => !parent.inert && !parent.hidden;
-  const toggle = () => {
-    if (active()) {
-      settings.setMuted(!settings.current.muted);
+    try {
+      icon.replaceChildren(createControlGlyph(doc, muted ? "sound-off" : "sound-on"));
+      vector = true;
+      icon.classList.remove("adw-standalone-mute-native");
+    } catch {
+      // Keep the inlined bootstrap art and readable text if this DOM cannot construct SVG.
+      vector = false;
+      icon.replaceChildren();
+      icon.textContent = muted ? "X" : MENU_TEXT.settings.on;
+      icon.classList.toggle("adw-standalone-mute-native", rasterReady);
     }
   };
   const key = (event: KeyboardEvent) => {
@@ -71,7 +104,6 @@ export function mountMuteControl(settings: MuteControlSettings, parent: HTMLElem
       toggle();
     }
   };
-  const unbind = bindGameAction({ activate: () => toggle(), available: active }, button);
   const stopHold = bindGameActionHolds(
     {
       cancelPress: () => undefined,
@@ -103,7 +135,7 @@ export function mountMuteControl(settings: MuteControlSettings, parent: HTMLElem
   return () => {
     stop();
     stopHold();
-    unbind();
+    controlView.dispose();
     resize?.disconnect();
     parent.removeEventListener("keydown", key);
     doc.defaultView?.removeEventListener("keydown", key);
