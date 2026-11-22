@@ -139,9 +139,9 @@ describe("startLaunch", () => {
 });
 
 describe("Update now", () => {
-  function offer(updateNow: UpdateOffer["updateNow"]) {
+  function offer(updateNow: UpdateOffer["updateNow"], version = "next") {
     const dismiss = vi.fn();
-    options().onUpdateReady({ dismiss, updateNow, version: "next" });
+    options().onUpdateReady({ dismiss, updateNow, version });
     return dismiss;
   }
 
@@ -184,6 +184,116 @@ describe("Update now", () => {
     expect(launch.updateOffered()).toBe(false);
     launch.acceptUpdate(() => Promise.resolve());
     expect(updateNow).not.toHaveBeenCalled();
+  });
+
+  it("closes its matching obsolete offer with an idle wait and normal change event", async () => {
+    await launch.startLaunch(() => ({ dispose() {}, update() {} }));
+    const { ObsoleteUpdateOfferError } =
+      await import("@andornaut/game-kit/runtime/web/pwa/buildContract");
+    const { loadingProgress } = await import("../loadingProgress.ts");
+    let reject!: (error: Error) => void;
+    const updateNow = vi.fn(
+      () =>
+        new Promise<void>((_resolve, fail) => {
+          reject = fail;
+        }),
+    );
+    const dismiss = offer(updateNow);
+    const save = vi.fn(() => Promise.resolve());
+    launch.acceptUpdate(save);
+    expect(snapshot(loadingProgress).active).toBe(true);
+    const observed: { accepting: boolean; failed: boolean; loading: boolean; offered: boolean }[] =
+      [];
+    dispatched.length = 0;
+    vi.stubGlobal("window", {
+      dispatchEvent: (event: Event) => {
+        dispatched.push(event.type);
+        if (event.type === PHONE_EVENTS.updateReady) {
+          observed.push({
+            accepting: launch.updateAccepting(),
+            failed: launch.updateAcceptanceFailed(),
+            loading: snapshot(loadingProgress).active,
+            offered: launch.updateOffered(),
+          });
+        }
+      },
+    });
+    reject(new ObsoleteUpdateOfferError("next"));
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(observed).toEqual([{ accepting: false, failed: false, loading: false, offered: false }]);
+    expect(dispatched).toEqual([PHONE_EVENTS.updateReady]);
+    expect(dismiss).not.toHaveBeenCalled();
+    launch.acceptUpdate(save);
+    expect(updateNow).toHaveBeenCalledExactlyOnceWith(save);
+    expect(kit.requestUpdateCheck).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    { name: "a newer offer", version: "later" },
+    { name: "a different object for the same version", version: "next" },
+  ])("keeps $name actionable when the accepted object becomes obsolete", async ({ version }) => {
+    await launch.startLaunch(() => ({ dispose() {}, update() {} }));
+    const { ObsoleteUpdateOfferError } =
+      await import("@andornaut/game-kit/runtime/web/pwa/buildContract");
+    const { loadingProgress } = await import("../loadingProgress.ts");
+    let reject!: (error: Error) => void;
+    const oldUpdateNow = vi.fn(
+      () =>
+        new Promise<void>((_resolve, fail) => {
+          reject = fail;
+        }),
+    );
+    const oldDismiss = offer(oldUpdateNow);
+    const save = vi.fn(() => Promise.resolve());
+    launch.acceptUpdate(save);
+    const replacement = vi.fn(() => Promise.resolve());
+    const replacementDismiss = offer(replacement, version);
+    dispatched.length = 0;
+    reject(new ObsoleteUpdateOfferError("next"));
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(launch.updateOffered()).toBe(true);
+    expect(launch.updateAccepting()).toBe(false);
+    expect(launch.updateAcceptanceFailed()).toBe(false);
+    expect(snapshot(loadingProgress).active).toBe(false);
+    expect(dispatched).toEqual([PHONE_EVENTS.updateReady]);
+    expect(oldDismiss).not.toHaveBeenCalled();
+    expect(replacementDismiss).not.toHaveBeenCalled();
+    expect(replacement).not.toHaveBeenCalled();
+    launch.acceptUpdate(save);
+    expect(replacement).toHaveBeenCalledExactlyOnceWith(save);
+    expect(oldUpdateNow).toHaveBeenCalledExactlyOnceWith(save);
+  });
+
+  it("retains the accepted offer when an obsolete error names a different version", async () => {
+    await launch.startLaunch(() => ({ dispose() {}, update() {} }));
+    const { ObsoleteUpdateOfferError } =
+      await import("@andornaut/game-kit/runtime/web/pwa/buildContract");
+    const { loadingProgress } = await import("../loadingProgress.ts");
+    let reject!: (error: Error) => void;
+    const updateNow = vi.fn(
+      () =>
+        new Promise<void>((_resolve, fail) => {
+          reject = fail;
+        }),
+    );
+    const dismiss = offer(updateNow);
+    const save = vi.fn(() => Promise.resolve());
+    launch.acceptUpdate(save);
+    dispatched.length = 0;
+    reject(new ObsoleteUpdateOfferError("other"));
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(launch.updateOffered()).toBe(true);
+    expect(launch.updateAccepting()).toBe(false);
+    expect(launch.updateAcceptanceFailed()).toBe(false);
+    expect(snapshot(loadingProgress).active).toBe(false);
+    expect(dispatched).toEqual([PHONE_EVENTS.updateReady]);
+    expect(dismiss).not.toHaveBeenCalled();
+    expect(updateNow).toHaveBeenCalledExactlyOnceWith(save);
+    launch.acceptUpdate(save);
+    expect(updateNow).toHaveBeenCalledTimes(2);
   });
 
   it("is refused while a newer save requires an update, which alone shows staging", async () => {

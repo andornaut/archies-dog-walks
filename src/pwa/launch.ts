@@ -6,11 +6,12 @@
 // rest through src/pwa/index.ts.
 import type { LoadingAttemptState } from "@andornaut/game-kit/runtime/load/loadingAttempts";
 import type { ProgressHandle } from "@andornaut/game-kit/runtime/progressState";
-import type {
-  LaunchFailure,
-  LaunchResult,
-  NetworkPlayNotice,
-  UpdateOffer,
+import {
+  type LaunchFailure,
+  type LaunchResult,
+  type NetworkPlayNotice,
+  ObsoleteUpdateOfferError,
+  type UpdateOffer,
 } from "@andornaut/game-kit/runtime/web/pwa/buildContract";
 import {
   browserLaunchContext,
@@ -214,7 +215,7 @@ export function updateAcceptanceFailed(): boolean {
 }
 
 // Update now: waits for save, then activates the staged build and reloads into it with no
-// download. A failed switch keeps this build playing and the prompt offering a retry.
+// download. An obsolete accepted offer closes only its own prompt; other failures keep retry.
 export function acceptUpdate(save: () => Promise<void>): void {
   const current = offer;
   if (current === undefined || accepting !== undefined || required !== undefined) {
@@ -224,10 +225,17 @@ export function acceptUpdate(save: () => Promise<void>): void {
   acceptFailed = false;
   changedOffer();
   current.updateNow(save).catch((error: unknown) => {
-    console.warn("Update now could not switch builds.", error);
     accepting?.finish();
     accepting = undefined;
-    acceptFailed = true;
+    if (error instanceof ObsoleteUpdateOfferError) {
+      if (error.version === current.version && offer === current) {
+        offer = undefined;
+        acceptFailed = false;
+      }
+    } else {
+      console.warn("Update now could not switch builds.", error);
+      acceptFailed = true;
+    }
     changedOffer();
   });
 }
