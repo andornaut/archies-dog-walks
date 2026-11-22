@@ -73,3 +73,4 @@ Reference: [Screens and UI](../../src/README.md#screens-and-ui), [Assets](../../
 | adw-0205 | Keep one action-area cancellation on decision dialogs            | [adw-0205.md](../work/adw-0205.md) |
 | adw-0207 | Match visible close insets and separate purchase status          | [adw-0207.md](../work/adw-0207.md) |
 | adw-0210 | Move Cheats to Menu and Pause and group its actions              | [adw-0210.md](../work/adw-0210.md) |
+| adw-0212 | Make Back and Close respond on the first press                   | [adw-0212.md](../work/adw-0212.md) |
