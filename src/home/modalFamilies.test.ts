@@ -145,11 +145,11 @@ it("keeps Fanny pack on one full-size title line and uses shared content and foo
   const bottom = (text: NonNullable<typeof effect>) =>
     text.capTop + inkRowsOfLines(fonts.body, text.lines.length) * 2;
   expect(status!.lines.join(" ")).toBe(card.status);
-  expect(status!.capTop - Math.max(well.y + well.height, bottom(effect!))).toBe(MODAL.gap);
-  expect(view.card.footer!.rect.y - bottom(status!)).toBe(MODAL.gap);
+  expect(status!.capTop - Math.max(well.y + well.height, bottom(effect!))).toBe(MODAL.pad);
+  expect(view.card.footer!.rect.y - bottom(status!)).toBe(MODAL.pad);
 });
 
-it("keeps the full long dog and owner block in the right column and omits walker type text", () => {
+it("keeps full dog details and the separate owner row, and omits walker type text", () => {
   const dog = dogDetail(gameData, newPlayerSave.owned, cents(0), "sequoia");
   const name = "Aunt Judy and the entire tennis club";
   const role = "Tennis coach for the neighbourhood junior championship team";
@@ -165,9 +165,9 @@ it("keeps the full long dog and owner block in the right column and omits walker
   }
   expect(dogView.framed).toHaveLength(2);
   for (const row of dogView.texts) {
-    expect(row.x + measure.bodyWidth(row.lines)).toBeLessThanOrEqual(
-      dogView.card.panel.x + dogView.card.panel.width - MODAL.pad,
-    );
+    expect(
+      row.align === "inkRight" ? row.x : row.x + measure.bodyWidth(row.lines),
+    ).toBeLessThanOrEqual(dogView.card.panel.x + dogView.card.panel.width - MODAL.pad);
   }
   const card = walkerDetail(gameData, newPlayerSave.owned, "casey");
   const walker = detailCardView(gameData, measure, SCREEN_LAYOUT.screen, {
@@ -201,9 +201,9 @@ it("fits all authored item details at their selected widths without shrinking te
     expect(view.card.title.every((line) => line.scale === 3)).toBe(true);
     for (const text of view.texts) {
       expect(text.scale ?? 2).toBe(2);
-      expect(measure.bodyWidth(text.lines)).toBeLessThanOrEqual(
-        view.card.panel.x + view.card.panel.width - MODAL.pad - text.x,
-      );
+      expect(
+        text.align === "inkRight" ? text.x : text.x + measure.bodyWidth(text.lines),
+      ).toBeLessThanOrEqual(view.card.panel.x + view.card.panel.width - MODAL.pad);
     }
   }
 });

@@ -1,13 +1,22 @@
+import { wrapWords } from "@andornaut/game-kit/runtime/lines";
 import type { Point, Rect } from "@andornaut/game-kit/runtime/rect";
+import { inkRowsOfLines } from "@andornaut/game-kit/runtime/text/bitmapFont";
 
 import { DETAIL_WELL_KEY, ownerFaceKey } from "../assets/spriteKeys.ts";
 import { MENU_TEXT } from "../data/menuText.ts";
 import type { GameData } from "../data/types.ts";
 import { withNamePills } from "../hud/effectNames.ts";
 import { barTitleRoom } from "../ui/barTitle.ts";
+import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";
 import { closeControl } from "../ui/closeControl.ts";
-import { DISMISS_FOOTER_SPACE, dismissFooter } from "../ui/modal/dismissFooter.ts";
-import { MODAL, modalFamilyWidth, modalRect, modalTitleLayout } from "../ui/modal/layout.ts";
+import { dismissFooter } from "../ui/modal/dismissFooter.ts";
+import {
+  MODAL,
+  modalActionWidth,
+  modalFamilyWidth,
+  modalRect,
+  modalTitleLayout,
+} from "../ui/modal/layout.ts";
 import { cardTitleRow } from "../ui/modal/titleRow.ts";
 import { type PanelMeasure, type QuestionPanelView } from "../ui/modal/types.ts";
 import { modalCardView } from "../ui/modal/view.ts";
@@ -17,6 +26,7 @@ import {
   cardTextRooms,
   detailCardLayout,
   detailOwner,
+  detailOwnerHeight,
   type DetailRow,
   HOME_LAYOUT,
 } from "./homeLayout.ts";
@@ -109,6 +119,7 @@ export interface DetailCardView {
   // The ui-detail-card, its title and close control.
   readonly card: QuestionPanelView;
   readonly framed: readonly DetailFramed[];
+  readonly separators?: readonly Rect[];
   readonly texts: readonly DetailText[];
   readonly title: string;
 }
@@ -190,17 +201,34 @@ function addArt(content: Content, art: DetailArt): void {
   content.right = Math.max(content.right, art.x + art.size.width * art.scale);
 }
 
-// A held dog's, walker's or gear item's detail card, as tall as what it shows, its rows beside
-// the well and under it as detailParts places them, centred in dim (the part of the screen
-// dimmed under it), using the selected family with full-size text reflow.
+export interface DetailViewInput {
+  readonly card: DetailCard;
+  readonly kind: "dog" | "dogSlot" | "gear" | "walker";
+  readonly picture: DetailPicture;
+  readonly purchase?: { readonly buy: string; readonly cancel: string; readonly left: string };
+  readonly statusLines?: readonly { readonly kind: "price" | "status"; readonly text: string }[];
+}
+
+// Item details use one content-sized modal: primary art and information, an optional owner
+// row, centred status lines and either purchase actions or a centred Close footer.
 export function detailCardView(
   data: Pick<GameData, "debuffs" | "dogs" | "shopGear" | "upgrades" | "walkerPerks">,
   measure: DetailMeasure,
   dim: Rect,
-  detail: { card: DetailCard; kind: "dog" | "gear" | "walker"; picture: DetailPicture },
+  detail: DetailViewInput,
 ): DetailCardView {
   const { card, kind, picture } = detail;
-  const parts = detailParts(kind, card);
+  const parts = detailParts(kind === "dogSlot" ? "gear" : kind, card);
+  const besideParts = parts.beside.filter((part) => !("owner" in part));
+  const status = detail.statusLines ?? [{ kind: "status" as const, text: card.status }];
+  const statusLines = [
+    ...status,
+    ...(detail.purchase === undefined
+      ? []
+      : [{ kind: "status" as const, text: detail.purchase.left }]),
+  ];
+  const dividerGap = MODAL.gap + MODAL.rowGap;
+  const footerGap = MODAL.pad;
   // Each row of text's value: each effect's name a line leads with, as a perk's "Second
   // chance: …", in its pill.
   const valueOf = (part: Extract<DetailPart, { text: string }>) =>
@@ -223,10 +251,58 @@ export function detailCardView(
             }
           : linesIn(room, valueOf(row)),
       );
-    const layout = detailCardLayout(measure.body, {
-      below: counts(parts.below, rooms.full),
-      beside: counts(parts.beside, rooms.beside),
+    const upper = detailCardLayout(measure.body, {
+      below: [],
+      beside: counts(besideParts, rooms.beside),
     });
+    let bottom = upper.height - CARD.pad;
+    let owner: { x: number; y: number; room: number } | undefined;
+    const separators: Rect[] = [];
+    if (card.owner !== undefined) {
+      const photo = detailOwner(measure.body, { x: 0, y: 0 }, 1).photo;
+      const x = CARD.well.x + CARD.well.size - photo.width;
+      const room = width - CARD.pad - (x + photo.width + CARD.owner.gap);
+      const nameLines = linesIn(room, card.owner.name);
+      const roleLines = linesIn(room, card.owner.role);
+      owner = { room, x, y: bottom + MODAL.pad };
+      bottom = owner.y + detailOwnerHeight(measure.body, roleLines, nameLines);
+      separators.push({ height: 1, width: rooms.full, x: CARD.pad, y: bottom + dividerGap });
+      bottom += 2 * dividerGap + 1;
+    } else {
+      bottom += MODAL.pad;
+    }
+    const statuses = statusLines.flatMap((row) => {
+      const font = row.kind === "price" ? "title" : "body";
+      return wrapWords((line) => measure.inkWidth(font, line), rooms.full, row.text).map((text) => {
+        bodyFits &&= measure.inkWidth(font, text) <= rooms.full;
+        const at = bottom;
+        bottom += inkRowsOfLines(measure[font], 1) * 2 + MODAL.pad;
+        return { font, kind: row.kind, text, y: at } as const;
+      });
+    });
+    if (statuses.length > 0) {
+      bottom -= MODAL.pad;
+    }
+    const widths =
+      detail.purchase === undefined
+        ? []
+        : [detail.purchase.cancel, detail.purchase.buy].map((label) =>
+            modalActionWidth(measure.inkWidth("title", label)),
+          );
+    const stacked = widths.reduce((a, b) => a + b, 0) + BUTTON_SIZE.gap > rooms.full;
+    bodyFits &&= widths.every((actionWidth) => actionWidth <= rooms.full);
+    const footerHeight =
+      BUTTON_SIZE.compact.height +
+      (stacked ? BUTTON_SIZE.compact.height + BUTTON_SIZE.stackGap : 0);
+    const layout = {
+      ...upper,
+      footerHeight,
+      height: bottom + CARD.pad,
+      owner,
+      separators,
+      stacked,
+      statuses,
+    };
     const titlePanel = { height: layout.height, width, x: 0, y: 0 };
     let heading;
     try {
@@ -245,7 +321,7 @@ export function detailCardView(
       }
       throw error;
     }
-    const height = layout.height + heading.extraHeight + DISMISS_FOOTER_SPACE;
+    const height = layout.height + heading.extraHeight + footerGap + layout.footerHeight;
     return {
       fits: bodyFits && height <= dim.height - 2 * MODAL.margin,
       heading,
@@ -328,11 +404,36 @@ export function detailCardView(
         x,
       });
     });
-  rows(parts.beside, CARD.besideX, rooms.beside, layout.beside);
-  rows(parts.below, CARD.pad, rooms.full, layout.below);
+  rows(besideParts, CARD.besideX, rooms.beside, layout.beside);
+  if (card.owner !== undefined && layout.owner !== undefined) {
+    addOwner(content, measure, data, layout.owner, layout.owner.room, card.owner);
+  }
+  for (const row of layout.statuses) {
+    const dollar = row.kind === "price" ? row.text.indexOf("$") : -1;
+    addText(content, measure, {
+      align: "inkRight",
+      capTop: row.y,
+      colour: colours.status,
+      font: row.font,
+      lines: [row.text],
+      ...(dollar < 0
+        ? {}
+        : {
+            spans: [
+              { colour: PALETTE.plum, text: row.text.slice(0, dollar) },
+              { colour: PALETTE.forest, text: row.text.slice(dollar, dollar + 1) },
+              {
+                colour: card.locked ? PALETTE.darkRed : PALETTE.plum,
+                text: row.text.slice(dollar + 1),
+              },
+            ],
+          }),
+      x: width / 2 + measure.inkWidth(row.font, row.text) / 2,
+    });
+  }
   const extra = heading.extraHeight;
   const rect = modalRect(dim, undefined, {
-    height: layout.height + extra + DISMISS_FOOTER_SPACE,
+    height: layout.height + extra + footerGap + layout.footerHeight,
     width,
   });
   const move = <T extends Point>(at: T): T => ({
@@ -340,16 +441,38 @@ export function detailCardView(
     x: at.x + rect.x,
     y: at.y + rect.y + extra,
   });
+  let panel = modalCardView(measure, rect, card.title, []);
+  if (detail.purchase === undefined) {
+    panel = {
+      ...panel,
+      footer: dismissFooter(measure, { label: MENU_TEXT.common.close, primary: true }, rect),
+    };
+  } else {
+    const buy = dismissFooter(measure, { label: detail.purchase.buy, primary: true }, rect);
+    const cancel = dismissFooter(measure, { label: detail.purchase.cancel, primary: false }, rect);
+    panel = modalCardView(measure, rect, card.title, [
+      {
+        label: cancel.label,
+        primary: false,
+        rect: {
+          ...cancel.rect,
+          y: layout.stacked
+            ? buy.rect.y - BUTTON_SIZE.compact.height - BUTTON_SIZE.stackGap
+            : buy.rect.y,
+        },
+        secondary: true,
+      },
+      { label: buy.label, primary: true, rect: buy.rect },
+    ]);
+  }
   return {
     art: content.art.map((art) => ({
       ...move(art),
       ...(art.holder === undefined ? {} : { holder: move({ x: art.holder.x, y: art.holder.y }) }),
     })),
-    card: {
-      ...modalCardView(measure, rect, card.title, []),
-      footer: dismissFooter(measure, { label: MENU_TEXT.common.close, primary: true }, rect),
-    },
+    card: panel,
     framed: content.framed.map((box) => ({ ...box, rect: move(box.rect) })),
+    separators: layout.separators.map((line) => move(line)),
     texts: content.texts.map((text) => ({
       ...text,
       capTop: text.capTop + rect.y + extra,
