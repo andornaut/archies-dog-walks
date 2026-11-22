@@ -4,8 +4,11 @@ import { expect, it } from "vitest";
 
 import { gameData } from "../data/index.ts";
 import { SCREEN_LAYOUT } from "../data/screen.ts";
-import { fontFileMetrics, gameFont, inkWidth } from "../testing/fontInk.ts";
+import { textPart } from "../hud/dom/detailCard.ts";
+import { FakeDocument, type FakeElement } from "../testing/fakeDom.ts";
+import { fontFileMetrics, fontInk, gameFont, inkWidth } from "../testing/fontInk.ts";
 import { newPlayerSave } from "../testing/saves.ts";
+import { artPixel, domScale, fontPixel, gridRect } from "../ui/domScale.ts";
 import { MODAL } from "../ui/modal/layout.ts";
 import { modalTitleInk } from "../ui/modal/titleRole.ts";
 import { PALETTE } from "../ui/palette.ts";
@@ -76,10 +79,8 @@ it("centres the price mark and amount together and the saving prompt as a separa
   const price = view.texts.find((text) => text.font === "title")!;
   const saving = view.texts.find((text) => text.lines.join(" ") === prompt)!;
   for (const text of [price, saving]) {
-    expect(text.align).toBe("inkRight");
-    expect(text.x - widthOf(text.font ?? "body", text.lines[0]!) / 2).toBe(
-      view.card.panel.x + view.card.panel.width / 2,
-    );
+    expect(text.align).toBe("inkCentre");
+    expect(text.x).toBe(view.card.panel.x + view.card.panel.width / 2);
     expect(text.scale ?? 2).toBe(2);
   }
   expect(view.separators).toHaveLength(2);
@@ -162,4 +163,54 @@ it("keeps the slot icon and capacity without an owner or owner divider", () => {
   expect(view.separators).toEqual([]);
   expect(view.texts.some(({ lines }) => lines.join(" ") === slot.line)).toBe(true);
   expect(view.card.footer!.label).toBe(gameData.menuText.common.close);
+});
+
+it.each([
+  { dpr: 1, width: 360 },
+  { dpr: 2.625, width: 575 },
+])("centres rendered segmented price and status ink at fit $width DPR $dpr", ({ dpr, width }) => {
+  const prompt = gameData.homeText.detail.saveUp;
+  const view = detailCardView(gameData, measure, SCREEN_LAYOUT.screen, {
+    card: { ...card, locked: true },
+    kind: "dog",
+    picture,
+    statusLines: [
+      { kind: "price", text: card.status },
+      { kind: "status", text: prompt },
+    ],
+  });
+  const scale = domScale(dpr, { height: 894, width, x: 0, y: 0 });
+  const panel = gridRect(scale, view.card.panel);
+  const middle = panel.left + panel.width / 2;
+  for (const row of view.texts.filter(
+    (text) => text.font === "title" || text.lines.join(" ") === prompt,
+  )) {
+    const doc = new FakeDocument();
+    const part = textPart(
+      doc as unknown as Document,
+      {
+        fonts: { body: gameFont("font-body"), title: gameFont("font-title") },
+        pillColours: () => undefined,
+      },
+      row,
+    );
+    part.place(scale);
+    const runs = (part.element as unknown as FakeElement).children.filter((element) =>
+      element.classList.contains("adw-text"),
+    );
+    const ink = runs.map((run) => {
+      const bounds = fontInk(
+        `font-${row.font ?? "body"}`,
+        { scale: fontPixel(scale, row.scale ?? 2) },
+        run.textContent,
+      );
+      const x = Number.parseFloat(run.style.left ?? "");
+      return { left: x + bounds.left, right: x + bounds.right };
+    });
+    const centre =
+      (Math.min(...ink.map((run) => run.left)) + Math.max(...ink.map((run) => run.right))) / 2;
+    expect(Math.abs(centre - middle), row.lines.join(" ")).toBeLessThanOrEqual(
+      artPixel(scale) / 2 + 0.5,
+    );
+  }
 });

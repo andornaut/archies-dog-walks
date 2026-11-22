@@ -166,7 +166,11 @@ it("keeps full dog details and the separate owner row, and omits walker type tex
   expect(dogView.framed).toHaveLength(2);
   for (const row of dogView.texts) {
     expect(
-      row.align === "inkRight" ? row.x : row.x + measure.bodyWidth(row.lines),
+      row.align === "inkCentre"
+        ? row.x + measure.bodyWidth(row.lines) / 2
+        : row.align === "inkRight"
+          ? row.x
+          : row.x + measure.bodyWidth(row.lines),
     ).toBeLessThanOrEqual(dogView.card.panel.x + dogView.card.panel.width - MODAL.pad);
   }
   const card = walkerDetail(gameData, newPlayerSave.owned, "casey");
@@ -202,7 +206,11 @@ it("fits all authored item details at their selected widths without shrinking te
     for (const text of view.texts) {
       expect(text.scale ?? 2).toBe(2);
       expect(
-        text.align === "inkRight" ? text.x : text.x + measure.bodyWidth(text.lines),
+        text.align === "inkCentre"
+          ? text.x + measure.bodyWidth(text.lines) / 2
+          : text.align === "inkRight"
+            ? text.x
+            : text.x + measure.bodyWidth(text.lines),
       ).toBeLessThanOrEqual(view.card.panel.x + view.card.panel.width - MODAL.pad);
     }
   }

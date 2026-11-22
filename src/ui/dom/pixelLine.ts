@@ -405,10 +405,11 @@ export function spokenText(line: string): string {
 // (ink, as a left-aligned title label's does), or its widest line's advance ending there (right,
 // as a right-aligned label's does), or its widest line's ink ending there (inkRight, as a label
 // the canvas moves there, placeInkRight), or each line's advance centred on x (centre, as a label
-// with originX 0.5 there), and its first line's capitals at capTop (game pixels), its lines a
+// with originX 0.5 there), or each line's visible ink centred on x (inkCentre). Its first line's
+// capitals start at capTop (game pixels), its lines a
 // font line apart, each effect's name set in a pill.
 export interface DomTextBlock {
-  readonly anchor?: "centre" | "ink" | "inkRight" | "pen" | "right";
+  readonly anchor?: "centre" | "ink" | "inkCentre" | "inkRight" | "pen" | "right";
   readonly backing?: Rect;
   // Each line's character indices where a run of another colour starts.
   readonly breaks?: readonly ReadonlySet<number>[];
@@ -538,9 +539,24 @@ export function blockPlace(
         )
       : deviceX(scale, block.x) + penOffset(bitmap, block) * pixel;
   const lineLeft = (shown: string) =>
-    block.anchor === "centre"
-      ? centredLeft(scale, block.x, boundsAdvance(bitmap, shown) * pixel)
-      : start;
+    block.anchor === "inkCentre"
+      ? textPlace(
+          bitmap,
+          scale,
+          { x: 0, y: 0 },
+          {
+            capTop: block.capTop,
+            centre: "ink",
+            centreX: block.x,
+            colour: block.colour,
+            font: block.font,
+            scale: block.scale,
+            text: shown,
+          },
+        ).left
+      : block.anchor === "centre"
+        ? centredLeft(scale, block.x, boundsAdvance(bitmap, shown) * pixel)
+        : start;
   const capTop = capRows(bitmap, block.font);
   const lines = block.lines.map((line, i) => {
     const shown = shownText(block.font, line);

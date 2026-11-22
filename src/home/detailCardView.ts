@@ -101,7 +101,7 @@ export interface DetailFramed {
 // each effect's name a line leads with in its pill. A one-line text may be runs in colours of
 // their own (spans), their texts the line's, run together.
 export interface DetailText {
-  readonly align?: "centre" | "inkRight" | "left" | "right";
+  readonly align?: "centre" | "inkCentre" | "inkRight" | "left" | "right";
   // A standalone label's own backing, rather than a card containing several separate parts.
   readonly backing?: Rect;
   readonly capTop: number;
@@ -416,7 +416,7 @@ export function detailCardView(
   for (const row of layout.statuses) {
     const dollar = row.kind === "price" ? row.text.indexOf("$") : -1;
     addText(content, measure, {
-      align: "inkRight",
+      align: "inkCentre",
       capTop: row.y,
       colour: colours.status,
       font: row.font,
@@ -433,7 +433,7 @@ export function detailCardView(
               },
             ],
           }),
-      x: width / 2 + measure.inkWidth(row.font, row.text) / 2,
+      x: width / 2,
     });
   }
   const extra = heading.extraHeight;
