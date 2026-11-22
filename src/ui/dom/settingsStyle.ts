@@ -8,9 +8,10 @@ export const SETTINGS_STYLE = `
   pointer-events:auto;
   touch-action:pan-y;scrollbar-width:thin}
 .adw-row:focus-visible{z-index:1}
-.adw-row:focus-visible::after{content:"";position:absolute;inset:calc(-1 * var(--adw-slice-3));
+.adw-row:not(.adw-standard-button):focus-visible::after{
+  content:"";position:absolute;inset:calc(-1 * var(--adw-slice-3));
   border:var(--adw-slice-2) solid var(--adw-cyan);pointer-events:none}
-.adw-settings-rows .adw-row:focus-visible::after{inset:0}
+.adw-settings-rows .adw-row:not(.adw-standard-button):focus-visible::after{inset:0}
 .adw-separator{background:var(--adw-tan)}
-.adw-face.adw-secondary{border-image-source:var(--adw-ui-button-secondary)}
+.adw-face.adw-secondary:not(.adw-standard-button-face){border-image-source:var(--adw-ui-button-secondary)}
 `;
