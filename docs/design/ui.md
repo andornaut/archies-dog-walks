@@ -59,3 +59,4 @@ Reference: [Screens and UI](../../src/README.md#screens-and-ui), [Assets](../../
 | adw-0186 | Use shared game button construction                              | [adw-0186.md](../work/adw-0186.md) |
 | adw-0190 | Balance vertical padding in the Start picker                     | [adw-0190.md](../work/adw-0190.md) |
 | adw-0191 | Tighten the gear details modal                                   | [adw-0191.md](../work/adw-0191.md) |
+| adw-0192 | Use Back for Settings navigation                                 | [adw-0192.md](../work/adw-0192.md) |
