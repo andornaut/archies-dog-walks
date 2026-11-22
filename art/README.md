@@ -36,7 +36,7 @@ Builds and previews run in the check image, the delivery gate image `archie-chec
   ```sh
   image="archie-check:node$(sed 's/^v//' .nvmrc)-sox-ffmpeg"
   docker volume create art-npm-deps
-  docker run --rm --cpus 4 --memory 16g \
+  docker run --rm --cpus 4 --memory 4g \
     --user 19001:19001 --group-add "$(stat -c %g .)" -e HOME=/tmp \
     --mount type=bind,src="$PWD/package.json",dst=/src/package.json,readonly \
     --mount type=bind,src="$PWD/package-lock.json",dst=/src/package-lock.json,readonly \
@@ -52,7 +52,7 @@ Builds and previews run in the check image, the delivery gate image `archie-chec
   ```sh
   image="archie-check:node$(sed 's/^v//' .nvmrc)-sox-ffmpeg"
   common="$(git rev-parse --path-format=absolute --git-common-dir)"
-  docker run --rm --network none --cpus 4 --memory 16g \
+  docker run --rm --network none --cpus 4 --memory 4g \
     --user 19001:19001 --group-add "$(stat -c %g .)" -e HOME=/tmp -e SRC="$PWD" \
     --mount type=bind,src="$PWD",dst="$PWD",readonly \
     --mount type=bind,src="$common",dst="$common",readonly \
