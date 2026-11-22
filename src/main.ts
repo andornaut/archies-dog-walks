@@ -18,9 +18,8 @@ import { SCREEN_CONFIG } from "./data/screen.ts";
 import { DEV_GAME_GLOBAL } from "./dev/devTools.ts";
 import { pageRunSetup } from "./dev/pageRunSetup.ts";
 import { noteKeyPress } from "./input/keyNumbers.ts";
-import { bindPressAdmission } from "./input/phaser/pressAdmission.ts";
+import { bindPressAdmission, createCanvasPressAdmission } from "./input/phaser/pressAdmission.ts";
 import { lostTouches } from "./input/touches.ts";
-import { createPressAdmission } from "./pressAdmission.ts";
 import { pageFrameWatch, setupPhoneApp } from "./pwa/index.ts";
 import { pageDeviceSettings } from "./save/settings.ts";
 import { BootScene } from "./scenes/BootScene.ts";
@@ -127,7 +126,7 @@ function bootGame(context: GameStartup): Game {
     });
   }
   followWorldCameras(game);
-  const press = createPressAdmission(() => game.input.pointers.some((pointer) => pointer.isDown));
+  const press = createCanvasPressAdmission(game);
   game.events.once(
     Core.Events.DESTROY,
     bindPressAdmission(game, press, () => game.canvas.parentElement?.inert === true),

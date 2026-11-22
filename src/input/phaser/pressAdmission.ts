@@ -1,6 +1,21 @@
-import type { PressAdmission } from "../../pressAdmission.ts";
+import { createPressAdmission, type PressAdmission } from "../../pressAdmission.ts";
 
 const admissions = new WeakMap<object, { admission: PressAdmission; blocked: () => boolean }>();
+
+// Phaser mirrors native controls' touches too; only canvas-origin contacts own canvas input.
+export function createCanvasPressAdmission(game: {
+  readonly canvas: EventTarget;
+  readonly input: {
+    readonly pointers: readonly {
+      readonly downElement: EventTarget | null;
+      readonly isDown: boolean;
+    }[];
+  };
+}): PressAdmission {
+  return createPressAdmission(() =>
+    game.input.pointers.some((pointer) => pointer.isDown && pointer.downElement === game.canvas),
+  );
+}
 
 // Main binds the same instance it supplies to the native layer. This adapter only exposes its
 // canvas boundary to scenes; it does not create another press owner.
