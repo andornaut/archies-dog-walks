@@ -1,4 +1,5 @@
 import { wrapWords } from "@andornaut/game-kit/runtime/lines";
+import { inkRowsOfLines } from "@andornaut/game-kit/runtime/text/bitmapFont";
 import { expect, it } from "vitest";
 
 import { gameData } from "../data/index.ts";
@@ -120,6 +121,31 @@ it("keeps portrait details Large and chooses item family using reflowed full-siz
     picture: { key: "missing-test-portrait", scale: 1 },
   });
   expect(dog.card.panel.width).toBe(328);
+});
+
+it("keeps Fanny pack on one full-size title line and uses shared content and footer gaps", () => {
+  const gear = "fannyPack";
+  const card = gearDetail(
+    gameData,
+    { ...newPlayerSave.owned, gear: [gear] },
+    cents(0),
+    { gear },
+    gear,
+  );
+  const view = detailCardView(gameData, measure, SCREEN_LAYOUT.screen, {
+    card,
+    kind: "gear",
+    picture: { key: "missing-test-icon", scale: 1 },
+  });
+  expect(view.card.title.map(({ text }) => text)).toEqual([card.title]);
+  expect(view.card.title[0]?.scale).toBe(3);
+  const well = view.framed[0]!.rect;
+  const [effect, status] = view.texts;
+  const bottom = (text: NonNullable<typeof effect>) =>
+    text.capTop + inkRowsOfLines(fonts.body, text.lines.length) * 2;
+  expect(status!.lines.join(" ")).toBe(card.status);
+  expect(status!.capTop - Math.max(well.y + well.height, bottom(effect!))).toBe(MODAL.gap);
+  expect(view.card.footer!.rect.y - bottom(status!)).toBe(MODAL.gap);
 });
 
 it("fits all authored item details at their selected widths without shrinking text", () => {

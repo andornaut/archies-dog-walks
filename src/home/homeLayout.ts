@@ -624,12 +624,14 @@ export function detailOwner(
 // Rows from top down, the next starting as far under a row's lowest ink as one line of 2x body
 // text starts under the last (a line of the font and the card's rowGap past its capitals): each
 // row's top (its capitals', or the owner's photo's), and the last row's lowest ink.
+// An explicit group gap measures clear space from the preceding row's lowest ink.
 function cardRows(
   body: FontMetrics,
   top: number,
+  gap: number | undefined,
   rows: readonly DetailRow[],
 ): { bottom: number; tops: number[] } {
-  const inkGap = body.lineHeight * 2 + HOME_LAYOUT.card.rowGap - inkRowsFromCapTop(body) * 2;
+  const inkGap = gap ?? body.lineHeight * 2 + HOME_LAYOUT.card.rowGap - inkRowsFromCapTop(body) * 2;
   let y = top;
   let bottom = top;
   const tops = rows.map((row) => {
@@ -683,17 +685,18 @@ function detailWellY(body: FontMetrics, beside: readonly DetailRow[], tops: read
 }
 
 // A detail card's rows beside the well and under it, the well's top, and the card's height.
-// The rows under the well start pad under whichever reaches lowest, the well or the rows beside
-// it, and the card is padded under the lowest of all.
+// The rows under the well start one group gap under whichever reaches lowest, the well or
+// the rows beside it. Portrait cards retain their padded separation; item cards use the shared
+// modal group gap. The card is padded under the lowest content.
 export function detailCardLayout(
   body: FontMetrics,
-  rows: { below: readonly DetailRow[]; beside: readonly DetailRow[] },
+  rows: { below: readonly DetailRow[]; beside: readonly DetailRow[]; gap?: number },
 ): { below: number[]; beside: number[]; height: number; wellY: number } {
   const { besideDy, pad, well } = HOME_LAYOUT.card;
-  const beside = cardRows(body, well.y + besideDy, rows.beside);
+  const beside = cardRows(body, well.y + besideDy, rows.gap, rows.beside);
   const wellY = detailWellY(body, rows.beside, beside.tops);
   const upper = Math.max(wellY + well.size, beside.bottom);
-  const below = cardRows(body, upper + pad, rows.below);
+  const below = cardRows(body, upper + (rows.gap ?? pad), rows.gap, rows.below);
   const bottom = rows.below.length > 0 ? below.bottom : upper;
   return { below: below.tops, beside: beside.tops, height: bottom + pad, wellY };
 }

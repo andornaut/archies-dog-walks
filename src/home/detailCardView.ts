@@ -204,6 +204,7 @@ export function detailCardView(
           : linesIn(room, valueOf(row)),
       );
     const layout = detailCardLayout(measure.body, {
+      ...(kind === "gear" ? { gap: MODAL.gap } : {}),
       below: counts(parts.below, rooms.full),
       beside: counts(parts.beside, rooms.beside),
     });
@@ -235,9 +236,12 @@ export function detailCardView(
     };
   };
   // Portrait/owner cards are rich details. Icon/item/effect details use Medium only when all
-  // full-size body ink and the complete footer fit the available protected area.
+  // full-size body ink and the complete footer fit the protected area, and widening would not
+  // remove a title line.
   const medium = kind === "gear" ? measureFamily("medium") : undefined;
-  const selected = medium?.fits ? medium : measureFamily("large")!;
+  const large = measureFamily("large")!;
+  const selected =
+    medium?.fits && medium.heading.lines.length <= large.heading.lines.length ? medium : large;
   const { heading, layout, rooms, width } = selected;
   const { well } = CARD;
   const wellRect = { height: well.size, width: well.size, x: well.x, y: layout.wellY };
