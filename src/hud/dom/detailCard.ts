@@ -17,6 +17,7 @@ import {
   gridY,
   wholeArtPixels,
 } from "../../ui/domScale.ts";
+import { PALETTE } from "../../ui/palette.ts";
 import { TEXT_SCALE } from "../../ui/textFit.ts";
 import {
   type DomPart,
@@ -42,6 +43,7 @@ export interface DomDetailCardInput extends Pick<
   // The colours of a name's pill of a kind and of its name, or undefined for none.
   readonly pillColours: (index: number) => { name: number; pill: number } | undefined;
   readonly view: DetailCardView;
+  readonly presses?: readonly (() => void)[];
 }
 
 const hex = (colour: number) => `#${colour.toString(16).padStart(6, "0")}`;
@@ -292,6 +294,16 @@ export function showDetailCard(layer: UiLayer, input: DomDetailCardInput): DomQu
   texts.append(...textParts.map(({ element }) => element));
   const parts: DomPart[] = [
     ...view.framed.map((framed) => framedPart(doc, framed)),
+    ...(view.separators ?? []).map((rect) => {
+      const element = doc.createElement("span");
+      element.setAttribute("aria-hidden", "true");
+      Object.assign(element.style, {
+        backgroundColor: hex(PALETTE.tan),
+        pointerEvents: "none",
+        position: "absolute",
+      });
+      return { element, place: (scale: DomScale) => setBox(element, gridRect(scale, rect)) };
+    }),
     ...view.art.map((art) => artPart(doc, input, art)),
     {
       element: texts,
@@ -312,7 +324,7 @@ export function showDetailCard(layer: UiLayer, input: DomDetailCardInput): DomQu
     fonts: input.fonts,
     numberKeys: false,
     parts,
-    presses: [],
+    presses: input.presses ?? [],
     toGame: input.toGame,
     view: view.card,
   });

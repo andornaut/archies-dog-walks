@@ -133,11 +133,12 @@ describe("every buy point", () => {
     expect(callers).toEqual(["home/purchaseConfirm.ts"]);
   });
 
-  it("saves a purchase only where it asks to confirm and answers the confirm", () => {
+  it("saves a purchase only through shared item eligibility and the purchase answer", () => {
     const savers = calling("purchaseInProfile").filter((path) => path !== "scenes/profileStore.ts");
     expect(savers.length).toBeGreaterThan(0);
+    expect(calling("requestPurchase")).toContain("home/itemModal.ts");
     for (const path of savers) {
-      expect(calling("requestPurchase"), path).toContain(path);
+      expect(calling("itemModal"), path).toContain(path);
       expect(calling("answerPurchase"), path).toContain(path);
     }
   });

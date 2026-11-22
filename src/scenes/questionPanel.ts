@@ -9,14 +9,11 @@ import type { HelpView } from "../help/helpView.ts";
 import type { BadgeCardView } from "../home/badgeCardView.ts";
 import type { DetailCardView } from "../home/detailCardView.ts";
 import type { EndScreenView } from "../home/endScreenView.ts";
-import type { ConfirmChoice } from "../home/purchaseConfirm.ts";
-import type { PurchaseConfirmCardView } from "../home/purchaseConfirmCardView.ts";
 import { showBadgeCard } from "../hud/dom/badgeCard.ts";
 import { type BadgeCelebrationView, showBadgeCelebration } from "../hud/dom/celebration.ts";
 import { showDetailCard } from "../hud/dom/detailCard.ts";
 import { type DomEndScreen, type DomEndScreenInput, showEndScreen } from "../hud/dom/endScreen.ts";
 import { type DomHelpInput, showHelpScreen } from "../hud/dom/helpScreen.ts";
-import { showPurchaseConfirm } from "../hud/dom/purchaseConfirm.ts";
 import {
   type DomQuestionPanel,
   type DomQuestionPanelInput,
@@ -226,6 +223,7 @@ export function addHtmlDetailCard(
   close: (() => void) | undefined,
   closePressed = false,
   dismiss?: () => void,
+  presses?: readonly (() => void)[],
 ): DomQuestionPanel | undefined {
   const place = htmlPanelPlace(scene);
   if (place === undefined) {
@@ -236,6 +234,7 @@ export function addHtmlDetailCard(
     close,
     closePressed,
     ...(dismiss === undefined ? {} : { backgroundCancel: dismiss, dismiss }),
+    ...(presses === undefined ? {} : { presses }),
     view,
   });
   return followScene(scene, nativeModalShade(scene, panel));
@@ -259,25 +258,6 @@ export function keepPanel(
   }
   kept?.panel?.destroy();
   return key === undefined ? undefined : { key, panel: show() };
-}
-
-// Native purchase confirmation forwards the original answer and close actions.
-export function addHtmlPurchaseConfirm(
-  scene: Scene,
-  view: PurchaseConfirmCardView,
-  answer: (choice: ConfirmChoice) => void,
-): DomQuestionPanel | undefined {
-  const place = htmlPanelPlace(scene);
-  if (place === undefined) {
-    return undefined;
-  }
-  const panel = showPurchaseConfirm(place.layer, {
-    ...htmlArtInput(place),
-    buy: () => answer("buy"),
-    cancel: () => answer("cancel"),
-    view,
-  });
-  return followScene(scene, nativeModalShade(scene, panel));
 }
 
 // Calls step before every frame scene's game draws, until the returned stop is called.

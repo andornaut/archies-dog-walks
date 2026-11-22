@@ -54,7 +54,6 @@ function page(type: (typeof PAGES)[number][1], resume: SceneKey) {
   const stage = { resume: vi.fn(), stop: vi.fn() };
   Object.assign(scene, {
     action: { kind: "none" },
-    confirm: undefined,
     detail: undefined,
     game: { events: { emit: vi.fn() } },
     page: 0,
@@ -108,12 +107,15 @@ it.each([
   expect(scene).toHaveProperty("detail", undefined);
 });
 
-it("cancels only the Pet shop confirmation without leaving its invoking page", () => {
+it("Escape dismisses the Pet shop item without buying or leaving its invoking page", () => {
   const { scene, stage } = page(ShopScene, SCENE_KEYS.start);
   const answer = vi.fn();
-  Object.assign(scene, { answer, confirm: {} });
-  scene.back();
-  expect(answer).toHaveBeenCalledExactlyOnceWith("cancel");
+  const render = vi.fn();
+  Object.assign(scene, { answer, detail: { dog: "lady", kind: "dog" }, render });
+  scene.onKey("Escape");
+  expect(answer).not.toHaveBeenCalled();
+  expect(scene).toHaveProperty("detail", undefined);
+  expect(render).toHaveBeenCalledOnce();
   expect(stage.resume).not.toHaveBeenCalled();
   expect(stage.stop).not.toHaveBeenCalled();
 });

@@ -15,13 +15,7 @@ import type { DogId, GearId, WalkerId } from "../data/types.ts";
 import { clearRunOverrides } from "../dev/pageRunSetup.ts";
 import { startWalkOpensHelp } from "../help/helpSeen.ts";
 import { bankAtLastVisit, newlyAffordable } from "../home/afford.ts";
-import {
-  type DetailCard,
-  type DetailPicture,
-  dogDetail,
-  gearDetail,
-  walkerDetail,
-} from "../home/detail.ts";
+import { type DetailPicture, walkerDetail } from "../home/detail.ts";
 import { createNativeHomeView, type NativeHomeView } from "../home/dom/screen.ts";
 import { createNativeHomeSession } from "../home/dom/session.ts";
 import {
@@ -63,9 +57,11 @@ import {
   walkerSays,
   walkersUnlockedSince,
 } from "../home/homeLines.ts";
+import { itemModal } from "../home/itemModal.ts";
 import { renderHomeBackdrop } from "../home/phaser/homeBackdrop.ts";
 import { nativeFrames } from "../home/phaser/nativeFrames.ts";
 import { porchOwners } from "../home/porch.ts";
+import { answerPurchase, type PendingPurchase } from "../home/purchaseConfirm.ts";
 import { homeSections, type Sections, startReady } from "../home/sections.ts";
 import { type HomeSelectionView, homeSelectionViews } from "../home/selectionView.ts";
 import { shopAffordable } from "../home/shop.ts";
@@ -149,6 +145,7 @@ import {
   isMuted,
   onSettingsChanged,
   profileSave,
+  purchaseInProfile,
   storageState,
   takeCelebrations,
   toggleMuted,
@@ -222,6 +219,7 @@ function gearIds(): GearId[] {
   return gearByPrice(gameData);
 }
 type DetailTarget =
+  | Extract<Purchase, { kind: "dogSlot" }>
   | {
       dog: DogId;
       kind: "dog";
@@ -365,8 +363,8 @@ const LAST_VISIT_BANK_KEY = "homeLastVisitBank";
 const LAST_VISIT_WALKERS_KEY = "homeLastVisitWalkers";
 // The screen before a walk: the bank at the top bar's left and Logbook, Help, Sound, Settings
 // and Exit at its right (Exit where exitShown); the walker and pack at the gate beside the Pet
-// shop; the Walker, Dogs and Pocket sections and Start walk. Buying happens only in the shop:
-// tapping the building opens it, and tapping a locked dog, gear item or the dog slot sign opens
+// shop; the Walker, Dogs and Pocket sections and Start walk. Affordable items open their detail
+// purchase actions, while the building and unavailable item routes open
 // it on that item. Holding a dog or gear tile opens its detail card.
 // The arrow keys move a focus ring, Enter or Space picks, Escape, P or back closes a card, ?
 // opens help, S settings, L the logbook, M mutes and Q leaves the game as Exit does, where the
@@ -787,8 +785,13 @@ export class StartScene extends Scene {
     }
     return { kind: "none" };
   }
-  private openDetail(target: Target): void {
-    if (target.kind !== "dog" && target.kind !== "gear" && target.kind !== "walker") {
+  private openDetail(target: Target | Extract<Purchase, { kind: "dogSlot" }>): void {
+    if (
+      target.kind !== "dog" &&
+      target.kind !== "gear" &&
+      target.kind !== "walker" &&
+      target.kind !== "dogSlot"
+    ) {
       return;
     }
     this.press = undefined;
@@ -949,7 +952,11 @@ export class StartScene extends Scene {
             ? tapDog(gameData, owned, target.dog, this.loadout)
             : tapGear(owned, target.gear, this.loadout);
         if (tap.kind === "shop") {
-          this.openShop({ focus: tap.purchase });
+          if (itemModal(gameData, this.save(), this.loadout, tap.purchase).pending !== undefined) {
+            this.openDetail(tap.purchase);
+          } else {
+            this.openShop({ focus: tap.purchase });
+          }
         } else if (tap.kind === "full") {
           this.shakes.set(id, now);
           this.action = {
@@ -968,7 +975,14 @@ export class StartScene extends Scene {
         return;
       case "slotSign": {
         const focus = slotSignPurchase(gameData, this.save().owned);
-        this.openShop(focus === null ? {} : { focus });
+        if (
+          focus !== null &&
+          itemModal(gameData, this.save(), this.loadout, focus).pending !== undefined
+        ) {
+          this.openDetail(focus);
+        } else {
+          this.openShop(focus === null ? {} : { focus });
+        }
         return;
       }
       case "walker": {
@@ -1042,14 +1056,14 @@ export class StartScene extends Scene {
   }
   // Badges earned on launch burst in over the home screen, with the owners of the dogs
   // picked cheering.
-  private celebrate(): void {
+  private celebrate(owners: readonly DogId[] = this.loadout.dogs): void {
     const achievements = takeCelebrations(this);
     if (achievements.length === 0) {
       return;
     }
     const data: CelebrationSceneData = {
       achievements,
-      owners: [...this.loadout.dogs],
+      owners: [...owners],
       resume: SCENE_KEYS.start,
     };
     openOverlay(this, SCENE_KEYS.celebration, data);
@@ -1490,25 +1504,37 @@ export class StartScene extends Scene {
       return;
     }
     const { target } = overlay;
-    const card = this.detailCard(save, target);
+    const item =
+      target.kind === "walker" ? undefined : itemModal(gameData, save, this.loadout, target);
+    const card =
+      target.kind === "walker" ? walkerDetail(gameData, save.owned, target.walker) : item!.card;
     const picture = this.detailPicture(target);
-    const view = detailView(this, HOME_REGION, { card, kind: target.kind, picture });
+    const view = detailView(this, HOME_REGION, {
+      card,
+      kind: target.kind,
+      picture,
+      ...(item === undefined ? {} : { statusLines: item.statusLines }),
+      ...(item?.purchase === undefined ? {} : { purchase: item.purchase }),
+    });
     const close = () => this.closeOverlay();
+    const presses = item?.pending === undefined ? [] : [close, () => this.buyDetail(item.pending!)];
     this.htmlDetail = keepPanel(this.htmlDetail, JSON.stringify([view, this.closePressed()]), () =>
-      addHtmlDetailCard(this, view, close, this.closePressed(), close),
+      addHtmlDetailCard(this, view, close, this.closePressed(), close, presses),
     );
     this.overlay = { ...overlay, rect: view.card.panel };
   }
-  // A dog, gear item or walker's full card, owned or not.
-  private detailCard(save: SaveDocument, target: DetailTarget): DetailCard {
-    const { bankCents, owned } = save;
-    if (target.kind === "dog") {
-      return dogDetail(gameData, owned, bankCents, target.dog);
+  private buyDetail(pending: PendingPurchase): void {
+    this.overlay = undefined;
+    const result = answerPurchase(gameData, this.save(), pending, "buy");
+    if (result.kind === "bought") {
+      void purchaseInProfile(this, () => result.save);
+      this.shopClosed({
+        action: { kind: "bought", name: pending.name, purchase: pending.purchase },
+      });
+      this.celebrate(pending.purchase.kind === "dog" ? [pending.purchase.dog] : []);
+    } else {
+      this.render();
     }
-    if (target.kind === "gear") {
-      return gearDetail(gameData, owned, bankCents, this.loadout, target.gear);
-    }
-    return walkerDetail(gameData, owned, target.walker);
   }
   private detailPicture(target: DetailTarget): DetailPicture {
     if (target.kind !== "walker") {

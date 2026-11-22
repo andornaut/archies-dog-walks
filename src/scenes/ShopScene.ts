@@ -7,20 +7,17 @@ import { Scene } from "phaser";
 import { domArtUrl } from "../assets/domArtFiles.ts";
 import { dogFaceKey, gearIconKey } from "../assets/spriteKeys.ts";
 import { gameData } from "../data/index.ts";
-import { dogDetail, gearDetail } from "../home/detail.ts";
 import { FEEDBACK, shakeOffset } from "../home/feedback.ts";
 import { focusDirectionForKey } from "../home/focus.ts";
-import { type Purchase } from "../home/home.ts";
+import { isAffordable, type Purchase } from "../home/home.ts";
 import { overlayRegion } from "../home/homeBar.ts";
 import { type HomeAction, messageLine } from "../home/homeLines.ts";
+import { itemModal } from "../home/itemModal.ts";
 import { pricePlateView } from "../home/pricePlateView.ts";
 import {
   answerPurchase,
   type ConfirmChoice,
-  confirmLines,
-  keyAnswer,
   type PendingPurchase,
-  requestPurchase,
 } from "../home/purchaseConfirm.ts";
 import {
   dogRows,
@@ -103,10 +100,8 @@ import {
   purchaseInProfile,
   takeCelebrations,
 } from "./profileStore.ts";
-import { purchaseConfirmView } from "./purchaseConfirmView.ts";
 import {
   addHtmlDetailCard,
-  addHtmlPurchaseConfirm,
   followScene,
   htmlPanelInput,
   htmlPanelPlace,
@@ -136,13 +131,8 @@ export interface ShopClosed {
 }
 
 // While a detail card is open, a press anywhere on the shop's panel is dismiss: its tap closes
-// the card. While the purchase confirm is open, so is a press on the panel off the confirm's
-// card: its tap cancels, as the confirm's own close control's does.
-type Target =
-  | { choice: ConfirmChoice; kind: "confirm" }
-  | { kind: "dismiss" }
-  | { id: string; kind: "row" }
-  | { kind: "tab"; tab: ShopTab };
+// the card. An item modal owns its dismissal and purchase actions.
+type Target = { kind: "dismiss" } | { id: string; kind: "row" } | { kind: "tab"; tab: ShopTab };
 
 const LAYOUT = SHOP_LAYOUT;
 const PANEL: Rect = LAYOUT.panel;
@@ -250,22 +240,19 @@ function shopTextLayout(
 }
 
 // The Pet shop under the home screen's top bar: a Dogs tab of dog slots and dogs, and a Gear
-// tab of gear for sale. Tapping a row the bank covers asks to confirm the purchase, and only
-// the confirm's Buy buys it; a row it cannot pays a shake and says why. The row the shop
+// tab of gear for sale. Tapping an affordable row opens its item modal, whose Buy purchases it;
+// an unaffordable row shakes and says why. The row the shop
 // opened on, or the last one tapped, is framed.
-// Holding a dog or gear row opens its detail card. A tab's headings and rows scroll in the list
+// Holding any item opens the same detail modal. A tab's headings and rows scroll in the list
 // area under the tabs, by a drag, the wheel or the page keys, with a scrollbar beside a list
 // longer than the view; a drag taps nothing. Left and right switch tabs, up and down move the
-// frame and bring its row into view, Enter or Space taps the framed row, and Escape cancels the
-// confirm, or closes the card or the shop. On the confirm, Enter or Space buys, and a tap on
-// the dim around its card cancels.
+// frame and bring its row into view, Enter or Space taps the framed row, and Escape closes the
+// item modal or the shop. Native modal buttons own their keyboard activation.
 export class ShopScene extends Scene {
   private action: HomeAction = { kind: "none" };
-  // The purchase asked for and not yet answered, and where its answers were drawn.
-  private confirm: PendingPurchase | undefined;
+  // The item shown in the shared detail/purchase modal.
   private detail: Purchase | undefined;
-  // The detail card and the purchase confirm drawn in HTML, while each is open.
-  private htmlConfirm: KeptPanel | undefined;
+  // The item's native detail/purchase modal.
   private htmlDetail: KeptPanel | undefined;
   private focusId: string | null = null;
   // The open list's area, rows' width and heading note's right edge, by whether it scrolls.
@@ -294,11 +281,9 @@ export class ShopScene extends Scene {
   create(data: ShopSceneData): void {
     this.resumeKey = data.resume;
     this.action = { kind: "none" };
-    this.confirm = undefined;
     this.detail = undefined;
     this.hold = undefined;
     // The scene's shutdown destroyed any HTML card.
-    this.htmlConfirm = undefined;
     this.htmlDetail = undefined;
     this.message = null;
     this.pressed = undefined;
@@ -327,7 +312,7 @@ export class ShopScene extends Scene {
     this.render();
     this.showFocus();
 
-    // A tap acts once its dip ends, but a row's tap that opens the confirm acts as it lifts;
+    // A tap acts once its dip ends, but an affordable row opens its item modal as it lifts;
     // holding a dog or gear row opens its detail card, and the hold takes the press. With a card
     // open, a tap anywhere closes it, as on the Logbook.
     this.presses = listenTargetPress<Target>(this, {
@@ -340,7 +325,7 @@ export class ShopScene extends Scene {
         this.render();
       },
       onTap: (target) => this.act(target),
-      opens: (target) => this.opensConfirm(target),
+      opens: (target) => this.opensItem(target),
       same: sameByValue,
       targetAt: () => undefined,
     });
@@ -351,17 +336,16 @@ export class ShopScene extends Scene {
     });
     // The shop is a page, not a modal: its live top bar keeps its buttons, and a tap on the bar's
     // empty area or beside the game closes the shop, as Back does; the page itself has no outside.
-    // An open card or confirm is modal, and its own backdrop takes those taps instead. The system
-    // back cancels the confirm or closes an open card first, as Escape does.
+    // An item modal's backdrop owns those taps. System back closes the item first, as Escape does.
     listenDismiss(
       this,
       sceneRegionOutside(this, [PANEL]),
       () => this.back(),
       () => this.back(),
     );
-    // A page the top bar opens over the shop closes an open card or confirm first.
+    // A page the top bar opens over the shop closes an open item modal first.
     listenHomeBar(this, () => {
-      if (this.confirm !== undefined || this.detail !== undefined) {
+      if (this.detail !== undefined) {
         this.back();
       }
     });
@@ -378,7 +362,7 @@ export class ShopScene extends Scene {
     }
     const purchase = target?.kind === "row" ? this.rowById(target.id)?.purchase : undefined;
     this.hold =
-      purchase !== undefined && purchase.kind !== "dogSlot"
+      purchase !== undefined
         ? startHold(holdRule(gameData.tuning, TILE_SLOP_PX), point, this.time.now)
         : undefined;
   }
@@ -599,7 +583,7 @@ export class ShopScene extends Scene {
         art,
         fills: [{ colour: PALETTE[pictureBox(look)], rect: box }],
         frame: this.textures.exists("ui-tile") ? "art" : "fallback",
-        holdDetail: row.purchase.kind !== "dogSlot",
+        holdDetail: true,
         id: row.id,
         label: row.name,
         rect,
@@ -690,21 +674,15 @@ export class ShopScene extends Scene {
     } else {
       this.drawDetail(save, this.detail);
     }
-    if (this.confirm === undefined) {
-      this.htmlConfirm?.panel?.destroy();
-      this.htmlConfirm = undefined;
-    } else {
-      this.drawConfirm(this.confirm);
-    }
   }
 
   private save(): SaveDocument {
     return profileSave(this);
   }
 
-  // Nothing covers the list: no detail card or confirm is open.
+  // Nothing covers the list while no item modal is open.
   private isListOpen(): boolean {
-    return this.detail === undefined && this.confirm === undefined;
+    return this.detail === undefined;
   }
 
   private moveList(scroll: ListScroll): void {
@@ -725,12 +703,8 @@ export class ShopScene extends Scene {
     }
   }
 
-  // An open confirm cancels, else an open card closes, else the shop.
+  // Close the item modal before leaving the shop.
   private back(): void {
-    if (this.confirm !== undefined) {
-      this.answer("cancel");
-      return;
-    }
     if (this.detail === undefined) {
       this.close();
       return;
@@ -740,11 +714,7 @@ export class ShopScene extends Scene {
   }
 
   private onKey(code: string): void {
-    if (this.confirm !== undefined) {
-      this.onKeyAnswer(code);
-      return;
-    }
-    if (isPauseKey(code) || (this.detail !== undefined && isConfirmKey(code))) {
+    if (isPauseKey(code)) {
       this.back();
       return;
     }
@@ -780,22 +750,11 @@ export class ShopScene extends Scene {
     }
   }
 
-  // Escape or P cancels at once; Enter or Space presses Buy, which dips, then buys.
-  private onKeyAnswer(code: string): void {
-    const choice = keyAnswer(code);
-    if (choice === "cancel") {
-      this.answer(choice);
-    } else if (choice === "buy") {
-      this.actAfterDip({ choice, kind: "confirm" });
-    }
-  }
-
-  // A key presses the tab or row: it dips, then acts, as a tap does, and a row that opens the
-  // confirm opens it at once, its dip playing on under it.
+  // A key presses the tab or row; affordable rows open their modal during the dip.
   private actAfterDip(target: Target): void {
     this.pressed = target;
     this.render();
-    const opens = this.opensConfirm(target);
+    const opens = this.opensItem(target);
     if (opens) {
       this.act(target);
     }
@@ -808,8 +767,8 @@ export class ShopScene extends Scene {
     });
   }
 
-  // Whether a tap on target opens the purchase confirm: a row not owned that the bank covers.
-  private opensConfirm(target: Target): boolean {
+  // Whether a tap opens an affordable unowned item's modal.
+  private opensItem(target: Target): boolean {
     const row = target.kind === "row" ? this.rowById(target.id) : undefined;
     if (row === undefined) {
       return false;
@@ -817,7 +776,7 @@ export class ShopScene extends Scene {
     const save = this.save();
     return (
       shopRowLook(gameData, save.owned, save.bankCents, row) !== "owned" &&
-      requestPurchase(gameData, save, row.name, row.purchase).kind === "confirm"
+      isAffordable(gameData, save.owned, save.bankCents, row.purchase)
     );
   }
 
@@ -865,7 +824,7 @@ export class ShopScene extends Scene {
   private openDetail(): void {
     const purchase = this.pressedPurchase();
     this.pressed = undefined;
-    if (purchase !== undefined && purchase.kind !== "dogSlot") {
+    if (purchase !== undefined) {
       this.detail = purchase;
     }
     this.render();
@@ -889,9 +848,6 @@ export class ShopScene extends Scene {
 
   private act(target: Target): void {
     switch (target.kind) {
-      case "confirm":
-        this.answer(target.choice);
-        return;
       case "dismiss":
         this.back();
         return;
@@ -912,7 +868,7 @@ export class ShopScene extends Scene {
   }
 
   // An owned row is only framed. One that costs more than the bank shakes and says why; one
-  // the bank covers asks to confirm its purchase.
+  // the bank covers opens its detail/purchase modal.
   private tapRow(id: string): void {
     const row = this.rowById(id);
     if (row === undefined) {
@@ -925,10 +881,10 @@ export class ShopScene extends Scene {
     if (look === "owned") {
       this.message = null;
     } else {
-      const request = requestPurchase(gameData, save, row.name, row.purchase);
-      if (request.kind === "confirm") {
+      const request = itemModal(gameData, save, save.lastLoadout, row.purchase);
+      if (request.pending !== undefined) {
         this.message = null;
-        this.confirm = request.pending;
+        this.detail = row.purchase;
       } else if (request.reason === "cantAfford" && row.price !== null) {
         this.shakes.set(id, this.time.now);
         this.action = {
@@ -942,16 +898,22 @@ export class ShopScene extends Scene {
     this.render();
   }
 
-  // The confirm closes; its Buy buys the pending purchase, if the bank still covers it.
+  // Buy revalidates the live item and bank before using the purchase transaction.
   private answer(choice: ConfirmChoice): void {
-    const confirm = this.confirm;
-    if (confirm === undefined) {
+    const purchase = this.detail;
+    if (purchase === undefined) {
       return;
     }
-    this.confirm = undefined;
-    const result = answerPurchase(gameData, this.save(), confirm, choice);
+    const save = this.save();
+    const pending = itemModal(gameData, save, save.lastLoadout, purchase).pending;
+    this.detail = undefined;
+    if (pending === undefined) {
+      this.render();
+      return;
+    }
+    const result = answerPurchase(gameData, save, pending, choice);
     if (result.kind === "bought") {
-      this.bought(confirm, result.save);
+      this.bought(pending, result.save);
       return;
     }
     this.render();
@@ -987,35 +949,21 @@ export class ShopScene extends Scene {
     }
   }
 
-  private drawConfirm(pending: PendingPurchase): void {
-    const pressed = this.pressed?.kind === "confirm" ? this.pressed.choice : undefined;
-    const view = purchaseConfirmView(this, {
-      lines: confirmLines(gameData, pending),
-      picture: purchasePicture(pending.purchase),
-      pressed,
-    });
-    this.htmlConfirm = keepPanel(this.htmlConfirm, JSON.stringify(view), () =>
-      addHtmlPurchaseConfirm(this, view, (choice) => this.answer(choice)),
-    );
-  }
-
   // A held dog's or gear item's detail card over the shop; any tap closes it.
   private drawDetail(save: SaveDocument, purchase: Purchase): void {
-    if (purchase.kind === "dogSlot") {
-      return;
-    }
-    const card =
-      purchase.kind === "dog"
-        ? dogDetail(gameData, save.owned, save.bankCents, purchase.dog)
-        : gearDetail(gameData, save.owned, save.bankCents, save.lastLoadout, purchase.gear);
+    const item = itemModal(gameData, save, save.lastLoadout, purchase);
     const dim = overlayRegion("home");
     const view = detailView(this, dim, {
-      card,
+      card: item.card,
       kind: purchase.kind,
       picture: purchasePicture(purchase),
+      ...(item.purchase === undefined ? {} : { purchase: item.purchase }),
+      statusLines: item.statusLines,
     });
+    const close = () => this.back();
+    const presses = item.pending === undefined ? [] : [close, () => this.answer("buy")];
     this.htmlDetail = keepPanel(this.htmlDetail, JSON.stringify(view), () =>
-      addHtmlDetailCard(this, view, undefined, false, () => this.back()),
+      addHtmlDetailCard(this, view, close, false, close, presses),
     );
   }
 }
