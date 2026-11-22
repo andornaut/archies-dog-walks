@@ -227,6 +227,7 @@ export function showEndScreen(layer: UiLayer, input: DomEndScreenInput): DomEndS
     const paint = () => {
       if (at !== undefined) {
         art.place(at, ORIGIN, {
+          projection: "layout",
           tag: face.fired ? "fired" : "happy",
           x: face.x,
           y: face.y + dy,

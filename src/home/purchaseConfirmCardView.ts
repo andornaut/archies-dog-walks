@@ -90,15 +90,27 @@ export function purchaseConfirmCardView(
   const framed: DetailFramed[] = [];
   const wellSize = measure.art(DETAIL_WELL_KEY);
   if (wellSize === undefined) {
-    framed.push({ border: PALETTE.plum, fill: PALETTE.grey, rect: layout.well });
+    framed.push({
+      border: PALETTE.plum,
+      fill: PALETTE.grey,
+      projection: "layout",
+      rect: layout.well,
+    });
   } else {
-    art.push({ key: DETAIL_WELL_KEY, scale: 1, size: wellSize, ...layout.well });
+    art.push({
+      key: DETAIL_WELL_KEY,
+      projection: "layout",
+      scale: 1,
+      size: wellSize,
+      ...layout.well,
+    });
   }
   const shown = measure.art(picture.key);
   if (shown !== undefined) {
     art.push({
       holder: layout.well,
       key: picture.key,
+      projection: "layout",
       scale: picture.scale,
       size: shown,
       ...layout.picture,

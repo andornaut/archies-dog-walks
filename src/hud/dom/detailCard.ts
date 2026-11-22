@@ -12,6 +12,7 @@ import {
   exactDeviceX,
   exactDeviceY,
   frameRect,
+  gridRect,
   gridX,
   gridY,
   wholeArtPixels,
@@ -48,7 +49,7 @@ const hex = (colour: number) => `#${colour.toString(16).padStart(6, "0")}`;
 // Ids that tie each card's dialog to its text.
 let cards = 0;
 
-// A framed box, whole art pixels from its corner, its fill an art pixel inside its border.
+// A framed box with one authored-pixel border; principal wells follow their logical allocation.
 export function framedPart(doc: Document, view: DetailCardView["framed"][number]): DomPart {
   const element = doc.createElement("div");
   element.className = "adw-framed";
@@ -62,17 +63,21 @@ export function framedPart(doc: Document, view: DetailCardView["framed"][number]
     place: (scale) => {
       const pixel = artPixel(scale);
       const { height, width, x, y } = view.rect;
-      setBox(element, {
-        height: height * pixel,
-        left: gridX(scale, x),
-        top: gridY(scale, y),
-        width: width * pixel,
-      });
+      const box =
+        view.projection === "layout"
+          ? gridRect(scale, view.rect)
+          : {
+              height: height * pixel,
+              left: gridX(scale, x),
+              top: gridY(scale, y),
+              width: width * pixel,
+            };
+      setBox(element, box);
       setBox(fill, {
-        height: (height - 2) * pixel,
+        height: box.height - 2 * pixel,
         left: pixel,
         top: pixel,
-        width: (width - 2) * pixel,
+        width: box.width - 2 * pixel,
       });
     },
   };
@@ -103,8 +108,8 @@ function fromRight(scale: DomScale, frame: Rect, x: number): number {
   return box.left + box.width - (frame.x + frame.width - x) * artPixel(scale);
 }
 
-// Art from its top-left, each art pixel art.scale times artPixel device pixels: an image's one
-// frame, or a sheet's frame, hidden until its frames say where on its sheet it is. Art in a box
+// Art from its top-left, authored pixels by default or the explicit logical allocation: an image's one
+// frame, or a sheet's frame, hidden until its frames say where on its sheet it is. Default art in a box
 // sits whole art pixels into it, rounded down where it is centred on a half pixel.
 export function artPart(
   doc: Document,
@@ -128,33 +133,45 @@ export function artPart(
     const pixel = artPixel(at) * art.scale;
     const holder = art.holder ?? art;
     const into = (from: number, to: number) => Math.floor(to - from) * artPixel(at);
-    const width = art.size.width * pixel;
-    const height = art.size.height * pixel;
+    const logical = { height: art.size.height * art.scale, width: art.size.width * art.scale };
+    const projected =
+      art.projection === "layout"
+        ? gridRect(at, {
+            ...logical,
+            x: art.centre === undefined ? art.x : art.centre.x - logical.width / 2,
+            y: art.centre === undefined ? art.y : art.centre.y - logical.height / 2,
+          })
+        : undefined;
+    const width = projected?.width ?? art.size.width * pixel;
+    const height = projected?.height ?? art.size.height * pixel;
     const left = gridX(at, holder.x);
     const top = gridY(at, holder.y);
     const { centre } = art;
     setBox(element, {
       height,
       left:
-        (art.right !== undefined
-          ? fromRight(at, art.right, art.x)
-          : left +
-            (centre !== undefined
-              ? wholeArtPixels(at, exactDeviceX(at, centre.x) - width / 2 - left)
-              : art.aim === undefined
-                ? into(holder.x, art.x)
-                : aimed(at, holder, art.aim, width))) + shift(at),
+        projected === undefined
+          ? (art.right !== undefined
+              ? fromRight(at, art.right, art.x)
+              : left +
+                (centre !== undefined
+                  ? wholeArtPixels(at, exactDeviceX(at, centre.x) - width / 2 - left)
+                  : art.aim === undefined
+                    ? into(holder.x, art.x)
+                    : aimed(at, holder, art.aim, width))) + shift(at)
+          : projected.left + shift(at),
       top:
+        projected?.top ??
         top +
-        (centre === undefined
-          ? into(holder.y, art.y)
-          : wholeArtPixels(at, exactDeviceY(at, centre.y) - height / 2 - top)),
+          (centre === undefined
+            ? into(holder.y, art.y)
+            : wholeArtPixels(at, exactDeviceY(at, centre.y) - height / 2 - top)),
       width,
     });
     if (frame !== undefined) {
       // An image fills its box; a sheet's frame shows at its own size.
-      const across = kind === "image" ? width / frame.width : pixel;
-      const down = kind === "image" ? height / frame.height : pixel;
+      const across = kind === "image" || projected !== undefined ? width / frame.width : pixel;
+      const down = kind === "image" || projected !== undefined ? height / frame.height : pixel;
       element.style.backgroundSize = `${frame.sheet.width * across}px ${frame.sheet.height * down}px`;
       element.style.backgroundPosition = `${-frame.x * across}px ${-frame.y * down}px`;
     }

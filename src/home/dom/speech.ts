@@ -78,6 +78,7 @@ export function createHomeSpeech(
         element: face.element,
         place: (scale) =>
           face.place(scale, origin, {
+            projection: "layout",
             tag: "happy",
             x: owner.face.x,
             y: owner.face.y,

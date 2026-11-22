@@ -46,6 +46,8 @@ export interface DetailMeasure extends PanelMeasure {
 // of the box it sits in (the well, the owner's photo), which the HTML interface sets it whole art
 // pixels into, so it sits as centred in the box at every scale as at 1x.
 export interface DetailArt {
+  // Principal pictures follow their allocated logical well; incidental art keeps authored pixels.
+  readonly projection?: "art" | "layout";
   // Art that points at something (a bubble's tail at its walker) sits with its middle across on
   // that column, whole art pixels into its holder, kept within the holder's straight edge: the
   // holder's rect less inset art pixels at each side.
@@ -75,6 +77,7 @@ export interface DetailArt {
 // A box filled in fill inside a one-pixel border, its rect in game pixels, which are its art
 // pixels at 1x.
 export interface DetailFramed {
+  readonly projection?: "art" | "layout";
   readonly border: number;
   readonly fill: number;
   readonly rect: Rect;
@@ -142,13 +145,26 @@ function addOwner(
   const name = measure.wrapBody(ownerRoom, owner.name);
   const role = measure.wrapBody(ownerRoom, owner.role);
   const spot = detailOwner(measure.body, at, role.length, name.length);
-  content.framed.push({ border: PALETTE.ink, fill: PALETTE.white, rect: spot.photo });
+  content.framed.push({
+    border: PALETTE.ink,
+    fill: PALETTE.white,
+    projection: "layout",
+    rect: spot.photo,
+  });
   const key = ownerFaceKey(data, owner.dog);
   const size = measure.art(key);
   if (size !== undefined) {
     const tag = measure.hasTag(key, OWNER_FACE_TAG) ? OWNER_FACE_TAG : undefined;
     const holder = { x: spot.photo.x, y: spot.photo.y };
-    content.art.push({ holder, key, scale: 1, sheet: { tag }, size, ...spot.face });
+    content.art.push({
+      holder,
+      key,
+      projection: "layout",
+      scale: 1,
+      sheet: { tag },
+      size,
+      ...spot.face,
+    });
   }
   addText(content, measure, {
     capTop: spot.name.y,
@@ -250,10 +266,16 @@ export function detailCardView(
   const content: Content = { art: [], framed: [], right: -Infinity, texts: [] };
   const wellSize = measure.art(DETAIL_WELL_KEY);
   if (wellSize === undefined) {
-    content.framed.push({ border: PALETTE.plum, fill: PALETTE.grey, rect: wellRect });
+    content.framed.push({
+      border: PALETTE.plum,
+      fill: PALETTE.grey,
+      projection: "layout",
+      rect: wellRect,
+    });
   } else {
     addArt(content, {
       key: DETAIL_WELL_KEY,
+      projection: "layout",
       scale: 1,
       size: wellSize,
       x: wellRect.x,
@@ -267,6 +289,7 @@ export function detailCardView(
     addArt(content, {
       holder: wellRect,
       key: picture.key,
+      projection: "layout",
       scale: picture.scale,
       size: shown,
       ...at,
@@ -276,6 +299,7 @@ export function detailCardView(
     addArt(content, {
       holder: wellRect,
       key: picture.fallback,
+      projection: "layout",
       scale: 1,
       sheet: { tag: undefined },
       size: fallback,

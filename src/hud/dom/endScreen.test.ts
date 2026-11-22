@@ -10,7 +10,7 @@ import { fontInk, fontInkRows, gameFont } from "../../testing/fontInk.ts";
 import { ownArtFrames } from "../../testing/ownArtFrames.ts";
 import { shownText } from "../../ui/dom/pixelLine.ts";
 import { SETTINGS_STYLE } from "../../ui/dom/settingsStyle.ts";
-import { artPixel, domScale, exactDeviceY, frameRect } from "../../ui/domScale.ts";
+import { artPixel, domScale, exactDeviceY, frameRect, gridRect } from "../../ui/domScale.ts";
 import { modalTitleInk } from "../../ui/modal/titleRole.ts";
 import { PALETTE } from "../../ui/palette.ts";
 import { TEXT_SCALE } from "../../ui/textFit.ts";
@@ -316,4 +316,21 @@ it("scrolls all owner art, names and quotes together while results chrome and Ba
   expect(policy).toContain("overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;");
   expect(policy).toContain("pointer-events:auto;");
   shown.destroy();
+});
+
+it("fills End owner wells at a fractional viewport and keeps live frames in the same allocation", async () => {
+  const { nodes, scale, shown } = endScreen(393);
+  const face = VIEW.results.faces[0]!;
+  const portrait = nodes.find((node) => node.style.backgroundImage?.includes(face.key))!;
+  await vi.waitFor(() => expect(portrait.style.visibility).toBe(""));
+  const expected = gridRect(scale, { height: 32, width: 32, x: face.x, y: face.y });
+  expect(portrait.style).toMatchObject({
+    height: `${expected.height}px`,
+
+    width: `${expected.width}px`,
+  });
+  shown.setFace(0, undefined, 1);
+  expect(portrait.style.top).toBe(
+    `${gridRect(scale, { height: 32, width: 32, x: face.x, y: face.y + VIEW.offsetY + 1 }).top}px`,
+  );
 });

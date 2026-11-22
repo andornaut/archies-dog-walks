@@ -7,12 +7,12 @@ import { gameData } from "../../data/index.ts";
 import { FakeDocument, type FakeElement } from "../../testing/fakeDom.ts";
 import { gameFont } from "../../testing/fontInk.ts";
 import { ownArtFrames } from "../../testing/ownArtFrames.ts";
-import { domScale } from "../../ui/domScale.ts";
+import { domScale, gridRect } from "../../ui/domScale.ts";
 import { PALETTE } from "../../ui/palette.ts";
 import { walkerSays } from "../homeLines.ts";
 import { homeSpeechView } from "../speechView.ts";
 import { createHomeSpeech } from "./speech.ts";
-function fixture(hasArt: boolean) {
+function fixture(hasArt: boolean, owner: "archie" | null = null) {
   const doc = new FakeDocument();
   const fonts = { body: gameFont("font-body"), title: gameFont("font-title") };
   const loadSheet = vi.fn(async (url: string) => ownArtFrames(url));
@@ -25,7 +25,7 @@ function fixture(hasArt: boolean) {
     loadSheet,
   };
   const view = homeSpeechView(gameData, fonts.body, undefined, {
-    owner: null,
+    owner,
     paragraphs: [walkerSays(gameData, "firstVisit", null)],
   });
   const speech = createHomeSpeech(doc as unknown as Document, source, fonts, () => undefined, view);
@@ -54,4 +54,30 @@ it("keeps the framed cream speech fallback when the source texture is absent", a
     parts.some((node) => node.style.backgroundColor === `#${PALETTE.cream.toString(16)}`),
   ).toBe(true);
   expect(parts.some((node) => node.style.width === `${view.rect.width}px`)).toBe(true);
+});
+
+it("fills the speech owner face backing at fractional fits and high DPR", async () => {
+  const { speech, view } = fixture(true, "archie");
+  await speech.ready;
+  const owner = view.owner!;
+  const portrait = (speech.element as unknown as FakeElement)
+    .all()
+    .find((node) => node.style.backgroundImage?.includes(owner.key))!;
+  for (const [dpr, width] of [
+    [1, 575],
+    [2.625, 393],
+  ] as const) {
+    const scale = domScale(dpr, { height: (width * 560) / 360, width, x: 0, y: 0 });
+    speech.place(scale);
+    const expected = gridRect(scale, owner.face);
+    expect(portrait.style).toMatchObject({
+      height: `${expected.height}px`,
+
+      left: `${expected.left}px`,
+
+      top: `${expected.top}px`,
+
+      width: `${expected.width}px`,
+    });
+  }
 });
