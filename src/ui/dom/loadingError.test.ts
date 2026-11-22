@@ -2,8 +2,11 @@ import type { LoadingFailurePresentation } from "@andornaut/game-kit/runtime/web
 import { expect, it, vi } from "vitest";
 
 import { BUTTON_SIZE, MODAL_SPACING, MODAL_WIDTHS } from "../../data/layout.ts";
+import { SCREEN_CONFIG } from "../../data/screen.ts";
 import { FakeDocument, fakeLayer } from "../../testing/fakeDom.ts";
 import type { DomScale } from "../domScale.ts";
+import { MODAL } from "../modalGeometry.ts";
+import { mountLaunchFailure } from "./launchFailure.ts";
 import { mountLoadingError } from "./loadingError.ts";
 
 const shared = vi.hoisted(() => ({
@@ -55,7 +58,7 @@ it("keeps fixed CSS text while fitting its Large width, margin and action on res
     parent as unknown as HTMLElement,
   );
   const [context, root, element] = shared.mount.mock.calls[0]! as unknown as [
-    { onRetry(): void | PromiseLike<void>; presentation: LoadingFailurePresentation },
+    { onRetry(): void | PromiseLike<void>; presentation: LoadingFailurePresentation<"content"> },
     HTMLElement,
     HTMLElement,
   ];
@@ -63,7 +66,8 @@ it("keeps fixed CSS text while fitting its Large width, margin and action on res
   expect(root.className).toBe("adw-loading-error");
   expect(element.className).not.toBe("crash-panel");
   const first = context.presentation;
-  expect(first.action.widthPx).toBe(BUTTON_SIZE.compact.width * scale.unit);
+  expect(first.action.widthPx).toBe("content");
+  expect(first.action.paddingXPx).toBe(MODAL.pad * scale.unit);
   expect(first.action.heightPx).toBe(BUTTON_SIZE.compact.height * scale.unit);
   expect(first.panel).toMatchObject({
     maxWidthPx: MODAL_WIDTHS.large * scale.unit,
@@ -81,7 +85,9 @@ it("keeps fixed CSS text while fitting its Large width, margin and action on res
   // A small landscape fit retains the approved logical height, without a CSS-size floor.
   scale.unit = 240 / 560;
   onScale(scale);
-  const next = shared.setPresentation.mock.lastCall![0] as LoadingFailurePresentation;
+  const next = shared.setPresentation.mock.lastCall![0] as LoadingFailurePresentation<"content">;
+  expect(next.action.widthPx).toBe("content");
+  expect(next.action.paddingXPx).toBe(MODAL.pad * scale.unit);
   expect(next.action.heightPx).toBe(BUTTON_SIZE.compact.height * scale.unit);
   expect(next.action.heightPx).toBeLessThan(48);
   expect(next.text).toEqual(first.text);
@@ -105,4 +111,43 @@ it("keeps fixed CSS text while fitting its Large width, margin and action on res
   expect(shared.dispose).toHaveBeenCalledOnce();
   await context.onRetry();
   expect(retry).toHaveBeenCalledOnce();
+});
+
+it("uses the same intrinsic Retry before game fonts and art load, including viewport resize", () => {
+  vi.clearAllMocks();
+  const doc = new FakeDocument();
+  Object.assign(doc.defaultView, {
+    innerHeight: SCREEN_CONFIG.height,
+    innerWidth: SCREEN_CONFIG.width,
+  });
+  const parent = doc.createElement("main");
+  const retry = vi.fn();
+  const view = mountLaunchFailure(retry, parent as unknown as HTMLElement);
+  const context = shared.mount.mock.calls[0]![0] as {
+    onRetry(): void;
+    presentation: LoadingFailurePresentation<"content">;
+  };
+  expect(context.presentation.action).toMatchObject({
+    heightPx: BUTTON_SIZE.compact.height,
+    paddingXPx: MODAL.pad,
+    widthPx: "content",
+  });
+  view.update({ attempt: 1, error: "503", kind: "failed" });
+  expect(parent.all().filter((node) => node.tagName === "button")).toHaveLength(1);
+  context.onRetry();
+  expect(retry).toHaveBeenCalledOnce();
+  Object.assign(doc.defaultView, { innerHeight: 240, innerWidth: 560 });
+  doc.defaultView.fire("resize");
+  const presentation = shared.setPresentation.mock
+    .lastCall![0] as LoadingFailurePresentation<"content">;
+  const unit = 240 / SCREEN_CONFIG.height;
+  expect(presentation.action).toMatchObject({
+    heightPx: BUTTON_SIZE.compact.height * unit,
+    paddingXPx: MODAL.pad * unit,
+    widthPx: "content",
+  });
+  expect(presentation.text).toEqual(context.presentation.text);
+  view.dispose();
+  expect(shared.dispose).toHaveBeenCalledOnce();
+  expect(doc.defaultView.listeners.get("resize")).toHaveLength(0);
 });

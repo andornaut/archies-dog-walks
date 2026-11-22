@@ -1,12 +1,13 @@
 import type { LoadingFailurePresentation } from "@andornaut/game-kit/runtime/web/progress/dom/loadingFailure";
 
 import { BUTTON_SIZE, MODAL_SPACING, MODAL_WIDTHS } from "../../data/layout.ts";
+import { MODAL } from "../modalGeometry.ts";
 import { PALETTE } from "../palette.ts";
 
 // Loading failed's look at unit CSS pixels per game pixel. Typography and inner panel spacing
 // stay in CSS pixels; the panel's Large width, its screen margin and the normal action follow
 // game fit.
-export function loadingFailurePresentation(unit: number): LoadingFailurePresentation {
+export function loadingFailurePresentation(unit: number): LoadingFailurePresentation<"content"> {
   const colour = (value: number) => `#${value.toString(16).padStart(6, "0")}`;
   return {
     action: {
@@ -14,9 +15,9 @@ export function loadingFailurePresentation(unit: number): LoadingFailurePresenta
       heightPx: BUTTON_SIZE.compact.height * unit,
       highlightHeightPx: Math.max(1, unit),
       paddingBottomPx: 4 * unit,
-      paddingXPx: 12,
+      paddingXPx: MODAL.pad * unit,
       shadeHeightPx: 4 * unit,
-      widthPx: BUTTON_SIZE.compact.width * unit,
+      widthPx: "content",
     },
     palette: {
       action: colour(PALETTE.green),
