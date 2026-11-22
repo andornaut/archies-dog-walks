@@ -16,6 +16,94 @@ const pointer = (pointerId: number, target: FakeElement, type = "pointerdown") =
   type,
 });
 
+// FakeTarget.fire intentionally does not model propagation. Document capture must stop at
+// stopImmediatePropagation here, as a browser does before the newer root hears pointerup.
+function documentCapture(doc: FakeDocument, event: ReturnType<typeof pointer>) {
+  for (const listener of doc.listeners.get(event.type) ?? []) {
+    listener(event);
+    if (event.stopImmediatePropagation.mock.calls.length > 0) {
+      break;
+    }
+  }
+}
+
+function freshDown(doc: FakeDocument, root: FakeElement): void {
+  const event = pointer(1, root);
+  documentCapture(doc, event);
+  if (event.stopImmediatePropagation.mock.calls.length === 0) {
+    root.fire("pointerdown", event);
+  }
+}
+
+function crossRootFixture() {
+  const doc = new FakeDocument();
+  const background = doc.createElement("div");
+  const dialog = doc.createElement("div");
+  doc.body.append(background, dialog);
+  const gate = createModalInputGate();
+  const stopBackground = guardNativeInput(
+    { gate, subscribe: gate.subscribe },
+    background as unknown as HTMLElement,
+  );
+  freshDown(doc, background);
+  const modal = gate.open();
+  const up = vi.fn();
+  const stopDialog = guardNativeInput(
+    { gate: modal, subscribe: gate.subscribe, up },
+    dialog as unknown as HTMLElement,
+  );
+  return {
+    dialog,
+    dispose: () => {
+      stopDialog();
+      stopBackground();
+      modal.close();
+      expect(doc.listeners.get("pointerdown") ?? []).toHaveLength(0);
+    },
+    doc,
+    up,
+  };
+}
+
+it("admits the first fresh same-ID dialog contact after an older root lost its cancelled release", () => {
+  const f = crossRootFixture();
+  const contact = () => {
+    const before = f.up.mock.calls.length;
+    freshDown(f.doc, f.dialog);
+    const release = pointer(1, f.dialog, "pointerup");
+    documentCapture(f.doc, release);
+    const click = pointer(1, f.dialog, "click");
+    f.dialog.fire("click", click);
+    return {
+      clickRejected: click.stopImmediatePropagation.mock.calls.length > 0,
+      releaseRejected: release.stopImmediatePropagation.mock.calls.length > 0,
+      upCalls: f.up.mock.calls.length - before,
+    };
+  };
+  const first = contact();
+  const second = contact();
+  f.dispose();
+  expect(second).toEqual({ clickRejected: false, releaseRejected: false, upCalls: 1 });
+  expect(first).toEqual({ clickRejected: false, releaseRejected: false, upCalls: 1 });
+});
+
+it("still suppresses the old carried release when no fresh dialog pointerdown occurred", () => {
+  const f = crossRootFixture();
+  const moved = pointer(1, f.dialog, "pointermove");
+  documentCapture(f.doc, moved);
+  expect(moved.stopImmediatePropagation).toHaveBeenCalledOnce();
+  const carried = pointer(1, f.dialog, "pointerup");
+  documentCapture(f.doc, carried);
+  expect(carried.stopImmediatePropagation).toHaveBeenCalledOnce();
+  expect(f.up).not.toHaveBeenCalled();
+  freshDown(f.doc, f.dialog);
+  const fresh = pointer(1, f.dialog, "pointerup");
+  documentCapture(f.doc, fresh);
+  expect(fresh.stopImmediatePropagation).not.toHaveBeenCalled();
+  expect(f.up).toHaveBeenCalledOnce();
+  f.dispose();
+});
+
 it("admits one native pointer and cancels its hold across a modal even after that modal closes", () => {
   const doc = new FakeDocument();
   const root = doc.createElement("div");

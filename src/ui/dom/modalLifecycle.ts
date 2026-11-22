@@ -58,6 +58,10 @@ export function guardNativeInput(guard: NativeInputGuard, root: HTMLElement): ()
     event.preventDefault();
     event.stopImmediatePropagation();
   };
+  // A fresh contact can reuse a cancelled pointer ID in another root of the same document.
+  const freshDown = (event: PointerEvent) => {
+    cancelled.delete(event.pointerId);
+  };
   const down = (event: PointerEvent) => {
     if (doc.hidden) {
       reject(event);
@@ -165,6 +169,7 @@ export function guardNativeInput(guard: NativeInputGuard, root: HTMLElement): ()
     },
   };
   const listen = () => {
+    doc.addEventListener("pointerdown", freshDown, true);
     // A hold may start only after this root has admitted and claimed the native contact.
     root.addEventListener("pointerdown", down, true);
     stopHolds = bindGameActionHolds(
@@ -188,6 +193,7 @@ export function guardNativeInput(guard: NativeInputGuard, root: HTMLElement): ()
     doc.addEventListener("pointercancel", end, true);
   };
   const unlisten = () => {
+    doc.removeEventListener("pointerdown", freshDown, true);
     stopHolds();
     stopClicks();
     root.removeEventListener("click", click, true);
