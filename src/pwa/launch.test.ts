@@ -8,6 +8,7 @@ import { PHONE_EVENTS } from "./events.ts";
 const kit = vi.hoisted(() => ({
   bootProgress: vi.fn(),
   options: undefined as LaunchOptions | undefined,
+  requestUpdateCheck: vi.fn(),
   requireNewer: vi.fn(),
   run: vi.fn(),
 }));
@@ -16,7 +17,12 @@ vi.mock("@andornaut/game-kit/runtime/web/pwa/dom/launch", () => ({
   browserLaunchContext: () => ({}),
   createLaunch: (_context: unknown, options: LaunchOptions) => {
     kit.options = options;
-    return { bootProgress: kit.bootProgress, requireNewer: kit.requireNewer, run: kit.run };
+    return {
+      bootProgress: kit.bootProgress,
+      requestUpdateCheck: kit.requestUpdateCheck,
+      requireNewer: kit.requireNewer,
+      run: kit.run,
+    };
   },
 }));
 
@@ -50,6 +56,7 @@ beforeEach(async () => {
   kit.options = undefined;
   kit.bootProgress.mockClear();
   kit.requireNewer.mockClear();
+  kit.requestUpdateCheck.mockClear();
   kit.run.mockReset().mockResolvedValue("play");
   dispatched.length = 0;
   launch = await import("./launch.ts");
@@ -61,6 +68,17 @@ afterEach(() => {
 });
 
 describe("startLaunch", () => {
+  it("delegates genuine Start returns only after boot hands over, without app throttling", async () => {
+    launch.requestStartUpdateCheck();
+    await launch.startLaunch(() => ({ dispose() {}, update() {} }));
+    launch.requestStartUpdateCheck();
+    expect(kit.requestUpdateCheck).not.toHaveBeenCalled();
+    launch.bootHandedOver();
+    launch.requestStartUpdateCheck();
+    launch.requestStartUpdateCheck();
+    expect(kit.requestUpdateCheck).toHaveBeenCalledTimes(2);
+  });
+
   it("installs only the sound format this page plays", async () => {
     await launch.startLaunch(() => ({ dispose() {}, update() {} }));
     expect(options().soundFormat).toBe("m4a");
@@ -111,6 +129,9 @@ describe("startLaunch", () => {
     vi.resetModules();
     launch = await import("./launch.ts");
     await expect(launch.startLaunch(() => ({ dispose() {}, update() {} }))).resolves.toBe("play");
+    launch.bootHandedOver();
+    launch.requestStartUpdateCheck();
+    expect(kit.requestUpdateCheck).not.toHaveBeenCalled();
     launch.requireNewer();
     expect(launch.requiredUpdate()).toBe("unavailable");
     expect(kit.options).toBeUndefined();

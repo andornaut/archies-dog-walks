@@ -15,7 +15,6 @@ import type {
 import {
   browserLaunchContext,
   createLaunch,
-  type Launch,
   type RequiredUpdateState,
 } from "@andornaut/game-kit/runtime/web/pwa/dom/launch";
 
@@ -42,7 +41,7 @@ export type { RequiredUpdateState } from "@andornaut/game-kit/runtime/web/pwa/do
 // the profile and drawing the first screen) completes when boot hands over (bootHandedOver).
 export const BOOT_READS_SHARE = 0.95;
 
-let launch: Launch | undefined;
+let launch: ReturnType<typeof createLaunch> | undefined;
 let booted = false;
 // Why this launch plays from the network, where the device could not install the game.
 let networkPlay: NetworkPlayNotice["reason"] | undefined;
@@ -142,6 +141,14 @@ export function networkPlayReason(): NetworkPlayNotice["reason"] | undefined {
 // Whether boot has handed over to the first screen.
 export function bootFinished(): boolean {
   return booted;
+}
+
+// A genuine return to Start wakes the existing launch. Initial boot already checks for updates;
+// the kit owns eligibility, coalescing and staging after this request.
+export function requestStartUpdateCheck(): void {
+  if (bootFinished()) {
+    launch?.requestUpdateCheck();
+  }
 }
 
 // Boot has drawn the first screen: the launch's line fills and fades.
