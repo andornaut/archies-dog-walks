@@ -50,3 +50,4 @@ Reference: [Developing](../../README.md#developing), [Deploying](../../README.md
 | adw-0187 | Cap Archie verification containers at 4 GiB                                  | [adw-0187.md](../work/adw-0187.md) |
 | adw-0188 | Restore the delivery gate image                                              | [adw-0188.md](../work/adw-0188.md) |
 | adw-0189 | Fix the art gallery font specimens and console error                         | [adw-0189.md](../work/adw-0189.md) |
+| adw-0198 | Request an ordinary update check on returning to Start                       | [adw-0198.md](../work/adw-0198.md) |
