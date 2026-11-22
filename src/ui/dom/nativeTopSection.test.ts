@@ -13,6 +13,7 @@ import { fontInk, fontInkRows, gameFont } from "../../testing/fontInk.ts";
 import { ownArtFrames } from "../../testing/ownArtFrames.ts";
 import { BUTTON_SIZE } from "../buttonGeometry.ts";
 import { domScale, fontPixel, gridRect } from "../domScale.ts";
+import { PALETTE } from "../palette.ts";
 import { TOP_BAR_FACE, TOP_BAR_TRIM, TOP_BAR_WELL } from "../topBarTrim.ts";
 import { topSectionLayout } from "../topSection.ts";
 import { createNativeTopSection } from "./nativeTopSection.ts";
@@ -76,6 +77,16 @@ function fixture(
     },
   );
   const buttons = element.all().filter((node) => node.tagName === "button");
+  for (const button of buttons) {
+    Object.assign(button, {
+      getBoundingClientRect: () => ({
+        height: Number.parseFloat(button.style.height!) / scale.dpr,
+        left: scale.origin.x + Number.parseFloat(button.style.left!) / scale.dpr,
+        top: scale.origin.y + Number.parseFloat(button.style.top!) / scale.dpr,
+        width: Number.parseFloat(button.style.width!) / scale.dpr,
+      }),
+    });
+  }
   const root = view.element as unknown as FakeTarget;
   const click = () => {
     const fields = { detail: 0, target: buttons[0] };
@@ -87,12 +98,23 @@ function fixture(
 }
 function dispatch(target: FakeTarget, type: string, fields: Record<string, unknown>) {
   let stopped = false;
+  let button = fields.target as FakeElement | undefined;
+  while (button !== undefined && button.tagName !== "button") {
+    button = button.parent ?? undefined;
+  }
+  const rect = (
+    button as
+      | (FakeElement & {
+          getBoundingClientRect(): { left: number; top: number; width: number; height: number };
+        })
+      | undefined
+  )?.getBoundingClientRect();
   const event = Object.assign(
     {
       button: 0,
       buttons: 0,
-      clientX: 10,
-      clientY: 10,
+      clientX: rect === undefined ? 10 : rect.left + rect.width / 2,
+      clientY: rect === undefined ? 10 : rect.top + rect.height / 2,
       detail: 0,
       isPrimary: true,
       pointerId: 1,
@@ -362,13 +384,20 @@ it.each([
         width: TOP_BAR_FACE.size,
       });
       const button = buttons[index]!;
+      const focusFace = button.all().find((node) => node.classList.contains("ui-button-face"))!;
+      expect(focusFace.style).toMatchObject({
+        height: `${faceBox.height}px`,
+        left: `${faceBox.left - hitBox.left}px`,
+        top: `${faceBox.top - hitBox.top}px`,
+        width: `${faceBox.width}px`,
+      });
       const normal = button
         .all()
         .find((node) => node.style.backgroundImage?.includes("ui-icon-button-normal"))!;
       expect(normal.style).toMatchObject({
         height: `${faceBox.height}px`,
-        left: `${faceBox.left - hitBox.left}px`,
-        top: `${faceBox.top - hitBox.top}px`,
+        left: "0px",
+        top: "0px",
         width: `${faceBox.width}px`,
       });
       const glyphBox = gridRect(scale, { height: 16, width: 16, x: face.x + 2, y: face.y + 1 });
@@ -377,8 +406,8 @@ it.each([
         .find((node) => node.className === "adw-art" && node.children.length > 0)!;
       expect(glyph.style).toMatchObject({
         height: `${glyphBox.height}px`,
-        left: `${glyphBox.left - hitBox.left}px`,
-        top: `${glyphBox.top - hitBox.top}px`,
+        left: `${glyphBox.left - faceBox.left}px`,
+        top: `${glyphBox.top - faceBox.top}px`,
         width: `${glyphBox.width}px`,
       });
       expect(glyph.children[0]!.style).toMatchObject({
@@ -394,7 +423,7 @@ it.each([
         x: face.x + 2,
         y: face.y + 1 + BUTTON_SIZE.press,
       });
-      expect(glyph.style.top).toBe(`${pressedBox.top - hitBox.top}px`);
+      expect(glyph.style.top).toBe(`${pressedBox.top - faceBox.top}px`);
     });
     const well = layout.currency!;
     const wellBox = gridRect(scale, well);
@@ -528,4 +557,54 @@ it("lets the Kit dispatch taps and holds once while preserving pointer timing an
   } finally {
     vi.useRealTimers();
   }
+});
+
+it("rejects releases outside the original control even if implicit capture retains its child target", async () => {
+  const { buttons, doc, press, reveal, root, view } = fixture();
+  reveal(true);
+  await Promise.resolve();
+  const original = buttons[0]!;
+  const child = original.all().find((node) => node.style.backgroundImage !== undefined)!;
+  const releaseCapture = vi.fn();
+  Object.assign(child, { hasPointerCapture: () => true, releasePointerCapture: releaseCapture });
+  const click = () => {
+    const fields = { detail: 1, target: child };
+    if (!dispatch(root, "click", fields)) {
+      dispatch(original, "click", fields);
+    }
+  };
+  for (const point of [
+    { clientX: -5, clientY: -5 },
+    { clientX: Number.parseFloat(buttons[1]!.style.left!) + 2, clientY: 2 },
+  ]) {
+    dispatch(root, "pointerdown", { buttons: 1, pointerId: 1, target: child });
+    expect(releaseCapture).toHaveBeenLastCalledWith(1);
+    dispatch(doc, "pointerup", { ...point, pointerId: 1, target: child });
+    click();
+    expect(press).not.toHaveBeenCalled();
+  }
+  dispatch(root, "pointerdown", { buttons: 1, pointerId: 2, target: child });
+  dispatch(doc, "pointerup", { pointerId: 2, target: child });
+  click();
+  expect(press).toHaveBeenCalledOnce();
+  view.dispose();
+});
+
+it("uses a local cyan face and translucent raster focus cue without the legacy close ring", () => {
+  const { buttons, element, view } = fixture();
+  expect(buttons.every((button) => button.classList.contains("adw-top-section-button"))).toBe(true);
+  expect(buttons.some((button) => button.classList.contains("adw-close"))).toBe(false);
+  const style = element
+    .all()
+    .find((node) => node.tagName === "style")!
+    .textContent.replace(/\s+/g, "");
+  const hex = (colour: number) => `#${colour.toString(16).padStart(6, "0")}`;
+  expect(style).toContain(
+    `.adw-top-section-button:focus-visible{` +
+      `--ui-button-focus-fill:${hex(PALETTE.cyan)};--ui-button-focus-text:${hex(PALETTE.ink)}}`,
+  );
+  expect(style).toContain(
+    '.adw-top-section-button:focus-visible>.ui-button-face>[aria-hidden="true"]{opacity:0.65}',
+  );
+  view.dispose();
 });

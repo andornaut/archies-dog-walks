@@ -1,3 +1,4 @@
+import { containsPoint } from "@andornaut/game-kit/runtime/rect";
 import {
   advanceWidth,
   type BitmapFont,
@@ -22,14 +23,7 @@ import { type TopSectionButton, topSectionCurrency, topSectionLayout } from "../
 import { type DomArtSource, imageArt, sheetArt } from "./artElements.ts";
 import { createGameButton } from "./gameButton.ts";
 import { guardNativeInput, revealPaint } from "./modalLifecycle.ts";
-import {
-  backedTextPlaces,
-  createTextLine,
-  placeBox,
-  placeFrame,
-  placeText,
-  setBox,
-} from "./pixelLine.ts";
+import { backedTextPlaces, createTextLine, placeBox, placeText, setBox } from "./pixelLine.ts";
 import type { UiLayer } from "./uiLayer.ts";
 export interface NativeTopSectionPress {
   readonly completedAt: number;
@@ -72,6 +66,7 @@ interface BarControl {
   readonly down: (event: PointerEvent) => void;
   readonly observeClick: (event: MouseEvent) => void;
   readonly clearMetadata: () => void;
+  readonly contains: (event: PointerEvent) => boolean;
   readonly setPressed: (pressed: boolean) => void;
 }
 const ORIGIN = { x: 0, y: 0 } as const;
@@ -97,6 +92,20 @@ export function createNativeTopSection(
   underlayElement.className = "adw-top-underlay";
   Object.assign(underlayElement.style, { inset: "0", pointerEvents: "none", position: "absolute" });
   root.append(underlayElement);
+  const focusStyle = doc.createElement("style");
+  focusStyle.textContent = `
+.adw-top-section-button{
+  position:absolute;box-sizing:border-box;pointer-events:auto;margin:0;padding:0;border:0;
+  background:none;color:inherit;font:inherit;cursor:pointer;touch-action:manipulation;
+  -webkit-tap-highlight-color:transparent;outline:none
+}
+.adw-top-section-button>.ui-button-face{position:absolute;pointer-events:none}
+.adw-top-section-button:focus-visible{
+  --ui-button-focus-fill:${hex(PALETTE.cyan)};--ui-button-focus-text:${hex(PALETTE.ink)}
+}
+.adw-top-section-button:focus-visible>.ui-button-face>[aria-hidden="true"]{opacity:0.65}
+`;
+  root.append(focusStyle);
   const layout = topSectionLayout(config.buttons, config);
   const placed: ((scale: DomScale) => void)[] = [];
   let muted = config.muted === true;
@@ -149,7 +158,7 @@ export function createNativeTopSection(
     const active = () =>
       paint.painted() && !disposed && shown && !inert && !root.hidden && config.accepts(id);
     const view = createGameButton(doc, {
-      appearance: { className: "adw-close", role: "navigation" },
+      appearance: { className: "adw-top-section-button", role: "navigation" },
       content: { icon: content, kind: "icon", name: config.labels[id] },
       getAction: () =>
         active()
@@ -210,12 +219,12 @@ export function createNativeTopSection(
               height: Math.max(0, Math.min(hit.height, inputBottom - hit.y)),
             },
       );
-      placeFrame(scale, hit, view.face, {
+      placeBox(scale, hit, view.face, {
         ...face,
         height: TOP_BAR_FACE.size,
         width: TOP_BAR_FACE.size,
       });
-      const origin = { x: hit.x, y: hit.y };
+      const origin = { x: face.x, y: face.y };
       for (const [index, art] of faces.entries()) {
         art.element.hidden = index !== Number(pressed);
         art.place(scale, origin, {
@@ -234,8 +243,8 @@ export function createNativeTopSection(
       const glyphBox = gridRect(scale, glyphRect);
       setBox(glyphRoot, {
         ...glyphBox,
-        left: glyphBox.left - gridX(scale, hit.x),
-        top: glyphBox.top - gridY(scale, hit.y),
+        left: glyphBox.left - gridX(scale, face.x),
+        top: glyphBox.top - gridY(scale, face.y),
       });
       for (const { art, key } of icons) {
         art.element.hidden = key !== iconKey();
@@ -264,10 +273,22 @@ export function createNativeTopSection(
         clickAt = undefined;
         via = "keyboard";
       },
+      contains: (event) => {
+        const rect = button.getBoundingClientRect();
+        return containsPoint(
+          { height: rect.height, width: rect.width, x: rect.left, y: rect.top },
+          event.clientX,
+          event.clientY,
+        );
+      },
       down: (event) => {
         startedAt = event.timeStamp;
         clickAt = undefined;
         via = "pointer";
+        const target = event.target as Element | null;
+        if (target?.hasPointerCapture?.(event.pointerId)) {
+          target.releasePointerCapture(event.pointerId);
+        }
         if (button.hasPointerCapture(event.pointerId)) {
           button.releasePointerCapture(event.pointerId);
         }
@@ -342,16 +363,19 @@ export function createNativeTopSection(
           },
         },
         holdUnit: () => layer.scale().unit,
-        move: (event) => held?.setPressed(held.button.contains(event.target as Node)),
+        move: (event) => held?.setPressed(held.contains(event)),
         subscribe: (listener) =>
           layer.input.subscribe(() => {
             epoch += 1;
             records.forEach((record) => record.clearMetadata());
             listener();
           }),
-        up: () => {
+        up: (event, cancelled) => {
+          const original = held;
           held?.setPressed(false);
           held = undefined;
+          // Implicit capture can keep the old target after the pointer leaves its hit box.
+          return cancelled || original === undefined || !original.contains(event);
         },
       },
       root,
