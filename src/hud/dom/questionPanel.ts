@@ -133,7 +133,7 @@ const ORIGIN = { x: 0, y: 0 } as const;
 
 // art: the close control's 16x16 glyph on its 20x20 ui-icon-button face, from the face's corner,
 // as the canvas draws it (addIconButton).
-const CLOSE_ART = { glyph: { size: 16, x: 2, y: 1 } } as const;
+const CLOSE_GLYPH_SIZE = 16;
 
 // art: fx-tap's side.
 const BURST_SIDE = 16;
@@ -367,12 +367,14 @@ export function showQuestionPanel(layer: UiLayer, input: DomQuestionPanelInput):
     const top =
       (modal ? panelBounds.top + inset : gridY(scale, closeArt.y)) - gridY(scale, view.close.hit.y);
     setBox(face, { height: side, left, top, width: side });
-    const { glyph: at } = CLOSE_ART;
+    const glyphSide = CLOSE_GLYPH_SIZE * pixel;
+    // Native content starts inside the persistent one-art-pixel face border.
+    const glyphInset = (side - glyphSide) / 2 - (closeView === undefined ? 0 : pixel);
     setBox(glyph, {
-      height: at.size * pixel,
-      left: closeView === undefined ? left + at.x * pixel : (side - at.size * pixel) / 2,
-      top: closeView === undefined ? top + at.y * pixel : (side - at.size * pixel) / 2,
-      width: at.size * pixel,
+      height: glyphSide,
+      left: glyphInset + (closeView === undefined ? left : 0),
+      top: glyphInset + (closeView === undefined ? top : 0),
+      width: glyphSide,
     });
   });
   if (closeView !== undefined) {

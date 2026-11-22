@@ -139,7 +139,7 @@ export const UI_STYLE = `
   background:${skinFrame("ui-icon-button-normal")} 0 0/100% 100%;image-rendering:pixelated}
 .adw-close:not(.adw-standard-button)[data-pressed] .adw-close-face{
   background-image:${skinFrame("ui-icon-button-pressed")}}
-.adw-close-glyph{background:var(--adw-icon-close) 0 0/100% 100%;image-rendering:pixelated}
+.adw-close-glyph:empty{background:var(--adw-icon-close) 0 0/100% 100%;image-rendering:pixelated}
 /* A keyboard focus only: a cyan band in ink keylines inside the control's face, clear of the gap
    and the next control. */
 .adw-button:not(.adw-standard-button):focus-visible .adw-face::after,

@@ -276,6 +276,12 @@ describe("an HTML detail card that takes no presses", () => {
     expect(nodes.some((node) => node.tagName === "button")).toBe(false);
     const close = nodes.find((node) => node.className === "adw-close");
     expect([close?.tagName, close?.getAttribute("aria-hidden")]).toEqual(["span", "true"]);
+    const face = close!.all().find((node) => node.classList.contains("adw-close-face"))!;
+    const glyph = close!.all().find((node) => node.classList.contains("adw-close-glyph"))!;
+    expect(glyph.children).toHaveLength(0);
+    const n = (node: typeof face, key: string) => Number.parseFloat(node.style[key]!);
+    expect(n(glyph, "left") + n(glyph, "width") / 2).toBe(n(face, "left") + n(face, "width") / 2);
+    expect(n(glyph, "top") + n(glyph, "height") / 2).toBe(n(face, "top") + n(face, "height") / 2);
     dialog?.fire("keydown", { code: "Tab", preventDefault: () => undefined, shiftKey: false });
     expect(doc.activeElement).toBe(dialog);
     const described = nodes.find((node) => node.id === dialog?.getAttribute("aria-describedby"));
@@ -856,6 +862,7 @@ it("keeps action identity while DOM order follows the button and footer position
 
 it.each([
   { dpr: 1, inset: 6, width: 360 },
+  { dpr: 1, inset: 10, width: 575 },
   { dpr: 2.625, inset: 24, width: 575 },
 ])("projects equal painted X gaps at width $width DPR $dpr", ({ dpr, inset, width }) => {
   for (const frame of ["card", "panel"] as const) {
@@ -892,8 +899,11 @@ it.each([
     const faceY = n(close, "top") + n(face, "top");
     expect(faceY - n(painted, "top")).toBe(inset);
     expect(n(painted, "left") + n(painted, "width") - faceX - n(face, "width")).toBe(inset);
-    expect(n(glyph, "left") + n(glyph, "width") / 2).toBe(n(face, "width") / 2);
-    expect(n(glyph, "top") + n(glyph, "height") / 2).toBe(n(face, "height") / 2);
+    const border = artPixel(scale);
+    expect(border + n(glyph, "left") + n(glyph, "width") / 2).toBe(n(face, "width") / 2);
+    expect(border + n(glyph, "top") + n(glyph, "height") / 2).toBe(n(face, "height") / 2);
+    expect(glyph.children).toHaveLength(1);
+    expect(glyph.children[0]!.tagName).toBe("svg");
     expect(view.close.hit).toMatchObject({ height: 48, width: 48 });
     shown.destroy();
   }
