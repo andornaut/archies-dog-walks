@@ -23,7 +23,7 @@ const methods = StartScene.prototype as unknown as {
   dispatchHeld: (target: Target) => void;
   homePressDown: (native: boolean, point: { x: number; y: number }) => void;
   homePressMove: (point: { isDown: boolean; x: number; y: number }) => void;
-  homePressUp: (point: { x: number; y: number }, cancelled: boolean) => void;
+  homePressUp: (point: { x: number; y: number }, cancelled: boolean, native?: boolean) => boolean;
   update: () => void;
 };
 function home(target: Target) {
@@ -69,21 +69,22 @@ it("release at the hold threshold uses the same world action without waiting for
   expect(state.actAfterDip).toHaveBeenCalledExactlyOnceWith(target);
 });
 
-it("leaves native default holds to the native registry while retaining dog detail overrides", () => {
-  const native = home({ kind: "petShop" });
-  methods.homePressDown.call(native, true, point);
-  expect(native.hold).toBeUndefined();
-  methods.update.call(native);
-  expect(native.actAfterDip).not.toHaveBeenCalled();
-
+it("leaves an admitted native dog press to Kit and consumes a release outside the pick", () => {
   const dog = { dog: newPlayerSave.lastLoadout.dogs[0]!, kind: "dog" } as const;
-  const detail = home(dog);
-  methods.homePressDown.call(detail, true, point);
-  detail.time.now = detail.hold!.rule.holdMs;
-  methods.update.call(detail);
-  methods.homePressUp.call(detail, point, false);
-  expect(detail.openDetail).toHaveBeenCalledExactlyOnceWith(dog);
-  expect(detail.actAfterDip).not.toHaveBeenCalled();
+  const state = home(dog);
+  methods.homePressDown.call(state, true, point);
+  state.time.now = read(gameData.tuning, "seconds", "holdSeconds") * 1000;
+  expect(state.hold).toBeUndefined();
+  methods.update.call(state);
+  expect(methods.homePressUp.call(state, point, false, true)).toBe(false);
+  expect(state.press?.held).toBe(false);
+
+  methods.homePressDown.call(state, true, point);
+  state.targetAt.mockReturnValue(undefined);
+  const outside = { x: point.x + TILE_SLOP_PX + 1, y: point.y };
+  expect(methods.homePressUp.call(state, outside, false, true)).toBe(true);
+  expect(state.openDetail).not.toHaveBeenCalled();
+  expect(state.actAfterDip).not.toHaveBeenCalled();
 });
 
 it("does not activate after dragging outside or withdrawing a world target before its hold", () => {
