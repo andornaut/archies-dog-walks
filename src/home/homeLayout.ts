@@ -236,11 +236,10 @@ export const HOME_LAYOUT = {
   },
   // The detail card that opens over the screen, centred and as tall as what it shows, in card
   // pixels: the paper starts 2px in, the title row (no bar is drawn) runs across its top 6px in
-  // with the title's caps 7px below the row's top, and the well sits under the row, on a dog's card with its bottom row
-  // level with the owner's photo's. Rows of 2x body text, each wrapped within the card less pad,
-  // rowGap between rows: a detail card's subtitle beside the well from besideX, besideDy under
-  // well.y, and its status or price last under the well, at pad. A dog's card puts its owner's
-  // photo, name and role under its subtitle (detailOwner): their face-owner-<art> face (owner.face
+  // with the title's caps 7px below the row's top, and the well starts at the shared header.
+  // Meaningful details wrap beside the well from besideX, besideDy under well.y, with shared
+  // group gaps. Status or price follows the taller column at pad. A dog's owner photo, name
+  // and role stay together after its other details (detailOwner): their face-owner-<art> face (owner.face
   // square) in the walk card's photo mat and frame, then owner.gap right of the photo their name in
   // 2x body text and under it their role in 2x body text, wrapped, its capitals LABEL_HELP_GAP
   // clear rows under the body font's lowest ink (helpCapDy). The name is in owner.nameColour: plum,
@@ -574,6 +573,7 @@ export function speechBubbleHeight(body: FontMetrics, lines: readonly string[]):
 
 // The owner's row on a dog's card, with its role on roleLines lines.
 interface OwnerRow {
+  readonly nameLines?: number;
   readonly roleLines: number;
 }
 
@@ -582,15 +582,17 @@ export type DetailRow = number | OwnerRow;
 
 // The rows from the owner's name's capitals to their role's lowest ink, the role on roleLines
 // lines.
-function ownerTextRows(body: FontMetrics, roleLines: number): number {
-  return helpCapDy(body, 2) + inkRowsOfLines(body, roleLines) * 2;
+function ownerTextRows(body: FontMetrics, roleLines: number, nameLines = 1): number {
+  return (
+    helpCapDy(body, 2) + (nameLines - 1) * body.lineHeight * 2 + inkRowsOfLines(body, roleLines) * 2
+  );
 }
 
 // How tall the owner's row is, its role on roleLines lines: the photo or the text beside it,
 // whichever is taller.
-export function detailOwnerHeight(body: FontMetrics, roleLines: number): number {
+export function detailOwnerHeight(body: FontMetrics, roleLines: number, nameLines = 1): number {
   const photo = ownerPhotoRect(HOME_LAYOUT.card.owner.face, { x: 0, y: 0 });
-  return Math.max(photo.height, ownerTextRows(body, roleLines));
+  return Math.max(photo.height, ownerTextRows(body, roleLines, nameLines));
 }
 
 // The owner's photo, name and role on a dog's card, the row's top-left at at, the role on
@@ -602,13 +604,14 @@ export function detailOwner(
   body: FontMetrics,
   at: Point,
   roleLines: number,
+  nameLines = 1,
 ): { face: Point; name: Point; photo: Rect; role: Point & { pitch: number } } {
   const { face, gap } = HOME_LAYOUT.card.owner;
-  const height = detailOwnerHeight(body, roleLines);
+  const height = detailOwnerHeight(body, roleLines, nameLines);
   const probe = ownerPhotoRect(face, { x: 0, y: 0 });
   const photo = { ...probe, x: at.x, y: at.y + Math.floor((height - probe.height) / 2) };
   const x = photo.x + photo.width + gap;
-  const nameY = at.y + Math.floor((height - ownerTextRows(body, roleLines)) / 2);
+  const nameY = at.y + Math.floor((height - ownerTextRows(body, roleLines, nameLines)) / 2);
   return {
     face: { x: photo.x - probe.x, y: photo.y - probe.y },
     name: { x, y: nameY },
@@ -616,22 +619,17 @@ export function detailOwner(
     role: {
       pitch: body.lineHeight * 2,
       x,
-      y: nameY + helpCapDy(body, 2),
+      y: nameY + helpCapDy(body, 2) + (nameLines - 1) * body.lineHeight * 2,
     },
   };
 }
 
-// Rows from top down, the next starting as far under a row's lowest ink as one line of 2x body
-// text starts under the last (a line of the font and the card's rowGap past its capitals): each
-// row's top (its capitals', or the owner's photo's), and the last row's lowest ink.
-// An explicit group gap measures clear space from the preceding row's lowest ink.
+// Paragraphs and owner blocks are separated by the shared clear-ink group gap.
 function cardRows(
   body: FontMetrics,
   top: number,
-  gap: number | undefined,
   rows: readonly DetailRow[],
 ): { bottom: number; tops: number[] } {
-  const inkGap = gap ?? body.lineHeight * 2 + HOME_LAYOUT.card.rowGap - inkRowsFromCapTop(body) * 2;
   let y = top;
   let bottom = top;
   const tops = rows.map((row) => {
@@ -640,8 +638,8 @@ function cardRows(
       at +
       (typeof row === "number"
         ? inkRowsOfLines(body, row) * 2
-        : detailOwnerHeight(body, row.roleLines));
-    y = bottom + inkGap;
+        : detailOwnerHeight(body, row.roleLines, row.nameLines));
+    y = bottom + MODAL.gap;
     return at;
   });
   return { bottom, tops };
@@ -671,34 +669,18 @@ export const CARD_TEXT_ROOM = cardTextRooms(
   modalFamilyWidth(SCREEN_CONFIG.width - 2 * MODAL.margin, "large"),
 );
 
-// The well's top on a detail card whose rows beside it are beside, at tops: well.y, or on a
-// dog's card the row that puts the well's bottom row level with the owner's photo's.
-function detailWellY(body: FontMetrics, beside: readonly DetailRow[], tops: readonly number[]) {
-  const { besideX, well } = HOME_LAYOUT.card;
-  const i = beside.findIndex((row) => typeof row !== "number");
-  const owner = beside[i];
-  if (owner === undefined || typeof owner === "number") {
-    return well.y;
-  }
-  const { photo } = detailOwner(body, { x: besideX, y: tops[i] ?? 0 }, owner.roleLines);
-  return photo.y + photo.height - well.size;
-}
-
-// A detail card's rows beside the well and under it, the well's top, and the card's height.
-// The rows under the well start one group gap under whichever reaches lowest, the well or
-// the rows beside it. Portrait cards retain their padded separation; item cards use the shared
-// modal group gap. The card is padded under the lowest content.
+// Every primary picture begins at the shared header. Status follows the taller picture or
+// details column by one shared group gap, with no empty trailing group.
 export function detailCardLayout(
   body: FontMetrics,
-  rows: { below: readonly DetailRow[]; beside: readonly DetailRow[]; gap?: number },
+  rows: { below: readonly DetailRow[]; beside: readonly DetailRow[] },
 ): { below: number[]; beside: number[]; height: number; wellY: number } {
   const { besideDy, pad, well } = HOME_LAYOUT.card;
-  const beside = cardRows(body, well.y + besideDy, rows.gap, rows.beside);
-  const wellY = detailWellY(body, rows.beside, beside.tops);
-  const upper = Math.max(wellY + well.size, beside.bottom);
-  const below = cardRows(body, upper + (rows.gap ?? pad), rows.gap, rows.below);
+  const beside = cardRows(body, well.y + besideDy, rows.beside);
+  const upper = Math.max(well.y + well.size, beside.bottom);
+  const below = cardRows(body, upper + MODAL.gap, rows.below);
   const bottom = rows.below.length > 0 ? below.bottom : upper;
-  return { below: below.tops, beside: beside.tops, height: bottom + pad, wellY };
+  return { below: below.tops, beside: beside.tops, height: bottom + pad, wellY: well.y };
 }
 
 // A walker or Pocket tile's label strip, rows tall, from the drawn tile at tile: across the tile

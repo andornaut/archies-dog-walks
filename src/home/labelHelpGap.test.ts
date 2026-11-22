@@ -18,6 +18,7 @@ import { dollarText } from "../presentation/currency.ts";
 import type { Owned } from "../save/schema.ts";
 import { fontFileMetrics, gameGlyphs, inkWidth } from "../testing/fontInk.ts";
 import { VETERAN_EARNED, veteranSave } from "../testing/saves.ts";
+import { MODAL } from "../ui/modal/layout.ts";
 import { plainMarks } from "../ui/pixelFont.ts";
 import { TEXT_SCALE } from "../ui/textFit.ts";
 import { cents } from "../units.ts";
@@ -62,6 +63,7 @@ function lowestInk(font: Font, scale: number, text: string): number {
 // that already left more.
 interface Pair {
   readonly font: Font;
+  readonly gap?: number;
   readonly held: "at least" | "exactly";
   readonly help: number;
   readonly label: string;
@@ -128,7 +130,10 @@ function cardRows(rows: readonly CardRow[], tops: readonly number[], where: stri
     const help = "owner" in next ? (at(next, nextTop)?.name.y ?? 0) : nextTop;
     const last = row.lines.at(-1) ?? "";
     const labelTop = top + (row.lines.length - 1) * BODY.lineHeight * TEXT_SCALE;
-    return [...own, { font: "font-body", held: "at least", help, label: last, labelTop, where }];
+    return [
+      ...own,
+      { font: "font-body", gap: MODAL.gap, held: "at least", help, label: last, labelTop, where },
+    ];
   });
 }
 function detailPairs(kind: "dog" | "gear" | "walker", card: DetailCard): Pair[] {
@@ -291,14 +296,15 @@ describe("a label over its help text", () => {
   });
 
   it.each(PAIRS.map((pair) => [pair.where, pair.label, pair.held, pair] as const))(
-    "leaves the %s's %s %s 10 clear rows under its font's lowest ink",
+    "leaves the %s's %s %s its required clear gap under its font's lowest ink",
     (_where, _label, held, pair) => {
+      const gap = pair.gap ?? 10;
       if (held === "exactly") {
-        expect(fontClearRows(pair)).toBe(10);
+        expect(fontClearRows(pair)).toBe(gap);
       } else {
-        expect(fontClearRows(pair)).toBeGreaterThanOrEqual(10);
+        expect(fontClearRows(pair)).toBeGreaterThanOrEqual(gap);
       }
-      expect(clearRows(pair)).toBeGreaterThanOrEqual(10);
+      expect(clearRows(pair)).toBeGreaterThanOrEqual(gap);
     },
   );
 });

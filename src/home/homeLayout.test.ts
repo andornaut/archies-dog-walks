@@ -24,6 +24,7 @@ import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";
 import { closeControl } from "../ui/closeControl.ts";
 import { gridRects } from "../ui/grid.ts";
 import { MARK_OFFSET } from "../ui/mark.ts";
+import { MODAL } from "../ui/modal/layout.ts";
 import { cardTitleRow } from "../ui/modal/titleRow.ts";
 import { plainMarks } from "../ui/pixelFont.ts";
 import { AFFORD_OUTSET } from "../ui/selection.ts";
@@ -616,17 +617,23 @@ describe("a detail card", () => {
     },
   );
 
-  // A dog's or walker's status sits a paragraph's 28 rows under its last line's capitals.
-  it.each(
-    cards.flatMap(([kind, card]) => (kind === "gear" ? [] : [[card.title, kind, card] as const])),
-  )("sets %s's %s card's status 28 rows under its last line", (_, kind, card) => {
-    const rows = rowsOf(kind, card);
-    const { below } = detailCardLayout(BODY, rows);
-    const last = below.length - 1;
-    const lines = rows.below[last - 1];
-    const lastLineTop = (below[last - 1] ?? 0) + ((lines as number) - 1) * BODY.lineHeight * 2;
-    expect((below[last] ?? 0) - lastLineTop).toBe(28);
-  });
+  it.each(cards)(
+    "sets %s card status below the taller column with the shared gap",
+    (kind, card) => {
+      const rows = rowsOf(kind, card);
+      const layout = detailCardLayout(BODY, rows);
+      const last = rows.beside.length - 1;
+      const row = rows.beside[last];
+      const height =
+        row === undefined
+          ? 0
+          : typeof row === "number"
+            ? inkRowsOfLines(BODY, row) * 2
+            : detailOwnerHeight(BODY, row.roleLines);
+      const rightBottom = (layout.beside[last] ?? 0) + height;
+      expect(layout.below[0]).toBe(Math.max(layout.wellY + well.size, rightBottom) + MODAL.gap);
+    },
+  );
 
   // An owned card is as tall as the same item's card for sale.
   it.each([
@@ -663,7 +670,7 @@ describe("a detail card", () => {
   );
 
   it.each(dogCards)(
-    "sets the photo, name and role of %s's owner, %s, %s, inside the card, clear of all else, level with the well",
+    "keeps %s owner %s (%s) inside the card, clear of content, with a fixed picture header",
     (_title, name, role, card) => {
       const rows = rowsOf("dog", card);
       const layout = detailCardLayout(BODY, rows);
@@ -712,7 +719,7 @@ describe("a detail card", () => {
       expect(texts.flatMap((a, i) => texts.slice(i + 1).filter((b) => rectsOverlap(a, b)))).toEqual(
         [],
       );
-      expect(layout.wellY + well.size).toBe(spot.photo.y + spot.photo.height);
+      expect(layout.wellY).toBe(well.y);
     },
   );
 

@@ -172,21 +172,17 @@ export type DetailPart =
   | { readonly owner: NonNullable<DetailCard["owner"]> }
   | { readonly text: string; readonly tone: "line" | "status" | "subtitle" };
 
-// A detail card's rows beside its well and under it, top down. A dog's or walker's card puts its
-// subtitle and a dog's owner beside the well and its lines under it; a gear card puts its lines
-// beside the well. Every card puts its status, the price while for sale, last under the well.
+// Every detail card puts meaningful information beside its primary art and status below both
+// columns. Only dogs have a breed subtitle and an owner photo/name/role block.
 export function detailParts(
   kind: "dog" | "gear" | "walker",
   card: DetailCard,
 ): { below: DetailPart[]; beside: DetailPart[] } {
   const lines = card.lines.map((text) => ({ text, tone: "line" }) as const);
-  const status = { text: card.status, tone: "status" } as const;
-  if (kind === "gear") {
-    return { below: [status], beside: lines };
-  }
+  const breed = kind === "dog" ? [{ text: card.subtitle, tone: "subtitle" } as const] : [];
   const owner = card.owner === undefined ? [] : [{ owner: card.owner }];
   return {
-    below: [...lines, status],
-    beside: [{ text: card.subtitle, tone: "subtitle" }, ...owner],
+    below: [{ text: card.status, tone: "status" }],
+    beside: [...breed, ...lines, ...owner],
   };
 }

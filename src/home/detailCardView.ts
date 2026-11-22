@@ -139,8 +139,9 @@ function addOwner(
   ownerRoom: number,
   owner: Owner,
 ): void {
+  const name = measure.wrapBody(ownerRoom, owner.name);
   const role = measure.wrapBody(ownerRoom, owner.role);
-  const spot = detailOwner(measure.body, at, role.length);
+  const spot = detailOwner(measure.body, at, role.length, name.length);
   content.framed.push({ border: PALETTE.ink, fill: PALETTE.white, rect: spot.photo });
   const key = ownerFaceKey(data, owner.dog);
   const size = measure.art(key);
@@ -152,7 +153,7 @@ function addOwner(
   addText(content, measure, {
     capTop: spot.name.y,
     colour: PALETTE[CARD.owner.nameColour],
-    lines: [owner.name],
+    lines: name,
     x: spot.name.x,
   });
   addText(content, measure, {
@@ -200,11 +201,13 @@ export function detailCardView(
     const counts = (rows: readonly DetailPart[], room: number): DetailRow[] =>
       rows.map((row) =>
         "owner" in row
-          ? { roleLines: linesIn(rooms.ownerName, row.owner.role) }
+          ? {
+              nameLines: linesIn(rooms.ownerName, row.owner.name),
+              roleLines: linesIn(rooms.ownerName, row.owner.role),
+            }
           : linesIn(room, valueOf(row)),
       );
     const layout = detailCardLayout(measure.body, {
-      ...(kind === "gear" ? { gap: MODAL.gap } : {}),
       below: counts(parts.below, rooms.full),
       beside: counts(parts.beside, rooms.beside),
     });
@@ -235,10 +238,9 @@ export function detailCardView(
       width,
     };
   };
-  // Portrait/owner cards are rich details. Icon/item/effect details use Medium only when all
-  // full-size body ink and the complete footer fit the protected area, and widening would not
-  // remove a title line.
-  const medium = kind === "gear" ? measureFamily("medium") : undefined;
+  // All detail types use the narrow family only while the complete full-size content fits and
+  // widening would not remove a title line.
+  const medium = measureFamily("medium");
   const large = measureFamily("large")!;
   const selected =
     medium?.fits && medium.heading.lines.length <= large.heading.lines.length ? medium : large;

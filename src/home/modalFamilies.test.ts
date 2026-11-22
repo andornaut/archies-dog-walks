@@ -11,6 +11,7 @@ import {
   ZONE_EARNINGS_FIT,
   zoneDoneRows,
 } from "../hud/celebrationLayout.ts";
+import { withNamePills } from "../hud/effectNames.ts";
 import { fontFileMetrics, gameFont, inkWidth } from "../testing/fontInk.ts";
 import { newPlayerSave, veteranSave } from "../testing/saves.ts";
 import { barTitleRoom } from "../ui/barTitle.ts";
@@ -19,9 +20,10 @@ import { MODAL, modalFamilyWidth } from "../ui/modal/layout.ts";
 import { modalTitleInk } from "../ui/modal/titleRole.ts";
 import { cardTitleRow } from "../ui/modal/titleRow.ts";
 import { navigationMenuWidth } from "../ui/navigationMenu.ts";
+import { plainMarks } from "../ui/pixelFont.ts";
 import { cents } from "../units.ts";
 import { CELEBRATION_PANEL } from "./badgesView.ts";
-import { dogDetail, gearDetail } from "./detail.ts";
+import { dogDetail, gearDetail, walkerDetail } from "./detail.ts";
 import { detailCardView, type DetailMeasure } from "./detailCardView.ts";
 import { updateModalLayout } from "./homeLayout.ts";
 import { logbookView } from "./logbookView.ts";
@@ -41,14 +43,14 @@ import { STATS_LAYOUT } from "./statsLayout.ts";
 
 const fonts = { body: fontFileMetrics("font-body"), title: fontFileMetrics("font-title") };
 const wrap = (room: number, text: string) =>
-  wrapWords((line) => inkWidth("font-body", { scale: 2 }, line), room, text);
+  wrapWords((line) => inkWidth("font-body", { scale: 2 }, plainMarks(line)), room, text);
 const measure: DetailMeasure = {
   ...fonts,
   art: () => undefined,
   bodyWidth: (lines) =>
-    Math.max(0, ...lines.map((line) => inkWidth("font-body", { scale: 2 }, line))),
+    Math.max(0, ...lines.map((line) => inkWidth("font-body", { scale: 2 }, plainMarks(line)))),
   hasTag: () => false,
-  inkWidth: (font, text) => inkWidth(`font-${font}`, { scale: 2 }, text),
+  inkWidth: (font, text) => inkWidth(`font-${font}`, { scale: 2 }, plainMarks(text)),
   titleInk: (text) => modalTitleInk(gameFont("font-title"), text),
   wrapBody: wrap,
   wrapNote: wrap,
@@ -101,7 +103,7 @@ it("stacks full-size paired actions against the selected Medium inner width", ()
   }
 });
 
-it("keeps portrait details Large and chooses item family using reflowed full-size content", () => {
+it("chooses every detail family using reflowed full-size content", () => {
   const gear = "runningShoes";
   const card = gearDetail(gameData, newPlayerSave.owned, cents(0), newPlayerSave.lastLoadout, gear);
   const item = (lines: string[], area = SCREEN_LAYOUT.screen) =>
@@ -120,7 +122,7 @@ it("keeps portrait details Large and chooses item family using reflowed full-siz
     kind: "dog",
     picture: { key: "missing-test-portrait", scale: 1 },
   });
-  expect(dog.card.panel.width).toBe(328);
+  expect(dog.card.panel.width).toBe(264);
 });
 
 it("keeps Fanny pack on one full-size title line and uses shared content and footer gaps", () => {
@@ -146,6 +148,39 @@ it("keeps Fanny pack on one full-size title line and uses shared content and foo
   expect(status!.lines.join(" ")).toBe(card.status);
   expect(status!.capTop - Math.max(well.y + well.height, bottom(effect!))).toBe(MODAL.gap);
   expect(view.card.footer!.rect.y - bottom(status!)).toBe(MODAL.gap);
+});
+
+it("keeps the full long dog and owner block in the right column and omits walker type text", () => {
+  const dog = dogDetail(gameData, newPlayerSave.owned, cents(0), "sequoia");
+  const name = "Aunt Judy and the entire tennis club";
+  const role = "Tennis coach for the neighbourhood junior championship team";
+  const dogView = detailCardView(gameData, measure, SCREEN_LAYOUT.screen, {
+    card: { ...dog, owner: { ...dog.owner!, name, role } },
+    kind: "dog",
+    picture: { key: "missing-test-portrait", scale: 1 },
+  });
+  for (const text of [dog.subtitle, ...dog.lines, name, role]) {
+    const row = dogView.texts.find((row) => row.lines.join(" ") === text);
+    expect(row, text).toBeDefined();
+    expect(row!.x).toBeGreaterThan(dogView.framed[0]!.rect.x + dogView.framed[0]!.rect.width);
+  }
+  expect(dogView.framed).toHaveLength(2);
+  for (const row of dogView.texts) {
+    expect(row.x + measure.bodyWidth(row.lines)).toBeLessThanOrEqual(
+      dogView.card.panel.x + dogView.card.panel.width - MODAL.pad,
+    );
+  }
+  const card = walkerDetail(gameData, newPlayerSave.owned, "casey");
+  const walker = detailCardView(gameData, measure, SCREEN_LAYOUT.screen, {
+    card,
+    kind: "walker",
+    picture: { key: "missing-test-portrait", scale: 1 },
+  });
+  expect(walker.texts.map((row) => row.lines.join(" "))).toEqual([
+    ...card.lines.map((line) => withNamePills(gameData, line)),
+    card.status,
+  ]);
+  expect(walker.card.footer?.label).toBe(gameData.menuText.common.close);
 });
 
 it("fits all authored item details at their selected widths without shrinking text", () => {
