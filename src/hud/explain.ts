@@ -58,7 +58,7 @@ interface ExplainSave {
   readonly stats: Pick<SaveStats, "dogs">;
 }
 
-// Held elements share item details: compact identity beside art, full-width description below.
+// Held elements share item details: identity and description right of art, owner and status below.
 interface ExplainDetail {
   readonly card: DetailCard;
   readonly kind: "dog" | "gear" | "walker";

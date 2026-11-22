@@ -602,11 +602,10 @@ describe("a detail card", () => {
     const parts = detailParts(kind, card);
     return {
       below: [
-        ...counts(parts.below, CARD_TEXT_ROOM.full),
         ...(card.owner === undefined ? [] : [{ roleLines: roleLines(card.owner.role).length }]),
         cardLines(CARD_TEXT_ROOM.full, card.status),
       ],
-      beside: counts(parts.beside, CARD_TEXT_ROOM.beside),
+      beside: counts([...parts.identity, ...parts.description], CARD_TEXT_ROOM.beside),
     };
   };
 
@@ -618,7 +617,7 @@ describe("a detail card", () => {
   );
 
   it.each(cards)(
-    "starts %s card descriptions or status below the taller column with the shared gap",
+    "sets %s owner or status below the taller column with the shared gap",
     (kind, card) => {
       const rows = rowsOf(kind, card);
       const layout = detailCardLayout(BODY, rows);

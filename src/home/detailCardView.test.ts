@@ -281,32 +281,37 @@ it.each([
     kind: "dogSlot",
   },
 ] as const)(
-  "wraps $kind $card.title prose across the padded width below its portrait",
+  "packs $kind $card.title prose into the whole right-of-portrait column",
   ({ card: info, description, kind }) => {
     const view = detailCardView(gameData, measure, SCREEN_LAYOUT.screen, {
       card: info,
       kind,
       picture,
     });
-    const full = view.card.panel.width - 2 * HOME_LAYOUT.card.pad;
+    const full = cardTextRooms(view.card.panel.width).beside;
     const well = view.framed[0]!.rect;
     for (const line of description) {
       const text = withNamePills(gameData, line);
       const row = view.texts.find((row) => row.lines.join(" ") === text)!;
       expect(row, line).toBeDefined();
-      expect(row.x).toBe(view.card.panel.x + HOME_LAYOUT.card.pad);
+      expect(row.x).toBe(view.card.panel.x + HOME_LAYOUT.card.besideX);
       expect(row.lines).toEqual(wrap(full, text));
-      expect(row.capTop).toBeGreaterThanOrEqual(well.y + well.height + MODAL.gap);
+      expect(row.capTop).toBeGreaterThanOrEqual(well.y);
+      expect(row.lines.every((line) => widthOf("body", line) <= full)).toBe(true);
+      for (let i = 0; i < row.lines.length - 1; i += 1) {
+        const word = row.lines[i + 1]!.split(/\s+/)[0]!;
+        expect(widthOf("body", `${row.lines[i]} ${word}`)).toBeGreaterThan(full);
+      }
     }
   },
 );
 
-it("uses Large when it removes wrapping from Mr. B's full-width description", () => {
+it("uses Large when it removes wrapping from Mr. B's right-column description", () => {
   const info = walkerDetail(gameData, newPlayerSave.owned, "mrB");
   const prose = info.lines.map((line) => withNamePills(gameData, line));
   const rowsAt = (family: "medium" | "large") => {
     const width = modalFamilyWidth(SCREEN_LAYOUT.screen.width - 2 * MODAL.margin, family);
-    return prose.reduce((count, text) => count + wrap(cardTextRooms(width).full, text).length, 0);
+    return prose.reduce((count, text) => count + wrap(cardTextRooms(width).beside, text).length, 0);
   };
   expect(rowsAt("medium")).toBeGreaterThan(rowsAt("large"));
   const view = detailCardView(gameData, measure, SCREEN_LAYOUT.screen, {
@@ -328,14 +333,14 @@ it("keeps real narrow description wrapping and applies the same layout to a debu
   )!;
   const area = { ...SCREEN_LAYOUT.screen, width: 240 };
   const view = detailCardView(gameData, measure, area, info);
-  const full = view.card.panel.width - 2 * HOME_LAYOUT.card.pad;
+  const full = cardTextRooms(view.card.panel.width).beside;
   const prose = withNamePills(gameData, info.card.lines[0]!);
   const row = view.texts.find((row) => row.lines.join(" ") === prose)!;
-  expect(row.x).toBe(view.card.panel.x + HOME_LAYOUT.card.pad);
+  expect(row.x).toBe(view.card.panel.x + HOME_LAYOUT.card.besideX);
   expect(row.lines).toEqual(wrap(full, prose));
   expect(row.lines.every((line) => widthOf("body", line) <= full)).toBe(true);
   const walker = detailCardView(gameData, measure, area, { card: mrB, kind: "walker", picture });
-  const room = walker.card.panel.width - 2 * HOME_LAYOUT.card.pad;
+  const room = cardTextRooms(walker.card.panel.width).beside;
   const proseLines = mrB.lines.map((line) => withNamePills(gameData, line));
   expect(proseLines.some((text) => wrap(room, text).length > 1)).toBe(true);
   for (const text of proseLines) {

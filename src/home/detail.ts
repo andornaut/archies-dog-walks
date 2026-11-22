@@ -172,18 +172,18 @@ export interface DetailPart {
   readonly tone: "line" | "subtitle";
 }
 
-// Compact dog identity sits beside the portrait. Descriptions use the full width below it,
-// followed by an optional owner and status.
+// Compact dog identity and descriptions share the column right of the portrait.
+// Owner and status remain separate blocks below the taller top group.
 export function detailParts(
   kind: "dog" | "dogSlot" | "gear" | "walker",
   card: DetailCard,
-): { below: DetailPart[]; beside: DetailPart[] } {
+): { description: DetailPart[]; identity: DetailPart[] } {
   const lines = card.lines.map((text) => ({ text, tone: "line" }) as const);
   const breed = kind === "dog" ? [{ text: card.subtitle, tone: "subtitle" } as const] : [];
   const identity = kind === "dog" ? lines.slice(0, 1) : [];
   const description = kind === "dog" ? lines.slice(1) : lines;
   return {
-    below: description,
-    beside: [...breed, ...identity],
+    description,
+    identity: [...breed, ...identity],
   };
 }

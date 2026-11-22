@@ -237,8 +237,8 @@ export const HOME_LAYOUT = {
   // The detail card that opens over the screen, centred and as tall as what it shows, in card
   // pixels: the paper starts 2px in, the title row (no bar is drawn) runs across its top 6px in
   // with the title's caps 7px below the row's top, and the well starts at the shared header.
-  // Compact identity wraps beside the well from besideX, besideDy under well.y. Descriptions
-  // use the padded width below both columns, followed by status or price with shared gaps. A dog's owner photo, name
+  // Identity and description wrap right of the well from besideX, besideDy under well.y,
+  // using the column through the shared right pad. Owner and status follow the taller group. A dog's owner photo, name
   // and role stay together after its other details (detailOwner): their face-owner-<art> face (owner.face
   // square) in the walk card's photo mat and frame, then owner.gap right of the photo their name in
   // 2x body text and under it their role in 2x body text, wrapped, its capitals LABEL_HELP_GAP

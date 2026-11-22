@@ -156,13 +156,13 @@ describe("detailParts", () => {
     { card: walkerDetail(data, none, "casey"), kind: "walker", owned: "locked" },
     { card: walkerDetail(data, owned, "casey"), kind: "walker", owned: "owned" },
   ] as const)(
-    "splits the $owned $card.title's $kind identity from its full-width description",
+    "splits the $owned $card.title's $kind identity from its description",
     ({ card, kind }) => {
       const parts = detailParts(kind, card);
       const identity = kind === "dog" ? [card.subtitle, ...card.lines.slice(0, 1)] : [];
       const description = kind === "dog" ? card.lines.slice(1) : card.lines;
-      expect(parts.beside.map((part) => part.text)).toEqual(identity);
-      expect(parts.below.map((part) => part.text)).toEqual(description);
+      expect(parts.identity.map((part) => part.text)).toEqual(identity);
+      expect(parts.description.map((part) => part.text)).toEqual(description);
     },
   );
 });

@@ -217,7 +217,8 @@ export function detailCardView(
   detail: DetailViewInput,
 ): DetailCardView {
   const { card, kind, picture } = detail;
-  const { below: descriptionParts, beside: besideParts } = detailParts(kind, card);
+  const { description, identity } = detailParts(kind, card);
+  const besideParts = [...identity, ...description];
   const status = detail.statusLines ?? [{ kind: "status" as const, text: card.status }];
   const statusLines = [
     ...status,
@@ -242,11 +243,11 @@ export function detailCardView(
     };
     const counts = (rows: readonly DetailPart[], room: number) =>
       rows.map((row) => linesIn(room, valueOf(row)));
-    const descriptionRows = counts(descriptionParts, rooms.full);
+    const descriptionRows = counts(description, rooms.beside);
     const descriptionLines = descriptionRows.reduce((sum, lines) => sum + lines, 0);
     const upper = detailCardLayout(measure.body, {
-      below: descriptionRows,
-      beside: counts(besideParts, rooms.beside),
+      below: [],
+      beside: [...counts(identity, rooms.beside), ...descriptionRows],
     });
     let bottom = upper.height - CARD.pad;
     let owner: { x: number; y: number; room: number } | undefined;
@@ -402,7 +403,6 @@ export function detailCardView(
       });
     });
   rows(besideParts, CARD.besideX, rooms.beside, layout.beside);
-  rows(descriptionParts, CARD.pad, rooms.full, layout.below);
   if (card.owner !== undefined && layout.owner !== undefined) {
     addOwner(content, measure, data, layout.owner, layout.owner.room, card.owner);
   }

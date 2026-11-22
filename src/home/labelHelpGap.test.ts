@@ -139,9 +139,8 @@ function detailPairs(kind: "dog" | "gear" | "walker", card: DetailCard): Pair[] 
   const rowsIn = (parts: readonly DetailPart[], room: number): CardRow[] =>
     parts.map((part) => ({ lines: cardLinesOf(room, part.text) }));
   const parts = detailParts(kind, card);
-  const beside = rowsIn(parts.beside, CARD_TEXT_ROOM.beside);
+  const beside = rowsIn([...parts.identity, ...parts.description], CARD_TEXT_ROOM.beside);
   const below: CardRow[] = [
-    ...rowsIn(parts.below, CARD_TEXT_ROOM.full),
     ...(card.owner === undefined ? [] : [{ owner: card.owner }]),
     { lines: cardLinesOf(CARD_TEXT_ROOM.full, card.status) },
   ];
