@@ -49,6 +49,37 @@ it("admits one native pointer and cancels its hold across a modal even after tha
   expect(leaseRelease).toHaveBeenCalledTimes(2);
 });
 
+it("observes click origin only after native admission and retires observation with its root", () => {
+  const doc = new FakeDocument();
+  const root = doc.createElement("div");
+  const gate = createModalInputGate();
+  const observeClick = vi.fn();
+  const stop = guardNativeInput(
+    { gate, observeClick, subscribe: gate.subscribe, up: () => true },
+    root as unknown as HTMLElement,
+  );
+  const unclaimed = pointer(1, root, "click");
+  root.fire("click", unclaimed);
+  expect(unclaimed.stopImmediatePropagation).toHaveBeenCalled();
+  expect(observeClick).not.toHaveBeenCalled();
+  root.fire("pointerdown", pointer(2, root));
+  doc.fire("pointerup", pointer(2, root, "pointerup"));
+  root.fire("click", pointer(2, root, "click"));
+  expect(observeClick).not.toHaveBeenCalled();
+  const keyboard = { ...pointer(3, root, "click"), detail: 0 };
+  root.fire("click", keyboard);
+  expect(observeClick).toHaveBeenCalledExactlyOnceWith(keyboard);
+  expect(keyboard.preventDefault).not.toHaveBeenCalled();
+  expect(keyboard.stopImmediatePropagation).not.toHaveBeenCalled();
+  const modal = gate.open();
+  root.fire("click", { ...pointer(4, root, "click"), detail: 0 });
+  expect(observeClick).toHaveBeenCalledOnce();
+  modal.close();
+  stop();
+  root.fire("click", { ...pointer(5, root, "click"), detail: 0 });
+  expect(observeClick).toHaveBeenCalledOnce();
+});
+
 it("admits revealed and painted views, makes covered dialogs inert and restores them", async () => {
   const doc = new FakeDocument();
   let paint: (() => void) | undefined;

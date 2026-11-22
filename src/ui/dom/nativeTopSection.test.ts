@@ -609,3 +609,21 @@ it("uses a local cyan face and translucent raster focus cue without the legacy c
   );
   view.dispose();
 });
+
+it("contains a control click even when its Kit action disposes the input root", async () => {
+  const { buttons, press, reveal, root, view } = fixture();
+  reveal(true);
+  await Promise.resolve();
+  const button = buttons[0]!;
+  const contained = vi.fn();
+  const fields = { detail: 0, stopPropagation: contained, target: button };
+  press.mockImplementationOnce(() => view.dispose());
+  expect(dispatch(root, "click", fields)).toBe(false);
+  expect(contained).not.toHaveBeenCalled();
+  dispatch(button, "click", fields);
+  expect(press).toHaveBeenCalledOnce();
+  expect(contained).toHaveBeenCalledOnce();
+  const background = vi.fn();
+  root.fire("click", { detail: 0, stopPropagation: background, target: view.element });
+  expect(background).not.toHaveBeenCalled();
+});

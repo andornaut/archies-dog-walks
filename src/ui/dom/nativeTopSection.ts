@@ -22,6 +22,7 @@ import {
 import { PALETTE } from "../palette.ts";
 import { TOP_BAR_FACE, TOP_BAR_TRIM, TOP_BAR_WELL, topBarRects } from "../topBarTrim.ts";
 import { type TopSectionButton, topSectionCurrency, topSectionLayout } from "../topSection.ts";
+import { containGameButtonClicks } from "./actionBinding.ts";
 import { type DomArtSource, imageArt, sheetArt } from "./artElements.ts";
 import { createGameButton } from "./gameButton.ts";
 import { guardNativeInput, revealPaint } from "./modalLifecycle.ts";
@@ -293,7 +294,7 @@ export function createNativeTopSection(
     };
     records.push(record);
     button.addEventListener("blur", () => setPressed(false));
-    button.addEventListener("click", (event) => event.stopPropagation());
+    containGameButtonClicks(button);
     for (const name of ["mousedown", "touchstart"]) {
       button.addEventListener(name, (event) => event.stopPropagation());
     }
@@ -352,6 +353,8 @@ export function createNativeTopSection(
         },
         holdUnit: () => layer.scale().unit,
         move: (event) => held?.setPressed(held.contains(event)),
+        observeClick: (event) =>
+          records.find(({ button }) => button.contains(event.target as Node))?.observeClick(event),
         subscribe: (listener) =>
           layer.input.subscribe(() => {
             epoch += 1;
@@ -369,16 +372,10 @@ export function createNativeTopSection(
       root,
     ),
   );
-  // Observe origin after the shared root has admitted a click; the Kit alone dispatches it.
-  const observeClick = (event: MouseEvent) => {
-    records.find(({ button }) => button.contains(event.target as Node))?.observeClick(event);
-  };
   const clearMetadata = () => records.forEach((record) => record.clearMetadata());
-  root.addEventListener("click", observeClick, true);
   doc.addEventListener("pointercancel", clearMetadata);
   doc.addEventListener("visibilitychange", clearMetadata);
   cleanups.push(() => {
-    root.removeEventListener("click", observeClick, true);
     doc.removeEventListener("pointercancel", clearMetadata);
     doc.removeEventListener("visibilitychange", clearMetadata);
   });

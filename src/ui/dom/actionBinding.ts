@@ -62,6 +62,15 @@ export function registerGameButton(view: ButtonView): () => void {
   };
 }
 
+// Keep containment on the control through a closing action's target dispatch.
+// The listener has the button's lifetime and never dispatches an action.
+export function containGameButtonClicks(element: HTMLElement): void {
+  if (!buttons.has(element)) {
+    throw new Error("Click containment requires a registered Kit control");
+  }
+  element.addEventListener("click", (event) => event.stopPropagation());
+}
+
 function actionAvailable(action: GameAction, element: HTMLElement): boolean {
   if (element.ownerDocument.hidden || !action.available()) {
     return false;

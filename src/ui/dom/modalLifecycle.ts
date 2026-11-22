@@ -13,6 +13,8 @@ import type { UiLayer } from "./uiLayer.ts";
 export interface NativeInputGuard {
   readonly gate: PressGate;
   readonly holdUnit?: () => number;
+  // Observe admitted origin only; the action binding and Kit own activation.
+  readonly observeClick?: (event: MouseEvent) => void;
   readonly subscribe: ModalInputGate["subscribe"];
   readonly cancel?: () => void;
   readonly claim?: (event: PointerEvent) => { release(): void } | undefined;
@@ -135,16 +137,19 @@ export function guardNativeInput(guard: NativeInputGuard, root: HTMLElement): ()
     }
   };
   const click = (event: MouseEvent) => {
-    if (doc.hidden) {
+    if (doc.hidden || !guard.gate.accepts()) {
       reject(event);
       return;
     }
     if (event.detail !== 0) {
       if (!completed || handledClick) {
+        completed = false;
         reject(event);
+        return;
       }
       completed = false;
     }
+    guard.observeClick?.(event);
   };
   let stopClicks: () => void;
   let stopHolds: () => void;
