@@ -4,7 +4,7 @@ import type { FontMetrics } from "@andornaut/game-kit/runtime/text/bitmapFont";
 
 import { dogFaceKey, gearIconKey } from "../assets/spriteKeys.ts";
 import type { DogId, GameData, GearId, WalkerId } from "../data/types.ts";
-import { effectIconKey, walkerEffectItems } from "../hud/effectIcons.ts";
+import { hudEffectIconKey, walkerEffectItems } from "../hud/effectIcons.ts";
 import { dollarText } from "../presentation/currency.ts";
 import type { SaveDocument } from "../save/schema.ts";
 import {
@@ -159,7 +159,7 @@ export function homeSelectionViews(
     const pictures = [
       portrait,
       ...walkerEffectItems(data, cell.id).map((item, i) => ({
-        key: effectIconKey(item),
+        key: hudEffectIconKey(item),
         moving: false,
         scale: 1,
         x: x + icons.dx,
@@ -231,7 +231,7 @@ export function homeSelectionViews(
     });
   }
   for (const cell of snapshot.gear) {
-    const { width, x, y } = cell.rect;
+    const { height, width, x, y } = cell.rect;
     const purchase: Purchase = { gear: cell.id, kind: "gear" };
     const tile = itemTile({
       affordable: isAffordable(data, save.owned, save.bankCents, purchase),
@@ -243,8 +243,11 @@ export function homeSelectionViews(
     });
     const { badge, box, icon, strip } = HOME_LAYOUT.pocket;
     const gearStrip = tileStrip(cell.rect, strip);
+    const picked = tile.kind === "picked";
+    const boxY = picked ? Math.floor((height - box.size) / 2) : box.dy;
+    const iconY = y + (picked ? Math.floor((height - icon.size) / 2) : icon.dy);
     result.push({
-      ...make(cell, tile, box, badge),
+      ...make(cell, tile, { ...box, dy: boxY }, badge),
       label: data.shopGear[cell.id].name,
       pictures: [
         {
@@ -252,13 +255,13 @@ export function homeSelectionViews(
             gear: cell.id,
             scale: 1,
             x: x + icon.dx,
-            y: y + icon.dy,
+            y: iconY,
           }),
           key: gearIconKey(cell.id),
           moving: false,
           scale: 1,
           x: x + icon.dx,
-          y: y + icon.dy,
+          y: iconY,
         },
       ],
       ...pricePlate(tile, x + width / 2, gearStrip.y + 1, 0.5, gearStrip),

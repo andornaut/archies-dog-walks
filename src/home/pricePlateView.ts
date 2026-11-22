@@ -70,10 +70,13 @@ export function pricePlateView(
 export function plateStripView(
   measure: Pick<PricePlateMeasure, "capHeight" | "scale">,
   strip: Rect,
-  kind: PlateKind,
+  kind: PlateKind | "picked",
   text: string,
 ): PricePlateView {
-  const colours = PLATE_LOOKS[kind];
+  const colours =
+    kind === "picked"
+      ? ({ edge: "plum", face: "amber", text: "plum" } as const)
+      : PLATE_LOOKS[kind];
   const rect = { ...strip, height: strip.height - 1, y: strip.y + 1 };
   return {
     fills: [

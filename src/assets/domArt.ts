@@ -252,7 +252,7 @@ function disabledTileArtKeys(
   return [
     ...keysOf(data.dogs).map((dog) => dogFaceKey(data, dog)),
     ...keysOf(data.walkers).map((walker) => data.walkers[walker].portraitKey),
-    ...keysOf(data.walkerPerks).map(perkIconKey),
+    ...keysOf(data.walkerPerks).map(hudPerkIconKey),
     ...keysOf(data.shopGear).map(gearIconKey),
     DOG_SLOT_ICON_KEY,
   ];

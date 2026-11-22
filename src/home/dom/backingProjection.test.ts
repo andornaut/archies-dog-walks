@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 import { fontMetrics } from "@andornaut/game-kit/runtime/text/bitmapFont";
 import { expect, it, vi } from "vitest";
 
+import { hudPerkIconKey } from "../../assets/iconKeys.ts";
 import { gameData } from "../../data/index.ts";
 import { SLICES } from "../../data/layout.ts";
 import { FakeDocument, type FakeElement } from "../../testing/fakeDom.ts";
@@ -13,6 +14,7 @@ import { setRampDimmed } from "../../ui/dom/rampDim.ts";
 import { sheetFrame } from "../../ui/dom/sheetFrames.ts";
 import { artPixel, domScale, fontPixel, gridRect, gridY } from "../../ui/domScale.ts";
 import { gridRects, type GridSpec } from "../../ui/grid.ts";
+import { PALETTE } from "../../ui/palette.ts";
 import { TEXT_SCALE } from "../../ui/textFit.ts";
 import { FEEDBACK } from "../feedback.ts";
 import { HOME_LAYOUT, slotSignText, tileFace } from "../homeLayout.ts";
@@ -40,7 +42,7 @@ const source = {
 };
 const viewport = { height: 844, width: 390, x: 0, y: 0 };
 
-it("fills each primary picker picture's logical well at fractional fits", async () => {
+it("projects picker art into the available space with selected and locked treatments", async () => {
   const doc = new FakeDocument();
   const fonts = { body: gameFont("font-body"), title: gameFont("font-title") };
   const cell = <Id extends string>(
@@ -55,14 +57,22 @@ it("fills each primary picker picture's logical well at fractional fits", async 
   const home = HOME_LAYOUT;
   const models = homeSelectionViews(gameData, fontMetrics(fonts.body), false, {
     dogs: [cell("kilo", home.dogTiles, home.dogOrigin, home.dogTileInset)],
-    gear: [cell("fannyPack", home.pocket.cells, home.pocket.origin, home.pocket.tileInset)],
-    loadout: newPlayerSave.lastLoadout,
-    save: newPlayerSave,
-    walkers: [cell("casey", home.walkerTiles, home.walkerOrigin, home.walkerTileInset)],
+    gear: [
+      cell("fannyPack", home.pocket.cells, home.pocket.origin, home.pocket.tileInset),
+      cell("whistle", home.pocket.cells, home.pocket.origin, home.pocket.tileInset),
+    ],
+    loadout: { ...newPlayerSave.lastLoadout, gear: "fannyPack" },
+    save: { ...newPlayerSave, owned: { ...newPlayerSave.owned, gear: ["fannyPack"] } },
+    walkers: [
+      cell("casey", home.walkerTiles, home.walkerOrigin, home.walkerTileInset),
+      cell("ada", home.walkerTiles, home.walkerOrigin, home.walkerTileInset),
+    ],
   });
   const pictures = [
     [5, 1, 30],
+    [5, 1, 30],
     [4, 5, 32],
+    [13, 9, 32],
     [13, 2, 32],
   ] as const;
   await Promise.all(
@@ -81,11 +91,25 @@ it("fills each primary picker picture's logical well at fractional fits", async 
       );
       const primary = model.pictures[0]!;
       const key = model.art === "grey" ? `${primary.key}-disabled` : primary.key;
-      const path = index === 2 ? `images/${key}.png` : `sprites/${key}.png`;
+      const path = index < 3 ? `sprites/${key}.png` : `images/${key}.png`;
       await expect(tile.ready).resolves.toContain(path);
-      const image = Array.from(tile.element.querySelectorAll<HTMLElement>(".adw-art")).find(
-        ({ style }) => style.backgroundImage?.includes(path),
-      )!;
+      const images = [...tile.element.querySelectorAll<HTMLElement>(".adw-art")];
+      const image = images.find(({ style }) => style.backgroundImage?.includes(path))!;
+      const perk =
+        index < 2
+          ? hudPerkIconKey(gameData.walkers[index === 0 ? "casey" : "ada"].perk)
+          : undefined;
+      const perkImage =
+        perk === undefined
+          ? undefined
+          : images.find(({ style }) =>
+              style.backgroundImage?.includes(
+                `images/${perk}${index === 1 ? "-disabled" : ""}.png`,
+              ),
+            );
+      if (perk !== undefined) {
+        expect(perkImage).toBeDefined();
+      }
       for (const scale of [domScale(1, { ...viewport, width: 575 }), domScale(2.625, viewport)]) {
         const hit = gridRect(scale, model.hit);
         for (const faceY of [0, -FEEDBACK.hopPx]) {
@@ -109,6 +133,34 @@ it("fills each primary picker picture's logical well at fractional fits", async 
           }
         }
         expect(tile.element.style.width).toBe(`${hit.width}px`);
+        if (perkImage !== undefined) {
+          const dest = gridRect(scale, {
+            height: 24,
+            width: 24,
+            x: model.rect.x + 44,
+            y: model.rect.y + 4,
+          });
+          expect(perkImage.style).toMatchObject({
+            height: `${dest.height}px`,
+            left: `${dest.left - hit.left}px`,
+            top: `${dest.top - hit.top}px`,
+            width: `${dest.width}px`,
+          });
+        }
+      }
+      if (index === 0) {
+        expect(
+          [...tile.element.querySelectorAll<HTMLElement>(".adw-framed")].some(
+            ({ style }) => style.backgroundColor === `#${PALETTE.amber.toString(16)}`,
+          ),
+        ).toBe(true);
+        expect(tile.element.querySelectorAll<HTMLElement>(".adw-text")[0]?.style.color).toBe(
+          `#${PALETTE.plum.toString(16)}`,
+        );
+      }
+      if (index === 3) {
+        expect(tile.element.getAttribute("aria-pressed")).toBe("true");
+        expect(tile.element.querySelectorAll(".adw-text")).toHaveLength(0);
       }
     }),
   );

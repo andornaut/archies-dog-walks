@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 
 import { dogFaceKey, gearIconKey } from "../../assets/spriteKeys.ts";
 import { gameData } from "../../data/index.ts";
-import { effectIconKey, walkerEffectItems } from "../../hud/effectIcons.ts";
+import { hudEffectIconKey, walkerEffectItems } from "../../hud/effectIcons.ts";
 import { greysOnTile } from "../../ui/disabledArt.ts";
 
 // The pictures the home screen's and the shop's tiles draw through tileTextureKey and
@@ -12,7 +12,7 @@ const TILE_PICTURES = [
   ...keysOf(gameData.dogs).map((dog) => dogFaceKey(gameData, dog)),
   ...keysOf(gameData.walkers).map((walker) => gameData.walkers[walker].portraitKey),
   ...keysOf(gameData.walkers).flatMap((walker) =>
-    walkerEffectItems(gameData, walker).map(effectIconKey),
+    walkerEffectItems(gameData, walker).map(hudEffectIconKey),
   ),
   ...keysOf(gameData.shopGear).map(gearIconKey),
   "icon-dog-slot",

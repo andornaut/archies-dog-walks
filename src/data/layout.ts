@@ -629,7 +629,7 @@ export const HOME_SCREEN = {
   pocket: {
     badge: { dx: -2, dy: -3 },
     box: { dx: 12, dy: 2, size: 34 },
-    icon: { dx: 13, dy: 2 },
+    icon: { dx: 13, dy: 2, size: 32 },
     strip: 15,
   },
   // art: the Pocket tiles' faces, each drawn inside a press cell grown round it to MIN_PRESS tall.
@@ -703,7 +703,7 @@ export const HOME_SCREEN = {
   walkerTile: {
     badge: { dx: -2, dy: -3 },
     face: { dx: 5, dy: 1, size: 30 },
-    icons: { dx: 46, dy: [5] },
+    icons: { dx: 44, dy: [4] },
     strip: 17,
   },
   // art: the walker tiles' faces, each drawn inside a press cell grown round it to MIN_PRESS tall.

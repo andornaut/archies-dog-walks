@@ -4,7 +4,7 @@ import { GREYED } from "./selection.ts";
 
 // The pictures a disabled tile draws in grey (uiKit's tileTextureKey and addTileSprite): each
 // dog's and walker's face, gear item and walker perk icon, and the dog slot's icon.
-const TILE_ART_PREFIXES = ["face-dog-", "face-walker-", "icon-perk-", "item-"];
+const TILE_ART_PREFIXES = ["face-dog-", "face-walker-", "icon-hud-effect-perk-", "item-"];
 const TILE_ART_KEYS: ReadonlySet<string> = new Set(["icon-dog-slot"]);
 
 // Whether a disabled tile can draw the key's art in grey. A build packs each such key's grey
