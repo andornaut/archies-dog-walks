@@ -242,6 +242,16 @@ export class FakeElement extends FakeTarget {
     }
   }
 
+  toggleAttribute(name: string, force?: boolean): boolean {
+    const present = force ?? !this.hasAttribute(name);
+    if (present) {
+      this.setAttribute(name, "");
+    } else {
+      this.removeAttribute(name);
+    }
+    return present;
+  }
+
   setAttribute(name: string, value: string): void {
     this.attributes.set(name, value);
     if (name === "inert") {

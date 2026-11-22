@@ -1,4 +1,5 @@
 import { bindHoldActions } from "@andornaut/game-kit/runtime/web/input/dom/holdActions";
+import type { ButtonView } from "@andornaut/game-kit/runtime/web/ui/dom/button";
 import type { PressGuard } from "@andornaut/game-kit/runtime/web/ui/dom/domPress";
 
 import { gameData } from "../../data/index.ts";
@@ -22,7 +23,44 @@ export interface GameAction {
 }
 
 const actions = new WeakMap<HTMLElement, GameAction>();
-const roots = new WeakMap<HTMLElement, object>();
+const buttons = new WeakMap<HTMLElement, ButtonView>();
+const roots = new WeakMap<HTMLElement, { readonly accepts: () => boolean }>();
+
+// A standard control needs its nearest live input root before it accepts native clicks.
+export function gameButtonAccepts(element: HTMLElement): boolean {
+  if (element.ownerDocument.hidden || !element.isConnected) {
+    return false;
+  }
+  for (let node: HTMLElement | null = element; node !== null; node = node.parentElement) {
+    if (
+      node.hidden ||
+      node.inert ||
+      node.style.display === "none" ||
+      node.style.visibility === "hidden"
+    ) {
+      return false;
+    }
+    const root = roots.get(node);
+    if (root !== undefined) {
+      return root.accepts();
+    }
+  }
+  return false;
+}
+
+// The kit owns the native click handler; the existing root owns hold dispatch.
+export function registerGameButton(view: ButtonView): () => void {
+  const { element } = view;
+  if (actions.has(element) || buttons.has(element)) {
+    throw new Error("A control must have one action binding");
+  }
+  buttons.set(element, view);
+  return () => {
+    if (buttons.get(element) === view) {
+      buttons.delete(element);
+    }
+  };
+}
 
 function actionAvailable(action: GameAction, element: HTMLElement): boolean {
   if (element.ownerDocument.hidden || !action.available()) {
@@ -43,7 +81,7 @@ function actionAvailable(action: GameAction, element: HTMLElement): boolean {
 
 // Register the action once: a discrete hold inherits its callback unless explicitly overridden.
 export function bindGameAction(action: GameAction, element: HTMLElement): () => void {
-  if (actions.has(element)) {
+  if (actions.has(element) || buttons.has(element)) {
     throw new Error("A control must have one action binding");
   }
   actions.set(element, action);
@@ -79,7 +117,7 @@ export function bindGameActionHolds(
   if (roots.has(root)) {
     throw new Error("An input root must have one action dispatcher");
   }
-  const owner = {};
+  const owner = { accepts: () => context.guard.gate.accepts() };
   roots.set(root, owner);
   const install = () =>
     bindHoldActions(
@@ -98,6 +136,26 @@ export function bindGameActionHolds(
           }
           let element = target as HTMLElement | null;
           while (element !== null && root.contains(element)) {
+            const button = buttons.get(element);
+            if (button !== undefined) {
+              const action = button.holdAction();
+              if (action === null) {
+                return null;
+              }
+              const control = element;
+              const dispatch = (activate: () => void) => {
+                context.cancelPress();
+                if (gameButtonAccepts(control) && action.available()) {
+                  activate();
+                }
+              };
+              return {
+                ...action,
+                activate: () => dispatch(action.activate),
+                ...(action.hold === undefined ? {} : { hold: () => dispatch(action.hold!) }),
+                rule: holdRule(gameData.tuning, TILE_SLOP_PX * context.unit()),
+              };
+            }
             const action = actions.get(element);
             if (action !== undefined) {
               if (

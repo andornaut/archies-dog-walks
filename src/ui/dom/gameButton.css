@@ -1,0 +1,127 @@
+/* The frame and bevel stay present in every state; interaction changes fill and text. */
+.adw-standard-button.ui-standard-button {
+  --adw-button-fill: var(--adw-cream);
+  --adw-button-highlight: var(--adw-white);
+  --adw-button-lip: var(--adw-tan);
+  --adw-button-text: var(--adw-plum);
+  --adw-button-unit: var(--adw-slice-1, 1px);
+  appearance: none;
+  position: absolute;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  color: var(--adw-button-text);
+  font: inherit;
+  cursor: pointer;
+  touch-action: manipulation;
+  outline: none;
+  box-shadow: none;
+}
+.adw-standard-button[data-ui-button-role="primary"] {
+  --adw-button-fill: var(--adw-green);
+  --adw-button-lip: var(--adw-forest);
+  --adw-button-text: var(--adw-ink);
+}
+.adw-standard-button[data-ui-button-role="navigation"] {
+  --adw-button-fill: var(--adw-navy);
+  --adw-button-highlight: var(--adw-tan);
+  --adw-button-lip: var(--adw-plum);
+  --adw-button-text: var(--adw-cream);
+}
+.adw-standard-button .adw-standard-button-face {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  box-sizing: border-box;
+  border: var(--adw-button-unit) solid var(--adw-ink);
+  border-radius: 0;
+  border-image: none !important;
+  background: linear-gradient(
+    to bottom,
+    var(--adw-button-highlight) 0 var(--adw-button-unit),
+    var(--adw-button-fill) var(--adw-button-unit) calc(100% - 4 * var(--adw-button-unit)),
+    var(--adw-button-lip) calc(100% - 4 * var(--adw-button-unit)) 100%
+  );
+  color: var(--adw-button-text);
+  pointer-events: none;
+}
+.adw-standard-button .adw-standard-button-content {
+  color: var(--adw-button-text);
+  pointer-events: none;
+}
+.adw-standard-button .adw-text {
+  color: var(--adw-button-text) !important;
+}
+.adw-standard-button:is([data-ui-selected], [aria-pressed="true"]) {
+  --adw-button-fill: var(--adw-yellow);
+  --adw-button-text: var(--adw-ink);
+}
+.adw-standard-button.ui-standard-button:focus-visible {
+  --adw-button-fill: var(--adw-cyan);
+  --adw-button-text: var(--adw-ink);
+  outline: none;
+  box-shadow: none;
+}
+.adw-standard-button[data-ui-pressed] {
+  --adw-button-fill: var(--adw-darkGreen);
+  --adw-button-text: var(--adw-white);
+}
+.adw-standard-button[data-ui-pressed] .adw-standard-button-face {
+  transform: translateY(calc(2 * var(--adw-button-unit)));
+}
+.adw-standard-button:is(:disabled, [aria-disabled="true"]) {
+  --adw-button-fill: var(--adw-neutralGrey);
+  --adw-button-highlight: var(--adw-neutralLightGrey);
+  --adw-button-lip: var(--adw-neutralSlate);
+  --adw-button-text: var(--adw-ink);
+}
+.adw-standard-button[aria-disabled="true"]:focus-visible {
+  --adw-button-fill: var(--adw-navy);
+  --adw-button-text: var(--adw-cream);
+}
+/* Suppress inherited game focus decorations; this control's face supplies its focus cue. */
+.adw-standard-button.ui-standard-button:focus-visible .adw-standard-button-face::after {
+  content: none;
+  outline: none;
+  box-shadow: none;
+}
+@media (forced-colors: active) {
+  .adw-standard-button.ui-standard-button {
+    --adw-button-fill: ButtonFace;
+    --adw-button-highlight: ButtonFace;
+    --adw-button-lip: ButtonFace;
+    --adw-button-text: ButtonText;
+    forced-color-adjust: none;
+  }
+  .adw-standard-button .adw-standard-button-face {
+    border-color: ButtonText;
+  }
+  .adw-standard-button.ui-standard-button:is(
+      :focus-visible,
+      [data-ui-selected],
+      [aria-pressed="true"],
+      [data-ui-pressed]
+    ) {
+    --adw-button-fill: Highlight;
+    --adw-button-highlight: Highlight;
+    --adw-button-lip: Highlight;
+    --adw-button-text: HighlightText;
+    outline: none;
+    box-shadow: none;
+  }
+  .adw-standard-button.ui-standard-button:is(:disabled, [aria-disabled="true"]) {
+    --adw-button-fill: ButtonFace;
+    --adw-button-highlight: ButtonFace;
+    --adw-button-lip: ButtonFace;
+    --adw-button-text: GrayText;
+  }
+  .adw-standard-button.ui-standard-button[aria-disabled="true"]:focus-visible {
+    --adw-button-fill: Highlight;
+    --adw-button-highlight: Highlight;
+    --adw-button-lip: Highlight;
+    --adw-button-text: HighlightText;
+  }
+}
