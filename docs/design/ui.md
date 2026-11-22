@@ -65,3 +65,4 @@ Reference: [Screens and UI](../../src/README.md#screens-and-ui), [Assets](../../
 | adw-0195 | Close details on the first press after opening by hold           | [adw-0195.md](../work/adw-0195.md) |
 | adw-0196 | Fill Pet Shop picture wells and balance row padding              | [adw-0196.md](../work/adw-0196.md) |
 | adw-0197 | Align principal art and content in comparable UI rows            | [adw-0197.md](../work/adw-0197.md) |
+| adw-0200 | Align Start section headings and notes to matching insets        | [adw-0200.md](../work/adw-0200.md) |
