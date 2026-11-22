@@ -4,7 +4,7 @@ import { logbookScrollbar, type LogbookView } from "../../home/logbookView.ts";
 import type { ShopPageView } from "../../home/shopPageView.ts";
 import { statsTabRects } from "../../home/statsLayout.ts";
 import { pageCloseControl } from "../../ui/closeControl.ts";
-import { bindGameAction } from "../../ui/dom/actionBinding.ts";
+import { createGameButton } from "../../ui/dom/gameButton.ts";
 import type { NativeGesture } from "../../ui/dom/modalLifecycle.ts";
 import { setBox } from "../../ui/dom/pixelLine.ts";
 import { dimDrawn, followModalUnderlay } from "../../ui/dom/rampDim.ts";
@@ -19,7 +19,7 @@ import {
 } from "../../ui/domScale.ts";
 import { artPart, type DomDetailCardInput, textPart } from "./detailCard.ts";
 import { type DomPart, type DomQuestionPanel, showQuestionPanel } from "./questionPanel.ts";
-import { fillPart, framedBoxPart, shopPageParts } from "./shopPage.ts";
+import { createPageTab, fillPart, framedBoxPart, shopPageParts } from "./shopPage.ts";
 
 // The Logbook in HTML over the canvas: the page (shopPageParts), its title and Back drawn as a
 // panel's (showQuestionPanel), the open tab's content clipped to the list's frame and moved up by
@@ -123,47 +123,86 @@ export function showLogbook(layer: UiLayer, input: DomLogbookInput): DomLogbook 
   const scrolled = doc.createElement("div");
   scrolled.className = "adw-scrolled";
   clip.append(scrolled);
-  const control = (
-    rect: Rect,
-    label: string,
-    target: LogbookTarget,
-  ): DomPart & { control: HTMLButtonElement } => {
-    const element = doc.createElement("button");
-    element.type = "button";
-    element.className = "adw-button";
-    element.style.pointerEvents = "auto";
-    element.setAttribute("aria-label", label);
-    bindGameAction(
-      {
-        activate: () => input.navigation.activate(target),
-        available: () => shown.accepts(),
-        pointer: "release",
+  const control = (rect: Rect, label: string, target: LogbookTarget, selected = false) => {
+    const content = doc.createElement("span");
+    content.className = "adw-lines";
+    const button = createGameButton(doc, {
+      appearance: { className: "adw-button", face: { className: "adw-face" }, role: "secondary" },
+      content: { icon: content, kind: "icon", name: label },
+      getAction: () =>
+        shown.accepts() ? { activate: () => input.navigation.activate(target) } : null,
+      getState: () => ({ selected }),
+    });
+    return {
+      content,
+      control: button.element,
+      dispose: () => button.dispose(),
+      element: button.element,
+      place: (scale: DomScale) => {
+        const box = gridRect(scale, rect);
+        setBox(button.element, box);
+        setBox(content, { height: 0, left: -box.left, top: -box.top, width: 0 });
       },
-      element,
-    );
-    return { control: element, element, place: (scale) => setBox(element, gridRect(scale, rect)) };
+    };
   };
   const tabs = statsTabRects().flatMap((rect, index) => {
     const tab = view.page.tabs[index];
     if (tab === undefined) {
       return [];
     }
-    const part = control(rect, tab.label.text, { tab: index });
-    part.control.setAttribute("aria-pressed", String(tab.framed));
+    const part = createPageTab(
+      doc,
+      {
+        font: input.fonts.title,
+        press: {
+          accepts: () => shown.accepts(),
+          burst: (event) => shown.burst(input.toGame({ x: event.clientX, y: event.clientY })),
+          press: () => input.navigation.activate({ tab: index }),
+        },
+      },
+      rect,
+      tab,
+    );
     return [part];
   });
+  const painted = [
+    ...content.fills.map((fill) => ({
+      part: fillPart(doc, fill),
+      y: fill.rect.y + fill.rect.height / 2,
+    })),
+    ...content.framed.map((framed) => ({
+      part: framedBoxPart(doc, framed),
+      y: framed.rect.y + framed.rect.height / 2,
+    })),
+    ...content.art.map((art) => ({
+      part: artPart(doc, input, art),
+      y: art.y + (art.size.height * art.scale) / 2,
+    })),
+    ...content.texts.map((text) => ({ part: textPart(doc, input, text), y: text.capTop })),
+  ];
   const badges = view.wallRows.map((rect, index) => {
     const name =
       view.content.texts
         .find((line) => line.capTop >= rect.y && line.capTop < rect.y + rect.height)
         ?.lines.join(" ") ?? input.view.page.title.map((line) => line.text).join(" ");
-    return control(rect, name, { badge: index });
+    const part = control(rect, name, { badge: index });
+    const children = painted.filter(({ y }) => y >= rect.y && y < rect.y + rect.height);
+    part.content.append(...children.map(({ part }) => part.element));
+    return {
+      ...part,
+      place: (scale: DomScale) => {
+        part.place(scale);
+        children.forEach(({ part }) => part.place(scale));
+      },
+      ready: Promise.all(
+        children.flatMap(({ part }) => (part.ready === undefined ? [] : [part.ready])),
+      ).then((all) => all.flat()),
+    };
   });
   const contentParts: DomPart[] = [
-    ...content.fills.map((fill) => fillPart(doc, fill)),
-    ...content.framed.map((framed) => framedBoxPart(doc, framed)),
-    ...content.art.map((art) => artPart(doc, input, art)),
-    ...content.texts.map((text) => textPart(doc, input, text)),
+    ...painted
+      .filter(({ y }) => !view.wallRows.some((rect) => y >= rect.y && y < rect.y + rect.height))
+      .map(({ part }) => part),
     ...badges,
   ];
   scrolled.append(...contentParts.map(({ element }) => element));
@@ -207,7 +246,7 @@ export function showLogbook(layer: UiLayer, input: DomLogbookInput): DomLogbook 
   const scrollbar = scrollbarPart(doc, input);
   const pagePaint = doc.createElement("div");
   pagePaint.className = "adw-lines";
-  let pageParts = shopPageParts(doc, input.fonts.title, page);
+  let pageParts = shopPageParts(doc, input.fonts.title, { ...page, tabs: [] });
   pagePaint.append(...pageParts.map((part) => part.element));
   let pageScale: DomScale | undefined;
   let dimmed = false;
@@ -222,7 +261,7 @@ export function showLogbook(layer: UiLayer, input: DomLogbookInput): DomLogbook 
   tabHost.className = "adw-lines";
   tabHost.append(...tabs.map((tab) => tab.element));
   const tabPart: DomPart = {
-    controls: tabs.map((tab) => tab.control),
+    controls: tabs.flatMap((tab) => tab.controls ?? []),
     element: tabHost,
     place: (scale) => tabs.forEach((tab) => tab.place(scale)),
   };
@@ -279,6 +318,7 @@ export function showLogbook(layer: UiLayer, input: DomLogbookInput): DomLogbook 
     destroy: () => {
       stop();
       stopUnderlay();
+      [...tabs, ...badges].forEach((part) => part.dispose());
       shown.destroy();
     },
     setDimmed: (next) => {
@@ -286,7 +326,7 @@ export function showLogbook(layer: UiLayer, input: DomLogbookInput): DomLogbook 
       shown.setDimmed(next);
     },
     setPage: (next) => {
-      pageParts = shopPageParts(doc, input.fonts.title, next);
+      pageParts = shopPageParts(doc, input.fonts.title, { ...next, tabs: [] });
       pagePaint.replaceChildren(...pageParts.map((part) => part.element));
       const current = pageScale;
       if (current !== undefined) {

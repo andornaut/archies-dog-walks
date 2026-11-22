@@ -1,6 +1,6 @@
 import { setImmediate } from "node:timers/promises";
 
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { gameData } from "../../data/index.ts";
 import type { LogbookView } from "../../home/logbookView.ts";
@@ -15,6 +15,7 @@ import { scrollPlace, showLogbook } from "./logbook.ts";
 // 393 CSS px wide over the 360-wide game at DPR 3: a game pixel is 3.275 device pixels and an
 // art pixel 3.
 const SCALE = domScale(3, { height: 611, width: 393, x: 0, y: 0 });
+afterEach(() => vi.useRealTimers());
 
 describe("the HTML Logbook's scroll", () => {
   it.each([
@@ -120,9 +121,12 @@ function nativeFixture() {
   };
 }
 const pointer = (target: FakeElement, pointerId: number, type: string) => ({
+  button: 0,
+  buttons: type === "pointerdown" ? 1 : 0,
   clientX: 40,
   clientY: 200,
   detail: 1,
+  isPrimary: true,
   pointerId,
   preventDefault: vi.fn(),
   stopImmediatePropagation: vi.fn(),
@@ -131,7 +135,28 @@ const pointer = (target: FakeElement, pointerId: number, type: string) => ({
   type,
 });
 
-it("retains native tab targets and the owned pointer while their pressed paint and scroll update", async () => {
+it("opens a held badge once and consumes its following native click", async () => {
+  const { activate, doc, panel, root } = nativeFixture();
+  await setImmediate();
+  vi.useFakeTimers();
+  Object.assign(doc.defaultView, {
+    clearTimeout: globalThis.clearTimeout,
+    performance: { now: () => Date.now() },
+    setTimeout: globalThis.setTimeout,
+  });
+  const badge = root.all().filter((node) => node.tagName === "button")[STATS_TABS.length]!;
+  root.fire("pointerdown", pointer(badge, 4, "pointerdown"));
+  await vi.advanceTimersByTimeAsync(gameData.tuning.seconds.holdSeconds * 1000);
+  expect(activate).toHaveBeenCalledExactlyOnceWith({ badge: 0 });
+  doc.fire("pointerup", pointer(badge, 4, "pointerup"));
+  const click = pointer(badge, 4, "click");
+  root.fire("click", click);
+  expect(click.stopImmediatePropagation).toHaveBeenCalled();
+  expect(activate).toHaveBeenCalledTimes(1);
+  panel.destroy();
+});
+
+it("keeps standard tab controls stable and dispatches each native click once while scrolling", async () => {
   const { activate, doc, down, focus, page, panel, root, scrollTo, up } = nativeFixture();
   await setImmediate();
   const tab = root
@@ -148,9 +173,11 @@ it("retains native tab targets and the owned pointer while their pressed paint a
   expect(down).toHaveBeenCalledOnce();
   expect(up).toHaveBeenCalledOnce();
   tab.fire("click", { detail: 1 });
-  expect(activate).not.toHaveBeenCalled();
+  expect(activate).toHaveBeenCalledExactlyOnceWith({ tab: 0 });
+  activate.mockClear();
   tab.fire("click", { detail: 0 });
-  expect(activate).toHaveBeenCalledWith({ tab: 0 });
+  expect(activate).toHaveBeenCalledExactlyOnceWith({ tab: 0 });
+  expect(tab.className).toContain("adw-standard-button");
   const badge = root
     .all()
     .find(
@@ -160,6 +187,10 @@ it("retains native tab targets and the owned pointer while their pressed paint a
     )!;
   root.fire("focusin", { target: badge });
   expect(focus).toHaveBeenCalledWith({ height: 40, width: 300, x: 24, y: 200 });
+  expect(badge.className).toContain("adw-standard-button");
+  activate.mockClear();
+  badge.fire("click", { detail: 0 });
+  expect(activate).toHaveBeenCalledExactlyOnceWith({ badge: 0 });
   panel.destroy();
 });
 

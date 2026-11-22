@@ -1,5 +1,5 @@
 import { clampIndex } from "@andornaut/game-kit/runtime/arrays";
-import { containsPoint, type Point, type Rect } from "@andornaut/game-kit/runtime/rect";
+import { containsPoint, type Point } from "@andornaut/game-kit/runtime/rect";
 import { Core, Scene } from "phaser";
 
 import { domArtUrl } from "../assets/domArtFiles.ts";
@@ -9,7 +9,7 @@ import { FEEDBACK } from "../home/feedback.ts";
 import { focusDirectionForKey } from "../home/focus.ts";
 import { overlayRegion } from "../home/homeBar.ts";
 import { logbookView } from "../home/logbookView.ts";
-import { STATS_LAYOUT, STATS_TABS, type StatsTab, statsTabRects } from "../home/statsLayout.ts";
+import { STATS_LAYOUT, STATS_TABS, type StatsTab } from "../home/statsLayout.ts";
 import {
   type DomLogbook,
   type LogbookScroll,
@@ -34,7 +34,6 @@ import {
   wheelScroll,
 } from "../input/listScroll.ts";
 import { loadSheet } from "../ui/dom/sheetFrames.ts";
-import { rectIndexAt } from "../ui/grid.ts";
 import { badgeCard } from "./badges.ts";
 import { pillColours } from "./effectNameColours.ts";
 import { listenHomeBar, sceneRegionOutside } from "./homeBarPress.ts";
@@ -52,11 +51,9 @@ import {
 } from "./questionPanel.ts";
 import { SCENE_KEYS, type SceneKey } from "./sceneKeys.ts";
 import { LIST_SCROLL_RULE } from "./scrollView.ts";
-import { listenTargetPress, sameByValue, type TargetPressListener } from "./targetPress.ts";
 
 type Target = LogbookTarget;
 const TABS = STATS_TABS;
-const TAB_RECTS: readonly Rect[] = statsTabRects();
 const PANEL = STATS_LAYOUT.panel;
 const VIEW = STATS_LAYOUT.view;
 const SCROLL = STATS_LAYOUT.scroll;
@@ -70,12 +67,10 @@ export class StatsScene extends Scene {
   private page: DomLogbook | undefined;
   private pageKey = "";
   private pressed: Target | undefined;
-  private presses: TargetPressListener<Target> | undefined;
   private resumeKey: SceneKey | undefined;
   private scroll: ListScroll = listScroll(0);
   private dragging = false;
   private tab: StatsTab = OPEN_TAB;
-  private wallRows: readonly Rect[] = [];
 
   constructor() {
     super(SCENE_KEYS.stats);
@@ -91,16 +86,6 @@ export class StatsScene extends Scene {
     this.dragging = false;
     this.scroll = listScroll(0);
     this.tab = OPEN_TAB;
-    this.presses = listenTargetPress<Target>(this, {
-      dipMs: (target) => (typeof target === "object" && "tab" in target ? FEEDBACK.pressDipMs : 0),
-      onPressed: (target) => {
-        this.pressed = target;
-        this.render();
-      },
-      onTap: (target) => this.act(target),
-      same: sameByValue,
-      targetAt: () => undefined,
-    });
     const onKey = (event: KeyboardEvent) => {
       if (!this.sys.isActive() || !this.input.enabled || !nativeSceneAccepts(this)) {
         return;
@@ -176,16 +161,6 @@ export class StatsScene extends Scene {
     this.tab = tab;
   }
 
-  private targetAt(point: Point): Target | undefined {
-    const tab = rectIndexAt(TAB_RECTS, point.x, point.y);
-    if (tab !== undefined) {
-      return { tab };
-    }
-    const onWall = this.tab === "badges" && containsPoint(VIEW, point.x, point.y);
-    const badge = onWall ? rectIndexAt(this.wallRows, point.x, point.y + this.scroll.y) : undefined;
-    return badge === undefined ? undefined : { badge };
-  }
-
   private openTabAfterDip(index: number): void {
     this.pressed = { tab: index };
     this.render();
@@ -235,14 +210,12 @@ export class StatsScene extends Scene {
   }
 
   private cancelPress(): void {
-    this.presses?.cancel();
     this.pressed = undefined;
     this.dragging = false;
     this.scroll = releaseScroll(LIST_SCROLL_RULE, true, this.time.now, this.scroll);
   }
 
   private down(point: Point): void {
-    this.presses?.down(this.targetAt(point));
     this.page?.burst(point);
     if (containsPoint(VIEW, point.x, point.y)) {
       this.scroll = pressScroll(point.y, this.time.now, this.scroll);
@@ -254,15 +227,13 @@ export class StatsScene extends Scene {
     this.scroll = dragScroll(LIST_SCROLL_RULE, point.y, this.time.now, this.scroll);
     if (!was && isDragging(this.scroll)) {
       this.dragging = true;
-      this.presses?.cancel();
       this.pressed = undefined;
       this.render();
     }
   }
 
-  private up(point: Point, cancelled: boolean): boolean {
+  private up(cancelled: boolean): boolean {
     const accepted = !cancelled && !this.dragging;
-    this.presses?.up(this.targetAt(point), !accepted);
     this.dragging = false;
     this.scroll = releaseScroll(
       LIST_SCROLL_RULE,
@@ -270,7 +241,7 @@ export class StatsScene extends Scene {
       this.time.now,
       this.scroll,
     );
-    return accepted;
+    return !accepted;
   }
 
   private render(): void {
@@ -287,7 +258,6 @@ export class StatsScene extends Scene {
       save,
       tab: this.tab,
     });
-    this.wallRows = view.wallRows;
     this.scroll = resizeScroll(scrollMax(VIEW, view.content.bottom), this.scroll);
     const key = JSON.stringify([
       this.tab,
@@ -312,8 +282,7 @@ export class StatsScene extends Scene {
           },
           loadSheet,
           navigation: {
-            activate: (target) =>
-              "tab" in target ? this.openTabAfterDip(target.tab) : this.act(target),
+            activate: (target) => this.act(target),
             close: () => this.close(),
             focus: (rect) => {
               this.scroll = scrollToShow(VIEW, rect, this.scroll);
@@ -322,7 +291,7 @@ export class StatsScene extends Scene {
               cancel: () => this.cancelPress(),
               down: (event) => this.down(point(event)),
               move: (event) => this.move(point(event)),
-              up: (event, cancelled) => this.up(point(event), cancelled),
+              up: (_event, cancelled) => this.up(cancelled),
             },
             wheel: (delta) => {
               this.scroll = wheelScroll(LIST_SCROLL_RULE, delta, this.scroll);
