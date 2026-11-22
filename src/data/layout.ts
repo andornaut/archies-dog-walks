@@ -629,7 +629,7 @@ export const HOME_SCREEN = {
   pocket: {
     badge: { dx: -2, dy: -3 },
     box: { dx: 12, dy: 2, size: 34 },
-    icon: { dx: 13, dy: 3 },
+    icon: { dx: 13, dy: 2 },
     strip: 15,
   },
   // art: the Pocket tiles' faces, each drawn inside a press cell grown round it to MIN_PRESS tall.
@@ -698,11 +698,11 @@ export const HOME_SCREEN = {
   walkerAtGate: { x: 180 },
   // A walker tile's portrait box: its offset and side.
   walkerBox: { dx: 3, dy: 2, size: 34 },
-  // A walker tile: a locked walker's badge's offset, the portrait's offset, the perk icon's left
+  // A walker tile: a locked walker's badge's offset, the portrait's offset and side, the perk icon's left
   // edge and tops, and its name strip's rows at the tile's foot.
   walkerTile: {
     badge: { dx: -2, dy: -3 },
-    face: { dx: 4, dy: 3 },
+    face: { dx: 5, dy: 1, size: 30 },
     icons: { dx: 46, dy: [5] },
     strip: 17,
   },

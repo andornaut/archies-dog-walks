@@ -12,12 +12,16 @@ import { newPlayerSave, testContext } from "../../testing/saves.ts";
 import { setRampDimmed } from "../../ui/dom/rampDim.ts";
 import { sheetFrame } from "../../ui/dom/sheetFrames.ts";
 import { artPixel, domScale, fontPixel, gridRect, gridY } from "../../ui/domScale.ts";
+import { gridRects, type GridSpec } from "../../ui/grid.ts";
 import { TEXT_SCALE } from "../../ui/textFit.ts";
-import { HOME_LAYOUT, slotSignText } from "../homeLayout.ts";
+import { FEEDBACK } from "../feedback.ts";
+import { HOME_LAYOUT, slotSignText, tileFace } from "../homeLayout.ts";
 import { homeSections } from "../sections.ts";
 import { homeSectionViews } from "../sectionView.ts";
+import { homeSelectionViews } from "../selectionView.ts";
 import { slotSign } from "../slotSign.ts";
 import { createHomeSections } from "./sections.ts";
+import { createHomeSelection } from "./selections.ts";
 
 // The fake document draws no canvas, so the fills' cuts from their sheet stand in.
 vi.mock("../../ui/dom/domCuts.ts", () => ({
@@ -35,6 +39,80 @@ const source = {
   loadSheet: async (path: string) => ownArtFrames(path),
 };
 const viewport = { height: 844, width: 390, x: 0, y: 0 };
+
+it("fills each primary picker picture's logical well at fractional fits", async () => {
+  const doc = new FakeDocument();
+  const fonts = { body: gameFont("font-body"), title: gameFont("font-title") };
+  const cell = <Id extends string>(
+    id: Id,
+    grid: GridSpec,
+    origin: { x: number; y: number },
+    inset: { x: number; y: number },
+  ) => {
+    const hit = gridRects(grid, 1, origin)[0]!;
+    return { feedbackId: id, hit, id, rect: tileFace(inset, hit) };
+  };
+  const home = HOME_LAYOUT;
+  const models = homeSelectionViews(gameData, fontMetrics(fonts.body), false, {
+    dogs: [cell("kilo", home.dogTiles, home.dogOrigin, home.dogTileInset)],
+    gear: [cell("fannyPack", home.pocket.cells, home.pocket.origin, home.pocket.tileInset)],
+    loadout: newPlayerSave.lastLoadout,
+    save: newPlayerSave,
+    walkers: [cell("casey", home.walkerTiles, home.walkerOrigin, home.walkerTileInset)],
+  });
+  const pictures = [
+    [5, 1, 30],
+    [4, 5, 32],
+    [13, 2, 32],
+  ] as const;
+  await Promise.all(
+    pictures.map(async ([dx, dy, size], index) => {
+      const model = models[index]!;
+      const tile = createHomeSelection(
+        doc as unknown as Document,
+        {
+          ...source,
+          disabledKey: (key) => `${key}-disabled`,
+          isSheet: (key) => key.startsWith("face-"),
+        },
+        fonts,
+        2,
+        model,
+      );
+      const primary = model.pictures[0]!;
+      const key = model.art === "grey" ? `${primary.key}-disabled` : primary.key;
+      const path = index === 2 ? `images/${key}.png` : `sprites/${key}.png`;
+      await expect(tile.ready).resolves.toContain(path);
+      const image = Array.from(tile.element.querySelectorAll<HTMLElement>(".adw-art")).find(
+        ({ style }) => style.backgroundImage?.includes(path),
+      )!;
+      for (const scale of [domScale(1, { ...viewport, width: 575 }), domScale(2.625, viewport)]) {
+        const hit = gridRect(scale, model.hit);
+        for (const faceY of [0, -FEEDBACK.hopPx]) {
+          tile.place(scale, { faceY, markY: 0, refusing: false, x: 0, y: 0 });
+          const dest = gridRect(scale, {
+            height: size,
+            width: size,
+            x: model.rect.x + dx,
+            y: model.rect.y + dy + faceY,
+          });
+          expect(image.style).toMatchObject({
+            height: `${dest.height}px`,
+            left: `${dest.left - hit.left}px`,
+            top: `${dest.top - hit.top}px`,
+            width: `${dest.width}px`,
+          });
+          expect(dest.width).toBeGreaterThan(32 * artPixel(scale));
+          const strip = model.plate?.strip;
+          if (strip !== undefined) {
+            expect(dest.top + dest.height).toBeLessThanOrEqual(gridY(scale, strip.y));
+          }
+        }
+        expect(tile.element.style.width).toBe(`${hit.width}px`);
+      }
+    }),
+  );
+});
 
 it("keeps picker headings clear of fills within logical bands at fractional fits", async () => {
   const doc = new FakeDocument();

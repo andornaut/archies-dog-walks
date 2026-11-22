@@ -55,6 +55,7 @@ import {
   sectionFill,
   slotSignText,
   tileFace,
+  tileStrip,
   updateModalText,
 } from "./homeLayout.ts";
 
@@ -245,11 +246,18 @@ describe("the Pocket's tiles", () => {
   });
 
   it("centre the icon box across the tile, the icon inside it", () => {
-    const [tile] = tiles;
-    const width = tile?.width ?? 0;
-    expect(Math.abs(width - box.size - 2 * box.dx)).toBeLessThanOrEqual(1);
-    expect(icon.dx).toBeGreaterThan(box.dx);
-    expect(icon.dy).toBeGreaterThan(box.dy);
+    const tile = tiles[0]!;
+    expect(Math.abs(tile.width - box.size - 2 * box.dx)).toBeLessThanOrEqual(1);
+    const picture = { height: 32, width: 32, x: tile.x + icon.dx, y: tile.y + icon.dy };
+    expect(
+      inside(picture, {
+        height: box.size,
+        width: box.size,
+        x: tile.x + box.dx,
+        y: tile.y + box.dy,
+      }),
+    ).toBe(true);
+    expect(picture.y + picture.height).toBeLessThanOrEqual(tileStrip(tile, pocket.strip).y);
   });
 });
 

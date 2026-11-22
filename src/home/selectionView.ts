@@ -151,7 +151,7 @@ export function homeSelectionViews(
     const portrait = {
       key: walker.portraitKey,
       moving: !reducedMotion,
-      scale: 1,
+      scale: face.size / 32,
       tag: tile.kind === "picked" ? "happy" : "neutral",
       x: x + face.dx,
       y: y + face.dy,

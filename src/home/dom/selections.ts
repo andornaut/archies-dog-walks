@@ -86,6 +86,8 @@ export function createHomeSelection(
   fill(view.fill.rect, view.fill.colour);
   view.pictures.forEach((picture, index) => {
     const key = view.art === "grey" ? source.disabledKey(picture.key) : picture.key;
+    // The primary picture fills its logical well. Perk art retains authored pixel sizing.
+    const projection = index === 0 ? "layout" : "art";
     if (!source.hasArt(picture.key) && picture.fallback !== undefined) {
       const line = picture.fallback;
       const label = createTextLine(doc, line);
@@ -103,6 +105,7 @@ export function createHomeSelection(
       parts.push((scale, motion) => {
         const frame = frames.get(index);
         art.place(scale, origin, {
+          projection,
           x: picture.x,
           y: picture.y + (index === 0 ? motion.faceY : 0),
           ...(picture.tag === undefined ? {} : { tag: picture.tag }),
@@ -118,6 +121,7 @@ export function createHomeSelection(
       parts.push((scale, motion) =>
         art.place(scale, origin, {
           height: size.height * picture.scale,
+          projection,
           width: size.width * picture.scale,
           x: picture.x,
           y: picture.y + (index === 0 ? motion.faceY : 0),
