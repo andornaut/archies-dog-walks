@@ -6,8 +6,8 @@ import type { DetailArt, DetailText } from "../../home/detailCardView.ts";
 import { END_LAYOUT } from "../../home/endLayout.ts";
 import type { EndResults, EndScreenView } from "../../home/endScreenView.ts";
 import { closeControl } from "../../ui/closeControl.ts";
-import { bindGameAction } from "../../ui/dom/actionBinding.ts";
 import { sheetArt } from "../../ui/dom/artElements.ts";
+import { createGameButton } from "../../ui/dom/gameButton.ts";
 import {
   createTextLine,
   type DomTextLine,
@@ -25,7 +25,7 @@ import { TEXT_SCALE } from "../../ui/textFit.ts";
 import type { DomBadgeCardInput } from "./badgeCard.ts";
 import { badgeStripParts } from "./celebration.ts";
 import { artPart, type DomDetailCardInput, framedPart, textPart } from "./detailCard.ts";
-import { createPanelButton } from "./panelButton.ts";
+import { bindPanelFeedback, createPanelButton } from "./panelButton.ts";
 import {
   type DomPart,
   type DomQuestionPanel,
@@ -268,11 +268,22 @@ export function showEndScreen(layer: UiLayer, input: DomEndScreenInput): DomEndS
         });
   const badgeControls = (
     strip === undefined ? [] : badgeStripHits(strip.panel, strip.rows, input.badges.length)
-  ).map((rect, index): DomPart => {
-    const element = doc.createElement("button");
-    element.type = "button";
-    element.className = "adw-button";
-    element.setAttribute("aria-label", input.badges[index]?.name ?? "");
+  ).map((rect, index): DomPart & { dispose(): void } => {
+    const control = createGameButton(doc, {
+      appearance: { className: "adw-end-badge-control" },
+      content: {
+        icon: doc.createElement("span"),
+        kind: "icon",
+        name: input.badges[index]?.name ?? "",
+      },
+      getAction: () => (accepts() ? { activate: () => input.openBadge(index) } : null),
+      skin: "authored",
+    });
+    const { element, face } = control;
+    const stopFeedback = bindPanelFeedback(control, {
+      accepts: () => accepts(),
+      burst: (event) => panel.burst(input.toGame({ x: event.clientX, y: event.clientY })),
+    });
     Object.assign(element.style, {
       background: "transparent",
       border: "0",
@@ -280,19 +291,18 @@ export function showEndScreen(layer: UiLayer, input: DomEndScreenInput): DomEndS
       pointerEvents: "auto",
       position: "absolute",
     });
-    bindGameAction(
-      {
-        activate: () => input.openBadge(index),
-        available: accepts,
-        hold: { external: "end-badge-detail" },
-        pointer: "release",
-      },
-      element,
-    );
+    face.style.setProperty("--ui-button-focus-fill", `#${PALETTE.cyan.toString(16)}66`);
     return {
       controls: [element],
+      dispose: () => {
+        stopFeedback();
+        control.dispose();
+      },
       element,
-      place: (scale) => placeBox(scale, ORIGIN, element, rect),
+      place: (scale) => {
+        placeBox(scale, ORIGIN, element, rect);
+        placeBox(scale, rect, face, rect);
+      },
     };
   });
   const ribbonView = input.ribbon;
@@ -413,7 +423,9 @@ export function showEndScreen(layer: UiLayer, input: DomEndScreenInput): DomEndS
         input.gesture.cancel?.();
       },
       down: (event) => {
-        nativeButtonPress = button.element.contains(event.target as Node);
+        nativeButtonPress = [button, ...badgeControls].some(({ element }) =>
+          element.contains(event.target as Node),
+        );
         if (nativeButtonPress) {
           return;
         }
@@ -466,6 +478,7 @@ export function showEndScreen(layer: UiLayer, input: DomEndScreenInput): DomEndS
       underlay();
       badges?.destroy();
       button.dispose();
+      badgeControls.forEach((control) => control.dispose());
       panel.destroy();
     },
     setBadgePop: (index, scale) => badges?.setPop(index, scale),

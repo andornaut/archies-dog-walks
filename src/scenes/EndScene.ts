@@ -4,16 +4,10 @@ import { type GameObjects, Scene } from "phaser";
 
 import { gameData } from "../data/index.ts";
 import { SCREEN_CONFIG, SCREEN_LAYOUT } from "../data/screen.ts";
-import {
-  BADGE_CHEER,
-  BADGE_POP,
-  badgeStripHits,
-  type BadgeView,
-  earnedBadges,
-} from "../home/badgesView.ts";
+import { BADGE_CHEER, BADGE_POP, type BadgeView, earnedBadges } from "../home/badgesView.ts";
 import { END_LAYOUT } from "../home/endLayout.ts";
 import { endScreenView } from "../home/endScreenView.ts";
-import { closingLines, earningsBreakdown, type EndTarget, endTargetAt } from "../home/endView.ts";
+import { closingLines, earningsBreakdown } from "../home/endView.ts";
 import { bobOffset } from "../home/feedback.ts";
 import { nativeFrames } from "../home/phaser/nativeFrames.ts";
 import {
@@ -25,14 +19,6 @@ import {
 } from "../home/returnHome.ts";
 import type { DomEndScreen } from "../hud/dom/endScreen.ts";
 import type { DomQuestionPanel } from "../hud/dom/questionPanel.ts";
-import {
-  type HoldPress,
-  holdRule,
-  moveHold,
-  startHold,
-  tickHold,
-  TILE_SLOP_PX,
-} from "../input/hold.ts";
 import { isConfirmKey, isMuteKey } from "../input/keyBindings.ts";
 import { screenArea } from "../input/outsideTap.ts";
 import { PackFigures } from "../pack/phaser/packFigures.ts";
@@ -93,8 +79,6 @@ export class EndScene extends Scene {
   private badges: BadgeView[] = [];
   // The open badge's card.
   private card: GameObjects.Container | undefined;
-  // A press on a badge, until its hold opens the card.
-  private hold: { readonly badge: number; readonly press: HoldPress } | undefined;
   private presses: TargetPressListener | undefined;
   private reduced = false;
   private nativeStep: (() => void) | undefined;
@@ -121,7 +105,6 @@ export class EndScene extends Scene {
     this.htmlCard = undefined;
     this.badges = [];
     this.card = undefined;
-    this.hold = undefined;
     if (walk === null) {
       goHome();
       return;
@@ -183,37 +166,10 @@ export class EndScene extends Scene {
     });
     const { results, strip } = view;
     this.badges = earnedBadges(gameData, earned);
-    const badgeHits =
-      strip === undefined ? [] : badgeStripHits(strip.panel, strip.rows, this.badges.length);
-    const targetAt = (x: number, y: number) => {
-      const target =
-        topSectionButtonAt(END_BAR_BUTTONS, x, y) === undefined
-          ? endTargetAt(
-              { badgeHits, button: view.button.hit, cardOpen: this.card !== undefined },
-              x,
-              y,
-            )
-          : undefined;
-      return target === "home" ? undefined : target;
-    };
-    const start = (
-      at: { x: number; y: number },
-      target: Exclude<EndTarget, "home"> | undefined,
-    ) => {
-      this.html?.burst(at);
-      this.hold =
-        typeof target === "object"
-          ? {
-              badge: target.badge,
-              press: startHold(holdRule(gameData.tuning, TILE_SLOP_PX), at, this.time.now),
-            }
-          : undefined;
-    };
-    const move = (at: { x: number; y: number }) => {
-      if (this.hold !== undefined) {
-        this.hold = { ...this.hold, press: moveHold(at, this.hold.press) };
-      }
-    };
+    const targetAt = (x: number, y: number) =>
+      topSectionButtonAt(END_BAR_BUTTONS, x, y) === undefined && this.card !== undefined
+        ? ("dismiss" as const)
+        : undefined;
     const place = htmlPanelPlace(this);
     const point = (event: PointerEvent) =>
       place === undefined
@@ -221,7 +177,6 @@ export class EndScene extends Scene {
         : htmlPanelInput(place).toGame({ x: event.clientX, y: event.clientY });
     const cancel = () => {
       this.presses?.cancel();
-      this.hold = undefined;
     };
     const ribbon = !newBest
       ? undefined
@@ -257,15 +212,9 @@ export class EndScene extends Scene {
           down: (event) => {
             const at = point(event);
             if (at !== undefined) {
+              this.html?.burst(at);
               const target = targetAt(at.x, at.y);
               this.presses?.down(target);
-              start(at, target);
-            }
-          },
-          move: (event) => {
-            const at = point(event);
-            if (at !== undefined) {
-              move(at);
             }
           },
           up: (event, cancelled) => {
@@ -358,27 +307,11 @@ export class EndScene extends Scene {
         );
       }
     };
-    // Badges have no tap action of their own, so a tap opens a badge's card as a hold does.
-    // With a card open, a tap anywhere closes it.
-    this.presses = listenTargetPress<Exclude<EndTarget, "home">>(this, {
-      onDown: (pointer, target) => start(pointer, target),
-      onMove: (pointer) => {
-        if (pointer.isDown) {
-          move(pointer);
-        }
-      },
-      onPressed: (target) => {
-        if (target === undefined) {
-          this.hold = undefined;
-        }
-      },
-      onTap: (target) => {
-        if (target === "dismiss") {
-          this.closeCard();
-        } else {
-          this.openCard(target.badge);
-        }
-      },
+    // Shared native badge controls own tap and hold. The remaining scene target only
+    // dismisses an open card when its backdrop is tapped.
+    this.presses = listenTargetPress<"dismiss">(this, {
+      onPressed: () => undefined,
+      onTap: () => this.closeCard(),
       same: sameByValue,
       targetAt,
     });
@@ -516,14 +449,5 @@ export class EndScene extends Scene {
     }
     this.nativeStep?.();
     this.html?.setButton(false, bobOffset(this.reduced, this.time.now, true));
-    if (this.hold !== undefined) {
-      const { fire, press } = tickHold(this.time.now, this.hold.press);
-      this.hold = { ...this.hold, press };
-      // A hold opens the card while the finger is still down; its release then taps nothing.
-      if (fire) {
-        this.presses?.cancel();
-        this.openCard(this.hold.badge);
-      }
-    }
   }
 }

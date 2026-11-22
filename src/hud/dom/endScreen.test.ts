@@ -2,6 +2,8 @@ import { fontMetrics } from "@andornaut/game-kit/runtime/text/bitmapFont";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { gameData } from "../../data/index.ts";
+import type { AchievementId } from "../../data/types.ts";
+import { type BadgeView, earnedBadges } from "../../home/badgesView.ts";
 import { END_LAYOUT } from "../../home/endLayout.ts";
 import { endScreenView, QUIP_TAIL_KEY } from "../../home/endScreenView.ts";
 import { ownerNameWrap } from "../../presentation/ownerName.ts";
@@ -36,20 +38,23 @@ const MEASURE = {
   wrapBody: (_width: number, text: string) => [text],
   wrapNote: (_width: number, text: string) => [text],
 };
-const VIEW = endScreenView(gameData, MEASURE, {
-  closing: [{ dog: "archie", fired: false, text: "Look at him go! Lovely." }],
-  earned: [],
-  lines: [],
-  stripNames: () => [],
-  walk: {
-    dogs: ["archie"],
-    earnedCents: 900,
-    firings: [],
-    outcome: "wentHome",
-    route: [],
-    zonesFinished: 1,
-  } as never,
-});
+const endView = (earned: readonly AchievementId[] = []) =>
+  endScreenView(gameData, MEASURE, {
+    closing: [{ dog: "archie", fired: false, text: "Look at him go! Lovely." }],
+    earned,
+    lines: [],
+    stripNames: () => [],
+    walk: {
+      dogs: ["archie"],
+      earnedCents: 900,
+      firings: [],
+      outcome: "wentHome",
+      route: [],
+      zonesFinished: 1,
+    } as never,
+  });
+
+const VIEW = endView();
 
 afterEach(() => vi.useRealTimers());
 
@@ -58,6 +63,7 @@ function endScreen(
   display: typeof fonts.title | null = fonts.title,
   view = VIEW,
   gesture: DomEndScreenInput["gesture"] = {},
+  badges: readonly BadgeView[] = [],
 ) {
   const doc = new FakeDocument();
   const scale = domScale(3, { height: (width * 560) / 360, width, x: 0, y: 0 });
@@ -74,9 +80,10 @@ function endScreen(
     setTimeout: globalThis.setTimeout,
   });
   const home = vi.fn();
+  const openBadge = vi.fn();
   const shown = showEndScreen(layer, {
     artUrl: (path) => path,
-    badges: [],
+    badges,
     closeLabel: gameData.menuText.common.close,
     display: display ?? undefined,
     everyFrame: () => () => undefined,
@@ -85,7 +92,7 @@ function endScreen(
     home,
     loadSheet: (path) => Promise.resolve(ownArtFrames(path)),
     now: () => 0,
-    openBadge: vi.fn(),
+    openBadge,
     pillColours: () => undefined,
     reduced: true,
     ribbon: undefined,
@@ -93,7 +100,7 @@ function endScreen(
     view,
   });
   const nodes = element.children[0]?.all() ?? [];
-  return { doc, frames, home, layer, nodes, scale, shown };
+  return { doc, frames, home, layer, nodes, openBadge, scale, shown };
 }
 
 describe("the HTML End screen", () => {
@@ -389,6 +396,65 @@ it.each(["tap", "hold"] as const)(
       button.fire("click", click);
     }
     expect(current.home).toHaveBeenCalledOnce();
+    expect(gesture.down).not.toHaveBeenCalled();
+    expect(gesture.up).not.toHaveBeenCalled();
+    current.shown.destroy();
+  },
+);
+
+it.each(["tap", "hold"] as const)(
+  "uses one Kit authored badge action on %s without the legacy release route",
+  async (mode) => {
+    vi.useFakeTimers();
+    const gesture = { down: vi.fn(), up: vi.fn(() => true) };
+    const earned = [gameData.achievements[0]!.id];
+    const current = endScreen(
+      393,
+      fonts.title,
+      endView(earned),
+      gesture,
+      earnedBadges(gameData, earned),
+    );
+    await vi.waitFor(() => expect(current.frames).toHaveLength(1));
+    current.frames.shift()?.();
+    const root = current.shown.element as unknown as FakeElement;
+    const button = current.nodes.find(
+      (node) =>
+        node.tagName === "button" &&
+        node.getAttribute("aria-label") === gameData.achievements[0]!.name,
+    )!;
+    expect(button.classList.contains("ui-standard-button")).toBe(true);
+    expect(button.classList.contains("adw-standard-button")).toBe(false);
+    const face = button.all().find((node) => node.classList.contains("ui-button-face"));
+    expect(face?.style.getPropertyValue("--ui-button-focus-fill")).toBe(
+      `#${PALETTE.cyan.toString(16)}66`,
+    );
+    const pointer = (type: string) => ({
+      button: 0,
+      buttons: type === "pointerdown" ? 1 : 0,
+      clientX: 180,
+      clientY: 520,
+      detail: 1,
+      isPrimary: true,
+      pointerId: 7,
+      preventDefault: vi.fn(),
+      stopImmediatePropagation: vi.fn(),
+      stopPropagation: vi.fn(),
+      target: button,
+      timeStamp: Date.now(),
+      type,
+    });
+    root.fire("pointerdown", pointer("pointerdown"));
+    button.fire("pointerdown", pointer("pointerdown"));
+    vi.advanceTimersByTime(mode === "tap" ? 499 : 500);
+    expect(current.openBadge).toHaveBeenCalledTimes(mode === "tap" ? 0 : 1);
+    current.doc.fire("pointerup", pointer("pointerup"));
+    const click = pointer("click");
+    root.fire("click", click);
+    if (click.stopImmediatePropagation.mock.calls.length === 0) {
+      button.fire("click", click);
+    }
+    expect(current.openBadge).toHaveBeenCalledExactlyOnceWith(0);
     expect(gesture.down).not.toHaveBeenCalled();
     expect(gesture.up).not.toHaveBeenCalled();
     current.shown.destroy();
