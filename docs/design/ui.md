@@ -70,4 +70,5 @@ Reference: [Screens and UI](../../src/README.md#screens-and-ui), [Assets](../../
 | adw-0200 | Align Start section headings and notes to matching insets        | [adw-0200.md](../work/adw-0200.md) |
 | adw-0201 | Show Cancel and Buy only when an item can be purchased           | [adw-0201.md](../work/adw-0201.md) |
 | adw-0203 | Balance Pet Shop section heading and count spacing               | [adw-0203.md](../work/adw-0203.md) |
-| adw-0205 | Remove duplicate dismissal controls from decision dialogs | [adw-0205.md](../work/adw-0205.md) |
+| adw-0205 | Keep one action-area cancellation on decision dialogs | [adw-0205.md](../work/adw-0205.md) |
+| adw-0207 | Match visible close insets and separate purchase status | [adw-0207.md](../work/adw-0207.md) |
