@@ -70,8 +70,8 @@ export interface DomQuestionPanelInput {
   readonly closeLabel: string;
   // A footer can dismiss a native overlay that intentionally has no corner close control.
   readonly footerPress?: () => void;
-  // Source action indices whose live native controls become the invokers before opening.
-  readonly focusBeforePress?: readonly number[];
+  // Gives the caller its exact source control after admission and before activation.
+  readonly onInvoke?: (index: number, control: HTMLElement) => void;
   // Whether a panel that takes no presses shows its close control pressed.
   readonly closePressed?: boolean;
   // The id of the part that describes the panel, if any.
@@ -315,13 +315,8 @@ export function showQuestionPanel(layer: UiLayer, input: DomQuestionPanelInput):
                   if (!accepts()) {
                     return;
                   }
-                  if (
-                    input.focusBeforePress?.includes(index) === true &&
-                    part.element.isConnected &&
-                    !part.element.hidden &&
-                    doc.activeElement !== part.element
-                  ) {
-                    focusTarget(part.element);
+                  if (part.element.isConnected && !part.element.hidden) {
+                    input.onInvoke?.(index, part.element);
                   }
                   press?.();
                 },
@@ -488,7 +483,13 @@ export function showQuestionPanel(layer: UiLayer, input: DomQuestionPanelInput):
       number !== undefined &&
       menuKeyActs(event.repeat, event.code)
     ) {
-      numberPresses[number - 1]?.();
+      const press = numberPresses[number - 1];
+      const index = input.presses.indexOf(press!);
+      const control = sourceButtons.get(index);
+      if (control?.isConnected && !control.hidden) {
+        input.onInvoke?.(index, control);
+      }
+      press?.();
     }
   };
   doc.defaultView?.addEventListener("keydown", onKey);

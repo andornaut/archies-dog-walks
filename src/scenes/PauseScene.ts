@@ -1,3 +1,4 @@
+import { focusTarget } from "@andornaut/game-kit/runtime/web/ui/dom/focusModality";
 import { Core, Scene, Scenes } from "phaser";
 
 import { gameData } from "../data/index.ts";
@@ -72,6 +73,7 @@ const NOTE_COLOURS: Readonly<Record<HomeNoteLine["kind"], number>> = {
 // keeps running under it, dimmed and inactive; its pause keys (P and Escape) resume.
 export class PauseScene extends Scene {
   private cheats: CheatsModal | undefined;
+  private cheatsInvoker: HTMLElement | undefined;
   constructor() {
     super(SCENE_KEYS.pause);
   }
@@ -83,11 +85,9 @@ export class PauseScene extends Scene {
   private mount(data: PauseSceneData): boolean {
     const { onHeadHome, onResume } = data;
     this.cheats = undefined;
-    const closeCheats = () => {
-      this.cheats?.destroy();
-      this.cheats = undefined;
-    };
-    this.events.once(Scenes.Events.SHUTDOWN, closeCheats);
+    this.cheatsInvoker = undefined;
+    const closeCheats = () => this.closeCheats(true);
+    this.events.once(Scenes.Events.SHUTDOWN, () => this.closeCheats(false));
     const walkView = overlayRegion("walk");
     // HTML under the menu, a paused celebration's, is palette-dimmed in HTML as the canvas's dim
     // dims the walk, which cannot dim it.
@@ -132,7 +132,13 @@ export class PauseScene extends Scene {
             press: answer === "headHome" ? headHome : onResume,
           }))
         : PAUSE_MENU_ITEMS.map((item) => ({
-            ...(item === "cheats" ? { focusBeforePress: true } : {}),
+            ...(item === "cheats"
+              ? {
+                  onInvoke: (control: HTMLElement) => {
+                    this.cheatsInvoker = control;
+                  },
+                }
+              : {}),
             label: pauseMenuItemLabel(gameData, item),
             press: presses[item],
           }));
@@ -225,10 +231,28 @@ export class PauseScene extends Scene {
       return true;
     }
     if (!this.cheats.back()) {
-      this.cheats.destroy();
-      this.cheats = undefined;
+      this.closeCheats(true);
     }
     return true;
+  }
+
+  private closeCheats(restore: boolean): void {
+    const open = this.cheats !== undefined;
+    const invoker = this.cheatsInvoker;
+    this.cheats?.destroy();
+    this.cheats = undefined;
+    this.cheatsInvoker = undefined;
+    if (
+      restore &&
+      open &&
+      nativeSceneAccepts(this) &&
+      invoker?.isConnected &&
+      !invoker.hidden &&
+      invoker.closest("[hidden], [inert]") === null &&
+      invoker.ownerDocument.activeElement !== invoker
+    ) {
+      focusTarget(invoker);
+    }
   }
 
   // The settings over the walk, dimmed as the menu dims it.

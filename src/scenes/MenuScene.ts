@@ -1,3 +1,4 @@
+import { focusTarget } from "@andornaut/game-kit/runtime/web/ui/dom/focusModality";
 import { Scene, Scenes } from "phaser";
 
 import { gameData } from "../data/index.ts";
@@ -54,9 +55,24 @@ export class MenuScene extends Scene {
   private mount({ context, onHeadHome, resume }: MenuSceneData): boolean {
     const area = overlayRegion("home");
     let cheats: CheatsModal | undefined;
-    const closeCheats = () => {
+    let cheatsInvoker: HTMLElement | undefined;
+    const closeCheats = (restore = true) => {
+      const open = cheats !== undefined;
+      const invoker = cheatsInvoker;
       cheats?.destroy();
       cheats = undefined;
+      cheatsInvoker = undefined;
+      if (
+        restore &&
+        open &&
+        nativeSceneAccepts(this) &&
+        invoker?.isConnected &&
+        !invoker.hidden &&
+        invoker.closest("[hidden], [inert]") === null &&
+        invoker.ownerDocument.activeElement !== invoker
+      ) {
+        focusTarget(invoker);
+      }
     };
     const back = () => {
       if (cheats !== undefined) {
@@ -68,7 +84,7 @@ export class MenuScene extends Scene {
       }
     };
     const close = back;
-    this.events.once(Scenes.Events.SHUTDOWN, closeCheats);
+    this.events.once(Scenes.Events.SHUTDOWN, () => closeCheats(false));
     const settings = () => {
       const data: SettingsData = { region: "home", resume: SCENE_KEYS.menu };
       openOverlay(this, SCENE_KEYS.settings, data);
@@ -104,7 +120,13 @@ export class MenuScene extends Scene {
       backgroundCancel: close,
       close,
       entries: menuItems(context).map((item) => ({
-        ...(item === "cheats" ? { focusBeforePress: true } : {}),
+        ...(item === "cheats"
+          ? {
+              onInvoke: (control: HTMLElement) => {
+                cheatsInvoker = control;
+              },
+            }
+          : {}),
         label: menuItemLabel(gameData, item),
         press: actions[item],
       })),

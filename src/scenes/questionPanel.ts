@@ -36,8 +36,8 @@ import { trackNativeSceneInput } from "./overlay.ts";
 
 // A button on the panel: its label and what a press, a tap or its number key, does.
 export interface PanelEntry {
-  // Retain this source action as the invoker when touch does not focus it.
-  readonly focusBeforePress?: boolean;
+  // Supplies the exact admitted source control before its action opens a modal.
+  readonly onInvoke?: (control: HTMLElement) => void;
   readonly label: string;
   readonly press: () => void;
 }
@@ -149,7 +149,7 @@ function showHtmlPanel(
   place: NonNullable<ReturnType<typeof htmlPanelPlace>>,
   controls: Pick<
     DomQuestionPanelInput,
-    "backgroundCancel" | "close" | "focusBeforePress" | "numberKeys" | "numberPresses" | "presses"
+    "backgroundCancel" | "close" | "onInvoke" | "numberKeys" | "numberPresses" | "presses"
   >,
   view: QuestionPanelView,
   dimsUnder = false,
@@ -176,10 +176,8 @@ export function addHtmlQuestionPanel(
       ? {}
       : { backgroundCancel: question.backgroundCancel }),
     close: question.close,
-    focusBeforePress: question.entries.flatMap((entry, index) =>
-      entry.focusBeforePress === true ? [index] : [],
-    ),
     numberKeys: true,
+    onInvoke: (index: number, control: HTMLElement) => question.entries[index]?.onInvoke?.(control),
     presses,
     ...(question.numberPresses === undefined ? {} : { numberPresses: question.numberPresses }),
   };

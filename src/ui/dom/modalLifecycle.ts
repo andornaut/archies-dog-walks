@@ -410,7 +410,6 @@ export function mountModalLifecycle(
           ...(options.backgroundCancel === undefined ? {} : { close: options.backgroundCancel }),
           focus: element,
           isolation: "dialog",
-          restore: () => previous,
         },
         parts.scope,
       );
@@ -505,6 +504,8 @@ export function mountModalLifecycle(
       const top = scope?.accepts() === true;
       alive = false;
       blur();
+      closeModal?.();
+      closeModal = undefined;
       stopBackdrop();
       stopBackdropInput();
       stopKeys();
@@ -512,9 +513,6 @@ export function mountModalLifecycle(
       stopChanges();
       paint.destroy();
       closeScope();
-      // Restore only after the lower input scope has released its explicit inert state.
-      closeModal?.();
-      closeModal = undefined;
       if (parts !== undefined) {
         // Companions outlive the view, which may be redrawn with the same ones.
         for (const companion of options.companions ?? []) {
