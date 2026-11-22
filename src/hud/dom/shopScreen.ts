@@ -10,8 +10,8 @@ import {
 import { FEEDBACK } from "../../home/feedback.ts";
 import { SHOP_LAYOUT, shopTabRects } from "../../home/shopLayout.ts";
 import type { ShopPageView } from "../../home/shopPageView.ts";
-import { bindGameAction } from "../../ui/dom/actionBinding.ts";
 import { type DomArtSource, imageArt, imageNineSlice, sheetArt } from "../../ui/dom/artElements.ts";
+import { createGameButton } from "../../ui/dom/gameButton.ts";
 import { type ModalLifecycle, mountModalLifecycle } from "../../ui/dom/modalLifecycle.ts";
 import {
   backedTextPlaces,
@@ -40,7 +40,7 @@ import type { ScrollbarRects } from "../../ui/scrollbar.ts";
 import { SELECT_OUTSET } from "../../ui/selection.ts";
 import { TEXT_SCALE } from "../../ui/textFit.ts";
 import { scrollPlace } from "./logbook.ts";
-import { createPanelButton } from "./panelButton.ts";
+import { bindPanelFeedback, createPanelButton } from "./panelButton.ts";
 import { addTapBurst, type DomPart } from "./questionPanel.ts";
 import { createPageTab, fillPart, shopPageParts } from "./shopPage.ts";
 
@@ -123,7 +123,9 @@ export interface ShopScreenInput {
   readonly cancel: () => void;
   readonly down: (point: Point) => void;
   readonly move: (point: Point) => void;
-  readonly up: (point: Point, cancelled: boolean) => void;
+  readonly up: (point: Point, cancelled: boolean) => boolean | void;
+  readonly activateRow: (id: string) => void;
+  readonly detailRow: (id: string) => void;
   readonly wheel: (deltaY: number) => void;
   readonly key: (code: string, repeat: boolean) => void;
   readonly click: (point: Point) => void;
@@ -174,6 +176,7 @@ export function showShopScreen(
   let footer: HTMLElement | undefined;
   let footerGesture = false;
   let tabGesture: Rect | undefined;
+  let rowGesture: string | undefined;
   let tabs: ReturnType<typeof createPageTab>[] = [];
   let scale = layer.scale();
   let motion: ShopScreenMotion | undefined;
@@ -194,7 +197,10 @@ export function showShopScreen(
     headingParts: DomPart[] = [],
     messageParts: DomPart[] = [];
   let disposeFooter: (() => void) | undefined;
-  const rows = new Map<string, { key: string; tile: NativeSelectionTile; parts: DomPart[] }>();
+  const rows = new Map<
+    string,
+    { dispose(): void; key: string; tile: NativeSelectionTile; parts: DomPart[] }
+  >();
   let chromeKey = "",
     headingsKey = "",
     messageKey = "";
@@ -242,7 +248,6 @@ export function showShopScreen(
       },
     };
   };
-  const controlPoints = new WeakMap<HTMLElement, Point>();
   const accepts = () => alive && input.active() && lifecycle?.accepts() === true;
   const capture = () => {
     const admitted = accepts();
@@ -349,8 +354,23 @@ export function showShopScreen(
       if (rows.get(row.id)?.key === key) {
         continue;
       }
+      rows.get(row.id)?.dispose();
       rows.get(row.id)?.tile.element.remove();
+      const control = createGameButton(doc, {
+        content: { kind: "icon", name: row.label },
+        getAction: () =>
+          accepts()
+            ? {
+                activate: () => input.activateRow(row.id),
+                ...(row.holdDetail === true ? { hold: () => input.detailRow(row.id) } : {}),
+              }
+            : null,
+        getState: () => ({ toggled: row.state === "selected" }),
+        skin: "authored",
+      });
+      const stopFeedback = bindPanelFeedback(control, { accepts, burst: () => undefined });
       const tile = createSelectionTile(doc, input.source, input.fonts.title, {
+        control,
         frame: row.frame,
         hit: row.rect,
         label: row.label,
@@ -406,24 +426,22 @@ export function showShopScreen(
             ]),
         });
       }
-      const point = { x: row.rect.x + row.rect.width / 2, y: row.rect.y + row.rect.height / 2 };
-      controlPoints.set(tile.element, point);
-      bindGameAction(
-        {
-          activate: () => input.click(point),
-          available: accepts,
-          ...(row.holdDetail === true ? { hold: { external: "shop-item-detail" as const } } : {}),
-          pointer: "release",
-        },
-        tile.element,
-      );
       tile.content.append(...parts.map(({ element }) => element));
       scrolled.append(tile.element);
-      rows.set(row.id, { key, parts, tile });
+      rows.set(row.id, {
+        dispose: () => {
+          stopFeedback();
+          control.dispose();
+        },
+        key,
+        parts,
+        tile,
+      });
       ready.push(tile.ready);
     }
     for (const [id, row] of rows) {
       if (!retained.has(id)) {
+        row.dispose();
         row.tile.element.remove();
         rows.delete(id);
       }
@@ -474,11 +492,15 @@ export function showShopScreen(
             cancel: () => {
               footerGesture = false;
               tabGesture = undefined;
+              rowGesture = undefined;
               input.cancel();
             },
             down: (event) => {
               const index = tabs.findIndex((tab) => tab.element.contains(event.target as Node));
               tabGesture = inputTabs(view)[index];
+              rowGesture = [...rows].find(([, row]) =>
+                row.tile.element.contains(event.target as Node),
+              )?.[0];
               footerGesture =
                 footer?.contains(event.target as Node) === true ||
                 tabs.some((tab) => tab.element.contains(event.target as Node));
@@ -496,12 +518,20 @@ export function showShopScreen(
               const position = point(event);
               const leftTab =
                 tabGesture !== undefined && !containsPoint(tabGesture, position.x, position.y);
+              const row = view.rows.find((row) => row.id === rowGesture);
+              const leftRow =
+                rowGesture !== undefined &&
+                (row === undefined ||
+                  !containsPoint(view.clip, position.x, position.y) ||
+                  (view.message !== undefined &&
+                    containsPoint(view.message.rect, position.x, position.y)) ||
+                  !containsPoint(row.rect, position.x, position.y + (motion?.scroll.y ?? 0)));
               footerGesture = false;
               tabGesture = undefined;
-              if (!native && (cancelled || accepts())) {
-                input.up(point(event), cancelled);
-              }
-              return leftTab;
+              rowGesture = undefined;
+              const handled =
+                !native && (cancelled || accepts()) ? input.up(position, cancelled) : false;
+              return leftTab || leftRow || handled === true;
             },
           },
           modal: false,
@@ -524,17 +554,6 @@ export function showShopScreen(
   const stopUnderlay = followModalUnderlay(coverage, root);
   const point = (event: MouseEvent) => input.toGame({ x: event.clientX, y: event.clientY });
   update(initial);
-  const controlPoint = (target: EventTarget | null): Point | undefined => {
-    let node = target as HTMLElement | null;
-    while (node !== null && node !== root) {
-      const point = controlPoints.get(node);
-      if (point !== undefined) {
-        return point;
-      }
-      node = node.parentElement;
-    }
-    return undefined;
-  };
   root.addEventListener(
     "wheel",
     (event) => {
@@ -549,7 +568,8 @@ export function showShopScreen(
     if (accepts()) {
       if (
         (footer?.contains(event.target as Node) ||
-          tabs.some((tab) => tab.element.contains(event.target as Node))) &&
+          tabs.some((tab) => tab.element.contains(event.target as Node)) ||
+          [...rows.values()].some((row) => row.tile.element.contains(event.target as Node))) &&
         (event.code === "Enter" || event.code === "Space")
       ) {
         if (event.repeat) {
@@ -584,14 +604,7 @@ export function showShopScreen(
         (controls[next] ?? root).focus();
         return;
       }
-      const target = controlPoint(event.target);
-      if ((event.code === "Enter" || event.code === "Space") && target !== undefined) {
-        if (!event.repeat) {
-          input.click(target);
-        }
-      } else {
-        input.key(event.code, event.repeat);
-      }
+      input.key(event.code, event.repeat);
     }
   });
   return {
@@ -599,6 +612,7 @@ export function showShopScreen(
     capture,
     destroy: () => {
       alive = false;
+      rows.forEach((row) => row.dispose());
       tabs.forEach((tab) => tab.dispose());
       tabs = [];
       disposeFooter?.();

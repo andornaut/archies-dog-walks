@@ -48,7 +48,9 @@ function fixture({
     wheel = vi.fn(),
     close = vi.fn(),
     click = vi.fn(),
-    key = vi.fn();
+    key = vi.fn(),
+    activateRow = vi.fn(),
+    detailRow = vi.fn();
   const view: ShopScreenView = {
     clip: { height: 300, width: 324, x: 18, y: 160 },
     headings: [],
@@ -75,6 +77,7 @@ function fixture({
         art: [],
         fills: [],
         frame: "art",
+        holdDetail: true,
         id: "row",
         label: gameData.dogs.kilo.name,
         rect: RECT,
@@ -86,10 +89,12 @@ function fixture({
   const screen = showShopScreen(
     layer,
     {
+      activateRow,
       active: () => true,
       cancel,
       click,
       close,
+      detailRow,
       down,
       fonts: { body: gameFont("font-body"), title: gameFont("font-title") },
       key,
@@ -102,9 +107,11 @@ function fixture({
     view,
   );
   return {
+    activateRow,
     cancel,
     click,
     close,
+    detailRow,
     doc,
     down,
     key,
@@ -224,6 +231,89 @@ it("dispatches a tab hold once and suppresses its release without starting a row
       tab.fire("click", dragged);
     }
     expect(f.click).toHaveBeenCalledOnce();
+  } finally {
+    f.screen.destroy();
+    vi.useRealTimers();
+  }
+});
+
+it("lets the row's native button own keyboard activation and retains its actionable detail state", async () => {
+  const f = fixture();
+  await settle();
+  const row = f.root
+    .all()
+    .find((node) => node.getAttribute("aria-label") === f.view.rows[0]!.label)!;
+  expect(row.tabIndex).toBe(0);
+  expect(row.getAttribute("aria-disabled")).toBeNull();
+  expect(row.getAttribute("aria-pressed")).toBe("false");
+  const key = {
+    code: "Enter",
+    preventDefault: vi.fn(),
+    repeat: false,
+    stopPropagation: vi.fn(),
+    target: row,
+  };
+  f.root.fire("keydown", key);
+  expect(key.preventDefault).not.toHaveBeenCalled();
+  expect(f.key).not.toHaveBeenCalled();
+  row.fire("click", { detail: 0 });
+  expect(f.activateRow).toHaveBeenCalledExactlyOnceWith("row");
+  expect(f.click).not.toHaveBeenCalled();
+  expect(f.detailRow).not.toHaveBeenCalled();
+  f.screen.destroy();
+  row.fire("click", { detail: 0 });
+  expect(f.activateRow).toHaveBeenCalledOnce();
+});
+
+it("keeps native row tap, explicit detail hold and consumed scroll releases distinct", async () => {
+  const f = fixture();
+  await settle();
+  vi.useFakeTimers();
+  Object.assign(f.doc.defaultView, {
+    clearTimeout,
+    performance: { now: () => Date.now() },
+    setTimeout,
+  });
+  try {
+    const row = f.root
+      .all()
+      .find((node) => node.getAttribute("aria-label") === f.view.rows[0]!.label)!;
+    const event = (type: string) => ({
+      ...pointer(row, 1, type),
+      button: 0,
+      buttons: type === "pointerdown" ? 1 : 0,
+      isPrimary: true,
+      stopPropagation: vi.fn(),
+      timeStamp: Date.now(),
+    });
+    const release = (cancelled = false) => {
+      f.doc.fire(
+        cancelled ? "pointercancel" : "pointerup",
+        event(cancelled ? "pointercancel" : "pointerup"),
+      );
+      const click = event("click");
+      f.root.fire("click", click);
+      if (click.stopImmediatePropagation.mock.calls.length === 0) {
+        row.fire("click", click);
+      }
+    };
+    f.root.fire("pointerdown", event("pointerdown"));
+    vi.advanceTimersByTime(10);
+    release();
+    expect(f.activateRow).toHaveBeenCalledExactlyOnceWith("row");
+    f.root.fire("pointerdown", event("pointerdown"));
+    vi.advanceTimersByTime(gameData.tuning.seconds.holdSeconds * 1000);
+    expect(f.detailRow).toHaveBeenCalledExactlyOnceWith("row");
+    release();
+    expect(f.activateRow).toHaveBeenCalledOnce();
+    f.root.fire("pointerdown", event("pointerdown"));
+    f.up.mockReturnValueOnce(true);
+    release();
+    expect(f.activateRow).toHaveBeenCalledOnce();
+    f.root.fire("pointerdown", event("pointerdown"));
+    release(true);
+    expect(f.activateRow).toHaveBeenCalledOnce();
+    expect(f.detailRow).toHaveBeenCalledOnce();
   } finally {
     f.screen.destroy();
     vi.useRealTimers();

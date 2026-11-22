@@ -55,14 +55,6 @@ import {
   type ShopScreenView,
   showShopScreen,
 } from "../hud/dom/shopScreen.ts";
-import {
-  type HoldPress,
-  holdRule,
-  moveHold,
-  startHold,
-  tickHold,
-  TILE_SLOP_PX,
-} from "../input/hold.ts";
 import { isConfirmKey, isPauseKey, menuKeyActs } from "../input/keyBindings.ts";
 import {
   dragScroll,
@@ -112,7 +104,6 @@ import {
 import { SCENE_KEYS, type SceneKey } from "./sceneKeys.ts";
 import { LIST_SCROLL_RULE } from "./scrollView.ts";
 import { selectionOrbitSegments } from "./selectionOrbit.ts";
-import { listenTargetPress, sameByValue, type TargetPressListener } from "./targetPress.ts";
 import { selectOuter } from "./uiKit.ts";
 
 // The caller pauses itself and launches the shop, on the tab of focus and framing its row
@@ -133,7 +124,7 @@ export interface ShopClosed {
 
 // While a detail card is open, a press anywhere on the shop's panel is dismiss: its tap closes
 // the card. An item modal owns its dismissal and purchase actions.
-type Target = { kind: "dismiss" } | { id: string; kind: "row" } | { kind: "tab"; tab: ShopTab };
+type Target = { id: string; kind: "row" } | { kind: "tab"; tab: ShopTab };
 
 const LAYOUT = SHOP_LAYOUT;
 const PANEL: Rect = LAYOUT.panel;
@@ -258,7 +249,6 @@ export class ShopScene extends Scene {
   private focusId: string | null = null;
   // The open list's area, rows' width and heading note's right edge, by whether it scrolls.
   private frame = shopListFrame(false);
-  private hold: HoldPress | undefined;
   // The persistent native page, mounted after the shared UI readiness barrier.
   private native: NativeShopScreen | undefined;
   private nativeDragging = false;
@@ -268,7 +258,6 @@ export class ShopScene extends Scene {
   private placed: PlacedRow[] = [];
   private messagePlate: Rect = PLATE;
   private pressed: Target | undefined;
-  private presses: TargetPressListener | undefined;
   private resumeKey: SceneKey | undefined;
   // The open tab's scroll and fling state.
   private scroll: ListScroll = listScroll(0);
@@ -283,7 +272,6 @@ export class ShopScene extends Scene {
     this.resumeKey = data.resume;
     this.action = { kind: "none" };
     this.detail = undefined;
-    this.hold = undefined;
     // The scene's shutdown destroyed any HTML card.
     this.htmlDetail = undefined;
     this.message = null;
@@ -316,20 +304,6 @@ export class ShopScene extends Scene {
     // A tap acts once its dip ends, but an affordable row opens its item modal as it lifts;
     // holding a dog or gear row opens its detail card, and the hold takes the press. With a card
     // open, a tap anywhere closes it, as on the Logbook.
-    this.presses = listenTargetPress<Target>(this, {
-      dipMs: (target) => (target.kind === "dismiss" ? 0 : FEEDBACK.pressDipMs),
-      onPressed: (target) => {
-        this.pressed = target?.kind === "dismiss" ? undefined : target;
-        if (target === undefined) {
-          this.hold = undefined;
-        }
-        this.render();
-      },
-      onTap: (target) => this.act(target),
-      opens: (target) => this.opensItem(target),
-      same: sameByValue,
-      targetAt: () => undefined,
-    });
     this.input.keyboard?.on("keydown", (event: KeyboardEvent) => {
       if (this.native?.accepts() === true && menuKeyActs(event.repeat, event.code)) {
         this.onKey(event.code);
@@ -352,57 +326,30 @@ export class ShopScene extends Scene {
     });
   }
 
-  private startRowHold(point: Point, target: Target | undefined): void {
+  private nativeDown(point: Point): void {
     const layer = uiLayer();
     if (layer !== undefined) {
-      // Native tap bursts share the panel renderer rather than drawing behind opaque UI.
       addNativeTapBurst(layer, point);
     }
-    if (!this.isListOpen()) {
-      return;
-    }
-    const purchase = target?.kind === "row" ? this.rowById(target.id)?.purchase : undefined;
-    this.hold =
-      purchase !== undefined
-        ? startHold(holdRule(gameData.tuning, TILE_SLOP_PX), point, this.time.now)
-        : undefined;
-  }
-
-  private nativeDown(point: Point): void {
-    const target = containsPoint(PANEL, point.x, point.y)
-      ? this.targetAt(point.x, point.y)
-      : { kind: "dismiss" as const };
-    this.presses?.down(target);
-    this.startRowHold(point, target);
     if (this.isListOpen() && containsPoint(LIST, point.x, point.y)) {
       this.scroll = pressScroll(point.y, this.time.now, this.scroll);
     }
   }
 
   private nativeMove(point: Point): void {
-    if (this.hold !== undefined) {
-      this.hold = moveHold(point, this.hold);
-    }
     const was = isDragging(this.scroll);
     this.scroll = dragScroll(LIST_SCROLL_RULE, point.y, this.time.now, this.scroll);
     if (isDragging(this.scroll)) {
       this.nativeDragging = true;
       if (!was) {
-        this.presses?.cancel();
-        this.hold = undefined;
         this.pressed = undefined;
       }
       this.placeList();
     }
   }
 
-  private nativeUp(point: Point, cancelled: boolean): void {
-    this.presses?.up(
-      containsPoint(PANEL, point.x, point.y)
-        ? this.targetAt(point.x, point.y)
-        : { kind: "dismiss" },
-      cancelled || this.nativeDragging,
-    );
+  private nativeUp(_point: Point, cancelled: boolean): boolean {
+    const handled = cancelled || this.nativeDragging;
     this.nativeDragging = false;
     this.scroll = releaseScroll(
       LIST_SCROLL_RULE,
@@ -410,11 +357,10 @@ export class ShopScene extends Scene {
       this.time.now,
       this.scroll,
     );
+    return handled;
   }
 
   private cancelNativePress(): void {
-    this.presses?.cancel();
-    this.hold = undefined;
     this.pressed = undefined;
     this.nativeDragging = false;
     this.scroll = releaseScroll(LIST_SCROLL_RULE, true, this.time.now, this.scroll);
@@ -592,7 +538,7 @@ export class ShopScene extends Scene {
         tabs: SHOP_TABS.map((tab) => ({
           label: words.tabs[tab],
           open: tab === this.tab,
-          pressed: sameByValue({ kind: "tab", tab }, this.pressed),
+          pressed: this.pressed?.kind === "tab" && this.pressed.tab === tab,
         })),
         title: words.title,
       }),
@@ -621,6 +567,7 @@ export class ShopScene extends Scene {
         showShopScreen(
           layer,
           {
+            activateRow: (id) => this.actAfterDip({ id, kind: "row" }),
             active: () => this.sys.isActive() && this.isListOpen(),
             cancel: () => this.cancelNativePress(),
             click: (point) => {
@@ -630,6 +577,7 @@ export class ShopScene extends Scene {
               }
             },
             close: () => this.close(),
+            detailRow: (id) => this.openDetail(id),
             down: (point) => this.nativeDown(point),
             fonts,
             key: (code, repeat) => {
@@ -810,13 +758,8 @@ export class ShopScene extends Scene {
     return this.rows().find((row) => row.id === id);
   }
 
-  private pressedPurchase(): Purchase | undefined {
-    const pressed = this.pressed;
-    return pressed?.kind === "row" ? this.rowById(pressed.id)?.purchase : undefined;
-  }
-
-  private openDetail(): void {
-    const purchase = this.pressedPurchase();
+  private openDetail(id: string): void {
+    const purchase = this.rowById(id)?.purchase;
     this.pressed = undefined;
     if (purchase !== undefined) {
       this.detail = purchase;
@@ -829,22 +772,11 @@ export class ShopScene extends Scene {
     if (flung !== this.scroll) {
       this.moveList(flung);
     }
-    if (this.hold !== undefined) {
-      const { fire, press } = tickHold(this.time.now, this.hold);
-      this.hold = press;
-      if (fire) {
-        this.presses?.cancel();
-        this.openDetail();
-      }
-    }
     this.placeNative();
   }
 
   private act(target: Target): void {
     switch (target.kind) {
-      case "dismiss":
-        this.back();
-        return;
       case "tab":
         if (target.tab !== this.tab) {
           this.scroll = listScroll(0);
