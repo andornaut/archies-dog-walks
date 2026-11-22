@@ -1,8 +1,10 @@
-import type { Rect } from "@andornaut/game-kit/runtime/rect";
+import "./logbook.css";
+
+import { containsPoint, type Rect } from "@andornaut/game-kit/runtime/rect";
 
 import { logbookScrollbar, type LogbookView } from "../../home/logbookView.ts";
 import type { ShopPageView } from "../../home/shopPageView.ts";
-import { statsTabRects } from "../../home/statsLayout.ts";
+import { earnedBand, statsTabRects } from "../../home/statsLayout.ts";
 import { pageCloseControl } from "../../ui/closeControl.ts";
 import { createGameButton } from "../../ui/dom/gameButton.ts";
 import type { NativeGesture } from "../../ui/dom/modalLifecycle.ts";
@@ -18,6 +20,7 @@ import {
   wholeArtPixels,
 } from "../../ui/domScale.ts";
 import { artPart, type DomDetailCardInput, textPart } from "./detailCard.ts";
+import { bindPanelFeedback } from "./panelButton.ts";
 import { type DomPart, type DomQuestionPanel, showQuestionPanel } from "./questionPanel.ts";
 import { createPageTab, fillPart, framedBoxPart, shopPageParts } from "./shopPage.ts";
 
@@ -123,24 +126,32 @@ export function showLogbook(layer: UiLayer, input: DomLogbookInput): DomLogbook 
   const scrolled = doc.createElement("div");
   scrolled.className = "adw-scrolled";
   clip.append(scrolled);
-  const control = (rect: Rect, label: string, target: LogbookTarget, selected = false) => {
+  const control = (rect: Rect, label: string, target: LogbookTarget) => {
     const content = doc.createElement("span");
     content.className = "adw-lines";
     const button = createGameButton(doc, {
-      appearance: { className: "adw-button", face: { className: "adw-face" }, role: "secondary" },
+      appearance: { className: "adw-logbook-badge", face: {}, role: "secondary" },
       content: { icon: content, kind: "icon", name: label },
       getAction: () =>
         shown.accepts() ? { activate: () => input.navigation.activate(target) } : null,
-      getState: () => ({ selected }),
+      skin: "authored",
+    });
+    const stopFeedback = bindPanelFeedback(button, {
+      accepts: () => shown.accepts(),
+      burst: (event) => shown.burst(input.toGame({ x: event.clientX, y: event.clientY })),
     });
     return {
       content,
       control: button.element,
-      dispose: () => button.dispose(),
+      dispose: () => {
+        stopFeedback();
+        button.dispose();
+      },
       element: button.element,
       place: (scale: DomScale) => {
         const box = gridRect(scale, rect);
         setBox(button.element, box);
+        setBox(button.face, { height: box.height, left: 0, top: 0, width: box.width });
         setBox(content, { height: 0, left: -box.left, top: -box.top, width: 0 });
       },
     };
@@ -163,22 +174,44 @@ export function showLogbook(layer: UiLayer, input: DomLogbookInput): DomLogbook 
       rect,
       tab,
     );
-    return [part];
+    return [{ ...part, hit: rect }];
   });
+  const rowForBox = (box: Rect) =>
+    view.wallRows.findIndex(
+      (row) =>
+        box.x >= row.x &&
+        box.x + box.width <= row.x + row.width &&
+        box.y >= row.y &&
+        box.y + box.height <= row.y + row.height,
+    );
   const painted = [
-    ...content.fills.map((fill) => ({
-      part: fillPart(doc, fill),
-      y: fill.rect.y + fill.rect.height / 2,
-    })),
+    // Background fills keep their original stacking and coordinates outside action content.
+    ...content.fills.map((fill) => ({ part: fillPart(doc, fill), row: -1 })),
     ...content.framed.map((framed) => ({
       part: framedBoxPart(doc, framed),
-      y: framed.rect.y + framed.rect.height / 2,
+      row: view.wallRows.findIndex((row) => {
+        const band = earnedBand(row);
+        return (
+          band.x === framed.rect.x &&
+          band.y === framed.rect.y &&
+          band.width === framed.rect.width &&
+          band.height === framed.rect.height
+        );
+      }),
     })),
     ...content.art.map((art) => ({
       part: artPart(doc, input, art),
-      y: art.y + (art.size.height * art.scale) / 2,
+      row: rowForBox({
+        height: art.size.height * art.scale,
+        width: art.size.width * art.scale,
+        x: art.x,
+        y: art.y,
+      }),
     })),
-    ...content.texts.map((text) => ({ part: textPart(doc, input, text), y: text.capTop })),
+    ...content.texts.map((text) => ({
+      part: textPart(doc, input, text),
+      row: rowForBox({ height: 1, width: 0, x: text.x, y: text.capTop }),
+    })),
   ];
   const badges = view.wallRows.map((rect, index) => {
     const name =
@@ -186,10 +219,11 @@ export function showLogbook(layer: UiLayer, input: DomLogbookInput): DomLogbook 
         .find((line) => line.capTop >= rect.y && line.capTop < rect.y + rect.height)
         ?.lines.join(" ") ?? input.view.page.title.map((line) => line.text).join(" ");
     const part = control(rect, name, { badge: index });
-    const children = painted.filter(({ y }) => y >= rect.y && y < rect.y + rect.height);
+    const children = painted.filter(({ row }) => row === index);
     part.content.append(...children.map(({ part }) => part.element));
     return {
       ...part,
+      hit: rect,
       place: (scale: DomScale) => {
         part.place(scale);
         children.forEach(({ part }) => part.place(scale));
@@ -200,9 +234,7 @@ export function showLogbook(layer: UiLayer, input: DomLogbookInput): DomLogbook 
     };
   });
   const contentParts: DomPart[] = [
-    ...painted
-      .filter(({ y }) => !view.wallRows.some((rect) => y >= rect.y && y < rect.y + rect.height))
-      .map(({ part }) => part),
+    ...painted.filter(({ row }) => row === -1).map(({ part }) => part),
     ...badges,
   ];
   scrolled.append(...contentParts.map(({ element }) => element));
@@ -265,12 +297,41 @@ export function showLogbook(layer: UiLayer, input: DomLogbookInput): DomLogbook 
     element: tabHost,
     place: (scale) => tabs.forEach((tab) => tab.place(scale)),
   };
+  let originalHit: Rect | undefined;
   const shown = showQuestionPanel(layer, {
     close: null,
     closeLabel: input.closeLabel,
     fonts: input.fonts,
     footerPress: input.navigation.close,
-    gesture: input.navigation.gesture,
+    gesture: {
+      cancel: () => {
+        originalHit = undefined;
+        input.navigation.gesture.cancel?.();
+      },
+      down: (event) => {
+        const tab = tabs.find((part) =>
+          part.controls?.some((control) => control.contains(event.target as Node)),
+        );
+        const badge = badges.find((part) => part.control.contains(event.target as Node));
+        originalHit =
+          tab?.hit ??
+          (badge === undefined
+            ? undefined
+            : {
+                ...badge.hit,
+                y: badge.hit.y - input.scroll().y,
+              });
+        input.navigation.gesture.down?.(event);
+      },
+      move: (event) => input.navigation.gesture.move?.(event),
+      up: (event, cancelled) => {
+        const hit = originalHit;
+        originalHit = undefined;
+        const point = input.toGame({ x: event.clientX, y: event.clientY });
+        const handled = input.navigation.gesture.up?.(event, cancelled);
+        return handled === true || (hit !== undefined && !containsPoint(hit, point.x, point.y));
+      },
+    },
     modal: false,
     numberKeys: false,
     onFocus: (index) => {

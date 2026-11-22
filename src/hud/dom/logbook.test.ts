@@ -5,11 +5,12 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { gameData } from "../../data/index.ts";
 import type { LogbookView } from "../../home/logbookView.ts";
 import { shopPageView } from "../../home/shopPageView.ts";
-import { STATS_TABS } from "../../home/statsLayout.ts";
+import { STATS_TABS, statsTabRects } from "../../home/statsLayout.ts";
 import { FakeDocument, type FakeElement, fakeLayer, layerViews } from "../../testing/fakeDom.ts";
 import { fontFileMetrics, gameFont } from "../../testing/fontInk.ts";
 import { deviceY, domScale } from "../../ui/domScale.ts";
 import { modalTitleInk } from "../../ui/modal/titleRole.ts";
+import { PALETTE } from "../../ui/palette.ts";
 import { scrollPlace, showLogbook } from "./logbook.ts";
 
 // 393 CSS px wide over the 360-wide game at DPR 3: a game pixel is 3.275 device pixels and an
@@ -78,7 +79,22 @@ function nativeFixture() {
     },
   );
   const view: LogbookView = {
-    content: { art: [], bottom: 700, fills: [], framed: [], texts: [] },
+    content: {
+      art: [],
+      bottom: 700,
+      fills: [{ colour: PALETTE.navy, rect: { height: 80, width: 324, x: 18, y: 180 } }],
+      framed: [],
+      texts: [
+        {
+          capTop: 210,
+          colour: PALETTE.green,
+          lines: [gameData.menuText.stats.title],
+          scale: 2,
+          x: 80,
+        },
+        { capTop: 230, colour: PALETTE.plum, lines: [gameData.menuText.pageBack], scale: 2, x: 80 },
+      ],
+    },
     frame: { rect: { height: 300, width: 324, x: 18, y: 160 }, right: 342 },
     page,
     wallRows: [{ height: 40, width: 300, x: 24, y: 200 }],
@@ -156,38 +172,83 @@ it("opens a held badge once and consumes its following native click", async () =
   panel.destroy();
 });
 
+it.each(["tab", "badge"])(
+  "consumes a %s release outside its original hit despite implicit capture",
+  async (kind) => {
+    const { activate, doc, panel, root } = nativeFixture();
+    await setImmediate();
+    const button = root.all().filter((node) => node.tagName === "button")[
+      kind === "tab" ? 0 : STATS_TABS.length
+    ]!;
+    const hit = kind === "tab" ? statsTabRects()[0]! : { height: 40, width: 300, x: 24, y: 200 };
+    root.fire("pointerdown", {
+      ...pointer(button, 8, "pointerdown"),
+      clientX: hit.x + hit.width / 2,
+      clientY: hit.y + hit.height / 2,
+    });
+    doc.fire("pointerup", { ...pointer(button, 8, "pointerup"), clientX: 0, clientY: 0 });
+    const click = pointer(button, 8, "click");
+    root.fire("click", click);
+    expect(click.stopImmediatePropagation).toHaveBeenCalled();
+    expect(activate).not.toHaveBeenCalled();
+    panel.destroy();
+  },
+);
+
 it("keeps standard tab controls stable and dispatches each native click once while scrolling", async () => {
   const { activate, doc, down, focus, page, panel, root, scrollTo, up } = nativeFixture();
   await setImmediate();
   const tab = root
     .all()
     .find((element) => element.getAttribute("aria-label") === page.tabs[0]!.label.text)!;
-  root.fire("pointerdown", pointer(tab, 1, "pointerdown"));
+  const hit = statsTabRects()[0]!;
+  const at = { clientX: hit.x + hit.width / 2, clientY: hit.y + hit.height / 2 };
+  root.fire("pointerdown", { ...pointer(tab, 1, "pointerdown"), ...at });
   panel.setPage({ ...page, tabs: page.tabs.map((tab) => ({ ...tab, dy: tab.dy + 2 })) });
   scrollTo(18.5);
   root.fire("pointerdown", pointer(tab, 2, "pointerdown"));
-  doc.fire("pointerup", pointer(tab, 1, "pointerup"));
+  doc.fire("pointerup", { ...pointer(tab, 1, "pointerup"), ...at });
   expect(
     root.all().find((element) => element.getAttribute("aria-label") === page.tabs[0]!.label.text),
   ).toBe(tab);
   expect(down).toHaveBeenCalledOnce();
   expect(up).toHaveBeenCalledOnce();
-  tab.fire("click", { detail: 1 });
+  const click = { ...pointer(tab, 1, "click"), ...at };
+  root.fire("click", click);
+  expect(click.stopImmediatePropagation).not.toHaveBeenCalled();
+  tab.fire("click", click);
   expect(activate).toHaveBeenCalledExactlyOnceWith({ tab: 0 });
   activate.mockClear();
   tab.fire("click", { detail: 0 });
   expect(activate).toHaveBeenCalledExactlyOnceWith({ tab: 0 });
   expect(tab.className).toContain("adw-standard-button");
-  const badge = root
-    .all()
-    .find(
-      (element) =>
-        element.tagName === "button" &&
-        element.getAttribute("aria-label") === page.title.map((line) => line.text).join(" "),
-    )!;
+  const badge = root.all().find((element) => element.className.includes("adw-logbook-badge"))!;
   root.fire("focusin", { target: badge });
   expect(focus).toHaveBeenCalledWith({ height: 40, width: 300, x: 24, y: 200 });
-  expect(badge.className).toContain("adw-standard-button");
+  expect(badge.className).not.toContain("adw-standard-button");
+  expect(badge.className).not.toContain("adw-button");
+  const colours = badge
+    .all()
+    .filter((node) => node.className.includes("adw-text"))
+    .map((node) => node.style.color);
+  expect(colours).toEqual(
+    [PALETTE.green, PALETTE.plum].map((colour) => `#${colour.toString(16).padStart(6, "0")}`),
+  );
+  const background = root
+    .all()
+    .find(
+      (node) => node.style.backgroundColor === `#${PALETTE.navy.toString(16).padStart(6, "0")}`,
+    )!;
+  expect(badge.contains(background)).toBe(false);
+  badge.fire("pointerdown", pointer(badge, 3, "pointerdown"));
+  expect(badge.hasAttribute("data-ui-pressed")).toBe(true);
+  expect(
+    badge
+      .all()
+      .filter((node) => node.className.includes("adw-text"))
+      .map((node) => node.style.color),
+  ).toEqual(colours);
+  badge.fire("pointerup", pointer(badge, 3, "pointerup"));
   activate.mockClear();
   badge.fire("click", { detail: 0 });
   expect(activate).toHaveBeenCalledExactlyOnceWith({ badge: 0 });

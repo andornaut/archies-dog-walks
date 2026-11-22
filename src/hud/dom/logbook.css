@@ -1,0 +1,29 @@
+/* Illustrated rows retain their authored colours; Kit supplies the native focus fill. */
+.adw-logbook-badge {
+  --ui-button-focus-fill: color-mix(in srgb, var(--adw-cyan) 35%, transparent);
+  position: absolute;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.adw-logbook-badge > .ui-button-face {
+  position: absolute;
+  pointer-events: none;
+}
+.adw-logbook-badge[data-ui-pressed] > .ui-button-face {
+  background-color: var(--ui-button-focus-fill);
+}
+.adw-logbook-badge[data-ui-pressed] > .ui-button-face > [aria-hidden="true"] {
+  opacity: 0.8;
+}
+@media (forced-colors: active) {
+  .adw-logbook-badge {
+    --ui-button-focus-fill: Highlight;
+  }
+}
