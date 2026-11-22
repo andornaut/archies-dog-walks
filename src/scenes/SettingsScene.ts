@@ -524,6 +524,10 @@ export class SettingsScene extends Scene {
           const frame = this.textures.getFrame(key);
           return { height: frame.realHeight, width: frame.realWidth };
         },
+        footerLabel:
+          this.resumeKey === SCENE_KEYS.menu || this.resumeKey === SCENE_KEYS.pause
+            ? gameData.menuText.pageBack
+            : gameData.menuText.common.close,
         layout: this.layout,
         ...(devToolsOn() ? { openCheats: gameData.menuText.cheats.open } : {}),
         rows: this.rows,

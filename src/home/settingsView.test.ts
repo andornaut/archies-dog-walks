@@ -47,11 +47,12 @@ const STATE: SettingsState = {
   settings: DEFAULT_SETTINGS,
   steps: undefined,
 };
-const view = (state: Partial<SettingsState>) =>
+const view = (state: Partial<SettingsState>, footerLabel?: string) =>
   settingsView(
     MEASURE,
     {
       art: () => ({ height: 16, width: 16 }),
+      ...(footerLabel === undefined ? {} : { footerLabel }),
       layout,
       rows,
       words: gameData.menuText.settings,
@@ -60,6 +61,18 @@ const view = (state: Partial<SettingsState>) =>
   );
 
 describe("settingsView", () => {
+  it.each([
+    ["navigation return", gameData.menuText.pageBack, gameData.menuText.pageBack],
+    ["standalone dismissal", undefined, gameData.menuText.common.close],
+  ])(
+    "labels its primary footer for %s without changing the close icon",
+    (_case, label, expected) => {
+      const current = view({}, label);
+      expect(current.card.footer).toMatchObject({ label: expected, primary: true });
+      expect(current.card.close).toEqual(view({}).card.close);
+    },
+  );
+
   it("uses readable body text for the centred build label and retains footer clearance", () => {
     const current = view({});
     expect(current.rowsViewport).toEqual(layout.rowsViewport);

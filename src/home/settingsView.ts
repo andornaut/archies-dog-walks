@@ -420,15 +420,16 @@ function stepsView(
   };
 }
 
-// The card with its primary Close at the bottom and, where cheats are available, Open Cheats
+// The card with its primary dismissal at the bottom and, where cheats are available, Open Cheats
 // beside it, secondary on its left, the pair centred across the panel.
 function settingsCard(
   measure: SettingsMeasure,
   panel: Rect,
   title: string,
+  footerLabel: string,
   openCheats: string | undefined,
 ): QuestionPanelView {
-  const close = dismissFooter(measure, { label: MENU_TEXT.common.close, primary: true }, panel);
+  const close = dismissFooter(measure, { label: footerLabel, primary: true }, panel);
   const card = { ...modalCardView(measure, panel, title, []), footer: close };
   if (openCheats === undefined) {
     return card;
@@ -454,6 +455,7 @@ export function settingsView(
   measure: SettingsMeasure,
   context: {
     readonly art: (key: string) => { readonly height: number; readonly width: number } | undefined;
+    readonly footerLabel?: string;
     readonly layout: SettingsLayout;
     // Open Cheats' label, where cheats are available.
     readonly openCheats?: string;
@@ -481,7 +483,13 @@ export function settingsView(
       scale: SETTINGS_BUILD_LABEL.style.scale,
       text: BUILD_LABEL,
     },
-    card: settingsCard(measure, panel, words.title, context.openCheats),
+    card: settingsCard(
+      measure,
+      panel,
+      words.title,
+      context.footerLabel ?? MENU_TEXT.common.close,
+      context.openCheats,
+    ),
     ring: focused === undefined ? undefined : insetRect(-FOCUS_OUTSET, focused),
     rows: rows.map((row, i) => {
       const at = itemAt(layout.rows, i);
