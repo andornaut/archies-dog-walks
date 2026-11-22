@@ -2,10 +2,10 @@ import { splitDepthKey } from "./depthSteps.ts";
 import { LOADING_ART } from "./spriteKeys.ts";
 
 // Pages in load order: the loading screen's art first, so it shows while the rest loads.
-export const ATLAS_GROUPS = ["boot", "ui", "home", "run", "road"] as const;
+export const ATLAS_GROUPS = ["boot", "ui", "run", "road"] as const;
 export type AtlasGroup = (typeof ATLAS_GROUPS)[number];
-// The groups a key belongs to by its name alone. road is split out of run by pageGroupOf.
-type KeyGroup = Exclude<AtlasGroup, "road">;
+// A key's grouping decides whether it trims. The page grouping also accounts for filtering.
+type KeyGroup = Exclude<AtlasGroup, "road"> | "home";
 
 // The groups whose pages draw with linear filtering. A page's filter covers every frame on it,
 // so the road art drawn between its depth steps packs on pages of its own.
@@ -59,12 +59,14 @@ export function steppedBases(keys: Iterable<string>): Set<string> {
   return bases;
 }
 
-// The page group a key packs into, given steppedBases of the keys packed: atlasGroupOf's, except
-// that the road art drawn between its depth steps (each depth step variant, and the full size of
-// a sprite with one) is road, whose pages filter linearly so it shrinks smoothly. Home art keeps
-// its group and stays nearest: the home screen draws it at 1x, and the pack stands at full size.
+// Home art shares the nearest-filtered run pages. The road art drawn between its depth steps
+// (each depth step variant and the full size of a sprite with one) has linear filtering and its
+// own pages. The home screen draws the pack at 1x, so it stays nearest-filtered.
 export function pageGroupOf(stepped: ReadonlySet<string>, key: string): AtlasGroup {
   const group = atlasGroupOf(key);
+  if (group === "home") {
+    return "run";
+  }
   return group === "run" && stepped.has(splitDepthKey(key).base) ? "road" : group;
 }
 

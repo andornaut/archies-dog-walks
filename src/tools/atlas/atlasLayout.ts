@@ -24,7 +24,7 @@ export const ATLAS_MAX_SIZE = 2048;
 // Each frame's edge pixels repeat this far outward, so a scaled or tiled frame that samples
 // past its edge reads its own colour rather than a neighbour's.
 export const EXTRUDE = 1;
-const PAGE_WIDTHS = [256, 512, 1024, 2048] as const;
+const PAGE_WIDTHS = [256, 512, 1024, 1344, 2048] as const;
 
 // A frame of a source PNG, by the rect of it that is packed. A trimmed frame's rect holds only
 // its opaque pixels: bounds is then the whole frame it was cut from, and trim where it sits in

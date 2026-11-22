@@ -42,7 +42,7 @@ describe("pageGroupOf", () => {
     ["newspaper-box", "road", true],
     ["newspaper-box@50", "road", true],
     ["dog-kilo@50", "road", true],
-    ["dog-kilo", "home", false],
+    ["dog-kilo", "run", false],
     ["fx-hit-skunk", "run", false],
     ["ambient-kite", "run", false],
     ["ui-heart", "ui", false],

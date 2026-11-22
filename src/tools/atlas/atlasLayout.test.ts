@@ -132,14 +132,16 @@ describe("layoutAtlases", () => {
     }
   });
 
-  it("orders pages boot, ui, home, run, road, each named for its group", () => {
-    expect(layoutAtlases(textures).pages.map(({ group, name }) => [group, name])).toEqual([
+  it("keeps boot, UI and road pages separate from the shared home and run art", () => {
+    const { pages, textures: mapped } = layoutAtlases(textures);
+    expect(pages.map(({ group, name }) => [group, name])).toEqual([
       ["boot", "atlas/boot-0"],
       ["ui", "atlas/ui-0"],
-      ["home", "atlas/home-0"],
       ["run", "atlas/run-0"],
       ["road", "atlas/road-0"],
     ]);
+    const pageOf = (key: string) => mapped.find((texture) => texture.key === key)?.page;
+    expect(pageOf("dog-kilo")).toBe(pageOf("fx-hit-skunk"));
   });
 
   it("packs frames with the same from rect once, each keeping its own trim", () => {
