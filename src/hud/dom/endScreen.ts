@@ -25,6 +25,7 @@ import { TEXT_SCALE } from "../../ui/textFit.ts";
 import type { DomBadgeCardInput } from "./badgeCard.ts";
 import { badgeStripParts } from "./celebration.ts";
 import { artPart, type DomDetailCardInput, framedPart, textPart } from "./detailCard.ts";
+import { createPanelButton } from "./panelButton.ts";
 import {
   type DomPart,
   type DomQuestionPanel,
@@ -158,46 +159,47 @@ function panelPart(doc: Document, rect: Rect): DomPart {
 // Back to title: the go button's face and its label, pressed or bobbing as the scene says.
 function buttonPart(
   doc: Document,
-  fonts: (line: DomTextLine) => BitmapFont,
-  home: () => void,
+  fonts: DomEndScreenInput["fonts"],
+  input: {
+    readonly accepts: () => boolean;
+    readonly burst: (event: PointerEvent) => void;
+    readonly home: () => void;
+  },
   button: EndScreenView["button"],
-): DomPart & { set(pressed: boolean, bob: number): void } {
-  const element = doc.createElement("button");
-  element.type = "button";
-  element.className = "adw-button adw-go";
-  element.setAttribute("aria-label", button.text.text);
-  bindGameAction({ activate: () => home(), available: () => true, pointer: "release" }, element);
-  const face = doc.createElement("span");
-  face.className = "adw-face";
-  const label = createTextLine(doc, button.text);
-  label.setAttribute("aria-hidden", "true");
-  element.append(face, label);
+): DomPart & { dispose(): void; set(pressed: boolean, bob: number): void } {
+  const part = createPanelButton(
+    doc,
+    {
+      fonts,
+      press: { accepts: input.accepts, burst: input.burst, press: input.home },
+    },
+    { ...button, label: button.text.text, primary: true },
+  );
+  const element = part.element;
   let scale: DomScale | undefined;
   let shown = { bob: 0, pressed: false };
   const show = () => {
-    if (shown.pressed) {
-      element.setAttribute("data-pressed", "");
-    } else {
-      element.removeAttribute("data-pressed");
-    }
+    const pressed = element.hasAttribute("data-ui-pressed");
     element.style.transform =
-      scale === undefined || shown.bob === 0 ? "" : `translateY(${shown.bob * artPixel(scale)}px)`;
+      scale === undefined || pressed || shown.bob === 0
+        ? ""
+        : `translateY(${shown.bob * artPixel(scale)}px)`;
   };
   return {
     controls: [element],
+    dispose: part.dispose,
     element,
     place: (at) => {
       scale = at;
-      placeBox(at, ORIGIN, element, button.hit);
-      placeFrame(at, button.hit, face, button.rect);
-      placeText(fonts(button.text), at, button.hit, label, button.text);
+      part.place(at);
       show();
     },
     set(pressed, bob) {
-      if (pressed !== shown.pressed || bob !== shown.bob) {
-        shown = { bob, pressed };
-        show();
+      if (pressed !== shown.pressed) {
+        element.toggleAttribute("data-ui-pressed", pressed);
       }
+      shown = { bob, pressed };
+      show();
     },
   };
 }
@@ -304,11 +306,11 @@ export function showEndScreen(layer: UiLayer, input: DomEndScreenInput): DomEndS
         : artPart(doc, input, { ...ribbonView.art, y: ribbonView.art.y + view.offsetY });
   const button = buttonPart(
     doc,
-    fonts,
-    () => {
-      if (accepts()) {
-        input.home();
-      }
+    input.fonts,
+    {
+      accepts: () => accepts(),
+      burst: (event) => panel.burst(input.toGame({ x: event.clientX, y: event.clientY })),
+      home: input.home,
     },
     view.button,
   );
@@ -400,6 +402,7 @@ export function showEndScreen(layer: UiLayer, input: DomEndScreenInput): DomEndS
   };
   const screen = { height: 0, width: 0, x: 0, y: 0 };
   let scrolling = false;
+  let nativeButtonPress = false;
   const panel = showQuestionPanel(layer, {
     close: null,
     closeLabel: input.closeLabel,
@@ -410,6 +413,10 @@ export function showEndScreen(layer: UiLayer, input: DomEndScreenInput): DomEndS
         input.gesture.cancel?.();
       },
       down: (event) => {
+        nativeButtonPress = button.element.contains(event.target as Node);
+        if (nativeButtonPress) {
+          return;
+        }
         scrolling = viewport.contains(event.target as Node);
         if (scrolling) {
           input.gesture.cancel?.();
@@ -418,11 +425,15 @@ export function showEndScreen(layer: UiLayer, input: DomEndScreenInput): DomEndS
         }
       },
       move: (event) => {
-        if (!scrolling) {
+        if (!scrolling && !nativeButtonPress) {
           input.gesture.move?.(event);
         }
       },
       up: (event, cancelled) => {
+        if (nativeButtonPress) {
+          nativeButtonPress = false;
+          return false;
+        }
         const nativeScroll = scrolling;
         scrolling = false;
         return nativeScroll ? false : input.gesture.up?.(event, cancelled);
@@ -454,6 +465,7 @@ export function showEndScreen(layer: UiLayer, input: DomEndScreenInput): DomEndS
       accepts = () => false;
       underlay();
       badges?.destroy();
+      button.dispose();
       panel.destroy();
     },
     setBadgePop: (index, scale) => badges?.setPop(index, scale),

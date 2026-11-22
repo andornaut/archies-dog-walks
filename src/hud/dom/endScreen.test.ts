@@ -1,11 +1,11 @@
 import { fontMetrics } from "@andornaut/game-kit/runtime/text/bitmapFont";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { gameData } from "../../data/index.ts";
 import { END_LAYOUT } from "../../home/endLayout.ts";
 import { endScreenView, QUIP_TAIL_KEY } from "../../home/endScreenView.ts";
 import { ownerNameWrap } from "../../presentation/ownerName.ts";
-import { FakeDocument, fakeLayer } from "../../testing/fakeDom.ts";
+import { FakeDocument, type FakeElement, fakeLayer } from "../../testing/fakeDom.ts";
 import { fontInk, fontInkRows, gameFont } from "../../testing/fontInk.ts";
 import { ownArtFrames } from "../../testing/ownArtFrames.ts";
 import { shownText } from "../../ui/dom/pixelLine.ts";
@@ -15,7 +15,7 @@ import { modalTitleInk } from "../../ui/modal/titleRole.ts";
 import { PALETTE } from "../../ui/palette.ts";
 import { TEXT_SCALE } from "../../ui/textFit.ts";
 import { cents } from "../../units.ts";
-import { showEndScreen } from "./endScreen.ts";
+import { type DomEndScreenInput, showEndScreen } from "./endScreen.ts";
 
 const fonts = { body: gameFont("font-body"), title: gameFont("font-title") };
 const ART = { [QUIP_TAIL_KEY]: { height: 8, width: 10 } } as Record<
@@ -51,17 +51,27 @@ const VIEW = endScreenView(gameData, MEASURE, {
   } as never,
 });
 
-function endScreen(width: number, display: typeof fonts.title | null = fonts.title, view = VIEW) {
+afterEach(() => vi.useRealTimers());
+
+function endScreen(
+  width: number,
+  display: typeof fonts.title | null = fonts.title,
+  view = VIEW,
+  gesture: DomEndScreenInput["gesture"] = {},
+) {
   const doc = new FakeDocument();
   const scale = domScale(3, { height: (width * 560) / 360, width, x: 0, y: 0 });
   const { element, layer } = fakeLayer(doc, scale);
   const frames: (() => void)[] = [];
   Object.assign(doc.defaultView, {
     cancelAnimationFrame: () => undefined,
+    clearTimeout: globalThis.clearTimeout,
+    performance: { now: () => Date.now() },
     requestAnimationFrame: (paint: () => void) => {
       frames.push(paint);
       return frames.length;
     },
+    setTimeout: globalThis.setTimeout,
   });
   const home = vi.fn();
   const shown = showEndScreen(layer, {
@@ -71,7 +81,7 @@ function endScreen(width: number, display: typeof fonts.title | null = fonts.tit
     display: display ?? undefined,
     everyFrame: () => () => undefined,
     fonts,
-    gesture: {},
+    gesture,
     home,
     loadSheet: (path) => Promise.resolve(ownArtFrames(path)),
     now: () => 0,
@@ -83,14 +93,14 @@ function endScreen(width: number, display: typeof fonts.title | null = fonts.tit
     view,
   });
   const nodes = element.children[0]?.all() ?? [];
-  return { frames, home, layer, nodes, scale, shown };
+  return { doc, frames, home, layer, nodes, scale, shown };
 }
 
 describe("the HTML End screen", () => {
   it("shows its native Back to title pressed or bobbing whole art pixels as told", () => {
     const { nodes, scale, shown } = endScreen(393);
     expect(nodes.filter((node) => node.tagName === "button")).toHaveLength(1);
-    const button = nodes.find((node) => node.className === "adw-button adw-go");
+    const button = nodes.find((node) => node.classList.contains("adw-go"));
     const hit = gridRect(scale, VIEW.button.hit);
     expect(button?.style.width).toBe(`${hit.width}px`);
     expect(button?.style.left).toBe(`${hit.left}px`);
@@ -98,13 +108,13 @@ describe("the HTML End screen", () => {
     shown.setButton(false, -1);
     expect(button?.style.transform).toBe(`translateY(${-artPixel(scale)}px)`);
     shown.setButton(true, 0);
-    expect(button?.attributes.has("data-pressed")).toBe(true);
+    expect(button?.attributes.has("data-ui-pressed")).toBe(true);
     expect(button?.style.transform).toBe("");
   });
 
   it("admits keyboard Back only after paint, blocks it under a modal, and drops it on destroy", async () => {
     const { frames, home, layer, nodes, shown } = endScreen(393);
-    const button = nodes.find((node) => node.className === "adw-button adw-go");
+    const button = nodes.find((node) => node.classList.contains("adw-go"));
     button?.fire("click", { detail: 0 });
     expect(home).not.toHaveBeenCalled();
     await vi.waitFor(() => expect(frames).toHaveLength(1));
@@ -152,7 +162,7 @@ describe("the HTML End screen", () => {
     );
     expect(title?.className).toBe("adw-text adw-font-title");
     expect(title?.style.color).toBe(`#${PALETTE.plum.toString(16).padStart(6, "0")}`);
-    expect(nodes.some((node) => node.className === "adw-button adw-go")).toBe(true);
+    expect(nodes.some((node) => node.classList.contains("adw-go"))).toBe(true);
   });
 
   it.each([360, 393])(
@@ -290,7 +300,7 @@ it("scrolls all owner art, names and quotes together while results chrome and Ba
   expect(spoken).not.toContain(view.results.names.map((line) => line.text).join(" "));
   expect((viewport as unknown as HTMLElement).tabIndex).toBe(0);
   expect(view.results.ownerRows.contentHeight - view.results.ownerRows.viewport.height).toBe(45);
-  const button = nodes.find((node) => node.className === "adw-button adw-go")!;
+  const button = nodes.find((node) => node.classList.contains("adw-go"))!;
   expect(viewport.contains(button)).toBe(false);
   const fixedTop = button.style.top;
   (viewport as unknown as HTMLElement).scrollTop = 45 * scale.unit * scale.dpr;
@@ -338,3 +348,49 @@ it("fills End owner wells at a fractional viewport and keeps live frames in the 
     `${gridRect(scale, { height: 32, width: 32, x: face.x, y: face.y + VIEW.offsetY + 1 }).top}px`,
   );
 });
+
+it.each(["tap", "hold"] as const)(
+  "uses one Kit Back action on %s without the legacy release route",
+  async (mode) => {
+    vi.useFakeTimers();
+    const gesture = { down: vi.fn(), up: vi.fn(() => true) };
+    const current = endScreen(393, fonts.title, VIEW, gesture);
+    await vi.waitFor(() => expect(current.frames).toHaveLength(1));
+    current.frames.shift()?.();
+    const root = current.shown.element as unknown as FakeElement;
+    const button = current.nodes.find((node) => node.classList.contains("adw-go"))!;
+    expect(button.classList.contains("ui-standard-button")).toBe(true);
+    expect(button.getAttribute("data-ui-button-role")).toBe("primary");
+    const pointer = (type: string) => ({
+      button: 0,
+      buttons: type === "pointerdown" ? 1 : 0,
+      clientX: 180,
+      clientY: 520,
+      detail: 1,
+      isPrimary: true,
+      pointerId: 7,
+      preventDefault: vi.fn(),
+      stopImmediatePropagation: vi.fn(),
+      stopPropagation: vi.fn(),
+      target: button,
+      timeStamp: Date.now(),
+      type,
+    });
+    root.fire("pointerdown", pointer("pointerdown"));
+    button.fire("pointerdown", pointer("pointerdown"));
+    current.shown.setButton(false, -1);
+    expect(button.style.transform).toBe("");
+    vi.advanceTimersByTime(mode === "tap" ? 499 : 500);
+    expect(current.home).toHaveBeenCalledTimes(mode === "tap" ? 0 : 1);
+    current.doc.fire("pointerup", pointer("pointerup"));
+    const click = pointer("click");
+    root.fire("click", click);
+    if (click.stopImmediatePropagation.mock.calls.length === 0) {
+      button.fire("click", click);
+    }
+    expect(current.home).toHaveBeenCalledOnce();
+    expect(gesture.down).not.toHaveBeenCalled();
+    expect(gesture.up).not.toHaveBeenCalled();
+    current.shown.destroy();
+  },
+);

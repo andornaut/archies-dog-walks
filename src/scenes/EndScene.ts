@@ -97,8 +97,6 @@ export class EndScene extends Scene {
   private hold: { readonly badge: number; readonly press: HoldPress } | undefined;
   private presses: TargetPressListener | undefined;
   private reduced = false;
-  // Back to title, which bobs as Start walk does, and still while pressed.
-  private homePressed = false;
   private nativeStep: (() => void) | undefined;
   private beginNative: (() => void) | undefined;
   private returnHomeStep: (() => void) | undefined;
@@ -117,7 +115,6 @@ export class EndScene extends Scene {
     const walk = save.stats.lastWalk;
     const goHome = () => this.scene.start(SCENE_KEYS.start);
     this.returnHomeStep = undefined;
-    this.homePressed = false;
     this.nativeStep = undefined;
     this.beginNative = undefined;
     this.html = undefined;
@@ -188,15 +185,21 @@ export class EndScene extends Scene {
     this.badges = earnedBadges(gameData, earned);
     const badgeHits =
       strip === undefined ? [] : badgeStripHits(strip.panel, strip.rows, this.badges.length);
-    const targetAt = (x: number, y: number) =>
-      topSectionButtonAt(END_BAR_BUTTONS, x, y) === undefined
-        ? endTargetAt(
-            { badgeHits, button: view.button.hit, cardOpen: this.card !== undefined },
-            x,
-            y,
-          )
-        : undefined;
-    const start = (at: { x: number; y: number }, target: EndTarget | undefined) => {
+    const targetAt = (x: number, y: number) => {
+      const target =
+        topSectionButtonAt(END_BAR_BUTTONS, x, y) === undefined
+          ? endTargetAt(
+              { badgeHits, button: view.button.hit, cardOpen: this.card !== undefined },
+              x,
+              y,
+            )
+          : undefined;
+      return target === "home" ? undefined : target;
+    };
+    const start = (
+      at: { x: number; y: number },
+      target: Exclude<EndTarget, "home"> | undefined,
+    ) => {
       this.html?.burst(at);
       this.hold =
         typeof target === "object"
@@ -357,7 +360,7 @@ export class EndScene extends Scene {
     };
     // Badges have no tap action of their own, so a tap opens a badge's card as a hold does.
     // With a card open, a tap anywhere closes it.
-    this.presses = listenTargetPress<EndTarget>(this, {
+    this.presses = listenTargetPress<Exclude<EndTarget, "home">>(this, {
       onDown: (pointer, target) => start(pointer, target),
       onMove: (pointer) => {
         if (pointer.isDown) {
@@ -365,7 +368,6 @@ export class EndScene extends Scene {
         }
       },
       onPressed: (target) => {
-        this.homePressed = target === "home";
         if (target === undefined) {
           this.hold = undefined;
         }
@@ -373,8 +375,6 @@ export class EndScene extends Scene {
       onTap: (target) => {
         if (target === "dismiss") {
           this.closeCard();
-        } else if (target === "home") {
-          goHome();
         } else {
           this.openCard(target.badge);
         }
@@ -515,10 +515,7 @@ export class EndScene extends Scene {
       begin();
     }
     this.nativeStep?.();
-    this.html?.setButton(
-      this.homePressed,
-      this.homePressed ? 0 : bobOffset(this.reduced, this.time.now, true),
-    );
+    this.html?.setButton(false, bobOffset(this.reduced, this.time.now, true));
     if (this.hold !== undefined) {
       const { fire, press } = tickHold(this.time.now, this.hold.press);
       this.hold = { ...this.hold, press };
