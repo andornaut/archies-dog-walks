@@ -3,12 +3,12 @@ import { describe, expect, it } from "vitest";
 
 import { gameData } from "../data/index.ts";
 import { SCREEN_CONFIG } from "../data/screen.ts";
-import { fontFileMetrics, gameFont } from "../testing/fontInk.ts";
+import { fontFileMetrics, gameFont, inkWidth as fontInkWidth } from "../testing/fontInk.ts";
 import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";
-import { MODAL } from "../ui/modal/layout.ts";
+import { MODAL, modalActionWidth } from "../ui/modal/layout.ts";
 import { modalTitleInk } from "../ui/modal/titleRole.ts";
 import type { PanelMeasure } from "../ui/modal/types.ts";
-import { NEXT_WALK_OFF } from "./cheats.ts";
+import { BANK_GRANTS, NEXT_WALK_OFF } from "./cheats.ts";
 import { type CheatRow, cheatRows, type CheatsState, cheatsView } from "./cheatsView.ts";
 
 const MEASURE: PanelMeasure = {
@@ -126,18 +126,109 @@ describe("cheatsView", () => {
     }
   });
 
-  it("draws the Add buttons compact, two to a row and apart, and every other action full width", () => {
+  it("sizes horizontal Add actions to their labels and keeps the vertical actions full width", () => {
     const pairs = current.rows.filter(({ buttons }) => buttons.length === 2);
     expect(pairs.length).toBeGreaterThan(0);
     for (const { buttons } of pairs) {
       const [a, b] = buttons;
-      expect(a!.rect).toMatchObject(BUTTON_SIZE.compact);
+      for (const button of buttons) {
+        expect(button.rect.width).toBe(modalActionWidth(MEASURE.inkWidth("title", button.label)));
+        expect(button.rect.height).toBe(BUTTON_SIZE.compact.height);
+      }
       expect(rectsOverlap(a!.rect, b!.rect)).toBe(false);
-      expect(b!.rect.x - (a!.rect.x + a!.rect.width)).toBe(BUTTON_SIZE.gap);
+      if (a!.rect.y === b!.rect.y) {
+        expect(b!.rect.x - (a!.rect.x + a!.rect.width)).toBe(BUTTON_SIZE.gap);
+      } else {
+        expect(b!.rect.y - (a!.rect.y + a!.rect.height)).toBe(BUTTON_SIZE.stackGap);
+      }
     }
     const reset = current.rows.find(({ label }) => label === words.cheats.resetSave);
     expect(reset?.buttons[0]?.rect.width).toBe(reset?.rect.width);
   });
+});
+
+const ACTUAL_MEASURE: PanelMeasure = {
+  ...MEASURE,
+  inkWidth: (font, label) =>
+    fontInkWidth(`font-${font}`, { scale: 2 }, font === "title" ? label.toUpperCase() : label),
+};
+
+it("centres each real-money action row, including the lone final grant, without changing actions", () => {
+  const current = cheatsView(
+    ACTUAL_MEASURE,
+    { data: gameData, screen: SCREEN_CONFIG, words },
+    HOME,
+  );
+  const horizontal = new Set(
+    cheatRows(gameData, words, HOME).flatMap((row) =>
+      row.kind === "buttons" && row.compact ? row.buttons.map(({ label }) => label) : [],
+    ),
+  );
+  const rows = current.rows.filter((row) => row.buttons.some(({ label }) => horizontal.has(label)));
+  expect(rows.some((row) => row.buttons.length === 1)).toBe(true);
+  expect(
+    rows.flatMap((row) =>
+      row.buttons.flatMap(({ action }) => (action.kind === "addBank" ? [action.amount] : [])),
+    ),
+  ).toEqual(BANK_GRANTS);
+  for (const row of rows) {
+    const left = Math.min(...row.buttons.map(({ rect }) => rect.x));
+    const right = Math.max(...row.buttons.map(({ rect }) => rect.x + rect.width));
+    expect((left + right) / 2).toBe(row.rect.x + row.rect.width / 2);
+    for (const button of row.buttons) {
+      expect(button.rect.width).toBe(
+        modalActionWidth(ACTUAL_MEASURE.inkWidth("title", button.label)),
+      );
+      expect(button.hit).toEqual(button.rect);
+    }
+  }
+});
+
+it("fits the exact available width and wraps one pixel beyond it into centred intrinsic rows", () => {
+  const baseline = cheatsView(
+    ACTUAL_MEASURE,
+    { data: gameData, screen: SCREEN_CONFIG, words },
+    HOME,
+  );
+  const index = baseline.rows.findIndex((row) => row.buttons.length === 2);
+  const source = baseline.rows[index]!;
+  const [first, second] = source.buttons;
+  const firstWidth = Math.floor((source.rect.width - BUTTON_SIZE.gap) / 2);
+  const secondWidth = source.rect.width - BUTTON_SIZE.gap - firstWidth;
+  const measured = (extra: number): PanelMeasure => ({
+    ...ACTUAL_MEASURE,
+    inkWidth: (font, label) =>
+      label === first!.label
+        ? firstWidth - 2 * MODAL.pad
+        : label === second!.label
+          ? secondWidth - 2 * MODAL.pad + extra
+          : ACTUAL_MEASURE.inkWidth(font, label),
+  });
+  const exact = cheatsView(measured(0), { data: gameData, screen: SCREEN_CONFIG, words }, HOME);
+  const wrapped = cheatsView(measured(1), { data: gameData, screen: SCREEN_CONFIG, words }, HOME);
+  const before = exact.rows[index]!;
+  const after = wrapped.rows[index]!;
+  expect(before.buttons.map(({ rect }) => rect.y)).toEqual([before.rect.y, before.rect.y]);
+  expect(before.buttons[0]!.rect.x).toBe(before.rect.x);
+  expect(before.buttons[1]!.rect.x + before.buttons[1]!.rect.width).toBe(
+    before.rect.x + before.rect.width,
+  );
+  expect(after.buttons[1]!.rect.y - after.buttons[0]!.rect.y).toBe(
+    BUTTON_SIZE.compact.height + BUTTON_SIZE.stackGap,
+  );
+  for (const { rect } of after.buttons) {
+    expect(rect.x + rect.width / 2).toBe(after.rect.x + after.rect.width / 2);
+  }
+  expect(
+    after.buttons.map(({ action, available, label }) => ({ action, available, label })),
+  ).toEqual(before.buttons.map(({ action, available, label }) => ({ action, available, label })));
+  expect(after.rect.width).toBe(before.rect.width);
+  expect(wrapped.layout.contentHeight - exact.layout.contentHeight).toBe(
+    BUTTON_SIZE.compact.height + BUTTON_SIZE.stackGap,
+  );
+  expect(wrapped.rows[index + 1]!.rect.y - exact.rows[index + 1]!.rect.y).toBe(
+    BUTTON_SIZE.compact.height + BUTTON_SIZE.stackGap,
+  );
 });
 
 describe("the Grant rows", () => {

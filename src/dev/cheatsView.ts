@@ -10,7 +10,7 @@ import { MENU_TEXT_FIELDS } from "../home/menuText.ts";
 import { dollarText } from "../presentation/currency.ts";
 import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";
 import { dismissFooter } from "../ui/modal/dismissFooter.ts";
-import { MODAL, modalFamilyWidth, modalRect } from "../ui/modal/layout.ts";
+import { MODAL, modalActionWidth, modalFamilyWidth, modalRect } from "../ui/modal/layout.ts";
 import type { PanelButton, PanelMeasure, PanelText, QuestionPanelView } from "../ui/modal/types.ts";
 import { modalCardView, panelButton } from "../ui/modal/view.ts";
 import { PALETTE } from "../ui/palette.ts";
@@ -40,7 +40,7 @@ export type CheatAction =
 
 // One full-width row: a group's heading, the divider before the actions that are no cheats, an
 // On/Off switch, a picker that a press moves to its next choice, the seed's field, an action
-// button, or up to two compact Add buttons.
+// button, or measured horizontal Add buttons that wrap within their row.
 export type CheatRow =
   | { readonly kind: "divider" }
   | { readonly kind: "heading"; readonly text: string }
@@ -66,7 +66,7 @@ export type CheatRow =
         readonly enabled: boolean;
         readonly label: string;
       }[];
-      // Compact Add buttons, two to a row, or one full-width action.
+      // Horizontal Add actions, or a full-width member of the vertical action stack.
       readonly compact: boolean;
       readonly kind: "buttons";
     };
@@ -215,12 +215,53 @@ const SCROLLBAR_INSET = 8;
 // Between the rows' right edge and the scrollbar's track.
 const SCROLL_GAP = 4;
 
-function rowHeight(row: CheatRow): number {
+function horizontalActions(
+  measure: Pick<PanelMeasure, "inkWidth">,
+  area: Rect,
+  buttons: Extract<CheatRow, { kind: "buttons" }>["buttons"],
+): Rect[] {
+  const widths = buttons.map(({ label }) => modalActionWidth(measure.inkWidth("title", label)));
+  const lines: number[][] = [];
+  let used = 0;
+  widths.forEach((width, index) => {
+    if (width > area.width) {
+      throw new RangeError("Cheat action label exceeds its fixed-font row");
+    }
+    if (lines.length === 0 || used + gap + width > area.width) {
+      lines.push([]);
+      used = 0;
+    }
+    lines.at(-1)!.push(index);
+    used += (used === 0 ? 0 : gap) + width;
+  });
+  return lines.flatMap((line, row) => {
+    const width = line.reduce((sum, index) => sum + widths[index]!, 0) + (line.length - 1) * gap;
+    let x = area.x + (area.width - width) / 2;
+    return line.map((index) => {
+      const rect = {
+        height: compact.height,
+        width: widths[index]!,
+        x,
+        y: area.y + row * (compact.height + stackGap),
+      };
+      x += rect.width + gap;
+      return rect;
+    });
+  });
+}
+
+function rowHeight(measure: Pick<PanelMeasure, "inkWidth">, width: number, row: CheatRow): number {
   switch (row.kind) {
     case "divider":
       return DIVIDER_HEIGHT;
     case "heading":
       return HEADING_HEIGHT;
+    case "buttons": {
+      const last = row.compact
+        ? horizontalActions(measure, { height: 0, width, x: 0, y: 0 }, row.buttons).at(-1)
+        : undefined;
+      return last === undefined ? compact.height : last.y + last.height;
+    }
     default:
       return compact.height;
   }
@@ -240,6 +281,7 @@ export interface CheatsLayout {
 // The Large card, as tall as the screen less its margins, its title row at the top, its Close
 // at the bottom, and the rows stacked in the body between, a list's gap apart.
 export function cheatsLayout(
+  measure: Pick<PanelMeasure, "inkWidth">,
   screen: { readonly height: number; readonly width: number },
   rows: readonly CheatRow[],
 ): CheatsLayout {
@@ -253,7 +295,7 @@ export function cheatsLayout(
   const rowWidth = trackX - SCROLL_GAP - x;
   let y = top;
   const rects = rows.map((row) => {
-    const rect = { height: rowHeight(row), width: rowWidth, x, y };
+    const rect = { height: rowHeight(measure, rowWidth, row), width: rowWidth, x, y };
     y += rect.height + stackGap;
     return rect;
   });
@@ -338,12 +380,9 @@ function rowView(measure: PanelMeasure, row: CheatRow, rect: Rect): CheatRowView
         texts: [rowText(measure, PALETTE.plum, rect, row.text, { left: rect.x })],
       };
     case "buttons": {
-      const count = row.buttons.length;
-      const full = !row.compact;
-      const span = full ? rect.width : count * compact.width + (count - 1) * gap;
-      const left = rect.x + (rect.width - span) / 2;
+      const faces = row.compact ? horizontalActions(measure, rect, row.buttons) : undefined;
       const buttons = row.buttons.map((button, i) => {
-        const face = full ? rect : { ...compact, x: left + i * (compact.width + gap), y: rect.y };
+        const face = faces?.[i] ?? rect;
         return {
           ...panelButton(measure, face, false, button.label),
           action: button.action,
@@ -418,7 +457,7 @@ export function cheatsView(
 ): CheatsView {
   const { data, screen, words } = context;
   const rows = cheatRows(data, words, state);
-  const layout = cheatsLayout(screen, rows);
+  const layout = cheatsLayout(measure, screen, rows);
   return {
     card: {
       ...modalCardView(measure, layout.panel, words.cheats.title, []),
