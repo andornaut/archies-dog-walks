@@ -1,3 +1,5 @@
+import { EventEmitter } from "node:events";
+
 import { expect, it, vi } from "vitest";
 
 import { gameData } from "../data/index.ts";
@@ -13,7 +15,7 @@ const stopMusic = vi.fn();
 vi.mock("phaser", () => ({
   Core: { Events: {} },
   Scene: class {},
-  Scenes: { Events: {} },
+  Scenes: { Events: { SHUTDOWN: "shutdown" } },
 }));
 vi.mock("./questionPanel.ts", async (original) => ({
   ...(await original<typeof import("./questionPanel.ts")>()),
@@ -29,20 +31,22 @@ it("keeps only the existing safe Keep walking and End walk answers in the confir
   questionPanel.mockClear();
   const onResume = vi.fn();
   const onHeadHome = vi.fn();
+  const events = new EventEmitter();
+  const scene = Object.assign(new PauseScene(), {
+    events,
+    scene: { get: () => ({ hudView: () => undefined }) },
+  });
   const mount = (
     PauseScene.prototype as unknown as {
       mount: (data: PauseSceneData) => boolean;
     }
   ).mount;
-  mount.call(
-    { scene: { get: () => ({ hudView: () => undefined }) } },
-    {
-      mode: "homeQuestion",
-      note: [],
-      onHeadHome,
-      onResume,
-    },
-  );
+  mount.call(scene, {
+    mode: "homeQuestion",
+    note: [],
+    onHeadHome,
+    onResume,
+  });
   const question = questionPanel.mock.calls[0]![2];
   expect("footer" in question).toBe(false);
   expect(question.entries.map(({ label }) => label)).toEqual([
@@ -55,6 +59,7 @@ it("keeps only the existing safe Keep walking and End walk answers in the confir
   question.entries[1]!.press();
   expect(onHeadHome).toHaveBeenCalledOnce();
   expect(stopMusic).toHaveBeenCalledOnce();
+  events.emit("shutdown");
 });
 
 it("keeps Quit's safe answer and corner cancel without a duplicate labelled Close", () => {
