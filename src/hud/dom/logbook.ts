@@ -6,6 +6,7 @@ import { logbookScrollbar, type LogbookView } from "../../home/logbookView.ts";
 import type { ShopPageView } from "../../home/shopPageView.ts";
 import { earnedBand, statsTabRects } from "../../home/statsLayout.ts";
 import { pageCloseControl } from "../../ui/closeControl.ts";
+import { contentSeparatorPart } from "../../ui/dom/contentSeparator.ts";
 import { createGameButton } from "../../ui/dom/gameButton.ts";
 import type { NativeGesture } from "../../ui/dom/modalLifecycle.ts";
 import { setBox } from "../../ui/dom/pixelLine.ts";
@@ -19,6 +20,7 @@ import {
   scrollbarBoxes,
   wholeArtPixels,
 } from "../../ui/domScale.ts";
+import { PALETTE } from "../../ui/palette.ts";
 import { artPart, type DomDetailCardInput, textPart } from "./detailCard.ts";
 import { bindPanelFeedback } from "./panelButton.ts";
 import { type DomPart, type DomQuestionPanel, showQuestionPanel } from "./questionPanel.ts";
@@ -184,9 +186,15 @@ export function showLogbook(layer: UiLayer, input: DomLogbookInput): DomLogbook 
         box.y >= row.y &&
         box.y + box.height <= row.y + row.height,
     );
-  const painted = [
+  const painted: { readonly part: DomPart; readonly row: number }[] = [
     // Background fills keep their original stacking and coordinates outside action content.
-    ...content.fills.map((fill) => ({ part: fillPart(doc, fill), row: -1 })),
+    ...content.fills.map((fill) => ({
+      part:
+        fill.rect.height === 1 && fill.colour === PALETTE.tan
+          ? contentSeparatorPart(doc, "art", fill.rect)
+          : fillPart(doc, fill),
+      row: -1,
+    })),
     ...content.framed.map((framed) => ({
       part: framedBoxPart(doc, framed),
       row: view.wallRows.findIndex((row) => {

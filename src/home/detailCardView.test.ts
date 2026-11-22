@@ -65,32 +65,35 @@ it("places the owner below the portrait row, photo aligned to the dog-art column
   expect(view.separators).toHaveLength(1);
 });
 
-it("centres the price mark and amount together and the saving prompt as a separate full-font row", () => {
-  const prompt = gameData.homeText.detail.saveUp;
-  const view = detailCardView(gameData, measure, SCREEN_LAYOUT.screen, {
-    card: { ...card, locked: true },
-    kind: "dog",
-    picture,
-    statusLines: [
-      { kind: "price", text: card.status },
-      { kind: "status", text: prompt },
-    ],
-  });
-  const price = view.texts.find((text) => text.font === "title")!;
-  const saving = view.texts.find((text) => text.lines.join(" ") === prompt)!;
-  for (const text of [price, saving]) {
-    expect(text.align).toBe("inkCentre");
-    expect(text.x).toBe(view.card.panel.x + view.card.panel.width / 2);
-    expect(text.scale ?? 2).toBe(2);
-  }
-  expect(view.separators).toHaveLength(2);
-  expect(price.spans!.map(({ text }) => text).join("")).toBe(card.status);
-  expect(price.spans!.at(-1)!.colour).toBe(PALETTE.darkRed);
-  expect(price.spans![1]).toEqual({ colour: PALETTE.forest, text: "$" });
-  expect(saving.capTop - bottom(price)).toBe(MODAL.pad);
-  expect(price.capTop - (view.separators!.at(-1)!.y + 1)).toBe(MODAL.gap + MODAL.rowGap);
-  expect(view.card.footer!.rect.y - bottom(saving)).toBe(MODAL.pad);
-});
+it.each([false, true])(
+  "centres a single-ink price and separate status row when locked is %s",
+  (locked) => {
+    const prompt = gameData.homeText.detail.saveUp;
+    const view = detailCardView(gameData, measure, SCREEN_LAYOUT.screen, {
+      card: { ...card, locked },
+      kind: "dog",
+      picture,
+      statusLines: [
+        { kind: "price", text: card.status },
+        { kind: "status", text: prompt },
+      ],
+    });
+    const price = view.texts.find((text) => text.font === "title")!;
+    const saving = view.texts.find((text) => text.lines.join(" ") === prompt)!;
+    for (const text of [price, saving]) {
+      expect(text.align).toBe("inkCentre");
+      expect(text.x).toBe(view.card.panel.x + view.card.panel.width / 2);
+      expect(text.scale ?? 2).toBe(2);
+    }
+    expect(view.separators).toHaveLength(2);
+    expect(price.spans).toBeUndefined();
+    expect(price.colour).toBe(locked ? PALETTE.darkRed : PALETTE.plum);
+    expect(saving.colour).toBe(locked ? PALETTE.darkRed : PALETTE.forest);
+    expect(saving.capTop - bottom(price)).toBe(MODAL.pad);
+    expect(price.capTop - (view.separators!.at(-1)!.y + 1)).toBe(MODAL.gap + MODAL.rowGap);
+    expect(view.card.footer!.rect.y - bottom(saving)).toBe(MODAL.pad);
+  },
+);
 
 it("uses the same card for Cancel and primary Buy, appending bank context only once", () => {
   const purchase = {

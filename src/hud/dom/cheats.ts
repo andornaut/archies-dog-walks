@@ -2,6 +2,7 @@ import type { Point, Rect } from "@andornaut/game-kit/runtime/rect";
 
 import type { CheatAction, CheatRowView, CheatsView } from "../../dev/cheatsView.ts";
 import { type DomArtSource, sheetArt } from "../../ui/dom/artElements.ts";
+import { createContentSeparator, placeContentSeparator } from "../../ui/dom/contentSeparator.ts";
 import { createGameButton } from "../../ui/dom/gameButton.ts";
 import {
   blockPlace,
@@ -110,15 +111,14 @@ function headingPart(doc: Document, input: DomCheatsInput, origin: Point): RowPa
 }
 
 function dividerPart(doc: Document, origin: Point): RowPart {
-  const element = doc.createElement("span");
-  element.className = "adw-framed adw-separator";
+  const element = createContentSeparator(doc);
   return {
     controls: [],
     element,
     place: (scale, row) => {
       const { rect } = row;
       const line = { height: 1, width: rect.width, x: rect.x, y: rect.y + rect.height / 2 };
-      placeFrame(scale, origin, element, line);
+      placeContentSeparator(scale, { origin, projection: "art" }, element, line);
     },
     ready: Promise.resolve([]),
   };

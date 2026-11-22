@@ -7,6 +7,7 @@ import { END_LAYOUT } from "../../home/endLayout.ts";
 import type { EndResults, EndScreenView } from "../../home/endScreenView.ts";
 import { closeControl } from "../../ui/closeControl.ts";
 import { sheetArt } from "../../ui/dom/artElements.ts";
+import { contentSeparatorPart } from "../../ui/dom/contentSeparator.ts";
 import { createGameButton } from "../../ui/dom/gameButton.ts";
 import {
   createTextLine,
@@ -326,7 +327,7 @@ export function showEndScreen(layer: UiLayer, input: DomEndScreenInput): DomEndS
     view.button,
   );
   const ownerParts: DomPart[] = [
-    fillPart(doc, { colour: PALETTE.tan, rect: results.rule }),
+    contentSeparatorPart(doc, "art", results.rule),
     ...results.wells.map((rect) => fillPart(doc, { colour: PALETTE.tan, rect })),
     ...results.bubbles.map((rect) => bubblePart(doc, rect)),
     ...results.ownerRows.art.map((art) => artPart(doc, input, art)),

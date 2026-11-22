@@ -416,21 +416,9 @@ export function detailCardView(
     addText(content, measure, {
       align: "inkCentre",
       capTop: row.y,
-      colour: colours.status,
+      colour: dollar >= 0 ? (card.locked ? PALETTE.darkRed : PALETTE.plum) : colours.status,
       font: row.font,
       lines: [row.text],
-      ...(dollar < 0
-        ? {}
-        : {
-            spans: [
-              { colour: PALETTE.plum, text: row.text.slice(0, dollar) },
-              { colour: PALETTE.forest, text: row.text.slice(dollar, dollar + 1) },
-              {
-                colour: card.locked ? PALETTE.darkRed : PALETTE.plum,
-                text: row.text.slice(dollar + 1),
-              },
-            ],
-          }),
       x: width / 2,
     });
   }

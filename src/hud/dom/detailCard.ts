@@ -3,6 +3,7 @@ import type { BitmapFont } from "@andornaut/game-kit/runtime/text/bitmapFont";
 
 import { domArtPath } from "../../assets/domArt.ts";
 import type { DetailArt, DetailCardView, DetailText } from "../../home/detailCardView.ts";
+import { contentSeparatorPart } from "../../ui/dom/contentSeparator.ts";
 import { blockPlace, setBox, shownText, spokenText } from "../../ui/dom/pixelLine.ts";
 import { type SheetFrame, sheetFrame } from "../../ui/dom/sheetFrames.ts";
 import type { UiLayer } from "../../ui/dom/uiLayer.ts";
@@ -17,7 +18,6 @@ import {
   gridY,
   wholeArtPixels,
 } from "../../ui/domScale.ts";
-import { PALETTE } from "../../ui/palette.ts";
 import { TEXT_SCALE } from "../../ui/textFit.ts";
 import {
   type DomPart,
@@ -297,16 +297,7 @@ export function showDetailCard(layer: UiLayer, input: DomDetailCardInput): DomQu
   texts.append(...textParts.map(({ element }) => element));
   const parts: DomPart[] = [
     ...view.framed.map((framed) => framedPart(doc, framed)),
-    ...(view.separators ?? []).map((rect) => {
-      const element = doc.createElement("span");
-      element.setAttribute("aria-hidden", "true");
-      Object.assign(element.style, {
-        backgroundColor: hex(PALETTE.tan),
-        pointerEvents: "none",
-        position: "absolute",
-      });
-      return { element, place: (scale: DomScale) => setBox(element, gridRect(scale, rect)) };
-    }),
+    ...(view.separators ?? []).map((rect) => contentSeparatorPart(doc, "grid", rect)),
     ...view.art.map((art) => artPart(doc, input, art)),
     {
       element: texts,

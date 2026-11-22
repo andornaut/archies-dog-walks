@@ -15,9 +15,10 @@ const SHAKE_KEYFRAMES = refuseShakeSteps()
 // alone) and flashes its label red, or, under reduced motion, holds its label red, as
 // refuseControl does on the canvas. The panel sets the flash's times on the control.
 export const CONTROL_STATE_STYLE = `
-.adw-button.adw-disabled .adw-face{border-image-source:var(--adw-ui-button-disabled);
+.adw-button.adw-disabled .adw-face:not(.adw-standard-button-face){border-image-source:var(--adw-ui-button-disabled);
   background-color:var(--adw-neutralGrey)}
-.adw-button.adw-go.adw-disabled .adw-face{border-image-source:var(--adw-ui-button-go-disabled)}
+.adw-button.adw-go.adw-disabled .adw-face:not(.adw-standard-button-face){
+  border-image-source:var(--adw-ui-button-go-disabled)}
 .adw-refusing,.adw-shaking{animation:adw-shake ${2 * REFUSE.shakeMs}ms step-end ${REFUSE_SHAKES}}
 .adw-refusing .adw-text{animation:adw-flash var(--adw-flash-ms) step-end var(--adw-flashes)}
 .adw-refusing-still .adw-text{animation:adw-red var(--adw-refuse-ms) step-end}

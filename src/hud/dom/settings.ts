@@ -18,6 +18,7 @@ import {
   sheetArt,
   sheetThreeSlice,
 } from "../../ui/dom/artElements.ts";
+import { createContentSeparator, placeContentSeparator } from "../../ui/dom/contentSeparator.ts";
 import { guardNativeInput } from "../../ui/dom/modalLifecycle.ts";
 import {
   blockPlace,
@@ -453,11 +454,7 @@ export function showSettings(layer: UiLayer, input: DomSettingsInput): DomSettin
       burst,
     ),
   );
-  const separators = current.separators.map(() => {
-    const element = doc.createElement("span");
-    element.className = "adw-framed adw-separator";
-    return element;
-  });
+  const separators = current.separators.map(() => createContentSeparator(doc));
   const build = createTextLine(doc, current.build);
   content.append(...rows.map((row) => row.element), ...separators);
   const revealRow = (index: number | undefined) => {
@@ -492,7 +489,12 @@ export function showSettings(layer: UiLayer, input: DomSettingsInput): DomSettin
         separators.forEach((element, index) => {
           const rect = current.separators[index];
           if (rect !== undefined) {
-            placeFrame(scale, current.rowsViewport, element, rect);
+            placeContentSeparator(
+              scale,
+              { origin: current.rowsViewport, projection: "art" },
+              element,
+              rect,
+            );
           }
         });
       },
