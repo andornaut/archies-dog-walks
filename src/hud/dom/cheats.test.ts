@@ -4,14 +4,14 @@ import { gameData } from "../../data/index.ts";
 import { SCREEN_CONFIG } from "../../data/screen.ts";
 import { NEXT_WALK_OFF } from "../../dev/cheats.ts";
 import { cheatsView } from "../../dev/cheatsView.ts";
-import { FakeDocument, fakeLayer } from "../../testing/fakeDom.ts";
+import { FakeDocument, type FakeElement, fakeLayer, layerViews } from "../../testing/fakeDom.ts";
 import { fontFileMetrics, gameFont } from "../../testing/fontInk.ts";
 import { ownArtFrames } from "../../testing/ownArtFrames.ts";
 import { domScale } from "../../ui/domScale.ts";
 import { modalTitleInk } from "../../ui/modal/titleRole.ts";
 import { showCheats } from "./cheats.ts";
 
-it("keeps Cheats actions guarded and disposable while the seed remains an editable control", async () => {
+async function cheatsScreen(inWalk = false) {
   const doc = new FakeDocument();
   const { element, layer } = fakeLayer(doc, domScale(1, { height: 560, width: 360, x: 0, y: 0 }));
   const view = cheatsView(
@@ -27,7 +27,7 @@ it("keeps Cheats actions guarded and disposable while the seed remains an editab
       fpsCounter: false,
       linkCopied: false,
       next: NEXT_WALK_OFF,
-      walk: undefined,
+      walk: inWalk ? { canFinish: false, upgradesLeft: [] } : undefined,
     },
   );
   const act = vi.fn();
@@ -45,6 +45,31 @@ it("keeps Cheats actions guarded and disposable while the seed remains an editab
     view,
   });
   await vi.waitFor(() => expect(shown.accepts()).toBe(true));
+  const [dialog] = layerViews(element);
+  const pointerClick = (control: FakeElement) => {
+    const event = {
+      button: 0,
+      buttons: 1,
+      clientX: 10,
+      clientY: 10,
+      isPrimary: true,
+      pointerId: 7,
+      target: control,
+      timeStamp: performance.now(),
+    };
+    dialog!.fire("pointerdown", { ...event, type: "pointerdown" });
+    doc.fire("pointerup", { ...event, buttons: 0, type: "pointerup" });
+    const click = { ...event, buttons: 0, detail: 1, stopImmediatePropagation: vi.fn() };
+    dialog!.fire("click", click);
+    if (click.stopImmediatePropagation.mock.calls.length === 0) {
+      control.fire("click", click);
+    }
+  };
+  return { act, element, pointerClick, seed, shown, view };
+}
+
+it("keeps Cheats actions guarded and disposable while the seed remains an editable control", async () => {
+  const { act, element, pointerClick, seed, shown, view } = await cheatsScreen();
   const action = view.rows
     .flatMap((row) => row.buttons)
     .find((button) => button.available !== false)!;
@@ -62,7 +87,15 @@ it("keeps Cheats actions guarded and disposable while the seed remains an editab
   const refused = element
     .all()
     .find((node) => node.getAttribute("aria-label") === unavailable.label)!;
-  refused.fire("click");
+  expect(refused.tabIndex).toBe(-1);
+  expect(refused.getAttribute("aria-description")).toBeNull();
+  refused.fire("click", { detail: 0 });
+  expect(refused.classList.contains("adw-refusing-still")).toBe(false);
+  shown.setInert(true);
+  pointerClick(refused);
+  expect(refused.classList.contains("adw-refusing-still")).toBe(false);
+  shown.setInert(false);
+  pointerClick(refused);
   expect(act).toHaveBeenCalledTimes(1);
   expect(refused.getAttribute("aria-disabled")).toBe("true");
   expect(refused.classList.contains("adw-refusing-still")).toBe(true);
@@ -73,4 +106,34 @@ it("keeps Cheats actions guarded and disposable while the seed remains an editab
   shown.destroy();
   button.fire("click");
   expect(act).toHaveBeenCalledTimes(1);
+});
+
+it("keeps disabled Cheats picker rows pointer-only while the native seed remains disabled", async () => {
+  const { act, element, pointerClick, shown, view } = await cheatsScreen(true);
+  const row = view.rows.find((row) => row.action !== undefined && !row.enabled)!;
+  const control = element
+    .all()
+    .find((node) => node.getAttribute("aria-label") === `${row.label}: ${row.value}`)!;
+  const refusing = () =>
+    control.all().some((node) => node.classList.contains("adw-refusing-still"));
+  expect(control.disabled).toBe(false);
+  expect(control.tabIndex).toBe(-1);
+  expect(control.getAttribute("aria-disabled")).toBe("true");
+  expect(control.getAttribute("aria-description")).toBeNull();
+  control.fire("click", { detail: 0 });
+  expect(refusing()).toBe(false);
+  shown.setInert(true);
+  pointerClick(control);
+  expect(refusing()).toBe(false);
+  shown.setInert(false);
+  pointerClick(control);
+  expect(refusing()).toBe(true);
+  expect(act).not.toHaveBeenCalled();
+  expect(element.all().find((node) => node.tagName === "input")?.disabled).toBe(true);
+  shown.destroy();
+  for (const node of control.all()) {
+    node.classList.remove("adw-refusing-still");
+  }
+  pointerClick(control);
+  expect(refusing()).toBe(false);
 });

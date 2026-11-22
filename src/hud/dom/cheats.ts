@@ -150,10 +150,10 @@ function buttonsPart(
       getState: () => ({
         availability:
           current().buttons[i]?.available === false
-            ? { kind: "unavailable", reason: current().buttons[i]!.label }
+            ? { kind: "pointer-refusal" }
             : { kind: "available" },
       }),
-      onUnavailable: () => {
+      onPointerRefusal: () => {
         if (press.accepts()) {
           refuse(view.element, input.reducedMotion());
         }
@@ -230,9 +230,9 @@ function settingRowPart(
       availability:
         current().enabled && current().action !== undefined
           ? { kind: "available" }
-          : { kind: "unavailable", reason: current().label },
+          : { kind: "pointer-refusal" },
     }),
-    onUnavailable: () => {
+    onPointerRefusal: () => {
       if (press.accepts()) {
         refuse(texts, input.reducedMotion());
       }
