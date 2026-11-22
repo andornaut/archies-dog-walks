@@ -10,7 +10,7 @@ export function createNativeHomeSession(
     readonly accepts: () => boolean;
     readonly down: (event: PointerEvent) => void;
     readonly move: (event: PointerEvent) => void;
-    readonly up: (event: PointerEvent, cancelled: boolean) => void;
+    readonly up: (event: PointerEvent, cancelled: boolean) => boolean | void;
     readonly cancel: () => void;
     readonly activate: (id: string) => void;
     readonly painted: () => void;
@@ -102,6 +102,9 @@ export function createNativeHomeSession(
       view?.dispose();
       view = next;
       for (const [id, control] of next.controls) {
+        if (control === next.start?.element || control === next.slot?.element) {
+          continue;
+        }
         removeActions.push(
           bindGameAction(
             {

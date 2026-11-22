@@ -11,6 +11,7 @@ import { homeSpeechView } from "../speechView.ts";
 import type { NativeHomeView } from "./screen.ts";
 import { createNativeHomeSession } from "./session.ts";
 import { createHomeSpeech } from "./speech.ts";
+import { createStartControl } from "./startControl.ts";
 function fixture() {
   const doc = new FakeDocument();
   const { layer } = fakeLayer(doc, domScale(1, { height: 560, width: 360, x: 0, y: 0 }));
@@ -148,6 +149,61 @@ describe("native home visit", () => {
     f.doc.fire("pointerup", release);
     expect(release.stopImmediatePropagation).toHaveBeenCalledOnce();
     expect(f.context.up).not.toHaveBeenCalled();
+    f.session.dispose();
+  });
+
+  it("lets Kit alone handle an admitted Start release and keyboard refusal", async () => {
+    const f = fixture();
+    const view = f.view();
+    const refuse = vi.fn();
+    const { sectionDogs, startLoading, startWalk } = gameData.homeText;
+    const start = createStartControl(f.doc as unknown as Document, gameFont("font-title"), {
+      activate: refuse,
+      label: startWalk,
+      loading: startLoading,
+      unavailable: sectionDogs,
+      waitingAlpha: 0.5,
+    });
+    view.element.replaceChildren(start.element);
+    f.session.replace({
+      ...view,
+      controls: new Map([["start", start.element]]),
+      dispose: start.dispose,
+      start,
+    });
+    f.reveals[0]!.settle(true);
+    await Promise.resolve();
+    f.frames.shift()?.();
+    const root = f.session.element as unknown as FakeElement;
+    const button = start.element as unknown as FakeElement;
+    const event = (type: string, detail: number) => ({
+      button: 0,
+      detail,
+      isPrimary: true,
+      pointerId: 1,
+      preventDefault: vi.fn(),
+      stopImmediatePropagation: vi.fn(),
+      target: button,
+      type,
+    });
+    const click = (detail: number) => {
+      const action = event("click", detail);
+      root.fire("click", action);
+      if (action.stopImmediatePropagation.mock.calls.length === 0) {
+        button.fire("click", action);
+      }
+    };
+    for (const consumed of [true, false]) {
+      f.context.up.mockReturnValueOnce(consumed);
+      root.fire("pointerdown", event("pointerdown", 1));
+      f.doc.fire("pointerup", event("pointerup", 1));
+      click(1);
+      expect(refuse).toHaveBeenCalledTimes(consumed ? 0 : 1);
+    }
+    expect(button.getAttribute("aria-description")).toBe(sectionDogs);
+    click(0);
+    expect(refuse).toHaveBeenCalledTimes(2);
+    expect(f.context.activate).not.toHaveBeenCalled();
     f.session.dispose();
   });
   it("keeps a replaced Sound off notice under the actual Home session dim while a modal scope is open", async () => {

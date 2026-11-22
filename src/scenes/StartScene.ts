@@ -62,7 +62,7 @@ import { renderHomeBackdrop } from "../home/phaser/homeBackdrop.ts";
 import { nativeFrames } from "../home/phaser/nativeFrames.ts";
 import { porchOwners } from "../home/porch.ts";
 import { answerPurchase, type PendingPurchase } from "../home/purchaseConfirm.ts";
-import { homeSections, type Sections, startReady } from "../home/sections.ts";
+import { homeSections, type Sections } from "../home/sections.ts";
 import { type HomeSelectionView, homeSelectionViews } from "../home/selectionView.ts";
 import { shopAffordable } from "../home/shop.ts";
 import { slotSign, slotSignPurchase } from "../home/slotSign.ts";
@@ -662,7 +662,8 @@ export class StartScene extends Scene {
       y: number;
     },
     cancelled: boolean,
-  ): void {
+    native = false,
+  ): boolean {
     const down = this.overlayPress;
     const controlDown = this.closePressed();
     this.overlayPress = undefined;
@@ -674,7 +675,7 @@ export class StartScene extends Scene {
       if (controlDown && this.overlay !== undefined) {
         this.render();
       }
-      return;
+      return true;
     }
     const target = cancelled ? undefined : this.targetAt(pointer.x, pointer.y);
     const pressed = this.pressedTarget;
@@ -685,13 +686,18 @@ export class StartScene extends Scene {
       this.press.held = false;
     }
     if (target === undefined || pressed === undefined || targetId(target) !== targetId(pressed)) {
-      return;
+      return true;
+    }
+    // The native button owns the click, after this matching release clears the game press.
+    if (native && (pressed.kind === "start" || pressed.kind === "slotSign")) {
+      return false;
     }
     if (release === "hold") {
       this.dispatchHeld(pressed);
     } else if (release === "tap") {
       this.actAfterDip(target);
     }
+    return true;
   }
   private dispatchHeld(target: Target): void {
     if (target.kind === "dog" || target.kind === "gear" || target.kind === "walker") {
@@ -1082,7 +1088,7 @@ export class StartScene extends Scene {
     const save = this.save();
     const dogs = packDogsOf(this.loadout.dogs);
     const { walker } = save;
-    if (dogs === undefined || walker === null || !this.startOpen(this.sections(save))) {
+    if (dogs === undefined || walker === null || this.startUnavailable(this.sections(save))) {
       this.shakes.set("start", this.time.now);
       this.emphasiseRefusal("start");
       return;
@@ -1258,7 +1264,7 @@ export class StartScene extends Scene {
             ? -FEEDBACK.liftPx
             : 0),
       }));
-      const ready = this.startOpen(this.sections(this.save()));
+      const ready = this.startUnavailable(this.sections(this.save())) === undefined;
       const waiting = this.artWait?.kind === "start";
       const down = (dip("start") > 0 && ready) || waiting;
       view.start.place(scale, {
@@ -1283,10 +1289,15 @@ export class StartScene extends Scene {
       sprite.setY(footY + hopOffset(reduced, now, this.pops.get(targetId({ dog, kind: "dog" }))));
     }
   }
-  // Text at the 2x body size unless told otherwise.
-  // Whether Start walk takes a walk: the sections are ready and no newer version is required.
-  private startOpen(sections: Sections): boolean {
-    return startReady(sections) && requiredUpdate() === undefined && !updateAccepting();
+  // Use the visible pick headings as the reason when a required selection is missing.
+  private startUnavailable(sections: Sections): string | undefined {
+    if (requiredUpdate() !== undefined || updateAccepting()) {
+      return gameData.homeText.noticeUpdateNeeded;
+    }
+    if (sections.walker.state !== "complete") {
+      return sections.walker.heading;
+    }
+    return sections.dogs.state === "complete" ? undefined : sections.dogs.heading;
   }
   private render(): void {
     const root = this.root;
@@ -1344,7 +1355,7 @@ export class StartScene extends Scene {
         }
       },
       scaled: () => this.place(this.time.now),
-      up: (event, cancelled) => this.homePressUp(toGame(event), cancelled),
+      up: (event, cancelled) => this.homePressUp(toGame(event), cancelled, true),
     });
     const reduced = currentSettings(this).reducedMotion;
     const selection = <Id>(
@@ -1405,11 +1416,13 @@ export class StartScene extends Scene {
       isSheet: (key: string) => sheetKeys.has(key),
       loadSheet,
     };
+    const sections = this.sections(save);
     const view = createNativeHomeView(
       layer.element.ownerDocument,
       source,
       fonts,
       {
+        activate: (kind) => this.actAfterDip({ kind }),
         pillColours: (index) => {
           const kind = pillKind(index);
           return kind === undefined ? undefined : pillColours(kind);
@@ -1443,14 +1456,14 @@ export class StartScene extends Scene {
                 rect: gearRect,
                 scale: smallGear ? 1 : 0.5,
               },
-        sections: this.sections(save),
+        sections,
         selections,
         slot: sign === null ? undefined : { crop: HERO_CROP, sign },
         speech,
         start: {
           label: gameData.homeText.startWalk,
           loading: gameData.homeText.startLoading,
-          ready: this.startOpen(this.sections(save)),
+          unavailable: this.startUnavailable(sections),
           waitingAlpha: WAITING_ALPHA,
         },
         streetSign: gameData.homeText.gateSign,

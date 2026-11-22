@@ -247,6 +247,7 @@ it("projects the slot sign frame without changing hit or pressed-tag geometry", 
     doc as unknown as Document,
     source,
     gameFont("font-body"),
+    () => undefined,
     {
       height: HOME_LAYOUT.gate.height,
       width: 360,
@@ -258,10 +259,10 @@ it("projects the slot sign frame without changing hit or pressed-tag geometry", 
   await expect(view.ready).resolves.toContain("sprites/ui-slot-sign.png");
   const json = await source.loadSheet("sprites/ui-slot-sign.json");
   const frame = sheetFrame(json, "normal");
-  const image = view.element.children[0]!.children[0] as unknown as FakeElement;
-  const labels = [...view.element.children[0]!.children]
-    .filter((child) => child.className.includes("adw-text"))
-    .map((child) => child as unknown as FakeElement);
+  const image = view.element.querySelectorAll(".adw-art")[0] as unknown as FakeElement;
+  const labels = [...view.element.querySelectorAll(".adw-text")].map(
+    (child) => child as unknown as FakeElement,
+  );
   for (const [dpr, box] of [
     [1, viewport],
     [2.625, viewport],

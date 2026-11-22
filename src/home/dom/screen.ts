@@ -62,6 +62,7 @@ export function createNativeHomeView(
     readonly title: BitmapFont;
   },
   context: {
+    readonly activate: (id: "start" | "slotSign") => void;
     readonly platePadding: number;
     readonly pillColours: (index: number) =>
       | {
@@ -98,9 +99,9 @@ export function createNativeHomeView(
         }
       | undefined;
     readonly start: {
-      readonly ready: boolean;
       readonly label: string;
       readonly loading: string;
+      readonly unavailable: string | undefined;
       readonly waitingAlpha: number;
     };
   },
@@ -141,13 +142,23 @@ export function createNativeHomeView(
   if (snapshot.bubbleInteractive) {
     controls.set("bubble", speechControl as HTMLButtonElement);
   }
-  const start = createStartControl(doc, fonts.title, snapshot.start);
+  const start = createStartControl(doc, fonts.title, {
+    ...snapshot.start,
+    activate: () => context.activate("start"),
+  });
   element.append(start.element);
   controls.set("start", start.element);
   const slot =
     snapshot.slot === undefined
       ? undefined
-      : createSlotSign(doc, source, fonts.body, snapshot.slot.crop, snapshot.slot.sign);
+      : createSlotSign(
+          doc,
+          source,
+          fonts.body,
+          () => context.activate("slotSign"),
+          snapshot.slot.crop,
+          snapshot.slot.sign,
+        );
   if (slot !== undefined) {
     element.append(slot.element);
     controls.set("slotSign", slot.element);
@@ -176,6 +187,8 @@ export function createNativeHomeView(
   return {
     controls,
     dispose: () => {
+      start.dispose();
+      slot?.dispose();
       element.remove();
     },
     element,

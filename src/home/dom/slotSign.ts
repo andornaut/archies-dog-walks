@@ -5,6 +5,7 @@ import { SLICES } from "../../data/layout.ts";
 import { framedPart } from "../../hud/dom/detailCard.ts";
 import { fillPart } from "../../hud/dom/shopPage.ts";
 import { type DomArtSource, sheetArt, sheetNineSlice } from "../../ui/dom/artElements.ts";
+import { createGameButton } from "../../ui/dom/gameButton.ts";
 import { createTextLine, placeBackedText, setBox } from "../../ui/dom/pixelLine.ts";
 import type { SheetFrame } from "../../ui/dom/sheetFrames.ts";
 import { artPixel, type DomScale, gridRect, gridX, gridY } from "../../ui/domScale.ts";
@@ -19,11 +20,13 @@ export function createSlotSign(
     readonly hasArt: (key: string) => boolean;
   },
   body: BitmapFont,
+  activate: () => void,
   crop: Rect,
   sign: NonNullable<ReturnType<typeof slotSign>>,
 ): {
   readonly element: HTMLButtonElement;
   readonly ready: Promise<readonly string[]>;
+  dispose(): void;
   place(
     scale: DomScale,
     motion: {
@@ -35,16 +38,20 @@ export function createSlotSign(
   setAffordFrame(frame: SheetFrame): void;
 } {
   const layout = HOME_LAYOUT.slotSign;
-  const element = doc.createElement("button");
-  element.type = "button";
-  element.className = "adw-close";
+  const paint = doc.createElement("span");
+  paint.className = "adw-framed";
+  const button = createGameButton(doc, {
+    appearance: { className: "adw-close" },
+    content: { icon: paint, kind: "icon", name: sign.lines.join(" ") },
+    getAction: () => ({ activate }),
+    skin: "authored",
+  });
+  const { element, face } = button;
   element.style.position = "absolute";
   element.style.pointerEvents = "auto";
   element.style.overflow = "visible";
-  element.setAttribute("aria-label", sign.lines.join(" "));
-  const paint = doc.createElement("span");
-  paint.className = "adw-framed";
-  element.append(paint);
+  element.style.setProperty("--ui-button-focus-fill", "var(--adw-cyan)");
+  Object.assign(face.style, { inset: "0", pointerEvents: "none", position: "absolute" });
   const art = source.hasArt(layout.key) ? sheetArt(doc, source, layout.key) : undefined;
   const fallback =
     art === undefined
@@ -97,6 +104,7 @@ export function createSlotSign(
   let affordFrame: SheetFrame | undefined;
   let key = "";
   return {
+    dispose: button.dispose,
     element,
     place: (scale, motion) => {
       const next = [

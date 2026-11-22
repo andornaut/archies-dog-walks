@@ -1,6 +1,7 @@
 import type { BitmapFont } from "@andornaut/game-kit/runtime/text/bitmapFont";
 
 import { BUTTON_SIZE } from "../../ui/buttonGeometry.ts";
+import { createGameButton } from "../../ui/dom/gameButton.ts";
 import { createTextLine, placeFrame, placeText, setBox } from "../../ui/dom/pixelLine.ts";
 import { artPixel, type DomScale, gridRect } from "../../ui/domScale.ts";
 import { PALETTE } from "../../ui/palette.ts";
@@ -8,6 +9,7 @@ import { BUTTON_COLOURS } from "../../ui/selection.ts";
 import { HOME_LAYOUT } from "../homeLayout.ts";
 export interface NativeStartControl {
   readonly element: HTMLButtonElement;
+  dispose(): void;
   place(
     scale: DomScale,
     state: {
@@ -24,36 +26,43 @@ export function createStartControl(
   doc: Document,
   title: BitmapFont,
   input: {
-    readonly ready: boolean;
+    readonly activate: () => void;
     readonly label: string;
     readonly loading: string;
+    readonly unavailable: string | undefined;
     readonly waitingAlpha: number;
   },
 ): NativeStartControl {
-  const element = doc.createElement("button");
-  element.type = "button";
-  element.className = `adw-button adw-go${input.ready ? "" : " adw-disabled"}`;
-  element.setAttribute("aria-disabled", String(!input.ready));
-  element.style.position = "absolute";
-  element.style.pointerEvents = "auto";
-  const face = doc.createElement("span");
-  face.className = "adw-face";
-  element.append(face);
+  const ready = input.unavailable === undefined;
   const rect = HOME_LAYOUT.startButton;
   const text = {
-    capTop: rect.y + HOME_LAYOUT.startLabel.readyY + (input.ready ? 0 : BUTTON_SIZE.press),
+    capTop: rect.y + HOME_LAYOUT.startLabel.readyY + (ready ? 0 : BUTTON_SIZE.press),
     centre: "advance",
     centreX: rect.x + rect.width / 2,
-    colour: PALETTE[BUTTON_COLOURS[input.ready ? "primary" : "disabled"].label],
+    colour: PALETTE[BUTTON_COLOURS[ready ? "primary" : "disabled"].label],
     font: "title",
     scale: HOME_LAYOUT.startLabel.scale,
     text: input.label,
   } as const;
   const label = createTextLine(doc, text);
-  label.setAttribute("aria-hidden", "true");
-  element.append(label);
+  const button = createGameButton(doc, {
+    appearance: { role: "primary" },
+    content: { icon: label, kind: "icon", name: input.label },
+    getAction: () => ({ activate: input.activate }),
+    getState: () => ({
+      availability:
+        input.unavailable === undefined
+          ? { kind: "available" }
+          : { kind: "unavailable", reason: input.unavailable },
+    }),
+    onUnavailable: input.activate,
+  });
+  const { element, face } = button;
+  element.style.pointerEvents = "auto";
+  let words = input.label;
   let key = "";
   return {
+    dispose: button.dispose,
     element,
     place: (scale, state) => {
       const next = [
@@ -71,24 +80,25 @@ export function createStartControl(
         return;
       }
       key = next;
-      const words = state.waiting ? input.loading : input.label;
-      label.textContent = words.toUpperCase();
-      element.setAttribute("aria-label", words);
-      element.toggleAttribute("data-pressed", state.down && input.ready);
+      const nextWords = state.waiting ? input.loading : input.label;
+      if (nextWords !== words) {
+        words = nextWords;
+        label.textContent = words.toUpperCase();
+        button.setContent({ icon: label, kind: "icon", name: words });
+      }
+      button.setPressed(state.down && ready);
       element.style.opacity = String(state.waiting ? input.waitingAlpha : 1);
+      element.style.setProperty(
+        "--adw-button-text",
+        state.refusing ? `#${PALETTE.red.toString(16).padStart(6, "0")}` : "",
+      );
       const box = gridRect(scale, rect);
       const pixel = artPixel(scale);
-      setBox(element, {
-        ...box,
-        left: box.left + Math.round(state.x) * pixel,
-        top: box.top + Math.round(state.y) * pixel,
-      });
+      setBox(element, box);
       placeFrame(scale, rect, face, rect);
-      placeText(title, scale, rect, label, {
-        ...text,
-        colour: state.refusing ? PALETTE.red : text.colour,
-        text: words,
-      });
+      face.style.left = `${Math.round(state.x) * pixel}px`;
+      face.style.top = `${Math.round(state.y) * pixel}px`;
+      placeText(title, scale, rect, label, { ...text, text: words });
     },
   };
 }
