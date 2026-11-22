@@ -6,7 +6,7 @@ import { Scene, Scenes } from "phaser";
 import { gameData } from "../data/index.ts";
 import type { HelpPictureId } from "../data/types.ts";
 import { helpActionForKey, helpActionForPointer } from "../help/helpInput.ts";
-import { HELP_LAYOUT } from "../help/helpLayout.ts";
+import { HELP_LAYOUT, type HelpActionBounds } from "../help/helpLayout.ts";
 import { applyHelpAction, type HelpAction } from "../help/helpPaging.ts";
 import { closeHelp } from "../help/helpSeen.ts";
 import { type HelpMeasure, helpView } from "../help/helpView.ts";
@@ -86,7 +86,9 @@ export class HelpScene extends Scene {
   private page = 0;
   // The page whose picture shows.
   private picturePage: number | undefined;
-  private pressStart: { point: Point; accepts: () => boolean } | undefined;
+  private actions: HelpActionBounds | undefined;
+  private pressStart:
+    { point: Point; accepts: () => boolean; actions: HelpActionBounds } | undefined;
   private resumeKey: SceneKey | undefined;
 
   constructor() {
@@ -106,6 +108,7 @@ export class HelpScene extends Scene {
     this.page = 0;
     this.picturePage = undefined;
     this.pressStart = undefined;
+    this.actions = undefined;
     this.resumeKey = data.resume;
     this.events.once(Scenes.Events.SHUTDOWN, () => this.scene.stop(SCENE_KEYS.helpPicture));
     this.draw();
@@ -166,8 +169,8 @@ export class HelpScene extends Scene {
   }
 
   private beginPagePress(point: Point): void {
-    if (this.html?.accepts()) {
-      this.pressStart = { accepts: this.html.capture(), point };
+    if (this.html?.accepts() && this.actions !== undefined) {
+      this.pressStart = { accepts: this.html.capture(), actions: this.actions, point };
     }
   }
 
@@ -178,7 +181,7 @@ export class HelpScene extends Scene {
       return false;
     }
     if (!cancelled && start.accepts()) {
-      const action = helpActionForPointer(gameData.help.length, start.point, point);
+      const action = helpActionForPointer(gameData.help.length, start.actions, start.point, point);
       if (action !== undefined) {
         this.act(action);
       }
@@ -216,6 +219,11 @@ export class HelpScene extends Scene {
     clearScene(this);
     const view = helpView(gameData, helpMeasure(this), this.page, undefined);
     this.page = view.page;
+    this.actions = {
+      footer: view.footer.hit,
+      next: view.buttons[1]!.hit,
+      previous: view.buttons[0]!.hit,
+    };
     view.backdrop.forEach(({ colour, rect }) => addFilledRect(this, colour, rect));
     this.showPicture(itemAt(gameData.help, this.page).art, view.illustration);
     this.html?.destroy();

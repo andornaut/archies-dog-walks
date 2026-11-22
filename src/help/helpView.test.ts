@@ -7,10 +7,12 @@ import { gameFont } from "../testing/fontInk.ts";
 import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";
 import { shownText } from "../ui/dom/pixelLine.ts";
 import { LABEL_HELP_GAP } from "../ui/labelHelpGap.ts";
+import { MODAL } from "../ui/modal/layout.ts";
 import { modalTitleInk } from "../ui/modal/titleRole.ts";
 import { PALETTE } from "../ui/palette.ts";
 import { BUTTON_COLOURS } from "../ui/selection.ts";
-import { HELP_LAYOUT } from "./helpLayout.ts";
+import { helpActionForPointer } from "./helpInput.ts";
+import { HELP_LAYOUT, helpActionAt } from "./helpLayout.ts";
 import { chromeFills, type HelpFill, type HelpMeasure, helpView, wellFills } from "./helpView.ts";
 
 const title = gameFont("font-title");
@@ -106,6 +108,53 @@ it("provides Back as the sole primary on every full-size Help page", () => {
     expect(view.footer.label).toBe(gameData.menuText.pageBack);
     expect(view.footer.primary).toBe(true);
     expect(view.buttons.every((button) => !button.primary && button.secondary)).toBe(true);
-    expect(view.footer.rect).toEqual(HELP_LAYOUT.footer);
+    expect(view.footer.rect).toMatchObject({
+      height: HELP_LAYOUT.footer.height,
+      y: HELP_LAYOUT.footer.y,
+    });
+  }
+});
+
+it("sizes Help actions from full-font ink and shares their exact rendered pointer bounds", () => {
+  for (const page of [0, gameData.help.length - 1]) {
+    const view = helpView(gameData, MEASURE, page, undefined);
+    const [previous, next] = view.buttons;
+    const actions = { footer: view.footer.hit, next: next!.hit, previous: previous!.hit };
+    for (const [button, anchor] of [
+      [previous!, HELP_LAYOUT.previous],
+      [next!, HELP_LAYOUT.next],
+      [view.footer, HELP_LAYOUT.footer],
+    ] as const) {
+      expect(button.rect.width).toBe(
+        Math.max(48, Math.ceil(MEASURE.inkWidth("title", button.label) + 2 * MODAL.pad)),
+      );
+      expect(button.rect).toMatchObject({ height: anchor.height, y: anchor.y });
+      expect(button.hit).toEqual(button.rect);
+      expect(button.text.scale).toBe(2);
+      expect(button.text.centreX).toBe(button.rect.x + button.rect.width / 2);
+    }
+    expect(next!.rect.x - previous!.rect.x - previous!.rect.width).toBe(BUTTON_SIZE.gap);
+    expect((previous!.rect.x + next!.rect.x + next!.rect.width) / 2).toBe(
+      HELP_LAYOUT.screen.width / 2,
+    );
+    expect(view.footer.rect.x + view.footer.rect.width / 2).toBe(HELP_LAYOUT.screen.width / 2);
+    for (const [target, expected] of [
+      [actions.previous, { kind: "previous" }],
+      [actions.next, { kind: "advance" }],
+      [actions.footer, { kind: "close" }],
+    ] as const) {
+      const point = { x: target.x + 1, y: target.y + target.height / 2 };
+      expect(helpActionAt(gameData.help.length, actions, point)).toEqual(expected);
+      expect(helpActionForPointer(gameData.help.length, actions, point, point)).toEqual(expected);
+    }
+    const oldFooterEdge = { x: HELP_LAYOUT.footer.x + 1, y: view.footer.rect.y + 1 };
+    expect(helpActionAt(gameData.help.length, actions, oldFooterEdge)).toBeUndefined();
+    expect(
+      helpActionForPointer(gameData.help.length, actions, oldFooterEdge, oldFooterEdge),
+    ).toBeUndefined();
+    const point = { x: next!.rect.x + 1, y: next!.rect.y + 1 };
+    expect(
+      helpActionForPointer(gameData.help.length, actions, point, { ...point, x: point.x + 50 }),
+    ).toEqual({ kind: "previous" });
   }
 });

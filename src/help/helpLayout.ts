@@ -135,15 +135,25 @@ export function dotRects(pageCount: number): Rect[] {
   }));
 }
 
-// The button or dot under a tap, if any.
-export function helpActionAt(pageCount: number, { x, y }: Point): HelpAction | undefined {
-  if (containsPoint(HELP_LAYOUT.footer, x, y)) {
+export interface HelpActionBounds {
+  readonly footer: Rect;
+  readonly next: Rect;
+  readonly previous: Rect;
+}
+
+// The rendered button or dot under a tap, if any.
+export function helpActionAt(
+  pageCount: number,
+  actions: HelpActionBounds,
+  { x, y }: Point,
+): HelpAction | undefined {
+  if (containsPoint(actions.footer, x, y)) {
     return { kind: "close" };
   }
-  if (containsPoint(tapRect(HELP_LAYOUT.previous), x, y)) {
+  if (containsPoint(actions.previous, x, y)) {
     return { kind: "previous" };
   }
-  if (containsPoint(tapRect(HELP_LAYOUT.next), x, y)) {
+  if (containsPoint(actions.next, x, y)) {
     return { kind: "advance" };
   }
   const page = rectIndexAt(dotRects(pageCount).map(tapRect), x, y);

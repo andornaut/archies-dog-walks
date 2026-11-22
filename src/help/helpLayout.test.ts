@@ -130,7 +130,7 @@ describe("helpActionAt", () => {
       [180, dotTop - 1, undefined],
     ];
     for (const [x, y, expected] of taps) {
-      expect(helpActionAt(7, { x, y }), `${x}, ${y}`).toEqual(expected);
+      expect(helpActionAt(7, HELP_LAYOUT, { x, y }), `${x}, ${y}`).toEqual(expected);
     }
   });
 });

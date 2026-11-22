@@ -84,7 +84,7 @@ describe("helpActionForPointer", () => {
       ["ignores a vertical drag", { x: 180, y: 300 }, { x: 190, y: 400 }, undefined],
     ];
     for (const [, from, to, expected] of cases) {
-      expect(helpActionForPointer(6, from, to)).toEqual(expected);
+      expect(helpActionForPointer(6, HELP_LAYOUT, from, to)).toEqual(expected);
     }
   });
 });

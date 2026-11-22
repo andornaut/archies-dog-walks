@@ -4,6 +4,7 @@ import type { Rect } from "@andornaut/game-kit/runtime/rect";
 import type { GameData } from "../data/types.ts";
 import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";
 import { LABEL_HELP_GAP } from "../ui/labelHelpGap.ts";
+import { arrangePanelActions } from "../ui/modal/actionGroup.ts";
 import { type PanelButton, type PanelMeasure, type PanelText } from "../ui/modal/types.ts";
 import { panelButton } from "../ui/modal/view.ts";
 import { PALETTE } from "../ui/palette.ts";
@@ -180,6 +181,25 @@ export function helpView(
           },
     };
   };
+  const buttons = arrangePanelActions(measure, layout.page, "row", [
+    button(layout.previous, words.previous, {
+      available: previousEnabled,
+      pressed: pressed === "previous",
+      primary: false,
+    }),
+    button(layout.next, words[next], {
+      available: true,
+      pressed: pressed === "next",
+      primary: false,
+    }),
+  ]).map((button) => ({
+    ...button,
+    available: button.available !== false,
+    pressed: button.pressed === true,
+  }));
+  const [footer] = arrangePanelActions(measure, layout.page, "row", [
+    panelButton(measure, layout.footer, true, data.menuText.pageBack),
+  ]);
   return {
     backdrop: [
       { colour: PALETTE.darkBrown, rect: layout.page },
@@ -187,18 +207,7 @@ export function helpView(
       ...wellFills(layout.well),
     ],
     body,
-    buttons: [
-      button(layout.previous, words.previous, {
-        available: previousEnabled,
-        pressed: pressed === "previous",
-        primary: false,
-      }),
-      button(layout.next, words[next], {
-        available: true,
-        pressed: pressed === "next",
-        primary: false,
-      }),
-    ],
+    buttons,
     caption: {
       capTop: layout.caption.y,
       centre: "ink",
@@ -210,7 +219,7 @@ export function helpView(
       text: shown.caption,
     },
     dots: dotRects(pages.length).map((rect, i) => ({ current: i === current, rect })),
-    footer: panelButton(measure, layout.footer, true, data.menuText.pageBack),
+    footer: footer!,
     illustration: layout.illustration,
     label: words.heading,
     page: current,

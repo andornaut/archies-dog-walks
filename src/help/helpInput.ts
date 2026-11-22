@@ -4,7 +4,7 @@ import { gameData } from "../data/index.ts";
 import { exceedsTapDistance, swipeDirection } from "../input/gestures.ts";
 import { isConfirmKey, isPauseKey, laneDirectionForKey } from "../input/keyBindings.ts";
 import { read } from "../rules/units.ts";
-import { helpActionAt } from "./helpLayout.ts";
+import { helpActionAt, type HelpActionBounds } from "./helpLayout.ts";
 import type { HelpAction } from "./helpPaging.ts";
 
 // A swipe turns a page once it travels this far.
@@ -31,6 +31,7 @@ export function helpActionForKey(repeat: boolean, code: string): HelpAction | un
 // a tap acts on the button or dot where it started.
 export function helpActionForPointer(
   pageCount: number,
+  actions: HelpActionBounds,
   start: Point,
   end: Point,
 ): HelpAction | undefined {
@@ -41,5 +42,5 @@ export function helpActionForPointer(
   if (exceedsTapDistance(read(gameData.tuning, "pixels", "tapMaxDistance"), start, end)) {
     return undefined;
   }
-  return helpActionAt(pageCount, start);
+  return helpActionAt(pageCount, actions, start);
 }
