@@ -42,7 +42,7 @@ import { TEXT_SCALE } from "../../ui/textFit.ts";
 import { scrollPlace } from "./logbook.ts";
 import { bindPanelFeedback, createPanelButton } from "./panelButton.ts";
 import { addTapBurst, type DomPart } from "./questionPanel.ts";
-import { createPageTab, fillPart, shopPageParts } from "./shopPage.ts";
+import { createPageTab, fillPart } from "./shopPage.ts";
 
 export interface ShopScreenArt {
   readonly key: string;
@@ -297,7 +297,7 @@ export function showShopScreen(
       tabs.forEach((tab) => tab.dispose());
       tabs = [];
       chromeKey = nextChrome;
-      chromeParts = shopPageParts(doc, input.fonts.title, { ...view.page, tabs: [] });
+      chromeParts = [fillPart(doc, view.page.fill)];
       chromeParts.push(...view.page.title.map((line) => textPart(line)));
       // Tabs retain their shared drawn geometry and expose their complete target as controls.
       view.page.tabs.forEach((tab, i) => {
@@ -373,7 +373,6 @@ export function showShopScreen(
         control,
         frame: row.frame,
         hit: row.rect,
-        label: row.label,
         mark: "none",
         outset: SELECT_OUTSET,
         rect: row.rect,

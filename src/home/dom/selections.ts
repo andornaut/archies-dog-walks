@@ -70,7 +70,6 @@ export function createHomeSelection(
     control,
     frame: source.hasArt("ui-tile") ? "art" : "fallback",
     hit: view.hit,
-    label: view.label,
     mark: view.tile.kind === "picked" ? (source.hasArt("ui-check") ? "art" : "fallback") : "none",
     outset: HOME_LAYOUT.tileSelectOutset,
     rect: view.rect,

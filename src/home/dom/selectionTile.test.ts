@@ -38,7 +38,6 @@ describe("native selection tile", () => {
       control: host,
       frame: "art",
       hit: HIT,
-      label: name,
       mark: "none",
       outset: HOME_LAYOUT.tileSelectOutset,
       rect: FACE,
@@ -69,10 +68,16 @@ describe("native selection tile", () => {
   });
   it("retains shop focus while its separate moving orbit settles", async () => {
     const doc = new FakeDocument();
+    const host = createGameButton(doc as unknown as Document, {
+      content: { kind: "icon", name: gameData.shopGear.runningShoes.name },
+      getAction: () => null,
+      getState: () => ({ toggled: false }),
+      skin: "authored",
+    });
     const tile = createSelectionTile(doc as unknown as Document, SOURCE, gameFont("font-title"), {
+      control: host,
       frame: "art",
       hit: HIT,
-      label: gameData.shopGear.runningShoes.name,
       mark: "none",
       outset: HOME_LAYOUT.tileSelectOutset,
       rect: FACE,
@@ -94,14 +99,20 @@ describe("native selection tile", () => {
     ).toBe(false);
     expect(tile.element.getAttribute("aria-pressed")).toBe("false");
     expect(tile.element.style.width).toBe("96px");
+    host.dispose();
   });
   it("retains the authored selected frame and plus marker without source textures", async () => {
     const doc = new FakeDocument();
     const source = { ...SOURCE, loadSheet: vi.fn(SOURCE.loadSheet) };
+    const host = createGameButton(doc as unknown as Document, {
+      content: { kind: "icon", name: gameData.dogs.archie.name },
+      getAction: () => null,
+      skin: "authored",
+    });
     const tile = createSelectionTile(doc as unknown as Document, source, gameFont("font-title"), {
+      control: host,
       frame: "fallback",
       hit: HIT,
-      label: gameData.dogs.archie.name,
       mark: "fallback",
       outset: HOME_LAYOUT.tileSelectOutset,
       rect: FACE,
@@ -114,5 +125,6 @@ describe("native selection tile", () => {
     expect(painted.some((node) => node.style.backgroundColor === hex(PALETTE.amber))).toBe(true);
     expect(painted.some((node) => node.textContent === "+")).toBe(true);
     expect(tile.element.style.width).toBe("96px");
+    host.dispose();
   });
 });

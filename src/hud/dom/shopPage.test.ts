@@ -1,12 +1,13 @@
 import { describe, expect, it } from "vitest";
 
+import { shopTabRects } from "../../home/shopLayout.ts";
 import { shopPageView } from "../../home/shopPageView.ts";
 import { FakeDocument, type FakeElement } from "../../testing/fakeDom.ts";
 import { gameFont } from "../../testing/fontInk.ts";
 import { domScale } from "../../ui/domScale.ts";
 import { modalTitleInk } from "../../ui/modal/titleRole.ts";
 import { type PanelMeasure } from "../../ui/modal/types.ts";
-import { shopPageParts } from "./shopPage.ts";
+import { createPageTab } from "./shopPage.ts";
 
 const MEASURE: PanelMeasure = {
   body: { capHeight: 6, capTop: 2, inkBottom: 9, letterTop: 1, lineHeight: 10 },
@@ -27,14 +28,23 @@ function faceWidths(dpr: number, open: number): number[] {
     title: "Logbook",
   });
   const scale = domScale(dpr, { height: 608, width: 390.844, x: 1, y: 0 });
-  const parts = shopPageParts(doc as unknown as Document, gameFont("font-title"), view).slice(
-    -LABELS.length,
-  );
-  return parts.map((part) => {
+  const hits = shopTabRects(LABELS.length);
+  return view.tabs.map((tab, index) => {
+    const part = createPageTab(
+      doc as unknown as Document,
+      {
+        font: gameFont("font-title"),
+        press: { accepts: () => true, burst: () => undefined, press: () => undefined },
+      },
+      hits[index]!,
+      tab,
+    );
     part.place(scale);
-    const group = (part.element as unknown as FakeElement).children.at(-1);
-    const face = group?.children[0];
-    return Number.parseFloat(face?.style.width ?? "") / dpr;
+    const face = (part.element as unknown as FakeElement).children[0];
+    const width = Number.parseFloat(face?.style.width ?? "") / dpr;
+    part.dispose();
+    expect(width).toBeGreaterThan(0);
+    return width;
   });
 }
 

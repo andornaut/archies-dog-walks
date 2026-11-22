@@ -22,9 +22,9 @@ import {
 import { artPart, type DomDetailCardInput, textPart } from "./detailCard.ts";
 import { bindPanelFeedback } from "./panelButton.ts";
 import { type DomPart, type DomQuestionPanel, showQuestionPanel } from "./questionPanel.ts";
-import { createPageTab, fillPart, framedBoxPart, shopPageParts } from "./shopPage.ts";
+import { createPageTab, fillPart, framedBoxPart } from "./shopPage.ts";
 
-// The Logbook in HTML over the canvas: the page (shopPageParts), its title and Back drawn as a
+// The Logbook in HTML over the canvas: the page, its title and Back drawn as a
 // panel's (showQuestionPanel), the open tab's content clipped to the list's frame and moved up by
 // the scroll, and the scrollbar, at the places the canvas draws them (logbookView).
 // It is a page like the Pet shop, not a modal: its top bar stays live, and a modal over it (a
@@ -278,15 +278,15 @@ export function showLogbook(layer: UiLayer, input: DomLogbookInput): DomLogbook 
   const scrollbar = scrollbarPart(doc, input);
   const pagePaint = doc.createElement("div");
   pagePaint.className = "adw-lines";
-  let pageParts = shopPageParts(doc, input.fonts.title, { ...page, tabs: [] });
-  pagePaint.append(...pageParts.map((part) => part.element));
+  let pageFill = fillPart(doc, page.fill);
+  pagePaint.append(pageFill.element);
   let pageScale: DomScale | undefined;
   let dimmed = false;
   const pagePart: DomPart = {
     element: pagePaint,
     place: (scale) => {
       pageScale = scale;
-      pageParts.forEach((part) => part.place(scale));
+      pageFill.place(scale);
     },
   };
   const tabHost = doc.createElement("div");
@@ -387,11 +387,11 @@ export function showLogbook(layer: UiLayer, input: DomLogbookInput): DomLogbook 
       shown.setDimmed(next);
     },
     setPage: (next) => {
-      pageParts = shopPageParts(doc, input.fonts.title, { ...next, tabs: [] });
-      pagePaint.replaceChildren(...pageParts.map((part) => part.element));
+      pageFill = fillPart(doc, next.fill);
+      pagePaint.replaceChildren(pageFill.element);
       const current = pageScale;
       if (current !== undefined) {
-        pageParts.forEach((part) => part.place(current));
+        pageFill.place(current);
       }
       dimDrawn(pagePaint, dimmed);
     },

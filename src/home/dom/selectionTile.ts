@@ -1,3 +1,5 @@
+import "./selectionTile.css";
+
 import { insetRect, type Rect, ringRects } from "@andornaut/game-kit/runtime/rect";
 import type { BitmapFont } from "@andornaut/game-kit/runtime/text/bitmapFont";
 import type { ButtonView } from "@andornaut/game-kit/runtime/web/ui/dom/button";
@@ -36,32 +38,22 @@ export function createSelectionTile(
   source: DomArtSource,
   title: BitmapFont,
   view: {
-    readonly control?: ButtonView;
+    readonly control: ButtonView;
     readonly frame: "art" | "fallback";
     readonly mark: "art" | "fallback" | "none";
     readonly outset: number;
     readonly hit: Rect;
-    readonly label: string;
     readonly rect: Rect;
     readonly state: TileState;
   },
 ): NativeSelectionTile {
-  const control = view.control;
-  const element = control?.element ?? doc.createElement("button");
-  element.classList.add("adw-button");
+  const { element, face: host } = view.control;
+  element.classList.add("adw-selection-tile");
   element.style.position = "absolute";
   element.style.pointerEvents = "auto";
   element.style.overflow = "visible";
-  if (control === undefined) {
-    element.type = "button";
-    element.setAttribute("aria-label", view.label);
-    element.setAttribute("aria-pressed", String(view.state === "selected"));
-  } else {
-    control.face.style.pointerEvents = "none";
-    control.face.style.position = "absolute";
-    element.style.setProperty("--ui-button-focus-fill", "var(--adw-cyan)");
-  }
-  const host = control?.face ?? element;
+  host.style.pointerEvents = "none";
+  host.style.position = "absolute";
   const paint = doc.createElement("span");
   paint.className = "adw-framed";
   paint.setAttribute("aria-hidden", "true");
@@ -228,9 +220,7 @@ export function createSelectionTile(
       placement = key;
       const hit = gridRect(scale, origin);
       setBox(element, hit);
-      if (control !== undefined) {
-        setBox(control.face, { ...hit, left: 0, top: 0 });
-      }
+      setBox(host, { ...hit, left: 0, top: 0 });
       if (shadow !== undefined) {
         setBox(
           shadow,
