@@ -4,7 +4,7 @@ import type { HomeNoteLine } from "../../hud/homeQuestion.ts";
 import { playerPaused, type RunPause } from "../../hud/topBar.ts";
 import type { CardView, Choice } from "../../rules/choices.ts";
 import type { CardSceneData } from "../CardScene.ts";
-import type { PauseOverlay, PauseSceneData } from "../PauseScene.ts";
+import type { PauseOverlay, PauseScene, PauseSceneData } from "../PauseScene.ts";
 import { SCENE_KEYS, type SceneKey } from "../sceneKeys.ts";
 import type { SettingsScene } from "../SettingsScene.ts";
 import { soundboardOf } from "../soundboard.ts";
@@ -133,6 +133,9 @@ export class MenuFlow {
     if (shown(SCENE_KEYS.settings)) {
       return "settings";
     }
+    if ((scene.get(SCENE_KEYS.pause) as PauseScene).cheatsOpen()) {
+      return "cheats";
+    }
     return this.pauseMode === "homeQuestion" ? "confirmHome" : "open";
   }
 
@@ -211,6 +214,9 @@ export class MenuFlow {
       return;
     }
     const { scene } = this;
+    if ((scene.scene.get(SCENE_KEYS.pause) as PauseScene).backCheats()) {
+      return;
+    }
     this.stopSettings();
     scene.scene.stop(SCENE_KEYS.pause);
     this.pauseOpen = false;

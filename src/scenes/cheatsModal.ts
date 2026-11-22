@@ -15,11 +15,9 @@ import {
   seedFrom,
   showTipsAgain,
   SPEEDS,
-  startZones,
 } from "../dev/cheats.ts";
 import { type CheatAction, type CheatsState, cheatsView } from "../dev/cheatsView.ts";
 import { stripDevParams } from "../dev/devStart.ts";
-import { devToolsOn } from "../dev/devTools.ts";
 import { pageRunSetup } from "../dev/pageRunSetup.ts";
 import { randomSeed } from "../dev/runSetup.ts";
 import { showCheats } from "../hud/dom/cheats.ts";
@@ -44,7 +42,7 @@ import { followScene, htmlPanelInput, htmlPanelPlace, questionView } from "./que
 import type { RunScene } from "./RunScene.ts";
 import { SCENE_KEYS } from "./sceneKeys.ts";
 
-// The Cheats modal as Settings opens it (gameplay/cheats.md): the view of the cheats where it
+// The Cheats modal opened directly from Menu or Pause (gameplay/cheats.md): the view of the cheats where it
 // opened, over a walk or on the Start screen, and what each press does. It owns its HTML and
 // Reset save's question over it.
 export interface CheatsModal {
@@ -159,10 +157,6 @@ export function openCheatsModal(
   const askReset = () => {
     const words = gameData.menuText.cheats.reset;
     const reset = () => {
-      if (!devToolsOn()) {
-        closeQuestion();
-        return;
-      }
       const home = stripDevParams(globalThis.location.href, false);
       void resetSave(scene).finally(() => globalThis.location.replace(home));
     };
@@ -194,11 +188,6 @@ export function openCheatsModal(
     dom.setInert(true);
   };
   const act = (action: CheatAction) => {
-    if (!devToolsOn()) {
-      close();
-      return;
-    }
-    const first = startZones(gameData)[0] ?? null;
     switch (action.kind) {
       case "addMoney":
       case "debuff":
@@ -245,7 +234,7 @@ export function openCheatsModal(
       case "startAt":
         setNext((next) => ({
           ...next,
-          start: nextChoice(startZones(gameData), next.start ?? first),
+          start: action.zone,
         }));
         return;
       default:
@@ -263,7 +252,7 @@ export function openCheatsModal(
       reducedMotion: () => currentSettings(scene).reducedMotion,
       seed: (text) => {
         const seed = seedFrom(text);
-        if (devToolsOn() && seed !== undefined && seed !== nextWalk(scene).seed) {
+        if (seed !== undefined && seed !== nextWalk(scene).seed) {
           setNext((next) => ({ ...next, seed }));
         } else {
           render();

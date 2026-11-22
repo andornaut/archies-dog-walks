@@ -5,7 +5,6 @@ import { Scene, Scenes } from "phaser";
 
 import { gameData } from "../data/index.ts";
 import { SCREEN_CONFIG, SCREEN_LAYOUT } from "../data/screen.ts";
-import { devToolsOn } from "../dev/devTools.ts";
 import { FEEDBACK } from "../home/feedback.ts";
 import { type Focus, focusDirectionForKey, moveFocus } from "../home/focus.ts";
 import { type OverlayRegion, overlayRegion } from "../home/homeBar.ts";
@@ -59,7 +58,6 @@ import {
   withProbe,
 } from "../ui/phaser/pixelText.ts";
 import { addRampDim } from "../ui/phaser/rampDim.ts";
-import { type CheatsModal, openCheatsModal } from "./cheatsModal.ts";
 import { clearOnHomePageOpening } from "./homeBarPress.ts";
 import { measureModalTitle, modalTextWidth } from "./modalMeasure.ts";
 import { mountNativeOverlay } from "./nativeOverlayReady.ts";
@@ -153,8 +151,6 @@ export interface SettingsData extends OverlayData {
 // slider the left and right keys, Home and End set the volume.
 export class SettingsScene extends Scene {
   private dim: Rect = SCREEN_LAYOUT.screen;
-  // Whether the settings opened over a walk, where This walk's cheats apply.
-  private walkRegion = false;
   private dragging: VolumeKey | undefined;
   private focus: Focus | null = null;
   // No rows until create measures their notes, so no font is read.
@@ -167,8 +163,6 @@ export class SettingsScene extends Scene {
   // The scene owns settings and gestures; the native view owns their rendering.
   private html: DomSettings | undefined;
   private presses: TargetPressListener<Target> | undefined;
-  // The Cheats modal over the settings while it is open.
-  private cheats: CheatsModal | undefined;
 
   constructor() {
     super(SCENE_KEYS.settings);
@@ -180,7 +174,6 @@ export class SettingsScene extends Scene {
 
   private mount(data: SettingsData): boolean {
     this.resumeKey = data.resume;
-    this.walkRegion = data.region === "walk";
     this.dim = overlayRegion(data.region);
     this.rows = settingsRows(offersInstall(installState()));
     this.layout = settingsLayout(settingsFonts(this), SCREEN_CONFIG, rowShapes(this, this.rows));
@@ -188,14 +181,12 @@ export class SettingsScene extends Scene {
     this.focus = null;
     this.pressed = undefined;
     this.steps = undefined;
-    this.cheats = undefined;
     this.html = addHtmlSettings(this, {
       close: () => this.close(),
       closeSteps: () => this.closeSteps(),
       onFocus: (index) => {
         this.focus = index === null ? null : { column: 0, row: index };
       },
-      ...(devToolsOn() ? { openCheats: () => this.openCheats() } : {}),
       press: {
         activate: (target) => this.tap(target),
         down: (target) => this.presses?.down(target),
@@ -241,16 +232,9 @@ export class SettingsScene extends Scene {
     onBackPressed(this, () => this.back());
     listenOutsideTap(
       this,
-      () =>
-        screenArea([
-          this.cheats?.panel() ?? (this.steps === undefined ? this.layout.panel : this.steps.card),
-        ]),
+      () => screenArea([this.steps === undefined ? this.layout.panel : this.steps.card]),
       () => this.back(),
     );
-    this.events.once(Scenes.Events.SHUTDOWN, () => {
-      this.cheats?.destroy();
-      this.cheats = undefined;
-    });
     if (data.region === "home") {
       clearOnHomePageOpening(this, () => this.close());
     }
@@ -268,12 +252,6 @@ export class SettingsScene extends Scene {
   }
 
   private onKey(code: string): void {
-    if (this.cheats !== undefined) {
-      if (isPauseKey(code)) {
-        this.back();
-      }
-      return;
-    }
     if (this.steps !== undefined) {
       if (isPauseKey(code) || isConfirmKey(code)) {
         this.closeSteps();
@@ -387,15 +365,8 @@ export class SettingsScene extends Scene {
     this.render();
   }
 
-  // The back button and a tap outside the open card close the innermost card first: Reset
-  // save's question, the Cheats modal or the steps' card.
+  // Back and outside taps close install steps first, then Settings.
   private back(): void {
-    if (this.cheats !== undefined) {
-      if (!this.cheats.back()) {
-        this.closeCheats();
-      }
-      return;
-    }
     if (this.steps === undefined) {
       this.close();
     } else {
@@ -412,7 +383,7 @@ export class SettingsScene extends Scene {
   }
 
   private targetAt(x: number, y: number): Target | undefined {
-    if (!nativeSceneAccepts(this) || this.cheats !== undefined) {
+    if (!nativeSceneAccepts(this)) {
       return undefined;
     }
     if (this.steps !== undefined) {
@@ -492,26 +463,6 @@ export class SettingsScene extends Scene {
     this.game.events.emit(SETTINGS_CLOSED_EVENT);
   }
 
-  // Cheats exist only in a browser tab, checked as the modal opens and as each action runs.
-  private openCheats(): void {
-    if (!devToolsOn() || this.cheats !== undefined || this.steps !== undefined) {
-      return;
-    }
-    this.cheats = openCheatsModal(this, this.walkRegion, () => this.closeCheats());
-    if (this.cheats !== undefined) {
-      this.html?.setDimmed(true);
-      this.html?.setInert(true);
-    }
-  }
-
-  private closeCheats(): void {
-    this.cheats?.destroy();
-    this.cheats = undefined;
-    this.html?.setInert(false);
-    this.html?.setDimmed(false);
-    this.render();
-  }
-
   // The card as it stands, measured on the scene's fonts.
   private view(): SettingsView {
     return settingsView(
@@ -529,7 +480,6 @@ export class SettingsScene extends Scene {
             ? gameData.menuText.pageBack
             : gameData.menuText.common.close,
         layout: this.layout,
-        ...(devToolsOn() ? { openCheats: gameData.menuText.cheats.open } : {}),
         rows: this.rows,
         words: gameData.menuText.settings,
       },

@@ -37,19 +37,19 @@ const measure: PanelMeasure = {
 };
 
 it("orders navigation by label with Back to title and the primary action last, and no Quit", () => {
-  expect(menuItems("home")).toEqual(["help", "logbook", "settings", "close"]);
-  expect(menuItems("page")).toEqual(["help", "logbook", "settings", "headHome", "close"]);
-  expect(menuItems("help")).toEqual(["settings", "headHome", "close"]);
-  expect(menuItems("end")).toEqual(["settings", "headHome", "close"]);
-  expect(PAUSE_MENU_ITEMS).toEqual(["help", "settings", "headHome", "resume"]);
-  expect(PAUSE_MENU_KEY_ORDER).toEqual(["resume", "help", "settings", "headHome"]);
+  expect(menuItems("home")).toEqual(["cheats", "help", "logbook", "settings", "close"]);
+  expect(menuItems("page")).toEqual(["cheats", "help", "logbook", "settings", "headHome", "close"]);
+  expect(menuItems("help")).toEqual(["cheats", "settings", "headHome", "close"]);
+  expect(menuItems("end")).toEqual(["cheats", "settings", "headHome", "close"]);
+  expect(PAUSE_MENU_ITEMS).toEqual(["cheats", "help", "settings", "headHome", "resume"]);
+  expect(PAUSE_MENU_KEY_ORDER).toEqual(["resume", "help", "settings", "headHome", "cheats"]);
 });
 
 it.each(["end", "help", "home", "page"] as const)(
-  "lists the %s Menu's other entries alphabetically by label",
+  "lists the %s Menu's navigation after Cheats alphabetically by label",
   (context) => {
     const others = menuItems(context)
-      .filter((item) => item !== "close" && item !== "headHome")
+      .filter((item) => item !== "cheats" && item !== "close" && item !== "headHome")
       .map((item) => menuItemLabel(gameData, item));
     expect(others).toEqual([...others].sort((a, b) => a.localeCompare(b)));
   },
@@ -112,4 +112,9 @@ describe.each(["home", "pause"] as const)("%s navigation geometry", (context) =>
       expect(view.note).toEqual([]);
     }
   });
+});
+
+it("uses the approved shared Cheats label in both navigation contexts", () => {
+  expect(menuItemLabel(gameData, "cheats")).toBe(gameData.menuText.cheats.open);
+  expect(pauseMenuItemLabel(gameData, "cheats")).toBe(gameData.menuText.cheats.open);
 });

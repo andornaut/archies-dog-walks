@@ -5,6 +5,7 @@ import { SCREEN_LAYOUT } from "../data/screen.ts";
 import { overlayRegion } from "../home/homeBar.ts";
 import type { HomeNoteLine } from "../hud/homeQuestion.ts";
 import { HOME_QUESTION_ANSWERS, homeQuestionLayout, pauseMenuLayout } from "../hud/pauseMenu.ts";
+import { isPauseKey, menuKeyActs } from "../input/keyBindings.ts";
 import { screenArea } from "../input/outsideTap.ts";
 import { WALKER_SILHOUETTES } from "../layout/packFormation.ts";
 import { walkerFootY } from "../layout/screenLayout.ts";
@@ -18,11 +19,18 @@ import {
 } from "../ui/navigationMenu.ts";
 import { PALETTE } from "../ui/palette.ts";
 import { addRampDim } from "../ui/phaser/rampDim.ts";
+import { type CheatsModal, openCheatsModal } from "./cheatsModal.ts";
 import { HELP_CLOSED_EVENT } from "./HelpScene.ts";
 import { openHelp } from "./helpScreen.ts";
 import { canvasPanelMeasure } from "./modalMeasure.ts";
 import { mountNativeOverlay } from "./nativeOverlayReady.ts";
-import { listenOutsideTap, onceSceneEvent, openOverlay } from "./overlay.ts";
+import {
+  listenOutsideTap,
+  nativeSceneAccepts,
+  onBackPressed,
+  onceSceneEvent,
+  openOverlay,
+} from "./overlay.ts";
 import {
   addHtmlQuestionPanel,
   type PanelEntry,
@@ -63,6 +71,7 @@ const NOTE_COLOURS: Readonly<Record<HomeNoteLine["kind"], number>> = {
 // Back to title or Resume; or the Home button's question, keep walking or end the walk. The HUD
 // keeps running under it, dimmed and inactive; its pause keys (P and Escape) resume.
 export class PauseScene extends Scene {
+  private cheats: CheatsModal | undefined;
   constructor() {
     super(SCENE_KEYS.pause);
   }
@@ -73,6 +82,12 @@ export class PauseScene extends Scene {
 
   private mount(data: PauseSceneData): boolean {
     const { onHeadHome, onResume } = data;
+    this.cheats = undefined;
+    const closeCheats = () => {
+      this.cheats?.destroy();
+      this.cheats = undefined;
+    };
+    this.events.once(Scenes.Events.SHUTDOWN, closeCheats);
     const walkView = overlayRegion("walk");
     // HTML under the menu, a paused celebration's, is palette-dimmed in HTML as the canvas's dim
     // dims the walk, which cannot dim it.
@@ -82,6 +97,11 @@ export class PauseScene extends Scene {
       onHeadHome();
     };
     const presses: Readonly<Record<PauseMenuItem, () => void>> = {
+      cheats: () => {
+        if (this.cheats === undefined) {
+          this.cheats = openCheatsModal(this, true, closeCheats);
+        }
+      },
       headHome: data.mode === "menu" ? data.onTitle : headHome,
       help: () =>
         this.hideUnder(() => openHelp(this, { region: "walk", resume: SCENE_KEYS.pause })),
@@ -155,7 +175,28 @@ export class PauseScene extends Scene {
     // do: the panel's backdrop takes the game frame, the walk bar and dog cards included, and
     // this takes the page beside the game.
     const outside = screenArea(covered);
-    listenOutsideTap(this, () => outside, onResume);
+    const back = () => {
+      if (!this.backCheats()) {
+        onResume();
+      }
+    };
+    listenOutsideTap(
+      this,
+      () => (this.cheats === undefined ? outside : screenArea([this.cheats.panel()])),
+      back,
+    );
+    onBackPressed(this, () => {
+      this.backCheats();
+    });
+    this.input.keyboard?.on("keydown", (event: KeyboardEvent) => {
+      if (
+        nativeSceneAccepts(this) &&
+        menuKeyActs(event.repeat, event.code) &&
+        isPauseKey(event.code)
+      ) {
+        this.backCheats();
+      }
+    });
     const overlay = data.mode === "menu" ? data.overlay : undefined;
     if (overlay !== undefined) {
       const closed = overlay.open === "help" ? HELP_CLOSED_EVENT : SETTINGS_CLOSED_EVENT;
@@ -166,6 +207,25 @@ export class PauseScene extends Scene {
       // the page, when the page closes back to the menu.
       const open = () => presses[overlay.open]();
       onceSceneEvent(this, this.game.events, Core.Events.POST_RENDER, open);
+    }
+    return true;
+  }
+
+  // The modal stays in this Pause scene, so the walk's shared pause policy reads its state.
+  cheatsOpen(): boolean {
+    return this.cheats !== undefined;
+  }
+
+  backCheats(): boolean {
+    if (this.cheats === undefined) {
+      return false;
+    }
+    if (!nativeSceneAccepts(this)) {
+      return true;
+    }
+    if (!this.cheats.back()) {
+      this.cheats.destroy();
+      this.cheats = undefined;
     }
     return true;
   }

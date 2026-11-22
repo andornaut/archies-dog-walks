@@ -63,7 +63,7 @@ export interface RunPause {
   card: boolean;
   hitStop: boolean;
   hold: boolean;
-  menu: "closed" | "confirmHome" | "help" | "open" | "settings";
+  menu: "cheats" | "closed" | "confirmHome" | "help" | "open" | "settings";
   page: "blurred" | "hidden" | "shown";
 }
 
@@ -123,6 +123,9 @@ export function topBarAction(
     }
     return button === "mute" ? "mute" : "closeHelp";
   }
+  if (pause.menu === "cheats") {
+    return via === "tap" && button === "pause" && !pause.hold ? "resume" : undefined;
+  }
   if (pause.menu === "settings" && via === "key") {
     return undefined;
   }
@@ -156,6 +159,7 @@ export function walkBackAction(over: boolean, pause: RunPause): WalkBackAction {
   switch (pause.menu) {
     case "closed":
       return "menu";
+    case "cheats":
     case "help":
     case "settings":
       return "none";

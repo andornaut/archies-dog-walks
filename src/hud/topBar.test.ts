@@ -220,3 +220,12 @@ describe("topBarButtonAt", () => {
     expect(topBarButtonAt(debuffs, x, y)).toBe(expected);
   });
 });
+
+it("leaves Cheats Back and keys with its modal and routes the pause icon one layer", () => {
+  const pause = { ...NOTHING_PAUSED, menu: "cheats" } as const;
+  expect(walkPaused(pause)).toBe(true);
+  expect(walkBackAction(false, pause)).toBe("none");
+  expect(topBarAction(pause, "key", "pause")).toBeUndefined();
+  expect(topBarAction(pause, "tap", "pause")).toBe("resume");
+  expect(topBarAction(pause, "tap", "mute")).toBeUndefined();
+});

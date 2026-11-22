@@ -11,7 +11,7 @@ import { modalTitleInk } from "../../ui/modal/titleRole.ts";
 import { type PanelMeasure } from "../../ui/modal/types.ts";
 import { modalCardView, panelButton } from "../../ui/modal/view.ts";
 import { inPill } from "../../ui/namePills.ts";
-import { PAUSE_MENU_ITEMS } from "../../ui/navigationMenu.ts";
+import { PAUSE_MENU_ITEMS, pauseMenuItemLabel } from "../../ui/navigationMenu.ts";
 import { pauseMenuLayout } from "../pauseMenu.ts";
 import { questionPanelView } from "../questionPanelView.ts";
 import { showZoneCelebration } from "./celebration.ts";
@@ -37,7 +37,7 @@ function menu(context = menuContext(), customNumbers = false) {
   const presses = PAUSE_MENU_ITEMS.map(() => vi.fn());
   const close = vi.fn();
   const view = questionPanelView(MEASURE, SCREEN_LAYOUT.walkView, {
-    labels: PAUSE_MENU_ITEMS.map((item) => words[item]),
+    labels: PAUSE_MENU_ITEMS.map((item) => pauseMenuItemLabel(gameData, item)),
     layout: pauseMenuLayout,
     note: [{ colour: 0, text: "Ending now keeps $5 of $9." }],
     primary: "last",
@@ -50,7 +50,7 @@ function menu(context = menuContext(), customNumbers = false) {
     fonts: { body: gameFont("font-body"), title: gameFont("font-title") },
     numberKeys: true,
     ...(customNumbers
-      ? { numberPresses: [presses[3]!, presses[0]!, presses[1]!, presses[2]!] }
+      ? { numberPresses: [presses[4]!, presses[1]!, presses[2]!, presses[3]!, presses[0]!] }
       : {}),
     presses,
     toGame: (point) => point,
@@ -77,9 +77,9 @@ describe("the HTML pause menu", () => {
   });
 
   it("names its buttons in order, with their keys, then the close control", () => {
-    const { buttons, words } = menu();
+    const { buttons } = menu();
     expect(buttons.map((button) => button.getAttribute("aria-label"))).toEqual([
-      ...PAUSE_MENU_ITEMS.map((item) => words[item]),
+      ...PAUSE_MENU_ITEMS.map((item) => pauseMenuItemLabel(gameData, item)),
       gameData.menuText.common.close,
     ]);
     expect(buttons.slice(0, -1).map((button) => button.getAttribute("aria-keyshortcuts"))).toEqual([
@@ -87,6 +87,7 @@ describe("the HTML pause menu", () => {
       "2",
       "3",
       "4",
+      "5",
     ]);
   });
 
@@ -124,13 +125,14 @@ describe("the HTML pause menu", () => {
   it("keeps digit bindings independent of visual action order", () => {
     const { buttons, doc, presses } = menu(undefined, true);
     expect(buttons.slice(0, -1).map((button) => button.getAttribute("aria-keyshortcuts"))).toEqual([
+      "5",
       "2",
       "3",
       "4",
       "1",
     ]);
     doc.defaultView.fire("keydown", { code: "Digit1", repeat: false });
-    expect(presses[3]).toHaveBeenCalledOnce();
+    expect(presses[4]).toHaveBeenCalledOnce();
     expect(presses[0]).not.toHaveBeenCalled();
   });
 

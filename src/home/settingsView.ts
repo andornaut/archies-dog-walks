@@ -8,10 +8,8 @@ import { SETTINGS_CARD } from "../data/layout.ts";
 import { MENU_TEXT } from "../data/menuText.ts";
 import type { MenuText } from "../data/types.ts";
 import type { Settings } from "../save/settings.ts";
-import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";
 import { closeFace } from "../ui/closeControl.ts";
 import { dismissFooter } from "../ui/modal/dismissFooter.ts";
-import { modalActionWidth } from "../ui/modal/layout.ts";
 import {
   type PanelButton,
   type PanelMeasure,
@@ -420,32 +418,17 @@ function stepsView(
   };
 }
 
-// The card with its primary dismissal at the bottom and, where cheats are available, Open Cheats
-// beside it, secondary on its left, the pair centred across the panel.
+// Settings has one centred primary dismissal.
 function settingsCard(
   measure: SettingsMeasure,
   panel: Rect,
   title: string,
   footerLabel: string,
-  openCheats: string | undefined,
 ): QuestionPanelView {
-  const close = dismissFooter(measure, { label: footerLabel, primary: true }, panel);
-  const card = { ...modalCardView(measure, panel, title, []), footer: close };
-  if (openCheats === undefined) {
-    return card;
-  }
-  const width = modalActionWidth(measure.inkWidth("title", openCheats));
-  const left = panel.x + (panel.width - width - BUTTON_SIZE.gap - close.rect.width) / 2;
-  const face = { ...close.rect, width, x: left };
-  const dx = left + width + BUTTON_SIZE.gap - close.rect.x;
-  const footer = {
-    ...close,
-    hit: { ...close.hit, x: close.hit.x + dx },
-    rect: { ...close.rect, x: close.rect.x + dx },
-    text: { ...close.text, centreX: close.text.centreX + dx },
+  return {
+    ...modalCardView(measure, panel, title, []),
+    footer: dismissFooter(measure, { label: footerLabel, primary: true }, panel),
   };
-  const open = { ...panelButton(measure, face, false, openCheats), secondary: true };
-  return { ...card, buttons: [open], footer };
 }
 
 // The settings card as it stands: the modal card, each row, the separators over the rows (a
@@ -457,8 +440,6 @@ export function settingsView(
     readonly art: (key: string) => { readonly height: number; readonly width: number } | undefined;
     readonly footerLabel?: string;
     readonly layout: SettingsLayout;
-    // Open Cheats' label, where cheats are available.
-    readonly openCheats?: string;
     readonly rows: readonly SettingsRow[];
     readonly words: MenuText["settings"];
   },
@@ -483,13 +464,7 @@ export function settingsView(
       scale: SETTINGS_BUILD_LABEL.style.scale,
       text: BUILD_LABEL,
     },
-    card: settingsCard(
-      measure,
-      panel,
-      words.title,
-      context.footerLabel ?? MENU_TEXT.common.close,
-      context.openCheats,
-    ),
+    card: settingsCard(measure, panel, words.title, context.footerLabel ?? MENU_TEXT.common.close),
     ring: focused === undefined ? undefined : insetRect(-FOCUS_OUTSET, focused),
     rows: rows.map((row, i) => {
       const at = itemAt(layout.rows, i);

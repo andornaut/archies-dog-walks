@@ -15,14 +15,16 @@ import {
 } from "../ui/navigationMenu.ts";
 import { addRampDim } from "../ui/phaser/rampDim.ts";
 import { whenArtReady } from "./artReady.ts";
+import { type CheatsModal, openCheatsModal } from "./cheatsModal.ts";
 import { openHelp } from "./helpScreen.ts";
 import { clearOnHomePageOpening } from "./homeBarPress.ts";
 import { canvasPanelMeasure } from "./modalMeasure.ts";
 import { mountNativeOverlay } from "./nativeOverlayReady.ts";
 import {
   closeOverlay,
-  listenDismiss,
+  listenOutsideTap,
   nativeSceneAccepts,
+  onBackPressed,
   openOverlay,
   type OverlayData,
 } from "./overlay.ts";
@@ -51,12 +53,32 @@ export class MenuScene extends Scene {
 
   private mount({ context, onHeadHome, resume }: MenuSceneData): boolean {
     const area = overlayRegion("home");
-    const close = () => closeOverlay(resume, this);
+    let cheats: CheatsModal | undefined;
+    const closeCheats = () => {
+      cheats?.destroy();
+      cheats = undefined;
+    };
+    const back = () => {
+      if (cheats !== undefined) {
+        if (!cheats.back()) {
+          closeCheats();
+        }
+      } else {
+        closeOverlay(resume, this);
+      }
+    };
+    const close = back;
+    this.events.once(Scenes.Events.SHUTDOWN, closeCheats);
     const settings = () => {
       const data: SettingsData = { region: "home", resume: SCENE_KEYS.menu };
       openOverlay(this, SCENE_KEYS.settings, data);
     };
     const actions: Readonly<Record<MenuItem, () => void>> = {
+      cheats: () => {
+        if (cheats === undefined) {
+          cheats = openCheatsModal(this, false, closeCheats);
+        }
+      },
       close,
       headHome: () => {
         close();
@@ -104,7 +126,12 @@ export class MenuScene extends Scene {
     addRampDim(this);
     this.events.on(Scenes.Events.PAUSE, () => this.scene.setVisible(false));
     this.events.on(Scenes.Events.RESUME, () => this.scene.setVisible(true));
-    listenDismiss(this, screenArea(covered), close);
+    onBackPressed(this, back);
+    listenOutsideTap(
+      this,
+      () => (cheats === undefined ? screenArea(covered) : screenArea([cheats.panel()])),
+      back,
+    );
     clearOnHomePageOpening(this, close);
     this.input.keyboard?.on("keydown", (event: KeyboardEvent) => {
       if (!nativeSceneAccepts(this)) {

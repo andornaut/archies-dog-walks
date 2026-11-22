@@ -54,7 +54,6 @@ export interface DomSettingsInput
   // Told the row (by index) or close control (the rows' count) focus moves to, or null.
   readonly onFocus: (index: number | null) => void;
   // What Open Cheats does, where the view shows it.
-  readonly openCheats?: () => void;
   // A press on a switch or install row, followed until it lifts, as the scene follows one on
   // the canvas.
   readonly press: {
@@ -517,7 +516,7 @@ export function showSettings(layer: UiLayer, input: DomSettingsInput): DomSettin
       input.onFocus(index ?? null);
     },
     parts,
-    presses: input.openCheats === undefined ? [] : [input.openCheats],
+    presses: [],
     toGame: input.toGame,
     view: current.card,
   });

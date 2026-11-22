@@ -11,7 +11,7 @@ import { walkLength } from "../rules/route.ts";
 import { bodyTextWidth } from "../testing/bodyFont.ts";
 import { fontFileMetrics, inkWidth } from "../testing/fontInk.ts";
 import { MODAL, modalActionWidth, modalFamilyWidth } from "../ui/modal/layout.ts";
-import { PAUSE_MENU_ITEMS } from "../ui/navigationMenu.ts";
+import { PAUSE_MENU_ITEMS, pauseMenuItemLabel } from "../ui/navigationMenu.ts";
 import { cents } from "../units.ts";
 import {
   HOME_QUESTION_ANSWERS,
@@ -34,9 +34,12 @@ const longer = (a: string, b: string): string => (bodyWidth(b) > bodyWidth(a) ? 
 describe("the menus' hit areas", () => {
   // The top bar's buttons stay live while the menu is up, so no menu button may reach them.
   it("keep each clear of the next and of the top bar's buttons", () => {
-    const { pause } = gameData.menuText;
     const cases = [
-      { labels: PAUSE_MENU_ITEMS.map((key) => pause[key]), layout: pauseMenuLayout, noteLines: 2 },
+      {
+        labels: PAUSE_MENU_ITEMS.map((key) => pauseMenuItemLabel(gameData, key)),
+        layout: pauseMenuLayout,
+        noteLines: 2,
+      },
       {
         labels: HOME_QUESTION_ANSWERS.map((key) => gameData.runText.homeQuestion[key]),
         layout: homeQuestionLayout,

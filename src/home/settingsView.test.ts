@@ -147,39 +147,10 @@ describe("settingsView", () => {
   });
 });
 
-describe("Open Cheats", () => {
-  const withCheats = settingsView(
-    MEASURE,
-    {
-      art: () => ({ height: 16, width: 16 }),
-      layout,
-      openCheats: gameData.menuText.cheats.open,
-      rows,
-      words: gameData.menuText.settings,
-    },
-    STATE,
-  );
-
-  it("shows only where cheats are available", () => {
-    expect(view({}).card.buttons).toEqual([]);
-    expect(withCheats.card.buttons.map(({ label }) => label)).toEqual([
-      gameData.menuText.cheats.open,
-    ]);
-  });
-
-  it("sits secondary beside the primary Close, the pair centred across the panel", () => {
-    const [open] = withCheats.card.buttons;
-    const close = withCheats.card.footer!;
-    const { panel } = layout;
-    expect(open).toMatchObject({ primary: false, secondary: true });
-    expect(close.primary).toBe(true);
-    expect(open!.rect.y).toBe(close.rect.y);
-    expect(close.rect.x - (open!.rect.x + open!.rect.width)).toBe(16);
-    const left = open!.rect.x - panel.x;
-    const right = panel.x + panel.width - (close.rect.x + close.rect.width);
-    expect(Math.abs(left - right)).toBeLessThanOrEqual(1);
-    expect(close.hit.x - close.rect.x).toBe(
-      view({}).card.footer!.hit.x - view({}).card.footer!.rect.x,
-    );
-  });
+it("keeps Settings dismissal centred without a Cheats entry", () => {
+  const card = view({}).card;
+  expect(card.buttons).toEqual([]);
+  const close = card.footer!;
+  expect(close.primary).toBe(true);
+  expect(close.rect.x + close.rect.width / 2).toBe(layout.panel.x + layout.panel.width / 2);
 });

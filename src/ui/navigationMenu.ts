@@ -3,15 +3,16 @@ import { MODAL, modalActionWidth, modalFamilyWidth } from "./modal/layout.ts";
 import type { PanelMeasure } from "./modal/types.ts";
 
 // Digit bindings stay fixed while the primary action occupies the bottom visual position.
-export const PAUSE_MENU_KEY_ORDER = ["resume", "help", "settings", "headHome"] as const;
+export const PAUSE_MENU_KEY_ORDER = ["resume", "help", "settings", "headHome", "cheats"] as const;
 export type PauseMenuItem = (typeof PAUSE_MENU_KEY_ORDER)[number];
 export const PAUSE_MENU_ITEMS = [
-  ...PAUSE_MENU_KEY_ORDER.filter((item) => item !== "resume"),
+  "cheats",
+  ...PAUSE_MENU_KEY_ORDER.filter((item) => item !== "resume" && item !== "cheats"),
   "resume",
 ] as const;
 
 export type MenuContext = "end" | "help" | "home" | "page";
-export type MenuItem = "close" | "headHome" | "help" | "logbook" | "settings";
+export type MenuItem = "cheats" | "close" | "headHome" | "help" | "logbook" | "settings";
 
 // Only the navigation applicable to the screen joins its primary Close action: the other entries
 // in label order, then Back to title where it applies, then Close. Leaving is the top bar's Exit,
@@ -19,13 +20,13 @@ export type MenuItem = "close" | "headHome" | "help" | "logbook" | "settings";
 export function menuItems(context: MenuContext): readonly MenuItem[] {
   switch (context) {
     case "home":
-      return ["help", "logbook", "settings", "close"];
+      return ["cheats", "help", "logbook", "settings", "close"];
     case "page":
-      return ["help", "logbook", "settings", "headHome", "close"];
+      return ["cheats", "help", "logbook", "settings", "headHome", "close"];
     case "help":
-      return ["settings", "headHome", "close"];
+      return ["cheats", "settings", "headHome", "close"];
     case "end":
-      return ["settings", "headHome", "close"];
+      return ["cheats", "settings", "headHome", "close"];
     default:
       return context satisfies never;
   }
@@ -36,6 +37,8 @@ export function menuItemLabel(
   item: MenuItem,
 ): string {
   switch (item) {
+    case "cheats":
+      return data.menuText.cheats.open;
     case "close":
       return data.menuText.common.close;
     case "headHome":
@@ -73,5 +76,9 @@ export function navigationMenuWidth(
 }
 
 export function pauseMenuItemLabel(data: Pick<GameData, "menuText">, item: PauseMenuItem): string {
-  return item === "headHome" ? data.menuText.end.headHome : data.menuText.pause[item];
+  return item === "cheats"
+    ? data.menuText.cheats.open
+    : item === "headHome"
+      ? data.menuText.end.headHome
+      : data.menuText.pause[item];
 }

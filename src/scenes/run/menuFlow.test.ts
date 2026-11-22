@@ -10,9 +10,11 @@ vi.mock("../soundboard.ts", () => ({ soundboardOf: () => ({ setPaused: vi.fn() }
 function fixture() {
   let current: PauseSceneData | undefined;
   const headHome = vi.fn();
+  const pause = { backCheats: vi.fn(() => false), cheatsOpen: vi.fn(() => false) };
   const scene = {
     scene: {
       get: () => ({
+        ...pause,
         scene: {
           restart: (data: PauseSceneData) => {
             current = data;
@@ -36,7 +38,7 @@ function fixture() {
     over: () => false,
     pauseNote: () => "",
   });
-  return { current: () => current!, flow, headHome };
+  return { current: () => current!, flow, headHome, pause, scene };
 }
 
 it("confirms navigation before requesting a title destination and retains fork settlement", () => {
@@ -69,4 +71,20 @@ it("a cancelled title confirmation does not alter subsequent fork or automatic r
   expect(endSceneFor("title", { kind: "ended", reason: "finished" })).toBe("end");
   expect(endSceneFor("title", { kind: "ended", reason: "noDogs" })).toBe("end");
   expect(endSceneFor("title", { kind: "ended", reason: "wentHome" })).toBe("start");
+});
+
+it("keeps Pause while closing the direct Cheats layer before resuming", () => {
+  const { flow, pause, scene } = fixture();
+  flow.openPause("menu");
+  pause.cheatsOpen.mockReturnValue(true);
+  pause.backCheats.mockReturnValueOnce(true);
+  expect(flow.pause().menu).toBe("cheats");
+  flow.closePause();
+  expect(scene.scene.stop).not.toHaveBeenCalled();
+  expect(scene.time.paused).toBe(true);
+  pause.cheatsOpen.mockReturnValue(false);
+  expect(flow.pause().menu).toBe("open");
+  flow.closePause();
+  expect(scene.scene.stop).toHaveBeenCalledWith("pause");
+  expect(flow.pause().menu).toBe("closed");
 });
