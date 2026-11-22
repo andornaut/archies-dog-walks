@@ -44,7 +44,7 @@ Choose one content rectangle for each page. Derive its outer margins, button edg
 | SHOP_LAYOUT.list  | Top 144; height 348; bottom 492                       | y px           | Shared scrolling viewport, x = 0 to the track less 2       | [shop layout](../src/home/shopLayout.ts)   |
 | page.back         | 116,500,128,48                                        | x,y,w,h px     | Back: Shop, Logbook and Help, 12px above the screen's foot | [help layout](../src/help/helpLayout.ts)   |
 
-Shop, Logbook and Help are frameless pages under the live top bar: each fills `(0,40,360,520)` edge to edge with no frame, border, margin or close control, and Back is its only leave. Their content takes one 8px side inset, and a scrollbar's track sits at x = 344–351. Shop and Logbook share their page and list geometry. Use `shopListFrame` and `statsListFrame` for the actual scrolling/non-scrolling content room. Settings uses Large width and a height capped by both its caller's safe capacity and `560 - 2 × 48 = 464px`; a full-height panel starts at y = 48 below the protected top bar. Its header/X, centred 48px footer and full-size version label above the footer stay fixed while only rows and separators scroll. The footer is Back from Menu or Pause and Close when opened standalone. Focused Settings rows retain a complete inset 2-art-pixel cyan ring. Other full-screen pages retain their own bounds.
+Shop, Logbook and Help are frameless pages under the live top bar: each fills `(0,40,360,520)` edge to edge with no frame, border, margin or close control, and Back is its only leave. Their content takes one 8px side inset, and a scrollbar's track sits at x = 344–351. Shop and Logbook share their page and list geometry. Use `shopListFrame` and `statsListFrame` for the actual scrolling/non-scrolling content room. Settings uses Large width and a height capped by both its caller's safe capacity and `560 - 2 × 48 = 464px`; a full-height panel starts at y = 48 below the protected top bar. Its header/X, centred 48px footer and full-size version label above the footer stay fixed while only rows and separators scroll. The footer is Back from Menu or Pause and Close when opened standalone. Authored Settings row focus stays within the visible row. Other full-screen pages retain their own bounds.
 
 ## Groups/columns
 
@@ -66,7 +66,7 @@ Keep hero, shop, sign and actor anchors independent of picker padding. On result
 
 ## Controls/targets
 
-Visible faces, touch targets and focus outlines are separate rectangles. Keep the game's 48px action/target and 20px icon-face roles; shared document structure across games does not make their control sizes interchangeable. See [Controls](controls.md#sizing-and-spacing) for sizing and [interaction rules](controls.md#interaction-and-accessibility) for semantics.
+Visible faces and touch targets use separate rectangles. Keep the game's 48px action/target and 20px icon-face roles; shared document structure across games does not make their control sizes interchangeable. See [Controls](controls.md#sizing-and-spacing) for sizing and [interaction rules](controls.md#interaction-and-accessibility) for semantics.
 
 | Token                  | Value                                 | Unit | Scope                                                  | Source                                         |
 | ---------------------- | ------------------------------------- | ---- | ------------------------------------------------------ | ---------------------------------------------- |
@@ -77,7 +77,7 @@ Visible faces, touch targets and focus outlines are separate rectangles. Keep th
 | topbar.home.pitch      | 48                                    | px   | Faces x = 230/278/326, y = 8; else 278/326             | [home placement](../src/home/homeLayout.ts)    |
 | topbar.home.well       | 97 wide, at x = 5                     | px   | Home bank well                                         | [home placement](../src/home/homeLayout.ts)    |
 | topbar.walk.hit        | 48×48, rows 0–47                      | px   | Two columns at x = 264/312; debuff bars win rows 40–47 | [walk HUD](../src/hud/walkHud.ts)              |
-| home.start.focusOutset | 4                                     | px   | Full focus ring, to the canvas's last row              | [home layout](../src/home/homeLayout.ts)       |
+| home.start.focusOutset | 4                                     | px   | Authored Start focus overlay, to canvas's last row     | [home layout](../src/home/homeLayout.ts)       |
 | press.min              | 48×48                                 | px   | Least press area; overlaps go to the nearest centre    | [Controls](controls.md#sizing-and-spacing)     |
 
 Modal actions use their full measured label/icon width plus padding, not the non-modal compact/wide width floors. Preserve prices, goals, reasons and full-size labels in every state.
@@ -134,6 +134,6 @@ Keep intentional geometry explicit: compact top bars, steering gestures, hold-to
 
 Loading recovery uses a fixed CSS panel and typography with the ordinary logical action fit, under the [recovery exception](controls.md#scope-and-exceptions). Keep that role separate from the ordinary modal tables.
 
-Before changing a layout, identify its coordinate space, page bounds, present groups, visible-ink extents, target rectangles and protected areas. Check smallest safe width, wrapped content, close-hit clearance, scrollbar reservation, focus outsets and empty groups. Compare neutral and selected card edges without counting badges as grid padding. Verify overlay ordering and unchanged dismissal behaviour.
+Before changing a layout, identify its coordinate space, page bounds, present groups, visible-ink extents, target rectangles and protected areas. Check smallest safe width, wrapped content, close-hit clearance, scrollbar reservation, visible state cues and empty groups. Compare neutral and selected card edges without counting badges as grid padding. Verify overlay ordering and unchanged dismissal behaviour.
 
 Read the owning source and committed export together. A changed layout needs matching exports and focused checks; a documentation-only correction needs formatting and Markdown lint. Use a bounded visual check only for a concrete unresolved visual question.
