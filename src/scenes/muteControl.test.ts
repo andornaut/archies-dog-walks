@@ -6,6 +6,7 @@ import { MENU_TEXT } from "../data/menuText.ts";
 import { DeviceSettings, SETTINGS_KEYS } from "../save/settings.ts";
 import { FakeDocument } from "../testing/fakeDom.ts";
 import { mountMuteControl } from "../ui/dom/muteControl.ts";
+import { PALETTE } from "../ui/palette.ts";
 
 afterEach(() => vi.unstubAllGlobals());
 
@@ -43,6 +44,9 @@ it("shares pre-profile mute with the device settings, follows external changes a
     const image = decodePng(Buffer.from(url.replace(/^data:image\/png;base64,/, ""), "base64"));
     expect(image.width).toBeGreaterThan(0);
   }
+  expect(parent.children[0]?.style.getPropertyValue("--mute-cyan")).toBe(
+    `#${PALETTE.cyan.toString(16)}`,
+  );
   expect(button.getAttribute("aria-label")).toBe(MENU_TEXT.settings.sound);
   expect(button.getAttribute("aria-pressed")).toBe("false");
   button.fire("click");

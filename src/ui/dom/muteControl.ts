@@ -1,3 +1,4 @@
+import "./focusStyle.css";
 import "./muteControl.css";
 
 import crashArt from "virtual:adw-crash-art";
@@ -21,7 +22,7 @@ export function mountMuteControl(settings: MuteControlSettings, parent: HTMLElem
   const doc = parent.ownerDocument;
   const view = doc.createElement("div");
   view.className = "adw-standalone-mute";
-  for (const name of ["amber", "brown", "cream", "ink"] as const) {
+  for (const name of ["brown", "cream", "cyan", "ink"] as const) {
     view.style.setProperty(`--mute-${name}`, `#${PALETTE[name].toString(16).padStart(6, "0")}`);
   }
   const button = doc.createElement("button");

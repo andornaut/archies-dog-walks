@@ -16,6 +16,7 @@
   pointer-events: auto;
   cursor: pointer;
   font: 10px monospace;
+  outline: none;
 }
 
 .adw-standalone-mute button::before {
@@ -51,7 +52,27 @@
   background-position-x: -16px;
 }
 
-.adw-standalone-mute button:focus-visible::before {
-  outline: 1px solid var(--mute-amber);
-  outline-offset: 2px;
+.adw-standalone-mute button:focus-visible::after {
+  position: absolute;
+  left: calc(var(--mute-face-x) + 1px);
+  top: calc(var(--mute-face-y) + 1px);
+  box-sizing: border-box;
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--mute-cyan);
+  content: "";
+  pointer-events: none;
+  box-shadow:
+    0 0 0 1px var(--mute-ink),
+    inset 0 0 0 1px var(--mute-ink);
+}
+
+@media (forced-colors: active) {
+  .adw-standalone-mute button:focus-visible::after {
+    border-color: Highlight;
+    box-shadow:
+      0 0 0 1px Canvas,
+      inset 0 0 0 1px Canvas;
+    forced-color-adjust: none;
+  }
 }

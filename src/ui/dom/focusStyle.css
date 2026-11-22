@@ -1,0 +1,48 @@
+/* Custom-painted controls retain native focus while using Archie's cyan and ink band. */
+.adw-button:focus-visible:not(.adw-row):not(:has(.adw-face))::after,
+.adw-close:focus-visible:not(:has(.adw-close-face))::after,
+.crash .crash-button:focus-visible::after {
+  position: absolute;
+  inset: var(--adw-slice-1, 1px);
+  box-sizing: border-box;
+  border: var(--adw-slice-2, 2px) solid var(--adw-cyan, #2ce8f5);
+  box-shadow:
+    0 0 0 var(--adw-slice-1, 1px) var(--adw-ink, #181425),
+    inset 0 0 0 var(--adw-slice-1, 1px) var(--adw-ink, #181425);
+  content: "";
+  pointer-events: none;
+}
+
+.crash .crash-button {
+  position: relative;
+}
+
+.crash .crash-button:focus-visible {
+  outline: none;
+}
+
+/* Editable seed fields keep their border, selection and native editing behaviour. */
+.adw-row input:focus-visible {
+  outline: none;
+  box-shadow: inset 0 0 0 var(--adw-slice-2, 2px) var(--adw-cyan, #2ce8f5);
+}
+
+@media (forced-colors: active) {
+  .adw-button:focus-visible:not(.adw-row):not(:has(.adw-face))::after,
+  .adw-close:focus-visible:not(:has(.adw-close-face))::after,
+  .adw-button:focus-visible .adw-face::after,
+  .adw-close:focus-visible .adw-close-face::after,
+  .adw-row:focus-visible::after,
+  .crash .crash-button:focus-visible::after {
+    border-color: Highlight;
+    box-shadow:
+      0 0 0 var(--adw-slice-1, 1px) Canvas,
+      inset 0 0 0 var(--adw-slice-1, 1px) Canvas;
+    forced-color-adjust: none;
+  }
+
+  .adw-row input:focus-visible {
+    border-color: Highlight !important;
+    box-shadow: none;
+  }
+}

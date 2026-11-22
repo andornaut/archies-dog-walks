@@ -2,6 +2,7 @@
 // file, since the page's CSP blocks a <style> a script adds.
 import "@andornaut/game-kit/runtime/web/ui/dom/ui.css";
 import "virtual:adw-ui.css";
+import "./focusStyle.css";
 
 import {
   createModalInputGate,
