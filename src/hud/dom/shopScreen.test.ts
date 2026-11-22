@@ -1,5 +1,6 @@
 import { setImmediate } from "node:timers/promises";
 
+import { createModalInputGate } from "@andornaut/game-kit/runtime/input/modalInput";
 import { expect, it, vi } from "vitest";
 
 import { gameData } from "../../data/index.ts";
@@ -15,6 +16,7 @@ import { shopPageView } from "../../home/shopPageView.ts";
 import { FakeDocument, type FakeElement, fakeLayer } from "../../testing/fakeDom.ts";
 import { fontFileMetrics, fontInk, fontInkRows, gameFont } from "../../testing/fontInk.ts";
 import { newPlayerSave } from "../../testing/saves.ts";
+import { guardNativeInput } from "../../ui/dom/modalLifecycle.ts";
 import { type DomScale, domScale, fontPixel, gridRect, gridX } from "../../ui/domScale.ts";
 import { modalTitleInk } from "../../ui/modal/titleRole.ts";
 import { PALETTE } from "../../ui/palette.ts";
@@ -32,16 +34,19 @@ const SOURCE: ShopScreenInput["source"] = {
 };
 const RECT = { height: 48, width: 300, x: 24, y: 180 };
 function fixture({
+  beforeMount,
   scale = domScale(3, { height: 560, width: 360, x: 0, y: 0 }),
   source = SOURCE,
   tabs = false,
 }: {
+  readonly beforeMount?: (doc: FakeDocument) => void;
   readonly tabs?: boolean;
   readonly scale?: DomScale;
   readonly source?: ShopScreenInput["source"];
 } = {}) {
   const doc = new FakeDocument();
   const { layer } = fakeLayer(doc, scale);
+  beforeMount?.(doc);
   const down = vi.fn(),
     up = vi.fn(),
     cancel = vi.fn(),
@@ -437,6 +442,64 @@ it("cancels a carried row gesture when a nested modal opens and rejects its late
   expect(released).toBeDefined();
   released?.release();
   screen.destroy();
+});
+
+it("accepts Shop Back's first touch after an older canceled surface reused its pointer id", async () => {
+  let stopOlder: () => void = () => undefined;
+  const f = fixture({
+    beforeMount: (doc) => {
+      const older = doc.createElement("div");
+      doc.body.append(older);
+      const gate = createModalInputGate();
+      const stop = guardNativeInput(
+        { gate, subscribe: gate.subscribe },
+        older as unknown as HTMLElement,
+      );
+      const down = pointer(older, 1, "pointerdown");
+      doc.fire("pointerdown", down);
+      older.fire("pointerdown", down);
+      const covered = gate.open();
+      stopOlder = () => {
+        stop();
+        covered.close();
+        older.remove();
+      };
+    },
+  });
+  try {
+    await settle();
+    const footer = f.root.all().find((node) => node.className.includes("adw-footer"))!;
+    const target = footer.children[0]!;
+    const touch = (type: string) => ({
+      ...pointer(target, 1, type),
+      button: 0,
+      buttons: type === "pointerdown" ? 1 : 0,
+      isPrimary: true,
+      pointerType: "touch",
+    });
+    const down = touch("pointerdown");
+    f.doc.fire("pointerdown", down);
+    f.root.fire("pointerdown", down);
+    const release = touch("pointerup");
+    // Respect real stopImmediatePropagation across document capture listeners from both roots.
+    for (const listener of f.doc.listeners.get("pointerup") ?? []) {
+      listener(release);
+      if (release.stopImmediatePropagation.mock.calls.length > 0) {
+        break;
+      }
+    }
+    const click = touch("click");
+    f.root.fire("click", click);
+    if (click.stopImmediatePropagation.mock.calls.length === 0) {
+      footer.fire("click", click);
+    }
+    expect(f.close).toHaveBeenCalledOnce();
+    expect(f.down).not.toHaveBeenCalled();
+    expect(f.up).not.toHaveBeenCalled();
+  } finally {
+    f.screen.destroy();
+    stopOlder();
+  }
 });
 
 it("leaves Shop by its native Back alone, without activating a list gesture", async () => {
