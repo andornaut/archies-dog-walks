@@ -264,10 +264,15 @@ export function detailCardView(
       const room = width - CARD.pad - (x + photo.width + CARD.owner.gap);
       const nameLines = linesIn(room, card.owner.name);
       const roleLines = linesIn(room, card.owner.role);
-      owner = { room, x, y: bottom + MODAL.pad };
-      bottom = owner.y + detailOwnerHeight(measure.body, roleLines, nameLines);
       separators.push({ height: 1, width: rooms.full, x: CARD.pad, y: bottom + dividerGap });
-      bottom += 2 * dividerGap + 1;
+      owner = { room, x, y: bottom + 2 * dividerGap + 1 };
+      bottom = owner.y + detailOwnerHeight(measure.body, roleLines, nameLines);
+      if (statusLines.some((row) => row.kind === "price")) {
+        separators.push({ height: 1, width: rooms.full, x: CARD.pad, y: bottom + dividerGap });
+        bottom += 2 * dividerGap + 1;
+      } else {
+        bottom += MODAL.pad;
+      }
     } else {
       bottom += MODAL.pad;
     }

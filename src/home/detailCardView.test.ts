@@ -53,9 +53,13 @@ it("places the owner below the portrait row, photo aligned to the dog-art column
   );
   expect(owner.every((text) => text.x > photo!.rect.x + photo!.rect.width)).toBe(true);
   const divider = view.separators![0]!;
-  expect(divider.y - Math.max(photo!.rect.y + photo!.rect.height, ...owner.map(bottom))).toBe(
+  expect(divider.y - Math.max(well!.rect.y + well!.rect.height, ...details.map(bottom))).toBe(
     MODAL.gap + MODAL.rowGap,
   );
+  expect(Math.min(photo!.rect.y, ...owner.map((text) => text.capTop)) - divider.y - 1).toBe(
+    MODAL.gap + MODAL.rowGap,
+  );
+  expect(view.separators).toHaveLength(1);
 });
 
 it("centres the price mark and amount together and the saving prompt as a separate full-font row", () => {
@@ -78,11 +82,12 @@ it("centres the price mark and amount together and the saving prompt as a separa
     );
     expect(text.scale ?? 2).toBe(2);
   }
+  expect(view.separators).toHaveLength(2);
   expect(price.spans!.map(({ text }) => text).join("")).toBe(card.status);
   expect(price.spans!.at(-1)!.colour).toBe(PALETTE.darkRed);
   expect(price.spans![1]).toEqual({ colour: PALETTE.forest, text: "$" });
   expect(saving.capTop - bottom(price)).toBe(MODAL.pad);
-  expect(price.capTop - (view.separators![0]!.y + 1)).toBe(MODAL.gap + MODAL.rowGap);
+  expect(price.capTop - (view.separators!.at(-1)!.y + 1)).toBe(MODAL.gap + MODAL.rowGap);
   expect(view.card.footer!.rect.y - bottom(saving)).toBe(MODAL.pad);
 });
 
