@@ -99,11 +99,10 @@ it.each([false, true])(
   },
 );
 
-it("uses the same card for Cancel and primary Buy, appending bank context only once", () => {
+it("shows only the price below an affordable card with Cancel and primary Buy", () => {
   const purchase = {
     buy: gameData.homeText.shop.confirmBuy,
     cancel: gameData.homeText.shop.confirmCancel,
-    left: gameData.homeText.detail.dogStatus,
   };
   const view = detailCardView(gameData, measure, SCREEN_LAYOUT.screen, {
     card,
@@ -119,7 +118,9 @@ it("uses the same card for Cancel and primary Buy, appending bank context only o
   ]);
   const [cancel, buy] = view.card.buttons;
   expect(buy!.rect.y > cancel!.rect.y || buy!.rect.x > cancel!.rect.x).toBe(true);
-  expect(view.texts.filter((text) => text.lines.join(" ") === purchase.left)).toHaveLength(1);
+  const price = view.texts.find((text) => text.font === "title")!;
+  expect(price.lines).toEqual([card.status]);
+  expect(view.texts.filter((text) => text.capTop >= price.capTop)).toEqual([price]);
 });
 
 it("fits all authored dog details at full font size with separate price and saving rows", () => {

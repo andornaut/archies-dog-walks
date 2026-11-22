@@ -4,7 +4,7 @@ import { gameData } from "../data/index.ts";
 import { newPlayerSave } from "../testing/saves.ts";
 import { cents } from "../units.ts";
 import { itemModal } from "./itemModal.ts";
-import { answerPurchase, confirmLines } from "./purchaseConfirm.ts";
+import { answerPurchase } from "./purchaseConfirm.ts";
 import { dogRows, gearRows, slotRows } from "./shop.ts";
 
 const items = [dogRows, gearRows, slotRows].map((rows) =>
@@ -17,8 +17,9 @@ it.each(items)(
     const save = { ...newPlayerSave, bankCents: cents(row.price! + 123) };
     const shown = itemModal(gameData, save, save.lastLoadout, row.purchase);
     const pending = shown.pending!;
-    const labels = confirmLines(gameData, pending);
-    expect(shown.purchase).toEqual({ buy: labels.buy, cancel: labels.cancel, left: labels.left });
+    const { confirmBuy: buy, confirmCancel: cancel } = gameData.homeText.shop;
+    expect(shown.purchase).toEqual({ buy, cancel });
+    expect(shown.statusLines).toEqual([{ kind: "price", text: shown.card.status }]);
     expect(shown.card.title).toBe(row.name);
     if (row.purchase.kind === "dog") {
       expect(shown.card.owner?.dog).toBe(row.purchase.dog);

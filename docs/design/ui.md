@@ -77,3 +77,4 @@ Reference: [Screens and UI](../../src/README.md#screens-and-ui), [Assets](../../
 | adw-0213 | Align Archie divider and icon ink                                | [adw-0213.md](../work/adw-0213.md) |
 | adw-0217 | Wrap detail descriptions at the available right margin           | [adw-0217.md](../work/adw-0217.md) |
 | adw-0218 | Enable Reset Save only for stored player progress                | [adw-0218.md](../work/adw-0218.md) |
+| adw-0220 | Show only the price in affordable item detail cards              | [adw-0220.md](../work/adw-0220.md) |

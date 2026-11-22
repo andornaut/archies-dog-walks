@@ -204,7 +204,7 @@ export interface DetailViewInput {
   readonly card: DetailCard;
   readonly kind: "dog" | "dogSlot" | "gear" | "walker";
   readonly picture: DetailPicture;
-  readonly purchase?: { readonly buy: string; readonly cancel: string; readonly left: string };
+  readonly purchase?: { readonly buy: string; readonly cancel: string };
   readonly statusLines?: readonly { readonly kind: "price" | "status"; readonly text: string }[];
 }
 
@@ -219,13 +219,7 @@ export function detailCardView(
   const { card, kind, picture } = detail;
   const { description, identity } = detailParts(kind, card);
   const besideParts = [...identity, ...description];
-  const status = detail.statusLines ?? [{ kind: "status" as const, text: card.status }];
-  const statusLines = [
-    ...status,
-    ...(detail.purchase === undefined
-      ? []
-      : [{ kind: "status" as const, text: detail.purchase.left }]),
-  ];
+  const statusLines = detail.statusLines ?? [{ kind: "status" as const, text: card.status }];
   const dividerGap = MODAL.gap + MODAL.rowGap;
   const footerGap = MODAL.pad;
   // Each row of text's value: each effect's name a line leads with, as a perk's "Second

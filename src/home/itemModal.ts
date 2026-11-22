@@ -6,13 +6,13 @@ import type { SaveDocument } from "../save/schema.ts";
 import { type DetailCard, dogDetail, gearDetail } from "./detail.ts";
 import type { HomeLoadout, Purchase } from "./home.ts";
 import { HOME_TEXT_FIELDS } from "./homeText.ts";
-import { confirmLines, type PendingPurchase, requestPurchase } from "./purchaseConfirm.ts";
+import { type PendingPurchase, requestPurchase } from "./purchaseConfirm.ts";
 import { slotRows } from "./shop.ts";
 
 export interface ItemModal {
   readonly card: DetailCard;
   readonly pending?: PendingPurchase;
-  readonly purchase?: { readonly buy: string; readonly cancel: string; readonly left: string };
+  readonly purchase?: { readonly buy: string; readonly cancel: string };
   readonly reason?: "cantAfford" | "notForSale";
   readonly statusLines: readonly { readonly kind: "price" | "status"; readonly text: string }[];
 }
@@ -54,19 +54,12 @@ export function itemModal(
   }
   const request = requestPurchase(data, save, card.title, purchase);
   if (request.kind === "confirm") {
-    const lines = confirmLines(data, request.pending);
+    const { confirmBuy: buy, confirmCancel: cancel } = data.homeText.shop;
     return {
       card,
       pending: request.pending,
-      purchase: { buy: lines.buy, cancel: lines.cancel, left: lines.left },
-      statusLines: [
-        {
-          kind: "price",
-          text: fillLine(HOME_TEXT_FIELDS.detail, data.homeText.detail, "priceBuy", {
-            price: lines.price,
-          }),
-        },
-      ],
+      purchase: { buy, cancel },
+      statusLines: [{ kind: "price", text: card.status }],
     };
   }
   if (request.reason === "cantAfford") {
