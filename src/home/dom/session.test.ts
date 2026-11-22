@@ -104,6 +104,24 @@ describe("native home visit", () => {
     expect(heldKey.stopPropagation).toHaveBeenCalledOnce();
     f.session.dispose();
   });
+  it("restores a held item's logical invoker only after its replacement is painted", async () => {
+    const f = fixture();
+    const next = f.view();
+    f.doc.body.focus();
+    f.session.replace(next, Promise.resolve(), "start");
+    expect(f.doc.activeElement).toBe(f.doc.body);
+    f.reveals[0]!.settle(true);
+    await Promise.resolve();
+    f.frames.shift()?.();
+    expect(f.doc.activeElement).toBe(next.controls.get("start"));
+    f.doc.body.focus();
+    f.session.replace(f.view(), Promise.resolve(), "removed-item");
+    f.reveals[1]!.settle(true);
+    await Promise.resolve();
+    f.frames.shift()?.();
+    expect(f.doc.activeElement).toBe(f.doc.body);
+    f.session.dispose();
+  });
   it("rejects a release captured before a modal opened even after it closes", async () => {
     const f = fixture();
     f.session.replace(f.view());

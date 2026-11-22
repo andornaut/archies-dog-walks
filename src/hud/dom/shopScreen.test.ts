@@ -99,6 +99,22 @@ function fixture({
 }
 const settle = () => setImmediate();
 
+it("restores a held item's retained row only when the native page accepts input", async () => {
+  const f = fixture();
+  await settle();
+  f.screen.focusRow("row");
+  expect(f.doc.activeElement?.getAttribute("aria-label")).toBe(gameData.dogs.kilo.name);
+  f.doc.body.focus();
+  f.screen.setInert(true);
+  f.screen.focusRow("row");
+  expect(f.doc.activeElement).toBe(f.doc.body);
+  f.screen.setInert(false);
+  const restored = f.doc.activeElement;
+  f.screen.focusRow("removed-item");
+  expect(f.doc.activeElement).toBe(restored);
+  f.screen.destroy();
+});
+
 const pointer = (target: FakeElement, id: number, type: string) => ({
   clientX: 40,
   clientY: 190,

@@ -102,6 +102,7 @@ export interface NativeShopScreen {
   accepts(): boolean;
   capture(): () => boolean;
   destroy(): void;
+  focusRow(id: string): void;
   setDimmed(dimmed: boolean): void;
   setEnabled(enabled: boolean): void;
   setInert(inert: boolean): void;
@@ -594,6 +595,11 @@ export function showShopScreen(
       root.remove();
     },
     element: root,
+    focusRow: (id) => {
+      if (accepts()) {
+        rows.get(id)?.tile.element.focus();
+      }
+    },
     place: (next) => {
       motion = next;
       redraw();

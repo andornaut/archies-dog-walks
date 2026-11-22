@@ -398,6 +398,7 @@ export class StartScene extends Scene {
   private overlay: Overlay | undefined;
   // The detail card drawn in HTML, while one is open.
   private htmlDetail: KeptPanel | undefined;
+  private detailFocus: string | undefined;
   private overlayLayer: GameObjects.Container | undefined;
   // A press that began while a panel was open: it never reaches the tiles under it.
   private overlayPress:
@@ -462,6 +463,7 @@ export class StartScene extends Scene {
     this.hold = undefined;
     // The scene's shutdown destroyed any HTML card.
     this.htmlDetail = undefined;
+    this.detailFocus = undefined;
     this.overlay = undefined;
     this.overlayPress = undefined;
     this.pending = new Set();
@@ -799,7 +801,10 @@ export class StartScene extends Scene {
     this.render();
   }
   private closeOverlay(): void {
+    const target = this.overlay?.target;
     this.overlay = undefined;
+    this.detailFocus =
+      target === undefined ? undefined : target.kind === "dogSlot" ? "slotSign" : targetId(target);
     this.render();
   }
   // Whether the press under way started on the open card's close control.
@@ -1452,7 +1457,8 @@ export class StartScene extends Scene {
     this.nativeSelections = selections;
     this.nativeSpeechOwner = speech.owner?.key;
     this.nativeView = view;
-    this.nativeHome.replace(view, this.topSection?.revealed);
+    this.nativeHome.replace(view, this.topSection?.revealed, this.detailFocus);
+    this.detailFocus = undefined;
     this.place(this.time.now);
   }
   private nativeTarget(id: string): Target | undefined {

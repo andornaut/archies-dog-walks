@@ -85,14 +85,18 @@ export function createNativeHomeSession(
       element.remove();
     },
     element,
-    replace: (next: NativeHomeView, ready: Promise<unknown> = Promise.resolve()) => {
+    replace: (
+      next: NativeHomeView,
+      ready: Promise<unknown> = Promise.resolve(),
+      restoreFocus?: string,
+    ) => {
       revision++;
       context.cancel();
       paint?.destroy();
       const previousFocus = doc.activeElement;
-      const focused = [...(view?.controls ?? [])].find(
-        ([, control]) => control === previousFocus,
-      )?.[0];
+      const focused =
+        restoreFocus ??
+        [...(view?.controls ?? [])].find(([, control]) => control === previousFocus)?.[0];
       removeActions.forEach((remove) => remove());
       removeActions = [];
       view?.dispose();
@@ -126,7 +130,7 @@ export function createNativeHomeSession(
             context.painted();
             if (
               focused !== undefined &&
-              layer.input.accepts() &&
+              accepts() &&
               (doc.activeElement === previousFocus || doc.activeElement === doc.body)
             ) {
               next.controls.get(focused)?.focus();

@@ -701,8 +701,10 @@ export class ShopScene extends Scene {
       this.close();
       return;
     }
+    const id = shopRowId(this.detail);
     this.detail = undefined;
     this.render();
+    this.native?.focusRow(id);
   }
 
   private onKey(code: string): void {
