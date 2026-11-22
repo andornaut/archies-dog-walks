@@ -48,3 +48,7 @@ Reference: [Screens and UI](../../src/README.md#screens-and-ui), [Assets](../../
 | adw-0174 | Draw the Pet shop message plate from its image                   | [adw-0174.md](../work/adw-0174.md) |
 | adw-0178 | Keep each walk dog card's owner name whole                       | [adw-0178.md](../work/adw-0178.md) |
 | adw-0179 | Show the Help and Logbook pages full screen                      | [adw-0179.md](../work/adw-0179.md) |
+| adw-0182 | Fill the Start picker art wells                                  | [adw-0182.md](../work/adw-0182.md) |
+| adw-0183 | Restore the invoking Menu or Pause on Back                       | [adw-0183.md](../work/adw-0183.md) |
+| adw-0184 | Use game-styled keyboard focus indicators                        | [adw-0184.md](../work/adw-0184.md) |
+| adw-0186 | Use shared game button construction                              | [adw-0186.md](../work/adw-0186.md) |
