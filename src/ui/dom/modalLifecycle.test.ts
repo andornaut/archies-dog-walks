@@ -171,10 +171,12 @@ it("releases an unfinished modal contact on window blur and accepts one fresh ac
   await reveal.revealed;
   root.fire("pointerdown", pointer(11, button));
   button.setAttribute("data-pressed", "");
+  button.setAttribute("data-ui-pressed", "");
   expect(press.canvasAllowed()).toBe(false);
   doc.defaultView.fire("blur");
   expect(press.canvasAllowed()).toBe(true);
   expect(button.getAttribute("data-pressed")).toBeNull();
+  expect(button.getAttribute("data-ui-pressed")).toBeNull();
   expect(cancel).toHaveBeenCalledOnce();
   expect(view.accepts()).toBe(true);
 
@@ -193,7 +195,10 @@ it("releases an unfinished modal contact on window blur and accepts one fresh ac
   button.fire("click", fresh);
   expect(action).toHaveBeenCalledOnce();
   expect(press.canvasAllowed()).toBe(true);
+  root.fire("pointerdown", pointer(13, button));
+  button.setAttribute("data-ui-pressed", "");
   const nested = gate.open();
+  expect(button.getAttribute("data-ui-pressed")).toBeNull();
   expect(view.accepts()).toBe(false);
   nested.close();
   expect(view.accepts()).toBe(true);

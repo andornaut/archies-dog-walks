@@ -431,6 +431,7 @@ export function mountModalLifecycle(
         options.gesture?.cancel?.();
         const clear = (node: HTMLElement) => {
           node.removeAttribute("data-pressed");
+          node.removeAttribute("data-ui-pressed");
           for (const child of node.children) {
             clear(child as HTMLElement);
           }
