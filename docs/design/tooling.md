@@ -48,3 +48,4 @@ Reference: [Developing](../../README.md#developing), [Deploying](../../README.md
 | adw-0181 | Reduce shipped art size and file count                                       | [adw-0181.md](../work/adw-0181.md) |
 | adw-0185 | Qualify Delivery Kit 7.1.0                                                   | [adw-0185.md](../work/adw-0185.md) |
 | adw-0187 | Cap Archie verification containers at 4 GiB                                  | [adw-0187.md](../work/adw-0187.md) |
+| adw-0188 | Restore the delivery gate image                                              | [adw-0188.md](../work/adw-0188.md) |
