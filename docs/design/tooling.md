@@ -55,3 +55,6 @@ Reference: [Developing](../../README.md#developing), [Deploying](../../README.md
 | adw-0208 | Adopt Game Kit 0.61.0                                                        | [adw-0208.md](../work/adw-0208.md) |
 | adw-0209 | Close obsolete update offers with Game Kit 0.62.1                            | [adw-0209.md](../work/adw-0209.md) |
 | adw-0211 | Adopt Delivery Kit 8.0.0                                                     | [adw-0211.md](../work/adw-0211.md) |
+| adw-0214 | Adopt Game Kit 0.63.0                                                        | [adw-0214.md](../work/adw-0214.md) |
+| adw-0215 | Adopt Art Kit 0.33.0                                                         | [adw-0215.md](../work/adw-0215.md) |
+| adw-0216 | Adopt Delivery Kit 8.1.0                                                     | [adw-0216.md](../work/adw-0216.md) |
