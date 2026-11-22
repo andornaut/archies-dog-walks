@@ -65,13 +65,12 @@ function isLocked(data: DetailData, owned: Owned, bank: Cents, purchase: Purchas
 }
 
 // What buying it would take, or null when it is already owned.
-function priceLine(data: DetailData, owned: Owned, bank: Cents, purchase: Purchase): string | null {
+function priceLine(data: DetailData, owned: Owned, purchase: Purchase): string | null {
   const cost = purchasePrice(data, owned, purchase);
   if (cost === null) {
     return null;
   }
-  const key = isAffordable(data, owned, bank, purchase) ? "priceBuy" : "priceLocked";
-  return fillLine(FIELDS, data.homeText.detail, key, { price: dollarText(cost) });
+  return fillLine(FIELDS, data.homeText.detail, "priceBuy", { price: dollarText(cost) });
 }
 
 // A dog's size rows: a large dog's lane-change slowdown, a small dog's dodge and lane-change
@@ -121,7 +120,7 @@ export function dogDetail(data: DetailData, owned: Owned, bank: Cents, dog: DogI
       name: owner.name,
       role: fillLine(FIELDS, text, "ownerRole", { role: owner.role }),
     },
-    status: priceLine(data, owned, bank, purchase) ?? text.dogStatus,
+    status: priceLine(data, owned, purchase) ?? text.dogStatus,
     subtitle: breed,
     title: name,
   };
@@ -142,7 +141,7 @@ export function gearDetail(
   return {
     lines: [`${capitalize(effectText(data, item.effects))}.`],
     locked: isLocked(data, owned, bank, purchase),
-    status: priceLine(data, owned, bank, purchase) ?? status,
+    status: priceLine(data, owned, purchase) ?? status,
     subtitle: text.gearSubtitle,
     title: item.name,
   };
@@ -175,7 +174,7 @@ export type DetailPart =
 // Every detail card puts meaningful information beside its primary art and status below both
 // columns. Only dogs have a breed subtitle and an owner photo/name/role block.
 export function detailParts(
-  kind: "dog" | "gear" | "walker",
+  kind: "dog" | "dogSlot" | "gear" | "walker",
   card: DetailCard,
 ): { below: DetailPart[]; beside: DetailPart[] } {
   const lines = card.lines.map((text) => ({ text, tone: "line" }) as const);

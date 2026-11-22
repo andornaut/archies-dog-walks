@@ -824,7 +824,7 @@ export interface HomeText {
     // A dog's owner's {role}, under their name beside their photo.
     readonly ownerRole: string;
     readonly priceBuy: string;
-    readonly priceLocked: string;
+    readonly saveUp: string;
     // A walker's detail card's agility, as agilityPercent says it, left out for a walker at the
     // base lane-change speed, and perk with its effect.
     readonly walkerAgility: string;

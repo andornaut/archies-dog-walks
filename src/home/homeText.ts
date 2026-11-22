@@ -17,7 +17,6 @@ export const HOME_TEXT_FIELDS = {
     dogSmallSpeed: ["speed"],
     ownerRole: ["role"],
     priceBuy: ["price"],
-    priceLocked: ["price"],
     walkerAgility: ["agility"],
     walkerPerk: ["effect", "perk"],
   },

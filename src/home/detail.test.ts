@@ -81,11 +81,11 @@ describe("dogDetail", () => {
 
   const price = purchasePrice(data, owned, { dog: "lady", kind: "dog" }) ?? cents(0);
   it.each([
-    { bank: cents(price - 1), key: "priceLocked", state: "a cent short" },
-    { bank: price, key: "priceBuy", state: "affordable" },
-  ] as const)("shows a dog not owned at its price, $state", ({ bank, key }) => {
+    { bank: cents(price - 1), state: "a cent short" },
+    { bank: price, state: "affordable" },
+  ] as const)("shows a dog not owned at its price, $state", ({ bank }) => {
     expect(dogDetail(data, owned, bank, "lady").status).toBe(
-      fillNames(data.homeText.detail[key], { price: dollarText(price) }),
+      fillNames(data.homeText.detail.priceBuy, { price: dollarText(price) }),
     );
   });
 });
@@ -106,7 +106,7 @@ describe("gearDetail", () => {
 
   it("shows a locked item's price", () => {
     const card = gearDetail(data, owned, dollars(0), { gear: null }, "hallPass");
-    const price = data.homeText.detail.priceLocked.split("{price}");
+    const price = data.homeText.detail.priceBuy.split("{price}");
     expect(card.status.startsWith(price[0] ?? "")).toBe(true);
     expect(card.status.endsWith(price[1] ?? "")).toBe(true);
   });
