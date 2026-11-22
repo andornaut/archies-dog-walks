@@ -7,7 +7,7 @@ import { gameData } from "../data/index.ts";
 import { SCREEN_CONFIG, SCREEN_LAYOUT } from "../data/screen.ts";
 import { DEFAULT_SETTINGS } from "../save/settings.ts";
 import { fontFileMetrics, gameFont, inkWidth } from "../testing/fontInk.ts";
-import { MODAL } from "../ui/modal/layout.ts";
+import { MODAL, modalActionWidth } from "../ui/modal/layout.ts";
 import { modalTitleInk } from "../ui/modal/titleRole.ts";
 import type { PanelButton } from "../ui/modal/types.ts";
 import { PAGE_LAYOUT } from "../ui/pageLayout.ts";
@@ -145,7 +145,10 @@ it("keeps only the purchase choices and corner close control", () => {
 it("keeps the Shop and Logbook scroll viewport clear of their fixed Back", () => {
   const { back } = shopPageView(measure, { tabs: [], title: gameData.menuText.stats.title });
   expect(back).toMatchObject({ label: gameData.menuText.pageBack, primary: true });
-  expect(back.rect).toEqual(PAGE_LAYOUT.back);
+  expect(back.rect.width).toBe(modalActionWidth(measure.inkWidth("title", back.label)));
+  expect(back.rect.x + back.rect.width / 2).toBe(PAGE_LAYOUT.back.x + PAGE_LAYOUT.back.width / 2);
+  expect(back.rect).toMatchObject({ height: PAGE_LAYOUT.back.height, y: PAGE_LAYOUT.back.y });
+  expect(back.hit).toEqual(back.rect);
   for (const rect of [SHOP_LAYOUT.list.rect, SHOP_LAYOUT.list.unscrolledRect, STATS_LAYOUT.view]) {
     expect(rect.y + rect.height).toBe(back.rect.y - MODAL.gap);
   }

@@ -91,6 +91,10 @@ describe("the HTML End screen", () => {
     const { nodes, scale, shown } = endScreen(393);
     expect(nodes.filter((node) => node.tagName === "button")).toHaveLength(1);
     const button = nodes.find((node) => node.className === "adw-button adw-go");
+    const hit = gridRect(scale, VIEW.button.hit);
+    expect(button?.style.width).toBe(`${hit.width}px`);
+    expect(button?.style.left).toBe(`${hit.left}px`);
+    expect(button?.style.top).toBe(`${hit.top}px`);
     shown.setButton(false, -1);
     expect(button?.style.transform).toBe(`translateY(${-artPixel(scale)}px)`);
     shown.setButton(true, 0);

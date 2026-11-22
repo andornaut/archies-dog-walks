@@ -1,6 +1,5 @@
 import { itemAt } from "@andornaut/game-kit/runtime/arrays";
 import { guardSceneInput } from "@andornaut/game-kit/runtime/input/phaser/guardSceneInput";
-import type { Rect } from "@andornaut/game-kit/runtime/rect";
 import { type GameObjects, Scene } from "phaser";
 
 import { gameData } from "../data/index.ts";
@@ -81,7 +80,6 @@ const RIBBON = { ...END_LAYOUT.ribbon, dropMs: 360, key: "ui-new-best", riseFrom
 const RIBBON_BURST = END_LAYOUT.ribbonBurst;
 const BADGE_SOUND_AFTER_BEST_MS = 1200;
 const RETURN_HOME_SCENE = END_LAYOUT.returnHome;
-const BUTTON: Rect = END_LAYOUT.button;
 // An open badge's card, over the badges just earned.
 const CARD_DEPTH = 2;
 
@@ -192,7 +190,11 @@ export class EndScene extends Scene {
       strip === undefined ? [] : badgeStripHits(strip.panel, strip.rows, this.badges.length);
     const targetAt = (x: number, y: number) =>
       topSectionButtonAt(END_BAR_BUTTONS, x, y) === undefined
-        ? endTargetAt({ badgeHits, button: BUTTON, cardOpen: this.card !== undefined }, x, y)
+        ? endTargetAt(
+            { badgeHits, button: view.button.hit, cardOpen: this.card !== undefined },
+            x,
+            y,
+          )
         : undefined;
     const start = (at: { x: number; y: number }, target: EndTarget | undefined) => {
       this.html?.burst(at);

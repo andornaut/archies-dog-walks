@@ -12,10 +12,10 @@ import { signedShortDollarText } from "../presentation/currency.ts";
 import type { OwnerNameLine } from "../presentation/ownerName.ts";
 import { walkLength } from "../rules/route.ts";
 import type { LastWalk } from "../save/schema.ts";
-import { MODAL } from "../ui/modal/layout.ts";
+import { MODAL, modalActionWidth } from "../ui/modal/layout.ts";
 import { type PanelButton, type PanelText } from "../ui/modal/types.ts";
+import { panelButton } from "../ui/modal/view.ts";
 import { PALETTE } from "../ui/palette.ts";
-import { BUTTON_COLOURS } from "../ui/selection.ts";
 import { TEXT_SCALE, textOnLines } from "../ui/textFit.ts";
 import { celebrationTitle } from "./badgesView.ts";
 import type { DetailArt, DetailFramed, DetailMeasure, DetailText } from "./detailCardView.ts";
@@ -104,7 +104,7 @@ export interface EndStrip {
 }
 
 export interface EndScreenView {
-  // Back to title, Start walk's size, its label on Start walk's caps.
+  // Back to title uses ordinary action geometry at the fixed return-button anchor.
   readonly button: PanelButton;
   readonly offsetY: number;
   readonly results: EndResults;
@@ -116,6 +116,7 @@ type ClosingLines = ReturnType<typeof closingLines>;
 const BREAKDOWN = END_LAYOUT.breakdown;
 const SIDE = END_LAYOUT.side;
 const QUIPS = END_LAYOUT.quips;
+// This anchor retains the vertical results clearance; the action measures its own width.
 const BUTTON = END_LAYOUT.button;
 
 // The bubble's tail, drawn flipped to point right at the face.
@@ -333,23 +334,13 @@ export function endScreenView(
       }
     : undefined;
 
-  const { buttonLabel } = END_LAYOUT;
-  const button: PanelButton = {
-    hit: BUTTON,
-    label: words.headHome,
-    primary: true,
-    rect: BUTTON,
-    text: {
-      capTop: BUTTON.y + buttonLabel.readyY,
-      centre: "advance",
-      centreX: BUTTON.x + BUTTON.width / 2,
-      colour: PALETTE[BUTTON_COLOURS.primary.label],
-      font: "title",
-      line: 0,
-      scale: buttonLabel.scale,
-      text: words.headHome,
-    },
-  };
+  const buttonWidth = modalActionWidth(measure.inkWidth("title", words.headHome));
+  const button = panelButton(
+    measure,
+    { ...BUTTON, width: buttonWidth, x: BUTTON.x + (BUTTON.width - buttonWidth) / 2 },
+    true,
+    words.headHome,
+  );
 
   return {
     button,

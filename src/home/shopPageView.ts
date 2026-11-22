@@ -2,6 +2,7 @@ import { insetRect, type Rect } from "@andornaut/game-kit/runtime/rect";
 
 import { MENU_TEXT } from "../data/menuText.ts";
 import { PLAIN_ITEM, tileState } from "../ui/interaction.ts";
+import { modalActionWidth } from "../ui/modal/layout.ts";
 import { type PanelButton, type PanelMeasure, type PanelText } from "../ui/modal/types.ts";
 import { panelButton, panelTitle } from "../ui/modal/view.ts";
 import { PALETTE } from "../ui/palette.ts";
@@ -106,13 +107,19 @@ export function shopPageView(
   page: { tabs: readonly ShopPageTab[]; title: string },
 ): ShopPageView {
   const { back, title } = SHOP_LAYOUT;
+  const backWidth = modalActionWidth(measure.inkWidth("title", MENU_TEXT.pageBack));
 
   const tabs = shopTabRects(page.tabs.length).flatMap((hit, i) => {
     const tab = page.tabs[i];
     return tab === undefined ? [] : [pageTab(measure, shopTabFace(hit), tab)];
   });
   return {
-    back: panelButton(measure, back, true, MENU_TEXT.pageBack),
+    back: panelButton(
+      measure,
+      { ...back, width: backWidth, x: back.x + (back.width - backWidth) / 2 },
+      true,
+      MENU_TEXT.pageBack,
+    ),
     fill: { colour: PALETTE.cream, rect: PANEL },
     panel: PANEL,
     tabs,
