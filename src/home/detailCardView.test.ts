@@ -59,7 +59,7 @@ it("places the owner below the portrait row, photo aligned to the dog-art column
 });
 
 it("centres the price mark and amount together and the saving prompt as a separate full-font row", () => {
-  const prompt = gameData.homeText.detail.priceLocked.split(". ")[1]!;
+  const prompt = gameData.homeText.detail.saveUp;
   const view = detailCardView(gameData, measure, SCREEN_LAYOUT.screen, {
     card: { ...card, locked: true },
     kind: "dog",
@@ -110,7 +110,7 @@ it("uses the same card for Cancel and primary Buy, appending bank context only o
 });
 
 it("fits all authored dog details at full font size with separate price and saving rows", () => {
-  const prompt = gameData.homeText.detail.priceLocked.split(". ")[1]!;
+  const prompt = gameData.homeText.detail.saveUp;
   for (const dog of Object.keys(gameData.dogs) as (keyof typeof gameData.dogs)[]) {
     const info = dogDetail(gameData, newPlayerSave.owned, cents(1_000_000), dog);
     const view = detailCardView(gameData, measure, SCREEN_LAYOUT.screen, {
