@@ -306,7 +306,7 @@ it.each([
   },
 );
 
-it("uses Large when it removes wrapping from Mr. B's right-column description", () => {
+it("retains a fitting Medium for Mr. B despite fewer description lines on Large", () => {
   const info = walkerDetail(gameData, newPlayerSave.owned, "mrB");
   const prose = info.lines.map((line) => withNamePills(gameData, line));
   const rowsAt = (family: "medium" | "large") => {
@@ -320,7 +320,7 @@ it("uses Large when it removes wrapping from Mr. B's right-column description", 
     picture,
   });
   expect(view.card.panel.width).toBe(
-    modalFamilyWidth(SCREEN_LAYOUT.screen.width - 2 * MODAL.margin, "large"),
+    modalFamilyWidth(SCREEN_LAYOUT.screen.width - 2 * MODAL.margin, "medium"),
   );
 });
 

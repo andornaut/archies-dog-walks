@@ -244,7 +244,6 @@ export function detailCardView(
     const counts = (rows: readonly DetailPart[], room: number) =>
       rows.map((row) => linesIn(room, valueOf(row)));
     const descriptionRows = counts(description, rooms.beside);
-    const descriptionLines = descriptionRows.reduce((sum, lines) => sum + lines, 0);
     const upper = detailCardLayout(measure.body, {
       below: [],
       beside: [...counts(identity, rooms.beside), ...descriptionRows],
@@ -320,7 +319,6 @@ export function detailCardView(
     }
     const height = layout.height + heading.extraHeight + footerGap + layout.footerHeight;
     return {
-      descriptionLines,
       fits: bodyFits && height <= dim.height - 2 * MODAL.margin,
       heading,
       layout,
@@ -329,15 +327,11 @@ export function detailCardView(
     };
   };
   // All detail types use the narrow family only while the complete full-size content fits and
-  // widening would not remove a title or description line.
+  // widening would not remove a title line.
   const medium = measureFamily("medium");
   const large = measureFamily("large")!;
   const selected =
-    medium?.fits &&
-    medium.heading.lines.length <= large.heading.lines.length &&
-    medium.descriptionLines <= large.descriptionLines
-      ? medium
-      : large;
+    medium?.fits && medium.heading.lines.length <= large.heading.lines.length ? medium : large;
   const { heading, layout, rooms, width } = selected;
   const { well } = CARD;
   const wellRect = { height: well.size, width: well.size, x: well.x, y: layout.wellY };
