@@ -9,7 +9,13 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { HOME_LAYOUT, homeBarButtons } from "../home/homeLayout.ts";
 import { exitShown } from "../pwa/index.ts";
-import { listenHomeBar, openHomePage, routeHomeBar, sceneRegionOutside } from "./homeBarPress.ts";
+import {
+  HOME_PAGE_OPENING_EVENT,
+  listenHomeBar,
+  openHomePage,
+  routeHomeBar,
+  sceneRegionOutside,
+} from "./homeBarPress.ts";
 import { openOverlay } from "./overlay.ts";
 import { nativeTopSectionButtons } from "./topSection.ts";
 
@@ -163,7 +169,6 @@ describe("pages opened over the open Logbook, as over the Pet shop", () => {
     vi.mocked(openOverlay).mockClear();
     const scene = over("help");
     const menu = {
-      closePage: vi.fn(),
       context: "help",
       onHeadHome: vi.fn(),
       resume: "help",
@@ -178,6 +183,20 @@ describe("pages opened over the open Logbook, as over the Pet shop", () => {
     vi.mocked(openOverlay).mockClear();
     openHomePage(over("help"), "help");
     expect(openOverlay).not.toHaveBeenCalled();
+    scene.events.emit("shutdown");
+  });
+
+  it.each(["help", "stats"])("returns %s to its invoking Menu without reopening it", (shown) => {
+    vi.mocked(openOverlay).mockClear();
+    const scene = over(shown);
+    const back = vi.fn();
+    const opening = vi.fn();
+    scene.game.events.on(HOME_PAGE_OPENING_EVENT, opening);
+    listenHomeBar(scene, vi.fn(), undefined, back);
+    openHomePage(scene, "menu");
+    expect(back).toHaveBeenCalledOnce();
+    expect(openOverlay).not.toHaveBeenCalled();
+    expect(opening).not.toHaveBeenCalled();
     scene.events.emit("shutdown");
   });
 });

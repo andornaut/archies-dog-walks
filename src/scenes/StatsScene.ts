@@ -126,15 +126,20 @@ export class StatsScene extends Scene {
     listenDismiss(
       this,
       sceneRegionOutside(this, [PANEL]),
-      () => this.close(),
+      () => this.back(),
       () => this.back(),
     );
     // A page the top bar opens over the Logbook closes an open card first.
-    listenHomeBar(this, () => {
-      if (this.detail !== undefined) {
-        this.back();
-      }
-    });
+    listenHomeBar(
+      this,
+      () => {
+        if (this.detail !== undefined) {
+          this.back();
+        }
+      },
+      undefined,
+      data?.resume === SCENE_KEYS.menu ? () => this.close() : undefined,
+    );
     mountNativeOverlay(this, () => {
       this.render();
       return this.page !== undefined;

@@ -38,6 +38,7 @@ vi.mock("./profileStore.ts", async (original) => ({
 // over. The page itself has no outside.
 interface PageScene {
   act(action: unknown): void;
+  back(): void;
   close(): void;
   onKey(code: string, repeat?: boolean): unknown;
 }
@@ -73,7 +74,11 @@ const escape = (name: string, scene: PageScene) => {
 
 it.each(
   PAGES.flatMap(([name, type]) =>
-    [SCENE_KEYS.start, ...(name === "Help" ? [SCENE_KEYS.pause] : [])].flatMap((resume) => [
+    [
+      SCENE_KEYS.start,
+      ...(name === "Pet shop" ? [] : [SCENE_KEYS.menu]),
+      ...(name === "Help" ? [SCENE_KEYS.pause] : []),
+    ].flatMap((resume) => [
       [name, type, resume, "Back", (scene: PageScene) => scene.close()] as const,
       [name, type, resume, "Escape", (scene: PageScene) => escape(name, scene)] as const,
     ]),
@@ -87,6 +92,30 @@ it.each(
 
 it.each(PAGES)("%s closes on the system back and an outside tap", (_name, _type, path) => {
   expect(readFileSync(path, "utf8")).toMatch(/listenDismiss\(\s*this,/);
+});
+
+it.each([
+  ["Logbook", StatsScene],
+  ["Pet shop", ShopScene],
+] as const)("%s leaves its parent open when dismissing a detail", (_name, type) => {
+  const { scene, stage } = page(type, SCENE_KEYS.menu);
+  const render = vi.fn();
+  Object.assign(scene, { detail: 0, render });
+  scene.back();
+  expect(stage.resume).not.toHaveBeenCalled();
+  expect(stage.stop).not.toHaveBeenCalled();
+  expect(render).toHaveBeenCalledOnce();
+  expect(scene).toHaveProperty("detail", undefined);
+});
+
+it("cancels only the Pet shop confirmation without leaving its invoking page", () => {
+  const { scene, stage } = page(ShopScene, SCENE_KEYS.start);
+  const answer = vi.fn();
+  Object.assign(scene, { answer, confirm: {} });
+  scene.back();
+  expect(answer).toHaveBeenCalledExactlyOnceWith("cancel");
+  expect(stage.resume).not.toHaveBeenCalled();
+  expect(stage.stop).not.toHaveBeenCalled();
 });
 
 const centre = (rect: Rect): Point => ({ x: rect.x + rect.width / 2, y: rect.y + rect.height / 2 });

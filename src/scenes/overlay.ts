@@ -5,6 +5,7 @@ import {
 } from "@andornaut/game-kit/runtime/input/outsideTap";
 import { catchOutsideTaps } from "@andornaut/game-kit/runtime/input/phaser/catchOutsideTaps";
 import type { PressGate } from "@andornaut/game-kit/runtime/web/ui/dom/domPress";
+import { focusTarget } from "@andornaut/game-kit/runtime/web/ui/dom/focusModality";
 import type { Events, Scene } from "phaser";
 
 import { gameData } from "../data/index.ts";
@@ -68,6 +69,22 @@ const overlayGuard = openGuard();
 // before then is dropped (openGuard). Returns whether it opened.
 export function openOverlay(scene: Scene, key: SceneKey, data: OverlayData): boolean {
   return overlayGuard(scene.game.events, scene, () => {
+    const invoking =
+      typeof document === "undefined" ? null : (document.activeElement as HTMLElement);
+    if (invoking !== null && invoking !== document.body) {
+      onceSceneEvent(scene, scene.events, "resume", () => {
+        // The resumed scene restores its native panel at the next render boundary.
+        onceSceneEvent(scene, scene.game.events, "postrender", () => {
+          if (
+            nativeSceneAccepts(scene) &&
+            invoking.isConnected &&
+            !invoking.closest("[inert], [hidden]")
+          ) {
+            focusTarget(invoking);
+          }
+        });
+      });
+    }
     scene.scene.pause();
     scene.scene.launch(key, data);
   });

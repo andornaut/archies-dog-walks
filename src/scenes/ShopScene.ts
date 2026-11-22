@@ -352,7 +352,7 @@ export class ShopScene extends Scene {
     listenDismiss(
       this,
       sceneRegionOutside(this, [PANEL]),
-      () => (this.confirm === undefined ? this.close() : this.back()),
+      () => this.back(),
       () => this.back(),
     );
     // A page the top bar opens over the shop closes an open card or confirm first.

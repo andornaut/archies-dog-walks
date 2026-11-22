@@ -148,12 +148,11 @@ export class HelpScene extends Scene {
       }
     });
     if (data.region === "home") {
-      // The bar's Menu opens help's own over it: its Close leaves help too.
+      // Return to the invoking Menu, or open a page Menu when Help has another parent.
       listenHomeBar(
         this,
         () => undefined,
         (): MenuSceneData => ({
-          closePage: () => this.close(),
           context: "help",
           onHeadHome: () => {
             this.close();
@@ -161,6 +160,7 @@ export class HelpScene extends Scene {
           },
           resume: SCENE_KEYS.help,
         }),
+        data.resume === SCENE_KEYS.menu ? () => this.close() : undefined,
       );
     }
   }

@@ -29,6 +29,8 @@ const homePageGuard = openGuard();
 const barRoutes = new WeakMap<object, Set<Scene>>();
 // The Menu a page opens over itself in place of the page Menu, by page (Help's).
 const pageMenus = new WeakMap<Scene, () => MenuSceneData>();
+// Pages launched by Menu return to its retained instance instead of opening it over itself.
+const parentMenus = new WeakMap<Scene, () => void>();
 
 // Opens page from the top bar, tapped on from, at once: over the topmost open page, Help, the
 // Logbook or the Pet shop, else over the start screen, in place of every other overlay and card.
@@ -38,12 +40,17 @@ const pageMenus = new WeakMap<Scene, () => MenuSceneData>();
 export function openHomePage(from: Scene, page: HomePage): void {
   homePageGuard(from.game.events, from, () => {
     const title = from.sys.settings.key === SCENE_KEYS.start;
-    from.game.events.emit(HOME_PAGE_OPENING_EVENT);
     const { help, shop, start, stats } = SCENE_KEYS;
     const resume =
       [help, stats, shop].find((key) => from.scene.isActive(key) || from.scene.isPaused(key)) ??
       start;
     const under = from.scene.get(resume);
+    const returnToMenu = page === "menu" ? parentMenus.get(under) : undefined;
+    if (returnToMenu !== undefined) {
+      returnToMenu();
+      return;
+    }
+    from.game.events.emit(HOME_PAGE_OPENING_EVENT);
     switch (page) {
       case "menu": {
         const own = pageMenus.get(under);
@@ -98,16 +105,25 @@ export function clearOnHomePageOpening(scene: Scene, clear: () => void): void {
 // A nonmodal page over the start screen (the Pet shop, the Logbook, Help) routes the shared
 // controls while the screen under it is paused. Under a modal the bar is dimmed and inactive, so
 // no modal routes it. menu, where given, is the Menu the bar's Menu opens over the page.
-export function listenHomeBar(scene: Scene, clear: () => void, menu?: () => MenuSceneData): void {
+export function listenHomeBar(
+  scene: Scene,
+  clear: () => void,
+  menu?: () => MenuSceneData,
+  returnToMenu?: () => void,
+): void {
   const routes = barRoutes.get(scene.game) ?? new Set<Scene>();
   routes.add(scene);
   barRoutes.set(scene.game, routes);
   if (menu !== undefined) {
     pageMenus.set(scene, menu);
   }
+  if (returnToMenu !== undefined) {
+    parentMenus.set(scene, returnToMenu);
+  }
   scene.events.once("shutdown", () => {
     routes.delete(scene);
     pageMenus.delete(scene);
+    parentMenus.delete(scene);
     if (routes.size === 0) {
       barRoutes.delete(scene.game);
     }

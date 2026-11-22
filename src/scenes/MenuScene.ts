@@ -14,7 +14,9 @@ import {
   navigationMenuWidth,
 } from "../ui/navigationMenu.ts";
 import { addRampDim } from "../ui/phaser/rampDim.ts";
-import { clearOnHomePageOpening, openHomePage } from "./homeBarPress.ts";
+import { whenArtReady } from "./artReady.ts";
+import { openHelp } from "./helpScreen.ts";
+import { clearOnHomePageOpening } from "./homeBarPress.ts";
 import { canvasPanelMeasure } from "./modalMeasure.ts";
 import { mountNativeOverlay } from "./nativeOverlayReady.ts";
 import {
@@ -29,13 +31,12 @@ import { SCENE_KEYS, type SceneKey } from "./sceneKeys.ts";
 import type { SettingsData } from "./SettingsScene.ts";
 
 export type MenuSceneData = OverlayData & { readonly resume: SceneKey } & (
-    | { readonly context: "home"; readonly closePage?: never; readonly onHeadHome?: never }
+    | { readonly context: "home"; readonly onHeadHome?: never }
     | {
         readonly context: Exclude<MenuContext, "home" | "page">;
-        readonly closePage: () => void;
         readonly onHeadHome: () => void;
       }
-    | { readonly context: "page"; readonly closePage?: never; readonly onHeadHome: () => void }
+    | { readonly context: "page"; readonly onHeadHome: () => void }
   );
 
 // Non-play navigation uses the pause menu's layout, controls and dismissal lifecycle.
@@ -48,25 +49,33 @@ export class MenuScene extends Scene {
     mountNativeOverlay(this, () => this.mount(data));
   }
 
-  private mount({ closePage, context, onHeadHome, resume }: MenuSceneData): boolean {
+  private mount({ context, onHeadHome, resume }: MenuSceneData): boolean {
     const area = overlayRegion("home");
     const close = () => closeOverlay(resume, this);
-    const closeScreen = () => {
-      close();
-      closePage?.();
-    };
     const settings = () => {
       const data: SettingsData = { region: "home", resume: SCENE_KEYS.menu };
       openOverlay(this, SCENE_KEYS.settings, data);
     };
     const actions: Readonly<Record<MenuItem, () => void>> = {
-      close: context === "help" ? closeScreen : close,
+      close,
       headHome: () => {
         close();
         onHeadHome?.();
       },
-      help: () => openHomePage(this, "help"),
-      logbook: () => openHomePage(this, "logbook"),
+      help: () => {
+        if (resume === SCENE_KEYS.help) {
+          close();
+        } else {
+          whenArtReady(this, () => openHelp(this, { region: "home", resume: SCENE_KEYS.menu }));
+        }
+      },
+      logbook: () => {
+        if (resume === SCENE_KEYS.stats) {
+          close();
+        } else {
+          openOverlay(this, SCENE_KEYS.stats, { resume: SCENE_KEYS.menu });
+        }
+      },
       settings,
     };
     const panel: QuestionPanel = {

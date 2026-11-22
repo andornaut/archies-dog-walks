@@ -159,7 +159,6 @@ export class EndScene extends Scene {
           this.game.events.emit(BAR_MUTED_EVENT, toggleMuted(this));
         } else {
           const data: MenuSceneData = {
-            closePage: goHome,
             context: "end",
             onHeadHome: goHome,
             resume: SCENE_KEYS.end,
