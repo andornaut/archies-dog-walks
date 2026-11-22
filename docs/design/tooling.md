@@ -53,4 +53,5 @@ Reference: [Developing](../../README.md#developing), [Deploying](../../README.md
 | adw-0198 | Request an ordinary update check on returning to Start                       | [adw-0198.md](../work/adw-0198.md) |
 | adw-0206 | Adopt the Game Kit update and startup retry fixes                            | [adw-0206.md](../work/adw-0206.md) |
 | adw-0208 | Adopt Game Kit 0.61.0                                                        | [adw-0208.md](../work/adw-0208.md) |
-| adw-0209 | Close obsolete update offers with Game Kit 0.62.0                            | [adw-0209.md](../work/adw-0209.md) |
+| adw-0209 | Close obsolete update offers with Game Kit 0.62.1                            | [adw-0209.md](../work/adw-0209.md) |
+| adw-0211 | Adopt Delivery Kit 8.0.0                                                     | [adw-0211.md](../work/adw-0211.md) |
