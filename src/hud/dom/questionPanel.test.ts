@@ -964,3 +964,32 @@ it("captures the exact admitted source control without relying on native focus o
   expect(press).toHaveBeenCalledTimes(2);
   shown.destroy();
 });
+
+it("uses the top modal's X action once for a letterbox backdrop tap", async () => {
+  const context = menuContext();
+  const lower = menu(context);
+  const upper = menu(context);
+  upper.close.mockImplementation(() => upper.shown.destroy());
+  await Promise.resolve();
+  await Promise.resolve();
+  const backdrop = context.element
+    .all()
+    .findLast((part) => part.className === "adw-modal-backdrop")!;
+  const pointer = {
+    clientX: -40,
+    clientY: 200,
+    detail: 1,
+    pointerId: 1,
+    stopPropagation: vi.fn(),
+    target: backdrop,
+    timeStamp: 10,
+  };
+  backdrop.fire("pointerdown", pointer);
+  context.doc.fire("pointerup", pointer);
+  backdrop.fire("click", pointer);
+  expect(upper.close).toHaveBeenCalledOnce();
+  expect(lower.close).not.toHaveBeenCalled();
+  expect(lower.shown.accepts()).toBe(true);
+  expect(pointer.stopPropagation).toHaveBeenCalledOnce();
+  lower.shown.destroy();
+});

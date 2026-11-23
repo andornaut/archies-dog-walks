@@ -358,10 +358,13 @@ export function mountModalLifecycle(
     const cover = { inset: "0", position: "absolute" };
     Object.assign(host.style, { ...cover, pointerEvents: "none" });
     Object.assign(scope.style, { ...cover, pointerEvents: "none" });
-    Object.assign(backdrop.style, { ...cover, pointerEvents: "auto" });
+    // Fixed positioning covers the letterbox too. The turned page body supplies the fixed
+    // containing block in landscape, so this follows the same physical viewport both ways.
+    Object.assign(backdrop.style, { inset: "0", pointerEvents: "auto", position: "fixed" });
     host.className = "adw-modal-host";
     backdrop.className = "adw-modal-backdrop";
     backdrop.setAttribute("aria-hidden", "true");
+    backdrop.addEventListener("click", (event) => event.stopPropagation());
     // Focus stays in the dialog, and Phaser never takes a backdrop press for one beside its canvas.
     backdrop.addEventListener("mousedown", (event) => {
       event.preventDefault();

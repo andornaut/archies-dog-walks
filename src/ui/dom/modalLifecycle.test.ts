@@ -418,6 +418,8 @@ describe("a modal view's host", () => {
     );
     expect(lifecycle.accepts()).toBe(true);
     expect(scope.children).toEqual([view, companion]);
+    expect(backdrop.style.position).toBe("fixed");
+    expect(backdrop.style.inset).toBe("0");
     backdrop.fire("pointerdown", pointer(1, backdrop));
     doc.fire("pointerup", pointer(1, backdrop, "pointerup"));
     backdrop.fire("click", pointer(1, backdrop, "click"));

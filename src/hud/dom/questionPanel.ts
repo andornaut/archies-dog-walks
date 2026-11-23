@@ -57,8 +57,8 @@ export interface DomPart {
 export interface DomQuestionPanelInput {
   // Base screens opt out of modal ownership; pictures can remain modal without native buttons.
   readonly modal?: boolean;
-  // What a tap on a modal panel's backdrop does: the existing outside dismissal of a closeable
-  // panel. Undefined for a required choice, whose backdrop consumes the tap.
+  // Outside dismissal when there is no interactive X. An interactive X always supplies the
+  // backdrop's action too. Required choices without either callback consume the tap.
   readonly backgroundCancel?: () => void;
   // The page's own controls drawn outside the panel, interactive with it.
   readonly companions?: readonly HTMLElement[];
@@ -553,7 +553,9 @@ export function showQuestionPanel(layer: UiLayer, input: DomQuestionPanelInput):
     layer,
     {
       ...(gesture === undefined ? {} : { gesture }),
-      ...(input.backgroundCancel === undefined ? {} : { backgroundCancel: input.backgroundCancel }),
+      ...((input.close ?? input.backgroundCancel) === undefined
+        ? {}
+        : { backgroundCancel: input.close ?? input.backgroundCancel }),
       ...(input.companions === undefined ? {} : { companions: input.companions }),
       ...(input.onPaint === undefined ? {} : { onPaint: input.onPaint }),
       modal,
