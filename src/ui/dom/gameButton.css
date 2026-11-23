@@ -59,7 +59,10 @@
   --adw-button-fill: var(--adw-yellow);
   --adw-button-text: var(--adw-ink);
 }
-.adw-standard-button.ui-standard-button:focus-visible {
+.adw-standard-button.ui-standard-button:is(
+    :focus-visible,
+    [data-picker-focused]:where(.adw-picker-surface:not(:has(:focus-visible)) *)
+  ) {
   --adw-button-fill: var(--adw-cyan);
   --adw-button-text: var(--adw-ink);
   outline: none;
@@ -78,7 +81,10 @@
   --adw-button-lip: var(--adw-neutralSlate);
   --adw-button-text: var(--adw-ink);
 }
-.adw-standard-button[aria-disabled="true"]:focus-visible {
+.adw-standard-button[aria-disabled="true"]:is(
+    :focus-visible,
+    [data-picker-focused]:where(.adw-picker-surface:not(:has(:focus-visible)) *)
+  ) {
   --adw-button-fill: var(--adw-navy);
   --adw-button-text: var(--adw-cream);
 }
@@ -101,6 +107,7 @@
   }
   .adw-standard-button.ui-standard-button:is(
       :focus-visible,
+      [data-picker-focused]:where(.adw-picker-surface:not(:has(:focus-visible)) *),
       [data-ui-selected],
       [aria-pressed="true"],
       [data-ui-pressed]
@@ -118,7 +125,10 @@
     --adw-button-lip: ButtonFace;
     --adw-button-text: GrayText;
   }
-  .adw-standard-button.ui-standard-button[aria-disabled="true"]:focus-visible {
+  .adw-standard-button.ui-standard-button[aria-disabled="true"]:is(
+      :focus-visible,
+      [data-picker-focused]:where(.adw-picker-surface:not(:has(:focus-visible)) *)
+    ) {
     --adw-button-fill: Highlight;
     --adw-button-highlight: Highlight;
     --adw-button-lip: Highlight;

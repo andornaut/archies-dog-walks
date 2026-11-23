@@ -93,3 +93,40 @@
     color: SelectedItemText !important;
   }
 }
+
+.adw-slot-sign-focus {
+  display: none;
+  pointer-events: none;
+}
+.adw-slot-sign.ui-standard-button:focus-visible > .ui-button-face {
+  background: none;
+}
+.adw-slot-sign.ui-standard-button:focus-visible > .ui-button-face > [aria-hidden="true"] {
+  opacity: 1;
+}
+.adw-slot-sign:is(
+    :focus-visible,
+    .adw-picker-surface:not(:has(:focus-visible)) [data-picker-focused]
+  )
+  .adw-slot-sign-focus {
+  display: block;
+  background-color: var(--adw-cyan);
+}
+@media (forced-colors: active) {
+  .adw-slot-sign:is(
+      :focus-visible,
+      .adw-picker-surface:not(:has(:focus-visible)) [data-picker-focused]
+    )
+    .adw-slot-sign-focus {
+    background-color: Highlight;
+    forced-color-adjust: none;
+  }
+  .adw-slot-sign:is(
+      :focus-visible,
+      .adw-picker-surface:not(:has(:focus-visible)) [data-picker-focused]
+    )
+    .adw-text {
+    color: HighlightText !important;
+    forced-color-adjust: none;
+  }
+}

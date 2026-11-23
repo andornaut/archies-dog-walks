@@ -1434,10 +1434,8 @@ export class StartScene extends Scene {
           focused === undefined
             ? undefined
             : {
-                outset:
-                  focused.target.kind === "start"
-                    ? Math.min(FOCUS_OUTSET, HOME_LAYOUT.startFocusOutset)
-                    : FOCUS_OUTSET,
+                id: targetId(focused.target),
+                outset: FOCUS_OUTSET,
                 rect: focused.rect,
               },
         gearBadge:

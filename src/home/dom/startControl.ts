@@ -27,6 +27,7 @@ export function createStartControl(
   title: BitmapFont,
   input: {
     readonly activate: () => void;
+    readonly focused?: boolean;
     readonly label: string;
     readonly loading: string;
     readonly unavailable: string | undefined;
@@ -59,6 +60,7 @@ export function createStartControl(
   });
   const { element, face } = button;
   element.style.pointerEvents = "auto";
+  element.toggleAttribute("data-picker-focused", input.focused === true);
   let words = input.label;
   let key = "";
   return {

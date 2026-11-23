@@ -254,17 +254,24 @@ it("projects the slot sign frame without changing hit or pressed-tag geometry", 
     gameFont("font-body"),
     () => undefined,
     {
-      height: HOME_LAYOUT.gate.height,
-      width: 360,
-      x: 0,
-      y: HOME_LAYOUT.gate.y,
+      crop: {
+        height: HOME_LAYOUT.gate.height,
+        width: 360,
+        x: 0,
+        y: HOME_LAYOUT.gate.y,
+      },
+      focused: true,
     },
     sign,
   );
+  expect(view.element.hasAttribute("data-picker-focused")).toBe(true);
   await expect(view.ready).resolves.toContain("sprites/ui-slot-sign.png");
   const json = await source.loadSheet("sprites/ui-slot-sign.json");
   const frame = sheetFrame(json, "normal");
   const image = view.element.querySelectorAll(".adw-art")[0] as unknown as FakeElement;
+  const focusFace = view.element.querySelectorAll(
+    ".adw-slot-sign-focus",
+  )[0] as unknown as FakeElement;
   const labels = [...view.element.querySelectorAll(".adw-text")].map(
     (child) => child as unknown as FakeElement,
   );
@@ -294,6 +301,12 @@ it("projects the slot sign frame without changing hit or pressed-tag geometry", 
       const backing = gridRect(scale, {
         ...cream,
         y: cream.y + (pressed ? HOME_LAYOUT.slotSign.pressDrop : 0),
+      });
+      expect(focusFace.style).toMatchObject({
+        height: `${backing.height}px`,
+        left: `${backing.left - hit.left}px`,
+        top: `${backing.top - hit.top}px`,
+        width: `${backing.width}px`,
       });
       const bounds = labels.map((label, index) => {
         expect(Number.parseFloat(label.style.fontSize!)).toBeCloseTo(8 * pixel);

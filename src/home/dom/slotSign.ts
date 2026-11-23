@@ -6,7 +6,7 @@ import { framedPart } from "../../hud/dom/detailCard.ts";
 import { fillPart } from "../../hud/dom/shopPage.ts";
 import { type DomArtSource, sheetArt, sheetNineSlice } from "../../ui/dom/artElements.ts";
 import { createGameButton } from "../../ui/dom/gameButton.ts";
-import { createTextLine, placeBackedText, setBox } from "../../ui/dom/pixelLine.ts";
+import { createTextLine, placeBackedText, placeBox, setBox } from "../../ui/dom/pixelLine.ts";
 import type { SheetFrame } from "../../ui/dom/sheetFrames.ts";
 import { artPixel, type DomScale, gridRect, gridX, gridY } from "../../ui/domScale.ts";
 import { PALETTE } from "../../ui/palette.ts";
@@ -21,7 +21,7 @@ export function createSlotSign(
   },
   body: BitmapFont,
   activate: () => void,
-  crop: Rect,
+  { crop, focused }: { readonly crop: Rect; readonly focused?: boolean },
   sign: NonNullable<ReturnType<typeof slotSign>>,
 ): {
   readonly element: HTMLButtonElement;
@@ -41,7 +41,7 @@ export function createSlotSign(
   const paint = doc.createElement("span");
   paint.className = "adw-framed";
   const button = createGameButton(doc, {
-    appearance: { className: "adw-close" },
+    appearance: { className: "adw-slot-sign" },
     content: { icon: paint, kind: "icon", name: sign.lines.join(" ") },
     getAction: () => ({ activate }),
     skin: "authored",
@@ -50,7 +50,7 @@ export function createSlotSign(
   element.style.position = "absolute";
   element.style.pointerEvents = "auto";
   element.style.overflow = "visible";
-  element.style.setProperty("--ui-button-focus-fill", "var(--adw-cyan)");
+  element.toggleAttribute("data-picker-focused", focused === true);
   Object.assign(face.style, { inset: "0", pointerEvents: "none", position: "absolute" });
   const art = source.hasArt(layout.key) ? sheetArt(doc, source, layout.key) : undefined;
   const fallback =
@@ -65,6 +65,9 @@ export function createSlotSign(
   }
   const origin = layout.hit;
   const at = slotSignText(fontMetrics(body));
+  const focusFace = doc.createElement("span");
+  focusFace.className = "adw-framed adw-slot-sign-focus";
+  paint.append(focusFace);
   const lines = sign.lines.map(
     (text, i) =>
       ({
@@ -153,11 +156,13 @@ export function createSlotSign(
         tag: motion.pressed ? "pressed" : "normal",
       });
       const pressDrop = art !== undefined && motion.pressed ? layout.pressDrop : 0;
+      const cream = { ...at.cream, y: at.cream.y + pressDrop };
+      placeBox(scale, origin, focusFace, cream);
       placeBackedText(
         body,
         scale,
         origin,
-        { ...at.cream, y: at.cream.y + pressDrop },
+        cream,
         lines.map((line, i) => ({
           element: labels[i]!,
           line: { ...line, capTop: line.capTop + pressDrop },

@@ -1,7 +1,6 @@
 /* Custom-painted controls retain native focus while using Archie's cyan and ink band. */
 .adw-button:not(.adw-standard-button):focus-visible:not(.adw-row):not(:has(.adw-face))::after,
-.adw-close:not(.adw-standard-button):focus-visible:not(:has(.adw-close-face))::after,
-.crash .crash-button:focus-visible::after {
+.adw-close:not(.adw-standard-button):focus-visible:not(:has(.adw-close-face))::after {
   position: absolute;
   inset: var(--adw-slice-1, 1px);
   box-sizing: border-box;
@@ -11,10 +10,6 @@
     inset 0 0 0 var(--adw-slice-1, 1px) var(--adw-ink, #181425);
   content: "";
   pointer-events: none;
-}
-
-.crash .crash-button {
-  position: relative;
 }
 
 .crash .crash-button:focus-visible {
@@ -32,8 +27,7 @@
   .adw-close:not(.adw-standard-button):focus-visible:not(:has(.adw-close-face))::after,
   .adw-button:not(.adw-standard-button):focus-visible .adw-face::after,
   .adw-close:not(.adw-standard-button):focus-visible .adw-close-face::after,
-  .adw-row:not(.adw-standard-button):focus-visible::after,
-  .crash .crash-button:focus-visible::after {
+  .adw-row:not(.adw-standard-button):focus-visible::after {
     border-color: Highlight;
     box-shadow:
       0 0 0 var(--adw-slice-1, 1px) Canvas,

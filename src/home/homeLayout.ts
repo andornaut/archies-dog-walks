@@ -407,7 +407,6 @@ export const HOME_LAYOUT = {
     top: GATE.y,
   },
   startButton: START_BUTTON,
-  startFocusOutset: SCREEN_CONFIG.height - START_BUTTON.y - START_BUTTON.height,
   startGap: START_GAP,
   // Start walk's label caps at readyY on its raised face, its ink centred down the flat face
   // between the outline and lit row over it and the lip under it, any odd row left under them;

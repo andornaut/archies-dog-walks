@@ -104,9 +104,7 @@ describe("home layout", () => {
     expect(SCREEN_CONFIG.height - startButton.y - startButton.height).toBe(
       HOME_SCREEN.startButton.foot,
     );
-    expect(
-      inside(insetRect(-HOME_LAYOUT.startFocusOutset, startButton), SCREEN_LAYOUT.screen),
-    ).toBe(true);
+    expect(inside(startButton, SCREEN_LAYOUT.screen)).toBe(true);
     // Start walk's loading label leaves a margin inside the button (its fit: ui/textRoles.test.ts).
     expect(HOME_LAYOUT.startLoading.room).toBeLessThan(startButton.width);
   });

@@ -95,6 +95,7 @@ export function createNativeHomeView(
       | undefined;
     readonly focus:
       | {
+          readonly id: string;
           readonly rect: Rect;
           readonly outset: number;
         }
@@ -121,16 +122,7 @@ export function createNativeHomeView(
   element.append(divider.element);
   const sections = createHomeSections(doc, source, fonts.title, snapshot);
   element.append(sections.element);
-  const pickerFocus = snapshot.selections.find(({ rect }) => {
-    const focused = snapshot.focus?.rect;
-    return (
-      focused !== undefined &&
-      rect.x === focused.x &&
-      rect.y === focused.y &&
-      rect.width === focused.width &&
-      rect.height === focused.height
-    );
-  })?.id;
+  const focused = snapshot.focus?.id;
   const selections = new Map(
     snapshot.selections.map((tile) => [
       tile.id,
@@ -140,7 +132,7 @@ export function createNativeHomeView(
         fonts,
         {
           activate: () => context.activate(tile.id),
-          focused: tile.id === pickerFocus,
+          focused: tile.id === focused,
           hold: () => context.hold(tile.id),
           platePadding: context.platePadding,
         },
@@ -167,6 +159,7 @@ export function createNativeHomeView(
   const start = createStartControl(doc, fonts.title, {
     ...snapshot.start,
     activate: () => context.activate("start"),
+    focused: focused === "start",
   });
   element.append(start.element);
   controls.set("start", start.element);
@@ -178,7 +171,7 @@ export function createNativeHomeView(
           source,
           fonts.body,
           () => context.activate("slotSign"),
-          snapshot.slot.crop,
+          { crop: snapshot.slot.crop, focused: focused === "slotSign" },
           snapshot.slot.sign,
         );
   if (slot !== undefined) {
@@ -192,7 +185,8 @@ export function createNativeHomeView(
   if (gearBadge !== undefined) {
     element.append(gearBadge.element);
   }
-  const focus = createHomeFocus(doc, pickerFocus === undefined ? snapshot.focus : undefined);
+  // The remaining canvas control supplies its own focus treatment until its board is replaced.
+  const focus = createHomeFocus(doc, focused === "petShop" ? snapshot.focus : undefined);
   element.append(focus.element);
   const signLine = {
     capTop: HOME_LAYOUT.streetSign.y,
