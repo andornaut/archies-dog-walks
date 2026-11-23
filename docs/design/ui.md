@@ -92,3 +92,4 @@ Reference: [Screens and UI](../../src/README.md#screens-and-ui), [Assets](../../
 | adw-0235 | Remove Show tips again from Cheats                               | [adw-0235.md](../work/adw-0235.md) |
 | adw-0237 | Match the approved Cheats layout                                 | [adw-0237.md](../work/adw-0237.md) |
 | adw-0238 | Route letterbox taps to the top page                             | [adw-0238.md](../work/adw-0238.md) |
+| adw-0239 | Align owner and dog portraits in the walk HUD                    | [adw-0239.md](../work/adw-0239.md) |
