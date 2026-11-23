@@ -34,12 +34,14 @@ const RECT = { height: 48, width: 300, x: 24, y: 180 };
 function fixture({
   beforeMount,
   scale = domScale(3, { height: 560, width: 360, x: 0, y: 0 }),
+  selectable = true,
   source = SOURCE,
   tabs = false,
 }: {
   readonly beforeMount?: (doc: FakeDocument) => void;
   readonly tabs?: boolean;
   readonly scale?: DomScale;
+  readonly selectable?: boolean;
   readonly source?: ShopScreenInput["source"];
 } = {}) {
   const doc = new FakeDocument();
@@ -84,6 +86,7 @@ function fixture({
         id: "row",
         label: gameData.dogs.kilo.name,
         rect: RECT,
+        selectable,
         state: "disabled",
         texts: [],
       },
@@ -129,10 +132,11 @@ function fixture({
 const settle = () => setImmediate();
 
 it("restores a held item's retained row only when the native page accepts input", async () => {
-  const f = fixture();
+  const f = fixture({ selectable: false });
   await settle();
   f.screen.focusRow("row");
   expect(f.doc.activeElement?.getAttribute("aria-label")).toBe(gameData.dogs.kilo.name);
+  expect(f.doc.activeElement?.getAttribute("data-picker-focus")).toBe("outline");
   f.doc.body.focus();
   f.screen.setInert(true);
   f.screen.focusRow("row");

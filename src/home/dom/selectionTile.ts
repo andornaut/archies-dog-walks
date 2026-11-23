@@ -36,7 +36,7 @@ export function createSelectionTile(
   title: BitmapFont,
   view: {
     readonly control: ButtonView;
-    readonly focus: "content" | "face";
+    readonly focus: "content" | "face" | "outline";
     readonly mark: "art" | "fallback" | "none";
     readonly hit: Rect;
     readonly rect: Rect;

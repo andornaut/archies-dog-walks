@@ -6,7 +6,7 @@ import { expect, it, vi } from "vitest";
 import { gameData } from "../data/index.ts";
 import { SCREEN_LAYOUT } from "../data/screen.ts";
 import { messageLine } from "../home/homeLines.ts";
-import { gearRows, type ShopTab } from "../home/shop.ts";
+import { gearRows, type ShopTab, slotRows } from "../home/shop.ts";
 import { SHOP_LAYOUT, SHOP_MESSAGE_FIT, shopRowTextRoom } from "../home/shopLayout.ts";
 import type { ShopScreenView } from "../hud/dom/shopScreen.ts";
 import { type ListScroll, listScroll } from "../input/listScroll.ts";
@@ -19,7 +19,7 @@ import { domScale } from "../ui/domScale.ts";
 import { modalTitleInk } from "../ui/modal/titleRole.ts";
 import { TEXT_SCALE } from "../ui/textFit.ts";
 import { canvasPanelMeasure } from "./modalMeasure.ts";
-import { ShopScene } from "./ShopScene.ts";
+import { ShopScene, type ShopSceneData } from "./ShopScene.ts";
 
 vi.mock("phaser", () => ({
   Core: { Events: { PRE_RENDER: "prerender" } },
@@ -45,19 +45,28 @@ const measure = {
 function render(message: string | null = null, save = newPlayerSave, tab: ShopTab = "gear") {
   const update = vi.fn();
   const scene = Object.create(ShopScene.prototype) as {
+    create(data: ShopSceneData): void;
+    focusId: string | null;
+    onKey(code: string): void;
+    tapRow(id: string): void;
     renderNative(place: { fonts: typeof fonts; layer: UiLayer }): void;
     scroll: ListScroll;
     targetAt(x: number, y: number): unknown;
   };
   Object.assign(scene, {
+    close: vi.fn(),
+    focusId: null,
     frame: { rowWidth: SHOP_LAYOUT.row.width },
     message: message === null ? null : { refused: true, text: message },
     native: { update },
     placeNative: vi.fn(),
+    render: vi.fn(),
     save: () => save,
     scroll: listScroll(0),
+    shakes: new Map(),
     tab,
     textures: { exists: () => false, getFrame: () => ({ height: 24, width: 24 }) },
+    time: { now: 0 },
   });
   vi.mocked(canvasPanelMeasure).mockReturnValue(measure);
   const { layer } = fakeLayer(new FakeDocument(), domScale(1, SCREEN_LAYOUT.screen));
@@ -184,4 +193,31 @@ it("wraps a long refusal into a grown message plate and reserves its hit area", 
     scene.targetAt(view.message!.rect.x + 1, view.message!.rect.y + view.message!.rect.height - 1),
   ).toBeUndefined();
   expect(scene.scroll.max).toBeGreaterThanOrEqual(baseline.scene.scroll.max);
+});
+
+it("keeps short shop rows unselected for slot-sign entry, taps and arrow navigation", () => {
+  const { scene, view } = render(null, newPlayerSave, "dogs");
+  scene.create({ focus: { kind: "dogSlot", slot: 2 } });
+  expect(scene.focusId).toBeNull();
+  expect(view.rows.find(({ id }) => id === "slot:2")?.selectable).toBe(false);
+
+  scene.onKey("ArrowDown");
+  const first = scene.focusId;
+  expect(first).toBe("slot:1");
+  scene.tapRow("slot:2");
+  scene.tapRow("dog:kilo");
+  expect(scene.focusId).toBe(first);
+  scene.onKey("ArrowDown");
+  expect(scene.focusId).toBe("dog:archie");
+
+  const gear = render().scene;
+  const unaffordableGear = gearRows(gameData, newPlayerSave.owned)[0]!;
+  gear.tapRow(unaffordableGear.id);
+  expect(gear.focusId).toBeNull();
+
+  const price = slotRows(gameData, newPlayerSave.owned).find(({ id }) => id === "slot:2")!.price!;
+  const funded = render(null, { ...newPlayerSave, bankCents: price }, "dogs");
+  funded.scene.create({ focus: { kind: "dogSlot", slot: 2 } });
+  expect(funded.scene.focusId).toBe("slot:2");
+  expect(funded.view.rows.find(({ id }) => id === "slot:2")?.selectable).toBe(true);
 });

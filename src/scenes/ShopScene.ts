@@ -9,7 +9,7 @@ import { dogFaceKey, gearIconKey } from "../assets/spriteKeys.ts";
 import { gameData } from "../data/index.ts";
 import { FEEDBACK, shakeOffset } from "../home/feedback.ts";
 import { focusDirectionForKey } from "../home/focus.ts";
-import { isAffordable, type Purchase } from "../home/home.ts";
+import type { Purchase } from "../home/home.ts";
 import { overlayRegion } from "../home/homeBar.ts";
 import { type HomeAction, messageLine } from "../home/homeLines.ts";
 import { itemModal } from "../home/itemModal.ts";
@@ -277,7 +277,13 @@ export class ShopScene extends Scene {
     this.scroll = listScroll(0);
     this.shakes = new Map();
     this.tab = shopOpenTab(data.focus);
-    this.focusId = data.focus === undefined ? null : shopRowId(data.focus);
+    this.focusId = null;
+    if (data.focus !== undefined) {
+      const row = this.rowById(shopRowId(data.focus));
+      if (row !== undefined && this.rowLook(this.save(), row) !== "short") {
+        this.focusId = row.id;
+      }
+    }
     // Mount only after fonts and the shared native layer are ready.
     this.native = undefined;
     const layer = uiLayer();
@@ -419,7 +425,12 @@ export class ShopScene extends Scene {
     const rows: ShopScreenRow[] = [];
     this.placed = layout.rows;
     for (const { lines: descriptions, rect, row, text } of layout.rows) {
-      const look = SHOP_ROW_VIEWS[shopRowLook(gameData, save.owned, save.bankCents, row)];
+      const rowLook = this.rowLook(save, row);
+      const selectable = rowLook !== "short";
+      if (!selectable && this.focusId === row.id) {
+        this.focusId = null;
+      }
+      const look = SHOP_ROW_VIEWS[rowLook];
       const mid = rect.y + Math.floor(rect.height / 2);
       const right = rect.x + rect.width - ROW.plateInset;
       const box = {
@@ -512,6 +523,7 @@ export class ShopScene extends Scene {
         id: row.id,
         label: row.name,
         rect,
+        selectable,
         state: look.state,
         texts,
         ...(plate === undefined ? {} : { plate }),
@@ -664,7 +676,10 @@ export class ShopScene extends Scene {
       return;
     }
     if (direction === "up" || direction === "down") {
-      const ids = this.rows().map(({ id }) => id);
+      const save = this.save();
+      const ids = this.rows()
+        .filter((row) => this.rowLook(save, row) !== "short")
+        .map(({ id }) => id);
       const at = this.focusId === null ? -1 : ids.indexOf(this.focusId);
       const next = clampIndex(ids.length, at + (direction === "up" ? -1 : 1));
       this.focusId = ids[next] ?? this.focusId;
@@ -706,11 +721,7 @@ export class ShopScene extends Scene {
     if (row === undefined) {
       return false;
     }
-    const save = this.save();
-    return (
-      shopRowLook(gameData, save.owned, save.bankCents, row) !== "owned" &&
-      isAffordable(gameData, save.owned, save.bankCents, row.purchase)
-    );
+    return this.rowLook(this.save(), row) === "affordable";
   }
 
   private close(): void {
@@ -743,6 +754,10 @@ export class ShopScene extends Scene {
     const listY = y + this.scroll.y;
     const hit = this.placed.find(({ rect }) => containsPoint(rect, x, listY));
     return hit === undefined ? undefined : { id: hit.row.id, kind: "row" };
+  }
+
+  private rowLook(save: SaveDocument, row: ShopRow): keyof typeof SHOP_ROW_VIEWS {
+    return shopRowLook(gameData, save.owned, save.bankCents, row);
   }
 
   private rowById(id: string): ShopRow | undefined {
@@ -791,9 +806,11 @@ export class ShopScene extends Scene {
     if (row === undefined) {
       return;
     }
-    this.focusId = id;
     const save = this.save();
-    const look = shopRowLook(gameData, save.owned, save.bankCents, row);
+    const look = this.rowLook(save, row);
+    if (look !== "short") {
+      this.focusId = id;
+    }
     const text = gameData.homeText;
     if (look === "owned") {
       this.message = null;

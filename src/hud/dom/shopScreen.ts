@@ -58,6 +58,7 @@ export interface ShopScreenRow {
   readonly id: string;
   readonly label: string;
   readonly rect: Rect;
+  readonly selectable: boolean;
   readonly state: TileState;
   readonly fills: readonly NativeTileFill[];
   readonly texts: readonly PanelText[];
@@ -368,7 +369,7 @@ export function showShopScreen(
       const stopFeedback = bindPanelFeedback(control, { accepts, burst: () => undefined });
       const tile = createSelectionTile(doc, input.source, input.fonts.title, {
         control,
-        focus: "face",
+        focus: row.selectable ? "face" : "outline",
         hit: row.rect,
         mark: "none",
         rect: row.rect,
