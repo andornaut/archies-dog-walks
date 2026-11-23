@@ -46,7 +46,6 @@ export const MENU_TEXT = {
     speeds: { fast: "Fast", normal: "Normal", slow: "Slow" },
     startAt: "Start at",
     title: "Cheats",
-    unlockAll: "Unlock All",
     unlockWalkers: "Unlock Walkers",
   },
   common: {

@@ -2,7 +2,9 @@ import { rectsOverlap } from "@andornaut/game-kit/runtime/rect";
 import { describe, expect, it } from "vitest";
 
 import { gameData } from "../data/index.ts";
+import { SETTINGS_CARD } from "../data/layout.ts";
 import { SCREEN_CONFIG } from "../data/screen.ts";
+import { SWITCH_STATE_GAP } from "../home/settings.ts";
 import { fontFileMetrics, gameFont, inkWidth } from "../testing/fontInk.ts";
 import { MODAL } from "../ui/modal/layout.ts";
 import { modalTitleInk } from "../ui/modal/titleRole.ts";
@@ -72,7 +74,7 @@ describe("Cheats actions", () => {
     expect(visible).not.toContain("fpsCounter");
   });
 
-  it("offers five unlocks and the three bank amounts only at Start", () => {
+  it("offers four unlocks in the approved order and the three bank amounts only at Start", () => {
     expect(BANK_GRANTS).toEqual([cents(10_000), cents(100_000), cents(1_000_000)]);
     for (const [state, isHome] of [
       [HOME, true],
@@ -85,7 +87,7 @@ describe("Cheats actions", () => {
       );
       const unlocks = current.filter(({ action }) => action.kind === "own");
       expect(unlocks.map(({ action, available }) => ({ action, available }))).toEqual(
-        ["walkers", "dogs", "dogSlots", "gear", "all"].map((grant) => ({
+        ["walkers", "dogSlots", "dogs", "gear"].map((grant) => ({
           action: { grant, kind: "own" },
           available: isHome,
         })),
@@ -147,10 +149,31 @@ describe("Cheats layout", () => {
     expect(invincible?.action?.kind).toBe("invincible");
     expect(invincible?.rect.height).toBe(48);
     expect(invincible?.switch?.y).toBeGreaterThan(invincible!.rect.y);
+    const sw = invincible!.switch!;
+    const { height, width } = SETTINGS_CARD.row.switch;
+    expect(sw.x + width).toBe(invincible!.rect.x + invincible!.rect.width);
+    expect(invincible!.texts[0]?.centreX).toBe(invincible!.rect.x);
+    expect(invincible!.texts[1]).toMatchObject({
+      capTop: sw.y + height + SWITCH_STATE_GAP,
+      centre: "ink",
+      centreX: sw.x + width / 2,
+      text: words.settings.off,
+    });
+    const on = view({ ...HOME, next: { ...HOME.next, invincible: true } }).rows.find(
+      ({ kind }) => kind === "switch",
+    );
+    expect(on?.texts[1]?.text).toBe(words.settings.on);
+    const index = current.rows.indexOf(invincible!);
+    expect(current.rows.slice(index + 1, index + 3)).toMatchObject([
+      { kind: "divider" },
+      { kind: "heading", label: words.cheats.startAt },
+    ]);
   });
 
   it("sets the Next Walk divider 16px from the last button and Unlocks/Money headings", () => {
-    const index = current.rows.findIndex((row) => row.kind === "divider");
+    const unlocks = current.rows.findIndex((row) => row.label === words.cheats.groups.unlocks);
+    const index = unlocks - 1;
+    expect(current.rows[index]?.kind).toBe("divider");
     const [before, divider, after] = current.rows
       .slice(index - 1, index + 2)
       .map(({ rect }) => rect);

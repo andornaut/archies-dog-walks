@@ -7,6 +7,7 @@ import type { Rect } from "@andornaut/game-kit/runtime/rect";
 import { SETTINGS_CARD, SHOP_PAGE } from "../data/layout.ts";
 import type { DebuffId, GameData, MenuText, UpgradeId, ZoneId } from "../data/types.ts";
 import { MENU_TEXT_FIELDS } from "../home/menuText.ts";
+import { SWITCH_STATE_GAP } from "../home/settings.ts";
 import { dollarText } from "../presentation/currency.ts";
 import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";
 import { dismissFooter } from "../ui/modal/dismissFooter.ts";
@@ -114,10 +115,9 @@ export function cheatRows(
   });
   const owns: readonly [string, OwnGrant][] = [
     [text.unlockWalkers, "walkers"],
-    [text.ownDogs, "dogs"],
     [text.ownDogSlots, "dogSlots"],
+    [text.ownDogs, "dogs"],
     [text.ownGear, "gear"],
-    [text.unlockAll, "all"],
   ];
   const zones = startZones(data);
   const selected = next.start ?? zones[0];
@@ -135,6 +135,7 @@ export function cheatRows(
   return [
     { kind: "heading", text: text.groups.nextWalk },
     switchRow(text.invincible, next.invincible, home, { kind: "invincible" }),
+    { kind: "divider" },
     { kind: "heading", text: text.startAt },
     ...zoneRows,
     { kind: "divider", section: true },
@@ -359,21 +360,14 @@ export interface CheatsView {
   readonly rows: readonly CheatRowView[];
 }
 
-// A line of title text centred down a row, from left or, right-aligned, ending at right.
-function rowText(
-  measure: PanelMeasure,
-  colour: number,
-  rect: Rect,
-  text: string,
-  at: { readonly left: number } | { readonly right: number },
-): PanelText {
+// A line of title text centred down a row on its left axis.
+function rowText(measure: PanelMeasure, colour: number, rect: Rect, text: string): PanelText {
   const { capTop, lineHeight } = measure.title;
   const caps = Math.round(rect.y + rect.height / 2 + (capTop - lineHeight / 2) * TEXT_SCALE);
-  const ink = measure.inkWidth("title", text);
   return {
     capTop: caps,
-    centre: "left" in at ? "left" : "ink",
-    centreX: "left" in at ? at.left : at.right - ink / 2,
+    centre: "left",
+    centreX: rect.x,
     colour,
     font: "title",
     line: 0,
@@ -401,7 +395,7 @@ function rowView(measure: PanelMeasure, row: CheatLine, rect: Rect): CheatRowVie
         ...plain,
         label: row.text,
         rect: heading,
-        texts: [rowText(measure, PALETTE.plum, heading, row.text, { left: rect.x })],
+        texts: [rowText(measure, PALETTE.plum, heading, row.text)],
       };
     }
     case "buttons": {
@@ -415,10 +409,13 @@ function rowView(measure: PanelMeasure, row: CheatLine, rect: Rect): CheatRowVie
       };
     }
     case "switch": {
-      const hit = { ...rect, height: TOGGLE_HEIGHT };
+      const stateHeight = measure.title.capHeight * TEXT_SCALE;
+      const stackHeight = SWITCH.height + SWITCH_STATE_GAP + stateHeight;
+      const hit = { ...rect, height: Math.max(TOGGLE_HEIGHT, stackHeight + 2 * MODAL.rowGap) };
       const look = row.enabled ? selectLook("normal") : { ...selectLook("normal"), ...GREYED };
       const colour = PALETTE[look.text];
-      const switchX = rect.x + rect.width - ROW.pad - SWITCH.width;
+      const switchX = rect.x + rect.width - SWITCH.width;
+      const switchY = hit.y + Math.floor((hit.height - stackHeight) / 2);
       return {
         ...plain,
         action: row.action,
@@ -428,11 +425,20 @@ function rowView(measure: PanelMeasure, row: CheatLine, rect: Rect): CheatRowVie
         switch: {
           on: row.on,
           x: switchX,
-          y: hit.y + Math.round((hit.height - SWITCH.height) / 2),
+          y: switchY,
         },
         texts: [
-          rowText(measure, colour, hit, row.label, { left: rect.x + ROW.pad }),
-          rowText(measure, colour, hit, row.value, { right: switchX - ROW.pad }),
+          rowText(measure, colour, hit, row.label),
+          {
+            capTop: switchY + SWITCH.height + SWITCH_STATE_GAP,
+            centre: "ink",
+            centreX: switchX + SWITCH.width / 2,
+            colour,
+            font: "title",
+            line: 0,
+            scale: TEXT_SCALE,
+            text: row.value,
+          },
         ],
         value: row.value,
       };

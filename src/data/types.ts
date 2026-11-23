@@ -1165,7 +1165,6 @@ export interface MenuText {
     readonly speeds: { readonly fast: string; readonly normal: string; readonly slow: string };
     readonly startAt: string;
     readonly title: string;
-    readonly unlockAll: string;
     readonly unlockWalkers: string;
   };
   // Words every panel shares: its close control's accessible name.
