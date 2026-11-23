@@ -87,3 +87,4 @@ Reference: [Screens and UI](../../src/README.md#screens-and-ui), [Assets](../../
 | adw-0229 | Route letterbox taps to the top modal                            | [adw-0229.md](../work/adw-0229.md) |
 | adw-0233 | Keep unaffordable Pet shop items unselected                      | [adw-0233.md](../work/adw-0233.md) |
 | adw-0234 | Add the FPS icon to Settings                                     | [adw-0234.md](../work/adw-0234.md) |
+| adw-0235 | Remove Show tips again from Cheats                               | [adw-0235.md](../work/adw-0235.md) |
