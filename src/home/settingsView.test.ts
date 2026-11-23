@@ -92,6 +92,7 @@ describe("settingsView", () => {
       const current = view({ settings: { ...DEFAULT_SETTINGS, fpsCounter, muted, reducedMotion } });
       expect(current.rows.at(-1)).toMatchObject({
         description: "",
+        icon: { key: "icon-fps-counter-panel", tag: fpsCounter ? "on" : "off" },
         key: "fpsCounter",
         switch: { on: fpsCounter },
         texts: [
@@ -136,7 +137,11 @@ describe("settingsView", () => {
       expect(configured.at(-2)?.key).toBe(installable ? "install" : "reducedMotion");
       const fps = view({}).rows.at(-1)!;
       const sound = view({}).rows[0]!;
-      expect(fps.icon).toBeUndefined();
+      expect(fps.icon).toMatchObject({
+        key: "icon-fps-counter-panel",
+        x: sound.icon?.x,
+        y: fps.rect.y + SETTINGS_CARD.row.icon.dy,
+      });
       expect(fps.texts[0]!.x - fps.rect.x).toBe(SETTINGS_CARD.row.label.dx);
       expect(fps.texts[0]!.x).toBe(sound.texts[0]!.x);
       expect(fps.switch!.art.x).toBe(sound.switch!.art.x);

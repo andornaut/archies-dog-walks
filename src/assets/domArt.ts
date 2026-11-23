@@ -61,6 +61,7 @@ function detailArtKeys(
 const SETTINGS_ART_KEYS = [
   "icon-browser-menu",
   "icon-effects-panel",
+  "icon-fps-counter-panel",
   "icon-install-panel",
   "icon-motion-panel",
   "icon-music-panel",

@@ -86,7 +86,7 @@ export const SETTING_ROWS: readonly SettingsRow[] = [
     label: "motion",
     note: "motionNote",
   },
-  { key: "fpsCounter", kind: "switch", label: "fpsCounter" },
+  { icon: "icon-fps-counter-panel", key: "fpsCounter", kind: "switch", label: "fpsCounter" },
 ];
 // Before FPS while the game can be installed (offersInstall).
 export const INSTALL_ROW: SettingsRow = {
