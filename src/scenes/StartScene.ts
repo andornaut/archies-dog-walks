@@ -102,7 +102,7 @@ import {
   stopWakeLock,
   updateAccepting,
 } from "../pwa/index.ts";
-import { requestStartUpdateCheck } from "../pwa/launch.ts";
+import { requestGameUpdateCheck } from "../pwa/launch.ts";
 import { walkerOrder } from "../rules/walkers.ts";
 import type { SaveDocument } from "../save/schema.ts";
 import { walksFinished, walksPlayed } from "../save/stats.ts";
@@ -432,7 +432,7 @@ export class StartScene extends Scene {
     super(SCENE_KEYS.start);
   }
   create(): void {
-    requestStartUpdateCheck();
+    requestGameUpdateCheck();
     // Back from a walk, a cheat session ends before the save is read.
     endCheatsAfterWalk(this);
     this.action = { kind: "none" };

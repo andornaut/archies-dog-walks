@@ -144,9 +144,9 @@ export function bootFinished(): boolean {
   return booted;
 }
 
-// A genuine return to Start wakes the existing launch. Initial boot already checks for updates;
-// the kit owns eligibility, coalescing and staging after this request.
-export function requestStartUpdateCheck(): void {
+// A genuine return to Start or entry to play wakes the existing launch. Initial boot already
+// checks for updates. The kit owns eligibility, coalescing and staging.
+export function requestGameUpdateCheck(): void {
   if (bootFinished()) {
     launch?.requestUpdateCheck();
   }

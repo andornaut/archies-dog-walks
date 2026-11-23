@@ -68,14 +68,14 @@ afterEach(() => {
 });
 
 describe("startLaunch", () => {
-  it("delegates genuine Start returns only after boot hands over, without app throttling", async () => {
-    launch.requestStartUpdateCheck();
+  it("delegates play and Start checks after boot hands over, without app throttling", async () => {
+    launch.requestGameUpdateCheck();
     await launch.startLaunch(() => ({ dispose() {}, update() {} }));
-    launch.requestStartUpdateCheck();
+    launch.requestGameUpdateCheck();
     expect(kit.requestUpdateCheck).not.toHaveBeenCalled();
     launch.bootHandedOver();
-    launch.requestStartUpdateCheck();
-    launch.requestStartUpdateCheck();
+    launch.requestGameUpdateCheck();
+    launch.requestGameUpdateCheck();
     expect(kit.requestUpdateCheck).toHaveBeenCalledTimes(2);
   });
 
@@ -130,7 +130,7 @@ describe("startLaunch", () => {
     launch = await import("./launch.ts");
     await expect(launch.startLaunch(() => ({ dispose() {}, update() {} }))).resolves.toBe("play");
     launch.bootHandedOver();
-    launch.requestStartUpdateCheck();
+    launch.requestGameUpdateCheck();
     expect(kit.requestUpdateCheck).not.toHaveBeenCalled();
     launch.requireNewer();
     expect(launch.requiredUpdate()).toBe("unavailable");

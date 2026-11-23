@@ -38,6 +38,7 @@ import {
   zoneCelebration,
 } from "../hud/zoneCelebration.ts";
 import { onFrameTurnChange, PHONE_EVENTS, startWakeLock, stopWakeLock } from "../pwa/index.ts";
+import { requestGameUpdateCheck } from "../pwa/launch.ts";
 import { type CardView, type Choice, outcomeChanges } from "../rules/choices.ts";
 import { currentZone, currentZoneId, previousZone, previousZoneId } from "../rules/route.ts";
 import { screenRoadGeometry } from "../runner/screenGeometry.ts";
@@ -239,6 +240,7 @@ export class RunScene extends Scene implements HudRun {
     if (resume !== undefined) {
       this.openPause();
     }
+    requestGameUpdateCheck();
   }
 
   // A new walk's first zone starts, and the HUD hears the walk's start a frame later. The first
