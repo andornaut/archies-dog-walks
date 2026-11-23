@@ -146,8 +146,10 @@ export class StatsScene extends Scene {
       this.close();
       return;
     }
+    const badge = this.detail;
     this.detail = undefined;
     this.render();
+    this.page?.focusBadge(badge);
   }
 
   override update(_time: number, deltaMs: number): void {

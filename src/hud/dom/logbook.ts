@@ -41,6 +41,7 @@ export interface LogbookScroll {
 export type LogbookTarget = { readonly badge: number } | { readonly tab: number };
 
 export interface DomLogbook extends DomQuestionPanel {
+  focusBadge(index: number): void;
   setPage(page: ShopPageView): void;
 }
 
@@ -389,6 +390,11 @@ export function showLogbook(layer: UiLayer, input: DomLogbookInput): DomLogbook 
       stopUnderlay();
       [...tabs, ...badges].forEach((part) => part.dispose());
       shown.destroy();
+    },
+    focusBadge: (index) => {
+      if (badges[index] !== undefined) {
+        shown.focusControl(tabs.length + index);
+      }
     },
     setDimmed: (next) => {
       dimmed = next;
