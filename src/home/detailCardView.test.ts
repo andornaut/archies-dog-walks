@@ -99,6 +99,21 @@ it.each([false, true])(
   },
 );
 
+it("keeps the wrapped walker unlock sentence in one centred text block", () => {
+  const info = walkerDetail(gameData, newPlayerSave.owned, "ada");
+  const view = detailCardView(gameData, measure, SCREEN_LAYOUT.screen, {
+    card: info,
+    kind: "walker",
+    picture,
+  });
+  const expected = wrap(cardTextRooms(view.card.panel.width).full, info.status);
+  expect(expected.length).toBeGreaterThan(1);
+  const status = view.texts.find((text) => text.lines.join(" ") === info.status)!;
+  expect(status.lines).toEqual(expected);
+  expect(status.align).toBe("inkCentre");
+  expect(view.card.footer!.rect.y - bottom(status)).toBe(MODAL.pad);
+});
+
 it("shows only the price below an affordable card with Cancel and primary Buy", () => {
   const purchase = {
     buy: gameData.homeText.shop.confirmBuy,

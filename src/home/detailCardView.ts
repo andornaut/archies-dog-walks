@@ -21,6 +21,7 @@ import { cardTitleRow } from "../ui/modal/titleRow.ts";
 import { type PanelMeasure, type QuestionPanelView } from "../ui/modal/types.ts";
 import { modalCardView } from "../ui/modal/view.ts";
 import { PALETTE } from "../ui/palette.ts";
+import { TEXT_SCALE } from "../ui/textFit.ts";
 import { type DetailCard, type DetailPart, detailParts, type DetailPicture } from "./detail.ts";
 import {
   cardTextRooms,
@@ -263,12 +264,14 @@ export function detailCardView(
     }
     const statuses = statusLines.flatMap((row) => {
       const font = row.kind === "price" ? "title" : "body";
-      return wrapWords((line) => measure.inkWidth(font, line), rooms.full, row.text).map((text) => {
-        bodyFits &&= measure.inkWidth(font, text) <= rooms.full;
-        const at = bottom;
-        bottom += inkRowsOfLines(measure[font], 1) * 2 + MODAL.pad;
-        return { font, kind: row.kind, text, y: at } as const;
-      });
+      const lines = wrapWords((line) => measure.inkWidth(font, line), rooms.full, row.text);
+      if (lines.length === 0) {
+        return [];
+      }
+      bodyFits &&= lines.every((line) => measure.inkWidth(font, line) <= rooms.full);
+      const y = bottom;
+      bottom += inkRowsOfLines(measure[font], lines.length) * TEXT_SCALE + MODAL.pad;
+      return [{ font, kind: row.kind, lines, y } as const];
     });
     if (statuses.length > 0) {
       bottom -= MODAL.pad;
@@ -395,13 +398,13 @@ export function detailCardView(
     addOwner(content, measure, data, layout.owner, layout.owner.room, card.owner);
   }
   for (const row of layout.statuses) {
-    const dollar = row.kind === "price" ? row.text.indexOf("$") : -1;
+    const isCurrency = row.kind === "price" && row.lines.some((line) => line.includes("$"));
     addText(content, measure, {
       align: "inkCentre",
       capTop: row.y,
-      colour: dollar >= 0 ? (card.locked ? PALETTE.darkRed : PALETTE.plum) : colours.status,
+      colour: isCurrency ? (card.locked ? PALETTE.darkRed : PALETTE.plum) : colours.status,
       font: row.font,
-      lines: [row.text],
+      lines: row.lines,
       x: width / 2,
     });
   }
