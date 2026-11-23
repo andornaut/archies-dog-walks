@@ -83,7 +83,7 @@ describe("PAGE_RULES", () => {
     expect(() => pageRules({}, PAGE_RULES, pages)).not.toThrow();
   });
 
-  it("permits website analytics while keeping playable connections same-origin", () => {
+  it("limits playable connections to the game's origin and its local audio blobs", () => {
     const paths = ["/", "/play/", "/tuning/", "/art/"];
     const pages = new Map(paths.map((path) => [path, { scriptHashes: [], styleHashes: [] }]));
     const rules = pageRules(BASE_DIRECTIVES, PAGE_RULES, pages);
@@ -98,11 +98,12 @@ describe("PAGE_RULES", () => {
       );
       if (path === "/play/") {
         expect(directives.get("script-src")).toEqual(["'self'"]);
-        expect(directives.get("connect-src")).toEqual(["'self'"]);
+        expect(directives.get("connect-src")).toEqual(["'self'", "blob:"]);
         expect(policy).not.toContain("cloudflareinsights.com");
       } else {
         expect(directives.get("script-src")).toContain("https://static.cloudflareinsights.com");
         expect(directives.get("connect-src")).toContain("https://cloudflareinsights.com");
+        expect(directives.get("connect-src")).not.toContain("blob:");
       }
     }
   });

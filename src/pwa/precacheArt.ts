@@ -4,6 +4,7 @@ import type { ArtFileMap } from "../assets/artUrl.ts";
 import { parseManifest } from "../assets/manifest.ts";
 import { SOUND_FORMATS } from "../audio/soundFormat.ts";
 import { ART_MANIFEST } from "../tools/artManifest.ts";
+import { soundBankId } from "../tools/packing/plan.ts";
 
 // A sound's logical URL in the build manifest: its art path under /art/ without the format's
 // extension. The page requests a hashed alternative directly; this only names the sound.
@@ -14,19 +15,30 @@ export function logicalSoundUrl(path: string): string {
 // The art the game loads, as the URLs of its hashed files: each sound's alternatives under its
 // logical URL, in SOUND_FORMATS order, and every other file. Only the map's files are listed, so
 // no unhashed art is installed.
-export function hashedArtUrls(artFiles: ArtFileMap, manifestJson: unknown): HashedFiles {
+export function hashedArtUrls(
+  artFiles: ArtFileMap,
+  manifestJson: unknown,
+  banks?: HashedFiles["sounds"],
+): HashedFiles {
   const { sounds } = parseManifest(manifestJson);
   const url = (fileName: string) => `/${fileName}`;
   const soundPaths = new Set(
     sounds.flatMap((sound) => SOUND_FORMATS.map((format) => sound[format])),
   );
   return {
-    sounds: Object.fromEntries(
-      sounds.map((sound) => [
-        logicalSoundUrl(sound[SOUND_FORMATS[0]]),
-        SOUND_FORMATS.flatMap((format) => artFiles.get(sound[format]) ?? []).map(url),
-      ]),
-    ),
+    sounds: {
+      ...Object.fromEntries(
+        sounds.flatMap((sound) => {
+          const alternatives = SOUND_FORMATS.flatMap(
+            (format) => artFiles.get(sound[format]) ?? [],
+          ).map(url);
+          return banks !== undefined && alternatives.some((path) => soundBankId(path) !== undefined)
+            ? []
+            : [[logicalSoundUrl(sound[SOUND_FORMATS[0]]), alternatives]];
+        }),
+      ),
+      ...banks,
+    },
     urls: [...artFiles]
       .filter(([path]) => !soundPaths.has(path))
       .map(([, fileName]) => url(fileName)),
@@ -37,6 +49,7 @@ export function hashedArtUrls(artFiles: ArtFileMap, manifestJson: unknown): Hash
 // manifest in the build output.
 export function artHashedFiles(
   getArtFiles: () => ArtFileMap,
+  getSoundBanks: () => HashedFiles["sounds"],
 ): (bundleFile: (url: string) => Uint8Array | undefined) => HashedFiles {
   return (bundleFile) => {
     const artFiles = getArtFiles();
@@ -45,7 +58,7 @@ export function artHashedFiles(
     if (manifest === undefined) {
       throw new Error(`the hashed ${ART_MANIFEST} is not in the build output`);
     }
-    return hashedArtUrls(artFiles, JSON.parse(new TextDecoder().decode(manifest)));
+    return hashedArtUrls(artFiles, JSON.parse(new TextDecoder().decode(manifest)), getSoundBanks());
   };
 }
 

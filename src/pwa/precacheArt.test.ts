@@ -47,6 +47,19 @@ describe("hashedArtUrls", () => {
     ]);
   });
 
+  it("lists the individual bank files and downloads neither loose cue", () => {
+    const banks = {
+      "/art/sounds/bank-other": [
+        "/assets/art/sounds/bank-other-a.ogg",
+        "/assets/art/sounds/bank-other-b.m4a",
+      ],
+    };
+    const packed = hashedArtUrls(artFiles, manifest, banks);
+    expect(packed.sounds).toEqual(banks);
+    expect(packed.urls).toEqual(others.map(urlOf));
+    expect(bootFiles(packed)).toContain(banks["/art/sounds/bank-other"][0]);
+  });
+
   it("rejects a malformed manifest, as the game does", () => {
     expect(() => hashedArtUrls(artFiles, { fonts: [], images: [], sounds: [] })).toThrow(
       "manifest.sprites",

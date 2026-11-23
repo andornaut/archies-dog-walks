@@ -8,6 +8,7 @@ import { artHashedFiles, bootFiles } from "./precacheArt.ts";
 interface PrecachePluginOptions {
   // The game's art files, as atlasPlugin hashed them for this build.
   getArtFiles: () => ArtFileMap;
+  getSoundBanks: () => Readonly<Record<string, readonly string[]>>;
   // The game page's file name in the build output, which is its path under Vite's root, e.g.
   // "play/index.html".
   pageHtmlFile: string;
@@ -20,12 +21,13 @@ interface PrecachePluginOptions {
 // complete build needs offline) and its pointer (/.game-kit/build.json).
 export function precachePlugin({
   getArtFiles,
+  getSoundBanks,
   pageHtmlFile,
   serviceWorkerSource,
 }: PrecachePluginOptions): Plugin {
   return kitPrecachePlugin({
     boot: bootFiles,
-    hashedFiles: artHashedFiles(getArtFiles),
+    hashedFiles: artHashedFiles(getArtFiles, getSoundBanks),
     pageHtmlFile,
     policy: CACHE_POLICY,
     serviceWorkerSource,

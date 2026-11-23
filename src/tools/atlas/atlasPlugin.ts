@@ -16,10 +16,12 @@ import {
   domSheetJsonPath,
 } from "../../assets/domArt.ts";
 import { parseManifest } from "../../assets/manifest.ts";
+import { SOUND_BANK_META } from "../../assets/packedAssetIndex.ts";
 import type { DomSheetJson } from "../../ui/dom/sheetFrames.ts";
 import { ART_DIR, ART_MANIFEST, artManifestText, generateArtManifest } from "../artManifest.ts";
 import { limitConcurrency } from "../concurrency.ts";
 import { nodeArtFiles, OPEN_FILE_LIMIT, writeIfChanged } from "../files.ts";
+import { buildSoundBanks } from "../packing/soundBanks.ts";
 import { type SiteArt, siteHtml, siteNavigation } from "../siteArt.ts";
 import { buildAtlases, WEBP_PAGES } from "./atlasBuild.ts";
 import { buildDomSheet, checkDomCopies } from "./domSheets.ts";
@@ -50,6 +52,7 @@ const CONTENT_TYPES: Readonly<Record<string, string>> = {
 interface AtlasPluginApi {
   // The build's ArtFileMap, once buildStart has run.
   artFiles(): ArtFileMap;
+  soundBanks(): Readonly<Record<string, readonly string[]>>;
 }
 
 // Writes /art/manifest.json from the files under public/art/ first, so the build packs and
@@ -65,10 +68,12 @@ interface AtlasPluginApi {
 // site's pages name (publicFilesPlugin).
 export function atlasPlugin(): Plugin & { api: AtlasPluginApi } {
   let artFiles: ArtFileMap = new Map();
+  let soundBanks: Readonly<Record<string, readonly string[]>> = {};
+  let bankIndexes: readonly { fileName: string; format: string }[] = [];
   let siteArt: SiteArt | undefined;
   let siteStylesheet: ((css: string) => string) | undefined;
   return {
-    api: { artFiles: () => artFiles },
+    api: { artFiles: () => artFiles, soundBanks: () => soundBanks },
     async buildStart() {
       const { config, logger } = this.environment;
       if (config.command !== "build") {
@@ -99,6 +104,12 @@ export function atlasPlugin(): Plugin & { api: AtlasPluginApi } {
         logger.info(`dom sheet: ${path}, ${(source.length / 1024).toFixed(1)} kB`);
       }
       for (const { fileName, source } of hashed) {
+        this.emitFile({ fileName, source, type: "asset" });
+      }
+      const banks = buildSoundBanks(hashed);
+      soundBanks = banks.alternatives;
+      bankIndexes = banks.indexes;
+      for (const { fileName, source } of banks.files) {
         this.emitFile({ fileName, source, type: "asset" });
       }
       artFiles = new Map(hashed.map(({ fileName, path }) => [path, fileName]));
@@ -207,19 +218,31 @@ export function atlasPlugin(): Plugin & { api: AtlasPluginApi } {
       });
     },
     load(id) {
-      return id === RESOLVED_ART_FILES_MODULE
-        ? `export default new Map(${JSON.stringify([...artFiles])});`
-        : undefined;
+      if (id !== RESOLVED_ART_FILES_MODULE) {
+        return undefined;
+      }
+      const gameArt = [...artFiles].filter(([path]) => !path.startsWith("sounds/sfx-"));
+      return `export default new Map(${JSON.stringify(gameArt)});`;
     },
     name: "archies-dog-walks-atlas",
     resolveId(id) {
       return id === ART_FILES_MODULE ? RESOLVED_ART_FILES_MODULE : undefined;
     },
     transformIndexHtml: {
-      handler(html) {
-        return siteArt === undefined || siteStylesheet === undefined
-          ? html
-          : siteHtml(siteArt, siteStylesheet, html);
+      handler(html, context) {
+        const page =
+          siteArt === undefined || siteStylesheet === undefined
+            ? html
+            : siteHtml(siteArt, siteStylesheet, html);
+        return {
+          html: page,
+          tags: context.filename.endsWith("/play/index.html")
+            ? bankIndexes.map(({ fileName, format }) => ({
+                attrs: { content: `/${fileName}`, name: `${SOUND_BANK_META}-${format}` },
+                tag: "meta",
+              }))
+            : [],
+        };
       },
       order: "post",
     },

@@ -29,6 +29,7 @@ import {
   ownerFaceKey,
   ROAD_SPRITE_SIZE,
 } from "../assets/spriteKeys.ts";
+import { preparedSoundUrl } from "../audio/soundBankUrls.ts";
 import { gameData } from "../data/index.ts";
 import type { EncounterId } from "../data/types.ts";
 import { devRunLoadout, namesRunSetup } from "../dev/devStart.ts";
@@ -455,7 +456,8 @@ export class BootScene extends Scene {
       return;
     }
     for (const sound of this.manifest.sounds.filter(({ key }) => include(key))) {
-      this.load.audio(sound.key, artUrl(sound[soundFormat]));
+      const path = sound[soundFormat];
+      this.load.audio(sound.key, preparedSoundUrl(path) ?? artUrl(path));
     }
   }
 

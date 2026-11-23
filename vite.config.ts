@@ -54,12 +54,14 @@ export default gameViteConfig<typeof ConfigModules>({
       modules.webManifestPlugin(),
       modules.precachePlugin({
         getArtFiles: atlas.api.artFiles,
+        getSoundBanks: atlas.api.soundBanks,
         pageHtmlFile: "play/index.html",
         serviceWorkerSource: repoPath("src/pwa/serviceWorker.ts"),
       }),
       modules.securityHeadersPlugin(),
       modules.inlineStyleCheckPlugin(),
       modules.uiStylePlugin({ source: repoPath("src/ui/dom/uiStylesheet.ts") }),
+      modules.packOriginPlugin(atlas.api.soundBanks, repoPath("src/pwa/packedOrigin.ts")),
     ];
   },
   previewHost: PREVIEW_HOST,

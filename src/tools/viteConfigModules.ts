@@ -11,6 +11,7 @@ export { atlasPlugin } from "./atlas/atlasPlugin.ts";
 export { crashArtPlugin } from "./crashArtPlugin.ts";
 export { crashFontPlugin } from "./crashFontPlugin.ts";
 export { generatedFilesPlugin } from "./generatedFilesPlugin.ts";
+export { packOriginPlugin } from "./packing/packOriginPlugin.ts";
 export { PHASER_BUILD } from "./phaserBuild.ts";
 export { publicFilesPlugin } from "./publicFilesPlugin.ts";
 export { siteArtSourcePlugin } from "./siteArt.ts";

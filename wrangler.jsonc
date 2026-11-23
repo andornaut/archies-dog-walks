@@ -4,9 +4,10 @@
   // Pinned so a deploy cannot land in another account wrangler is logged in to.
   "account_id": "90f23a78b62eb9571a3fd6c296d15f30",
   "compatibility_date": "2026-11-10",
-  // Static assets only: there is no Worker script, so every request is served
-  // from the Vite build output, which is free and unmetered.
+  "main": "./dist/.worker/index.mjs",
+  // Static files take the ordinary asset path. The Worker only serves missing packed members.
   "assets": {
+    "binding": "ASSETS",
     "directory": "./dist",
   },
   // Served only at the custom domains: no workers.dev address. This is wrangler's default for a

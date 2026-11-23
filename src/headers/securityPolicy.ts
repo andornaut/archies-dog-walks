@@ -59,6 +59,11 @@ export const FILE_RULES = [
     path: HASHED_ASSET_PATH,
   },
   {
+    comment: "Sound banks contain verified cue bytes with an installer codec suffix.",
+    headers: [["Content-Type", "application/octet-stream"]] satisfies HeaderList,
+    path: "/assets/art/sounds/bank-*",
+  },
+  {
     comment:
       "The build pointer, which every launch and resume reads to find the deployed build: no " +
       "CDN or browser cache may keep it.",
@@ -105,7 +110,11 @@ const GOOGLE_FONTS: Directives = {
 // matching policies would join into one header and the browser would enforce both.
 export const PAGE_RULES: readonly PageRule[] = [
   { comment: "The home page.", directives: { ...GOOGLE_FONTS, ...WEBSITE_ANALYTICS }, path: "/" },
-  { comment: "The game.", directives: {}, path: "/play/*" },
+  {
+    comment: "The game. Phaser reads verified sound-bank cues from their local object URLs.",
+    directives: { "connect-src": ["blob:"] },
+    path: "/play/*",
+  },
   { comment: "Tuning.", directives: WEBSITE_ANALYTICS, path: "/tuning/*" },
   {
     comment:
