@@ -42,6 +42,15 @@ export function logicalWorldPoint(fit: RenderFit, point: Point): Point {
   return { x: (point.x - view.x) / fit.zoom, y: (point.y - view.y) / fit.zoom };
 }
 
+// The canvas letterbox belongs to the backing, outside the logical game viewport.
+export function logicalBackingBounds(fit: RenderFit): Rect {
+  return {
+    ...logicalWorldPoint(fit, { x: 0, y: 0 }),
+    height: fit.backing.height / fit.zoom,
+    width: fit.backing.width / fit.zoom,
+  };
+}
+
 // The HTML layer uses the camera's actual logical view, excluding the native canvas's bars.
 // box is the unturned canvas layout rect relative to the page body, supplied by the UI layer.
 export function worldViewBox(scale: RenderScale, box: Rect): Rect {

@@ -13,6 +13,7 @@ import { openGuard } from "../input/openGuard.ts";
 import { logicalInput } from "../input/phaser/logicalPointer.ts";
 import { PHONE_EVENTS } from "../pwa/index.ts";
 import { read } from "../rules/units.ts";
+import { deviceFitOwned, logicalBackingBounds, worldFit } from "../ui/worldFit.ts";
 import { listenPagePresses } from "./pagePresses.ts";
 import type { SceneKey } from "./sceneKeys.ts";
 
@@ -181,7 +182,13 @@ export function listenOutsideTap(
   catchOutsideTaps(
     tapMaxDistance,
     logicalInput(scene),
-    () => (input.accepts() ? area() : undefined),
+    () => {
+      const open = input.accepts() ? area() : undefined;
+      if (open === undefined || !deviceFitOwned(scene.scale)) {
+        return open;
+      }
+      return { ...open, bounds: logicalBackingBounds(worldFit(scene.scale)) };
+    },
     () => {
       if (released?.()) {
         onTap();

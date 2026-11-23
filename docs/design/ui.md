@@ -6,8 +6,10 @@ Under a modal the whole background, top controls included, is dimmed and inactiv
 
 Back restores the immediate invoking view. Help and Logbook opened from Menu return to that
 same Menu; pages opened from Pause leave the walk paused until Resume. Close, X, Escape and
-outside dismissal leave one layer when dismissal is allowed. Restore focus to the invoking
-control when available, and keep required choices nondismissible.
+outside dismissal leave one layer when dismissal is allowed. A tap on a bar outside the rendered
+game uses the top page or modal’s Back, Close or X action. Previous only changes the page within
+a view. Restore focus to the invoking control when available, and keep required choices
+nondismissible.
 
 Reference: [Screens and UI](../../src/README.md#screens-and-ui), [Assets](../../src/README.md#assets), [Phone](../../src/README.md#phone).
 
@@ -89,3 +91,4 @@ Reference: [Screens and UI](../../src/README.md#screens-and-ui), [Assets](../../
 | adw-0234 | Add the FPS icon to Settings                                     | [adw-0234.md](../work/adw-0234.md) |
 | adw-0235 | Remove Show tips again from Cheats                               | [adw-0235.md](../work/adw-0235.md) |
 | adw-0237 | Match the approved Cheats layout                                 | [adw-0237.md](../work/adw-0237.md) |
+| adw-0238 | Route letterbox taps to the top page                             | [adw-0238.md](../work/adw-0238.md) |
