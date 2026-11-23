@@ -88,3 +88,4 @@ Reference: [Screens and UI](../../src/README.md#screens-and-ui), [Assets](../../
 | adw-0233 | Keep unaffordable Pet shop items unselected                      | [adw-0233.md](../work/adw-0233.md) |
 | adw-0234 | Add the FPS icon to Settings                                     | [adw-0234.md](../work/adw-0234.md) |
 | adw-0235 | Remove Show tips again from Cheats                               | [adw-0235.md](../work/adw-0235.md) |
+| adw-0237 | Match the approved Cheats layout                                 | [adw-0237.md](../work/adw-0237.md) |
