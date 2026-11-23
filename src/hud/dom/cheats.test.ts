@@ -12,7 +12,7 @@ import { modalTitleInk } from "../../ui/modal/titleRole.ts";
 import { TEXT_SCALE } from "../../ui/textFit.ts";
 import { showCheats } from "./cheats.ts";
 
-async function cheatsScreen(inWalk = false) {
+async function cheatsScreen(inWalk = false, canResetSave = false) {
   const doc = new FakeDocument();
   const { element, layer } = fakeLayer(doc, domScale(1, { height: 560, width: 360, x: 0, y: 0 }));
   const view = cheatsView(
@@ -30,7 +30,7 @@ async function cheatsScreen(inWalk = false) {
     },
     { data: gameData, screen: SCREEN_CONFIG, words: gameData.menuText },
     {
-      canResetSave: false,
+      canResetSave,
       linkCopied: false,
       next: NEXT_WALK_OFF,
       walk: inWalk ? { canFinish: false, upgradesLeft: [] } : undefined,
@@ -71,7 +71,7 @@ async function cheatsScreen(inWalk = false) {
       control.fire("click", click);
     }
   };
-  return { act, element, pointerClick, seed, shown, view };
+  return { act, doc, element, pointerClick, seed, shown, view };
 }
 
 it("keeps Cheats actions guarded and disposable and renders only the approved controls", async () => {
@@ -144,4 +144,17 @@ it("keeps the disabled Invincible switch pointer-only during a walk", async () =
   }
   pointerClick(control);
   expect(refusing()).toBe(false);
+});
+
+it("restores focus to the Reset save button when its confirmation closes", async () => {
+  const { doc, element, shown } = await cheatsScreen(false, true);
+  const reset = element
+    .all()
+    .find((node) => node.getAttribute("aria-label") === gameData.menuText.cheats.resetSave);
+  expect(reset?.tabIndex).toBe(0);
+  shown.setInert(true);
+  shown.setInert(false);
+  shown.focusReset();
+  expect(doc.activeElement).toBe(reset);
+  shown.destroy();
 });

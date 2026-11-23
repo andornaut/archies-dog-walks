@@ -12,6 +12,7 @@ import { openCheatsModal } from "./cheatsModal.ts";
 
 const fake = vi.hoisted(() => ({
   canResetSave: vi.fn(() => true),
+  focusReset: vi.fn(),
   input: undefined as DomCheatsInput | undefined,
   next: undefined as typeof NEXT_WALK_OFF | undefined,
   question: undefined as DomQuestionPanelInput | undefined,
@@ -32,7 +33,13 @@ vi.mock("../dev/cheatsView.ts", () => ({
 vi.mock("../hud/dom/cheats.ts", () => ({
   showCheats: (_layer: unknown, input: DomCheatsInput) => {
     fake.input = input;
-    return { destroy: vi.fn(), setDimmed: vi.fn(), setInert: vi.fn(), update: vi.fn() };
+    return {
+      destroy: vi.fn(),
+      focusReset: fake.focusReset,
+      setDimmed: vi.fn(),
+      setInert: vi.fn(),
+      update: vi.fn(),
+    };
   },
 }));
 vi.mock("../hud/dom/questionPanel.ts", () => ({
@@ -126,6 +133,7 @@ it("requires Reset confirmation in an installed app and Back closes only that qu
   input.act({ kind: "resetSave" });
   expect(fake.reset).not.toHaveBeenCalled();
   expect(modal.back()).toBe(true);
+  expect(fake.focusReset).toHaveBeenCalledOnce();
   expect(modal.back()).toBe(false);
   expect(close).not.toHaveBeenCalled();
   input.act({ kind: "resetSave" });

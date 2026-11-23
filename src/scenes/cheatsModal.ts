@@ -152,6 +152,7 @@ export function openCheatsModal(
     question = undefined;
     dom.setInert(false);
     dom.setDimmed(false);
+    dom.focusReset();
   };
   // Reset save writes a new player's save and no badges, then loads the Start screen afresh.
   const askReset = () => {

@@ -36,6 +36,7 @@ export interface DomCheats extends Pick<
   DomQuestionPanel,
   "accepts" | "capture" | "destroy" | "setDimmed" | "setEnabled" | "setInert" | "setShown"
 > {
+  focusReset(): void;
   // Shows view as it now stands, every row in its place, the scroll kept.
   update(view: CheatsView): void;
 }
@@ -348,9 +349,18 @@ export function showCheats(layer: UiLayer, input: DomCheatsInput): DomCheats {
     });
   };
   const scrollbar = scrollbarPart(doc, clip, () => current);
+  const controls = rows.flatMap((row) => row.controls);
+  const resetRow = current.rows.findIndex((row) =>
+    row.buttons.some(({ action }) => action.kind === "resetSave"),
+  );
+  const resetButton = current.rows[resetRow]?.buttons.findIndex(
+    ({ action }) => action.kind === "resetSave",
+  );
+  const resetControl =
+    resetButton === undefined ? undefined : rows[resetRow]?.controls[resetButton];
   const parts: DomPart[] = [
     {
-      controls: rows.flatMap(({ controls }) => controls),
+      controls,
       element: clip,
       place: placeRows,
       ready: Promise.all(rows.map(({ ready }) => ready)).then((urls) => urls.flat()),
@@ -374,6 +384,11 @@ export function showCheats(layer: UiLayer, input: DomCheatsInput): DomCheats {
     destroy() {
       rows.forEach((row) => row.dispose?.());
       panel.destroy();
+    },
+    focusReset() {
+      if (resetControl !== undefined) {
+        panel.focusControl(controls.indexOf(resetControl));
+      }
     },
     setDimmed: (dimmed) => panel.setDimmed(dimmed),
     setEnabled: (enabled) => panel.setEnabled(enabled),
