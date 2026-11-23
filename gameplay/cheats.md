@@ -49,4 +49,4 @@ Available only during a walk, through Pause. Each acts on the walk already under
 These are not cheats and start no session.
 
 - **Show tips again:** clears the shown hints and whether Help has been seen, in the save.
-- **Reset save:** last, after a confirmation, resets the save entirely, earned badges included. Device settings stay.
+- **Reset save** stays visible at the end of the menu. It is enabled only when available storage contains a valid saved checkpoint, a recorded ended walk, a positive bank balance or an earned badge. Default saves, hint-only changes and cheat-only progress do not qualify. Unavailable storage or newer-version data disables it. Reset requires confirmation, which Cancel and X can dismiss. Accepting immediately prevents repeat attempts, clears the save and earned badges, and keeps device settings.
