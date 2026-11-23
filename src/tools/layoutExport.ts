@@ -140,6 +140,7 @@ export const SETTINGS_EXPORT_ROWS: readonly SettingsRowShape[] = [
   { kind: "slider" },
   { kind: "slider" },
   { kind: "switch", noteLines: noteLines(32, MENU_TEXT.settings.motionNote) },
+  { kind: "switch", noteLines: 0 },
   {
     controlWidth: installWidth,
     kind: "button",

@@ -33,7 +33,6 @@ import {
   currentSettings,
   profileSave,
   resetSave,
-  setSettings,
   updateOutsideCheats,
   updateProfile,
   walkerInUse,
@@ -102,7 +101,6 @@ export function openCheatsModal(
   const state = (): CheatsState => {
     const run = runOf(scene, inWalk);
     return {
-      fpsCounter: currentSettings(scene).fpsCounter,
       linkCopied: copied,
       next: nextWalk(scene),
       walk:
@@ -204,12 +202,6 @@ export function openCheatsModal(
       case "copyRunLink":
         copyLink();
         return;
-      case "fpsCounter": {
-        const settings = currentSettings(scene);
-        setSettings(scene, { ...settings, fpsCounter: !settings.fpsCounter });
-        render();
-        return;
-      }
       case "invincible":
         setNext((next) => ({ ...next, invincible: !next.invincible }));
         return;

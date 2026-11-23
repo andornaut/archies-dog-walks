@@ -118,7 +118,7 @@ function rowTarget(row: SettingsRowView): SettingsTarget | undefined {
   if (row.key === "install") {
     return { kind: "install" };
   }
-  return row.key === "muted" || row.key === "reducedMotion"
+  return row.key === "fpsCounter" || row.key === "muted" || row.key === "reducedMotion"
     ? { key: row.key, kind: "switch" }
     : undefined;
 }
@@ -151,9 +151,12 @@ function rowPart(
   element.setAttribute("role", first.kind === "button" ? "button" : first.kind);
   const face = doc.createElement("span");
   face.className = "adw-framed";
-  const icon = sheetArt(doc, input, first.icon.key);
+  const icon = first.icon === undefined ? undefined : sheetArt(doc, input, first.icon.key);
   const texts = first.texts.map(() => textElement(doc, input.fonts));
-  const parts: HTMLElement[] = [icon.element, ...texts.map(({ element: text }) => text)];
+  const parts = texts.map(({ element: text }) => text);
+  if (icon !== undefined) {
+    parts.unshift(icon.element);
+  }
   const control =
     first.switch === undefined ? undefined : sheetArt(doc, input, first.switch.art.key);
   const button = first.button === undefined ? undefined : doc.createElement("span");
@@ -189,7 +192,9 @@ function rowPart(
       face.style.backgroundColor = hex(row.face.colour);
       placeBox(scale, rect, face, row.face.rect);
     }
-    icon.place(scale, rect, row.icon);
+    if (row.icon !== undefined) {
+      icon?.place(scale, rect, row.icon);
+    }
     row.texts.forEach((text, i) => texts[i]?.place(scale, rect, text));
     if (control !== undefined && row.switch !== undefined) {
       control.place(scale, rect, row.switch.art);
@@ -351,7 +356,7 @@ function rowPart(
     element,
     place,
     ready: Promise.all([
-      icon.ready,
+      ...(icon === undefined ? [] : [icon.ready]),
       ...(control === undefined ? [] : [control.ready]),
       ...(slider === undefined ? [] : [slider.empty.ready, slider.filled.ready, slider.knob.ready]),
     ]).then((urls) => urls.flat()),

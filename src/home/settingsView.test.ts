@@ -36,7 +36,9 @@ const layout = settingsLayout(
   fonts,
   SCREEN_CONFIG,
   rows.map((row) =>
-    row.kind === "slider" ? { kind: "slider" } : { kind: row.kind, noteLines: 1 },
+    row.kind === "slider"
+      ? { kind: "slider" }
+      : { kind: row.kind, noteLines: row.note === undefined ? 0 : 1 },
   ),
 );
 const STATE: SettingsState = {
@@ -87,7 +89,8 @@ describe("settingsView", () => {
 
   it.each([false, true])("shows current switch states with mute %s and stable help", (muted) => {
     for (const reducedMotion of [false, true]) {
-      const current = view({ settings: { ...DEFAULT_SETTINGS, muted, reducedMotion } });
+      const fpsCounter = !reducedMotion;
+      const current = view({ settings: { ...DEFAULT_SETTINGS, fpsCounter, muted, reducedMotion } });
       for (const [index, on, label, description] of [
         [0, !muted, gameData.menuText.settings.sound, gameData.menuText.settings.soundNote],
         [
@@ -96,6 +99,7 @@ describe("settingsView", () => {
           gameData.menuText.settings.motion,
           gameData.menuText.settings.motionNote,
         ],
+        [4, fpsCounter, gameData.menuText.settings.fpsCounter, ""],
       ] as const) {
         const row = current.rows[index];
         expect(row?.label).toBe(label);
@@ -113,7 +117,7 @@ describe("settingsView", () => {
     const [down] = view({ pressed: { key: "muted", kind: "switch" } }).rows;
     const tops = (row: typeof up) => [
       row?.face?.rect.y,
-      row?.icon.y,
+      row?.icon?.y,
       ...(row?.texts.map(({ capTop }) => capTop) ?? []),
       row?.switch?.art.y,
     ];

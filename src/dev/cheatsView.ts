@@ -27,7 +27,6 @@ export type CheatAction =
   | { readonly kind: "addMoney" }
   | { readonly kind: "copyRunLink" }
   | { readonly kind: "finishZone" }
-  | { readonly kind: "fpsCounter" }
   | { readonly kind: "invincible" }
   | { readonly kind: "pocket" }
   | { readonly kind: "refillHearts" }
@@ -54,7 +53,6 @@ type CheatLine =
       readonly kind: "switch";
       readonly label: string;
       readonly on: boolean;
-      readonly shift: number;
       readonly value: string;
     }
   | {
@@ -76,7 +74,6 @@ export type CheatRow =
 // Where the modal opened and what it shows: the walk's state there, or undefined on the Start
 // screen.
 export interface CheatsState {
-  readonly fpsCounter: boolean;
   readonly linkCopied: boolean;
   readonly next: NextWalk;
   readonly walk:
@@ -120,19 +117,12 @@ export function cheatRows(
       kind: "debuff",
     }),
   );
-  const switchRow = (
-    label: string,
-    on: boolean,
-    enabled: boolean,
-    act: CheatAction,
-    shift: number,
-  ): CheatRow => ({
+  const switchRow = (label: string, on: boolean, enabled: boolean, act: CheatAction): CheatRow => ({
     action: act,
     enabled,
     kind: "switch",
     label,
     on,
-    shift,
     value: on ? words.settings.on : words.settings.off,
   });
   const owns: readonly [string, OwnGrant][] = [
@@ -157,8 +147,7 @@ export function cheatRows(
   }));
   return [
     { kind: "heading", text: text.groups.nextWalk },
-    switchRow(text.fpsCounter, state.fpsCounter, true, { kind: "fpsCounter" }, 6),
-    switchRow(text.invincible, next.invincible, home, { kind: "invincible" }, -6),
+    switchRow(text.invincible, next.invincible, home, { kind: "invincible" }),
     { kind: "heading", text: text.startAt },
     ...zoneRows,
     { kind: "divider", section: true },
@@ -460,7 +449,6 @@ function rowView(measure: PanelMeasure, row: CheatLine, rect: Rect): CheatRowVie
     }
     case "switch": {
       const hit = { ...rect, height: TOGGLE_HEIGHT };
-      const display = { ...hit, y: hit.y + row.shift };
       const look = row.enabled ? selectLook("normal") : { ...selectLook("normal"), ...GREYED };
       const colour = PALETTE[look.text];
       const switchX = rect.x + rect.width - ROW.pad - SWITCH.width;
@@ -473,11 +461,11 @@ function rowView(measure: PanelMeasure, row: CheatLine, rect: Rect): CheatRowVie
         switch: {
           on: row.on,
           x: switchX,
-          y: display.y + Math.round((display.height - SWITCH.height) / 2),
+          y: hit.y + Math.round((hit.height - SWITCH.height) / 2),
         },
         texts: [
-          rowText(measure, colour, display, row.label, { left: rect.x + ROW.pad }),
-          rowText(measure, colour, display, row.value, { right: switchX - ROW.pad }),
+          rowText(measure, colour, hit, row.label, { left: rect.x + ROW.pad }),
+          rowText(measure, colour, hit, row.value, { right: switchX - ROW.pad }),
         ],
         value: row.value,
       };

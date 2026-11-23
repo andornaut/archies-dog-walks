@@ -26,7 +26,6 @@ import {
   volumeSteps,
 } from "../home/settings.ts";
 import {
-  hasNote,
   INSTALL_ROW,
   SETTING_ROWS,
   type SettingsRow,
@@ -103,9 +102,13 @@ function stepsLines(scene: Scene, steps: string): string[] {
 function rowShapes(scene: Scene, rows: readonly Row[]): SettingsRowShape[] {
   const words = gameData.menuText.settings;
   return rows.map((row) => {
-    if (!hasNote(row)) {
-      return { kind: row.kind };
+    if (row.kind === "slider") {
+      return { kind: "slider" };
     }
+    if (row.note === undefined) {
+      return { kind: row.kind, noteLines: 0 };
+    }
+    const note = words[row.note];
     const controlWidth =
       row.kind === "button"
         ? modalActionWidth(modalTextWidth(scene, "title", [words[row.button]]))
@@ -115,7 +118,7 @@ function rowShapes(scene: Scene, rows: readonly Row[]): SettingsRowShape[] {
         SETTINGS_NOTE_STYLE,
         labelInkWidth(probe),
         noteRoomForControl(controlWidth),
-        words[row.note],
+        note,
       ),
     );
     return {

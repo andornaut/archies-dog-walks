@@ -42,7 +42,7 @@ import {
 // the canvas's (SettingsScene) and the HTML interface's (src/hud/dom/settings.ts). Every rect and
 // text origin is in game pixels.
 
-export type SwitchKey = "muted" | "reducedMotion";
+export type SwitchKey = "fpsCounter" | "muted" | "reducedMotion";
 export type SettingsWord = Exclude<keyof MenuText["settings"], "installSteps" | "volume">;
 
 // Each row carries a 16x16 -panel icon with on and off tags, and the menuText.settings keys
@@ -56,9 +56,9 @@ export type SettingsRow =
       label: SettingsWord;
       note: SettingsWord;
     }
-  | { icon: string; key: SwitchKey; kind: "switch"; label: SettingsWord; note: SettingsWord }
+  | { icon?: string; key: SwitchKey; kind: "switch"; label: SettingsWord; note?: SettingsWord }
   | { icon: string; key: VolumeKey; kind: "slider"; label: SettingsWord };
-export type NotedRow = Extract<SettingsRow, { note: SettingsWord }>;
+export type ControlRow = Exclude<SettingsRow, { kind: "slider" }>;
 
 // What a press on the card can land on.
 export type SettingsTarget =
@@ -67,7 +67,7 @@ export type SettingsTarget =
   | { kind: "stepsClose" }
   | { key: SwitchKey; kind: "switch" };
 
-// Four rows, each its own tap target, and the close control.
+// Device preferences in display order.
 export const SETTING_ROWS: readonly SettingsRow[] = [
   {
     icon: "icon-sound-panel",
@@ -85,6 +85,7 @@ export const SETTING_ROWS: readonly SettingsRow[] = [
     label: "motion",
     note: "motionNote",
   },
+  { key: "fpsCounter", kind: "switch", label: "fpsCounter" },
 ];
 // Under them while the game can be installed (offersInstall).
 export const INSTALL_ROW: SettingsRow = {
@@ -106,7 +107,7 @@ export const STEPS_ICONS: Readonly<Partial<Record<InstallStepsKind, string>>> = 
 // The art the card draws: each row's icon sheet, the switch, the slider and its knob, and the
 // install steps' button glyphs.
 export const SETTINGS_ART_KEYS: readonly string[] = [
-  ...[...SETTING_ROWS, INSTALL_ROW].map(({ icon }) => icon),
+  ...[...SETTING_ROWS, INSTALL_ROW].flatMap(({ icon }) => (icon === undefined ? [] : [icon])),
   "ui-slider",
   "ui-slider-knob",
   "ui-switch",
@@ -117,13 +118,9 @@ export const SETTINGS_ART_KEYS: readonly string[] = [
 const FOCUS_OUTSET = SETTINGS_CARD.focusOutset;
 const { icon: ICON, label: LABEL, note: NOTE } = SETTINGS_ROW;
 
-export function hasNote(row: SettingsRow): row is NotedRow {
-  return row.kind !== "slider";
-}
-
 // A switch is on when its setting is: sound is on while not muted.
 export function switchOn(key: SwitchKey, settings: Settings): boolean {
-  return key === "muted" ? !settings.muted : settings.reducedMotion;
+  return key === "muted" ? !settings.muted : settings[key];
 }
 
 // What the view measures text with, beyond a panel's title: body text at TEXT_SCALE fitted onto
@@ -165,7 +162,7 @@ export interface SettingsRowView {
   readonly dip: number;
   // A noted row's face, in its colour; none on a slider row.
   readonly face: { readonly colour: number; readonly rect: Rect } | undefined;
-  readonly icon: SettingsArt;
+  readonly icon?: SettingsArt;
   readonly key: SettingsRow["key"];
   readonly kind: SettingsRow["kind"];
   readonly label: string;
@@ -232,11 +229,11 @@ export interface SettingsState {
 // A noted row: a normal row that dips while pressed, with its icon, label and note, and its
 // switch or button. A switch row shows its setting in its icon and switch. The note wraps in its
 // room.
-function notedRow(
+function controlRow(
   measure: SettingsMeasure,
   words: MenuText["settings"],
   layout: SettingsLayout["rows"][number],
-  row: NotedRow,
+  row: ControlRow,
   state: SettingsState,
 ): SettingsRowView {
   const { control, noteY, rect } = layout;
@@ -249,12 +246,14 @@ function notedRow(
   const dip = pressed ? FEEDBACK.pressDipPx : 0;
   const { x, y } = rect;
   const room = noteRoomForControl(control?.width ?? SETTINGS_ROW[row.kind].width);
-  const note = measure.fitBody(SETTINGS_NOTE_STYLE.lines ?? 1, room, words[row.note]);
+  const description = row.note === undefined ? "" : words[row.note];
   const view: SettingsRowView = {
-    description: words[row.note],
+    description,
     dip,
     face: { colour: PALETTE[look.face], rect: { ...rect, y: y + dip } },
-    icon: { key: row.icon, tag: on ? "on" : "off", x: x + ICON.dx, y: y + ICON.dy + dip },
+    ...(row.icon === undefined
+      ? {}
+      : { icon: { key: row.icon, tag: on ? "on" : "off", x: x + ICON.dx, y: y + ICON.dy + dip } }),
     key: row.key,
     kind: row.kind,
     label: words[row.label],
@@ -269,15 +268,19 @@ function notedRow(
         scale: TEXT_SCALE,
         x: x + LABEL.dx,
       },
-      {
-        anchor: "pen",
-        capTop: (noteY ?? y) + dip,
-        colour: PALETTE.darkBrown,
-        font: "body",
-        lines: note,
-        scale: TEXT_SCALE,
-        x: x + NOTE.dx,
-      },
+      ...(noteY === null
+        ? []
+        : [
+            {
+              anchor: "pen" as const,
+              capTop: noteY + dip,
+              colour: PALETTE.darkBrown,
+              font: "body" as const,
+              lines: measure.fitBody(SETTINGS_NOTE_STYLE.lines ?? 1, room, description),
+              scale: TEXT_SCALE,
+              x: x + NOTE.dx,
+            },
+          ]),
     ],
   };
   if (control === null) {
@@ -468,9 +471,9 @@ export function settingsView(
     ring: focused === undefined ? undefined : insetRect(-FOCUS_OUTSET, focused),
     rows: rows.map((row, i) => {
       const at = itemAt(layout.rows, i);
-      return hasNote(row)
-        ? notedRow(measure, words, at, row, state)
-        : sliderRow(words, layout, at.rect, row, state);
+      return row.kind === "slider"
+        ? sliderRow(words, layout, at.rect, row, state)
+        : controlRow(measure, words, at, row, state);
     }),
     rowsContentHeight: layout.rowsContentHeight,
     rowsViewport: layout.rowsViewport,

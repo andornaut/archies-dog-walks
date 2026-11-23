@@ -98,15 +98,16 @@ describe("volumeStepForKey", () => {
 // from the shipped text.
 const words = gameData.menuText.settings;
 type ShippedRow =
-  { kind: "button" | "switch"; label: string; note: string } | { kind: "slider"; label: string };
+  { kind: "button" | "switch"; label: string; note?: string } | { kind: "slider"; label: string };
 const SHIPPED_ROWS: readonly ShippedRow[] = [
   { kind: "switch", label: words.sound, note: words.soundNote },
   { kind: "slider", label: words.music },
   { kind: "slider", label: words.effects },
   { kind: "switch", label: words.motion, note: words.motionNote },
+  { kind: "switch", label: words.fpsCounter },
   { kind: "button", label: words.install, note: words.installNote },
 ];
-const notedRows = SHIPPED_ROWS.flatMap((row) => (row.kind === "slider" ? [] : [row]));
+const notedRows = SHIPPED_ROWS.filter((row) => "note" in row && row.note !== undefined);
 const fittedNotes = notedRows.map((row) =>
   fittingText(
     SETTINGS_NOTE_STYLE,
@@ -116,7 +117,7 @@ const fittedNotes = notedRows.map((row) =>
         ? modalActionWidth(inkWidth("font-title", { scale: 2 }, words.installButton))
         : SETTINGS_ROW.switch.width,
     ),
-    row.note,
+    "note" in row ? (row.note ?? "") : "",
   ),
 );
 const shapes: SettingsRowShape[] = SHIPPED_ROWS.map((row) =>
@@ -225,6 +226,7 @@ function rowParts(i: number): [string, Rect][] {
 describe("the settings card", () => {
   const { close, panel, rows } = layout;
   const titleRow = cardTitleRow(panel);
+  const rowContent = { ...layout.rowsViewport, height: layout.rowsContentHeight };
 
   it("exports the rows the shipped notes wrap to", () => {
     expect(SETTINGS_EXPORT_ROWS).toEqual(shapes);
@@ -235,7 +237,7 @@ describe("the settings card", () => {
     ["the title row", titleRow, panel],
     ["the close control's face", closeFace(close), panel],
     ["the close control's hit area", close.hit, panel],
-    ...rows.map(({ rect }, i): [string, Rect, Rect] => [`row ${i + 1}`, rect, panel]),
+    ...rows.map(({ rect }, i): [string, Rect, Rect] => [`row ${i + 1}`, rect, rowContent]),
     ...rows.flatMap(({ rect }, i) =>
       rowParts(i).map(([part, ink]): [string, Rect, Rect] => [`row ${i + 1}'s ${part}`, ink, rect]),
     ),
@@ -277,7 +279,7 @@ describe("the settings card", () => {
         expect(state.y + state.height).toBeLessThan(control?.y ?? 0);
       }
       const label = parts.get("label");
-      const below = parts.get("note line 1") ?? parts.get("knob");
+      const below = parts.get("note line 1") ?? parts.get("knob") ?? control;
       expect((label?.y ?? 0) + (label?.height ?? 0)).toBeLessThan(below?.y ?? 0);
     },
   );
@@ -456,7 +458,7 @@ it("bounds centred Settings under the shared top bar and scrolls only its full-s
 
 it("keeps shorter Settings rows unscrolled and honours a tighter caller capacity", () => {
   const fonts = { body: bodyFont, title: titleFont };
-  const shorter = settingsLayout(fonts, SCREEN_CONFIG, SETTINGS_EXPORT_ROWS.slice(0, -1));
+  const shorter = settingsLayout(fonts, SCREEN_CONFIG, SETTINGS_EXPORT_ROWS.slice(0, -2));
   expect(shorter.rowsViewport.height).toBe(shorter.rowsContentHeight);
   const screen = { ...SCREEN_CONFIG, height: shorter.panel.height };
   const bounded = settingsLayout(fonts, screen, SETTINGS_EXPORT_ROWS);

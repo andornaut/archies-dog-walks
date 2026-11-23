@@ -1128,7 +1128,6 @@ export interface MenuText {
     readonly applyDebuff: string;
     readonly copyRunLink: string;
     readonly finishZone: string;
-    readonly fpsCounter: string;
     readonly grantAllUpgrades: string;
     readonly grantUpgrade: string;
     // The groups' headings, in the modal's order.
@@ -1227,6 +1226,7 @@ export interface MenuText {
   };
   readonly settings: {
     readonly effects: string;
+    readonly fpsCounter: string;
     // The row that installs the game, shown until it is installed: its label (install), its
     // button's label (installButton) and its note (installNote).
     readonly install: string;

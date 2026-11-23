@@ -22,7 +22,6 @@ const MEASURE: PanelMeasure = {
 };
 const words = gameData.menuText;
 const HOME: CheatsState = {
-  fpsCounter: false,
   linkCopied: false,
   next: NEXT_WALK_OFF,
   walk: undefined,
@@ -68,7 +67,7 @@ describe("Cheats actions", () => {
     expect(visible).not.toContain("copyRunLink");
     expect(visible).not.toContain("pocket");
     expect(visible).not.toContain("speed");
-    expect(visible.filter((kind) => kind === "fpsCounter")).toHaveLength(1);
+    expect(visible).not.toContain("fpsCounter");
   });
 
   it("offers five unlocks and the three bank amounts only at Start and retains the walk grant", () => {
@@ -98,9 +97,6 @@ describe("Cheats actions", () => {
           .filter(({ action }) => action.kind === "startAt")
           .every(({ available }) => available === isHome),
       ).toBe(true);
-      expect(view(state).rows.find(({ action }) => action?.kind === "fpsCounter")?.enabled).toBe(
-        true,
-      );
       expect(view(state).rows.find(({ action }) => action?.kind === "invincible")?.enabled).toBe(
         isHome,
       );
@@ -151,17 +147,13 @@ describe("Cheats layout", () => {
     expect(tall.panel.y + tall.panel.height / 2).toBeCloseTo(1500, 0);
   });
 
-  it("gives the adjacent toggles two disjoint 48px hits with a 36px visible pitch", () => {
-    const [fps, invincible] = current.rows.filter(({ kind }) => kind === "switch");
-    expect(fps?.action?.kind).toBe("fpsCounter");
+  it("gives the invincible switch a 48px target around its visible control", () => {
+    const switches = current.rows.filter(({ kind }) => kind === "switch");
+    expect(switches).toHaveLength(1);
+    const [invincible] = switches;
     expect(invincible?.action?.kind).toBe("invincible");
-    expect(fps!.rect.height).toBe(48);
-    expect(invincible!.rect.height).toBe(48);
-    expect(invincible!.rect.y - fps!.rect.y).toBe(48);
-    expect(invincible!.switch!.y - fps!.switch!.y).toBe(36);
-    expect(invincible!.texts[0]!.capTop - fps!.texts[0]!.capTop).toBe(36);
-    expect(invincible!.texts[1]!.capTop - fps!.texts[1]!.capTop).toBe(36);
-    expect(invincible!.switch!.x).toBe(fps!.switch!.x);
+    expect(invincible?.rect.height).toBe(48);
+    expect(invincible?.switch?.y).toBeGreaterThan(invincible!.rect.y);
   });
 
   it("sets the Next Walk divider 16px from the last button and Start Screen heading", () => {

@@ -2,7 +2,7 @@ import { clamp01 } from "@andornaut/game-kit/runtime/numbers";
 import type { Rect } from "@andornaut/game-kit/runtime/rect";
 import { type FontMetrics, inkRowsOfLines } from "@andornaut/game-kit/runtime/text/bitmapFont";
 
-import { SETTINGS_CARD } from "../data/layout.ts";
+import { MIN_PRESS, SETTINGS_CARD } from "../data/layout.ts";
 import { SCREEN_CONFIG } from "../data/screen.ts";
 import { laneDirectionForKey } from "../input/keyBindings.ts";
 import type { Settings } from "../save/settings.ts";
@@ -183,7 +183,9 @@ function noteInkBottom(fonts: SettingsFonts, noteLines: number): number {
 function rowHeight(fonts: SettingsFonts, shape: SettingsRowShape): number {
   return shape.kind === "slider"
     ? SETTINGS_ROW.slider.height
-    : noteInkBottom(fonts, shape.noteLines) + SETTINGS_ROW.inkFoot;
+    : shape.noteLines === 0
+      ? MIN_PRESS
+      : noteInkBottom(fonts, shape.noteLines) + SETTINGS_ROW.inkFoot;
 }
 
 // A switch or button row's control, right-aligned and centred down from the label's capitals to
@@ -196,11 +198,15 @@ function rowControl(fonts: SettingsFonts, row: Rect, shape: SettingsRowShape): R
     ...SETTINGS_ROW[shape.kind],
     width: shape.controlWidth ?? SETTINGS_ROW[shape.kind].width,
   };
-  const middle = Math.floor((SETTINGS_ROW.label.dy + noteInkBottom(fonts, shape.noteLines)) / 2);
+  const top =
+    shape.noteLines === 0
+      ? MIN_PRESS - size.height
+      : Math.floor((SETTINGS_ROW.label.dy + noteInkBottom(fonts, shape.noteLines)) / 2) -
+        size.height / 2;
   return {
     ...size,
     x: row.x + row.width - SETTINGS_ROW.pad - size.width,
-    y: row.y + middle - size.height / 2,
+    y: row.y + top,
   };
 }
 
@@ -212,7 +218,7 @@ function rowInkBottom(fonts: SettingsFonts, shape: SettingsRowShape): number {
   }
   const control = rowControl(fonts, { height: 0, width: 0, x: 0, y: 0 }, shape);
   return Math.max(
-    noteInkBottom(fonts, shape.noteLines),
+    shape.noteLines === 0 ? MIN_PRESS : noteInkBottom(fonts, shape.noteLines),
     (control?.y ?? 0) + (control?.height ?? 0),
   );
 }
@@ -258,7 +264,7 @@ export function settingsLayout(
     rowY += rect.height + ROW_GAP;
     return {
       control: rowControl(fonts, rect, shape),
-      noteY: shape.kind === "slider" ? null : rect.y + noteDy(fonts.title),
+      noteY: shape.kind === "slider" || shape.noteLines === 0 ? null : rect.y + noteDy(fonts.title),
       rect,
     };
   });

@@ -171,7 +171,8 @@ function bootGame(context: GameStartup): Game {
     Core.Events.DESTROY,
     mountFpsCounter(
       { rate: () => game.loop.actualFps, settings: pageDeviceSettings() },
-      document.body,
+      // The body rotates for portrait play on a landscape device.
+      document.documentElement,
     ),
   );
 

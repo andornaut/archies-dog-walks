@@ -1,10 +1,10 @@
 /* The FPS counter: a dev readout over everything, the letterbox bars and #ui included, at the
-   frame's bottom-right corner inside the safe area, in the palette's cream on ink. It never takes
+   device viewport's top-right corner inside the safe area, in the palette's cream on ink. It never takes
    a press. */
 .adw-fps-counter {
   position: fixed;
-  right: calc(var(--inset-right, env(safe-area-inset-right, 0px)) + 4px);
-  bottom: calc(var(--inset-bottom, env(safe-area-inset-bottom, 0px)) + 4px);
+  right: calc(env(safe-area-inset-right, 0px) + 4px);
+  top: calc(env(safe-area-inset-top, 0px) + 4px);
   z-index: 2147483647;
   padding: 1px 4px;
   background: rgb(24 20 37 / 85%);
