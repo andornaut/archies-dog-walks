@@ -17,7 +17,7 @@ import { BUTTON_SIZE } from "../buttonGeometry.ts";
 import { domScale, fontPixel, gridRect } from "../domScale.ts";
 import { TOP_BAR_FACE, TOP_BAR_TRIM, TOP_BAR_WELL } from "../topBarTrim.ts";
 import { topSectionLayout } from "../topSection.ts";
-import { createNativeTopSection } from "./nativeTopSection.ts";
+import { createNativeTopSection, type NativeTopSection } from "./nativeTopSection.ts";
 import { followModalUnderlay } from "./rampDim.ts";
 const labels = {
   exit: gameData.homeText.quit.quit,
@@ -25,6 +25,12 @@ const labels = {
   mute: gameData.menuText.settings.sound,
   pause: gameData.menuText.pause.title,
 };
+
+function currencyTexts(view: NativeTopSection): FakeElement[] {
+  const underlay = view.underlayElement as unknown as FakeElement;
+  return underlay.all().filter((node) => node.classList.contains("adw-text"));
+}
+
 function fixture(
   effects = 0,
   exit = false,
@@ -283,7 +289,7 @@ describe("native top section integration", () => {
   });
   it("fits approved five-character currency labels in one fixed well with unchanged controls", () => {
     const { element, view } = fixture(6);
-    const money = element.all().filter((node) => node.className.includes("adw-text"));
+    const money = currencyTexts(view);
     for (const text of ["999", "9.9k", "999m"]) {
       view.setAmount(text, text);
       expect(money.map((node) => node.textContent)).toEqual(["$", text]);
@@ -296,25 +302,22 @@ describe("native top section integration", () => {
     expect(backings.map((node) => [node.style.left, node.style.top])).toEqual([]);
   });
   it("uses the existing short currency form inside the fixed walk well", () => {
-    const { element, view } = fixture(6);
+    const { view } = fixture(6);
     view.setAmount("1,234", "1.2k");
-    const texts = element
-      .all()
-      .filter((node) => node.className.includes("adw-text"))
-      .map((node) => node.textContent);
+    const texts = currencyTexts(view).map((node) => node.textContent);
     expect(texts).toContain("1.2k");
     expect(texts).not.toContain("1,234");
   });
   it("updates currency and mute state without replacing controls", () => {
     const { buttons, element, view } = fixture();
     view.setAmount("9".repeat(16), "999K");
-    expect(
-      element
-        .all()
-        .filter((node) => node.className.includes("adw-text"))
-        .map((node) => node.textContent),
-    ).toContain("999K");
+    expect(currencyTexts(view).map((node) => node.textContent)).toContain("999K");
+    const root = view.element as unknown as FakeElement;
+    const state = root.children.find((node) => node.classList.contains("adw-text"));
+    expect(state?.textContent).toBe(gameData.menuText.settings.on.toUpperCase());
+    expect(state?.getAttribute("aria-hidden")).toBe("true");
     view.setMuted(true);
+    expect(state?.textContent).toBe(gameData.menuText.settings.off.toUpperCase());
     expect(buttons[0]?.getAttribute("aria-pressed")).toBe("false");
     expect(element.all().filter((node) => node.tagName === "button")).toEqual(buttons);
   });
@@ -449,7 +452,7 @@ it.each([
           ).toBe(Number.parseFloat(segments[i]!.style.left ?? ""));
         }
       }
-      const texts = element.all().filter((node) => node.className.includes("adw-text"));
+      const texts = currencyTexts(view);
       const bounds = texts.map((node) => {
         const ink = fontInk("font-title", { scale: pixel }, node.textContent);
         const rows = fontInkRows("font-title", { scale: pixel }, node.textContent);

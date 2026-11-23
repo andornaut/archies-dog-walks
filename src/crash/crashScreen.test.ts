@@ -24,9 +24,11 @@ it("installs the kit crash screen with the game words, palette and portrait", as
   const screen = { stopGameOnCrash: vi.fn() };
   vi.mocked(installCrashScreen).mockReturnValueOnce(screen);
   const { CRASH_SCREEN } = await import("./crashScreen.ts");
+  const { bindRecoveryHold } = await import("../ui/dom/actionBinding.ts");
   expect(CRASH_SCREEN).toBe(screen);
   expect(installCrashScreen).toHaveBeenCalledWith(
     {
+      bindHoldAction: bindRecoveryHold,
       buildLabel: expect.any(String),
       colours: {
         background: `#${palette.ink.hex}`,
