@@ -8,7 +8,7 @@ Cheats never touch the save. The first cheat used starts a cheat session; openin
 
 - **During a session:** nothing is saved, earned or banked. Granted cash and unlocks, Pet shop purchases, picks, walks, banked earnings, statistics, records and checkpoints all stay in the session. No badge is earned in a session; a badge earned before it waits to celebrate until the session ends.
 - **On the Start screen:** cheats used there apply to the Start screen at once, with its Pet shop, Logbook and Settings pages, and to the walk the next Start walk begins.
-- **Run links:** opening a link with any run parameter, a seed alone included, starts a session, so a reproduced walk saves nothing.
+- **Run links:** in a browser tab, opening a link with any run parameter, a seed alone included, starts a session, so a reproduced walk saves nothing.
 - **Ending:** the session ends when the game returns to the Start screen from a walk (going home from the end screen, or Back to title), and when the game reloads or closes. Opening and closing a page over the Start screen does not end it. The session is never stored: when it ends, every cheat is off and the game shows the save as it was before the first cheat, its checkpoint included, so a walk closed before the session resumes as normal on the next launch.
 
 ## Modal
