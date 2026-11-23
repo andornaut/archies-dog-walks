@@ -98,13 +98,24 @@ it.each([
   ["Pet shop", ShopScene],
 ] as const)("%s leaves its parent open when dismissing a detail", (_name, type) => {
   const { scene, stage } = page(type, SCENE_KEYS.menu);
+  const focusBadge = vi.fn();
   const render = vi.fn();
-  Object.assign(scene, { detail: 0, render });
+  Object.assign(scene, {
+    detail: 0,
+    ...(type === StatsScene ? { page: { focusBadge } } : {}),
+    render,
+  });
   scene.back();
   expect(stage.resume).not.toHaveBeenCalled();
   expect(stage.stop).not.toHaveBeenCalled();
   expect(render).toHaveBeenCalledOnce();
   expect(scene).toHaveProperty("detail", undefined);
+  if (type === StatsScene) {
+    expect(focusBadge).toHaveBeenCalledExactlyOnceWith(0);
+    expect(render.mock.invocationCallOrder[0]).toBeLessThan(
+      focusBadge.mock.invocationCallOrder[0]!,
+    );
+  }
 });
 
 it("Escape dismisses the Pet shop item without buying or leaving its invoking page", () => {
