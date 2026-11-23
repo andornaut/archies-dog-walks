@@ -79,3 +79,4 @@ Reference: [Screens and UI](../../src/README.md#screens-and-ui), [Assets](../../
 | adw-0218 | Enable Reset Save only for stored player progress                | [adw-0218.md](../work/adw-0218.md) |
 | adw-0220 | Show only the price in affordable item detail cards              | [adw-0220.md](../work/adw-0220.md) |
 | adw-0223 | Move the FPS counter to Settings                                 | [adw-0223.md](../work/adw-0223.md) |
+| adw-0224 | Keep wrapped details status sentences together                   | [adw-0224.md](../work/adw-0224.md) |
