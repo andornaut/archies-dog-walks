@@ -85,3 +85,5 @@ Reference: [Screens and UI](../../src/README.md#screens-and-ui), [Assets](../../
 | adw-0227 | Trim the Cheats action list                                      | [adw-0227.md](../work/adw-0227.md) |
 | adw-0228 | Put the FPS switch last in Settings                              | [adw-0228.md](../work/adw-0228.md) |
 | adw-0229 | Route letterbox taps to the top modal                            | [adw-0229.md](../work/adw-0229.md) |
+| adw-0233 | Keep unaffordable Pet shop items unselected                      | [adw-0233.md](../work/adw-0233.md) |
+| adw-0234 | Add the FPS icon to Settings                                     | [adw-0234.md](../work/adw-0234.md) |
