@@ -68,17 +68,16 @@ Keep hero, shop, sign and actor anchors independent of picker padding. On result
 
 Visible faces and touch targets use separate rectangles. Keep the game's 48px action/target and 20px icon-face roles; shared document structure across games does not make their control sizes interchangeable. See [Controls](controls.md#sizing-and-spacing) for sizing and [interaction rules](controls.md#interaction-and-accessibility) for semantics.
 
-| Token                  | Value                                 | Unit | Scope                                                  | Source                                         |
-| ---------------------- | ------------------------------------- | ---- | ------------------------------------------------------ | ---------------------------------------------- |
-| BUTTON_SIZE.wide       | 296×48                                | px   | Non-modal main actions                                 | [button geometry](../src/ui/buttonGeometry.ts) |
-| BUTTON_SIZE.compact    | 128×48                                | px   | Non-modal secondary actions                            | [button geometry](../src/ui/buttonGeometry.ts) |
-| BUTTON_SIZE.icon       | Face 20×20; glyph 16×16; target 48×48 | px   | Non-bar icon controls                                  | [button geometry](../src/ui/buttonGeometry.ts) |
-| topbar.home.hit        | 48×48, rows 0–47                      | px   | Sound/Menu/Exit x = 216/264/312; else 264/312          | [home placement](../src/home/homeLayout.ts)    |
-| topbar.home.pitch      | 48                                    | px   | Faces x = 230/278/326, y = 8; else 278/326             | [home placement](../src/home/homeLayout.ts)    |
-| topbar.home.well       | 97 wide, at x = 5                     | px   | Home bank well                                         | [home placement](../src/home/homeLayout.ts)    |
-| topbar.walk.hit        | 48×48, rows 0–47                      | px   | Two columns at x = 264/312; debuff bars win rows 40–47 | [walk HUD](../src/hud/walkHud.ts)              |
-| home.start.focusOutset | 4                                     | px   | Start walk's authored focus overlay to last row        | [home layout](../src/home/homeLayout.ts)       |
-| press.min              | 48×48                                 | px   | Least press area; overlaps go to the nearest centre    | [Controls](controls.md#sizing-and-spacing)     |
+| Token               | Value                                 | Unit | Scope                                                  | Source                                         |
+| ------------------- | ------------------------------------- | ---- | ------------------------------------------------------ | ---------------------------------------------- |
+| BUTTON_SIZE.wide    | 296×48                                | px   | Non-modal main actions                                 | [button geometry](../src/ui/buttonGeometry.ts) |
+| BUTTON_SIZE.compact | 128×48                                | px   | Non-modal secondary actions                            | [button geometry](../src/ui/buttonGeometry.ts) |
+| BUTTON_SIZE.icon    | Face 20×20; glyph 16×16; target 48×48 | px   | Non-bar icon controls                                  | [button geometry](../src/ui/buttonGeometry.ts) |
+| topbar.home.hit     | 48×48, rows 0–47                      | px   | Sound/Menu/Exit x = 216/264/312; else 264/312          | [home placement](../src/home/homeLayout.ts)    |
+| topbar.home.pitch   | 48                                    | px   | Faces x = 230/278/326, y = 8; else 278/326             | [home placement](../src/home/homeLayout.ts)    |
+| topbar.home.well    | 97 wide, at x = 5                     | px   | Home bank well                                         | [home placement](../src/home/homeLayout.ts)    |
+| topbar.walk.hit     | 48×48, rows 0–47                      | px   | Two columns at x = 264/312; debuff bars win rows 40–47 | [walk HUD](../src/hud/walkHud.ts)              |
+| press.min           | 48×48                                 | px   | Least press area; overlaps go to the nearest centre    | [Controls](controls.md#sizing-and-spacing)     |
 
 Modal actions use their full measured label/icon width plus padding, not the non-modal compact/wide width floors. Preserve prices, goals, reasons and full-size labels in every state.
 
