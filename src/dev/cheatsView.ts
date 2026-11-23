@@ -17,7 +17,7 @@ import { PALETTE } from "../ui/palette.ts";
 import { BUTTON_LIP_PX, GREYED, selectLook } from "../ui/selection.ts";
 import { MODAL_TITLE_SCALE, TEXT_SCALE } from "../ui/textFit.ts";
 import type { Cents } from "../units.ts";
-import { BANK_GRANTS, type NextWalk, type OwnGrant, startZones, WALK_GRANT } from "./cheats.ts";
+import { BANK_GRANTS, type NextWalk, type OwnGrant, startZones } from "./cheats.ts";
 
 // What a press on a row or button does.
 export type CheatAction =
@@ -105,19 +105,6 @@ export function cheatRows(
     enabled: home,
     label: addLabel(amount),
   }));
-  const upgrades = data.upgradeDrawOrder.map((upgrade) =>
-    action(
-      fillLine(fields, text, "grantUpgrade", { upgrade: data.upgrades[upgrade].name }),
-      walk?.upgradesLeft.includes(upgrade) ?? false,
-      { kind: "upgrade", upgrade },
-    ),
-  );
-  const debuffs = (Object.keys(data.debuffs) as DebuffId[]).map((debuff) =>
-    action(fillLine(fields, text, "applyDebuff", { debuff: data.debuffs[debuff].name }), inWalk, {
-      debuff,
-      kind: "debuff",
-    }),
-  );
   const switchRow = (label: string, on: boolean, enabled: boolean, act: CheatAction): CheatRow => ({
     action: act,
     enabled,
@@ -152,7 +139,6 @@ export function cheatRows(
     { kind: "heading", text: text.startAt },
     ...zoneRows,
     { kind: "divider", section: true },
-    { kind: "heading", text: text.groups.startScreen },
     {
       groups: [
         {
@@ -167,25 +153,7 @@ export function cheatRows(
       ],
       kind: "columns",
     },
-    { kind: "heading", text: text.groups.thisWalk },
-    {
-      buttons: [
-        {
-          action: { kind: "addMoney" },
-          enabled: inWalk,
-          label: addLabel(WALK_GRANT),
-        },
-      ],
-      kind: "buttons",
-      layout: "compact",
-    },
-    action(text.refillHearts, inWalk, { kind: "refillHearts" }),
-    ...upgrades,
-    action(text.grantAllUpgrades, (walk?.upgradesLeft.length ?? 0) > 0, { kind: "upgrades" }),
-    ...debuffs,
-    action(text.finishZone, walk?.canFinish ?? false, { kind: "finishZone" }),
     { kind: "divider" },
-    { kind: "heading", text: text.groups.other },
     action(text.showTips, true, { kind: "showTips" }),
     action(text.resetSave, state.canResetSave, { kind: "resetSave" }),
   ];

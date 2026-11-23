@@ -9,7 +9,7 @@ import { modalTitleInk } from "../ui/modal/titleRole.ts";
 import type { PanelMeasure } from "../ui/modal/types.ts";
 import { MODAL_TITLE_SCALE, TEXT_SCALE } from "../ui/textFit.ts";
 import { cents } from "../units.ts";
-import { BANK_GRANTS, NEXT_WALK_OFF, startZones, WALK_GRANT } from "./cheats.ts";
+import { BANK_GRANTS, NEXT_WALK_OFF, startZones } from "./cheats.ts";
 import { type CheatsState, cheatsView } from "./cheatsView.ts";
 
 const MEASURE: PanelMeasure = {
@@ -41,11 +41,8 @@ describe("Cheats actions", () => {
     expect(view(HOME).rows.flatMap((row) => (row.kind === "heading" ? [row.label] : []))).toEqual([
       groups.nextWalk,
       startAt,
-      groups.startScreen,
       groups.unlocks,
       groups.money,
-      groups.thisWalk,
-      groups.other,
     ]);
     const chosen = startZones(gameData)[2]!;
     const zoneButtons = buttons({ ...HOME, next: { ...HOME.next, start: chosen } }).filter(
@@ -75,7 +72,7 @@ describe("Cheats actions", () => {
     expect(visible).not.toContain("fpsCounter");
   });
 
-  it("offers five unlocks and the three bank amounts only at Start and retains the walk grant", () => {
+  it("offers five unlocks and the three bank amounts only at Start", () => {
     expect(BANK_GRANTS).toEqual([cents(10_000), cents(100_000), cents(1_000_000)]);
     for (const [state, isHome] of [
       [HOME, true],
@@ -93,10 +90,6 @@ describe("Cheats actions", () => {
           available: isHome,
         })),
       );
-      expect(current.find(({ action }) => action.kind === "addMoney")).toMatchObject({
-        available: !isHome,
-        label: `Add $${WALK_GRANT / 100}`,
-      });
       expect(
         current
           .filter(({ action }) => action.kind === "startAt")
@@ -108,20 +101,19 @@ describe("Cheats actions", () => {
     }
   });
 
-  it("lists each upgrade in draw order, refusing a used upgrade or a finish that cannot happen", () => {
-    const [picked, ...left] = gameData.upgradeDrawOrder;
-    const state = { ...WALK, walk: { canFinish: false, upgradesLeft: left } };
-    const current = buttons(state);
+  it.each([HOME, WALK])("keeps only the retained visible actions in either context", (state) => {
+    const visible = view(state).rows.flatMap((row) => [
+      ...(row.action === undefined ? [] : [row.action.kind]),
+      ...row.buttons.map(({ action }) => action.kind),
+    ]);
+    expect(new Set(visible)).toEqual(
+      new Set(["invincible", "startAt", "own", "addBank", "showTips", "resetSave"]),
+    );
     expect(
-      current.flatMap(({ action }) => (action.kind === "upgrade" ? [action.upgrade] : [])),
-    ).toEqual(gameData.upgradeDrawOrder);
-    expect(
-      current.find(({ action }) => action.kind === "upgrade" && action.upgrade === picked)
-        ?.available,
-    ).toBe(false);
-    expect(current.find(({ action }) => action.kind === "finishZone")?.available).toBe(false);
-    const none = { ...WALK, walk: { canFinish: true, upgradesLeft: [] } };
-    expect(buttons(none).find(({ action }) => action.kind === "upgrades")?.available).toBe(false);
+      buttons(state)
+        .slice(-2)
+        .map(({ action }) => action.kind),
+    ).toEqual(["showTips", "resetSave"]);
   });
 });
 
@@ -161,7 +153,7 @@ describe("Cheats layout", () => {
     expect(invincible?.switch?.y).toBeGreaterThan(invincible!.rect.y);
   });
 
-  it("sets the Next Walk divider 16px from the last button and Start Screen heading", () => {
+  it("sets the Next Walk divider 16px from the last button and Unlocks/Money headings", () => {
     const index = current.rows.findIndex((row) => row.kind === "divider");
     const [before, divider, after] = current.rows
       .slice(index - 1, index + 2)
