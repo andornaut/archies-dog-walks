@@ -95,7 +95,10 @@ describe("settingsView", () => {
         description: "",
         key: "fpsCounter",
         switch: { on: fpsCounter },
-        texts: [{ lines: [gameData.menuText.settings.fpsCounter] }],
+        texts: [
+          { lines: [gameData.menuText.settings.fpsCounter] },
+          { lines: [fpsCounter ? gameData.menuText.settings.on : gameData.menuText.settings.off] },
+        ],
       });
       for (const [index, on, label, description] of [
         [1, !muted, gameData.menuText.settings.sound, gameData.menuText.settings.soundNote],
@@ -113,6 +116,15 @@ describe("settingsView", () => {
         expect(row?.texts.at(-1)?.lines).toEqual([
           on ? gameData.menuText.settings.on : gameData.menuText.settings.off,
         ]);
+      }
+      for (const row of current.rows.filter(({ kind }) => kind === "switch")) {
+        const art = row.switch!.art;
+        const state = row.texts.at(-1)!;
+        expect(state.capTop - art.y - SETTINGS_CARD.row.switch.height).toBeGreaterThan(0);
+        expect(state.x + MEASURE.inkWidth("title", state.lines[0]!) / 2).toBeCloseTo(
+          art.x + SETTINGS_CARD.row.switch.width / 2,
+          0,
+        );
       }
     }
   });

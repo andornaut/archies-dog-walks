@@ -179,24 +179,21 @@ function rowParts(i: number): [string, Rect][] {
   }
   const { rect } = placed;
   const { icon, label } = SETTINGS_ROW;
-  if (row.kind === "switch" && row.note === undefined) {
-    return [
-      [
-        "label",
-        labelInk(
-          "font-title",
-          row.label,
-          rect.x + SETTINGS_ROW.pad,
-          rect.y + Math.floor((rect.height - titleFont.capHeight * 2) / 2),
-        ),
-      ],
-      ["control", placed.control ?? rect],
-    ];
-  }
+  const inline = row.kind === "switch" && row.note === undefined;
   const parts: [string, Rect][] = [
-    ["icon", { height: 16, width: 16, x: rect.x + icon.dx, y: rect.y + icon.dy }],
-    ["label", labelInk("font-title", row.label, rect.x + label.dx, rect.y + label.dy)],
+    [
+      "label",
+      labelInk(
+        "font-title",
+        row.label,
+        rect.x + (inline ? SETTINGS_ROW.pad : label.dx),
+        rect.y + (inline ? Math.floor((rect.height - titleFont.capHeight * 2) / 2) : label.dy),
+      ),
+    ],
   ];
+  if (!inline) {
+    parts.push(["icon", { height: 16, width: 16, x: rect.x + icon.dx, y: rect.y + icon.dy }]);
+  }
   if (row.kind === "slider") {
     const { track } = layout;
     const percent = fillLine(MENU_TEXT_FIELDS.settings, words, "volume", { percent: "100" });
@@ -214,7 +211,13 @@ function rowParts(i: number): [string, Rect][] {
   const fitted = fittedNotes[notedRows.indexOf(row)];
   const noteY = placed.noteY ?? 0;
   const lines = fitted?.lines ?? [];
-  const state = labelInk("font-title", words.off, 0, rect.y + label.dy);
+  const control = placed.control ?? rect;
+  const state = labelInk(
+    "font-title",
+    words.off,
+    0,
+    control.y + control.height + BUTTON_SIZE.stackGap,
+  );
   // A note line's rows run from its capitals to the font's lowest ink, descenders included.
   const noteInk = (line: string, n: number): Rect => {
     const columns = placedInk("font-body", TWO_X, line);
@@ -229,14 +232,14 @@ function rowParts(i: number): [string, Rect][] {
     ...parts,
     ...(row.kind === "switch"
       ? [
-          ["state", { ...state, x: rect.x + rect.width - SETTINGS_ROW.pad - state.width }] as [
+          ["state", { ...state, x: control.x + Math.floor((control.width - state.width) / 2) }] as [
             string,
             Rect,
           ],
         ]
       : []),
     ...lines.map((line, n): [string, Rect] => [`note line ${n + 1}`, noteInk(line, n)]),
-    ["control", placed.control ?? rect],
+    ["control", control],
   ];
 }
 
@@ -289,40 +292,39 @@ describe("the settings card", () => {
       const control = parts.get("control") ?? parts.get("percentage");
       for (const [name, ink] of parts) {
         if (name.startsWith("note") || name === "label") {
-          const right = name === "label" ? (parts.get("state") ?? control) : control;
           expect(ink.x + ink.width + SETTINGS_ROW.controlGap, name).toBeLessThanOrEqual(
-            right?.x ?? 0,
+            control?.x ?? 0,
           );
         }
       }
       const state = parts.get("state");
       if (state !== undefined) {
-        expect(state.y + state.height).toBeLessThan(control?.y ?? 0);
+        expect(state.y).toBeGreaterThan(control!.y + control!.height);
+        expect(state.x + state.width / 2).toBeCloseTo(control!.x + control!.width / 2, 0);
       }
       const label = parts.get("label");
       const below = parts.get("note line 1") ?? parts.get("knob");
       if (below !== undefined) {
         expect((label?.y ?? 0) + (label?.height ?? 0)).toBeLessThan(below.y);
-      } else {
-        expect(label!.y + label!.height / 2).toBeCloseTo(control!.y + control!.height / 2, -1);
       }
     },
   );
 
   // Centred within a pixel down from the label's top to the note's lowest ink.
-  it.each(notedRows.map((row) => [row.label, SHIPPED_ROWS.indexOf(row)] as const))(
-    "centres the %s row's control on its label and note",
-    (_, i) => {
-      const parts = rowParts(i);
-      const control = new Map(parts).get("control");
-      const inks = parts.filter(([name]) => name === "label" || name.startsWith("note"));
-      const top = Math.min(...inks.map(([, ink]) => ink.y));
-      const bottom = Math.max(...inks.map(([, ink]) => ink.y + ink.height));
-      const above = (control?.y ?? 0) - top;
-      const under = bottom - (control?.y ?? 0) - (control?.height ?? 0);
-      expect(Math.abs(above - under)).toBeLessThanOrEqual(1);
-    },
-  );
+  it.each(
+    notedRows
+      .filter(({ kind }) => kind === "button")
+      .map((row) => [row.label, SHIPPED_ROWS.indexOf(row)] as const),
+  )("centres the %s row's control on its label and note", (_, i) => {
+    const parts = rowParts(i);
+    const control = new Map(parts).get("control");
+    const inks = parts.filter(([name]) => name === "label" || name.startsWith("note"));
+    const top = Math.min(...inks.map(([, ink]) => ink.y));
+    const bottom = Math.max(...inks.map(([, ink]) => ink.y + ink.height));
+    const above = (control?.y ?? 0) - top;
+    const under = bottom - (control?.y ?? 0) - (control?.height ?? 0);
+    expect(Math.abs(above - under)).toBeLessThanOrEqual(1);
+  });
 
   it("sets the install button's label at 2x within its face", () => {
     const control = layout.rows.at(-1)?.control;

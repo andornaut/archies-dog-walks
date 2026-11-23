@@ -31,6 +31,7 @@ import {
   SETTINGS_NOTE_STYLE,
   SETTINGS_ROW,
   type SettingsLayout,
+  SWITCH_STATE_GAP,
   VOLUME_STEPS,
   type VolumeKey,
   volumePercent,
@@ -295,22 +296,20 @@ function controlRow(
     return { ...view, button: panelButton(measure, face, false, words[row.button]) };
   }
   const art = { key: "ui-switch", tag: on ? "on" : "off", x: control.x, y: control.y + dip };
-  if (inline) {
-    return { ...view, switch: { art, on } };
-  }
+  const word = on ? words.on : words.off;
   return {
     ...view,
     switch: { art, on },
     texts: [
       ...view.texts,
       {
-        anchor: "right",
-        capTop: y + LABEL.dy + dip,
+        anchor: "ink",
+        capTop: art.y + control.height + SWITCH_STATE_GAP,
         colour: PALETTE[look.text],
         font: "title",
-        lines: [on ? words.on : words.off],
+        lines: [word],
         scale: TEXT_SCALE,
-        x: x + rect.width - SETTINGS_ROW.pad,
+        x: control.x + Math.floor((control.width - measure.inkWidth("title", word)) / 2),
       },
     ],
   };

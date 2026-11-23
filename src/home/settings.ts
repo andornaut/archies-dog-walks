@@ -112,9 +112,8 @@ export interface SettingsFonts {
 // its title-font label's capitals. A switch or button row has its note under them in body text,
 // LABEL_HELP_GAP clear rows under the label font's lowest ink (helpCapDy), from the icon's
 // column, wrapped onto up to note.lines lines, and inkFoot rows under the note's lowest ink.
-// Its control sits pad in from the row's right, centred down from the label's capitals to the
-// note's lowest ink. A slider row is slider.height tall, with its percentage on the label's
-// line, ending pad in from the row's right, and its track under them, pad in from either side.
+// A switch sits at the upper right with its state word below. A button centres beside its
+// label and note. Sliders place the percentage on the label line and the track below it.
 const ROW = SETTINGS_CARD.row;
 export const SETTINGS_ROW = {
   button: BUTTON_SIZE.compact,
@@ -157,6 +156,7 @@ const ROWS_TOP = MODAL.header - SETTINGS_ROW.icon.dy;
 const SEPARATOR_INSET = SETTINGS_CARD.separatorInset;
 // The rows press as a list's rows do, the stacked button gap apart.
 const ROW_GAP = BUTTON_SIZE.stackGap;
+export const SWITCH_STATE_GAP = BUTTON_SIZE.stackGap;
 const TOP_SECTION = topSectionLayout(HOME_BAR_BUTTONS, { currency: true });
 const TOP_SECTION_BOTTOM = Math.max(
   TOP_SECTION.bar.y + TOP_SECTION.bar.height,
@@ -186,16 +186,26 @@ function noteInkBottom(fonts: SettingsFonts, noteLines: number): number {
   return noteDy(fonts.title) + inkRowsOfLines(fonts.body, noteLines) * TEXT_SCALE;
 }
 
-function rowHeight(fonts: SettingsFonts, shape: SettingsRowShape): number {
-  return shape.kind === "slider"
-    ? SETTINGS_ROW.slider.height
-    : shape.noteLines === 0
-      ? MIN_PRESS
-      : noteInkBottom(fonts, shape.noteLines) + SETTINGS_ROW.inkFoot;
+function switchStateInkBottom(fonts: SettingsFonts): number {
+  return (
+    SETTINGS_ROW.icon.dy +
+    SETTINGS_ROW.switch.height +
+    SWITCH_STATE_GAP +
+    fonts.title.capHeight * TEXT_SCALE
+  );
 }
 
-// A switch or button row's control, right-aligned and centred down from the label's capitals to
-// the note's lowest ink.
+function rowHeight(fonts: SettingsFonts, shape: SettingsRowShape): number {
+  if (shape.kind === "slider") {
+    return SETTINGS_ROW.slider.height;
+  }
+  const noteBottom =
+    shape.noteLines === 0 ? 0 : noteInkBottom(fonts, shape.noteLines) + SETTINGS_ROW.inkFoot;
+  const stateBottom = shape.kind === "switch" ? switchStateInkBottom(fonts) : 0;
+  return Math.max(MIN_PRESS, noteBottom, stateBottom);
+}
+
+// Switches align with the row's upper icon edge. Buttons centre beside their label and note.
 function rowControl(fonts: SettingsFonts, row: Rect, shape: SettingsRowShape): Rect | null {
   if (shape.kind === "slider") {
     return null;
@@ -205,8 +215,8 @@ function rowControl(fonts: SettingsFonts, row: Rect, shape: SettingsRowShape): R
     width: shape.controlWidth ?? SETTINGS_ROW[shape.kind].width,
   };
   const top =
-    shape.noteLines === 0
-      ? Math.floor((row.height - size.height) / 2)
+    shape.kind === "switch"
+      ? SETTINGS_ROW.icon.dy
       : Math.floor((SETTINGS_ROW.label.dy + noteInkBottom(fonts, shape.noteLines)) / 2) -
         size.height / 2;
   return {
@@ -216,8 +226,8 @@ function rowControl(fonts: SettingsFonts, row: Rect, shape: SettingsRowShape): R
   };
 }
 
-// A row's lowest ink, from its top: a noted row's note or control, whichever reaches lower. A
-// slider row counts whole, its knob's art setting its lowest ink.
+// Lowest ink from each row's top, including the state word below a switch. A slider counts
+// its whole row to leave room for the knob.
 function rowInkBottom(fonts: SettingsFonts, shape: SettingsRowShape): number {
   if (shape.kind === "slider") {
     return SETTINGS_ROW.slider.height;
@@ -225,7 +235,9 @@ function rowInkBottom(fonts: SettingsFonts, shape: SettingsRowShape): number {
   const control = rowControl(fonts, { height: 0, width: 0, x: 0, y: 0 }, shape);
   return Math.max(
     shape.noteLines === 0 ? MIN_PRESS : noteInkBottom(fonts, shape.noteLines),
-    (control?.y ?? 0) + (control?.height ?? 0),
+    shape.kind === "switch"
+      ? switchStateInkBottom(fonts)
+      : (control?.y ?? 0) + (control?.height ?? 0),
   );
 }
 
