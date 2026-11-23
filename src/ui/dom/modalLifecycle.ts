@@ -364,7 +364,6 @@ export function mountModalLifecycle(
     host.className = "adw-modal-host";
     backdrop.className = "adw-modal-backdrop";
     backdrop.setAttribute("aria-hidden", "true");
-    backdrop.addEventListener("click", (event) => event.stopPropagation());
     // Focus stays in the dialog, and Phaser never takes a backdrop press for one beside its canvas.
     backdrop.addEventListener("mousedown", (event) => {
       event.preventDefault();
@@ -472,9 +471,20 @@ export function mountModalLifecycle(
           parts.backdrop,
         );
   const stopBackdrop =
-    parts === undefined || options.backgroundCancel === undefined
+    parts === undefined
       ? () => undefined
-      : bindGameAction({ activate: options.backgroundCancel, available: accepts }, parts.backdrop);
+      : bindGameAction(
+          {
+            activate: (origin) => {
+              if (origin.kind === "click") {
+                origin.event.stopPropagation();
+              }
+              options.backgroundCancel?.();
+            },
+            available: accepts,
+          },
+          parts.backdrop,
+        );
   const stopKeys = parts === undefined ? () => undefined : forwardSceneKeys(parts.scope);
   const paint = revealPaint(
     reveal,
