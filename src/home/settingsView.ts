@@ -69,6 +69,7 @@ export type SettingsTarget =
 
 // Device preferences in display order.
 export const SETTING_ROWS: readonly SettingsRow[] = [
+  { key: "fpsCounter", kind: "switch", label: "fpsCounter" },
   {
     icon: "icon-sound-panel",
     key: "muted",
@@ -85,7 +86,6 @@ export const SETTING_ROWS: readonly SettingsRow[] = [
     label: "motion",
     note: "motionNote",
   },
-  { key: "fpsCounter", kind: "switch", label: "fpsCounter" },
 ];
 // Under them while the game can be installed (offersInstall).
 export const INSTALL_ROW: SettingsRow = {
@@ -247,6 +247,10 @@ function controlRow(
   const { x, y } = rect;
   const room = noteRoomForControl(control?.width ?? SETTINGS_ROW[row.kind].width);
   const description = row.note === undefined ? "" : words[row.note];
+  const inline = noteY === null;
+  const labelTop = inline
+    ? y + Math.floor((rect.height - measure.title.capHeight * TEXT_SCALE) / 2)
+    : y + LABEL.dy;
   const view: SettingsRowView = {
     description,
     dip,
@@ -261,12 +265,12 @@ function controlRow(
     texts: [
       {
         anchor: "ink",
-        capTop: y + LABEL.dy + dip,
+        capTop: labelTop + dip,
         colour: PALETTE[look.text],
         font: "title",
         lines: [words[row.label]],
         scale: TEXT_SCALE,
-        x: x + LABEL.dx,
+        x: x + (inline ? SETTINGS_ROW.pad : LABEL.dx),
       },
       ...(noteY === null
         ? []
@@ -291,6 +295,9 @@ function controlRow(
     return { ...view, button: panelButton(measure, face, false, words[row.button]) };
   }
   const art = { key: "ui-switch", tag: on ? "on" : "off", x: control.x, y: control.y + dip };
+  if (inline) {
+    return { ...view, switch: { art, on } };
+  }
   return {
     ...view,
     switch: { art, on },

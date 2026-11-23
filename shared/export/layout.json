@@ -2393,64 +2393,64 @@
             "height": 16,
             "width": 32,
             "x": 288,
-            "y": 134
-          },
-          "noteY": 136,
-          "rect": {
-            "height": 82,
-            "width": 296,
-            "x": 32,
-            "y": 102
-          }
-        },
-        {
-          "control": null,
-          "noteY": null,
-          "rect": {
-            "height": 56,
-            "width": 296,
-            "x": 32,
-            "y": 192
-          }
-        },
-        {
-          "control": null,
-          "noteY": null,
-          "rect": {
-            "height": 56,
-            "width": 296,
-            "x": 32,
-            "y": 256
-          }
-        },
-        {
-          "control": {
-            "height": 16,
-            "width": 32,
-            "x": 288,
-            "y": 352
-          },
-          "noteY": 354,
-          "rect": {
-            "height": 82,
-            "width": 296,
-            "x": 32,
-            "y": 320
-          }
-        },
-        {
-          "control": {
-            "height": 16,
-            "width": 32,
-            "x": 288,
-            "y": 442
+            "y": 118
           },
           "noteY": null,
           "rect": {
             "height": 48,
+            "width": 178,
+            "x": 150,
+            "y": 102
+          }
+        },
+        {
+          "control": {
+            "height": 16,
+            "width": 32,
+            "x": 288,
+            "y": 190
+          },
+          "noteY": 192,
+          "rect": {
+            "height": 82,
             "width": 296,
             "x": 32,
-            "y": 410
+            "y": 158
+          }
+        },
+        {
+          "control": null,
+          "noteY": null,
+          "rect": {
+            "height": 56,
+            "width": 296,
+            "x": 32,
+            "y": 248
+          }
+        },
+        {
+          "control": null,
+          "noteY": null,
+          "rect": {
+            "height": 56,
+            "width": 296,
+            "x": 32,
+            "y": 312
+          }
+        },
+        {
+          "control": {
+            "height": 16,
+            "width": 32,
+            "x": 288,
+            "y": 408
+          },
+          "noteY": 410,
+          "rect": {
+            "height": 82,
+            "width": 296,
+            "x": 32,
+            "y": 376
           }
         },
         {
@@ -2481,25 +2481,25 @@
           "height": 1,
           "width": 288,
           "x": 36,
-          "y": 187
+          "y": 153
         },
         {
           "height": 1,
           "width": 288,
           "x": 36,
-          "y": 251
+          "y": 243
         },
         {
           "height": 1,
           "width": 288,
           "x": 36,
-          "y": 315
+          "y": 307
         },
         {
           "height": 1,
           "width": 288,
           "x": 36,
-          "y": 405
+          "y": 371
         },
         {
           "height": 1,

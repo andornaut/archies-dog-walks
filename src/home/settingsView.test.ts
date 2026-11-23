@@ -91,15 +91,20 @@ describe("settingsView", () => {
     for (const reducedMotion of [false, true]) {
       const fpsCounter = !reducedMotion;
       const current = view({ settings: { ...DEFAULT_SETTINGS, fpsCounter, muted, reducedMotion } });
+      expect(current.rows[0]).toMatchObject({
+        description: "",
+        key: "fpsCounter",
+        switch: { on: fpsCounter },
+        texts: [{ lines: [gameData.menuText.settings.fpsCounter] }],
+      });
       for (const [index, on, label, description] of [
-        [0, !muted, gameData.menuText.settings.sound, gameData.menuText.settings.soundNote],
+        [1, !muted, gameData.menuText.settings.sound, gameData.menuText.settings.soundNote],
         [
-          3,
+          4,
           reducedMotion,
           gameData.menuText.settings.motion,
           gameData.menuText.settings.motionNote,
         ],
-        [4, fpsCounter, gameData.menuText.settings.fpsCounter, ""],
       ] as const) {
         const row = current.rows[index];
         expect(row?.label).toBe(label);
@@ -113,8 +118,10 @@ describe("settingsView", () => {
   });
 
   it("dips a pressed row's face, icon, text and switch together", () => {
-    const [up] = view({}).rows;
-    const [down] = view({ pressed: { key: "muted", kind: "switch" } }).rows;
+    const up = view({}).rows.find(({ key }) => key === "muted");
+    const down = view({ pressed: { key: "muted", kind: "switch" } }).rows.find(
+      ({ key }) => key === "muted",
+    );
     const tops = (row: typeof up) => [
       row?.face?.rect.y,
       row?.icon?.y,
@@ -128,7 +135,7 @@ describe("settingsView", () => {
     [false, "filled", "normal", "45%"],
     [true, "filled-disabled", "disabled", gameData.menuText.settings.muted],
   ])("draws a slider muted %s with its %s fill, %s knob and %s", (muted, fill, knob, value) => {
-    const music = view({ settings: { ...DEFAULT_SETTINGS, musicVolume: 0.45, muted } }).rows[1];
+    const music = view({ settings: { ...DEFAULT_SETTINGS, musicVolume: 0.45, muted } }).rows[2];
     expect([music?.slider?.filled.tag, music?.slider?.knob.tag, music?.texts[1]?.lines]).toEqual([
       fill,
       knob,

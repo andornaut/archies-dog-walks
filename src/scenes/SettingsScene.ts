@@ -106,7 +106,11 @@ function rowShapes(scene: Scene, rows: readonly Row[]): SettingsRowShape[] {
       return { kind: "slider" };
     }
     if (row.note === undefined) {
-      return { kind: row.kind, noteLines: 0 };
+      return {
+        inlineLabelWidth: modalTextWidth(scene, "title", [words[row.label]]),
+        kind: row.kind,
+        noteLines: 0,
+      };
     }
     const note = words[row.note];
     const controlWidth =

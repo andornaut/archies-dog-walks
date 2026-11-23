@@ -136,11 +136,19 @@ const noteLines = (width: number, text: string) =>
     text,
   ).length;
 export const SETTINGS_EXPORT_ROWS: readonly SettingsRowShape[] = [
+  {
+    inlineLabelWidth: inkWidth(
+      readBitmapFont("font-title"),
+      2,
+      plainMarks(MENU_TEXT.settings.fpsCounter).toUpperCase(),
+    ),
+    kind: "switch",
+    noteLines: 0,
+  },
   { kind: "switch", noteLines: noteLines(32, MENU_TEXT.settings.soundNote) },
   { kind: "slider" },
   { kind: "slider" },
   { kind: "switch", noteLines: noteLines(32, MENU_TEXT.settings.motionNote) },
-  { kind: "switch", noteLines: 0 },
   {
     controlWidth: installWidth,
     kind: "button",

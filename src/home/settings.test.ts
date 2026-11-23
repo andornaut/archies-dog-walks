@@ -100,11 +100,11 @@ const words = gameData.menuText.settings;
 type ShippedRow =
   { kind: "button" | "switch"; label: string; note?: string } | { kind: "slider"; label: string };
 const SHIPPED_ROWS: readonly ShippedRow[] = [
+  { kind: "switch", label: words.fpsCounter },
   { kind: "switch", label: words.sound, note: words.soundNote },
   { kind: "slider", label: words.music },
   { kind: "slider", label: words.effects },
   { kind: "switch", label: words.motion, note: words.motionNote },
-  { kind: "switch", label: words.fpsCounter },
   { kind: "button", label: words.install, note: words.installNote },
 ];
 const notedRows = SHIPPED_ROWS.filter((row) => "note" in row && row.note !== undefined);
@@ -124,6 +124,9 @@ const shapes: SettingsRowShape[] = SHIPPED_ROWS.map((row) =>
   row.kind === "slider"
     ? { kind: "slider" }
     : {
+        ...(row.kind === "switch" && row.note === undefined
+          ? { inlineLabelWidth: inkWidth("font-title", { scale: 2 }, row.label) }
+          : {}),
         kind: row.kind,
         noteLines: fittedNotes[notedRows.indexOf(row)]?.lines.length ?? 0,
         ...(row.kind === "button"
@@ -176,6 +179,20 @@ function rowParts(i: number): [string, Rect][] {
   }
   const { rect } = placed;
   const { icon, label } = SETTINGS_ROW;
+  if (row.kind === "switch" && row.note === undefined) {
+    return [
+      [
+        "label",
+        labelInk(
+          "font-title",
+          row.label,
+          rect.x + SETTINGS_ROW.pad,
+          rect.y + Math.floor((rect.height - titleFont.capHeight * 2) / 2),
+        ),
+      ],
+      ["control", placed.control ?? rect],
+    ];
+  }
   const parts: [string, Rect][] = [
     ["icon", { height: 16, width: 16, x: rect.x + icon.dx, y: rect.y + icon.dy }],
     ["label", labelInk("font-title", row.label, rect.x + label.dx, rect.y + label.dy)],
@@ -251,6 +268,8 @@ describe("the settings card", () => {
   it("starts rows below the close target or the stacked button gap under the row before", () => {
     expect(rows[0]!.rect.y + SETTINGS_ROW.icon.dy).toBe(panel.y + MODAL.header);
     expect(rows[0]!.rect.y).toBeGreaterThanOrEqual(close.hit.y + close.hit.height);
+    expect(rows[0]!.rect.x).toBeGreaterThan(rows[1]!.rect.x);
+    expect(rows[0]!.rect.x + rows[0]!.rect.width).toBe(rows[1]!.rect.x + rows[1]!.rect.width);
     rows.slice(1).forEach(({ rect }, i) => {
       const above = rows[i]?.rect;
       const gap = BUTTON_SIZE.stackGap;
@@ -271,7 +290,9 @@ describe("the settings card", () => {
       for (const [name, ink] of parts) {
         if (name.startsWith("note") || name === "label") {
           const right = name === "label" ? (parts.get("state") ?? control) : control;
-          expect(ink.x + ink.width + SETTINGS_ROW.controlGap, name).toBeLessThan(right?.x ?? 0);
+          expect(ink.x + ink.width + SETTINGS_ROW.controlGap, name).toBeLessThanOrEqual(
+            right?.x ?? 0,
+          );
         }
       }
       const state = parts.get("state");
@@ -279,8 +300,12 @@ describe("the settings card", () => {
         expect(state.y + state.height).toBeLessThan(control?.y ?? 0);
       }
       const label = parts.get("label");
-      const below = parts.get("note line 1") ?? parts.get("knob") ?? control;
-      expect((label?.y ?? 0) + (label?.height ?? 0)).toBeLessThan(below?.y ?? 0);
+      const below = parts.get("note line 1") ?? parts.get("knob");
+      if (below !== undefined) {
+        expect((label?.y ?? 0) + (label?.height ?? 0)).toBeLessThan(below.y);
+      } else {
+        expect(label!.y + label!.height / 2).toBeCloseTo(control!.y + control!.height / 2, -1);
+      }
     },
   );
 
@@ -444,7 +469,7 @@ it("bounds centred Settings under the shared top bar and scrolls only its full-s
   );
   const first = placed.rows[0]!.rect;
   const last = placed.rows.at(-1)!.rect;
-  expect(placed.rowsViewport).toMatchObject({ width: SETTINGS_ROW.width, x: first.x, y: first.y });
+  expect(placed.rowsViewport).toMatchObject({ width: SETTINGS_ROW.width, x: last.x, y: first.y });
   expect(inside(placed.rowsViewport, placed.panel)).toBe(true);
   expect(placed.rowsContentHeight).toBe(last.y + last.height - first.y);
   expect(placed.rows.every(({ rect }) => rect.height >= MIN_PRESS)).toBe(true);
@@ -458,7 +483,7 @@ it("bounds centred Settings under the shared top bar and scrolls only its full-s
 
 it("keeps shorter Settings rows unscrolled and honours a tighter caller capacity", () => {
   const fonts = { body: bodyFont, title: titleFont };
-  const shorter = settingsLayout(fonts, SCREEN_CONFIG, SETTINGS_EXPORT_ROWS.slice(0, -2));
+  const shorter = settingsLayout(fonts, SCREEN_CONFIG, SETTINGS_EXPORT_ROWS.slice(0, -3));
   expect(shorter.rowsViewport.height).toBe(shorter.rowsContentHeight);
   const screen = { ...SCREEN_CONFIG, height: shorter.panel.height };
   const bounded = settingsLayout(fonts, screen, SETTINGS_EXPORT_ROWS);

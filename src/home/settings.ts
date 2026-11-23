@@ -69,7 +69,13 @@ export function setVolumeSteps(key: VolumeKey, steps: number, settings: Settings
 // A row as the layout needs it: its kind and, for a switch or button row, how many lines its
 // note wraps onto.
 export type SettingsRowShape =
-  { controlWidth?: number; kind: "button" | "switch"; noteLines: number } | { kind: "slider" };
+  | {
+      controlWidth?: number;
+      inlineLabelWidth?: number;
+      kind: "button" | "switch";
+      noteLines: number;
+    }
+  | { kind: "slider" };
 
 interface SettingsRowLayout {
   // The switch's or the button's face, or null on a slider row.
@@ -200,7 +206,7 @@ function rowControl(fonts: SettingsFonts, row: Rect, shape: SettingsRowShape): R
   };
   const top =
     shape.noteLines === 0
-      ? MIN_PRESS - size.height
+      ? Math.floor((row.height - size.height) / 2)
       : Math.floor((SETTINGS_ROW.label.dy + noteInkBottom(fonts, shape.noteLines)) / 2) -
         size.height / 2;
   return {
@@ -260,7 +266,15 @@ export function settingsLayout(
   const rowX = x + (PANEL.width - SETTINGS_ROW.width) / 2;
   let rowY = y + ROWS_TOP;
   const rows = shapes.map((shape, i) => {
-    const rect = { height: heights[i] ?? 0, width: SETTINGS_ROW.width, x: rowX, y: rowY };
+    const labelWidth = shape.kind === "slider" ? undefined : shape.inlineLabelWidth;
+    const width =
+      labelWidth === undefined
+        ? SETTINGS_ROW.width
+        : Math.min(
+            SETTINGS_ROW.width,
+            labelWidth + SETTINGS_ROW.switch.width + SETTINGS_ROW.controlGap + 2 * SETTINGS_ROW.pad,
+          );
+    const rect = { height: heights[i] ?? 0, width, x: rowX + SETTINGS_ROW.width - width, y: rowY };
     rowY += rect.height + ROW_GAP;
     return {
       control: rowControl(fonts, rect, shape),
