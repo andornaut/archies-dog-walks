@@ -30,6 +30,7 @@ async function cheatsScreen(inWalk = false) {
     },
     { data: gameData, screen: SCREEN_CONFIG, words: gameData.menuText },
     {
+      canResetSave: false,
       linkCopied: false,
       next: NEXT_WALK_OFF,
       walk: inWalk ? { canFinish: false, upgradesLeft: [] } : undefined,

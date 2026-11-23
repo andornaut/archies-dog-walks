@@ -228,9 +228,13 @@ export function updateOutsideCheats(
   return session(scene).updateOutsideCheats(change);
 }
 
+export function canResetSave(scene: Scene): boolean {
+  return session(scene).canResetSave;
+}
+
 // Reset save: the stored save a new player's and the earned badges none, written once every
 // earlier write has been; nothing is written after it.
-export function resetSave(scene: Scene): Promise<void> {
+export function resetSave(scene: Scene): Promise<boolean> {
   const format = earnedRecordFormat(gameData);
   const earned = saveStore(localSaveStorage(), EARNED_KEYS, format);
   return session(scene).resetSave(

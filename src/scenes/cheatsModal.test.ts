@@ -11,10 +11,11 @@ import { cents } from "../units.ts";
 import { openCheatsModal } from "./cheatsModal.ts";
 
 const fake = vi.hoisted(() => ({
+  canResetSave: vi.fn(() => true),
   input: undefined as DomCheatsInput | undefined,
   next: undefined as typeof NEXT_WALK_OFF | undefined,
   question: undefined as DomQuestionPanelInput | undefined,
-  reset: vi.fn(() => Promise.resolve()),
+  reset: vi.fn(() => Promise.resolve(true)),
   run: {
     canFinishZone: () => true,
     cheat: vi.fn(),
@@ -48,6 +49,7 @@ vi.mock("./questionPanel.ts", () => ({
   questionView: () => ({}),
 }));
 vi.mock("./profileStore.ts", () => ({
+  canResetSave: fake.canResetSave,
   currentSettings: () => ({ fpsCounter: false, reducedMotion: true }),
   profileSave: vi.fn(),
   resetSave: fake.reset,
@@ -68,6 +70,7 @@ vi.mock("./cheatSession.ts", () => ({
 
 beforeEach(() => {
   vi.clearAllMocks();
+  fake.canResetSave.mockReturnValue(true);
   fake.next = NEXT_WALK_OFF;
   fake.question = undefined;
 });
@@ -115,6 +118,11 @@ it("requires Reset confirmation in an installed app and Back closes only that qu
   const replace = vi.fn();
   vi.stubGlobal("location", { href: import.meta.url, replace });
   const { close, input, modal, scene } = open(false);
+  fake.canResetSave.mockReturnValue(false);
+  input.act({ kind: "resetSave" });
+  expect(fake.question).toBeUndefined();
+  expect(fake.reset).not.toHaveBeenCalled();
+  fake.canResetSave.mockReturnValue(true);
   input.act({ kind: "resetSave" });
   expect(fake.reset).not.toHaveBeenCalled();
   expect(modal.back()).toBe(true);

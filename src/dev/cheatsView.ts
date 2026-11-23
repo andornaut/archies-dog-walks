@@ -74,6 +74,7 @@ export type CheatRow =
 // Where the modal opened and what it shows: the walk's state there, or undefined on the Start
 // screen.
 export interface CheatsState {
+  readonly canResetSave: boolean;
   readonly linkCopied: boolean;
   readonly next: NextWalk;
   readonly walk:
@@ -186,7 +187,7 @@ export function cheatRows(
     { kind: "divider" },
     { kind: "heading", text: text.groups.other },
     action(text.showTips, true, { kind: "showTips" }),
-    action(text.resetSave, true, { kind: "resetSave" }),
+    action(text.resetSave, state.canResetSave, { kind: "resetSave" }),
   ];
 }
 

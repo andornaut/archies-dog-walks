@@ -579,6 +579,29 @@ describe("a cheat session", () => {
 });
 
 describe("resetSave", () => {
+  it("requires successfully stored play rather than boot data or cheat progress", async () => {
+    const { entries, session } = await opened(newPlayerSave);
+    await session.markHintShown("tip");
+    expect(session.canResetSave).toBe(false);
+    session.startCheats();
+    await session.update((save) => ({ ...save, bankCents: cents(100) }));
+    const clearBadges = vi.fn(async () => ({ status: "saved" as const }));
+    expect(await session.resetSave(clearBadges, newPlayerSave)).toBe(false);
+    expect(clearBadges).not.toHaveBeenCalled();
+    expect(stored(entries).bankCents).toBe(0);
+
+    session.endCheats();
+    const save = session.update((current) => ({ ...current, bankCents: cents(100) }));
+    expect(session.canResetSave).toBe(false);
+    await save;
+    expect(session.canResetSave).toBe(true);
+    const reset = session.resetSave(clearBadges, newPlayerSave);
+    expect(session.canResetSave).toBe(false);
+    expect(await reset).toBe(true);
+    expect(clearBadges).toHaveBeenCalledOnce();
+    expect(stored(entries).bankCents).toBe(0);
+  });
+
   it.each([false, true])(
     "writes a new player's save and no badges, then nothing (in a cheat session: %s)",
     async (cheating) => {

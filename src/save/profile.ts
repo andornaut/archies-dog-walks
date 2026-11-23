@@ -79,6 +79,10 @@ function loadedState(
 // checkpoint banks.
 type LaunchDecision = (checkpoint: Checkpoint) => LaunchWalk;
 
+function hasSavedPlay(save: SaveDocument): boolean {
+  return save.checkpoint !== null || save.stats.lastWalk !== null || save.bankCents > 0;
+}
+
 const bankEvery: LaunchDecision = () => ({ kind: "bank", reason: "resuming is off" });
 
 function withoutResume(checkpoint: Checkpoint): Checkpoint {
@@ -106,6 +110,8 @@ export class ProfileSession {
   private readonly judge: AchievementJudge;
   private ended: RunEnd | null = null;
   private state: StorageState;
+  private storedPlay = false;
+  private storedBadges = false;
   private writes: Promise<void> = Promise.resolve();
   // The walk the launch resumes, until the walk takes it (takeResumedWalk).
   private resumable: ResumeWalk | null = null;
@@ -147,6 +153,8 @@ export class ProfileSession {
     const loaded = load.save;
     const state = loadedState(load, earned);
     const session = new ProfileSession(awards, stores, loaded, earned.save.earned, state);
+    session.storedPlay = load.status === "loaded" && hasSavedPlay(loaded);
+    session.storedBadges = earned.status === "loaded" && earned.save.earned.length > 0;
     session.celebrations.push(earned.save.unannounced);
     if (loaded.checkpoint !== null) {
       const decided = launch(loaded.checkpoint);
@@ -180,6 +188,10 @@ export class ProfileSession {
     return this.state;
   }
 
+  get canResetSave(): boolean {
+    return !this.halted && this.state === "available" && (this.storedPlay || this.storedBadges);
+  }
+
   // The last run finished this session, or null before one.
   get lastRunEnd(): RunEnd | null {
     return this.ended;
@@ -190,7 +202,21 @@ export class ProfileSession {
   update(change: (save: SaveDocument) => SaveDocument): Promise<void> {
     this.document = change(this.document);
     const document = this.document;
-    return this.write("save", () => this.stores.save.save(document));
+    return this.writeSave(document);
+  }
+
+  private writeSave(document: SaveDocument, outside = false): Promise<void> {
+    return this.write(
+      "save",
+      async () => {
+        const result = await this.stores.save.save(document);
+        if (result.status === "saved") {
+          this.storedPlay = hasSavedPlay(document);
+        }
+        return result;
+      },
+      outside,
+    );
   }
 
   // Resolves once every change and checkpoint made so far has been written or has failed.
@@ -234,7 +260,13 @@ export class ProfileSession {
     const added = newlyEarned(this.judge, achievements, scope, facts, this.earnedIds);
     if (added.length > 0) {
       this.earnedIds = award(added, this.earnedIds);
-      void this.write("earned badges", async () => (await this.stores.earned.award(added)).save);
+      void this.write("earned badges", async () => {
+        const { save } = await this.stores.earned.award(added);
+        if (save?.status === "saved") {
+          this.storedBadges = true;
+        }
+        return save;
+      });
     }
     return added;
   }
@@ -375,17 +407,24 @@ export class ProfileSession {
     const document = change(before.document);
     this.beforeCheats = { ...before, document };
     this.document = change(this.document);
-    return this.write("save", () => this.stores.save.save(document), true);
+    return this.writeSave(document, true);
   }
 
   // Reset save: after every write before it, the stored save becomes fresh and resetEarned
   // clears the earned badges, whatever a cheat session holds. Nothing is written after it, since
   // the page then reloads into the new save. With a newer version's save stored, nothing is
   // written.
-  resetSave(resetEarned: () => Promise<StoreSaveResult>, fresh: SaveDocument): Promise<void> {
-    void this.write("save", () => this.stores.save.save(fresh), true);
+  async resetSave(
+    resetEarned: () => Promise<StoreSaveResult>,
+    fresh: SaveDocument,
+  ): Promise<boolean> {
+    if (!this.canResetSave) {
+      return false;
+    }
+    void this.writeSave(fresh, true);
     const reset = this.write("earned badges", resetEarned, true);
     this.halted = true;
-    return reset;
+    await reset;
+    return true;
   }
 }

@@ -22,6 +22,7 @@ const MEASURE: PanelMeasure = {
 };
 const words = gameData.menuText;
 const HOME: CheatsState = {
+  canResetSave: false,
   linkCopied: false,
   next: NEXT_WALK_OFF,
   walk: undefined,
@@ -59,7 +60,11 @@ describe("Cheats actions", () => {
     expect(zoneButtons.filter(({ selected }) => selected).map(({ action }) => action)).toEqual([
       { kind: "startAt", zone: chosen },
     ]);
-    expect(view(HOME).rows.at(-1)?.buttons[0]?.action.kind).toBe("resetSave");
+    expect(view(HOME).rows.at(-1)?.buttons[0]).toMatchObject({
+      action: { kind: "resetSave" },
+      available: false,
+    });
+    expect(view({ ...HOME, canResetSave: true }).rows.at(-1)?.buttons[0]?.available).toBe(true);
     const visible = view(HOME).rows.flatMap((row) => [
       ...(row.action === undefined ? [] : [row.action.kind]),
       ...row.buttons.map(({ action }) => action.kind),

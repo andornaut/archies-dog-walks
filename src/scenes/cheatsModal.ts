@@ -30,6 +30,7 @@ import { PALETTE } from "../ui/palette.ts";
 import { CHEATS_CHANGED_EVENT, nextWalk, setNextWalk, useCheat } from "./cheatSession.ts";
 import { canvasPanelMeasure } from "./modalMeasure.ts";
 import {
+  canResetSave,
   currentSettings,
   profileSave,
   resetSave,
@@ -101,6 +102,7 @@ export function openCheatsModal(
   const state = (): CheatsState => {
     const run = runOf(scene, inWalk);
     return {
+      canResetSave: canResetSave(scene),
       linkCopied: copied,
       next: nextWalk(scene),
       walk:
@@ -153,10 +155,19 @@ export function openCheatsModal(
   };
   // Reset save writes a new player's save and no badges, then loads the Start screen afresh.
   const askReset = () => {
+    if (question !== undefined || !canResetSave(scene)) {
+      return;
+    }
     const words = gameData.menuText.cheats.reset;
     const reset = () => {
       const home = stripDevParams(globalThis.location.href, false);
-      void resetSave(scene).finally(() => globalThis.location.replace(home));
+      void resetSave(scene).then((started) => {
+        if (started) {
+          globalThis.location.replace(home);
+        } else {
+          closeQuestion();
+        }
+      });
     };
     const panel = questionView(scene, SCREEN_LAYOUT.screen, {
       close: closeQuestion,
