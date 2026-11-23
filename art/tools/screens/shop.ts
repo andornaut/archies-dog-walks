@@ -110,17 +110,19 @@ export function petShop({ doorFrame = null, pressed = false }: PetShopOptions = 
   return cv;
 }
 
+type BoardState = "normal" | "pressed" | "focused";
+
 // ui-pet-shop-board's frame, BOARD's width x its height plus BOARD_DROP.
-export function petShopBoard(pressed = false): Clear {
+export function petShopBoard(state: BoardState = "normal"): Clear {
   const cv = clear(BOARD[2], BOARD[3] + BOARD_DROP);
-  shopBoard(cv, pressed);
+  shopBoard(cv, state);
   return cv;
 }
 
 // The shop with its board at rest, as the yard shows them.
 export function petShopFront({ doorFrame = null, pressed = false }: PetShopOptions = {}): Clear {
   const cv = petShop({ doorFrame, pressed });
-  composite({ x: BOARD[0], y: BOARD[1] }, petShopBoard(pressed).img, cv.img);
+  composite({ x: BOARD[0], y: BOARD[1] }, petShopBoard(pressed ? "pressed" : "normal").img, cv.img);
   return cv;
 }
 
@@ -130,13 +132,15 @@ export function petShopFront({ doorFrame = null, pressed = false }: PetShopOptio
 // label. Raised, row 0 is ink, row 1 the highlight, the face runs to row 16, the lip fills rows 17
 // to 20 and ink row 21; the caps fill rows 4 to 13. Pressed, the lip and highlight give way to
 // face, as go-pressed, and the board rides down with the front: face and letters sink BOARD_DROP.
-function shopBoard(cv: Canvas, pressed: boolean): void {
+// Focused keeps the raised chrome and replaces the green face with cyan.
+function shopBoard(cv: Canvas, state: BoardState): void {
   const [, , bw, bh] = BOARD;
+  const pressed = state === "pressed";
   const t = pressed ? BOARD_DROP : 0;
   const [face, lip, hi] = STATES.go!;
   cv.fill(1, t, bw - 2, bh, "ink");
   cv.fill(0, 1 + t, bw, bh - 2, "ink");
-  cv.fill(1, 1 + t, bw - 2, bh - 2, face);
+  cv.fill(1, 1 + t, bw - 2, bh - 2, state === "focused" ? "cyan" : face);
   if (!pressed) {
     cv.fill(1, 1, bw - 2, 1, hi!);
     cv.fill(1, bh - 5, bw - 2, 4, lip!);

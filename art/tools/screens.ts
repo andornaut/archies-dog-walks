@@ -69,13 +69,13 @@
 // withdraws as it closes. The building stays fixed. Normal frame 0 is the static closed pose. An
 // affordable item in the shop takes ui-afford 2px outside the frame (232,52 124x112 on screen).
 //
-// ui-pet-shop-board: a 114x24 sprite, tags normal and pressed: the PET SHOP board, drawn over
+// ui-pet-shop-board: a 114x24 sprite, tags normal, pressed and focused: the PET SHOP board, drawn over
 // ui-pet-shop at BOARD's offset (3,0 in the shop's frame, 237,54 on screen) with the same origin
-// for both tags. Built and coloured as ui-button's go state (green face, yellow highlight, forest
+// for all tags. Built and coloured as ui-button's go state (green face, yellow highlight, forest
 // lip, ink line), with PET SHOP in the sign letters' shapes at 2x in ink, as the go label. normal
 // fills rows 0 to 21, its bottom 2 rows over the parapet; pressed sinks 2px with the front (rows 2
-// to 23) and loses its lip and highlight to face, as go-pressed. The game bobs it 1px up as Start
-// walk bobs, and not while pressed.
+// to 23) and loses its lip and highlight to face, as go-pressed. Focused changes the normal face to
+// cyan. The game bobs it 1px up as Start walk bobs, and not while pressed.
 //
 // ui-loading: a 98x84 sprite, tag walk (4 frames, 160ms): Casey and Lady side on, walking right on
 // a plum leash, at 1.75x, larger than on the road (Casey 84 rows tall, Lady 56), cel shaded with
@@ -1623,7 +1623,14 @@ function* sprites(): Generator<Sprite> {
       ],
     ],
   ];
-  yield ["ui-pet-shop-board", pressedTags((pressed) => imageRows(petShopBoard(pressed).img))];
+  yield [
+    "ui-pet-shop-board",
+    (["normal", "pressed", "focused"] as const).map((tag): Tag => [
+      tag,
+      [imageRows(petShopBoard(tag).img)],
+      1000,
+    ]),
+  ];
 }
 
 // Block in the UI that sits on a screen, for the preview only (layout from StartScene, StatsScene on
