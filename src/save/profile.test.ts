@@ -565,17 +565,6 @@ describe("a cheat session", () => {
     await session.update((save) => ({ ...save, bankCents: cents(1) }));
     expect(stored(entries).bankCents).toBe(1);
   });
-
-  it("writes a change that is no cheat's to the save it set aside, and keeps it in both", async () => {
-    const { entries, session } = await openedVeteran();
-    session.startCheats();
-    await session.update((save) => ({ ...save, bankCents: cents(999_999) }));
-    await session.updateOutsideCheats((save) => ({ ...save, helpSeen: false }));
-    expect(stored(entries)).toMatchObject({ bankCents: veteranSave().bankCents, helpSeen: false });
-    expect(session.save).toMatchObject({ bankCents: 999_999, helpSeen: false });
-    session.endCheats();
-    expect(session.save).toMatchObject({ bankCents: veteranSave().bankCents, helpSeen: false });
-  });
 });
 
 describe("resetSave", () => {

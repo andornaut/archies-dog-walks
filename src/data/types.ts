@@ -1161,7 +1161,6 @@ export interface MenuText {
     readonly resetSave: string;
     readonly seed: string;
     readonly seedRandom: string;
-    readonly showTips: string;
     readonly speed: string;
     readonly speeds: { readonly fast: string; readonly normal: string; readonly slow: string };
     readonly startAt: string;

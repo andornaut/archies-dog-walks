@@ -15,7 +15,7 @@ Cheats never touch the save. The first cheat used starts a cheat session; openin
 
 - **Size** follows measured content within the safe viewport. The body scrolls when needed and text stays full size. See the [Layout guide](../art/layout.md#modals) for interface measurements.
 - **Frame** has a Cheats title, a top-right X and a centred primary Back at the bottom. Back and X return one layer to the invoking Menu or Pause and restore focus to Cheats.
-- **Order** starts with Next walk, then Unlocks and Money side by side. Show tips again and Reset save follow without a section heading.
+- **Order** starts with Next walk, then Unlocks and Money side by side. Reset save follows without a section heading.
 - **Controls** use On/Off rows for toggles and repeatable buttons for Add actions. Next-walk setup and Start screen grants apply from Start.
 
 ## Cheats
@@ -36,7 +36,6 @@ Enabled only on the Start screen.
 
 ## Other actions
 
-These are not cheats and start no session.
+Reset save is a save tool and starts no cheat session.
 
-- **Show tips again:** clears the shown hints and whether Help has been seen, in the save.
 - **Reset save** stays visible at the end of the menu. It is enabled only when available storage contains a valid saved checkpoint, a recorded ended walk, a positive bank balance or an earned badge. Default saves, hint-only changes and cheat-only progress do not qualify. Unavailable storage or newer-version data disables it. Reset requires confirmation, which Cancel and X can dismiss. Accepting immediately prevents repeat attempts, clears the save and earned badges, and keeps device settings.

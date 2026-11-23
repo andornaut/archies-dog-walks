@@ -61,7 +61,6 @@ vi.mock("./profileStore.ts", () => ({
   profileSave: vi.fn(),
   resetSave: fake.reset,
   setSettings: vi.fn(),
-  updateOutsideCheats: vi.fn(),
   updateProfile: fake.update,
   walkerInUse: vi.fn(),
 }));

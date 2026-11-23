@@ -23,7 +23,6 @@ import {
   type OwnGrant,
   pocketChoices,
   seedFrom,
-  showTipsAgain,
   startZones,
   timeScaleOf,
   upgradesLeft,
@@ -121,11 +120,6 @@ describe("the Start screen's grants", () => {
       const expected = granted.includes(key) ? every[key] : newPlayerSave.owned[key];
       expect([...owned[key]].sort()).toEqual([...expected].sort());
     }
-  });
-
-  it("show tips again: the hints and Help unseen", () => {
-    const seen = { ...newPlayerSave, helpSeen: true, shownHints: ["tip" as const] };
-    expect(showTipsAgain(seen)).toMatchObject({ helpSeen: false, shownHints: [] });
   });
 });
 

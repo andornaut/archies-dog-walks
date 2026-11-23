@@ -31,7 +31,6 @@ export type CheatAction =
   | { readonly kind: "pocket" }
   | { readonly kind: "refillHearts" }
   | { readonly kind: "resetSave" }
-  | { readonly kind: "showTips" }
   | { readonly kind: "speed" }
   | { readonly kind: "startAt"; readonly zone: ZoneId }
   | { readonly kind: "upgrade"; readonly upgrade: UpgradeId }
@@ -154,7 +153,6 @@ export function cheatRows(
       kind: "columns",
     },
     { kind: "divider" },
-    action(text.showTips, true, { kind: "showTips" }),
     action(text.resetSave, state.canResetSave, { kind: "resetSave" }),
   ];
 }

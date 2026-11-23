@@ -42,7 +42,6 @@ export const MENU_TEXT = {
     resetSave: "Reset save",
     seed: "Seed",
     seedRandom: "Random",
-    showTips: "Show tips again",
     speed: "Movement speed",
     speeds: { fast: "Fast", normal: "Normal", slow: "Slow" },
     startAt: "Start at",

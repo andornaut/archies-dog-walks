@@ -162,11 +162,6 @@ export function grantOwned(data: GrantData, grant: OwnGrant, save: SaveDocument)
   };
 }
 
-// Clears the hints shown and whether Help has been seen, so each shows again.
-export function showTipsAgain(save: SaveDocument): SaveDocument {
-  return { ...save, helpSeen: false, shownHints: [] };
-}
-
 type WalkData = Pick<
   GameData,
   "debuffs" | "dogs" | "encounters" | "shopGear" | "tuning" | "upgrades" | "walkers"

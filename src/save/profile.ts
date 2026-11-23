@@ -396,20 +396,6 @@ export class ProfileSession {
     this.ended = before.ended;
   }
 
-  // A change that is no cheat's, such as Show tips again: made to the save and written, and
-  // during a cheat session made to both the session's save and the save it set aside, which is
-  // the one written.
-  updateOutsideCheats(change: (save: SaveDocument) => SaveDocument): Promise<void> {
-    const before = this.beforeCheats;
-    if (before === null) {
-      return this.update(change);
-    }
-    const document = change(before.document);
-    this.beforeCheats = { ...before, document };
-    this.document = change(this.document);
-    return this.writeSave(document, true);
-  }
-
   // Reset save: after every write before it, the stored save becomes fresh and resetEarned
   // clears the earned badges, whatever a cheat session holds. Nothing is written after it, since
   // the page then reloads into the new save. With a newer version's save stored, nothing is

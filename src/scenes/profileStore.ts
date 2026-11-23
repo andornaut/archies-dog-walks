@@ -220,14 +220,6 @@ export function endCheatSession(scene: Scene): void {
   openedSession(scene)?.endCheats();
 }
 
-// A change that is no cheat's, written to the save even during a cheat session.
-export function updateOutsideCheats(
-  scene: Scene,
-  change: (save: SaveDocument) => SaveDocument,
-): Promise<void> {
-  return session(scene).updateOutsideCheats(change);
-}
-
 export function canResetSave(scene: Scene): boolean {
   return session(scene).canResetSave;
 }

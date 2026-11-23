@@ -13,7 +13,6 @@ import {
   nextWalkLink,
   pocketChoices,
   seedFrom,
-  showTipsAgain,
   SPEEDS,
 } from "../dev/cheats.ts";
 import { type CheatAction, type CheatsState, cheatsView } from "../dev/cheatsView.ts";
@@ -34,7 +33,6 @@ import {
   currentSettings,
   profileSave,
   resetSave,
-  updateOutsideCheats,
   updateProfile,
   walkerInUse,
 } from "./profileStore.ts";
@@ -225,10 +223,6 @@ export function openCheatsModal(
         return;
       case "resetSave":
         askReset();
-        return;
-      case "showTips":
-        void updateOutsideCheats(scene, showTipsAgain);
-        changed();
         return;
       case "speed": {
         const speeds = SPEEDS.map(({ id }) => id);

@@ -107,13 +107,9 @@ describe("Cheats actions", () => {
       ...row.buttons.map(({ action }) => action.kind),
     ]);
     expect(new Set(visible)).toEqual(
-      new Set(["invincible", "startAt", "own", "addBank", "showTips", "resetSave"]),
+      new Set(["invincible", "startAt", "own", "addBank", "resetSave"]),
     );
-    expect(
-      buttons(state)
-        .slice(-2)
-        .map(({ action }) => action.kind),
-    ).toEqual(["showTips", "resetSave"]);
+    expect(buttons(state).at(-1)?.action.kind).toBe("resetSave");
   });
 });
 
