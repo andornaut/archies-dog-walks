@@ -62,3 +62,5 @@ Reference: [Developing](../../README.md#developing), [Deploying](../../README.md
 | adw-0221 | Adopt Game Kit 0.64.0                                                        | [adw-0221.md](../work/adw-0221.md) |
 | adw-0222 | Adopt Game Kit 0.64.1                                                        | [adw-0222.md](../work/adw-0222.md) |
 | adw-0230 | Adopt Game Kit 0.65.0                                                        | [adw-0230.md](../work/adw-0230.md) |
+| adw-0231 | Check for updates when a walk starts                                         | [adw-0231.md](../work/adw-0231.md) |
+| adw-0232 | Correct documentation drift                                                  | [adw-0232.md](../work/adw-0232.md) |
