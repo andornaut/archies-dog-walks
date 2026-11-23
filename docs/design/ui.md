@@ -81,3 +81,7 @@ Reference: [Screens and UI](../../src/README.md#screens-and-ui), [Assets](../../
 | adw-0223 | Move the FPS counter to Settings                                 | [adw-0223.md](../work/adw-0223.md) |
 | adw-0224 | Keep wrapped details status sentences together                   | [adw-0224.md](../work/adw-0224.md) |
 | adw-0225 | Keep modal X dismissal consistent with its action                | [adw-0225.md](../work/adw-0225.md) |
+| adw-0226 | Restore the transparent Slot Sign hit area                       | [adw-0226.md](../work/adw-0226.md) |
+| adw-0227 | Trim the Cheats action list                                      | [adw-0227.md](../work/adw-0227.md) |
+| adw-0228 | Put the FPS switch last in Settings                              | [adw-0228.md](../work/adw-0228.md) |
+| adw-0229 | Route letterbox taps to the top modal                            | [adw-0229.md](../work/adw-0229.md) |
