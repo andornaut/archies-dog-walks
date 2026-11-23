@@ -119,7 +119,7 @@ export const UI_STYLE = `
 .adw-font-body{font-family:"ADW Body"}
 .adw-font-title{font-family:"ADW Title"}
 .adw-font-display{font-family:"ADW Display";text-shadow:${DISPLAY_SHADOW}}
-.adw-button,.adw-close{margin:0;padding:0;border:0;background:none;color:inherit;font:inherit;
+.adw-button,.adw-close,.adw-slot-sign{margin:0;padding:0;border:0;background:none;color:inherit;font:inherit;
   cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;outline:none}
 .adw-face,.adw-close-face,.adw-close-glyph{position:absolute;box-sizing:border-box;pointer-events:none}
 .adw-face:not(.adw-standard-button-face){
