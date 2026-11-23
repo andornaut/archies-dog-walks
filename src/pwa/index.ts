@@ -94,13 +94,13 @@ export function setupPhoneApp(): void {
     // Each back the guard keeps opens the pause menu or Quit?, as the scenes decide.
     guardBackNavigation(
       {
+        createCloseWatcher: closeWatcher,
+        history,
         onBack: () => dispatchPhoneEvent(window, PHONE_EVENTS.backPressed),
         stateKey: BACK_GUARD_STATE_KEY,
+        timer: window,
       },
       window,
-      window,
-      closeWatcher,
-      history,
     );
   }
   const wakeLock = "wakeLock" in navigator ? navigator.wakeLock : undefined;

@@ -25,18 +25,21 @@ it("installs the kit crash screen with the game words, palette and portrait", as
   vi.mocked(installCrashScreen).mockReturnValueOnce(screen);
   const { CRASH_SCREEN } = await import("./crashScreen.ts");
   expect(CRASH_SCREEN).toBe(screen);
-  expect(installCrashScreen).toHaveBeenCalledWith(window, {
-    buildLabel: expect.any(String),
-    colours: {
-      background: `#${palette.ink.hex}`,
-      buttonFace: `#${palette.green.hex}`,
-      buttonLip: `#${palette.forest.hex}`,
-      ink: `#${palette.ink.hex}`,
-      text: `#${palette.cream.hex}`,
+  expect(installCrashScreen).toHaveBeenCalledWith(
+    {
+      buildLabel: expect.any(String),
+      colours: {
+        background: `#${palette.ink.hex}`,
+        buttonFace: `#${palette.green.hex}`,
+        buttonLip: `#${palette.forest.hex}`,
+        ink: `#${palette.ink.hex}`,
+        text: `#${palette.cream.hex}`,
+      },
+      dev: false,
+      words: MENU_TEXT.crash,
     },
-    dev: false,
-    words: MENU_TEXT.crash,
-  });
+    window,
+  );
   expect(setProperty.mock.calls).toEqual([
     ["--crash-paper", `#${palette.cream.hex}`],
     ["--crash-paper-lip", `#${palette.tan.hex}`],

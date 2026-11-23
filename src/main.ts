@@ -121,9 +121,15 @@ function bootGame(context: GameStartup): Game {
   // the visible area or the turn changes.
   const parent = document.getElementById(GAME_PARENT_ID);
   if (parent !== null) {
-    followFrameTurn(pageFrameWatch(), game.scale.gameSize, parent, game, {
-      deviceResolution: { max: MAX_RENDER_SCALE },
-    });
+    followFrameTurn(
+      {
+        deviceResolution: { max: MAX_RENDER_SCALE },
+        gameSize: game.scale.gameSize,
+        parent,
+        watch: pageFrameWatch(),
+      },
+      game,
+    );
   }
   followWorldCameras(game);
   const press = createCanvasPressAdmission(game);

@@ -2,8 +2,9 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vites
 
 import type { StorageState } from "../save/profile.ts";
 
-const { appCannotClose, requireNewer, runsInAppWindow } = vi.hoisted(() => ({
+const { appCannotClose, guardBackNavigation, requireNewer, runsInAppWindow } = vi.hoisted(() => ({
   appCannotClose: vi.fn(() => true),
+  guardBackNavigation: vi.fn(),
   requireNewer: vi.fn(),
   runsInAppWindow: vi.fn(() => false),
 }));
@@ -20,7 +21,7 @@ vi.mock("@andornaut/game-kit/runtime/web/pwa/dom/wakeLock", () => ({
 }));
 vi.mock("@andornaut/game-kit/runtime/web/pwa/dom/backNavigation", () => ({
   browserCloseWatcher: () => undefined,
-  guardBackNavigation: () => undefined,
+  guardBackNavigation,
 }));
 vi.mock("@andornaut/game-kit/runtime/web/pwa/appWindow", () => ({
   appCannotClose,
@@ -53,6 +54,7 @@ afterAll(() => {
 beforeEach(async () => {
   vi.resetModules();
   appCannotClose.mockReturnValue(true);
+  guardBackNavigation.mockClear();
   runsInAppWindow.mockReturnValue(false);
   requireNewer.mockClear();
   phone = await import("./index.ts");
@@ -75,6 +77,24 @@ describe("setupPhoneApp", () => {
       phone = await import("./index.ts");
       phone.setupPhoneApp();
       expect(phone.exitShown()).toBe(shown);
+      if (cannotClose) {
+        expect(guardBackNavigation).not.toHaveBeenCalled();
+      } else {
+        expect(guardBackNavigation).toHaveBeenCalledExactlyOnceWith(
+          {
+            createCloseWatcher: undefined,
+            history,
+            onBack: expect.any(Function),
+            stateKey: "archiesDogWalksBackGuard",
+            timer: window,
+          },
+          window,
+        );
+        const dispatch = vi.spyOn(window, "dispatchEvent");
+        guardBackNavigation.mock.calls[0]![0].onBack();
+        expect(dispatch).toHaveBeenCalledWith(expect.objectContaining({ type: "back-pressed" }));
+        dispatch.mockRestore();
+      }
     },
   );
 });

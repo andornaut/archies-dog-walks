@@ -110,6 +110,42 @@ it("fails closed without its input root and rechecks readiness for native activa
   expect(current.activate).toHaveBeenCalledTimes(2);
 });
 
+it("supplies the actual button to action and state resolvers through native admission", () => {
+  const doc = new FakeDocument();
+  const root = doc.createElement("div");
+  doc.body.append(root);
+  const activate = vi.fn();
+  const getAction = vi.fn((element: HTMLButtonElement) =>
+    element.getAttribute("aria-pressed") === "true" ? { activate } : null,
+  );
+  const getState = vi.fn((element: HTMLButtonElement) => ({
+    toggled: element.getAttribute("data-ready") === "true",
+  }));
+  const view = createGameButton(doc as unknown as Document, {
+    content: { kind: "text", label: gameData.menuText.pause.resume },
+    getAction,
+    getState,
+  });
+  const button = view.element as unknown as ReturnType<FakeDocument["createElement"]>;
+  root.append(button);
+  expect(getState).toHaveBeenCalledWith(view.element);
+  button.fire("click", { detail: 0 });
+  expect(getAction).not.toHaveBeenCalled();
+  const stop = bindGameActionHolds(
+    { cancelPress: vi.fn(), guard: { gate: createModalInputGate() }, unit: () => 1 },
+    root as unknown as HTMLElement,
+  );
+  button.fire("click", { detail: 0 });
+  expect(getAction).toHaveBeenCalledWith(view.element);
+  expect(activate).not.toHaveBeenCalled();
+  button.setAttribute("data-ready", "true");
+  button.fire("click", { detail: 0 });
+  expect(activate).toHaveBeenCalledOnce();
+  expect(button.getAttribute("aria-pressed")).toBe("true");
+  stop();
+  view.dispose();
+});
+
 it.each([false, true])(
   "uses one hold dispatcher and suppresses release (contact guard: %s)",
   (contactGuard) => {

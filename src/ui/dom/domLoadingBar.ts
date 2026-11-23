@@ -29,15 +29,17 @@ export function mountDomLoadingBar(progress: ProgressSource, parent: HTMLElement
   parent.append(view);
   // Three CSS rows carry the existing fill colours without a border taking their rows.
   const bar = createDomProgressBar(
-    view,
-    { ...GAME_PROGRESS_STYLE, border: 0 },
     {
-      height: LOADING_BAR_HEIGHT,
-      width: SCREEN_CONFIG.width,
-      x: 0,
-      y: 0,
+      frame: {
+        height: LOADING_BAR_HEIGHT,
+        width: SCREEN_CONFIG.width,
+        x: 0,
+        y: 0,
+      },
+      style: { ...GAME_PROGRESS_STYLE, border: 0 },
+      timing: LOADING_TIMING,
     },
-    LOADING_TIMING,
+    view,
   );
   bar.element.setAttribute(
     "aria-label",

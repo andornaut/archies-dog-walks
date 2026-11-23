@@ -38,18 +38,21 @@ document.documentElement.style.setProperty(
 );
 
 // Reload uses the same green primary face and forest lip as canvas actions.
-export const CRASH_SCREEN = installCrashScreen(window, {
-  buildLabel: BUILD_LABEL,
-  colours: {
-    background: colour("ink"),
-    buttonFace: colour("green"),
-    buttonLip: colour("forest"),
-    ink: colour("ink"),
-    text: colour("cream"),
+export const CRASH_SCREEN = installCrashScreen(
+  {
+    buildLabel: BUILD_LABEL,
+    colours: {
+      background: colour("ink"),
+      buttonFace: colour("green"),
+      buttonLip: colour("forest"),
+      ink: colour("ink"),
+      text: colour("cream"),
+    },
+    dev: devInSearch(pageSearch()),
+    words: MENU_TEXT.crash,
   },
-  dev: devInSearch(pageSearch()),
-  words: MENU_TEXT.crash,
-});
+  window,
+);
 
 // The crash dialog owns the control so the existing inert barrier still blocks the game.
 // Observe only its insertion; the renderer and profile do not participate in this endpoint.
