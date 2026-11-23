@@ -59,3 +59,4 @@ Reference: [Developing](../../README.md#developing), [Deploying](../../README.md
 | adw-0215 | Adopt Art Kit 0.33.0                                                         | [adw-0215.md](../work/adw-0215.md) |
 | adw-0216 | Adopt Delivery Kit 8.1.0                                                     | [adw-0216.md](../work/adw-0216.md) |
 | adw-0219 | Remove the retired delivery report project field                             | [adw-0219.md](../work/adw-0219.md) |
+| adw-0221 | Adopt Game Kit 0.64.0                                                        | [adw-0221.md](../work/adw-0221.md) |
