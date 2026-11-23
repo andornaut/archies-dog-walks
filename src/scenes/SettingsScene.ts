@@ -16,6 +16,7 @@ import {
   SETTINGS_NOTE_STYLE,
   SETTINGS_ROW,
   type SettingsFonts,
+  settingsInstallWidth,
   type SettingsLayout,
   settingsLayout,
   type SettingsRowShape,
@@ -47,7 +48,6 @@ import {
 } from "../pwa/index.ts";
 import type { Settings } from "../save/settings.ts";
 import { barTitleRoom } from "../ui/barTitle.ts";
-import { modalActionWidth } from "../ui/modal/layout.ts";
 import { cardTitleRow } from "../ui/modal/titleRow.ts";
 import {
   fitPixelText,
@@ -101,6 +101,13 @@ function rowShapes(scene: Scene, rows: readonly Row[]): SettingsRowShape[] {
     if (row.kind === "slider") {
       return { kind: "slider" };
     }
+    if (row.kind === "button") {
+      return {
+        controlWidth: settingsInstallWidth(modalTextWidth(scene, "title", [words.install])),
+        kind: "button",
+        noteLines: 0,
+      };
+    }
     if (row.note === undefined) {
       return {
         kind: row.kind,
@@ -108,10 +115,7 @@ function rowShapes(scene: Scene, rows: readonly Row[]): SettingsRowShape[] {
       };
     }
     const note = words[row.note];
-    const controlWidth =
-      row.kind === "button"
-        ? modalActionWidth(modalTextWidth(scene, "title", [words[row.button]]))
-        : SETTINGS_ROW.switch.width;
+    const controlWidth = SETTINGS_ROW.switch.width;
     const { lines } = withProbe(scene, BODY_TEXT, (probe) =>
       fittingText(
         SETTINGS_NOTE_STYLE,
@@ -123,7 +127,6 @@ function rowShapes(scene: Scene, rows: readonly Row[]): SettingsRowShape[] {
     return {
       kind: row.kind,
       noteLines: lines.length,
-      ...(row.kind === "button" ? { controlWidth } : {}),
     };
   });
 }

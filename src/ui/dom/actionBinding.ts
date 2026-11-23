@@ -1,4 +1,7 @@
-import { bindHoldActions } from "@andornaut/game-kit/runtime/web/input/dom/holdActions";
+import {
+  bindHoldActions,
+  type HoldActionBinding,
+} from "@andornaut/game-kit/runtime/web/input/dom/holdActions";
 import type { ButtonView } from "@andornaut/game-kit/runtime/web/ui/dom/button";
 import type { PressGuard } from "@andornaut/game-kit/runtime/web/ui/dom/domPress";
 
@@ -112,6 +115,24 @@ export function bindGameAction(action: GameAction, element: HTMLElement): () => 
     }
   };
 }
+
+// Recovery views already bind native clicks to these same semantic actions.
+export const bindRecoveryHold: HoldActionBinding = ({ activate, available, element }) => {
+  const active = () => element.isConnected && available();
+  const unbind = bindGameAction({ activate, available: active, nativeClick: true }, element);
+  const stop = bindGameActionHolds(
+    {
+      cancelPress: () => undefined,
+      guard: { gate: { accepts: active, capture: () => active } },
+      unit: () => 1,
+    },
+    element,
+  );
+  return () => {
+    stop();
+    unbind();
+  };
+};
 
 // The existing root admission owns captures and leases; the kit owns hold timing and suppression.
 export function bindGameActionHolds(

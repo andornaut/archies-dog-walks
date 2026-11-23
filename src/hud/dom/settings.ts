@@ -19,6 +19,7 @@ import {
   sheetThreeSlice,
 } from "../../ui/dom/artElements.ts";
 import { createContentSeparator, placeContentSeparator } from "../../ui/dom/contentSeparator.ts";
+import { createGameButton } from "../../ui/dom/gameButton.ts";
 import { guardNativeInput } from "../../ui/dom/modalLifecycle.ts";
 import {
   blockPlace,
@@ -31,6 +32,7 @@ import type { UiLayer } from "../../ui/dom/uiLayer.ts";
 import { artPixel, type DomScale, gridX, gridY, wholeArtPixels } from "../../ui/domScale.ts";
 import { PALETTE } from "../../ui/palette.ts";
 import { REFUSE } from "../../ui/refuse.ts";
+import { bindPanelFeedback } from "./panelButton.ts";
 import {
   addTapBurst,
   type DomPart,
@@ -126,6 +128,65 @@ function rowTarget(row: SettingsRowView): SettingsTarget | undefined {
 // Ids that tie each row to its description.
 let described = 0;
 
+function installPart(
+  layer: UiLayer,
+  input: DomSettingsInput,
+  panel: () => DomQuestionPanel,
+  origin: () => Point,
+  burst: (event: PointerEvent) => void,
+  row: SettingsRowView,
+) {
+  const doc = layer.element.ownerDocument;
+  const { button, rect } = row;
+  const glyph = row.icon;
+  if (button === undefined || glyph === undefined) {
+    throw new Error("The Install action requires a face and icon");
+  }
+  const content = doc.createElement("span");
+  content.className = "adw-lines";
+  const icon = sheetArt(doc, input, glyph.key);
+  const label = createTextLine(doc, button.text);
+  label.setAttribute("aria-hidden", "true");
+  icon.element.setAttribute("aria-hidden", "true");
+  content.append(icon.element, label);
+  const accepts = () => panel().accepts();
+  const press = () => input.press.activate({ kind: "install" });
+  const view = createGameButton(doc, {
+    appearance: {
+      className: "adw-row adw-button adw-secondary",
+      face: { className: "adw-face" },
+      role: "secondary",
+    },
+    content: { icon: content, kind: "icon", name: row.label },
+    getAction: () => (accepts() ? { activate: press } : null),
+  });
+  const stopFeedback = bindPanelFeedback(view, { accepts, burst });
+  const stopInput = guardNativeInput(
+    {
+      gate: { accepts, capture: () => panel().capture() },
+      holdUnit: () => layer.scale().unit,
+      subscribe: layer.input.subscribe,
+    },
+    view.element,
+  );
+  return {
+    destroy() {
+      stopInput();
+      stopFeedback();
+      view.dispose();
+    },
+    element: view.element,
+    place(scale: DomScale) {
+      placeBox(scale, origin(), view.element, rect);
+      placeFrame(scale, rect, view.face, button.rect);
+      icon.place(scale, button.rect, glyph);
+      placeText(input.fonts.title, scale, button.rect, label, button.text);
+    },
+    ready: icon.ready,
+    refuse: () => undefined,
+  };
+}
+
 // A row's element and its parts, placed from the row's view as it stands.
 function rowPart(
   layer: UiLayer,
@@ -139,6 +200,9 @@ function rowPart(
   const doc = layer.element.ownerDocument;
   const view = () => current().rows[index] as SettingsRowView;
   const first = view();
+  if (first.kind === "button") {
+    return installPart(layer, input, panel, origin, burst, first);
+  }
   const element = doc.createElement("div");
   element.className = "adw-row";
   element.tabIndex = -1;
@@ -148,7 +212,7 @@ function rowPart(
   described += 1;
   description.id = `adw-settings-row-${described}`;
   element.setAttribute("aria-describedby", description.id);
-  element.setAttribute("role", first.kind === "button" ? "button" : first.kind);
+  element.setAttribute("role", first.kind);
   const face = doc.createElement("span");
   face.className = "adw-framed";
   const icon = first.icon === undefined ? undefined : sheetArt(doc, input, first.icon.key);
@@ -159,9 +223,6 @@ function rowPart(
   }
   const control =
     first.switch === undefined ? undefined : sheetArt(doc, input, first.switch.art.key);
-  const button = first.button === undefined ? undefined : doc.createElement("span");
-  const buttonText =
-    first.button === undefined ? undefined : createTextLine(doc, first.button.text);
   const slider =
     first.slider === undefined
       ? undefined
@@ -170,14 +231,10 @@ function rowPart(
           filled: sheetThreeSlice(doc, input, first.slider.filled.key, SLICES["ui-slider"]),
           knob: sheetArt(doc, input, first.slider.knob.key),
         };
-  if (button !== undefined) {
-    button.className = "adw-face adw-secondary";
-  }
   element.append(
     ...(first.face === undefined ? [] : [face]),
     ...parts,
     ...(control === undefined ? [] : [control.element]),
-    ...(button === undefined || buttonText === undefined ? [] : [button, buttonText]),
     ...(slider === undefined
       ? []
       : [slider.empty.element, slider.filled.element, slider.knob.element]),
@@ -199,10 +256,6 @@ function rowPart(
     if (control !== undefined && row.switch !== undefined) {
       control.place(scale, rect, row.switch.art);
       element.setAttribute("aria-checked", String(row.switch.on));
-    }
-    if (button !== undefined && buttonText !== undefined && row.button !== undefined) {
-      placeFrame(scale, rect, button, row.button.rect);
-      placeText(input.fonts.title, scale, rect, buttonText, row.button.text);
     }
     if (slider !== undefined && row.slider !== undefined) {
       // The track whole art pixels long from its snapped start, and the knob whole art pixels

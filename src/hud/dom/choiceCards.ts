@@ -1,10 +1,12 @@
+import "./choiceCards.css";
+
 import type { Point, Rect } from "@andornaut/game-kit/runtime/rect";
 import { fontMetrics } from "@andornaut/game-kit/runtime/text/bitmapFont";
 
 import { cardGreyPath } from "../../assets/cardArt.ts";
 import { domArtPath } from "../../assets/domArt.ts";
 import { DIFFICULTY_KEY } from "../../assets/spriteKeys.ts";
-import { CHOICE_CARDS, SLICES } from "../../data/layout.ts";
+import { SLICES } from "../../data/layout.ts";
 import { SCREEN_CONFIG, SCREEN_LAYOUT } from "../../data/screen.ts";
 import type { GameData } from "../../data/types.ts";
 import { CHARM } from "../../layout/buffLayout.ts";
@@ -117,7 +119,12 @@ function sheetPart(
   };
 }
 
-function surfaceParts(doc: Document, original: Source, surface: ChoiceCardSurface) {
+function surfaceParts(
+  doc: Document,
+  original: Source,
+  surface: ChoiceCardSurface,
+  pressCue = false,
+) {
   const source: Source = surface.grey
     ? { ...original, artUrl: (path) => original.artUrl(cardGreyPath(path)) }
     : original;
@@ -195,6 +202,23 @@ function surfaceParts(doc: Document, original: Source, surface: ChoiceCardSurfac
       text,
     ),
   );
+  if (pressCue) {
+    const band = doc.createElement("span");
+    band.className = "adw-art adw-choice-press-band";
+    band.setAttribute("aria-hidden", "true");
+    const { height, room, y } = CARD_LAYOUT.band;
+    all.push({
+      element: band,
+      place: (scale) =>
+        placeBox(scale, ORIGIN, band, {
+          height,
+          width: room,
+          x: rect.x + (rect.width - room) / 2,
+          y: rect.y + y,
+        }),
+    });
+    labels[0]?.element.classList.add("adw-choice-press-label");
+  }
   all.push(...labels);
   for (const { charm, rect: plate } of surface.charms) {
     const well = imageNineSlice(
@@ -351,7 +375,7 @@ export function showChoiceCards(
   label(input.subtitle, centre, header.subtitleTop, 1, PALETTE.white);
   const small = input.entries.map((entry, index) => {
     const surface = choiceCardSurface(input.data, input.fonts, input.view, entry, rects[index]!);
-    const rendered = surfaceParts(doc, input, surface);
+    const rendered = surfaceParts(doc, input, surface, !input.picture && entry.enabled);
     const group = doc.createElement("div");
     group.className = "adw-choice-group";
     const button = doc.createElement(input.picture ? "span" : "button");
@@ -380,17 +404,12 @@ export function showChoiceCards(
         button,
       );
     }
-    const ring = doc.createElement("span");
-    ring.className = "adw-art";
-    ring.hidden = true;
-    ring.style.borderStyle = "solid";
-    ring.style.borderColor = colour(PALETTE.amber);
     let offset = 0;
     let scale = layer.scale();
     const motion = () => {
       group.style.transform = `translateX(${Math.round(offset) * artPixel(scale)}px)`;
     };
-    group.append(...rendered.all.map(({ element }) => element), ring, button);
+    group.append(...rendered.all.map(({ element }) => element), button);
     parts.push({
       controls: input.picture ? [] : [button],
       element: group,
@@ -398,14 +417,6 @@ export function showChoiceCards(
         scale = next;
         rendered.all.forEach((part) => part.place(next));
         placeBox(next, ORIGIN, button, surface.rect);
-        const outset = CHOICE_CARDS.selectedOutline;
-        placeBox(next, ORIGIN, ring, {
-          height: surface.rect.height + 2 * outset,
-          width: surface.rect.width + 2 * outset,
-          x: surface.rect.x - outset,
-          y: surface.rect.y - outset,
-        });
-        ring.style.borderWidth = `${outset * artPixel(next)}px`;
         motion();
       },
       ready: Promise.all(
@@ -429,7 +440,6 @@ export function showChoiceCards(
         motion();
         rendered.flash(red);
       },
-      ring,
     };
   });
   const large = input.picture
@@ -518,7 +528,7 @@ export function showChoiceCards(
     },
     setPressed: (index) =>
       small.forEach((part, i) => {
-        part.ring.hidden = index !== i;
+        part.element.classList.toggle("adw-choice-pressed", index === i);
       }),
     setRefusal: (index, offset, red) => small[index]?.motion(offset, red),
   };

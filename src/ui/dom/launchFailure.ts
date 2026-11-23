@@ -8,6 +8,7 @@ import { mountLoadingFailure } from "@andornaut/game-kit/runtime/web/progress/do
 import { createModalLayer } from "@andornaut/game-kit/runtime/web/ui/dom/modalLayer";
 
 import { SCREEN_CONFIG } from "../../data/screen.ts";
+import { bindRecoveryHold } from "./actionBinding.ts";
 import { loadingFailurePresentation } from "./loadingFailureStyle.ts";
 
 // The game's fit before Phaser exists: CSS pixels per game pixel for the whole screen in view.
@@ -33,7 +34,11 @@ export function mountLaunchFailure(
   parent.append(root);
   const modal = createModalLayer(parent);
   const failure = mountLoadingFailure(
-    { onRetry: retry, presentation: loadingFailurePresentation(viewportUnit(view)) },
+    {
+      bindHoldAction: bindRecoveryHold,
+      onRetry: retry,
+      presentation: loadingFailurePresentation(viewportUnit(view)),
+    },
     root,
   );
   const button = failure.element.querySelector("button");

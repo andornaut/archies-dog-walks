@@ -271,8 +271,7 @@ it("speaks intact owner names once while keeping their visual lines hidden", asy
     const original = gameData.dogs[dogs[index]!].owner.name;
     const nodes = card.all();
     const fragments = nodes.filter((node) => node.className === "adw-text adw-font-body");
-    // Ralph and Gadget fit one line under the photo; Aunt Judy takes two beside it.
-    expect(fragments).toHaveLength(original.includes(" ") ? 2 : 1);
+    expect(fragments).toHaveLength(1);
     expect(fragments.every((node) => node.getAttribute("aria-hidden") === "true")).toBe(true);
     expect(
       nodes.filter((node) => node.className === "adw-spoken" && node.textContent === original),

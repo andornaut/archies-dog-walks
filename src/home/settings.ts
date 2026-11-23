@@ -10,7 +10,7 @@ import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";
 import { type CloseControl, closeControl } from "../ui/closeControl.ts";
 import { helpCapDy, LABEL_HELP_GAP } from "../ui/labelHelpGap.ts";
 import { DISMISS_FOOTER_SPACE } from "../ui/modal/dismissFooter.ts";
-import { MODAL, modalFamilyWidth, modalRect } from "../ui/modal/layout.ts";
+import { MODAL, modalActionWidth, modalFamilyWidth, modalRect } from "../ui/modal/layout.ts";
 import { TEXT_SCALE, TEXT_STYLE, textOnLines } from "../ui/textFit.ts";
 import { topSectionButtonBacking, topSectionLayout } from "../ui/topSection.ts";
 import { HOME_BAR_BUTTONS, HOME_LAYOUT } from "./homeLayout.ts";
@@ -131,6 +131,13 @@ export const SETTINGS_ROW = {
 
 // The room a switch or button row's note wraps in: from the icon's column to controlGap short
 // of its control.
+export const INSTALL_ICON_SIZE = 16;
+export const INSTALL_ICON_GAP = BUTTON_SIZE.stackGap;
+
+export function settingsInstallWidth(ink: number): number {
+  return modalActionWidth(INSTALL_ICON_SIZE + INSTALL_ICON_GAP + ink);
+}
+
 export function noteRoom(kind: "button" | "switch"): number {
   return noteRoomForControl(SETTINGS_ROW[kind].width);
 }
@@ -205,7 +212,7 @@ function rowHeight(fonts: SettingsFonts, shape: SettingsRowShape): number {
 }
 
 // Switches align with the row's upper icon edge. Buttons centre beside their label and note.
-function rowControl(fonts: SettingsFonts, row: Rect, shape: SettingsRowShape): Rect | null {
+function rowControl(row: Rect, shape: SettingsRowShape): Rect | null {
   if (shape.kind === "slider") {
     return null;
   }
@@ -214,10 +221,7 @@ function rowControl(fonts: SettingsFonts, row: Rect, shape: SettingsRowShape): R
     width: shape.controlWidth ?? SETTINGS_ROW[shape.kind].width,
   };
   const top =
-    shape.kind === "switch"
-      ? SETTINGS_ROW.icon.dy
-      : Math.floor((SETTINGS_ROW.label.dy + noteInkBottom(fonts, shape.noteLines)) / 2) -
-        size.height / 2;
+    shape.kind === "switch" ? SETTINGS_ROW.icon.dy : Math.floor((row.height - size.height) / 2);
   return {
     ...size,
     x: row.x + row.width - SETTINGS_ROW.pad - size.width,
@@ -231,7 +235,7 @@ function rowInkBottom(fonts: SettingsFonts, shape: SettingsRowShape): number {
   if (shape.kind === "slider") {
     return SETTINGS_ROW.slider.height;
   }
-  const control = rowControl(fonts, { height: 0, width: 0, x: 0, y: 0 }, shape);
+  const control = rowControl({ height: 0, width: 0, x: 0, y: 0 }, shape);
   return Math.max(
     shape.noteLines === 0 ? MIN_PRESS : noteInkBottom(fonts, shape.noteLines),
     shape.kind === "switch"
@@ -280,7 +284,7 @@ export function settingsLayout(
     const rect = { height: heights[i] ?? 0, width: SETTINGS_ROW.width, x: rowX, y: rowY };
     rowY += rect.height + ROW_GAP;
     return {
-      control: rowControl(fonts, rect, shape),
+      control: rowControl(rect, shape),
       noteY: shape.kind === "slider" || shape.noteLines === 0 ? null : rect.y + noteDy(fonts.title),
       rect,
     };

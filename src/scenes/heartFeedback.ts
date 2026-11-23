@@ -15,6 +15,7 @@ import {
 } from "../hud/feedback.ts";
 import type { ChangeLabel } from "../hud/hudView.ts";
 import { arcControl } from "../hud/moments.ts";
+import { cardHearts } from "../hud/walkHud.ts";
 import { slotIndexOf } from "../state/pack.ts";
 import { PALETTE } from "../ui/palette.ts";
 import { plainMarks } from "../ui/pixelFont.ts";
@@ -33,6 +34,7 @@ interface HeartPop {
   label: ChangeLabel;
   lane: Rect;
   slot: number;
+  to: Point;
 }
 interface ActivePop {
   covers: Rect[];
@@ -119,7 +121,7 @@ export class HeartFeedback {
       this.land(loss, pop);
       return;
     }
-    const to = { x: pop.lane.x + Math.round(pop.lane.width / 2), y: pop.lane.y };
+    const { to } = pop;
     const number = this.addNumber(pop.label, heartPopFrame(pop.dogTop), art.popInk.right);
     const { frame } = number;
     const centre = { x: frame.x + 16, y: frame.y + 16 };
@@ -273,11 +275,12 @@ export function heartPops(
     if (label.target.kind !== "dog") {
       return [];
     }
-    const { dog } = label.target;
+    const { cell, dog } = label.target;
     const slot = slotIndexOf(pack, dog);
     const lane = hud.lanes[slot];
     const view = slotOf(slot);
-    if (lane === undefined || view === undefined) {
+    const heart = cardHearts(0, cell + 1)[cell];
+    if (lane === undefined || view === undefined || heart === undefined) {
       return [];
     }
     const before = shown.get(dog) ?? 0;
@@ -290,6 +293,10 @@ export function heartPops(
         label,
         lane,
         slot,
+        to: {
+          x: view.x + heart.x + HEART_CELL.width / 2,
+          y: view.y + heart.y + HEART_CELL.height / 2,
+        },
       },
     ];
   });

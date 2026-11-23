@@ -738,12 +738,6 @@ export function textRoleCases(): TextRoleCase[] {
       [settings.motionNote, settings.soundNote],
     ),
     ...plainRole(
-      "settings button note",
-      "font-body",
-      { room: noteRoom("button"), style: SETTINGS_NOTE_STYLE },
-      [settings.installNote],
-    ),
-    ...plainRole(
       "settings build label",
       "font-body",
       SETTINGS_BUILD_LABEL,

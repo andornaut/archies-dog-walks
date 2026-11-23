@@ -16,7 +16,9 @@ export interface ChangeLabel {
   gain: boolean;
   reachIcon?: string;
   target:
-    { dog: DogId; kind: "dog" } | { from: Point; kind: "bank" } | { kind: "cash"; tip: boolean };
+    | { cell: number; dog: DogId; kind: "dog" }
+    | { from: Point; kind: "bank" }
+    | { kind: "cash"; tip: boolean };
   text: string;
   zeroedBy?: DebuffId;
 }
@@ -45,7 +47,7 @@ function zeroingDebuff(change: Change): DebuffId | undefined {
 // loss, or another change that came to nothing, from from, where it changed hands, to the bank.
 function labelTarget(from: Point, change: Change): ChangeLabel["target"] {
   if (change.kind === "hearts") {
-    return { dog: change.dog, kind: "dog" };
+    return { cell: Math.max(change.before, change.after) - 1, dog: change.dog, kind: "dog" };
   }
   const tip = change.causes.some((cause) => cause.kind === "tip");
   return tip || change.amount > 0 ? { kind: "cash", tip } : { from, kind: "bank" };

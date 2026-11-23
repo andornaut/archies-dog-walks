@@ -11,6 +11,12 @@ game uses the top page or modal’s Back, Close or X action. Previous only chang
 a view. Restore focus to the invoking control when available, and keep required choices
 nondismissible.
 
+The Sound button shows its current On or Off state under its icon. Settings uses one Install
+button with its decorative install icon, and opens the browser prompt or instructions on
+activation. Recovery buttons use the same action for a tap, key activation or hold. Developer
+Copy keeps the crash screen open and Reload restarts it. A pressed choice highlights its title
+band. Required choices retain their existing gesture and dismissal rules.
+
 Reference: [Screens and UI](../../src/README.md#screens-and-ui), [Assets](../../src/README.md#assets), [Phone](../../src/README.md#phone).
 
 ## Work items
@@ -93,3 +99,4 @@ Reference: [Screens and UI](../../src/README.md#screens-and-ui), [Assets](../../
 | adw-0237 | Match the approved Cheats layout                                 | [adw-0237.md](../work/adw-0237.md) |
 | adw-0238 | Route letterbox taps to the top page                             | [adw-0238.md](../work/adw-0238.md) |
 | adw-0239 | Align owner and dog portraits in the walk HUD                    | [adw-0239.md](../work/adw-0239.md) |
+| adw-0240 | Finish shared Settings and recovery controls                     | [adw-0240.md](../work/adw-0240.md) |

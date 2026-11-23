@@ -227,32 +227,23 @@ export const DEBUFF_BAR = {
 // art: a dog card (ui-dog-card), from its top-left corner.
 export const DOG_CARD_PARTS = {
   // The dog's face's top-left.
-  dogFace: { x: 8, y: 25 },
+  dogFace: { x: 5, y: 17 },
   // "Empty"'s centre column and capitals' top.
   empty: { x: 60, y: 33 },
   // FIRED's centre column and capitals' top.
-  fired: { x: 24, y: 38 },
+  fired: { x: 21, y: 30 },
   // The hearts' rows: hearts to a row, their pitch, and the first heart's top-left.
-  hearts: { perRow: 6, pitch: 9, x: 45, y: 60 },
+  hearts: { perRow: 3, pitch: 9, x: 85, y: 26 },
   // The LEAD tag's top-left.
-  lead: { x: 10, y: 54 },
+  lead: { x: 7, y: 46 },
   // The dog's name: its widest ink, text scale, capitals' top and centre column.
-  name: { room: 108, scale: 2, top: 4, x: 60 },
+  name: { room: 108, scale: 2, top: 3, x: 60 },
   owner: {
     // The owner's face's side and top-left.
-    face: { size: 20, x: 47, y: 20 },
-    // The visible ink tops of a name's two lines beside the photo.
-    ink: { tops: [20, 40] },
+    face: { size: 32, x: 47, y: 17 },
+    name: { inkTop: 53, scale: 1.75, x: 78 },
     // The photo's ink frame and white mat round the face.
     photo: { frame: 1, mat: 1 },
-    // The widest line beside the photo.
-    room: 44,
-    // The owner's name uses the standard body scale.
-    scale: 2,
-    // The one line under the photo: its capitals' top, widest ink and ink left edge.
-    under: { capTop: 45, room: 71, x: 45 },
-    // The lines' ink left edge beside the photo.
-    x: 72,
   },
 } as const;
 
@@ -518,7 +509,6 @@ export const CHOICE_CARDS = {
   // The gap between cards in a row.
   row: { gap: CHOICE_CARD_GAP },
   // A picked card's outline, outside the card.
-  selectedOutline: 2,
   // The rows between the effect and a firing warning.
   warningGap: 2,
   // art: card-frame's width.

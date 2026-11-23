@@ -4,9 +4,11 @@ import { containsPoint } from "@andornaut/game-kit/runtime/rect";
 import {
   advanceWidth,
   type BitmapFont,
+  fontMetrics,
   inkWidth,
 } from "@andornaut/game-kit/runtime/text/bitmapFont";
 
+import { MENU_TEXT } from "../../data/menuText.ts";
 import { SCREEN_CONFIG } from "../../data/screen.ts";
 import { BUTTON_SIZE } from "../buttonGeometry.ts";
 import {
@@ -20,7 +22,13 @@ import {
   gridY,
 } from "../domScale.ts";
 import { PALETTE } from "../palette.ts";
-import { TOP_BAR_FACE, TOP_BAR_TRIM, TOP_BAR_WELL, topBarRects } from "../topBarTrim.ts";
+import {
+  TOP_BAR_FACE,
+  TOP_BAR_TRIM,
+  TOP_BAR_WELL,
+  topBarContentRows,
+  topBarRects,
+} from "../topBarTrim.ts";
 import { type TopSectionButton, topSectionCurrency, topSectionLayout } from "../topSection.ts";
 import { containGameButtonClicks } from "./actionBinding.ts";
 import { type DomArtSource, imageArt, sheetArt } from "./artElements.ts";
@@ -187,6 +195,29 @@ export function createNativeTopSection(
             key,
           }));
     const sound = id === "mute" ? sheetArt(doc, source, "icon-sound") : undefined;
+    const soundState =
+      sound === undefined
+        ? undefined
+        : ({
+            capTop: Math.floor(
+              (face.y +
+                TOP_BAR_FACE.size +
+                topBarContentRows(layout.bar.height).bottom -
+                fontMetrics(title).capHeight) /
+                2,
+            ),
+            centre: "ink",
+            centreX: face.x + TOP_BAR_FACE.size / 2,
+            colour: PALETTE.cream,
+            font: "title",
+            scale: 1,
+            text: "",
+          } as const);
+    const soundLabel = soundState === undefined ? undefined : createTextLine(doc, soundState);
+    if (soundLabel !== undefined) {
+      soundLabel.setAttribute("aria-hidden", "true");
+      root.append(soundLabel);
+    }
     if (sound !== undefined) {
       artReady.push(sound.ready);
     }
@@ -245,6 +276,11 @@ export function createNativeTopSection(
         x: glyphRect.x,
         y: glyphRect.y,
       });
+      if (soundLabel !== undefined && soundState !== undefined) {
+        const text = muted ? MENU_TEXT.settings.off : MENU_TEXT.settings.on;
+        soundLabel.textContent = text.toUpperCase();
+        placeText(title, scale, ORIGIN, soundLabel, { ...soundState, text });
+      }
     };
     placed.push(place);
     const setPressed = (value: boolean) => {

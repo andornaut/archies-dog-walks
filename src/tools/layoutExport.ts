@@ -29,7 +29,12 @@ import {
   updateModalLayout,
   updateModalText,
 } from "../home/homeLayout.ts";
-import { noteRoomForControl, settingsLayout, type SettingsRowShape } from "../home/settings.ts";
+import {
+  noteRoomForControl,
+  settingsInstallWidth,
+  settingsLayout,
+  type SettingsRowShape,
+} from "../home/settings.ts";
 import { SHOP_TABS } from "../home/shop.ts";
 import { SHOP_LAYOUT, shopTabRects } from "../home/shopLayout.ts";
 import { STATS_LAYOUT, statsTabRects } from "../home/statsLayout.ts";
@@ -122,12 +127,8 @@ function ownerLead(ink: OwnerNameInk, slot: LeadSlot, line: Rect) {
 
 // SettingsScene's rows with the install row: sound, music, effects, reduced motion, install and FPS,
 // each note on the lines the shipped notes wrap to (src/home/settings.test.ts checks them).
-const installWidth = modalActionWidth(
-  inkWidth(
-    readBitmapFont("font-title"),
-    2,
-    plainMarks(MENU_TEXT.settings.installButton).toUpperCase(),
-  ),
+const installWidth = settingsInstallWidth(
+  inkWidth(readBitmapFont("font-title"), 2, plainMarks(MENU_TEXT.settings.install).toUpperCase()),
 );
 const noteLines = (width: number, text: string) =>
   wrapWords(
@@ -143,7 +144,7 @@ export const SETTINGS_EXPORT_ROWS: readonly SettingsRowShape[] = [
   {
     controlWidth: installWidth,
     kind: "button",
-    noteLines: noteLines(installWidth, MENU_TEXT.settings.installNote),
+    noteLines: 0,
   },
   { kind: "switch", noteLines: 0 },
 ];

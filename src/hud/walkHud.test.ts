@@ -7,7 +7,7 @@ import { type Point, type Rect, rectsOverlap } from "@andornaut/game-kit/runtime
 import { pixels } from "@andornaut/game-kit/runtime/units";
 import { describe, expect, it } from "vitest";
 
-import { dogFaceKey, ownerCardFaceKey } from "../assets/spriteKeys.ts";
+import { dogFaceKey, ownerFaceKey } from "../assets/spriteKeys.ts";
 import { gameData } from "../data/index.ts";
 import { MIN_PRESS } from "../data/layout.ts";
 import { SCREEN_CONFIG, SCREEN_LAYOUT } from "../data/screen.ts";
@@ -20,7 +20,6 @@ import { zoneLength } from "../runner/walkMotion.ts";
 import { fontInk, gameFont } from "../testing/fontInk.ts";
 import { LONE } from "../testing/packPlaces.ts";
 import { inside } from "../testing/rects.ts";
-import { plainMarks } from "../ui/pixelFont.ts";
 import { TEXT_SCALE, TITLE_CAP_ROWS } from "../ui/textFit.ts";
 import { cents } from "../units.ts";
 import { maxEffects } from "./effectIcons.ts";
@@ -37,8 +36,8 @@ import {
   type ExplainShown,
   type ExplainTarget,
   explainTargetAt,
+  hudOwnerName,
   leadSlot,
-  ownerNameLines,
   ownerPhotoRect,
   ownerTabRect,
   SPARE_TREAT_PIP,
@@ -62,11 +61,6 @@ const centre = (rect: Rect): Point => ({
 });
 
 const ownerFont = gameFont("font-body");
-const ownerWidth = (line: string) => {
-  const ink = fontInk("font-body", { scale: TEXT_SCALE }, plainMarks(line));
-  return ink.right - ink.left;
-};
-
 // Every dog's owner's name, by dog.
 const owners = keysOf(gameData.dogs).map((dog) => [dog, gameData.dogs[dog].owner.name] as const);
 
@@ -401,11 +395,12 @@ describe("the dog cards", () => {
   const heartRects = (max: number) =>
     cardHearts(max, max).map((cell) => ({ ...HEART_SIZE, x: cell.x, y: cell.y }));
 
-  it("fits the most hearts an owner can have on one row", () => {
+  it("fits the most hearts an owner can have in the two authored rows", () => {
+    const { perRow, pitch, y } = DOG_CARD.hearts;
     expect(mostHearts).toBeLessThanOrEqual(gameData.tuning.hearts.maxOwnerHearts);
-    expect(gameData.tuning.hearts.maxOwnerHearts).toBeLessThanOrEqual(DOG_CARD.hearts.perRow);
-    expect(new Set(cardHearts(mostHearts, mostHearts).map(({ y }) => y))).toEqual(
-      new Set([DOG_CARD.hearts.y]),
+    expect(gameData.tuning.hearts.maxOwnerHearts).toBeLessThanOrEqual(perRow * 2);
+    expect(new Set(cardHearts(perRow * 2, perRow * 2).map((heart) => heart.y))).toEqual(
+      new Set([y, y + pitch]),
     );
   });
 
@@ -458,7 +453,7 @@ describe("the dog cards", () => {
   });
 
   it.each(owners)("draws the card face of %s's owner, %s, the photo's size", (dog) => {
-    expect(frameSize(ownerCardFaceKey(gameData, dog))).toEqual({
+    expect(frameSize(ownerFaceKey(gameData, dog))).toEqual({
       height: face.size,
       width: face.size,
     });
@@ -474,64 +469,22 @@ describe("the dog cards", () => {
     expect(rectsOverlap(text, ownerPhoto)).toBe(false);
   });
 
-  // Each line of the owner's name as the card sets it: its ink from its highest to its lowest
-  // row, from the line's ink left edge.
-  const nameRects = (name: string) =>
-    ownerNameLines(ownerFont, name).map((line) => ({
+  it.each(owners)("centres %s's owner name %s below the portraits", (_dog, name) => {
+    const line = hudOwnerName(ownerFont, name);
+    const nameRect = {
       height: line.ink.bottom - line.ink.top,
       width: line.ink.right - line.ink.left,
       x: line.x,
       y: line.top + line.ink.top,
-    }));
-
-  it.each(owners)(
-    "sets the name of %s's owner, %s, whole: under the photo when it fits, else on two lines beside it",
-    (_dog, name) => {
-      const lines = ownerNameLines(ownerFont, name);
-      const under = ownerWidth(name) <= DOG_CARD.owner.under.room;
-      expect(lines.map(({ text }) => text).join(" ")).toBe(name);
-      expect(lines).toHaveLength(under ? 1 : 2);
-      const room = under ? DOG_CARD.owner.under.room : DOG_CARD.owner.room;
-      expect(lines.filter(({ text }) => ownerWidth(text) > room)).toEqual([]);
-    },
-  );
-
-  // Of the names set on one line and of those set on two, the one whose widest line reaches
-  // farthest: every line starts at owner.x, at its count's tops.
-  const reach = (name: string) =>
-    Math.max(...ownerNameLines(ownerFont, name).map(({ text }) => ownerWidth(text)));
-  const lineCount = (name: string) => ownerNameLines(ownerFont, name).length;
-  const farthest = owners.filter(([, name]) =>
-    owners.every(
-      ([, other]) =>
-        lineCount(other) !== lineCount(name) ||
-        reach(other) < reach(name) ||
-        (reach(other) === reach(name) && other >= name),
-    ),
-  );
-  it.each(farthest)(
-    "keeps the name of %s's owner, %s, inside the card, clear of the photos and over the hearts",
-    (_dog, name) => {
-      const hearts = heartRects(mostHearts);
-      const face = { ...frameSize(dogFaceKey(gameData, "kilo")), ...DOG_CARD.dogFace };
-      // The dog's photo: its ink frame and cream mat round the face.
-      const dogPhoto = {
-        height: face.height + 4,
-        width: face.width + 4,
-        x: face.x - 2,
-        y: face.y - 2,
-      };
-      const hit = nameRects(name).filter(
-        (rect) =>
-          !inside(rect, card) ||
-          rectsOverlap(rect, ownerPhoto) ||
-          rectsOverlap(rect, dogPhoto) ||
-          rectsOverlap(rect, lead) ||
-          hearts.some((heart) => rectsOverlap(rect, heart)),
-      );
-      expect(hit).toEqual([]);
-    },
-  );
+    };
+    expect(line.text).toBe(name);
+    expect(nameRect.x + nameRect.width / 2).toBeCloseTo(DOG_CARD.owner.name.x);
+    expect(nameRect.y).toBe(DOG_CARD.owner.name.inkTop);
+    expect(inside(nameRect, card)).toBe(true);
+    expect(rectsOverlap(nameRect, ownerPhoto)).toBe(false);
+    expect(rectsOverlap(nameRect, lead)).toBe(false);
+    expect(heartRects(mostHearts).some((heart) => rectsOverlap(nameRect, heart))).toBe(false);
+  });
 
   it.each<[string, boolean[], number | undefined]>([
     ["the first dog while it walks", [true, true, true], 0],

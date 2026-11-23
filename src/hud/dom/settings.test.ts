@@ -28,7 +28,7 @@ function fixture(install = false, width = 360, dpr = 1) {
     configuredRows.map((row) =>
       row.kind === "slider"
         ? { kind: "slider" }
-        : { kind: row.kind, noteLines: row.note === undefined ? 0 : 1 },
+        : { kind: row.kind, noteLines: row.kind === "button" || row.note === undefined ? 0 : 1 },
     ),
   );
   const view = (steps = false) =>

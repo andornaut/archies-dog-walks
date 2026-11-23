@@ -57,13 +57,13 @@ describe("changeLabels", () => {
       {
         amount: -2,
         gain: false,
-        target: { dog: "reggie", kind: "dog" },
+        target: { cell: 4, dog: "reggie", kind: "dog" },
         text: "−2♥",
       },
       {
         amount: 1,
         gain: true,
-        target: { dog: "kilo", kind: "dog" },
+        target: { cell: 5, dog: "kilo", kind: "dog" },
         text: "+1♥",
       },
       {

@@ -2,7 +2,7 @@ import type { Point, Rect } from "@andornaut/game-kit/runtime/rect";
 import { type BitmapFont } from "@andornaut/game-kit/runtime/text/bitmapFont";
 
 import { domArtPath } from "../../assets/domArt.ts";
-import { dogCardTag, dogFaceKey, ownerCardFaceKey } from "../../assets/spriteKeys.ts";
+import { dogCardTag, dogFaceKey, ownerFaceKey } from "../../assets/spriteKeys.ts";
 import { SCREEN_CONFIG, SCREEN_LAYOUT } from "../../data/screen.ts";
 import type { GameData } from "../../data/types.ts";
 import { loopFrame } from "../../home/feedback.ts";
@@ -23,7 +23,7 @@ import { artPixel, deviceX, deviceY, type DomScale, gridTransform } from "../../
 import { PALETTE } from "../../ui/palette.ts";
 import { FEEDBACK } from "../feedback.ts";
 import { cardOwnerMood } from "../moments.ts";
-import { cardHearts, DOG_CARD, leadSlot, ownerNameLines, slotShown } from "../walkHud.ts";
+import { cardHearts, DOG_CARD, hudOwnerName, leadSlot, slotShown } from "../walkHud.ts";
 
 export interface HudCardsContext {
   readonly momentNow: number;
@@ -251,7 +251,7 @@ export function createHudCards(
           y: rect.y + DOG_CARD.dogFace.y,
         });
       }
-      sprite(ownerCardFaceKey(data, part.dog), cardOwnerMood(data, max, part), {
+      sprite(ownerFaceKey(data, part.dog), cardOwnerMood(data, max, part), {
         x: rect.x + DOG_CARD.owner.face.x,
         y: rect.y + DOG_CARD.owner.face.y,
       });
@@ -264,20 +264,20 @@ export function createHudCards(
         scale: DOG_CARD.name.scale,
         text: dog.name,
       });
-      for (const line of ownerNameLines(fonts.body, dog.owner.name)) {
-        text(
-          {
-            capTop: rect.y + line.top,
-            centre: "left",
-            centreX: rect.x + line.x - line.ink.left,
-            colour: PALETTE.tan,
-            font: "body",
-            scale: DOG_CARD.owner.scale,
-            text: line.text,
-          },
-          false,
-        );
-      }
+      const owner = hudOwnerName(fonts.body, dog.owner.name);
+      text(
+        {
+          capTop: rect.y + owner.top,
+          centre: "left",
+          centreX: rect.x + owner.x - owner.ink.left,
+          colour: PALETTE.tan,
+          font: "body",
+          projection: "layout",
+          scale: DOG_CARD.owner.name.scale,
+          text: owner.text,
+        },
+        false,
+      );
       const ownerName = doc.createElement("span");
       ownerName.className = "adw-spoken";
       ownerName.textContent = dog.owner.name;
@@ -293,10 +293,7 @@ export function createHudCards(
           text: data.runText.fired,
         });
       }
-      for (const cell of cardHearts(fired ? 0 : part.hearts, max).slice(
-        0,
-        DOG_CARD.hearts.perRow,
-      )) {
+      for (const cell of cardHearts(fired ? 0 : part.hearts, max)) {
         sprite("ui-heart", cell.full ? "full-dark" : "empty-dark", {
           x: rect.x + cell.x,
           y: rect.y + cell.y,

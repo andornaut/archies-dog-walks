@@ -995,27 +995,21 @@ const DOG_CARD: readonly [number, number] = [120, 70];
 
 const DOG_CARD_FRAME: readonly [number, number, number, number] = [1, 0, 118, 70];
 
-// The header's rows (2 to 15) and the ink rule under it.
-const DOG_CARD_RULE = 16;
+// The header's rows (2 to 13) and the ink rule under it.
+const DOG_CARD_RULE = 14;
 
-// The photo in the body (the navy on x 3 to 115 and rows 17 to 66): 3 columns of navy to its left, as
-// the owner's column keeps to its right, 6 rows above it and 8 below.
-const DOG_PHOTO: readonly [number, number] = [6, 23];
+// Both portrait frames start immediately below the rule and hold native 32x32 faces.
+const DOG_PHOTO: readonly [number, number] = [3, 15];
+const DOG_CARD_OWNER: readonly [number, number, number] = [45, 15, 36];
 
-// The owner's photo, x, y and side: 3 columns right of the dog's and 5 rows above its top, one navy row
-// under the header's rule, so one full-size name line fits between the photo and the hearts. An ink
-// frame round a white mat round sky, as ui-owner-tab frames the owner, for the 20x20
-// face-owner-<dog>-20.
-const DOG_CARD_OWNER: readonly [number, number, number] = [45, 18, 24];
-
-// The hearts area the heart-loss flash fills, as x, y, w, h: one row of six hearts from (45,60), with
+// The hearts area the heart-loss flash fills, as x, y, w, h: two rows of three from (85,26), with
 // a pixel round them. It is the only part of the card the flash touches, so the warn rim stays
 // the card's only border.
-const DOG_CARD_HEARTS: readonly [number, number, number, number] = [44, 59, 55, 9];
+const DOG_CARD_HEARTS: readonly [number, number, number, number] = [84, 25, 28, 18];
 
 // The empty card's FIRED plate, x, y, w and h: a band across the empty photo, centred on it, the
 // plate's sides on the photo's frame.
-const DOG_CARD_FIRED: readonly [number, number, number, number] = [6, 32, 36, 17];
+const DOG_CARD_FIRED: readonly [number, number, number, number] = [3, 24, 36, 17];
 
 // Each heart-loss frame: the flash's colour and how many of the area's pixels it fills (1 every pixel,
 // 2 a checkerboard, 4 one in four), so it bursts white and dithers away. White keeps the hearts drawn
@@ -1029,16 +1023,12 @@ const DOG_CARD_HEART_LOSS: readonly (readonly [string, number])[] = [
 ];
 
 // 120x70, ui-dog-card: one of three cards in the walk's card row, in the neutral section look: a 2px
-// ink frame (the chrome with an ink inner line and an ink lip) round a navy face, the header (rows 2 to
-// 15) split from the body by an ink rule on row 16. The game writes the name on the header in cream
-// (9.59:1), with no plate. The dog's photo is an ink frame (6,23 36x36) round a cream mat round its
-// colour (8,25 32x32), in the body's middle. The owner's photo is an ink frame (45,18 24x24) round a
-// white mat round sky (47,20 20x20) for the owner's small face; the game writes the owner's name (tan,
-// 6.61:1) on one line under it, or on two lines beside it when the whole name is too wide, and the
-// hearts (ui-heart full-dark and empty-dark) under the name, and pins the LEAD tag
-// across the foot of the dog's photo. The empty card (a fired dog's) is dslate in the same frame, with
-// a dslate photo crossed by a dred plate built as ui-fired-plate (6,32 36x17, its face 10,36 28x9) for
-// FIRED, and the owner's photo.
+// ink frame (the chrome with an ink inner line and an ink lip) round a navy face. An ink rule at y14
+// splits the body from the cream dog name. The dog's photo is an ink frame (3,15 36x36) round a cream
+// mat round its colour (5,17 32x32). The owner's photo is an ink frame (45,15 36x36) round a white mat
+// round sky (47,17 32x32). The owner's name sits below the portraits in tan, the two heart rows sit
+// to their right, and the LEAD tag stays at the foot of the dog's photo. The empty card (a fired
+// dog's) is dslate in the same frame, with the dred FIRED plate (3,24 36x17) across the dog's photo.
 function dogCard(dog: string): Grid {
   const empty = dog === "empty";
   const face = empty ? "dslate" : "navy";
@@ -1104,7 +1094,7 @@ function dogCardWarn(step: number): Grid {
 }
 
 // 120x70, ui-dog-card's heart-loss frames, an overlay over the card and under the game's face, hearts
-// and text that fills only the hearts area (44,59 55x9, its corners cut 1px), never the card's edge or
+// and text that fills only the hearts area (84,25 28x18, its corners cut 1px), never the card's edge or
 // header: frames 0 and 1 white (13.89:1 on navy), then white on a checkerboard and on one pixel in
 // four, so the flash clears.
 function dogCardHeartLoss(step: number): Grid {

@@ -25,7 +25,7 @@ import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";
 import { closeFace } from "../ui/closeControl.ts";
 import { LABEL_HELP_GAP } from "../ui/labelHelpGap.ts";
 import { DISMISS_FOOTER_SPACE } from "../ui/modal/dismissFooter.ts";
-import { MODAL, modalActionWidth, modalTitleLayout } from "../ui/modal/layout.ts";
+import { MODAL, modalTitleLayout } from "../ui/modal/layout.ts";
 import { modalTitleInk } from "../ui/modal/titleRole.ts";
 import { cardTitleRow } from "../ui/modal/titleRow.ts";
 import { topSectionButtonBacking, topSectionLayout } from "../ui/topSection.ts";
@@ -40,6 +40,7 @@ import {
   SETTINGS_BUILD_LABEL,
   SETTINGS_NOTE_STYLE,
   SETTINGS_ROW,
+  settingsInstallWidth,
   settingsLayout,
   type SettingsRowShape,
   setVolumeSteps,
@@ -105,7 +106,7 @@ const SHIPPED_ROWS: readonly ShippedRow[] = [
   { kind: "slider", label: words.music },
   { kind: "slider", label: words.effects },
   { kind: "switch", label: words.motion, note: words.motionNote },
-  { kind: "button", label: words.install, note: words.installNote },
+  { kind: "button", label: words.install },
   { kind: "switch", label: words.fpsCounter },
 ];
 const notedRows = SHIPPED_ROWS.filter((row) => "note" in row && row.note !== undefined);
@@ -113,11 +114,7 @@ const fittedNotes = notedRows.map((row) =>
   fittingText(
     SETTINGS_NOTE_STYLE,
     (style: TextFitStyle, line: string) => inkWidth("font-body", style, line),
-    noteRoomForControl(
-      row.kind === "button"
-        ? modalActionWidth(inkWidth("font-title", { scale: 2 }, words.installButton))
-        : SETTINGS_ROW.switch.width,
-    ),
+    noteRoomForControl(SETTINGS_ROW.switch.width),
     "note" in row ? (row.note ?? "") : "",
   ),
 );
@@ -129,8 +126,8 @@ const shapes: SettingsRowShape[] = SHIPPED_ROWS.map((row) =>
         noteLines: fittedNotes[notedRows.indexOf(row)]?.lines.length ?? 0,
         ...(row.kind === "button"
           ? {
-              controlWidth: modalActionWidth(
-                inkWidth("font-title", { scale: 2 }, words.installButton),
+              controlWidth: settingsInstallWidth(
+                inkWidth("font-title", { scale: 2 }, words.install),
               ),
             }
           : {}),
@@ -176,6 +173,9 @@ function rowParts(i: number): [string, Rect][] {
     throw new Error(`no row ${i}`);
   }
   const { rect } = placed;
+  if (row.kind === "button") {
+    return placed.control === null ? [] : [["control", placed.control]];
+  }
   const { icon, label } = SETTINGS_ROW;
   const inline = row.kind === "switch" && row.note === undefined;
   const parts: [string, Rect][] = [
@@ -308,25 +308,9 @@ describe("the settings card", () => {
     },
   );
 
-  // Centred within a pixel down from the label's top to the note's lowest ink.
-  it.each(
-    notedRows
-      .filter(({ kind }) => kind === "button")
-      .map((row) => [row.label, SHIPPED_ROWS.indexOf(row)] as const),
-  )("centres the %s row's control on its label and note", (_, i) => {
-    const parts = rowParts(i);
-    const control = new Map(parts).get("control");
-    const inks = parts.filter(([name]) => name === "label" || name.startsWith("note"));
-    const top = Math.min(...inks.map(([, ink]) => ink.y));
-    const bottom = Math.max(...inks.map(([, ink]) => ink.y + ink.height));
-    const above = (control?.y ?? 0) - top;
-    const under = bottom - (control?.y ?? 0) - (control?.height ?? 0);
-    expect(Math.abs(above - under)).toBeLessThanOrEqual(1);
-  });
-
   it("sets the install button's label at 2x within its face", () => {
     const control = layout.rows[SHIPPED_ROWS.findIndex((row) => row.kind === "button")]?.control;
-    expect(inkWidth("font-title", { scale: 2 }, words.installButton)).toBeLessThan(
+    expect(inkWidth("font-title", { scale: 2 }, words.install)).toBeLessThan(
       (control?.width ?? 0) - 8,
     );
   });

@@ -101,9 +101,7 @@ export const MENU_TEXT = {
     effects: "Sound effects",
     fpsCounter: "FPS counter",
     install: "Install",
-    installButton: "Install",
     installDescription: "A cozy pixel-art lane runner about walking dogs.",
-    installNote: "Full screen, offline",
     installSteps: {
       chromiumAndroid: {
         steps: "Tap the menu, then Add to Home screen or Install app.",

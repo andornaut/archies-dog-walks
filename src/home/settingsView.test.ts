@@ -37,7 +37,7 @@ const layout = settingsLayout(
   rows.map((row) =>
     row.kind === "slider"
       ? { kind: "slider" }
-      : { kind: row.kind, noteLines: row.note === undefined ? 0 : 1 },
+      : { kind: row.kind, noteLines: row.kind === "button" || row.note === undefined ? 0 : 1 },
   ),
 );
 const STATE: SettingsState = {

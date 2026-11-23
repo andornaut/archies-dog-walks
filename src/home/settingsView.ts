@@ -23,6 +23,8 @@ import { TEXT_SCALE } from "../ui/textFit.ts";
 import { FEEDBACK } from "./feedback.ts";
 import { MENU_TEXT_FIELDS } from "./menuText.ts";
 import {
+  INSTALL_ICON_GAP,
+  INSTALL_ICON_SIZE,
   INSTALL_STEPS_FIT,
   type InstallStepsLayout,
   knobX,
@@ -50,12 +52,10 @@ export type SettingsWord = Exclude<keyof MenuText["settings"], "installSteps" | 
 // of its label, its note and its button's label.
 export type SettingsRow =
   | {
-      button: SettingsWord;
       icon: string;
       key: "install";
       kind: "button";
       label: SettingsWord;
-      note: SettingsWord;
     }
   | { icon?: string; key: SwitchKey; kind: "switch"; label: SettingsWord; note?: SettingsWord }
   | { icon: string; key: VolumeKey; kind: "slider"; label: SettingsWord };
@@ -90,12 +90,10 @@ export const SETTING_ROWS: readonly SettingsRow[] = [
 ];
 // Before FPS while the game can be installed (offersInstall).
 export const INSTALL_ROW: SettingsRow = {
-  button: "installButton",
   icon: "icon-install-panel",
   key: "install",
   kind: "button",
   label: "install",
-  note: "installNote",
 };
 // FPS stays last whether installation is offered or not.
 export function settingsRows(installable: boolean): readonly SettingsRow[] {
@@ -245,12 +243,34 @@ function controlRow(
   state: SettingsState,
 ): SettingsRowView {
   const { control, noteY, rect } = layout;
-  const on = row.kind === "button" || switchOn(row.key, state.settings);
+  if (row.kind === "button" && control !== null) {
+    const button = panelButton(measure, control, false, words.install);
+    const prefix = INSTALL_ICON_SIZE + INSTALL_ICON_GAP;
+    const ink = measure.inkWidth("title", words.install);
+    return {
+      button: { ...button, text: { ...button.text, centreX: button.text.centreX + prefix / 2 } },
+      description: "",
+      dip: 0,
+      face: undefined,
+      icon: {
+        key: row.icon,
+        tag: "on",
+        x: control.x + (control.width - prefix - ink) / 2,
+        y: control.y + (control.height - INSTALL_ICON_SIZE) / 2,
+      },
+      key: row.key,
+      kind: row.kind,
+      label: words.install,
+      rect,
+      texts: [],
+    };
+  }
+  if (row.kind === "button") {
+    throw new Error("The Install button requires a measured face");
+  }
+  const on = switchOn(row.key, state.settings);
   const look = selectLook("normal");
-  const pressed =
-    row.kind === "button"
-      ? state.pressed?.kind === "install"
-      : state.pressed?.kind === "switch" && state.pressed.key === row.key;
+  const pressed = state.pressed?.kind === "switch" && state.pressed.key === row.key;
   const dip = pressed ? FEEDBACK.pressDipPx : 0;
   const { x, y } = rect;
   const room = noteRoomForControl(control?.width ?? SETTINGS_ROW[row.kind].width);
@@ -297,10 +317,6 @@ function controlRow(
   };
   if (control === null) {
     return view;
-  }
-  if (row.kind === "button") {
-    const face = { ...control, y: control.y + dip };
-    return { ...view, button: panelButton(measure, face, false, words[row.button]) };
   }
   const art = { key: "ui-switch", tag: on ? "on" : "off", x: control.x, y: control.y + dip };
   const word = on ? words.on : words.off;

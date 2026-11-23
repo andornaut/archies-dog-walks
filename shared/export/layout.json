@@ -119,57 +119,48 @@
     ],
     "parts": {
       "dogFace": {
-        "x": 8,
-        "y": 25
+        "x": 5,
+        "y": 17
       },
       "empty": {
         "x": 60,
         "y": 33
       },
       "fired": {
-        "x": 24,
-        "y": 38
+        "x": 21,
+        "y": 30
       },
       "hearts": {
-        "perRow": 6,
+        "perRow": 3,
         "pitch": 9,
-        "x": 45,
-        "y": 60
+        "x": 85,
+        "y": 26
       },
       "lead": {
-        "x": 10,
-        "y": 54
+        "x": 7,
+        "y": 46
       },
       "name": {
         "room": 108,
         "scale": 2,
-        "top": 4,
+        "top": 3,
         "x": 60
       },
       "owner": {
         "face": {
-          "size": 20,
+          "size": 32,
           "x": 47,
-          "y": 20
+          "y": 17
         },
-        "ink": {
-          "tops": [
-            20,
-            40
-          ]
+        "name": {
+          "inkTop": 53,
+          "scale": 1.75,
+          "x": 78
         },
         "photo": {
           "frame": 1,
           "mat": 1
-        },
-        "room": 44,
-        "scale": 2,
-        "under": {
-          "capTop": 45,
-          "room": 71,
-          "x": 45
-        },
-        "x": 72
+        }
       },
       "size": {
         "height": 70,
@@ -2440,13 +2431,13 @@
         {
           "control": {
             "height": 48,
-            "width": 102,
-            "x": 218,
-            "y": 416
+            "width": 126,
+            "x": 194,
+            "y": 410
           },
-          "noteY": 444,
+          "noteY": null,
           "rect": {
-            "height": 62,
+            "height": 48,
             "width": 296,
             "x": 32,
             "y": 410
@@ -2457,18 +2448,18 @@
             "height": 16,
             "width": 32,
             "x": 288,
-            "y": 489
+            "y": 475
           },
           "noteY": null,
           "rect": {
             "height": 53,
             "width": 296,
             "x": 32,
-            "y": 480
+            "y": 466
           }
         }
       ],
-      "rowsContentHeight": 431,
+      "rowsContentHeight": 417,
       "rowsViewport": {
         "height": 321,
         "width": 296,
@@ -2504,7 +2495,7 @@
           "height": 1,
           "width": 288,
           "x": 36,
-          "y": 475
+          "y": 461
         }
       ],
       "track": {

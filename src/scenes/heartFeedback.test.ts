@@ -67,7 +67,7 @@ function fixture(still = false, hasFrames = true) {
     const label: ChangeLabel = {
       amount,
       gain: amount > 0,
-      target: { dog: "archie", kind: "dog" },
+      target: { cell: 4, dog: "archie", kind: "dog" },
       text: "unused heart glyph ♥",
     };
     feedback.play({
@@ -76,6 +76,7 @@ function fixture(still = false, hasFrames = true) {
       label,
       lane: { height: 12, width: 100, x: 130, y: 510 },
       slot: 0,
+      to: { x: 180, y: 510 },
     });
   };
   return { feedback, flashCard, landed, nodes, play, timers };

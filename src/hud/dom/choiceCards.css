@@ -1,0 +1,21 @@
+.adw-choice-press-band {
+  display: none;
+  background: var(--adw-green);
+}
+
+.adw-choice-pressed .adw-choice-press-band {
+  display: block;
+}
+
+@media (forced-colors: active) {
+  .adw-choice-pressed .adw-choice-press-band {
+    forced-color-adjust: none;
+    background: Highlight;
+  }
+
+  .adw-choice-pressed .adw-choice-press-label,
+  .adw-choice-pressed .adw-choice-press-label * {
+    forced-color-adjust: none;
+    color: HighlightText !important;
+  }
+}

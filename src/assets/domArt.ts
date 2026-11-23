@@ -182,7 +182,7 @@ function hudArtKeys(
       ...keysOf(data.walkerPerks).map(perkIconKey),
       ...keysOf(data.upgrades).map(upgradeIconKey),
     ].map((key) => `${key}-20`),
-    ...keysOf(data.dogs).map((dog) => ownerCardFaceKey(data, dog)),
+    ...keysOf(data.dogs).flatMap((dog) => [ownerCardFaceKey(data, dog), ownerFaceKey(data, dog)]),
     WARNING_KEY,
     "fx-coin-fly",
     "fx-fired-pop",

@@ -16,7 +16,7 @@ import {
 import { SCREEN_CONFIG } from "../data/screen.ts";
 import type { DebuffId, DogId, GameData } from "../data/types.ts";
 import type { ScreenLayout } from "../layout/screenLayout.ts";
-import { ownerNameLayout, type OwnerNameLine } from "../presentation/ownerName.ts";
+import { ownerNameInk, type OwnerNameLine } from "../presentation/ownerName.ts";
 import { walkLength } from "../rules/route.ts";
 import { zoneLength } from "../runner/walkMotion.ts";
 import type { RunState } from "../state/runState.ts";
@@ -232,10 +232,8 @@ export function zoneProgressLayout(strip: Rect, share: number): ZoneProgressLayo
 // at name.scale, its capitals' top at name.top, no wider than name.room. The owner's photo heads
 // the column right of the dog's, their face (face.size square) at owner.face on every card with
 // a dog, a fired dog's included, inside the card art's photo: its white mat and ink frame, each
-// photo's pixels wide, round the face. Their name goes in the body font at scale on one line
-// under the photo from owner.under.x within owner.under.room, or, when the whole name is wider,
-// on two lines beside it from owner.x within owner.room, wrapped at a space (ownerNameLines).
-// The hearts sit under the name in rows of perRow, pitch apart. The LEAD tag is pinned across the
+// photo's pixels wide, round the face. The owner's name is centred below the photo.
+// The hearts sit beside the photo in rows of perRow, pitch apart. The LEAD tag is pinned across the
 // foot of the front dog's photo, and FIRED is centred on fired.x across a fired dog's empty photo.
 // An owned slot with no dog shows "Empty" centred on empty.x in its outline.
 export const DOG_CARD = {
@@ -262,15 +260,11 @@ export function ownerPhotoRect(size: number, face: Point): Rect {
   return { height: side, width: side, x: face.x - outset, y: face.y - outset };
 }
 
-// The owner's name at full size: one line under the photo when the whole name fits there, else two
-// lines beside it, wrapped at a space.
-export function ownerNameLines(font: BitmapFont, name: string): CardLine[] {
-  const { ink, room, under, x } = DOG_CARD.owner;
-  const layout = ownerNameLayout(font, { beside: room, under: under.room }, name);
-  if (layout.under) {
-    return layout.lines.map((line) => ({ ...line, top: under.capTop, x: under.x }));
-  }
-  return layout.lines.map((line, i) => ({ ...line, top: ink.tops[i]! - line.ink.top, x }));
+// One whole name centred by visible ink, with the same ink top for every owner.
+export function hudOwnerName(font: BitmapFont, text: string): CardLine {
+  const { inkTop, scale, x } = DOG_CARD.owner.name;
+  const ink = ownerNameInk(font, text, scale);
+  return { ink, text, top: inkTop - ink.top, x: x - (ink.right - ink.left) / 2 };
 }
 
 interface CardHeart extends Point {
