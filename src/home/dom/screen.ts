@@ -21,7 +21,6 @@ import type { Sections } from "../sections.ts";
 import type { HomeSelectionView } from "../selectionView.ts";
 import type { slotSign } from "../slotSign.ts";
 import type { HomeSpeechView } from "../speechView.ts";
-import { createHomeFocus } from "./focus.ts";
 import { createGearBadge } from "./gearBadge.ts";
 import { createHomeSections } from "./sections.ts";
 import {
@@ -93,13 +92,7 @@ export function createNativeHomeView(
           readonly fallback: PanelText;
         }
       | undefined;
-    readonly focus:
-      | {
-          readonly id: string;
-          readonly rect: Rect;
-          readonly outset: number;
-        }
-      | undefined;
+    readonly focus: string | undefined;
     readonly start: {
       readonly label: string;
       readonly loading: string;
@@ -122,7 +115,7 @@ export function createNativeHomeView(
   element.append(divider.element);
   const sections = createHomeSections(doc, source, fonts.title, snapshot);
   element.append(sections.element);
-  const focused = snapshot.focus?.id;
+  const focused = snapshot.focus;
   const selections = new Map(
     snapshot.selections.map((tile) => [
       tile.id,
@@ -185,9 +178,6 @@ export function createNativeHomeView(
   if (gearBadge !== undefined) {
     element.append(gearBadge.element);
   }
-  // The remaining canvas control supplies its own focus treatment until its board is replaced.
-  const focus = createHomeFocus(doc, focused === "petShop" ? snapshot.focus : undefined);
-  element.append(focus.element);
   const signLine = {
     capTop: HOME_LAYOUT.streetSign.y,
     centre: "ink",
@@ -219,7 +209,6 @@ export function createNativeHomeView(
         element.style.transform = gridTransform(scale);
         divider.place(scale);
         sections.place(scale);
-        focus.place(scale);
         placeText(fonts.title, scale, { x: 0, y: 0 }, sign, signLine);
         setBox(speechControl, gridRect(scale, snapshot.speech.rect));
         const speechX = gridX(scale, snapshot.speech.rect.x);

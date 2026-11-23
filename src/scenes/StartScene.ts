@@ -9,7 +9,6 @@ import { gearSmallIconKey } from "../assets/iconKeys.ts";
 import { MANIFEST_CACHE_KEY } from "../assets/phaser/manifestArt.ts";
 import { dogSpriteKey, gearIconKey, walkerPortraitKey } from "../assets/spriteKeys.ts";
 import { gameData } from "../data/index.ts";
-import { HOME_SCREEN } from "../data/layout.ts";
 import { SCREEN_LAYOUT } from "../data/screen.ts";
 import type { DogId, GearId, WalkerId } from "../data/types.ts";
 import { clearRunOverrides } from "../dev/pageRunSetup.ts";
@@ -207,7 +206,6 @@ const START_BUTTON: Rect = HOME_LAYOUT.startButton;
 const WAITING_ALPHA = 0.6;
 const GEAR_BADGE: Rect = HOME_LAYOUT.gearBadge;
 // The keyboard ring sits outside the ui-select frame.
-const FOCUS_OUTSET = HOME_SCREEN.focusOutset;
 // The walker's speech bubble: its place, padding and most lines.
 // The gate scene, which crops the Pet shop group: its foot sits under the divider strip.
 const HERO_CROP: Rect = { ...GATE, width: SCREEN.width, x: 0 };
@@ -314,39 +312,21 @@ function walkerTiles(): Rect[] {
 function walkerFace(hit: Rect): Rect {
   return tileFace(HOME_LAYOUT.walkerTileInset, hit);
 }
-interface Focusable {
-  rect: Rect;
-  target: Target;
-}
-// The keyboard's rows, top to bottom as the screen shows them: the dog slot sign while it
-// shows and the Pet shop, the walkers, the dog rows,
-// the Pocket and Start walk.
-function focusRows(shown: { sign: boolean }): Focusable[][] {
-  const walkers = walkerTiles();
-  const sign: Focusable = { rect: SLOT_SIGN.board, target: { kind: "slotSign" } };
-  const rows: Focusable[][] = [
-    [...(shown.sign ? [sign] : []), { rect: PET_SHOP, target: { kind: "petShop" } }],
-    walkerIds().map((walker, i): Focusable => ({
-      rect: walkerFace(itemAt(walkers, i)),
-      target: { kind: "walker", walker },
-    })),
+// Keyboard rows follow the visible controls in reading order.
+function focusRows(shown: { sign: boolean }): Target[][] {
+  const top: Target[] = [
+    ...(shown.sign ? [{ kind: "slotSign" } as const] : []),
+    { kind: "petShop" },
   ];
-  const tiles = dogTiles();
-  const dogs = rosterOrder().map((dog, i): Focusable => ({
-    rect: dogFace(itemAt(tiles, i)),
-    target: { dog, kind: "dog" },
-  }));
+  const rows: Target[][] = [top, walkerIds().map((walker) => ({ kind: "walker", walker }))];
+  const dogs = rosterOrder().map((dog): Target => ({ dog, kind: "dog" }));
   for (let i = 0; i < dogs.length; i += DOG_TILES.columns) {
     rows.push(dogs.slice(i, i + DOG_TILES.columns));
   }
-  const slots = gearSlots();
   rows.push(
-    gearIds().map((gear, i): Focusable => ({
-      rect: pocketTile(itemAt(slots, i)),
-      target: { gear, kind: "gear" },
-    })),
+    gearIds().map((gear) => ({ gear, kind: "gear" })),
+    [{ kind: "start" }],
   );
-  rows.push([{ rect: START_BUTTON, target: { kind: "start" } }]);
   return rows;
 }
 // A held item's detail card, above the home screen.
@@ -433,6 +413,7 @@ export class StartScene extends Scene {
   private petShop:
     | {
         container: GameObjects.Container;
+        focusFallback?: GameObjects.Graphics;
         iconButton?: IconButton;
         shopBoard?: ShopBoard;
         shopIdle?: ShopIdle;
@@ -733,12 +714,12 @@ export class StartScene extends Scene {
         direction,
         this.focus,
       );
-      this.action = this.focusAction(this.focused()?.target);
+      this.action = this.focusAction(this.focused());
       this.render();
       return;
     }
     if (isConfirmKey(code)) {
-      const target = this.focused()?.target ?? { kind: "start" };
+      const target = this.focused() ?? { kind: "start" };
       this.press = { held: false, id: targetId(target), startedMs: this.time.now };
       this.actAfterDip(target);
       return;
@@ -760,7 +741,7 @@ export class StartScene extends Scene {
   }
   // The focused item, its column kept inside its row: the top row loses the dog slot sign once
   // the last slot is bought.
-  private focused(): Focusable | undefined {
+  private focused(): Target | undefined {
     if (this.focus === null) {
       return undefined;
     }
@@ -1209,7 +1190,9 @@ export class StartScene extends Scene {
       pressed?.id === id ? pressDip(pressed.held, now, pressed.startedMs) : 0;
     const shop = this.petShop;
     if (shop !== undefined) {
-      shop.iconButton?.setPressed(dip("petShop") > 0);
+      const down = dip("petShop") > 0;
+      shop.iconButton?.setPressed(down);
+      shop.focusFallback?.setVisible(!down);
       shop.shopBoard?.place(reduced, now);
       shop.shopIdle?.update(
         !reduced && this.overlay === undefined && this.artWait === undefined && this.sys.isActive(),
@@ -1430,14 +1413,7 @@ export class StartScene extends Scene {
       {
         bonus: packBonusLine(gameData, this.loadout),
         bubbleInteractive: this.joined.length > 0 && save.walker !== null,
-        focus:
-          focused === undefined
-            ? undefined
-            : {
-                id: targetId(focused.target),
-                outset: FOCUS_OUTSET,
-                rect: focused.rect,
-              },
+        focus: focused === undefined ? undefined : targetId(focused),
         gearBadge:
           gearKey === undefined || gearRect === undefined || gear === null
             ? undefined
@@ -1720,6 +1696,7 @@ export class StartScene extends Scene {
     const view: NonNullable<StartScene["petShop"]> = { container };
     this.petShop = view;
     maskToRect(this, HERO_MASK_KEY, HERO_CROP, view.container);
+    const focused = this.focused()?.kind === "petShop";
     const faces = this.addPressFaces(SHOP_ART.petShop, PET_SHOP);
     if (faces !== undefined) {
       const [normal, pressed] = faces;
@@ -1740,12 +1717,26 @@ export class StartScene extends Scene {
         view.iconButton = shop;
       } else {
         view.container.add(board);
-        view.shopBoard = addShopBoard(shop, board);
+        const focusFace = focused
+          ? addTagImage(this, SHOP_ART.petShopBoard, "focused", PET_SHOP_BOARD.x, PET_SHOP_BOARD.y)
+          : undefined;
+        if (focusFace !== undefined) {
+          view.container.add(focusFace);
+        }
+        view.shopBoard = addShopBoard(shop, board, focusFace);
         view.iconButton = view.shopBoard;
       }
       view.iconButton.setPressed(false);
     } else {
-      drawPetShopFallback(this, view.container, PET_SHOP, gameData.homeText.shop.title);
+      const fallback = drawPetShopFallback(
+        this,
+        view.container,
+        PET_SHOP,
+        gameData.homeText.shop.title,
+      );
+      if (focused) {
+        view.focusFallback = fallback.setVisible(true);
+      }
     }
     if (shopAffordable(gameData, save.owned, save.bankCents)) {
       addAffordFrame(this, view.container, PET_SHOP, currentSettings(this).reducedMotion);

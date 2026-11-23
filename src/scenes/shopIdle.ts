@@ -22,20 +22,25 @@ export interface ShopBoard extends IconButton {
 export function addShopBoard(
   shop: IconButton,
   faces: readonly [GameObjects.Image, GameObjects.Image],
+  focusFace?: GameObjects.Image,
 ): ShopBoard {
   const [normal, pressed] = faces;
+  const up = focusFace ?? normal;
   const rest = normal.y;
+  if (focusFace !== undefined) {
+    normal.setVisible(false);
+  }
   let down = false;
   return {
     place(reducedMotion, nowMs) {
       const y = rest + (down ? 0 : bobOffset(reducedMotion, nowMs, true));
-      normal.setY(y);
+      up.setY(y);
       pressed.setY(y);
     },
     setPressed(next) {
       down = next;
       shop.setPressed(next);
-      normal.setVisible(!next);
+      up.setVisible(!next);
       pressed.setVisible(next);
     },
   };

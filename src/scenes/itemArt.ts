@@ -121,7 +121,7 @@ export function drawPetShopFallback(
   parent: GameObjects.Container,
   rect: Rect,
   name: string,
-): void {
+): GameObjects.Graphics {
   const { height, width, x, y } = rect;
   const g = scene.add.graphics();
   fillRect(g, PALETTE.ink, { height: height - 18, width: width - 8, x: x + 4, y: y + 18 });
@@ -136,6 +136,9 @@ export function drawPetShopFallback(
   fillRect(g, PALETTE.ink, { height: 18, width: 74, x: x + 23, y });
   fillRect(g, PALETTE.green, { height: 16, width: 72, x: x + 24, y: y + 1 });
   parent.add(g);
+  const focusFace = scene.add.graphics().setVisible(false);
+  fillRect(focusFace, PALETTE.cyan, { height: 16, width: 72, x: x + 24, y: y + 1 });
+  parent.add(focusFace);
   parent.add(
     addPixelText(scene, x + width / 2, y + 5, name, {
       colour: PALETTE.ink,
@@ -143,6 +146,7 @@ export function drawPetShopFallback(
       originX: 0.5,
     }),
   );
+  return focusFace;
 }
 
 // The dog slot icon drawn in code while icon-dog-slot is missing: a doghouse with a plus.

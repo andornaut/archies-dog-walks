@@ -232,7 +232,7 @@ function shopIdleScene(loaded = true, sheet?: unknown) {
 }
 
 // The Pet shop's faces and its board's, each keeping its row and visibility, under one board.
-function shopBoardScene() {
+function shopBoardScene(focused = false) {
   const face = (y: number) => ({
     setVisible(visible: boolean) {
       this.visible = visible;
@@ -254,7 +254,12 @@ function shopBoardScene() {
       shopFaces[1].setVisible(down);
     },
   };
-  const board = addShopBoard(shop, boardFaces as unknown as [GameObjects.Image, GameObjects.Image]);
+  const focusFace = face(rest.y);
+  const board = addShopBoard(
+    shop,
+    boardFaces as unknown as [GameObjects.Image, GameObjects.Image],
+    focused ? (focusFace as unknown as GameObjects.Image) : undefined,
+  );
   // The board's and the shop's rows at now, while up or pressed, after the scene's place step.
   const rows = (now: number, down: boolean, reduced = false) => {
     board.setPressed(down);
@@ -264,7 +269,7 @@ function shopBoardScene() {
       shop: shopFaces.map(({ y }) => y - shopY),
     };
   };
-  return { boardFaces, rows, shopFaces };
+  return { boardFaces, focusFace, rows, shopFaces };
 }
 
 describe("Pet shop board", () => {
@@ -303,6 +308,20 @@ describe("Pet shop board", () => {
       true,
       false,
     ]);
+  });
+  it("uses the bobbing focused board only while the shop is up", () => {
+    const { boardFaces, focusFace, rows, shopFaces } = shopBoardScene(true);
+    rows(beat, false);
+    expect(focusFace.visible).toBe(true);
+    expect(focusFace.y).toBe(boardFaces[1].y);
+    expect(boardFaces.every(({ visible }) => !visible)).toBe(true);
+    rows(beat, true);
+    expect(focusFace.visible).toBe(false);
+    expect(boardFaces[1].visible).toBe(true);
+    expect(shopFaces[1].visible).toBe(true);
+    rows(beat, false);
+    expect(focusFace.visible).toBe(true);
+    expect(boardFaces[1].visible).toBe(false);
   });
 });
 
