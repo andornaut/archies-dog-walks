@@ -71,7 +71,6 @@ export function setVolumeSteps(key: VolumeKey, steps: number, settings: Settings
 export type SettingsRowShape =
   | {
       controlWidth?: number;
-      inlineLabelWidth?: number;
       kind: "button" | "switch";
       noteLines: number;
     }
@@ -278,15 +277,7 @@ export function settingsLayout(
   const rowX = x + (PANEL.width - SETTINGS_ROW.width) / 2;
   let rowY = y + ROWS_TOP;
   const rows = shapes.map((shape, i) => {
-    const labelWidth = shape.kind === "slider" ? undefined : shape.inlineLabelWidth;
-    const width =
-      labelWidth === undefined
-        ? SETTINGS_ROW.width
-        : Math.min(
-            SETTINGS_ROW.width,
-            labelWidth + SETTINGS_ROW.switch.width + SETTINGS_ROW.controlGap + 2 * SETTINGS_ROW.pad,
-          );
-    const rect = { height: heights[i] ?? 0, width, x: rowX + SETTINGS_ROW.width - width, y: rowY };
+    const rect = { height: heights[i] ?? 0, width: SETTINGS_ROW.width, x: rowX, y: rowY };
     rowY += rect.height + ROW_GAP;
     return {
       control: rowControl(fonts, rect, shape),

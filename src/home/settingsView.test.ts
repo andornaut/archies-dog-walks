@@ -13,10 +13,9 @@ import { TEXT_SCALE } from "../ui/textFit.ts";
 import { FEEDBACK } from "./feedback.ts";
 import { installStepsLayout, settingsLayout } from "./settings.ts";
 import {
-  INSTALL_ROW,
-  SETTING_ROWS,
   SETTINGS_ART_KEYS,
   type SettingsMeasure,
+  settingsRows,
   type SettingsState,
   settingsView,
 } from "./settingsView.ts";
@@ -31,7 +30,7 @@ const MEASURE: SettingsMeasure = {
   titleInk: (line: string) => modalTitleInk(gameFont("font-title"), line),
   wrapNote: (_width, text) => [text],
 };
-const rows = [...SETTING_ROWS, INSTALL_ROW];
+const rows = settingsRows(true);
 const layout = settingsLayout(
   fonts,
   SCREEN_CONFIG,
@@ -91,7 +90,7 @@ describe("settingsView", () => {
     for (const reducedMotion of [false, true]) {
       const fpsCounter = !reducedMotion;
       const current = view({ settings: { ...DEFAULT_SETTINGS, fpsCounter, muted, reducedMotion } });
-      expect(current.rows[0]).toMatchObject({
+      expect(current.rows.at(-1)).toMatchObject({
         description: "",
         key: "fpsCounter",
         switch: { on: fpsCounter },
@@ -101,9 +100,9 @@ describe("settingsView", () => {
         ],
       });
       for (const [index, on, label, description] of [
-        [1, !muted, gameData.menuText.settings.sound, gameData.menuText.settings.soundNote],
+        [0, !muted, gameData.menuText.settings.sound, gameData.menuText.settings.soundNote],
         [
-          4,
+          3,
           reducedMotion,
           gameData.menuText.settings.motion,
           gameData.menuText.settings.motionNote,
@@ -129,6 +128,21 @@ describe("settingsView", () => {
     }
   });
 
+  it.each([false, true])(
+    "keeps FPS last on the shared label axis with Install offered %s",
+    (installable) => {
+      const configured = settingsRows(installable);
+      expect(configured.at(-1)?.key).toBe("fpsCounter");
+      expect(configured.at(-2)?.key).toBe(installable ? "install" : "reducedMotion");
+      const fps = view({}).rows.at(-1)!;
+      const sound = view({}).rows[0]!;
+      expect(fps.icon).toBeUndefined();
+      expect(fps.texts[0]!.x - fps.rect.x).toBe(SETTINGS_CARD.row.label.dx);
+      expect(fps.texts[0]!.x).toBe(sound.texts[0]!.x);
+      expect(fps.switch!.art.x).toBe(sound.switch!.art.x);
+    },
+  );
+
   it("dips a pressed row's face, icon, text and switch together", () => {
     const up = view({}).rows.find(({ key }) => key === "muted");
     const down = view({ pressed: { key: "muted", kind: "switch" } }).rows.find(
@@ -147,7 +161,7 @@ describe("settingsView", () => {
     [false, "filled", "normal", "45%"],
     [true, "filled-disabled", "disabled", gameData.menuText.settings.muted],
   ])("draws a slider muted %s with its %s fill, %s knob and %s", (muted, fill, knob, value) => {
-    const music = view({ settings: { ...DEFAULT_SETTINGS, musicVolume: 0.45, muted } }).rows[2];
+    const music = view({ settings: { ...DEFAULT_SETTINGS, musicVolume: 0.45, muted } }).rows[1];
     expect([music?.slider?.filled.tag, music?.slider?.knob.tag, music?.texts[1]?.lines]).toEqual([
       fill,
       knob,

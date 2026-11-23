@@ -26,9 +26,9 @@ import {
   volumeSteps,
 } from "../home/settings.ts";
 import {
-  INSTALL_ROW,
   SETTING_ROWS,
   type SettingsRow,
+  settingsRows,
   type SettingsTarget,
   type SettingsView,
   settingsView,
@@ -85,10 +85,6 @@ type OpenSteps = InstallStepsLayout & { readonly kind: InstallStepsKind };
 type Row = SettingsRow;
 type Target = SettingsTarget;
 
-function settingsRows(installable: boolean): readonly Row[] {
-  return installable ? [...SETTING_ROWS, INSTALL_ROW] : SETTING_ROWS;
-}
-
 // How many lines a browser's install steps wrap onto in their card.
 function stepsLines(scene: Scene, steps: string): string[] {
   return withProbe(scene, BODY_TEXT, (probe) => {
@@ -107,7 +103,6 @@ function rowShapes(scene: Scene, rows: readonly Row[]): SettingsRowShape[] {
     }
     if (row.note === undefined) {
       return {
-        inlineLabelWidth: modalTextWidth(scene, "title", [words[row.label]]),
         kind: row.kind,
         noteLines: 0,
       };

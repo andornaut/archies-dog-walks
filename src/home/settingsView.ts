@@ -70,7 +70,6 @@ export type SettingsTarget =
 
 // Device preferences in display order.
 export const SETTING_ROWS: readonly SettingsRow[] = [
-  { key: "fpsCounter", kind: "switch", label: "fpsCounter" },
   {
     icon: "icon-sound-panel",
     key: "muted",
@@ -87,8 +86,9 @@ export const SETTING_ROWS: readonly SettingsRow[] = [
     label: "motion",
     note: "motionNote",
   },
+  { key: "fpsCounter", kind: "switch", label: "fpsCounter" },
 ];
-// Under them while the game can be installed (offersInstall).
+// Before FPS while the game can be installed (offersInstall).
 export const INSTALL_ROW: SettingsRow = {
   button: "installButton",
   icon: "icon-install-panel",
@@ -97,6 +97,13 @@ export const INSTALL_ROW: SettingsRow = {
   label: "install",
   note: "installNote",
 };
+// FPS stays last whether installation is offered or not.
+export function settingsRows(installable: boolean): readonly SettingsRow[] {
+  return installable
+    ? SETTING_ROWS.flatMap((row) => (row.key === "fpsCounter" ? [INSTALL_ROW, row] : [row]))
+    : SETTING_ROWS;
+}
+
 // The button the install steps start from, drawn before them: the three-dot menu of Chrome or
 // Firefox for Android, or Safari's Share. Other kinds draw none.
 export const STEPS_ICONS: Readonly<Partial<Record<InstallStepsKind, string>>> = {
@@ -271,7 +278,7 @@ function controlRow(
         font: "title",
         lines: [words[row.label]],
         scale: TEXT_SCALE,
-        x: x + (inline ? SETTINGS_ROW.pad : LABEL.dx),
+        x: x + LABEL.dx,
       },
       ...(noteY === null
         ? []

@@ -4,10 +4,9 @@ import { gameData } from "../data/index.ts";
 import { SCREEN_CONFIG, SCREEN_LAYOUT } from "../data/screen.ts";
 import { installStepsLayout, settingsLayout } from "../home/settings.ts";
 import {
-  INSTALL_ROW,
-  SETTING_ROWS,
   type SettingsMeasure,
   type SettingsRow,
+  settingsRows,
   type SettingsView,
   settingsView,
 } from "../home/settingsView.ts";
@@ -27,7 +26,7 @@ vi.mock("phaser", () => ({
 vi.mock("virtual:art-files", () => ({ default: new Map() }));
 
 function fixture(install = false, width = 360, dpr = 1) {
-  const configuredRows = [...SETTING_ROWS, ...(install ? [INSTALL_ROW] : [])];
+  const configuredRows = settingsRows(install);
   const fonts = { body: fontFileMetrics("font-body"), title: fontFileMetrics("font-title") };
   const measure: SettingsMeasure = {
     ...fonts,
@@ -109,7 +108,7 @@ it("returns manual install instructions to the live Install row without leaving 
     focus: null,
     html: f.shown,
     pressed: { kind: "install" },
-    rows: [...SETTING_ROWS, INSTALL_ROW],
+    rows: settingsRows(true),
     steps: f.view(true).steps,
     view: () => f.view(scene.steps !== undefined),
   });
@@ -125,7 +124,7 @@ it("returns manual install instructions to the live Install row without leaving 
     )!;
   scene.closeSteps();
   expect(scene.steps).toBeUndefined();
-  expect(scene.focus?.row).toBe(scene.rows.length - 1);
+  expect(scene.focus?.row).toBe(scene.rows.findIndex((row) => row.key === "install"));
   expect(f.doc.activeElement).toBe(install);
   expect(layerViews(f.element)).toHaveLength(1);
   expect(f.close).not.toHaveBeenCalled();

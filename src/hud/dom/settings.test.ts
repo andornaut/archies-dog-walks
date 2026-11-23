@@ -3,12 +3,7 @@ import { expect, it, vi } from "vitest";
 import { gameData } from "../../data/index.ts";
 import { SCREEN_CONFIG, SCREEN_LAYOUT } from "../../data/screen.ts";
 import { installStepsLayout, settingsLayout } from "../../home/settings.ts";
-import {
-  INSTALL_ROW,
-  SETTING_ROWS,
-  type SettingsMeasure,
-  settingsView,
-} from "../../home/settingsView.ts";
+import { type SettingsMeasure, settingsRows, settingsView } from "../../home/settingsView.ts";
 import { DEFAULT_SETTINGS } from "../../save/settings.ts";
 import { FakeDocument, fakeLayer, layerViews } from "../../testing/fakeDom.ts";
 import { fontFileMetrics, fontInk, gameFont } from "../../testing/fontInk.ts";
@@ -17,7 +12,7 @@ import { modalTitleInk } from "../../ui/modal/titleRole.ts";
 import { type DomSettingsInput, showSettings } from "./settings.ts";
 
 function fixture(install = false, width = 360, dpr = 1) {
-  const configuredRows = [...SETTING_ROWS, ...(install ? [INSTALL_ROW] : [])];
+  const configuredRows = settingsRows(install);
   const fonts = { body: fontFileMetrics("font-body"), title: fontFileMetrics("font-title") };
   const measure: SettingsMeasure = {
     ...fonts,

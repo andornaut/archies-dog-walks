@@ -44,6 +44,7 @@ import {
   type SettingsRowShape,
   setVolumeSteps,
   type SliderTrack,
+  SWITCH_STATE_GAP,
   volumeStepAt,
   volumeStepForKey,
   volumeSteps,
@@ -100,12 +101,12 @@ const words = gameData.menuText.settings;
 type ShippedRow =
   { kind: "button" | "switch"; label: string; note?: string } | { kind: "slider"; label: string };
 const SHIPPED_ROWS: readonly ShippedRow[] = [
-  { kind: "switch", label: words.fpsCounter },
   { kind: "switch", label: words.sound, note: words.soundNote },
   { kind: "slider", label: words.music },
   { kind: "slider", label: words.effects },
   { kind: "switch", label: words.motion, note: words.motionNote },
   { kind: "button", label: words.install, note: words.installNote },
+  { kind: "switch", label: words.fpsCounter },
 ];
 const notedRows = SHIPPED_ROWS.filter((row) => "note" in row && row.note !== undefined);
 const fittedNotes = notedRows.map((row) =>
@@ -124,9 +125,6 @@ const shapes: SettingsRowShape[] = SHIPPED_ROWS.map((row) =>
   row.kind === "slider"
     ? { kind: "slider" }
     : {
-        ...(row.kind === "switch" && row.note === undefined
-          ? { inlineLabelWidth: inkWidth("font-title", { scale: 2 }, row.label) }
-          : {}),
         kind: row.kind,
         noteLines: fittedNotes[notedRows.indexOf(row)]?.lines.length ?? 0,
         ...(row.kind === "button"
@@ -186,7 +184,7 @@ function rowParts(i: number): [string, Rect][] {
       labelInk(
         "font-title",
         row.label,
-        rect.x + (inline ? SETTINGS_ROW.pad : label.dx),
+        rect.x + label.dx,
         rect.y + (inline ? Math.floor((rect.height - titleFont.capHeight * 2) / 2) : label.dy),
       ),
     ],
@@ -271,7 +269,7 @@ describe("the settings card", () => {
   it("starts rows below the close target or the stacked button gap under the row before", () => {
     expect(rows[0]!.rect.y + SETTINGS_ROW.icon.dy).toBe(panel.y + MODAL.header);
     expect(rows[0]!.rect.y).toBeGreaterThanOrEqual(close.hit.y + close.hit.height);
-    expect(rows[0]!.rect.x).toBeGreaterThan(rows[1]!.rect.x);
+    expect(rows[0]!.rect.x).toBe(rows.at(-1)!.rect.x);
     expect(rows[0]!.rect.x + rows[0]!.rect.width).toBe(rows[1]!.rect.x + rows[1]!.rect.width);
     rows.slice(1).forEach(({ rect }, i) => {
       const above = rows[i]?.rect;
@@ -327,7 +325,7 @@ describe("the settings card", () => {
   });
 
   it("sets the install button's label at 2x within its face", () => {
-    const control = layout.rows.at(-1)?.control;
+    const control = layout.rows[SHIPPED_ROWS.findIndex((row) => row.kind === "button")]?.control;
     expect(inkWidth("font-title", { scale: 2 }, words.installButton)).toBeLessThan(
       (control?.width ?? 0) - 8,
     );
@@ -347,15 +345,22 @@ const labelInkBottom =
 
 describe.each([
   ["with the Install row", shapes],
-  ["without the Install row", shapes.slice(0, -1)],
+  ["without the Install row", shapes.filter((_, i) => SHIPPED_ROWS[i]?.kind !== "button")],
 ])("the build label %s", (_, rowShapes) => {
   const placed = settingsLayout({ body: bodyFont, title: titleFont }, SCREEN_CONFIG, rowShapes);
   const { buildLabelY, panel } = placed;
   const last = defined(placed.rows.at(-1));
   const lastShape = defined(rowShapes.at(-1));
   const noteLines = lastShape.kind === "slider" ? 1 : lastShape.noteLines;
-  // The last row's lowest ink: its note's, down to the font's deepest descender, or its control's.
+  // Reserve the last row's note/control/state ink and the minimum target when it has no note.
   const lastInk = Math.max(
+    noteLines === 0 ? last.rect.y + MIN_PRESS : 0,
+    lastShape.kind === "switch"
+      ? (last.control?.y ?? 0) +
+          (last.control?.height ?? 0) +
+          SWITCH_STATE_GAP +
+          titleFont.capHeight * 2
+      : 0,
     (last.noteY ?? 0) +
       ((noteLines - 1) * bodyFont.lineHeight + bodyFont.inkBottom - bodyFont.capTop) * 2,
     (last.control?.y ?? 0) + (last.control?.height ?? 0),
