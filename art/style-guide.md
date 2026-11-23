@@ -310,7 +310,7 @@ Result summaries and earned-badge strips follow the [control guide's measured pl
 
 ## Animation
 
-- The authored Start picker retains its yellow face, gold frame, lift and check badge. The retained picker and Shop row effects use a 2400ms clockwise segment and a static cue under reduced motion. See the [control contract](controls.md#selection-controls) for these specific effects.
+- Native picker selections retain their yellow fill, lift and check badge. Native picker and Shop controls change their interior fill or ink for focus and press. Reduced motion retains these cues. See the [control contract](controls.md#selection-controls).
 
 - Animation names are the tag names in each sprite JSON's `meta.frameTags`. Keep tag names and order stable; append new tags. A frame-count change shifts later tags and needs matching exports, the same feet anchors and updated render-bound checks in the same change. Leash sockets and the logical collision, formation, pickup and planning geometry stay fixed; measure visual extents separately. Consumers resolve tags instead of hardcoding absolute frame indices. Motion is in whole pixels.
 - Walkers are seen from behind: `walk` has 8 frames at 80ms (640ms per stride), `react` 2, `stumble` 4 and `idle` 2 frames, no gear variants. `wave` and `cheer` face the camera at their own cadence, and Mr. B has his `phone` poses.
