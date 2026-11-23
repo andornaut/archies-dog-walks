@@ -89,6 +89,7 @@ import {
   CREAM_PANEL,
   effects,
   exitIcon,
+  fpsCounter,
   heart,
   helpIcon,
   homeIcon,
@@ -1609,7 +1610,7 @@ function still(name: string, g: Drawable, outline = false): Tag {
 }
 
 // Every sprite: [key, [[tag, frames, duration ms]]].
-function* sprites(): Generator<Sprite> {
+function* sprites(drawFpsCounter: (on: boolean) => Grid): Generator<Sprite> {
   yield [
     "ui-dog-card",
     [
@@ -1683,6 +1684,7 @@ function* sprites(): Generator<Sprite> {
   yield ["icon-music-panel", onOff((on) => speaker(CREAM_PANEL, on, true))];
   yield ["icon-effects-panel", onOff((on) => effects(CREAM_PANEL, on))];
   yield ["icon-motion-panel", onOff((on) => motion(CREAM_PANEL, on))];
+  yield ["icon-fps-counter-panel", onOff(drawFpsCounter)];
   yield ["icon-install-panel", onOff((on) => install(CREAM_PANEL, on))];
   yield [
     "ui-zone-pips",
@@ -1699,9 +1701,9 @@ function* sprites(): Generator<Sprite> {
 // ---------- preview and build ----------
 
 // Every piece in rows that wrap at width, so the 360px walk bar gets a row of its own.
-function preview(out: string, scale = 3, width = 380): void {
+async function preview(out: string, scale = 3, width = 380): Promise<void> {
   const pieces = [...IMAGES.values()].map((draw) => draw());
-  for (const [, tags] of sprites()) {
+  for (const [, tags] of sprites(await fpsCounter(CREAM_PANEL))) {
     pieces.push(...tags.flatMap(([, fs]) => fs.map(toImage)));
   }
   const rowsOf: RgbaImage[][] = [];
@@ -1735,7 +1737,7 @@ async function build(): Promise<void> {
     const png = `public/art/images/${key}.png`;
     writeFileSync(png, savePng(draw()));
   }
-  await buildSprites({}, sprites());
+  await buildSprites({}, sprites(await fpsCounter(CREAM_PANEL)));
   console.log("built", [...IMAGES.keys()].join(", "));
 }
 

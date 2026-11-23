@@ -6899,6 +6899,11 @@
       "json": "sprites/icon-effects-panel.json"
     },
     {
+      "key": "icon-fps-counter-panel",
+      "png": "sprites/icon-fps-counter-panel.png",
+      "json": "sprites/icon-fps-counter-panel.json"
+    },
+    {
       "key": "icon-install-panel",
       "png": "sprites/icon-install-panel.png",
       "json": "sprites/icon-install-panel.json"
