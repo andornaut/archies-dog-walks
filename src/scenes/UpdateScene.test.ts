@@ -1,17 +1,39 @@
-import type { Game } from "phaser";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { EventEmitter } from "node:events";
 
+import type { Game } from "phaser";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
+import { PHONE_EVENTS } from "../pwa/events.ts";
+import { FakeDocument } from "../testing/fakeDom.ts";
+import type { CardEntry } from "./questionPanel.ts";
 import { SCENE_KEYS, TAP_BURST_SCENE_KEY } from "./sceneKeys.ts";
 
-const state = vi.hoisted(() => ({ booted: false, offered: false }));
+const state = vi.hoisted(() => ({ accepting: false, booted: false, offered: false }));
+const native = vi.hoisted(() => ({
+  destroy: vi.fn(),
+  entries: [] as readonly CardEntry[],
+  mount: vi.fn(),
+  reload: vi.fn(),
+}));
 
 vi.mock("phaser", () => ({
-  Core: { Events: { POST_STEP: "poststep" } },
+  Core: { Events: { POST_RENDER: "postrender", POST_STEP: "poststep" } },
   Scene: class {},
   Scenes: { Events: { SHUTDOWN: "shutdown" } },
 }));
 vi.mock("../pwa/index.ts", async (original) => ({
   ...(await original<typeof import("../pwa/index.ts")>()),
+  acceptUpdate: vi.fn((save: () => Promise<void>) => {
+    void save();
+    state.accepting = true;
+    window.dispatchEvent(new Event(PHONE_EVENTS.updateReady));
+  }),
+  dismissUpdate: vi.fn(() => {
+    state.offered = false;
+    window.dispatchEvent(new Event(PHONE_EVENTS.updateReady));
+  }),
+  updateAcceptanceFailed: () => false,
+  updateAccepting: () => state.accepting,
   updateOffered: () => state.offered,
 }));
 vi.mock("../pwa/launch.ts", async (original) => ({
@@ -19,7 +41,34 @@ vi.mock("../pwa/launch.ts", async (original) => ({
   bootFinished: () => state.booted,
 }));
 
-const { holdPlay, watchUpdateOffer } = await import("./UpdateScene.ts");
+vi.mock("../ui/phaser/rampDim.ts", () => ({ addRampDim: vi.fn() }));
+vi.mock("./nativeOverlayReady.ts", () => ({
+  mountNativeOverlay: (_scene: unknown, mount: () => boolean) => mount(),
+}));
+vi.mock("./modalMeasure.ts", () => ({
+  measureModalTitle: () => ({ extraHeight: 0 }),
+  modalTextWidth: () => 80,
+}));
+vi.mock("./overlay.ts", async (original) => ({
+  ...(await original<typeof import("./overlay.ts")>()),
+  listenOutsideTap: vi.fn(),
+}));
+vi.mock("./profileStore.ts", () => ({ profileWritesSettled: () => Promise.resolve() }));
+vi.mock("./questionPanel.ts", () => ({
+  addHtmlModalCard: (
+    _scene: unknown,
+    _rect: unknown,
+    _title: string,
+    entries: readonly CardEntry[],
+  ) => {
+    native.entries = entries;
+    native.mount();
+    return { destroy: native.destroy };
+  },
+}));
+afterEach(() => vi.unstubAllGlobals());
+
+const { UpdateScene, holdPlay, watchUpdateOffer } = await import("./UpdateScene.ts");
 
 // A scene manager with the given scenes running, and the walk's hold if a walk is one of them.
 function fakeGame(running: readonly string[]) {
@@ -93,3 +142,83 @@ describe("watchUpdateOffer", () => {
     expect(f.scene.run).toHaveBeenCalledTimes(2);
   });
 });
+
+it.each([false, true])(
+  "restores the legitimate underlying target only after the obsolete or successor prompt releases (successor:%s)",
+  (successor) => {
+    vi.clearAllMocks();
+    state.offered = true;
+    state.accepting = false;
+    const doc = new FakeDocument();
+    const underlying = doc.createElement("div");
+    const invoker = doc.createElement("button");
+    const fallback = doc.createElement("div");
+    underlying.append(invoker);
+    doc.body.append(underlying, fallback);
+    invoker.focus();
+    const page = new EventTarget();
+    vi.stubGlobal("window", page);
+    vi.stubGlobal("document", doc);
+    vi.stubGlobal("location", { reload: native.reload });
+    const events = new EventEmitter();
+    const render = new EventEmitter();
+    const paused = new Set<string>();
+    let stopPending = false;
+    const resume = vi.fn((key: string) => {
+      paused.delete(key);
+    });
+    const manager = {
+      getScenes: () => [{ sys: { settings: { key: SCENE_KEYS.start } } }],
+      isActive: (key: string) => key === SCENE_KEYS.start && !paused.has(key),
+      isPaused: (key: string) => paused.has(key),
+      pause: (key: string) => {
+        paused.add(key);
+        underlying.inert = true;
+        fallback.focus();
+      },
+      resume,
+    };
+    const stop = vi.fn(() => {
+      stopPending = true;
+    });
+    const update = Object.assign(new UpdateScene(), {
+      events,
+      game: { events: render, scene: manager },
+      input: { enabled: true, keyboard: new EventEmitter() },
+      scene: { isActive: manager.isActive, isPaused: manager.isPaused, resume, stop },
+      sys: { isActive: () => !stopPending },
+    });
+    native.destroy.mockImplementation(() => fallback.focus());
+    const settle = () => {
+      if (stopPending) {
+        events.emit("shutdown");
+        stopPending = false;
+      }
+      underlying.inert = paused.size > 0;
+      render.emit("postrender");
+    };
+    update.create();
+    expect(paused.has(SCENE_KEYS.start)).toBe(true);
+    expect(native.mount).toHaveBeenCalledOnce();
+    native.entries[1]!.press();
+    expect(native.destroy).toHaveBeenCalledOnce();
+    state.accepting = false;
+    state.offered = successor;
+    page.dispatchEvent(new Event(PHONE_EVENTS.updateReady));
+    if (successor) {
+      expect(stop).not.toHaveBeenCalled();
+      expect(native.mount).toHaveBeenCalledTimes(2);
+      settle();
+      expect(paused.has(SCENE_KEYS.start)).toBe(true);
+      expect(doc.activeElement).not.toBe(invoker);
+      native.entries[0]!.press();
+    }
+    expect(stop).toHaveBeenCalledOnce();
+    expect(doc.activeElement).not.toBe(invoker);
+    settle();
+    expect(resume).toHaveBeenCalledExactlyOnceWith(SCENE_KEYS.start);
+    expect(paused.size).toBe(0);
+    expect(doc.activeElement).toBe(invoker);
+    expect(native.reload).not.toHaveBeenCalled();
+  },
+);

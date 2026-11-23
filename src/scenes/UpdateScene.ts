@@ -1,3 +1,4 @@
+import { focusTarget } from "@andornaut/game-kit/runtime/web/ui/dom/focusModality";
 import { Core, type Game, Scene, Scenes } from "phaser";
 
 import { gameData } from "../data/index.ts";
@@ -86,6 +87,10 @@ export class UpdateScene extends Scene {
   create(): void {
     this.awaitingPause = false;
     this.walking = this.scene.isActive(SCENE_KEYS.run);
+    const invoking =
+      typeof document === "undefined" || document.activeElement === document.body
+        ? null
+        : (document.activeElement as HTMLElement | null);
     const hold = holdPlay(this.game);
     this.release = () => {
       if (this.scene.isPaused(SCENE_KEYS.pause)) {
@@ -98,6 +103,21 @@ export class UpdateScene extends Scene {
       this.card = undefined;
       this.release?.();
       this.release = undefined;
+      if (invoking !== null && !updateOffered() && !updateAccepting()) {
+        // Resumed native views restore admission at their existing render boundary.
+        this.game.events.once(Core.Events.POST_RENDER, () => {
+          if (
+            !updateOffered() &&
+            !updateAccepting() &&
+            !invoking.ownerDocument.hidden &&
+            invoking.isConnected &&
+            !invoking.closest("[inert], [hidden]") &&
+            invoking.ownerDocument.activeElement !== invoking
+          ) {
+            focusTarget(invoking);
+          }
+        });
+      }
     });
     onWindowEvent(this, PHONE_EVENTS.updateReady, () => this.sync());
     onBackPressed(this, () => this.dismiss());
