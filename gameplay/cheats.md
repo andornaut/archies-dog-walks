@@ -22,7 +22,6 @@ Cheats never touch the save. The first cheat used starts a cheat session; openin
 
 ### Next walk
 
-- **FPS counter** is first. It toggles a device setting immediately, independent of the save and cheat session. It is Off by default. The counter sits at the device viewport's bottom-right, inset from the safe area, above all content including letterbox bars.
 - **Invincible owners:** bumps and cards cost no hearts on the next walk.
 - **Start at** shows one button per neighbourhood in game order. The chosen button sets the starting neighbourhood and route for the next walk.
 

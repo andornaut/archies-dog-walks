@@ -13,7 +13,6 @@ export const MENU_TEXT = {
     applyDebuff: "Apply {debuff}",
     copyRunLink: "Copy run link",
     finishZone: "Finish this neighbourhood",
-    fpsCounter: "FPS counter",
     grantAllUpgrades: "Grant all upgrades",
     grantUpgrade: "Grant {upgrade}",
     groups: {
@@ -102,6 +101,7 @@ export const MENU_TEXT = {
   },
   settings: {
     effects: "Sound effects",
+    fpsCounter: "FPS counter",
     install: "Install",
     installButton: "Install",
     installDescription: "A cozy pixel-art lane runner about walking dogs.",
