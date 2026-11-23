@@ -367,8 +367,13 @@ export class SettingsScene extends Scene {
   }
 
   private closeSteps(): void {
+    if (this.steps === undefined) {
+      return;
+    }
+    const row = this.rowIndex("install");
     this.steps = undefined;
     this.pressed = undefined;
+    this.focus = row < 0 ? null : { column: 0, row };
     this.render();
   }
 
