@@ -54,9 +54,6 @@ export interface CheatsModal {
 // Reset save's question is as wide as the Cheats modal under it.
 const RESET_WIDTH = modalFamilyWidth(SCREEN_CONFIG.width - 2 * MODAL.margin, "large");
 
-// How long Copy run link reads as copied.
-const COPIED_MS = 1500;
-
 // The walk the modal opened over, while it is on.
 function runOf(scene: Scene, inWalk: boolean): RunScene | undefined {
   const { scene: plugin } = scene;
@@ -95,18 +92,13 @@ export function openCheatsModal(
   if (place === undefined) {
     return undefined;
   }
-  let copied = false;
   let question: DomQuestionPanel | undefined;
   const state = (): CheatsState => {
     const run = runOf(scene, inWalk);
     return {
       canResetSave: canResetSave(scene),
-      linkCopied: copied,
       next: nextWalk(scene),
-      walk:
-        run === undefined
-          ? undefined
-          : { canFinish: run.canFinishZone(), upgradesLeft: run.upgradesToGrant() },
+      walk: run?.activeCheats(),
     };
   };
   const view = () =>
@@ -133,17 +125,9 @@ export function openCheatsModal(
     const seed = nextWalk(scene).seed ?? randomSeed();
     setNext((next) => ({ ...next, seed }));
     const link = runLink(scene, { ...nextWalk(scene), seed });
-    void globalThis.navigator.clipboard?.writeText(link).then(
-      () => {
-        copied = true;
-        render();
-        scene.time.delayedCall(COPIED_MS, () => {
-          copied = false;
-          render();
-        });
-      },
-      (error: unknown) => console.warn("Copy run link: the link was not copied", error),
-    );
+    void globalThis.navigator.clipboard?.writeText(link).catch((error: unknown) => {
+      console.warn("Copy run link: the link was not copied", error);
+    });
   };
   const closeQuestion = () => {
     question?.destroy();
@@ -212,9 +196,15 @@ export function openCheatsModal(
       case "copyRunLink":
         copyLink();
         return;
-      case "invincible":
-        setNext((next) => ({ ...next, invincible: !next.invincible }));
+      case "invincible": {
+        if (inWalk) {
+          runOf(scene, true)?.toggleInvincible();
+          render();
+        } else {
+          setNext((next) => ({ ...next, invincible: !next.invincible }));
+        }
         return;
+      }
       case "own":
         grant((save) => grantOwned(gameData, action.grant, save));
         return;
@@ -229,12 +219,15 @@ export function openCheatsModal(
         setNext((next) => ({ ...next, speed: nextChoice(speeds, next.speed) }));
         return;
       }
-      case "startAt":
-        setNext((next) => ({
-          ...next,
-          start: action.zone,
-        }));
+      case "startAt": {
+        if (inWalk) {
+          runOf(scene, true)?.jumpToZone(action.zone);
+          render();
+        } else {
+          setNext((next) => ({ ...next, start: action.zone }));
+        }
         return;
+      }
       default:
         assertNever(action);
     }

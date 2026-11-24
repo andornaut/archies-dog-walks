@@ -25,6 +25,7 @@ import {
   chooseCard,
   chooseShownCard,
   headHomeSession,
+  jumpToNeighbourhood,
   resumeSession,
   runStreams,
   type Session,
@@ -62,6 +63,85 @@ function emptyRoad(session: Session): Session {
 
 const take = (count: number, random: () => number) => Array.from({ length: count }, random);
 const kinds = (events: readonly SessionEvent[]) => events.map(({ kind }) => kind);
+
+describe("live neighbourhood cheat", () => {
+  it("replaces a held final neighbourhood without ending the walk, paying fees or reopening its card", () => {
+    const { walk } = STARTED;
+    const zoneIndex = walkLength(gameData) - 1;
+    const prefix = gameData.world.zones.slice(0, zoneIndex).map(({ id }) => id as ZoneId);
+    const run = {
+      ...openCard(SKUNK, walk.run),
+      route: [...prefix, firstZoneId(gameData)],
+      zoneDistance: pixels(105),
+      zoneIndex,
+    };
+    const session: Session = {
+      ...STARTED,
+      card: cardFor(gameData, run, SKUNK),
+      distanceBeforeZone: 200,
+      queue: [STOP],
+      timeMs: 3000,
+      walk: { ...walk, run },
+      zoneEndPending: true,
+    };
+
+    const changed = jumpToNeighbourhood(
+      gameData,
+      runStreams(1),
+      geometry,
+      LANE_COUNT,
+      "cabbagetown",
+      session,
+    );
+
+    expect(kinds(changed.events)).toEqual(["zonePlanned"]);
+    expect(changed.session).toMatchObject({
+      card: null,
+      distanceBeforeZone: 305,
+      needsZonePlan: false,
+      queue: [],
+      timeMs: 3000,
+      walk: {
+        road: { hitStop: null },
+        run: {
+          money: run.money,
+          pack: run.pack,
+          phase: { kind: "walking" },
+          route: [...prefix, "cabbagetown"],
+          zoneDistance: 0,
+          zoneEndMoney: run.zoneEndMoney,
+          zoneIndex,
+        },
+      },
+      zoneEndPending: false,
+    });
+    expect(changed.session.walk.road.pending.length).toBeGreaterThan(0);
+  });
+
+  it("fills the pending fork slot and preserves the completed route and distance", () => {
+    const source: CardSource = { kind: "fork", paths: ["cabbagetown"], upgrades: ["bellyRubs"] };
+    const run = { ...openCard(source, STARTED.walk.run), zoneIndex: 1 };
+    const session: Session = {
+      ...STARTED,
+      card: cardFor(gameData, run, source),
+      distanceBeforeZone: zoneLength(gameData),
+      needsZonePlan: true,
+      walk: { ...STARTED.walk, run },
+    };
+    const changed = jumpToNeighbourhood(
+      gameData,
+      runStreams(1),
+      geometry,
+      LANE_COUNT,
+      "cabbagetown",
+      session,
+    );
+    expect(kinds(changed.events)).toEqual(["zonePlanned"]);
+    expect(changed.session.distanceBeforeZone).toBe(session.distanceBeforeZone);
+    expect(changed.session.walk.run.route).toEqual([...run.route, "cabbagetown"]);
+    expect(changed.session.walk.run.zoneIndex).toBe(1);
+  });
+});
 
 describe("runStreams", () => {
   // Each stream is named from the seed, so a seed repeats them and another seed does not. A

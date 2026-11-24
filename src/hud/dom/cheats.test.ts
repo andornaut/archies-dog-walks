@@ -2,7 +2,7 @@ import { expect, it, vi } from "vitest";
 
 import { gameData } from "../../data/index.ts";
 import { SCREEN_CONFIG } from "../../data/screen.ts";
-import { NEXT_WALK_OFF } from "../../dev/cheats.ts";
+import { NEXT_WALK_OFF, startZones } from "../../dev/cheats.ts";
 import { cheatsView } from "../../dev/cheatsView.ts";
 import { FakeDocument, type FakeElement, fakeLayer, layerViews } from "../../testing/fakeDom.ts";
 import { fontFileMetrics, gameFont, inkWidth } from "../../testing/fontInk.ts";
@@ -31,9 +31,8 @@ async function cheatsScreen(inWalk = false, canResetSave = false) {
     { data: gameData, screen: SCREEN_CONFIG, words: gameData.menuText },
     {
       canResetSave,
-      linkCopied: false,
       next: NEXT_WALK_OFF,
-      walk: inWalk ? { canFinish: false, upgradesLeft: [] } : undefined,
+      walk: inWalk ? { invincible: false, zone: startZones(gameData)[0]! } : undefined,
     },
   );
   const act = vi.fn();
@@ -117,33 +116,22 @@ it("keeps Cheats actions guarded and disposable and renders only the approved co
   expect(act).toHaveBeenCalledTimes(1);
 });
 
-it("keeps the disabled Invincible switch pointer-only during a walk", async () => {
+it("accepts a single press on Invincible and the selected neighbourhood during a walk", async () => {
   const { act, element, pointerClick, shown, view } = await cheatsScreen(true);
-  const row = view.rows.find((row) => row.action !== undefined && !row.enabled)!;
-  const control = element
+  const row = view.rows.find(({ action }) => action?.kind === "invincible")!;
+  const toggle = element
     .all()
     .find((node) => node.getAttribute("aria-label") === `${row.label}: ${row.value}`)!;
-  const refusing = () =>
-    control.all().some((node) => node.classList.contains("adw-refusing-still"));
-  expect(control.disabled).toBe(false);
-  expect(control.tabIndex).toBe(-1);
-  expect(control.getAttribute("aria-disabled")).toBe("true");
-  expect(control.getAttribute("aria-description")).toBeNull();
-  control.fire("click", { detail: 0 });
-  expect(refusing()).toBe(false);
-  shown.setInert(true);
-  pointerClick(control);
-  expect(refusing()).toBe(false);
-  shown.setInert(false);
-  pointerClick(control);
-  expect(refusing()).toBe(true);
-  expect(act).not.toHaveBeenCalled();
+  expect(toggle.tabIndex).toBe(0);
+  pointerClick(toggle);
+  expect(act).toHaveBeenCalledExactlyOnceWith(row.action);
+
+  const selected = view.rows.flatMap(({ buttons }) => buttons).find(({ selected }) => selected)!;
+  const button = element.all().find((node) => node.getAttribute("aria-label") === selected.label)!;
+  pointerClick(button);
+  expect(act).toHaveBeenLastCalledWith(selected.action);
+  expect(act).toHaveBeenCalledTimes(2);
   shown.destroy();
-  for (const node of control.all()) {
-    node.classList.remove("adw-refusing-still");
-  }
-  pointerClick(control);
-  expect(refusing()).toBe(false);
 });
 
 it("restores focus to the Reset save button when its confirmation closes", async () => {

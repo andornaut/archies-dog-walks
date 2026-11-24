@@ -1044,14 +1044,18 @@ export function finishZone(data: WalkData, run: RunState): ZoneEnd {
   }
   return {
     fees: changes,
-    run: {
-      ...expired,
-      cardsThisZone: 0,
-      heartsForgiven: 0,
-      skipUsed: false,
-      zoneDistance: pixels(0),
-      zoneIndex: run.zoneIndex + 1,
-    },
+    run: resetZoneProgress({ ...expired, zoneIndex: run.zoneIndex + 1 }),
+  };
+}
+
+// A fresh neighbourhood starts with its own allowances and distance.
+export function resetZoneProgress(run: RunState): RunState {
+  return {
+    ...run,
+    cardsThisZone: 0,
+    heartsForgiven: 0,
+    skipUsed: false,
+    zoneDistance: pixels(0),
   };
 }
 

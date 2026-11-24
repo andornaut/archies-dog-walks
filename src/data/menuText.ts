@@ -17,7 +17,6 @@ export const MENU_TEXT = {
     grantUpgrade: "Grant {upgrade}",
     groups: {
       money: "Money",
-      nextWalk: "Next walk",
       other: "Other actions",
       startScreen: "Start screen",
       thisWalk: "This walk",

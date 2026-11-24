@@ -75,10 +75,8 @@ export type CheatRow =
 // screen.
 export interface CheatsState {
   readonly canResetSave: boolean;
-  readonly linkCopied: boolean;
   readonly next: NextWalk;
-  readonly walk:
-    { readonly canFinish: boolean; readonly upgradesLeft: readonly UpgradeId[] } | undefined;
+  readonly walk: { readonly invincible: boolean; readonly zone: ZoneId } | undefined;
 }
 
 type CheatsData = Pick<GameData, "debuffs" | "upgradeDrawOrder" | "upgrades" | "world">;
@@ -91,8 +89,6 @@ export function cheatRows(
 ): CheatRow[] {
   const text = words.cheats;
   const { next, walk } = state;
-  const inWalk = walk !== undefined;
-  const home = !inWalk;
   const fields = MENU_TEXT_FIELDS.cheats;
   const addLabel = (amount: Cents) => fillLine(fields, text, "add", { cash: dollarText(amount) });
   const action = (label: string, enabled: boolean, act: CheatAction): CheatRow => ({
@@ -102,7 +98,7 @@ export function cheatRows(
   });
   const adds = BANK_GRANTS.map((amount) => ({
     action: { amount, kind: "addBank" } as const,
-    enabled: home,
+    enabled: true,
     label: addLabel(amount),
   }));
   const switchRow = (label: string, on: boolean, enabled: boolean, act: CheatAction): CheatRow => ({
@@ -120,10 +116,10 @@ export function cheatRows(
     [text.ownGear, "gear"],
   ];
   const zones = startZones(data);
-  const selected = next.start ?? zones[0];
+  const selected = walk?.zone ?? next.start ?? zones[0];
   const choices = zones.map((zone): CheatButton => ({
     action: { kind: "startAt", zone },
-    enabled: home,
+    enabled: true,
     label: data.world.zones.find(({ id }) => id === zone)!.name,
     selected: selected === zone,
   }));
@@ -133,8 +129,7 @@ export function cheatRows(
     layout: "pair",
   }));
   return [
-    { kind: "heading", text: text.groups.nextWalk },
-    switchRow(text.invincible, next.invincible, home, { kind: "invincible" }),
+    switchRow(text.invincible, walk?.invincible ?? next.invincible, true, { kind: "invincible" }),
     { kind: "divider" },
     { kind: "heading", text: text.startAt },
     ...zoneRows,
@@ -144,7 +139,7 @@ export function cheatRows(
         {
           buttons: owns.map(([label, grant]) => ({
             action: { grant, kind: "own" },
-            enabled: home,
+            enabled: true,
             label,
           })),
           label: text.groups.unlocks,

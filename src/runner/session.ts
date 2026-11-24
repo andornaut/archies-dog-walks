@@ -1,6 +1,6 @@
 import { type Random, randomStream } from "@andornaut/game-kit/runtime/random";
 
-import type { CardSource, DogId, GameData } from "../data/types.ts";
+import type { CardSource, DogId, GameData, ZoneId } from "../data/types.ts";
 import type { LaneDirection } from "../layout/lanes.ts";
 import type { MoneyChange } from "../rules/causes.ts";
 import {
@@ -13,6 +13,7 @@ import {
   offerFork,
   openCard,
 } from "../rules/choices.ts";
+import { expireAtZoneEnd } from "../rules/durations.ts";
 import { read } from "../rules/units.ts";
 import type { RunState } from "../state/runState.ts";
 import { holdForFiring } from "./firingStop.ts";
@@ -20,6 +21,8 @@ import { NO_PULLS, type PullData, type Pulls, type PullStep, stepPulls } from ".
 import {
   finishZone,
   headHome,
+  resetZoneProgress,
+  startRoad,
   steerWalk,
   stepWalk,
   type Walk,
@@ -177,6 +180,37 @@ export function startSession(
     needsZonePlan: false,
     walk: planCurrentZone(data, streams, geometry, walk),
   };
+}
+
+// A live neighbourhood cheat replaces the unfinished route slot without awarding completion.
+export function jumpToNeighbourhood(
+  data: SessionData,
+  streams: RunStreams,
+  geometry: SessionGeometry,
+  laneCount: number,
+  zone: ZoneId,
+  session: Session,
+): SessionStep {
+  const { road, run } = session.walk;
+  if (run.phase.kind === "ended") {
+    return { events: [], session };
+  }
+  // At the fork the last neighbourhood has already ended and its distance has been counted.
+  const leaving = !session.needsZonePlan;
+  const nextRun = resetZoneProgress({
+    ...(leaving ? expireAtZoneEnd(run.zoneIndex, run) : run),
+    phase: { kind: "walking" },
+    route: [...run.route.slice(0, run.zoneIndex), zone],
+  });
+  const start = unplannedStart({
+    road: { ...startRoad(laneCount, road.speedFactor), nextItemId: road.nextItemId },
+    run: nextRun,
+  });
+  return continueWalk(data, streams, geometry, [], {
+    ...start,
+    distanceBeforeZone: session.distanceBeforeZone + (leaving ? run.zoneDistance : 0),
+    timeMs: session.timeMs,
+  });
 }
 
 // A walk about to start, its first zone not yet planned: the point a walk resumes from until

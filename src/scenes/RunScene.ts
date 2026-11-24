@@ -11,12 +11,10 @@ import { Scene } from "phaser";
 import { musicKey } from "../audio/music.ts";
 import { gameData } from "../data/index.ts";
 import { LANE_COUNT } from "../data/screen.ts";
-import type { DogId, UpgradeId } from "../data/types.ts";
+import type { DogId, ZoneId } from "../data/types.ts";
 import {
-  canFinishZone,
   finishZone,
   timeScaleOf,
-  upgradesLeft,
   WALK_CHEATS_OFF,
   type WalkCheat,
   walkCheat,
@@ -46,6 +44,7 @@ import {
   chooseShownCard,
   forkPoint,
   headHomeSession,
+  jumpToNeighbourhood,
   resumeSession,
   type RunStreams,
   runStreams,
@@ -154,7 +153,8 @@ export class RunScene extends Scene implements HudRun {
   // The ambient movers' clock: the walk's simulated time less its firings' holds, in which
   // they stand still.
   private ambientMs = 0;
-  // The cheats the walk plays by, from the Start screen's Next walk choices.
+  private celebrationGeneration = 0;
+  // The cheats the walk plays by, initially from the Start screen.
   private cheats: WalkCheats = WALK_CHEATS_OFF;
   private endDestination: EndDestination = "end";
   // Where the next launch resumes the walk, saved with each checkpoint: the walk's start, its
@@ -292,6 +292,7 @@ export class RunScene extends Scene implements HudRun {
 
   private resetState(): void {
     this.ambientMs = 0;
+    this.celebrationGeneration += 1;
     this.updateHeld = false;
     this.resumePoint = null;
     this.session = undefined;
@@ -479,6 +480,55 @@ export class RunScene extends Scene implements HudRun {
     return run !== undefined && run.phase.kind !== "ended";
   }
 
+  activeCheats(): { readonly invincible: boolean; readonly zone: ZoneId } | undefined {
+    const run = this.session?.walk.run;
+    if (run === undefined || run.phase.kind === "ended") {
+      return undefined;
+    }
+    return { invincible: run.invincible ?? false, zone: currentZoneId(gameData, run) };
+  }
+
+  toggleInvincible(): void {
+    const session = this.session;
+    const active = this.activeCheats();
+    if (session === undefined || active === undefined) {
+      return;
+    }
+    useCheat(this);
+    this.world?.recorder.abandon();
+    const { walk } = session;
+    this.cheats = { ...this.cheats, invincible: !active.invincible };
+    const changed = { ...walk, run: withCheats(this.cheats, walk.run) };
+    this.session = { ...session, walk: changed };
+    this.stepBefore = changed;
+    this.draw();
+  }
+
+  jumpToZone(zone: ZoneId): void {
+    const { session, world } = this;
+    if (session === undefined || world === undefined || !this.cheatsApply()) {
+      return;
+    }
+    const next = jumpToNeighbourhood(
+      gameData,
+      world.streams,
+      screenRoadGeometry,
+      LANE_COUNT,
+      zone,
+      session,
+    );
+    useCheat(this);
+    world.recorder.abandon();
+    this.celebrationGeneration += 1;
+    world.menus.closeZoneOverlays();
+    world.input.dropPress();
+    world.input.takePending();
+    this.stepClock = holdStepClock(this.stepClock);
+    this.stepBefore = next.session.walk;
+    this.apply(next);
+    this.draw();
+  }
+
   // The walk as This walk's cheat leaves it, in a cheat session: nothing of it is saved. The
   // walk's checkpoints and end stay in the session.
   cheat(cheat: WalkCheat): void {
@@ -495,18 +545,6 @@ export class RunScene extends Scene implements HudRun {
     };
     this.stepBefore = this.session.walk;
     this.draw();
-  }
-
-  // The upgrades This walk can still grant.
-  upgradesToGrant(): readonly UpgradeId[] {
-    const run = this.session?.walk.run;
-    return run === undefined ? [] : upgradesLeft(gameData, run);
-  }
-
-  // Whether This walk's Finish this neighbourhood applies: walking, with no card or hit stop.
-  canFinishZone(): boolean {
-    const session = this.session;
-    return session !== undefined && session.card === null && canFinishZone(session.walk);
   }
 
   private walking(): boolean {
@@ -624,12 +662,25 @@ export class RunScene extends Scene implements HudRun {
     if (menus === undefined) {
       return;
     }
+    const generation = ++this.celebrationGeneration;
+    const current = (action: () => void) => () => {
+      if (generation === this.celebrationGeneration) {
+        action();
+      }
+    };
     const show = (celebration: ZoneCelebration, done: () => void) => {
       menus.holdForCelebration();
-      menus.showCelebration({ celebration, onDone: done, openPause: () => this.openPause() });
+      menus.showCelebration({
+        celebration,
+        onDone: current(done),
+        openPause: () => this.openPause(),
+      });
     };
     menus.holdForCelebration();
-    this.time.delayedCall(delayMs, () => playInTurn(show, next, celebrations));
+    this.time.delayedCall(
+      delayMs,
+      current(() => playInTurn(show, next, celebrations)),
+    );
   }
 
   // An event's sounds, bursts, hints and labels, and the input log.

@@ -25,13 +25,12 @@ const MEASURE: PanelMeasure = {
 const words = gameData.menuText;
 const HOME: CheatsState = {
   canResetSave: false,
-  linkCopied: false,
   next: NEXT_WALK_OFF,
   walk: undefined,
 };
 const WALK: CheatsState = {
   ...HOME,
-  walk: { canFinish: true, upgradesLeft: gameData.upgradeDrawOrder },
+  walk: { invincible: false, zone: startZones(gameData)[0]! },
 };
 const view = (state: CheatsState, screen: { height: number; width: number } = SCREEN_CONFIG) =>
   cheatsView(MEASURE, { data: gameData, screen, words }, state);
@@ -41,7 +40,6 @@ describe("Cheats actions", () => {
   it("keeps the approved groups and gives every neighbourhood its direct action in game order", () => {
     const { groups, startAt } = words.cheats;
     expect(view(HOME).rows.flatMap((row) => (row.kind === "heading" ? [row.label] : []))).toEqual([
-      groups.nextWalk,
       startAt,
       groups.unlocks,
       groups.money,
@@ -74,33 +72,47 @@ describe("Cheats actions", () => {
     expect(visible).not.toContain("fpsCounter");
   });
 
-  it("offers four unlocks in the approved order and the three bank amounts only at Start", () => {
+  it("offers every retained cheat at Start and during a walk", () => {
     expect(BANK_GRANTS).toEqual([cents(10_000), cents(100_000), cents(1_000_000)]);
-    for (const [state, isHome] of [
-      [HOME, true],
-      [WALK, false],
-    ] as const) {
+    for (const state of [HOME, WALK]) {
       const current = buttons(state);
       const adds = current.filter(({ action }) => action.kind === "addBank");
       expect(adds.map(({ action, available }) => ({ action, available }))).toEqual(
-        BANK_GRANTS.map((amount) => ({ action: { amount, kind: "addBank" }, available: isHome })),
+        BANK_GRANTS.map((amount) => ({ action: { amount, kind: "addBank" }, available: true })),
       );
       const unlocks = current.filter(({ action }) => action.kind === "own");
       expect(unlocks.map(({ action, available }) => ({ action, available }))).toEqual(
         ["walkers", "dogSlots", "dogs", "gear"].map((grant) => ({
           action: { grant, kind: "own" },
-          available: isHome,
+          available: true,
         })),
       );
       expect(
         current
           .filter(({ action }) => action.kind === "startAt")
-          .every(({ available }) => available === isHome),
+          .every(({ available }) => available === true),
       ).toBe(true);
       expect(view(state).rows.find(({ action }) => action?.kind === "invincible")?.enabled).toBe(
-        isHome,
+        true,
       );
     }
+  });
+
+  it("shows the live invincibility and neighbourhood instead of staged Start choices", () => {
+    const zone = startZones(gameData)[2]!;
+    const state: CheatsState = {
+      ...HOME,
+      next: { ...HOME.next, start: startZones(gameData)[1]! },
+      walk: { invincible: true, zone },
+    };
+    expect(view(state).rows.find(({ kind }) => kind === "switch")?.texts[1]?.text).toBe(
+      words.settings.on,
+    );
+    expect(
+      buttons(state)
+        .filter(({ selected }) => selected)
+        .map(({ action }) => action),
+    ).toEqual([{ kind: "startAt", zone }]);
   });
 
   it.each([HOME, WALK])("keeps only the retained visible actions in either context", (state) => {
@@ -170,7 +182,7 @@ describe("Cheats layout", () => {
     ]);
   });
 
-  it("sets the Next Walk divider 16px from the last button and Unlocks/Money headings", () => {
+  it("sets the neighbourhood divider 16px from the last button and Unlocks/Money headings", () => {
     const unlocks = current.rows.findIndex((row) => row.label === words.cheats.groups.unlocks);
     const index = unlocks - 1;
     expect(current.rows[index]?.kind).toBe("divider");

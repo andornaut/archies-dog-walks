@@ -5,6 +5,7 @@ import { afterEach, beforeEach, expect, it, vi } from "vitest";
 
 import { gameData } from "../data/index.ts";
 import { NEXT_WALK_OFF, startZones } from "../dev/cheats.ts";
+import type { CheatsState } from "../dev/cheatsView.ts";
 import type { DomCheatsInput } from "../hud/dom/cheats.ts";
 import type { DomQuestionPanelInput } from "../hud/dom/questionPanel.ts";
 import { cents } from "../units.ts";
@@ -15,20 +16,26 @@ const fake = vi.hoisted(() => ({
   focusReset: vi.fn(),
   input: undefined as DomCheatsInput | undefined,
   next: undefined as typeof NEXT_WALK_OFF | undefined,
+  projection: vi.fn(),
   question: undefined as DomQuestionPanelInput | undefined,
+  render: vi.fn(),
   reset: vi.fn(() => Promise.resolve(true)),
   run: {
-    canFinishZone: () => true,
+    activeCheats: vi.fn(),
     cheat: vi.fn(),
-    cheatsApply: () => true,
-    upgradesToGrant: () => 0,
+    cheatsApply: vi.fn(() => true),
+    jumpToZone: vi.fn(),
+    toggleInvincible: vi.fn(),
   },
   update: vi.fn(),
   useCheat: vi.fn(),
 }));
 vi.mock("../dev/devTools.ts", () => ({ devToolsOn: () => false }));
 vi.mock("../dev/cheatsView.ts", () => ({
-  cheatsView: () => ({ layout: { panel: { height: 400, width: 300, x: 30, y: 40 } } }),
+  cheatsView: (_measure: unknown, _input: unknown, state: CheatsState) => {
+    fake.projection(state);
+    return { layout: { panel: { height: 400, width: 300, x: 30, y: 40 } } };
+  },
 }));
 vi.mock("../hud/dom/cheats.ts", () => ({
   showCheats: (_layer: unknown, input: DomCheatsInput) => {
@@ -38,7 +45,7 @@ vi.mock("../hud/dom/cheats.ts", () => ({
       focusReset: fake.focusReset,
       setDimmed: vi.fn(),
       setInert: vi.fn(),
-      update: vi.fn(),
+      update: fake.render,
     };
   },
 }));
@@ -79,6 +86,10 @@ beforeEach(() => {
   fake.canResetSave.mockReturnValue(true);
   fake.next = NEXT_WALK_OFF;
   fake.question = undefined;
+  fake.run.activeCheats.mockReturnValue({ invincible: false, zone: startZones(gameData)[0]! });
+  fake.run.cheatsApply.mockReturnValue(true);
+  fake.run.jumpToZone.mockReset();
+  fake.run.toggleInvincible.mockReset();
 });
 afterEach(() => vi.unstubAllGlobals());
 
@@ -112,12 +123,58 @@ it.each([false, true])("keeps walk-only actions scoped to the invoking context (
   expect(fake.run.cheat).toHaveBeenCalledTimes(inWalk ? 1 : 0);
 });
 
-it("selects an explicit neighbourhood without changing other Next Walk choices", () => {
+it("selects a Start neighbourhood without changing other setup choices", () => {
   const { input } = open(false);
   const zone = startZones(gameData)[1]!;
   input.act({ kind: "startAt", zone });
   expect(fake.next).toEqual({ ...NEXT_WALK_OFF, start: zone });
   expect(fake.useCheat).toHaveBeenCalledOnce();
+});
+
+it("applies live invincibility and neighbourhood changes without closing Cheats or staging choices", () => {
+  const { close, input } = open(true);
+  const zone = startZones(gameData)[2]!;
+  fake.run.toggleInvincible.mockImplementation(() => {
+    fake.run.activeCheats.mockReturnValue({ invincible: true, zone: startZones(gameData)[0]! });
+  });
+  input.act({ kind: "invincible" });
+  expect(fake.run.toggleInvincible).toHaveBeenCalledOnce();
+  expect(fake.projection).toHaveBeenLastCalledWith(
+    expect.objectContaining({ walk: { invincible: true, zone: startZones(gameData)[0]! } }),
+  );
+  fake.run.jumpToZone.mockImplementation(() => {
+    fake.run.activeCheats.mockReturnValue({ invincible: true, zone });
+  });
+  input.act({ kind: "startAt", zone });
+  expect(fake.run.jumpToZone).toHaveBeenCalledExactlyOnceWith(zone);
+  expect(fake.projection).toHaveBeenLastCalledWith(
+    expect.objectContaining({ walk: { invincible: true, zone } }),
+  );
+  expect(fake.next).toEqual(NEXT_WALK_OFF);
+  expect(fake.render).toHaveBeenCalledTimes(2);
+  expect(close).not.toHaveBeenCalled();
+});
+
+it("does not stage later changes when the invoking walk has ended", () => {
+  const { input } = open(true);
+  fake.run.cheatsApply.mockReturnValue(false);
+  input.act({ kind: "invincible" });
+  input.act({ kind: "startAt", zone: startZones(gameData)[1]! });
+  expect(fake.run.toggleInvincible).not.toHaveBeenCalled();
+  expect(fake.run.jumpToZone).not.toHaveBeenCalled();
+  expect(fake.next).toEqual(NEXT_WALK_OFF);
+  expect(fake.useCheat).not.toHaveBeenCalled();
+});
+
+it("applies bank and ownership grants immediately while Cheats remains over the walk", () => {
+  const { close, input, scene } = open(true);
+  input.act({ amount: cents(100), kind: "addBank" });
+  input.act({ grant: "dogs", kind: "own" });
+  expect(fake.useCheat).toHaveBeenCalledTimes(2);
+  expect(fake.update).toHaveBeenNthCalledWith(1, scene, expect.any(Function));
+  expect(fake.update).toHaveBeenNthCalledWith(2, scene, expect.any(Function));
+  expect(fake.render).toHaveBeenCalledTimes(2);
+  expect(close).not.toHaveBeenCalled();
 });
 
 it("requires Reset confirmation in an installed app and Back closes only that question", async () => {

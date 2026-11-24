@@ -1133,7 +1133,6 @@ export interface MenuText {
     // The groups' headings, in the modal's order.
     readonly groups: {
       readonly money: string;
-      readonly nextWalk: string;
       readonly other: string;
       readonly startScreen: string;
       readonly thisWalk: string;

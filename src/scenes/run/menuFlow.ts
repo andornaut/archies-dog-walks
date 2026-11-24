@@ -110,6 +110,12 @@ export class MenuFlow {
     this.scene.scene.stop(SCENE_KEYS.card);
   }
 
+  closeZoneOverlays(): void {
+    this.closeCard();
+    this.celebrating = false;
+    this.scene.scene.stop(SCENE_KEYS.zoneCelebration);
+  }
+
   // The tab hid or showed again.
   setPageHidden(hidden: boolean): void {
     this.hidden = hidden;

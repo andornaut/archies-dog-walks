@@ -68,7 +68,7 @@ export function nextRunStart(next: NextWalk = NEXT_WALK_OFF): RunStart {
 // The run's dev hooks: the input log it records and the replay that drives it.
 export class RunRecorder {
   private inputLog: InputLog | undefined;
-  private readonly replay: { events: readonly InputEvent[]; next: number } | undefined;
+  private replay: { events: readonly InputEvent[]; next: number } | undefined;
 
   constructor(replay: readonly InputEvent[] | undefined) {
     this.replay = replay === undefined ? undefined : { events: replay, next: 0 };
@@ -76,6 +76,12 @@ export class RunRecorder {
 
   start(setup: RunSetup): void {
     this.inputLog = startInputLog(setup);
+  }
+
+  // A live edit cannot be represented by the step and card inputs in a replay.
+  abandon(): void {
+    this.inputLog = undefined;
+    this.replay = undefined;
   }
 
   replaying(): boolean {
