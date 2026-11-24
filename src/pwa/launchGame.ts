@@ -1,12 +1,12 @@
 import type { LaunchResult } from "./launch.ts";
 
 // The launch decides before the game's modules load: "reloading" means another document takes
-// over, so this one never reads or writes a save or constructs Phaser.
+// over. An unsupported browser stops here as well, before save access or Phaser.
 export async function launchGame(
-  launch: Promise<LaunchResult>,
+  launch: Promise<LaunchResult | "unsupported">,
   start: () => Promise<void>,
 ): Promise<void> {
-  if ((await launch) !== "reloading") {
+  if ((await launch) === "play") {
     await start();
   }
 }

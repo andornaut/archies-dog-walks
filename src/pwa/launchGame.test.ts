@@ -1,12 +1,15 @@
 import { describe, expect, it, vi } from "vitest";
 
-import type { LaunchResult } from "./launch.ts";
+import type { LaunchResult as KitLaunchResult } from "./launch.ts";
+
+type LaunchResult = KitLaunchResult | "unsupported";
 import { launchGame } from "./launchGame.ts";
 
 describe("launchGame", () => {
   it.each<[LaunchResult, number]>([
     ["play", 1],
     ["reloading", 0],
+    ["unsupported", 0],
   ])("keeps the game's start behind the %s launch decision", async (result, starts) => {
     let resolveLaunch!: (result: LaunchResult) => void;
     const launch = new Promise<LaunchResult>((resolve) => {

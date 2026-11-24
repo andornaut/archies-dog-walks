@@ -14,8 +14,8 @@ import {
   type UpdateOffer,
 } from "@andornaut/game-kit/runtime/web/pwa/buildContract";
 import {
-  browserLaunchContext,
   createLaunch,
+  prepareBrowserLaunch,
   type RequiredUpdateState,
 } from "@andornaut/game-kit/runtime/web/pwa/dom/launch";
 
@@ -64,22 +64,33 @@ function changedOffer(): void {
 }
 
 // The production build only: the dev server has no /sw.js, and a router would serve stale
-// modules over hot reloads. Without a launch (the dev server, or a browser with no service
-// workers or Cache Storage) the game plays from the network and "play" resolves at once. A
+// modules over hot reloads. Development plays from the network. Production browsers without
+// Service Worker or Cache Storage support show the shared unsupported screen. A
 // first install that fails on the network or verification shows mountFailure's Loading failed;
 // Retry resumes the install from the files already stored, and the launch resolves once it
 // succeeds. Where the device cannot install (the router cannot register, or storage is full) the
 // game plays from the network and the start screen says why (networkPlayReason); the next
 // launch tries the install again.
-export function startLaunch(mountFailure: (retry: () => void) => LaunchFailureView) {
-  const context = import.meta.env.PROD ? browserLaunchContext(CACHE_POLICY) : undefined;
-  if (context === undefined) {
+export function startLaunch(
+  mountFailure: (retry: () => void) => LaunchFailureView,
+  onUnsupported: () => void,
+) {
+  if (!import.meta.env.PROD) {
     return Promise.resolve<LaunchResult>("play");
+  }
+  const prepared = prepareBrowserLaunch({ onUnsupported, parent: document.body }, CACHE_POLICY);
+  if (prepared.kind === "unsupported") {
+    window.addEventListener("pagehide", ({ persisted }) => {
+      if (!persisted) {
+        prepared.failure.dispose();
+      }
+    });
+    return Promise.resolve("unsupported" as const);
   }
   let failure: LaunchFailureView | undefined;
   let attempt = 0;
   let retry: () => void = () => undefined;
-  const started = createLaunch(context, {
+  const started = createLaunch(prepared.context, {
     onFailure: (next: LaunchFailure) => {
       attempt += 1;
       retry = next.retry;

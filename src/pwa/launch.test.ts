@@ -8,13 +8,13 @@ import { PHONE_EVENTS } from "./events.ts";
 const kit = vi.hoisted(() => ({
   bootProgress: vi.fn(),
   options: undefined as LaunchOptions | undefined,
+  prepare: vi.fn(),
   requestUpdateCheck: vi.fn(),
   requireNewer: vi.fn(),
   run: vi.fn(),
 }));
 
 vi.mock("@andornaut/game-kit/runtime/web/pwa/dom/launch", () => ({
-  browserLaunchContext: () => ({}),
   createLaunch: (_context: unknown, options: LaunchOptions) => {
     kit.options = options;
     return {
@@ -24,10 +24,12 @@ vi.mock("@andornaut/game-kit/runtime/web/pwa/dom/launch", () => ({
       run: kit.run,
     };
   },
+  prepareBrowserLaunch: kit.prepare,
 }));
 
 let launch: typeof import("./launch.ts");
 const dispatched: string[] = [];
+const onUnsupported = () => undefined;
 
 function snapshot(source: {
   subscribe(listener: (next: ProgressSnapshot) => void): () => void;
@@ -49,11 +51,15 @@ function options(): LaunchOptions {
 beforeEach(async () => {
   vi.resetModules();
   vi.stubEnv("PROD", true);
-  vi.stubGlobal("window", { dispatchEvent: (event: Event) => dispatched.push(event.type) });
+  vi.stubGlobal("window", {
+    addEventListener: vi.fn(),
+    dispatchEvent: (event: Event) => dispatched.push(event.type),
+  });
   vi.stubGlobal("document", {
     createElement: () => ({ canPlayType: (type: string) => (type.includes("ogg") ? "" : "maybe") }),
   });
   kit.options = undefined;
+  kit.prepare.mockReset().mockReturnValue({ context: {}, kind: "supported" });
   kit.bootProgress.mockClear();
   kit.requireNewer.mockClear();
   kit.requestUpdateCheck.mockClear();
@@ -68,9 +74,25 @@ afterEach(() => {
 });
 
 describe("startLaunch", () => {
+  it("stops an unsupported production launch before creating the installer", async () => {
+    const unsupported = vi.fn();
+    const dispose = vi.fn();
+    kit.prepare.mockImplementation(({ onUnsupported }: { onUnsupported: () => void }) => {
+      onUnsupported();
+      return { failure: { dispose }, kind: "unsupported" };
+    });
+    const mount = vi.fn(() => ({ dispose() {}, update() {} }));
+
+    await expect(launch.startLaunch(mount, unsupported)).resolves.toBe("unsupported");
+    expect(unsupported).toHaveBeenCalledOnce();
+    expect(mount).not.toHaveBeenCalled();
+    expect(kit.run).not.toHaveBeenCalled();
+    expect(kit.options).toBeUndefined();
+  });
+
   it("delegates play and Start checks after boot hands over, without app throttling", async () => {
     launch.requestGameUpdateCheck();
-    await launch.startLaunch(() => ({ dispose() {}, update() {} }));
+    await launch.startLaunch(() => ({ dispose() {}, update() {} }), onUnsupported);
     launch.requestGameUpdateCheck();
     expect(kit.requestUpdateCheck).not.toHaveBeenCalled();
     launch.bootHandedOver();
@@ -80,7 +102,7 @@ describe("startLaunch", () => {
   });
 
   it("installs only the sound format this page plays", async () => {
-    await launch.startLaunch(() => ({ dispose() {}, update() {} }));
+    await launch.startLaunch(() => ({ dispose() {}, update() {} }), onUnsupported);
     expect(options().soundFormat).toBe("m4a");
   });
 
@@ -96,7 +118,7 @@ describe("startLaunch", () => {
     const started = launch.startLaunch((retry) => {
       pressRetry = retry;
       return view;
-    });
+    }, onUnsupported);
     const retry = vi.fn();
     options().onFailure({ reason: "network", retry });
     expect(view.update).toHaveBeenLastCalledWith({ attempt: 1, error: "network", kind: "failed" });
@@ -118,7 +140,7 @@ describe("startLaunch", () => {
         return Promise.resolve("play");
       });
       expect(launch.networkPlayReason()).toBeUndefined();
-      await expect(launch.startLaunch(mount)).resolves.toBe("play");
+      await expect(launch.startLaunch(mount, onUnsupported)).resolves.toBe("play");
       expect(launch.networkPlayReason()).toBe(reason);
       expect(mount).not.toHaveBeenCalled();
     },
@@ -128,7 +150,9 @@ describe("startLaunch", () => {
     vi.stubEnv("PROD", false);
     vi.resetModules();
     launch = await import("./launch.ts");
-    await expect(launch.startLaunch(() => ({ dispose() {}, update() {} }))).resolves.toBe("play");
+    await expect(
+      launch.startLaunch(() => ({ dispose() {}, update() {} }), onUnsupported),
+    ).resolves.toBe("play");
     launch.bootHandedOver();
     launch.requestGameUpdateCheck();
     expect(kit.requestUpdateCheck).not.toHaveBeenCalled();
@@ -146,7 +170,7 @@ describe("Update now", () => {
   }
 
   it("saves, then switches, showing a wait, and offers a retry when the switch fails", async () => {
-    await launch.startLaunch(() => ({ dispose() {}, update() {} }));
+    await launch.startLaunch(() => ({ dispose() {}, update() {} }), onUnsupported);
     const { loadingProgress } = await import("../loadingProgress.ts");
     let fail!: (error: Error) => void;
     const updateNow = vi.fn(
@@ -176,7 +200,7 @@ describe("Update now", () => {
   });
 
   it("dismissing continues on this build and leaves the update to the next launch", async () => {
-    await launch.startLaunch(() => ({ dispose() {}, update() {} }));
+    await launch.startLaunch(() => ({ dispose() {}, update() {} }), onUnsupported);
     const updateNow = vi.fn(() => Promise.resolve());
     const dismiss = offer(updateNow);
     launch.dismissUpdate();
@@ -187,7 +211,7 @@ describe("Update now", () => {
   });
 
   it("closes its matching obsolete offer with an idle wait and normal change event", async () => {
-    await launch.startLaunch(() => ({ dispose() {}, update() {} }));
+    await launch.startLaunch(() => ({ dispose() {}, update() {} }), onUnsupported);
     const { ObsoleteUpdateOfferError } =
       await import("@andornaut/game-kit/runtime/web/pwa/buildContract");
     const { loadingProgress } = await import("../loadingProgress.ts");
@@ -233,7 +257,7 @@ describe("Update now", () => {
     { name: "a newer offer", version: "later" },
     { name: "a different object for the same version", version: "next" },
   ])("keeps $name actionable when the accepted object becomes obsolete", async ({ version }) => {
-    await launch.startLaunch(() => ({ dispose() {}, update() {} }));
+    await launch.startLaunch(() => ({ dispose() {}, update() {} }), onUnsupported);
     const { ObsoleteUpdateOfferError } =
       await import("@andornaut/game-kit/runtime/web/pwa/buildContract");
     const { loadingProgress } = await import("../loadingProgress.ts");
@@ -267,7 +291,7 @@ describe("Update now", () => {
   });
 
   it("retains the accepted offer when an obsolete error names a different version", async () => {
-    await launch.startLaunch(() => ({ dispose() {}, update() {} }));
+    await launch.startLaunch(() => ({ dispose() {}, update() {} }), onUnsupported);
     const { ObsoleteUpdateOfferError } =
       await import("@andornaut/game-kit/runtime/web/pwa/buildContract");
     const { loadingProgress } = await import("../loadingProgress.ts");
@@ -297,7 +321,7 @@ describe("Update now", () => {
   });
 
   it("is refused while a newer save requires an update, which alone shows staging", async () => {
-    await launch.startLaunch(() => ({ dispose() {}, update() {} }));
+    await launch.startLaunch(() => ({ dispose() {}, update() {} }), onUnsupported);
     const { requiredUpdateProgress } = await import("./requiredUpdate.ts");
     options().onUpdateState({ phase: "staging", value: 0.4, version: "next" });
     expect(snapshot(requiredUpdateProgress).active).toBe(false);
@@ -319,7 +343,7 @@ describe("Update now", () => {
 
 describe("bootLoad", () => {
   it("counts boot's reads into the launch's value until boot hands over", async () => {
-    await launch.startLaunch(() => ({ dispose() {}, update() {} }));
+    await launch.startLaunch(() => ({ dispose() {}, update() {} }), onUnsupported);
     kit.bootProgress.mockClear();
     const after = { begin: vi.fn(() => ({ finish: vi.fn(), progress: vi.fn() })) };
     const reads = launch.bootLoad(after).begin();

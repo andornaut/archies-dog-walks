@@ -13,27 +13,17 @@ import {
   SOUND_BANK_INDEX_KEY,
 } from "../../assets/packedAssetIndex.ts";
 import { planPackedAssets, soundBankId } from "./plan.ts";
-import { retainPreviousBuild } from "./retainedBuild.ts";
 
 const MEDIA_TYPES: Readonly<Record<string, string>> = {
-  ".css": "text/css; charset=utf-8",
   ".fnt": "text/xml; charset=utf-8",
-  ".js": "text/javascript; charset=utf-8",
   ".json": "application/json",
-  ".m4a": "audio/mp4",
-  ".ogg": "audio/ogg",
   ".png": "image/png",
-  ".svg": "image/svg+xml",
-  ".ttf": "font/ttf",
   ".webp": "image/webp",
   ".woff": "font/woff",
-  ".woff2": "font/woff2",
 };
 
 function contentTypeFor(path: string): string {
-  const contentType = path.startsWith("/assets/art/sounds/bank-")
-    ? "application/octet-stream"
-    : MEDIA_TYPES[extname(path)];
+  const contentType = MEDIA_TYPES[extname(path)];
   if (contentType === undefined) {
     throw new Error(`No origin MIME policy for ${path}`);
   }
@@ -75,31 +65,12 @@ async function packFinishedOutput(output: string, bankIndexes: readonly string[]
   if (targets.length > 0) {
     groups["brand-icons"] = targets;
   }
-  // The scheduled runner passes the release SHA to the gate container. Local preview builds can
-  // omit it and still exercise the packed route without pulling a production predecessor.
-  const previousOrigin =
-    process.env.ARCHIE_PREVIOUS_ORIGIN ??
-    (process.env.WORKERS_CI_COMMIT_SHA ? "https://archie.tristamittermayer.com" : undefined);
-  const previous =
-    previousOrigin === undefined
-      ? { files: [], versions: [] }
-      : await retainPreviousBuild(output, new URL(previousOrigin));
-  if (previous.files.length > 0) {
-    groups["previous-assets"] = previous.files.map(({ path }) => path);
-  }
   const inputs = await Promise.all(
     [...planned.groups.flatMap(({ members }) => members), ...Object.keys(aliases), ...targets].map(
       async (path) => ({ bytes: await read(path), contentType: contentTypeFor(path), path }),
     ),
   );
-  const { archives, index } = buildOriginMemberPacks({ aliases, groups }, [
-    ...inputs,
-    ...previous.files.map(({ bytes, path }) => ({
-      bytes,
-      contentType: contentTypeFor(path),
-      path,
-    })),
-  ]);
+  const { archives, index } = buildOriginMemberPacks({ aliases, groups }, inputs);
   const combined = parseOriginMemberIndex({
     archives: [...index.archives, ...sounds.flatMap(({ index }) => index.archives)],
     members: [...index.members, ...soundMembers],
@@ -116,7 +87,6 @@ async function packFinishedOutput(output: string, bankIndexes: readonly string[]
     join(output, ORIGIN_INDEX_URL),
     JSON.stringify({
       index: combined,
-      retainedVersions: previous.versions,
       urls: Object.assign({}, ...sounds.map(({ urls }) => urls)),
     } satisfies PackedAssetIndex),
   );

@@ -46,7 +46,13 @@ const loading = mountDomLoadingBar(progress, document.documentElement);
 // art and sounds then load from the installed build. Module download and renderer setup before
 // the launch reports have no measurable denominator.
 void launchGame(
-  startLaunch((retry) => mountLaunchFailure(retry, document.body)),
+  startLaunch(
+    (retry) => mountLaunchFailure(retry, document.body),
+    () => {
+      startupLoad.finish();
+      loading.dispose();
+    },
+  ),
   async () => {
     const [{ startGame }] = await Promise.all([import("./main.ts"), prepareSoundBanks()]);
     startGame({ loading, nativeProgress });
