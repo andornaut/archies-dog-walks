@@ -148,6 +148,12 @@ describe("control state cues", () => {
       "background-color:var(--adw-green)!important",
     ],
     [
+      "a refused row's icon, a white silhouette on the dark red face",
+      "ui",
+      ".adw-row:is([data-refusal-red],[data-ui-refusal-red]) .ui-form-row-icon>*",
+      "filter:brightness(0)invert(1)",
+    ],
+    [
       "a focused or pressed row in forced colours",
       "ui",
       ".adw-row:not(.adw-standard-button):is(:focus-visible,[data-ui-pressed]:not([role=slider]))>.adw-row-face",

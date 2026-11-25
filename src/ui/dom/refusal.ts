@@ -17,8 +17,8 @@ export const REFUSAL_CUE: RefusalCue = {
 // control right and back in whole art pixels (--adw-slice-1) at the canvas's offsets and times
 // (refuseShakeSteps), so it never passes through a blended sub-pixel place; adw-refusing-still
 // holds it still under reduced motion. Through the red phases (refusalRed) the control holds
-// data-refusal-red, which fills its face dark red under a white label (REFUSAL_STYLE and each
-// control's skin).
+// data-refusal-red, which fills its face dark red under a white label and, on a row, its icon as
+// a white silhouette (REFUSAL_STYLE and each control's skin).
 const SHAKE_KEYFRAMES = refuseShakeSteps()
   .map(
     ({ at, offset }) =>
@@ -36,6 +36,7 @@ export const REFUSAL_STYLE = `
 .adw-row:is([${REFUSAL_RED}],[data-ui-refusal-red])>.adw-row-face{background-color:var(--adw-darkRed)!important}
 .adw-row:is([${REFUSAL_RED}],[data-ui-refusal-red]):is(*,[data-ui-pressed],:focus-visible) .adw-text{
   color:var(--adw-white)!important}
+.adw-row:is([${REFUSAL_RED}],[data-ui-refusal-red]) .ui-form-row-icon>*{filter:brightness(0) invert(1)}
 .adw-row[data-ui-refusal-shake]{translate:none;transition:none;
   animation:adw-shake ${2 * REFUSE.shakeMs}ms step-end ${REFUSE_SHAKES}}
 `;
