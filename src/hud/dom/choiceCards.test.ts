@@ -64,7 +64,7 @@ it.each(["cards", "zones"] as const)(
     expect(groups.length).toBe(view.options.length + (view.skip ? 1 : 0));
     expect(layer.input.accepts()).toBe(false);
     const enabled = groups.findIndex(
-      (group) => group.children.at(-1)?.getAttribute("aria-disabled") === "false",
+      (group) => group.children.at(-1)?.getAttribute("aria-disabled") !== "true",
     );
     const pressed = groups[enabled]!;
     expect(pressed.children.some((part) => part.classList.contains("adw-choice-press-band"))).toBe(

@@ -98,13 +98,13 @@ describe("control state cues", () => {
     [
       "an enabled pressed choice card's band",
       "choice",
-      '.adw-choice-pressed:has(.adw-choice-option[aria-disabled="false"]) .adw-choice-press-band',
+      '.adw-choice-pressed:has(.adw-choice-option:not([aria-disabled="true"])) .adw-choice-press-band',
       "background:var(--adw-green)",
     ],
     [
       "a focused or pressed choice label in forced colours",
       "choice",
-      '.adw-choice-pressed:has(.adw-choice-option[aria-disabled="false"]) .adw-choice-press-label *',
+      '.adw-choice-pressed:has(.adw-choice-option:not([aria-disabled="true"])) .adw-choice-press-label *',
       "color:HighlightText!important",
     ],
     [
