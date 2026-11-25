@@ -103,3 +103,4 @@ Reference: [Screens and UI](../../src/README.md#screens-and-ui), [Assets](../../
 | adw-0242 | Make Cheats available during a walk                                  | [adw-0242.md](../work/adw-0242.md) |
 | adw-0246 | Keep keyboard focus on the Start screen when an overlay closes       | [adw-0246.md](../work/adw-0246.md) |
 | adw-0248 | Show every control's focus and press as fills, with no outline rings | [adw-0248.md](../work/adw-0248.md) |
+| adw-0251 | Audit the interface for shared components and principled alignment   | [adw-0251.md](../work/adw-0251.md) |
