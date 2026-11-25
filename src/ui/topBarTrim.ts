@@ -49,14 +49,14 @@ function topBarWellRows(height: number): { height: number; y: number } {
 // Every top bar's height: the start screen's, the walk bar and Help's.
 export { TOP_BAR_HEIGHT };
 
-// The top bar's plum rows and their middle row, which each button's 20-row ui-icon-button face is
-// centred on, the upper half of the face above it, so any odd row is left under the face.
+// The top bar's plum rows and their middle row, which each button's 20-row ui-icon-button-normal
+// face is centred on, the upper half of the face above it, so any odd row is left under the face.
 const TOP_BAR_ROWS = topBarContentRows(TOP_BAR_HEIGHT);
 export const TOP_BAR_MID =
   TOP_BAR_ROWS.top + Math.floor((TOP_BAR_ROWS.bottom - TOP_BAR_ROWS.top) / 2);
 const FACE_SIZE = TOP_BAR_SIZES.faceSize;
-// art: fill is ui-icon-button's navy face inside its tan rim, from its highlight row to its lip,
-// on the normal frame; the pressed frame has it BUTTON_SIZE.press rows lower.
+// art: fill is ui-icon-button-normal's navy face inside its tan rim, from its highlight row to its
+// lip; ui-icon-button-pressed has it BUTTON_SIZE.press rows lower.
 export const TOP_BAR_FACE = {
   fill: { height: 16, width: 18, x: 1, y: 1 },
   size: FACE_SIZE,

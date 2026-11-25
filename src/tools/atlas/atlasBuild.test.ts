@@ -191,11 +191,13 @@ it("keeps native chrome out of packed inputs without reading or rewriting its au
   const manifest: AssetManifest = {
     fonts: [],
     images: [
-      { key: "icon-close", png: "images/icon-close.png" },
+      { key: "icon-exit", png: "images/icon-exit.png" },
       { key: "screen-home", png: "images/screen-home.png" },
     ],
     sounds: [],
-    sprites: [{ json: "sprites/ui-button.json", key: "ui-button", png: "sprites/ui-button.png" }],
+    sprites: [
+      { json: "sprites/icon-sound.json", key: "icon-sound", png: "sprites/icon-sound.png" },
+    ],
   };
   const original = structuredClone(manifest);
   const read = vi.fn(async () => {

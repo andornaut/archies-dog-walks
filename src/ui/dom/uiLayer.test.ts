@@ -207,23 +207,6 @@ it("notifies loading immediately and keeps good cuts when retrying unrelated HUD
     fonts: { add: () => undefined },
     getElementById: () => root,
   });
-  const manifest = {
-    sprites: ["ui-button", "ui-icon-button"].map((key) => ({
-      json: `required-${key}.json`,
-      key,
-      png: `required-${key}.png`,
-    })),
-  };
-  const sheet = {
-    frames: { normal: { frame: { h: 20, w: 20, x: 0, y: 0 } } },
-    meta: { size: { h: 20, w: 20 } },
-  };
-  vi.stubGlobal(
-    "fetch",
-    vi.fn((url: string) =>
-      Promise.resolve({ json: () => (url.includes("manifest") ? manifest : sheet), ok: true }),
-    ),
-  );
   const canvas = {
     offsetHeight: 560,
     offsetLeft: 0,

@@ -13,13 +13,10 @@ const nativeOnly = [...manifest.fonts, ...manifest.images, ...manifest.sprites]
 
 it("omits exactly the reviewed native chrome from the authored manifest, retaining all other renderer roles", () => {
   expect([...nativeOnly].sort()).toEqual([
-    "icon-close",
     "icon-exit",
     "icon-menu",
     "icon-pause",
     "icon-sound",
-    "ui-button",
-    "ui-icon-button",
     "ui-icon-button-normal",
     "ui-icon-button-pressed",
     "ui-scroll-thumb",

@@ -124,7 +124,7 @@ export function artPixel(scale: DomScale): number {
 
 // The lengths a screen's stylesheet reads as --adw-slice-<n>: n art pixels in device pixels, for
 // a pixel (a rim, a focus keyline), a press's sink and the focus band, and the nine-slice edges
-// (ui-button's 3 and 5, ui-panel's 4, ui-detail-card's 8), so each art pixel of a frame is
+// (the scrollbar's 3, ui-panel's 4, ui-detail-card's 8), so each art pixel of a frame is
 // artPixel device pixels.
 export function sliceLengths(scale: DomScale): readonly (readonly [string, string])[] {
   return [1, 2, 3, 4, 5, 8].map((n) => [`--adw-slice-${n}`, `${n * artPixel(scale)}px`] as const);

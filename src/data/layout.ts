@@ -26,7 +26,7 @@ export const BUTTON_SIZE = {
   // The gap between neighbouring standard buttons' faces side by side, the compact and modal
   // buttons counting as standard: every game's.
   gap: BUTTON_GAP,
-  // art: ui-icon-button's face side, the glyph drawn on it, and the square press target round it.
+  // art: ui-icon-button-normal's face side, the glyph drawn on it, and the square press target round it.
   icon: { face: 20, glyph: 16, target: MIN_PRESS },
   // How far a pressed face sinks.
   press: 2,
@@ -55,7 +55,6 @@ export const BUTTON_FACE_EDGE = { bottom: 1, top: 2 } as const;
 export const SLICES = {
   // The gold outline on the Pet shop while anything in it is affordable.
   "ui-afford": { bottom: 8, left: 8, right: 8, top: 8 },
-  "ui-button": { bottom: 5, left: 3, right: 3, top: 3 },
   // The detail card a held dog or gear tile opens, and the title band across it.
   "ui-detail-card": { bottom: 8, left: 8, right: 8, top: 8 },
   // A buff's well, widened into a card charm's plate: 1px cut corners and edges.
@@ -131,7 +130,7 @@ export const PAGE_CLOSE_FACE = { right: 7, top: 9 } as const;
 export const TOP_BAR_HEIGHT = 40;
 
 export const TOP_BAR_SIZES = {
-  // art: a button's ui-icon-button face side.
+  // art: a button's ui-icon-button-normal face side.
   faceSize: BUTTON_SIZE.icon.face,
   // The trim's line's row, and the rows a well keeps clear of the plum's top and of the edge,
   // which centre the 29-row well down the bar's 37 plum rows.

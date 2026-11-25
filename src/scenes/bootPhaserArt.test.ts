@@ -39,7 +39,7 @@ beforeEach(() => vi.clearAllMocks());
 it("does not create animations for native chrome even when a prior texture is already present", () => {
   const stub = sceneStub(vi.fn, { textures: { exists: () => true } });
   const nativeSprites = manifest.sprites.filter(({ key }) => !usesPhaserArt(key));
-  expect(nativeSprites).toHaveLength(3);
+  expect(nativeSprites).toHaveLength(1);
   nativeSprites.forEach((sprite) => methods.registerSprite.call(stub, sprite));
   expect(stub.anims.create).not.toHaveBeenCalled();
   expect(stub.cache.json.get).not.toHaveBeenCalled();
@@ -65,7 +65,7 @@ it("leaves native sprites out of Boot processing while preserving non-native fal
   expect(vi.mocked(ensurePlaceholder).mock.calls.every(([, key]) => usesPhaserArt(key))).toBe(true);
 });
 
-it("still requires all eleven native keys' frames and their sheet's image before Home admission", () => {
+it("still requires all eight native keys' frames and their sheet's image before Home admission", () => {
   const stub = sceneStub(vi.fn);
   const keys = new Set(
     [...manifest.images, ...manifest.sprites]
@@ -75,7 +75,7 @@ it("still requires all eleven native keys' frames and their sheet's image before
   const wait = vi.fn(() => () => undefined);
   Object.assign(stub, { manifest, nativeUi: { wait } });
   methods.requireNativeUi.call(stub, keys, vi.fn());
-  expect(keys.size).toBe(11);
+  expect(keys.size).toBe(8);
   expect(wait).toHaveBeenCalledOnce();
   const resources = native.requireAssets.mock.calls[0]![0] as { kind: string; url: string }[];
   expect(resources.map(({ kind, url }) => [kind, url.replace(/^.*\/art\//, "")]).sort()).toEqual(

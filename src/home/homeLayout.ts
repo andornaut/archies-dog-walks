@@ -186,7 +186,7 @@ export function sectionFill(section: Rect): Rect {
 export const HOME_BAR_BUTTONS = ["mute", "menu", "exit"] as const;
 export type HomeBarButton = (typeof HOME_BAR_BUTTONS)[number];
 
-// A top bar button: its ui-icon-button face and its hit area from the bar's top.
+// A top bar button: its ui-icon-button-normal face and its hit area from the bar's top.
 interface HomeBarButtonPlace {
   face: Point;
   hit: Rect;

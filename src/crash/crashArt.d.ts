@@ -2,7 +2,6 @@
 // the screen draws without loading a file.
 declare module "virtual:adw-crash-art" {
   const art: {
-    readonly chrome: string;
     readonly pose: string;
     readonly sound: string;
   };

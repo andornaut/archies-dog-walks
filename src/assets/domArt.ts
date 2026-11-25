@@ -89,11 +89,6 @@ export const DOM_STYLE_ART: readonly (readonly ["image" | "sheet", string])[] = 
 // The top bar's button faces (src/ui/dom/nativeTopSection.ts), at rest and pressed.
 const TOP_BAR_FACE_KEYS = ["ui-icon-button-normal", "ui-icon-button-pressed"];
 
-// CLEANUP (added 2026-11-25): native chrome no screen draws, which ships on dom-chrome because
-// usesPhaserArt (src/assets/phaserArt.ts) leaves it off the atlas. Remove this list, and the keys
-// from NATIVE_ONLY_KEYS, once Art has retired their files.
-const UNDRAWN_CHROME_KEYS = ["icon-close", "ui-button", "ui-icon-button"];
-
 // The Logbook's art (src/home/logbookView.ts) and every badge's card (src/home/badgeCardView.ts):
 // each badge's sheet, each dog's face sheet, the earned tick, the scrollbar, and the confetti.
 function logbookArtKeys(data: Pick<GameData, "achievements" | "dogs">): string[] {
@@ -204,7 +199,6 @@ export const DOM_ART_KEYS: ReadonlySet<string> = new Set([
   ...DOM_CHOICE_CARD_ART.images,
   ...DOM_CHOICE_CARD_ART.sheets,
   ...DOM_STYLE_ART.map(([, key]) => key),
-  ...UNDRAWN_CHROME_KEYS,
   ...detailArtKeys(gameData),
   ...SETTINGS_ART_KEYS,
   ...celebrationArtKeys(gameData),
@@ -261,7 +255,6 @@ export const DOM_SHEET_DIR = "dom";
 const CHROME_ART_KEYS = [
   ...DOM_STYLE_ART.map(([, key]) => key),
   ...TOP_BAR_FACE_KEYS,
-  ...UNDRAWN_CHROME_KEYS,
   "icon-exit",
   "icon-help",
   "icon-menu",

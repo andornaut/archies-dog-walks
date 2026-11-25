@@ -67,12 +67,12 @@ it("never queues native-only chrome through the missing-atlas own-file fallback"
   const assets: AssetManifest = {
     fonts: [],
     images: [
-      { key: "icon-close", png: "images/icon-close.png" },
+      { key: "icon-exit", png: "images/icon-exit.png" },
       { key: "screen-home", png: "images/screen-home.png" },
     ],
     sounds: [],
     sprites: [
-      { json: "sprites/ui-button.json", key: "ui-button", png: "sprites/ui-button.png" },
+      { json: "sprites/icon-sound.json", key: "icon-sound", png: "sprites/icon-sound.png" },
       { json: "sprites/world.json", key: "world", png: "sprites/world.png" },
     ],
   };
@@ -97,7 +97,7 @@ it("does not register native textures from an old or externally supplied atlas p
       get: () => ({ source: [{}] }),
     },
   });
-  const keys = ["icon-close", "ui-button", "screen-home"];
+  const keys = ["icon-exit", "icon-sound", "screen-home"];
   stub.cache.json.add(KEY, {
     atlas: packAtlasManifest({
       pages: manifest.pages,

@@ -1,12 +1,9 @@
 // Native chrome draws from its DOM sheet alone, without a Phaser texture.
 const NATIVE_ONLY_KEYS: ReadonlySet<string> = new Set([
-  "icon-close",
   "icon-exit",
   "icon-menu",
   "icon-pause",
   "icon-sound",
-  "ui-button",
-  "ui-icon-button",
   "ui-icon-button-normal",
   "ui-icon-button-pressed",
   "ui-scroll-thumb",

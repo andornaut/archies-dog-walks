@@ -8,7 +8,7 @@ vi.mock("@andornaut/game-kit/runtime/web/crash/dom/crashScreen", () => ({
   installCrashScreen: vi.fn(),
 }));
 vi.mock("virtual:adw-crash-art", () => ({
-  default: { chrome: "data:chrome", pose: "data:pose", sound: "data:sound" },
+  default: { pose: "data:pose", sound: "data:sound" },
 }));
 
 afterEach(() => {
